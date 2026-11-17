@@ -14,7 +14,7 @@
  * Flags: --budget-ledger <path> (default: the round's ledger), --list-price
  * (allow a full submission at factor 1.0 when no pilot confirmed the batch
  * discount), --budget-usd <n> (RB-LME only: its run's runaway cap when the run
- * first opens). Workstream caps are the plan's: W10a $28, W10b $107, W10c $50,
+ * first opens), --parallel (RB-LME only: submit while another batch is open). Workstream caps are the plan's: W10a $28, W10b $107, W10c $50,
  * W8's LongMemEval control $5.
  *
  * RB-LME (docs/plans/2026-11-17-readme-baselines/PREREG.md) adds the no-gbrain
@@ -185,6 +185,8 @@ function rbArm(id: string, model: string, label: string, pick: () => (q: Questio
       for (const qid of allIds()) {
         const q = ds.get(qid)!;
         const text = houseNotesText(q, choose(q), r);
+        const leaked = q.haystack_session_ids.filter(s => s.startsWith('answer_') && (text.user.includes(s) || text.system.includes(s)));
+        if (leaked.length) throw new Error(`${id}/${qid}: the prompt carries ${leaked.length} answer_ session id(s)`);
         bodies.set(qid, readerBody(model, text, maxOutputTokens ?? MODEL_SETTINGS[model].max_output_tokens, maxOutputTokens));
         meta[qid] = { sessions: text.sessions, truncated: text.truncated, chars: text.chars };
       }
@@ -314,9 +316,12 @@ export function budgetRun(ws: Workstream, ledgerPath: string, budgetUsd?: number
   return run;
 }
 
-function lane(run: BudgetRun): BatchLane {
-  return new BatchLane({ statePath: join(STATE_DIR, 'batch-state.sqlite'), transports: { openai: openAiTransport(), anthropic: anthropicTransport() }, run });
+function lane(run: BudgetRun, parallel = false): BatchLane {
+  return new BatchLane({ statePath: join(STATE_DIR, 'batch-state.sqlite'), transports: { openai: openAiTransport(), anthropic: anthropicTransport() }, run, parallel });
 }
+
+/** --parallel lets an RB-LME batch open beside unsettled ones; the ledger's caps still bound the sum of open reservations. Other workstreams keep one batch at a time. */
+export const parallelFor = (ws: Workstream, argv: readonly string[]) => ws === 'RB-LME' && argv.includes('--parallel');
 
 // ─── Judges ─────────────────────────────────────────────────────────
 
@@ -410,7 +415,8 @@ async function main(argv: string[]) {
     const built = await def.build();
     const s = MODEL_SETTINGS[def.model];
     const manifest = buildManifest({ arm_id: def.id, workstream: def.workstream, kind: 'reader', provider: s.provider, model: def.model, max_output_tokens: def.maxOutputTokens ?? s.max_output_tokens, reasoning_effort: s.effort, protocol: built.protocol, source: built.source, denominator: built.bodies.size, bodies: built.bodies, ...(def.maxOutputTokens ? { outputFloor: def.maxOutputTokens } : {}) });
-    for (const body of built.bodies.values()) if (JSON.stringify(body).includes('answer_')) throw new Error(`${arm}: a request body carries an answer_ session id`);
+    // RB-LME arms check each question's own answer_ session ids instead: whole histories hold source code with `answer_start`.
+    if (def.workstream !== 'RB-LME') for (const body of built.bodies.values()) if (JSON.stringify(body).includes('answer_')) throw new Error(`${arm}: a request body carries an answer_ session id`);
     freezeManifest(manifestPath(arm), manifest);
     saveBodies(arm, built.bodies);
     if (built.meta) writeJson(join(MANIFEST_DIR, `${arm}.meta.json`), built.meta);
@@ -455,7 +461,7 @@ async function main(argv: string[]) {
   const run = budgetRun(ws!, ledgerPath, flag(argv, '--budget-usd') ? Number(flag(argv, '--budget-usd')) : undefined);
   const guard = installPaidRequestGuard(run);
   try {
-    const l = lane(run);
+    const l = lane(run, parallelFor(ws!, argv));
     if (cmd === 'run' || cmd === 'retry') {
       if ((arm.startsWith('w10c-') && arm.endsWith('-full')) || arm === 'rb-sonnet55-full') {
         const manifest = readManifest(manifestPath(arm));

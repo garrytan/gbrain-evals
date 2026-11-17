@@ -7,7 +7,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 process.env.W10_STATE_DIR = join(tmpdir(), `rb-lme-test-${process.pid}`);
-const { ARMS, RB_ARMS, budgetRun, rbHybridTop, rbRenderer } = await import('../../eval/runner/batch/w10.ts');
+const { ARMS, RB_ARMS, budgetRun, parallelFor, rbHybridTop, rbRenderer } = await import('../../eval/runner/batch/w10.ts');
 const { fullHistoryText, houseNotesText, parseSessionBlocks } = await import('../../eval/runner/batch/sources.ts');
 
 const q = {
@@ -49,6 +49,7 @@ describe('RB-LME arms', () => {
     const saved = process.env.RB_GBRAIN_DIR;
     delete process.env.RB_GBRAIN_DIR;
     try { await expect(rbRenderer()).rejects.toThrow(/set RB_GBRAIN_DIR/); } finally { if (saved !== undefined) process.env.RB_GBRAIN_DIR = saved; }
+    expect([parallelFor('RB-LME', ['run', 'x', '--parallel']), parallelFor('RB-LME', ['run', 'x']), parallelFor('W10b', ['run', 'x', '--parallel'])]).toEqual([true, false, false]);
     expect(() => budgetRun('RB-LME', join(tmpdir(), `rb-ledger-${process.pid}.sqlite`))).toThrow(/pass --budget-usd/);
   });
 });
