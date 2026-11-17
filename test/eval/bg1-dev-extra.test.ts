@@ -106,6 +106,7 @@ describe('the mint', () => {
     expect(readFileSync(join(out, 'set/worlds/bg1-dev-04/plan.json'), 'utf8')).toBe(readFileSync(join(BG1_DATA_DIR, 'dev/worlds/bg1-dev-04/plan.json'), 'utf8'));
     expect(run('--dev', '--out', join(tmp, 'mint2'), '--worlds', 'bg1-dev-21', '--fake').stderr).toContain('--worlds takes bg1-dev-01 to bg1-dev-20');
     expect(run('--dev', '--out', join(tmp, 'mint3'), '--worlds', 'bg1-dev-05,bg1-dev-05', '--fake').stderr).toContain('lists a world twice');
+    expect(run('--dev', '--out', join(tmp, 'mint4'), '--worlds', '', '--fake').stderr).toContain('--worlds names no world');
     expect(run('--out', join(tmp, 'bg1-custody-x'), '--worlds', 'bg1-dev-04', '--fake').stderr).toContain('--worlds lists public dev worlds, so it needs --dev');
   }, 120_000);
 });

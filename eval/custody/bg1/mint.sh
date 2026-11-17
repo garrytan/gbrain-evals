@@ -222,6 +222,7 @@ if [ "$DEV" = 1 ]; then
     done
   }
   IFS=, read -r -a DEV_IDS <<<"$DEV_WORLDS"
+  [ ${#DEV_IDS[@]} -gt 0 ] || die "--worlds names no world"
   for id in "${DEV_IDS[@]}"; do
     [[ "$id" =~ ^bg1-dev-(0[1-9]|1[0-9]|20)$ ]] || die "--worlds takes bg1-dev-01 to bg1-dev-20, not $id"
   done
