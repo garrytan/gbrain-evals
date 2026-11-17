@@ -1365,6 +1365,27 @@ describe('the fallback validator', () => {
     expect(none.fallback_categories).toEqual({ none: 1 });
   });
 
+  test('runCalls settles every call of a failed ask as an error, and starts no ask after a budget refusal', async () => {
+    const settled: Array<string | null> = [];
+    const call = (prompt: string) => ({ client: 0, prompt, tokens: 1, cacheFile: null, cached: false, settle: (r: string | null) => { settled.push(r); return r !== null; } });
+    const down: ModelClient = { id: HAIKU, async complete() { throw new Error('down'); } };
+    expect(await runCalls([call('err'), call('err'), call('err')], [down], 3)).toMatchObject({ errors: 3, cached: 0 });
+    expect(settled).toEqual([null, null, null]);
+    const asked: string[] = [];
+    const budget: ModelClient = {
+      id: HAIKU,
+      async complete(prompt) {
+        asked.push(prompt);
+        await new Promise(r => setTimeout(r, prompt === 'p0' ? 5 : 30));
+        if (prompt === 'p0') throw new BudgetExceededError('run budget exhausted');
+        return '{"supported": true}';
+      },
+    };
+    await expect(runCalls(['p0', 'p1', 'p2', 'p3', 'p4'].map(p => call(p)), [budget], 2)).rejects.toBeInstanceOf(BudgetExceededError);
+    await new Promise(r => setTimeout(r, 80));
+    expect(asked).toEqual(['p0', 'p1']);
+  });
+
   test('validate.ts fails a support item on refusal when both refuse its prompt, and prints the fallback counts', async () => {
     const set = writeProbedSet(join(root, 'fs'), [probedConversation('fallback-support', 120)]);
     const support = (q: string) => q.includes('<question>');

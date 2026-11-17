@@ -1119,8 +1119,9 @@ the floor, so its items now count toward `validate.ts`'s stop share; before, it 
 
 Both reports name the fallback and count its usable and unusable replies (`fallback_answers`, `fallback_unusable`). They
 also count those replies by the `stop_details.category` of the Haiku refusal that sent each prompt there
-(`fallback_category_<category>`, with `none` when the refusal had no stop details). The published validation counts
-include them. The candidate report also keeps each unusable reply's stop reason and, for Anthropic, its category, never
+(`fallback_category_<category>`, with `none` when the refusal had no stop details). Each count is per validator call,
+as for cached replies, so a prompt that several calls hold counts once for each of them. The published validation
+counts include them. The candidate report also keeps each unusable reply's stop reason and, for Anthropic, its category, never
 text; `validate.ts`'s report records only each item's gate (`refusal` or `validator_error`).
 
 **Why claude-sonnet-5-5.** The preregistration's rule is two validators from different families. The fallback answers
