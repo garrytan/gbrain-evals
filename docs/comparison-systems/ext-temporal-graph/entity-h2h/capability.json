@@ -17,7 +17,7 @@
         "dims": 1024,
         "reranker": "gpt-4.1-nano"
       },
-      "notes": "The pinned recipe with both LLM roles set to gpt-6.2-sol for the entity-resolution head-to-head (newest GPT generation the OpenAI API serves on 2026-11-17), on graphiti-core 0.31.2. Embedder and cross-encoder stay at the recipe's values; the cross-encoder runs only in search, which the head-to-head does not call. graphiti-core 0.31.2 treats every GPT model of major version 5 or later as a reasoning model (llm_client/openai_base_client.py _is_reasoning_model), so for gpt-6.2-sol it sends no temperature, reasoning effort none ('auto' resolves to none for GPT 5.1 and later), text.verbosity low, and prompt_cache_options {mode: explicit} with no breakpoint, so no prompt-cache writes are billed. 0.30.2 matched only gpt-5*, o1* and o3*, and sent gpt-6.2-sol a temperature and the API's default effort. Extraction uses the combined node-and-edge prompt (add_episode use_combined_extraction=True by default, new in 0.31)."
+      "notes": "The pinned recipe with both LLM roles set to gpt-6.2-sol for the entity-resolution head-to-head (newest GPT generation the OpenAI API serves on 2026-11-17), on graphiti-core 0.31.2. Embedder and cross-encoder stay at the recipe's values; the cross-encoder runs only in search, which the head-to-head does not call. graphiti-core 0.31.2 treats every GPT model of major version 5 or later as a reasoning model (llm_client/openai_base_client.py _is_reasoning_model), so for gpt-6.2-sol it sends no temperature, text.verbosity low, and prompt_cache_options {mode: explicit} with no breakpoint, so no prompt-cache writes are billed. 0.30.2 matched only gpt-5*, o1* and o3*, and sent gpt-6.2-sol a temperature and the API's default effort. Its default reasoning 'auto' resolves to effort none for GPT 5.1 and later, which gpt-6.2-sol rejects with a 400, so entity_h2h.py sets the client's reasoning to None and no effort is sent: gpt-6.2-sol runs at its API default (preregistration Amendment 3). Extraction uses the combined node-and-edge prompt (add_episode use_combined_extraction=True by default, new in 0.31)."
     }
   },
   "time": "native",
@@ -75,7 +75,7 @@
   },
   "streaming": "disabled",
   "provider_routes": [
-    "POST /v1/responses (structured extraction and summaries, responses.parse; gpt-6.2-sol, reasoning effort none, text.verbosity low, prompt_cache_options explicit)",
+    "POST /v1/responses (structured extraction and summaries, responses.parse; gpt-6.2-sol, no reasoning effort (API default), text.verbosity low, prompt_cache_options explicit)",
     "POST /v1/chat/completions (cross-encoder reranker with logprobs; search only, not called by the head-to-head)",
     "POST /v1/embeddings"
   ],
@@ -96,7 +96,8 @@
     "Episode name = opaque source_id (or source_id#turn) so provenance and deletion map back to sessions through public node APIs; names are not shown to any prompt.",
     "group_id = opaque namespace id instead of 'locomo_experiment_user_<idx>'.",
     "Retrieval follows the shootout's two policies over Graphiti.search_() rather than Zep's two-search recipe, which is recorded under vendor_benchmark_reference; the edge validity window travels in valid_from/valid_to instead of being printed into the text.",
-    "Provider clients are constructed explicitly with the configured models and OPENAI_BASE_URL rather than relying on Graphiti()'s implicit defaults; for SHIM_CONFIG=recipe the values are identical."
+    "Provider clients are constructed explicitly with the configured models and OPENAI_BASE_URL rather than relying on Graphiti()'s implicit defaults; for SHIM_CONFIG=recipe the values are identical.",
+    "entity-h2h only: entity_h2h.py sets the OpenAI client's reasoning to None after the adapter builds it, because graphiti-core 0.31.2's default 'auto' resolves to effort none for gpt-6 models and gpt-6.2-sol rejects none with a 400 (https://github.com/getzep/graphiti/blob/v0.31.2/graphiti_core/llm_client/openai_base_client.py _resolve_reasoning_effort, unchanged on main as of 2026-11-18, no upstream fix; the client's docstring documents that explicit values, None included, pass through unchanged). No effort is sent, so gpt-6.2-sol runs at its API default (preregistration Amendment 3)."
   ],
   "entity_readout": {
     "endpoint": "GET /entities?ns=",
