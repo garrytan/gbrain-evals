@@ -154,6 +154,27 @@ describe('entity-h2h ubicloud run.sh, with a fake runner', () => {
     expect(JSON.parse(readFileSync(join(f.cells, 't9', 'choice.json'), 'utf8')).setting).toBe(names[1]);
   });
 
+  // Value: protects=Amendment 4, ext-extract-first's ingest drains each page so its last /finish fits the timeout and the 345-page checkpoint sees its extraction spend; fails_when=vm-run.sh drops --drain-each for ext-extract-first in run, restart or continue, or passes it to any other system.
+  test('vm-run.sh passes --drain-each to ext-extract-first in every mode, and to no other system', () => {
+    const root = join(dir, 'vm-drain');
+    const bin = join(root, 'bin');
+    mkdirSync(join(root, 'eval/systems'), { recursive: true });
+    mkdirSync(bin, { recursive: true });
+    writeFileSync(join(root, 'eval/systems/bootstrap.sh'), '[ "$1" != proxy ] || mkdir -p "$7"\nexit 0\n');
+    writeFileSync(join(bin, 'bun'), `#!/usr/bin/env bash\ncase "$2" in run|restart|continue) echo "$*" >> "$(dirname "$(dirname "$0")")/calls" ;; esac\nexit 0\n`, { mode: 0o755 });
+    const call = (cell: string, system: string, mode: string) => {
+      const r = spawnSync('bash', [join(REPO, 'eval/runner/entity-h2h/ubicloud/vm-run.sh'), cell, system, 'default', '1', mode, '1', '2'], { cwd: root, env: { PATH: `${bin}:${process.env.PATH}`, HOME: join(root, 'home'), ENTITY_H2H_SEED: '424242' }, encoding: 'utf8' });
+      expect(r.status).toBe(0);
+      return readFileSync(join(root, 'calls'), 'utf8').trim().split('\n').at(-1)!;
+    };
+    for (const mode of ['run', 'restart', 'continue']) {
+      const ef = call(`ef-${mode}`, 'ext-extract-first', mode);
+      expect(ef).toStartWith(`eval/runner/entity-h2h/run.ts ${mode} `);
+      expect(ef).toEndWith('--drain-each');
+      for (const other of ['ext-memory-bank', 'ext-graph-pipeline', 'ext-temporal-graph']) expect(call(`${other}-${mode}`, other, mode)).not.toContain('--drain-each');
+    }
+  });
+
   test('the VM scripts parse', () => {
     for (const s of ['run.sh', 'vm-run.sh', 'setup.sh']) expect(spawnSync('bash', ['-n', join(REPO, 'eval/runner/entity-h2h/ubicloud', s)]).status).toBe(0);
   });

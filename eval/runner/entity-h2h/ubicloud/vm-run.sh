@@ -12,7 +12,8 @@
 # (and ~/work/<cell>/choice.json for a tuned cell) on a first run, or from cell/cell.json on a restart or continue, and
 # writes attempt-<n>/stack.env, which this script sources before the stack starts; the runner then refuses
 # (STACK_CONFIG_MISMATCH) unless the shim reports that same setting. The stack and the proxy are stopped before exit,
-# whatever the runner's status, so the final pull reads a ledger nobody is writing. Exit status: the runner's (0 done,
+# whatever the runner's status, so the final pull reads a ledger nobody is writing. ext-extract-first, and no other
+# system, runs with --drain-each in every mode (preregistration Amendment 4). Exit status: the runner's (0 done,
 # 2 refusal, 3 error, 4 paused, 5 failed (infrastructure)).
 set -uo pipefail
 cell=${1:?cell}; system=${2:?system}; config=${3:?config}; lease=${4:?lease}; mode=${5:?mode}; attempt=${6:?attempt}; stop=${7:-none}; per_family=${8:-20}
@@ -41,6 +42,7 @@ bun eval/runner/entity-h2h/run.ts stack-env "${stack[@]}" > "$A/stack.env" || ex
 set -a; . "$A/stack.env"; set +a
 bash eval/systems/bootstrap.sh up --system "$system" --config entity-h2h --port 8700 || exit 3
 paid=(--shim http://127.0.0.1:8700 --proxy http://127.0.0.1:8787 --budget-ledger "$A/lease.sqlite" --budget-run-id "$run_id" --usage-log "$A/usage.ndjson")
+[ "$system" != ext-extract-first ] || paid+=(--drain-each)
 case $mode in
   run) bun eval/runner/entity-h2h/run.ts run --system "$system" --config "$config" ${choice[@]+"${choice[@]}"} --world "$W" --output "$C" "${paid[@]}" ;;
   restart) bun eval/runner/entity-h2h/run.ts restart --output "$C" "${paid[@]}" ;;
