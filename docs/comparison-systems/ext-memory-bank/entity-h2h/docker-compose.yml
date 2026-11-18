@@ -1,4 +1,4 @@
-# Hindsight 0.10.2 behind the shootout shim (eval/systems/PROTOCOL.md), entity-h2h configuration (gpt-6.2-sol and
+# Hindsight 1.2.1 behind the shootout shim (eval/systems/PROTOCOL.md), entity-h2h configuration (gpt-6.2-sol and
 # GET /entities). bootstrap.sh uses this file for --config entity-h2h; the pinned configurations use ../docker-compose.yml.
 #
 #   SHIM_CONFIG=entity-h2h  PROXY_URL=http://<metering proxy host:port>  docker compose up -d --build
@@ -34,7 +34,7 @@ services:
     networks: [internal]
 
   hindsight:
-    image: ghcr.io/vectorize-io/hindsight:0.10.2@sha256:d1840062a5b79940ab7a9f4809ceb90fc776d4ad737cd9329e9b5836cc64ab70
+    image: ghcr.io/vectorize-io/hindsight:1.2.1@sha256:d2bc230a714e933affd63753e181a0579328fdcbbc021800a76e0bc7b6e76b31
     env_file: ["hindsight.entity-h2h.env"]
     environment:
       HINDSIGHT_API_DATABASE_URL: postgresql://hindsight:hindsight@db:5432/hindsight

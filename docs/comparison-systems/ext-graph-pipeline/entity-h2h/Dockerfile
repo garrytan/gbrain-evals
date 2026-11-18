@@ -1,5 +1,5 @@
-# Cognee 1.6.2 shim image for the entity-resolution head-to-head (SHIM_CONFIG=entity-h2h): the pinned lock and adapter,
-# unchanged, plus entity_h2h.py. Build context is the repository root:
+# Cognee 1.6.8 shim image for the entity-resolution head-to-head (SHIM_CONFIG=entity-h2h): this directory's lock, the
+# pinned adapter (../shim.py) unchanged, plus entity_h2h.py. Build context is the repository root:
 #   docker build -f docs/comparison-systems/ext-graph-pipeline/entity-h2h/Dockerfile .
 FROM python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d
 COPY --from=ghcr.io/astral-sh/uv:0.12.3@sha256:2d890623d310b57771ce840f0da5eed5fc6d657da05ffaa45d82797b53fa3abc /uv /usr/local/bin/uv
@@ -8,8 +8,9 @@ ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_PYTHON_DOWNLOADS=never \
     PATH=/app/cognee/.venv/bin:$PATH \
     TIKTOKEN_CACHE_DIR=/opt/tiktoken
 WORKDIR /app/cognee
-COPY docs/comparison-systems/ext-graph-pipeline/pyproject.toml docs/comparison-systems/ext-graph-pipeline/uv.lock ./
+COPY docs/comparison-systems/ext-graph-pipeline/entity-h2h/pyproject.toml docs/comparison-systems/ext-graph-pipeline/entity-h2h/uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project \
+ && python -c "import importlib.metadata as m; assert m.version('cognee') == '1.6.8'" \
  && python -c "import tiktoken; [tiktoken.get_encoding(e) for e in ('cl100k_base', 'o200k_base')]"
 
 COPY eval/systems/_shim/shim.py /app/_shim/shim.py

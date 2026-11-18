@@ -7,12 +7,12 @@
  *              pageKeys normalises them;
  *   companies  the full strict-folded name, the company name core (the variant fold, which drops trailing legal
  *              suffixes), and any shared key (domain from `domain` or the `website` host, LinkedIn).
- * A person page and a company page are never a pair.
+ * A person page and a company page are never a pair, whatever keys they share.
  *
  * Crowded keys: a key value held by more than MAX_BLOCK_PAGES (50) pages is DROPPED and makes no pairs, as the
- * 2026-11-17 smoke did; every dropped key is listed with its page count in the blocking record. At the development
- * seed (20261117, 20 per family) no key passes 50 pages, so nothing is dropped there: 21,574 pairs, reaching all but
- * 32 of the 972 designed pairs.
+ * 2026-11-17 smoke did; every dropped key is listed with its page count in the blocking record. How many keys are
+ * dropped, how many candidate pairs remain and how many designed pairs they miss depend on the seed and the world's
+ * size, so no count is fixed here: `bun eval/runner/entity-h2h/run.ts dry-run --seed N` prints them for any seed.
  */
 import type { WrittenPage } from '../../generators/person-dedupe-gen.ts';
 import { pageKeys, strictFold, variantFold } from '../person-dedupe.ts';

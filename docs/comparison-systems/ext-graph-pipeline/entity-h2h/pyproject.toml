@@ -1,0 +1,9 @@
+[project]
+name = "shootout-cognee-shim-entity-h2h"
+version = "0.1.0"
+description = "Protocol v1 shim around cognee 1.6.8 for the entity-resolution head-to-head"
+requires-python = "==3.12.*"
+dependencies = ["cognee==1.6.8"]
+
+[tool.uv]
+package = false

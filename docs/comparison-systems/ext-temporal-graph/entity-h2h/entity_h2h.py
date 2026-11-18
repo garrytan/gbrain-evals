@@ -1,6 +1,7 @@
-"""Graphiti shim, SHIM_CONFIG=entity-h2h: the pinned graphiti-core 0.30.2 adapter with gpt-6.2-sol and an entity readout.
+"""Graphiti shim, SHIM_CONFIG=entity-h2h: graphiti-core 0.31.2 under the pinned adapter, with gpt-6.2-sol and an entity readout.
 
-The adapter is the pinned bundle's shim.py, unchanged (copied into the image as graphiti_shim.py); it builds its clients
+The adapter is the pinned bundle's shim.py, unchanged (copied into the image as graphiti_shim.py), which runs on 0.31.2
+as it does for shipped-0.31; the image installs 0.31.2 from this directory's lock. The adapter builds its clients
 from this directory's capability.json, whose only configuration sets both LLM roles to gpt-6.2-sol and keeps the pinned
 recipe's embedder and cross-encoder. This file adds GET /entities (eval/systems/PROTOCOL.md, "Entity readout"), read
 through graphiti-core's public node and edge APIs:
