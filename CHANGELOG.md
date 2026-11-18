@@ -2,6 +2,16 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.255] - 2026-11-18
+
+- The secrets check that runs before a push now accepts two harmless values from the duplicate-finder head-to-head
+  harness: the memory-bank bundle's internal docker-network Postgres URL in that bundle's compose files (the same dummy
+  password its compose file on main already carries), and the sentinel key value `must-not-reach-gbrain` in
+  `test/eval/entity-h2h-cells.test.ts`. Each entry matches only that exact value, ending at a quote, space or line end,
+  so any other password, host, database or key at those paths, or text appended to either value, is still flagged.
+
+- The entity-dedupe head-to-head now has its runner, `bun eval/runner/entity-h2h/run.ts`, built to the preregistration (docs/benchmarks/2026-11-18-entity-dedupe-h2h-preregistration.md). It writes the worlds, holds labels and tuning to the held-out seed 20261118, and drives gbrain, Splink, dedupe, Zingg, the four memory systems and the language-model matcher (frozen blocker, keys on more than 50 pages dropped and listed). It scores every system's neutral output by one rule, and `dry-run` prints each system's pages, pairs, projected cost and stop with no call made. Memory-system cells follow "Spend and safety": a ledger stop, a pause check at 345 pages, reconcile before any restart or continue (refused as `LEDGER_UNRECONCILED` otherwise), one restart from page one, then "failed (infrastructure)". They run detached on Ubicloud through eval/runner/entity-h2h/ubicloud/run.sh, inside the 464 and 208 vCPU lines. Refusals share one format and exit code (eval/runner/runner-refusal.ts), which eval/runner/person-dedupe.ts now uses too. Memory systems run their default configuration only, until a tuned setting reaches their stacks.
+
 ## [0.10.254] - 2026-11-18
 
 - Add five cases where namesakes, coworkers or a founder and their firm can share one account identifier. The [duplicate-finder benchmark](docs/benchmarks/2026-11-18-entity-dedupe-h2h-preregistration.md) now varies LinkedIn paths and GitHub logins by seed and generator version, while version 1 still reproduces the published development receipt.
