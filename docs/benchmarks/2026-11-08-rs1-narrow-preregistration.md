@@ -163,7 +163,7 @@ Systems are named by role. Product identities, images by digest, locks and capab
 
 | Row | Cell id | System and pin | Configuration | Role |
 |---|---|---|---|---|
-| gbrain | `rs1.gbrain-defaults.rs1-stable`, arm `p` | gbrain's newest release at wave A's launch, the highest version tag on gbrain's master: v0.60.733.0 (`6ce7195b44a034f85aec811f11fbf862db376f50`) on 2026-11-16, read again at launch | `rs1-stable`: F6's brain build (`GBRAIN_F6=1`: gbrain's default fact extraction, the quiesce barrier and the fact index) with F6's arm P retrieval (`query` limit 50, token budget 5,500, facts block on), packed to 8,000 cl100k tokens; serve's idle upkeep off (`GBRAIN_IDLE_UPKEEP=off`, amendment of 2026-11-16) | subject |
+| gbrain | `rs1.gbrain-defaults.rs1-stable`, arm `p` | gbrain's newest release at wave A's launch, the highest version tag on gbrain's master: v0.60.740.0 (`82fdd00001833d0cbcc03c3952c3b5635d79dd92`), read on 2026-11-18 (amendment of 2026-11-18) | `rs1-stable`: F6's brain build (`GBRAIN_F6=1`: gbrain's default fact extraction, the quiesce barrier and the fact index) with F6's arm P retrieval (`query` limit 50, token budget 5,500, facts block on), packed to 8,000 cl100k tokens; serve's idle upkeep off (`GBRAIN_IDLE_UPKEEP=off`, amendment of 2026-11-16) | subject |
 | memory-bank server | `rs1.ext-memory-bank.recipe`, `component-b8000` | bundle lock `f54d89df`, capabilities `23a033f4` | `recipe`, exactly as F6 and Q1 ran it, 8,000 tokens | comparator |
 | extract-first server | `rs1.ext-extract-first.common`, `component-b8000` | bundle lock `9777b7a8`, capabilities `0acaff3a` | `common`, Q1's BEAM headline configuration, exactly as F6 and Q1 ran it, 8,000 tokens | comparator |
 | no-memory floor | `rs1.baseline-none.baseline`, `component-b8000` | harness baseline | the question alone | floor, never part of a claim |
@@ -185,8 +185,9 @@ run from a copy with its pin set to that sha and every provider key unset. On 20
 built gbrain on `oven/bun:1.4.4-slim`, which still meets gbrain's `engines` floor of bun 1.4.4. Against the fake upstream it
 brought the gbrain-defaults stack up in F6 mode, ingested two sessions, ran extraction under the recorded cap with the
 safe-chunks repair and the fact index, and answered a query with arm P's settings (`query`, limit 50, token budget 5,500,
-facts block on) that returned a fact first. All 4 tests passed (33 checks, 134 seconds). The smoke measures neither
-ingest cost nor answer quality.
+facts block on) that returned a fact first. All 4 tests passed (33 checks, 134 seconds). At wave A's launch pin,
+v0.60.740.0 (`82fdd000`), it passed the same 4 tests (33 checks) with `GBRAIN_IDLE_UPKEEP=off` (amendment of 2026-11-18).
+The smoke measures neither ingest cost nor answer quality.
 
 **Why arm P.** On F6's S2b (24 sealed BEAM-1M conversations at gbrain `0ccf2bdd`), arm P scored highest of the MCP
 query arms ([F6 scoreboard](2026-10-29-f6-current-master/scoreboard.md)).
@@ -1176,6 +1177,35 @@ branch. The custodian records the commit each pass ran.
 Counted cells still run from `c0edd29635222c41405b76b4ba03643abdce4c48` with `rs1-cells.json` SHA-256
 `1f8d7459654427c93569cb809bb0557de329725769e27735a1f7c795fd42a39e`, and the final verdict from `d927c88f` or later. This
 change touches neither. The next mint window's stop line is recorded on the tracking issue.
+
+### 2026-11-18: wave A's launch pin, gbrain v0.60.740.0
+
+Wave A's launch read gbrain's tags at 17:07 UTC on 2026-11-18: the highest version tag on gbrain's master is v0.60.740.0
+at `82fdd00001833d0cbcc03c3952c3b5635d79dd92`, seven releases after v0.60.733.0. As the first 2026-11-16 amendment says,
+arm `p` moves to it before any counted cell runs, and the pin then holds for wave A, wave B and every particle-1
+re-read. No counted cell has run and no system has answered an RS1 question.
+
+- **What changed.** `RS1_ASSUMPTIONS` in `eval/runner/q1/cells/definitions.ts` names the new pin, `rs1-cells.json` is
+  regenerated with `bun eval/runner/q1/cells/rs1.ts`, `test/eval/rs1-cells.test.ts` checks the new `GBRAIN_SHA`, and
+  `test/fixtures/rs1/wave-a-identity.json` records the gbrain row's new identity. The other three rows keep theirs.
+  Only the pin fields of `rs1-cells.json` change, and its estimate is unchanged. The gbrain row of the systems table
+  and the smoke result above now name the new pin.
+- **The smoke.** The keyless F6 Docker smoke ran at `82fdd000` on the same `oven/bun:1.4.4-slim` image with
+  `GBRAIN_IDLE_UPKEEP=off`, with only its pin and version strings changed, and passed all 4 tests (33 checks). Its
+  `/capabilities` record idle upkeep off, with `maintenance.auto` read back as `false`. gbrain's `engines` floor is
+  still bun 1.4.4. Beside the same smoke at `6ce7195b`, the new build sent the same two claude-haiku-5-5 extraction
+  requests byte for byte, and every one of its other requests matched one the old build sent. It sent one embedding
+  request once where the old build sent it twice.
+- **Ingest rates.** gbrain's conversation segmenting (`src/core/facts/conversation-windows.ts`), its extraction model
+  and its embedding default (voyage-4) are the same in both builds, so `pricing.ts`'s projection keeps stage 1's rates
+  until wave A's ingest receipts measure the new build.
+- **Unchanged.** No bar, margin, N rule, reader, judge, cap or verdict rule changes.
+
+**Code.** Counted cells run from `e65bf230bfc83fc61dcaf537ee634d3b15c8bc16` on the results branch, where
+`eval/runner/q1/cells/rs1-cells.json` has SHA-256 `2ae965815153098a06ea0f454d2a908e1d057503a1870ce390a4cdcc0f7dd559`.
+This replaces `c0edd296` from the amendments above, and `c0edd296` stays an ancestor. Between the two commits, the
+files counted cells execute differ only in this pin (`definitions.ts` and `rs1-cells.json`). Validation keeps the code
+the 2026-11-17 amendment names, and the final verdict still runs from `d927c88f` or later.
 
 ## Disclosures
 

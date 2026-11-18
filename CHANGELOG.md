@@ -56,8 +56,8 @@ This records what each gbrain-evals release changed and what its measurements me
   shape (and keeps asking that window one candidate at a time on later runs), fails a candidate whose own prompt the validator refuses on a new `refusal` gate, and records how each
   unusable reply ended (stop reason, output tokens, content block kinds or HTTP status), never its text.
 - **gbrain's newest release.** RS1's gbrain arm runs gbrain's newest release when wave A launches, in place of the weekly
-  `stable` tag: v0.60.733.0 (`6ce7195b`) on 2026-11-16, read again at launch and then frozen for every counted cell. Only
-  the pin fields of `rs1-cells.json` change, and the keyless F6 Docker test passes at the new pin.
+  `stable` tag: v0.60.740.0 (`82fdd000`), read at wave A's launch on 2026-11-18 and then frozen for every counted cell.
+  Only the pin fields of `rs1-cells.json` change, and the keyless F6 Docker test passes at the new pin.
 - **No idle upkeep in gbrain's cells.** From v0.60.715.0 an idle `gbrain serve` runs gbrain's free maintenance on its
   brain, which in RS1 could happen only when a cell's calls stall and would then change the brain between `/finish` and
   later questions. RS1's gbrain cells set `GBRAIN_IDLE_UPKEEP=off`: every install writes gbrain's own off switch
