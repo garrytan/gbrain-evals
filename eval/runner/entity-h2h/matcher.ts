@@ -93,7 +93,7 @@ export async function ask(model: string, prompt: string, proxy: string, slot: st
   return { outcome: 'answer', text, verdict: verdictOf(text), usage, model: json.model ?? null, status: res.status, detail: null };
 }
 
-export interface CallEvent { a: string; b: string; attempt: number; reask: boolean; outcome: Outcome; verdict: 'yes' | 'no' | 'unsure' | null; status: number | null; detail: string | null; answer: string; usage: NormalizedUsage | null; response_model: string | null; ms: number }
+export interface CallEvent { a: string; b: string; attempt: number; reask: boolean; outcome: Outcome | 'pending'; verdict: 'yes' | 'no' | 'unsure' | null; status: number | null; detail: string | null; answer: string; usage: NormalizedUsage | null; response_model: string | null; ms: number }
 
 export interface PairPlan { ask: Array<{ a: string; b: string; reask: boolean }>; settled: number; no_verdict: Array<{ a: string; b: string; why: string }> }
 
@@ -110,7 +110,8 @@ export function planPairs(pairs: ReadonlyArray<readonly [string, string]>, event
     const es = last.get(pairBrain(a, b)) ?? [];
     if (es.some(e => e.outcome === 'answer' || e.outcome === 'safety_stop')) { plan.settled++; continue; }
     if (!logged.has(pairBrain(a, b))) { plan.ask.push({ a, b, reask: false }); continue; }
-    if (es.some(e => e.reask && e.outcome !== 'budget_refused')) { plan.no_verdict.push({ a, b, why: es.at(-1)?.detail ?? 'sent, no verdict, already asked again once' }); continue; }
+    const orphan = es.some(p => p.reask && p.outcome === 'pending' && !es.some(x => x.reask && x.outcome !== 'pending' && x.attempt === p.attempt));
+    if (orphan || es.some(e => e.reask && e.outcome !== 'budget_refused' && e.outcome !== 'pending')) { plan.no_verdict.push({ a, b, why: es.at(-1)?.detail ?? 'sent, no verdict, already asked again once' }); continue; }
     plan.ask.push({ a, b, reask: true });
   }
   return plan;

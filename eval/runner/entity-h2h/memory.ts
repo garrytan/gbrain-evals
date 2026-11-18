@@ -89,6 +89,8 @@ export async function runMemoryAttempt(o: MemoryAttemptOptions): Promise<Attempt
 
   const fin = await proxy.around(system, 'finish', () => client.finishIngest(ns, 3600));
   if (fin.error) return end('crashed', `finish failed: ${String((fin.error as Error).message ?? fin.error).slice(0, 300)}`);
+  const finErrors = (fin.value!.raw as { errors?: unknown[] } | undefined)?.errors ?? [];
+  if (!fin.value!.ready || fin.value!.completeness === 'degraded' || finErrors.length) return end('crashed', `finish reported ready ${fin.value!.ready}, completeness ${fin.value!.completeness}, ${finErrors.length} errors: ${String(finErrors.join('; ')).slice(0, 300)}`);
   const ent = await proxy.around(system, 'entities', async () => {
     const res = await fetch(`${o.shim.replace(/\/$/, '')}/entities?ns=${ns}`);
     const json = await res.json() as EntitiesResponse & { error?: { message: string } };

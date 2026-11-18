@@ -193,6 +193,14 @@ function paidOf(a: Args, dir: string): { paid: PaidRun; proxy: string } {
   return { proxy: a.need('--proxy'), paid: { budget_ledger: storePath(dir, a.need('--budget-ledger')), run_id: a.need('--budget-run-id'), usage_log: storePath(dir, a.need('--usage-log')) } };
 }
 
+/** The proxy at --proxy must be the lease proxy writing this paid run, so its spend lands in the ledger the stop is checked against. */
+async function checkProxy(proxy: string, dir: string, paid: PaidRun): Promise<void> {
+  const st = await fetch(`${proxy.replace(/\/$/, '')}/__proxy/status`).then(r => r.json() as Promise<{ mode?: string; run_id?: string | null; lease_usd?: number }>, () => null);
+  const budget = runBudget(dir, paid);
+  if (!st || st.mode !== 'lease' || st.run_id !== paid.run_id || Math.abs((st.lease_usd ?? -1) - budget) > 1e-9)
+    throw new Error(`entity-h2h: the proxy at ${proxy} serves ${st ? `run ${st.run_id} (${st.mode}, lease ${st.lease_usd})` : 'no status'}, not run ${paid.run_id} with its lease of ${usd(budget)}; point --proxy at the proxy started with --run-id ${paid.run_id}`);
+}
+
 /** The lease must hold no more than what is left of the cell's stop, and each attempt is its own paid run. */
 function checkLease(dir: string, s: CellState, paid: PaidRun, prior: number): void {
   if (s.attempts.some(x => x.paid.run_id === paid.run_id)) throw new Error(`entity-h2h: paid run ${paid.run_id} already paid for an attempt of this cell; open each restart, continue or resume as its own paid run`);
@@ -277,6 +285,7 @@ export async function memoryCell(mode: 'run' | 'restart' | 'continue', a: Args, 
   }
   const { paid, proxy } = paidOf(a, dir);
   checkLease(dir, s, paid, prior);
+  await checkProxy(proxy, dir, paid);
   const label = (s as CellState & { label: string }).label;
   const release = lockCell(dir);
   try {
@@ -334,6 +343,7 @@ export async function matcherCell(mode: 'run' | 'resume', a: Args, log: (s: stri
   const model = s.model as MatcherModel;
   const { paid, proxy } = paidOf(a, dir);
   checkLease(dir, s, paid, prior);
+  await checkProxy(proxy, dir, paid);
   const pairs = blockPairs(w.pages.map(p => p.written)).pairs;
   log(`llm-matcher ${model}: ${count(pairs.length)} candidate pairs (logged in pairs.json before any paid call); stop ${usd(s.stop_usd)}, ${usd(prior)} spent before`);
   const release = lockCell(dir);
@@ -351,6 +361,7 @@ export async function matcherCell(mode: 'run' | 'resume', a: Args, log: (s: stri
       while (!stopped && next < plan.ask.length) {
         const { a: pa, b: pb, reask } = plan.ask[next++];
         const t0 = performance.now();
+        if (reask) appendFileSync(join(dir, 'calls.jsonl'), JSON.stringify({ a: pa, b: pb, attempt: attempt.n, reask, outcome: 'pending', verdict: null, status: null, detail: 'asked again; no result recorded', answer: '', usage: null, response_model: null, ms: 0 } satisfies CallEvent) + '\n');
         const r = await ask(model, pairPrompt(template, text.get(pa)!, text.get(pb)!), proxy, slot, pairBrain(pa, pb), fetchImpl);
         const ev: CallEvent = { a: pa, b: pb, attempt: attempt.n, reask, outcome: r.outcome, verdict: r.verdict, status: r.status, detail: r.detail, answer: r.text.slice(0, 600), usage: r.usage, response_model: r.model, ms: Math.round(performance.now() - t0) };
         appendFileSync(join(dir, 'calls.jsonl'), JSON.stringify(ev) + '\n');
@@ -385,7 +396,7 @@ export async function matcherCell(mode: 'run' | 'resume', a: Args, log: (s: stri
     const correct = direct.filter(e => (designed.get(pairId(e.a, e.b))!.label === 'same') === (e.verdict === 'yes') && e.verdict !== null && e.verdict !== 'unsure').length;
     const spend = s.attempts.reduce((t, x) => t + runSpend(dir, x.paid), 0);
     writeFileSync(join(dir, 'summary.json'), JSON.stringify({
-      model, prompt_sha256: sha256, pairs: pairs.length, outcomes, no_verdict: after.no_verdict, asked_again: events.filter(e => e.reask).length,
+      model, prompt_sha256: sha256, pairs: pairs.length, outcomes, no_verdict: after.no_verdict, asked_again: events.filter(e => e.reask && e.outcome !== 'pending').length,
       errors_before_closure: { yes_on_must_not_link: direct.filter(e => e.verdict === 'yes' && designed.get(pairId(e.a, e.b))!.label === 'different').length, no_on_must_link: direct.filter(e => e.verdict === 'no' && designed.get(pairId(e.a, e.b))!.label === 'same').length },
       designed_pairs_decided: direct.length, correct_decisions: correct, spend_usd: spend, usd_per_correct_decision: correct ? spend / correct : null,
     }, null, 2) + '\n');

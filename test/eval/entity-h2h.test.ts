@@ -186,6 +186,14 @@ describe('matcher', () => {
     expect(planPairs([['a', 'b']], [ev('error', false), ev('budget_refused', true)], sent).ask).toEqual([{ a: 'a', b: 'b', reask: true }]);
     expect(planPairs([['a', 'b']], [ev('error', false), ev('error', true)], sent).no_verdict).toHaveLength(1);
   });
+
+  // Value: protects=the one re-ask cap across a crash mid-send; fails_when=a re-ask whose result was never recorded is sent a third time
+  test('a re-ask marked pending with no recorded result counts as the one re-ask, unless its attempt recorded a budget refusal', () => {
+    const ev = (outcome: CallEvent['outcome'], reask: boolean, attempt = 1): CallEvent => ({ a: 'a', b: 'b', attempt, reask, outcome, verdict: null, status: null, detail: 'x', answer: '', usage: null, response_model: null, ms: 0 });
+    const sent = new Set([pairBrain('a', 'b')]);
+    expect(planPairs([['a', 'b']], [ev('error', false), ev('pending', true, 2)], sent).no_verdict).toHaveLength(1);
+    expect(planPairs([['a', 'b']], [ev('error', false), ev('pending', true, 2), ev('budget_refused', true, 2)], sent).ask).toEqual([{ a: 'a', b: 'b', reask: true }]);
+  });
 });
 
 describe('memory readout', () => {

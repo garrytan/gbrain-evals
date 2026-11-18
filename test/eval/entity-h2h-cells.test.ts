@@ -31,7 +31,7 @@ const fakeProvider = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: async re
 } });
 
 /** The fake memory system: each ingest makes one provider call through the proxy's slot; /entities makes one node per page title. */
-const shim = { failAt: 0, finishMaxTokens: 0, system: 'ext-memory-bank', proxy: '', nsOrder: [] as string[], ingests: new Map<string, string[]>() };
+const shim = { failAt: 0, finishMaxTokens: 0, finishDegraded: false, system: 'ext-memory-bank', proxy: '', nsOrder: [] as string[], ingests: new Map<string, string[]>() };
 const fakeShim = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: async req => {
   const path = new URL(req.url).pathname;
   const body = req.method === 'POST' ? await req.json() as any : {};
@@ -49,6 +49,7 @@ const fakeShim = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: async req =>
   }
   if (path === '/finish') {
     if (shim.finishMaxTokens) await fetch(`${shim.proxy}/${shim.system}/openai/v1/chat/completions`, { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer dummy' }, body: JSON.stringify({ model: 'gpt-6.2-sol', max_tokens: shim.finishMaxTokens, messages: [{ role: 'user', content: 'consolidate' }] }) });
+    if (shim.finishDegraded) return Response.json({ ready: true, waited_ms: 0, completeness: 'degraded', errors: ['fake: 94 queued imports failed'] });
     return Response.json({ ready: true, waited_ms: 0, completeness: 'known' });
   }
   if (path === '/entities') {
@@ -82,7 +83,7 @@ function leaseProxy(runId: string, leaseUsd: number) {
 }
 const shimArgs = () => ['--shim', `http://127.0.0.1:${fakeShim.port}`];
 const world = (name: string, seed: number, perFamily: number) => { const d = join(tmp, name); writeH2hWorld(d, seed, perFamily); return d; };
-const reset = (tokens: number, failAt = 0) => { upstream.tokens = tokens; upstream.n = 0; upstream.reply = () => ({ status: 200 }); shim.failAt = failAt; shim.finishMaxTokens = 0; shim.nsOrder = []; shim.ingests = new Map(); };
+const reset = (tokens: number, failAt = 0) => { upstream.tokens = tokens; upstream.n = 0; upstream.reply = () => ({ status: 200 }); shim.failAt = failAt; shim.finishMaxTokens = 0; shim.finishDegraded = false; shim.nsOrder = []; shim.ingests = new Map(); };
 
 describe('memory-system cells', () => {
   test('a cell ingests every page in the fixed order, writes the neutral output and a hand-check sample, and scores', async () => {
@@ -159,6 +160,20 @@ describe('memory-system cells', () => {
     const s = readCell(out)!;
     expect([s.status, s.attempts[0].status, s.attempts[0].done]).toEqual(['open', 'paused', 94]);
     expect(s.attempts[0].reason).toMatch(/^ledger stop: .*swallowed/);
+    expect(existsSync(join(out, 'output.json'))).toBe(false);
+  }, 60_000);
+
+  // Value: protects=a partial run is never scored; fails_when=a finish that reports degraded completeness or queued errors completes the cell
+  test('a finish that reports degraded completeness or queued errors ends the attempt as crashed, never complete', async () => {
+    reset(10);
+    shim.finishDegraded = true;
+    const w = world('w-deg', 7, 1), out = join(tmp, 'c-deg');
+    const p = leaseProxy('deg-1', memoryStop('ext-memory-bank', 94).stop_usd);
+    try { expect(await cli(['run', '--system', 'ext-memory-bank', '--config', 'default', '--world', w, '--output', out, ...shimArgs(), ...p.args], quiet)).toBe(3); }
+    finally { p.proxy.stop(); }
+    const s = readCell(out)!;
+    expect([s.status, s.attempts[0].status]).toEqual(['open', 'crashed']);
+    expect(s.attempts[0].reason).toMatch(/completeness degraded, 1 errors/);
     expect(existsSync(join(out, 'output.json'))).toBe(false);
   }, 60_000);
 
@@ -261,6 +276,21 @@ describe('matcher cells', () => {
     expect(await cli(['score', '--world', w, '--json-out', join(tmp, 'm-scores.json'), out], quiet)).toBe(0);
     expect(JSON.parse(readFileSync(join(tmp, 'm-scores.json'), 'utf8')).scores[0].not_a_candidate).not.toBeNull();
   }, 60_000);
+});
+
+describe('proxy binding', () => {
+  // Value: protects=the cell's stop and recorded spend; fails_when=--proxy names a proxy serving another run, so spend bypasses this cell's ledger
+  test('a paid cell refuses a proxy that serves another run, before any call', async () => {
+    reset(10);
+    const w = world('w-px', 7, 1);
+    const mine = leaseProxy('px-mine', 0.05), other = leaseProxy('px-other', 50);
+    try {
+      const args = ['--proxy', other.url, ...mine.args.slice(2)];
+      await expect(cli(['run', '--system', 'llm-matcher', '--model', 'openai:gpt-6.2-sol', '--world', w, '--output', join(tmp, 'c-px'), ...args], quiet)).rejects.toThrow(/serves run px-other .*not run px-mine/);
+      await expect(cli(['run', '--system', 'ext-memory-bank', '--config', 'default', '--world', w, '--output', join(tmp, 'c-px2'), ...shimArgs(), ...args], quiet)).rejects.toThrow(/serves run px-other/);
+      expect(upstream.n).toBe(0);
+    } finally { mine.proxy.stop(); other.proxy.stop(); }
+  });
 });
 
 describe('gbrain driver', () => {
