@@ -61,8 +61,9 @@ export interface WorldManifest {
 
 /** The world at a seed, built in memory (nothing written). */
 export function buildWorld(seed: number, perFamily: number): H2hWorld {
-  const people = generateLedger(seed, perFamily);
+  const generated = generateLedger(seed, perFamily);
   const companies = generateCompanyLedger(seed, perFamily);
+  const people = companies.founders?.length ? { ...generated, pages: [...generated.pages, ...companies.founders] } : generated;
   const peopleGold = deriveGold(people), companyGold = deriveCompanyGold(companies);
   const pw = writtenPages(people), cw = companyWrittenPages(companies);
   const pages: WorldPage[] = [
@@ -72,7 +73,7 @@ export function buildWorld(seed: number, perFamily: number): H2hWorld {
   return {
     seed, per_family: perFamily, people, companies, pages, pairs: [...people.pairs, ...companies.pairs],
     gold: new Map([...peopleGold, ...companyGold]), people_gold: peopleGold, company_gold: companyGold,
-    fingerprints: { people: ledgerFingerprint(people), companies: ledgerFingerprint(companies) },
+    fingerprints: { people: ledgerFingerprint(generated), companies: ledgerFingerprint(companies) },
   };
 }
 

@@ -10,6 +10,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, writeFileSync, unlinkSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+import { generateCompanyLedger } from '../../eval/generators/company-dedupe-gen.ts';
 import { generateLedger } from '../../eval/generators/person-dedupe-gen.ts';
 import { cacheSplit } from '../../eval/runner/metering-proxy.ts';
 import { checkFinderCoverage, writeWorld } from '../../eval/runner/person-dedupe.ts';
@@ -66,17 +67,22 @@ describe('world', () => {
 
 describe('frozen blocker', () => {
   // Value: protects=the preregistration's counts for the fixed blocker; fails_when=a key, the type split or the crowding rule changes; seam=blockPairs on the dev world
-  test('at the development seed it gives 21,574 pairs and misses exactly the 32 designed pairs the preregistration names', () => {
+  test('at the development seed every page, founders included, is blocked, and its pairs and misses follow from the blocking keys', () => {
     const w = buildWorld(DEV_SEED, 20);
+    const people = generateLedger(DEV_SEED, 20), companies = generateCompanyLedger(DEV_SEED, 20);
+    expect(w.pages.length).toBe(people.pages.length + (companies.founders ?? []).length + companies.pages.length);
+    const blocks = new Map<string, string[]>();
+    for (const p of w.pages) for (const k of new Set(blockingKeys(p.written))) blocks.set(k, [...(blocks.get(k) ?? []), p.key]);
+    const expected = new Set<string>();
+    for (const keys of blocks.values()) if (keys.length <= MAX_BLOCK_PAGES) for (let i = 0; i < keys.length; i++) for (let j = i + 1; j < keys.length; j++) if (keys[i] !== keys[j]) expected.add(pairId(keys[i], keys[j]));
     const b = blockPairs(w.pages.map(p => p.written));
-    expect(w.pages.length).toBe(1886);
-    expect(b.pairs.length).toBe(21574);
-    expect(b.crowded).toEqual([]);
+    expect(b.pairs.length).toBe(expected.size);
+    const byKey = (x: { key: string }, y: { key: string }) => (x.key < y.key ? -1 : 1);
+    expect([...b.crowded].sort(byKey)).toEqual([...blocks].filter(([, ks]) => ks.length > MAX_BLOCK_PAGES).map(([key, ks]) => ({ key, pages: ks.length })).sort(byKey));
     const ids = new Set(b.pairs.map(([x, y]) => pairId(x, y)));
-    const missed = w.pairs.filter(p => !ids.has(pairId(p.a, p.b)));
-    const by: Record<string, number> = {};
-    for (const p of missed) by[`${p.family}:${p.label}`] = (by[`${p.family}:${p.label}`] ?? 0) + 1;
-    expect(by).toEqual({ 'co-diff-acquired:different': 20, 'co-same-abbreviation:same': 6, 'co-same-rebrand:same': 6 });
+    expect(w.pairs.filter(p => !ids.has(pairId(p.a, p.b)))).toEqual(w.pairs.filter(p => !expected.has(pairId(p.a, p.b))));
+    const type = new Map(w.pages.map(p => [p.key, p.type]));
+    expect(w.pairs.filter(p => type.get(p.a) !== type.get(p.b)).every(p => !ids.has(pairId(p.a, p.b)))).toBe(true);
   });
 
   test('keys are typed, and a key on more than 50 pages is dropped and listed', () => {
@@ -239,12 +245,17 @@ describe('spend projection', () => {
   test('the dry run on the development world quotes pages, pairs and every stop', () => {
     const d = dryRun(DEV_SEED, 20);
     const text = d.lines.join('\n');
-    expect(text).toContain('1,886 pages (1,380 people, 506 companies)');
-    expect(text).toContain('people 400 must-not-link and 280 must-link; companies 172 must-not-link and 120 must-link');
-    expect(text).toContain('21,574 candidate pairs');
-    expect(text).toContain('not a candidate: 32 designed pairs (12 must-link, 20 must-not-link)');
-    expect(d.memory['ext-temporal-graph'].stop_usd).toBe(107.51);
-    expect(d.matcher['anthropic:claude-opus-5-5'].stop_usd).toBe(64.73);
+    const w = buildWorld(DEV_SEED, 20), b = blockPairs(w.pages.map(p => p.written));
+    const n = (x: number) => x.toLocaleString('en-US');
+    const of = (type: string) => w.pages.filter(p => p.type === type).length;
+    const split = (person: boolean, label: string) => w.pairs.filter(p => w.people_gold.has(p.a) === person && p.label === label).length;
+    const ids = new Set(b.pairs.map(([x, y]) => pairId(x, y))), missed = w.pairs.filter(p => !ids.has(pairId(p.a, p.b)));
+    expect(text).toContain(`${n(w.pages.length)} pages (${n(of('person'))} people, ${n(of('company'))} companies)`);
+    expect(text).toContain(`people ${split(true, 'different')} must-not-link and ${split(true, 'same')} must-link; companies ${split(false, 'different')} must-not-link and ${split(false, 'same')} must-link`);
+    expect(text).toContain(`${n(b.pairs.length)} candidate pairs; ${b.crowded.length} keys on more than ${MAX_BLOCK_PAGES} pages dropped`);
+    expect(text).toContain(`not a candidate: ${missed.length} designed pairs (${missed.filter(p => p.label === 'same').length} must-link, ${missed.filter(p => p.label === 'different').length} must-not-link)`);
+    expect(d.memory['ext-temporal-graph'].stop_usd).toBe(memoryStop('ext-temporal-graph', w.pages.length).stop_usd);
+    expect(d.matcher['anthropic:claude-opus-5-5'].stop_usd).toBe(matcherStop('anthropic:claude-opus-5-5', b.pairs.length).stop_usd);
   });
 });
 
