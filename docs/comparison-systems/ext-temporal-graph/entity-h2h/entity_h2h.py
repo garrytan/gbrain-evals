@@ -13,6 +13,12 @@ through graphiti-core's public node and edge APIs:
   name is the source id, as the pinned shim names it.
 - links: IS_DUPLICATE_OF facts between two surviving nodes, which Graphiti records when its dedupe prompt names an
   existing node as a duplicate without reusing it; tier "proposed", since both nodes stay separate.
+
+Reasoning effort: graphiti-core 0.31.2's OpenAI client defaults to reasoning 'auto', which its
+_resolve_reasoning_effort turns into 'none' for every gpt-6 model, and gpt-6.2-sol rejects 'none' with a 400
+(preregistration Amendment 3). _connect sets the adapter's client to reasoning=None once the adapter has built it,
+which the client's docstring documents as passing through unchanged, so no effort is sent and gpt-6.2-sol runs at its
+API default, the request shape the 0.30.2 smoke sent. Everything else the adapter builds is unchanged.
 """
 from __future__ import annotations
 
@@ -43,6 +49,11 @@ class EntityReadoutAdapter(base.GraphitiAdapter):
             "notes": "EntityNode.get_by_group_ids; MENTIONS per episode through search_utils.get_mentioned_nodes; "
                      "IS_DUPLICATE_OF from EntityEdge.get_by_group_ids",
         }
+
+    async def _connect(self) -> Any:
+        graphiti = await super()._connect()
+        graphiti.llm_client.reasoning = None
+        return graphiti
 
     def entities(self, ns: str) -> dict[str, Any]:
         with self._lock(ns):
