@@ -37,7 +37,7 @@ describe('rs1-cells.json', () => {
     const f6 = JSON.parse(readFileSync(join(ROOT, 'eval/runner/q1/cells/f6-cells.json'), 'utf8')).cells.find((c: CellDefinition) => c.system === 'gbrain-defaults').arms.find((a: { id: string }) => a.id === 'p');
     expect([g.arms[0].retrieval, g.arms[0].policy]).toEqual([f6.retrieval, f6.policy]);
     expect(g.launch?.env.GBRAIN_F6).toBe('1');
-    expect(g.launch?.env.GBRAIN_SHA).toBe('6ce7195b44a034f85aec811f11fbf862db376f50');
+    expect(g.launch?.env.GBRAIN_SHA).toBe('82fdd00001833d0cbcc03c3952c3b5635d79dd92');
     expect(g.launch?.env.GBRAIN_IDLE_UPKEEP).toBe('off');
     expect(Number(g.launch?.env.GBRAIN_F6_EXTRACT_CAP_USD)).toBeGreaterThan(0);
     expect(m.waves.A.length).toBe(16);
