@@ -1,0 +1,1 @@
+- The agent guides (AGENTS.md and CLAUDE.md) name `gpt-6.2-sol` as the newest frontier GPT that model-comparison runs test, now that OpenAI's API serves it. Results measured on `gpt-6.1-sol`, and judges a protocol fixes to it, keep that name.
