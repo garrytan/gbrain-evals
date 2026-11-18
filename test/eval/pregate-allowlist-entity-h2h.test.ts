@@ -34,11 +34,14 @@ describe('secrets allowlist: the entity-dedupe head-to-head harness', () => {
       `postgresql://${product}:${product}@db:5432/other`,
       `postgresql://admin:admin@db:5432/admin`,
       `postgresql://${product}:${product}x@db:5432/${product}`,
+      `postgresql://${product}:${product}@db:5432/${product}?password=hunter2`,
+      `postgresql://${product}:${product}@db:5432/${product}/hunter2`,
     ]) expect(covers(dbUrl, url)).toBe(false);
   });
 
   test("covers the harness test's sentinel key value, in that test file only", () => {
     expect(covers(sentinel, "must-not-reach-gbrain';")).toBe(true);
+    for (const value of ['must-not-reach-gbrain.hunter2', 'must-not-reach-gbrain:hunter2', 'must-not-reach-gbrain/hunter2']) expect(covers(sentinel, value)).toBe(false);
     expect(sentinel.paths).toEqual(['test/eval/entity-h2h-cells.test.ts']);
     expect(inScope(sentinel, 'test/eval/entity-h2h.test.ts')).toBe(false);
   });
