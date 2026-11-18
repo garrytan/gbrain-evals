@@ -289,7 +289,7 @@ export function emulateFinder(pages: readonly WrittenPage[], rule: CleanRule = {
     const sharedTypes = new Set(shared.map(typeOf));
     const role = type === 'email' && isRoleEmail(value) && !(rule.singlePersonDomain && domainNames.get(value.slice(value.indexOf('@') + 1))!.size === 1);
     const employer = ps.every(p => p.company !== null && p.company === ps[0].company);
-    const clean = new Set(ps.map(p => strictFold(p.title))).size === 1
+    const clean = new Set(ps.map(p => strictFold(p.title))).size === 1 && new Set(ps.map(p => p.type)).size === 1
       && new Set(ps.map(p => p.source)).size === ps.length && kindOf(members) === 'cross_source'
       && !(rule.noRole && role)
       && !(rule.twoKeyTypes && sharedTypes.size < 2)

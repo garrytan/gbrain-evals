@@ -150,6 +150,11 @@ describe('finder contract emulator', () => {
 });
 
 describe('clean-rule arms', () => {
+  test('a person and a company sharing an exclusive id never form a clean group, under any arm', () => {
+    const li = 'https://www.linkedin.com/in/ada-founder';
+    const pages = [{ ...page('work', 'ada-lark', 'Ada Lark'), linkedin: li }, company('home', 'ada-lark', 'Ada Lark', [], li)];
+    for (const [, a] of Object.entries(ARMS)) expect(emulateFinder(pages, a.rule).groups.filter(g => g.class === 'clean')).toEqual([]);
+  });
   const pair = (title: string, emails: string[], li?: [string, string]) => [
     { ...page('a', 'x', title, emails), linkedin: li ? `https://www.linkedin.com/in/${li[0]}` : null },
     { ...page('b', 'x', title, emails), linkedin: li ? `https://www.linkedin.com/in/${li[1]}` : null },
