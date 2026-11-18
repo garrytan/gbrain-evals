@@ -2,6 +2,12 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.252] - 2026-11-18
+
+README's results tables now say which direction is better on every row whose direction wasn't plain. The permission row
+says it counts leaks of finance-only text that the agent's user isn't allowed to see, fewer is better, and its headline
+reads "100 → 0 leaking runs". No number changed ([README](README.md#current-results)).
+
 ## [0.10.251] - 2026-11-18
 
 ### Engine-bench's launcher logs and resumed runs are more robust
