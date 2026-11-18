@@ -120,7 +120,10 @@ both sources simply list the same node. A system without the route answers the `
 }
 ```
 
-`answer` is present only on a system that serves `POST /answer`.
+`answer` is present only on a system that serves `POST /answer`. `entity_readout` is present only on a system that
+serves `GET /entities` and says how its shim builds the readout: `endpoint`, `entities` (the vendor API the nodes come
+from), `provenance` (how each node's sources are found), `links` (each vendor link name and the tier it maps to, empty
+when the system keeps no such link) and `merge` (what the system does with a mention of a node it already has).
 
 The active configuration is chosen at container start with `SHIM_CONFIG=recipe|common`; `/capabilities` reports both
 and `/health` reports the active one.
