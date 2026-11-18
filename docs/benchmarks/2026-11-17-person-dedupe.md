@@ -86,7 +86,7 @@ Seed 20261117, generator version 1, ledger `14877e8e396c`. Intervals are Wilson 
 | 6 + union | 6.5% (26/400; 4.5 to 9.4) | 44.3% (124/280; 38.6 to 50.1) | same as arm 2b | same as arm 2b | household 13, no-role alias 13 |
 | 7 (union built in) | 0.0% (0/400; 0.0 to 1.0) | 17.1% (48/280; 13.2 to 22.0) | same as arm 2b | same as arm 2b | none |
 
-**The confirm list.** Arm 7 moves every email-only match to a list of cross-source `likely` groups held by a shared email. On this world that list holds 76 real-duplicate pairs and 52 different-people pairs (13 from each of the four shared-address families; the LinkedIn veto removes the other 7 of each 20). Confirming the whole list in one go gives 13.0% false merges (52/400; 10.1 to 16.7) and 44.3% recall (124/280; 38.6 to 50.1), the same totals as arm 6 with the union check, which links 26 of those pairs without asking. The list is only safer if someone reads it. Bridge pages never reach it: the union check drops them to `likely` on id evidence, not email.
+**The confirm list.** Arm 7 moves every email-only match to a list of cross-source `likely` groups held by a shared email, which gbrain's finder marks `contact_key_only` (the bench scores the real finder's list by that mark). On this world that list holds 76 real-duplicate pairs and 52 different-people pairs (13 from each of the four shared-address families; the LinkedIn veto removes the other 7 of each 20). Confirming the whole list in one go gives 13.0% false merges (52/400; 10.1 to 16.7) and 44.3% recall (124/280; 38.6 to 50.1), the same totals as arm 6 with the union check, which links 26 of those pairs without asking. The list is only safer if someone reads it. Bridge pages never reach it: the union check drops them to `likely` on id evidence, not email.
 
 What drives the numbers:
 
@@ -129,13 +129,15 @@ bun eval/runner/person-dedupe.ts --output eval/reports/person-dedupe
 bun test test/eval/person-dedupe.test.ts
 ```
 
-The run takes about two seconds, uses no key and no network, and writes `eval/reports/person-dedupe/receipt.json` with every arm, every family and the ledger's hash (the generator rebuilds the ledger from the seed). To score gbrain's finder once it ships, write the world, import each source into a fresh brain, and score its output:
+The run takes about two seconds, uses no key and no network, and writes `eval/reports/person-dedupe/receipt.json` with every arm, every family and the ledger's hash (the generator rebuilds the ledger from the seed). To score gbrain's finder, write the world into a new, empty folder (the runner refuses a folder that already has files), import each source into a fresh brain, and score its output together with the import summaries (the runner fails unless every page was imported):
 
 ```sh
-bun eval/runner/person-dedupe.ts --write-world /path/to/world
-# import /path/to/world/work and /path/to/world/home as sources work and home, then:
+bun eval/runner/person-dedupe.ts --write-world /path/to/new-world
+gbrain sources add work --path /path/to/new-world/work && gbrain sources add home --path /path/to/new-world/home
+gbrain import /path/to/new-world/work --source work --no-embed --json > imports.jsonl
+gbrain import /path/to/new-world/home --source home --no-embed --json >> imports.jsonl
 gbrain dedupe --preview --json > finder.json
-bun eval/runner/person-dedupe.ts --finder-json finder.json --finder-build <release tag or commit>
+bun eval/runner/person-dedupe.ts --finder-json finder.json --finder-imports imports.jsonl --finder-build <release tag or commit>
 ```
 
 ## Disclosures
