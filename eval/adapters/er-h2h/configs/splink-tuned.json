@@ -1,0 +1,125 @@
+{
+ "name": "tuned",
+ "doc": "https://moj-analytical-services.github.io/splink/demos/examples/duckdb/deduplicate_50k_synthetic.html",
+ "based_on": "Splink 5 example 'Deduplicate 50k rows historical persons' (ForenameSurnameComparison with a concatenated-name column, exact matches with term-frequency adjustments, several blocking rules) and the Getting Started training steps; feature cleaning per https://moj-analytical-services.github.io/splink/topic_guides/data_preparation/feature_engineering.html",
+ "tuning": "Comparisons, blocking and both thresholds were chosen by looking only at the held-out world (seed 20261118); m and u are fitted by EM on whichever world is being scored, unsupervised",
+ "records": {
+  "normalise": true
+ },
+ "settings": {
+  "link_type": "dedupe_only",
+  "comparisons": [
+   {
+    "fn": "ForenameSurnameComparison",
+    "args": [
+     "first_name",
+     "surname"
+    ],
+    "kwargs": {
+     "forename_surname_concat_col_name": "name_concat"
+    }
+   },
+   {
+    "fn": "ArrayIntersectAtSizes",
+    "args": [
+     "emails",
+     [
+      1
+     ]
+    ]
+   },
+   {
+    "fn": "ExactMatch",
+    "args": [
+     "linkedin"
+    ]
+   },
+   {
+    "fn": "ExactMatch",
+    "args": [
+     "github"
+    ]
+   },
+   {
+    "fn": "ExactMatch",
+    "args": [
+     "company"
+    ],
+    "configure": {
+     "term_frequency_adjustments": true
+    }
+   },
+   {
+    "fn": "ExactMatch",
+    "args": [
+     "city"
+    ],
+    "configure": {
+     "term_frequency_adjustments": true
+    }
+   }
+  ],
+  "blocking_rules_to_generate_predictions": [
+   [
+    "surname"
+   ],
+   [
+    "first_name"
+   ],
+   {
+    "on": [
+     "emails"
+    ],
+    "arrays_to_explode": [
+     "emails"
+    ]
+   },
+   [
+    "linkedin"
+   ],
+   [
+    "github"
+   ]
+  ]
+ },
+ "training": [
+  {
+   "step": "estimate_probability_two_random_records_match",
+   "blocking": [
+    [
+     "first_name",
+     "surname"
+    ]
+   ],
+   "recall": 0.7
+  },
+  {
+   "step": "estimate_u_using_random_sampling",
+   "max_pairs": 1000000,
+   "seed": 1
+  },
+  {
+   "step": "estimate_parameters_using_expectation_maximisation",
+   "blocking": [
+    "first_name",
+    "surname"
+   ]
+  },
+  {
+   "step": "estimate_parameters_using_expectation_maximisation",
+   "blocking": [
+    "company"
+   ]
+  }
+ ],
+ "predict": {
+  "threshold_match_weight": -5
+ },
+ "auto": {
+  "tune": "max_pair_f1"
+ },
+ "proposed": {
+  "tune": "lowest_with_precision_at_least:0.5"
+ },
+ "proposed_note": "bench-defined review band, not Splink's: Splink documents no clerical-review range, so the lower threshold is the lowest held-out threshold whose pairwise precision is at least 0.5"
+}

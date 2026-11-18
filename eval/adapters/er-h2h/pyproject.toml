@@ -1,0 +1,10 @@
+[project]
+name = "er-h2h-classic-arms"
+version = "0.1.0"
+description = "Keyless classic entity-resolution arms (Splink, dedupe, Zingg) for the person-dedupe head-to-head"
+requires-python = "==3.12.*"
+# BTrees 6.5 (2026-08-20) removed byValue() from the IF family, which dedupe 3.0.3 calls in its canopy index; 6.4 keeps it.
+dependencies = ["splink==5.0.0", "dedupe==3.0.3", "btrees<6.5"]
+
+[tool.uv]
+package = false
