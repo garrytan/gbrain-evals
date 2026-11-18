@@ -138,7 +138,7 @@ the weekly `stable` tag, the `latest-stable` alias or this repository's `package
 
 gbrain and gstack are built for frontier models, so every model-comparison run (Cat 40 Model Ladder, answer-model
 benchmarks and any paid agent-task eval) tests them on the newest frontier Opus and GPT, today `claude-opus-5-5` and
-`gpt-6.1-sol`, plus `particle-1` as the primary low-cost model. These rules follow the gbrain project rule of
+`gpt-6.2-sol`, plus `particle-1` as the primary low-cost model. These rules follow the gbrain project rule of
 2026-10-07, Garry's decision of 2026-10-31 that `claude-opus-5-5` and `particle-1` are the primary models, and his
 rule of 2026-11-01 that evals test gbrain and gstack on frontier models.
 
@@ -152,13 +152,16 @@ rule of 2026-11-01 that evals test gbrain and gstack on frontier models.
   lists particle-1 under `models_not_run` with the reason. First paired numbers:
   [particle replay](docs/benchmarks/2026-11-01-longmemeval-particle-replay/REPORT.md).
 - **Always run the newest frontier Opus and GPT.** Today's counted frontier readers are `claude-opus-5-5` and
-  `gpt-6.1-sol`. Before a run, check which models are newest (`bun scripts/model-freshness.ts` reads the providers'
-  model lists, Particle's included) and add any that the run doesn't already include. Register a price for a new model
-  in `eval/runner/budget-ledger.ts` so the ledger can reserve it.
+  `gpt-6.2-sol`. The runner's code still names `gpt-6.1-sol` (`FRONTIER_READERS` in `eval/runner/systems/baselines.ts`,
+  which the workload sweep's model check requires) and the ledger has no `gpt-6.2-sol` price yet, so the first run on
+  `gpt-6.2-sol` registers its price and moves `FRONTIER_READERS` in its own change. Before a run, check which models
+  are newest (`bun scripts/model-freshness.ts` reads the providers' model lists, Particle's included) and add any that
+  the run doesn't already include. Register a price for a new model in `eval/runner/budget-ledger.ts` so the ledger can
+  reserve it.
 - **particle-1 never judges a counted cell.** Counted judges stay protocol-matched (for example `gpt-4o-2024-08-06` for
   LongMemEval and `gpt-6.1-sol` for Cat 40 Hard). particle-1 becomes the default reader and agent for a development loop
   once it passes that loop's preregistered agreement test; development judges are the ones the dataset's harness fixes,
-  else `gpt-6.1-sol`.
+  else `gpt-6.2-sol`.
 - **Sonnet and Haiku are not models under test (Garry, 2026-11-01).** A comparison run no longer needs them. Never run
   one as an agent, reader, answer model, optimizer or optimization target, never use one as a stand-in for a frontier
   model, and never spend a run on transfer between them. The exception is a run that asks a question about that tier
@@ -180,7 +183,7 @@ rule of 2026-11-01 that evals test gbrain and gstack on frontier models.
   rather than counting it as a win or a tie.
 - **Preregistered gates keep their model list.** To change the models of an existing preregistered gate, record the
   change and its reason in the preregistration before any new cell runs. A preregistered program that names Sonnet or
-  Haiku as a model under test makes that change before its next run: Opus 5.5, GPT-6.1 Sol and, where the runner has a
+  Haiku as a model under test makes that change before its next run: Opus 5.5, GPT-6.2 Sol and, where the runner has a
   route, particle-1.
 - **Defaults follow the same rules.** A live category's default models are current-generation models, and its default
   models under test are frontier models, never Sonnet or Haiku. `test/eval/model-defaults.test.ts` holds both, for

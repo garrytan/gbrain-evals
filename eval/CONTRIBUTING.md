@@ -5,7 +5,7 @@ Useful contributions make it easier to tell when gbrain helps. You can contribut
 Work from the repository root.
 Install with `bun install --frozen-lockfile`, and run `bun run test` for the tests under `test/eval/` and `eval/`, the Python tests and the validators.
 The gbrain under test is the one `package.json` declares, gbrain's newest release ([the pin](../docs/gbrain-under-test.md#the-pin) names its version and commit); a category scores what gbrain implements at that commit.
-Model-comparison runs follow the model rules in [CLAUDE.md](../CLAUDE.md#choose-models): gbrain and gstack are built for frontier models, so runs test them on the newest frontier Opus and GPT (today `claude-opus-5-5` and `gpt-6.1-sol`) plus `particle-1` as the primary low-cost model, and never use Sonnet or Haiku as a model under test.
+Model-comparison runs follow the model rules in [CLAUDE.md](../CLAUDE.md#choose-models): gbrain and gstack are built for frontier models, so runs test them on the newest frontier Opus and GPT (today `claude-opus-5-5` and `gpt-6.2-sol`) plus `particle-1` as the primary low-cost model, and never use Sonnet or Haiku as a model under test.
 The primary models are `claude-opus-5-5` and `particle-1`, and a runner that calls models supports both (particle-1 through `eval/runner/providers/openai-compatible.ts`) or lists the one it cannot run under `models_not_run`.
 Everything above [Changelog](#changelog) is current.
 
@@ -224,6 +224,11 @@ See [CREDITS.md](CREDITS.md) for attribution. Contributions to external question
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-11-18: Today's frontier GPT is `gpt-6.2-sol`
+
+The model rules name `gpt-6.2-sol` as today's newest frontier GPT (was `gpt-6.1-sol`), matching CLAUDE.md now that
+OpenAI's API serves it.
 
 ### 2026-11-16: The opening links the pin
 
