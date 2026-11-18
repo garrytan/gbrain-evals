@@ -13,9 +13,14 @@ through graphiti-core's public node and edge APIs:
   name is the source id, as the pinned shim names it.
 - links: IS_DUPLICATE_OF facts between two surviving nodes, which Graphiti records when its dedupe prompt names an
   existing node as a duplicate without reusing it; tier "proposed", since both nodes stay separate.
+
+GET /health reports the head-to-head setting the stack started in (ENTITY_H2H_SETTING) under entity_h2h, which the
+runner checks against the cell. graphiti-core documents no knob for its default dedupe (capability.json
+entity_h2h_tuning), so the settings are always empty and only "default" is a valid setting.
 """
 from __future__ import annotations
 
+import os
 from typing import Any
 
 import graphiti_shim as base
@@ -47,6 +52,9 @@ class EntityReadoutAdapter(base.GraphitiAdapter):
     def entities(self, ns: str) -> dict[str, Any]:
         with self._lock(ns):
             return self._run(self._entities(ns))
+
+    def health(self) -> dict[str, Any]:
+        return {**super().health(), "entity_h2h": {"setting": os.environ.get("ENTITY_H2H_SETTING", "default"), "settings": {}}}
 
 
 if __name__ == "__main__":

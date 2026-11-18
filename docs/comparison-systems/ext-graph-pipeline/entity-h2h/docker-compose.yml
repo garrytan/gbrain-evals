@@ -27,6 +27,7 @@ services:
     image: shootout-cognee:entity-h2h
     environment:
       SHIM_CONFIG: ${SHIM_CONFIG:-entity-h2h}
+      ENTITY_H2H_SETTING: ${ENTITY_H2H_SETTING:-default}
       OPENAI_BASE_URL: http://egress:8787${PROXY_OPENAI_PATH:-/cognee/openai/v1}
       OPENAI_API_KEY: ${SHOOTOUT_CELL_TOKEN:-dummy-key-the-proxy-injects-the-real-one}
       LLM_ENDPOINT: http://egress:8787${PROXY_OPENAI_PATH:-/cognee/openai/v1}

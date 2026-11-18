@@ -92,6 +92,13 @@ graph API; the shim never resolves anything on its own. The response:
 only flags them for review (a `SAME_AS` review band). A system that merges by reusing one node has no link for it:
 both sources simply list the same node. A system without the route answers the `unsupported` error kind.
 
+An entity-h2h shim also reports, under `GET /health`, the head-to-head setting its stack started in:
+`"entity_h2h": { "setting": "default" | "<grid setting>", "settings": { "<knob>": value } }`. The setting comes from
+`ENTITY_H2H_SETTING` (`eval/runner/entity-h2h/run.ts stack-env` writes it, with any server-side knob), and the
+settings are the knob values the shim applied or the server was given, from the bundle's
+`capability.json` `entity_h2h_tuning`. The runner refuses a cell (`STACK_CONFIG_MISMATCH`) whose stack reports
+anything but the cell's own setting and settings.
+
 ## Capability record
 
 ```json
