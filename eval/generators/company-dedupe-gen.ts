@@ -19,6 +19,7 @@
  *
  * Pure: no gbrain import, no I/O.
  */
+import { createHash } from 'node:crypto';
 import { SOURCES, mulberry32, slugify, type DesignedPair, type Label, type SourceId, type WrittenPage } from './person-dedupe-gen.ts';
 
 export const COMPANY_DEDUPE_GENERATOR_VERSION = 1;
@@ -305,7 +306,7 @@ export function generateCompanyLedger(seed: number, perFamily: number): CompanyL
 
       // LinkedIn coverage cycles by instance, as on person pages: on every third instance the first
       // two pages carry a LinkedIn company page, one value per company. A design choice, not a field rate.
-      if (instance % 3 === 1) for (const pg of made.slice(0, 2)) pg.linkedin = `https://www.linkedin.com/company/${compact(pg.company)}`;
+      if (instance % 3 === 1) for (const pg of made.slice(0, 2)) pg.linkedin = `https://www.linkedin.com/company/${createHash('sha256').update(pg.company).digest('hex').slice(0, 10)}`;
       for (let i = 0; i < made.length; i++) for (let j = i + 1; j < made.length; j++) {
         pairs.push({ a: companyPageKey(made[i]), b: companyPageKey(made[j]), family: family.id, instance, label: made[i].company === made[j].company ? 'same' : 'different' });
       }

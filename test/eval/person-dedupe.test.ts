@@ -276,6 +276,8 @@ describe('company pages', () => {
       const md = renderCompanyPage(p);
       expect(md).toContain('type: company');
       expect(md).not.toContain(p.company);
+      expect(md).not.toContain(p.company.replace(/-/g, ''));
+      expect(md).not.toContain(p.family.replace(/-/g, ''));
       const w = parseCompanyPage(p.source, p.slug, md);
       expect([w.key, w.type, w.title, w.linkedin, w.city]).toEqual([companyPageKey(p), 'company', p.title, p.linkedin, p.city]);
       expect(w.domains).toEqual([...p.domains, ...(p.website ? [p.website] : [])]);

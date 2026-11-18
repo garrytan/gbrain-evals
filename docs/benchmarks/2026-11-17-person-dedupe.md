@@ -117,7 +117,7 @@ A company page has `type: company`, a title and the fields gbrain's finder reads
 
 | Different companies (must not link) | One company (must link) |
 |---|---|
-| same name and industry in another city; in a third of instances both are franchise owners whose sites sit on the brand domain | same name, same domain |
+| same name and industry in another city; in 9 of the 20 instances both are franchise owners whose sites sit on the brand domain | same name, same domain |
 | same name in one city, another industry | the legal suffix written another way or dropped (Inc and `, Inc.`; Inc and none; Incorporated and Inc; LLC and `L.L.C.`; Ltd and Limited; Inc and LLC after a conversion) |
 | same name, another legal suffix and country (Halwick GmbH, Halwick Ltd) | initials (Halwick International Machines, HIM), with the same domain or none on the short page |
 | names that differ only by the suffix, in one city (Halwick Inc, Halwick LLC) | a rename: the new page keeps the old domain, or only says "formerly" |
