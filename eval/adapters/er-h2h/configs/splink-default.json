@@ -1,0 +1,84 @@
+{
+ "name": "default",
+ "doc": "https://moj-analytical-services.github.io/splink/getting_started.html",
+ "based_on": "Splink 5 Getting Started, 'Simple Splink Model Example' (the fake_1000 persons model): comparisons, blocking, training steps, the predict cutoff and the 0.95 clustering threshold as documented",
+ "changes_from_doc": [
+  "DateOfBirthComparison('dob') and the blocking rule block_on('first_name', 'dob') are dropped: the pages carry no date of birth",
+  "first_name and surname are the first and last words of the page title; email is the first listed email; values are not cleaned (the example's data is already clean)"
+ ],
+ "records": {
+  "normalise": false
+ },
+ "settings": {
+  "link_type": "dedupe_only",
+  "comparisons": [
+   {
+    "fn": "NameComparison",
+    "args": [
+     "first_name"
+    ]
+   },
+   {
+    "fn": "JaroAtThresholds",
+    "args": [
+     "surname"
+    ]
+   },
+   {
+    "fn": "ExactMatch",
+    "args": [
+     "city"
+    ],
+    "configure": {
+     "term_frequency_adjustments": true
+    }
+   },
+   {
+    "fn": "EmailComparison",
+    "args": [
+     "email"
+    ]
+   }
+  ],
+  "blocking_rules_to_generate_predictions": [
+   [
+    "surname"
+   ]
+  ]
+ },
+ "training": [
+  {
+   "step": "estimate_probability_two_random_records_match",
+   "blocking": [
+    [
+     "first_name",
+     "surname"
+    ]
+   ],
+   "recall": 0.7
+  },
+  {
+   "step": "estimate_u_using_random_sampling",
+   "max_pairs": 1000000,
+   "seed": 1
+  },
+  {
+   "step": "estimate_parameters_using_expectation_maximisation",
+   "blocking": [
+    "first_name",
+    "surname"
+   ]
+  },
+  {
+   "step": "estimate_parameters_using_expectation_maximisation",
+   "blocking": [
+    "email"
+   ]
+  }
+ ],
+ "predict": {
+  "threshold_match_weight": -5
+ },
+ "auto": 0.95,
+ "proposed_note": "none: Splink documents no clerical-review band (its threshold guides say to pick a threshold from labelled data), so the default config has no proposed tier"
+}

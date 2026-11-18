@@ -1439,6 +1439,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'cat36-scorer.ts': { role: 'Cat36 span-coverage scorer', part_of: 'associative-retrieval-smoke' },
   'cat36-snapshot.ts': { role: 'Cat36 index snapshot hashing', part_of: 'associative-retrieval-live' },
   'compare.ts': { role: 'paired run comparator CLI' },
+  'er-h2h-score.ts': { role: 'keyless scorer for the classic entity-resolution arms (Splink, dedupe, Zingg) from eval/adapters/er-h2h, plus held-out labels for their labellers', part_of: 'person-dedupe' },
   'feedback-replay-locomo.ts': { role: 'use-attributed feedback replay on LoCoMo (off, frozen, online, noisy, frequency arms); dev or custodian sealed split' },
   'feedback-replay-world.ts': { role: 'use-attributed feedback replay on world-v1 relational questions; dev or custodian sealed half' },
   'feedback-think-replay.ts': { role: 'use-attributed feedback from the implicit citation signal: LoCoMo answers through the think operation (off, frozen, sparse, online arms), judged N times; dev or custodian sealed split' },

@@ -1,0 +1,66 @@
+{
+ "name": "tuned",
+ "doc": "https://docs.zingg.ai/zingg/zingg-concepts/zingg-configuration/field-definition/match-types.md",
+ "based_on": "the default config's Febrl-style setup with match types chosen from Zingg's match-type reference: TEXT for the space-joined email list (word overlap), EXACT plus NULL_OR_BLANK for single-valued ids, company and city (Zingg treats nulls as matches unless NULL_OR_BLANK is added), FUZZY for the name parts and the full name; a larger labelling budget in the same findTrainingData and label loop",
+ "tuning": "Match types and the labelling budget were chosen by looking only at the held-out world (seed 20261118); the oracle labels only held-out pairs. Zingg Community has no threshold to tune",
+ "modelId": 102,
+ "numPartitions": 4,
+ "labelDataSampleSize": 0.5,
+ "fieldDefinition": [
+  {
+   "fieldName": "first_name",
+   "matchType": "fuzzy",
+   "fields": "first_name",
+   "dataType": "string"
+  },
+  {
+   "fieldName": "surname",
+   "matchType": "fuzzy",
+   "fields": "surname",
+   "dataType": "string"
+  },
+  {
+   "fieldName": "full_name",
+   "matchType": "fuzzy",
+   "fields": "full_name",
+   "dataType": "string",
+   "source": "name"
+  },
+  {
+   "fieldName": "emails",
+   "matchType": "text,null_or_blank",
+   "fields": "emails",
+   "dataType": "string"
+  },
+  {
+   "fieldName": "company",
+   "matchType": "exact,null_or_blank",
+   "fields": "company",
+   "dataType": "string"
+  },
+  {
+   "fieldName": "city",
+   "matchType": "exact,null_or_blank",
+   "fields": "city",
+   "dataType": "string"
+  },
+  {
+   "fieldName": "linkedin",
+   "matchType": "exact,null_or_blank",
+   "fields": "linkedin",
+   "dataType": "string"
+  },
+  {
+   "fieldName": "github",
+   "matchType": "exact,null_or_blank",
+   "fields": "github",
+   "dataType": "string"
+  }
+ ],
+ "labelling": {
+  "min_match": 80,
+  "min_distinct": 0,
+  "max_rounds": 40
+ },
+ "proposed_note": "none: Zingg Community exposes no match threshold and no review band"
+}
