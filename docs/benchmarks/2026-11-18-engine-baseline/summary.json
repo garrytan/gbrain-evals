@@ -1,0 +1,278 @@
+{
+  "runs": [
+    {
+      "engine": "pglite",
+      "run": 1,
+      "n": 548,
+      "run_status": "completed",
+      "verdict": "partial",
+      "ndcg5": 0.5566844356261117,
+      "p5": 0.27408759124087595,
+      "r5": 0.794860097323601,
+      "mrr5": 0.6753649635036497,
+      "p50_ms": 201,
+      "p95_ms": 220,
+      "cost_usd": 0,
+      "cost_per_query_usd": 0.0,
+      "embed_cache": {
+        "path": "/var/tmp/bench-embed-cache.sqlite",
+        "stats": {
+          "hits": 1028,
+          "misses": 0,
+          "inserts": 0,
+          "bytes": 0
+        }
+      },
+      "started_at": "2026-11-18T18:09:49.427Z",
+      "finished_at": "2026-11-18T18:11:49.743Z"
+    },
+    {
+      "engine": "pglite",
+      "run": 2,
+      "n": 548,
+      "run_status": "completed",
+      "verdict": "partial",
+      "ndcg5": 0.5566844356261117,
+      "p5": 0.27408759124087595,
+      "r5": 0.794860097323601,
+      "mrr5": 0.6753649635036497,
+      "p50_ms": 202,
+      "p95_ms": 220,
+      "cost_usd": 0,
+      "cost_per_query_usd": 0.0,
+      "embed_cache": {
+        "path": "/var/tmp/bench-embed-cache.sqlite",
+        "stats": {
+          "hits": 1028,
+          "misses": 0,
+          "inserts": 0,
+          "bytes": 0
+        }
+      },
+      "started_at": "2026-11-18T18:12:25.398Z",
+      "finished_at": "2026-11-18T18:14:25.944Z"
+    },
+    {
+      "engine": "pglite",
+      "run": 3,
+      "n": 548,
+      "run_status": "completed",
+      "verdict": "partial",
+      "ndcg5": 0.5566844356261117,
+      "p5": 0.27408759124087595,
+      "r5": 0.794860097323601,
+      "mrr5": 0.6753649635036497,
+      "p50_ms": 200,
+      "p95_ms": 219,
+      "cost_usd": 0,
+      "cost_per_query_usd": 0.0,
+      "embed_cache": {
+        "path": "/var/tmp/bench-embed-cache.sqlite",
+        "stats": {
+          "hits": 1028,
+          "misses": 0,
+          "inserts": 0,
+          "bytes": 0
+        }
+      },
+      "started_at": "2026-11-18T18:15:01.038Z",
+      "finished_at": "2026-11-18T18:17:00.342Z"
+    },
+    {
+      "engine": "postgres",
+      "run": 1,
+      "n": 548,
+      "run_status": "completed",
+      "verdict": "partial",
+      "ndcg5": 0.5566844356261117,
+      "p5": 0.27408759124087595,
+      "r5": 0.794860097323601,
+      "mrr5": 0.6753649635036497,
+      "p50_ms": 47,
+      "p95_ms": 56,
+      "cost_usd": 0,
+      "cost_per_query_usd": 0.0,
+      "embed_cache": {
+        "path": "/var/tmp/bench-embed-cache.sqlite",
+        "stats": {
+          "hits": 1028,
+          "misses": 0,
+          "inserts": 0,
+          "bytes": 0
+        }
+      },
+      "started_at": "2026-11-18T18:11:50.906Z",
+      "finished_at": "2026-11-18T18:12:24.218Z"
+    },
+    {
+      "engine": "postgres",
+      "run": 2,
+      "n": 548,
+      "run_status": "completed",
+      "verdict": "partial",
+      "ndcg5": 0.5566844356261117,
+      "p5": 0.27408759124087595,
+      "r5": 0.794860097323601,
+      "mrr5": 0.6753649635036497,
+      "p50_ms": 42,
+      "p95_ms": 57,
+      "cost_usd": 0,
+      "cost_per_query_usd": 0.0,
+      "embed_cache": {
+        "path": "/var/tmp/bench-embed-cache.sqlite",
+        "stats": {
+          "hits": 1028,
+          "misses": 0,
+          "inserts": 0,
+          "bytes": 0
+        }
+      },
+      "started_at": "2026-11-18T18:14:27.098Z",
+      "finished_at": "2026-11-18T18:14:59.879Z"
+    },
+    {
+      "engine": "postgres",
+      "run": 3,
+      "n": 548,
+      "run_status": "completed",
+      "verdict": "partial",
+      "ndcg5": 0.5566844356261117,
+      "p5": 0.27408759124087595,
+      "r5": 0.794860097323601,
+      "mrr5": 0.6753649635036497,
+      "p50_ms": 41,
+      "p95_ms": 55,
+      "cost_usd": 0,
+      "cost_per_query_usd": 0.0,
+      "embed_cache": {
+        "path": "/var/tmp/bench-embed-cache.sqlite",
+        "stats": {
+          "hits": 1028,
+          "misses": 0,
+          "inserts": 0,
+          "bytes": 0
+        }
+      },
+      "started_at": "2026-11-18T18:17:01.500Z",
+      "finished_at": "2026-11-18T18:17:33.552Z"
+    }
+  ],
+  "not_scored": [
+    {
+      "run": "rust-r1",
+      "exit_code": "3",
+      "scored": false,
+      "why": "FAILED to run: OperationError: This brain's engine does not support upsertChunks (option embeddingColumn) yet (it needs the chunks capability), so nothing ran."
+    },
+    {
+      "run": "rust-r2",
+      "exit_code": "3",
+      "scored": false,
+      "why": "FAILED to run: OperationError: This brain's engine does not support upsertChunks (option embeddingColumn) yet (it needs the chunks capability), so nothing ran."
+    },
+    {
+      "run": "rust-r3",
+      "exit_code": "3",
+      "scored": false,
+      "why": "FAILED to run: OperationError: This brain's engine does not support upsertChunks (option embeddingColumn) yet (it needs the chunks capability), so nothing ran."
+    },
+    {
+      "run": "warmup-pglite",
+      "exit_code": "0",
+      "scored": false,
+      "why": "warm-up run (fills the shared embedding cache); excluded from the table"
+    }
+  ],
+  "by_engine": {
+    "pglite": {
+      "runs": 3,
+      "ndcg5": {
+        "mean": 0.5566844356261117,
+        "min": 0.5566844356261117,
+        "max": 0.5566844356261117,
+        "stddev": 0.0
+      },
+      "p5": {
+        "mean": 0.27408759124087595,
+        "min": 0.27408759124087595,
+        "max": 0.27408759124087595,
+        "stddev": 0.0
+      },
+      "r5": {
+        "mean": 0.794860097323601,
+        "min": 0.794860097323601,
+        "max": 0.794860097323601,
+        "stddev": 0.0
+      },
+      "mrr5": {
+        "mean": 0.6753649635036497,
+        "min": 0.6753649635036497,
+        "max": 0.6753649635036497,
+        "stddev": 0.0
+      },
+      "p50_ms": {
+        "mean": 201.0,
+        "min": 200,
+        "max": 202,
+        "stddev": 1.0
+      },
+      "p95_ms": {
+        "mean": 219.66666666666666,
+        "min": 219,
+        "max": 220,
+        "stddev": 0.5773502691896257
+      },
+      "cost_per_query_usd": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "stddev": 0.0
+      }
+    },
+    "postgres": {
+      "runs": 3,
+      "ndcg5": {
+        "mean": 0.5566844356261117,
+        "min": 0.5566844356261117,
+        "max": 0.5566844356261117,
+        "stddev": 0.0
+      },
+      "p5": {
+        "mean": 0.27408759124087595,
+        "min": 0.27408759124087595,
+        "max": 0.27408759124087595,
+        "stddev": 0.0
+      },
+      "r5": {
+        "mean": 0.794860097323601,
+        "min": 0.794860097323601,
+        "max": 0.794860097323601,
+        "stddev": 0.0
+      },
+      "mrr5": {
+        "mean": 0.6753649635036497,
+        "min": 0.6753649635036497,
+        "max": 0.6753649635036497,
+        "stddev": 0.0
+      },
+      "p50_ms": {
+        "mean": 43.333333333333336,
+        "min": 41,
+        "max": 47,
+        "stddev": 3.2145502536643185
+      },
+      "p95_ms": {
+        "mean": 56.0,
+        "min": 55,
+        "max": 57,
+        "stddev": 1.0
+      },
+      "cost_per_query_usd": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "stddev": 0.0
+      }
+    }
+  }
+}

@@ -1,0 +1,11 @@
+  Setting up brain schema (v321)...
+  316 migration(s) applied
+pglite OK {"status":"imported","chunks":1,"embedded":1}
+  Setting up brain schema (v321)...
+  316 migration(s) applied
+postgres OK {"status":"imported","chunks":1,"embedded":1}
+rust REFUSED engine_capability_missing This brain's engine does not support upsertChunks (option embeddingColumn) yet (it needs the chunks capability), so nothing ran.
+    at opError (<gbrain>/src/core/ops/contract.ts:204:17)
+    at takeOptions (<gbrain>/src/core/rust-engine/store-members/common.ts:34:16)
+    at <anonymous> (<gbrain>/src/core/rust-engine/store-members/chunks.ts:35:19)
+    at served (<gbrain>/src/core/rust-engine.ts:368:99)

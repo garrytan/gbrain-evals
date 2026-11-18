@@ -786,3 +786,47 @@ describe('A-06 / A-14: deterministic probe set and gold-text flagging', () => {
     expect(scoreByProbeClass(rows, 'holdout').conceptual).toEqual({ ndcg5: 0.5, p1_strict: 1, count: 1 });
   });
 });
+
+describe('cat13 storage engine for the gbrain arm', () => {
+  test('GBRAIN_EVAL_ENGINE picks the engine; --pg-url and --embed-cache parse in both forms', () => {
+    const o = parseCat13Argv(['--pg-url', 'postgres://u@h:5/db', '--embed-cache=/var/tmp/x.sqlite'], { GBRAIN_EVAL_ENGINE: 'postgres' });
+    expect(o.engine).toBe('postgres');
+    expect(o.pgUrl).toBe('postgres://u@h:5/db');
+    expect(o.embedCache).toBe('/var/tmp/x.sqlite');
+  });
+
+  test('no GBRAIN_EVAL_ENGINE keeps the in-memory PGLite default; LIFECYCLE_PG_URL fills a missing --pg-url', () => {
+    expect(parseCat13Argv([], {}).engine).toBeUndefined();
+    expect(parseCat13Argv([], { GBRAIN_EVAL_ENGINE: 'postgres', LIFECYCLE_PG_URL: 'postgres://x' }).pgUrl).toBe('postgres://x');
+    expect(parseCat13Argv(['--pg-url', 'postgres://flag'], { LIFECYCLE_PG_URL: 'postgres://env' }).pgUrl).toBe('postgres://flag');
+  });
+
+  test('--embed-cache with --stub-embed is refused at parse time', () => {
+    expect(() => parseCat13Argv(['--stub-embed', '--embed-cache', '/var/tmp/x.sqlite'], {})).toThrow(/does not apply to --stub-embed/);
+  });
+
+  test('engine=postgres without a URL refuses before any request, with the engine-refused exit and a skipped receipt', async () => {
+    const reportsDir = mkdtempSync(join(tmpdir(), 'cat13-engine-'));
+    const { receipt, exitCode } = await runCat13({ stubEmbed: true, only: 'gbrain', engine: 'postgres', targetProbes: 30, reportsDir, quiet: true });
+    expect(exitCode).toBe(69);
+    expect(receipt.run_status).toBe('skipped');
+    expect(receipt.n_scored).toBe(0);
+    // The refusal is persisted like any skipped run, so no stale receipt survives at the canonical path.
+    const onDisk = loadReceipt(join(reportsDir, 'cat13-conceptual', 'receipt.json'));
+    expect(onDisk.run_status).toBe('skipped');
+    expect(String(onDisk.skip_reason)).toContain('postgres_url_missing');
+  });
+
+  test('engine=postgres with an unreachable server refuses with exit 69, not an adapter failure', async () => {
+    const reportsDir = mkdtempSync(join(tmpdir(), 'cat13-engine-'));
+    const { receipt, exitCode } = await runCat13({ stubEmbed: true, only: 'gbrain', engine: 'postgres', pgUrl: 'postgres://nobody@127.0.0.1:1/none', targetProbes: 30, reportsDir, quiet: true });
+    expect(exitCode).toBe(69);
+    expect(String(receipt.skip_reason)).toContain('postgres_unreachable');
+  });
+
+  test('runCat13 itself refuses --embed-cache with stub mode (the paid guard is off under the stub)', async () => {
+    const reportsDir = mkdtempSync(join(tmpdir(), 'cat13-engine-'));
+    await expect(runCat13({ stubEmbed: true, only: 'gbrain', embedCache: join(reportsDir, 'c.sqlite'), targetProbes: 30, reportsDir, quiet: true }))
+      .rejects.toThrow(/does not apply to --stub-embed/);
+  });
+});

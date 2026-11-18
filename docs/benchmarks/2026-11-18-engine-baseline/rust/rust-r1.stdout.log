@@ -1,0 +1,103 @@
+[cat13] dropped 190 ambiguous probe candidate(s) claimed by >1 concept
+[cat13] dropped 190 ambiguous probe candidate(s) claimed by >1 concept
+[budget] cat13-conceptual: estimated cost $0.05; ledger /var/tmp/bench-ledger.sqlite
+# BrainBench Cat 13 — Conceptual Recall
+
+Generated: 2026-11-18T18:09:40
+Corpus: 240 pages, 30 concept pages
+Probes: 548 (target 500 per-concept + company pass; CAT13_PROBES env var to override)
+Embeds: live — openai:text-embedding-3-large @ 1536d (every adapter, one gateway)
+Search pins (gbrain-backed adapters): search.mode=balanced search.reranker.enabled=false search.autocut=false
+Concept split: seed=42 tuning=20 held-out=10 → probes tuning=359 held-out=181 mixed=8 unassigned=0
+Metric: nDCG@5 (graded: target=3, co-occurrence peer=1)
+
+## Template breakdown
+
+- synonym: 159
+- body-fuzzy: 97
+- title-paraphrase: 81
+- title-variation: 75
+- synonym-fuzzy: 49
+- company-neighborhood: 38
+- description-paraphrase: 34
+- semantic-neighborhood: 15
+
+## Running adapters
+
+- gbrain ...
+[models] OpenAI account offers gpt-6.2-sol but src/core/model-pricing.ts has no row for it — staying on the newest PRICED family so budget caps keep working. Add the pricing row to adopt it.
+  FAILED to run: OperationError: This brain's engine does not support upsertChunks (option embeddingColumn) yet (it needs the chunks capability), so nothing ran.
+
+## Scorecard
+
+| Adapter | nDCG@5 | P@5 (graded) | P@1 (strict target) | Wall (s) |
+|---------|--------|---------------|----------------------|----------|
+
+## Per-template nDCG@5 (where each retrieval style earns its keep)
+
+| Template |  | #probes |
+|----------||---------|
+| body-fuzzy |  | 97 |
+| company-neighborhood |  | 38 |
+| description-paraphrase |  | 34 |
+| semantic-neighborhood |  | 15 |
+| synonym |  | 159 |
+| synonym-fuzzy |  | 49 |
+| title-paraphrase |  | 81 |
+| title-variation |  | 75 |
+
+## Concept split — tuning vs held-out (seed=42, 20/10 concepts)
+
+| Adapter | Subset | #probes | nDCG@5 | P@5 (graded) | P@1 (strict target) |
+|---------|--------|---------|--------|---------------|----------------------|
+
+Mixed-target probes (gold names concepts from both sets) are excluded from both subsets: 8. Unassigned (targets outside both sets): 0.
+Held-out concepts: concepts/community-led-growth, concepts/developer-relations, concepts/enterprise-gtm, concepts/gross-margin-expansion, concepts/horizontal-api, concepts/open-source-distribution, concepts/permitting-reform, concepts/revenue-durability, concepts/vertical-saas, concepts/wallet-share
+
+## Conceptual probes vs lexical control (A-14)
+
+Lexical-control templates copy the target page's own title, description or body phrases: title-paraphrase, title-variation, description-paraphrase, body-fuzzy, semantic-neighborhood. Conceptual probes use hand-authored synonyms or company neighborhoods.
+
+| Adapter | Subset | Conceptual n | Conceptual nDCG@5 | Conceptual P@1 | Lexical-control n | Lexical-control nDCG@5 | Lexical-control P@1 |
+|---------|--------|--------------|-------------------|----------------|-------------------|------------------------|---------------------|
+
+## Per-template nDCG@5 — tuning concepts
+
+| Template |  | #probes |
+|----------||---------|
+| body-fuzzy |  | 63 |
+| company-neighborhood |  | 19 |
+| description-paraphrase |  | 22 |
+| semantic-neighborhood |  | 11 |
+| synonym |  | 104 |
+| synonym-fuzzy |  | 34 |
+| title-paraphrase |  | 58 |
+| title-variation |  | 48 |
+
+## Per-template nDCG@5 — held-out concepts (decision set)
+
+| Template |  | #probes |
+|----------||---------|
+| body-fuzzy |  | 34 |
+| company-neighborhood |  | 11 |
+| description-paraphrase |  | 12 |
+| semantic-neighborhood |  | 4 |
+| synonym |  | 55 |
+| synonym-fuzzy |  | 15 |
+| title-paraphrase |  | 23 |
+| title-variation |  | 27 |
+
+## Methodology
+
+- Corpus: eval/data/world-v1/concepts__*.json (30 concept pages) + the full world-v1 index.
+- Probes: programmatic, seeded (mulberry32 seed=42, Fisher-Yates sampling). Rerun produces the identical set across JS runtimes.
+- Probe texts are globally unique: ambiguous candidates (same text claimable by >1 concept) are dropped at generation and the run aborts on any surviving duplicate.
+- Graded gold: target concept=3, co-occurrence peers (share >=1 related company/person)=1. Company-neighborhood probes: every concept listing the company=3, the company page=1.
+- Template mix: title paraphrase, title variation, description paraphrase, hand-authored synonyms, body-phrase fuzzy recall, semantic neighborhood (self-grounded), company neighborhood (global pass).
+- Metric: nDCG@5 (primary, shared eval/runner/metrics.ts). P@5-graded = precision@5 against the grade>=1 set. P@1-strict = rank-1 is in the grade-3 target set.
+- Top-K: 5.
+- Embedder: openai:text-embedding-3-large @ 1536d for EVERY adapter (CAT13_EMBEDDING_MODEL / CAT13_EMBED_DIMS); the receipt records the gateway state after each adapter's init.
+- Search pins on gbrain-backed adapters (gbrain, vector-grep-rrf-fusion): search.mode=balanced, search.reranker.enabled=false, search.autocut=false — set via engine.setConfig before ingest, echoed per adapter.
+- Concept split: seeded Fisher-Yates over the sorted concept slugs (seed=42, separate rng from the probe generator); 20 tuning / 10 held-out. A probe is in a subset only when every grade-3 target is.
+- No gold data passed to adapters; PublicPage/PublicQuery sealed at the boundary.
+[cat13] RUN INVALID — infra error rate 100.0% over cap
