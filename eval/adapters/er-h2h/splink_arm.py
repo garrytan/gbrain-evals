@@ -1,25 +1,26 @@
 """Splink arm: Fellegi-Sunter on DuckDB, m and u fitted on the world being scored.
 
-  uv run python splink_arm.py --config configs/splink-default.json \
-      --world WORLD --held-out HELD_OUT --labels HELD_OUT.labels.json --out DIR
+  uv run python splink_arm.py --config configs/splink-default.json --entity people \
+      --world WORLD [--held-out HELD_OUT --labels LABELS] --out-file OUT.json
 
 The config file names its Splink documentation source and is read as Splink
 calls: each comparison is a function from splink.comparison_library with its
 arguments, each blocking rule is block_on(...), and the training steps are the
-linker.training methods in order. EM runs on the scored world unsupervised,
-which is Splink's normal path. A threshold given as a number is used as is; a
-threshold given as {"tune": ...} is chosen on the held-out world, never on
-the scored world. Clustering is Splink's connected components
-(cluster_pairwise_predictions_at_threshold).
+linker.training methods in order. For --entity companies, the config's
+"companies" section replaces the top-level keys it names. EM runs on the
+scored world unsupervised, which is Splink's normal path, so the arm takes no
+labels for training and refuses --label-budget and --seed. A threshold given
+as a number is used as is; a threshold given as {"tune": ...} is chosen on the
+held-out world, never on the scored world. Clustering is Splink's connected
+components (cluster_pairwise_predictions_at_threshold). The run log goes to
+OUT.run.json.
 """
 
 from __future__ import annotations
 
-import argparse
 import json
 import time
 import unicodedata
-from pathlib import Path
 
 import pyarrow as pa
 import splink
@@ -29,6 +30,7 @@ from splink import DuckDBAPI, Linker, SettingsCreator, block_on
 import world
 
 WEIGHT_GRID = [w / 2 for w in range(-10, 41)]
+FOLDED = ("city", "company", "linkedin", "github", "industry", "country")
 
 
 def probability(weight: float) -> float:
@@ -54,13 +56,14 @@ def records(rows: list[dict], normalise: bool) -> pa.Table:
         rec["unique_id"] = r["key"]
         rec["first_name"] = tokens[0] if len(tokens) > 1 else None
         rec["surname"] = tokens[-1] if tokens else None
+        rec["first_word"] = tokens[0] if tokens else None
         rec["name_concat"] = name
         for f in lists:
             vals = [v.strip().lower() if normalise else v for v in (r.get(f) or []) if isinstance(v, str) and v.strip()]
             rec[f] = vals or None
-        emails = rec.get("emails") or []
-        rec["email"] = emails[0] if emails else None
-        for f in ("city", "company", "linkedin", "github"):
+        rec["email"] = (rec.get("emails") or [None])[0]
+        rec["domain"] = (rec.get("domains") or [None])[0]
+        for f in FOLDED:
             if normalise and isinstance(rec.get(f), str):
                 rec[f] = rec[f].strip().lower() or None
         out.append(rec)
@@ -115,12 +118,12 @@ def cluster(linker, df_predict, threshold: float) -> list[list[str]]:
     return sorted(sorted(g) for g in groups.values() if len(g) > 1)
 
 
-def tune(spec: dict, held_out_rows: list[dict], person: dict[str, str], held_edges, log: dict, tier: str) -> float:
+def tune(spec: dict, held_out_rows: list[dict], entity_of: dict[str, str], held_edges, log: dict, tier: str) -> float:
     keys = [r["key"] for r in held_out_rows]
     curve = []
     for w in WEIGHT_GRID:
         t = probability(w)
-        m = world.pair_metrics(world.components(keys, [(a, b) for a, b, p in held_edges if p >= t]), person)
+        m = world.pair_metrics(world.components(keys, [(a, b) for a, b, p in held_edges if p >= t]), entity_of)
         curve.append({"threshold": t, "match_weight": w, **m})
     goal = spec["tune"]
     if goal == "max_pair_f1":
@@ -136,47 +139,40 @@ def tune(spec: dict, held_out_rows: list[dict], person: dict[str, str], held_edg
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--config", required=True)
-    ap.add_argument("--world", required=True, help="world to score")
-    ap.add_argument("--held-out", help="held-out world for threshold tuning")
-    ap.add_argument("--labels", help="held-out labels from er-h2h-score.ts labels")
-    ap.add_argument("--out", required=True)
-    a = ap.parse_args()
-    cfg = json.loads(Path(a.config).read_text())
-    if a.held_out and Path(a.held_out).resolve() == Path(a.world).resolve():
-        raise SystemExit("splink_arm: the held-out world must differ from the scored world")
-    log: dict = {"system": "splink", "version": splink.__version__, "config": cfg["name"], "config_file": a.config, "doc": cfg["doc"], "world": a.world, "held_out": a.held_out}
+    a = world.arm_args("splink", takes_labels=False, takes_seed=False)
+    cfg = world.load_config(a.config, a.entity)
+    log: dict = {"system": "splink", "version": splink.__version__, "config": cfg["name"], "entity": a.entity, "config_file": a.config, "doc": cfg["doc"], "world": a.world, "held_out": a.held_out, "labels": a.labels, "label_budget": None, "seed": None}
     thresholds = {}
     needs_tuning = [t for t in ("auto", "proposed") if isinstance(cfg.get(t), dict)]
     if needs_tuning:
         if not (a.held_out and a.labels):
             raise SystemExit("splink_arm: this config tunes a threshold, so it needs --held-out and --labels")
         t0 = time.time()
-        held_rows = world.read_world(a.held_out)
-        person = world.read_labels(a.labels, held_rows)
+        held_rows = world.read_world(a.held_out, a.entity)
+        entity_of = world.read_labels(a.labels, held_rows)
         _, held_predict = fit_and_predict(held_rows, cfg)
         held_edges = edges(held_predict)
         for tier in needs_tuning:
-            thresholds[tier] = tune(cfg[tier], held_rows, person, held_edges, log, tier)
+            thresholds[tier] = tune(cfg[tier], held_rows, entity_of, held_edges, log, tier)
+        log["held_out_pages"] = len(held_rows)
         log["held_out_seconds"] = round(time.time() - t0, 2)
     for tier in ("auto", "proposed"):
         if isinstance(cfg.get(tier), (int, float)):
             thresholds[tier] = float(cfg[tier])
     t0 = time.time()
-    rows = world.read_world(a.world)
+    rows = world.read_world(a.world, a.entity)
     linker, df_predict = fit_and_predict(rows, cfg)
     auto = cluster(linker, df_predict, thresholds["auto"])
     proposed = cluster(linker, df_predict, thresholds["proposed"]) if "proposed" in thresholds else None
+    log["scored_pages"] = len(rows)
     log["scored_seconds"] = round(time.time() - t0, 2)
     log["thresholds_match_probability"] = thresholds
     log["proposed_tier"] = cfg.get("proposed_note")
     log["pairs_predicted"] = len(edges(df_predict))
     log["probability_two_random_records_match"] = linker._settings_obj._probability_two_random_records_match
-    out = Path(a.out)
-    world.write_output(out / f"splink-{cfg['name']}.json", "splink", splink.__version__, cfg["name"], auto, proposed)
-    world.write_run_log(out / f"splink-{cfg['name']}.run.json", log)
-    print(json.dumps({k: log[k] for k in ("config", "thresholds_match_probability", "scored_seconds", "pairs_predicted")}))
+    world.write_output(a.out_file, "splink", splink.__version__, cfg["name"], auto, proposed)
+    world.write_run_log(world.run_log_path(a.out_file), log)
+    print(json.dumps({k: log[k] for k in ("config", "entity", "thresholds_match_probability", "scored_seconds", "pairs_predicted")}))
 
 
 if __name__ == "__main__":

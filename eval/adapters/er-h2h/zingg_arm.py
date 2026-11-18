@@ -1,24 +1,29 @@
 """Zingg Community arm: Spark local mode, JSON config, the documented phases.
 
-  uv run python zingg_arm.py --config configs/zingg-default.json \
-      --world WORLD --held-out HELD_OUT --labels HELD_OUT.labels.json --out DIR \
-      [--zingg-home DIR] [--spark-home DIR]
+  uv run python zingg_arm.py --config configs/zingg-default.json --entity people \
+      --world WORLD --held-out HELD_OUT --labels LABELS --out-file OUT.json \
+      [--label-budget N] [--zingg-home DIR] [--spark-home DIR]
 
 Zingg's documented path is findTrainingData, then label, repeated until there
 are enough labelled pairs, then train, then match (scripts/zingg.sh --phase
 <phase> --conf config.json). Here the label phase's human is an oracle: after
 each findTrainingData round it reads the candidate pairs Zingg wrote under
 <zinggDir>/<modelId>/trainingData/unmarked, answers each pair from the
-held-out world's page-to-person map (1 match, 0 no match), and writes them
-where the label phase writes them (trainingData/marked). Training sees only
-the held-out world. match then runs the trained model on the scored world,
-and the output's z_cluster gives the clusters. Zingg Community has no
-threshold setting and no review band, so there is no proposed tier.
+held-out labels (1 match, 0 no match), and writes them where the label phase
+writes them (trainingData/marked). Every Zingg phase runs with standard input
+closed. --label-budget N stops after the round that reaches N answered pairs,
+answering only up to N within that round; without it the config's stop rule
+alone applies (the ceiling). Zingg Community has no seed setting, so the arm
+refuses --seed and each config runs once. For --entity companies, the
+config's "companies" section replaces the top-level keys it names. Training
+sees only the held-out world. match then runs the trained model on the scored
+world, and the output's z_cluster gives the clusters. Zingg Community has no
+threshold setting and no review band, so there is no proposed tier. Work
+files go to OUT.work/ and the run log to OUT.run.json.
 """
 
 from __future__ import annotations
 
-import argparse
 import csv
 import json
 import os
@@ -73,14 +78,14 @@ def run_phase(phase: str, conf: Path, zingg_home: Path, spark_home: Path, log_di
     t0 = time.time()
     log_file = log_dir / f"{len(timings):02d}-{phase}.log"
     with log_file.open("w") as fh:
-        rc = subprocess.run(["bash", "scripts/zingg.sh", "--properties-file", "config/zingg.conf", "--phase", phase, "--conf", str(conf)], cwd=zingg_home, env=env, stdout=fh, stderr=subprocess.STDOUT).returncode
+        rc = subprocess.run(["bash", "scripts/zingg.sh", "--properties-file", "config/zingg.conf", "--phase", phase, "--conf", str(conf)], cwd=zingg_home, env=env, stdin=subprocess.DEVNULL, stdout=fh, stderr=subprocess.STDOUT).returncode
     timings.append({"phase": phase, "seconds": round(time.time() - t0, 2), "log": str(log_file)})
     if rc != 0:
         raise SystemExit(f"zingg_arm: phase {phase} failed with exit {rc}; see {log_file}")
 
 
-def oracle_label(model_dir: Path, person: dict[str, str], round_no: int) -> dict:
-    """What the label phase does with a human, answered from the held-out ledger."""
+def oracle_label(model_dir: Path, entity_of: dict[str, str], round_no: int, room: int | None) -> dict:
+    """What the label phase does with a human, answered from the held-out labels, for at most room pairs."""
     unmarked = model_dir / "trainingData" / "unmarked"
     marked = model_dir / "trainingData" / "marked"
     con = duckdb.connect()
@@ -96,10 +101,13 @@ def oracle_label(model_dir: Path, person: dict[str, str], round_no: int) -> dict
         done_before = {r[0] for r in con.sql(f"select distinct z_cluster from read_parquet('{marked}/**/*.parquet', union_by_name=true)").fetchall()}
     labelled = []
     n_match = n_distinct = 0
-    for cid, members in pairs.items():
+    for cid in sorted(pairs, key=str):
+        members = pairs[cid]
         if cid in done_before or len(members) != 2:
             continue
-        same = person[members[0][idx_id]] == person[members[1][idx_id]]
+        if room is not None and n_match + n_distinct >= room:
+            break
+        same = entity_of[members[0][idx_id]] == entity_of[members[1][idx_id]]
         n_match += same
         n_distinct += not same
         for m in members:
@@ -108,11 +116,9 @@ def oracle_label(model_dir: Path, person: dict[str, str], round_no: int) -> dict
             labelled.append(m)
     if labelled:
         marked.mkdir(parents=True, exist_ok=True)
-        types = dict(zip(cols, rel.types))
         con.execute("create table lab as select * from rel limit 0")
         con.executemany(f"insert into lab values ({', '.join('?' for _ in cols)})", labelled)
         con.execute(f"copy lab to '{marked}/oracle-round-{round_no:02d}.parquet' (format parquet)")
-        del types
     shutil.rmtree(unmarked)
     return {"round": round_no, "pairs_offered": len(pairs), "match": n_match, "distinct": n_distinct}
 
@@ -126,61 +132,64 @@ def read_clusters(out_dir: Path) -> list[list[str]]:
     return sorted(sorted(g) for g in groups.values() if len(g) > 1)
 
 
-def main() -> None:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--config", required=True)
-    ap.add_argument("--world", required=True)
-    ap.add_argument("--held-out", required=True)
-    ap.add_argument("--labels", required=True)
-    ap.add_argument("--out", required=True)
+def zingg_paths(ap) -> None:
     ap.add_argument("--zingg-home", default=os.environ.get("ZINGG_HOME"))
     ap.add_argument("--spark-home", default=os.environ.get("SPARK_HOME"))
-    a = ap.parse_args()
+
+
+def main() -> None:
+    a = world.arm_args("zingg", takes_labels=True, takes_seed=False, extra=zingg_paths)
     if not a.zingg_home or not a.spark_home:
         raise SystemExit("zingg_arm: set --zingg-home and --spark-home (or ZINGG_HOME and SPARK_HOME)")
-    if Path(a.held_out).resolve() == Path(a.world).resolve():
-        raise SystemExit("zingg_arm: the held-out world must differ from the scored world")
-    cfg = json.loads(Path(a.config).read_text())
+    cfg = world.load_config(a.config, a.entity)
     zingg_home, spark_home = Path(a.zingg_home).resolve(), Path(a.spark_home).resolve()
-    out = Path(a.out).resolve()
-    work = out / f"zingg-{cfg['name']}-work"
+    out_file = Path(a.out_file).resolve()
+    work = out_file.with_suffix(".work")
     if work.exists():
         shutil.rmtree(work)
     (work / "logs").mkdir(parents=True)
     zingg_dir = work / "models"
     model_dir = zingg_dir / str(cfg["modelId"])
     version = (zingg_home / "zingg-version.txt").read_text().strip() if (zingg_home / "zingg-version.txt").exists() else next(p.stem.split("-", 1)[1] for p in zingg_home.glob("zingg-*.jar") if "tests" not in p.name)
-    log: dict = {"system": "zingg", "version": version, "edition": "Community", "config": cfg["name"], "config_file": a.config, "doc": cfg["doc"], "world": a.world, "held_out": a.held_out, "spark_master": os.environ.get("SPARK_MASTER", "local[*]"), "phases": [], "label_rounds": []}
+    log: dict = {"system": "zingg", "version": version, "edition": "Community", "config": cfg["name"], "entity": a.entity, "config_file": a.config, "doc": cfg["doc"], "world": a.world, "held_out": a.held_out, "labels_file": a.labels, "label_budget": a.label_budget, "seed": None, "runs_per_config": 1, "spark_master": os.environ.get("SPARK_MASTER", "local[*]"), "phases": [], "label_rounds": []}
 
-    held_rows = world.read_world(a.held_out)
-    person = world.read_labels(a.labels, held_rows)
+    held_rows = world.read_world(a.held_out, a.entity)
+    entity_of = world.read_labels(a.labels, held_rows)
     schema = write_csv(held_rows, cfg["fieldDefinition"], work / "held-out.csv")
     held_conf = work / "held-out.json"
     held_conf.write_text(json.dumps(zingg_conf(cfg, work / "held-out.csv", schema, work / "held-out-match", zingg_dir), indent=1))
 
     stop = cfg["labelling"]
     total_match = total_distinct = 0
+    stopped_by = "max_rounds"
     for round_no in range(1, stop["max_rounds"] + 1):
         run_phase("findTrainingData", held_conf, zingg_home, spark_home, work / "logs", log["phases"])
-        r = oracle_label(model_dir, person, round_no)
+        room = None if a.label_budget is None else a.label_budget - total_match - total_distinct
+        r = oracle_label(model_dir, entity_of, round_no, room)
         log["label_rounds"].append(r)
         total_match += r["match"]
         total_distinct += r["distinct"]
         if total_match >= stop["min_match"] and total_distinct >= stop["min_distinct"]:
+            stopped_by = "min_match_and_min_distinct"
             break
-    log["labels"] = {"match": total_match, "distinct": total_distinct, "rounds": len(log["label_rounds"])}
+        if a.label_budget is not None and total_match + total_distinct >= a.label_budget:
+            stopped_by = "label_budget"
+            break
+    log["labels"] = {"asked": total_match + total_distinct, "match": total_match, "distinct": total_distinct, "rounds": len(log["label_rounds"]), "stopped_by": stopped_by, "stop_rule": stop, "label_budget": a.label_budget}
+    log["held_out_pages"] = len(held_rows)
     run_phase("train", held_conf, zingg_home, spark_home, work / "logs", log["phases"])
 
-    rows = world.read_world(a.world)
+    rows = world.read_world(a.world, a.entity)
     scored_schema = write_csv(rows, cfg["fieldDefinition"], work / "scored.csv")
     scored_conf = work / "scored.json"
     scored_conf.write_text(json.dumps(zingg_conf(cfg, work / "scored.csv", scored_schema, work / "scored-match", zingg_dir), indent=1))
     run_phase("match", scored_conf, zingg_home, spark_home, work / "logs", log["phases"])
     auto = read_clusters(work / "scored-match")
+    log["scored_pages"] = len(rows)
     log["proposed_tier"] = cfg.get("proposed_note")
-    world.write_output(out / f"zingg-{cfg['name']}.json", "zingg", version, cfg["name"], auto)
-    world.write_run_log(out / f"zingg-{cfg['name']}.run.json", log)
-    print(json.dumps({"config": cfg["name"], "labels": log["labels"], "phases": [(p["phase"], p["seconds"]) for p in log["phases"]]}))
+    world.write_output(out_file, "zingg", version, cfg["name"], auto)
+    world.write_run_log(world.run_log_path(out_file), log)
+    print(json.dumps({"config": cfg["name"], "entity": a.entity, "labels": log["labels"], "phases": [(p["phase"], p["seconds"]) for p in log["phases"]]}))
 
 
 if __name__ == "__main__":

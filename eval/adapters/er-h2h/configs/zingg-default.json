@@ -59,5 +59,54 @@
   "min_distinct": 0,
   "max_rounds": 30
  },
- "proposed_note": "none: Zingg Community exposes no match threshold and no review band"
+ "proposed_note": "none: Zingg Community exposes no match threshold and no review band",
+ "companies": {
+  "doc": "https://github.com/zinggAI/zingg/blob/v0.7.0/examples/febrl/FebrlExample.py",
+  "based_on": "These company mappings are ours: the tool's documentation has no company example, so each person field is mapped to the company field that plays the same part. This section keeps FebrlExample.py's setup (every field FUZZY, the same sample size, partitions and labelling loop) and lists company fields instead of person fields",
+  "changes_from_doc": [
+   "ours: first_name and surname become one name field (the page title), FUZZY",
+   "ours: emails become domains (space-joined), the company's contact key, FUZZY",
+   "ours: industry, city, country and linkedin are FUZZY; the person's company and github have no company counterpart and are dropped",
+   "an id column is added as DONT_USE so output rows map back to pages; the label phase's human is an oracle answering from the held-out world"
+  ],
+  "modelId": 201,
+  "fieldDefinition": [
+   {
+    "fieldName": "name",
+    "matchType": "fuzzy",
+    "fields": "name",
+    "dataType": "string"
+   },
+   {
+    "fieldName": "domains",
+    "matchType": "fuzzy",
+    "fields": "domains",
+    "dataType": "string"
+   },
+   {
+    "fieldName": "industry",
+    "matchType": "fuzzy",
+    "fields": "industry",
+    "dataType": "string"
+   },
+   {
+    "fieldName": "city",
+    "matchType": "fuzzy",
+    "fields": "city",
+    "dataType": "string"
+   },
+   {
+    "fieldName": "country",
+    "matchType": "fuzzy",
+    "fields": "country",
+    "dataType": "string"
+   },
+   {
+    "fieldName": "linkedin",
+    "matchType": "fuzzy",
+    "fields": "linkedin",
+    "dataType": "string"
+   }
+  ]
+ }
 }

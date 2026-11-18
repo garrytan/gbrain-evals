@@ -1,122 +1,285 @@
 /**
- * Entity-resolution head-to-head smokes (eval/runner/entity-h2h/): the readout from entity nodes, its scoring, the
- * matcher's blocking, verdicts and request shape, the proxy's cache-token log fields and the shims' optional
- * GET /entities route. Keyless: provider keys are blanked and every model call goes to a stub fetch, never a network.
+ * Entity-dedupe head-to-head (eval/runner/entity-h2h/), keyless units: the world and its ingest order, the frozen
+ * blocker against the preregistration's counts, the scorer's closure and "not a candidate" counts, the matcher's
+ * request shape, safety-filter and budget outcomes and resume plan, the memory readout, held-out-only labels, the dry
+ * run, the stable refusals (person-dedupe's included), the classic records parser's imports and the shim's optional
+ * GET /entities. Provider keys are blanked and every model call goes to a stub fetch, never a network.
  */
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync, unlinkSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { generateLedger, parseWrittenPage, renderPage } from '../../eval/generators/person-dedupe-gen.ts';
-import { ask, blockPairs, blockingKeys, pairPrompt, verdictOf } from '../../eval/runner/entity-h2h/matcher.ts';
-import { nameMatch, opaque, parseReadout, readoutFromEntities, scoreReadout, smokePages, subjectOf, usageByKey, type EntityNode } from '../../eval/runner/entity-h2h/world.ts';
+import { generateLedger } from '../../eval/generators/person-dedupe-gen.ts';
 import { cacheSplit } from '../../eval/runner/metering-proxy.ts';
+import { checkFinderCoverage, writeWorld } from '../../eval/runner/person-dedupe.ts';
+import { RunnerRefusal } from '../../eval/runner/runner-refusal.ts';
+import { MAX_BLOCK_PAGES, blockPairs, blockingKeys, pairId } from '../../eval/runner/entity-h2h/blocker.ts';
+import { ask, matcherPrompt, pairBrain, pairPrompt, planPairs, verdictOf, type CallEvent } from '../../eval/runner/entity-h2h/matcher.ts';
+import { matcherStop, memoryStop } from '../../eval/runner/entity-h2h/rates.ts';
+import { cli, dryRun } from '../../eval/runner/entity-h2h/run.ts';
+import { parseOutput, scoreOutput } from '../../eval/runner/entity-h2h/score.ts';
+import { DEV_SEED, HELD_OUT_SEED, buildWorld, heldOutLabels, ingestOrder, loadWorld, nameMatch, opaque, readoutFromEntities, subjectOf, usageByKey, writeH2hWorld, type EntityNode } from '../../eval/runner/entity-h2h/world.ts';
 
 const KEYS = ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'PARTICLE_API_KEY'] as const;
 const saved: Record<string, string | undefined> = {};
 beforeAll(() => { for (const k of KEYS) { saved[k] = process.env[k]; process.env[k] = ''; } });
 afterAll(() => { for (const k of KEYS) if (saved[k] === undefined) delete process.env[k]; else process.env[k] = saved[k]; });
 
-const ledger = generateLedger(20261117, 2);
-const pages = smokePages(ledger, '/nonexistent-world');
-const node = (id: string, name: string, sources: string[], type: string | null = 'Person'): EntityNode => ({ id, name, type, source_ids: sources, provenance_status: 'exact' });
-const meta = { system: 'test', version: '0', config: {}, model: 'none' };
+const tmp = mkdtempSync(join(tmpdir(), 'entity-h2h-'));
+const small = buildWorld(7, 1);
+const known = new Set(small.pages.map(p => p.key));
+const quiet = () => {};
 
-describe('entity-h2h smoke world and readout', () => {
-  test('the smoke world is instance 0 of every family, and each designed pair has both pages in it', () => {
-    const keys = new Set(pages.map(p => p.key));
-    expect(pages.length).toBe(ledger.pages.filter(p => p.instance === 0).length);
-    for (const pair of ledger.pairs.filter(p => p.instance === 0)) expect(keys.has(pair.a) && keys.has(pair.b)).toBe(true);
-    expect(opaque('ns', 'x')).toMatch(/^ns-[0-9a-f]{16}$/);
-    expect(opaque('src', 'x', 'a')).not.toBe(opaque('src', 'x', 'b'));
+describe('world', () => {
+  test('a written world loads back, and a used, stale or padded folder is refused', () => {
+    const dir = join(tmp, 'w1');
+    writeH2hWorld(dir, 7, 1);
+    const w = loadWorld(dir);
+    expect(w.pages.length).toBe(small.pages.length);
+    expect(w.pages.some(p => p.type === 'company' && p.key.includes(':companies/'))).toBe(true);
+    expect(() => writeH2hWorld(dir, 7, 1)).toThrow(/WORLD_DIR_USED.*entries_in_folder/);
+    const page = join(dir, w.pages[0].file);
+    const text = readFileSync(page, 'utf8');
+    writeFileSync(page, text + 'x');
+    expect(() => loadWorld(dir)).toThrow(/differ from what seed 7 renders/);
+    writeFileSync(page, text);
+    writeFileSync(join(dir, 'work', 'people', 'extra.md'), '---\ntitle: "x"\n---\n');
+    expect(() => loadWorld(dir)).toThrow(/does not render/);
   });
 
-  test('a page subject is the best title match among the nodes its source mentions', () => {
+  test('the ingest order is a fixed permutation drawn from the world seed', () => {
+    const a = ingestOrder(small).map(p => p.key), b = ingestOrder(buildWorld(7, 1)).map(p => p.key);
+    expect(a).toEqual(b);
+    expect([...a].sort()).toEqual([...known].sort());
+    expect(a).not.toEqual(small.pages.map(p => p.key));
+    expect(ingestOrder(buildWorld(8, 1)).map(p => p.key)).not.toEqual(a);
+  });
+
+  test('labels come only from the held-out seed', () => {
+    expect(() => heldOutLabels(small)).toThrow(/only from held-out seed 20261118/);
+    const h = heldOutLabels(buildWorld(HELD_OUT_SEED, 1));
+    expect(h.seed).toBe(HELD_OUT_SEED);
+    expect(Object.keys(h.entities).length).toBe(buildWorld(HELD_OUT_SEED, 1).pages.length);
+  });
+});
+
+describe('frozen blocker', () => {
+  // Value: protects=the preregistration's counts for the fixed blocker; fails_when=a key, the type split or the crowding rule changes; seam=blockPairs on the dev world
+  test('at the development seed it gives 21,574 pairs and misses exactly the 32 designed pairs the preregistration names', () => {
+    const w = buildWorld(DEV_SEED, 20);
+    const b = blockPairs(w.pages.map(p => p.written));
+    expect(w.pages.length).toBe(1886);
+    expect(b.pairs.length).toBe(21574);
+    expect(b.crowded).toEqual([]);
+    const ids = new Set(b.pairs.map(([x, y]) => pairId(x, y)));
+    const missed = w.pairs.filter(p => !ids.has(pairId(p.a, p.b)));
+    const by: Record<string, number> = {};
+    for (const p of missed) by[`${p.family}:${p.label}`] = (by[`${p.family}:${p.label}`] ?? 0) + 1;
+    expect(by).toEqual({ 'co-diff-acquired:different': 20, 'co-same-abbreviation:same': 6, 'co-same-rebrand:same': 6 });
+  });
+
+  test('keys are typed, and a key on more than 50 pages is dropped and listed', () => {
+    const p = small.pages.find(x => x.type === 'person')!.written, c = small.pages.find(x => x.type === 'company')!.written;
+    expect(blockingKeys(p).every(k => k.startsWith('person|'))).toBe(true);
+    expect(blockingKeys(p).some(k => k.startsWith('person|surname:'))).toBe(true);
+    expect(blockingKeys(c).some(k => k.startsWith('company|core:'))).toBe(true);
+    const crowd = Array.from({ length: MAX_BLOCK_PAGES + 1 }, (_, i) => ({ ...p, key: `work:x${i}`, title: `Ann Lee${i}`, emails: ['team@shared.example'], linkedin: null, github: null }));
+    const b = blockPairs(crowd);
+    expect(b.crowded).toEqual([{ key: 'person|email:team@shared.example', pages: 51 }]);
+    expect(b.pairs.length).toBe(0);
+  });
+});
+
+describe('scoring', () => {
+  const same = small.pairs.find(p => p.label === 'same' && small.people_gold.has(p.a))!;
+  const diff = small.pairs.find(p => p.label === 'different' && small.people_gold.has(p.a))!;
+  const coSame = small.pairs.find(p => p.label === 'same' && small.company_gold.has(p.a))!;
+  const out = { system: 'toy', version: '0', config: 'c', model: null, tiers: { auto: [[same.a, same.b]], proposed: [[diff.a, diff.b], [coSame.a, coSame.b]] } };
+
+  test('auto and proposed are scored for people and companies, closed transitively', () => {
+    const s = scoreOutput(small, parseOutput(out, known));
+    expect(s.points.auto.person.false_merge.k).toBe(0);
+    expect(s.points.auto.person.designed_recall.k).toBeGreaterThanOrEqual(1);
+    expect(s.points.proposed.person.false_merge.k).toBeGreaterThanOrEqual(1);
+    expect(s.points.proposed.company.designed_recall.k).toBeGreaterThanOrEqual(1);
+    expect(s.points.auto.company.designed_recall.k).toBe(0);
+    expect(s.points.auto.person.false_merge.n + s.points.auto.company.false_merge.n).toBe(small.pairs.filter(p => p.label === 'different').length);
+    expect(s.not_a_candidate).toBeNull();
+  });
+
+  test('pairs the blocker never reached are counted and stay in every denominator', () => {
+    const cands = new Set(small.pairs.filter(p => p !== same && p !== diff).map(p => pairId(p.a, p.b)));
+    const s = scoreOutput(small, parseOutput(out, known), { candidates: cands, unresolved: ['x'] });
+    expect(s.not_a_candidate!.person).toEqual({ must_link: 1, must_not_link: 1 });
+    expect(s.not_a_candidate!.company).toEqual({ must_link: 0, must_not_link: 0 });
+    expect(s.points.auto.person.designed_recall.n).toBe(small.pairs.filter(p => p.label === 'same' && small.people_gold.has(p.a)).length);
+    expect(s.points.auto.person.designed_recall.k).toBeGreaterThanOrEqual(1);
+    expect(s.unresolved).toBe(1);
+  });
+
+  test('refuses an output it cannot score exactly', () => {
+    const bad: Array<[unknown, RegExp]> = [
+      [{ ...out, extra: 1 }, /keys/], [{ ...out, tiers: { auto: [] } }, /exactly auto and proposed/], [{ ...out, model: '' }, /model/],
+      [{ ...out, tiers: { auto: [['work:nobody', same.a]], proposed: [] } }, /does not have/], [{ ...out, tiers: { auto: [same.a], proposed: [] } }, /not a list/],
+    ];
+    for (const [raw, msg] of bad) expect(() => parseOutput(raw, known)).toThrow(msg);
+  });
+});
+
+describe('matcher', () => {
+  test('the prompt is the frozen file with both pages filled in', () => {
+    const { template, sha256 } = matcherPrompt();
+    expect(sha256).toMatch(/^[0-9a-f]{64}$/);
+    expect(pairPrompt(template, 'AAA $& x', 'BBB')).toContain('Page A:\nAAA $& x\n\nPage B:\nBBB');
+    expect(verdictOf('**Yes** - same')).toBe('yes');
+    expect(verdictOf('Maybe')).toBeNull();
+  });
+
+  test('each call goes to its proxy slot with a placeholder key and its pair named, never to a provider host', async () => {
+    const seen: Array<{ url: string; headers: Record<string, string>; body: any }> = [];
+    const fake = (async (url: string | URL | Request, init?: RequestInit) => {
+      seen.push({ url: String(url), headers: init!.headers as Record<string, string>, body: JSON.parse(String(init!.body)) });
+      return String(url).includes('/anthropic/') ? Response.json({ model: 'claude-opus-5-5', content: [{ type: 'text', text: 'no - x' }], stop_reason: 'end_turn', usage: { input_tokens: 10, output_tokens: 3 } })
+        : Response.json({ model: 'm', choices: [{ message: { content: 'yes - y' }, finish_reason: 'stop' }], usage: { prompt_tokens: 10, completion_tokens: 3 } });
+    }) as typeof fetch;
+    for (const model of ['openai:gpt-6.2-sol', 'anthropic:claude-opus-5-5', 'particle:particle-1']) {
+      const r = await ask(model, 'P', 'http://127.0.0.1:9', 'matcher-x', pairBrain('a', 'b'), fake);
+      expect([r.outcome, r.usage!.input_total]).toEqual(['answer', 10]);
+    }
+    expect(seen.map(s => new URL(s.url).pathname)).toEqual(['/matcher-x/openai/v1/chat/completions', '/matcher-x/anthropic/v1/messages', '/matcher-x/particle/v1/chat/completions']);
+    for (const s of seen) {
+      expect(new URL(s.url).hostname).toBe('127.0.0.1');
+      expect(JSON.stringify(s.headers)).toContain('dummy-key-the-proxy-injects-the-real-one');
+      expect(s.headers['x-proxy-brain']).toBe('pair:a|b');
+    }
+    expect([seen[0].body.reasoning_effort, seen[0].body.max_completion_tokens, seen[1].body.max_tokens, seen[2].body.reasoning_effort]).toEqual([undefined, 4096, 4096, 'high']);
+    await expect(ask('voyage:x', 'P', 'http://127.0.0.1:9', 's', 'b', fake)).rejects.toThrow(/no route/);
+  });
+
+  // Value: protects=safety-filter stops reported as their own outcome (R38, R95), never a model failure or a verdict; seam=ask's response classification
+  test('safety-filter stops, budget refusals and errors are their own outcomes', async () => {
+    const reply = (status: number, body: unknown) => (async () => new Response(JSON.stringify(body), { status })) as unknown as typeof fetch;
+    const o = (m: string, f: typeof fetch) => ask(m, 'P', 'http://127.0.0.1:9', 's', 'b', f).then(r => r.outcome);
+    expect(await o('openai:gpt-6.2-sol', reply(200, { choices: [{ message: { content: '' }, finish_reason: 'content_filter' }], usage: {} }))).toBe('safety_stop');
+    expect(await o('anthropic:claude-opus-5-5', reply(200, { content: [], stop_reason: 'refusal', usage: { input_tokens: 1, output_tokens: 0 } }))).toBe('safety_stop');
+    expect(await o('particle:particle-1', reply(400, { error: { code: 'content_policy_violation', message: 'flagged' } }))).toBe('safety_stop');
+    expect(await o('openai:gpt-6.2-sol', reply(402, { error: { kind: 'budget', type: 'budget', message: 'metering proxy: over' } }))).toBe('budget_refused');
+    expect(await o('openai:gpt-6.2-sol', reply(500, { error: { message: 'boom' } }))).toBe('error');
+    expect(await o('openai:gpt-6.2-sol', (async () => { throw new Error('refused'); }) as unknown as typeof fetch)).toBe('error');
+  });
+
+  test('a resume asks unsent pairs, asks a sent pair with no verdict once more, and never a third time', () => {
+    const pairs: Array<[string, string]> = [['a', 'b'], ['a', 'c'], ['b', 'c'], ['c', 'd'], ['d', 'e']];
+    const ev = (a: string, b: string, outcome: CallEvent['outcome'], reask = false): CallEvent => ({ a, b, attempt: 1, reask, outcome, verdict: outcome === 'answer' ? 'no' : null, status: null, detail: 'x', answer: '', usage: null, response_model: null, ms: 0 });
+    const events = [ev('a', 'b', 'answer'), ev('a', 'c', 'error'), ev('b', 'c', 'error'), ev('c', 'd', 'error'), ev('c', 'd', 'error', true), ev('d', 'e', 'safety_stop')];
+    const plan = planPairs(pairs, events, new Set([pairBrain('a', 'c'), pairBrain('c', 'd')]));
+    expect(plan.settled).toBe(2);
+    expect(plan.ask).toEqual([{ a: 'a', b: 'c', reask: true }, { a: 'b', b: 'c', reask: false }]);
+    expect(plan.no_verdict.map(p => `${p.a}${p.b}`)).toEqual(['cd']);
+  });
+});
+
+describe('memory readout', () => {
+  const pages = small.pages.slice(0, 3);
+  const node = (id: string, name: string, sources: string[], type: string | null = 'Person'): EntityNode => ({ id, name, type, source_ids: sources, provenance_status: 'exact' });
+
+  test('a page subject is the best title match among its source\'s nodes', () => {
     expect(nameMatch('Omar Brandt', 'omar brandt')).toBe(3);
     expect(nameMatch('Robert Bly', 'R. Bly')).toBe(2);
     expect(subjectOf('Omar Brandt', [node('a', 'Orchid Retail', ['s'], 'Organization'), node('b', 'Omar Brandt', ['s'])])!.node.id).toBe('b');
     expect(subjectOf('Omar Brandt', [node('a', 'Porto', ['s'], 'Location')])).toBeNull();
   });
 
-  test('pages whose subjects share a node form an auto group; a proposed link adds a review group', () => {
+  test('shared nodes form auto groups, proposed links add review groups, and an unmapped page is unresolved', () => {
+    const src = new Map(pages.map(p => [p.key, opaque('src', 't', p.key)]));
     const [p1, p2, p3] = pages;
-    const src = new Map([p1, p2, p3].map(p => [p.key, opaque('src', 't', p.key)]));
-    const { readout, subjects } = readoutFromEntities([p1, p2, p3], src, {
-      entities: [node('n1', p1.title, [src.get(p1.key)!, src.get(p2.key)!]), node('n2', p2.title, [src.get(p2.key)!]), node('n3', p3.title, [src.get(p3.key)!])],
-      links: [{ a: 'n1', b: 'n3', kind: 'SAME_AS', tier: 'proposed', score: 0.7 }],
-    }, meta);
-    expect(subjects.every(s => s.node)).toBe(true);
-    const auto = p1.title === p2.title ? [[p1.key, p2.key].sort()] : [];
-    expect(readout.tiers.auto).toEqual(auto);
-    expect(readout.tiers.proposed.length).toBe(1);
-    expect(parseReadout(readout, new Set(pages.map(p => p.key)))).toBe(readout);
+    const { tiers, subjects } = readoutFromEntities(pages, src, {
+      entities: [node('n1', p1.title, [src.get(p1.key)!, src.get(p2.key)!]), node('n2', p2.title, [src.get(p2.key)!])],
+      links: [{ a: 'n1', b: 'n2', kind: 'SAME_AS', tier: 'proposed', score: null }],
+    });
+    expect(subjects.find(s => s.key === p3.key)!.node).toBeNull();
+    expect(tiers.auto.length + tiers.proposed.length).toBeGreaterThanOrEqual(1);
+    expect(opaque('ns', 'x')).toMatch(/^ns-[0-9a-f]{16}$/);
   });
 
-  test('usage totals count only the rows a run wrote, not an earlier probe on the same log', () => {
-    const dir = mkdtempSync(join(tmpdir(), 'entity-h2h-usage-'));
-    const log = join(dir, 'usage.ndjson');
-    const row = (at: string, usd: number) => JSON.stringify({ at, key: 'work:a', provider: 'openai', model: 'm', outcome: 'forwarded', actual_usd: usd, input_tokens: 10, output_tokens: 2, cache_read_tokens: 4 });
-    writeFileSync(log, [row('2026-11-18T00:00:00.000Z', 1), row('2026-11-18T00:05:00.000Z', 0.5)].join('\n') + '\n');
-    expect(usageByKey(log).get('work:a')!.usd).toBe(1.5);
-    const t = usageByKey(log, () => true, '2026-11-18T00:01:00.000Z').get('work:a')!;
-    expect([t.calls, t.usd, t.input, t.cached, t.output]).toEqual([1, 0.5, 10, 4, 2]);
-    rmSync(dir, { recursive: true, force: true });
-  });
-
-  test('a readout that groups a designed different-people pair scores a false merge; an unknown page is refused', () => {
-    const diff = ledger.pairs.find(p => p.instance === 0 && p.label === 'different')!;
-    const s = scoreReadout(ledger, pages, { ...meta, tiers: { auto: [[diff.a, diff.b]], proposed: [] } });
-    expect(s.auto.false_merge.k).toBe(1);
-    expect(s['auto+proposed'].false_merge.k).toBe(1);
-    expect(scoreReadout(ledger, pages, { ...meta, tiers: { auto: [], proposed: [[diff.a, diff.b]] } }).auto.false_merge.k).toBe(0);
-    expect(() => scoreReadout(ledger, pages, { ...meta, tiers: { auto: [['work:nobody', diff.a]], proposed: [] } })).toThrow(/does not have/);
-    expect(() => parseReadout({ ...meta, tiers: { auto: [] } }, new Set())).toThrow(/exactly auto and proposed/);
+  test('usage sums per key and counts budget refusals apart', () => {
+    const rows = [
+      { at: '2', key: 'k', provider: 'openai', model: 'm', outcome: 'forwarded', actual_usd: 0.5, input_tokens: 10, output_tokens: 2 },
+      { at: '3', key: 'k', provider: 'openai', model: 'm', outcome: 'refused', status: 402 },
+      { at: '1', key: 'k', provider: 'openai', model: 'm', outcome: 'forwarded', actual_usd: 9 },
+    ];
+    const t = usageByKey(rows, () => true, '2').get('k')!;
+    expect([t.calls, t.usd, t.refused, t.budget_refused]).toEqual([1, 0.5, 1, 1]);
   });
 });
 
-describe('entity-h2h LLM matcher', () => {
-  const written = ledger.pages.filter(p => p.instance === 0).map(p => parseWrittenPage(p.source, p.slug, renderPage(p)));
-
-  test('blocking pairs pages that share a key and drops crowded keys', () => {
-    const { pairs } = blockPairs(written);
-    const same = ledger.pairs.filter(p => p.instance === 0 && p.family === 'same-exact').map(p => [p.a, p.b].sort().join('|'));
-    const ids = new Set(pairs.map(p => p.join('|')));
-    for (const s of same) expect(ids.has(s)).toBe(true);
-    expect(blockPairs(written, 1).pairs.length).toBe(0);
-    expect(blockingKeys({ ...written[0], emails: ['A@X.example'] })).toContain('domain:x.example');
-    expect(blockingKeys(written[0], false).some(k => k.startsWith('name:'))).toBe(false);
+describe('spend projection', () => {
+  test('stops are 1.5 times a memory system\'s projected cost and the matcher\'s projected cost, rounded up to a cent', () => {
+    expect(memoryStop('ext-temporal-graph', 1886)).toEqual({ projected_usd: 0.038 * 1886, stop_usd: 107.51 });
+    expect(matcherStop('particle:particle-1', 21574).stop_usd).toBe(4.54);
   });
 
-  test('verdicts come from the first word only', () => {
-    expect(verdictOf('Yes. Same email.')).toBe('yes');
-    expect(verdictOf('**No** - different cities')).toBe('no');
-    expect(verdictOf('unsure, too little to go on')).toBe('unsure');
-    expect(verdictOf('Probably yes')).toBeNull();
+  test('the dry run on the development world quotes pages, pairs and every stop', () => {
+    const d = dryRun(DEV_SEED, 20);
+    const text = d.lines.join('\n');
+    expect(text).toContain('1,886 pages (1,380 people, 506 companies)');
+    expect(text).toContain('people 400 must-not-link and 280 must-link; companies 172 must-not-link and 120 must-link');
+    expect(text).toContain('21,574 candidate pairs');
+    expect(text).toContain('not a candidate: 32 designed pairs (12 must-link, 20 must-not-link)');
+    expect(d.memory['ext-temporal-graph'].stop_usd).toBe(107.51);
+    expect(d.matcher['anthropic:claude-opus-5-5'].stop_usd).toBe(64.73);
+  });
+});
+
+describe('refusals', () => {
+  test('person-dedupe refuses a used world folder and an incomplete import with stable codes, counts and a fix', () => {
+    const dir = join(tmp, 'pd');
+    mkdirSync(dir);
+    writeFileSync(join(dir, 'x'), '');
+    const ledger = generateLedger(4, 1);
+    let e: unknown;
+    try { writeWorld(ledger, dir); } catch (x) { e = x; }
+    expect(e).toBeInstanceOf(RunnerRefusal);
+    expect((e as RunnerRefusal).code).toBe('WORLD_DIR_USED');
+    expect((e as Error).message).toMatch(/^REFUSED WORLD_DIR_USED: .*not empty.*\(entries_in_folder 1\)\. Fix: pass a fresh --write-world directory$/);
+    try { checkFinderCoverage([], ledger.pages); } catch (x) { e = x; }
+    expect((e as RunnerRefusal).code).toBe('IMPORT_INCOMPLETE');
+    expect((e as Error).message).toContain(`(pages_expected ${ledger.pages.length}, pages_imported 0). Fix: `);
   });
 
-  test('each model call goes to its proxy slot with a placeholder key, never a provider host or a real key', async () => {
-    const seen: Array<{ url: string; headers: Record<string, string>; body: any }> = [];
-    const fake = (async (url: string | URL | Request, init?: RequestInit) => {
-      seen.push({ url: String(url), headers: init!.headers as Record<string, string>, body: JSON.parse(String(init!.body)) });
-      const anthropic = String(url).includes('/anthropic/');
-      return Response.json(anthropic ? { model: 'claude-opus-5-5', content: [{ type: 'text', text: 'no - x' }], usage: { input_tokens: 10, output_tokens: 3 } }
-        : { model: 'm', choices: [{ message: { content: 'yes - y' }, finish_reason: 'stop' }], usage: { prompt_tokens: 10, completion_tokens: 3 } });
-    }) as typeof fetch;
-    const prompt = pairPrompt('A', 'B');
-    for (const model of ['openai:gpt-6.2-sol', 'anthropic:claude-opus-5-5', 'particle:particle-1']) {
-      const r = await ask(model, prompt, 'http://127.0.0.1:9', 'matcher-x', fake);
-      expect(r.usage!.input_total).toBe(10);
-    }
-    expect(seen.map(s => new URL(s.url).pathname)).toEqual(['/matcher-x/openai/v1/chat/completions', '/matcher-x/anthropic/v1/messages', '/matcher-x/particle/v1/chat/completions']);
-    for (const s of seen) {
-      expect(new URL(s.url).hostname).toBe('127.0.0.1');
-      expect(JSON.stringify(s.headers)).toContain('dummy-key-the-proxy-injects-the-real-one');
-      expect(s.body.messages[0].content).toContain('Page A:\nA');
-    }
-    expect(seen[0].body.reasoning_effort).toBeUndefined();
-    expect(seen[2].body.reasoning_effort).toBe('high');
-    await expect(ask('voyage:x', prompt, 'http://127.0.0.1:9', 's', fake)).rejects.toThrow(/no route/);
+  test('the runner refuses a used output folder with exit 2 and a classic run on the wrong seeds', async () => {
+    const w = join(tmp, 'rw'), held = join(tmp, 'rh'), out = join(tmp, 'ro');
+    writeH2hWorld(w, 7, 1);
+    writeH2hWorld(held, 7, 1);
+    const realHeld = join(tmp, 'rh-real');
+    writeH2hWorld(realHeld, HELD_OUT_SEED, 1);
+    mkdirSync(out); writeFileSync(join(out, 'x'), '');
+    expect(await cli(['run', '--system', 'splink', '--config', 'default', '--world', w, '--held-out', realHeld, '--output', out], quiet)).toBe(2);
+    await expect(cli(['run', '--system', 'splink', '--config', 'default', '--world', realHeld, '--held-out', realHeld, '--output', join(tmp, 'ro1')], quiet)).rejects.toThrow(/nothing scored comes from it/);
+    await expect(cli(['run', '--system', 'splink', '--config', 'default', '--world', w, '--held-out', held, '--output', join(tmp, 'ro2')], quiet)).rejects.toThrow(/only from held-out seed 20261118/);
+    await expect(cli(['run', '--system', 'dedupe', '--config', 'default', '--world', w, '--held-out', held, '--output', join(tmp, 'ro3')], quiet)).rejects.toThrow(/labeller seed/);
+    await expect(cli(['run', '--system', 'zingg', '--config', 'default', '--world', w, '--held-out', held, '--output', join(tmp, 'ro4'), '--labeller-seed', '1'], quiet)).rejects.toThrow(/no seed setting/);
+    await expect(cli(['run', '--system', 'splink', '--config', 'default', '--world', w, '--held-out', held, '--output', join(tmp, 'ro5'), '--label-budget', '100'], quiet)).rejects.toThrow(/takes no labels/);
+    await expect(cli(['labels', '--world', w, '--out', join(tmp, 'l.json')], quiet)).rejects.toThrow(/only from held-out seed/);
+  });
+});
+
+describe('classic records parser', () => {
+  // Value: protects=the preregistration's rule that the records table comes from the rendered pages only; fails_when=world.py imports the generator, the ledger or a non-stdlib module
+  test('world.py imports only the standard library, nothing from the generators or a ledger', () => {
+    const script = [
+      'import ast, sys, json',
+      'tree = ast.parse(open(sys.argv[1]).read())',
+      'mods = sorted({(n.module if isinstance(n, ast.ImportFrom) else a.name).split(".")[0] for n in ast.walk(tree) if isinstance(n, (ast.Import, ast.ImportFrom)) for a in (n.names if isinstance(n, ast.Import) else [n])})',
+      'print(json.dumps(mods))',
+    ].join('\n');
+    const r = spawnSync('python3', ['-I', '-c', script, resolve(import.meta.dir, '../../eval/adapters/er-h2h/world.py')], { encoding: 'utf8' });
+    expect(r.status).toBe(0);
+    const mods: string[] = JSON.parse(r.stdout);
+    const stdlib = new Set(['__future__', 'argparse', 'json', 're', 'itertools', 'pathlib', 'urllib', 'typing', 'dataclasses', 'collections', 'os', 'sys']);
+    expect(mods.filter(m => !stdlib.has(m))).toEqual([]);
+    expect(readFileSync(resolve(import.meta.dir, '../../eval/adapters/er-h2h/world.py'), 'utf8')).not.toMatch(/person-dedupe-gen|company-dedupe-gen|ledger\.json/);
   });
 });
 

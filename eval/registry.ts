@@ -1439,7 +1439,6 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'cat36-scorer.ts': { role: 'Cat36 span-coverage scorer', part_of: 'associative-retrieval-smoke' },
   'cat36-snapshot.ts': { role: 'Cat36 index snapshot hashing', part_of: 'associative-retrieval-live' },
   'compare.ts': { role: 'paired run comparator CLI' },
-  'er-h2h-score.ts': { role: 'keyless scorer for the classic entity-resolution arms (Splink, dedupe, Zingg) from eval/adapters/er-h2h, plus held-out labels for their labellers', part_of: 'person-dedupe' },
   'feedback-replay-locomo.ts': { role: 'use-attributed feedback replay on LoCoMo (off, frozen, online, noisy, frequency arms); dev or custodian sealed split' },
   'feedback-replay-world.ts': { role: 'use-attributed feedback replay on world-v1 relational questions; dev or custodian sealed half' },
   'feedback-think-replay.ts': { role: 'use-attributed feedback from the implicit citation signal: LoCoMo answers through the think operation (off, frozen, sparse, online arms), judged N times; dev or custodian sealed split' },
@@ -1502,6 +1501,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'usage-receipt.ts': { role: 'provider-normalized usage and answer receipt (usage-receipt/v1) shared by the reading lanes (docs/usage-receipt.md)' },
   'recorder.ts': { role: 'flight-recorder bundle emitter' },
   'retrieval-pins.ts': { role: 'pinned retrieval config' },
+  'runner-refusal.ts': { role: 'shared refusal codes (WORLD_DIR_USED, IMPORT_INCOMPLETE, LEDGER_UNRECONCILED) and the refusal exit for person-dedupe and the entity-dedupe head-to-head (eval/runner/entity-h2h/run.ts)' },
   'sealed-confirmation-lib.ts': { role: 'sealed-set contracts, commitments, access log and spend ledger', part_of: 'sealed-confirmation' },
   'situation-recall-associative.ts': { role: 'situation-recall associative lane', part_of: 'situation-recall' },
   'situation-recall-cat36.ts': { role: 'situation-recall Cat36 lane', part_of: 'situation-recall' },
@@ -1548,4 +1548,4 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
 };
 
 /** Subdirectories of eval/runner/ holding helper modules only. */
-export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'batch', 'bg1', 'budgeted-delivery', 'cat40', 'cat41', 'decisions', 'engine-bench', 'evaluator', 'evidence-delivery', 'external-ideas-wave-a', 'facts-absorb', 'failure-causes', 'graph-backend', 'lifecycle', 'lifecycle-lite', 'live-recall', 'memory-proof-wave', 'memory-qa', 'memory-trust', 'messy-company', 'miss-mining', 'multi-evidence', 'nightly', 'outcomes', 'p4-stream', 'pilot', 'power', 'predictive', 'providers', 'q1', 'q2', 'queries', 'refresh-barrier', 'rs1', 'skillopt-method', 'sota', 'stats', 'strict-pageless', 'system-one', 'systems', 't0', 'takes-bootstrap'];
+export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'batch', 'bg1', 'budgeted-delivery', 'cat40', 'cat41', 'decisions', 'engine-bench', 'entity-h2h', 'evaluator', 'evidence-delivery', 'external-ideas-wave-a', 'facts-absorb', 'failure-causes', 'graph-backend', 'lifecycle', 'lifecycle-lite', 'live-recall', 'memory-proof-wave', 'memory-qa', 'memory-trust', 'messy-company', 'miss-mining', 'multi-evidence', 'nightly', 'outcomes', 'p4-stream', 'pilot', 'power', 'predictive', 'providers', 'q1', 'q2', 'queries', 'refresh-barrier', 'rs1', 'skillopt-method', 'sota', 'stats', 'strict-pageless', 'system-one', 'systems', 't0', 'takes-bootstrap'];

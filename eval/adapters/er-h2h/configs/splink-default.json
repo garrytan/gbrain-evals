@@ -80,5 +80,76 @@
   "threshold_match_weight": -5
  },
  "auto": 0.95,
- "proposed_note": "none: Splink documents no clerical-review band (its threshold guides say to pick a threshold from labelled data), so the default config has no proposed tier"
+ "proposed_note": "none: Splink documents no clerical-review band (its threshold guides say to pick a threshold from labelled data), so the default config has no proposed tier",
+ "companies": {
+  "doc": "https://moj-analytical-services.github.io/splink/getting_started.html",
+  "based_on": "These company mappings are ours: the tool's documentation has no company example, so each person field is mapped to the company field that plays the same part. This section maps the Getting Started persons model (the people config above) onto company pages, keeping its shape: one name comparison, city with term-frequency adjustments, one contact key, one blocking rule, the same training steps, predict cutoff and 0.95 threshold",
+  "changes_from_doc": [
+   "ours: NameComparison('first_name') and JaroAtThresholds('surname') become one JaroAtThresholds on the whole company name (name_concat), because a company name has no forename and surname",
+   "ours: EmailComparison('email') becomes ExactMatch('domain'), the first listed domain, because a domain is the company's contact key as an email is a person's; world.py builds the domains from the domain field and the website host",
+   "ExactMatch('city') with term-frequency adjustments is kept as documented",
+   "ours: the blocking rule block_on('surname') becomes block_on('first_word'), the first word of the name, because a company name's last word is often a legal suffix",
+   "ours: the training blocks (first_name, surname) and (email) become (name_concat) and (domain)",
+   "values are not cleaned, as in the people config"
+  ],
+  "settings": {
+   "link_type": "dedupe_only",
+   "comparisons": [
+    {
+     "fn": "JaroAtThresholds",
+     "args": [
+      "name_concat"
+     ]
+    },
+    {
+     "fn": "ExactMatch",
+     "args": [
+      "city"
+     ],
+     "configure": {
+      "term_frequency_adjustments": true
+     }
+    },
+    {
+     "fn": "ExactMatch",
+     "args": [
+      "domain"
+     ]
+    }
+   ],
+   "blocking_rules_to_generate_predictions": [
+    [
+     "first_word"
+    ]
+   ]
+  },
+  "training": [
+   {
+    "step": "estimate_probability_two_random_records_match",
+    "blocking": [
+     [
+      "name_concat"
+     ]
+    ],
+    "recall": 0.7
+   },
+   {
+    "step": "estimate_u_using_random_sampling",
+    "max_pairs": 1000000,
+    "seed": 1
+   },
+   {
+    "step": "estimate_parameters_using_expectation_maximisation",
+    "blocking": [
+     "name_concat"
+    ]
+   },
+   {
+    "step": "estimate_parameters_using_expectation_maximisation",
+    "blocking": [
+     "domain"
+    ]
+   }
+  ]
+ }
 }

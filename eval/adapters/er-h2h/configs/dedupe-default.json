@@ -63,5 +63,62 @@
  },
  "train": {},
  "threshold": 0.5,
- "proposed_note": "none: dedupe's partition() has one threshold and no review band"
+ "proposed_note": "none: dedupe's partition() has one threshold and no review band",
+ "companies": {
+  "doc": "https://github.com/dedupeio/dedupe-examples/blob/master/patent_example/patent_example.py",
+  "based_on": "These company mappings are ours: the tool's documentation has no company example, so each person field is mapped to the company field that plays the same part. This section keeps the patent example's variables for the name (String, Text and their Interaction) and maps the people config's other fields onto company fields",
+  "changes_from_doc": [
+   "ours: domains (a list per page) take the place of emails as a Set variable, as the company's contact key",
+   "ours: industry takes the place of the person's company as a String with has_missing; city stays a String with has_missing",
+   "the oracle, the stop rule and partition(data, 0.5) are the same as for people"
+  ],
+  "variables": [
+   {
+    "type": "String",
+    "field": "name",
+    "kwargs": {
+     "name": "name_string",
+     "has_missing": true
+    }
+   },
+   {
+    "type": "Text",
+    "field": "name",
+    "corpus": true,
+    "kwargs": {
+     "name": "name_text",
+     "has_missing": true
+    }
+   },
+   {
+    "type": "Set",
+    "field": "domains",
+    "corpus": true,
+    "kwargs": {
+     "has_missing": true
+    }
+   },
+   {
+    "type": "String",
+    "field": "industry",
+    "kwargs": {
+     "has_missing": true
+    }
+   },
+   {
+    "type": "String",
+    "field": "city",
+    "kwargs": {
+     "has_missing": true
+    }
+   },
+   {
+    "type": "Interaction",
+    "args": [
+     "name_string",
+     "name_text"
+    ]
+   }
+  ]
+ }
 }

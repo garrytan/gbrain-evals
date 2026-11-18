@@ -1,65 +1,44 @@
 /**
- * Entity-resolution head-to-head, LLM matcher baseline: block candidate pairs, then ask a model about each pair.
+ * Entity-dedupe head-to-head, language-model matcher baseline: the frozen blocker (blocker.ts) gives candidate pairs,
+ * and one call per pair asks the model, with the frozen prompt in matcher-prompt.md, whether both pages describe the
+ * same person or company. `yes` pairs are the auto tier and `unsure` pairs the proposed tier; the scorer closes both.
  *
- * Blocking: two pages are a candidate pair when they share any key: a normalised name token, the surname, an email,
- * an email domain, a LinkedIn URL or a GitHub handle. A key held by more than --max-block pages is dropped as too
- * crowded to block on (recorded). For each pair, one call: "Do these two pages describe the same real-world person or
- * company? Answer yes, no or unsure, then one line of reasons", with both pages in full. `yes` pairs are the auto tier,
- * `unsure` pairs the proposed tier; the scorer closes both transitively.
+ * Models: claude-opus-5-5, particle-1 and gpt-6.2-sol, each at its default reasoning (particle-1's default, high, is
+ * sent explicitly), with an output cap of 4,096 tokens (particle-1: its provider row's floor). Every call goes to the metering proxy (eval/runner/metering-proxy.ts), which holds the keys,
+ * reserves each request against the run's lease before sending and logs one usage line per request. Each request
+ * carries `x-proxy-brain: pair:<a>|<b>`, so the usage log names the pair it paid for.
  *
- * Every call goes through a lease-mode metering proxy (eval/runner/metering-proxy.ts), which holds the keys, prices the
- * request before sending and writes one usage line per call. Each model uses its own proxy slot (matcher-<model>), so
- * the usage log splits by model. No call is resent.
+ * Outcomes per pair: a verdict (yes, no, unsure), an answer with no verdict (unparsed, reported, never guessed), a
+ * safety-filter stop (its own outcome, never a model failure: OpenAI-style finish_reason content_filter, Anthropic
+ * stop_reason refusal, or a provider error that names a content or safety policy), a budget refusal from the proxy
+ * (the run's ledger stop: the run pauses, asking no further pair) or an error.
  *
- *   bun eval/runner/entity-h2h/matcher.ts --world DIR --out DIR --usage-log FILE
- *     [--models openai:gpt-6.2-sol,anthropic:claude-opus-5-5,particle:particle-1] [--proxy http://127.0.0.1:8787]
- *     [--seed N] [--concurrency 4] [--max-block 50] [--limit-pairs N] [--blocking-only]
- *
- * --blocking-only prints the pair counts for the smoke world and for people worlds of per-family 5, 10 and 20 (the
- * full 1,380-page world; the generator's name pool runs out before per-family 40), without any model call.
+ * Resume (preregistration, "Crash and resume"): after the reconcile, a resumed run asks only pairs with no request
+ * on the proxy log; a pair whose request was sent but got no verdict is asked again at most once, counted twice in
+ * spend, and reported. A pair still without a verdict after that is reported as having none.
  */
-import { mkdirSync, readFileSync, writeFileSync, appendFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
-import { asciiFold, generateLedger, parseWrittenPage, renderPage, PERSON_DEDUPE_DEFAULT_SEED, type WrittenPage } from '../../generators/person-dedupe-gen.ts';
-import { compatRequest, compatSend, parseCompatResponse } from '../providers/openai-compatible.ts';
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { compatRequest } from '../providers/openai-compatible.ts';
 import { normalizeUsage, type NormalizedUsage } from '../usage-receipt.ts';
-import { loadSmokeWorld, scoreReadout, usageByKey, type Readout } from './world.ts';
 
-export const MATCHER_PROMPT = 'Do these two pages describe the same real-world person or company? Answer yes, no or unsure, then one line of reasons.';
-export const DEFAULT_MODELS = ['openai:gpt-6.2-sol', 'anthropic:claude-opus-5-5', 'particle:particle-1'];
+export const MATCHER_PROMPT_FILE = join(import.meta.dir, 'matcher-prompt.md');
+export const MATCHER_VERSION = 'entity-h2h matcher v1';
+/** Output caps (reasoning included) that keep each request's ledger reservation near its real cost; a one-word verdict and a line of reasons fit far inside them, and the reasoning effort stays each model's default. particle-1 takes its provider row's output floor. */
 const ANTHROPIC_MAX_TOKENS = 4096;
+const OPENAI_MAX_COMPLETION_TOKENS = 4096;
 const PROXY_HOLDS_KEY = 'dummy-key-the-proxy-injects-the-real-one';
 
-/** The blocking keys of one page. */
-export function blockingKeys(p: WrittenPage, nameTokens = true): string[] {
-  const name = asciiFold(p.title).toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').split(/\s+/).filter(t => t.length > 1);
-  const keys = nameTokens ? name.map(t => `name:${t}`) : [];
-  if (name.length) keys.push(`surname:${name.at(-1)}`);
-  for (const e of p.emails) {
-    const email = e.trim().toLowerCase();
-    keys.push(`email:${email}`);
-    const at = email.lastIndexOf('@');
-    if (at > 0) keys.push(`domain:${email.slice(at + 1)}`);
-  }
-  if (p.linkedin) keys.push(`linkedin:${p.linkedin.toLowerCase()}`);
-  if (p.github) keys.push(`github:${p.github.toLowerCase()}`);
-  return [...new Set(keys)];
+/** The frozen prompt: the whole of matcher-prompt.md, with {{page_a}} and {{page_b}} replaced by the two pages. */
+export function matcherPrompt(): { template: string; sha256: string } {
+  const template = readFileSync(MATCHER_PROMPT_FILE, 'utf8');
+  if (!template.includes('{{page_a}}') || !template.includes('{{page_b}}')) throw new Error(`entity-h2h: ${MATCHER_PROMPT_FILE} must hold {{page_a}} and {{page_b}}`);
+  return { template, sha256: createHash('sha256').update(template).digest('hex') };
 }
 
-export function blockPairs(pages: readonly WrittenPage[], maxBlock = 50, nameTokens = true): { pairs: Array<[string, string]>; crowded: string[] } {
-  const blocks = new Map<string, string[]>();
-  for (const p of pages) for (const k of blockingKeys(p, nameTokens)) blocks.set(k, [...(blocks.get(k) ?? []), p.key]);
-  const seen = new Set<string>(), pairs: Array<[string, string]> = [], crowded: string[] = [];
-  for (const [k, members] of blocks) {
-    if (members.length > maxBlock) { crowded.push(`${k} (${members.length})`); continue; }
-    for (let i = 0; i < members.length; i++) for (let j = i + 1; j < members.length; j++) {
-      const [a, b] = [members[i], members[j]].sort();
-      const id = `${a}|${b}`;
-      if (a !== b && !seen.has(id)) { seen.add(id); pairs.push([a, b]); }
-    }
-  }
-  return { pairs: pairs.sort((x, y) => x.join('|').localeCompare(y.join('|'))), crowded };
-}
+export const pairPrompt = (template: string, a: string, b: string) => template.replace('{{page_a}}', () => a).replace('{{page_b}}', () => b);
+export const pairBrain = (a: string, b: string) => `pair:${a}|${b}`;
 
 /** yes, no or unsure from the first word of an answer; null when it opens with none of them. */
 export function verdictOf(text: string): 'yes' | 'no' | 'unsure' | null {
@@ -67,93 +46,72 @@ export function verdictOf(text: string): 'yes' | 'no' | 'unsure' | null {
   return first === 'yes' || first === 'no' || first === 'unsure' ? first : null;
 }
 
-export const pairPrompt = (a: string, b: string) => `${MATCHER_PROMPT}\n\nPage A:\n${a}\n\nPage B:\n${b}`;
+export type Outcome = 'answer' | 'safety_stop' | 'budget_refused' | 'error';
+export interface Answer { outcome: Outcome; text: string; verdict: 'yes' | 'no' | 'unsure' | null; usage: NormalizedUsage | null; model: string | null; status: number | null; detail: string | null }
 
-interface Answer { text: string; usage: NormalizedUsage | null; model: string | null }
+const SAFETY_WORDS = /content[ _-]?(?:filter|policy|management)|safety|flagged|cyber_policy|usage polic/i;
 
 /** One call through the metering proxy's slot for this model. The proxy injects the key; the request carries none. */
-export async function ask(model: string, prompt: string, proxy: string, slot: string, fetchImpl: typeof fetch = fetch): Promise<Answer> {
+export async function ask(model: string, prompt: string, proxy: string, slot: string, brain: string, fetchImpl: typeof fetch = fetch): Promise<Answer> {
   const base = `${proxy.replace(/\/$/, '')}/${slot}`;
-  const [provider, id] = [model.slice(0, model.indexOf(':')), model.slice(model.indexOf(':') + 1)];
+  const provider = model.slice(0, model.indexOf(':')), id = model.slice(model.indexOf(':') + 1);
+  const anthropic = provider === 'anthropic';
+  let url: string, headers: Record<string, string>, body: Record<string, unknown>;
   if (provider === 'particle') {
     const req = compatRequest(model, [{ role: 'user', content: prompt }], {}, { PARTICLE_BASE_URL: `${base}/particle/v1`, PARTICLE_API_KEY: PROXY_HOLDS_KEY });
-    const r = await compatSend(req, { fetchImpl });
-    return { text: r.text, usage: normalizeUsage('openai', r.usage), model: r.response_model };
+    ({ url, headers, body } = req);
+  } else if (anthropic || provider === 'openai') {
+    url = anthropic ? `${base}/anthropic/v1/messages` : `${base}/openai/v1/chat/completions`;
+    headers = { 'content-type': 'application/json', ...(anthropic ? { 'anthropic-version': '2023-06-01', 'x-api-key': PROXY_HOLDS_KEY } : { authorization: `Bearer ${PROXY_HOLDS_KEY}` }) };
+    body = anthropic ? { model: id, max_tokens: ANTHROPIC_MAX_TOKENS, messages: [{ role: 'user', content: prompt }] } : { model: id, max_completion_tokens: OPENAI_MAX_COMPLETION_TOKENS, messages: [{ role: 'user', content: prompt }] };
+  } else throw new Error(`matcher: no route for ${model}`);
+  const none = { text: '', verdict: null, usage: null, model: null } as const;
+  let res: Response;
+  try { res = await fetchImpl(url, { method: 'POST', headers: { ...headers, 'x-proxy-brain': brain }, body: JSON.stringify(body) }); }
+  catch (e) { return { ...none, outcome: 'error', status: null, detail: String((e as Error).message).slice(0, 300) }; }
+  const raw = await res.text();
+  let json: Record<string, any> | null = null;
+  try { json = JSON.parse(raw); } catch { json = null; }
+  if (!res.ok) {
+    const err = json?.error ?? {};
+    const detail = `HTTP ${res.status} ${String(err.message ?? raw).slice(0, 300)}`;
+    if (res.status === 402 && (err.kind === 'budget' || err.type === 'budget')) return { ...none, outcome: 'budget_refused', status: 402, detail };
+    if (res.status === 400 && SAFETY_WORDS.test(`${err.code ?? ''} ${err.type ?? ''} ${err.message ?? ''}`)) return { ...none, outcome: 'safety_stop', status: 400, detail };
+    return { ...none, outcome: 'error', status: res.status, detail };
   }
-  const anthropic = provider === 'anthropic';
-  if (!anthropic && provider !== 'openai') throw new Error(`matcher: no route for ${model}`);
-  const res = await fetchImpl(anthropic ? `${base}/anthropic/v1/messages` : `${base}/openai/v1/chat/completions`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', ...(anthropic ? { 'anthropic-version': '2023-06-01', 'x-api-key': PROXY_HOLDS_KEY } : { authorization: `Bearer ${PROXY_HOLDS_KEY}` }) },
-    body: JSON.stringify(anthropic ? { model: id, max_tokens: ANTHROPIC_MAX_TOKENS, messages: [{ role: 'user', content: prompt }] } : { model: id, messages: [{ role: 'user', content: prompt }] }),
-  });
-  const text = await res.text();
-  if (!res.ok) throw new Error(`${model}: HTTP ${res.status} ${text.slice(0, 300)}`);
-  const json = JSON.parse(text) as Record<string, any>;
-  if (anthropic) return { text: (json.content ?? []).filter((c: any) => c?.type === 'text').map((c: any) => c.text).join(''), usage: normalizeUsage('anthropic', json.usage), model: json.model ?? null };
-  const r = parseCompatResponse(json);
-  return { text: r.text, usage: normalizeUsage('openai', r.usage), model: r.response_model };
+  if (!json) return { ...none, outcome: 'error', status: res.status, detail: 'response is not JSON' };
+  if (anthropic) {
+    const text = (json.content ?? []).filter((c: any) => c?.type === 'text').map((c: any) => c.text).join('');
+    const usage = normalizeUsage('anthropic', json.usage);
+    if (json.stop_reason === 'refusal') return { outcome: 'safety_stop', text, verdict: null, usage, model: json.model ?? null, status: res.status, detail: 'stop_reason refusal' };
+    return { outcome: 'answer', text, verdict: verdictOf(text), usage, model: json.model ?? null, status: res.status, detail: null };
+  }
+  const choice = json.choices?.[0] ?? {};
+  const text = typeof choice.message?.content === 'string' ? choice.message.content : '';
+  const usage = normalizeUsage('openai', json.usage);
+  if (choice.finish_reason === 'content_filter' || choice.message?.refusal) return { outcome: 'safety_stop', text, verdict: null, usage, model: json.model ?? null, status: res.status, detail: `finish_reason ${choice.finish_reason}` };
+  return { outcome: 'answer', text, verdict: verdictOf(text), usage, model: json.model ?? null, status: res.status, detail: null };
 }
 
-const arg = (flag: string) => { const at = process.argv.indexOf(flag); return at >= 0 ? process.argv[at + 1] : undefined; };
+export interface CallEvent { a: string; b: string; attempt: number; reask: boolean; outcome: Outcome; verdict: 'yes' | 'no' | 'unsure' | null; status: number | null; detail: string | null; answer: string; usage: NormalizedUsage | null; response_model: string | null; ms: number }
 
-async function main(): Promise<void> {
-  const seed = Number(arg('--seed') ?? PERSON_DEDUPE_DEFAULT_SEED);
-  const maxBlock = Number(arg('--max-block') ?? 50);
-  const worldPages = (perFamily: number) => generateLedger(seed, perFamily).pages.map(p => parseWrittenPage(p.source, p.slug, renderPage(p)));
-  const scale = Object.fromEntries([5, 10, 20].map(n => {
-    const ps = worldPages(n), b = blockPairs(ps, maxBlock), s = blockPairs(ps, maxBlock, false);
-    return [`per_family_${n}`, { pages: ps.length, pairs: b.pairs.length, pairs_per_page: b.pairs.length / ps.length, crowded_keys: b.crowded.length, without_given_name_tokens: { pairs: s.pairs.length, pairs_per_page: s.pairs.length / ps.length } }];
-  }));
-  const { ledger, pages } = loadSmokeWorld(resolve(arg('--world')!), seed);
-  const texts = new Map(pages.map(p => [p.key, readFileSync(p.path, 'utf8')]));
-  const written = pages.map(p => parseWrittenPage(p.source, p.slug, texts.get(p.key)!));
-  const { pairs: allPairs, crowded } = blockPairs(written, maxBlock);
-  const pairs = arg('--limit-pairs') ? allPairs.slice(0, Number(arg('--limit-pairs'))) : allPairs;
-  const blocking = { smoke: { pages: pages.length, pairs: allPairs.length, pairs_per_page: allPairs.length / pages.length, crowded }, ...scale, max_block: maxBlock };
-  console.log(JSON.stringify({ blocking }, null, 2));
-  if (process.argv.includes('--blocking-only')) return;
+export interface PairPlan { ask: Array<{ a: string; b: string; reask: boolean }>; settled: number; no_verdict: Array<{ a: string; b: string; why: string }> }
 
-  const out = resolve(arg('--out')!), usageLog = resolve(arg('--usage-log')!), proxy = arg('--proxy') ?? 'http://127.0.0.1:8787';
-  const concurrency = Number(arg('--concurrency') ?? 4);
-  mkdirSync(out, { recursive: true });
-  const summary: Record<string, unknown> = { blocking, prompt: MATCHER_PROMPT, pairs_sent: pairs.length };
-  for (const model of (arg('--models') ?? DEFAULT_MODELS.join(',')).split(',')) {
-    const slot = `matcher-${model.slice(model.indexOf(':') + 1).replace(/[^a-z0-9.-]/gi, '-')}`;
-    const calls = join(out, `${slot}.calls.jsonl`);
-    const verdicts = new Map<string, 'yes' | 'no' | 'unsure' | null>();
-    const errors: string[] = [];
-    let next = 0;
-    const started = performance.now();
-    const startedAt = new Date().toISOString();
-    await Promise.all(Array.from({ length: concurrency }, async () => {
-      while (next < pairs.length) {
-        const [a, b] = pairs[next++];
-        const t0 = performance.now();
-        try {
-          const r = await ask(model, pairPrompt(texts.get(a)!, texts.get(b)!), proxy, slot);
-          const v = verdictOf(r.text);
-          verdicts.set(`${a}|${b}`, v);
-          appendFileSync(calls, JSON.stringify({ a, b, verdict: v, answer: r.text.slice(0, 600), usage: r.usage, response_model: r.model, ms: Math.round(performance.now() - t0) }) + '\n');
-        } catch (e) {
-          errors.push(`${a}|${b}: ${String((e as Error).message).slice(0, 300)}`);
-          appendFileSync(calls, JSON.stringify({ a, b, error: String((e as Error).message).slice(0, 600), ms: Math.round(performance.now() - t0) }) + '\n');
-        }
-      }
-    }));
-    const wall = (performance.now() - started) / 1000;
-    const tier = (want: string) => [...verdicts].filter(([, v]) => v === want).map(([k]) => k.split('|'));
-    const readout: Readout = { system: 'llm-matcher', version: 'entity-h2h matcher v1', config: { blocking: 'name token, surname, email, email domain, linkedin, github', max_block: maxBlock, prompt: MATCHER_PROMPT, reasoning: 'provider default (particle-1: its default effort, high, sent explicitly)' }, model, tiers: { auto: tier('yes'), proposed: tier('unsure') } };
-    writeFileSync(join(out, `${slot}.readout.json`), JSON.stringify(readout, null, 2) + '\n');
-    const usage = usageByKey(usageLog, k => k === `slot:${slot}`, startedAt).get(`slot:${slot}`) ?? null;
-    const score = scoreReadout(ledger, pages, readout);
-    const counts = { yes: 0, no: 0, unsure: 0, unparsed: 0 };
-    for (const v of verdicts.values()) counts[v ?? 'unparsed']++;
-    summary[model] = { slot, calls: verdicts.size, errors, verdicts: counts, wall_s: wall, usage,
-      sanity_score: Object.fromEntries(Object.entries(score).map(([t, s]) => [t, { false_merge: s.false_merge, precision: s.precision, recall: s.recall, b3: s.b3 }])) };
-    console.log(`${model}: ${verdicts.size} answered, ${errors.length} errors, ${JSON.stringify(counts)}, $${usage?.usd.toFixed(4) ?? '?'}, ${wall.toFixed(0)}s`);
+/**
+ * Which pairs a run asks. A pair is settled by an answer (a verdict, or an answer with none) or a safety stop. On a
+ * resume, an unsettled pair with no request on the proxy log is asked; one that has a request there is asked again
+ * once (reask); one already asked again is left with no verdict.
+ */
+export function planPairs(pairs: ReadonlyArray<readonly [string, string]>, events: readonly CallEvent[], logged: ReadonlySet<string>): PairPlan {
+  const last = new Map<string, CallEvent[]>();
+  for (const e of events) last.set(pairBrain(e.a, e.b), [...(last.get(pairBrain(e.a, e.b)) ?? []), e]);
+  const plan: PairPlan = { ask: [], settled: 0, no_verdict: [] };
+  for (const [a, b] of pairs) {
+    const es = last.get(pairBrain(a, b)) ?? [];
+    if (es.some(e => e.outcome === 'answer' || e.outcome === 'safety_stop')) { plan.settled++; continue; }
+    if (!logged.has(pairBrain(a, b))) { plan.ask.push({ a, b, reask: false }); continue; }
+    if (es.some(e => e.reask)) { plan.no_verdict.push({ a, b, why: es.at(-1)?.detail ?? 'sent, no verdict, already asked again once' }); continue; }
+    plan.ask.push({ a, b, reask: true });
   }
-  writeFileSync(join(out, 'summary.json'), JSON.stringify(summary, null, 2) + '\n');
+  return plan;
 }
-
-if (import.meta.main) main().catch(e => { console.error(e); process.exit(1); });
