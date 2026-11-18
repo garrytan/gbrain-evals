@@ -1,0 +1,16 @@
+79cb4848611b56675f36516ae2bfcc079085a84e
+ M bun.lock
+ M package.json
+    "gbrain": "github:garrytan/gbrain#6ce7195b44a034f85aec811f11fbf862db376f50",
+    "gbrain",
+  "version": "0.60.733.0",
+dcd0da8a513aa16aab021ea6cac6c60d30aee66cefa6d24589da04567621dce2  bun.lock
+4
+1.4.4
+2026-11-16T22:17:12Z
+ANTHROPIC_API_KEY unset
+OPENAI_API_KEY unset
+VOYAGE_API_KEY unset
+PARTICLE_API_KEY unset
+GEMINI_API_KEY unset
+EXA_API_KEY unset

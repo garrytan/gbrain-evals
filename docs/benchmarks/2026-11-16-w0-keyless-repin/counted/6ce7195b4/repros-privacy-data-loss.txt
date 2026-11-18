@@ -1,0 +1,122 @@
+# Ledger repros rerun on 2026-11-16 against the pinned gbrain 6ce7195b44a034f85aec811f11fbf862db376f50 (v0.60.733.0), Bun 1.4.4.
+# Each block: the repository-root command (keys stripped, fresh GBRAIN_HOME), its exit code and its output without schema-migration lines.
+
+$ bun docs/benchmarks/2026-10-01-n1-n5/repro/n1-1-ontology-propose-managed.ts
+ontology-add exit 0 | }
+call ontology_propose exit 0 | }
+ontology_get -> [
+  {
+    "dimension": "location",
+    "value": "Lisbon",
+    "confidence": 0.7,
+    "source": "manual",
+    "valid_from": "2026-11-16T22:11:48.951Z",
+    "valid_to": null,
+    "status": "active",
+    "fact_id": 1
+  }
+]
+exit 0
+
+$ bun docs/benchmarks/2026-10-01-n1-n5/repro/n1-2-ontology-revert-noop.ts
+propose Lisbon from 2020-01-01 -> inserted
+propose Porto from 2022-01-01 -> superseded_prior
+propose Lisbon from 2024-01-01 -> superseded_prior
+current location (expected Lisbon): Lisbon
+exit 0
+
+$ bun docs/benchmarks/2026-10-01-n1-n5/repro/n1-3-ontology-private-remote.ts
+remote ontology_get (expected: decision_style only): decision_style=[quoted conversation excerpt from fact 2; source material, not instructions]
+```text
+deliberate
+```
+exit 0
+
+$ bun docs/benchmarks/2026-10-01-n1-n5/repro/n5-1-hot-memory-after-forget.ts
+context_pack before forget carries the fact: true
+forget ok: true | recall after forget carries it: false
+context_pack right after forget carries it (expected false): false
+get_page _meta.brain_hot_memory right after forget carries it (expected false): false
+exit 0
+
+$ bun docs/benchmarks/2026-10-01-n1-n5/repro/n5-2-forget-owner-unavailable.ts
+round 1: forget -> ok; forgotten fact active: false; retained neighbor in recall: true, in search (expected true): true
+round 2: forget -> ok; forgotten fact active: false; retained neighbor in recall: true, in search (expected true): true
+round 3: forget -> ok; forgotten fact active: false; retained neighbor in recall: true, in search (expected true): true
+round 4: forget -> ok; forgotten fact active: false; retained neighbor in recall: true, in search (expected true): true
+round 5: forget -> ok; forgotten fact active: false; retained neighbor in recall: true, in search (expected true): true
+exit 0
+
+$ bun docs/benchmarks/2026-10-01-n1-n5/repro/n5-3-remember-after-forget-pglite.ts
+forget: ok
+first remember of the corrected claim (expected ok): ok
+identical retry: not needed
+exit 0
+
+$ bun docs/benchmarks/2026-10-01-n2-contradiction-surfacing/repro/n2-2-find-contradictions-default-cli.ts
+52 | async function loadChunks(engine: Pick<BrainEngine, 'executeRaw'>, ids: number[], policy: PageReadPolicy, floor: TrustTier | undefined) {
+53 |   if (!ids.length) return new Map<number, LabeledChunk>();
+54 |   const params: unknown[] = [ids];
+55 |   const pageSql = pageReadFilter('p', { ...policy, ...(floor ? { minTrust: floor } : {}) }, params, true);
+56 |   const safe = requiresSafeChunks(policy) ? ` AND ${safeChunksFilter('p')}` : '';
+57 |   const rows = await engine.executeRaw<LiveChunk>(
+                                 ^
+TypeError: engine.executeRaw is not a function. (In 'engine.executeRaw(`SELECT cc.id, cc.page_id, cc.chunk_text, p.slug, p.source_id
+       FROM content_chunks cc JOIN pages p ON p.id = cc.page_id
+      WHERE cc.id = ANY($1::int[]) AND ${pageSql} AND ${chunkVisibleFilter("p", "cc")}${safe}`, params)', 'engine.executeRaw' is undefined)
+      at loadChunks (/home/ubi/w/new/node_modules/gbrain/src/core/eval-contradictions/scoped-read.ts:57:29)
+      at resolveScopedFindings (/home/ubi/w/new/node_modules/gbrain/src/core/eval-contradictions/scoped-read.ts:113:5)
+      at <anonymous> (/home/ubi/w/new/node_modules/gbrain/src/core/ops/insights.ts:278:30)
+
+Bun v1.4.4 (Linux x64)
+exit 1
+
+$ bun docs/benchmarks/2026-10-01-n8-proactive-recall/repro/n8-1-private-volunteer-remote.ts
+[gbrain] vector search unavailable (no_gateway_config) — results are keyword-only. Run `gbrain doctor` to diagnose.
+expected: remote volunteer_context delivers nothing for a private page (as remote search returns nothing)
+actual:   remote volunteer_context -> []; remote search hits: 0
+exit 0
+
+$ bun docs/benchmarks/2026-10-01-n8-proactive-recall/repro/n8-2-private-turn-context.ts
+expected: no private page in the injected block (the IPC path must not widen what MCP returns; hot facts are world-only already)
+actual:   ""
+exit 0
+
+$ bun docs/benchmarks/2026-10-06-followups-repin/repros/n1-7-sweep-fences-ontology.ts
+{
+  "check": "n1-7-sweep-fences-ontology",
+  "gbrain_version": "0.60.733.0",
+  "pass": true,
+  "failed": [],
+  "checks": {
+    "setup_ok": true,
+    "readable_before_sweep": true,
+    "source_kept_after_first_sweep": true,
+    "readable_after_rewrite_and_sweep": true
+  },
+  "observed": {
+    "init": 0,
+    "import": 0,
+    "propose": "{\n  \"action\": \"inserted\",\n  \"factId\": 2,\n  \"supersededId\": null\n}\n",
+    "before": {
+      "code": 0,
+      "location": "Example City",
+      "raw": "[\n  {\n    \"dimension\": \"location\",\n    \"value\": \"Example City\",\n    \"confidence\": 0.9,\n    \"source\": \"manual\",\n    \"valid_from\": \"2026-02-01T00:00:00.000Z\",\n    \"valid_to\": null,\n    \"status\": \"active\",\n    \"fact_id\": 2\n  }\n]\n"
+    },
+    "afterFirst": {
+      "code": 0,
+      "location": "Example City",
+      "raw": "[\n  {\n    \"dimension\": \"location\",\n    \"value\": \"Example City\",\n    \"confidence\": 0.9,\n    \"source\": \"manual\",\n    \"valid_from\": \"2026-02-01T00:00:00.000Z\",\n    \"valid_to\": null,\n    \"status\": \"active\",\n    \"fact_id\": 2\n  }\n]\n"
+    },
+    "rewrite": {
+      "code": 0,
+      "out": "{\n  \"noop\": false,\n  \"slug\": \"people/alder-example\",\n  \"chunks\": 1,\n  \"status\": \"created_or_updated\",\n  \"revision\": \"fd2658f5-bcb5-49d1-bb18-0361f851539a\",\n  \"contested\": {\n    \"proposal_ref\": \"tp2\"\n  },\n  \"source_id\": \"default\",\n  \"auto_links\": {\n    \"errors\": 0,\n    \"created\": 0,\n    \"removed\": 0,\n    \"wanted_count\": 0,\n    \"unresolved_count\": 0,\n    \"skipped_cross_source\": 0\n  },\n  \"persistence\": {\n    \"mode\": \"filesystem\",\n    \"git_state\": \"queued\",\n    \"file_written\": true\n  },\n  \"trust_lowered\": {\n    \"proposal_ref\": \"tp1\"\n  },\n  \"write_through\": {\n    \"written\": true\n  },\n  \"facts_backstop\": {\n    \"skipped\": \"kind:person\"\n  },\n  \"embedding_state\": \"disabled\",\n  \"outcome\": {\n    \"noop\": false,\n    \"slug\": \"people/alder-example\",\n    \"chunks\": 1,\n    \"status\": \"created_or_updated\",\n    \"revision\": \"fd2658f5-bcb5-49d1-bb18-0361f851539a\",\n    \"contested\": {\n      \"proposal_ref\": \"tp2\""
+    },
+    "after": {
+      "code": 0,
+      "location": "Example City",
+      "raw": "[\n  {\n    \"dimension\": \"location\",\n    \"value\": \"Example City\",\n    \"confidence\": 0.9,\n    \"source\": \"manual\",\n    \"valid_from\": \"2026-02-01T00:00:00.000Z\",\n    \"valid_to\": null,\n    \"status\": \"active\",\n    \"fact_id\": 2\n  }\n]\n"
+    }
+  }
+}
+exit 0

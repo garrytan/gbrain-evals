@@ -12,7 +12,7 @@ questions (opaque session ids, gbrain `109b992`). The interesting engineering
 question is how it gets there, and which parts help on other kinds of material.
 
 This page states what the experiments show about gbrain as this repository pins
-it (master `d253ec0ff`, v0.60.623.0); each number names the gbrain commit it was
+it ([the pin](gbrain-under-test.md#the-pin)); each number names the gbrain commit it was
 measured at. Everything above [Changelog](#changelog) is current.
 [Conversation results](benchmarks/2026-10-04-longmemeval-opaque-followups.md).
 
@@ -254,6 +254,19 @@ application resemble the ones a measured configuration solves.
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-11-16: The opening links the pin
+
+The opening links [the pin](gbrain-under-test.md#the-pin) instead of naming `6ce7195b4` (v0.60.733.0), so a re-pin
+no longer changes this page. No number changed.
+
+### 2026-11-16: The opening names `6ce7195b4`
+
+The opening names gbrain master `6ce7195b4` (v0.60.733.0), gbrain's newest release, as the pin (was `d253ec0ff`,
+v0.60.623.0). The search mode bundles gain `qualified_aliases` and `title_qualified`, off in every bundle
+(v0.60.710.0). Since v0.60.725.0 a keyless `search` or `query` with a short first page adds pages that hold only some
+of the question's words, and since v0.60.726.0 conversation archive pages rank under a 0.8 prior. Every number here was
+measured before v0.60.710.0 and names its commit, so no lesson changes.
 
 ### 2026-11-09: The opening names `d253ec0ff`
 

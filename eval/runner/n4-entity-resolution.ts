@@ -67,6 +67,7 @@ import { gbrainPin } from './gbrain-version.ts';
 import { DECIDE_OFF, withHermeticEnv } from './hermetic-env.ts';
 import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from './gbrain-under-test.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
+import { loadFactUnquote, storedFactText, type Unquote } from './quoted-reads.ts';
 import {
   BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, noModelSpend, receiptPath, sourceTreeIdentity, writeReceipt,
   type Receipt, type ReceiptVerdict,
@@ -300,15 +301,17 @@ interface Gbrain {
   operations: Operation[];
   resolveEntitySlugWithSource: ResolveModule['resolveEntitySlugWithSource'];
   resolveExtractedEntitiesForSave: ResolveOnSaveModule['resolveExtractedEntitiesForSave'];
+  unquote: Unquote | undefined;
 }
 
 async function loadGbrain(gut: GbrainUnderTest): Promise<Gbrain> {
-  const [pglite, imp, ops, res, ros] = await Promise.all([
+  const [pglite, imp, ops, res, ros, unquote] = await Promise.all([
     importGbrain<typeof import('gbrain/pglite-engine')>(gut, 'src/core/pglite-engine.ts'),
     importGbrain<typeof import('gbrain/import-file')>(gut, 'src/core/import-file.ts'),
     importGbrain<typeof import('gbrain/operations')>(gut, 'src/core/operations.ts'),
     importGbrain<ResolveModule>(gut, 'src/core/entities/resolve.ts'),
     importGbrain<ResolveOnSaveModule>(gut, 'src/core/entities/resolve-on-save.ts'),
+    loadFactUnquote(gut),
   ]);
   return {
     PGLiteEngine: pglite.PGLiteEngine,
@@ -316,6 +319,7 @@ async function loadGbrain(gut: GbrainUnderTest): Promise<Gbrain> {
     operations: ops.operations,
     resolveEntitySlugWithSource: res.resolveEntitySlugWithSource,
     resolveExtractedEntitiesForSave: ros.resolveExtractedEntitiesForSave,
+    unquote,
   };
 }
 
@@ -338,6 +342,12 @@ function op(g: Gbrain, name: string): Operation {
 }
 
 const MARKER = 'n4-marker ';
+
+/** The page keys whose marker facts a `recall` answer returned. A remote read quotes facts (gbrain v0.60.536.0 on), so each fact is read through the build's own unquote. */
+export function recallMarkers(facts: ReadonlyArray<{ fact: string; quoted?: unknown }>, unquote: Unquote | undefined): string[] {
+  if (!unquote && facts.some(f => f.quoted)) throw new HarnessError('recall returned a quote-fenced fact, and this build exports no unquoteFactText (v0.60.536.0 and v0.60.537.0 fence facts without it); measure another build');
+  return facts.map(f => storedFactText(f.fact, f.quoted, unquote)).filter(f => f.startsWith(MARKER)).map(f => f.slice(MARKER.length));
+}
 
 export interface IdentityProbeRow {
   probe_id: string;
@@ -530,8 +540,8 @@ async function runOnEngine(g: Gbrain, engine: BrainEngine, ledger: Ledger, gold:
     let pred: Prediction;
     let returned: string[] = [];
     try {
-      const res = await op(g, 'recall').handler(callerContext(engine, m.caller), { entity: m.text, limit: 100 }) as { facts?: Array<{ fact: string }> };
-      returned = (res.facts ?? []).map(f => f.fact).filter(f => f.startsWith(MARKER)).map(f => f.slice(MARKER.length));
+      const res = await op(g, 'recall').handler(callerContext(engine, m.caller), { entity: m.text, limit: 100 }) as { facts?: Array<{ fact: string; quoted?: unknown }> };
+      returned = recallMarkers(res.facts ?? [], g.unquote);
       const pages = [...new Set(returned)].sort();
       const stray = pages.filter(p => !seeded.has(p));
       if (stray.length) throw new HarnessError(`recall returned marker for unseeded page ${stray.join(', ')}`);

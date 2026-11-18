@@ -30,7 +30,7 @@ The LongMemEval embedding cache is local and uncommitted. Its default location i
 
 README.md, the hub pages in `docs/` (index, settings, retrieval lessons, comparisons) and the guides in `eval/` (README, CONTRIBUTING, CREDITS) have two parts:
 
-1. **Current state, on top.** A first-time reader, human or agent, learns what gbrain does at the commit `package.json` pins, in present tense. Name the pin once; give each number its gbrain commit when it differs from the pin. Replace a superseded claim instead of appending an "Update" or a dated amendment beside it.
+1. **Current state, on top.** A first-time reader, human or agent, learns what gbrain does at the commit `package.json` pins, in present tense. Only [docs/gbrain-under-test.md](docs/gbrain-under-test.md#the-pin) names the pin's version and commit; every other page links there, so a re-pin changes one page. Give each number its gbrain commit. Replace a superseded claim instead of appending an "Update" or a dated amendment beside it.
 2. **`## Changelog`, at the bottom.** Newest first, one `### YYYY-MM-DD: <what changed>` entry per change, linking the commit, saying what changed on that page (old value to new value) and why. History, superseded numbers and corrections to earlier wording live here, in dated reports and in CHANGELOG.md. A published number later found invalid or overstated is listed in [docs/corrections.md](docs/corrections.md), not in a current-state part.
 
 README's current state has three parts, in this order: **what gbrain does** (capabilities in plain words), **current results** (one table, each number with its gbrain commit and report) and **how gbrain compares** with other systems, to the best we know. Put gbrain's best foot forward, exactly: lead with what it does well, keep each comparison on a matched metric, and list known limits after. Never add an "Update, <date>" block; fold a new result into the right table and record the change in the changelog.
@@ -111,11 +111,34 @@ A release follows each merge, and the agent whose pull request just merged cuts 
 3. **Report it ready.** When every required check is green at `<sha>` and the pull request's head is still `<sha>`, report it ready to merge with `<sha>` as the pin.
 4. **Merge.** The maintainer merges it with `gstack-ship-queue land --pr <n> --pin <sha>`. If another pull request landed after the stamp, land refuses with `RELEASE_STAMP_INVALID`; run step 1 again, which replaces the branch and updates the same pull request, and report the new sha.
 
+### Choose the gbrain build
+
+Every new run, development or counted, measures gbrain's newest release at the moment it starts (Garry, 2026-11-16:
+"We don't care about old Gbrain builds. We care about newest always!"). The newest release is the highest version tag
+merged into gbrain's master (`git ls-remote --tags https://github.com/garrytan/gbrain.git` lists the tags). It is not
+the weekly `stable` tag, the `latest-stable` alias or this repository's `package.json` pin when that lags.
+
+- **Move the pin to it.** `bun eval/runner/gbrain-pin.ts bump` moves `gbrain` in `package.json` and `bun.lock` to the
+  newest release, rewrites the pin line of [docs/gbrain-under-test.md](docs/gbrain-under-test.md#the-pin), the one
+  page that names the pin, with a changelog entry there, writes a `changelog.d` fragment, and prints the commit range
+  and gbrain's changelog in between; it exits 2 when that release is already pinned. Read the printed changelog for
+  changes that break the harness, and describe a new capability on that page by hand when it matters. Results
+  measured at older commits keep naming their commit, and a re-pin changes no published number.
+- **A preregistration names "newest release at launch".** If a newer release lands before the experiment's first
+  counted gbrain run, re-pin in a dated amendment committed before that run.
+- **The build freezes once counted gbrain runs start,** so the experiment's numbers stay tied to one commit, which
+  the results record. A results branch keeps that pin when it merges main: resolve `package.json` and `bun.lock` to
+  it until its counted runs finish, then take main's pin at the last main merge, so main never moves back.
+- **Run an older build only when the question is about that build,** such as a regression bisect or a
+  stable-versus-master check, and say so. The nightly check keeps `stable` only as master's regression reference.
+  `gbrain-cues` and `gbrain-reader` are frozen pins of the experiments that name them
+  ([eval/runner/pins.ts](eval/runner/pins.ts)); new work uses `gbrain`.
+
 ### Choose models
 
 gbrain and gstack are built for frontier models, so every model-comparison run (Cat 40 Model Ladder, answer-model
 benchmarks and any paid agent-task eval) tests them on the newest frontier Opus and GPT, today `claude-opus-5-5` and
-`gpt-6.1-sol`, plus `particle-1` as the primary low-cost model. These rules follow the gbrain project rule of
+`gpt-6.2-sol`, plus `particle-1` as the primary low-cost model. These rules follow the gbrain project rule of
 2026-10-07, Garry's decision of 2026-10-31 that `claude-opus-5-5` and `particle-1` are the primary models, and his
 rule of 2026-11-01 that evals test gbrain and gstack on frontier models.
 
@@ -129,13 +152,16 @@ rule of 2026-11-01 that evals test gbrain and gstack on frontier models.
   lists particle-1 under `models_not_run` with the reason. First paired numbers:
   [particle replay](docs/benchmarks/2026-11-01-longmemeval-particle-replay/REPORT.md).
 - **Always run the newest frontier Opus and GPT.** Today's counted frontier readers are `claude-opus-5-5` and
-  `gpt-6.1-sol`. Before a run, check which models are newest (`bun scripts/model-freshness.ts` reads the providers'
-  model lists, Particle's included) and add any that the run doesn't already include. Register a price for a new model
-  in `eval/runner/budget-ledger.ts` so the ledger can reserve it.
+  `gpt-6.2-sol`. The runner's code still names `gpt-6.1-sol` (`FRONTIER_READERS` in `eval/runner/systems/baselines.ts`,
+  which the workload sweep's model check requires) and the ledger has no `gpt-6.2-sol` price yet, so the first run on
+  `gpt-6.2-sol` registers its price and moves `FRONTIER_READERS` in its own change. Before a run, check which models
+  are newest (`bun scripts/model-freshness.ts` reads the providers' model lists, Particle's included) and add any that
+  the run doesn't already include. Register a price for a new model in `eval/runner/budget-ledger.ts` so the ledger can
+  reserve it.
 - **particle-1 never judges a counted cell.** Counted judges stay protocol-matched (for example `gpt-4o-2024-08-06` for
   LongMemEval and `gpt-6.1-sol` for Cat 40 Hard). particle-1 becomes the default reader and agent for a development loop
   once it passes that loop's preregistered agreement test; development judges are the ones the dataset's harness fixes,
-  else `gpt-6.1-sol`.
+  else `gpt-6.2-sol`.
 - **Sonnet and Haiku are not models under test (Garry, 2026-11-01).** A comparison run no longer needs them. Never run
   one as an agent, reader, answer model, optimizer or optimization target, never use one as a stand-in for a frontier
   model, and never spend a run on transfer between them. The exception is a run that asks a question about that tier
@@ -157,7 +183,7 @@ rule of 2026-11-01 that evals test gbrain and gstack on frontier models.
   rather than counting it as a win or a tie.
 - **Preregistered gates keep their model list.** To change the models of an existing preregistered gate, record the
   change and its reason in the preregistration before any new cell runs. A preregistered program that names Sonnet or
-  Haiku as a model under test makes that change before its next run: Opus 5.5, GPT-6.1 Sol and, where the runner has a
+  Haiku as a model under test makes that change before its next run: Opus 5.5, GPT-6.2 Sol and, where the runner has a
   route, particle-1.
 - **Defaults follow the same rules.** A live category's default models are current-generation models, and its default
   models under test are frontier models, never Sonnet or Haiku. `test/eval/model-defaults.test.ts` holds both, for

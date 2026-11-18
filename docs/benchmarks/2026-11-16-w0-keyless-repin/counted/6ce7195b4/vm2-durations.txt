@@ -1,0 +1,8 @@
+lifecycle 8
+lifecycle-report 0
+n14-pglite-2mb 101
+n14-pglite-20mb 537
+n14-pglite-24mib 673
+n14-pglite-large 389
+n14-postgres-2mb 131
+n14-postgres-large 1080

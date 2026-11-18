@@ -7,8 +7,11 @@
  *   - remote: GbrainMcpArm, gbrain serve over stdio, which dispatches remote: true with no grant, the identity reach.ts
  *     probes with. Out-of-view gold is not readable.
  *   - local: GbrainCallArm, the same tool list dispatched through gbrain call (remote: false), the trusted CLI caller.
- * Before the agent starts, each of the task's gold pages is probed with get_page as that caller, so the task's
- * out_of_view comes from observed reachability, as tasks.ts requires. Probe calls are not the agent's.
+ * Before the agent starts, each of the task's gold pages is probed with get_page as that caller, one page at a time, so
+ * the task's out_of_view comes from observed reachability, as tasks.ts requires. Probe calls are not the agent's.
+ * Each local probe is its own gbrain call process on a single-writer PGLite brain, so two at once can fail the second.
+ * Only gbrain's page_not_found answer counts as out of view; any other failed probe makes the episode a harness_error
+ * row, scored before the agent runs.
  *
  * The answer is the fixed schema {answered, abstained, citations}, parsed with tasks.ts parseAnswer (anything else is
  * an invalid row, never a judge call) and scored with scoreAnswer. The scorecard reports verdicts by caller and by the
@@ -93,6 +96,27 @@ export function scriptedOutOfViewPolicy(task: Task, policy: 'careful' | 'answers
   };
 }
 
+/** Whether a get_page answer is gbrain's out-of-view result: the page_not_found error it gives a caller a page is hidden from. */
+function hidden(output: string): boolean {
+  if (!output.startsWith('Error:')) return false;
+  try { return (JSON.parse(output.slice('Error:'.length)) as { code?: unknown }).code === 'page_not_found'; } catch { return false; }
+}
+
+/**
+ * Each gold page probed one page at a time: readable, or out of view only on gbrain's page_not_found answer. Any other
+ * answer (a lock timeout, a crash) is a harness error, never out of view, and the page stays in view.
+ */
+export async function probeReachable(arm: { call(name: string, args: Record<string, unknown>): Promise<string> }, gold: readonly string[]): Promise<{ observed: Record<string, boolean>; errors: string[] }> {
+  const observed: Record<string, boolean> = {};
+  const errors: string[] = [];
+  for (const slug of gold) {
+    const output = await arm.call('get_page', { slug });
+    observed[slug] = !hidden(output);
+    if (observed[slug] && !readable(output, slug)) errors.push(`${slug}: ${output.slice(0, 200)}`);
+  }
+  return { observed, errors };
+}
+
 export async function runOutOfViewEpisode(input: { world: World; index: number; caller: Caller; trial: number; gut?: GbrainUnderTest; policy?: 'careful' | 'answers-anyway' } & EpisodeModel): Promise<OutOfViewEpisode> {
   if (!input.scripted && !input.policy && !input.budgetRunId) throw new Error(`a real ${input.model} episode needs the paid-arm guard: pass the budgetRunId requirePaidArm returned, inside a granted paid window`);
   const { world, caller } = input;
@@ -101,17 +125,17 @@ export async function runOutOfViewEpisode(input: { world: World; index: number; 
     const mcp = await GbrainMcpArm.start(brain, SERVE_ARGS);
     let arm: GbrainMcpArm | GbrainCallArm = mcp;
     const gold = g6Tasks(world)[input.index].gold;
-    const probe = async (a: GbrainMcpArm | GbrainCallArm) => Object.fromEntries(await Promise.all(gold.map(async s => [s, readable(await a.call('get_page', { slug: s }), s)] as const)));
-    let observed: Record<string, boolean>;
+    let probe: Awaited<ReturnType<typeof probeReachable>>;
     try {
-      if (caller === 'remote') observed = await probe(mcp);
+      if (caller === 'remote') probe = await probeReachable(mcp, gold);
       else {
         arm = new GbrainCallArm(brain, mcp.tools(), mcp.instructions());
         await mcp.close();
-        observed = await probe(arm);
+        probe = await probeReachable(arm, gold);
       }
       arm.calls.length = 0;
-      const task = g6Tasks(world, { caller, reachable: observed })[input.index];
+      const task = g6Tasks(world, { caller, reachable: probe.observed })[input.index];
+      if (probe.errors.length) return scoreOutOfViewEpisode({ world, task, caller, model: input.model, trial: input.trial, calls: [], final: null, usd: 0, stop: 'harness_error' });
       const scripted = input.scripted ?? (input.policy ? scriptedOutOfViewPolicy(task, input.policy) : undefined);
       const { run, calls } = await runOnArm(arm, { ...input, scripted }, task.question, OOV_ANSWER_TOOL);
       return scoreOutOfViewEpisode({ world, task, caller, model: input.model, trial: input.trial, calls, final: run.final, usd: run.usd, stop: run.stop });

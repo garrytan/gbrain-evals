@@ -27,6 +27,26 @@
     "eval/data/skillopt-method-v3/world/**",
     "docs/benchmarks/predictive-measures/**/scorecard.json",
     "docs/benchmarks/predictive-measures/**/episodes.jsonl.gz",
-    "eval/data/changing-facts-v1/dev/worlds/*/world.json"
+    "eval/data/changing-facts-v1/dev/worlds/*/world.json",
+    "eval/data/changing-facts-v1/dev/worlds/bg1-dev-0[4-9]/plan.json",
+    "eval/data/changing-facts-v1/dev/worlds/bg1-dev-1[0-9]/plan.json",
+    "eval/data/changing-facts-v1/dev/worlds/bg1-dev-20/plan.json",
+    "eval/data/changing-facts-v1/dev/worlds/bg1-dev-0[4-9]/questions.json",
+    "eval/data/changing-facts-v1/dev/worlds/bg1-dev-1[0-9]/questions.json",
+    "eval/data/changing-facts-v1/dev/worlds/bg1-dev-20/questions.json",
+    "eval/data/changing-facts-v1/fixtures/worlds/bg1-dev-0[4-9]/world.json",
+    "eval/data/changing-facts-v1/fixtures/worlds/bg1-dev-1[0-9]/world.json",
+    "eval/data/changing-facts-v1/fixtures/worlds/bg1-dev-20/world.json",
+    "eval/data/changing-facts-v1/fixtures/worlds/bg1-dev-0[4-9]/questions.json",
+    "eval/data/changing-facts-v1/fixtures/worlds/bg1-dev-1[0-9]/questions.json",
+    "eval/data/changing-facts-v1/fixtures/worlds/bg1-dev-20/questions.json",
+    "docs/benchmarks/2026-11-16-w0-keyless-repin/counted/**",
+    "docs/benchmarks/2026-11-17-readme-baselines/**/*.json",
+    "docs/benchmarks/2026-11-17-readme-baselines/**/*.ndjson",
+    "docs/benchmarks/2026-11-17-readme-baselines/**/*.gz",
+    "docs/benchmarks/2026-11-17-readme-baselines/**/*.csv",
+    "docs/benchmarks/2026-11-17-readme-baselines/**/*.jsonl",
+    "docs/benchmarks/*-engine-bench/correctness/work/*/receipt.json",
+    "docs/benchmarks/*-engine-bench/speed/*speed-*-10000.json"
   ]
 }

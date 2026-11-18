@@ -1,0 +1,83 @@
+{
+ "schema": "gbrain-evals/readme-baselines-lme-plain-hybrid/v1",
+ "started": "2026-11-17T07:41:16.130Z",
+ "finished": "2026-11-17T07:45:13.362Z",
+ "git_sha": "6895d48840ba4f19ec67b7078998d033f99bddaa",
+ "bun": "1.4.4",
+ "dataset": {
+  "file": "longmemeval/longmemeval_s_cleaned.json",
+  "url": "https://huggingface.co/datasets/xiaowu0162/longmemeval-cleaned/resolve/98d7416c24c778c2fee6e6f3006e7a073259d48f/longmemeval_s_cleaned.json",
+  "sha256": "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442"
+ },
+ "sanitizer_salt": "readme-baselines-lme",
+ "retrieve_k": 50,
+ "probe": "first 300 characters of the longest turn of the last session in ingest order (the readiness probe before A23)",
+ "capabilities": {
+  "system": "plain-hybrid",
+  "protocol": 1,
+  "versions": {
+   "package": "in-repo",
+   "lock_sha256": null,
+   "image": null,
+   "vendor_benchmark_code": null
+  },
+  "configs": {
+   "common": {
+    "model_roles": {
+     "embedder": "openai:text-embedding-3-large@1536",
+     "dims": 1536
+    },
+    "notes": "Postgres full-text plus pgvector cosine, reciprocal-rank fusion; whole sessions; embedding input cut at 24,000 characters"
+   }
+  },
+  "time": "in-text",
+  "provenance": {
+   "status": "exact",
+   "mechanism": "one item per ingested session"
+  },
+  "delete": "native",
+  "readiness": "synchronous: up to 256 sessions are buffered and embedded 16 at a time, one per request; retrieve, delete and finish write every buffered session of the namespace first, so a session is searchable once ingest returns",
+  "namespace": "in-process",
+  "parallel_namespaces": false,
+  "retrieval_policies": {
+   "vendor-default": {
+    "settings": {
+     "k": 10
+    }
+   },
+   "fixed-evidence": {
+    "settings": {
+     "k": 30
+    }
+   }
+  },
+  "streaming": "disabled",
+  "telemetry_off": [],
+  "agent_surface": {
+   "kind": "none"
+  },
+  "deviations_from_vendor_code": []
+ },
+ "concurrency": 6,
+ "questions_attempted": 500,
+ "rows_written": 500,
+ "error_rows": 1,
+ "ledger": {
+  "run_id": "lme-plain-hybrid-2026-11-17T07-41-16-127Z-622e395d",
+  "budget_usd": 15,
+  "reserved_usd": 8.82752195,
+  "actual_usd": 5.20055029,
+  "charged_reservations": 0,
+  "requests": 20441,
+  "input_tokens": 40004233,
+  "output_tokens": 0,
+  "overshoot_usd": 0.00296335,
+  "ledger_path": "<vm>/rb/ledger-retrieval.sqlite",
+  "program_cap_usd": 20,
+  "event_loop_lag_ms": {
+   "p50": 0,
+   "p99": 524,
+   "max": 8309.9
+  }
+ }
+}

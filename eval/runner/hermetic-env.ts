@@ -57,6 +57,18 @@ export const HERMETIC_STRIPPED_KEYS = [
 /** Any provider credential gbrain might add later. */
 export const HERMETIC_KEY_PATTERN = /(_API_KEY|_API_TOKEN|_BEARER_TOKEN)$|^(TYPESAFE|JEV)_/;
 
+/**
+ * Mask every password that a connection URL or a libpq key=value string carries in recorded text (argv, logs,
+ * receipts). Covers `scheme://user:pass@host`, an empty user (`scheme://:pass@host`), a `'` in the user or password,
+ * percent-encoded passwords, and malformed ones holding a raw `@`, `:` or `/` (masked up to the last `@` before the
+ * host), plus `password=` in a query string or key=value list, bare or quoted. Text with no password is returned
+ * unchanged.
+ */
+export function redactUrlPasswords(text: string, mask = '***'): string {
+  const urls = text.includes('@') ? text.replace(/([a-z][a-z0-9+.-]*:\/\/[^\s:/@"]*):[^\s"]*@(?=[^\s@'"]*(?:[\s'"]|$))/gi, `$1:${mask}@`) : text;
+  return urls.replace(/(^|[?&;\s'"])(password=)(?:'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|[^&;\s'"]*)/gi, `$1$2${mask}`);
+}
+
 export interface HermeticEnv {
   /** The throwaway GBRAIN_HOME. */
   home: string;

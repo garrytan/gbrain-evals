@@ -278,8 +278,43 @@ says which ones do not and why. Everything above [Changelog](#changelog) is curr
   (2026-11-12) found it HELD for direction ([results](benchmarks/2026-11-12-g2-paraphrase-gap-replication.md)), so G2
   may gate on the gap's direction, never its size. Its paraphrase Kendall tau of 0.80 breaks a synthetic
   tie by list order; as tau-b it is 0.949. Tau never gates. gbrain is Garry Tan's own project.
+- **Three G6 local episodes were scored against a wrong view** (2026-11-17). The harness checked a task's two gold
+  pages at the same time, and for the local caller each check is its own `gbrain call` process on a brain that lets
+  one process in at a time, so a second check could fail and mark a readable page as hidden. One Claude Opus 5.5 and two
+  particle-1 episodes that answered with both gold pages were scored as answering without them. Rescored from the
+  committed log, G6 local success is 100% (200/200) for Opus, was 99.5% (199/200), and 98.0% (196/200) for particle-1,
+  was 97.0% (194/200); pass^4 over both callers is 0.99 and 0.74, were 0.98 and 0.73; and G6 local Opus − particle-1 is
+  +2.0 points (+0.5 to +4.0), was +2.5 (0.0 to +5.5), still below its 21.7-point MDD. No remote-caller figure or verdict
+  changes. [Report](benchmarks/2026-11-10-predictive-measures.md#correction-2026-11-17),
+  [rescore](benchmarks/predictive-measures/g6/correction-2026-11-17.json). gbrain is Garry Tan's own project.
+  Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1.
+
+## Changing-facts battleground
+
+- **The battleground's exposure figures for withdrawn facts were wrong** (2026-11-16). For S5, the share of gbrain's
+  contexts that held the withdrawal was published as 60%, against 52% for the memory-bank server and 80% for the
+  extract-first server, and gbrain's loss to the memory-bank server was put down to reading. That count took a call-off
+  form anywhere in the context as the withdrawal, so it counted other entities' call-offs and stray words such as
+  "nothing", and it missed call-offs worded with words its list lacked. Counted in one sentence that names the
+  question's entity, the withdrawn value and a call-off word, the shares are 85%, 95% and 97%: against both servers
+  gbrain's context held the withdrawal less often, by more than its S5 loss (10.4 and 12.1 points against losses of 6.4
+  and 9.6). Hybrid search's contexts held the right value for 20% of all questions, not 23%. No accuracy figure,
+  interval or verdict changes; verdict.json keeps the published figures, and the report carries the correction.
+  [Report](benchmarks/2026-11-15-changing-facts-battleground-results.md),
+  [corrected figures](benchmarks/2026-11-15-changing-facts-battleground-results/exposure-correction.json). gbrain is
+  Garry Tan's own project.
 
 ## Changelog
+
+### 2026-11-17: Predictive measures, G6 local episodes
+
+A new Predictive measures entry says three G6 local episodes were scored as answering without their gold because the
+harness checked two pages at once, and gives the rescored figures.
+
+### 2026-11-16: Changing-facts battleground exposure
+
+A new Changing-facts battleground entry says the battleground's exposure figures for withdrawn facts counted other
+entities' call-offs and missed call-offs its word list lacked, and gives the corrected figures.
 
 ### 2026-11-13: Strict-source pageless facts re-run
 

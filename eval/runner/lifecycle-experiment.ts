@@ -21,7 +21,7 @@ import { execFileSync } from 'node:child_process';
 import { appendFileSync, mkdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { SQL } from 'bun';
-import { assertBuildVerified, prepareBuild, type BuildInfo, type BuildSpec } from './lifecycle/builds.ts';
+import { assertBuildVerified, embedStaleArgs, prepareBuild, type BuildInfo, type BuildSpec } from './lifecycle/builds.ts';
 import { CliDriver, McpHttpDriver, McpStdioDriver, runCli, type Driver, type RunEnv } from './lifecycle/drivers.ts';
 import { startFakeEmbedder } from './lifecycle/fake-embedder.ts';
 import { observe, probeLeaks, type LeakProbe, type Snapshot } from './lifecycle/observe.ts';
@@ -30,6 +30,8 @@ import {
   renderFile, versionAt, type Checkpoint, type PhaseName, type SourceName,
 } from './lifecycle/scenario.ts';
 import { scoreCheckpoint, type CheckpointScore, type FactEvent } from './lifecycle/score.ts';
+import { loadFactUnquote, type Unquote } from './quoted-reads.ts';
+import { scrubMachinePaths } from './receipt.ts';
 
 type Engine = 'pglite' | 'postgres';
 type Iface = 'cli' | 'mcp-stdio' | 'mcp-http';
@@ -159,6 +161,7 @@ async function runCell(build: BuildInfo, engine: Engine, iface: Iface, opts: { w
     return codes;
   };
   const forgotten = new Set<string>();
+  let unquote: Unquote | undefined;
   const hiddenIds = iface === 'cli' ? [] : [PRIVATE_ID];
   const ignoreIds = iface === 'cli' ? [] : HAZARD_IDS;
   const observer: 'local' | 'remote' = iface === 'cli' ? 'local' : 'remote';
@@ -166,7 +169,7 @@ async function runCell(build: BuildInfo, engine: Engine, iface: Iface, opts: { w
   // Search reads the default source, so only main-vault pages are probed; a remote caller is not expected to find the private page.
   const searchIds = IDENTITIES.filter(i => (i.source ?? 'vault') === 'vault' && !hiddenIds.includes(i.id)).map(i => i.id);
   const checkpoint = async (cp: Checkpoint, o: { search?: boolean; leaks?: boolean } = {}) => {
-    const snap = await observe(driver!, { search: o.search, searchIds, extraSources, oldSlugs: filePhaseAt(cp) === 'correct' ? OLD_SLUGS : [] });
+    const snap = await observe(driver!, { search: o.search, searchIds, extraSources, oldSlugs: filePhaseAt(cp) === 'correct' ? OLD_SLUGS : [], unquote });
     const exp = expectedAt(filePhaseAt(cp), observer);
     const score = scoreCheckpoint({ snap, exp, hiddenIds, ignoreIds, acknowledgedCanaries: acknowledged, factEvents: result.fact_events, forgotten, forgetKey: FORGET_KEY });
     const leaks = o.leaks && driver!.remote ? await probeLeaks(driver!) : undefined;
@@ -187,6 +190,7 @@ async function runCell(build: BuildInfo, engine: Engine, iface: Iface, opts: { w
   };
 
   try {
+    unquote = await loadFactUnquote({ root: build.dir, version: build.version, overlay: null });
     const dbArgs: string[] = [];
     if (engine === 'pglite') dbArgs.push('--pglite', '--path', join(home, 'brain.pglite'));
     else {
@@ -248,7 +252,7 @@ async function runCell(build: BuildInfo, engine: Engine, iface: Iface, opts: { w
 
     // 4. reconcile: full sync, stale extraction and the embedding catch-up sweep.
     result.sync_exits.reconcile = await syncStep('reconcile-sync', 'correct', true);
-    await op('reconcile-embed', ['embed', '--stale']);
+    await op('reconcile-embed', embedStaleArgs(build.dir));
     await checkpoint('reconcile', { search: true, leaks: true });
     const embeddedDocs = embedder.embeddedInputsWith(OUTAGE_BODY_PHRASE);
     result.outage.embedded_after_recovery = OUTAGE_IDS.filter(id => {
@@ -347,11 +351,15 @@ async function main() {
     engines, interfaces: ifaces,
     cells: results,
   };
+  writeLifecycleReceipt(out, receipt);
+  console.error(`[lifecycle] receipt ${out}`);
+}
+
+export function writeLifecycleReceipt(out: string, receipt: unknown): void {
   mkdirSync(dirname(out), { recursive: true });
   const tmp = `${out}.tmp`;
-  writeFileSync(tmp, JSON.stringify(receipt, null, 1) + '\n');
+  writeFileSync(tmp, JSON.stringify(scrubMachinePaths(receipt), null, 1) + '\n');
   renameSync(tmp, out);
-  console.error(`[lifecycle] receipt ${out}`);
 }
 
 if (import.meta.main) {

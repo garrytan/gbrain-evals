@@ -821,6 +821,15 @@ export const REGISTRY: readonly CategoryEntry[] = [
     contract: 'Seeds a generated world of people and companies (nicknames, typos, handles, initials, former names, namesakes, the same person in two sources linked by an identity group, and two different people sharing a slug across sources) into PGLite, then resolves mentions through gbrain\'s resolver cascade, the recall and remember operations, the resolve-on-save path, the search exact-lookup tier and the identity-group operations. Gold comes from an oracle over the written pages; ambiguous, unreadable and no-referent mentions must be refused. Metrics are B-cubed over mention clusters, wrong merges, fragmentation, unresolved and correct refusals. It does not test context-aware disambiguation, names declared only in prose as a gbrain feature, or LLM extraction. A product exception is a scored miss; a failed presence assertion is a harness error.',
   },
   {
+    id: 'person-dedupe', legacy_alias: 'N4D', name: 'Duplicate people and companies: really different entities are not linked',
+    family: 'relationships', tier: 'H', script: 'eval/runner/person-dedupe.ts',
+    run: { kind: 'listed', reason: 'gbrain\'s duplicate finder (`gbrain dedupe --preview --json`) is not in a release yet, so the runner scores reference matchers and a stand-in written from the finder\'s documented contract; it scores the finder from a JSON file until the runner drives it directly', command: 'bun eval/runner/person-dedupe.ts [--write-world <dir>] [--finder-json <file> --finder-build <tag or sha>] [--output <dir>]' },
+    cost_estimate: FREE, receipt_path: receipt('person-dedupe'),
+    headline: { metric: 'false-merge rate: designed different-entity pairs that end up in one group after transitive closure, with a Wilson 95% interval, reported for people, for companies and combined, for the groups automatic linking would join (cross_source and clean) and for every proposed group; then recall of real duplicates, pairwise precision and recall over every page pair, and B-cubed F1', denominator: 'person-dedupe-gen and company-dedupe-gen at the default seed, 20 instances per family, two sources (the receipt records the page and pair counts per entity type)' },
+    gate: 'report-only', promotion: REPORT_ONLY, evidence_maturity: 'regression-only',
+    contract: 'Generates person pages in two sources from a seeded ledger of who each page belongs to: namesakes alone, at one company, in one city, with one slug across sources, behind a team address on 2, 5 or 6 pages, a family email or a placeholder email, Jr suffixes, assistants, shared mailboxes, lookalike names and a transitive chain, plus the same person under case changes, accents, transliteration, name order, nicknames, initials, a married name, two emails, a role address and a second page in one source. Groups from a system are closed transitively and scored against the ledger. Reference matchers and stand-ins for the documented finder rule and its proposed variants are controls, never reported as gbrain. It does not test aliases, declared ids, slug-shape rules, thin pages, model-based matching or what an owner does with a proposal. A finder output with an unknown key, class, kind or page is a harness error.',
+  },
+  {
     id: 'visibility-leak-fuzz', legacy_alias: 'N6', name: 'Visibility and access leak fuzz (every read op x caller x scope)',
     family: 'safety', tier: 'H', script: 'eval/runner/n6-visibility-fuzz.ts', run: { kind: 'dispatched' },
     cost_estimate: FREE, receipt_path: receipt('n6-visibility-fuzz'),
@@ -1396,6 +1405,9 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'a4-s4-rescore.ts': { role: 'keyless re-score of the A4 S4-on arm (G8, 2026-10-06)', part_of: 'abstention' },
   'cat20-judges.ts': { role: 'keyless four-judge Cat 20 decision and the W8 Cat 20 control statistic (2026-10-06)', part_of: 'brainstorm-grounding' },
   'cat21-paired.ts': { role: 'keyless Cat 21 per-split metrics and file-clustered paired comparisons (2026-10-06)', part_of: 'code-retrieval' },
+  'lme-plain-hybrid.ts': { role: 'no-gbrain LongMemEval baseline: plain Postgres full-text plus pgvector retrieval, recall and the verbatim probe (README baselines, 2026-11-17); paid embeddings, not dispatched', part_of: 'longmemeval-retrieval' },
+  'plain-baseline.ts': { role: 'no-gbrain plain-prompt baselines for the contradiction, timeline and memory-page rows (README baselines, 2026-11-17); paid, not dispatched' },
+  'retrieval-baselines.ts': { role: 'no-gbrain BM25, vector and plain-hybrid baselines for the relationship and attendance rows (README baselines, 2026-11-17); paid embeddings for two arms, not dispatched', part_of: 'relational-ab' },
   'n2-judge-replay.ts': { role: 'N2 judge-only replay: capture and verify judge inputs, select, judge, score (W9, 2026-10-06); paid, not dispatched', part_of: 'contradiction-surfacing' },
   'openai-judge-shim.ts': { role: 'Anthropic-shaped messages.create over the OpenAI Responses API, so Anthropic-SDK judges can run OpenAI models' },
   'anthropic-request.ts': { role: 'fits Anthropic Messages requests to the model: no temperature or forced tool choice for Claude 5, older models unchanged' },
@@ -1408,6 +1420,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'budget-ledger.ts': { role: 'shared paid-run reservation ledger' },
   'bug-ledger.ts': { role: 'shared gbrain bug ledger: validated entries and the Markdown view' },
   'eval-config.ts': { role: 'GBRAIN_EVAL_CONFIG: any gbrain config key for a category arm, applied before the first write and read back' },
+  'eval-engine.ts': { role: 'GBRAIN_EVAL_ENGINE and openEvalEngine: open a pglite, postgres or rust gbrain engine for a runner, refusing rust with a stated reason when the build lacks it; used by engine-bench and the keyless gate runners' },
   'evidence-auto-v2.ts': { role: 'auto v2 follow-up to the evidence-delivery study (decision manifest v2: LongMemEval sanity check and sealed E2)', part_of: 'evidence-delivery' },
   'external-ideas-wave-a.ts': { role: 'GBRA-162 external ideas wave A: search.evidence_resolve_dates on frozen evidence-delivery retrieval (LongMemEval-S plus a synthetic relative-date suite)', part_of: 'evidence-delivery' },
   'cat13-gap-localize.ts': { role: 'Phase E1 diagnostic over Cat13 hybrid stages', part_of: 'concept-search' },
@@ -1435,6 +1448,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'parse-relational-questions.ts': { role: "the relation a gbrain checkout's parser chooses for each question in Query-shaped JSONL, for the attendance gate", part_of: 'multi-hop-paraphrase' },
   'decide.ts': { role: 'held-out decision kit CLI (bun run eval:decide): decision specs, dev runs of baseline vs candidate gbrain builds, paired verdicts' },
   'eval-adapter-config.ts': { role: 'typed adapter config for matrix cells' },
+  'gbrain-pin.ts': { role: 'moves the gbrain pin in package.json and bun.lock to gbrain\'s newest release tag (bump)' },
   'gbrain-under-test.ts': { role: 'pinned gbrain or a copied --gbrain overlay, with receipt identity' },
   'gbrain-version.ts': { role: 'resolves the loaded gbrain version' },
   'hermetic-env.ts': { role: 'shared keyless environment: strips provider and TypeSafe keys, fresh GBRAIN_HOME, proves System One off' },
@@ -1533,4 +1547,4 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
 };
 
 /** Subdirectories of eval/runner/ holding helper modules only. */
-export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'batch', 'bg1', 'budgeted-delivery', 'cat40', 'cat41', 'decisions', 'evaluator', 'evidence-delivery', 'external-ideas-wave-a', 'facts-absorb', 'failure-causes', 'graph-backend', 'lifecycle', 'lifecycle-lite', 'live-recall', 'memory-proof-wave', 'memory-qa', 'memory-trust', 'messy-company', 'miss-mining', 'nightly', 'outcomes', 'p4-stream', 'pilot', 'power', 'predictive', 'providers', 'q1', 'q2', 'queries', 'refresh-barrier', 'rs1', 'skillopt-method', 'sota', 'stats', 'strict-pageless', 'system-one', 'systems', 't0', 'takes-bootstrap'];
+export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'batch', 'bg1', 'budgeted-delivery', 'cat40', 'cat41', 'decisions', 'engine-bench', 'evaluator', 'evidence-delivery', 'external-ideas-wave-a', 'facts-absorb', 'failure-causes', 'graph-backend', 'lifecycle', 'lifecycle-lite', 'live-recall', 'memory-proof-wave', 'memory-qa', 'memory-trust', 'messy-company', 'miss-mining', 'multi-evidence', 'nightly', 'outcomes', 'p4-stream', 'pilot', 'power', 'predictive', 'providers', 'q1', 'q2', 'queries', 'refresh-barrier', 'rs1', 'skillopt-method', 'sota', 'stats', 'strict-pageless', 'system-one', 'systems', 't0', 'takes-bootstrap'];

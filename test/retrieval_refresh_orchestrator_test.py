@@ -485,6 +485,11 @@ class ChangelogFragmentLinks(unittest.TestCase):
         self.assertEqual(self.errors("docs/wrong.md", "See [page](docs/page.md).\n"),
                          ["docs/wrong.md: docs/page.md: missing local target"])
 
+    def test_html_href_links_are_checked_like_markdown_links(self):
+        self.assertEqual(self.errors("docs/html.md", '<a href="page.md">page</a>\n'), [])
+        self.assertEqual(self.errors("docs/bad.md", '<a href="missing.md">x</a>\n'),
+                         ["docs/bad.md: missing.md: missing local target"])
+
 
 if __name__ == "__main__":
     unittest.main()

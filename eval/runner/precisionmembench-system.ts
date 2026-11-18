@@ -2,12 +2,16 @@
  * PrecisionMemBench for any shootout system (open-source memory shootout,
  * Phase 5, row P3; preregistration family S3).
  *
- *   bun eval/runner/precisionmembench-system.ts --system <shim URL>|gbrain-shootout|fake --output <dir>
+ *   bun eval/runner/precisionmembench-system.ts --system <shim URL>|gbrain-shootout|plain-hybrid|fake --output <dir>
  *     [--gbrain <checkout>[@ref]] [--config key=value]... [--embed hash|real] [--embedding-model provider:model --embedding-dims N]
  *     [--policy vendor-default|fixed-evidence] [--policy-setting key=value]... [--limit N]
  *     [--max-attempts 3] [--finish-timeout-s 600] [--ingest-timeout-s 3600]
  *     [--provider-proxy <metering proxy URL>] [--proxy-slot <slot>] [--no-retry-upstream-5xx]
- *     [--paid --budget-run-id <id>]   (gbrain-shootout without a lease proxy)
+ *     [--paid --budget-run-id <id>]   (gbrain-shootout or plain-hybrid without a lease proxy)
+ *
+ * `plain-hybrid` is the no-gbrain control (systems/baselines.ts PlainHybridSystem: Postgres full-text plus pgvector over
+ * OpenAI text-embedding-3-large at 1,536 dims, reciprocal-rank fusion, one row per belief); `--policy-setting k=1` cuts
+ * it to one result, the return size of gbrain's tight mode. `--embed hash` runs it keyless.
  *
  * The contract ("PrecisionMemBench upstream contract", plan decision 20):
  * the vendored upstream evaluator (eval/precisionmembench/scorer, untouched)
@@ -81,6 +85,8 @@ import { appendAttempt, canonicalize, DEFAULT_MAX_ATTEMPTS, freezeManifest, HARN
 import { hashEmbed, readinessProbe, type ProbeResult } from './memory-qa/run.ts';
 import type { Conversation, MemoryQuestion } from './memory-qa/corpus.ts';
 import { FakeMemorySystem } from './systems/fake.ts';
+import { PlainHybridSystem } from './systems/baselines.ts';
+import { cachedOpenAIEmbedder, PG_EMBED_DIMS, PG_EMBED_MODEL } from './cat40/pg-arm.ts';
 import { GbrainShootoutSystem, type GbrainModules } from './systems/gbrain.ts';
 import { HttpMemorySystem } from './systems/http.ts';
 import { strictSources, validateSources } from './systems/render.ts';
@@ -154,8 +160,8 @@ export function parsePmbArgs(argv: string[]): PmbArgs {
     return n;
   };
   const system = one('--system');
-  if (!system) throw new Error('--system <shim URL>|gbrain-shootout|fake is required');
-  if (system !== 'gbrain-shootout' && system !== 'fake' && !/^https?:\/\//.test(system)) throw new Error(`--system must be gbrain-shootout, fake or a protocol v1 shim URL (got ${system})`);
+  if (!system) throw new Error('--system <shim URL>|gbrain-shootout|plain-hybrid|fake is required');
+  if (system !== 'gbrain-shootout' && system !== 'plain-hybrid' && system !== 'fake' && !/^https?:\/\//.test(system)) throw new Error(`--system must be gbrain-shootout, plain-hybrid, fake or a protocol v1 shim URL (got ${system})`);
   const output = one('--output');
   if (!output) throw new Error('--output <dir> is required');
   const embed = (one('--embed') ?? 'real') as PmbArgs['embed'];
@@ -164,6 +170,7 @@ export function parsePmbArgs(argv: string[]): PmbArgs {
   if (policy !== 'vendor-default' && policy !== 'fixed-evidence') throw new Error('--policy must be vendor-default or fixed-evidence');
   const embeddingModel = one('--embedding-model') ?? 'openai:text-embedding-3-large';
   if (!/^(openai|voyage|google):\S+$/.test(embeddingModel)) throw new Error('--embedding-model must look like provider:model');
+  if (system === 'plain-hybrid' && (embeddingModel !== `openai:${PG_EMBED_MODEL}` || (one('--embedding-dims') ?? String(PG_EMBED_DIMS)) !== String(PG_EMBED_DIMS))) throw new Error(`plain-hybrid embeds with openai:${PG_EMBED_MODEL} at ${PG_EMBED_DIMS} dims only`);
   return {
     system, output: resolve(output), gbrain: gbrainSpecFrom(argv), config: kv(many('--config'), '--config'), embed, embeddingModel,
     embeddingDims: int('--embedding-dims', 1536, 1)!, policy, policySettings: kv(many('--policy-setting'), '--policy-setting'), limit: int('--limit', null, 1),
@@ -373,6 +380,8 @@ export async function runPmb(a: PmbArgs): Promise<{ receipt: Record<string, unkn
     identity = { system: cap.system, config: typeof h.config === 'string' ? h.config : null, versions: cap.versions ?? null, health: h };
   } else if (a.system === 'gbrain-shootout') {
     identity = { system: 'gbrain-shootout', config: a.config, embedding: { mode: a.embed, model: a.embeddingModel, dims: a.embeddingDims }, gbrain: gut.overlay?.build.commit ?? gut.version };
+  } else if (a.system === 'plain-hybrid') {
+    identity = { system: 'plain-hybrid', embedding: { mode: a.embed, model: a.embeddingModel, dims: a.embeddingDims } };
   } else identity = { system: a.system };
 
   const scorerSha = Object.fromEntries(SCORER_FILES.map(f => [f, sha256(readFileSync(join(PMB_DIR, f)))]));
@@ -389,11 +398,11 @@ export async function runPmb(a: PmbArgs): Promise<{ receipt: Record<string, unkn
   const outgoing = [...corpus.conversations.flatMap(c => c.sessions.flatMap(s => s.turns.map(t => t.content))), ...cases.map(c => c.query)];
   if (outgoing.some(t => markers.some(m => t.includes(m)))) throw new Error('a belief text or query carries a forbidden marker; the marker set would trip on honest traffic');
 
-  const needsPaid = !a.providerProxy && a.system === 'gbrain-shootout' && (a.embed === 'real' || a.config['search.reranker.enabled'] !== 'false');
+  const needsPaid = !a.providerProxy && ((a.system === 'gbrain-shootout' && (a.embed === 'real' || a.config['search.reranker.enabled'] !== 'false')) || (a.system === 'plain-hybrid' && a.embed === 'real'));
   let paid: { run: BudgetRun; guard: PaidRequestGuard } | null = null;
   if (needsPaid) {
-    requirePaidArm(a.argv, { arm: 'precisionmembench gbrain-shootout', estimateUsd: 0.25, ledgerPath: budgetOptionsFrom(a.argv).ledgerPath });
-    paid = startPaidRun('precisionmembench-system:gbrain-shootout', { ...budgetOptionsFrom(a.argv), estimateUsd: 0.25 });
+    requirePaidArm(a.argv, { arm: `precisionmembench ${a.system}`, estimateUsd: 0.25, ledgerPath: budgetOptionsFrom(a.argv).ledgerPath });
+    paid = startPaidRun(`precisionmembench-system:${a.system}`, { ...budgetOptionsFrom(a.argv), estimateUsd: 0.25 });
   }
 
   let cache: EmbeddingCache | null = null;
@@ -423,6 +432,9 @@ export async function runPmb(a: PmbArgs): Promise<{ receipt: Record<string, unkn
       hybridSearch: (await importGbrain<{ hybridSearch: GbrainModules['hybridSearch'] }>(gut, 'src/core/search/hybrid.ts')).hybridSearch,
     };
     system = new GbrainShootoutSystem(mods, a.config, productIdentityFor(gut) as unknown as Record<string, unknown>);
+  } else if (a.system === 'plain-hybrid') {
+    system = new PlainHybridSystem(a.embed === 'hash' ? async (texts: string[]) => texts.map(t => hashEmbed(t, PG_EMBED_DIMS))
+      : cachedOpenAIEmbedder(join(process.env.GBRAIN_EVALS_EMBED_CACHE ?? join(homedir(), '.cache', 'gbrain-evals', 'embed-cache'), `plain-hybrid-${PG_EMBED_MODEL}-${PG_EMBED_DIMS}.json`)));
   } else if (a.system === 'fake') system = new FakeMemorySystem();
   else system = new HttpMemorySystem(a.system, { markers, ingestTimeoutMs: a.ingestTimeoutS * 1000 });
 
@@ -607,7 +619,7 @@ export async function runPmb(a: PmbArgs): Promise<{ receipt: Record<string, unkn
     policy: { name: policy.name, mode: policy.mode, settings: policy.settings, settings_source: knobs.source },
     product: a.system === 'gbrain-shootout' ? productIdentityFor(gut) : null, overlay: a.system === 'gbrain-shootout' && gut.overlay ? { ...overlaySummary(gut), requested: gut.overlay.requested.split(homedir()).join('~') } : null,
     gbrain_config: a.system === 'gbrain-shootout' ? a.config : null,
-    embedding: a.system === 'gbrain-shootout' ? { mode: a.embed, model: a.embeddingModel, dims: a.embeddingDims, cache_stats: cache ? { ...cache.stats } : null } : null,
+    embedding: a.system === 'gbrain-shootout' || a.system === 'plain-hybrid' ? { mode: a.embed, model: a.embeddingModel, dims: a.embeddingDims, cache_stats: cache ? { ...cache.stats } : null } : null,
     fidelity, cost,
     metering: a.providerProxy ? { mode: 'lease-proxy', proxy: a.providerProxy, slot, lease_id: process.env.SHOOTOUT_LEASE_ID ?? null, retry_upstream_5xx: a.retryUpstream5xx } : { mode: paid ? 'budget-ledger' : 'none' },
     sanitizer: { forbidden_markers: markers.length },
