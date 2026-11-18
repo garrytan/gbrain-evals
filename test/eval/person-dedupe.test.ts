@@ -162,6 +162,11 @@ describe('finder output parser', () => {
     expect(groups.filter(SELECTIONS['confirm-list']).map(g => g.rules)).toEqual([['shared_key/shared_key/email', 'key_check/contact_key_only']]);
     expect(groups.filter(SELECTIONS['auto-link+confirm-list']).map(g => g.class)).toEqual(['likely', 'clean']);
   });
+  test('the confirm list reads the contact_key_only mark under any matcher name', () => {
+    const out = toFinderOutput([{ members: ['home:a', 'work:a'], kind: 'cross_source', class: 'likely', rules: ['shared_key:email'] }]);
+    out.groups[0].evidence.push({ matcher: 'shared_key', rule: 'contact_key_only' });
+    expect(parseFinderOutput(out, known).filter(SELECTIONS['confirm-list']).length).toBe(1);
+  });
 });
 
 describe('person-dedupe scorer', () => {
@@ -245,6 +250,7 @@ describe('real-finder run guards', () => {
     expect(() => checkFinderCoverage(ok, ledger.pages)).not.toThrow();
     expect(() => checkFinderCoverage(ok.slice(1), ledger.pages)).toThrow(/never saw/);
     expect(() => checkFinderCoverage([{ ...ok[0], imported: ok[0].imported - 1 }, ...ok.slice(1)], ledger.pages)).toThrow(/missing pages/);
+    expect(() => checkFinderCoverage([{ ...ok[0], imported: ok[0].imported - 1, unchanged: 1 }, ...ok.slice(1)], ledger.pages)).toThrow(/1 unchanged/);
     expect(() => checkFinderCoverage([{ ...ok[0], errors: 1 }, ...ok.slice(1)], ledger.pages)).toThrow(/errors/);
     expect(() => checkFinderCoverage([{ ...ok[0], malformed_skipped: 1 }, ...ok.slice(1)], ledger.pages)).toThrow(/malformed/);
     expect(() => checkFinderCoverage([{ ...ok[0], failures: [{ path: 'x' }] }, ...ok.slice(1)], ledger.pages)).toThrow(/failures/);

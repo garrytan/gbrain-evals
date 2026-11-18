@@ -502,7 +502,7 @@ export const SELECTIONS: Record<string, (g: Group) => boolean> = {
 };
 
 function isConfirm(g: Group): boolean {
-  return g.kind === 'cross_source' && g.class === 'likely' && g.rules.includes('key_check/contact_key_only');
+  return g.kind === 'cross_source' && g.class === 'likely' && g.rules.some(r => r.endsWith('/contact_key_only'));
 }
 
 export interface TypeResult { score: Score; verdict: ReturnType<typeof verdictOf> }
@@ -563,7 +563,8 @@ export interface ImportSummary { status: string; source_id: string; imported: nu
 
 /**
  * Checks, from the `gbrain import --json` summaries, that the finder's brain holds every page of the
- * world: one successful import per source, with every file imported or unchanged and none failed.
+ * world: one successful import per source into a fresh brain, with every file imported and none failed.
+ * gbrain counts a page that is still publishing as unchanged, so an unchanged page fails the check too.
  * Throws otherwise, because a finder that never saw a page can't link it and would score as safe.
  */
 export function checkFinderCoverage(imports: readonly unknown[], pages: readonly { source: string }[]): void {
@@ -583,7 +584,7 @@ export function checkFinderCoverage(imports: readonly unknown[], pages: readonly
       s.malformed_skipped !== 0 && `${s.malformed_skipped} malformed pages skipped`,
       (!Array.isArray(s.failures) || s.failures.length > 0) && 'failures listed',
       s.total_files !== n && `${s.total_files} files, the world has ${n}`,
-      s.imported + s.unchanged !== n && `${s.imported} imported and ${s.unchanged} unchanged, the world has ${n}`,
+      s.imported !== n && `${s.imported} imported (${s.unchanged} unchanged), the world has ${n}; import each source into a fresh brain and rerun until every page is imported`,
     ].filter(Boolean);
     if (problems.length) throw new Error(`person-dedupe: the finder's brain is missing pages of source ${s.source_id}: ${problems.join('; ')}`);
   }
