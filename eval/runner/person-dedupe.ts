@@ -41,19 +41,19 @@
  * and the false-merge rate per family, with each false merge attributed to
  * the groups that joined it.
  *
- * Usage: bun eval/runner/person-dedupe.ts [--seed N] [--per-family N] [--output DIR]
+ * Usage: bun eval/runner/person-dedupe.ts [--seed N] [--per-family N] [--generator-version N] [--output DIR]
  *          [--write-world DIR] [--finder-json FILE --finder-build LABEL --finder-imports FILE] [--json]
  */
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import {
-  FAMILIES, NICKNAMES, PERSON_DEDUPE_DEFAULT_PER_FAMILY, PERSON_DEDUPE_DEFAULT_SEED, PERSON_DEDUPE_GENERATOR_VERSION,
+  DECLARED_PERSON_ID_FIELD, FAMILIES, NICKNAMES, PERSON_DEDUPE_DEFAULT_PER_FAMILY, PERSON_DEDUPE_DEFAULT_SEED, PERSON_DEDUPE_GENERATOR_VERSION,
   deriveGold, generateLedger, ledgerFingerprint, renderPage, writtenPages,
-  type DesignedPair, type Ledger, type WrittenPage,
+  type DesignedPair, type Ledger, type LedgerPage, type WrittenPage,
 } from '../generators/person-dedupe-gen.ts';
 import {
-  COMPANY_DEDUPE_GENERATOR_VERSION, COMPANY_FAMILIES, companyWrittenPages, deriveCompanyGold, generateCompanyLedger, renderCompanyPage,
+  COMPANY_FAMILIES, companyWrittenPages, deriveCompanyGold, generateCompanyLedger, renderCompanyPage,
   type CompanyLedger,
 } from '../generators/company-dedupe-gen.ts';
 import { gbrainPin } from './gbrain-version.ts';
@@ -233,11 +233,13 @@ export function pageKeys(p: WrittenPage): string[] {
   if (li) out.push(`linkedin:${li}`);
   const gh = p.github?.trim().toLowerCase().replace(/^@/, '').replace(/^https?:\/\/(www\.)?github\.com\//, '').replace(/\/$/, '');
   if (gh && !PLACEHOLDERS.has(gh)) out.push(`github:${gh}`);
+  const declaredId = p.external_id?.trim().toLowerCase();
+  if (declaredId && !PLACEHOLDERS.has(declaredId) && !/^0+$/.test(declaredId) && declaredId.length <= 320) out.push(`declared_id:${declaredId}`);
   return [...new Set(out)];
 }
 
 const typeOf = (k: string) => k.slice(0, k.indexOf(':'));
-const EXCLUSIVE = new Set(['linkedin', 'github']);
+const EXCLUSIVE = new Set(['linkedin', 'github', 'declared_id']);
 const CONTACT = new Set(['email', 'domain']);
 
 /**
@@ -288,7 +290,7 @@ export function emulateFinder(pages: readonly WrittenPage[], rule: CleanRule = {
     const sharedTypes = new Set(shared.map(typeOf));
     const role = type === 'email' && isRoleEmail(value) && !(rule.singlePersonDomain && domainNames.get(value.slice(value.indexOf('@') + 1))!.size === 1);
     const employer = ps.every(p => p.company !== null && p.company === ps[0].company);
-    const clean = new Set(ps.map(p => strictFold(p.title))).size === 1
+    const clean = new Set(ps.map(p => strictFold(p.title))).size === 1 && new Set(ps.map(p => p.type)).size === 1
       && new Set(ps.map(p => p.source)).size === ps.length && kindOf(members) === 'cross_source'
       && !(rule.noRole && role)
       && !(rule.twoKeyTypes && sharedTypes.size < 2)
@@ -371,7 +373,7 @@ export function toFinderOutput(groups: readonly Group[], crowded = 0): FinderOut
     groups: groups.map(g => ({
       id: groupId(g.kind, g.members), kind: g.kind, class: g.class,
       members: g.members.map(k => ({ source_id: sourceOf(k), slug: finderSlug(k) })),
-      evidence: g.rules.map(r => r.startsWith('shared_key:') ? { matcher: 'shared_key', rule: 'shared_key', key: r.slice(11), field: r === 'shared_key:email' ? 'emails' : r.slice(11) } : r === 'strict_name' ? { matcher: 'same_name', rule: 'strict_name' } : r === 'contact_key_only' ? { matcher: 'key_check', rule: 'contact_key_only' } : { matcher: r, rule: r }),
+      evidence: g.rules.map(r => r.startsWith('shared_key:') ? { matcher: 'shared_key', rule: 'shared_key', key: r.slice(11), field: r === 'shared_key:email' ? 'emails' : r === 'shared_key:declared_id' ? DECLARED_PERSON_ID_FIELD : r.slice(11) } : r === 'strict_name' ? { matcher: 'same_name', rule: 'strict_name' } : r === 'contact_key_only' ? { matcher: 'key_check', rule: 'contact_key_only' } : { matcher: r, rule: r }),
     })),
     counts: { by_kind, by_class, crowded_key_values: crowded },
   };
@@ -522,14 +524,15 @@ export interface ArmResult {
 }
 
 export function runPersonDedupe(ledger: Ledger, opts: { companies?: CompanyLedger; finderJson?: unknown; finderBuild?: string } = {}): ArmResult[] {
-  const people = deriveGold(ledger);
+  const peopleLedger = opts.companies?.founders?.length ? { ...ledger, pages: [...ledger.pages, ...opts.companies.founders] } : ledger;
+  const people = deriveGold(peopleLedger);
   const companies = opts.companies ? deriveCompanyGold(opts.companies) : new Map<string, string>();
   const gold = new Map([...people, ...companies]);
-  const pages = [...writtenPages(ledger), ...(opts.companies ? companyWrittenPages(opts.companies) : [])];
+  const pages = [...writtenPages(peopleLedger), ...(opts.companies ? companyWrittenPages(opts.companies) : [])];
   const pairs = [...ledger.pairs, ...(opts.companies?.pairs ?? [])];
   const known = new Set(pages.map(p => p.key));
   for (const p of pages) if (!gold.has(p.key) || !p.title) throw new Error(`person-dedupe: presence: page ${p.key} has no person or company, or no title`);
-  const peoplePairs = pairs.filter(p => people.has(p.a)), companyPairs = pairs.filter(p => companies.has(p.a));
+  const peoplePairs = pairs.filter(p => people.has(p.a) && people.has(p.b)), companyPairs = pairs.filter(p => companies.has(p.a) && companies.has(p.b));
   const arm = (id: string, system: ArmResult['system'], armId: string | null, selection: string, description: string, groups: Group[], build: string | null = null, companyRule: string | null = null): ArmResult => {
     const part = (keys: ReadonlyMap<string, string>, typePairs: readonly DesignedPair[], scope: Scope): TypeResult => {
       const score = scoreGroups(groups.filter(g => g.members.some(m => keys.has(m))), typePairs, keys, groups);
@@ -551,10 +554,10 @@ export function runPersonDedupe(ledger: Ledger, opts: { companies?: CompanyLedge
 }
 
 /** Writes the world's pages. Refuses (WORLD_DIR_USED) a directory that already has files, so an old world never mixes into a new one. */
-export function writeWorld(ledger: Ledger, dir: string): void {
+export function writeWorld(ledger: Ledger, dir: string, founders: readonly LedgerPage[] = []): void {
   const used = existsSync(dir) ? readdirSync(dir).length : 0;
   if (used > 0) throw new RunnerRefusal('WORLD_DIR_USED', `person-dedupe: --write-world ${dir} is not empty; write each world into a new directory`, { entries_in_folder: used }, 'pass a fresh --write-world directory');
-  for (const p of ledger.pages) {
+  for (const p of [...ledger.pages, ...founders]) {
     const file = join(dir, p.source, 'people', `${p.slug}.md`);
     mkdirSync(dirname(file), { recursive: true });
     writeFileSync(file, renderPage(p));
@@ -626,6 +629,7 @@ async function main(): Promise<void> {
   const log = json ? () => {} : (s: string) => console.log(s);
   const seed = Number(argValue(argv, '--seed') ?? PERSON_DEDUPE_DEFAULT_SEED);
   const perFamily = Number(argValue(argv, '--per-family') ?? PERSON_DEDUPE_DEFAULT_PER_FAMILY);
+  const generatorVersion = Number(argValue(argv, '--generator-version') ?? PERSON_DEDUPE_GENERATOR_VERSION);
   const outputDir = argValue(argv, '--output');
   const receiptFile = outputDir ? join(resolve(outputDir), 'receipt.json') : receiptPath(RECEIPT_STEM);
   if (outputDir) mkdirSync(resolve(outputDir), { recursive: true });
@@ -636,18 +640,19 @@ async function main(): Promise<void> {
   if (finderFile && !importsFile) throw new Error('person-dedupe: --finder-json needs --finder-imports <file of gbrain import --json summaries, one per line>');
   const startedAt = new Date().toISOString();
 
-  const ledger = generateLedger(seed, perFamily);
-  const companies = generateCompanyLedger(seed, perFamily);
+  const ledger = generateLedger(seed, perFamily, generatorVersion);
+  const companies = generateCompanyLedger(seed, perFamily, generatorVersion);
+  const founders = companies.founders ?? [];
   const fingerprint = ledgerFingerprint(ledger);
   const companyFingerprint = ledgerFingerprint(companies);
   const worldDir = argValue(argv, '--write-world');
   if (worldDir) {
-    writeWorld(ledger, resolve(worldDir));
+    writeWorld(ledger, resolve(worldDir), founders);
     writeCompanyWorld(companies, resolve(worldDir));
-    log(`world written: ${ledger.pages.length} person pages under ${worldDir}/<source>/people/ and ${companies.pages.length} company pages under ${worldDir}/<source>/companies/`);
+    log(`world written: ${ledger.pages.length + founders.length} person pages under ${worldDir}/<source>/people/ and ${companies.pages.length} company pages under ${worldDir}/<source>/companies/`);
   }
 
-  if (importsFile) checkFinderCoverage(readFileSync(importsFile, 'utf8').split('\n').filter(l => l.trim()).map(l => JSON.parse(l)), [...ledger.pages, ...companies.pages]);
+  if (importsFile) checkFinderCoverage(readFileSync(importsFile, 'utf8').split('\n').filter(l => l.trim()).map(l => JSON.parse(l)), [...ledger.pages, ...founders, ...companies.pages]);
   const arms = runPersonDedupe(ledger, { companies, finderJson: finderFile ? JSON.parse(readFileSync(finderFile, 'utf8')) : undefined, finderBuild });
   const headline = arms.find(a => a.id === 'finder:auto-link') ?? arms.find(a => a.id === 'contract-emulator[arm 1]:auto-link')!;
   const count = (ps: readonly DesignedPair[]) => { const d = ps.filter(p => p.label === 'different').length; return `${ps.length} designed pairs (${d} different, ${ps.length - d} same)`; };
@@ -655,7 +660,7 @@ async function main(): Promise<void> {
   log('# BrainBench person-dedupe: are really different people and companies kept apart?\n');
   log(`seed ${seed}; ${perFamily} per family`);
   log(`people: ledger ${fingerprint.slice(0, 12)}; ${ledger.pages.length} pages; ${count(ledger.pairs)}`);
-  log(`companies: stream seed ${companies.stream_seed}; ledger ${companyFingerprint.slice(0, 12)}; ${companies.pages.length} pages; ${count(companies.pairs)}`);
+  log(`companies: stream seed ${companies.stream_seed}; ledger ${companyFingerprint.slice(0, 12)}; ${companies.pages.length} company pages and ${founders.length} founder person pages; ${count(companies.pairs)} including cross-type pairs`);
   log(`\nHeadline (${headline.id}${headline.build ? ` at ${headline.build}` : ', a stand-in for the finder, not gbrain'}), false-merge rate:`);
   log(`  people     ${pct(headline.by_type.person.score.false_merge)}`);
   log(`  companies  ${pct(headline.by_type.company!.score.false_merge)}`);
@@ -686,9 +691,9 @@ async function main(): Promise<void> {
     errors: [],
     publishable: true,
     resolved_config: {
-      seed, per_family: perFamily, generator_version: PERSON_DEDUPE_GENERATOR_VERSION, ledger_sha256: fingerprint,
-      company_generator_version: COMPANY_DEDUPE_GENERATOR_VERSION, company_stream_seed: companies.stream_seed, company_ledger_sha256: companyFingerprint,
-      sources: ledger.sources, finder_build: finderBuild ?? null, finder_contract_schema: 1, targets: TARGETS, closure: 'transitive', selections: Object.keys(SELECTIONS), scopes: ['person', 'company', 'all'],
+      seed, per_family: perFamily, generator_version: ledger.generator_version, ledger_sha256: fingerprint,
+      company_generator_version: companies.generator_version, company_stream_seed: companies.stream_seed, company_ledger_sha256: companyFingerprint,
+      sources: ledger.sources, finder_build: finderBuild ?? null, finder_contract_schema: 1, identity_keys: { person: [DECLARED_PERSON_ID_FIELD] }, targets: TARGETS, closure: 'transitive', selections: Object.keys(SELECTIONS), scopes: ['person', 'company', 'all'],
     },
     hashes: { ledger: fingerprint, company_ledger: companyFingerprint },
     finished_at: new Date().toISOString(),
@@ -700,8 +705,8 @@ async function main(): Promise<void> {
       }),
       families: FAMILIES,
       company_families: COMPANY_FAMILIES,
-      ledger: { seed, per_family: perFamily, generator_version: PERSON_DEDUPE_GENERATOR_VERSION, sha256: fingerprint, pages: ledger.pages.length, pairs: ledger.pairs.length, regenerate: 'generateLedger(seed, per_family) in eval/generators/person-dedupe-gen.ts; --write-world writes the pages' },
-      company_ledger: { seed, stream_seed: companies.stream_seed, per_family: perFamily, generator_version: COMPANY_DEDUPE_GENERATOR_VERSION, sha256: companyFingerprint, pages: companies.pages.length, pairs: companies.pairs.length, regenerate: 'generateCompanyLedger(seed, per_family) in eval/generators/company-dedupe-gen.ts; --write-world writes the pages' },
+      ledger: { seed, per_family: perFamily, generator_version: ledger.generator_version, sha256: fingerprint, pages: ledger.pages.length, pairs: ledger.pairs.length, regenerate: 'generateLedger(seed, per_family, generator_version) in eval/generators/person-dedupe-gen.ts; --write-world writes the pages' },
+      company_ledger: { seed, stream_seed: companies.stream_seed, per_family: perFamily, generator_version: companies.generator_version, sha256: companyFingerprint, pages: companies.pages.length, founder_pages: founders.length, pairs: companies.pairs.length, regenerate: 'generateCompanyLedger(seed, per_family, generator_version) in eval/generators/company-dedupe-gen.ts; --write-world writes the pages' },
     },
   } satisfies Receipt);
   log(`\nReceipt: ${receiptFile}`);

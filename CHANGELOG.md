@@ -2,6 +2,12 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.254] - 2026-11-18
+
+- Add five cases where namesakes, coworkers or a founder and their firm can share one account identifier. The [duplicate-finder benchmark](docs/benchmarks/2026-11-18-entity-dedupe-h2h-preregistration.md) now varies LinkedIn paths and GitHub logins by seed and generator version, while version 1 still reproduces the published development receipt.
+
+- The agent guides (AGENTS.md, CLAUDE.md and eval/CONTRIBUTING.md) name `gpt-6.2-sol` as the newest frontier GPT that model-comparison runs test, now that OpenAI's API serves it. Results measured on `gpt-6.1-sol`, and judges a protocol fixes to it, keep that name. The runner's frontier-reader list and price table still name `gpt-6.1-sol` until the first run on `gpt-6.2-sol` moves them.
+
 ## [0.10.253] - 2026-11-18
 
 entity-dedupe head-to-head preregistration ([docs/benchmarks/2026-11-18-entity-dedupe-h2h-preregistration.md](docs/benchmarks/2026-11-18-entity-dedupe-h2h-preregistration.md)). It fixes, before any counted run, how often gbrain's duplicate finder under its chosen automatic rule, three classic matchers (Splink, dedupe, Zingg), four memory systems named by kind and a language-model matcher on claude-opus-5-5, gpt-6.2-sol and particle-1 join different people or different companies on one synthetic world of hard cases, and what each result changes: whether automatic linking stays on, what the confirm list shows, and whether gbrain adopts a better matching method. Families where different people share an exclusive id are added before the freeze, and the counted seed is published only as a commitment until the results.
