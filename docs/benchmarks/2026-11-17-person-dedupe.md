@@ -158,11 +158,11 @@ Never treat two different emails as a disagreement: one person often has several
 ## Reproduce
 
 ```sh
-bun eval/runner/person-dedupe.ts --output eval/reports/person-dedupe
+bun eval/runner/person-dedupe.ts --generator-version 1 --output eval/reports/person-dedupe
 bun test test/eval/person-dedupe.test.ts
 ```
 
-The run takes a few seconds, uses no key and no network, and writes `eval/reports/person-dedupe/receipt.json` with every arm scored for people, companies and both, every family and both ledgers' hashes (the generators rebuild the ledgers from the seed). This report's receipt predates the company pages; a new receipt's people scores (`by_type.person` on each arm) match it. To score gbrain's finder, write the world (person pages under `<source>/people/`, company pages under `<source>/companies/`) into a new, empty folder (the runner refuses a folder that already has files), import each source into a fresh brain, and score its output together with the import summaries (the runner fails unless every page was imported):
+The run takes a few seconds, uses no key and no network, and writes `eval/reports/person-dedupe/receipt.json` with every arm scored for people, companies and both, every family and both ledgers' hashes (the generators rebuild the ledgers from the seed). `--generator-version 1` rebuilds the world this report measured (ledger `14877e8e396c`); without it the runner builds version 2, which adds the shared-id families (2026-11-18). This report's receipt predates the company pages; a new receipt's people scores (`by_type.person` on each arm) match it. To score gbrain's finder, write the world (person pages under `<source>/people/`, company pages under `<source>/companies/`) into a new, empty folder (the runner refuses a folder that already has files), import each source into a fresh brain, and score its output together with the import summaries (the runner fails unless every page was imported):
 
 ```sh
 bun eval/runner/person-dedupe.ts --write-world /path/to/new-world

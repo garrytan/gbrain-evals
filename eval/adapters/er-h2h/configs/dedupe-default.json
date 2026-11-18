@@ -1,0 +1,124 @@
+{
+ "name": "default",
+ "doc": "https://github.com/dedupeio/dedupe-examples/blob/master/patent_example/patent_example.py",
+ "based_on": "dedupe's person example, 'Patent Author Disambiguation' (listed at https://docs.dedupe.io/en/latest/Examples.html): the name as a String and a Text variable with their Interaction, set-valued fields as Set variables, values lowercased, prepare_training defaults, train() defaults and partition(data, 0.5)",
+ "changes_from_doc": [
+  "emails (a list per page) take the place of the example's Coauthor and Class sets as a Set variable",
+  "company and city have no counterpart in the patent example; they are String variables with has_missing, as in dedupe's csv_example (https://docs.dedupe.io/en/latest/API-documentation.html shows String(..., has_missing=True))",
+  "console_label is replaced by an oracle that answers the same uncertain_pairs() loop from the held-out world, stopping at console_label's own counter of 10 positive and 10 negative labels"
+ ],
+ "variables": [
+  {
+   "type": "String",
+   "field": "name",
+   "kwargs": {
+    "name": "name_string",
+    "has_missing": true
+   }
+  },
+  {
+   "type": "Text",
+   "field": "name",
+   "corpus": true,
+   "kwargs": {
+    "name": "name_text",
+    "has_missing": true
+   }
+  },
+  {
+   "type": "Set",
+   "field": "emails",
+   "corpus": true,
+   "kwargs": {
+    "has_missing": true
+   }
+  },
+  {
+   "type": "String",
+   "field": "company",
+   "kwargs": {
+    "has_missing": true
+   }
+  },
+  {
+   "type": "String",
+   "field": "city",
+   "kwargs": {
+    "has_missing": true
+   }
+  },
+  {
+   "type": "Interaction",
+   "args": [
+    "name_string",
+    "name_text"
+   ]
+  }
+ ],
+ "lowercase": true,
+ "labelling": {
+  "min_match": 10,
+  "min_distinct": 10,
+  "max_pairs": 500
+ },
+ "train": {},
+ "threshold": 0.5,
+ "proposed_note": "none: dedupe's partition() has one threshold and no review band",
+ "companies": {
+  "doc": "https://github.com/dedupeio/dedupe-examples/blob/master/patent_example/patent_example.py",
+  "based_on": "These company mappings are ours: the tool's documentation has no company example, so each person field is mapped to the company field that plays the same part. This section keeps the patent example's variables for the name (String, Text and their Interaction) and maps the people config's other fields onto company fields",
+  "changes_from_doc": [
+   "ours: domains (a list per page) take the place of emails as a Set variable, as the company's contact key",
+   "ours: industry takes the place of the person's company as a String with has_missing; city stays a String with has_missing",
+   "the oracle, the stop rule and partition(data, 0.5) are the same as for people"
+  ],
+  "variables": [
+   {
+    "type": "String",
+    "field": "name",
+    "kwargs": {
+     "name": "name_string",
+     "has_missing": true
+    }
+   },
+   {
+    "type": "Text",
+    "field": "name",
+    "corpus": true,
+    "kwargs": {
+     "name": "name_text",
+     "has_missing": true
+    }
+   },
+   {
+    "type": "Set",
+    "field": "domains",
+    "corpus": true,
+    "kwargs": {
+     "has_missing": true
+    }
+   },
+   {
+    "type": "String",
+    "field": "industry",
+    "kwargs": {
+     "has_missing": true
+    }
+   },
+   {
+    "type": "String",
+    "field": "city",
+    "kwargs": {
+     "has_missing": true
+    }
+   },
+   {
+    "type": "Interaction",
+    "args": [
+     "name_string",
+     "name_text"
+    ]
+   }
+  ]
+ }
+}

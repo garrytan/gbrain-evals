@@ -2,6 +2,26 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.254] - 2026-11-18
+
+- Add five cases where namesakes, coworkers or a founder and their firm can share one account identifier. The [duplicate-finder benchmark](docs/benchmarks/2026-11-18-entity-dedupe-h2h-preregistration.md) now varies LinkedIn paths and GitHub logins by seed and generator version, while version 1 still reproduces the published development receipt.
+
+- The agent guides (AGENTS.md, CLAUDE.md and eval/CONTRIBUTING.md) name `gpt-6.2-sol` as the newest frontier GPT that model-comparison runs test, now that OpenAI's API serves it. Results measured on `gpt-6.1-sol`, and judges a protocol fixes to it, keep that name. The runner's frontier-reader list and price table still name `gpt-6.1-sol` until the first run on `gpt-6.2-sol` moves them.
+
+## [0.10.253] - 2026-11-18
+
+entity-dedupe head-to-head preregistration ([docs/benchmarks/2026-11-18-entity-dedupe-h2h-preregistration.md](docs/benchmarks/2026-11-18-entity-dedupe-h2h-preregistration.md)). It fixes, before any counted run, how often gbrain's duplicate finder under its chosen automatic rule, three classic matchers (Splink, dedupe, Zingg), four memory systems named by kind and a language-model matcher on claude-opus-5-5, gpt-6.2-sol and particle-1 join different people or different companies on one synthetic world of hard cases, and what each result changes: whether automatic linking stays on, what the confirm list shows, and whether gbrain adopts a better matching method. Families where different people share an exclusive id are added before the freeze, and the counted seed is published only as a commitment until the results.
+
+### The duplicate-people bench also checks companies
+
+- `person-dedupe` now writes company pages beside the people: 12 families of same-name companies in different places or industries, parents and subsidiaries, rebrands, legal suffixes and abbreviations, a holding group on one domain, a company with several domains, and acquisitions. Every arm is scored for people, companies and both, so the false-merge rate is reported for each type ([report](docs/benchmarks/2026-11-17-person-dedupe.md)).
+
+### Scoring a real duplicate finder fails loudly on a stale or partial world
+
+- `person-dedupe --write-world` refuses a folder that already has files, so a new world never mixes with pages left from an earlier one.
+- Scoring a finder's output now needs `--finder-imports`, the `gbrain import --json` summaries, and fails unless every page of every source was imported, because a finder that never saw a page can't link it and would score as safe ([report](docs/benchmarks/2026-11-17-person-dedupe.md)).
+- The confirm list is now read from the finder's own `contact_key_only` mark, so the bench scores the list an owner actually sees. The stand-in's published numbers are unchanged.
+
 ## [0.10.252] - 2026-11-18
 
 README's results tables now say which direction is better on every row whose direction wasn't plain. The permission row

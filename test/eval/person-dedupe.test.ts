@@ -3,15 +3,15 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
-  COMPANY_FAMILIES, companyPageKey, companySeed, deriveCompanyGold, generateCompanyLedger, parseCompanyPage, renderCompanyPage,
+  COMPANY_FAMILIES, companyPageKey, companySeed, companyWrittenPages, deriveCompanyGold, generateCompanyLedger, parseCompanyPage, renderCompanyPage,
 } from '../../eval/generators/company-dedupe-gen.ts';
 import {
-  FAMILIES, PERSON_DEDUPE_DEFAULT_PER_FAMILY, PERSON_DEDUPE_DEFAULT_SEED, deriveGold, generateLedger, ledgerFingerprint, pageKey, parseWrittenPage, renderPage,
+  FAMILIES, PERSON_DEDUPE_DEFAULT_PER_FAMILY, PERSON_DEDUPE_DEFAULT_SEED, deriveGold, generateLedger, ledgerFingerprint, pageKey, parseWrittenPage, renderPage, writtenPages,
   type DesignedPair, type WrittenPage,
 } from '../../eval/generators/person-dedupe-gen.ts';
 import { assertScorerRejectsFakeSystems } from '../../eval/runner/mutation-kit.ts';
 import {
-  ARMS, REFERENCE_MATCHERS, SELECTIONS, checkFinderCoverage, domainKey, emailKey, emulateFinder, groupId, isRoleEmail, parseFinderOutput, runPersonDedupe, scoreGroups, strictFold, toFinderOutput, variantFold, verdictOf, writeWorld,
+  ARMS, REFERENCE_MATCHERS, SELECTIONS, checkFinderCoverage, domainKey, emailKey, emulateFinder, groupId, isRoleEmail, pageKeys, parseFinderOutput, runPersonDedupe, scoreGroups, strictFold, toFinderOutput, variantFold, verdictOf, writeWorld,
   type Group, type Score,
 } from '../../eval/runner/person-dedupe.ts';
 
@@ -47,6 +47,73 @@ describe('person-dedupe generator', () => {
       const team = pages[0].emails.find(e => e.startsWith('team-'))!;
       expect(ledger.pages.filter(p => p.emails.includes(team)).length).toBe(n);
     }
+  });
+});
+
+describe('shared exclusive ids in the generated world', () => {
+  const world = (seed: number) => {
+    const people = generateLedger(seed);
+    const companies = generateCompanyLedger(seed, PERSON_DEDUPE_DEFAULT_PER_FAMILY);
+    const pages = [...writtenPages({ ...people, pages: [...people.pages, ...(companies.founders ?? [])] }), ...companyWrittenPages(companies)];
+    return { people, companies, pages };
+  };
+
+  test('two seeds have disjoint LinkedIn paths and GitHub logins across people and companies', () => {
+    const ids = (seed: number) => {
+      const { pages } = world(seed);
+      expect(pages.some(p => p.type === 'company' && p.linkedin)).toBe(true);
+      expect(pages.some(p => p.type === 'person' && p.linkedin)).toBe(true);
+      expect(pages.some(p => p.type === 'person' && p.github)).toBe(true);
+      return new Set(pages.flatMap(pageKeys).filter(k => /^(linkedin|github):/.test(k)));
+    };
+    const a = ids(401), b = ids(402);
+    expect([...a].filter(k => b.has(k))).toEqual([]);
+  });
+
+  test('a declared id is an exclusive key unless it is a placeholder, all zeros or over 320 characters', () => {
+    const declared = (external_id: string) => pageKeys({ ...page('work', 'x', 'X Y'), external_id }).filter(k => k.startsWith('declared_id:'));
+    expect(declared(' CRM-12 ')).toEqual(['declared_id:crm-12']);
+    expect(declared('x'.repeat(320))).toEqual([`declared_id:${'x'.repeat(320)}`]);
+    for (const bad of ['', 'n/a', 'Unknown', '000', 'x'.repeat(321)]) expect(declared(bad)).toEqual([]);
+  });
+
+  test('the rendered collisions and controls share the named id, with no out-of-instance holder', () => {
+    const { people, companies, pages } = world(PERSON_DEDUPE_DEFAULT_SEED);
+    const keys = new Map(pages.map(p => [p.key, pageKeys(p)]));
+    const byPage = new Map(pages.map(p => [p.key, p]));
+    const holders = new Map<string, string[]>();
+    for (const [page, ids] of keys) for (const id of ids) holders.set(id, [...(holders.get(id) ?? []), page]);
+    for (const [family, kind, different, same, size] of [
+      ['diff-recycled-github', 'github', 16, 4, 2],
+      ['diff-wrong-linkedin', 'linkedin', 16, 4, 2],
+      ['diff-declared-id-typo', 'declared_id', 16, 4, 2],
+      ['diff-shared-github-account', 'github', 40, 20, 3],
+      ['co-diff-founder-linkedin', 'linkedin', 16, 4, 2],
+    ] as const) {
+      const pairs = [...people.pairs, ...companies.pairs].filter(p => p.family === family);
+      expect(new Set(pairs.map(p => p.instance)).size).toBe(20);
+      expect(pairs.filter(p => p.label === 'different').length).toBe(different);
+      expect(pairs.filter(p => p.label === 'same').length).toBe(same);
+      for (const { a, b, instance, label } of pairs) {
+        const shared = keys.get(a)!.filter(id => id.startsWith(`${kind}:`) && keys.get(b)!.includes(id));
+        expect(shared).toHaveLength(1);
+        const instancePages = new Set(pairs.filter(p => p.instance === instance).flatMap(p => [p.a, p.b]));
+        expect(new Set(holders.get(shared[0]))).toEqual(instancePages);
+        expect(instancePages.size).toBe(size);
+        if (family === 'co-diff-founder-linkedin') expect(byPage.get(a)!.type === byPage.get(b)!.type).toBe(label === 'same');
+        if (size === 2) expect(byPage.get(a)!.source).not.toBe(byPage.get(b)!.source);
+      }
+    }
+  });
+
+  test('both gold checks reject flipped labels in the mixed families', () => {
+    const { people, companies } = world(PERSON_DEDUPE_DEFAULT_SEED);
+    for (const family of ['diff-recycled-github', 'diff-wrong-linkedin', 'diff-declared-id-typo', 'diff-shared-github-account']) {
+      const p = people.pairs.find(p => p.family === family && p.label === 'different')!;
+      expect(() => deriveGold({ ...people, pairs: [{ ...p, label: 'same' }] })).toThrow(/people say different/);
+    }
+    const p = companies.pairs.find(p => p.family === 'co-diff-founder-linkedin' && p.label === 'different')!;
+    expect(() => deriveCompanyGold({ ...companies, pairs: [{ ...p, label: 'same' }] })).toThrow(/companies say different/);
   });
 });
 
@@ -90,6 +157,11 @@ describe('finder contract emulator', () => {
 });
 
 describe('clean-rule arms', () => {
+  test('a person and a company sharing an exclusive id never form a clean group, under any arm', () => {
+    const li = 'https://www.linkedin.com/in/ada-founder';
+    const pages = [{ ...page('work', 'ada-lark', 'Ada Lark'), linkedin: li }, company('home', 'ada-lark', 'Ada Lark', [], li)];
+    for (const [, a] of Object.entries(ARMS)) expect(emulateFinder(pages, a.rule).groups.filter(g => g.class === 'clean')).toEqual([]);
+  });
   const pair = (title: string, emails: string[], li?: [string, string]) => [
     { ...page('a', 'x', title, emails), linkedin: li ? `https://www.linkedin.com/in/${li[0]}` : null },
     { ...page('b', 'x', title, emails), linkedin: li ? `https://www.linkedin.com/in/${li[1]}` : null },
@@ -262,7 +334,8 @@ describe('real-finder run guards', () => {
 describe('company pages', () => {
   test('the company world is seeded on its own stream and leaves every person page where v1 put it', () => {
     const v1 = JSON.parse(readFileSync(join(import.meta.dir, '../../docs/benchmarks/2026-11-17-person-dedupe/receipt.json'), 'utf8'));
-    expect(ledgerFingerprint(generateLedger())).toBe(v1.data.ledger.sha256);
+    const { seed, per_family, generator_version, sha256 } = v1.data.ledger;
+    expect(ledgerFingerprint(generateLedger(seed, per_family, generator_version))).toBe(sha256);
     expect(companySeed(PERSON_DEDUPE_DEFAULT_SEED)).not.toBe(PERSON_DEDUPE_DEFAULT_SEED);
     const a = generateCompanyLedger(PERSON_DEDUPE_DEFAULT_SEED, PERSON_DEDUPE_DEFAULT_PER_FAMILY);
     expect(ledgerFingerprint(a)).toBe(ledgerFingerprint(generateCompanyLedger(PERSON_DEDUPE_DEFAULT_SEED, PERSON_DEDUPE_DEFAULT_PER_FAMILY)));
@@ -351,7 +424,7 @@ describe('type-split scoring', () => {
   test('a people-only world scores no companies; with companies, a finder that links a person to a company counts a cross-type merge', () => {
     const ledger = generateLedger(PERSON_DEDUPE_DEFAULT_SEED, 2);
     expect(runPersonDedupe(ledger)[0].by_type.company).toBeNull();
-    const companies = generateCompanyLedger(PERSON_DEDUPE_DEFAULT_SEED, 2);
+    const companies = generateCompanyLedger(PERSON_DEDUPE_DEFAULT_SEED, 2, 1);
     const p = pageKey(ledger.pages[0]), c = companyPageKey(companies.pages[0]);
     const arms = runPersonDedupe(ledger, { companies, finderJson: toFinderOutput([{ members: [c, p].sort(), kind: 'cross_source', class: 'clean', rules: ['shared_key:email'] }]), finderBuild: 'cross-type-fixture' });
     const auto = arms.find(a => a.id === 'finder:auto-link')!;
@@ -363,7 +436,8 @@ describe('type-split scoring', () => {
 
   test('adding companies leaves every person number of the published v1 receipt byte-identical', () => {
     const v1 = JSON.parse(readFileSync(join(import.meta.dir, '../../docs/benchmarks/2026-11-17-person-dedupe/receipt.json'), 'utf8'));
-    const arms = runPersonDedupe(generateLedger(), { companies: generateCompanyLedger(PERSON_DEDUPE_DEFAULT_SEED, PERSON_DEDUPE_DEFAULT_PER_FAMILY) });
+    const { seed, per_family, generator_version } = v1.data.ledger;
+    const arms = runPersonDedupe(generateLedger(seed, per_family, generator_version), { companies: generateCompanyLedger(seed, per_family, 1) });
     const brief = (s: Score) => ({ ...s, false_merge_cases: `${s.false_merge_cases.length} cases; listed only for auto-link selections` });
     expect(arms.map(a => a.id)).toEqual(v1.data.arms.map((a: { id: string }) => a.id));
     for (const old of v1.data.arms) {
@@ -372,4 +446,17 @@ describe('type-split scoring', () => {
       expect(JSON.stringify({ score, verdict: now.by_type.person.verdict })).toBe(JSON.stringify({ score: old.score, verdict: old.verdict }));
     }
   }, 60_000);
+
+  test('the designed founder collision is scored together and never in a single-type denominator', () => {
+    const ledger = generateLedger(PERSON_DEDUPE_DEFAULT_SEED, 1);
+    const companies = generateCompanyLedger(PERSON_DEDUPE_DEFAULT_SEED, 1);
+    const family = 'co-diff-founder-linkedin';
+    const { a, b } = companies.pairs.find(p => p.family === family)!;
+    const finderJson = toFinderOutput([g([a, b])]);
+    const auto = runPersonDedupe(ledger, { companies, finderJson }).find(a => a.id === 'finder:auto-link')!;
+    expect(auto.score.by_family[family].false_merge).toMatchObject({ k: 1, n: 1 });
+    expect(auto.by_type.person.score.by_family[family]).toBeUndefined();
+    expect(auto.by_type.company!.score.by_family[family]).toBeUndefined();
+    expect(auto.cross_type_merges).toBe(1);
+  });
 });
