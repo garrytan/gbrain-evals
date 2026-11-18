@@ -109,6 +109,39 @@ What drives the numbers:
 
 The reference matchers have no crowding, one-page-per-source or conflict checks, and that is where most of their false merges come from.
 
+## Company pages
+
+The runner also writes company pages, so the same scorer reports false merges on companies. They come from [eval/generators/company-dedupe-gen.ts](../../eval/generators/company-dedupe-gen.ts) on their own random stream, so every person page, pair and number above stays exactly as this report's receipt has it at seed 20261117; a test checks each arm against that receipt. The numbers in this report are people only.
+
+A company page has `type: company`, a title and the fields gbrain's finder reads for a company: `domain` (one value or a list), `website` (its host counts as a domain) and `linkedin` (a `/company/` page), plus industry, city, country, legal suffix and parent where the case needs them. All names are invented and every domain ends in `.example`. There are twelve families with 20 instances each:
+
+| Different companies (must not link) | One company (must link) |
+|---|---|
+| same name and industry in another city; in 9 of the 20 instances both are franchise owners whose sites sit on the brand domain | same name, same domain |
+| same name in one city, another industry | the legal suffix written another way or dropped (Inc and `, Inc.`; Inc and none; Incorporated and Inc; LLC and `L.L.C.`; Ltd and Limited; Inc and LLC after a conversion) |
+| same name, another legal suffix and country (Halwick GmbH, Halwick Ltd) | initials (Halwick International Machines, HIM), with the same domain or none on the short page |
+| names that differ only by the suffix, in one city (Halwick Inc, Halwick LLC) | a rename: the new page keeps the old domain, or only says "formerly" |
+| parent and subsidiary: the subsidiary site on the parent domain, on a subdomain, or a name the finder's suffix list folds away (Halwick, Halwick Labs) | several domains: one page lists both, the pages list different ones, or one is a country domain |
+| companies of one holding group on one domain, including a US and a UK company with the same name | |
+| an acquirer and the company it bought, whose second page lists the acquirer domain | the bought company's own two pages |
+
+LinkedIn coverage cycles as on person pages: on every third instance the first two pages carry a LinkedIn company page, one per company.
+
+**How each arm treats company pages.** No arm ever links a person page to a company page, as the finder contract requires. On companies the keys are a domain (a contact key, like an email) and a LinkedIn company page (an exclusive key, like a personal LinkedIn), and the variant fold also drops trailing corporate suffixes (inc, llc, ltd, gmbh, labs and the rest of gbrain's list), so two names that differ only by a suffix and share a domain come out `likely` rather than `conflict`. Three arms have parts with no company rule:
+
+| arm | on company pages |
+|---|---|
+| exact name, folded name | the same rule on company names |
+| any shared email | any shared domain |
+| shared email and folded name | a shared domain and the same folded name |
+| shared email and nickname-aware name | there is no nickname table for companies; instead a shared domain and the same name after the legal suffixes are dropped |
+| 1, 3, 4, 7 and every `+ union` | the same rule with the company keys |
+| 2 | **no company rule**: role words are read from email addresses and company pages have none, so arm 2 is arm 1 on companies |
+| 2b | the employer path has **no company rule**, so a shared domain links only with a shared LinkedIn company page as well |
+| 5 and 6 | the role-word and one-person-domain parts have **no company rule**, so both are arm 4 on companies |
+
+Every arm is scored three ways with the same metrics: over person pages, over company pages and over both together. A chain that runs through a page of the other type still counts in each type's score, and a person page and a company page that end up merged are counted as cross-type merges.
+
 ## What to use and what to avoid
 
 Check the union of linked groups before any automatic link: it is the one guard here that costs only the cases it is meant to stop. Then decide how much an email may do on its own. If an email can link by itself, a role-word list plus a disagreeing-id veto brings the stress rate down but not to zero, because people name shared addresses anything. If it can't, the key-type split, a second key type or id-only links (arm 7) get to zero or close and link far fewer real duplicates without a person; arm 7's email matches then need a confirm step that is a real read, since 52 of the 128 designed pairs on its list are different people. Which is right depends on how often shared addresses meet same-named people in a real brain, which this bench does not measure.
@@ -129,7 +162,7 @@ bun eval/runner/person-dedupe.ts --output eval/reports/person-dedupe
 bun test test/eval/person-dedupe.test.ts
 ```
 
-The run takes about two seconds, uses no key and no network, and writes `eval/reports/person-dedupe/receipt.json` with every arm, every family and the ledger's hash (the generator rebuilds the ledger from the seed). To score gbrain's finder, write the world into a new, empty folder (the runner refuses a folder that already has files), import each source into a fresh brain, and score its output together with the import summaries (the runner fails unless every page was imported):
+The run takes a few seconds, uses no key and no network, and writes `eval/reports/person-dedupe/receipt.json` with every arm scored for people, companies and both, every family and both ledgers' hashes (the generators rebuild the ledgers from the seed). This report's receipt predates the company pages; a new receipt's people scores (`by_type.person` on each arm) match it. To score gbrain's finder, write the world (person pages under `<source>/people/`, company pages under `<source>/companies/`) into a new, empty folder (the runner refuses a folder that already has files), import each source into a fresh brain, and score its output together with the import summaries (the runner fails unless every page was imported):
 
 ```sh
 bun eval/runner/person-dedupe.ts --write-world /path/to/new-world

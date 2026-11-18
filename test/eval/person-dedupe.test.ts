@@ -1,18 +1,22 @@
 import { describe, expect, test } from 'bun:test';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
-  FAMILIES, PERSON_DEDUPE_DEFAULT_SEED, deriveGold, generateLedger, ledgerFingerprint, pageKey, parseWrittenPage, renderPage,
+  COMPANY_FAMILIES, companyPageKey, companySeed, deriveCompanyGold, generateCompanyLedger, parseCompanyPage, renderCompanyPage,
+} from '../../eval/generators/company-dedupe-gen.ts';
+import {
+  FAMILIES, PERSON_DEDUPE_DEFAULT_PER_FAMILY, PERSON_DEDUPE_DEFAULT_SEED, deriveGold, generateLedger, ledgerFingerprint, pageKey, parseWrittenPage, renderPage,
   type DesignedPair, type WrittenPage,
 } from '../../eval/generators/person-dedupe-gen.ts';
 import { assertScorerRejectsFakeSystems } from '../../eval/runner/mutation-kit.ts';
 import {
-  ARMS, SELECTIONS, checkFinderCoverage, emailKey, emulateFinder, groupId, isRoleEmail, parseFinderOutput, runPersonDedupe, scoreGroups, strictFold, toFinderOutput, variantFold, verdictOf, writeWorld,
-  type Group,
+  ARMS, REFERENCE_MATCHERS, SELECTIONS, checkFinderCoverage, domainKey, emailKey, emulateFinder, groupId, isRoleEmail, parseFinderOutput, runPersonDedupe, scoreGroups, strictFold, toFinderOutput, variantFold, verdictOf, writeWorld,
+  type Group, type Score,
 } from '../../eval/runner/person-dedupe.ts';
 
-const page = (source: string, slug: string, title: string, emails: string[] = []): WrittenPage => ({ key: `${source}:${slug}`, source, slug, title, emails, linkedin: null, github: null, company: null, city: null });
+const page = (source: string, slug: string, title: string, emails: string[] = []): WrittenPage => ({ key: `${source}:${slug}`, source, slug, type: 'person', title, emails, domains: [], linkedin: null, github: null, company: null, city: null });
+const company = (source: string, slug: string, title: string, domains: string[] = [], linkedin: string | null = null): WrittenPage => ({ key: `${source}:companies/${slug}`, source, slug: `companies/${slug}`, type: 'company', title, emails: [], domains, linkedin, github: null, company: null, city: null });
 
 describe('person-dedupe generator', () => {
   test('same seed gives the same ledger; another seed gives another', () => {
@@ -243,14 +247,129 @@ describe('real-finder run guards', () => {
     const per = new Map<string, number>();
     for (const p of ledger.pages) per.set(p.source, (per.get(p.source) ?? 0) + 1);
     const ok = [...per].map(([source_id, n]) => ({ status: 'success', source_id, imported: n, unchanged: 0, total_files: n, errors: 0, malformed_skipped: 0, failures: [] as unknown[], skipped: 0, chunks: n, duration_s: 0.1 }));
-    expect(() => checkFinderCoverage(ok, ledger)).not.toThrow();
-    expect(() => checkFinderCoverage(ok.slice(1), ledger)).toThrow(/never saw/);
-    expect(() => checkFinderCoverage([{ ...ok[0], imported: ok[0].imported - 1 }, ...ok.slice(1)], ledger)).toThrow(/missing pages/);
-    expect(() => checkFinderCoverage([{ ...ok[0], imported: ok[0].imported - 1, unchanged: 1 }, ...ok.slice(1)], ledger)).toThrow(/1 unchanged/);
-    expect(() => checkFinderCoverage([{ ...ok[0], errors: 1 }, ...ok.slice(1)], ledger)).toThrow(/errors/);
-    expect(() => checkFinderCoverage([{ ...ok[0], malformed_skipped: 1 }, ...ok.slice(1)], ledger)).toThrow(/malformed/);
-    expect(() => checkFinderCoverage([{ ...ok[0], failures: [{ path: 'x' }] }, ...ok.slice(1)], ledger)).toThrow(/failures/);
-    expect(() => checkFinderCoverage([...ok, ok[0]], ledger)).toThrow(/two import summaries/);
-    expect(() => checkFinderCoverage([...ok, { ...ok[0], source_id: 'elsewhere' }], ledger)).toThrow(/does not have/);
+    expect(() => checkFinderCoverage(ok, ledger.pages)).not.toThrow();
+    expect(() => checkFinderCoverage(ok.slice(1), ledger.pages)).toThrow(/never saw/);
+    expect(() => checkFinderCoverage([{ ...ok[0], imported: ok[0].imported - 1 }, ...ok.slice(1)], ledger.pages)).toThrow(/missing pages/);
+    expect(() => checkFinderCoverage([{ ...ok[0], imported: ok[0].imported - 1, unchanged: 1 }, ...ok.slice(1)], ledger.pages)).toThrow(/1 unchanged/);
+    expect(() => checkFinderCoverage([{ ...ok[0], errors: 1 }, ...ok.slice(1)], ledger.pages)).toThrow(/errors/);
+    expect(() => checkFinderCoverage([{ ...ok[0], malformed_skipped: 1 }, ...ok.slice(1)], ledger.pages)).toThrow(/malformed/);
+    expect(() => checkFinderCoverage([{ ...ok[0], failures: [{ path: 'x' }] }, ...ok.slice(1)], ledger.pages)).toThrow(/failures/);
+    expect(() => checkFinderCoverage([...ok, ok[0]], ledger.pages)).toThrow(/two import summaries/);
+    expect(() => checkFinderCoverage([...ok, { ...ok[0], source_id: 'elsewhere' }], ledger.pages)).toThrow(/does not have/);
   });
+});
+
+describe('company pages', () => {
+  test('the company world is seeded on its own stream and leaves every person page where v1 put it', () => {
+    const v1 = JSON.parse(readFileSync(join(import.meta.dir, '../../docs/benchmarks/2026-11-17-person-dedupe/receipt.json'), 'utf8'));
+    expect(ledgerFingerprint(generateLedger())).toBe(v1.data.ledger.sha256);
+    expect(companySeed(PERSON_DEDUPE_DEFAULT_SEED)).not.toBe(PERSON_DEDUPE_DEFAULT_SEED);
+    const a = generateCompanyLedger(PERSON_DEDUPE_DEFAULT_SEED, PERSON_DEDUPE_DEFAULT_PER_FAMILY);
+    expect(ledgerFingerprint(a)).toBe(ledgerFingerprint(generateCompanyLedger(PERSON_DEDUPE_DEFAULT_SEED, PERSON_DEDUPE_DEFAULT_PER_FAMILY)));
+    expect(ledgerFingerprint(generateCompanyLedger(PERSON_DEDUPE_DEFAULT_SEED + 1, PERSON_DEDUPE_DEFAULT_PER_FAMILY))).not.toBe(ledgerFingerprint(a));
+  });
+
+  test('gold agrees with every company family on many seeds, and every family plants pairs', () => {
+    for (let seed = 1; seed <= 40; seed++) expect(() => deriveCompanyGold(generateCompanyLedger(seed, 6))).not.toThrow();
+    const ledger = generateCompanyLedger(PERSON_DEDUPE_DEFAULT_SEED, PERSON_DEDUPE_DEFAULT_PER_FAMILY);
+    for (const f of COMPANY_FAMILIES) expect(ledger.pairs.some(p => p.family === f.id)).toBe(true);
+    expect(new Set(ledger.pages.map(companyPageKey)).size).toBe(ledger.pages.length);
+    expect(ledger.pages.every(p => p.domains.every(d => d.endsWith('.example')) && (!p.website || new URL(p.website).hostname.endsWith('.example')))).toBe(true);
+  });
+
+  test('a rendered company page has type company, reads back its domain and website, and never carries the company id', () => {
+    for (const p of generateCompanyLedger(3, 3).pages) {
+      const md = renderCompanyPage(p);
+      expect(md).toContain('type: company');
+      expect(md).not.toContain(p.company);
+      expect(md).not.toContain(p.company.replace(/-/g, ''));
+      expect(md).not.toContain(p.family.replace(/-/g, ''));
+      const w = parseCompanyPage(p.source, p.slug, md);
+      expect([w.key, w.type, w.title, w.linkedin, w.city]).toEqual([companyPageKey(p), 'company', p.title, p.linkedin, p.city]);
+      expect(w.domains).toEqual([...p.domains, ...(p.website ? [p.website] : [])]);
+    }
+  });
+
+  test('company keys and folds follow the contract: the website host is a domain, and the variant fold drops suffixes only for companies', () => {
+    expect(domainKey('https://www.Halwick.example/labs?x=1')).toBe('halwick.example');
+    expect(domainKey('uk.halwick.example')).toBe('uk.halwick.example');
+    expect(domainKey('not a domain')).toBeNull();
+    expect(variantFold('Halwick, Inc.', 'company')).toBe('halwick');
+    expect(variantFold('Halwick Labs', 'company')).toBe('halwick');
+    expect(variantFold('Sam Example Co', 'person')).toBe('sam example co');
+  });
+
+  test('the stand-in classes company groups by the contract', () => {
+    const cls = (pages: WrittenPage[], arm = '1') => emulateFinder(pages, ARMS[arm].rule).groups.map(g => `${g.kind}/${g.class}`);
+    const franchise = [company('work', 'halwick-bakery', 'Halwick Bakery', ['https://www.halwickbakery.example/leeds']), company('home', 'halwick-bakery', 'Halwick Bakery', ['https://www.halwickbakery.example/york'])];
+    expect(cls(franchise)).toEqual(['cross_source/clean']);
+    const vetoed = franchise.map((p, i) => ({ ...p, linkedin: `https://www.linkedin.com/company/halwick-${i}` }));
+    expect(cls(vetoed, '4')).toEqual(['conflict/conflict']);
+    expect(cls(franchise, '2b')).toEqual(['cross_source/likely']);
+    expect(cls([company('work', 'halwick', 'Halwick', ['halwick.example']), company('home', 'halwick-labs', 'Halwick Labs', ['https://www.halwick.example/labs'])])).toEqual(['cross_source/likely']);
+    expect(cls([company('work', 'halwick-group', 'Halwick Group', ['halwick.example']), company('home', 'halwick-rail', 'Halwick Rail', ['halwick.example'])])).toEqual(['conflict/conflict']);
+    expect(cls([company('work', 'sam-example', 'Sam Example'), page('home', 'sam-example', 'Sam Example')])).toEqual([]);
+  });
+
+  test('company groups go through the finder\'s JSON shape with companies/ slugs', () => {
+    const known = new Set(['work:companies/halwick', 'home:companies/halwick', 'work:halwick']);
+    const out = toFinderOutput([{ members: ['home:companies/halwick', 'work:companies/halwick'], kind: 'cross_source', class: 'clean', rules: ['shared_key:domain'] }]);
+    expect(out.groups[0].members).toEqual([{ source_id: 'home', slug: 'companies/halwick' }, { source_id: 'work', slug: 'companies/halwick' }]);
+    expect(parseFinderOutput(out, known)[0].members).toEqual(['home:companies/halwick', 'work:companies/halwick']);
+  });
+
+  test('every reference matcher and stand-in arm says what it does on company pages', () => {
+    for (const m of REFERENCE_MATCHERS) expect(m.company.length).toBeGreaterThan(0);
+    for (const a of Object.values(ARMS)) expect(a.company.length).toBeGreaterThan(0);
+    expect(ARMS['2'].company).toMatch(/no company rule/);
+  });
+});
+
+describe('type-split scoring', () => {
+  const gold = new Map([['w:p1', 'P1'], ['h:p2', 'P2'], ['w:companies/c', 'C'], ['h:companies/c', 'C']]);
+  const pairs: DesignedPair[] = [
+    { a: 'w:p1', b: 'h:p2', family: 'diff-namesake', instance: 0, label: 'different' },
+    { a: 'w:companies/c', b: 'h:companies/c', family: 'co-same-exact', instance: 0, label: 'same' },
+  ];
+  const g = (members: string[]): Group => ({ members, kind: 'cross_source', class: 'clean', rules: ['t'] });
+
+  test('a chain through a company page still merges two people in the people score', () => {
+    const groups = [g(['w:companies/c', 'w:p1']), g(['h:p2', 'w:companies/c'])];
+    const people = new Map([...gold].filter(([k]) => !k.includes('companies/')));
+    const s = scoreGroups(groups, pairs.slice(0, 1), people, groups);
+    expect(s.false_merge.k).toBe(1);
+    expect(scoreGroups([], pairs.slice(0, 1), people, groups).false_merge.k).toBe(1);
+    expect(scoreGroups([], pairs.slice(0, 1), people).false_merge.k).toBe(0);
+  });
+
+  test('the company verdict names companies and its own plain duplicates', () => {
+    const s = scoreGroups([g(['h:p2', 'w:p1'])], pairs, gold);
+    expect(verdictOf(s, 'all').shortfalls).toEqual(['1 of 1 designed different-entity pairs merged (target 0)', 'found 0 of 1 plain duplicates (same name, same email or domain, two sources; target all)']);
+    expect(verdictOf(s, 'company').shortfalls[0]).toMatch(/different-company/);
+  });
+
+  test('a people-only world scores no companies; with companies, a finder that links a person to a company counts a cross-type merge', () => {
+    const ledger = generateLedger(PERSON_DEDUPE_DEFAULT_SEED, 2);
+    expect(runPersonDedupe(ledger)[0].by_type.company).toBeNull();
+    const companies = generateCompanyLedger(PERSON_DEDUPE_DEFAULT_SEED, 2);
+    const p = pageKey(ledger.pages[0]), c = companyPageKey(companies.pages[0]);
+    const arms = runPersonDedupe(ledger, { companies, finderJson: toFinderOutput([{ members: [c, p].sort(), kind: 'cross_source', class: 'clean', rules: ['shared_key:email'] }]), finderBuild: 'cross-type-fixture' });
+    const auto = arms.find(a => a.id === 'finder:auto-link')!;
+    expect(auto.cross_type_merges).toBe(1);
+    expect(auto.score.false_merges_anywhere).toBe(1);
+    expect(auto.by_type.person.score.false_merges_anywhere + auto.by_type.company!.score.false_merges_anywhere).toBe(0);
+    expect(arms.filter(a => a.system !== 'finder').every(a => a.cross_type_merges === 0)).toBe(true);
+  });
+
+  test('adding companies leaves every person number of the published v1 receipt byte-identical', () => {
+    const v1 = JSON.parse(readFileSync(join(import.meta.dir, '../../docs/benchmarks/2026-11-17-person-dedupe/receipt.json'), 'utf8'));
+    const arms = runPersonDedupe(generateLedger(), { companies: generateCompanyLedger(PERSON_DEDUPE_DEFAULT_SEED, PERSON_DEDUPE_DEFAULT_PER_FAMILY) });
+    const brief = (s: Score) => ({ ...s, false_merge_cases: `${s.false_merge_cases.length} cases; listed only for auto-link selections` });
+    expect(arms.map(a => a.id)).toEqual(v1.data.arms.map((a: { id: string }) => a.id));
+    for (const old of v1.data.arms) {
+      const now = arms.find(a => a.id === old.id)!;
+      const score = now.selection === 'auto-link' ? now.by_type.person.score : brief(now.by_type.person.score);
+      expect(JSON.stringify({ score, verdict: now.by_type.person.verdict })).toBe(JSON.stringify({ score: old.score, verdict: old.verdict }));
+    }
+  }, 60_000);
 });

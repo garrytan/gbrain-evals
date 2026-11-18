@@ -121,7 +121,7 @@ const COMPANIES = ['Acme Robotics', 'Bluefin Labs', 'Cobalt Health', 'Driftwood 
 const CITIES = ['Portland', 'Austin', 'Denver', 'Raleigh', 'Tucson', 'Madison', 'Boise', 'Savannah', 'Spokane', 'Duluth', 'Lisbon', 'Leeds', 'Lyon', 'Graz', 'Malmo', 'Porto'];
 const MAIL = 'mail.example';
 
-function mulberry32(seed: number): () => number {
+export function mulberry32(seed: number): () => number {
   let a = seed >>> 0;
   return () => {
     a = (a + 0x6d2b79f5) >>> 0;
@@ -485,8 +485,12 @@ export interface WrittenPage {
   key: string;
   source: string;
   slug: string;
+  /** The page's canonical type; a person never groups with a company. */
+  type: 'person' | 'company';
   title: string;
   emails: string[];
+  /** Company pages: every `domain` and `website` value as written. Empty on person pages. */
+  domains: string[];
   linkedin: string | null;
   github: string | null;
   company: string | null;
@@ -502,7 +506,7 @@ export function parseWrittenPage(source: string, slug: string, markdown: string)
     if (at > 0) fields.set(line.slice(0, at), line.slice(at + 2));
   }
   const scalar = (k: string) => fields.has(k) ? JSON.parse(fields.get(k)!) as string : null;
-  return { key: pageKey({ source, slug }), source, slug, title: scalar('title') ?? '', emails: fields.has('emails') ? JSON.parse(fields.get('emails')!) as string[] : [], linkedin: scalar('linkedin'), github: scalar('github'), company: scalar('company'), city: scalar('city') };
+  return { key: pageKey({ source, slug }), source, slug, type: 'person', title: scalar('title') ?? '', emails: fields.has('emails') ? JSON.parse(fields.get('emails')!) as string[] : [], domains: [], linkedin: scalar('linkedin'), github: scalar('github'), company: scalar('company'), city: scalar('city') };
 }
 
 export function writtenPages(ledger: Ledger): WrittenPage[] {
@@ -532,6 +536,6 @@ function canonical(value: unknown): string {
   return JSON.stringify(value);
 }
 
-export function ledgerFingerprint(ledger: Ledger): string {
+export function ledgerFingerprint(ledger: object): string {
   return createHash('sha256').update(canonical(ledger)).digest('hex');
 }
