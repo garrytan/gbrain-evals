@@ -52,6 +52,10 @@ import {
   deriveGold, generateLedger, ledgerFingerprint, renderPage, writtenPages,
   type DesignedPair, type Ledger, type WrittenPage,
 } from '../generators/person-dedupe-gen.ts';
+import {
+  COMPANY_DEDUPE_GENERATOR_VERSION, COMPANY_FAMILIES, companyWrittenPages, deriveCompanyGold, generateCompanyLedger, renderCompanyPage,
+  type CompanyLedger,
+} from '../generators/company-dedupe-gen.ts';
 import { gbrainPin } from './gbrain-version.ts';
 import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, noModelSpend, productIdentity, receiptPath, sourceTreeIdentity, writeReceipt, type Receipt } from './receipt.ts';
 
@@ -75,10 +79,14 @@ export function strictFold(title: string): string {
 
 const HONORIFICS = new Set(['dr', 'mr', 'mrs', 'ms', 'mx', 'prof', 'sir', 'dame', 'mayor', 'ceo', 'cto', 'cfo']);
 
-/** The finder's variant fold: the strict fold without leading honorifics or job titles. Name suffixes stay. */
-export function variantFold(title: string): string {
+/** gbrain's corporate suffixes (CORPORATE_SUFFIXES in src/core/entities/near-name.ts, finder PR #9680), dropped from the end of a company name by the variant fold. */
+export const CORPORATE_SUFFIXES: ReadonlySet<string> = new Set(['inc', 'incorporated', 'llc', 'ltd', 'limited', 'corp', 'corporation', 'co', 'company', 'labs', 'lab', 'gmbh', 'plc', 'ag', 'sa', 'bv', 'the']);
+
+/** The finder's variant fold: the strict fold without leading honorifics or job titles, and for a company without trailing corporate suffixes. Name suffixes stay. */
+export function variantFold(title: string, type: WrittenPage['type'] = 'person'): string {
   const parts = strictFold(title).split(' ');
   while (parts.length > 1 && HONORIFICS.has(parts[0])) parts.shift();
+  if (type === 'company') while (parts.length > 1 && CORPORATE_SUFFIXES.has(parts.at(-1)!)) parts.pop();
   return parts.join(' ');
 }
 
@@ -102,6 +110,12 @@ export function emailKey(raw: string): string | null {
   const v = raw.trim().toLowerCase();
   if (!v || /^0+$/.test(v) || PLACEHOLDERS.has(v) || v.length > 320 || !v.includes('@')) return null;
   return v;
+}
+
+/** A company domain as the finder keys it (from `domain` or a `website` URL): the host, lowercase, without www. */
+export function domainKey(raw: string): string | null {
+  const host = raw.trim().toLowerCase().replace(/^[a-z][a-z0-9+.-]*:\/\//, '').split(/[/?#:]/)[0].replace(/^www\./, '');
+  return host.includes('.') && /^[a-z0-9.-]+$/.test(host) ? host : null;
 }
 
 // ─── Groups ───────────────────────────────────────────────────────────────
@@ -133,14 +147,14 @@ function bucket<K>(pages: readonly WrittenPage[], keysOf: (p: WrittenPage) => K[
 /** Connected components of the pairs `linked` accepts, among pages that share a candidate block. */
 function linkGroups(pages: readonly WrittenPage[], linked: (a: WrittenPage, b: WrittenPage) => boolean, rule: string): Group[] {
   const uf = new UnionFind();
-  const blocks = [...bucket(pages, p => p.emails.map(e => `e:${e.trim().toLowerCase()}`).concat([`n:${strictFold(p.title).split(' ').at(-1)}`])).values()];
+  const blocks = [...bucket(pages, p => p.emails.map(e => `e:${e.trim().toLowerCase()}`).concat(p.domains.map(d => `d:${domainKey(d)}`), [`n:${strictFold(p.title).split(' ').at(-1)}`])).values()];
   const seen = new Set<string>();
   for (const block of blocks) for (let i = 0; i < block.length; i++) for (let j = i + 1; j < block.length; j++) {
     const a = block[i], b = block[j];
     const k = a.key < b.key ? `${a.key}|${b.key}` : `${b.key}|${a.key}`;
     if (seen.has(k)) continue;
     seen.add(k);
-    if (linked(a, b)) uf.union(a.key, b.key);
+    if (a.type === b.type && linked(a, b)) uf.union(a.key, b.key);
   }
   const comps = new Map<string, string[]>();
   for (const p of pages) { const r = uf.find(p.key); comps.set(r, [...(comps.get(r) ?? []), p.key]); }
@@ -148,15 +162,19 @@ function linkGroups(pages: readonly WrittenPage[], linked: (a: WrittenPage, b: W
 }
 
 const sharesEmail = (a: WrittenPage, b: WrittenPage) => a.emails.some(e => emailKey(e) !== null && b.emails.some(f => emailKey(f) === emailKey(e)));
+const sharesDomain = (a: WrittenPage, b: WrittenPage) => a.domains.some(d => domainKey(d) !== null && b.domains.some(e => domainKey(e) === domainKey(d)));
+/** A shared email between people, a shared domain between companies: the contact key of each type. */
+const sharesContact = (a: WrittenPage, b: WrittenPage) => a.type === 'company' ? sharesDomain(a, b) : sharesEmail(a, b);
 
-export interface Matcher { id: string; description: string; run(pages: readonly WrittenPage[]): Group[] }
+/** A reference matcher; `company` says what it does on company pages. A person page never links to a company page. */
+export interface Matcher { id: string; description: string; company: string; run(pages: readonly WrittenPage[]): Group[] }
 
 export const REFERENCE_MATCHERS: readonly Matcher[] = [
-  { id: 'exact-name', description: 'same name (case and spacing ignored), nothing else', run: ps => linkGroups(ps, (a, b) => exactNameKey(a.title) === exactNameKey(b.title), 'exact-name') },
-  { id: 'folded-name', description: 'same strict-folded name, nothing else', run: ps => linkGroups(ps, (a, b) => strictFold(a.title) === strictFold(b.title), 'folded-name') },
-  { id: 'shared-email', description: 'any shared email (placeholders dropped), whatever the names', run: ps => linkGroups(ps, sharesEmail, 'shared-email') },
-  { id: 'email+folded-name', description: 'a shared email and the same strict-folded name, with no crowding or one-per-source checks', run: ps => linkGroups(ps, (a, b) => sharesEmail(a, b) && strictFold(a.title) === strictFold(b.title), 'email+folded-name') },
-  { id: 'email+nickname-name', description: 'a shared email and the same name after folding and mapping nicknames to formal names', run: ps => linkGroups(ps, (a, b) => sharesEmail(a, b) && nicknameKey(a.title) === nicknameKey(b.title), 'email+nickname-name') },
+  { id: 'exact-name', description: 'same name (case and spacing ignored), nothing else', company: 'the same rule on company names', run: ps => linkGroups(ps, (a, b) => exactNameKey(a.title) === exactNameKey(b.title), 'exact-name') },
+  { id: 'folded-name', description: 'same strict-folded name, nothing else', company: 'the same rule on company names', run: ps => linkGroups(ps, (a, b) => strictFold(a.title) === strictFold(b.title), 'folded-name') },
+  { id: 'shared-email', description: 'any shared email (placeholders dropped), whatever the names', company: 'any shared domain (a `domain` value or the `website` host), whatever the names', run: ps => linkGroups(ps, sharesContact, 'shared-email') },
+  { id: 'email+folded-name', description: 'a shared email and the same strict-folded name, with no crowding or one-per-source checks', company: 'a shared domain and the same strict-folded name', run: ps => linkGroups(ps, (a, b) => sharesContact(a, b) && strictFold(a.title) === strictFold(b.title), 'email+folded-name') },
+  { id: 'email+nickname-name', description: 'a shared email and the same name after folding and mapping nicknames to formal names', company: 'no nickname table for companies; instead a shared domain and the same name after the variant fold drops trailing legal suffixes', run: ps => linkGroups(ps, (a, b) => sharesContact(a, b) && (a.type === 'company' ? variantFold(a.title, 'company') === variantFold(b.title, 'company') : nicknameKey(a.title) === nicknameKey(b.title)), 'email+nickname-name') },
 ];
 
 /**
@@ -181,20 +199,21 @@ export interface CleanRule {
   unionCheck?: boolean;
 }
 
-const BASE_ARMS: Record<string, { rule: CleanRule; text: string }> = {
-  '1': { rule: {}, text: 'approved rule: one shared key value that only the group carries, the same strict-folded name, one page per source' },
-  '2': { rule: { noRole: true }, text: 'arm 1, but a role or household email (team, support, hello, family and similar words) never makes clean' },
-  '2b': { rule: { keyTypeSplit: true, noRole: true, noContradiction: true }, text: 'key-type split: LinkedIn or GitHub plus the same name links; an email needs a shared LinkedIn or GitHub or the same employer as well; role emails never; no contradicting key' },
-  '3': { rule: { twoKeyTypes: true }, text: 'arm 1, and the pages also share a value of a second key type' },
-  '4': { rule: { noContradiction: true }, text: 'arm 1, and no contradicting LinkedIn or GitHub (any class)' },
-  '5': { rule: { noRole: true, noContradiction: true }, text: 'arms 2 and 4 together' },
-  '6': { rule: { noRole: true, noContradiction: true, singlePersonDomain: true }, text: 'arm 5, but a role email still counts when its domain belongs to one person in the brain' },
-  '7': { rule: { keyTypeSplit: true, noEmployerSignal: true, noContradiction: true, unionCheck: true }, text: 'arm 2b without the employer path, with the union check: only a shared LinkedIn or GitHub plus the same name links; an email never links by itself and goes to the confirm list; no contradicting key' },
+/** `text` is the rule on person pages; `company` says what of it applies to company pages, whose keys are a domain (contact, like email) and a LinkedIn company page (exclusive). */
+const BASE_ARMS: Record<string, { rule: CleanRule; text: string; company: string }> = {
+  '1': { rule: {}, text: 'approved rule: one shared key value that only the group carries, the same strict-folded name, one page per source', company: 'the same rule; the key is a shared domain or LinkedIn company page' },
+  '2': { rule: { noRole: true }, text: 'arm 1, but a role or household email (team, support, hello, family and similar words) never makes clean', company: 'no company rule: role words are read from email addresses and company pages carry none, so on companies arm 2 is arm 1' },
+  '2b': { rule: { keyTypeSplit: true, noRole: true, noContradiction: true }, text: 'key-type split: LinkedIn or GitHub plus the same name links; an email needs a shared LinkedIn or GitHub or the same employer as well; role emails never; no contradicting key', company: 'a shared LinkedIn company page plus the same name links; the employer path has no company rule, so a shared domain links only with a shared LinkedIn company page as well; no contradicting LinkedIn' },
+  '3': { rule: { twoKeyTypes: true }, text: 'arm 1, and the pages also share a value of a second key type', company: 'the same rule: a shared domain and a shared LinkedIn company page' },
+  '4': { rule: { noContradiction: true }, text: 'arm 1, and no contradicting LinkedIn or GitHub (any class)', company: 'the same rule: no contradicting LinkedIn company page; two different domains are no contradiction' },
+  '5': { rule: { noRole: true, noContradiction: true }, text: 'arms 2 and 4 together', company: 'arm 4 on companies: the role-word part has no company rule' },
+  '6': { rule: { noRole: true, noContradiction: true, singlePersonDomain: true }, text: 'arm 5, but a role email still counts when its domain belongs to one person in the brain', company: 'arm 4 on companies: the role-word and one-person-domain parts have no company rule' },
+  '7': { rule: { keyTypeSplit: true, noEmployerSignal: true, noContradiction: true, unionCheck: true }, text: 'arm 2b without the employer path, with the union check: only a shared LinkedIn or GitHub plus the same name links; an email never links by itself and goes to the confirm list; no contradicting key', company: 'the same rule: only a shared LinkedIn company page plus the same name links; a shared domain never links by itself' },
 };
 
-export const ARMS: Record<string, { rule: CleanRule; text: string }> = Object.fromEntries(Object.entries(BASE_ARMS).flatMap(([id, a]) => a.rule.unionCheck ? [[id, a]] : [
+export const ARMS: Record<string, { rule: CleanRule; text: string; company: string }> = Object.fromEntries(Object.entries(BASE_ARMS).flatMap(([id, a]) => a.rule.unionCheck ? [[id, a]] : [
   [id, a],
-  [`${id}+union`, { rule: { ...a.rule, unionCheck: true }, text: `${a.text}; plus a check of the union before linking` }],
+  [`${id}+union`, { rule: { ...a.rule, unionCheck: true }, text: `${a.text}; plus a check of the union before linking`, company: `${a.company}; plus the union check` }],
 ]));
 
 /** Email local-part words that mark a role or household address rather than one person. */
@@ -208,6 +227,7 @@ export function isRoleEmail(key: string): boolean {
 /** The keys a page carries, as `<type>:<value>`, normalized as the finder contract says; placeholders dropped. */
 export function pageKeys(p: WrittenPage): string[] {
   const out = p.emails.map(emailKey).filter((k): k is string => k !== null).map(k => `email:${k}`);
+  for (const d of p.domains) { const k = domainKey(d); if (k) out.push(`domain:${k}`); }
   const li = p.linkedin?.trim().toLowerCase().match(/\/(in|company)\/[^/?#]+/)?.[0];
   if (li) out.push(`linkedin:${li}`);
   const gh = p.github?.trim().toLowerCase().replace(/^@/, '').replace(/^https?:\/\/(www\.)?github\.com\//, '').replace(/\/$/, '');
@@ -217,10 +237,12 @@ export function pageKeys(p: WrittenPage): string[] {
 
 const typeOf = (k: string) => k.slice(0, k.indexOf(':'));
 const EXCLUSIVE = new Set(['linkedin', 'github']);
+const CONTACT = new Set(['email', 'domain']);
 
 /**
  * gbrain's finder as its contract (schema 1) describes it, for person pages
- * with email, LinkedIn and GitHub keys: clean, likely, weak and conflict.
+ * with email, LinkedIn and GitHub keys and company pages with domain and
+ * LinkedIn keys: clean, likely, weak and conflict.
  * Slug-shape and thin rules have no case in this world. `rule` swaps the test
  * that decides clean. Where the contract leaves a choice open, the choice is
  * written next to it.
@@ -240,7 +262,7 @@ export function emulateFinder(pages: readonly WrittenPage[], rule: CleanRule = {
   const contradicts = (members: readonly string[]) => {
     for (let i = 0; i < members.length; i++) for (let j = i + 1; j < members.length; j++) {
       const a = usable(members[i]), b = usable(members[j]);
-      for (const t of new Set(a.map(typeOf))) if (t !== 'email' && b.some(k => typeOf(k) === t) && !a.some(k => typeOf(k) === t && b.includes(k))) return true;
+      for (const t of new Set(a.map(typeOf))) if (!CONTACT.has(t) && b.some(k => typeOf(k) === t) && !a.some(k => typeOf(k) === t && b.includes(k))) return true;
     }
     return false;
   };
@@ -260,7 +282,7 @@ export function emulateFinder(pages: readonly WrittenPage[], rule: CleanRule = {
     for (let i = 0; i < members.length; i++) for (let j = i + 1; j < members.length; j++) keyed.add([members[i], members[j]].sort().join('|'));
     const type = typeOf(key), value = key.slice(type.length + 1);
     const why = `shared_key:${type}`;
-    if (new Set(ps.map(p => variantFold(p.title))).size > 1) { add(members, 'conflict', 'conflict', why); continue; }
+    if (new Set(ps.map(p => variantFold(p.title, p.type))).size > 1) { add(members, 'conflict', 'conflict', why); continue; }
     const shared = usable(members[0]).filter(k => members.every(m => usable(m).includes(k)));
     const sharedTypes = new Set(shared.map(typeOf));
     const role = type === 'email' && isRoleEmail(value) && !(rule.singlePersonDomain && domainNames.get(value.slice(value.indexOf('@') + 1))!.size === 1);
@@ -272,7 +294,7 @@ export function emulateFinder(pages: readonly WrittenPage[], rule: CleanRule = {
       && !(rule.keyTypeSplit && !EXCLUSIVE.has(type) && !shared.some(k => EXCLUSIVE.has(typeOf(k))) && (rule.noEmployerSignal || !employer));
     add(members, kindOf(members), clean ? 'clean' : 'likely', why);
   }
-  for (const [, ps] of bucket(pages, p => [strictFold(p.title)])) {
+  for (const [, ps] of bucket(pages, p => [`${p.type}:${strictFold(p.title)}`])) {
     if (new Set(ps.map(p => p.source)).size < 2) continue;
     // Choice: a weak group is the whole same-name bucket across sources, unless every pair in it already shares a key.
     const members = ps.map(p => p.key);
@@ -293,7 +315,7 @@ export function emulateFinder(pages: readonly WrittenPage[], rule: CleanRule = {
       if (!perSource || !clique) for (const g of clean) if (uf.find(g.members[0]) === root) g.class = 'likely';
     }
   }
-  for (const g of groups) if (g.kind === 'cross_source' && g.class === 'likely' && g.rules.includes('shared_key:email')) g.rules.push('contact_key_only');
+  for (const g of groups) if (g.kind === 'cross_source' && g.class === 'likely' && (g.rules.includes('shared_key:email') || g.rules.includes('shared_key:domain'))) g.rules.push('contact_key_only');
   return toFinderOutput(groups, crowdedKeys.size);
 }
 
@@ -330,8 +352,11 @@ export function parseFinderOutput(raw: unknown, known: ReadonlySet<string>): Gro
   });
 }
 
+/** A page key's slug as the finder prints it: people/<slug>, or companies/<slug> as the key already carries it. */
+const finderSlug = (key: string) => { const rest = key.slice(key.indexOf(':') + 1); return rest.startsWith('companies/') ? rest : `people/${rest}`; };
+
 export function groupId(kind: string, members: readonly string[]): string {
-  const lines = members.map(k => `${sourceOf(k)}\tpeople/${k.slice(k.indexOf(':') + 1)}`).sort().join('\n');
+  const lines = members.map(k => `${sourceOf(k)}\t${finderSlug(k)}`).sort().join('\n');
   return `dedupe/${createHash('sha256').update(`${kind}\n${lines}`).digest('hex').slice(0, 16)}`;
 }
 
@@ -344,7 +369,7 @@ export function toFinderOutput(groups: readonly Group[], crowded = 0): FinderOut
     schema_version: 1,
     groups: groups.map(g => ({
       id: groupId(g.kind, g.members), kind: g.kind, class: g.class,
-      members: g.members.map(k => ({ source_id: sourceOf(k), slug: `people/${k.slice(k.indexOf(':') + 1)}` })),
+      members: g.members.map(k => ({ source_id: sourceOf(k), slug: finderSlug(k) })),
       evidence: g.rules.map(r => r.startsWith('shared_key:') ? { matcher: 'shared_key', rule: 'shared_key', key: r.slice(11), field: r === 'shared_key:email' ? 'emails' : r.slice(11) } : r === 'strict_name' ? { matcher: 'same_name', rule: 'strict_name' } : r === 'contact_key_only' ? { matcher: 'key_check', rule: 'contact_key_only' } : { matcher: r, rule: r }),
     })),
     counts: { by_kind, by_class, crowded_key_values: crowded },
@@ -385,10 +410,18 @@ export interface Score {
 }
 
 const choose2 = (n: number) => (n * (n - 1)) / 2;
+const ALL_FAMILIES: ReadonlyArray<{ id: string; label: string }> = [...FAMILIES, ...COMPANY_FAMILIES];
+/** The plain-duplicate families behind the utility floor: same name and same email or domain, two sources. */
+const SAME_EXACT = new Set(['same-exact', 'co-same-exact']);
 
-export function scoreGroups(groups: readonly Group[], pairs: readonly DesignedPair[], person: ReadonlyMap<string, string>): Score {
+/**
+ * Scores groups against the entities in `person` (page key to person or company id). `closure` is the
+ * set of groups whose links chain (by default `groups`); scoring one entity type passes every group
+ * there, so a chain through a page of another type still counts.
+ */
+export function scoreGroups(groups: readonly Group[], pairs: readonly DesignedPair[], person: ReadonlyMap<string, string>, closure: readonly Group[] = groups): Score {
   const uf = new UnionFind();
-  for (const g of groups) for (const m of g.members.slice(1)) uf.union(g.members[0], m);
+  for (const g of closure) for (const m of g.members.slice(1)) uf.union(g.members[0], m);
   const merged = (a: string, b: string) => uf.find(a) === uf.find(b);
 
   const byFamily: Record<string, { fm: number; nd: number; fs: number; ns: number }> = {};
@@ -407,7 +440,7 @@ export function scoreGroups(groups: readonly Group[], pairs: readonly DesignedPa
         cases.push({ a: p.a, b: p.b, family: p.family, via: via.length ? via : ['closure'] });
       }
     } else { ns++; f.ns++; if (m) { fs++; f.fs++; } }
-    if (p.family === 'same-exact') { sn++; if (m) se++; }
+    if (SAME_EXACT.has(p.family)) { sn++; if (m) se++; }
   }
 
   const comps = new Map<string, string[]>();
@@ -434,17 +467,25 @@ export function scoreGroups(groups: readonly Group[], pairs: readonly DesignedPa
     recall: rate(mergedSame, allSame),
     false_merges_anywhere: mergedPairs - mergedSame,
     b3: { precision: P, recall: R, f1: P + R ? (2 * P * R) / (P + R) : 0 },
-    by_family: Object.fromEntries(FAMILIES.filter(f => byFamily[f.id]).map(f => { const x = byFamily[f.id]; return [f.id, { label: f.label, false_merge: x.nd ? rate(x.fm, x.nd) : null, found: x.ns ? rate(x.fs, x.ns) : null }]; })),
+    by_family: Object.fromEntries(ALL_FAMILIES.filter(f => byFamily[f.id]).map(f => { const x = byFamily[f.id]; return [f.id, { label: f.label, false_merge: x.nd ? rate(x.fm, x.nd) : null, found: x.ns ? rate(x.fs, x.ns) : null }]; })),
     same_exact_recall: rate(se, sn),
     false_merge_cases: cases,
     groups: groups.length,
   };
 }
 
-export function verdictOf(s: Score): { pass: boolean; shortfalls: string[] } {
+export type Scope = 'person' | 'company' | 'all';
+const SCOPE_WORDS: Record<Scope, [string, string]> = {
+  person: ['different-people', 'same name, same email'],
+  company: ['different-company', 'same name, same domain'],
+  all: ['different-entity', 'same name, same email or domain'],
+};
+
+export function verdictOf(s: Score, scope: Scope = 'person'): { pass: boolean; shortfalls: string[] } {
+  const [different, plain] = SCOPE_WORDS[scope];
   const shortfalls: string[] = [];
-  if (s.false_merge.k > TARGETS.false_merges) shortfalls.push(`${s.false_merge.k} of ${s.false_merge.n} designed different-people pairs merged (target 0)`);
-  if ((s.same_exact_recall.rate ?? 0) < TARGETS.same_exact_recall) shortfalls.push(`found ${s.same_exact_recall.k} of ${s.same_exact_recall.n} plain duplicates (same name, same email, two sources; target all)`);
+  if (s.false_merge.k > TARGETS.false_merges) shortfalls.push(`${s.false_merge.k} of ${s.false_merge.n} designed ${different} pairs merged (target 0)`);
+  if ((s.same_exact_recall.rate ?? 0) < TARGETS.same_exact_recall) shortfalls.push(`found ${s.same_exact_recall.k} of ${s.same_exact_recall.n} plain duplicates (${plain}, two sources; target all)`);
   return { pass: shortfalls.length === 0, shortfalls };
 }
 
@@ -464,21 +505,45 @@ function isConfirm(g: Group): boolean {
   return g.kind === 'cross_source' && g.class === 'likely' && g.rules.includes('key_check/contact_key_only');
 }
 
-export interface ArmResult { id: string; system: 'reference' | 'contract-emulator' | 'finder'; arm: string | null; selection: string; description: string; build: string | null; score: Score; verdict: ReturnType<typeof verdictOf> }
+export interface TypeResult { score: Score; verdict: ReturnType<typeof verdictOf> }
 
-export function runPersonDedupe(ledger: Ledger, opts: { finderJson?: unknown; finderBuild?: string } = {}): ArmResult[] {
-  const person = deriveGold(ledger);
-  const pages = writtenPages(ledger);
+export interface ArmResult {
+  id: string; system: 'reference' | 'contract-emulator' | 'finder'; arm: string | null; selection: string; description: string;
+  /** What the arm does on company pages; null for the finder, which brings its own rules. */
+  company_rule: string | null;
+  build: string | null;
+  /** Every page and designed pair, people and companies together. */
+  score: Score; verdict: ReturnType<typeof verdictOf>;
+  /** The same metrics over one entity type's pages and pairs (closure still runs over every group); company is null in a people-only world. */
+  by_type: { person: TypeResult; company: TypeResult | null };
+  /** Person and company pages that end up in one component: always wrong, since a person is never a company. */
+  cross_type_merges: number;
+}
+
+export function runPersonDedupe(ledger: Ledger, opts: { companies?: CompanyLedger; finderJson?: unknown; finderBuild?: string } = {}): ArmResult[] {
+  const people = deriveGold(ledger);
+  const companies = opts.companies ? deriveCompanyGold(opts.companies) : new Map<string, string>();
+  const gold = new Map([...people, ...companies]);
+  const pages = [...writtenPages(ledger), ...(opts.companies ? companyWrittenPages(opts.companies) : [])];
+  const pairs = [...ledger.pairs, ...(opts.companies?.pairs ?? [])];
   const known = new Set(pages.map(p => p.key));
-  for (const p of pages) if (!person.has(p.key) || !p.title) throw new Error(`person-dedupe: presence: page ${p.key} has no person or no title`);
-  const arm = (id: string, system: ArmResult['system'], armId: string | null, selection: string, description: string, groups: Group[], build: string | null = null): ArmResult => {
-    const score = scoreGroups(groups, ledger.pairs, person);
-    return { id, system, arm: armId, selection, description, build, score, verdict: verdictOf(score) };
+  for (const p of pages) if (!gold.has(p.key) || !p.title) throw new Error(`person-dedupe: presence: page ${p.key} has no person or company, or no title`);
+  const peoplePairs = pairs.filter(p => people.has(p.a)), companyPairs = pairs.filter(p => companies.has(p.a));
+  const arm = (id: string, system: ArmResult['system'], armId: string | null, selection: string, description: string, groups: Group[], build: string | null = null, companyRule: string | null = null): ArmResult => {
+    const part = (keys: ReadonlyMap<string, string>, typePairs: readonly DesignedPair[], scope: Scope): TypeResult => {
+      const score = scoreGroups(groups.filter(g => g.members.some(m => keys.has(m))), typePairs, keys, groups);
+      return { score, verdict: verdictOf(score, scope) };
+    };
+    const score = scoreGroups(groups, pairs, gold);
+    const person = part(people, peoplePairs, 'person');
+    const company = opts.companies ? part(companies, companyPairs, 'company') : null;
+    const cross = score.false_merges_anywhere - person.score.false_merges_anywhere - (company?.score.false_merges_anywhere ?? 0);
+    return { id, system, arm: armId, selection, description, company_rule: companyRule, build, score, verdict: verdictOf(score, opts.companies ? 'all' : 'person'), by_type: { person, company }, cross_type_merges: cross };
   };
   const describe = (sel: string) => ({ 'auto-link': 'groups automatic linking would join (cross_source and clean)', proposed: 'every group except conflict (clean, likely, weak, thin)', 'confirm-list': 'cross_source likely groups marked contact_key_only (the confirm list)', 'auto-link+confirm-list': 'automatic links plus the whole confirm list, confirmed in one go' } as Record<string, string>)[sel] ?? `only ${sel.slice(6)} groups`;
   const finderArms = (system: 'contract-emulator' | 'finder', armId: string | null, all: Group[], build: string | null, selections: readonly string[]) =>
-    selections.map(sel => arm(`${system}${armId ? `[arm ${armId}]` : ''}:${sel}`, system, armId, sel, `${describe(sel)}${armId ? `; clean rule: ${ARMS[armId].text}` : ''}`, all.filter(SELECTIONS[sel]), build));
-  const arms = REFERENCE_MATCHERS.map(m => arm(m.id, 'reference', null, 'all', m.description, m.run(pages)));
+    selections.map(sel => arm(`${system}${armId ? `[arm ${armId}]` : ''}:${sel}`, system, armId, sel, `${describe(sel)}${armId ? `; clean rule: ${ARMS[armId].text}` : ''}`, all.filter(SELECTIONS[sel]), build, armId ? ARMS[armId].company : null));
+  const arms = REFERENCE_MATCHERS.map(m => arm(m.id, 'reference', null, 'all', m.description, m.run(pages), null, m.company));
   for (const [armId, a] of Object.entries(ARMS)) arms.push(...finderArms('contract-emulator', armId, parseFinderOutput(JSON.parse(JSON.stringify(emulateFinder(pages, a.rule))), known), null, armId === '1' ? Object.keys(SELECTIONS) : ['auto-link', 'proposed', 'confirm-list', 'auto-link+confirm-list']));
   if (opts.finderJson !== undefined) arms.push(...finderArms('finder', null, parseFinderOutput(opts.finderJson, known), opts.finderBuild ?? null, Object.keys(SELECTIONS)));
   return arms;
@@ -501,9 +566,9 @@ export interface ImportSummary { status: string; source_id: string; imported: nu
  * world: one successful import per source, with every file imported or unchanged and none failed.
  * Throws otherwise, because a finder that never saw a page can't link it and would score as safe.
  */
-export function checkFinderCoverage(imports: readonly unknown[], ledger: Ledger): void {
+export function checkFinderCoverage(imports: readonly unknown[], pages: readonly { source: string }[]): void {
   const want = new Map<string, number>();
-  for (const p of ledger.pages) want.set(p.source, (want.get(p.source) ?? 0) + 1);
+  for (const p of pages) want.set(p.source, (want.get(p.source) ?? 0) + 1);
   const seen = new Set<string>();
   for (const raw of imports) {
     const s = raw as ImportSummary;
@@ -526,6 +591,15 @@ export function checkFinderCoverage(imports: readonly unknown[], ledger: Ledger)
   if (missing.length) throw new Error(`person-dedupe: no import summary for source ${missing.join(', ')}; the finder never saw those pages`);
 }
 
+/** Writes the company pages beside the person pages: <dir>/<source>/companies/<slug>.md. */
+export function writeCompanyWorld(companies: CompanyLedger, dir: string): void {
+  for (const p of companies.pages) {
+    const file = join(dir, p.source, 'companies', `${p.slug}.md`);
+    mkdirSync(dirname(file), { recursive: true });
+    writeFileSync(file, renderCompanyPage(p));
+  }
+}
+
 function argValue(argv: readonly string[], flag: string): string | undefined {
   const at = argv.indexOf(flag);
   if (at >= 0) return argv[at + 1];
@@ -533,6 +607,8 @@ function argValue(argv: readonly string[], flag: string): string | undefined {
 }
 
 const pct = (r: Rate) => r.rate === null ? 'n/a' : `${(r.rate * 100).toFixed(1)}% (${r.k}/${r.n}; 95% CI ${(r.ci95![0] * 100).toFixed(1)} to ${(r.ci95![1] * 100).toFixed(1)}%)`;
+const headlineOf = (r: TypeResult) => ({ false_merge: r.score.false_merge, designed_recall: r.score.designed_recall, precision: r.score.precision, recall: r.score.recall, shortfalls: r.verdict.shortfalls });
+const briefCases = (s: Score): Score => ({ ...s, false_merge_cases: `${s.false_merge_cases.length} cases; listed only for auto-link selections` as unknown as Score['false_merge_cases'] });
 
 async function main(): Promise<void> {
   const argv = process.argv.slice(2);
@@ -551,21 +627,36 @@ async function main(): Promise<void> {
   const startedAt = new Date().toISOString();
 
   const ledger = generateLedger(seed, perFamily);
+  const companies = generateCompanyLedger(seed, perFamily);
   const fingerprint = ledgerFingerprint(ledger);
+  const companyFingerprint = ledgerFingerprint(companies);
   const worldDir = argValue(argv, '--write-world');
-  if (worldDir) { writeWorld(ledger, resolve(worldDir)); log(`world written: ${ledger.pages.length} pages under ${worldDir}/<source>/people/`); }
+  if (worldDir) {
+    writeWorld(ledger, resolve(worldDir));
+    writeCompanyWorld(companies, resolve(worldDir));
+    log(`world written: ${ledger.pages.length} person pages under ${worldDir}/<source>/people/ and ${companies.pages.length} company pages under ${worldDir}/<source>/companies/`);
+  }
 
-  if (importsFile) checkFinderCoverage(readFileSync(importsFile, 'utf8').split('\n').filter(l => l.trim()).map(l => JSON.parse(l)), ledger);
-  const arms = runPersonDedupe(ledger, { finderJson: finderFile ? JSON.parse(readFileSync(finderFile, 'utf8')) : undefined, finderBuild });
+  if (importsFile) checkFinderCoverage(readFileSync(importsFile, 'utf8').split('\n').filter(l => l.trim()).map(l => JSON.parse(l)), [...ledger.pages, ...companies.pages]);
+  const arms = runPersonDedupe(ledger, { companies, finderJson: finderFile ? JSON.parse(readFileSync(finderFile, 'utf8')) : undefined, finderBuild });
   const headline = arms.find(a => a.id === 'finder:auto-link') ?? arms.find(a => a.id === 'contract-emulator[arm 1]:auto-link')!;
-  const nDiff = ledger.pairs.filter(p => p.label === 'different').length;
+  const count = (ps: readonly DesignedPair[]) => { const d = ps.filter(p => p.label === 'different').length; return `${ps.length} designed pairs (${d} different, ${ps.length - d} same)`; };
 
-  log('# BrainBench person-dedupe: are really different people kept apart?\n');
-  log(`seed ${seed}; ${perFamily} per family; ledger ${fingerprint.slice(0, 12)}; ${ledger.pages.length} pages; ${ledger.pairs.length} designed pairs (${nDiff} different-people, ${ledger.pairs.length - nDiff} same-person)`);
-  log(`\nHeadline (${headline.id}${headline.build ? ` at ${headline.build}` : ', a stand-in for the finder, not gbrain'}): false-merge rate ${pct(headline.score.false_merge)}`);
-  log('\n| system | false-merge rate (designed different-people pairs) | precision (all pairs) | recall (all pairs) | B-cubed F1 | false merges anywhere |');
-  log('|---|---|---|---|---|---|');
-  for (const a of arms) log(`| ${a.id} | ${pct(a.score.false_merge)} | ${pct(a.score.precision)} | ${pct(a.score.recall)} | ${a.score.b3.f1.toFixed(3)} | ${a.score.false_merges_anywhere} |`);
+  log('# BrainBench person-dedupe: are really different people and companies kept apart?\n');
+  log(`seed ${seed}; ${perFamily} per family`);
+  log(`people: ledger ${fingerprint.slice(0, 12)}; ${ledger.pages.length} pages; ${count(ledger.pairs)}`);
+  log(`companies: stream seed ${companies.stream_seed}; ledger ${companyFingerprint.slice(0, 12)}; ${companies.pages.length} pages; ${count(companies.pairs)}`);
+  log(`\nHeadline (${headline.id}${headline.build ? ` at ${headline.build}` : ', a stand-in for the finder, not gbrain'}), false-merge rate:`);
+  log(`  people     ${pct(headline.by_type.person.score.false_merge)}`);
+  log(`  companies  ${pct(headline.by_type.company!.score.false_merge)}`);
+  log(`  combined   ${pct(headline.score.false_merge)}; person and company pages merged together: ${headline.cross_type_merges}`);
+  const scopes: Array<[string, (a: ArmResult) => TypeResult]> = [['People', a => a.by_type.person], ['Companies', a => a.by_type.company!], ['People and companies combined', a => ({ score: a.score, verdict: a.verdict })]];
+  for (const [title, of] of scopes) {
+    log(`\n## ${title}\n`);
+    log('| system | false-merge rate (designed pairs) | recall (designed pairs) | precision (all pairs) | recall (all pairs) | B-cubed F1 | false merges anywhere |');
+    log('|---|---|---|---|---|---|---|');
+    for (const a of arms) { const s = of(a).score; log(`| ${a.id} | ${pct(s.false_merge)} | ${pct(s.designed_recall)} | ${pct(s.precision)} | ${pct(s.recall)} | ${s.b3.f1.toFixed(3)} | ${s.false_merges_anywhere} |`); }
+  }
   log(`\nVerdict (${headline.id}): ${headline.verdict.pass ? 'pass' : 'fail'}${headline.verdict.shortfalls.map(s => `\n  ${s}`).join('')}`);
 
   writeReceipt(receiptFile, {
@@ -579,23 +670,33 @@ async function main(): Promise<void> {
     execution: { source_tree: sourceTreeIdentity(), product: productIdentity() },
     run_status: 'completed',
     verdict: headline.verdict.pass ? 'pass' : 'fail',
-    n_total: ledger.pairs.length,
-    n_scored: ledger.pairs.length,
+    n_total: ledger.pairs.length + companies.pairs.length,
+    n_scored: ledger.pairs.length + companies.pairs.length,
     completion_rate: 1,
     errors: [],
     publishable: true,
-    resolved_config: { seed, per_family: perFamily, generator_version: PERSON_DEDUPE_GENERATOR_VERSION, ledger_sha256: fingerprint, sources: ledger.sources, finder_build: finderBuild ?? null, finder_contract_schema: 1, targets: TARGETS, closure: 'transitive', selections: Object.keys(SELECTIONS) },
-    hashes: { ledger: fingerprint },
+    resolved_config: {
+      seed, per_family: perFamily, generator_version: PERSON_DEDUPE_GENERATOR_VERSION, ledger_sha256: fingerprint,
+      company_generator_version: COMPANY_DEDUPE_GENERATOR_VERSION, company_stream_seed: companies.stream_seed, company_ledger_sha256: companyFingerprint,
+      sources: ledger.sources, finder_build: finderBuild ?? null, finder_contract_schema: 1, targets: TARGETS, closure: 'transitive', selections: Object.keys(SELECTIONS), scopes: ['person', 'company', 'all'],
+    },
+    hashes: { ledger: fingerprint, company_ledger: companyFingerprint },
     finished_at: new Date().toISOString(),
     data: {
-      headline: { arm: headline.id, build: headline.build, false_merge: headline.score.false_merge, precision: headline.score.precision, recall: headline.score.recall, shortfalls: headline.verdict.shortfalls },
-      arms: arms.map(a => a.selection === 'auto-link' ? a : { ...a, score: { ...a.score, false_merge_cases: `${a.score.false_merge_cases.length} cases; listed only for auto-link selections` } }),
+      headline: { arm: headline.id, build: headline.build, person: headlineOf(headline.by_type.person), company: headlineOf(headline.by_type.company!), all: headlineOf({ score: headline.score, verdict: headline.verdict }), cross_type_merges: headline.cross_type_merges },
+      arms: arms.map(a => a.selection === 'auto-link' ? a : {
+        ...a, score: briefCases(a.score),
+        by_type: { person: { ...a.by_type.person, score: briefCases(a.by_type.person.score) }, company: a.by_type.company && { ...a.by_type.company, score: briefCases(a.by_type.company.score) } },
+      }),
       families: FAMILIES,
+      company_families: COMPANY_FAMILIES,
       ledger: { seed, per_family: perFamily, generator_version: PERSON_DEDUPE_GENERATOR_VERSION, sha256: fingerprint, pages: ledger.pages.length, pairs: ledger.pairs.length, regenerate: 'generateLedger(seed, per_family) in eval/generators/person-dedupe-gen.ts; --write-world writes the pages' },
+      company_ledger: { seed, stream_seed: companies.stream_seed, per_family: perFamily, generator_version: COMPANY_DEDUPE_GENERATOR_VERSION, sha256: companyFingerprint, pages: companies.pages.length, pairs: companies.pairs.length, regenerate: 'generateCompanyLedger(seed, per_family) in eval/generators/company-dedupe-gen.ts; --write-world writes the pages' },
     },
   } satisfies Receipt);
   log(`\nReceipt: ${receiptFile}`);
-  if (json) process.stdout.write(JSON.stringify(arms.map(a => ({ id: a.id, build: a.build, false_merge: a.score.false_merge, precision: a.score.precision, recall: a.score.recall, verdict: a.verdict })), null, 2) + '\n');
+  const brief = (r: TypeResult | null) => r && { false_merge: r.score.false_merge, designed_recall: r.score.designed_recall, precision: r.score.precision, recall: r.score.recall };
+  if (json) process.stdout.write(JSON.stringify(arms.map(a => ({ id: a.id, build: a.build, false_merge: a.score.false_merge, precision: a.score.precision, recall: a.score.recall, people: brief(a.by_type.person), companies: brief(a.by_type.company), cross_type_merges: a.cross_type_merges, verdict: a.verdict })), null, 2) + '\n');
   process.exit(headline.verdict.pass ? 0 : 1);
 }
 
