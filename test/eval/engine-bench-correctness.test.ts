@@ -143,7 +143,11 @@ if (plan.refusal) { console.error(plan.refusal); process.exit(69); }
 if (plan.receipt) fs.writeFileSync(path.join(out, 'receipt.json'), JSON.stringify(plan.receipt));
 process.exit(plan.exit);
 `;
-  const gut: GbrainUnderTest = { root: mkdtempSync(join(tmpdir(), 'correctness-gut-')), version: '0.0.0-fake', overlay: null };
+  const gut: GbrainUnderTest = {
+    root: mkdtempSync(join(tmpdir(), 'correctness-gut-')), version: '0.0.0-fake',
+    overlay: { requested: 'gbrain@v0.0.0-fake', checkout: '/fake/gbrain', ref: 'v0.0.0-fake', checkout_dirty: false, build: { commit: 'c0ffee', tree: 't', version: '0.0.0-fake', verified: {} } as unknown as NonNullable<GbrainUnderTest['overlay']>['build'] },
+  };
+  const ran = { execution: { product: { loaded_git_head: 'c0ffee' } } };
 
   async function stage(plan: Record<string, unknown>, engines: EvalEngineKind[], seedWork?: (work: string) => void) {
     const dir = mkdtempSync(join(tmpdir(), 'correctness-test-'));
@@ -161,7 +165,7 @@ process.exit(plan.exit);
       if (saved.key === undefined) delete process.env.ZZ_FAKE_API_KEY; else process.env.ZZ_FAKE_API_KEY = saved.key;
     }
   }
-  const pass = (metrics: Record<string, number>, na: unknown[] = []) => ({ exit: 0, receipt: { verdict: 'pass', not_applicable: na, data: { metrics } } });
+  const pass = (metrics: Record<string, number>, na: unknown[] = []) => ({ exit: 0, receipt: { verdict: 'pass', not_applicable: na, data: { metrics }, ...ran } });
 
   test('a reused work directory never lends an old receipt to a runner that exits before writing one', async () => {
     const { receipt } = await stage({ pglite: { exit: 1 } }, ['pglite'], work => {
@@ -183,10 +187,15 @@ process.exit(plan.exit);
     expect(receipt.summary.errored).toEqual([]);
     expect(receipt.findings).toEqual([]);
     expect(Object.keys(receipt.summary.wall_ms.fake!).sort()).toEqual(['pglite', 'postgres', 'rust']);
-    expect(receipt.gbrain).toMatchObject({ version: '0.0.0-fake', spec: null, rust_engine_in_build: false });
+    expect(receipt.gbrain).toMatchObject({ version: '0.0.0-fake', spec: '/fake/gbrain@v0.0.0-fake', rust_engine_in_build: false });
     expect(receipt.keyless.child_env_stripped).toContain('ZZ_FAKE_API_KEY');
     const seen = JSON.parse(readFileSync(join(dir, 'work', 'fake-rust', 'seen.json'), 'utf8'));
-    expect(seen).toEqual({ argv: ['--output', join(dir, 'work', 'fake-rust')], pg: 'postgres://u@127.0.0.1:1/postgres', n14: 'postgres://u@127.0.0.1:1/postgres', key: false });
+    expect(seen).toEqual({ argv: ['--gbrain', '/fake/gbrain@v0.0.0-fake', '--output', join(dir, 'work', 'fake-rust')], pg: 'postgres://u@127.0.0.1:1/postgres', n14: 'postgres://u@127.0.0.1:1/postgres', key: false });
+  });
+
+  test('a runner whose receipt names no loaded gbrain commit is an error', async () => {
+    const { receipt } = await stage({ pglite: pass({ leaks: 0, sealed: 0 }), postgres: { exit: 0, receipt: { verdict: 'pass', data: { metrics: { leaks: 0, sealed: 0 } } } } }, ['pglite', 'postgres']);
+    expect(receipt.checks[0]!.engines.postgres).toMatchObject({ status: 'error', gbrain_commit: null, error: 'ran gbrain unknown, expected c0ffee' });
   });
 
   test('a runner that loaded a different gbrain commit than the stage is an error, and each run records the commit it loaded', async () => {
@@ -210,7 +219,7 @@ process.exit(plan.exit);
   });
 
   test('without rust the stage compares PGLite and Postgres and reports the difference', async () => {
-    const { receipt } = await stage({ pglite: pass({ leaks: 0, sealed: 0 }), postgres: { exit: 1, receipt: { verdict: 'fail', data: { metrics: { leaks: 3, sealed: 0 } } } } }, ['pglite', 'postgres']);
+    const { receipt } = await stage({ pglite: pass({ leaks: 0, sealed: 0 }), postgres: { exit: 1, receipt: { verdict: 'fail', data: { metrics: { leaks: 3, sealed: 0 } }, ...ran } } }, ['pglite', 'postgres']);
     expect(receipt.summary.rust).toBeNull();
     expect(receipt.findings.map(f => `${f.kind}:${f.contract ?? ''}`).sort()).toEqual(['typescript_contract_failure:leaks', 'typescript_engines_differ:leaks', 'typescript_verdict_fail:']);
   });
