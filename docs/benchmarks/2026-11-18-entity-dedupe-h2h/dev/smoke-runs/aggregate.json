@@ -74,7 +74,7 @@
     "b3_f1": 0.8784109307743949
    }
   },
-  "version": "graphiti-core==0.30.2 (getzep/graphiti@eaa4128681bc53487138a4bbc22d58336ebe70d2, tag v0.30.2)",
+  "run_record": "docs/comparison-systems/ext-temporal-graph/entity-h2h-smoke-run.json",
   "usd_per_page_last_third": 0.038
  },
  "ext-extract-first": {
@@ -152,7 +152,7 @@
     "b3_f1": 0.8343804976124655
    }
   },
-  "version": "mem0ai[nlp]==2.2.1 + fastembed + en_core_web_sm 3.8.0",
+  "run_record": "docs/comparison-systems/ext-extract-first/entity-h2h-smoke-run.json",
   "usd_per_page_last_third": 0.0045
  },
  "ext-graph-pipeline": {
@@ -237,7 +237,7 @@
     "b3_f1": 0.8578252773054814
    }
   },
-  "version": "cognee==1.6.2",
+  "run_record": "docs/comparison-systems/ext-graph-pipeline/entity-h2h-smoke-run.json",
   "usd_per_page_last_third": 0.009
  },
  "ext-memory-bank": {
@@ -309,7 +309,7 @@
     "b3_f1": 0.8607330683688627
    }
   },
-  "version": "hindsight server 0.10.2 (vectorize-io/hindsight@5fc4ce20917b916240cef27c212c387a177f115b, tag v0.10.2) + hindsight-client==0.10.2",
+  "run_record": "docs/comparison-systems/ext-memory-bank/entity-h2h-smoke-run.json",
   "usd_per_page_last_third": 0.0022
  }
 }

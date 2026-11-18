@@ -168,7 +168,8 @@ describe('entity-dedupe h2h development evidence: world size and company stand-i
 describe('entity-dedupe h2h development evidence: smoke', () => {
   const KINDS = ['ext-temporal-graph', 'ext-extract-first', 'ext-graph-pipeline', 'ext-memory-bank'] as const;
   const MODELS = { 'gpt-6.2-sol': 'openai:gpt-6.2-sol', 'claude-opus-5-5': 'anthropic:claude-opus-5-5', 'particle-1': 'particle:particle-1' } as const;
-  const runs = Object.fromEntries(KINDS.map(k => [k, read(`smoke-runs/${k}-run.json`)]));
+  const runRecord = (k: string) => `docs/comparison-systems/${k}/entity-h2h-smoke-run.json`;
+  const runs = Object.fromEntries(KINDS.map(k => [k, JSON.parse(readFileSync(join(ROOT, runRecord(k)), 'utf8'))]));
   const aggregate = read('smoke-runs/aggregate.json');
   const matcher = read('smoke-runs/matcher-summary.json');
   const smoke = generateLedger(DEV_SEED, 2);
@@ -201,6 +202,7 @@ describe('entity-dedupe h2h development evidence: smoke', () => {
       }
     };
     for (const name of readdirSync(join(DEV, 'smoke-runs'))) walk(read(`smoke-runs/${name}`), name);
+    for (const k of KINDS) walk(runs[k], runRecord(k));
     expect(offending).toEqual([]);
   });
 
@@ -208,6 +210,7 @@ describe('entity-dedupe h2h development evidence: smoke', () => {
     const files: string[] = [];
     const list = (dir: string) => { for (const n of readdirSync(dir)) { const p = join(dir, n); if (statSync(p).isDirectory()) list(p); else files.push(p); } };
     list(DEV);
+    files.push(...KINDS.map(k => join(ROOT, runRecord(k))));
     for (const f of files) expect(readFileSync(f, 'utf8')).not.toMatch(/\/home\/|\/var\/tmp|\/tmp\/|~\/\.capy|\/workspace\//);
   });
 
@@ -259,7 +262,8 @@ describe('entity-dedupe h2h development evidence: smoke', () => {
     const t = runs['ext-temporal-graph'].timings_s;
     const mean = smokePages.reduce((s, key) => s + t[key], 0) / smokePages.length;
     expect(PREREG).toContain(`about ${mean.toFixed(1)} seconds a page in the smoke`);
-    expect(aggregate['ext-temporal-graph'].version).toContain(quoted(/`ext-temporal-graph` at ([0-9.]+) sends/));
+    for (const k of KINDS) expect(aggregate[k].run_record).toBe(runRecord(k));
+    expect(runs['ext-temporal-graph'].capabilities.versions.package).toContain(quoted(/`ext-temporal-graph` at ([0-9.]+) sends/));
   });
 
   test('the matcher cost per pair recounts from its token counts over the pairs sent', () => {
