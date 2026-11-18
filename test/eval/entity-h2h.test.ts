@@ -271,6 +271,14 @@ describe('memory-system pins (each the newest release at launch, preregistration
   const PINNED = { 'ext-temporal-graph': '0.31.2', 'ext-graph-pipeline': '1.6.8', 'ext-extract-first': '2.2.1', 'ext-memory-bank': '1.2.1' } as const;
   const bundle = (kind: string, file: string) => readFileSync(resolve(import.meta.dir, '../../docs/comparison-systems', kind, 'entity-h2h', file), 'utf8');
 
+  // Value: protects=ext-temporal-graph's ingest reaches gpt-6.2-sol, which rejects reasoning effort none; fails_when=the entity-h2h shim stops setting the adapter's OpenAI client to reasoning=None, or its record still claims effort none
+  test("ext-temporal-graph's entity-h2h shim sends no reasoning effort, since gpt-6.2-sol rejects the client's default 'none' (Amendment 3)", () => {
+    expect(bundle('ext-temporal-graph', 'entity_h2h.py')).toMatch(/async def _connect\(self\)[^\n]*\n\s+(\w+) = await super\(\)\._connect\(\)\n\s+\1\.llm_client\.reasoning = None\n\s+return \1\n/);
+    const rec = JSON.parse(bundle('ext-temporal-graph', 'capability.json'));
+    expect(JSON.stringify(rec.provider_routes)).not.toContain('reasoning effort none');
+    expect(rec.deviations_from_vendor_code.some((d: string) => d.includes('reasoning to None') && d.includes('Amendment 3'))).toBe(true);
+  });
+
   test('the dry run prints each memory system\'s pinned release and lock from its entity-h2h bundle', () => {
     const d = dryRun(DEV_SEED, 20);
     for (const [kind, version] of Object.entries(PINNED)) {
