@@ -6,7 +6,7 @@ selection and how to match a change to a useful test.
 
 Model selection, in short (full rules in [CLAUDE.md, "Choose models"](CLAUDE.md#choose-models)): gbrain and gstack are
 built for frontier models, so every model-comparison run tests them on the newest frontier Opus and GPT (today
-`claude-opus-5-5` and `gpt-6.1-sol`), plus `particle-1` as the primary low-cost model. The primary models are
+`claude-opus-5-5` and `gpt-6.2-sol`), plus `particle-1` as the primary low-cost model. The primary models are
 `claude-opus-5-5` and `particle-1`, and a run's first table shows both with cost per correct answer. Sonnet and Haiku
 are no longer required, and they are never models under test (agents, readers, optimization targets) or stand-ins for a
 frontier model, unless a run asks a question about that tier and says so. Judges are separate: a protocol's judge stays,
