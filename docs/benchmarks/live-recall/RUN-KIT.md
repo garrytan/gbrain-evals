@@ -127,7 +127,7 @@ All commands run from the repository root.
    coverage at the freeze as aggregates, with the scorecard. There is one counted batch 4 run.
 
    For batch 5's session, use the gbrain-evals commit the request names, on a clean tree, and run batch 5 once at gbrain
-   v0.60.733.0 ([2026-11-16 build entry](PREREGISTRATION.md#2026-11-16-batch-5-runs-at-v0607330-only)). The reference
+   v0.60.737.0 ([2026-11-18 build entry](PREREGISTRATION.md#2026-11-18-batch-5-runs-at-v0607370)). The reference
    run at 0.60.682.0 and the reruns of batches 3 and 4 wait for a monthly refresh. `--reference-build`, which such a refresh
    would use, lets only a build a preregistration names as a reference (0.60.682.0 at `42faabf2`) read a brain whose
    schema is newer than it expects; any other build stops with [`LR_REFERENCE_BUILD`](#lr_reference_build), and the
@@ -135,7 +135,7 @@ All commands run from the repository root.
 
    ```bash
    bun eval/runner/live-recall/run.ts run --questions <batch 5 questions.jsonl> --freeze <batch 5 freeze.json> \
-     --gbrain <gbrain checkout>@6ce7195b44a034f85aec811f11fbf862db376f50 --out <b5-newest>
+     --gbrain <gbrain checkout>@291b7996a4e2881acc921b1085d818bb9640f5d0 --out <b5-newest>
    ```
 
    Every `--fixture` and real-brain run from this runner also starts the `search_op_keyless` arm, before the other

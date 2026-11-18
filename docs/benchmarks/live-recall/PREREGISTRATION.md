@@ -878,6 +878,84 @@ on that month's `stable` tag. This entry replaces the same-day build pair and th
 - **Cost.** Wintermute's keys pay for about one query embedding per form for `hybrid` and `configured`, and one rerank
   call per configured query, at one build. `search_op_keyless` sends nothing to any provider.
 
+### 2026-11-18: Batch 5 runs at v0.60.737.0
+
+Written before any batch 5 search. The box that holds the brain moved from gbrain v0.60.728.0 to v0.60.737.0
+(`291b7996a`) for gbrain #9637, a security fix, and batch 5 runs at the build the box keeps, so the session's build
+matches the brain's. As read back on the box by its operator and relayed to us (we haven't checked the box directly),
+v0.60.737.0 has been live there since 2026-11-18 03:00:29Z, its first hour of watching ended clean at 04:12:26Z, and
+the brain's schema is 319. Tag v0.60.737.0 peels to `291b7996a4e2881acc921b1085d818bb9640f5d0`, and no later release is
+tagged. Batch 5's counted run hasn't started. This entry changes only the build of
+[Batch 5 runs at v0.60.733.0 only](#2026-11-16-batch-5-runs-at-v0607330-only); the rest of that entry stands.
+
+- **What runs.** Batch 5 runs once, at gbrain v0.60.737.0 (`291b7996a4e2881acc921b1085d818bb9640f5d0`), with every
+  arm: `keyword`, `vector`, `hybrid_lexical`, `hybrid`, `configured`, `configured_window` and `search_op_keyless`. It
+  is batch 5's counted run, and the box's gbrain runs the same build when the session starts.
+- **The freeze stands.** `freeze.json` (sha256 `4792912a`…) records gbrain 0.60.733.0 and visibility epoch
+  `post_gbra_398`. v0.60.737.0 is in the same epoch, so the runner takes that freeze unchanged. The pages the runner's
+  caller can read don't change in code between the two builds: the runner reads as an unbound local caller (it refuses
+  any relaxed privacy view), page read policy (`read-policy-sql.ts`, `safe-chunks.ts`) is unchanged, and the new
+  visibility work in this range applies to remote callers, owner agents, credentials with a private-facts grant, or
+  fact rows, none of which the runner is or ranks.
+- **Schemas 318 and 319.** `v318-guard-ledgers-fail-closed` replaces seven write-guard functions, and
+  `v319-principal-private-facts` adds a private-facts grant column with a constant default. Neither changes a page,
+  chunk or row that a read returns. v0.60.737.0 adds no migration.
+- **What can move a page rank** (`git log 6ce7195b..291b7996a` on the files the arms run):
+  - gbrain #9502 (`ad6da0b72`, v0.60.734.0) caps the title step's all-words attempt at 5,000 matching pages for
+    in-process searches. A question whose words match more pages than that, across titles and timelines, now ranks only
+    the 5,000 with the lowest ids and puts title-only matches first (`keyword_candidates_incomplete`); at 0.60.733.0
+    ranking every match could reach the statement timeout and fail the title step open (`title_arm_failed`, a
+    degraded row here). Either direction. It reaches every arm built on `hybridSearch`: `hybrid_lexical`,
+    `hybrid`, `configured`, `configured_window` and `search_op_keyless`, not `keyword` or `vector`.
+  - gbrain #9592 (`4737c26e3`, v0.60.735.0) changes the title step's any-word retry, which runs when no page holds
+    every word of a question. For an in-process caller it now matches page timelines as well as titles while every page
+    matching any of the words fits the same 5,000-page cap, and titles alone, as before, when they don't. It aims at
+    reworded relationship questions whose people's pages name the company only in their timelines, so it should mostly
+    lift reworded forms and narrow the gap between exact and reworded questions; the extra candidates can also push a
+    gold page down. On a large brain, an any-word set over 5,000 pages leaves the step as it was. It reaches the same
+    arms as #9502, `hybrid_lexical` (`keywordOnly`) and `search_op_keyless` (through the search operation, called
+    as a local caller) included, and not `keyword` or `vector`. The fill is unchanged: it still needs an all-words
+    row.
+  - gbrain #9567 (`c5a80f17f`, v0.60.735.0) reads a bare-date `since` as midnight UTC rather than midnight in the
+    database session's time zone. It reaches `configured_window` only, whose windows are bare dates, and moves its
+    first-day edge by the session's offset in either direction; a session in UTC sees no change.
+- **What can't move a page rank in batch 5.** gbrain #9637 (`280b5a87c`) changes the text of link contexts and the
+  core memory block for remote callers; relational rows keep their pages and order, and no arm returns core memory.
+  gbrain #9630, #9588, #9627 and #9574 change what remote callers, owner agents and granted credentials read of facts
+  and held page lines, behind checks the runner's calls don't meet (the search operation runs with `remote: false`)
+  or in operations no arm calls. gbrain #9573, #9524 and #9603 change saved-fact rows, which the facts arm adds only
+  after every page row, and the facts block and temporal reserve, which need a token budget the runner never passes.
+  gbrain #9622 changes bounded-read cleanup and `traverse_graph`. gbrain #9656 (`15f17a311`), the one change from
+  v0.60.736.0 to v0.60.737.0, changes which wishes and preferences conversation extraction keeps; it writes saved facts
+  and touches no search code. Nothing in the range changes embedding, vector, rerank, fusion, exact-lookup or
+  rank-priors code, so #7935's direction and the archive-layout reading of #9433 above hold.
+- **Keyless check at v0.60.737.0.** `run.ts run --fixture --protocol batch5` at `291b7996a`, with every provider key
+  blank and every provider and proxy address pointed at a closed local port, read schema 319, verified read-only and ran
+  all 40 `search_op_keyless` forms `ok` with no provider call. It matched the same check at `6ce7195b` (v0.60.733.0) and
+  at `4d1628afb` (v0.60.736.0) row for row on every arm, in first-hit rank and top ten pages: fill rows on 13 of 20
+  exact forms and on none of the 20 reworded forms, and fill on and fill off level at 27, 35 and 36 of 40 at k1, k5 and
+  k10. These are harness checks on the public fixture, too small to exercise the title-step changes above, not
+  measurements.
+- **Idle upkeep and the conversation archive.** During the session the box's own `gbrain serve` may run idle upkeep
+  and the conversation archive as the box has them configured. The session doesn't stop, pause or change them, because
+  batch 5 measures the live brain as it runs. The session's own processes run neither
+  ([gbrain's home entry](#2026-11-16-gbrains-home-and-its-background-upkeep-during-the-session)). Upkeep's writes to
+  saved facts can't move a page rank in any arm, since page search never ranks facts and the search operation adds fact
+  rows only after every page row, and the pages upkeep or the archive write or change are counted in
+  `run.brain_pages_*`, `run.archive_layout_pages` and `run.gold_pages_in_archive_layout`. Conversation extraction,
+  which upkeep may run, keeps more wishes and preferences from v0.60.737.0 (gbrain #9656); what it keeps are saved
+  facts. From gbrain #9563, a command that makes a brain shared (adding or enabling a member, setting an owner or an
+  audience) keeps the archive pages written while it was personal to the owner, as an archive run on a shared brain
+  already did, so no such command runs during the session. The same read-back, at 04:15Z on 2026-11-18, found the
+  brain personal by its members (one enabled member, who is the owner) with `brain.audience` unset, and no sharing
+  command in the box's supervisor audit files changed since 2026-11-16 20:21Z or in its shell histories. The
+  supervisor audit is the only command record the box keeps, so this isn't a full command log. With `brain.audience`
+  unset, gbrain also counts a brain as shared when three or more non-automation MCP clients were active in the past 30
+  days (`classifyBrainAudience`); the read-back didn't cover that count.
+- **gbrain #9637.** No batch 1 to 5 file in this repository records link-context or core-memory text from the box: the
+  freezes and scorecards carry no free text, and the plans and notes give aggregates only. Nothing published changes.
+- **The run kit** names `291b7996a4e2881acc921b1085d818bb9640f5d0` in batch 5's command.
+
 ## Limits
 
 - One writer who knows the brain writes both the questions and the gold, so paraphrase difficulty and topic choice
