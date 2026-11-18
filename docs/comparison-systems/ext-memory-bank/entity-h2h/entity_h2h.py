@@ -1,9 +1,10 @@
-"""Hindsight shim, SHIM_CONFIG=entity-h2h: the pinned 0.10.2 adapter, with an entity readout.
+"""Hindsight shim, SHIM_CONFIG=entity-h2h: Hindsight 1.2.1 under the pinned adapter, with an entity readout.
 
-The adapter is the pinned bundle's shim.py, unchanged (copied into the image as hindsight_shim.py). The server's model
-comes from hindsight.entity-h2h.env (gpt-6.2-sol; embedder and reranker stay at the recipe's local models). This file
-adds GET /entities (eval/systems/PROTOCOL.md, "Entity readout"), read through the server's public HTTP API with
-hindsight-client 0.10.2:
+The adapter is the pinned bundle's shim.py, unchanged (copied into the image as hindsight_shim.py); every client call it
+makes keeps its signature and response fields in hindsight-client 1.2.1, which the image installs from this directory's
+lock. The server's model comes from hindsight.entity-h2h.env (gpt-6.2-sol; embedder and reranker at the 1.2.1 server
+defaults). This file adds GET /entities (eval/systems/PROTOCOL.md, "Entity readout"), read through the server's public
+HTTP API with hindsight-client 1.2.1:
 
 - entities: every entity the bank knows (GET .../entities, paged). Hindsight resolves each extracted mention to an
   existing entity or a new one during retain, so two sources it resolved to one person share one entity id.

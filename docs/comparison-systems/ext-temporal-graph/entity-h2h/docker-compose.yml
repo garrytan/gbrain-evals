@@ -1,4 +1,4 @@
-# Graphiti (graphiti-core 0.30.2, not Zep Cloud) on Neo4j 5.26 behind the shootout shim (eval/systems/PROTOCOL.md), in the
+# Graphiti (graphiti-core 0.31.2, not Zep Cloud) on Neo4j 5.26 behind the shootout shim (eval/systems/PROTOCOL.md), in the
 # entity-h2h configuration: the pinned adapter with gpt-6.2-sol and GET /entities. bootstrap.sh uses this file for
 # --config entity-h2h; the pinned configurations use ../docker-compose.yml.
 #

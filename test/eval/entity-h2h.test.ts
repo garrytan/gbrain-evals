@@ -7,6 +7,7 @@
  */
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { mkdtempSync, readFileSync, writeFileSync, unlinkSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -256,6 +257,35 @@ describe('spend projection', () => {
     expect(text).toContain(`not a candidate: ${missed.length} designed pairs (${missed.filter(p => p.label === 'same').length} must-link, ${missed.filter(p => p.label === 'different').length} must-not-link)`);
     expect(d.memory['ext-temporal-graph'].stop_usd).toBe(memoryStop('ext-temporal-graph', w.pages.length).stop_usd);
     expect(d.matcher['anthropic:claude-opus-5-5'].stop_usd).toBe(matcherStop('anthropic:claude-opus-5-5', b.pairs.length).stop_usd);
+  });
+});
+
+describe('memory-system pins (each the newest release at launch, preregistration "Systems")', () => {
+  const PINNED = { 'ext-temporal-graph': '0.31.2', 'ext-graph-pipeline': '1.6.8', 'ext-extract-first': '2.2.1', 'ext-memory-bank': '1.2.1' } as const;
+  const bundle = (kind: string, file: string) => readFileSync(resolve(import.meta.dir, '../../docs/comparison-systems', kind, 'entity-h2h', file), 'utf8');
+
+  test('the dry run prints each memory system\'s pinned release and lock from its entity-h2h bundle', () => {
+    const d = dryRun(DEV_SEED, 20);
+    for (const [kind, version] of Object.entries(PINNED)) {
+      const pin = JSON.parse(bundle(kind, 'capability.json')).versions as { lock_sha256: string | null };
+      expect([d.memory[kind].version, d.memory[kind].lock_sha256]).toEqual([version, pin.lock_sha256]);
+      expect(d.lines.find(l => l.trimStart().startsWith(`${kind} `))).toContain(` ${version} `);
+    }
+  });
+
+  test('each re-pinned bundle builds from its own lock, whose hash the capability record carries, and asserts the release', () => {
+    for (const kind of ['ext-temporal-graph', 'ext-graph-pipeline', 'ext-memory-bank'] as const) {
+      const pin = JSON.parse(bundle(kind, 'capability.json')).versions as { lock_sha256: string; lock_file: string };
+      expect(pin.lock_file).toBe(`docs/comparison-systems/${kind}/entity-h2h/uv.lock`);
+      expect(createHash('sha256').update(readFileSync(resolve(import.meta.dir, '../..', pin.lock_file))).digest('hex')).toBe(pin.lock_sha256);
+      const dockerfile = bundle(kind, 'Dockerfile');
+      expect(dockerfile).toContain(`COPY docs/comparison-systems/${kind}/entity-h2h/pyproject.toml docs/comparison-systems/${kind}/entity-h2h/uv.lock ./`);
+      expect(dockerfile).toContain(`== '${PINNED[kind]}'`);
+      expect(bundle(kind, 'pyproject.toml')).toContain(`==${PINNED[kind]}"]`);
+    }
+    const memoryBank = JSON.parse(bundle('ext-memory-bank', 'capability.json')).versions as { image: string };
+    expect(memoryBank.image).toMatch(/:1\.2\.1@sha256:[0-9a-f]{64}$/);
+    expect(bundle('ext-memory-bank', 'docker-compose.yml')).toContain(`image: ${memoryBank.image}`);
   });
 });
 
