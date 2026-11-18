@@ -7,7 +7,7 @@
   maps them back, and the `ext-memory-bank` image no longer ships the old default reranker, so its env file names the
   new default. `run.ts dry-run` prints each memory system's pinned release and lock, and a test checks every lock hash
   against its capability record.
-- The gbrain cell of that head-to-head no longer changes the world folder: it imports a copy under its `--output`
+- The gbrain cell of that head-to-head no longer changes the world folder. It imports a copy under its `--output`
   folder, because `gbrain import` rewrites frontmatter and a later `run.ts score` on the same world refused every page.
   It also declares the person pages' `external_id` to gbrain's duplicate finder, which treats an id field as a key only
   when the active schema pack lists it in the person type's `identity_keys`: the cell forks the active pack, declares
