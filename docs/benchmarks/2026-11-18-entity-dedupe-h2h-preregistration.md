@@ -100,11 +100,11 @@ Classic tools, keyless, people only, seed 20261117, labels and thresholds from h
 | Arm | False merges | Recall |
 |---|---|---|
 | Splink 5.0.0, default (Getting Started persons model) | 216/400 (54.0%) | 158/280 |
-| Splink tuned, automatic | 41/400 (10.3%) | 199/280 |
+| Splink tuned, automatic | 41/400 (10.25%) | 199/280 |
 | Splink tuned, review band (chosen on held-out) | 161/400 | 207/280 |
 | dedupe 3.0.3, default | 0/400 | 50/280 |
 | dedupe tuned | 24/400 (6.0%) | 269/280 |
-| Zingg 0.7.0, default | 5/400 (1.3%) | 205/280 |
+| Zingg 0.7.0, default | 5/400 (1.25%) | 205/280 |
 | Zingg tuned | 0/400 | 201/280 (71.8%) |
 | gbrain (ad179784), chosen rule, automatic | 0/400 | 49/280 (17.5%) |
 
@@ -114,14 +114,14 @@ A 69-page smoke on 2026-11-17 (Pacific), a plumbing check only, with 20 designed
 
 ## Prior art
 
-"Merge Without Measure" (Edward Izgorodin and Olga Timoshina, 2026; summarised in Mnemoverse's "Agent Memory Deduplication: The Missing Error Rate", with pre-publication reviews filed as mem0ai/mem0#7002 and letta-ai/letta#3431) read the deduplication write paths of six shipping agent-memory systems and found hardcoded similarity thresholds, no published false-merge or false-split rate, and no way to undo a merge. The wider literature: Fellegi-Sunter and Splink's term-frequency weights; transitive closure as the weakest clustering choice (Hassanzadeh et al., PVLDB 2009); and OpenSanctions Pairs (arXiv 2603.11051), where rules over-match and language models struggle with transliteration.
+"Merge Without Measure" (Edward Izgorodin and Olga Timoshina, 2026; summarised in Mnemoverse's "Agent Memory Deduplication: The Missing Error Rate", with pre-publication reviews filed upstream with `ext-extract-first` and `ext-agent-runtime`) read the deduplication write paths of six shipping agent-memory systems and found hardcoded similarity thresholds, no published false-merge or false-split rate, and no way to undo a merge. The wider literature: Fellegi-Sunter and Splink's term-frequency weights; transitive closure as the weakest clustering choice (Hassanzadeh et al., PVLDB 2009); and OpenSanctions Pairs (arXiv 2603.11051), where rules over-match and language models struggle with transliteration.
 
 ## Budget
 
 - **Order.** Keyless systems first: gbrain, Splink, dedupe, Zingg. Paid cells run one at a time through the repository's metering proxy and budget ledger (`eval/runner/budget-ledger.ts`); every request is reserved against the ledger before it is sent.
 - **Prices the design depends on.** Measured in the smoke from the proxy's usage fields at list prices, with gpt-6.2-sol. Ingest cost per page, at the rate from the last third of the smoke (cost per page rises as a graph grows, so these are floors): `ext-temporal-graph` $0.038, `ext-graph-pipeline` $0.009, `ext-extract-first` $0.0045, `ext-memory-bank` $0.0022. Matcher cost per pair: gpt-6.2-sol $0.00055, claude-opus-5-5 $0.0030, particle-1 $0.00021. The blocker was chosen on these: any shared name token gives 49,150 pairs at the development seed against the fixed blocker's 21,574.
 - **Runs.** Each memory system runs default on the scored seed, tuned on the scored seed, and tuning on the held-out seed.
-- **Tuning is counted as grid size × world cost.** A memory system resolves entities while it ingests, so every setting tried is a full re-ingest. Tuning therefore runs on a 345-page slice of the held-out seed (5 instances per family), with at most 4 settings per system, which costs no more than one full held-out world. The chosen setting then runs once on the scored seed.
+- **Tuning is counted as grid size × world cost.** A memory system resolves entities while it ingests, so every setting tried is a full re-ingest. Tuning therefore runs on a slice of the held-out seed with 5 instances per family (a quarter of the held-out world), with at most 4 settings per system, which costs no more than one full held-out world. The chosen setting then runs once on the scored seed.
 - **Ledger stops.** Each memory-system run stops at 1.5 times its own projected run cost at the rates above, scaled to the counted world's page count, and the matcher stops at its projected cost. Reaching a stop pauses the run at the cell boundary; it resumes only after the measured rate is reported and a new paid run is opened. It never ends the test incomplete.
 - **345-page checkpoint.** Every memory-system ingest re-measures its cost per page after its first 345 pages. If the rate projects the run past its stop, it pauses there before ingesting the rest.
 - **Crash and resume.** None of the four memory systems is shown to ingest idempotently: a re-sent page can bill twice and create a duplicate entity. So an ingest that dies mid-world never resumes in place. It restarts from page one on a fresh namespace (a fresh database on a fresh VM). Before any restart, the cell's ledger is reconciled against the metering proxy's usage log, and the partial run's billed spend counts toward that cell's stop; the partial output is kept and never scored. Each cell gets at most one restart, and each restart is opened as its own paid run. A second failure ends the cell as "failed (infrastructure)", reported as such, and a further attempt needs a dated amendment. A matcher run that dies resumes after the same reconcile, re-asking only pairs with no request on the proxy log; a pair whose request was sent but got no verdict is re-asked at most once, counted twice in spend, and reported.
