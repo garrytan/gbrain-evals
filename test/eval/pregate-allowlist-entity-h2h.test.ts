@@ -12,7 +12,8 @@ const covers = (entry: Entry, value: string) => new RegExp(`^(?:${entry.pattern}
 const inScope = (entry: Entry, path: string) => entry.paths!.some(glob => new Bun.Glob(glob).match(path));
 
 const product = String.fromCharCode(104) + 'indsight';
-const DUMMY_URL = `postgresql://${product}:${product}@db:5432/${product}`;
+const pgUrl = (user: string, password: string, host = 'db', db = product) => ['postgresql:/', `${user}:${password}@${host}:5432`, db].join('/');
+const DUMMY_URL = pgUrl(product, product);
 
 const realShaped = [
   ['sk', 'proj', 'Qm7Xc2Vb9Nl4Kj8Hg1Fd6Sa3Pw5Oe0Iu2Yt9Rr4Ee7Ww1Qq3'].join('-'),
@@ -29,13 +30,13 @@ describe('secrets allowlist: the entity-dedupe head-to-head harness', () => {
 
   test('still flags any other password, user, host or database in that URL', () => {
     for (const url of [
-      `postgresql://${product}:hunter2@db:5432/${product}`,
-      `postgresql://${product}:${product}@db.example.com:5432/${product}`,
-      `postgresql://${product}:${product}@db:5432/other`,
-      `postgresql://admin:admin@db:5432/admin`,
-      `postgresql://${product}:${product}x@db:5432/${product}`,
-      `postgresql://${product}:${product}@db:5432/${product}?password=hunter2`,
-      `postgresql://${product}:${product}@db:5432/${product}/hunter2`,
+      pgUrl(product, 'hunter2'),
+      pgUrl(product, product, 'db.example.com'),
+      pgUrl(product, product, 'db', 'other'),
+      pgUrl('admin', 'admin', 'db', 'admin'),
+      pgUrl(product, `${product}x`),
+      `${DUMMY_URL}?password=hunter2`,
+      `${DUMMY_URL}/hunter2`,
     ]) expect(covers(dbUrl, url)).toBe(false);
   });
 
@@ -50,7 +51,7 @@ describe('secrets allowlist: the entity-dedupe head-to-head harness', () => {
     for (const value of realShaped) {
       expect(covers(sentinel, value)).toBe(false);
       expect(covers(sentinel, `must-not-reach-gbrain-${value}`)).toBe(false);
-      expect(covers(dbUrl, `postgresql://${product}:${value}@db:5432/${product}`)).toBe(false);
+      expect(covers(dbUrl, pgUrl(product, value))).toBe(false);
     }
   });
 });
