@@ -25,8 +25,11 @@
  *                        ships; never reported as gbrain.
  *   finder               `--finder-json <file>`: the output of
  *                        `gbrain dedupe --preview --json` on this world
- *                        (written with `--write-world <dir>`), labelled
- *                        `--finder-build <tag or sha>`.
+ *                        (written with `--write-world <dir>` into a new
+ *                        directory), labelled `--finder-build <tag or sha>`,
+ *                        with `--finder-imports <file>` holding the
+ *                        `gbrain import --json` summaries, one per line, so
+ *                        the run fails unless the finder saw every page.
  *
  * A finder-shaped output is scored under two selections: auto-link (kind
  * cross_source and class clean, what automatic linking would join) and
@@ -39,10 +42,10 @@
  * the groups that joined it.
  *
  * Usage: bun eval/runner/person-dedupe.ts [--seed N] [--per-family N] [--output DIR]
- *          [--write-world DIR] [--finder-json FILE --finder-build LABEL] [--json]
+ *          [--write-world DIR] [--finder-json FILE --finder-build LABEL --finder-imports FILE] [--json]
  */
 import { createHash } from 'node:crypto';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import {
   FAMILIES, NICKNAMES, PERSON_DEDUPE_DEFAULT_PER_FAMILY, PERSON_DEDUPE_DEFAULT_SEED, PERSON_DEDUPE_GENERATOR_VERSION,
@@ -290,6 +293,7 @@ export function emulateFinder(pages: readonly WrittenPage[], rule: CleanRule = {
       if (!perSource || !clique) for (const g of clean) if (uf.find(g.members[0]) === root) g.class = 'likely';
     }
   }
+  for (const g of groups) if (g.kind === 'cross_source' && g.class === 'likely' && g.rules.includes('shared_key:email')) g.rules.push('contact_key_only');
   return toFinderOutput(groups, crowdedKeys.size);
 }
 
@@ -341,7 +345,7 @@ export function toFinderOutput(groups: readonly Group[], crowded = 0): FinderOut
     groups: groups.map(g => ({
       id: groupId(g.kind, g.members), kind: g.kind, class: g.class,
       members: g.members.map(k => ({ source_id: sourceOf(k), slug: `people/${k.slice(k.indexOf(':') + 1)}` })),
-      evidence: g.rules.map(r => r.startsWith('shared_key:') ? { matcher: 'shared_key', rule: 'shared_key', key: r.slice(11), field: r === 'shared_key:email' ? 'emails' : r.slice(11) } : r === 'strict_name' ? { matcher: 'same_name', rule: 'strict_name' } : { matcher: r, rule: r }),
+      evidence: g.rules.map(r => r.startsWith('shared_key:') ? { matcher: 'shared_key', rule: 'shared_key', key: r.slice(11), field: r === 'shared_key:email' ? 'emails' : r.slice(11) } : r === 'strict_name' ? { matcher: 'same_name', rule: 'strict_name' } : r === 'contact_key_only' ? { matcher: 'key_check', rule: 'contact_key_only' } : { matcher: r, rule: r }),
     })),
     counts: { by_kind, by_class, crowded_key_values: crowded },
   };
@@ -451,13 +455,13 @@ export const SELECTIONS: Record<string, (g: Group) => boolean> = {
   'auto-link': g => g.kind === 'cross_source' && g.class === 'clean',
   proposed: g => g.class !== 'conflict',
   ...Object.fromEntries(FINDER_CLASSES.filter(c => c !== 'conflict').map(c => [`class:${c}`, (g: Group) => g.class === c])),
-  /** Cross-source likely groups held together by a shared email: what an owner would confirm in one go. */
+  /** The confirm list: cross-source likely groups the finder marks contact_key_only (the stand-in marks those held by a shared email). */
   'confirm-list': g => isConfirm(g),
   'auto-link+confirm-list': g => (g.kind === 'cross_source' && g.class === 'clean') || isConfirm(g),
 };
 
 function isConfirm(g: Group): boolean {
-  return g.kind === 'cross_source' && g.class === 'likely' && g.rules.some(r => r.endsWith('/email'));
+  return g.kind === 'cross_source' && g.class === 'likely' && g.rules.some(r => r.endsWith('/contact_key_only'));
 }
 
 export interface ArmResult { id: string; system: 'reference' | 'contract-emulator' | 'finder'; arm: string | null; selection: string; description: string; build: string | null; score: Score; verdict: ReturnType<typeof verdictOf> }
@@ -471,7 +475,7 @@ export function runPersonDedupe(ledger: Ledger, opts: { finderJson?: unknown; fi
     const score = scoreGroups(groups, ledger.pairs, person);
     return { id, system, arm: armId, selection, description, build, score, verdict: verdictOf(score) };
   };
-  const describe = (sel: string) => ({ 'auto-link': 'groups automatic linking would join (cross_source and clean)', proposed: 'every group except conflict (clean, likely, weak, thin)', 'confirm-list': 'cross_source likely groups held by a shared email (the confirm list)', 'auto-link+confirm-list': 'automatic links plus the whole confirm list, confirmed in one go' } as Record<string, string>)[sel] ?? `only ${sel.slice(6)} groups`;
+  const describe = (sel: string) => ({ 'auto-link': 'groups automatic linking would join (cross_source and clean)', proposed: 'every group except conflict (clean, likely, weak, thin)', 'confirm-list': 'cross_source likely groups marked contact_key_only (the confirm list)', 'auto-link+confirm-list': 'automatic links plus the whole confirm list, confirmed in one go' } as Record<string, string>)[sel] ?? `only ${sel.slice(6)} groups`;
   const finderArms = (system: 'contract-emulator' | 'finder', armId: string | null, all: Group[], build: string | null, selections: readonly string[]) =>
     selections.map(sel => arm(`${system}${armId ? `[arm ${armId}]` : ''}:${sel}`, system, armId, sel, `${describe(sel)}${armId ? `; clean rule: ${ARMS[armId].text}` : ''}`, all.filter(SELECTIONS[sel]), build));
   const arms = REFERENCE_MATCHERS.map(m => arm(m.id, 'reference', null, 'all', m.description, m.run(pages)));
@@ -480,12 +484,47 @@ export function runPersonDedupe(ledger: Ledger, opts: { finderJson?: unknown; fi
   return arms;
 }
 
+/** Writes the world's pages. Refuses a directory that already has files, so an old world never mixes into a new one. */
 export function writeWorld(ledger: Ledger, dir: string): void {
+  if (existsSync(dir) && readdirSync(dir).length > 0) throw new Error(`person-dedupe: --write-world ${dir} is not empty; write each world into a new directory`);
   for (const p of ledger.pages) {
     const file = join(dir, p.source, 'people', `${p.slug}.md`);
     mkdirSync(dirname(file), { recursive: true });
     writeFileSync(file, renderPage(p));
   }
+}
+
+export interface ImportSummary { status: string; source_id: string; imported: number; unchanged: number; total_files: number; errors: number; malformed_skipped: number; failures: unknown[] }
+
+/**
+ * Checks, from the `gbrain import --json` summaries, that the finder's brain holds every page of the
+ * world: one successful import per source into a fresh brain, with every file imported and none failed.
+ * gbrain counts a page that is still publishing as unchanged, so an unchanged page fails the check too.
+ * Throws otherwise, because a finder that never saw a page can't link it and would score as safe.
+ */
+export function checkFinderCoverage(imports: readonly unknown[], ledger: Ledger): void {
+  const want = new Map<string, number>();
+  for (const p of ledger.pages) want.set(p.source, (want.get(p.source) ?? 0) + 1);
+  const seen = new Set<string>();
+  for (const raw of imports) {
+    const s = raw as ImportSummary;
+    if (!s || typeof s !== 'object' || typeof s.source_id !== 'string') throw new Error('person-dedupe: an import summary has no source_id');
+    const n = want.get(s.source_id);
+    if (n === undefined) throw new Error(`person-dedupe: import summary for source ${s.source_id}, which the world does not have`);
+    if (seen.has(s.source_id)) throw new Error(`person-dedupe: two import summaries for source ${s.source_id}`);
+    seen.add(s.source_id);
+    const problems = [
+      s.status !== 'success' && `status ${s.status}`,
+      s.errors !== 0 && `${s.errors} errors`,
+      s.malformed_skipped !== 0 && `${s.malformed_skipped} malformed pages skipped`,
+      (!Array.isArray(s.failures) || s.failures.length > 0) && 'failures listed',
+      s.total_files !== n && `${s.total_files} files, the world has ${n}`,
+      s.imported !== n && `${s.imported} imported (${s.unchanged} unchanged), the world has ${n}; import each source into a fresh brain and rerun until every page is imported`,
+    ].filter(Boolean);
+    if (problems.length) throw new Error(`person-dedupe: the finder's brain is missing pages of source ${s.source_id}: ${problems.join('; ')}`);
+  }
+  const missing = [...want.keys()].filter(src => !seen.has(src));
+  if (missing.length) throw new Error(`person-dedupe: no import summary for source ${missing.join(', ')}; the finder never saw those pages`);
 }
 
 function argValue(argv: readonly string[], flag: string): string | undefined {
@@ -508,6 +547,8 @@ async function main(): Promise<void> {
   const finderFile = argValue(argv, '--finder-json');
   const finderBuild = argValue(argv, '--finder-build');
   if (finderFile && !finderBuild) throw new Error('person-dedupe: --finder-json needs --finder-build <tag or sha>');
+  const importsFile = argValue(argv, '--finder-imports');
+  if (finderFile && !importsFile) throw new Error('person-dedupe: --finder-json needs --finder-imports <file of gbrain import --json summaries, one per line>');
   const startedAt = new Date().toISOString();
 
   const ledger = generateLedger(seed, perFamily);
@@ -515,6 +556,7 @@ async function main(): Promise<void> {
   const worldDir = argValue(argv, '--write-world');
   if (worldDir) { writeWorld(ledger, resolve(worldDir)); log(`world written: ${ledger.pages.length} pages under ${worldDir}/<source>/people/`); }
 
+  if (importsFile) checkFinderCoverage(readFileSync(importsFile, 'utf8').split('\n').filter(l => l.trim()).map(l => JSON.parse(l)), ledger);
   const arms = runPersonDedupe(ledger, { finderJson: finderFile ? JSON.parse(readFileSync(finderFile, 'utf8')) : undefined, finderBuild });
   const headline = arms.find(a => a.id === 'finder:auto-link') ?? arms.find(a => a.id === 'contract-emulator[arm 1]:auto-link')!;
   const nDiff = ledger.pairs.filter(p => p.label === 'different').length;

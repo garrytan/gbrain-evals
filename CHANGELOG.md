@@ -2,6 +2,53 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.252] - 2026-11-18
+
+README's results tables now say which direction is better on every row whose direction wasn't plain. The permission row
+says it counts leaks of finance-only text that the agent's user isn't allowed to see, fewer is better, and its headline
+reads "100 → 0 leaking runs". No number changed ([README](README.md#current-results)).
+
+## [0.10.251] - 2026-11-18
+
+### Engine-bench's launcher logs and resumed runs are more robust
+
+- `launch-log.ts` now forwards Ctrl-C and termination signals to the command it runs, keeps standard output and error
+  lines whole, keeps characters split across reads intact, logs a command that cannot start, replaces passwords in URLs,
+  and leaves four-part version numbers ending in .0 (such as 1.97.0.0) alone while still replacing IP addresses,
+  including all-numeric IPv6 ones.
+- A LongMemEval-S run resumed from a stream written before the keyword arm changed no longer reuses those rows.
+- The correctness stage treats a run whose receipt names no loaded gbrain commit, or a stage with no build commit, as an
+  error.
+- The [results page](docs/benchmarks/2026-11-17-engine-bench.md) notes that the keyword arm's 84.4% may read slightly
+  higher than `gbrain search` would give, and that its reproduce commands run the current keyword arm.
+
+### Engine-bench's keyword arm searches as gbrain does, and runs record the gbrain commit they loaded
+
+- The LongMemEval-S keyword arm now runs gbrain's own search on a brain with no embedding provider, which falls back to
+  passages holding any of the question's words. It used to call the engine's all-words keyword search, which returned
+  nothing on 82 of 102 questions. Rerun at gbrain v0.60.737.0, both engines return the same full top 5 on 102 of 102
+  questions, with recall_all@5 of 84.4%. The [results page](docs/benchmarks/2026-11-17-engine-bench.md) and a dated
+  amendment to the [preregistration](docs/benchmarks/2026-11-17-engine-bench-preregistration.md#amendments) record the
+  change, and the superseded first-run numbers stay on the page.
+- Agreement in the LongMemEval-S report now counts the questions where every engine returned nothing.
+- The correctness stage records the gbrain commit each check's runner loaded, and marks a run as an error when it
+  differs from the stage's build.
+- `bun eval/runner/engine-bench/launch-log.ts --out <log> -- <command>` writes a launcher's log with Ubicloud VM names,
+  IP addresses and machine paths replaced; the two published 100,000-page launcher logs are rewritten the same way.
+
+### A bench for how often duplicate-people finders link different people
+
+- A new keyless bench, `person-dedupe`, measures how often a duplicate-people finder links two different people:
+  namesakes at one company, behind a shared team or family address, across sources, with Jr suffixes and lookalike
+  names, plus the same person written many ways. It scores reference matchers and a stand-in for gbrain's documented
+  finder today, and scores `gbrain dedupe --preview --json` output from a file once the finder ships. First result: a
+  shared email plus the same name links different people when the email is a role or household address
+  ([report](docs/benchmarks/2026-11-17-person-dedupe.md)).
+
+The README's results table top-aligns every cell, opens each gbrain cell with a large headline of how far gbrain is
+ahead, level or behind, and moves each row's gbrain commit and report into small type under its description; no number
+changed ([README.md](README.md#current-results)). `scripts/check-links.py` also checks `href` links in Markdown files.
+
 ## [0.10.250] - 2026-11-17
 
 engine-bench baseline ([docs/benchmarks/2026-11-17-engine-bench.md](docs/benchmarks/2026-11-17-engine-bench.md)): development runs of gbrain on PGLite and Postgres at v0.60.734.0 and v0.60.735.0. Both engines pass the five keyless correctness checks they can both run with identical counts (Postgres also passes the sixth, which only it can run), 301 of 302 CLI, MCP and markdown outputs are byte-identical (the exception is `stale` in `gbrain search --json`), and LongMemEval-S retrieval returns the same top 5 on 102 of 102 questions. At 16 concurrent clients PGLite serves 0.05x Postgres's reads, and PGLite's import slows from 27.7 to 1.5 pages per second by 45,000 pages while Postgres slows only from 28.4 to 23. The Rust engine is not measured yet.
