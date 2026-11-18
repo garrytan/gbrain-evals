@@ -292,9 +292,17 @@ to this repository, separately from the gbrain dependency's version.
 Maintainers can use the [Cat13 experiment recipe](../eval/runner/README-cat13-phase-e0.md)
 and [repository writing guide](../CLAUDE.md). The
 [older provider shootout runbook](../scripts/RUNBOOK_SHOOTOUT.md) is an archival
-procedure with documented missing pieces; it is not the current refresh command.
+procedure with documented missing pieces; it is not the current refresh command. To decide which engine-bench or
+retrieval baselines need a rerun, the [daily retrieval commit screen](../scripts/retrieval-commit-screen.md) tags each
+gbrain or gbrain-evals commit in a time window `yes`, `maybe` or `no` for whether it can change what a benchmark
+measures.
 
 ## Changelog
+
+### 2026-11-18: Daily retrieval commit screen link
+
+"Checking the evidence" links the [daily retrieval commit screen](../scripts/retrieval-commit-screen.md) guide for
+maintainers: how to list a day's gbrain and gbrain-evals commits from local git and read each commit's tag.
 
 ### 2026-11-18: Entity-dedupe head-to-head preregistration row
 
