@@ -7,6 +7,9 @@ import { generateCompanyLedger } from '../../eval/generators/company-dedupe-gen.
 import { deriveGold, generateLedger, ledgerFingerprint, writtenPages } from '../../eval/generators/person-dedupe-gen.ts';
 import { CHAT_PRICE_OVERRIDES } from '../../eval/runner/budget-ledger.ts';
 import { SELECTIONS, checkFinderCoverage, parseFinderOutput, runPersonDedupe, scoreGroups, type Rate } from '../../eval/runner/person-dedupe.ts';
+import { blockPairs, pairId } from '../../eval/runner/entity-h2h/blocker.ts';
+import { matcherPrompt } from '../../eval/runner/entity-h2h/matcher.ts';
+import { buildWorld } from '../../eval/runner/entity-h2h/world.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
 const DEV = join(ROOT, 'docs/benchmarks/2026-11-18-entity-dedupe-h2h/dev');
@@ -141,6 +144,34 @@ describe('entity-dedupe h2h development evidence: gbrain finder', () => {
     const [before, after] = [confirmList('1e6e7ed3'), confirmList('ad179784')];
     expect(after.vetoed).toBe(0);
     expect([after.entries, after.real, after.mustNotLink]).toEqual([before.entries - before.vetoed, before.real, before.mustNotLink - before.vetoed]);
+    expect(PREREG).toContain(`At ad179784 the ${before.vetoed} vetoed groups move to the conflict class, leaving ${after.entries} entries: ${after.real} real duplicates and ${after.mustNotLink} must-not-link pairs, none vetoed.`);
+  });
+});
+
+describe('entity-dedupe h2h amendment 1: counted world, blocker and matcher prompt', () => {
+  const w = buildWorld(DEV_SEED, 20);
+  const n = (x: number) => x.toLocaleString('en-US');
+  const split = (label: string, person: boolean) => w.pairs.filter(p => w.people_gold.has(p.a) === person && p.label === label).length;
+
+  test('the counted world counts recount from the generator at the current version', () => {
+    const founders = w.people.pages.length - generateLedger(DEV_SEED, 20).pages.length;
+    expect(PREREG).toContain(`${n(w.pages.length)} pages, of them ${n(w.people.pages.length)} person pages (${founders} of them founder pages written beside their companies) and ${w.companies.pages.length} company pages; ${n(w.pairs.length)} designed pairs: people ${split('different', true)} must-not-link and ${split('same', true)} must-link, companies ${split('different', false)} must-not-link and ${split('same', false)} must-link.`);
+  });
+
+  test('the blocker figures recount at the development seed', () => {
+    const b = blockPairs(w.pages.map(p => p.written));
+    const cands = new Set(b.pairs.map(([x, y]) => pairId(x, y)));
+    const missed = w.pairs.filter(p => !cands.has(pairId(p.a, p.b)));
+    const fam = (label: string, family: string) => missed.filter(p => p.label === label && p.family === family).length;
+    expect(b.crowded).toHaveLength(1);
+    const [crowded] = b.crowded;
+    expect(PREREG).toContain(`it gives ${n(b.pairs.length)} candidate pairs, drops one key (the surname "${crowded.key.split(':').at(-1)}", on ${crowded.pages} pages), and leaves ${missed.length} designed pairs unreached: ${missed.filter(p => p.label === 'different').length} must-not-link (${fam('different', 'co-diff-acquired')} acquired-company pairs, the ${fam('different', 'co-diff-founder-linkedin')} founder-versus-firm pairs and ${fam('different', 'diff-initial-lookalike')} initial-lookalike pair) and ${missed.filter(p => p.label === 'same').length} must-link (${fam('same', 'co-same-abbreviation')} abbreviations, ${fam('same', 'co-same-rebrand')} rebrands).`);
+  });
+
+  test('the frozen matcher prompt is the file the harness reads', () => {
+    const { template, sha256 } = matcherPrompt();
+    expect(PREREG).toContain(`(${Buffer.byteLength(template)} bytes, SHA-256 \`${sha256}\`)`);
+    for (const line of template.trimEnd().split('\n').filter(Boolean)) expect(PREREG).toContain(`  ${line}`);
   });
 });
 
