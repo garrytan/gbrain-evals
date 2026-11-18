@@ -6,7 +6,8 @@
 #
 # State is ~/work/<cell>/ (pushed from and pulled back to the launching machine). This attempt's metering proxy is the
 # one writer of its own lease ledger, attempt-<n>/lease.sqlite, and logs every request to attempt-<n>/usage.ndjson;
-# the runner writes cell/. The world is written fresh from ENTITY_H2H_SEED into ~/world, outside the state folder.
+# the runner writes cell/. The world is written fresh from ENTITY_H2H_SEED into ~/world, outside the state folder;
+# ENTITY_H2H_WORLD=smoke (run.sh sets it) writes the 2026-11-17 smoke's world there instead, for re-smokes.
 # The stack and the proxy are stopped before exit, whatever the runner's status, so the final pull reads a ledger
 # nobody is writing. Exit status: the runner's (0 done, 2 refusal, 3 error, 4 paused, 5 failed (infrastructure)).
 set -uo pipefail
@@ -17,7 +18,8 @@ run_id=entity-h2h-$cell-a$attempt
 [ ! -e "$A" ] || { echo "vm-run: $A exists; every attempt gets a fresh lease ledger" >&2; exit 2; }
 mkdir -p "$S"
 rm -rf "$W"
-bun eval/runner/entity-h2h/run.ts world --seed "$ENTITY_H2H_SEED" --output "$W" >/dev/null || exit 3
+case ${ENTITY_H2H_WORLD:-full} in full) world_args=() ;; smoke) world_args=(--smoke) ;; *) echo "vm-run: ENTITY_H2H_WORLD is full or smoke" >&2; exit 2 ;; esac
+bun eval/runner/entity-h2h/run.ts world --seed "$ENTITY_H2H_SEED" ${world_args[@]+"${world_args[@]}"} --output "$W" >/dev/null || exit 3
 bash eval/systems/bootstrap.sh proxy --lease-id "$run_id" --lease-usd "$lease" --out "$A" >/dev/null || exit 3
 stop_all() {
   bash eval/systems/bootstrap.sh down --system "$system" --config entity-h2h || true

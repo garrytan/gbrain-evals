@@ -58,6 +58,23 @@ describe('world', () => {
     expect(ingestOrder(buildWorld(8, 1)).map(p => p.key)).not.toEqual(a);
   });
 
+  // Value: protects=the re-smoke runs on the 2026-11-17 smoke's own world; fails_when=--smoke builds another ledger, page set or order, or a manifest drops its smoke flag and still loads
+  test('the smoke world is the 2026-11-17 smoke world: version-1 people ledger 7db1e1f4, instance 0 of each family, ledger order', () => {
+    const dir = join(tmp, 'smoke');
+    const w = writeH2hWorld(dir, DEV_SEED, 2, true);
+    expect([w.smoke, w.pages.length, w.companies.pages.length, w.people.generator_version]).toEqual([true, 69, 0, 1]);
+    expect(w.fingerprints.people).toBe('7db1e1f4062f62c389a8fbee734fe3e05281392e78dd0673de018e536ff05ccb');
+    expect(w.people.pages.every(p => p.instance === 0)).toBe(true);
+    expect(w.pairs.every(p => w.gold.has(p.a) && w.gold.has(p.b))).toBe(true);
+    const loaded = loadWorld(dir);
+    expect(ingestOrder(loaded).map(p => p.key)).toEqual(loaded.pages.map(p => p.key));
+    expect(buildWorld(DEV_SEED, 2).fingerprints.people).not.toBe(w.fingerprints.people);
+    const m = JSON.parse(readFileSync(join(dir, 'world.json'), 'utf8'));
+    delete m.smoke;
+    writeFileSync(join(dir, 'world.json'), JSON.stringify(m));
+    expect(() => loadWorld(dir)).toThrow();
+  });
+
   test('labels come only from the held-out seed', () => {
     expect(() => heldOutLabels(small)).toThrow(/only from held-out seed 20261118/);
     const h = heldOutLabels(buildWorld(HELD_OUT_SEED, 1));
