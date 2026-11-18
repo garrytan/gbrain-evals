@@ -103,6 +103,10 @@ else
   attempt=$(( $(bun -e 'console.log(JSON.parse(await Bun.file(process.argv[1]).text()).attempts.length)' "$STATE/cell/cell.json") + 1 ))
   (cd "$REPO" && bun eval/runner/entity-h2h/run.ts reconcile --output "$STATE/cell") || { echo "run.sh: the reconcile failed; no $mode launches until it passes" >&2; exit 2; }
 fi
+if [ -e "$STATE/attempt-$attempt" ]; then
+  echo "run.sh: $STATE/attempt-$attempt exists but the cell lists $((attempt - 1)) attempts: an earlier attempt stopped before the runner recorded it, so its lease ledger is not counted in the cell's spend. Check that its ledger-status.json shows nothing committed, move the folder aside, then retry; no VM was started" >&2
+  exit 2
+fi
 for k in ENTITY_H2H_SEED OPENAI_API_KEY; do
   [ -n "${!k:-}" ] || { echo "run.sh: $k must be set" >&2; exit 2; }
 done

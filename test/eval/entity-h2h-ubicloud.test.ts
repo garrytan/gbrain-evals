@@ -93,6 +93,15 @@ describe('entity-h2h ubicloud run.sh, with a fake runner', () => {
     expect(f.launches()).toHaveLength(1);
   });
 
+  // Value: protects=no paid VM boots for an attempt vm-run.sh would refuse; fails_when=run.sh launches while an unrecorded attempt-<n> folder exists
+  test('an attempt folder the cell never recorded refuses the launch before any VM starts', () => {
+    const f = fakeRunner('orphan');
+    mkdirSync(join(f.cells, 'o1', 'attempt-1'), { recursive: true });
+    const r = f.launch(['launch', 'o1', 'ext-memory-bank', 'default', '0.2']);
+    expect([r.status, r.stderr]).toEqual([2, expect.stringContaining('attempt-1 exists but the cell lists 0 attempts')]);
+    expect(f.launches()).toEqual([]);
+  });
+
   test('the VM scripts parse', () => {
     for (const s of ['run.sh', 'vm-run.sh', 'setup.sh']) expect(spawnSync('bash', ['-n', join(REPO, 'eval/runner/entity-h2h/ubicloud', s)]).status).toBe(0);
   });
