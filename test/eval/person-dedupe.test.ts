@@ -70,6 +70,13 @@ describe('shared exclusive ids in the generated world', () => {
     expect([...a].filter(k => b.has(k))).toEqual([]);
   });
 
+  test('a declared id is an exclusive key unless it is a placeholder, all zeros or over 320 characters', () => {
+    const declared = (external_id: string) => pageKeys({ ...page('work', 'x', 'X Y'), external_id }).filter(k => k.startsWith('declared_id:'));
+    expect(declared(' CRM-12 ')).toEqual(['declared_id:crm-12']);
+    expect(declared('x'.repeat(320))).toEqual([`declared_id:${'x'.repeat(320)}`]);
+    for (const bad of ['', 'n/a', 'Unknown', '000', 'x'.repeat(321)]) expect(declared(bad)).toEqual([]);
+  });
+
   test('the rendered collisions and controls share the named id, with no out-of-instance holder', () => {
     const { people, companies, pages } = world(PERSON_DEDUPE_DEFAULT_SEED);
     const keys = new Map(pages.map(p => [p.key, pageKeys(p)]));
