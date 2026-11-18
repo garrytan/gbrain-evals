@@ -882,10 +882,9 @@ on that month's `stable` tag. This entry replaces the same-day build pair and th
 
 Written before any batch 5 search. The box that holds the brain moved from gbrain v0.60.728.0 to v0.60.737.0
 (`291b7996a`) for gbrain #9637, a security fix, and batch 5 runs at the build the box keeps, so the session's build
-matches the brain's. As read back on the box by its operator and relayed to us (we haven't checked the box directly),
-v0.60.737.0 has been live there since 2026-11-18 03:00:29Z, its first hour of watching ended clean at 04:12:26Z, and
-the brain's schema is 319. Tag v0.60.737.0 peels to `291b7996a4e2881acc921b1085d818bb9640f5d0`, and no later release is
-tagged. Batch 5's counted run hasn't started. This entry changes only the build of
+matches the brain's. The box's operator read back on 2026-11-18 that the upgrade is live and the brain's schema is
+319; we haven't checked the box directly. Tag v0.60.737.0 peels to `291b7996a4e2881acc921b1085d818bb9640f5d0`, and no
+later release is tagged. Batch 5's counted run hasn't started. This entry changes only the build of
 [Batch 5 runs at v0.60.733.0 only](#2026-11-16-batch-5-runs-at-v0607330-only); the rest of that entry stands.
 
 - **What runs.** Batch 5 runs once, at gbrain v0.60.737.0 (`291b7996a4e2881acc921b1085d818bb9640f5d0`), with every
@@ -946,12 +945,30 @@ tagged. Batch 5's counted run hasn't started. This entry changes only the build 
   which upkeep may run, keeps more wishes and preferences from v0.60.737.0 (gbrain #9656); what it keeps are saved
   facts. From gbrain #9563, a command that makes a brain shared (adding or enabling a member, setting an owner or an
   audience) keeps the archive pages written while it was personal to the owner, as an archive run on a shared brain
-  already did, so no such command runs during the session. The same read-back, at 04:15Z on 2026-11-18, found the
-  brain personal by its members (one enabled member, who is the owner) with `brain.audience` unset, and no sharing
-  command in the box's supervisor audit files changed since 2026-11-16 20:21Z or in its shell histories. The
-  supervisor audit is the only command record the box keeps, so this isn't a full command log. With `brain.audience`
-  unset, gbrain also counts a brain as shared when three or more non-automation MCP clients were active in the past 30
-  days (`classifyBrainAudience`); the read-back didn't cover that count.
+  already did, so no such command runs during the session. The box's operator read back on 2026-11-18, before the
+  session, that the brain is personal and that no command making it shared has run since the freeze (2026-11-16
+  20:21Z); we haven't checked the box directly. gbrain can also count a brain as shared when three or more
+  non-automation MCP clients were active in the past 30 days (`classifyBrainAudience`), and an archive run on such a
+  brain keeps the personal-era pages to the owner in the same way. The read-back didn't cover that count, so the
+  session checks the audience itself, before the first search and after the last (next item).
+- **The audience check.** Before the first search, the session reads the brain's audience with the box's gbrain
+  v0.60.737.0, using three commands that only read:
+  - `gbrain doctor --only memory_writeback --json`: the `memory_writeback` check's `details.audience` (`personal`,
+    `shared` or `unknown`), gbrain's audience verdict, the client count included;
+  - `gbrain transcripts archive status --json`: `rescope`, present with a `code` (such as `archive_rescope_pending`)
+    when keeping the pages archived while the brain was personal to the owner is due and not done, and absent
+    otherwise; and `source_id`;
+  - `gbrain config get transcripts.archive.audience.<source_id>`: the audience the archive recorded at its last run.
+
+  The session records only two things: personal or shared, and whether a re-scope is pending. The brain is personal
+  when `details.audience` is `personal` and the archive's recorded audience isn't `shared`; anything else, `unknown`
+  included, counts as shared. A re-scope is pending when `rescope` is present. If the brain is shared or a re-scope is
+  pending, the session stops before any search and reports back to GBEV-3. After the last search it runs the same
+  three reads; if either recorded value changed, the change is reported with the scorecard and noted in the results,
+  and the result goes to GBEV-3 before anything is published. At `291b7996a`, keyless, on a test brain, the three
+  reads changed no row in any of its 186 tables and made no provider call. With three non-automation clients logged,
+  `details.audience` read `shared` and `rescope` appeared (`archive_rescope_owner_unset`), while the archive's
+  recorded audience still read `personal`.
 - **gbrain #9637.** No batch 1 to 5 file in this repository records link-context or core-memory text from the box: the
   freezes and scorecards carry no free text, and the plans and notes give aggregates only. Nothing published changes.
 - **The run kit** names `291b7996a4e2881acc921b1085d818bb9640f5d0` in batch 5's command.

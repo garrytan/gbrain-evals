@@ -138,6 +138,22 @@ All commands run from the repository root.
      --gbrain <gbrain checkout>@291b7996a4e2881acc921b1085d818bb9640f5d0 --out <b5-newest>
    ```
 
+   Around batch 5's run, read the brain's audience with the box's own gbrain, as the
+   [2026-11-18 build entry](PREREGISTRATION.md#2026-11-18-batch-5-runs-at-v0607370) sets out: once before the command
+   above, whose probe query is the first search, and once after it ends. These three commands only read:
+
+   ```bash
+   gbrain doctor --only memory_writeback --json   # details.audience of the memory_writeback check
+   gbrain transcripts archive status --json       # rescope (absent when none is pending) and source_id
+   gbrain config get transcripts.archive.audience.<source_id>
+   ```
+
+   Keep their output on the box and record only two things each time: `personal` when `details.audience` is
+   `personal` and the last command doesn't print `shared`, otherwise `shared`; and whether `rescope` is present (a
+   re-scope is pending). If the first reading is `shared` or a re-scope is pending, don't start the run, and send the
+   two values to GBEV-3. Send the second reading with the scorecard and say whether either value changed; nothing is
+   published until GBEV-3 has it.
+
    Every `--fixture` and real-brain run from this runner also starts the `search_op_keyless` arm, before the other
    arms open the brain: `run.ts keyless-arm`, a second process with every provider key blank, no HTTP allowed, the same
    gbrain, brain, barrier and questions, and gbrain's own `search` operation called with the question alone. It stops
