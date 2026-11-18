@@ -398,6 +398,8 @@ export interface UsageLine {
   at: string; key: string; provider: string; route: string; model: string | null;
   outcome: 'forwarded' | 'refused' | 'failed';
   reason?: string; status?: number; reserved_usd?: number; actual_usd?: number; input_tokens?: number; output_tokens?: number; charged_reservation?: boolean; streamed?: boolean;
+  /** Cache reads and writes inside input_tokens, logged only when the response reports some (usageCost prices them). */
+  cache_read_tokens?: number; cache_write_tokens?: number;
   /** Stable per-request id (`<run>-<n>`), the slot, the brain and phase bound when it arrived, and its bucket. */
   request_id?: string; slot?: string; brain?: string | null; phase?: Phase | null; bucket?: Bucket;
   route_class?: string; output_cap?: number; admission_wait_ms?: number; retry_after_ms?: number; transport_retries?: number;
@@ -411,6 +413,16 @@ export const HARNESS_CLASSES = new Set(['reader', 'judge', 'agent']);
 
 const json = (status: number, kind: string, message: string) =>
   new Response(JSON.stringify({ error: { kind, type: kind, message: `metering proxy: ${message}` } }), { status, headers: { 'content-type': 'application/json' } });
+
+/** Cache reads and writes a response reported (OpenAI input details or Anthropic's fields), for the usage log; usageCost prices them. */
+export function cacheSplit(body: unknown): { cache_read_tokens?: number; cache_write_tokens?: number } {
+  const u = (body as { usage?: Record<string, unknown> } | null)?.usage;
+  if (!u || typeof u !== 'object') return {};
+  const d = (u.input_tokens_details ?? u.prompt_tokens_details ?? {}) as Record<string, unknown>;
+  const n = (x: unknown) => (typeof x === 'number' && Number.isFinite(x) ? x : 0);
+  const read = n(u.cache_read_input_tokens) + n(d.cached_tokens), write = n(u.cache_creation_input_tokens) + n(d.cache_write_tokens);
+  return { ...(read ? { cache_read_tokens: read } : {}), ...(write ? { cache_write_tokens: write } : {}) };
+}
 
 /** The output-token field a request uses, by provider and route. */
 function outputField(provider: ProviderName, route: string): string | null {
@@ -698,8 +710,10 @@ export class MeteringProxy {
     if (outBody !== undefined) headers.set('content-type', 'application/json');
     const waitMs = admitted?.waited_ms;
     let retries = 0;
+    let cached: ReturnType<typeof cacheSplit> = {};
     /** Price usage the provider reported; usage the ledger cannot price is charged at the reservation, stops this proxy and closes its lease. */
     const priced = (usage: unknown): { cost: ReturnType<typeof usageCost>; unpriced: string | null } => {
+      cached = cacheSplit(usage);
       try { return { cost: bounded && usage ? usageCost(bounded, usage) : null, unpriced: null }; }
       catch (e) { closeRun(p.lease.ledgerPath, p.lease.runId); return { cost: null, unpriced: this.unpriced = (e as Error).message }; }
     };
@@ -709,7 +723,7 @@ export class MeteringProxy {
       const usd = cost ? cost.usd : reserved;
       this.charge(key, prov, bounded?.model ?? null, usd, !!bounded && !cost, tag);
       this.log({ at, key, provider: prov, route, model: bounded?.model ?? model, outcome: 'forwarded', ...(unpriced ? { reason: unpriced } : {}), status, reserved_usd: reserved, actual_usd: usd,
-        input_tokens: cost?.input_tokens, output_tokens: cost?.output_tokens, charged_reservation: !!bounded && !cost, streamed: isStream, ...tagged,
+        input_tokens: cost?.input_tokens, output_tokens: cost?.output_tokens, ...(cost ? cached : {}), charged_reservation: !!bounded && !cost, streamed: isStream, ...tagged,
         ...(waitMs ? { admission_wait_ms: waitMs } : {}), ...(retryAfter !== null ? { retry_after_ms: retryAfter } : {}), ...(retries ? { transport_retries: retries } : {}) });
     };
     const deadline = AbortSignal.timeout(UPSTREAM_DEADLINE_MS);

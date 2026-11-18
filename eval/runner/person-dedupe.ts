@@ -57,6 +57,7 @@ import {
   type CompanyLedger,
 } from '../generators/company-dedupe-gen.ts';
 import { gbrainPin } from './gbrain-version.ts';
+import { RunnerRefusal, exitOnRefusal } from './runner-refusal.ts';
 import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, noModelSpend, productIdentity, receiptPath, sourceTreeIdentity, writeReceipt, type Receipt } from './receipt.ts';
 
 export const CATEGORY = 'person-dedupe';
@@ -552,9 +553,10 @@ export function runPersonDedupe(ledger: Ledger, opts: { companies?: CompanyLedge
   return arms;
 }
 
-/** Writes the world's pages. Refuses a directory that already has files, so an old world never mixes into a new one. */
+/** Writes the world's pages. Refuses (WORLD_DIR_USED) a directory that already has files, so an old world never mixes into a new one. */
 export function writeWorld(ledger: Ledger, dir: string, founders: readonly LedgerPage[] = []): void {
-  if (existsSync(dir) && readdirSync(dir).length > 0) throw new Error(`person-dedupe: --write-world ${dir} is not empty; write each world into a new directory`);
+  const used = existsSync(dir) ? readdirSync(dir).length : 0;
+  if (used > 0) throw new RunnerRefusal('WORLD_DIR_USED', `person-dedupe: --write-world ${dir} is not empty; write each world into a new directory`, { entries_in_folder: used }, 'pass a fresh --write-world directory');
   for (const p of [...ledger.pages, ...founders]) {
     const file = join(dir, p.source, 'people', `${p.slug}.md`);
     mkdirSync(dirname(file), { recursive: true });
@@ -568,18 +570,25 @@ export interface ImportSummary { status: string; source_id: string; imported: nu
  * Checks, from the `gbrain import --json` summaries, that the finder's brain holds every page of the
  * world: one successful import per source into a fresh brain, with every file imported and none failed.
  * gbrain counts a page that is still publishing as unchanged, so an unchanged page fails the check too.
- * Throws otherwise, because a finder that never saw a page can't link it and would score as safe.
+ * Refuses otherwise (IMPORT_INCOMPLETE, with the pages expected and imported), because a finder that never saw a page
+ * can't link it and would score as safe.
  */
 export function checkFinderCoverage(imports: readonly unknown[], pages: readonly { source: string }[]): void {
   const want = new Map<string, number>();
   for (const p of pages) want.set(p.source, (want.get(p.source) ?? 0) + 1);
+  const imported = imports.reduce<number>((n, raw) => {
+    const s = raw as ImportSummary | null;
+    return n + (s && typeof s === 'object' && want.has(s.source_id) && Number.isFinite(s.imported) ? s.imported : 0);
+  }, 0);
+  const incomplete = (detail: string) => new RunnerRefusal('IMPORT_INCOMPLETE', detail, { pages_expected: pages.length, pages_imported: imported },
+    'import each source into a fresh brain, rerun until every page is imported, and pass every source\'s gbrain import --json summary');
   const seen = new Set<string>();
   for (const raw of imports) {
     const s = raw as ImportSummary;
-    if (!s || typeof s !== 'object' || typeof s.source_id !== 'string') throw new Error('person-dedupe: an import summary has no source_id');
+    if (!s || typeof s !== 'object' || typeof s.source_id !== 'string') throw incomplete('person-dedupe: an import summary has no source_id');
     const n = want.get(s.source_id);
-    if (n === undefined) throw new Error(`person-dedupe: import summary for source ${s.source_id}, which the world does not have`);
-    if (seen.has(s.source_id)) throw new Error(`person-dedupe: two import summaries for source ${s.source_id}`);
+    if (n === undefined) throw incomplete(`person-dedupe: import summary for source ${s.source_id}, which the world does not have`);
+    if (seen.has(s.source_id)) throw incomplete(`person-dedupe: two import summaries for source ${s.source_id}`);
     seen.add(s.source_id);
     const problems = [
       s.status !== 'success' && `status ${s.status}`,
@@ -589,10 +598,10 @@ export function checkFinderCoverage(imports: readonly unknown[], pages: readonly
       s.total_files !== n && `${s.total_files} files, the world has ${n}`,
       s.imported !== n && `${s.imported} imported (${s.unchanged} unchanged), the world has ${n}; import each source into a fresh brain and rerun until every page is imported`,
     ].filter(Boolean);
-    if (problems.length) throw new Error(`person-dedupe: the finder's brain is missing pages of source ${s.source_id}: ${problems.join('; ')}`);
+    if (problems.length) throw incomplete(`person-dedupe: the finder's brain is missing pages of source ${s.source_id}: ${problems.join('; ')}`);
   }
   const missing = [...want.keys()].filter(src => !seen.has(src));
-  if (missing.length) throw new Error(`person-dedupe: no import summary for source ${missing.join(', ')}; the finder never saw those pages`);
+  if (missing.length) throw incomplete(`person-dedupe: no import summary for source ${missing.join(', ')}; the finder never saw those pages`);
 }
 
 /** Writes the company pages beside the person pages: <dir>/<source>/companies/<slug>.md. */
@@ -707,5 +716,7 @@ async function main(): Promise<void> {
 }
 
 if (import.meta.main) {
-  main().catch(e => { console.error(e); process.exit(3); });
+  main().catch(e => {
+    try { exitOnRefusal(e); } catch { console.error(e); process.exit(3); }
+  });
 }

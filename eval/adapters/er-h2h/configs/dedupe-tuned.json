@@ -1,0 +1,150 @@
+{
+ "name": "tuned",
+ "doc": "https://docs.dedupe.io/en/latest/Variable-definition.html",
+ "based_on": "the default config's patent-example variables, plus Exact variables for the single-valued ids (LinkedIn, GitHub) from dedupe's variable definitions page, a larger labelling budget, and a partition threshold chosen on the held-out world",
+ "tuning": "Variables, labelling budget and threshold were chosen by looking only at the held-out world (seed 20261118); the oracle labels only held-out pairs; the threshold maximises held-out pairwise F1",
+ "variables": [
+  {
+   "type": "String",
+   "field": "name",
+   "kwargs": {
+    "name": "name_string",
+    "has_missing": true
+   }
+  },
+  {
+   "type": "Text",
+   "field": "name",
+   "corpus": true,
+   "kwargs": {
+    "name": "name_text",
+    "has_missing": true
+   }
+  },
+  {
+   "type": "Set",
+   "field": "emails",
+   "corpus": true,
+   "kwargs": {
+    "has_missing": true
+   }
+  },
+  {
+   "type": "Exact",
+   "field": "linkedin",
+   "kwargs": {
+    "has_missing": true
+   }
+  },
+  {
+   "type": "Exact",
+   "field": "github",
+   "kwargs": {
+    "has_missing": true
+   }
+  },
+  {
+   "type": "Exact",
+   "field": "company",
+   "kwargs": {
+    "has_missing": true
+   }
+  },
+  {
+   "type": "String",
+   "field": "city",
+   "kwargs": {
+    "has_missing": true
+   }
+  },
+  {
+   "type": "Interaction",
+   "args": [
+    "name_string",
+    "name_text"
+   ]
+  }
+ ],
+ "lowercase": true,
+ "labelling": {
+  "min_match": null,
+  "max_pairs": 200
+ },
+ "train": {},
+ "threshold": {
+  "tune": "max_pair_f1"
+ },
+ "proposed_note": "none: dedupe's partition() has one threshold and no review band",
+ "companies": {
+  "doc": "https://docs.dedupe.io/en/latest/Variable-definition.html",
+  "based_on": "These company mappings are ours: the tool's documentation has no company example, so each person field is mapped to the company field that plays the same part. This section keeps the people tuned config's approach (the name variables, a Set for the contact key, Exact variables for single-valued ids, the same labelling budget and a held-out threshold) on company fields",
+  "changes_from_doc": [
+   "ours: domains take the place of emails as a Set variable",
+   "ours: linkedin stays an Exact variable; github has no company counterpart and is dropped",
+   "ours: industry and country are Exact variables and city a String, all with has_missing"
+  ],
+  "tuning": "Variables, labelling budget and threshold are chosen on the held-out world (seed 20261118) only; the oracle labels only held-out pairs; the threshold maximises held-out pairwise F1",
+  "variables": [
+   {
+    "type": "String",
+    "field": "name",
+    "kwargs": {
+     "name": "name_string",
+     "has_missing": true
+    }
+   },
+   {
+    "type": "Text",
+    "field": "name",
+    "corpus": true,
+    "kwargs": {
+     "name": "name_text",
+     "has_missing": true
+    }
+   },
+   {
+    "type": "Set",
+    "field": "domains",
+    "corpus": true,
+    "kwargs": {
+     "has_missing": true
+    }
+   },
+   {
+    "type": "Exact",
+    "field": "linkedin",
+    "kwargs": {
+     "has_missing": true
+    }
+   },
+   {
+    "type": "Exact",
+    "field": "industry",
+    "kwargs": {
+     "has_missing": true
+    }
+   },
+   {
+    "type": "String",
+    "field": "city",
+    "kwargs": {
+     "has_missing": true
+    }
+   },
+   {
+    "type": "Exact",
+    "field": "country",
+    "kwargs": {
+     "has_missing": true
+    }
+   },
+   {
+    "type": "Interaction",
+    "args": [
+     "name_string",
+     "name_text"
+    ]
+   }
+  ]
+ }
+}

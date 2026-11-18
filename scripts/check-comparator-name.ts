@@ -44,6 +44,8 @@ export const ALLOWED: Record<string, Needle['id'][]> = {
   'docs/comparison-systems.md': ['product', 'maker'],
   // Frozen Q1 comparison bundles at 008b83fe; capability hash labels published scoreboard rows (GBRA-108, 2026-10-27).
   'docs/comparison-systems/ext-memory-bank/': ['product', 'maker'],
+  // The same system's entity-dedupe head-to-head bundle, which pins and runs its vendor code (2026-11-18 preregistration).
+  'docs/comparison-systems/ext-memory-bank/entity-h2h/': ['product', 'maker'],
   'docs/comparison-systems/ext-temporal-graph/README.md': ['product'],
   'docs/plans/2026-09-28-gbrain-10x/audit/coverage-and-categories.md': ['product', 'maker'],
   'docs/plans/2026-09-28-gbrain-10x/audit/evals-docs-infra.md': ['product'],
