@@ -18,7 +18,8 @@ import { checkFinderCoverage, writeWorld } from '../../eval/runner/person-dedupe
 import { RunnerRefusal } from '../../eval/runner/runner-refusal.ts';
 import { MAX_BLOCK_PAGES, blockPairs, blockingKeys, pairId } from '../../eval/runner/entity-h2h/blocker.ts';
 import { ask, matcherPrompt, pairBrain, pairPrompt, planPairs, verdictOf, type CallEvent } from '../../eval/runner/entity-h2h/matcher.ts';
-import { matcherStop, memoryStop } from '../../eval/runner/entity-h2h/rates.ts';
+import { MEMORY_KINDS, TUNING_SETTINGS, matcherStop, memoryStop } from '../../eval/runner/entity-h2h/rates.ts';
+import { applyRule, distanceOf, tuningOf, type Candidate } from '../../eval/runner/entity-h2h/tuning.ts';
 import { cli, dryRun } from '../../eval/runner/entity-h2h/run.ts';
 import { parseOutput, scoreOutput } from '../../eval/runner/entity-h2h/score.ts';
 import { DEV_SEED, HELD_OUT_SEED, buildWorld, heldOutLabels, ingestOrder, loadWorld, nameMatch, opaque, readoutFromEntities, subjectOf, usageByKey, writeH2hWorld, type EntityNode } from '../../eval/runner/entity-h2h/world.ts';
@@ -273,6 +274,12 @@ describe('spend projection', () => {
     expect(text).toContain(`${n(b.pairs.length)} candidate pairs; ${b.crowded.length} keys on more than ${MAX_BLOCK_PAGES} pages dropped`);
     expect(text).toContain(`not a candidate: ${missed.length} designed pairs (${missed.filter(p => p.label === 'same').length} must-link, ${missed.filter(p => p.label === 'different').length} must-not-link)`);
     expect(d.memory['ext-temporal-graph'].stop_usd).toBe(memoryStop('ext-temporal-graph', w.pages.length).stop_usd);
+    const slice = buildWorld(HELD_OUT_SEED, 5).pages.length;
+    for (const kind of MEMORY_KINDS) {
+      const m = d.memory[kind], knob = tuningOf(kind).knob !== null, runs = knob ? Object.keys(tuningOf(kind).grid).length + 1 : 0;
+      expect([m.tuning_pages, m.tuning_runs]).toEqual([slice, runs]);
+      expect(m.cell_stops_usd).toBeCloseTo((knob ? 2 : 1) * m.stop_usd + runs * memoryStop(kind, slice).stop_usd, 9);
+    }
     expect(d.matcher['anthropic:claude-opus-5-5'].stop_usd).toBe(matcherStop('anthropic:claude-opus-5-5', b.pairs.length).stop_usd);
   });
 });
@@ -281,9 +288,9 @@ describe('memory-system pins (each the newest release at launch, preregistration
   const PINNED = { 'ext-temporal-graph': '0.31.2', 'ext-graph-pipeline': '1.6.8', 'ext-extract-first': '2.2.1', 'ext-memory-bank': '1.2.1' } as const;
   const bundle = (kind: string, file: string) => readFileSync(resolve(import.meta.dir, '../../docs/comparison-systems', kind, 'entity-h2h', file), 'utf8');
 
-  // Value: protects=ext-temporal-graph's ingest reaches gpt-6.2-sol, which rejects reasoning effort none; fails_when=the entity-h2h shim stops setting graphiti's client to reasoning=None, or its record still claims effort none
-  test("ext-temporal-graph's entity-h2h shim sends no reasoning effort, since gpt-6.2-sol rejects graphiti's 'none' (Amendment 3)", () => {
-    expect(bundle('ext-temporal-graph', 'entity_h2h.py')).toMatch(/async def _connect\(self\)[^\n]*\n\s+graphiti = await super\(\)\._connect\(\)\n\s+graphiti\.llm_client\.reasoning = None\n\s+return graphiti/);
+  // Value: protects=ext-temporal-graph's ingest reaches gpt-6.2-sol, which rejects reasoning effort none; fails_when=the entity-h2h shim stops setting the adapter's OpenAI client to reasoning=None, or its record still claims effort none
+  test("ext-temporal-graph's entity-h2h shim sends no reasoning effort, since gpt-6.2-sol rejects the client's default 'none' (Amendment 3)", () => {
+    expect(bundle('ext-temporal-graph', 'entity_h2h.py')).toMatch(/async def _connect\(self\)[^\n]*\n\s+(\w+) = await super\(\)\._connect\(\)\n\s+\1\.llm_client\.reasoning = None\n\s+return \1\n/);
     const rec = JSON.parse(bundle('ext-temporal-graph', 'capability.json'));
     expect(JSON.stringify(rec.provider_routes)).not.toContain('reasoning effort none');
     expect(rec.deviations_from_vendor_code.some((d: string) => d.includes('reasoning to None') && d.includes('Amendment 3'))).toBe(true);
@@ -311,6 +318,47 @@ describe('memory-system pins (each the newest release at launch, preregistration
     const memoryBank = JSON.parse(bundle('ext-memory-bank', 'capability.json')).versions as { image: string };
     expect(memoryBank.image).toMatch(/:1\.2\.1@sha256:[0-9a-f]{64}$/);
     expect(bundle('ext-memory-bank', 'docker-compose.yml')).toContain(`image: ${memoryBank.image}`);
+  });
+
+  // Value: protects=the stack starts in, and reports, the cell's setting; fails_when=a bundle drops the setting variable, a shim stops reporting it, or a server-env knob reaches the server and the shim from different variables
+  test('each bundle records its knob and grid (or why it has none) and passes the cell\'s setting to a shim that reports it under GET /health', () => {
+    for (const kind of MEMORY_KINDS) {
+      const t = tuningOf(kind), compose = bundle(kind, 'docker-compose.yml');
+      expect(Object.keys(t.grid).length).toBeLessThanOrEqual(TUNING_SETTINGS);
+      expect(t.docs.length).toBeGreaterThan(0);
+      if (t.knob) expect(Object.keys(t.grid).length).toBeGreaterThan(0); else expect(t.no_knob).toStartWith('No documented dedupe setting (preregistration Amendment 2)');
+      expect(compose).toContain('ENTITY_H2H_SETTING: ${ENTITY_H2H_SETTING:-default}');
+      expect(bundle(kind, 'entity_h2h.py')).toMatch(/def health\(self\)[^\n]*\n[\s\S]*?"entity_h2h": \{"setting"/);
+      if (t.applied_by === 'server-env') for (const [k, v] of Object.entries(t.default)) expect(compose.split(`\${${k}:-${v}}`).length - 1).toBe(2);
+    }
+  });
+});
+
+describe('the tuned-setting rule (preregistration Amendment 2)', () => {
+  const cand = (setting: string, distance: number, fm: [number, number], recall: [number, number]): Candidate =>
+    ({ setting, settings: {}, distance, false_merge: { k: fm[0], n: fm[1] }, recall: { k: recall[0], n: recall[1] }, eligible: false });
+
+  // Value: protects=the tuned setting is the lowest false-merge rate among settings within 5 recall points of default; fails_when=the recall bound is dropped, compared inexactly at its edge, or false merges are compared the wrong way
+  test('picks the lowest false-merge rate within the recall bound; a lower rate outside it loses; the bound is exact at its edge', () => {
+    const base = cand('default', 0, [10, 100], [50, 100]);
+    expect(applyRule([base, cand('a', 0.1, [5, 100], [46, 100]), cand('b', 0.2, [2, 100], [44, 100])])).toBe('a');
+    const edge = [base, cand('a', 0.1, [5, 100], [9, 20]), cand('b', 0.2, [4, 100], [449, 1000])];
+    expect(applyRule(edge)).toBe('a');
+    expect(edge.map(c => c.eligible)).toEqual([true, true, false]);
+    expect(applyRule([base, cand('a', 0.1, [11, 100], [60, 100])])).toBe('default');
+  });
+
+  // Value: protects=Amendment 2's tie-breaks; fails_when=a false-merge tie does not go to the setting nearest default, an equal distance does not go to higher recall, or a full tie does not go to grid order
+  test('ties go to the nearest default (default at 0), then higher recall, then grid order; 0.70 and 1.00 are equally near 0.85', () => {
+    const base = cand('default', 0, [10, 100], [50, 100]);
+    expect(applyRule([base, cand('far', 0.3, [5, 100], [50, 100]), cand('near', 0.1, [5, 100], [50, 100])])).toBe('near');
+    expect(applyRule([base, cand('a', 0.1, [10, 100], [60, 100])])).toBe('default');
+    const g = tuningOf('ext-graph-pipeline'), low = g.grid['similarity-0.70'].settings, high = g.grid['similarity-1.00'].settings;
+    const d = distanceOf(g, low);
+    expect([d, distanceOf(g, high)]).toEqual([0.15, 0.15]);
+    expect(applyRule([base, cand('similarity-0.70', d, [5, 100], [60, 100]), cand('similarity-1.00', d, [5, 100], [61, 100])])).toBe('similarity-1.00');
+    expect(applyRule([base, cand('similarity-0.70', d, [5, 100], [60, 100]), cand('similarity-1.00', d, [5, 100], [60, 100])])).toBe('similarity-0.70');
+    expect(() => applyRule([cand('a', 0.1, [5, 100], [60, 100])])).toThrow(/default as its first candidate/);
   });
 });
 

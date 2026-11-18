@@ -11,6 +11,12 @@
  *   dry-run   --seed N [--per-family 20]                     pages, pairs, the projected cost and stop of every system and
  *                                                            each memory system's pinned release (its entity-h2h bundle)
  *   run       --system S --config C --world DIR --output DIR [system options]
+ *   choose    --system S --held-out DIR --out FILE CELL...    apply preregistration Amendment 2's rule to a memory
+ *                                                            system's slice runs (default and every grid setting) and
+ *                                                            record the tuned setting, or default (tuning.ts)
+ *   stack-env --system S --config C [--choice FILE] | --output DIR
+ *                                                            the environment that starts a memory system's stack in a
+ *                                                            cell's setting (KEY=VALUE lines; vm-run.sh sources them)
  *   reconcile --output DIR [--proxy URL]                     close and check every attempt's ledger against the proxy log
  *   restart   --output DIR <paid options>                    memory system after a crash: page one, fresh namespace
  *   continue  --output DIR --stop-usd X <paid options>       memory system after a pause: page one, fresh namespace
@@ -23,13 +29,16 @@
  *   splink, dedupe, zingg  --held-out DIR (a world at seed 20261118) [--label-budget 100] [--labeller-seed 1-5, dedupe
  *                          only] [--zingg-home DIR --spark-home DIR]: eval/adapters/er-h2h, people and companies apart
  *   ext-temporal-graph, ext-graph-pipeline, ext-extract-first, ext-memory-bank
- *                          <paid options> --shim URL [--drain-each] [--label L]
+ *                          --config default | tuning:<setting|default> | tuned --choice FILE  <paid options> --shim URL
+ *                          [--drain-each] [--label L]: a tuning cell runs on the held-out seed at 5 per family only, a
+ *                          tuned cell never on it and never when it is the default cell, and the shim must report the
+ *                          cell's exact setting (tuning.ts)
  *   llm-matcher            --model provider:model <paid options> [--concurrency 4]
  * Paid options: --proxy URL --budget-ledger FILE --budget-run-id ID --usage-log FILE, naming the metering proxy's lease
  * (eval/runner/metering-proxy.ts --run-id ID --lease-usd N); the lease must hold no more than the cell's stop.
  *
- * Exit status: 0 done, 2 a refusal (WORLD_DIR_USED, IMPORT_INCOMPLETE or LEDGER_UNRECONCILED, printed with its counts
- * and a fix line), 3 an error, 4 paused (a ledger stop or the 345-page checkpoint), 5 failed (infrastructure): a
+ * Exit status: 0 done, 2 a refusal (WORLD_DIR_USED, IMPORT_INCOMPLETE, LEDGER_UNRECONCILED, STACK_CONFIG_MISMATCH,
+ * TUNING_SEED, TUNING_CHOICE or TUNED_IS_DEFAULT, printed with its counts and a fix line), 3 an error, 4 paused (a ledger stop or the 345-page checkpoint), 5 failed (infrastructure): a
  * second failure of a cell, which only a dated amendment to the preregistration can reopen.
  */
 import { spawnSync } from 'node:child_process';
@@ -48,6 +57,8 @@ import {
   matcherStop, memoryStop, type MatcherModel, type MemoryKind,
 } from './rates.ts';
 import { parseOutput, scoreOutput, scoreTable, type NeutralOutput, type OutputScore } from './score.ts';
+import { HttpMemorySystem } from '../systems/http.ts';
+import { checkStack, checkWorldFor, chooseSetting, configLabel, resolveConfig, stackEnv, tuningOf } from './tuning.ts';
 import { DEV_SEED, HELD_OUT_SEED, SMOKE_PER_FAMILY, buildWorld, heldOutLabels, ingestOrder, loadWorld, manifestOf, opaque, readUsage, writeH2hWorld, type H2hWorld } from './world.ts';
 
 export const CLASSIC = ['splink', 'dedupe', 'zingg'] as const;
@@ -76,7 +87,7 @@ const count = (n: number) => n.toLocaleString('en-US');
 
 // ─── Dry run ───────────────────────────────────────────────────────────────
 
-export interface DryRun { seed: number; per_family: number; lines: string[]; memory: Record<string, { version: string; lock_sha256: string | null; pages: number; projected_usd: number; stop_usd: number; tuning_pages: number; tuning_stop_usd: number; cell_stops_usd: number }>; matcher: Record<string, { pairs: number; stop_usd: number }> }
+export interface DryRun { seed: number; per_family: number; lines: string[]; memory: Record<string, { version: string; lock_sha256: string | null; pages: number; projected_usd: number; stop_usd: number; tuning_pages: number; tuning_runs: number; tuning_stop_usd: number; cell_stops_usd: number }>; matcher: Record<string, { pairs: number; stop_usd: number }> }
 
 /**
  * Each system's pages, pairs and cost line from the measured rates, for a world at a seed, with each memory system's
@@ -97,7 +108,7 @@ export function dryRun(seed: number, perFamily: number): DryRun {
     `designed pairs: people ${split('different', true)} must-not-link and ${split('same', true)} must-link; companies ${split('different', false)} must-not-link and ${split('same', false)} must-link (${w.pairs.length} in all)`,
     `matcher blocker: ${count(blocking.pairs.length)} candidate pairs; ${blocking.crowded.length} keys on more than ${blocking.max_block_pages} pages dropped${blocking.crowded.length ? ` (${blocking.crowded.slice(0, 5).map(c => `${c.key} ${c.pages}`).join(', ')})` : ''}; not a candidate: ${missed.length} designed pairs (${missed.filter(p => p.label === 'same').length} must-link, ${missed.filter(p => p.label === 'different').length} must-not-link)`,
     '',
-    `Memory systems (one page per session; stop = ${STOP_MULTIPLIER} x projected; pause check at ${CHECKPOINT_PAGES} pages; tuning = ${TUNING_SETTINGS} settings on the held-out seed at ${TUNING_PER_FAMILY} per family, ${count(tuning)} pages each):`,
+    `Memory systems (one page per session; stop = ${STOP_MULTIPLIER} x projected; pause check at ${CHECKPOINT_PAGES} pages; tuning, for a system with a documented dedupe setting = default plus each grid setting (at most ${TUNING_SETTINGS}) on the held-out seed at ${TUNING_PER_FAMILY} per family, ${count(tuning)} pages each, then one tuned run; preregistration Amendment 2):`,
   ];
   const memory: DryRun['memory'] = {};
   for (const kind of MEMORY_KINDS) {
@@ -105,9 +116,10 @@ export function dryRun(seed: number, perFamily: number): DryRun {
     const version = /\b\d+\.\d+\.\d+\b/.exec(pin.package)?.[0];
     if (!version) throw new Error(`entity-h2h: no release version in ${kind}'s entity-h2h capability record (versions.package)`);
     const run = memoryStop(kind, w.pages.length), t = memoryStop(kind, tuning);
-    const cell = 2 * run.stop_usd + TUNING_SETTINGS * t.stop_usd;
-    memory[kind] = { version, lock_sha256: pin.lock_sha256, pages: w.pages.length, projected_usd: run.projected_usd, stop_usd: run.stop_usd, tuning_pages: tuning, tuning_stop_usd: t.stop_usd, cell_stops_usd: cell };
-    lines.push(`  ${kind.padEnd(20)} ${version.padEnd(7)} ${`(lock ${pin.lock_sha256?.slice(0, 12) ?? 'none'})`.padEnd(19)} ${MEMORY_MODEL}  $${MEMORY_USD_PER_PAGE[kind]}/page x ${count(w.pages.length)} pages = ${usd(run.projected_usd)} projected, stop ${usd(run.stop_usd)} per run (default and tuned); tuning ${TUNING_SETTINGS} x stop ${usd(t.stop_usd)}; sum of stops ${usd(cell)}`);
+    const knob = tuningOf(kind).knob !== null, slices = knob ? Object.keys(tuningOf(kind).grid).length + 1 : 0;
+    const cell = (knob ? 2 : 1) * run.stop_usd + slices * t.stop_usd;
+    memory[kind] = { version, lock_sha256: pin.lock_sha256, pages: w.pages.length, projected_usd: run.projected_usd, stop_usd: run.stop_usd, tuning_pages: tuning, tuning_runs: slices, tuning_stop_usd: t.stop_usd, cell_stops_usd: cell };
+    lines.push(`  ${kind.padEnd(20)} ${version.padEnd(7)} ${`(lock ${pin.lock_sha256?.slice(0, 12) ?? 'none'})`.padEnd(19)} ${MEMORY_MODEL}  $${MEMORY_USD_PER_PAGE[kind]}/page x ${count(w.pages.length)} pages = ${usd(run.projected_usd)} projected, ${knob ? `stop ${usd(run.stop_usd)} per run (default and tuned); tuning ${slices} slice runs x stop ${usd(t.stop_usd)}` : `stop ${usd(run.stop_usd)} (default only: no documented dedupe setting, so the tuned cell is the default cell)`}; sum of stops ${usd(cell)}`);
   }
   lines.push('', 'Language-model matcher (one call per candidate pair; stop = projected):');
   const matcher: DryRun['matcher'] = {};
@@ -298,11 +310,12 @@ export async function memoryCell(mode: 'run' | 'restart' | 'continue', a: Args, 
   let s: CellState, w: H2hWorld, prior = 0, kind: Attempt['kind'];
   if (mode === 'run') {
     const system = a.need('--system') as MemoryKind, worldDir = resolve(a.need('--world'));
-    if (a.need('--config') !== 'default') throw new Error(`entity-h2h: memory systems run --config default only; a tuned or tuning setting is not carried to the stack yet (vm-run.sh starts every stack with --config entity-h2h), so a ${a.need('--config')} cell would score the default behaviour under another label`);
+    const stack = resolveConfig(system, a.need('--config'), a.one('--choice'));
     w = loadWorld(worldDir);
+    checkWorldFor(stack, w);
     freshDir(dir);
     const stop = memoryStop(system, w.pages.length);
-    s = { ...cellRecord(system, a.need('--config'), MEMORY_MODEL, w, worldDir), projected_usd: stop.projected_usd, stop_usd: stop.stop_usd };
+    s = { ...cellRecord(system, configLabel(stack), MEMORY_MODEL, w, worldDir), projected_usd: stop.projected_usd, stop_usd: stop.stop_usd, stack };
     (s as CellState & { label: string }).label = a.one('--label') ?? `entity-h2h-${system}-${s.config}`;
     kind = 'first';
   } else {
@@ -330,6 +343,9 @@ export async function memoryCell(mode: 'run' | 'restart' | 'continue', a: Args, 
   const { paid, proxy } = paidOf(a, dir);
   checkLease(dir, s, paid, prior);
   await checkProxy(proxy, dir, paid);
+  const shim = a.need('--shim');
+  const health = await new HttpMemorySystem(shim, { name: s.system }).health().catch(e => { throw new Error(`entity-h2h: the shim at ${shim} did not answer GET /health (${(e as Error).message}); no attempt was opened`); });
+  checkStack(s.stack ?? resolveConfig(s.system, 'default'), health, shim);
   const label = (s as CellState & { label: string }).label;
   const release = lockCell(dir);
   try {
@@ -338,7 +354,7 @@ export async function memoryCell(mode: 'run' | 'restart' | 'continue', a: Args, 
     log(`${s.system} ${s.config}: attempt ${attempt.n} (${kind}) on ${w.pages.length} pages, namespace ${attempt.ns}, stop ${usd(s.stop_usd)} (${usd(prior)} spent before)`);
     let end: AttemptEnd;
     try {
-      end = await runMemoryAttempt({ dir, state: s, attempt, world: w, order: ingestOrder(w), shim: a.need('--shim'), proxy: new ProxyControl(proxy), label, priorUsd: prior, drainEach: a.has('--drain-each'), log });
+      end = await runMemoryAttempt({ dir, state: s, attempt, world: w, order: ingestOrder(w), shim, proxy: new ProxyControl(proxy), label, priorUsd: prior, drainEach: a.has('--drain-each'), log });
     } catch (e) {
       if (attempt.status === 'running') { attempt.status = 'crashed'; attempt.reason = String((e as Error).message).slice(0, 300); attempt.finished_at = new Date().toISOString(); }
       const failed = s.attempts.filter(x => FAILED.has(x.status)).length >= MAX_ATTEMPTS;
@@ -534,7 +550,27 @@ export async function cli(argv: string[], log: (s: string) => void = s => consol
       case 'resume': return await matcherCell('resume', a, log, fetchImpl);
       case 'reconcile': return await reconcileCell(a, log);
       case 'score': return scoreCells(a, log).code;
-      default: throw new Error('usage: bun eval/runner/entity-h2h/run.ts world|labels|dry-run|run|reconcile|restart|continue|resume|score ... (see the header of this file)');
+      case 'choose': {
+        const system = a.need('--system');
+        const { choice, scores } = chooseSetting(system, resolve(a.need('--held-out')), a.rest.slice(1), resolve(a.need('--out')));
+        log(scoreTable(scores));
+        for (const c of choice.candidates) log(`  ${c.setting.padEnd(18)} false merges ${c.false_merge.k}/${c.false_merge.n}, must-link recall ${c.recall.k}/${c.recall.n}, distance ${c.distance}, ${c.eligible ? 'eligible' : 'outside the recall bound'}`);
+        log(choice.setting === 'default'
+          ? `choice: ${system} keeps default, so its tuned cell is its default cell and nothing more runs (${choice.rule}) -> ${a.need('--out')}`
+          : `choice: ${system} tuned runs ${choice.setting} ${JSON.stringify(choice.settings)} (${choice.rule}) -> ${a.need('--out')}`);
+        return EXIT.ok;
+      }
+      case 'stack-env': {
+        const out = a.one('--output');
+        const cell = out ? readCell(resolve(out)) : null;
+        if (out && !cell) throw new Error(`entity-h2h: ${out} has no cell.json`);
+        const system = cell ? cell.system : a.need('--system');
+        tuningOf(system);
+        const stack = cell ? (cell.stack ?? resolveConfig(system, 'default')) : resolveConfig(system, a.need('--config'), a.one('--choice'));
+        for (const l of stackEnv(system, stack)) log(l);
+        return EXIT.ok;
+      }
+      default: throw new Error('usage: bun eval/runner/entity-h2h/run.ts world|labels|dry-run|run|reconcile|restart|continue|resume|score|choose|stack-env ... (see the header of this file)');
     }
   } catch (e) {
     if (e instanceof RunnerRefusal) { console.error(e.message); return EXIT.refusal; }

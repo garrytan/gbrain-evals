@@ -17,7 +17,7 @@
         "dims": 3072,
         "reranker": null
       },
-      "notes": "The pinned recipe with LLM_MODEL=openai/gpt-6.2-sol for the entity-resolution head-to-head (newest GPT generation the OpenAI API serves on 2026-11-17), on cognee 1.6.8; the embedder stays at the recipe default. /finish runs consolidate_entities_pipeline once per namespace with its defaults (similarity_threshold 0.85, name_match on, top_k 10, allow_cross_type off, protect_node_types none), the memify entity-deduplication step in docs.cognee.ai/guides/memify-entity-deduplication. Structured output: the image sets LITELLM_LOCAL_MODEL_COST_MAP=True, and litellm 1.110.0's bundled model map has no gpt-6.2-sol, so litellm.supports_response_schema is false and cognee's litellm_native adapter takes its JSON fallback for every structured call: response_format json_object with the response model's JSON schema in the system prompt, re-asked with the validation error on a reply that does not validate (native_adapter.py _acreate_json_fallback)."
+      "notes": "The pinned recipe with LLM_MODEL=openai/gpt-6.2-sol for the entity-resolution head-to-head (newest GPT generation the OpenAI API serves on 2026-11-17), on cognee 1.6.8; the embedder stays at the recipe default. /finish runs consolidate_entities_pipeline once per namespace at the cell's setting (default: similarity_threshold 0.85, its documented default; a tuning or tuned cell: one setting of entity_h2h_tuning) with its other parameters at their defaults (name_match on, top_k 10, allow_cross_type off, protect_node_types none), the memify entity-deduplication step in docs.cognee.ai/guides/memify-entity-deduplication. Structured output: the image sets LITELLM_LOCAL_MODEL_COST_MAP=True, and litellm 1.110.0's bundled model map has no gpt-6.2-sol, so litellm.supports_response_schema is false and cognee's litellm_native adapter takes its JSON fallback for every structured call: response_format json_object with the response model's JSON schema in the system prompt, re-asked with the validation error on a reply that does not validate (native_adapter.py _acreate_json_fallback)."
     }
   },
   "time": "in-text",
@@ -82,5 +82,39 @@
     "provenance": "DocumentChunk -contains-> Entity, DocumentChunk -is_part_of-> document (id = the per-source data id); exact",
     "links": {},
     "merge": "consolidate_entities_pipeline collapses each duplicate cluster into one canonical node and deletes the rest; no pointer is kept"
+  },
+  "entity_h2h_tuning": {
+    "knob": "consolidate_entities_pipeline(similarity_threshold=...), the minimum cosine similarity between two entity-name embeddings for the memify entity-deduplication step to merge them (default 0.85; name_match stays on, its default)",
+    "applied_by": "shim",
+    "docs": [
+      "https://github.com/topoteretes/cognee/blob/069f3cc119bdf5628be054bb915992b2fc78cfc5/cognee/memify_pipelines/consolidate_entities.py#L24-L52",
+      "https://docs.cognee.ai/guides/memify-entity-deduplication"
+    ],
+    "default": {
+      "similarity_threshold": 0.85
+    },
+    "grid": {
+      "similarity-0.70": {
+        "settings": {
+          "similarity_threshold": 0.7
+        }
+      },
+      "similarity-0.90": {
+        "settings": {
+          "similarity_threshold": 0.9
+        }
+      },
+      "similarity-0.95": {
+        "settings": {
+          "similarity_threshold": 0.95
+        }
+      },
+      "similarity-1.00": {
+        "settings": {
+          "similarity_threshold": 1.0
+        }
+      }
+    },
+    "notes": "The shim passes the setting to consolidate_entities_pipeline in /finish and reports it under GET /health entity_h2h. The grid brackets the 0.85 default: 0.70 toward the guide's own example (0.6), 0.90 to 1.00 toward fewer merges; 1.00 is the largest value the function accepts ((0, 1]). name_match is not in the grid: identical normalised names embed identically (cosine 1.0), so turning it off would not stop a merge any threshold allows. Only the consolidation step reads the knob; entities the extraction itself gives one node are not affected."
   }
 }

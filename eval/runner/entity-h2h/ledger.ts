@@ -16,6 +16,7 @@ import { existsSync, readFileSync, renameSync, unlinkSync, writeFileSync } from 
 import { isAbsolute, join, relative, resolve } from 'node:path';
 import { BudgetRun, readLedger, type LedgerEntry } from '../budget-ledger.ts';
 import { RunnerRefusal } from '../runner-refusal.ts';
+import type { StackSetting } from './tuning.ts';
 import { readUsage } from './world.ts';
 
 export const CELL_FILE = 'cell.json';
@@ -53,6 +54,8 @@ export interface CellState {
   attempts: Attempt[];
   /** gbrain cells: the identity line of the schema pack that declared the person id field. */
   schema_pack?: string;
+  /** Memory-system cells: the exact setting the stack must run (tuning.ts); its shim reports it back before each attempt. */
+  stack?: StackSetting;
 }
 
 export function readCell(dir: string): CellState | null {

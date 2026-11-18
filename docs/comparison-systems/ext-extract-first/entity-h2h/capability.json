@@ -85,5 +85,17 @@
     "provenance": "source_id metadata of each linked memory (Memory.get_all); exact",
     "links": {},
     "merge": "a mention that matches an existing row is linked to that row; no graph store in mem0ai 2.2.1"
+  },
+  "entity_h2h_tuning": {
+    "knob": null,
+    "applied_by": null,
+    "docs": [
+      "https://github.com/mem0ai/mem0/blob/94c3fe9f238f3dbf29c9ce98643bd71eb13077cd/mem0/memory/main.py#L605-L621",
+      "https://github.com/mem0ai/mem0/blob/94c3fe9f238f3dbf29c9ce98643bd71eb13077cd/mem0/configs/base.py#L29",
+      "https://github.com/mem0ai/mem0/blob/94c3fe9f238f3dbf29c9ce98643bd71eb13077cd/docs/core-concepts/how-it-works.mdx"
+    ],
+    "no_knob": "No documented dedupe setting (preregistration Amendment 2): its tuned cell is its default cell, with no extra run. mem0ai 2.2.1 (tag v2.2.1, commit 94c3fe9f) links an entity mention to an existing entity-store row on an exact normalised-text match or an embedding score of at least 0.95, written as a literal in Memory._upsert_entity and the batch path (main.py lines 621 and 1166). MemoryConfig has no entity setting and the docs describe entity linking as automatic, with no knob.",
+    "default": {},
+    "grid": {}
   }
 }
