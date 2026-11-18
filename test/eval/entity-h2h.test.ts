@@ -257,7 +257,8 @@ describe('memory readout', () => {
 
 describe('spend projection', () => {
   test('stops are 1.5 times a memory system\'s projected cost and the matcher\'s projected cost, rounded up to a cent', () => {
-    expect(memoryStop('ext-temporal-graph', 1886)).toEqual({ projected_usd: 0.038 * 1886, stop_usd: 107.51 });
+    expect(memoryStop('ext-temporal-graph', 2106)).toEqual({ projected_usd: 0.03431286 * 2106, stop_usd: 108.4 });
+    expect([memoryStop('ext-graph-pipeline', 2106).stop_usd, memoryStop('ext-extract-first', 2106).stop_usd, memoryStop('ext-memory-bank', 2106).stop_usd]).toEqual([15.97, 14.22, 7.04]);
     expect(matcherStop('particle:particle-1', 21574).stop_usd).toBe(4.54);
   });
 

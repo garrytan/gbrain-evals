@@ -4,6 +4,12 @@
  * from the last third of the smoke (cost per page grows with the graph, so they are floors); matcher rates are per
  * candidate pair at default reasoning.
  *
+ * The three memory systems re-pinned in Amendment 1 (ext-temporal-graph 0.31.2, ext-graph-pipeline 1.6.8,
+ * ext-memory-bank 1.2.1) use their 2026-11-18 re-smoke's rate instead, as Amendment 1 requires: the mean metered cost
+ * per page over the last third (pages 47 to 69) of the 69-page smoke world, from each run's usage fields
+ * (run-attempt JSON, page sources only), to 7 significant figures. ext-extract-first was not re-pinned and keeps its
+ * 2026-11-17 rate.
+ *
  * Ledger stops: a memory-system run stops at STOP_MULTIPLIER (1.5) times its projected cost (rate times the world's
  * page count); a matcher run stops at its projected cost (rate times candidate pairs). At CHECKPOINT_PAGES (345) every
  * memory-system ingest re-measures its cost per page and pauses before the rest when that rate projects the run past
@@ -11,7 +17,7 @@
  */
 export const MEMORY_KINDS = ['ext-temporal-graph', 'ext-graph-pipeline', 'ext-extract-first', 'ext-memory-bank'] as const;
 export type MemoryKind = typeof MEMORY_KINDS[number];
-export const MEMORY_USD_PER_PAGE: Record<MemoryKind, number> = { 'ext-temporal-graph': 0.038, 'ext-graph-pipeline': 0.009, 'ext-extract-first': 0.0045, 'ext-memory-bank': 0.0022 };
+export const MEMORY_USD_PER_PAGE: Record<MemoryKind, number> = { 'ext-temporal-graph': 0.03431286, 'ext-graph-pipeline': 0.00505538, 'ext-extract-first': 0.0045, 'ext-memory-bank': 0.002226643 };
 /** The language model every memory system runs with (its default provider family's newest model). */
 export const MEMORY_MODEL = 'openai:gpt-6.2-sol';
 
