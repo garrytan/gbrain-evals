@@ -19,8 +19,8 @@
 # proxy usage log on this machine (run.ts reconcile), and the runner refuses (LEDGER_UNRECONCILED) otherwise. The
 # runner allows one restart; a second failure ends the cell as "failed (infrastructure)" (exit 5).
 #
-# The world's seed travels only as ENTITY_H2H_SEED through ubi-runner's --pass (never on a command line), and the VM
-# writes the world itself. OPENAI_API_KEY goes to the VM's metering proxy the same way, the only key a memory cell
+# The world's seed travels only as ENTITY_H2H_SEED through ubi-runner's --pass (never on this machine's command line),
+# and the VM writes the world itself (vm-run.sh passes it to run.ts world as an argument there). OPENAI_API_KEY goes to the VM's metering proxy the same way, the only key a memory cell
 # needs. One ledger writer: the VM's proxy is the only writer of an attempt's ledger, and this script refuses to launch
 # while any VM of its owner exists, while another launch holds the cell's state folder, or while any cell's final pull
 # has not landed. vCPU lines: ubi-runner refuses a create past UBI_QUOTA_VCPUS (464, project) or UBI_CREW_VCPUS (208,
