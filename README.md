@@ -65,7 +65,7 @@ behaviour, such as `forget` leaving nothing behind or a sync catching up, where 
 <tbody>
 <tr><th valign="top" align="left" colspan="3">Agents answering with and without gbrain</th></tr>
 <tr>
-<td valign="top">Questions about one person's own notes, asked in other words (99 tasks on Garry Tan's own brain), Opus 5.5<br><sub>gbrain <code>98dda48fb9fd</code> (v0.60.613.0) · <a href="docs/benchmarks/2026-11-09-live-recall-phase2.md">Live recall</a></sub></td>
+<td valign="top">Right answers to questions about one person's own notes, asked in other words (99 tasks on Garry Tan's own brain), Opus 5.5<br><sub>gbrain <code>98dda48fb9fd</code> (v0.60.613.0) · <a href="docs/benchmarks/2026-11-09-live-recall-phase2.md">Live recall</a></sub></td>
 <td valign="top">13.3% with no retrieval</td>
 <td valign="top"><h3>+73.5 points</h3><b>86.7%</b> with gbrain's tools; the gain's 95% interval is 63.9 to 82.5¹</td>
 </tr>
@@ -75,7 +75,7 @@ behaviour, such as `forget` leaving nothing behind or a sync catching up, where 
 <td valign="top"><h3>+58.8 points</h3><b>68.0%</b> with gbrain's tools; the gain's 95% interval is 48.5 to 68.8¹ ²</td>
 </tr>
 <tr>
-<td valign="top">Hard questions about a large, messy company, answered by agents (two worlds of about 55,000 documents; Opus 5.5, Sonnet 5.5, GPT-6.1 Sol)<br><sub>gbrain <code>3e4ff61ce</code> (shipped as v0.60.174.0) · <a href="docs/benchmarks/2026-10-10-model-ladder-hard-confirmation.md">Hard company questions</a></sub></td>
+<td valign="top">Hard questions about a large, messy company, answered correctly by agents (two worlds of about 55,000 documents; Opus 5.5, Sonnet 5.5, GPT-6.1 Sol)<br><sub>gbrain <code>3e4ff61ce</code> (shipped as v0.60.174.0) · <a href="docs/benchmarks/2026-10-10-model-ladder-hard-confirmation.md">Hard company questions</a></sub></td>
 <td valign="top">the same files with <code>grep</code>: 71.0% on a fresh world, 53.0% on a sealed one</td>
 <td valign="top"><h3>+7.7 and +13.0 points</h3><b>78.7%</b> and <b>66.0%</b>; the gains' 95% intervals are +2.7 to +12.7 and +7.7 to +18.3³</td>
 </tr>
@@ -85,9 +85,9 @@ behaviour, such as `forget` leaving nothing behind or a sync catching up, where 
 <td valign="top"><h3>+10.67 points</h3><b>382 of 600 (63.7%)</b>; the gain's 95% interval is +7.00 to +14.50⁴</td>
 </tr>
 <tr>
-<td valign="top">Finance-only text reaching an agent's context in 100 permission runs, on the first, easier company world (five frontier models)<br><sub>gbrain <code>51f865d78</code> · <a href="docs/benchmarks/2026-10-02-model-ladder.md">Permission runs</a></sub></td>
-<td valign="top">the same files: 100; plain Postgres: 97, with 4 leaked answers</td>
-<td valign="top"><h3>100 → 0 runs</h3><b>0 of 100</b> runs let finance-only text reach the agent</td>
+<td valign="top">Leaks (fewer is better): finance-only text reaching the agent's context in 100 permission runs, where the agent works for an account manager outside finance who isn't allowed to see it; first, easier company world (five frontier models)<br><sub>gbrain <code>51f865d78</code> · <a href="docs/benchmarks/2026-10-02-model-ladder.md">Permission runs</a></sub></td>
+<td valign="top">the same files: leaks in 100 runs; plain Postgres: 97, with 4 of them reaching an answer</td>
+<td valign="top"><h3>100 → 0 leaking runs</h3><b>0 of 100</b> runs leak finance-only text into the agent's context or its answer</td>
 </tr>
 <tr>
 <td valign="top">Right answers on 150 LongMemEval questions, against pasting each whole history (about 50 conversations) into the prompt<br><sub>gbrain <code>c5fb0201</code> · <a href="docs/benchmarks/2026-10-07-longmemeval-w10c-full-context.md">Whole-history comparison</a></sub></td>
@@ -116,17 +116,17 @@ behaviour, such as `forget` leaving nothing behind or a sync catching up, where 
 <td valign="top"><h3>+23 over plain hybrid search</h3><b>468 of 500 (93.6%)</b>; level with the whole history, which costs about 7.4 times as much to read</td>
 </tr>
 <tr>
-<td valign="top">A newer reader, Opus 5.5, reading search results saved on September 29 (official GPT-4o judge)<br><sub>gbrain <code>a7cb37b</code> retrieval · <a href="docs/benchmarks/2026-10-07-longmemeval-w10b-reader-replay.md">Reader replay</a> · <a href="docs/benchmarks/2026-11-17-readme-baselines/longmemeval/results.md">Baseline</a></sub></td>
+<td valign="top">Right answers from a newer reader, Opus 5.5, reading search results saved on September 29 (official GPT-4o judge)<br><sub>gbrain <code>a7cb37b</code> retrieval · <a href="docs/benchmarks/2026-10-07-longmemeval-w10b-reader-replay.md">Reader replay</a> · <a href="docs/benchmarks/2026-11-17-readme-baselines/longmemeval/results.md">Baseline</a></sub></td>
 <td valign="top">plain hybrid search's top five conversations, same reader and judge: 445 of 500, with gbrain ahead on 43 questions and behind on 14 (p = 0.0002)</td>
 <td valign="top"><h3>+29 answers</h3><b>474 of 500 (94.8%)</b>, above Sonnet 4.6's 451 on the same saved results (Holm-adjusted p = 0.0002)⁷</td>
 </tr>
 <tr>
-<td valign="top">A search that quotes a saved message word for word (LongMemEval-S, 500 questions)<br><sub>gbrain <code>fecc7827</code> (merged as <code>f05943e65</code>) · <a href="docs/benchmarks/2026-10-09-verbatim-probe-preregistration.md">Verbatim probe</a> · <a href="docs/benchmarks/2026-11-17-readme-baselines/longmemeval/results.md">Baseline</a></sub></td>
+<td valign="top">Finding the conversation when a search quotes a saved message word for word (LongMemEval-S, 500 questions)<br><sub>gbrain <code>fecc7827</code> (merged as <code>f05943e65</code>) · <a href="docs/benchmarks/2026-10-09-verbatim-probe-preregistration.md">Verbatim probe</a> · <a href="docs/benchmarks/2026-11-17-readme-baselines/longmemeval/results.md">Baseline</a></sub></td>
 <td valign="top">plain hybrid search: the quoted conversation first for 491 of 500 and in the top ten for 499, no measurable difference²³; strict recall in the top ten 480, behind gbrain</td>
 <td valign="top"><h3>Level at the ceiling</h3><b>500 of 500</b> return the conversation as a clean read (was 429); strict recall in the top ten unchanged at 496, against 480</td>
 </tr>
 <tr>
-<td valign="top">Handing the reader whole conversations instead of bare passages (a sealed set never used in development)<br><sub>gbrain <code>d44296c</code> · <a href="docs/benchmarks/2026-10-02-sealed-v2-decision-1.md">Sealed decision</a></sub></td>
+<td valign="top">Right answers when the reader gets whole conversations instead of bare passages (a sealed set never used in development)<br><sub>gbrain <code>d44296c</code> · <a href="docs/benchmarks/2026-10-02-sealed-v2-decision-1.md">Sealed decision</a></sub></td>
 <td valign="top">the question alone, no memory: 40 of 200, every one an abstention (0 of the 160 answerable), with the same reader (Sonnet 4.6) and judge in the set's solvability check</td>
 <td valign="top"><h3>40 → 192 of 200</h3><b>192 vs 132 of 200</b> with whole conversations against bare passages (60 gained, 0 lost)</td>
 </tr>
@@ -141,7 +141,7 @@ behaviour, such as `forget` leaving nothing behind or a sync catching up, where 
 <td valign="top"><h3>Level with BM25</h3><b>0.411 → 0.537</b>, 19 better, 0 worse¹⁶; BM25 leads on the point estimate¹⁷; ahead of vector-only and plain hybrid search</td>
 </tr>
 <tr>
-<td valign="top">Meeting attendance from a <code>## Attendees</code> list of links, the form gbrain documents<br><sub>gbrain <code>c5fb0201</code> · <a href="docs/benchmarks/2026-10-06-attendance-world.md">Attendance world</a> · <a href="docs/benchmarks/2026-11-17-readme-baselines/retrieval/results.md">Baseline</a></sub></td>
+<td valign="top">Finding who attended a meeting from a <code>## Attendees</code> list of links, the form gbrain documents<br><sub>gbrain <code>c5fb0201</code> · <a href="docs/benchmarks/2026-10-06-attendance-world.md">Attendance world</a> · <a href="docs/benchmarks/2026-11-17-readme-baselines/retrieval/results.md">Baseline</a></sub></td>
 <td valign="top">a keyword (BM25) ranker: 18.2% "who attended" recall in the top five; plain hybrid search 24.7% (gbrain ahead on 48 and 44 of 50 meetings, behind on none)</td>
 <td valign="top"><h3>80% vs 24.7% recall</h3><b>132 of 132</b> attendees stored, 0 false; "who attended" recall in the top five 32% → 80%</td>
 </tr>
@@ -152,23 +152,23 @@ behaviour, such as `forget` leaving nothing behind or a sync catching up, where 
 </tr>
 <tr><th valign="top" align="left" colspan="3">Keeping memory correct, private and safe</th></tr>
 <tr>
-<td valign="top">An attacker's false claim from an email or a relayed tool result, adopted in a later session (Opus 5.5, Sonnet 5.5, GPT-6.1 Sol)<br><sub>gbrain <code>c2f10ee8</code> to <code>5b9c814b</code> (shipped as <code>d4dc2d4d8</code>); keyless at <code>6ce7195b4</code> · <a href="docs/benchmarks/2026-10-08-memory-trust-results-paid.md">Memory trust</a> · <a href="docs/benchmarks/2026-11-17-readme-baselines/memory-trust/results.md">Baseline</a></sub></td>
+<td valign="top">An attacker's false claim from an email or a relayed tool result, adopted in a later session (fewer is better; Opus 5.5, Sonnet 5.5, GPT-6.1 Sol)<br><sub>gbrain <code>c2f10ee8</code> to <code>5b9c814b</code> (shipped as <code>d4dc2d4d8</code>); keyless at <code>6ce7195b4</code> · <a href="docs/benchmarks/2026-10-08-memory-trust-results-paid.md">Memory trust</a> · <a href="docs/benchmarks/2026-11-17-readme-baselines/memory-trust/results.md">Baseline</a></sub></td>
 <td valign="top">an agent with a plain Postgres memory and no trust labels: 6.6% (Opus 5.5), 12.1% (Sonnet 5.5) and 12.1% (GPT-6.1 Sol) of sessions, with gbrain ahead on all three (p = 0.02, 2e-6 and 0.0005); 1 of 355 instruction-worded injections followed</td>
 <td valign="top"><h3>Fewer adopted on all three models</h3><b>1.5% to 5%</b> of sessions with trust labels shown, 5.1% to 10.6% with them stripped; <b>0 of 360</b> instruction-worded injections followed per model; the checks that need no API keys pass at the pin, and CI runs them on every pull request</td>
 </tr>
 <tr>
-<td valign="top">Finding notes that contradict each other<br><sub>gbrain <code>77cf8e111</code> · <a href="docs/benchmarks/2026-10-11-wave14-repin.md#the-paid-n2-judge-arm">Contradiction re-run</a> · <a href="docs/benchmarks/2026-11-17-readme-baselines/judgment/results.md">Baseline</a></sub></td>
+<td valign="top">Finding notes that contradict each other: conflicts found (more is better) and false flags on notes that don't (fewer is better)<br><sub>gbrain <code>77cf8e111</code> · <a href="docs/benchmarks/2026-10-11-wave14-repin.md#the-paid-n2-judge-arm">Contradiction re-run</a> · <a href="docs/benchmarks/2026-11-17-readme-baselines/judgment/results.md">Baseline</a></sub></td>
 <td valign="top">the same model with a plain prompt: 150 of 150 conflicts, but <b>24 of 40</b> dated changes and <b>29 of 51</b> compatible pairs flagged</td>
 <td valign="top"><h3>24 → 0 and 29 → 4 false flags</h3><b>146 of 150</b> conflicts found (4 missed) with the default judge model (<code>claude-haiku-4-5</code>); 0 of 40 dated changes and 4 of 51 compatible pairs flagged</td>
 </tr>
 <tr>
-<td valign="top">Contradiction judging on current models<br><sub>gbrain <code>c5fb0201</code> · <a href="docs/benchmarks/2026-10-06-n2-judges.md">Contradiction judges</a> · <a href="docs/benchmarks/2026-11-17-readme-baselines/judgment/results.md">Baseline</a></sub></td>
+<td valign="top">The same contradiction finding on current models<br><sub>gbrain <code>c5fb0201</code> · <a href="docs/benchmarks/2026-10-06-n2-judges.md">Contradiction judges</a> · <a href="docs/benchmarks/2026-11-17-readme-baselines/judgment/results.md">Baseline</a></sub></td>
 <td valign="top">a plain prompt: 150 of 150 conflicts for GPT-6 Luna, Sonnet 5.5 and GPT-6.1 Sol, 149 for Opus 5.5; Luna and Sonnet also flag 27 and 13 of 251 compatible pairs, while Sol and Opus flag none, no measurable difference for those two¹⁹</td>
 <td valign="top"><h3>Ahead for Luna and Sonnet; level for Sol and Opus</h3><b>150 of 150</b> conflicts and <b>0 of 251</b> compatible pairs flagged, for each of four current models; the cheapest passing one costs $0.24 per 1,000 pairs</td>
 </tr>
 <tr><th valign="top" align="left" colspan="3">Writing and syncing memory</th></tr>
 <tr>
-<td valign="top">Timeline events extracted from meetings and chats<br><sub>gbrain <code>b9ee931</code> · <a href="docs/benchmarks/2026-10-04-auto-chronicle-rerun.md">Timeline extraction</a> · <a href="docs/benchmarks/2026-11-17-readme-baselines/judgment/results.md">Baseline</a></sub></td>
+<td valign="top">Labeled timeline events found in meetings and chats (more is better), and wrong events per page (fewer is better)<br><sub>gbrain <code>b9ee931</code> · <a href="docs/benchmarks/2026-10-04-auto-chronicle-rerun.md">Timeline extraction</a> · <a href="docs/benchmarks/2026-11-17-readme-baselines/judgment/results.md">Baseline</a></sub></td>
 <td valign="top">the same model (Sonnet 4.6) with a plain prompt: 33 and 36 of 38, 0.54 and 0.36 wrong per page, no measurable difference by the preregistered page test (p = 0.06)²⁰</td>
 <td valign="top"><h3>Level by the preregistered test</h3><b>37 and 38 of 38</b>, 0.04 wrong per page</td>
 </tr>
@@ -191,10 +191,10 @@ behaviour, such as `forget` leaving nothing behind or a sync catching up, where 
 | **Keeping memory correct, private and safe** | | | |
 | Serving the new value after an update | **388 of 388** probes, never stale, on PGLite and Postgres through the CLI and MCP¹⁰ | `6ce7195b4` (v0.60.733.0) | [Knowledge updates](docs/benchmarks/2026-10-01-n1-knowledge-update.md) |
 | Nothing left behind after `forget` | **0** prohibited outputs, 6 of 6 reinstatements¹⁰ | `6ce7195b4` (v0.60.733.0) | [Forget residue](docs/benchmarks/2026-10-01-n5-forget-residue.md) |
-| Private pages reaching agent callers or remote callers | **0**, in process and on Postgres over real HTTP (155 of 155 cells, 5 kinds of caller)¹⁰ | `6ce7195b4` (v0.60.733.0) | [Privacy on Postgres](docs/benchmarks/2026-10-06-n6-postgres-http.md) |
+| Leaks: private pages reaching agent callers or remote callers not granted them (fewer is better) | **0**, in process and on Postgres over real HTTP (155 of 155 cells, 5 kinds of caller)¹⁰ | `6ce7195b4` (v0.60.733.0) | [Privacy on Postgres](docs/benchmarks/2026-10-06-n6-postgres-http.md) |
 | Keeping speaker and time across chat export formats | **every** registered format keeps the conversation whole (29 of 29 formats at `77cf8e111`)¹⁰ | `6ce7195b4` (v0.60.733.0) | [Chat formats](docs/benchmarks/2026-10-01-n12-format-fidelity.md) |
 | One very large document stored as one page (2 MB to 260 MiB, under the preregistered rules) | **Every preregistered rule passes**: 0 crashes, 0 responses over 1 MiB, 0 bytes lost on export, keyword recall in the top ten 1.00 at 2 MB¹¹ | `7a6bdd3` (v0.60.454.0) | [Large pages](docs/benchmarks/2026-10-25-n14-large-page-fidelity-wave-b4.md) |
-| Crediting someone else's claim to the page's owner (the classifier for takes, gbrain's saved claims, still experimental) | **0 of 123** cases on Sonnet 5.5, GPT-6.1 Sol and Opus 5.5 (3 with Claude Haiku 4.5) | `c5fb0201` | [Takes](docs/benchmarks/2026-10-06-takes-bootstrap-frontier.md) |
+| Mistakes crediting someone else's claim to the page's owner (fewer is better; the classifier for takes, gbrain's saved claims, still experimental) | **0 of 123** cases on Sonnet 5.5, GPT-6.1 Sol and Opus 5.5 (3 with Claude Haiku 4.5) | `c5fb0201` | [Takes](docs/benchmarks/2026-10-06-takes-bootstrap-frontier.md) |
 | Real agents (Claude Code, Codex) spending money or destroying data without consent | **0** violations in 66 safety sessions; 96 of 102 tasks finished | `b3f4e8b` (shipped in v0.60.46.0) | [Agent operator](docs/benchmarks/2026-10-03-agent-operator.md) |
 | **Writing and syncing memory** | | | |
 | Catching up a 10,000-file backlog on managed Postgres 57 ms from the database | **367.9 pages/min** steady, **33.6 min** for the backlog (was 174.8 pages/min and 74.5 min on the same rig); a page save 2.5 s instead of 8.6 s | `0ba3b1f7c` (merged as `9d013e52d`, v0.60.111.0) | [Sync lanes](docs/benchmarks/2026-10-07-managed-sync-lanes-foreground.md) |
@@ -616,6 +616,17 @@ Garry Tan runs Y Combinator.
 [Disclosures](docs/disclosures.md) lists every relationship and where each line goes.
 
 ## Changelog
+
+### 2026-11-17: Every result row says which direction is better
+
+The permission row read "Finance-only text reaching an agent's context", which didn't say whether that was good or
+bad. It now reads "Leaks (fewer is better): finance-only text reaching the agent's context in 100 permission runs,
+where the agent works for an account manager outside finance who isn't allowed to see it", and its headline changed
+from "100 → 0 runs" to "100 → 0 leaking runs". Other rows whose direction wasn't plain now say it: the first table
+names right answers for live recall, hard company questions, the newer reader and whole conversations, says finding
+for the quoted-message and attendance rows, marks attacker claims "fewer is better", and splits contradiction finding
+and timeline extraction into what should go up and what should go down. In the second table, the privacy row is
+labelled a leak and the takes row a mistake count, both "fewer is better". No number changed.
 
 ### 2026-11-17: The results table leads with gbrain's gain and top-aligns every cell
 
