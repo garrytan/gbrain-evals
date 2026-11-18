@@ -41,7 +41,7 @@
  * and the false-merge rate per family, with each false merge attributed to
  * the groups that joined it.
  *
- * Usage: bun eval/runner/person-dedupe.ts [--seed N] [--per-family N] [--output DIR]
+ * Usage: bun eval/runner/person-dedupe.ts [--seed N] [--per-family N] [--generator-version N] [--output DIR]
  *          [--write-world DIR] [--finder-json FILE --finder-build LABEL --finder-imports FILE] [--json]
  */
 import { createHash } from 'node:crypto';
@@ -53,7 +53,7 @@ import {
   type DesignedPair, type Ledger, type LedgerPage, type WrittenPage,
 } from '../generators/person-dedupe-gen.ts';
 import {
-  COMPANY_DEDUPE_GENERATOR_VERSION, COMPANY_FAMILIES, companyWrittenPages, deriveCompanyGold, generateCompanyLedger, renderCompanyPage,
+  COMPANY_FAMILIES, companyWrittenPages, deriveCompanyGold, generateCompanyLedger, renderCompanyPage,
   type CompanyLedger,
 } from '../generators/company-dedupe-gen.ts';
 import { gbrainPin } from './gbrain-version.ts';
@@ -620,6 +620,7 @@ async function main(): Promise<void> {
   const log = json ? () => {} : (s: string) => console.log(s);
   const seed = Number(argValue(argv, '--seed') ?? PERSON_DEDUPE_DEFAULT_SEED);
   const perFamily = Number(argValue(argv, '--per-family') ?? PERSON_DEDUPE_DEFAULT_PER_FAMILY);
+  const generatorVersion = Number(argValue(argv, '--generator-version') ?? PERSON_DEDUPE_GENERATOR_VERSION);
   const outputDir = argValue(argv, '--output');
   const receiptFile = outputDir ? join(resolve(outputDir), 'receipt.json') : receiptPath(RECEIPT_STEM);
   if (outputDir) mkdirSync(resolve(outputDir), { recursive: true });
@@ -630,8 +631,8 @@ async function main(): Promise<void> {
   if (finderFile && !importsFile) throw new Error('person-dedupe: --finder-json needs --finder-imports <file of gbrain import --json summaries, one per line>');
   const startedAt = new Date().toISOString();
 
-  const ledger = generateLedger(seed, perFamily);
-  const companies = generateCompanyLedger(seed, perFamily);
+  const ledger = generateLedger(seed, perFamily, generatorVersion);
+  const companies = generateCompanyLedger(seed, perFamily, generatorVersion);
   const founders = companies.founders ?? [];
   const fingerprint = ledgerFingerprint(ledger);
   const companyFingerprint = ledgerFingerprint(companies);
@@ -681,8 +682,8 @@ async function main(): Promise<void> {
     errors: [],
     publishable: true,
     resolved_config: {
-      seed, per_family: perFamily, generator_version: PERSON_DEDUPE_GENERATOR_VERSION, ledger_sha256: fingerprint,
-      company_generator_version: COMPANY_DEDUPE_GENERATOR_VERSION, company_stream_seed: companies.stream_seed, company_ledger_sha256: companyFingerprint,
+      seed, per_family: perFamily, generator_version: ledger.generator_version, ledger_sha256: fingerprint,
+      company_generator_version: companies.generator_version, company_stream_seed: companies.stream_seed, company_ledger_sha256: companyFingerprint,
       sources: ledger.sources, finder_build: finderBuild ?? null, finder_contract_schema: 1, identity_keys: { person: [DECLARED_PERSON_ID_FIELD] }, targets: TARGETS, closure: 'transitive', selections: Object.keys(SELECTIONS), scopes: ['person', 'company', 'all'],
     },
     hashes: { ledger: fingerprint, company_ledger: companyFingerprint },
@@ -695,8 +696,8 @@ async function main(): Promise<void> {
       }),
       families: FAMILIES,
       company_families: COMPANY_FAMILIES,
-      ledger: { seed, per_family: perFamily, generator_version: PERSON_DEDUPE_GENERATOR_VERSION, sha256: fingerprint, pages: ledger.pages.length, pairs: ledger.pairs.length, regenerate: 'generateLedger(seed, per_family) in eval/generators/person-dedupe-gen.ts; --write-world writes the pages' },
-      company_ledger: { seed, stream_seed: companies.stream_seed, per_family: perFamily, generator_version: COMPANY_DEDUPE_GENERATOR_VERSION, sha256: companyFingerprint, pages: companies.pages.length, founder_pages: founders.length, pairs: companies.pairs.length, regenerate: 'generateCompanyLedger(seed, per_family) in eval/generators/company-dedupe-gen.ts; --write-world writes the pages' },
+      ledger: { seed, per_family: perFamily, generator_version: ledger.generator_version, sha256: fingerprint, pages: ledger.pages.length, pairs: ledger.pairs.length, regenerate: 'generateLedger(seed, per_family, generator_version) in eval/generators/person-dedupe-gen.ts; --write-world writes the pages' },
+      company_ledger: { seed, stream_seed: companies.stream_seed, per_family: perFamily, generator_version: companies.generator_version, sha256: companyFingerprint, pages: companies.pages.length, founder_pages: founders.length, pairs: companies.pairs.length, regenerate: 'generateCompanyLedger(seed, per_family, generator_version) in eval/generators/company-dedupe-gen.ts; --write-world writes the pages' },
     },
   } satisfies Receipt);
   log(`\nReceipt: ${receiptFile}`);
