@@ -50,6 +50,17 @@ describe('entity-dedupe h2h development evidence: classic tools', () => {
     }
   });
 
+  test('every tool ran on the development world, with labels and thresholds from the held-out seed only', () => {
+    const HELD_OUT_SEED = 20261118;
+    for (const input of scores.inputs) {
+      const run = read(`er-h2h-classic/${input.system}-${input.config}.run.json`);
+      expect([run.system, run.version, run.config]).toEqual([input.system, input.version, input.config]);
+      expect(run.world).toBe(`<er-h2h>/worlds/s${DEV_SEED}`);
+      expect(run.held_out).toBe(input.system === 'splink' && input.config === 'default' ? null : `<er-h2h>/worlds/s${HELD_OUT_SEED}`);
+    }
+    expect(PREREG).toContain(`Classic tools, keyless, people only, seed ${DEV_SEED}, labels and thresholds from held-out seed ${HELD_OUT_SEED} only`);
+  });
+
   test('every row of the scores file is recounted from the tool output', () => {
     expect(scores.rows).toHaveLength(7);
     for (const row of scores.rows) {
@@ -220,6 +231,7 @@ describe('entity-dedupe h2h development evidence: smoke', () => {
       return fm.k;
     });
     const order = (Object.keys(MODELS) as Array<keyof typeof MODELS>);
+    for (const m of order) expect(matcher[MODELS[m]].sanity_score.auto.false_merge.n).toBe(smokeDifferent.length);
     const yes = Object.fromEntries(order.map(m => [m, matcher[MODELS[m]].sanity_score.auto.false_merge.k]));
     expect(PREREG).toContain(`each memory system merged ${Math.min(...merged)} to ${Math.max(...merged)} of ${smokeDifferent.length}, and the matcher's "yes" verdicts merged ${yes['claude-opus-5-5']} (claude-opus-5-5), ${yes['gpt-6.2-sol']} (gpt-6.2-sol) and ${yes['particle-1']} (particle-1).`);
   });
