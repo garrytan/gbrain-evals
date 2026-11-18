@@ -152,9 +152,12 @@ rule of 2026-11-01 that evals test gbrain and gstack on frontier models.
   lists particle-1 under `models_not_run` with the reason. First paired numbers:
   [particle replay](docs/benchmarks/2026-11-01-longmemeval-particle-replay/REPORT.md).
 - **Always run the newest frontier Opus and GPT.** Today's counted frontier readers are `claude-opus-5-5` and
-  `gpt-6.2-sol`. Before a run, check which models are newest (`bun scripts/model-freshness.ts` reads the providers'
-  model lists, Particle's included) and add any that the run doesn't already include. Register a price for a new model
-  in `eval/runner/budget-ledger.ts` so the ledger can reserve it.
+  `gpt-6.2-sol`. The runner's code still names `gpt-6.1-sol` (`FRONTIER_READERS` in `eval/runner/systems/baselines.ts`,
+  which the workload sweep's model check requires) and the ledger has no `gpt-6.2-sol` price yet, so the first run on
+  `gpt-6.2-sol` registers its price and moves `FRONTIER_READERS` in its own change. Before a run, check which models
+  are newest (`bun scripts/model-freshness.ts` reads the providers' model lists, Particle's included) and add any that
+  the run doesn't already include. Register a price for a new model in `eval/runner/budget-ledger.ts` so the ledger can
+  reserve it.
 - **particle-1 never judges a counted cell.** Counted judges stay protocol-matched (for example `gpt-4o-2024-08-06` for
   LongMemEval and `gpt-6.1-sol` for Cat 40 Hard). particle-1 becomes the default reader and agent for a development loop
   once it passes that loop's preregistered agreement test; development judges are the ones the dataset's harness fixes,
