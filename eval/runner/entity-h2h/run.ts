@@ -220,6 +220,13 @@ function closeAttempt(dir: string, s: CellState, end: AttemptEnd, log: (l: strin
   return EXIT.error;
 }
 
+/** A restart, continue or resume runs on the world the cell started on, never on a folder rewritten since. */
+function requireSameWorld(dir: string, s: CellState, w: H2hWorld): void {
+  const m = manifestOf(w);
+  if (m.seed !== s.world.seed || m.pages !== s.world.pages || m.people_ledger_sha256 !== s.world.people_ledger_sha256 || m.company_ledger_sha256 !== s.world.company_ledger_sha256)
+    throw new Error(`entity-h2h: ${s.world_dir} no longer holds the world the cell in ${dir} started on (seed ${s.world.seed}, ${s.world.pages} pages; found seed ${m.seed}, ${m.pages} pages or other ledgers); restore that world before any paid attempt`);
+}
+
 function openCell(dir: string): CellState {
   const s = readCell(dir);
   if (!s) throw new Error(`entity-h2h: ${dir} has no cell.json`);
@@ -239,6 +246,7 @@ export async function memoryCell(mode: 'run' | 'restart' | 'continue', a: Args, 
   let s: CellState, w: H2hWorld, prior = 0, kind: Attempt['kind'];
   if (mode === 'run') {
     const system = a.need('--system') as MemoryKind, worldDir = resolve(a.need('--world'));
+    if (a.need('--config') !== 'default') throw new Error(`entity-h2h: memory systems run --config default only; a tuned or tuning setting is not carried to the stack yet (vm-run.sh starts every stack with --config entity-h2h), so a ${a.need('--config')} cell would score the default behaviour under another label`);
     w = loadWorld(worldDir);
     freshDir(dir);
     const stop = memoryStop(system, w.pages.length);
@@ -248,6 +256,7 @@ export async function memoryCell(mode: 'run' | 'restart' | 'continue', a: Args, 
   } else {
     s = openCell(dir);
     w = loadWorld(s.world_dir);
+    requireSameWorld(dir, s, w);
     markCrashed(s);
     const last = s.attempts.at(-1);
     if (last?.status === 'running') throw new Error(`entity-h2h: attempt ${last.n} of ${dir} is still running (pid ${last.pid})`);
@@ -259,6 +268,8 @@ export async function memoryCell(mode: 'run' | 'restart' | 'continue', a: Args, 
     if (mode === 'continue') {
       const stop = Number(a.need('--stop-usd'));
       if (!(stop > prior)) throw new Error(`entity-h2h: --stop-usd must be above the ${usd(prior)} the cell has spent`);
+      const need = last!.checkpoint ? prior + last!.checkpoint.usd_per_page * w.pages.length : 0;
+      if (stop < need) throw new Error(`entity-h2h: --stop-usd ${usd(stop)} is below the ${usd(need)} a continue needs: it starts again from page one, so it adds ${usd(need - prior)} (the measured $${last!.checkpoint!.usd_per_page.toFixed(5)} a page x ${w.pages.length} pages) to the ${usd(prior)} already spent; pass --stop-usd ${Math.ceil(need * 100) / 100} or more`);
       (s as CellState & { stops?: unknown[] }).stops = [...((s as CellState & { stops?: unknown[] }).stops ?? []), { from_usd: s.stop_usd, to_usd: stop, at: new Date().toISOString(), after_attempt: last!.n, checkpoint: last!.checkpoint ?? null }];
       s.stop_usd = stop;
     }
@@ -308,11 +319,13 @@ export async function matcherCell(mode: 'run' | 'resume', a: Args, log: (s: stri
   } else {
     s = openCell(dir);
     w = loadWorld(s.world_dir);
+    requireSameWorld(dir, s, w);
     markCrashed(s);
     const last = s.attempts.at(-1);
     if (last?.status === 'running') throw new Error(`entity-h2h: attempt ${last.n} of ${dir} is still running (pid ${last.pid})`);
     prior = requireReconciled(dir, s);
     if (a.one('--stop-usd') !== undefined) {
+      if (last?.status !== 'paused') throw new Error(`entity-h2h: --stop-usd raises the stop only after a pause, once its measured rate is reported; attempt ${last?.n} is ${last?.status}, so resume it without --stop-usd`);
       const stop = Number(a.one('--stop-usd'));
       if (!(stop > prior)) throw new Error(`entity-h2h: --stop-usd must be above the ${usd(prior)} the cell has spent`);
       s.stop_usd = stop;

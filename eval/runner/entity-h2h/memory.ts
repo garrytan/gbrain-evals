@@ -96,6 +96,9 @@ export async function runMemoryAttempt(o: MemoryAttemptOptions): Promise<Attempt
     return json;
   });
   if (ent.error) return end('crashed', `entity readout failed: ${String((ent.error as Error).message ?? ent.error).slice(0, 300)}`);
+  const lateRefusals = (fin.meter.refused?.budget ?? 0) + (ent.meter.refused?.budget ?? 0)
+    + readUsage(loadPath(dir, attempt.paid.usage_log)).filter(u => u.at >= attempt.started_at && u.outcome === 'refused' && u.status === 402).length;
+  if (lateRefusals > 0) return end('paused', `ledger stop: the proxy refused ${lateRefusals} request(s) for budget during finish, the readout or queued work, which the system swallowed; the cell's stop is $${state.stop_usd.toFixed(2)}`);
   const entities = ent.value!;
   const known = new Set(sourceOf.values());
   for (const e of entities.entities) e.source_ids = e.source_ids.filter(s => known.has(s));

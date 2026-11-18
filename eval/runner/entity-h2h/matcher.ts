@@ -110,7 +110,7 @@ export function planPairs(pairs: ReadonlyArray<readonly [string, string]>, event
     const es = last.get(pairBrain(a, b)) ?? [];
     if (es.some(e => e.outcome === 'answer' || e.outcome === 'safety_stop')) { plan.settled++; continue; }
     if (!logged.has(pairBrain(a, b))) { plan.ask.push({ a, b, reask: false }); continue; }
-    if (es.some(e => e.reask)) { plan.no_verdict.push({ a, b, why: es.at(-1)?.detail ?? 'sent, no verdict, already asked again once' }); continue; }
+    if (es.some(e => e.reask && e.outcome !== 'budget_refused')) { plan.no_verdict.push({ a, b, why: es.at(-1)?.detail ?? 'sent, no verdict, already asked again once' }); continue; }
     plan.ask.push({ a, b, reask: true });
   }
   return plan;

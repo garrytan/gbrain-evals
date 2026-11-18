@@ -7,7 +7,7 @@
  * binary. Provider keys are blanked, the proxy gets placeholder keys and every upstream is a local fake.
  */
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
-import { appendFileSync, chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { appendFileSync, chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { BudgetRun, closeLedgers } from '../../eval/runner/budget-ledger.ts';
@@ -31,7 +31,7 @@ const fakeProvider = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: async re
 } });
 
 /** The fake memory system: each ingest makes one provider call through the proxy's slot; /entities makes one node per page title. */
-const shim = { failAt: 0, system: 'ext-memory-bank', proxy: '', nsOrder: [] as string[], ingests: new Map<string, string[]>() };
+const shim = { failAt: 0, finishMaxTokens: 0, system: 'ext-memory-bank', proxy: '', nsOrder: [] as string[], ingests: new Map<string, string[]>() };
 const fakeShim = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: async req => {
   const path = new URL(req.url).pathname;
   const body = req.method === 'POST' ? await req.json() as any : {};
@@ -47,7 +47,10 @@ const fakeShim = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: async req =>
     done.push(body.session.source_id + '\t' + body.session.turns[0].content);
     return Response.json({ items_created: 1, completeness: 'known' });
   }
-  if (path === '/finish') return Response.json({ ready: true, waited_ms: 0, completeness: 'known' });
+  if (path === '/finish') {
+    if (shim.finishMaxTokens) await fetch(`${shim.proxy}/${shim.system}/openai/v1/chat/completions`, { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer dummy' }, body: JSON.stringify({ model: 'gpt-6.2-sol', max_tokens: shim.finishMaxTokens, messages: [{ role: 'user', content: 'consolidate' }] }) });
+    return Response.json({ ready: true, waited_ms: 0, completeness: 'known' });
+  }
   if (path === '/entities') {
     const ns = new URL(req.url).searchParams.get('ns')!;
     const nodes = new Map<string, string[]>();
@@ -79,7 +82,7 @@ function leaseProxy(runId: string, leaseUsd: number) {
 }
 const shimArgs = () => ['--shim', `http://127.0.0.1:${fakeShim.port}`];
 const world = (name: string, seed: number, perFamily: number) => { const d = join(tmp, name); writeH2hWorld(d, seed, perFamily); return d; };
-const reset = (tokens: number, failAt = 0) => { upstream.tokens = tokens; upstream.n = 0; upstream.reply = () => ({ status: 200 }); shim.failAt = failAt; shim.nsOrder = []; shim.ingests = new Map(); };
+const reset = (tokens: number, failAt = 0) => { upstream.tokens = tokens; upstream.n = 0; upstream.reply = () => ({ status: 200 }); shim.failAt = failAt; shim.finishMaxTokens = 0; shim.nsOrder = []; shim.ingests = new Map(); };
 
 describe('memory-system cells', () => {
   test('a cell ingests every page in the fixed order, writes the neutral output and a hand-check sample, and scores', async () => {
@@ -123,6 +126,7 @@ describe('memory-system cells', () => {
     expect(await cli(['reconcile', '--output', out], quiet)).toBe(0);
     await expect(cli(['restart', '--output', out, ...shimArgs(), ...p2.args], quiet)).rejects.toThrow(/continue/);
     await expect(cli(['continue', '--output', out, '--stop-usd', '3', ...shimArgs(), ...p1.args], quiet)).rejects.toThrow(/already paid for an attempt/);
+    await expect(cli(['continue', '--output', out, '--stop-usd', '2', ...shimArgs(), ...p2.args], quiet)).rejects.toThrow(/is below the \$2\.53 a continue needs/);
     try { expect(await cli(['continue', '--output', out, '--stop-usd', '3', ...shimArgs(), ...p2.args], quiet)).toBe(0); }
     finally { p2.proxy.stop(); }
     s = readCell(out)!;
@@ -142,6 +146,41 @@ describe('memory-system cells', () => {
     expect(a.status).toBe('paused');
     expect(a.reason).toMatch(/^ledger stop/);
     expect(a.done).toBeLessThan(10);
+  }, 60_000);
+
+  // Value: protects=the rule that a partial run is never scored; fails_when=a budget refusal the system swallows during finish lets the attempt complete
+  test('a budget refusal the system swallows during finish pauses the cell instead of completing it', async () => {
+    reset(10);
+    shim.finishMaxTokens = 50_000_000;
+    const w = world('w-fin', 7, 1), out = join(tmp, 'c-fin');
+    const p = leaseProxy('fin-1', memoryStop('ext-memory-bank', 94).stop_usd);
+    try { expect(await cli(['run', '--system', 'ext-memory-bank', '--config', 'default', '--world', w, '--output', out, ...shimArgs(), ...p.args], quiet)).toBe(4); }
+    finally { p.proxy.stop(); }
+    const s = readCell(out)!;
+    expect([s.status, s.attempts[0].status, s.attempts[0].done]).toEqual(['open', 'paused', 94]);
+    expect(s.attempts[0].reason).toMatch(/^ledger stop: .*swallowed/);
+    expect(existsSync(join(out, 'output.json'))).toBe(false);
+  }, 60_000);
+
+  // Value: protects=published memory rows carry the configuration that ran; fails_when=a tuned or tuning cell runs the stack's default under another label
+  test('a memory system runs --config default only, because no tuned setting reaches the stack yet', async () => {
+    await expect(cli(['run', '--system', 'ext-memory-bank', '--config', 'tuned', '--world', world('w-tu', 7, 1), '--output', join(tmp, 'c-tu'), ...shimArgs()], quiet)).rejects.toThrow(/--config default only/);
+    expect(existsSync(join(tmp, 'c-tu'))).toBe(false);
+  });
+
+  // Value: protects=a paid restart runs on the cell's own world; fails_when=a world folder rewritten at another seed is ingested and paid for
+  test('restart refuses a world folder rewritten since the cell started, before any paid call', async () => {
+    reset(10, 3);
+    const w = world('w-rw', 7, 1), out = join(tmp, 'c-rw');
+    const p1 = leaseProxy('rw-1', memoryStop('ext-memory-bank', 94).stop_usd);
+    try { expect(await cli(['run', '--system', 'ext-memory-bank', '--config', 'default', '--world', w, '--output', out, ...shimArgs(), ...p1.args], quiet)).toBe(2); }
+    finally { p1.proxy.stop(); }
+    rmSync(w, { recursive: true });
+    writeH2hWorld(w, 8, 1);
+    const before = upstream.n;
+    await expect(cli(['restart', '--output', out, ...shimArgs(), '--proxy', 'http://127.0.0.1:9'], quiet)).rejects.toThrow(/no longer holds the world the cell/);
+    expect(upstream.n).toBe(before);
+    expect(readCell(out)!.attempts).toHaveLength(1);
   }, 60_000);
 
   // Value: protects=crash and resume (never in place, one restart, then failed (infrastructure)) and LEDGER_UNRECONCILED; fails_when=a restart resumes a namespace, skips the reconcile or a cell gets a third attempt
@@ -211,6 +250,7 @@ describe('matcher cells', () => {
     const p2 = leaseProxy('m-2', 0.05);
     expect(await cli(['resume', '--output', out, ...p2.args], quiet)).toBe(2);
     expect(await cli(['reconcile', '--output', out], quiet)).toBe(0);
+    await expect(cli(['resume', '--output', out, '--stop-usd', '1', ...p2.args], quiet)).rejects.toThrow(/only after a pause/);
     const before = upstream.n;
     try { expect(await cli(['resume', '--output', out, '--concurrency', '1', ...p2.args], quiet)).toBe(0); }
     finally { p2.proxy.stop(); }

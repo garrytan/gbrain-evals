@@ -178,6 +178,14 @@ describe('matcher', () => {
     expect(plan.ask).toEqual([{ a: 'a', b: 'c', reask: true }, { a: 'b', b: 'c', reask: false }]);
     expect(plan.no_verdict.map(p => `${p.a}${p.b}`)).toEqual(['cd']);
   });
+
+  // Value: protects=a re-ask the proxy refused for budget (never sent) is asked again after a ledger-stop pause; fails_when=any reask event, budget-refused included, leaves the pair with no verdict
+  test('a re-ask the proxy refused for budget never reached the provider, so a later resume asks it again', () => {
+    const ev = (outcome: CallEvent['outcome'], reask: boolean): CallEvent => ({ a: 'a', b: 'b', attempt: 1, reask, outcome, verdict: null, status: null, detail: 'x', answer: '', usage: null, response_model: null, ms: 0 });
+    const sent = new Set([pairBrain('a', 'b')]);
+    expect(planPairs([['a', 'b']], [ev('error', false), ev('budget_refused', true)], sent).ask).toEqual([{ a: 'a', b: 'b', reask: true }]);
+    expect(planPairs([['a', 'b']], [ev('error', false), ev('error', true)], sent).no_verdict).toHaveLength(1);
+  });
 });
 
 describe('memory readout', () => {

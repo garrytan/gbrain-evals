@@ -96,7 +96,7 @@ export function writeH2hWorld(dir: string, seed: number, perFamily: number): H2h
 }
 
 function markdownFiles(dir: string, rel = ''): string[] {
-  return readdirSync(join(dir, rel), { withFileTypes: true }).flatMap(e => e.isDirectory() ? markdownFiles(dir, join(rel, e.name)) : e.name.endsWith('.md') ? [join(rel, e.name)] : []);
+  return readdirSync(join(dir, rel), { withFileTypes: true }).sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0)).flatMap(e => e.isDirectory() ? markdownFiles(dir, join(rel, e.name)) : e.name.endsWith('.md') ? [join(rel, e.name)] : []);
 }
 
 /** Reads world.json, rebuilds the ledgers and checks every page on disk is exactly the one the seed renders, and no other page is there. */
