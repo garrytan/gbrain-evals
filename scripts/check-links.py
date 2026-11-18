@@ -28,7 +28,7 @@ anchors = import_module("verify-documentation-refresh").anchors
 
 ROOT = Path(__file__).resolve().parent.parent
 SKIP = (re.compile(r"^eval/data/"), re.compile(r"^docs/benchmarks/.*/artifacts/"))
-LINK = re.compile(r"!?\[[^\]]*\]\(([^\n]+?)\)")
+LINK = re.compile(r"!?\[[^\]]*\]\(([^\n]+?)\)|\bhref=\"([^\"]+)\"")
 BLOCKED = {401, 403, 429}
 
 
@@ -40,8 +40,8 @@ def markdown_files():
 def links(path):
     text = re.sub(r"```.*?```", "", path.read_text(), flags=re.S)
     text = re.sub(r"`[^`\n]*`", "", text)
-    for raw in LINK.findall(text):
-        yield raw.strip().split(' "')[0].strip("<>")
+    for markdown, html in LINK.findall(text):
+        yield (markdown or html).strip().split(' "')[0].strip("<>")
 
 
 def check_local(files):

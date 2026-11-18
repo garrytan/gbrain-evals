@@ -70,7 +70,7 @@ import {
   type LmeSutQuestion,
 } from '../evaluator/longmemeval.ts';
 
-export const LME_RECALL_SCHEMA = 'engine-bench.lme-recall/1';
+export const LME_RECALL_SCHEMA = 'engine-bench.lme-recall/2';
 export const LME_RECALL_TOP_K = 5;
 export const LME_ARMS = ['keyword', 'vector', 'hybrid'] as const;
 export type LmeArm = (typeof LME_ARMS)[number];
