@@ -1,10 +1,11 @@
 {
   "system": "ext-graph-pipeline",
   "versions": {
-    "package": "cognee==1.6.2",
-    "lock_sha256": "59af44d5a70bfa016e888d650259443ba8d0d2f2fd27f4416f9b8e184ef5a0d7",
-    "image": "built from docs/comparison-systems/ext-graph-pipeline/Dockerfile on python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d with uv 0.12.3; the run receipt records the built image id",
-    "vendor_benchmark_code": "topoteretes/cognee@ba3631f2ed363a6ea50d649c34c56885af6b36fe (tag v1.6.2): cognee/eval_framework/beam/local_ingest.py, preprocessing/preprocess.py (format_turn_pair), report_artifacts/100k_fixed/beam_hybrid_completion_20_20_qa_v1_config.json"
+    "package": "cognee==1.6.8 (topoteretes/cognee@069f3cc119bdf5628be054bb915992b2fc78cfc5, tag v1.6.8, published to PyPI 2026-11-12)",
+    "lock_sha256": "ee1f861dd360c3a4569a5bd796a821d2202d127ece6d07a08e031be89517e325",
+    "lock_file": "docs/comparison-systems/ext-graph-pipeline/entity-h2h/uv.lock",
+    "image": "built from docs/comparison-systems/ext-graph-pipeline/entity-h2h/Dockerfile on python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d with uv 0.12.3; the run receipt records the built image id",
+    "vendor_benchmark_code": "topoteretes/cognee@ba3631f2ed363a6ea50d649c34c56885af6b36fe (tag v1.6.2): cognee/eval_framework/beam/local_ingest.py, preprocessing/preprocess.py (format_turn_pair), report_artifacts/100k_fixed/beam_hybrid_completion_20_20_qa_v1_config.json (the pinned adapter was written from the v1.6.2 files, which v1.6.8 still ships)"
   },
   "configs": {
     "entity-h2h": {
@@ -16,11 +17,11 @@
         "dims": 3072,
         "reranker": null
       },
-      "notes": "The pinned recipe with LLM_MODEL=openai/gpt-6.2-sol for the entity-resolution head-to-head (newest GPT generation the OpenAI API serves on 2026-11-17); the embedder stays at the recipe default. /finish runs consolidate_entities_pipeline once per namespace with its defaults (similarity_threshold 0.85, name_match on, top_k 10, allow_cross_type off), the memify entity-deduplication step in docs.cognee.ai/guides/memify-entity-deduplication."
+      "notes": "The pinned recipe with LLM_MODEL=openai/gpt-6.2-sol for the entity-resolution head-to-head (newest GPT generation the OpenAI API serves on 2026-11-17), on cognee 1.6.8; the embedder stays at the recipe default. /finish runs consolidate_entities_pipeline once per namespace with its defaults (similarity_threshold 0.85, name_match on, top_k 10, allow_cross_type off, protect_node_types none), the memify entity-deduplication step in docs.cognee.ai/guides/memify-entity-deduplication. Structured output: the image sets LITELLM_LOCAL_MODEL_COST_MAP=True, and litellm 1.110.0's bundled model map has no gpt-6.2-sol, so litellm.supports_response_schema is false and cognee's litellm_native adapter takes its JSON fallback for every structured call: response_format json_object with the response model's JSON schema in the system prompt, re-asked with the validation error on a reply that does not validate (native_adapter.py _acreate_json_fallback)."
     }
   },
   "time": "in-text",
-  "time_notes": "Each turn-pair item carries 'Time anchor: <event_time>' in its text, as cognee's BEAM preprocessing does. temporal_cognify stays off, as in cognee's BEAM ingestion. cognee.search takes no query date, so query_time is ignored and applied_settings says so. A null event_time (allowed by the protocol) is written as 'Time anchor: unknown'; cognee never substitutes the ingest time, because dates live only in the text.",
+  "time_notes": "Each turn-pair item carries 'Time anchor: <event_time>' in its text, as cognee's BEAM preprocessing does. temporal_cognify stays off, as in cognee's BEAM ingestion; since cognee 1.6.3 the flag is deprecated and ignored, and cognify extracts dates as Timestamp nodes by default. cognee.search takes no query date, so query_time is ignored and applied_settings says so. A null event_time (allowed by the protocol) is written as 'Time anchor: unknown'; cognee never substitutes the ingest time, because dates live only in the text.",
   "provenance": {
     "status": "partial",
     "mechanism": "Chunk items carry payload.document_id, which is the cognee Data id. The shim pins each session's Data id (uuid5 of namespace and source id) through DataItem.data_id and labels it with the source id, so a chunk maps to exactly one session (exact). Entity and fact items come from the merged graph and carry no source; they are returned with provenance unavailable. The map is rebuilt from cognee.datasets.list_data labels (public API) after a restart."

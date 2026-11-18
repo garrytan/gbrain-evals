@@ -1,8 +1,11 @@
-"""Cognee shim, SHIM_CONFIG=entity-h2h: the pinned cognee 1.6.2 adapter with gpt-6.2-sol, entity consolidation and a readout.
+"""Cognee shim, SHIM_CONFIG=entity-h2h: cognee 1.6.8 under the pinned adapter, with gpt-6.2-sol, entity consolidation and a readout.
 
 The adapter is the pinned bundle's shim.py, unchanged (copied into the image as cognee_shim.py); it is imported under its
 recipe configuration with LLM_MODEL set to openai/gpt-6.2-sol, so every LLM stage uses that model and the embedder stays
-at the recipe default. Two additions:
+at the recipe default. The image installs cognee 1.6.8 from this directory's lock. The adapter was written for 1.6.2 and
+imports payload, display_value and result_id from cognee.modules.retrieval.hybrid.results; cognee 1.6.5 moved those
+three functions, unchanged, to cognee.modules.retrieval.utils.results (topoteretes/cognee#5534), so this file puts them
+back under the old module name before importing the adapter. Nothing else in the adapter needed a change. Two additions:
 
 - POST /finish runs cognee's entity-deduplication memify step once per namespace, as its guide describes
   (docs.cognee.ai/guides/memify-entity-deduplication): consolidate_entities_pipeline with its defaults (cosine 0.85 on
@@ -24,6 +27,11 @@ if CONFIG != "entity-h2h":
     raise SystemExit(f"SHIM_CONFIG must be entity-h2h in this image, not {CONFIG!r}")
 os.environ["LLM_MODEL"] = "openai/gpt-6.2-sol"
 os.environ["SHIM_CONFIG"] = "recipe"
+import cognee.modules.retrieval.hybrid.results as hybrid_results  # noqa: E402
+from cognee.modules.retrieval.utils import results as moved_results  # noqa: E402
+
+for name in ("payload", "display_value", "result_id"):
+    setattr(hybrid_results, name, getattr(moved_results, name))
 import cognee_shim as base  # noqa: E402
 
 os.environ["SHIM_CONFIG"] = base.CONFIG = CONFIG

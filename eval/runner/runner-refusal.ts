@@ -6,12 +6,13 @@
  *   WORLD_DIR_USED       the folder a run would write was used before: pass a fresh --output
  *   IMPORT_INCOMPLETE    the system did not take in every page: pages expected and imported
  *   LEDGER_UNRECONCILED  the ledger does not match the metering proxy's usage log: run the reconcile first
+ *   SCHEMA_PACK_INACTIVE gbrain did not activate the schema pack that declares the person id field: check the build
  *
  * Every refusal prints one line, "REFUSED <CODE>: <message> (<counts>). Fix: <fix>", to stderr and exits
  * REFUSAL_EXIT. No score is written after a refusal.
  */
 
-export const REFUSAL_CODES = ['WORLD_DIR_USED', 'IMPORT_INCOMPLETE', 'LEDGER_UNRECONCILED'] as const;
+export const REFUSAL_CODES = ['WORLD_DIR_USED', 'IMPORT_INCOMPLETE', 'LEDGER_UNRECONCILED', 'SCHEMA_PACK_INACTIVE'] as const;
 export type RefusalCode = typeof REFUSAL_CODES[number];
 
 /** The exit status of every refusal; 1 stays a failed verdict and 3 an unexpected error. */

@@ -51,6 +51,8 @@ export interface CellState {
   /** complete, failed (infrastructure) after a second failure, or open while attempts may still run. */
   status: 'open' | 'complete' | 'failed (infrastructure)';
   attempts: Attempt[];
+  /** gbrain cells: the identity line of the schema pack that declared the person id field. */
+  schema_pack?: string;
 }
 
 export function readCell(dir: string): CellState | null {

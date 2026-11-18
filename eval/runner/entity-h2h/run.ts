@@ -5,7 +5,8 @@
  *
  *   world     --seed N [--per-family 20] --output DIR       write a world (people, companies, world.json)
  *   labels    --world DIR --out FILE                         held-out page-to-entity labels; refuses any seed but 20261118
- *   dry-run   --seed N [--per-family 20]                     pages, pairs and the projected cost and stop of every system
+ *   dry-run   --seed N [--per-family 20]                     pages, pairs, the projected cost and stop of every system and
+ *                                                            each memory system's pinned release (its entity-h2h bundle)
  *   run       --system S --config C --world DIR --output DIR [system options]
  *   reconcile --output DIR [--proxy URL]                     close and check every attempt's ledger against the proxy log
  *   restart   --output DIR <paid options>                    memory system after a crash: page one, fresh namespace
@@ -29,8 +30,9 @@
  * second failure of a cell, which only a dated amendment to the preregistration can reopen.
  */
 import { spawnSync } from 'node:child_process';
-import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { appendFileSync, cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { DECLARED_PERSON_ID_FIELD } from '../../generators/person-dedupe-gen.ts';
 import { ProxyControl } from '../metering-proxy.ts';
 import { SELECTIONS, checkFinderCoverage, parseFinderOutput } from '../person-dedupe.ts';
 import { RunnerRefusal } from '../runner-refusal.ts';
@@ -49,6 +51,7 @@ export const CLASSIC = ['splink', 'dedupe', 'zingg'] as const;
 export const SYSTEMS = ['gbrain', ...CLASSIC, ...MEMORY_KINDS, 'llm-matcher'] as const;
 export const EXIT = { ok: 0, refusal: 2, error: 3, paused: 4, failed: 5 } as const;
 const ADAPTERS = resolve(import.meta.dir, '../../adapters/er-h2h');
+const BUNDLES = resolve(import.meta.dir, '../../../docs/comparison-systems');
 
 type Args = { one: (f: string) => string | undefined; need: (f: string) => string; has: (f: string) => boolean; rest: string[] };
 function parse(argv: string[]): Args {
@@ -70,9 +73,13 @@ const count = (n: number) => n.toLocaleString('en-US');
 
 // ─── Dry run ───────────────────────────────────────────────────────────────
 
-export interface DryRun { seed: number; per_family: number; lines: string[]; memory: Record<string, { pages: number; projected_usd: number; stop_usd: number; tuning_pages: number; tuning_stop_usd: number; cell_stops_usd: number }>; matcher: Record<string, { pairs: number; stop_usd: number }> }
+export interface DryRun { seed: number; per_family: number; lines: string[]; memory: Record<string, { version: string; lock_sha256: string | null; pages: number; projected_usd: number; stop_usd: number; tuning_pages: number; tuning_stop_usd: number; cell_stops_usd: number }>; matcher: Record<string, { pairs: number; stop_usd: number }> }
 
-/** Each system's pages, pairs and cost line from the measured rates, for a world at a seed. Writes nothing and calls nothing. */
+/**
+ * Each system's pages, pairs and cost line from the measured rates, for a world at a seed, with each memory system's
+ * pinned release and lock read from its bundle's capability record (docs/comparison-systems/<kind>/entity-h2h). Writes
+ * nothing and calls nothing.
+ */
 export function dryRun(seed: number, perFamily: number): DryRun {
   const w = buildWorld(seed, perFamily);
   const isPerson = (k: string) => w.people_gold.has(k);
@@ -91,10 +98,13 @@ export function dryRun(seed: number, perFamily: number): DryRun {
   ];
   const memory: DryRun['memory'] = {};
   for (const kind of MEMORY_KINDS) {
+    const pin = (JSON.parse(readFileSync(join(BUNDLES, kind, 'entity-h2h', 'capability.json'), 'utf8')) as { versions: { package: string; lock_sha256: string | null } }).versions;
+    const version = /\b\d+\.\d+\.\d+\b/.exec(pin.package)?.[0];
+    if (!version) throw new Error(`entity-h2h: no release version in ${kind}'s entity-h2h capability record (versions.package)`);
     const run = memoryStop(kind, w.pages.length), t = memoryStop(kind, tuning);
     const cell = 2 * run.stop_usd + TUNING_SETTINGS * t.stop_usd;
-    memory[kind] = { pages: w.pages.length, projected_usd: run.projected_usd, stop_usd: run.stop_usd, tuning_pages: tuning, tuning_stop_usd: t.stop_usd, cell_stops_usd: cell };
-    lines.push(`  ${kind.padEnd(20)} ${MEMORY_MODEL}  $${MEMORY_USD_PER_PAGE[kind]}/page x ${count(w.pages.length)} pages = ${usd(run.projected_usd)} projected, stop ${usd(run.stop_usd)} per run (default and tuned); tuning ${TUNING_SETTINGS} x stop ${usd(t.stop_usd)}; sum of stops ${usd(cell)}`);
+    memory[kind] = { version, lock_sha256: pin.lock_sha256, pages: w.pages.length, projected_usd: run.projected_usd, stop_usd: run.stop_usd, tuning_pages: tuning, tuning_stop_usd: t.stop_usd, cell_stops_usd: cell };
+    lines.push(`  ${kind.padEnd(20)} ${version.padEnd(7)} ${`(lock ${pin.lock_sha256?.slice(0, 12) ?? 'none'})`.padEnd(19)} ${MEMORY_MODEL}  $${MEMORY_USD_PER_PAGE[kind]}/page x ${count(w.pages.length)} pages = ${usd(run.projected_usd)} projected, stop ${usd(run.stop_usd)} per run (default and tuned); tuning ${TUNING_SETTINGS} x stop ${usd(t.stop_usd)}; sum of stops ${usd(cell)}`);
   }
   lines.push('', 'Language-model matcher (one call per candidate pair; stop = projected):');
   const matcher: DryRun['matcher'] = {};
@@ -150,12 +160,42 @@ export function runClassic(system: typeof CLASSIC[number], a: Args, log: (s: str
   return EXIT.ok;
 }
 
+export const ER_SCHEMA_PACK = 'er-bench';
+
+/**
+ * Declare the person pages' id field to the finder (finder contract, "How an id field is declared"): a declared id is a
+ * key only when the active schema pack lists it in the person type's identity_keys, and writing it into the pages
+ * declares nothing. Forks the active pack, sets identity_keys on its one person type, validates and activates the fork,
+ * and refuses the cell unless gbrain then reports it active. Companies declare nothing: the generator writes no
+ * company id field. Returns the pack identity line gbrain prints.
+ */
+function declareIdField(gbrain: (args: string[]) => string, home: string): string {
+  const active = /^Active pack: (\S+)/m.exec(gbrain(['schema', 'active']))?.[1];
+  if (!active) throw new Error('entity-h2h: gbrain schema active named no active pack');
+  gbrain(['schema', 'fork', active, ER_SCHEMA_PACK]);
+  const file = join(home, '.gbrain', 'schema-packs', ER_SCHEMA_PACK, 'pack.json');
+  const pack = JSON.parse(readFileSync(file, 'utf8')) as { page_types: Array<{ name: string; identity_keys?: string[] }> };
+  const person = pack.page_types.filter(t => t.name === 'person');
+  if (person.length !== 1) throw new Error(`entity-h2h: pack ${ER_SCHEMA_PACK} (forked from ${active}) has ${person.length} person page types, not one`);
+  person[0].identity_keys = [DECLARED_PERSON_ID_FIELD];
+  writeFileSync(file, JSON.stringify(pack, null, 2) + '\n');
+  gbrain(['schema', 'validate', ER_SCHEMA_PACK]);
+  gbrain(['schema', 'use', ER_SCHEMA_PACK]);
+  const now = gbrain(['schema', 'active']);
+  if (!new RegExp(`^Active pack: ${ER_SCHEMA_PACK}\\b`, 'm').test(now))
+    throw new RunnerRefusal('SCHEMA_PACK_INACTIVE', `entity-h2h: gbrain did not activate pack ${ER_SCHEMA_PACK}, so ${DECLARED_PERSON_ID_FIELD} would be no key; it reports ${JSON.stringify(now.split('\n')[0])}`, { packs_activated: 0 },
+      `check gbrain schema use ${ER_SCHEMA_PACK} at this build, then rerun the cell on a fresh --output`);
+  return /^Pack identity: (.+)$/m.exec(now)?.[1] ?? now.split('\n')[0];
+}
+
 export function runGbrain(a: Args, log: (s: string) => void): number {
   const worldDir = resolve(a.need('--world')), out = resolve(a.need('--output')), bin = a.need('--gbrain-bin'), build = a.need('--build');
   const sandbox = a.one('--sandbox') ?? 'unshare';
   if (sandbox !== 'unshare' && sandbox !== 'none') throw new Error('entity-h2h: --sandbox is unshare or none');
   const w = loadWorld(worldDir);
   freshDir(out);
+  const pages = join(out, 'world');
+  cpSync(worldDir, pages, { recursive: true });
   const home = join(out, 'home');
   mkdirSync(home);
   const env = { ...keylessEnv(), HOME: home };
@@ -167,10 +207,11 @@ export function runGbrain(a: Args, log: (s: string) => void): number {
   };
   const lastJson = (s: string) => JSON.parse(s.trim().split('\n').filter(l => l.trim().startsWith('{')).at(-1) ?? 'null');
   gbrain(['init', '--pglite', '--no-embedding']);
+  const schemaPack = declareIdField(gbrain, home);
   const sources = [...new Set(w.pages.map(p => p.source))].sort();
   for (const s of sources) {
-    gbrain(['sources', 'add', s, '--path', join(worldDir, s)]);
-    appendFileSync(join(out, 'imports.jsonl'), JSON.stringify(lastJson(gbrain(['import', join(worldDir, s), '--source', s, '--no-embed', '--json']))) + '\n');
+    gbrain(['sources', 'add', s, '--path', join(pages, s)]);
+    appendFileSync(join(out, 'imports.jsonl'), JSON.stringify(lastJson(gbrain(['import', join(pages, s), '--source', s, '--no-embed', '--json']))) + '\n');
   }
   const imports = readFileSync(join(out, 'imports.jsonl'), 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l));
   checkFinderCoverage(imports, w.pages);
@@ -181,7 +222,7 @@ export function runGbrain(a: Args, log: (s: string) => void): number {
   const autoSet = new Set(auto.map(g => g.join('|')));
   const output: NeutralOutput = { system: 'gbrain', version: build, config: 'chosen-rule', model: null, tiers: { auto, proposed: groups.filter(SELECTIONS.proposed).map(g => g.members).filter(g => !autoSet.has(g.join('|'))) } };
   writeFileSync(join(out, 'output.json'), JSON.stringify(output, null, 2) + '\n');
-  writeCell(out, { ...cellRecord('gbrain', 'chosen-rule', null, w, worldDir), status: 'complete' });
+  writeCell(out, { ...cellRecord('gbrain', 'chosen-rule', null, w, worldDir), status: 'complete', schema_pack: schemaPack });
   rmSync(home, { recursive: true, force: true });
   log(`gbrain ${build}: ${imports.length} sources imported, auto groups ${auto.length}, proposed ${output.tiers.proposed.length}; confirm-list composition: bun eval/runner/person-dedupe.ts --finder-json ${join(out, 'finder.json')} --finder-imports ${join(out, 'imports.jsonl')} --finder-build ${build}`);
   return EXIT.ok;

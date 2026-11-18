@@ -300,16 +300,34 @@ describe('proxy binding', () => {
 });
 
 describe('gbrain driver', () => {
-  test('imports each source into a fresh home with no keys, refuses an incomplete import, and writes the neutral output', async () => {
+  test('the generator writes the declared id field on person pages only, so only the person type declares it', () => {
+    const pages = buildWorld(20261117, 20).pages;
+    const idLine = /^(external_id|registry_id|[a-z_]*_id):/m;
+    expect(pages.filter(p => p.type === 'company' && idLine.test(p.text))).toEqual([]);
+    expect(pages.some(p => p.type === 'person' && /^external_id:/m.test(p.text))).toBe(true);
+  });
+
+  test('imports a copy of the world into a fresh home with no keys after declaring the person id field, refuses an incomplete import or an inactive pack, and writes the neutral output', async () => {
     const w = world('w-g', 7, 1);
     const bin = join(tmp, 'fake-gbrain.sh');
     writeFileSync(bin, `#!/usr/bin/env bash
 set -eu
 [ -z "\${OPENAI_API_KEY:-}" ] || { echo "a key reached gbrain" >&2; exit 9; }
 echo "$*" >> "$HOME/../calls"
+pack="$HOME/.gbrain/schema-packs/er-bench/pack.json"
 case $1 in
   init|sources) ;;
-  import) n=$(find "$2" -name '*.md' | wc -l); [ -f "$HOME/../../short" ] && n=$((n-1)); echo "{\\"status\\":\\"success\\",\\"source_id\\":\\"$4\\",\\"imported\\":$n,\\"unchanged\\":0,\\"total_files\\":$n,\\"errors\\":0,\\"malformed_skipped\\":0,\\"failures\\":[]}" ;;
+  schema) case $2 in
+    active) if [ -f "$HOME/active-er-bench" ]; then printf 'Active pack: er-bench v0.0.1\nPack identity: er-bench@0.0.1+fake\n'; else printf 'Active pack: gbrain-base-v2 v1.7.0\nPack identity: gbrain-base-v2@1.7.0+fake\n'; fi ;;
+    fork) [ "$3 $4" = "gbrain-base-v2 er-bench" ] || exit 4; mkdir -p "$(dirname "$pack")"
+      echo '{"name":"er-bench","page_types":[{"name":"person","primitive":"entity"},{"name":"company","primitive":"entity"}]}' > "$pack" ;;
+    validate) case "$(tr -d ' \n' < "$pack")" in *'{"name":"person","primitive":"entity","identity_keys":["external_id"]}'*) ;; *) echo "person external_id not declared" >&2; exit 5 ;; esac
+      [ "$(grep -o identity_keys "$pack" | wc -l)" -eq 1 ] || { echo "another type declares an id" >&2; exit 5; } ;;
+    use) [ -f "$HOME/../../no-activate" ] || touch "$HOME/active-er-bench" ;;
+  esac ;;
+  import) n=$(find "$2" -name '*.md' | wc -l); [ -f "$HOME/../../short" ] && n=$((n-1))
+    find "$2" -name '*.md' -exec sed -i 's/^type: person$/type: "person"/' {} +
+    echo "{\\"status\\":\\"success\\",\\"source_id\\":\\"$4\\",\\"imported\\":$n,\\"unchanged\\":0,\\"total_files\\":$n,\\"errors\\":0,\\"malformed_skipped\\":0,\\"failures\\":[]}" ;;
   dedupe) cat "$FAKE_FINDER" ;;
 esac
 `);
@@ -323,12 +341,27 @@ esac
     writeFileSync(join(tmp, 'finder.json'), JSON.stringify(finder));
     process.env.FAKE_FINDER = join(tmp, 'finder.json');
     process.env.OPENAI_API_KEY = 'must-not-reach-gbrain';
+    const files = (dir: string) => new Map([...new Bun.Glob('**/*').scanSync({ cwd: dir })].sort().map(f => [f, readFileSync(join(dir, f), 'utf8')]));
+    const before = files(w);
     try {
       const out = join(tmp, 'g-ok');
       expect(await cli(['run', '--system', 'gbrain', '--world', w, '--output', out, '--gbrain-bin', bin, '--build', 'v-test', '--sandbox', 'none'], quiet)).toBe(0);
       const o = JSON.parse(readFileSync(join(out, 'output.json'), 'utf8'));
       expect([o.system, o.version, o.tiers.auto.length, o.tiers.proposed.length]).toEqual(['gbrain', 'v-test', 1, 0]);
-      expect(readFileSync(join(out, 'calls'), 'utf8')).toContain('init --pglite --no-embedding');
+      const calls = readFileSync(join(out, 'calls'), 'utf8');
+      expect(calls).toContain('init --pglite --no-embedding');
+      expect(files(w)).toEqual(before);
+      expect(calls).toContain(`import ${join(out, 'world', 'home')} --source home`);
+      expect(calls).not.toContain(`import ${w}`);
+      expect(calls.split('\n').filter(l => l.startsWith('schema ') && !l.endsWith('active'))).toEqual(['schema fork gbrain-base-v2 er-bench', 'schema validate er-bench', 'schema use er-bench']);
+      expect(calls.indexOf('schema use er-bench')).toBeLessThan(calls.indexOf('sources add'));
+      expect(readCell(out)!.schema_pack).toBe('er-bench@0.0.1+fake');
+      const inactive = join(tmp, 'g-inactive');
+      mkdirSync(inactive);
+      writeFileSync(join(inactive, 'no-activate'), '');
+      expect(await cli(['run', '--system', 'gbrain', '--world', w, '--output', join(inactive, 'cell'), '--gbrain-bin', bin, '--build', 'v-test', '--sandbox', 'none'], quiet)).toBe(2);
+      expect(existsSync(join(inactive, 'cell', 'output.json'))).toBe(false);
+      expect(readFileSync(join(inactive, 'cell', 'calls'), 'utf8')).not.toContain('import ');
       const short = join(tmp, 'g-short');
       mkdirSync(short);
       writeFileSync(join(short, 'short'), '');
