@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { lookupEmbeddingPrice } from '../../node_modules/gbrain/src/core/embedding-pricing.ts';
-import { COMPANY_FAMILIES, generateCompanyLedger } from '../../eval/generators/company-dedupe-gen.ts';
+import { generateCompanyLedger } from '../../eval/generators/company-dedupe-gen.ts';
 import { deriveGold, generateLedger, ledgerFingerprint, writtenPages } from '../../eval/generators/person-dedupe-gen.ts';
 import { CHAT_PRICE_OVERRIDES } from '../../eval/runner/budget-ledger.ts';
 import { SELECTIONS, checkFinderCoverage, parseFinderOutput, runPersonDedupe, scoreGroups, type Rate } from '../../eval/runner/person-dedupe.ts';
@@ -13,8 +13,9 @@ const DEV = join(ROOT, 'docs/benchmarks/2026-11-18-entity-dedupe-h2h/dev');
 const PREREG = readFileSync(join(ROOT, 'docs/benchmarks/2026-11-18-entity-dedupe-h2h-preregistration.md'), 'utf8');
 const read = (path: string) => JSON.parse(readFileSync(join(DEV, path), 'utf8'));
 const DEV_SEED = 20261117;
+const DEV_GENERATOR_VERSION = 1;
 
-const people = generateLedger(DEV_SEED, 20);
+const people = generateLedger(DEV_SEED, 20, DEV_GENERATOR_VERSION);
 const gold = deriveGold(people);
 const known = new Set(writtenPages(people).map(p => p.key));
 const pairLabel = new Map(people.pairs.map(p => [[p.a, p.b].sort().join('|'), p.label]));
@@ -144,12 +145,12 @@ describe('entity-dedupe h2h development evidence: gbrain finder', () => {
 });
 
 describe('entity-dedupe h2h development evidence: world size and company stand-in', () => {
-  const companies = generateCompanyLedger(DEV_SEED, 20);
+  const companies = generateCompanyLedger(DEV_SEED, 20, DEV_GENERATOR_VERSION);
   const count = (pairs: ReadonlyArray<{ label: string }>, label: string) => pairs.filter(p => p.label === label).length;
 
   test('the world sizes match the preregistration', () => {
     const [pd, ps, cd, cs] = [count(people.pairs, 'different'), count(people.pairs, 'same'), count(companies.pairs, 'different'), count(companies.pairs, 'same')];
-    expect(PREREG).toContain(`plus ${COMPANY_FAMILIES.length} company families (${companies.pages.length} pages at 20 instances)`);
+    expect(PREREG).toContain(`plus ${new Set(companies.pages.map(p => p.family)).size} company families (${companies.pages.length} pages at 20 instances)`);
     expect(PREREG).toContain(`that is ${(people.pages.length + companies.pages.length).toLocaleString('en-US')} pages: ${pd} person and ${cd} company must-not-link pairs, and ${ps} person and ${cs} company must-link pairs.`);
     expect(PREREG).toContain(`of the ${pd + ps + cd + cs} designed pairs`);
   });
@@ -172,7 +173,7 @@ describe('entity-dedupe h2h development evidence: smoke', () => {
   const runs = Object.fromEntries(KINDS.map(k => [k, JSON.parse(readFileSync(join(ROOT, runRecord(k)), 'utf8'))]));
   const aggregate = read('smoke-runs/aggregate.json');
   const matcher = read('smoke-runs/matcher-summary.json');
-  const smoke = generateLedger(DEV_SEED, 2);
+  const smoke = generateLedger(DEV_SEED, 2, DEV_GENERATOR_VERSION);
   const smokePages = Object.keys(runs['ext-temporal-graph'].ingest);
   const inSmoke = new Set(smokePages);
   const smokeDifferent = smoke.pairs.filter(p => p.label === 'different' && inSmoke.has(p.a) && inSmoke.has(p.b));
