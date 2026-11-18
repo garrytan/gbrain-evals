@@ -10,7 +10,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { BudgetRun, closeLedgers } from '../../eval/runner/budget-ledger.ts';
-import { canonical, tuningOf } from '../../eval/runner/entity-h2h/tuning.ts';
+import { RULE, canonical, tuningOf } from '../../eval/runner/entity-h2h/tuning.ts';
 import { HELD_OUT_SEED, buildWorld } from '../../eval/runner/entity-h2h/world.ts';
 
 const REPO = join(import.meta.dir, '../..');
@@ -104,8 +104,8 @@ describe('entity-h2h ubicloud run.sh, with a fake runner', () => {
     expect(f.launches()).toEqual([]);
   });
 
-  // Value: protects=a paid VM boots only for a setting the runner would run, on the seed and world size the preregistration fixes; fails_when=a tuning cell launches off the held-out seed or at 20 per family, a tuned cell launches without its choice or on the held-out seed, or a setting outside the grid boots a VM
-  test('a tuning launch needs the held-out seed and writes a 5-per-family world; a tuned launch needs a usable choice and another seed; nothing else boots a VM', () => {
+  // Value: protects=a paid VM boots only for a setting the runner would run, on the seed and world size the preregistration fixes; fails_when=a tuning cell launches off the held-out seed or at 20 per family, a tuned cell launches without a usable record, on the held-out seed or when it is the default cell, or a setting outside the grid boots a VM
+  test('a tuning launch needs the held-out seed and writes a 5-per-family world; a tuned launch needs a usable record, another seed and a non-default winner; nothing else boots a VM', () => {
     const f = fakeRunner('tuning');
     const t = tuningOf('ext-memory-bank'), names = Object.keys(t.grid), held = { ...DUMMIES, ENTITY_H2H_SEED: String(HELD_OUT_SEED) };
     const refused = (args: string[], env: Record<string, string>, why: string) => {
@@ -113,20 +113,31 @@ describe('entity-h2h ubicloud run.sh, with a fake runner', () => {
       expect([r.status, r.stderr]).toEqual([2, expect.stringContaining(why)]);
     };
     refused(['launch', 't1', 'ext-memory-bank', `tuning:${names[0]}`, '1.5'], DUMMIES, 'runs only on the held-out seed');
+    refused(['launch', 't1b', 'ext-memory-bank', 'tuning:default', '1.5'], DUMMIES, 'runs only on the held-out seed');
     refused(['launch', 't2', 'ext-memory-bank', 'tuning:not-in-grid', '1.5'], held, 'no VM was started');
     refused(['launch', 't3', 'ext-extract-first', 'tuning:anything', '1.5'], held, 'no VM was started');
-    refused(['launch', 't4', 'ext-memory-bank', 'tuned', '1.5'], DUMMIES, 'needs the recorded choice');
+    refused(['launch', 't3b', 'ext-temporal-graph', 'tuned', '1.5'], DUMMIES, 'REFUSED TUNED_IS_DEFAULT');
+    refused(['launch', 't4', 'ext-memory-bank', 'tuned', '1.5'], DUMMIES, 'REFUSED TUNING_CHOICE');
     refused(['launch', 't5', 'ext-memory-bank', 'default', '1.5', join(f.root, 'x.json')], DUMMIES, 'tuned only');
-    const choice = join(f.root, 'choice.json');
-    writeFileSync(choice, JSON.stringify({ choice: 'entity-h2h-tuning-choice', system: 'ext-memory-bank', setting: names[1], settings: t.grid[names[1]].settings, rule: 'test rule',
-      grid_sha256: createHash('sha256').update(canonical(t.grid)).digest('hex'), held_out: { seed: HELD_OUT_SEED, per_family: 5 }, cells: names.slice(1).map(setting => ({ setting })) }));
+    const record = (winsFm: number) => {
+      const candidates = ['default', ...names].map((setting, i) => ({ setting, settings: setting === 'default' ? t.default : t.grid[setting].settings, distance: i, eligible: true,
+        false_merge: { k: setting === names[1] ? winsFm : 10, n: 100 }, recall: { k: 50, n: 100 } }));
+      const setting = winsFm < 10 ? names[1] : 'default';
+      return { choice: 'entity-h2h-tuning-choice', system: 'ext-memory-bank', setting, settings: setting === 'default' ? t.default : t.grid[setting].settings, rule: RULE, eligibility: 'x',
+        grid_sha256: createHash('sha256').update(canonical(t.grid)).digest('hex'), held_out: { seed: HELD_OUT_SEED, per_family: 5 }, candidates, at: 'x' };
+    };
+    const choice = join(f.root, 'choice.json'), keep = join(f.root, 'choice-default.json');
+    writeFileSync(choice, JSON.stringify({ ...record(2), candidates: record(2).candidates.slice(0, -1) }));
     refused(['launch', 't6', 'ext-memory-bank', 'tuned', '1.5', choice], DUMMIES, 'REFUSED TUNING_CHOICE');
-    writeFileSync(choice, JSON.stringify({ ...JSON.parse(readFileSync(choice, 'utf8')), cells: names.map(setting => ({ setting })) }));
+    writeFileSync(keep, JSON.stringify(record(10)));
+    refused(['launch', 't6b', 'ext-memory-bank', 'tuned', '1.5', keep], DUMMIES, 'REFUSED TUNED_IS_DEFAULT');
+    writeFileSync(choice, JSON.stringify(record(2)));
     refused(['launch', 't7', 'ext-memory-bank', 'tuned', '1.5', choice], held, 'never runs on the held-out seed');
     expect(f.launches()).toEqual([]);
     expect(f.launch(['launch', 't8', 'ext-memory-bank', `tuning:${names[0]}`, '1.5'], held).status).toBe(0);
+    expect(f.launch(['launch', 't8b', 'ext-memory-bank', 'tuning:default', '1.5'], held).status).toBe(0);
     expect(f.launch(['launch', 't9', 'ext-memory-bank', 'tuned', '1.5', choice]).status).toBe(0);
-    expect(f.launches()).toEqual([expect.stringContaining(`vm-run.sh t8 ext-memory-bank tuning:${names[0]} 1.5 run 1 none 5`), expect.stringContaining('vm-run.sh t9 ext-memory-bank tuned 1.5 run 1 none 20')]);
+    expect(f.launches()).toEqual([expect.stringContaining(`vm-run.sh t8 ext-memory-bank tuning:${names[0]} 1.5 run 1 none 5`), expect.stringContaining('vm-run.sh t8b ext-memory-bank tuning:default 1.5 run 1 none 5'), expect.stringContaining('vm-run.sh t9 ext-memory-bank tuned 1.5 run 1 none 20')]);
     expect(JSON.parse(readFileSync(join(f.cells, 't9', 'choice.json'), 'utf8')).setting).toBe(names[1]);
   });
 

@@ -25,7 +25,7 @@ bun eval/runner/entity-h2h/run.ts world --seed "$ENTITY_H2H_SEED" --per-family "
 choice=()
 [ "$config" != tuned ] || choice=(--choice "$S/choice.json")
 case $mode in
-  run) stack=(--system "$system" --config "$config" "${choice[@]}") ;;
+  run) stack=(--system "$system" --config "$config" ${choice[@]+"${choice[@]}"}) ;;
   *) stack=(--output "$C") ;;
 esac
 bash eval/systems/bootstrap.sh proxy --lease-id "$run_id" --lease-usd "$lease" --out "$A" >/dev/null || exit 3
@@ -40,7 +40,7 @@ set -a; . "$A/stack.env"; set +a
 bash eval/systems/bootstrap.sh up --system "$system" --config entity-h2h --port 8700 || exit 3
 paid=(--shim http://127.0.0.1:8700 --proxy http://127.0.0.1:8787 --budget-ledger "$A/lease.sqlite" --budget-run-id "$run_id" --usage-log "$A/usage.ndjson")
 case $mode in
-  run) bun eval/runner/entity-h2h/run.ts run --system "$system" --config "$config" "${choice[@]}" --world "$W" --output "$C" "${paid[@]}" ;;
+  run) bun eval/runner/entity-h2h/run.ts run --system "$system" --config "$config" ${choice[@]+"${choice[@]}"} --world "$W" --output "$C" "${paid[@]}" ;;
   restart) bun eval/runner/entity-h2h/run.ts restart --output "$C" "${paid[@]}" ;;
   continue) bun eval/runner/entity-h2h/run.ts continue --output "$C" --stop-usd "$stop" "${paid[@]}" ;;
   *) echo "vm-run: unknown mode $mode" >&2; exit 2 ;;

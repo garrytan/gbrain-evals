@@ -21,9 +21,10 @@
 # runner allows one restart; a second failure ends the cell as "failed (infrastructure)" (exit 5).
 #
 # Configurations (eval/runner/entity-h2h/tuning.ts): before any VM starts, this script checks the setting against the
-# system's grid (run.ts stack-env) and the seed rules: a tuning:<setting> cell runs only with ENTITY_H2H_SEED set to the
-# held-out seed 20261118 and a world of 5 instances per family, a tuned cell never on that seed and only with the
-# recorded choice from run.ts choose, which travels to the VM as <cell>/choice.json. default and tuned cells write the
+# system's grid (run.ts stack-env) and the seed rules: a tuning:<setting|default> cell runs only with ENTITY_H2H_SEED set
+# to the held-out seed 20261118 and a world of 5 instances per family, a tuned cell never on that seed and only with the
+# choice record from run.ts choose, which travels to the VM as <cell>/choice.json. A tuned cell whose system has no
+# documented dedupe setting, or whose rule chose default, is the default cell, so it starts no VM (TUNED_IS_DEFAULT). default and tuned cells write the
 # world at 20 per family; a restart or continue takes the cell's own. vm-run.sh starts the stack in the cell's setting,
 # and the runner refuses (STACK_CONFIG_MISMATCH) a stack that reports another.
 #
@@ -108,7 +109,7 @@ if [ "$mode" = run ]; then
   case $config in
     default) per_family=20 ;;
     tuning:*) per_family=5 ;;
-    tuned) per_family=20; [ -n "$choice" ] && [ -f "$choice" ] || { echo "run.sh: a tuned cell needs the recorded choice from run.ts choose: run.sh launch <cell> <system> tuned <lease-usd> <choice-file>" >&2; exit 2; } ;;
+    tuned) per_family=20; [ -z "$choice" ] || [ -f "$choice" ] || { echo "run.sh: no choice record at $choice" >&2; exit 2; } ;;
     *) echo "run.sh: config is default, tuning:<setting> or tuned" >&2; exit 2 ;;
   esac
   [ "$config" = tuned ] || [ -z "$choice" ] || { echo "run.sh: a choice file goes with config tuned only" >&2; exit 2; }
