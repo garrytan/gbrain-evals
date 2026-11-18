@@ -20,9 +20,9 @@
  * Pure: no gbrain import, no I/O.
  */
 import { createHash } from 'node:crypto';
-import { SOURCES, mulberry32, slugify, type DesignedPair, type Label, type SourceId, type WrittenPage } from './person-dedupe-gen.ts';
+import { SOURCES, exclusiveIdSuffix, mulberry32, pageKey, slugify, type DesignedPair, type Label, type LedgerPage, type SourceId, type WrittenPage } from './person-dedupe-gen.ts';
 
-export const COMPANY_DEDUPE_GENERATOR_VERSION = 1;
+export const COMPANY_DEDUPE_GENERATOR_VERSION = 2;
 
 /** The company stream's seed for a world seed. */
 export function companySeed(seed: number): number {
@@ -35,7 +35,7 @@ export interface CompanyFamily {
   description: string;
 }
 
-export const COMPANY_FAMILIES: readonly CompanyFamily[] = [
+const V1_FAMILIES: readonly CompanyFamily[] = [
   { id: 'co-same-exact', label: 'same', description: 'one company in two sources: same name, same domain' },
   { id: 'co-same-legal-suffix', label: 'same', description: 'one company whose legal suffix is written another way or dropped (Halwick Inc and Halwick, Inc.; Halwick Inc and Halwick; Inc and LLC after a conversion), same domain' },
   { id: 'co-same-abbreviation', label: 'same', description: 'one company; one page uses its initials (Halwick International Machines, HIM), with the same domain or no domain on the short page' },
@@ -50,8 +50,13 @@ export const COMPANY_FAMILIES: readonly CompanyFamily[] = [
   { id: 'co-diff-acquired', label: 'different', description: 'an acquirer and the company it bought, whose second page lists the acquirer domain (its site now redirects); the bought company\'s two pages are one company' },
 ];
 
-/** Families whose designed pairs mix labels: the bought company's own two pages are one company. */
-export const COMPANY_MIXED_FAMILIES: ReadonlySet<string> = new Set(['co-diff-acquired']);
+const FOUNDER_FAMILY: CompanyFamily = {
+  id: 'co-diff-founder-linkedin', label: 'different',
+  description: 'A directory uses the founder’s personal LinkedIn as the profile of a practice named after them. The founder and the practice can have the same display name and location. Controls use the founder’s link on two pages about the same practice.',
+};
+
+export const COMPANY_FAMILIES: readonly CompanyFamily[] = [...V1_FAMILIES, FOUNDER_FAMILY];
+export const COMPANY_MIXED_FAMILIES: ReadonlySet<string> = new Set(['co-diff-acquired', FOUNDER_FAMILY.id]);
 
 export const COMPANY_FAMILY_BY_ID: ReadonlyMap<string, CompanyFamily> = new Map(COMPANY_FAMILIES.map(f => [f.id, f]));
 
@@ -82,6 +87,7 @@ export interface CompanyLedger {
   generator_version: number;
   sources: readonly SourceId[];
   pages: CompanyLedgerPage[];
+  founders?: LedgerPage[];
   pairs: DesignedPair[];
 }
 
@@ -93,6 +99,7 @@ const INDUSTRIES: ReadonlyArray<readonly [string, string]> = [['bakery', 'Bakery
 const ABBREV_MIDDLE = ['International', 'United', 'General', 'Consolidated', 'Pacific', 'Northern'];
 const ABBREV_LAST = ['Machines', 'Systems', 'Instruments', 'Shipping', 'Minerals', 'Textiles'];
 const DIVISIONS = ['Energy', 'Water', 'Rail', 'Ports', 'Foods'];
+const FOUNDER_GIVEN = ['Aline', 'Caris', 'Della', 'Ellery', 'Galen', 'Iona', 'Jory', 'Liora', 'Maren', 'Neris', 'Olin', 'Renna', 'Tavin', 'Veda'];
 interface Place { country: string; suffix: string; cc: string; cities: readonly string[] }
 const PLACES: readonly Place[] = [
   { country: 'United States', suffix: 'Inc', cc: 'us', cities: ['Portland', 'Austin', 'Denver', 'Raleigh'] },
@@ -118,7 +125,8 @@ export function companyPageKey(p: { source: string; slug: string }): string {
   return `${p.source}:companies/${p.slug}`;
 }
 
-export function generateCompanyLedger(seed: number, perFamily: number): CompanyLedger {
+export function generateCompanyLedger(seed: number, perFamily: number, version = COMPANY_DEDUPE_GENERATOR_VERSION): CompanyLedger {
+  if (version !== 1 && version !== COMPANY_DEDUPE_GENERATOR_VERSION) throw new Error(`company-dedupe: unknown generator version ${version}`);
   const streamSeed = companySeed(seed);
   const next = mulberry32(streamSeed);
   const pick = <T>(items: readonly T[]): T => items[Math.floor(next() * items.length)];
@@ -141,6 +149,7 @@ export function generateCompanyLedger(seed: number, perFamily: number): CompanyL
     throw new Error('company-dedupe: name pool exhausted');
   };
   const pages: CompanyLedgerPage[] = [];
+  const founders: LedgerPage[] = [];
   const pairs: DesignedPair[] = [];
   const slugsBySource = new Map<SourceId, Set<string>>(SOURCES.map(s => [s, new Set<string>()]));
   const place = (source: SourceId, base: string): string => {
@@ -151,7 +160,7 @@ export function generateCompanyLedger(seed: number, perFamily: number): CompanyL
     return slug;
   };
 
-  for (const family of COMPANY_FAMILIES) {
+  for (const family of version === 1 ? V1_FAMILIES : COMPANY_FAMILIES) {
     for (let instance = 0; instance < perFamily; instance++) {
       const home = pick(PLACES);
       const city = pick(home.cities);
@@ -160,13 +169,13 @@ export function generateCompanyLedger(seed: number, perFamily: number): CompanyL
       // Variants step every three instances, so each variant meets every LinkedIn coverage case below.
       const variant = (k: number) => Math.floor(instance / 3) % k;
       const made: CompanyLedgerPage[] = [];
-      type Opts = { domains: string[]; website?: string | null; industry?: string; city?: string; country?: string; legal_suffix?: string | null; parent?: string | null; body?: string };
+      type Opts = { domains: string[]; website?: string | null; linkedin?: string; industry?: string; city?: string; country?: string; legal_suffix?: string | null; parent?: string | null; body?: string };
       const add = (company: string, source: SourceId, title: string, o: Opts) => {
         const ind = o.industry ?? industry, c = o.city ?? city, country = o.country ?? home.country;
         made.push({
           source, slug: place(source, slugify(title)), company: `${tag}-${company}`, family: family.id, instance, title,
           domains: o.domains, website: o.website === undefined ? (o.domains.length ? `https://www.${o.domains[0]}` : null) : o.website,
-          linkedin: null, industry: ind, city: c, country, legal_suffix: o.legal_suffix ?? null, parent: o.parent ?? null,
+          linkedin: o.linkedin ?? null, industry: ind, city: c, country, legal_suffix: o.legal_suffix ?? null, parent: o.parent ?? null,
           body: o.body ?? `${title} is a ${ind} business in ${c}, ${country}.`,
         });
       };
@@ -300,20 +309,42 @@ export function generateCompanyLedger(seed: number, perFamily: number): CompanyL
           add('buyer', 'work', buyer, { domains: [ad], industry: 'holding company' });
           break;
         }
+        case FOUNDER_FAMILY.id: {
+          const founder = `${pick(FOUNDER_GIVEN)} ${stem()}`;
+          const title = instance % 4 === 1 ? `${founder}, LLC` : founder;
+          const linkedin = `https://www.linkedin.example/in/${exclusiveIdSuffix(seed, version, `company:linkedin:${tag}:founder`)}`;
+          const domains = [`${compact(founder)}.example`];
+          add('practice', 'work', title, { domains, linkedin, body: `${title} provides ${industry} services in ${city}.` });
+          if (instance % 5 === 4) {
+            add('practice', 'home', title, { domains: [], linkedin, body: `Listed locally for ${industry} services in ${city}.` });
+          } else {
+            const p: LedgerPage = {
+              person: `${tag}-founder`, source: 'home', slug: slugify(founder), title: founder, family: family.id, instance,
+              linkedin, github: null, emails: [], company: title, city, body: `Works in ${industry} in ${city}.`,
+            };
+            founders.push(p);
+            pairs.push({ a: companyPageKey(made[0]), b: pageKey(p), family: family.id, instance, label: 'different' });
+          }
+          break;
+        }
         default:
           throw new Error(`company-dedupe: no generator for family ${family.id}`);
       }
 
       // LinkedIn coverage cycles by instance, as on person pages: on every third instance the first
       // two pages carry a LinkedIn company page, one value per company. A design choice, not a field rate.
-      if (instance % 3 === 1) for (const pg of made.slice(0, 2)) pg.linkedin = `https://www.linkedin.com/company/${createHash('sha256').update(pg.company).digest('hex').slice(0, 10)}`;
+      if (instance % 3 === 1 && !made.some(pg => pg.linkedin)) for (const pg of made.slice(0, 2)) {
+        pg.linkedin = version === 1
+          ? `https://www.linkedin.com/company/${createHash('sha256').update(pg.company).digest('hex').slice(0, 10)}`
+          : `https://www.linkedin.example/company/${exclusiveIdSuffix(seed, version, `company:linkedin:${pg.company}`)}`;
+      }
       for (let i = 0; i < made.length; i++) for (let j = i + 1; j < made.length; j++) {
         pairs.push({ a: companyPageKey(made[i]), b: companyPageKey(made[j]), family: family.id, instance, label: made[i].company === made[j].company ? 'same' : 'different' });
       }
       pages.push(...made);
     }
   }
-  return { seed, stream_seed: streamSeed, per_family: perFamily, generator_version: COMPANY_DEDUPE_GENERATOR_VERSION, sources: SOURCES, pages, pairs };
+  return { seed, stream_seed: streamSeed, per_family: perFamily, generator_version: version, sources: SOURCES, pages, ...(version === 1 ? {} : { founders }), pairs };
 }
 
 /** The Markdown a system imports: frontmatter and a body line, never the company id. */
@@ -359,8 +390,10 @@ export function deriveCompanyGold(ledger: CompanyLedger): Map<string, string> {
     if (company.has(k)) throw new Error(`company-dedupe: duplicate page key ${k}`);
     company.set(k, p.company);
   }
+  const entities = new Map([...company, ...(ledger.founders ?? []).map(p => [pageKey(p), p.person] as const)]);
   for (const pair of ledger.pairs) {
-    const truth: Label = company.get(pair.a) === company.get(pair.b) ? 'same' : 'different';
+    if (!entities.has(pair.a) || !entities.has(pair.b)) throw new Error(`company-dedupe: unknown page in pair ${pair.a} ${pair.b}`);
+    const truth: Label = entities.get(pair.a) === entities.get(pair.b) ? 'same' : 'different';
     if (truth !== pair.label) throw new Error(`company-dedupe: pair ${pair.a} ${pair.b} labelled ${pair.label}, companies say ${truth}`);
     const fam = COMPANY_FAMILY_BY_ID.get(pair.family)!;
     if (!COMPANY_MIXED_FAMILIES.has(fam.id) && fam.label !== truth) throw new Error(`company-dedupe: family ${fam.id} designs ${fam.label} pairs, got ${truth}`);
