@@ -21,9 +21,10 @@
  */
 import { createHash } from 'node:crypto';
 
-export const PERSON_DEDUPE_GENERATOR_VERSION = 1;
+export const PERSON_DEDUPE_GENERATOR_VERSION = 2;
 export const PERSON_DEDUPE_DEFAULT_SEED = 20261117;
 export const PERSON_DEDUPE_DEFAULT_PER_FAMILY = 20;
+export const DECLARED_PERSON_ID_FIELD = 'external_id';
 export const SOURCES = ['work', 'home'] as const;
 export type SourceId = typeof SOURCES[number];
 
@@ -35,7 +36,7 @@ export interface Family {
   description: string;
 }
 
-export const FAMILIES: readonly Family[] = [
+const V1_FAMILIES: readonly Family[] = [
   { id: 'same-exact', label: 'same', description: 'one person in two sources: same name, same email' },
   { id: 'same-case-space', label: 'same', description: 'one person; the name differs only in case, spacing or a full stop' },
   { id: 'same-diacritics', label: 'same', description: 'one person; one page drops the accents (Núñez, Nunez)' },
@@ -68,8 +69,15 @@ export const FAMILIES: readonly Family[] = [
   { id: 'diff-transitive-chain', label: 'different', description: 'A and B are one person (same name, same email); C has the same name and shares only the team address with B' },
 ];
 
-/** Families whose designed pairs mix labels: the true pair inside a chain or a bridge is one person. */
-export const MIXED_FAMILIES: ReadonlySet<string> = new Set(['diff-transitive-chain', 'diff-bridge-page']);
+const SHARED_ID_FAMILIES: readonly Family[] = [
+  { id: 'diff-recycled-github', label: 'different', description: 'Two dated rosters show one GitHub login: a namesake took it after the first owner deleted the account. Both people do similar work, so the change looks like an ordinary profile update. Some rosters instead track the same owner.' },
+  { id: 'diff-wrong-linkedin', label: 'different', description: 'A contact in a second source gets a LinkedIn URL copied from a namesake, with no second profile to contradict it. The people work in the same area. In controls the copied link goes to the right person.' },
+  { id: 'diff-declared-id-typo', label: 'different', description: 'Two nearby CRM records have ids that differ by a digit swap. A handwritten import transposes the id onto a similar-looking contact, so the only account id agrees. In controls the id is copied without error.' },
+  { id: 'diff-shared-github-account', label: 'different', description: 'Project maintainers list the same organisation or release account as their GitHub login. Two are namesakes or look like namesakes, and one is also listed twice across sources.' },
+];
+
+export const FAMILIES: readonly Family[] = [...V1_FAMILIES, ...SHARED_ID_FAMILIES];
+export const MIXED_FAMILIES: ReadonlySet<string> = new Set(['diff-transitive-chain', 'diff-bridge-page', ...SHARED_ID_FAMILIES.map(f => f.id)]);
 
 export const FAMILY_BY_ID: ReadonlyMap<string, Family> = new Map(FAMILIES.map(f => [f.id, f]));
 
@@ -85,6 +93,7 @@ export interface LedgerPage {
   /** A LinkedIn profile URL or a GitHub handle; see the key-coverage note in generateLedger. */
   linkedin: string | null;
   github: string | null;
+  external_id?: string;
   company: string | null;
   city: string | null;
   body: string;
@@ -169,7 +178,12 @@ class Names {
   }
 }
 
-export function generateLedger(seed: number = PERSON_DEDUPE_DEFAULT_SEED, perFamily: number = PERSON_DEDUPE_DEFAULT_PER_FAMILY): Ledger {
+export function exclusiveIdSuffix(seed: number, version: number, id: string): string {
+  return createHash('sha256').update(JSON.stringify([seed, version, id])).digest('hex').slice(0, 16);
+}
+
+export function generateLedger(seed: number = PERSON_DEDUPE_DEFAULT_SEED, perFamily: number = PERSON_DEDUPE_DEFAULT_PER_FAMILY, version = PERSON_DEDUPE_GENERATOR_VERSION): Ledger {
+  if (version !== 1 && version !== PERSON_DEDUPE_GENERATOR_VERSION) throw new Error(`person-dedupe: unknown generator version ${version}`);
   const next = mulberry32(seed);
   const names = new Names(next);
   const pages: LedgerPage[] = [];
@@ -189,7 +203,7 @@ export function generateLedger(seed: number = PERSON_DEDUPE_DEFAULT_SEED, perFam
   const num = () => String(10 + Math.floor(next() * 89));
   let shared = 0;
 
-  for (const family of FAMILIES) {
+  for (const family of version === 1 ? V1_FAMILIES : FAMILIES) {
     for (let instance = 0; instance < perFamily; instance++) {
       const company = names.pick(COMPANIES);
       const otherCompany = other(COMPANIES, company);
@@ -198,10 +212,11 @@ export function generateLedger(seed: number = PERSON_DEDUPE_DEFAULT_SEED, perFam
       const domain = `${compact(company)}.example`;
       const tag = `${family.id}-${instance}`;
       const made: LedgerPage[] = [];
-      const add = (person: string, source: SourceId, title: string, o: { emails: string[]; linkedin?: string; github?: string; company?: string | null; city?: string | null; body?: string; slugBase?: string }) => {
+      const add = (person: string, source: SourceId, title: string, o: { emails: string[]; linkedin?: string; github?: string; external_id?: string; company?: string | null; city?: string | null; body?: string; slugBase?: string }) => {
         made.push({
           source, slug: place(source, o.slugBase ?? slugify(title)), person: `${tag}-${person}`, family: family.id, instance, title,
           emails: o.emails, linkedin: o.linkedin ?? null, github: o.github ?? null, company: o.company === undefined ? company : o.company, city: o.city === undefined ? city : o.city,
+          ...(o.external_id ? { external_id: o.external_id } : {}),
           body: o.body ?? `${title.trim()} is a contact.`,
         });
       };
@@ -446,6 +461,50 @@ export function generateLedger(seed: number = PERSON_DEDUPE_DEFAULT_SEED, perFam
           add('c', 'work', name, { emails: [work(n.given, n.surname, '2'), t], city: otherCity });
           break;
         }
+        case 'diff-recycled-github': {
+          const n = names.fresh();
+          const name = `${n.given} ${n.surname}`;
+          const shortened = `${n.given[0]}. ${n.surname}`;
+          const later = instance % 4 === 1 && names.claim(shortened) ? shortened : name;
+          const github = `${compact(name)}-dev`;
+          add('original', 'work', name, { emails: [], github, company: null, body: '2021 contributor roster: maintains test fixtures and reviews documentation changes.' });
+          add(instance % 5 === 4 ? 'original' : 'later', 'home', later, { emails: [], github, company: null, body: '2025 contributor roster: updates test fixtures and reviews documentation changes.' });
+          break;
+        }
+        case 'diff-wrong-linkedin': {
+          const n = names.fresh();
+          const name = `${n.given} ${n.surname}`;
+          const shortened = `${n.given[0]}. ${n.surname}`;
+          const listed = instance % 4 === 2 && names.claim(shortened) ? shortened : name;
+          const linkedin = `https://www.linkedin.example/in/${slugify(name)}`;
+          add('owner', 'work', name, { emails: [], linkedin, body: `${name} is on the partner directory.` });
+          add(instance % 5 === 4 ? 'owner' : 'other', 'home', listed, { emails: [], linkedin, body: `${listed} was added from a regional event list.` });
+          break;
+        }
+        case 'diff-declared-id-typo': {
+          const n = names.fresh();
+          const name = `${n.given} ${n.surname}`;
+          const shortened = `${n.given[0]}. ${n.surname}`;
+          const listed = instance % 4 === 3 && names.claim(shortened) ? shortened : name;
+          const same = instance % 5 === 4;
+          const batch = `crm-${exclusiveIdSuffix(seed, version, tag)}`;
+          const [issuedA, issuedB] = [`${batch}-4817`, `${batch}-4871`];
+          const imported = same ? issuedA : `${issuedB.slice(0, -2)}${issuedB.at(-1)}${issuedB.at(-2)}`;
+          add('owner', 'work', name, { emails: [], external_id: issuedA, body: `${name} appears in the account directory.` });
+          add(same ? 'owner' : 'other', 'home', listed, { emails: [], external_id: imported, body: `${listed} appears in the migrated contact list.` });
+          break;
+        }
+        case 'diff-shared-github-account': {
+          const n = names.fresh();
+          const name = `${n.given} ${n.surname}`;
+          const shortened = `${n.given[0]}. ${n.surname}`;
+          const namesake = instance % 4 === 3 && names.claim(shortened) ? shortened : name;
+          const github = `${instance % 2 === 0 ? 'releases' : 'engineering'}-${compact(company)}-${instance}`;
+          add('maintainer', 'work', name, { emails: [], github, body: `${name} reviews changes for the project.` });
+          add('maintainer', 'home', name, { emails: [], github, body: `${name} helps maintain the project.` });
+          add('other-maintainer', 'work', namesake, { emails: [], github, body: `${namesake} coordinates project releases.` });
+          break;
+        }
         default:
           throw new Error(`person-dedupe: no generator for family ${family.id}`);
       }
@@ -454,9 +513,13 @@ export function generateLedger(seed: number = PERSON_DEDUPE_DEFAULT_SEED, perFam
       // profile (one value per person, so the same person agrees and different people disagree);
       // 2 only the first page carries a GitHub handle. The split is a design choice, not a field rate.
       const profile = (pg: LedgerPage) => createHash('sha256').update(pg.person).digest('hex').slice(0, 10);
-      const presetKeys = made.some(pg => pg.linkedin || pg.github);
+      const presetKeys = made.some(pg => pg.linkedin || pg.github || pg.external_id);
       if (!presetKeys && instance % 3 === 1 && made.length >= 2) for (const pg of made.slice(0, 2)) pg.linkedin = `https://www.linkedin.com/in/${profile(pg)}`;
       if (!presetKeys && instance % 3 === 2) made[0].github = `${compact(made[0].title)}${profile(made[0]).slice(0, 4)}`;
+      if (version !== 1) for (const pg of made) {
+        if (pg.linkedin) pg.linkedin = `https://www.linkedin.example/in/${exclusiveIdSuffix(seed, version, `person:linkedin:${pg.linkedin}`)}`;
+        if (pg.github) pg.github = `${pg.github.slice(0, 22).replace(/-+$/, '')}-${exclusiveIdSuffix(seed, version, `person:github:${pg.github}`)}`;
+      }
       for (let i = 0; i < made.length; i++) for (let j = i + 1; j < made.length; j++) {
         if (made[i].person.includes('-colleague') || made[j].person.includes('-colleague')) continue;
         pairs.push({ a: pageKey(made[i]), b: pageKey(made[j]), family: family.id, instance, label: made[i].person === made[j].person ? 'same' : 'different' });
@@ -464,7 +527,7 @@ export function generateLedger(seed: number = PERSON_DEDUPE_DEFAULT_SEED, perFam
       pages.push(...made);
     }
   }
-  return { seed, per_family: perFamily, generator_version: PERSON_DEDUPE_GENERATOR_VERSION, sources: SOURCES, pages, pairs };
+  return { seed, per_family: perFamily, generator_version: version, sources: SOURCES, pages, pairs };
 }
 
 /** The Markdown a system imports: frontmatter and a body line, never the person id. */
@@ -474,6 +537,7 @@ export function renderPage(p: LedgerPage): string {
   if (p.emails.length) lines.push(`emails: [${p.emails.map(q).join(', ')}]`);
   if (p.linkedin) lines.push(`linkedin: ${q(p.linkedin)}`);
   if (p.github) lines.push(`github: ${q(p.github)}`);
+  if (p.external_id) lines.push(`${DECLARED_PERSON_ID_FIELD}: ${q(p.external_id)}`);
   if (p.company) lines.push(`company: ${q(p.company)}`);
   if (p.city) lines.push(`city: ${q(p.city)}`);
   lines.push('---', '', `# ${p.title.trim()}`, '', p.body, '');
@@ -493,6 +557,7 @@ export interface WrittenPage {
   domains: string[];
   linkedin: string | null;
   github: string | null;
+  external_id?: string;
   company: string | null;
   city: string | null;
 }
@@ -506,7 +571,8 @@ export function parseWrittenPage(source: string, slug: string, markdown: string)
     if (at > 0) fields.set(line.slice(0, at), line.slice(at + 2));
   }
   const scalar = (k: string) => fields.has(k) ? JSON.parse(fields.get(k)!) as string : null;
-  return { key: pageKey({ source, slug }), source, slug, type: 'person', title: scalar('title') ?? '', emails: fields.has('emails') ? JSON.parse(fields.get('emails')!) as string[] : [], domains: [], linkedin: scalar('linkedin'), github: scalar('github'), company: scalar('company'), city: scalar('city') };
+  const externalId = scalar(DECLARED_PERSON_ID_FIELD);
+  return { key: pageKey({ source, slug }), source, slug, type: 'person', title: scalar('title') ?? '', emails: fields.has('emails') ? JSON.parse(fields.get('emails')!) as string[] : [], domains: [], linkedin: scalar('linkedin'), github: scalar('github'), ...(externalId ? { external_id: externalId } : {}), company: scalar('company'), city: scalar('city') };
 }
 
 export function writtenPages(ledger: Ledger): WrittenPage[] {
@@ -522,6 +588,7 @@ export function deriveGold(ledger: Ledger): Map<string, string> {
     person.set(k, p.person);
   }
   for (const pair of ledger.pairs) {
+    if (!person.has(pair.a) || !person.has(pair.b)) throw new Error(`person-dedupe: unknown page in pair ${pair.a} ${pair.b}`);
     const truth: Label = person.get(pair.a) === person.get(pair.b) ? 'same' : 'different';
     if (truth !== pair.label) throw new Error(`person-dedupe: pair ${pair.a} ${pair.b} labelled ${pair.label}, people say ${truth}`);
     const fam = FAMILY_BY_ID.get(pair.family)!;

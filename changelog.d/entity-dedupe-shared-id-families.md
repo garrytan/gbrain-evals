@@ -1,0 +1,1 @@
+- Add five cases where namesakes, coworkers or a founder and their firm can share one account identifier. The [duplicate-finder benchmark](docs/benchmarks/2026-11-18-entity-dedupe-h2h-preregistration.md) now varies LinkedIn paths and GitHub logins by seed and generator version, while version 1 still reproduces the published development receipt.
