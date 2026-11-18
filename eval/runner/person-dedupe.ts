@@ -293,6 +293,7 @@ export function emulateFinder(pages: readonly WrittenPage[], rule: CleanRule = {
       if (!perSource || !clique) for (const g of clean) if (uf.find(g.members[0]) === root) g.class = 'likely';
     }
   }
+  for (const g of groups) if (g.kind === 'cross_source' && g.class === 'likely' && g.rules.includes('shared_key:email')) g.rules.push('contact_key_only');
   return toFinderOutput(groups, crowdedKeys.size);
 }
 
@@ -344,7 +345,7 @@ export function toFinderOutput(groups: readonly Group[], crowded = 0): FinderOut
     groups: groups.map(g => ({
       id: groupId(g.kind, g.members), kind: g.kind, class: g.class,
       members: g.members.map(k => ({ source_id: sourceOf(k), slug: `people/${k.slice(k.indexOf(':') + 1)}` })),
-      evidence: g.rules.map(r => r.startsWith('shared_key:') ? { matcher: 'shared_key', rule: 'shared_key', key: r.slice(11), field: r === 'shared_key:email' ? 'emails' : r.slice(11) } : r === 'strict_name' ? { matcher: 'same_name', rule: 'strict_name' } : { matcher: r, rule: r }),
+      evidence: g.rules.map(r => r.startsWith('shared_key:') ? { matcher: 'shared_key', rule: 'shared_key', key: r.slice(11), field: r === 'shared_key:email' ? 'emails' : r.slice(11) } : r === 'strict_name' ? { matcher: 'same_name', rule: 'strict_name' } : r === 'contact_key_only' ? { matcher: 'key_check', rule: 'contact_key_only' } : { matcher: r, rule: r }),
     })),
     counts: { by_kind, by_class, crowded_key_values: crowded },
   };
@@ -454,13 +455,13 @@ export const SELECTIONS: Record<string, (g: Group) => boolean> = {
   'auto-link': g => g.kind === 'cross_source' && g.class === 'clean',
   proposed: g => g.class !== 'conflict',
   ...Object.fromEntries(FINDER_CLASSES.filter(c => c !== 'conflict').map(c => [`class:${c}`, (g: Group) => g.class === c])),
-  /** Cross-source likely groups held together by a shared email: what an owner would confirm in one go. */
+  /** The confirm list: cross-source likely groups the finder marks contact_key_only (the stand-in marks those held by a shared email). */
   'confirm-list': g => isConfirm(g),
   'auto-link+confirm-list': g => (g.kind === 'cross_source' && g.class === 'clean') || isConfirm(g),
 };
 
 function isConfirm(g: Group): boolean {
-  return g.kind === 'cross_source' && g.class === 'likely' && g.rules.some(r => r.endsWith('/email'));
+  return g.kind === 'cross_source' && g.class === 'likely' && g.rules.includes('key_check/contact_key_only');
 }
 
 export interface ArmResult { id: string; system: 'reference' | 'contract-emulator' | 'finder'; arm: string | null; selection: string; description: string; build: string | null; score: Score; verdict: ReturnType<typeof verdictOf> }
@@ -474,7 +475,7 @@ export function runPersonDedupe(ledger: Ledger, opts: { finderJson?: unknown; fi
     const score = scoreGroups(groups, ledger.pairs, person);
     return { id, system, arm: armId, selection, description, build, score, verdict: verdictOf(score) };
   };
-  const describe = (sel: string) => ({ 'auto-link': 'groups automatic linking would join (cross_source and clean)', proposed: 'every group except conflict (clean, likely, weak, thin)', 'confirm-list': 'cross_source likely groups held by a shared email (the confirm list)', 'auto-link+confirm-list': 'automatic links plus the whole confirm list, confirmed in one go' } as Record<string, string>)[sel] ?? `only ${sel.slice(6)} groups`;
+  const describe = (sel: string) => ({ 'auto-link': 'groups automatic linking would join (cross_source and clean)', proposed: 'every group except conflict (clean, likely, weak, thin)', 'confirm-list': 'cross_source likely groups marked contact_key_only (the confirm list)', 'auto-link+confirm-list': 'automatic links plus the whole confirm list, confirmed in one go' } as Record<string, string>)[sel] ?? `only ${sel.slice(6)} groups`;
   const finderArms = (system: 'contract-emulator' | 'finder', armId: string | null, all: Group[], build: string | null, selections: readonly string[]) =>
     selections.map(sel => arm(`${system}${armId ? `[arm ${armId}]` : ''}:${sel}`, system, armId, sel, `${describe(sel)}${armId ? `; clean rule: ${ARMS[armId].text}` : ''}`, all.filter(SELECTIONS[sel]), build));
   const arms = REFERENCE_MATCHERS.map(m => arm(m.id, 'reference', null, 'all', m.description, m.run(pages)));
