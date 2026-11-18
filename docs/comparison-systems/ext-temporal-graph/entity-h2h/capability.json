@@ -106,5 +106,16 @@
       "IS_DUPLICATE_OF": "proposed"
     },
     "merge": "a mention resolved to an existing node during add_episode reuses that node"
+  },
+  "entity_h2h_tuning": {
+    "knob": null,
+    "applied_by": null,
+    "docs": [
+      "https://github.com/getzep/graphiti/blob/d72407dcedac911e1be9fc15b55e8c05a3efcc36/README.md#L727-L774",
+      "https://github.com/getzep/graphiti/blob/d72407dcedac911e1be9fc15b55e8c05a3efcc36/graphiti_core/utils/maintenance/dedup_helpers.py#L31-L36"
+    ],
+    "no_knob": "graphiti-core 0.31.2 documents no setting for the node dedupe it runs by default (exact name, then MinHash with a Jaccard cut of 0.9, then its LLM dedupe prompt): _FUZZY_JACCARD_THRESHOLD and the other cut-offs are private module constants in dedup_helpers.py that no doc names. The one documented dedupe threshold, duplicate_threshold (0.7), belongs to the optional JevClient and OpenAIDecisionsClient (README 'Jev dedupe' and 'OpenAI Decisions dedupe'), which replace the dedupe model rather than tune it: Jev is a hosted service that needs a TypeSafe account (out of scope, as hosted services are), and OpenAI Decisions is another model (gpt-6-luna) on another endpoint (POST /v1/decisions), so it would change the system under test and its metered route. Runs default only.",
+    "default": {},
+    "grid": {}
   }
 }

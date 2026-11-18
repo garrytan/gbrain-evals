@@ -10,10 +10,15 @@ so mem0 sends no temperature) and the embedder left at the SDK default. This fil
   embedding score of at least 0.95; otherwise it inserts a new row. There is no graph store in 2.2.1.
 - source_ids: the source_id metadata of each memory in the row's linked_memory_ids (Memory.get_all).
 - links: none; mem0 has no merge pointer or review band, it reuses the row.
+
+GET /health reports the head-to-head setting the stack started in (ENTITY_H2H_SETTING) under entity_h2h, which the
+runner checks against the cell. mem0 2.2.1 documents no knob for its entity linking (the 0.95 cut is a literal;
+capability.json entity_h2h_tuning), so the settings are always empty and only "default" is a valid setting.
 """
 from __future__ import annotations
 
 import copy
+import os
 from typing import Any
 
 import mem0_shim as base
@@ -56,6 +61,9 @@ class EntityReadoutAdapter(base.Mem0Adapter):
                              "source_ids": sources, "provenance_status": "exact"})
         return {"entities": entities, "links": [],
                 "notes": f"Memory.entity_store rows with linked_memory_ids; source_id metadata of {len(memories)} memories from Memory.get_all"}
+
+    def health(self) -> dict[str, Any]:
+        return {**super().health(), "entity_h2h": {"setting": os.environ.get("ENTITY_H2H_SETTING", "default"), "settings": {}}}
 
 
 if __name__ == "__main__":

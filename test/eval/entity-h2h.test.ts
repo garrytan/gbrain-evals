@@ -18,7 +18,8 @@ import { checkFinderCoverage, writeWorld } from '../../eval/runner/person-dedupe
 import { RunnerRefusal } from '../../eval/runner/runner-refusal.ts';
 import { MAX_BLOCK_PAGES, blockPairs, blockingKeys, pairId } from '../../eval/runner/entity-h2h/blocker.ts';
 import { ask, matcherPrompt, pairBrain, pairPrompt, planPairs, verdictOf, type CallEvent } from '../../eval/runner/entity-h2h/matcher.ts';
-import { matcherStop, memoryStop } from '../../eval/runner/entity-h2h/rates.ts';
+import { MEMORY_KINDS, TUNING_SETTINGS, matcherStop, memoryStop } from '../../eval/runner/entity-h2h/rates.ts';
+import { tuningOf } from '../../eval/runner/entity-h2h/tuning.ts';
 import { cli, dryRun } from '../../eval/runner/entity-h2h/run.ts';
 import { parseOutput, scoreOutput } from '../../eval/runner/entity-h2h/score.ts';
 import { DEV_SEED, HELD_OUT_SEED, buildWorld, heldOutLabels, ingestOrder, loadWorld, nameMatch, opaque, readoutFromEntities, subjectOf, usageByKey, writeH2hWorld, type EntityNode } from '../../eval/runner/entity-h2h/world.ts';
@@ -286,6 +287,19 @@ describe('memory-system pins (each the newest release at launch, preregistration
     const memoryBank = JSON.parse(bundle('ext-memory-bank', 'capability.json')).versions as { image: string };
     expect(memoryBank.image).toMatch(/:1\.2\.1@sha256:[0-9a-f]{64}$/);
     expect(bundle('ext-memory-bank', 'docker-compose.yml')).toContain(`image: ${memoryBank.image}`);
+  });
+
+  // Value: protects=the stack starts in, and reports, the cell's setting; fails_when=a bundle drops the setting variable, a shim stops reporting it, or a server-env knob reaches the server and the shim from different variables
+  test('each bundle records its knob and grid (or why it has none) and passes the cell\'s setting to a shim that reports it under GET /health', () => {
+    for (const kind of MEMORY_KINDS) {
+      const t = tuningOf(kind), compose = bundle(kind, 'docker-compose.yml');
+      expect(Object.keys(t.grid).length).toBeLessThanOrEqual(TUNING_SETTINGS);
+      expect(t.docs.length).toBeGreaterThan(0);
+      expect(t.knob ? Object.keys(t.grid).length : t.no_knob!.length).toBeGreaterThan(0);
+      expect(compose).toContain('ENTITY_H2H_SETTING: ${ENTITY_H2H_SETTING:-default}');
+      expect(bundle(kind, 'entity_h2h.py')).toMatch(/def health\(self\)[^\n]*\n[\s\S]*?"entity_h2h": \{"setting"/);
+      if (t.applied_by === 'server-env') for (const [k, v] of Object.entries(t.default)) expect(compose.split(`\${${k}:-${v}}`).length - 1).toBe(2);
+    }
   });
 });
 

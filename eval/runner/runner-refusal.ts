@@ -7,12 +7,15 @@
  *   IMPORT_INCOMPLETE    the system did not take in every page: pages expected and imported
  *   LEDGER_UNRECONCILED  the ledger does not match the metering proxy's usage log: run the reconcile first
  *   SCHEMA_PACK_INACTIVE gbrain did not activate the schema pack that declares the person id field: check the build
+ *   STACK_CONFIG_MISMATCH a memory system's stack reports another setting than its cell records: start it from the cell
+ *   TUNING_SEED          a tuning cell off the held-out seed at 5 per family, or a tuned cell on it: use the right world
+ *   TUNING_CHOICE        a tuned cell without a recorded choice that covers the system's whole tuning grid: record one
  *
  * Every refusal prints one line, "REFUSED <CODE>: <message> (<counts>). Fix: <fix>", to stderr and exits
  * REFUSAL_EXIT. No score is written after a refusal.
  */
 
-export const REFUSAL_CODES = ['WORLD_DIR_USED', 'IMPORT_INCOMPLETE', 'LEDGER_UNRECONCILED', 'SCHEMA_PACK_INACTIVE'] as const;
+export const REFUSAL_CODES = ['WORLD_DIR_USED', 'IMPORT_INCOMPLETE', 'LEDGER_UNRECONCILED', 'SCHEMA_PACK_INACTIVE', 'STACK_CONFIG_MISMATCH', 'TUNING_SEED', 'TUNING_CHOICE'] as const;
 export type RefusalCode = typeof REFUSAL_CODES[number];
 
 /** The exit status of every refusal; 1 stays a failed verdict and 3 an unexpected error. */

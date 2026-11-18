@@ -1,5 +1,7 @@
 # Hindsight 1.2.1 behind the shootout shim (eval/systems/PROTOCOL.md), entity-h2h configuration (gpt-6.2-sol and
 # GET /entities). bootstrap.sh uses this file for --config entity-h2h; the pinned configurations use ../docker-compose.yml.
+# The entity merge floor (HINDSIGHT_API_ENTITY_MERGE_MIN_SIMILARITY, server default 0.3) comes from the cell's setting
+# (eval/runner/entity-h2h/run.ts stack-env); the same value goes to the shim, which reports it under GET /health.
 #
 #   SHIM_CONFIG=entity-h2h  PROXY_URL=http://<metering proxy host:port>  docker compose up -d --build
 #
@@ -44,6 +46,7 @@ services:
       HINDSIGHT_API_EMBEDDINGS_OPENAI_BASE_URL: *proxy_openai
       OPENAI_BASE_URL: *proxy_openai
       OPENAI_API_KEY: ${SHOOTOUT_CELL_TOKEN:-dummy-key-the-proxy-injects-the-real-one}
+      HINDSIGHT_API_ENTITY_MERGE_MIN_SIMILARITY: ${HINDSIGHT_API_ENTITY_MERGE_MIN_SIMILARITY:-0.3}
       HINDSIGHT_API_SKIP_LLM_VERIFICATION: "true"
       HINDSIGHT_API_OTEL_TRACES_ENABLED: "false"
       HINDSIGHT_ENABLE_CP: "false"
@@ -57,6 +60,8 @@ services:
     build: { context: ../../../.., dockerfile: docs/comparison-systems/ext-memory-bank/entity-h2h/Dockerfile }
     environment:
       SHIM_CONFIG: ${SHIM_CONFIG:-entity-h2h}
+      ENTITY_H2H_SETTING: ${ENTITY_H2H_SETTING:-default}
+      ENTITY_H2H_SERVER_ENTITY_MERGE_MIN_SIMILARITY: ${HINDSIGHT_API_ENTITY_MERGE_MIN_SIMILARITY:-0.3}
       SHIM_LLM_PROVIDER: ${HINDSIGHT_LLM_PROVIDER:-openai}
       HINDSIGHT_URL: http://hindsight:8888
     depends_on: [hindsight]

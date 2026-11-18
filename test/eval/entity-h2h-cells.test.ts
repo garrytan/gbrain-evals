@@ -3,11 +3,11 @@
  * matcher through the real lease metering proxy (eval/runner/metering-proxy.ts) and budget ledger, with a fake shim
  * and a fake provider on loopback. Covers the ledger stop, the 345-page checkpoint, a crash and its one restart from
  * page one on a fresh namespace, "failed (infrastructure)" after a second failure, the reconcile and the
- * LEDGER_UNRECONCILED refusal, the matcher's resume rules and safety-filter stops, and the gbrain driver with a fake
- * binary. Provider keys are blanked, the proxy gets placeholder keys and every upstream is a local fake.
+ * LEDGER_UNRECONCILED refusal, the matcher's resume rules and safety-filter stops, the tuned and tuning settings (the
+ * stack's reported setting, the seed rules and the recorded choice), and the gbrain driver with a fake binary. Provider keys are blanked, the proxy gets placeholder keys and every upstream is a local fake.
  */
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
-import { appendFileSync, chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { appendFileSync, chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { BudgetRun, closeLedgers } from '../../eval/runner/budget-ledger.ts';
@@ -16,7 +16,8 @@ import { reconcileRun, requireReconciled, writeCell, readCell, type CellState } 
 import { matcherStop, memoryStop } from '../../eval/runner/entity-h2h/rates.ts';
 import { cli } from '../../eval/runner/entity-h2h/run.ts';
 import { blockPairs } from '../../eval/runner/entity-h2h/blocker.ts';
-import { buildWorld, writeH2hWorld } from '../../eval/runner/entity-h2h/world.ts';
+import { HELD_OUT_SEED, buildWorld, writeH2hWorld } from '../../eval/runner/entity-h2h/world.ts';
+import { tuningOf } from '../../eval/runner/entity-h2h/tuning.ts';
 
 const KEYS = ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'PARTICLE_API_KEY'] as const;
 const saved: Record<string, string | undefined> = {};
@@ -32,12 +33,14 @@ const fakeProvider = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: async re
 } });
 
 /** The fake memory system: each ingest makes one provider call through the proxy's slot; /entities makes one node per page title. */
-const shim = { failAt: 0, finishMaxTokens: 0, finishDegraded: false, system: 'ext-memory-bank', proxy: '', nsOrder: [] as string[], ingests: new Map<string, string[]>() };
+/** The setting the fake stack reports under GET /health entity_h2h, as a real shim does; the memory bank's default unless a test sets another. */
+const DEFAULT_STACK = () => ({ setting: 'default', settings: tuningOf('ext-memory-bank').default as Record<string, unknown> });
+const shim = { failAt: 0, finishMaxTokens: 0, finishDegraded: false, system: 'ext-memory-bank', proxy: '', nsOrder: [] as string[], ingests: new Map<string, string[]>(), stack: DEFAULT_STACK() as unknown };
 const fakeShim = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: async req => {
   const path = new URL(req.url).pathname;
   const body = req.method === 'POST' ? await req.json() as any : {};
   const err = (status: number, kind: string, message: string) => Response.json({ error: { kind, message } }, { status });
-  if (path === '/health') return Response.json({ ok: true, config: 'entity-h2h' });
+  if (path === '/health') return Response.json({ ok: true, config: 'entity-h2h', ...(shim.stack === undefined ? {} : { entity_h2h: shim.stack }) });
   if (path === '/capabilities') return Response.json({ protocol: 1, system: shim.system, versions: { package: '0.0.0-fake' }, configs: { 'entity-h2h': { model_roles: { extraction: 'gpt-6.2-sol' } } } });
   if (path === '/reset') { shim.nsOrder.push(body.ns); shim.ingests.set(body.ns, []); return Response.json({ ok: true }); }
   if (path === '/ingest') {
@@ -83,10 +86,16 @@ function leaseProxy(runId: string, leaseUsd: number) {
   return { proxy, url, ledgerPath, usageLog, args: ['--proxy', url, '--budget-ledger', ledgerPath, '--budget-run-id', runId, '--usage-log', usageLog] };
 }
 const shimArgs = () => ['--shim', `http://127.0.0.1:${fakeShim.port}`];
+/** Runs a cli call and keeps the refusal lines it prints to stderr. */
+async function refusals(run: () => Promise<number>): Promise<{ code: number; errors: string[] }> {
+  const errors: string[] = [], original = console.error;
+  console.error = (...x: unknown[]) => { errors.push(x.map(String).join(' ')); };
+  try { return { code: await run(), errors }; } finally { console.error = original; }
+}
 /** Pages of the seed-7 test worlds, from the generator: 1 and 4 per family. */
 const PAGES_1 = buildWorld(7, 1).pages.length, PAGES_4 = buildWorld(7, 4).pages.length;
 const world = (name: string, seed: number, perFamily: number) => { const d = join(tmp, name); writeH2hWorld(d, seed, perFamily); return d; };
-const reset = (tokens: number, failAt = 0) => { upstream.tokens = tokens; upstream.n = 0; upstream.reply = () => ({ status: 200 }); shim.failAt = failAt; shim.finishMaxTokens = 0; shim.finishDegraded = false; shim.nsOrder = []; shim.ingests = new Map(); };
+const reset = (tokens: number, failAt = 0) => { upstream.tokens = tokens; upstream.n = 0; upstream.reply = () => ({ status: 200 }); shim.failAt = failAt; shim.finishMaxTokens = 0; shim.finishDegraded = false; shim.nsOrder = []; shim.ingests = new Map(); shim.stack = DEFAULT_STACK(); };
 
 describe('memory-system cells', () => {
   test('a cell ingests every page in the fixed order, writes the neutral output and a hand-check sample, and scores', async () => {
@@ -182,11 +191,86 @@ describe('memory-system cells', () => {
     expect(existsSync(join(out, 'output.json'))).toBe(false);
   }, 60_000);
 
-  // Value: protects=published memory rows carry the configuration that ran; fails_when=a tuned or tuning cell runs the stack's default under another label
-  test('a memory system runs --config default only, because no tuned setting reaches the stack yet', async () => {
-    await expect(cli(['run', '--system', 'ext-memory-bank', '--config', 'tuned', '--world', world('w-tu', 7, 1), '--output', join(tmp, 'c-tu'), ...shimArgs()], quiet)).rejects.toThrow(/--config default only/);
-    expect(existsSync(join(tmp, 'c-tu'))).toBe(false);
+  // Value: protects=published memory rows carry the configuration that ran; fails_when=a stack that runs another setting, other settings or reports none is ingested and paid for under the cell's label
+  test('a cell refuses (STACK_CONFIG_MISMATCH) a stack that reports another setting, other settings or none, before any attempt or paid call', async () => {
+    reset(10);
+    const w = world('w-sm', 7, 1), out = join(tmp, 'c-sm');
+    const knob = Object.keys(tuningOf('ext-memory-bank').default)[0];
+    const p = leaseProxy('sm-1', memoryStop('ext-memory-bank', PAGES_1).stop_usd);
+    try {
+      for (const stack of [{ setting: 'merge-min-0.5', settings: { [knob]: 0.5 } }, { setting: 'default', settings: { [knob]: 0.5 } }, { setting: 'default', settings: {} }, undefined]) {
+        shim.stack = stack;
+        const { code, errors } = await refusals(() => cli(['run', '--system', 'ext-memory-bank', '--config', 'default', '--world', w, '--output', out, ...shimArgs(), ...p.args], quiet));
+        expect([code, errors]).toEqual([2, [expect.stringContaining('REFUSED STACK_CONFIG_MISMATCH')]]);
+      }
+    } finally { p.proxy.stop(); }
+    expect([existsSync(join(out, 'cell.json')), upstream.n, shim.nsOrder]).toEqual([false, 0, []]);
   });
+
+  // Value: protects=tuning only on the held-out seed and nothing scored from it; fails_when=a tuning cell runs on a scored or full-size world, a tuned cell runs on the held-out seed, or a setting outside the documented grid runs
+  test('a tuning cell runs only on the held-out seed at 5 per family, a tuned cell never on it (TUNING_SEED), and only grid settings of a system with a knob run', async () => {
+    reset(10);
+    const t = tuningOf('ext-memory-bank'), name = Object.keys(t.grid)[0];
+    for (const [w, label] of [[world('w-ts7', 7, 1), 'seed 7'], [world('w-ts4', HELD_OUT_SEED, 4), 'held-out at 4 per family']] as const) {
+      const out = join(tmp, `c-ts-${label.replace(/\W+/g, '-')}`);
+      const { code, errors } = await refusals(() => cli(['run', '--system', 'ext-memory-bank', '--config', `tuning:${name}`, '--world', w, '--output', out, ...shimArgs(), '--proxy', 'http://127.0.0.1:9'], quiet));
+      expect([code, errors]).toEqual([2, [expect.stringContaining('REFUSED TUNING_SEED')]]);
+      expect(existsSync(out)).toBe(false);
+    }
+    await expect(cli(['run', '--system', 'ext-memory-bank', '--config', 'tuning:not-in-grid', '--world', world('w-ts-g', HELD_OUT_SEED, 5), '--output', join(tmp, 'c-ts-g'), ...shimArgs()], quiet)).rejects.toThrow(/no tuning setting "not-in-grid"/);
+    await expect(cli(['run', '--system', 'ext-extract-first', '--config', 'tuning:anything', '--world', join(tmp, 'w-ts-g'), '--output', join(tmp, 'c-ts-n'), ...shimArgs()], quiet)).rejects.toThrow(/no dedupe knob in its docs/);
+    await expect(cli(['run', '--system', 'ext-memory-bank', '--config', 'tuned:x', '--world', join(tmp, 'w-ts-g'), '--output', join(tmp, 'c-ts-x'), ...shimArgs()], quiet)).rejects.toThrow(/--config for a memory system is default, tuning:<setting>/);
+    expect(upstream.n).toBe(0);
+  });
+
+  // Value: protects=the tuned cell runs the setting chosen from the whole held-out grid, and its stack runs that setting; fails_when=a tuned cell runs without a choice, from part of the grid, on the held-out seed, or on a stack in another setting
+  test('a tuned cell needs a recorded choice from every tuning cell of the grid (TUNING_CHOICE), runs the chosen setting and records it', async () => {
+    reset(10);
+    const t = tuningOf('ext-memory-bank'), names = Object.keys(t.grid).sort(), knob = Object.keys(t.default)[0];
+    const held = world('w-held', HELD_OUT_SEED, 5), pages = buildWorld(HELD_OUT_SEED, 5).pages.length;
+    const tuneDir = (n: string) => join(tmp, `c-tune-${n}`);
+    shim.stack = { setting: names[0], settings: t.grid[names[0]].settings };
+    const p1 = leaseProxy('tune-1', memoryStop('ext-memory-bank', pages).stop_usd);
+    try { expect(await cli(['run', '--system', 'ext-memory-bank', '--config', `tuning:${names[0]}`, '--world', held, '--output', tuneDir(names[0]), ...shimArgs(), ...p1.args], quiet)).toBe(0); }
+    finally { p1.proxy.stop(); }
+    const first = readCell(tuneDir(names[0]))!;
+    expect([first.config, first.stack, JSON.parse(readFileSync(join(tuneDir(names[0]), 'output.json'), 'utf8')).config]).toEqual([`tuning:${names[0]}`, { kind: 'tuning', setting: names[0], settings: t.grid[names[0]].settings }, `tuning:${names[0]}`]);
+    const choice = join(tmp, 'choice.json'), choose = (cells: string[], setting = names[2]) => refusals(() => cli(['choose', '--system', 'ext-memory-bank', '--setting', setting, '--rule', 'test rule', '--held-out', held, '--out', choice, ...cells], quiet));
+    expect(await choose([tuneDir(names[0])])).toEqual({ code: 2, errors: [expect.stringContaining('REFUSED TUNING_CHOICE')] });
+    for (const n of names.slice(1)) {
+      cpSync(tuneDir(names[0]), tuneDir(n), { recursive: true });
+      writeCell(tuneDir(n), { ...first, config: `tuning:${n}`, stack: { kind: 'tuning', setting: n, settings: t.grid[n].settings } });
+    }
+    expect(await choose([...names.slice(0, -1), names[0]].map(tuneDir))).toEqual({ code: 2, errors: [expect.stringContaining('two tuning cells ran')] });
+    expect(existsSync(choice)).toBe(false);
+    expect((await choose(names.map(tuneDir))).code).toBe(0);
+    const recorded = JSON.parse(readFileSync(choice, 'utf8'));
+    expect([recorded.setting, recorded.settings, recorded.cells.map((c: { setting: string }) => c.setting), recorded.held_out.seed, recorded.held_out.per_family]).toEqual([names[2], t.grid[names[2]].settings, names, HELD_OUT_SEED, 5]);
+
+    const w = world('w-tuned', 7, 1), out = join(tmp, 'c-tuned'), partial = join(tmp, 'choice-partial.json');
+    writeFileSync(partial, JSON.stringify({ ...recorded, cells: recorded.cells.slice(1) }));
+    for (const extra of [[], ['--choice', partial], ['--choice', join(tmp, 'no-such-choice.json')]]) {
+      const { code, errors } = await refusals(() => cli(['run', '--system', 'ext-memory-bank', '--config', 'tuned', ...extra, '--world', w, '--output', out, ...shimArgs()], quiet));
+      expect([code, errors]).toEqual([2, [expect.stringContaining('REFUSED TUNING_CHOICE')]]);
+    }
+    const onHeld = await refusals(() => cli(['run', '--system', 'ext-memory-bank', '--config', 'tuned', '--choice', choice, '--world', held, '--output', join(tmp, 'c-tuned-held'), ...shimArgs()], quiet));
+    expect(onHeld).toEqual({ code: 2, errors: [expect.stringContaining('REFUSED TUNING_SEED')] });
+    const p2 = leaseProxy('tuned-1', memoryStop('ext-memory-bank', PAGES_1).stop_usd);
+    try {
+      shim.stack = DEFAULT_STACK();
+      expect(await refusals(() => cli(['run', '--system', 'ext-memory-bank', '--config', 'tuned', '--choice', choice, '--world', w, '--output', out, ...shimArgs(), ...p2.args], quiet))).toEqual({ code: 2, errors: [expect.stringContaining('REFUSED STACK_CONFIG_MISMATCH')] });
+      shim.stack = { setting: names[2], settings: t.grid[names[2]].settings };
+      expect(await cli(['run', '--system', 'ext-memory-bank', '--config', 'tuned', '--choice', choice, '--world', w, '--output', out, ...shimArgs(), ...p2.args], quiet)).toBe(0);
+    } finally { p2.proxy.stop(); }
+    const s = readCell(out)!;
+    expect([s.status, s.config, s.stack!.kind, s.stack!.setting, s.stack!.settings, s.stack!.choice!.rule]).toEqual(['complete', `tuned:${names[2]}`, 'tuned', names[2], t.grid[names[2]].settings, 'test rule']);
+    const env: string[] = [];
+    expect(await cli(['stack-env', '--output', out], l => env.push(l))).toBe(0);
+    expect(env).toEqual([`ENTITY_H2H_SETTING=${names[2]}`, `${knob}=${t.grid[names[2]].settings[knob]}`]);
+    const graph: string[] = [], graphName = Object.keys(tuningOf('ext-graph-pipeline').grid)[0];
+    expect(await cli(['stack-env', '--system', 'ext-graph-pipeline', '--config', `tuning:${graphName}`], l => graph.push(l))).toBe(0);
+    expect(graph).toEqual([`ENTITY_H2H_SETTING=${graphName}`]);
+  }, 60_000);
 
   // Value: protects=a paid restart runs on the cell's own world; fails_when=a world folder rewritten at another seed is ingested and paid for
   test('restart refuses a world folder rewritten since the cell started, before any paid call', async () => {

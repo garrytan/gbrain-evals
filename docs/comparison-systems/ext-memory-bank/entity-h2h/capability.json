@@ -103,5 +103,39 @@
     "provenance": "document ids of memory.list_memories(entity_id=...); exact",
     "links": {},
     "merge": "retain resolves each mention to an existing entity or a new one"
+  },
+  "entity_h2h_tuning": {
+    "knob": "HINDSIGHT_API_ENTITY_MERGE_MIN_SIMILARITY, the minimum trigram similarity a name must have with an existing entity before retain may reuse that entity (server default 0.3)",
+    "applied_by": "server-env",
+    "docs": [
+      "https://github.com/vectorize-io/hindsight/blob/0eb02d8c418eac6b489bc63883c993b2257dfac4/hindsight-docs/docs/developer/configuration.mdx#L128",
+      "https://github.com/vectorize-io/hindsight/blob/0eb02d8c418eac6b489bc63883c993b2257dfac4/hindsight-docs/docs/developer/configuration.mdx#L2186-L2197"
+    ],
+    "default": {
+      "HINDSIGHT_API_ENTITY_MERGE_MIN_SIMILARITY": 0.3
+    },
+    "grid": {
+      "merge-min-0.4": {
+        "settings": {
+          "HINDSIGHT_API_ENTITY_MERGE_MIN_SIMILARITY": 0.4
+        }
+      },
+      "merge-min-0.5": {
+        "settings": {
+          "HINDSIGHT_API_ENTITY_MERGE_MIN_SIMILARITY": 0.5
+        }
+      },
+      "merge-min-0.6": {
+        "settings": {
+          "HINDSIGHT_API_ENTITY_MERGE_MIN_SIMILARITY": 0.6
+        }
+      },
+      "merge-min-0.7": {
+        "settings": {
+          "HINDSIGHT_API_ENTITY_MERGE_MIN_SIMILARITY": 0.7
+        }
+      }
+    },
+    "notes": "The docs' advice for unrelated entities merging is to raise this floor, and they put genuine surface variants of one name between 0.4 and 0.7, so the grid spans that range. It is a server-wide environment variable, not a per-bank setting in 1.2.1, so docker-compose.yml passes one value to the server and mirrors it to the shim, which reports it under GET /health entity_h2h; the server has no API that reads it back."
   }
 }

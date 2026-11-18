@@ -19,6 +19,7 @@ services:
         condition: service_healthy
     environment:
       SHIM_CONFIG: ${SHIM_CONFIG:-entity-h2h}
+      ENTITY_H2H_SETTING: ${ENTITY_H2H_SETTING:-default}
       SHIM_IMAGE: ${SHIM_IMAGE:-}
       MEM0_CHUNK_TURNS: ${MEM0_CHUNK_TURNS:-2}
       OPENAI_API_KEY: ${SHOOTOUT_CELL_TOKEN:-sk-dummy-metering-proxy-injects-the-real-key}
