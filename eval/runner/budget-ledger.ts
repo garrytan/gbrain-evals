@@ -1167,6 +1167,8 @@ export const CHAT_PRICE_OVERRIDES: Record<string, ChatPrice> = {
   'openai:gpt-5.5': { input: 5, output: 30, cache_read: 0.5, cache_write: 5, long: { above_input_tokens: 272_000, input: 10, output: 45, cache_read: 1, cache_write: 10 } },
   'openai:gpt-6-sol': { input: 2, output: 10, cache_read: 0.2, cache_write: 2.5, cache_write_12h: 5, long: { above_input_tokens: 272_000, input: 4, output: 15, cache_read: 0.4, cache_write: 5, cache_write_12h: 10 } },
   'openai:gpt-6.1-sol': { input: 2, output: 10, cache_read: 0.1, cache_write: 2.5, cache_write_12h: 5, long: { above_input_tokens: 272_000, input: 4, output: 15, cache_read: 0.2, cache_write: 5, cache_write_12h: 10 } },
+  // gpt-6.2-sol: developers.openai.com/api/docs/pricing.md, "Standard pricing data", checked 2026-11-17.
+  'openai:gpt-6.2-sol': { input: 2, output: 10, cache_read: 0.1, cache_write: 2.5, cache_write_12h: 5, long: { above_input_tokens: 272_000, input: 4, output: 15, cache_read: 0.2, cache_write: 5, cache_write_12h: 10 } },
   'openai:gpt-6-luna': { input: 0.1, output: 0.5, cache_read: 0.01, cache_write: 0.125, cache_write_12h: 0.25, long: { above_input_tokens: 272_000, input: 0.2, output: 0.75, cache_read: 0.02, cache_write: 0.25, cache_write_12h: 0.5 } },
   'openai:gpt-6-astra': { input: 10, output: 50, cache_read: 1, cache_write: 12.5, cache_write_12h: 25, long: { above_input_tokens: 272_000, input: 20, output: 75, cache_read: 2, cache_write: 25, cache_write_12h: 50 } },
   // docs.particle.ai/models and /usage-billing, checked 2026-10-31: peak list rates, reasoning tokens billed as output

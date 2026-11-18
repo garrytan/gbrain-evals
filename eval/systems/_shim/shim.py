@@ -12,6 +12,7 @@ import traceback
 from dataclasses import dataclass, field
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
+from urllib.parse import parse_qs
 
 PROTOCOL = 1
 ERROR_KINDS = {"unsupported", "product_error", "timeout", "invalid_request", "budget"}
@@ -67,6 +68,10 @@ class Adapter:
     def delete_source(self, ns: str, source_id: str) -> dict[str, Any]:
         return {"status": "unsupported", "receipt": {}}
 
+    def entities(self, ns: str) -> dict[str, Any]:
+        """Optional entity readout (PROTOCOL.md, "Entity readout"); a shim without one answers `unsupported`."""
+        raise ShimError("unsupported", "entity readout not implemented", 501)
+
 
 def _require(body: dict[str, Any], *keys: str) -> None:
     missing = [k for k in keys if k not in body]
@@ -112,6 +117,13 @@ def dispatch(adapter: Adapter, method: str, path: str, body: dict[str, Any]) -> 
             out["items"] = [i.to_json() if isinstance(i, Item) else Item(**i).to_json() for i in items]
             out.setdefault("applied_settings", {})
             out.setdefault("truncated", False)
+        elif method == "GET" and path.split("?", 1)[0] == "/entities":
+            ns = parse_qs(path.partition("?")[2]).get("ns", [""])[0]
+            if not ns.startswith("ns-"):
+                raise ShimError("invalid_request", "query parameter ns must be opaque (ns-...)", 400)
+            out = adapter.entities(ns)
+            if not isinstance(out.get("entities"), list) or not isinstance(out.get("links"), list):
+                raise ShimError("product_error", "entities must return entities and links lists")
         elif method == "POST" and path == "/delete_source":
             _require(body, "ns", "source_id")
             out = adapter.delete_source(body["ns"], body["source_id"])

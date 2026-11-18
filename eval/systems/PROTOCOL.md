@@ -30,6 +30,7 @@ at the proxy is `blocked`.
 | `POST /finish` | `{ "ns", "timeout_s" }` | `{ "ready", "waited_ms", "completeness" }` after the vendor's background work drains |
 | `POST /retrieve` | `{ "ns", "question", "query_time", "policy": { "name", "mode": "vendor-default" \| "fixed-evidence", "settings": {} } }` | `{ "items": [Item], "applied_settings": {}, "truncated": false, "raw": <vendor response, optional> }` |
 | `POST /delete_source` | `{ "ns", "source_id" }` | `{ "status": "deleted" \| "partial" \| "unsupported", "receipt": {} }` |
+| `GET /entities?ns=` (optional) | | the namespace's entity nodes and the system's own links between them (below) |
 | `POST /answer` (optional) | `{ "ns", "question", "query_time", "mode", "model"? }` | the system's own answer (below) |
 
 `event_time` and `query_time` are ISO-8601 strings or `null`. Sessions within one namespace arrive in event-time order,
@@ -70,6 +71,26 @@ The request carries the sanitized question, its date, the mode and, optionally, 
 `extractive_fallback`); `harness_invalid` when the answer path could not run for a reason outside the product (a
 provider refusal through the proxy), which the harness retries under the outcome rules. A mode the stack does not serve
 is the `unsupported` error kind. `source_ids` are the ingested sources the answer cites.
+
+## Entity readout (optional)
+
+A system that resolves entities (merges two mentions of one person or company into one node, or proposes that two
+nodes may be one) can serve `GET /entities?ns=<ns>`, which the entity-resolution head-to-head reads after ingest
+(`eval/runner/entity-h2h/`). It reports what the system itself decided, read through the vendor's public node or
+graph API; the shim never resolves anything on its own. The response:
+
+```json
+{ "entities": [{ "id": "vendor node id", "name": "the node's name", "type": "Person | null",
+                 "source_ids": ["src-…"], "provenance_status": "exact | partial" }],
+  "links": [{ "a": "node id", "b": "node id", "kind": "vendor link name", "tier": "auto | proposed", "score": null }],
+  "notes": "how the shim read nodes, provenance and links" }
+```
+
+`source_ids` are the ingested sources that mention the node (`exact` when the vendor records every mention,
+`partial` when it may not). `links` holds the system's own merge or same-entity edges between two surviving nodes:
+`auto` when the system treats the two as one entity (a merge pointer such as `merged_into`), `proposed` when it
+only flags them for review (a `SAME_AS` review band). A system that merges by reusing one node has no link for it:
+both sources simply list the same node. A system without the route answers the `unsupported` error kind.
 
 ## Capability record
 
