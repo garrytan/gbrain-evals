@@ -1,0 +1,2552 @@
+{
+  "system": "ext-graph-pipeline",
+  "label": "full",
+  "ns": "ns-a18b869b2e81c0c5",
+  "seed": 20261117,
+  "per_family": 2,
+  "ledger_sha256": "7db1e1f4062f62c389a8fbee734fe3e05281392e78dd0673de018e536ff05ccb",
+  "pages": 69,
+  "capabilities": {
+    "protocol": 1,
+    "system": "ext-graph-pipeline",
+    "versions": {
+      "package": "cognee==1.6.2",
+      "lock_sha256": "59af44d5a70bfa016e888d650259443ba8d0d2f2fd27f4416f9b8e184ef5a0d7",
+      "image": "built from docs/comparison-systems/ext-graph-pipeline/Dockerfile on python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d with uv 0.12.3; the run receipt records the built image id",
+      "vendor_benchmark_code": "topoteretes/cognee@ba3631f2ed363a6ea50d649c34c56885af6b36fe (tag v1.6.2): cognee/eval_framework/beam/local_ingest.py, preprocessing/preprocess.py (format_turn_pair), report_artifacts/100k_fixed/beam_hybrid_completion_20_20_qa_v1_config.json"
+    },
+    "configs": {
+      "entity-h2h": {
+        "model_roles": {
+          "extraction": "openai/gpt-6.2-sol",
+          "small": null,
+          "summarization": "openai/gpt-6.2-sol",
+          "embedder": "openai/text-embedding-3-large",
+          "dims": 3072,
+          "reranker": null
+        },
+        "notes": "The pinned recipe with LLM_MODEL=openai/gpt-6.2-sol for the entity-resolution head-to-head (newest GPT generation the OpenAI API serves on 2026-11-17); the embedder stays at the recipe default. /finish runs consolidate_entities_pipeline once per namespace with its defaults (similarity_threshold 0.85, name_match on, top_k 10, allow_cross_type off), the memify entity-deduplication step in docs.cognee.ai/guides/memify-entity-deduplication."
+      }
+    },
+    "time": "in-text",
+    "time_notes": "Each turn-pair item carries 'Time anchor: <event_time>' in its text, as cognee's BEAM preprocessing does. temporal_cognify stays off, as in cognee's BEAM ingestion. cognee.search takes no query date, so query_time is ignored and applied_settings says so. A null event_time (allowed by the protocol) is written as 'Time anchor: unknown'; cognee never substitutes the ingest time, because dates live only in the text.",
+    "provenance": {
+      "status": "partial",
+      "mechanism": "Chunk items carry payload.document_id, which is the cognee Data id. The shim pins each session's Data id (uuid5 of namespace and source id) through DataItem.data_id and labels it with the source id, so a chunk maps to exactly one session (exact). Entity and fact items come from the merged graph and carry no source; they are returned with provenance unavailable. The map is rebuilt from cognee.datasets.list_data labels (public API) after a restart."
+    },
+    "delete": "native",
+    "delete_notes": "cognee.forget(data_id, dataset) removes the Data row and its chunks and chunk vectors; after it no chunk from the deleted session returns. In the keyless check (canned extraction), graph entities shared with a surviving session stayed and their edge text still quoted the deleted session; in the metered smoke (real extraction) no entity or fact mentioned the deleted fact. lifecycle-lite should score entity and fact items as well as chunks.",
+    "readiness": "synchronous: /ingest runs cognee.add then cognee.cognify(run_in_background=False) for that session, as cognee's BEAM local_ingest does, so /finish has nothing to wait for. A failed pipeline raises (raise_on_error=True) and becomes a product_error.",
+    "namespace": "dataset (one cognee dataset per namespace, named by the opaque ns id; ENABLE_BACKEND_ACCESS_CONTROL is on by default, so each dataset gets its own graph and vector store)",
+    "parallel_namespaces": false,
+    "retrieval_policies": {
+      "vendor-default": {
+        "top_k": 15,
+        "maps_to": "cognee.search(query_type=HYBRID_COMPLETION, only_context=True, verbose=True, datasets=[ns]). search top_k 15 caps each hybrid lane at min(15, DEFAULT_HYBRID_LANE_TOP_K=10): 10 chunks, 10 entities with up to 10 edges each, 10 facts. HYBRID_COMPLETION is recall()'s fallback type (ROUTER_FALLBACK_TYPE) and the retriever cognee selected for its reported BEAM configuration. The type is pinned (auto_route off) so the item shape is deterministic."
+      },
+      "fixed-evidence": {
+        "top_k": 15,
+        "chunks_top_k": 20,
+        "entities_top_k": 20,
+        "maps_to": "cognee.search(query_type=HYBRID_COMPLETION, only_context=True, verbose=True, datasets=[ns]). 20 chunks, 20 entities (cognee's reported BEAM 100K configuration hybrid_completion_20_20_qa_v1), 10 facts; the harness packs the returned items to the 8,000-token budget. Why: the largest documented hybrid setting; the harness truncates to the shared budget"
+      }
+    },
+    "retrieval_notes": {
+      "settable": [
+        "top_k",
+        "chunks_top_k",
+        "entities_top_k",
+        "facts_top_k",
+        "max_edges_per_entity"
+      ],
+      "item_order": "chunks (cognee rank), then entities, then facts, the order cognee renders them into its own context string (raw.context)",
+      "descriptive_keys": [
+        "maps_to"
+      ]
+    },
+    "streaming": "disabled",
+    "telemetry_off": [
+      "TELEMETRY_DISABLED=1",
+      "LITELLM_LOCAL_MODEL_COST_MAP=True",
+      "HF_HUB_OFFLINE=1"
+    ],
+    "agent_surface": {
+      "kind": "vendor-mcp",
+      "transport": "stdio",
+      "version": "cognee-mcp 0.5.6 (not built in this lane; Phase 8)"
+    },
+    "deviations_from_vendor_code": [
+      "Session documents are added as JSON text through DataItem (with a pinned data_id and the source id as label) instead of a JSON file on disk; JsonListChunker reads the same JSON list either way.",
+      "Turns are paired in arrival order (1-2, 3-4, ...) and labelled by speaker; cognee's BEAM code pairs user and assistant turns. LoCoMo has two named speakers and no assistant.",
+      "The item header keeps Session/Turn/Time anchor but the session number is the ingestion order inside the namespace, not a dataset session id.",
+      "No BEAM turn compression, no session distillation and no global context index: they are BEAM-specific additions in local_ingest.py, not part of add + cognify, and the reported 100K retrieval did not query the global index.",
+      "cognee.search with verbose=True is used instead of cognee.recall: for only_context completion types recall returns one rendered prompt string, while search(verbose=True) returns the same retrieval as separate ranked chunks, entities and facts with chunk document ids.",
+      "No per-question-type answer prompts: the harness's fixed reader answers.",
+      "AMB's cognee provider (vectorize-io/agent-memory-benchmark@f618ed7) ingests all documents then cognifies once and retrieves CHUNKS top 50 with fastembed; this shim follows cognee's own BEAM code instead because it exercises the graph."
+    ],
+    "entity_readout": {
+      "endpoint": "GET /entities?ns=",
+      "entities": "Entity nodes from get_formatted_graph_data (the dataset graph API)",
+      "provenance": "DocumentChunk -contains-> Entity, DocumentChunk -is_part_of-> document (id = the per-source data id); exact",
+      "links": {},
+      "merge": "consolidate_entities_pipeline collapses each duplicate cluster into one canonical node and deletes the rest; no pointer is kept"
+    }
+  },
+  "health": {
+    "ok": true,
+    "config": "entity-h2h",
+    "resolved": {
+      "llm_model": "openai/gpt-6.2-sol",
+      "llm_endpoint": "http://egress:8787/ext-graph-pipeline/openai/v1",
+      "structured_output_framework": "litellm_native",
+      "embedding_model": "openai/text-embedding-3-large",
+      "embedding_dimensions": 3072,
+      "embedding_endpoint": "http://egress:8787/ext-graph-pipeline/openai/v1",
+      "graph_extractor": "llm"
+    },
+    "service_ms": 0.031
+  },
+  "timings_s": {
+    "work:omar-brandt": 8.762875548,
+    "home:omar-brandt": 6.0553596999999995,
+    "work:maya-galloway": 8.073090328000003,
+    "home:maya-galloway": 6.021948985999999,
+    "work:clara-lefevre": 8.063317384999994,
+    "home:clara-lefevre": 6.524503906999999,
+    "work:sergei-abara": 7.302510183999999,
+    "home:sergey-abara": 5.754198541000005,
+    "work:song-fang": 6.589833310000002,
+    "home:fang-song": 5.649062071,
+    "work:rebecca-bly": 7.000096566000008,
+    "home:becky-bly": 5.934416751000011,
+    "work:tomas-zeller": 7.1578233760000005,
+    "home:t-zeller": 6.267130153999998,
+    "home:samir-rasku": 5.557126455999998,
+    "work:samir-ahn": 7.312410770999995,
+    "work:noor-rasku": 8.72346635599999,
+    "home:noor-rasku": 5.687647777000006,
+    "work:hugo-ostrow": 6.978251313,
+    "home:hugo-ostrow": 7.342522266,
+    "work:priya-galloway": 7.331537855000002,
+    "home:priya-galloway": 5.6001306430000115,
+    "work:amara-quinlan": 7.619970306000003,
+    "work:amara-quinlan-2": 8.548186317999992,
+    "work:lena-whitlow": 6.985416664000018,
+    "home:lena-whitlow": 6.712377616999991,
+    "work:sofia-hartigan": 8.175176355999982,
+    "work:sofia-hartigan-2": 6.9915397899999805,
+    "work:tomas-quinlan": 6.990134858000005,
+    "home:tomas-quinlan": 6.982796833999979,
+    "work:tomas-lindqvist": 7.409876426999981,
+    "home:tomas-lindqvist": 5.952250957000011,
+    "work:anton-whitlow": 8.703878040999989,
+    "home:anton-whitlow": 9.291430521000002,
+    "home:nadia-bly": 5.680879840999987,
+    "work:nadia-bly": 8.379191202000017,
+    "work:leila-pell": 8.199793987000012,
+    "home:omar-tamsin": 7.306572625999979,
+    "work:ravi-rasku": 7.346915960000013,
+    "home:amara-nakata": 8.367359288999985,
+    "work:nick-vance": 6.974111737999949,
+    "work:nicky-vance": 7.364033438000013,
+    "work:m-rasku": 7.935148033000005,
+    "work:mira-rasku": 7.683296503999969,
+    "work:theo-quinlan": 8.45921898799995,
+    "home:theo-quinlan": 8.621197670999972,
+    "work:idris-quinlan": 8.594518393000005,
+    "work:rosa-ostrow": 8.587687365999969,
+    "work:amara-pell": 8.27157076599996,
+    "work:ines-yilmaz": 8.657436550000043,
+    "home:ines-yilmaz": 9.079960550000019,
+    "work:iris-zeller": 8.667561341000022,
+    "work:clara-bly": 8.986488521000021,
+    "work:clara-orsini": 8.492003489999973,
+    "work:ravi-corrigan": 8.433332655999983,
+    "home:yara-rhee": 6.064199921999999,
+    "work:yara-rhee-jr": 8.31395783899998,
+    "work:idris-vance": 5.932205940000014,
+    "home:idris-vance": 6.099911840000015,
+    "home:nadia-pell": 5.705239708000037,
+    "work:nadia-pell": 8.278598857000004,
+    "work:iris-lindqvist": 9.321715375999979,
+    "home:iris-lindqvist": 8.659196624000034,
+    "work:idris-rasku": 8.532395129000012,
+    "work:idris-rasku-2": 6.075912942000024,
+    "home:idris-rasku": 7.7667404889999885,
+    "home:mira-abara": 6.034968091999995,
+    "work:mira-abara": 8.663395030000014,
+    "work:mira-abara-2": 8.884024180999956,
+    "finish": 3.0395872760000056,
+    "entities": 0.121437248000002
+  },
+  "wall_s": 517.637300567,
+  "drain_each": false,
+  "ingest": {
+    "work:omar-brandt": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 8759.056
+    },
+    "home:omar-brandt": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 6052.764
+    },
+    "work:maya-galloway": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 8070.831
+    },
+    "home:maya-galloway": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 6018.584
+    },
+    "work:clara-lefevre": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 8059.43
+    },
+    "home:clara-lefevre": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 6520.877
+    },
+    "work:sergei-abara": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 7298.674
+    },
+    "home:sergey-abara": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 5750.809
+    },
+    "work:song-fang": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 6586.267
+    },
+    "home:fang-song": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 5645.486
+    },
+    "work:rebecca-bly": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 6996.521
+    },
+    "home:becky-bly": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 5931.796
+    },
+    "work:tomas-zeller": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 7154.829
+    },
+    "home:t-zeller": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 6264.085
+    },
+    "home:samir-rasku": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 5553.813
+    },
+    "work:samir-ahn": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 7309.723
+    },
+    "work:noor-rasku": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 8720.352
+    },
+    "home:noor-rasku": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 5684.641
+    },
+    "work:hugo-ostrow": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 6974.764
+    },
+    "home:hugo-ostrow": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 7339.693
+    },
+    "work:priya-galloway": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 7328.841
+    },
+    "home:priya-galloway": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 5597.039
+    },
+    "work:amara-quinlan": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 7616.589
+    },
+    "work:amara-quinlan-2": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 8545.315
+    },
+    "work:lena-whitlow": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 6982.554
+    },
+    "home:lena-whitlow": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 6709.741
+    },
+    "work:sofia-hartigan": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 8171.535
+    },
+    "work:sofia-hartigan-2": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 6988.234
+    },
+    "work:tomas-quinlan": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 6987.52
+    },
+    "home:tomas-quinlan": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 6980.159
+    },
+    "work:tomas-lindqvist": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 7406.509
+    },
+    "home:tomas-lindqvist": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 5949.175
+    },
+    "work:anton-whitlow": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 8700.995
+    },
+    "home:anton-whitlow": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 9288.007
+    },
+    "home:nadia-bly": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 5677.863
+    },
+    "work:nadia-bly": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 8376.262
+    },
+    "work:leila-pell": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 8197.048
+    },
+    "home:omar-tamsin": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 7303.651
+    },
+    "work:ravi-rasku": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 7342.166
+    },
+    "home:amara-nakata": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 8363.784
+    },
+    "work:nick-vance": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 6971.365
+    },
+    "work:nicky-vance": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 7361.347
+    },
+    "work:m-rasku": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 7932.182
+    },
+    "work:mira-rasku": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 7680.67
+    },
+    "work:theo-quinlan": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 8456.938
+    },
+    "home:theo-quinlan": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 8618.037
+    },
+    "work:idris-quinlan": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 8591.144
+    },
+    "work:rosa-ostrow": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 8584.9
+    },
+    "work:amara-pell": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 8268.549
+    },
+    "work:ines-yilmaz": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 8654.941
+    },
+    "home:ines-yilmaz": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 9077.052
+    },
+    "work:iris-zeller": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 8664.276
+    },
+    "work:clara-bly": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 8983.124
+    },
+    "work:clara-orsini": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 8489.184
+    },
+    "work:ravi-corrigan": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 8430.004
+    },
+    "home:yara-rhee": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 6060.752
+    },
+    "work:yara-rhee-jr": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 8310.213
+    },
+    "work:idris-vance": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 5928.311
+    },
+    "home:idris-vance": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 6096.63
+    },
+    "home:nadia-pell": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 5702.708
+    },
+    "work:nadia-pell": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 8275.956
+    },
+    "work:iris-lindqvist": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 9318.639
+    },
+    "home:iris-lindqvist": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 8656.215
+    },
+    "work:idris-rasku": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 8529.701
+    },
+    "work:idris-rasku-2": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 6073.505
+    },
+    "home:idris-rasku": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 7763.335
+    },
+    "home:mira-abara": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 6030.968
+    },
+    "work:mira-abara": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 8658.946
+    },
+    "work:mira-abara-2": {
+      "items_created": 1,
+      "warnings": [],
+      "errors": [],
+      "completeness": "known",
+      "service_ms": 8879.896
+    }
+  },
+  "finish": {
+    "ready": true,
+    "waited_ms": 3036,
+    "completeness": "known",
+    "service_ms": 3036.299,
+    "raw": {
+      "consolidation": {
+        "step": "consolidate_entities_pipeline",
+        "defaults": true,
+        "seconds": 3.036,
+        "result": "{UUID('e20105f3-7146-5078-b7fb-729602cf004c'): PipelineRunCompleted(status='PipelineRunCompleted', pipeline_run_id=UUID('5fb334c0-0201-41b3-98a5-9f634663c0dd'), dataset_id=UUID('e20105f3-7146-5078-b7fb-729602cf004c'), dataset_name='ns-a18b869b2e81c0c5', payload=None, data_ingestion_info=[{'run_info': PipelineRunCompleted(status='PipelineRunCompleted', pipeline_run_id=UUID('5fb334c0-0201-41b3-98a5-9f634663c0dd'), dataset_id=UUID('e20105f3-7146-5078-b7fb-729602cf004c'), dataset_name='ns-a18b869b2e81c0c5', payload=None, data_ingestion_info=None)}])}"
+      }
+    }
+  },
+  "usage": {
+    "work:omar-brandt": {
+      "calls": 18,
+      "input": 4104,
+      "cached": 1104,
+      "cache_write": 1104,
+      "output": 930,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-large": {
+          "calls": 13,
+          "input": 926,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 5,
+          "input": 3178,
+          "cached": 1104,
+          "output": 930
+        }
+      }
+    },
+    "home:omar-brandt": {
+      "calls": 16,
+      "input": 3874,
+      "cached": 1097,
+      "cache_write": 1097,
+      "output": 704,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 4,
+          "input": 3128,
+          "cached": 1097,
+          "output": 704
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 12,
+          "input": 746,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "finish": {
+      "calls": 2,
+      "input": 879,
+      "cached": 0,
+      "cache_write": 0,
+      "output": 0,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-large": {
+          "calls": 2,
+          "input": 879,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "work:maya-galloway": {
+      "calls": 8,
+      "input": 2063,
+      "cached": 0,
+      "cache_write": 1108,
+      "output": 480,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1586,
+          "cached": 0,
+          "output": 480
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 477,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "home:maya-galloway": {
+      "calls": 8,
+      "input": 1946,
+      "cached": 0,
+      "cache_write": 1099,
+      "output": 349,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1568,
+          "cached": 0,
+          "output": 349
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 378,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "work:clara-lefevre": {
+      "calls": 8,
+      "input": 2089,
+      "cached": 0,
+      "cache_write": 1107,
+      "output": 479,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1584,
+          "cached": 0,
+          "output": 479
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 505,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "home:clara-lefevre": {
+      "calls": 8,
+      "input": 1992,
+      "cached": 0,
+      "cache_write": 1102,
+      "output": 360,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1574,
+          "cached": 0,
+          "output": 360
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 418,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "work:sergei-abara": {
+      "calls": 8,
+      "input": 2077,
+      "cached": 0,
+      "cache_write": 1108,
+      "output": 494,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1586,
+          "cached": 0,
+          "output": 494
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 491,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "home:sergey-abara": {
+      "calls": 8,
+      "input": 1965,
+      "cached": 0,
+      "cache_write": 1098,
+      "output": 344,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1566,
+          "cached": 0,
+          "output": 344
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 399,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "work:song-fang": {
+      "calls": 8,
+      "input": 1977,
+      "cached": 0,
+      "cache_write": 1094,
+      "output": 422,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1558,
+          "cached": 0,
+          "output": 422
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 419,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "home:fang-song": {
+      "calls": 8,
+      "input": 1893,
+      "cached": 0,
+      "cache_write": 1089,
+      "output": 303,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1548,
+          "cached": 0,
+          "output": 303
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 345,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "work:rebecca-bly": {
+      "calls": 8,
+      "input": 2015,
+      "cached": 0,
+      "cache_write": 1099,
+      "output": 431,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1568,
+          "cached": 0,
+          "output": 431
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 447,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "home:becky-bly": {
+      "calls": 8,
+      "input": 1943,
+      "cached": 0,
+      "cache_write": 1094,
+      "output": 327,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1558,
+          "cached": 0,
+          "output": 327
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 385,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "work:tomas-zeller": {
+      "calls": 8,
+      "input": 2052,
+      "cached": 0,
+      "cache_write": 1106,
+      "output": 467,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1582,
+          "cached": 0,
+          "output": 467
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 470,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "home:t-zeller": {
+      "calls": 8,
+      "input": 1966,
+      "cached": 0,
+      "cache_write": 1099,
+      "output": 347,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1568,
+          "cached": 0,
+          "output": 347
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 398,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "home:samir-rasku": {
+      "calls": 8,
+      "input": 1961,
+      "cached": 0,
+      "cache_write": 1099,
+      "output": 344,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1568,
+          "cached": 0,
+          "output": 344
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 393,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "work:samir-ahn": {
+      "calls": 8,
+      "input": 2070,
+      "cached": 0,
+      "cache_write": 1109,
+      "output": 477,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1588,
+          "cached": 0,
+          "output": 477
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 482,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "work:noor-rasku": {
+      "calls": 8,
+      "input": 2168,
+      "cached": 0,
+      "cache_write": 1118,
+      "output": 615,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1606,
+          "cached": 0,
+          "output": 615
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 562,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "home:noor-rasku": {
+      "calls": 8,
+      "input": 1962,
+      "cached": 0,
+      "cache_write": 1099,
+      "output": 359,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1568,
+          "cached": 0,
+          "output": 359
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 394,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "work:hugo-ostrow": {
+      "calls": 8,
+      "input": 2050,
+      "cached": 0,
+      "cache_write": 1107,
+      "output": 484,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1584,
+          "cached": 0,
+          "output": 484
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 466,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "home:hugo-ostrow": {
+      "calls": 8,
+      "input": 2038,
+      "cached": 0,
+      "cache_write": 1104,
+      "output": 459,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1578,
+          "cached": 0,
+          "output": 459
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 460,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "work:priya-galloway": {
+      "calls": 8,
+      "input": 2059,
+      "cached": 0,
+      "cache_write": 1106,
+      "output": 482,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1582,
+          "cached": 0,
+          "output": 482
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 477,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "home:priya-galloway": {
+      "calls": 8,
+      "input": 1938,
+      "cached": 0,
+      "cache_write": 1099,
+      "output": 342,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1568,
+          "cached": 0,
+          "output": 342
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 370,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "work:amara-quinlan": {
+      "calls": 8,
+      "input": 2064,
+      "cached": 0,
+      "cache_write": 1105,
+      "output": 475,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1580,
+          "cached": 0,
+          "output": 475
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 484,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "work:amara-quinlan-2": {
+      "calls": 8,
+      "input": 2139,
+      "cached": 0,
+      "cache_write": 1108,
+      "output": 601,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1586,
+          "cached": 0,
+          "output": 601
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 553,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "work:lena-whitlow": {
+      "calls": 8,
+      "input": 2027,
+      "cached": 0,
+      "cache_write": 1106,
+      "output": 450,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1582,
+          "cached": 0,
+          "output": 450
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 445,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "home:lena-whitlow": {
+      "calls": 8,
+      "input": 1994,
+      "cached": 0,
+      "cache_write": 1103,
+      "output": 434,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1576,
+          "cached": 0,
+          "output": 434
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 418,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "work:sofia-hartigan": {
+      "calls": 8,
+      "input": 2054,
+      "cached": 0,
+      "cache_write": 1105,
+      "output": 470,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1580,
+          "cached": 0,
+          "output": 470
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 474,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "work:sofia-hartigan-2": {
+      "calls": 8,
+      "input": 2031,
+      "cached": 0,
+      "cache_write": 1106,
+      "output": 466,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1582,
+          "cached": 0,
+          "output": 466
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 449,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "work:tomas-quinlan": {
+      "calls": 8,
+      "input": 2040,
+      "cached": 0,
+      "cache_write": 1105,
+      "output": 452,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1580,
+          "cached": 0,
+          "output": 452
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 460,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "home:tomas-quinlan": {
+      "calls": 8,
+      "input": 2011,
+      "cached": 0,
+      "cache_write": 1102,
+      "output": 446,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1574,
+          "cached": 0,
+          "output": 446
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 437,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "work:tomas-lindqvist": {
+      "calls": 8,
+      "input": 2085,
+      "cached": 0,
+      "cache_write": 1112,
+      "output": 505,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1594,
+          "cached": 0,
+          "output": 505
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 491,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "home:tomas-lindqvist": {
+      "calls": 8,
+      "input": 1992,
+      "cached": 0,
+      "cache_write": 1101,
+      "output": 364,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1572,
+          "cached": 0,
+          "output": 364
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 420,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "work:anton-whitlow": {
+      "calls": 8,
+      "input": 2186,
+      "cached": 0,
+      "cache_write": 1119,
+      "output": 641,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1608,
+          "cached": 0,
+          "output": 641
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 578,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "home:anton-whitlow": {
+      "calls": 8,
+      "input": 2176,
+      "cached": 0,
+      "cache_write": 1120,
+      "output": 634,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1610,
+          "cached": 0,
+          "output": 634
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 566,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "home:nadia-bly": {
+      "calls": 8,
+      "input": 1952,
+      "cached": 0,
+      "cache_write": 1093,
+      "output": 327,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1556,
+          "cached": 0,
+          "output": 327
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 396,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "work:nadia-bly": {
+      "calls": 8,
+      "input": 2118,
+      "cached": 0,
+      "cache_write": 1111,
+      "output": 562,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1592,
+          "cached": 0,
+          "output": 562
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 526,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "work:leila-pell": {
+      "calls": 8,
+      "input": 2141,
+      "cached": 0,
+      "cache_write": 1106,
+      "output": 604,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1582,
+          "cached": 0,
+          "output": 604
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 559,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "home:omar-tamsin": {
+      "calls": 8,
+      "input": 2120,
+      "cached": 0,
+      "cache_write": 1109,
+      "output": 511,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1588,
+          "cached": 0,
+          "output": 511
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 532,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "work:ravi-rasku": {
+      "calls": 8,
+      "input": 2051,
+      "cached": 0,
+      "cache_write": 1104,
+      "output": 469,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1578,
+          "cached": 0,
+          "output": 469
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 473,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "home:amara-nakata": {
+      "calls": 8,
+      "input": 2114,
+      "cached": 0,
+      "cache_write": 1110,
+      "output": 577,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1590,
+          "cached": 0,
+          "output": 577
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 524,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "work:nick-vance": {
+      "calls": 8,
+      "input": 2004,
+      "cached": 0,
+      "cache_write": 1102,
+      "output": 455,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1574,
+          "cached": 0,
+          "output": 455
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 430,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "work:nicky-vance": {
+      "calls": 8,
+      "input": 2021,
+      "cached": 0,
+      "cache_write": 1105,
+      "output": 454,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1580,
+          "cached": 0,
+          "output": 454
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 441,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "work:m-rasku": {
+      "calls": 8,
+      "input": 2088,
+      "cached": 0,
+      "cache_write": 1113,
+      "output": 486,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1596,
+          "cached": 0,
+          "output": 486
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 492,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "work:mira-rasku": {
+      "calls": 8,
+      "input": 2086,
+      "cached": 0,
+      "cache_write": 1109,
+      "output": 499,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1588,
+          "cached": 0,
+          "output": 499
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 498,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "work:theo-quinlan": {
+      "calls": 8,
+      "input": 2164,
+      "cached": 0,
+      "cache_write": 1117,
+      "output": 596,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1604,
+          "cached": 0,
+          "output": 596
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 560,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "home:theo-quinlan": {
+      "calls": 8,
+      "input": 2148,
+      "cached": 0,
+      "cache_write": 1117,
+      "output": 606,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1604,
+          "cached": 0,
+          "output": 606
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 544,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "work:idris-quinlan": {
+      "calls": 8,
+      "input": 2209,
+      "cached": 0,
+      "cache_write": 1120,
+      "output": 624,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1610,
+          "cached": 0,
+          "output": 624
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 599,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "work:rosa-ostrow": {
+      "calls": 8,
+      "input": 2157,
+      "cached": 0,
+      "cache_write": 1118,
+      "output": 603,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1606,
+          "cached": 0,
+          "output": 603
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 551,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "work:amara-pell": {
+      "calls": 8,
+      "input": 2133,
+      "cached": 0,
+      "cache_write": 1115,
+      "output": 590,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1600,
+          "cached": 0,
+          "output": 590
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 533,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "work:ines-yilmaz": {
+      "calls": 8,
+      "input": 2200,
+      "cached": 0,
+      "cache_write": 1122,
+      "output": 632,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1614,
+          "cached": 0,
+          "output": 632
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 586,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "home:ines-yilmaz": {
+      "calls": 8,
+      "input": 2209,
+      "cached": 0,
+      "cache_write": 1123,
+      "output": 650,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1616,
+          "cached": 0,
+          "output": 650
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 593,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "work:iris-zeller": {
+      "calls": 8,
+      "input": 2162,
+      "cached": 0,
+      "cache_write": 1117,
+      "output": 614,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1604,
+          "cached": 0,
+          "output": 614
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 558,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "work:clara-bly": {
+      "calls": 8,
+      "input": 2186,
+      "cached": 0,
+      "cache_write": 1115,
+      "output": 621,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1600,
+          "cached": 0,
+          "output": 621
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 586,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "work:clara-orsini": {
+      "calls": 8,
+      "input": 2190,
+      "cached": 0,
+      "cache_write": 1122,
+      "output": 624,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1614,
+          "cached": 0,
+          "output": 624
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 576,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "work:ravi-corrigan": {
+      "calls": 8,
+      "input": 2209,
+      "cached": 0,
+      "cache_write": 1119,
+      "output": 616,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1608,
+          "cached": 0,
+          "output": 616
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 601,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "home:yara-rhee": {
+      "calls": 8,
+      "input": 1940,
+      "cached": 0,
+      "cache_write": 1095,
+      "output": 331,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1560,
+          "cached": 0,
+          "output": 331
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 380,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "work:yara-rhee-jr": {
+      "calls": 8,
+      "input": 2153,
+      "cached": 0,
+      "cache_write": 1116,
+      "output": 609,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1602,
+          "cached": 0,
+          "output": 609
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 551,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "work:idris-vance": {
+      "calls": 8,
+      "input": 1951,
+      "cached": 0,
+      "cache_write": 1098,
+      "output": 338,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1566,
+          "cached": 0,
+          "output": 338
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 385,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "home:idris-vance": {
+      "calls": 8,
+      "input": 1940,
+      "cached": 0,
+      "cache_write": 1097,
+      "output": 337,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1564,
+          "cached": 0,
+          "output": 337
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 376,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "home:nadia-pell": {
+      "calls": 8,
+      "input": 1914,
+      "cached": 0,
+      "cache_write": 1091,
+      "output": 314,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1552,
+          "cached": 0,
+          "output": 314
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 362,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "work:nadia-pell": {
+      "calls": 8,
+      "input": 2097,
+      "cached": 0,
+      "cache_write": 1111,
+      "output": 575,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1592,
+          "cached": 0,
+          "output": 575
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 505,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "work:iris-lindqvist": {
+      "calls": 8,
+      "input": 2142,
+      "cached": 0,
+      "cache_write": 1116,
+      "output": 603,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1602,
+          "cached": 0,
+          "output": 603
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 540,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "home:iris-lindqvist": {
+      "calls": 8,
+      "input": 2140,
+      "cached": 0,
+      "cache_write": 1118,
+      "output": 604,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1606,
+          "cached": 0,
+          "output": 604
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 534,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "work:idris-rasku": {
+      "calls": 8,
+      "input": 2191,
+      "cached": 0,
+      "cache_write": 1122,
+      "output": 638,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1614,
+          "cached": 0,
+          "output": 638
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 577,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "work:idris-rasku-2": {
+      "calls": 8,
+      "input": 2101,
+      "cached": 0,
+      "cache_write": 1130,
+      "output": 420,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1630,
+          "cached": 0,
+          "output": 420
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 471,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "home:idris-rasku": {
+      "calls": 8,
+      "input": 2152,
+      "cached": 0,
+      "cache_write": 1123,
+      "output": 549,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1616,
+          "cached": 0,
+          "output": 549
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 536,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "home:mira-abara": {
+      "calls": 8,
+      "input": 1959,
+      "cached": 0,
+      "cache_write": 1098,
+      "output": 344,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1566,
+          "cached": 0,
+          "output": 344
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 393,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "work:mira-abara": {
+      "calls": 8,
+      "input": 2131,
+      "cached": 0,
+      "cache_write": 1118,
+      "output": 602,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1606,
+          "cached": 0,
+          "output": 602
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 525,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    },
+    "work:mira-abara-2": {
+      "calls": 8,
+      "input": 2178,
+      "cached": 0,
+      "cache_write": 1119,
+      "output": 626,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 1608,
+          "cached": 0,
+          "output": 626
+        },
+        "openai:text-embedding-3-large": {
+          "calls": 6,
+          "input": 570,
+          "cached": 0,
+          "output": 0
+        }
+      }
+    }
+  },
+  "subjects_unresolved": [],
+  "sanity_score": {
+    "auto": {
+      "false_merge": {
+        "k": 16,
+        "n": 20,
+        "rate": 0.8,
+        "ci95": [
+          0.5839825677481064,
+          0.919342337420202
+        ]
+      },
+      "precision": {
+        "k": 10,
+        "n": 26,
+        "rate": 0.38461538461538464,
+        "ci95": [
+          0.22428594435712798,
+          0.5746514991488447
+        ]
+      },
+      "recall": {
+        "k": 10,
+        "n": 14,
+        "rate": 0.7142857142857143,
+        "ci95": [
+          0.4535091567010681,
+          0.8827862135542308
+        ]
+      },
+      "b3": {
+        "precision": 0.7874396135265702,
+        "recall": 0.9420289855072463,
+        "f1": 0.8578252773054814
+      },
+      "groups": 22,
+      "false_merge_cases": [
+        {
+          "a": "work:lena-whitlow",
+          "b": "home:lena-whitlow",
+          "family": "diff-namesake",
+          "via": [
+            "cross_source/clean: ext-graph-pipeline"
+          ]
+        },
+        {
+          "a": "work:sofia-hartigan",
+          "b": "work:sofia-hartigan-2",
+          "family": "diff-namesake-same-company",
+          "via": [
+            "cross_source/clean: ext-graph-pipeline"
+          ]
+        },
+        {
+          "a": "work:tomas-quinlan",
+          "b": "home:tomas-quinlan",
+          "family": "diff-namesake-same-city",
+          "via": [
+            "cross_source/clean: ext-graph-pipeline"
+          ]
+        },
+        {
+          "a": "work:tomas-lindqvist",
+          "b": "home:tomas-lindqvist",
+          "family": "diff-namesake-cross-source-slug",
+          "via": [
+            "cross_source/clean: ext-graph-pipeline"
+          ]
+        },
+        {
+          "a": "work:anton-whitlow",
+          "b": "home:anton-whitlow",
+          "family": "diff-namesake-team-alias",
+          "via": [
+            "cross_source/clean: ext-graph-pipeline"
+          ]
+        },
+        {
+          "a": "home:nadia-bly",
+          "b": "work:nadia-bly",
+          "family": "diff-namesake-family-email",
+          "via": [
+            "cross_source/clean: ext-graph-pipeline"
+          ]
+        },
+        {
+          "a": "work:theo-quinlan",
+          "b": "home:theo-quinlan",
+          "family": "diff-namesake-alias-on-5",
+          "via": [
+            "cross_source/clean: ext-graph-pipeline"
+          ]
+        },
+        {
+          "a": "work:ines-yilmaz",
+          "b": "home:ines-yilmaz",
+          "family": "diff-namesake-alias-on-6",
+          "via": [
+            "cross_source/clean: ext-graph-pipeline"
+          ]
+        },
+        {
+          "a": "home:yara-rhee",
+          "b": "work:yara-rhee-jr",
+          "family": "diff-jr-suffix",
+          "via": [
+            "cross_source/clean: ext-graph-pipeline"
+          ]
+        },
+        {
+          "a": "work:idris-vance",
+          "b": "home:idris-vance",
+          "family": "diff-namesake-placeholder-email",
+          "via": [
+            "cross_source/clean: ext-graph-pipeline"
+          ]
+        },
+        {
+          "a": "home:nadia-pell",
+          "b": "work:nadia-pell",
+          "family": "diff-namesake-household-plain",
+          "via": [
+            "cross_source/clean: ext-graph-pipeline"
+          ]
+        },
+        {
+          "a": "work:iris-lindqvist",
+          "b": "home:iris-lindqvist",
+          "family": "diff-namesake-offlist-alias",
+          "via": [
+            "cross_source/clean: ext-graph-pipeline"
+          ]
+        },
+        {
+          "a": "work:idris-rasku",
+          "b": "work:idris-rasku-2",
+          "family": "diff-bridge-page",
+          "via": [
+            "cross_source/clean: ext-graph-pipeline"
+          ]
+        },
+        {
+          "a": "work:idris-rasku-2",
+          "b": "home:idris-rasku",
+          "family": "diff-bridge-page",
+          "via": [
+            "cross_source/clean: ext-graph-pipeline"
+          ]
+        },
+        {
+          "a": "home:mira-abara",
+          "b": "work:mira-abara-2",
+          "family": "diff-transitive-chain",
+          "via": [
+            "cross_source/clean: ext-graph-pipeline"
+          ]
+        },
+        {
+          "a": "work:mira-abara",
+          "b": "work:mira-abara-2",
+          "family": "diff-transitive-chain",
+          "via": [
+            "cross_source/clean: ext-graph-pipeline"
+          ]
+        }
+      ]
+    },
+    "auto+proposed": {
+      "false_merge": {
+        "k": 16,
+        "n": 20,
+        "rate": 0.8,
+        "ci95": [
+          0.5839825677481064,
+          0.919342337420202
+        ]
+      },
+      "precision": {
+        "k": 10,
+        "n": 26,
+        "rate": 0.38461538461538464,
+        "ci95": [
+          0.22428594435712798,
+          0.5746514991488447
+        ]
+      },
+      "recall": {
+        "k": 10,
+        "n": 14,
+        "rate": 0.7142857142857143,
+        "ci95": [
+          0.4535091567010681,
+          0.8827862135542308
+        ]
+      },
+      "b3": {
+        "precision": 0.7874396135265702,
+        "recall": 0.9420289855072463,
+        "f1": 0.8578252773054814
+      },
+      "groups": 22,
+      "false_merge_cases": [
+        {
+          "a": "work:lena-whitlow",
+          "b": "home:lena-whitlow",
+          "family": "diff-namesake",
+          "via": [
+            "cross_source/clean: ext-graph-pipeline"
+          ]
+        },
+        {
+          "a": "work:sofia-hartigan",
+          "b": "work:sofia-hartigan-2",
+          "family": "diff-namesake-same-company",
+          "via": [
+            "cross_source/clean: ext-graph-pipeline"
+          ]
+        },
+        {
+          "a": "work:tomas-quinlan",
+          "b": "home:tomas-quinlan",
+          "family": "diff-namesake-same-city",
+          "via": [
+            "cross_source/clean: ext-graph-pipeline"
+          ]
+        },
+        {
+          "a": "work:tomas-lindqvist",
+          "b": "home:tomas-lindqvist",
+          "family": "diff-namesake-cross-source-slug",
+          "via": [
+            "cross_source/clean: ext-graph-pipeline"
+          ]
+        },
+        {
+          "a": "work:anton-whitlow",
+          "b": "home:anton-whitlow",
+          "family": "diff-namesake-team-alias",
+          "via": [
+            "cross_source/clean: ext-graph-pipeline"
+          ]
+        },
+        {
+          "a": "home:nadia-bly",
+          "b": "work:nadia-bly",
+          "family": "diff-namesake-family-email",
+          "via": [
+            "cross_source/clean: ext-graph-pipeline"
+          ]
+        },
+        {
+          "a": "work:theo-quinlan",
+          "b": "home:theo-quinlan",
+          "family": "diff-namesake-alias-on-5",
+          "via": [
+            "cross_source/clean: ext-graph-pipeline"
+          ]
+        },
+        {
+          "a": "work:ines-yilmaz",
+          "b": "home:ines-yilmaz",
+          "family": "diff-namesake-alias-on-6",
+          "via": [
+            "cross_source/clean: ext-graph-pipeline"
+          ]
+        },
+        {
+          "a": "home:yara-rhee",
+          "b": "work:yara-rhee-jr",
+          "family": "diff-jr-suffix",
+          "via": [
+            "cross_source/clean: ext-graph-pipeline"
+          ]
+        },
+        {
+          "a": "work:idris-vance",
+          "b": "home:idris-vance",
+          "family": "diff-namesake-placeholder-email",
+          "via": [
+            "cross_source/clean: ext-graph-pipeline"
+          ]
+        },
+        {
+          "a": "home:nadia-pell",
+          "b": "work:nadia-pell",
+          "family": "diff-namesake-household-plain",
+          "via": [
+            "cross_source/clean: ext-graph-pipeline"
+          ]
+        },
+        {
+          "a": "work:iris-lindqvist",
+          "b": "home:iris-lindqvist",
+          "family": "diff-namesake-offlist-alias",
+          "via": [
+            "cross_source/clean: ext-graph-pipeline"
+          ]
+        },
+        {
+          "a": "work:idris-rasku",
+          "b": "work:idris-rasku-2",
+          "family": "diff-bridge-page",
+          "via": [
+            "cross_source/clean: ext-graph-pipeline"
+          ]
+        },
+        {
+          "a": "work:idris-rasku-2",
+          "b": "home:idris-rasku",
+          "family": "diff-bridge-page",
+          "via": [
+            "cross_source/clean: ext-graph-pipeline"
+          ]
+        },
+        {
+          "a": "home:mira-abara",
+          "b": "work:mira-abara-2",
+          "family": "diff-transitive-chain",
+          "via": [
+            "cross_source/clean: ext-graph-pipeline"
+          ]
+        },
+        {
+          "a": "work:mira-abara",
+          "b": "work:mira-abara-2",
+          "family": "diff-transitive-chain",
+          "via": [
+            "cross_source/clean: ext-graph-pipeline"
+          ]
+        }
+      ]
+    }
+  }
+}

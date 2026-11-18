@@ -1,0 +1,23 @@
+{
+  "system": "dedupe",
+  "version": "3.0.3",
+  "config": "default",
+  "config_file": "configs/dedupe-default.json",
+  "doc": "https://github.com/dedupeio/dedupe-examples/blob/master/patent_example/patent_example.py",
+  "world": "<er-h2h>/worlds/s20261117",
+  "held_out": "<er-h2h>/worlds/s20261118",
+  "seed": 1,
+  "labels": {
+    "asked": 23,
+    "match": 10,
+    "distinct": 13
+  },
+  "train_seconds": 6.02,
+  "predicates": [
+    "SimplePredicate: (wholeSetPredicate, emails)",
+    "SimplePredicate: (wholeFieldPredicate, name)"
+  ],
+  "threshold": 0.5,
+  "scored_seconds": 0.12,
+  "proposed_tier": "none: dedupe's partition() has one threshold and no review band"
+}

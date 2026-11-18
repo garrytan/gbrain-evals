@@ -1,0 +1,862 @@
+{
+  "system": "splink",
+  "version": "5.0.0",
+  "config": "tuned",
+  "config_file": "configs/splink-tuned.json",
+  "doc": "https://moj-analytical-services.github.io/splink/demos/examples/duckdb/deduplicate_50k_synthetic.html",
+  "world": "<er-h2h>/worlds/s20261117",
+  "held_out": "<er-h2h>/worlds/s20261118",
+  "held_out_tuning": {
+    "auto": {
+      "goal": "max_pair_f1",
+      "chosen": {
+        "threshold": 0.9980506822612085,
+        "match_weight": 9.0,
+        "precision": 0.8571428571428571,
+        "recall": 0.6857142857142857,
+        "f1": 0.7619047619047619,
+        "merged_pairs": 224
+      },
+      "curve": [
+        {
+          "threshold": 0.030303030303030304,
+          "match_weight": -5.0,
+          "precision": 0.21153846153846154,
+          "recall": 0.9428571428571428,
+          "f1": 0.3455497382198953,
+          "merged_pairs": 1248
+        },
+        {
+          "threshold": 0.04232371232479359,
+          "match_weight": -4.5,
+          "precision": 0.22896790980052037,
+          "recall": 0.9428571428571428,
+          "f1": 0.3684577808792742,
+          "merged_pairs": 1153
+        },
+        {
+          "threshold": 0.058823529411764705,
+          "match_weight": -4.0,
+          "precision": 0.23218997361477572,
+          "recall": 0.9428571428571428,
+          "f1": 0.3726182074805928,
+          "merged_pairs": 1137
+        },
+        {
+          "threshold": 0.08121030314161229,
+          "match_weight": -3.5,
+          "precision": 0.23342175066312998,
+          "recall": 0.9428571428571428,
+          "f1": 0.37420269312544296,
+          "merged_pairs": 1131
+        },
+        {
+          "threshold": 0.1111111111111111,
+          "match_weight": -3.0,
+          "precision": 0.2344582593250444,
+          "recall": 0.9428571428571428,
+          "f1": 0.3755334281650071,
+          "merged_pairs": 1126
+        },
+        {
+          "threshold": 0.15022110482233483,
+          "match_weight": -2.5,
+          "precision": 0.2357142857142857,
+          "recall": 0.9428571428571428,
+          "f1": 0.3771428571428571,
+          "merged_pairs": 1120
+        },
+        {
+          "threshold": 0.2,
+          "match_weight": -2.0,
+          "precision": 0.2357142857142857,
+          "recall": 0.9428571428571428,
+          "f1": 0.3771428571428571,
+          "merged_pairs": 1120
+        },
+        {
+          "threshold": 0.2612038749637415,
+          "match_weight": -1.5,
+          "precision": 0.2357142857142857,
+          "recall": 0.9428571428571428,
+          "f1": 0.3771428571428571,
+          "merged_pairs": 1120
+        },
+        {
+          "threshold": 0.3333333333333333,
+          "match_weight": -1.0,
+          "precision": 0.2357142857142857,
+          "recall": 0.9428571428571428,
+          "f1": 0.3771428571428571,
+          "merged_pairs": 1120
+        },
+        {
+          "threshold": 0.4142135623730951,
+          "match_weight": -0.5,
+          "precision": 0.24,
+          "recall": 0.9428571428571428,
+          "f1": 0.3826086956521739,
+          "merged_pairs": 1100
+        },
+        {
+          "threshold": 0.5,
+          "match_weight": 0.0,
+          "precision": 0.24535315985130113,
+          "recall": 0.9428571428571428,
+          "f1": 0.3893805309734514,
+          "merged_pairs": 1076
+        },
+        {
+          "threshold": 0.5857864376269051,
+          "match_weight": 0.5,
+          "precision": 0.25287356321839083,
+          "recall": 0.9428571428571428,
+          "f1": 0.39879154078549844,
+          "merged_pairs": 1044
+        },
+        {
+          "threshold": 0.6666666666666666,
+          "match_weight": 1.0,
+          "precision": 0.25691699604743085,
+          "recall": 0.9285714285714286,
+          "f1": 0.4024767801857585,
+          "merged_pairs": 1012
+        },
+        {
+          "threshold": 0.7387961250362586,
+          "match_weight": 1.5,
+          "precision": 0.2542372881355932,
+          "recall": 0.9107142857142857,
+          "f1": 0.397505845674201,
+          "merged_pairs": 1003
+        },
+        {
+          "threshold": 0.8,
+          "match_weight": 2.0,
+          "precision": 0.24974411463664278,
+          "recall": 0.8714285714285714,
+          "f1": 0.38822593476531425,
+          "merged_pairs": 977
+        },
+        {
+          "threshold": 0.8497788951776651,
+          "match_weight": 2.5,
+          "precision": 0.24008350730688935,
+          "recall": 0.8214285714285714,
+          "f1": 0.3715670436187399,
+          "merged_pairs": 958
+        },
+        {
+          "threshold": 0.8888888888888888,
+          "match_weight": 3.0,
+          "precision": 0.23452768729641693,
+          "recall": 0.7714285714285715,
+          "f1": 0.3597002497918401,
+          "merged_pairs": 921
+        },
+        {
+          "threshold": 0.9187896968583877,
+          "match_weight": 3.5,
+          "precision": 0.2349537037037037,
+          "recall": 0.725,
+          "f1": 0.35489510489510484,
+          "merged_pairs": 864
+        },
+        {
+          "threshold": 0.9411764705882353,
+          "match_weight": 4.0,
+          "precision": 0.2349537037037037,
+          "recall": 0.725,
+          "f1": 0.35489510489510484,
+          "merged_pairs": 864
+        },
+        {
+          "threshold": 0.9576762876752064,
+          "match_weight": 4.5,
+          "precision": 0.2354988399071926,
+          "recall": 0.725,
+          "f1": 0.3555166374781086,
+          "merged_pairs": 862
+        },
+        {
+          "threshold": 0.9696969696969697,
+          "match_weight": 5.0,
+          "precision": 0.24516908212560387,
+          "recall": 0.725,
+          "f1": 0.3664259927797834,
+          "merged_pairs": 828
+        },
+        {
+          "threshold": 0.9783806380088231,
+          "match_weight": 5.5,
+          "precision": 0.32901134521880065,
+          "recall": 0.725,
+          "f1": 0.45261984392419174,
+          "merged_pairs": 617
+        },
+        {
+          "threshold": 0.9846153846153847,
+          "match_weight": 6.0,
+          "precision": 0.46136363636363636,
+          "recall": 0.725,
+          "f1": 0.5638888888888889,
+          "merged_pairs": 440
+        },
+        {
+          "threshold": 0.989072192895632,
+          "match_weight": 6.5,
+          "precision": 0.5286458333333334,
+          "recall": 0.725,
+          "f1": 0.6114457831325302,
+          "merged_pairs": 384
+        },
+        {
+          "threshold": 0.9922480620155039,
+          "match_weight": 7.0,
+          "precision": 0.5546448087431693,
+          "recall": 0.725,
+          "f1": 0.628482972136223,
+          "merged_pairs": 366
+        },
+        {
+          "threshold": 0.994506078188917,
+          "match_weight": 7.5,
+          "precision": 0.559228650137741,
+          "recall": 0.725,
+          "f1": 0.6314152410575427,
+          "merged_pairs": 363
+        },
+        {
+          "threshold": 0.9961089494163424,
+          "match_weight": 8.0,
+          "precision": 0.5867052023121387,
+          "recall": 0.725,
+          "f1": 0.6485623003194888,
+          "merged_pairs": 346
+        },
+        {
+          "threshold": 0.9972454725151444,
+          "match_weight": 8.5,
+          "precision": 0.6979166666666666,
+          "recall": 0.7178571428571429,
+          "f1": 0.7077464788732394,
+          "merged_pairs": 288
+        },
+        {
+          "threshold": 0.9980506822612085,
+          "match_weight": 9.0,
+          "precision": 0.8571428571428571,
+          "recall": 0.6857142857142857,
+          "f1": 0.7619047619047619,
+          "merged_pairs": 224
+        },
+        {
+          "threshold": 0.9986208367860828,
+          "match_weight": 9.5,
+          "precision": 0.9142857142857143,
+          "recall": 0.45714285714285713,
+          "f1": 0.6095238095238095,
+          "merged_pairs": 140
+        },
+        {
+          "threshold": 0.9990243902439024,
+          "match_weight": 10.0,
+          "precision": 0.981651376146789,
+          "recall": 0.3821428571428571,
+          "f1": 0.5501285347043701,
+          "merged_pairs": 109
+        },
+        {
+          "threshold": 0.9993099425421107,
+          "match_weight": 10.5,
+          "precision": 1.0,
+          "recall": 0.35714285714285715,
+          "f1": 0.5263157894736842,
+          "merged_pairs": 100
+        },
+        {
+          "threshold": 0.9995119570522206,
+          "match_weight": 11.0,
+          "precision": 1.0,
+          "recall": 0.2892857142857143,
+          "f1": 0.4487534626038781,
+          "merged_pairs": 81
+        },
+        {
+          "threshold": 0.9996548521851435,
+          "match_weight": 11.5,
+          "precision": 1.0,
+          "recall": 0.25,
+          "f1": 0.4,
+          "merged_pairs": 70
+        },
+        {
+          "threshold": 0.9997559189650964,
+          "match_weight": 12.0,
+          "precision": 1.0,
+          "recall": 0.24285714285714285,
+          "f1": 0.3908045977011494,
+          "merged_pairs": 68
+        },
+        {
+          "threshold": 0.9998273963056777,
+          "match_weight": 12.5,
+          "precision": 1.0,
+          "recall": 0.24285714285714285,
+          "f1": 0.3908045977011494,
+          "merged_pairs": 68
+        },
+        {
+          "threshold": 0.9998779445868424,
+          "match_weight": 13.0,
+          "precision": 1.0,
+          "recall": 0.22857142857142856,
+          "f1": 0.3720930232558139,
+          "merged_pairs": 64
+        },
+        {
+          "threshold": 0.9999136907041872,
+          "match_weight": 13.5,
+          "precision": 1.0,
+          "recall": 0.19642857142857142,
+          "f1": 0.3283582089552239,
+          "merged_pairs": 55
+        },
+        {
+          "threshold": 0.9999389685688129,
+          "match_weight": 14.0,
+          "precision": 1.0,
+          "recall": 0.19642857142857142,
+          "f1": 0.3283582089552239,
+          "merged_pairs": 55
+        },
+        {
+          "threshold": 0.9999568434896896,
+          "match_weight": 14.5,
+          "precision": 1.0,
+          "recall": 0.19642857142857142,
+          "f1": 0.3283582089552239,
+          "merged_pairs": 55
+        },
+        {
+          "threshold": 0.9999694833531692,
+          "match_weight": 15.0,
+          "precision": 1.0,
+          "recall": 0.19642857142857142,
+          "f1": 0.3283582089552239,
+          "merged_pairs": 55
+        },
+        {
+          "threshold": 0.9999784212792137,
+          "match_weight": 15.5,
+          "precision": 1.0,
+          "recall": 0.19642857142857142,
+          "f1": 0.3283582089552239,
+          "merged_pairs": 55
+        },
+        {
+          "threshold": 0.9999847414437646,
+          "match_weight": 16.0,
+          "precision": 1.0,
+          "recall": 0.19642857142857142,
+          "f1": 0.3283582089552239,
+          "merged_pairs": 55
+        },
+        {
+          "threshold": 0.9999892105231952,
+          "match_weight": 16.5,
+          "precision": 1.0,
+          "recall": 0.19642857142857142,
+          "f1": 0.3283582089552239,
+          "merged_pairs": 55
+        },
+        {
+          "threshold": 0.999992370663676,
+          "match_weight": 17.0,
+          "precision": 1.0,
+          "recall": 0.19285714285714287,
+          "f1": 0.32335329341317365,
+          "merged_pairs": 54
+        },
+        {
+          "threshold": 0.9999946052324943,
+          "match_weight": 17.5,
+          "precision": 1.0,
+          "recall": 0.15357142857142858,
+          "f1": 0.26625386996904027,
+          "merged_pairs": 43
+        },
+        {
+          "threshold": 0.9999961853172863,
+          "match_weight": 18.0,
+          "precision": 1.0,
+          "recall": 0.075,
+          "f1": 0.13953488372093023,
+          "merged_pairs": 21
+        },
+        {
+          "threshold": 0.9999973026089712,
+          "match_weight": 18.5,
+          "precision": 1.0,
+          "recall": 0.05357142857142857,
+          "f1": 0.10169491525423728,
+          "merged_pairs": 15
+        },
+        {
+          "threshold": 0.9999980926550052,
+          "match_weight": 19.0,
+          "precision": 1.0,
+          "recall": 0.05,
+          "f1": 0.09523809523809523,
+          "merged_pairs": 14
+        },
+        {
+          "threshold": 0.9999986513026666,
+          "match_weight": 19.5,
+          "precision": 1.0,
+          "recall": 0.025,
+          "f1": 0.04878048780487806,
+          "merged_pairs": 7
+        },
+        {
+          "threshold": 0.9999990463265931,
+          "match_weight": 20.0,
+          "precision": 1.0,
+          "recall": 0.025,
+          "f1": 0.04878048780487806,
+          "merged_pairs": 7
+        }
+      ]
+    },
+    "proposed": {
+      "goal": "lowest_with_precision_at_least:0.5",
+      "chosen": {
+        "threshold": 0.989072192895632,
+        "match_weight": 6.5,
+        "precision": 0.5286458333333334,
+        "recall": 0.725,
+        "f1": 0.6114457831325302,
+        "merged_pairs": 384
+      },
+      "curve": [
+        {
+          "threshold": 0.030303030303030304,
+          "match_weight": -5.0,
+          "precision": 0.21153846153846154,
+          "recall": 0.9428571428571428,
+          "f1": 0.3455497382198953,
+          "merged_pairs": 1248
+        },
+        {
+          "threshold": 0.04232371232479359,
+          "match_weight": -4.5,
+          "precision": 0.22896790980052037,
+          "recall": 0.9428571428571428,
+          "f1": 0.3684577808792742,
+          "merged_pairs": 1153
+        },
+        {
+          "threshold": 0.058823529411764705,
+          "match_weight": -4.0,
+          "precision": 0.23218997361477572,
+          "recall": 0.9428571428571428,
+          "f1": 0.3726182074805928,
+          "merged_pairs": 1137
+        },
+        {
+          "threshold": 0.08121030314161229,
+          "match_weight": -3.5,
+          "precision": 0.23342175066312998,
+          "recall": 0.9428571428571428,
+          "f1": 0.37420269312544296,
+          "merged_pairs": 1131
+        },
+        {
+          "threshold": 0.1111111111111111,
+          "match_weight": -3.0,
+          "precision": 0.2344582593250444,
+          "recall": 0.9428571428571428,
+          "f1": 0.3755334281650071,
+          "merged_pairs": 1126
+        },
+        {
+          "threshold": 0.15022110482233483,
+          "match_weight": -2.5,
+          "precision": 0.2357142857142857,
+          "recall": 0.9428571428571428,
+          "f1": 0.3771428571428571,
+          "merged_pairs": 1120
+        },
+        {
+          "threshold": 0.2,
+          "match_weight": -2.0,
+          "precision": 0.2357142857142857,
+          "recall": 0.9428571428571428,
+          "f1": 0.3771428571428571,
+          "merged_pairs": 1120
+        },
+        {
+          "threshold": 0.2612038749637415,
+          "match_weight": -1.5,
+          "precision": 0.2357142857142857,
+          "recall": 0.9428571428571428,
+          "f1": 0.3771428571428571,
+          "merged_pairs": 1120
+        },
+        {
+          "threshold": 0.3333333333333333,
+          "match_weight": -1.0,
+          "precision": 0.2357142857142857,
+          "recall": 0.9428571428571428,
+          "f1": 0.3771428571428571,
+          "merged_pairs": 1120
+        },
+        {
+          "threshold": 0.4142135623730951,
+          "match_weight": -0.5,
+          "precision": 0.24,
+          "recall": 0.9428571428571428,
+          "f1": 0.3826086956521739,
+          "merged_pairs": 1100
+        },
+        {
+          "threshold": 0.5,
+          "match_weight": 0.0,
+          "precision": 0.24535315985130113,
+          "recall": 0.9428571428571428,
+          "f1": 0.3893805309734514,
+          "merged_pairs": 1076
+        },
+        {
+          "threshold": 0.5857864376269051,
+          "match_weight": 0.5,
+          "precision": 0.25287356321839083,
+          "recall": 0.9428571428571428,
+          "f1": 0.39879154078549844,
+          "merged_pairs": 1044
+        },
+        {
+          "threshold": 0.6666666666666666,
+          "match_weight": 1.0,
+          "precision": 0.25691699604743085,
+          "recall": 0.9285714285714286,
+          "f1": 0.4024767801857585,
+          "merged_pairs": 1012
+        },
+        {
+          "threshold": 0.7387961250362586,
+          "match_weight": 1.5,
+          "precision": 0.2542372881355932,
+          "recall": 0.9107142857142857,
+          "f1": 0.397505845674201,
+          "merged_pairs": 1003
+        },
+        {
+          "threshold": 0.8,
+          "match_weight": 2.0,
+          "precision": 0.24974411463664278,
+          "recall": 0.8714285714285714,
+          "f1": 0.38822593476531425,
+          "merged_pairs": 977
+        },
+        {
+          "threshold": 0.8497788951776651,
+          "match_weight": 2.5,
+          "precision": 0.24008350730688935,
+          "recall": 0.8214285714285714,
+          "f1": 0.3715670436187399,
+          "merged_pairs": 958
+        },
+        {
+          "threshold": 0.8888888888888888,
+          "match_weight": 3.0,
+          "precision": 0.23452768729641693,
+          "recall": 0.7714285714285715,
+          "f1": 0.3597002497918401,
+          "merged_pairs": 921
+        },
+        {
+          "threshold": 0.9187896968583877,
+          "match_weight": 3.5,
+          "precision": 0.2349537037037037,
+          "recall": 0.725,
+          "f1": 0.35489510489510484,
+          "merged_pairs": 864
+        },
+        {
+          "threshold": 0.9411764705882353,
+          "match_weight": 4.0,
+          "precision": 0.2349537037037037,
+          "recall": 0.725,
+          "f1": 0.35489510489510484,
+          "merged_pairs": 864
+        },
+        {
+          "threshold": 0.9576762876752064,
+          "match_weight": 4.5,
+          "precision": 0.2354988399071926,
+          "recall": 0.725,
+          "f1": 0.3555166374781086,
+          "merged_pairs": 862
+        },
+        {
+          "threshold": 0.9696969696969697,
+          "match_weight": 5.0,
+          "precision": 0.24516908212560387,
+          "recall": 0.725,
+          "f1": 0.3664259927797834,
+          "merged_pairs": 828
+        },
+        {
+          "threshold": 0.9783806380088231,
+          "match_weight": 5.5,
+          "precision": 0.32901134521880065,
+          "recall": 0.725,
+          "f1": 0.45261984392419174,
+          "merged_pairs": 617
+        },
+        {
+          "threshold": 0.9846153846153847,
+          "match_weight": 6.0,
+          "precision": 0.46136363636363636,
+          "recall": 0.725,
+          "f1": 0.5638888888888889,
+          "merged_pairs": 440
+        },
+        {
+          "threshold": 0.989072192895632,
+          "match_weight": 6.5,
+          "precision": 0.5286458333333334,
+          "recall": 0.725,
+          "f1": 0.6114457831325302,
+          "merged_pairs": 384
+        },
+        {
+          "threshold": 0.9922480620155039,
+          "match_weight": 7.0,
+          "precision": 0.5546448087431693,
+          "recall": 0.725,
+          "f1": 0.628482972136223,
+          "merged_pairs": 366
+        },
+        {
+          "threshold": 0.994506078188917,
+          "match_weight": 7.5,
+          "precision": 0.559228650137741,
+          "recall": 0.725,
+          "f1": 0.6314152410575427,
+          "merged_pairs": 363
+        },
+        {
+          "threshold": 0.9961089494163424,
+          "match_weight": 8.0,
+          "precision": 0.5867052023121387,
+          "recall": 0.725,
+          "f1": 0.6485623003194888,
+          "merged_pairs": 346
+        },
+        {
+          "threshold": 0.9972454725151444,
+          "match_weight": 8.5,
+          "precision": 0.6979166666666666,
+          "recall": 0.7178571428571429,
+          "f1": 0.7077464788732394,
+          "merged_pairs": 288
+        },
+        {
+          "threshold": 0.9980506822612085,
+          "match_weight": 9.0,
+          "precision": 0.8571428571428571,
+          "recall": 0.6857142857142857,
+          "f1": 0.7619047619047619,
+          "merged_pairs": 224
+        },
+        {
+          "threshold": 0.9986208367860828,
+          "match_weight": 9.5,
+          "precision": 0.9142857142857143,
+          "recall": 0.45714285714285713,
+          "f1": 0.6095238095238095,
+          "merged_pairs": 140
+        },
+        {
+          "threshold": 0.9990243902439024,
+          "match_weight": 10.0,
+          "precision": 0.981651376146789,
+          "recall": 0.3821428571428571,
+          "f1": 0.5501285347043701,
+          "merged_pairs": 109
+        },
+        {
+          "threshold": 0.9993099425421107,
+          "match_weight": 10.5,
+          "precision": 1.0,
+          "recall": 0.35714285714285715,
+          "f1": 0.5263157894736842,
+          "merged_pairs": 100
+        },
+        {
+          "threshold": 0.9995119570522206,
+          "match_weight": 11.0,
+          "precision": 1.0,
+          "recall": 0.2892857142857143,
+          "f1": 0.4487534626038781,
+          "merged_pairs": 81
+        },
+        {
+          "threshold": 0.9996548521851435,
+          "match_weight": 11.5,
+          "precision": 1.0,
+          "recall": 0.25,
+          "f1": 0.4,
+          "merged_pairs": 70
+        },
+        {
+          "threshold": 0.9997559189650964,
+          "match_weight": 12.0,
+          "precision": 1.0,
+          "recall": 0.24285714285714285,
+          "f1": 0.3908045977011494,
+          "merged_pairs": 68
+        },
+        {
+          "threshold": 0.9998273963056777,
+          "match_weight": 12.5,
+          "precision": 1.0,
+          "recall": 0.24285714285714285,
+          "f1": 0.3908045977011494,
+          "merged_pairs": 68
+        },
+        {
+          "threshold": 0.9998779445868424,
+          "match_weight": 13.0,
+          "precision": 1.0,
+          "recall": 0.22857142857142856,
+          "f1": 0.3720930232558139,
+          "merged_pairs": 64
+        },
+        {
+          "threshold": 0.9999136907041872,
+          "match_weight": 13.5,
+          "precision": 1.0,
+          "recall": 0.19642857142857142,
+          "f1": 0.3283582089552239,
+          "merged_pairs": 55
+        },
+        {
+          "threshold": 0.9999389685688129,
+          "match_weight": 14.0,
+          "precision": 1.0,
+          "recall": 0.19642857142857142,
+          "f1": 0.3283582089552239,
+          "merged_pairs": 55
+        },
+        {
+          "threshold": 0.9999568434896896,
+          "match_weight": 14.5,
+          "precision": 1.0,
+          "recall": 0.19642857142857142,
+          "f1": 0.3283582089552239,
+          "merged_pairs": 55
+        },
+        {
+          "threshold": 0.9999694833531692,
+          "match_weight": 15.0,
+          "precision": 1.0,
+          "recall": 0.19642857142857142,
+          "f1": 0.3283582089552239,
+          "merged_pairs": 55
+        },
+        {
+          "threshold": 0.9999784212792137,
+          "match_weight": 15.5,
+          "precision": 1.0,
+          "recall": 0.19642857142857142,
+          "f1": 0.3283582089552239,
+          "merged_pairs": 55
+        },
+        {
+          "threshold": 0.9999847414437646,
+          "match_weight": 16.0,
+          "precision": 1.0,
+          "recall": 0.19642857142857142,
+          "f1": 0.3283582089552239,
+          "merged_pairs": 55
+        },
+        {
+          "threshold": 0.9999892105231952,
+          "match_weight": 16.5,
+          "precision": 1.0,
+          "recall": 0.19642857142857142,
+          "f1": 0.3283582089552239,
+          "merged_pairs": 55
+        },
+        {
+          "threshold": 0.999992370663676,
+          "match_weight": 17.0,
+          "precision": 1.0,
+          "recall": 0.19285714285714287,
+          "f1": 0.32335329341317365,
+          "merged_pairs": 54
+        },
+        {
+          "threshold": 0.9999946052324943,
+          "match_weight": 17.5,
+          "precision": 1.0,
+          "recall": 0.15357142857142858,
+          "f1": 0.26625386996904027,
+          "merged_pairs": 43
+        },
+        {
+          "threshold": 0.9999961853172863,
+          "match_weight": 18.0,
+          "precision": 1.0,
+          "recall": 0.075,
+          "f1": 0.13953488372093023,
+          "merged_pairs": 21
+        },
+        {
+          "threshold": 0.9999973026089712,
+          "match_weight": 18.5,
+          "precision": 1.0,
+          "recall": 0.05357142857142857,
+          "f1": 0.10169491525423728,
+          "merged_pairs": 15
+        },
+        {
+          "threshold": 0.9999980926550052,
+          "match_weight": 19.0,
+          "precision": 1.0,
+          "recall": 0.05,
+          "f1": 0.09523809523809523,
+          "merged_pairs": 14
+        },
+        {
+          "threshold": 0.9999986513026666,
+          "match_weight": 19.5,
+          "precision": 1.0,
+          "recall": 0.025,
+          "f1": 0.04878048780487806,
+          "merged_pairs": 7
+        },
+        {
+          "threshold": 0.9999990463265931,
+          "match_weight": 20.0,
+          "precision": 1.0,
+          "recall": 0.025,
+          "f1": 0.04878048780487806,
+          "merged_pairs": 7
+        }
+      ]
+    }
+  },
+  "held_out_seconds": 2.76,
+  "scored_seconds": 3.1,
+  "thresholds_match_probability": {
+    "auto": 0.9980506822612085,
+    "proposed": 0.989072192895632
+  },
+  "proposed_tier": "bench-defined review band, not Splink's: Splink documents no clerical-review range, so the lower threshold is the lowest held-out threshold whose pairwise precision is at least 0.5",
+  "pairs_predicted": 1174,
+  "probability_two_random_records_match": 0.0007266645347169987
+}

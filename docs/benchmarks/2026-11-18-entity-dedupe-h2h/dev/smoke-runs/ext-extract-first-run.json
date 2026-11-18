@@ -1,0 +1,3565 @@
+{
+  "system": "ext-extract-first",
+  "label": "full",
+  "ns": "ns-a18b869b2e81c0c5",
+  "seed": 20261117,
+  "per_family": 2,
+  "ledger_sha256": "7db1e1f4062f62c389a8fbee734fe3e05281392e78dd0673de018e536ff05ccb",
+  "pages": 69,
+  "capabilities": {
+    "protocol": 1,
+    "system": "ext-extract-first",
+    "versions": {
+      "package": "mem0ai[nlp]==2.2.1 + fastembed + en_core_web_sm 3.8.0",
+      "lock_sha256": "9777b7a8d09274ccfd52e887c2f4caae288c505d6164b0c6b4be491b0af25680",
+      "image": null,
+      "vendor_benchmark_code": "mem0ai/memory-benchmarks@4b61c5d31b9c668a12b4f5e78064248a02c82d2b, benchmarks/locomo/run.py (ingest_conversation, session_to_chunks, process_question), benchmarks/longmemeval/run.py and benchmarks/beam/run.py (CHUNK_SIZE), benchmarks/common/mem0_client.py",
+      "backend": "qdrant/qdrant:v1.19.2@sha256:b7b0444c4c351c970b98e90a6f89c2ee4287c65b44e52b4cb503fa5b2aa927ad (server, matching qdrant-client 1.19.1 in uv.lock)",
+      "resolved_dependencies": "uv.lock resolved 2026-10-05 with exclude-newer and no prereleases: qdrant-client 1.19.1, openai 3.24.0, spacy 3.8.16, fastembed 0.8.1, posthog 7.62.1. pip install mem0ai resolves the same way; mem0's poetry.lock is not used by its hatch build."
+    },
+    "configs": {
+      "entity-h2h": {
+        "model_roles": {
+          "extraction": "gpt-6.2-sol",
+          "small": null,
+          "embedder": "text-embedding-3-small",
+          "dims": 1536,
+          "reranker": null
+        },
+        "notes": "The pinned recipe with the LLM set to gpt-6.2-sol for the entity-resolution head-to-head (newest GPT generation the OpenAI API serves on 2026-11-17). is_reasoning_model stays True as in the recipe, so mem0 sends no temperature or max_tokens; the embedder stays at the SDK default. Qdrant collection memories_entity_h2h."
+      }
+    },
+    "time": "in-text",
+    "time_notes": "Memory.add raises ValueError for any non-null timestamp in OSS 2.2.1 (main.py:818, 'Platform-only temporal parameter'), and Memory.search raises for any non-null reference_date (main.py:1447). The shim puts a system message 'This conversation took place at 1:56 pm on 8 May, 2023.' at the head of every add call. The extraction prompt's '## Observation Date' section, which the prompt calls the only temporal anchor, is always the wall-clock date in OSS (configs/prompts.py _resolve_dates), so relative dates may still resolve against today. The session's ISO date is also stored in memory metadata (session_date) and returned as valid_from.",
+    "provenance": {
+      "status": "partial",
+      "mechanism": "metadata={'source_id', 'session_date'} on every add; mem0 copies it into each memory it creates and returns it from search. Each memory cites the session whose add created it. The extractor also reads the scope's last 10 raw messages and its 10 nearest existing memories, and a later restatement of the same fact is dropped by hash dedup rather than cited, so the list can be incomplete."
+    },
+    "delete": "public-api-composition",
+    "delete_notes": "get_all(filters={user_id, source_id}) then delete(memory_id) for each. Mem0 deletes memories, not sources. The history store keeps the scope's 10 most recent raw messages (fed to later extraction calls as context) and each memory's change log; neither is searchable.",
+    "readiness": "queued: /ingest validates the session and queues it on the namespace's single worker, returning completeness `unknown` at once, because one session of synchronous Memory.add calls can outlast the harness's 600-second request deadline (gpt-5-mini takes about 16 s per call; a 30-turn LoCoMo session at one turn per call is about 8 minutes). /finish waits until the queue drains (bounded by timeout_s, else ready=false) and reports `known`, or `degraded` when any add raised (mem0 falls back to per-record inserts and raises only when none persisted, main.py:1055-1076), with counts in its receipt. A budget refusal stops the namespace's remaining chunks and /finish returns the budget error. /reset cancels queued sessions; one already running finishes into the retired user_id, which nothing reads.",
+    "namespace": "user_id (filters={'user_id': ...} on search and get_all). /reset moves the namespace to a fresh user_id (<ns>.g<n>) after delete_all, because delete_all leaves the scope's recent raw messages in the history store.",
+    "parallel_namespaces": true,
+    "parallel_notes": "memory-benchmarks drives one Memory instance from 10 concurrent workers across conversations (FastAPI threadpool, sync endpoints); the shim serializes calls within a namespace.",
+    "ingest_chunking": {
+      "env": "MEM0_CHUNK_TURNS",
+      "default": 2,
+      "vendor_values": {
+        "locomo": 1,
+        "longmemeval": 2,
+        "beam": 2
+      },
+      "notes": "set per cell at container start; each chunk is one add call and one extraction LLM call"
+    },
+    "retrieval_policies": {
+      "vendor-default": {
+        "settings": {
+          "k": 20
+        },
+        "maps_to": "Memory.search(query, top_k=20, filters={'user_id'}, threshold=0.1, rerank=False): the SDK defaults (main.py:1397-1400). Hybrid scoring (semantic + BM25 + entity boost) is always on when spaCy and fastembed are installed."
+      },
+      "fixed-evidence": {
+        "settings": {
+          "k": 200
+        },
+        "maps_to": "same call with top_k=200, the largest cutoff memory-benchmarks evaluates (--top-k 200, cutoffs 10,20,50,200), so the harness can pack 8,000 tokens of short memories"
+      }
+    },
+    "streaming": "disabled",
+    "telemetry_off": [
+      "MEM0_TELEMETRY=false",
+      "HF_HUB_OFFLINE=1",
+      "HF_HUB_DISABLE_TELEMETRY=1",
+      "QDRANT__TELEMETRY_DISABLED=true"
+    ],
+    "agent_surface": {
+      "kind": "harness-mcp",
+      "transport": "stdio",
+      "version": "not built yet: a harness MCP wrapper over this image's mem0ai 2.2.1 SDK (add, search, get_all, delete), because OpenMemory, mem0's own MCP server, is being sunset"
+    },
+    "deviations_from_vendor_code": [
+      "memory-benchmarks talks to its own FastAPI server (docker/mem0/main.py) built from mem0's feat/v3-pipeline branch; the shim calls the pinned mem0ai 2.2.1 SDK in process, with the same Qdrant backend. That server passes user_id to search() as a keyword, which 2.2.1 rejects; the shim uses filters={'user_id'}.",
+      "The session date goes into the messages as a system line. memory-benchmarks sends timestamp=<epoch> to its OSS server, whose AddRequest model has no timestamp field, so in the vendor's own OSS runs the date never reaches mem0.",
+      "Messages keep the harness's role and render content as 'Speaker: text', as session_to_chunks does; when a role is neither user nor assistant the first speaker becomes user and others assistant, the vendor's mapping. Image captions are not sent because the sanitized sessions carry text only.",
+      "metadata={'source_id', 'session_date'} is added to every add call for provenance and delete; the vendor sends no metadata.",
+      "user_id is the opaque namespace plus a reset generation, not locomo_<conv>_<run_id>.",
+      "Extraction model: the recipe uses the SDK default gpt-5-mini; memory-benchmarks' server defaults to gpt-4o-mini.",
+      "Search runs once per question at the policy's top_k; the vendor searches once at top_k=200 and slices cutoffs.",
+      "Recipe LLM config sets is_reasoning_model=True, mem0's documented override; without it every gpt-5-mini extraction call fails with HTTP 400 (temperature 0.1 unsupported)."
+    ],
+    "proxy_refusals": "HTTP 402 from the metering proxy maps to the protocol's budget error, HTTP 403 (route outside the allowlist or leak tripwire) to invalid_request",
+    "entity_readout": {
+      "endpoint": "GET /entities?ns=",
+      "entities": "Memory.entity_store rows (spaCy entity texts; a mention joins a row on an exact normalised-text match or embedding score >= 0.95)",
+      "provenance": "source_id metadata of each linked memory (Memory.get_all); exact",
+      "links": {},
+      "merge": "a mention that matches an existing row is linked to that row; no graph store in mem0ai 2.2.1"
+    },
+    "resolved": {
+      "config": "entity-h2h",
+      "extraction": "gpt-6.2-sol",
+      "embedder": "text-embedding-3-small",
+      "dims": 1536,
+      "chunk_turns": 2
+    }
+  },
+  "health": {
+    "ok": true,
+    "config": "entity-h2h",
+    "extraction": "gpt-6.2-sol",
+    "embedder": "text-embedding-3-small",
+    "dims": 1536,
+    "chunk_turns": 2,
+    "service_ms": 1.097
+  },
+  "timings_s": {
+    "work:omar-brandt": 3.788415079,
+    "home:omar-brandt": 1.4197615909999999,
+    "work:maya-galloway": 2.65866975,
+    "home:maya-galloway": 1.6221133880000007,
+    "work:clara-lefevre": 2.767553978,
+    "home:clara-lefevre": 2.839701559000001,
+    "work:sergei-abara": 2.853167527999998,
+    "home:sergey-abara": 2.818995713,
+    "work:song-fang": 2.6580338649999975,
+    "home:fang-song": 3.0543107850000015,
+    "work:rebecca-bly": 2.670322070000002,
+    "home:becky-bly": 3.342536801999999,
+    "work:tomas-zeller": 2.760192329999998,
+    "home:t-zeller": 2.8376168460000044,
+    "home:samir-rasku": 2.6153187030000042,
+    "work:samir-ahn": 2.950236649999999,
+    "work:noor-rasku": 2.6240708989999986,
+    "home:noor-rasku": 3.204994704000004,
+    "work:hugo-ostrow": 2.924790676999997,
+    "home:hugo-ostrow": 2.7892504629999966,
+    "work:priya-galloway": 2.7707482780000063,
+    "home:priya-galloway": 2.442258295,
+    "work:amara-quinlan": 2.8865831619999955,
+    "work:amara-quinlan-2": 2.7483414610000034,
+    "work:lena-whitlow": 2.7923553079999985,
+    "home:lena-whitlow": 2.7786370009999954,
+    "work:sofia-hartigan": 2.98301467199999,
+    "work:sofia-hartigan-2": 2.920826802999989,
+    "work:tomas-quinlan": 2.778692041999995,
+    "home:tomas-quinlan": 3.0481129490000023,
+    "work:tomas-lindqvist": 2.8563055289999904,
+    "home:tomas-lindqvist": 3.295414700999987,
+    "work:anton-whitlow": 3.02995384799999,
+    "home:anton-whitlow": 3.2879248960000114,
+    "home:nadia-bly": 2.710079961999989,
+    "work:nadia-bly": 3.374770436000006,
+    "work:leila-pell": 2.8938583229999932,
+    "home:omar-tamsin": 3.4363424369999995,
+    "work:ravi-rasku": 2.646260246000005,
+    "home:amara-nakata": 2.7899301850000047,
+    "work:nick-vance": 2.701237089000002,
+    "work:nicky-vance": 2.7276780419999995,
+    "work:m-rasku": 3.7167904629999975,
+    "work:mira-rasku": 3.187237924999994,
+    "work:theo-quinlan": 2.8102432109999937,
+    "home:theo-quinlan": 2.7745888620000043,
+    "work:idris-quinlan": 2.9173222689999965,
+    "work:rosa-ostrow": 2.8982330950000033,
+    "work:amara-pell": 3.5268355900000024,
+    "work:ines-yilmaz": 2.9577692310000128,
+    "home:ines-yilmaz": 3.242243518000003,
+    "work:iris-zeller": 2.629866990999988,
+    "work:clara-bly": 3.0577584079999944,
+    "work:clara-orsini": 2.858167524999997,
+    "work:ravi-corrigan": 3.1533165720000107,
+    "home:yara-rhee": 2.510774972000014,
+    "work:yara-rhee-jr": 3.7345700450000003,
+    "work:idris-vance": 2.555751525,
+    "home:idris-vance": 2.633199670000002,
+    "home:nadia-pell": 2.45941780700002,
+    "work:nadia-pell": 3.049182391999988,
+    "work:iris-lindqvist": 2.9227962019999976,
+    "home:iris-lindqvist": 2.694179038000002,
+    "work:idris-rasku": 3.1287066150000027,
+    "work:idris-rasku-2": 3.0382312720000044,
+    "home:idris-rasku": 3.4778563319999956,
+    "home:mira-abara": 2.576926023999986,
+    "work:mira-abara": 2.873479615999997,
+    "work:mira-abara-2": 2.874002555999992,
+    "finish": 0.0023999970000004394,
+    "entities": 0.013719818999990821
+  },
+  "wall_s": 199.37809845499999,
+  "drain_each": true,
+  "ingest": {
+    "work:omar-brandt": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.255,
+      "drained": {
+        "ready": true,
+        "waited_ms": 3784,
+        "completeness": "known",
+        "service_ms": 3783.707,
+        "raw": {
+          "receipt": {
+            "sessions_added": 1,
+            "memories_created": 1,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "home:omar-brandt": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.052,
+      "drained": {
+        "ready": true,
+        "waited_ms": 1416,
+        "completeness": "known",
+        "service_ms": 1415.819,
+        "raw": {
+          "receipt": {
+            "sessions_added": 2,
+            "memories_created": 1,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "work:maya-galloway": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.04,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2655,
+        "completeness": "known",
+        "service_ms": 2654.508,
+        "raw": {
+          "receipt": {
+            "sessions_added": 3,
+            "memories_created": 2,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "home:maya-galloway": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.053,
+      "drained": {
+        "ready": true,
+        "waited_ms": 1615,
+        "completeness": "known",
+        "service_ms": 1615.277,
+        "raw": {
+          "receipt": {
+            "sessions_added": 4,
+            "memories_created": 2,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "work:clara-lefevre": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.12,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2761,
+        "completeness": "known",
+        "service_ms": 2761.106,
+        "raw": {
+          "receipt": {
+            "sessions_added": 5,
+            "memories_created": 3,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "home:clara-lefevre": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.039,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2835,
+        "completeness": "known",
+        "service_ms": 2835.426,
+        "raw": {
+          "receipt": {
+            "sessions_added": 6,
+            "memories_created": 4,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "work:sergei-abara": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.061,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2848,
+        "completeness": "known",
+        "service_ms": 2848.462,
+        "raw": {
+          "receipt": {
+            "sessions_added": 7,
+            "memories_created": 5,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "home:sergey-abara": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.042,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2814,
+        "completeness": "known",
+        "service_ms": 2814.117,
+        "raw": {
+          "receipt": {
+            "sessions_added": 8,
+            "memories_created": 6,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "work:song-fang": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.094,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2651,
+        "completeness": "known",
+        "service_ms": 2651.4,
+        "raw": {
+          "receipt": {
+            "sessions_added": 9,
+            "memories_created": 7,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "home:fang-song": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.06,
+      "drained": {
+        "ready": true,
+        "waited_ms": 3048,
+        "completeness": "known",
+        "service_ms": 3047.743,
+        "raw": {
+          "receipt": {
+            "sessions_added": 10,
+            "memories_created": 8,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "work:rebecca-bly": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.09,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2664,
+        "completeness": "known",
+        "service_ms": 2664.4,
+        "raw": {
+          "receipt": {
+            "sessions_added": 11,
+            "memories_created": 9,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "home:becky-bly": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.062,
+      "drained": {
+        "ready": true,
+        "waited_ms": 3337,
+        "completeness": "known",
+        "service_ms": 3336.668,
+        "raw": {
+          "receipt": {
+            "sessions_added": 12,
+            "memories_created": 10,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "work:tomas-zeller": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.075,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2754,
+        "completeness": "known",
+        "service_ms": 2754.263,
+        "raw": {
+          "receipt": {
+            "sessions_added": 13,
+            "memories_created": 11,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "home:t-zeller": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.054,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2832,
+        "completeness": "known",
+        "service_ms": 2832.142,
+        "raw": {
+          "receipt": {
+            "sessions_added": 14,
+            "memories_created": 12,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "home:samir-rasku": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.058,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2609,
+        "completeness": "known",
+        "service_ms": 2609.459,
+        "raw": {
+          "receipt": {
+            "sessions_added": 15,
+            "memories_created": 13,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "work:samir-ahn": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.058,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2946,
+        "completeness": "known",
+        "service_ms": 2946.269,
+        "raw": {
+          "receipt": {
+            "sessions_added": 16,
+            "memories_created": 14,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "work:noor-rasku": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.049,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2620,
+        "completeness": "known",
+        "service_ms": 2620.065,
+        "raw": {
+          "receipt": {
+            "sessions_added": 17,
+            "memories_created": 15,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "home:noor-rasku": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.05,
+      "drained": {
+        "ready": true,
+        "waited_ms": 3199,
+        "completeness": "known",
+        "service_ms": 3198.929,
+        "raw": {
+          "receipt": {
+            "sessions_added": 18,
+            "memories_created": 16,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "work:hugo-ostrow": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.083,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2912,
+        "completeness": "known",
+        "service_ms": 2912.206,
+        "raw": {
+          "receipt": {
+            "sessions_added": 19,
+            "memories_created": 17,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "home:hugo-ostrow": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.059,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2783,
+        "completeness": "known",
+        "service_ms": 2782.881,
+        "raw": {
+          "receipt": {
+            "sessions_added": 20,
+            "memories_created": 18,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "work:priya-galloway": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.077,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2765,
+        "completeness": "known",
+        "service_ms": 2764.615,
+        "raw": {
+          "receipt": {
+            "sessions_added": 21,
+            "memories_created": 19,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "home:priya-galloway": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.041,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2436,
+        "completeness": "known",
+        "service_ms": 2436.472,
+        "raw": {
+          "receipt": {
+            "sessions_added": 22,
+            "memories_created": 20,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "work:amara-quinlan": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.104,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2878,
+        "completeness": "known",
+        "service_ms": 2877.6,
+        "raw": {
+          "receipt": {
+            "sessions_added": 23,
+            "memories_created": 21,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "work:amara-quinlan-2": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.097,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2740,
+        "completeness": "known",
+        "service_ms": 2740.193,
+        "raw": {
+          "receipt": {
+            "sessions_added": 24,
+            "memories_created": 22,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "work:lena-whitlow": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.077,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2786,
+        "completeness": "known",
+        "service_ms": 2785.928,
+        "raw": {
+          "receipt": {
+            "sessions_added": 25,
+            "memories_created": 23,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "home:lena-whitlow": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.038,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2773,
+        "completeness": "known",
+        "service_ms": 2773.411,
+        "raw": {
+          "receipt": {
+            "sessions_added": 26,
+            "memories_created": 24,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "work:sofia-hartigan": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.057,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2977,
+        "completeness": "known",
+        "service_ms": 2977.082,
+        "raw": {
+          "receipt": {
+            "sessions_added": 27,
+            "memories_created": 25,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "work:sofia-hartigan-2": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.051,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2914,
+        "completeness": "known",
+        "service_ms": 2914.27,
+        "raw": {
+          "receipt": {
+            "sessions_added": 28,
+            "memories_created": 26,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "work:tomas-quinlan": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.04,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2774,
+        "completeness": "known",
+        "service_ms": 2773.709,
+        "raw": {
+          "receipt": {
+            "sessions_added": 29,
+            "memories_created": 27,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "home:tomas-quinlan": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.042,
+      "drained": {
+        "ready": true,
+        "waited_ms": 3042,
+        "completeness": "known",
+        "service_ms": 3042.473,
+        "raw": {
+          "receipt": {
+            "sessions_added": 30,
+            "memories_created": 28,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "work:tomas-lindqvist": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.064,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2850,
+        "completeness": "known",
+        "service_ms": 2849.821,
+        "raw": {
+          "receipt": {
+            "sessions_added": 31,
+            "memories_created": 29,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "home:tomas-lindqvist": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.048,
+      "drained": {
+        "ready": true,
+        "waited_ms": 3290,
+        "completeness": "known",
+        "service_ms": 3289.597,
+        "raw": {
+          "receipt": {
+            "sessions_added": 32,
+            "memories_created": 30,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "work:anton-whitlow": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.06,
+      "drained": {
+        "ready": true,
+        "waited_ms": 3024,
+        "completeness": "known",
+        "service_ms": 3024.16,
+        "raw": {
+          "receipt": {
+            "sessions_added": 33,
+            "memories_created": 31,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "home:anton-whitlow": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.052,
+      "drained": {
+        "ready": true,
+        "waited_ms": 3283,
+        "completeness": "known",
+        "service_ms": 3283.034,
+        "raw": {
+          "receipt": {
+            "sessions_added": 34,
+            "memories_created": 32,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "home:nadia-bly": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.053,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2706,
+        "completeness": "known",
+        "service_ms": 2705.555,
+        "raw": {
+          "receipt": {
+            "sessions_added": 35,
+            "memories_created": 33,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "work:nadia-bly": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.057,
+      "drained": {
+        "ready": true,
+        "waited_ms": 3370,
+        "completeness": "known",
+        "service_ms": 3370.344,
+        "raw": {
+          "receipt": {
+            "sessions_added": 36,
+            "memories_created": 34,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "work:leila-pell": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.059,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2889,
+        "completeness": "known",
+        "service_ms": 2889.431,
+        "raw": {
+          "receipt": {
+            "sessions_added": 37,
+            "memories_created": 35,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "home:omar-tamsin": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.055,
+      "drained": {
+        "ready": true,
+        "waited_ms": 3431,
+        "completeness": "known",
+        "service_ms": 3431.251,
+        "raw": {
+          "receipt": {
+            "sessions_added": 38,
+            "memories_created": 36,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "work:ravi-rasku": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.056,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2642,
+        "completeness": "known",
+        "service_ms": 2641.597,
+        "raw": {
+          "receipt": {
+            "sessions_added": 39,
+            "memories_created": 37,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "home:amara-nakata": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.057,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2786,
+        "completeness": "known",
+        "service_ms": 2785.724,
+        "raw": {
+          "receipt": {
+            "sessions_added": 40,
+            "memories_created": 38,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "work:nick-vance": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.04,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2697,
+        "completeness": "known",
+        "service_ms": 2697.366,
+        "raw": {
+          "receipt": {
+            "sessions_added": 41,
+            "memories_created": 39,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "work:nicky-vance": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.04,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2724,
+        "completeness": "known",
+        "service_ms": 2723.92,
+        "raw": {
+          "receipt": {
+            "sessions_added": 42,
+            "memories_created": 40,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "work:m-rasku": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.041,
+      "drained": {
+        "ready": true,
+        "waited_ms": 3713,
+        "completeness": "known",
+        "service_ms": 3712.775,
+        "raw": {
+          "receipt": {
+            "sessions_added": 43,
+            "memories_created": 41,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "work:mira-rasku": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.041,
+      "drained": {
+        "ready": true,
+        "waited_ms": 3182,
+        "completeness": "known",
+        "service_ms": 3182.381,
+        "raw": {
+          "receipt": {
+            "sessions_added": 44,
+            "memories_created": 42,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "work:theo-quinlan": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.048,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2804,
+        "completeness": "known",
+        "service_ms": 2804.372,
+        "raw": {
+          "receipt": {
+            "sessions_added": 45,
+            "memories_created": 43,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "home:theo-quinlan": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.051,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2770,
+        "completeness": "known",
+        "service_ms": 2769.879,
+        "raw": {
+          "receipt": {
+            "sessions_added": 46,
+            "memories_created": 44,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "work:idris-quinlan": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.071,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2912,
+        "completeness": "known",
+        "service_ms": 2911.905,
+        "raw": {
+          "receipt": {
+            "sessions_added": 47,
+            "memories_created": 45,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "work:rosa-ostrow": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.047,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2894,
+        "completeness": "known",
+        "service_ms": 2893.549,
+        "raw": {
+          "receipt": {
+            "sessions_added": 48,
+            "memories_created": 46,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "work:amara-pell": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.056,
+      "drained": {
+        "ready": true,
+        "waited_ms": 3522,
+        "completeness": "known",
+        "service_ms": 3521.844,
+        "raw": {
+          "receipt": {
+            "sessions_added": 49,
+            "memories_created": 47,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "work:ines-yilmaz": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.039,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2953,
+        "completeness": "known",
+        "service_ms": 2953.416,
+        "raw": {
+          "receipt": {
+            "sessions_added": 50,
+            "memories_created": 48,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "home:ines-yilmaz": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.04,
+      "drained": {
+        "ready": true,
+        "waited_ms": 3236,
+        "completeness": "known",
+        "service_ms": 3236.294,
+        "raw": {
+          "receipt": {
+            "sessions_added": 51,
+            "memories_created": 49,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "work:iris-zeller": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.062,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2624,
+        "completeness": "known",
+        "service_ms": 2624.329,
+        "raw": {
+          "receipt": {
+            "sessions_added": 52,
+            "memories_created": 50,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "work:clara-bly": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.047,
+      "drained": {
+        "ready": true,
+        "waited_ms": 3054,
+        "completeness": "known",
+        "service_ms": 3053.572,
+        "raw": {
+          "receipt": {
+            "sessions_added": 53,
+            "memories_created": 51,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "work:clara-orsini": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.055,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2853,
+        "completeness": "known",
+        "service_ms": 2852.951,
+        "raw": {
+          "receipt": {
+            "sessions_added": 54,
+            "memories_created": 52,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "work:ravi-corrigan": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.053,
+      "drained": {
+        "ready": true,
+        "waited_ms": 3148,
+        "completeness": "known",
+        "service_ms": 3148.441,
+        "raw": {
+          "receipt": {
+            "sessions_added": 55,
+            "memories_created": 53,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "home:yara-rhee": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.048,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2506,
+        "completeness": "known",
+        "service_ms": 2506.046,
+        "raw": {
+          "receipt": {
+            "sessions_added": 56,
+            "memories_created": 54,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "work:yara-rhee-jr": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.061,
+      "drained": {
+        "ready": true,
+        "waited_ms": 3728,
+        "completeness": "known",
+        "service_ms": 3728.161,
+        "raw": {
+          "receipt": {
+            "sessions_added": 57,
+            "memories_created": 55,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "work:idris-vance": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.055,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2551,
+        "completeness": "known",
+        "service_ms": 2551.091,
+        "raw": {
+          "receipt": {
+            "sessions_added": 58,
+            "memories_created": 56,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "home:idris-vance": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.075,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2629,
+        "completeness": "known",
+        "service_ms": 2628.604,
+        "raw": {
+          "receipt": {
+            "sessions_added": 59,
+            "memories_created": 57,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "home:nadia-pell": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.054,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2454,
+        "completeness": "known",
+        "service_ms": 2453.669,
+        "raw": {
+          "receipt": {
+            "sessions_added": 60,
+            "memories_created": 58,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "work:nadia-pell": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.055,
+      "drained": {
+        "ready": true,
+        "waited_ms": 3042,
+        "completeness": "known",
+        "service_ms": 3042.345,
+        "raw": {
+          "receipt": {
+            "sessions_added": 61,
+            "memories_created": 59,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "work:iris-lindqvist": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.059,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2918,
+        "completeness": "known",
+        "service_ms": 2917.68,
+        "raw": {
+          "receipt": {
+            "sessions_added": 62,
+            "memories_created": 60,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "home:iris-lindqvist": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.058,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2689,
+        "completeness": "known",
+        "service_ms": 2689.195,
+        "raw": {
+          "receipt": {
+            "sessions_added": 63,
+            "memories_created": 61,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "work:idris-rasku": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.045,
+      "drained": {
+        "ready": true,
+        "waited_ms": 3123,
+        "completeness": "known",
+        "service_ms": 3123.242,
+        "raw": {
+          "receipt": {
+            "sessions_added": 64,
+            "memories_created": 62,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "work:idris-rasku-2": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.048,
+      "drained": {
+        "ready": true,
+        "waited_ms": 3034,
+        "completeness": "known",
+        "service_ms": 3034.348,
+        "raw": {
+          "receipt": {
+            "sessions_added": 65,
+            "memories_created": 63,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "home:idris-rasku": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.078,
+      "drained": {
+        "ready": true,
+        "waited_ms": 3474,
+        "completeness": "known",
+        "service_ms": 3473.717,
+        "raw": {
+          "receipt": {
+            "sessions_added": 66,
+            "memories_created": 64,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "home:mira-abara": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.051,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2572,
+        "completeness": "known",
+        "service_ms": 2572.484,
+        "raw": {
+          "receipt": {
+            "sessions_added": 67,
+            "memories_created": 65,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "work:mira-abara": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.056,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2869,
+        "completeness": "known",
+        "service_ms": 2868.782,
+        "raw": {
+          "receipt": {
+            "sessions_added": 68,
+            "memories_created": 66,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    },
+    "work:mira-abara-2": {
+      "items_created": 0,
+      "warnings": [],
+      "errors": [],
+      "completeness": "unknown",
+      "service_ms": 0.051,
+      "drained": {
+        "ready": true,
+        "waited_ms": 2868,
+        "completeness": "known",
+        "service_ms": 2868.441,
+        "raw": {
+          "receipt": {
+            "sessions_added": 69,
+            "memories_created": 67,
+            "errors": [],
+            "error_count": 0,
+            "pending": 0
+          }
+        }
+      }
+    }
+  },
+  "finish": {
+    "ready": true,
+    "waited_ms": 0,
+    "completeness": "known",
+    "service_ms": 0.146,
+    "raw": {
+      "receipt": {
+        "sessions_added": 69,
+        "memories_created": 67,
+        "errors": [],
+        "error_count": 0,
+        "pending": 0
+      }
+    }
+  },
+  "usage": {
+    "work:omar-brandt": {
+      "calls": 8,
+      "input": 15745,
+      "cached": 7740,
+      "cache_write": 7740,
+      "output": 143,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 6,
+          "input": 259,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 15486,
+          "cached": 7740,
+          "output": 143
+        }
+      }
+    },
+    "home:omar-brandt": {
+      "calls": 4,
+      "input": 15859,
+      "cached": 15218,
+      "cache_write": 491,
+      "output": 70,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 2,
+          "input": 144,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 2,
+          "input": 15715,
+          "cached": 15218,
+          "output": 70
+        }
+      }
+    },
+    "work:maya-galloway": {
+      "calls": 4,
+      "input": 8075,
+      "cached": 7609,
+      "cache_write": 328,
+      "output": 75,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 135,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 7940,
+          "cached": 7609,
+          "output": 75
+        }
+      }
+    },
+    "home:maya-galloway": {
+      "calls": 2,
+      "input": 8137,
+      "cached": 7609,
+      "cache_write": 447,
+      "output": 41,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 1,
+          "input": 78,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8059,
+          "cached": 7609,
+          "output": 41
+        }
+      }
+    },
+    "work:clara-lefevre": {
+      "calls": 4,
+      "input": 8285,
+      "cached": 7609,
+      "cache_write": 528,
+      "output": 73,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 145,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8140,
+          "cached": 7609,
+          "output": 73
+        }
+      }
+    },
+    "home:clara-lefevre": {
+      "calls": 4,
+      "input": 8406,
+      "cached": 7609,
+      "cache_write": 648,
+      "output": 90,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 146,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8260,
+          "cached": 7609,
+          "output": 90
+        }
+      }
+    },
+    "work:sergei-abara": {
+      "calls": 4,
+      "input": 8454,
+      "cached": 7609,
+      "cache_write": 704,
+      "output": 83,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 138,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8316,
+          "cached": 7609,
+          "output": 83
+        }
+      }
+    },
+    "home:sergey-abara": {
+      "calls": 4,
+      "input": 8492,
+      "cached": 7609,
+      "cache_write": 750,
+      "output": 89,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 130,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8362,
+          "cached": 7609,
+          "output": 89
+        }
+      }
+    },
+    "work:song-fang": {
+      "calls": 4,
+      "input": 8503,
+      "cached": 7609,
+      "cache_write": 787,
+      "output": 65,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 104,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8399,
+          "cached": 7609,
+          "output": 65
+        }
+      }
+    },
+    "home:fang-song": {
+      "calls": 4,
+      "input": 8526,
+      "cached": 7609,
+      "cache_write": 813,
+      "output": 76,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 101,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8425,
+          "cached": 7609,
+          "output": 76
+        }
+      }
+    },
+    "work:rebecca-bly": {
+      "calls": 4,
+      "input": 8579,
+      "cached": 7609,
+      "cache_write": 843,
+      "output": 69,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 124,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8455,
+          "cached": 7609,
+          "output": 69
+        }
+      }
+    },
+    "home:becky-bly": {
+      "calls": 4,
+      "input": 8606,
+      "cached": 7609,
+      "cache_write": 875,
+      "output": 80,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 119,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8487,
+          "cached": 7609,
+          "output": 80
+        }
+      }
+    },
+    "work:tomas-zeller": {
+      "calls": 4,
+      "input": 8657,
+      "cached": 7609,
+      "cache_write": 915,
+      "output": 83,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 130,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8527,
+          "cached": 7609,
+          "output": 83
+        }
+      }
+    },
+    "home:t-zeller": {
+      "calls": 4,
+      "input": 8651,
+      "cached": 7609,
+      "cache_write": 915,
+      "output": 84,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 124,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8527,
+          "cached": 7609,
+          "output": 84
+        }
+      }
+    },
+    "home:samir-rasku": {
+      "calls": 4,
+      "input": 8643,
+      "cached": 7609,
+      "cache_write": 916,
+      "output": 69,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 115,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8528,
+          "cached": 7609,
+          "output": 69
+        }
+      }
+    },
+    "work:samir-ahn": {
+      "calls": 4,
+      "input": 8713,
+      "cached": 7609,
+      "cache_write": 931,
+      "output": 98,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 170,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8543,
+          "cached": 7609,
+          "output": 98
+        }
+      }
+    },
+    "work:noor-rasku": {
+      "calls": 4,
+      "input": 8751,
+      "cached": 7609,
+      "cache_write": 988,
+      "output": 83,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 151,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8600,
+          "cached": 7609,
+          "output": 83
+        }
+      }
+    },
+    "home:noor-rasku": {
+      "calls": 4,
+      "input": 8737,
+      "cached": 7609,
+      "cache_write": 1007,
+      "output": 78,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 118,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8619,
+          "cached": 7609,
+          "output": 78
+        }
+      }
+    },
+    "work:hugo-ostrow": {
+      "calls": 4,
+      "input": 8722,
+      "cached": 7609,
+      "cache_write": 985,
+      "output": 75,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 125,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8597,
+          "cached": 7609,
+          "output": 75
+        }
+      }
+    },
+    "home:hugo-ostrow": {
+      "calls": 4,
+      "input": 8732,
+      "cached": 7609,
+      "cache_write": 991,
+      "output": 82,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 129,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8603,
+          "cached": 7609,
+          "output": 82
+        }
+      }
+    },
+    "work:priya-galloway": {
+      "calls": 4,
+      "input": 8761,
+      "cached": 7609,
+      "cache_write": 1013,
+      "output": 77,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 136,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8625,
+          "cached": 7609,
+          "output": 77
+        }
+      }
+    },
+    "home:priya-galloway": {
+      "calls": 4,
+      "input": 8736,
+      "cached": 7609,
+      "cache_write": 1008,
+      "output": 77,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 116,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8620,
+          "cached": 7609,
+          "output": 77
+        }
+      }
+    },
+    "work:amara-quinlan": {
+      "calls": 4,
+      "input": 8719,
+      "cached": 7609,
+      "cache_write": 973,
+      "output": 84,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 134,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8585,
+          "cached": 7609,
+          "output": 84
+        }
+      }
+    },
+    "work:amara-quinlan-2": {
+      "calls": 4,
+      "input": 8701,
+      "cached": 7609,
+      "cache_write": 973,
+      "output": 92,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 116,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8585,
+          "cached": 7609,
+          "output": 92
+        }
+      }
+    },
+    "work:lena-whitlow": {
+      "calls": 4,
+      "input": 8719,
+      "cached": 7609,
+      "cache_write": 977,
+      "output": 86,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 130,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8589,
+          "cached": 7609,
+          "output": 86
+        }
+      }
+    },
+    "home:lena-whitlow": {
+      "calls": 4,
+      "input": 8700,
+      "cached": 7609,
+      "cache_write": 963,
+      "output": 87,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 125,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8575,
+          "cached": 7609,
+          "output": 87
+        }
+      }
+    },
+    "work:sofia-hartigan": {
+      "calls": 4,
+      "input": 8719,
+      "cached": 7609,
+      "cache_write": 975,
+      "output": 76,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 132,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8587,
+          "cached": 7609,
+          "output": 76
+        }
+      }
+    },
+    "work:sofia-hartigan-2": {
+      "calls": 4,
+      "input": 8714,
+      "cached": 7609,
+      "cache_write": 965,
+      "output": 88,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 137,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8577,
+          "cached": 7609,
+          "output": 88
+        }
+      }
+    },
+    "work:tomas-quinlan": {
+      "calls": 4,
+      "input": 8703,
+      "cached": 7609,
+      "cache_write": 960,
+      "output": 75,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 131,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8572,
+          "cached": 7609,
+          "output": 75
+        }
+      }
+    },
+    "home:tomas-quinlan": {
+      "calls": 4,
+      "input": 8694,
+      "cached": 7609,
+      "cache_write": 954,
+      "output": 84,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 128,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8566,
+          "cached": 7609,
+          "output": 84
+        }
+      }
+    },
+    "work:tomas-lindqvist": {
+      "calls": 4,
+      "input": 8728,
+      "cached": 7609,
+      "cache_write": 980,
+      "output": 80,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 136,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8592,
+          "cached": 7609,
+          "output": 80
+        }
+      }
+    },
+    "home:tomas-lindqvist": {
+      "calls": 4,
+      "input": 8729,
+      "cached": 7609,
+      "cache_write": 989,
+      "output": 88,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 128,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8601,
+          "cached": 7609,
+          "output": 88
+        }
+      }
+    },
+    "work:anton-whitlow": {
+      "calls": 4,
+      "input": 8767,
+      "cached": 7609,
+      "cache_write": 1002,
+      "output": 98,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 153,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8614,
+          "cached": 7609,
+          "output": 98
+        }
+      }
+    },
+    "home:anton-whitlow": {
+      "calls": 4,
+      "input": 8802,
+      "cached": 7609,
+      "cache_write": 1031,
+      "output": 105,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 159,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8643,
+          "cached": 7609,
+          "output": 105
+        }
+      }
+    },
+    "home:nadia-bly": {
+      "calls": 4,
+      "input": 8758,
+      "cached": 7609,
+      "cache_write": 1016,
+      "output": 78,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 130,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8628,
+          "cached": 7609,
+          "output": 78
+        }
+      }
+    },
+    "work:nadia-bly": {
+      "calls": 4,
+      "input": 8825,
+      "cached": 7609,
+      "cache_write": 1028,
+      "output": 123,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 185,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8640,
+          "cached": 7609,
+          "output": 123
+        }
+      }
+    },
+    "work:leila-pell": {
+      "calls": 4,
+      "input": 8781,
+      "cached": 7609,
+      "cache_write": 1030,
+      "output": 82,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 139,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8642,
+          "cached": 7609,
+          "output": 82
+        }
+      }
+    },
+    "home:omar-tamsin": {
+      "calls": 4,
+      "input": 8807,
+      "cached": 7609,
+      "cache_write": 1032,
+      "output": 99,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 163,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8644,
+          "cached": 7609,
+          "output": 99
+        }
+      }
+    },
+    "work:ravi-rasku": {
+      "calls": 4,
+      "input": 8745,
+      "cached": 7609,
+      "cache_write": 1008,
+      "output": 72,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 125,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8620,
+          "cached": 7609,
+          "output": 72
+        }
+      }
+    },
+    "home:amara-nakata": {
+      "calls": 4,
+      "input": 8803,
+      "cached": 7609,
+      "cache_write": 1042,
+      "output": 94,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 149,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8654,
+          "cached": 7609,
+          "output": 94
+        }
+      }
+    },
+    "work:nick-vance": {
+      "calls": 4,
+      "input": 8827,
+      "cached": 7609,
+      "cache_write": 1098,
+      "output": 84,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 117,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8710,
+          "cached": 7609,
+          "output": 84
+        }
+      }
+    },
+    "work:nicky-vance": {
+      "calls": 4,
+      "input": 8805,
+      "cached": 7609,
+      "cache_write": 1072,
+      "output": 82,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 121,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8684,
+          "cached": 7609,
+          "output": 82
+        }
+      }
+    },
+    "work:m-rasku": {
+      "calls": 4,
+      "input": 8769,
+      "cached": 7609,
+      "cache_write": 1008,
+      "output": 164,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 149,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8620,
+          "cached": 7609,
+          "output": 164
+        }
+      }
+    },
+    "work:mira-rasku": {
+      "calls": 4,
+      "input": 8762,
+      "cached": 7609,
+      "cache_write": 1017,
+      "output": 124,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 133,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8629,
+          "cached": 7609,
+          "output": 124
+        }
+      }
+    },
+    "work:theo-quinlan": {
+      "calls": 4,
+      "input": 8812,
+      "cached": 7609,
+      "cache_write": 1043,
+      "output": 93,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 157,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8655,
+          "cached": 7609,
+          "output": 93
+        }
+      }
+    },
+    "home:theo-quinlan": {
+      "calls": 4,
+      "input": 8829,
+      "cached": 7609,
+      "cache_write": 1059,
+      "output": 94,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 158,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8671,
+          "cached": 7609,
+          "output": 94
+        }
+      }
+    },
+    "work:idris-quinlan": {
+      "calls": 4,
+      "input": 8838,
+      "cached": 7609,
+      "cache_write": 1065,
+      "output": 98,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 161,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8677,
+          "cached": 7609,
+          "output": 98
+        }
+      }
+    },
+    "work:rosa-ostrow": {
+      "calls": 4,
+      "input": 8851,
+      "cached": 7609,
+      "cache_write": 1083,
+      "output": 105,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 156,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8695,
+          "cached": 7609,
+          "output": 105
+        }
+      }
+    },
+    "work:amara-pell": {
+      "calls": 4,
+      "input": 8857,
+      "cached": 7609,
+      "cache_write": 1099,
+      "output": 101,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 146,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8711,
+          "cached": 7609,
+          "output": 101
+        }
+      }
+    },
+    "work:ines-yilmaz": {
+      "calls": 4,
+      "input": 8881,
+      "cached": 7609,
+      "cache_write": 1108,
+      "output": 96,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 161,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8720,
+          "cached": 7609,
+          "output": 96
+        }
+      }
+    },
+    "home:ines-yilmaz": {
+      "calls": 4,
+      "input": 8918,
+      "cached": 7609,
+      "cache_write": 1115,
+      "output": 113,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 191,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8727,
+          "cached": 7609,
+          "output": 113
+        }
+      }
+    },
+    "work:iris-zeller": {
+      "calls": 4,
+      "input": 8900,
+      "cached": 7609,
+      "cache_write": 1146,
+      "output": 92,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 142,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8758,
+          "cached": 7609,
+          "output": 92
+        }
+      }
+    },
+    "work:clara-bly": {
+      "calls": 4,
+      "input": 8911,
+      "cached": 7609,
+      "cache_write": 1147,
+      "output": 98,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 152,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8759,
+          "cached": 7609,
+          "output": 98
+        }
+      }
+    },
+    "work:clara-orsini": {
+      "calls": 4,
+      "input": 8891,
+      "cached": 7609,
+      "cache_write": 1120,
+      "output": 104,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 159,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8732,
+          "cached": 7609,
+          "output": 104
+        }
+      }
+    },
+    "work:ravi-corrigan": {
+      "calls": 4,
+      "input": 8943,
+      "cached": 7609,
+      "cache_write": 1170,
+      "output": 106,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 161,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8782,
+          "cached": 7609,
+          "output": 106
+        }
+      }
+    },
+    "home:yara-rhee": {
+      "calls": 4,
+      "input": 8892,
+      "cached": 7609,
+      "cache_write": 1168,
+      "output": 72,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 112,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8780,
+          "cached": 7609,
+          "output": 72
+        }
+      }
+    },
+    "work:yara-rhee-jr": {
+      "calls": 4,
+      "input": 8898,
+      "cached": 7609,
+      "cache_write": 1127,
+      "output": 98,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 159,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8739,
+          "cached": 7609,
+          "output": 98
+        }
+      }
+    },
+    "work:idris-vance": {
+      "calls": 4,
+      "input": 8822,
+      "cached": 7609,
+      "cache_write": 1092,
+      "output": 81,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 118,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8704,
+          "cached": 7609,
+          "output": 81
+        }
+      }
+    },
+    "home:idris-vance": {
+      "calls": 4,
+      "input": 8813,
+      "cached": 7609,
+      "cache_write": 1078,
+      "output": 84,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 123,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8690,
+          "cached": 7609,
+          "output": 84
+        }
+      }
+    },
+    "home:nadia-pell": {
+      "calls": 4,
+      "input": 8768,
+      "cached": 7609,
+      "cache_write": 1048,
+      "output": 71,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 108,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8660,
+          "cached": 7609,
+          "output": 71
+        }
+      }
+    },
+    "work:nadia-pell": {
+      "calls": 4,
+      "input": 8792,
+      "cached": 7609,
+      "cache_write": 1015,
+      "output": 107,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 165,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8627,
+          "cached": 7609,
+          "output": 107
+        }
+      }
+    },
+    "work:iris-lindqvist": {
+      "calls": 4,
+      "input": 8813,
+      "cached": 7609,
+      "cache_write": 1057,
+      "output": 119,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 144,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8669,
+          "cached": 7609,
+          "output": 119
+        }
+      }
+    },
+    "home:iris-lindqvist": {
+      "calls": 4,
+      "input": 8820,
+      "cached": 7609,
+      "cache_write": 1054,
+      "output": 96,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 154,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8666,
+          "cached": 7609,
+          "output": 96
+        }
+      }
+    },
+    "work:idris-rasku": {
+      "calls": 4,
+      "input": 8821,
+      "cached": 7609,
+      "cache_write": 1040,
+      "output": 126,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 169,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8652,
+          "cached": 7609,
+          "output": 126
+        }
+      }
+    },
+    "work:idris-rasku-2": {
+      "calls": 4,
+      "input": 8891,
+      "cached": 7609,
+      "cache_write": 1079,
+      "output": 109,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 200,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8691,
+          "cached": 7609,
+          "output": 109
+        }
+      }
+    },
+    "home:idris-rasku": {
+      "calls": 4,
+      "input": 8951,
+      "cached": 7609,
+      "cache_write": 1134,
+      "output": 118,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 205,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8746,
+          "cached": 7609,
+          "output": 118
+        }
+      }
+    },
+    "home:mira-abara": {
+      "calls": 4,
+      "input": 8860,
+      "cached": 7609,
+      "cache_write": 1130,
+      "output": 75,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 118,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8742,
+          "cached": 7609,
+          "output": 75
+        }
+      }
+    },
+    "work:mira-abara": {
+      "calls": 4,
+      "input": 8904,
+      "cached": 7609,
+      "cache_write": 1132,
+      "output": 101,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 160,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8744,
+          "cached": 7609,
+          "output": 101
+        }
+      }
+    },
+    "work:mira-abara-2": {
+      "calls": 4,
+      "input": 8917,
+      "cached": 7609,
+      "cache_write": 1132,
+      "output": 115,
+      "refused": 0,
+      "by_model": {
+        "openai:text-embedding-3-small": {
+          "calls": 3,
+          "input": 173,
+          "cached": 0,
+          "output": 0
+        },
+        "openai:gpt-6.2-sol": {
+          "calls": 1,
+          "input": 8744,
+          "cached": 7609,
+          "output": 115
+        }
+      }
+    }
+  },
+  "subjects_unresolved": [
+    "home:omar-brandt",
+    "home:maya-galloway"
+  ],
+  "sanity_score": {
+    "auto": {
+      "false_merge": {
+        "k": 15,
+        "n": 20,
+        "rate": 0.75,
+        "ci95": [
+          0.531299122381256,
+          0.8881382985923343
+        ]
+      },
+      "precision": {
+        "k": 5,
+        "n": 20,
+        "rate": 0.25,
+        "ci95": [
+          0.11186170140766569,
+          0.468700877618744
+        ]
+      },
+      "recall": {
+        "k": 5,
+        "n": 14,
+        "rate": 0.35714285714285715,
+        "ci95": [
+          0.1634473175355414,
+          0.612355768960926
+        ]
+      },
+      "b3": {
+        "precision": 0.8019323671497586,
+        "recall": 0.8695652173913043,
+        "f1": 0.8343804976124655
+      },
+      "groups": 16,
+      "false_merge_cases": [
+        {
+          "a": "work:lena-whitlow",
+          "b": "home:lena-whitlow",
+          "family": "diff-namesake",
+          "via": [
+            "cross_source/clean: ext-extract-first"
+          ]
+        },
+        {
+          "a": "work:sofia-hartigan",
+          "b": "work:sofia-hartigan-2",
+          "family": "diff-namesake-same-company",
+          "via": [
+            "cross_source/clean: ext-extract-first"
+          ]
+        },
+        {
+          "a": "work:tomas-quinlan",
+          "b": "home:tomas-quinlan",
+          "family": "diff-namesake-same-city",
+          "via": [
+            "cross_source/clean: ext-extract-first"
+          ]
+        },
+        {
+          "a": "work:tomas-lindqvist",
+          "b": "home:tomas-lindqvist",
+          "family": "diff-namesake-cross-source-slug",
+          "via": [
+            "cross_source/clean: ext-extract-first"
+          ]
+        },
+        {
+          "a": "work:anton-whitlow",
+          "b": "home:anton-whitlow",
+          "family": "diff-namesake-team-alias",
+          "via": [
+            "cross_source/clean: ext-extract-first"
+          ]
+        },
+        {
+          "a": "home:nadia-bly",
+          "b": "work:nadia-bly",
+          "family": "diff-namesake-family-email",
+          "via": [
+            "cross_source/clean: ext-extract-first"
+          ]
+        },
+        {
+          "a": "work:theo-quinlan",
+          "b": "home:theo-quinlan",
+          "family": "diff-namesake-alias-on-5",
+          "via": [
+            "cross_source/clean: ext-extract-first"
+          ]
+        },
+        {
+          "a": "work:ines-yilmaz",
+          "b": "home:ines-yilmaz",
+          "family": "diff-namesake-alias-on-6",
+          "via": [
+            "cross_source/clean: ext-extract-first"
+          ]
+        },
+        {
+          "a": "work:idris-vance",
+          "b": "home:idris-vance",
+          "family": "diff-namesake-placeholder-email",
+          "via": [
+            "cross_source/clean: ext-extract-first"
+          ]
+        },
+        {
+          "a": "home:nadia-pell",
+          "b": "work:nadia-pell",
+          "family": "diff-namesake-household-plain",
+          "via": [
+            "cross_source/clean: ext-extract-first"
+          ]
+        },
+        {
+          "a": "work:iris-lindqvist",
+          "b": "home:iris-lindqvist",
+          "family": "diff-namesake-offlist-alias",
+          "via": [
+            "cross_source/clean: ext-extract-first"
+          ]
+        },
+        {
+          "a": "work:idris-rasku",
+          "b": "work:idris-rasku-2",
+          "family": "diff-bridge-page",
+          "via": [
+            "cross_source/clean: ext-extract-first"
+          ]
+        },
+        {
+          "a": "work:idris-rasku-2",
+          "b": "home:idris-rasku",
+          "family": "diff-bridge-page",
+          "via": [
+            "cross_source/clean: ext-extract-first"
+          ]
+        },
+        {
+          "a": "home:mira-abara",
+          "b": "work:mira-abara-2",
+          "family": "diff-transitive-chain",
+          "via": [
+            "cross_source/clean: ext-extract-first"
+          ]
+        },
+        {
+          "a": "work:mira-abara",
+          "b": "work:mira-abara-2",
+          "family": "diff-transitive-chain",
+          "via": [
+            "cross_source/clean: ext-extract-first"
+          ]
+        }
+      ]
+    },
+    "auto+proposed": {
+      "false_merge": {
+        "k": 15,
+        "n": 20,
+        "rate": 0.75,
+        "ci95": [
+          0.531299122381256,
+          0.8881382985923343
+        ]
+      },
+      "precision": {
+        "k": 5,
+        "n": 20,
+        "rate": 0.25,
+        "ci95": [
+          0.11186170140766569,
+          0.468700877618744
+        ]
+      },
+      "recall": {
+        "k": 5,
+        "n": 14,
+        "rate": 0.35714285714285715,
+        "ci95": [
+          0.1634473175355414,
+          0.612355768960926
+        ]
+      },
+      "b3": {
+        "precision": 0.8019323671497586,
+        "recall": 0.8695652173913043,
+        "f1": 0.8343804976124655
+      },
+      "groups": 16,
+      "false_merge_cases": [
+        {
+          "a": "work:lena-whitlow",
+          "b": "home:lena-whitlow",
+          "family": "diff-namesake",
+          "via": [
+            "cross_source/clean: ext-extract-first"
+          ]
+        },
+        {
+          "a": "work:sofia-hartigan",
+          "b": "work:sofia-hartigan-2",
+          "family": "diff-namesake-same-company",
+          "via": [
+            "cross_source/clean: ext-extract-first"
+          ]
+        },
+        {
+          "a": "work:tomas-quinlan",
+          "b": "home:tomas-quinlan",
+          "family": "diff-namesake-same-city",
+          "via": [
+            "cross_source/clean: ext-extract-first"
+          ]
+        },
+        {
+          "a": "work:tomas-lindqvist",
+          "b": "home:tomas-lindqvist",
+          "family": "diff-namesake-cross-source-slug",
+          "via": [
+            "cross_source/clean: ext-extract-first"
+          ]
+        },
+        {
+          "a": "work:anton-whitlow",
+          "b": "home:anton-whitlow",
+          "family": "diff-namesake-team-alias",
+          "via": [
+            "cross_source/clean: ext-extract-first"
+          ]
+        },
+        {
+          "a": "home:nadia-bly",
+          "b": "work:nadia-bly",
+          "family": "diff-namesake-family-email",
+          "via": [
+            "cross_source/clean: ext-extract-first"
+          ]
+        },
+        {
+          "a": "work:theo-quinlan",
+          "b": "home:theo-quinlan",
+          "family": "diff-namesake-alias-on-5",
+          "via": [
+            "cross_source/clean: ext-extract-first"
+          ]
+        },
+        {
+          "a": "work:ines-yilmaz",
+          "b": "home:ines-yilmaz",
+          "family": "diff-namesake-alias-on-6",
+          "via": [
+            "cross_source/clean: ext-extract-first"
+          ]
+        },
+        {
+          "a": "work:idris-vance",
+          "b": "home:idris-vance",
+          "family": "diff-namesake-placeholder-email",
+          "via": [
+            "cross_source/clean: ext-extract-first"
+          ]
+        },
+        {
+          "a": "home:nadia-pell",
+          "b": "work:nadia-pell",
+          "family": "diff-namesake-household-plain",
+          "via": [
+            "cross_source/clean: ext-extract-first"
+          ]
+        },
+        {
+          "a": "work:iris-lindqvist",
+          "b": "home:iris-lindqvist",
+          "family": "diff-namesake-offlist-alias",
+          "via": [
+            "cross_source/clean: ext-extract-first"
+          ]
+        },
+        {
+          "a": "work:idris-rasku",
+          "b": "work:idris-rasku-2",
+          "family": "diff-bridge-page",
+          "via": [
+            "cross_source/clean: ext-extract-first"
+          ]
+        },
+        {
+          "a": "work:idris-rasku-2",
+          "b": "home:idris-rasku",
+          "family": "diff-bridge-page",
+          "via": [
+            "cross_source/clean: ext-extract-first"
+          ]
+        },
+        {
+          "a": "home:mira-abara",
+          "b": "work:mira-abara-2",
+          "family": "diff-transitive-chain",
+          "via": [
+            "cross_source/clean: ext-extract-first"
+          ]
+        },
+        {
+          "a": "work:mira-abara",
+          "b": "work:mira-abara-2",
+          "family": "diff-transitive-chain",
+          "via": [
+            "cross_source/clean: ext-extract-first"
+          ]
+        }
+      ]
+    }
+  }
+}
