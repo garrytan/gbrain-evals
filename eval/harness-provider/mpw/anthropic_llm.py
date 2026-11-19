@@ -77,7 +77,9 @@ class AnthropicLLM(LLM):
                     return parsed
             except json.JSONDecodeError:
                 pass
-        if text.strip() and "answer" in schema.properties and all(schema.properties[k].get("type") == "string" for k in schema.required):
+        called = any(getattr(b, "type", None) == "tool_use" and b.name == "respond" for b in response.content)
+        if text.strip() and not called and response.stop_reason == "end_turn" and "answer" in schema.properties \
+                and all(schema.properties[k].get("type") == "string" for k in schema.required):
             return {**{k: "" for k in schema.required}, "answer": text.strip()}
         raise RuntimeError(f"{self.model_id} returned no structured response (stop_reason={response.stop_reason})")
 

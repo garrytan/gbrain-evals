@@ -58,8 +58,13 @@ def test_a_json_text_reply_still_parses(monkeypatch, llm):
     assert llm.generate("q", SCHEMA) == {"reasoning": "r", "answer": "a"}
 
 
-def test_a_tool_call_missing_a_field_with_no_text_is_an_error(monkeypatch, llm):
-    _with(monkeypatch, llm, _reply("tool_use", tool(reasoning="r")))
+@pytest.mark.parametrize("reply", [
+    _reply("tool_use", tool(reasoning="r")),
+    _reply("tool_use", text("Let me answer."), tool(reasoning="r")),
+    _reply("max_tokens", text("The answer is")),
+])
+def test_a_cut_off_or_partial_reply_is_an_error(monkeypatch, llm, reply):
+    _with(monkeypatch, llm, reply)
     with pytest.raises(RuntimeError, match="no structured response"):
         llm.generate("q", SCHEMA)
 
