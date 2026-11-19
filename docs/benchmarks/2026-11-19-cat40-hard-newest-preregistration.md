@@ -64,7 +64,7 @@ Fixed for every arm: the 16-turn cap, 5 gbrain slots per world, concurrency 10, 
 
 ## Decision rule
 
-- **Headline:** Δ = gbrain success minus files success, paired by task, averaged over the two frontier readers (Opus 5.5 and GPT-6.2 Sol) on all 200 tasks, with its 95% interval. One row per reader follows. particle-1's Δ is reported with its interval and is not pooled into the headline. Wording as in row 1: "ahead" only when the lower bound is above 0; "parity" only when the lower bound is above -3 points; otherwise "not distinguishable", with the point estimate.
+- **Headline:** Δ = gbrain success minus files success, paired by task, averaged over the two frontier readers (Opus 5.5 and GPT-6.2 Sol) on all 200 tasks, with its 95% interval. One row per reader follows. particle-1's Δ is reported with its interval and is not pooled into the headline. Wording as in row 1, with one added case: "ahead" only when the lower bound is above 0; "behind" when the upper bound is below 0; "parity" only when the lower bound is above -3 points and the upper bound is not below 0; otherwise "not distinguishable", with the point estimate.
 - **Smallest detectable difference** (two-sided α 0.05, 80% power, 2.8 standard errors), estimated before any cell from row 1's committed world M cells for Opus 5.5 and GPT-6.1 Sol (task-bootstrap standard error of the paired Δ, scaled to 200 tasks) and from the published intervals:
 
 | Comparison | Detectable difference |
@@ -76,7 +76,7 @@ Fixed for every arm: the 16-turn cap, 5 gbrain slots per world, concurrency 10, 
 | One family against 0, readers pooled (40 tasks) | 8.4 to 12.8 points; H4 9.6 |
 
 - **Comparison with the published rows.** Different worlds can't be paired by task, so these are unpaired. The lead **holds** when Δ is at least 12.50 - 7.2 = **+5.3** (within the detectable difference of both published fresh-world and public leads). It **drops** when Δ is below +5.3. It **rises** when Δ is above 7.7 + 8.9 = **+16.6**. The comparison is also shown for Opus 5.5 alone against Opus's own published leads, descriptive. Row 2's public half was measured with Sonnet 5.5 and GPT-6.1 Sol as the other readers, and with F5 and two extra settings on; its baseline build on defaults scored +8.50 (+4.83 to +12.33), shown beside it.
-- **Which wording applies.** The interval wording against 0 (ahead, parity, not distinguishable) is decided first and always printed. The comparison with the published rows (holds, drops, rises) is decided second and printed beside it. When Δ is not distinguishable from 0, that row of the outcome table applies whatever the comparison says; otherwise the comparison's row applies.
+- **Which wording applies.** The interval wording against 0 (ahead, behind, parity, not distinguishable) is decided first and always printed. The comparison with the published rows (holds, drops, rises) is decided second and printed beside it. When Δ is not distinguishable from 0, that row of the outcome table applies whatever the comparison says; otherwise the comparison's row applies. A "behind" result is below +5.3, so it takes the lead-drops row, and README says gbrain is behind files on these questions, never "no measurable difference".
 - **H4:** H4 is "level or behind" when its pooled Δ's lower bound is at or below 0.
 - **Multiplicity.** One primary comparison; families, readers and worlds are secondary and are reported without correction, labelled as such.
 
