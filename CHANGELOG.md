@@ -1321,15 +1321,14 @@ Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a
 
 - **Fix.** `eval/runner/q1/usage.ts` now reads `cache_write_tokens` inside `input_tokens_details` (and Chat
   Completions' `prompt_tokens_details`) as well as at the top level, so an OpenAI response's cache writes are priced
-  at the model's cache-write rate ($2.50 per million for gpt-6.1-sol) instead of as plain input. The paid fixture smoke
-  on 2026-11-08 had priced gpt-6.1-sol at $0.2853 from its records against $0.3325 on the ledger, while Anthropic and
+  at the model's cache-write rate instead of as plain input. The paid fixture smoke
+  on 2026-11-08 had priced gpt-6.1-sol lower from its records than the ledger did, while Anthropic and
   particle-1 matched to the cent. The parser is shared, so Cat 40's agent loop and q1's readers, including the memory-qa
   results q1 reads, get the same fix; Cat 40's text-only claims judge (`runAgentText`) and `p5-agent.ts` still price an
   OpenAI judge's cache writes as plain input.
 - **Test.** `test/eval/q1-usage.test.ts` prices the 13 real `usage` objects in
   `eval/data/live-recall-v1/provider-usage-2026-11-08.jsonl` both ways: the loop's price equals the ledger's for every
-  response, and the totals equal that capture's ledger ($0.0831378 Anthropic, $0.013817 OpenAI, $0.00152595
-  particle-1). It fails on the old parser.
+  response, and the totals equal that capture's ledger for each provider. It fails on the old parser.
 - **Harness digest.** `HARNESS_FILES` now also hashes the cost path the runner prices with (`q1/usage.ts`,
   `usage-receipt.ts`, `metering-proxy.ts`, and gbrain's `model-pricing.ts`, `model-id.ts` and `embedding-pricing.ts`)
   and the shared `metrics.ts` its scorecard uses. Before this, the digest was the same with and without the cost fix. A
@@ -1347,9 +1346,9 @@ Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a
   (`LR_JUDGE_CHECK`) unless GBEV-3 waives it. Every judge row records its served model version, every comparison
   reports the tasks that got worse and reads an interval that includes zero as "no measurable difference", and
   `tasks.ts estimate` shows each judge's cost on its own line and projects the judge check. The counted run's starting
-  cap moves from $360 to $700, the judge check has its own $200 cap, and the box ledger's program cap is $900.
+  cap rises, the judge check has its own cap, and the box ledger has a program cap over both.
 - **Label floor and truncated judge calls.** If a counted judge has fewer than 40 labels on either primary metric after
-  20 tasks, the judge check adds 10 frozen tasks at a time, up to 40, under the same $200 cap, and applies the pass
+  20 tasks, the judge check adds 10 frozen tasks at a time, up to 40, under the same cap, and applies the pass
   rule once to the final set; `judge-check.json` lists every step. Every judge row records its 8192-token output cap and
   whether the call hit it. A truncated call is a judge error, `judge-check.json` reports each judge model's truncation
   rate, and above 1% the check fails and a judge check or counted run stops (`LR_JUDGE_TRUNCATED`). A counted run also
@@ -1709,24 +1708,24 @@ Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a
   counted cells, the four stage 1 cells and particle-1's re-read plans. The `beam-rs1` loader reads the custodian's
   kept list from the filled manifest across 48 mint slots, and cells run in launch units of five kept conversations.
   `eval/runner/rs1/iut.ts` is the decision rule, `power.ts` the power model and pilot sizing, `pricing.ts` the price and
-  the $2,300 check-in, and `verdict.ts` the verdict and pilot reports.
+  the spend check-in, and `verdict.ts` the verdict and pilot reports.
 - **What the verdict refuses.** `verdict.ts` reads only receipts that hold exactly the first N_final kept conversations
   of the filled manifest, from whole launch units (no `--limit`) whose run config and instrument match the committed
   cell definition, with paid, valid, non-overlapping particle-1 re-reads. A question that one system row lacks is a
   `row_missing` drop on that side, a failed retrieval counts as 0 in the delivered-context gate, and the first table
   prints n/a where a unit's meters or a re-read's spend are missing. The pilot refuses a kept list shorter than wave A's 20.
-- **Caps.** The counted block stops at $760.79, 1.5 times its cells' own estimate (the re-reads spend from their own
-  ledgers). Stage 1's $60 covers the dry-run campaign ($55.05) and its re-reads ($4.95) together, and
-  `reread-cell.ts` refuses a stage 1 re-read ledger cap above $4.95.
+- **Caps.** The counted block stops at 1.5 times its cells' own estimate (the re-reads spend from their own
+  ledgers). Stage 1's cap covers the dry-run campaign and its re-reads together, and
+  `reread-cell.ts` refuses a stage 1 re-read ledger cap above the re-reads' share.
 
 ### The RS1 mint stops answering once the chat passes BEAM's truncation limit (GST-1154, GBEV-36)
 
-- **What it wasted.** The truncate step of `eval/custody/rs1/rs1_mint.py` runs BEAM's `count_chats_tokens` (b2da22e), which keeps a chat's turns in order until the running count (tiktoken's gpt-4o-mini encoding over each turn, for a gemini model) passes 1,040,000 tokens, and drops the rest. Stage 0 measured about 168k tokens a batch on a fixed-code conversation, so the cut falls inside batch 7, and batches 8 to 10, about $10 a conversation at stage 0's $3.47 a batch, were generated and thrown away.
+- **What it wasted.** The truncate step of `eval/custody/rs1/rs1_mint.py` runs BEAM's `count_chats_tokens` (b2da22e), which keeps a chat's turns in order until the running count (tiktoken's gpt-4o-mini encoding over each turn, for a gemini model) passes 1,040,000 tokens, and drops the rest. Stage 0 measured about 168k tokens a batch on a fixed-code conversation, so the cut falls inside batch 7, and batches 8 to 10 were generated and thrown away.
 - **The stop.** BEAM answers batch b from plans 0 to b only (the `previous_plans` loop in `main.answer_generation`), so no later batch feeds a kept turn. Before each answer batch and after the last, the answer step runs BEAM's own `convert_chats_pickle_to_json`, `add_ids_to_chats` and `count_chats_tokens` (with `GEN_MODEL` and `TRUNCATE_TOKENS`, as the truncate step calls it) on a scratch copy of the chat inside custody, and stops once that truncate writes `chat_trunecated.json`. The batches it kept and the turns in the last one are read from that file. BEAM's printed count is recorded for information only. A rerun of a chat that has already passed the limit answers nothing. The check takes about a second a batch. The truncate, probe, select and rubric steps are unchanged, and message ids are still renumbered in chat order.
 - **Where the stop is recorded.** The answer step's manifest entry records `early_stop`: the batches answered and planned, the batch and turn at which BEAM's truncate cuts, the batches and turns it keeps, BEAM's printed count and the limit, or null when the chat never passes the limit. `check-gaps` checks an early-stopped answer step against the batches it answered and prints `early_stop=<batches>` or `early_stop=none` on each answer line. `validate.ts` already counts a conversation complete once its rubric step is done, whatever its batch count.
 - **`rs1_mint.py check-early-stop --out <dir> [--conv cNNN] [--beam-dir <dir>]`** replays the stop on a mint's finished answer steps with no model call. It finds the batch after which the stop would have ended the step, runs chat_json and truncate on the full chat and on that prefix in scratch directories inside the conversation, and prints byte equality and both sha256s for each of the four files truncate writes, counts and hashes only. It exits 1 when a file differs. Run it with the mint's venv python, `<dir>/tooling/venv/bin/python`.
 - **Tests.** `test/eval/custody-rs1-early-stop.test.ts` checks keylessly, with a stubbed BEAM, that a chat passing the limit in batch 7 requests no later batch (on main it requested batches 8 to 10), that the stop is recorded, that a rerun answers nothing with or without the manifest entry, that a chat that never passes answers all 10 batches, that `check-gaps` passes and that `validate.ts` loads the conversation as complete. Where a BEAM checkout and venv exist (`RS1_BEAM_DIR`, `RS1_BEAM_PYTHON`), it also runs BEAM's own code and tokenizer on 80-turn chats: `chat_trunecated.json`, `chat_trunecated.pickle`, `plan_new_trunecated.pickle` and `plan_new_trunecated.txt` come out byte-identical for the early-stopped chat and the full one with the cut at batch 7's first, last and fourth turn, and a chat that never passes the limit writes no truncated files and the same `chat.json`. CI's test shards have neither, so they skip that block. The stub BEAM in `test/eval/custody-rs1-gap-check.test.ts` gains the chat_json and truncate calls the answer step now makes, and its `check-gaps` line the `early_stop` field.
-- **Cost.** Stage 0 projected the mint at about $42.78 a conversation without the stop and about $32.10 with it. c003's finished run measures where the cut actually falls. RS1's pricing (`eval/runner/rs1/pricing.ts`) is updated on its own branch.
+- **Cost.** Stage 0 projected that the stop lowers the mint's cost per conversation. c003's finished run measures where the cut actually falls. RS1's pricing (`eval/runner/rs1/pricing.ts`) is updated on its own branch.
 
 ### beam-checkout.sh replaces a stale BEAM directory only when it is a real git directory (GST-1154)
 
@@ -1739,7 +1738,7 @@ Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a
 - **What it measures.** `docs/benchmarks/2026-11-07-skill-ranker-offline.md` tests whether a word-matching ranker can
   pick an acceptable skill from catalogs of 250, 750 and 1,500 public skills for 300 synthetic turns, and whether a
   "no skill applies" gate can tell when none fits. Labels come from a blind judge, and the test split was frozen by hash
-  before scoring. Spend was $11.07 of a $50 cap.
+  before scoring.
 - **What it found.** As preregistered, Step 1 fails: no deployable arm passes, because the preregistered gate hides
   every skill turn and the repaired gate still fails bar 1 at 250 and 750 skills and the false-suggestion spread bar.
   With the gate off, BM25F over name, description and a 4 KB body slice puts an acceptable skill in its top 5 on 48%,
@@ -1773,7 +1772,7 @@ Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a
   when the answer was given. An inline `[x]` counts as a citation only when x holds a `/` or names a page the episode
   saw, so a note such as `[TBD]` is not one. The [preregistration](docs/benchmarks/live-recall/PHASE2-PREREGISTRATION.md) fixes four
   Holm-corrected primaries on the paraphrase form (B minus A on correct, C minus B on correct and grounded, for Opus and
-  particle-1), the prompts and judge prompt verbatim, a $360 starting cap for the counted run and a cost gate. No counted
+  particle-1), the prompts and judge prompt verbatim, a starting cap for the counted run and a cost gate. No counted
   run has happened.
 - **Privacy.** Every gbrain read runs as gbrain's untrusted remote caller (`remote: true` through the MCP dispatcher), so
   gbrain hides pages flagged private and unsafe chunks from the models and the judge. The runner deletes
