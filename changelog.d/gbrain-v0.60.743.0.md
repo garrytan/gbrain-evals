@@ -4,8 +4,8 @@
   (`16124807c`), gbrain's newest release on 2026-11-19, 10 releases and 101 commits later.
   [docs/gbrain-under-test.md](docs/gbrain-under-test.md#the-pin) names the new pin. No result was rerun.
 - [test/eval/sharing-contract.test.ts](test/eval/sharing-contract.test.ts) now runs its 12 scenarios in CI instead of
-  skipping, because the pin is past v0.60.738.0. It also refuses any network request that isn't to `127.0.0.1`, and
-  fails if one was tried.
+  skipping, because the pin is past v0.60.738.0. Its `fetch` now refuses any host but `127.0.0.1`, and a scenario
+  fails if it called `fetch` for another host.
 - gbrain v0.60.743.0 ships a `src/core/rust-engine` folder, but its engine factory still doesn't construct a rust
   engine. So the rust arm refuses with `rust_kind_unsupported` instead of `rust_engine_not_in_build`, and the tests
   that run on the pinned build expect that reason.
