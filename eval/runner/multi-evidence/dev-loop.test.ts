@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test';
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import type { Outcome } from '../nightly/outcome.ts';
 import { ARMS, BASE_TURN_CAP, cat40ArmFlags, cat40Setup, compareVersions, followUpRun, newestRelease, parseArgs, planRuns, powerTable, rerankTimedOut, resumeRefusal } from './dev-loop.ts';
 import type { SuiteRun } from '../nightly/adapters.ts';
@@ -169,6 +169,8 @@ describe('batch reads (get_page slugs)', () => {
     const a = parseArgs(['--out', '/tmp/x', '--fake', '--slots-from', 'v0.60.743.0', '--cat40-slots', '3']);
     expect([a.slotsFrom, a.cat40Slots]).toEqual(['v0.60.743.0', 3]);
     expect(parseArgs(['--out', '/tmp/x', '--fake']).cat40Slots).toBeNull();
+    expect(parseArgs(['--out', '/tmp/x', '--fake', '--cat40-task-prepend-file', 'p.json']).taskPrepend).toBe(resolve('p.json'));
+    expect(parseArgs(['--out', '/tmp/x', '--fake']).taskPrepend).toBeNull();
     const s = 'a'.repeat(40), t = 'c'.repeat(40);
     expect(resumeRefusal({ sha: s, fake: false, slots_from: { sha: t } }, { sha: s, fake: false, slotsSha: t }, 'out/v1', 'v1')).toBeNull();
     expect(resumeRefusal({ sha: s, fake: false }, { sha: s, fake: false, slotsSha: t }, 'out/v1', 'v1')).toContain('brains');

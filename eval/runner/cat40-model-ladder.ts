@@ -356,7 +356,7 @@ export interface ExperimentManifest {
   /** Set when the run includes the exploratory gbrain-fs arm (development world only, never counted). */
   exploratory?: true;
   /** Hard worlds: identity, behavior settings and the evaluator's code hashes (DX-F14); a resume must match them. */
-  hard?: { identity: ReturnType<typeof identityOf>; max_turns: number; tool_limits: string; judge: string | null; scorer: string; judge_prompt: string; settings_digest: string; code: Record<string, string>; runner_commit: string | null };
+  hard?: { identity: ReturnType<typeof identityOf>; max_turns: number; tool_limits: string; judge: string | null; scorer: string; judge_prompt: string; settings_digest: string; code: Record<string, string>; runner_commit: string | null; task_prepend?: Record<string, string> };
 }
 
 export { rerankProbe };
@@ -451,6 +451,24 @@ export function freezeGate(o: { devSet: boolean; accept: boolean; step: string |
   return null;
 }
 
+/**
+ * --task-prepend-file: a JSON object of task id to the text put before that task's question (hardSessions). The
+ * SHA-256 of each text goes in the Hard manifest (experiment.json and the receipt), so a resume or an arm reuse with other
+ * text is refused even when the file path is the same.
+ */
+export function readTaskPrepend(path: string, worldTasks: readonly string[]): { texts: Record<string, string>; sha256: Record<string, string> } {
+  const raw = JSON.parse(readFileSync(path, 'utf8')) as unknown;
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new UsageError(`--task-prepend-file ${path} must hold a JSON object of task id to text`);
+  const entries = Object.entries(raw as Record<string, unknown>).sort(([a], [b]) => a.localeCompare(b));
+  const empty = entries.filter(([, v]) => typeof v !== 'string' || !v.trim()).map(([k]) => k);
+  if (empty.length) throw new UsageError(`--task-prepend-file: ${empty.join(', ')} must map to non-empty text`);
+  const unknown = entries.map(([k]) => k).filter(k => !worldTasks.includes(k));
+  if (unknown.length) throw new UsageError(`--task-prepend-file names tasks this world does not have: ${unknown.join(', ')}`);
+  if (!entries.length) throw new UsageError('--task-prepend-file names no task');
+  const texts = Object.fromEntries(entries) as Record<string, string>;
+  return { texts, sha256: Object.fromEntries(entries.map(([k, v]) => [k, createHash('sha256').update(v as string).digest('hex')])) };
+}
+
 function insideRepo(p: string): boolean {
   const r = relative(REPO_ROOT, resolve(p));
   return r === '' || (!r.startsWith('..') && !isAbsolute(r));
@@ -495,14 +513,14 @@ export function incompleteSlotCoverage(dir: string, n: number): { problems: stri
 export const VALUE_FLAGS = ['--arms', '--models', '--families', '--tasks', '--repeat', '--concurrency', '--slots', '--gbrain-repo', '--gbrain-ref', '--gbrain-root', '--gbrain-label', '--judge', '--world', '--out',
   '--max-tool-chars', '--order', '--slot-ref', '--surface', '--gbrain-instructions-file', '--gbrain-tool-descriptions-file', '--gbrain-drop-tools', '--gbrain-config', '--gbrain-build-config', '--build-slot-ids', '--slot-build-allowance-usd',
   '--budget-usd', '--estimate-usd', '--budget-run-id', '--budget-ledger', '--program-cap-usd', '--max-turns', '--per-family', '--hard-tool-limits', '--accept-freeze-drift', '--step',
-  '--gbrain', '--advertised', '--world-templates-file', '--decision-id', '--purpose', '--retire-models'];
+  '--gbrain', '--advertised', '--world-templates-file', '--decision-id', '--purpose', '--retire-models', '--task-prepend-file'];
 export const BOOLEAN_FLAGS = ['--scripted', '--keyless-slots', '--build-slots', '--rebuild', '--no-pglite-analyze', '--transcripts', '--preflight', '--help', '--new-budget-run', '--dev-set'];
 const NUMERIC_FLAGS = new Set(['--repeat', '--concurrency', '--slots', '--slot-build-allowance-usd', '--budget-usd', '--estimate-usd', '--program-cap-usd', '--max-turns', '--per-family']);
 
 export const RUNNER_USAGE = `Usage: bun eval/runner/cat40-model-ladder.ts [flags]
   v1:    --models <list> [--arms oracle,fs,fs-acl,memory,pg,gbrain] --budget-usd <n> [--world <world.json>] [--out <dir>] ...
   Hard:  --world <hard world.json> --models <list> --judge gpt-6.1-sol [--arms oracle,fs,pg,memory,gbrain] [--per-family N] [--max-turns N]
-         [--hard-tool-limits hard|v1] [--preflight] [--step <step>] --budget-usd <n> --budget-ledger .budget/cat40-hard.sqlite --out <dir>
+         [--hard-tool-limits hard|v1] [--preflight] [--step <step>] [--task-prepend-file <json>] --budget-usd <n> --budget-ledger .budget/cat40-hard.sqlite --out <dir>
          exploratory: --arms gbrain-fs (gbrain plus read-only files) on the calibration-seed world only, no --step
   $0:    --scripted [--arms fs,memory,oracle] [--world <world.json>] --out <dir>   (gbrain: add --keyless-slots)
   Slots: --build-slots --gbrain-ref <sha> --slots N --world <world.json> --budget-usd <n> --slot-build-allowance-usd 2 [--gbrain-build-config key=value,...]
@@ -550,7 +568,7 @@ export async function main(argv = process.argv.slice(2)) {
     } else assertDevWorld(raw.seed, raw.templates);
     const regenerated = generateLadderWorld(raw.seed, { scale: raw.scale, templates: sealed ? undefined : raw.templates, sealedTemplates: sealed ? { id: sealed.id, templates: sealed.templates } : undefined });
     if (worldDigest(regenerated) !== worldDigest(raw)) throw new Error(`${worldPath} does not match its generator; ${sealed ? 'regenerate it in custodian mode' : `run bun eval/generators/model-ladder-gen.ts${raw.scale ? ` --scale ${raw.scale}` : ''}`}`);
-    for (const f of ['--per-family', '--hard-tool-limits', '--accept-freeze-drift', '--step']) if (flag(argv, f) !== undefined) throw new UsageError(`${f} applies to Hard worlds only`);
+    for (const f of ['--per-family', '--hard-tool-limits', '--accept-freeze-drift', '--step', '--task-prepend-file']) if (flag(argv, f) !== undefined) throw new UsageError(`${f} applies to Hard worlds only`);
   }
   const world = raw as LadderWorld;
   const models = scripted ? ['scripted'] : buildSlots ? [] : (flag(argv, '--models') ?? '').split(',').filter(Boolean);
@@ -593,6 +611,8 @@ export async function main(argv = process.argv.slice(2)) {
   const record = cat40Recorder(repo, root);
   const maxTurns = flag(argv, '--max-turns') ? Number(flag(argv, '--max-turns')) : hw?.max_turns;
   if (maxTurns !== undefined && (!Number.isInteger(maxTurns) || maxTurns < 1)) throw new UsageError('--max-turns must be a positive integer');
+  const prependFile = flag(argv, '--task-prepend-file');
+  const taskPrepend = prependFile && hw ? readTaskPrepend(resolve(prependFile), hw.tasks.map(t => t.id)) : null;
   const toolLimits = (flag(argv, '--hard-tool-limits') ?? 'hard') as 'hard' | 'v1';
   if (toolLimits !== 'hard' && toolLimits !== 'v1') throw new UsageError('--hard-tool-limits must be hard or v1');
   // A slot build checks the freeze too: the cells would refuse drifted code anyway, after the builds had spent.
@@ -697,6 +717,7 @@ export async function main(argv = process.argv.slice(2)) {
   const hardManifest: ExperimentManifest['hard'] | undefined = hw ? {
     identity: identityOf(hw), max_turns: maxTurns!, tool_limits: toolLimits, judge, scorer: HARD_SCORER_VERSION, judge_prompt: HARD_JUDGE_PROMPT_VERSION,
     settings_digest: settingsDigest({ knob_digest: hw.knob_digest, max_turns: maxTurns!, tool_limits: toolLimits, judge }), code: codeHashes(REPO_ROOT),
+    ...(taskPrepend ? { task_prepend: taskPrepend.sha256 } : {}),
     runner_commit: (() => { try { return execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(); } catch { return null; } })(),
   } : undefined;
   if (argv.includes('--preflight')) {
@@ -790,7 +811,7 @@ export async function main(argv = process.argv.slice(2)) {
     if (hw) {
       const hctx: HardCtx = {
         world: hw, worldDigest: hardWorldDigest(hw), files: ctx.files, pg: ctx.pg, pool: ctx.pool, proxy: ctx.proxy, scripted, judge, gbrainLabel: ctx.gbrainLabel,
-        maxToolChars: ctx.maxToolChars, maxTurns: maxTurns!, toolLimits, budgetRunId: ctx.budgetRunId, logJudge: e => appendFileSync(join(out, 'judge-requests.jsonl'), JSON.stringify(record(e)) + '\n'),
+        maxToolChars: ctx.maxToolChars, maxTurns: maxTurns!, toolLimits, budgetRunId: ctx.budgetRunId, ...(taskPrepend ? { taskPrepend: taskPrepend.texts } : {}), logJudge: e => appendFileSync(join(out, 'judge-requests.jsonl'), JSON.stringify(record(e)) + '\n'),
       };
       await pool(cells, concurrency, async c => {
         const key = cellKey(c.model, cellLabel(c.arm, ctx.gbrainLabel), c.task.id, c.repeat);

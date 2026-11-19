@@ -5,7 +5,7 @@
  *   bun eval/runner/multi-evidence/dev-loop.ts --out <dir> [--gbrain <tag|sha|branch>] [--gbrain-clone <path>]
  *     [--arms base[,cap2x,batch]] [--readers claude-opus-5-5,gpt-6.1-sol] [--suites a,b] [--items x,y] [--k N]
  *     [--fake | --paid --budget-ledger <path> (--budget-run-id <id> | --budget-usd <n>)] [--cat40-slot-allowance-usd 4]
- *     [--slots-from <tag|sha|branch>] [--cat40-slots N]
+ *     [--slots-from <tag|sha|branch>] [--cat40-slots N] [--cat40-task-prepend-file <json>]
  *     [--agent-noise 0.167]
  *   bun eval/runner/multi-evidence/dev-loop.ts --report <run dir> [--agent-noise 0.167]
  *
@@ -13,6 +13,8 @@
  * --slots-from builds the Cat 40 brains with another commit and serves the build under test on them (the runner's
  * --slot-ref), so two builds that change only how pages are read run on byte-identical brains and their cells pair on
  * the server code alone; the two commits must share a schema. --cat40-slots sets how many brains run cells at once (5).
+ * --cat40-task-prepend-file passes the Cat 40 runner's --task-prepend-file to every Cat 40 arm: a JSON object of task id
+ * to text put before that task's question (a prompt A/B on the same build, run in its own --out).
  *
  * The dev set (eval/data/multi-evidence/devset-v1.json, select.ts) holds the nightly's Cat 40 Hard world M tasks,
  * LongMemEval-S dev questions and public BEAM-1M dev questions whose gold has at least two items, BEAM and LME items only
@@ -108,7 +110,7 @@ export function resolveGbrainRef(clone: string, ref: string): string {
 export interface LoopArgs {
   out: string | null; report: string | null; gbrain: string | null; clone: string; arms: ArmName[]; readers: string[]; suites: string[] | null; items: string[] | null; k: number;
   fake: boolean; paid: boolean; budgetLedger: string | null; budgetRunId: string | null; budgetUsd: number | null; slotAllowanceUsd: number; agentNoise: number; fetch: boolean;
-  slotsFrom: string | null; cat40Slots: number | null;
+  slotsFrom: string | null; cat40Slots: number | null; taskPrepend: string | null;
 }
 
 export function parseArgs(argv: readonly string[]): LoopArgs {
@@ -132,6 +134,7 @@ export function parseArgs(argv: readonly string[]): LoopArgs {
     k: Math.max(1, Math.floor(num('--k', 1))), fake, paid, budgetLedger: flag('--budget-ledger') ? resolve(flag('--budget-ledger')!) : null, budgetRunId: flag('--budget-run-id') ?? null,
     budgetUsd: usd === undefined ? null : Number(usd), slotAllowanceUsd: num('--cat40-slot-allowance-usd', 4), agentNoise: num('--agent-noise', AGENT_NOISE), fetch: !argv.includes('--no-fetch'),
     slotsFrom: flag('--slots-from') ?? null, cat40Slots: flag('--cat40-slots') === undefined ? null : Math.max(1, Math.floor(num('--cat40-slots', 5))),
+    taskPrepend: flag('--cat40-task-prepend-file') ? resolve(flag('--cat40-task-prepend-file')!) : null,
   };
 }
 
@@ -147,7 +150,7 @@ export function planRuns(me: MeDevSet, a: Pick<LoopArgs, 'suites' | 'items' | 'r
   }).filter(r => r.items.length > 0);
 }
 
-interface Ctx extends NightContext { label: string; slots: { sha?: string; n?: number } }
+interface Ctx extends NightContext { label: string; slots: { sha?: string; n?: number }; taskPrepend: string | null }
 
 // ─── Cat 40 ─────────────────────────────────────────────────────────
 
@@ -222,7 +225,7 @@ async function runCat40Arm(full: SuiteRun, ctx: Ctx, arm: ArmName, d: Cat40Dirs,
     hint = join(cells, 'instructions-batch.txt');
     writeFileSync(hint, `${readFileSync(served, 'utf8').replace(/\n+$/, '')}\n\n${BATCH_HINT}\n`);
   }
-  const cmd = [...cat40Commands(run, ctx, d.world, { ...d, cells }, ctx.slots).cells, ...cat40ArmFlags(arm, hint), ...ownRun(ctx)];
+  const cmd = [...cat40Commands(run, ctx, d.world, { ...d, cells }, ctx.slots).cells, ...cat40ArmFlags(arm, hint), ...(ctx.taskPrepend ? ['--task-prepend-file', ctx.taskPrepend] : []), ...ownRun(ctx)];
   const r = await runChild({ cmd, env: envFor(ctx, run.suite, ['anthropic', 'openai', 'voyage']), log: join(cells, '..', 'cells.log'), signal: ctx.signal });
   return r.code === 0 ? null : `cells exited ${r.code ?? r.signal}: ${r.tail.split('\n').slice(-3).join(' ')}`;
 }
@@ -485,10 +488,10 @@ export async function main(argv: readonly string[]): Promise<number> {
     worktree: () => Promise.reject(new Error('the dev loop runs no refresh-barrier suite')), overlayFor: () => Promise.reject(new Error('the dev loop runs no smoke suite')),
     cache: new NightlyCache(cacheRoot), paid, pg: { admin: null, template: null, pg15Admin: null }, smokeRefs: { previous: null, old: null },
     cat40SlotAllowanceUsd: a.fake ? null : a.slotAllowanceUsd, log: line => console.error(`[multi-evidence] ${line}`), signal: abort.signal,
-    slots: { ...(slotsFrom ? { sha: slotsFrom.sha } : {}), ...(a.cat40Slots !== null ? { n: a.cat40Slots } : {}) },
+    slots: { ...(slotsFrom ? { sha: slotsFrom.sha } : {}), ...(a.cat40Slots !== null ? { n: a.cat40Slots } : {}) }, taskPrepend: a.taskPrepend,
   };
   const runInfo = { schema: 'multi-evidence-run/1', label, sha, version: gut.version, night: ctx.night, fake: a.fake, world, devset_digest: me.digest, budget: paid, slots_from: slotsFrom,
-    args: { arms: a.arms, readers: a.readers, suites: a.suites, items: a.items, k: a.k, cat40_slots: a.cat40Slots }, started_at: new Date().toISOString() } as Record<string, any>;
+    args: { arms: a.arms, readers: a.readers, suites: a.suites, items: a.items, k: a.k, cat40_slots: a.cat40Slots, cat40_task_prepend_file: a.taskPrepend }, started_at: new Date().toISOString() } as Record<string, any>;
   writeFileSync(join(dir, 'run.json'), JSON.stringify(runInfo, null, 2) + '\n');
   ctx.log(`gbrain ${label} ${sha.slice(0, 12)} (${gut.version})${slotsFrom ? ` on brains built by ${slotsFrom.ref} ${slotsFrom.sha.slice(0, 12)}` : ''}; arms ${a.arms.join(', ')}; ${runs.map(r => `${r.suite.id} ${r.items.length}`).join(', ')}; ${a.fake ? 'keyless' : `ledger run ${paid!.runId}`}`);
 

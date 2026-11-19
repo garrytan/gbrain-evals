@@ -180,9 +180,13 @@ export function hardOracleEvidence(world: HardWorld, task: HardTask): string {
   return parts.join('\n\n');
 }
 
-/** User messages of a cell, in order. The oracle runs only the final session (CEO-F13). */
-export function hardSessions(world: HardWorld, task: HardTask, armName: string): string[] {
-  const final = armName === 'oracle' ? `${task.question}\n\nRelevant documents:\n\n${hardOracleEvidence(world, task)}` : task.question;
+/**
+ * User messages of a cell, in order. The oracle runs only the final session (CEO-F13). `prepend` (the runner's
+ * --task-prepend-file text for this task) goes before the question, separated by a blank line.
+ */
+export function hardSessions(world: HardWorld, task: HardTask, armName: string, prepend?: string): string[] {
+  const question = prepend ? `${prepend.replace(/\n+$/, '')}\n\n${task.question}` : task.question;
+  const final = armName === 'oracle' ? `${question}\n\nRelevant documents:\n\n${hardOracleEvidence(world, task)}` : question;
   return armName === 'oracle' ? [final] : [...(task.sessions ?? []), final];
 }
 
@@ -282,6 +286,8 @@ export interface HardCtx {
   maxTurns: number;
   toolLimits: ToolLimits;
   budgetRunId: string | null;
+  /** Text put before each task's question, by task id (--task-prepend-file). */
+  taskPrepend?: Record<string, string>;
   /** Persist one judge request (for re-judging without rerunning the agent). */
   logJudge: (entry: JudgeRequestLog) => void;
 }
@@ -316,7 +322,7 @@ export async function runHardCell(ctx: HardCtx, model: string, armName: CellArm,
   // Taken while the slot is live: after restoreOrQuarantine the pool may hand the slot to another cell, whose restart
   // clears the client, so the scoring and H5 write diagnostic below must not ask the slot again.
   const writeTools = arm.writeTools();
-  const messages = hardSessions(ctx.world, task, armName);
+  const messages = hardSessions(ctx.world, task, armName, ctx.taskPrepend?.[task.id]);
   const runs: AgentRun[] = [];
   const sessions: SessionRecord[] = [];
   let embedUsd = 0;

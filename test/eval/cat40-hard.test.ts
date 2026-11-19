@@ -28,7 +28,8 @@ import {
 import { project, stepPlan, loadCostBasis, checkRoster, budgetCheck, STEPS } from '../../eval/runner/cat40/hard-ops.ts';
 import { runAgent, ProviderError, HarnessError, type Arm, type AgentRun } from '../../eval/runner/cat40/loop.ts';
 import { OracleArm, FsArm, FileStore } from '../../eval/runner/cat40/arms.ts';
-import { main, checkRunnerFlags, experimentFlags, bindExperiment, DEV_SET_LABEL, freezeGate, rerankProbe } from '../../eval/runner/cat40-model-ladder.ts';
+import { main, checkRunnerFlags, experimentFlags, bindExperiment, DEV_SET_LABEL, freezeGate, rerankProbe, type ExperimentManifest } from '../../eval/runner/cat40-model-ladder.ts';
+import { reuseVerdict } from '../../eval/runner/cat40/reuse-check.ts';
 import { assertScorerRejectsFakeSystems } from '../../eval/runner/mutation-kit.ts';
 import { canonicalCells, readRecords, type CellRecordV2 } from '../../eval/runner/cat40/records.ts';
 import { closeLedgers, initLedger } from '../../eval/runner/budget-ledger.ts';
@@ -379,6 +380,35 @@ describe('runner (T1, T2, T6: CEO-F3, CEO-F12, DX-F3, DX-F7, ENG-F1, ENG-F2, ENG
     const receipt = JSON.parse(readFileSync(join(out, readdirSync(out).find(f => f.startsWith('receipt-'))!), 'utf8'));
     expect(receipt.dev_set).toEqual({ label: DEV_SET_LABEL, freeze_drift: null });
     expect(DEV_SET_LABEL).toContain('not a Hard-freeze result');
+  });
+  test('--task-prepend-file puts its text before the question, records each text\'s SHA-256, and a resume or reuse with other text is refused', async () => {
+    const h1 = byFamily('H1')[0];
+    const text = 'Retrieval playbook:\n1. List the candidates with list_pages.\n';
+    const [fs] = hardSessions(world, h1, 'fs', text);
+    expect(fs).toBe(`${text}\n${h1.question}`);
+    expect(hardSessions(world, h1, 'oracle', text)[0].startsWith(`${text}\n${h1.question}\n\nRelevant documents:`)).toBe(true);
+    expect(hardSessions(world, h1, 'fs')).toEqual([h1.question]);
+    const dir = tmp(), file = join(dir, 'prepend.json');
+    writeFileSync(file, JSON.stringify({ [h1.id]: text }));
+    const out = tmp();
+    const args = ['--scripted', '--dev-set', '--world', writeWorld(world), '--arms', 'oracle', '--tasks', h1.id, '--task-prepend-file', file, '--out', out];
+    await main(args);
+    const sha = createHash('sha256').update(text).digest('hex');
+    const exp = JSON.parse(readFileSync(join(out, 'experiment.json'), 'utf8')) as ExperimentManifest;
+    expect(exp.hard!.task_prepend).toEqual({ [h1.id]: sha });
+    const receipt = JSON.parse(readFileSync(join(out, readdirSync(out).find(f => f.startsWith('receipt-'))!), 'utf8'));
+    expect(receipt.hard.task_prepend).toEqual({ [h1.id]: sha });
+    writeFileSync(file, JSON.stringify({ [h1.id]: `${text}3. Search once.\n` }));
+    rmSync(join(out, 'attempts.jsonl'));
+    await expect(main(args)).rejects.toThrow('already holds a different experiment');
+    const plain = { ...exp, hard: { ...exp.hard!, task_prepend: undefined } };
+    expect(reuseVerdict(exp, { ...plain, arms: [] }, 'oracle', [{ model: 'scripted', cells: 1, harness_errors: 0 }]).reasons).toContain('hard: task_prepend differ');
+    expect(reuseVerdict(exp, { ...exp, arms: [] }, 'oracle', [{ model: 'scripted', cells: 1, harness_errors: 0 }]).reasons).toEqual([]);
+    writeFileSync(file, JSON.stringify({ 'H9-99': text }));
+    await expect(main([...args.slice(0, -1), tmp()])).rejects.toThrow('tasks this world does not have: H9-99');
+    writeFileSync(file, JSON.stringify({ [h1.id]: ' ' }));
+    await expect(main([...args.slice(0, -1), tmp()])).rejects.toThrow('must map to non-empty text');
+    await expect(main(['--scripted', '--world', join(ROOT, 'eval/data/model-ladder-v1/world.json'), '--arms', 'oracle', '--task-prepend-file', file, '--out', tmp()])).rejects.toThrow('--task-prepend-file applies to Hard worlds only');
   });
   test('particle-1 does not run on Hard worlds: amendment A6 keeps the model list, and the Hard freeze does not cover its transport', async () => {
     await expect(main(['--world', writeWorld(world), '--models', 'particle-1', '--judge', 'gpt-6.1-sol', '--arms', 'fs', '--out', tmp(), '--preflight'])).rejects.toThrow('particle-1 does not run on Hard worlds');
