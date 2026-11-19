@@ -472,8 +472,10 @@ class CellRun:
             return await self._answer_rag(q, pq, docs, ret, tag, base, unit)
         return await self._answer_mode(q, pq, tag, base, unit)
 
-    async def _answer_rag(self, q, pq, docs, ret: RetrieveRecord, tag: str, base: dict, unit: str) -> AnswerRecord:
+    async def _answer_rag(self, q, pq, docs, ret: RetrieveRecord, tag: str, base: dict, unit: str, append_line: str | None = None) -> AnswerRecord:
         rendered = _render_rag_context(docs)
+        if append_line:
+            rendered = f"{rendered}\n\n{append_line}"
         meta = dict(pq.meta)
         task = self.task_type
 
