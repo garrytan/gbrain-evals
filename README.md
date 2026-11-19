@@ -80,7 +80,7 @@ behaviour, such as `forget` leaving nothing behind or a sync catching up, where 
 <tr>
 <td valign="top">Hard questions about a large, messy company, answered correctly by agents (two new worlds of about 55,000 documents; Opus 5.5 and GPT-6.2 Sol)<br><sub>gbrain <code>ae8201041</code> (v0.60.742.0) · <a href="docs/benchmarks/2026-11-19-cat40-hard-newest.md">Hard company questions, newest build</a></sub></td>
 <td valign="top">the same files with <code>grep</code>: 315 of 400 (78.75%)</td>
-<td valign="top"><h3>Level: +2.50 points</h3><b>325 of 400 (81.25%)</b>; the gain's interval is -1.50 to +6.50, so the two are at parity; an October build scores the same on these worlds, so the smaller lead than October's is not a gbrain regression³</td>
+<td valign="top"><h3>Level: +2.50 points</h3><b>325 of 400 (81.25%)</b>; the gain's interval is -1.50 to +6.50, so the two are at parity; an October build scores within noise of the newest on these worlds, so the smaller lead than October's is not a gbrain regression³</td>
 </tr>
 <tr>
 <td valign="top">The same questions where two sources disagree and one governs<br><sub>gbrain <code>ae8201041</code> (v0.60.742.0) · <a href="docs/benchmarks/2026-11-19-cat40-hard-newest.md">Hard company questions, newest build</a></sub></td>
@@ -629,7 +629,7 @@ Garry Tan runs Y Combinator.
 
 ### 2026-11-19: The hard company questions' smaller lead is not a gbrain regression
 
-The old-build control reported: gbrain's October build `09d21554d` scores the same as v0.60.742.0 on the two new worlds
+The old-build control reported: gbrain's October build `09d21554d` scores within noise of v0.60.742.0 on the two new worlds
 (+4.00 over files, newest minus October -1.50, -4.50 to +1.50). The "We learned" line, the hard-company row and
 footnote 3 now say the smaller lead is not a gbrain regression, replacing "not yet known", and the known-limits line
 adds the October build's -11.25 where sources disagree.
