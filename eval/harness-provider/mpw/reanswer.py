@@ -29,7 +29,7 @@ import json
 from pathlib import Path
 
 from . import cell as cellmod
-from .records import RetrieveRecord, read_record, write_record
+from .records import ANSWER_FAILURE, RetrieveRecord, read_record, write_record
 
 
 async def reanswer(src: Path, out_root: Path, sample: int, retrievals: Path | None = None, only: set[str] | None = None, tag: str | None = None,
@@ -92,8 +92,8 @@ async def reanswer(src: Path, out_root: Path, sample: int, retrievals: Path | No
         line = append_line if line_ids is not None and q.id in line_ids else None
         expected = None
         if retrievals is None:
-            expected = orig.get("final_prompt")
-            if not expected:
+            expected = orig.get("final_prompt") or None
+            if not expected and not (orig.get("outcome") == ANSWER_FAILURE and line is None):
                 raise SystemExit(f"{q.id}: the source cell recorded no answer prompt; refusing to reanswer it")
             if line is not None:
                 ctx = orig.get("rendered_context") or ""

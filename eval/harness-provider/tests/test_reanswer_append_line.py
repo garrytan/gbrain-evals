@@ -116,3 +116,42 @@ def test_a_reader_refusal_keeps_the_prompt_it_was_sent(tmp_path, stub_models, sh
     rows = _answers(d).values()
     assert rows and all(r["error"].startswith("reader refusal") for r in rows)
     assert all(r["final_prompt"] for r in rows)
+
+
+def _fail_rows(source, keep_prompt=False):
+    for p in (source / "stages" / "answer").glob("*.json"):
+        rec = json.loads(p.read_text())
+        rec.update(ok=False, outcome="answer_failure", answer="", error="RuntimeError: no structured response")
+        if not keep_prompt:
+            rec["final_prompt"] = ""
+        p.write_text(json.dumps(rec))
+
+
+def test_a_failed_row_with_no_recorded_prompt_is_asked_again_without_a_line(source, tmp_path, sent):
+    _fail_rows(source)
+    res = asyncio.run(reanswer(source, tmp_path / "out", 2, tag="repair"))
+    assert res["answered"] == len(sent) > 0
+    assert all(r["final_prompt"] for r in _answers(tmp_path / "out" / f"{source.name}-repair").values())
+
+
+def test_a_failed_row_with_no_recorded_prompt_never_gets_the_line(source, tmp_path, sent):
+    _fail_rows(source)
+    ids = set(json.loads((source / "cell.json").read_text())["resolved"]["schedule"][:1])
+    with pytest.raises(SystemExit, match="recorded no answer prompt"):
+        asyncio.run(reanswer(source, tmp_path / "out", 2, tag="oracle", append_line=LINE, line_ids=ids))
+    assert sent == []
+
+
+def test_an_answer_failure_keeps_the_prompt_it_was_sent(tmp_path, stub_models, shim_scorer, monkeypatch):  # noqa: F811
+    real = StubLLM.generate
+
+    def broken(self, prompt, schema):
+        if "correct" in set(schema.properties):
+            return real(self, prompt, schema)
+        raise RuntimeError("no structured response")
+
+    monkeypatch.setattr(StubLLM, "generate", broken)
+    d = make_cell(tmp_path, SPEC)
+    asyncio.run(cellmod.CellRun(d).run())
+    rows = _answers(d).values()
+    assert rows and all(r["outcome"] == "answer_failure" and r["final_prompt"] for r in rows)
