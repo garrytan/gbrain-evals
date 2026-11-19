@@ -14,7 +14,7 @@ gbrain's maintainers are deciding whether to build an "evidence not found" signa
 
 - If the line cuts made-up answers materially: "We learned that telling the model 'memory found nothing for this' cut made-up answers from X% to Y%, and that a false alarm costs Z correct answers in 100. You should give your agent's memory tool an explicit 'no evidence' result, and build it only as precise as Z says it must be."
 - If it doesn't: "We learned that even a perfect 'no evidence' line cut made-up answers by only X points: frontier readers answer from what memory returns whether or not memory says it found nothing. You should look elsewhere than a memory-side signal (the reader's prompt, or not returning loose matches) to stop made-up answers."
-- If there is no headroom: "We learned that at gbrain's newest release frontier readers already decline on almost all of BEAM-500K's unanswerable questions (X%), so the 32% we measured in October was a property of an older build and a smaller reader."
+- If there is no headroom: "We learned that at gbrain's newest release frontier readers already decline on almost all of BEAM-500K's unanswerable questions (X%). The 32% we measured in October came from an older build and a smaller reader, and this run can't say which of the two made the difference."
 
 ## Evidence class
 
@@ -22,7 +22,7 @@ Development evidence on public data: BEAM's 500K conversations at the pinned rev
 
 ## Build and data
 
-- **gbrain build.** The newest release on gbrain's master at launch: the highest version tag, read with `git ls-remote --tags https://github.com/garrytan/gbrain.git` (v0.60.742.0, commit `ae8201041c21`, when this file was written). It is pinned with `bun eval/runner/gbrain-pin.ts bump` in a dated commit on the results branch. The tags are re-read immediately before the first ingest, and a newer release moves the pin by dated amendment before that ingest. The ingest is the first counted gbrain run, so the build freezes there for this experiment; every arm reads the stores it built. The results record the release and its commit.
+- **gbrain build.** The newest release on gbrain's master at launch: the highest version tag, read with `git ls-remote --tags https://github.com/garrytan/gbrain.git` (v0.60.742.0, commit `ae8201041c21`, when this file was written). It is pinned with `bun eval/runner/gbrain-pin.ts bump` in a dated commit on the results branch. The tags are re-read immediately before the first ingest, and a newer release moves the pin by dated amendment before that ingest. The ingest is the first counted gbrain run, so the build freezes there for this experiment. Each conversation is ingested once into one store, which the three readers' `B` cells all read. The results record the release and its commit.
 - **Data.** BEAM at `b2da22e` (`eval/decisions/datasets/beam-b2da22e.json`), 500K size, the 11 dev conversations: `500k-10`, `500k-12`, `500k-18`, `500k-20`, `500k-21`, `500k-24`, `500k-25`, `500k-28`, `500k-29`, `500k-31`, `500k-33`. Each has 20 questions, 2 per ability: 220 questions, of which **22 are unanswerable** (`abstention`) and **198 are answerable** (the other nine abilities, the matched answerable set: same conversations, same stores, same retrieval). Only question counts per ability were read before this file was written; no question, answer or conversation text was opened.
 - **Harness.** The memory proof wave harness (`eval/harness-provider`, pinned harness commit `f618ed7b` in `harness.lock.json`), `rag` mode, provider `gbrain`, combined lane, with the provider settings of the confirmation cell `a49df98da16d` (Voyage `voyage-4` embeddings and `rerank-2.5` reranking, exchange pages, 600 facts tokens, an 8,000-token delivered-context target). A setting the newest build refuses is dropped, and a setting it renamed is mapped, by dated amendment before the first ingest. The delivered-context gate of the harness (mean within 10% of the target) applies; if it fails, the retrieval-only tuning pass of `eval/runner/harness-dev.ts` (no reader, no judge) picks the setting, recorded before the first answer.
 - **Bridge to the October number, descriptive only.** 7 of the 11 dev conversations (`10`, `18`, `20`, `24`, `25`, `29`, `33`) were among the confirmation cells' 28. On their 14 unanswerable questions, the October combined lane stated an answer on 5 (cells above). That row is shown beside this run's rows on the same 14 questions, unpaired in build and reader.
@@ -37,23 +37,25 @@ Development evidence on public data: BEAM's 500K conversations at the pinned rev
 
 - **The line.** `gbrain found no evidence for this question`, on its own line after the last retrieved memory, separated by one blank line. It is keyed on BEAM's gold ability label (`abstention`), never on anything gbrain returns, so `O` is a perfect signal by construction: it fires on every unanswerable question and on no answerable one. Under that perfect signal the answerable questions see no line, so their `B` rows stand for `O`, and `O` loses no correct answer by construction. `F` measures what each false alarm of a real signal would cost.
 - **Same evidence.** `O` and `F` start no memory system. They replay `B`'s recorded retrievals through `python -m mpw.reanswer`, which rebuilds each answer prompt and refuses to run when the rebuilt prompt differs from the recorded one. The only change between `B` and `O` or `F` is the appended line, so every difference is the line's effect plus resampling noise, which the paired analysis carries.
-- **Harness change.** `mpw.reanswer` gains one option that appends a given line to the rendered context of the questions a file lists, compares the rebuilt prompt against the recorded prompt with that line, and records the line, its SHA-256 and the id list in the cell. It lands as a dated commit on the results branch with a keyless test (the stub reader) that fails without it, before any paid request, and one Opus reader reads that commit. No gbrain change is involved.
+- **Harness change.** `mpw.reanswer` gains one option that appends a given line to the rendered context of the questions a file lists, compares the rebuilt prompt against the recorded prompt with that line, and records the line, its SHA-256 and the id list in the cell. Unlike the current replay, which compares prompts after the answer request returns, the option rebuilds and compares each prompt before any request is sent, and refuses a question with no recorded prompt. It lands as a dated commit on the results branch with a keyless test (the stub reader) that fails without it, before any paid request, and one Opus reader reads that commit. No gbrain change is involved.
 - **Fixed for every arm:** the answer prompt of the pinned harness's BEAM `rag` mode, the rendered context format, the 8,000-token target, and every setting not named here.
 
 ## Readers and judges
 
 - **Readers:** `claude-opus-5-5` and `particle-1` (the primary models), and `gpt-6.2-sol` (the newest frontier GPT). Opus 5.5 and GPT-6.2 Sol run at their provider default effort. particle-1 is sent `reasoning_effort: high` with a 16,000-token output limit, and the receipt records the effort and limit sent. Sonnet and Haiku are not run. The October reader, `gemini-3.8-flash`, is not rerun: the bridge above uses its published rows. A reader the pinned harness can't drive is fixed by a dated commit and amendment before the first counted answer, after a search for a known fix; a provider safety-filter stop is a result, reported on its own line. Model freshness (`bun scripts/model-freshness.ts`) runs on the day of the first counted answer, and a newer frontier Opus or GPT stops the run until a dated amendment names it.
-- **Correctness judge: BEAM's rubric judge** (`BEAMDataset.score_result` through the harness's strict scorer), on `gemini-3.5-flash`, which the pinned harness fixes for BEAM and which produced the October 32%. It is from a different family than every reader. A row is correct when the scorer marks it `correct`. On an unanswerable question the rubric has one item, that the answer says the history holds no such information, so a row judged not correct there is a **made-up answer**.
+- **Correctness judge: BEAM's rubric judge** (`BEAMDataset.score_result` through the harness's strict scorer), on `gemini-3.5-flash`, which the pinned harness fixes for BEAM and which produced the October 32%. It is from a different family than every reader. A row is correct when the scorer marks it `correct` (the harness's rubric score of at least 0.5). On an unanswerable question the rubric has one item, that the answer says the history holds no such information, so a row judged not correct there is a **made-up answer**.
 - **Answer-type judge (the three-way label):** every row is also labelled `declined` (says the history doesn't hold the answer and gives none), `hedged` (gives a specific answer and says it is unsure) or `committed` (gives a specific answer without saying it is unsure). The prompt, `beam-answer-type-v1`, shows the question and the answer only, never the gold or the context; it is committed on the results branch before the judge check and not changed after. `gpt-6-astra` labels the Opus 5.5 and particle-1 rows; `claude-opus-5-5` labels the GPT-6.2 Sol rows, so no family labels its own rows. particle-1 never judges.
 - **Judge check (R78, before any counted judgment).** On public material only, from the 220 dev questions, written from each question's gold (BEAM's ideal response and rubric) before any counted answer exists, with labels by construction:
-  - for the correctness judge, 48 items: on unanswerable questions 12 declining answers (good) and 12 answers that state an invented detail (bad); on answerable questions 12 answers that state the ideal response in other words (good) and 12 that state a wrong value or leave out a rubric item (bad);
+  - for the correctness judge, 48 items: on unanswerable questions 12 declining answers (good) and 12 answers that state an invented detail, 6 of them hedged (bad); on answerable questions 12 answers that state the ideal response in other words, 4 of them hedged (good) and 12 that state a wrong value or leave out a rubric item, 4 of them hedged (bad);
   - for the answer-type judges, 48 items, 16 per class, over both kinds of question.
+
+  The items are written by hand in this thread from the public gold, with no model call. BEAM is published under CC BY-SA 4.0: the item texts stay on the run's VM and in the private run record, and the repository holds only their SHA-256 hashes, labels and counts. After `B` is answered, 40 real `B` answers (20 on unanswerable questions), sampled with `random.Random(1)` stratified by reader, are labelled by hand before their judgments are read; agreement with both judges is reported, descriptive only.
 
   A judge passes when its Cohen's kappa against the construction labels is at least 0.6 (for the type judges, on the three classes and on declined against not declined), with at least 15 items of each class graded (for the type judges, at least 12 per class) and at most 1% of its outputs unparseable. Both type judges grade all 48 type items, and their agreement is reported. If the correctness judge fails, the primary endpoints use the type judges' declined-against-not-declined label instead (made-up = hedged or committed on an unanswerable question), and say so; a type judge that fails makes the endpoints it labels descriptive, not counted. If both fail, no verdict is printed and the numbers are reported as descriptive.
 
 ## Metric and denominator
 
-- **Unit and pairing.** A question and reader: on unanswerable questions, the made-up rate of a question and reader is the mean over its 3 samples in each arm; on answerable questions, one sample per arm. Denominators are fixed by the schedule: 22 unanswerable and 198 answerable questions per reader. A row that failed for a harness reason (a provider 5xx or 429 after backoff, a store or transport failure) is resumed by the same command, never counted as a failure, and the analysis refuses to compute an endpoint while any scheduled row is missing. A context-length error, an empty answer or a refusal counts as answered and is judged.
+- **Unit and pairing.** A question and reader: on unanswerable questions, the made-up rate of a question and reader is the mean over its 3 samples in each arm; on answerable questions, one sample per arm. Denominators are fixed by the schedule: 22 unanswerable and 198 answerable questions per reader. A row that failed for a harness reason (a provider 5xx or 429 after backoff, a store or transport failure) is resumed by the same command, never counted as a failure, and the analysis refuses to compute an endpoint while any scheduled row is missing. A context-length error, an empty answer, a truncated answer or a refusal counts as answered and is judged. Such rows are also reported on their own line per arm and reader, and Δ_O is printed a second time without them, so a line that only causes empty answers can't pass as fewer made-up ones.
 - **Primary 1, the ceiling: Δ_O** = made-up rate in `B` minus made-up rate in `O` on the 22 unanswerable questions, pooled over the three readers (equal weight), paired by question and reader.
 - **Primary 2, the cost of a false alarm: L** = correct rate in `B` minus correct rate in `F` on the 198 answerable questions, pooled over the three readers, paired by question and reader; also split into answers that turned into declines and answers that turned wrong.
 - **Intervals.** A question bootstrap: 10,000 resamples from one `random.Random(1)` stream; each resample draws the question ids of the endpoint with replacement (`rng.choice` over the ids sorted as strings), and a drawn question brings every reader's rows of both arms; the interval is the 2.5th and 97.5th percentiles. Questions share conversations, and there are only 11 conversations, so the interval is conditional on them (see limitations).
@@ -62,21 +64,31 @@ Development evidence on public data: BEAM's 500K conversations at the pinned rev
 
 ## Decision rule
 
-- **Smallest detectable difference** (two-sided α 0.05, 80% power, 2.8 standard errors), estimated before any cell by simulation, since no frontier-reader rows exist on these questions: per-question made-up probabilities drawn from a beta distribution with mean 0.32 (the October rate) and concentration 2, each reader's probability that plus normal noise with standard deviation 0.10, three samples per arm on unanswerable questions and one on answerable questions with a 0.55 correct rate, 3,000 simulated runs per row. For Δ_O the standard error is taken at a 50% cut; for L, at no effect. The simulation is the handoff script `sdd.py` named in the results, rerun there with the same seed.
+- **Smallest detectable difference** (two-sided α 0.05, 80% power, 2.8 standard errors), estimated before any cell by simulation, since no frontier-reader rows exist on these questions: per-question made-up probabilities drawn from a beta distribution with mean 0.32 (the October rate) and concentration 2, each reader's probability that plus normal noise with standard deviation 0.10, three samples per arm on unanswerable questions and one on answerable questions with a 0.55 correct rate, 3,000 simulated runs per row. For Δ_O the standard error is taken at a 50% cut; for L, at no effect. The script that prints this table and the power table below, `sdd.py`, is committed with the results unchanged and rerun there with the same seed.
 
 | Comparison | Detectable difference |
 |---|---:|
 | Δ_O, three readers pooled, 22 questions × 3 samples | 12.8 points |
 | Δ_O, one reader | 19.3 points |
-| L, three readers pooled, 198 questions | 6.6 points |
-| L, one reader | 11.8 points |
+| L, three readers pooled, 198 questions | 6.5 points |
+| L, one reader | 11.2 points |
 
-- **Materially**, stated now: the line cuts the pooled made-up rate materially when **Δ_O is at least M = the larger of 13 points and half of `B`'s pooled made-up rate**. 13 points is the detectable difference rounded up, so a smaller cut can't be told from noise at this size; half the rate is the smallest cut worth a release.
-- **Outcomes, decided in this order:**
+- **Materially**, stated now: the line cuts the pooled made-up rate materially when **Δ_O is at least M = the larger of 13 points and half of `B`'s pooled made-up rate**. Half the rate is the smallest cut worth a release; 13 points is the detectable difference rounded up, so a smaller cut can't be told from noise at this size. The 13-point floor applies only to calling a cut material, never to calling it not material.
+- **Outcomes, decided in this order.** D = Δ_O − M and D_half = Δ_O − (half of `B`'s pooled made-up rate) are computed inside each bootstrap resample, with `B`'s rate from that resample, so their intervals carry the uncertainty in M.
   1. **No headroom:** `B`'s pooled made-up rate is below 13%. Even removing every made-up answer couldn't be detected here.
-  2. **Material:** Δ_O is at least M and its interval's lower bound is above 0.
-  3. **Not material:** the upper bound of Δ_O's interval is below M.
-  4. **Not distinguishable:** anything else, printed with the point estimate and interval.
+  2. **Material:** D is at least 0 and Δ_O's interval's lower bound is above 0.
+  3. **Not material:** D_half's interval's upper bound is below 0 (the cut is reliably smaller than half the before rate).
+  4. **Not distinguishable:** anything else, printed with the point estimate and both intervals.
+- **How often each outcome comes out** under the simulation above (normal intervals from per-question paired differences, 3,000 runs each). M sits at the cut a true halving gives, so a true halving is called material only about half the time and almost never not material; the rule prefers "not distinguishable" to a wrong call either way:
+
+| True cut of the made-up rate | Before rate 32%: material / not material / not distinguishable | Before rate 20%: material / not material / not distinguishable (no headroom 4%) |
+|---|---|---|
+| none | 0% / 99% / 1% | 0% / 86% / 10% |
+| 30% | 2% / 36% / 63% | 2% / 20% / 74% |
+| 50% | 49% / 1% / 50% | 26% / 0% / 69% |
+| 60% | 87% / 0% / 13% | 48% / 0% / 48% |
+| 70% | 98% / 0% / 2% | 68% / 0% / 28% |
+| 90% | 100% / 0% / 0% | 91% / 0% / 4% |
 - **L is not a gate.** It is printed with its interval in every outcome and used in the sizing below.
 
 ## What each outcome changes
@@ -100,7 +112,7 @@ Development evidence on public data: BEAM's 500K conversations at the pinned rev
 
 ## Budget
 
-The run goes on one Ubicloud VM, detached, with one budget ledger and one writer. Every request is reserved against that ledger before it is sent (`eval/runner/budget-ledger.ts`) through the harness's metering proxy, and every cell passes its own budget. Reaching a cap pauses the run at the cell boundary until the cap is extended, and the same command resumes it; it never ends the test incomplete. Every particle-1 request, smoke and counted, runs inside one granted paid window after the other readers' cells, so Particle's spend reconciles against one ledger with no other traffic on its key. The VM is destroyed when the run ends.
+The run goes on one Ubicloud VM, detached, with one budget ledger and one writer. Every paid step, the judge check, the retrieval tuning pass and the smokes included, runs against that ledger, and every request is reserved against it before it is sent (`eval/runner/budget-ledger.ts`) through the harness's metering proxy, and every cell passes its own budget. Reaching a cap pauses the run at the cell boundary until the cap is extended, and the same command resumes it; it never ends the test incomplete. Every particle-1 request, smoke and counted, runs inside one granted paid window after the other readers' cells, so Particle's spend reconciles against one ledger with no other traffic on its key. The VM is destroyed when the run ends.
 
 ## Known limitations
 
@@ -112,6 +124,8 @@ The run goes on one Ubicloud VM, detached, with one budget ledger and one writer
 - A perfect signal is an upper bound for this wording only; a real signal also changes what gbrain retrieves, which this run holds fixed.
 - The answer-type labels come from two judges of different families, so type shares compare across readers only as far as the judge check's agreement allows.
 - The bridge to October is unpaired in build and reader.
+- The answer-type judge for Claude and particle-1 rows is `gpt-6-astra`, the judge R78 names and the one the budget ledger prices; it is one generation behind the newest Astra.
+- BEAM is used under CC BY-SA 4.0 at the pinned revision; the results credit it, and no BEAM text beyond short quoted questions in examples is committed.
 
 ## Recorded before cells
 
