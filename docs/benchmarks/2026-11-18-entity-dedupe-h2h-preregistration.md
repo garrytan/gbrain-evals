@@ -200,6 +200,8 @@ This changes only when the driver waits for one system. The world, the scoring, 
 - **The 345-page checkpoint was blind for this system.** With pages queued, the ledger at page 345 held only the spend of the few pages the worker had reached, so the checkpoint's rate was far below this system's real cost per page and could not have paused the run. With drain-each, each page's extraction finishes, and is metered, before the next page is sent, so the checkpoint measures the real rate.
 - **The change.** `eval/runner/entity-h2h/ubicloud/vm-run.sh` passes `--drain-each` to the runner for `ext-extract-first` only, in run, restart and continue alike; a keyless test in `test/eval/entity-h2h-ubicloud.test.ts` checks both halves. The cell restarts from page one on a fresh namespace at the same stop, under Amendment 1's rule: it is that cell's one restart, and a second failure ends it as "failed (infrastructure)".
 
+- **Harness (2026-11-19).** No arm runs inside a coding-agent harness. gpt-6.2-sol is called directly by the bench, as the matcher through the metering proxy's chat completions route and as `ext-temporal-graph`'s model through that system's own OpenAI client, so the rule that Sol runs in Codex CLI and Opus in Claude Code changes nothing here.
+
 ## Disclosures
 
 gbrain is Garry Tan's own project. Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1. Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
