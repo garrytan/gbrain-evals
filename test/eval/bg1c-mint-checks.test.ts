@@ -61,8 +61,8 @@ describe('mint.sh --bg1c keeps minting until 40 worlds pass validation', () => {
     for (const slot of range(31, 67)) record(out, slot, 'pass');
     const m = mint(out, j, ['--fake', '--bg1c', '--start', '68', '--fake-break', '69:length']);
     expect(m.code).toBe(0);
-    expect(m.out).toMatch(/\nbg1-validate slot=68 world=bg1-068 status=pass gates=none tokens=\d+\n/);
-    expect(m.out).toMatch(/\nbg1-validate slot=69 world=bg1-069 status=fail gates=length tokens=\d+\n/);
+    expect(m.out).toMatch(/\nbg1-validate slot=68 world=bg1-068 status=pass gates=none tokens=\d+ controls_dropped=0\n/);
+    expect(m.out).toMatch(/\nbg1-validate slot=69 world=bg1-069 status=fail gates=length tokens=\d+ controls_dropped=0\n/);
     expect(m.out).toContain('bg1-mint summary=kept mode=fake kept=40 written=4 skipped=0 dropped=0 dropped_earlier=0 last_slot=71 invalid=1\n');
     expect(m.out).not.toContain('slot=72');
     expect(existsSync(join(out, 'set', 'worlds', 'bg1-069', 'world.json'))).toBe(true);
@@ -259,4 +259,28 @@ describe('bg1c-checks.ts: the phrasing check and the seed check with its commitm
     refusal(check(j), 'the manifest is not BG1\'s filled manifest');
     expect(readFileSync(nonceFile, 'utf8').trim()).toBe(nonce);
   }, 120_000);
+
+  // Value: protects=launch amendment A's descriptive count of control characters in BG1's sealed worlds reads only the files BG1's filled manifest lists, as listed, and prints counts and world ids only; fails_when=it misses a U+0000 or another control character, counts a newline or tab, miscounts the questions citing a session that holds one, reads a changed file, or prints world text; why_new=GBEV-3's ruling A (2026-11-19): bg1-dev-20's s123 held a U+0000 that gbrain could not store, and BG1's published results don't record failed sessions; seam=bg1c-checks.ts controls over a synthetic BG1 set and manifest; no_claim=BG1's real counts
+  test('controls counts U+0000 and the other control characters in BG1\'s listed worlds, and the questions citing them, without text', () => {
+    const dir = scratch('controls'), root = join(dir, 'bg1-set'), manifest = join(dir, 'bg1-manifest.json');
+    const turn = (content: string) => ({ speaker: 'user', content });
+    const worlds: Record<string, { sessions: unknown[]; questions: unknown[] }> = {
+      'bg1-001': { sessions: [{ id: 's001', turns: [turn('plain\ttext\nhere')] }, { id: 's002', turns: [turn('canap\u0000es\r'), turn('more \u0000')] }],
+        questions: [{ evidence_sessions: ['s002'] }, { evidence_sessions: ['s001', 's002'] }, { evidence_sessions: ['s001'] }] },
+      'bg1-002': { sessions: [{ id: 's001', turns: [turn('clean')] }], questions: [{ evidence_sessions: ['s001'] }] },
+    };
+    const files = Object.entries(worlds).flatMap(([w, { sessions, questions }]) => {
+      mkdirSync(join(root, 'worlds', w), { recursive: true });
+      return [['world.json', JSON.stringify({ id: w, sessions })], ['questions.json', JSON.stringify(questions)]].map(([f, text]) => {
+        writeFileSync(join(root, 'worlds', w, f), text);
+        return { path: `worlds/${w}/${f}`, sha256: sha(text) };
+      });
+    });
+    writeFileSync(manifest, JSON.stringify({ dataset: 'BG1 changing-facts set', status: 'filled', files, kept: Object.keys(worlds) }));
+    const check = (extra: string[] = ['--bg1-manifest', manifest]) => run('bun', [CHECKS, 'controls', '--bg1-root', root, ...extra]);
+    expect(check()).toEqual({ code: 0, err: '', out: 'bg1c-controls worlds=2 unreadable=0 nul=2 other=1 sessions_affected=1 worlds_affected=bg1-001 questions_citing=2 status=pass\n' });
+    writeFileSync(join(root, 'worlds', 'bg1-002', 'world.json'), JSON.stringify({ id: 'bg1-002', sessions: [{ id: 's001', turns: [turn('\u0000')] }] }));
+    expect(check()).toEqual({ code: 12, err: '', out: 'bg1c-controls worlds=2 unreadable=1 nul=2 other=1 sessions_affected=1 worlds_affected=bg1-001 questions_citing=2 status=fail\n' });
+    refusal(check([]), 'controls needs BG1\'s set root and filled manifest');
+  }, 60_000);
 });

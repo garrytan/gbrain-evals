@@ -1,5 +1,5 @@
 /**
- * BG1-C's two custody checks before its mint (docs/benchmarks/2026-11-19-changing-facts-confirmation-preregistration.md,
+ * BG1-C's three custody checks before its mint (docs/benchmarks/2026-11-19-changing-facts-confirmation-preregistration.md,
  * "The worlds" and run order steps 4 and 5), run on the custody host with BG1's seed and private phrasing. Both print
  * counts and hashes only: no world, question, phrasing, seed or nonce text.
  *
@@ -7,6 +7,7 @@
  *   bun eval/custody/bg1/bg1c-checks.ts seed --seed-file <path>.bg1-seed --phrasing <path>.bg1-phrasing.json
  *       [--bg1-root <BG1's set root, default GBRAIN_EVALS_BG1_SOURCE>] [--bg1-manifest <BG1's filled manifest, default
  *       GBRAIN_EVALS_BG1_MANIFEST>]
+ *   bun eval/custody/bg1/bg1c-checks.ts controls [--bg1-root <dir>] [--bg1-manifest <file>] (defaults as for seed)
  *
  * phrasing: the generator's phrasing check (loadPhrasing: keys, placeholders and the custody marker), then each BG1-C
  * slot's plan and questions, 31 to 96, from the seed and the phrasing, in memory. Nothing is written. It passes when
@@ -19,13 +20,19 @@
  * file. The nonce is 32 random bytes in hex, kept beside the seed as <name>.bg1c-nonce (one line, mode 600): the first
  * pass writes it and every later pass reuses it, so the commitment never changes. It is never printed.
  *
- * Both refuse (exit 2) a seed or phrasing file that is misnamed, not owner-only or inside a git checkout. Exit 12: a slot
- * does not plan, or a re-derived or stored file does not match. Exit 1: an error, printed as its class and a hash.
+ * controls: a descriptive count for launch amendment A, which has render.ts drop control characters other than newline
+ * and tab before a world is written. Over the world.json files BG1's filled manifest lists, each read only when it
+ * matches its SHA-256 there, it counts U+0000, the other control characters, the sessions and worlds holding any, and the
+ * questions whose evidence sessions include one. It needs no seed or phrasing, changes nothing and gates nothing.
+ *
+ * phrasing and seed refuse (exit 2) a seed or phrasing file that is misnamed, not owner-only or inside a git checkout.
+ * Exit 12: a slot does not plan, a re-derived or stored file does not match, or a file controls reads is missing,
+ * changed or not readable JSON. Exit 1: an error, printed as its class and a hash.
  */
 import { createHash, randomBytes } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-import { buildQuestions, PlanError } from '../../generators/changing-facts-gen.ts';
+import { buildQuestions, PlanError, type QuestionRecord, type World } from '../../generators/changing-facts-gen.ts';
 import { BG1_CONVERSATIONS, BG1C_FIRST_SLOT, BG1C_LAST_SLOT } from '../../runner/memory-qa/bg1-names.ts';
 import { BG1_SET, type Bg1Manifest } from '../../runner/memory-qa/corpus.ts';
 import { insideCheckout, ownerOnly, readPhrasing, readSeedLine, RenderRefusal, sealedPlan } from './render.ts';
@@ -69,15 +76,21 @@ function custodyNonce(seedFile: string): { nonce: string; written: boolean } {
   return { nonce, written: true };
 }
 
-/** seed: BG1's questions re-derived from the seed and phrasing and its files checked against its filled manifest, then the commitment. */
-export function seedCheck(argv: string[], env: Record<string, string | undefined> = process.env): { pass: boolean; line: string } {
-  const { seedFile, seedLine, phrasingFile, phrasing, flag } = custodyInputs(argv);
+/** BG1's set root and filled manifest, from --bg1-root and --bg1-manifest or BG1's two environment variables. */
+function bg1Inputs(what: string, flag: (name: string) => string | undefined, env: Record<string, string | undefined>): { root: string; manifest: Bg1Manifest } {
   const root = flag('--bg1-root') ?? env[BG1_SET.env.source], manifestPath = flag('--bg1-manifest') ?? env[BG1_SET.env.manifest];
-  if (!root || !manifestPath) throw new RenderRefusal(`seed needs BG1's set root and filled manifest (--bg1-root and --bg1-manifest, or ${BG1_SET.env.source} and ${BG1_SET.env.manifest})`);
+  if (!root || !manifestPath) throw new RenderRefusal(`${what} needs BG1's set root and filled manifest (--bg1-root and --bg1-manifest, or ${BG1_SET.env.source} and ${BG1_SET.env.manifest})`);
   if (!existsSync(resolve(manifestPath))) throw new RenderRefusal('BG1\'s filled manifest does not exist');
   let manifest: Bg1Manifest;
   try { manifest = JSON.parse(readFileSync(resolve(manifestPath), 'utf8')) as Bg1Manifest; } catch { throw new RenderRefusal('BG1\'s filled manifest is not readable JSON'); }
   if (manifest.dataset !== BG1_SET.dataset || manifest.status !== 'filled' || !Array.isArray(manifest.files) || !manifest.files.length) throw new RenderRefusal('the manifest is not BG1\'s filled manifest');
+  return { root, manifest };
+}
+
+/** seed: BG1's questions re-derived from the seed and phrasing and its files checked against its filled manifest, then the commitment. */
+export function seedCheck(argv: string[], env: Record<string, string | undefined> = process.env): { pass: boolean; line: string } {
+  const { seedFile, seedLine, phrasingFile, phrasing, flag } = custodyInputs(argv);
+  const { root, manifest } = bg1Inputs('seed', flag, env);
   const listed = new Map(manifest.files.map(f => [f.path, f.sha256]));
   const q = { listed: 0, match: 0, mismatch: 0 };
   BG1_CONVERSATIONS.forEach((id, i) => {
@@ -101,11 +114,50 @@ export function seedCheck(argv: string[], env: Record<string, string | undefined
   return { pass, line: `${counts} status=pass nonce=${written ? 'written' : 'reused'} commitment_sha256=${commitment} phrasing_sha256=${sha256(readFileSync(phrasingFile))}` };
 }
 
+const CONTROL_CHARS = /[^\P{Cc}\t\n]/gu;
+
+/** controls: U+0000 and the other control characters (not newline or tab) in BG1's listed worlds, counts only. */
+export function controlsCheck(argv: string[], env: Record<string, string | undefined> = process.env): { pass: boolean; line: string } {
+  const flag = (name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
+  const { root, manifest } = bg1Inputs('controls', flag, env);
+  const listed = new Map(manifest.files.map(f => [f.path, f.sha256]));
+  const read = <T>(path: string): T | null => {
+    const abs = join(resolve(root), path);
+    if (!existsSync(abs)) return null;
+    const bytes = readFileSync(abs);
+    if (sha256(bytes) !== listed.get(path)) return null;
+    try { return JSON.parse(bytes.toString('utf8')) as T; } catch { return null; }
+  };
+  const c = { worlds: 0, unreadable: 0, nul: 0, other: 0, sessions: 0, questions: 0 };
+  const affected: string[] = [];
+  for (const path of listed.keys()) {
+    const id = /^worlds\/([^/]+)\/world\.json$/.exec(path)?.[1];
+    if (!id) continue;
+    c.worlds++;
+    const world = read<World>(path);
+    if (!Array.isArray(world?.sessions)) { c.unreadable++; continue; }
+    const hit = new Set<string>();
+    for (const s of world!.sessions) for (const t of s.turns) {
+      const all = t.content.match(CONTROL_CHARS)?.length ?? 0, nul = t.content.split('\u0000').length - 1;
+      c.nul += nul; c.other += all - nul;
+      if (all) hit.add(s.id);
+    }
+    if (!hit.size) continue;
+    affected.push(id);
+    c.sessions += hit.size;
+    const questions = read<QuestionRecord[]>(`worlds/${id}/questions.json`);
+    if (!questions) { c.unreadable++; continue; }
+    c.questions += questions.filter(q => q.evidence_sessions.some(e => hit.has(e))).length;
+  }
+  const pass = c.unreadable === 0;
+  return { pass, line: `bg1c-controls worlds=${c.worlds} unreadable=${c.unreadable} nul=${c.nul} other=${c.other} sessions_affected=${c.sessions} worlds_affected=${affected.join(',') || 'none'} questions_citing=${c.questions} status=${pass ? 'pass' : 'fail'}` };
+}
+
 if (import.meta.main) {
   try {
     const [sub, ...argv] = process.argv.slice(2);
-    if (sub !== 'phrasing' && sub !== 'seed') throw new RenderRefusal('usage: bg1c-checks.ts phrasing|seed --seed-file <path>.bg1-seed --phrasing <path>.bg1-phrasing.json [seed: --bg1-root <dir> --bg1-manifest <file>]');
-    const r = sub === 'phrasing' ? phrasingCheck(argv) : seedCheck(argv);
+    if (sub !== 'phrasing' && sub !== 'seed' && sub !== 'controls') throw new RenderRefusal('usage: bg1c-checks.ts phrasing|seed --seed-file <path>.bg1-seed --phrasing <path>.bg1-phrasing.json [seed: --bg1-root <dir> --bg1-manifest <file>], or controls [--bg1-root <dir> --bg1-manifest <file>]');
+    const r = sub === 'phrasing' ? phrasingCheck(argv) : sub === 'seed' ? seedCheck(argv) : controlsCheck(argv);
     console.log(r.line);
     process.exit(r.pass ? 0 : 12);
   } catch (error) {

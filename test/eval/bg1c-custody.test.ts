@@ -212,7 +212,7 @@ describe('a BG1-C set end to end: mint, validate --bg1c, fill --bg1c and load', 
     refusal(run('bun', [VALIDATE, '--bg1c', '--set', set, '--seed-file', j.seed, '--phrasing', j.phrasing, '--report', report, ...LENGTH, '--n-final', '41']), '--n-final must be a whole number from 1 to 40');
     const v = run('bun', [VALIDATE, '--bg1c', '--set', set, '--seed-file', j.seed, '--phrasing', j.phrasing, '--report', report, ...LENGTH, '--n-final', '40']);
     expect(v.err).toBe('');
-    expect(v.out).toMatch(/^bg1-validate checked=40 passed=40 failed=1 render_dropped=1 kept=40 gates=render:1 report_sha256=[0-9a-f]{16}\n$/);
+    expect(v.out).toMatch(/^bg1-validate checked=40 passed=40 failed=1 render_dropped=1 kept=40 gates=render:1 controls_dropped=0 report_sha256=[0-9a-f]{16}\n$/);
     const kept = (JSON.parse(readFileSync(report, 'utf8')) as { kept: string[] }).kept;
     expect(kept).toEqual(range(31, 71).filter(s => s !== 33).map(id));
     refusal(run('bun', [VALIDATE, '--set', set, '--seed-file', j.seed, '--phrasing', j.phrasing, '--report', join(j.dir, 'bg1.json'), ...LENGTH]), 'that are not BG1 mint slots');

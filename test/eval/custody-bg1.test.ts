@@ -276,7 +276,7 @@ describe('mint.sh --fake, validate.ts and hashlist.ts end to end', () => {
     const report = join(i.dir, 'validation', 'report.json');
     const v = run('bun', [VALIDATE, '--set', join(out, 'set'), '--seed-file', i.seed, '--phrasing', i.phrasing, '--report', report, '--target-tokens', '30000', '--tolerance', '0.25', '--n-final', '2']);
     expect(v.code).toBe(0);
-    expect(v.out).toMatch(/^bg1-validate checked=3 passed=3 failed=0 render_dropped=0 kept=2 gates=none report_sha256=[0-9a-f]{16}\n$/);
+    expect(v.out).toMatch(/^bg1-validate checked=3 passed=3 failed=0 render_dropped=0 kept=2 gates=none controls_dropped=0 report_sha256=[0-9a-f]{16}\n$/);
     expect(JSON.parse(readFileSync(report, 'utf8')).kept).toEqual(['bg1-001', 'bg1-002']);
     const copy = join(i.dir, 'bg1-custody-t');
     cpSync(out, copy, { recursive: true });
@@ -289,9 +289,14 @@ describe('mint.sh --fake, validate.ts and hashlist.ts end to end', () => {
     qs[0].bg1.gold_values = qs[0].bg1.stale_values.length ? qs[0].bg1.stale_values : ['nothing'];
     writeFileSync(w('bg1-002', 'questions.json'), JSON.stringify(qs, null, 1) + '\n');
     writeFileSync(w('bg1-003', 'plan.json'), readFileSync(w('bg1-003', 'plan.json'), 'utf8').replace('"long": false', '"long": true'));
+    const rec = join(copy, 'render', 'bg1-001.json');
+    writeFileSync(rec, JSON.stringify({ ...JSON.parse(readFileSync(rec, 'utf8')), controls_dropped: 3 }));
     const t = run('bun', [VALIDATE, '--set', join(copy, 'set'), '--seed-file', i.seed, '--phrasing', i.phrasing, '--report', join(i.dir, 'validation', 'tampered.json'), '--target-tokens', '30000', '--tolerance', '0.25']);
     expect(t.code).toBe(0);
     expect(t.out).toContain('checked=3 passed=0 failed=3');
+    expect(t.out).toContain(' controls_dropped=3 ');
+    const tampered = JSON.parse(readFileSync(join(i.dir, 'validation', 'tampered.json'), 'utf8'));
+    expect([tampered.counts.controls_dropped, tampered.worlds.map((x: { controls_dropped: number | null }) => x.controls_dropped)]).toEqual([3, [3, 0, 0]]);
     const byId = Object.fromEntries(JSON.parse(readFileSync(join(i.dir, 'validation', 'tampered.json'), 'utf8')).worlds.map((x: { id: string; failed: string[] }) => [x.id, x.failed]));
     expect(byId).toEqual({ 'bg1-001': ['sessions'], 'bg1-002': ['gold'], 'bg1-003': ['plan'] });
     expect(leaks(v.all + t.all, probes(join(out, 'set'), i.line))).toEqual([]);
@@ -902,11 +907,37 @@ describe('checkSession and renderWorld', () => {
     const set = join(scratch('fake-same'), 'set');
     const r = run('bun', [RENDER, '--dev', 'bg1-dev-01', '--fake', '--set', set, '--target-tokens', String(BG1_FIXTURE_TOKENS)]);
     expect(r.code).toBe(0);
-    expect(r.out).toMatch(/^bg1-render world=bg1-dev-01 status=written sessions=(\d+) attempts=\1 regenerated=0 checks=\d+ failures=none tokens=\d+ world_sha256=[0-9a-f]{16}\n$/);
+    expect(r.out).toMatch(/^bg1-render world=bg1-dev-01 status=written sessions=(\d+) attempts=\1 regenerated=0 checks=\d+ failures=none tokens=\d+ controls_dropped=0 world_sha256=[0-9a-f]{16}\n$/);
     const world = JSON.parse(readFileSync(join(set, 'worlds', 'bg1-dev-01', 'world.json'), 'utf8')) as World;
     const fixture = JSON.parse(readFileSync(join(REPO, 'eval/data/changing-facts-v1/fixtures/worlds/bg1-dev-01/world.json'), 'utf8')) as World;
     expect(world.renderer).toBe('fake-template');
     expect(world.sessions).toEqual(fixture.sessions);
+  });
+
+  // Value: protects=no world keeps a control character other than newline and tab, the checks read the text the world keeps, and the render record and line count what went; fails_when=a reply's U+0000, carriage return, DEL or C1 character reaches world.json or a check, a newline or tab is dropped, or controls_dropped miscounts or leaves the record or the line; why_new=GBEV-3's ruling A (2026-11-19): gemini-3.8-flash wrote U+0000 into bg1-dev-20's s123, gbrain's put_page refused the page, and that session never reached gbrain while the other servers ingested it; seam=renderWorld and render.ts main over fakeModels with control characters added to one assistant turn per session; no_claim=how often the real renderer writes control characters
+  test('control characters other than newline and tab leave every reply before the checks, and the record and line count them', async () => {
+    const dirty = (base: Models): Models => ({ ...base, async render(brief, attempt, failures, lastTokens) {
+      const reply = JSON.parse(await base.render(brief, attempt, failures, lastTokens)) as { turns: Turn[] };
+      reply.turns[1].content = `canap\u0000es\r with\ttabs\u007f\nand\u0085 ${reply.turns[1].content}`;
+      return JSON.stringify(reply);
+    } });
+    const small = { ...dev, sessions: dev.sessions.slice(0, 12) } as WorldPlan;
+    const base = fakeModels(small);
+    const checked: string[] = [];
+    const models: Models = { ...dirty(base), async check(model, brief, ts, reask) { checked.push(...ts.map(t => t.content)); return base.check(model, brief, ts, reask); } };
+    const r = await renderWorld(small, models, { targetTokens: 400, concurrency: 1 });
+    expect(r.world).not.toBeNull();
+    expect(r.stats.controls_dropped).toBe(4 * 12);
+    expect(r.world!.sessions.map(s => s.turns[1].content.startsWith('canapes with\ttabs\nand '))).toEqual(small.sessions.map(() => true));
+    expect(checked.length).toBeGreaterThan(0);
+    expect(checked.filter(c => /[^\P{Cc}\t\n]/u.test(c))).toEqual([]);
+    const set = join(scratch('controls'), 'set');
+    const out = await renderTs.main(['--dev', 'bg1-dev-01', '--set', set, '--target-tokens', String(BG1_FIXTURE_TOKENS)], {}, p => dirty(fakeModels(p)));
+    const world = JSON.parse(readFileSync(join(set, 'worlds', 'bg1-dev-01', 'world.json'), 'utf8')) as World;
+    const dropped = 4 * world.sessions.length;
+    expect(out.line).toContain(` controls_dropped=${dropped} world_sha256=`);
+    expect(JSON.parse(readFileSync(join(set, 'render', 'bg1-dev-01.json'), 'utf8')).controls_dropped).toBe(dropped);
+    expect(world.sessions.flatMap(s => s.turns.map(t => t.content)).filter(c => /[^\P{Cc}\t\n]/u.test(c))).toEqual([]);
   });
 
   test('a check that finds extra claims regenerates; an unreadable verdict counts as a failure; four failures drop the world', async () => {
