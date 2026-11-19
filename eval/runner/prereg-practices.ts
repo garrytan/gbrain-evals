@@ -1,0 +1,192 @@
+/**
+ * Eval-loop practices for new preregistrations.
+ *
+ * The org's eval-loop practices page (software-factory/evals/eval-loop-practices.md) asks every new plan to carry four
+ * things before it spends: the decision each outcome changes (R97), a pilot per arm on at most a tenth of that arm's
+ * budget (R111), a checked cross-family judge read per arm (R78) and, above $500 paid, one interim look at half the
+ * units (R113). A quick look (R112) needs only its three-line plan.
+ *
+ * `checkPractices` runs in CI beside `checkOrder`. It reads structured fields on each registry entry and checks their
+ * presence and minimal shape, never the meaning of prose. Entries and preregistration files that existed when this
+ * check landed are listed in `docs/benchmarks/preregistrations-grandfathered.json` and keep the rules they were written
+ * under. Every other entry is new: it carries a `registered` date on or after the cutoff and the fields below, and every
+ * new preregistration file needs a registry entry. Cost never appears here: the paid tier is a band, not a figure (R79).
+ */
+import { execFileSync } from 'node:child_process';
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import type { ManifestEntry, OrderProblem } from './prereg.ts';
+
+export const PRACTICES_CUTOFF = '2026-11-19';
+export const GRANDFATHERED_PATH = 'docs/benchmarks/preregistrations-grandfathered.json';
+export const PREREGISTRATION_FILES = ['docs/benchmarks/*-preregistration.md', 'docs/plans/*/PREREG.md'];
+export const PAID_TIERS = ['quick-look', 'under-500', 'over-500'] as const;
+export const SETTLED_CALL = /^\s*(?:[-*]\s+)?(?:\*\*)?Settled call:(?:\*\*)?[ \t]*(.*)$/m;
+
+const MODEL_FAMILIES: Array<[RegExp, string]> = [
+  [/^claude-/, 'anthropic'],
+  [/^(gpt-|o\d|chatgpt-)/, 'openai'],
+  [/^gemini-/, 'google'],
+  [/^particle-/, 'particle'],
+  [/^grok-/, 'xai'],
+  [/^(muse-|llama-)/, 'meta'],
+  [/^deepseek-/, 'deepseek'],
+  [/^qwen/, 'alibaba'],
+  [/^kimi-/, 'moonshot'],
+  [/^glm-/, 'zai'],
+];
+
+export interface Grandfathered {
+  ids: string[];
+  unlisted_preregistrations: string[];
+}
+
+export type PracticeEntry = ManifestEntry & Record<string, unknown>;
+
+export function modelFamily(model: string): string | null {
+  const bare = model.trim().toLowerCase().replace(/^[^:/]*[:/]/, '');
+  return MODEL_FAMILIES.find(([pattern]) => pattern.test(bare))?.[1] ?? null;
+}
+
+export function loadGrandfathered(root = process.cwd()): Grandfathered {
+  return JSON.parse(readFileSync(join(root, GRANDFATHERED_PATH), 'utf8')) as Grandfathered;
+}
+
+const isText = (v: unknown): v is string => typeof v === 'string' && v.trim() !== '';
+const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
+
+function missingText(obj: Record<string, unknown>, keys: string[]): string[] {
+  return keys.filter(k => !isText(obj[k]));
+}
+
+function checkDecision(decision: unknown): string[] {
+  if (!Array.isArray(decision) || decision.length < 2) {
+    return ['decision must list at least two outcomes as [{ "if": "<outcome>", "then": "<what we do differently>" }] (R97)'];
+  }
+  return decision.flatMap((d, i) =>
+    isObject(d) && missingText(d, ['if', 'then']).length === 0 ? [] : [`decision[${i}] needs non-empty "if" and "then"`],
+  );
+}
+
+function checkPilots(arms: unknown, pilots: unknown): string[] {
+  if (!Array.isArray(arms) || arms.length === 0 || !arms.every(isText)) return ['arms must list every arm by name'];
+  if (new Set(arms).size !== arms.length) return ['arms has duplicate names'];
+  if (!Array.isArray(pilots)) return ['pilots must list one pilot per arm (R111)'];
+  const problems: string[] = [];
+  const piloted = new Set<string>();
+  pilots.forEach((p, i) => {
+    if (!isObject(p)) {
+      problems.push(`pilots[${i}] must be an object`);
+      return;
+    }
+    if (!isText(p.arm) || !arms.includes(p.arm)) problems.push(`pilots[${i}].arm must name one of arms`);
+    else if (piloted.has(p.arm)) problems.push(`pilots[${i}] pilots ${p.arm} twice`);
+    else piloted.add(p.arm);
+    const f = p.max_budget_fraction;
+    if (typeof f !== 'number' || !(f > 0 && f <= 0.1)) problems.push(`pilots[${i}].max_budget_fraction must be above 0 and at most 0.1 of the arm's budget`);
+    for (const k of missingText(p, ['part_under_test_ran', 'judge_passes', 'units_supplied_at_rate'])) {
+      problems.push(`pilots[${i}].${k} must say how the pilot shows it`);
+    }
+  });
+  for (const arm of arms) if (!piloted.has(arm)) problems.push(`arm ${arm} has no pilot (R111)`);
+  return problems;
+}
+
+function checkJudge(judge: unknown): string[] {
+  if (!isObject(judge)) return ['judge_check is required: { "model_judge": false, "reason": "..." } or { "judges": [...], "read_per_arm": true } (R78)'];
+  if (judge.model_judge === false) return isText(judge.reason) ? [] : ['judge_check.reason must say why no model judge is used'];
+  const problems: string[] = [];
+  if (!Array.isArray(judge.judges) || judge.judges.length === 0) problems.push('judge_check.judges must list each model judge');
+  if (judge.read_per_arm !== true) problems.push('judge_check.read_per_arm must be true: the judge\'s errors are read per arm, not pooled (R78)');
+  (Array.isArray(judge.judges) ? judge.judges : []).forEach((j: unknown, i: number) => {
+    if (!isObject(j)) {
+      problems.push(`judge_check.judges[${i}] must be an object`);
+      return;
+    }
+    const family = isText(j.model) ? modelFamily(j.model) : null;
+    if (!isText(j.model)) problems.push(`judge_check.judges[${i}].model is required`);
+    else if (!family) problems.push(`judge_check.judges[${i}].model ${j.model} has no known family; add it to MODEL_FAMILIES in eval/runner/prereg-practices.ts`);
+    else if (family === 'particle') problems.push(`judge_check.judges[${i}]: particle-1 never judges a counted cell`);
+    if (!Number.isInteger(j.labelled_outputs) || (j.labelled_outputs as number) < 40) problems.push(`judge_check.judges[${i}].labelled_outputs must be at least 40 (R78)`);
+    if (typeof j.kappa_min !== 'number' || j.kappa_min < 0.6 || j.kappa_min > 1) problems.push(`judge_check.judges[${i}].kappa_min must be at least 0.6 (R78)`);
+    if (!Array.isArray(j.grades) || j.grades.length === 0 || !j.grades.every(isText)) {
+      problems.push(`judge_check.judges[${i}].grades must list the models whose outputs it scores`);
+      return;
+    }
+    for (const graded of j.grades as string[]) {
+      const gradedFamily = modelFamily(graded);
+      if (!gradedFamily) problems.push(`judge_check.judges[${i}].grades: ${graded} has no known family; add it to MODEL_FAMILIES in eval/runner/prereg-practices.ts`);
+      else if (family && gradedFamily === family) problems.push(`judge_check.judges[${i}]: ${j.model} grades its own family's model ${graded}; use a cross-family judge (R78)`);
+    }
+  });
+  return problems;
+}
+
+function checkInterim(tier: string, look: unknown): string[] {
+  if (isObject(look) && 'not_required' in look) {
+    if (tier === 'over-500') return ['interim_look is required above $500 paid: one look at half the units (R113)'];
+    return isText(look.not_required) ? [] : ['interim_look.not_required must give the reason'];
+  }
+  if (!isObject(look)) {
+    return [tier === 'over-500'
+      ? 'interim_look is required above $500 paid: { "at_units_fraction": 0.5, "bounds": "obrien-fleming", "alpha": <the plan\'s alpha>, "futility_stop": "..." } (R113)'
+      : 'interim_look must be a planned look or { "not_required": "<reason>" }'];
+  }
+  const problems: string[] = [];
+  if (look.at_units_fraction !== 0.5) problems.push('interim_look.at_units_fraction must be 0.5: one look at half the units (R113)');
+  if (look.bounds !== 'obrien-fleming') problems.push('interim_look.bounds must be "obrien-fleming" (R113)');
+  if (typeof look.alpha !== 'number' || !(look.alpha > 0 && look.alpha < 0.5)) problems.push('interim_look.alpha must be the plan\'s own alpha, above 0 and below 0.5 (R113)');
+  if (!isText(look.futility_stop)) problems.push('interim_look.futility_stop must state the futility rule (R113)');
+  return problems;
+}
+
+function checkResultsPage(entry: PracticeEntry, required: boolean, cwd: string): string[] {
+  const page = entry.results_page;
+  if (page === undefined && !required) return [];
+  if (!isText(page) || !page.endsWith('.md')) return ['results_page must name the Markdown results page'];
+  if (!entry.results.some(glob => new Bun.Glob(glob).match(page))) return [`results_page ${page} must match one of the results globs`];
+  if (!existsSync(join(cwd, page))) return [];
+  const line = readFileSync(join(cwd, page), 'utf8').match(SETTLED_CALL);
+  if (!line || !isText(line[1])) return [`${page} needs one line "Settled call: <the ship-or-kill call this result settled, or none>"`];
+  if (/\$\s?\d/.test(line[1])) return [`${page}: the settled-call line names a cost; cost goes in the private ledger, not the repo (R79)`];
+  return [];
+}
+
+export function checkEntry(entry: PracticeEntry, cwd = process.cwd()): string[] {
+  const problems: string[] = [];
+  const registered = entry.registered;
+  if (!isText(registered) || !/^\d{4}-\d{2}-\d{2}$/.test(registered) || registered < PRACTICES_CUTOFF) {
+    problems.push(`registered must be the YYYY-MM-DD date the entry was added, on or after ${PRACTICES_CUTOFF}`);
+  }
+  const tier = entry.paid_tier;
+  if (!PAID_TIERS.includes(tier as (typeof PAID_TIERS)[number])) {
+    return [...problems, `paid_tier must be one of ${PAID_TIERS.join(', ')}; it is a band, never a dollar figure`];
+  }
+  if (tier === 'quick-look') {
+    const plan = entry.quick_look;
+    if (!isObject(plan)) problems.push('quick_look must carry the three-line plan: { "question", "decision", "stop_rule" } (R112)');
+    else for (const k of missingText(plan, ['question', 'decision', 'stop_rule'])) problems.push(`quick_look.${k} is required (R112)`);
+    return [...problems, ...checkResultsPage(entry, false, cwd)];
+  }
+  return [
+    ...problems,
+    ...checkDecision(entry.decision),
+    ...checkPilots(entry.arms, entry.pilots),
+    ...checkJudge(entry.judge_check),
+    ...checkInterim(tier as string, entry.interim_look),
+    ...checkResultsPage(entry, true, cwd),
+  ];
+}
+
+export function checkPractices(entries: PracticeEntry[], grandfathered: Grandfathered, cwd = process.cwd()): OrderProblem[] {
+  const oldIds = new Set(grandfathered.ids);
+  const problems: OrderProblem[] = entries
+    .filter(entry => !oldIds.has(entry.id))
+    .flatMap(entry => checkEntry(entry, cwd).map(problem => ({ id: entry.id, file: entry.preregistration, problem })));
+  const listed = new Set([...entries.map(e => e.preregistration), ...grandfathered.unlisted_preregistrations]);
+  const tracked = execFileSync('git', ['ls-files', '--', ...PREREGISTRATION_FILES], { cwd, encoding: 'utf8' }).split('\n').filter(Boolean);
+  for (const file of tracked) {
+    if (!listed.has(file)) problems.push({ id: '*', file, problem: 'new preregistration has no registry entry; add one under docs/benchmarks/preregistrations.d/' });
+  }
+  return problems;
+}
