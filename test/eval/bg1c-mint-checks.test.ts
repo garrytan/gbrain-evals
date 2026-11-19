@@ -117,6 +117,29 @@ describe('mint.sh --bg1c keeps minting until 40 worlds pass validation', () => {
 });
 
 describe('supply.ts: Gemini requests per kept world over slots 31 to 35 (R111)', () => {
+  // Value: protects=mint.sh itself stops BG1-C's mint for GBEV-3 once slots 31 to 35 used more than 504 Gemini requests per kept world, before slot 36 spends; fails_when=mint.sh never runs supply.ts, runs it before slot 35 resolves, or renders slot 36 after it fails; why_new=the Opus reader's note 2 on the BG1-C harness commits after 9d4cf3b85 (the header said supply.ts checks slots 31 to 35, but nothing ran it); seam=mint.sh --bg1c --fake over synthetic Gemini request logs for slots 31 to 35; no_claim=the real mint's request counts
+  test('mint.sh runs the supply check once slot 35 resolves: over the limit pauses before slot 36, and at the limit the mint goes on', () => {
+    const j = inputs('supply-stop');
+    const logs = (out: string, perSlot: number) => {
+      mkdirSync(join(out, 'proxy', 'requests'), { recursive: true });
+      for (const slot of range(31, 35)) writeFileSync(join(out, 'proxy', 'requests', `${id(slot)}-gemini.jsonl`), '{"refused":false}\n'.repeat(perSlot));
+    };
+    const over = join(j.dir, 'bg1-custody-o');
+    logs(over, 505);
+    const paused = mint(over, j, ['--fake', '--bg1c', '--count', '6']);
+    expect(paused.code).toBe(3);
+    expect(paused.out).toContain('bg1-supply slots=31-35 gemini_requests=2525 kept=5 per_kept_world=505.0 limit=504 status=fail\n');
+    expect(paused.out).toContain('bg1-mint summary=paused reason=supply mode=fake written=5 skipped=0 dropped=0 dropped_earlier=0 last_slot=35\n');
+    expect(paused.out).not.toContain('slot=36');
+    expect(existsSync(join(over, 'set', 'worlds', 'bg1-036'))).toBe(false);
+    const at = join(j.dir, 'bg1-custody-a');
+    logs(at, 504);
+    const on = mint(at, j, ['--fake', '--bg1c', '--count', '6']);
+    expect(on.code).toBe(0);
+    expect(on.out).toContain('bg1-supply slots=31-35 gemini_requests=2520 kept=5 per_kept_world=504.0 limit=504 status=pass\n');
+    expect(existsSync(join(at, 'set', 'worlds', 'bg1-036', 'world.json'))).toBe(true);
+  }, 240_000);
+
   const lines = (n: number, refused = 0) => [...Array(n - refused).fill({ provider: 'gemini', refused: false, status: 200 }), ...Array(refused).fill({ provider: 'gemini', refused: true, status: 429 })].map(l => JSON.stringify(l)).join('\n') + '\n';
   // Value: protects=the preregistered supply condition (at most 1.5 x 336 Gemini requests per kept world over the first five slots) is measured from the mint's own proxy logs before the mint goes on; fails_when=the check counts refused requests, divides by minted rather than kept worlds, passes over 504, or runs before slots 31 to 35 are resolved; why_new=BG1-C harness item 5 (R111 pilot, condition 3); seam=supply.ts over synthetic request logs and records; no_claim=the real mint's request counts
   test('passes at 504 requests per kept world, fails above it, counts only requests sent upstream, and refuses before slot 35 is resolved', () => {

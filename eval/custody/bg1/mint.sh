@@ -60,8 +60,12 @@
 #     both stops and is never rendered again (BG1's Amendment 6 stop counts validation failures too); the summary lines
 #     then end in invalid=<n>, this invocation's count. Once slot 96 is done with fewer than 40 kept, the mint pauses
 #     with exit 3 and a summary=paused reason=slots_exhausted line, for GBEV-3. --fake-break <slot>:length (render.ts)
-#     writes that slot's world over-long, the top-up drill. After slots 31 to 35, eval/custody/bg1/supply.ts checks
-#     their Gemini requests per kept world (R111).
+#     writes that slot's world over-long, the top-up drill.
+#   - BG1-C's supply check (--bg1c only; R111, the preregistration's pilot condition 3). Once slot 35 resolves (written
+#     and validated, or dropped), mint.sh runs eval/custody/bg1/supply.ts on slots 31 to 35 and prints its counts-only
+#     line. More than 504 Gemini requests per kept world, or no kept world, pauses the mint with exit 3 and a
+#     summary=paused reason=supply line, for GBEV-3, before slot 36 renders. A mint GBEV-3 lets go on resumes with
+#     --start 36, since any run through slot 35 checks again.
 #   - One ledger. A relative --budget-ledger is resolved once, against the directory mint.sh starts in, before the window
 #     check, so the check, both proxies and render.ts all name the same ledger file. CDPATH is unset first, so a
 #     relative --out or --budget-ledger never resolves against a directory the caller's CDPATH names.
@@ -371,6 +375,20 @@ validate_slot() {
   [ -z "$line" ] || printf '%s\n' "$line"
   case "$rc" in 0) ;; 12) INVALID=$((INVALID + 1)) ;; *) exit "$rc" ;; esac
 }
+# BG1-C: once slot 35 ($1) resolves, runs supply.ts on slots 31 to 35 and prints its line; over its limit (exit 12)
+# pauses with exit 3, and any other failure exits with its code.
+supply_check() {
+  [ "$BG1C" = 1 ] && [ "$1" -eq $((FIRST + 4)) ] || return 0
+  local line rc=0
+  line="$(cd "$OUT" && env -i PATH=/usr/bin:/bin HOME="$HOME" LANG=C.UTF-8 TZ=UTC "$BUN" "$HERE/supply.ts" --out "$OUT")" || rc=$?
+  [ -z "$line" ] || printf '%s\n' "$line"
+  case "$rc" in
+    0) ;;
+    12) say "summary=paused reason=supply mode=$MODE written=$WRITTEN skipped=$SKIPPED dropped=$DROPPED dropped_earlier=$DROPPED_EARLIER last_slot=$1$(invalid_tail)"
+        exit 3 ;;
+    *) exit "$rc" ;;
+  esac
+}
 # BG1-C: stops the mint with exit 0 once KEPT_TARGET worlds are kept. $1 is the last slot.
 kept_stop() {
   [ -n "$KEPT_TARGET" ] || return 0
@@ -407,6 +425,7 @@ for ((slot = START; slot < START + COUNT; slot++)); do
   if dropped_record "$id"; then
     DROPPED_EARLIER=$((DROPPED_EARLIER + 1))
     say "slot=$slot world=$id status=dropped_earlier"
+    supply_check "$slot"
     continue
   fi
   render_one "$id" --set "$OUT/set" --seed-file "$SEED_FILE" --phrasing "$PHRASING" --slot "$slot"
@@ -417,6 +436,7 @@ for ((slot = START; slot < START + COUNT; slot++)); do
   esac
   [ "$BG1C" = 0 ] || [ "$RC" != 0 ] || validate_slot "$slot"
   yield_gate "$slot"
+  supply_check "$slot"
   kept_stop "$slot"
 done
 
