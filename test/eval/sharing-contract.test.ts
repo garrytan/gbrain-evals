@@ -12,8 +12,8 @@
  *
  * On a build whose get_page reads several pages with `slugs` (gbrain#9798, GBRA-650), every page is also read through a
  * batch that asks for it first and then for every other page in the brain, scoped to its source and unscoped. Those
- * cells answer to the same contract as a single get_page, and a page read through the batch that the same caller does
- * not read through a single get_page fails as slugs_only. On a build without `slugs` those paths are skipped.
+ * cells answer to the same contract as a single get_page, and any page a batch delivers, the one it asks for first or a
+ * later one, that the same caller does not read through a single get_page fails as slugs_only. On a build without `slugs` those paths are skipped.
  */
 import { afterAll, describe, expect, test } from 'bun:test';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -162,7 +162,8 @@ function contract(caller: CallerKind, item: Item, state: State, path: ReadPath):
   return 'never';
 }
 
-export interface Cell { scenario: string; phase: 'before' | 'after'; caller: string; item: string; path: ReadPath; read: boolean | null; error?: string; expect: Expect; verdict: 'ok' | 'violation' | 'owner_lost' | 'slugs_only' }
+/** `batch`, on a slugs cell: the other pages whose marks the batch result carried. */
+export interface Cell { scenario: string; phase: 'before' | 'after'; caller: string; item: string; path: ReadPath; read: boolean | null; batch?: string[]; error?: string; expect: Expect; verdict: 'ok' | 'violation' | 'owner_lost' | 'slugs_only' }
 
 interface Brain {
   engine: any; home: string; tokens: Record<string, string>; server: any; archiveSlug: string;
@@ -299,7 +300,8 @@ async function matrix(b: Brain, scenario: string, phase: 'before' | 'after', sta
         const read = isList ? text.includes('"' + slug + '"') || text.includes('\\"' + slug + '\\"') : text.includes(item.mark);
         const expect = contract(kindNow(caller, state), item, state, path);
         const verdict = expect === 'never' && read ? 'violation' : expect === 'must' && !read ? 'owner_lost' : 'ok';
-        cells.push({ scenario, phase, caller: caller.id, item: item.id, path, read, expect, verdict,
+        const batch = path === 'get_page_slugs' || path === 'get_page_slugs_unscoped' ? ITEMS.filter(o => o.kind === 'page' && o.id !== item.id && text.includes(o.mark)).map(o => o.id) : null;
+        cells.push({ scenario, phase, caller: caller.id, item: item.id, path, read, ...(batch ? { batch } : {}), expect, verdict,
           ...(verdict !== 'ok' || !read ? { error: (text.match(/"code"\s*:\s*"([a-z_]+)"/)?.[1] ?? text.slice(0, 160)) } : {}) });
       }
     }
@@ -307,11 +309,13 @@ async function matrix(b: Brain, scenario: string, phase: 'before' | 'after', sta
   return slugsOnly(cells);
 }
 
-/** A page a caller reads through a get_page slugs batch but not through a single get_page of the same scope: a leak. */
+/** A page a caller reads through a get_page slugs batch, first or later in it, but not through a single get_page of the same scope: a leak. */
 export function slugsOnly(cells: Cell[]): Cell[] {
   const single = new Map(cells.filter(c => c.path === 'get_page' || c.path === 'get_page_unscoped').map(c => [c.caller + '|' + c.item + '|' + c.path, c.read === true]));
+  const alone = (c: Cell, item: string) => single.get(c.caller + '|' + item + '|' + c.path.replace('_slugs', '')) === true;
   for (const c of cells) {
-    if ((c.path === 'get_page_slugs' || c.path === 'get_page_slugs_unscoped') && c.read && single.get(c.caller + '|' + c.item + '|' + c.path.replace('_slugs', '')) !== true) c.verdict = 'slugs_only';
+    if (c.path !== 'get_page_slugs' && c.path !== 'get_page_slugs_unscoped') continue;
+    if ((c.read && !alone(c, c.item)) || (c.batch ?? []).some(id => !alone(c, id))) c.verdict = 'slugs_only';
   }
   return cells;
 }
@@ -421,6 +425,13 @@ describe('AD sharing contract: get_page slugs leak check', () => {
       cell('get_page', true, 'owner_http', 'archive'), cell('get_page_slugs', false, 'owner_http', 'archive'),
     ]);
     expect(cells.filter(c => c.verdict === 'slugs_only').map(c => c.caller + ' ' + c.item + ' ' + c.path)).toEqual(['member_http private get_page_slugs']);
+  });
+  test('a page delivered later in an allowed batch that a single get_page denies is slugs_only', () => {
+    const cells = slugsOnly([
+      cell('get_page', true, 'member_http', 'world'), cell('get_page', false), cell('get_page_unscoped', true, 'member_http', 'world'), cell('get_page_unscoped', true),
+      { ...cell('get_page_slugs', true, 'member_http', 'world'), batch: ['private'] }, { ...cell('get_page_slugs_unscoped', true, 'member_http', 'world'), batch: ['private'] },
+    ]);
+    expect(cells.filter(c => c.verdict === 'slugs_only').map(c => c.item + ' ' + c.path)).toEqual(['world get_page_slugs']);
   });
   test('the slugs paths run exactly when the installed gbrain has get_page slugs', () => {
     expect(PAGE_PATHS.includes('get_page_slugs')).toBe(HAS_SLUGS);

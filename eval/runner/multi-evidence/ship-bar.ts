@@ -2,7 +2,8 @@
  * The ship bar for gbrain's multi-page read (get_page with `slugs`, gbrain#9798; GBRA-650, GST-3137), set by Garry
  * through GBRA-108 and written down before any spend (GBEV-108, GST-3185). It compares two multi-evidence dev-loop run
  * directories of the same Cat 40 items, agents, turn cap and served instructions: the newest release (base) and the
- * build that adds `slugs` (candidate), paired by item, agent and trial.
+ * build that adds `slugs` (candidate), paired by item, agent and trial. Only base-arm rows count: a run's follow-up arms
+ * (cap2x, batch) rerun only the items base missed, so they are not the same cells on both builds.
  *
  *   bun eval/runner/multi-evidence/ship-bar.ts --base <run dir> --candidate <run dir> [--privacy <ad-sharing-cells.json>] [--out <dir>]
  *
@@ -75,16 +76,16 @@ const readItems = (dir: string): ItemRow[] => {
 };
 const key = (r: ItemRow) => `${r.suite}|${r.item}|${r.reader}|${r.trial}`;
 
-/** Pairs every base and candidate row of the same item, agent and trial; a pair with a harness row or no transcript on either side is dropped and named. */
+/** Pairs every eligible base and candidate row of the same item, agent and trial; an eligible pair with a harness row or no transcript on either side is dropped and named. */
 export function pairRows(base: ItemRow[], cand: ItemRow[]): { pairs: Pair[]; dropped: string[] } {
   const b = new Map(base.map(r => [key(r), r])), c = new Map(cand.map(r => [key(r), r]));
   const pairs: Pair[] = [], dropped: string[] = [];
   for (const k of [...new Set([...b.keys(), ...c.keys()])].sort()) {
     const x = b.get(k), y = c.get(k);
+    if (!eligible((x ?? y)!)) continue;
     const why = !x ? 'no base row' : !y ? 'no candidate row' : x.harness ? `base harness: ${x.harness}` : y.harness ? `candidate harness: ${y.harness}`
       : x.result_chars === null || y.result_chars === null ? 'no transcript' : null;
     if (why) { dropped.push(`${k}: ${why}`); continue; }
-    if (!eligible(x!)) continue;
     pairs.push({ item: x!.item, reader: x!.reader, trial: x!.trial, base: x!, cand: y! });
   }
   return { pairs, dropped };
@@ -112,7 +113,8 @@ export interface BarResult {
   omitted_cells: number; slugs_multi_cells: number; decision: string;
 }
 
-export function shipBar(baseRows: ItemRow[], candRows: ItemRow[], dirs: { base: string; candidate: string }, privacyFile: string | null): BarResult {
+export function shipBar(baseRun: ItemRow[], candRun: ItemRow[], dirs: { base: string; candidate: string }, privacyFile: string | null): BarResult {
+  const baseRows = baseRun.filter(r => r.arm === 'base'), candRows = candRun.filter(r => r.arm === 'base');
   const { pairs, dropped } = pairRows(baseRows, candRows);
   const cand = candRows.filter(r => r.harness === null && r.result_chars !== null && eligible(r));
   const incomplete = dropped.length > BAR.maxDroppedPairs;

@@ -69,6 +69,23 @@ describe('ship bar', () => {
     expect(shipBar(base, worse, { base: 'b', candidate: 'c' }, null).bars.slugs_use.verdict).toBe('incomplete');
   });
 
+  test('only base-arm rows pair and count', () => {
+    const base = [row({ result_chars: 1000 }), row({ arm: 'batch', result_chars: 100 })];
+    const c = [cand({ result_chars: 900, slugs_calls: 1 }), cand({ arm: 'batch', result_chars: 900, slugs_calls: 1 })];
+    const r = shipBar(base, c, { base: 'b', candidate: 'c' }, null);
+    expect(r.pairs).toBe(1);
+    expect(r.eligible_cells).toBe(1);
+    expect(r.bars.chars_reduction.point).toBeCloseTo(0.1);
+  });
+
+  test('drops on items no bar uses do not make the run incomplete', () => {
+    const base = items.flatMap((item, i) => readers.map(reader => row({ item, reader, ...(i < 6 ? { gold: ['a/one'] } : {}) })));
+    const c = items.flatMap((item, i) => readers.map(reader => cand({ item, reader, slugs_calls: 1, ...(i < 6 ? { gold: ['a/one'], harness: 'boom' } : {}) })));
+    const r = shipBar(base, c, { base: 'b', candidate: 'c' }, null);
+    expect(r.dropped.length).toBe(0);
+    expect(r.bars.slugs_use.verdict).toBe('met');
+  });
+
   test('items whose gold names fewer than two pages are not eligible', () => {
     const base = [row({ item: 'one', gold: ['a/one'] }), row({ item: 'two' })];
     const c = [cand({ item: 'one', gold: ['a/one'], slugs_calls: 0 }), cand({ item: 'two', slugs_calls: 1 })];
