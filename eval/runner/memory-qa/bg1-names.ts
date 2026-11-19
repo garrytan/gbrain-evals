@@ -75,6 +75,12 @@ export const BG1C_LAST_SLOT = 96;
 export const BG1C_CONVERSATIONS: readonly string[] = Array.from({ length: BG1C_LAST_SLOT - BG1C_FIRST_SLOT + 1 }, (_, i) => bg1WorldId(BG1C_FIRST_SLOT + i));
 /** N_final, fixed by the preregistration: the counted cells run on exactly the first 40 kept worlds. */
 export const BG1C_N_FINAL = 40;
+/**
+ * Kept worlds per launch unit, as GBEV-3 set them on 2026-11-19 for R113's one look at half the units: eight units at
+ * N_final. The first BG1C_FIRST_HALF_UNITS units, kept worlds 1 to 20, are the first half, where that look happens.
+ */
+export const BG1C_KEPT_UNITS = 5;
+export const BG1C_FIRST_HALF_UNITS = 4;
 /** The campaign and custody decision id that every BG1-C opening is logged under. */
 export const BG1C_CAMPAIGN = 'q1-scoreboard-bg1c-changing-facts-confirmation';
 /** The `dataset` of BG1-C's manifest (eval/decisions/datasets/bg1c-manifest.json); the bg1c loader refuses any other. */
