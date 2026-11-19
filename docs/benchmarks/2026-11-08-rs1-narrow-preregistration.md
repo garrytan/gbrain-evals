@@ -163,7 +163,7 @@ Systems are named by role. Product identities, images by digest, locks and capab
 
 | Row | Cell id | System and pin | Configuration | Role |
 |---|---|---|---|---|
-| gbrain | `rs1.gbrain-defaults.rs1-stable`, arm `p` | gbrain's newest release at wave A's launch, the highest version tag on gbrain's master: v0.60.740.0 (`82fdd00001833d0cbcc03c3952c3b5635d79dd92`), read on 2026-11-18 (amendment of 2026-11-18) | `rs1-stable`: F6's brain build (`GBRAIN_F6=1`: gbrain's default fact extraction, the quiesce barrier and the fact index) with F6's arm P retrieval (`query` limit 50, token budget 5,500, facts block on), packed to 8,000 cl100k tokens; serve's idle upkeep off (`GBRAIN_IDLE_UPKEEP=off`, amendment of 2026-11-16) | subject |
+| gbrain | `rs1.gbrain-defaults.rs1-stable`, arm `p` | gbrain's newest release at wave A's launch, the highest version tag on gbrain's master: v0.60.740.0 (`82fdd00001833d0cbcc03c3952c3b5635d79dd92`), read on 2026-11-18 (amendment of 2026-11-18) | `rs1-stable`: F6's brain build (`GBRAIN_F6=1`: gbrain's default fact extraction, the quiesce barrier and the fact index) with F6's arm P retrieval (`query` limit 50, token budget 5,500, facts block on), packed to 8,000 cl100k tokens; serve's idle upkeep off (`GBRAIN_IDLE_UPKEEP=off`, amendment of 2026-11-16); the build records gbrain's safety-filter stops and unparsed pages instead of failing the realization (`GBRAIN_F6_BUILD_PROBLEMS=record`, amendment of 2026-11-19) | subject |
 | memory-bank server | `rs1.ext-memory-bank.recipe`, `component-b8000` | bundle lock `f54d89df`, capabilities `23a033f4` | `recipe`, exactly as F6 and Q1 ran it, 8,000 tokens | comparator |
 | extract-first server | `rs1.ext-extract-first.common`, `component-b8000` | bundle lock `9777b7a8`, capabilities `0acaff3a` | `common`, Q1's BEAM headline configuration, exactly as F6 and Q1 ran it, 8,000 tokens | comparator |
 | no-memory floor | `rs1.baseline-none.baseline`, `component-b8000` | harness baseline | the question alone | floor, never part of a claim |
@@ -186,7 +186,8 @@ built gbrain on `oven/bun:1.4.4-slim`, which still meets gbrain's `engines` floo
 brought the gbrain-defaults stack up in F6 mode, ingested two sessions, ran extraction under the recorded cap with the
 safe-chunks repair and the fact index, and answered a query with arm P's settings (`query`, limit 50, token budget 5,500,
 facts block on) that returned a fact first. All 4 tests passed (33 checks, 134 seconds). At wave A's launch pin,
-v0.60.740.0 (`82fdd000`), it passed the same 4 tests (33 checks) with `GBRAIN_IDLE_UPKEEP=off` (amendment of 2026-11-18).
+v0.60.740.0 (`82fdd000`), it passed the same 4 tests (33 checks) with `GBRAIN_IDLE_UPKEEP=off` (amendment of 2026-11-18),
+and again from `0eb85687` with `GBRAIN_F6_BUILD_PROBLEMS=record` as well (amendment of 2026-11-19).
 The smoke measures neither ingest cost nor answer quality.
 
 **Why arm P.** On F6's S2b (24 sealed BEAM-1M conversations at gbrain `0ccf2bdd`), arm P scored highest of the MCP
@@ -1213,6 +1214,63 @@ Garry's rule of 2026-11-19 runs GPT-6.1 Sol in Codex CLI and Claude Opus in Clau
 harness, so nothing changes: every arm is packed, and claude-opus-5-5 and gpt-6.1-sol each answer a frozen packed context
 in one direct API chat call (`readPrompt` in `eval/runner/q1/cell.ts`), as particle-1 does in its re-reads and every
 judge does.
+
+### 2026-11-19: gbrain's build records safety-filter stops and unparsed pages, and wave A's gbrain units run again
+
+Wave A ran all 16 units and its pilot, but 17 of the gbrain row's 20 realizations reached their questions without the
+quiesce barrier. In each of them the F6 build failed the realization, so `/finish` stopped before the barrier (doctor,
+embedding coverage, the job drain) and before the fact index. The answers were read and judged, but not from the brain
+this preregistration measures. The gbrain row's four wave A units are therefore set aside and run again under the switch
+below. The two servers' and the floor's wave A units stand.
+
+- **The cause is gbrain's own extraction outcome.** The custodian read the 17 builds' records inside custody, under
+  GBEV-3's sealed-read decision, with no conversation text leaving it. Every failed page, 72 of 72, carried one error:
+  `segment <start>..<end> extraction failed (content_filter)`. gbrain raises it when the provider stops a transcript
+  window on its safety filter, which on claude-haiku-5-5 is Anthropic's refusal stop, and one failed window fails its
+  whole page. Retries cleared 12 of the first pass's 84 refused pages, and no later pass refused a page the first had
+  not. Apart from that, 13 of the 17 had pages gbrain's conversation parser skipped as unparsed, 53 in all; which turns
+  its parser could not read, and why, is not identified. By conversation, 4 had refusals only, 10 had both and 3 had
+  unparsed pages only.
+- **No harness cause.** No build reached its extraction cap, no extraction model was unpriced, every pass returned
+  JSON, no page was pending, blocked, ambiguous, too large or lock-skipped, and the safe-chunks repair reported no
+  problem. The metering proxy refused no request, each unit had at most one transport failure, and the runner logs hold
+  no rate-limit, overload or payment refusal. The three realizations that passed quiesced normally. gbrain itself treats
+  a run with some failed pages as a success (status `partial`, exit 0).
+- **The switch.** `rs1-stable` sets `GBRAIN_F6_BUILD_PROBLEMS=record` in the gbrain cells' launch environment, stage
+  1's cells included. The F6 build then records two outcomes instead of failing the realization: failed pages, when
+  gbrain lists every failed page and each one stopped on the provider's safety filter (reason `content_filter` or
+  `refusal`), and unparsed pages. The extraction passes, the safe-chunks repair, the quiesce barrier and the fact index
+  run as before. Every other problem still fails the realization: the cap, an unpriced model, a pass without JSON, any
+  other failure reason (a provider error included), a failed page gbrain does not list, a first pass on which every
+  page failed, pending, blocked, ambiguous, too-large or lock-skipped pages, and a safe-chunks problem. Each
+  realization's ingest record carries the build's outcome: whether extraction covered the brain, its problems, and the
+  last pass's status, failed pages by reason and unparsed pages. Unset, the shim behaves as F6 preregistered.
+- **Why this and not a retry.** A harness backoff would fit a transient error. These are not transient: retries
+  stopped on the same pages, and the safety filter's stop is the provider's answer to that text. Under R95 a provider's
+  safety-filter stop is a result, reported as its own outcome. An installed gbrain carries on past these pages too:
+  they keep their text and embeddings and stay searchable as pages, and only their saved facts are missing. Failing the
+  realization measured a brain the barrier never checked, which is not gbrain as people run it.
+- **Reported plainly.** The results say what share of pages gbrain's own extraction left without saved facts at this
+  scale on v0.60.740.0, split into the provider's safety-filter stops and unparsed pages, with each realization's
+  counts beside the gbrain row. The finding goes to gbrain's maintainers.
+- **The rerun.** Wave A's four gbrain units (c0 to c3, the same 20 conversations) run again as a new campaign from the
+  code below, with their particle-1 re-reads, and the internal pilot is computed again from the new gbrain rows and wave
+  A's server and floor rows. N_final follows from that pilot under the rules above; above 27 it goes to GBEV-3. Wave
+  B's gbrain unit runs under the same switch. The set-aside units' receipts stay in custody and enter no verdict:
+  verdict.ts already refuses them, because their run config differs from the committed definition at
+  `launch.env.GBRAIN_F6_BUILD_PROBLEMS`.
+- **Unchanged.** The pin stays v0.60.740.0, frozen since wave A's counted gbrain runs started. No bar, margin, N rule,
+  reader, judge or verdict rule changes.
+
+**Code.** gbrain's units run from `0eb85687f1170324183ace3be55206bb14f6e41b` on the results branch, where
+`eval/runner/q1/cells/rs1-cells.json` has SHA-256 `1d4cefd0add83d41c086be1b1cfda1594d3bfee2bd25a37bbfb9ab451b4b344e`.
+Wave A's server and floor units ran from `e65bf230`, which stays an ancestor, and wave B's units run from
+`0eb85687` or a later commit an amendment names. Between the two commits, the files counted cells execute differ only
+in this switch: `definitions.ts` and `rs1-cells.json`, `cell.ts` (the ingest record keeps the build outcome
+`/finish` returns), and the gbrain-defaults bundle's `shim.py`, `docker-compose.yml` and `capability.json`. Against
+`e65bf230`, the only identity field that moves is the gbrain row's `launch.env.GBRAIN_F6_BUILD_PROBLEMS`, and wave A's
+identity fixture records the gbrain rerun's identity beside the one it replaces. The keyless F6 Docker smoke at `82fdd000`, run from `0eb85687` with `GBRAIN_IDLE_UPKEEP=off` and `GBRAIN_F6_BUILD_PROBLEMS=record`, passed all 4 tests (33 checks), and its `/capabilities` record the switch. In a second run, the fake upstream answered one session's extraction request with Anthropic's refusal stop. gbrain reported that page failed with reason `content_filter`, as in wave A; the build recorded it (refused on both passes, status `failed` on the retry); and `/finish` went on to pass the barrier, build the fact index and serve the retrieval tests. All 4 tests passed (35 checks). The gbrain row of the
+systems table above now names the switch.
 
 ## Disclosures
 

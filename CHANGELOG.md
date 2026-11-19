@@ -62,6 +62,12 @@ This records what each gbrain-evals release changed and what its measurements me
   brain, which in RS1 could happen only when a cell's calls stall and would then change the brain between `/finish` and
   later questions. RS1's gbrain cells set `GBRAIN_IDLE_UPKEEP=off`: every install writes gbrain's own off switch
   (`maintenance.auto false`) and reads it back. The older idle sweep is unchanged.
+- **gbrain's build records safety-filter stops and unparsed pages.** In wave A, 17 of the gbrain row's 20 brain builds
+  failed because gbrain's own extraction left pages unfinished: the provider's safety filter stopped some transcript
+  windows, or gbrain's parser skipped a page as unparsed. The shim then stopped before the quiesce barrier and the fact
+  index. RS1's gbrain cells now set `GBRAIN_F6_BUILD_PROBLEMS=record`: the build records those two outcomes and carries
+  on, every other problem still fails the realization, and each realization's ingest record carries its refused and
+  unparsed pages. Wave A's four gbrain units run again under it, and the servers' and the floor's stand.
 - **A fallback validator for Haiku's refusals.** claude-haiku-5-5 refused some validator prompts in the third mint, and a
   refusal doesn't change on a rerun, so five of the nine new chats could never finish validation. validate.ts and
   validate-candidates.ts now send a prompt Haiku refuses to claude-sonnet-5-5, whose reply counts in Haiku's place, and
