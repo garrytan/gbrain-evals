@@ -54,6 +54,7 @@ import {
   splitConcepts,
   probeSubset,
   parseCat13Argv,
+  postgresServerKind,
   DEFAULT_EMBEDDING_MODEL,
   DEFAULT_EMBED_DIMS,
   CAT13_RERANK_MODEL_PIN,
@@ -784,5 +785,78 @@ describe('A-06 / A-14: deterministic probe set and gold-text flagging', () => {
     expect(all.conceptual).toEqual({ ndcg5: 0.25, p1_strict: 0.5, count: 2 });
     expect(all.lexical_control).toEqual({ ndcg5: 1, p1_strict: 1, count: 1 });
     expect(scoreByProbeClass(rows, 'holdout').conceptual).toEqual({ ndcg5: 0.5, p1_strict: 1, count: 1 });
+  });
+});
+
+describe('cat13 storage engine for the gbrain arm', () => {
+  test('GBRAIN_EVAL_ENGINE picks the engine; --pg-url and --embed-cache parse in both forms', () => {
+    const o = parseCat13Argv(['--pg-url', 'postgres://u@h:5/db', '--embed-cache=/var/tmp/x.sqlite'], { GBRAIN_EVAL_ENGINE: 'postgres' });
+    expect(o.engine).toBe('postgres');
+    expect(o.pgUrl).toBe('postgres://u@h:5/db');
+    expect(o.embedCache).toBe('/var/tmp/x.sqlite');
+  });
+
+  test('no GBRAIN_EVAL_ENGINE keeps the in-memory PGLite default; LIFECYCLE_PG_URL fills a missing --pg-url', () => {
+    expect(parseCat13Argv([], {}).engine).toBeUndefined();
+    expect(parseCat13Argv([], { GBRAIN_EVAL_ENGINE: 'postgres', LIFECYCLE_PG_URL: 'postgres://x' }).pgUrl).toBe('postgres://x');
+    expect(parseCat13Argv(['--pg-url', 'postgres://flag'], { LIFECYCLE_PG_URL: 'postgres://env' }).pgUrl).toBe('postgres://flag');
+  });
+
+  test('--embed-cache with --stub-embed is refused at parse time', () => {
+    expect(() => parseCat13Argv(['--stub-embed', '--embed-cache', '/var/tmp/x.sqlite'], {})).toThrow(/does not apply to --stub-embed/);
+  });
+
+  test('engine=postgres without a URL refuses before any request, with the engine-refused exit and a skipped receipt', async () => {
+    const reportsDir = mkdtempSync(join(tmpdir(), 'cat13-engine-'));
+    const { receipt, exitCode } = await runCat13({ stubEmbed: true, only: 'gbrain', engine: 'postgres', targetProbes: 30, reportsDir, quiet: true });
+    expect(exitCode).toBe(69);
+    expect(receipt.run_status).toBe('skipped');
+    expect(receipt.n_scored).toBe(0);
+    // The refusal is persisted like any skipped run, so no stale receipt survives at the canonical path.
+    const onDisk = loadReceipt(join(reportsDir, 'cat13-conceptual', 'receipt.json'));
+    expect(onDisk.run_status).toBe('skipped');
+    expect(String(onDisk.skip_reason)).toContain('postgres_url_missing');
+  });
+
+  test('engine=postgres with an unreachable server refuses with exit 69, not an adapter failure', async () => {
+    const reportsDir = mkdtempSync(join(tmpdir(), 'cat13-engine-'));
+    const { receipt, exitCode } = await runCat13({ stubEmbed: true, only: 'gbrain', engine: 'postgres', pgUrl: 'postgres://nobody@127.0.0.1:1/none', targetProbes: 30, reportsDir, quiet: true });
+    expect(exitCode).toBe(69);
+    expect(String(receipt.skip_reason)).toContain('postgres_unreachable');
+    // Receipts are public: the engine block says only whether the server was local, never its host or user.
+    const engine = (receipt.resolved_config as { engine: Record<string, unknown> }).engine;
+    expect(engine.postgres_server).toBe('loopback');
+    expect(JSON.stringify(engine)).not.toContain('nobody');
+  });
+
+  test('postgresServerKind names no host: loopback, remote or unparsed', () => {
+    expect(postgresServerKind('postgres://u:p@127.0.0.1:5432/db')).toBe('loopback');
+    expect(postgresServerKind('postgres://u@localhost/db')).toBe('loopback');
+    expect(postgresServerKind('postgres://u@[::1]:5432/db')).toBe('loopback');
+    expect(postgresServerKind('postgres://u@db.example.com:5432/db')).toBe('remote');
+    expect(postgresServerKind('not a url')).toBe('unparsed');
+  });
+
+  test('runCat13 itself refuses --embed-cache with stub mode (the paid guard is off under the stub)', async () => {
+    const reportsDir = mkdtempSync(join(tmpdir(), 'cat13-engine-'));
+    await expect(runCat13({ stubEmbed: true, only: 'gbrain', embedCache: join(reportsDir, 'c.sqlite'), targetProbes: 30, reportsDir, quiet: true }))
+      .rejects.toThrow(/does not apply to --stub-embed/);
+  });
+
+  test('--warm-passes re-times the same probes unscored; quality and first-pass latency stay as they were', async () => {
+    expect(parseCat13Argv(['--warm-passes', '2'], {}).warmPasses).toBe(2);
+    expect(() => parseCat13Argv(['--warm-passes', '11'], {})).toThrow(/0 to 10/);
+    const { probes, gradesByQuery } = syntheticProbes();
+    const ranking = { p1: ['concepts/a', 'concepts/n'], p2: ['concepts/b'] };
+    const cold = await scoreAdapter(new FixedAdapter(ranking), [], probes, gradesByQuery, new ProbeAccounting(probes.length));
+    const acc = new ProbeAccounting(probes.length);
+    const r = await scoreAdapter(new FixedAdapter(ranking), [], probes, gradesByQuery, acc, { warmPasses: 2 });
+    expect(cold.warm).toBeUndefined();
+    expect(cold.per_query[0]!.warm_latency_ms).toBeUndefined();
+    expect(r.ndcg5).toBe(cold.ndcg5);
+    expect(r.warm).toMatchObject({ passes: 2, top5_changed: 0, failures: 0 });
+    expect(r.per_query.every(q => q.warm_latency_ms?.length === 2)).toBe(true);
+    // Repeat queries are not scored: the accounting still counts each probe once.
+    expect(acc.summary().n_scored).toBe(2);
   });
 });

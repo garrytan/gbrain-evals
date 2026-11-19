@@ -163,13 +163,16 @@ export function initRustBrain(gut: Pick<GbrainUnderTest, 'root' | 'version'>, da
     mkdirSync(join(home, '.gbrain'), { recursive: true });
     const config = { ...cliEngineConfig('rust', { databasePath }), embedding_disabled: true, schema_pack: 'gbrain-base-v2' };
     writeFileSync(join(home, '.gbrain', 'config.json'), `${JSON.stringify(config, null, 2)}\n`);
-    const env = { PATH: process.env.PATH, HOME: home, GBRAIN_HOME: home, GBRAIN_SKIP_STARTUP_HOOKS: '1', TZ: 'UTC', NO_COLOR: '1' };
+    // GBRAIN_RUST_ENGINE_ADDON passes through: a locally built addon (`bun run rust:build`) is found only through it,
+    // and the store this process opens next resolves the same addon.
+    const addon = process.env.GBRAIN_RUST_ENGINE_ADDON;
+    const env = { PATH: process.env.PATH, HOME: home, GBRAIN_HOME: home, GBRAIN_SKIP_STARTUP_HOOKS: '1', TZ: 'UTC', NO_COLOR: '1', ...(addon ? { GBRAIN_RUST_ENGINE_ADDON: addon } : {}) };
     const r = spawnSync(process.execPath, [join(gut.root, 'src/cli.ts'), 'init', '--migrate-only', '--non-interactive'], { env, cwd: home, encoding: 'utf8', timeout: 300_000 });
     if (r.status === 0) return;
     const out = `${r.stderr ?? ''}\n${r.stdout ?? ''}`.trim();
     const tail = out.split('\n').slice(-6).join(' | ').slice(0, 600);
-    const addon = RUST_ADDON_CODES.find(c => out.includes(c));
-    if (addon) throw new EvalEngineUnavailable('rust', addon, `gbrain init on a rust config: the Rust engine addon did not load (${addon}): ${tail}`);
+    const addonCode = RUST_ADDON_CODES.find(c => out.includes(c));
+    if (addonCode) throw new EvalEngineUnavailable('rust', addonCode, `gbrain init on a rust config: the Rust engine addon did not load (${addonCode}): ${tail}`);
     throw new EvalEngineUnavailable('rust', 'rust_init_failed', `gbrain ${gut.version} init --migrate-only on a rust config exited ${r.status ?? r.signal}: ${tail}`);
   } finally {
     rmSync(home, { recursive: true, force: true });

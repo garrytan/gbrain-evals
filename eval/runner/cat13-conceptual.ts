@@ -95,7 +95,7 @@
 
 import { readdirSync, readFileSync, mkdirSync, writeFileSync } from 'fs';
 import { createHash } from 'crypto';
-import { join, dirname } from 'path';
+import { basename, join, dirname } from 'path';
 import {
   configureGateway, __setEmbedTransportForTests, getEmbeddingModel, getEmbeddingDimensions,
 } from 'gbrain/ai/gateway';
@@ -105,6 +105,13 @@ import { VectorOnlyAdapter } from './adapters/vector.ts';
 import { HybridNoGraphAdapter } from './adapters/vector-grep-rrf-fusion.ts';
 import { observedSearchFailures, type SearchObservedStats, type SearchObservation } from './retrieval-pins.ts';
 import { GbrainInlineAdapter } from './adapters/gbrain-inline.ts';
+import {
+  EvalEngineUnavailable, EVAL_ENGINE_REFUSED_EXIT, evalEngineRefusalMessage, openScratchEvalEngine, preflightEvalEngine, requestedEvalEngine,
+  type EvalEngineKind,
+} from './eval-engine.ts';
+import { resolveGbrainUnderTest } from './gbrain-under-test.ts';
+import { EmbeddingCache, makeCachingTransport } from './longmemeval-cache.ts';
+import { createRequire } from 'node:module';
 import { VectorRerankAdapter } from './adapters/vector-rerank.ts';
 import type { EvalAdapterConfig } from './eval-adapter-config.ts';
 import type { Adapter, Page, Query, RankedDoc } from './types.ts';
@@ -964,6 +971,8 @@ export interface AdapterScore {
   wallMs: number;
   /** Ingest vs query-phase ledger spend and per-query latency. */
   phase?: PhaseStats;
+  /** Present only with --warm-passes N > 0. Quality numbers always come from the first (cold) pass. */
+  warm?: WarmPassStats;
   /** Tuning / held-out rollups when a ConceptSplit was supplied. */
   splits?: {
     seed: number;
@@ -989,6 +998,10 @@ export interface AdapterScore {
     /** Returned page ids that repeated an earlier one (a broken adapter; repeats earn nothing). */
     duplicate_results?: number;
     error?: string;
+    /** Wall time of the adapter's query() call for this probe (ms, Date.now resolution); absent when it threw. */
+    latency_ms?: number;
+    /** One entry per --warm-passes repeat of this probe (ms); absent without the flag. */
+    warm_latency_ms?: number[];
     search_observation?: SearchObservation;
   }>;
 }
@@ -1038,6 +1051,17 @@ export interface ScoreAdapterOptions {
   gold?: GoldStore<Cat13Gold>;
   /** Cumulative ledger spend of this run; read around init and the query loop to split ingest from query cost. */
   spentUsd?: () => number;
+  /** Extra unscored passes over the same probes on the same brain, timed only (--warm-passes). */
+  warmPasses?: number;
+}
+
+/** Latency of the unscored repeat passes (--warm-passes): the same probes, in order, on the already-queried brain. */
+export interface WarmPassStats {
+  passes: number;
+  query_ms: PhaseStats['query_ms'];
+  /** Repeat queries whose top-5 page ids differed from the scored first pass. */
+  top5_changed: number;
+  failures: number;
 }
 
 /** Query-phase cost and latency of one adapter run (live runs only for cost). */
@@ -1109,12 +1133,14 @@ export async function scoreAdapter(
     let duplicates = 0;
     let rankedPages: RankedDoc[] = [];
     let error: string | undefined;
+    let latencyMs: number | undefined;
     const publicQuery = sanitizeQuery(probe.q);
     assertPayload(CAT13_SUT_QUERY, publicQuery, cat13ForbiddenValues(gold, probe.q.id));
     try {
       const tq = Date.now();
       const results: RankedDoc[] = await adapter.query(publicQuery, state);
-      latencies.push(Date.now() - tq);
+      latencyMs = Date.now() - tq;
+      latencies.push(latencyMs);
       rankedPages = results.slice(0, TOP_K);
       const reference = scoreCat13(gold, probe.q.id, results.map(r => r.page_id), TOP_K);
       ndcg = Number.isNaN(reference.ndcg) ? 0 : reference.ndcg;
@@ -1137,6 +1163,7 @@ export async function scoreAdapter(
       graded_gold: gold.read(probe.q.id).grades, ranked_pages: rankedPages,
       ndcg5: ndcg, p5_graded: p5, p1_strict: p1, cluster_id: [...probe.targetSlugs].sort()[0] ?? probe.q.id,
       ...(duplicates ? { duplicate_results: duplicates } : {}), ...(error ? { error } : {}),
+      ...(latencyMs !== undefined ? { latency_ms: latencyMs } : {}),
     });
     addToAccum(overall, probe.template, ndcg, p5, p1);
     if (opts.split) {
@@ -1152,11 +1179,37 @@ export async function scoreAdapter(
   const phase = phaseStats(latencies, { start: spentStart, afterInit: spentAfterInit, end: opts.spentUsd?.() ?? null }, probes.length);
   const hooks = adapter as unknown as EchoingAdapter;
   const resolvedConfig = typeof hooks.resolvedConfig === 'function' ? hooks.resolvedConfig(state) : undefined;
-  const observed = typeof hooks.observedStats === 'function' ? hooks.observedStats(state) : undefined;
+  const observedLive = typeof hooks.observedStats === 'function' ? hooks.observedStats(state) : undefined;
+  // Snapshot before any warm pass, so repeat queries never add to the first pass's observations.
+  const observed = observedLive && opts.warmPasses ? structuredClone(observedLive) : observedLive;
   const observationsById = new Map(observed?.search_observations?.map(o => [o.query_id, o]));
   for (const row of perQuery) {
     const observation = observationsById.get(row.id);
     if (observation) row.search_observation = observation;
+  }
+
+  let warm: WarmPassStats | undefined;
+  if (opts.warmPasses) {
+    const warmLatencies: number[] = [];
+    let changed = 0;
+    let failures = 0;
+    for (let pass = 0; pass < opts.warmPasses; pass++) {
+      for (const [index, probe] of probes.entries()) {
+        const row = perQuery[index]!;
+        try {
+          const tq = Date.now();
+          const results: RankedDoc[] = await adapter.query(sanitizeQuery(probe.q), state);
+          const ms = Date.now() - tq;
+          warmLatencies.push(ms);
+          (row.warm_latency_ms ??= []).push(ms);
+          const ids = results.slice(0, TOP_K).map(r => r.page_id).join('\n');
+          if (ids !== row.ranked_pages.map(r => r.page_id).join('\n')) changed += 1;
+        } catch {
+          failures += 1;
+        }
+      }
+    }
+    warm = { passes: opts.warmPasses, query_ms: phaseStats(warmLatencies, { start: null, afterInit: null, end: null }, 0).query_ms, top5_changed: changed, failures };
   }
 
   if (adapter.teardown) await adapter.teardown(state);
@@ -1171,6 +1224,7 @@ export async function scoreAdapter(
     probesScored: probes.length,
     wallMs: Date.now() - t0,
     phase,
+    ...(warm ? { warm } : {}),
     per_query: perQuery,
     ...(opts.split ? {
       splits: {
@@ -1202,7 +1256,7 @@ export interface AdapterPlan {
  * default mid-run — the exact confound behind the unreproducible voyage-space
  * receipt). Both gbrain-backed arms get the same search pins.
  */
-export function buildAdapters(run: { embedder: EmbedderConfig; searchConfig: Record<string, string>; stubEmbed?: boolean }): AdapterPlan[] {
+export function buildAdapters(run: { embedder: EmbedderConfig; searchConfig: Record<string, string>; stubEmbed?: boolean; engine?: { kind: EvalEngineKind; pgAdminUrl?: string } }): AdapterPlan[] {
   const shootout: EvalAdapterConfig = {
     embedder: run.embedder.model,
     dim: run.embedder.dims,
@@ -1216,6 +1270,7 @@ export function buildAdapters(run: { embedder: EmbedderConfig; searchConfig: Rec
         embeddingModel: run.embedder.model,
         embeddingDimensions: run.embedder.dims,
         expectStubTransport: run.stubEmbed === true,
+        ...(run.engine ? { engine: run.engine } : {}),
       }),
       initConfig: {},
     },
@@ -1289,6 +1344,20 @@ export interface Cat13Options {
   preregistration?: string;
   /** Override the registry's cost estimate for this run (must not exceed --budget-usd). */
   estimateUsd?: number;
+  /**
+   * Storage engine for the gbrain arm (GBRAIN_EVAL_ENGINE=pglite|postgres|rust). Unset: the in-memory PGLite
+   * brain, as before. The other arms keep their own brains; the receipt records which arm the engine applies to.
+   */
+  engine?: EvalEngineKind;
+  /** Postgres admin URL for engine=postgres (--pg-url, else LIFECYCLE_PG_URL); a scratch database is made per run. */
+  pgUrl?: string;
+  /**
+   * Content-addressed embedding cache (--embed-cache <sqlite path>). Every embed goes through it, so repeated runs
+   * and different engines see byte-identical vectors; misses are paid through the budget ledger as before.
+   */
+  embedCache?: string;
+  /** Unscored repeat passes timed after the scored pass, for warm-cache latency (--warm-passes N, 0-10). */
+  warmPasses?: number;
 }
 
 export const DEFAULT_TUNING_CONCEPTS = 20;
@@ -1298,6 +1367,14 @@ function parseNonNegativeInt(raw: string, flag: string): number {
   const n = Number(raw);
   if (!Number.isInteger(n) || n < 0) throw new Error(`${flag} must be a non-negative integer, got '${raw}'`);
   return n;
+}
+
+/** `loopback` when the Postgres admin URL points at this machine, else `remote`; the receipt never names the host. */
+export function postgresServerKind(url: string): 'loopback' | 'remote' | 'unparsed' {
+  let host: string;
+  try { host = new URL(url).hostname; } catch { return 'unparsed'; }
+  host = host.replace(/^\[|\]$/g, '');
+  return host === '' || host === 'localhost' || host === '::1' || /^127\./.test(host) ? 'loopback' : 'remote';
 }
 
 /**
@@ -1343,6 +1420,14 @@ export function parseCat13Argv(
       case '--seed': opts.seed = parseNonNegativeInt(value(), '--seed'); break;
       case '--corpus-dir': opts.corpusDir = value(); break;
       case '--preregistration': opts.preregistration = value(); break;
+      case '--pg-url': opts.pgUrl = value(); break;
+      case '--embed-cache': opts.embedCache = value(); break;
+      case '--warm-passes': {
+        const n = parseNonNegativeInt(value(), '--warm-passes');
+        if (n > 10) throw new Error(`--warm-passes must be 0 to 10, got ${n}`);
+        opts.warmPasses = n;
+        break;
+      }
       case '--estimate-usd': {
         const raw = value();
         const n = Number(raw);
@@ -1362,11 +1447,16 @@ export function parseCat13Argv(
           + `--embedding-model <provider:model> --embedding-dims <N> --reranker on|off --autocut on|off `
           + `--expansion-variant-budget <b> --keyword-arm-confidence-floor <f|off> `
           + `--search-pin <search.key>=<value> (repeatable; generic pass-through — gbrain ignores unknown search.* keys silently) `
-          + `--tuning-concepts <N> --holdout-concepts <M> --seed <N> --budget-usd <dollars> --budget-ledger <path> --program-cap-usd <dollars>`,
+          + `--tuning-concepts <N> --holdout-concepts <M> --seed <N> --budget-usd <dollars> --budget-ledger <path> --program-cap-usd <dollars> `
+          + `--pg-url <admin url> --embed-cache <sqlite path> --warm-passes <N> (engine: GBRAIN_EVAL_ENGINE=pglite|postgres|rust)`,
         );
     }
   }
   if (env.CAT13_STUB_EMBED === '1') opts.stubEmbed = true;
+  const engine = requestedEvalEngine(env);
+  if (engine) opts.engine = engine;
+  if (opts.pgUrl === undefined && env.LIFECYCLE_PG_URL) opts.pgUrl = env.LIFECYCLE_PG_URL;
+  if (opts.embedCache !== undefined && opts.stubEmbed) throw new Error('--embed-cache caches live provider vectors; it does not apply to --stub-embed');
   return opts;
 }
 
@@ -1444,7 +1534,17 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
       extra_search_pins: Object.keys(extraPins).length > 0 ? extraPins : null,
     },
     search_pins: searchConfig,
+    engine: {
+      kind: opts.engine ?? 'pglite',
+      selected_by: opts.engine ? 'GBRAIN_EVAL_ENGINE' : 'default (in-memory PGLite)',
+      applies_to: ['gbrain'],
+      // Receipts are public: record only whether the server was local, never its host name or address.
+      ...(opts.engine === 'postgres' ? { postgres_server: opts.pgUrl ? postgresServerKind(opts.pgUrl) : null } : {}),
+    },
+    embed_cache: opts.embedCache ? { file: basename(opts.embedCache), stats: embedCache?.stats ?? null } : null,
+    warm_passes: opts.warmPasses ?? 0,
   });
+  let embedCache: EmbeddingCache | null = null;
 
   const skipped = (reason: string): Cat13RunResult => {
     const receipt: Receipt = {
@@ -1509,6 +1609,36 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
 
   // Live embeds go through the budget ledger, which refuses to start without
   // --budget-usd; the hermetic stub makes no provider request.
+  // --embed-cache installs the real provider transport; stub mode skips the paid-request guard, so the two never mix.
+  if (opts.embedCache !== undefined && stubEmbed) throw new Error('--embed-cache caches live provider vectors; it does not apply to --stub-embed');
+  // Refuse an engine that cannot run before any paid request: Postgres without a URL or that cannot make a scratch
+  // database, Rust in a build without the engine or with no loadable addon. The skipped receipt is written like any other.
+  if (opts.engine) {
+    const refused = (e: EvalEngineUnavailable): Cat13RunResult => {
+      const receipt: Receipt = { ...baseReceipt(), run_status: 'skipped', skip_reason: `engine_refused: ${e.reason}: ${e.message}`, n_total: 0, n_scored: 0, completion_rate: 0, errors: [], publishable: false, resolved_config: cellConfig() };
+      writeReceipt(receiptFile, receipt);
+      console.error(evalEngineRefusalMessage(e, 'cat13'));
+      return { receipt, results: [], exitCode: EVAL_ENGINE_REFUSED_EXIT };
+    };
+    try {
+      if (opts.engine === 'postgres') {
+        if (!opts.pgUrl) throw new EvalEngineUnavailable('postgres', 'postgres_url_missing', 'engine=postgres needs --pg-url or LIFECYCLE_PG_URL');
+        try {
+          const probe = await openScratchEvalEngine({ gut: resolveGbrainUnderTest(null), kind: 'postgres', label: 'cat13_preflight', pgAdminUrl: opts.pgUrl, initSchema: false });
+          await probe.close();
+        } catch (e) {
+          if (e instanceof EvalEngineUnavailable) throw e;
+          throw new EvalEngineUnavailable('postgres', 'postgres_unreachable', `Could not open a scratch Postgres brain: ${(e as Error).message}`);
+        }
+      } else {
+        await preflightEvalEngine(resolveGbrainUnderTest(null), opts.engine);
+      }
+    } catch (e) {
+      if (!(e instanceof EvalEngineUnavailable)) throw e;
+      return refused(e);
+    }
+  }
+
   let paid: { run: BudgetRun; guard: PaidRequestGuard } | null = null;
   const attestation = !stubEmbed && opts.preregistration ? attestPreregistration(opts.preregistration) : null;
   if (!stubEmbed) {
@@ -1531,6 +1661,14 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
 
   try {
   ensureGateway(stubEmbed, embedder);
+  if (opts.embedCache) {
+    // The real transport is the AI SDK embedMany that the linked gbrain itself resolves (its provider model objects
+    // must match its own `ai` version), wrapped so cached vectors return without a request.
+    const gbrainRoot = resolveGbrainUnderTest(null).root;
+    const { embedMany } = await import(createRequire(join(gbrainRoot, 'package.json')).resolve('ai')) as { embedMany: (p: unknown) => Promise<{ embeddings: number[][]; usage?: unknown }> };
+    embedCache = new EmbeddingCache(opts.embedCache, `${embedder.model}@${embedder.dims}`);
+    __setEmbedTransportForTests(makeCachingTransport(p => embedMany(p), embedCache) as unknown as Parameters<typeof __setEmbedTransportForTests>[0]);
+  }
 
   log(`# BrainBench Cat 13 — Conceptual Recall\n`);
   log(`Generated: ${new Date().toISOString().replace(/\..*$/, '')}`);
@@ -1548,7 +1686,7 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
   }
   log('');
 
-  const standardPlans = buildAdapters({ embedder, searchConfig, stubEmbed });
+  const standardPlans = buildAdapters({ embedder, searchConfig, stubEmbed, ...(opts.engine ? { engine: { kind: opts.engine, pgAdminUrl: opts.pgUrl } } : {}) });
   const allPlans = [...standardPlans, ...buildOptInAdapters({ embedder })];
   const plans = opts.only ? allPlans.filter(p => p.adapter.name === opts.only) : standardPlans;
   if (plans.length === 0) {
@@ -1564,7 +1702,7 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
     log(`- ${a.name} ...`);
     try {
       const run = paid?.run;
-      const r = await scoreAdapter(a, pages, probes, gradesByQuery, acc, { initConfig, split, gold, ...(run ? { spentUsd: () => run.summary().actual_usd } : {}) });
+      const r = await scoreAdapter(a, pages, probes, gradesByQuery, acc, { initConfig, split, gold, ...(opts.warmPasses ? { warmPasses: opts.warmPasses } : {}), ...(run ? { spentUsd: () => run.summary().actual_usd } : {}) });
       if (GBRAIN_BACKED_ADAPTERS.has(a.name)) {
         const failures = observedSearchFailures(r.observed, probes.length);
         if (failures.length) {
@@ -1737,7 +1875,7 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
 
   // Leave the process-global gateway the way the other runners do: a stub
   // installed by ensureGateway must not leak into a later file's live run.
-  if (stubEmbed) __setEmbedTransportForTests(null);
+  if (stubEmbed || embedCache) __setEmbedTransportForTests(null);
 
   const resolvedConfig: Record<string, unknown> = {
     top_k: TOP_K,
@@ -1770,6 +1908,7 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
       p1_strict: r.p1_strict,
       wall_ms: r.wallMs,
       ...(r.phase ? { phase: r.phase } : {}),
+      ...(r.warm ? { warm: r.warm } : {}),
       tuning: subsetRow(r.splits?.tuning),
       holdout: subsetRow(r.splits?.holdout),
     })),
@@ -1829,6 +1968,11 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
   } finally {
     paid?.guard.uninstall();
     paid?.run.close();
+    // The caching transport wraps a live provider: never leave it installed after an early throw.
+    if (embedCache) {
+      __setEmbedTransportForTests(null);
+      embedCache.close();
+    }
   }
 }
 
