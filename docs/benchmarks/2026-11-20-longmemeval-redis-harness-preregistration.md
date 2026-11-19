@@ -339,7 +339,7 @@ An arm that fails is fixed, or left out and reported as left out. The pilot's pe
 
 ## Interim look (R113)
 
-The counted run's planned paid spend can pass R113's threshold, so it takes one look at half its units: after every cell has an answer and
+The counted run is planned above R113's paid threshold, so it takes R113's one look at half its units, and no other: after every cell has an answer and
 both judgments for the first 250 questions in the seed-42 order (a random half, since that order is shuffled).
 
 - **What is looked at:** the primary comparison only.
