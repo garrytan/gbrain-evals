@@ -315,7 +315,7 @@ describe('the command line', () => {
       const readers = up.log.filter(l => l.model === 'gpt-6.2-sol'), opus = up.log.filter(l => l.model === 'claude-opus-5-5'), gemini = up.log.filter(l => l.model === 'gemini-3.8-flash');
       expect([readers.length, opus.length, readers.length + opus.length + gemini.length]).toEqual([1920, 1920, up.log.length]);
       expect(up.log.every(l => l.auth.includes('keyless-not-a-provider-key'))).toBe(true);
-      expect(readers.every(l => l.path.endsWith('/v1/chat/completions') && l.body.max_completion_tokens === 2048 && l.body.reasoning_effort === 'medium')).toBe(true);
+      expect(readers.every(l => l.path.endsWith('/v1/chat/completions') && l.body.max_completion_tokens === 2048 && l.body.reasoning_effort === 'medium' && !('n' in l.body))).toBe(true);
       expect(opus.every(l => l.path.endsWith('/v1/messages') && l.body.max_tokens === 8000 && l.body.output_config?.effort === 'medium')).toBe(true);
       expect(up.log.findIndex(l => l.model === 'gemini-3.8-flash')).toBeGreaterThan(up.log.findLastIndex(l => l.model !== 'gemini-3.8-flash'));
       const frozen = BG1C_ROWS.flatMap(row => BG1C_WORLDS.flatMap(w => ndjson(join(runs[row], 'worlds', w, 'runs', `bg1-dev-extra.${row}.${row === 'gbrain-defaults' ? 'rs1-stable' : row === 'ext-memory-bank' ? 'recipe' : 'common'}`, 'contexts.ndjson')).map(c => c.prompt_sha256)));
