@@ -97,7 +97,9 @@ Each world runs on its own Ubicloud VM, detached, with one budget ledger and one
 
 ## Amendments
 
-(none)
+- **2026-11-19, before any paid control request: two harness details the text above left implicit.** Nothing in the arms, worlds, gates, outcome rows or budget changes.
+  1. Besides the label, ledger, budget, build commit and explicit surface, each control gbrain step has its own output directory (under `eval/reports/cat40/hard-control/`), its own slot directory, and its own freeze-drift note naming this preregistration and the control's harness commit. The keyless test ([cat40-hard-old-build-control.test.ts](../../test/eval/cat40-hard-old-build-control.test.ts)) sets aside exactly those flags and requires every other argument to match the November 19 receipts, the task lists of that run's two halves included. The control runs both halves one after the other with no look between them.
+  2. To record the served model id, the agent loop (`eval/runner/cat40/loop.ts`) now keeps the `model` field of each Anthropic and OpenAI response as `served_models` on every session's run. Request bodies, retries and pricing are unchanged (pinned by `test/eval/cat40-particle-loop.test.ts`), and the new file hash is listed in [accepted-drift.json](cat40-hard/accepted-drift.json) and [calibration.md](cat40-hard/calibration.md).
 
 ## Disclosures
 
