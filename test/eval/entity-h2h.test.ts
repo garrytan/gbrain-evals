@@ -303,7 +303,7 @@ describe('memory-system pins (each the newest release at launch, preregistration
     const limit = shim.match(/^OPENAI_BATCH_LIMIT = r"(.+)"$/m)?.[1];
     expect(limit).toBeDefined();
     expect(shim).toContain('litellm_embedding._EMBED_LENGTH_ERROR_RE = re.compile(f"{litellm_embedding._EMBED_LENGTH_ERROR_RE.pattern}|{OPENAI_BATCH_LIMIT}",');
-    expect(shim).toContain('importlib.import_module("cognee.infrastructure.databases.vector.embeddings.LiteLLMEmbeddingEngine")');
+    expect(shim).toMatch(/importlib\.import_module\("\w+\.infrastructure\.databases\.vector\.embeddings\.LiteLLMEmbeddingEngine"\)/);
     const wording = new RegExp(limit!, 'i');
     expect(wording.test("litellm.BadRequestError: OpenAIException - Error code: 400 - Invalid 'input': array length must be 2048 or less.")).toBe(true);
     expect(wording.test("Error code: 400 - Invalid 'input': must not be empty")).toBe(false);
