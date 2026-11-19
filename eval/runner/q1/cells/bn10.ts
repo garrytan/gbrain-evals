@@ -13,7 +13,7 @@
  *
  * Judging: every answer gets BEAM's canonical judge (gpt-4.1-mini), the bridge view, and exactly one frontier judge by
  * the reader's family (frontier.per_reader, definitions.ts frontierJudgeOf): gpt-6.1-sol for claude-opus-5-5 and
- * particle-1, claude-opus-5-5 for gpt-6.2-sol. The readers are named here, not in the runner's shared FRONTIER_READERS
+ * particle-1, claude-opus-5-5 for gpt-6.2-sol, every call pinned to PER_READER_JUDGE_SETTINGS. The readers are named here, not in the runner's shared FRONTIER_READERS
  * (amendment A1).
  *
  * `bun eval/runner/q1/cells/bn10.ts` regenerates bn10-cells.json; a test fails when the committed file is stale.
@@ -21,7 +21,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
-  ALL_SETS, ASSUMPTIONS, BN10_ASSUMPTIONS, estimateCell, F6_ASSUMPTIONS, frontierJudgeOf, makeCell, MANIFEST_SCHEMA, priceOf,
+  ALL_SETS, ASSUMPTIONS, BN10_ASSUMPTIONS, estimateCell, F6_ASSUMPTIONS, frontierJudgeOf, makeCell, MANIFEST_SCHEMA, PER_READER_JUDGE_SETTINGS, priceOf,
   type ArmDefinition, type ArmSpec, type BlockId, type BN10BlockId, type CellDefinition, type Manifest, type SetId,
 } from './definitions.ts';
 import { extractionCapUsd, F6_ARMS, withHours, withLease } from './f6.ts';
@@ -40,7 +40,7 @@ export const PARTICLE = 'particle:particle-1';
 /** Live readers; particle-1 re-reads the frozen contexts (reread-cell.ts), so it is the third reader of every arm. */
 export const BN10_READERS = [OPUS, SOL];
 
-const perReader = (readers: string[]): NonNullable<ArmDefinition['frontier']> => ({ judges: [...new Set(readers.map(frontierJudgeOf))].sort(), readers: null, sample: null, per_reader: true });
+const perReader = (readers: string[]): NonNullable<ArmDefinition['frontier']> => ({ judges: [...new Set(readers.map(frontierJudgeOf))].sort(), readers: null, sample: null, per_reader: true, settings: { ...PER_READER_JUDGE_SETTINGS } });
 const frontier = perReader(BN10_READERS);
 export const BN10_ARMS: ArmSpec[] = [
   { id: 'p', mode: 'packed', budget: 8000, label: F6_ARMS.p.label, retrieval: F6_ARMS.p.retrieval, readers: BN10_READERS, frontier },

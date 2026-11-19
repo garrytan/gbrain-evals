@@ -2,7 +2,7 @@ import { afterAll, describe, expect, test } from 'bun:test';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { BN10_ASSUMPTIONS, definitionProblems, estimateCell, frontierJudgesFor, policyKey, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
+import { BN10_ASSUMPTIONS, definitionProblems, estimateCell, frontierJudgesFor, PER_READER_JUDGE_SETTINGS, policyKey, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
 import { BN10_DRY_RUN_CAP_USD, BN10_MANIFEST_PATH, bn10ManifestText, buildBN10Manifest, OPUS, PARTICLE, SOL } from '../../eval/runner/q1/cells/bn10.ts';
 import { loadCellManifest, runCell } from '../../eval/runner/q1/cell.ts';
 import type { Corpus, MemoryQuestion } from '../../eval/runner/memory-qa/corpus.ts';
@@ -60,6 +60,7 @@ describe('bn10-cells.json', () => {
   test('each arm is judged by the reader\'s other family, and particle-1 re-reads every arm, whole included', () => {
     for (const a of [...m.cells, ...m.smoke_cells].flatMap(c => c.arms)) {
       expect(a.frontier?.per_reader).toBe(true);
+      expect(a.frontier?.settings).toEqual(PER_READER_JUDGE_SETTINGS);
       expect(frontierJudgesFor(a, OPUS)).toEqual(['openai:gpt-6.1-sol']);
       expect(frontierJudgesFor(a, SOL)).toEqual(['anthropic:claude-opus-5-5']);
     }

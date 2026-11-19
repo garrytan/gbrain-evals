@@ -399,7 +399,11 @@
             ],
             "readers": null,
             "sample": null,
-            "per_reader": true
+            "per_reader": true,
+            "settings": {
+              "effort": "medium",
+              "max_tokens": 8000
+            }
           },
           "judge_repeats": null,
           "label": "P: A with the facts block"
@@ -439,7 +443,11 @@
             ],
             "readers": null,
             "sample": null,
-            "per_reader": true
+            "per_reader": true,
+            "settings": {
+              "effort": "medium",
+              "max_tokens": 8000
+            }
           },
           "judge_repeats": null,
           "label": "A0: query limit 50, no token_budget (the harness packs 8,000 from gbrain's auto delivery)"
@@ -477,7 +485,11 @@
             ],
             "readers": null,
             "sample": null,
-            "per_reader": true
+            "per_reader": true,
+            "settings": {
+              "effort": "medium",
+              "max_tokens": 8000
+            }
           },
           "judge_repeats": null,
           "label": "whole system: a bare query under P's search keys, read at gbrain's own default amount"
@@ -580,7 +592,11 @@
             ],
             "readers": null,
             "sample": null,
-            "per_reader": true
+            "per_reader": true,
+            "settings": {
+              "effort": "medium",
+              "max_tokens": 8000
+            }
           },
           "judge_repeats": null,
           "label": "P: A with the facts block"
@@ -620,7 +636,11 @@
             ],
             "readers": null,
             "sample": null,
-            "per_reader": true
+            "per_reader": true,
+            "settings": {
+              "effort": "medium",
+              "max_tokens": 8000
+            }
           },
           "judge_repeats": null,
           "label": "A0: query limit 50, no token_budget (the harness packs 8,000 from gbrain's auto delivery)"
@@ -658,7 +678,11 @@
             ],
             "readers": null,
             "sample": null,
-            "per_reader": true
+            "per_reader": true,
+            "settings": {
+              "effort": "medium",
+              "max_tokens": 8000
+            }
           },
           "judge_repeats": null,
           "label": "whole system: a bare query under P's search keys, read at gbrain's own default amount"
