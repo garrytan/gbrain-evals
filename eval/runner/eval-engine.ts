@@ -233,8 +233,9 @@ export function evalEngineReceiptFields(kind: EvalEngineKind | null, notApplicab
  */
 export const EVAL_ENGINE_REFUSED_EXIT = 69;
 
-export function evalEngineRefusalMessage(e: EvalEngineUnavailable, runner: string): string {
-  return `REFUSED: ${runner} did not run on engine ${e.kind}. EvalEngineUnavailable (${e.reason}): ${e.message} No receipt or verdict was written (exit ${EVAL_ENGINE_REFUSED_EXIT}).`;
+export function evalEngineRefusalMessage(e: EvalEngineUnavailable, runner: string, o: { skippedReceipt?: string } = {}): string {
+  const written = o.skippedReceipt ? `A skipped receipt was written to ${o.skippedReceipt}; no verdict was written` : 'No receipt or verdict was written';
+  return `REFUSED: ${runner} did not run on engine ${e.kind}. EvalEngineUnavailable (${e.reason}): ${e.message} ${written} (exit ${EVAL_ENGINE_REFUSED_EXIT}).`;
 }
 
 /** Print the refusal and exit with EVAL_ENGINE_REFUSED_EXIT. */
