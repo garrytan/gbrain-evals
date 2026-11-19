@@ -328,6 +328,8 @@ export const SCENARIOS: Scenario[] = [
 const report: Cell[] = [];
 const notes: Record<string, unknown> = {};
 
+const savedDiscovery = process.env.GBRAIN_MODEL_DISCOVERY;
+process.env.GBRAIN_MODEL_DISCOVERY = 'off';
 configureGateway({ embedding_model: 'openai:text-embedding-3-small', embedding_dimensions: DIMS, env: { OPENAI_API_KEY: 'keyless-test' } });
 __setEmbedTransportForTests((async ({ values }: { values: string[] }) => ({ embeddings: values.map(vectorFor) })) as never);
 
@@ -359,6 +361,8 @@ for (const s of SCENARIOS) {
 afterAll(() => {
   __setEmbedTransportForTests(null);
   resetGateway();
+  if (savedDiscovery === undefined) delete process.env.GBRAIN_MODEL_DISCOVERY;
+  else process.env.GBRAIN_MODEL_DISCOVERY = savedDiscovery;
   const dir = process.env.AD_REPORT_DIR;
   if (!dir) return;
   mkdirSync(dir, { recursive: true });
