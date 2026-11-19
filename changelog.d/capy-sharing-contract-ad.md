@@ -8,4 +8,5 @@
   facts, as the local CLI, the owner's token, OAuth client and stdio server, another member, a token bound to nobody and a
   caller with no token, through `get_page`, `search`, `query`, `list_pages` and `recall`. It fails when one of the
   owner's callers loses a read or anyone else gains one that gbrain's access guide doesn't allow. It makes no model calls
-  and needs no keys, so it runs in CI at every gbrain pin.
+  and needs no keys. It needs gbrain v0.60.738.0 or later, so on the current pin (v0.60.733.0) it skips with that
+  reason and starts running in CI at the next pin move.

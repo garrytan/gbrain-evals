@@ -8,7 +8,7 @@
  * A cell that fails names the scenario, phase, caller, content and read path, and AD_REPORT_DIR=<dir> writes every cell.
  */
 import { afterAll, describe, expect, test } from 'bun:test';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { PGLiteEngine } from '../../node_modules/gbrain/src/core/pglite-engine.ts';
 import { configureGateway, resetGateway, __setEmbedTransportForTests } from '../../node_modules/gbrain/src/core/ai/gateway.ts';
@@ -32,6 +32,16 @@ import { runAccess } from '../../node_modules/gbrain/src/commands/access.ts';
 import { runConfig } from '../../node_modules/gbrain/src/commands/config.ts';
 import { emptyHome, withEnv } from '../../node_modules/gbrain/test/helpers/with-env.ts';
 import { archivedPages, conversation, staticReader } from '../../node_modules/gbrain/test/helpers/transcript-archive.ts';
+
+/**
+ * The contract needs owner-only sources (gbrain v0.60.738.0) and the archive re-scope on sharing (v0.60.735.0), so on an
+ * older pinned build every scenario is skipped with this reason instead of reporting their absence as leaks.
+ */
+const MIN_GBRAIN = '0.60.738.0';
+const GBRAIN_VERSION: string = JSON.parse(readFileSync(join(import.meta.dir, '../../node_modules/gbrain/package.json'), 'utf8')).version;
+const older = (a: string, b: string) => { const x = a.split('.').map(Number), y = b.split('.').map(Number); for (let i = 0; i < Math.max(x.length, y.length); i++) { if ((x[i] ?? 0) !== (y[i] ?? 0)) return (x[i] ?? 0) < (y[i] ?? 0); } return false; };
+const TOO_OLD = older(GBRAIN_VERSION, MIN_GBRAIN);
+if (TOO_OLD) console.warn('sharing contract skipped: the pinned gbrain is v' + GBRAIN_VERSION + ', and this test needs v' + MIN_GBRAIN + ' or later');
 
 const OWNER = 'alice-example';
 const OTHER = 'bob-example';
@@ -322,7 +332,7 @@ configureGateway({ embedding_model: 'openai:text-embedding-3-small', embedding_d
 __setEmbedTransportForTests((async ({ values }: { values: string[] }) => ({ embeddings: values.map(vectorFor) })) as never);
 
 for (const s of SCENARIOS) {
-  describe('AD sharing contract: ' + s.name, () => {
+  describe.skipIf(TOO_OLD)('AD sharing contract: ' + s.name, () => {
     test("no non-owner gains a read and the owner's callers lose none", async () => {
       const b = await makeBrain({ ownerSet: s.ownerSet ?? true, otherDisabled: s.otherDisabled });
       try {
