@@ -81,7 +81,9 @@ describe.skipIf(!ON)('gbrain-defaults container at the BEAM-10M re-measure pin (
 
     const whole = await ok('POST', '/retrieve', { ns: NS, question: Q, query_time: null, policy: policy('vendor-default', WHOLE) });
     console.log('[bn10-docker] whole', JSON.stringify({ applied: whole.applied_settings, rows: whole.items.length, classification: whole.raw.classification }));
-    expect(whole.applied_settings).toEqual({ op: 'query', query: Q, overlay_sha256: p.raw.overlay.overlay_sha256 });
+    expect(whole.applied_settings).toMatchObject({ op: 'query', query: Q, overlay_sha256: p.raw.overlay.overlay_sha256 });
+    expect(Object.keys(whole.applied_settings).sort()).toEqual(['fence', 'op', 'overlay_sha256', 'query']);
+    expect(whole.applied_settings.fence).toMatchObject({ budget_tokens: 5500, unmatched_quoted_rows: 0 });
     expect(whole.raw.overlay).toMatchObject({ switched: true, overlay_sha256: p.raw.overlay.overlay_sha256 });
     expect(whole.items.length).toBeGreaterThan(0);
   }, 1_800_000);
