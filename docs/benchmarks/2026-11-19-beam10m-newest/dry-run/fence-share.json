@@ -1,0 +1,41 @@
+{
+  "schema": "gbrain-evals/bn10-fence-share/v1",
+  "arms": {
+    "p": {
+      "delivered_contexts": 10,
+      "measured_contexts": 10,
+      "missing_measurements": 0,
+      "overlay_mismatches": 0,
+      "unmatched_quoted_rows": 0,
+      "mean_delivered_rows": 27.6,
+      "mean_fenced_rows": 27.6,
+      "mean_fence_tokens": 1347,
+      "reference_budget_tokens": 5500,
+      "share_of_reference_budget": 0.2449090909090909
+    },
+    "a0": {
+      "delivered_contexts": 10,
+      "measured_contexts": 10,
+      "missing_measurements": 0,
+      "overlay_mismatches": 0,
+      "unmatched_quoted_rows": 0,
+      "mean_delivered_rows": 50,
+      "mean_fenced_rows": 50,
+      "mean_fence_tokens": 3577.5,
+      "reference_budget_tokens": 5500,
+      "share_of_reference_budget": 0.6504545454545455
+    },
+    "whole": {
+      "delivered_contexts": 10,
+      "measured_contexts": 10,
+      "missing_measurements": 0,
+      "overlay_mismatches": 0,
+      "unmatched_quoted_rows": 0,
+      "mean_delivered_rows": 4.3,
+      "mean_fenced_rows": 4.3,
+      "mean_fence_tokens": 269.2,
+      "reference_budget_tokens": 5500,
+      "share_of_reference_budget": 0.04894545454545454
+    }
+  }
+}
