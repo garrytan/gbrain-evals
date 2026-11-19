@@ -19,7 +19,7 @@ test('the pilot aggregates all three arms separately without double counting ret
       const a = def.arms[arm]!, policy = policyKey(a);
       const overlay = sha256(JSON.stringify(Object.fromEntries(Object.entries(a.retrieval!.overlay).sort())));
       return { key: `${id}|${policy}`, policy, question_id: id, outcome, applied_settings: { overlay_sha256: overlay,
-        ...(recorded ? { fence: { delivered_rows: 4, fenced_rows: 2, fence_tokens: tokens, budget_tokens: 5500, budget_share: tokens / 5500 } } : {}) } };
+        ...(recorded ? { fence: { delivered_rows: 4, fenced_rows: 2, unmatched_quoted_rows: arm === 2 ? 1 : 0, fence_tokens: tokens, budget_tokens: 5500, budget_share: tokens / 5500 } } : {}) } };
     };
     writeFileSync(join(logs, 'retrievals.ndjson'), [
       row(0, 'fixture-secret-01', 999), row(0, 'fixture-secret-01', 20), row(0, 'fixture-secret-02', 40, 'ingest_degraded'),
@@ -28,7 +28,8 @@ test('the pilot aggregates all three arms separately without double counting ret
     const summary = measureFences(def, [root]);
     expect(summary.p).toMatchObject({ measured_contexts: 2, overlay_mismatches: 0, mean_delivered_rows: 4, mean_fenced_rows: 2, mean_fence_tokens: 30, share_of_reference_budget: 30 / 5500 });
     expect(summary.a0).toMatchObject({ delivered_contexts: 1, missing_measurements: 1, mean_fence_tokens: null });
-    expect(summary.whole).toMatchObject({ measured_contexts: 1, mean_fence_tokens: 70 });
+    expect(summary.whole).toMatchObject({ measured_contexts: 1, mean_fence_tokens: 70, unmatched_quoted_rows: 1 });
+    expect(summary.p.unmatched_quoted_rows).toBe(0);
     expect(JSON.stringify(summary)).not.toContain('fixture-secret-');
   } finally { rmSync(root, { recursive: true, force: true }); }
 });

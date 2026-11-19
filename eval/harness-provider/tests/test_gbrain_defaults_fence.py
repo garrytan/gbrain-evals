@@ -65,12 +65,13 @@ def test_f6_delivery_counts_wrapped_chunks_facts_and_titles(gbrain_shim):
     fake = Fake()
     result = fake.f6_retrieve("test", "Example?", {})
     fence = result["applied_settings"]["fence"]
-    assert fence == {"delivered_rows": 4, "fenced_rows": 3, "fence_tokens": 78,
+    assert fence == {"delivered_rows": 4, "fenced_rows": 3, "unmatched_quoted_rows": 0, "fence_tokens": 78,
                      "budget_tokens": 5500, "budget_share": 78 / 5500}
     assert result["items"][0]["text"] == chunk
     assert result["raw"]["fence"] == fake.captured["fence"] == fence
 
 
-def test_marked_row_with_unknown_fence_refuses(gbrain_shim):
-    with pytest.raises(gbrain_shim.ShimError, match="did not match"):
-        gbrain_shim.fence_accounting([("page", {"quoted": "transcript", "chunk_text": "unknown wrapper"})])
+def test_marked_row_with_unknown_fence_is_counted_not_refused(gbrain_shim):
+    fence = gbrain_shim.fence_accounting([("page", {"quoted": "transcript", "chunk_text": "unknown wrapper"})])
+    assert fence == {"delivered_rows": 1, "fenced_rows": 0, "unmatched_quoted_rows": 1, "fence_tokens": 0,
+                     "budget_tokens": 5500, "budget_share": 0.0}

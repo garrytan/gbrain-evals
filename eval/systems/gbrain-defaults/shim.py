@@ -426,7 +426,7 @@ QUOTE_WRAPPER = re.compile(
 
 
 def fence_accounting(rows: list[tuple[str, dict[str, Any]]]) -> dict[str, Any]:
-    fields, fenced_rows = [], 0
+    fields, fenced_rows, unmatched = [], 0, 0
     for kind, row in rows:
         if row.get("quoted") != "transcript":
             continue
@@ -437,9 +437,10 @@ def fence_accounting(rows: list[tuple[str, dict[str, Any]]]) -> dict[str, Any]:
             if isinstance(value, str) and (match := QUOTE_WRAPPER.fullmatch(value)):
                 fields.append((value, (match["head"] or "") + match["body"]))
         if len(fields) == before:
-            raise ShimError("invalid_request", "a quoted row did not match the pinned gbrain quote fence", 503)
+            unmatched += 1
+            continue
         fenced_rows += 1
-    tokens = 0
+    tokens: int | None = 0
     if fields:
         try:
             result = subprocess.run(["bun", os.path.join(HERE, "fence-tokens.ts")], input=json.dumps(fields),
@@ -448,9 +449,9 @@ def fence_accounting(rows: list[tuple[str, dict[str, Any]]]) -> dict[str, Any]:
             if tokens < 0:
                 raise ValueError()
         except (OSError, ValueError, subprocess.SubprocessError):
-            raise ShimError("invalid_request", "the local cl100k fence count failed", 503) from None
-    return {"delivered_rows": len(rows), "fenced_rows": fenced_rows, "fence_tokens": tokens,
-            "budget_tokens": FENCE_BUDGET, "budget_share": tokens / FENCE_BUDGET}
+            tokens = None
+    return {"delivered_rows": len(rows), "fenced_rows": fenced_rows, "unmatched_quoted_rows": unmatched, "fence_tokens": tokens,
+            "budget_tokens": FENCE_BUDGET, "budget_share": None if tokens is None else tokens / FENCE_BUDGET}
 
 
 def f6_pin_problem(image_sha: str, launch_sha: str) -> str | None:

@@ -16,11 +16,12 @@ import { exitCodeOf, refuse, renderMessage, ScoreboardError } from '../q1/scoreb
 const FRONT = ['bun', 'eval/runner/bn10/fence-share.ts'];
 const BUDGET = 5500;
 type Delivery = Pick<StagedRetrieval, 'outcome' | 'policy' | 'applied_settings'>;
-interface FenceFields { delivered_rows: number; fenced_rows: number; fence_tokens: number; budget_tokens: number; budget_share: number }
+interface FenceFields { delivered_rows: number; fenced_rows: number; unmatched_quoted_rows?: number; fence_tokens: number; budget_tokens: number; budget_share: number }
 const isFence = (x: unknown): x is FenceFields => {
   if (!x || typeof x !== 'object') return false;
   const f = x as FenceFields;
   return [f.delivered_rows, f.fenced_rows, f.fence_tokens].every(n => Number.isSafeInteger(n) && n >= 0)
+    && (f.unmatched_quoted_rows === undefined || (Number.isSafeInteger(f.unmatched_quoted_rows) && f.unmatched_quoted_rows >= 0))
     && f.fenced_rows <= f.delivered_rows && (f.fenced_rows > 0 || f.fence_tokens === 0)
     && f.budget_tokens === BUDGET && f.budget_share === f.fence_tokens / BUDGET;
 };
@@ -38,6 +39,7 @@ export function aggregateFence(def: CellDefinition, deliveries: readonly Deliver
     const tokens = mean('fence_tokens');
     return [arm.id, { delivered_contexts: contexts.length, measured_contexts: measurements.length,
       missing_measurements: contexts.length - measurements.length, overlay_mismatches: overlayMismatches,
+      unmatched_quoted_rows: measurements.reduce((s, f) => s + (f.unmatched_quoted_rows ?? 0), 0),
       mean_delivered_rows: mean('delivered_rows'), mean_fenced_rows: mean('fenced_rows'), mean_fence_tokens: tokens,
       reference_budget_tokens: BUDGET, share_of_reference_budget: tokens === null ? null : tokens / BUDGET }];
   }));
