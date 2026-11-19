@@ -5,14 +5,23 @@
  * caller before and after the change, and checks each cell against gbrain's access contract
  * (docs/guides/access-designations.md, docs/guides/conversation-archive.md): the owner's own callers never lose a read,
  * and nobody else ever gains one. Run it against another gbrain build by pointing node_modules/gbrain at that checkout.
- * A cell that fails names the scenario, phase, caller, content and read path, and AD_REPORT_DIR=<dir> writes every cell.
+ * A cell that fails names the scenario, phase, caller, content and read path, and AD_REPORT_DIR=<dir> writes every cell,
+ * with the build it ran on (the commit and whether the tree was clean, when node_modules/gbrain is a git checkout, read
+ * once before the scenarios and again after them) and every scenario this build defines, so a reader can tell a full run on one commit from a partial or mislabelled one.
  * Every count it reports is on PGLite: no Postgres brain runs here. Source config goes in through gbrain's
  * executeRawJsonb, because a JSON.stringify'd ::jsonb parameter is stored as a JSON string on Postgres, and setup fails
  * if the owner-only source doesn't read back owner_only: true.
+ *
+ * On a build whose get_page reads several pages with `slugs` (gbrain#9798, GBRA-650), every page is also read through a
+ * batch that asks for it first and then for every other page in the brain, scoped to its source and unscoped. Those
+ * cells answer to the same contract as a single get_page, and any page a batch delivers, the one it asks for first or a
+ * later one, that the same caller does not read through a single get_page fails as slugs_only. On a build without `slugs` those paths are skipped.
  */
 import { afterAll, describe, expect, test } from 'bun:test';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { PGLiteEngine } from '../../node_modules/gbrain/src/core/pglite-engine.ts';
 import { configureGateway, resetGateway, __setEmbedTransportForTests } from '../../node_modules/gbrain/src/core/ai/gateway.ts';
 import { GBrainOAuthProvider } from '../../node_modules/gbrain/src/core/oauth-provider.ts';
@@ -49,6 +58,22 @@ const GBRAIN_VERSION: string = JSON.parse(readFileSync(join(import.meta.dir, '..
 const older = (a: string, b: string) => { const x = a.split('.').map(Number), y = b.split('.').map(Number); for (let i = 0; i < Math.max(x.length, y.length); i++) { if ((x[i] ?? 0) !== (y[i] ?? 0)) return (x[i] ?? 0) < (y[i] ?? 0); } return false; };
 const TOO_OLD = older(GBRAIN_VERSION, MIN_GBRAIN);
 if (TOO_OLD) console.warn('sharing contract skipped: the pinned gbrain is v' + GBRAIN_VERSION + ', and this test needs v' + MIN_GBRAIN + ' or later');
+/**
+ * The build node_modules/gbrain holds: its version, and its commit and whether its tree is clean when it is a git checkout
+ * of its own (a link to a gbrain clone). An installed package records no commit, so sha is null there.
+ */
+export function gbrainBuild(root: string = join(import.meta.dir, '../../node_modules/gbrain')): { version: string; sha: string | null; dirty: boolean | null } {
+  const real = realpathSync(root);
+  const version = (JSON.parse(readFileSync(join(real, 'package.json'), 'utf8')) as { version: string }).version;
+  const git = (...args: string[]) => { const r = spawnSync('git', ['-C', real, ...args], { encoding: 'utf8' }); return r.status === 0 ? r.stdout.trim() : null; };
+  const top = git('rev-parse', '--show-toplevel');
+  if (!top || realpathSync(top) !== real) return { version, sha: null, dirty: null };
+  return { version, sha: git('rev-parse', 'HEAD'), dirty: (git('status', '--porcelain') ?? 'unknown') !== '' };
+}
+const BUILD_AT_START = gbrainBuild();
+
+/** get_page { slugs } ships in gbrain#9798 as src/core/ops/get-page-batch.ts. */
+export const HAS_SLUGS = existsSync(join(import.meta.dir, '../../node_modules/gbrain/src/core/ops/get-page-batch.ts'));
 
 /**
  * Pages in an archived source stay hidden from every page read for API tokens, and the owner admin page re-scopes the
@@ -105,14 +130,19 @@ const CALLERS: Caller[] = [
 ];
 
 /** Each read names the item's source; the _unscoped twins name none, the way an agent usually calls. */
-type ReadPath = 'get_page' | 'search' | 'query' | 'list_pages' | 'recall' | 'get_page_unscoped' | 'search_unscoped' | 'query_unscoped' | 'list_unscoped' | 'recall_unscoped';
-const PAGE_PATHS: ReadPath[] = ['get_page', 'search', 'query', 'list_pages', 'get_page_unscoped', 'search_unscoped', 'query_unscoped', 'list_unscoped'];
+type ReadPath = 'get_page' | 'search' | 'query' | 'list_pages' | 'recall' | 'get_page_unscoped' | 'search_unscoped' | 'query_unscoped' | 'list_unscoped' | 'recall_unscoped'
+  | 'get_page_slugs' | 'get_page_slugs_unscoped';
+const PAGE_PATHS: ReadPath[] = ['get_page', 'search', 'query', 'list_pages', 'get_page_unscoped', 'search_unscoped', 'query_unscoped', 'list_unscoped',
+  ...(HAS_SLUGS ? ['get_page_slugs', 'get_page_slugs_unscoped'] as ReadPath[] : [])];
 const FACT_PATHS: ReadPath[] = ['recall', 'query', 'recall_unscoped', 'query_unscoped'];
 const OP: Record<ReadPath, string> = { get_page: 'get_page', search: 'search', query: 'query', list_pages: 'list_pages', recall: 'recall', get_page_unscoped: 'get_page',
-  search_unscoped: 'search', query_unscoped: 'query', list_unscoped: 'list_pages', recall_unscoped: 'recall' };
+  search_unscoped: 'search', query_unscoped: 'query', list_unscoped: 'list_pages', recall_unscoped: 'recall', get_page_slugs: 'get_page', get_page_slugs_unscoped: 'get_page' };
 
-function argsFor(path: ReadPath, item: Item, slug: string): Record<string, unknown> {
+/** `others` is every other page slug in the brain, which a slugs batch asks for after the item's own. */
+function argsFor(path: ReadPath, item: Item, slug: string, others: string[] = []): Record<string, unknown> {
   switch (path) {
+    case 'get_page_slugs': return { slugs: [slug, ...others], source_id: item.source };
+    case 'get_page_slugs_unscoped': return { slugs: [slug, ...others] };
     case 'get_page': return { slug, source_id: item.source };
     case 'search': return { query: item.query, match: 'keyword', fields: 'full', limit: 50, source_id: item.source };
     case 'query': return { query: item.query, expand: false, fields: 'full', limit: 50, source_id: item.source };
@@ -150,7 +180,8 @@ function contract(caller: CallerKind, item: Item, state: State, path: ReadPath):
   return 'never';
 }
 
-export interface Cell { scenario: string; phase: 'before' | 'after'; caller: string; item: string; path: ReadPath; read: boolean | null; error?: string; expect: Expect; verdict: 'ok' | 'violation' | 'owner_lost' }
+/** `batch`, on a slugs cell: the other pages whose marks the batch result carried. */
+export interface Cell { scenario: string; phase: 'before' | 'after'; caller: string; item: string; path: ReadPath; read: boolean | null; batch?: string[]; error?: string; expect: Expect; verdict: 'ok' | 'violation' | 'owner_lost' | 'slugs_only' }
 
 interface Brain {
   engine: any; home: string; tokens: Record<string, string>; server: any; archiveSlug: string;
@@ -276,20 +307,33 @@ async function matrix(b: Brain, scenario: string, phase: 'before' | 'after', sta
     if (!present(caller, b)) continue;
     const listing: Record<string, string> = {};
     const listKey = (path: ReadPath, item: Item) => path + ':' + (path === 'list_pages' ? item.source : '');
+    const pageSlugs = ITEMS.filter(i => i.kind === 'page').map(i => (i.id === 'archive' ? b.archiveSlug : i.slug));
     for (const item of ITEMS) {
       const slug = item.id === 'archive' ? b.archiveSlug : item.slug;
       for (const path of item.kind === 'page' ? PAGE_PATHS : FACT_PATHS) {
         let text: string;
         const isList = path === 'list_pages' || path === 'list_unscoped';
         if (isList) text = listing[listKey(path, item)] ??= await readAs(b, caller, OP[path], argsFor(path, item, slug));
-        else text = await readAs(b, caller, OP[path], argsFor(path, item, slug));
+        else text = await readAs(b, caller, OP[path], argsFor(path, item, slug, pageSlugs.filter(s => s !== slug)));
         const read = isList ? text.includes('"' + slug + '"') || text.includes('\\"' + slug + '\\"') : text.includes(item.mark);
         const expect = contract(kindNow(caller, state), item, state, path);
         const verdict = expect === 'never' && read ? 'violation' : expect === 'must' && !read ? 'owner_lost' : 'ok';
-        cells.push({ scenario, phase, caller: caller.id, item: item.id, path, read, expect, verdict,
+        const batch = path === 'get_page_slugs' || path === 'get_page_slugs_unscoped' ? ITEMS.filter(o => o.kind === 'page' && o.id !== item.id && text.includes(o.mark)).map(o => o.id) : null;
+        cells.push({ scenario, phase, caller: caller.id, item: item.id, path, read, ...(batch ? { batch } : {}), expect, verdict,
           ...(verdict !== 'ok' || !read ? { error: (text.match(/"code"\s*:\s*"([a-z_]+)"/)?.[1] ?? text.slice(0, 160)) } : {}) });
       }
     }
+  }
+  return slugsOnly(cells);
+}
+
+/** A page a caller reads through a get_page slugs batch, first or later in it, but not through a single get_page of the same scope: a leak. */
+export function slugsOnly(cells: Cell[]): Cell[] {
+  const single = new Map(cells.filter(c => c.path === 'get_page' || c.path === 'get_page_unscoped').map(c => [c.caller + '|' + c.item + '|' + c.path, c.read === true]));
+  const alone = (c: Cell, item: string) => single.get(c.caller + '|' + item + '|' + c.path.replace('_slugs', '')) === true;
+  for (const c of cells) {
+    if (c.path !== 'get_page_slugs' && c.path !== 'get_page_slugs_unscoped') continue;
+    if ((c.read && !alone(c, c.item)) || (c.batch ?? []).some(id => !alone(c, id))) c.verdict = 'slugs_only';
   }
   return cells;
 }
@@ -389,6 +433,44 @@ globalThis.fetch = Object.assign(async (input: string | URL | Request, init?: Re
 configureGateway({ embedding_model: 'openai:text-embedding-3-small', embedding_dimensions: DIMS, env: { OPENAI_API_KEY: 'keyless-test' } });
 __setEmbedTransportForTests((async ({ values }: { values: string[] }) => ({ embeddings: values.map(vectorFor) })) as never);
 
+describe('AD sharing contract: the build it ran on', () => {
+  test('a gbrain checkout reports its commit and whether its tree is clean; a directory that is not its own checkout reports no commit', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'ad-build-'));
+    writeFileSync(join(dir, 'package.json'), JSON.stringify({ name: 'gbrain', version: '9.9.9' }));
+    expect(gbrainBuild(dir)).toEqual({ version: '9.9.9', sha: null, dirty: null });
+    const g = (...a: string[]) => spawnSync('git', ['-C', dir, ...a], { encoding: 'utf8', env: { ...process.env, GIT_CONFIG_GLOBAL: '/dev/null', GIT_AUTHOR_NAME: 't', GIT_AUTHOR_EMAIL: 't@t', GIT_COMMITTER_NAME: 't', GIT_COMMITTER_EMAIL: 't@t' } }).stdout.trim();
+    g('init', '-q'); g('add', 'package.json'); g('commit', '-q', '-m', 'a');
+    expect(gbrainBuild(dir)).toEqual({ version: '9.9.9', sha: g('rev-parse', 'HEAD'), dirty: false });
+    writeFileSync(join(dir, 'extra.ts'), 'export {}');
+    expect(gbrainBuild(dir).dirty).toBe(true);
+  });
+});
+
+describe('AD sharing contract: get_page slugs leak check', () => {
+  const cell = (path: ReadPath, read: boolean, caller = 'member_http', item = 'private'): Cell => ({ scenario: 's', phase: 'after', caller, item, path, read, expect: 'may', verdict: 'ok' });
+  test('a page read through slugs but not through a single get_page of the same scope is slugs_only; matching reads pass', () => {
+    const cells = slugsOnly([
+      cell('get_page', false), cell('get_page_slugs', true),
+      cell('get_page_unscoped', true), cell('get_page_slugs_unscoped', true),
+      cell('get_page', true, 'owner_http', 'world'), cell('get_page_slugs', true, 'owner_http', 'world'),
+      cell('get_page', true, 'owner_http', 'archive'), cell('get_page_slugs', false, 'owner_http', 'archive'),
+    ]);
+    expect(cells.filter(c => c.verdict === 'slugs_only').map(c => c.caller + ' ' + c.item + ' ' + c.path)).toEqual(['member_http private get_page_slugs']);
+  });
+  test('a page delivered later in an allowed batch that a single get_page denies is slugs_only', () => {
+    const cells = slugsOnly([
+      cell('get_page', true, 'member_http', 'world'), cell('get_page', false), cell('get_page_unscoped', true, 'member_http', 'world'), cell('get_page_unscoped', true),
+      { ...cell('get_page_slugs', true, 'member_http', 'world'), batch: ['private'] }, { ...cell('get_page_slugs_unscoped', true, 'member_http', 'world'), batch: ['private'] },
+    ]);
+    expect(cells.filter(c => c.verdict === 'slugs_only').map(c => c.item + ' ' + c.path)).toEqual(['world get_page_slugs']);
+  });
+  test('the slugs paths run exactly when the installed gbrain has get_page slugs', () => {
+    expect(PAGE_PATHS.includes('get_page_slugs')).toBe(HAS_SLUGS);
+    expect(argsFor('get_page_slugs', ITEMS[0]!, 'notes/a', ['notes/b'])).toEqual({ slugs: ['notes/a', 'notes/b'], source_id: 'default' });
+    expect(argsFor('get_page_slugs_unscoped', ITEMS[0]!, 'notes/a', ['notes/b'])).toEqual({ slugs: ['notes/a', 'notes/b'] });
+  });
+});
+
 for (const s of SCENARIOS) {
   describe.skipIf(TOO_OLD)('AD sharing contract: ' + s.name, () => {
     test("no non-owner gains a read and the owner's callers lose none", async () => {
@@ -426,5 +508,6 @@ afterAll(() => {
   const dir = process.env.AD_REPORT_DIR;
   if (!dir) return;
   mkdirSync(dir, { recursive: true });
-  writeFileSync(join(dir, 'ad-sharing-cells.json'), JSON.stringify({ callers: CALLERS, items: ITEMS, notes, cells: report }, null, 1));
+  writeFileSync(join(dir, 'ad-sharing-cells.json'), JSON.stringify({ gbrain: BUILD_AT_START, gbrain_at_end: gbrainBuild(), has_slugs: HAS_SLUGS, too_old: TOO_OLD, scenarios: SCENARIOS.map(s => s.name),
+    callers: CALLERS, items: ITEMS, notes, cells: report }, null, 1));
 });
