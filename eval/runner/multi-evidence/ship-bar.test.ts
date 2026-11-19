@@ -15,7 +15,7 @@ const items = Array.from({ length: 24 }, (_, i) => `H1-${String(i).padStart(2, '
 const readers = ['claude-opus-5-5', 'gpt-6.2-sol'];
 const SHA = 'b'.repeat(40);
 const cand = (o: Partial<ItemRow>) => row({ gbrain: { ref: 'slugs', sha: SHA }, ...o });
-const full = { gbrain: { version: '0.60.747.0', sha: SHA, dirty: false }, has_slugs: true, too_old: false, scenarios: ['s'] };
+const full = { gbrain: { version: '0.60.747.0', sha: SHA, dirty: false }, gbrain_at_end: { sha: SHA, dirty: false }, has_slugs: true, too_old: false, scenarios: ['s'] };
 
 describe('ship bar', () => {
   test('the four thresholds are the ones written down before spend', () => {
@@ -118,7 +118,10 @@ describe('ship bar', () => {
     const f = { ...full, scenarios: ['s', 't'], cells };
     expect(privacyRefusal(f, SHA)).toEqual([]);
     expect(privacyRefusal(f, 'c'.repeat(40)).join()).toContain(`it ran on ${SHA}, not the candidate`);
-    expect(privacyRefusal({ ...f, gbrain: { version: '1', sha: SHA, dirty: true } }, SHA).join()).toContain('uncommitted changes');
+    expect(privacyRefusal({ ...f, gbrain: { version: '1', sha: SHA, dirty: true }, gbrain_at_end: { sha: SHA, dirty: true } }, SHA).join()).toContain('uncommitted changes');
+    expect(privacyRefusal({ ...f, gbrain_at_end: { sha: 'c'.repeat(40), dirty: false } }, SHA).join()).toContain(`node_modules/gbrain changed during the run (${SHA} at the start, ${'c'.repeat(40)} at the end)`);
+    expect(privacyRefusal({ ...f, gbrain_at_end: { sha: SHA, dirty: true } }, SHA).join()).toContain('changed during the run');
+    expect(privacyRefusal({ ...f, gbrain_at_end: undefined }, SHA).join()).toContain('no commit recorded at the end');
     expect(privacyRefusal({ ...f, gbrain: { version: '1', sha: null, dirty: null } }, SHA).join()).toContain('records no gbrain commit');
     expect(privacyRefusal({ cells }, SHA).length).toBeGreaterThanOrEqual(3);
     expect(privacyRefusal({ ...f, has_slugs: false }, SHA).join()).toContain('skipped');

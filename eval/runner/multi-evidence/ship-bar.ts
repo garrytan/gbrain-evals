@@ -20,7 +20,8 @@
  *   4. Privacy: every cell of the keyless sharing-contract test passes, its get_page { slugs } paths were exercised, and no
  *      caller reads a page through slugs that it does not read through a single get_page (--privacy, the file
  *      AD_REPORT_DIR makes test/eval/sharing-contract.test.ts write). The file is refused unless it ran on the candidate's
- *      commit from a clean checkout and holds cells for every scenario that build defines, before and after.
+ *      commit from a clean checkout that stayed linked for the whole run, and holds cells for every scenario that build
+ *      defines, before and after.
  * The comparison is refused when an arm's rows name more than one gbrain commit, or when a pair's gold pages, turn cap or
  * setup (the digest dev-loop.ts records per cells dir: world, brains, Hard identity, evaluator code, served instructions
  * and tool names, cell flags) differ, or a row records no setup.
@@ -111,7 +112,7 @@ export function pairRows(base: ItemRow[], cand: ItemRow[]): { pairs: Pair[]; dro
 export interface PrivacyResult { ok: boolean; cells: number; violations: number; slugs_cells: number; slugs_only_reads: number; slugs_reads: number; detail: string[] }
 
 interface PrivacyFile {
-  gbrain?: { version?: string; sha?: string | null; dirty?: boolean | null }; has_slugs?: boolean; too_old?: boolean; scenarios?: string[];
+  gbrain?: { version?: string; sha?: string | null; dirty?: boolean | null }; gbrain_at_end?: { sha?: string | null; dirty?: boolean | null }; has_slugs?: boolean; too_old?: boolean; scenarios?: string[];
   cells: Array<{ scenario: string; phase: string; caller: string; item: string; path: string; read: boolean | null; verdict: string }>;
 }
 
@@ -121,6 +122,7 @@ export function privacyRefusal(f: PrivacyFile, sha: string): string[] {
   if (!f.gbrain?.sha) why.push('it records no gbrain commit (run it with node_modules/gbrain linked to a clean checkout of the candidate)');
   else if (f.gbrain.sha !== sha) why.push(`it ran on ${f.gbrain.sha}, not the candidate ${sha}`);
   if (f.gbrain?.sha && f.gbrain.dirty !== false) why.push('the gbrain checkout had uncommitted changes');
+  if (f.gbrain?.sha && (f.gbrain_at_end?.sha !== f.gbrain.sha || f.gbrain_at_end?.dirty !== f.gbrain.dirty)) why.push(`node_modules/gbrain changed during the run (${f.gbrain.sha} at the start, ${f.gbrain_at_end?.sha ?? 'no commit recorded'} at the end)`);
   if (f.too_old !== false || f.has_slugs !== true) why.push('that build skipped the scenarios or the get_page slugs paths');
   const scenarios = f.scenarios ?? [];
   if (!scenarios.length) why.push('it lists no scenarios');

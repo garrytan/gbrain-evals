@@ -40,7 +40,8 @@ use `slugs`, whether page-read text (every `get_page` result, single or batch) p
 tool-result text doesn't grow, whether correct answers drop by more than 15 points, and whether
 `test/eval/sharing-contract.test.ts` passes with its `slugs` reads. Run that test with `AD_REPORT_DIR` and
 node_modules/gbrain linked to a clean git checkout of the build: the file it writes names that commit and every
-scenario, and `ship-bar.ts` refuses a file from another commit, a dirty tree or a partial run. It also refuses the
+scenario, and `ship-bar.ts` refuses a file from another commit, a dirty tree, a link that changed during the run or a
+partial run. It also refuses the
 comparison when a pair's gold pages, turn cap or setup differ (each cells dir's world, brains, Hard identity, evaluator
 code, served instructions, tool names and cell flags), so rerun `--report` on a run dir made before rows recorded their
 setup. Each number is paired by item and agent, with a 95% bootstrap interval over items.

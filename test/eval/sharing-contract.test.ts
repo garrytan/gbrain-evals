@@ -6,8 +6,8 @@
  * (docs/guides/access-designations.md, docs/guides/conversation-archive.md): the owner's own callers never lose a read,
  * and nobody else ever gains one. Run it against another gbrain build by pointing node_modules/gbrain at that checkout.
  * A cell that fails names the scenario, phase, caller, content and read path, and AD_REPORT_DIR=<dir> writes every cell,
- * with the build it ran on (the commit and whether the tree was clean, when node_modules/gbrain is a git checkout) and
- * every scenario this build defines, so a reader can tell a full run on one commit from a partial or mislabelled one.
+ * with the build it ran on (the commit and whether the tree was clean, when node_modules/gbrain is a git checkout, read
+ * once before the scenarios and again after them) and every scenario this build defines, so a reader can tell a full run on one commit from a partial or mislabelled one.
  * Every count it reports is on PGLite: no Postgres brain runs here. Source config goes in through gbrain's
  * executeRawJsonb, because a JSON.stringify'd ::jsonb parameter is stored as a JSON string on Postgres, and setup fails
  * if the owner-only source doesn't read back owner_only: true.
@@ -70,6 +70,7 @@ export function gbrainBuild(root: string = join(import.meta.dir, '../../node_mod
   if (!top || realpathSync(top) !== real) return { version, sha: null, dirty: null };
   return { version, sha: git('rev-parse', 'HEAD'), dirty: (git('status', '--porcelain') ?? 'unknown') !== '' };
 }
+const BUILD_AT_START = gbrainBuild();
 
 /** get_page { slugs } ships in gbrain#9798 as src/core/ops/get-page-batch.ts. */
 export const HAS_SLUGS = existsSync(join(import.meta.dir, '../../node_modules/gbrain/src/core/ops/get-page-batch.ts'));
@@ -507,6 +508,6 @@ afterAll(() => {
   const dir = process.env.AD_REPORT_DIR;
   if (!dir) return;
   mkdirSync(dir, { recursive: true });
-  writeFileSync(join(dir, 'ad-sharing-cells.json'), JSON.stringify({ gbrain: gbrainBuild(), has_slugs: HAS_SLUGS, too_old: TOO_OLD, scenarios: SCENARIOS.map(s => s.name),
+  writeFileSync(join(dir, 'ad-sharing-cells.json'), JSON.stringify({ gbrain: BUILD_AT_START, gbrain_at_end: gbrainBuild(), has_slugs: HAS_SLUGS, too_old: TOO_OLD, scenarios: SCENARIOS.map(s => s.name),
     callers: CALLERS, items: ITEMS, notes, cells: report }, null, 1));
 });
