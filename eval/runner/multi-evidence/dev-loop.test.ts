@@ -4,7 +4,7 @@ import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Outcome } from '../nightly/outcome.ts';
-import { ARMS, BASE_TURN_CAP, cat40ArmFlags, compareVersions, followUpRun, newestRelease, parseArgs, planRuns, powerTable, rerankTimedOut, resumeRefusal } from './dev-loop.ts';
+import { ARMS, BASE_TURN_CAP, cat40ArmFlags, cat40Setup, compareVersions, followUpRun, newestRelease, parseArgs, planRuns, powerTable, rerankTimedOut, resumeRefusal } from './dev-loop.ts';
 import type { SuiteRun } from '../nightly/adapters.ts';
 import { agentItem, agentWhy, batchPagesRead, isSlugsCall, minDetectable, missed, qaItem, qaWhy, readTargets, slice, slugName, trialDiscordance, type ItemRow } from './score.ts';
 import { loadMeDevSet, MIN_GOLD } from './select.ts';
@@ -213,5 +213,32 @@ describe('dev loop', () => {
     g('checkout', '-q', '-b', 'side'); commit('c'); g('tag', 'v0.11.0'); g('checkout', '-q', 'master');
     g('update-ref', 'refs/remotes/origin/master', 'master');
     expect(newestRelease(dir, false)).toEqual({ tag: 'v0.10.0', sha: c2 });
+  });
+});
+
+describe('cat40Setup', () => {
+  const exp = { world_digest: 'w', slot_commit: 's'.repeat(40), gbrain_commit: 'g'.repeat(40), hard: { max_turns: 16, runner_commit: 'r1', settings_digest: 'x' },
+    flags: { '--judge': 'gpt-6.1-sol', '--repeat': '1', '--gbrain-ref': 'g'.repeat(40), '--tasks': 'H1-02', '--out': '/a', '--concurrency': '10' } };
+  const dir = (o: { exp?: Record<string, unknown> | null; instructions?: string; tools?: string[] } = {}) => {
+    const d = mkdtempSync(join(tmpdir(), 'me-setup-'));
+    if (o.exp !== null) writeFileSync(join(d, 'experiment.json'), JSON.stringify(o.exp ?? exp));
+    writeFileSync(join(d, 'served-instructions.txt'), o.instructions ?? 'Use search first.');
+    writeFileSync(join(d, 'served-tools.json'), JSON.stringify((o.tools ?? ['search', 'get_page']).map(name => ({ name, description: name + ' ' + Math.random(), inputSchema: {} }))));
+    return d;
+  };
+  test('two builds on the same brains, tasks split across dirs, and a new runner commit share one setup', () => {
+    const a = cat40Setup(dir());
+    expect(a).toMatch(/^[0-9a-f]{64}$/);
+    expect(cat40Setup(dir({ exp: { ...exp, gbrain_commit: 'h'.repeat(40), hard: { ...exp.hard, runner_commit: 'r2' },
+      flags: { ...exp.flags, '--gbrain-ref': 'h'.repeat(40), '--slot-ref': 's'.repeat(40), '--tasks': 'H1-03', '--out': '/b' } } }))).toBe(a);
+    expect(cat40Setup(dir({ tools: ['get_page', 'search'] }))).toBe(a);
+  });
+  test('the turn cap, brains, world, served instructions, tool names or a cell flag change the setup; no experiment.json gives null', () => {
+    const a = cat40Setup(dir());
+    for (const d of [dir({ exp: { ...exp, hard: { ...exp.hard, max_turns: 32 } } }), dir({ exp: { ...exp, slot_commit: 't'.repeat(40) } }), dir({ exp: { ...exp, world_digest: 'v' } }),
+      dir({ instructions: 'Use search first. Read several pages per call.' }), dir({ tools: ['search', 'get_page', 'fetch'] }), dir({ exp: { ...exp, flags: { ...exp.flags, '--judge': 'other' } } })]) {
+      expect(cat40Setup(d)).not.toBe(a);
+    }
+    expect(cat40Setup(dir({ exp: null }))).toBeNull();
   });
 });

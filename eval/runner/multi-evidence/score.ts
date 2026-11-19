@@ -10,7 +10,10 @@
  *                   the submitted answer's sources. Packing is not measured for agents, so cut is null. result_chars is the
  *                   characters of every tool result the agent received (submit_answer excluded); slugs_calls, slugs_multi
  *                   and omitted_calls count get_page batch reads (gbrain#9798): calls with a non-empty slugs array, those
- *                   whose result delivered two or more pages, and results that listed pages under omitted.
+ *                   whose result delivered two or more pages, and results that listed pages under omitted. page_chars is
+ *                   the characters of every get_page result, single reads and slugs batches alike. setup is a digest of
+ *                   the cell's setup (world, brains, Hard identity, turn cap, evaluator code, served instructions and
+ *                   tool names, the flags that reach a cell), so two runs' cells pair only when it matches.
  *   qa (LME, BEAM)  retrieved = gold in the ranked session list gbrain returned (top 10); delivered = gold in the sessions
  *                   the reader was given (the first qa_sessions of that list); cut = retrieved but past the packing cut.
  * coverage is all, some or none of the gold delivered. A harness row (a crashed child, a provider error) is kept and
@@ -34,7 +37,8 @@ export interface ItemRow {
   gold: string[]; retrieved: string[]; delivered: string[]; opened: string[] | null; cited: string[] | null; cut: string[] | null;
   coverage: Coverage;
   turns: number | null; turn_cap: number | null; hit_cap: boolean | null; calls: number | null; assemble_calls: number | null;
-  result_chars: number | null; slugs_calls: number | null; slugs_multi: number | null; omitted_calls: number | null;
+  result_chars: number | null; page_chars: number | null; slugs_calls: number | null; slugs_multi: number | null; omitted_calls: number | null;
+  setup: string | null;
   correct: boolean | null; score: number | null; stop: string | null; harness: string | null; cost_usd: number | null;
 }
 
@@ -63,7 +67,7 @@ export const listsOmitted = (result: string) => /"omitted"\s*:\s*\{/.test(result
 const isError = (result: string) => /^Error:/.test(result.trimStart());
 
 /** An agent item from its nightly outcome row (cat40Rows), its transcript and its turns. */
-export function agentItem(o: Outcome, x: { arm: ArmName; ref: string; gold: string[]; calls: Call[] | null; turns: number | null; turnCap: number | null }): ItemRow {
+export function agentItem(o: Outcome, x: { arm: ArmName; ref: string; gold: string[]; calls: Call[] | null; turns: number | null; turnCap: number | null; setup?: string | null }): ItemRow {
   const calls = x.calls ?? [];
   const delivered = x.calls ? x.gold.filter(g => calls.some(c => namesSlug(String(c.result ?? ''), g))) : (o.searched_gold ?? []);
   const openedBy = (c: Call) => { const r = String(c.result ?? ''); return isError(r) ? [] : isSlugsCall(c) ? batchPagesRead(r) : readTargets(c); };
@@ -76,9 +80,11 @@ export function agentItem(o: Outcome, x: { arm: ArmName; ref: string; gold: stri
     turns: x.turns, turn_cap: x.turnCap, hit_cap: o.stop === null ? null : o.stop === 'turn_cap', calls: x.calls ? calls.filter(c => c.name !== 'submit_answer').length : (o.calls?.length ?? null),
     assemble_calls: x.calls ? calls.filter(c => c.name === 'assemble_evidence').length : null,
     result_chars: x.calls ? calls.filter(c => c.name !== 'submit_answer').reduce((n, c) => n + String(c.result ?? '').length, 0) : null,
+    page_chars: x.calls ? calls.filter(c => c.name === 'get_page').reduce((n, c) => n + String(c.result ?? '').length, 0) : null,
     slugs_calls: x.calls ? calls.filter(isSlugsCall).length : null,
     slugs_multi: x.calls ? calls.filter(c => isSlugsCall(c) && !isError(String(c.result ?? '')) && batchPagesRead(String(c.result ?? '')).length >= 2).length : null,
     omitted_calls: x.calls ? calls.filter(c => c.name === 'get_page' && listsOmitted(String(c.result ?? ''))).length : null,
+    setup: x.setup ?? null,
     correct: o.harness ? null : o.pass, score: o.score, stop: o.stop, harness: o.harness?.error ?? null, cost_usd: o.cost_usd,
   };
 }
@@ -93,7 +99,7 @@ export function qaItem(o: Outcome, x: { arm: ArmName; ref: string; gold: string[
     schema: ITEM_SCHEMA, suite: o.suite, kind: 'qa', item: o.item, reader: o.reader ?? 'none', arm: x.arm, trial: o.trial, gbrain: { ref: x.ref, sha: o.sha },
     category: o.category ?? null, question: o.question ?? null, expected: o.expected ?? null, answer: o.answer ?? null,
     gold: x.gold, retrieved, delivered, opened: null, cited: null, cut: retrieved.filter(g => !delivered.includes(g)), coverage: coverage(delivered.length, x.gold.length),
-    turns: null, turn_cap: null, hit_cap: null, calls: x.ranked ? 1 : null, assemble_calls: null, result_chars: null, slugs_calls: null, slugs_multi: null, omitted_calls: null,
+    turns: null, turn_cap: null, hit_cap: null, calls: x.ranked ? 1 : null, assemble_calls: null, result_chars: null, page_chars: null, slugs_calls: null, slugs_multi: null, omitted_calls: null, setup: null,
     correct: o.harness ? null : o.pass, score: o.score, stop: o.stop, harness: o.harness?.error ?? null, cost_usd: o.cost_usd,
   };
 }
