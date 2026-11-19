@@ -475,3 +475,29 @@ At one-sided 0.025 the same computation gives R113's 2.80 and 1.98.
   even the easiest final bound is out of reach.
 
 **What the look costs.** These figures come from the same seed (20261119), with 200,000 simulated runs per scenario and
+per-world normal differences (`eval/runner/bg1/confirm-power-sim.py`). The "one look" columns reproduce the Power
+section's table.
+
+| If the development effects are the truth, N = 40 | Central, one look | Central, with the look | Pessimistic, one look | Pessimistic, with the look |
+|---|---|---|---|---|
+| Row 3, all four ahead | 13.8% | 12.9% | 2.8% | 2.6% |
+| Row 4, one class ahead of both servers | 30.7% | 30.6% | 18.1% | 17.8% |
+| Row 5, at least one ahead, neither class on both | 55.2% | 56.1% | 67.3% | 67.6% |
+| Row 6, none ahead and none behind | 0.3% | 0.3% | 11.7% | 12.0% |
+| "Ahead", by comparison, in the Power table's order | 0.99, 0.30, 0.44, 0.55 | 0.99, 0.29, 0.43, 0.54 | 0.82, 0.20, 0.22, 0.20 | 0.82, 0.19, 0.21, 0.20 |
+| "Not behind by 3 points or more" | 1.00 | 1.00 | 0.93 to 1.00 | 0.93 to 1.00 |
+| The run stops at the look (every stop is for futility) | none | 0.1% | none | 0.2% |
+
+With no true difference, the run stops at the look 0.1% of the time under the central SDs and 2.2% under the
+pessimistic ones. "Ahead" comes out in each comparison 1.2% to 1.3% of the time, and a "behind" anywhere 4.7% and 4.5%
+(4.9% with one look). The expected number of worlds run is 39.98 and 39.96 under the development effects, so the budget
+does not change.
+
+GBEV-3 decided this on 2026-11-19, before any paid call: "R113 exists to preserve the plan's alpha across one look, not
+to make the test stricter."
+
+## Disclosures
+
+- gbrain is Garry Tan's own project.
+- Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1.
+- Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
