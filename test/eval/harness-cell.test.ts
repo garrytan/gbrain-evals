@@ -218,3 +218,14 @@ describe('re-judge and re-answer spend', () => {
     } finally { spend.run.close(); spend.close(); rmSync(dir, { recursive: true, force: true }); }
   });
 });
+
+describe('particle-1 as a reader', () => {
+  test('a particle answer model gets the particle credentials and a list price', () => {
+    expect(harnessCredentials({ ...spec, models: { ...spec.models, answer: 'particle:particle-1' } }, resolved).sort()).toEqual(['gemini', 'particle']);
+    expect(chatPrice('particle:particle-1')).not.toBeNull();
+  });
+
+  test('particle-1 never judges', () => {
+    expect(() => validateSpec({ ...spec, models: { ...spec.models, judge: 'particle:particle-1' } })).toThrow('particle-1 never judges');
+  });
+});

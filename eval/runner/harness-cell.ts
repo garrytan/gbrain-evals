@@ -101,6 +101,7 @@ export function validateSpec(raw: unknown): CellSpec {
   if (s.target_tokens !== null && !(Number.isInteger(s.target_tokens) && s.target_tokens > 0)) problems.push('target_tokens must be a positive integer or null');
   if (!s.models || !/^[a-z-]+:.+/.test(s.models.answer ?? '') && s.mode !== 'retrieval') problems.push('models.answer must be "<llm>:<model>"');
   if (s.models?.judge !== null && s.models?.judge !== undefined && !/^[a-z-]+:.+/.test(s.models.judge)) problems.push('models.judge must be "<llm>:<model>" or null');
+  if (/(^|:)particle/.test(s.models?.judge ?? '')) problems.push('particle-1 never judges');
   if (!(typeof s.budget_usd === 'number' && s.budget_usd > 0)) problems.push('budget_usd must be a positive number');
   if (!s.questions || typeof s.questions !== 'object') problems.push('questions selection is required');
   if (s.reuse_store !== undefined && !(/^[A-Za-z0-9-]+$/.test(s.reuse_store?.store_id ?? '') && s.reuse_store?.reason?.trim())) problems.push('reuse_store needs a store_id and a reason');
@@ -165,6 +166,7 @@ const PRICE_URL: Record<string, (model: string) => string> = {
   anthropic: () => 'https://api.anthropic.com/v1/messages',
   gemini: m => `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`,
   groq: () => 'https://api.groq.com/openai/v1/chat/completions',
+  particle: () => 'https://api.particle.ai/v1/chat/completions',
 };
 
 /** List price (USD per 1M tokens) through the ledger's own pricing, or null when it has none. */
@@ -342,7 +344,7 @@ function stageReceiptCount(dir: string): number {
   return readdirSync(stages).reduce((n, s) => n + readdirSync(join(stages, s)).filter(f => f.endsWith('.json')).length, 0);
 }
 
-const LLM_PROVIDER: Record<string, string> = { gemini: 'gemini', openai: 'openai', anthropic: 'anthropic', groq: 'groq' };
+const LLM_PROVIDER: Record<string, string> = { gemini: 'gemini', openai: 'openai', anthropic: 'anthropic', groq: 'groq', particle: 'particle' };
 
 export function harnessCredentials(spec: CellSpec, resolved: ResolvedCell): string[] {
   const models = [spec.models.answer, spec.models.judge, resolved.dataset_judge_model].filter((m): m is string => !!m);
@@ -356,6 +358,7 @@ function pick(env: Record<string, string>, providers: string[]): Record<string, 
     gemini: ['GEMINI_API_KEY', 'GOOGLE_GENERATIVE_AI_API_KEY', 'GOOGLE_GEMINI_BASE_URL', 'GOOGLE_GENERATIVE_AI_BASE_URL'],
     groq: ['GROQ_API_KEY', 'GROQ_BASE_URL'],
     voyage: ['VOYAGE_API_KEY', 'VOYAGE_BASE_URL'],
+    particle: ['PARTICLE_API_KEY', 'PARTICLE_BASE_URL'],
   };
   const names = new Set(providers.flatMap(p => keep[p] ?? []));
   return Object.fromEntries(Object.entries(env).filter(([k]) => names.has(k)));
@@ -430,7 +433,7 @@ export async function runCell(ctx: Ctx, target: string, resume: boolean, tuneGri
   const proxyDir = join(dir, 'proxy');
   mkdirSync(proxyDir, { recursive: true });
   const upstreams = stub ? stub.upstreams : undefined;
-  const realKeys = stub ? Object.fromEntries(['openai', 'anthropic', 'gemini', 'groq', 'voyage'].map(p => [p, 'stub-upstream-key'])) : undefined;
+  const realKeys = stub ? Object.fromEntries(['openai', 'anthropic', 'gemini', 'groq', 'voyage', 'particle'].map(p => [p, 'stub-upstream-key'])) : undefined;
   const proxy = await startMeteringProxy({
     run, cellId: cell.cell_id, requestLogPath: join(proxyDir, 'requests.jsonl'), bodiesDir: join(proxyDir, 'bodies'),
     labels: ['harness', 'gbrain', 'comparator'], upstreams, realKeys,
