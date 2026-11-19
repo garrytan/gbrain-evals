@@ -51,7 +51,7 @@ describe('vendored Redis LongMemEval harness', () => {
     expect(changed.length).toBeGreaterThan(0);
     for (const f of changed) {
       const sha = createHash('sha256').update(readFileSync(join(DIR, f.path))).digest('hex');
-      expect([f.path, sha]).toEqual([f.path, f.local_sha256]);
+      expect([f.path, sha]).toEqual([f.path, f.local_sha256 ?? '']);
     }
   });
 

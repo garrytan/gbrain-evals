@@ -82,7 +82,8 @@
       "path": "src/agent_memory_benchmark/benchmark/runner.py",
       "upstream_path": "agent-memory-benchmark/src/agent_memory_benchmark/benchmark/runner.py",
       "upstream_blob": "c4589ef6e2a414d5c00e4e67598e3bb48dde71ce",
-      "changed": false
+      "changed": true,
+      "local_sha256": "a27ece001dbf96538d2d2041069a0d39a809b979fa2f8cf7ec53e5f5d1a02f0a"
     },
     {
       "path": "src/agent_memory_benchmark/datasets/__init__.py",

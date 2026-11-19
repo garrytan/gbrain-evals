@@ -132,7 +132,7 @@ arm, run for every reader.
 | Reader | Arms | Request |
 |---|---|---|
 | `gpt-4o-2024-08-06` | all five | OpenAI chat completions, temperature 0, 2,048 output tokens. The link to Redis's table, not a model under test. |
-| `claude-opus-5-5` | off, on, full, oracle | Anthropic messages, system prompt and question as the harness builds them, temperature 0, default effort, 8,192 output tokens |
+| `claude-opus-5-5` | off, on, full, oracle | Anthropic messages, system prompt and question as the harness builds them, no temperature (the model takes only its default and thinks adaptively, sharing the output limit), default effort, 8,192 output tokens |
 | `gpt-6.2-sol` | off, on, full, oracle | OpenAI chat completions, default reasoning effort, 16,000 output tokens, no temperature and no `n` (the model refuses both) |
 | `particle-1` | off, on, full, oracle | Particle chat completions (`https://api.particle.ai/v1`), `reasoning_effort: high`, 32,000 output tokens (its default cap) |
 
@@ -179,8 +179,9 @@ yes/no scorer.
   decision rests on the cross-family judges.
 - **Cross-family judges** follow R78: GPT-6 Astra for Claude rows and Claude Opus 5.5 for GPT rows; particle-1 rows go
   to Astra, and particle-1 never judges. gpt-6.2-astra runs at low reasoning effort with 2,000 output tokens;
-  claude-opus-5-5 at temperature 0 with 64 output tokens. If the API doesn't serve gpt-6.2-astra at the judge check,
-  `gpt-6-astra` replaces it by amendment before any counted unit.
+  claude-opus-5-5 at low effort (`output_config.effort`), no temperature (it takes only its default), 2,000 output
+  tokens, since its adaptive thinking shares the output limit. If the API doesn't serve gpt-6.2-astra at the judge
+  check, `gpt-6-astra` replaces it by amendment before any counted unit.
 - **Parsing.** Redis's scorer counts a reply as yes if "yes" appears anywhere in it, which is fine for 10-token replies
   but fragile for longer ones. Cross-family replies are parsed strictly: the first word of the reply, lowercased and
   stripped of punctuation, must be yes or no. Both parses are recorded, and the 1% unparsable gate below applies to the

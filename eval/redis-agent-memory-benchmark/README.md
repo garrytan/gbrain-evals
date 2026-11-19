@@ -30,6 +30,7 @@ header line is removed.
 | File | Change |
 |---|---|
 | `pyproject.toml` | Removed the optional third-party provider extras. |
+| `src/agent_memory_benchmark/benchmark/runner.py` | Renames the local variable `key` to `qid` in `process()`, because gstack's secret scanner read `key = qa.question_id or ...` as a credential. Behaviour is unchanged. |
 | `src/agent_memory_benchmark/datasets/longmemeval.py` | Reads the dataset at Hugging Face revision `98d7416c24c778c2fee6e6f3006e7a073259d48f` instead of `main`, so the files can't move under a run. |
 | `src/agent_memory_benchmark/memory/__init__.py` | Imports and registers none of the removed provider adapters, so `STORES` starts empty. |
 | `tests/test_memory_base.py` | Dropped the one test that imports removed provider adapters. |
