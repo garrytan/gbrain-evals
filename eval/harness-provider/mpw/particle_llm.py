@@ -2,7 +2,7 @@
 
 The pinned harness has no Particle client. Particle serves OpenAI Chat Completions (eval/runner/providers/
 openai-compatible.ts, COMPAT_PROVIDERS.particle), so this client sends one with the OpenAI SDK to PARTICLE_BASE_URL
-with PARTICLE_API_KEY, which the launcher points at the metering proxy. Every request carries `reasoning_effort: high`
+with PARTICLE_API_KEY, which the launcher points at the metering proxy; a base URL that is not on this machine is refused. Every request carries `reasoning_effort: high`
 and a 16,000-token output limit (particle-1 reasons by default and bills reasoning as output) and never `temperature`
 or `seed`. Particle may bill a request that failed after it was sent, so nothing is sent twice: the SDK's own retries
 are off, and the only resend is after the proxy's `mpw_proxy_upstream_unreachable` 502, which it returns only when the
@@ -20,7 +20,6 @@ from memory_bench.llm.base import LLM, Schema
 MODEL = "particle-1"
 REASONING_EFFORT = "high"
 MAX_OUTPUT_TOKENS = 16_000
-DEFAULT_BASE_URL = "https://api.particle.ai/v1"
 UNREACHABLE = "mpw_proxy_upstream_unreachable"
 _MAX_SENDS = 4
 _RETRY_BASE_DELAY = 5
@@ -35,9 +34,14 @@ class ParticleLLM(LLM):
     def __init__(self, model: str = MODEL):
         if model != MODEL:
             raise ValueError(f"particle: only {MODEL} is wired, not {model}")
+        from urllib.parse import urlparse
+
         from openai import OpenAI
 
-        self._client = OpenAI(api_key=os.environ.get("PARTICLE_API_KEY"), base_url=os.environ.get("PARTICLE_BASE_URL") or DEFAULT_BASE_URL, max_retries=0)
+        base_url = os.environ.get("PARTICLE_BASE_URL") or ""
+        if urlparse(base_url).hostname not in ("127.0.0.1", "localhost", "::1"):
+            raise RuntimeError("particle: PARTICLE_BASE_URL must point at the local metering proxy; this client never calls Particle directly")
+        self._client = OpenAI(api_key=os.environ.get("PARTICLE_API_KEY"), base_url=base_url, max_retries=0)
         self._model = model
 
     @property

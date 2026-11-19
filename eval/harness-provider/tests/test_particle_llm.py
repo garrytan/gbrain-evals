@@ -95,3 +95,14 @@ def test_only_particle_1_is_wired_and_it_is_registered():
 
     register.install()
     assert llm_pkg.REGISTRY["particle"] is ParticleLLM
+
+
+@pytest.mark.parametrize("base_url", [None, "https://api.particle.ai/v1", "http://example.com/particle/v1"])
+def test_it_never_calls_particle_directly(monkeypatch, base_url):
+    monkeypatch.setenv("PARTICLE_API_KEY", "stub-key")
+    if base_url is None:
+        monkeypatch.delenv("PARTICLE_BASE_URL", raising=False)
+    else:
+        monkeypatch.setenv("PARTICLE_BASE_URL", base_url)
+    with pytest.raises(RuntimeError, match="metering proxy"):
+        ParticleLLM()
