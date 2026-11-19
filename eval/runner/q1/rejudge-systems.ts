@@ -41,7 +41,7 @@ import { BudgetRun, ledgerPaths, ledgerStatus } from '../budget-ledger.ts';
 import { loadCorpus, type MemoryQuestion } from '../memory-qa/corpus.ts';
 import { instrumentFor, PASS_THRESHOLD, type Instrument } from '../memory-qa/instruments.ts';
 import { DEFAULT_MAX_ATTEMPTS, HARNESS_FAILURES, NOT_APPLICABLE, PRODUCT_FAILURES, type Outcome } from '../memory-qa/outcomes.ts';
-import { ChatClient, judgeAnswer, type ChatLike } from '../memory-qa/qa-v2.ts';
+import { ChatClient, judgeAnswer, type ChatLike, type PinnedJudgeSettings } from '../memory-qa/qa-v2.ts';
 import { judgmentKey, RecordLog, sha256, type AnswerRecord, type JudgmentRecord } from '../memory-qa/records.ts';
 import { DEFAULT_ROUTE_CAPS, MeteringProxy, usageSplit, type UsageLine } from '../metering-proxy.ts';
 import { requireRs1Window, type PaidWindow } from '../paid-arm.ts';
@@ -319,7 +319,8 @@ export function reproduce(s: Sources, deriveFn: (receipt: string) => DerivedBoar
 
 // ─── Tasks ───────────────────────────────────────────────────────────
 
-export interface Task { answer_id: string; question_id: string; set: string; cell: string; system: string; reader: string | null; text: string; judge: string; instrument: string; instrument_id: string; instrument_sha256: string }
+/** settings and view: a pinned judge's request settings and the view it serves (BN10's per-reader judges); GST-1365's own tasks carry neither and are sent at each judge's default. */
+export interface Task { answer_id: string; question_id: string; set: string; cell: string; system: string; reader: string | null; text: string; judge: string; instrument: string; instrument_id: string; instrument_sha256: string; settings?: PinnedJudgeSettings; view?: 'gating' | 'descriptive' }
 
 /** The frontier judgments strata still need: each reader's replicate-0 judged answer in its contrasts' published cohorts without a usable frontier judgment. */
 export function frontierTasks(s: Sources, strata: readonly Stratum[], cuts: Cuts | null): { tasks: Task[]; scope: string[]; reusable: number; productFailures: number; byJudge: Record<string, { needed: number; reusable: number; to_judge: number }> } {
@@ -507,7 +508,7 @@ export async function judgeTasks(tasks: readonly Task[], question: (t: Task) => 
     if (!queue.length) break;
     const one = async (t: Task) => {
       try {
-        log.append({ answer_id: t.answer_id, ...await judgeAnswer(opts.client, inst(t.instrument), question(t), t.text, { judge: t.judge, judgeReplicate: 0, maxAttempts }), instrument_id: t.instrument_id });
+        log.append({ answer_id: t.answer_id, ...await judgeAnswer(opts.client, inst(t.instrument), question(t), t.text, { judge: t.judge, judgeReplicate: 0, maxAttempts, ...(t.settings ? { settings: { ...t.settings } } : {}), ...(t.view ? { view: t.view } : {}) }), instrument_id: t.instrument_id });
         run.judged++;
         run.per_judge[t.judge] = (run.per_judge[t.judge] ?? 0) + 1;
       } catch (e) {
