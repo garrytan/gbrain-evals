@@ -1,0 +1,1 @@
+Release notes no longer state spend, cost totals or caps. A new test (`test/eval/changelog-no-spend.test.ts`) fails any changelog fragment, or any CHANGELOG.md section released after v0.10.257, that states a dollar amount or a cap figure, and the changing-facts confirmation entry drops its cost figure.
