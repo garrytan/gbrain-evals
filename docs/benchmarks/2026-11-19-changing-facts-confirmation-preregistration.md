@@ -439,6 +439,63 @@ each row's pilot, and no counted cell of a row launches until that row's pilot h
 
 GBEV-3 directed this amendment on 2026-11-19, passing on R111 and R113 as Garry approved them, before any paid call.
 
+### Amendment 2 (2026-11-19): the look's bounds, scaled to each comparison's own alpha
+
+Amendment 1 used 2.80 and 1.98. Those are the O'Brien-Fleming bounds for one two-sided test at 0.05 with two looks. But
+BG1-C's comparisons are frozen at one-sided 0.05 in each direction, at Holm's step levels, so those bounds made the test
+stricter than the plan. Under the central SDs, the chance that all four come out ahead fell from 13.8% to 6.8%. R113 is
+there to keep a plan's alpha across one look, not to tighten it. So this amendment replaces Amendment 1's bounds with
+O'Brien-Fleming two-look bounds computed at each Holm step's one-sided alpha.
+
+Everything else in Amendment 1 stands: when the look happens, its statistic, the futility stop below 10% conditional
+power, stopping only when every comparison has crossed or is futile, the wording after an early stop, the pilots, and
+no other look counting.
+
+**Bounds.** At Holm's k-th step the one-sided alpha is 0.05 divided by the number of comparisons still undecided, as
+frozen. For that alpha the bounds are the O'Brien-Fleming pair with the look at half the worlds: the look bound is the
+square root of 2 times the final bound, and the pair spends exactly that alpha (bivariate normal, correlation the square
+root of 0.5).
+
+| Holm step | One-sided alpha | Look bound | Final bound | One look, as frozen |
+|---|---|---|---|---|
+| 1 | 0.0125 | 3.183 | 2.250 | 2.241 |
+| 2 | 0.0167 | 3.026 | 2.140 | 2.128 |
+| 3 | 0.025 | 2.797 | 1.977 | 1.960 |
+| 4 | 0.05 | 2.373 | 1.678 | 1.645 |
+
+At one-sided 0.025 the same computation gives R113's 2.80 and 1.98.
+
+- **At the look**, Holm steps down over the four z's in each direction using the look bounds. The largest z is compared
+  with 3.183, the next with 3.026, and so on, stopping at the first that falls short. Each comparison it passes has
+  crossed, as ahead, or as behind in the mirror test.
+- **At the final**, Holm steps down the same way over the 40-world z's using the final bounds. These replace the frozen
+  Holm thresholds (the last column) and Amendment 1's extra condition of 1.98. The 3-point readings keep the 0.0125
+  bounds.
+- **Futility** asks for a final z of at least 1.678, the last step's final bound. So a comparison is futile only when
+  even the easiest final bound is out of reach.
+
+**What the look costs.** These figures come from the same seed (20261119), with 200,000 simulated runs per scenario and
+per-world normal differences (`eval/runner/bg1/confirm-power-sim.py`). The "one look" columns reproduce the Power
+section's table.
+
+| If the development effects are the truth, N = 40 | Central, one look | Central, with the look | Pessimistic, one look | Pessimistic, with the look |
+|---|---|---|---|---|
+| Row 3, all four ahead | 13.8% | 12.9% | 2.8% | 2.6% |
+| Row 4, one class ahead of both servers | 30.7% | 30.6% | 18.1% | 17.8% |
+| Row 5, at least one ahead, neither class on both | 55.2% | 56.1% | 67.3% | 67.6% |
+| Row 6, none ahead and none behind | 0.3% | 0.3% | 11.7% | 12.0% |
+| "Ahead", by comparison, in the Power table's order | 0.99, 0.30, 0.44, 0.55 | 0.99, 0.29, 0.43, 0.54 | 0.82, 0.20, 0.22, 0.20 | 0.82, 0.19, 0.21, 0.20 |
+| "Not behind by 3 points or more" | 1.00 | 1.00 | 0.93 to 1.00 | 0.93 to 1.00 |
+| The run stops at the look (every stop is for futility) | none | 0.1% | none | 0.2% |
+
+With no true difference, the run stops at the look 0.1% of the time under the central SDs and 2.2% under the
+pessimistic ones. "Ahead" comes out in each comparison 1.2% to 1.3% of the time, and a "behind" anywhere 4.7% and 4.5%
+(4.9% with one look). The expected number of worlds run is 39.98 and 39.96 under the development effects, so the budget
+does not change.
+
+GBEV-3 decided this on 2026-11-19, before any paid call: "R113 exists to preserve the plan's alpha across one look, not
+to make the test stricter."
+
 ## Disclosures
 
 - gbrain is Garry Tan's own project.
