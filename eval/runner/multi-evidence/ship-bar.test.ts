@@ -78,12 +78,13 @@ describe('ship bar', () => {
     expect(r.bars.chars_reduction.point).toBeCloseTo(0.1);
   });
 
-  test('drops on items no bar uses do not make the run incomplete', () => {
-    const base = items.flatMap((item, i) => readers.map(reader => row({ item, reader, ...(i < 6 ? { gold: ['a/one'] } : {}) })));
-    const c = items.flatMap((item, i) => readers.map(reader => cand({ item, reader, slugs_calls: 1, ...(i < 6 ? { gold: ['a/one'], harness: 'boom' } : {}) })));
+  test('a base harness row, which carries no gold, is dropped rather than skipped', () => {
+    const base = items.flatMap((item, i) => readers.map(reader => row({ item, reader, ...(i < 6 ? { gold: [], harness: 'boom' } : {}) })));
+    const c = items.flatMap(item => readers.map(reader => cand({ item, reader, slugs_calls: 1 })));
     const r = shipBar(base, c, { base: 'b', candidate: 'c' }, null);
-    expect(r.dropped.length).toBe(0);
-    expect(r.bars.slugs_use.verdict).toBe('met');
+    expect(r.dropped.length).toBe(12);
+    expect(r.dropped[0]).toContain('base harness: boom');
+    expect(r.bars.slugs_use.verdict).toBe('incomplete');
   });
 
   test('items whose gold names fewer than two pages are not eligible', () => {

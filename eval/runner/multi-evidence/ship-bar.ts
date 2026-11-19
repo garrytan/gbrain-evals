@@ -76,16 +76,16 @@ const readItems = (dir: string): ItemRow[] => {
 };
 const key = (r: ItemRow) => `${r.suite}|${r.item}|${r.reader}|${r.trial}`;
 
-/** Pairs every eligible base and candidate row of the same item, agent and trial; an eligible pair with a harness row or no transcript on either side is dropped and named. */
+/** Pairs every base and candidate row of the same item, agent and trial; a pair with a harness row or no transcript on either side is dropped and named. */
 export function pairRows(base: ItemRow[], cand: ItemRow[]): { pairs: Pair[]; dropped: string[] } {
   const b = new Map(base.map(r => [key(r), r])), c = new Map(cand.map(r => [key(r), r]));
   const pairs: Pair[] = [], dropped: string[] = [];
   for (const k of [...new Set([...b.keys(), ...c.keys()])].sort()) {
     const x = b.get(k), y = c.get(k);
-    if (!eligible((x ?? y)!)) continue;
     const why = !x ? 'no base row' : !y ? 'no candidate row' : x.harness ? `base harness: ${x.harness}` : y.harness ? `candidate harness: ${y.harness}`
       : x.result_chars === null || y.result_chars === null ? 'no transcript' : null;
     if (why) { dropped.push(`${k}: ${why}`); continue; }
+    if (!eligible(x!)) continue;
     pairs.push({ item: x!.item, reader: x!.reader, trial: x!.trial, base: x!, cand: y! });
   }
   return { pairs, dropped };
