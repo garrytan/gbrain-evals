@@ -2,6 +2,18 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.258] - 2026-11-19
+
+- Preregistration for re-measuring the two BEAM-10M rows on gbrain's newest release: arms P, A0 and the whole system on the sealed BEAM-10M set, paired on claude-opus-5-5 with F6 and Q1, with a judge check before any number counts ([preregistration](docs/benchmarks/2026-11-19-beam10m-newest-preregistration.md)).
+
+Changing-facts confirmation preregistration (BG1-C) ([docs/benchmarks/2026-11-19-changing-facts-confirmation-preregistration.md](docs/benchmarks/2026-11-19-changing-facts-confirmation-preregistration.md)). It fixes, before anything is spent, how gbrain's newest release at launch is compared with the memory-bank and extract-first servers on 40 newly minted, sealed BG1 worlds from slots never minted before: four paired comparisons (what is true now and questions about the past, against each server) with Holm's correction, BG1's readers and judges with gpt-6.2-sol as the live GPT reader, a new judge check on public answers, the smallest differences each comparison can detect, a cost of about $990 under a $1,200 cap, and what is published for a lead, a partial lead, a tie and a loss.
+
+The preregistration order check now covers the changing-facts battleground's (BG1) results ([docs/benchmarks/preregistrations.d/changing-facts-battleground.json](docs/benchmarks/preregistrations.d/changing-facts-battleground.json)). Its registry entry named results paths that no file has ever had, so the check matched nothing; it now names the published results page and its folder, and confirms both were committed after the preregistration.
+
+Hard company questions preregistration, newest build ([docs/benchmarks/2026-11-19-cat40-hard-newest-preregistration.md](docs/benchmarks/2026-11-19-cat40-hard-newest-preregistration.md)). It fixes, before any paid run, how gbrain's newest release is measured against an agent that reads plain files with grep on two fresh public-generator worlds (seeds 20261141 and 20263151), with claude-opus-5-5 and gpt-6.2-sol pooled and particle-1 beside them, the detectable differences, the thresholds at which the published lead holds, drops or rises, H4 reported as its own family, and what each outcome changes in README and for gbrain's maintainers.
+
+- The duplicate-finder head-to-head's `ext-temporal-graph` shim sends no reasoning effort to gpt-6.2-sol. At 0.31.2 the system's OpenAI client defaults to effort `none` for gpt-6 models, which gpt-6.2-sol rejects with a 400, so the shim sets the client's reasoning to None, its documented pass-through, and the model runs at its API default. Recorded in [the bundle's deviations](docs/comparison-systems/ext-temporal-graph/entity-h2h/capability.json).
+
 ## [0.10.257] - 2026-11-18
 
 - The duplicate-finder head-to-head can now run each memory system's tuned and tuning configurations, as its
