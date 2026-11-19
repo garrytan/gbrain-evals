@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "experiments": [
+    {
+      "id": "cat40-hard-newest",
+      "preregistration": "docs/benchmarks/2026-11-19-cat40-hard-newest-preregistration.md",
+      "results": [
+        "docs/benchmarks/2026-11-19-cat40-hard-newest/**",
+        "docs/benchmarks/2026-11-19-cat40-hard-newest.md"
+      ]
+    }
+  ]
+}
