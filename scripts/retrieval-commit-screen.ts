@@ -67,7 +67,7 @@ export const RULES: Rule[] = [
   { cls: 'context', area: 'read-path context', re: /^src\/core\/(trust|access|page-state|ops|verbs|facts|persistence)\/|^src\/core\/(import-file|operations|config|search-config)\.ts$|^src\/commands\/(sync|import|embed|query|search)[^/]*(\.ts|\/)/ },
   // ---- evals harness (only meaningful with --kind evals)
   { cls: 'harness', area: 'retrieval bench harness', re: /^eval\/runner\/(engine-bench\/|longmemeval|lme-plain-hybrid|plain-baseline|retrieval-baselines|systems\/baselines|metrics|cat13|cat18|cat21|cat22|cat26|cat27|perf|multi-adapter|before-after|smoke|types)[^/]*|^eval\/runner\/(adapters|loaders|queries)\/|^eval\/adapters\/(?!er-h2h)|^eval\/data\/(longmemeval|world|source-swamp|gold|qrels)/ },
-  { cls: 'harness', area: 'shared harness', re: /^eval\/runner\/(hermetic-env|lifecycle\/|recorder|llm-budget|judge|tool-bridge)/ },
+  { cls: 'harness', area: 'shared harness', re: /^eval\/runner\/(hermetic-env|lifecycle\/|recorder|llm-budget|judge|tool-bridge|eval-engine\.ts$|gbrain-under-test\.ts$)/ },
   { cls: 'harness', area: 'scorers', re: /^eval\/runner\/evaluator\// },
   { cls: 'ignore', area: 'other benches', re: /^eval\/(runner|adapters|data|systems|loaders|generators)\/|^scripts\/ubicloud\// },
 ];
@@ -82,7 +82,9 @@ export const RETRIEVAL_SUBJECT = /search|rank|retriev|embed|chunk|keyword|vector
 const PIN = ['--literal-pathspecs', '-c', 'core.quotePath=false', '-c', 'color.ui=never', '-c', 'diff.noprefix=false', '-c', 'diff.mnemonicPrefix=false',
   '-c', 'diff.renames=false', '-c', 'log.showSignature=false', '-c', 'i18n.logOutputEncoding=UTF-8'];
 const PATCH = ['--no-color', '--no-ext-diff', '--no-textconv', '--src-prefix=a/', '--dst-prefix=b/'];
-const gitEnv = () => ({ ...process.env, TZ: 'UTC' });
+// GIT_NO_LAZY_FETCH=1 (git 2.44 and newer) stops a partial clone (--filter=blob:none) from fetching a missing blob
+// from its promisor remote; older git ignores the variable.
+export const gitEnv = (): NodeJS.ProcessEnv => ({ ...process.env, TZ: 'UTC', GIT_NO_LAZY_FETCH: '1' });
 
 /** Run git; null when it exits non-zero (for a probe such as "does this blob exist"). */
 function gitTry(repo: string, args: string[]): string | null {

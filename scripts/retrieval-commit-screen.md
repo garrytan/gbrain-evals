@@ -5,8 +5,9 @@ can this commit change what a gbrain benchmark measures? It looks for changes to
 embeddings, chunking, search latency or a storage engine (Postgres, PGLite, Rust). Use it once a day to decide
 which engine-bench or retrieval baselines need a rerun.
 
-The script reads only your local git checkout. It makes no GitHub API calls and never fetches, so fetch the refs you
-want first. A tag is a pointer for a person to review, not a verdict: read every `yes` and `maybe` row before you
+The script reads only your local git checkout. It makes no GitHub API calls and runs no `git fetch`, so fetch the refs
+you want first. In a partial clone (`--filter=blob:none`) git 2.44 or newer does not fetch missing file contents
+either; older git can still fetch them on demand. A tag is a pointer for a person to review, not a verdict: read every `yes` and `maybe` row before you
 schedule a rerun.
 
 ## Run the daily screen
@@ -123,7 +124,7 @@ To change what counts, edit `RULES` or the three patterns at the top of the scri
 
 ## Reporting Rust engine latency
 
-Commits that add caches to the Rust engine's search path (for example a search-vector cache that cut repeat queries
-from about 370 ms to about 20 ms, and a vector cache) make the first query and repeat queries behave differently.
+Commits that add caches to the Rust engine's search path (for example a search-vector cache or a vector cache) make
+the first query and repeat queries behave differently.
 Report Rust latency as separate cold-cache and warm-cache p50 and p95 columns, so a cache gain does not hide a
 first-query regression. This changes how latency is reported, not any threshold.

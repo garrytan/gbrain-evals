@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { classify, parseArgs, screenCommit } from '../../scripts/retrieval-commit-screen.ts';
+import { classify, gitEnv, parseArgs, screenCommit } from '../../scripts/retrieval-commit-screen.ts';
 
 const SCRIPT = new URL('../../scripts/retrieval-commit-screen.ts', import.meta.url).pathname;
 const dirs: string[] = [];
@@ -42,6 +42,11 @@ describe('classify', () => {
     expect(classify('eval/runner/engine-bench/perf.ts')?.cls).toBe('harness');
     for (const f of ['eval/runner/lme-plain-hybrid.ts', 'eval/runner/plain-baseline.ts', 'eval/runner/retrieval-baselines.ts', 'eval/runner/systems/baselines.ts', 'eval/runner/metrics.ts']) expect(classify(f)?.cls).toBe('harness');
     expect(classify('eval/runner/cat11-multimodal.ts')?.cls).toBe('ignore');
+    // engine-bench imports these two, so a change there can move its numbers
+    for (const f of ['eval/runner/eval-engine.ts', 'eval/runner/gbrain-under-test.ts']) expect(classify(f)).toMatchObject({ cls: 'harness', area: 'shared harness' });
+    expect(classify('eval/runner/eval-engine-extra.ts')?.cls).toBe('ignore');
+    // a partial clone must not fetch missing blobs on demand (git 2.44 and newer honour this)
+    expect(gitEnv().GIT_NO_LAZY_FETCH).toBe('1');
     expect(classify('src/cli.ts')).toBeNull();
   });
 });
