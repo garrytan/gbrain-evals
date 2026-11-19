@@ -6,6 +6,9 @@
  * (docs/guides/access-designations.md, docs/guides/conversation-archive.md): the owner's own callers never lose a read,
  * and nobody else ever gains one. Run it against another gbrain build by pointing node_modules/gbrain at that checkout.
  * A cell that fails names the scenario, phase, caller, content and read path, and AD_REPORT_DIR=<dir> writes every cell.
+ * Every count it reports is on PGLite: no Postgres brain runs here. Source config goes in through gbrain's
+ * executeRawJsonb, because a JSON.stringify'd ::jsonb parameter is stored as a JSON string on Postgres, and setup fails
+ * if the owner-only source doesn't read back owner_only: true.
  */
 import { afterAll, describe, expect, test } from 'bun:test';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -13,7 +16,7 @@ import { join } from 'node:path';
 import { PGLiteEngine } from '../../node_modules/gbrain/src/core/pglite-engine.ts';
 import { configureGateway, resetGateway, __setEmbedTransportForTests } from '../../node_modules/gbrain/src/core/ai/gateway.ts';
 import { GBrainOAuthProvider } from '../../node_modules/gbrain/src/core/oauth-provider.ts';
-import { sqlQueryForEngine } from '../../node_modules/gbrain/src/core/sql-query.ts';
+import { executeRawJsonb, sqlQueryForEngine } from '../../node_modules/gbrain/src/core/sql-query.ts';
 import { mintLegacyToken } from '../../node_modules/gbrain/src/core/token-mint.ts';
 import { noGrantFederatedScope, localFederatedSourceIds } from '../../node_modules/gbrain/src/core/source-resolver.ts';
 import { dispatchToolCall } from '../../node_modules/gbrain/src/mcp/dispatch.ts';
@@ -163,8 +166,12 @@ async function makeBrain(opts: { ownerSet: boolean; otherDisabled?: boolean }): 
   await engine.setConfig('maintenance.auto', 'false');
   await engine.setConfig(ARCHIVE_TIMEZONE_KEY, 'UTC');
   await setArchiveEnabled(engine, true);
-  await engine.executeRaw("INSERT INTO sources (id, name, config) VALUES ('owner-notes', 'owner-notes', $1::jsonb)", [JSON.stringify({ owner_only: true, federated: true })]);
-  if (ARCHIVE_FIX) await engine.executeRaw("INSERT INTO sources (id, name, config) VALUES ('old-project', 'old-project', $1::jsonb)", [JSON.stringify({ federated: true })]);
+  const sources: Array<[string, Record<string, boolean>]> = [['owner-notes', { owner_only: true, federated: true }], ...(ARCHIVE_FIX ? [['old-project', { federated: true }] as [string, Record<string, boolean>]] : [])];
+  for (const [id, config] of sources) {
+    await executeRawJsonb(engine, 'INSERT INTO sources (id, name, config) VALUES ($1, $1, $2::jsonb) ON CONFLICT (id) DO NOTHING', [id], [config]);
+  }
+  const [ownerOnly] = await engine.executeRaw("SELECT config->>'owner_only' AS owner_only FROM sources WHERE id = 'owner-notes'") as Array<{ owner_only: string | null }>;
+  if (ownerOnly?.owner_only !== 'true') throw new Error('setup: owner-notes did not store owner_only: true (config->>\'owner_only\' read ' + ownerOnly?.owner_only + ')');
   const body = (it: Item, fm: string) => '---\ntype: note\ntitle: ' + it.id + '\n' + fm + '---\n# ' + it.id + '\n\nPlanning notes ' + it.query + ' ' + it.mark + '.\n';
   for (const it of ITEMS.filter(i => i.kind === 'page' && i.id !== 'archive')) {
     const fm = it.id === 'private' || it.id === 'archived_private' ? 'visibility: private\n' : it.id === 'owner_listed' ? 'readable_by: [' + OWNER + ']\n' : '';
