@@ -19,14 +19,14 @@ import { answerId } from '../../eval/runner/memory-qa/records.ts';
 import { tQuantile } from '../../eval/runner/power/risk-ratio.ts';
 import { frontierInstrumentId, runConfigText } from '../../eval/runner/q1/cell.ts';
 import { loadBG1Manifest, OPUS, PARTICLE } from '../../eval/runner/q1/cells/bg1.ts';
-import { BG1C_MANIFEST_PATH, BG1C_READERS, BG1C_SOL } from '../../eval/runner/q1/cells/bg1c.ts';
+import { BG1C_GBRAIN_BUILD, BG1C_MANIFEST_PATH, BG1C_READERS, BG1C_SOL, bg1cRereadPlans } from '../../eval/runner/q1/cells/bg1c.ts';
 import { bg1JudgeOf, PER_READER_JUDGE_SETTINGS, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
 import { rereadCellId } from '../../eval/runner/q1/reread-cell.ts';
 import { normalQuantile } from '../../eval/runner/stats/paired.ts';
 import {
   CONFIRM_CELLS_PATH, CONFIRM_COMPARISONS, CONFIRM_CONVERSATIONS, CONFIRM_LESSON_CAVEAT, CONFIRM_LIVE_READERS, CONFIRM_LOOK_N, CONFIRM_MANIFEST_REL, CONFIRM_N, CONFIRM_READERS, CONFIRM_SOL,
   CONFIRM_STOP_SENTENCE, CONFIRM_WORDS, conditionalPower, confirmFinal, confirmKeptProblems, confirmLesson, confirmLook, confirmOutcome, confirmPhrase, confirmZ, holmAlphas, holmCrosses,
-  leftOutProblems, normalCdf, obfBounds, obfSpend, type ConfirmReading, type ConfirmTest, type ConfirmWord,
+  confirmBounds, leftOutProblems, normalCdf, obfBounds, obfSpend, type ConfirmReading, type ConfirmTest, type ConfirmWord,
 } from '../../eval/runner/bg1/confirm.ts';
 import type { PairedT } from '../../eval/runner/bg1/rule.ts';
 import { BG1_PRIMARY, BG1_STRATA, type Bg1Stratum } from '../../eval/runner/bg1/types.ts';
@@ -149,13 +149,17 @@ describe('the outcome table', () => {
     expect(six.next).toEqual({ text: 'GBRA-108 gets the per-kind rows and exposure of every comparison.', comparisons: KEYS, kinds: [...BG1_STRATA] });
   });
 
-  // Value: protects=the public lesson is the preregistration's own sentence, chosen by the row: the lead for row 3, "did" carry over for rows 4 and 5, "did not" for rows 2 and 6, none for an incomplete run, with the design's limit beside it; fails_when=a row gets the other sentence or the other word, an incomplete run gets a lesson, or the code's words drift from the preregistration's; why_new=BG1-C's preregistration, "Public lesson"; seam=confirmLesson, confirmOutcome; no_claim=which row the sealed run lands in
-  test('the public lesson is the preregistration\'s sentence, with "did" or "did not" chosen by the row, and the design\'s limit beside it', () => {
+  // Value: protects=the public lesson is the preregistration's own sentence, chosen by the row: the lead for row 3, Amendment 3's "part of the lead ... carried over" for rows 4 and 5, the tie-or-loss sentence with "did not" for rows 2 and 6, none for an incomplete run, with the design's limit beside it; fails_when=a row gets another row's sentence or word, an incomplete run gets a lesson, or the code's words drift from the preregistration's or Amendment 3's; why_new=BG1-C's preregistration, "Public lesson", and Amendment 3; seam=confirmLesson, confirmOutcome; no_claim=which row the sealed run lands in
+  test('the public lesson is the preregistration\'s sentence for the row: the lead, Amendment 3\'s "part of the lead" for rows 4 and 5, or "did not", with the design\'s limit beside it', () => {
     const prereg = readFileSync('docs/benchmarks/2026-11-19-changing-facts-confirmation-preregistration.md', 'utf8');
     const section = prereg.slice(prereg.indexOf('## Public lesson'), prereg.indexOf('## Why we are asking')).replace(/\s*\n\s*/g, ' ');
     const [lead, carry] = [...section.matchAll(/"(We learned[^"]+)"/g)].map(m => m[1]);
+    const amendment = prereg.slice(prereg.indexOf('### Amendment 3'), prereg.indexOf('## Disclosures')).replace(/\s*\n\s*/g, ' ');
+    const part = [...amendment.matchAll(/"(We learned[^"]+)"/g)].map(m => m[1]);
+    expect(part).toEqual(['We learned that part of the lead gbrain showed on development worlds carried over to worlds nobody had seen. You should confirm a memory change on held-out data before you claim it.']);
+    expect(amendment).toContain('Row 3 keeps the lead sentence, rows 2 and 6 take the tie-or-loss sentence with "did not", and row 1 gets none.');
     const said = (word: string) => carry.replace('<did / did not>', word);
-    const expected: Record<number, string | null> = { 1: null, 2: said('did not'), 3: lead, 4: said('did'), 5: said('did'), 6: said('did not') };
+    const expected: Record<number, string | null> = { 1: null, 2: said('did not'), 3: lead, 4: part[0], 5: part[0], 6: said('did not') };
     expect(([1, 2, 3, 4, 5, 6] as const).map(confirmLesson)).toEqual([1, 2, 3, 4, 5, 6].map(r => expected[r]));
     expect(section).toContain(`${CONFIRM_LESSON_CAVEAT.slice(0, -1)}, and the findings say so.`);
     const wrong: string[] = [];
@@ -449,6 +453,21 @@ describe('the confirm analysis', () => {
     expect(v.worst_case).toEqual({ words: ['ahead', 'behind', 'no measurable difference', 'no measurable difference'], row: 2, disagrees: false });
   });
 
+  // Value: protects=at a stop a futile comparison takes its 3-point reading on the 20 worlds from the 0.0125 bounds: level within 3 points, not behind by 3 points or more, or no measurable difference when neither holds, and the published lines say it; fails_when=a futile comparison at a stop always reads "no measurable difference", reads on other bounds or another number of worlds, or keeps a directional word; why_new=Amendment 3; seam=confirmLook, confirmBounds, threePoint, confirmOutcome; no_claim=how often a real run stops
+  test('at a stop, each futile comparison takes its 3-point reading on the 20 worlds: level within 3 points, not behind by 3 points or more, or no measurable difference', () => {
+    const q = tQuantile(1 - 0.05 / 4, 19) / Math.sqrt(20);
+    const crossed = lookTest(KEYS[0], 10, 3), futile = (k: string) => lookTest(k, -2, 4);
+    for (const [mean, sd, word] of [[-1.5, 2, 'level within 3 points'], [0.15, 5.5, 'not behind by 3 points or more'], [-3, 4, 'no measurable difference']] as const) {
+      const l = confirmLook([crossed, lookTest(KEYS[1], mean, sd), futile(KEYS[2]), futile(KEYS[3])]), c = l.comparisons[1];
+      expect([l.stop, c.status, c.word]).toEqual([true, 'futile', word]);
+      expect([c.lower, c.upper]).toEqual([confirmBounds(lookTest(KEYS[1], mean, sd).test).lower, confirmBounds(lookTest(KEYS[1], mean, sd).test).upper]);
+      expect(c.lower).toBeCloseTo(mean - q * sd, 9);
+      const o = confirmOutcome(l.comparisons.map(x => ({ key: x.key, word: x.word, descriptive: null, mean: 1, ci95: [-1, 3] as [number, number] })), { release: RELEASE, stopped: true });
+      expect(o.publish).toContain(`${confirmPhrase({ key: KEYS[1], word, descriptive: null, mean: 1, ci95: [-1, 3] })}.`);
+      expect(o.publish.at(-1)).toBe(CONFIRM_STOP_SENTENCE);
+    }
+  });
+
   // Value: protects=a server row left out reads "not run (pilot failed: <reason>)" in both comparisons, Holm runs over the two that remain with their own steps, and the results list the row; fails_when=the left-out row's comparisons are tested, still count in Holm's steps or vanish from the results; why_new=Amendment 1 (R111); seam=analyzeConfirm; no_claim=which rows pass their pilots
   test('a server row left out: its two comparisons are not run, Holm runs over the other two, and the results list it', () => {
     const left = analyzeConfirm(confirmSynthetic(), { release: RELEASE, leftOut: { 'memory-bank': NO_MEMORIES } });
@@ -483,7 +502,13 @@ const manifestOf = (o: Record<string, unknown> = {}) => new TextEncoder().encode
 const MANIFEST = manifestOf();
 const ndjson = (path: string, rows: unknown[]) => { mkdirSync(join(path, '..'), { recursive: true }); writeFileSync(path, rows.map(r => JSON.stringify(r) + '\n').join('')); };
 
-interface Opts { worlds?: readonly string[]; dataset?: (d: { files: Array<{ path: string; sha256: string }> }) => void; config?: (c: Record<string, any>) => void; contexts?: (system: string, q: MemoryQuestion) => string | null }
+/** particle-1's re-read plans by half for the counted rows, as bg1c.ts gives them to the cell set: .h1 re-reads launch units 0 to 3, .h2 units 4 to 7. */
+const HALF_PLANS = bg1cRereadPlans(CELLS).filter(p => p.half !== null);
+/** One particle-1 re-read receipt of a row: its half, the worlds its answers cover, and optionally another --receipts root, cell id or receipt fields. */
+interface Reread { half: 1 | 2; worlds: readonly string[]; root?: string; id?: string; receipt?: Record<string, unknown> }
+/** Writes a row's re-reads: write writes one receipt, and standard writes the usual one per half over the fixture's worlds. */
+type Rereads = (write: (r: Reread) => void, def: CellDefinition, standard: () => void) => void;
+interface Opts { worlds?: readonly string[]; dataset?: (d: { files: Array<{ path: string; sha256: string }> }) => void; config?: (c: Record<string, any>) => void; contexts?: (system: string, q: MemoryQuestion) => string | null; rereads?: Rereads }
 let n = 0;
 function receipts(o: Opts = {}) {
   const root = join(tmp, `r${++n}`);
@@ -515,12 +540,19 @@ function receipts(o: Opts = {}) {
     ndjson(join(dir, 'judgments.ndjson'), answers.map(a => judgment(a.answer_id, bg1JudgeOf(a.reader), frontierInstrumentId(instrument.id, bg1JudgeOf(a.reader)), scored(role, qs.find(q => q.id === a.question_id)!, a.reader), true)));
     const contexts = o.contexts ? qs.flatMap(q => { const prompt = o.contexts!(def.system, q); return prompt === null ? [] : [{ key: `r0|${q.id}|${arm.id}`, prompt, meta: { context_sha256: sha(`ctx|${def.system}|${q.id}`) } }]; }) : [];
     if (contexts.length) ndjson(join(root, 'runs', def.id, 'contexts.ndjson'), contexts);
-    const rid = rereadCellId(arm.cell_id, PARTICLE), rdir = join(root, 'cells', rid);
-    mkdirSync(rdir, { recursive: true });
-    writeFileSync(join(rdir, 'receipt.json'), JSON.stringify({ cell_id: rid, keyless: false, run_status: 'complete', dataset, instrument: { id: instrument.id, sha256: instrument.sha256 }, source: { config_sha256s: [`cfg-${def.system}`] }, spend: { reader_usd: 0.48 } }));
-    const rereads = qs.map(q => answer(rid, def.system, arm.id, q, PARTICLE));
-    ndjson(join(rdir, 'answers.ndjson'), rereads);
-    ndjson(join(rdir, 'judgments.ndjson'), rereads.map(a => judgment(a.answer_id, OPUS, frontierInstrumentId(instrument.id, OPUS), scored(role, qs.find(q => q.id === a.question_id)!, PARTICLE), true)));
+    const write = (r: Reread) => {
+      const plan = HALF_PLANS.find(p => p.arm_cell_id === arm.cell_id && p.half === r.half)!;
+      const rid = r.id ?? plan.id, rdir = join(r.root ?? root, 'cells', rid);
+      mkdirSync(rdir, { recursive: true });
+      const rq = qs.filter(q => r.worlds.includes(q.conversation));
+      writeFileSync(join(rdir, 'receipt.json'), JSON.stringify({ cell_id: rid, keyless: false, run_status: 'complete', dataset, instrument: { id: instrument.id, sha256: instrument.sha256 }, source: { config_sha256s: [`cfg-${def.system}`] },
+        half: { plan: plan.id, half: plan.half, units: plan.units }, spend: { reader_usd: 0.48 * rq.length / qs.length }, ...r.receipt }));
+      const rereads = rq.map(q => answer(rid, def.system, arm.id, q, PARTICLE));
+      ndjson(join(rdir, 'answers.ndjson'), rereads);
+      ndjson(join(rdir, 'judgments.ndjson'), rereads.map(a => judgment(a.answer_id, OPUS, frontierInstrumentId(instrument.id, OPUS), scored(role, qs.find(q => q.id === a.question_id)!, PARTICLE), true)));
+    };
+    const standard = () => { for (const half of [1, 2] as const) { const ws = [...worlds].filter(w => (WORLDS.indexOf(w) >= 0 && WORLDS.indexOf(w) < CONFIRM_LOOK_N ? 1 : 2) === half); if (ws.length) write({ half, worlds: ws }); } };
+    (o.rereads ?? ((_w, _d, s) => s()))(write, def, standard);
   }
   return root;
 }
@@ -553,6 +585,39 @@ describe('BG1-C receipts', () => {
     expect(Object.keys(left.questions[0].rows).sort()).toEqual(['extract-first', 'gbrain']);
     expect(() => loadInput([root], { set: 'BG1', look: true }, DEPS)).toThrow('the look and rows left out are BG1-C\'s only');
   });
+
+  // Value: protects=a counted row's particle-1 re-reads are read by half under the cell set's plans: the look reads half 1 and refuses half 2, the final reads both, each half's receipts (one per launch unit or one for the half) hold exactly its units' kept worlds and name their plan, and a re-read under the plain id refuses; fails_when=a plain-id re-read is read for a counted row, half 2 is read at the look, a half with a gap or a world outside it passes, a world re-read in both halves passes, a receipt naming another plan or none is read, or the final reads half 1 alone; why_new=BG1-C's half re-read ids (2247f1d5b), the wiring gap; seam=loadInput set BG1-C; no_claim=reread-cell.ts's own staging check
+  test('particle-1 re-reads are read by half: half 1 at the look, both halves at the final, each holding exactly its units\' kept worlds', () => {
+    const gb = CELLS[0], plain = rereadCellId(gb.arms[0].cell_id, PARTICLE);
+    const plan = (half: 1 | 2) => HALF_PLANS.find(p => p.cell === gb.id && p.half === half)!;
+    const committed = (JSON.parse(readFileSync(CONFIRM_CELLS_PATH, 'utf8')) as { reread_plans: Array<{ id: string; half: 1 | 2 | null; units: number[] }> }).reread_plans.filter(p => p.half !== null);
+    expect(HALF_PLANS.map(p => [p.id, p.half, p.units])).toEqual(committed.map(p => [p.id, p.half, p.units]));
+    expect([plan(1).id, plan(1).units, plan(2).id, plan(2).units]).toEqual([`${plain}.h1`, [0, 1, 2, 3], `${plain}.h2`, [4, 5, 6, 7]]);
+    const H1 = WORLDS.slice(0, CONFIRM_LOOK_N), H2 = WORLDS.slice(CONFIRM_LOOK_N);
+    const gbrainOnly = (custom: (write: (r: Reread) => void) => void): Rereads => (write, def, standard) => (def.id === gb.id ? custom(write) : standard());
+    const loaded = (r: string, look = false, more: string[] = []) => loadInput([r, ...more], { set: 'BG1-C', look }, DEPS);
+    const units = join(tmp, `units-${++n}`), unitRoots = Array.from({ length: 8 }, (_, u) => join(units, `u${u}`));
+    const byUnit = receipts({ rereads: gbrainOnly(write => unitRoots.forEach((r, u) => write({ half: u < 4 ? 1 : 2, worlds: WORLDS.slice(u * 5, u * 5 + 5), root: r }))) });
+    expect(loaded(byUnit, false, unitRoots).questions).toEqual(load(root).questions);
+    expect(loaded(half, true).questions.every(q => READERS.every(r => !('drop' in q.rows.gbrain![r])))).toBe(true);
+    expect(() => loaded(receipts({ worlds: H1, rereads: gbrainOnly(write => { write({ half: 1, worlds: H1 }); write({ half: 2, worlds: [] }); }) }), true))
+      .toThrow(`: the look reads only half 1's particle-1 re-reads, and this one is ${plan(2).id}`);
+    const withPlain = receipts({ rereads: (write, def, standard) => { standard(); if (def.id === gb.id) write({ half: 1, worlds: [], id: plain, receipt: { half: undefined } }); } });
+    expect(() => loaded(withPlain)).toThrow(`: ${gb.id} is a counted BG1-C cell, so its particle-1 re-reads go under its half plans (${plan(1).id}, ${plan(2).id}), not ${plain}`);
+    expect(() => loaded(receipts({ rereads: gbrainOnly(write => write({ half: 1, worlds: H1 })) })))
+      .toThrow(`${plan(2).id}: half 2's re-reads must hold exactly the kept worlds of launch units 4, 5, 6, 7; missing ${H2.join(', ')}; outside that half none`);
+    expect(() => loaded(receipts({ rereads: gbrainOnly(write => { write({ half: 1, worlds: H1 }); write({ half: 2, worlds: H2.slice(1) }); }) })))
+      .toThrow(`${plan(2).id}: half 2's re-reads must hold exactly the kept worlds of launch units 4, 5, 6, 7; missing ${H2[0]}; outside that half none`);
+    expect(() => loaded(receipts({ rereads: gbrainOnly(write => { write({ half: 1, worlds: [...H1, H2[0]] }); write({ half: 2, worlds: H2.slice(1) }); }) })))
+      .toThrow(`${plan(1).id}: half 1's re-reads must hold exactly the kept worlds of launch units 0, 1, 2, 3; missing none; outside that half ${H2[0]}`);
+    expect(() => loaded(receipts({ rereads: gbrainOnly(write => { write({ half: 1, worlds: [...H1, H2[0]] }); write({ half: 2, worlds: H2 }); }) })))
+      .toThrow(`${plan(2).id}: world ${H2[0]} is re-read in both `);
+    expect(() => loaded(receipts({ rereads: gbrainOnly(write => { write({ half: 1, worlds: H1, receipt: { half: { plan: plan(1).id, half: 1, units: [0, 1, 2] } } }); write({ half: 2, worlds: H2 }); }) })))
+      .toThrow(`: its receipt names re-read plan {"plan":"${plan(1).id}","half":1,"units":[0,1,2]}, not ${plan(1).id} (half 1, units 0, 1, 2, 3)`);
+    expect(() => loaded(receipts({ rereads: gbrainOnly(write => { write({ half: 1, worlds: H1 }); write({ half: 2, worlds: H2, receipt: { half: undefined } }); }) })))
+      .toThrow(`: its receipt names re-read plan null, not ${plan(2).id} (half 2, units 4, 5, 6, 7)`);
+    expect(() => loaded(receipts({ rereads: gbrainOnly(() => {}) }))).toThrow(`missing particle-1 re-read: ${gb.arms[0].cell_id} has 1 receipt(s) no ${plan(1).id} or ${plan(2).id} covers`);
+  }, 120_000);
 
   // Value: protects=a BG1-C verdict reads only the filled BG1-C manifest, which must exist and be filled; fails_when=a missing, unfilled or BG1 manifest is read, or the default path is not the BG1-C manifest; why_new=BG1-C harness item 3; seam=loadInput set BG1-C; no_claim=custody of the bytes
   test('refuses a missing or unfilled BG1-C manifest, by default at eval/decisions/datasets/bg1c-manifest.json', () => {
@@ -647,14 +712,22 @@ describe('BG1-C receipts', () => {
     try { return { code: main(argv, deps), err, out }; } finally { process.stderr.write = w; process.stdout.write = o; }
   };
 
-  test('the CLI: confirm needs a release and set BG1-C, and a refusal exits 2 with its message', () => {
-    const cells = join(tmp, 'bg1c-cells.json');
-    writeFileSync(cells, JSON.stringify({ cells: CELLS }));
+  // Value: protects=confirm measures the release the cell set pins (gbrain_build.release): it takes it from there, refuses a cell set without one and a --release that differs, and needs set BG1-C; fails_when=a run names another release than the cell set's, runs with none, or reads another set; why_new=the Opus reader's gate note 3 on BG1-C harness item 3b; seam=main confirm; no_claim=which release launch amendment A names
+  test('the CLI: confirm takes its release from the cell set, refuses one that differs or a cell set without one, and needs set BG1-C', () => {
+    const cells = join(tmp, 'bg1c-cells.json'), bare = join(tmp, 'bg1c-cells-bare.json');
+    writeFileSync(cells, JSON.stringify({ cells: CELLS, gbrain_build: BG1C_GBRAIN_BUILD }));
+    writeFileSync(bare, JSON.stringify({ cells: CELLS }));
     const base = ['confirm', '--receipts', root, '--cells', cells, '--out', join(tmp, 'out')];
+    expect(RELEASE).toBe(BG1C_GBRAIN_BUILD.release);
     expect(run(['confirm', '--out', join(tmp, 'out')]).err).toContain('verdict.ts confirm [--look] --receipts');
-    expect(run(base)).toEqual({ code: 2, err: 'confirm needs --release <the gbrain release under test, such as v0.60.741.0>, not none\n', out: '' });
+    expect(run(['confirm', '--receipts', root, '--cells', bare, '--release', RELEASE, '--out', join(tmp, 'out')])).toEqual({ code: 2, err: `bg1 verdict refused: the BG1-C cell set ${bare} names no gbrain release in gbrain_build.release, so confirm cannot say which release it measures\n`, out: '' });
+    expect(run([...base, '--release', 'v0.60.593.0'])).toEqual({ code: 2, err: `bg1 verdict refused: --release v0.60.593.0 is not the gbrain release the BG1-C cell set pins, v0.60.741.0 (${cells}); confirm measures the cell set's release\n`, out: '' });
     expect(run([...base, '--release', 'latest']).code).toBe(2);
     expect(run([...base, '--release', RELEASE, '--set', 'BG1'])).toEqual({ code: 2, err: 'confirm reads set BG1-C only, not BG1\n', out: '' });
+    for (const given of [[], ['--release', RELEASE]]) {
+      const out = join(tmp, `release-${++n}`), look = run(['confirm', '--look', '--receipts', half, '--cells', cells, ...given, '--out', out], DEPS);
+      expect([look.code, look.err, JSON.parse(readFileSync(join(out, 'look.json'), 'utf8')).release]).toEqual([0, '', BG1C_GBRAIN_BUILD.release]);
+    }
     const missing = run([...base, '--release', RELEASE, '--manifest', join(tmp, 'missing.json')]);
     expect(missing.code).toBe(2);
     expect(missing.err).toStartWith('bg1 verdict refused: the BG1-C manifest');

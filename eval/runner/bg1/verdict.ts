@@ -5,9 +5,9 @@
  *
  *   bun eval/runner/bg1/verdict.ts verdict --receipts <out dir>... [--manifest <filled bg1-manifest.json>] [--set BG1|BG1-dev3] [--judge-check <summary.json>] --out <dir>
  *   bun eval/runner/bg1/verdict.ts pilot   --receipts <out dir>... [--manifest <filled bg1-manifest.json>] --out <dir>
- *   bun eval/runner/bg1/verdict.ts confirm [--look] --receipts <out dir>... --release <gbrain release> [--left-out <server row>=<reason>]... [--brain-counts <counts.json>]
+ *   bun eval/runner/bg1/verdict.ts confirm [--look] --receipts <out dir>... [--release <gbrain release>] [--left-out <server row>=<reason>]... [--brain-counts <counts.json>]
  *                                          [--manifest <filled bg1c-manifest.json>] [--cells <BG1-C cell set>] [--judge-check <summary.json>] --out <dir>
- *   bun eval/runner/bg1/verdict.ts pilot   --set BG1-C --receipts <smoke out dir>... [--brain-counts <counts.json>] [--memory-counts <counts.json>] [--mint-rate <mint.json>]
+ *   bun eval/runner/bg1/verdict.ts pilot   --set BG1-C --receipts <smoke out dir>... [--brain-counts <counts.json>] [--memory-counts <counts.json>] [--mint-rate <supply.json>]
  *                                          [--judge-check <report.json>]... [--cells <BG1-C cell set>] --out <dir>
  *
  * Each --receipts directory is a cell or re-read output (cell.ts --out, reread-cell.ts --out): every
@@ -48,12 +48,18 @@
  *             raw-text rows), each gating judge's model versions, and the judge check's summary when given.
  *   Pilot     wave A only (the first 12 kept worlds): the per-world SDs of the three primary differences under the gating
  *             view and their correlations, never a mean; then power.ts's N_final. Above 40 it exits 3.
- *   Confirm   BG1-C (docs/benchmarks/2026-11-19-changing-facts-confirmation-preregistration.md and its Amendments 1 and
- *             2; confirm.ts holds its design, rule, words and outcome table). The same receipt checks against the filled
+ *   Confirm   BG1-C (docs/benchmarks/2026-11-19-changing-facts-confirmation-preregistration.md and its Amendments 1 to
+ *             3; confirm.ts holds its design, rule, words and outcome table). The same receipt checks against the filled
  *             BG1-C manifest (by default eval/decisions/datasets/bg1c-manifest.json; a missing or unfilled one refuses)
  *             and its kept list of 40 BG1-C worlds, for the rows of the BG1-C cell set (by default
- *             eval/runner/q1/cells/bg1c-cells.json), read by claude-opus-5-5, gpt-6.2-sol and particle-1. A server row
- *             whose pilot failed is left out with --left-out <row>=<reason>: it needs no receipts, its two comparisons
+ *             eval/runner/q1/cells/bg1c-cells.json), read by claude-opus-5-5, gpt-6.2-sol and particle-1. The release
+ *             under test is the cell set's gbrain_build.release; a cell set without one, or a --release that differs,
+ *             refuses. A counted row's particle-1 re-reads go under the cell set's half plans (bg1c.ts
+ *             bg1cRereadPlans: the re-read cell id with .h1 for launch units 0 to 3, .h2 for 4 to 7), each receipt naming
+ *             its plan, half and units: the look reads half 1 only and the final both, each half's re-reads holding
+ *             exactly its units' kept worlds, and a re-read under the plain id, a half the stage does not read, a gap or
+ *             a world outside its half refuses. A server row whose pilot failed is left out with
+ *             --left-out <row>=<reason>: it needs no receipts, its two comparisons
  *             read "not run (pilot failed: <reason>)", and Holm runs over the rest; gbrain's row refuses. The same values
  *             and metric, and the drop cap and fill gate per comparison, a class's drops counting against both of its
  *             comparisons. Each comparison (each server, on what is true now and on questions about the past) gets a
@@ -76,15 +82,20 @@
  *             answers' context hashes) for every one of the 64 questions, a mean fill rate of at least 0.90, for gbrain
  *             --brain-counts' tagged_facts, slotted_facts and changing_slots all above 0, and for each server its stored
  *             memories for the world in --memory-counts ({"memory-bank": n, "extract-first": n}) above 0. Condition 2:
- *             every --judge-check report passes (stop false, every gate passing). Condition 3: the cell's metered spend
- *             plus its re-read's reader and judge spend, per world, at most 1.5 times the row's Budget rate, and the
- *             mint's record in --mint-rate ({"gemini_requests_per_kept_world": n}, over BG1-C's first five slots) at
- *             most 504, 1.5 times the dev mint's 336. It prints each row's ingest wall time per world from the receipt,
- *             writes pilot.json, and exits 3 naming each failing row (or the mint) and condition.
+ *             every --judge-check report passes (stop false, every gate passing), is a paid run (the upstream.json
+ *             beside it says keyless false) and carries BG1's or BG1-C's judge-check schema, with at least one of each:
+ *             BG1's for gpt-6-astra on Opus's answers and claude-opus-5-5 on particle-1's, BG1-C's for claude-opus-5-5
+ *             on gpt-6.2-sol's. Condition 1 also counts, for each of claude-opus-5-5, gpt-6.2-sol (from the smoke) and
+ *             particle-1 (from its re-read), the questions answered at replicate 0 and those with its mapped judge's
+ *             gating grade, and needs all 64 of each. Condition 3: the cell's metered spend plus its re-read's reader
+ *             and judge spend, per world, at most 1.5 times the row's Budget rate, and the mint's supply check in
+ *             --mint-rate (eval/custody/bg1/supply.ts's render/supply.json, per_kept_world over BG1-C's first five
+ *             slots) at most 504, 1.5 times the dev mint's 336. It prints each row's ingest wall time per world from the
+ *             receipt, writes pilot.json, and exits 3 naming each failing row (or the mint) and condition.
  */
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { DecideError } from '../decisions/errors.ts';
 import { BG1C_SET, bg1Source, loadCorpus, type MemoryQuestion } from '../memory-qa/corpus.ts';
 import { instrumentFor } from '../memory-qa/instruments.ts';
@@ -92,12 +103,13 @@ import { HARNESS_FAILURES, PRODUCT_FAILURES, type Outcome } from '../memory-qa/o
 import { readRecords, type AnswerRecord, type JudgmentRecord } from '../memory-qa/records.ts';
 import { frontierInstrumentId, runConfigIdentity, runConfigText } from '../q1/cell.ts';
 import { loadBG1Manifest, OPUS, PARTICLE, SOL } from '../q1/cells/bg1.ts';
+import { bg1cRereadPlans } from '../q1/cells/bg1c.ts';
 import { bg1JudgeOf, PER_READER_JUDGE_SETTINGS, type CellDefinition } from '../q1/cells/definitions.ts';
 import { rereadCellId } from '../q1/reread-cell.ts';
 import { holmAdjusted, seededRandom } from '../stats/paired.ts';
 import { wildTest } from '../stats/wild-cluster.ts';
 import {
-  CONFIRM_BOUND_ALPHA, CONFIRM_CELLS_PATH, CONFIRM_CLASSES, CONFIRM_COMPARISONS, CONFIRM_CONVERSATIONS, CONFIRM_DEV_MINT_REQUESTS, CONFIRM_LIVE_READERS, CONFIRM_LOOK_N, CONFIRM_MANIFEST_PATH,
+  CONFIRM_BOUND_ALPHA, CONFIRM_CELLS_PATH, CONFIRM_CLASSES, CONFIRM_COMPARISONS, CONFIRM_CONVERSATIONS, CONFIRM_DEV_MINT_REQUESTS, CONFIRM_JUDGE_CHECKS, CONFIRM_LIVE_READERS, CONFIRM_LOOK_N, CONFIRM_MANIFEST_PATH,
   CONFIRM_MANIFEST_REL, CONFIRM_MINT_FACTOR, CONFIRM_MINT_LINE, CONFIRM_MINT_SLOTS, CONFIRM_N, CONFIRM_PILOT_QUESTIONS, CONFIRM_PILOT_WORLD, CONFIRM_READERS, CONFIRM_ROWS, CONFIRM_TABLE_READERS,
   confirmFinal, confirmKeptProblems, confirmLook, confirmOutcome, confirmPilotSpendLine, confirmRow, holmAlphas, leftOutProblems, obfBounds,
   type ConfirmClass, type ConfirmComparison, type ConfirmReading, type ConfirmWord, type LookStatus,
@@ -767,22 +779,40 @@ export function loadInput(dirs: readonly string[], o: LoadOptions, deps: LoadDep
     const unplanned = [...ids].filter(id => !plannedIds.has(id)).sort();
     if (unplanned.length) refuse(`${armCell}: rows ${more(unplanned)} are not planned questions of the loaded ${benchmark} corpus`);
     const rereadId = rereadCellId(armCell, PARTICLE);
-    const rereads = found.filter(f => f.receipt.cell_id === rereadId);
+    const plans = confirm && def.kept_units ? bg1cRereadPlans([def]).filter(p => p.arm_cell_id === armCell && p.reader === PARTICLE) : null;
+    const halves = plans ? plans.filter(p => !o.look || p.half === 1) : null;
+    if (plans) {
+      const plain = found.find(f => f.receipt.cell_id === rereadId);
+      if (plain) refuse(`${plain.dir}: ${def.id} is a counted BG1-C cell, so its particle-1 re-reads go under its half plans (${plans.map(p => p.id).join(', ')}), not ${rereadId}`);
+      const later = found.find(f => plans.some(p => p.id === f.receipt.cell_id && !halves!.includes(p)));
+      if (later) refuse(`${later.dir}: the look reads only half 1's particle-1 re-reads, and this one is ${later.receipt.cell_id}`);
+    }
+    const rereadIds = halves ? halves.map(p => p.id) : [rereadId];
+    const rereads = found.filter(f => rereadIds.includes(f.receipt.cell_id));
     const configs = new Set(units.map(u => String(u.receipt.config_sha256)));
     const covered = new Set(rereads.flatMap(r => (r.receipt.source?.config_sha256s ?? []) as string[]));
     const uncovered = [...configs].filter(c => !covered.has(c));
-    if (!rereads.length || uncovered.length) refuse(`missing particle-1 re-read: ${armCell} has ${uncovered.length || configs.size} receipt(s) no ${rereadId} covers`);
+    if (!rereads.length || uncovered.length) refuse(`missing particle-1 re-read: ${armCell} has ${uncovered.length || configs.size} receipt(s) no ${rereadIds.join(' or ')} covers`);
     const reheld = new Map<string, string>();
+    const reread = new Map<string, Set<string>>();
     for (const r of rereads) {
       if (r.receipt.keyless !== false) refuse(`${r.dir} is not a paid re-read (keyless ${r.receipt.keyless ?? 'unrecorded'}); a verdict reads only re-reads whose receipt says keyless: false`);
+      const plan = halves?.find(p => p.id === r.receipt.cell_id), h = r.receipt.half;
+      if (plan && (h?.plan !== plan.id || h?.half !== plan.half || JSON.stringify(h?.units) !== JSON.stringify(plan.units))) refuse(`${r.dir}: its receipt names re-read plan ${JSON.stringify(h ?? null)}, not ${plan.id} (half ${plan.half}, units ${plan.units.join(', ')})`);
       if (r.receipt.run_status === 'invalid') refuse(`${r.dir} is invalid: ${(r.receipt.invalid_reasons ?? []).join('; ')}`);
       if (manifest) { const p = receiptManifestProblems(r.receipt.dataset, manifest, manifestSha, ref); if (p.length) refuse(`${r.dir}: ${p.join('; ')}`); }
       if (wrongInstrument(r)) refuse(`${r.dir} was judged under instrument ${r.receipt.instrument?.id}, not ${instrument.id} (${instrument.sha256.slice(0, 12)})`);
       const ans = readRecords(join(r.dir, 'answers.ndjson'), 'answer');
-      for (const conv of new Set(ans.map(a => a.conversation))) { if (reheld.has(conv)) refuse(`${rereadId}: world ${conv} is re-read in both ${reheld.get(conv)} and ${r.dir}`); reheld.set(conv, r.dir); }
+      for (const conv of new Set(ans.map(a => a.conversation))) { if (reheld.has(conv)) refuse(`${r.receipt.cell_id}: world ${conv} is re-read in both ${reheld.get(conv)} and ${r.dir}`); reheld.set(conv, r.dir); }
+      if (plan) reread.set(plan.id, new Set([...(reread.get(plan.id) ?? []), ...ans.map(a => a.conversation)]));
       take(r.dir, ans);
       const readerUsd = typeof r.receipt.spend?.reader_usd === 'number' && ans.length ? r.receipt.spend.reader_usd / ans.length : null;
       for (const a of ans.filter(x => inScope(x.conversation))) addUsd(PARTICLE, a.conversation, readerUsd);
+    }
+    for (const p of halves ?? []) {
+      const want = p.units.flatMap(u => manifest!.kept!.slice(u * def.kept_units!, (u + 1) * def.kept_units!)), got = [...(reread.get(p.id) ?? [])];
+      const absent = want.filter(w => !got.includes(w)), extra = got.filter(w => !want.includes(w)).sort();
+      if (absent.length || extra.length) refuse(`${p.id}: half ${p.half}'s re-reads must hold exactly the kept worlds of launch units ${p.units.join(', ')}; missing ${absent.join(', ') || 'none'}; outside that half ${extra.join(', ') || 'none'}`);
     }
     values.set(role, byQuestion);
     exposures.set(role, exposed);
@@ -807,33 +837,40 @@ export function loadInput(dirs: readonly string[], o: LoadOptions, deps: LoadDep
 /** One pilot check: the condition of Amendment 1's pilot list it belongs to, what it measured and its line. */
 export interface PilotCheck { condition: 1 | 2 | 3; check: string; value: number | string | null; line: string; pass: boolean }
 
-const judgeCheckPasses = (report: unknown) => {
-  const r = report as { stop?: unknown; gates?: unknown } | null;
-  return !!r && r.stop === false && Array.isArray(r.gates) && r.gates.length > 0 && r.gates.every(g => (g as { pass?: unknown } | null)?.pass === true);
+/** One judge check for pilot condition 2: its report.json and the upstream.json its run wrote beside it (keyless false for a paid run). */
+export interface PilotJudgeCheck { report: unknown; upstream: unknown }
+const schemaOf = (c: PilotJudgeCheck) => (c.report as { schema?: unknown } | null)?.schema;
+const judgeCheckPasses = (c: PilotJudgeCheck) => {
+  const r = c.report as { stop?: unknown; gates?: unknown } | null;
+  return !!r && Object.keys(CONFIRM_JUDGE_CHECKS).includes(schemaOf(c) as string) && (c.upstream as { keyless?: unknown } | null | undefined)?.keyless === false
+    && r.stop === false && Array.isArray(r.gates) && r.gates.length > 0 && r.gates.every(g => (g as { pass?: unknown } | null)?.pass === true);
 };
 
-/** What the BG1-C pilot reads beside the smoke's receipts: gbrain's brain counts and each server's stored memories (condition 1), the judge checks' reports (condition 2), the mint's record (condition 3), and the cell set's smoke cells (by default the committed BG1-C cell set's). */
-export interface PilotInputs { brainCounts?: unknown; memoryCounts?: unknown; mintRate?: unknown; judgeChecks?: readonly unknown[]; cells?: readonly CellDefinition[] }
+/** What the BG1-C pilot reads beside the smoke's receipts: gbrain's brain counts and each server's stored memories (condition 1), the judge checks (condition 2), the mint's supply check (condition 3), and the cell set's smoke cells (by default the committed BG1-C cell set's). */
+export interface PilotInputs { brainCounts?: unknown; memoryCounts?: unknown; mintRate?: unknown; judgeChecks?: readonly PilotJudgeCheck[]; cells?: readonly CellDefinition[] }
 
 /**
  * BG1-C's pilot (Amendment 1, R111): each row's smoke cell in the cell set, on bg1-dev-01, read from that cell's receipt
- * and its particle-1 re-read, against conditions 1 and 3 of the pilot list, with gbrain's brain counts and each server's
- * stored memories for the world for condition 1, the judge checks' reports for condition 2, and the mint's Gemini
- * requests per kept world over BG1-C's first five slots for condition 3.
+ * and its particle-1 re-read, against conditions 1 and 3 of the pilot list, with gbrain's brain counts, each server's
+ * stored memories for the world and each reader's answered and graded questions for condition 1, the paid judge checks,
+ * BG1's and BG1-C's, for condition 2, and the mint's Gemini requests per kept world over BG1-C's first five slots
+ * (supply.ts's per_kept_world) for condition 3.
  */
 export function confirmPilot(dirs: readonly string[], o: PilotInputs = {}) {
   const found = findReceipts(dirs);
   const smoke = confirmCells(o.cells ?? readCellSet(CONFIRM_CELLS_PATH, 'smoke_cells'));
   const reports = o.judgeChecks ?? [];
-  const passing = reports.filter(judgeCheckPasses).length;
-  const judges: PilotCheck = { condition: 2, check: 'judge checks', value: reports.length ? `${passing} of ${reports.length} pass` : null, line: 'at least one, every one passing', pass: reports.length > 0 && passing === reports.length };
+  const passing = reports.filter(judgeCheckPasses);
+  const unchecked = Object.entries(CONFIRM_JUDGE_CHECKS).filter(([schema]) => !passing.some(c => schemaOf(c) === schema)).map(([, name]) => name);
+  const judges: PilotCheck = { condition: 2, check: 'judge checks', value: reports.length ? `${passing.length} of ${reports.length} pass${unchecked.length ? `, none of them ${unchecked.join(' or ')}'s` : ''}` : null,
+    line: `a paid ${Object.values(CONFIRM_JUDGE_CHECKS).join(' and a paid ')} judge check, every one passing`, pass: reports.length > 0 && passing.length === reports.length && !unchecked.length };
   const counts = (o.brainCounts ?? {}) as Record<string, unknown>;
   const brain: PilotCheck = { condition: 1, check: 'brain counts (tagged facts, slotted facts, changing slots)', value: o.brainCounts === undefined ? null : BRAIN_COUNTS.map(k => String(counts[k] ?? 'missing')).join(', '),
     line: 'each above 0', pass: BRAIN_COUNTS.every(k => typeof counts[k] === 'number' && (counts[k] as number) > 0) };
   const num = (x: unknown) => (typeof x === 'number' && Number.isFinite(x) ? x : null);
   const memories = (o.memoryCounts ?? {}) as Record<string, unknown>;
-  const requests = num((o.mintRate as { gemini_requests_per_kept_world?: unknown } | null | undefined)?.gemini_requests_per_kept_world);
-  const mint: PilotCheck = { condition: 3, check: 'Gemini requests per kept world', value: o.mintRate === undefined ? null : requests ?? 'missing',
+  const supplied = (o.mintRate as { per_kept_world?: unknown } | null | undefined)?.per_kept_world, requests = num(supplied);
+  const mint: PilotCheck = { condition: 3, check: 'Gemini requests per kept world', value: o.mintRate === undefined ? null : requests ?? (supplied === null ? 'no kept world' : 'missing'),
     line: `at most ${CONFIRM_MINT_LINE}, ${CONFIRM_MINT_FACTOR} times the dev mint's ${CONFIRM_DEV_MINT_REQUESTS}, over ${CONFIRM_CONVERSATIONS[0]} to ${CONFIRM_CONVERSATIONS[CONFIRM_MINT_SLOTS - 1]}`, pass: requests !== null && requests <= CONFIRM_MINT_LINE };
   const rows = smoke.map(c => {
     const row = ROLES[c.system], cell = c.arms[0].cell_id;
@@ -849,6 +886,15 @@ export function confirmPilot(dirs: readonly string[], o: PilotInputs = {}) {
     const nFrozen = [...ids].filter(id => withContext.has(id)).length;
     const fill = meanOf(qRows.map(r => (typeof r.fill_rate === 'number' ? r.fill_rate : 0)));
     const reread = u ? found.find(f => f.receipt.cell_id === rereadCellId(cell, PARTICLE)) : undefined;
+    const instrument = instrumentFor(c.canonical_instrument).id;
+    const tally = (dir: string | undefined, reader: string) => {
+      const ans = dir ? readRecords(join(dir, 'answers.ndjson'), 'answer').filter(a => a.replicate === 0 && a.reader === reader && ids.has(a.question_id)) : [];
+      const judge = bg1JudgeOf(reader);
+      const graded = new Set((dir ? readRecords(join(dir, 'judgments.ndjson'), 'judgment') : [])
+        .filter(j => j.judge_replicate === 0 && j.view === 'gating' && j.judge === judge && j.instrument_id === frontierInstrumentId(instrument, judge) && typeof j.score === 'number').map(j => j.answer_id));
+      return { answered: new Set(ans.map(a => a.question_id)).size, graded: new Set(ans.filter(a => graded.has(a.answer_id)).map(a => a.question_id)).size };
+    };
+    const tallies = CONFIRM_READERS.map(reader => tally(reader === PARTICLE ? reread?.dir : u?.dir, reader));
     const cellUsd = num(u?.receipt.spend?.total_usd), readerUsd = num(reread?.receipt.spend?.reader_usd), judgeUsd = num(reread?.receipt.spend?.judge_usd);
     const unspent = !u ? 'no smoke receipt' : cellUsd === null ? 'no metered spend on the smoke receipt' : !reread ? 'no particle-1 re-read' : reread.receipt.keyless !== false ? 'the particle-1 re-read is not paid'
       : readerUsd === null || judgeUsd === null ? 'no metered spend on the re-read' : null;
@@ -859,6 +905,8 @@ export function confirmPilot(dirs: readonly string[], o: PilotInputs = {}) {
     const checks: PilotCheck[] = [
       { condition: 1, check: 'frozen contexts', value: u ? nFrozen : 'no smoke receipt', line: `all ${CONFIRM_PILOT_QUESTIONS} questions`, pass: ids.size === CONFIRM_PILOT_QUESTIONS && nFrozen === CONFIRM_PILOT_QUESTIONS },
       { condition: 1, check: 'mean fill rate', value: fill === null ? (u ? 'no rows' : 'no smoke receipt') : r4(fill), line: `at least ${FILL_GATE}`, pass: fill !== null && fill >= FILL_GATE },
+      { condition: 1, check: `answered and graded (${CONFIRM_READERS.map(r => r.split(':')[1]).join(', ')})`, value: u ? `${tallies.map(t => t.answered).join(', ')} answered, ${tallies.map(t => t.graded).join(', ')} graded` : 'no smoke receipt',
+        line: `all ${CONFIRM_PILOT_QUESTIONS} questions by each reader, each graded by its mapped judge`, pass: tallies.every(t => t.answered === CONFIRM_PILOT_QUESTIONS && t.graded === CONFIRM_PILOT_QUESTIONS) },
       row === 'gbrain' ? brain : storedCheck,
       judges,
       { condition: 3, check: 'spend per world', value: perWorld === null ? unspent : r4(perWorld), line: `at most $${r4(spendLine)}, 1.5 times the Budget rate`, pass: perWorld !== null && perWorld <= spendLine },
@@ -875,7 +923,8 @@ function confirmPilotMain(argv: readonly string[], dirs: readonly string[], out:
   const input = (n: string) => { const path = many(n)[0]; return path ? read(path) : undefined; };
   try {
     const cells = many('--cells')[0];
-    const p = confirmPilot(dirs, { brainCounts: input('--brain-counts'), memoryCounts: input('--memory-counts'), mintRate: input('--mint-rate'), judgeChecks: many('--judge-check').map(read),
+    const judgeChecks = many('--judge-check').map(path => { const marker = join(dirname(resolve(path)), 'upstream.json'); return { report: read(path), upstream: existsSync(marker) ? read(marker) : undefined }; });
+    const p = confirmPilot(dirs, { brainCounts: input('--brain-counts'), memoryCounts: input('--memory-counts'), mintRate: input('--mint-rate'), judgeChecks,
       ...(cells ? { cells: readCellSet(resolve(cells), 'smoke_cells') } : {}) });
     mkdirSync(resolve(out), { recursive: true });
     writeFileSync(join(resolve(out), 'pilot.json'), JSON.stringify(p, null, 2) + '\n');
@@ -896,6 +945,14 @@ function confirmPilotMain(argv: readonly string[], dirs: readonly string[], out:
 
 // ─── CLI ─────────────────────────────────────────────────────────────
 
+/** The gbrain release a BG1-C run measures: the cell set's gbrain_build.release. A cell set without one, or a --release that differs from it, refuses. */
+function confirmRelease(cellsPath: string, given: string | undefined): string {
+  const set = existsSync(cellsPath) ? JSON.parse(readFileSync(cellsPath, 'utf8')) as { gbrain_build?: { release?: unknown } } : refuse(`the BG1-C cell set ${cellsPath} does not exist; pass --cells <file>`);
+  const pinned = set.gbrain_build?.release;
+  const release = typeof pinned === 'string' && /^v\d+(\.\d+)+$/.test(pinned) ? pinned : refuse(`the BG1-C cell set ${cellsPath} names no gbrain release in gbrain_build.release, so confirm cannot say which release it measures`);
+  return given === undefined || given === release ? release : refuse(`--release ${given} is not the gbrain release the BG1-C cell set pins, ${release} (${cellsPath}); confirm measures the cell set's release`);
+}
+
 export function main(argv: string[], deps: LoadDeps = {}): number {
   const mode = argv[0];
   const one = (n: string) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : undefined; };
@@ -903,8 +960,8 @@ export function main(argv: string[], deps: LoadDeps = {}): number {
   const out = one('--out');
   if ((mode !== 'verdict' && mode !== 'pilot' && mode !== 'confirm') || !dirs.length || !out) {
     process.stderr.write('usage: bun eval/runner/bg1/verdict.ts verdict|pilot --receipts <out dir>... [--manifest <filled bg1-manifest.json>] [--set BG1|BG1-dev3] [--judge-check <summary.json>] --out <dir>\n'
-      + '       bun eval/runner/bg1/verdict.ts confirm [--look] --receipts <out dir>... --release <gbrain release> [--left-out <server row>=<reason>]... [--brain-counts <counts.json>] [--manifest <filled bg1c-manifest.json>] [--cells <BG1-C cell set>] [--judge-check <summary.json>] --out <dir>\n'
-      + '       bun eval/runner/bg1/verdict.ts pilot --set BG1-C --receipts <smoke out dir>... [--brain-counts <counts.json>] [--memory-counts <counts.json>] [--mint-rate <mint.json>] [--judge-check <report.json>]... [--cells <BG1-C cell set>] --out <dir>\n');
+      + '       bun eval/runner/bg1/verdict.ts confirm [--look] --receipts <out dir>... [--release <gbrain release>] [--left-out <server row>=<reason>]... [--brain-counts <counts.json>] [--manifest <filled bg1c-manifest.json>] [--cells <BG1-C cell set>] [--judge-check <summary.json>] --out <dir>\n'
+      + '       bun eval/runner/bg1/verdict.ts pilot --set BG1-C --receipts <smoke out dir>... [--brain-counts <counts.json>] [--memory-counts <counts.json>] [--mint-rate <supply.json>] [--judge-check <report.json>]... [--cells <BG1-C cell set>] --out <dir>\n');
     return 2;
   }
   const confirm = mode === 'confirm';
@@ -912,8 +969,6 @@ export function main(argv: string[], deps: LoadDeps = {}): number {
   if (mode === 'pilot' && set === 'BG1-C') return confirmPilotMain(argv, dirs, out);
   if (confirm && set !== 'BG1-C') { process.stderr.write(`confirm reads set BG1-C only, not ${set}\n`); return 2; }
   if (!confirm && set !== 'BG1' && set !== 'BG1-dev3') { process.stderr.write(`--set takes BG1 or BG1-dev3, not ${set}\n`); return 2; }
-  const release = one('--release');
-  if (confirm && !/^v\d+(\.\d+)+$/.test(release ?? '')) { process.stderr.write(`confirm needs --release <the gbrain release under test, such as v0.60.741.0>, not ${release ?? 'none'}\n`); return 2; }
   const look = confirm && argv.includes('--look');
   const leftOut: Record<string, string> = {};
   for (const spec of confirm ? argv.flatMap((a, i) => (a === '--left-out' ? [argv[i + 1] ?? ''] : [])) : []) {
@@ -922,6 +977,7 @@ export function main(argv: string[], deps: LoadDeps = {}): number {
     leftOut[row] = eq < 0 ? '' : spec.slice(eq + 1);
   }
   try {
+    const release = confirm ? confirmRelease(resolve(one('--cells') ?? CONFIRM_CELLS_PATH), one('--release')) : undefined;
     const bad = leftOutProblems(leftOut);
     if (bad.length) refuse(bad.join('; '));
     const countsPath = confirm ? one('--brain-counts') : undefined;

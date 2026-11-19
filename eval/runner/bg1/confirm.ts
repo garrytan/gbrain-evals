@@ -1,7 +1,7 @@
 /**
  * BG1-C, the changing-facts confirmation (preregistration
  * docs/benchmarks/2026-11-19-changing-facts-confirmation-preregistration.md, "The worlds", "Estimand and verdict rules",
- * "What each outcome changes (R97)", and Amendments 1 and 2): the frozen design verdict.ts's confirm mode reads receipts
+ * "What each outcome changes (R97)", and Amendments 1 to 3): the frozen design verdict.ts's confirm mode reads receipts
  * against, the rule that turns the comparisons into words at the look and at the final analysis, the outcome table with
  * every sentence it publishes, and each row's pilot lines. verdict.ts computes each comparison's paired t from the
  * receipts; this file turns them into words, a row and sentences, so nobody chooses words after seeing the data. It reads
@@ -29,8 +29,9 @@
  *                20 worlds' mean difference at the planned effect (+2.6, +1.1, +1.5 and +1.5 points, the development
  *                effects), the first 20 worlds' SD, and a final z of at least the last step's final bound (1.678). The
  *                run stops only when every comparison that runs has crossed or is futile and none is descriptive:
- *                crossed comparisons keep their word, the rest take the 3-point readings on the 20 worlds, and the
- *                results say the run stopped at its look. Otherwise the look decides nothing.
+ *                crossed comparisons keep their word, each futile one takes its 3-point reading on the 20 worlds from
+ *                the bounds below (Amendment 3), and the results say the run stopped at its look. Otherwise the look
+ *                decides nothing.
  *   Final        Holm steps down the same way over the 40-world z's with the final bounds, for "ahead" and for "behind".
  *   Words        a comparison that is neither ahead nor behind reads from the simultaneous one-sided bounds at 0.05 / 4,
  *                whichever comparisons run: "level within 3 points" when the lower bound is above -3 and the upper bound
@@ -40,10 +41,10 @@
  *                the 0.90 fill gate), 2 any comparison behind, 3 all four ahead, 4 both comparisons of one class ahead,
  *                5 at least one ahead, 6 none ahead and none behind. confirmOutcome gives the row's published lines,
  *                README's changing-facts line (which the scoreboard also gets), the next step and the public lesson
- *                (confirmLesson: the lead's sentence for row 3, the development lead "did" carry over for rows 4 and 5
- *                and "did not" for rows 2 and 6, none for row 1), with the design's limit beside it. When the worst
- *                case's words differ, that is the first published line; a row left out is listed after the comparisons;
- *                and a run that stopped at its look says so last.
+ *                (confirmLesson: the lead's sentence for row 3, Amendment 3's "part of the lead ... carried over" for
+ *                rows 4 and 5, the tie-or-loss sentence with "did not" for rows 2 and 6, none for row 1), with the
+ *                design's limit beside it. When the worst case's words differ, that is the first published line; a row
+ *                left out is listed after the comparisons; and a run that stopped at its look says so last.
  *   Pilot        each row's pilot is its smoke cell in the cell set (eval/runner/q1/cells/bg1c-cells.json), on public
  *                dev world bg1-dev-01 at the counted settings. Conditions 1 and 3 of the pilot list: a frozen context for
  *                every one of the 64 questions, a mean fill rate of at least 0.90, gbrain's kept brain holding tagged
@@ -317,14 +318,16 @@ export const CONFIRM_LESSON_ADVICE = 'You should confirm a memory change on held
 export const CONFIRM_LESSON_CAVEAT = 'The design compares one gbrain release with two servers. It does not test which gbrain change caused any difference.';
 
 /**
- * The public lesson for an outcome row: the lead's sentence when all four comparisons are ahead (row 3); otherwise the
- * carry-over sentence, saying the development lead "did" carry over when a comparison is ahead and none is behind (rows 4
- * and 5) and "did not" when one is behind or none is ahead (rows 2 and 6). An incomplete run (row 1) has no lesson.
+ * The public lesson for an outcome row: the lead's sentence when all four comparisons are ahead (row 3); Amendment 3's
+ * sentence, that part of the development lead carried over, when a comparison is ahead and none is behind (rows 4 and
+ * 5); and the tie-or-loss sentence with "did not" when one is behind or none is ahead (rows 2 and 6). An incomplete run
+ * (row 1) has no lesson.
  */
 export function confirmLesson(row: ConfirmRowNumber): string | null {
   if (row === 1) return null;
   if (row === 3) return `${CONFIRM_LESSON_LEAD} ${CONFIRM_LESSON_ADVICE}`;
-  return `We learned that the lead gbrain showed on development worlds ${row === 4 || row === 5 ? 'did' : 'did not'} carry over to worlds nobody had seen. ${CONFIRM_LESSON_ADVICE}`;
+  if (row === 4 || row === 5) return `We learned that part of the lead gbrain showed on development worlds carried over to worlds nobody had seen. ${CONFIRM_LESSON_ADVICE}`;
+  return `We learned that the lead gbrain showed on development worlds did not carry over to worlds nobody had seen. ${CONFIRM_LESSON_ADVICE}`;
 }
 
 /** The outcome table's row for the four readings and the sentences it publishes; worstCase holds the worst case's words, said first when they differ, and stopped says the run stopped at its look. */
@@ -401,6 +404,8 @@ export const CONFIRM_SHARED_RATE = (3.34 + 0.46 + 0.73) / 3;
 /** A smoke cell's pilot spend line per world: 1.5 times its row's Budget rate, its own line from the cell set's rates (bg1c.ts BG1C_RATES) plus its third of the three-row lines. */
 export const confirmPilotSpendLine = (cell: Pick<CellDefinition, 'system' | 'configuration'>): number =>
   CONFIRM_PILOT_SPEND_FACTOR * ((BG1C_RATES.row_usd_per_world[`${cell.system}:${cell.configuration}`] ?? NaN) + CONFIRM_SHARED_RATE);
+/** Pilot condition 2's judge checks by report schema: BG1's (gpt-6-astra on Opus's answers, claude-opus-5-5 on particle-1's) and this experiment's new one (claude-opus-5-5 on gpt-6.2-sol's answers). */
+export const CONFIRM_JUDGE_CHECKS: Readonly<Record<string, string>> = { 'gbrain-evals/bg1-judge-check/v1': 'BG1', 'gbrain-evals/bg1c-judge-check/v1': 'BG1-C' };
 /** The mint's line (Amendment 1, condition 3): over BG1-C's first five slots, at most 1.5 times the dev mint's 336 Gemini requests per world. */
 export const CONFIRM_MINT_SLOTS = 5;
 export const CONFIRM_DEV_MINT_REQUESTS = 336;
