@@ -421,6 +421,7 @@ kept_stop() {
 }
 if [ -n "$ACK" ] && ! { [ -s "$ACKS" ] && tail -n 1 "$ACKS" | grep -Fq "{\"ack\":\"$ACK\","; }; then
   ! grep -Fq "{\"ack\":\"$ACK\"," "$ACKS" 2>/dev/null || die "approval $ACK acknowledged an earlier pause; a new pause needs a new approval"
+  ! grep -Fq "{\"ack\":\"$ACK\"," "$SUPPLY_ACKS" 2>/dev/null || die "approval $ACK acknowledged the supply check; a yield-gate or drop-cap pause needs an approval of its own"
   n="$(early_drops)"
   m="$(all_drops)"
   ack_counts
@@ -440,6 +441,7 @@ if [ -n "$ACK" ] && ! { [ -s "$ACKS" ] && tail -n 1 "$ACKS" | grep -Fq "{\"ack\"
   fi
 fi
 if [ -n "$SUPPLY_ACK" ]; then
+  ! grep -Fq "{\"ack\":\"$SUPPLY_ACK\"," "$ACKS" 2>/dev/null || die "approval $SUPPLY_ACK acknowledged a yield-gate or drop-cap pause; the supply check needs an approval of its own"
   acked="$(supply_acked)"
   if [ -n "$acked" ]; then
     [ "$acked" = "$SUPPLY_ACK" ] || die "the supply check on this --out is already acknowledged by $acked, and a mint has one supply check"

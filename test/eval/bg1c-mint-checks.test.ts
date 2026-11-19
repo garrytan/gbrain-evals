@@ -135,6 +135,8 @@ describe('supply.ts: Gemini requests per kept world over slots 31 to 35 (R111)',
     expect([resumed.code, resumed.out]).toEqual([3, 'bg1-supply slots=31-35 gemini_requests=2525 kept=5 per_kept_world=505.0 limit=504 status=fail\nbg1-mint summary=paused reason=supply mode=fake written=0 skipped=0 dropped=0 dropped_earlier=0 last_slot=35\n']);
     expect(existsSync(join(over, 'set', 'worlds', 'bg1-036'))).toBe(false);
     refusal(mint(over, j, ['--fake', '--bg1c', '--start', '36', '--count', '1', '--supply-ack', 'a-0123']), "--supply-ack takes GBEV-3's approval id");
+    writeFileSync(join(over, 'render', 'yield-gate-acks.jsonl'), JSON.stringify({ ack: 'a-111111111111', at: '2026-11-19T00:00:00Z', early_drops: 0, drops: 0 }) + '\n');
+    refusal(mint(over, j, ['--fake', '--bg1c', '--start', '36', '--count', '1', '--supply-ack', 'a-111111111111']), 'approval a-111111111111 acknowledged a yield-gate or drop-cap pause; the supply check needs an approval of its own');
     const acked = mint(over, j, ['--fake', '--bg1c', '--start', '36', '--count', '1', '--supply-ack', 'a-0123456789ab']);
     expect(acked.code).toBe(0);
     expect(acked.out).toContain('bg1-mint supply_ack=a-0123456789ab\n');
@@ -144,6 +146,7 @@ describe('supply.ts: Gemini requests per kept world over slots 31 to 35 (R111)',
     const again = mint(over, j, ['--fake', '--bg1c', '--count', '7']);
     expect([again.code, again.out.includes('bg1-mint supply=acked ack=a-0123456789ab\n'), existsSync(join(over, 'set', 'worlds', 'bg1-037', 'world.json'))]).toEqual([0, true, true]);
     refusal(mint(over, j, ['--fake', '--bg1c', '--start', '38', '--count', '1', '--supply-ack', 'a-ba9876543210']), 'already acknowledged by a-0123456789ab');
+    refusal(mint(over, j, ['--fake', '--bg1c', '--start', '38', '--count', '1', '--yield-gate-ack', 'a-0123456789ab']), 'approval a-0123456789ab acknowledged the supply check; a yield-gate or drop-cap pause needs an approval of its own');
 
     const at = join(j.dir, 'bg1-custody-a');
     logs(at, 504);

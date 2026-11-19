@@ -926,7 +926,8 @@ function confirmPilotMain(argv: readonly string[], dirs: readonly string[], out:
   try {
     const cells = many('--cells')[0];
     const judgeChecks = many('--judge-check').map(path => {
-      const published = existsSync(resolve(path)) && realpathSync(resolve(path)) === realpathSync(CONFIRM_BG1_VERDICT_PATH)
+      const published = existsSync(resolve(path)) && existsSync(CONFIRM_BG1_VERDICT_PATH)
+        && realpathSync(resolve(path)) === realpathSync(CONFIRM_BG1_VERDICT_PATH)
         && createHash('sha256').update(readFileSync(resolve(path))).digest('hex') === CONFIRM_BG1_VERDICT_SHA256;
       if (published) return { report: (read(path) as { judge_check?: unknown }).judge_check, upstream: { keyless: false } };
       const marker = join(dirname(resolve(path)), 'upstream.json');
