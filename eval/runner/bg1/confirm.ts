@@ -53,19 +53,20 @@ import { tCdf, tQuantile } from '../power/risk-ratio.ts';
 import { OPUS, PARTICLE } from '../q1/cells/bg1.ts';
 import { normalQuantile } from '../stats/paired.ts';
 import { BG1_ALPHA, type PairedT } from './rule.ts';
-import { BG1_PRIMARY, BG1_SECONDARY, BG1_STRATA, type Bg1Stratum } from './types.ts';
+import { BG1_PRIMARY, BG1_SECONDARY, BG1_STRATA, BG1C_CONVERSATIONS, BG1C_FIRST_HALF_UNITS, BG1C_FIRST_SLOT, BG1C_KEPT_UNITS, BG1C_LAST_SLOT, BG1C_N_FINAL, type Bg1Stratum } from './types.ts';
 import type { Bg1Row } from './verdict.ts';
 
-export const CONFIRM_N = 40;
-export const CONFIRM_LOOK_N = 20;
+export const CONFIRM_N = BG1C_N_FINAL;
+/** The look reads the first half of the launch units (Amendment 1): BG1C_FIRST_HALF_UNITS units of BG1C_KEPT_UNITS kept worlds. */
+export const CONFIRM_LOOK_N = BG1C_KEPT_UNITS * BG1C_FIRST_HALF_UNITS;
 export const CONFIRM_MARGIN_POINTS = 3;
-export const CONFIRM_FIRST_SLOT = 31;
-export const CONFIRM_LAST_SLOT = 96;
-/** BG1-C's mint slots, bg1-031 to bg1-096. Kept here until harness item 1 adds its BG1-C list to eval/runner/memory-qa/bg1-names.ts. */
-export const CONFIRM_CONVERSATIONS: readonly string[] = Array.from({ length: CONFIRM_LAST_SLOT - CONFIRM_FIRST_SLOT + 1 }, (_, i) => `bg1-${String(CONFIRM_FIRST_SLOT + i).padStart(3, '0')}`);
+export const CONFIRM_FIRST_SLOT = BG1C_FIRST_SLOT;
+export const CONFIRM_LAST_SLOT = BG1C_LAST_SLOT;
+/** BG1-C's mint slots, bg1-031 to bg1-096, as eval/runner/memory-qa/bg1-names.ts lists them. */
+export const CONFIRM_CONVERSATIONS: readonly string[] = BG1C_CONVERSATIONS;
 export const CONFIRM_MANIFEST_REL = 'eval/decisions/datasets/bg1c-manifest.json';
 export const CONFIRM_MANIFEST_PATH = resolve(import.meta.dir, '../../..', CONFIRM_MANIFEST_REL);
-/** The BG1-C cell set harness item 2 writes; verdict.ts confirm --cells overrides it. */
+/** The BG1-C cell set that eval/runner/q1/cells/bg1c.ts writes; verdict.ts confirm --cells overrides it. */
 export const CONFIRM_CELLS_PATH = resolve(import.meta.dir, '../q1/cells/bg1c-cells.json');
 export const CONFIRM_SOL = 'openai:gpt-6.2-sol';
 export const CONFIRM_LIVE_READERS: readonly string[] = [OPUS, CONFIRM_SOL];
