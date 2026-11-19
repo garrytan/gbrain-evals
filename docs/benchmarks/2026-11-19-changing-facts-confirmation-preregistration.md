@@ -357,7 +357,87 @@ histories". A result favourable to particle-1 keeps its gap to Opus and the inte
 
 ## Amendments
 
-None yet.
+### Amendment 1 (2026-11-19): one look at half the worlds, and a pilot for every row
+
+Two rules Garry approved on 2026-11-19 apply here before any paid call. A counted run planned above $500 takes one
+preregistered look at half its units, with stop bounds fixed in advance and no other look (R113), and every arm gets a
+pilot before its counted run (R111). BG1-C is planned at about $990, so both apply. This amendment adds them, before any
+paid call, mint or counted cell. Launch amendments A and B keep their letters.
+
+**The look.**
+
+- **When.** Once the first 20 kept worlds (launch units 1 to 4 of 8, five worlds each, in kept-slot order) have every
+  row, both live readers and particle-1's re-read scored. particle-1 re-reads the first half before units 5 to 8 run.
+- **Statistic.** Each of the four comparisons, with the same estimand, on those 20 worlds. Its z is the normal score with
+  the same one-sided p as its paired t on 19 degrees of freedom.
+- **Stop for a difference** (O'Brien-Fleming bounds): a comparison crosses when |z| is at least 2.80, as ahead when z is
+  positive and behind when it is negative.
+- **Futility.** A comparison that has not crossed is futile when its conditional power for "ahead" under the planned
+  effect is below 10%. The planned effects are the development effects in the Power table's order: +2.6, +1.1, +1.5
+  and +1.5 points. Conditional power assumes the last 20 worlds' mean difference is the planned effect, with the first
+  20 worlds' SD, and asks for a final 40-world z of at least 1.98.
+- **The run stops at the look only when every comparison has crossed or is futile.** Crossed comparisons then keep
+  their word, and futile ones read "no measurable difference", with the 3-point readings from the 0.0125 bounds on the
+  20 worlds. The outcome table picks the row as usual. The results say the run stopped at its planned look and that its
+  estimates may be overstated.
+- **Otherwise the look decides nothing.** Every row runs to 40 worlds. `verdict.ts confirm` prints "continue" with
+  each comparison's z, conditional power and status, and it refuses a second look.
+
+**The final analysis** at 40 worlds is the frozen rule (Holm at 0.05 in each direction, then the 3-point readings from
+the 0.0125 bounds) with the final bound added. A comparison is ahead or behind only when Holm says so and its z, on 39
+degrees of freedom, is at least 1.98 in that direction. A comparison that Holm calls ahead or behind with |z| below
+1.98 takes its 3-point reading instead. No other look at the comparisons counts. The harness checks made during the run
+(fill rates, drops, spend) compute no difference between rows.
+
+**What the look costs.** These figures come from 200,000 simulated runs of the two-look design with per-world normal
+differences, seed 20261119 (`eval/runner/bg1/confirm-power-sim.py`), using the Power section's SDs. The same script with
+one look reproduces that section's table, with all four ahead at 13.8% and 2.8%. The bounds above are the ones R113 sets. The
+final bound of 1.98 is stricter than Holm's last step under the frozen rule (one-sided 0.05, a z of 1.64), so the chance
+that all four comparisons come out ahead roughly halves.
+
+| If the development effects are the truth, N = 40 | Central SDs | Pessimistic SDs |
+|---|---|---|
+| The run stops at the look (every stop is for futility) | 0.5% | 1.4% |
+| Row 3, all four ahead | 6.8% (13.8% with one look) | 1.1% (2.8%) |
+| Row 4, one class ahead of both servers | 36.8% (30.7%) | 19.5% (18.1%) |
+| Row 5, at least one ahead, neither class on both | 56.0% (55.2%) | 67.7% (67.3%) |
+| Row 6, none ahead and none behind | 0.3% (0.3%) | 11.7% (11.7%) |
+| "Ahead", by comparison, in the Power table's order | 0.99, 0.27, 0.41, 0.53 | 0.82, 0.19, 0.21, 0.20 |
+| "Not behind by 3 points or more" at 40 worlds | 0.99 | 0.92 to 0.99 |
+
+With no true difference, the run stops at the look 0.8% of the time under the central SDs and 8.7% under the
+pessimistic ones. "Ahead" comes out in each comparison 1.3% of the time, and a "behind" anywhere 4.8% and 4.2% (4.9%
+with one look). The expected number of worlds run is 39.9 and 39.7 under the development effects, so the budget does not
+change.
+
+**A pilot for every row (R111).** Each of the three rows is an arm. Its pilot is the existing smoke on public dev world
+`bg1-dev-01` at the counted settings (run order step 6), with both live readers and particle-1's re-read. At the Budget
+rates a row's smoke costs about $5.01 (gbrain), $4.72 (memory-bank server) and $8.21 (extract-first server). Each is
+under a tenth of that row's planned spend at N = 40, which is about $200, $189 and $328. A row passes its pilot when its
+own smoke outputs show three things:
+
+1. **The part under test ran.** gbrain's kept brain holds facts tagged with the person or company they are about,
+   slotted facts and changing slots (counts above 0, by the dev loop's free query). Each server stored memories for the
+   world. Every row delivered a frozen context for all 64 questions, with a mean fill rate of at least 0.90.
+2. **Its judges pass R78.** gpt-6-astra (Opus's answers) and claude-opus-5-5 (particle-1's) pass by BG1's judge check on
+   this instrument. claude-opus-5-5 on gpt-6.2-sol's answers passes by this experiment's new judge check (run order step
+   3), which must pass first.
+3. **The units can be supplied at the planned rate.**
+   - Each row's smoke spend is at most 1.5 times its Budget rate for one world, and its wall time sets the hours per
+     launch unit that launch amendment B states.
+   - For the sealed worlds themselves, the mint's first five slots use at most 1.5 times the dev mint's 336 Gemini
+     requests per world (5,714 for 17 worlds), so 40 kept worlds fit the custody host's shared quota at the planned pace.
+   - The existing mint stops cover the yield.
+
+A row that fails its pilot is fixed and piloted again, or left out. A server row left out reports its two comparisons
+as "not run (pilot failed: <reason>)", Holm runs over the remaining comparisons, and the results list the row as left
+out. gbrain's row can't be left out, so its failure goes to GBEV-3, as a failed judge check does.
+
+**Run order, as amended.** The steps stay those of "Run order", with step 8 split in two: units 1 to 4 and their
+particle-1 re-reads, then the look, then, unless the run stopped, units 5 to 8 and their re-reads. Step 6's smoke is
+each row's pilot, and no counted cell of a row launches until that row's pilot has passed.
+
+GBEV-3 directed this amendment on 2026-11-19, passing on R111 and R113 as Garry approved them, before any paid call.
 
 ## Disclosures
 
