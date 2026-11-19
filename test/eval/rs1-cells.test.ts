@@ -39,6 +39,7 @@ describe('rs1-cells.json', () => {
     expect(g.launch?.env.GBRAIN_F6).toBe('1');
     expect(g.launch?.env.GBRAIN_SHA).toBe('82fdd00001833d0cbcc03c3952c3b5635d79dd92');
     expect(g.launch?.env.GBRAIN_IDLE_UPKEEP).toBe('off');
+    expect(g.launch?.env.GBRAIN_F6_BUILD_PROBLEMS).toBe('record');
     expect(Number(g.launch?.env.GBRAIN_F6_EXTRACT_CAP_USD)).toBeGreaterThan(0);
     expect(m.waves.A.length).toBe(16);
   });
@@ -234,8 +235,8 @@ describe('wave A run identity across the wave B regeneration (2026-11-08 amendme
     expect(moved).toEqual([]);
   });
 
-  // Value: protects=wave A's counted units keep the run identity they started from through every later commit on the results branch; fails_when=a change to the RS1 cell definitions or to runConfigText moves a field verdict.ts compares for a wave A unit; why_new=verdict.ts aggregates mode lands after wave A started (GBEV-3, 2026-11-09) and must not change wave A's identity; seam=none; no_claim=wave B's units
-  test('every wave A unit still has the identity counted runs started from (test/fixtures/rs1/wave-a-identity.json, recorded at the gbrain re-pin)', () => {
+  // Value: protects=wave A's counted units keep the run identity they started from through every later commit on the results branch; fails_when=a change to the RS1 cell definitions or to runConfigText moves a field verdict.ts compares for a wave A unit; why_new=verdict.ts aggregates mode lands after wave A started (GBEV-3, 2026-11-09) and must not change wave A's identity; seam=none; no_claim=wave B's units. The gbrain row's identity is its rerun's under the 2026-11-19 amendment (the fixture's gbrain_rerun), which moved only its launch environment
+  test('every wave A unit still has the identity counted runs started from (test/fixtures/rs1/wave-a-identity.json, recorded at the gbrain re-pin; gbrain at its 2026-11-19 rerun)', () => {
     const pinned = JSON.parse(readFileSync(join(ROOT, 'test/fixtures/rs1/wave-a-identity.json'), 'utf8')) as { identity_sha256: Record<string, string> };
     const now = Object.fromEntries(committed.filter(c => waveA.has(c.id)).map(c => [c.id, createHash('sha256').update(identity(c)).digest('hex')]));
     expect(now).toEqual(pinned.identity_sha256);

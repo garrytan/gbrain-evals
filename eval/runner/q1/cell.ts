@@ -332,10 +332,12 @@ interface RealizationEvent {
 }
 /** Background work a system reported still queued when its /finish returned (gbrain-defaults: pending gbrain jobs by kind); never dropped, published per realization. */
 export interface BackgroundLiabilities { pending_jobs: Record<string, number> | null; oldest_pending_age_s: number | null; [k: string]: unknown }
+/** gbrain-defaults' F6 build as its /finish reported it (shim.py f6_build, passes counted): whether extraction covered the brain, its problems, and under GBRAIN_F6_BUILD_PROBLEMS=record whether it passed on recorded problems only, with the last pass's counts. */
+export interface F6BuildSummary { ok: boolean; problems: string[]; recorded?: boolean; last_pass?: { status: string; pages_failed: number; pages_skipped_unparsed: number; failed_reasons: Record<string, number> }; [k: string]: unknown }
 export interface IngestSummary {
   sessions: number; failed_sessions: number; synthetic_times: number; messages: number; ingested_tokens: number;
   wall_ms: number; write_ms: { p50: number | null; p95: number | null; total: number };
-  finish: { ready: boolean; waited_ms: number; completeness: string; background_liabilities?: BackgroundLiabilities };
+  finish: { ready: boolean; waited_ms: number; completeness: string; background_liabilities?: BackgroundLiabilities; f6_build?: F6BuildSummary };
   readiness_probe: string; degraded: boolean; errors: Array<{ source_id: string; kind: string; message: string }>;
 }
 export interface ProbeRecord { realization_id: string; source_id: string; kind: 'last' | 'sample'; status: 'found' | 'missed' | 'not-measurable'; write_start_to_queryable_ms: number | null; polls: number }
@@ -874,7 +876,8 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
         try {
           const f = await system.finishIngest(ns, opts.finishTimeoutS ?? finishTimeoutFor(def));
           const liabilities = f.raw?.background_liabilities as BackgroundLiabilities | undefined;
-          finish = { ready: f.ready, waited_ms: f.waited_ms, completeness: f.completeness, ...(liabilities ? { background_liabilities: liabilities } : {}) };
+          const build = f.raw?.f6_build as F6BuildSummary | undefined;
+          finish = { ready: f.ready, waited_ms: f.waited_ms, completeness: f.completeness, ...(liabilities ? { background_liabilities: liabilities } : {}), ...(build ? { f6_build: build } : {}) };
         } catch (e) { finish = { ready: false, waited_ms: 0, completeness: `error: ${(e as Error).message.slice(0, 200)}` }; }
       }
       if (finish.ready) drained = true;

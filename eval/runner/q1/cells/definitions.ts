@@ -664,7 +664,7 @@ export function makeCell(set: SetId, system: string, configuration: string, armS
 /** How a shim cell's stack starts: bootstrap.sh --config and any environment the configuration needs. */
 export function shimLaunch(system: string, configuration: string): NonNullable<CellDefinition['launch']> {
   if (configuration === 'f6-master') return { env: { GBRAIN_BUN_IMAGE: F6_ASSUMPTIONS.bun_image, GBRAIN_F6: '1', GBRAIN_SHA: F6_ASSUMPTIONS.gbrain_sha }, config: 'recipe' };
-  if (configuration === 'rs1-stable') return { env: { GBRAIN_BUN_IMAGE: RS1_ASSUMPTIONS.bun_image, GBRAIN_F6: '1', GBRAIN_IDLE_UPKEEP: 'off', GBRAIN_SHA: RS1_ASSUMPTIONS.gbrain_sha }, config: 'recipe' };
+  if (configuration === 'rs1-stable') return { env: { GBRAIN_BUN_IMAGE: RS1_ASSUMPTIONS.bun_image, GBRAIN_F6: '1', GBRAIN_F6_BUILD_PROBLEMS: 'record', GBRAIN_IDLE_UPKEEP: 'off', GBRAIN_SHA: RS1_ASSUMPTIONS.gbrain_sha }, config: 'recipe' };
   if (configuration === 'shipped-0.31') return { env: {}, config: 'shipped-0.31' };
   return { env: configuration === 'full-surface' ? { GBRAIN_FULL_SURFACE: '1' } : {}, config: configuration === 'common' || configuration === 'common-embedder' ? 'common' : 'recipe' };
 }
