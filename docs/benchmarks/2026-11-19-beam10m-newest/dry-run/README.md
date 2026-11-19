@@ -6,9 +6,8 @@ cell `s2b-ingest.gbrain-defaults.bn10-newest`, lease run `s2b-ingest.gbrain-defa
 one Ubicloud VM that was destroyed when the cell settled. It is the pilot the preregistration's amendment A2 asks for
 under R111. It is not a counted result, so no accuracy figure appears here.
 
-Every check passed for every arm with the two frontier readers, claude-opus-5-5 and gpt-6.2-sol. The particle-1
-re-read of the same frozen contexts is a separate step and is not in this receipt yet, so the particle-1 reader's
-pilot is still open.
+Every check passed for every arm with the two frontier readers, claude-opus-5-5 and gpt-6.2-sol, and with the
+particle-1 re-read of the same frozen contexts (below).
 
 ## The four checks, per arm
 
@@ -34,6 +33,14 @@ pilot is still open.
    inside the plan's 41-hour VM timeout. Retrieval took 1.2 seconds at the median in every arm, and an answer
    7 to 9 seconds. No provider rate limit held a call back: 0 refused, 0 failed and 0 paused requests at the
    metering proxy.
+
+## particle-1 re-read
+
+particle-1 re-read the same 30 frozen contexts, 10 per arm, byte for byte. Every context matched its stored hash, and
+all 20 stored answers per arm were cross-checked. Each arm got 10 particle-1 answers with no truncation. gpt-6.1-sol
+graded every one on the gating view and gpt-4.1-mini on the descriptive view, with no judge error. There were 460
+requests, all answered with status 200, and none was refused. With this step, the particle-1 reader passes checks 1 to
+3 in all three arms. Check 4 is the frontier run's, because the re-read retrieves nothing.
 
 ## Fence share
 
