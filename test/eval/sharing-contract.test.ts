@@ -43,10 +43,18 @@ const older = (a: string, b: string) => { const x = a.split('.').map(Number), y 
 const TOO_OLD = older(GBRAIN_VERSION, MIN_GBRAIN);
 if (TOO_OLD) console.warn('sharing contract skipped: the pinned gbrain is v' + GBRAIN_VERSION + ', and this test needs v' + MIN_GBRAIN + ' or later');
 
+/**
+ * Pages in an archived source stay hidden from every page read for API tokens from gbrain v0.60.744.0 (#9795). On an
+ * older build the archived-source items are left out with this reason.
+ */
+const ARCHIVE_FIX_GBRAIN = '0.60.744.0';
+const ARCHIVE_FIX = !older(GBRAIN_VERSION, ARCHIVE_FIX_GBRAIN);
+if (!TOO_OLD && !ARCHIVE_FIX) console.warn('sharing contract: the archived-source items are skipped: the pinned gbrain is v' + GBRAIN_VERSION + ', and they need v' + ARCHIVE_FIX_GBRAIN + ' or later');
+
 const OWNER = 'alice-example';
 const OTHER = 'bob-example';
 const DIMS = 1536;
-const GRANT = ['default', 'conversations', 'owner-notes'];
+const GRANT = ['default', 'conversations', 'owner-notes', ...(ARCHIVE_FIX ? ['old-project'] : [])];
 
 function vectorFor(text: string): number[] {
   const v = new Array<number>(DIMS).fill(0);
@@ -68,6 +76,10 @@ const ITEMS: Item[] = [
   page('owner_listed', 'page kept to the owner (readable_by owner)', 'default', 'notes/adlistedqzx', 'adlistedqzx harbor', 'marklistedjtq'),
   page('owner_source', 'page in an owner-only source', 'owner-notes', 'notes/advaultqzx', 'advaultqzx harbor', 'markvaultjtq'),
   page('archive', 'conversation archive page written while personal', 'conversations', '', 'adarchiveqzx harbor', 'markarchivejtq'),
+  ...(ARCHIVE_FIX ? [
+    page('archived_source', 'page in an archived source', 'old-project', 'notes/adoldqzx', 'adoldqzx harbor', 'markoldjtq'),
+    page('archived_private', 'private page in an archived source', 'old-project', 'notes/adoldprivateqzx', 'adoldprivateqzx harbor', 'markoldprivatejtq'),
+  ] : []),
   { id: 'world_fact', label: 'public fact', kind: 'fact', source: 'default', slug: 'notes/adworldqzx', query: 'adfactworldqzx ledger', mark: 'factworldhmz' },
   { id: 'private_fact', label: 'private fact', kind: 'fact', source: 'default', slug: 'notes/adworldqzx', query: 'adfactprivateqzx ledger', mark: 'factprivatehmz' },
 ];
@@ -113,13 +125,15 @@ function argsFor(path: ReadPath, item: Item, slug: string): Record<string, unkno
  * 'may' = the contract allows either (an unbound token reading world content in its grace, personal-era archive pages
  * on a personal brain, where gbrain treats every caller as the owner, or on a shared brain while gbrain reports
  * archive_rescope_pending, the documented wait in conversation-archive.md "When a personal brain becomes shared"; the owner's own member before any owner is set,
- * which reads what lists it but gets no owner relaxation;).
+ * which reads what lists it but gets no owner relaxation; a page in an archived source, which the owner hid on purpose
+ * and multi-source-brains.md keeps from every reader but the owner).
  */
 type Expect = 'must' | 'never' | 'may';
 function contract(caller: CallerKind, item: Item, state: State, path: ReadPath): Expect {
   const shared = state.shared;
   if (caller === 'unauthenticated' || caller === 'disabled') return 'never';
   const scoped = !path.endsWith('_unscoped');
+  if (item.id === 'archived_source' || item.id === 'archived_private') return caller === 'local' || caller === 'owner' ? 'may' : 'never';
   if (caller === 'local' || caller === 'owner') return scoped ? 'must' : 'may';
   if (caller === 'owner_unset') return ['private', 'owner_source', 'private_fact'].includes(item.id) ? 'never' : 'may';
   if (item.id === 'world' || item.id === 'world_fact') return caller === 'member' && scoped ? 'must' : 'may';
@@ -145,9 +159,10 @@ async function makeBrain(opts: { ownerSet: boolean; otherDisabled?: boolean }): 
   await engine.setConfig(ARCHIVE_TIMEZONE_KEY, 'UTC');
   await setArchiveEnabled(engine, true);
   await engine.executeRaw("INSERT INTO sources (id, name, config) VALUES ('owner-notes', 'owner-notes', $1::jsonb)", [JSON.stringify({ owner_only: true, federated: true })]);
+  if (ARCHIVE_FIX) await engine.executeRaw("INSERT INTO sources (id, name, config) VALUES ('old-project', 'old-project', $1::jsonb)", [JSON.stringify({ federated: true })]);
   const body = (it: Item, fm: string) => '---\ntype: note\ntitle: ' + it.id + '\n' + fm + '---\n# ' + it.id + '\n\nPlanning notes ' + it.query + ' ' + it.mark + '.\n';
   for (const it of ITEMS.filter(i => i.kind === 'page' && i.id !== 'archive')) {
-    const fm = it.id === 'private' ? 'visibility: private\n' : it.id === 'owner_listed' ? 'readable_by: [' + OWNER + ']\n' : '';
+    const fm = it.id === 'private' || it.id === 'archived_private' ? 'visibility: private\n' : it.id === 'owner_listed' ? 'readable_by: [' + OWNER + ']\n' : '';
     await importFromContent(engine, it.slug, body(it, fm), { sourceId: it.source });
   }
   await addMember(engine, OWNER);
@@ -271,7 +286,7 @@ async function matrix(b: Brain, scenario: string, phase: 'before' | 'after', sta
 function ownerLosses(before: Cell[], after: Cell[]): Cell[] {
   const key = (c: Cell) => c.caller + '|' + c.item + '|' + c.path;
   const had = new Set(before.filter(c => c.read && (c.caller === 'local' || c.caller.startsWith('owner_'))).map(key));
-  return after.filter(c => had.has(key(c)) && !c.read);
+  return after.filter(c => had.has(key(c)) && !c.read && !c.item.startsWith('archived_'));
 }
 
 /** shared: 'audience' takes the brain's state from classifyBrainAudience after the change (the client-count trigger). */
@@ -349,6 +364,7 @@ for (const s of SCENARIOS) {
       offHostFetches.length = 0;
       const b = await makeBrain({ ownerSet: s.ownerSet ?? true, otherDisabled: s.otherDisabled });
       try {
+        if (ARCHIVE_FIX) await softDeleteSource(b.engine, 'old-project');
         const before = await matrix(b, s.name, 'before', { shared: false, ownerSet: s.ownerSet ?? true, otherEnabled: true, rescopePending: false });
         await s.change(b);
         if (s.mintOther && !b.tokens.member_http) await mint(b, 'member_http', OTHER);
