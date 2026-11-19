@@ -100,6 +100,11 @@ describe('newest_analysis.py', () => {
     expect(h.wording).toBe('not distinguishable');
     expect(h.outcome_row).toBe('not distinguishable from 0');
   });
+  test('an interval wholly below 0 reads "behind" and takes the lead-drops row', () => {
+    const d = tmp();
+    const h = analyse([world(d, 'N1', i => i >= 10, () => true), world(d, 'N2', i => i >= 10, () => true)]).json.headline;
+    expect(h).toMatchObject({ delta_pp: -10, wording: 'behind', comparison: 'drops', outcome_row: 'drops' });
+  });
   test('a missing frontier cell refuses the headline; a missing particle-1 cell leaves only its row incomplete', () => {
     const d = tmp();
     const r = analyse([world(d, 'N1', () => true, i => i >= 10, 'fs|gpt-6.2-sol|H3-04'), world(d, 'N2', () => true, i => i >= 10)]);

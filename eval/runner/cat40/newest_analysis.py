@@ -116,8 +116,12 @@ class Comparison:
 
 
 def wording(res):
-    lo = res['ci95'][0]
-    return 'ahead' if lo > 0 else 'parity' if lo > -3 else 'not distinguishable'
+    lo, hi = res['ci95']
+    if lo > 0:
+        return 'ahead'
+    if hi < 0:
+        return 'behind'
+    return 'parity' if lo > -3 else 'not distinguishable'
 
 
 def comparison_label(delta):
