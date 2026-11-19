@@ -647,6 +647,8 @@ async function main(): Promise<void> {
   if (companyAutolink && (seed !== PERSON_DEDUPE_DEFAULT_SEED || generatorVersion !== PERSON_DEDUPE_GENERATOR_VERSION)) {
     throw new Error(`person-dedupe: --company-autolink runs only on the dev seed ${PERSON_DEDUPE_DEFAULT_SEED} at generator version ${PERSON_DEDUPE_GENERATOR_VERSION}, not seed ${seed} at version ${generatorVersion}`);
   }
+  const vGen = companyAutolink ? await import('../generators/company-dedupe-v-gen.ts') : null;
+  const vWorld = vGen?.generateCompanyVWorld(seed, perFamily) ?? null;
   const startedAt = new Date().toISOString();
 
   const ledger = generateLedger(seed, perFamily, generatorVersion);
@@ -683,10 +685,9 @@ async function main(): Promise<void> {
   }
   log(`\nVerdict (${headline.id}): ${headline.verdict.pass ? 'pass' : 'fail'}${headline.verdict.shortfalls.map(s => `\n  ${s}`).join('')}`);
   let autolink: Record<string, unknown> | null = null;
-  if (companyAutolink) {
-    const { COMPANY_V_FAMILIES, COMPANY_V_GENERATOR_VERSION, generateCompanyVWorld } = await import('../generators/company-dedupe-v-gen.ts');
+  if (vGen && vWorld) {
+    const { COMPANY_V_FAMILIES, COMPANY_V_GENERATOR_VERSION } = vGen;
     const { COMPANY_AUTOLINK_ARMS, formatCompanyAutoLink, runCompanyAutoLink } = await import('./company-autolink.ts');
-    const vWorld = generateCompanyVWorld(seed, perFamily);
     const results = runCompanyAutoLink(vWorld);
     log('\n## Company auto-link rules (dev seed, company pages only; a stand-in for the finder, not gbrain)\n');
     log(`${vWorld.pages.length} company pages and ${vWorld.pairs.length} designed company pairs, with the V families; ${vWorld.rejections.length} rejected pairs. Base counts cover the families above; per-family counts use rejection memory keyed on the stable page id.\n`);

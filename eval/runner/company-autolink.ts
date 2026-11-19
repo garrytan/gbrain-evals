@@ -35,9 +35,9 @@ export function linkedinPath(p: { linkedin: string | null }): string | null {
   return p.linkedin?.trim().toLowerCase().match(/\/(in|company)\/[^/?#]+/)?.[0] ?? null;
 }
 
-/** A website or domain value with a URL path after the host (https://www.halwick.example/labs). */
+/** A website or domain value with a URL path after the host (https://www.halwick.example/labs, or halwick.example/labs). */
 export function hasUrlPath(raw: string): boolean {
-  return /^[a-z][a-z0-9+.-]*:\/\/[^/]+\/./i.test(raw.trim());
+  return /^[^/]+\/./.test(raw.trim().replace(/^[a-z][a-z0-9+.-]*:\/\//i, ''));
 }
 
 /** The registrable part of a domain in this world (TLD .example; a two-letter label before it is a country code). */

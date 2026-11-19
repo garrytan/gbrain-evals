@@ -1,5 +1,8 @@
 import { describe, expect, test } from 'bun:test';
 import { createHash } from 'node:crypto';
+import { mkdtempSync, readdirSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { generateCompanyLedger } from '../../eval/generators/company-dedupe-gen.ts';
 import { COMPANY_V_DEV_SEED, COMPANY_V_FAMILIES, generateCompanyVWorld } from '../../eval/generators/company-dedupe-v-gen.ts';
 import {
@@ -71,6 +74,20 @@ describe('company V families', () => {
   });
 });
 
+describe('person-dedupe --company-autolink', () => {
+  const run = (...args: string[]) => Bun.spawnSync(['bun', 'eval/runner/person-dedupe.ts', '--company-autolink', ...args], { env: { ...process.env, ANTHROPIC_API_KEY: '', OPENAI_API_KEY: '', PARTICLE_API_KEY: '' } });
+  test('refuses a seed other than the dev seed before any work, and a per-family count the name pool cannot fill', () => {
+    const out = mkdtempSync(join(tmpdir(), 'company-autolink-'));
+    const seed = run('--seed', '7', '--output', out);
+    expect(seed.exitCode).not.toBe(0);
+    expect(seed.stderr.toString() + seed.stdout.toString()).toContain('runs only on the dev seed');
+    const big = run('--per-family', '40', '--output', out);
+    expect(big.exitCode).not.toBe(0);
+    expect(big.stderr.toString() + big.stdout.toString()).toContain('name pool exhausted');
+    expect(readdirSync(out)).toEqual([]);
+  });
+});
+
 describe('company auto-link rules', () => {
   test('new folds and keys: dotted abbreviations, own-site domains, registrable domains and initials', () => {
     expect(variantFold('Iselwood, L.L.C.', 'company')).toBe('iselwood l l c');
@@ -78,11 +95,19 @@ describe('company auto-link rules', () => {
     expect(dottedVariantFold('Iselwood LLC')).toBe('iselwood');
     expect(ownSiteDomains({ domains: ['halwick.example', 'https://www.halwick.example/labs'] })).toEqual([]);
     expect(ownSiteDomains({ domains: ['halwick.example', 'https://www.halwick.example'] })).toEqual(['halwick.example']);
+    expect(ownSiteDomains({ domains: ['halwick.example', 'halwick.example/labs'] })).toEqual([]);
     expect(registrableDomain('https://www.uk.halwick.example/x')).toBe('halwick');
     expect(registrableDomain('halwick.uk.example')).toBe('halwick.uk');
     expect(companyInitials('Velfield United Minerals')).toBe('vum');
     expect(initialsMatch('VUM', 'Velfield United Minerals')).toBe(true);
     expect(initialsMatch('Velfield', 'Velfield United Minerals')).toBe(false);
+  });
+  test('two linked groups that share a page link nothing when their union holds two pages of one source; an unknown arm throws', () => {
+    const page = (key: string, domains: string[], linkedin: string | null) => ({ key, source: key.slice(0, key.indexOf(':')), slug: key.slice(key.indexOf(':') + 1), type: 'company' as const, title: 'Acme', emails: [], domains, linkedin, github: null, company: null, city: null, page_id: key });
+    const pages = [page('work:companies/acme', ['acme.example'], null), page('home:companies/acme', ['acme.example'], 'https://www.linkedin.example/company/acme'), page('work:companies/acme-2', [], 'https://www.linkedin.example/company/acme')];
+    expect(companyAutoLink(pages.slice(0, 2), 'd3').length).toBe(1);
+    expect(companyAutoLink(pages, 'd3')).toEqual([]);
+    expect(() => companyAutoLink(pages, 'nope')).toThrow(/unknown arm/);
   });
   test('the baseline arm is the contract emulator\'s arm 7 auto tier on company pages', () => {
     const { pages } = generateCompanyVWorld();
@@ -110,6 +135,9 @@ describe('company auto-link rules', () => {
     expect(by.d3.base.found.k).toBeGreaterThan(by.d2.base.found.k);
     expect(by.d2.base.found.k).toBeGreaterThan(by.d1.base.found.k);
     expect(by.a.base.false_merge.k).toBeGreaterThan(0);
+    expect(by.baseline.older_pass.links_joining_a_rejected_pair).toBe(0);
+    expect(by.d3.older_pass.links_joining_a_rejected_pair).toBeGreaterThan(0);
+    expect(by.d3.older_pass.links_touching_changed_pages).toBeGreaterThanOrEqual(by.d3.older_pass.links_joining_a_rejected_pair);
     expect(formatCompanyAutoLink(results).join('\n')).toContain('v-subsidiary-root-domain / plainly different name');
   });
 });
