@@ -40,6 +40,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { join, resolve } from 'node:path';
+import { createHash } from 'node:crypto';
 import { BudgetRun, budgetOptionsFrom, closeRun, ledgerStatus } from '../budget-ledger.ts';
 import { canonicalCells, readRecords } from '../cat40/records.ts';
 import { resolveGbrainUnderTest } from '../gbrain-under-test.ts';
@@ -226,6 +227,30 @@ async function runCat40Arm(full: SuiteRun, ctx: Ctx, arm: ArmName, d: Cat40Dirs,
   return r.code === 0 ? null : `cells exited ${r.code ?? r.signal}: ${r.tail.split('\n').slice(-3).join(' ')}`;
 }
 
+/** Flags that never reach a cell, or that differ between two builds by design (the build and its brains are named by gbrain_commit and slot_commit). */
+const SETUP_IGNORED_FLAGS = new Set(['--out', '--world', '--arms', '--models', '--budget-ledger', '--concurrency', '--transcripts', '--order', '--accept-freeze-drift',
+  '--tasks', '--gbrain-ref', '--gbrain-repo', '--gbrain-root', '--slot-ref', '--slots']);
+
+/**
+ * A digest of what a Cat 40 cells dir's cells ran under, apart from the gbrain build itself: the world, the commit that
+ * built the brains, the Hard identity, turn and tool limits, judge, scorer and evaluator code (experiment.json), the
+ * served instructions, the served tool names and every flag that reaches a cell. Null when experiment.json is missing.
+ */
+export function cat40Setup(cellsDir: string): string | null {
+  const exp = join(cellsDir, 'experiment.json');
+  if (!existsSync(exp)) return null;
+  const e = JSON.parse(readFileSync(exp, 'utf8')) as { world_digest?: string; slot_commit?: string; hard?: Record<string, unknown>; flags?: Record<string, unknown> };
+  const file = (f: string) => (existsSync(join(cellsDir, f)) ? readFileSync(join(cellsDir, f), 'utf8') : null);
+  const instructions = file('served-instructions.txt'), tools = file('served-tools.json');
+  const setup = {
+    world_digest: e.world_digest ?? null, slot_commit: e.slot_commit ?? null, hard: e.hard ? { ...e.hard, runner_commit: null } : null,
+    flags: Object.fromEntries(Object.entries(e.flags ?? {}).filter(([k]) => !SETUP_IGNORED_FLAGS.has(k)).sort(([a], [b]) => a.localeCompare(b))),
+    instructions: instructions === null ? null : createHash('sha256').update(instructions).digest('hex'),
+    tools: tools === null ? null : (JSON.parse(tools) as Array<{ name: string }>).map(t => t.name).sort(),
+  };
+  return createHash('sha256').update(JSON.stringify(setup)).digest('hex');
+}
+
 /** Items from a Cat 40 arm's cells: the nightly outcome row, plus each cell's transcript and turns. */
 export function cat40Items(run: SuiteRun, ctx: Pick<Ctx, 'night' | 'ref' | 'sha' | 'fake' | 'label' | 'dir'> & Partial<NightContext>, arm: ArmName, cellsDir: string, world: string): { items: ItemRow[]; why: WhyRow[] } {
   const tasks = existsSync(world) ? new Map(((JSON.parse(readFileSync(world, 'utf8')) as { tasks: any[] }).tasks).filter(t => run.items.some(i => i.id === t.id)).map(t => [t.id, t])) : new Map();
@@ -236,13 +261,14 @@ export function cat40Items(run: SuiteRun, ctx: Pick<Ctx, 'night' | 'ref' | 'sha'
   const tp = join(cellsDir, 'transcripts.jsonl');
   if (existsSync(tp)) for (const line of readFileSync(tp, 'utf8').split('\n').filter(Boolean)) { const t = JSON.parse(line); transcripts.set(t.attempt_id ?? t.key, t.tools ?? []); }
   const items: ItemRow[] = [], why: WhyRow[] = [];
+  const setup = cat40Setup(cellsDir);
   for (const o of rows) {
     const cell = cells.find(c => c.task === o.item && (ctx.fake ? true : c.model === o.reader) && c.repeat + 1 === o.trial);
     const raw = (cell?.raw ?? {}) as Record<string, any>;
     const calls = cell ? transcripts.get(cell.attempt_id) ?? transcripts.get(cell.key) ?? null : null;
     const turns = Array.isArray(raw.sessions) ? raw.sessions.reduce((n: number, s: any) => n + (s.run?.turns ?? 0), 0) : raw.run?.turns ?? null;
     const gold = [...((o.evidence.evidence_cited as string[]) ?? []), ...((o.evidence.missed_evidence as string[]) ?? [])];
-    const row = agentItem(o, { arm, ref: ctx.label, gold, calls, turns, turnCap: raw.experiment?.max_turns ?? ARMS[arm].turnCap });
+    const row = agentItem(o, { arm, ref: ctx.label, gold, calls, turns, turnCap: raw.experiment?.max_turns ?? ARMS[arm].turnCap, setup });
     items.push(row);
     if (missed(row) && calls) why.push(agentWhy(row, calls));
   }
