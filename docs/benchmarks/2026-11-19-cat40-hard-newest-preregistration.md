@@ -130,9 +130,16 @@ The H4 variant mix sits inside P1's and P2's range. Each world is copied to its 
 
 To be appended before the first counted cell: the gbrain release, commit and slot commit; the harness commit; the hashes of the particle-1 transport files (`eval/runner/providers/`), which the Hard freeze doesn't cover; the judge check's result; model freshness; the slot receipts; the oracle gate; the VM names and ledger run ids.
 
+**Recorded 2026-11-19, before any slot build:**
+
+- **gbrain build.** v0.60.742.0, commit `ae8201041c21101dc8c5127afc1be4a047049483`, the highest version tag on gbrain's master when re-read on 2026-11-19 with `git ls-remote --tags`. The slots are built from the same commit. Each VM re-reads the tags again immediately before its slot build and stops if a newer release exists.
+- **Harness.** gbrain-evals `00c85dfd986207a94cecb375668a741079b6ee2c` on `capy/cat40-hard-newest-results` carries the pin, the seed registration, the reader change, the particle-1 change and the accepted drift. The runs execute from the commit that adds this record, which changes no code.
+- **particle-1 transport.** `eval/runner/providers/openai-compatible.ts`, SHA-256 `ed4cd5fc73ad971e3769fc4888eec8672c38eee8e1ff6a000203e2d41a7479ec` (last changed in `53583e386`), the only file in `eval/runner/providers/`.
+- **Judge check** (`eval/runner/cat40/judge-check-hard.ts`, 60 constructed items with 30 good and 30 bad answers, 12 per family, plus 40 real answers from world M's committed cells). gpt-6.1-sol: kappa 0.967, caught 30 of 30 bad answers, failed 1 of 30 good ones, 0 malformed, agreed with the recorded judge on 39 of 40 real answers. claude-opus-5-5: kappa 1.000, caught 30 of 30, failed 0 of 30, 0 malformed, agreed on 36 of 40 real answers. The two judges agreed with each other on 92.3% of the real answers. Both pass (kappa at least 0.6, at least 15 items per class, at most 1% malformed), so the counted cells may start.
+
 ## Amendments
 
-None yet.
+- **2026-11-19, harness check under R110** ("Sol runs in Codex CLI and Opus in Claude Code"): no arm runs inside Claude Code or Codex CLI. Both frontier readers, and particle-1, are called through this repository's own agent loop (`eval/runner/cat40/loop.ts`, the OpenAI Responses API for gpt-6.2-sol and the Anthropic Messages API for claude-opus-5-5), so nothing changes.
 
 ## Disclosures
 
