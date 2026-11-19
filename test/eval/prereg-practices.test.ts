@@ -3,7 +3,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { checkEntry, checkPractices, loadGrandfathered, modelFamily, type PracticeEntry } from '../../eval/runner/prereg-practices.ts';
+import { checkEntry, checkGrandfatheredFrozen, checkPractices, GRANDFATHERED_PATH, isPreregistrationFile, loadGrandfathered, modelFamily, type PracticeEntry } from '../../eval/runner/prereg-practices.ts';
 import { loadManifest } from '../../eval/runner/prereg.ts';
 
 const fixture = (name: string): PracticeEntry =>
@@ -224,11 +224,89 @@ describe('checkPractices', () => {
     ]);
   });
 
+  test('refuses a new preregistration in any filename shape, and accepts an addendum to a listed one', () => {
+    const shapes = [
+      'docs/benchmarks/2026-11-20-x/PREREGISTRATION.md',
+      'docs/benchmarks/2026-11-20-x/preregistration.md',
+      'docs/benchmarks/live/PHASE3-PREREGISTRATION.md',
+      'docs/benchmarks/2026-11-20-x/preregistration-gate-2.md',
+      'docs/benchmarks/2026-11-20-x-protocol.md',
+      'docs/plans/2026-11-20-wave/PREREG.md',
+      'docs/plans/2026-11-20-wave/prereg-arm.md',
+    ];
+    const listed = 'docs/benchmarks/2026-11-20-y-preregistration.md';
+    const files = Object.fromEntries([...shapes, listed, 'docs/benchmarks/2026-11-20-y-preregistration-addenda.md', 'docs/benchmarks/PREREGISTRATION-TEMPLATE.md', 'docs/benchmarks/2026-11-20-x/REPORT.md'].map(f => [f, 'plan']));
+    const entry = { id: 'y', preregistration: listed, results: [] } as PracticeEntry;
+    const p = checkPractices([entry], { ids: ['y'], unlisted_preregistrations: [] }, repo(files));
+    expect(p.map(x => x.file).sort()).toEqual([...shapes].sort());
+  });
+
+  test('isPreregistrationFile skips the template and files outside docs', () => {
+    expect(isPreregistrationFile('docs/benchmarks/PREREGISTRATION-TEMPLATE.md')).toBe(false);
+    expect(isPreregistrationFile('eval/data/x-preregistration.md')).toBe(false);
+    expect(isPreregistrationFile('docs/benchmarks/x-preregistration.json')).toBe(false);
+  });
+
   test('the grandfather list names only experiments in the registry', () => {
     const root = join(import.meta.dir, '../..');
     const grandfathered = loadGrandfathered(root);
     const ids = new Set(loadManifest(root).map(e => e.id));
     for (const id of grandfathered.ids) expect(ids.has(id)).toBe(true);
+  });
+});
+
+// Value: protects=the grandfather list as a closed set, so a new plan can't skip the practices check by joining it; fails_when=an id or file that did not exist when the list was first committed passes as grandfathered; seam=checkGrandfatheredFrozen over throwaway git repos, keyless; no_claim=edits that forge git history
+describe('checkGrandfatheredFrozen', () => {
+  function history(): { dir: string; commit: (files: Record<string, string>) => void } {
+    const dir = repo({});
+    const commit = (files: Record<string, string>) => {
+      for (const [file, body] of Object.entries(files)) {
+        mkdirSync(dirname(join(dir, file)), { recursive: true });
+        writeFileSync(join(dir, file), body);
+      }
+      execFileSync('git', ['add', '-A'], { cwd: dir });
+      execFileSync('git', ['-c', 'user.email=t@example.com', '-c', 'user.name=t', '-c', 'commit.gpgsign=false', 'commit', '-q', '-m', 'c'], { cwd: dir });
+    };
+    const registry = (ids: string[]) => JSON.stringify({ experiments: ids.map(id => ({ id, preregistration: `docs/benchmarks/${id}-preregistration.md`, results: [] })) });
+    commit({ 'docs/benchmarks/preregistrations.json': registry(['old-a']), 'docs/benchmarks/preregistrations.d/old-b.json': registry(['old-b']), 'docs/benchmarks/old-c-preregistration.md': 'plan' });
+    commit({ [GRANDFATHERED_PATH]: '{}' });
+    commit({ 'docs/benchmarks/preregistrations.d/new.json': registry(['new']), 'docs/benchmarks/new-loose-preregistration.md': 'plan' });
+    return { dir, commit };
+  }
+
+  test('passes when every name existed when the list was created, and when names are removed', () => {
+    const { dir } = history();
+    expect(checkGrandfatheredFrozen({ ids: ['old-a', 'old-b'], unlisted_preregistrations: ['docs/benchmarks/old-c-preregistration.md'] }, dir)).toEqual([]);
+    expect(checkGrandfatheredFrozen({ ids: ['old-a'], unlisted_preregistrations: [] }, dir)).toEqual([]);
+  });
+
+  test('refuses an id added to the list after it was created', () => {
+    const { dir } = history();
+    expect(checkGrandfatheredFrozen({ ids: ['old-a', 'new'], unlisted_preregistrations: [] }, dir)).toEqual([
+      expect.objectContaining({ id: 'new', problem: expect.stringContaining("new plans can't be grandfathered") }),
+    ]);
+  });
+
+  test('refuses a preregistration file added to the list after it was created', () => {
+    const { dir } = history();
+    expect(checkGrandfatheredFrozen({ ids: [], unlisted_preregistrations: ['docs/benchmarks/new-loose-preregistration.md'] }, dir)).toEqual([
+      expect.objectContaining({ file: 'docs/benchmarks/new-loose-preregistration.md', problem: expect.stringContaining("new plans can't be grandfathered") }),
+    ]);
+  });
+
+  test('a later rewrite of the list does not move the creation commit', () => {
+    const { dir, commit } = history();
+    commit({ [GRANDFATHERED_PATH]: '{"rewritten":true}' });
+    expect(checkGrandfatheredFrozen({ ids: ['new'], unlisted_preregistrations: [] }, dir)).toHaveLength(1);
+  });
+
+  test('refuses an uncommitted list', () => {
+    expect(checkGrandfatheredFrozen(none, empty)[0]!.problem).toBe('grandfather list is not committed');
+  });
+
+  test('the repository\'s list passes', () => {
+    const root = join(import.meta.dir, '../..');
+    expect(checkGrandfatheredFrozen(loadGrandfathered(root), root)).toEqual([]);
   });
 });
 

@@ -19,7 +19,6 @@ import type { ManifestEntry, OrderProblem } from './prereg.ts';
 
 export const PRACTICES_CUTOFF = '2026-11-19';
 export const GRANDFATHERED_PATH = 'docs/benchmarks/preregistrations-grandfathered.json';
-export const PREREGISTRATION_FILES = ['docs/benchmarks/*-preregistration.md', 'docs/plans/*/PREREG.md'];
 export const PAID_TIERS = ['quick-look', 'under-500', 'over-500'] as const;
 export const SETTLED_CALL = /^\s*(?:[-*]\s+)?(?:\*\*)?Settled call:(?:\*\*)?[ \t]*(.*)$/m;
 
@@ -42,6 +41,13 @@ export interface Grandfathered {
 }
 
 export type PracticeEntry = ManifestEntry & Record<string, unknown>;
+
+/** Every Markdown file under docs/ whose name says it is a preregistration or a protocol, except the template. */
+export function isPreregistrationFile(path: string): boolean {
+  if (!path.startsWith('docs/') || !path.endsWith('.md')) return false;
+  const name = path.slice(path.lastIndexOf('/') + 1).toLowerCase();
+  return name !== 'preregistration-template.md' && (name.includes('prereg') || name.endsWith('-protocol.md'));
+}
 
 export function modelFamily(model: string): string | null {
   const bare = model.trim().toLowerCase().replace(/^[^:/]*[:/]/, '');
@@ -189,9 +195,33 @@ export function checkPractices(entries: PracticeEntry[], grandfathered: Grandfat
     seen.add(entry.id);
   }
   const listed = new Set([...entries.map(e => e.preregistration), ...grandfathered.unlisted_preregistrations]);
-  const tracked = execFileSync('git', ['ls-files', '--', ...PREREGISTRATION_FILES], { cwd, encoding: 'utf8' }).split('\n').filter(Boolean);
+  const tracked = git(cwd, ['ls-files', '--', ':(glob,icase)docs/**/*prereg*.md', ':(glob,icase)docs/**/*-protocol.md']).split('\n').filter(isPreregistrationFile);
   for (const file of tracked) {
-    if (!listed.has(file)) problems.push({ id: '*', file, problem: 'new preregistration has no registry entry; add one under docs/benchmarks/preregistrations.d/' });
+    if (listed.has(file) || listed.has(file.replace(/-addenda\.md$/i, '.md'))) continue;
+    problems.push({ id: '*', file, problem: 'new preregistration has no registry entry; add one under docs/benchmarks/preregistrations.d/' });
   }
   return problems;
+}
+
+function git(cwd: string, args: string[]): string {
+  return execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 64 * 1024 * 1024 });
+}
+
+/**
+ * The grandfather list may only name experiments and files that existed in the commit that first added it, so a new
+ * plan can't join the list to skip the practices check. Removing a name is always allowed.
+ */
+export function checkGrandfatheredFrozen(grandfathered: Grandfathered, cwd = process.cwd()): OrderProblem[] {
+  const hasCommits = execFileSync('git', ['rev-list', '-n', '1', '--all'], { cwd, encoding: 'utf8' }).trim() !== '';
+  const adds = hasCommits ? git(cwd, ['log', '--diff-filter=A', '--format=%H', '--', GRANDFATHERED_PATH]).split('\n').filter(Boolean) : [];
+  const created = adds[adds.length - 1];
+  if (!created) return [{ id: '*', file: GRANDFATHERED_PATH, problem: 'grandfather list is not committed' }];
+  const filesThen = new Set(git(cwd, ['ls-tree', '-r', '--name-only', created, '--', ...grandfathered.unlisted_preregistrations]).split('\n').filter(Boolean));
+  const registry = git(cwd, ['ls-tree', '-r', '--name-only', created, '--', 'docs/benchmarks/preregistrations.json', 'docs/benchmarks/preregistrations.d']).split('\n').filter(f => f.endsWith('.json'));
+  const idsThen = new Set(registry.flatMap(f => (JSON.parse(git(cwd, ['show', `${created}:${f}`])) as { experiments: ManifestEntry[] }).experiments.map(e => e.id)));
+  const at = created.slice(0, 12);
+  return [
+    ...grandfathered.ids.filter(id => !idsThen.has(id)).map(id => ({ id, file: GRANDFATHERED_PATH, problem: `grandfathered id was not in the registry when the list was created (${at}); new plans can't be grandfathered` })),
+    ...grandfathered.unlisted_preregistrations.filter(f => !filesThen.has(f)).map(f => ({ id: '*', file: f, problem: `grandfathered file did not exist when the list was created (${at}); new plans can't be grandfathered` })),
+  ];
 }
