@@ -3,7 +3,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const ROOT = join(import.meta.dir, '..', '..');
-const SINCE = '2026-11-08';
+const AFTER = [0, 10, 257];
 
 const MONEY = [
   /\$\s?\d/,
@@ -19,14 +19,14 @@ function moneyLines(text: string): string[] {
     .filter(line => MONEY.some(re => re.test(line)));
 }
 
-/** CHANGELOG.md's sections dated on or after SINCE, the day spend and caps stopped being published here. */
-function recentSections(text: string): string {
-  const out: string[] = [];
-  for (const section of text.split(/^(?=## \[)/m)) {
-    const date = /^## \[[^\]]+\] - (\d{4}-\d{2}-\d{2})/.exec(section)?.[1];
-    if (date && date >= SINCE) out.push(section);
-  }
-  return out.join('');
+/** CHANGELOG.md's sections released after AFTER, the first release whose notes are checked here. */
+function newerSections(text: string): string {
+  return text.split(/^(?=## \[)/m).filter(section => {
+    const version = /^## \[(\d+)\.(\d+)\.(\d+)\]/.exec(section)?.slice(1).map(Number);
+    if (!version) return false;
+    const i = version.findIndex((n, k) => n !== AFTER[k]);
+    return i >= 0 && version[i] > AFTER[i];
+  }).join('');
 }
 
 describe('changelog money wording', () => {
@@ -46,8 +46,8 @@ describe('changelog money wording', () => {
     expect(hits).toEqual([]);
   });
 
-  test(`CHANGELOG.md sections dated ${SINCE} or later state no spend, cost total or cap`, () => {
-    const hits = moneyLines(recentSections(readFileSync(join(ROOT, 'CHANGELOG.md'), 'utf8'))).map(l => l.trim());
+  test(`CHANGELOG.md sections after v${AFTER.join('.')} state no spend, cost total or cap`, () => {
+    const hits = moneyLines(newerSections(readFileSync(join(ROOT, 'CHANGELOG.md'), 'utf8'))).map(l => l.trim());
     expect(hits).toEqual([]);
   });
 });
