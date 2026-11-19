@@ -346,6 +346,7 @@ __setEmbedTransportForTests((async ({ values }: { values: string[] }) => ({ embe
 for (const s of SCENARIOS) {
   describe.skipIf(TOO_OLD)('AD sharing contract: ' + s.name, () => {
     test("no non-owner gains a read and the owner's callers lose none", async () => {
+      offHostFetches.length = 0;
       const b = await makeBrain({ ownerSet: s.ownerSet ?? true, otherDisabled: s.otherDisabled });
       try {
         const before = await matrix(b, s.name, 'before', { shared: false, ownerSet: s.ownerSet ?? true, otherEnabled: true, rescopePending: false });
