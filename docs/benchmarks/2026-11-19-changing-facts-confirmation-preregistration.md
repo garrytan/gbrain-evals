@@ -556,9 +556,9 @@ kept set is still the first 40 worlds that pass BG1's validation.
 - **What happened on the dev worlds.** In public dev world bg1-dev-20, gemini-3.8-flash wrote a U+0000 character inside
   a word in one turn of session s123. gbrain keeps pages in Postgres, which can't store that character, so gbrain's
   `put_page` refused the page and the session never reached gbrain. memory-bank and extract-first ingested all 152
-  sessions. Every gbrain build the dev loop ran, v0.60.734.0 to v0.60.741.0, lost that session and missed the three
-  questions that cite it, which both other servers answered. It is the only control character in the 20 public dev
-  worlds.
+  sessions. Every gbrain build the dev loop ran on bg1-dev-20 (v0.60.734.0, v0.60.735.0, v0.60.737.0 and v0.60.741.0)
+  lost that session and missed the three questions that cite it, which both other servers answered. It is the only
+  control character in the 20 public dev worlds.
 - **The change.** `eval/custody/bg1/render.ts` now removes every control character except newline and tab from each
   rendered turn, before the checks run and before the world is written. The checks read the text the world keeps, and
   every server ingests that same text. The render record and line count what each world lost (`controls_dropped`), and

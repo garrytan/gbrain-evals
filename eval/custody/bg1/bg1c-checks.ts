@@ -1,7 +1,8 @@
 /**
  * BG1-C's three custody checks before its mint (docs/benchmarks/2026-11-19-changing-facts-confirmation-preregistration.md,
- * "The worlds" and run order steps 4 and 5), run on the custody host with BG1's seed and private phrasing. Both print
- * counts and hashes only: no world, question, phrasing, seed or nonce text.
+ * "The worlds" and run order steps 4 and 5), run on the custody host. phrasing and seed read BG1's seed and private
+ * phrasing; controls reads only BG1's listed worlds. All three print counts, hashes and world or slot ids only: no world,
+ * question, phrasing, seed or nonce text.
  *
  *   bun eval/custody/bg1/bg1c-checks.ts phrasing --seed-file <path>.bg1-seed --phrasing <path>.bg1-phrasing.json
  *   bun eval/custody/bg1/bg1c-checks.ts seed --seed-file <path>.bg1-seed --phrasing <path>.bg1-phrasing.json
