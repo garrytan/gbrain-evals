@@ -35,13 +35,14 @@ const QUERIES: SyntheticQuery[] = [
   { id: 'payments', text: 'fintech payment rails banks', relevant_slugs: ['concepts/payment-rails'] },
 ];
 const OPENAI_PAIR = CELLS.filter(c => c.embedder === 'openai:text-embedding-3-large');
-const ENV_KEYS = ['GBRAIN_HOME', 'OPENAI_API_KEY', 'VOYAGE_API_KEY', 'ZEROENTROPY_API_KEY'];
+const ENV_KEYS = ['GBRAIN_HOME', 'OPENAI_API_KEY', 'VOYAGE_API_KEY', 'ZEROENTROPY_API_KEY', 'GBRAIN_MODEL_DISCOVERY'];
 let savedEnv: Record<string, string | undefined>;
 let reportsDir: string;
 let network: ReturnType<typeof spyOn<typeof globalThis, 'fetch'>>;
 
 beforeEach(() => {
   savedEnv = Object.fromEntries(ENV_KEYS.map(key => [key, process.env[key]]));
+  process.env.GBRAIN_MODEL_DISCOVERY = 'off';
   reportsDir = mkdtempSync(join(tmpdir(), 'native-evidence-18-24-'));
   network = spyOn(globalThis, 'fetch').mockRejectedValue(new Error('network disabled in native evidence tests'));
 });
