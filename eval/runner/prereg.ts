@@ -16,10 +16,14 @@
  * Commit order alone can't prove a preregistration was written first; the
  * runtime attestation against `origin` is what does. CI needs full history
  * (`fetch-depth: 0`).
+ *
+ * The same CI step runs `checkPractices` (`prereg-practices.ts`), which
+ * refuses a new registry entry that lacks the eval-loop practice fields.
  */
 import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { checkPractices, loadGrandfathered, type PracticeEntry } from './prereg-practices.ts';
 
 export interface Attestation {
   preregistration: string;
@@ -157,5 +161,8 @@ if (import.meta.main) {
   const problems = checkOrder(entries);
   for (const p of problems) console.error(`prereg-order: ${p.id}: ${p.file}: ${p.problem}`);
   console.log(`prereg-order: ${entries.length} experiments checked, ${problems.length} problems`);
-  process.exit(problems.length === 0 ? 0 : 1);
+  const practices = checkPractices(entries as PracticeEntry[], loadGrandfathered());
+  for (const p of practices) console.error(`prereg-practices: ${p.id}: ${p.file}: ${p.problem}`);
+  console.log(`prereg-practices: ${practices.length} problems (eval-loop practices: docs/benchmarks/PREREGISTRATION-TEMPLATE.md)`);
+  process.exit(problems.length === 0 && practices.length === 0 ? 0 : 1);
 }
