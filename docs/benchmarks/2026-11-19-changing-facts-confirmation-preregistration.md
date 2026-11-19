@@ -548,6 +548,30 @@ bound, row, arm or budget line.
   hash and the counts from the custody seed check. A dated commit adds them under this heading once the custody host is
   free.
 
+### Amendment 5 (2026-11-19): launch amendment A, part 2: control characters in rendered chats
+
+Written before anything is minted, on GBEV-3's ruling of 2026-11-19. It moves no bound, row, arm or budget line, and the
+kept set is still the first 40 worlds that pass BG1's validation.
+
+- **What happened on the dev worlds.** In public dev world bg1-dev-20, gemini-3.8-flash wrote a U+0000 character inside
+  a word in one turn of session s123. gbrain keeps pages in Postgres, which can't store that character, so gbrain's
+  `put_page` refused the page and the session never reached gbrain. memory-bank and extract-first ingested all 152
+  sessions. Every gbrain build the dev loop ran, v0.60.734.0 to v0.60.741.0, lost that session and missed the three
+  questions that cite it, which both other servers answered. It is the only control character in the 20 public dev
+  worlds.
+- **The change.** `eval/custody/bg1/render.ts` now removes every control character except newline and tab from each
+  rendered turn, before the checks run and before the world is written. The checks read the text the world keeps, and
+  every server ingests that same text. The render record and line count what each world lost (`controls_dropped`), and
+  `validate.ts` reports the count for each world and in total. Whether a world is kept or dropped is decided as before.
+- **Harness commit.** `a37af44a8f8a9444e02b7ff2d2d2d93249aec887` on this experiment's results branch, with keyless
+  tests. The render test fails without the change.
+- **A descriptive count for BG1.** BG1's published results don't record failed sessions, so whether its sealed gbrain
+  row lost a session this way isn't known. In the custody step that adds Amendment 4's custody items, the custodian also
+  runs `bg1c-checks.ts controls` over BG1's 30 sealed worlds. It counts U+0000 and the other control characters, the
+  sessions and worlds that hold any, and the questions that cite those sessions, and it prints counts and world ids
+  only. The counts go under this heading as a descriptive note. They don't change BG1's outputs or verdict, and they
+  don't enter BG1-C's verdict.
+
 ## Disclosures
 
 - gbrain is Garry Tan's own project.
