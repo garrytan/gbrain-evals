@@ -511,21 +511,25 @@ bound, a row, an arm or the budget.
 
 ### Amendment 4 (2026-11-19): launch amendment A, part 1: the build, the harness and the cell set
 
-Written after the judge check (run order step 3), the only paid call so far, and before anything is minted. It moves no
+Written after the judge check (run order step 3), the only paid step so far, and before anything is minted. It moves no
 bound, row, arm or budget line.
 
-- **gbrain's build.** Every BG1-C gbrain cell now runs v0.60.745.0, commit
-  `8ebb7980c35d1d05e75f4c9c8461b49b3c3b454b`, instead of v0.60.741.0 (`41e33807`). v0.60.745.0 is the newest release tag on
-  gbrain's master as this is written (`eval/runner/q1/cells/bg1c.ts`, `BG1C_GBRAIN_BUILD`). Read by title, the 22
-  commits between the two releases change the secret store, page purges, iMessage sending, managed refresh, upgrades
-  for brains with very long page titles, trust tiers on renamed pages, OpenClaw's skill resolver and the Rust engine,
-  which can't be selected yet. None of them names fact extraction, name tags or slot history, so the development result
-  above, measured on v0.60.741.0 and left as measured, is also this build's expectation. If a newer release lands
-  before the first counted gbrain cell, another dated amendment re-pins to it. The build freezes once counted gbrain
-  cells start.
+- **gbrain's build.** Every BG1-C gbrain cell now runs v0.60.745.0, commit `8ebb7980c35d1d05e75f4c9c8461b49b3c3b454b`,
+  instead of v0.60.741.0 (`41e33807`). v0.60.745.0 is the newest release tag on gbrain's master as this is written
+  (`eval/runner/q1/cells/bg1c.ts`, `BG1C_GBRAIN_BUILD`). Read by title, the 22 commits between the two releases change
+  the secret store, page purges, iMessage sending, managed refresh, upgrades for brains with very long page titles,
+  trust tiers on renamed pages, archived sources' visibility to API tokens, OpenClaw's skill resolver, the Rust engine
+  (which can't be selected yet), and test and bench tooling. None of them names fact extraction, name tags or slot
+  history, so the development result above, measured on v0.60.741.0 and left as measured, is also this build's
+  expectation. If a newer release lands before the first counted gbrain cell, another dated amendment re-pins to it. The
+  build freezes once counted gbrain cells start.
 - **Harness commit.** `d21dd8209d61c5dd6d55fd7cee76f9ab494600d7` on this experiment's results branch. Since Amendment 3:
   - OpenAI reads no longer send `n`. gpt-6.2-sol refuses any request that carries it, and since it defaults to 1,
     other models' reads don't change.
+  - The pilot passes judge checks only when they are paid and every gate passes. It needs every reader to answer, and
+    be graded on, all 64 questions. `confirm` takes its gbrain release from the cell set and refuses one that differs,
+    and it reads particle-1's re-reads by half: half 1 at the look and both at the final, each holding exactly its
+    launch units' kept worlds.
   - The pilot takes BG1's judge check from BG1's published verdict, pinned by its SHA-256, because that is the only
     place the check survives.
   - `mint.sh` runs the supply check (Amendment 1, condition 3) once slot 35 resolves, and again before any run that
@@ -540,8 +544,9 @@ bound, row, arm or budget line.
 - **The judge check passed.** On 148 stratified public dev answers, gemini-3.8-flash and claude-opus-5-5 agreed on all
   148: kappa 1.0 against a line of 0.6, and 74 agreed in each class against a line of 15. So Opus's grades of
   gpt-6.2-sol's answers count.
-- **Still to come from custody, before slot 31 mints:** the seed commitment, the phrasing file's hash and the counts
-  from the custody seed check. A dated commit adds them under this heading once the custody host is free.
+- **Still to come from custody, before the phrasing check (run order step 5):** the seed commitment, the phrasing file's
+  hash and the counts from the custody seed check. A dated commit adds them under this heading once the custody host is
+  free.
 
 ## Disclosures
 
