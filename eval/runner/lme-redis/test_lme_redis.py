@@ -62,15 +62,40 @@ class Tests(unittest.TestCase):
         self.assertEqual([s.label for s in sessions], [ROW["haystack_dates"][i] for i in (0, 2, 3)])
         self.assertEqual(L.evidence_turns(ROW), [(1, "I adopted a beagle named   Biscuit last week.")])
 
-    def test_whole_sessions_deliver_by_conversation(self):
-        self.assertEqual(L.delivery(ROW, [0, 2], None), {"evidence_turns": 1, "delivered": 0, "partial": 0})
-        self.assertEqual(L.delivery(ROW, [1], None), {"evidence_turns": 1, "delivered": 1, "partial": 0})
+    def test_whole_conversations_deliver_by_turn_text_and_by_conversation(self):
+        ex = Example().inner
+        texts = [session_text(ex.sessions[i]) for i in (0, 2)]
+        self.assertEqual(L.delivery(ROW, texts, [0, 2]),
+                         {"evidence_turns": 1, "delivered": 0, "all_delivered": False, "window_rule": None, "conversation_level": 0})
+        held = L.delivery(ROW, [session_text(ex.sessions[1])], [1])
+        self.assertEqual((held["delivered"], held["all_delivered"], held["conversation_level"]), (1, True, 1))
 
-    def test_passages_deliver_by_full_text(self):
-        whole = "[excerpt]\n**user:** I adopted a beagle named Biscuit last week.\n"
-        self.assertEqual(L.delivery(ROW, None, [whole])["delivered"], 1)
-        self.assertEqual(L.delivery(ROW, None, ["I adopted a beagle"])["delivered"], 0)
-        self.assertEqual(L.delivery(ROW, None, ["nothing here"]), {"evidence_turns": 1, "delivered": 0, "partial": 0})
+    def test_passages_deliver_by_first_80_normalised_characters(self):
+        quoted = "[excerpt]\n**user:** I ADOPTED a beagle named Biscuit\n last week.\n"
+        self.assertEqual(L.delivery(ROW, [quoted], None)["delivered"], 1)
+        self.assertEqual(L.delivery(ROW, ["I adopted a beagle"], None)["delivered"], 0)
+        self.assertEqual(L.delivery(ROW, ["nothing here"], None),
+                         {"evidence_turns": 1, "delivered": 0, "all_delivered": False, "window_rule": 0, "conversation_level": None})
+
+    def test_a_long_turn_split_across_passages_counts_by_any_80_character_window(self):
+        long = " ".join(f"word{i}" for i in range(60))
+        row = {**ROW, "haystack_sessions": [[{"role": "user", "content": long, "has_answer": True}]],
+               "haystack_dates": ["2023/05/20 (Sat) 02:21"]}
+        tail = long[len(long) // 2:]
+        got = L.delivery(row, ["unrelated", tail], None)
+        self.assertEqual((got["delivered"], got["window_rule"]), (1, 1))
+        self.assertEqual(L.delivery(row, [long[:60], long[-60:]], None)["delivered"], 0)
+        self.assertEqual(L.delivery(row, [long], None)["window_rule"], 0)
+
+    def test_degraded_means_no_reranker_or_any_degraded_stage(self):
+        self.assertFalse(L.degraded({"op": {"degraded": [], "reranker": "voyage:rerank-3-lite"}}))
+        self.assertTrue(L.degraded({"op": {"degraded": [], "reranker": None}}))
+        self.assertTrue(L.degraded({"op": {"degraded": [{"stage": "rerank_failed"}], "reranker": "voyage:rerank-3-lite"}}))
+
+    def test_on_is_checked_as_a_prefix_of_off(self):
+        rows = [{"slug": s, "chunk_text": s * 2} for s in "abc"]
+        self.assertTrue(L.is_prefix(rows[:2], rows))
+        self.assertFalse(L.is_prefix([rows[1]], rows))
 
     def test_ranked_sessions_keep_first_five_distinct_in_rank_order(self):
         results = [{"idx": i} for i in (4, 4, 2, 7, 2, 1, 9, 3)]
@@ -97,7 +122,7 @@ class Tests(unittest.TestCase):
         line = L.message_line("off", ex, context, [1], ROW, None)
         self.assertEqual(line["messages"], build_prompt(context, ROW["question"], question_date=ROW["question_date"]))
         self.assertEqual(line["context_sha256"], hashlib.sha256(context.encode()).hexdigest())
-        self.assertEqual(line["delivery"]["delivered"], 1)
+        self.assertEqual((line["delivery"]["delivered"], line["delivery"]["conversation_level"]), (1, 1))
 
     def test_ingest_payload_matches_the_quick_look_roles(self):
         payload = L.ingest_payload(example())

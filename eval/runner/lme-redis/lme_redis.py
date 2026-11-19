@@ -88,27 +88,48 @@ def evidence_turns(row: dict) -> list[tuple[int, str]]:
     return out
 
 
-def _norm(text: str) -> str:
-    return " ".join(text.split())
+def norm(text: str) -> str:
+    """The preregistered normalisation: supplementary-plane characters removed (as the loader does), then whitespace
+    collapsed and case folded."""
+    return " ".join(_SUPPLEMENTARY_UTF8_RE.sub("", text).lower().split())
 
 
-def delivery(row: dict, sessions: list[int] | None, passages: list[str] | None) -> dict[str, Any]:
-    """Turn-level delivery: an evidence turn is delivered when its conversation is in the context whole, or when the
-    passages hold its full text (whitespace-normalized). `partial` counts passages holding its first 80 characters."""
+WINDOW = 80
+
+
+def delivery(row: dict, texts: list[str], sessions: list[int] | None) -> dict[str, Any]:
+    """Turn-level delivery of the evidence turns (`has_answer`) into a prompt's memories.
+
+    `texts` is what the prompt holds, one string per conversation (whole arms) or per passage. A turn is delivered
+    when its first 80 normalised characters appear in one of them. For passages, a turn whose first 80 characters are
+    in none of them still counts when any 80-character window of it appears in one, and `window_rule` counts those.
+    `conversation_level` counts turns whose conversation is in the prompt (whole arms only).
+    """
     turns = evidence_turns(row)
-    delivered = partial = 0
-    if passages is not None:
-        joined = _norm("\n".join(passages))
-        for _, text in turns:
-            t = _norm(text)
-            if t and t in joined:
-                delivered += 1
-            elif t and t[:80] in joined:
-                partial += 1
-    else:
-        held = set(sessions or [])
-        delivered = sum(1 for i, _ in turns if i in held)
-    return {"evidence_turns": len(turns), "delivered": delivered, "partial": partial}
+    held = [norm(t) for t in texts]
+    passages = sessions is None
+    windows: set[str] = set()
+    if passages:
+        for h in held:
+            windows.update(h[i:i + WINDOW] for i in range(max(1, len(h) - WINDOW + 1)))
+    delivered = window_rule = 0
+    for _, text in turns:
+        t = norm(text)
+        if not t:
+            continue
+        head = t[:WINDOW]
+        if any(head in h for h in held):
+            delivered += 1
+        elif passages and len(t) > WINDOW and any(t[i:i + WINDOW] in windows for i in range(len(t) - WINDOW + 1)):
+            delivered += 1
+            window_rule += 1
+    return {
+        "evidence_turns": len(turns),
+        "delivered": delivered,
+        "all_delivered": bool(turns) and delivered == len(turns),
+        "window_rule": window_rule if passages else None,
+        "conversation_level": None if passages else sum(1 for i, _ in turns if i in set(sessions)),
+    }
 
 
 def whole_context(example: Any, indices: list[int]) -> str:
@@ -138,6 +159,16 @@ def gbrain_context(arm: str, example: Any, results: list[dict]) -> tuple[str, li
         return text, sorted({r["idx"] for r in results}), passages
     indices = ranked_sessions(results)
     return whole_context(example, indices), indices, None
+
+
+def degraded(query: dict) -> bool:
+    """A query that ran without the reranker or with a degraded stage."""
+    return bool(query["op"]["degraded"]) or not query["op"]["reranker"]
+
+
+def is_prefix(short: list[dict], long: list[dict]) -> bool:
+    key = [(r["slug"], r["chunk_text"]) for r in long]
+    return [(r["slug"], r["chunk_text"]) for r in short] == key[: len(short)]
 
 
 def ingest_payload(sessions: list[SessionLike]) -> list[dict]:
@@ -171,7 +202,8 @@ def message_line(arm: str, example: Any, context: str, sessions: list[int], row:
         "context_sha256": sha(context),
         "messages_sha256": sha(json.dumps(messages, ensure_ascii=False, sort_keys=True)),
         "sessions": sessions,
-        "delivery": delivery(row, sessions if passages is None else None, passages),
+        "delivery": delivery(row, passages if passages is not None else [session_text(example.sessions[i]) for i in sessions],
+                             None if passages is not None else sessions),
     }
 
 
@@ -297,9 +329,14 @@ async def freeze(args: argparse.Namespace) -> int:
             async with semaphore:
                 try:
                     await post("/ingest", {"brain_id": qid, "sessions": ingest_payload(example.sessions)})
-                    queries = {}
-                    for arm, params in QUERY_PARAMS.items():
-                        queries[arm] = await post("/query", {"brain_id": qid, "question": qa.question, "params": params})
+                    retried = False
+                    while True:
+                        queries = {}
+                        for arm, params in QUERY_PARAMS.items():
+                            queries[arm] = await post("/query", {"brain_id": qid, "question": qa.question, "params": params})
+                        if retried or not any(degraded(q) for q in queries.values()):
+                            break
+                        retried = True
                 finally:
                     await post("/reset", {"brain_id": qid})
             lines = {}
@@ -321,9 +358,12 @@ async def freeze(args: argparse.Namespace) -> int:
                           "meta": q["meta"]}
                     for arm, q in queries.items()
                 },
+                "retrieved_again": retried,
+                "degraded": any(degraded(q) for q in queries.values()),
+                "on_prefix_of_off": is_prefix(queries["on"]["results"], queries["off"]["results"]),
                 "off_on_context_differs": lines["off"]["context_sha256"] != lines["on"]["context_sha256"],
             }
-            if any(q["op"]["degraded"] or not q["op"]["reranker"] for q in queries.values()):
+            if record["degraded"]:
                 failures += 1
             async with lock:
                 for arm in ARMS:
@@ -335,7 +375,7 @@ async def freeze(args: argparse.Namespace) -> int:
         await asyncio.gather(*(one(e) for e in order))
     for h in handles.values():
         h.close()
-    print(json.dumps({"questions": len(order), "skipped_done": len(done), "not_reranked_or_degraded": failures}))
+    print(json.dumps({"questions": len(order), "skipped_done": len(done), "degraded_after_retry": failures}))
     return 0
 
 
