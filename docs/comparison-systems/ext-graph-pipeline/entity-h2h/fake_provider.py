@@ -9,11 +9,16 @@ cognee accepts as an empty graph, so no entity is ever extracted. This file fill
 the pinned fake fills a json_schema request (capitalized words become entities); everything else is the pinned fake,
 unchanged. Scores obtained with it say nothing about memory quality.
 
+It also enforces OpenAI's embeddings limit of 2,048 inputs per request, answering a longer list with the 400 OpenAI
+sends ("Invalid 'input': array length must be 2048 or less."), so a keyless run meets the failure the counted run met
+in consolidate_entities (preregistration Amendment 5). GET /_stats counts those refusals as embeddings:over_limit.
+
 Run: python3 fake_provider.py  (FAKE_PROVIDER_PORT, default 8787; request log at FAKE_PROVIDER_LOG)
 """
 from __future__ import annotations
 
 import importlib.util
+import io
 import json
 import os
 import re
@@ -40,6 +45,25 @@ def chat(body: dict[str, Any]) -> dict[str, Any]:
 
 
 pinned.chat = chat
+
+EMBEDDING_INPUT_LIMIT = 2048
+pinned_post = pinned.Handler.do_POST
+
+
+def do_post(self: Any) -> None:
+    if self.path.endswith("/embeddings"):
+        raw = self.rfile.read(int(self.headers.get("Content-Length") or 0))
+        inputs = json.loads(raw or b"{}").get("input", [])
+        if isinstance(inputs, list) and len(inputs) > EMBEDDING_INPUT_LIMIT:
+            with pinned.LOCK:
+                pinned.STATS["embeddings:over_limit"] += 1
+            return self._send(400, {"error": {"message": f"Invalid 'input': array length must be {EMBEDDING_INPUT_LIMIT} or less.",
+                                              "type": "invalid_request_error", "param": "input", "code": None}})
+        self.rfile = io.BytesIO(raw)
+    return pinned_post(self)
+
+
+pinned.Handler.do_POST = do_post
 
 if __name__ == "__main__":
     ThreadingHTTPServer(("0.0.0.0", int(os.environ.get("FAKE_PROVIDER_PORT", "8787"))), pinned.Handler).serve_forever()

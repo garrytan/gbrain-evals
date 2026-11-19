@@ -297,6 +297,38 @@ describe('memory-system pins (each the newest release at launch, preregistration
     expect(rec.deviations_from_vendor_code.some((d: string) => d.includes('reasoning to None') && d.includes('Amendment 3'))).toBe(true);
   });
 
+  // Value: protects=ext-graph-pipeline's finish step on the counted world, whose consolidation embeds more than 2,048 names in one request; fails_when=the shim stops adding OpenAI's batch-limit wording to the embedder's split-and-retry pattern, the pattern stops matching OpenAI's 400, or the keyless fake stops refusing over-limit batches the way OpenAI does
+  test("ext-graph-pipeline's entity-h2h shim routes OpenAI's 2,048-input embeddings 400 into the embedder's split-and-retry path, and the keyless fake sends that 400 (Amendment 5)", () => {
+    const shim = bundle('ext-graph-pipeline', 'entity_h2h.py');
+    const limit = shim.match(/^OPENAI_BATCH_LIMIT = r"(.+)"$/m)?.[1];
+    expect(limit).toBeDefined();
+    expect(shim).toContain('litellm_embedding._EMBED_LENGTH_ERROR_RE = re.compile(f"{litellm_embedding._EMBED_LENGTH_ERROR_RE.pattern}|{OPENAI_BATCH_LIMIT}",');
+    expect(shim).toContain('importlib.import_module("cognee.infrastructure.databases.vector.embeddings.LiteLLMEmbeddingEngine")');
+    const wording = new RegExp(limit!, 'i');
+    expect(wording.test("litellm.BadRequestError: OpenAIException - Error code: 400 - Invalid 'input': array length must be 2048 or less.")).toBe(true);
+    expect(wording.test("Error code: 400 - Invalid 'input': must not be empty")).toBe(false);
+    const rec = JSON.parse(bundle('ext-graph-pipeline', 'capability.json'));
+    expect(rec.deviations_from_vendor_code.some((d: string) => d.includes('array length must be 2048 or less') && d.includes('Amendment 5'))).toBe(true);
+    const script = [
+      'import importlib.util, json, sys, threading, urllib.request, urllib.error',
+      'from http.server import ThreadingHTTPServer',
+      'spec = importlib.util.spec_from_file_location("fp", sys.argv[1]); fp = importlib.util.module_from_spec(spec); spec.loader.exec_module(fp)',
+      'srv = ThreadingHTTPServer(("127.0.0.1", 0), fp.pinned.Handler); threading.Thread(target=srv.serve_forever, daemon=True).start()',
+      'out = {}',
+      'for n in (2048, 2049):',
+      '    body = json.dumps({"model": "text-embedding-3-small", "dimensions": 4, "input": ["x"] * n}).encode()',
+      '    req = urllib.request.Request(f"http://127.0.0.1:{srv.server_address[1]}/v1/embeddings", data=body, headers={"Content-Type": "application/json"})',
+      '    try:',
+      '        r = urllib.request.urlopen(req, timeout=30); out[n] = [r.status, len(json.load(r)["data"])]',
+      '    except urllib.error.HTTPError as e:',
+      '        out[n] = [e.code, json.load(e)["error"]["message"]]',
+      'srv.shutdown(); print(json.dumps(out))',
+    ].join('\n');
+    const r = spawnSync('python3', ['-I', '-c', script, resolve(import.meta.dir, '../../docs/comparison-systems/ext-graph-pipeline/entity-h2h/fake_provider.py')], { encoding: 'utf8' });
+    expect(r.status).toBe(0);
+    expect(JSON.parse(r.stdout)).toEqual({ 2048: [200, 2048], 2049: [400, "Invalid 'input': array length must be 2048 or less."] });
+  });
+
   test('the dry run prints each memory system\'s pinned release and lock from its entity-h2h bundle', () => {
     const d = dryRun(DEV_SEED, 20);
     for (const [kind, version] of Object.entries(PINNED)) {

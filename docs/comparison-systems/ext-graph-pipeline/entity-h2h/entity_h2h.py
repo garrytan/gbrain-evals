@@ -18,11 +18,20 @@ back under the old module name before importing the adapter. Nothing else in the
   get_formatted_graph_data, the function behind cognee's dataset graph API: Entity nodes, their EntityType (is_a), and
   the sources whose chunks contain them (DocumentChunk -contains-> Entity, DocumentChunk -is_part_of-> document, whose
   id is the data id the pinned shim assigns per source). A merge leaves no pointer, so links stay empty.
+
+One fix (preregistration Amendment 5): consolidate_entities embeds every candidate entity name in one request
+(cognee/tasks/memify/consolidate_entities.py:266 in 1.6.8, unchanged through 1.6.10). OpenAI's embeddings endpoint
+takes at most 2,048 inputs and answers a longer list with a 400, "Invalid 'input': array length must be 2048 or less.".
+LiteLLMEmbeddingEngine.embed_text already splits a batch in half and retries when a 400 matches _EMBED_LENGTH_ERROR_RE,
+whose patterns cover Vertex's wording of the same limit but not OpenAI's, so the counted run's finish step failed. This
+file adds OpenAI's wording to that pattern and changes nothing else: the same names are embedded, in smaller requests.
 """
 from __future__ import annotations
 
+import importlib
 import json
 import os
+import re
 import time
 from pathlib import Path
 from typing import Any
@@ -43,6 +52,11 @@ from cognee.modules.retrieval.utils import results as moved_results  # noqa: E40
 for name in ("payload", "display_value", "result_id"):
     setattr(hybrid_results, name, getattr(moved_results, name))
 import cognee_shim as base  # noqa: E402
+
+OPENAI_BATCH_LIMIT = r"array\s+length\s+must\s+be\s+\d+\s+or\s+less"
+litellm_embedding = importlib.import_module("cognee.infrastructure.databases.vector.embeddings.LiteLLMEmbeddingEngine")
+litellm_embedding._EMBED_LENGTH_ERROR_RE = re.compile(f"{litellm_embedding._EMBED_LENGTH_ERROR_RE.pattern}|{OPENAI_BATCH_LIMIT}",
+                                                      litellm_embedding._EMBED_LENGTH_ERROR_RE.flags)
 
 os.environ["SHIM_CONFIG"] = base.CONFIG = CONFIG
 
