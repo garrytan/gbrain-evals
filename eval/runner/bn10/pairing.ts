@@ -1,7 +1,8 @@
 /**
  * BEAM-10M newest release (GST-3139), custody only. The Q1 and F6 directories are their published receipt
  * trees with the private campaign.json and per-cell logs restored. --rejudged is the paid custody tool's
- * judgments.ndjson: standard Q1 JudgmentRecords for the ORIGINAL F6 P/A and Q1 whole/file Opus answer IDs,
+ * judgments.ndjson: standard Q1 JudgmentRecords for the ORIGINAL F6 P/A and Q1 whole/file Opus answer IDs (a Q1 answer
+ * whose ID an F6 answer with another text also uses takes rejudge-systems.ts's root-qualified ID, sha256(`q1|<id>`)),
  * judged by openai:gpt-6.1-sol, replicate 0, under the frontier instrument and PER_READER_JUDGE_SETTINGS.
  * Pass the F6 particle add-on's P re-read separately and one --reread root per current arm. --root takes the
  * original BN10 cell output roots (including runs/ for the fences and proxy meters), one per shard if sharded.
@@ -205,7 +206,14 @@ function stored(f6Root: string, q1Root: string, rejudgedPath: string, freeze: bo
   const q1 = schedule(json(join(q1Root, 'campaign.json')), 'q1-scoreboard');
   if (JSON.stringify(q1.questions) !== JSON.stringify(f6.questions)) throw bad('the F6 and Q1 S1 schedules do not match');
   const p = cell([f6Root], F6 + '.p'), a = cell([f6Root], F6 + '.a');
-  const whole = cell([q1Root], Q1 + '.whole-default'), file = cell([q1Root], FILE_AGENT);
+  const f6Text = new Map([p, a, cell([f6Root], Q1 + '.whole-default', false), cell([f6Root], FILE_AGENT, false)]
+    .flatMap(c => c.answers.map(x => [x.answer_id, x.text] as const)));
+  const qualify = (c: Cell): Cell => {
+    const moved = new Map(c.answers.filter(x => f6Text.has(x.answer_id) && f6Text.get(x.answer_id) !== x.text).map(x => [x.answer_id, sha256(`q1|${x.answer_id}`)]));
+    return { ...c, answers: c.answers.map(x => ({ ...x, answer_id: moved.get(x.answer_id) ?? x.answer_id })),
+      judgments: c.judgments.map(j => ({ ...j, answer_id: moved.get(j.answer_id) ?? j.answer_id })) };
+  };
+  const whole = qualify(cell([q1Root], Q1 + '.whole-default')), file = qualify(cell([q1Root], FILE_AGENT));
   const instrument = p.receipts[0]!.instrument;
   if ([a, whole, file].some(c => c.receipts.some(r => r.instrument.id !== instrument.id || r.instrument.sha256 !== instrument.sha256)))
     throw bad('the four stored answer sets used different scoring instruments');

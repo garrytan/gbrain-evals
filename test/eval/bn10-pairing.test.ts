@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { compare, primaryOutcome, wholeOutcome } from '../../eval/runner/bn10/pairing.ts';
-import { answerId } from '../../eval/runner/memory-qa/records.ts';
+import { answerId, sha256 } from '../../eval/runner/memory-qa/records.ts';
 import { OPUS, PARTICLE, SOL, generateBN10Cells } from '../../eval/runner/q1/cells/bn10.ts';
 import { ALL_SETS, frontierJudgeOf, PER_READER_JUDGE_SETTINGS, policyKey } from '../../eval/runner/q1/cells/definitions.ts';
 import { F6_FILE_AGENT_CONFIG_SHA256 } from '../../eval/runner/q1/particle-addon-report.ts';
@@ -162,3 +162,49 @@ test('the SDD edge is inclusive, with a separate outcome for measured drops belo
   expect(wholeOutcome(observ, 5)).toContain('Keep the file-agent comparison');
   expect(wholeOutcome({ ...observ, ci95_points: [-7, 0] }, 5)).toContain('5 points');
 });
+
+test('freeze pairs Q1 answers whose ids F6 reused for another text under their root-qualified ids, as the re-judge wrote them', () => {
+  const root = mkdtempSync(join(tmpdir(), 'bn10-pair-qualified-'));
+  try {
+    const [f6, q1] = ['f6', 'q1'].map(n => join(root, n));
+    const [frozen, log] = ['freeze.json', 'custody.ndjson'].map(n => join(root, n));
+    const cellAt = (base: string, id: string, text: string, i0: number, rejudged: unknown[], qualify: (key: string) => string) => {
+      const dir = join(base, 'cells', id);
+      mkdirSync(dir, { recursive: true });
+      write(join(dir, 'receipt.json'), { instrument, run_status: 'complete', set: 'S1', cell_id: id, config_sha256: config(id) });
+      const answers: unknown[] = [], judgments: unknown[] = [];
+      for (const [i, q] of scheduled.entries()) {
+        const key = answerId(id, q.question_id, OPUS, 0);
+        answers.push({ ...q, reader: OPUS, cell_id: id, replicate: 0, answer_id: key, context_sha256: 'c', text, outcome: 'scored' });
+        judgments.push({ answer_id: key, judge: bridgeJudge, judge_replicate: 0, instrument_id: instrument.id, instrument_sha256: instrument.sha256, score: (i + i0) % 3 ? 1 : 0, parse_ok: true, outcome: 'scored' });
+        const j = frontierJudgeOf(OPUS);
+        rejudged.push({ answer_id: qualify(key), judge: j, judge_replicate: 0, instrument_id: `${instrument.id}@${j}`, instrument_sha256: instrument.sha256,
+          score: (i + i0) % 4 ? 1 : 0, settings: PER_READER_JUDGE_SETTINGS, parse_ok: true, outcome: 'scored' });
+      }
+      writeFileSync(join(dir, 'answers.ndjson'), nd(answers));
+      writeFileSync(join(dir, 'judgments.ndjson'), nd(judgments));
+    };
+    const set = { id: 'S1', scheduled, exclusions: [exclusion] };
+    for (const d of [f6, q1]) mkdirSync(d, { recursive: true });
+    write(join(q1, 'campaign.json'), { schema: CAMPAIGN_SCHEMA, campaign_id: 'q1-scoreboard', sets: [set] });
+    write(join(f6, 'campaign.json'), { schema: CAMPAIGN_SCHEMA, campaign_id: 'q1-scoreboard-f6-current-master', sets: [set] });
+    const freezeWith = (qualifyQ1File: (key: string) => string) => {
+      const rejudged: unknown[] = [];
+      cellAt(f6, f6Id + '.p', 'p', 0, rejudged, k => k);
+      cellAt(f6, f6Id + '.a', 'a', 1, rejudged, k => k);
+      cellAt(q1, q1Id + '.whole-default', 'whole', 2, rejudged, k => k);
+      cellAt(q1, fileId, 'q1 file agent', 0, rejudged, qualifyQ1File);
+      cellAt(f6, fileId, 'f6 file agent rerun', 1, [], k => k);
+      writeFileSync(join(root, 'rejudged.ndjson'), nd(rejudged));
+      return launch(['freeze', '--f6', f6, '--q1', q1, '--rejudged', join(root, 'rejudged.ndjson'), '--out', frozen], log);
+    };
+    const raw = freezeWith(k => k);
+    expect(raw.exitCode).not.toBe(0);
+    expect(raw.stderr.toString()).toContain('outside the four pinned Opus sets');
+    const qualified = freezeWith(k => sha256(`q1|${k}`));
+    expect(qualified.stderr.toString()).toBe('');
+    expect(qualified.exitCode).toBe(0);
+    expect(read(frozen).sdd_points.whole_vs_file).toMatchObject({ frontier: expect.any(Number), bridge: expect.any(Number) });
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
