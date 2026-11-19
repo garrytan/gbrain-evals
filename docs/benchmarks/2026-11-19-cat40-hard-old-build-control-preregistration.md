@@ -102,4 +102,4 @@ gbrain is Garry Tan's own project.
 
 Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
 
-[Disclosures](disclosures.md) lists every relationship and where each line goes.
+[Disclosures](../disclosures.md) lists every relationship and where each line goes.
