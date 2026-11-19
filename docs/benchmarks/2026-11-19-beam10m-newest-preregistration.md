@@ -48,13 +48,24 @@ Each outcome changes something (R97):
 1. **Arm P falls by at least the smallest detectable difference** against F6's arm P (below): it's a regression. It is
    published plainly. gbrain's maintainers get the failure classes and the per-ability split (aggregates only), with
    the quote fences as the first suspect and the measured fence share of each context as the evidence.
-2. **Otherwise** no regression is claimed, and the result says what the interval allows.
-3. **In both cases** README's two BEAM-10M rows and the scoreboard block move to the newest measurement, each labelled
-   with its gbrain build and measurement date. The stored rows stay in the Q1 and F6 reports.
-4. **The whole-system arm against the file agent** keeps or changes README's "where gbrain loses" bullet. The bullet
-   stays, with the new numbers, while the paired difference favours the file agent. It leaves "where gbrain loses" if
-   gbrain's whole system is level or ahead. No ranking word is written either way, because 10 conversations cannot rank
-   two systems.
+2. **Otherwise** no regression is claimed, and the result says what the interval allows. A drop whose 95% interval
+   lies below 0 but whose size is smaller than the smallest detectable difference is reported as a measured drop,
+   smaller than this test was sized to detect, and gbrain's maintainers get it as a note with the same aggregates.
+3. **In every case** README's two BEAM-10M rows and the scoreboard block move to the newest measurement, each labelled
+   with its gbrain build and measurement date, and a regression is published plainly. The stored rows stay in the Q1
+   and F6 reports.
+   - **"Right answers about very long chat histories"** shows arm P, gbrain as it ships with an 8,000-token budget:
+     the mean of the three readers (claude-opus-5-5, gpt-6.2-sol and particle-1) under the frontier view, with the
+     readers named in the label, and beside it the Opus-paired change against F6's arm P with its interval. Arm A0
+     is reported in the results, not in README.
+   - **"The same questions, against an agent with list, grep and read tools"** shows the whole arm's three-reader mean
+     beside the file agent's stored 67.6%, each labelled with its build or date and its readers, and the comparison
+     between them is the Opus-paired difference (the one reader both rows share), with its interval.
+4. **The whole-system arm against the file agent** sets README's "where gbrain loses" bullet from the Opus-paired
+   difference. If the whole 95% interval lies below 0, the bullet stays under "where gbrain loses" with the new
+   numbers. If the interval includes 0, the bullet says we could not tell the two apart at this sample size, and names
+   the smallest detectable difference. If the interval lies above 0, the bullet leaves "where gbrain loses". No ranking
+   word is written in any case, because 10 conversations cannot rank two systems.
 
 ## System under test
 
@@ -80,7 +91,10 @@ Such conversations are scored, and every result is also shown without them as a 
 ### Arms
 
 All three arms read the same brain over MCP, which gbrain treats as a remote caller. Every arm writes F6's six search
-keys before it reads, as F6 did, so no arm inherits another's settings.
+keys before it reads, as F6 did, so no arm inherits another's settings: the shim stops serve, sets each key, reads each
+key back, and starts serve again, and a key that reads back wrong invalidates the cell, which is never scored. Each
+retrieval record carries its arm's settings hash, and the results count records whose hash differs from their arm's
+(expected 0).
 
 | Arm | Call | Search keys | Pairs with |
 |---|---|---|---|
@@ -88,8 +102,8 @@ keys before it reads, as F6 did, so no arm inherits another's settings.
 | A0 | `query {limit: 50}`, gbrain's auto delivery, packed to 8,000 | as P with the facts block off | Q1's 8,000-token row (56.3%) and F6 arm A0 (53.8%) |
 | Whole | a bare `query`, gbrain's own default amount | P's keys | Q1's whole-system row (58.9%) and the file agent |
 
-P's six keys equal gbrain's shipped defaults at v0.60.741.0, so P is gbrain as it ships with an 8,000-token budget.
-The keyless prep checks the same at the pinned release. If any default differs there, P keeps F6's keys, the whole arm
+The survey behind this plan found that P's six keys equal gbrain's shipped defaults at v0.60.741.0, so P is gbrain as
+it ships with an 8,000-token budget. The keyless prep checks the same at the pinned release. If any default differs there, P keeps F6's keys, the whole arm
 takes the shipped defaults, and an amendment records the difference before any counted cell.
 
 ### The file agent
@@ -118,8 +132,8 @@ fixed it.
 
 **Why these readers.** The repository's model rules replace Sonnet 5.5 with the newest frontier GPT and particle-1, so
 F6's and Q1's three-reader means can't be compared with this run's. **claude-opus-5-5 is the clean pair:** it is the
-only reader in every published row (F6 P 60.7%, Q1 component 55.3%, Q1 whole system 56.0%). particle-1 also pairs with
-F6's particle-1 re-read of P's contexts (56.4%, [F6 add-on](../findings/2026-11-04-particle-1-f6-addon.md)). The
+only reader in every published row (F6 P 60.7%, Q1 component 55.3%, Q1 whole system 56.0%). particle-1 also pairs, under the
+bridge view, with F6's particle-1 re-read of P's contexts (56.4%, [F6 add-on](../findings/2026-11-04-particle-1-f6-addon.md)). The
 runner's `FRONTIER_READERS` still names gpt-6.1-sol; the keyless prep moves it to gpt-6.2-sol in its own commit.
 `bun scripts/model-freshness.ts` runs again before the first counted cell, and a newer frontier model goes in by
 amendment.
@@ -137,12 +151,30 @@ Every answer gets two judges, scored apart and never averaged:
 - **gpt-4.1-mini** is BEAM's canonical judge and the judge of every published BEAM-10M row, so it is the bridge to
   them. AGENTS.md allows it only as that bridge.
 - **The frontier judges** follow the crew's BEAM rule (`frontierJudgeOf`, `eval/runner/q1/cells/definitions.ts`):
-  no judge grades its own family's answers, and particle-1 never judges. They are also the judges
-  [GST-1365](2026-11-05-gst-1365-judge-robustness.md) used to re-judge F6's and Q1's answers, so the frontier view
-  pairs with those stored judgments of the same published answers. GST-1365 found the frontier judges right more
-  often where the two views disagree and recommended them for new BEAM work.
+  gpt-6.1-sol judges the claude-opus-5-5 and particle-1 rows, and claude-opus-5-5 judges the gpt-6.2-sol rows,
+  because no model judges its own family's rows and particle-1 never judges. They are the judges
+  [GST-1365](2026-11-05-gst-1365-judge-robustness.md) used to re-judge F6's and Q1's answers. GST-1365 found the
+  frontier judges right more often where the two views disagree and recommended them for new BEAM work.
 - The frontier judges run at the crew's pinned settings (`PER_READER_JUDGE_SETTINGS`: medium effort, 8,000 output
-  tokens). A missing judgment counts as unjudged, so a cell is complete only when both judges have graded every answer.
+  tokens). GST-1365 judged at each judge's default effort, so its stored judgments are not used for any pair; the
+  stored answers a pair needs are judged again (below). A missing judgment counts as unjudged, so a cell is complete
+  only when both judges have graded every answer.
+
+### Stored answers judged again, in custody
+
+The frontier view pairs this run's answers with stored answers judged by the same judge at the same settings. Four
+stored S1 answer sets are judged again in custody by gpt-6.1-sol at the pinned settings, in a paid window, before the
+pairing report runs:
+
+1. F6's arm P, claude-opus-5-5 answers (the primary and its smallest detectable difference).
+2. F6's arm A, claude-opus-5-5 answers (the smallest detectable difference).
+3. Q1's whole-system arm, claude-opus-5-5 answers (whole against Q1, and the second smallest detectable difference).
+4. Q1's file agent, claude-opus-5-5 answers (whole against the file agent, and the second smallest detectable
+   difference).
+
+Every other pair with a stored row (A0 against Q1's 8,000-token row and F6's A0, particle-1 against F6's particle-1
+re-read, and the file agent's F6 rerun) is reported under the bridge view only. Only aggregates of these judgments
+leave custody.
 
 ### Judge agreement check (R78), before any number counts
 
@@ -153,7 +185,8 @@ On public data only, before any counted cell:
    conversations: the gold answer (pass), another question's gold answer (fail), a fixed "I can't find that in our
    conversation history." (fail, or pass on an abstention question) and the gold answer inside a hedge (pass). That
    gives more than 40 labelled items, with at least 15 in each class.
-2. **Grading.** gpt-6.1-sol, claude-opus-5-5 and gpt-4.1-mini grade every item through the production judge request
+2. **Grading.** Every judge whose numbers count grades every item: gpt-6.1-sol (Opus and particle-1 rows),
+   claude-opus-5-5 (gpt-6.2-sol rows) and gpt-4.1-mini (the bridge). Each grades through the production judge request
    (BEAM's rubric instrument, the settings above), pass at a score of 0.5.
 3. **Gate.** A judge's view counts only if its Cohen's kappa against the known verdicts is at least 0.6 on at least 40
    items, and at most 1% of its calls hit the output limit. A frontier judge that fails stops the experiment before any
@@ -171,26 +204,29 @@ The check's item texts stay out of the repository. Its report carries counts, ra
   under the same judge. BEAM's graded score (0, 0.5 or 1 per rubric item, averaged) times 100.
 - **Estimate.** The mean paired difference, with a 95% interval from a conversation-cluster bootstrap (10,000
   resamples, seed `beam10m-newest`). A question-level bootstrap interval is a sensitivity view.
-- **Views.** The frontier view (gpt-6.1-sol here against GST-1365's gpt-6.1-sol judgments of F6's Opus answers) decides
-  outcome 1. The bridge view (gpt-4.1-mini against F6's published judgments) is reported beside it, and if the two views
+- **Views.** The frontier view (gpt-6.1-sol on this run's Opus answers against gpt-6.1-sol's new judgments of F6's
+  stored Opus answers, both at the pinned settings) decides outcome 1. The bridge view (gpt-4.1-mini against F6's published judgments) is reported beside it, and if the two views
   disagree on outcome 1, the findings' first lines say so.
 - **Regression (outcome 1).** The mean paired difference is at or below minus the smallest detectable difference.
 - **Smallest detectable difference.** At 80% power and two-sided alpha 0.05, 2.80 times the standard error of a
   paired Opus difference on S1. The standard error is estimated in custody before the freeze from F6's stored S1
   per-question Opus scores, using F6's arm P minus arm A as the stand-in for a same-system pair, clustered by
-  conversation as above, under each judge view. The planning estimate is about 6 points (from F6's S1 paired
+  conversation as above, under each judge view (the frontier view from the judgments made again above). The planning estimate is about 6 points (from F6's S1 paired
   intervals, which have half-widths of about 4). Only the resulting figures leave custody, and they are recorded in the
   freeze amendment before any counted cell.
 
 ### Secondary comparisons, descriptive
 
-- **Whole system against the file agent.** This run's Opus whole-arm scores minus the file agent's stored Opus scores,
-  paired by question, under both views, with the same interval. Its smallest detectable difference is computed the same
+- **Whole system against the file agent.** This run's Opus whole-arm scores minus the file agent's stored Opus scores
+  (Q1's run, the row README shows), paired by question, under both views, with the same interval. The file agent's F6
+  rerun (68.2%, Opus 72.2%) is a bridge-view sensitivity view. Its smallest detectable difference is computed the same
   way from Q1's stored whole-arm and file-agent Opus rows and recorded in the freeze amendment. Q1's three-reader figure
   was 12.4 points.
-- **A0 against Q1's 8,000-token row and F6's A0,** on Opus, paired. This sizes the net change on Q1's call shape.
-- **Whole against Q1's whole-system row,** on Opus, paired. This sizes the 3-page cap and the fences together.
-- **particle-1 against F6's particle-1 re-read of arm P,** paired.
+- **A0 against Q1's 8,000-token row and F6's A0,** on Opus, paired, under the bridge view. This sizes the net change
+  on Q1's call shape.
+- **Whole against Q1's whole-system row,** on Opus, paired, under both views. This sizes the 3-page cap and the fences
+  together.
+- **particle-1 against F6's particle-1 re-read of arm P,** paired, under the bridge view.
 - **Per reader and per arm:** each reader's score with its clustered interval, and the Opus plus gpt-6.2-sol mean.
   The three-reader mean of this run is reported but never compared with F6's or Q1's, whose readers differ.
 - **Per ability:** P minus F6 P on Opus for each of BEAM's ten abilities, with intervals. The predicted directions are
@@ -210,10 +246,12 @@ best-case and worst-case bounds.
 
 ### First table and cost per correct answer
 
-The results' first table shows claude-opus-5-5 and particle-1 on each arm, with each reader's cost per correct answer
-(an answer scoring at least 0.5 under the frontier view). Per reader and arm it is the arm's ingest, extraction and
-retrieval dollars divided by its questions, plus the reader's own dollars per answer, all divided by that reader's
-accuracy. Judge dollars are left out, because they buy the measurement, not the answer. gpt-6.2-sol follows.
+The results' first table shows claude-opus-5-5 and particle-1 on each arm, with each reader's cost per correct answer.
+For a reader and arm it is the reader's own dollars on that arm plus the arm's gbrain query dollars, divided by the
+number of that reader's answers that score at least 0.5 under the frontier view. The brain build (ingest, extraction
+and embeddings) is shared by every arm and reader, so it is given once, per conversation and per question, beside the
+table, as F6's add-on did. Judge dollars are left out, because they buy the measurement, not the answer. gpt-6.2-sol
+follows. Dollars come from the metering proxy's usage fields at list price.
 
 ## Dry run (public BEAM-1M), before any sealed cell
 
@@ -230,7 +268,8 @@ S1 lives with the custody program on its host (`~/Private/gbrain-heldout-custody
 that this crew runs S1's cells there, under seven conditions, which this experiment follows:
 
 1. **Sealed text stays in custody.** S1 text stays inside the custody directory on the custody host, and its layout is
-   unchanged. No sealed text and no per-question S1 row goes to a Capy drive, a transcript, a pull request or a message.
+   unchanged. The one exception is the hash-checked copies on cell VMs under condition 4, as GBRA-108's conditions
+   allow. No sealed text and no per-question S1 row goes to a Capy drive, a transcript, a pull request or a message.
    Only aggregates leave custody.
 2. **Contexts are checked before any counted cell.** The S1 files are re-read byte for byte against the campaign's
    recorded hashes before any counted cell, and particle-1's re-reads check every frozen context against its SHA-256.
@@ -242,7 +281,8 @@ that this crew runs S1's cells there, under seven conditions, which this experim
    close checks that `ubi-runner.sh list --mine` prints nothing.
 5. **No prompts on the host's screen.** Every step on the custody host runs non-interactively over a shell. A step
    that would raise a prompt on its screen stops, and GBRA-108 is told.
-6. Spend is this crew's (kept in the tracking issue, not here).
+6. Spend is this crew's, and Garry saw the total before the first wave (plan X, approved on 2026-11-19). Figures stay
+   in the tracking issue, not here.
 7. GBRA-108 gets one line at the start (campaign hash, release, who runs it) and one at the close (aggregates written,
    VMs destroyed, custody check passing).
 
@@ -258,7 +298,7 @@ paid windows for the paid calls.
 | Anthropic | Opus reads, Opus judging of gpt-6.2-sol's answers, gbrain's fact extraction | no training on API data by default |
 | OpenAI | gpt-6.2-sol reads, gpt-4.1-mini and gpt-6.1-sol judging | no training on API data by default |
 | Particle | particle-1 re-reads | zero data retention |
-| Voyage | gbrain's embeddings and reranking | the custodian confirms the host's key belongs to the organization that opted out on 2026-11-03 before any sealed text reaches Voyage |
+| Voyage | gbrain's embeddings and reranking | before any sealed text reaches Voyage, the runner confirms that the Voyage key the cell VMs receive belongs to the organization that opted out on 2026-11-03 |
 
 These are the providers S1 already reached in Q1 and F6, plus Particle, which F6's add-on used.
 
@@ -271,8 +311,9 @@ Each item is a dated commit on the results branch with a keyless test, before an
 - The gbrain pin moved to the newest release (`bun eval/runner/gbrain-pin.ts bump`) and kept on this branch.
 - `FRONTIER_READERS` moved to gpt-6.2-sol.
 - The judge check, from `buildControls`, on public BEAM-1M dev questions, refusing to spend outside a paid window.
-- The pairing report: it reads this run's receipts and F6's, Q1's and GST-1365's stored rows in custody and writes
-  only aggregates.
+- The re-judging of the four stored answer sets above, refusing to spend outside a paid window.
+- The pairing report: it reads this run's receipts, F6's and Q1's stored rows and the new judgments in custody, and
+  writes only aggregates.
 - The fence-share measurement in the shim's delivered-row record.
 
 Tests reach no real provider: they use the dead keyless upstream with blanked keys.
