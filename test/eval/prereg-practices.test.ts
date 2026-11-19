@@ -241,6 +241,12 @@ describe('checkPractices', () => {
     expect(p.map(x => x.file).sort()).toEqual([...shapes].sort());
   });
 
+  test('refuses an upper-case .MD preregistration and a copy of the template name outside its own path', () => {
+    const files = ['docs/benchmarks/2026-11-20-z/PREREGISTRATION.MD', 'docs/benchmarks/2026-11-20-z-protocol.MD', 'docs/benchmarks/2026-11-20-z/preregistration-template.md'];
+    const p = checkPractices([], { ids: [], unlisted_preregistrations: [] }, repo(Object.fromEntries([...files, 'docs/benchmarks/PREREGISTRATION-TEMPLATE.md'].map(f => [f, 'plan']))));
+    expect(p.map(x => x.file).sort()).toEqual([...files].sort());
+  });
+
   test('isPreregistrationFile skips the template and files outside docs', () => {
     expect(isPreregistrationFile('docs/benchmarks/PREREGISTRATION-TEMPLATE.md')).toBe(false);
     expect(isPreregistrationFile('eval/data/x-preregistration.md')).toBe(false);

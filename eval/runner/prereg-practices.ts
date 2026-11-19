@@ -19,6 +19,7 @@ import type { ManifestEntry, OrderProblem } from './prereg.ts';
 
 export const PRACTICES_CUTOFF = '2026-11-19';
 export const GRANDFATHERED_PATH = 'docs/benchmarks/preregistrations-grandfathered.json';
+export const TEMPLATE_PATH = 'docs/benchmarks/PREREGISTRATION-TEMPLATE.md';
 export const PAID_TIERS = ['quick-look', 'under-500', 'over-500'] as const;
 export const SETTLED_CALL = /^\s*(?:[-*]\s+)?(?:\*\*)?Settled call:(?:\*\*)?[ \t]*(.*)$/m;
 
@@ -44,9 +45,10 @@ export type PracticeEntry = ManifestEntry & Record<string, unknown>;
 
 /** Every Markdown file under docs/ whose name says it is a preregistration or a protocol, except the template. */
 export function isPreregistrationFile(path: string): boolean {
-  if (!path.startsWith('docs/') || !path.endsWith('.md')) return false;
-  const name = path.slice(path.lastIndexOf('/') + 1).toLowerCase();
-  return name !== 'preregistration-template.md' && (name.includes('prereg') || name.endsWith('-protocol.md'));
+  const lower = path.toLowerCase();
+  if (!lower.startsWith('docs/') || !lower.endsWith('.md') || path === TEMPLATE_PATH) return false;
+  const name = lower.slice(lower.lastIndexOf('/') + 1);
+  return name.includes('prereg') || name.endsWith('-protocol.md');
 }
 
 export function modelFamily(model: string): string | null {
