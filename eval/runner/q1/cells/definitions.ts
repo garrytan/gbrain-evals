@@ -468,8 +468,8 @@ export const F6_ASSUMPTIONS = {
  * 1m-16 measures them at this pin; they live apart so the other manifests stay byte-identical.
  */
 export const BN10_ASSUMPTIONS = {
-  gbrain_sha: '7d45c5d17e05a3a21b82f3949139ed022bf63914',
-  gbrain_version: 'v0.60.747.0',
+  gbrain_sha: '7f162344652afc725793dd476945716e09d26104',
+  gbrain_version: 'v0.60.748.0',
   bun_image: F6_ASSUMPTIONS.bun_image,
   ingest_usd_per_mtok: { 'gbrain-defaults:bn10-newest': 0.08 } as Record<string, number>,
   hours_per_mtok: { 'gbrain-defaults:bn10-newest': 1.92 } as Record<string, number>,

@@ -247,8 +247,8 @@
     }
   },
   "bn10_assumptions": {
-    "gbrain_sha": "7d45c5d17e05a3a21b82f3949139ed022bf63914",
-    "gbrain_version": "v0.60.747.0",
+    "gbrain_sha": "7f162344652afc725793dd476945716e09d26104",
+    "gbrain_version": "v0.60.748.0",
     "bun_image": "oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4",
     "ingest_usd_per_mtok": {
       "gbrain-defaults:bn10-newest": 0.08
@@ -355,13 +355,13 @@
         "env": {
           "GBRAIN_BUN_IMAGE": "oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4",
           "GBRAIN_F6": "1",
-          "GBRAIN_SHA": "7d45c5d17e05a3a21b82f3949139ed022bf63914",
+          "GBRAIN_SHA": "7f162344652afc725793dd476945716e09d26104",
           "GBRAIN_F6_EXTRACT_CAP_USD": "29"
         },
         "config": "recipe"
       },
-      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=29 GBRAIN_SHA=7d45c5d17e05a3a21b82f3949139ed022bf63914 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
-      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=29 GBRAIN_SHA=7d45c5d17e05a3a21b82f3949139ed022bf63914 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\"",
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=29 GBRAIN_SHA=7f162344652afc725793dd476945716e09d26104 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=29 GBRAIN_SHA=7f162344652afc725793dd476945716e09d26104 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\"",
       "arms": [
         {
           "id": "p",
@@ -548,13 +548,13 @@
         "env": {
           "GBRAIN_BUN_IMAGE": "oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4",
           "GBRAIN_F6": "1",
-          "GBRAIN_SHA": "7d45c5d17e05a3a21b82f3949139ed022bf63914",
+          "GBRAIN_SHA": "7f162344652afc725793dd476945716e09d26104",
           "GBRAIN_F6_EXTRACT_CAP_USD": "3"
         },
         "config": "recipe"
       },
-      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=3 GBRAIN_SHA=7d45c5d17e05a3a21b82f3949139ed022bf63914 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
-      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=3 GBRAIN_SHA=7d45c5d17e05a3a21b82f3949139ed022bf63914 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\"",
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=3 GBRAIN_SHA=7f162344652afc725793dd476945716e09d26104 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=3 GBRAIN_SHA=7f162344652afc725793dd476945716e09d26104 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\"",
       "arms": [
         {
           "id": "p",
