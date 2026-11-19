@@ -9,4 +9,6 @@
   say so instead of "not yet known".
 - [eval/runner/cat40/old-build-control.ts](eval/runner/cat40/old-build-control.ts) plans the control's steps;
   [eval/runner/cat40/newest_analysis.py](eval/runner/cat40/newest_analysis.py) gains `--look control` and
-  `--world-transcripts`; the Cat 40 agent loop records the model id each provider served.
+  `--world-transcripts`, and that look refuses unless it gets both worlds, the same task ids in every arm and, for the
+  widened-session sensitivity, a transcript for every gbrain attempt; the Cat 40 agent loop records the model id each
+  provider served.
