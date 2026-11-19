@@ -12,11 +12,11 @@ code: it is a copy of [redis/agent-memory-server](https://github.com/redis/agent
   contract and the resumable runner and command line, plus four of upstream's keyless test files.
 - **What we left out:** the nine third-party provider adapters (`memory/*_store.py`), their docs and tests, upstream's
   README and its `uv.lock`.
-- **Reference results:** [reference/redis-results.json](reference/redis-results.json) is Redis's published LongMemEval
+- **Reference results:** [redis-longmemeval-results.json](../../docs/comparison-systems/redis-longmemeval-results.json) is Redis's published LongMemEval
   table (task-averaged accuracy for each Redis strategy, with per-task figures), copied unchanged from
   [redis/redis-ai-research-public](https://github.com/redis/redis-ai-research-public) at
   `7dbb607e1d6a439b14b7d35a45624e82a54e0a8f`, `docs/longmemeval-agent-memory/data/results.json`, under that
-  repository's MIT license ([reference/LICENSE](reference/LICENSE)). Redis publishes aggregates only, no per-question
+  repository's MIT license ([LICENSE-redis-ai-research-public](../../docs/comparison-systems/LICENSE-redis-ai-research-public)). Redis publishes aggregates only, no per-question
   outputs.
 
 ## What we changed

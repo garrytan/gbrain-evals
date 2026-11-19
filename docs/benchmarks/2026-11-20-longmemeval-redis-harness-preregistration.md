@@ -55,7 +55,7 @@ takes, from [redis/agent-memory-server](https://github.com/redis/agent-memory-se
 | The LongMemEval loader for the cleaned dataset and its seed-42 question order | `datasets/longmemeval.py`, `benchmark/runner.py` | the question set and its order |
 | The memory-store contract and resumable runner | `memory/base.py`, `benchmark/runner.py` | the gbrain store, and the pilot's end-to-end parity run |
 
-Redis's published table (`reference/redis-results.json` in the same folder, MIT, from
+Redis's published table (`docs/comparison-systems/redis-longmemeval-results.json`, MIT, from
 [redis/redis-ai-research-public](https://github.com/redis/redis-ai-research-public) at `7dbb607e`) is the reference
 row: **86.14%** task-averaged for "Remis + Instruct" on all 500 Small questions, gpt-4o reader and judge. Redis
 publishes no per-question outputs, so no comparison with Redis can be paired.

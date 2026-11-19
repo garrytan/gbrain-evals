@@ -12,14 +12,14 @@
     "license": "MIT",
     "files": [
       {
-        "path": "reference/redis-results.json",
+        "path": "../../docs/comparison-systems/redis-longmemeval-results.json",
         "upstream_path": "docs/longmemeval-agent-memory/data/results.json",
         "upstream_blob": "3ed62ab6f9b2f18e72a347ba0026ea82d23cf664",
         "changed": false,
         "header": false
       },
       {
-        "path": "reference/LICENSE",
+        "path": "../../docs/comparison-systems/LICENSE-redis-ai-research-public",
         "upstream_path": "LICENSE",
         "upstream_blob": "89d3cc899c4665b38fc79cc809ed4be4978a3a30",
         "changed": false,
@@ -40,7 +40,7 @@
       "upstream_path": "agent-memory-benchmark/pyproject.toml",
       "upstream_blob": "3c063303f03bcb8a01e73987490d363fc0ed2437",
       "changed": true,
-      "local_sha256": "d122f7ae684d971e0bcafbddda31e84ab56fb096dc8548acca3815288e6a5bf7"
+      "local_sha256": "4a05c9f927bb0795a22e5b48563f3238bca811a57b9351cfb347ddc9d4a0da75"
     },
     {
       "path": "src/agent_memory_benchmark/__init__.py",
