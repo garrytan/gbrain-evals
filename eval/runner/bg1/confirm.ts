@@ -39,18 +39,26 @@
  *   Outcome      the first match of: 1 incomplete (any comparison descriptive, over the 5% drop cap or with a row below
  *                the 0.90 fill gate), 2 any comparison behind, 3 all four ahead, 4 both comparisons of one class ahead,
  *                5 at least one ahead, 6 none ahead and none behind. confirmOutcome gives the row's published lines,
- *                README's changing-facts line (which the scoreboard also gets) and the next step. When the worst case's
- *                words differ, that is the first published line; a row left out is listed after the comparisons; and a
- *                run that stopped at its look says so last.
- *   Pilot        each row's pilot is the smoke on public dev world bg1-dev-01 at the counted settings. Conditions 1 and
- *                3 of the pilot list: a frozen context for every one of the 64 questions, a mean fill rate of at least
- *                0.90, gbrain's kept brain holding tagged facts, slotted facts and changing slots, and spend per world at
- *                most 1.5 times the row's Budget rate (its own line plus a third of the three-row lines: gpt-6.2-sol's
- *                reads, Opus grading them, and particle-1's re-reads with their grading).
+ *                README's changing-facts line (which the scoreboard also gets), the next step and the public lesson
+ *                (confirmLesson: the lead's sentence for row 3, the development lead "did" carry over for rows 4 and 5
+ *                and "did not" for rows 2 and 6, none for row 1), with the design's limit beside it. When the worst
+ *                case's words differ, that is the first published line; a row left out is listed after the comparisons;
+ *                and a run that stopped at its look says so last.
+ *   Pilot        each row's pilot is its smoke cell in the cell set (eval/runner/q1/cells/bg1c-cells.json), on public
+ *                dev world bg1-dev-01 at the counted settings. Conditions 1 and 3 of the pilot list: a frozen context for
+ *                every one of the 64 questions, a mean fill rate of at least 0.90, gbrain's kept brain holding tagged
+ *                facts, slotted facts and changing slots, each server holding stored memories for the world, spend per
+ *                world at most 1.5 times the row's Budget rate (its own line from the cell set's rates plus a third of
+ *                the three-row lines: gpt-6.2-sol's reads, Opus grading them, and particle-1's re-reads with their
+ *                grading), and the mint's first five BG1-C slots at most 1.5 times the dev mint's 336 Gemini requests
+ *                per kept world (504).
  */
 import { resolve } from 'node:path';
 import { tCdf, tQuantile } from '../power/risk-ratio.ts';
+import { BG1C_MANIFEST } from '../memory-qa/corpus.ts';
 import { OPUS, PARTICLE } from '../q1/cells/bg1.ts';
+import { BG1C_MANIFEST_PATH, BG1C_RATES, BG1C_READERS, BG1C_SOL } from '../q1/cells/bg1c.ts';
+import { BG1C_SETS, type CellDefinition } from '../q1/cells/definitions.ts';
 import { normalQuantile } from '../stats/paired.ts';
 import { BG1_ALPHA, type PairedT } from './rule.ts';
 import { BG1_PRIMARY, BG1_SECONDARY, BG1_STRATA, BG1C_CONVERSATIONS, BG1C_FIRST_HALF_UNITS, BG1C_FIRST_SLOT, BG1C_KEPT_UNITS, BG1C_LAST_SLOT, BG1C_N_FINAL, type Bg1Stratum } from './types.ts';
@@ -64,13 +72,15 @@ export const CONFIRM_FIRST_SLOT = BG1C_FIRST_SLOT;
 export const CONFIRM_LAST_SLOT = BG1C_LAST_SLOT;
 /** BG1-C's mint slots, bg1-031 to bg1-096, as eval/runner/memory-qa/bg1-names.ts lists them. */
 export const CONFIRM_CONVERSATIONS: readonly string[] = BG1C_CONVERSATIONS;
-export const CONFIRM_MANIFEST_REL = 'eval/decisions/datasets/bg1c-manifest.json';
+/** BG1-C's manifest, as the bg1c loader names it (eval/runner/memory-qa/corpus.ts BG1C_MANIFEST). */
+export const CONFIRM_MANIFEST_REL = BG1C_MANIFEST;
 export const CONFIRM_MANIFEST_PATH = resolve(import.meta.dir, '../../..', CONFIRM_MANIFEST_REL);
-/** The BG1-C cell set that eval/runner/q1/cells/bg1c.ts writes; verdict.ts confirm --cells overrides it. */
-export const CONFIRM_CELLS_PATH = resolve(import.meta.dir, '../q1/cells/bg1c-cells.json');
-export const CONFIRM_SOL = 'openai:gpt-6.2-sol';
-export const CONFIRM_LIVE_READERS: readonly string[] = [OPUS, CONFIRM_SOL];
-export const CONFIRM_READERS: readonly string[] = [OPUS, CONFIRM_SOL, PARTICLE];
+/** The BG1-C cell set that eval/runner/q1/cells/bg1c.ts writes (BG1C_MANIFEST_PATH); verdict.ts confirm --cells overrides it. */
+export const CONFIRM_CELLS_PATH = BG1C_MANIFEST_PATH;
+/** The cell set's live readers (bg1c.ts BG1C_READERS): claude-opus-5-5 and gpt-6.2-sol; particle-1 re-reads their frozen contexts. */
+export const CONFIRM_SOL = BG1C_SOL;
+export const CONFIRM_LIVE_READERS: readonly string[] = BG1C_READERS;
+export const CONFIRM_READERS: readonly string[] = [...CONFIRM_LIVE_READERS, PARTICLE];
 /** The cost table's reader order: the primary models first (AGENTS.md), then gpt-6.2-sol. */
 export const CONFIRM_TABLE_READERS: readonly string[] = [OPUS, PARTICLE, CONFIRM_SOL];
 export const CONFIRM_ROWS: readonly Bg1Row[] = ['gbrain', 'memory-bank', 'extract-first'];
@@ -275,6 +285,10 @@ export interface ConfirmOutcome {
   readme: { line: string; label: string | null; bg1_rows: string; replaces: string[] };
   /** What happens next, with the comparisons and kinds (S1 to S8) GBRA-108 gets; a comparison not run sends none. */
   next: { text: string; comparisons: string[]; kinds: Bg1Stratum[] };
+  /** The public lesson for the row (confirmLesson); null when the run was incomplete. */
+  lesson: string | null;
+  /** The design's limit, which every finding states beside the lesson. */
+  caveat: string;
 }
 
 const points = (x: number) => { const r = Number(x.toFixed(1)); return r === 0 ? '0.0' : `${r > 0 ? '+' : ''}${r.toFixed(1)}`; };
@@ -297,6 +311,22 @@ export function confirmPhrase(r: ConfirmReading): string {
   return `${r.word === null ? `gbrain against ${server} on ${cls} has no test` : said[r.word]}${interval}${r.descriptive ? `, descriptive: ${r.descriptive}` : ''}`;
 }
 
+/** The preregistration's "Public lesson": the sentence for a lead, the advice both lessons end with, and the limit the findings state. */
+export const CONFIRM_LESSON_LEAD = "We learned that gbrain's newest release, whose main changes since BG1 tag each fact with the person or company it is about, now answers questions about changing facts more accurately than two leading memory servers on worlds nobody had seen.";
+export const CONFIRM_LESSON_ADVICE = 'You should confirm a memory change on held-out data before you claim it.';
+export const CONFIRM_LESSON_CAVEAT = 'The design compares one gbrain release with two servers. It does not test which gbrain change caused any difference.';
+
+/**
+ * The public lesson for an outcome row: the lead's sentence when all four comparisons are ahead (row 3); otherwise the
+ * carry-over sentence, saying the development lead "did" carry over when a comparison is ahead and none is behind (rows 4
+ * and 5) and "did not" when one is behind or none is ahead (rows 2 and 6). An incomplete run (row 1) has no lesson.
+ */
+export function confirmLesson(row: ConfirmRowNumber): string | null {
+  if (row === 1) return null;
+  if (row === 3) return `${CONFIRM_LESSON_LEAD} ${CONFIRM_LESSON_ADVICE}`;
+  return `We learned that the lead gbrain showed on development worlds ${row === 4 || row === 5 ? 'did' : 'did not'} carry over to worlds nobody had seen. ${CONFIRM_LESSON_ADVICE}`;
+}
+
 /** The outcome table's row for the four readings and the sentences it publishes; worstCase holds the worst case's words, said first when they differ, and stopped says the run stopped at its look. */
 export function confirmOutcome(readings: readonly ConfirmReading[], o: { release: string; worstCase?: readonly Pick<ConfirmReading, 'key' | 'word'>[]; stopped?: boolean }): ConfirmOutcome {
   const rs = inOrder(readings);
@@ -317,6 +347,7 @@ export function confirmOutcome(readings: readonly ConfirmReading[], o: { release
   const stop = o.stopped ? [CONFIRM_STOP_SENTENCE] : [];
   const out = (headline: string | null, lines: readonly string[], readme: readonly string[], then: ConfirmOutcome['next'], replaces: string[] = []): ConfirmOutcome => ({
     row, result: CONFIRM_RESULTS[row], headline, publish: [...first, ...lines, ...last], readme: { line: [...readme, ...stop].join(' '), label, bg1_rows: below, replaces }, next: then,
+    lesson: confirmLesson(row), caveat: CONFIRM_LESSON_CAVEAT,
   });
   const ahead = rs.filter(r => r.word === 'ahead'), notAhead = rs.filter(r => r.word !== 'ahead');
   switch (row) {
@@ -324,7 +355,7 @@ export function confirmOutcome(readings: readonly ConfirmReading[], o: { release
       const reasons = [...new Set(rs.flatMap(r => (r.descriptive ? [r.descriptive] : [])))];
       return { row, result: CONFIRM_RESULTS[row], headline: null, publish: [...first, ...rs.map(line), ...last],
         readme: { line: `A confirmation on new sealed worlds (gbrain ${o.release}) was incomplete: ${reasons.join('; ')}.`, label: null, bg1_rows: "BG1's rows stay as they are", replaces: [] },
-        next: next('The cause is named and repaired by dated amendment. A rerun is never used to change a verdict.', []) };
+        next: next('The cause is named and repaired by dated amendment. A rerun is never used to change a verdict.', []), lesson: confirmLesson(row), caveat: CONFIRM_LESSON_CAVEAT };
     }
     case 2: {
       const losses = rs.filter(r => r.word === 'behind'), others = rs.filter(r => r.word !== 'behind');
@@ -361,12 +392,17 @@ export function confirmOutcome(readings: readonly ConfirmReading[], o: { release
 
 // ─── The pilot ───────────────────────────────────────────────────────
 
-export const CONFIRM_PILOT_WORLD = 'bg1-dev-01';
-export const CONFIRM_PILOT_QUESTIONS = 64;
+/** The smoke's world and questions, as the cell set's smoke set names them (definitions.ts BG1C_SETS, BG1C-dev1). */
+export const CONFIRM_PILOT_WORLD = BG1C_SETS['BG1C-dev1'].only_conversations![0];
+export const CONFIRM_PILOT_QUESTIONS = BG1C_SETS['BG1C-dev1'].questions;
 export const CONFIRM_PILOT_SPEND_FACTOR = 1.5;
-/** The Budget's per-world rates in US dollars: each row's own line (ingest, Opus reads, Astra grading). */
-export const CONFIRM_ROW_RATES: Readonly<Record<string, number>> = { gbrain: 3.5, 'memory-bank': 3.21, 'extract-first': 6.7 };
-/** Each row's third of the three-row lines: gpt-6.2-sol's reads (3.34), Opus grading them (0.46), and particle-1's re-reads with their grading (0.73). */
+/** Each row's third of the Budget's three-row lines: gpt-6.2-sol's reads (3.34), Opus grading them (0.46), and particle-1's re-reads with their grading (0.73). */
 export const CONFIRM_SHARED_RATE = (3.34 + 0.46 + 0.73) / 3;
-/** A row's pilot spend line per world: 1.5 times its Budget rate. */
-export const confirmPilotSpendLine = (row: string): number => CONFIRM_PILOT_SPEND_FACTOR * ((CONFIRM_ROW_RATES[row] ?? NaN) + CONFIRM_SHARED_RATE);
+/** A smoke cell's pilot spend line per world: 1.5 times its row's Budget rate, its own line from the cell set's rates (bg1c.ts BG1C_RATES) plus its third of the three-row lines. */
+export const confirmPilotSpendLine = (cell: Pick<CellDefinition, 'system' | 'configuration'>): number =>
+  CONFIRM_PILOT_SPEND_FACTOR * ((BG1C_RATES.row_usd_per_world[`${cell.system}:${cell.configuration}`] ?? NaN) + CONFIRM_SHARED_RATE);
+/** The mint's line (Amendment 1, condition 3): over BG1-C's first five slots, at most 1.5 times the dev mint's 336 Gemini requests per world. */
+export const CONFIRM_MINT_SLOTS = 5;
+export const CONFIRM_DEV_MINT_REQUESTS = 336;
+export const CONFIRM_MINT_FACTOR = 1.5;
+export const CONFIRM_MINT_LINE = CONFIRM_MINT_FACTOR * CONFIRM_DEV_MINT_REQUESTS;

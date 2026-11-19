@@ -13,23 +13,24 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import type { MemoryQuestion } from '../../eval/runner/memory-qa/corpus.ts';
+import { BG1C_MANIFEST, type MemoryQuestion } from '../../eval/runner/memory-qa/corpus.ts';
 import { instrumentFor } from '../../eval/runner/memory-qa/instruments.ts';
 import { answerId } from '../../eval/runner/memory-qa/records.ts';
 import { tQuantile } from '../../eval/runner/power/risk-ratio.ts';
 import { frontierInstrumentId, runConfigText } from '../../eval/runner/q1/cell.ts';
 import { loadBG1Manifest, OPUS, PARTICLE } from '../../eval/runner/q1/cells/bg1.ts';
+import { BG1C_MANIFEST_PATH, BG1C_READERS, BG1C_SOL } from '../../eval/runner/q1/cells/bg1c.ts';
 import { bg1JudgeOf, PER_READER_JUDGE_SETTINGS, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
 import { rereadCellId } from '../../eval/runner/q1/reread-cell.ts';
 import { normalQuantile } from '../../eval/runner/stats/paired.ts';
 import {
-  CONFIRM_COMPARISONS, CONFIRM_CONVERSATIONS, CONFIRM_LIVE_READERS, CONFIRM_LOOK_N, CONFIRM_MANIFEST_REL, CONFIRM_N, CONFIRM_READERS, CONFIRM_SOL, CONFIRM_STOP_SENTENCE, CONFIRM_WORDS,
-  conditionalPower, confirmFinal, confirmKeptProblems, confirmLook, confirmOutcome, confirmPhrase, confirmZ, holmAlphas, holmCrosses, leftOutProblems, normalCdf, obfBounds, obfSpend,
-  type ConfirmReading, type ConfirmTest, type ConfirmWord,
+  CONFIRM_CELLS_PATH, CONFIRM_COMPARISONS, CONFIRM_CONVERSATIONS, CONFIRM_LESSON_CAVEAT, CONFIRM_LIVE_READERS, CONFIRM_LOOK_N, CONFIRM_MANIFEST_REL, CONFIRM_N, CONFIRM_READERS, CONFIRM_SOL,
+  CONFIRM_STOP_SENTENCE, CONFIRM_WORDS, conditionalPower, confirmFinal, confirmKeptProblems, confirmLesson, confirmLook, confirmOutcome, confirmPhrase, confirmZ, holmAlphas, holmCrosses,
+  leftOutProblems, normalCdf, obfBounds, obfSpend, type ConfirmReading, type ConfirmTest, type ConfirmWord,
 } from '../../eval/runner/bg1/confirm.ts';
 import type { PairedT } from '../../eval/runner/bg1/rule.ts';
 import { BG1_PRIMARY, BG1_STRATA, type Bg1Stratum } from '../../eval/runner/bg1/types.ts';
-import { analyzeConfirm, BG1_MANIFEST_REL, confirmCells, loadInput, lookConfirm, main, ROLES, type Bg1Input, type Bg1Row, type QuestionInput, type ReaderValue } from '../../eval/runner/bg1/verdict.ts';
+import { analyzeConfirm, BG1_MANIFEST_REL, confirmCells, loadInput, lookConfirm, main, ROLES, type Bg1Input, type Bg1Row, type QuestionInput, type ReaderValue, type WorldPlan } from '../../eval/runner/bg1/verdict.ts';
 
 const tmp = mkdtempSync(join(tmpdir(), 'bg1-confirm-'));
 const realFetch = globalThis.fetch;
@@ -146,6 +147,24 @@ describe('the outcome table', () => {
     expect([six.row, six.headline, six.publish.length]).toEqual([6, null, 4]);
     expect(six.readme.replaces).toEqual(['On questions about the past against the memory-bank server, "not behind by 3 points or more" replaces BG1\'s "behind" for gbrain v0.60.741.0.']);
     expect(six.next).toEqual({ text: 'GBRA-108 gets the per-kind rows and exposure of every comparison.', comparisons: KEYS, kinds: [...BG1_STRATA] });
+  });
+
+  // Value: protects=the public lesson is the preregistration's own sentence, chosen by the row: the lead for row 3, "did" carry over for rows 4 and 5, "did not" for rows 2 and 6, none for an incomplete run, with the design's limit beside it; fails_when=a row gets the other sentence or the other word, an incomplete run gets a lesson, or the code's words drift from the preregistration's; why_new=BG1-C's preregistration, "Public lesson"; seam=confirmLesson, confirmOutcome; no_claim=which row the sealed run lands in
+  test('the public lesson is the preregistration\'s sentence, with "did" or "did not" chosen by the row, and the design\'s limit beside it', () => {
+    const prereg = readFileSync('docs/benchmarks/2026-11-19-changing-facts-confirmation-preregistration.md', 'utf8');
+    const section = prereg.slice(prereg.indexOf('## Public lesson'), prereg.indexOf('## Why we are asking')).replace(/\s*\n\s*/g, ' ');
+    const [lead, carry] = [...section.matchAll(/"(We learned[^"]+)"/g)].map(m => m[1]);
+    const said = (word: string) => carry.replace('<did / did not>', word);
+    const expected: Record<number, string | null> = { 1: null, 2: said('did not'), 3: lead, 4: said('did'), 5: said('did'), 6: said('did not') };
+    expect(([1, 2, 3, 4, 5, 6] as const).map(confirmLesson)).toEqual([1, 2, 3, 4, 5, 6].map(r => expected[r]));
+    expect(section).toContain(`${CONFIRM_LESSON_CAVEAT.slice(0, -1)}, and the findings say so.`);
+    const wrong: string[] = [];
+    for (let w = 0; w < 5 ** 4; w++) for (const descriptive of [null, 'too few worlds for a test']) {
+      const words = KEYS.map((_, j) => CONFIRM_WORDS[Math.floor(w / 5 ** j) % 5]);
+      const o = confirmOutcome(KEYS.map((key, i) => ({ key, word: words[i], descriptive: i === 0 ? descriptive : null, mean: 1, ci95: [-1, 3] as [number, number] })), { release: RELEASE });
+      if (o.lesson !== expected[o.row] || o.caveat !== CONFIRM_LESSON_CAVEAT) wrong.push(`${words.join(' / ')}${descriptive ? ' (descriptive)' : ''}: row ${o.row}, lesson ${o.lesson}`);
+    }
+    expect(wrong.slice(0, 5)).toEqual([]);
   });
 
   // Value: protects=a server row left out after its pilot reads "not run (pilot failed: <reason>)" in both comparisons, is listed, sends nothing to GBRA-108 and can never make a class or the whole lead; fails_when=a comparison not run counts as ahead, level or descriptive, or the row is not listed; why_new=Amendment 1 (R111); seam=confirmOutcome; no_claim=which rows pass their pilots
@@ -455,18 +474,20 @@ const QUESTIONS: MemoryQuestion[] = CELLS_OF_WORLD.map(c => ({
   bg1: { stratum: c.stratum, family: classOf(c.stratum) === 'now' ? 'primary' : 'secondary', form: 'exact', slot: 'person-01.city', gold_values: ['Porto'], stale_values: ['Lisbon'], decoy_values: ['Braga'] },
 }) as unknown as MemoryQuestion);
 const CELL_OF = new Map(CELLS_OF_WORLD.map(c => [idOf(c), c]));
-/** BG1-C's three rows as the dev cells define them, read live by claude-opus-5-5 and gpt-6.2-sol (harness item 2 writes the real cell set). */
-const CELLS: CellDefinition[] = loadBG1Manifest().smoke_cells.filter(c => ['gbrain-defaults', 'ext-memory-bank', 'ext-extract-first'].includes(c.system))
-  .map(c => { const d = structuredClone(c) as CellDefinition; d.arms[0].readers = [...CONFIRM_LIVE_READERS]; return d; });
+/** BG1-C's three counted rows as the committed cell set defines them (eval/runner/q1/cells/bg1c-cells.json), read live by claude-opus-5-5 and gpt-6.2-sol. */
+const CELLS: CellDefinition[] = confirmCells((JSON.parse(readFileSync(CONFIRM_CELLS_PATH, 'utf8')) as { cells: CellDefinition[] }).cells);
+/** Each kept world's plan: its one tracked entity, person-01, is Ana Silva. */
+const ENTITY = 'Ana Silva';
+const PLANS: ReadonlyMap<string, WorldPlan> = new Map(WORLDS.map(w => [w, { entities: [{ id: 'person-01', name: ENTITY }] }]));
 const manifestOf = (o: Record<string, unknown> = {}) => new TextEncoder().encode(JSON.stringify({ dataset: 'BG1-C test', status: 'filled', files: [{ path: 'worlds/bg1-031/world.json', sha256: 'a'.repeat(64) }], kept: WORLDS, n_final: CONFIRM_N, ...o }));
 const MANIFEST = manifestOf();
 const ndjson = (path: string, rows: unknown[]) => { mkdirSync(join(path, '..'), { recursive: true }); writeFileSync(path, rows.map(r => JSON.stringify(r) + '\n').join('')); };
 
-interface Opts { worlds?: readonly string[]; dataset?: (d: { files: Array<{ path: string; sha256: string }> }) => void; config?: (c: Record<string, any>) => void }
+interface Opts { worlds?: readonly string[]; dataset?: (d: { files: Array<{ path: string; sha256: string }> }) => void; config?: (c: Record<string, any>) => void; contexts?: (system: string, q: MemoryQuestion) => string | null }
 let n = 0;
 function receipts(o: Opts = {}) {
   const root = join(tmp, `r${++n}`);
-  const instrument = instrumentFor('bg1-dev');
+  const instrument = instrumentFor(CELLS[0].canonical_instrument!);
   const worlds = new Set(o.worlds ?? WORLDS);
   const qs = QUESTIONS.filter(q => worlds.has(q.conversation)).concat(o.worlds ? o.worlds.filter(w => !WORLDS.includes(w)).map(w => ({ ...QUESTIONS[0], id: `${w}-now-0`, conversation: w })) : []);
   const dataset = { name: 'BG1-C test', files: [{ path: CONFIRM_MANIFEST_REL, sha256: sha(MANIFEST) }], revision: sha(MANIFEST).slice(0, 7), license: 'custodian-held' };
@@ -492,6 +513,8 @@ function receipts(o: Opts = {}) {
     const answers = qs.flatMap(q => CONFIRM_LIVE_READERS.map(r => answer(arm.cell_id, def.system, arm.id, q, r)));
     ndjson(join(dir, 'answers.ndjson'), answers);
     ndjson(join(dir, 'judgments.ndjson'), answers.map(a => judgment(a.answer_id, bg1JudgeOf(a.reader), frontierInstrumentId(instrument.id, bg1JudgeOf(a.reader)), scored(role, qs.find(q => q.id === a.question_id)!, a.reader), true)));
+    const contexts = o.contexts ? qs.flatMap(q => { const prompt = o.contexts!(def.system, q); return prompt === null ? [] : [{ key: `r0|${q.id}|${arm.id}`, prompt, meta: { context_sha256: sha(`ctx|${def.system}|${q.id}`) } }]; }) : [];
+    if (contexts.length) ndjson(join(root, 'runs', def.id, 'contexts.ndjson'), contexts);
     const rid = rereadCellId(arm.cell_id, PARTICLE), rdir = join(root, 'cells', rid);
     mkdirSync(rdir, { recursive: true });
     writeFileSync(join(rdir, 'receipt.json'), JSON.stringify({ cell_id: rid, keyless: false, run_status: 'complete', dataset, instrument: { id: instrument.id, sha256: instrument.sha256 }, source: { config_sha256s: [`cfg-${def.system}`] }, spend: { reader_usd: 0.48 } }));
@@ -501,9 +524,9 @@ function receipts(o: Opts = {}) {
   }
   return root;
 }
-const DEPS = { questions: QUESTIONS, cells: CELLS, manifestBytes: MANIFEST };
-const load = (root: string, o: { manifestPath?: string; manifestBytes?: Uint8Array; cells?: CellDefinition[]; cellsPath?: string; questions?: MemoryQuestion[] } = {}) =>
-  loadInput([root], { set: 'BG1-C', manifestPath: o.manifestPath, cellsPath: o.cellsPath }, { questions: o.questions ?? QUESTIONS, cells: o.cellsPath ? undefined : (o.cells ?? CELLS), manifestBytes: o.manifestPath ? undefined : (o.manifestBytes ?? MANIFEST) });
+const DEPS = { questions: QUESTIONS, cells: CELLS, manifestBytes: MANIFEST, plans: PLANS };
+const load = (root: string, o: { manifestPath?: string; manifestBytes?: Uint8Array; cells?: CellDefinition[]; cellsPath?: string; questions?: MemoryQuestion[]; plans?: ReadonlyMap<string, WorldPlan> } = {}) =>
+  loadInput([root], { set: 'BG1-C', manifestPath: o.manifestPath, cellsPath: o.cellsPath }, { questions: o.questions ?? QUESTIONS, cells: o.cellsPath ? undefined : (o.cells ?? CELLS), manifestBytes: o.manifestPath ? undefined : (o.manifestBytes ?? MANIFEST), plans: o.plans ?? PLANS });
 
 describe('BG1-C receipts', () => {
   const root = receipts();
@@ -576,6 +599,46 @@ describe('BG1-C receipts', () => {
     expect(() => load(root, { cellsPath: join(tmp, 'no-cells.json') })).toThrow('the BG1-C cell set');
   });
 
+  // Value: protects=the verdict reads its readers, manifest and cell set from the shared names, and receipts of the committed BG1-C cell set load by default; fails_when=confirm.ts keeps its own copy that drifts from bg1c.ts or corpus.ts, or the default path is not item 2's cell set; why_new=folding BG1-C's names into bg1c.ts, corpus.ts and the cell set; seam=confirm.ts names, loadInput set BG1-C; no_claim=the cell set's contents
+  test('its readers, manifest and cell set are the shared names, and the committed cell set loads by default', () => {
+    expect([CONFIRM_SOL, CONFIRM_LIVE_READERS, CONFIRM_CELLS_PATH, CONFIRM_MANIFEST_REL]).toEqual([BG1C_SOL, BG1C_READERS, BG1C_MANIFEST_PATH, BG1C_MANIFEST]);
+    expect(CELLS.map(c => c.id)).toEqual(['bg1c.gbrain-defaults.rs1-stable', 'bg1c.ext-memory-bank.recipe', 'bg1c.ext-extract-first.common']);
+    expect(loadInput([root], { set: 'BG1-C' }, { questions: QUESTIONS, manifestBytes: MANIFEST, plans: PLANS })).toEqual(load(root));
+  }, 60_000);
+
+  // Value: protects=confirm reports S5's entity-scoped exposure beside exposure.ts's count, per row and kind, from each question's entity in its world's plan; fails_when=the report lacks it, counts another entity's call-off as the withdrawal, misses a call-off worded without the gold value, changes exposure.ts's count or its stale values, or reports a row with no frozen contexts; why_new=BG1-C's preregistration, "Reported beside the verdict" (BG1's correction of 2026-11-16); seam=loadInput set BG1-C, analyzeConfirm scoped_exposure; no_claim=the custody call-off words
+  test('S5\'s entity-scoped exposure sits beside exposure.ts\'s, per row and kind, with each entity from its world\'s plan', () => {
+    const said: Record<string, string> = { 'gbrain-defaults': `${ENTITY} walked away from the move to Lisbon.`, 'ext-memory-bank': 'Bruno Costa lives in Porto. Bruno Costa called off the move to Lisbon.' };
+    const a = analyzeConfirm(load(receipts({ contexts: system => said[system] ?? null })), { release: RELEASE });
+    const s5 = (e: typeof a.exposure | NonNullable<typeof a.scoped_exposure>, row: Bg1Row) => { const x = e[row]!.by_stratum.s5_withdrawn!; return [x.contexts, x.gold_rate, x.stale_rate]; };
+    expect(Object.keys(a.exposure)).toEqual(['gbrain', 'memory-bank']);
+    expect(Object.keys(a.scoped_exposure!)).toEqual(['gbrain', 'memory-bank']);
+    expect([s5(a.exposure, 'gbrain'), s5(a.scoped_exposure!, 'gbrain')]).toEqual([[80, 0, 1], [80, 1, 1]]);
+    expect([s5(a.exposure, 'memory-bank'), s5(a.scoped_exposure!, 'memory-bank')]).toEqual([[80, 1, 1], [80, 0, 1]]);
+    expect([a.exposure.gbrain!.all.gold_rate, a.scoped_exposure!.gbrain!.all.gold_rate, a.scoped_exposure!['memory-bank']!.all.gold_rate]).toEqual([0, 0.125, 0]);
+    expect(a.scoped_exposure!.gbrain!.all.contexts).toBe(640);
+    expect(analyzeConfirm(load(root), { release: RELEASE }).scoped_exposure).toEqual({});
+  }, 60_000);
+
+  // Value: protects=in custody each entity comes from <GBRAIN_EVALS_BG1C_SOURCE>/worlds/<world>/plan.json, and a missing plan or an unlisted entity refuses instead of reporting a wrong count; fails_when=the plans are read from elsewhere, a world without a plan or a slot whose entity the plan lacks is skipped, or a load without plans goes through; why_new=S5's scoped exposure on BG1-C; seam=loadInput set BG1-C; no_claim=the custody host's layout beyond the plans
+  test('in custody the plans come from the BG1-C set root, and a missing plan or entity refuses', () => {
+    const src = join(tmp, 'bg1c-set'), before = process.env.GBRAIN_EVALS_BG1C_SOURCE;
+    for (const w of WORLDS) { mkdirSync(join(src, 'worlds', w), { recursive: true }); writeFileSync(join(src, 'worlds', w, 'plan.json'), JSON.stringify(PLANS.get(w))); }
+    const inCustody = () => loadInput([root], { set: 'BG1-C' }, { questions: QUESTIONS, cells: CELLS, manifestBytes: MANIFEST });
+    try {
+      delete process.env.GBRAIN_EVALS_BG1C_SOURCE;
+      expect(inCustody).toThrow('bg1c: GBRAIN_EVALS_BG1C_SOURCE is not set');
+      process.env.GBRAIN_EVALS_BG1C_SOURCE = src;
+      expect(inCustody()).toEqual(load(root));
+      rmSync(join(src, 'worlds', WORLDS[3], 'plan.json'));
+      expect(inCustody).toThrow(`${join(src, 'worlds', WORLDS[3], 'plan.json')} does not exist; S5's scoped exposure names each question's entity from its world's plan`);
+    } finally {
+      if (before === undefined) delete process.env.GBRAIN_EVALS_BG1C_SOURCE; else process.env.GBRAIN_EVALS_BG1C_SOURCE = before;
+    }
+    expect(() => load(root, { plans: new Map([...PLANS].slice(1)) })).toThrow(`no plan for ${WORLDS[0]}; S5's scoped exposure`);
+    expect(() => load(root, { plans: new Map(WORLDS.map(w => [w, { entities: [{ id: 'person-02', name: 'Bruno Costa' }] }])) })).toThrow(`${WORLDS[0]}: slot person-01.city names entity person-01, which the plan does not list`);
+  }, 60_000);
+
   const run = (argv: string[], deps: Parameters<typeof main>[1] = {}) => {
     let err = '', out = '';
     const w = process.stderr.write, o = process.stdout.write;
@@ -636,5 +699,25 @@ describe('BG1-C receipts', () => {
     const record = JSON.parse(readFileSync(join(out, 'look.json'), 'utf8'));
     expect(record.left_out).toEqual([{ row: 'memory-bank', reason: NO_MEMORIES }]);
     expect(record.comparisons[0]).toEqual({ key: 'now|memory-bank', z: null, cp: null, status: 'not run', reason: `pilot failed: ${NO_MEMORIES}` });
+  }, 60_000);
+
+  // Value: protects=confirm's report carries gbrain's kept-brain counts for a tie's "Why null?" cycle, exactly the three whole counts and nothing else, and null without them; fails_when=the counts are dropped, a fraction, a negative, a missing or an extra key is accepted, or a bad file refuses only after the look is written; why_new=BG1-C's preregistration, "Reported beside the verdict" (R48); seam=main confirm --brain-counts; no_claim=the dev loop's query that makes them
+  test('the CLI: --brain-counts goes into the report as the three whole counts, and anything else refuses before the look', () => {
+    const out = join(tmp, 'run5'), args = (r: string, more: string[]) => ['confirm', '--receipts', r, '--release', RELEASE, '--out', out, ...more];
+    const COUNTS = { tagged_facts: 9120, slotted_facts: 6044, changing_slots: 0 };
+    const counts = (body: unknown) => { const p = join(tmp, `counts-${++n}.json`); writeFileSync(p, JSON.stringify(body)); return p; };
+    const refusal = 'bg1 verdict refused: --brain-counts must hold exactly tagged_facts, slotted_facts, changing_slots, each a whole number of at least 0\n';
+    for (const bad of [{ ...COUNTS, changing_slots: 1.5 }, { ...COUNTS, tagged_facts: -1 }, { tagged_facts: 1, slotted_facts: 2 }, { ...COUNTS, sample: 'Ana Silva moved to Porto' }, [1, 2, 3], null]) {
+      expect(run(args(half, ['--look', '--brain-counts', counts(bad)]), DEPS)).toEqual({ code: 2, err: refusal, out: '' });
+    }
+    expect(run(args(half, ['--look', '--brain-counts', join(tmp, 'no-counts.json')]), DEPS).err).toBe(`bg1 verdict refused: ${join(tmp, 'no-counts.json')} does not exist\n`);
+    expect(existsSync(join(out, 'look.json'))).toBe(false);
+    expect(run(args(half, ['--look', '--brain-counts', counts(COUNTS)]), DEPS).code).toBe(0);
+    expect(run(args(root, ['--brain-counts', counts(COUNTS)]), DEPS).code).toBe(0);
+    const report = JSON.parse(readFileSync(join(out, 'confirm.json'), 'utf8'));
+    expect([report.brain_counts, Object.keys(report).indexOf('brain_counts') - Object.keys(report).indexOf('scoped_exposure')]).toEqual([COUNTS, 1]);
+    expect(run(args(root, []), DEPS).code).toBe(0);
+    expect(JSON.parse(readFileSync(join(out, 'confirm.json'), 'utf8')).brain_counts).toBeNull();
+    expect(analyzeConfirm(load(root), { release: RELEASE, brainCounts: COUNTS }).brain_counts).toEqual(COUNTS);
   }, 60_000);
 });

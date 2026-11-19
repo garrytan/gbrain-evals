@@ -5,9 +5,10 @@
  *
  *   bun eval/runner/bg1/verdict.ts verdict --receipts <out dir>... [--manifest <filled bg1-manifest.json>] [--set BG1|BG1-dev3] [--judge-check <summary.json>] --out <dir>
  *   bun eval/runner/bg1/verdict.ts pilot   --receipts <out dir>... [--manifest <filled bg1-manifest.json>] --out <dir>
- *   bun eval/runner/bg1/verdict.ts confirm [--look] --receipts <out dir>... --release <gbrain release> [--left-out <server row>=<reason>]... [--manifest <filled bg1c-manifest.json>]
- *                                          [--cells <BG1-C cell set>] [--judge-check <summary.json>] --out <dir>
- *   bun eval/runner/bg1/verdict.ts pilot   --set BG1-C --receipts <smoke out dir>... [--brain-counts <counts.json>] [--judge-check <report.json>]... --out <dir>
+ *   bun eval/runner/bg1/verdict.ts confirm [--look] --receipts <out dir>... --release <gbrain release> [--left-out <server row>=<reason>]... [--brain-counts <counts.json>]
+ *                                          [--manifest <filled bg1c-manifest.json>] [--cells <BG1-C cell set>] [--judge-check <summary.json>] --out <dir>
+ *   bun eval/runner/bg1/verdict.ts pilot   --set BG1-C --receipts <smoke out dir>... [--brain-counts <counts.json>] [--memory-counts <counts.json>] [--mint-rate <mint.json>]
+ *                                          [--judge-check <report.json>]... [--cells <BG1-C cell set>] --out <dir>
  *
  * Each --receipts directory is a cell or re-read output (cell.ts --out, reread-cell.ts --out): every
  * cells/<cell id>/receipt.json under it is read, with its run-config.json, rows, answers and judgments, the unit's frozen
@@ -64,39 +65,48 @@
  *             worst case reruns the same stage's rule. Reported beside the words: each comparison's interval, counts and
  *             wild bootstrap; per kind, per reader and all 64 questions pooled, unadjusted; fill, drops, exposure, the
  *             matcher's agreement, cost per correct answer (claude-opus-5-5 and particle-1 first, then gpt-6.2-sol) and
- *             the judges' model versions.
- *   Pilot     with --set BG1-C, each BG1-C row's pilot (Amendment 1, R111): the smoke on bg1-dev-01, found under --receipts
- *             by each cell receipt's system and its particle-1 re-read, against the pilot list's conditions. Condition 1:
- *             a frozen context (runs/<cell>/contexts.ndjson, matched by the answers' context hashes) for every one of
- *             the 64 questions, a mean fill rate of at least 0.90, and for gbrain --brain-counts' tagged_facts,
- *             slotted_facts and changing_slots all above 0. Condition 2: every --judge-check report passes (stop false,
- *             every gate passing). Condition 3: the cell's metered spend plus its re-read's reader and judge spend, per
- *             world, at most 1.5 times the row's Budget rate. It prints each row's ingest wall time per world from the
- *             receipt, writes pilot.json, and exits 3 naming each failing row and condition.
+ *             the judges' model versions. Beside exposure, scoped_exposure gives the same summaries per row and kind
+ *             with scoped-exposure.ts's entity-scoped gold check, the count S5 uses (BG1's correction of 2026-11-16);
+ *             each question's entity comes from its world's plan, <GBRAIN_EVALS_BG1C_SOURCE>/worlds/<world>/plan.json,
+ *             and a missing plan refuses. brain_counts carries --brain-counts (tagged_facts, slotted_facts and
+ *             changing_slots over gbrain's kept brains, whole numbers only), or null, for a tie's "Why null?" cycle.
+ *   Pilot     with --set BG1-C, each BG1-C row's pilot (Amendment 1, R111): its smoke cell in the BG1-C cell set (--cells
+ *             overrides it), on bg1-dev-01, found under --receipts by that cell's id and its particle-1 re-read, against
+ *             the pilot list's conditions. Condition 1: a frozen context (runs/<cell>/contexts.ndjson, matched by the
+ *             answers' context hashes) for every one of the 64 questions, a mean fill rate of at least 0.90, for gbrain
+ *             --brain-counts' tagged_facts, slotted_facts and changing_slots all above 0, and for each server its stored
+ *             memories for the world in --memory-counts ({"memory-bank": n, "extract-first": n}) above 0. Condition 2:
+ *             every --judge-check report passes (stop false, every gate passing). Condition 3: the cell's metered spend
+ *             plus its re-read's reader and judge spend, per world, at most 1.5 times the row's Budget rate, and the
+ *             mint's record in --mint-rate ({"gemini_requests_per_kept_world": n}, over BG1-C's first five slots) at
+ *             most 504, 1.5 times the dev mint's 336. It prints each row's ingest wall time per world from the receipt,
+ *             writes pilot.json, and exits 3 naming each failing row (or the mint) and condition.
  */
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { DecideError } from '../decisions/errors.ts';
-import { loadCorpus, type MemoryQuestion } from '../memory-qa/corpus.ts';
+import { BG1C_SET, bg1Source, loadCorpus, type MemoryQuestion } from '../memory-qa/corpus.ts';
 import { instrumentFor } from '../memory-qa/instruments.ts';
 import { HARNESS_FAILURES, PRODUCT_FAILURES, type Outcome } from '../memory-qa/outcomes.ts';
 import { readRecords, type AnswerRecord, type JudgmentRecord } from '../memory-qa/records.ts';
 import { frontierInstrumentId, runConfigIdentity, runConfigText } from '../q1/cell.ts';
 import { loadBG1Manifest, OPUS, PARTICLE, SOL } from '../q1/cells/bg1.ts';
 import { bg1JudgeOf, PER_READER_JUDGE_SETTINGS, type CellDefinition } from '../q1/cells/definitions.ts';
-import { REREAD_RECEIPT_SCHEMA, rereadCellId } from '../q1/reread-cell.ts';
+import { rereadCellId } from '../q1/reread-cell.ts';
 import { holmAdjusted, seededRandom } from '../stats/paired.ts';
 import { wildTest } from '../stats/wild-cluster.ts';
 import {
-  CONFIRM_BOUND_ALPHA, CONFIRM_CELLS_PATH, CONFIRM_CLASSES, CONFIRM_COMPARISONS, CONFIRM_LIVE_READERS, CONFIRM_LOOK_N, CONFIRM_MANIFEST_PATH, CONFIRM_MANIFEST_REL, CONFIRM_N, CONFIRM_PILOT_QUESTIONS,
-  CONFIRM_PILOT_WORLD, CONFIRM_READERS, CONFIRM_ROWS, CONFIRM_TABLE_READERS, confirmFinal, confirmKeptProblems, confirmLook, confirmOutcome, confirmPilotSpendLine, confirmRow, holmAlphas,
-  leftOutProblems, obfBounds, type ConfirmClass, type ConfirmComparison, type ConfirmReading, type ConfirmWord, type LookStatus,
+  CONFIRM_BOUND_ALPHA, CONFIRM_CELLS_PATH, CONFIRM_CLASSES, CONFIRM_COMPARISONS, CONFIRM_CONVERSATIONS, CONFIRM_DEV_MINT_REQUESTS, CONFIRM_LIVE_READERS, CONFIRM_LOOK_N, CONFIRM_MANIFEST_PATH,
+  CONFIRM_MANIFEST_REL, CONFIRM_MINT_FACTOR, CONFIRM_MINT_LINE, CONFIRM_MINT_SLOTS, CONFIRM_N, CONFIRM_PILOT_QUESTIONS, CONFIRM_PILOT_WORLD, CONFIRM_READERS, CONFIRM_ROWS, CONFIRM_TABLE_READERS,
+  confirmFinal, confirmKeptProblems, confirmLook, confirmOutcome, confirmPilotSpendLine, confirmRow, holmAlphas, leftOutProblems, obfBounds,
+  type ConfirmClass, type ConfirmComparison, type ConfirmReading, type ConfirmWord, type LookStatus,
 } from './confirm.ts';
 import { evidenceOf, exposure, isRawTextRow, summarizeExposure, type Exposure, type ExposureSummary } from './exposure.ts';
 import { matchAnswer, MATCH_CLASSES, type MatchClass } from './match.ts';
 import { sizeFromPilot, type Bg1Pilot } from './power.ts';
 import { BG1_ALPHA, decideFamily, pairedT, type ComparisonVerdict, type VerdictWord } from './rule.ts';
+import { scopedExposure, slotEntity } from './scoped-exposure.ts';
 import { BG1_N_CAP, BG1_PRIMARY, BG1_SECONDARY, BG1_STRATA, BG1_WAVE_A, type Bg1Stratum } from './types.ts';
 
 export const READERS = [OPUS, SOL, PARTICLE];
@@ -129,6 +139,8 @@ export interface QuestionInput {
   rows: Partial<Record<Bg1Row, Record<string, ReaderValue>>>;
   /** Each row's delivered-context exposure for this question (absent where no frozen context was read). */
   exposure?: Partial<Record<Bg1Row, Exposure>>;
+  /** BG1-C: the same contexts with the gold check scoped to the question's entity (scoped-exposure.ts), the count S5 uses. */
+  scoped_exposure?: Partial<Record<Bg1Row, Exposure>>;
 }
 /** One row's spend for one reader on one world, null when a meter is missing. */
 export interface CostCell { row: Bg1Row; reader: string; conversation: string; usd: number | null }
@@ -263,11 +275,11 @@ export function matcherAgreement(input: Pick<Bg1Input, 'questions'>, view: View)
   return { view, answers, decisive: pairs.length, agreement: pairs.length ? r4(pairs.filter(([a, b]) => a === b).length / pairs.length) : null, kappa: k === null ? null : r4(k), table };
 }
 
-/** Each row's exposure over every planned question, and by stratum. */
-export function exposureSummaries(input: Pick<Bg1Input, 'questions'>): Partial<Record<Bg1Row, { all: ExposureSummary; by_stratum: Partial<Record<Bg1Stratum, ExposureSummary>> }>> {
-  const rows = [...new Set(input.questions.flatMap(q => Object.keys(q.exposure ?? {})))] as Bg1Row[];
+/** Each row's exposure over every planned question, and by stratum; `count` picks the exposure records, exposure.ts's by default. */
+export function exposureSummaries(input: Pick<Bg1Input, 'questions'>, count: (q: QuestionInput) => QuestionInput['exposure'] = q => q.exposure): Partial<Record<Bg1Row, { all: ExposureSummary; by_stratum: Partial<Record<Bg1Stratum, ExposureSummary>> }>> {
+  const rows = [...new Set(input.questions.flatMap(q => Object.keys(count(q) ?? {})))] as Bg1Row[];
   return Object.fromEntries(rows.sort().map(row => {
-    const of = (qs: readonly QuestionInput[]) => summarizeExposure(qs.flatMap(q => (q.exposure?.[row] ? [q.exposure[row]!] : [])));
+    const of = (qs: readonly QuestionInput[]) => summarizeExposure(qs.flatMap(q => { const e = count(q)?.[row]; return e ? [e] : []; }));
     return [row, { all: of(input.questions), by_stratum: Object.fromEntries(BG1_STRATA.map(s => [s, of(input.questions.filter(q => q.stratum === s))])) }];
   }));
 }
@@ -355,8 +367,22 @@ export function analyze(input: Bg1Input, opts: { judgeCheck?: unknown } = {}) {
 }
 export type Analysis = ReturnType<typeof analyze>;
 
-/** What confirm reads beside the receipts: the gbrain release under test, the server rows left out after a failed pilot with each one's reason (R111), and the judge check's summary. */
-export interface ConfirmOptions { release: string; leftOut?: Readonly<Record<string, string>>; judgeCheck?: unknown }
+/** The aggregate counts from gbrain's kept brains (the dev loop's free query): facts with a name tag, facts with a slot, and changing slots. */
+export const BRAIN_COUNTS = ['tagged_facts', 'slotted_facts', 'changing_slots'] as const;
+export type BrainCounts = Readonly<Record<typeof BRAIN_COUNTS[number], number>>;
+
+/** Brain counts as confirm reports them: exactly the three counts, each a whole number of at least 0, so only counts leave custody. */
+export function confirmBrainCounts(x: unknown): BrainCounts {
+  const c = x as Record<string, unknown> | null;
+  const keys = c && typeof c === 'object' && !Array.isArray(c) ? Object.keys(c).sort() : null;
+  if (!keys || JSON.stringify(keys) !== JSON.stringify([...BRAIN_COUNTS].sort()) || !BRAIN_COUNTS.every(k => Number.isInteger(c![k]) && (c![k] as number) >= 0)) {
+    refuse(`--brain-counts must hold exactly ${BRAIN_COUNTS.join(', ')}, each a whole number of at least 0`);
+  }
+  return Object.fromEntries(BRAIN_COUNTS.map(k => [k, c![k] as number])) as BrainCounts;
+}
+
+/** What confirm reads beside the receipts: the gbrain release under test, the server rows left out after a failed pilot with each one's reason (R111), the judge check's summary, and the counts from gbrain's kept brains. */
+export interface ConfirmOptions { release: string; leftOut?: Readonly<Record<string, string>>; judgeCheck?: unknown; brainCounts?: BrainCounts }
 
 const leftOutList = (leftOut: Readonly<Record<string, string>>) => CONFIRM_ROWS.filter(r => r in leftOut).map(row => ({ row, reason: leftOut[row] }));
 
@@ -433,6 +459,8 @@ function confirmReport(p: ConfirmPrep, o: ConfirmOptions, stage: 'look' | 'final
     }))])),
     matcher: matcherAgreement(input, 'gating'),
     exposure: exposureSummaries(input),
+    scoped_exposure: input.questions.some(q => q.scoped_exposure) ? exposureSummaries(input, q => q.scoped_exposure) : null,
+    brain_counts: o.brainCounts ?? null,
     cost_per_correct: costPerCorrect(input, keep, { rows, comparators: servers, tableReaders: CONFIRM_TABLE_READERS }),
     judges: { versions: input.snapshots, mixed_snapshot: Object.entries(input.snapshots).filter(([, vs]) => vs.length > 1).map(([j]) => j) },
     judge_check: o.judgeCheck ?? null,
@@ -595,13 +623,35 @@ export function confirmCells(cells: readonly CellDefinition[]): CellDefinition[]
   if (off.length) refuse(`every BG1-C row is read live by ${CONFIRM_LIVE_READERS.join(' and ')}; ${off.join('; ')}`);
   return CONFIRM_ROWS.map(r => rows.find(c => ROLES[c.system] === r)!);
 }
-const readCellSet = (path: string): CellDefinition[] => (existsSync(path) ? (JSON.parse(readFileSync(path, 'utf8')) as { cells?: CellDefinition[] }).cells ?? refuse(`${path} lists no cells`) : refuse(`the BG1-C cell set ${path} does not exist; pass --cells <file>`));
+const readCellSet = (path: string, key: 'cells' | 'smoke_cells' = 'cells'): CellDefinition[] => (existsSync(path)
+  ? (JSON.parse(readFileSync(path, 'utf8')) as Record<string, CellDefinition[] | undefined>)[key] ?? refuse(`${path} lists no ${key === 'cells' ? 'cells' : 'smoke cells'}`)
+  : refuse(`the BG1-C cell set ${path} does not exist; pass --cells <file>`));
 const readConfirmManifest = (path: string) => (existsSync(path) ? readFileSync(path) : refuse(`the BG1-C manifest ${path} does not exist; verdict.ts reads receipts only against the filled manifest`));
 const bg1Cells = (set: LoadOptions['set']) => { const cells = loadBG1Manifest(); return (set === 'BG1' ? cells.cells : cells.smoke_cells).filter(c => c.arms[0].set === set && ROLES[c.system]); };
 
 /** How loadInput reads receipts. On set BG1-C, look reads exactly the first 20 kept worlds, and leftOut names server rows left out after a failed pilot, which need no receipts. */
 export interface LoadOptions { set: 'BG1' | 'BG1-dev3' | 'BG1-C'; manifestPath?: string; waveA?: boolean; cellsPath?: string; look?: boolean; leftOut?: readonly Bg1Row[] }
-export interface LoadDeps { questions?: readonly MemoryQuestion[]; manifestBytes?: Uint8Array; cells?: readonly CellDefinition[] }
+/** A world's plan, as far as scoped exposure reads it: the entities its slots belong to. */
+export interface WorldPlan { entities: ReadonlyArray<{ id: string; name: string }> }
+export interface LoadDeps { questions?: readonly MemoryQuestion[]; manifestBytes?: Uint8Array; cells?: readonly CellDefinition[]; plans?: ReadonlyMap<string, WorldPlan> }
+
+/**
+ * Each planned BG1-C question's entity, named from its world's plan (scoped-exposure.ts slotEntity), for S5's scoped
+ * exposure. The plans are `plans` when given, else <GBRAIN_EVALS_BG1C_SOURCE>/worlds/<world>/plan.json, beside the
+ * worlds the bg1c loader reads in custody. A missing plan, or a slot whose entity the plan does not list, refuses.
+ */
+function confirmEntities(qs: readonly MemoryQuestion[], plans?: ReadonlyMap<string, WorldPlan>): Map<string, string> {
+  const root = plans ? '' : join(bg1Source(process.env, BG1C_SET), 'worlds');
+  const why = 'S5\'s scoped exposure names each question\'s entity from its world\'s plan';
+  const planOf = new Map([...new Set(qs.map(q => q.conversation))].map(w => {
+    const path = join(root, w, 'plan.json');
+    const plan = plans ? plans.get(w) : existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) as WorldPlan : undefined;
+    return [w, plan ?? refuse(plans ? `no plan for ${w}; ${why}` : `${path} does not exist; ${why}`)] as const;
+  }));
+  return new Map(qs.map(q => {
+    try { return [q.id, slotEntity(planOf.get(q.conversation)!, q.bg1!.slot)] as const; } catch (e) { return refuse(`${q.conversation}: ${(e as Error).message}; ${why}`); }
+  }));
+}
 
 /** Read and check every receipt, then build the analysis input. Set BG1-C reads the BG1-C cell set, its readers, its filled manifest and its kept list. */
 export function loadInput(dirs: readonly string[], o: LoadOptions, deps: LoadDeps = {}): Bg1Input {
@@ -639,9 +689,11 @@ export function loadInput(dirs: readonly string[], o: LoadOptions, deps: LoadDep
   const worlds = wave ?? new Set(finalSet ?? defs[0].only_conversations ?? qs.map(q => q.conversation));
   const planned = qs.filter(q => worlds.has(q.conversation)).sort((a, b) => (a.id < b.id ? -1 : 1));
   const plannedIds = new Set(planned.map(q => q.id));
+  const entities = confirm ? confirmEntities(planned, deps.plans) : null;
   const rowWorlds = new Set<string>();
   const values = new Map<Bg1Row, Map<string, Record<string, ReaderValue>>>();
   const exposures = new Map<Bg1Row, Map<string, Exposure>>();
+  const scopedExposures = new Map<Bg1Row, Map<string, Exposure>>();
   const rowIds = new Map<Bg1Row, Set<string>>();
   const fill: Partial<Record<Bg1Row, number | null>> = {};
   const costs: CostCell[] = [];
@@ -658,6 +710,7 @@ export function loadInput(dirs: readonly string[], o: LoadOptions, deps: LoadDep
     const ids = new Set<string>();
     const byQuestion = new Map<string, Record<string, ReaderValue>>();
     const exposed = new Map<string, Exposure>();
+    const scoped = new Map<string, Exposure>();
     const usd = new Map<string, number | null>();
     const addUsd = (reader: string, conv: string, x: number | null) => { const k = `${reader}|${conv}`; const prev = usd.has(k) ? usd.get(k)! : 0; usd.set(k, prev === null || x === null ? null : prev + x); };
     const take = (dir: string, ans: AnswerRecord[]) => {
@@ -692,7 +745,10 @@ export function loadInput(dirs: readonly string[], o: LoadOptions, deps: LoadDep
         const contexts = new Map(readLoose(join(runDir, 'contexts.ndjson')).map(c => [String(c.meta?.context_sha256), String(c.prompt)]));
         for (const a of ans) {
           const prompt = contexts.get(a.context_sha256);
-          if (prompt !== undefined && !exposed.has(a.question_id)) exposed.set(a.question_id, exposure(question(a.question_id), evidenceOf(prompt), { rawText: isRawTextRow(def.system) }));
+          if (prompt === undefined || exposed.has(a.question_id)) continue;
+          const q = question(a.question_id), text = evidenceOf(prompt), rawText = isRawTextRow(def.system), entity = entities?.get(a.question_id);
+          exposed.set(a.question_id, exposure(q, text, { rawText }));
+          if (entity !== undefined) scoped.set(a.question_id, scopedExposure(q, text, { rawText, entity }));
         }
       }
       const spend = u.receipt.spend?.usd as Record<string, number> | undefined;
@@ -730,6 +786,7 @@ export function loadInput(dirs: readonly string[], o: LoadOptions, deps: LoadDep
     }
     values.set(role, byQuestion);
     exposures.set(role, exposed);
+    scopedExposures.set(role, scoped);
     rowIds.set(role, ids);
     if (role !== 'floor') fill[role] = meanOf(fills);
     for (const [k, x] of usd) { const [reader, conversation] = k.split('|'); costs.push({ row: role, reader, conversation, usd: x === null ? null : r4(x) }); }
@@ -738,8 +795,8 @@ export function loadInput(dirs: readonly string[], o: LoadOptions, deps: LoadDep
   const questions: QuestionInput[] = planned.map(({ id, conversation, bg1 }) => {
     const rows: QuestionInput['rows'] = {};
     for (const row of [...SYSTEM_ROWS, 'floor' as Bg1Row]) if (rowIds.get(row)?.has(id)) rows[row] = Object.fromEntries(readers.map(r => [r, value(row, id, r)]));
-    const exposure = Object.fromEntries([...exposures].flatMap(([row, m]) => (m.has(id) ? [[row, m.get(id)!]] : [])));
-    return { id, conversation, stratum: bg1!.stratum, rows, exposure };
+    const of = (byRow: Map<Bg1Row, Map<string, Exposure>>) => Object.fromEntries([...byRow].flatMap(([row, m]) => (m.has(id) ? [[row, m.get(id)!]] : [])));
+    return { id, conversation, stratum: bg1!.stratum, rows, exposure: of(exposures), ...(entities ? { scoped_exposure: of(scopedExposures) } : {}) };
   });
   if (wave) { const absent = [...wave].filter(c => !rowWorlds.has(c)); if (absent.length) refuse(`the pilot needs every wave A world; ${absent.join(', ')} has no rows`); }
   return { set: o.set, questions, fill, costs, snapshots: Object.fromEntries([...snapshots].sort(([a], [b]) => (a < b ? -1 : 1)).map(([j, vs]) => [j, [...vs].sort()])) };
@@ -749,20 +806,24 @@ export function loadInput(dirs: readonly string[], o: LoadOptions, deps: LoadDep
 
 /** One pilot check: the condition of Amendment 1's pilot list it belongs to, what it measured and its line. */
 export interface PilotCheck { condition: 1 | 2 | 3; check: string; value: number | string | null; line: string; pass: boolean }
-export const BRAIN_COUNTS = ['tagged_facts', 'slotted_facts', 'changing_slots'] as const;
 
 const judgeCheckPasses = (report: unknown) => {
   const r = report as { stop?: unknown; gates?: unknown } | null;
   return !!r && r.stop === false && Array.isArray(r.gates) && r.gates.length > 0 && r.gates.every(g => (g as { pass?: unknown } | null)?.pass === true);
 };
 
+/** What the BG1-C pilot reads beside the smoke's receipts: gbrain's brain counts and each server's stored memories (condition 1), the judge checks' reports (condition 2), the mint's record (condition 3), and the cell set's smoke cells (by default the committed BG1-C cell set's). */
+export interface PilotInputs { brainCounts?: unknown; memoryCounts?: unknown; mintRate?: unknown; judgeChecks?: readonly unknown[]; cells?: readonly CellDefinition[] }
+
 /**
- * BG1-C's pilot (Amendment 1, R111): each row's smoke on bg1-dev-01, read from the cell receipt whose system is that row
- * and its particle-1 re-read, against conditions 1 and 3 of the pilot list, with gbrain's brain counts for condition 1
- * and the judge checks' reports for condition 2.
+ * BG1-C's pilot (Amendment 1, R111): each row's smoke cell in the cell set, on bg1-dev-01, read from that cell's receipt
+ * and its particle-1 re-read, against conditions 1 and 3 of the pilot list, with gbrain's brain counts and each server's
+ * stored memories for the world for condition 1, the judge checks' reports for condition 2, and the mint's Gemini
+ * requests per kept world over BG1-C's first five slots for condition 3.
  */
-export function confirmPilot(dirs: readonly string[], o: { brainCounts?: unknown; judgeChecks?: readonly unknown[] } = {}) {
+export function confirmPilot(dirs: readonly string[], o: PilotInputs = {}) {
   const found = findReceipts(dirs);
+  const smoke = confirmCells(o.cells ?? readCellSet(CONFIRM_CELLS_PATH, 'smoke_cells'));
   const reports = o.judgeChecks ?? [];
   const passing = reports.filter(judgeCheckPasses).length;
   const judges: PilotCheck = { condition: 2, check: 'judge checks', value: reports.length ? `${passing} of ${reports.length} pass` : null, line: 'at least one, every one passing', pass: reports.length > 0 && passing === reports.length };
@@ -770,8 +831,13 @@ export function confirmPilot(dirs: readonly string[], o: { brainCounts?: unknown
   const brain: PilotCheck = { condition: 1, check: 'brain counts (tagged facts, slotted facts, changing slots)', value: o.brainCounts === undefined ? null : BRAIN_COUNTS.map(k => String(counts[k] ?? 'missing')).join(', '),
     line: 'each above 0', pass: BRAIN_COUNTS.every(k => typeof counts[k] === 'number' && (counts[k] as number) > 0) };
   const num = (x: unknown) => (typeof x === 'number' && Number.isFinite(x) ? x : null);
-  const rows = CONFIRM_ROWS.map(row => {
-    const live = found.filter(f => ROLES[String(f.receipt.system?.kind)] === row && f.receipt.schema !== REREAD_RECEIPT_SCHEMA);
+  const memories = (o.memoryCounts ?? {}) as Record<string, unknown>;
+  const requests = num((o.mintRate as { gemini_requests_per_kept_world?: unknown } | null | undefined)?.gemini_requests_per_kept_world);
+  const mint: PilotCheck = { condition: 3, check: 'Gemini requests per kept world', value: o.mintRate === undefined ? null : requests ?? 'missing',
+    line: `at most ${CONFIRM_MINT_LINE}, ${CONFIRM_MINT_FACTOR} times the dev mint's ${CONFIRM_DEV_MINT_REQUESTS}, over ${CONFIRM_CONVERSATIONS[0]} to ${CONFIRM_CONVERSATIONS[CONFIRM_MINT_SLOTS - 1]}`, pass: requests !== null && requests <= CONFIRM_MINT_LINE };
+  const rows = smoke.map(c => {
+    const row = ROLES[c.system], cell = c.arms[0].cell_id;
+    const live = found.filter(f => f.receipt.cell_id === cell);
     if (live.length > 1) refuse(`the pilot reads one smoke receipt per row, and ${row} has ${live.length} (${live.map(f => f.dir).join(', ')})`);
     const u = live[0];
     const qRows = u ? readLoose(join(u.dir, 'rows.ndjson')) : [];
@@ -782,37 +848,44 @@ export function confirmPilot(dirs: readonly string[], o: { brainCounts?: unknown
     const ids = new Set(qRows.map(r => String(r.id)));
     const nFrozen = [...ids].filter(id => withContext.has(id)).length;
     const fill = meanOf(qRows.map(r => (typeof r.fill_rate === 'number' ? r.fill_rate : 0)));
-    const reread = u ? found.find(f => f.receipt.cell_id === rereadCellId(String(u.receipt.cell_id), PARTICLE)) : undefined;
+    const reread = u ? found.find(f => f.receipt.cell_id === rereadCellId(cell, PARTICLE)) : undefined;
     const cellUsd = num(u?.receipt.spend?.total_usd), readerUsd = num(reread?.receipt.spend?.reader_usd), judgeUsd = num(reread?.receipt.spend?.judge_usd);
     const unspent = !u ? 'no smoke receipt' : cellUsd === null ? 'no metered spend on the smoke receipt' : !reread ? 'no particle-1 re-read' : reread.receipt.keyless !== false ? 'the particle-1 re-read is not paid'
       : readerUsd === null || judgeUsd === null ? 'no metered spend on the re-read' : null;
     const perWorld = unspent ? null : (cellUsd! + readerUsd! + judgeUsd!) / worlds.length;
-    const spendLine = confirmPilotSpendLine(row), ingest = num(u?.receipt.ingest?.wall_ms?.total);
+    const spendLine = confirmPilotSpendLine(c), ingest = num(u?.receipt.ingest?.wall_ms?.total);
+    const stored = num(memories[row]);
+    const storedCheck: PilotCheck = { condition: 1, check: 'stored memories', value: o.memoryCounts === undefined ? null : stored ?? 'missing', line: `above 0 for ${CONFIRM_PILOT_WORLD}`, pass: stored !== null && stored > 0 };
     const checks: PilotCheck[] = [
       { condition: 1, check: 'frozen contexts', value: u ? nFrozen : 'no smoke receipt', line: `all ${CONFIRM_PILOT_QUESTIONS} questions`, pass: ids.size === CONFIRM_PILOT_QUESTIONS && nFrozen === CONFIRM_PILOT_QUESTIONS },
       { condition: 1, check: 'mean fill rate', value: fill === null ? (u ? 'no rows' : 'no smoke receipt') : r4(fill), line: `at least ${FILL_GATE}`, pass: fill !== null && fill >= FILL_GATE },
-      ...(row === 'gbrain' ? [brain] : []),
+      row === 'gbrain' ? brain : storedCheck,
       judges,
       { condition: 3, check: 'spend per world', value: perWorld === null ? unspent : r4(perWorld), line: `at most $${r4(spendLine)}, 1.5 times the Budget rate`, pass: perWorld !== null && perWorld <= spendLine },
     ];
-    return { row, cell: u ? String(u.receipt.cell_id) : null, checks, wall_ms_per_world: ingest === null || !worlds.length ? null : Math.round(ingest / worlds.length), pass: checks.every(c => c.pass) };
+    return { row, cell, checks, wall_ms_per_world: ingest === null || !worlds.length ? null : Math.round(ingest / worlds.length), pass: checks.every(x => x.pass) };
   });
-  return { schema: 'gbrain-evals/bg1c-pilot/v1', world: CONFIRM_PILOT_WORLD, rows, pass: rows.every(r => r.pass) };
+  return { schema: 'gbrain-evals/bg1c-pilot/v1', world: CONFIRM_PILOT_WORLD, rows, mint, pass: rows.every(r => r.pass) && mint.pass };
 }
 export type ConfirmPilot = ReturnType<typeof confirmPilot>;
 
 function confirmPilotMain(argv: readonly string[], dirs: readonly string[], out: string): number {
   const many = (n: string) => argv.flatMap((a, i) => (a === n && argv[i + 1] ? [argv[i + 1]] : []));
   const read = (path: string): unknown => (existsSync(resolve(path)) ? JSON.parse(readFileSync(resolve(path), 'utf8')) : refuse(`${path} does not exist`));
+  const input = (n: string) => { const path = many(n)[0]; return path ? read(path) : undefined; };
   try {
-    const counts = many('--brain-counts')[0];
-    const p = confirmPilot(dirs, { brainCounts: counts ? read(counts) : undefined, judgeChecks: many('--judge-check').map(read) });
+    const cells = many('--cells')[0];
+    const p = confirmPilot(dirs, { brainCounts: input('--brain-counts'), memoryCounts: input('--memory-counts'), mintRate: input('--mint-rate'), judgeChecks: many('--judge-check').map(read),
+      ...(cells ? { cells: readCellSet(resolve(cells), 'smoke_cells') } : {}) });
     mkdirSync(resolve(out), { recursive: true });
     writeFileSync(join(resolve(out), 'pilot.json'), JSON.stringify(p, null, 2) + '\n');
     const hours = (ms: number | null) => (ms === null ? 'unknown' : `${(ms / 3_600_000).toFixed(2)} h`);
-    process.stdout.write([`BG1-C pilot on ${p.world}: ${p.pass ? 'pass' : 'FAIL'}`, ...p.rows.map(r => `  ${r.row}: ${r.pass ? 'pass' : 'FAIL'}; ${r.checks.map(c => `condition ${c.condition} ${c.check} ${c.value ?? 'none given'} (${c.line}) ${c.pass ? 'pass' : 'FAIL'}`).join('; ')}; ingest wall time per world ${hours(r.wall_ms_per_world)}`)].join('\n') + '\n');
+    const said = (c: PilotCheck) => `condition ${c.condition} ${c.check} ${c.value ?? 'none given'} (${c.line}) ${c.pass ? 'pass' : 'FAIL'}`;
+    process.stdout.write([`BG1-C pilot on ${p.world}: ${p.pass ? 'pass' : 'FAIL'}`, ...p.rows.map(r => `  ${r.row}: ${r.pass ? 'pass' : 'FAIL'}; ${r.checks.map(said).join('; ')}; ingest wall time per world ${hours(r.wall_ms_per_world)}`),
+      `  mint: ${p.mint.pass ? 'pass' : 'FAIL'}; ${said(p.mint)}`].join('\n') + '\n');
     if (p.pass) return 0;
-    process.stderr.write(`BG1-C pilot failed: ${p.rows.flatMap(r => r.checks.filter(c => !c.pass).map(c => `${r.row} condition ${c.condition} (${c.check})`)).join('; ')}\n`);
+    const failed = [...p.rows.flatMap(r => r.checks.filter(c => !c.pass).map(c => `${r.row} condition ${c.condition} (${c.check})`)), ...(p.mint.pass ? [] : [`mint condition ${p.mint.condition} (${p.mint.check})`])];
+    process.stderr.write(`BG1-C pilot failed: ${failed.join('; ')}\n`);
     return 3;
   } catch (e) {
     if (!(e instanceof VerdictError)) throw e;
@@ -830,8 +903,8 @@ export function main(argv: string[], deps: LoadDeps = {}): number {
   const out = one('--out');
   if ((mode !== 'verdict' && mode !== 'pilot' && mode !== 'confirm') || !dirs.length || !out) {
     process.stderr.write('usage: bun eval/runner/bg1/verdict.ts verdict|pilot --receipts <out dir>... [--manifest <filled bg1-manifest.json>] [--set BG1|BG1-dev3] [--judge-check <summary.json>] --out <dir>\n'
-      + '       bun eval/runner/bg1/verdict.ts confirm [--look] --receipts <out dir>... --release <gbrain release> [--left-out <server row>=<reason>]... [--manifest <filled bg1c-manifest.json>] [--cells <BG1-C cell set>] [--judge-check <summary.json>] --out <dir>\n'
-      + '       bun eval/runner/bg1/verdict.ts pilot --set BG1-C --receipts <smoke out dir>... [--brain-counts <counts.json>] [--judge-check <report.json>]... --out <dir>\n');
+      + '       bun eval/runner/bg1/verdict.ts confirm [--look] --receipts <out dir>... --release <gbrain release> [--left-out <server row>=<reason>]... [--brain-counts <counts.json>] [--manifest <filled bg1c-manifest.json>] [--cells <BG1-C cell set>] [--judge-check <summary.json>] --out <dir>\n'
+      + '       bun eval/runner/bg1/verdict.ts pilot --set BG1-C --receipts <smoke out dir>... [--brain-counts <counts.json>] [--memory-counts <counts.json>] [--mint-rate <mint.json>] [--judge-check <report.json>]... [--cells <BG1-C cell set>] --out <dir>\n');
     return 2;
   }
   const confirm = mode === 'confirm';
@@ -851,6 +924,8 @@ export function main(argv: string[], deps: LoadDeps = {}): number {
   try {
     const bad = leftOutProblems(leftOut);
     if (bad.length) refuse(bad.join('; '));
+    const countsPath = confirm ? one('--brain-counts') : undefined;
+    const brainCounts = countsPath ? confirmBrainCounts(existsSync(resolve(countsPath)) ? JSON.parse(readFileSync(resolve(countsPath), 'utf8')) : refuse(`${countsPath} does not exist`)) : undefined;
     const input = loadInput(dirs, { set, manifestPath: one('--manifest'), waveA: mode === 'pilot', ...(confirm ? { cellsPath: one('--cells'), look, leftOut: Object.keys(leftOut) as Bg1Row[] } : {}) }, deps);
     const dir = resolve(out), marker = join(dir, 'look.json');
     const rowsOut = (xs: ReadonlyArray<{ row: string }>) => xs.map(x => x.row).join(' and ') || 'no row';
@@ -875,7 +950,7 @@ export function main(argv: string[], deps: LoadDeps = {}): number {
         return x ? `${x.key} ${x.word ?? 'no test'}${x.descriptive ? ' (descriptive)' : ''}` : `${k.key} ${c.not_run.find(y => y.key === k.key)!.status}`;
       }).join('; ');
       if (look) {
-        const l = lookConfirm(input, { release: release!, leftOut, judgeCheck });
+        const l = lookConfirm(input, { release: release!, leftOut, judgeCheck, brainCounts });
         writeFileSync(marker, JSON.stringify(l, null, 2) + '\n', { flag: 'wx' });
         if (l.verdict) writeFileSync(join(dir, 'confirm.json'), JSON.stringify(l.verdict, null, 2) + '\n');
         const stats = l.comparisons.map(x => `${x.key} ${x.status}${x.z === null ? '' : `, z ${x.z.toFixed(2)}, CP ${x.cp!.toFixed(2)}`}`).join('; ');
@@ -883,7 +958,7 @@ export function main(argv: string[], deps: LoadDeps = {}): number {
           : `BG1-C look: continue to ${CONFIRM_N} worlds; ${stats}\n`);
         return 0;
       }
-      const c = analyzeConfirm(input, { release: release!, leftOut, judgeCheck });
+      const c = analyzeConfirm(input, { release: release!, leftOut, judgeCheck, brainCounts });
       writeFileSync(join(dir, 'confirm.json'), JSON.stringify(c, null, 2) + '\n');
       process.stdout.write(`BG1-C: row ${c.outcome.row} (${c.outcome.result}); ${wordsOf(c)}; ${c.worlds} worlds, ${c.common} of ${c.planned} questions in the common set${c.worst_case.disagrees ? '; the worst case disagrees' : ''}\n`);
       return 0;
