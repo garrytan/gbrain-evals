@@ -220,11 +220,15 @@ export function checkConfirmLedger(ledger: string | undefined, root = REPO_ROOT)
 }
 
 /**
- * Gate 2 of the confirmation: pooled oracle success over every planned oracle cell (3 models x 100 tasks). A cell
- * with no harness-clean attempt counts as missing, and any missing cell fails the gate.
+ * Gate 2 of the confirmation: pooled oracle success over every planned oracle cell (the gate's models x 100 tasks;
+ * HARD_MODELS unless the run names its own readers, as the newest-build re-measure does). A cell with no harness-clean
+ * attempt counts as missing, and any missing cell fails the gate. Cells of other models are left out.
  */
-export function confirmOracleGate(records: Array<Record<string, unknown>>, planned = HARD_MODELS.length * 100): { cells: number; planned: number; successes: number; rate: number; by_model: Record<string, { cells: number; successes: number }>; incomplete: number; pass: boolean } {
-  const { cells, incomplete } = canonicalCells(records);
+export function confirmOracleGate(records: Array<Record<string, unknown>>, models: readonly string[] = HARD_MODELS): { cells: number; planned: number; successes: number; rate: number; by_model: Record<string, { cells: number; successes: number }>; incomplete: number; pass: boolean } {
+  const planned = models.length * 100;
+  const all = canonicalCells(records);
+  const cells = all.cells.filter(c => models.includes(c.model));
+  const incomplete = all.incomplete.filter(key => models.includes(key.split('|')[0]));
   const oracle = cells.filter(c => c.arm === 'oracle');
   const by_model: Record<string, { cells: number; successes: number }> = {};
   for (const c of oracle) { by_model[c.model] ??= { cells: 0, successes: 0 }; by_model[c.model].cells++; if (c.success) by_model[c.model].successes++; }
@@ -321,7 +325,7 @@ if (import.meta.main) {
     } else if (cmd === 'oracle-gate') {
       const results = flag('--attempts');
       if (!results) { console.error('usage: hard-ops.ts oracle-gate --attempts <confirm-oracle attempts.jsonl>'); process.exit(2); }
-      const g = confirmOracleGate(readRecords([results]));
+      const g = confirmOracleGate(readRecords(results.split(',')), flag('--models')?.split(',').filter(Boolean) ?? HARD_MODELS);
       console.log(JSON.stringify(g, null, 2));
       if (!g.pass) throw new HardStop('HARD_ORACLE_GATE', `pooled oracle success ${(g.rate * 100).toFixed(1)}% on ${g.cells} of ${g.planned} cells (${g.incomplete} without a clean attempt); the gate needs ${CONFIRM_ORACLE_MIN * 100}% on all ${g.planned}`, 'run no counted cells on this world; report it', 'Garry decides what follows a failed oracle gate (PREREG.md, gate 2)');
     } else if (cmd === 'confirm-ledger') {
