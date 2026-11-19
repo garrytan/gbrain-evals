@@ -209,6 +209,14 @@ describe('checkPractices', () => {
     expect(checkPractices([fixture('pass-counted.json'), fixture('pass-quick-look.json')], none, empty)).toEqual([]);
   });
 
+  test('refuses a new entry that reuses a grandfathered id', () => {
+    const old = fixture('fail-old-shape.json');
+    const copy = { ...structuredClone(old), preregistration: 'docs/benchmarks/2026-11-21-copy-preregistration.md', results: ['docs/benchmarks/2026-11-21-copy/**'] };
+    expect(checkPractices([old, copy], { ids: [old.id], unlisted_preregistrations: [] }, empty)).toEqual([
+      { id: old.id, file: copy.preregistration, problem: 'id is already used by another registry entry; a new experiment needs its own id' },
+    ]);
+  });
+
   test('refuses a new preregistration file with no registry entry', () => {
     const dir = repo({ 'docs/benchmarks/2026-11-20-loose-preregistration.md': 'plan', 'docs/benchmarks/2026-11-01-old-preregistration.md': 'plan' });
     expect(checkPractices([], { ids: [], unlisted_preregistrations: ['docs/benchmarks/2026-11-01-old-preregistration.md'] }, dir)).toEqual([

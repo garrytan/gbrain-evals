@@ -183,6 +183,11 @@ export function checkPractices(entries: PracticeEntry[], grandfathered: Grandfat
   const problems: OrderProblem[] = entries
     .filter(entry => !oldIds.has(entry.id))
     .flatMap(entry => checkEntry(entry, cwd).map(problem => ({ id: entry.id, file: entry.preregistration, problem })));
+  const seen = new Set<string>();
+  for (const entry of entries) {
+    if (seen.has(entry.id)) problems.push({ id: entry.id, file: entry.preregistration, problem: 'id is already used by another registry entry; a new experiment needs its own id' });
+    seen.add(entry.id);
+  }
   const listed = new Set([...entries.map(e => e.preregistration), ...grandfathered.unlisted_preregistrations]);
   const tracked = execFileSync('git', ['ls-files', '--', ...PREREGISTRATION_FILES], { cwd, encoding: 'utf8' }).split('\n').filter(Boolean);
   for (const file of tracked) {
