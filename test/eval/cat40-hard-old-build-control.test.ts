@@ -105,29 +105,36 @@ describe('newest_analysis.py --look control', () => {
   const tasks = Array.from({ length: 100 }, (_, i) => `H${(i % 5) + 1}-${String(Math.floor(i / 5) + 1).padStart(2, '0')}`);
   type Ok = (i: number) => boolean;
   /** One world's cells for both frontier readers: the old build, the newest build and files succeed where their predicates say. */
-  function world(dir: string, name: string, oldOk: Ok, newOk: Ok, fsOk: Ok, drop?: string) {
+  function world(dir: string, name: string, oldOk: Ok, newOk: Ok, fsOk: Ok, drop?: string, stray?: string) {
     const lines: string[] = [];
-    for (const model of FRONTIER) for (const [arm, ok] of [[CONTROL_LABEL, oldOk], ['gbrain-newest', newOk], ['fs', fsOk]] as const) tasks.forEach((t, i) => {
-      if (drop === `${arm}|${model}|${t}`) return;
+    for (const model of FRONTIER) for (const [arm, ok] of [[CONTROL_LABEL, oldOk], ['gbrain-newest', newOk], ['fs', fsOk]] as const) tasks.forEach((tt, i) => {
+      if (drop === `${arm}|${model}|${tt}`) return;
+      const t = stray === `${arm}|${model}|${tt}` ? 'H3-99' : tt;
       lines.push(JSON.stringify({ attempt_id: `${model}|${arm}|${t}|0#1`, arm, model, task: t, family: t.slice(0, 2), variant: '', stop: 'submitted', score: { success: ok(i), submitted: true, said_wrong: false }, total_usd: 0.1, judge_usd: 0.01 }));
     });
     const p = join(dir, `${name}.jsonl`);
     writeFileSync(p, lines.join('\n') + '\n');
     return `${name}=${p}`;
   }
-  /** A transcript file per world in which the newest build's session widened itself to the full surface on the given tasks. */
-  function widened(dir: string, name: string, tasksWidened: string[]) {
+  /** A transcript per old- and newest-build attempt in one world, in which the newest build's Sol session widened itself
+   * to the full surface on the given tasks; skip leaves one attempt's transcript out. */
+  function widened(dir: string, name: string, tasksWidened: string[], skip?: string) {
     const result = JSON.stringify({ surface: 'full', previous: 'starter' });
-    const lines = tasksWidened.map(t => JSON.stringify({ key: `gpt-6.2-sol|gbrain-newest|${t}|0`, attempt_id: `gpt-6.2-sol|gbrain-newest|${t}|0#1`, tools: [{ session: 2, name: 'request_tools', args: { surface: 'full' }, result }] }));
+    const lines = FRONTIER.flatMap(model => [CONTROL_LABEL, 'gbrain-newest'].flatMap(arm => tasks.map(t => {
+      const id = `${model}|${arm}|${t}|0#1`;
+      if (id === skip) return [];
+      const wide = arm === 'gbrain-newest' && model === 'gpt-6.2-sol' && tasksWidened.includes(t);
+      return [JSON.stringify({ key: `${model}|${arm}|${t}|0`, attempt_id: id, tools: wide ? [{ session: 2, name: 'request_tools', args: { surface: 'full' }, result }] : [] })];
+    }).flat()));
     const p = join(dir, `${name}-transcripts.jsonl`);
     writeFileSync(p, lines.join('\n') + '\n');
     return `${name}=${p}`;
   }
-  function control(oldOk: Ok, newOk: Ok, fsOk: Ok, drop?: string, wide?: Record<string, string[]>) {
+  function control(oldOk: Ok, newOk: Ok, fsOk: Ok, drop?: string, wide?: Record<string, string[]>, opts: { only?: string[]; skip?: string; stray?: string } = {}) {
     const dir = mkdtempSync(join(tmpdir(), 'control-analysis-'));
     const out = join(dir, 'out.json');
-    const worlds = [world(dir, 'N1', oldOk, newOk, fsOk, drop), world(dir, 'N2', oldOk, newOk, fsOk)];
-    const trans = Object.entries(wide ?? {}).flatMap(([w, ts]) => ['--world-transcripts', widened(dir, w, ts)]);
+    const worlds = (opts.only ?? ['N1', 'N2']).map(w => world(dir, w, oldOk, newOk, fsOk, w === 'N1' ? drop : undefined, w === 'N1' ? opts.stray : undefined));
+    const trans = Object.entries(wide ?? {}).flatMap(([w, ts]) => ['--world-transcripts', widened(dir, w, ts, w === 'N1' ? opts.skip : undefined)]);
     const r = spawnSync('python3', [SCRIPT, '--look', 'control', '--old', CONTROL_LABEL, ...worlds.flatMap(w => ['--world', w]), ...trans, '--resamples', '1000', '--json', out], { encoding: 'utf8' });
     const json = r.status === 0 ? JSON.parse(readFileSync(out, 'utf8')) : null;
     rmSync(dir, { recursive: true, force: true });
@@ -178,6 +185,26 @@ describe('newest_analysis.py --look control', () => {
     expect(json.tool_calls['gbrain-newest|gpt-6.2-sol'].cells_widened_to_full).toBe(3);
     expect(json.without_widened_sessions.dropped_pairs).toBe(3);
     expect(json.without_widened_sessions.delta_old.cells).toBe(400 - 3);
+  });
+  test('a control run on only one of the planned worlds refuses (CONTROL_INCOMPLETE, exit 3)', () => {
+    const r = control(below(55), below(52), below(50), undefined, undefined, { only: ['N1'] });
+    expect(r.code).toBe(3);
+    expect(r.err).toContain('CONTROL_INCOMPLETE');
+  });
+  test('a sensitivity run whose transcripts lack an old- or newest-build attempt refuses (exit 3)', () => {
+    const r = control(below(55), below(52), below(50), undefined, { N1: ['H1-01'], N2: [] }, { skip: `claude-opus-5-5|${CONTROL_LABEL}|H2-03|0#1` });
+    expect(r.code).toBe(3);
+    expect(r.err).toContain('have no transcript');
+  });
+  test('a sensitivity run with transcripts for only one world refuses (exit 3)', () => {
+    const r = control(below(55), below(52), below(50), undefined, { N1: ['H1-01'] });
+    expect(r.code).toBe(3);
+    expect(r.err).toContain('transcripts for every world');
+  });
+  test('arms that cover different task ids at 100 cells each refuse (exit 3)', () => {
+    const r = control(below(55), below(52), below(50), undefined, undefined, { stray: `${CONTROL_LABEL}|gpt-6.2-sol|H3-07` });
+    expect(r.code).toBe(3);
+    expect(r.err).toContain('task pairs lack a cell');
   });
   test('a missing old-build cell refuses the control (CONTROL_INCOMPLETE, exit 3)', () => {
     const r = control(below(55), below(52), below(50), `${CONTROL_LABEL}|gpt-6.2-sol|H3-07`);

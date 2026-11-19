@@ -42,6 +42,7 @@ HIDDEN_SEARCH_OPTIONS = ('snippet_chars', 'mode', 'token_budget')
 HALF_A = [f'{fam}-{i:02d}' for fam in FAMILIES for i in range(1, 11)]
 # The old-build control's outcome rows (its preregistration, "What the result changes").
 CONTROL_ROWS = ('regression', 'smaller regression', 'newest improved', 'not a regression')
+CONTROL_WORLDS = ('N1', 'N2')
 INTERIM_Z, FINAL_Z, PLANNED_EFFECT, FUTILITY_CP, INFO_FRACTION = 2.80, 1.98, 5.4, 0.10, 0.5
 
 
@@ -233,6 +234,8 @@ def control(worlds, cost, O, G, F, B, S, transcripts=None):
     if old.tasks != nmo.tasks:
         raise ValueError('the old, newest and files arms do not cover the same tasks; the paired draws would differ')
     d_old, d_nmo = old.run(B, S), nmo.run(B, S)
+    if d_old['missing_pairs'] or d_nmo['missing_pairs']:
+        raise ValueError(f"{d_old['missing_pairs'] + d_nmo['missing_pairs']} task pairs lack a cell in one arm; the arms must cover the same task ids")
     row = control_row(d_old, d_nmo)
     out = {'look': 'control', 'resamples': B, 'seed': S, 'arms': {'old': O, 'newest': G, 'fs': F}, 'readers_pooled': FRONTIER,
            'delta_old': d_old, 'newest_minus_old': d_nmo, 'outcome_row': row, 'threshold_regression_at_or_above': HOLD_AT,
@@ -264,7 +267,16 @@ def control(worlds, cost, O, G, F, B, S, transcripts=None):
     out['first_table'][f'{O}|{PARTICLE}'] = 'not run in this control (the decision reads only the frontier readers)'
     if transcripts:
         out['tool_calls'], widened = {}, set()
+        if set(transcripts) != set(worlds):
+            raise ValueError(f'the widened-session sensitivity needs transcripts for every world: {sorted(set(worlds) - set(transcripts))} missing')
         for w, paths in sorted(transcripts.items()):
+            seen = set()
+            for p in paths:
+                with open(p) as f:
+                    seen |= {json.loads(line).get('attempt_id') for line in f if line.strip()}
+            lacking = {r['attempt_id'] for k, r in worlds[w].items() if k[0] in (O, G)} - seen
+            if lacking:
+                raise ValueError(f'{w}: {len(lacking)} old- or newest-build attempts have no transcript; the widened-session sensitivity needs them all')
             for label in (O, G):
                 stats, wid = tool_stats(paths, label, worlds_of={w: worlds[w]})
                 for k, v in stats.items():
@@ -351,6 +363,9 @@ def main(argv=None):
             cost[k] += v
     G, F, B, S = args.gbrain, args.fs, args.resamples, args.seed
     if args.look == 'control':
+        if set(worlds) != set(CONTROL_WORLDS):
+            print(f'STOP CONTROL_INCOMPLETE: the control reads exactly the worlds {list(CONTROL_WORLDS)}, got {sorted(worlds)}', file=sys.stderr)
+            return 3
         gaps = complete(worlds, [args.old, G, F], FRONTIER)
         if gaps:
             print(json.dumps({'refused': 'CONTROL_INCOMPLETE', 'missing_cells': gaps}), file=sys.stderr)
@@ -363,7 +378,11 @@ def main(argv=None):
         if set(wt) - set(worlds):
             print(f'--world-transcripts names worlds not given with --world: {sorted(set(wt) - set(worlds))}', file=sys.stderr)
             return 2
-        out = control(worlds, cost, args.old, G, F, B, S, {w: f.split(',') for w, f in wt.items()} or None)
+        try:
+            out = control(worlds, cost, args.old, G, F, B, S, {w: f.split(',') for w, f in wt.items()} or None)
+        except ValueError as e:
+            print(f'STOP CONTROL_INCOMPLETE: {e}', file=sys.stderr)
+            return 3
         if args.json:
             with open(args.json, 'w') as f:
                 f.write(json.dumps(out, indent=1, allow_nan=False))
