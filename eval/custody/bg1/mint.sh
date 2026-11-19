@@ -2,8 +2,8 @@
 # BG1 mint: plans, renders and checks the sealed changing-facts worlds in custody, one mint slot at a time, through
 # eval/custody/bg1/render.ts (docs/benchmarks/2026-11-09-changing-facts-battleground-preregistration.md).
 #
-#   eval/custody/bg1/mint.sh [--bg1c] --out <dir>/bg1-custody --seed-file <path>.bg1-seed --phrasing <path>.bg1-phrasing.json
-#       [--count <n>] [--start <slot>] [--target-tokens 200000] [--yield-gate-ack <approval id>]
+#   eval/custody/bg1/mint.sh [--bg1c [--tolerance 0.15]] --out <dir>/bg1-custody --seed-file <path>.bg1-seed
+#       --phrasing <path>.bg1-phrasing.json [--count <n>] [--start <slot>] [--target-tokens 200000] [--yield-gate-ack <id>]
 #       (--fake [--fake-break <slot>:<session>:<attempts>,...]
 #        | --budget-ledger <sqlite> --budget-run-id <id> --paid-window <unit> --window-cap-usd <n>)
 #   eval/custody/bg1/mint.sh --dev --out <dir> [--worlds bg1-dev-01,...] [--target-tokens 200000]
@@ -50,8 +50,18 @@
 #     measures from. An ack moves only a paused gate's count: the yield gate's when it is paused, the drop cap's when it
 #     is, so after a yield-gate ack the third drop in all still pauses, and after a drop-cap ack two early drops still
 #     do. Three drops past the latest acknowledged total pause it again, and a total below it refuses as above. The
-#     mint stops with exit 0 and a summary=kept line once 40 of BG1-C's slots hold a written world (render.ts writes a
-#     world only after every session passed its checks), checked before the first slot and after each one.
+#     mint stops with exit 0 and a summary=kept line once 40 of BG1-C's slots hold a world that passed validation,
+#     checked before the first slot and after each one.
+#   - BG1-C's validation and top-up (--bg1c only). The kept set is the first 40 slots that pass BG1's validation, so
+#     after each written or skipped slot mint.sh runs validate.ts --slot on it (every deterministic gate, at
+#     --target-tokens and --tolerance, default 0.15, and the duplicate gate against the earlier slots), which writes
+#     render/bg1-NNN.validation.json and prints one counts-only line. Only a slot whose record says pass is kept, so the
+#     mint goes on past a world that fails until 40 pass. A world that fails validation counts as a dropped world for
+#     both stops and is never rendered again (BG1's Amendment 6 stop counts validation failures too); the summary lines
+#     then end in invalid=<n>, this invocation's count. Once slot 96 is done with fewer than 40 kept, the mint pauses
+#     with exit 3 and a summary=paused reason=slots_exhausted line, for GBEV-3. --fake-break <slot>:length (render.ts)
+#     writes that slot's world over-long, the top-up drill. After slots 31 to 35, eval/custody/bg1/supply.ts checks
+#     their Gemini requests per kept world (R111).
 #   - One ledger. A relative --budget-ledger is resolved once, against the directory mint.sh starts in, before the window
 #     check, so the check, both proxies and render.ts all name the same ledger file. CDPATH is unset first, so a
 #     relative --out or --budget-ledger never resolves against a directory the caller's CDPATH names.
@@ -95,7 +105,7 @@ file_mode() { stat -c %a "$1" 2>/dev/null || stat -f %Lp "$1"; }
 owner_only() { case "$(file_mode "$1")" in 600|400) return 0 ;; *) return 1 ;; esac; }
 
 OUT="" SEED_FILE="${BG1_SEED_FILE:-}" PHRASING="${BG1_PHRASING_FILE:-}" COUNT="" START="" TARGET=200000 MODE=real BREAKS=""
-LEDGER="" RUN_ID="" WINDOW="" WINDOW_CAP="" ACK="" DEV=0 BG1C=0 SEALED_ONLY="" DEV_WORLDS="bg1-dev-01,bg1-dev-02,bg1-dev-03" DEV_ONLY=""
+LEDGER="" RUN_ID="" WINDOW="" WINDOW_CAP="" ACK="" DEV=0 BG1C=0 SEALED_ONLY="" DEV_WORLDS="bg1-dev-01,bg1-dev-02,bg1-dev-03" DEV_ONLY="" TOLERANCE=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --out) OUT="$2"; shift 2 ;;
@@ -107,6 +117,7 @@ while [ $# -gt 0 ]; do
     --count) COUNT="$2"; SEALED_ONLY+=" $1"; shift 2 ;;
     --start) START="$2"; SEALED_ONLY+=" $1"; shift 2 ;;
     --target-tokens) TARGET="$2"; shift 2 ;;
+    --tolerance) TOLERANCE="$2"; SEALED_ONLY+=" $1"; shift 2 ;;
     --fake) MODE=fake; shift ;;
     --fake-break) BREAKS="$2"; shift 2 ;;
     --budget-ledger) LEDGER="$2"; shift 2 ;;
@@ -134,6 +145,12 @@ fi
 # The set's slots and kept target: BG1's 1 to 30, or BG1-C's 31 to 96 with 40 kept (bg1-names.ts BG1C_FIRST_SLOT,
 # BG1C_LAST_SLOT and BG1C_N_FINAL).
 if [ "$BG1C" = 1 ]; then SET=BG1-C FIRST=31 LAST=96 KEPT_TARGET=40; else SET=BG1 FIRST=1 LAST=30 KEPT_TARGET=""; fi
+if [ "$BG1C" = 1 ]; then
+  TOLERANCE="${TOLERANCE:-0.15}"
+  [[ "$TOLERANCE" =~ ^0?\.[0-9]+$ && ! "$TOLERANCE" =~ ^0?\.0+$ ]] || die "--tolerance must be a decimal between 0 and 1"
+elif [ -n "$TOLERANCE" ]; then
+  die "--tolerance sets BG1-C's per-slot validation, so it needs --bg1c"
+fi
 START="${START:-$FIRST}"
 [[ "${COUNT:-0}" =~ ^[0-9]+$ && "$START" =~ ^[0-9]+$ ]] || die "--count and --start must be whole numbers"
 START=$((10#$START))
@@ -244,7 +261,7 @@ render_one() {
   [ -z "$LINE" ] || printf '%s\n' "$LINE"
 }
 
-WRITTEN=0 SKIPPED=0 DROPPED=0 DROPPED_EARLIER=0
+WRITTEN=0 SKIPPED=0 DROPPED=0 DROPPED_EARLIER=0 INVALID=0
 if [ "$DEV" = 1 ]; then
   RENDERED=()
   dev_report() {
@@ -277,8 +294,13 @@ if [ "$DEV" = 1 ]; then
   exit 0
 fi
 
-# True when world $1's render record under --out says dropped, whichever invocation dropped it.
-dropped_record() { grep -Eq '"status": ?"dropped"' "$OUT/render/$1.json" 2>/dev/null; }
+# True when world $1's render record under --out says dropped, whichever invocation dropped it, or (BG1-C) its
+# validation record says fail.
+dropped_record() {
+  grep -Eq '"status": ?"dropped"' "$OUT/render/$1.json" 2>/dev/null || { [ "$BG1C" = 1 ] && grep -Eq '"status": ?"fail"' "$OUT/render/$1.validation.json" 2>/dev/null; }
+}
+# BG1-C: " invalid=<n>" for summary lines once this invocation has a world that failed validation.
+invalid_tail() { [ "$INVALID" = 0 ] || printf ' invalid=%s' "$INVALID"; }
 # The dropped worlds among slots $1 to $2 that the render records under --out hold.
 drops_among() {
   local n=0 s
@@ -327,18 +349,27 @@ yield_gate() {
   local tail_counts
   tail_counts="$([ "$DROPPED_EARLIER" = 0 ] || printf ' dropped_earlier=%s' "$DROPPED_EARLIER")"
   if [ $((n - ACK_EARLY)) -ge 2 ]; then
-    say "summary=paused reason=yield_gate mode=$MODE written=$WRITTEN skipped=$SKIPPED dropped=$DROPPED last_slot=$1 early_drops=$n$([ ! -s "$ACKS" ] || printf ' acked_drops=%s' "$ACK_EARLY")$([ "$BG1C" = 0 ] || printf ' drops=%s' "$m")$tail_counts"
+    say "summary=paused reason=yield_gate mode=$MODE written=$WRITTEN skipped=$SKIPPED dropped=$DROPPED last_slot=$1 early_drops=$n$([ ! -s "$ACKS" ] || printf ' acked_drops=%s' "$ACK_EARLY")$([ "$BG1C" = 0 ] || printf ' drops=%s' "$m")$tail_counts$(invalid_tail)"
     exit 3
   fi
   [ "$BG1C" = 1 ] && [ $((m - ACK_DROPS)) -ge 3 ] || return 0
-  say "summary=paused reason=drop_cap mode=$MODE written=$WRITTEN skipped=$SKIPPED dropped=$DROPPED last_slot=$1 drops=$m$([ ! -s "$ACKS" ] || printf ' acked_total_drops=%s' "$ACK_DROPS")$tail_counts"
+  say "summary=paused reason=drop_cap mode=$MODE written=$WRITTEN skipped=$SKIPPED dropped=$DROPPED last_slot=$1 drops=$m$([ ! -s "$ACKS" ] || printf ' acked_total_drops=%s' "$ACK_DROPS")$tail_counts$(invalid_tail)"
   exit 3
 }
-# BG1-C: the slots among 31 to 96 holding a written world.
+# BG1-C: the slots among 31 to 96 whose validation record says pass.
 kept_worlds() {
   local n=0 s
-  for ((s = FIRST; s <= LAST; s++)); do [ ! -f "$OUT/set/worlds/$(printf 'bg1-%03d' "$s")/world.json" ] || n=$((n + 1)); done
+  for ((s = FIRST; s <= LAST; s++)); do ! grep -Eq '"status": ?"pass"' "$OUT/render/$(printf 'bg1-%03d' "$s").validation.json" 2>/dev/null || n=$((n + 1)); done
   printf '%s' "$n"
+}
+# BG1-C: validates slot $1's world (validate.ts --slot), which writes its validation record, and prints its line; a
+# fail adds to INVALID.
+validate_slot() {
+  local line rc=0
+  line="$(cd "$OUT" && env -i PATH=/usr/bin:/bin HOME="$HOME" LANG=C.UTF-8 TZ=UTC "$BUN" "$HERE/validate.ts" --bg1c --slot "$1" --set "$OUT/set" \
+    --seed-file "$SEED_FILE" --phrasing "$PHRASING" --target-tokens "$TARGET" --tolerance "$TOLERANCE")" || rc=$?
+  [ -z "$line" ] || printf '%s\n' "$line"
+  case "$rc" in 0) ;; 12) INVALID=$((INVALID + 1)) ;; *) exit "$rc" ;; esac
 }
 # BG1-C: stops the mint with exit 0 once KEPT_TARGET worlds are kept. $1 is the last slot.
 kept_stop() {
@@ -346,7 +377,7 @@ kept_stop() {
   local k
   k="$(kept_worlds)"
   [ "$k" -ge "$KEPT_TARGET" ] || return 0
-  say "summary=kept mode=$MODE kept=$k written=$WRITTEN skipped=$SKIPPED dropped=$DROPPED dropped_earlier=$DROPPED_EARLIER last_slot=$1"
+  say "summary=kept mode=$MODE kept=$k written=$WRITTEN skipped=$SKIPPED dropped=$DROPPED dropped_earlier=$DROPPED_EARLIER last_slot=$1$(invalid_tail)"
   exit 0
 }
 if [ -n "$ACK" ] && ! { [ -s "$ACKS" ] && tail -n 1 "$ACKS" | grep -Fq "{\"ack\":\"$ACK\","; }; then
@@ -384,8 +415,13 @@ for ((slot = START; slot < START + COUNT; slot++)); do
     11) DROPPED=$((DROPPED + 1)) ;;
     *) exit "$RC" ;;
   esac
+  [ "$BG1C" = 0 ] || [ "$RC" != 0 ] || validate_slot "$slot"
   yield_gate "$slot"
   kept_stop "$slot"
 done
 
-say "summary=mint mode=$MODE slots=$COUNT written=$WRITTEN skipped=$SKIPPED dropped=$DROPPED dropped_earlier=$DROPPED_EARLIER$([ -z "$KEPT_TARGET" ] || printf ' kept=%s' "$(kept_worlds)")"
+if [ "$BG1C" = 1 ] && [ "$END" -eq "$LAST" ]; then
+  say "summary=paused reason=slots_exhausted mode=$MODE kept=$(kept_worlds) written=$WRITTEN skipped=$SKIPPED dropped=$DROPPED dropped_earlier=$DROPPED_EARLIER last_slot=$LAST$(invalid_tail)"
+  exit 3
+fi
+say "summary=mint mode=$MODE slots=$COUNT written=$WRITTEN skipped=$SKIPPED dropped=$DROPPED dropped_earlier=$DROPPED_EARLIER$([ -z "$KEPT_TARGET" ] || printf ' kept=%s' "$(kept_worlds)")$(invalid_tail)"

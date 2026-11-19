@@ -6,6 +6,8 @@
  *
  *   bun eval/custody/bg1/validate.ts [--bg1c] --set <out>/set --seed-file <path>.bg1-seed --phrasing <path>.bg1-phrasing.json
  *       --report <path outside the set> [--target-tokens 200000] [--tolerance 0.15] [--n-final <n>]
+ *   bun eval/custody/bg1/validate.ts --bg1c --slot <31 to 96> --set <out>/set --seed-file <path>.bg1-seed
+ *       --phrasing <path>.bg1-phrasing.json [--target-tokens 200000] [--tolerance 0.15]
  *
  * Without --bg1c it validates BG1's set (slots 1 to 30); with it, BG1-C's (slots 31 to 96, mint.sh --bg1c;
  * docs/benchmarks/2026-11-19-changing-facts-confirmation-preregistration.md), whose --n-final is at most 40. Either way a
@@ -24,6 +26,12 @@
  * A slot that render.ts dropped (its <out>/render/<id>.json record) is listed with the gate "render". Kept: the first
  * --n-final passing worlds in slot order, or every passing world without it. Each world's entry records the SHA-256 of
  * its files as validated, so eval/custody/bg1/fill-manifest.ts can refuse files that changed since.
+ *
+ * --slot (BG1-C only) is the same gates for one written world, the duplicate gate against every earlier slot's world in
+ * the set, run by mint.sh --bg1c after each slot so its kept count is the validated count and the mint tops up past a
+ * world that fails (the kept set is the first 40 slots that pass validation). It writes a counts-only record,
+ * <out>/render/<id>.validation.json (status pass or fail, the failed gates, sessions and tokens), prints one line and
+ * exits 0 on a pass and 12 on a fail.
  */
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -105,6 +113,29 @@ export function validateSet(setDir: string, seedLine: string, phrasing: ReturnTy
     counts: { checked: results.length - renderDropped, passed: passing.length, failed: results.length - passing.length, render_dropped: renderDropped } };
 }
 
+/** One BG1-C slot's gates (--slot): validateWorld, then the duplicate gate against every earlier slot's world in the set. */
+export function validateSlot(argv: string[]): { pass: boolean; line: string } {
+  const flag = (name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
+  const set = flag('--set'), seedFile = flag('--seed-file'), phrasingFile = flag('--phrasing'), slot = Number(flag('--slot'));
+  if (!argv.includes('--bg1c')) throw new RenderRefusal('--slot is BG1-C\'s check of one minted world (mint.sh --bg1c), so it needs --bg1c');
+  if (!set || !seedFile || !phrasingFile) throw new RenderRefusal('usage: --bg1c --slot <n> --set <dir> --seed-file <path>.bg1-seed --phrasing <path>.bg1-phrasing.json [--target-tokens <n>] [--tolerance <x>]');
+  const id = BG1C_CONVERSATIONS.find(c => Number(c.slice('bg1-'.length)) === slot);
+  if (!id) throw new RenderRefusal('--slot must be one of BG1-C\'s slots, 31 to 96');
+  const targetTokens = Number(flag('--target-tokens') ?? BG1_TARGET_TOKENS), tolerance = Number(flag('--tolerance') ?? 0.15);
+  if (!(targetTokens >= 1000) || !(tolerance > 0 && tolerance < 1)) throw new RenderRefusal('--target-tokens must be at least 1000 and --tolerance between 0 and 1');
+  const worldsDir = join(resolve(set), 'worlds');
+  if (!existsSync(join(worldsDir, id, 'world.json'))) throw new RenderRefusal(`${id} has no written world to validate`);
+  const r = validateWorld(join(worldsDir, id), slot, readSeedLine(resolve(seedFile)), readPhrasing(resolve(phrasingFile)), { targetTokens, tolerance });
+  const hash = r.worldText === null ? null : sha256(r.worldText);
+  const earlier = BG1C_CONVERSATIONS.slice(0, BG1C_CONVERSATIONS.indexOf(id)).filter(e => WORLD_FILES.every(f => existsSync(join(worldsDir, e, f))));
+  if (hash !== null && earlier.some(e => sha256(readFileSync(join(worldsDir, e, 'world.json'))) === hash)) r.failed.push('duplicate');
+  const status = r.failed.length ? 'fail' : 'pass';
+  const record = join(dirname(resolve(set)), 'render', `${id}.validation.json`);
+  mkdirSync(dirname(record), { recursive: true });
+  writeFileSync(record, json({ schema: VALIDATION_SCHEMA, world: id, slot, status, failed: r.failed, sessions: r.sessions, tokens: r.tokens, target_tokens: targetTokens, tolerance, world_sha256: hash }), { mode: 0o600 });
+  return { pass: status === 'pass', line: `bg1-validate slot=${slot} world=${id} status=${status} gates=${r.failed.join(',') || 'none'} tokens=${r.tokens ?? 'none'}` };
+}
+
 function inside(child: string, parent: string): boolean {
   const rel = relative(parent, child);
   return rel === '' || (rel !== '..' && !rel.startsWith('../') && !isAbsolute(rel));
@@ -129,7 +160,12 @@ export function main(argv: string[]): { report: ValidationReport; line: string }
 }
 
 if (import.meta.main) {
-  try { console.log(main(process.argv.slice(2)).line); process.exit(0); } catch (error) {
+  try {
+    const argv = process.argv.slice(2);
+    if (argv.includes('--slot')) { const r = validateSlot(argv); console.log(r.line); process.exit(r.pass ? 0 : 12); }
+    console.log(main(argv).line);
+    process.exit(0);
+  } catch (error) {
     const e = error as Error;
     process.stderr.write(e instanceof RenderRefusal ? `bg1-validate refused: ${e.message}\n` : `bg1-validate error class=${e.name} sha256=${sha256(String(e.message)).slice(0, 16)}\n`);
     process.exit(e instanceof RenderRefusal ? 2 : 1);

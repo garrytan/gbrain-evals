@@ -6,7 +6,7 @@
  *
  *   bun eval/custody/bg1/render.ts --set <out>/set --seed-file <path>.bg1-seed --phrasing <path>.bg1-phrasing.json --slot <n>
  *       [--cache <dir>, default <set>/../render-cache] [--target-tokens 200000]
- *       (--fake [--fake-break <slot>:<session index>:<attempts>,...]
+ *       (--fake [--fake-break <slot>:<session index>:<attempts>,... or <slot>:length]
  *        | --paid-window <unit> --window-cap-usd <n> --budget-ledger <file> --budget-run-id <id>)
  *   bun eval/custody/bg1/render.ts --dev <bg1-dev-01 to bg1-dev-20> --set <out>/set [--cache <dir>] [--target-tokens 200000]
  *       (--fake [--fake-break <dev number>:<session index>:<attempts>,...] | --paid-window ... as above)
@@ -40,7 +40,9 @@
  *
  * Model calls sit behind one interface (Models), so tests inject fakes. --fake writes each session with the template
  * renderer and answers both checks "no extra claims", spending nothing; --fake-break makes the stand-in reply with no
- * turns for one session's first attempts (a regeneration and drop drill). Real mode needs the granted paid
+ * turns for one session's first attempts (a regeneration and drop drill), and <slot>:length writes that slot's world
+ * at FAKE_LENGTH_BREAK times the target, so every session passes here and the world fails validate.ts's length gate
+ * (BG1-C's top-up drill, mint.sh --bg1c). Real mode needs the granted paid
  * window, and refuses (exit 2) before any client exists without it or when a cap it would spend under is unknown or
  * above the window cap (eval/runner/paid-arm.ts). It reaches providers only through the metering proxies mint.sh
  * starts: BG1_GEMINI_READY and BG1_ANTHROPIC_READY name their ready files, each proxy holds only its own provider's
@@ -78,6 +80,8 @@ export const CHECK_MODELS = ['gemini:gemini-3.8-flash', 'anthropic:claude-haiku-
 export type CheckModel = typeof CHECK_MODELS[number];
 export const REGENERATIONS = 3;
 export const LENGTH_GATE = { min: 0.6, max: 1.5, from_target: 400 } as const;
+/** --fake-break <slot>:length: the target that slot's fake world is written to, as a multiple of --target-tokens. */
+export const FAKE_LENGTH_BREAK = 1.3;
 export const CONCURRENCY = 6;
 const CACHE_VERSION = 'bg1-render-cache/v3';
 /** A session whose target is at least this many tokens renders at high thinking from its first attempt; every re-render does too. */
@@ -414,7 +418,7 @@ export async function renderWorld(plan: WorldPlan, models: Models, opts: { targe
 
 // ─── custody inputs ──────────────────────────────────────────────────
 
-const ownerOnly = (path: string) => (statSync(path).mode & 0o077) === 0;
+export const ownerOnly = (path: string) => (statSync(path).mode & 0o077) === 0;
 
 /** The custody seed line: a *.bg1-seed file, owner-only, holding "bg1-seed-v1:" and 64 hex digits. */
 export function readSeedLine(path: string): string {
@@ -462,7 +466,7 @@ export function devPlan(id: string, worlds = BG1_DEV_WORLDS): WorldPlan {
 }
 
 /** True when path, or its nearest existing parent, sits inside a git work tree; refuses when git cannot say. */
-function insideCheckout(path: string): boolean {
+export function insideCheckout(path: string): boolean {
   let dir = resolve(path);
   while (!existsSync(dir)) dir = dirname(dir);
   const git = spawnSync('git', ['-C', dir, 'rev-parse', '--is-inside-work-tree'], { stdio: 'ignore' });
@@ -528,9 +532,11 @@ export async function main(argv: string[], env: Record<string, string | undefine
   const phrasing = dev === null ? readPhrasing(resolve(phrasingFile!)) : PUBLIC_PHRASING;
   const plan = dev === null ? sealedPlan(readSeedLine(resolve(seedFile!)), slot, phrasing) : devPlan(dev, devWorlds);
   const label = dev === null ? `slot=${slot} world=${id}` : `world=${id}`;
+  let renderTokens = targetTokens;
   if (!make) {
     const breaks = new Map<number, number>();
     for (const entry of (flag('--fake-break') ?? '').split(',').filter(Boolean)) {
+      if (entry === `${slot}:length`) { renderTokens = Math.round(targetTokens * FAKE_LENGTH_BREAK); continue; }
       const [s, i, n] = entry.split(':').map(Number);
       if (s === slot) breaks.set(i, n);
     }
@@ -542,7 +548,7 @@ export async function main(argv: string[], env: Record<string, string | undefine
     if (!existsSync(join(dir, 'plan.json')) || readFileSync(join(dir, 'plan.json'), 'utf8') !== planText) throw new RenderRefusal(`${id} is already written from a different plan`);
     return { status: 'skipped', line: `bg1-render ${label} status=skipped world_sha256=${sha256(readFileSync(join(dir, 'world.json'))).slice(0, 16)}` };
   }
-  const { world, stats } = await renderWorld(plan, make(plan), { targetTokens });
+  const { world, stats } = await renderWorld(plan, make(plan), { targetTokens: renderTokens });
   const failures = Object.entries(stats.failures).sort(([a], [b]) => (a < b ? -1 : 1)).map(([k, v]) => `${k}:${v}`).join(',') || 'none';
   const counts = `sessions=${stats.sessions} attempts=${stats.attempts} regenerated=${stats.regenerated} checks=${stats.checks} failures=${failures}`;
   const record = join(dev === null ? dirname(resolve(set)) : resolve(set), 'render', `${id}.json`);

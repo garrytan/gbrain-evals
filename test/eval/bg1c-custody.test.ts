@@ -49,8 +49,9 @@ function inputs(name: string) {
   chmodSync(seed, 0o600); chmodSync(phrasing, 0o600);
   return { dir, seed, phrasing };
 }
-const mint = (out: string, i: ReturnType<typeof inputs>, extra: string[], tokens = '4000') =>
-  run('bash', [MINT, '--out', out, '--seed-file', i.seed, '--phrasing', i.phrasing, '--target-tokens', tokens, ...extra]);
+/** A fake mint; a BG1-C one validates each slot (mint.sh --bg1c), so its worlds are rendered at a length the fake renderer meets. */
+const mint = (out: string, i: ReturnType<typeof inputs>, extra: string[], tokens = '30000') =>
+  run('bash', [MINT, '--out', out, '--seed-file', i.seed, '--phrasing', i.phrasing, '--target-tokens', tokens, ...(extra.includes('--bg1c') ? ['--tolerance', '0.25'] : []), ...extra]);
 const refusal = (r: ReturnType<typeof run>, text: string) => { expect(r.code).toBe(2); expect(r.out).toBe(''); expect(r.err).toContain(text); };
 const acks = (out: string) => readFileSync(join(out, 'render', 'yield-gate-acks.jsonl'), 'utf8').trim().split('\n').map(l => JSON.parse(l) as { ack: string; early_drops: number; drops: number });
 
@@ -179,7 +180,8 @@ describe('BG1-C\'s mint stops', () => {
   test('the mint stops with exit 0 at the 40th kept world, checked after each slot and before the first', () => {
     const j = inputs('bg1c-kept');
     const out = join(j.dir, 'bg1-custody-k40');
-    for (const slot of range(31, 69)) { mkdirSync(join(out, 'set', 'worlds', id(slot)), { recursive: true }); writeFileSync(join(out, 'set', 'worlds', id(slot), 'world.json'), '{}'); }
+    mkdirSync(join(out, 'render'), { recursive: true });
+    for (const slot of range(31, 69)) writeFileSync(join(out, 'render', `${id(slot)}.validation.json`), JSON.stringify({ world: id(slot), status: 'pass' }));
     const stop = mint(out, j, ['--fake', '--bg1c', '--start', '70']);
     expect(stop.code).toBe(0);
     expect(stop.out).toMatch(/^bg1-render slot=70 world=bg1-070 status=written /);
