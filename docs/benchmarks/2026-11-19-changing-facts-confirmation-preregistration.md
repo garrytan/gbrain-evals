@@ -544,9 +544,12 @@ bound, row, arm or budget line.
 - **The judge check passed.** On 148 stratified public dev answers, gemini-3.8-flash and claude-opus-5-5 agreed on all
   148: kappa 1.0 against a line of 0.6, and 74 agreed in each class against a line of 15. So Opus's grades of
   gpt-6.2-sol's answers count.
-- **Still to come from custody, before the phrasing check (run order step 5):** the seed commitment, the phrasing file's
-  hash and the counts from the custody seed check. A dated commit adds them under this heading once the custody host is
-  free.
+- **From custody (2026-11-19, before the phrasing check, run order step 5).** The custody seed check passed on BG1's
+  seed and private phrasing: all 30 of BG1's questions files re-derive to the SHA-256 its filled manifest lists, and all
+  60 files the manifest lists match their bytes. The seed commitment, the SHA-256 of `gbrain-evals bg1-c seed commitment
+  v1|<seed line>|nonce=<nonce>`, is `a3df666b1bb6ad9bc889f7e6c53112d07ad7b78d045ecec9a77378b37f8ce875`; the 32-byte
+  nonce stays beside the seed in custody. The phrasing file's SHA-256 is
+  `6f287faec771e51f29d4599304998fa8bda77d0c4844e8b72dd8c301ca415656`.
 
 ### Amendment 5 (2026-11-19): launch amendment A, part 2: control characters in rendered chats
 
@@ -571,6 +574,10 @@ kept set is still the first 40 worlds that pass BG1's validation.
   sessions and worlds that hold any, and the questions that cite those sessions, and it prints counts and world ids
   only. The counts go under this heading as a descriptive note. They don't change BG1's outputs or verdict, and they
   don't enter BG1-C's verdict.
+- **BG1's count (2026-11-19, from custody).** `bg1c-checks.ts controls` over BG1's 30 sealed worlds found 5 U+0000
+  characters and no other control character, in 2 sessions of 2 worlds (bg1-010 and bg1-025). No BG1 question cites
+  either session. BG1's records don't say whether gbrain refused those two sessions; if it did, no scored question lost
+  its evidence.
 
 ## Disclosures
 
