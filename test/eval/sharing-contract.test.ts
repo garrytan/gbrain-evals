@@ -30,6 +30,10 @@ import { softDeleteSource, restoreSource } from '../../node_modules/gbrain/src/c
 import { importFromContent } from '../../node_modules/gbrain/src/core/import-file.ts';
 import { runAccess } from '../../node_modules/gbrain/src/commands/access.ts';
 import { runConfig } from '../../node_modules/gbrain/src/commands/config.ts';
+import { mountAdminAccess } from '../../node_modules/gbrain/src/commands/serve-http-access.ts';
+import { createRequireAdmin } from '../../node_modules/gbrain/src/commands/serve-http-admin-api.ts';
+import express from 'express';
+import cookieParser from 'cookie-parser';
 import { emptyHome, withEnv } from '../../node_modules/gbrain/test/helpers/with-env.ts';
 import { archivedPages, conversation, staticReader } from '../../node_modules/gbrain/test/helpers/transcript-archive.ts';
 
@@ -44,12 +48,13 @@ const TOO_OLD = older(GBRAIN_VERSION, MIN_GBRAIN);
 if (TOO_OLD) console.warn('sharing contract skipped: the pinned gbrain is v' + GBRAIN_VERSION + ', and this test needs v' + MIN_GBRAIN + ' or later');
 
 /**
- * Pages in an archived source stay hidden from every page read for API tokens from gbrain v0.60.744.0 (#9795). On an
- * older build the archived-source items are left out with this reason.
+ * Pages in an archived source stay hidden from every page read for API tokens, and the owner admin page re-scopes the
+ * archive before it adds a member, from gbrain v0.60.744.0 (#9795). On an older build the archived-source items and the
+ * admin-route scenario are left out with this reason.
  */
 const ARCHIVE_FIX_GBRAIN = '0.60.744.0';
 const ARCHIVE_FIX = !older(GBRAIN_VERSION, ARCHIVE_FIX_GBRAIN);
-if (!TOO_OLD && !ARCHIVE_FIX) console.warn('sharing contract: the archived-source items are skipped: the pinned gbrain is v' + GBRAIN_VERSION + ', and they need v' + ARCHIVE_FIX_GBRAIN + ' or later');
+if (!TOO_OLD && !ARCHIVE_FIX) console.warn('sharing contract: the archived-source items and the admin-route scenario are skipped: the pinned gbrain is v' + GBRAIN_VERSION + ', and they need v' + ARCHIVE_FIX_GBRAIN + ' or later');
 
 const OWNER = 'alice-example';
 const OTHER = 'bob-example';
@@ -300,6 +305,23 @@ const quiet = async <T>(fn: () => Promise<T>): Promise<T> => {
 };
 const access = (b: Brain, argv: string[]) => inHome(b, () => quiet(() => runAccess(b.engine, argv)));
 const archiveRun = (b: Brain) => inHome(b, () => runTranscriptArchive(b.engine, { mode: 'run', readers: [staticReader('openclaw', [])], now: new Date('2026-10-05T00:00:00Z') }));
+/** Add a member the way the owner's admin page does: POST /admin/api/access/members on gbrain's own admin routes. */
+async function adminAddMember(b: Brain, id: string): Promise<void> {
+  const app = express();
+  app.use(cookieParser());
+  mountAdminAccess(app, createRequireAdmin(new Map([['owner-session', Date.now() + 3_600_000]])), b.engine);
+  const server = app.listen(0, '127.0.0.1');
+  await new Promise<void>(r => server.once('listening', () => r()));
+  try {
+    const res = await fetch('http://127.0.0.1:' + (server.address() as { port: number }).port + '/admin/api/access/members', { method: 'POST',
+      headers: { 'content-type': 'application/json', cookie: 'gbrain_admin=owner-session' }, body: JSON.stringify({ action: 'add', id }) });
+    if (res.status !== 200) throw new Error('admin member add answered ' + res.status + ' ' + await res.text());
+  } finally {
+    server.closeAllConnections();
+    await new Promise<void>(r => server.close(() => r()));
+  }
+}
+
 async function threeOwnerClients(b: Brain): Promise<void> {
   await mint(b, 'owner_muse', OWNER);
   await mint(b, 'owner_grok', OWNER);
@@ -321,8 +343,10 @@ export const SCENARIOS: Scenario[] = [
     change: async b => { await access(b, ['serves', 'several', '--members', OWNER + ',' + OTHER, '--yes']); await archiveRun(b); } },
   { name: "MCP-client count: three of the owner's own clients in 30 days, no command", shared: 'audience', change: threeOwnerClients },
   { name: "MCP-client count: three of the owner's own clients, then the next archive run", shared: 'audience', change: async b => { await threeOwnerClients(b); await archiveRun(b); } },
-  { name: 'MCP-client count, then a second member joins over the admin path (addMember, no CLI)', shared: true, mintOther: true,
+  { name: 'MCP-client count, then a second member joins by the addMember library call, no hook', shared: true, mintOther: true,
     change: async b => { await threeOwnerClients(b); await addMember(b.engine, OTHER); } },
+  ...(ARCHIVE_FIX ? [{ name: 'MCP-client count, then a second member joins on the owner admin page (POST /admin/api/access/members)', shared: true, mintOther: true,
+    change: async (b: Brain) => { await threeOwnerClients(b); await adminAddMember(b, OTHER); } }] : []),
   { name: 'shared with no owner, then gbrain access owner set alice-example', ownerSet: false, shared: true, mintOther: true,
     change: async b => { await access(b, ['member', 'add', OTHER]); await access(b, ['owner', 'set', OWNER]); } },
   { name: 'shared, then back to personal (member disable, brain.audience personal, archive run)', shared: false, otherEnabledAfter: false,
