@@ -6,6 +6,9 @@
  * (docs/guides/access-designations.md, docs/guides/conversation-archive.md): the owner's own callers never lose a read,
  * and nobody else ever gains one. Run it against another gbrain build by pointing node_modules/gbrain at that checkout.
  * A cell that fails names the scenario, phase, caller, content and read path, and AD_REPORT_DIR=<dir> writes every cell.
+ * Every count it reports is on PGLite: no Postgres brain runs here. Source config goes in through gbrain's
+ * executeRawJsonb, because a JSON.stringify'd ::jsonb parameter is stored as a JSON string on Postgres, and setup fails
+ * if the owner-only source doesn't read back owner_only: true.
  */
 import { afterAll, describe, expect, test } from 'bun:test';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -13,7 +16,7 @@ import { join } from 'node:path';
 import { PGLiteEngine } from '../../node_modules/gbrain/src/core/pglite-engine.ts';
 import { configureGateway, resetGateway, __setEmbedTransportForTests } from '../../node_modules/gbrain/src/core/ai/gateway.ts';
 import { GBrainOAuthProvider } from '../../node_modules/gbrain/src/core/oauth-provider.ts';
-import { sqlQueryForEngine } from '../../node_modules/gbrain/src/core/sql-query.ts';
+import { executeRawJsonb, sqlQueryForEngine } from '../../node_modules/gbrain/src/core/sql-query.ts';
 import { mintLegacyToken } from '../../node_modules/gbrain/src/core/token-mint.ts';
 import { noGrantFederatedScope, localFederatedSourceIds } from '../../node_modules/gbrain/src/core/source-resolver.ts';
 import { dispatchToolCall } from '../../node_modules/gbrain/src/mcp/dispatch.ts';
@@ -30,6 +33,10 @@ import { softDeleteSource, restoreSource } from '../../node_modules/gbrain/src/c
 import { importFromContent } from '../../node_modules/gbrain/src/core/import-file.ts';
 import { runAccess } from '../../node_modules/gbrain/src/commands/access.ts';
 import { runConfig } from '../../node_modules/gbrain/src/commands/config.ts';
+import { mountAdminAccess } from '../../node_modules/gbrain/src/commands/serve-http-access.ts';
+import { createRequireAdmin } from '../../node_modules/gbrain/src/commands/serve-http-admin-api.ts';
+import express from 'express';
+import cookieParser from 'cookie-parser';
 import { emptyHome, withEnv } from '../../node_modules/gbrain/test/helpers/with-env.ts';
 import { archivedPages, conversation, staticReader } from '../../node_modules/gbrain/test/helpers/transcript-archive.ts';
 
@@ -43,10 +50,19 @@ const older = (a: string, b: string) => { const x = a.split('.').map(Number), y 
 const TOO_OLD = older(GBRAIN_VERSION, MIN_GBRAIN);
 if (TOO_OLD) console.warn('sharing contract skipped: the pinned gbrain is v' + GBRAIN_VERSION + ', and this test needs v' + MIN_GBRAIN + ' or later');
 
+/**
+ * Pages in an archived source stay hidden from every page read for API tokens, and the owner admin page re-scopes the
+ * archive before it adds a member, from gbrain v0.60.744.0 (#9795). On an older build the archived-source items and the
+ * admin-route scenario are left out with this reason.
+ */
+const ARCHIVE_FIX_GBRAIN = '0.60.744.0';
+const ARCHIVE_FIX = !older(GBRAIN_VERSION, ARCHIVE_FIX_GBRAIN);
+if (!TOO_OLD && !ARCHIVE_FIX) console.warn('sharing contract: the archived-source items and the admin-route scenario are skipped: the pinned gbrain is v' + GBRAIN_VERSION + ', and they need v' + ARCHIVE_FIX_GBRAIN + ' or later');
+
 const OWNER = 'alice-example';
 const OTHER = 'bob-example';
 const DIMS = 1536;
-const GRANT = ['default', 'conversations', 'owner-notes'];
+const GRANT = ['default', 'conversations', 'owner-notes', ...(ARCHIVE_FIX ? ['old-project'] : [])];
 
 function vectorFor(text: string): number[] {
   const v = new Array<number>(DIMS).fill(0);
@@ -68,6 +84,10 @@ const ITEMS: Item[] = [
   page('owner_listed', 'page kept to the owner (readable_by owner)', 'default', 'notes/adlistedqzx', 'adlistedqzx harbor', 'marklistedjtq'),
   page('owner_source', 'page in an owner-only source', 'owner-notes', 'notes/advaultqzx', 'advaultqzx harbor', 'markvaultjtq'),
   page('archive', 'conversation archive page written while personal', 'conversations', '', 'adarchiveqzx harbor', 'markarchivejtq'),
+  ...(ARCHIVE_FIX ? [
+    page('archived_source', 'page in an archived source', 'old-project', 'notes/adoldqzx', 'adoldqzx harbor', 'markoldjtq'),
+    page('archived_private', 'private page in an archived source', 'old-project', 'notes/adoldprivateqzx', 'adoldprivateqzx harbor', 'markoldprivatejtq'),
+  ] : []),
   { id: 'world_fact', label: 'public fact', kind: 'fact', source: 'default', slug: 'notes/adworldqzx', query: 'adfactworldqzx ledger', mark: 'factworldhmz' },
   { id: 'private_fact', label: 'private fact', kind: 'fact', source: 'default', slug: 'notes/adworldqzx', query: 'adfactprivateqzx ledger', mark: 'factprivatehmz' },
 ];
@@ -113,13 +133,15 @@ function argsFor(path: ReadPath, item: Item, slug: string): Record<string, unkno
  * 'may' = the contract allows either (an unbound token reading world content in its grace, personal-era archive pages
  * on a personal brain, where gbrain treats every caller as the owner, or on a shared brain while gbrain reports
  * archive_rescope_pending, the documented wait in conversation-archive.md "When a personal brain becomes shared"; the owner's own member before any owner is set,
- * which reads what lists it but gets no owner relaxation;).
+ * which reads what lists it but gets no owner relaxation; a page in an archived source, which the owner hid on purpose
+ * and multi-source-brains.md keeps from every reader but the owner).
  */
 type Expect = 'must' | 'never' | 'may';
 function contract(caller: CallerKind, item: Item, state: State, path: ReadPath): Expect {
   const shared = state.shared;
   if (caller === 'unauthenticated' || caller === 'disabled') return 'never';
   const scoped = !path.endsWith('_unscoped');
+  if (item.id === 'archived_source' || item.id === 'archived_private') return caller === 'local' || caller === 'owner' ? 'may' : 'never';
   if (caller === 'local' || caller === 'owner') return scoped ? 'must' : 'may';
   if (caller === 'owner_unset') return ['private', 'owner_source', 'private_fact'].includes(item.id) ? 'never' : 'may';
   if (item.id === 'world' || item.id === 'world_fact') return caller === 'member' && scoped ? 'must' : 'may';
@@ -144,10 +166,15 @@ async function makeBrain(opts: { ownerSet: boolean; otherDisabled?: boolean }): 
   await engine.setConfig('maintenance.auto', 'false');
   await engine.setConfig(ARCHIVE_TIMEZONE_KEY, 'UTC');
   await setArchiveEnabled(engine, true);
-  await engine.executeRaw("INSERT INTO sources (id, name, config) VALUES ('owner-notes', 'owner-notes', $1::jsonb)", [JSON.stringify({ owner_only: true, federated: true })]);
+  const sources: Array<[string, Record<string, boolean>]> = [['owner-notes', { owner_only: true, federated: true }], ...(ARCHIVE_FIX ? [['old-project', { federated: true }] as [string, Record<string, boolean>]] : [])];
+  for (const [id, config] of sources) {
+    await executeRawJsonb(engine, 'INSERT INTO sources (id, name, config) VALUES ($1, $1, $2::jsonb) ON CONFLICT (id) DO NOTHING', [id], [config]);
+  }
+  const [ownerOnly] = await engine.executeRaw("SELECT config->>'owner_only' AS owner_only FROM sources WHERE id = 'owner-notes'") as Array<{ owner_only: string | null }>;
+  if (ownerOnly?.owner_only !== 'true') throw new Error('setup: owner-notes did not store owner_only: true (config->>\'owner_only\' read ' + ownerOnly?.owner_only + ')');
   const body = (it: Item, fm: string) => '---\ntype: note\ntitle: ' + it.id + '\n' + fm + '---\n# ' + it.id + '\n\nPlanning notes ' + it.query + ' ' + it.mark + '.\n';
   for (const it of ITEMS.filter(i => i.kind === 'page' && i.id !== 'archive')) {
-    const fm = it.id === 'private' ? 'visibility: private\n' : it.id === 'owner_listed' ? 'readable_by: [' + OWNER + ']\n' : '';
+    const fm = it.id === 'private' || it.id === 'archived_private' ? 'visibility: private\n' : it.id === 'owner_listed' ? 'readable_by: [' + OWNER + ']\n' : '';
     await importFromContent(engine, it.slug, body(it, fm), { sourceId: it.source });
   }
   await addMember(engine, OWNER);
@@ -271,7 +298,7 @@ async function matrix(b: Brain, scenario: string, phase: 'before' | 'after', sta
 function ownerLosses(before: Cell[], after: Cell[]): Cell[] {
   const key = (c: Cell) => c.caller + '|' + c.item + '|' + c.path;
   const had = new Set(before.filter(c => c.read && (c.caller === 'local' || c.caller.startsWith('owner_'))).map(key));
-  return after.filter(c => had.has(key(c)) && !c.read);
+  return after.filter(c => had.has(key(c)) && !c.read && !c.item.startsWith('archived_'));
 }
 
 /** shared: 'audience' takes the brain's state from classifyBrainAudience after the change (the client-count trigger). */
@@ -285,6 +312,23 @@ const quiet = async <T>(fn: () => Promise<T>): Promise<T> => {
 };
 const access = (b: Brain, argv: string[]) => inHome(b, () => quiet(() => runAccess(b.engine, argv)));
 const archiveRun = (b: Brain) => inHome(b, () => runTranscriptArchive(b.engine, { mode: 'run', readers: [staticReader('openclaw', [])], now: new Date('2026-10-05T00:00:00Z') }));
+/** Add a member the way the owner's admin page does: POST /admin/api/access/members on gbrain's own admin routes. */
+async function adminAddMember(b: Brain, id: string): Promise<void> {
+  const app = express();
+  app.use(cookieParser());
+  mountAdminAccess(app, createRequireAdmin(new Map([['owner-session', Date.now() + 3_600_000]])), b.engine);
+  const server = app.listen(0, '127.0.0.1');
+  await new Promise<void>(r => server.once('listening', () => r()));
+  try {
+    const res = await fetch('http://127.0.0.1:' + (server.address() as { port: number }).port + '/admin/api/access/members', { method: 'POST',
+      headers: { 'content-type': 'application/json', cookie: 'gbrain_admin=owner-session' }, body: JSON.stringify({ action: 'add', id }) });
+    if (res.status !== 200) throw new Error('admin member add answered ' + res.status + ' ' + await res.text());
+  } finally {
+    server.closeAllConnections();
+    await new Promise<void>(r => server.close(() => r()));
+  }
+}
+
 async function threeOwnerClients(b: Brain): Promise<void> {
   await mint(b, 'owner_muse', OWNER);
   await mint(b, 'owner_grok', OWNER);
@@ -306,8 +350,10 @@ export const SCENARIOS: Scenario[] = [
     change: async b => { await access(b, ['serves', 'several', '--members', OWNER + ',' + OTHER, '--yes']); await archiveRun(b); } },
   { name: "MCP-client count: three of the owner's own clients in 30 days, no command", shared: 'audience', change: threeOwnerClients },
   { name: "MCP-client count: three of the owner's own clients, then the next archive run", shared: 'audience', change: async b => { await threeOwnerClients(b); await archiveRun(b); } },
-  { name: 'MCP-client count, then a second member joins over the admin path (addMember, no CLI)', shared: true, mintOther: true,
+  { name: 'MCP-client count, then a second member joins by the addMember library call, no hook', shared: true, mintOther: true,
     change: async b => { await threeOwnerClients(b); await addMember(b.engine, OTHER); } },
+  ...(ARCHIVE_FIX ? [{ name: 'MCP-client count, then a second member joins on the owner admin page (POST /admin/api/access/members)', shared: true, mintOther: true,
+    change: async (b: Brain) => { await threeOwnerClients(b); await adminAddMember(b, OTHER); } }] : []),
   { name: 'shared with no owner, then gbrain access owner set alice-example', ownerSet: false, shared: true, mintOther: true,
     change: async b => { await access(b, ['member', 'add', OTHER]); await access(b, ['owner', 'set', OWNER]); } },
   { name: 'shared, then back to personal (member disable, brain.audience personal, archive run)', shared: false, otherEnabledAfter: false,
@@ -349,6 +395,7 @@ for (const s of SCENARIOS) {
       offHostFetches.length = 0;
       const b = await makeBrain({ ownerSet: s.ownerSet ?? true, otherDisabled: s.otherDisabled });
       try {
+        if (ARCHIVE_FIX) await softDeleteSource(b.engine, 'old-project');
         const before = await matrix(b, s.name, 'before', { shared: false, ownerSet: s.ownerSet ?? true, otherEnabled: true, rescopePending: false });
         await s.change(b);
         if (s.mintOther && !b.tokens.member_http) await mint(b, 'member_http', OTHER);
