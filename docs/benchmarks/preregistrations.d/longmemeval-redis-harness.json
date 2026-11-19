@@ -25,16 +25,20 @@
           "then": "keep autocut on and close the lead"
         },
         {
-          "if": "a frontier reader's Wilson interval on off reaches README's 93.6%",
+          "if": "a frontier reader closes the gap to README's 93.6% on off (point estimate at least 92.6% and Wilson interval including 93.6%)",
           "then": "the gap was the reader: reader work goes ahead of retrieval work, starting with gbrain's own answer path on that reader"
         },
         {
-          "if": "no frontier reader reaches 93.6% on off and its oracle interval also stays below 93.6%",
+          "if": "both frontier readers fall short of 93.6% on off (interval upper end below it) and each one's oracle also falls short",
           "then": "the one-shot answer prompt is the limit: reader-prompt work (a notes step) goes ahead of retrieval"
         },
         {
-          "if": "no frontier reader reaches 93.6% on off but oracle does and oracle minus off passes its Holm-adjusted test",
+          "if": "a frontier reader falls short on off but its oracle closes the gap and oracle minus off passes its Holm-adjusted test",
           "then": "retrieval is the gap: retrieval work goes ahead of reader work, starting where off missed an answer turn"
+        },
+        {
+          "if": "any other reader-gap combination, or a result not distinguishable at this sample size",
+          "then": "no reordering of reader and retrieval work; the results name which rows were not distinguishable"
         },
         {
           "if": "gpt-4o's task-averaged interval on off lies above, includes or lies below Redis's 86.14%",
@@ -93,7 +97,7 @@
               "claude-opus-5-5",
               "particle:particle-1"
             ],
-            "labelled_outputs": 60,
+            "labelled_outputs": 40,
             "kappa_min": 0.6
           },
           {
@@ -102,7 +106,7 @@
               "gpt-4o-2024-08-06",
               "gpt-6.2-sol"
             ],
-            "labelled_outputs": 60,
+            "labelled_outputs": 40,
             "kappa_min": 0.6
           }
         ],

@@ -15,7 +15,7 @@ dataset loader, answer prompt, judge prompts and metric. On that harness:
 1. **Where does gbrain land against Redis's published table,** with Redis's own reader and judge (gpt-4o)?
 2. **Does turning off `query`'s autocut change how many questions gbrain answers right?** Autocut trims a search's
    result list where the relevance scores drop sharply. It is on by default for agents.
-3. **Do frontier readers close the gap** between gbrain's ~88% on this harness (quick look) and the 93.6% (468 of 500)
+3. **Do frontier readers close the gap** between gbrain read by gpt-4o on this harness and the 93.6% (468 of 500)
    that README shows for gbrain on LongMemEval? That figure used a different reader (Sonnet 5.5 taking notes) and
    different retrieval settings ([report](2026-10-07-longmemeval-w10a-current-pin.md)). If they do, the reader was the
    gap. If they don't, the oracle arm below says whether retrieval or the harness's one-shot answer prompt is.
@@ -120,7 +120,7 @@ Whole conversations are rendered with the harness's `session_text` in every arm,
 **oracle** differ only in which conversations they include. `off` and `on` differ only in autocut.
 
 **Why autocut gets its own clean pair.** In the quick look, the arm with autocut on also used gbrain's other defaults
-(limit 25) and gave the reader passages instead of whole conversations. Its 12-point drop mixed three changes.
+(limit 25) and gave the reader passages instead of whole conversations, so its drop mixed three changes.
 `agent-default` keeps that bundle as a descriptive bridge to the quick look; `off` against `on` isolates autocut.
 
 **R44's plain arm.** R44 asks every head-to-head to include the same reader, tasks and harness without the thing
@@ -133,13 +133,22 @@ arm, run for every reader.
 |---|---|---|
 | `gpt-4o-2024-08-06` | all five | OpenAI chat completions, temperature 0, 2,048 output tokens. The link to Redis's table, not a model under test. |
 | `claude-opus-5-5` | off, on, full, oracle | Anthropic messages, system prompt and question as the harness builds them, temperature 0, default effort, 8,192 output tokens |
-| `gpt-6.2-sol` | off, on, full, oracle | OpenAI chat completions, default reasoning effort, 8,192 output tokens, no temperature and no `n` (the model refuses both) |
-| `particle-1` | off, on, full, oracle | Particle chat completions (`https://api.particle.ai/v1`), `reasoning_effort: high`, 16,000 output tokens |
+| `gpt-6.2-sol` | off, on, full, oracle | OpenAI chat completions, default reasoning effort, 16,000 output tokens, no temperature and no `n` (the model refuses both) |
+| `particle-1` | off, on, full, oracle | Particle chat completions (`https://api.particle.ai/v1`), `reasoning_effort: high`, 32,000 output tokens (its default cap) |
 
 claude-opus-5-5 and gpt-6.2-sol are the newest frontier Opus and GPT; particle-1 is the primary low-cost model
 (CLAUDE.md, "Choose models"). `bun scripts/model-freshness.ts` runs again before the first counted unit, and a newer
 frontier model goes in by amendment. Every reader is a plain API call with the harness's prompt, so Garry's rule that
 Sol runs in Codex CLI (R110, for agent harnesses) doesn't apply.
+
+**Messages are built once, by the vendored Python.** A results-branch script writes every reader's and judge's
+messages per arm as JSONL from the vendored `build_prompt`, `session_text` and `build_judge_prompt`; the request
+builders only wrap those bytes in each provider's request shape. Nothing re-implements Redis's prompts.
+
+**Context window.** Every **full** prompt is counted with each reader's own token count before any reader spend. A
+prompt that can't fit a reader's window with its output limit is not sent; it is recorded as `does_not_fit`, scored
+wrong for that reader (a no-memory system that can't read the history can't answer), and counted on its own line. By
+the o200k count the longest Small history is about 106,000 tokens, inside every planned reader's window.
 
 **What we changed from Redis's answer request**, all in the request wrapper and none in the prompt: gpt-4o is pinned
 to its dated snapshot (the harness sends the alias, which resolved to the same snapshot in the quick look); every
@@ -164,33 +173,43 @@ yes/no scorer.
 | claude-opus-5-5 | gpt-4o-2024-08-06 | gpt-6.2-astra |
 | particle-1 | gpt-4o-2024-08-06 | gpt-6.2-astra |
 
-- **Protocol judge:** Redis's request exactly (temperature 0, seed 42, 10 output tokens). It grades its own family's
-  answers on the gpt-4o and Sol rows, as it does in Redis's table, so its numbers are the comparable view and never
-  decide anything here.
+- **Protocol judge:** Redis's request exactly (temperature 0, seed 42, 10 output tokens), parsed with Redis's scorer.
+  It grades its own family's answers on the gpt-4o and Sol rows, as it does in Redis's table. It decides only the two
+  rows that compare with published numbers judged the same way (Redis's 86.14% and README's 93.6%); every other
+  decision rests on the cross-family judges.
 - **Cross-family judges** follow R78: GPT-6 Astra for Claude rows and Claude Opus 5.5 for GPT rows; particle-1 rows go
   to Astra, and particle-1 never judges. gpt-6.2-astra runs at low reasoning effort with 2,000 output tokens;
   claude-opus-5-5 at temperature 0 with 64 output tokens. If the API doesn't serve gpt-6.2-astra at the judge check,
   `gpt-6-astra` replaces it by amendment before any counted unit.
+- **Parsing.** Redis's scorer counts a reply as yes if "yes" appears anywhere in it, which is fine for 10-token replies
+  but fragile for longer ones. Cross-family replies are parsed strictly: the first word of the reply, lowercased and
+  stripped of punctuation, must be yes or no. Both parses are recorded, and the 1% unparsable gate below applies to the
+  strict one.
 - A judge reply that parses as neither yes nor no counts as unjudged. A cell is complete only when both judges have
   graded every answer, and the results count unparsable replies by judge and arm (expected near 0).
 
 ### Judge check (R78), before any number counts
 
 1. **Known-answer controls.** From 50 Small questions outside the pilot's 25 (40 answerable, spread over the six
-   types, and 10 abstention questions, drawn with seed `lme-redis-harness`), four answers each with a known verdict: the gold answer (yes), another question's gold
-   answer (no), "I don't have enough information to answer that." (no, or yes on an abstention question) and the gold
-   answer inside a hedge such as "I think it was <gold>, though I'm not certain." (yes). 200 items.
-2. **Real answers, labelled.** 60 answers from the pilots, sampled across every arm and reader (at least 3 per reader
-   and arm), labelled yes or no against the gold answer and the official rubric before any judge's verdict on them is
-   read. The labeller is this experiment's agent (claude-opus-5-5); the results say so, and the controls are the
-   check that doesn't depend on that labeller.
-3. **Gate.** Each judge's numbers count only if its Cohen's kappa is at least 0.6 on both sets (each at least 40
-   items) and at most 1% of its replies are unparsable. A cross-family judge that fails stops the experiment before
-   any counted unit and goes to GBEV-3. If the protocol judge fails, its view is descriptive only and the Redis link is
-   reported as such.
+   types, and 10 abstention questions, drawn with seed `lme-redis-harness`), four answers each with a known verdict:
+   the gold answer (yes), another question's gold answer (no), "I don't have enough information to answer that." (no,
+   or yes on an abstention question) and the gold answer inside a hedge such as "I think it was <gold>, though I'm not
+   certain." (yes). 200 items. Every judge grades all of them.
+2. **Real answers, labelled.** From the pilots, for each cross-family judge, at least 40 answers from the rows it
+   grades (Astra: Opus and particle-1 rows; Opus: gpt-4o and Sol rows), spread over every arm, with at least 15 that the
+   protocol judge marked wrong where the pilot has that many. The labeller is `gemini-4-argon`, a third model family
+   that neither judges nor reads here, given the question, the gold answer or rubric and the official prompt's
+   criterion, and blind to every judge's verdict. The labeller is recorded per item. The protocol judge is checked on
+   the union of both sets. The results keep one caveat: the labels come from a model, and the controls
+   are the check that doesn't depend on any model's labels.
+3. **Gate.** Each judge's numbers count only if its Cohen's kappa is at least 0.6 on the controls and on its real set
+   (each at least 40 items) and at most 1% of its replies are unparsable. The results show each confusion matrix and
+   the raw agreement beside kappa, because kappa moves a lot when most answers are right. A cross-family judge that
+   fails stops the experiment before any counted unit and goes to GBEV-3. If the protocol judge fails, its view is
+   descriptive only and the two reference rows are reported as such.
 4. **Read per arm.** On the counted answers, each arm's rate of disagreement between the two judges, with a Wilson 95%
-   interval. Where an arm's rate is more than twice the pooled rate, 20 of its disagreements are read and labelled,
-   and the results report which judge was right.
+   interval. Where an arm's rate is more than twice the pooled rate, 20 of its disagreements go to the same labeller,
+   and the results report which judge it sided with.
 
 ## Metrics and denominators
 
@@ -200,12 +219,25 @@ yes/no scorer.
 - **Overall accuracy under the protocol judge**: the figure compared with 93.6%, which was overall accuracy under
   gpt-4o.
 - **Evidence delivered, at turn level** (GBRA-108's requirement after GBEV-112): for each answerable question and arm,
-  whether every turn LongMemEval marks `has_answer` appears in the reader's prompt (its first 80 characters after
-  whitespace and case normalisation), and how many such turns appear. Reported for every arm, in the pilot and in the
+  whether every turn LongMemEval marks `has_answer` appears in the reader's prompt, and how many such turns appear. A
+  turn's text is first normalised the way the loader does (supplementary-plane characters such as emoji removed), then
+  whitespace and case are normalised on both sides. A turn counts as delivered when its first 80 normalised characters
+  appear in one conversation or one passage of the prompt; for passages, a turn split across a passage boundary counts
+  as delivered when any 80-character window of it appears, and the results count how often that rule was needed. Reported for every arm, in the pilot and in the
   results. For the arms that deliver whole conversations it equals conversation-level delivery unless a turn was lost,
   and the results report both. For **agent-default**, which delivers passages, it is the one that counts. Autocut
   drops whole conversations, never parts of one, so for **off** against **on** the two levels agree; the results
   check that they do.
+- **One request per distinct context.** Where autocut doesn't cut below 5 conversations, **off** and **on** give the
+  reader byte-identical prompts. Each reader then answers that prompt once, and the answer and its judgments are scored
+  for both arms, so the pair differs only where the contexts differ. The same holds for any two arms whose prompts
+  hash the same. Before any reader spend, the share of the 500 questions whose **off** and **on** contexts differ is
+  recorded: it is the largest effect the primary can show. If that share times the pilot's rate of answer changes on
+  differing contexts is below the smallest detectable difference, that goes to GBEV-3 under R97 before counted units.
+- **Degraded retrieval.** A question whose **off**, **on** or **agent-default** query ran without the reranker or with
+  a degraded stage is retrieved again once, before any reader sees it. If it is still degraded, it is scored as given,
+  counted, and left out of the primary pair, because autocut reads the reranker's scores and does nothing without them.
+  The results check that **on**'s result list is a prefix of **off**'s on every clean question.
 - **Failures.** A reader refusal, an empty answer or a truncated answer is an answer and is judged. A provider safety
   stop is reported on its own line and judged as given (R38). A reader or judge transport error that survives the
   lane's one retry leaves the question unscored in that cell; every such drop is counted, and a comparison needs 98%
@@ -225,9 +257,9 @@ yes/no scorer.
 - **Estimate:** the paired difference in points with a 95% interval from a paired bootstrap (10,000 resamples, seed
   `lme-redis-harness`).
 - **Smallest detectable difference** at 80% power: 2.82 × √(d / 500) × 100 points, where d is the share of questions
-  on which the two arms disagree. At an assumed d of 8% it is **3.6 points** (3.1 at 6%, 4.0 at 10%). The quick look's
-  confounded pair disagreed on 12% of 50 questions; the clean pair should disagree less. The pilot's Opus d is recorded
-  before counted units with the resulting figure, and the test runs at n = 500 whatever it shows.
+  on which the two arms' answers disagree. At an assumed d of 8% it is **3.6 points** (3.1 at 6%, 4.0 at 10%). The
+  pilot's Opus d, scaled by the recorded share of questions whose contexts differ, is recorded before counted units with
+  the resulting figure, and the test runs at n = 500 whatever it shows.
 - **Smaller than that:** a difference whose interval includes 0 is "no measurable difference at this sample size,"
   with the smallest detectable difference named. It is never called "no effect."
 
@@ -237,21 +269,26 @@ Each is a paired difference under the cross-family judge, with the same test, in
 
 1. off minus on, for gpt-6.2-sol, gpt-4o and particle-1;
 2. off minus full, for each of the four readers (gbrain against no memory, R44);
-3. oracle minus off, for each of the four readers (what retrieval costs each reader against perfect evidence);
-4. claude-opus-5-5 minus gpt-4o and gpt-6.2-sol minus gpt-4o, on off (what the frontier reader adds).
+3. oracle minus off, for each of the four readers (what retrieval costs each reader against perfect evidence).
 
-Holm's correction runs over these 13 tests at alpha 0.05. The smallest detectable difference for each is computed the
+Holm's correction runs over these 11 tests at alpha 0.05. The smallest detectable difference for each is computed the
 same way from its own pilot discordance and reported.
 
 ### The two fixed references
 
 - **Redis's 86.14%:** gpt-4o on **off**, task-averaged under the protocol judge, with a 95% interval from a bootstrap
   over questions stratified by type (10,000 resamples, same seed). One sample against a fixed published number.
-- **README's 93.6%:** each frontier reader's overall accuracy on **off** under the protocol judge, with a Wilson 95%
-  interval. The interval half-width at 90% is about 2.6 points.
+- **README's 93.6%:** each frontier reader's overall accuracy on **off** (and on **oracle**) under the protocol judge,
+  with a Wilson 95% interval (about 2.6 points either side at 90%). A reader **closes the gap** when its point estimate
+  is at least 92.6% (463 of 500, within 5 questions of 468) and its interval includes 93.6%; it **falls short** when
+  its interval's upper end is below 93.6%; anything else is "not distinguishable at this sample size".
 
 ### Descriptive
 
+- **Reader against reader** (claude-opus-5-5 minus gpt-4o, gpt-6.2-sol minus gpt-4o, on **off**): the two members of
+  each pair are graded by different cross-family judges, so a difference in judge leniency would count as reader skill.
+  These pairs are shown under the protocol judge (one judge for both members) and under the cross-family judges, with
+  intervals, as description only.
 - **agent-default** for gpt-4o, beside **off** and **on**: the agent's out-of-the-box number and its turn-level
   delivery.
 - Per question type, per reader and arm, with Wilson intervals (single types are too small to test).
@@ -265,10 +302,11 @@ same way from its own pilot discordance and reported.
 | Autocut | **off wins clearly:** the primary test passes its bound with **off** ahead, gpt-6.2-sol's estimate points the same way, and **off** delivers every answer turn on more questions than **on** | A default change goes to Garry through GBRA-108: turn `query`'s autocut off for memory questions (or stop it cutting below a fixed floor), with the paired numbers and the turn-level delivery counts |
 | Autocut | **No measurable difference** (the interval includes 0) | No default change. GBRA-108 hears that autocut at limit 10 costs less than the stated detectable difference on this set, and that the quick look's 12-point drop came with the limit and passage changes (agent-default shows how much) |
 | Autocut | **on wins clearly** | Autocut stays on, the lead is closed, and the results say autocut also helped the reader |
-| Reader gap | **A frontier reader closes it:** its Wilson interval on **off** reaches 93.6% | The gap was the reader. Reader work goes ahead of retrieval work for this benchmark: the next experiment tests gbrain's own answer path with that reader, and README can show this harness's frontier number beside 93.6% |
-| Reader gap | **Neither closes it, and the reader's oracle interval also stays below 93.6%** | Even perfect evidence doesn't reach 93.6% under this one-shot prompt, so the harness's answer prompt is the limit. Reader-prompt work (a notes step) goes ahead of retrieval; no retrieval experiment is opened on this evidence |
-| Reader gap | **Neither closes it on off, but oracle reaches 93.6% and oracle minus off passes its Holm-adjusted test** for that reader | Retrieval is the gap for frontier readers. Retrieval work goes ahead of reader work (the reverse of the quick look's reading), starting with the questions where **off** missed an answer turn |
-| Redis link | gpt-4o's task-averaged interval on **off** lies above 86.14% | README's comparison section gets a matched-harness row ("above Redis's published 86.1% on Redis's own harness, same reader and judge"), with no ranking word. An upstream adapter offer goes to GBEV-3 for the claim check; nothing goes upstream without its go |
+| Reader gap | **A frontier reader closes it** on **off** (as defined under "The two fixed references") | The gap was the reader. Reader work goes ahead of retrieval work for this benchmark: the next experiment tests gbrain's own answer path with that reader, and README can show this harness's frontier number beside 93.6% |
+| Reader gap | **Both fall short on off, and each one's oracle also falls short** | Even perfect evidence doesn't reach 93.6% under this one-shot prompt, so the harness's answer prompt is the limit. Reader-prompt work (a notes step) goes ahead of retrieval; no retrieval experiment is opened on this evidence |
+| Reader gap | **A reader falls short on off, but its oracle closes the gap and oracle minus off passes its Holm-adjusted test** | Retrieval is the gap for frontier readers. Retrieval work goes ahead of reader work (the reverse of the quick look's reading), starting with the questions where **off** missed an answer turn |
+| Reader gap | Any other combination (for example oracle closes the gap but oracle minus off doesn't pass, or a result is not distinguishable) | Undetermined: no reordering of reader and retrieval work, and the results say which rows were not distinguishable |
+| Redis link | gpt-4o's task-averaged interval on **off** lies above 86.14% | README's comparison section gets a matched-harness row that names the system by kind, as README does ("above a published memory server's result on that server's own open harness, same reader and judge"), with no ranking word; [comparisons and their protocols](../comparison-systems.md) names Redis and the source. An upstream adapter offer goes to GBEV-3 for the claim check; nothing goes upstream without its go |
 | Redis link | The interval includes 86.14% | The row says level on the same harness, with the interval |
 | Redis link | The interval lies below 86.14% | The row says behind, plainly, and the result gets one "Why null?" pass (R48) |
 | No memory | For a reader, **full** beats **off** (Holm-adjusted) | README says so for that reader, and gbrain's case on this set rests on cost; a "Why null?" pass reads where retrieval lost |
@@ -289,8 +327,12 @@ most a tenth of that arm's planned spend. It shows, on that arm's own outputs:
   real-answer labels for the judge check above.
 - **Units can be supplied at the planned rate:** the batch for each reader finishes inside the provider's window, the
   first batch per provider confirms the batch discount in the ledger, and particle-1 sustains the planned concurrency.
-  The pilot also runs Redis's own runner end to end (gpt-4o, live gbrain store) on 3 questions and checks that its
-  messages match ours byte for byte.
+- **Answers are whole:** at most 1% of each reader's pilot answers per arm are empty or cut off by the output limit. A
+  reader that fails gets a higher limit by amendment before counted units; truncations are reported per cell in the
+  results.
+- **Parity with Redis's runner, keyless:** Redis's own runner runs end to end on 3 questions with the live gbrain store
+  and its OpenAI client pointed at a local keyless fake that records each request and answers a fixed string. The
+  recorded messages must equal the messages our builders send for those questions byte for byte. No provider is called.
 
 An arm that fails is fixed, or left out and reported as left out. The pilot's per-reader, per-arm disagreement between
 **off** and **on** sets the recorded smallest detectable differences.
@@ -303,11 +345,14 @@ both judgments for the first 250 questions in the seed-42 order (a random half, 
 - **What is looked at:** the primary comparison only.
 - **Bounds:** O'Brien-Fleming at two-sided alpha 0.05: stop for a difference at |z| ≥ 2.80 either way; the final look
   uses |z| ≥ 1.98.
-- **Futility:** stop when the conditional power to detect a 3.6-point difference (or the recorded figure) at the final
-  look, given the interim data, falls below 10%.
+- **Futility:** stop when the conditional power at the final look falls below 10%, computed by the B-value method
+  under the planned alternative: a true difference equal to the recorded smallest detectable difference (planned 3.6
+  points), at the recorded discordance.
 - **What stopping changes:** only the **on** arm stops (for every reader), because the other arms answer the other
   questions, which have no interim test. A stopped primary is reported as stopped at the interim look, with its estimate
-  marked as possibly overstated. No other look at the primary comparison is taken.
+  marked as possibly overstated. The **on**-arm secondaries (off minus on for the other readers) are then reported at
+  n = 250 with their smallest detectable differences recomputed for that size. No other look at the primary comparison
+  is taken.
 
 ## Budget
 
@@ -327,8 +372,9 @@ Each item is a dated commit on the results branch with a keyless test, before an
   store for the vendored runner.
 - The context freezer: one brain per question, the three `query` calls, whole-conversation and passage rendering, the
   **full** and **oracle** contexts, SHA-256 per context, the retrieval record and turn-level delivery.
-- Request builders for the four readers and the two judges over the vendored prompts, and arm manifests for the batch
-  lane.
+- The message writer (vendored Python, JSONL per arm), request builders that wrap those messages for the four readers
+  and the judges, and arm manifests for the batch lane.
+- A dataset check that verifies both files' sha256 before every load, whatever the cache holds.
 - The judge check's control builder and kappa report.
 - The analysis: accuracy, task-averaged accuracy, the paired tests, Holm, the interim look and the tables.
 - `gpt-6.2-astra` registered in the ledger's price table, and `FRONTIER_READERS` moved to gpt-6.2-sol if the runner
@@ -350,6 +396,7 @@ Appended as a dated amendment before the first counted unit:
 - The results-branch commit the counted run uses.
 - The judge check's kappas, unparsable rates and per-set counts.
 - The pilot's per-arm checks, its discordances and the smallest detectable differences they give.
+- The share of questions whose **off** and **on** contexts differ, and the count of `does_not_fit` prompts per reader.
 
 ## What it can and can't claim
 
@@ -358,7 +405,9 @@ Redis's published number; whether autocut at limit 10 changes accuracy on Opus 5
 difference; how far four readers get with gbrain's retrieval, with the whole history, and with perfect evidence.
 
 **It can't say:** that gbrain ranks above or below Redis (one published aggregate, no paired outputs), anything about
-held-out data, or anything about the reranker, embeddings or other gbrain settings it doesn't vary.
+held-out data, or anything about the reranker, embeddings or other gbrain settings it doesn't vary. Running Redis's own
+open memory server through the same harness would give a paired comparison; it is a possible follow-up with its own
+plan and decision, not part of this one.
 
 ## Amendments
 

@@ -39,7 +39,8 @@
       "path": "pyproject.toml",
       "upstream_path": "agent-memory-benchmark/pyproject.toml",
       "upstream_blob": "3c063303f03bcb8a01e73987490d363fc0ed2437",
-      "changed": true
+      "changed": true,
+      "local_sha256": "d122f7ae684d971e0bcafbddda31e84ab56fb096dc8548acca3815288e6a5bf7"
     },
     {
       "path": "src/agent_memory_benchmark/__init__.py",
@@ -99,7 +100,8 @@
       "path": "src/agent_memory_benchmark/datasets/longmemeval.py",
       "upstream_path": "agent-memory-benchmark/src/agent_memory_benchmark/datasets/longmemeval.py",
       "upstream_blob": "3edefe03829d210a8acaca6b15e971bd2568f283",
-      "changed": true
+      "changed": true,
+      "local_sha256": "1848713cfc0ea5b1094a4bce2d8d57d90ceb430e522530f8b710d10da0719694"
     },
     {
       "path": "src/agent_memory_benchmark/datasets/models.py",
@@ -111,7 +113,8 @@
       "path": "src/agent_memory_benchmark/memory/__init__.py",
       "upstream_path": "agent-memory-benchmark/src/agent_memory_benchmark/memory/__init__.py",
       "upstream_blob": "965952625b6f68e3a275df4ef5a89573d931ce15",
-      "changed": true
+      "changed": true,
+      "local_sha256": "7c3e98a41794a17be8d632a61f08c5b11e92ea8731c18d01601dad863e4bd0d0"
     },
     {
       "path": "src/agent_memory_benchmark/memory/base.py",
@@ -165,7 +168,8 @@
       "path": "tests/test_memory_base.py",
       "upstream_path": "agent-memory-benchmark/tests/test_memory_base.py",
       "upstream_blob": "53a8c83af32388b7e354eb328d48c25574203d82",
-      "changed": true
+      "changed": true,
+      "local_sha256": "8d4c443165e6f4672cb941705bc68d01680d3020f886c070dd7b1381b8d44b5b"
     },
     {
       "path": "tests/test_models_and_runner.py",

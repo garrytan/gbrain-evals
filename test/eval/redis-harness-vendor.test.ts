@@ -8,7 +8,7 @@ const ROOT = join(import.meta.dir, '../..');
 const DIR = join(ROOT, 'eval/redis-agent-memory-benchmark');
 const LOCAL = new Set(['README.md', 'vendor.json', 'uv.lock']);
 
-interface VendoredFile { path: string; upstream_path: string; upstream_blob: string; changed: boolean; header?: boolean }
+interface VendoredFile { path: string; upstream_path: string; upstream_blob: string; changed: boolean; header?: boolean; local_sha256?: string }
 const vendor = JSON.parse(readFileSync(join(DIR, 'vendor.json'), 'utf8')) as {
   upstream: { commit: string };
   reference: { commit: string; files: VendoredFile[] };
@@ -43,6 +43,15 @@ describe('vendored Redis LongMemEval harness', () => {
       const bytes = readFileSync(join(DIR, f.path));
       const body = f.header === false ? bytes : bytes.subarray(bytes.indexOf(0x0a) + 1);
       expect([f.path, gitBlob(body)]).toEqual([f.path, f.upstream_blob]);
+    }
+  });
+
+  test('files marked changed match the bytes recorded when they were changed', () => {
+    const changed = all.filter(f => f.changed);
+    expect(changed.length).toBeGreaterThan(0);
+    for (const f of changed) {
+      const sha = createHash('sha256').update(readFileSync(join(DIR, f.path))).digest('hex');
+      expect([f.path, sha]).toEqual([f.path, f.local_sha256]);
     }
   });
 
