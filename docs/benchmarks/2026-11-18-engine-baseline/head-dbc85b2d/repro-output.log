@@ -1,0 +1,7 @@
+  Setting up brain schema (v321)...
+  316 migration(s) applied
+pglite OK {"status":"imported","chunks":1,"embedded":1}
+  Setting up brain schema (v321)...
+  316 migration(s) applied
+postgres OK {"status":"imported","chunks":1,"embedded":1}
+rust OK {"status":"imported","chunks":1,"embedded":1}

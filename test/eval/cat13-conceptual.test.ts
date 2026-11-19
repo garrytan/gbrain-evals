@@ -829,4 +829,21 @@ describe('cat13 storage engine for the gbrain arm', () => {
     await expect(runCat13({ stubEmbed: true, only: 'gbrain', embedCache: join(reportsDir, 'c.sqlite'), targetProbes: 30, reportsDir, quiet: true }))
       .rejects.toThrow(/does not apply to --stub-embed/);
   });
+
+  test('--warm-passes re-times the same probes unscored; quality and first-pass latency stay as they were', async () => {
+    expect(parseCat13Argv(['--warm-passes', '2'], {}).warmPasses).toBe(2);
+    expect(() => parseCat13Argv(['--warm-passes', '11'], {})).toThrow(/0 to 10/);
+    const { probes, gradesByQuery } = syntheticProbes();
+    const ranking = { p1: ['concepts/a', 'concepts/n'], p2: ['concepts/b'] };
+    const cold = await scoreAdapter(new FixedAdapter(ranking), [], probes, gradesByQuery, new ProbeAccounting(probes.length));
+    const acc = new ProbeAccounting(probes.length);
+    const r = await scoreAdapter(new FixedAdapter(ranking), [], probes, gradesByQuery, acc, { warmPasses: 2 });
+    expect(cold.warm).toBeUndefined();
+    expect(cold.per_query[0]!.warm_latency_ms).toBeUndefined();
+    expect(r.ndcg5).toBe(cold.ndcg5);
+    expect(r.warm).toMatchObject({ passes: 2, top5_changed: 0, failures: 0 });
+    expect(r.per_query.every(q => q.warm_latency_ms?.length === 2)).toBe(true);
+    // Repeat queries are not scored: the accounting still counts each probe once.
+    expect(acc.summary().n_scored).toBe(2);
+  });
 });

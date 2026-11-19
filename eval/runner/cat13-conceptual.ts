@@ -971,6 +971,8 @@ export interface AdapterScore {
   wallMs: number;
   /** Ingest vs query-phase ledger spend and per-query latency. */
   phase?: PhaseStats;
+  /** Present only with --warm-passes N > 0. Quality numbers always come from the first (cold) pass. */
+  warm?: WarmPassStats;
   /** Tuning / held-out rollups when a ConceptSplit was supplied. */
   splits?: {
     seed: number;
@@ -998,6 +1000,8 @@ export interface AdapterScore {
     error?: string;
     /** Wall time of the adapter's query() call for this probe (ms, Date.now resolution); absent when it threw. */
     latency_ms?: number;
+    /** One entry per --warm-passes repeat of this probe (ms); absent without the flag. */
+    warm_latency_ms?: number[];
     search_observation?: SearchObservation;
   }>;
 }
@@ -1047,6 +1051,17 @@ export interface ScoreAdapterOptions {
   gold?: GoldStore<Cat13Gold>;
   /** Cumulative ledger spend of this run; read around init and the query loop to split ingest from query cost. */
   spentUsd?: () => number;
+  /** Extra unscored passes over the same probes on the same brain, timed only (--warm-passes). */
+  warmPasses?: number;
+}
+
+/** Latency of the unscored repeat passes (--warm-passes): the same probes, in order, on the already-queried brain. */
+export interface WarmPassStats {
+  passes: number;
+  query_ms: PhaseStats['query_ms'];
+  /** Repeat queries whose top-5 page ids differed from the scored first pass. */
+  top5_changed: number;
+  failures: number;
 }
 
 /** Query-phase cost and latency of one adapter run (live runs only for cost). */
@@ -1164,11 +1179,37 @@ export async function scoreAdapter(
   const phase = phaseStats(latencies, { start: spentStart, afterInit: spentAfterInit, end: opts.spentUsd?.() ?? null }, probes.length);
   const hooks = adapter as unknown as EchoingAdapter;
   const resolvedConfig = typeof hooks.resolvedConfig === 'function' ? hooks.resolvedConfig(state) : undefined;
-  const observed = typeof hooks.observedStats === 'function' ? hooks.observedStats(state) : undefined;
+  const observedLive = typeof hooks.observedStats === 'function' ? hooks.observedStats(state) : undefined;
+  // Snapshot before any warm pass, so repeat queries never add to the first pass's observations.
+  const observed = observedLive && opts.warmPasses ? structuredClone(observedLive) : observedLive;
   const observationsById = new Map(observed?.search_observations?.map(o => [o.query_id, o]));
   for (const row of perQuery) {
     const observation = observationsById.get(row.id);
     if (observation) row.search_observation = observation;
+  }
+
+  let warm: WarmPassStats | undefined;
+  if (opts.warmPasses) {
+    const warmLatencies: number[] = [];
+    let changed = 0;
+    let failures = 0;
+    for (let pass = 0; pass < opts.warmPasses; pass++) {
+      for (const [index, probe] of probes.entries()) {
+        const row = perQuery[index]!;
+        try {
+          const tq = Date.now();
+          const results: RankedDoc[] = await adapter.query(sanitizeQuery(probe.q), state);
+          const ms = Date.now() - tq;
+          warmLatencies.push(ms);
+          (row.warm_latency_ms ??= []).push(ms);
+          const ids = results.slice(0, TOP_K).map(r => r.page_id).join('\n');
+          if (ids !== row.ranked_pages.map(r => r.page_id).join('\n')) changed += 1;
+        } catch {
+          failures += 1;
+        }
+      }
+    }
+    warm = { passes: opts.warmPasses, query_ms: phaseStats(warmLatencies, { start: null, afterInit: null, end: null }, 0).query_ms, top5_changed: changed, failures };
   }
 
   if (adapter.teardown) await adapter.teardown(state);
@@ -1183,6 +1224,7 @@ export async function scoreAdapter(
     probesScored: probes.length,
     wallMs: Date.now() - t0,
     phase,
+    ...(warm ? { warm } : {}),
     per_query: perQuery,
     ...(opts.split ? {
       splits: {
@@ -1314,6 +1356,8 @@ export interface Cat13Options {
    * and different engines see byte-identical vectors; misses are paid through the budget ledger as before.
    */
   embedCache?: string;
+  /** Unscored repeat passes timed after the scored pass, for warm-cache latency (--warm-passes N, 0-10). */
+  warmPasses?: number;
 }
 
 export const DEFAULT_TUNING_CONCEPTS = 20;
@@ -1370,6 +1414,12 @@ export function parseCat13Argv(
       case '--preregistration': opts.preregistration = value(); break;
       case '--pg-url': opts.pgUrl = value(); break;
       case '--embed-cache': opts.embedCache = value(); break;
+      case '--warm-passes': {
+        const n = parseNonNegativeInt(value(), '--warm-passes');
+        if (n > 10) throw new Error(`--warm-passes must be 0 to 10, got ${n}`);
+        opts.warmPasses = n;
+        break;
+      }
       case '--estimate-usd': {
         const raw = value();
         const n = Number(raw);
@@ -1390,7 +1440,7 @@ export function parseCat13Argv(
           + `--expansion-variant-budget <b> --keyword-arm-confidence-floor <f|off> `
           + `--search-pin <search.key>=<value> (repeatable; generic pass-through — gbrain ignores unknown search.* keys silently) `
           + `--tuning-concepts <N> --holdout-concepts <M> --seed <N> --budget-usd <dollars> --budget-ledger <path> --program-cap-usd <dollars> `
-          + `--pg-url <admin url> --embed-cache <sqlite path> (engine: GBRAIN_EVAL_ENGINE=pglite|postgres|rust)`,
+          + `--pg-url <admin url> --embed-cache <sqlite path> --warm-passes <N> (engine: GBRAIN_EVAL_ENGINE=pglite|postgres|rust)`,
         );
     }
   }
@@ -1483,6 +1533,7 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
       ...(opts.engine === 'postgres' ? { postgres_admin_url_host: opts.pgUrl ? new URL(opts.pgUrl).host : null } : {}),
     },
     embed_cache: opts.embedCache ? { path: opts.embedCache, stats: embedCache?.stats ?? null } : null,
+    warm_passes: opts.warmPasses ?? 0,
   });
   let embedCache: EmbeddingCache | null = null;
 
@@ -1642,7 +1693,7 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
     log(`- ${a.name} ...`);
     try {
       const run = paid?.run;
-      const r = await scoreAdapter(a, pages, probes, gradesByQuery, acc, { initConfig, split, gold, ...(run ? { spentUsd: () => run.summary().actual_usd } : {}) });
+      const r = await scoreAdapter(a, pages, probes, gradesByQuery, acc, { initConfig, split, gold, ...(opts.warmPasses ? { warmPasses: opts.warmPasses } : {}), ...(run ? { spentUsd: () => run.summary().actual_usd } : {}) });
       if (GBRAIN_BACKED_ADAPTERS.has(a.name)) {
         const failures = observedSearchFailures(r.observed, probes.length);
         if (failures.length) {
@@ -1848,6 +1899,7 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
       p1_strict: r.p1_strict,
       wall_ms: r.wallMs,
       ...(r.phase ? { phase: r.phase } : {}),
+      ...(r.warm ? { warm: r.warm } : {}),
       tuning: subsetRow(r.splits?.tuning),
       holdout: subsetRow(r.splits?.holdout),
     })),

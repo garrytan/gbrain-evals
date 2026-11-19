@@ -1,10 +1,43 @@
-# Engine baseline on cat13: PGLite and Postgres match exactly; the Rust engine cannot run the bench yet
+# Engine baseline on cat13: PGLite and Postgres match exactly; the Rust engine imports now but cannot run vector search yet
 
-**On the cat13 conceptual-recall bench (548 probes, world-v1), gbrain returns the same top 5 on PGLite and on Postgres for every probe in every run: nDCG@5 55.7%, P@5 27.4%, R@5 79.5%, MRR@5 67.5%. Postgres in Docker answers about 4.7 times faster at p50 (43 ms against 201 ms). The Rust store engine refuses the first embedded import, so it has no quality or latency number yet.**
+- **We learned that PGLite and Postgres return the same top 5 on every probe, on two gbrain builds.** You should treat a change between these two engines as quality-neutral on this bench and pick by latency and operations: Postgres in Docker answered about 4.5 times faster at p50 here (45 ms against 204 ms at gbrain dbc85b2d).
+- **We learned that the Rust engine now imports and embeds the corpus, but serves no vector search.** You should not compare it with the other engines until its `searchVector` member exists. Without it, hybrid search runs keyword-only and cat13 marks every Rust run invalid (548 of 548 probes lose the vector arm).
+
+**On the cat13 conceptual-recall bench (548 probes, world-v1), gbrain returns the same top 5 on PGLite and on Postgres for every probe in every run: nDCG@5 55.7%, P@5 27.4%, R@5 79.5%, MRR@5 67.5%. Postgres in Docker answers about 4.7 times faster at p50 (43 ms against 201 ms). On the first build (gbrain 6ad51d6b) the Rust store engine refused the first embedded import; on the second (dbc85b2d) it imports but has no vector search, so it still has no valid quality or latency number.**
 
 This is the first baseline that runs one gbrain build on three storage engines with the same corpus, probes, gold, vectors and machine. It is a descriptive baseline, not a claim that one engine is better.
 
-## Results
+## Second build: gbrain dbc85b2d (Rust import fix)
+
+gbrain `rust-engine/lane6-import-embedding-column` at dbc85b2d19111666a4f26b8f1052d86741a622e4 (0.60.737.0) lets the Rust engine's `upsertChunks` accept the `embeddingColumn` option. We rebuilt the addon at that commit and ran, serially and interleaved: rust r1, PGLite control, rust r2, Postgres control, rust r3. Every run used the same corpus, probes, gold, cache, search pins and machine as the first build, plus `--warm-passes 1` (after the scored pass, the same 548 probes run again on the same brain, timed but not scored). All 1576 embedding lookups per run hit the shared cache (1028 as before, plus 548 for the repeat pass), with zero misses and zero paid requests, so every run searched byte-identical vectors.
+
+**The one-page repro now imports on all three engines.** PGLite, Postgres and Rust each report `imported`, 1 chunk, 1 embedded ([head-dbc85b2d/repro-output.log](head-dbc85b2d/repro-output.log)).
+
+| Engine at dbc85b2d | Runs | nDCG@5 | P@5 (graded) | R@5 | MRR@5 | cold p50 / p95 ms | warm p50 / p95 ms |
+|---|---|---|---|---|---|---|---|
+| PGLite (control) | 1 | 55.7% | 27.4% | 79.5% | 67.5% | 204 / 224 | 203 / 221 |
+| Postgres (control) | 1 | 55.7% | 27.4% | 79.5% | 67.5% | 45 / 53 | 44 / 54 |
+| Rust store engine | 0 of 3 valid | invalid | invalid | invalid | invalid | invalid | invalid |
+
+Cold is the scored first pass on a freshly imported brain; warm is the repeat pass on the same brain. One control run per engine has no spread to report.
+
+**Observed.**
+
+- **The controls did not move.** At dbc85b2d, PGLite and Postgres each returned the same ordered top 5 as the first build's PGLite run on all 548 probes ([head-dbc85b2d/top5-controls.json](head-dbc85b2d/top5-controls.json)), so the quality rows of both builds agree. Latency is within a few ms of the first build's band (PGLite p50 204 against 200 to 202; Postgres 45 against 41 to 47). We still keep the rows per build and do not pool runs across builds.
+- **Rust stops at vector search.** In every Rust run each query logged `This brain's engine does not support searchVector yet (it needs the vector_search capability)`. Hybrid search salvaged the keyword arm, and cat13 recorded `SEARCH INCOMPLETE: 548 query execution/observation failures` and exited 3 (`run_status: error`). In gbrain at dbc85b2d, `src/core/rust-engine/store-members/vectors.ts` exports no members, so `searchVector` refuses with `engine_capability_missing`.
+- **Rust is deterministic on its keyword-only path.** The three Rust runs returned identical top 5 lists on all 548 probes.
+- **Diagnostic only, not comparable.** The keyword-only Rust rankings differ from the PGLite control's ordered top 5 on 548 of 548 probes (the top-5 set differs on 546). The scores are lower on 300 probes, higher on 82 and the same on 166. Diagnostic means over the three runs: nDCG@5 41.7%, R@5 65.3%, MRR@5 52.1%, cold p50 22 to 23 ms and p95 28 to 30 ms, warm p50 22 to 23 ms and p95 28 to 29 ms. Examples (target concept, then the top 3 of each):
+  - `c13-00105` (synonym-fuzzy), target `concepts/developer-relations`: PGLite ranks it first; Rust returns a person page, a company page and an unrelated concept.
+  - `c13-00108` (synonym), the same target: PGLite first; Rust misses it in the top 3.
+  - `c13-00400` (body-fuzzy), target `concepts/revenue-durability`: PGLite misses it; Rust ranks it first.
+  These numbers measure a keyword-only search against hybrid search. They are not a Rust engine result and not a quality or speed claim. Every probe row is in [head-dbc85b2d/per-query-invalid-runs.jsonl.gz](head-dbc85b2d/per-query-invalid-runs.jsonl.gz) and [head-dbc85b2d/top5-rust-diagnostic.json.gz](head-dbc85b2d/top5-rust-diagnostic.json.gz).
+
+**Hypotheses (not tested).**
+
+- Once `searchVector` serves the default `embedding` column, Rust would run the same hybrid path as the other engines and this bench could score it.
+- Most of the keyword-only gap comes from the missing vector arm, since the losses cluster in the synonym templates, where the probe shares few words with the target. We did not run a keyword-only PGLite control, so this bench cannot yet say whether Rust's keyword arm itself matches PGLite's.
+
+## Results (first build, gbrain 6ad51d6b)
 
 | Engine | Scored runs | nDCG@5 | P@5 (graded) | R@5 | MRR@5 | p50 query ms | p95 query ms |
 |---|---|---|---|---|---|---|---|
@@ -22,7 +55,7 @@ Cells are mean [min to max, sample sd] across the scored runs. Raw numbers: [sum
 - **Latency.** Postgres p50 43 ms, PGLite p50 201 ms. The spread between runs is small (sd 1 to 3 ms). Wall time for a whole run: PGLite about 120 s, Postgres about 33 s.
 - **Rust.** All three runs stopped at ingest with `OperationError: This brain's engine does not support upsertChunks (option embeddingColumn) yet (it needs the chunks capability), so nothing ran.` (exit 3). See [rust/](rust/).
 
-## Why the Rust engine is blocked (observed)
+## Why the Rust engine was blocked on the first build (observed)
 
 gbrain's own import path (`src/core/import-file.ts`) passes an `embeddingColumn` option to `upsertChunks` on every import that embeds chunks. The Rust engine's `upsertChunks` member accepts only `sourceId`, `expectedRevision`, `sealChunkerVersion`, `pageId` and `deferSeal`, so it refuses the call, even when the column is the default `embedding`. A minimal repro ([harness/rust-embed-import.repro.ts](harness/rust-embed-import.repro.ts)) imports one page with stub vectors on each engine from the same build: PGLite and Postgres import and embed the page; Rust refuses with `engine_capability_missing`. The refusal comes from the product, not from this harness, so this bench cannot measure Rust until gbrain lets the Rust `upsertChunks` take that option.
 
@@ -30,7 +63,7 @@ A keyword-only run on Rust does work (import with `noEmbed`, then hybrid search 
 
 ## Hypotheses (not tested here)
 
-- The Rust member could accept `embeddingColumn` when the column is the default `embedding`. That would unblock this bench.
+- The Rust member could accept `embeddingColumn` when the column is the default `embedding`. That would unblock this bench. (The second build did this: the import now works, and the next block is vector search.)
 - The PGLite gap is likely the cost of single-threaded WASM Postgres against a native server on 8 vCPUs, not network or tuning. We did not profile it.
 - Both engines run the same SQL and pgvector code paths. On a 240-page corpus the candidate sets are small, so approximate-index effects did not change any ranking. A larger corpus could separate them.
 
@@ -41,7 +74,8 @@ Comparable: one gbrain build, one machine, one corpus, the same 548 probes and g
 Not comparable or limited:
 
 - **Environment.** Postgres runs natively in a Docker container and is reached over local TCP; PGLite runs inside the bench process as WASM. The latency gap measures this whole setup, not the storage engines alone.
-- **Build.** The gbrain code under test is `rust-cli-members` at 6ad51d6b90dd, not master and not the `package.json` pin (6ce7195b44a0, which has no Rust engine). Receipts record both.
+- **Build.** The gbrain code under test is `rust-cli-members` at 6ad51d6b90dd for the first build and `rust-engine/lane6-import-embedding-column` at dbc85b2d1911 for the second, neither on master and neither the `package.json` pin (6ce7195b44a0, which has no Rust engine). Receipts record each. Rows are reported per build, never pooled.
+- **Warm pass.** `--warm-passes` repeats the probes on the same brain in the same process. "Cold" means the first query pass after import, not a cold OS page cache; the store was never evicted from memory.
 - **Small, synthetic corpus.** 240 pages of world-v1. Zero variance here comes from a deterministic pipeline and cached vectors, not from a large sample. It says nothing about engine behavior at 100k pages.
 - **Latency resolution.** Per-query times use `Date.now()` (1 ms) and include the cached query-embedding lookup, which is the same for every engine.
 - **Preregistration.** The prediction and stop rule ([PREREGISTRATION.md](PREREGISTRATION.md)) were written before any paid run, but kept locally, not committed to origin first, so this is not an attested preregistration under `eval/runner/prereg.ts` and is not listed in `preregistrations.json`. One prediction failed: we predicted Docker Postgres would be slower than PGLite; it was faster.
@@ -63,6 +97,17 @@ for i in 1 2 3; do for e in pglite postgres; do $H/run-one.sh $e $e-r$i out/runs
 python3 $H/summarize.py out/runs out/summary
 ```
 
+For the second build, link gbrain dbc85b2d, rebuild the addon (`bun run rust:build` in the gbrain checkout), and add `--warm-passes 1` to `A`:
+
+```bash
+for s in rust:rust-r1 pglite:pglite-ctl rust:rust-r2 postgres:postgres-ctl rust:rust-r3; do $H/run-one.sh ${s%%:*} ${s#*:} out/dbc $A; done
+python3 $H/summarize.py out/dbc out/dbc-summary
+python3 $H/compare-top5.py out/dbc-summary/top5-rust-diagnostic.json pglite-ctl=out/dbc-summary/per-query.jsonl:pglite-0 \
+  rust-r1=out/dbc-summary/per-query-invalid-runs.jsonl:rust-1
+```
+
+The five runs took about 7 minutes in all (PGLite about 4 minutes with the repeat pass, Postgres 1, each Rust run under 1).
+
 `run-one.sh` finds the repo from its own location, sets `GBRAIN_EVAL_ENGINE`, an empty `GBRAIN_HOME` and the addon path (default: the addon inside the linked `node_modules/gbrain`; override with `GBRAIN_RUST_ENGINE_ADDON`), then copies the receipt out of the Git-ignored `eval/reports/`. Override the Postgres URL with `BENCH_PG_URL`. The runs above used the same script with sandbox paths as defaults. The warm-up takes about 7 minutes; each scored run takes 0.5 to 2 minutes.
 
 ## Metrics
@@ -77,6 +122,7 @@ python3 $H/summarize.py out/runs out/summary
 - [per-query.jsonl.gz](per-query.jsonl.gz): one row per probe per scored run (top 5, graded gold, metrics, latency, search failures).
 - [receipts/](receipts/): full cat13 receipts (gzip) and logs for the warm-up and the six scored runs, including every search observation.
 - [rust/](rust/): logs and receipts of the three refused Rust runs.
-- [environment.json](environment.json): commits, addon hash, Postgres image digest, machine, run order.
-- [harness/](harness/): the run script, the summarizer and the Rust repro.
+- [environment.json](environment.json): commits, addon hashes, Postgres image digest, machine, run order for both builds.
+- [head-dbc85b2d/](head-dbc85b2d/): the second build: repro output, receipts and logs of the five runs, [summary.json](head-dbc85b2d/summary.json), [table.md](head-dbc85b2d/table.md), the control rows (`per-query.jsonl.gz`), the invalid Rust rows and the top-5 comparisons.
+- [harness/](harness/): the run script, the summarizer, [compare-top5.py](harness/compare-top5.py) and the Rust repro.
 - Harness change in this branch: `eval/runner/adapters/gbrain-inline.ts`, `eval/runner/cat13-conceptual.ts`, `eval/runner/eval-engine.ts`.
