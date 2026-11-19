@@ -68,7 +68,7 @@ import {
   sealedWorldSeed, termRegex, type Phrasing, type RenderBrief, type Turn, type World, type WorldPlan,
 } from '../../generators/changing-facts-gen.ts';
 import { readLedger } from '../../runner/budget-ledger.ts';
-import { BG1_CONVERSATIONS, BG1_DEV_CONVERSATIONS, BG1_DEV_EXTRA_CONVERSATIONS } from '../../runner/bg1/types.ts';
+import { BG1_DEV_CONVERSATIONS, BG1_DEV_EXTRA_CONVERSATIONS, BG1C_LAST_SLOT, bg1WorldId } from '../../runner/bg1/types.ts';
 import { ledgerCaps, requireRs1Window, WindowRefusal } from '../../runner/paid-arm.ts';
 import { PROXY_REFUSAL_MARKERS } from '../../runner/providers/openai-compatible.ts';
 import { encodingCount } from '../../runner/systems/render-v2.ts';
@@ -434,10 +434,10 @@ export function readPhrasing(path: string): Phrasing {
   try { return loadPhrasing(path); } catch (e) { throw new RenderRefusal(e instanceof PlanError ? e.message : 'the phrasing file is not readable JSON'); }
 }
 
+/** A mint slot's world id: BG1's slots 1 to 30 and BG1-C's 31 to 96 (mint.sh keeps each mint to one set's slots). */
 export const worldIdOf = (slot: number) => {
-  const id = BG1_CONVERSATIONS[slot - 1];
-  if (!Number.isInteger(slot) || !id) throw new RenderRefusal(`--slot must be a whole number from 1 to ${BG1_CONVERSATIONS.length}`);
-  return id;
+  if (!Number.isInteger(slot) || slot < 1 || slot > BG1C_LAST_SLOT) throw new RenderRefusal(`--slot must be a whole number from 1 to ${BG1C_LAST_SLOT}`);
+  return bg1WorldId(slot);
 };
 
 /** The sealed plan of one mint slot: deterministic from the custody seed line, the slot and the phrasing set. */

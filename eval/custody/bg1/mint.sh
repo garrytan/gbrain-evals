@@ -2,12 +2,20 @@
 # BG1 mint: plans, renders and checks the sealed changing-facts worlds in custody, one mint slot at a time, through
 # eval/custody/bg1/render.ts (docs/benchmarks/2026-11-09-changing-facts-battleground-preregistration.md).
 #
-#   eval/custody/bg1/mint.sh --out <dir>/bg1-custody --seed-file <path>.bg1-seed --phrasing <path>.bg1-phrasing.json
-#       [--count 48] [--start 1] [--target-tokens 200000] [--yield-gate-ack <approval id>]
+#   eval/custody/bg1/mint.sh [--bg1c] --out <dir>/bg1-custody --seed-file <path>.bg1-seed --phrasing <path>.bg1-phrasing.json
+#       [--count <n>] [--start <slot>] [--target-tokens 200000] [--yield-gate-ack <approval id>]
 #       (--fake [--fake-break <slot>:<session>:<attempts>,...]
 #        | --budget-ledger <sqlite> --budget-run-id <id> --paid-window <unit> --window-cap-usd <n>)
 #   eval/custody/bg1/mint.sh --dev --out <dir> [--worlds bg1-dev-01,...] [--target-tokens 200000]
 #       (--fake [--fake-break <dev number>:<session>:<attempts>,...] | --budget-ledger ... as above)
+#
+# Two sealed sets share the seed, phrasing and world ids, each on slots of its own. Without --bg1c the mint is BG1's:
+# slots 1 to 30, its kept list (BG1 planned 48 and released 31 to 48, never minted, to BG1-C on 2026-11-19). With
+# --bg1c it is BG1-C's, the changing-facts confirmation (docs/benchmarks/2026-11-19-changing-facts-confirmation-
+# preregistration.md): slots 31 to 96, minted in order from 31. --start defaults to the set's first slot and --count
+# to the rest of its slots. A range that mixes the two sets refuses, and so does an --out whose set/worlds or render/
+# holds a bg1-NNN entry outside the set's slots, so each set mints into a custody --out of its own and its drop counts
+# never include the other's.
 #
 # What it guarantees:
 #   - Output only counts and hashes. Every line is "bg1-mint key=value ...", render.ts's counts line, or a refusal
@@ -20,12 +28,13 @@
 #     custody marker, which every plan, world and question file then carries too. Files under --out are owner-only
 #     (umask 077).
 #   - Deterministic seeds. Slot i's world seed is HMAC-SHA256(seed line, "bg1/world/<i>") (changing-facts-gen.ts
-#     sealedWorldSeed), and no file records it.
+#     sealedWorldSeed), for BG1 and BG1-C alike, and no file records it.
 #   - Resume. A slot whose world is written from the same plan is skipped, and model replies are cached under
 #     <out>/render-cache, so a rerun buys nothing twice. A recorded drop is final: a slot whose render record
 #     (render/bg1-NNN.json) says dropped is never rendered again by any later invocation. mint.sh prints a
 #     status=dropped_earlier line for it, counts it as dropped_earlier in the summary and leaves the record as it is.
-#   - Yield gate. Two dropped worlds among mint slots 1 to 5 pause the mint with exit 3. Drops are counted from the
+#   - Yield gate. Two dropped worlds among the set's first five slots (1 to 5 for BG1, 31 to 35 for BG1-C) pause the
+#     mint with exit 3. Drops are counted from the
 #     render records under --out (render/bg1-NNN.json), so every invocation on one --out counts them, a resumed or
 #     --start run included, and a run on an --out that already holds two pauses before it renders anything. A pause goes
 #     to GBEV-3, whose approval id comes back as --yield-gate-ack (a- and 12 hex digits). mint.sh appends the id, the
@@ -35,6 +44,14 @@
 #     run. With no ack recorded, the gate is as above. Since a drop is final, the early-drop count never falls, so an
 #     invocation that finds it below the latest ack's recorded count (a render record changed outside mint.sh) refuses
 #     with exit 3 and a summary=refused line before it renders or acknowledges anything.
+#   - BG1-C's drop cap and kept stop (--bg1c only). Three dropped worlds among slots 31 to 96 pause the mint with exit 3
+#     and a summary=paused reason=drop_cap line, counted from the render records as the yield gate counts. The same
+#     --yield-gate-ack acknowledges either pause, and each ack line also records "drops", the total the drop cap
+#     measures from. An ack moves only a paused gate's count: the yield gate's when it is paused, the drop cap's when it
+#     is, so after a yield-gate ack the third drop in all still pauses, and after a drop-cap ack two early drops still
+#     do. Three drops past the latest acknowledged total pause it again, and a total below it refuses as above. The
+#     mint stops with exit 0 and a summary=kept line once 40 of BG1-C's slots hold a written world (render.ts writes a
+#     world only after every session passed its checks), checked before the first slot and after each one.
 #   - One ledger. A relative --budget-ledger is resolved once, against the directory mint.sh starts in, before the window
 #     check, so the check, both proxies and render.ts all name the same ledger file. CDPATH is unset first, so a
 #     relative --out or --budget-ledger never resolves against a directory the caller's CDPATH names.
@@ -77,12 +94,13 @@ die() { printf 'bg1-mint refused: %s\n' "$*" >&2; exit 2; }
 file_mode() { stat -c %a "$1" 2>/dev/null || stat -f %Lp "$1"; }
 owner_only() { case "$(file_mode "$1")" in 600|400) return 0 ;; *) return 1 ;; esac; }
 
-OUT="" SEED_FILE="${BG1_SEED_FILE:-}" PHRASING="${BG1_PHRASING_FILE:-}" COUNT=48 START=1 TARGET=200000 MODE=real BREAKS=""
-LEDGER="" RUN_ID="" WINDOW="" WINDOW_CAP="" ACK="" DEV=0 SEALED_ONLY="" DEV_WORLDS="bg1-dev-01,bg1-dev-02,bg1-dev-03" DEV_ONLY=""
+OUT="" SEED_FILE="${BG1_SEED_FILE:-}" PHRASING="${BG1_PHRASING_FILE:-}" COUNT="" START="" TARGET=200000 MODE=real BREAKS=""
+LEDGER="" RUN_ID="" WINDOW="" WINDOW_CAP="" ACK="" DEV=0 BG1C=0 SEALED_ONLY="" DEV_WORLDS="bg1-dev-01,bg1-dev-02,bg1-dev-03" DEV_ONLY=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --out) OUT="$2"; shift 2 ;;
     --dev) DEV=1; shift ;;
+    --bg1c) BG1C=1; SEALED_ONLY+=" $1"; shift ;;
     --worlds) DEV_WORLDS="$2"; DEV_ONLY+=" $1"; shift 2 ;;
     --seed-file) SEED_FILE="$2"; SEALED_ONLY+=" $1"; shift 2 ;;
     --phrasing) PHRASING="$2"; SEALED_ONLY+=" $1"; shift 2 ;;
@@ -96,7 +114,7 @@ while [ $# -gt 0 ]; do
     --paid-window) WINDOW="$2"; shift 2 ;;
     --window-cap-usd) WINDOW_CAP="$2"; shift 2 ;;
     --yield-gate-ack) ACK="$2"; SEALED_ONLY+=" $1"; shift 2 ;;
-    -h|--help) sed -n '2,10p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,17p' "$0"; exit 0 ;;
     *) die "unknown argument $1" ;;
   esac
 done
@@ -113,8 +131,17 @@ else
   [ -n "$SEED_FILE" ] || die "--seed-file (or BG1_SEED_FILE) is required; there is no default seed"
   [ -n "$PHRASING" ] || die "--phrasing (or BG1_PHRASING_FILE) is required; sealed worlds never use the public phrasing"
 fi
-[[ "$COUNT" =~ ^[0-9]+$ && "$START" =~ ^[0-9]+$ ]] || die "--count and --start must be whole numbers"
-[ "$START" -ge 1 ] && [ $((START + COUNT - 1)) -le 48 ] || die "--start must be at least 1 and the last slot at most 48"
+# The set's slots and kept target: BG1's 1 to 30, or BG1-C's 31 to 96 with 40 kept (bg1-names.ts BG1C_FIRST_SLOT,
+# BG1C_LAST_SLOT and BG1C_N_FINAL).
+if [ "$BG1C" = 1 ]; then SET=BG1-C FIRST=31 LAST=96 KEPT_TARGET=40; else SET=BG1 FIRST=1 LAST=30 KEPT_TARGET=""; fi
+START="${START:-$FIRST}"
+[[ "${COUNT:-0}" =~ ^[0-9]+$ && "$START" =~ ^[0-9]+$ ]] || die "--count and --start must be whole numbers"
+START=$((10#$START))
+COUNT=$((10#${COUNT:-$((LAST - START + 1 > 0 ? LAST - START + 1 : 0))}))
+END=$((START + COUNT - 1))
+if [ "$START" -le 30 ] && [ "$END" -ge 31 ]; then die "slots $START to $END mix BG1's slots (1 to 30) and BG1-C's (31 to 96); a mint covers one set"; fi
+if [ "$BG1C" = 0 ] && [ "$START" -ge 31 ]; then die "slots 31 to 96 are BG1-C's, so they need --bg1c"; fi
+[ "$START" -ge "$FIRST" ] && [ "$START" -le "$LAST" ] && [ "$END" -le "$LAST" ] || die "--start must be at least $FIRST and the last slot at most $LAST ($SET's slots)"
 [[ "$TARGET" =~ ^[0-9]+$ ]] || die "--target-tokens must be a whole number"
 [ "$MODE" = fake ] || [ -z "$BREAKS" ] || die "--fake-break is a --fake drill"
 [ -z "$ACK" ] || [[ "$ACK" =~ ^a-[0-9a-f]{12}$ ]] || die "--yield-gate-ack takes GBEV-3's approval id, a- and 12 hex digits"
@@ -122,6 +149,12 @@ if [ "$DEV" = 0 ]; then
   case "$(basename "$OUT")" in bg1-custody*) ;; *) die "--out must be a directory whose name starts with bg1-custody" ;; esac
   case "$SEED_FILE" in *.bg1-seed) ;; *) die "the seed file must be named *.bg1-seed" ;; esac
   case "$PHRASING" in *.bg1-phrasing.json) ;; *) die "the phrasing file must be named *.bg1-phrasing.json" ;; esac
+  for f in "$OUT"/set/worlds/bg1-[0-9][0-9][0-9]* "$OUT"/render/bg1-[0-9][0-9][0-9]*; do
+    [ -e "$f" ] || [ -L "$f" ] || continue
+    entry="$(basename "$f")"
+    slot=$((10#${entry:4:3}))
+    [ "$slot" -ge "$FIRST" ] && [ "$slot" -le "$LAST" ] || die "this --out holds $entry, which is not one of $SET's slots ($FIRST to $LAST); BG1 and BG1-C each mint into a custody --out of their own"
+  done
 fi
 
 command -v bun >/dev/null || die "bun is not on PATH"
@@ -246,19 +279,28 @@ fi
 
 # True when world $1's render record under --out says dropped, whichever invocation dropped it.
 dropped_record() { grep -Eq '"status": ?"dropped"' "$OUT/render/$1.json" 2>/dev/null; }
-# The dropped worlds among slots 1 to 5 that the render records under --out hold.
-early_drops() {
+# The dropped worlds among slots $1 to $2 that the render records under --out hold.
+drops_among() {
   local n=0 s
-  for s in 1 2 3 4 5; do dropped_record "$(printf 'bg1-%03d' "$s")" && n=$((n + 1)); done
+  for ((s = $1; s <= $2; s++)); do dropped_record "$(printf 'bg1-%03d' "$s")" && n=$((n + 1)); done
   printf '%s' "$n"
 }
+# The yield gate's early drops, among the set's first five slots, and BG1-C's drops among all its slots.
+early_drops() { drops_among "$FIRST" $((FIRST + 4)); }
+all_drops() { drops_among "$FIRST" "$LAST"; }
 ACKS="$OUT/render/yield-gate-acks.jsonl"
-# The early-drop count the latest acknowledgement recorded, or 0 with none recorded.
-acked_drops() {
-  local n=0
-  [ ! -s "$ACKS" ] || n="$(tail -n 1 "$ACKS" | sed -n 's/^{"ack":"a-[0-9a-f]\{12\}","at":"[0-9TZ:-]*","early_drops":\([0-9][0-9]*\)}$/\1/p')"
-  [ -n "$n" ] || die "render/yield-gate-acks.jsonl ends in a line that is not an acknowledgement"
-  printf '%s' "$n"
+# Sets ACK_EARLY and ACK_DROPS to the early-drop count and (BG1-C) the total the latest acknowledgement recorded, or
+# 0 with none recorded.
+ack_counts() {
+  local re last
+  ACK_EARLY=0 ACK_DROPS=0
+  [ -s "$ACKS" ] || return 0
+  last="$(tail -n 1 "$ACKS")"
+  if [ "$BG1C" = 1 ]; then re='^\{"ack":"a-[0-9a-f]{12}","at":"[0-9TZ:-]*","early_drops":([0-9]+),"drops":([0-9]+)\}$'
+  else re='^\{"ack":"a-[0-9a-f]{12}","at":"[0-9TZ:-]*","early_drops":([0-9]+)\}$'; fi
+  [[ "$last" =~ $re ]] || die "render/yield-gate-acks.jsonl ends in a line that is not an acknowledgement"
+  ACK_EARLY=$((10#${BASH_REMATCH[1]}))
+  ACK_DROPS=$((10#${BASH_REMATCH[2]:-0}))
 }
 # Exits 3 when the early-drop count $1 is below the latest ack's count $2: a recorded drop is final, so the count falls
 # only when a render record changed outside mint.sh.
@@ -267,25 +309,68 @@ drops_kept() {
   say "summary=refused reason=early_drops_below_ack mode=$MODE written=$WRITTEN skipped=$SKIPPED dropped=$DROPPED last_slot=$3 early_drops=$1 acked_drops=$2"
   exit 3
 }
-yield_gate() {
-  local n a
-  n="$(early_drops)"
-  a="$(acked_drops)"
-  drops_kept "$n" "$a" "$1"
-  [ $((n - a)) -ge 2 ] || return 0
-  say "summary=paused reason=yield_gate mode=$MODE written=$WRITTEN skipped=$SKIPPED dropped=$DROPPED last_slot=$1 early_drops=$n$([ ! -s "$ACKS" ] || printf ' acked_drops=%s' "$a")$([ "$DROPPED_EARLIER" = 0 ] || printf ' dropped_earlier=%s' "$DROPPED_EARLIER")"
+# BG1-C: the same refusal for the drop cap's total.
+total_drops_kept() {
+  [ "$1" -lt "$2" ] || return 0
+  say "summary=refused reason=drops_below_ack mode=$MODE written=$WRITTEN skipped=$SKIPPED dropped=$DROPPED last_slot=$3 drops=$1 acked_total_drops=$2"
   exit 3
+}
+# Pauses with exit 3 on two early drops past the latest acknowledged count, or, for BG1-C, three drops past the latest
+# acknowledged total; refuses with exit 3 when either count is below its acknowledged one. $1 is the last slot.
+yield_gate() {
+  local n m
+  n="$(early_drops)"
+  m="$(all_drops)"
+  ack_counts
+  drops_kept "$n" "$ACK_EARLY" "$1"
+  [ "$BG1C" = 0 ] || total_drops_kept "$m" "$ACK_DROPS" "$1"
+  local tail_counts
+  tail_counts="$([ "$DROPPED_EARLIER" = 0 ] || printf ' dropped_earlier=%s' "$DROPPED_EARLIER")"
+  if [ $((n - ACK_EARLY)) -ge 2 ]; then
+    say "summary=paused reason=yield_gate mode=$MODE written=$WRITTEN skipped=$SKIPPED dropped=$DROPPED last_slot=$1 early_drops=$n$([ ! -s "$ACKS" ] || printf ' acked_drops=%s' "$ACK_EARLY")$([ "$BG1C" = 0 ] || printf ' drops=%s' "$m")$tail_counts"
+    exit 3
+  fi
+  [ "$BG1C" = 1 ] && [ $((m - ACK_DROPS)) -ge 3 ] || return 0
+  say "summary=paused reason=drop_cap mode=$MODE written=$WRITTEN skipped=$SKIPPED dropped=$DROPPED last_slot=$1 drops=$m$([ ! -s "$ACKS" ] || printf ' acked_total_drops=%s' "$ACK_DROPS")$tail_counts"
+  exit 3
+}
+# BG1-C: the slots among 31 to 96 holding a written world.
+kept_worlds() {
+  local n=0 s
+  for ((s = FIRST; s <= LAST; s++)); do [ ! -f "$OUT/set/worlds/$(printf 'bg1-%03d' "$s")/world.json" ] || n=$((n + 1)); done
+  printf '%s' "$n"
+}
+# BG1-C: stops the mint with exit 0 once KEPT_TARGET worlds are kept. $1 is the last slot.
+kept_stop() {
+  [ -n "$KEPT_TARGET" ] || return 0
+  local k
+  k="$(kept_worlds)"
+  [ "$k" -ge "$KEPT_TARGET" ] || return 0
+  say "summary=kept mode=$MODE kept=$k written=$WRITTEN skipped=$SKIPPED dropped=$DROPPED dropped_earlier=$DROPPED_EARLIER last_slot=$1"
+  exit 0
 }
 if [ -n "$ACK" ] && ! { [ -s "$ACKS" ] && tail -n 1 "$ACKS" | grep -Fq "{\"ack\":\"$ACK\","; }; then
   ! grep -Fq "{\"ack\":\"$ACK\"," "$ACKS" 2>/dev/null || die "approval $ACK acknowledged an earlier pause; a new pause needs a new approval"
   n="$(early_drops)"
-  a="$(acked_drops)"
-  drops_kept "$n" "$a" $((START - 1))
-  [ $((n - a)) -ge 2 ] || die "the yield gate is not paused on this --out, so --yield-gate-ack has nothing to acknowledge"
-  printf '{"ack":"%s","at":"%s","early_drops":%s}\n' "$ACK" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$n" >> "$ACKS"
-  say "yield_gate_ack=$ACK early_drops=$n"
+  m="$(all_drops)"
+  ack_counts
+  drops_kept "$n" "$ACK_EARLY" $((START - 1))
+  if [ "$BG1C" = 0 ]; then
+    [ $((n - ACK_EARLY)) -ge 2 ] || die "the yield gate is not paused on this --out, so --yield-gate-ack has nothing to acknowledge"
+    printf '{"ack":"%s","at":"%s","early_drops":%s}\n' "$ACK" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$n" >> "$ACKS"
+    say "yield_gate_ack=$ACK early_drops=$n"
+  else
+    total_drops_kept "$m" "$ACK_DROPS" $((START - 1))
+    early=$ACK_EARLY total=$ACK_DROPS
+    [ $((n - ACK_EARLY)) -lt 2 ] || early=$n
+    [ $((m - ACK_DROPS)) -lt 3 ] || total=$m
+    [ "$early" != "$ACK_EARLY" ] || [ "$total" != "$ACK_DROPS" ] || die "neither the yield gate nor the drop cap is paused on this --out, so --yield-gate-ack has nothing to acknowledge"
+    printf '{"ack":"%s","at":"%s","early_drops":%s,"drops":%s}\n' "$ACK" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$early" "$total" >> "$ACKS"
+    say "yield_gate_ack=$ACK early_drops=$early drops=$total"
+  fi
 fi
 yield_gate $((START - 1))
+kept_stop $((START - 1))
 for ((slot = START; slot < START + COUNT; slot++)); do
   id="$(printf 'bg1-%03d' "$slot")"
   if dropped_record "$id"; then
@@ -300,6 +385,7 @@ for ((slot = START; slot < START + COUNT; slot++)); do
     *) exit "$RC" ;;
   esac
   yield_gate "$slot"
+  kept_stop "$slot"
 done
 
-say "summary=mint mode=$MODE slots=$COUNT written=$WRITTEN skipped=$SKIPPED dropped=$DROPPED dropped_earlier=$DROPPED_EARLIER"
+say "summary=mint mode=$MODE slots=$COUNT written=$WRITTEN skipped=$SKIPPED dropped=$DROPPED dropped_earlier=$DROPPED_EARLIER$([ -z "$KEPT_TARGET" ] || printf ' kept=%s' "$(kept_worlds)")"

@@ -4,8 +4,12 @@
  * picks the kept list. It prints counts and hashes only, and writes a report of world ids, gate names and numbers
  * (never text) for the custody record and the manifest fill.
  *
- *   bun eval/custody/bg1/validate.ts --set <out>/set --seed-file <path>.bg1-seed --phrasing <path>.bg1-phrasing.json
+ *   bun eval/custody/bg1/validate.ts [--bg1c] --set <out>/set --seed-file <path>.bg1-seed --phrasing <path>.bg1-phrasing.json
  *       --report <path outside the set> [--target-tokens 200000] [--tolerance 0.15] [--n-final <n>]
+ *
+ * Without --bg1c it validates BG1's set (slots 1 to 30); with it, BG1-C's (slots 31 to 96, mint.sh --bg1c;
+ * docs/benchmarks/2026-11-19-changing-facts-confirmation-preregistration.md), whose --n-final is at most 40. Either way a
+ * world directory outside the set's slots refuses the whole set, and each world is planned from its own slot number.
  *
  * Gates per world, in slot order; a failure drops the world:
  *   - files: plan.json, questions.json and world.json are present and each carries the custody marker;
@@ -25,7 +29,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { BG1_CUSTODY_MARKER, BG1_TARGET_TOKENS, buildQuestions, goldFields, PlanError, renderBriefs, worldTokens, type QuestionRecord, type World } from '../../generators/changing-facts-gen.ts';
-import { BG1_CONVERSATIONS, BG1_N_CAP } from '../../runner/bg1/types.ts';
+import { BG1_CONVERSATIONS, BG1_N_CAP, BG1C_CONVERSATIONS, BG1C_N_FINAL } from '../../runner/bg1/types.ts';
 import { checkSession, readPhrasing, readSeedLine, RenderRefusal, sealedPlan } from './render.ts';
 
 export const VALIDATION_SCHEMA = 'gbrain-evals/bg1-validation/v1';
@@ -69,16 +73,17 @@ export function validateWorld(dir: string, slot: number, seedLine: string, phras
   return { failed: [...failed].sort(), sessions: world?.sessions?.length ?? 0, tokens, worldText };
 }
 
-export function validateSet(setDir: string, seedLine: string, phrasing: ReturnType<typeof readPhrasing>, opts: { targetTokens: number; tolerance: number; nFinal: number | null }): ValidationReport {
+export function validateSet(setDir: string, seedLine: string, phrasing: ReturnType<typeof readPhrasing>, opts: { targetTokens: number; tolerance: number; nFinal: number | null; bg1c?: boolean }): ValidationReport {
+  const ids = opts.bg1c ? BG1C_CONVERSATIONS : BG1_CONVERSATIONS;
   const worldsDir = join(setDir, 'worlds');
   const present = existsSync(worldsDir) ? readdirSync(worldsDir).sort() : [];
-  const stray = present.filter(d => !BG1_CONVERSATIONS.includes(d));
-  if (stray.length) throw new RenderRefusal(`the set holds ${stray.length} director(ies) under worlds/ that are not BG1 mint slots`);
+  const stray = present.filter(d => !ids.includes(d));
+  if (stray.length) throw new RenderRefusal(`the set holds ${stray.length} director(ies) under worlds/ that are not ${opts.bg1c ? 'BG1-C' : 'BG1'} mint slots`);
   const recordDir = join(dirname(setDir), 'render');
   const results: WorldResult[] = [];
   const seen = new Set<string>();
   let renderDropped = 0;
-  BG1_CONVERSATIONS.forEach((id, i) => {
+  ids.forEach(id => {
     const record = join(recordDir, `${id}.json`);
     if (!present.includes(id)) {
       if (existsSync(record) && (JSON.parse(readFileSync(record, 'utf8')) as { status?: string }).status === 'dropped') {
@@ -87,7 +92,7 @@ export function validateSet(setDir: string, seedLine: string, phrasing: ReturnTy
       }
       return;
     }
-    const r = validateWorld(join(worldsDir, id), i + 1, seedLine, phrasing, opts);
+    const r = validateWorld(join(worldsDir, id), Number(id.slice('bg1-'.length)), seedLine, phrasing, opts);
     const hash = r.worldText === null ? null : sha256(r.worldText);
     if (hash !== null && seen.has(hash)) r.failed.push('duplicate');
     if (hash !== null) seen.add(hash);
@@ -113,8 +118,9 @@ export function main(argv: string[]): { report: ValidationReport; line: string }
   const targetTokens = Number(flag('--target-tokens') ?? BG1_TARGET_TOKENS), tolerance = Number(flag('--tolerance') ?? 0.15);
   const nFinal = flag('--n-final') === undefined ? null : Number(flag('--n-final'));
   if (!(targetTokens >= 1000) || !(tolerance > 0 && tolerance < 1)) throw new RenderRefusal('--target-tokens must be at least 1000 and --tolerance between 0 and 1');
-  if (nFinal !== null && !(Number.isInteger(nFinal) && nFinal >= 1 && nFinal <= BG1_N_CAP)) throw new RenderRefusal(`--n-final must be a whole number from 1 to ${BG1_N_CAP}`);
-  const report = validateSet(resolve(set), readSeedLine(resolve(seedFile)), readPhrasing(resolve(phrasingFile)), { targetTokens, tolerance, nFinal });
+  const bg1c = argv.includes('--bg1c'), cap = bg1c ? BG1C_N_FINAL : BG1_N_CAP;
+  if (nFinal !== null && !(Number.isInteger(nFinal) && nFinal >= 1 && nFinal <= cap)) throw new RenderRefusal(`--n-final must be a whole number from 1 to ${cap}`);
+  const report = validateSet(resolve(set), readSeedLine(resolve(seedFile)), readPhrasing(resolve(phrasingFile)), { targetTokens, tolerance, nFinal, bg1c });
   mkdirSync(dirname(resolve(reportPath)), { recursive: true });
   const text = json(report);
   writeFileSync(resolve(reportPath), text, { mode: 0o600 });

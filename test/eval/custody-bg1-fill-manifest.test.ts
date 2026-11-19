@@ -45,7 +45,7 @@ beforeAll(() => {
   chmodSync(seed, 0o600); chmodSync(phrasing, 0o600);
   mkdirSync(join(dir, 'reports'));
   full = join(dir, 'bg1-custody-full');
-  const m = run('bash', [MINT, '--out', full, '--seed-file', seed, '--phrasing', phrasing, '--fake', '--count', '32', '--target-tokens', '30000']);
+  const m = run('bash', [MINT, '--out', full, '--seed-file', seed, '--phrasing', phrasing, '--fake', '--count', '30', '--target-tokens', '30000']);
   if (m.code !== 0) throw new Error(`fake mint failed with exit ${m.code}`);
 }, 240_000);
 
@@ -99,7 +99,7 @@ describe('fill-manifest.ts', () => {
     expect(m2.earlier_fills).toEqual([m1sha]);
     const m2sha = sha(readFileSync(out));
 
-    addSlots('a', range(21, 32));
+    addSlots('a', range(21, 30));
     const third = fill(root, validate(root, ['--n-final', '30']));
     expect(third.code).toBe(0);
     expect(third.out.match(LINE)!.slice(1, 7)).toEqual(['60', '30', 'bg1-001', 'bg1-030', '30', '2']);
@@ -121,14 +121,17 @@ describe('fill-manifest.ts', () => {
     }
 
     const filled = readFileSync(out);
-    refused(fill(root, validate(root, ['--n-final', '31'])), 'n_final is 30 in the earlier fill and never changes');
+    refused(fill(root, validate(root, ['--n-final', '31'])), 'the kept list is too short: the report keeps 30 world(s), and its n_final needs 31');
+    writeFileSync(out, JSON.stringify({ ...manifestOf(root), n_final: 31 }, null, 1) + '\n');
+    refused(fill(root, validate(root, ['--n-final', '30'])), 'n_final is 31 in the earlier fill and never changes');
+    writeFileSync(out, filled);
     const world1 = join(root, 'worlds', 'bg1-001', 'world.json'), original = readFileSync(world1);
     appendFileSync(world1, ' ');
     refused(fill(root, validate(root, ['--n-final', '30'])), 'a refill only adds files: 1 file(s) the earlier fill pins are missing or changed (first worlds/bg1-001/world.json)');
     writeFileSync(world1, original);
     const plan5 = join(root, 'worlds', 'bg1-005', 'plan.json');
     appendFileSync(plan5, ' ');
-    refused(fill(root, validate(root, ['--n-final', '30'])), 'a refill only adds worlds: the earlier fill keeps 30 world(s)');
+    refused(fill(root, validate(root)), 'a refill only adds worlds: the earlier fill keeps 30 world(s)');
     expect(readFileSync(out)).toEqual(filled);
   }, 240_000);
 
