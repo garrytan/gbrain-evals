@@ -32,6 +32,9 @@
  *             the false-fail rate on good ones and kappa, with Wilson 95% intervals for rates, and the agreement with
  *             each judge on the real answers. `report` exits 0 only for a paid check whose gates pass; a keyless rehearsal
  *             or an --out with no marker exits 4 (JUDGE_CHECK_NOT_PAID). report.json carries no dollar field (R79).
+ *   BG1-C     BG1-C's check of its new reader's judge (gpt-6.2-sol graded by claude-opus-5-5, against gemini-3.8-flash) is
+ *             its own command, eval/runner/bg1/bg1c-judge-check.ts, which reuses this file's statistics and pool key and
+ *             leaves this check as it is.
  *   Window    `run` spends real keys only inside a granted paid window: without --keyless-upstream it needs --paid-window
  *             and --window-cap-usd, its --ledger-cap-usd never exceeds the window cap, and it exits 2 before any lease,
  *             proxy or output otherwise. A keyless run blanks every provider key first.
@@ -79,7 +82,7 @@ export interface Item {
   row?: string; reader?: string; canonical?: number | null;
 }
 
-const shuffle = <T,>(xs: readonly T[], rand: () => number): T[] => { const a = [...xs]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+export const shuffle = <T,>(xs: readonly T[], rand: () => number): T[] => { const a = [...xs]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const GOOD = ['{v}.', 'It is {v}.', 'The current answer is {v}.', 'From the history, {v}.'];
 const BAD = ['{v}.', 'It is {v}.', 'The current answer is {v}.', 'From the history, {v}, as it stands now.'];
 const fill = (t: string, v: string) => t.replace('{v}', v);
@@ -157,8 +160,8 @@ export interface Grade { score: number | null; truncated: boolean }
 export type Grades = Record<string, Record<string, Grade>>;
 export const gradeOf = (j: Pick<JudgmentRecord, 'score' | 'detail'>): Grade => ({ score: typeof j.score === 'number' ? j.score : null, truncated: j.detail?.truncated === true });
 
-const r4 = (x: number | null) => (x === null ? null : Math.round(x * 1e4) / 1e4);
-const rate = (k: number, n: number) => ({ k, n, rate: n ? r4(k / n) : null, ci95: wilson(k, n)?.map(x => r4(x)!) ?? null });
+export const r4 = (x: number | null) => (x === null ? null : Math.round(x * 1e4) / 1e4);
+export const rate = (k: number, n: number) => ({ k, n, rate: n ? r4(k / n) : null, ci95: wilson(k, n)?.map(x => r4(x)!) ?? null });
 
 /** Construction-label numbers for one rater (a judge's scores or the matcher's reading). */
 function againstLabels(items: readonly Item[], verdict: (i: Item) => boolean | null) {
@@ -229,25 +232,28 @@ export function loadRealAnswers(roots: readonly string[], instrument: string): R
   });
 }
 
-type Graded = JudgmentRecord & { item: string; pool_sha256?: string; seed?: number };
-const readGraded = (file: string): Graded[] => (existsSync(file) ? readFileSync(file, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l)) : []);
+export type Graded = JudgmentRecord & { item: string; pool_sha256?: string; seed?: number };
+export const readGraded = (file: string): Graded[] => (existsSync(file) ? readFileSync(file, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l)) : []);
 export const gradesFrom = (records: readonly Graded[]): Grades => {
   const grades: Grades = Object.fromEntries(GATING_JUDGES.map(j => [j, {}]));
   for (const r of records) if (grades[r.judge]) grades[r.judge][r.item] = gradeOf(r);
   return grades;
 };
 
+/** What a pool key reads of each item: its id, its question and its text's hash (BG1's items, and BG1-C's pool items). */
+export type PoolKeyItem = Pick<Item, 'id' | 'question_id' | 'text_sha256'>;
+
 /**
  * The key every grade records: the seed, the instrument's sha256, the pool, and a hash of each item's question and gold
  * (its text, answer and BG1 fields) as the loaded corpus holds them now.
  */
-export const poolSha256 = (pool: readonly Item[], seed: number, questions: ReadonlyMap<string, MemoryQuestion>, instrument: Pick<Instrument, 'sha256'>) => {
+export const poolSha256 = (pool: readonly PoolKeyItem[], seed: number, questions: ReadonlyMap<string, MemoryQuestion>, instrument: Pick<Instrument, 'sha256'>) => {
   const gold = pool.map(i => { const q = questions.get(i.question_id); return q ? sha256(JSON.stringify({ question: q.question, answer: q.answer, bg1: q.bg1 ?? null })) : null; });
   return sha256(JSON.stringify({ seed, instrument: instrument.sha256, pool, gold }));
 };
 
 /** Why the grades in a judgments file were not all made under this key (poolSha256) for each item's text; null when they were. */
-export function staleGrades(file: string, pool: readonly Item[], seed: number, questions: ReadonlyMap<string, MemoryQuestion>, instrument: Pick<Instrument, 'sha256'>): string | null {
+export function staleGrades(file: string, pool: readonly PoolKeyItem[], seed: number, questions: ReadonlyMap<string, MemoryQuestion>, instrument: Pick<Instrument, 'sha256'>): string | null {
   const key = poolSha256(pool, seed, questions, instrument), items = new Map(pool.map(i => [i.id, i]));
   const stale = readGraded(file).flatMap(r => {
     const i = items.get(r.item);

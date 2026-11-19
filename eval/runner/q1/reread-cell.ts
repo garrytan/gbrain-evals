@@ -40,6 +40,12 @@
  * receipt.json. A BG1 re-read's receipt (and verify.json) also carries `dataset`, the corpus record its schedule was
  * checked against, as BG1's cells write it into run-config.json, so BG1's verdict.ts checks it against the filled
  * manifest. The proxy, cell token, placeholder keys and keyless/paid marker are calibration-cell.ts's.
+ *
+ * BG1-C's judge check (eval/runner/bg1/bg1c-judge-check.ts) re-reads BG1's dev arms with gpt-6.2-sol, which their judge
+ * map does not name, and grades each answer as a counted BG1-C row of that reader is graded: `gating` names the reader's
+ * gating judge, which then grades alone, in the gating view at PER_READER_JUDGE_SETTINGS, with no canonical judge. A
+ * gating judge from the reader's own family is refused, and the judge is part of the --out's identity, so a re-read
+ * never resumes under another judging plan. Without `gating` nothing changes.
  */
 import { randomUUID } from 'node:crypto';
 import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -55,9 +61,9 @@ import { DEFAULT_ROUTE_CAPS, keylessKeys, keylessUpstream, MeteringProxy, usageS
 import { DEFAULT_ROUTE_CLASSES } from '../shootout-cell.ts';
 import type { PackedContext } from '../systems/render-v2.ts';
 import { claimOut, keylessUpstreamArg } from './calibration-cell.ts';
-import { answerAppender, bg1GeminiKey, custodyGate, devOnly, findCell, gatherStaging, JUDGED, latestBy, metering, needsCustody, onSlot, readerMaxTokens, readPrompt, refuseCompatJudges, requiredJudges, scheduledQuestions,
-  selectCellQuestions, type CellManifestId, type MeterLine, type StagedRetrieval } from './cell.ts';
-import { frontierJudgesFor, isBg1Benchmark, pinnedJudgeRouteCaps, policyKey, type ArmDefinition, type CellDefinition } from './cells/definitions.ts';
+import { answerAppender, bg1GeminiKey, custodyGate, devOnly, findCell, frontierInstrumentId, gatherStaging, JUDGED, latestBy, metering, needsCustody, onSlot, readerMaxTokens, readPrompt, refuseCompatJudges, requiredJudges, scheduledQuestions,
+  selectCellQuestions, type CellManifestId, type MeterLine, type RequiredJudge, type StagedRetrieval } from './cell.ts';
+import { frontierJudgesFor, isBg1Benchmark, PER_READER_JUDGE_SETTINGS, pinnedJudgeRouteCaps, policyKey, type ArmDefinition, type CellDefinition } from './cells/definitions.ts';
 import { loadRS1Manifest } from './cells/rs1.ts';
 import { exitCodeOf, refuse, renderMessage, ScoreboardError } from './scoreboard-errors.ts';
 import { readBg1Manifest } from '../memory-qa/corpus.ts';
@@ -226,9 +232,10 @@ export function verifySources(def: CellDefinition, arm: ArmDefinition, sources: 
   return { verify, plan: problems.length ? null : plan };
 }
 
-export interface RereadOptions { sources: string[]; reader: string; out: string; manifest?: CellManifestId; env?: Record<string, string | undefined>; keyless?: boolean }
+/** `gating`: the reader's gating judge, which then grades alone (BG1-C's judge check; see the header). */
+export interface RereadOptions { sources: string[]; reader: string; out: string; manifest?: CellManifestId; env?: Record<string, string | undefined>; keyless?: boolean; gating?: string }
 export interface RereadDeps { corpus?: Corpus; reader?: ChatLike; judge?: ChatLike; instrument?: Instrument }
-export interface PreparedReread { def: CellDefinition; arm: ArmDefinition; reader: string; out: string; manifest: CellManifestId | null; keyless: boolean; instrument: Instrument; verify: RereadVerify; plan: PlannedRead[] }
+export interface PreparedReread { def: CellDefinition; arm: ArmDefinition; reader: string; out: string; manifest: CellManifestId | null; keyless: boolean; instrument: Instrument; verify: RereadVerify; plan: PlannedRead[]; gating: string | null }
 
 /** Everything before the first request: the judge refusal, custody, one re-read per --out, the --out claim, the corpus and the byte-for-byte check (verify.json). */
 export function prepareReread(def: CellDefinition, arm: ArmDefinition, opts: RereadOptions, deps: Pick<RereadDeps, 'corpus' | 'instrument'> = {}): PreparedReread {
@@ -236,9 +243,11 @@ export function prepareReread(def: CellDefinition, arm: ArmDefinition, opts: Rer
   const out = resolve(opts.out);
   const instrument = deps.instrument ?? instrumentFor(def.canonical_instrument);
   let frontier: string[];
-  try { frontier = arm.frontier?.per_reader ? frontierJudgesFor(arm, opts.reader) : []; }
+  try { frontier = !opts.gating && arm.frontier?.per_reader ? frontierJudgesFor(arm, opts.reader) : []; }
   catch (e) { throw refuse({ code: 'USAGE', message: `${arm.cell_id} judges each reader with its family's frontier judge: ${(e as Error).message}`, why: 'a re-read answer on a per-reader frontier arm is scored by both judge views, so a reader without a preregistered judge would be read and never fully scored', fix: { next: 'report', user_message: 're-read with particle:particle-1, whose frontier judge is openai:gpt-6.1-sol' } }); }
-  refuseCompatJudges(arm.cell_id, [instrument.canonical_judge, ...frontier]);
+  if (opts.gating && opts.gating.split(':')[0] === opts.reader.split(':')[0]) throw refuse({ code: 'USAGE', message: `${opts.gating} would grade ${opts.reader}, a reader of its own family`,
+    why: 'no judge grades its own family\'s answers (R78; GST-767)', fix: { next: 'report', user_message: 'name the reader\'s preregistered gating judge (definitions.ts bg1JudgeOf)' } });
+  refuseCompatJudges(arm.cell_id, opts.gating ? [opts.gating] : [instrument.canonical_judge, ...frontier]);
   if (!hasChatRoute(opts.reader)) throw refuse({ code: 'USAGE', message: `reader ${opts.reader} has no chat route`, why: 'a re-read sends each frozen prompt to one provider:model reader', fix: { next: 'run', argv: [...FRONT, '--reader', 'particle:particle-1'] } });
   if (def.benchmark === 'bg1' && (deps.corpus ? deps.corpus.source.revision === 'unfilled' : readBg1Manifest().manifest.status !== 'filled')) throw refuse({ code: 'PREFLIGHT_FAILED', message: `bg1: the BG1 manifest is unfilled, so ${arm.cell_id} cannot be re-read`,
     why: 'a re-read is scored only against the filled manifest\'s pinned bytes, and BG1\'s verdict.ts checks every receipt\'s dataset against it', fix: { next: 'ask_user', user_message: 'the custodian fills the BG1 manifest before any BG1 re-read' } });
@@ -260,12 +269,12 @@ export function prepareReread(def: CellDefinition, arm: ArmDefinition, opts: Rer
       why: 'a re-read sends exactly the bytes the source readers read, so every frozen context, answer and schedule must check out first',
       fix: { next: 'report', user_message: resuming ? `the sources no longer verify; ${join(out, 'verify.json')} still holds the check the answers in ${out} were read under` : `the counts are in ${join(out, 'verify.json')}` } });
   }
-  const identity = JSON.stringify({ arm_cell_id: arm.cell_id, reader: opts.reader, effort: def.effort, config_sha256: verify.source_config_sha256, contexts_sha256: verify.sources.map(s => s.contexts_sha256).sort() }) + '\n';
+  const identity = JSON.stringify({ arm_cell_id: arm.cell_id, reader: opts.reader, effort: def.effort, config_sha256: verify.source_config_sha256, contexts_sha256: verify.sources.map(s => s.contexts_sha256).sort(), ...(opts.gating ? { gating: opts.gating } : {}) }) + '\n';
   if (resuming && readFileSync(frozen, 'utf8') !== identity) throw refuse({ code: 'USAGE', message: `${out} holds a re-read of other sources, another run configuration or another effort; give this run a fresh --out`,
     why: 'a resume keeps the answers already in --out, so it must read the sources they were read from', fix: { next: 'run', argv: [...FRONT, '--out', '<a fresh directory>'] } });
   writeFileSync(join(out, 'verify.json'), JSON.stringify(verify, null, 2) + '\n');
   if (!resuming) writeFileSync(frozen, identity);
-  return { def, arm, reader: opts.reader, out, manifest: opts.manifest ?? null, keyless: !!opts.keyless, instrument, verify, plan };
+  return { def, arm, reader: opts.reader, out, manifest: opts.manifest ?? null, keyless: !!opts.keyless, instrument, verify, plan, gating: opts.gating ?? null };
 }
 
 export interface RereadResult { cell_id: string; dir: string; status: 'complete' | 'partial'; stopped: string | null; receipt: Record<string, unknown> }
@@ -287,7 +296,7 @@ export async function runReread(p: PreparedReread, opts: { providerProxy?: strin
   const chat = new ChatClient(join(p.out, 'cache', 'qa'));
   const readerChat = onSlot(deps.reader ?? chat, meter, 'harness');
   const judgeChat = onSlot(deps.judge ?? chat, meter, 'judge');
-  const planned = requiredJudges(arm, { reader, replicate: 0 }, instrument);
+  const planned: RequiredJudge[] = p.gating ? [{ judge: p.gating, instrument_id: frontierInstrumentId(instrument.id, p.gating), view: 'gating', settings: { ...PER_READER_JUDGE_SETTINGS } }] : requiredJudges(arm, { reader, replicate: 0 }, instrument);
   const judgedBy = (id: string, judge: string) => judgments.has(judgmentKey({ answer_id: id, instrument_sha256: instrument.sha256, judge, judge_replicate: 0 }));
   const judged = (id: string) => planned.every(j => judgedBy(id, j.judge));
   const idOf = (x: PlannedRead) => answerId(cellId, x.question.id, reader, 0);
@@ -329,7 +338,7 @@ export async function runReread(p: PreparedReread, opts: { providerProxy?: strin
   const all = answers.all().sort((a, b) => (order.get(a.answer_id) ?? 0) - (order.get(b.answer_id) ?? 0));
   const canonical = new Map(judgments.all().filter(j => j.instrument_id === instrument.id && j.judge_replicate === 0).map(j => [j.answer_id, j]));
   const scores = all.map(a => canonical.get(a.answer_id)?.score).filter((s): s is number => typeof s === 'number');
-  const view = planned[1];
+  const view = planned.find(j => j.view === 'gating');
   const viewScores = view ? all.map(a => judgments.all().find(j => j.answer_id === a.answer_id && j.instrument_id === view.instrument_id && j.judge_replicate === 0)?.score).filter((s): s is number => typeof s === 'number') : [];
   const mean = (xs: number[]) => xs.length ? Math.round(xs.reduce((s, x) => s + x, 0) / xs.length * 1e6) / 1e6 : null;
   const outcomes: Record<string, number> = {};
@@ -346,7 +355,7 @@ export async function runReread(p: PreparedReread, opts: { providerProxy?: strin
     system: { kind: def.system, configuration: def.configuration },
     arm: { id: arm.id, arm: arm.arm, mode: arm.mode, policy: arm.policy, budget: arm.budget, label: arm.label },
     readers: [reader], reader_replicates: {}, effort: def.effort, max_tokens: readerMaxTokens(reader),
-    instrument: { id: instrument.id, sha256: instrument.sha256, judge: instrument.canonical_judge },
+    instrument: { id: instrument.id, sha256: instrument.sha256, judge: p.gating ? null : instrument.canonical_judge },
     frontier: view ? { per_reader: true, judge_by_reader: { [reader]: view.judge }, instrument_ids: [view.instrument_id] } : null,
     verify: p.verify.counts,
     ...(p.verify.dataset ? { dataset: p.verify.dataset } : {}),
