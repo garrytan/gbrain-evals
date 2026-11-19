@@ -227,28 +227,29 @@ server includes 0.
 
 The minimum detectable difference (MDD) below is for one comparison at the strictest Holm step (one-sided alpha
 0.05 / 4 = 0.0125) with 80% power, by `rule.ts`'s `mdd`: (t(1 - alpha) + t(0.8)) × SD / sqrt(N), on N - 1 degrees of
-freedom. Later Holm steps are looser, so these are conservative. Power is computed with the noncentral t. Two SD
-scenarios per comparison: **central**, the development per-world SD (v0.60.741.0, one reader); and **pessimistic**,
+freedom. Later Holm steps are looser, so these are conservative. The two right-hand columns come from 200,000 simulated
+runs of the frozen rule (Holm over the four comparisons, treated as independent, seed 20261119). Two SD scenarios per
+comparison: **central**, the development per-world SD (v0.60.741.0, one reader); and **pessimistic**,
 BG1's sealed per-world SD (v0.60.593.0, three readers).
 
 | Comparison | SD central / pessimistic | MDD at N = 30 | **MDD at N = 40** | MDD at N = 48 | Power for "ahead" at the dev effect, N = 40 | Chance of "not behind by 3" at the dev effect, N = 40 |
 |---|---|---|---|---|---|---|
-| now, memory-bank | 3.49 / 5.15 | 2.05 / 3.03 | **1.76 / 2.59** | 1.59 / 2.35 | 0.99 / 0.81 (dev +2.6) | 1.00 / 1.00 |
-| now, extract-first | 4.83 / 5.59 | 2.84 / 3.28 | **2.43 / 2.81** | 2.21 / 2.55 | 0.21 / 0.16 (dev +1.1) | 1.00 / 0.99 |
-| past, memory-bank | 5.11 / 7.13 | 3.00 / 4.19 | **2.57 / 3.59** | 2.33 / 3.26 | 0.31 / 0.16 (dev +1.5) | 1.00 / 0.95 |
-| past, extract-first | 4.33 / 7.42 | 2.54 / 4.36 | **2.18 / 3.73** | 1.98 / 3.39 | 0.43 / 0.15 (dev +1.5) | 1.00 / 0.93 |
+| now, memory-bank | 3.49 / 5.15 | 2.05 / 3.03 | **1.76 / 2.59** | 1.59 / 2.35 | 0.99 / 0.82 (dev +2.6) | 1.00 / 1.00 |
+| now, extract-first | 4.83 / 5.59 | 2.84 / 3.28 | **2.43 / 2.81** | 2.21 / 2.55 | 0.30 / 0.20 (dev +1.1) | 1.00 / 0.99 |
+| past, memory-bank | 5.11 / 7.13 | 3.00 / 4.19 | **2.57 / 3.59** | 2.33 / 3.26 | 0.43 / 0.22 (dev +1.5) | 1.00 / 0.95 |
+| past, extract-first | 4.33 / 7.42 | 2.54 / 4.36 | **2.18 / 3.73** | 1.98 / 3.39 | 0.55 / 0.20 (dev +1.5) | 1.00 / 0.93 |
 
 **What this means, said before any data.**
 
-- If the development effects are the truth, all four "ahead" (row 3's headline) has about a 3% chance at N = 40 under
-  the central SDs, treating the four as independent. The positive correlation between the two servers' comparisons
-  raises that a little. A lead in every comparison needs true differences of about 2 to 4 points, larger than three of
-  the four development effects.
-- The most likely result is row 5: ahead of the memory-bank server on what is true now, and not behind by 3 points or
-  more elsewhere.
+- If the development effects are the truth, all four "ahead" (row 3's headline) has about a 14% chance at N = 40 under
+  the central SDs and about 3% under the pessimistic SDs, treating the four as independent. The positive correlation
+  between the two servers' comparisons raises that a little. At the strictest Holm step, a lead in a comparison needs a
+  true difference of about 2 to 4 points, larger than three of the four development effects.
+- The most likely result is row 5 (55% central, 67% pessimistic): ahead of the memory-bank server on what is true now,
+  and not behind by 3 points or more elsewhere. Row 4, one class ahead of both servers, comes next (31%, 18%).
 - "Not behind by 3 points or more" is the well-powered reading: 0.93 to 1.00 in every comparison at the development
   effects. It is what can retire BG1's "behind on questions about the past" for this release. If the true difference is
-  0, its chance is 0.59 to 1.00, and "level within 3 points" is 0.18 to 1.00.
+  0, its chance is 0.59 to 1.00, and "level within 3 points" is 0.20 to 1.00.
 
 ## Budget
 
@@ -297,7 +298,8 @@ until that reader is clean.
 3. **Verdict.** A `confirm` mode in `eval/runner/bg1/verdict.ts`: `decideFamily` over the four comparisons, the two
    3-point readings, the outcome table's row and sentences emitted from code, and the reports above. A test runs it over
    every combination of the four comparisons' words and both descriptive states, and checks that each maps to exactly
-   one row. It refuses any receipt that doesn't match the filled BG1-C manifest.
+   one row. It refuses any receipt that doesn't match the filled BG1-C manifest. A test reruns the power simulation above
+   from its seed through `decideFamily` and checks the table's numbers.
 4. **Judge check.** The public gpt-6.2-sol re-reads and the stratified Gemini agreement check
    (`eval/runner/q1/reread-cell.ts`, `eval/runner/bg1/judge-check.ts`), with a test that the pool is stratified and the
    gates hold.
