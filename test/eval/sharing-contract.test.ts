@@ -330,6 +330,16 @@ const notes: Record<string, unknown> = {};
 
 const savedDiscovery = process.env.GBRAIN_MODEL_DISCOVERY;
 process.env.GBRAIN_MODEL_DISCOVERY = 'off';
+const realFetch = globalThis.fetch;
+const offHostFetches: string[] = [];
+globalThis.fetch = Object.assign(async (input: string | URL | Request, init?: RequestInit) => {
+  const url = new URL(input instanceof Request ? input.url : String(input));
+  if (url.hostname !== '127.0.0.1') {
+    offHostFetches.push(url.origin);
+    throw new Error('network disabled in the sharing contract test: ' + url.origin);
+  }
+  return realFetch(input, init);
+}, realFetch) as typeof fetch;
 configureGateway({ embedding_model: 'openai:text-embedding-3-small', embedding_dimensions: DIMS, env: { OPENAI_API_KEY: 'keyless-test' } });
 __setEmbedTransportForTests((async ({ values }: { values: string[] }) => ({ embeddings: values.map(vectorFor) })) as never);
 
@@ -351,6 +361,7 @@ for (const s of SCENARIOS) {
           archive_rescope: rescope };
         const bad = [...before, ...after].filter(c => c.verdict !== 'ok').map(c => c.phase + ' ' + c.caller + ' ' + c.item + ' ' + c.path + ' ' + c.verdict + (c.error ? ' (' + c.error + ')' : ''));
         expect(bad).toEqual([]);
+        expect(offHostFetches).toEqual([]);
       } finally {
         await closeBrain(b);
       }
@@ -359,6 +370,7 @@ for (const s of SCENARIOS) {
 }
 
 afterAll(() => {
+  globalThis.fetch = realFetch;
   __setEmbedTransportForTests(null);
   resetGateway();
   if (savedDiscovery === undefined) delete process.env.GBRAIN_MODEL_DISCOVERY;
