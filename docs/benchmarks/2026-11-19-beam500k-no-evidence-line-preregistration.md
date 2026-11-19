@@ -133,7 +133,19 @@ To be appended before the first counted cell: the gbrain release and commit; the
 
 ## Amendments
 
-None yet.
+### Amendment 1 (2026-11-19, before any paid request): the approved build condition, pilots, the newest release
+
+This adds a second verdict, read the way gbrain's maintainers read the owner's approval of their release plan. It is their reading, not the owner's words. The preregistered "material" verdict above is unchanged, and the results report both verdicts.
+
+- **Build:** the perfect line cuts the pooled made-up rate on the 22 unanswerable questions by at least 44% of `B`'s rate (8 of 18, taken as a ratio), with 3 samples per reader, paired, and Δ_O's 95% interval excluding 0.
+- **No build:** the relative cut's point estimate is under 25%.
+- **Borderline:** a relative cut from 25% to 44%, or 44% or more with an interval that reaches 0. This run then decides nothing. The decision goes to a separate, separately approved step on held-out data, which this run does not include.
+- **Ship conditions** (the line misfires on at most 5% of answerable questions, and costs at most 1 point of correct answers) are measured later on the real signal, not in this test. Arm `F` shows the line on every answerable question, so it can't measure a misfire rate. What it measures is L, the correct answers lost per misfire. The results print L with its interval, and beside it the cost at a 5% misfire rate (0.05 × L) and the highest misfire rate that keeps the cost at 1 point (1 point ÷ L), each with an interval. When an interval is wider than the bar it is compared with, the same sentence says so.
+- The relative cut is Δ_O divided by `B`'s pooled made-up rate, both computed inside each bootstrap resample.
+- **Pilot (R111).** Each arm's pilot comes before its counted run and stays under a tenth of that arm's budget. For `B`, the one-question smoke per reader goes through the harness: it shows the store answers and the question is supplied with the delivered-context gate met. For `O` and `F`, a two-question replay per reader, one unanswerable for `O` and one answerable for `F`, shows in the recorded final prompt that the appended line is present and the rest of the prompt is byte-identical. Both judges' check (R78) must pass before any pilot output is judged. The pilot rows are judged, reported, and not counted. An arm whose pilot fails is fixed by dated amendment or left out, and is reported as left out.
+
+- **Named open notes from #527's review, settled here.** (1) When the correctness judge fails, L is unavailable. The "Material" row then sizes the signal with the made-up cut alone, says the false-alarm cost is unmeasured, and the build condition's ship readings print "unavailable". (2) When the correctness judge fails, the before row's accuracy and wrong-answer rates are printed as descriptive, not counted. When a type judge also fails, Δ_O for that judge's rows is descriptive, and the verdict uses only the readers whose judges passed, saying so.
+- **gbrain build.** The newest release on gbrain's master is now v0.60.743.0 (commit `16124807cb78`, read with `git ls-remote` at 2026-11-19T07:42Z). The pin moves to it in the next commit on this branch, before any ingest. The tags are read again immediately before the first ingest.
 
 ## Disclosures
 
