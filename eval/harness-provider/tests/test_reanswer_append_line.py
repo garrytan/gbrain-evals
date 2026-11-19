@@ -90,3 +90,29 @@ def test_bad_line_options_are_refused_before_anything_runs(source, tmp_path, sen
     with pytest.raises(SystemExit, match=match):
         asyncio.run(reanswer(source, tmp_path / "out", 2, tag="oracle", **kwargs))
     assert sent == []
+
+
+def test_line_ids_outside_questions_are_refused(source, tmp_path, sent):
+    first, second = json.loads((source / "cell.json").read_text())["resolved"]["schedule"][:2]
+    with pytest.raises(SystemExit, match="outside --questions"):
+        asyncio.run(reanswer(source, tmp_path / "out", 2, only={first}, tag="oracle", append_line=LINE, line_ids={first, second}))
+    assert sent == []
+
+
+def test_a_reader_refusal_keeps_the_prompt_it_was_sent(tmp_path, stub_models, shim_scorer, monkeypatch):  # noqa: F811
+    class ModelRefusal(RuntimeError):
+        pass
+
+    real = StubLLM.generate
+
+    def refusing(self, prompt, schema):
+        if "correct" in set(schema.properties):
+            return real(self, prompt, schema)
+        raise ModelRefusal("stop_reason=refusal")
+
+    monkeypatch.setattr(StubLLM, "generate", refusing)
+    d = make_cell(tmp_path, SPEC)
+    asyncio.run(cellmod.CellRun(d).run())
+    rows = _answers(d).values()
+    assert rows and all(r["error"].startswith("reader refusal") for r in rows)
+    assert all(r["final_prompt"] for r in rows)

@@ -42,6 +42,8 @@ async def reanswer(src: Path, out_root: Path, sample: int, retrievals: Path | No
     stored = spec["resolved"]
     if line_ids is not None and not line_ids <= set(stored["schedule"]):
         raise SystemExit(f"--line-ids names question(s) outside the cell's schedule: {', '.join(sorted(line_ids - set(stored['schedule']))[:10])}")
+    if line_ids is not None and only is not None and not line_ids <= only:
+        raise SystemExit(f"--line-ids names question(s) outside --questions, which would keep answers that never saw the line: {', '.join(sorted(line_ids - only)[:10])}")
     if retrievals is not None and only is not None:
         diff_path = retrievals.parent / "replay-diff.json"
         if not diff_path.exists():

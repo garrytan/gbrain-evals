@@ -28,6 +28,7 @@ import { createHash } from 'node:crypto';
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { BudgetRun, budgetOptionsFrom, closeLedgers, initLedger, priceRequest } from './budget-ledger.ts';
+import { requirePaidArm } from './paid-arm.ts';
 import { scrubMachinePaths } from './receipt.ts';
 import { gbrainSpecFrom, resolveGbrainUnderTest, productIdentityFor, type GbrainUnderTest } from './gbrain-under-test.ts';
 import { ensureHarness, harnessProcessEnv, PROVIDER_DIR, REPO_ROOT, type HarnessInstall } from './harness-env.ts';
@@ -494,6 +495,25 @@ export async function runCell(ctx: Ctx, target: string, resume: boolean, tuneGri
 }
 
 /**
+ * The ledger run, upstreams and keys for a replay command (rejudge, reanswer). Under --stub-upstream every request goes
+ * to the local stub on a stub ledger, as in runCell. Otherwise the command spends only with --paid and an open
+ * --budget-run-id, which it joins, so its requests count against that run's cap.
+ */
+export async function replaySpend(ctx: Pick<Ctx, 'argv' | 'stub' | 'log'>, runner: string, dir: string, budgetUsd: number) {
+  if (ctx.stub) {
+    const { startStubUpstream } = await import('./stub-upstream.ts');
+    const stub = await startStubUpstream();
+    mkdirSync(dir, { recursive: true });
+    const ledgerPath = join(dir, 'stub-ledger.sqlite');
+    if (!existsSync(ledgerPath)) initLedger({ ledgerPath, programCapUsd: 1000, reason: 'keyless stub-upstream replay: no real spend' });
+    return { run: BudgetRun.open({ runner, budgetUsd, ledgerPath, log: ctx.log }), upstreams: stub.upstreams,
+      realKeys: Object.fromEntries(['openai', 'anthropic', 'gemini', 'groq', 'voyage', 'particle'].map(p => [p, 'stub-upstream-key'])), close: () => stub.close() };
+  }
+  const { budgetRunId } = requirePaidArm(ctx.argv, { arm: runner, estimateUsd: null });
+  return { run: BudgetRun.join({ runId: budgetRunId, ledgerPath: budgetOptionsFrom(ctx.argv).ledgerPath, log: ctx.log }), upstreams: undefined, realKeys: undefined, close: () => {} };
+}
+
+/**
  * Joint blinded re-judge of two or more cells over the same schedule, through
  * the metering proxy, with the dataset's own judge (mpw/rejudge.py).
  */
@@ -502,10 +522,11 @@ export async function rejudgeCells(ctx: Ctx, ids: string[], budgetUsd: number, o
   const judge = cells[0].resolved.dataset_judge_model ?? cells[0].spec.models.judge;
   if (!judge) throw new Error('these cells have no judge model');
   const { startMeteringProxy } = await import('./harness-metering-proxy.ts');
-  const ledgerPath = budgetOptionsFrom(ctx.argv).ledgerPath;
-  const run = BudgetRun.open({ runner: `harness-rejudge:${ids.join('+')}`.slice(0, 200), budgetUsd, ledgerPath, log: ctx.log });
+  const spend = await replaySpend(ctx, `harness-rejudge:${ids.join('+')}`.slice(0, 200), out, budgetUsd);
+  const run = spend.run;
   mkdirSync(join(out, 'proxy'), { recursive: true });
-  const proxy = await startMeteringProxy({ run, cellId: `rejudge:${ids.join('+')}`, requestLogPath: join(out, 'proxy/requests.jsonl'), bodiesDir: join(out, 'proxy/bodies'), labels: ['harness'] });
+  const proxy = await startMeteringProxy({ run, cellId: `rejudge:${ids.join('+')}`, requestLogPath: join(out, 'proxy/requests.jsonl'), bodiesDir: join(out, 'proxy/bodies'), labels: ['harness'],
+    upstreams: spend.upstreams, realKeys: spend.realKeys });
   const j = splitModel(judge);
   const env = { ...pick(proxy.envFor('harness'), [LLM_PROVIDER[j.llm]]), OMB_JUDGE_LLM: j.llm, OMB_JUDGE_MODEL: j.model,
     OMB_ANSWER_LLM: j.llm, OMB_ANSWER_MODEL: j.model, MPW_PROXY_LOG: join(out, 'proxy/requests.jsonl'), MPW_PROXY_BODIES: join(out, 'proxy/bodies') };
@@ -516,6 +537,7 @@ export async function rejudgeCells(ctx: Ctx, ids: string[], budgetUsd: number, o
   try { code = await child.exited; } finally {
     const stats = proxy.stats();
     await proxy.close();
+    spend.close();
     const summary = run.close();
     writeFileSync(join(out, 'spend.json'), JSON.stringify({ run_id: summary.run_id, usd: summary.actual_usd, requests: summary.requests, metered: stats }, null, 2) + '\n');
     closeLedgers();
@@ -532,10 +554,12 @@ export async function reanswerCell(ctx: Ctx, id: string, sample: number, budgetU
   only?: { retrievals?: string; questions?: string; appendLine?: string; lineIds?: string }): Promise<number> {
   const cell = JSON.parse(readFileSync(join(ctx.cellsDir, id, 'cell.json'), 'utf8')) as CellFile;
   const { startMeteringProxy } = await import('./harness-metering-proxy.ts');
-  const run = BudgetRun.open({ runner: `harness-reanswer:${id}-s${sample}`, budgetUsd, ledgerPath: budgetOptionsFrom(ctx.argv).ledgerPath, log: ctx.log });
+  const spend = await replaySpend(ctx, `harness-reanswer:${id}-s${sample}`, join(out, `${id}-s${sample}`), budgetUsd);
+  const run = spend.run;
   const proxyDir = join(out, `${id}-s${sample}`, 'proxy');
   mkdirSync(proxyDir, { recursive: true });
-  const proxy = await startMeteringProxy({ run, cellId: `${id}-s${sample}`, requestLogPath: join(proxyDir, 'requests.jsonl'), bodiesDir: join(proxyDir, 'bodies'), labels: ['harness'] });
+  const proxy = await startMeteringProxy({ run, cellId: `${id}-s${sample}`, requestLogPath: join(proxyDir, 'requests.jsonl'), bodiesDir: join(proxyDir, 'bodies'), labels: ['harness'],
+    upstreams: spend.upstreams, realKeys: spend.realKeys });
   const a = splitModel(cell.spec.models.answer);
   const j = cell.spec.models.judge ? splitModel(cell.spec.models.judge) : a;
   const env = { ...pick(proxy.envFor('harness'), [...new Set([LLM_PROVIDER[a.llm], LLM_PROVIDER[j.llm]])]), OMB_ANSWER_LLM: a.llm, OMB_ANSWER_MODEL: a.model,
@@ -549,6 +573,7 @@ export async function reanswerCell(ctx: Ctx, id: string, sample: number, budgetU
   try { code = await child.exited; } finally {
     const stats = proxy.stats();
     await proxy.close();
+    spend.close();
     const summary = run.close();
     writeFileSync(join(out, `${id}-s${sample}`, 'spend.json'), JSON.stringify({ run_id: summary.run_id, usd: summary.actual_usd, requests: summary.requests, metered: stats }, null, 2) + '\n');
     closeLedgers();
@@ -621,8 +646,8 @@ export function makeCtx(argv: string[], log: (l: string) => void = l => process.
 }
 
 export const USAGE = `usage: bun run harness:cell <plan|run|resume> <spec.json | cell-id> [--stub-upstream] [--budget-ledger <path>] [--gbrain <checkout>[@ref]] [--cells-dir <dir>]
-       bun run harness:cell rejudge <cell-id> <cell-id> [--out <dir>] [--seed N] [--budget-usd N]   joint blinded re-judge with the dataset's judge
-       bun run harness:cell reanswer <cell-id> [--sample N] [--out <dir>] [--budget-usd N] [--retrievals <replay dir> --questions <json list>] [--append-line <text> --line-ids <json list>]   another answer sample from the recorded (or replayed) retrievals, optionally with a line added to listed questions' context
+       bun run harness:cell rejudge <cell-id> <cell-id> [--out <dir>] [--seed N] (--stub-upstream [--budget-usd N] | --paid --budget-run-id <id>)   joint blinded re-judge with the dataset's judge
+       bun run harness:cell reanswer <cell-id> [--sample N] [--out <dir>] (--stub-upstream [--budget-usd N] | --paid --budget-run-id <id>) [--retrievals <replay dir> --questions <json list>] [--append-line <text> --line-ids <json list>]   another answer sample from the recorded (or replayed) retrievals, optionally with a line added to listed questions' context
        bun run harness:cell replay <cell-id> --store <store dir> --out <dir> --gbrain <checkout>@<ref> [--budget-usd N] [--probe]   retrieval-only replay on another build (--probe logs queries and engine searches)
        bun run harness:cell ingest <spec.json | cell-id>   ingest every unit into the shared store, no questions
        bun run harness:cell tune <cell-id> --auto '{"targets": [4000, 8000, 16000, 32000], "base": {"token_budget": 8100}, "sample": 60}'

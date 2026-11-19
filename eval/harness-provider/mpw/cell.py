@@ -494,7 +494,9 @@ class CellRun:
             raise
         except Exception as e:  # noqa: BLE001
             if type(e).__name__ == "ModelRefusal":
+                sent = [p["prompt"] for p in cap.prompts if "prompt" in p]
                 return AnswerRecord(ok=True, outcome=ANSWERED, answer=REFUSAL_ANSWER, rendered_context=rendered,
+                                    final_prompt=sent[0] if len(sent) == 1 else "",
                                     error=f"reader refusal: {e}", requests=self._requests(tag), **base)
             return AnswerRecord(ok=False, outcome=ANSWER_FAILURE, rendered_context=rendered,
                                 error=f"{type(e).__name__}: {e}", requests=self._requests(tag), **base)
