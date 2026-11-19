@@ -224,8 +224,9 @@ behaviour, such as `forget` leaving nothing behind or a sync catching up, where 
    that doesn't ship ([October 15](docs/benchmarks/2026-10-15-cat40-next-confirm/README.md)). Different worlds can't be
    paired by task, so those comparisons are unpaired. `09d21554d` led by 8.50 on public worlds P1 and P2 in October; on
    the new worlds' tasks it led files by +4.00 (0.00 to +8.25), and the newest build scored 1.50 points below it (-4.50
-   to +1.50), so the build didn't move the number ([old-build control](docs/benchmarks/2026-11-19-cat40-hard-old-build-control.md)).
-   The worlds, the readers or the files agent did, and that run can't say which.
+   to +1.50), so the control found no regression from the build, though its interval allows up to 4.50 points
+   ([old-build control](docs/benchmarks/2026-11-19-cat40-hard-old-build-control.md)). The rest of the drop comes from the worlds,
+   the readers or the files agent, and that run can't say which.
 4. gbrain trailed by a similar amount on world M in October (-15.0 at `3e4ff61ce`). Most of the gap is in questions
    whose history is also long (-18.18 points, 54 against 66 of 66 cells).
 5. The gap sits in questions that need several conversations, and LongMemEval-S was used to tune gbrain. The whole

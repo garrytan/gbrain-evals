@@ -111,7 +111,7 @@ Run notes:
 
 ## Limits
 
-- Both the build and the worlds changed since the published rows. The comparison with them is unpaired, and the readers changed too: GPT-6.2 Sol replaced GPT-6.1 Sol, and Sonnet 5.5 was dropped. The drop is a fact about these worlds on this build. The [old-build control](2026-11-19-cat40-hard-old-build-control.md) shows the build isn't its cause; the worlds, the readers or the files agent are, and neither run can say which.
+- Both the build and the worlds changed since the published rows. The comparison with them is unpaired, and the readers changed too: GPT-6.2 Sol replaced GPT-6.1 Sol, and Sonnet 5.5 was dropped. The drop is a fact about these worlds on this build. The [old-build control](2026-11-19-cat40-hard-old-build-control.md) found no regression from the build under its preregistered rule, though its interval allows the newest build up to 4.50 points below October's; the rest of the drop comes from the worlds, the readers or the files agent, and neither run can say which.
 - These worlds come from the public generator. They compare with world M and the public half, not with the sealed worlds (+13.0 and +10.67), which this run doesn't re-measure.
 - One attempt per task, so per-family and per-reader intervals are wide. They are secondary and uncorrected.
 

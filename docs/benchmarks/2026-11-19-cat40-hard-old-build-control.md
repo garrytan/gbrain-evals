@@ -61,7 +61,8 @@ The two builds lead in the same places (H1 and H5) and trail in the same place (
 - The files and newest-gbrain cells ran earlier on 2026-11-19 than the control's. Served model ids were recorded only for the control.
 - `09d21554d` and v0.60.742.0 differ by every gbrain change between them, so "not a regression" covers that span on these worlds, not each change.
 - Two worlds can't estimate between-world variance. The intervals are conditional on N1 and N2, and N1 alone leans the other way (newest minus old -4.50, 0.00 at the top of its interval).
-- October's +8.50 for this build was on other worlds (P1 and P2), read by Opus 5.5, Sonnet 5.5 and GPT-6.1 Sol, with an earlier files agent. That comparison is unpaired, so this run says the build didn't cause the drop, not which of the worlds, readers or files agent did.
+- October's +8.50 for this build was on other worlds (P1 and P2), read by Opus 5.5, Sonnet 5.5 and GPT-6.1 Sol, with an earlier files agent. That comparison is unpaired, so this run says the drop doesn't meet the preregistered regression rule (the newest build could still be up to 4.50 points below October's), not which of the worlds, readers or files agent caused the rest.
+- The preregistered descriptive bridge to October (Opus 5.5 only, October's P1 and P2 beside N1 and N2) is not reported. The Opus-only difference on N1 and N2 is in the per-reader table (+4.50, -1.50 to +11.00).
 - One attempt per task, so per-family and per-reader intervals are wide. They are secondary and uncorrected.
 
 ## Files
