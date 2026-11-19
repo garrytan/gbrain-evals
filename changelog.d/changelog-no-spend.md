@@ -1,0 +1,1 @@
+CHANGELOG.md entries from 2026-11-08 on no longer state spend, cost totals or caps; each keeps its description. A new test (`test/eval/changelog-no-spend.test.ts`) fails any changelog fragment, or any CHANGELOG.md section from that date on, that states a dollar amount or a cap figure, so a release can't fold one in again.
