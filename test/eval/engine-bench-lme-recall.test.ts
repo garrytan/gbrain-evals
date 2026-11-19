@@ -183,7 +183,7 @@ describe('runLmeRecall', () => {
   test('keyword arm on PGLite finds the evidence session; the pinned build refuses rust with the reason', async () => {
     const r = await runLmeRecall({ gut: pinned, engines: ['pglite', 'rust'], datasetPath: dataset, arms: ['keyword'], log: quiet });
     const [pg, rust] = r.engines;
-    expect(rust).toMatchObject({ kind: 'rust', status: 'refused', reason: 'rust_engine_not_in_build' });
+    expect(rust).toMatchObject({ kind: 'rust', status: 'refused', reason: 'rust_kind_unsupported' });
     expect(pg.status).toBe('ran');
     expect(pg.n_errors).toBe(0);
     expect(pg.recall.keyword).toEqual({ recall_all_at_5: 1, recall_any_at_5: 1, n_scored: 2 });
