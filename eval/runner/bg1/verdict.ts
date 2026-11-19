@@ -5,6 +5,9 @@
  *
  *   bun eval/runner/bg1/verdict.ts verdict --receipts <out dir>... [--manifest <filled bg1-manifest.json>] [--set BG1|BG1-dev3] [--judge-check <summary.json>] --out <dir>
  *   bun eval/runner/bg1/verdict.ts pilot   --receipts <out dir>... [--manifest <filled bg1-manifest.json>] --out <dir>
+ *   bun eval/runner/bg1/verdict.ts confirm [--look] --receipts <out dir>... --release <gbrain release> [--left-out <server row>=<reason>]... [--manifest <filled bg1c-manifest.json>]
+ *                                          [--cells <BG1-C cell set>] [--judge-check <summary.json>] --out <dir>
+ *   bun eval/runner/bg1/verdict.ts pilot   --set BG1-C --receipts <smoke out dir>... [--brain-counts <counts.json>] [--judge-check <report.json>]... --out <dir>
  *
  * Each --receipts directory is a cell or re-read output (cell.ts --out, reread-cell.ts --out): every
  * cells/<cell id>/receipt.json under it is read, with its run-config.json, rows, answers and judgments, the unit's frozen
@@ -44,6 +47,32 @@
  *             raw-text rows), each gating judge's model versions, and the judge check's summary when given.
  *   Pilot     wave A only (the first 12 kept worlds): the per-world SDs of the three primary differences under the gating
  *             view and their correlations, never a mean; then power.ts's N_final. Above 40 it exits 3.
+ *   Confirm   BG1-C (docs/benchmarks/2026-11-19-changing-facts-confirmation-preregistration.md and its Amendments 1 and
+ *             2; confirm.ts holds its design, rule, words and outcome table). The same receipt checks against the filled
+ *             BG1-C manifest (by default eval/decisions/datasets/bg1c-manifest.json; a missing or unfilled one refuses)
+ *             and its kept list of 40 BG1-C worlds, for the rows of the BG1-C cell set (by default
+ *             eval/runner/q1/cells/bg1c-cells.json), read by claude-opus-5-5, gpt-6.2-sol and particle-1. A server row
+ *             whose pilot failed is left out with --left-out <row>=<reason>: it needs no receipts, its two comparisons
+ *             read "not run (pilot failed: <reason>)", and Holm runs over the rest; gbrain's row refuses. The same values
+ *             and metric, and the drop cap and fill gate per comparison, a class's drops counting against both of its
+ *             comparisons. Each comparison (each server, on what is true now and on questions about the past) gets a
+ *             paired t and its z, and confirm.ts's rule turns them into words, the outcome row and its sentences.
+ *             --look reads exactly the first 20 kept worlds and writes <out>/look.json, refusing when it already exists,
+ *             since no second look counts: "continue" with each comparison's z, conditional power and status, or
+ *             "stop" with the full report, also written to confirm.json. Without --look it reads all 40 kept worlds and
+ *             writes confirm.json, and refuses unless <out>/look.json says "continue" with the same rows left out. The
+ *             worst case reruns the same stage's rule. Reported beside the words: each comparison's interval, counts and
+ *             wild bootstrap; per kind, per reader and all 64 questions pooled, unadjusted; fill, drops, exposure, the
+ *             matcher's agreement, cost per correct answer (claude-opus-5-5 and particle-1 first, then gpt-6.2-sol) and
+ *             the judges' model versions.
+ *   Pilot     with --set BG1-C, each BG1-C row's pilot (Amendment 1, R111): the smoke on bg1-dev-01, found under --receipts
+ *             by each cell receipt's system and its particle-1 re-read, against the pilot list's conditions. Condition 1:
+ *             a frozen context (runs/<cell>/contexts.ndjson, matched by the answers' context hashes) for every one of
+ *             the 64 questions, a mean fill rate of at least 0.90, and for gbrain --brain-counts' tagged_facts,
+ *             slotted_facts and changing_slots all above 0. Condition 2: every --judge-check report passes (stop false,
+ *             every gate passing). Condition 3: the cell's metered spend plus its re-read's reader and judge spend, per
+ *             world, at most 1.5 times the row's Budget rate. It prints each row's ingest wall time per world from the
+ *             receipt, writes pilot.json, and exits 3 naming each failing row and condition.
  */
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -55,10 +84,15 @@ import { HARNESS_FAILURES, PRODUCT_FAILURES, type Outcome } from '../memory-qa/o
 import { readRecords, type AnswerRecord, type JudgmentRecord } from '../memory-qa/records.ts';
 import { frontierInstrumentId, runConfigIdentity, runConfigText } from '../q1/cell.ts';
 import { loadBG1Manifest, OPUS, PARTICLE, SOL } from '../q1/cells/bg1.ts';
-import { bg1JudgeOf, PER_READER_JUDGE_SETTINGS } from '../q1/cells/definitions.ts';
-import { rereadCellId } from '../q1/reread-cell.ts';
+import { bg1JudgeOf, PER_READER_JUDGE_SETTINGS, type CellDefinition } from '../q1/cells/definitions.ts';
+import { REREAD_RECEIPT_SCHEMA, rereadCellId } from '../q1/reread-cell.ts';
 import { holmAdjusted, seededRandom } from '../stats/paired.ts';
 import { wildTest } from '../stats/wild-cluster.ts';
+import {
+  CONFIRM_BOUND_ALPHA, CONFIRM_CELLS_PATH, CONFIRM_CLASSES, CONFIRM_COMPARISONS, CONFIRM_LIVE_READERS, CONFIRM_LOOK_N, CONFIRM_MANIFEST_PATH, CONFIRM_MANIFEST_REL, CONFIRM_N, CONFIRM_PILOT_QUESTIONS,
+  CONFIRM_PILOT_WORLD, CONFIRM_READERS, CONFIRM_ROWS, CONFIRM_TABLE_READERS, confirmFinal, confirmKeptProblems, confirmLook, confirmOutcome, confirmPilotSpendLine, confirmRow, holmAlphas,
+  leftOutProblems, obfBounds, type ConfirmClass, type ConfirmComparison, type ConfirmReading, type ConfirmWord, type LookStatus,
+} from './confirm.ts';
 import { evidenceOf, exposure, isRawTextRow, summarizeExposure, type Exposure, type ExposureSummary } from './exposure.ts';
 import { matchAnswer, MATCH_CLASSES, type MatchClass } from './match.ts';
 import { sizeFromPilot, type Bg1Pilot } from './power.ts';
@@ -99,30 +133,35 @@ export interface QuestionInput {
 /** One row's spend for one reader on one world, null when a meter is missing. */
 export interface CostCell { row: Bg1Row; reader: string; conversation: string; usd: number | null }
 export interface Bg1Input {
-  set: 'BG1' | 'BG1-dev3';
+  set: 'BG1' | 'BG1-dev3' | 'BG1-C';
   questions: QuestionInput[];
   fill: Partial<Record<Bg1Row, number | null>>;
   costs: CostCell[];
   snapshots: Record<string, string[]>;
+  /** The readers and system rows the analysis reads, BG1's (READERS, SYSTEM_ROWS) when absent. */
+  readers?: readonly string[];
+  systemRows?: readonly Bg1Row[];
 }
 
 const isDrop = (v: ReaderValue | undefined): v is { drop: string } | undefined => !v || 'drop' in v;
 const scoreOf = (v: ReaderValue | undefined, view: View): number | null => (isDrop(v) ? null : v[view]);
+const readersOf = (input: Pick<Bg1Input, 'readers'>) => input.readers ?? READERS;
+const rowsOf = (input: Pick<Bg1Input, 'systemRows'>) => input.systemRows ?? SYSTEM_ROWS;
 
 // ─── Analysis ────────────────────────────────────────────────────────
 
 /** The common question set: questions every system row answered, for every reader, with a score under the view. */
-export function commonSet(input: Pick<Bg1Input, 'questions'>, view: View = 'gating'): Set<string> {
-  return new Set(input.questions.filter(q => SYSTEM_ROWS.every(row => READERS.every(r => scoreOf(q.rows[row]?.[r], view) !== null))).map(q => q.id));
+export function commonSet(input: Pick<Bg1Input, 'questions' | 'readers' | 'systemRows'>, view: View = 'gating'): Set<string> {
+  return new Set(input.questions.filter(q => rowsOf(input).every(row => readersOf(input).every(r => scoreOf(q.rows[row]?.[r], view) !== null))).map(q => q.id));
 }
 
 export interface Drops { planned: number; dropped: number; share: number; by: Record<string, number> }
 
 /** Questions outside the common set, and each missing value by side (gbrain or a comparison row) and reason. */
-export function dropsOf(input: Pick<Bg1Input, 'questions'>, view: View = 'gating'): Drops {
+export function dropsOf(input: Pick<Bg1Input, 'questions' | 'readers' | 'systemRows'>, view: View = 'gating'): Drops {
   const keep = commonSet(input, view);
   const by: Record<string, number> = {};
-  for (const q of input.questions.filter(x => !keep.has(x.id))) for (const row of SYSTEM_ROWS) for (const r of READERS) {
+  for (const q of input.questions.filter(x => !keep.has(x.id))) for (const row of rowsOf(input)) for (const r of readersOf(input)) {
     const v = q.rows[row]?.[r];
     const reason = !q.rows[row] ? 'row_missing' : !v ? 'answer_missing' : 'drop' in v ? v.drop : v[view] === null ? `judgment_missing:${view}` : null;
     if (reason) { const k = `${row === 'gbrain' ? 'gbrain' : 'other'}|${reason}`; by[k] = (by[k] ?? 0) + 1; }
@@ -143,8 +182,8 @@ export interface WorldDifference { conversation: string; d: number; n: number }
  * Per-world mean differences, gbrain minus `other`, over the questions of `strata`: within `keep` (the common set), or
  * every question with the worst case's fills (a gbrain drop 0, a comparison drop 100).
  */
-export function worldDifferences(input: Pick<Bg1Input, 'questions'>, other: Bg1Row, strata: readonly Bg1Stratum[], o: { view?: View; readers?: readonly string[]; keep?: ReadonlySet<string>; worstCase?: boolean } = {}): WorldDifference[] {
-  const view = o.view ?? 'gating', readers = o.readers ?? READERS;
+export function worldDifferences(input: Pick<Bg1Input, 'questions' | 'readers'>, other: Bg1Row, strata: readonly Bg1Stratum[], o: { view?: View; readers?: readonly string[]; keep?: ReadonlySet<string>; worstCase?: boolean } = {}): WorldDifference[] {
+  const view = o.view ?? 'gating', readers = o.readers ?? readersOf(input);
   const by = new Map<string, number[]>();
   for (const q of input.questions) {
     if (!strata.includes(q.stratum) || (o.keep && !o.keep.has(q.id))) continue;
@@ -174,17 +213,22 @@ export function familyRows(input: Bg1Input, rows: readonly Bg1Row[], strata: rea
     const ds = diffs.get(row)!;
     const gate = [row, 'gbrain'].filter(x => x !== 'floor' && !((input.fill[x as Bg1Row] ?? 0) >= FILL_GATE)).map(x => `descriptive: ${x} failed the delivered-context gate (mean fill rate ${input.fill[x as Bg1Row] === null || input.fill[x as Bg1Row] === undefined ? 'unknown' : r4(input.fill[x as Bg1Row]!)}, below ${FILL_GATE})`);
     const descriptive = [...invalid, ...gate, ...(enough ? [] : ['too few worlds for a test'])].join('; ') || null;
-    let worse = 0, better = 0, same = 0;
-    for (const q of input.questions.filter(x => strata.includes(x.stratum) && keep.has(x.id))) {
-      const g = qScore(q, 'gbrain', view, READERS, null)!, x = qScore(q, row, view, READERS, null)!;
-      if (Math.abs(g - x) < 1e-9) same++; else if (g < x) worse++; else better++;
-    }
-    const w = ds.length >= 2 ? wildTest(ds.map(x => ({ id: x.conversation, stratum: 'all', n: x.n, sum: x.d * x.n })), { draws: DRAWS, seed: SEED }) : null;
+    const { worse, better, same, wild } = beside(input, row, strata, keep, ds, view);
     const { comparison: _c, ...test } = tests?.[i] ?? { comparison: '' };
     return { row, worlds: ds.length, questions: ds.reduce((s, x) => s + x.n, 0), verdict: tests && !descriptive ? tests[i].verdict : null, descriptive,
-      test: tests ? test as Omit<ComparisonVerdict, 'comparison'> : null, worse, better, same,
-      wild: w ? { estimate: r4(w.theta), p: r4(w.p), ci95: [r4(w.ci95[0]), r4(w.ci95[1])], method: WILD_METHOD } : null };
+      test: tests ? test as Omit<ComparisonVerdict, 'comparison'> : null, worse, better, same, wild };
   });
+}
+
+/** What is reported beside a comparison: the questions (the readers' mean, within keep) where gbrain scored lower, higher and the same, and the wild cluster bootstrap of its world differences. */
+function beside(input: Bg1Input, row: Bg1Row, strata: readonly Bg1Stratum[], keep: ReadonlySet<string>, ds: readonly WorldDifference[], view: View) {
+  let worse = 0, better = 0, same = 0;
+  for (const q of input.questions.filter(x => strata.includes(x.stratum) && keep.has(x.id))) {
+    const g = qScore(q, 'gbrain', view, readersOf(input), null)!, x = qScore(q, row, view, readersOf(input), null)!;
+    if (Math.abs(g - x) < 1e-9) same++; else if (g < x) worse++; else better++;
+  }
+  const w = ds.length >= 2 ? wildTest(ds.map(x => ({ id: x.conversation, stratum: 'all', n: x.n, sum: x.d * x.n })), { draws: DRAWS, seed: SEED }) : null;
+  return { worse, better, same, wild: w ? { estimate: r4(w.theta), p: r4(w.p), ci95: [r4(w.ci95[0]), r4(w.ci95[1])] as [number, number], method: WILD_METHOD } : null };
 }
 
 /** A descriptive paired row: the mean of the per-world differences with its unadjusted two-sided 95% interval. */
@@ -228,31 +272,36 @@ export function exposureSummaries(input: Pick<Bg1Input, 'questions'>): Partial<R
   }));
 }
 
-/** Cost per correct answer: each row's spend over its correct answers by reader, and gbrain's ratio to each comparator (all readers) with a world cluster bootstrap, Holm across the three. */
-export function costPerCorrect(input: Bg1Input, keep: ReadonlySet<string>) {
+/**
+ * Cost per correct answer: each row's spend over its correct answers by reader, and gbrain's ratio to each comparator
+ * (all readers) with a world cluster bootstrap, Holm across the comparators. BG1's rows, comparators and table order
+ * unless given.
+ */
+export function costPerCorrect(input: Bg1Input, keep: ReadonlySet<string>, o: { rows?: readonly Bg1Row[]; comparators?: readonly Bg1Row[]; tableReaders?: readonly string[] } = {}) {
+  const rows = o.rows ?? [...SYSTEM_ROWS, 'floor' as Bg1Row], all = readersOf(input);
   const worlds = [...new Set(input.questions.map(q => q.conversation))].sort();
   const cells = new Map<string, { usd: number | null; correct: number }>();
   const key = (row: Bg1Row, reader: string, conv: string) => `${row}|${reader}|${conv}`;
-  for (const row of [...SYSTEM_ROWS, 'floor' as Bg1Row]) for (const reader of READERS) for (const conv of worlds) {
+  for (const row of rows) for (const reader of all) for (const conv of worlds) {
     const c = input.costs.find(x => x.row === row && x.reader === reader && x.conversation === conv);
     cells.set(key(row, reader, conv), { usd: c ? c.usd : null, correct: 0 });
   }
-  for (const q of input.questions) for (const row of [...SYSTEM_ROWS, 'floor' as Bg1Row]) {
+  for (const q of input.questions) for (const row of rows) {
     if (row !== 'floor' && !keep.has(q.id)) continue;
-    for (const reader of READERS) cells.get(key(row, reader, q.conversation))!.correct += scoreOf(q.rows[row]?.[reader], row === 'floor' ? 'canonical' : 'gating') ?? 0;
+    for (const reader of all) cells.get(key(row, reader, q.conversation))!.correct += scoreOf(q.rows[row]?.[reader], row === 'floor' ? 'canonical' : 'gating') ?? 0;
   }
   const ratio = (row: Bg1Row, readers: readonly string[], ws: readonly string[]) => {
     let usd = 0, correct = 0;
     for (const w of ws) for (const r of readers) { const c = cells.get(key(row, r, w))!; if (c.usd === null) return null; usd += c.usd; correct += c.correct; }
     return correct ? usd / correct : null;
   };
-  const table = TABLE_READERS.map(reader => ({ reader, usd_per_correct: Object.fromEntries([...SYSTEM_ROWS, 'floor' as Bg1Row].map(row => { const x = ratio(row, [reader], worlds); return [row, x === null ? null : r4(x)]; })) }));
+  const table = (o.tableReaders ?? TABLE_READERS).map(reader => ({ reader, usd_per_correct: Object.fromEntries(rows.map(row => { const x = ratio(row, [reader], worlds); return [row, x === null ? null : r4(x)]; })) }));
   const rand = seededRandom(SEED);
   const draws = Array.from({ length: DRAWS }, () => worlds.map(() => worlds[Math.floor(rand() * worlds.length)]));
-  const tests = COMPARATOR_ROWS.map(row => {
-    const g = ratio('gbrain', READERS, worlds), x = ratio(row, READERS, worlds);
+  const tests = (o.comparators ?? COMPARATOR_ROWS).map(row => {
+    const g = ratio('gbrain', all, worlds), x = ratio(row, all, worlds);
     if (g === null || x === null) return { row, ratio: null, ci95: null, p_ahead: 1, p_behind: 1, note: 'n/a: a meter or a re-read reader spend is missing' };
-    const boot = draws.map(ws => { const a = ratio('gbrain', READERS, ws), b = ratio(row, READERS, ws); return a !== null && b ? a / b : null; }).filter((v): v is number => v !== null).sort((a, b) => a - b);
+    const boot = draws.map(ws => { const a = ratio('gbrain', all, ws), b = ratio(row, all, ws); return a !== null && b ? a / b : null; }).filter((v): v is number => v !== null).sort((a, b) => a - b);
     const at = (p: number) => boot[Math.min(boot.length - 1, Math.max(0, Math.floor(p * boot.length)))];
     return { row, ratio: r4(g / x), ci95: [r4(at(0.025)), r4(at(0.975))] as [number, number], p_ahead: (boot.filter(v => v >= 1).length + 1) / (boot.length + 1), p_behind: (boot.filter(v => v <= 1).length + 1) / (boot.length + 1), note: null };
   });
@@ -306,6 +355,124 @@ export function analyze(input: Bg1Input, opts: { judgeCheck?: unknown } = {}) {
 }
 export type Analysis = ReturnType<typeof analyze>;
 
+/** What confirm reads beside the receipts: the gbrain release under test, the server rows left out after a failed pilot with each one's reason (R111), and the judge check's summary. */
+export interface ConfirmOptions { release: string; leftOut?: Readonly<Record<string, string>>; judgeCheck?: unknown }
+
+const leftOutList = (leftOut: Readonly<Record<string, string>>) => CONFIRM_ROWS.filter(r => r in leftOut).map(row => ({ row, reason: leftOut[row] }));
+
+/** The comparisons that run on a BG1-C input that must hold the given number of worlds: their world differences, paired t's and why each is descriptive (the drop cap and fill gate per comparison, a class's drops counting against both of its comparisons). */
+function confirmPrep(raw: Bg1Input, o: ConfirmOptions, worlds: number) {
+  if (raw.set !== 'BG1-C') refuse(`the confirm mode reads set BG1-C only, not ${raw.set}`);
+  const leftOut = o.leftOut ?? {};
+  const bad = leftOutProblems(leftOut);
+  if (bad.length) refuse(bad.join('; '));
+  const input: Bg1Input = { ...raw, readers: CONFIRM_READERS, systemRows: CONFIRM_ROWS.filter(r => !(r in leftOut)) };
+  const held = new Set(input.questions.map(q => q.conversation)).size;
+  if (held !== worlds) refuse(worlds === CONFIRM_LOOK_N ? `the look reads the first ${CONFIRM_LOOK_N} kept worlds, and the input holds ${held}` : `the final analysis reads all ${CONFIRM_N} kept worlds, and the input holds ${held}`);
+  const keep = commonSet(input, 'gating');
+  const run = CONFIRM_COMPARISONS.filter(c => !(c.server in leftOut));
+  const strataOf = (cls: ConfirmClass): readonly Bg1Stratum[] => CONFIRM_CLASSES[cls].strata;
+  const classes = [...new Set(run.map(c => c.cls))];
+  const classDrops = Object.fromEntries(classes.map(cls => [cls, dropsOf({ ...input, questions: input.questions.filter(q => strataOf(cls).includes(q.stratum)) }, 'gating')])) as Partial<Record<ConfirmClass, Drops>>;
+  const testsOf = (diffs: readonly WorldDifference[][]) => (diffs.every(d => d.length >= 2) ? diffs.map(d => pairedT(d.map(x => x.d))) : null);
+  const diffs = run.map(c => worldDifferences(input, c.server, strataOf(c.cls), { keep }));
+  const tests = testsOf(diffs);
+  const fillOf = (row: Bg1Row) => (input.fill[row] === undefined || input.fill[row] === null ? null : r4(input.fill[row]!));
+  const descriptive = run.map(c => {
+    const d = classDrops[c.cls]!;
+    return [
+      ...(d.share > DROP_CAP ? [`${d.dropped} of ${d.planned} planned questions on ${CONFIRM_CLASSES[c.cls].name} dropped (${(d.share * 100).toFixed(1)}%, above the 5% cap)`] : []),
+      ...(['gbrain', c.server] as Bg1Row[]).filter(row => !((input.fill[row] ?? 0) >= FILL_GATE)).map(row => `${row} failed the delivered-context gate (mean fill rate ${fillOf(row) ?? 'unknown'}, below ${FILL_GATE})`),
+      ...(tests ? [] : ['too few worlds for a test']),
+    ].join('; ') || null;
+  });
+  const confirmTests = tests ? run.map((c, i) => ({ key: c.key, test: tests[i], descriptive: descriptive[i] })) : null;
+  const worst = () => { const t = testsOf(run.map(c => worldDifferences(input, c.server, strataOf(c.cls), { worstCase: true }))); return t ? run.map((c, i) => ({ key: c.key, test: t[i] })) : null; };
+  return { input, keep, leftOut, run, strataOf, classDrops, diffs, tests, descriptive, fillOf, confirmTests, worst };
+}
+type ConfirmPrep = ReturnType<typeof confirmPrep>;
+type StageReading = { word: ConfirmWord; z: number; lower: number; upper: number; cp?: number; status?: LookStatus };
+
+/** The report at a stop or at the final: the words, the outcome row and its sentences, the worst case, and every report the preregistration puts beside them that receipts can give. */
+function confirmReport(p: ConfirmPrep, o: ConfirmOptions, stage: 'look' | 'final', readings: readonly StageReading[] | null, worstWords: readonly ConfirmWord[] | null) {
+  const { input, keep, run, strataOf, classDrops, diffs, tests, descriptive, fillOf } = p;
+  const rows = input.systemRows!, servers = [...new Set(run.map(c => c.server))];
+  const classes = [...new Set(run.map(c => c.cls))];
+  const comparisons = run.map((c, i) => ({
+    key: c.key, class: c.cls, server: c.server, worlds: diffs[i].length, questions: diffs[i].reduce((s, x) => s + x.n, 0), word: readings ? readings[i].word : null, descriptive: descriptive[i],
+    z: readings ? r4(readings[i].z) : null,
+    ...(stage === 'look' ? { cp: readings ? r4(readings[i].cp!) : null, status: readings ? readings[i].status! : null } : {}),
+    three_point: readings ? { alpha: CONFIRM_BOUND_ALPHA, lower: r4(readings[i].lower), upper: r4(readings[i].upper) } : null,
+    test: tests ? tests[i] : null, ...beside(input, c.server, strataOf(c.cls), keep, diffs[i], 'gating'),
+  }));
+  const reading = (c: ConfirmComparison, word: (i: number) => ConfirmWord | null): ConfirmReading => {
+    const i = run.indexOf(c);
+    return i < 0 ? { key: c.key, word: null, descriptive: null, notRun: p.leftOut[c.server] } : { key: c.key, word: word(i), descriptive: descriptive[i], mean: tests?.[i].mean ?? null, ci95: tests?.[i].ci95 ?? null };
+  };
+  const words = CONFIRM_COMPARISONS.map(c => reading(c, i => comparisons[i].word));
+  const worst = worstWords ? CONFIRM_COMPARISONS.map(c => reading(c, i => worstWords[i])) : null;
+  const alphas = holmAlphas(run.length);
+  const vsServers = (strata: readonly Bg1Stratum[], readers?: readonly string[]) => Object.fromEntries(servers.map(s => [s, subgroup(worldDifferences(input, s, strata, { keep, readers }))]));
+  return {
+    schema: 'gbrain-evals/bg1c-verdict/v1', set: input.set, release: o.release, stage, worlds: new Set(input.questions.map(q => q.conversation)).size, planned: input.questions.length, common: keep.size,
+    outcome: confirmOutcome(words, { release: o.release, worstCase: worst ?? undefined, stopped: stage === 'look' }),
+    left_out: leftOutList(p.leftOut),
+    holm_over: run.map(c => c.key),
+    bounds: { stage, holm_alphas: alphas, z: alphas.map(a => r4(obfBounds(a)[stage])), three_point_alpha: CONFIRM_BOUND_ALPHA },
+    comparisons,
+    not_run: CONFIRM_COMPARISONS.filter(c => !run.includes(c)).map(c => ({ key: c.key, class: c.cls, server: c.server, status: `not run (pilot failed: ${p.leftOut[c.server]})` })),
+    worst_case: { words: worst ? worst.map(w => w.word) : null, row: worst ? confirmRow(worst) : null, disagrees: worst !== null && worst.some((w, i) => w.word !== words[i].word) },
+    drops: { all: dropsOf(input, 'gating'), by_class: classDrops },
+    fill: Object.fromEntries(rows.map(r => [r, { mean_fill: fillOf(r), pass: (input.fill[r] ?? 0) >= FILL_GATE }])),
+    per_kind: BG1_STRATA.map(stratum => ({ stratum, rows: vsServers([stratum]) })),
+    per_reader: CONFIRM_READERS.map(reader => ({ reader, classes: Object.fromEntries(classes.map(cls => [cls, vsServers(strataOf(cls), [reader])])) })),
+    pooled: { strata: BG1_STRATA, rows: vsServers(BG1_STRATA) },
+    row_means: Object.fromEntries(rows.map(row => [row, Object.fromEntries(CONFIRM_READERS.map(r => {
+      const m = meanOf(input.questions.filter(q => keep.has(q.id)).flatMap(q => { const s = scoreOf(q.rows[row]?.[r], 'gating'); return s === null ? [] : [s * 100]; }));
+      return [r, m === null ? null : r4(m)];
+    }))])),
+    matcher: matcherAgreement(input, 'gating'),
+    exposure: exposureSummaries(input),
+    cost_per_correct: costPerCorrect(input, keep, { rows, comparators: servers, tableReaders: CONFIRM_TABLE_READERS }),
+    judges: { versions: input.snapshots, mixed_snapshot: Object.entries(input.snapshots).filter(([, vs]) => vs.length > 1).map(([j]) => j) },
+    judge_check: o.judgeCheck ?? null,
+  };
+}
+export type ConfirmAnalysis = ReturnType<typeof confirmReport>;
+
+/**
+ * BG1-C's final analysis (confirm.ts; Amendments 1 and 2) on all 40 kept worlds: BG1's values and metric over gbrain and
+ * the servers that run, the drop cap and fill gate per comparison, Holm's step-down over the comparisons' z's with the
+ * final bounds, the 3-point readings, the same rule once more for the worst case, the outcome row from confirm.ts, and
+ * every report the preregistration puts beside them that receipts can give.
+ */
+export function analyzeConfirm(raw: Bg1Input, o: ConfirmOptions): ConfirmAnalysis {
+  const p = confirmPrep(raw, o, CONFIRM_N);
+  const worst = p.worst();
+  return confirmReport(p, o, 'final', p.confirmTests ? confirmFinal(p.confirmTests) : null, worst ? confirmFinal(worst).map(w => w.word) : null);
+}
+
+/**
+ * BG1-C's one look (Amendment 1, with Amendment 2's bounds) on the first 20 kept worlds. Unless every comparison that runs
+ * has crossed or is futile, it decides nothing: "continue", with each comparison's z, conditional power and status and
+ * nothing else. When the run stops, the record carries the full report: crossed comparisons keep their word, the rest
+ * take the 3-point readings on the 20 worlds, and the results say the run stopped at its look.
+ */
+export function lookConfirm(raw: Bg1Input, o: ConfirmOptions) {
+  const p = confirmPrep(raw, o, CONFIRM_LOOK_N);
+  const look = p.confirmTests ? confirmLook(p.confirmTests) : null;
+  const comparisons = CONFIRM_COMPARISONS.map(c => {
+    const i = p.run.indexOf(c), l = look?.comparisons[i];
+    if (i < 0) return { key: c.key, z: null, cp: null, status: 'not run', reason: `pilot failed: ${p.leftOut[c.server]}` };
+    return { key: c.key, z: l ? r4(l.z) : null, cp: l ? r4(l.cp) : null, status: l?.status ?? 'descriptive', reason: p.descriptive[i] };
+  });
+  const record = { schema: 'gbrain-evals/bg1c-look/v1', release: o.release, worlds: CONFIRM_LOOK_N, left_out: leftOutList(p.leftOut), comparisons };
+  if (!look?.stop) return { ...record, decision: 'continue' as const, verdict: null };
+  const worst = p.worst();
+  return { ...record, decision: 'stop' as const, verdict: confirmReport(p, o, 'look', look.comparisons, worst ? confirmLook(worst).comparisons.map(w => w.word) : null) };
+}
+export type ConfirmLook = ReturnType<typeof lookConfirm>;
+
 const pearson = (a: readonly number[], b: readonly number[]) => {
   const ma = meanOf(a)!, mb = meanOf(b)!;
   const cov = a.reduce((s, x, i) => s + (x - ma) * (b[i] - mb), 0), va = a.reduce((s, x) => s + (x - ma) ** 2, 0), vb = b.reduce((s, x) => s + (x - mb) ** 2, 0);
@@ -330,6 +497,10 @@ export function pilotStats(input: Bg1Input): Bg1Pilot {
 
 /** The filled manifest's path in a receipt's dataset (the loader lists it first, then every file it read). */
 export const BG1_MANIFEST_REL = 'eval/decisions/datasets/bg1-manifest.json';
+/** A filled manifest a receipt's dataset names first: its path in the repository and the set it pins. */
+export interface ManifestRef { rel: string; name: string }
+export const BG1_MANIFEST_REF: ManifestRef = { rel: BG1_MANIFEST_REL, name: 'BG1' };
+export const CONFIRM_MANIFEST_REF: ManifestRef = { rel: CONFIRM_MANIFEST_REL, name: 'BG1-C' };
 
 interface CellFiles { dir: string; root: string; receipt: Record<string, any>; config: Record<string, any> | null }
 const readLoose = (path: string): Array<Record<string, any>> => (existsSync(path) ? readFileSync(path, 'utf8').split('\n').filter(l => l.trim()).map(l => JSON.parse(l)) : []);
@@ -354,19 +525,19 @@ export interface FilledManifest { status: string; files: Array<{ path: string; s
  * GBRAIN_EVALS_BG1_MANIFEST, or nothing). The loader lists the manifest itself first, which pins every other file but
  * not itself, so that entry is checked against the --manifest's own SHA-256 and every other file against its pins.
  */
-export function unpinnedCorpusFiles(files: ReadonlyArray<{ path: string; sha256: string }>, manifest: FilledManifest, manifestSha: string): string[] {
-  const pins = new Map([...manifest.files.map(f => [f.path, f.sha256] as const), [BG1_MANIFEST_REL, manifestSha] as const]);
+export function unpinnedCorpusFiles(files: ReadonlyArray<{ path: string; sha256: string }>, manifest: FilledManifest, manifestSha: string, rel = BG1_MANIFEST_REL): string[] {
+  const pins = new Map([...manifest.files.map(f => [f.path, f.sha256] as const), [rel, manifestSha] as const]);
   return files.filter(f => pins.get(f.path) !== f.sha256).map(f => f.path);
 }
 
-/** A set-BG1 receipt must come from the filled manifest (or one of its earlier fills) and load only its pinned bytes. */
-export function receiptManifestProblems(dataset: Record<string, any> | undefined, manifest: FilledManifest, manifestSha: string): string[] {
+/** A set-BG1 (or BG1-C) receipt must come from its filled manifest (or one of its earlier fills) and load only its pinned bytes. */
+export function receiptManifestProblems(dataset: Record<string, any> | undefined, manifest: FilledManifest, manifestSha: string, ref: ManifestRef = BG1_MANIFEST_REF): string[] {
   if (!dataset) return ['it records no dataset'];
   if (dataset.revision === 'unfilled') return ['its dataset revision is unfilled'];
   const [head, ...files] = (dataset.files ?? []) as Array<{ path: string; sha256: string }>;
-  if (head?.path !== BG1_MANIFEST_REL) return [`its dataset is not the BG1 manifest (${head?.path ?? 'no files'})`];
+  if (head?.path !== ref.rel) return [`its dataset is not the ${ref.name} manifest (${head?.path ?? 'no files'})`];
   const problems: string[] = [];
-  if (![manifestSha, ...(manifest.earlier_fills ?? [])].includes(head.sha256)) problems.push(`its BG1 manifest SHA-256 ${head.sha256.slice(0, 12)} is not the filled manifest's (${manifestSha.slice(0, 12)}) or an earlier fill's`);
+  if (![manifestSha, ...(manifest.earlier_fills ?? [])].includes(head.sha256)) problems.push(`its ${ref.name} manifest SHA-256 ${head.sha256.slice(0, 12)} is not the filled manifest's (${manifestSha.slice(0, 12)}) or an earlier fill's`);
   for (const f of files) {
     const pinned = manifest.files.find(x => x.path === f.path);
     if (!pinned) problems.push(`it loaded ${f.path}, which the filled manifest does not pin`);
@@ -413,21 +584,44 @@ const differing = (a: Record<string, any>, b: Record<string, any>, at = ''): str
   JSON.stringify(a[k]) === JSON.stringify(b[k]) ? [] : a[k] && b[k] && typeof a[k] === 'object' && typeof b[k] === 'object' && !Array.isArray(a[k]) ? differing(a[k], b[k], `${at}${k}.`) : [`${at}${k}`]);
 const more = (xs: readonly string[]) => xs.slice(0, 3).join('; ') + (xs.length > 3 ? ` (and ${xs.length - 3} more)` : '');
 
-export interface LoadOptions { set: 'BG1' | 'BG1-dev3'; manifestPath?: string; waveA?: boolean }
-export interface LoadDeps { questions?: readonly MemoryQuestion[]; manifestBytes?: Uint8Array }
+/** The BG1-C cell set's counted rows: exactly one cell each for gbrain and the two servers, on one set, read live by claude-opus-5-5 and gpt-6.2-sol. */
+export function confirmCells(cells: readonly CellDefinition[]): CellDefinition[] {
+  const rows = cells.filter(c => CONFIRM_ROWS.includes(ROLES[c.system]));
+  const counts = CONFIRM_ROWS.flatMap(r => { const n = rows.filter(c => ROLES[c.system] === r).length; return n === 1 ? [] : [`${ROW_SYSTEM[r]} has ${n}`]; });
+  if (counts.length) refuse(`the BG1-C cell set needs exactly one counted cell each for gbrain and the two servers; ${counts.join(', ')}`);
+  const sets = [...new Set(rows.map(c => c.arms[0].set))];
+  if (sets.length !== 1) refuse(`the BG1-C cell set's rows run on more than one set (${sets.join(', ')})`);
+  const off = rows.filter(c => JSON.stringify(c.arms[0].readers) !== JSON.stringify(CONFIRM_LIVE_READERS)).map(c => `${c.id} reads with ${(c.arms[0].readers ?? []).join(', ')}`);
+  if (off.length) refuse(`every BG1-C row is read live by ${CONFIRM_LIVE_READERS.join(' and ')}; ${off.join('; ')}`);
+  return CONFIRM_ROWS.map(r => rows.find(c => ROLES[c.system] === r)!);
+}
+const readCellSet = (path: string): CellDefinition[] => (existsSync(path) ? (JSON.parse(readFileSync(path, 'utf8')) as { cells?: CellDefinition[] }).cells ?? refuse(`${path} lists no cells`) : refuse(`the BG1-C cell set ${path} does not exist; pass --cells <file>`));
+const readConfirmManifest = (path: string) => (existsSync(path) ? readFileSync(path) : refuse(`the BG1-C manifest ${path} does not exist; verdict.ts reads receipts only against the filled manifest`));
+const bg1Cells = (set: LoadOptions['set']) => { const cells = loadBG1Manifest(); return (set === 'BG1' ? cells.cells : cells.smoke_cells).filter(c => c.arms[0].set === set && ROLES[c.system]); };
 
-/** Read and check every receipt, then build the analysis input. */
+/** How loadInput reads receipts. On set BG1-C, look reads exactly the first 20 kept worlds, and leftOut names server rows left out after a failed pilot, which need no receipts. */
+export interface LoadOptions { set: 'BG1' | 'BG1-dev3' | 'BG1-C'; manifestPath?: string; waveA?: boolean; cellsPath?: string; look?: boolean; leftOut?: readonly Bg1Row[] }
+export interface LoadDeps { questions?: readonly MemoryQuestion[]; manifestBytes?: Uint8Array; cells?: readonly CellDefinition[] }
+
+/** Read and check every receipt, then build the analysis input. Set BG1-C reads the BG1-C cell set, its readers, its filled manifest and its kept list. */
 export function loadInput(dirs: readonly string[], o: LoadOptions, deps: LoadDeps = {}): Bg1Input {
-  const cells = loadBG1Manifest();
-  const defs = (o.set === 'BG1' ? cells.cells : cells.smoke_cells).filter(c => c.arms[0].set === o.set && ROLES[c.system]);
+  const confirm = o.set === 'BG1-C';
+  if (!confirm && (o.look || o.leftOut?.length)) refuse('the look and rows left out are BG1-C\'s only');
+  const defs = confirm ? confirmCells(deps.cells ?? readCellSet(o.cellsPath ?? CONFIRM_CELLS_PATH)).filter(d => !o.leftOut?.includes(ROLES[d.system])) : bg1Cells(o.set);
+  const readers = confirm ? CONFIRM_READERS : READERS, ref = confirm ? CONFIRM_MANIFEST_REF : BG1_MANIFEST_REF;
   let manifest: FilledManifest | null = null, manifestSha = '', wave: Set<string> | null = null, finalSet: string[] | null = null;
-  if (o.set === 'BG1') {
-    const bytes = deps.manifestBytes ?? readFileSync(o.manifestPath ?? refuse('set BG1 needs --manifest <filled bg1-manifest.json>'));
+  if (o.set === 'BG1' || confirm) {
+    const bytes = deps.manifestBytes ?? (confirm ? readConfirmManifest(o.manifestPath ?? CONFIRM_MANIFEST_PATH) : readFileSync(o.manifestPath ?? refuse('set BG1 needs --manifest <filled bg1-manifest.json>')));
     manifest = JSON.parse(Buffer.from(bytes).toString('utf8')) as FilledManifest;
-    if (manifest.status !== 'filled' || !manifest.kept?.length) refuse('the BG1 manifest is unfilled; verdict.ts reads receipts only against the filled manifest');
+    if (manifest.status !== 'filled' || !manifest.kept?.length) refuse(`the ${ref.name} manifest is unfilled; verdict.ts reads receipts only against the filled manifest`);
     manifestSha = sha256(bytes);
     const kept = manifest.kept!, nFinal = manifest.n_final ?? null;
-    if (o.waveA) {
+    if (confirm) {
+      if (o.waveA) refuse('the pilot reads set BG1 only');
+      const p = confirmKeptProblems(manifest);
+      if (p.length) refuse(`the filled BG1-C manifest cannot be read: ${p.join('; ')}`);
+      finalSet = o.look ? kept.slice(0, CONFIRM_LOOK_N) : [...kept];
+    } else if (o.waveA) {
       if (kept.length < BG1_WAVE_A) refuse(`the pilot needs the first ${BG1_WAVE_A} kept worlds (wave A), and the kept list holds ${kept.length}`);
       wave = new Set(kept.slice(0, BG1_WAVE_A));
     } else if (nFinal === null || kept.length < nFinal || nFinal > BG1_N_CAP) refuse(`the filled manifest's kept list is not final (n_final ${nFinal ?? 'unset'}, ${kept.length} kept); a verdict reads exactly the first N_final kept worlds`);
@@ -436,7 +630,7 @@ export function loadInput(dirs: readonly string[], o: LoadOptions, deps: LoadDep
   const found = findReceipts(dirs);
   const benchmark = defs[0]?.benchmark ?? refuse(`bg1-cells.json has no cells on ${o.set}`);
   const corpus = deps.questions ? null : loadCorpus(benchmark, undefined, wave ?? (finalSet ? new Set(finalSet) : undefined));
-  const off = corpus && manifest ? unpinnedCorpusFiles(corpus.source.files, manifest, manifestSha) : [];
+  const off = corpus && manifest ? unpinnedCorpusFiles(corpus.source.files, manifest, manifestSha, ref.rel) : [];
   if (off.length) refuse(`the loaded ${benchmark} corpus read ${off.join(', ')} at bytes the --manifest does not pin; the strata and values that decide the verdict come only from the pinned worlds`);
   const qs = deps.questions ?? corpus!.questions;
   const byId = new Map(qs.map(q => [q.id, q]));
@@ -473,7 +667,7 @@ export function loadInput(dirs: readonly string[], o: LoadOptions, deps: LoadDep
       if (problems.length) refuse(`${dir}: ${more(problems)}`);
       for (const j of records.filter(r => r.view === 'gating')) for (const v of j.judge_versions ?? []) snapshots.set(j.judge, new Set([...(snapshots.get(j.judge) ?? []), v]));
       const score = new Map(records.map(j => [`${j.answer_id}|${j.instrument_id}`, j.score]));
-      for (const a of ans.filter(x => x.replicate === 0 && READERS.includes(x.reader) && inScope(x.conversation))) {
+      for (const a of ans.filter(x => x.replicate === 0 && readers.includes(x.reader) && inScope(x.conversation))) {
         byQuestion.set(a.question_id, { ...(byQuestion.get(a.question_id) ?? {}), [a.reader]: readerValue(a, score, instrument.id, question(a.question_id), role === 'floor') });
       }
     };
@@ -481,10 +675,10 @@ export function loadInput(dirs: readonly string[], o: LoadOptions, deps: LoadDep
     for (const u of units) {
       if (u.receipt.run_status === 'invalid') refuse(`${u.dir} is invalid: ${(u.receipt.invalid_reasons ?? []).join('; ')}`);
       const config = u.config ?? refuse(`${u.dir} has no run-config.json`);
-      if (manifest) { const p = receiptManifestProblems(config.dataset, manifest, manifestSha); if (p.length) refuse(`${u.dir}: ${p.join('; ')}`); }
+      if (manifest) { const p = receiptManifestProblems(config.dataset, manifest, manifestSha, ref); if (p.length) refuse(`${u.dir}: ${p.join('; ')}`); }
       if ((config.limit ?? null) !== null) refuse(`${u.dir} ran with --limit ${config.limit}; a verdict reads whole launch units, every scheduled question`);
       const diff = differing(unitIdentity(config), expected);
-      if (diff.length) refuse(`${u.dir}: its run config differs from ${def.id} in the committed bg1-cells.json at ${diff.join(', ')}`);
+      if (diff.length) refuse(`${u.dir}: its run config differs from ${def.id} in ${confirm ? 'the BG1-C cell set' : 'the committed bg1-cells.json'} at ${diff.join(', ')}`);
       if (wrongInstrument(u)) refuse(`${u.dir} was judged under instrument ${u.receipt.instrument?.id}, not ${instrument.id} (${instrument.sha256.slice(0, 12)})`);
       const allRows = readLoose(join(u.dir, 'rows.ndjson'));
       const rows = allRows.filter(r => inScope(String(r.conversation)));
@@ -507,7 +701,7 @@ export function loadInput(dirs: readonly string[], o: LoadOptions, deps: LoadDep
       const metered = new Map<string, number>();
       const byKey = new Map(ans.map(a => [`read:${a.answer_id.slice(0, 16)}`, a]));
       for (const m of readLoose(join(runDir, 'meters.ndjson'))) { const a = m.phase === 'reader' ? byKey.get(String(m.key)) : undefined; if (a) metered.set(a.answer_id, (metered.get(a.answer_id) ?? 0) + Number(m.usd)); }
-      for (const r of rows) for (const reader of READERS) addUsd(reader, String(r.conversation), perQuestion);
+      for (const r of rows) for (const reader of readers) addUsd(reader, String(r.conversation), perQuestion);
       for (const a of ans.filter(x => x.replicate === 0 && x.reader !== PARTICLE)) addUsd(a.reader, a.conversation, metered.has(a.answer_id) ? metered.get(a.answer_id)! : a.context_sha256 === sha256(`no-context|${a.outcome}`) ? 0 : null);
     }
     if (finalSet) {
@@ -526,7 +720,7 @@ export function loadInput(dirs: readonly string[], o: LoadOptions, deps: LoadDep
     for (const r of rereads) {
       if (r.receipt.keyless !== false) refuse(`${r.dir} is not a paid re-read (keyless ${r.receipt.keyless ?? 'unrecorded'}); a verdict reads only re-reads whose receipt says keyless: false`);
       if (r.receipt.run_status === 'invalid') refuse(`${r.dir} is invalid: ${(r.receipt.invalid_reasons ?? []).join('; ')}`);
-      if (manifest) { const p = receiptManifestProblems(r.receipt.dataset, manifest, manifestSha); if (p.length) refuse(`${r.dir}: ${p.join('; ')}`); }
+      if (manifest) { const p = receiptManifestProblems(r.receipt.dataset, manifest, manifestSha, ref); if (p.length) refuse(`${r.dir}: ${p.join('; ')}`); }
       if (wrongInstrument(r)) refuse(`${r.dir} was judged under instrument ${r.receipt.instrument?.id}, not ${instrument.id} (${instrument.sha256.slice(0, 12)})`);
       const ans = readRecords(join(r.dir, 'answers.ndjson'), 'answer');
       for (const conv of new Set(ans.map(a => a.conversation))) { if (reheld.has(conv)) refuse(`${rereadId}: world ${conv} is re-read in both ${reheld.get(conv)} and ${r.dir}`); reheld.set(conv, r.dir); }
@@ -543,7 +737,7 @@ export function loadInput(dirs: readonly string[], o: LoadOptions, deps: LoadDep
   const value = (row: Bg1Row, id: string, reader: string): ReaderValue => values.get(row)?.get(id)?.[reader] ?? { drop: reader === PARTICLE ? 'reread_answer_missing' : 'answer_missing' };
   const questions: QuestionInput[] = planned.map(({ id, conversation, bg1 }) => {
     const rows: QuestionInput['rows'] = {};
-    for (const row of [...SYSTEM_ROWS, 'floor' as Bg1Row]) if (rowIds.get(row)?.has(id)) rows[row] = Object.fromEntries(READERS.map(r => [r, value(row, id, r)]));
+    for (const row of [...SYSTEM_ROWS, 'floor' as Bg1Row]) if (rowIds.get(row)?.has(id)) rows[row] = Object.fromEntries(readers.map(r => [r, value(row, id, r)]));
     const exposure = Object.fromEntries([...exposures].flatMap(([row, m]) => (m.has(id) ? [[row, m.get(id)!]] : [])));
     return { id, conversation, stratum: bg1!.stratum, rows, exposure };
   });
@@ -551,31 +745,151 @@ export function loadInput(dirs: readonly string[], o: LoadOptions, deps: LoadDep
   return { set: o.set, questions, fill, costs, snapshots: Object.fromEntries([...snapshots].sort(([a], [b]) => (a < b ? -1 : 1)).map(([j, vs]) => [j, [...vs].sort()])) };
 }
 
+// ─── BG1-C pilot ─────────────────────────────────────────────────────
+
+/** One pilot check: the condition of Amendment 1's pilot list it belongs to, what it measured and its line. */
+export interface PilotCheck { condition: 1 | 2 | 3; check: string; value: number | string | null; line: string; pass: boolean }
+export const BRAIN_COUNTS = ['tagged_facts', 'slotted_facts', 'changing_slots'] as const;
+
+const judgeCheckPasses = (report: unknown) => {
+  const r = report as { stop?: unknown; gates?: unknown } | null;
+  return !!r && r.stop === false && Array.isArray(r.gates) && r.gates.length > 0 && r.gates.every(g => (g as { pass?: unknown } | null)?.pass === true);
+};
+
+/**
+ * BG1-C's pilot (Amendment 1, R111): each row's smoke on bg1-dev-01, read from the cell receipt whose system is that row
+ * and its particle-1 re-read, against conditions 1 and 3 of the pilot list, with gbrain's brain counts for condition 1
+ * and the judge checks' reports for condition 2.
+ */
+export function confirmPilot(dirs: readonly string[], o: { brainCounts?: unknown; judgeChecks?: readonly unknown[] } = {}) {
+  const found = findReceipts(dirs);
+  const reports = o.judgeChecks ?? [];
+  const passing = reports.filter(judgeCheckPasses).length;
+  const judges: PilotCheck = { condition: 2, check: 'judge checks', value: reports.length ? `${passing} of ${reports.length} pass` : null, line: 'at least one, every one passing', pass: reports.length > 0 && passing === reports.length };
+  const counts = (o.brainCounts ?? {}) as Record<string, unknown>;
+  const brain: PilotCheck = { condition: 1, check: 'brain counts (tagged facts, slotted facts, changing slots)', value: o.brainCounts === undefined ? null : BRAIN_COUNTS.map(k => String(counts[k] ?? 'missing')).join(', '),
+    line: 'each above 0', pass: BRAIN_COUNTS.every(k => typeof counts[k] === 'number' && (counts[k] as number) > 0) };
+  const num = (x: unknown) => (typeof x === 'number' && Number.isFinite(x) ? x : null);
+  const rows = CONFIRM_ROWS.map(row => {
+    const live = found.filter(f => ROLES[String(f.receipt.system?.kind)] === row && f.receipt.schema !== REREAD_RECEIPT_SCHEMA);
+    if (live.length > 1) refuse(`the pilot reads one smoke receipt per row, and ${row} has ${live.length} (${live.map(f => f.dir).join(', ')})`);
+    const u = live[0];
+    const qRows = u ? readLoose(join(u.dir, 'rows.ndjson')) : [];
+    const worlds = [...new Set(qRows.map(r => String(r.conversation)))];
+    if (u && (worlds.length !== 1 || worlds[0] !== CONFIRM_PILOT_WORLD)) refuse(`${u.dir}: the pilot reads the smoke on ${CONFIRM_PILOT_WORLD}, and this receipt holds ${worlds.join(', ') || 'no rows'}`);
+    const frozen = new Set(u ? readLoose(join(u.root, 'runs', String(u.receipt.run_cell ?? u.receipt.cell_id), 'contexts.ndjson')).map(c => String(c.meta?.context_sha256)) : []);
+    const withContext = new Set((u ? readRecords(join(u.dir, 'answers.ndjson'), 'answer') : []).filter(a => a.replicate === 0 && frozen.has(a.context_sha256)).map(a => a.question_id));
+    const ids = new Set(qRows.map(r => String(r.id)));
+    const nFrozen = [...ids].filter(id => withContext.has(id)).length;
+    const fill = meanOf(qRows.map(r => (typeof r.fill_rate === 'number' ? r.fill_rate : 0)));
+    const reread = u ? found.find(f => f.receipt.cell_id === rereadCellId(String(u.receipt.cell_id), PARTICLE)) : undefined;
+    const cellUsd = num(u?.receipt.spend?.total_usd), readerUsd = num(reread?.receipt.spend?.reader_usd), judgeUsd = num(reread?.receipt.spend?.judge_usd);
+    const unspent = !u ? 'no smoke receipt' : cellUsd === null ? 'no metered spend on the smoke receipt' : !reread ? 'no particle-1 re-read' : reread.receipt.keyless !== false ? 'the particle-1 re-read is not paid'
+      : readerUsd === null || judgeUsd === null ? 'no metered spend on the re-read' : null;
+    const perWorld = unspent ? null : (cellUsd! + readerUsd! + judgeUsd!) / worlds.length;
+    const spendLine = confirmPilotSpendLine(row), ingest = num(u?.receipt.ingest?.wall_ms?.total);
+    const checks: PilotCheck[] = [
+      { condition: 1, check: 'frozen contexts', value: u ? nFrozen : 'no smoke receipt', line: `all ${CONFIRM_PILOT_QUESTIONS} questions`, pass: ids.size === CONFIRM_PILOT_QUESTIONS && nFrozen === CONFIRM_PILOT_QUESTIONS },
+      { condition: 1, check: 'mean fill rate', value: fill === null ? (u ? 'no rows' : 'no smoke receipt') : r4(fill), line: `at least ${FILL_GATE}`, pass: fill !== null && fill >= FILL_GATE },
+      ...(row === 'gbrain' ? [brain] : []),
+      judges,
+      { condition: 3, check: 'spend per world', value: perWorld === null ? unspent : r4(perWorld), line: `at most $${r4(spendLine)}, 1.5 times the Budget rate`, pass: perWorld !== null && perWorld <= spendLine },
+    ];
+    return { row, cell: u ? String(u.receipt.cell_id) : null, checks, wall_ms_per_world: ingest === null || !worlds.length ? null : Math.round(ingest / worlds.length), pass: checks.every(c => c.pass) };
+  });
+  return { schema: 'gbrain-evals/bg1c-pilot/v1', world: CONFIRM_PILOT_WORLD, rows, pass: rows.every(r => r.pass) };
+}
+export type ConfirmPilot = ReturnType<typeof confirmPilot>;
+
+function confirmPilotMain(argv: readonly string[], dirs: readonly string[], out: string): number {
+  const many = (n: string) => argv.flatMap((a, i) => (a === n && argv[i + 1] ? [argv[i + 1]] : []));
+  const read = (path: string): unknown => (existsSync(resolve(path)) ? JSON.parse(readFileSync(resolve(path), 'utf8')) : refuse(`${path} does not exist`));
+  try {
+    const counts = many('--brain-counts')[0];
+    const p = confirmPilot(dirs, { brainCounts: counts ? read(counts) : undefined, judgeChecks: many('--judge-check').map(read) });
+    mkdirSync(resolve(out), { recursive: true });
+    writeFileSync(join(resolve(out), 'pilot.json'), JSON.stringify(p, null, 2) + '\n');
+    const hours = (ms: number | null) => (ms === null ? 'unknown' : `${(ms / 3_600_000).toFixed(2)} h`);
+    process.stdout.write([`BG1-C pilot on ${p.world}: ${p.pass ? 'pass' : 'FAIL'}`, ...p.rows.map(r => `  ${r.row}: ${r.pass ? 'pass' : 'FAIL'}; ${r.checks.map(c => `condition ${c.condition} ${c.check} ${c.value ?? 'none given'} (${c.line}) ${c.pass ? 'pass' : 'FAIL'}`).join('; ')}; ingest wall time per world ${hours(r.wall_ms_per_world)}`)].join('\n') + '\n');
+    if (p.pass) return 0;
+    process.stderr.write(`BG1-C pilot failed: ${p.rows.flatMap(r => r.checks.filter(c => !c.pass).map(c => `${r.row} condition ${c.condition} (${c.check})`)).join('; ')}\n`);
+    return 3;
+  } catch (e) {
+    if (!(e instanceof VerdictError)) throw e;
+    process.stderr.write(`bg1 pilot refused: ${e.message}\n`);
+    return 2;
+  }
+}
+
 // ─── CLI ─────────────────────────────────────────────────────────────
 
-export function main(argv: string[]): number {
+export function main(argv: string[], deps: LoadDeps = {}): number {
   const mode = argv[0];
   const one = (n: string) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : undefined; };
   const dirs = argv.flatMap((a, i) => (a === '--receipts' && argv[i + 1] ? [resolve(argv[i + 1])] : []));
   const out = one('--out');
-  if ((mode !== 'verdict' && mode !== 'pilot') || !dirs.length || !out) {
-    process.stderr.write('usage: bun eval/runner/bg1/verdict.ts verdict|pilot --receipts <out dir>... [--manifest <filled bg1-manifest.json>] [--set BG1|BG1-dev3] [--judge-check <summary.json>] --out <dir>\n');
+  if ((mode !== 'verdict' && mode !== 'pilot' && mode !== 'confirm') || !dirs.length || !out) {
+    process.stderr.write('usage: bun eval/runner/bg1/verdict.ts verdict|pilot --receipts <out dir>... [--manifest <filled bg1-manifest.json>] [--set BG1|BG1-dev3] [--judge-check <summary.json>] --out <dir>\n'
+      + '       bun eval/runner/bg1/verdict.ts confirm [--look] --receipts <out dir>... --release <gbrain release> [--left-out <server row>=<reason>]... [--manifest <filled bg1c-manifest.json>] [--cells <BG1-C cell set>] [--judge-check <summary.json>] --out <dir>\n'
+      + '       bun eval/runner/bg1/verdict.ts pilot --set BG1-C --receipts <smoke out dir>... [--brain-counts <counts.json>] [--judge-check <report.json>]... --out <dir>\n');
     return 2;
   }
-  const set = (one('--set') ?? 'BG1') as LoadOptions['set'];
-  if (set !== 'BG1' && set !== 'BG1-dev3') { process.stderr.write(`--set takes BG1 or BG1-dev3, not ${set}\n`); return 2; }
+  const confirm = mode === 'confirm';
+  const set = (one('--set') ?? (confirm ? 'BG1-C' : 'BG1')) as LoadOptions['set'];
+  if (mode === 'pilot' && set === 'BG1-C') return confirmPilotMain(argv, dirs, out);
+  if (confirm && set !== 'BG1-C') { process.stderr.write(`confirm reads set BG1-C only, not ${set}\n`); return 2; }
+  if (!confirm && set !== 'BG1' && set !== 'BG1-dev3') { process.stderr.write(`--set takes BG1 or BG1-dev3, not ${set}\n`); return 2; }
+  const release = one('--release');
+  if (confirm && !/^v\d+(\.\d+)+$/.test(release ?? '')) { process.stderr.write(`confirm needs --release <the gbrain release under test, such as v0.60.741.0>, not ${release ?? 'none'}\n`); return 2; }
+  const look = confirm && argv.includes('--look');
+  const leftOut: Record<string, string> = {};
+  for (const spec of confirm ? argv.flatMap((a, i) => (a === '--left-out' ? [argv[i + 1] ?? ''] : [])) : []) {
+    const eq = spec.indexOf('='), row = eq < 0 ? spec : spec.slice(0, eq);
+    if (row in leftOut) { process.stderr.write(`--left-out names ${row} twice\n`); return 2; }
+    leftOut[row] = eq < 0 ? '' : spec.slice(eq + 1);
+  }
   try {
-    const input = loadInput(dirs, { set, manifestPath: one('--manifest'), waveA: mode === 'pilot' });
-    mkdirSync(resolve(out), { recursive: true });
+    const bad = leftOutProblems(leftOut);
+    if (bad.length) refuse(bad.join('; '));
+    const input = loadInput(dirs, { set, manifestPath: one('--manifest'), waveA: mode === 'pilot', ...(confirm ? { cellsPath: one('--cells'), look, leftOut: Object.keys(leftOut) as Bg1Row[] } : {}) }, deps);
+    const dir = resolve(out), marker = join(dir, 'look.json');
+    const rowsOut = (xs: ReadonlyArray<{ row: string }>) => xs.map(x => x.row).join(' and ') || 'no row';
+    if (look && existsSync(marker)) refuse(`this run already took its look (${marker}); Amendment 1 allows one look, and no second look counts`);
+    if (confirm && !look) {
+      if (!existsSync(marker)) refuse(`the final analysis comes after the look, and ${marker} does not exist; run confirm --look on the first ${CONFIRM_LOOK_N} kept worlds into the same --out first`);
+      const record = JSON.parse(readFileSync(marker, 'utf8')) as { decision?: string; left_out?: Array<{ row: string; reason: string }> };
+      if (record.decision !== 'continue') refuse(`the run stopped at its look (${marker}), so the look's verdict stands and no final analysis counts`);
+      if (JSON.stringify(record.left_out ?? []) !== JSON.stringify(leftOutList(leftOut))) refuse(`the final analysis leaves out ${rowsOut(leftOutList(leftOut))}, but the look left out ${rowsOut(record.left_out ?? [])}; both read the same rows, with the same reasons`);
+    }
+    mkdirSync(dir, { recursive: true });
     if (mode === 'pilot') {
       const pilot = pilotStats(input), sizing = sizeFromPilot(pilot);
-      writeFileSync(join(resolve(out), 'pilot.json'), JSON.stringify({ pilot, sizing }, null, 2) + '\n');
+      writeFileSync(join(dir, 'pilot.json'), JSON.stringify({ pilot, sizing }, null, 2) + '\n');
       process.stdout.write(`pilot: ${pilot.worlds} worlds; N_required ${sizing.n_required_max}, N_final ${sizing.n_final}${sizing.pause ? ' (above the cap: pause for GBEV-3)' : ''}\n`);
       return sizing.pause ? 3 : 0;
     }
     const judgeCheck = one('--judge-check') ? JSON.parse(readFileSync(one('--judge-check')!, 'utf8')) : undefined;
+    if (confirm) {
+      const wordsOf = (c: ConfirmAnalysis) => CONFIRM_COMPARISONS.map(k => {
+        const x = c.comparisons.find(y => y.key === k.key);
+        return x ? `${x.key} ${x.word ?? 'no test'}${x.descriptive ? ' (descriptive)' : ''}` : `${k.key} ${c.not_run.find(y => y.key === k.key)!.status}`;
+      }).join('; ');
+      if (look) {
+        const l = lookConfirm(input, { release: release!, leftOut, judgeCheck });
+        writeFileSync(marker, JSON.stringify(l, null, 2) + '\n', { flag: 'wx' });
+        if (l.verdict) writeFileSync(join(dir, 'confirm.json'), JSON.stringify(l.verdict, null, 2) + '\n');
+        const stats = l.comparisons.map(x => `${x.key} ${x.status}${x.z === null ? '' : `, z ${x.z.toFixed(2)}, CP ${x.cp!.toFixed(2)}`}`).join('; ');
+        process.stdout.write(l.verdict ? `BG1-C look: stop at ${CONFIRM_LOOK_N} worlds; row ${l.verdict.outcome.row} (${l.verdict.outcome.result}); ${wordsOf(l.verdict)}${l.verdict.worst_case.disagrees ? '; the worst case disagrees' : ''}\n`
+          : `BG1-C look: continue to ${CONFIRM_N} worlds; ${stats}\n`);
+        return 0;
+      }
+      const c = analyzeConfirm(input, { release: release!, leftOut, judgeCheck });
+      writeFileSync(join(dir, 'confirm.json'), JSON.stringify(c, null, 2) + '\n');
+      process.stdout.write(`BG1-C: row ${c.outcome.row} (${c.outcome.result}); ${wordsOf(c)}; ${c.worlds} worlds, ${c.common} of ${c.planned} questions in the common set${c.worst_case.disagrees ? '; the worst case disagrees' : ''}\n`);
+      return 0;
+    }
     const a = analyze(input, { judgeCheck });
-    writeFileSync(join(resolve(out), 'verdict.json'), JSON.stringify(a, null, 2) + '\n');
+    writeFileSync(join(dir, 'verdict.json'), JSON.stringify(a, null, 2) + '\n');
     const words = a.primary.comparisons.map(c => `${c.row} ${c.verdict ?? 'descriptive'}`).join('; ');
     process.stdout.write(`${a.set}: ${words}; ${a.worlds} worlds, ${a.common} of ${a.planned} questions in the common set${a.primary.worst_case.disagrees ? '; the worst case disagrees' : ''}\n`);
     return 0;
