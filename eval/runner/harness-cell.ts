@@ -528,7 +528,8 @@ export async function rejudgeCells(ctx: Ctx, ids: string[], budgetUsd: number, o
  * retrievals, through the metering proxy (mpw/reanswer.py). Variance checks
  * re-judge it jointly with the original cell.
  */
-export async function reanswerCell(ctx: Ctx, id: string, sample: number, budgetUsd: number, out: string, only?: { retrievals?: string; questions?: string }): Promise<number> {
+export async function reanswerCell(ctx: Ctx, id: string, sample: number, budgetUsd: number, out: string,
+  only?: { retrievals?: string; questions?: string; appendLine?: string; lineIds?: string }): Promise<number> {
   const cell = JSON.parse(readFileSync(join(ctx.cellsDir, id, 'cell.json'), 'utf8')) as CellFile;
   const { startMeteringProxy } = await import('./harness-metering-proxy.ts');
   const run = BudgetRun.open({ runner: `harness-reanswer:${id}-s${sample}`, budgetUsd, ledgerPath: budgetOptionsFrom(ctx.argv).ledgerPath, log: ctx.log });
@@ -539,7 +540,8 @@ export async function reanswerCell(ctx: Ctx, id: string, sample: number, budgetU
   const j = cell.spec.models.judge ? splitModel(cell.spec.models.judge) : a;
   const env = { ...pick(proxy.envFor('harness'), [...new Set([LLM_PROVIDER[a.llm], LLM_PROVIDER[j.llm]])]), OMB_ANSWER_LLM: a.llm, OMB_ANSWER_MODEL: a.model,
     OMB_JUDGE_LLM: j.llm, OMB_JUDGE_MODEL: j.model, MPW_PROXY_LOG: join(proxyDir, 'requests.jsonl'), MPW_PROXY_BODIES: join(proxyDir, 'bodies') };
-  const extra = [...(only?.retrievals ? ['--retrievals', only.retrievals] : []), ...(only?.questions ? ['--questions', only.questions] : [])];
+  const extra = [...(only?.retrievals ? ['--retrievals', only.retrievals] : []), ...(only?.questions ? ['--questions', only.questions] : []),
+    ...(only?.appendLine !== undefined ? ['--append-line', only.appendLine] : []), ...(only?.lineIds ? ['--line-ids', only.lineIds] : [])];
   const child = Bun.spawn([ctx.install.python, '-m', 'mpw.reanswer', '--cell', join(ctx.cellsDir, id), '--out', out, '--sample', String(sample), ...extra], {
     cwd: PROVIDER_DIR, env: harnessProcessEnv(ctx.install, env), stdout: 'inherit', stderr: 'inherit',
   });
@@ -620,7 +622,7 @@ export function makeCtx(argv: string[], log: (l: string) => void = l => process.
 
 export const USAGE = `usage: bun run harness:cell <plan|run|resume> <spec.json | cell-id> [--stub-upstream] [--budget-ledger <path>] [--gbrain <checkout>[@ref]] [--cells-dir <dir>]
        bun run harness:cell rejudge <cell-id> <cell-id> [--out <dir>] [--seed N] [--budget-usd N]   joint blinded re-judge with the dataset's judge
-       bun run harness:cell reanswer <cell-id> [--sample N] [--out <dir>] [--budget-usd N] [--retrievals <replay dir> --questions <json list>]   another answer sample from the recorded (or replayed) retrievals
+       bun run harness:cell reanswer <cell-id> [--sample N] [--out <dir>] [--budget-usd N] [--retrievals <replay dir> --questions <json list>] [--append-line <text> --line-ids <json list>]   another answer sample from the recorded (or replayed) retrievals, optionally with a line added to listed questions' context
        bun run harness:cell replay <cell-id> --store <store dir> --out <dir> --gbrain <checkout>@<ref> [--budget-usd N] [--probe]   retrieval-only replay on another build (--probe logs queries and engine searches)
        bun run harness:cell ingest <spec.json | cell-id>   ingest every unit into the shared store, no questions
        bun run harness:cell tune <cell-id> --auto '{"targets": [4000, 8000, 16000, 32000], "base": {"token_budget": 8100}, "sample": 60}'
@@ -663,7 +665,8 @@ if (import.meta.main) {
       const out = resolve(flag(argv, '--out') ?? ctx.cellsDir);
       const retrievals = flag(argv, '--retrievals');
       process.exit(await reanswerCell(ctx, target, Number(flag(argv, '--sample') ?? 2), Number(flag(argv, '--budget-usd') ?? 5), out,
-        { retrievals: retrievals ? resolve(retrievals) : undefined, questions: flag(argv, '--questions') }));
+        { retrievals: retrievals ? resolve(retrievals) : undefined, questions: flag(argv, '--questions'), appendLine: flag(argv, '--append-line'),
+          lineIds: flag(argv, '--line-ids') ? resolve(flag(argv, '--line-ids')!) : undefined }));
     }
     if (action === 'tune') {
       const grid = flag(argv, '--grid');
