@@ -5,7 +5,9 @@
  * caller before and after the change, and checks each cell against gbrain's access contract
  * (docs/guides/access-designations.md, docs/guides/conversation-archive.md): the owner's own callers never lose a read,
  * and nobody else ever gains one. Run it against another gbrain build by pointing node_modules/gbrain at that checkout.
- * A cell that fails names the scenario, phase, caller, content and read path, and AD_REPORT_DIR=<dir> writes every cell.
+ * A cell that fails names the scenario, phase, caller, content and read path, and AD_REPORT_DIR=<dir> writes every cell,
+ * with the build it ran on (the commit and whether the tree was clean, when node_modules/gbrain is a git checkout) and
+ * every scenario this build defines, so a reader can tell a full run on one commit from a partial or mislabelled one.
  * Every count it reports is on PGLite: no Postgres brain runs here. Source config goes in through gbrain's
  * executeRawJsonb, because a JSON.stringify'd ::jsonb parameter is stored as a JSON string on Postgres, and setup fails
  * if the owner-only source doesn't read back owner_only: true.
@@ -16,8 +18,10 @@
  * later one, that the same caller does not read through a single get_page fails as slugs_only. On a build without `slugs` those paths are skipped.
  */
 import { afterAll, describe, expect, test } from 'bun:test';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { PGLiteEngine } from '../../node_modules/gbrain/src/core/pglite-engine.ts';
 import { configureGateway, resetGateway, __setEmbedTransportForTests } from '../../node_modules/gbrain/src/core/ai/gateway.ts';
 import { GBrainOAuthProvider } from '../../node_modules/gbrain/src/core/oauth-provider.ts';
@@ -54,6 +58,19 @@ const GBRAIN_VERSION: string = JSON.parse(readFileSync(join(import.meta.dir, '..
 const older = (a: string, b: string) => { const x = a.split('.').map(Number), y = b.split('.').map(Number); for (let i = 0; i < Math.max(x.length, y.length); i++) { if ((x[i] ?? 0) !== (y[i] ?? 0)) return (x[i] ?? 0) < (y[i] ?? 0); } return false; };
 const TOO_OLD = older(GBRAIN_VERSION, MIN_GBRAIN);
 if (TOO_OLD) console.warn('sharing contract skipped: the pinned gbrain is v' + GBRAIN_VERSION + ', and this test needs v' + MIN_GBRAIN + ' or later');
+/**
+ * The build node_modules/gbrain holds: its version, and its commit and whether its tree is clean when it is a git checkout
+ * of its own (a link to a gbrain clone). An installed package records no commit, so sha is null there.
+ */
+export function gbrainBuild(root: string = join(import.meta.dir, '../../node_modules/gbrain')): { version: string; sha: string | null; dirty: boolean | null } {
+  const real = realpathSync(root);
+  const version = (JSON.parse(readFileSync(join(real, 'package.json'), 'utf8')) as { version: string }).version;
+  const git = (...args: string[]) => { const r = spawnSync('git', ['-C', real, ...args], { encoding: 'utf8' }); return r.status === 0 ? r.stdout.trim() : null; };
+  const top = git('rev-parse', '--show-toplevel');
+  if (!top || realpathSync(top) !== real) return { version, sha: null, dirty: null };
+  return { version, sha: git('rev-parse', 'HEAD'), dirty: (git('status', '--porcelain') ?? 'unknown') !== '' };
+}
+
 /** get_page { slugs } ships in gbrain#9798 as src/core/ops/get-page-batch.ts. */
 export const HAS_SLUGS = existsSync(join(import.meta.dir, '../../node_modules/gbrain/src/core/ops/get-page-batch.ts'));
 
@@ -415,6 +432,19 @@ globalThis.fetch = Object.assign(async (input: string | URL | Request, init?: Re
 configureGateway({ embedding_model: 'openai:text-embedding-3-small', embedding_dimensions: DIMS, env: { OPENAI_API_KEY: 'keyless-test' } });
 __setEmbedTransportForTests((async ({ values }: { values: string[] }) => ({ embeddings: values.map(vectorFor) })) as never);
 
+describe('AD sharing contract: the build it ran on', () => {
+  test('a gbrain checkout reports its commit and whether its tree is clean; a directory that is not its own checkout reports no commit', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'ad-build-'));
+    writeFileSync(join(dir, 'package.json'), JSON.stringify({ name: 'gbrain', version: '9.9.9' }));
+    expect(gbrainBuild(dir)).toEqual({ version: '9.9.9', sha: null, dirty: null });
+    const g = (...a: string[]) => spawnSync('git', ['-C', dir, ...a], { encoding: 'utf8', env: { ...process.env, GIT_CONFIG_GLOBAL: '/dev/null', GIT_AUTHOR_NAME: 't', GIT_AUTHOR_EMAIL: 't@t', GIT_COMMITTER_NAME: 't', GIT_COMMITTER_EMAIL: 't@t' } }).stdout.trim();
+    g('init', '-q'); g('add', 'package.json'); g('commit', '-q', '-m', 'a');
+    expect(gbrainBuild(dir)).toEqual({ version: '9.9.9', sha: g('rev-parse', 'HEAD'), dirty: false });
+    writeFileSync(join(dir, 'extra.ts'), 'export {}');
+    expect(gbrainBuild(dir).dirty).toBe(true);
+  });
+});
+
 describe('AD sharing contract: get_page slugs leak check', () => {
   const cell = (path: ReadPath, read: boolean, caller = 'member_http', item = 'private'): Cell => ({ scenario: 's', phase: 'after', caller, item, path, read, expect: 'may', verdict: 'ok' });
   test('a page read through slugs but not through a single get_page of the same scope is slugs_only; matching reads pass', () => {
@@ -477,5 +507,6 @@ afterAll(() => {
   const dir = process.env.AD_REPORT_DIR;
   if (!dir) return;
   mkdirSync(dir, { recursive: true });
-  writeFileSync(join(dir, 'ad-sharing-cells.json'), JSON.stringify({ callers: CALLERS, items: ITEMS, notes, cells: report }, null, 1));
+  writeFileSync(join(dir, 'ad-sharing-cells.json'), JSON.stringify({ gbrain: gbrainBuild(), has_slugs: HAS_SLUGS, too_old: TOO_OLD, scenarios: SCENARIOS.map(s => s.name),
+    callers: CALLERS, items: ITEMS, notes, cells: report }, null, 1));
 });
