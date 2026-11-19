@@ -5,6 +5,7 @@ Usage:
   python3 eval/runner/cat40/newest_analysis.py --world N1=<attempts or results.jsonl>[,<more>] --world N2=<...> \
       [--transcripts <transcripts.jsonl>[,<more>]] [--judge-check <report.json>] [--gbrain gbrain-newest] [--fs fs] \
       [--resamples 10000] [--seed 1] [--json out.json] [--look interim|final|control] [--old gbrain-old-09d]
+      [--world-transcripts N1=<transcripts.jsonl>[,<more>] ...]  (--look control only)
 
 --look control is the old-build control (docs/benchmarks/2026-11-19-cat40-hard-old-build-control-preregistration.md):
 each world's files list holds the old build's cells beside the newest run's gbrain and files cells. It reports Delta_old
@@ -225,7 +226,8 @@ def without(worlds, drop):
 
 def control(worlds, cost, O, G, F, B, S, transcripts=None):
     """The old-build control. Both differences use one draw sequence: every arm covers the same tasks per world, so each
-    Comparison's random.Random(S) stream draws the same tasks (checked below)."""
+    Comparison's random.Random(S) stream draws the same tasks (checked below). transcripts maps each world to its own
+    transcript files, because attempt ids don't name the world."""
     old = Comparison(worlds, O, F, 'success', FRONTIER)
     nmo = Comparison(worlds, G, O, 'success', FRONTIER)
     if old.tasks != nmo.tasks:
@@ -262,10 +264,15 @@ def control(worlds, cost, O, G, F, B, S, transcripts=None):
     out['first_table'][f'{O}|{PARTICLE}'] = 'not run in this control (the decision reads only the frontier readers)'
     if transcripts:
         out['tool_calls'], widened = {}, set()
-        for label in (O, G):
-            stats, wid = tool_stats(transcripts, label, worlds_of=worlds)
-            out['tool_calls'].update({k: v for k, v in stats.items() if k.split('|')[0] == label})
-            widened |= wid
+        for w, paths in sorted(transcripts.items()):
+            for label in (O, G):
+                stats, wid = tool_stats(paths, label, worlds_of={w: worlds[w]})
+                for k, v in stats.items():
+                    if k.split('|')[0] == label:
+                        acc = out['tool_calls'].setdefault(k, {})
+                        for kk, vv in v.items():
+                            acc[kk] = acc.get(kk, 0) + vv
+                widened |= wid
         cut = without(worlds, widened)
         out['without_widened_sessions'] = {'dropped_pairs': len(widened),
                                            'delta_old': Comparison(cut, O, F, 'success', FRONTIER).run(B, S),
@@ -326,6 +333,7 @@ def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument('--world', action='append', required=True, help='NAME=file[,file...]')
     ap.add_argument('--transcripts')
+    ap.add_argument('--world-transcripts', action='append', help='--look control: NAME=transcripts.jsonl[,...] per world')
     ap.add_argument('--judge-check')
     ap.add_argument('--gbrain', default='gbrain-newest')
     ap.add_argument('--fs', default='fs')
@@ -348,7 +356,14 @@ def main(argv=None):
             print(json.dumps({'refused': 'CONTROL_INCOMPLETE', 'missing_cells': gaps}), file=sys.stderr)
             print('STOP CONTROL_INCOMPLETE: the control needs every planned cell of the old, newest and files arms; resume the missing cells', file=sys.stderr)
             return 3
-        out = control(worlds, cost, args.old, G, F, B, S, args.transcripts.split(',') if args.transcripts else None)
+        if args.transcripts:
+            print('--look control takes --world-transcripts NAME=file[,file...] per world, not --transcripts', file=sys.stderr)
+            return 2
+        wt = dict(spec.split('=', 1) for spec in args.world_transcripts or [])
+        if set(wt) - set(worlds):
+            print(f'--world-transcripts names worlds not given with --world: {sorted(set(wt) - set(worlds))}', file=sys.stderr)
+            return 2
+        out = control(worlds, cost, args.old, G, F, B, S, {w: f.split(',') for w, f in wt.items()} or None)
         if args.json:
             with open(args.json, 'w') as f:
                 f.write(json.dumps(out, indent=1, allow_nan=False))

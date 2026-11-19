@@ -109,17 +109,26 @@ describe('newest_analysis.py --look control', () => {
     const lines: string[] = [];
     for (const model of FRONTIER) for (const [arm, ok] of [[CONTROL_LABEL, oldOk], ['gbrain-newest', newOk], ['fs', fsOk]] as const) tasks.forEach((t, i) => {
       if (drop === `${arm}|${model}|${t}`) return;
-      lines.push(JSON.stringify({ attempt_id: `${name}|${model}|${arm}|${t}#1`, arm, model, task: t, family: t.slice(0, 2), variant: '', stop: 'submitted', score: { success: ok(i), submitted: true, said_wrong: false }, total_usd: 0.1, judge_usd: 0.01 }));
+      lines.push(JSON.stringify({ attempt_id: `${model}|${arm}|${t}|0#1`, arm, model, task: t, family: t.slice(0, 2), variant: '', stop: 'submitted', score: { success: ok(i), submitted: true, said_wrong: false }, total_usd: 0.1, judge_usd: 0.01 }));
     });
     const p = join(dir, `${name}.jsonl`);
     writeFileSync(p, lines.join('\n') + '\n');
     return `${name}=${p}`;
   }
-  function control(oldOk: Ok, newOk: Ok, fsOk: Ok, drop?: string) {
+  /** A transcript file per world in which the newest build's session widened itself to the full surface on the given tasks. */
+  function widened(dir: string, name: string, tasksWidened: string[]) {
+    const result = JSON.stringify({ surface: 'full', previous: 'starter' });
+    const lines = tasksWidened.map(t => JSON.stringify({ key: `gpt-6.2-sol|gbrain-newest|${t}|0`, attempt_id: `gpt-6.2-sol|gbrain-newest|${t}|0#1`, tools: [{ session: 2, name: 'request_tools', args: { surface: 'full' }, result }] }));
+    const p = join(dir, `${name}-transcripts.jsonl`);
+    writeFileSync(p, lines.join('\n') + '\n');
+    return `${name}=${p}`;
+  }
+  function control(oldOk: Ok, newOk: Ok, fsOk: Ok, drop?: string, wide?: Record<string, string[]>) {
     const dir = mkdtempSync(join(tmpdir(), 'control-analysis-'));
     const out = join(dir, 'out.json');
     const worlds = [world(dir, 'N1', oldOk, newOk, fsOk, drop), world(dir, 'N2', oldOk, newOk, fsOk)];
-    const r = spawnSync('python3', [SCRIPT, '--look', 'control', '--old', CONTROL_LABEL, ...worlds.flatMap(w => ['--world', w]), '--resamples', '1000', '--json', out], { encoding: 'utf8' });
+    const trans = Object.entries(wide ?? {}).flatMap(([w, ts]) => ['--world-transcripts', widened(dir, w, ts)]);
+    const r = spawnSync('python3', [SCRIPT, '--look', 'control', '--old', CONTROL_LABEL, ...worlds.flatMap(w => ['--world', w]), ...trans, '--resamples', '1000', '--json', out], { encoding: 'utf8' });
     const json = r.status === 0 ? JSON.parse(readFileSync(out, 'utf8')) : null;
     rmSync(dir, { recursive: true, force: true });
     return { code: r.status, json, err: r.stderr };
@@ -163,6 +172,12 @@ describe('newest_analysis.py --look control', () => {
     const { json } = control(() => true, i => i % 5 !== 3, () => true);
     expect(json.per_family.H4.newest_minus_old.ci95[1]).toBeLessThan(0);
     expect(json.h4_regression).toBe(true);
+  });
+  test('the widened-session sensitivity drops each widened task in its own world, even where attempt ids repeat across worlds', () => {
+    const { json } = control(below(55), below(52), below(50), undefined, { N1: ['H1-01', 'H2-01'], N2: ['H1-01'] });
+    expect(json.tool_calls['gbrain-newest|gpt-6.2-sol'].cells_widened_to_full).toBe(3);
+    expect(json.without_widened_sessions.dropped_pairs).toBe(3);
+    expect(json.without_widened_sessions.delta_old.cells).toBe(400 - 3);
   });
   test('a missing old-build cell refuses the control (CONTROL_INCOMPLETE, exit 3)', () => {
     const r = control(below(55), below(52), below(50), `${CONTROL_LABEL}|gpt-6.2-sol|H3-07`);

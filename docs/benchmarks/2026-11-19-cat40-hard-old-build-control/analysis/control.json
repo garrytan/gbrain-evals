@@ -688,32 +688,32 @@
   }
  },
  "without_widened_sessions": {
-  "dropped_pairs": 16,
+  "dropped_pairs": 21,
   "delta_old": {
-   "delta_pp": 3.62,
+   "delta_pp": 3.1,
    "ci95": [
-    -0.5,
-    7.81
+    -0.95,
+    7.17
    ],
    "tasks": 198,
-   "cells": 384,
-   "a_count": 326.0,
+   "cells": 379,
+   "a_count": 324.0,
    "b_count": 312.0,
-   "missing_pairs": 12,
-   "se_pp": 2.13
+   "missing_pairs": 17,
+   "se_pp": 2.093
   },
   "newest_minus_old": {
-   "delta_pp": -1.56,
+   "delta_pp": -0.76,
    "ci95": [
-    -4.63,
-    1.53
+    -3.86,
+    2.34
    ],
    "tasks": 198,
-   "cells": 384,
-   "a_count": 320.0,
-   "b_count": 326.0,
-   "missing_pairs": 12,
-   "se_pp": 1.567
+   "cells": 379,
+   "a_count": 321.0,
+   "b_count": 324.0,
+   "missing_pairs": 17,
+   "se_pp": 1.591
   }
  }
 }
