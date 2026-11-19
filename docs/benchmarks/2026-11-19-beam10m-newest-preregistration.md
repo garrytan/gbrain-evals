@@ -358,6 +358,49 @@ decision rule or verdict.
   gpt-6.2-sol) in its own cell file instead. This replaces the sentence under "Readers" and the line under "Harness"
   that said the keyless prep moves `FRONTIER_READERS`.
 
+### A2 (2026-11-19): a pilot for every arm, and no interim look, before any paid call
+
+Written on the results branch before any dry run, judge check or counted cell, under two factory rules that took
+effect on 2026-11-19 (R111 and R113). It changes no arm, reader, judge, set or decision rule. It adds a gate before each
+arm's counted cells, and it says what happens to an arm that fails that gate.
+
+- **No interim look (R113).** The rule asks for one preregistered interim look only when a counted run's planned paid
+  spend is above a fixed threshold. This experiment's planned paid spend, every provider call and VM hour for the dry
+  run, judge check, stored re-judging and counted cells taken together, is below that threshold at its estimate and at
+  its runaway caps. So the counted cells take no interim look. Every scheduled unit runs, and the primary comparison
+  (arm P against F6's arm P on claude-opus-5-5) is computed once, after the last counted cell, with the 95% interval and
+  smallest detectable difference preregistered above. No earlier look at it counts.
+- **A pilot for each arm (R111).** Each of arms P, A0 and whole passes its own pilot before its counted cells start.
+  The pilot is the dry run above (public BEAM-1M `1m-16`, 10 questions, the counted launch path), read arm by arm. Its
+  spend on each arm, from the dry run's ledger with the shared brain build split evenly across the three arms, is at
+  most a tenth of that arm's planned spend. An arm passes only if all four checks below pass on that arm's own dry-run
+  outputs:
+  1. **The part under test ran.** For P: the shim's readback shows P's six overlay keys with the values set, every
+     retrieval call carries P's arguments, and the delivered contexts are packed to 8,000 tokens and carry dated fact
+     rows (v0.60.734.0's change). For A0: the readback shows A0's overlay, and every call has Q1's call shape. For
+     whole: every call is a native-default `query` that passes no `limit`, the readback shows the shipped defaults,
+     and the context is gbrain's own default amount. For all three: every delivered row's fence share is recorded.
+  2. **Its judges pass the agreement check (R78).** Every judge that grades the arm's counted rows (gpt-6.1-sol for the
+     claude-opus-5-5 and particle-1 rows, claude-opus-5-5 for the gpt-6.2-sol rows) has passed the judge agreement check
+     above and has graded every one of the arm's dry-run answers with no `judge_error` and no output-limit stop.
+  3. **The tasks can be supplied.** Every one of the 10 dry-run questions produced a context, an answer from each reader
+     and a verdict, with no harness failure. Before the arm's first counted cell, a keyless count in custody confirms
+     that the hash-checked S1 copy holds the 10 conversations and 199 questions the manifest names.
+  4. **At the planned rate.** The dry run's measured ingest and extraction hours per million tokens, and its seconds per
+     answered question, project S1's cells to finish inside the VM timeout this plan set, and no provider rate limit
+     held a call back for longer than the retry policy allows.
+
+  The pilot is not a counted result: no accuracy figure from it is published. Its receipt under
+  `docs/benchmarks/2026-11-19-beam10m-newest/dry-run/` shows each check's pass or fail per arm, the rates and the fence
+  share, and the freeze amendment records each arm's pilot spend as a share of its planned spend.
+- **An arm that fails its pilot** is either fixed, by a dated amendment and a second pilot inside the same tenth, or left
+  out. A left-out arm runs no counted cell and is reported as left out, with the failed check, in the results. If arm P
+  or arm whole is left out, its README row keeps the stored measurement, labelled with its build and date, and says
+  that the newest-release run of that arm was left out and why. This replaces, for that case only, item 3 of "What the
+  result decides".
+- **The file agent** runs no new cell (its stored answers are only judged again), so it has no pilot. Its re-judged set
+  counts only under a judge that passed the agreement check.
+
 ## Disclosures
 
 - gbrain is Garry Tan's own project.
