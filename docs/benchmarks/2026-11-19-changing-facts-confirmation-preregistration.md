@@ -562,7 +562,7 @@ kept set is still the first 40 worlds that pass BG1's validation.
 - **The change.** `eval/custody/bg1/render.ts` now removes every control character except newline and tab from each
   rendered turn, before the checks run and before the world is written. The checks read the text the world keeps, and
   every server ingests that same text. The render record and line count what each world lost (`controls_dropped`), and
-  `validate.ts` reports the count for each world and in total. Whether a world is kept or dropped is decided as before.
+  `validate.ts` reports the count for each world and in total. The gates that keep or drop a world are unchanged.
 - **Harness commit.** `a37af44a8f8a9444e02b7ff2d2d2d93249aec887` on this experiment's results branch, with keyless
   tests. The render test fails without the change.
 - **A descriptive count for BG1.** BG1's published results don't record failed sessions, so whether its sealed gbrain
