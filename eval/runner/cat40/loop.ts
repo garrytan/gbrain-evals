@@ -117,6 +117,8 @@ export interface AgentRun {
    * question again.
    */
   timed_out?: true;
+  /** Anthropic and OpenAI runs: each distinct model id the provider said served a turn (the response's `model`), in order. */
+  served_models?: string[];
 }
 
 export const SUBMIT_TOOL: ToolSpec = {
@@ -330,6 +332,10 @@ export async function runAgent(cfg: LoopConfig): Promise<AgentRun> {
 }
 
 /** Add one response's usage to the run, and its cost as the budget ledger settles it: long prompts and cache writes at their own rates. */
+function addServed(run: AgentRun, model: unknown) {
+  if (typeof model === 'string' && !(run.served_models ??= []).includes(model)) run.served_models.push(model);
+}
+
 function addUsage(run: AgentRun, usage: unknown) {
   const p = provider(run.model);
   const u = normalizeUsage(p === 'anthropic' ? 'anthropic' : 'openai', usage as object | undefined);
@@ -391,6 +397,7 @@ async function anthropicLoop(cfg: LoopConfig, run: AgentRun, specs: () => ToolSp
     }, onAttempt);
     run.model_ms += Date.now() - s;
     addUsage(run, res.usage);
+    addServed(run, res.model);
     const content = (res.content ?? []) as Array<Record<string, unknown>>;
     messages.push({ role: 'assistant', content });
     const calls = content.filter(c => c.type === 'tool_use');
@@ -429,6 +436,7 @@ async function openaiLoop(cfg: LoopConfig, run: AgentRun, specs: () => ToolSpec[
     }, onAttempt);
     run.model_ms += Date.now() - s;
     addUsage(run, res.usage);
+    addServed(run, res.model);
     const output = (res.output ?? []) as Array<Record<string, unknown>>;
     const calls = output.filter(o => o.type === 'function_call');
     if (!calls.length) {
