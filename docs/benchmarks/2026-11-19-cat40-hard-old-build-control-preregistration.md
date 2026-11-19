@@ -82,7 +82,7 @@ The November 19 run's paired standard error for gbrain minus files, pooled, was 
 
 ## Budget
 
-Each world runs on its own Ubicloud VM, detached, with one budget ledger and one writer; every request is reserved before it is sent, every step passes its own `--budget-usd`, and reaching a cap pauses at the cell boundary until it is extended, never ending the test incomplete. The planned spend is about $275 (two gbrain arms on two worlds, priced from the November 19 run's cells, plus slot builds), under the $500 above which R113 requires one interim look, so none is taken. The ledger caps are set so their sum stays under $500; spending past that would need a dated amendment that adds the interim look first. The VMs are destroyed when their runs end. Dollar amounts stay in the tracking issue.
+Each world runs on its own Ubicloud VM, detached, with one budget ledger and one writer; every request is reserved before it is sent, every step passes its own `--budget-usd`, and reaching a cap pauses at the cell boundary until it is extended, never ending the test incomplete. The planned spend (two gbrain arms on two worlds, priced from the November 19 run's cells, plus slot builds) and the summed ledger caps stay below the level at which R113 requires one interim look, so none is taken. Spending past that level would need a dated amendment that adds the interim look first. The VMs are destroyed when their runs end. Dollar amounts stay in the tracking issue.
 
 ## Known limitations
 
