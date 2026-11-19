@@ -496,6 +496,19 @@ does not change.
 GBEV-3 decided this on 2026-11-19, before any paid call: "R113 exists to preserve the plan's alpha across one look, not
 to make the test stricter."
 
+### Amendment 3 (2026-11-19): two readings made explicit
+
+Written before any paid call, after the harness for Amendments 1 and 2 was built and read. Neither change moves a
+bound, a row, an arm or the budget.
+
+- **A futile comparison at a stop** takes its 3-point reading on the 20 worlds, from the 0.0125 bounds: level within 3
+  points, not behind by 3 points or more, or no measurable difference when neither holds. Amendment 1 named "no
+  measurable difference" and the 3-point readings together, and this says which one applies.
+- **The public lesson for rows 4 and 5.** "Public lesson" gave one sentence for a lead and one for a tie or a loss.
+  Rows 4 and 5 are neither, so they get their own: "We learned that part of the lead gbrain showed on development
+  worlds carried over to worlds nobody had seen. You should confirm a memory change on held-out data before you claim
+  it." Row 3 keeps the lead sentence, rows 2 and 6 take the tie-or-loss sentence with "did not", and row 1 gets none.
+
 ## Disclosures
 
 - gbrain is Garry Tan's own project.
