@@ -26,8 +26,8 @@ afterAll(() => {
 
 test('no OpenAI chat request carries n, for a reasoning model or a temperature model', async () => {
   const client = new ChatClient(join(tmp, 'cache'), () => 0);
-  await client.chat('openai:gpt-6.2-sol', 'Say ok.', { maxTokens: 100, effort: 'medium' });
-  await client.chat('openai:gpt-4.1-mini', 'Say ok.', { maxTokens: 100 });
+  await client.chat('openai:gpt-6.2-sol', 'Say ok.', { maxTokens: 100, effort: 'medium', replicate: 0 });
+  await client.chat('openai:gpt-4.1-mini', 'Say ok.', { maxTokens: 100, replicate: 0 });
   expect(bodies.map(b => b.model)).toEqual(['gpt-6.2-sol', 'gpt-4.1-mini']);
   for (const b of bodies) expect('n' in b).toBe(false);
 });

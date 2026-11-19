@@ -23,7 +23,7 @@ const [P, A0, WHOLE] = BN10_ARMS.map(a => a.retrieval!);
 const free = () => { const s = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: () => new Response('') }); const p = s.port as number; s.stop(true); return p; };
 const port = ON ? free() : 0;
 const BASE_URL = `http://127.0.0.1:${port}`;
-const env = { ...process.env, SHIM_HOST_PORT: String(port), PROXY_UPSTREAM: 'fake-upstream:8787', GBRAIN_F6: '1', GBRAIN_SHA: PIN, GBRAIN_BUN_IMAGE: BN10_ASSUMPTIONS.bun_image, GBRAIN_F6_EXTRACT_CAP_USD: '1' };
+const env = { ...process.env, SHIM_HOST_PORT: String(port), PROXY_UPSTREAM: 'fake-upstream:8787', GBRAIN_F6: '1', GBRAIN_SHA: PIN, GBRAIN_BUN_IMAGE: BN10_ASSUMPTIONS.bun_image, GBRAIN_F6_EXTRACT_CAP_USD: '1' } as Record<string, string | undefined>;
 for (const k of ['OPENAI_BASE_URL', 'ANTHROPIC_BASE_URL', 'VOYAGE_BASE_URL', 'OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'VOYAGE_API_KEY']) delete env[k];
 const compose = (...args: string[]) => Bun.spawnSync(['docker', 'compose', '-p', PROJECT, '-f', COMPOSE, '--profile', 'keyless', ...args], { cwd: ROOT, env });
 
