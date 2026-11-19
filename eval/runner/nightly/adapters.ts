@@ -148,16 +148,23 @@ export const CAT40 = {
 };
 
 /** The Cat 40 runner's commands for one night: the world (free), one slot build per slot (run side by side), and the cells, scripted on a fake night. */
-export function cat40Commands(run: SuiteRun, ctx: NightContext, world: string, dirs: { root: string; slots: string; cells: string }) {
+/**
+ * `slots.sha` builds the brains with that commit and serves the build under test on them (the runner's --slot-ref, for
+ * read-path changes that share a schema); `slots.n` sets how many brains run cells at once (CAT40.slots).
+ */
+export function cat40Commands(run: SuiteRun, ctx: NightContext, world: string, dirs: { root: string; slots: string; cells: string }, slots: { sha?: string; n?: number } = {}) {
   // World M is a dev set (gate decision A, 2026-11-09), so the night runs it on the current harness and records any drift from the Hard freeze.
-  const build = ['--dev-set', '--world', world, '--gbrain-repo', ctx.clone, '--gbrain-ref', ctx.sha, '--gbrain-root', dirs.root, '--slots', String(CAT40.slots)];
+  const n = slots.n ?? CAT40.slots;
+  const flags = (ref: string) => ['--dev-set', '--world', world, '--gbrain-repo', ctx.clone, '--gbrain-ref', ref, '--gbrain-root', dirs.root, '--slots', String(n)];
+  const build = [...flags(ctx.sha), ...(slots.sha && slots.sha !== ctx.sha ? ['--slot-ref', slots.sha] : [])];
+  const buildSlots = flags(slots.sha ?? ctx.sha);
   const keyless = ctx.fake ? ['--scripted', '--keyless-slots'] : [];
   if (!ctx.fake && ctx.cat40SlotAllowanceUsd === null) throw new Error('a paid Cat 40 night builds embedded slots; pass --cat40-slot-allowance-usd <dollars>');
   const paid = paidFlags(ctx, run.suite);
   return {
     world: [bun(CAT40.generator, '--mode', 'hard', '--seed', String(CAT40.seed), '--knobs', CAT40.knobs, '--out', join(dirname(dirname(world)), 'base-4k')),
       bun(CAT40.generator, '--mode', 'hard', '--seed', String(CAT40.seed), '--knobs', CAT40.knobs, '--scale', 'large', '--base-world', join(dirname(dirname(world)), 'base-4k', 'world.json'), '--out', dirname(world))],
-    slots: Array.from({ length: CAT40.slots }, (_, i) => bun(CAT40.runner, '--build-slots', ...build, '--build-slot-ids', String(i), ...keyless,
+    slots: Array.from({ length: n }, (_, i) => bun(CAT40.runner, '--build-slots', ...buildSlots, '--build-slot-ids', String(i), ...keyless,
       ...(ctx.fake ? [] : ['--slot-build-allowance-usd', String(ctx.cat40SlotAllowanceUsd)]), ...paid, '--out', join(dirs.slots, `slot${i}`))),
     cells: bun(CAT40.runner, ...build, '--arms', 'gbrain', '--gbrain-label', CAT40.label, '--tasks', run.items.map(i => i.id).join(','), '--repeat', String(run.k),
       '--concurrency', String(CAT40.concurrency), '--transcripts', ...keyless,

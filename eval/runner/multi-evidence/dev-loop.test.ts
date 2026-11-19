@@ -4,9 +4,9 @@ import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Outcome } from '../nightly/outcome.ts';
-import { ARMS, BASE_TURN_CAP, cat40ArmFlags, compareVersions, followUpRun, newestRelease, parseArgs, planRuns, powerTable, rerankTimedOut, resumeRefusal } from './dev-loop.ts';
+import { ARMS, BASE_TURN_CAP, cat40ArmFlags, cat40Setup, compareVersions, followUpRun, newestRelease, parseArgs, planRuns, powerTable, rerankTimedOut, resumeRefusal } from './dev-loop.ts';
 import type { SuiteRun } from '../nightly/adapters.ts';
-import { agentItem, agentWhy, minDetectable, missed, qaItem, qaWhy, readTargets, slice, slugName, trialDiscordance, type ItemRow } from './score.ts';
+import { agentItem, agentWhy, batchPagesRead, isSlugsCall, minDetectable, missed, qaItem, qaWhy, readTargets, slice, slugName, trialDiscordance, type ItemRow } from './score.ts';
 import { loadMeDevSet, MIN_GOLD } from './select.ts';
 
 const outcome = (o: Partial<Outcome>): Outcome => ({
@@ -134,6 +134,47 @@ describe('summaries and power', () => {
   });
 });
 
+describe('batch reads (get_page slugs)', () => {
+  const page = (slug: string) => '{"requested_slug":' + JSON.stringify(slug) + ',"page":{"slug":' + JSON.stringify(slug) + ',"compiled_truth":"x"}}';
+  const miss = (slug: string) => '{"requested_slug":' + JSON.stringify(slug) + ',"error":"page_not_found","message":"no page"}';
+  const gold = ['crm/a', 'crm/b', 'crm/c'];
+  const o = outcome({ evidence: { evidence_cited: [], missed_evidence: gold } });
+  const calls = [
+    { name: 'search', args: { query: 'q' }, result: 'crm/a crm/b crm/c' },
+    { name: 'get_page', args: { slugs: ['crm/a', 'crm/b', 'crm/c', 'crm/z'] }, result: '{"summary":"2 of 4 pages read; 1 not found: crm/z; 1 left for omitted.next (token_budget)","pages":[' + page('crm/a') + ',' + page('crm/b') + ',' + miss('crm/z') + '],"omitted":{"slugs":["crm/c"],"reason":"token_budget"}}' },
+    { name: 'get_page', args: { slugs: [] }, result: 'Error: invalid_params' },
+    { name: 'get_page', args: { slug: 'crm/c' }, result: '{"slug":"crm/c"}' },
+    { name: 'submit_answer', args: { answer: 'x' }, result: 'Answer submitted.' },
+  ];
+  const row = agentItem(o, { arm: 'base', ref: 'v1', gold, calls, turns: 5, turnCap: 16 });
+  test('counts slugs calls, multi-page batches, omitted results and tool-result characters', () => {
+    expect(row.slugs_calls).toBe(1);
+    expect(row.slugs_multi).toBe(1);
+    expect(row.omitted_calls).toBe(1);
+    expect(row.result_chars).toBe(calls.slice(0, 4).reduce((n, c) => n + c.result.length, 0));
+  });
+  test('a batch opens only the pages its result delivered, never the omitted or missing ones', () => {
+    expect(row.opened).toEqual(['crm/a', 'crm/b', 'crm/c']);
+    const only = agentItem(o, { arm: 'base', ref: 'v1', gold, calls: calls.slice(0, 2), turns: 2, turnCap: 16 });
+    expect(only.opened).toEqual(['crm/a', 'crm/b']);
+    expect(batchPagesRead(calls[1]!.result)).toEqual(['crm/a', 'crm/b']);
+    expect(readTargets({ name: 'get_page', args: { slugs: ['crm/a', 'crm/b'] } })).toEqual(['crm/a', 'crm/b']);
+    expect(isSlugsCall({ name: 'get_page', args: { slug: 'crm/a' } })).toBe(false);
+  });
+  test('without a transcript every batch count is null', () => {
+    const none = agentItem(o, { arm: 'base', ref: 'v1', gold, calls: null, turns: null, turnCap: 16 });
+    expect([none.result_chars, none.slugs_calls, none.slugs_multi, none.omitted_calls]).toEqual([null, null, null, null]);
+  });
+  test('--slots-from serves the build under test on brains another commit built; a run dir refuses other brains', () => {
+    const a = parseArgs(['--out', '/tmp/x', '--fake', '--slots-from', 'v0.60.743.0', '--cat40-slots', '3']);
+    expect([a.slotsFrom, a.cat40Slots]).toEqual(['v0.60.743.0', 3]);
+    expect(parseArgs(['--out', '/tmp/x', '--fake']).cat40Slots).toBeNull();
+    const s = 'a'.repeat(40), t = 'c'.repeat(40);
+    expect(resumeRefusal({ sha: s, fake: false, slots_from: { sha: t } }, { sha: s, fake: false, slotsSha: t }, 'out/v1', 'v1')).toBeNull();
+    expect(resumeRefusal({ sha: s, fake: false }, { sha: s, fake: false, slotsSha: t }, 'out/v1', 'v1')).toContain('brains');
+  });
+});
+
 describe('dev loop', () => {
   test('the arms: base is the nightly cap, cap2x doubles it, batch adds the hint file', () => {
     expect(BASE_TURN_CAP).toBe(16);
@@ -172,5 +213,32 @@ describe('dev loop', () => {
     g('checkout', '-q', '-b', 'side'); commit('c'); g('tag', 'v0.11.0'); g('checkout', '-q', 'master');
     g('update-ref', 'refs/remotes/origin/master', 'master');
     expect(newestRelease(dir, false)).toEqual({ tag: 'v0.10.0', sha: c2 });
+  });
+});
+
+describe('cat40Setup', () => {
+  const exp = { world_digest: 'w', slot_commit: 's'.repeat(40), gbrain_commit: 'g'.repeat(40), hard: { max_turns: 16, runner_commit: 'r1', settings_digest: 'x' },
+    flags: { '--judge': 'gpt-6.1-sol', '--repeat': '1', '--gbrain-ref': 'g'.repeat(40), '--tasks': 'H1-02', '--out': '/a', '--concurrency': '10' } };
+  const dir = (o: { exp?: Record<string, unknown> | null; instructions?: string; tools?: string[] } = {}) => {
+    const d = mkdtempSync(join(tmpdir(), 'me-setup-'));
+    if (o.exp !== null) writeFileSync(join(d, 'experiment.json'), JSON.stringify(o.exp ?? exp));
+    writeFileSync(join(d, 'served-instructions.txt'), o.instructions ?? 'Use search first.');
+    writeFileSync(join(d, 'served-tools.json'), JSON.stringify((o.tools ?? ['search', 'get_page']).map(name => ({ name, description: name + ' ' + Math.random(), inputSchema: {} }))));
+    return d;
+  };
+  test('two builds on the same brains, tasks split across dirs, and a new runner commit share one setup', () => {
+    const a = cat40Setup(dir());
+    expect(a).toMatch(/^[0-9a-f]{64}$/);
+    expect(cat40Setup(dir({ exp: { ...exp, gbrain_commit: 'h'.repeat(40), hard: { ...exp.hard, runner_commit: 'r2' },
+      flags: { ...exp.flags, '--gbrain-ref': 'h'.repeat(40), '--slot-ref': 's'.repeat(40), '--tasks': 'H1-03', '--out': '/b' } } }))).toBe(a);
+    expect(cat40Setup(dir({ tools: ['get_page', 'search'] }))).toBe(a);
+  });
+  test('the turn cap, brains, world, served instructions, tool names or a cell flag change the setup; no experiment.json gives null', () => {
+    const a = cat40Setup(dir());
+    for (const d of [dir({ exp: { ...exp, hard: { ...exp.hard, max_turns: 32 } } }), dir({ exp: { ...exp, slot_commit: 't'.repeat(40) } }), dir({ exp: { ...exp, world_digest: 'v' } }),
+      dir({ instructions: 'Use search first. Read several pages per call.' }), dir({ tools: ['search', 'get_page', 'fetch'] }), dir({ exp: { ...exp, flags: { ...exp.flags, '--judge': 'other' } } })]) {
+      expect(cat40Setup(d)).not.toBe(a);
+    }
+    expect(cat40Setup(dir({ exp: null }))).toBeNull();
   });
 });

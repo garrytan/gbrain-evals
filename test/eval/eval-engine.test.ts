@@ -61,11 +61,11 @@ describe('cliEngineConfig', () => {
 });
 
 describe('openEvalEngine', () => {
-  test('rust refuses when the build has no Rust engine (the pinned gbrain today)', async () => {
+  test('rust refuses on the pinned gbrain, whose factory does not construct it', async () => {
     const gut = resolveGbrainUnderTest(null);
     const err = await openEvalEngine({ gut, kind: 'rust', databasePath: '/nowhere' }).catch(e => e);
     expect(err).toBeInstanceOf(EvalEngineUnavailable);
-    expect(err.reason).toBe('rust_engine_not_in_build');
+    expect(err.reason).toBe('rust_kind_unsupported');
   });
   test('rust refuses when the factory does not know the kind', async () => {
     const gut = fakeGbrain('export async function constructEngine(c) { throw new Error(`Unknown engine type: "${c.engine}"`); }');
