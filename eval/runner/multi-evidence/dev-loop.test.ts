@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import type { Outcome } from '../nightly/outcome.ts';
 import { ARMS, BASE_TURN_CAP, cat40ArmFlags, compareVersions, followUpRun, newestRelease, parseArgs, planRuns, powerTable, rerankTimedOut, resumeRefusal } from './dev-loop.ts';
 import type { SuiteRun } from '../nightly/adapters.ts';
-import { agentItem, agentWhy, minDetectable, missed, qaItem, qaWhy, readTargets, slice, slugName, trialDiscordance, type ItemRow } from './score.ts';
+import { agentItem, agentWhy, batchPagesRead, isSlugsCall, minDetectable, missed, qaItem, qaWhy, readTargets, slice, slugName, trialDiscordance, type ItemRow } from './score.ts';
 import { loadMeDevSet, MIN_GOLD } from './select.ts';
 
 const outcome = (o: Partial<Outcome>): Outcome => ({
@@ -131,6 +131,47 @@ describe('summaries and power', () => {
     expect(many[0]!.noise).toBe(0.25);
     expect(many[0]!.noise_source).toBe('measured here, 20 trial pairs');
     expect(many[0]!.rows).toBe(40);
+  });
+});
+
+describe('batch reads (get_page slugs)', () => {
+  const page = (slug: string) => '{"requested_slug":' + JSON.stringify(slug) + ',"page":{"slug":' + JSON.stringify(slug) + ',"compiled_truth":"x"}}';
+  const miss = (slug: string) => '{"requested_slug":' + JSON.stringify(slug) + ',"error":"page_not_found","message":"no page"}';
+  const gold = ['crm/a', 'crm/b', 'crm/c'];
+  const o = outcome({ evidence: { evidence_cited: [], missed_evidence: gold } });
+  const calls = [
+    { name: 'search', args: { query: 'q' }, result: 'crm/a crm/b crm/c' },
+    { name: 'get_page', args: { slugs: ['crm/a', 'crm/b', 'crm/c', 'crm/z'] }, result: '{"summary":"2 of 4 pages read; 1 not found: crm/z; 1 left for omitted.next (token_budget)","pages":[' + page('crm/a') + ',' + page('crm/b') + ',' + miss('crm/z') + '],"omitted":{"slugs":["crm/c"],"reason":"token_budget"}}' },
+    { name: 'get_page', args: { slugs: [] }, result: 'Error: invalid_params' },
+    { name: 'get_page', args: { slug: 'crm/c' }, result: '{"slug":"crm/c"}' },
+    { name: 'submit_answer', args: { answer: 'x' }, result: 'Answer submitted.' },
+  ];
+  const row = agentItem(o, { arm: 'base', ref: 'v1', gold, calls, turns: 5, turnCap: 16 });
+  test('counts slugs calls, multi-page batches, omitted results and tool-result characters', () => {
+    expect(row.slugs_calls).toBe(1);
+    expect(row.slugs_multi).toBe(1);
+    expect(row.omitted_calls).toBe(1);
+    expect(row.result_chars).toBe(calls.slice(0, 4).reduce((n, c) => n + c.result.length, 0));
+  });
+  test('a batch opens only the pages its result delivered, never the omitted or missing ones', () => {
+    expect(row.opened).toEqual(['crm/a', 'crm/b', 'crm/c']);
+    const only = agentItem(o, { arm: 'base', ref: 'v1', gold, calls: calls.slice(0, 2), turns: 2, turnCap: 16 });
+    expect(only.opened).toEqual(['crm/a', 'crm/b']);
+    expect(batchPagesRead(calls[1]!.result)).toEqual(['crm/a', 'crm/b']);
+    expect(readTargets({ name: 'get_page', args: { slugs: ['crm/a', 'crm/b'] } })).toEqual(['crm/a', 'crm/b']);
+    expect(isSlugsCall({ name: 'get_page', args: { slug: 'crm/a' } })).toBe(false);
+  });
+  test('without a transcript every batch count is null', () => {
+    const none = agentItem(o, { arm: 'base', ref: 'v1', gold, calls: null, turns: null, turnCap: 16 });
+    expect([none.result_chars, none.slugs_calls, none.slugs_multi, none.omitted_calls]).toEqual([null, null, null, null]);
+  });
+  test('--slots-from serves the build under test on brains another commit built; a run dir refuses other brains', () => {
+    const a = parseArgs(['--out', '/tmp/x', '--fake', '--slots-from', 'v0.60.743.0', '--cat40-slots', '3']);
+    expect([a.slotsFrom, a.cat40Slots]).toEqual(['v0.60.743.0', 3]);
+    expect(parseArgs(['--out', '/tmp/x', '--fake']).cat40Slots).toBeNull();
+    const s = 'a'.repeat(40), t = 'c'.repeat(40);
+    expect(resumeRefusal({ sha: s, fake: false, slots_from: { sha: t } }, { sha: s, fake: false, slotsSha: t }, 'out/v1', 'v1')).toBeNull();
+    expect(resumeRefusal({ sha: s, fake: false }, { sha: s, fake: false, slotsSha: t }, 'out/v1', 'v1')).toContain('brains');
   });
 });
 

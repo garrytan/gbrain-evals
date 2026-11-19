@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "experiments": [
+    {
+      "id": "beam500k-no-evidence-line",
+      "preregistration": "docs/benchmarks/2026-11-19-beam500k-no-evidence-line-preregistration.md",
+      "results": [
+        "docs/benchmarks/2026-11-19-beam500k-no-evidence-line/**",
+        "docs/benchmarks/2026-11-19-beam500k-no-evidence-line.md"
+      ]
+    }
+  ]
+}
