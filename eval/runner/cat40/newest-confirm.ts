@@ -47,7 +47,17 @@ export function driftNote(harnessSha: string, date: string): string {
   return `${NEWEST_PREREG}: harness ${harnessSha}; drift is listed in docs/benchmarks/cat40-hard/accepted-drift.json (2026-11-19 entries: stateless OpenAI requests and per-request pricing in loop.ts, the newest seeds in schema.ts and hard.ts) (${date})`;
 }
 
-export interface Step { id: string; argv: string[]; note?: string; paid_window?: 'particle' }
+/**
+ * The one interim look (R113, amendment of 2026-11-19): the counted frontier cells run in two halves of every world's
+ * tasks, fixed by id before any counted cell. Half A is tasks 01 to 10 of each family, half B tasks 11 to 20. Both
+ * worlds finish half A for both arms and both readers, then the look runs; half B runs only if the look continues.
+ */
+export const HALVES = { a: [1, 10], b: [11, 20] } as const;
+export const halfTasks = (half: keyof typeof HALVES) =>
+  ['H1', 'H2', 'H3', 'H4', 'H5'].flatMap(f => Array.from({ length: HALVES[half][1] - HALVES[half][0] + 1 }, (_, i) => `${f}-${String(HALVES[half][0] + i).padStart(2, '0')}`));
+
+/** A hold stops the operator's driver until the named release file exists; it runs nothing. */
+export interface Step { id: string; argv: string[]; note?: string; paid_window?: 'particle'; hold?: 'record' | 'look' }
 
 const cap = (id: string) => `$CAP_${id.toUpperCase().replace(/-/g, '_')}`;
 
@@ -72,8 +82,13 @@ export function worldPlan(world: NewestWorld, build: string, harnessSha: string,
     ...FRONTIER.map(m => run(`oracle-${short(m)}`, m, ['--arms', 'oracle'])),
     { id: 'oracle-gate', argv: ['bun', 'eval/runner/cat40/hard-ops.ts', 'oracle-gate', '--models', FRONTIER.join(','), '--attempts', FRONTIER.map(m => `${dir}/oracle-${short(m)}/attempts.jsonl`).join(',')], note: 'pooled frontier oracle success >= 95% of 200 cells, or stop this world (gate 4)' },
     ...FRONTIER.map(m => run(`smoke-${short(m)}`, m, gbrain, ['--per-family', '1'], 'five gbrain cells; any harness_error stops the world (gate 5); never counted')),
-    ...FRONTIER.map(m => run(`gbrain-${short(m)}`, m, gbrain)),
-    ...FRONTIER.map(m => run(`fs-${short(m)}`, m, ['--arms', 'fs'])),
+    ...FRONTIER.map(m => run(`smoke-fs-${short(m)}`, m, ['--arms', 'fs'], ['--per-family', '1'], 'five files cells, the files arm\'s pilot (R111); any harness_error stops the world; never counted')),
+    { id: 'hold-record', argv: [], hold: 'record', note: 'the slot receipts, oracle gate and pilots are committed to the preregistration before any counted cell' },
+    ...(['a', 'b'] as const).flatMap(half => [
+      ...(half === 'b' ? [{ id: 'interim-look', argv: [], hold: 'look' as const, note: 'both worlds finished half A; newest_analysis.py --look interim decides; half B runs only if it continues (R113)' }] : []),
+      ...FRONTIER.map(m => run(`gbrain-${short(m)}-${half}`, m, gbrain, ['--tasks', halfTasks(half).join(',')])),
+      ...FRONTIER.map(m => run(`fs-${short(m)}-${half}`, m, ['--arms', 'fs', '--tasks', halfTasks(half).join(',')])),
+    ]),
     run('oracle-particle', PARTICLE, ['--arms', 'oracle'], [], 'descriptive; inside the granted Particle window, one world at a time, after this world\'s frontier cells'),
     run('gbrain-particle', PARTICLE, gbrain),
     run('fs-particle', PARTICLE, ['--arms', 'fs']),

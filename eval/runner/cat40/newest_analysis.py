@@ -4,7 +4,12 @@
 Usage:
   python3 eval/runner/cat40/newest_analysis.py --world N1=<attempts or results.jsonl>[,<more>] --world N2=<...> \
       [--transcripts <transcripts.jsonl>[,<more>]] [--judge-check <report.json>] [--gbrain gbrain-newest] [--fs fs] \
-      [--resamples 10000] [--seed 1] [--json out.json]
+      [--resamples 10000] [--seed 1] [--json out.json] [--look interim|final]
+
+--look interim is the one look at half the tasks (R113; amendment of 2026-11-19): it reads exactly half A (tasks 01 to
+10 of each family) and stops for a difference at |z| >= 2.80, or for futility when conditional power under the planned
+effect (+5.4 points) is below 10%; z is the pooled Delta over its bootstrap standard error. The final headline reads
+its interval at the final bound, z 1.98.
 
 Canonical cells: the last attempt per (arm, model, task) whose stop is not harness_error; cost sums every attempt.
 Headline: Delta = mean over the frontier readers (claude-opus-5-5, gpt-6.2-sol) of (gbrain rate - files rate) over all
@@ -14,7 +19,7 @@ each resample visits the worlds in name order and draws that world's task count 
 An endpoint whose planned cells are not all present is refused (exit 3 for the headline), never computed on fewer.
 Counts and rates only; no world content is read.
 """
-import argparse, json, random, re, sys
+import argparse, json, math, random, re, sys
 from collections import defaultdict
 
 FRONTIER = ['claude-opus-5-5', 'gpt-6.2-sol']
@@ -27,6 +32,20 @@ WORLD_M, D_M = 7.7, 8.9
 HOLD_AT = round(PUBLIC_HALF - D_PUBLIC, 1)   # +5.3
 RISE_ABOVE = round(WORLD_M + D_M, 1)         # +16.6
 HIDDEN_SEARCH_OPTIONS = ('snippet_chars', 'mode', 'token_budget')
+# The one interim look (R113, amendment of 2026-11-19): O'Brien-Fleming bounds at half the tasks, futility on
+# conditional power under the planned effect (the 80%-power detectable difference), and the final critical value.
+HALF_A = [f'{fam}-{i:02d}' for fam in FAMILIES for i in range(1, 11)]
+INTERIM_Z, FINAL_Z, PLANNED_EFFECT, FUTILITY_CP, INFO_FRACTION = 2.80, 1.98, 5.4, 0.10, 0.5
+
+
+def phi(x):
+    return 0.5 * math.erfc(-x / math.sqrt(2))
+
+
+def conditional_power(z, theta=PLANNED_EFFECT, se_interim=None, t=INFO_FRACTION, c=FINAL_Z):
+    """P(final z >= c | interim z, true effect theta): Brownian-motion B-value form, final SE = interim SE * sqrt(t)."""
+    drift = theta / (se_interim * math.sqrt(t))
+    return 1 - phi((c - z * math.sqrt(t) - drift * (1 - t)) / math.sqrt(1 - t))
 
 
 def load(paths):
@@ -96,7 +115,7 @@ class Comparison:
         ms = [m for m in self.models if den[m]]
         return sum(num[m] / den[m] for m in ms) / len(ms) * 100 if ms else float('nan')
 
-    def run(self, resamples, seed):
+    def run(self, resamples, seed, extra_z=()):
         if not any(self.tasks.values()):
             return {'delta_pp': None, 'ci95': None, 'tasks': 0, 'cells': 0, 'a_count': 0.0, 'b_count': 0.0, 'missing_pairs': self.missing}
         point = self.delta([(w, t) for w in self.worlds for t in self.tasks[w]])
@@ -111,12 +130,18 @@ class Comparison:
             stats.append(self.delta(draw))
         stats.sort()
         lo, hi = stats[int(0.025 * resamples)], stats[min(resamples - 1, int(0.975 * resamples))]
-        return {'delta_pp': round(point, 2), 'ci95': [round(lo, 2), round(hi, 2)], 'tasks': sum(len(v) for v in self.tasks.values()),
-                'cells': self.counts['cells'], 'a_count': self.counts['a'], 'b_count': self.counts['b'], 'missing_pairs': self.missing}
+        mean = sum(stats) / resamples
+        res = {'delta_pp': round(point, 2), 'ci95': [round(lo, 2), round(hi, 2)], 'tasks': sum(len(v) for v in self.tasks.values()),
+               'cells': self.counts['cells'], 'a_count': self.counts['a'], 'b_count': self.counts['b'], 'missing_pairs': self.missing,
+               'se_pp': round(math.sqrt(sum((s - mean) ** 2 for s in stats) / (resamples - 1)), 3)}
+        for z in extra_z:
+            p = phi(-z)
+            res[f'ci_z{z:.2f}'] = [round(stats[int(p * resamples)], 2), round(stats[min(resamples - 1, int((1 - p) * resamples))], 2)]
+        return res
 
 
-def wording(res):
-    lo, hi = res['ci95']
+def wording(res, key='ci95'):
+    lo, hi = res[key]
     if lo > 0:
         return 'ahead'
     if hi < 0:
@@ -128,22 +153,50 @@ def comparison_label(delta):
     return 'drops' if delta < HOLD_AT else 'rises' if delta > RISE_ABOVE else 'holds'
 
 
-def outcome_row(res):
+def outcome_row(res, key='ci95'):
     """Precedence (Decision rule): the interval wording first; 'not distinguishable' decides the row on its own."""
-    w = wording(res)
+    w = wording(res, key)
     return 'not distinguishable from 0' if w == 'not distinguishable' else comparison_label(res['delta_pp'])
 
 
-def complete(worlds, arms, models):
-    """Planned cells absent per (world, arm, model): every world needs TASKS_PER_WORLD clean cells."""
+def complete(worlds, arms, models, tasks=None):
+    """Planned cells absent per (world, arm, model): every world needs TASKS_PER_WORLD clean cells, or exactly the named tasks."""
     gaps = {}
     for w, cells in worlds.items():
         for arm in arms:
             for m in models:
-                n = sum(1 for (a, mm, _) in cells if a == arm and mm == m)
-                if n != TASKS_PER_WORLD:
-                    gaps[f'{w}|{arm}|{m}'] = TASKS_PER_WORLD - n
+                have = {t for (a, mm, t) in cells if a == arm and mm == m}
+                if tasks is not None:
+                    if have != set(tasks):
+                        gaps[f'{w}|{arm}|{m}'] = len(set(tasks) - have) or -len(have - set(tasks))
+                elif len(have) != TASKS_PER_WORLD:
+                    gaps[f'{w}|{arm}|{m}'] = TASKS_PER_WORLD - len(have)
     return gaps
+
+
+def interim(worlds, G, F, B, S):
+    """The one look at half A (R113). Stops for a difference at |z| >= 2.80, for futility when conditional power under
+    the planned effect is below 10%; otherwise half B runs. A stop reports its estimate as possibly overstated."""
+    res = Comparison(worlds, G, F, 'success', FRONTIER).run(B, S, extra_z=(INTERIM_Z,))
+    d, se = res['delta_pp'], res['se_pp']
+    z = d / se if se else (0.0 if d == 0 else math.copysign(float('inf'), d))
+    cp = conditional_power(z, se_interim=se) if se else (1.0 if d >= PLANNED_EFFECT else 0.0)
+    if z >= INTERIM_Z:
+        decision = 'stop: difference, gbrain ahead'
+    elif z <= -INTERIM_Z:
+        decision = 'stop: difference, gbrain behind'
+    elif cp < FUTILITY_CP:
+        decision = 'stop: futility'
+    else:
+        decision = 'continue'
+    key = f'ci_z{INTERIM_Z:.2f}'
+    res.update({'z': round(z, 3), 'conditional_power': round(cp, 4), 'decision': decision, 'stopped_early': decision != 'continue',
+                'bounds': {'difference_abs_z': INTERIM_Z, 'final_z': FINAL_Z, 'futility_conditional_power_below': FUTILITY_CP,
+                           'planned_effect_pp': PLANNED_EFFECT, 'information_fraction': INFO_FRACTION}})
+    if res['stopped_early']:
+        res.update({'interval_key': key, 'wording': wording(res, key), 'comparison': comparison_label(res['delta_pp']),
+                    'outcome_row': outcome_row(res, key), 'possibly_overstated': True})
+    return res
 
 
 def claims_summary(worlds, arm, model):
@@ -193,6 +246,7 @@ def main(argv=None):
     ap.add_argument('--resamples', type=int, default=10000)
     ap.add_argument('--seed', type=int, default=1)
     ap.add_argument('--json')
+    ap.add_argument('--look', choices=('interim', 'final'), default='final')
     args = ap.parse_args(argv)
     worlds, cost = {}, defaultdict(float)
     for spec in args.world:
@@ -201,13 +255,27 @@ def main(argv=None):
         for k, v in c.items():
             cost[k] += v
     G, F, B, S = args.gbrain, args.fs, args.resamples, args.seed
+    if args.look == 'interim':
+        gaps = complete(worlds, [G, F], FRONTIER, HALF_A)
+        if gaps:
+            print(json.dumps({'refused': 'INTERIM_INCOMPLETE', 'missing_cells': gaps}), file=sys.stderr)
+            print('STOP INTERIM_INCOMPLETE: the look reads exactly half A (tasks 01 to 10 of each family) for both arms and readers in every world', file=sys.stderr)
+            return 3
+        look = {'look': 'interim', 'resamples': B, 'seed': S, 'tasks': HALF_A, 'headline': interim(worlds, G, F, B, S)}
+        if args.json:
+            with open(args.json, 'w') as f:
+                f.write(json.dumps(look, indent=1, allow_nan=False))
+        h = look['headline']
+        print(f"interim: gbrain - files {h['delta_pp']:+.2f} pp, se {h['se_pp']:.2f}, z {h['z']:+.2f}, conditional power {h['conditional_power']:.3f}: {h['decision']}")
+        return 0
     gaps = complete(worlds, [G, F], FRONTIER)
     if gaps:
         print(json.dumps({'refused': 'HEADLINE_INCOMPLETE', 'missing_cells': gaps}), file=sys.stderr)
         print('STOP HEADLINE_INCOMPLETE: resume the missing cells with the same step command; no endpoint is computed on fewer cells', file=sys.stderr)
         return 3
-    head = Comparison(worlds, G, F, 'success', FRONTIER).run(B, S)
-    head.update({'wording': wording(head), 'comparison': comparison_label(head['delta_pp']), 'outcome_row': outcome_row(head),
+    head = Comparison(worlds, G, F, 'success', FRONTIER).run(B, S, extra_z=(FINAL_Z,))
+    key = f'ci_z{FINAL_Z:.2f}'
+    head.update({'interval_key': key, 'wording': wording(head, key), 'comparison': comparison_label(head['delta_pp']), 'outcome_row': outcome_row(head, key),
                  'thresholds': {'holds_at_or_above': HOLD_AT, 'rises_above': RISE_ABOVE}})
     out = {'resamples': B, 'seed': S, 'arms': {'gbrain': G, 'fs': F}, 'readers_pooled': FRONTIER, 'headline': head,
            'per_reader': {}, 'per_family': {}, 'per_world': {}, 'secondary': {}, 'first_table': {}, 'claims': {}}
@@ -251,7 +319,7 @@ def main(argv=None):
         with open(args.json, 'w') as f:
             f.write(text)
     h = out['headline']
-    print(f"headline: gbrain - files {h['delta_pp']:+.2f} pp [{h['ci95'][0]:+.2f}, {h['ci95'][1]:+.2f}] over {h['tasks']} tasks, readers {', '.join(FRONTIER)}: {h['wording']}; against the published leads: {h['comparison']}; outcome row: {h['outcome_row']}")
+    print(f"headline: gbrain - files {h['delta_pp']:+.2f} pp [{h[key][0]:+.2f}, {h[key][1]:+.2f}] (z {FINAL_Z}) over {h['tasks']} tasks, readers {', '.join(FRONTIER)}: {h['wording']}; against the published leads: {h['comparison']}; outcome row: {h['outcome_row']}")
     h4 = out['per_family']['H4']
     print(f"H4: {h4['delta_pp']:+.2f} pp [{h4['ci95'][0]:+.2f}, {h4['ci95'][1]:+.2f}] level_or_behind={h4['level_or_behind']}")
     return 0
