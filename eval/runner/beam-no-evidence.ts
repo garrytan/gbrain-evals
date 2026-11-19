@@ -4,7 +4,7 @@
  *
  *   bun eval/runner/beam-no-evidence.ts label --cells <cell dir>... --out <labels.ndjson> --paid --budget-run-id <id> [--budget-ledger <file>]
  *   bun eval/runner/beam-no-evidence.ts check-materialize --cell <B cell dir> --items <items.json> --out <dir>
- *   bun eval/runner/beam-no-evidence.ts check-report --items <items.json> --rubric <judge stage dir> --type <labels.ndjson> --out <report.json>
+ *   bun eval/runner/beam-no-evidence.ts check-report --items <items.json> --source <B cell id> --rubric <rejudge out dir> --type <labels.ndjson> --out <report.json>
  *
  * label      Every answered row of the given cells gets one label from the cross-family judge for its reader
  *            (typeJudgeFor): gpt-6-astra for Claude and particle-1 rows, claude-opus-5-5 for GPT rows. The prompt shows
@@ -12,9 +12,10 @@
  *            request goes through the budget ledger. A row already in --out is skipped, so a rerun resumes.
  *            With --rows <file> --judges a,b the judge check's type items are labelled by each named judge instead.
  * check-*    The R78 check. items.json (kept off the repository: BEAM is CC BY-SA 4.0) lists construction items
- *            { id, qid, instrument: "rubric" | "type", text, label }. check-materialize writes a cell-shaped copy of
- *            the B cell whose schedule is the rubric items' questions and whose answers are the item texts, for
- *            `bun run harness:cell rejudge` (BEAM's own judge through the strict scorer), and a rows file for label.
+ *            { id, qid, instrument: "rubric" | "type", text, label }. check-materialize writes two or more cell-shaped
+ *            copies of the B cell, each scheduled over every rubric item's question and holding the item texts as
+ *            answers (items on one question in different copies), for `bun run harness:cell rejudge` (BEAM's own
+ *            judge through the strict scorer), and a rows file for label.
  *            check-report computes each judge's Cohen's kappa against the construction labels and the gates, and
  *            writes item hashes and counts only. Exit 3 when a gate fails.
  */
@@ -63,11 +64,15 @@ const FAMILY: Record<string, string> = { anthropic: 'anthropic', particle: 'part
 
 /** The answer-type judge for a reader, never of the reader's own family; particle-1 never judges. */
 export function typeJudgeFor(reader: string): string {
-  const provider = reader.split(':')[0];
-  const judge = provider === 'anthropic' || provider === 'particle' ? 'openai:gpt-6-astra' : provider === 'openai' ? 'anthropic:claude-opus-5-5' : null;
-  if (!judge || !FAMILY[provider]) throw new Error(`no answer-type judge is preregistered for reader ${reader}`);
+  const [provider, model = ''] = reader.split(':');
+  const family = model.startsWith('particle') ? 'particle' : FAMILY[provider];
+  const judge = family === 'anthropic' || family === 'particle' ? 'openai:gpt-6-astra' : family === 'openai' ? 'anthropic:claude-opus-5-5' : null;
+  if (!judge) throw new Error(`no answer-type judge is preregistered for reader ${reader}`);
   return judge;
 }
+
+export const RUBRIC_JUDGE = 'gemini:gemini-3.5-flash';
+export const TYPE_JUDGES = ['anthropic:claude-opus-5-5', 'openai:gpt-6-astra'];
 
 export interface Row { cell: string; qid: string; reader: string; question: string; answer: string }
 export interface Label extends Row { judge: string; prompt_id: string; prompt_sha256: string; label: AnswerType | null; raw: string; finish: string | null; input_tokens: number; output_tokens: number }
@@ -80,7 +85,8 @@ export async function labelRows(rows: Row[], chat: ChatLike, out: string, judges
   const written: Label[] = [];
   for (const row of rows) {
     for (const judge of judges ?? [typeJudgeFor(row.reader)]) {
-      if (judge.startsWith('particle:')) throw new Error('particle-1 never judges');
+      if (judge.startsWith('particle:') || judge.includes(':particle')) throw new Error('particle-1 never judges');
+      if (row.reader !== 'construction' && judge !== typeJudgeFor(row.reader)) throw new Error(`${judge} is not the preregistered answer-type judge for ${row.reader}`);
       if (done.has(key(row.cell, row.qid, judge))) continue;
       const res = await chat.chat(judge, answerTypePrompt(row.question, row.answer), { maxTokens: 4000, replicate: 0, temperature: sendsTemperature(judge) ? 0 : null });
       const label: Label = { ...row, judge, prompt_id: ANSWER_TYPE_PROMPT_ID, prompt_sha256: ANSWER_TYPE_PROMPT_SHA256, label: parseAnswerType(res.text),
@@ -126,7 +132,7 @@ export function itemRows(items: Array<{ item: string; qid: string; answer: strin
   return items.map(i => {
     const question = questions.get(i.qid);
     if (question === undefined) throw new Error(`item ${i.item}: no question text for ${i.qid}`);
-    return { cell: 'judge-check', qid: i.qid, reader: 'construction', question, answer: i.answer };
+    return { cell: `judge-check:${i.item}`, qid: i.qid, reader: 'construction', question, answer: i.answer };
   });
 }
 
@@ -171,65 +177,98 @@ const sha = (s: string) => createHash('sha256').update(s).digest('hex');
 
 export function readItems(path: string): Item[] {
   const items = JSON.parse(readFileSync(path, 'utf8')) as Item[];
-  const rubric = items.filter(i => i.instrument === 'rubric');
   for (const i of items) {
     const ok = i.instrument === 'rubric' ? ['good', 'bad'].includes(i.label) : (ANSWER_TYPES as readonly string[]).includes(i.label);
     if (!i.id || !i.qid || !i.text || !ok) throw new Error(`item ${i.id ?? '?'}: needs id, qid, text and a label of its instrument`);
   }
   if (new Set(items.map(i => i.id)).size !== items.length) throw new Error('item ids repeat');
-  if (new Set(rubric.map(i => i.qid)).size !== rubric.length) throw new Error('rubric items share a question; each needs its own (one answer per question in the items cell)');
   return items;
 }
 
-export function materialize(cellDir: string, items: Item[], out: string): { cell: string; rows: string } {
-  const cell = JSON.parse(readFileSync(join(cellDir, 'cell.json'), 'utf8'));
-  const rubric = items.filter(i => i.instrument === 'rubric');
-  const id = `${cell.cell_id}-judge-check`;
-  const dir = join(out, id);
-  mkdirSync(join(dir, 'stages', 'answer'), { recursive: true });
-  writeFileSync(join(dir, 'cell.json'), JSON.stringify({ ...cell, cell_id: id, resolved: { ...cell.resolved, schedule: rubric.map(i => i.qid).sort() },
-    judge_check: { source_cell: cell.cell_id, items_sha256: rubric.map(i => sha(i.text)) } }, null, 2) + '\n');
-  for (const i of rubric) writeFileSync(join(dir, 'stages', 'answer', `${i.qid}.json`), JSON.stringify({ cell_id: id, query_id: i.qid, ok: true, outcome: 'answered', answer: i.text, answer_model: 'construction' }) + '\n');
-  const rows = join(out, 'type-items.rows.json');
-  writeFileSync(rows, JSON.stringify(items.filter(i => i.instrument === 'type').map(i => ({ item: i.id, qid: i.qid, answer: i.text }))) + '\n');
-  return { cell: dir, rows };
+/**
+ * Which items cell each rubric item goes in: items on the same question go in different cells, every cell shares one
+ * schedule (all rubric questions), and there are at least two cells, because mpw.rejudge judges two or more cells jointly
+ * and only the answers each cell holds.
+ */
+export function rubricCells(items: Item[]): Map<string, number> {
+  const byQuestion = new Map<string, Item[]>();
+  for (const i of items.filter(x => x.instrument === 'rubric').sort((a, b) => a.id.localeCompare(b.id))) byQuestion.set(i.qid, [...(byQuestion.get(i.qid) ?? []), i]);
+  const n = Math.max(2, ...[...byQuestion.values()].map(g => g.length));
+  const at = new Map<string, number>();
+  [...byQuestion.keys()].sort().forEach((qid, q) => byQuestion.get(qid)!.forEach((i, k) => at.set(i.id, (q + k) % n)));
+  return at;
 }
 
-export function checkReport(items: Item[], rubricDir: string, typeLabels: Label[]) {
+/** mpw/records.py safe_name: the file name a harness record for this id is stored under. */
+export function safeName(id: string): string {
+  const safe = id.replace(/[^A-Za-z0-9._-]+/g, '_');
+  return safe === id && safe.length <= 180 ? safe : `${safe.slice(0, 160)}-${sha(id).slice(0, 12)}`;
+}
+
+export const itemsCellId = (source: string, n: number) => `${source}-judge-check-${n}`;
+
+export function materialize(cellDir: string, items: Item[], out: string): { cells: string[]; rows: string } {
+  const cell = JSON.parse(readFileSync(join(cellDir, 'cell.json'), 'utf8'));
+  const rubric = items.filter(i => i.instrument === 'rubric');
+  const at = rubricCells(items);
+  const schedule = [...new Set(rubric.map(i => i.qid))].sort();
+  const n = Math.max(2, ...[...at.values()].map(c => c + 1));
+  const cells: string[] = [];
+  for (let c = 0; c < n; c++) {
+    const id = itemsCellId(cell.cell_id, c);
+    const dir = join(out, id);
+    const mine = rubric.filter(i => at.get(i.id) === c);
+    mkdirSync(join(dir, 'stages', 'answer'), { recursive: true });
+    writeFileSync(join(dir, 'cell.json'), JSON.stringify({ ...cell, cell_id: id, resolved: { ...cell.resolved, schedule },
+      judge_check: { source_cell: cell.cell_id, items: mine.map(i => ({ id: i.id, qid: i.qid, text_sha256: sha(i.text) })) } }, null, 2) + '\n');
+    for (const i of mine) writeFileSync(join(dir, 'stages', 'answer', `${safeName(i.qid)}.json`), JSON.stringify({ cell_id: id, query_id: i.qid, ok: true, outcome: 'answered', answer: i.text, answer_model: 'construction' }) + '\n');
+    cells.push(dir);
+  }
+  const rows = join(out, 'type-items.rows.json');
+  writeFileSync(rows, JSON.stringify(items.filter(i => i.instrument === 'type').map(i => ({ item: i.id, qid: i.qid, answer: i.text }))) + '\n');
+  return { cells, rows };
+}
+
+/** The R78 gates. `rejudgeOut` is mpw.rejudge's --out, holding <items cell id>/stages/judge/<qid>.json. */
+export function checkReport(items: Item[], source: string, rejudgeOut: string, typeLabels: Label[]) {
   const rubric = items.filter(i => i.instrument === 'rubric');
   const type = items.filter(i => i.instrument === 'type');
+  const at = rubricCells(items);
   const rubricGrades = new Map<string, string | null>();
-  let rubricJudge = 'rubric';
+  const rubricJudges = new Set<string>();
   for (const i of rubric) {
-    const p = join(rubricDir, `${i.qid}.json`);
+    const p = join(rejudgeOut, itemsCellId(source, at.get(i.id)!), 'stages', 'judge', `${safeName(i.qid)}.json`);
     if (!existsSync(p)) continue;
     const j = JSON.parse(readFileSync(p, 'utf8')) as { correct?: boolean; outcome?: string; judge_model?: string };
-    rubricJudge = j.judge_model ?? rubricJudge;
+    if (j.judge_model) rubricJudges.add(j.judge_model);
     rubricGrades.set(i.id, typeof j.correct === 'boolean' && j.outcome !== 'judge_failure' ? (j.correct ? 'good' : 'bad') : null);
   }
-  const byQid = new Map(type.map(i => [i.qid + '\u0000' + i.text, i.id]));
+  const gates: Gate[] = [
+    { judge: 'rubric', gate: `rubric judge is ${RUBRIC_JUDGE}`, value: rubricJudges.size, pass: rubricJudges.size === 1 && rubricJudges.has(RUBRIC_JUDGE) },
+    ...judgeGates(RUBRIC_JUDGE, rubric, rubricGrades, 15),
+  ];
   const judges = [...new Set(typeLabels.map(l => l.judge))].sort();
-  const gates: Gate[] = judgeGates(rubricJudge, rubric, rubricGrades, 15);
-  const agreement: Record<string, number> = {};
+  gates.push({ judge: 'type', gate: `type judges are ${TYPE_JUDGES.join(' and ')}`, value: judges.length, pass: JSON.stringify(judges) === JSON.stringify([...TYPE_JUDGES].sort()) });
   const perJudge = new Map<string, Map<string, string | null>>();
-  for (const judge of judges) {
+  for (const judge of TYPE_JUDGES) {
     const g = new Map<string, string | null>();
-    for (const l of typeLabels.filter(x => x.judge === judge)) { const id = byQid.get(l.qid + '\u0000' + l.answer); if (id) g.set(id, l.label); }
+    for (const l of typeLabels.filter(x => x.judge === judge && x.cell.startsWith('judge-check:'))) g.set(l.cell.slice('judge-check:'.length), l.label);
     perJudge.set(judge, g);
     gates.push(...judgeGates(judge, type, g, 12, l => (l === 'declined' ? 'declined' : 'not declined')));
   }
-  if (judges.length === 2) {
-    const [a, b] = judges.map(j => perJudge.get(j)!);
-    const both = type.filter(i => a.get(i.id) != null && b.get(i.id) != null);
-    if (both.length) agreement[`${judges[0]} vs ${judges[1]}`] = cohenKappa(both.map(i => a.get(i.id)!), both.map(i => b.get(i.id)!));
-  }
-  if (judges.length < 2) gates.push({ judge: 'type', gate: 'both type judges graded the items', value: judges.length, pass: false });
+  const [a, b] = TYPE_JUDGES.map(j => perJudge.get(j)!);
+  const both = type.filter(i => a.get(i.id) != null && b.get(i.id) != null);
+  const agreement = both.length ? { [`${TYPE_JUDGES[0]} vs ${TYPE_JUDGES[1]}`]: cohenKappa(both.map(i => a.get(i.id)!), both.map(i => b.get(i.id)!)) } : {};
   return { prompt_id: ANSWER_TYPE_PROMPT_ID, prompt_sha256: ANSWER_TYPE_PROMPT_SHA256,
     items: items.map(i => ({ id: i.id, instrument: i.instrument, label: i.label, text_sha256: sha(i.text) })), gates, agreement, pass: gates.every(g => g.pass) };
 }
 
 function flag(argv: string[], name: string): string | undefined { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; }
-function flags(argv: string[], name: string): string[] { return argv.flatMap((a, i) => (a === name && argv[i + 1] ? [argv[i + 1]] : [])); }
+function flags(argv: string[], name: string): string[] {
+  const out: string[] = [];
+  argv.forEach((a, i) => { if (a === name) for (let j = i + 1; j < argv.length && !argv[j].startsWith('--'); j++) out.push(argv[j]); });
+  return out;
+}
 
 if (import.meta.main) {
   const [cmd, ...argv] = process.argv.slice(2);
@@ -238,7 +277,7 @@ if (import.meta.main) {
     const cells = flags(argv, '--cells');
     const rowsFile = flag(argv, '--rows');
     const judges = flag(argv, '--judges')?.split(',');
-    if (!out || (!cells.length && !rowsFile) || (rowsFile && !judges)) { console.error('label needs --out <labels.ndjson> and --cells <dir>..., or --rows <items rows> with --judges a,b'); process.exit(2); }
+    if (!out || (!cells.length && !rowsFile) || (rowsFile && !judges) || (judges && !rowsFile)) { console.error('label needs --out <labels.ndjson> and --cells <dir>..., or --rows <items rows> with --judges a,b (--judges only with --rows)'); process.exit(2); }
     try { requirePaidArm(argv, { arm: 'beam-no-evidence answer-type labels', estimateUsd: null }); }
     catch (e) { console.error((e as Error).message); process.exit(2); }
     const questions = beamQuestions();
@@ -253,10 +292,10 @@ if (import.meta.main) {
     if (!cell || !items || !out) { console.error('check-materialize needs --cell, --items and --out'); process.exit(2); }
     console.log(JSON.stringify(materialize(resolve(cell), readItems(resolve(items)), resolve(out))));
   } else if (cmd === 'check-report') {
-    const [items, rubric, type, out] = ['--items', '--rubric', '--type', '--out'].map(f => flag(argv, f));
-    if (!items || !rubric || !type || !out) { console.error('check-report needs --items, --rubric, --type and --out'); process.exit(2); }
+    const [items, source, rubric, type, out] = ['--items', '--source', '--rubric', '--type', '--out'].map(f => flag(argv, f));
+    if (!items || !source || !rubric || !type || !out) { console.error('check-report needs --items, --source <B cell id>, --rubric <rejudge --out dir>, --type and --out'); process.exit(2); }
     const labels = readFileSync(resolve(type), 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l) as Label);
-    const report = checkReport(readItems(resolve(items)), resolve(rubric), labels);
+    const report = checkReport(readItems(resolve(items)), source, resolve(rubric), labels);
     writeFileSync(resolve(out), JSON.stringify(report, null, 2) + '\n');
     console.log(report.gates.map(g => `${g.judge} ${g.gate} ${Number.isFinite(g.value) ? +g.value.toFixed(3) : g.value} ${g.pass ? 'pass' : 'FAIL'}`).join('\n'));
     if (!report.pass) { console.error('JUDGE_CHECK_STOP: a gate failed; the endpoints that judge labels are descriptive'); process.exit(3); }
