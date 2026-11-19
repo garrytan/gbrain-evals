@@ -307,7 +307,8 @@ describe('the arm policy identity', () => {
     const withArm = (a: Partial<ArmDefinition>, c: Partial<CellDefinition> = {}) => definitionProblems({ ...base, ...c, arms: [{ ...base.arms[1], ...a }] }, kinds).join(' | ');
     expect(withArm({})).toBe('');
     expect(withArm({}, { launch: { env: {}, config: 'recipe' } })).toContain('GBRAIN_F6=1');
-    expect(withArm({ mode: 'native-default', policy: 'vendor-default', budget: null })).toContain('only packed and retrieval-only arms carry a retrieval identity');
+    expect(withArm({ mode: 'full-context', policy: null, budget: null })).toContain('only packed, retrieval-only and native-default arms carry a retrieval identity');
+    expect(withArm({ mode: 'native-default', policy: 'vendor-default', budget: null })).toBe('');
     expect(withArm({ retrieval: { ...F6_ARMS.a.retrieval, op: 'think' as 'query' } })).toContain('retrieval.op must be query or recall');
     expect(withArm({ retrieval: { ...F6_ARMS.a.retrieval, args: { budget_tokens: 5500 } } })).toContain('query takes no budget_tokens');
     expect(withArm({ retrieval: { ...F6_ARMS.a.retrieval, args: { token_budget: 0 } } })).toContain('token_budget must be a positive integer');
