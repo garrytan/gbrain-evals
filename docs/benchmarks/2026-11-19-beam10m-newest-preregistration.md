@@ -341,7 +341,22 @@ budgets, benchmarks or builds, or a ranking against the file agent or any other 
 
 ## Amendments
 
-None yet.
+### A1 (2026-11-19): pin, harness and reader route, before any paid call
+
+Written on the results branch before any dry run, judge check or counted cell. It changes no arm, reader, judge, set,
+decision rule or verdict.
+
+- **Pin.** gbrain's newest release is now v0.60.743.0, `16124807cb7846ffba8aa093c7a6b588a76a5e13`, and the results
+  branch pins it (`bun eval/runner/gbrain-pin.ts bump`). Its changes since v0.60.742.0 are OpenClaw's skill resolver,
+  the Mac helper's Touch ID approvals and an encrypted secret-store backup, none of which is on this benchmark's path.
+  The tags are read again before the first counted cell, and the freeze amendment records the final pin.
+- **How gpt-6.2-sol runs.** gpt-6.2-sol reads and judges as a plain API model, through Q1's reader and judge requests and
+  the metering proxy. No arm runs it inside an agent harness (Claude Code or Codex), so the rule that Sol runs in Codex
+  CLI changes nothing here.
+- **`FRONTIER_READERS` stays as it is.** The runner's shared list also builds another experiment's frozen cells and
+  its leader cache, so moving it would change their manifests. This experiment names its readers (claude-opus-5-5 and
+  gpt-6.2-sol) in its own cell file instead. This replaces the sentence under "Readers" and the line under "Harness"
+  that said the keyless prep moves `FRONTIER_READERS`.
 
 ## Disclosures
 
