@@ -2,6 +2,52 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.258] - 2026-11-19
+
+- Preregistration for re-measuring the two BEAM-10M rows on gbrain's newest release: arms P, A0 and the whole system on the sealed BEAM-10M set, paired on claude-opus-5-5 with F6 and Q1, with a judge check before any number counts ([preregistration](docs/benchmarks/2026-11-19-beam10m-newest-preregistration.md)).
+
+Changing-facts confirmation preregistration (BG1-C) ([docs/benchmarks/2026-11-19-changing-facts-confirmation-preregistration.md](docs/benchmarks/2026-11-19-changing-facts-confirmation-preregistration.md)). It fixes, before anything is spent, how gbrain's newest release at launch is compared with the memory-bank and extract-first servers on 40 newly minted, sealed BG1 worlds from slots never minted before: four paired comparisons (what is true now and questions about the past, against each server) with Holm's correction, BG1's readers and judges with gpt-6.2-sol as the live GPT reader, a new judge check on public answers, the smallest differences each comparison can detect, and what is published for a lead, a partial lead, a tie and a loss.
+
+The preregistration order check now covers the changing-facts battleground's (BG1) results ([docs/benchmarks/preregistrations.d/changing-facts-battleground.json](docs/benchmarks/preregistrations.d/changing-facts-battleground.json)). Its registry entry named results paths that no file has ever had, so the check matched nothing; it now names the published results page and its folder, and confirms both were committed after the preregistration.
+
+- The duplicate-people bench can now score company auto-link rules on development families where the world changes. They cover a firm renamed and moved between sources, a firm renamed into a namesake, a pair a user rejected before one side moved or was renamed, two companies sharing one LinkedIn page, and a subsidiary on its parent's root domain. `bun eval/runner/person-dedupe.ts --company-autolink` adds the table on the dev seed only. It scores rule d3 (an own-site domain or LinkedIn page plus the same name, or initials, with "L.L.C." read as "LLC") and arms baseline, a, b, c, d1 and d2 with a contract stand-in, not gbrain, and it reports rejected pairs re-proposed or re-linked under three rejection memories and the links an older pass would install. Without the flag the bench and the entity-dedupe head-to-head world are unchanged, and [a test](test/eval/company-autolink.test.ts) pins their hashes. Code is in [company-autolink.ts](eval/runner/company-autolink.ts) and [company-dedupe-v-gen.ts](eval/generators/company-dedupe-v-gen.ts).
+
+### A keyless test of who can read what when a brain's sharing changes
+
+- [test/eval/sharing-contract.test.ts](test/eval/sharing-contract.test.ts) builds synthetic brains, turns each one shared
+  in every way gbrain has (declaring `brain.audience shared`, adding or enabling a second member, `gbrain access serves
+  several`, three MCP clients in 30 days, setting an owner on a shared brain), turns one back to personal, and archives
+  and restores a conversation source. Before and after each change it reads public and private pages, a page kept to the
+  owner, a page in an owner-only source, a conversation archived while the brain was personal, and public and private
+  facts, as the local CLI, the owner's token, OAuth client and stdio server, another member, a token bound to nobody and a
+  caller with no token, through `get_page`, `search`, `query`, `list_pages` and `recall`. It fails when one of the
+  owner's callers loses a read or anyone else gains one that gbrain's access guide doesn't allow. It makes no model calls
+  and needs no keys. It needs gbrain v0.60.738.0 or later, so on the current pin (v0.60.733.0) it skips with that
+  reason and starts running in CI at the next pin move.
+
+Hard company questions preregistration, newest build ([docs/benchmarks/2026-11-19-cat40-hard-newest-preregistration.md](docs/benchmarks/2026-11-19-cat40-hard-newest-preregistration.md)). It fixes, before any paid run, how gbrain's newest release is measured against an agent that reads plain files with grep on two fresh public-generator worlds (seeds 20261141 and 20263151), with claude-opus-5-5 and gpt-6.2-sol pooled and particle-1 beside them, the detectable differences, the thresholds at which the published lead holds, drops or rises, H4 reported as its own family, and what each outcome changes in README and for gbrain's maintainers.
+
+Release notes no longer state spend, cost totals or caps. A new test (`test/eval/changelog-no-spend.test.ts`) fails any changelog fragment, or any CHANGELOG.md section released after v0.10.257, that states a dollar amount or a cap figure, and the changing-facts confirmation entry drops its cost figure.
+
+BEAM-500K "no evidence found" preregistration ([docs/benchmarks/2026-11-19-beam500k-no-evidence-line-preregistration.md](docs/benchmarks/2026-11-19-beam500k-no-evidence-line-preregistration.md)). It fixes, before any paid run, how often claude-opus-5-5, particle-1 and gpt-6.2-sol make up answers to BEAM-500K's 22 unanswerable public dev questions at gbrain's newest release, how much a perfect line saying gbrain found no evidence cuts that (detectable at about 13 points pooled, and "materially" means at least the larger of 13 points and half the before rate), what the same line costs on the 198 answerable questions when it is a false alarm, and what each outcome changes for gbrain's maintainers.
+
+- The duplicate-finder head-to-head's `ext-temporal-graph` shim sends no reasoning effort to gpt-6.2-sol. At 0.31.2 the system's OpenAI client defaults to effort `none` for gpt-6 models, which gpt-6.2-sol rejects with a 400, so the shim sets the client's reasoning to None, its documented pass-through, and the model runs at its API default. Recorded in [the bundle's deviations](docs/comparison-systems/ext-temporal-graph/entity-h2h/capability.json).
+
+**The concept-recall bench (cat13) can now run its gbrain arm on PGLite, Postgres or gbrain's Rust engine, and time each query.**
+
+### Added
+
+- `GBRAIN_EVAL_ENGINE=pglite|postgres|rust` picks the storage engine for cat13's gbrain arm. Without it the arm keeps its in-memory PGLite brain. Postgres needs `--pg-url` or `LIFECYCLE_PG_URL` and gets a scratch database per run. The receipt records only whether the Postgres server was local (`postgres_server: loopback|remote`), never its host.
+- Before any paid request, the run stops with exit 69 and writes a skipped receipt when Postgres has no URL, cannot make a scratch database or lacks pgvector, or when the Rust engine is missing from the gbrain build or its addon does not load. The receipt keeps only the reason code; the server's error text goes to stderr. A Rust engine that loads but refuses a later step still fails the run as before.
+- `--embed-cache <sqlite>` lets every engine search the same cached vectors. The receipt records the cache's file name and hit counts.
+- Each per-query row records `latency_ms`.
+- `--warm-passes N` (0 to 10) runs the same probes again on the same brain after the scored pass, timed but not scored, so a receipt reports first-pass and repeat-pass latency apart. Warm-pass spend is recorded apart from the first pass, the run's cost estimate scales with the number of passes, and a budget-ledger refusal during a warm pass stops the run.
+
+### Fixed
+
+- The Rust engine's init step now receives `GBRAIN_RUST_ENGINE_ADDON`, so a locally built addon loads.
+- An adapter's scratch Postgres database or Rust temp directory is removed even when scoring throws.
+
 ## [0.10.257] - 2026-11-18
 
 - The duplicate-finder head-to-head can now run each memory system's tuned and tuning configurations, as its
