@@ -41,6 +41,11 @@ describe('newest-confirm plan', () => {
       expect(steps.findIndex(s => s.id === 'slots')).toBeLessThan(steps.findIndex(s => s.id === 'oracle-gate'));
       expect(steps.findIndex(s => s.id === 'oracle-gate')).toBeLessThan(steps.findIndex(s => s.id === 'gbrain-opus'));
     });
+    test(`${w}: every ladder step, the slot build included, accepts the recorded freeze drift`, () => {
+      const ladder = steps.filter(s => s.argv.includes('eval/runner/cat40-model-ladder.ts'));
+      expect(ladder.map(s => s.id)).toContain('slots');
+      for (const s of ladder) expect(val(s.argv, '--accept-freeze-drift')).toContain('accepted-drift.json');
+    });
     test(`${w}: every cap is a placeholder, never a dollar figure (R79)`, () => {
       for (const s of steps) {
         if (s.argv.includes('--budget-usd')) expect(val(s.argv, '--budget-usd')).toMatch(/^\$CAP_[A-Z_]+$/);
