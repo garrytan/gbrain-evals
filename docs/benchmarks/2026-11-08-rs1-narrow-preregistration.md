@@ -1207,6 +1207,13 @@ This replaces `c0edd296` from the amendments above, and `c0edd296` stays an ance
 files counted cells execute differ only in this pin (`definitions.ts` and `rs1-cells.json`). Validation keeps the code
 the 2026-11-17 amendment names, and the final verdict still runs from `d927c88f` or later.
 
+### 2026-11-19: which harness each reader runs in
+
+Garry's rule of 2026-11-19 runs GPT-6.1 Sol in Codex CLI and Claude Opus in Claude Code. No RS1 arm runs in an agent
+harness, so nothing changes: every arm is packed, and claude-opus-5-5 and gpt-6.1-sol each answer a frozen packed context
+in one direct API chat call (`readPrompt` in `eval/runner/q1/cell.ts`), as particle-1 does in its re-reads and every
+judge does.
+
 ## Disclosures
 
 - gbrain is Garry Tan's own project.
