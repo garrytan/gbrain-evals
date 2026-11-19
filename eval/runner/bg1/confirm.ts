@@ -406,6 +406,8 @@ export const confirmPilotSpendLine = (cell: Pick<CellDefinition, 'system' | 'con
   CONFIRM_PILOT_SPEND_FACTOR * ((BG1C_RATES.row_usd_per_world[`${cell.system}:${cell.configuration}`] ?? NaN) + CONFIRM_SHARED_RATE);
 /** Pilot condition 2's judge checks by report schema: BG1's (gpt-6-astra on Opus's answers, claude-opus-5-5 on particle-1's) and this experiment's new one (claude-opus-5-5 on gpt-6.2-sol's answers). */
 export const CONFIRM_JUDGE_CHECKS: Readonly<Record<string, string>> = { 'gbrain-evals/bg1-judge-check/v1': 'BG1', 'gbrain-evals/bg1c-judge-check/v1': 'BG1-C' };
+/** BG1's published verdict. Its judge_check block is BG1's paid judge check, run in BG1's stage 1 and kept in the repo with no upstream.json beside it; the preregistration says that check stands, so the pilot reads this file's block as BG1's report. */
+export const CONFIRM_BG1_VERDICT_PATH = resolve(import.meta.dir, '../../..', 'docs/benchmarks/2026-11-15-changing-facts-battleground-results/verdict.json');
 /** The mint's line (Amendment 1, condition 3): over BG1-C's first five slots, at most 1.5 times the dev mint's 336 Gemini requests per world. */
 export const CONFIRM_MINT_SLOTS = 5;
 export const CONFIRM_DEV_MINT_REQUESTS = 336;

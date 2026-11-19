@@ -85,7 +85,9 @@
  *             every --judge-check report passes (stop false, every gate passing), is a paid run (the upstream.json
  *             beside it says keyless false) and carries BG1's or BG1-C's judge-check schema, with at least one of each:
  *             BG1's for gpt-6-astra on Opus's answers and claude-opus-5-5 on particle-1's, BG1-C's for claude-opus-5-5
- *             on gpt-6.2-sol's. Condition 1 also counts, for each of claude-opus-5-5, gpt-6.2-sol (from the smoke) and
+ *             on gpt-6.2-sol's. BG1's published verdict.json (confirm.ts CONFIRM_BG1_VERDICT_PATH) given as a
+ *             --judge-check counts as BG1's paid check, read from its judge_check block. Condition 1 also counts,
+ *             for each of claude-opus-5-5, gpt-6.2-sol (from the smoke) and
  *             particle-1 (from its re-read), the questions answered at replicate 0 and those with its mapped judge's
  *             gating grade, and needs all 64 of each. Condition 3: the cell's metered spend plus its re-read's reader
  *             and judge spend, per world, at most 1.5 times the row's Budget rate, and the mint's supply check in
@@ -109,7 +111,7 @@ import { rereadCellId } from '../q1/reread-cell.ts';
 import { holmAdjusted, seededRandom } from '../stats/paired.ts';
 import { wildTest } from '../stats/wild-cluster.ts';
 import {
-  CONFIRM_BOUND_ALPHA, CONFIRM_CELLS_PATH, CONFIRM_CLASSES, CONFIRM_COMPARISONS, CONFIRM_CONVERSATIONS, CONFIRM_DEV_MINT_REQUESTS, CONFIRM_JUDGE_CHECKS, CONFIRM_LIVE_READERS, CONFIRM_LOOK_N, CONFIRM_MANIFEST_PATH,
+  CONFIRM_BG1_VERDICT_PATH, CONFIRM_BOUND_ALPHA, CONFIRM_CELLS_PATH, CONFIRM_CLASSES, CONFIRM_COMPARISONS, CONFIRM_CONVERSATIONS, CONFIRM_DEV_MINT_REQUESTS, CONFIRM_JUDGE_CHECKS, CONFIRM_LIVE_READERS, CONFIRM_LOOK_N, CONFIRM_MANIFEST_PATH,
   CONFIRM_MANIFEST_REL, CONFIRM_MINT_FACTOR, CONFIRM_MINT_LINE, CONFIRM_MINT_SLOTS, CONFIRM_N, CONFIRM_PILOT_QUESTIONS, CONFIRM_PILOT_WORLD, CONFIRM_READERS, CONFIRM_ROWS, CONFIRM_TABLE_READERS,
   confirmFinal, confirmKeptProblems, confirmLook, confirmOutcome, confirmPilotSpendLine, confirmRow, holmAlphas, leftOutProblems, obfBounds,
   type ConfirmClass, type ConfirmComparison, type ConfirmReading, type ConfirmWord, type LookStatus,
@@ -923,7 +925,11 @@ function confirmPilotMain(argv: readonly string[], dirs: readonly string[], out:
   const input = (n: string) => { const path = many(n)[0]; return path ? read(path) : undefined; };
   try {
     const cells = many('--cells')[0];
-    const judgeChecks = many('--judge-check').map(path => { const marker = join(dirname(resolve(path)), 'upstream.json'); return { report: read(path), upstream: existsSync(marker) ? read(marker) : undefined }; });
+    const judgeChecks = many('--judge-check').map(path => {
+      if (resolve(path) === CONFIRM_BG1_VERDICT_PATH) return { report: (read(path) as { judge_check?: unknown }).judge_check, upstream: { keyless: false } };
+      const marker = join(dirname(resolve(path)), 'upstream.json');
+      return { report: read(path), upstream: existsSync(marker) ? read(marker) : undefined };
+    });
     const p = confirmPilot(dirs, { brainCounts: input('--brain-counts'), memoryCounts: input('--memory-counts'), mintRate: input('--mint-rate'), judgeChecks,
       ...(cells ? { cells: readCellSet(resolve(cells), 'smoke_cells') } : {}) });
     mkdirSync(resolve(out), { recursive: true });

@@ -23,7 +23,7 @@ import { REREAD_RECEIPT_SCHEMA, rereadCellId } from '../../eval/runner/q1/reread
 import { BG1C_JUDGE_CHECK_SCHEMA } from '../../eval/runner/bg1/bg1c-judge-check.ts';
 import { JUDGE_CHECK_SCHEMA } from '../../eval/runner/bg1/judge-check.ts';
 import { bg1cPerWorld } from '../../eval/runner/bg1/pricing.ts';
-import { CONFIRM_CELLS_PATH, CONFIRM_DEV_MINT_REQUESTS, CONFIRM_JUDGE_CHECKS, CONFIRM_LIVE_READERS, CONFIRM_MINT_LINE, CONFIRM_PILOT_QUESTIONS, CONFIRM_PILOT_WORLD, CONFIRM_SHARED_RATE, confirmPilotSpendLine } from '../../eval/runner/bg1/confirm.ts';
+import { CONFIRM_BG1_VERDICT_PATH, CONFIRM_CELLS_PATH, CONFIRM_DEV_MINT_REQUESTS, CONFIRM_JUDGE_CHECKS, CONFIRM_LIVE_READERS, CONFIRM_MINT_LINE, CONFIRM_PILOT_QUESTIONS, CONFIRM_PILOT_WORLD, CONFIRM_SHARED_RATE, confirmPilotSpendLine } from '../../eval/runner/bg1/confirm.ts';
 import { confirmPilot, main } from '../../eval/runner/bg1/verdict.ts';
 
 const tmp = mkdtempSync(join(tmpdir(), 'bg1c-pilot-'));
@@ -205,6 +205,19 @@ describe('the BG1-C pilot', () => {
   });
 
   // Value: protects=each row passes condition 1 only when claude-opus-5-5 and gpt-6.2-sol (from the smoke) and particle-1 (from its re-read) each answered all 64 questions and each answer has its mapped judge's gating grade, with the counts printed; fails_when=a missing answer, a missing grade, a grade by another judge than the mapped one or a missing re-read passes, or a count is read for the wrong reader; why_new=the Opus reader's gate note 2 on BG1-C harness item 3b; seam=main pilot --set BG1-C, confirmPilot; no_claim=the grades themselves
+  // Value: protects=BG1's paid judge check, which survives only as the judge_check block of BG1's published verdict.json with no upstream.json beside it, still meets pilot condition 2 as the preregistration's "BG1's judge check stands" says, while the same block anywhere else needs its paid marker; fails_when=the pilot needs an upstream.json beside BG1's published verdict, reads the whole verdict rather than its judge_check block, or takes the block as paid from any other path; why_new=the Opus reader's note 1 on the BG1-C harness commits after 9d4cf3b85; seam=main pilot --set BG1-C --judge-check <BG1 verdict.json>; no_claim=BG1's judge check's own numbers
+  test("condition 2 takes BG1's published verdict as BG1's paid judge check, and the same block elsewhere needs its paid marker", () => {
+    const judgesOnly = (r: { err: string }) => failing(r).length === 3 && failing(r).every(f => f.endsWith('condition 2 (judge checks)'));
+    const inputs = ['--brain-counts', file('brain-counts.json', COUNTS), '--memory-counts', file('memory-counts.json', MEMORIES), '--mint-rate', file('mint-rate.json', MINT)];
+    const bg1c = ['--judge-check', judgeCheck({ report: BG1C_JUDGES })];
+    const published = pilot(smoke(), [...inputs, '--judge-check', CONFIRM_BG1_VERDICT_PATH, ...bg1c]);
+    expect([published.code, published.out.includes('condition 2 judge checks 2 of 2 pass')]).toEqual([0, true]);
+    const block = (JSON.parse(readFileSync(CONFIRM_BG1_VERDICT_PATH, 'utf8')) as { judge_check: unknown }).judge_check;
+    expect(judgesOnly(pilot(smoke(), [...inputs, '--judge-check', judgeCheck({ report: block, upstream: null }), ...bg1c]))).toBe(true);
+    expect(pilot(smoke(), [...inputs, '--judge-check', judgeCheck({ report: block }), ...bg1c]).code).toBe(0);
+    expect(judgesOnly(pilot(smoke(), [...inputs, '--judge-check', file('verdict.json', JSON.parse(readFileSync(CONFIRM_BG1_VERDICT_PATH, 'utf8'))), ...bg1c]))).toBe(true);
+  });
+
   test('condition 1 needs all 64 questions answered and graded by each of the three readers, and prints the counts', () => {
     const sol = pilot(smoke({ 'memory-bank': { unanswered: { [BG1C_SOL]: 1 } } }));
     expect([sol.code, failing(sol)]).toEqual([3, [`memory-bank condition 1 (${GRADED})`]]);
