@@ -1,0 +1,357 @@
+"""LongMemEval on Redis's open harness: contexts, messages and the runner store for gbrain.
+
+Preregistration: docs/benchmarks/2026-11-20-longmemeval-redis-harness-preregistration.md.
+
+    uv run --project eval/redis-agent-memory-benchmark python eval/runner/lme-redis/lme_redis.py freeze \
+        --cache-dir <dir> --out <dir> [--server-url http://127.0.0.1:8787] [--limit N | --last N]
+
+freeze loads both LongMemEval files through the vendored loader after checking their sha256, puts the questions in
+the harness's seed-42 order, and for each question writes one line per arm to <out>/messages/<arm>.jsonl: the two
+messages from the vendored build_prompt, the context's sha256, the conversations it holds and turn-level delivery of
+the evidence turns (`has_answer`). The gbrain arms build one brain per question on the adapter server
+(eval/runner/lme-redis/gbrain-server.ts) and record each query in <out>/retrieval.jsonl. Whole conversations are
+rendered with the vendored session_text in every arm, so the arms differ only in which conversations they hold.
+
+The same rendering backs GBrainArmStore, a store for the vendored runner, so the runner's own requests can be checked
+against the frozen messages byte for byte (the pilot's parity check).
+
+freeze and the runner store need the vendored package's environment (httpx); the rendering functions need only the
+vendored sources on the path, so their tests (test_lme_redis.py beside this file) run on a bare python3.
+"""
+
+from __future__ import annotations
+
+import argparse
+import asyncio
+import hashlib
+import json
+import random
+import re
+import sys
+from pathlib import Path
+from typing import Any
+
+from agent_memory_benchmark.memory.base import QueryResult, SessionLike, TokenUsage
+from agent_memory_benchmark.memory.common import AnsweringStore, session_text
+from agent_memory_benchmark.memory.llm import build_prompt
+
+SHA256 = {
+    "small": "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442",
+    "oracle": "821a2034d219ab45846873dd14c14f12cfe7776e73527a483f9dac095d38620c",
+}
+FILES = {"small": "longmemeval_s_cleaned.json", "oracle": "longmemeval_oracle.json"}
+TOP_SESSIONS = 5
+QUERY_PARAMS: dict[str, dict[str, Any]] = {
+    "off": {"limit": 10, "autocut": False},
+    "on": {"limit": 10},
+    "agent-default": {},
+}
+ARMS = ("off", "on", "agent-default", "full", "oracle")
+_SUPPLEMENTARY_UTF8_RE = re.compile(r"[\U00010000-\U0010ffff]+")
+
+
+def load_split(split: str, cache_dir: Path) -> tuple[list[Any], list[dict]]:
+    """The vendored loader's examples and raw rows, after the file's sha256 matches the preregistered one."""
+    from agent_memory_benchmark.datasets.longmemeval import LongMemEvalAdapter
+
+    path = Path(cache_dir) / "longmemeval-v1" / FILES[split]
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    if digest != SHA256[split]:
+        raise SystemExit(f"{path}: sha256 {digest}, preregistered {SHA256[split]}; refusing to load")
+    adapter = LongMemEvalAdapter(split, cache_dir=cache_dir)
+    return adapter.load(), adapter.load_raw()
+
+
+def seed42(items: list[Any]) -> list[Any]:
+    """The harness's order: random.Random(42).shuffle over the loader's examples."""
+    out = list(items)
+    random.Random(42).shuffle(out)
+    return out
+
+
+def kept_raw_sessions(row: dict) -> list[list[dict]]:
+    """The raw sessions the loader keeps, in its order (it drops sessions with no role/content turn)."""
+    return [
+        [t for t in s if isinstance(t, dict) and "role" in t and "content" in t]
+        for s in row.get("haystack_sessions", [])
+        if any(isinstance(t, dict) and "role" in t and "content" in t for t in s)
+    ]
+
+
+def evidence_turns(row: dict) -> list[tuple[int, str]]:
+    """(kept session index, turn text as the loader cleans it) for every has_answer turn."""
+    out = []
+    for i, session in enumerate(kept_raw_sessions(row)):
+        for t in session:
+            if t.get("has_answer"):
+                out.append((i, _SUPPLEMENTARY_UTF8_RE.sub("", str(t["content"]))))
+    return out
+
+
+def _norm(text: str) -> str:
+    return " ".join(text.split())
+
+
+def delivery(row: dict, sessions: list[int] | None, passages: list[str] | None) -> dict[str, Any]:
+    """Turn-level delivery: an evidence turn is delivered when its conversation is in the context whole, or when the
+    passages hold its full text (whitespace-normalized). `partial` counts passages holding its first 80 characters."""
+    turns = evidence_turns(row)
+    delivered = partial = 0
+    if passages is not None:
+        joined = _norm("\n".join(passages))
+        for _, text in turns:
+            t = _norm(text)
+            if t and t in joined:
+                delivered += 1
+            elif t and t[:80] in joined:
+                partial += 1
+    else:
+        held = set(sessions or [])
+        delivered = sum(1 for i, _ in turns if i in held)
+    return {"evidence_turns": len(turns), "delivered": delivered, "partial": partial}
+
+
+def whole_context(example: Any, indices: list[int]) -> str:
+    return "\n\n".join(session_text(example.sessions[i]) for i in indices)
+
+
+def ranked_sessions(results: list[dict], top: int = TOP_SESSIONS) -> list[int]:
+    """The first `top` distinct conversations behind gbrain's results, in rank order."""
+    seen: list[int] = []
+    for r in results:
+        if r["idx"] not in seen:
+            seen.append(r["idx"])
+    return seen[:top]
+
+
+def passage_context(example: Any, results: list[dict]) -> tuple[str, list[str]]:
+    passages = [r["chunk_text"] for r in results]
+    text = "\n\n".join(
+        f"[Conversation date: {example.sessions[r['idx']].label}]\n{r['chunk_text']}" for r in results
+    )
+    return text, passages
+
+
+def gbrain_context(arm: str, example: Any, results: list[dict]) -> tuple[str, list[int], list[str] | None]:
+    if arm == "agent-default":
+        text, passages = passage_context(example, results)
+        return text, sorted({r["idx"] for r in results}), passages
+    indices = ranked_sessions(results)
+    return whole_context(example, indices), indices, None
+
+
+def ingest_payload(sessions: list[SessionLike]) -> list[dict]:
+    return [
+        {
+            "date": s.label or "",
+            "turns": [
+                {"role": "user" if m.speaker.lower().strip() in {"user", "human", "environment", "tool"} else "assistant",
+                 "content": m.text}
+                for m in s.messages
+                if m.text.strip()
+            ],
+        }
+        for s in sessions
+    ]
+
+
+def sha(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def message_line(arm: str, example: Any, context: str, sessions: list[int], row: dict,
+                 passages: list[str] | None) -> dict[str, Any]:
+    qa = example.qa_pairs[0]
+    messages = build_prompt(context, qa.question, question_date=example.metadata.get("question_date"))
+    return {
+        "question_id": qa.question_id,
+        "question_type": qa.question_type,
+        "arm": arm,
+        "messages": messages,
+        "context_sha256": sha(context),
+        "messages_sha256": sha(json.dumps(messages, ensure_ascii=False, sort_keys=True)),
+        "sessions": sessions,
+        "delivery": delivery(row, sessions if passages is None else None, passages),
+    }
+
+
+class GBrainArmStore(AnsweringStore):
+    """A store for the vendored runner: one gbrain arm (off, on or agent-default), rendered as freeze renders it."""
+
+    def __init__(self, *, user_id: str = "benchmark", model: str = "gpt-4o", arm: str = "off",
+                 server_url: str = "http://127.0.0.1:8787", request_timeout: float = 900) -> None:
+        super().__init__(model=model)
+        if arm not in QUERY_PARAMS:
+            raise ValueError(f"arm must be one of {sorted(QUERY_PARAMS)}")
+        self._brain_id = user_id
+        self._arm = arm
+        self._sessions: list[SessionLike] = []
+        import httpx
+
+        self._client = httpx.AsyncClient(base_url=server_url, timeout=request_timeout)
+
+    async def close(self) -> None:
+        await self._client.aclose()
+
+    async def _post(self, path: str, body: dict[str, Any]) -> dict[str, Any]:
+        response = await self._client.post(path, json=body)
+        if response.status_code != 200:
+            raise RuntimeError(f"gbrain {path} failed: {response.text[:2000]}")
+        return response.json()
+
+    async def ingest(self, sessions: list[SessionLike]) -> None:
+        self._sessions = list(sessions)
+        await self._post("/ingest", {"brain_id": self._brain_id, "sessions": ingest_payload(self._sessions)})
+
+    async def query(self, question: str, *, question_date: str | None = None) -> QueryResult:
+        result = await self._post("/query", {"brain_id": self._brain_id, "question": question,
+                                             "params": QUERY_PARAMS[self._arm]})
+
+        class _Example:
+            sessions = self._sessions
+
+        context, _, _ = gbrain_context(self._arm, _Example, result["results"])
+        return await self._answer(context, question, question_date)
+
+    async def list_memories(self) -> list[str]:
+        return [f"session-{i}" for i in range(len(self._sessions))]
+
+    async def reset(self) -> None:
+        await self._post("/reset", {"brain_id": self._brain_id})
+        self._sessions = []
+        self._token_usage = TokenUsage()
+
+    def get_store_metadata(self) -> dict[str, Any]:
+        return {**super().get_store_metadata(), "arm": self._arm, "query_params": QUERY_PARAMS[self._arm]}
+
+
+class FullContextStore(AnsweringStore):
+    """The plain arm for the vendored runner: every conversation, whole, in the loader's order."""
+
+    def __init__(self, *, user_id: str = "benchmark", model: str = "gpt-4o") -> None:
+        super().__init__(model=model)
+        self._sessions: list[SessionLike] = []
+
+    async def ingest(self, sessions: list[SessionLike]) -> None:
+        self._sessions = list(sessions)
+
+    async def query(self, question: str, *, question_date: str | None = None) -> QueryResult:
+        return await self._answer("\n\n".join(session_text(s) for s in self._sessions), question, question_date)
+
+    async def list_memories(self) -> list[str]:
+        return [f"session-{i}" for i in range(len(self._sessions))]
+
+    async def reset(self) -> None:
+        self._sessions = []
+        self._token_usage = TokenUsage()
+
+
+def register_stores() -> None:
+    from agent_memory_benchmark.memory import STORES
+
+    STORES["gbrain-arm"] = GBrainArmStore
+    STORES["full-context"] = FullContextStore
+
+
+async def freeze(args: argparse.Namespace) -> int:
+    import httpx
+
+    small, small_raw = load_split("small", args.cache_dir)
+    oracle, oracle_raw = load_split("oracle", args.cache_dir)
+    raw_by_id = {str(r["question_id"]): r for r in small_raw}
+    oracle_by_id = {str(e.qa_pairs[0].question_id): e for e in oracle}
+    oracle_raw_by_id = {str(r["question_id"]): r for r in oracle_raw}
+    order = seed42(small)
+    if args.last:
+        order = order[-args.last:]
+    elif args.limit:
+        order = order[: args.limit]
+    out = Path(args.out)
+    (out / "messages").mkdir(parents=True, exist_ok=True)
+    done: set[str] = set()
+    retrieval_path = out / "retrieval.jsonl"
+    if retrieval_path.exists():
+        done = {json.loads(line)["question_id"] for line in retrieval_path.read_text().splitlines() if line.strip()}
+    handles = {arm: (out / "messages" / f"{arm}.jsonl").open("a", encoding="utf-8") for arm in ARMS}
+    semaphore = asyncio.Semaphore(args.concurrency)
+    lock = asyncio.Lock()
+    failures = 0
+
+    async with httpx.AsyncClient(base_url=args.server_url, timeout=900) as client:
+
+        async def post(path: str, body: dict[str, Any]) -> dict[str, Any]:
+            r = await client.post(path, json=body)
+            if r.status_code != 200:
+                raise RuntimeError(f"{path}: {r.text[:2000]}")
+            return r.json()
+
+        async def one(example: Any) -> None:
+            nonlocal failures
+            qa = example.qa_pairs[0]
+            qid = str(qa.question_id)
+            if qid in done:
+                return
+            row = raw_by_id[qid]
+            if len(kept_raw_sessions(row)) != len(example.sessions):
+                raise RuntimeError(f"{qid}: raw and loader sessions disagree")
+            async with semaphore:
+                try:
+                    await post("/ingest", {"brain_id": qid, "sessions": ingest_payload(example.sessions)})
+                    queries = {}
+                    for arm, params in QUERY_PARAMS.items():
+                        queries[arm] = await post("/query", {"brain_id": qid, "question": qa.question, "params": params})
+                finally:
+                    await post("/reset", {"brain_id": qid})
+            lines = {}
+            for arm, result in queries.items():
+                context, sessions, passages = gbrain_context(arm, example, result["results"])
+                lines[arm] = message_line(arm, example, context, sessions, row, passages)
+            lines["full"] = message_line("full", example, whole_context(example, list(range(len(example.sessions)))),
+                                         list(range(len(example.sessions))), row, None)
+            o = oracle_by_id[qid]
+            o_row = oracle_raw_by_id[qid]
+            lines["oracle"] = message_line("oracle", o, whole_context(o, list(range(len(o.sessions)))),
+                                           list(range(len(o.sessions))), o_row, None)
+            record = {
+                "question_id": qid,
+                "question_type": qa.question_type,
+                "conversations": len(example.sessions),
+                "queries": {
+                    arm: {**q["op"], "order": [r["idx"] for r in q["results"]], "rows": len(q["results"]),
+                          "meta": q["meta"]}
+                    for arm, q in queries.items()
+                },
+                "off_on_context_differs": lines["off"]["context_sha256"] != lines["on"]["context_sha256"],
+            }
+            if any(q["op"]["degraded"] or not q["op"]["reranker"] for q in queries.values()):
+                failures += 1
+            async with lock:
+                for arm in ARMS:
+                    handles[arm].write(json.dumps(lines[arm], ensure_ascii=False) + "\n")
+                    handles[arm].flush()
+                with retrieval_path.open("a", encoding="utf-8") as f:
+                    f.write(json.dumps(record, ensure_ascii=False) + "\n")
+
+        await asyncio.gather(*(one(e) for e in order))
+    for h in handles.values():
+        h.close()
+    print(json.dumps({"questions": len(order), "skipped_done": len(done), "not_reranked_or_degraded": failures}))
+    return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(prog="lme_redis")
+    sub = parser.add_subparsers(dest="command", required=True)
+    f = sub.add_parser("freeze")
+    f.add_argument("--cache-dir", type=Path, required=True)
+    f.add_argument("--out", type=Path, required=True)
+    f.add_argument("--server-url", default="http://127.0.0.1:8787")
+    f.add_argument("--concurrency", type=int, default=4)
+    f.add_argument("--limit", type=int, default=0)
+    f.add_argument("--last", type=int, default=0)
+    args = parser.parse_args(argv)
+    return asyncio.run(freeze(args))
+
+
+if __name__ == "__main__":
+    sys.exit(main())
