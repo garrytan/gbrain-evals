@@ -509,6 +509,40 @@ bound, a row, an arm or the budget.
   worlds carried over to worlds nobody had seen. You should confirm a memory change on held-out data before you claim
   it." Row 3 keeps the lead sentence, rows 2 and 6 take the tie-or-loss sentence with "did not", and row 1 gets none.
 
+### Amendment 4 (2026-11-19): launch amendment A, part 1: the build, the harness and the cell set
+
+Written after the judge check (run order step 3), the only paid call so far, and before anything is minted. It moves no
+bound, row, arm or budget line.
+
+- **gbrain's build.** Every BG1-C gbrain cell now runs v0.60.745.0, commit
+  `8ebb7980c35d1d05e75f4c9c8461b49b3c3b454b`, instead of v0.60.741.0 (`41e33807`). v0.60.745.0 is the newest release tag on
+  gbrain's master as this is written (`eval/runner/q1/cells/bg1c.ts`, `BG1C_GBRAIN_BUILD`). Read by title, the 22
+  commits between the two releases change the secret store, page purges, iMessage sending, managed refresh, upgrades
+  for brains with very long page titles, trust tiers on renamed pages, OpenClaw's skill resolver and the Rust engine,
+  which can't be selected yet. None of them names fact extraction, name tags or slot history, so the development result
+  above, measured on v0.60.741.0 and left as measured, is also this build's expectation. If a newer release lands
+  before the first counted gbrain cell, another dated amendment re-pins to it. The build freezes once counted gbrain
+  cells start.
+- **Harness commit.** `d21dd8209d61c5dd6d55fd7cee76f9ab494600d7` on this experiment's results branch. Since Amendment 3:
+  - OpenAI reads no longer send `n`. gpt-6.2-sol refuses any request that carries it, and since it defaults to 1,
+    other models' reads don't change.
+  - The pilot takes BG1's judge check from BG1's published verdict, pinned by its SHA-256, because that is the only
+    place the check survives.
+  - `mint.sh` runs the supply check (Amendment 1, condition 3) once slot 35 resolves, and again before any run that
+    starts past slot 35. When the check fails, the mint pauses for GBEV-3 until GBEV-3's approval is recorded for that
+    check alone (`--supply-ack`).
+- **Cell set.** `eval/runner/q1/cells/bg1c-cells.json`, SHA-256
+  `6b346bbeb3e17e23b19929a9d8ae30c3a954ac0912a1c44146fc109111bc0a2a`.
+- **Readers are plain API calls.** claude-opus-5-5 and gpt-6.2-sol each answer one question from one fixed context, in
+  a single chat request through the metering proxy, as BG1's readers did. They don't run inside Claude Code or Codex
+  CLI, because BG1-C measures memory servers, not agent harnesses. A CLI session would add its own prompt and tools to
+  every read and break the pairing with BG1.
+- **The judge check passed.** On 148 stratified public dev answers, gemini-3.8-flash and claude-opus-5-5 agreed on all
+  148: kappa 1.0 against a line of 0.6, and 74 agreed in each class against a line of 15. So Opus's grades of
+  gpt-6.2-sol's answers count.
+- **Still to come from custody, before slot 31 mints:** the seed commitment, the phrasing file's hash and the counts
+  from the custody seed check. A dated commit adds them under this heading once the custody host is free.
+
 ## Disclosures
 
 - gbrain is Garry Tan's own project.
