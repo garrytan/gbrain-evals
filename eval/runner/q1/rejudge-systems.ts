@@ -141,22 +141,22 @@ export const cellOf = (s: Sources, root: string, id: string) => s.cells.get(cell
  * F6's also uses, Q1's answer and its judgments take a root-qualified id. Neither receipt's judgments then score the
  * other's text, while answers both receipts hold verbatim keep one id and are judged once.
  */
-export function loadSources(roots: string[], out: string): Sources {
+export function loadSources(roots: string[], out: string, extra: ReadonlyArray<{ root: 'f6' | 'q1'; cell: string }> = []): Sources {
   const named = (k: string) => roots.filter(r => r.startsWith(`${k}=`)).map(r => resolve(r.slice(k.length + 1)));
   const [f6Root] = named('f6'), [q1Root] = named('q1');
   if (!f6Root || !q1Root) throw refuse({ code: 'USAGE', message: 'GST-1365 needs --root f6=<receipt> and --root q1=<receipt>', why: 'the contrasts are F6\'s and Q1\'s published comparisons', fix: { next: 'run', argv: [...FRONT, 'plan', '--root', 'f6=<receipt>', '--root', 'q1=<receipt>', '--out', '<dir>'] } });
   const receipts = { f6: f6Root, q1: q1Root };
   const campaigns = { f6: JSON.parse(readFileSync(join(f6Root, 'campaign.json'), 'utf8')) as CampaignLite, q1: JSON.parse(readFileSync(join(q1Root, 'campaign.json'), 'utf8')) as CampaignLite };
   const cells = new Map<string, LoadedCell>();
-  for (const c of CONTRASTS) for (const id of [c.anchor, c.other]) {
-    if (cells.has(cellKey(c.root, id))) continue;
-    const def = campaigns[c.root].cells.find(x => x.cell_id === id);
-    if (!def || def.status === 'not-run') throw refuse({ code: 'INPUT_MISSING', message: `the ${c.root} receipt has no published cell ${id}`, why: 'every preregistered contrast compares two published cells', fix: { next: 'report', user_message: 'point --root at the published receipt' } });
-    const dir = join(receipts[c.root], def.dir ?? join('cells', id));
+  for (const { root, id } of [...CONTRASTS.flatMap(c => [c.anchor, c.other].map(id => ({ root: c.root, id }))), ...extra.map(x => ({ root: x.root, id: x.cell }))]) {
+    if (cells.has(cellKey(root, id))) continue;
+    const def = campaigns[root].cells.find(x => x.cell_id === id);
+    if (!def || def.status === 'not-run') throw refuse({ code: 'INPUT_MISSING', message: `the ${root} receipt has no published cell ${id}`, why: 'every preregistered contrast, and every stored set judged again, is a published cell', fix: { next: 'report', user_message: 'point --root at the published receipt' } });
+    const dir = join(receipts[root], def.dir ?? join('cells', id));
     const receipt = JSON.parse(readFileSync(join(dir, 'receipt.json'), 'utf8')) as { instrument: { id: string; sha256: string } };
     const jkey = (j: JudgmentRecord) => `${j.answer_id}|${j.instrument_id}|${j.judge}|${j.judge_replicate}`;
     const redo = new Map(ndjson<JudgmentRecord>(join(dir, 'frontier-redo.ndjson')).map(j => [jkey(j), j]));
-    cells.set(cellKey(c.root, id), { def, root: c.root, instrument: receipt.instrument, answers: ndjson<AnswerRecord>(join(dir, 'answers.ndjson')),
+    cells.set(cellKey(root, id), { def, root, instrument: receipt.instrument, answers: ndjson<AnswerRecord>(join(dir, 'answers.ndjson')),
       judgments: ndjson<JudgmentRecord>(join(dir, 'judgments.ndjson')).map(j => redo.get(jkey(j)) ?? j) });
   }
   const f6Text = new Map([...cells.values()].filter(c => c.root === 'f6').flatMap(c => c.answers.map(a => [a.answer_id, a.text] as const)));
@@ -732,12 +732,13 @@ export function plan(s: Sources, rates: Record<string, number> = {}) {
 
 // ─── CLI ─────────────────────────────────────────────────────────────
 
-function questionsFor(sets: readonly string[], out: string, env: Record<string, string | undefined>): (set: string, id: string) => MemoryQuestion {
+/** The questions of judged sets, each opened through the custody gate under a decision id and purpose (GST-1365's by default). */
+export function questionsFor(sets: readonly string[], out: string, env: Record<string, string | undefined>, decision: { id: string; purpose: string } = { id: 'gst-1365', purpose: 'GST-1365 judge-robustness check' }): (set: string, id: string) => MemoryQuestion {
   const byId = new Map<string, MemoryQuestion>();
   for (const set of [...new Set(sets)].sort()) {
     const facts = ALL_SETS[set as SetId];
     if (!facts) throw refuse({ code: 'USAGE', message: `no set ${set}`, why: 'GST-1365 judges S1, S2b, S2a and D8 answers', fix: { next: 'report', user_message: 'report a bug in rejudge-systems.ts' } });
-    custodyGate({ id: `gst-1365.${set}`, benchmark: facts.benchmark, split: facts.split }, out, { ...env, GBRAIN_EVALS_DECISION_ID: 'gst-1365' }, `GST-1365 judge-robustness check: judge frozen answers on ${set}`);
+    custodyGate({ id: `${decision.id}.${set}`, benchmark: facts.benchmark, split: facts.split }, out, { ...env, GBRAIN_EVALS_DECISION_ID: decision.id }, `${decision.purpose}: judge frozen answers on ${set}`);
     for (const q of loadCorpus(facts.benchmark).questions) byId.set(`${set}|${q.id}`, q);
   }
   return (set, id) => { const q = byId.get(`${set}|${id}`); if (!q) throw new Error('a judged answer names a question its corpus does not hold'); return q; };

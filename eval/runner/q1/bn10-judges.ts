@@ -1,12 +1,17 @@
 /**
  * Judging tools of the BEAM-10M re-measure (docs/benchmarks/2026-11-19-beam10m-newest-preregistration.md, GST-3139):
  * the judge agreement check (R78; "Judge agreement check (R78), before any number counts" and amendment A2 check 2)
- * on public BEAM-1M dev questions, and the judges' pairwise agreement on the dry run's real answers.
+ * on public BEAM-1M dev questions, the judges' pairwise agreement on the dry run's real answers, and the custody
+ * re-judge of four stored S1 answer sets ("Stored answers judged again, in custody").
  *
  *   bun eval/runner/q1/bn10-judges.ts check-plan   --out <dir>
  *   bun eval/runner/q1/bn10-judges.ts check-run    --out <dir> <lease>
  *   bun eval/runner/q1/bn10-judges.ts check-report --out <dir>
  *   bun eval/runner/q1/bn10-judges.ts agreement    --dry-run <dry-run out>... --out <dir>
+ *   bun eval/runner/q1/bn10-judges.ts rejudge-plan    <roots> --out <custody dir>
+ *   bun eval/runner/q1/bn10-judges.ts rejudge-run     <roots> --out <custody dir> <lease>
+ *   bun eval/runner/q1/bn10-judges.ts rejudge-summary <roots> --out <custody dir> [--aggregates <file>]
+ *     <roots>: --root f6=<receipt> --root q1=<receipt>, the receipts rejudge-systems.ts reads
  *     <lease>: --budget-ledger <file> --run-id <id> --lease-usd <n> --ledger-cap-usd <n> [--concurrency <n>]
  *              (--keyless-upstream <url> | --paid-window <unit> --window-cap-usd <n>)
  *
@@ -30,6 +35,18 @@
  *              dry-run outs only), over the answers both graded, descriptive, with frontier judgments not at the pinned
  *              settings counted and left out. Both carry counts, rates and kappas only: no item text, question id or
  *              dollar figure. A report that would hold an item's text or question id is refused before it is written.
+ *   Re-judge   the replicate-0 claude-opus-5-5 answers of four stored S1 sets (F6 arm P, F6 arm A, Q1's whole-system
+ *              arm and Q1's file agent), each judged again by gpt-6.1-sol at PER_READER_JUDGE_SETTINGS in the gating
+ *              view under its cell's canonical instrument; no stored frontier judgment is reused, since GST-1365's were
+ *              made at each judge's default effort. Every rejudge subcommand runs in custody: the receipts must
+ *              reproduce the published contrasts (rejudge-systems.ts reproduce), and the S1 questions open only through
+ *              the custody gate. A product failure scores 0 and sends nothing; any other unjudged outcome, and a
+ *              question with no answer, is counted and not judged. rejudge-plan sends nothing and prints each set's
+ *              judgments and provider calls (one per rubric item; event-ordering answers also ask BEAM's equivalence
+ *              calls, counted apart). Per-question judgments stay in the custody --out, which refuses judgments made at
+ *              other settings; rejudge-run and rejudge-summary write aggregates.json there (and to --aggregates): per
+ *              set, counts, the mean score and the pass rate with its Wilson interval, with no question id, answer id
+ *              or dollar figure.
  *   Window     a paid subcommand without --keyless-upstream needs --paid-window and --window-cap-usd; its
  *              --ledger-cap-usd and --lease-usd never exceed the window cap, and it exits 2 before any output, key
  *              check or lease otherwise. Every stage of an --out spends on one ledger (tieLedger), the stages under one
@@ -44,6 +61,7 @@ import { ledgerPaths, ledgerStatus } from '../budget-ledger.ts';
 import { devConversations } from '../decisions/splits.ts';
 import { loadCorpus, type MemoryQuestion } from '../memory-qa/corpus.ts';
 import { instrumentFor, PASS_THRESHOLD, type Instrument } from '../memory-qa/instruments.ts';
+import { PRODUCT_FAILURES, type Outcome } from '../memory-qa/outcomes.ts';
 import { ChatClient, TRUNCATED_FINISHES, type ChatLike } from '../memory-qa/qa-v2.ts';
 import { readRecords, RecordLog, type JudgmentRecord } from '../memory-qa/records.ts';
 import { DEFAULT_ROUTE_CAPS, keylessKeys, keylessUpstream, MeteringProxy, usageSplit } from '../metering-proxy.ts';
@@ -51,12 +69,12 @@ import { requireRs1Window, WindowRefusal, type PaidWindow } from '../paid-arm.ts
 import { attestPreregistration } from '../prereg.ts';
 import { DEFAULT_ROUTE_CLASSES } from '../shootout-cell.ts';
 import { claimOut, keylessUpstreamArg } from './calibration-cell.ts';
-import { metering, type MeterLine } from './cell.ts';
-import { BN10_PREREGISTRATION, BN10_READERS, buildBN10Manifest, PARTICLE } from './cells/bn10.ts';
+import { JUDGED, metering, type MeterLine } from './cell.ts';
+import { BN10_PREREGISTRATION, BN10_READERS, buildBN10Manifest, OPUS, PARTICLE } from './cells/bn10.ts';
 import { frontierJudgeOf, PER_READER_JUDGE_SETTINGS } from './cells/definitions.ts';
 import { openRereadLease } from './reread-cell.ts';
-import { buildControls, CANONICAL, checkIdentity, checkInstruments, checkPair, checkWindowRoom, exitFor, frontierId, judgeTasks, preflightKeys, stopCode, tieLedger,
-  type ControlAnswer, type JudgeRun, type StopCode, type Task } from './rejudge-systems.ts';
+import { buildControls, CANONICAL, cellOf, checkIdentity, checkInstruments, checkPair, checkWindowRoom, exitFor, frontierId, guardIds, judgeTasks, loadSources, preflightKeys, questionsFor, reproduce, stopCode, tieLedger,
+  type ControlAnswer, type JudgeRun, type Sources, type StopCode, type Task } from './rejudge-systems.ts';
 import { exitCodeOf, refuse, renderMessage, ScoreboardError } from './scoreboard-errors.ts';
 
 const ROOT = resolve(import.meta.dir, '../../..');
@@ -262,10 +280,87 @@ export function dryRunAgreement(roots: readonly string[]) {
   return { schema: AGREEMENT_SCHEMA, preregistration: BN10_PREREGISTRATION, view: 'descriptive', roots: roots.length, cell_files: files, answers: byAnswer.size, unpinned_frontier_judgments: unpinned, pairs };
 }
 
+// ─── Stored answers judged again, in custody ─────────────────────────
+
+export const REJUDGE_SCHEMA = 'gbrain-evals/bn10-rejudge-aggregates/v1';
+export const STORED_READER = OPUS;
+export const STORED_JUDGE = frontierJudgeOf(STORED_READER);
+export const STORED_SETS = [
+  { id: 'f6-p', root: 'f6', cell: 's1.gbrain-defaults.f6-master.p', label: "F6's arm P" },
+  { id: 'f6-a', root: 'f6', cell: 's1.gbrain-defaults.f6-master.a', label: "F6's arm A" },
+  { id: 'q1-whole', root: 'q1', cell: 's1.gbrain-defaults.shipped-defaults.whole-default', label: "Q1's whole-system arm" },
+  { id: 'q1-file-agent', root: 'q1', cell: 's1.baseline-file-agent.baseline.whole-agent', label: "Q1's file agent" },
+] as const;
+export type StoredSetId = typeof STORED_SETS[number]['id'];
+export interface StoredCounts { scheduled: number; excluded: number; missing: number; product_failures: number; not_judged: number; to_judge: number }
+
+/** The receipts with the four stored cells loaded beside GST-1365's contrast cells (loadSources keeps Q1's answer ids apart from F6's). */
+export const loadStored = (roots: string[], out: string): Sources => loadSources(roots, out, STORED_SETS.map(x => ({ root: x.root, cell: x.cell })));
+
+/** Each stored set's counts and the tasks: every scheduled, unexcluded question's replicate-0 Opus answer with a judged outcome, for gpt-6.1-sol at the pinned settings. */
+export function storedTasks(s: Sources): { tasks: Task[]; sets: Record<StoredSetId, StoredCounts>; setOf: Map<string, StoredSetId> } {
+  const tasks: Task[] = [], setOf = new Map<string, StoredSetId>();
+  const sets = Object.fromEntries(STORED_SETS.map(x => {
+    const cell = cellOf(s, x.root, x.cell), set = s.campaigns[x.root].sets.find(y => y.id === cell.def.set)!;
+    const excluded = new Set(set.exclusions.map(e => e.question_id)), asProduct = new Set((cell.def.product_outcomes ?? []).map(p => `${p.reader}|${p.outcome}`));
+    const answers = new Map(cell.answers.filter(a => a.reader === STORED_READER && a.replicate === 0).map(a => [a.question_id, a]));
+    const c: StoredCounts = { scheduled: 0, excluded: 0, missing: 0, product_failures: 0, not_judged: 0, to_judge: 0 };
+    for (const q of set.scheduled) {
+      if (excluded.has(q.question_id)) { c.excluded++; continue; }
+      c.scheduled++;
+      const a = answers.get(q.question_id);
+      if (!a) { c.missing++; continue; }
+      if (PRODUCT_FAILURES.has(a.outcome as Outcome) || asProduct.has(`${a.reader}|${a.outcome}`)) { c.product_failures++; continue; }
+      if (!JUDGED.has(a.outcome as Outcome)) { c.not_judged++; continue; }
+      c.to_judge++;
+      setOf.set(a.answer_id, x.id);
+      tasks.push({ answer_id: a.answer_id, question_id: a.question_id, set: cell.def.set, cell: cell.def.cell_id, system: cell.def.system, reader: a.reader, text: a.text, judge: STORED_JUDGE,
+        instrument: cell.def.canonical_instrument, instrument_id: frontierId(cell.def.canonical_instrument, STORED_JUDGE), instrument_sha256: cell.instrument.sha256, settings: { ...PER_READER_JUDGE_SETTINGS }, view: 'gating' });
+    }
+    return [x.id, c];
+  })) as Record<StoredSetId, StoredCounts>;
+  return { tasks, sets, setOf };
+}
+
+/** What the re-judge would send, per set and in all: judgments, rubric calls, and event-ordering answers (which also ask equivalence calls). Sends nothing. */
+export function rejudgePlan(stored: ReturnType<typeof storedTasks>, question: (t: Task) => MemoryQuestion) {
+  const of = (id: StoredSetId) => stored.tasks.filter(t => stored.setOf.get(t.answer_id) === id);
+  const sets = Object.fromEntries(STORED_SETS.map(x => [x.id, { label: x.label, ...stored.sets[x.id], judgments: of(x.id).length, calls: callCount(of(x.id), question), event_ordering_answers: of(x.id).filter(t => question(t).category === 'event_ordering').length }]));
+  return { judge: STORED_JUDGE, settings: { ...PER_READER_JUDGE_SETTINGS }, reader: STORED_READER, sets,
+    total: { judgments: stored.tasks.length, calls: callCount(stored.tasks, question), event_ordering_answers: stored.tasks.filter(t => question(t).category === 'event_ordering').length } };
+}
+
+/** A custody --out holds only this re-judge's judgments: gpt-6.1-sol at the pinned settings; anything else is refused before a lease. */
+export function checkOwnLog(logPath: string): void {
+  const other = ndjson<JudgmentRecord>(logPath).filter(j => j.judge !== STORED_JUDGE || !atPinned(j)).length;
+  if (other) throw refuse({ code: 'RESUME_REFUSED', message: `${logPath} holds ${other} judgments that are not ${STORED_JUDGE} at ${JSON.stringify(PER_READER_JUDGE_SETTINGS)}`,
+    why: 'a resume skips answers its log already holds, so another run\'s judgments would stand in for the pinned re-judge', fix: { next: 'run', argv: [...FRONT, 'rejudge-run', '--out', '<a fresh custody directory>'] } });
+}
+
+/** Per set: counts, and over its judged answers with product failures at 0, the mean score and the pass rate with its Wilson interval; question and answer ids never appear. */
+export function rejudgeAggregates(s: Sources, stored: ReturnType<typeof storedTasks>, judgments: readonly JudgmentRecord[], keyless: boolean | null) {
+  const own = new Map(judgments.filter(j => j.judge === STORED_JUDGE && j.judge_replicate === 0 && atPinned(j)).map(j => [j.answer_id, j]));
+  const mean = (xs: number[]) => (xs.length ? r4(xs.reduce((a, b) => a + b, 0) / xs.length) : null);
+  const sets = Object.fromEntries(STORED_SETS.map(x => {
+    const mine = stored.tasks.filter(t => stored.setOf.get(t.answer_id) === x.id), c = stored.sets[x.id];
+    const done = mine.flatMap(t => (own.has(t.answer_id) ? [own.get(t.answer_id)!] : []));
+    const ok = done.filter(scored).map(j => j.score), withFailures = [...ok, ...Array<number>(c.product_failures).fill(0)];
+    return [x.id, { label: x.label, ...c, judged: done.length, scored: ok.length, judge_errors: done.length - ok.length, truncated: done.filter(j => j.detail?.truncated === true).length,
+      remaining: mine.length - done.length, complete: done.length === mine.length, mean_judged: mean(ok), mean_with_product_failures: mean(withFailures),
+      pass: rate(withFailures.filter(v => v >= PASS_THRESHOLD).length, withFailures.length) }];
+  }));
+  const out = { schema: REJUDGE_SCHEMA, preregistration: BN10_PREREGISTRATION, keyless, judge: STORED_JUDGE, settings: { ...PER_READER_JUDGE_SETTINGS }, view: 'gating', reader: STORED_READER, pass_threshold: PASS_THRESHOLD,
+    sets, complete: Object.values(sets).every(v => v.complete) };
+  const text = JSON.stringify(out);
+  guardIds(text, s);
+  if (stored.tasks.some(t => text.includes(t.answer_id))) throw refuse({ code: 'PREFLIGHT_FAILED', message: 'the aggregates would hold an answer id; nothing was written', why: 'only aggregates leave custody', fix: { next: 'report', user_message: 'report a bug in bn10-judges.ts' } });
+  return out;
+}
+
 // ─── CLI ─────────────────────────────────────────────────────────────
 
-const SUBCOMMANDS = ['check-plan', 'check-run', 'check-report', 'agreement'];
-const PAID = ['check-run'];
+const SUBCOMMANDS = ['check-plan', 'check-run', 'check-report', 'agreement', 'rejudge-plan', 'rejudge-run', 'rejudge-summary'];
+const PAID = ['check-run', 'rejudge-run'];
 
 if (import.meta.main) {
   const argv = process.argv.slice(2), sub = argv[0];
@@ -289,6 +384,29 @@ if (import.meta.main) {
       writeFileSync(join(out, 'agreement.json'), json);
       console.log(json);
       process.exit(0);
+    }
+    if (sub.startsWith('rejudge-')) {
+      const s = loadStored(many('--root'), out);
+      reproduce(s);
+      const stored = storedTasks(s), logPath = join(out, 'judgments.ndjson');
+      checkOwnLog(logPath);
+      const aggregates = () => {
+        const marker = existsSync(join(out, 'upstream.json')) ? JSON.parse(readFileSync(join(out, 'upstream.json'), 'utf8')).keyless === true : null;
+        const json = JSON.stringify(rejudgeAggregates(s, stored, ndjson<JudgmentRecord>(logPath), marker), null, 2) + '\n';
+        for (const f of [join(out, 'aggregates.json'), ...(one('--aggregates') ? [resolve(one('--aggregates')!)] : [])]) writeFileSync(f, json);
+        return JSON.parse(json) as ReturnType<typeof rejudgeAggregates>;
+      };
+      if (sub === 'rejudge-summary') { const a = aggregates(); console.log(JSON.stringify(a, null, 2)); process.exit(a.complete ? 0 : 4); }
+      const q = questionsFor([...new Set(stored.tasks.map(t => t.set))], out, process.env, { id: 'bn10-rejudge', purpose: 'BEAM-10M re-measure: stored answers judged again at the pinned settings' });
+      const question = (t: Task) => q(t.set, t.question_id);
+      if (sub === 'rejudge-plan') { console.log(JSON.stringify(rejudgePlan(stored, question), null, 2)); process.exit(0); }
+      claimOut(out, !!keyless, 'bn10-rejudge');
+      checkIdentity(join(out, 'identity-rejudge.json'), stored.tasks);
+      const { run, stop } = await judgeInWindow({ tasks: stored.tasks, question, out, logPath, keyless, window, lease: lease!, runner: 'bn10-rejudge', extra: { sets: stored.sets } });
+      const a = aggregates();
+      console.log(JSON.stringify({ subcommand: sub, stop, judged: run.judged, remaining: run.remaining, request_errors: run.request_errors, held_may_have_billed: run.held, complete: a.complete }, null, 2));
+      process.exitCode = exitFor(stop, run.remaining);
+      process.exit();
     }
     if (sub === 'check-report') {
       const items = existsSync(join(out, 'items.json')) ? JSON.parse(readFileSync(join(out, 'items.json'), 'utf8')) as ControlAnswer[] : null;
