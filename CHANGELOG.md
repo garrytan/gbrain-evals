@@ -1738,7 +1738,7 @@ Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a
 - **What it measures.** `docs/benchmarks/2026-11-07-skill-ranker-offline.md` tests whether a word-matching ranker can
   pick an acceptable skill from catalogs of 250, 750 and 1,500 public skills for 300 synthetic turns, and whether a
   "no skill applies" gate can tell when none fits. Labels come from a blind judge, and the test split was frozen by hash
-  before scoring.
+  before scoring. Spend stayed under its cap.
 - **What it found.** As preregistered, Step 1 fails: no deployable arm passes, because the preregistered gate hides
   every skill turn and the repaired gate still fails bar 1 at 250 and 750 skills and the false-suggestion spread bar.
   With the gate off, BM25F over name, description and a 4 KB body slice puts an acceptable skill in its top 5 on 48%,
