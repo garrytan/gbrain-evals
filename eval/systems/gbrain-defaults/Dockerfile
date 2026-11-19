@@ -23,7 +23,8 @@ RUN if [ "$GBRAIN_FAKETIME_LIB" = 1 ]; then \
       && ln -s "$(dpkg -L libfaketime | grep '/libfaketime\.so\.1$')" /usr/local/lib/libfaketime.so.1; \
     fi
 COPY eval/systems/_shim/shim.py /app/_shim/shim.py
-COPY eval/systems/gbrain-defaults/shim.py eval/systems/gbrain-defaults/capability.json /app/gbrain-defaults/
+COPY eval/systems/gbrain-defaults/shim.py eval/systems/gbrain-defaults/capability.json eval/systems/gbrain-defaults/fence-tokens.ts /app/gbrain-defaults/
+ENV GBRAIN_TOKENIZER_PACKAGE=/opt/bun/install/global/node_modules/gbrain/package.json
 USER gbrain
 VOLUME /data
 EXPOSE 8700
