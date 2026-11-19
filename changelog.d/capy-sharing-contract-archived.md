@@ -1,0 +1,4 @@
+### The sharing test checks pages in an archived source
+
+- [test/eval/sharing-contract.test.ts](test/eval/sharing-contract.test.ts) adds two pages in an archived source, one public and one `visibility: private`, and gives every token a grant that names that source. Only the owner's own callers may read them, and no other caller ever does, by any read path. gbrain v0.60.744.0 (#9795) keeps them hidden, so on an older build the test leaves these two items out and says why.
+- One scenario was named as if a member joined "over the admin path", but it calls gbrain's `addMember` library function with no hook. It's now named "…joins by the addMember library call, no hook". A new scenario adds the member through gbrain's real owner admin route, `POST /admin/api/access/members`, which re-scopes the conversation archive before the member can read it. It also needs v0.60.744.0 or later.
