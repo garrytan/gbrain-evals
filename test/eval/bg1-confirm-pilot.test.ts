@@ -23,7 +23,7 @@ import { REREAD_RECEIPT_SCHEMA, rereadCellId } from '../../eval/runner/q1/reread
 import { BG1C_JUDGE_CHECK_SCHEMA } from '../../eval/runner/bg1/bg1c-judge-check.ts';
 import { JUDGE_CHECK_SCHEMA } from '../../eval/runner/bg1/judge-check.ts';
 import { bg1cPerWorld } from '../../eval/runner/bg1/pricing.ts';
-import { CONFIRM_BG1_VERDICT_PATH, CONFIRM_CELLS_PATH, CONFIRM_DEV_MINT_REQUESTS, CONFIRM_JUDGE_CHECKS, CONFIRM_LIVE_READERS, CONFIRM_MINT_LINE, CONFIRM_PILOT_QUESTIONS, CONFIRM_PILOT_WORLD, CONFIRM_SHARED_RATE, confirmPilotSpendLine } from '../../eval/runner/bg1/confirm.ts';
+import { CONFIRM_BG1_VERDICT_PATH, CONFIRM_BG1_VERDICT_SHA256, CONFIRM_CELLS_PATH, CONFIRM_DEV_MINT_REQUESTS, CONFIRM_JUDGE_CHECKS, CONFIRM_LIVE_READERS, CONFIRM_MINT_LINE, CONFIRM_PILOT_QUESTIONS, CONFIRM_PILOT_WORLD, CONFIRM_SHARED_RATE, confirmPilotSpendLine } from '../../eval/runner/bg1/confirm.ts';
 import { confirmPilot, main } from '../../eval/runner/bg1/verdict.ts';
 
 const tmp = mkdtempSync(join(tmpdir(), 'bg1c-pilot-'));
@@ -216,6 +216,7 @@ describe('the BG1-C pilot', () => {
     expect(judgesOnly(pilot(smoke(), [...inputs, '--judge-check', judgeCheck({ report: block, upstream: null }), ...bg1c]))).toBe(true);
     expect(pilot(smoke(), [...inputs, '--judge-check', judgeCheck({ report: block }), ...bg1c]).code).toBe(0);
     expect(judgesOnly(pilot(smoke(), [...inputs, '--judge-check', file('verdict.json', JSON.parse(readFileSync(CONFIRM_BG1_VERDICT_PATH, 'utf8'))), ...bg1c]))).toBe(true);
+    expect(createHash('sha256').update(readFileSync(CONFIRM_BG1_VERDICT_PATH)).digest('hex')).toBe(CONFIRM_BG1_VERDICT_SHA256);
   });
 
   test('condition 1 needs all 64 questions answered and graded by each of the three readers, and prints the counts', () => {

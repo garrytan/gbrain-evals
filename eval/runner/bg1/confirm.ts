@@ -408,6 +408,8 @@ export const confirmPilotSpendLine = (cell: Pick<CellDefinition, 'system' | 'con
 export const CONFIRM_JUDGE_CHECKS: Readonly<Record<string, string>> = { 'gbrain-evals/bg1-judge-check/v1': 'BG1', 'gbrain-evals/bg1c-judge-check/v1': 'BG1-C' };
 /** BG1's published verdict. Its judge_check block is BG1's paid judge check, run in BG1's stage 1 and kept in the repo with no upstream.json beside it; the preregistration says that check stands, so the pilot reads this file's block as BG1's report. */
 export const CONFIRM_BG1_VERDICT_PATH = resolve(import.meta.dir, '../../..', 'docs/benchmarks/2026-11-15-changing-facts-battleground-results/verdict.json');
+/** The SHA-256 of that verdict as BG1 published it; a file at the path with other bytes is not BG1's paid check. */
+export const CONFIRM_BG1_VERDICT_SHA256 = '091079f256bc4bbcf728cc06830d91ec3e31df05483f27e22972d80b7d104003';
 /** The mint's line (Amendment 1, condition 3): over BG1-C's first five slots, at most 1.5 times the dev mint's 336 Gemini requests per world. */
 export const CONFIRM_MINT_SLOTS = 5;
 export const CONFIRM_DEV_MINT_REQUESTS = 336;

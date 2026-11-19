@@ -2,7 +2,7 @@
 # BG1 mint: plans, renders and checks the sealed changing-facts worlds in custody, one mint slot at a time, through
 # eval/custody/bg1/render.ts (docs/benchmarks/2026-11-09-changing-facts-battleground-preregistration.md).
 #
-#   eval/custody/bg1/mint.sh [--bg1c [--tolerance 0.15]] --out <dir>/bg1-custody --seed-file <path>.bg1-seed
+#   eval/custody/bg1/mint.sh [--bg1c [--tolerance 0.15] [--supply-ack <id>]] --out <dir>/bg1-custody --seed-file <path>.bg1-seed
 #       --phrasing <path>.bg1-phrasing.json [--count <n>] [--start <slot>] [--target-tokens 200000] [--yield-gate-ack <id>]
 #       (--fake [--fake-break <slot>:<session>:<attempts>,...]
 #        | --budget-ledger <sqlite> --budget-run-id <id> --paid-window <unit> --window-cap-usd <n>)
@@ -62,10 +62,13 @@
 #     with exit 3 and a summary=paused reason=slots_exhausted line, for GBEV-3. --fake-break <slot>:length (render.ts)
 #     writes that slot's world over-long, the top-up drill.
 #   - BG1-C's supply check (--bg1c only; R111, the preregistration's pilot condition 3). Once slot 35 resolves (written
-#     and validated, or dropped), mint.sh runs eval/custody/bg1/supply.ts on slots 31 to 35 and prints its counts-only
-#     line. More than 504 Gemini requests per kept world, or no kept world, pauses the mint with exit 3 and a
-#     summary=paused reason=supply line, for GBEV-3, before slot 36 renders. A mint GBEV-3 lets go on resumes with
-#     --start 36, since any run through slot 35 checks again.
+#     and validated, or dropped), and before a run that starts past slot 35 renders anything, mint.sh runs
+#     eval/custody/bg1/supply.ts on slots 31 to 35 and prints its counts-only line; a run past slot 35 with any of them
+#     unresolved refuses. More than 504 Gemini requests per kept world, or no kept world, pauses the mint with exit 3
+#     and a summary=paused reason=supply line, for GBEV-3, before slot 36 renders, and every later run pauses the same
+#     way. GBEV-3's approval id comes back as --supply-ack (a- and 12 hex digits), which mint.sh takes only while the
+#     check fails and appends to render/supply-acks.jsonl; from then on the failed check prints supply=acked and the
+#     mint goes on. A mint has one supply check, so an id other than the recorded one refuses.
 #   - One ledger. A relative --budget-ledger is resolved once, against the directory mint.sh starts in, before the window
 #     check, so the check, both proxies and render.ts all name the same ledger file. CDPATH is unset first, so a
 #     relative --out or --budget-ledger never resolves against a directory the caller's CDPATH names.
@@ -109,7 +112,7 @@ file_mode() { stat -c %a "$1" 2>/dev/null || stat -f %Lp "$1"; }
 owner_only() { case "$(file_mode "$1")" in 600|400) return 0 ;; *) return 1 ;; esac; }
 
 OUT="" SEED_FILE="${BG1_SEED_FILE:-}" PHRASING="${BG1_PHRASING_FILE:-}" COUNT="" START="" TARGET=200000 MODE=real BREAKS=""
-LEDGER="" RUN_ID="" WINDOW="" WINDOW_CAP="" ACK="" DEV=0 BG1C=0 SEALED_ONLY="" DEV_WORLDS="bg1-dev-01,bg1-dev-02,bg1-dev-03" DEV_ONLY="" TOLERANCE=""
+LEDGER="" RUN_ID="" WINDOW="" WINDOW_CAP="" ACK="" SUPPLY_ACK="" DEV=0 BG1C=0 SEALED_ONLY="" DEV_WORLDS="bg1-dev-01,bg1-dev-02,bg1-dev-03" DEV_ONLY="" TOLERANCE=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --out) OUT="$2"; shift 2 ;;
@@ -129,6 +132,7 @@ while [ $# -gt 0 ]; do
     --paid-window) WINDOW="$2"; shift 2 ;;
     --window-cap-usd) WINDOW_CAP="$2"; shift 2 ;;
     --yield-gate-ack) ACK="$2"; SEALED_ONLY+=" $1"; shift 2 ;;
+    --supply-ack) SUPPLY_ACK="$2"; SEALED_ONLY+=" $1"; shift 2 ;;
     -h|--help) sed -n '2,17p' "$0"; exit 0 ;;
     *) die "unknown argument $1" ;;
   esac
@@ -166,6 +170,8 @@ if [ "$BG1C" = 0 ] && [ "$START" -ge 31 ]; then die "slots 31 to 96 are BG1-C's,
 [[ "$TARGET" =~ ^[0-9]+$ ]] || die "--target-tokens must be a whole number"
 [ "$MODE" = fake ] || [ -z "$BREAKS" ] || die "--fake-break is a --fake drill"
 [ -z "$ACK" ] || [[ "$ACK" =~ ^a-[0-9a-f]{12}$ ]] || die "--yield-gate-ack takes GBEV-3's approval id, a- and 12 hex digits"
+[ -z "$SUPPLY_ACK" ] || [ "$BG1C" = 1 ] || die "--supply-ack acknowledges BG1-C's supply check, so it needs --bg1c"
+[ -z "$SUPPLY_ACK" ] || [[ "$SUPPLY_ACK" =~ ^a-[0-9a-f]{12}$ ]] || die "--supply-ack takes GBEV-3's approval id, a- and 12 hex digits"
 if [ "$DEV" = 0 ]; then
   case "$(basename "$OUT")" in bg1-custody*) ;; *) die "--out must be a directory whose name starts with bg1-custody" ;; esac
   case "$SEED_FILE" in *.bg1-seed) ;; *) die "the seed file must be named *.bg1-seed" ;; esac
@@ -375,19 +381,34 @@ validate_slot() {
   [ -z "$line" ] || printf '%s\n' "$line"
   case "$rc" in 0) ;; 12) INVALID=$((INVALID + 1)) ;; *) exit "$rc" ;; esac
 }
-# BG1-C: once slot 35 ($1) resolves, runs supply.ts on slots 31 to 35 and prints its line; over its limit (exit 12)
-# pauses with exit 3, and any other failure exits with its code.
+SUPPLY_ACKS="$OUT/render/supply-acks.jsonl"
+# BG1-C: supply.ts's counts-only line over slots 31 to 35, run with no key; supply_run exits with its code.
+supply_run() { (cd "$OUT" && env -i PATH=/usr/bin:/bin HOME="$HOME" LANG=C.UTF-8 TZ=UTC "$BUN" "$HERE/supply.ts" --out "$OUT"); }
+# BG1-C: the approval id render/supply-acks.jsonl records for a failed supply check, or nothing with none recorded.
+supply_acked() {
+  local last re='^\{"ack":"(a-[0-9a-f]{12})","at":"[0-9TZ:-]*"\}$'
+  [ -s "$SUPPLY_ACKS" ] || return 0
+  last="$(tail -n 1 "$SUPPLY_ACKS")"
+  [[ "$last" =~ $re ]] || die "render/supply-acks.jsonl ends in a line that is not an acknowledgement"
+  printf '%s' "${BASH_REMATCH[1]}"
+}
+# BG1-C: runs supply.ts on slots 31 to 35 and prints its line. Over its limit (exit 12) the mint pauses with exit 3
+# unless GBEV-3's approval is recorded; supply.ts's refusal (a slot among 31 to 35 unresolved) or any other failure
+# exits with its code. $1 is the last slot.
 supply_check() {
-  [ "$BG1C" = 1 ] && [ "$1" -eq $((FIRST + 4)) ] || return 0
-  local line rc=0
-  line="$(cd "$OUT" && env -i PATH=/usr/bin:/bin HOME="$HOME" LANG=C.UTF-8 TZ=UTC "$BUN" "$HERE/supply.ts" --out "$OUT")" || rc=$?
+  [ "$BG1C" = 1 ] || return 0
+  local line rc=0 acked
+  line="$(supply_run)" || rc=$?
   [ -z "$line" ] || printf '%s\n' "$line"
   case "$rc" in
-    0) ;;
-    12) say "summary=paused reason=supply mode=$MODE written=$WRITTEN skipped=$SKIPPED dropped=$DROPPED dropped_earlier=$DROPPED_EARLIER last_slot=$1$(invalid_tail)"
-        exit 3 ;;
+    0) return 0 ;;
+    12) ;;
     *) exit "$rc" ;;
   esac
+  acked="$(supply_acked)"
+  if [ -n "$acked" ]; then say "supply=acked ack=$acked"; return 0; fi
+  say "summary=paused reason=supply mode=$MODE written=$WRITTEN skipped=$SKIPPED dropped=$DROPPED dropped_earlier=$DROPPED_EARLIER last_slot=$1$(invalid_tail)"
+  exit 3
 }
 # BG1-C: stops the mint with exit 0 once KEPT_TARGET worlds are kept. $1 is the last slot.
 kept_stop() {
@@ -418,14 +439,30 @@ if [ -n "$ACK" ] && ! { [ -s "$ACKS" ] && tail -n 1 "$ACKS" | grep -Fq "{\"ack\"
     say "yield_gate_ack=$ACK early_drops=$early drops=$total"
   fi
 fi
+if [ -n "$SUPPLY_ACK" ]; then
+  acked="$(supply_acked)"
+  if [ -n "$acked" ]; then
+    [ "$acked" = "$SUPPLY_ACK" ] || die "the supply check on this --out is already acknowledged by $acked, and a mint has one supply check"
+  else
+    rc=0
+    supply_run >/dev/null || rc=$?
+    case "$rc" in
+      12) printf '{"ack":"%s","at":"%s"}\n' "$SUPPLY_ACK" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$SUPPLY_ACKS"
+          say "supply_ack=$SUPPLY_ACK" ;;
+      0) die "the supply check passes on this --out, so --supply-ack has nothing to acknowledge" ;;
+      *) exit "$rc" ;;
+    esac
+  fi
+fi
 yield_gate $((START - 1))
 kept_stop $((START - 1))
+[ "$START" -le $((FIRST + 4)) ] || supply_check $((START - 1))
 for ((slot = START; slot < START + COUNT; slot++)); do
   id="$(printf 'bg1-%03d' "$slot")"
   if dropped_record "$id"; then
     DROPPED_EARLIER=$((DROPPED_EARLIER + 1))
     say "slot=$slot world=$id status=dropped_earlier"
-    supply_check "$slot"
+    [ "$slot" -ne $((FIRST + 4)) ] || supply_check "$slot"
     continue
   fi
   render_one "$id" --set "$OUT/set" --seed-file "$SEED_FILE" --phrasing "$PHRASING" --slot "$slot"
@@ -436,7 +473,7 @@ for ((slot = START; slot < START + COUNT; slot++)); do
   esac
   [ "$BG1C" = 0 ] || [ "$RC" != 0 ] || validate_slot "$slot"
   yield_gate "$slot"
-  supply_check "$slot"
+  [ "$slot" -ne $((FIRST + 4)) ] || supply_check "$slot"
   kept_stop "$slot"
 done
 

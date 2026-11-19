@@ -84,6 +84,8 @@ describe('mint.sh keeps BG1\'s and BG1-C\'s slots apart', () => {
     const bg1 = join(j.dir, 'bg1-custody-a'), bg1c = join(j.dir, 'bg1-custody-c');
     expect(mint(bg1, j, ['--fake', '--start', '3', '--count', '1']).code).toBe(0);
     refusal(mint(bg1, j, ['--fake', '--bg1c', '--count', '1']), 'this --out holds bg1-003, which is not one of BG1-C\'s slots (31 to 96)');
+    mkdirSync(join(bg1c, 'render'), { recursive: true });
+    for (const slot of range(31, 35)) writeFileSync(join(bg1c, 'render', `${id(slot)}.validation.json`), JSON.stringify({ world: id(slot), status: 'pass' }));
     expect(mint(bg1c, j, ['--fake', '--bg1c', '--start', '40', '--count', '1']).code).toBe(0);
     refusal(mint(bg1c, j, ['--fake', '--count', '1']), 'this --out holds bg1-040, which is not one of BG1\'s slots (1 to 30)');
     mkdirSync(join(bg1c, 'render'), { recursive: true });
@@ -109,9 +111,11 @@ describe('BG1-C\'s mint stops', () => {
     expect(later.out).toBe('bg1-mint summary=paused reason=yield_gate mode=fake written=0 skipped=0 dropped=0 last_slot=39 early_drops=2 drops=2\n');
 
     const past = join(j.dir, 'bg1-custody-p');
+    mkdirSync(join(past, 'render'), { recursive: true });
+    for (const slot of range(31, 35)) writeFileSync(join(past, 'render', `${id(slot)}.validation.json`), JSON.stringify({ world: id(slot), status: 'pass' }));
     const two = mint(past, j, ['--fake', '--bg1c', '--start', '36', '--count', '3', '--fake-break', '36:1:4,37:1:4']);
     expect(two.code).toBe(0);
-    expect(two.out).toContain('bg1-mint summary=mint mode=fake slots=3 written=1 skipped=0 dropped=2 dropped_earlier=0 kept=1\n');
+    expect(two.out).toContain('bg1-mint summary=mint mode=fake slots=3 written=1 skipped=0 dropped=2 dropped_earlier=0 kept=6\n');
   }, 240_000);
 
   // Value: protects=a third dropped world anywhere in BG1-C's slots pauses the mint, across invocations on one --out; fails_when=the mint goes on past a third drop, or a resumed run renders past it; why_new=BG1-C preregistration harness item 1 (stop on a third dropped world); seam=mint.sh --bg1c --fake-break; no_claim=a paid render
@@ -184,7 +188,7 @@ describe('BG1-C\'s mint stops', () => {
     for (const slot of range(31, 69)) writeFileSync(join(out, 'render', `${id(slot)}.validation.json`), JSON.stringify({ world: id(slot), status: 'pass' }));
     const stop = mint(out, j, ['--fake', '--bg1c', '--start', '70']);
     expect(stop.code).toBe(0);
-    expect(stop.out).toMatch(/^bg1-render slot=70 world=bg1-070 status=written /);
+    expect(stop.out).toMatch(/^bg1-supply slots=31-35 gemini_requests=0 kept=5 per_kept_world=0\.0 limit=504 status=pass\nbg1-render slot=70 world=bg1-070 status=written /);
     expect(stop.out).toContain('bg1-mint summary=kept mode=fake kept=40 written=1 skipped=0 dropped=0 dropped_earlier=0 last_slot=70\n');
     expect(stop.out).not.toContain('slot=71');
     expect(existsSync(join(out, 'set', 'worlds', 'bg1-071'))).toBe(false);

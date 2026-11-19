@@ -117,8 +117,8 @@ describe('mint.sh --bg1c keeps minting until 40 worlds pass validation', () => {
 });
 
 describe('supply.ts: Gemini requests per kept world over slots 31 to 35 (R111)', () => {
-  // Value: protects=mint.sh itself stops BG1-C's mint for GBEV-3 once slots 31 to 35 used more than 504 Gemini requests per kept world, before slot 36 spends; fails_when=mint.sh never runs supply.ts, runs it before slot 35 resolves, or renders slot 36 after it fails; why_new=the Opus reader's note 2 on the BG1-C harness commits after 9d4cf3b85 (the header said supply.ts checks slots 31 to 35, but nothing ran it); seam=mint.sh --bg1c --fake over synthetic Gemini request logs for slots 31 to 35; no_claim=the real mint's request counts
-  test('mint.sh runs the supply check once slot 35 resolves: over the limit pauses before slot 36, and at the limit the mint goes on', () => {
+  // Value: protects=mint.sh itself stops BG1-C's mint for GBEV-3 once slots 31 to 35 used more than 504 Gemini requests per kept world, before slot 36 spends, on every run that would render past 35 (a resume from --start 36 included) until GBEV-3's approval is recorded; fails_when=mint.sh never runs supply.ts, renders slot 36 after it fails or before it ran, lets --start 36 skip it, takes an approval while the check passes, or takes a second approval; why_new=the Opus readers' notes on the BG1-C harness commits after 9d4cf3b85 (the header said supply.ts checks slots 31 to 35, but nothing ran it; then a resume past 35 skipped the check); seam=mint.sh --bg1c --fake over synthetic Gemini request logs for slots 31 to 35, and --supply-ack; no_claim=the real mint's request counts
+  test('mint.sh runs the supply check once slot 35 resolves and before any run past 35: over the limit pauses until GBEV-3\'s approval is recorded', () => {
     const j = inputs('supply-stop');
     const logs = (out: string, perSlot: number) => {
       mkdirSync(join(out, 'proxy', 'requests'), { recursive: true });
@@ -131,13 +131,41 @@ describe('supply.ts: Gemini requests per kept world over slots 31 to 35 (R111)',
     expect(paused.out).toContain('bg1-supply slots=31-35 gemini_requests=2525 kept=5 per_kept_world=505.0 limit=504 status=fail\n');
     expect(paused.out).toContain('bg1-mint summary=paused reason=supply mode=fake written=5 skipped=0 dropped=0 dropped_earlier=0 last_slot=35\n');
     expect(paused.out).not.toContain('slot=36');
+    const resumed = mint(over, j, ['--fake', '--bg1c', '--start', '36', '--count', '1']);
+    expect([resumed.code, resumed.out]).toEqual([3, 'bg1-supply slots=31-35 gemini_requests=2525 kept=5 per_kept_world=505.0 limit=504 status=fail\nbg1-mint summary=paused reason=supply mode=fake written=0 skipped=0 dropped=0 dropped_earlier=0 last_slot=35\n']);
     expect(existsSync(join(over, 'set', 'worlds', 'bg1-036'))).toBe(false);
+    refusal(mint(over, j, ['--fake', '--bg1c', '--start', '36', '--count', '1', '--supply-ack', 'a-0123']), "--supply-ack takes GBEV-3's approval id");
+    const acked = mint(over, j, ['--fake', '--bg1c', '--start', '36', '--count', '1', '--supply-ack', 'a-0123456789ab']);
+    expect(acked.code).toBe(0);
+    expect(acked.out).toContain('bg1-mint supply_ack=a-0123456789ab\n');
+    expect(acked.out).toContain('bg1-mint supply=acked ack=a-0123456789ab\n');
+    expect(existsSync(join(over, 'set', 'worlds', 'bg1-036', 'world.json'))).toBe(true);
+    expect(readFileSync(join(over, 'render', 'supply-acks.jsonl'), 'utf8').trim().split('\n').map(l => (JSON.parse(l) as { ack: string }).ack)).toEqual(['a-0123456789ab']);
+    const again = mint(over, j, ['--fake', '--bg1c', '--count', '7']);
+    expect([again.code, again.out.includes('bg1-mint supply=acked ack=a-0123456789ab\n'), existsSync(join(over, 'set', 'worlds', 'bg1-037', 'world.json'))]).toEqual([0, true, true]);
+    refusal(mint(over, j, ['--fake', '--bg1c', '--start', '38', '--count', '1', '--supply-ack', 'a-ba9876543210']), 'already acknowledged by a-0123456789ab');
+
     const at = join(j.dir, 'bg1-custody-a');
     logs(at, 504);
     const on = mint(at, j, ['--fake', '--bg1c', '--count', '6']);
     expect(on.code).toBe(0);
     expect(on.out).toContain('bg1-supply slots=31-35 gemini_requests=2520 kept=5 per_kept_world=504.0 limit=504 status=pass\n');
     expect(existsSync(join(at, 'set', 'worlds', 'bg1-036', 'world.json'))).toBe(true);
+    refusal(mint(at, j, ['--fake', '--bg1c', '--start', '37', '--count', '1', '--supply-ack', 'a-0123456789ac']), 'the supply check passes on this --out, so --supply-ack has nothing to acknowledge');
+
+    refusal(mint(join(j.dir, 'bg1-custody-n'), j, ['--fake', '--bg1c', '--start', '36', '--count', '1']), 'slots 31 to 35 are not all resolved');
+    refusal(run('bash', [MINT, '--out', join(j.dir, 'bg1-custody-b'), '--seed-file', j.seed, '--phrasing', j.phrasing, '--fake', '--count', '1', '--supply-ack', 'a-0123456789ab']), "--supply-ack acknowledges BG1-C's supply check, so it needs --bg1c");
+
+    const late = join(j.dir, 'bg1-custody-d');
+    for (const slot of range(31, 34)) record(late, slot, 'pass');
+    dropped(late, 35);
+    logs(late, 505);
+    const d = mint(late, j, ['--fake', '--bg1c', '--start', '35', '--count', '2']);
+    expect(d.code).toBe(3);
+    expect(d.out).toContain('bg1-mint slot=35 world=bg1-035 status=dropped_earlier\n');
+    expect(d.out).toContain('bg1-supply slots=31-35 gemini_requests=2525 kept=4 per_kept_world=631.3 limit=504 status=fail\n');
+    expect(d.out).toContain('bg1-mint summary=paused reason=supply mode=fake written=0 skipped=0 dropped=0 dropped_earlier=1 last_slot=35\n');
+    expect(existsSync(join(late, 'set', 'worlds', 'bg1-036'))).toBe(false);
   }, 240_000);
 
   const lines = (n: number, refused = 0) => [...Array(n - refused).fill({ provider: 'gemini', refused: false, status: 200 }), ...Array(refused).fill({ provider: 'gemini', refused: true, status: 429 })].map(l => JSON.stringify(l)).join('\n') + '\n';
