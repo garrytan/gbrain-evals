@@ -121,9 +121,11 @@ async function query(body: { brain_id: string; question: string; params?: Record
   const latency_ms = Math.round(performance.now() - t0);
   const model_calls: Record<string, number> = {};
   let failed_model_calls = 0;
+  let reranked: string | null = null;
   for (const m of tracker.snapshot().models) {
     model_calls[m.touchpoint] = (model_calls[m.touchpoint] ?? 0) + m.calls;
     failed_model_calls += m.failed_calls;
+    if (m.touchpoint === 'rerank' && m.calls > m.failed_calls) reranked = m.model;
   }
   const results = (Array.isArray(rows) ? rows : []).map((r: any) => {
     const idx = b.idxBySlug.get(r.slug);
@@ -136,7 +138,7 @@ async function query(body: { brain_id: string; question: string; params?: Record
     meta: kept,
     op: {
       params, latency_ms, model_calls, failed_model_calls,
-      reranker: meta.rerank?.model_resolved ?? null,
+      reranker: meta.crag?.top_rerank_score === undefined ? null : reranked,
       degraded: Array.isArray(meta.degraded) ? meta.degraded : [],
     },
   };

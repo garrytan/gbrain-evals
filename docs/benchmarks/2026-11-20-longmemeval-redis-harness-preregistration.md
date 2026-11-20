@@ -441,6 +441,11 @@ plan and decision, not part of this one.
   A particle-1 request is resent only after a failure proven to happen before sending.
 - **Labels per judge.** gemini-4-argon labels 48 answers per cross-family judge, so that at least 40 still parse.
 - **`FRONTIER_READERS` stays unchanged.** This run's driver names its readers itself and doesn't read that list.
+- **How the adapter knows the reranker ran.** gbrain v0.60.748.0's retrieval metadata has no field naming the reranker.
+  It sets `crag.top_rerank_score` whenever the reranker ran. So a query counts as reranked only when that field is set
+  and gbrain's own call accounting shows a rerank call that succeeded; the adapter records the model that call served.
+  A keyless run through the metering proxy, against a fake Voyage, found this before any paid call: the old field read
+  came back empty on every query, so every question would have been marked degraded.
 
 ## Disclosures
 

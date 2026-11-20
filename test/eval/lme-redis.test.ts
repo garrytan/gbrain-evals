@@ -79,3 +79,53 @@ describe('LongMemEval on Redis harness: gbrain adapter server, keyless', () => {
     expect((await post('/query', { brain_id: 'q1', question: 'x' })).status).toBe(500);
   }, 120_000);
 });
+
+describe('LongMemEval on Redis harness: the adapter records the reranker that answered', () => {
+  const home = mkdtempSync(join(tmpdir(), 'lme-redis-rerank-'));
+  const rerankBodies: any[] = [];
+  const fake = Bun.serve({
+    port: 0, hostname: '127.0.0.1',
+    async fetch(req) {
+      const b = await req.json() as any;
+      if (!new URL(req.url).pathname.endsWith('/rerank')) return new Response('no', { status: 404 });
+      rerankBodies.push(b);
+      return Response.json({ object: 'list', model: b.model, usage: { total_tokens: 10 }, data: (b.documents as string[]).map((_, i) => ({ index: i, relevance_score: 1 / (i + 1) })) });
+    },
+  });
+  let server: ReturnType<typeof Bun.spawn> | undefined;
+  let url = '';
+
+  beforeAll(async () => {
+    mkdirSync(join(home, '.gbrain'));
+    writeFileSync(join(home, '.gbrain/config.json'), JSON.stringify({ embedding_model: 'voyage:voyage-4', embedding_dimensions: 1024, provider_base_urls: { voyage: `http://127.0.0.1:${fake.port}/v1` } }));
+    server = Bun.spawn(['bun', join(DIR, 'gbrain-server.ts')], {
+      env: { PATH: process.env.PATH ?? '', HOME: home, GBRAIN_HOME: home, GBRAIN_SRC: join(ROOT, 'node_modules/gbrain/src'), VOYAGE_API_KEY: 'fake-upstream-test', LME_REDIS_STUB_EMBED: '1', LME_REDIS_PORT: '0' },
+      stdout: 'ignore', stderr: 'pipe',
+    });
+    const reader = (server.stderr as ReadableStream<Uint8Array>).getReader();
+    let seen = '';
+    while (!/up on (\d+)/.test(seen)) {
+      const { value, done } = await reader.read();
+      if (done) throw new Error('adapter server exited: ' + seen);
+      seen += new TextDecoder().decode(value);
+    }
+    url = 'http://127.0.0.1:' + /up on (\d+)/.exec(seen)![1];
+    reader.releaseLock();
+  }, 120_000);
+
+  afterAll(() => { server?.kill(); fake.stop(true); rmSync(home, { recursive: true, force: true }); });
+
+  test('a query the reranker answered names the served reranker', async () => {
+    const sessions = [
+      { date: '2023/05/20 (Sat) 02:21', turns: [{ role: 'user', content: 'I adopted a beagle named Biscuit last week.' }, { role: 'assistant', content: 'Congrats on Biscuit!' }] },
+      { date: '2023/05/21 (Sun) 10:00', turns: [{ role: 'user', content: 'My favourite pasta is carbonara.' }, { role: 'assistant', content: 'Nice.' }] },
+    ];
+    const ingest = await fetch(url + '/ingest', { method: 'POST', body: JSON.stringify({ brain_id: 'r1', sessions }) });
+    expect(ingest.status).toBe(200);
+    const q = await (await fetch(url + '/query', { method: 'POST', body: JSON.stringify({ brain_id: 'r1', question: 'What is the name of the beagle I adopted?', params: { limit: 10, autocut: false } }) })).json() as any;
+    expect(rerankBodies.length).toBeGreaterThan(0);
+    expect(rerankBodies[0].model).toBe('rerank-3-lite');
+    expect(q.op.reranker).toContain('rerank-3-lite');
+    expect(q.op.failed_model_calls).toBe(0);
+  }, 120_000);
+});
