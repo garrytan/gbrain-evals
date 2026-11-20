@@ -47,7 +47,7 @@ export function pairedBounds(n: number, left: number, right: number) {
     return (inside + outside) / 2;
   };
   const ci95: Bounds = [bound(-1, 1.959963984540054), bound(1, 1.959963984540054)];
-  return { difference: diff, ci95, upper95: bound(1, 1.6448536269514722) };
+  return { difference: diff, ci95, lower95: bound(-1, 1.6448536269514722), upper95: bound(1, 1.6448536269514722) };
 }
 
 function quantile(sorted: Float64Array, p: number) {
@@ -58,6 +58,7 @@ function intervals(rep: Float64Array) {
   const sorted = rep.filter(Number.isFinite).sort();
   return sorted.length ? {
     ci95: [quantile(sorted, .025), quantile(sorted, .975)] as Bounds,
+    lower95: quantile(sorted, .05),
     upper95: quantile(sorted, .95),
     used: sorted.length,
   } : null;
@@ -179,7 +180,7 @@ function analyze(worldDir: string, counted: string) {
     return { k, n, replicated: ratio(res) };
   };
   const correct = (a: string, b: string) => w.gold.get(a) === w.gold.get(b);
-  const goldPairs = groupPairs(Object.values(Object.groupBy([...known], k => w.gold.get(k)!)).filter(g => g.length > 1));
+  const goldPairs = groupPairs(Object.values(Object.groupBy([...known], k => w.gold.get(k)!)).filter((g): g is string[] => !!g && g.length > 1));
   const finder = read<{ groups: Array<{ evidence: Array<{ rule: string; veto?: boolean }> }> }>(join(counted, 'gbrain', 'finder.json'));
   const parsed = parseFinderOutput(finder, known);
   const finderPairs = groupPairs(parsed.map(g => g.members));
@@ -224,14 +225,14 @@ function analyze(worldDir: string, counted: string) {
         return [scope, { false_merge: summary(relevant, 'different'), designed_recall: summary(relevant, 'same'),
           pairwise_precision: intervals(p.replicated)?.ci95 ?? null, pairwise_recall: intervals(r.replicated)?.ci95 ?? null,
           by_family: Object.fromEntries(Object.entries(Object.groupBy(relevant, p => p.family)).map(([f, ps]) => [f, {
-            false_merge: summary(ps, 'different'), designed_recall: summary(ps, 'same'),
+            false_merge: summary(ps!, 'different'), designed_recall: summary(ps!, 'same'),
           }])) }];
       }));
       const falseMergeComponents = closed.bins.flatMap(members => {
         if (members.length < 2) return [];
         const sizes = Object.values(Object.groupBy(members, key => w.gold.get(key)!));
         const choose2 = (n: number) => n * (n - 1) / 2;
-        const count = choose2(members.length) - sizes.reduce((sum, x) => sum + choose2(x.length), 0);
+        const count = choose2(members.length) - sizes.reduce((sum, x) => sum + choose2(x!.length), 0);
         return count ? [{ first_page: members[0], pages: members.length, count }] : [];
       });
       if (falseMergeComponents.reduce((sum, g) => sum + g.count, 0) !== scores.points[tier].all.false_merges_anywhere) throw new Error(`${id}/${tier}: false-merge attribution disagrees with scorer`);
