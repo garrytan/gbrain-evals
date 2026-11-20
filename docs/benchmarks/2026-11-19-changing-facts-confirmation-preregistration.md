@@ -589,7 +589,8 @@ line.
   the newest release tag on gbrain's master as this is written. The build freezes once counted gbrain cells start.
 - **What changed since v0.60.745.0 that could move BG1-C's gbrain row.** Read from the release notes of v0.60.746.0,
   v0.60.747.0, v0.60.748.0 and v0.60.750.0 (there is no v0.60.749.0). BG1-C's gbrain cell writes each session with
-  `put_page` and reads with `query` and `recall` over MCP stdio, with Voyage, OpenAI and Anthropic keys only.
+  `put_page` over MCP stdio, runs gbrain's conversation fact extraction (`extract-conversation-facts`) over the saved
+  pages, and reads with `query` and `recall`, with Voyage, OpenAI and Anthropic keys only.
   - #9849: recall, the entity card, hot memory, an entity's saved facts and search's saved-fact matches now end a slot
     value (employer, city, role) once a later value for the same slot is saved, as the query facts block already did.
     This bears directly on the changing-facts classes. It should help, or leave unchanged, the questions about current
@@ -604,11 +605,12 @@ line.
     have kept session s123.
   - Nothing else in the four releases names fact extraction, name tags, slot history, or `put_page`, `query` or
     `recall` on a local brain. v0.60.748.0's move of the `gemini` alias and the Google provider's default models to
-    gemini-3.5-flash-lite doesn't reach this cell, which has no Google key. #9848's private history in `known_as_of`
-    and v0.60.747.0's private fact rows on `put_page` (#9760, #9733) apply to remote MCP callers only. The rest change
-    the Mac helper and iMessage pages, dedupe and company linking, purges, sharing and access, a `remember` parameter
-    the shim doesn't send (#9802), dream synthesis, which the shim never starts (#9840), `check-resolvable`, OpenClaw's
-    skill resolver, cost estimates, and test and CI tooling.
+    gemini-3.5-flash-lite doesn't reach this cell, which has no Google key. #9848's private history in `known_as_of`,
+    and v0.60.747.0's private fact rows on remote `put_page` (#9760) and in get_page `as_of` reads (#9733), apply to
+    remote MCP callers only. The rest change the Mac helper and iMessage pages, dedupe and company linking, purges, the
+    secret store's restore (#9806), sharing and access, a `remember` parameter the shim doesn't send (#9802), dream
+    synthesis, which the shim never starts (#9840), refresh's link-backlog lock, `check-resolvable`, OpenClaw's skill
+    resolver, the Rust engine, cost estimates, and test and CI tooling.
 - **What this build is expected to score.** Amendment 4 carried the v0.60.741.0 development result forward as
   v0.60.745.0's expectation, because nothing between them touched facts. That no longer holds: #9849, #9833 and #9853
   could move the changing-facts classes. A development run on the 20 public dev worlds at v0.60.750.0, from the same
@@ -630,8 +632,11 @@ line.
   visible change. The gaps to the other servers barely moved: on current values +2.8 (+1.1 to +4.5) over memory-bank
   and +1.3 (-0.4 to +2.9) over extract-first, against +2.6 and +1.1 at v0.60.741.0; on questions about the past +0.6
   (-1.3 to +2.7) and +0.6 (-1.3 to +2.5), against +1.5 and +1.5. bg1-dev-20's three questions on session s123 are now
-  answered right. Five worlds were rerun after their first runs stopped early, so every question is graded once. This
-  build's expectation is therefore the v0.60.741.0 result above, within these intervals.
+  answered right, because v0.60.750.0 saves the page that holds U+0000. BG1-C's worlds lose those characters before any
+  server sees them, so that gain can't repeat there. Without those three questions the paired differences are -0.5
+  overall, -1.0 on questions about the past and -2.5 on S8. Five worlds were rerun whole after their first runs stopped
+  on their per-world spend lease, so every question is graded once. This build's expectation is therefore the
+  v0.60.741.0 result above, within these intervals.
 
 ## Disclosures
 
