@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { exactMcNemar, pairedBounds } from './analyze.ts';
+import { exactMcNemar, pairedBounds } from '../../docs/benchmarks/2026-11-18-entity-dedupe-h2h/analysis/analyze.ts';
 
 test('exact McNemar uses discordant pairs only and doubles the smaller binomial tail', () => {
   expect(exactMcNemar(0, 0)).toBe(1);
