@@ -229,7 +229,7 @@ behaviour, such as `forget` leaving nothing behind or a sync catching up, where 
    paired by task, so those comparisons are unpaired. An old-build control on the new worlds will say whether the build or the worlds moved
    the number.
 4. gbrain trailed by a similar amount on world M in October (-15.0 at `3e4ff61ce`). Most of the gap is in questions
-   whose history is also long (-18.18 points, 54 against 66 of 66 cells).
+   whose deciding document is long (-18.18 points, 54 against 66 of 66 cells).
 5. The gap sits in questions that need several conversations, and LongMemEval-S was used to tune gbrain. The whole
    history averaged 171,596 tokens as Sonnet 5.5 counts them and 106,683 as GPT-6.1 Sol does; it used no gbrain
    retrieval, though gbrain's page renderer formatted it. gbrain also pays a one-time cost to index each history.
