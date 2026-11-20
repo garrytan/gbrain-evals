@@ -1272,6 +1272,34 @@ in this switch: `definitions.ts` and `rs1-cells.json`, `cell.ts` (the ingest rec
 identity fixture records the gbrain rerun's identity beside the one it replaces. The keyless F6 Docker smoke at `82fdd000`, run from `0eb85687` with `GBRAIN_IDLE_UPKEEP=off` and `GBRAIN_F6_BUILD_PROBLEMS=record`, passed all 4 tests (33 checks), and its `/capabilities` record the switch. In a second run, the fake upstream answered one session's extraction request with Anthropic's refusal stop. gbrain reported that page failed with reason `content_filter`, as in wave A; the build recorded it (refused on both passes, status `failed` on the retry); and `/finish` went on to pass the barrier, build the fact index and serve the retrieval tests. All 4 tests passed (35 checks). The gbrain row of the
 systems table above now names the switch.
 
+### 2026-11-20: N_final is 20, so wave B is empty and the verdict reads wave A's 20 conversations
+
+The 2026-11-19 amendment set aside wave A's four gbrain units, ran them again under `GBRAIN_F6_BUILD_PROBLEMS=record`, and
+said the internal pilot would be computed again from the new gbrain rows and wave A's server and floor rows, with
+N_final following from it under the rules above. That amendment was committed before the rerun launched. The rerun's 20
+realizations all passed the quiesce barrier, none degraded, and the pilot was computed again.
+
+- **N_final.** verdict.ts in pilot mode gives N_required 19, so N_final = min(33, max(20, 19)) = 20. Wave A's first
+  pilot, which read the set-aside gbrain rows, had given 22. That figure was never written to the filled manifest,
+  whose `n_final` was still unset, and the 2026-11-19 amendment had already named the new pilot as its replacement.
+- **Not a stop on seen results.** The pilot reads the per-conversation differences only to emit their SDs and
+  correlations. It emits no means, and a test checks that its output has no mean keys. No mean, answer or score has left
+  custody. The rerun was decided on the gbrain builds' failures, before either pilot's means could be known, and the
+  sizing rule is the one frozen above. The Wittes and Brittain note above applies unchanged.
+- **Wave B is empty.** Wave B is the next N_final - 20 conversations, which is none. No cells are regenerated,
+  `rs1-cells.json` is unchanged, and no wave B unit or re-read runs.
+- **Slots minted toward the earlier 22.** Before the new pilot landed, the custodian had started minting rs1-027 and
+  rs1-028 toward wave A's first N_final, as the minting rules allowed. Minting was stopped when the new pilot gave 20.
+  Both slots lie past N_final, so under the kept-set rule they are not in RS1: they are not validated for it, never
+  enter the filled manifest's kept list, and no system sees them. The runner also refuses a kept list longer than
+  `n_final`.
+- **The fill and the verdict.** The custodian fills the manifest again with the same 20 kept conversations and
+  `n_final` 20, and wave A's fill becomes an earlier fill. `verdict.ts aggregates` then reads 16 launch units and their
+  16 particle-1 re-reads: wave A's 12 server and floor units, from `e65bf230`, and the rerun's four gbrain units, from
+  `0eb85687`. It runs from this commit, where `verdict.ts` and `iut.ts` are unchanged since `d927c88f`.
+- **A correction.** The 2026-11-19 amendment's mentions of wave B's gbrain unit no longer apply, because no wave B unit runs.
+- **Unchanged.** No bar, margin, reader, judge, missing-data rule, gate or verdict rule changes.
+
 ## Disclosures
 
 - gbrain is Garry Tan's own project.

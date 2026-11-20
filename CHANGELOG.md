@@ -68,6 +68,9 @@ This records what each gbrain-evals release changed and what its measurements me
   index. RS1's gbrain cells now set `GBRAIN_F6_BUILD_PROBLEMS=record`: the build records those two outcomes and carries
   on, every other problem still fails the realization, and each realization's ingest record carries its refused and
   unparsed pages. Wave A's four gbrain units run again under it, and the servers' and the floor's stand.
+- **N_final is 20.** With wave A's gbrain units run again, the internal pilot gives N_final 20 under the preregistered
+  sizing rule, so wave B is empty and the verdict reads wave A's 20 conversations. Minting toward the first pilot's
+  figure stopped, and the two slots it had started stay outside RS1.
 - **A fallback validator for Haiku's refusals.** claude-haiku-5-5 refused some validator prompts in the third mint, and a
   refusal doesn't change on a rerun, so five of the nine new chats could never finish validation. validate.ts and
   validate-candidates.ts now send a prompt Haiku refuses to claude-sonnet-5-5, whose reply counts in Haiku's place, and
