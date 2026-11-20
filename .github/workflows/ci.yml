@@ -30,7 +30,8 @@ jobs:
   # actions/checkout. This job keeps the whole .git (every branch, full history)
   # in the Actions cache: a push to main refreshes it for the new commit, and a
   # pull request builds one only when neither the PR nor main has one yet. Every
-  # other job restores it before actions/checkout, which then fetches only what
+  # other job but tested-tree, which reads only scripts/ and the tracked file
+  # list, restores it before actions/checkout, which then fetches only what
   # is new and checks out the same commit at the same depth as before. A depth-1
   # job's .git now also holds older commits' objects, so tests that look for a
   # pinned commit (five cases in test/eval/q1-reuse-check.test.ts) run instead of
@@ -256,13 +257,10 @@ jobs:
     runs-on: ubicloud-standard-2-ubuntu-2604
     timeout-minutes: 5
     steps:
-      - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-        with:
-          path: .git
-          key: ${{ format('git-objects-v1-{0}', github.sha) }}
-          restore-keys: git-objects-v1-
-
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          filter: blob:none
+          sparse-checkout: scripts
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
