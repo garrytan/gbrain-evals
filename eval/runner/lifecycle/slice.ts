@@ -29,9 +29,28 @@ import { execFileSync } from 'node:child_process';
 import { appendFileSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { SQL } from 'bun';
-import { cliEngineConfig } from '../eval-engine.ts';
+import { cliEngineConfig, rustAddonEnv } from '../eval-engine.ts';
 import { redactUrlPasswords, strippedKeysIn } from '../hermetic-env.ts';
 import { CliDriver, McpHttpClient, McpHttpDriver, McpStdioDriver, runCli, type CallResult, type Driver, type RunEnv } from './drivers.ts';
+
+/** gbrain's typed refusal of a remote caller on an engine that does not enforce the brain's access rules itself. */
+export function isAccessControlRefusal(text: string): boolean {
+  return text.includes('engine_capability_missing') && text.includes('access_control');
+}
+
+/**
+ * Why a cell is not_applicable: a Rust cell on a remote interface (stdio or HTTP MCP) that did not finish because the
+ * build refuses remote callers with engine_capability_missing, reason access_control. That is a named gap (the build
+ * does not serve remote callers yet), never a pass or a fail, so the cell leaves the gate and the receipt lists it.
+ * It counts only when every remote call the cell made was refused that way (remote_access_refused), or when the cell
+ * made no remote call and its fatal is that refusal (the HTTP cell's client registration). Null for every other cell,
+ * including a Rust cell that finished, or failed after any remote call that was not refused that way.
+ */
+export function remoteAccessGap(c: { engine: Engine; interface: Iface; fatal?: string; void_reason?: string; remote_access_refused?: string | null; remote_calls?: number }): string | null {
+  if (c.engine !== 'rust' || c.interface === 'cli' || !(c.fatal || c.void_reason)) return null;
+  const evidence = c.remote_access_refused ?? (c.remote_calls === 0 && isAccessControlRefusal(c.fatal ?? '') ? (c.fatal ?? '').split('\n')[0]!.slice(0, 200) : null);
+  return evidence ? `The Rust build refuses remote callers (engine_capability_missing, reason access_control), so the ${c.interface} cell cannot run: ${evidence}` : null;
+}
 
 /** `rust` is selected only through GBRAIN_EVAL_ENGINE (eval/runner/eval-engine.ts); ENGINES stays the default matrix. */
 export type Engine = 'pglite' | 'postgres' | 'rust';
@@ -102,7 +121,7 @@ export class SliceCell {
     this.home = join(this.dir, 'gbrain-home');
     const env: NodeJS.ProcessEnv = {
       PATH: process.env.PATH, HOME: join(this.dir, 'user-home'), GBRAIN_HOME: this.home,
-      GBRAIN_SKIP_STARTUP_HOOKS: '1', TZ: 'UTC', LANG: 'C.UTF-8', NO_COLOR: '1',
+      GBRAIN_SKIP_STARTUP_HOOKS: '1', TZ: 'UTC', LANG: 'C.UTF-8', NO_COLOR: '1', ...rustAddonEnv(),
     };
     this.childKeys = strippedKeysIn(env);
     this.run = { buildDir: opts.buildDir, env };
@@ -126,6 +145,23 @@ export class SliceCell {
     if (!this.mustPause) return fn();
     await this.primary.close();
     try { return await fn(); } finally { await this.primary.start(); }
+  }
+
+  /**
+   * The first remote call, when this remote cell made at least one and the engine refused every one of them with
+   * engine_capability_missing, reason access_control. Null when any remote call succeeded or failed another way.
+   */
+  firstAccessRefusal(): string | null {
+    if (!this.remote) return null;
+    const remote = this.calls.filter(x => x.caller !== 'trusted');
+    if (!remote.length || !remote.every(x => !x.ok && isAccessControlRefusal(`${x.error ?? ''} ${x.raw}`))) return null;
+    const c = remote[0]!;
+    return `${c.op}: ${(c.error ?? c.raw).slice(0, 200)}`;
+  }
+
+  /** How many calls this cell made as a remote (non-trusted) caller. */
+  remoteCalls(): number {
+    return this.calls.filter(x => x.caller !== 'trusted').length;
   }
 
   /** Run reads as the trusted local CLI caller. On the CLI cell this is the primary itself. */
