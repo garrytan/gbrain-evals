@@ -12,7 +12,7 @@ These are **stress rates on invented hard cases, not field rates**. The study ra
 | [`particle-1`](2026-11-18-entity-dedupe-h2h/counted/particle/matcher-summary.json) | 684 of 1,059 | $0.00685 | 232/488 (47.54%; 43.15% to 51.97%) | 0/188 (0%; 0% to 2.00%) |
 | [`gpt-6.2-sol`](2026-11-18-entity-dedupe-h2h/counted/gpt/matcher-summary.json) | 656 of 1,059 | $0.02249 | 238/488 (48.77%; 44.36% to 53.20%) | 0/188 (0%; 0% to 2.00%) |
 
-A **correct direct decision** is a “yes” on a planted same-entity pair or a “no” on a planted different-entity pair, before following any chains. “Unsure” isn't correct, and we don't grade pairs without a planted label for this measure. The numerator of the price ratio covers **all** matcher calls with provider-reported usage, including calls on pairs without a planted label. We priced the normalized input, cache read, cache write and output token counts from those calls at the [bench's list rates](../../eval/runner/budget-ledger.ts), using peak list rates for particle-1. That lower price came with **16.80 percentage points more** automatic people false merges than Opus (paired 95% interval 13.68 to 20.42 points; family-instance interval 14.11 to 19.51). This score uses the fixed answer key, not a model judge.
+A **correct direct decision** is a “yes” on a planted same-entity pair or a “no” on a planted different-entity pair, before following any chains. “Unsure” isn't correct, and we don't grade pairs without a planted label for this measure. The numerator of the price ratio covers **all** matcher calls with provider-reported usage, including calls on pairs without a planted label. We priced the normalized input, cache read, cache write and output token counts from those calls at the [bench's list rates](../../eval/runner/budget-ledger.ts), using peak list rates for particle-1. Requests that failed with a server error or timed out returned no usage and were asked again (71 for `gpt-6.2-sol`, 1 for particle-1, none for Opus); they aren't in the numerator, so if the provider billed any of them the true cost is a little higher. That lower price came with **16.80 percentage points more** automatic people false merges than Opus (paired 95% interval 13.68 to 20.42 points; family-instance interval 14.11 to 19.51). This score uses the fixed answer key, not a model judge.
 
 ## The concrete case
 
@@ -49,6 +49,8 @@ Every row below is the spread across **all five** dedupe seeds, not a seed we pi
 | Default, full labels | 0–40/488; 95–200/312 | 0–23/188; 103–105/124 | 0–63/676; 198–305/436 |
 | Tuned, 100 labels | 26–52/488; 43–263/312 | 0/188; 107–108/124 | 26–52/676; 150–371/436 |
 | Tuned, full labels | 27–123/488; 247–306/312 | 0–1/188; 108–110/124 | 27–124/676; 355–414/436 |
+
+The default dedupe setting keeps the library's own labelling rule, which stops after 10 matching and 10 non-matching answers. Here that took 21 to 31 labels per record type, so the 100-label limit never came into play: the 100-label and full-label default runs asked the same questions and scored the same, seed for seed. The tuned setting keeps asking until it reaches its limit (100 labels, or 200 for the full-label runs), so its two rows differ.
 
 ## Memory systems
 
