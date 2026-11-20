@@ -1,4 +1,4 @@
-# Vendored from redis/agent-memory-server@843d2078830f7297882316efb1aae0fb7ae1481f, agent-memory-benchmark/pyproject.toml (Apache-2.0). Changes: removed the optional third-party provider extras (mem0, langmem, zep, graphiti, supermemory, google, aws, oracle, all-providers); everything else unchanged.
+# Vendored from redis/agent-memory-server@843d2078830f7297882316efb1aae0fb7ae1481f, agent-memory-benchmark/pyproject.toml (Apache-2.0). Changes: removed the optional third-party provider extras, all-providers included; everything else unchanged.
 [project]
 name = "agent-memory-benchmark"
 version = "0.1.0"

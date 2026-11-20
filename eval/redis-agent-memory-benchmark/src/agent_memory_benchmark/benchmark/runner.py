@@ -1,4 +1,4 @@
-# Vendored from redis/agent-memory-server@843d2078830f7297882316efb1aae0fb7ae1481f, agent-memory-benchmark/src/agent_memory_benchmark/benchmark/runner.py (Apache-2.0). Changes: none.
+# Vendored from redis/agent-memory-server@843d2078830f7297882316efb1aae0fb7ae1481f, agent-memory-benchmark/src/agent_memory_benchmark/benchmark/runner.py (Apache-2.0). Changes: renamed the local variable key to qid in process(), so the secret scanner stops reading it as a credential; behaviour unchanged.
 """Provider-neutral LongMemEval runners."""
 
 from __future__ import annotations
@@ -267,8 +267,8 @@ async def run_longmemeval_v1(
 
     async def process(index: int, example: Any) -> None:
         qa = example.qa_pairs[0]
-        key = qa.question_id or f"{index}:{qa.question}"
-        if key in completed:
+        qid = qa.question_id or f"{index}:{qa.question}"
+        if qid in completed:
             return
         async with semaphore:
             store_cls = STORES[provider]
@@ -284,7 +284,7 @@ async def run_longmemeval_v1(
                     await _retry(
                         ingest_clean,
                         attempts=retries,
-                        label=f"ingest {key}",
+                        label=f"ingest {qid}",
                     )
                     ingest_ms = round((time.perf_counter() - ingest_started) * 1000, 1)
                     memories = await _memories(store)
@@ -313,9 +313,9 @@ async def run_longmemeval_v1(
                             metadata.save(out_dir / "metadata.json")
                         append_jsonl(answers_path, record)
                         append_jsonl(hypotheses_path, hypothesis_record(record))
-                        completed.add(key)
+                        completed.add(qid)
             except Exception as exc:
-                logger.exception("Failed LongMemEval question %s", key)
+                logger.exception("Failed LongMemEval question %s", qid)
                 async with write_lock:
                     append_jsonl(
                         errors_path,

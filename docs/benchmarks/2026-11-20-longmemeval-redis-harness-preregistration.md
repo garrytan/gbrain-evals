@@ -55,7 +55,7 @@ takes, from [redis/agent-memory-server](https://github.com/redis/agent-memory-se
 | The LongMemEval loader for the cleaned dataset and its seed-42 question order | `datasets/longmemeval.py`, `benchmark/runner.py` | the question set and its order |
 | The memory-store contract and resumable runner | `memory/base.py`, `benchmark/runner.py` | the gbrain store, and the pilot's end-to-end parity run |
 
-Redis's published table (`reference/redis-results.json` in the same folder, MIT, from
+Redis's published table (`docs/comparison-systems/redis-longmemeval-results.json`, MIT, from
 [redis/redis-ai-research-public](https://github.com/redis/redis-ai-research-public) at `7dbb607e`) is the reference
 row: **86.14%** task-averaged for "Remis + Instruct" on all 500 Small questions, gpt-4o reader and judge. Redis
 publishes no per-question outputs, so no comparison with Redis can be paired.
@@ -132,7 +132,7 @@ arm, run for every reader.
 | Reader | Arms | Request |
 |---|---|---|
 | `gpt-4o-2024-08-06` | all five | OpenAI chat completions, temperature 0, 2,048 output tokens. The link to Redis's table, not a model under test. |
-| `claude-opus-5-5` | off, on, full, oracle | Anthropic messages, system prompt and question as the harness builds them, temperature 0, default effort, 8,192 output tokens |
+| `claude-opus-5-5` | off, on, full, oracle | Anthropic messages, system prompt and question as the harness builds them, no temperature (the model takes only its default and thinks adaptively, sharing the output limit), default effort, 8,192 output tokens |
 | `gpt-6.2-sol` | off, on, full, oracle | OpenAI chat completions, default reasoning effort, 16,000 output tokens, no temperature and no `n` (the model refuses both) |
 | `particle-1` | off, on, full, oracle | Particle chat completions (`https://api.particle.ai/v1`), `reasoning_effort: high`, 32,000 output tokens (its default cap) |
 
@@ -179,8 +179,9 @@ yes/no scorer.
   decision rests on the cross-family judges.
 - **Cross-family judges** follow R78: GPT-6 Astra for Claude rows and Claude Opus 5.5 for GPT rows; particle-1 rows go
   to Astra, and particle-1 never judges. gpt-6.2-astra runs at low reasoning effort with 2,000 output tokens;
-  claude-opus-5-5 at temperature 0 with 64 output tokens. If the API doesn't serve gpt-6.2-astra at the judge check,
-  `gpt-6-astra` replaces it by amendment before any counted unit.
+  claude-opus-5-5 at low effort (`output_config.effort`), no temperature (it takes only its default), 2,000 output
+  tokens, since its adaptive thinking shares the output limit. If the API doesn't serve gpt-6.2-astra at the judge
+  check, `gpt-6-astra` replaces it by amendment before any counted unit.
 - **Parsing.** Redis's scorer counts a reply as yes if "yes" appears anywhere in it, which is fine for 10-token replies
   but fragile for longer ones. Cross-family replies are parsed strictly: the first word of the reply, lowercased and
   stripped of punctuation, must be yes or no. Both parses are recorded, and the 1% unparsable gate below applies to the
@@ -221,10 +222,13 @@ yes/no scorer.
 - **Evidence delivered, at turn level** (GBRA-108's requirement after GBEV-112): for each answerable question and arm,
   whether every turn LongMemEval marks `has_answer` appears in the reader's prompt, and how many such turns appear. A
   turn's text is first normalised the way the loader does (supplementary-plane characters such as emoji removed), then
-  whitespace and case are normalised on both sides. A turn counts as delivered when its first 80 normalised characters
-  appear in one conversation or one passage of the prompt; for passages, a turn split across a passage boundary counts
-  as delivered when any 80-character window of it appears, and the results count how often that rule was needed. Reported for every arm, in the pilot and in the
-  results. For the arms that deliver whole conversations it equals conversation-level delivery unless a turn was lost,
+  whitespace and case are normalised on both sides. A turn counts as delivered only when its whole normalised text
+  appears in one conversation or one passage of the prompt; a turn split across passages counts as delivered when the
+  passages from its conversation together cover every character of it, and the results count how often that rule was
+  needed. A turn present only in part (its opening kept and its answer cut, for example) counts as not delivered, and
+  the results report partial turns separately. The results branch adds a keyless test in which a passage keeps a turn's
+  opening but drops its answer, and that turn must count as not delivered. Reported for every arm, in the pilot and in
+  the results. For the arms that deliver whole conversations it equals conversation-level delivery unless a turn was lost,
   and the results report both. For **agent-default**, which delivers passages, it is the one that counts. Autocut
   drops whole conversations, never parts of one, so for **off** against **on** the two levels agree; the results
   check that they do.

@@ -1,4 +1,4 @@
-# Vendored from redis/agent-memory-server@843d2078830f7297882316efb1aae0fb7ae1481f, agent-memory-benchmark/src/agent_memory_benchmark/cli.py (Apache-2.0). Changes: none.
+# Vendored from redis/agent-memory-server@843d2078830f7297882316efb1aae0fb7ae1481f, agent-memory-benchmark/src/agent_memory_benchmark/cli.py (Apache-2.0). Changes: run and judge refuse to start unless OPENAI_BASE_URL (and --base-url, if given) points at a loopback host, so they reach only the metering proxy or the keyless fake.
 """Command-line interface for the LongMemEval harness."""
 
 from __future__ import annotations
@@ -7,8 +7,10 @@ import argparse
 import asyncio
 import json
 import logging
+import os
 import sys
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from dotenv import load_dotenv
 
@@ -23,6 +25,7 @@ from agent_memory_benchmark.benchmark.runner import (
 from agent_memory_benchmark.memory import STORES
 
 DEFAULT_RESULTS_ROOT = Path("experiment_results")
+LOOPBACK_HOSTS = {"127.0.0.1", "::1", "localhost"}
 
 
 def _positive(value: str) -> int:
@@ -73,6 +76,22 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _refuse_unless_loopback(cli_base_url: str | None) -> None:
+    urls = [os.environ.get("OPENAI_BASE_URL", "")]
+    if cli_base_url is not None:
+        urls.append(cli_base_url)
+    for url in urls:
+        try:
+            host = urlsplit(url).hostname
+        except ValueError:
+            host = None
+        if host not in LOOPBACK_HOSTS:
+            raise SystemExit(
+                "memory-bench: refusing to start: OPENAI_BASE_URL (and --base-url, if given) must point at "
+                "127.0.0.1, ::1 or localhost, because the metering proxy or the keyless fake are the only allowed routes"
+            )
+
+
 async def _run(args: argparse.Namespace) -> Path:
     try:
         params = parse_provider_params(args.provider_param)
@@ -104,6 +123,7 @@ def main(argv: list[str] | None = None) -> int:
         names = sorted(STORES)
         print(json.dumps(names, indent=2) if args.as_json else "\n".join(names))
         return 0
+    _refuse_unless_loopback(getattr(args, "base_url", None))
     if args.command == "run":
         out_dir = asyncio.run(_run(args))
         print(out_dir)
