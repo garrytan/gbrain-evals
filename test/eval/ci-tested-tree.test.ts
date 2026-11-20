@@ -168,7 +168,7 @@ describe('CI carry wiring (.gstack/pregate.json and ci.yml)', () => {
     expect(tests).toContain('name: tested-files-${{ matrix.shard }}');
     expect(tests).toContain('path: ${{ runner.temp }}/tests-${{ matrix.shard }}.xml');
     const record = job('tested-tree');
-    expect(record).toContain('needs: [checks, tests, harness]');
+    expect(record).toContain('needs: [git-cache, checks, tests, harness]');
     expect(record).not.toMatch(/^\s+if:/m);
     expect(record).toContain('pattern: tested-files-*');
     expect(record).toContain('PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}');
