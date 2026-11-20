@@ -60,7 +60,11 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
   const flushOut = pipe(child.stdout!, process.stdout);
   const flushErr = pipe(child.stderr!, process.stderr);
   const code = await new Promise<number>(res => {
-    child.on('error', err => { log.write(scrubLauncherLog(`launch-log: could not start ${argv[sep + 1]}: ${err.message}\n`)); res(127); });
+    child.on('error', err => {
+      if (child.pid !== undefined) { log.write(scrubLauncherLog(`launch-log: ${argv[sep + 1]}: ${err.message}\n`)); return; }
+      log.write(scrubLauncherLog(`launch-log: could not start ${argv[sep + 1]}: ${err.message}\n`));
+      res(127);
+    });
     child.on('close', c => res(c ?? 1));
   });
   for (const signal of FORWARDED) process.off(signal, forward);

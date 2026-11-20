@@ -2,6 +2,123 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.261] - 2026-11-20
+
+### Hard company questions: the old-build control names its unretried cell
+
+- [docs/benchmarks/2026-11-19-cat40-hard-old-build-control.md](docs/benchmarks/2026-11-19-cat40-hard-old-build-control.md)
+  now says in its limits that one reused newest-build cell ended on an Anthropic HTTP 520 and was scored with no retry.
+  If a retry had scored it right, newest minus old would be -1.25 (-4.25 to +1.75); if wrong, it stays -1.50 as
+  published, and the verdict is "not a regression" either way.
+- [docs/benchmarks/cat40-hard/accepted-drift.json](docs/benchmarks/cat40-hard/accepted-drift.json) lists the agent
+  loop's 5xx retry change, so the next counted hard-company run's freeze check accepts it.
+
+### Hard company questions re-measured on gbrain's newest release
+
+- [docs/benchmarks/2026-11-19-cat40-hard-newest.md](docs/benchmarks/2026-11-19-cat40-hard-newest.md) reports the
+  preregistered re-measurement at gbrain v0.60.742.0 on two new public-generator worlds: gbrain 325 and files 315 of
+  400 right (+2.50 points, interval -1.50 to +6.50, parity), and gbrain behind where sources disagree (-16.25). Whether
+  the build or the worlds explain the drop from October's leads is not yet known. Its per-step data, redacted run
+  receipts and analysis sit beside it.
+- particle-1's oracle, gbrain and files cells ran on the same build and worlds: 67 of 200 right with gbrain against 6
+  with plain files (+30.5 points, 24.5 to 37.0), reported apart from the headline, with the Particle disclosure.
+- README's two hard-company rows are replaced by the new parity row and a disagreeing-sources row, with the earlier
+  builds' numbers in footnotes.
+- [eval/runner/cat40/newest-confirm.ts](eval/runner/cat40/newest-confirm.ts) gains the interim look and the files
+  pilots the amendments added, and the slot step passes `--accept-freeze-drift`;
+  [eval/runner/cat40/newest_analysis.py](eval/runner/cat40/newest_analysis.py) gains `--look interim` and the z 1.98
+  final interval.
+
+### Hard company questions: gbrain's smaller lead is not a regression
+
+- [docs/benchmarks/2026-11-19-cat40-hard-old-build-control.md](docs/benchmarks/2026-11-19-cat40-hard-old-build-control.md)
+  reports the preregistered old-build control: gbrain `09d21554d` (October) on the November 19 worlds and tasks got 331
+  of 400 against the files agent's 315 (+4.00 points, 0.00 to +8.25), and v0.60.742.0 scored 1.50 points below it
+  (-4.50 to +1.50), so the smaller lead is not a gbrain regression. Its per-step data, redacted receipts and analysis
+  sit beside it.
+- README's hard-company row, "We learned" line, footnote 3 and known-limits line, and the newest-build results doc, now
+  say so instead of "not yet known".
+- [eval/runner/cat40/old-build-control.ts](eval/runner/cat40/old-build-control.ts) plans the control's steps;
+  [eval/runner/cat40/newest_analysis.py](eval/runner/cat40/newest_analysis.py) gains `--look control` and
+  `--world-transcripts`, and that look refuses unless it gets both worlds, the same task ids in every arm and, for the
+  widened-session sensitivity, a transcript for every gbrain attempt; the Cat 40 agent loop records the model id each
+  provider served.
+- The hard company questions' analysis and checks now refuse more mistakes instead of computing on them
+  ([test/eval/cat40-hard-fail-closed.test.ts](test/eval/cat40-hard-fail-closed.test.ts)):
+  [newest_analysis.py](eval/runner/cat40/newest_analysis.py) needs exactly the worlds N1 and N2 and every planned task id
+  in every arm, and refuses a counted cell that ended on a provider 5xx or 429 unless `--accept-unretried` names it (both
+  results pages' reproduce commands name the one disclosed HTTP 520 cell);
+  [judge-check-hard.ts](eval/runner/cat40/judge-check-hard.ts) gives each real item an id with its arm, refuses a row drawn
+  twice, and fails a judge roster that is empty or a judge that graded fewer than every item, with `report` requiring
+  `--judges`; and the Cat 40 agent loop retries every 5xx from Anthropic and OpenAI that a resend can fix (all but 501 and 505),
+  such as Cloudflare's 520, while
+  Particle keeps its listed retry statuses.
+
+- CI runs on Ubicloud runners instead of GitHub's hosted ones, so a pull request no longer waits for a runner that
+  every repository on the account shares. Over the 199 pull-request runs in the 67 hours before the switch, the
+  median run took 11.9 minutes and the run at the 95th percentile took 52.7 minutes, 40.3 of them waiting for a
+  runner. The checks, BrainBench, test and harness jobs keep a 4-vCPU, 16 GB machine on Ubuntu 26.04, the same size
+  and Ubuntu release as before; the small jobs run on 2 vCPU. No job, step or check changed.
+
+- When the F6 brain build stops short, its error and its saved build record now name each page that failed, each conversation window the extraction model declined and each page with no parseable turns, with the reason, instead of counts alone. This reads the `failed_pages`, `declined_windows` and `unparsed_pages` lists that gbrain's `extract-conversation-facts --json` now prints ([garrytan/gbrain#9856](https://github.com/garrytan/gbrain/pull/9856)); a gbrain build without them prints the same message as before. The change is in [eval/systems/gbrain-defaults/shim.py](eval/systems/gbrain-defaults/shim.py).
+
+- The secrets check that runs before a push now accepts the interval field name that the hard company questions
+  analysis writes into its analysis JSON (`"interval_key": "ci_z1.98"`, or `ci_z2.80` at the interim look), in
+  `docs/benchmarks/*/analysis/*.json` only. The entry matches only that exact shape, ending at the closing quote, so any
+  other value in those files, or text appended to it, is still flagged.
+
+- The credential check before a push no longer flags the duplicate-finder head-to-head's generated page keys (such as
+  `home:yara-mabry`) in the key fields of its counted `subjects.json` and `hand-check-sample.json` files. The rule
+  covers only those two file names in that run's counted folder and only values shaped like a page key, so any other
+  value there is still checked.
+
+- Code review before merge now leaves out the hard company questions' raw per-step run data in the arm folders inside
+  `n1/` and `n2/` of `docs/benchmarks/2026-11-19-cat40-hard-newest/` and
+  `docs/benchmarks/2026-11-19-cat40-hard-old-build-control/`, which hold every cell's attempts, receipts and served
+  tool lists. The results pages, the preregistrations, the analysis JSON and each world's `oracle-gate.json` verdict
+  stay in review. Nothing in CI recounts the excluded files, so a published number is checked against them only when
+  someone reruns the run's analysis.
+
+- Code review before merge now omits eligible raw data from the duplicate-finder head-to-head. The rule covers
+  JSON and JSONL files under `docs/benchmarks/2026-11-18-entity-dedupe-h2h/counted/` and `dev/` and external smoke-run
+  records. Files named by code still get reviewed, as do the results page, preregistration, and analysis script and
+  tables. The results PR adds a CI check that recounts the development numbers. To check the counted numbers against
+  the raw data, rerun the analysis script.
+
+- CI's tested-tree record now lists the harness Python tests under `eval/harness-provider/tests/`, read from the JUnit
+  report of the `harness (pytest)` job, which the `tested-tree` job now waits for. A pull request that adds or changes
+  one of those tests can now clear gstack's pre-push test check from its green CI run instead of being refused as
+  uncovered. The record fails when a tracked harness test file collects no tests, and no `/ship` lane's inventory
+  lists these files, because no lane command runs them.
+
+- Vorflux's bot now hears about our replies on its pull requests right away instead of on its hourly check. A new
+  workflow, `.github/workflows/vorflux-hook.yml`, posts a small JSON notice to the webhook in the Actions secret
+  `VORFLUX_HOOK_URL` when capy-ai[bot] comments, reviews or leaves a review comment on a pull request labelled
+  `vorflux` (reviews and review comments only on branches in this repository, because GitHub gives fork runs of those
+  events no secrets), and when such a pull request is merged or closed. It checks out nothing, has no token
+  permissions and never sends the comment's text. Until the secret is set, each matching event fails its run with a
+  message that says so. `test/eval/vorflux-hook-workflow.test.ts` covers which events ring and what is sent.
+
+Engine-bench is ready to run on gbrain's Rust engine. Each run now passes the Rust addon (`GBRAIN_RUST_ENGINE_ADDON`) to every gbrain process it starts, and each stage receipt records the addon's SHA-256 and build. N14 large pages now fail on Rust when nothing was stored instead of passing. N1 and N5 cells over MCP that a Rust build refuses as remote callers are now recorded as a named gap instead of a failure, but only when the build refused every remote call the cell made.
+The correctness stage refuses to start without `--gbrain <checkout>@<ref>`. The launcher log keeps running when the command it started reports an error, and keeps the end of that command's log.
+The engine-bench preregistration has a 2026-11-20 amendment. It records gbrain's maintainers' dates, how a user selects Rust, that Rust must match PGLite on `stale`, how refused remote callers are counted, and that cat13-by-engine is context only.
+
+BEAM-500K "no evidence found" run, preparation: amendment 1 to the [preregistration](docs/benchmarks/2026-11-19-beam500k-no-evidence-line-preregistration.md) (the approved build condition, one pilot per arm, the newest gbrain release); the harness replay can add one line to listed questions' context and now checks every prompt against the recorded one before it is sent (`mpw.reanswer --append-line --line-ids`, passed through by `harness:cell reanswer`); `harness:cell reanswer` and `rejudge` now refuse to call a provider without `--paid --budget-run-id` and use the keyless stub under `--stub-upstream`; the harness can now run particle-1 as a reader (`particle:particle-1`, high effort, 16,000-token output, never sent twice unless it never reached Particle) and refuses it as a judge; the Anthropic reader treats a reply that stopped for a refusal as a refusal and a plain text reply as the answer, an answer failure records its prompt, and `mpw.reanswer` can re-ask a failed row without the line; and [eval/runner/beam-no-evidence.ts](eval/runner/beam-no-evidence.ts) adds the declined, hedged or committed answer label from a judge of another model family and the judge check against labelled construction items.
+
+BEAM-500K "no evidence found" results: [the results](docs/benchmarks/2026-11-20-beam500k-no-evidence-line-results.md) at gbrain v0.60.743.0 with claude-opus-5-5, particle-1 and gpt-6.2-sol. A perfect "no evidence found" line cut made-up answers on the 22 unanswerable public dev questions from 22.7% to 20.7%, a cut of 2.0 points (95% interval −0.5 to 5.1), which is not material and is no build under the approved build condition. As a false alarm on the 198 answerable questions, it cost 1.2 points of correct answers (−0.8 to 3.2). The endpoint output, the judge check's hashes and labels, and the 40-answer hand audit are in [docs/benchmarks/beam500k-no-evidence-line](docs/benchmarks/beam500k-no-evidence-line/).
+
+**The concept-recall bench (cat13) now flags every search that ran degraded, and a degraded repeat search no longer counts in warm latency.**
+
+### Added
+
+- Each per-query row records `degraded` and, when true, a short `degraded_reason` (reason codes only, never error text). Each `--warm-passes` repeat gets its own entry in `warm_searches` with its latency and flag.
+- For gbrain-backed arms, degraded means gbrain's own per-search report listed a problem. The problem can be that the vector arm did not run (`vector_not_enabled`), a fail-open stage fired (`meta.degraded`), the search meta was missing, the reranker or expansion did not match the pin, the relational arm errored, or the search threw. This is the same list that already marks a scored pass incomplete. The reranker arm uses its per-query reranker reports. Arms with no per-search report are degraded only when the query throws. The scorecard names which signal an arm used (`degraded_signal`).
+- The warm block reports `searches`, `clean_searches`, `warm_excluded_degraded` and a count per reason, and the run log prints the excluded count beside warm p50 and p95.
+
+### Fixed
+
+- Warm p50 and p95 are computed from clean repeat searches only. Before, a repeat that fell back to keyword-only search, skipped the reranker or returned a partial result was timed into warm latency. First-pass latency rules are unchanged, because a degraded scored search on a gbrain-backed arm already makes the run incomplete.
+
 ## [0.10.260] - 2026-11-20
 
 - **Redis's open LongMemEval harness is vendored, and a run of gbrain on it is preregistered.** The judge prompts, answer prompt, task-averaged metric, dataset loader and runner from [redis/agent-memory-server](https://github.com/redis/agent-memory-server) (`agent-memory-benchmark`, Apache-2.0, commit `843d2078`) now live in [eval/redis-agent-memory-benchmark/](eval/redis-agent-memory-benchmark/README.md), each file headed with what we changed, with a test that holds unchanged files to their upstream bytes. The [preregistration](docs/benchmarks/2026-11-20-longmemeval-redis-harness-preregistration.md) plans gbrain's newest release on all 500 LongMemEval-S questions with Redis's gpt-4o reader and judge, Opus 5.5, GPT-6.2 Sol and particle-1 readers, autocut on and off, whole-history and perfect-evidence arms, and a checked cross-family judge.
