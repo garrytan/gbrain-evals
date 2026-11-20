@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { inventory, isBunTestFile, junitFiles, PYTHON_TESTS, treeRecord } from '../../scripts/ci-tested-tree.ts';
+import { harnessTests, inventory, isBunTestFile, junitFiles, pytestFiles, PYTHON_TESTS, treeRecord } from '../../scripts/ci-tested-tree.ts';
 
 const root = new URL('../../', import.meta.url);
 const read = (path: string) => readFileSync(new URL(path, root), 'utf8');
@@ -28,6 +28,15 @@ const JUNIT = `<?xml version="1.0" encoding="UTF-8"?>
 </testsuites>
 `;
 
+const PYTEST = `<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="2" tests="5" time="0.01">
+<testcase classname="tests.sub.test_nested" name="test_n" file="tests/sub/test_nested.py" line="0" time="0.000" />
+<testcase classname="tests.test_one" name="test_a" file="tests/test_one.py" line="1" time="0.000" />
+<testcase classname="tests.test_one" name="test_b" file="tests/test_one.py" line="2" time="0.000"><skipped type="pytest.skip" message="unconditional skip">tests/test_one.py:3: unconditional skip</skipped></testcase>
+<testcase classname="tests.test_one.TestK" name="test_p[1&amp;2]" file="tests/test_one.py" line="6" time="0.000" />
+<testcase classname="tests.test_skipped" name="test_s" file="tests/test_skipped.py" line="2" time="0.000"><skipped type="pytest.skip" message="unconditional skip">skip</skipped></testcase>
+</testsuite></testsuites>
+`;
+
 describe('ci-tested-tree inventory', () => {
   test('matches the files Bun discovers under the suite roots, plus the Python tests for the full lane', () => {
     const tracked = ['test/eval/a.test.ts', 'eval/runner/b_test.ts', 'eval/runner/c.spec.tsx', 'eval/runner/helper.ts', 'test/support/x.test.ts', 'docs/eval/y.test.ts', 'eval/data/notes.md'];
@@ -36,6 +45,12 @@ describe('ci-tested-tree inventory', () => {
     expect(inventory('py', tracked)).toEqual(PYTHON_TESTS);
     expect(isBunTestFile('test/eval/a.test.mts')).toBe(true);
     expect(isBunTestFile('test/eval/a.test.json')).toBe(false);
+  });
+
+  test('the harness tests are the files pytest collects under eval/harness-provider/tests, and no lane lists them', () => {
+    const tracked = ['eval/harness-provider/tests/test_a.py', 'eval/harness-provider/tests/sub/b_test.py', 'eval/harness-provider/tests/conftest.py', 'eval/harness-provider/tests/stub_llm.py', 'eval/harness-provider/mpw/test_x.py', 'eval/harness-provider/tests/test_c.ts', 'test/eval/a.test.ts'];
+    expect(harnessTests(tracked)).toEqual(['eval/harness-provider/tests/sub/b_test.py', 'eval/harness-provider/tests/test_a.py']);
+    for (const lane of ['test', 'unit', 'py'] as const) expect(inventory(lane, tracked).filter(f => f.startsWith('eval/harness-provider/'))).toEqual([]);
   });
 
   test('lists this tree: every tracked Bun test under the roots and the Python tests the checks job runs', () => {
@@ -56,6 +71,12 @@ describe('ci-tested-tree record', () => {
     expect(() => junitFiles('<testsuite file="a.test.ts" />')).toThrow('no <testsuites>');
     expect(() => junitFiles('<testsuites tests="2" skipped="3"></testsuites>')).toThrow('valid tests');
     expect(() => junitFiles('<testsuites name="bun test"></testsuites>')).toThrow('valid tests');
+  });
+
+  test("reads the harness pytest run's xunit1 report: files from the repo root, skips excluded, and refuses a report that names no files", () => {
+    expect(pytestFiles(PYTEST)).toEqual({ files: ['eval/harness-provider/tests/sub/test_nested.py', 'eval/harness-provider/tests/test_one.py', 'eval/harness-provider/tests/test_skipped.py'], tests: 3 });
+    expect(() => pytestFiles(PYTEST.replace(/ file="[^"]*"/g, ''))).toThrow('junit_family=xunit1');
+    expect(() => pytestFiles('<testcase file="tests/test_a.py" />')).toThrow('no <testsuite>');
   });
 
   test("reads Bun's own JUnit report: repo-relative files, skips excluded, and no entry for a file that registers no tests", () => {
@@ -99,16 +120,20 @@ describe('ci-tested-tree record', () => {
     const dir = mkdtempSync(join(tmpdir(), 'ci-tested-tree-'));
     const env = { ...process.env, ...ENV, GITHUB_SHA: git('rev-parse', 'HEAD'), GITHUB_STEP_SUMMARY: join(dir, 'summary.md') };
     const junit = (files: string[]) => `<testsuites tests="${files.length}" skipped="0">${files.map(f => `<testsuite file="${f}" tests="1" />`).join('')}</testsuites>`;
-    const record = (files: string[], out: string) => {
+    const harness = harnessTests(git('ls-files', '--', 'eval/harness-provider/tests').split('\n'));
+    const pytest = (files: string[]) => `<testsuites name="pytest tests"><testsuite name="pytest">${files.map(f => `<testcase name="t" file="${f.slice('eval/harness-provider/'.length)}" />`).join('')}</testsuite></testsuites>`;
+    const record = (files: string[], out: string, py = harness) => {
       mkdirSync(join(dir, out), { recursive: true });
       writeFileSync(join(dir, out, 'tests-1.xml'), junit(files));
+      writeFileSync(join(dir, out, 'pytest.xml'), pytest(py));
       return spawnSync(process.execPath, ['--no-env-file', '--config=/dev/null', 'scripts/ci-tested-tree.ts', 'record', '--junit', join(dir, out), '--out', join(dir, out, 'tree.json')], { cwd: root, encoding: 'utf8', env });
     };
     try {
       const ok = record(unit, 'all');
       expect(ok.status).toBe(0);
       const tree = JSON.parse(readFileSync(join(dir, 'all', 'tree.json'), 'utf8'));
-      expect([tree.tree, tree.head_sha, tree.files, tree.tests]).toEqual([git('rev-parse', 'HEAD^{tree}'), env.GITHUB_SHA, [...unit, ...PYTHON_TESTS].sort(), unit.length]);
+      expect(harness.length).toBeGreaterThan(10);
+      expect([tree.tree, tree.head_sha, tree.files, tree.tests]).toEqual([git('rev-parse', 'HEAD^{tree}'), env.GITHUB_SHA, [...unit, ...harness, ...PYTHON_TESTS].sort(), unit.length + harness.length]);
       expect(readFileSync(env.GITHUB_STEP_SUMMARY, 'utf8')).toStartWith(`TESTED_TREE: run 41/2 push head ${env.GITHUB_SHA.slice(0, 12)}`);
       const short = record(unit.slice(1), 'short');
       expect(short.status).toBe(1);
@@ -116,6 +141,11 @@ describe('ci-tested-tree record', () => {
       expect(short.stdout).toContain(unit[0]!);
       expect(short.stderr).toContain('tree.json was not written');
       expect(existsSync(join(dir, 'short', 'tree.json'))).toBe(false);
+      const noPytest = record(unit, 'no-pytest', harness.slice(1));
+      expect(noPytest.status).toBe(1);
+      expect(noPytest.stdout).toContain(`::error::1 inventory file(s) did not run`);
+      expect(noPytest.stdout).toContain(harness[0]!);
+      expect(existsSync(join(dir, 'no-pytest', 'tree.json'))).toBe(false);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
@@ -127,7 +157,8 @@ describe('CI carry wiring (.gstack/pregate.json and ci.yml)', () => {
 
   test('the profile names this workflow, the tested-tree artifact and the jobs that ran the lanes', () => {
     const shards = /shard: \[([\d, ]+)\]/.exec(job('tests'))![1]!.split(', ');
-    expect(profile).toEqual({ workflow: 'ci.yml', events: ['pull_request', 'push'], jobs: ['checks', ...shards.map(s => `tests (${s})`), 'tested-tree'], artifact: 'tested-tree', os: 'Linux' });
+    expect(profile).toEqual({ workflow: 'ci.yml', events: ['pull_request', 'push'], jobs: ['checks', ...shards.map(s => `tests (${s})`), 'harness (pytest)', 'tested-tree'], artifact: 'tested-tree', os: 'Linux' });
+    expect(job('harness')).toContain('suite: [pytest, proxy]');
     expect(workflow).toMatch(/^on:\n {2}pull_request:\n {2}push:\n {4}branches: \[main\]\n/m);
   });
 
@@ -140,13 +171,22 @@ describe('CI carry wiring (.gstack/pregate.json and ci.yml)', () => {
     expect(tests).toContain('path: ${{ runner.temp }}/tested-files/tests-*.xml');
     expect(tests).toContain('if-no-files-found: error');
     const record = job('tested-tree');
-    expect(record).toContain('needs: [checks, tests]');
+    expect(record).toContain('needs: [checks, tests, harness]');
     expect(record).not.toMatch(/^\s+if:/m);
     expect(record).toContain('pattern: tested-files-*');
     expect(record).toContain('PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}');
     expect(record).toContain('run: bun scripts/ci-tested-tree.ts record --junit "$RUNNER_TEMP/tested-files" --out "$RUNNER_TEMP/tested-tree/tree.json"');
     expect(record).toContain(`name: ${profile.artifact}`);
     expect(record).toContain('path: ${{ runner.temp }}/tested-tree/tree.json');
+  });
+
+  test('the harness pytest run uploads its xunit1 JUnit report as pytest.xml among the tested files', () => {
+    const harness = job('harness');
+    expect(harness).toContain('run: bun run harness:test --junitxml="$RUNNER_TEMP/pytest.xml" -o junit_family=xunit1');
+    expect(harness).toContain('name: tested-files-pytest');
+    expect(harness).toContain('path: ${{ runner.temp }}/pytest.xml');
+    expect(harness.match(/if: matrix\.suite == 'pytest'/g)).toHaveLength(2);
+    expect(read('eval/runner/harness-test.ts')).toContain("[install.python, '-m', 'pytest', ...process.argv.slice(2)]");
   });
 
   test('ship_lanes_from maps the package.json test commands to their inventories', () => {

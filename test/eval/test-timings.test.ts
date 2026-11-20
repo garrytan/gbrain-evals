@@ -1,6 +1,8 @@
 import { describe, expect, test } from 'bun:test';
-import { readFileSync } from 'node:fs';
-import { fileTimes, medianTimings } from '../../scripts/test-timings.ts';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { bunReports, fileTimes, medianTimings } from '../../scripts/test-timings.ts';
 
 const report = (suites: string) => `<?xml version="1.0" encoding="UTF-8"?>\n<testsuites name="bun test" tests="3" time="2.5">\n${suites}</testsuites>\n`;
 
@@ -19,6 +21,19 @@ describe('test timings for time-balanced shards', () => {
     ].join('\n'));
     expect(fileTimes(xml)).toEqual({ 'test/eval/a.test.ts': 1235, 'eval/b.test.ts': 0 });
     expect(() => fileTimes(report('  <testsuite name="no file" tests="0" time="1">\n  </testsuite>\n'))).toThrow(/no file or time/);
+  });
+
+  test("a run's download directory yields the shards' Bun reports, not the harness pytest report that shares the tested-files-* pattern", () => {
+    const dir = mkdtempSync(join(tmpdir(), 'test-timings-'));
+    try {
+      for (const [sub, file] of [['tested-files-2', 'tests-2.xml'], ['tested-files-1', 'tests-1.xml'], ['tested-files-pytest', 'pytest.xml']]) {
+        mkdirSync(join(dir, sub!), { recursive: true });
+        writeFileSync(join(dir, sub!, file!), '<testsuites />');
+      }
+      expect(bunReports(dir)).toEqual([join('tested-files-1', 'tests-1.xml'), join('tested-files-2', 'tests-2.xml')]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 
   test('each file gets its median time across runs, and files come out sorted', () => {
