@@ -24,6 +24,8 @@ LOGS="$LME_REDIS_STATE_DIR/logs"; mkdir -p "$LOGS"
 CACHE="$HOME/lme-cache"
 DRV="bun $REPO/eval/runner/batch/lme-redis.ts"
 PY="uv run -q --project $REPO/eval/redis-agent-memory-benchmark python $REPO/eval/runner/lme-redis/lme_redis.py"
+STAGE=${STAGE:-pilot}   # pilot, judge-check, counted-first-half or counted-second-half
+IDS=${IDS:-pilot}       # pilot, first-half, second-half or all
 BATCH_ARMS="gpt4o--off gpt4o--on gpt4o--agent-default gpt4o--full gpt4o--oracle opus--off opus--on opus--full opus--oracle sol--off sol--on sol--full sol--oracle"
 
 only_env() {  # only_env "NAMES" CMD...: runs CMD with just the named variables, none of them on a command line
@@ -70,12 +72,12 @@ run() {
     controls)
       (cd "$REPO/eval/redis-agent-memory-benchmark" && $PY controls --cache-dir "$CACHE" --out "$LME_REDIS_STATE_DIR/controls.jsonl") || return 1
       for j in protocol opus astra; do $DRV judge-controls $j --controls "$LME_REDIS_STATE_DIR/controls.jsonl" --stage judge-check --budget-ledger "$LEDGER" || return 1; done ;;
-    pilot)
-      for a in $BATCH_ARMS; do $DRV run "$a" --stage pilot --ids pilot --budget-ledger "$LEDGER" || return 1; done ;;
-    judges)
-      for a in $BATCH_ARMS ${EXTRA_ARMS:-}; do for role in protocol cross; do $DRV judge "$a" "$role" --stage pilot --ids pilot --budget-ledger "$LEDGER" --cache-dir "$CACHE" || return 1; done; done ;;
+    pilot|reads)  # reader batches for STAGE over IDS
+      for a in $BATCH_ARMS; do $DRV run "$a" --stage "$STAGE" --ids "$IDS" --budget-ledger "$LEDGER" || return 1; done ;;
+    judges)  # both judges for every batch arm (and EXTRA_ARMS) over IDS
+      for a in $BATCH_ARMS ${EXTRA_ARMS:-}; do for role in protocol cross; do $DRV judge "$a" "$role" --stage "$STAGE" --ids "$IDS" --budget-ledger "$LEDGER" --cache-dir "$CACHE" || return 1; done; done ;;
     particle)
-      for m in off on full oracle; do $DRV particle "particle--$m" --stage pilot --ids pilot --budget-ledger "$LEDGER" || return 1; done ;;
+      for m in off on full oracle; do $DRV particle "particle--$m" --stage "$STAGE" --ids "$IDS" --budget-ledger "$LEDGER" || return 1; done ;;
     label)
       for j in opus astra; do $DRV label $j --stage pilot --ids pilot --budget-ledger "$LEDGER" || return 1; done ;;
     archive-pilot)  # before the counted wave: no pilot answer counts, so pilot answers and the pilot freeze move aside
@@ -90,7 +92,7 @@ run() {
       for f in "$LME_REDIS_STATE_DIR"/bodies/*.ndjson.gz; do case $(basename "$f") in controls--*) ;; *) mv "$f" "$A/bodies/" ;; esac; done
       cp "$LME_REDIS_STATE_DIR/order.json" "$A/" ;;
     poll)
-      $DRV poll --stage "${STAGE:-pilot}" --budget-ledger "$LEDGER" ;;
+      $DRV poll --stage "$STAGE" --budget-ledger "$LEDGER" ;;
     *) echo "unknown step $step" >&2; return 2 ;;
   esac
 }
