@@ -10,6 +10,11 @@
 # PGLite snapshot (test/support/pglite-snapshot.ts).
 # Per-job timeouts bound every job well above its observed runtime rather
 # than hoping for it.
+# Jobs run on Ubicloud runners on Ubuntu 26.04, the image ubuntu-latest
+# used: 4 vCPU and 16 GB for the checks, BrainBench, test and harness jobs,
+# the size of GitHub's hosted runner, and 2 vCPU for the small jobs. GitHub's
+# hosted runners are one pool for every repository on the account, and a PR
+# run waited about 42 minutes for them at p95 in November 2026 (GST-3302).
 name: ci
 
 on:
@@ -37,7 +42,7 @@ jobs:
   # which runs no tests, keeps its default condition, which reads every upstream
   # job, so it is skipped and that run carries nothing.
   git-cache:
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-2-ubuntu-2604
     timeout-minutes: 20
     steps:
       - id: cache
@@ -67,7 +72,7 @@ jobs:
   checks:
     needs: git-cache
     if: ${{ !cancelled() }}
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-4-ubuntu-2604
     timeout-minutes: 20
     steps:
       - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
@@ -127,7 +132,7 @@ jobs:
   brainbench:
     needs: git-cache
     if: ${{ !cancelled() }}
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-4-ubuntu-2604
     timeout-minutes: 20
     strategy:
       fail-fast: false
@@ -164,7 +169,7 @@ jobs:
   prereg-order:
     needs: git-cache
     if: ${{ !cancelled() }}
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-2-ubuntu-2604
     timeout-minutes: 5
     steps:
       - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
@@ -189,7 +194,7 @@ jobs:
   tests:
     needs: git-cache
     if: ${{ !cancelled() }}
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-4-ubuntu-2604
     timeout-minutes: 15
     strategy:
       fail-fast: false
@@ -243,7 +248,7 @@ jobs:
   # the suite again. It runs no tests itself.
   tested-tree:
     needs: [checks, tests]
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-2-ubuntu-2604
     timeout-minutes: 5
     steps:
       - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
@@ -288,7 +293,7 @@ jobs:
   scoreboard:
     needs: git-cache
     if: ${{ !cancelled() }}
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-2-ubuntu-2604
     timeout-minutes: 10
     steps:
       - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
@@ -320,7 +325,7 @@ jobs:
   receipt-secrets:
     needs: git-cache
     if: ${{ !cancelled() }}
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-2-ubuntu-2604
     timeout-minutes: 5
     steps:
       - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
@@ -359,7 +364,7 @@ jobs:
   harness:
     needs: git-cache
     if: ${{ !cancelled() }}
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-4-ubuntu-2604
     timeout-minutes: 30
     strategy:
       fail-fast: false
