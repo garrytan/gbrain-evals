@@ -45,7 +45,7 @@ Under the decision rule, the interval wording comes first: the lower bound is ab
 | H4 without (14 cells) | -7.14 | -21.43 to 0.0 | 12 / 13 |
 | H5, five recording sessions | **+12.5** | +6.25 to +20.0 | 80 / 70 |
 
-Each family has 80 cells: 2 readers × 40 tasks. For comparison, Opus 5.5 alone was +6.0 (-3.0 to +15.0) on world M in October. H4 is "level or behind" under the preregistered rule, so it goes to gbrain's maintainers with its per-reader rows.
+Each family has 80 cells: 2 readers × 40 tasks. For comparison, Opus 5.5 alone was +6 (-2 to +15) on world M in October. H4 is "level or behind" under the preregistered rule, so it goes to gbrain's maintainers with its per-reader rows.
 
 | Other outcomes (gbrain minus files, points) | Δ | 95% interval |
 |---|---:|---|
@@ -112,7 +112,7 @@ Gates, all passed before any counted cell:
 
 - Both world files matched their recorded SHA-256 and digest on their VM.
 - Model freshness passed: no newer frontier Opus or GPT.
-- Judge check: gpt-6.1-sol scored kappa 0.967 and claude-opus-5-5 1.000, on 60 constructed and 40 real answers, with 0 malformed outputs.
+- Judge check: gpt-6.1-sol scored kappa 0.967 and claude-opus-5-5 1.000, on 60 constructed and 40 real answers, with 0 malformed outputs. The two judges agreed with each other on 37 of the 40 real answers (92.5%). The preregistration's record and `analysis/judge-check.json` say 92.3% (36 of 39), because two of the real answers were given the same id and counted once; neither judge's pass changes.
 - Every slot passed the write, restore and rerank probes with 0 queued effects, and the config read back as defaults.
 - Oracle success on all 100 tasks: 198 of 200 on N1 and 196 of 200 on N2.
 - A five-cell pilot per arm and reader (R111): every cell called its arm's tools, none hit a harness error or a rate-limit stop, and each pilot cost under a tenth of its arm's planned spend.
@@ -123,7 +123,7 @@ Run notes:
 
 - **The slot build stopped at first.** The slot step first stopped on both worlds before building anything, because the plan didn't pass the accepted freeze drift to it. That was fixed in `4d306473e` before any spend.
 - **A step cap was smaller than one request's worst case.** On N1, the files Sol half-A step paused after 37 of its 50 cells. The budget ledger refused one request because its worst-case reservation (the most that request could cost) was larger than the step's whole cap. That is a plan bug: every step cap has to exceed one worst-case request reservation for its reader. The step resumed under a larger cap, approved before the resume, and its 13 remaining cells finished. No cell was lost or rerun.
-- **No harness errors.** All 800 counted frontier cells finished on their first attempt.
+- **No harness errors, one provider error.** All 800 counted frontier cells ran once, with no harness error. One of them, N1 `gbrain-opus-b` task H4-13, ended on an Anthropic server error (HTTP 520) before any request was billed. The protocol retries only harness errors, so it is scored as a wrong gbrain answer. Scored right, it would move the headline to +2.75 (-1.00 to +6.75) and H4 to -15.0 (-22.5 to -8.75), and neither wording would change.
 - **particle-1 ran last, in its own paid window.** Its oracle, gbrain and files cells ran on 2026-11-20, one world at a time, after both worlds' frontier cells, from harness `c5050b28d` (the frontier cells' commit). The frontier VMs were gone by then, so each world's 5 slots were rebuilt from gbrain `ae8201041` on new VMs; their receipts are in `slots-particle/`, and both gbrain steps' receipts name that commit. On N1 the gbrain step paused after 79 of its 100 cells, when its budget cap was reached at a cell boundary. The cap was extended before the resume, and the 21 remaining cells ran under a new budget run. No cell was lost or rerun, and none of the 600 particle-1 cells was a harness error.
 - **One record is missing.** The preregistration asked particle-1's receipts to record the effort sent and effective, the output limit and the weight version. They don't. The harness at `c5050b28d` sends `reasoning_effort: high` and a 16,000-token limit on every particle-1 request (`eval/runner/cat40/loop.ts`, line 469), but the effective effort and the weight version weren't captured.
 
