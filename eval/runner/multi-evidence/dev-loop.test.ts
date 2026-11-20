@@ -171,6 +171,9 @@ describe('batch reads (get_page slugs)', () => {
     expect(parseArgs(['--out', '/tmp/x', '--fake']).cat40Slots).toBeNull();
     expect(parseArgs(['--out', '/tmp/x', '--fake', '--cat40-task-prepend-file', 'p.json']).taskPrepend).toBe(resolve('p.json'));
     expect(parseArgs(['--out', '/tmp/x', '--fake']).taskPrepend).toBeNull();
+    expect(parseArgs(['--out', '/tmp/x', '--fake', '--cat40-max-turns', '32']).cat40MaxTurns).toBe(32);
+    expect(parseArgs(['--out', '/tmp/x', '--fake']).cat40MaxTurns).toBeNull();
+    expect(() => parseArgs(['--out', '/tmp/x', '--fake', '--arms', 'base,cap2x', '--cat40-max-turns', '32'])).toThrow(/--arms base only/);
     const s = 'a'.repeat(40), t = 'c'.repeat(40);
     expect(resumeRefusal({ sha: s, fake: false, slots_from: { sha: t } }, { sha: s, fake: false, slotsSha: t }, 'out/v1', 'v1')).toBeNull();
     expect(resumeRefusal({ sha: s, fake: false }, { sha: s, fake: false, slotsSha: t }, 'out/v1', 'v1')).toContain('brains');
