@@ -472,8 +472,10 @@ class CellRun:
             return await self._answer_rag(q, pq, docs, ret, tag, base, unit)
         return await self._answer_mode(q, pq, tag, base, unit)
 
-    async def _answer_rag(self, q, pq, docs, ret: RetrieveRecord, tag: str, base: dict, unit: str) -> AnswerRecord:
+    async def _answer_rag(self, q, pq, docs, ret: RetrieveRecord, tag: str, base: dict, unit: str, append_line: str | None = None) -> AnswerRecord:
         rendered = _render_rag_context(docs)
+        if append_line:
+            rendered = f"{rendered}\n\n{append_line}"
         meta = dict(pq.meta)
         task = self.task_type
 
@@ -491,10 +493,12 @@ class CellRun:
         except leakage.LeakError:
             raise
         except Exception as e:  # noqa: BLE001
+            sent = [p["prompt"] for p in cap.prompts if "prompt" in p]
             if type(e).__name__ == "ModelRefusal":
                 return AnswerRecord(ok=True, outcome=ANSWERED, answer=REFUSAL_ANSWER, rendered_context=rendered,
+                                    final_prompt=sent[0] if len(sent) == 1 else "",
                                     error=f"reader refusal: {e}", requests=self._requests(tag), **base)
-            return AnswerRecord(ok=False, outcome=ANSWER_FAILURE, rendered_context=rendered,
+            return AnswerRecord(ok=False, outcome=ANSWER_FAILURE, rendered_context=rendered, final_prompt=sent[0] if len(sent) == 1 else "",
                                 error=f"{type(e).__name__}: {e}", requests=self._requests(tag), **base)
         prompts = [p for p in cap.prompts if "prompt" in p]
         if len(prompts) != 1:

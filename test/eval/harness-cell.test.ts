@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { cellId, cellIdentity, chatPrice, estimateCell, harnessCredentials, identityDiff, reusedStoreIdentity, storeIdentity, validateSpec, type CellSpec, type ResolvedCell } from '../../eval/runner/harness-cell.ts';
+import { cellId, cellIdentity, chatPrice, estimateCell, harnessCredentials, identityDiff, replaySpend, reusedStoreIdentity, storeIdentity, validateSpec, type CellSpec, type ResolvedCell } from '../../eval/runner/harness-cell.ts';
 import { cpuRequirements } from '../../eval/runner/harness-env.ts';
 import { findNeedles, scan } from '../../scripts/check-comparator-name.ts';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
@@ -196,5 +196,36 @@ describe('comparator name guard', () => {
       expect(r.allowed.map(h => h.path)).toEqual([files[0]]);
       expect(r.violations.map(h => h.path).sort()).toEqual([files[1], files[2]]);
     } finally { rmSync(root, { recursive: true, force: true }); }
+  });
+});
+
+describe('re-judge and re-answer spend', () => {
+  const log = () => {};
+  test('refuse to spend without --paid and an open budget run', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'replay-spend-'));
+    const ledger = join(dir, 'ledger.sqlite');
+    for (const argv of [[], ['--paid'], ['--budget-run-id', 'r1'], ['--paid', '--budget-run-id', 'missing']])
+      await expect(replaySpend({ argv: [...argv, '--budget-ledger', ledger], stub: false, log }, 'harness-rejudge:x', join(dir, 'out'), 1)).rejects.toThrow(/--paid|budget run/);
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  test('under --stub-upstream use the stub upstream for every provider and a stub ledger', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'replay-spend-'));
+    const spend = await replaySpend({ argv: [], stub: true, log }, 'harness-reanswer:x', join(dir, 'out'), 1);
+    try {
+      expect(Object.keys(spend.realKeys!).sort()).toEqual(['anthropic', 'gemini', 'groq', 'openai', 'particle', 'voyage']);
+      expect(spend.upstreams).toBeDefined();
+    } finally { spend.run.close(); spend.close(); rmSync(dir, { recursive: true, force: true }); }
+  });
+});
+
+describe('particle-1 as a reader', () => {
+  test('a particle answer model gets the particle credentials and a list price', () => {
+    expect(harnessCredentials({ ...spec, models: { ...spec.models, answer: 'particle:particle-1' } }, resolved).sort()).toEqual(['gemini', 'particle']);
+    expect(chatPrice('particle:particle-1')).not.toBeNull();
+  });
+
+  test('particle-1 never judges', () => {
+    expect(() => validateSpec({ ...spec, models: { ...spec.models, judge: 'particle:particle-1' } })).toThrow('particle-1 never judges');
   });
 });

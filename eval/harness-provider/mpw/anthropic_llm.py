@@ -6,7 +6,8 @@ so the newest Sonnet/Opus readers can run through OMB_ANSWER_LLM=anthropic.
 Structured output uses a `respond` tool whose input schema is the harness
 Schema. The newest models reject a forced tool choice, so the tool is offered
 with `tool_choice: auto` (and no `temperature`, which they also reject) and an instruction to call it; a JSON object in the
-text reply is accepted when the model answers without the tool. The SDK reads ANTHROPIC_API_KEY and ANTHROPIC_BASE_URL, so
+text reply is accepted when the model answers without the tool, and a plain text reply is taken as the answer when the schema
+is an answer plus string fields. A reply that stopped for a refusal is a refusal even when it holds a partial tool call. The SDK reads ANTHROPIC_API_KEY and ANTHROPIC_BASE_URL, so
 the launcher points it at the metering proxy.
 """
 from __future__ import annotations
@@ -62,11 +63,11 @@ class AnthropicLLM(LLM):
             tools=[tool],
             tool_choice={"type": "auto"},
         )
-        for block in response.content:
-            if getattr(block, "type", None) == "tool_use" and block.name == "respond":
-                return dict(block.input)
         if response.stop_reason == "refusal":
             raise ModelRefusal(f"{self.model_id} declined to answer (stop_reason=refusal)")
+        for block in response.content:
+            if getattr(block, "type", None) == "tool_use" and block.name == "respond" and all(k in block.input for k in schema.required):
+                return dict(block.input)
         text = "".join(getattr(b, "text", "") for b in response.content if getattr(b, "type", None) == "text")
         start, end = text.find("{"), text.rfind("}")
         if start >= 0 and end > start:
@@ -76,6 +77,10 @@ class AnthropicLLM(LLM):
                     return parsed
             except json.JSONDecodeError:
                 pass
+        called = any(getattr(b, "type", None) == "tool_use" and b.name == "respond" for b in response.content)
+        if text.strip() and not called and response.stop_reason == "end_turn" and "answer" in schema.properties \
+                and all(schema.properties[k].get("type") == "string" for k in schema.required):
+            return {**{k: "" for k in schema.required}, "answer": text.strip()}
         raise RuntimeError(f"{self.model_id} returned no structured response (stop_reason={response.stop_reason})")
 
     def tool_loop(self, prompt: str, tools: list[ToolDef], max_tool_calls: int = 10) -> str:
