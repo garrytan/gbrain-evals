@@ -1,0 +1,82 @@
+{
+  "people": {
+    "version": "0.7.0",
+    "entity": "people",
+    "seed": null,
+    "label_rounds": [
+      {
+        "round": 1,
+        "pairs_offered": 22,
+        "match": 4,
+        "distinct": 18
+      },
+      {
+        "round": 2,
+        "pairs_offered": 20,
+        "match": 19,
+        "distinct": 1
+      },
+      {
+        "round": 3,
+        "pairs_offered": 20,
+        "match": 3,
+        "distinct": 17
+      },
+      {
+        "round": 4,
+        "pairs_offered": 20,
+        "match": 7,
+        "distinct": 13
+      },
+      {
+        "round": 5,
+        "pairs_offered": 20,
+        "match": 8,
+        "distinct": 12
+      }
+    ]
+  },
+  "companies": {
+    "version": "0.7.0",
+    "entity": "companies",
+    "seed": null,
+    "label_rounds": [
+      {
+        "round": 1,
+        "pairs_offered": 20,
+        "match": 2,
+        "distinct": 18
+      },
+      {
+        "round": 2,
+        "pairs_offered": 20,
+        "match": 4,
+        "distinct": 16
+      },
+      {
+        "round": 3,
+        "pairs_offered": 20,
+        "match": 10,
+        "distinct": 10
+      },
+      {
+        "round": 4,
+        "pairs_offered": 20,
+        "match": 10,
+        "distinct": 10
+      },
+      {
+        "round": 5,
+        "pairs_offered": 20,
+        "match": 10,
+        "distinct": 10
+      },
+      {
+        "round": 6,
+        "pairs_offered": 20,
+        "match": 10,
+        "distinct": 10
+      }
+    ]
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "cell": "entity-h2h",
+  "system": "dedupe",
+  "config": "tuned+labels-100+labeller-seed-4",
+  "model": null,
+  "world": {
+    "seed": 1975418963,
+    "per_family": 20,
+    "pages": 2106,
+    "people_ledger_sha256": "da556967bbe5c1529dfccebdcf14862e72baacdcd37f39833dd714563487a0c2",
+    "company_ledger_sha256": "dc2391abf9cae7e8cab1122267b0bd739f404aa8d3a66cb122be7ee731929d06"
+  },
+  "status": "complete",
+  "attempts": []
+}

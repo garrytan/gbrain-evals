@@ -1,0 +1,10 @@
+{
+  "commitment": "1cfe7abab2b4b5ae98860a1fc61113466b24e48cdc0df101842fce652a56d1f7",
+  "seed": 1975418963,
+  "nonce": "5e7db709634b08baa22c070e21bd3d909fd47afd2cac9af382fab244b44076ba",
+  "preimage_bytes": 122,
+  "sha256": "1cfe7abab2b4b5ae98860a1fc61113466b24e48cdc0df101842fce652a56d1f7",
+  "match": true,
+  "checked_at": "2026-11-18T10:23:24Z",
+  "bench_commit": "b85a4eb57358913ff1edb09bc6aa672cc14e893d"
+}

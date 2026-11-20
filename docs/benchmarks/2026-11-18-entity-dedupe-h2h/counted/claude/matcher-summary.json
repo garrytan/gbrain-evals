@@ -1,0 +1,30 @@
+{
+  "model": "anthropic:claude-opus-5-5",
+  "prompt_sha256": "c62baa1c3c085afa45d30ae472b594415ff6c338ec67674b571d44a4328caa77",
+  "pairs": 25273,
+  "outcomes": {
+    "yes": 555,
+    "no": 24601,
+    "unsure": 117,
+    "unparsed": 0,
+    "no_verdict": 0,
+    "safety_filtered": 0
+  },
+  "asked_again": 0,
+  "errors_before_closure": {
+    "yes_on_must_not_link": 130,
+    "no_on_must_link": 0
+  },
+  "designed_pairs_decided": 1059,
+  "correct_decisions": 834,
+  "without_verdict": [],
+  "usage_responses": 25273,
+  "usage_tokens": {
+    "input_total": 6574418,
+    "input_uncached": 6574418,
+    "cache_read": 0,
+    "cache_write": 0,
+    "output_total": 2533491,
+    "reasoning": 674901
+  }
+}

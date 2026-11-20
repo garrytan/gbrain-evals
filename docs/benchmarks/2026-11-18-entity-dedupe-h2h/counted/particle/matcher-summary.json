@@ -1,0 +1,30 @@
+{
+  "model": "particle:particle-1",
+  "prompt_sha256": "c62baa1c3c085afa45d30ae472b594415ff6c338ec67674b571d44a4328caa77",
+  "pairs": 25273,
+  "outcomes": {
+    "yes": 624,
+    "no": 24430,
+    "unsure": 219,
+    "unparsed": 0,
+    "no_verdict": 0,
+    "safety_filtered": 0
+  },
+  "asked_again": 1,
+  "errors_before_closure": {
+    "yes_on_must_not_link": 197,
+    "no_on_must_link": 0
+  },
+  "designed_pairs_decided": 1059,
+  "correct_decisions": 684,
+  "without_verdict": [],
+  "usage_responses": 25273,
+  "usage_tokens": {
+    "input_total": 6334600,
+    "input_uncached": 6319752,
+    "cache_read": 14848,
+    "cache_write": 0,
+    "output_total": 3103409,
+    "reasoning": 2372137
+  }
+}

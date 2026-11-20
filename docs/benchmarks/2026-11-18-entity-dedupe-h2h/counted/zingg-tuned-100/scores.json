@@ -1,0 +1,5318 @@
+{
+  "seed": 1975418963,
+  "per_family": 20,
+  "fingerprints": {
+    "people": "da556967bbe5c1529dfccebdcf14862e72baacdcd37f39833dd714563487a0c2",
+    "companies": "dc2391abf9cae7e8cab1122267b0bd739f404aa8d3a66cb122be7ee731929d06"
+  },
+  "scores": [
+    {
+      "system": "zingg",
+      "version": "0.7.0",
+      "config": "tuned+labels-100",
+      "model": null,
+      "points": {
+        "auto": {
+          "groups": 341,
+          "person": {
+            "false_merge": {
+              "k": 72,
+              "n": 488,
+              "rate": 0.14754098360655737,
+              "ci95": [
+                0.11883101697082529,
+                0.18175661379779448
+              ]
+            },
+            "designed_recall": {
+              "k": 214,
+              "n": 312,
+              "rate": 0.6858974358974359,
+              "ci95": [
+                0.632397267137644,
+                0.7348756058826588
+              ]
+            },
+            "precision": {
+              "k": 214,
+              "n": 289,
+              "rate": 0.740484429065744,
+              "ci95": [
+                0.687022941132537,
+                0.7876366257189902
+              ]
+            },
+            "recall": {
+              "k": 214,
+              "n": 312,
+              "rate": 0.6858974358974359,
+              "ci95": [
+                0.632397267137644,
+                0.7348756058826588
+              ]
+            },
+            "b3": {
+              "precision": 0.9591793570219951,
+              "recall": 0.9378172588832487,
+              "f1": 0.9483780285506812
+            },
+            "false_merges_anywhere": 75,
+            "by_family": {
+              "same-exact": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-case-space": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-diacritics": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 16,
+                  "n": 20,
+                  "rate": 0.8,
+                  "ci95": [
+                    0.5839825677481064,
+                    0.919342337420202
+                  ]
+                }
+              },
+              "same-transliteration": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 8,
+                  "n": 20,
+                  "rate": 0.4,
+                  "ci95": [
+                    0.21880653237281705,
+                    0.6134184992377469
+                  ]
+                }
+              },
+              "same-name-order": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                }
+              },
+              "same-nickname": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 12,
+                  "n": 20,
+                  "rate": 0.6,
+                  "ci95": [
+                    0.3865815007622531,
+                    0.781193467627183
+                  ]
+                }
+              },
+              "same-initial": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 2,
+                  "n": 20,
+                  "rate": 0.1,
+                  "ci95": [
+                    0.027866481213768224,
+                    0.3010336452284873
+                  ]
+                }
+              },
+              "same-married-name": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 2,
+                  "n": 20,
+                  "rate": 0.1,
+                  "ci95": [
+                    0.027866481213768224,
+                    0.3010336452284873
+                  ]
+                }
+              },
+              "same-email-bridge": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-disjoint-emails": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 7,
+                  "n": 20,
+                  "rate": 0.35,
+                  "ci95": [
+                    0.18119182410108206,
+                    0.5671457233147638
+                  ]
+                }
+              },
+              "same-role-address": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-within-source": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "diff-namesake": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-same-company": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-same-city": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-cross-source-slug": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-team-alias": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-family-email": {
+                "label": "different",
+                "false_merge": {
+                  "k": 13,
+                  "n": 20,
+                  "rate": 0.65,
+                  "ci95": [
+                    0.43285427668523624,
+                    0.818808175898918
+                  ]
+                },
+                "found": null
+              },
+              "diff-assistant-email": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-shared-mailbox": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-nickname-lookalike": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-initial-lookalike": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-alias-on-5": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-alias-on-6": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-jr-suffix": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-placeholder-email": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-household-plain": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-offlist-alias": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-bridge-page": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 40,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.08762160119728664
+                  ]
+                },
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "diff-transitive-chain": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 40,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.08762160119728664
+                  ]
+                },
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "diff-recycled-github": {
+                "label": "different",
+                "false_merge": {
+                  "k": 13,
+                  "n": 16,
+                  "rate": 0.8125,
+                  "ci95": [
+                    0.5699111903802586,
+                    0.9340840092857187
+                  ]
+                },
+                "found": {
+                  "k": 4,
+                  "n": 4,
+                  "rate": 1,
+                  "ci95": [
+                    0.5101091635454027,
+                    1
+                  ]
+                }
+              },
+              "diff-wrong-linkedin": {
+                "label": "different",
+                "false_merge": {
+                  "k": 14,
+                  "n": 16,
+                  "rate": 0.875,
+                  "ci95": [
+                    0.639771727342413,
+                    0.9650225122567595
+                  ]
+                },
+                "found": {
+                  "k": 3,
+                  "n": 4,
+                  "rate": 0.75,
+                  "ci95": [
+                    0.30064184258240184,
+                    0.9544127391902995
+                  ]
+                }
+              },
+              "diff-declared-id-typo": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 16,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.1936076805344365
+                  ]
+                },
+                "found": {
+                  "k": 0,
+                  "n": 4,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.4898908364545973
+                  ]
+                }
+              },
+              "diff-shared-github-account": {
+                "label": "different",
+                "false_merge": {
+                  "k": 32,
+                  "n": 40,
+                  "rate": 0.8,
+                  "ci95": [
+                    0.652426936536005,
+                    0.895000102745623
+                  ]
+                },
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              }
+            },
+            "false_merge_cases": [
+              {
+                "a": "home:felix-corrigan",
+                "b": "work:felix-corrigan",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:kenji-rhee",
+                "b": "work:kenji-rhee",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:pavel-sato",
+                "b": "work:pavel-sato",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:mira-lorne",
+                "b": "work:mira-lorne",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:hugo-marsh",
+                "b": "work:hugo-marsh",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:theo-wexford",
+                "b": "work:theo-wexford",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:maya-halloran",
+                "b": "work:maya-halloran",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:maya-nakata",
+                "b": "work:maya-nakata",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:kenji-zeller",
+                "b": "work:kenji-zeller",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:mateo-halloran",
+                "b": "work:mateo-halloran",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:iris-lindqvist",
+                "b": "work:iris-lindqvist",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:priya-whitlow",
+                "b": "work:priya-whitlow",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:maya-brandt",
+                "b": "work:maya-brandt",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:hugo-castell",
+                "b": "home:hugo-castell",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:greta-kowal",
+                "b": "home:greta-kowal",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:lena-marsh",
+                "b": "home:lena-marsh",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:omar-nakata",
+                "b": "home:o-nakata",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:samir-ulloa",
+                "b": "home:samir-ulloa",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:felix-hartigan",
+                "b": "home:felix-hartigan",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:ravi-okafor",
+                "b": "home:ravi-okafor",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:ravi-whitlow",
+                "b": "home:ravi-whitlow",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:kenji-vance",
+                "b": "home:kenji-vance",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:idris-abara",
+                "b": "home:idris-abara",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:maya-quinlan",
+                "b": "home:maya-quinlan",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:kenji-okafor",
+                "b": "home:kenji-okafor",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:omar-marsh",
+                "b": "home:omar-marsh",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:samir-pell",
+                "b": "home:samir-pell",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:maya-vance",
+                "b": "home:maya-vance",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:omar-moreau",
+                "b": "home:o-moreau",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:leila-teague",
+                "b": "home:leila-teague",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:daniel-nakata",
+                "b": "home:daniel-nakata",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:clara-dahl",
+                "b": "home:c-dahl",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:mira-strand",
+                "b": "home:mira-strand",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:omar-halloran",
+                "b": "home:omar-halloran",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:sofia-okafor",
+                "b": "home:sofia-okafor",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:tomas-zeller",
+                "b": "home:tomas-zeller",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:mira-marsh",
+                "b": "home:mira-marsh",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:felix-teague",
+                "b": "home:felix-teague",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:noor-nakata",
+                "b": "home:noor-nakata",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:priya-orsini",
+                "b": "home:priya-orsini",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:leila-ahn",
+                "b": "work:leila-ahn-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:leila-ahn",
+                "b": "work:leila-ahn-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:tomas-marsh",
+                "b": "work:tomas-marsh-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:tomas-marsh",
+                "b": "work:tomas-marsh-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:felix-feld",
+                "b": "work:felix-feld-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:felix-feld",
+                "b": "work:felix-feld-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:pavel-corrigan",
+                "b": "work:pavel-corrigan-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:pavel-corrigan",
+                "b": "work:pavel-corrigan-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:lena-hartigan",
+                "b": "work:lena-hartigan-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:lena-hartigan",
+                "b": "work:lena-hartigan-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:yara-teague",
+                "b": "work:yara-teague-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:yara-teague",
+                "b": "work:yara-teague-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:clara-ibsen",
+                "b": "work:c-ibsen",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:clara-ibsen",
+                "b": "work:c-ibsen",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:nadia-brandt",
+                "b": "work:nadia-brandt-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:nadia-brandt",
+                "b": "work:nadia-brandt-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:mira-ostrow",
+                "b": "work:mira-ostrow-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:mira-ostrow",
+                "b": "work:mira-ostrow-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:tomas-feld",
+                "b": "work:tomas-feld-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:tomas-feld",
+                "b": "work:tomas-feld-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:clara-reeves",
+                "b": "work:clara-reeves-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:clara-reeves",
+                "b": "work:clara-reeves-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:rosa-ahn",
+                "b": "work:rosa-ahn-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:rosa-ahn",
+                "b": "work:rosa-ahn-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:clara-marsh",
+                "b": "work:clara-marsh-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:clara-marsh",
+                "b": "work:clara-marsh-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:leila-ibsen",
+                "b": "work:leila-ibsen-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:leila-ibsen",
+                "b": "work:leila-ibsen-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:maya-galloway",
+                "b": "work:maya-galloway-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:maya-galloway",
+                "b": "work:maya-galloway-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:noor-lindqvist",
+                "b": "work:noor-lindqvist-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:noor-lindqvist",
+                "b": "work:noor-lindqvist-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              }
+            ]
+          },
+          "company": {
+            "false_merge": {
+              "k": 0,
+              "n": 188,
+              "rate": 0,
+              "ci95": [
+                0,
+                0.02002413265781392
+              ]
+            },
+            "designed_recall": {
+              "k": 84,
+              "n": 124,
+              "rate": 0.6774193548387096,
+              "ci95": [
+                0.5908802892204477,
+                0.7532960085618925
+              ]
+            },
+            "precision": {
+              "k": 84,
+              "n": 84,
+              "rate": 1,
+              "ci95": [
+                0.95626827158534,
+                0.9999999999999999
+              ]
+            },
+            "recall": {
+              "k": 84,
+              "n": 124,
+              "rate": 0.6774193548387096,
+              "ci95": [
+                0.5908802892204477,
+                0.7532960085618925
+              ]
+            },
+            "b3": {
+              "precision": 1,
+              "recall": 0.9245283018867925,
+              "f1": 0.9607843137254902
+            },
+            "false_merges_anywhere": 0,
+            "by_family": {
+              "co-same-exact": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "co-same-legal-suffix": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "co-same-abbreviation": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                }
+              },
+              "co-same-rebrand": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                }
+              },
+              "co-same-multi-domain": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "co-diff-namesake-city": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-namesake-industry": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-namesake-country-suffix": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-legal-suffix": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-parent-subsidiary": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-holding-domain": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 32,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.1071791982550706
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-acquired": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 40,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.08762160119728664
+                  ]
+                },
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "co-diff-founder-linkedin": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 16,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.1936076805344365
+                  ]
+                },
+                "found": {
+                  "k": 4,
+                  "n": 4,
+                  "rate": 1,
+                  "ci95": [
+                    0.5101091635454027,
+                    1
+                  ]
+                }
+              }
+            },
+            "false_merge_cases": []
+          },
+          "all": {
+            "false_merge": {
+              "k": 72,
+              "n": 676,
+              "rate": 0.10650887573964497,
+              "ci95": [
+                0.08543694085387363,
+                0.13202767078830455
+              ]
+            },
+            "designed_recall": {
+              "k": 298,
+              "n": 436,
+              "rate": 0.6834862385321101,
+              "ci95": [
+                0.6383870350124379,
+                0.7253804016202823
+              ]
+            },
+            "precision": {
+              "k": 298,
+              "n": 373,
+              "rate": 0.7989276139410187,
+              "ci95": [
+                0.7552990442407366,
+                0.8364617474138414
+              ]
+            },
+            "recall": {
+              "k": 298,
+              "n": 436,
+              "rate": 0.6834862385321101,
+              "ci95": [
+                0.6383870350124379,
+                0.7253804016202823
+              ]
+            },
+            "b3": {
+              "precision": 0.9694523583412461,
+              "recall": 0.9344729344729344,
+              "f1": 0.9516413207493092
+            },
+            "false_merges_anywhere": 75,
+            "by_family": {
+              "same-exact": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-case-space": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-diacritics": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 16,
+                  "n": 20,
+                  "rate": 0.8,
+                  "ci95": [
+                    0.5839825677481064,
+                    0.919342337420202
+                  ]
+                }
+              },
+              "same-transliteration": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 8,
+                  "n": 20,
+                  "rate": 0.4,
+                  "ci95": [
+                    0.21880653237281705,
+                    0.6134184992377469
+                  ]
+                }
+              },
+              "same-name-order": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                }
+              },
+              "same-nickname": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 12,
+                  "n": 20,
+                  "rate": 0.6,
+                  "ci95": [
+                    0.3865815007622531,
+                    0.781193467627183
+                  ]
+                }
+              },
+              "same-initial": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 2,
+                  "n": 20,
+                  "rate": 0.1,
+                  "ci95": [
+                    0.027866481213768224,
+                    0.3010336452284873
+                  ]
+                }
+              },
+              "same-married-name": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 2,
+                  "n": 20,
+                  "rate": 0.1,
+                  "ci95": [
+                    0.027866481213768224,
+                    0.3010336452284873
+                  ]
+                }
+              },
+              "same-email-bridge": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-disjoint-emails": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 7,
+                  "n": 20,
+                  "rate": 0.35,
+                  "ci95": [
+                    0.18119182410108206,
+                    0.5671457233147638
+                  ]
+                }
+              },
+              "same-role-address": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-within-source": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "diff-namesake": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-same-company": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-same-city": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-cross-source-slug": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-team-alias": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-family-email": {
+                "label": "different",
+                "false_merge": {
+                  "k": 13,
+                  "n": 20,
+                  "rate": 0.65,
+                  "ci95": [
+                    0.43285427668523624,
+                    0.818808175898918
+                  ]
+                },
+                "found": null
+              },
+              "diff-assistant-email": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-shared-mailbox": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-nickname-lookalike": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-initial-lookalike": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-alias-on-5": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-alias-on-6": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-jr-suffix": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-placeholder-email": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-household-plain": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-offlist-alias": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-bridge-page": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 40,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.08762160119728664
+                  ]
+                },
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "diff-transitive-chain": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 40,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.08762160119728664
+                  ]
+                },
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "diff-recycled-github": {
+                "label": "different",
+                "false_merge": {
+                  "k": 13,
+                  "n": 16,
+                  "rate": 0.8125,
+                  "ci95": [
+                    0.5699111903802586,
+                    0.9340840092857187
+                  ]
+                },
+                "found": {
+                  "k": 4,
+                  "n": 4,
+                  "rate": 1,
+                  "ci95": [
+                    0.5101091635454027,
+                    1
+                  ]
+                }
+              },
+              "diff-wrong-linkedin": {
+                "label": "different",
+                "false_merge": {
+                  "k": 14,
+                  "n": 16,
+                  "rate": 0.875,
+                  "ci95": [
+                    0.639771727342413,
+                    0.9650225122567595
+                  ]
+                },
+                "found": {
+                  "k": 3,
+                  "n": 4,
+                  "rate": 0.75,
+                  "ci95": [
+                    0.30064184258240184,
+                    0.9544127391902995
+                  ]
+                }
+              },
+              "diff-declared-id-typo": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 16,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.1936076805344365
+                  ]
+                },
+                "found": {
+                  "k": 0,
+                  "n": 4,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.4898908364545973
+                  ]
+                }
+              },
+              "diff-shared-github-account": {
+                "label": "different",
+                "false_merge": {
+                  "k": 32,
+                  "n": 40,
+                  "rate": 0.8,
+                  "ci95": [
+                    0.652426936536005,
+                    0.895000102745623
+                  ]
+                },
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "co-same-exact": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "co-same-legal-suffix": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "co-same-abbreviation": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                }
+              },
+              "co-same-rebrand": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                }
+              },
+              "co-same-multi-domain": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "co-diff-namesake-city": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-namesake-industry": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-namesake-country-suffix": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-legal-suffix": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-parent-subsidiary": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-holding-domain": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 32,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.1071791982550706
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-acquired": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 40,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.08762160119728664
+                  ]
+                },
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "co-diff-founder-linkedin": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 16,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.1936076805344365
+                  ]
+                },
+                "found": {
+                  "k": 4,
+                  "n": 4,
+                  "rate": 1,
+                  "ci95": [
+                    0.5101091635454027,
+                    1
+                  ]
+                }
+              }
+            },
+            "false_merge_cases": [
+              {
+                "a": "home:felix-corrigan",
+                "b": "work:felix-corrigan",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:kenji-rhee",
+                "b": "work:kenji-rhee",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:pavel-sato",
+                "b": "work:pavel-sato",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:mira-lorne",
+                "b": "work:mira-lorne",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:hugo-marsh",
+                "b": "work:hugo-marsh",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:theo-wexford",
+                "b": "work:theo-wexford",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:maya-halloran",
+                "b": "work:maya-halloran",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:maya-nakata",
+                "b": "work:maya-nakata",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:kenji-zeller",
+                "b": "work:kenji-zeller",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:mateo-halloran",
+                "b": "work:mateo-halloran",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:iris-lindqvist",
+                "b": "work:iris-lindqvist",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:priya-whitlow",
+                "b": "work:priya-whitlow",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:maya-brandt",
+                "b": "work:maya-brandt",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:hugo-castell",
+                "b": "home:hugo-castell",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:greta-kowal",
+                "b": "home:greta-kowal",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:lena-marsh",
+                "b": "home:lena-marsh",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:omar-nakata",
+                "b": "home:o-nakata",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:samir-ulloa",
+                "b": "home:samir-ulloa",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:felix-hartigan",
+                "b": "home:felix-hartigan",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:ravi-okafor",
+                "b": "home:ravi-okafor",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:ravi-whitlow",
+                "b": "home:ravi-whitlow",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:kenji-vance",
+                "b": "home:kenji-vance",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:idris-abara",
+                "b": "home:idris-abara",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:maya-quinlan",
+                "b": "home:maya-quinlan",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:kenji-okafor",
+                "b": "home:kenji-okafor",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:omar-marsh",
+                "b": "home:omar-marsh",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:samir-pell",
+                "b": "home:samir-pell",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:maya-vance",
+                "b": "home:maya-vance",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:omar-moreau",
+                "b": "home:o-moreau",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:leila-teague",
+                "b": "home:leila-teague",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:daniel-nakata",
+                "b": "home:daniel-nakata",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:clara-dahl",
+                "b": "home:c-dahl",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:mira-strand",
+                "b": "home:mira-strand",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:omar-halloran",
+                "b": "home:omar-halloran",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:sofia-okafor",
+                "b": "home:sofia-okafor",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:tomas-zeller",
+                "b": "home:tomas-zeller",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:mira-marsh",
+                "b": "home:mira-marsh",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:felix-teague",
+                "b": "home:felix-teague",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:noor-nakata",
+                "b": "home:noor-nakata",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:priya-orsini",
+                "b": "home:priya-orsini",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:leila-ahn",
+                "b": "work:leila-ahn-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:leila-ahn",
+                "b": "work:leila-ahn-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:tomas-marsh",
+                "b": "work:tomas-marsh-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:tomas-marsh",
+                "b": "work:tomas-marsh-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:felix-feld",
+                "b": "work:felix-feld-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:felix-feld",
+                "b": "work:felix-feld-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:pavel-corrigan",
+                "b": "work:pavel-corrigan-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:pavel-corrigan",
+                "b": "work:pavel-corrigan-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:lena-hartigan",
+                "b": "work:lena-hartigan-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:lena-hartigan",
+                "b": "work:lena-hartigan-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:yara-teague",
+                "b": "work:yara-teague-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:yara-teague",
+                "b": "work:yara-teague-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:clara-ibsen",
+                "b": "work:c-ibsen",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:clara-ibsen",
+                "b": "work:c-ibsen",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:nadia-brandt",
+                "b": "work:nadia-brandt-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:nadia-brandt",
+                "b": "work:nadia-brandt-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:mira-ostrow",
+                "b": "work:mira-ostrow-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:mira-ostrow",
+                "b": "work:mira-ostrow-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:tomas-feld",
+                "b": "work:tomas-feld-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:tomas-feld",
+                "b": "work:tomas-feld-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:clara-reeves",
+                "b": "work:clara-reeves-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:clara-reeves",
+                "b": "work:clara-reeves-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:rosa-ahn",
+                "b": "work:rosa-ahn-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:rosa-ahn",
+                "b": "work:rosa-ahn-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:clara-marsh",
+                "b": "work:clara-marsh-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:clara-marsh",
+                "b": "work:clara-marsh-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:leila-ibsen",
+                "b": "work:leila-ibsen-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:leila-ibsen",
+                "b": "work:leila-ibsen-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:maya-galloway",
+                "b": "work:maya-galloway-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:maya-galloway",
+                "b": "work:maya-galloway-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:noor-lindqvist",
+                "b": "work:noor-lindqvist-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:noor-lindqvist",
+                "b": "work:noor-lindqvist-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              }
+            ]
+          },
+          "cross_type_merges": 0
+        },
+        "proposed": {
+          "groups": 341,
+          "person": {
+            "false_merge": {
+              "k": 72,
+              "n": 488,
+              "rate": 0.14754098360655737,
+              "ci95": [
+                0.11883101697082529,
+                0.18175661379779448
+              ]
+            },
+            "designed_recall": {
+              "k": 214,
+              "n": 312,
+              "rate": 0.6858974358974359,
+              "ci95": [
+                0.632397267137644,
+                0.7348756058826588
+              ]
+            },
+            "precision": {
+              "k": 214,
+              "n": 289,
+              "rate": 0.740484429065744,
+              "ci95": [
+                0.687022941132537,
+                0.7876366257189902
+              ]
+            },
+            "recall": {
+              "k": 214,
+              "n": 312,
+              "rate": 0.6858974358974359,
+              "ci95": [
+                0.632397267137644,
+                0.7348756058826588
+              ]
+            },
+            "b3": {
+              "precision": 0.9591793570219951,
+              "recall": 0.9378172588832487,
+              "f1": 0.9483780285506812
+            },
+            "false_merges_anywhere": 75,
+            "by_family": {
+              "same-exact": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-case-space": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-diacritics": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 16,
+                  "n": 20,
+                  "rate": 0.8,
+                  "ci95": [
+                    0.5839825677481064,
+                    0.919342337420202
+                  ]
+                }
+              },
+              "same-transliteration": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 8,
+                  "n": 20,
+                  "rate": 0.4,
+                  "ci95": [
+                    0.21880653237281705,
+                    0.6134184992377469
+                  ]
+                }
+              },
+              "same-name-order": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                }
+              },
+              "same-nickname": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 12,
+                  "n": 20,
+                  "rate": 0.6,
+                  "ci95": [
+                    0.3865815007622531,
+                    0.781193467627183
+                  ]
+                }
+              },
+              "same-initial": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 2,
+                  "n": 20,
+                  "rate": 0.1,
+                  "ci95": [
+                    0.027866481213768224,
+                    0.3010336452284873
+                  ]
+                }
+              },
+              "same-married-name": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 2,
+                  "n": 20,
+                  "rate": 0.1,
+                  "ci95": [
+                    0.027866481213768224,
+                    0.3010336452284873
+                  ]
+                }
+              },
+              "same-email-bridge": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-disjoint-emails": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 7,
+                  "n": 20,
+                  "rate": 0.35,
+                  "ci95": [
+                    0.18119182410108206,
+                    0.5671457233147638
+                  ]
+                }
+              },
+              "same-role-address": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-within-source": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "diff-namesake": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-same-company": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-same-city": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-cross-source-slug": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-team-alias": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-family-email": {
+                "label": "different",
+                "false_merge": {
+                  "k": 13,
+                  "n": 20,
+                  "rate": 0.65,
+                  "ci95": [
+                    0.43285427668523624,
+                    0.818808175898918
+                  ]
+                },
+                "found": null
+              },
+              "diff-assistant-email": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-shared-mailbox": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-nickname-lookalike": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-initial-lookalike": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-alias-on-5": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-alias-on-6": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-jr-suffix": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-placeholder-email": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-household-plain": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-offlist-alias": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-bridge-page": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 40,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.08762160119728664
+                  ]
+                },
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "diff-transitive-chain": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 40,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.08762160119728664
+                  ]
+                },
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "diff-recycled-github": {
+                "label": "different",
+                "false_merge": {
+                  "k": 13,
+                  "n": 16,
+                  "rate": 0.8125,
+                  "ci95": [
+                    0.5699111903802586,
+                    0.9340840092857187
+                  ]
+                },
+                "found": {
+                  "k": 4,
+                  "n": 4,
+                  "rate": 1,
+                  "ci95": [
+                    0.5101091635454027,
+                    1
+                  ]
+                }
+              },
+              "diff-wrong-linkedin": {
+                "label": "different",
+                "false_merge": {
+                  "k": 14,
+                  "n": 16,
+                  "rate": 0.875,
+                  "ci95": [
+                    0.639771727342413,
+                    0.9650225122567595
+                  ]
+                },
+                "found": {
+                  "k": 3,
+                  "n": 4,
+                  "rate": 0.75,
+                  "ci95": [
+                    0.30064184258240184,
+                    0.9544127391902995
+                  ]
+                }
+              },
+              "diff-declared-id-typo": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 16,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.1936076805344365
+                  ]
+                },
+                "found": {
+                  "k": 0,
+                  "n": 4,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.4898908364545973
+                  ]
+                }
+              },
+              "diff-shared-github-account": {
+                "label": "different",
+                "false_merge": {
+                  "k": 32,
+                  "n": 40,
+                  "rate": 0.8,
+                  "ci95": [
+                    0.652426936536005,
+                    0.895000102745623
+                  ]
+                },
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              }
+            },
+            "false_merge_cases": [
+              {
+                "a": "home:felix-corrigan",
+                "b": "work:felix-corrigan",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:kenji-rhee",
+                "b": "work:kenji-rhee",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:pavel-sato",
+                "b": "work:pavel-sato",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:mira-lorne",
+                "b": "work:mira-lorne",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:hugo-marsh",
+                "b": "work:hugo-marsh",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:theo-wexford",
+                "b": "work:theo-wexford",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:maya-halloran",
+                "b": "work:maya-halloran",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:maya-nakata",
+                "b": "work:maya-nakata",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:kenji-zeller",
+                "b": "work:kenji-zeller",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:mateo-halloran",
+                "b": "work:mateo-halloran",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:iris-lindqvist",
+                "b": "work:iris-lindqvist",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:priya-whitlow",
+                "b": "work:priya-whitlow",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:maya-brandt",
+                "b": "work:maya-brandt",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:hugo-castell",
+                "b": "home:hugo-castell",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:greta-kowal",
+                "b": "home:greta-kowal",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:lena-marsh",
+                "b": "home:lena-marsh",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:omar-nakata",
+                "b": "home:o-nakata",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:samir-ulloa",
+                "b": "home:samir-ulloa",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:felix-hartigan",
+                "b": "home:felix-hartigan",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:ravi-okafor",
+                "b": "home:ravi-okafor",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:ravi-whitlow",
+                "b": "home:ravi-whitlow",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:kenji-vance",
+                "b": "home:kenji-vance",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:idris-abara",
+                "b": "home:idris-abara",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:maya-quinlan",
+                "b": "home:maya-quinlan",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:kenji-okafor",
+                "b": "home:kenji-okafor",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:omar-marsh",
+                "b": "home:omar-marsh",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:samir-pell",
+                "b": "home:samir-pell",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:maya-vance",
+                "b": "home:maya-vance",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:omar-moreau",
+                "b": "home:o-moreau",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:leila-teague",
+                "b": "home:leila-teague",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:daniel-nakata",
+                "b": "home:daniel-nakata",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:clara-dahl",
+                "b": "home:c-dahl",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:mira-strand",
+                "b": "home:mira-strand",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:omar-halloran",
+                "b": "home:omar-halloran",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:sofia-okafor",
+                "b": "home:sofia-okafor",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:tomas-zeller",
+                "b": "home:tomas-zeller",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:mira-marsh",
+                "b": "home:mira-marsh",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:felix-teague",
+                "b": "home:felix-teague",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:noor-nakata",
+                "b": "home:noor-nakata",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:priya-orsini",
+                "b": "home:priya-orsini",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:leila-ahn",
+                "b": "work:leila-ahn-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:leila-ahn",
+                "b": "work:leila-ahn-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:tomas-marsh",
+                "b": "work:tomas-marsh-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:tomas-marsh",
+                "b": "work:tomas-marsh-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:felix-feld",
+                "b": "work:felix-feld-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:felix-feld",
+                "b": "work:felix-feld-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:pavel-corrigan",
+                "b": "work:pavel-corrigan-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:pavel-corrigan",
+                "b": "work:pavel-corrigan-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:lena-hartigan",
+                "b": "work:lena-hartigan-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:lena-hartigan",
+                "b": "work:lena-hartigan-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:yara-teague",
+                "b": "work:yara-teague-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:yara-teague",
+                "b": "work:yara-teague-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:clara-ibsen",
+                "b": "work:c-ibsen",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:clara-ibsen",
+                "b": "work:c-ibsen",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:nadia-brandt",
+                "b": "work:nadia-brandt-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:nadia-brandt",
+                "b": "work:nadia-brandt-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:mira-ostrow",
+                "b": "work:mira-ostrow-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:mira-ostrow",
+                "b": "work:mira-ostrow-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:tomas-feld",
+                "b": "work:tomas-feld-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:tomas-feld",
+                "b": "work:tomas-feld-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:clara-reeves",
+                "b": "work:clara-reeves-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:clara-reeves",
+                "b": "work:clara-reeves-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:rosa-ahn",
+                "b": "work:rosa-ahn-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:rosa-ahn",
+                "b": "work:rosa-ahn-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:clara-marsh",
+                "b": "work:clara-marsh-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:clara-marsh",
+                "b": "work:clara-marsh-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:leila-ibsen",
+                "b": "work:leila-ibsen-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:leila-ibsen",
+                "b": "work:leila-ibsen-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:maya-galloway",
+                "b": "work:maya-galloway-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:maya-galloway",
+                "b": "work:maya-galloway-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:noor-lindqvist",
+                "b": "work:noor-lindqvist-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:noor-lindqvist",
+                "b": "work:noor-lindqvist-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              }
+            ]
+          },
+          "company": {
+            "false_merge": {
+              "k": 0,
+              "n": 188,
+              "rate": 0,
+              "ci95": [
+                0,
+                0.02002413265781392
+              ]
+            },
+            "designed_recall": {
+              "k": 84,
+              "n": 124,
+              "rate": 0.6774193548387096,
+              "ci95": [
+                0.5908802892204477,
+                0.7532960085618925
+              ]
+            },
+            "precision": {
+              "k": 84,
+              "n": 84,
+              "rate": 1,
+              "ci95": [
+                0.95626827158534,
+                0.9999999999999999
+              ]
+            },
+            "recall": {
+              "k": 84,
+              "n": 124,
+              "rate": 0.6774193548387096,
+              "ci95": [
+                0.5908802892204477,
+                0.7532960085618925
+              ]
+            },
+            "b3": {
+              "precision": 1,
+              "recall": 0.9245283018867925,
+              "f1": 0.9607843137254902
+            },
+            "false_merges_anywhere": 0,
+            "by_family": {
+              "co-same-exact": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "co-same-legal-suffix": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "co-same-abbreviation": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                }
+              },
+              "co-same-rebrand": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                }
+              },
+              "co-same-multi-domain": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "co-diff-namesake-city": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-namesake-industry": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-namesake-country-suffix": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-legal-suffix": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-parent-subsidiary": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-holding-domain": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 32,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.1071791982550706
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-acquired": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 40,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.08762160119728664
+                  ]
+                },
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "co-diff-founder-linkedin": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 16,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.1936076805344365
+                  ]
+                },
+                "found": {
+                  "k": 4,
+                  "n": 4,
+                  "rate": 1,
+                  "ci95": [
+                    0.5101091635454027,
+                    1
+                  ]
+                }
+              }
+            },
+            "false_merge_cases": []
+          },
+          "all": {
+            "false_merge": {
+              "k": 72,
+              "n": 676,
+              "rate": 0.10650887573964497,
+              "ci95": [
+                0.08543694085387363,
+                0.13202767078830455
+              ]
+            },
+            "designed_recall": {
+              "k": 298,
+              "n": 436,
+              "rate": 0.6834862385321101,
+              "ci95": [
+                0.6383870350124379,
+                0.7253804016202823
+              ]
+            },
+            "precision": {
+              "k": 298,
+              "n": 373,
+              "rate": 0.7989276139410187,
+              "ci95": [
+                0.7552990442407366,
+                0.8364617474138414
+              ]
+            },
+            "recall": {
+              "k": 298,
+              "n": 436,
+              "rate": 0.6834862385321101,
+              "ci95": [
+                0.6383870350124379,
+                0.7253804016202823
+              ]
+            },
+            "b3": {
+              "precision": 0.9694523583412461,
+              "recall": 0.9344729344729344,
+              "f1": 0.9516413207493092
+            },
+            "false_merges_anywhere": 75,
+            "by_family": {
+              "same-exact": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-case-space": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-diacritics": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 16,
+                  "n": 20,
+                  "rate": 0.8,
+                  "ci95": [
+                    0.5839825677481064,
+                    0.919342337420202
+                  ]
+                }
+              },
+              "same-transliteration": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 8,
+                  "n": 20,
+                  "rate": 0.4,
+                  "ci95": [
+                    0.21880653237281705,
+                    0.6134184992377469
+                  ]
+                }
+              },
+              "same-name-order": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                }
+              },
+              "same-nickname": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 12,
+                  "n": 20,
+                  "rate": 0.6,
+                  "ci95": [
+                    0.3865815007622531,
+                    0.781193467627183
+                  ]
+                }
+              },
+              "same-initial": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 2,
+                  "n": 20,
+                  "rate": 0.1,
+                  "ci95": [
+                    0.027866481213768224,
+                    0.3010336452284873
+                  ]
+                }
+              },
+              "same-married-name": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 2,
+                  "n": 20,
+                  "rate": 0.1,
+                  "ci95": [
+                    0.027866481213768224,
+                    0.3010336452284873
+                  ]
+                }
+              },
+              "same-email-bridge": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-disjoint-emails": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 7,
+                  "n": 20,
+                  "rate": 0.35,
+                  "ci95": [
+                    0.18119182410108206,
+                    0.5671457233147638
+                  ]
+                }
+              },
+              "same-role-address": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-within-source": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "diff-namesake": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-same-company": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-same-city": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-cross-source-slug": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-team-alias": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-family-email": {
+                "label": "different",
+                "false_merge": {
+                  "k": 13,
+                  "n": 20,
+                  "rate": 0.65,
+                  "ci95": [
+                    0.43285427668523624,
+                    0.818808175898918
+                  ]
+                },
+                "found": null
+              },
+              "diff-assistant-email": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-shared-mailbox": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-nickname-lookalike": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-initial-lookalike": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-alias-on-5": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-alias-on-6": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-jr-suffix": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-placeholder-email": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-household-plain": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-offlist-alias": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-bridge-page": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 40,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.08762160119728664
+                  ]
+                },
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "diff-transitive-chain": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 40,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.08762160119728664
+                  ]
+                },
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "diff-recycled-github": {
+                "label": "different",
+                "false_merge": {
+                  "k": 13,
+                  "n": 16,
+                  "rate": 0.8125,
+                  "ci95": [
+                    0.5699111903802586,
+                    0.9340840092857187
+                  ]
+                },
+                "found": {
+                  "k": 4,
+                  "n": 4,
+                  "rate": 1,
+                  "ci95": [
+                    0.5101091635454027,
+                    1
+                  ]
+                }
+              },
+              "diff-wrong-linkedin": {
+                "label": "different",
+                "false_merge": {
+                  "k": 14,
+                  "n": 16,
+                  "rate": 0.875,
+                  "ci95": [
+                    0.639771727342413,
+                    0.9650225122567595
+                  ]
+                },
+                "found": {
+                  "k": 3,
+                  "n": 4,
+                  "rate": 0.75,
+                  "ci95": [
+                    0.30064184258240184,
+                    0.9544127391902995
+                  ]
+                }
+              },
+              "diff-declared-id-typo": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 16,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.1936076805344365
+                  ]
+                },
+                "found": {
+                  "k": 0,
+                  "n": 4,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.4898908364545973
+                  ]
+                }
+              },
+              "diff-shared-github-account": {
+                "label": "different",
+                "false_merge": {
+                  "k": 32,
+                  "n": 40,
+                  "rate": 0.8,
+                  "ci95": [
+                    0.652426936536005,
+                    0.895000102745623
+                  ]
+                },
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "co-same-exact": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "co-same-legal-suffix": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "co-same-abbreviation": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                }
+              },
+              "co-same-rebrand": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                }
+              },
+              "co-same-multi-domain": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "co-diff-namesake-city": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-namesake-industry": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-namesake-country-suffix": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-legal-suffix": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-parent-subsidiary": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-holding-domain": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 32,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.1071791982550706
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-acquired": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 40,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.08762160119728664
+                  ]
+                },
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "co-diff-founder-linkedin": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 16,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.1936076805344365
+                  ]
+                },
+                "found": {
+                  "k": 4,
+                  "n": 4,
+                  "rate": 1,
+                  "ci95": [
+                    0.5101091635454027,
+                    1
+                  ]
+                }
+              }
+            },
+            "false_merge_cases": [
+              {
+                "a": "home:felix-corrigan",
+                "b": "work:felix-corrigan",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:kenji-rhee",
+                "b": "work:kenji-rhee",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:pavel-sato",
+                "b": "work:pavel-sato",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:mira-lorne",
+                "b": "work:mira-lorne",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:hugo-marsh",
+                "b": "work:hugo-marsh",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:theo-wexford",
+                "b": "work:theo-wexford",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:maya-halloran",
+                "b": "work:maya-halloran",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:maya-nakata",
+                "b": "work:maya-nakata",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:kenji-zeller",
+                "b": "work:kenji-zeller",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:mateo-halloran",
+                "b": "work:mateo-halloran",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:iris-lindqvist",
+                "b": "work:iris-lindqvist",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:priya-whitlow",
+                "b": "work:priya-whitlow",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:maya-brandt",
+                "b": "work:maya-brandt",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:hugo-castell",
+                "b": "home:hugo-castell",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:greta-kowal",
+                "b": "home:greta-kowal",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:lena-marsh",
+                "b": "home:lena-marsh",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:omar-nakata",
+                "b": "home:o-nakata",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:samir-ulloa",
+                "b": "home:samir-ulloa",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:felix-hartigan",
+                "b": "home:felix-hartigan",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:ravi-okafor",
+                "b": "home:ravi-okafor",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:ravi-whitlow",
+                "b": "home:ravi-whitlow",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:kenji-vance",
+                "b": "home:kenji-vance",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:idris-abara",
+                "b": "home:idris-abara",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:maya-quinlan",
+                "b": "home:maya-quinlan",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:kenji-okafor",
+                "b": "home:kenji-okafor",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:omar-marsh",
+                "b": "home:omar-marsh",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:samir-pell",
+                "b": "home:samir-pell",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:maya-vance",
+                "b": "home:maya-vance",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:omar-moreau",
+                "b": "home:o-moreau",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:leila-teague",
+                "b": "home:leila-teague",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:daniel-nakata",
+                "b": "home:daniel-nakata",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:clara-dahl",
+                "b": "home:c-dahl",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:mira-strand",
+                "b": "home:mira-strand",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:omar-halloran",
+                "b": "home:omar-halloran",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:sofia-okafor",
+                "b": "home:sofia-okafor",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:tomas-zeller",
+                "b": "home:tomas-zeller",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:mira-marsh",
+                "b": "home:mira-marsh",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:felix-teague",
+                "b": "home:felix-teague",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:noor-nakata",
+                "b": "home:noor-nakata",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:priya-orsini",
+                "b": "home:priya-orsini",
+                "family": "diff-wrong-linkedin",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:leila-ahn",
+                "b": "work:leila-ahn-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:leila-ahn",
+                "b": "work:leila-ahn-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:tomas-marsh",
+                "b": "work:tomas-marsh-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:tomas-marsh",
+                "b": "work:tomas-marsh-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:felix-feld",
+                "b": "work:felix-feld-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:felix-feld",
+                "b": "work:felix-feld-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:pavel-corrigan",
+                "b": "work:pavel-corrigan-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:pavel-corrigan",
+                "b": "work:pavel-corrigan-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:lena-hartigan",
+                "b": "work:lena-hartigan-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:lena-hartigan",
+                "b": "work:lena-hartigan-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:yara-teague",
+                "b": "work:yara-teague-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:yara-teague",
+                "b": "work:yara-teague-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:clara-ibsen",
+                "b": "work:c-ibsen",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:clara-ibsen",
+                "b": "work:c-ibsen",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:nadia-brandt",
+                "b": "work:nadia-brandt-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:nadia-brandt",
+                "b": "work:nadia-brandt-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:mira-ostrow",
+                "b": "work:mira-ostrow-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:mira-ostrow",
+                "b": "work:mira-ostrow-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:tomas-feld",
+                "b": "work:tomas-feld-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:tomas-feld",
+                "b": "work:tomas-feld-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:clara-reeves",
+                "b": "work:clara-reeves-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:clara-reeves",
+                "b": "work:clara-reeves-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:rosa-ahn",
+                "b": "work:rosa-ahn-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:rosa-ahn",
+                "b": "work:rosa-ahn-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:clara-marsh",
+                "b": "work:clara-marsh-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:clara-marsh",
+                "b": "work:clara-marsh-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:leila-ibsen",
+                "b": "work:leila-ibsen-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:leila-ibsen",
+                "b": "work:leila-ibsen-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:maya-galloway",
+                "b": "work:maya-galloway-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:maya-galloway",
+                "b": "work:maya-galloway-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "work:noor-lindqvist",
+                "b": "work:noor-lindqvist-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              },
+              {
+                "a": "home:noor-lindqvist",
+                "b": "work:noor-lindqvist-2",
+                "family": "diff-shared-github-account",
+                "via": [
+                  "cross_source/clean: zingg"
+                ]
+              }
+            ]
+          },
+          "cross_type_merges": 0
+        }
+      },
+      "not_a_candidate": null,
+      "unresolved": null
+    }
+  ]
+}

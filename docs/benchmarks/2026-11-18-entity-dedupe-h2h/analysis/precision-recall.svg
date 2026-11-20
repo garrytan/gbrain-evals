@@ -1,0 +1,140 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 450" role="img" aria-labelledby="title desc">
+<title id="title">Precision and recall by entity type</title>
+<desc id="desc">Two scatterplots compare all scored operating points for people and companies. Open circles are proposed tiers; filled circles are automatic tiers. Every point is in the accompanying table.</desc>
+<rect width="1000" height="450" rx="8" fill="#fff"/>
+<g font-family="system-ui, sans-serif" font-size="13" fill="#233043">
+<text x="66" y="29" font-size="19" font-weight="700">People</text>
+<path d="M66 335h365 M66 335V49" stroke="#dfe4ea"/>
+<text x="56" y="339" text-anchor="end">0</text>
+<text x="66" y="356" text-anchor="middle">0</text>
+<path d="M66 277.8h365 M139 335V49" stroke="#dfe4ea"/>
+<text x="56" y="281.8" text-anchor="end">20</text>
+<text x="139" y="356" text-anchor="middle">20</text>
+<path d="M66 220.6h365 M212 335V49" stroke="#dfe4ea"/>
+<text x="56" y="224.6" text-anchor="end">40</text>
+<text x="212" y="356" text-anchor="middle">40</text>
+<path d="M66 163.4h365 M285 335V49" stroke="#dfe4ea"/>
+<text x="56" y="167.4" text-anchor="end">60</text>
+<text x="285" y="356" text-anchor="middle">60</text>
+<path d="M66 106.2h365 M358 335V49" stroke="#dfe4ea"/>
+<text x="56" y="110.2" text-anchor="end">80</text>
+<text x="358" y="356" text-anchor="middle">80</text>
+<path d="M66 49h365 M431 335V49" stroke="#dfe4ea"/>
+<text x="56" y="53" text-anchor="end">100</text>
+<text x="431" y="356" text-anchor="middle">100</text>
+<text x="248.5" y="385" text-anchor="middle">Pairwise recall (%)</text>
+<text transform="translate(20 192) rotate(-90)" text-anchor="middle">Pairwise precision (%)</text>
+<circle cx="275.41" cy="68.36" r="4" fill="#786400" fill-opacity=".85" stroke="#786400" stroke-width="1.6"><title>zingg-tuned-full auto: precision 93.23%, recall 57.37%</title></circle>
+<circle cx="316.35" cy="123.22" r="4" fill="#786400" fill-opacity=".85" stroke="#786400" stroke-width="1.6"><title>zingg-tuned-100 auto: precision 74.05%, recall 68.59%</title></circle>
+<circle cx="323.37" cy="130.71" r="4" fill="#786400" fill-opacity=".85" stroke="#786400" stroke-width="1.6"><title>zingg-default-full auto: precision 71.43%, recall 70.51%</title></circle>
+<circle cx="337.41" cy="125.03" r="4" fill="#786400" fill-opacity=".85" stroke="#786400" stroke-width="1.6"><title>zingg-default-100 auto: precision 73.42%, recall 74.36%</title></circle>
+<circle cx="318.69" cy="143.74" r="4" fill="#105ed1" fill-opacity=".85" stroke="#105ed1" stroke-width="1.6"><title>splink-tuned auto: precision 66.87%, recall 69.23%</title></circle>
+<circle cx="338.58" cy="184.91" r="4" fill="#fff" fill-opacity=".85" stroke="#105ed1" stroke-width="1.6"><title>splink-tuned proposed: precision 52.48%, recall 74.68%</title></circle>
+<circle cx="250.84" cy="225.85" r="4" fill="#105ed1" fill-opacity=".85" stroke="#105ed1" stroke-width="1.6"><title>splink-default auto: precision 38.16%, recall 50.64%</title></circle>
+<circle cx="397.07" cy="136.62" r="4" fill="#08768c" fill-opacity=".85" stroke="#08768c" stroke-width="1.6"><title>dedupe-tuned-full-s5 auto: precision 69.36%, recall 90.71%</title></circle>
+<circle cx="354.96" cy="90.56" r="4" fill="#08768c" fill-opacity=".85" stroke="#08768c" stroke-width="1.6"><title>dedupe-tuned-full-s4 auto: precision 85.47%, recall 79.17%</title></circle>
+<circle cx="423.98" cy="117.30" r="4" fill="#08768c" fill-opacity=".85" stroke="#08768c" stroke-width="1.6"><title>dedupe-tuned-full-s3 auto: precision 76.12%, recall 98.08%</title></circle>
+<circle cx="373.68" cy="86.76" r="4" fill="#08768c" fill-opacity=".85" stroke="#08768c" stroke-width="1.6"><title>dedupe-tuned-full-s2 auto: precision 86.80%, recall 84.29%</title></circle>
+<circle cx="354.96" cy="79.05" r="4" fill="#08768c" fill-opacity=".85" stroke="#08768c" stroke-width="1.6"><title>dedupe-tuned-full-s1 auto: precision 89.49%, recall 79.17%</title></circle>
+<circle cx="116.30" cy="190.32" r="4" fill="#08768c" fill-opacity=".85" stroke="#08768c" stroke-width="1.6"><title>dedupe-tuned-100-s5 auto: precision 50.59%, recall 13.78%</title></circle>
+<circle cx="352.62" cy="90.00" r="4" fill="#08768c" fill-opacity=".85" stroke="#08768c" stroke-width="1.6"><title>dedupe-tuned-100-s4 auto: precision 85.66%, recall 78.53%</title></circle>
+<circle cx="354.96" cy="78.12" r="4" fill="#08768c" fill-opacity=".85" stroke="#08768c" stroke-width="1.6"><title>dedupe-tuned-100-s3 auto: precision 89.82%, recall 79.17%</title></circle>
+<circle cx="373.68" cy="86.76" r="4" fill="#08768c" fill-opacity=".85" stroke="#08768c" stroke-width="1.6"><title>dedupe-tuned-100-s2 auto: precision 86.80%, recall 84.29%</title></circle>
+<circle cx="359.64" cy="99.64" r="4" fill="#08768c" fill-opacity=".85" stroke="#08768c" stroke-width="1.6"><title>dedupe-tuned-100-s1 auto: precision 82.30%, recall 80.45%</title></circle>
+<circle cx="177.14" cy="133.74" r="4" fill="#08768c" fill-opacity=".85" stroke="#08768c" stroke-width="1.6"><title>dedupe-default-full-s5 auto: precision 70.37%, recall 30.45%</title></circle>
+<circle cx="190.01" cy="49.00" r="4" fill="#08768c" fill-opacity=".85" stroke="#08768c" stroke-width="1.6"><title>dedupe-default-full-s4 auto: precision 100.00%, recall 33.97%</title></circle>
+<circle cx="240.31" cy="52.79" r="4" fill="#08768c" fill-opacity=".85" stroke="#08768c" stroke-width="1.6"><title>dedupe-default-full-s3 auto: precision 98.68%, recall 47.76%</title></circle>
+<circle cx="276.58" cy="52.14" r="4" fill="#08768c" fill-opacity=".85" stroke="#08768c" stroke-width="1.6"><title>dedupe-default-full-s2 auto: precision 98.90%, recall 57.69%</title></circle>
+<circle cx="299.97" cy="79.64" r="4" fill="#08768c" fill-opacity=".85" stroke="#08768c" stroke-width="1.6"><title>dedupe-default-full-s1 auto: precision 89.29%, recall 64.10%</title></circle>
+<circle cx="177.14" cy="133.74" r="4" fill="#08768c" fill-opacity=".85" stroke="#08768c" stroke-width="1.6"><title>dedupe-default-100-s5 auto: precision 70.37%, recall 30.45%</title></circle>
+<circle cx="190.01" cy="49.00" r="4" fill="#08768c" fill-opacity=".85" stroke="#08768c" stroke-width="1.6"><title>dedupe-default-100-s4 auto: precision 100.00%, recall 33.97%</title></circle>
+<circle cx="240.31" cy="52.79" r="4" fill="#08768c" fill-opacity=".85" stroke="#08768c" stroke-width="1.6"><title>dedupe-default-100-s3 auto: precision 98.68%, recall 47.76%</title></circle>
+<circle cx="276.58" cy="52.14" r="4" fill="#08768c" fill-opacity=".85" stroke="#08768c" stroke-width="1.6"><title>dedupe-default-100-s2 auto: precision 98.90%, recall 57.69%</title></circle>
+<circle cx="299.97" cy="79.64" r="4" fill="#08768c" fill-opacity=".85" stroke="#08768c" stroke-width="1.6"><title>dedupe-default-100-s1 auto: precision 89.29%, recall 64.10%</title></circle>
+<circle cx="261.37" cy="244.71" r="4" fill="#cc4d00" fill-opacity=".85" stroke="#cc4d00" stroke-width="1.6"><title>ext-extract-first auto: precision 31.57%, recall 53.53%</title></circle>
+<circle cx="395.90" cy="216.57" r="4" fill="#cc4d00" fill-opacity=".85" stroke="#cc4d00" stroke-width="1.6"><title>ext-temporal-graph auto: precision 41.41%, recall 90.38%</title></circle>
+<circle cx="214.57" cy="238.91" r="4" fill="#cc4d00" fill-opacity=".85" stroke="#cc4d00" stroke-width="1.6"><title>ext-graph-pipeline-tuned auto: precision 33.60%, recall 40.71%</title></circle>
+<circle cx="309.33" cy="237.64" r="4" fill="#cc4d00" fill-opacity=".85" stroke="#cc4d00" stroke-width="1.6"><title>ext-graph-pipeline-patched auto: precision 34.04%, recall 66.67%</title></circle>
+<circle cx="337.41" cy="236.70" r="4" fill="#cc4d00" fill-opacity=".85" stroke="#cc4d00" stroke-width="1.6"><title>ext-memory-bank auto: precision 34.37%, recall 74.36%</title></circle>
+<circle cx="133.85" cy="158.53" r="5.5" fill="#007354" fill-opacity=".85" stroke="#007354" stroke-width="1.6"><title>gbrain auto: precision 61.70%, recall 18.59%</title></circle>
+<circle cx="310.50" cy="217.10" r="5.5" fill="#fff" fill-opacity=".85" stroke="#007354" stroke-width="1.6"><title>gbrain proposed: precision 41.22%, recall 66.99%</title></circle>
+<circle cx="431.00" cy="173.35" r="4" fill="#7634a7" fill-opacity=".85" stroke="#7634a7" stroke-width="1.6"><title>gpt auto: precision 56.52%, recall 100.00%</title></circle>
+<circle cx="431.00" cy="297.84" r="4" fill="#fff" fill-opacity=".85" stroke="#7634a7" stroke-width="1.6"><title>gpt proposed: precision 12.99%, recall 100.00%</title></circle>
+<circle cx="431.00" cy="172.17" r="4" fill="#7634a7" fill-opacity=".85" stroke="#7634a7" stroke-width="1.6"><title>particle auto: precision 56.93%, recall 100.00%</title></circle>
+<circle cx="431.00" cy="226.05" r="4" fill="#fff" fill-opacity=".85" stroke="#7634a7" stroke-width="1.6"><title>particle proposed: precision 38.10%, recall 100.00%</title></circle>
+<circle cx="431.00" cy="142.69" r="4" fill="#7634a7" fill-opacity=".85" stroke="#7634a7" stroke-width="1.6"><title>claude auto: precision 67.24%, recall 100.00%</title></circle>
+<circle cx="431.00" cy="187.75" r="4" fill="#fff" fill-opacity=".85" stroke="#7634a7" stroke-width="1.6"><title>claude proposed: precision 51.49%, recall 100.00%</title></circle>
+<text x="562" y="29" font-size="19" font-weight="700">Companies</text>
+<path d="M562 335h365 M562 335V49" stroke="#dfe4ea"/>
+<text x="552" y="339" text-anchor="end">0</text>
+<text x="562" y="356" text-anchor="middle">0</text>
+<path d="M562 277.8h365 M635 335V49" stroke="#dfe4ea"/>
+<text x="552" y="281.8" text-anchor="end">20</text>
+<text x="635" y="356" text-anchor="middle">20</text>
+<path d="M562 220.6h365 M708 335V49" stroke="#dfe4ea"/>
+<text x="552" y="224.6" text-anchor="end">40</text>
+<text x="708" y="356" text-anchor="middle">40</text>
+<path d="M562 163.4h365 M781 335V49" stroke="#dfe4ea"/>
+<text x="552" y="167.4" text-anchor="end">60</text>
+<text x="781" y="356" text-anchor="middle">60</text>
+<path d="M562 106.2h365 M854 335V49" stroke="#dfe4ea"/>
+<text x="552" y="110.2" text-anchor="end">80</text>
+<text x="854" y="356" text-anchor="middle">80</text>
+<path d="M562 49h365 M927 335V49" stroke="#dfe4ea"/>
+<text x="552" y="53" text-anchor="end">100</text>
+<text x="927" y="356" text-anchor="middle">100</text>
+<text x="744.5" y="385" text-anchor="middle">Pairwise recall (%)</text>
+<text transform="translate(516 192) rotate(-90)" text-anchor="middle">Pairwise precision (%)</text>
+<circle cx="809.26" cy="49.00" r="4" fill="#786400" fill-opacity=".85" stroke="#786400" stroke-width="1.6"><title>zingg-tuned-full auto: precision 100.00%, recall 67.74%</title></circle>
+<circle cx="809.26" cy="49.00" r="4" fill="#786400" fill-opacity=".85" stroke="#786400" stroke-width="1.6"><title>zingg-tuned-100 auto: precision 100.00%, recall 67.74%</title></circle>
+<circle cx="809.26" cy="62.00" r="4" fill="#786400" fill-opacity=".85" stroke="#786400" stroke-width="1.6"><title>zingg-default-full auto: precision 95.45%, recall 67.74%</title></circle>
+<circle cx="809.26" cy="62.00" r="4" fill="#786400" fill-opacity=".85" stroke="#786400" stroke-width="1.6"><title>zingg-default-100 auto: precision 95.45%, recall 67.74%</title></circle>
+<circle cx="835.75" cy="161.16" r="4" fill="#105ed1" fill-opacity=".85" stroke="#105ed1" stroke-width="1.6"><title>splink-tuned auto: precision 60.78%, recall 75.00%</title></circle>
+<circle cx="835.75" cy="195.74" r="4" fill="#fff" fill-opacity=".85" stroke="#105ed1" stroke-width="1.6"><title>splink-tuned proposed: precision 48.69%, recall 75.00%</title></circle>
+<circle cx="688.57" cy="209.51" r="4" fill="#105ed1" fill-opacity=".85" stroke="#105ed1" stroke-width="1.6"><title>splink-default auto: precision 43.88%, recall 34.68%</title></circle>
+<circle cx="885.79" cy="56.59" r="4" fill="#08768c" fill-opacity=".85" stroke="#08768c" stroke-width="1.6"><title>dedupe-tuned-full-s5 auto: precision 97.35%, recall 88.71%</title></circle>
+<circle cx="879.90" cy="49.00" r="4" fill="#08768c" fill-opacity=".85" stroke="#08768c" stroke-width="1.6"><title>dedupe-tuned-full-s4 auto: precision 100.00%, recall 87.10%</title></circle>
+<circle cx="879.90" cy="49.00" r="4" fill="#08768c" fill-opacity=".85" stroke="#08768c" stroke-width="1.6"><title>dedupe-tuned-full-s3 auto: precision 100.00%, recall 87.10%</title></circle>
+<circle cx="885.79" cy="49.00" r="4" fill="#08768c" fill-opacity=".85" stroke="#08768c" stroke-width="1.6"><title>dedupe-tuned-full-s2 auto: precision 100.00%, recall 88.71%</title></circle>
+<circle cx="879.90" cy="49.00" r="4" fill="#08768c" fill-opacity=".85" stroke="#08768c" stroke-width="1.6"><title>dedupe-tuned-full-s1 auto: precision 100.00%, recall 87.10%</title></circle>
+<circle cx="876.96" cy="54.25" r="4" fill="#08768c" fill-opacity=".85" stroke="#08768c" stroke-width="1.6"><title>dedupe-tuned-100-s5 auto: precision 98.17%, recall 86.29%</title></circle>
+<circle cx="876.96" cy="54.25" r="4" fill="#08768c" fill-opacity=".85" stroke="#08768c" stroke-width="1.6"><title>dedupe-tuned-100-s4 auto: precision 98.17%, recall 86.29%</title></circle>
+<circle cx="879.90" cy="49.00" r="4" fill="#08768c" fill-opacity=".85" stroke="#08768c" stroke-width="1.6"><title>dedupe-tuned-100-s3 auto: precision 100.00%, recall 87.10%</title></circle>
+<circle cx="879.90" cy="54.20" r="4" fill="#08768c" fill-opacity=".85" stroke="#08768c" stroke-width="1.6"><title>dedupe-tuned-100-s2 auto: precision 98.18%, recall 87.10%</title></circle>
+<circle cx="879.90" cy="49.00" r="4" fill="#08768c" fill-opacity=".85" stroke="#08768c" stroke-width="1.6"><title>dedupe-tuned-100-s1 auto: precision 100.00%, recall 87.10%</title></circle>
+<circle cx="865.19" cy="101.21" r="4" fill="#08768c" fill-opacity=".85" stroke="#08768c" stroke-width="1.6"><title>dedupe-default-full-s5 auto: precision 81.75%, recall 83.06%</title></circle>
+<circle cx="871.07" cy="54.35" r="4" fill="#08768c" fill-opacity=".85" stroke="#08768c" stroke-width="1.6"><title>dedupe-default-full-s4 auto: precision 98.13%, recall 84.68%</title></circle>
+<circle cx="865.19" cy="51.75" r="4" fill="#08768c" fill-opacity=".85" stroke="#08768c" stroke-width="1.6"><title>dedupe-default-full-s3 auto: precision 99.04%, recall 83.06%</title></circle>
+<circle cx="868.13" cy="85.05" r="4" fill="#08768c" fill-opacity=".85" stroke="#08768c" stroke-width="1.6"><title>dedupe-default-full-s2 auto: precision 87.39%, recall 83.87%</title></circle>
+<circle cx="871.07" cy="64.46" r="4" fill="#08768c" fill-opacity=".85" stroke="#08768c" stroke-width="1.6"><title>dedupe-default-full-s1 auto: precision 94.59%, recall 84.68%</title></circle>
+<circle cx="865.19" cy="101.21" r="4" fill="#08768c" fill-opacity=".85" stroke="#08768c" stroke-width="1.6"><title>dedupe-default-100-s5 auto: precision 81.75%, recall 83.06%</title></circle>
+<circle cx="871.07" cy="54.35" r="4" fill="#08768c" fill-opacity=".85" stroke="#08768c" stroke-width="1.6"><title>dedupe-default-100-s4 auto: precision 98.13%, recall 84.68%</title></circle>
+<circle cx="865.19" cy="51.75" r="4" fill="#08768c" fill-opacity=".85" stroke="#08768c" stroke-width="1.6"><title>dedupe-default-100-s3 auto: precision 99.04%, recall 83.06%</title></circle>
+<circle cx="868.13" cy="85.05" r="4" fill="#08768c" fill-opacity=".85" stroke="#08768c" stroke-width="1.6"><title>dedupe-default-100-s2 auto: precision 87.39%, recall 83.87%</title></circle>
+<circle cx="871.07" cy="64.46" r="4" fill="#08768c" fill-opacity=".85" stroke="#08768c" stroke-width="1.6"><title>dedupe-default-100-s1 auto: precision 94.59%, recall 84.68%</title></circle>
+<circle cx="688.57" cy="202.76" r="4" fill="#cc4d00" fill-opacity=".85" stroke="#cc4d00" stroke-width="1.6"><title>ext-extract-first auto: precision 46.24%, recall 34.68%</title></circle>
+<circle cx="773.94" cy="161.96" r="4" fill="#cc4d00" fill-opacity=".85" stroke="#cc4d00" stroke-width="1.6"><title>ext-temporal-graph auto: precision 60.50%, recall 58.06%</title></circle>
+<circle cx="768.05" cy="237.34" r="4" fill="#cc4d00" fill-opacity=".85" stroke="#cc4d00" stroke-width="1.6"><title>ext-graph-pipeline-tuned auto: precision 34.15%, recall 56.45%</title></circle>
+<circle cx="770.99" cy="171.24" r="4" fill="#cc4d00" fill-opacity=".85" stroke="#cc4d00" stroke-width="1.6"><title>ext-graph-pipeline-patched auto: precision 57.26%, recall 57.26%</title></circle>
+<circle cx="765.10" cy="203.44" r="4" fill="#cc4d00" fill-opacity=".85" stroke="#cc4d00" stroke-width="1.6"><title>ext-memory-bank auto: precision 46.00%, recall 55.65%</title></circle>
+<circle cx="641.48" cy="49.00" r="5.5" fill="#007354" fill-opacity=".85" stroke="#007354" stroke-width="1.6"><title>gbrain auto: precision 100.00%, recall 21.77%</title></circle>
+<circle cx="800.43" cy="175.23" r="5.5" fill="#fff" fill-opacity=".85" stroke="#007354" stroke-width="1.6"><title>gbrain proposed: precision 55.86%, recall 65.32%</title></circle>
+<circle cx="891.68" cy="49.00" r="4" fill="#7634a7" fill-opacity=".85" stroke="#7634a7" stroke-width="1.6"><title>gpt auto: precision 100.00%, recall 90.32%</title></circle>
+<circle cx="891.68" cy="84.75" r="4" fill="#fff" fill-opacity=".85" stroke="#7634a7" stroke-width="1.6"><title>gpt proposed: precision 87.50%, recall 90.32%</title></circle>
+<circle cx="888.73" cy="49.00" r="4" fill="#7634a7" fill-opacity=".85" stroke="#7634a7" stroke-width="1.6"><title>particle auto: precision 100.00%, recall 89.52%</title></circle>
+<circle cx="891.68" cy="70.27" r="4" fill="#fff" fill-opacity=".85" stroke="#7634a7" stroke-width="1.6"><title>particle proposed: precision 92.56%, recall 90.32%</title></circle>
+<circle cx="888.73" cy="49.00" r="4" fill="#7634a7" fill-opacity=".85" stroke="#7634a7" stroke-width="1.6"><title>claude auto: precision 100.00%, recall 89.52%</title></circle>
+<circle cx="891.68" cy="51.53" r="4" fill="#fff" fill-opacity=".85" stroke="#7634a7" stroke-width="1.6"><title>claude proposed: precision 99.12%, recall 90.32%</title></circle>
+<circle cx="69" cy="412" r="4" fill="#007354"/>
+<text x="81" y="417">gbrain</text>
+<circle cx="201" cy="412" r="4" fill="#7634a7"/>
+<text x="213" y="417">llm-matcher</text>
+<circle cx="333" cy="412" r="4" fill="#105ed1"/>
+<text x="345" y="417">splink</text>
+<circle cx="465" cy="412" r="4" fill="#08768c"/>
+<text x="477" y="417">dedupe</text>
+<circle cx="597" cy="412" r="4" fill="#786400"/>
+<text x="609" y="417">zingg</text>
+<circle cx="729" cy="412" r="4" fill="#cc4d00"/>
+<text x="741" y="417">memory systems</text>
+<text x="68" y="437">Filled = automatic. Open = automatic plus suggestions. Some settings overlap.</text></g></svg>

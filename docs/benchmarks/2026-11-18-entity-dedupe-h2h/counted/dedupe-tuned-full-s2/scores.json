@@ -1,0 +1,4230 @@
+{
+  "seed": 1975418963,
+  "per_family": 20,
+  "fingerprints": {
+    "people": "da556967bbe5c1529dfccebdcf14862e72baacdcd37f39833dd714563487a0c2",
+    "companies": "dc2391abf9cae7e8cab1122267b0bd739f404aa8d3a66cb122be7ee731929d06"
+  },
+  "scores": [
+    {
+      "system": "dedupe",
+      "version": "3.0.3",
+      "config": "tuned+labels-full+labeller-seed-2",
+      "model": null,
+      "points": {
+        "auto": {
+          "groups": 411,
+          "person": {
+            "false_merge": {
+              "k": 38,
+              "n": 488,
+              "rate": 0.0778688524590164,
+              "ci95": [
+                0.05725569648497699,
+                0.1050760008309281
+              ]
+            },
+            "designed_recall": {
+              "k": 263,
+              "n": 312,
+              "rate": 0.842948717948718,
+              "ci95": [
+                0.7984345230771823,
+                0.8791206047361351
+              ]
+            },
+            "precision": {
+              "k": 263,
+              "n": 303,
+              "rate": 0.8679867986798679,
+              "ci95": [
+                0.8252253644168052,
+                0.9015343142037827
+              ]
+            },
+            "recall": {
+              "k": 263,
+              "n": 312,
+              "rate": 0.842948717948718,
+              "ci95": [
+                0.7984345230771823,
+                0.8791206047361351
+              ]
+            },
+            "b3": {
+              "precision": 0.9750423011844332,
+              "recall": 0.9689086294416244,
+              "f1": 0.9719657886466954
+            },
+            "false_merges_anywhere": 40,
+            "by_family": {
+              "same-exact": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-case-space": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-diacritics": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-transliteration": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-name-order": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-nickname": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-initial": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-married-name": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-email-bridge": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-disjoint-emails": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                }
+              },
+              "same-role-address": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-within-source": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "diff-namesake": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-same-company": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-same-city": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-cross-source-slug": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-team-alias": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-family-email": {
+                "label": "different",
+                "false_merge": {
+                  "k": 13,
+                  "n": 20,
+                  "rate": 0.65,
+                  "ci95": [
+                    0.43285427668523624,
+                    0.818808175898918
+                  ]
+                },
+                "found": null
+              },
+              "diff-assistant-email": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-shared-mailbox": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-nickname-lookalike": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-initial-lookalike": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-alias-on-5": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-alias-on-6": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-jr-suffix": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-placeholder-email": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-household-plain": {
+                "label": "different",
+                "false_merge": {
+                  "k": 13,
+                  "n": 20,
+                  "rate": 0.65,
+                  "ci95": [
+                    0.43285427668523624,
+                    0.818808175898918
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-offlist-alias": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-bridge-page": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 40,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.08762160119728664
+                  ]
+                },
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "diff-transitive-chain": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 40,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.08762160119728664
+                  ]
+                },
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "diff-recycled-github": {
+                "label": "different",
+                "false_merge": {
+                  "k": 12,
+                  "n": 16,
+                  "rate": 0.75,
+                  "ci95": [
+                    0.5050168346449122,
+                    0.8981793250878696
+                  ]
+                },
+                "found": {
+                  "k": 3,
+                  "n": 4,
+                  "rate": 0.75,
+                  "ci95": [
+                    0.30064184258240184,
+                    0.9544127391902995
+                  ]
+                }
+              },
+              "diff-wrong-linkedin": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 16,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.1936076805344365
+                  ]
+                },
+                "found": {
+                  "k": 0,
+                  "n": 4,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.4898908364545973
+                  ]
+                }
+              },
+              "diff-declared-id-typo": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 16,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.1936076805344365
+                  ]
+                },
+                "found": {
+                  "k": 0,
+                  "n": 4,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.4898908364545973
+                  ]
+                }
+              },
+              "diff-shared-github-account": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 40,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.08762160119728664
+                  ]
+                },
+                "found": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                }
+              }
+            },
+            "false_merge_cases": [
+              {
+                "a": "home:felix-corrigan",
+                "b": "work:felix-corrigan",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:kenji-rhee",
+                "b": "work:kenji-rhee",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:pavel-sato",
+                "b": "work:pavel-sato",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:mira-lorne",
+                "b": "work:mira-lorne",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:hugo-marsh",
+                "b": "work:hugo-marsh",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:theo-wexford",
+                "b": "work:theo-wexford",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:maya-halloran",
+                "b": "work:maya-halloran",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:maya-nakata",
+                "b": "work:maya-nakata",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:kenji-zeller",
+                "b": "work:kenji-zeller",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:mateo-halloran",
+                "b": "work:mateo-halloran",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:iris-lindqvist",
+                "b": "work:iris-lindqvist",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:priya-whitlow",
+                "b": "work:priya-whitlow",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:maya-brandt",
+                "b": "work:maya-brandt",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:felix-ibsen",
+                "b": "work:felix-ibsen",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:yara-vance",
+                "b": "work:yara-vance",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:iris-whitlow",
+                "b": "work:iris-whitlow",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:elias-ulloa",
+                "b": "work:elias-ulloa",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:yara-brandt",
+                "b": "work:yara-brandt",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:mira-ulloa",
+                "b": "work:mira-ulloa",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:anton-hartigan",
+                "b": "work:anton-hartigan",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:lena-sato",
+                "b": "work:lena-sato",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:lena-lorne",
+                "b": "work:lena-lorne",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:yara-galloway",
+                "b": "work:yara-galloway",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:omar-castell",
+                "b": "work:omar-castell",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:ravi-hartigan",
+                "b": "work:ravi-hartigan",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:iris-kowal",
+                "b": "work:iris-kowal",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:hugo-castell",
+                "b": "home:hugo-castell",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:greta-kowal",
+                "b": "home:greta-kowal",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:lena-marsh",
+                "b": "home:lena-marsh",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:samir-ulloa",
+                "b": "home:samir-ulloa",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:felix-hartigan",
+                "b": "home:felix-hartigan",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:ravi-okafor",
+                "b": "home:ravi-okafor",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:ravi-whitlow",
+                "b": "home:ravi-whitlow",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:kenji-vance",
+                "b": "home:kenji-vance",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:idris-abara",
+                "b": "home:idris-abara",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:maya-quinlan",
+                "b": "home:maya-quinlan",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:kenji-okafor",
+                "b": "home:kenji-okafor",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:omar-marsh",
+                "b": "home:omar-marsh",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              }
+            ]
+          },
+          "company": {
+            "false_merge": {
+              "k": 0,
+              "n": 188,
+              "rate": 0,
+              "ci95": [
+                0,
+                0.02002413265781392
+              ]
+            },
+            "designed_recall": {
+              "k": 110,
+              "n": 124,
+              "rate": 0.8870967741935484,
+              "ci95": [
+                0.8193861015044891,
+                0.9315440027478895
+              ]
+            },
+            "precision": {
+              "k": 110,
+              "n": 110,
+              "rate": 1,
+              "ci95": [
+                0.9662560647018358,
+                0.9999999999999999
+              ]
+            },
+            "recall": {
+              "k": 110,
+              "n": 124,
+              "rate": 0.8870967741935484,
+              "ci95": [
+                0.8193861015044891,
+                0.9315440027478895
+              ]
+            },
+            "b3": {
+              "precision": 1,
+              "recall": 0.9735849056603774,
+              "f1": 0.9866156787762906
+            },
+            "false_merges_anywhere": 0,
+            "by_family": {
+              "co-same-exact": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "co-same-legal-suffix": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "co-same-abbreviation": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "co-same-rebrand": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 6,
+                  "n": 20,
+                  "rate": 0.3,
+                  "ci95": [
+                    0.1454772448676043,
+                    0.5189728183535235
+                  ]
+                }
+              },
+              "co-same-multi-domain": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "co-diff-namesake-city": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-namesake-industry": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-namesake-country-suffix": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-legal-suffix": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-parent-subsidiary": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-holding-domain": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 32,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.1071791982550706
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-acquired": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 40,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.08762160119728664
+                  ]
+                },
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "co-diff-founder-linkedin": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 16,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.1936076805344365
+                  ]
+                },
+                "found": {
+                  "k": 4,
+                  "n": 4,
+                  "rate": 1,
+                  "ci95": [
+                    0.5101091635454027,
+                    1
+                  ]
+                }
+              }
+            },
+            "false_merge_cases": []
+          },
+          "all": {
+            "false_merge": {
+              "k": 38,
+              "n": 676,
+              "rate": 0.05621301775147929,
+              "ci95": [
+                0.04122590461224884,
+                0.07621538671351603
+              ]
+            },
+            "designed_recall": {
+              "k": 373,
+              "n": 436,
+              "rate": 0.8555045871559633,
+              "ci95": [
+                0.8193955534087374,
+                0.8854038550671577
+              ]
+            },
+            "precision": {
+              "k": 373,
+              "n": 413,
+              "rate": 0.9031476997578692,
+              "ci95": [
+                0.8707983217855928,
+                0.9280665534648347
+              ]
+            },
+            "recall": {
+              "k": 373,
+              "n": 436,
+              "rate": 0.8555045871559633,
+              "ci95": [
+                0.8193955534087374,
+                0.8854038550671577
+              ]
+            },
+            "b3": {
+              "precision": 0.9813232035454259,
+              "recall": 0.9700854700854701,
+              "f1": 0.9756719789974718
+            },
+            "false_merges_anywhere": 40,
+            "by_family": {
+              "same-exact": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-case-space": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-diacritics": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-transliteration": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-name-order": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-nickname": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-initial": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-married-name": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-email-bridge": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-disjoint-emails": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                }
+              },
+              "same-role-address": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-within-source": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "diff-namesake": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-same-company": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-same-city": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-cross-source-slug": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-team-alias": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-family-email": {
+                "label": "different",
+                "false_merge": {
+                  "k": 13,
+                  "n": 20,
+                  "rate": 0.65,
+                  "ci95": [
+                    0.43285427668523624,
+                    0.818808175898918
+                  ]
+                },
+                "found": null
+              },
+              "diff-assistant-email": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-shared-mailbox": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-nickname-lookalike": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-initial-lookalike": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-alias-on-5": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-alias-on-6": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-jr-suffix": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-placeholder-email": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-household-plain": {
+                "label": "different",
+                "false_merge": {
+                  "k": 13,
+                  "n": 20,
+                  "rate": 0.65,
+                  "ci95": [
+                    0.43285427668523624,
+                    0.818808175898918
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-offlist-alias": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-bridge-page": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 40,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.08762160119728664
+                  ]
+                },
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "diff-transitive-chain": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 40,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.08762160119728664
+                  ]
+                },
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "diff-recycled-github": {
+                "label": "different",
+                "false_merge": {
+                  "k": 12,
+                  "n": 16,
+                  "rate": 0.75,
+                  "ci95": [
+                    0.5050168346449122,
+                    0.8981793250878696
+                  ]
+                },
+                "found": {
+                  "k": 3,
+                  "n": 4,
+                  "rate": 0.75,
+                  "ci95": [
+                    0.30064184258240184,
+                    0.9544127391902995
+                  ]
+                }
+              },
+              "diff-wrong-linkedin": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 16,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.1936076805344365
+                  ]
+                },
+                "found": {
+                  "k": 0,
+                  "n": 4,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.4898908364545973
+                  ]
+                }
+              },
+              "diff-declared-id-typo": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 16,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.1936076805344365
+                  ]
+                },
+                "found": {
+                  "k": 0,
+                  "n": 4,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.4898908364545973
+                  ]
+                }
+              },
+              "diff-shared-github-account": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 40,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.08762160119728664
+                  ]
+                },
+                "found": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                }
+              },
+              "co-same-exact": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "co-same-legal-suffix": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "co-same-abbreviation": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "co-same-rebrand": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 6,
+                  "n": 20,
+                  "rate": 0.3,
+                  "ci95": [
+                    0.1454772448676043,
+                    0.5189728183535235
+                  ]
+                }
+              },
+              "co-same-multi-domain": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "co-diff-namesake-city": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-namesake-industry": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-namesake-country-suffix": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-legal-suffix": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-parent-subsidiary": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-holding-domain": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 32,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.1071791982550706
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-acquired": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 40,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.08762160119728664
+                  ]
+                },
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "co-diff-founder-linkedin": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 16,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.1936076805344365
+                  ]
+                },
+                "found": {
+                  "k": 4,
+                  "n": 4,
+                  "rate": 1,
+                  "ci95": [
+                    0.5101091635454027,
+                    1
+                  ]
+                }
+              }
+            },
+            "false_merge_cases": [
+              {
+                "a": "home:felix-corrigan",
+                "b": "work:felix-corrigan",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:kenji-rhee",
+                "b": "work:kenji-rhee",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:pavel-sato",
+                "b": "work:pavel-sato",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:mira-lorne",
+                "b": "work:mira-lorne",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:hugo-marsh",
+                "b": "work:hugo-marsh",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:theo-wexford",
+                "b": "work:theo-wexford",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:maya-halloran",
+                "b": "work:maya-halloran",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:maya-nakata",
+                "b": "work:maya-nakata",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:kenji-zeller",
+                "b": "work:kenji-zeller",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:mateo-halloran",
+                "b": "work:mateo-halloran",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:iris-lindqvist",
+                "b": "work:iris-lindqvist",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:priya-whitlow",
+                "b": "work:priya-whitlow",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:maya-brandt",
+                "b": "work:maya-brandt",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:felix-ibsen",
+                "b": "work:felix-ibsen",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:yara-vance",
+                "b": "work:yara-vance",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:iris-whitlow",
+                "b": "work:iris-whitlow",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:elias-ulloa",
+                "b": "work:elias-ulloa",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:yara-brandt",
+                "b": "work:yara-brandt",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:mira-ulloa",
+                "b": "work:mira-ulloa",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:anton-hartigan",
+                "b": "work:anton-hartigan",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:lena-sato",
+                "b": "work:lena-sato",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:lena-lorne",
+                "b": "work:lena-lorne",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:yara-galloway",
+                "b": "work:yara-galloway",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:omar-castell",
+                "b": "work:omar-castell",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:ravi-hartigan",
+                "b": "work:ravi-hartigan",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:iris-kowal",
+                "b": "work:iris-kowal",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:hugo-castell",
+                "b": "home:hugo-castell",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:greta-kowal",
+                "b": "home:greta-kowal",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:lena-marsh",
+                "b": "home:lena-marsh",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:samir-ulloa",
+                "b": "home:samir-ulloa",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:felix-hartigan",
+                "b": "home:felix-hartigan",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:ravi-okafor",
+                "b": "home:ravi-okafor",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:ravi-whitlow",
+                "b": "home:ravi-whitlow",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:kenji-vance",
+                "b": "home:kenji-vance",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:idris-abara",
+                "b": "home:idris-abara",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:maya-quinlan",
+                "b": "home:maya-quinlan",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:kenji-okafor",
+                "b": "home:kenji-okafor",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:omar-marsh",
+                "b": "home:omar-marsh",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              }
+            ]
+          },
+          "cross_type_merges": 0
+        },
+        "proposed": {
+          "groups": 411,
+          "person": {
+            "false_merge": {
+              "k": 38,
+              "n": 488,
+              "rate": 0.0778688524590164,
+              "ci95": [
+                0.05725569648497699,
+                0.1050760008309281
+              ]
+            },
+            "designed_recall": {
+              "k": 263,
+              "n": 312,
+              "rate": 0.842948717948718,
+              "ci95": [
+                0.7984345230771823,
+                0.8791206047361351
+              ]
+            },
+            "precision": {
+              "k": 263,
+              "n": 303,
+              "rate": 0.8679867986798679,
+              "ci95": [
+                0.8252253644168052,
+                0.9015343142037827
+              ]
+            },
+            "recall": {
+              "k": 263,
+              "n": 312,
+              "rate": 0.842948717948718,
+              "ci95": [
+                0.7984345230771823,
+                0.8791206047361351
+              ]
+            },
+            "b3": {
+              "precision": 0.9750423011844332,
+              "recall": 0.9689086294416244,
+              "f1": 0.9719657886466954
+            },
+            "false_merges_anywhere": 40,
+            "by_family": {
+              "same-exact": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-case-space": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-diacritics": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-transliteration": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-name-order": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-nickname": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-initial": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-married-name": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-email-bridge": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-disjoint-emails": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                }
+              },
+              "same-role-address": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-within-source": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "diff-namesake": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-same-company": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-same-city": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-cross-source-slug": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-team-alias": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-family-email": {
+                "label": "different",
+                "false_merge": {
+                  "k": 13,
+                  "n": 20,
+                  "rate": 0.65,
+                  "ci95": [
+                    0.43285427668523624,
+                    0.818808175898918
+                  ]
+                },
+                "found": null
+              },
+              "diff-assistant-email": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-shared-mailbox": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-nickname-lookalike": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-initial-lookalike": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-alias-on-5": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-alias-on-6": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-jr-suffix": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-placeholder-email": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-household-plain": {
+                "label": "different",
+                "false_merge": {
+                  "k": 13,
+                  "n": 20,
+                  "rate": 0.65,
+                  "ci95": [
+                    0.43285427668523624,
+                    0.818808175898918
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-offlist-alias": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-bridge-page": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 40,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.08762160119728664
+                  ]
+                },
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "diff-transitive-chain": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 40,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.08762160119728664
+                  ]
+                },
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "diff-recycled-github": {
+                "label": "different",
+                "false_merge": {
+                  "k": 12,
+                  "n": 16,
+                  "rate": 0.75,
+                  "ci95": [
+                    0.5050168346449122,
+                    0.8981793250878696
+                  ]
+                },
+                "found": {
+                  "k": 3,
+                  "n": 4,
+                  "rate": 0.75,
+                  "ci95": [
+                    0.30064184258240184,
+                    0.9544127391902995
+                  ]
+                }
+              },
+              "diff-wrong-linkedin": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 16,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.1936076805344365
+                  ]
+                },
+                "found": {
+                  "k": 0,
+                  "n": 4,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.4898908364545973
+                  ]
+                }
+              },
+              "diff-declared-id-typo": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 16,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.1936076805344365
+                  ]
+                },
+                "found": {
+                  "k": 0,
+                  "n": 4,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.4898908364545973
+                  ]
+                }
+              },
+              "diff-shared-github-account": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 40,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.08762160119728664
+                  ]
+                },
+                "found": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                }
+              }
+            },
+            "false_merge_cases": [
+              {
+                "a": "home:felix-corrigan",
+                "b": "work:felix-corrigan",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:kenji-rhee",
+                "b": "work:kenji-rhee",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:pavel-sato",
+                "b": "work:pavel-sato",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:mira-lorne",
+                "b": "work:mira-lorne",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:hugo-marsh",
+                "b": "work:hugo-marsh",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:theo-wexford",
+                "b": "work:theo-wexford",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:maya-halloran",
+                "b": "work:maya-halloran",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:maya-nakata",
+                "b": "work:maya-nakata",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:kenji-zeller",
+                "b": "work:kenji-zeller",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:mateo-halloran",
+                "b": "work:mateo-halloran",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:iris-lindqvist",
+                "b": "work:iris-lindqvist",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:priya-whitlow",
+                "b": "work:priya-whitlow",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:maya-brandt",
+                "b": "work:maya-brandt",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:felix-ibsen",
+                "b": "work:felix-ibsen",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:yara-vance",
+                "b": "work:yara-vance",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:iris-whitlow",
+                "b": "work:iris-whitlow",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:elias-ulloa",
+                "b": "work:elias-ulloa",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:yara-brandt",
+                "b": "work:yara-brandt",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:mira-ulloa",
+                "b": "work:mira-ulloa",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:anton-hartigan",
+                "b": "work:anton-hartigan",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:lena-sato",
+                "b": "work:lena-sato",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:lena-lorne",
+                "b": "work:lena-lorne",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:yara-galloway",
+                "b": "work:yara-galloway",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:omar-castell",
+                "b": "work:omar-castell",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:ravi-hartigan",
+                "b": "work:ravi-hartigan",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:iris-kowal",
+                "b": "work:iris-kowal",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:hugo-castell",
+                "b": "home:hugo-castell",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:greta-kowal",
+                "b": "home:greta-kowal",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:lena-marsh",
+                "b": "home:lena-marsh",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:samir-ulloa",
+                "b": "home:samir-ulloa",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:felix-hartigan",
+                "b": "home:felix-hartigan",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:ravi-okafor",
+                "b": "home:ravi-okafor",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:ravi-whitlow",
+                "b": "home:ravi-whitlow",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:kenji-vance",
+                "b": "home:kenji-vance",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:idris-abara",
+                "b": "home:idris-abara",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:maya-quinlan",
+                "b": "home:maya-quinlan",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:kenji-okafor",
+                "b": "home:kenji-okafor",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:omar-marsh",
+                "b": "home:omar-marsh",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              }
+            ]
+          },
+          "company": {
+            "false_merge": {
+              "k": 0,
+              "n": 188,
+              "rate": 0,
+              "ci95": [
+                0,
+                0.02002413265781392
+              ]
+            },
+            "designed_recall": {
+              "k": 110,
+              "n": 124,
+              "rate": 0.8870967741935484,
+              "ci95": [
+                0.8193861015044891,
+                0.9315440027478895
+              ]
+            },
+            "precision": {
+              "k": 110,
+              "n": 110,
+              "rate": 1,
+              "ci95": [
+                0.9662560647018358,
+                0.9999999999999999
+              ]
+            },
+            "recall": {
+              "k": 110,
+              "n": 124,
+              "rate": 0.8870967741935484,
+              "ci95": [
+                0.8193861015044891,
+                0.9315440027478895
+              ]
+            },
+            "b3": {
+              "precision": 1,
+              "recall": 0.9735849056603774,
+              "f1": 0.9866156787762906
+            },
+            "false_merges_anywhere": 0,
+            "by_family": {
+              "co-same-exact": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "co-same-legal-suffix": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "co-same-abbreviation": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "co-same-rebrand": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 6,
+                  "n": 20,
+                  "rate": 0.3,
+                  "ci95": [
+                    0.1454772448676043,
+                    0.5189728183535235
+                  ]
+                }
+              },
+              "co-same-multi-domain": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "co-diff-namesake-city": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-namesake-industry": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-namesake-country-suffix": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-legal-suffix": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-parent-subsidiary": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-holding-domain": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 32,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.1071791982550706
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-acquired": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 40,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.08762160119728664
+                  ]
+                },
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "co-diff-founder-linkedin": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 16,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.1936076805344365
+                  ]
+                },
+                "found": {
+                  "k": 4,
+                  "n": 4,
+                  "rate": 1,
+                  "ci95": [
+                    0.5101091635454027,
+                    1
+                  ]
+                }
+              }
+            },
+            "false_merge_cases": []
+          },
+          "all": {
+            "false_merge": {
+              "k": 38,
+              "n": 676,
+              "rate": 0.05621301775147929,
+              "ci95": [
+                0.04122590461224884,
+                0.07621538671351603
+              ]
+            },
+            "designed_recall": {
+              "k": 373,
+              "n": 436,
+              "rate": 0.8555045871559633,
+              "ci95": [
+                0.8193955534087374,
+                0.8854038550671577
+              ]
+            },
+            "precision": {
+              "k": 373,
+              "n": 413,
+              "rate": 0.9031476997578692,
+              "ci95": [
+                0.8707983217855928,
+                0.9280665534648347
+              ]
+            },
+            "recall": {
+              "k": 373,
+              "n": 436,
+              "rate": 0.8555045871559633,
+              "ci95": [
+                0.8193955534087374,
+                0.8854038550671577
+              ]
+            },
+            "b3": {
+              "precision": 0.9813232035454259,
+              "recall": 0.9700854700854701,
+              "f1": 0.9756719789974718
+            },
+            "false_merges_anywhere": 40,
+            "by_family": {
+              "same-exact": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-case-space": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-diacritics": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-transliteration": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-name-order": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-nickname": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-initial": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-married-name": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-email-bridge": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-disjoint-emails": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                }
+              },
+              "same-role-address": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "same-within-source": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "diff-namesake": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-same-company": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-same-city": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-cross-source-slug": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-team-alias": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-family-email": {
+                "label": "different",
+                "false_merge": {
+                  "k": 13,
+                  "n": 20,
+                  "rate": 0.65,
+                  "ci95": [
+                    0.43285427668523624,
+                    0.818808175898918
+                  ]
+                },
+                "found": null
+              },
+              "diff-assistant-email": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-shared-mailbox": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-nickname-lookalike": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-initial-lookalike": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-alias-on-5": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-alias-on-6": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-jr-suffix": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-placeholder-email": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-household-plain": {
+                "label": "different",
+                "false_merge": {
+                  "k": 13,
+                  "n": 20,
+                  "rate": 0.65,
+                  "ci95": [
+                    0.43285427668523624,
+                    0.818808175898918
+                  ]
+                },
+                "found": null
+              },
+              "diff-namesake-offlist-alias": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "diff-bridge-page": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 40,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.08762160119728664
+                  ]
+                },
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "diff-transitive-chain": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 40,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.08762160119728664
+                  ]
+                },
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "diff-recycled-github": {
+                "label": "different",
+                "false_merge": {
+                  "k": 12,
+                  "n": 16,
+                  "rate": 0.75,
+                  "ci95": [
+                    0.5050168346449122,
+                    0.8981793250878696
+                  ]
+                },
+                "found": {
+                  "k": 3,
+                  "n": 4,
+                  "rate": 0.75,
+                  "ci95": [
+                    0.30064184258240184,
+                    0.9544127391902995
+                  ]
+                }
+              },
+              "diff-wrong-linkedin": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 16,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.1936076805344365
+                  ]
+                },
+                "found": {
+                  "k": 0,
+                  "n": 4,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.4898908364545973
+                  ]
+                }
+              },
+              "diff-declared-id-typo": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 16,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.1936076805344365
+                  ]
+                },
+                "found": {
+                  "k": 0,
+                  "n": 4,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.4898908364545973
+                  ]
+                }
+              },
+              "diff-shared-github-account": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 40,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.08762160119728664
+                  ]
+                },
+                "found": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                }
+              },
+              "co-same-exact": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "co-same-legal-suffix": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "co-same-abbreviation": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "co-same-rebrand": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 6,
+                  "n": 20,
+                  "rate": 0.3,
+                  "ci95": [
+                    0.1454772448676043,
+                    0.5189728183535235
+                  ]
+                }
+              },
+              "co-same-multi-domain": {
+                "label": "same",
+                "false_merge": null,
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "co-diff-namesake-city": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-namesake-industry": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-namesake-country-suffix": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-legal-suffix": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-parent-subsidiary": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 20,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.16112515805281938
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-holding-domain": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 32,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.1071791982550706
+                  ]
+                },
+                "found": null
+              },
+              "co-diff-acquired": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 40,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.08762160119728664
+                  ]
+                },
+                "found": {
+                  "k": 20,
+                  "n": 20,
+                  "rate": 1,
+                  "ci95": [
+                    0.8388748419471806,
+                    1
+                  ]
+                }
+              },
+              "co-diff-founder-linkedin": {
+                "label": "different",
+                "false_merge": {
+                  "k": 0,
+                  "n": 16,
+                  "rate": 0,
+                  "ci95": [
+                    0,
+                    0.1936076805344365
+                  ]
+                },
+                "found": {
+                  "k": 4,
+                  "n": 4,
+                  "rate": 1,
+                  "ci95": [
+                    0.5101091635454027,
+                    1
+                  ]
+                }
+              }
+            },
+            "false_merge_cases": [
+              {
+                "a": "home:felix-corrigan",
+                "b": "work:felix-corrigan",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:kenji-rhee",
+                "b": "work:kenji-rhee",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:pavel-sato",
+                "b": "work:pavel-sato",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:mira-lorne",
+                "b": "work:mira-lorne",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:hugo-marsh",
+                "b": "work:hugo-marsh",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:theo-wexford",
+                "b": "work:theo-wexford",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:maya-halloran",
+                "b": "work:maya-halloran",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:maya-nakata",
+                "b": "work:maya-nakata",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:kenji-zeller",
+                "b": "work:kenji-zeller",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:mateo-halloran",
+                "b": "work:mateo-halloran",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:iris-lindqvist",
+                "b": "work:iris-lindqvist",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:priya-whitlow",
+                "b": "work:priya-whitlow",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:maya-brandt",
+                "b": "work:maya-brandt",
+                "family": "diff-namesake-family-email",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:felix-ibsen",
+                "b": "work:felix-ibsen",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:yara-vance",
+                "b": "work:yara-vance",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:iris-whitlow",
+                "b": "work:iris-whitlow",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:elias-ulloa",
+                "b": "work:elias-ulloa",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:yara-brandt",
+                "b": "work:yara-brandt",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:mira-ulloa",
+                "b": "work:mira-ulloa",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:anton-hartigan",
+                "b": "work:anton-hartigan",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:lena-sato",
+                "b": "work:lena-sato",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:lena-lorne",
+                "b": "work:lena-lorne",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:yara-galloway",
+                "b": "work:yara-galloway",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:omar-castell",
+                "b": "work:omar-castell",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:ravi-hartigan",
+                "b": "work:ravi-hartigan",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "home:iris-kowal",
+                "b": "work:iris-kowal",
+                "family": "diff-namesake-household-plain",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:hugo-castell",
+                "b": "home:hugo-castell",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:greta-kowal",
+                "b": "home:greta-kowal",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:lena-marsh",
+                "b": "home:lena-marsh",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:samir-ulloa",
+                "b": "home:samir-ulloa",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:felix-hartigan",
+                "b": "home:felix-hartigan",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:ravi-okafor",
+                "b": "home:ravi-okafor",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:ravi-whitlow",
+                "b": "home:ravi-whitlow",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:kenji-vance",
+                "b": "home:kenji-vance",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:idris-abara",
+                "b": "home:idris-abara",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:maya-quinlan",
+                "b": "home:maya-quinlan",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:kenji-okafor",
+                "b": "home:kenji-okafor",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              },
+              {
+                "a": "work:omar-marsh",
+                "b": "home:omar-marsh",
+                "family": "diff-recycled-github",
+                "via": [
+                  "cross_source/clean: dedupe"
+                ]
+              }
+            ]
+          },
+          "cross_type_merges": 0
+        }
+      },
+      "not_a_candidate": null,
+      "unresolved": null
+    }
+  ]
+}

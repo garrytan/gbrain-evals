@@ -1,0 +1,26 @@
+{
+  "people": {
+    "version": "5.0.0",
+    "entity": "people",
+    "seed": null,
+    "thresholds_match_probability": {
+      "auto": 0.9980506822612085,
+      "proposed": 0.994506078188917
+    },
+    "pairs_predicted": 1191,
+    "scored_seconds": 3.57,
+    "held_out_seconds": 3.1
+  },
+  "companies": {
+    "version": "5.0.0",
+    "entity": "companies",
+    "seed": null,
+    "thresholds_match_probability": {
+      "auto": 0.9411764705882353,
+      "proposed": 0.6666666666666666
+    },
+    "pairs_predicted": 225,
+    "scored_seconds": 1.35,
+    "held_out_seconds": 1.16
+  }
+}
