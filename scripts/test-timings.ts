@@ -12,13 +12,13 @@
  */
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
-import { PYTEST_REPORT } from './ci-tested-tree.ts';
+import { isPytestReport } from './ci-tested-tree.ts';
 
 export interface Timings { version: 1; files: Record<string, number> }
 
 /** The Bun JUnit reports under one run's download directory: every .xml file except the harness pytest report, which has no per-file times. */
 export function bunReports(dir: string): string[] {
-  return readdirSync(dir, { recursive: true, encoding: 'utf8' }).filter(f => f.endsWith('.xml') && basename(f) !== PYTEST_REPORT).sort();
+  return readdirSync(dir, { recursive: true, encoding: 'utf8' }).filter(f => f.endsWith('.xml') && !isPytestReport(basename(f))).sort();
 }
 
 /** Each test file's time in ms from one Bun JUnit report: the time of its top-level <testsuite>, not its describes. */

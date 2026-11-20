@@ -17,7 +17,7 @@
  * instead of carry stopping quietly.
  *
  * The Bun files come from each shard's JUnit report, so tree.json lists only files Bun ran. The harness Python tests
- * under eval/harness-provider/tests/ come from the JUnit report of the harness job's pytest run (`pytest.xml` in the
+ * under eval/harness-provider/tests/ come from the JUnit reports of the harness job's pytest runs (`pytest-<n>.xml` in the
  * --junit directory), so tree.json lists only files pytest ran. `tests` counts the Bun and harness pytest tests that
  * ran (skips excluded). The other Python files are the ones the checks job runs; the job needs it. The harness files
  * stay out of every lane's inventory, because no lane command runs them: gstack's pregate requires the ones a change
@@ -30,7 +30,8 @@ import { dirname, join } from 'node:path';
 export const BUN_TEST_ROOTS = ['test/eval', 'eval'];
 export const PYTHON_TESTS = ['test/retrieval_refresh_orchestrator_test.py'];
 export const HARNESS_DIR = 'eval/harness-provider';
-export const PYTEST_REPORT = 'pytest.xml';
+/** A harness pytest report among the tested files: pytest.xml, or pytest-<n>.xml when the suite runs as several processes (eval/runner/harness-test.ts --junit-dir). */
+export const isPytestReport = (name: string) => /^pytest(?:-\d+)?\.xml$/.test(name);
 export const LANES = ['test', 'unit', 'py'] as const;
 export type Lane = (typeof LANES)[number];
 
@@ -118,7 +119,7 @@ function record(args: string[]): void {
   const dir = flag(args, '--junit');
   const out = flag(args, '--out');
   if (!dir || !out) throw new Error('record needs --junit <dir> and --out <tree.json>');
-  const reports = readdirSync(dir).filter(f => f.endsWith('.xml')).sort().map(f => (f === PYTEST_REPORT ? pytestFiles : junitFiles)(readFileSync(join(dir, f), 'utf8')));
+  const reports = readdirSync(dir).filter(f => f.endsWith('.xml')).sort().map(f => (isPytestReport(f) ? pytestFiles : junitFiles)(readFileSync(join(dir, f), 'utf8')));
   const rec = treeRecord(process.env, { reports, tree: git(['rev-parse', '--verify', `${process.env.GITHUB_SHA ?? ''}^{tree}`]).trim() });
   const ran = new Set(rec.files);
   const files = tracked();
