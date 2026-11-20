@@ -57,7 +57,7 @@ describe('LongMemEval on Redis harness: batch bodies', () => {
 
   test('build freezes one manifest per reader and arm and records the reuse', () => {
     const out = L.build(frozenDir({ on: { q3: 'cut-q3' } }));
-    expect(out.map(r => r.arm)).toEqual(['gpt4o--off', 'gpt4o--on', 'gpt4o--agent-default', 'gpt4o--full', 'gpt4o--oracle', 'opus--off', 'opus--on', 'opus--full', 'opus--oracle', 'sol--off', 'sol--on', 'sol--full', 'sol--oracle']);
+    expect(out.map(r => r.arm)).toEqual(['gpt4o--off', 'gpt4o--on', 'gpt4o--agent-default', 'gpt4o--full', 'gpt4o--oracle', 'opus--off', 'opus--on', 'opus--full', 'opus--oracle', 'sol--off', 'sol--on', 'sol--full', 'sol--oracle', 'particle--off', 'particle--on', 'particle--full', 'particle--oracle']);
     expect(out.find(r => r.arm === 'sol--on')).toEqual({ arm: 'sol--on', requests: 1, reused: 2 });
     const reuse = JSON.parse(readFileSync(join(tmp, 'manifests', 'reuse.json'), 'utf8'));
     expect(reuse.gpt4o.on).toEqual({ q1: 'off', q2: 'off' });
@@ -100,8 +100,32 @@ describe('LongMemEval on Redis harness: judges and stages', () => {
     expect(L.answerRows(manifest, results).map(r => [r.question_id, r.answer, r.status, r.truncated])).toEqual([['a', 'cut off', 'succeeded', true], ['b', null, 'errored', false], ['c', null, 'not_run', false]]);
   });
 
+  test('particle-1 sends the frozen system and user text, keeps a truncated answer and stops on a budget refusal', async () => {
+    const dir = mkdtempSync(join(tmp, 'particle-'));
+    const { gzipSync } = await import('node:zlib');
+    const texts = ['a', 'b', 'c'].map(q => ({ question_id: q, system: `sys ${q}`, user: `user ${q}` }));
+    writeFileSync(join(dir, 'off.texts.ndjson.gz'), gzipSync(texts.map(x => JSON.stringify(x)).join('\n') + '\n'));
+    const sent: any[] = [];
+    const client = {
+      async chat(model: string, prompt: string, opts: any) {
+        sent.push({ model, prompt, opts });
+        if (prompt === 'user c') throw Object.assign(new Error('ledger refused'), { name: 'BudgetExceededError' });
+        return { text: `answer to ${prompt}`, finish: prompt === 'user b' ? 'length' : 'stop', usage: { input: 1, output: 1 }, response_model: 'particle-ai/particle-1', cached: false, attempt_errors: [] } as any;
+      },
+    };
+    const out = await L.runParticle('off', ['a', 'b', 'c'], client as any, dir);
+    expect(out.stopped).toBe('ledger refused');
+    expect(sent.map(s => [s.model, s.prompt, s.opts.system, s.opts.effort, s.opts.maxTokens]).sort()).toEqual([['particle:particle-1', 'user a', 'sys a', 'high', 32000], ['particle:particle-1', 'user b', 'sys b', 'high', 32000], ['particle:particle-1', 'user c', 'sys c', 'high', 32000]]);
+    const rows = L.readJsonl<any>(join(dir, 'off.rows.jsonl'));
+    expect(rows.map(r => [r.question_id, r.answer, r.truncated, r.status]).sort()).toEqual([['a', 'answer to user a', false, 'succeeded'], ['b', 'answer to user b', true, 'succeeded'], ['c', null, false, 'errored']]);
+    const again = await L.runParticle('off', ['a', 'b', 'c'], client as any, dir);
+    expect(again.ran).toBe(0);
+  });
+
   test('an unknown arm is refused before anything is read', () => {
     expect(() => L.parseArm('opus--agent-default')).toThrow(/unknown arm/);
     expect(L.parseArm('gpt4o--agent-default')).toEqual({ reader: 'gpt4o', memories: 'agent-default' });
+    expect(L.parseArm('particle--on')).toEqual({ reader: 'particle', memories: 'on' });
+    expect(() => L.parseArm('particle--agent-default')).toThrow(/unknown arm/);
   });
 });

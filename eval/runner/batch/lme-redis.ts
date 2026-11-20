@@ -7,6 +7,7 @@
  *   bun eval/runner/batch/lme-redis.ts plan <arm>                                worst case per arm (counts tokens)
  *   bun eval/runner/batch/lme-redis.ts run <arm> --stage <id> [--ids pilot|first-half|second-half|all]
  *   bun eval/runner/batch/lme-redis.ts judge <arm> protocol|cross --stage <id> [--ids ...]
+ *   bun eval/runner/batch/lme-redis.ts particle particle--<memories> --stage <id> [--ids ...]
  *   bun eval/runner/batch/lme-redis.ts poll --stage <id>
  *   bun eval/runner/batch/lme-redis.ts status
  *
@@ -14,20 +15,22 @@
  * wrote (eval/runner/lme-redis/lme_redis.py freeze) in each provider's request shape and change no byte of them. A
  * reader answers each distinct prompt once: where a question's messages hash the same as in an earlier arm for that
  * reader (most often off and on when autocut keeps five conversations), the later arm holds no request and reuses the
- * earlier arm's answer and judgments (`reuse.json`). particle-1 has no batch endpoint and runs elsewhere.
+ * earlier arm's answer and judgments (`reuse.json`). particle-1 has no batch endpoint: its requests go one at a time
+ * through qa-v2's ChatClient, each reserved in the ledger by the paid-request guard, and its judges use the lane.
  *
  * Every paid command runs under a budget run per stage (judge check, pilots, counted first half, counted second half),
  * opened with --budget-usd when the stage first runs, with the paid-request guard installed. Dollar figures live in the
  * ledger and the tracking issue, never in this repository.
  */
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { gunzipSync, gzipSync } from 'node:zlib';
 import { BudgetRun, installPaidRequestGuard, ledgerStatus } from '../budget-ledger.ts';
 import { attestPreregistration } from '../prereg.ts';
 import { buildManifest, freezeManifest, readManifest, sha256, type ArmManifest, type Provider } from './manifest.ts';
+import { ChatClient, chatWithReceipts } from '../memory-qa/qa-v2.ts';
 import { BatchLane, type StoredResult } from './submit.ts';
 import { anthropicTransport, openAiTransport } from './transport.ts';
 
@@ -66,6 +69,13 @@ export const READERS: Record<'gpt4o' | 'opus' | 'sol', Request & { memories: rea
   },
 };
 export type Reader = keyof typeof READERS;
+
+/** particle-1 has no batch endpoint: each request goes through qa-v2's ChatClient, under the paid-request guard that reserves it in the ledger. */
+export const PARTICLE = {
+  model: 'particle:particle-1', memories: ['off', 'on', 'full', 'oracle'] as readonly Memories[], effort: 'high', max_output_tokens: 32000, concurrency: 8, timeout_ms: 900_000,
+  describe: 'Particle chat completions, reasoning_effort high, 32,000 output tokens (its default cap)',
+};
+export type AnyReader = Reader | 'particle';
 
 /** The judges (preregistration, "Judges"): the protocol judge for every row, and the cross-family judge by reader family. */
 export const JUDGES: Record<'protocol' | 'opus' | 'astra', Request & { body: (m: JudgeMessages) => Record<string, unknown> }> = {
@@ -117,32 +127,39 @@ export function loadFrozen(dir: string): { order: string[]; lines: Record<Memori
  * One reader's bodies per memories arm, one request per distinct prompt: a question whose messages hash the same as
  * in an earlier arm for this reader has no request in the later arm, and `reuse` names the arm that answers it.
  */
-export function readerBodies(reader: Reader, frozen: ReturnType<typeof loadFrozen>) {
-  const r = READERS[reader];
-  const bodies = new Map<Memories, Map<string, Record<string, unknown>>>();
+export function distinctPrompts(memories: readonly Memories[], frozen: ReturnType<typeof loadFrozen>) {
+  const keep = new Map<Memories, FrozenLine[]>();
   const reuse: Record<string, Record<string, Memories>> = {};
   const seen = new Map<string, Map<string, Memories>>();
-  for (const arm of r.memories) {
-    const b = new Map<string, Record<string, unknown>>();
+  for (const arm of memories) {
+    const lines: FrozenLine[] = [];
     for (const q of frozen.order) {
       const line = frozen.lines[arm].get(q)!;
       const earlier = seen.get(q)?.get(line.messages_sha256);
       if (earlier) { (reuse[arm] ??= {})[q] = earlier; continue; }
       if (!seen.has(q)) seen.set(q, new Map());
       seen.get(q)!.set(line.messages_sha256, arm);
-      b.set(q, r.body(line.messages));
+      lines.push(line);
     }
-    bodies.set(arm, b);
+    keep.set(arm, lines);
   }
+  return { keep, reuse };
+}
+
+export function readerBodies(reader: Reader, frozen: ReturnType<typeof loadFrozen>) {
+  const r = READERS[reader];
+  const { keep, reuse } = distinctPrompts(r.memories, frozen);
+  const bodies = new Map([...keep].map(([arm, lines]) => [arm, new Map(lines.map(l => [l.question_id, r.body(l.messages)]))] as const));
   return { bodies, reuse };
 }
 
-export const armId = (reader: Reader, memories: Memories) => `${reader}--${memories}`;
+export const armId = (reader: AnyReader, memories: Memories) => `${reader}--${memories}`;
 export const judgeArmId = (arm: string, role: 'protocol' | 'cross') => `${arm}--${role}`;
 
-export function parseArm(arm: string): { reader: Reader; memories: Memories } {
-  const [reader, memories] = arm.split('--') as [Reader, Memories];
-  if (!READERS[reader] || !READERS[reader].memories.includes(memories)) throw new Error(`unknown arm ${arm}`);
+export function parseArm(arm: string): { reader: AnyReader; memories: Memories } {
+  const [reader, memories] = (arm ?? '').split('--') as [AnyReader, Memories];
+  const allowed = reader === 'particle' ? PARTICLE.memories : READERS[reader as Reader]?.memories;
+  if (!allowed?.includes(memories)) throw new Error(`unknown arm ${arm}`);
   return { reader, memories };
 }
 
@@ -188,13 +205,20 @@ export function build(frozenDir: string): { arm: string; requests: number; reuse
       out.push({ arm: id, requests: b.size, reused: Object.keys(reuse[memories] ?? {}).length });
     }
   }
+  const { keep, reuse } = distinctPrompts(PARTICLE.memories, frozen);
+  reuseAll.particle = reuse;
+  mkdirSync(join(STATE_DIR, 'particle'), { recursive: true });
+  for (const [memories, lines] of keep) {
+    writeFileSync(join(STATE_DIR, 'particle', `${memories}.texts.ndjson.gz`), gzipSync(lines.map(l => JSON.stringify({ question_id: l.question_id, system: l.messages[0].content, user: l.messages[1].content })).join('\n') + '\n'));
+    out.push({ arm: armId('particle', memories), requests: lines.length, reused: Object.keys(reuse[memories] ?? {}).length });
+  }
   writeJson(join(MANIFEST_DIR, 'reuse.json'), reuseAll);
   writeJson(join(STATE_DIR, 'order.json'), frozen.order);
   return out;
 }
 
 /** Judge bodies for an arm's answers, from the vendored judge prompt (lme_redis.py judge-messages). */
-export function judgeBodies(role: 'protocol' | 'cross', reader: Reader, lines: { item_id: string; messages: JudgeMessages }[]) {
+export function judgeBodies(role: 'protocol' | 'cross', reader: AnyReader, lines: { item_id: string; messages: JudgeMessages }[]) {
   const j = JUDGES[role === 'protocol' ? 'protocol' : crossJudge(reader)];
   return { judge: j, bodies: new Map(lines.map(l => [l.item_id, j.body(l.messages)])) };
 }
@@ -207,6 +231,43 @@ export function answerRows(manifest: ArmManifest, results: Map<string, StoredRes
     const answer = r.status === 'succeeded' ? (r.text ?? '') : null;
     return { question_id, answer, status: r.status, finish: r.finish, truncated: r.finish === 'max_tokens' || r.finish === 'length', usage: r.usage };
   });
+}
+
+export interface ParticleRow { question_id: string; answer: string | null; status: string; finish: string | null; truncated: boolean; usage: unknown; response_model: string | null; cached: boolean; error: string | null }
+
+/**
+ * One particle-1 arm, eight questions at a time: each question whose prompt this arm holds and that has no row yet
+ * gets one request with the frozen system and user text. A row records the answer (a truncated one is kept), and a
+ * budget stop ends the arm after the question in flight, with no new question started.
+ */
+export async function runParticle(memories: Memories, ids: string[], client: { chat: ChatClient['chat'] }, dir = join(STATE_DIR, 'particle')): Promise<{ ran: number; stopped: string | null }> {
+  const texts = readJsonl<{ question_id: string; system: string; user: string }>(join(dir, `${memories}.texts.ndjson.gz`));
+  const rowsPath = join(dir, `${memories}.rows.jsonl`);
+  const done = new Set(existsSync(rowsPath) ? readJsonl<ParticleRow>(rowsPath).map(r => r.question_id) : []);
+  const wanted = new Set(ids);
+  const queue = texts.filter(t => wanted.has(t.question_id) && !done.has(t.question_id));
+  let stopped: string | null = null;
+  let ran = 0;
+  const receipts: unknown[] = [];
+  const worker = async () => {
+    for (let t = queue.shift(); t && !stopped; t = queue.shift()) {
+      let row: ParticleRow;
+      try {
+        const r = await chatWithReceipts(client, { role: 'reader', question_id: t.question_id, replicate: 0, model: PARTICLE.model, delivered: null } as never, t.user,
+          { maxTokens: PARTICLE.max_output_tokens, replicate: 0, effort: PARTICLE.effort, system: t.system }, receipts as never);
+        row = { question_id: t.question_id, answer: r.text ?? '', status: 'succeeded', finish: r.finish ?? null, truncated: r.finish === 'length' || r.finish === 'max_tokens', usage: r.usage ?? null, response_model: r.response_model ?? null, cached: r.cached, error: null };
+      } catch (e) {
+        const message = String((e as Error).message ?? e).slice(0, 500);
+        if ((e as Error).name === 'BudgetExceededError' || /BudgetExceeded|402/.test(message)) stopped = message;
+        row = { question_id: t.question_id, answer: null, status: 'errored', finish: null, truncated: false, usage: null, response_model: null, cached: false, error: message };
+      }
+      appendFileSync(rowsPath, JSON.stringify(row) + '\n');
+      ran++;
+    }
+  };
+  await Promise.all(Array.from({ length: PARTICLE.concurrency }, worker));
+  appendFileSync(join(dir, `${memories}.receipts.jsonl`), receipts.map(r => JSON.stringify(r)).join('\n') + (receipts.length ? '\n' : ''));
+  return { ran, stopped };
 }
 
 /** The strict cross-family parse: the reply's first word, lowercased and stripped of punctuation, must be yes or no. */
@@ -286,15 +347,23 @@ async function main(argv: string[]) {
     if (cmd === 'poll') { for (const o of await l.poll()) console.log(JSON.stringify(o)); return; }
     const order = jsonFile<string[]>(join(STATE_DIR, 'order.json'), []);
     const ids = stageIds(order, flag(argv, '--ids') ?? 'all');
-    if (cmd === 'run') {
-      parseArm(arm);
+    if (cmd === 'particle') {
+      const { reader, memories } = parseArm(arm);
+      if (reader !== 'particle') throw new Error('particle runs a particle--<memories> arm');
+      const out = await runParticle(memories, ids, new ChatClient(join(STATE_DIR, 'particle', 'cache'), undefined, PARTICLE.timeout_ms));
+      console.log(JSON.stringify({ arm, ...out }));
+      if (out.stopped) process.exitCode = 3;
+    } else if (cmd === 'run') {
+      if (parseArm(arm).reader === 'particle') throw new Error('particle-1 has no batch endpoint; use the particle command');
       await submit(l, run, readManifest(manifestPath(arm)), loadBodies(arm), ids, argv.includes('--list-price'));
     } else if (cmd === 'judge') {
       const { reader } = parseArm(arm);
       if (role !== 'protocol' && role !== 'cross') throw new Error('judge role must be protocol or cross');
       const id = judgeArmId(arm, role);
       if (!existsSync(manifestPath(id))) {
-        const answers = answerRows(readManifest(manifestPath(arm)), l.results(arm)).filter(a => a.answer !== null);
+        const answers = reader === 'particle'
+          ? readJsonl<ParticleRow>(join(STATE_DIR, 'particle', `${parseArm(arm).memories}.rows.jsonl`)).filter(a => a.answer !== null)
+          : answerRows(readManifest(manifestPath(arm)), l.results(arm)).filter(a => a.answer !== null);
         const answersPath = join(STATE_DIR, 'answers', `${arm}.jsonl`);
         mkdirSync(join(STATE_DIR, 'answers'), { recursive: true });
         writeFileSync(answersPath, answers.map(a => JSON.stringify({ item_id: a.question_id, question_id: a.question_id, answer: a.answer })).join('\n') + '\n');
