@@ -170,13 +170,13 @@ Arm `B` for Opus 5.5 ended with 21 of 220 rows (3 of them unanswerable) failed a
 - **The 21 rows are asked again** as this preregistration says for harness failures. `mpw.reanswer` re-asks a failed row that has no recorded prompt, without the line, and records the prompt it sends. It still refuses to add the line to any row whose prompt was never recorded. The repaired answers replace the failed receipts in the `B` cell. The failed receipts are kept beside them with a manifest of their hashes and errors, and the results list the 21 rows. Before the repaired answers go back, each repaired prompt is checked against the request body the failed row recorded, byte for byte. The 8 rows with a missing field may first have been refusals; their first reply wasn't kept, so asking again gives them a second draw. For that reason the paired endpoints are also printed without the 21 rows, as a sensitivity check.
 - Every Opus row in `O`, `F` and the extra `B` samples is answered by the fixed client. The GPT-6.2 Sol and particle-1 clients are unchanged by this.
 
-### Amendment 5 (2026-11-20, during arm `B` for particle-1, before any particle-1 row is judged): a list in the particle-1 answer
+### Amendment 5 (2026-11-20, during arm `B` for particle-1): a list in the particle-1 answer
 
-particle-1's arm `B` stopped in its 69th answer. For an event-ordering question it replied with the requested JSON object, but its `answer` was a list of strings (one dated step per item) rather than one string. The cell's judge then failed on the list, before any particle-1 row was graded.
+particle-1's first arm `B` cell (`beam-500k-gbrain-rag-edd57c6d3c92`) stopped at its 69th answer. For an event-ordering question it replied with the requested JSON object, but its `answer` was a list of strings (one dated step per item) rather than one string. The scorer's abstention check failed on the list. The 68 rows before it had already been answered and judged.
 
 - **The client now reads such a reply as its lines** (`mpw/particle_llm.py`, with a keyless test that fails without it). A string field that holds a list of strings is joined with newlines. Any other non-string value is no structured response, which is a failed row as amendment 3 says. The request is unchanged.
-- **The one stored row is converted the same way, not asked again.** Its recorded answer becomes the list's items joined with newlines. The original reply's hash is kept beside it in `answer-coerce.json` in the cell, and the results list the row. Every later particle-1 answer, in `B`, `O` and `F`, goes through the fixed client.
-- An Opus reader read this commit. Because the window for particle-1 is shared, the cell resumed while that reader ran. The change touches only replies that hold a list, and the results say what the reader found.
+- **Arm `B` for particle-1 was answered again from the start.** The fix changed the harness commit, so the same command started a new cell (`beam-500k-gbrain-rag-354daaed3f56`), and every particle-1 row in `B`, `O` and `F` goes through the fixed client. The first cell, with 69 answers, is not counted and is kept as it is. In it the list row was converted to its lines, with the original's hash in `answer-coerce.json`, before the new cell started.
+- One Opus reader read this commit and found no blocking issue.
 
 ## Disclosures
 
