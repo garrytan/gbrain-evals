@@ -198,6 +198,20 @@ result = {"ok": a["ok"], "passes": len(a["passes"]), "spent": a["spent_usd"], "c
     expect(p({ ...okRun, pages_skipped_unparsed: 2, pages_pending: 1 })).toEqual(['pages_pending=1', 'pages_skipped_unparsed=2']);
     expect(p({ ...okRun, no_pricing_models: ['m'] })).toEqual(["unpriced extraction models ['m']"]);
   });
+  test('each failed, declined and unparsed page is named with its cause', () => {
+    const p = (run: object) => f6(`result = shim.extraction_problems(${J(run)})`).ok;
+    expect(p({
+      ...okRun, pages_failed: 1, pages_skipped_unparsed: 1,
+      failed_pages: [{ slug: 'conversations/2026-04-10/src-1', error: 'the extraction model declined 1 window(s)' }],
+      declined_windows: [{ slug: 'conversations/2026-04-10/src-1', start: '2026-04-10T09:00:00Z', end: '2026-04-10T09:05:00Z', reason: 'refusal' }],
+      unparsed_pages: [{ slug: 'conversations/2026-04-11/src-2', cause: 'no line matched any conversation format' }],
+    })).toEqual([
+      'pages_failed=1', 'pages_skipped_unparsed=1',
+      'failed conversations/2026-04-10/src-1: the extraction model declined 1 window(s)',
+      'declined conversations/2026-04-10/src-1 2026-04-10T09:00:00Z..2026-04-10T09:05:00Z (refusal)',
+      'unparsed conversations/2026-04-11/src-2: no line matched any conversation format',
+    ]);
+  });
 });
 
 describe('F6 retrieval: fact rows first, mapped to their source session', () => {

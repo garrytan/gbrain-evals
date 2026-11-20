@@ -2,6 +2,26 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.260] - 2026-11-20
+
+- **Redis's open LongMemEval harness is vendored, and a run of gbrain on it is preregistered.** The judge prompts, answer prompt, task-averaged metric, dataset loader and runner from [redis/agent-memory-server](https://github.com/redis/agent-memory-server) (`agent-memory-benchmark`, Apache-2.0, commit `843d2078`) now live in [eval/redis-agent-memory-benchmark/](eval/redis-agent-memory-benchmark/README.md), each file headed with what we changed, with a test that holds unchanged files to their upstream bytes. The [preregistration](docs/benchmarks/2026-11-20-longmemeval-redis-harness-preregistration.md) plans gbrain's newest release on all 500 LongMemEval-S questions with Redis's gpt-4o reader and judge, Opus 5.5, GPT-6.2 Sol and particle-1 readers, autocut on and off, whole-history and perfect-evidence arms, and a checked cross-family judge.
+
+- `bun eval/runner/prereg.ts`, the preregistration check CI runs, now refuses a new preregistration that skips the eval-loop
+  practices: its registry entry must name the decision each outcome changes, a pilot per arm on at most a tenth of that
+  arm's budget, a checked judge from another model family read per arm, and, for the highest paid tier, one interim look
+  at half the units with O'Brien-Fleming bounds and a futility stop. A quick look needs only its question, decision and
+  stop rule. It also refuses a registry entry that reuses another entry's id. Results pages for new entries carry one
+  `Settled call:` line. Plans registered before 2026-11-19 are listed
+  in [docs/benchmarks/preregistrations-grandfathered.json](docs/benchmarks/preregistrations-grandfathered.json) and keep
+  their rules; the fields are in [docs/benchmarks/PREREGISTRATION-TEMPLATE.md](docs/benchmarks/PREREGISTRATION-TEMPLATE.md#registry-entry).
+
+- The preregistration check now treats every Markdown file under `docs/` whose name contains `prereg` or ends in
+  `-protocol.md` as a preregistration that needs a registry entry, instead of two filename shapes, so a plan named
+  `PREREGISTRATION.md` or `*-protocol.md` can't skip the eval-loop practices. It also refuses any name on
+  [docs/benchmarks/preregistrations-grandfathered.json](docs/benchmarks/preregistrations-grandfathered.json) that wasn't
+  in the repository when that list was first committed, so a new plan can't be grandfathered. The 16 existing files the
+  wider match finds are added to the list.
+
 ## [0.10.259] - 2026-11-19
 
 - [docs/benchmarks/2026-11-19-cat40-hard-old-build-control-preregistration.md](docs/benchmarks/2026-11-19-cat40-hard-old-build-control-preregistration.md)

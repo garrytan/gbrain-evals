@@ -1,0 +1,313 @@
+{
+  "meta": {
+    "title": "LongMemEval small — agent memory evaluation",
+    "benchmark_version": "Original chat-session LongMemEval (v1), not LongMemEval-V2",
+    "questions": 500,
+    "task_types": 6,
+    "answer_model": "gpt-4o",
+    "judge_model": "gpt-4o",
+    "primary_metric": "task-averaged accuracy",
+    "evaluation_date": "2026-06",
+    "cost_formula": "1,000,000 * modeled visible LLM spend for one memory query per observed user turn / observed conversation tokens",
+    "cost_scope": "Modeled visible LLM spend at list prices per 1M LongMemEval Small conversation tokens, assuming one memory query per user turn; excludes infrastructure, hosting, and unobserved server-side spend."
+  },
+  "redis_strategies": [
+    {
+      "name": "Instruct",
+      "task_averaged_accuracy": 71.24,
+      "kind": "redis",
+      "note": "Complete 500-question Small-split run using per-message ingestion retrieval."
+    },
+    {
+      "name": "Remis + Instruct",
+      "task_averaged_accuracy": 86.14,
+      "kind": "redis",
+      "note": "Completed 500-question Small-split aggregate: Remis top_k=5, context_window=1; Instruct search_limit=40."
+    }
+  ],
+  "per_task_comparison": [
+    {
+      "task": "User facts",
+      "count": 70,
+      "instruct": 95.71,
+      "remis_instruct": 97.14
+    },
+    {
+      "task": "Preferences",
+      "count": 30,
+      "instruct": 40.0,
+      "remis_instruct": 73.33
+    },
+    {
+      "task": "Assistant facts",
+      "count": 56,
+      "instruct": 76.79,
+      "remis_instruct": 100.0
+    },
+    {
+      "task": "Multi-session",
+      "count": 133,
+      "instruct": 69.17,
+      "remis_instruct": 75.94
+    },
+    {
+      "task": "Temporal reasoning",
+      "count": 133,
+      "instruct": 71.43,
+      "remis_instruct": 81.95
+    },
+    {
+      "task": "Knowledge updates",
+      "count": 78,
+      "instruct": 74.36,
+      "remis_instruct": 88.46
+    }
+  ],
+  "leaderboard": [
+    {
+      "name": "Remis + Instruct",
+      "accuracy": 86.14,
+      "kind": "redis",
+      "model": "gpt-4o",
+      "flag": "our complete run",
+      "note": "500-question evaluation result."
+    },
+    {
+      "name": "Oracle Agent Memory",
+      "accuracy": 86.0,
+      "kind": "reproduced",
+      "model": "gpt-5.5 xhigh",
+      "note": "Measured on 479/500 questions using a stronger answer model; not a direct comparison."
+    },
+    {
+      "name": "Mastra OM",
+      "accuracy": 84.24,
+      "kind": "reproduced",
+      "model": "Gemini + gpt-4o",
+      "note": "Complete run measured in our evaluation; the score matched the published figure."
+    },
+    {
+      "name": "Supermemory",
+      "accuracy": 81.6,
+      "kind": "published",
+      "model": "not disclosed here",
+      "note": "Published figure; not measured in our evaluation."
+    },
+    {
+      "name": "emergence-fast",
+      "accuracy": 81.34,
+      "kind": "reproduced",
+      "model": "gpt-4o answer",
+      "note": "Measured on 493 of 500 Small-split questions."
+    },
+    {
+      "name": "langmem",
+      "accuracy": 71.94,
+      "kind": "reproduced",
+      "model": "gpt-4o",
+      "note": "Measured on 497 of 500 Small-split questions."
+    },
+    {
+      "name": "Instruct",
+      "accuracy": 71.24,
+      "kind": "redis",
+      "model": "gpt-4o",
+      "note": "Complete 500-question LongMemEval Small run."
+    },
+    {
+      "name": "Zep / Graphiti",
+      "accuracy": 71.2,
+      "kind": "published",
+      "model": "gpt-4o",
+      "note": "Published figure; not measured in our evaluation."
+    },
+    {
+      "name": "Mem0",
+      "accuracy": 49.0,
+      "kind": "published",
+      "model": "not disclosed here",
+      "note": "Published figure; not measured in our evaluation."
+    },
+    {
+      "name": "Google Vertex Memory Bank",
+      "accuracy": 42.4,
+      "kind": "reproduced",
+      "model": "gpt-4o answer",
+      "note": "Configurable black box; this was our best effort to obtain a strong benchmark result."
+    }
+  ],
+  "cost_accuracy": [
+    {
+      "name": "Remis + Instruct",
+      "accuracy": 86.14,
+      "cost_usd_per_million_conversation_tokens": 33.2509,
+      "kind": "redis",
+      "lower_bound": false,
+      "note": "Completed Small-split aggregate with Remis top_k=5 and context_window=1."
+    },
+    {
+      "name": "Mastra OM",
+      "accuracy": 84.24,
+      "cost_usd_per_million_conversation_tokens": 171.6527,
+      "kind": "reproduced",
+      "lower_bound": false,
+      "note": "Complete Small-split run using Gemini for memory processing and gpt-4o for answering."
+    },
+    {
+      "name": "emergence-fast",
+      "accuracy": 81.34,
+      "cost_usd_per_million_conversation_tokens": 116.9153,
+      "kind": "qualified",
+      "lower_bound": false,
+      "note": "Partial Small-split run: 493/500 questions."
+    },
+    {
+      "name": "Instruct",
+      "accuracy": 71.24,
+      "cost_usd_per_million_conversation_tokens": 14.47,
+      "kind": "redis",
+      "lower_bound": false,
+      "note": "Complete Small-split per-message ingestion retrieval run."
+    },
+    {
+      "name": "langmem",
+      "accuracy": 71.94,
+      "cost_usd_per_million_conversation_tokens": 4.6917,
+      "kind": "qualified",
+      "lower_bound": true,
+      "note": "Partial Small-split run: 497/500 questions; extraction cost was not captured."
+    },
+    {
+      "name": "Google Vertex Memory Bank",
+      "accuracy": 42.4,
+      "cost_usd_per_million_conversation_tokens": 9.495,
+      "kind": "qualified",
+      "lower_bound": true,
+      "note": "Configurable black box; this was our best effort to obtain a strong benchmark result."
+    }
+  ],
+  "extraction_evaluation": {
+    "accuracy_metric": "question-level accuracy",
+    "answer_model": "gpt-4o",
+    "judge_model": "gpt-4o",
+    "pricing_basis": "OpenAI standard API rates verified July 2026; includes extraction, answering, and embedding token costs.",
+    "series": [
+      {
+        "name": "gpt-5-nano",
+        "sample_size": 500,
+        "color": "#2a78d6",
+        "points": [
+          {
+            "effort": "minimal",
+            "accuracy": 25.7,
+            "task_averaged_accuracy": 27.1,
+            "cost_per_million_conversation_tokens": 0.19,
+            "ingest_seconds_per_session": 2.9,
+            "median_memories": 35
+          },
+          {
+            "effort": "low",
+            "accuracy": 39.7,
+            "task_averaged_accuracy": 39.7,
+            "cost_per_million_conversation_tokens": 0.29,
+            "ingest_seconds_per_session": 7.6,
+            "median_memories": 388
+          },
+          {
+            "effort": "medium",
+            "accuracy": 58.9,
+            "task_averaged_accuracy": 59.1,
+            "cost_per_million_conversation_tokens": 1.16,
+            "ingest_seconds_per_session": 37.4,
+            "median_memories": 1308
+          },
+          {
+            "effort": "high",
+            "accuracy": 52.3,
+            "task_averaged_accuracy": 51.9,
+            "cost_per_million_conversation_tokens": 2.26,
+            "ingest_seconds_per_session": 75.0,
+            "median_memories": 1267
+          }
+        ]
+      },
+      {
+        "name": "gpt-5-mini",
+        "sample_size": 100,
+        "color": "#1baf7a",
+        "points": [
+          {
+            "effort": "minimal",
+            "accuracy": 24.0,
+            "task_averaged_accuracy": 23.9,
+            "cost_per_million_conversation_tokens": 0.58,
+            "ingest_seconds_per_session": 2.0,
+            "median_memories": 47
+          },
+          {
+            "effort": "low",
+            "accuracy": 72.0,
+            "task_averaged_accuracy": 68.3,
+            "cost_per_million_conversation_tokens": 1.62,
+            "ingest_seconds_per_session": 15.1,
+            "median_memories": 615
+          },
+          {
+            "effort": "medium",
+            "accuracy": 82.0,
+            "task_averaged_accuracy": 78.8,
+            "cost_per_million_conversation_tokens": 4.45,
+            "ingest_seconds_per_session": 49.7,
+            "median_memories": 1404
+          }
+        ]
+      },
+      {
+        "name": "gpt-5",
+        "sample_size": 100,
+        "color": "#4a3aa7",
+        "points": [
+          {
+            "effort": "minimal",
+            "accuracy": 66.0,
+            "task_averaged_accuracy": 65.8,
+            "cost_per_million_conversation_tokens": 3.90,
+            "ingest_seconds_per_session": 4.8,
+            "median_memories": 241
+          },
+          {
+            "effort": "low",
+            "accuracy": 80.0,
+            "task_averaged_accuracy": 75.9,
+            "cost_per_million_conversation_tokens": 10.75,
+            "ingest_seconds_per_session": 26.2,
+            "median_memories": 714
+          },
+          {
+            "effort": "medium",
+            "accuracy": 78.0,
+            "task_averaged_accuracy": 79.6,
+            "cost_per_million_conversation_tokens": 23.54,
+            "ingest_seconds_per_session": 56.6,
+            "median_memories": 954
+          }
+        ]
+      },
+      {
+        "name": "gpt-4o",
+        "sample_size": 500,
+        "color": "#eb6834",
+        "points": [
+          {
+            "effort": "non-reasoning",
+            "accuracy": 72.1,
+            "task_averaged_accuracy": 71.3,
+            "cost_per_million_conversation_tokens": 6.42,
+            "ingest_seconds_per_session": 5.4,
+            "median_memories": 412
+          }
+        ]
+      }
+    ]
+  }
+}

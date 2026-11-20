@@ -5,6 +5,8 @@
   400 right (+2.50 points, interval -1.50 to +6.50, parity), and gbrain behind where sources disagree (-16.25). Whether
   the build or the worlds explain the drop from October's leads is not yet known. Its per-step data, redacted run
   receipts and analysis sit beside it.
+- particle-1's oracle, gbrain and files cells ran on the same build and worlds: 67 of 200 right with gbrain against 6
+  with plain files (+30.5 points, 24.5 to 37.0), reported apart from the headline, with the Particle disclosure.
 - README's two hard-company rows are replaced by the new parity row and a disagreeing-sources row, with the earlier
   builds' numbers in footnotes.
 - [eval/runner/cat40/newest-confirm.ts](eval/runner/cat40/newest-confirm.ts) gains the interim look and the files

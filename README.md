@@ -83,6 +83,11 @@ behaviour, such as `forget` leaving nothing behind or a sync catching up, where 
 <td valign="top"><h3>Level: +2.50 points</h3><b>325 of 400 (81.25%)</b>; the gain's interval is -1.50 to +6.50, so the two are at parity; an October build scores within noise of the newest on these worlds, so the smaller lead than October's is not a gbrain regression³</td>
 </tr>
 <tr>
+<td valign="top">The same hard company questions, particle-1 (a low-cost reader)<br><sub>gbrain <code>ae8201041</code> (v0.60.742.0) · <a href="docs/benchmarks/2026-11-19-cat40-hard-newest.md">Hard company questions, newest build</a></sub></td>
+<td valign="top">the same files with <code>grep</code>: 6 of 200 (3.0%)</td>
+<td valign="top"><h3>+30.5 points</h3><b>67 of 200 (33.5%)</b> with gbrain's tools; the gain's 95% interval is 24.5 to 37.0. Opus 5.5 with gbrain got 158 of 200</td>
+</tr>
+<tr>
 <td valign="top">The same questions where two sources disagree and one governs<br><sub>gbrain <code>ae8201041</code> (v0.60.742.0) · <a href="docs/benchmarks/2026-11-19-cat40-hard-newest.md">Hard company questions, newest build</a></sub></td>
 <td valign="top">the same files with <code>grep</code>: 79 of 80 (98.75%)</td>
 <td valign="top"><h3>Behind: -16.25 points</h3><b>66 of 80 (82.50%)</b>; the gap's 95% interval is -23.75 to -10.00⁴</td>
@@ -228,7 +233,7 @@ behaviour, such as `forget` leaving nothing behind or a sync catching up, where 
    ([old-build control](docs/benchmarks/2026-11-19-cat40-hard-old-build-control.md)). The rest of the drop comes from the worlds,
    the readers or the files agent, and that run can't say which.
 4. gbrain trailed by a similar amount on world M in October (-15.0 at `3e4ff61ce`). Most of the gap is in questions
-   whose history is also long (-18.18 points, 54 against 66 of 66 cells).
+   whose deciding document is long (-18.18 points, 54 against 66 of 66 cells).
 5. The gap sits in questions that need several conversations, and LongMemEval-S was used to tune gbrain. The whole
    history averaged 171,596 tokens as Sonnet 5.5 counts them and 106,683 as GPT-6.1 Sol does; it used no gbrain
    retrieval, though gbrain's page renderer formatted it. gbrain also pays a one-time cost to index each history.
@@ -628,12 +633,17 @@ Garry Tan runs Y Combinator.
 
 ## Changelog
 
-### 2026-11-19: The hard company questions' smaller lead is not a gbrain regression
+### 2026-11-20: The hard company questions' smaller lead is not a gbrain regression
 
 The old-build control reported: gbrain's October build `09d21554d` scores within noise of v0.60.742.0 on the two new worlds
 (+4.00 over files, newest minus October -1.50, -4.50 to +1.50). The "We learned" line, the hard-company row and
 footnote 3 now say the smaller lead is not a gbrain regression, replacing "not yet known", and the known-limits line
 adds the October build's -11.25 where sources disagree.
+
+### 2026-11-20: Hard company questions, particle-1 row
+
+A row for particle-1 on the hard company questions at v0.60.742.0 joins the results table: 67 of 200 right with gbrain
+against 6 of 200 with plain files (+30.5 points, 24.5 to 37.0), still well behind Opus 5.5 with gbrain (158 of 200).
 
 ### 2026-11-19: Hard company questions re-measured on gbrain's newest release
 

@@ -1,0 +1,965 @@
+{
+ "schema": "cat40-receipt-v1",
+ "version": "cat40-v1",
+ "judge_prompt": "cat40-hard-claims-v1",
+ "hard": {
+  "identity": {
+   "seed": 20261141,
+   "scale": "large",
+   "mode": "hard",
+   "version": "model-ladder-hard-v2",
+   "knob_digest": "37a16085e0fbf2e92072b2e7cf00468d43451dd4fb35bb1232ebbf79d3027434"
+  },
+  "max_turns": 16,
+  "tool_limits": "hard",
+  "scorer": "cat40-hard-score-v2",
+  "judge_prompt": "cat40-hard-claims-v1",
+  "settings_digest": "e90efa3a334f7a073a38eeebbb33effd294e319267d10287dd56628b7a2a87f3",
+  "code": {
+   "eval/generators/model-ladder-hard.ts": "574be4e1f5c0305b46407c35e10d898c25034d684089ac7ad4b03b015ddf6804",
+   "eval/generators/hard/schema.ts": "5d131b37696386cdf01e3030cc78ecbc71d922cc4de39f5ff32b6e61e53e4bb1",
+   "eval/generators/hard/semantics.ts": "943cf770348e81e527214be33b15e7f304865419149a3eabf05d6776ae5dcb33",
+   "eval/generators/hard/render.ts": "e9dae9373f3c3de7b91cf8fa85e5959360928c57f72534894cfaf1ce8e47f240",
+   "eval/generators/hard/rng.ts": "d0f4b78272e811ab559a1f086d4637a6f414e82c6a6deeffc3b9f1a4e2dce08d",
+   "eval/generators/hard/validate.ts": "049265b5dde2026104e5ff922b5837dc41fdd7ee35a02c531393c6bfd9b0ed13",
+   "eval/runner/cat40/hard.ts": "3a5bd8b6ea1fb3a281e18ce4b3f4e70af864952b357159c72251aca580d5052a",
+   "eval/runner/cat40/score-hard.ts": "83ba80902417c6a7627482c37b14b6f1d216fc67328dce10146214860a9d414b",
+   "eval/runner/cat40/judge-hard.ts": "4546497537199b18aeae947ea230762c22dddc6d5ec8b3816c53db58d561c955",
+   "eval/runner/cat40/score.ts": "8a44805190566cdc8ed22caf46c566ac12073db25a0f105d69b6f4222e06174d",
+   "eval/runner/cat40/loop.ts": "df9039e79b33ba8003d35ee9693994f488da9c43fa8734bd14ce6b80156734df",
+   "eval/runner/cat40/arms.ts": "d8a464366a23b88ec814587b77c0abc9a328f39668a6fb386e870ed233982cff",
+   "eval/runner/cat40/hard-grep.ts": "4319257f2a6ec2226a14c670b3774cc8f001790a74255753dd7fcea2afa26a53",
+   "eval/runner/cat40/hard-grep-worker.ts": "39d080f4917f5ec8478053d15e0a23cc6a5d6b4cd53baf400c0ae7c89096af69",
+   "eval/runner/cat40/pg-arm.ts": "8963958e026439056dc3b800eb53c84ff7ac6541cb57370048f04965efcd6b0e"
+  },
+  "runner_commit": "c5050b28db328cd62efbbf332af8e81bc037a272",
+  "attempts_path": "attempts.jsonl",
+  "max_retries": 2,
+  "quarantined": {},
+  "pg_setup_embed_usd": 0
+ },
+ "world": {
+  "path": "eval/reports/cat40/hard-newest/n1/world/world.json",
+  "scale": "large",
+  "digest": "647d6123621842a5b43ec7291e94b440e18bd03bb0209f6b94c46d36cd5f52ac",
+  "seed": 20261141,
+  "docs": 55736,
+  "tasks": 100
+ },
+ "evals_commit": "c5050b28db328cd62efbbf332af8e81bc037a272",
+ "evals_dirty": false,
+ "gbrain": {
+  "slot_ref": null,
+  "slot_commit": "ae8201041c21101dc8c5127afc1be4a047049483",
+  "label": "gbrain",
+  "commit": "ae8201041c21101dc8c5127afc1be4a047049483",
+  "version": "0.60.742.0",
+  "tree": "ddaf41f58780948366b13d4ed5530a72d74ecd17",
+  "verified": {
+   "copy_tree": "ddaf41f58780948366b13d4ed5530a72d74ecd17",
+   "tree_matches": true,
+   "symlinks_under_src": 0,
+   "dir_is_realpath": true,
+   "cli_version": "0.60.742.0",
+   "cli_version_matches": true
+  },
+  "surface": "starter",
+  "advertised_surface": null,
+  "tool_overrides": {
+   "descriptions_file": null,
+   "descriptions_sha256": null,
+   "dropped": []
+  },
+  "instructions_override": null,
+  "served_instructions_sha256": null,
+  "config": {},
+  "build_config": {},
+  "keyless_slots": false,
+  "slot_dir": "<slots>/slots-ae8201041c21-647d6123-noanalyze",
+  "restore_probe": [
+   {
+    "slot": "slot0",
+    "config": {},
+    "owner_phrases": {
+     "links": 0,
+     "windows": null
+    }
+   },
+   {
+    "slot": "slot1",
+    "config": {},
+    "owner_phrases": {
+     "links": 0,
+     "windows": null
+    }
+   },
+   {
+    "slot": "slot2",
+    "config": {},
+    "owner_phrases": {
+     "links": 0,
+     "windows": null
+    }
+   },
+   {
+    "slot": "slot3",
+    "config": {},
+    "owner_phrases": {
+     "links": 0,
+     "windows": null
+    }
+   },
+   {
+    "slot": "slot4",
+    "config": {},
+    "owner_phrases": {
+     "links": 0,
+     "windows": null
+    }
+   }
+  ],
+  "rerank_probe": "passed",
+  "operator_analyze": false,
+  "serve_boot_timeout_s": 0,
+  "staged_build": {
+   "sync_batch_docs": 5000
+  }
+ },
+ "mode": "build-slots",
+ "order": "task",
+ "complete": true,
+ "cells_planned": 0,
+ "slot_builds": [
+  {
+   "slot": "slot0",
+   "dir": "<slots>/slots-ae8201041c21-647d6123-noanalyze/slot0",
+   "steps": [
+    {
+     "step": "init",
+     "code": 0,
+     "ms": 5031,
+     "tail": "More: bulk-load notes `gbrain import <dir>` \u00b7 scale up `gbrain migrate --to postgres --plan` \u00b7 health `gbrain doctor`\n[models] OpenAI account offers gpt-6.2-sol but src/core/model-pricing.ts has no row for it \u2014 staying on the newest PRICED family so budget caps keep working. Add the pricing row to adopt it.\n  Setting up brain schema (v325)...\n  320 migration(s) applied\n[init] Migrations: 14 recorded as not needed on a new brain; 5 setup migration(s) pending (0.11.0, 0.14.0, 0.22.4, 0.28.0, 0.53.0). Finish setup: gbrain apply-migrations --yes --no-autopilot-install\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: <slots>/slots-ae8201041c21-647d6123-noanalyze/slot0/home/.gbrain/content/2a532386-5467-4b21-95bc-d1f61ffbb08a/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)"
+    },
+    {
+     "step": "sources-add",
+     "code": 0,
+     "ms": 974,
+     "tail": "  \"local_path\": \"<slots>/slots-ae8201041c21-647d6123-noanalyze/slot0/vault\",\n  \"source_incarnation\": \"0adb2648-e11b-48d4-b228-372e9d84acf6\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"25bb99ac-adf7-46e0-88a8-ae2fd6ebc47e\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\nthis brain serves one person, so a new source joins default search; `gbrain sources unfederate vault` takes it out"
+    },
+    {
+     "step": "sources-default",
+     "code": 0,
+     "ms": 665,
+     "tail": "Default source set to \"vault\"."
+    },
+    {
+     "step": "sync-1",
+     "code": 0,
+     "ms": 232232,
+     "tail": "[sync] 9095/10000 processed (9095 written, 0 waived this run) \u00b7 2706.1 pages/min \u00b7 indexing ETA 21s\n[sync] 9581/10000 processed (9581 written, 0 waived this run) \u00b7 2715.9 pages/min \u00b7 indexing ETA 10s\n[sync] pass round 2: read 10000 path(s) at e0dc2082 in 0s; settling them next.\n[sync] 9000 page(s) have un-extracted edges (doctor: links_extraction_lag; 10000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 9000 page(s): about 1 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 9000 page(s): about 12 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-2",
+     "code": 0,
+     "ms": 129477,
+     "tail": "[sync] 4726/5000 processed (4726 written, 0 waived this run) \u00b7 2537.6 pages/min \u00b7 indexing ETA 7s\n[sync] pass round 2: read 15000 path(s) at f96458f9 in 1s; settling them next.\n[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)\n[sync] 13000 page(s) have un-extracted edges (doctor: links_extraction_lag; 15000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 13000 page(s): about 1 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 13000 page(s): about 17 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-3",
+     "code": 0,
+     "ms": 129816,
+     "tail": "[sync] 4748/5000 processed (4748 written, 0 waived this run) \u00b7 2537 pages/min \u00b7 indexing ETA 6s\n[sync] pass round 2: read 20000 path(s) at d6c3b60a in 1s; settling them next.\n[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)\n[sync] 17000 page(s) have un-extracted edges (doctor: links_extraction_lag; 20000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 17000 page(s): about 1 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 17000 page(s): about 21 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-4",
+     "code": 0,
+     "ms": 139040,
+     "tail": "[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)\n[sync] 4854/5000 processed (4854 written, 0 waived this run) \u00b7 2374.1 pages/min \u00b7 indexing ETA 4s\n[sync] pass round 2: read 25000 path(s) at 2cd4d1e2 in 1s; settling them next.\n[sync] 21000 page(s) have un-extracted edges (doctor: links_extraction_lag; 25000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 21000 page(s): about 1 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 21000 page(s): about 26 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-5",
+     "code": 0,
+     "ms": 137872,
+     "tail": "[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)\n[sync] 4972/5000 processed (4972 written, 0 waived this run) \u00b7 2423.6 pages/min \u00b7 indexing ETA 1s\n[sync] pass round 2: read 30000 path(s) at ef56d6ed in 1s; settling them next.\n[sync] 25000 page(s) have un-extracted edges (doctor: links_extraction_lag; 30000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 25000 page(s): about 2 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 25000 page(s): about 31 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-6",
+     "code": 0,
+     "ms": 143187,
+     "tail": "[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)\n[sync] 4770/5000 processed (4770 written, 0 waived this run) \u00b7 2314.7 pages/min \u00b7 indexing ETA 6s\n[sync] pass round 2: read 35000 path(s) at 7f733b34 in 1s; settling them next.\n[sync] 29000 page(s) have un-extracted edges (doctor: links_extraction_lag; 35000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 29000 page(s): about 2 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 29000 page(s): about 36 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-7",
+     "code": 0,
+     "ms": 143458,
+     "tail": "[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)\n[sync] 4783/5000 processed (4783 written, 0 waived this run) \u00b7 2323.1 pages/min \u00b7 indexing ETA 6s\n[sync] pass round 2: read 40000 path(s) at 3fc11791 in 1s; settling them next.\n[sync] 33000 page(s) have un-extracted edges (doctor: links_extraction_lag; 40000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 33000 page(s): about 2 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 33000 page(s): about 41 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-8",
+     "code": 0,
+     "ms": 176208,
+     "tail": "[sync] 4781/5000 processed (4781 written, 0 waived this run) \u00b7 1877.9 pages/min \u00b7 indexing ETA 7s\n[sync] pass round 2: read 45000 path(s) at ef21d752 in 1s; settling them next.\n[sync] 37000 page(s) have un-extracted edges (doctor: links_extraction_lag; 45000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 37000 page(s): about 2 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 37000 page(s): about 46 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n  \u2192 embed-backfill not queued; manual drain required: `gbrain embed --stale --source vault`.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-9",
+     "code": 0,
+     "ms": 158040,
+     "tail": "[sync] 4723/5000 processed (4723 written, 0 waived this run) \u00b7 2109.3 pages/min \u00b7 indexing ETA 8s\n[sync] pass round 2: read 50000 path(s) at 6557bd9f in 1s; settling them next.\n[sync] 41000 page(s) have un-extracted edges (doctor: links_extraction_lag; 50000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 41000 page(s): about 2 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 41000 page(s): about 51 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n  \u2192 embed-backfill not queued; manual drain required: `gbrain embed --stale --source vault`.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-10",
+     "code": 0,
+     "ms": 144671,
+     "tail": "[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)\n[sync] 4670/5000 processed (4670 written, 0 waived this run) \u00b7 2284.7 pages/min \u00b7 indexing ETA 9s\n[sync] pass round 2: read 55000 path(s) at 694beabe in 2s; settling them next.\n[sync] 45000 page(s) have un-extracted edges (doctor: links_extraction_lag; 55000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 45000 page(s): about 2 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 45000 page(s): about 56 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-11",
+     "code": 0,
+     "ms": 38435,
+     "tail": "[sync] managed catch-up: 736 entries frozen, 736 remaining; one write request per page (bulk off: PGLite publishes without network round trips; bulk applies to Postgres).\n[sync] 1/736 processed (1 written, 0 waived this run) \u00b7 28 pages/min \u00b7 indexing ETA 26m15s\n[sync] 367/736 processed (367 written, 0 waived this run) \u00b7 1811.5 pages/min \u00b7 indexing ETA 13s\n[sync] pass round 2: read 55736 path(s) at 9022dd82 in 2s; settling them next.\n[sync] 44736 page(s) have un-extracted edges (doctor: links_extraction_lag; 55736 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 44736 page(s): about 2 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 44736 page(s): about 56 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+    },
+    {
+     "step": "extract",
+     "code": 0,
+     "ms": 386187,
+     "tail": "Extract --stale: 0 link(s) created, 0 removed, 0 timeline entr(ies) from 44736 page(s).\nMentions: 45142 link(s) added, 0 removed from 55736 page(s).\nActionable: 0 page(s) still need link/timeline extraction; 0 page(s) due for the mention pass. Extraction is complete (raw stale totals are not a completion signal)."
+    },
+    {
+     "step": "embed-consent-refused",
+     "code": 3,
+     "ms": 864,
+     "tail": "confirmation_required; rerun with --yes (evaluator-authorized build spend)"
+    },
+    {
+     "step": "embed",
+     "code": 0,
+     "ms": 1303285,
+     "tail": "[embed.pages] 71303/71630 (99%)\n[embed.pages] 71368/71630 (99%)\n[embed.pages] 71434/71630 (99%)\n[embed.pages] 71497/71630 (99%)\n[embed.pages] 71557/71630 (99%)\n[embed.pages] 71619/71630 (99%)\n[embed.pages] 71630/71630 (100%)\n[embed.pages] 71630/71630 (100%) done"
+    },
+    {
+     "step": "embed-verify",
+     "code": 0,
+     "ms": 1153,
+     "tail": "[dry-run] Would embed 0 chunks (0 stale found)"
+    },
+    {
+     "step": "warm-boot",
+     "code": 0,
+     "ms": 24167,
+     "tail": "1 server start(s), each answering one read-only tool call before stopping; queued persistence effects at snapshot: 0"
+    }
+   ],
+   "meter": {
+    "usd": 2.7062666800000437,
+    "requests": 55757,
+    "unpriced": 0,
+    "byModel": {
+     "openai:text-embedding-3-large": {
+      "usd": 2.7062666800000437,
+      "requests": 55756
+     }
+    }
+   },
+   "ms": 3310118,
+   "coverage": {
+    "supported": true,
+    "state": "complete",
+    "pending": 0,
+    "last_pass_at": "2026-11-19T23:30:27.531Z",
+    "queued_effects": 0
+   },
+   "build_config": {},
+   "owner_phrases": {
+    "links": 0,
+    "windows": null
+   }
+  },
+  {
+   "slot": "slot1",
+   "dir": "<slots>/slots-ae8201041c21-647d6123-noanalyze/slot1",
+   "steps": [
+    {
+     "step": "init",
+     "code": 0,
+     "ms": 4916,
+     "tail": "More: bulk-load notes `gbrain import <dir>` \u00b7 scale up `gbrain migrate --to postgres --plan` \u00b7 health `gbrain doctor`\n[models] OpenAI account offers gpt-6.2-sol but src/core/model-pricing.ts has no row for it \u2014 staying on the newest PRICED family so budget caps keep working. Add the pricing row to adopt it.\n  Setting up brain schema (v325)...\n  320 migration(s) applied\n[init] Migrations: 14 recorded as not needed on a new brain; 5 setup migration(s) pending (0.11.0, 0.14.0, 0.22.4, 0.28.0, 0.53.0). Finish setup: gbrain apply-migrations --yes --no-autopilot-install\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: <slots>/slots-ae8201041c21-647d6123-noanalyze/slot1/home/.gbrain/content/1e7833c2-87b7-4a32-a127-6d7fe2db5916/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)"
+    },
+    {
+     "step": "sources-add",
+     "code": 0,
+     "ms": 921,
+     "tail": "  \"local_path\": \"<slots>/slots-ae8201041c21-647d6123-noanalyze/slot1/vault\",\n  \"source_incarnation\": \"00b120e0-101e-43f1-9bfe-2eb8bbcf2f40\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"9d15538f-65a4-41f2-bb25-a5583156fed4\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\nthis brain serves one person, so a new source joins default search; `gbrain sources unfederate vault` takes it out"
+    },
+    {
+     "step": "sources-default",
+     "code": 0,
+     "ms": 732,
+     "tail": "Default source set to \"vault\"."
+    },
+    {
+     "step": "sync-1",
+     "code": 0,
+     "ms": 228502,
+     "tail": "[sync] 9284/10000 processed (9284 written, 0 waived this run) \u00b7 2758.9 pages/min \u00b7 indexing ETA 16s\n[sync] 9729/10000 processed (9729 written, 0 waived this run) \u00b7 2754.5 pages/min \u00b7 indexing ETA 6s\n[sync] pass round 2: read 10000 path(s) at 4374534d in 0s; settling them next.\n[sync] 9000 page(s) have un-extracted edges (doctor: links_extraction_lag; 10000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 9000 page(s): about 1 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 9000 page(s): about 12 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-2",
+     "code": 0,
+     "ms": 130609,
+     "tail": "[sync] 4661/5000 processed (4661 written, 0 waived this run) \u00b7 2509.1 pages/min \u00b7 indexing ETA 9s\n[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)\n[sync] pass round 2: read 15000 path(s) at 6736fb07 in 1s; settling them next.\n[sync] 13000 page(s) have un-extracted edges (doctor: links_extraction_lag; 15000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 13000 page(s): about 1 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 13000 page(s): about 17 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-3",
+     "code": 0,
+     "ms": 132310,
+     "tail": "[sync] 4647/5000 processed (4647 written, 0 waived this run) \u00b7 2484.8 pages/min \u00b7 indexing ETA 9s\n[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)\n[sync] pass round 2: read 20000 path(s) at 7e78be0d in 1s; settling them next.\n[sync] 17000 page(s) have un-extracted edges (doctor: links_extraction_lag; 20000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 17000 page(s): about 1 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 17000 page(s): about 21 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-4",
+     "code": 0,
+     "ms": 135393,
+     "tail": "[sync] 4616/5000 processed (4616 written, 0 waived this run) \u00b7 2454.3 pages/min \u00b7 indexing ETA 10s\n[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)\n[sync] pass round 2: read 25000 path(s) at 844d67e4 in 1s; settling them next.\n[sync] 21000 page(s) have un-extracted edges (doctor: links_extraction_lag; 25000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 21000 page(s): about 1 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 21000 page(s): about 26 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-5",
+     "code": 0,
+     "ms": 137545,
+     "tail": "[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)\n[sync] 4971/5000 processed (4971 written, 0 waived this run) \u00b7 2424.6 pages/min \u00b7 indexing ETA 1s\n[sync] pass round 2: read 30000 path(s) at 54703cf2 in 1s; settling them next.\n[sync] 25000 page(s) have un-extracted edges (doctor: links_extraction_lag; 30000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 25000 page(s): about 2 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 25000 page(s): about 31 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-6",
+     "code": 0,
+     "ms": 141487,
+     "tail": "[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)\n[sync] 4842/5000 processed (4842 written, 0 waived this run) \u00b7 2349.2 pages/min \u00b7 indexing ETA 5s\n[sync] pass round 2: read 35000 path(s) at 27d6eb7a in 1s; settling them next.\n[sync] 29000 page(s) have un-extracted edges (doctor: links_extraction_lag; 35000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 29000 page(s): about 2 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 29000 page(s): about 36 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-7",
+     "code": 0,
+     "ms": 141739,
+     "tail": "[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)\n[sync] 4844/5000 processed (4844 written, 0 waived this run) \u00b7 2377.9 pages/min \u00b7 indexing ETA 4s\n[sync] pass round 2: read 40000 path(s) at 8f27a210 in 1s; settling them next.\n[sync] 33000 page(s) have un-extracted edges (doctor: links_extraction_lag; 40000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 33000 page(s): about 2 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 33000 page(s): about 41 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-8",
+     "code": 0,
+     "ms": 174993,
+     "tail": "[sync] 4832/5000 processed (4832 written, 0 waived this run) \u00b7 1898.7 pages/min \u00b7 indexing ETA 6s\n[sync] pass round 2: read 45000 path(s) at 96082147 in 2s; settling them next.\n[sync] 37000 page(s) have un-extracted edges (doctor: links_extraction_lag; 45000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 37000 page(s): about 2 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 37000 page(s): about 46 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n  \u2192 embed-backfill not queued; manual drain required: `gbrain embed --stale --source vault`.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-9",
+     "code": 0,
+     "ms": 158535,
+     "tail": "[sync] 4740/5000 processed (4740 written, 0 waived this run) \u00b7 2116.4 pages/min \u00b7 indexing ETA 8s\n[sync] pass round 2: read 50000 path(s) at f4aaf439 in 2s; settling them next.\n[sync] 41000 page(s) have un-extracted edges (doctor: links_extraction_lag; 50000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 41000 page(s): about 2 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 41000 page(s): about 51 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n  \u2192 embed-backfill not queued; manual drain required: `gbrain embed --stale --source vault`.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-10",
+     "code": 0,
+     "ms": 141909,
+     "tail": "[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)\n[sync] 4787/5000 processed (4787 written, 0 waived this run) \u00b7 2331.7 pages/min \u00b7 indexing ETA 6s\n[sync] pass round 2: read 55000 path(s) at ce6cf35a in 2s; settling them next.\n[sync] 45000 page(s) have un-extracted edges (doctor: links_extraction_lag; 55000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 45000 page(s): about 2 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 45000 page(s): about 56 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-11",
+     "code": 0,
+     "ms": 38813,
+     "tail": "[sync] managed catch-up: 736 entries frozen, 736 remaining; one write request per page (bulk off: PGLite publishes without network round trips; bulk applies to Postgres).\n[sync] 1/736 processed (1 written, 0 waived this run) \u00b7 27.7 pages/min \u00b7 indexing ETA 26m30s\n[sync] 359/736 processed (359 written, 0 waived this run) \u00b7 1768.8 pages/min \u00b7 indexing ETA 13s\n[sync] pass round 2: read 55736 path(s) at ed8ec5b1 in 2s; settling them next.\n[sync] 44736 page(s) have un-extracted edges (doctor: links_extraction_lag; 55736 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 44736 page(s): about 2 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 44736 page(s): about 56 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+    },
+    {
+     "step": "extract",
+     "code": 0,
+     "ms": 386110,
+     "tail": "Extract --stale: 0 link(s) created, 0 removed, 0 timeline entr(ies) from 44736 page(s).\nMentions: 45142 link(s) added, 0 removed from 55736 page(s).\nActionable: 0 page(s) still need link/timeline extraction; 0 page(s) due for the mention pass. Extraction is complete (raw stale totals are not a completion signal)."
+    },
+    {
+     "step": "embed-consent-refused",
+     "code": 3,
+     "ms": 891,
+     "tail": "confirmation_required; rerun with --yes (evaluator-authorized build spend)"
+    },
+    {
+     "step": "embed",
+     "code": 0,
+     "ms": 1368787,
+     "tail": "[embed.pages] 71433/71714 (99%)\n[embed.pages] 71487/71714 (99%)\n[embed.pages] 71542/71714 (99%)\n[embed.pages] 71597/71714 (99%)\n[embed.pages] 71651/71714 (99%)\n[embed.pages] 71708/71714 (99%)\n[embed.pages] 71714/71714 (100%)\n[embed.pages] 71714/71714 (100%) done"
+    },
+    {
+     "step": "embed-verify",
+     "code": 0,
+     "ms": 1136,
+     "tail": "[dry-run] Would embed 0 chunks (0 stale found)"
+    },
+    {
+     "step": "warm-boot",
+     "code": 0,
+     "ms": 25303,
+     "tail": "1 server start(s), each answering one read-only tool call before stopping; queued persistence effects at snapshot: 0"
+    }
+   ],
+   "meter": {
+    "usd": 2.7062785100000446,
+    "requests": 55762,
+    "unpriced": 0,
+    "byModel": {
+     "openai:text-embedding-3-large": {
+      "usd": 2.7062785100000446,
+      "requests": 55761
+     }
+    }
+   },
+   "ms": 3366133,
+   "coverage": {
+    "supported": true,
+    "state": "complete",
+    "pending": 0,
+    "last_pass_at": "2026-11-20T00:25:28.288Z",
+    "queued_effects": 0
+   },
+   "build_config": {},
+   "owner_phrases": {
+    "links": 0,
+    "windows": null
+   }
+  },
+  {
+   "slot": "slot2",
+   "dir": "<slots>/slots-ae8201041c21-647d6123-noanalyze/slot2",
+   "steps": [
+    {
+     "step": "init",
+     "code": 0,
+     "ms": 4970,
+     "tail": "More: bulk-load notes `gbrain import <dir>` \u00b7 scale up `gbrain migrate --to postgres --plan` \u00b7 health `gbrain doctor`\n[models] OpenAI account offers gpt-6.2-sol but src/core/model-pricing.ts has no row for it \u2014 staying on the newest PRICED family so budget caps keep working. Add the pricing row to adopt it.\n  Setting up brain schema (v325)...\n  320 migration(s) applied\n[init] Migrations: 14 recorded as not needed on a new brain; 5 setup migration(s) pending (0.11.0, 0.14.0, 0.22.4, 0.28.0, 0.53.0). Finish setup: gbrain apply-migrations --yes --no-autopilot-install\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: <slots>/slots-ae8201041c21-647d6123-noanalyze/slot2/home/.gbrain/content/a2e5b02d-3bd6-4d88-a469-1a1f45dd96ec/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)"
+    },
+    {
+     "step": "sources-add",
+     "code": 0,
+     "ms": 868,
+     "tail": "  \"local_path\": \"<slots>/slots-ae8201041c21-647d6123-noanalyze/slot2/vault\",\n  \"source_incarnation\": \"19c826e9-4384-4a47-898b-3a696dd570aa\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"bc8edf34-ddc8-48b8-8e89-8928053e762a\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\nthis brain serves one person, so a new source joins default search; `gbrain sources unfederate vault` takes it out"
+    },
+    {
+     "step": "sources-default",
+     "code": 0,
+     "ms": 762,
+     "tail": "Default source set to \"vault\"."
+    },
+    {
+     "step": "sync-1",
+     "code": 0,
+     "ms": 235235,
+     "tail": "[sync] 9445/10000 processed (9445 written, 0 waived this run) \u00b7 2674.7 pages/min \u00b7 indexing ETA 13s\n[sync] 9907/10000 processed (9907 written, 0 waived this run) \u00b7 2678.8 pages/min \u00b7 indexing ETA 3s\n[sync] pass round 2: read 10000 path(s) at 7c6a47ed in 0s; settling them next.\n[sync] 9000 page(s) have un-extracted edges (doctor: links_extraction_lag; 10000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 9000 page(s): about 1 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 9000 page(s): about 12 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-2",
+     "code": 0,
+     "ms": 129545,
+     "tail": "[sync] 4698/5000 processed (4698 written, 0 waived this run) \u00b7 2528.3 pages/min \u00b7 indexing ETA 8s\n[sync] pass round 2: read 15000 path(s) at 4bf794e2 in 1s; settling them next.\n[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)\n[sync] 13000 page(s) have un-extracted edges (doctor: links_extraction_lag; 15000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 13000 page(s): about 1 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 13000 page(s): about 17 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-3",
+     "code": 0,
+     "ms": 130702,
+     "tail": "[sync] 4721/5000 processed (4721 written, 0 waived this run) \u00b7 2520.4 pages/min \u00b7 indexing ETA 7s\n[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)\n[sync] pass round 2: read 20000 path(s) at b8cba4cd in 1s; settling them next.\n[sync] 17000 page(s) have un-extracted edges (doctor: links_extraction_lag; 20000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 17000 page(s): about 1 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 17000 page(s): about 21 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-4",
+     "code": 0,
+     "ms": 136404,
+     "tail": "[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)\n[sync] 4973/5000 processed (4973 written, 0 waived this run) \u00b7 2432.7 pages/min \u00b7 indexing ETA 1s\n[sync] pass round 2: read 25000 path(s) at 2f6eec05 in 1s; settling them next.\n[sync] 21000 page(s) have un-extracted edges (doctor: links_extraction_lag; 25000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 21000 page(s): about 1 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 21000 page(s): about 26 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-5",
+     "code": 0,
+     "ms": 137566,
+     "tail": "[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)\n[sync] 4979/5000 processed (4979 written, 0 waived this run) \u00b7 2427 pages/min \u00b7 indexing ETA 1s\n[sync] pass round 2: read 30000 path(s) at fd8fc26b in 1s; settling them next.\n[sync] 25000 page(s) have un-extracted edges (doctor: links_extraction_lag; 30000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 25000 page(s): about 2 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 25000 page(s): about 31 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-6",
+     "code": 0,
+     "ms": 141184,
+     "tail": "[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)\n[sync] 4828/5000 processed (4828 written, 0 waived this run) \u00b7 2345.6 pages/min \u00b7 indexing ETA 5s\n[sync] pass round 2: read 35000 path(s) at bb3fd5b9 in 1s; settling them next.\n[sync] 29000 page(s) have un-extracted edges (doctor: links_extraction_lag; 35000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 29000 page(s): about 2 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 29000 page(s): about 36 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-7",
+     "code": 0,
+     "ms": 143260,
+     "tail": "[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)\n[sync] 4800/5000 processed (4800 written, 0 waived this run) \u00b7 2334.2 pages/min \u00b7 indexing ETA 6s\n[sync] pass round 2: read 40000 path(s) at 79cef2d6 in 1s; settling them next.\n[sync] 33000 page(s) have un-extracted edges (doctor: links_extraction_lag; 40000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 33000 page(s): about 2 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 33000 page(s): about 41 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-8",
+     "code": 0,
+     "ms": 176909,
+     "tail": "[sync] 4772/5000 processed (4772 written, 0 waived this run) \u00b7 1874.7 pages/min \u00b7 indexing ETA 8s\n[sync] pass round 2: read 45000 path(s) at eff520cb in 1s; settling them next.\n[sync] 37000 page(s) have un-extracted edges (doctor: links_extraction_lag; 45000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 37000 page(s): about 2 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 37000 page(s): about 46 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n  \u2192 embed-backfill not queued; manual drain required: `gbrain embed --stale --source vault`.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-9",
+     "code": 0,
+     "ms": 159218,
+     "tail": "[sync] 4685/5000 processed (4685 written, 0 waived this run) \u00b7 2099.5 pages/min \u00b7 indexing ETA 10s\n[sync] pass round 2: read 50000 path(s) at 0d8506a2 in 2s; settling them next.\n[sync] 41000 page(s) have un-extracted edges (doctor: links_extraction_lag; 50000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 41000 page(s): about 2 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 41000 page(s): about 51 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n  \u2192 embed-backfill not queued; manual drain required: `gbrain embed --stale --source vault`.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-10",
+     "code": 0,
+     "ms": 144878,
+     "tail": "[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)\n[sync] 4664/5000 processed (4664 written, 0 waived this run) \u00b7 2278.6 pages/min \u00b7 indexing ETA 9s\n[sync] pass round 2: read 55000 path(s) at 34625e64 in 2s; settling them next.\n[sync] 45000 page(s) have un-extracted edges (doctor: links_extraction_lag; 55000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 45000 page(s): about 2 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 45000 page(s): about 56 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-11",
+     "code": 0,
+     "ms": 38850,
+     "tail": "[sync] 1/736 processed (1 written, 0 waived this run) \u00b7 27.6 pages/min \u00b7 indexing ETA 26m39s\n[sync] 353/736 processed (353 written, 0 waived this run) \u00b7 1737.5 pages/min \u00b7 indexing ETA 14s\n[sync] 736/736 processed (736 written, 0 waived this run) \u00b7 1977.1 pages/min \u00b7 indexing ETA 0s\n[sync] pass round 2: read 55736 path(s) at dac624e7 in 2s; settling them next.\n[sync] 44736 page(s) have un-extracted edges (doctor: links_extraction_lag; 55736 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 44736 page(s): about 2 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 44736 page(s): about 56 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+    },
+    {
+     "step": "extract",
+     "code": 0,
+     "ms": 387597,
+     "tail": "Extract --stale: 0 link(s) created, 0 removed, 0 timeline entr(ies) from 44736 page(s).\nMentions: 45142 link(s) added, 0 removed from 55736 page(s).\nActionable: 0 page(s) still need link/timeline extraction; 0 page(s) due for the mention pass. Extraction is complete (raw stale totals are not a completion signal)."
+    },
+    {
+     "step": "embed-consent-refused",
+     "code": 3,
+     "ms": 930,
+     "tail": "confirmation_required; rerun with --yes (evaluator-authorized build spend)"
+    },
+    {
+     "step": "embed",
+     "code": 0,
+     "ms": 1307938,
+     "tail": "[embed.pages] 71136/71501 (99%)\n[embed.pages] 71198/71501 (99%)\n[embed.pages] 71260/71501 (99%)\n[embed.pages] 71320/71501 (99%)\n[embed.pages] 71382/71501 (99%)\n[embed.pages] 71443/71501 (99%)\n[embed.pages] 71501/71501 (100%)\n[embed.pages] 71501/71501 (100%) done"
+    },
+    {
+     "step": "embed-verify",
+     "code": 0,
+     "ms": 1180,
+     "tail": "[dry-run] Would embed 0 chunks (0 stale found)"
+    },
+    {
+     "step": "warm-boot",
+     "code": 0,
+     "ms": 30151,
+     "tail": "1 server start(s), each answering one read-only tool call before stopping; queued persistence effects at snapshot: 0"
+    }
+   ],
+   "meter": {
+    "usd": 2.7062986600000456,
+    "requests": 55761,
+    "unpriced": 0,
+    "byModel": {
+     "openai:text-embedding-3-large": {
+      "usd": 2.7062986600000456,
+      "requests": 55760
+     }
+    }
+   },
+   "ms": 3324035,
+   "coverage": {
+    "supported": true,
+    "state": "complete",
+    "pending": 0,
+    "last_pass_at": "2026-11-20T01:21:49.134Z",
+    "queued_effects": 0
+   },
+   "build_config": {},
+   "owner_phrases": {
+    "links": 0,
+    "windows": null
+   }
+  },
+  {
+   "slot": "slot3",
+   "dir": "<slots>/slots-ae8201041c21-647d6123-noanalyze/slot3",
+   "steps": [
+    {
+     "step": "init",
+     "code": 0,
+     "ms": 4719,
+     "tail": "More: bulk-load notes `gbrain import <dir>` \u00b7 scale up `gbrain migrate --to postgres --plan` \u00b7 health `gbrain doctor`\n[models] OpenAI account offers gpt-6.2-sol but src/core/model-pricing.ts has no row for it \u2014 staying on the newest PRICED family so budget caps keep working. Add the pricing row to adopt it.\n  Setting up brain schema (v325)...\n  320 migration(s) applied\n[init] Migrations: 14 recorded as not needed on a new brain; 5 setup migration(s) pending (0.11.0, 0.14.0, 0.22.4, 0.28.0, 0.53.0). Finish setup: gbrain apply-migrations --yes --no-autopilot-install\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: <slots>/slots-ae8201041c21-647d6123-noanalyze/slot3/home/.gbrain/content/ae9e6dbf-0e3a-4dc2-bf5b-4b1ce9741d88/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)"
+    },
+    {
+     "step": "sources-add",
+     "code": 0,
+     "ms": 969,
+     "tail": "  \"local_path\": \"<slots>/slots-ae8201041c21-647d6123-noanalyze/slot3/vault\",\n  \"source_incarnation\": \"213e2109-ebaf-468f-83a1-b69e9bb57310\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"34f810b2-11a0-438a-b7b4-b5b9a42d48f3\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\nthis brain serves one person, so a new source joins default search; `gbrain sources unfederate vault` takes it out"
+    },
+    {
+     "step": "sources-default",
+     "code": 0,
+     "ms": 755,
+     "tail": "Default source set to \"vault\"."
+    },
+    {
+     "step": "sync-1",
+     "code": 0,
+     "ms": 234462,
+     "tail": "[sync] 9500/10000 processed (9500 written, 0 waived this run) \u00b7 2691.1 pages/min \u00b7 indexing ETA 12s\n[sync] 9937/10000 processed (9937 written, 0 waived this run) \u00b7 2688 pages/min \u00b7 indexing ETA 2s\n[sync] pass round 2: read 10000 path(s) at 2ea02460 in 0s; settling them next.\n[sync] 9000 page(s) have un-extracted edges (doctor: links_extraction_lag; 10000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 9000 page(s): about 1 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 9000 page(s): about 12 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-2",
+     "code": 0,
+     "ms": 128743,
+     "tail": "[sync] 4747/5000 processed (4747 written, 0 waived this run) \u00b7 2556.1 pages/min \u00b7 indexing ETA 6s\n[sync] pass round 2: read 15000 path(s) at 1f1f26dc in 1s; settling them next.\n[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)\n[sync] 13000 page(s) have un-extracted edges (doctor: links_extraction_lag; 15000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 13000 page(s): about 1 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 13000 page(s): about 17 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-3",
+     "code": 0,
+     "ms": 131512,
+     "tail": "[sync] 4680/5000 processed (4680 written, 0 waived this run) \u00b7 2502.5 pages/min \u00b7 indexing ETA 8s\n[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)\n[sync] pass round 2: read 20000 path(s) at 10b3c72f in 1s; settling them next.\n[sync] 17000 page(s) have un-extracted edges (doctor: links_extraction_lag; 20000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 17000 page(s): about 1 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 17000 page(s): about 21 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-4",
+     "code": 0,
+     "ms": 137654,
+     "tail": "[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)\n[sync] 4923/5000 processed (4923 written, 0 waived this run) \u00b7 2406.8 pages/min \u00b7 indexing ETA 2s\n[sync] pass round 2: read 25000 path(s) at d700d3e4 in 1s; settling them next.\n[sync] 21000 page(s) have un-extracted edges (doctor: links_extraction_lag; 25000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 21000 page(s): about 1 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 21000 page(s): about 26 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-5",
+     "code": 0,
+     "ms": 138984,
+     "tail": "[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)\n[sync] 4902/5000 processed (4902 written, 0 waived this run) \u00b7 2400.6 pages/min \u00b7 indexing ETA 3s\n[sync] pass round 2: read 30000 path(s) at 31a75678 in 1s; settling them next.\n[sync] 25000 page(s) have un-extracted edges (doctor: links_extraction_lag; 30000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 25000 page(s): about 2 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 25000 page(s): about 31 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-6",
+     "code": 0,
+     "ms": 142613,
+     "tail": "[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)\n[sync] 4797/5000 processed (4797 written, 0 waived this run) \u00b7 2329.7 pages/min \u00b7 indexing ETA 6s\n[sync] pass round 2: read 35000 path(s) at c8a9c87b in 1s; settling them next.\n[sync] 29000 page(s) have un-extracted edges (doctor: links_extraction_lag; 35000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 29000 page(s): about 2 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 29000 page(s): about 36 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-7",
+     "code": 0,
+     "ms": 142859,
+     "tail": "[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)\n[sync] 4821/5000 processed (4821 written, 0 waived this run) \u00b7 2341.6 pages/min \u00b7 indexing ETA 5s\n[sync] pass round 2: read 40000 path(s) at cbf182de in 1s; settling them next.\n[sync] 33000 page(s) have un-extracted edges (doctor: links_extraction_lag; 40000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 33000 page(s): about 2 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 33000 page(s): about 41 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-8",
+     "code": 0,
+     "ms": 176090,
+     "tail": "[sync] 4796/5000 processed (4796 written, 0 waived this run) \u00b7 1884.8 pages/min \u00b7 indexing ETA 7s\n[sync] pass round 2: read 45000 path(s) at 7e98d906 in 2s; settling them next.\n[sync] 37000 page(s) have un-extracted edges (doctor: links_extraction_lag; 45000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 37000 page(s): about 2 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 37000 page(s): about 46 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n  \u2192 embed-backfill not queued; manual drain required: `gbrain embed --stale --source vault`.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-9",
+     "code": 0,
+     "ms": 158006,
+     "tail": "[sync] 4745/5000 processed (4745 written, 0 waived this run) \u00b7 2121.1 pages/min \u00b7 indexing ETA 8s\n[sync] pass round 2: read 50000 path(s) at ed3a6970 in 2s; settling them next.\n[sync] 41000 page(s) have un-extracted edges (doctor: links_extraction_lag; 50000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 41000 page(s): about 2 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 41000 page(s): about 51 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n  \u2192 embed-backfill not queued; manual drain required: `gbrain embed --stale --source vault`.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-10",
+     "code": 0,
+     "ms": 143148,
+     "tail": "[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)\n[sync] 4720/5000 processed (4720 written, 0 waived this run) \u00b7 2310.3 pages/min \u00b7 indexing ETA 8s\n[sync] pass round 2: read 55000 path(s) at 20799bbb in 2s; settling them next.\n[sync] 45000 page(s) have un-extracted edges (doctor: links_extraction_lag; 55000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 45000 page(s): about 2 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 45000 page(s): about 56 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-11",
+     "code": 0,
+     "ms": 38473,
+     "tail": "[sync] 1/736 processed (1 written, 0 waived this run) \u00b7 28.3 pages/min \u00b7 indexing ETA 25m56s\n[sync] 363/736 processed (363 written, 0 waived this run) \u00b7 1793 pages/min \u00b7 indexing ETA 13s\n[sync] 736/736 processed (736 written, 0 waived this run) \u00b7 1993.8 pages/min \u00b7 indexing ETA 0s\n[sync] pass round 2: read 55736 path(s) at 6ccf0a2f in 2s; settling them next.\n[sync] 44736 page(s) have un-extracted edges (doctor: links_extraction_lag; 55736 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 44736 page(s): about 2 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 44736 page(s): about 56 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+    },
+    {
+     "step": "extract",
+     "code": 0,
+     "ms": 384386,
+     "tail": "Extract --stale: 0 link(s) created, 0 removed, 0 timeline entr(ies) from 44736 page(s).\nMentions: 45142 link(s) added, 0 removed from 55736 page(s).\nActionable: 0 page(s) still need link/timeline extraction; 0 page(s) due for the mention pass. Extraction is complete (raw stale totals are not a completion signal)."
+    },
+    {
+     "step": "embed-consent-refused",
+     "code": 3,
+     "ms": 930,
+     "tail": "confirmation_required; rerun with --yes (evaluator-authorized build spend)"
+    },
+    {
+     "step": "embed",
+     "code": 0,
+     "ms": 1339836,
+     "tail": "[embed.pages] 71263/71576 (99%)\n[embed.pages] 71323/71576 (99%)\n[embed.pages] 71383/71576 (99%)\n[embed.pages] 71444/71576 (99%)\n[embed.pages] 71503/71576 (99%)\n[embed.pages] 71564/71576 (99%)\n[embed.pages] 71576/71576 (100%)\n[embed.pages] 71576/71576 (100%) done"
+    },
+    {
+     "step": "embed-verify",
+     "code": 0,
+     "ms": 1077,
+     "tail": "[dry-run] Would embed 0 chunks (0 stale found)"
+    },
+    {
+     "step": "warm-boot",
+     "code": 0,
+     "ms": 30466,
+     "tail": "1 server start(s), each answering one read-only tool call before stopping; queued persistence effects at snapshot: 0"
+    }
+   ],
+   "meter": {
+    "usd": 2.7062659000000444,
+    "requests": 55758,
+    "unpriced": 0,
+    "byModel": {
+     "openai:text-embedding-3-large": {
+      "usd": 2.7062659000000444,
+      "requests": 55757
+     }
+    }
+   },
+   "ms": 3351306,
+   "coverage": {
+    "supported": true,
+    "state": "complete",
+    "pending": 0,
+    "last_pass_at": "2026-11-20T02:17:09.917Z",
+    "queued_effects": 0
+   },
+   "build_config": {},
+   "owner_phrases": {
+    "links": 0,
+    "windows": null
+   }
+  },
+  {
+   "slot": "slot4",
+   "dir": "<slots>/slots-ae8201041c21-647d6123-noanalyze/slot4",
+   "steps": [
+    {
+     "step": "init",
+     "code": 0,
+     "ms": 4695,
+     "tail": "More: bulk-load notes `gbrain import <dir>` \u00b7 scale up `gbrain migrate --to postgres --plan` \u00b7 health `gbrain doctor`\n[models] OpenAI account offers gpt-6.2-sol but src/core/model-pricing.ts has no row for it \u2014 staying on the newest PRICED family so budget caps keep working. Add the pricing row to adopt it.\n  Setting up brain schema (v325)...\n  320 migration(s) applied\n[init] Migrations: 14 recorded as not needed on a new brain; 5 setup migration(s) pending (0.11.0, 0.14.0, 0.22.4, 0.28.0, 0.53.0). Finish setup: gbrain apply-migrations --yes --no-autopilot-install\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: <slots>/slots-ae8201041c21-647d6123-noanalyze/slot4/home/.gbrain/content/d573d8d1-c5bf-4513-8814-e4f012603552/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)"
+    },
+    {
+     "step": "sources-add",
+     "code": 0,
+     "ms": 894,
+     "tail": "  \"local_path\": \"<slots>/slots-ae8201041c21-647d6123-noanalyze/slot4/vault\",\n  \"source_incarnation\": \"efd2ebe3-33e8-42a4-a992-0b8c486397e5\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"21b8819d-69d9-4af8-93da-d349a5191fb2\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\nthis brain serves one person, so a new source joins default search; `gbrain sources unfederate vault` takes it out"
+    },
+    {
+     "step": "sources-default",
+     "code": 0,
+     "ms": 693,
+     "tail": "Default source set to \"vault\"."
+    },
+    {
+     "step": "sync-1",
+     "code": 0,
+     "ms": 231733,
+     "tail": "[sync] 9081/10000 processed (9081 written, 0 waived this run) \u00b7 2701.1 pages/min \u00b7 indexing ETA 21s\n[sync] 9565/10000 processed (9565 written, 0 waived this run) \u00b7 2710.7 pages/min \u00b7 indexing ETA 10s\n[sync] pass round 2: read 10000 path(s) at cee36e61 in 1s; settling them next.\n[sync] 9000 page(s) have un-extracted edges (doctor: links_extraction_lag; 10000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 9000 page(s): about 1 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 9000 page(s): about 12 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-2",
+     "code": 0,
+     "ms": 128496,
+     "tail": "[sync] 4759/5000 processed (4759 written, 0 waived this run) \u00b7 2561.1 pages/min \u00b7 indexing ETA 6s\n[sync] pass round 2: read 15000 path(s) at 14e7071f in 1s; settling them next.\n[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)\n[sync] 13000 page(s) have un-extracted edges (doctor: links_extraction_lag; 15000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 13000 page(s): about 1 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 13000 page(s): about 17 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-3",
+     "code": 0,
+     "ms": 132691,
+     "tail": "[sync] 4649/5000 processed (4649 written, 0 waived this run) \u00b7 2484.4 pages/min \u00b7 indexing ETA 9s\n[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)\n[sync] pass round 2: read 20000 path(s) at 7dd42746 in 1s; settling them next.\n[sync] 17000 page(s) have un-extracted edges (doctor: links_extraction_lag; 20000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 17000 page(s): about 1 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 17000 page(s): about 21 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-4",
+     "code": 0,
+     "ms": 138822,
+     "tail": "[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)\n[sync] 4899/5000 processed (4899 written, 0 waived this run) \u00b7 2384.6 pages/min \u00b7 indexing ETA 3s\n[sync] pass round 2: read 25000 path(s) at b2edf0c5 in 1s; settling them next.\n[sync] 21000 page(s) have un-extracted edges (doctor: links_extraction_lag; 25000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 21000 page(s): about 1 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 21000 page(s): about 26 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-5",
+     "code": 0,
+     "ms": 137698,
+     "tail": "[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)\n[sync] 4981/5000 processed (4981 written, 0 waived this run) \u00b7 2427.5 pages/min \u00b7 indexing ETA 1s\n[sync] pass round 2: read 30000 path(s) at 83d49ef3 in 1s; settling them next.\n[sync] 25000 page(s) have un-extracted edges (doctor: links_extraction_lag; 30000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 25000 page(s): about 2 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 25000 page(s): about 31 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-6",
+     "code": 0,
+     "ms": 141344,
+     "tail": "[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)\n[sync] 4846/5000 processed (4846 written, 0 waived this run) \u00b7 2353.7 pages/min \u00b7 indexing ETA 4s\n[sync] pass round 2: read 35000 path(s) at 95692e83 in 1s; settling them next.\n[sync] 29000 page(s) have un-extracted edges (doctor: links_extraction_lag; 35000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 29000 page(s): about 2 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 29000 page(s): about 36 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-7",
+     "code": 0,
+     "ms": 143240,
+     "tail": "[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)\n[sync] 4816/5000 processed (4816 written, 0 waived this run) \u00b7 2336.5 pages/min \u00b7 indexing ETA 5s\n[sync] pass round 2: read 40000 path(s) at 1097a216 in 1s; settling them next.\n[sync] 33000 page(s) have un-extracted edges (doctor: links_extraction_lag; 40000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 33000 page(s): about 2 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 33000 page(s): about 41 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-8",
+     "code": 0,
+     "ms": 173021,
+     "tail": "[sync] 4860/5000 processed (4860 written, 0 waived this run) \u00b7 1909.6 pages/min \u00b7 indexing ETA 5s\n[sync] pass round 2: read 45000 path(s) at 3501be1c in 1s; settling them next.\n[sync] 37000 page(s) have un-extracted edges (doctor: links_extraction_lag; 45000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 37000 page(s): about 2 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 37000 page(s): about 46 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n  \u2192 embed-backfill not queued; manual drain required: `gbrain embed --stale --source vault`.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-9",
+     "code": 0,
+     "ms": 157054,
+     "tail": "[sync] 4790/5000 processed (4790 written, 0 waived this run) \u00b7 2137.9 pages/min \u00b7 indexing ETA 6s\n[sync] pass round 2: read 50000 path(s) at 1e83ccf5 in 2s; settling them next.\n[sync] 41000 page(s) have un-extracted edges (doctor: links_extraction_lag; 50000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 41000 page(s): about 2 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 41000 page(s): about 51 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n  \u2192 embed-backfill not queued; manual drain required: `gbrain embed --stale --source vault`.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-10",
+     "code": 0,
+     "ms": 143163,
+     "tail": "[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)\n[sync] 4728/5000 processed (4728 written, 0 waived this run) \u00b7 2313.9 pages/min \u00b7 indexing ETA 8s\n[sync] pass round 2: read 55000 path(s) at c4659c96 in 2s; settling them next.\n[sync] 45000 page(s) have un-extracted edges (doctor: links_extraction_lag; 55000 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 45000 page(s): about 2 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 45000 page(s): about 56 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n[gbrain notice sync_tail_degraded] The sync of source vault is synced, but link extraction stopped at its budget with 1 imported page(s) not yet derived; their links and backlinks are missing until they are extracted."
+    },
+    {
+     "step": "sync-11",
+     "code": 0,
+     "ms": 38503,
+     "tail": "[sync] managed catch-up: 736 entries frozen, 736 remaining; one write request per page (bulk off: PGLite publishes without network round trips; bulk applies to Postgres).\n[sync] 1/736 processed (1 written, 0 waived this run) \u00b7 29.5 pages/min \u00b7 indexing ETA 24m54s\n[sync] 359/736 processed (359 written, 0 waived this run) \u00b7 1789.6 pages/min \u00b7 indexing ETA 13s\n[sync] pass round 2: read 55736 path(s) at 432ded45 in 2s; settling them next.\n[sync] 44736 page(s) have un-extracted edges (doctor: links_extraction_lag; 55736 page(s) await the mention pass). Two ways to finish: Run it on the brain host, not inside an agent tool call.\n[sync]   gbrain extract --stale --source-id vault --brain host \u2014 44736 page(s): about 2 run(s) of up to 30 min (estimate at 10 ms RTT; measure your pooler RTT); each run resumes where the last stopped (the cron default)\n[sync]   gbrain extract --stale --catch-up --source-id vault --brain host \u2014 44736 page(s): about 56 min in one run (estimate at 10 ms RTT; measure your pooler RTT); finishes, safe to interrupt, each page commits alone\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+    },
+    {
+     "step": "extract",
+     "code": 0,
+     "ms": 385802,
+     "tail": "Extract --stale: 0 link(s) created, 0 removed, 0 timeline entr(ies) from 44736 page(s).\nMentions: 45142 link(s) added, 0 removed from 55736 page(s).\nActionable: 0 page(s) still need link/timeline extraction; 0 page(s) due for the mention pass. Extraction is complete (raw stale totals are not a completion signal)."
+    },
+    {
+     "step": "embed-consent-refused",
+     "code": 3,
+     "ms": 916,
+     "tail": "confirmation_required; rerun with --yes (evaluator-authorized build spend)"
+    },
+    {
+     "step": "embed",
+     "code": 0,
+     "ms": 1290062,
+     "tail": "[embed.pages] 71224/71593 (99%)\n[embed.pages] 71288/71593 (99%)\n[embed.pages] 71353/71593 (99%)\n[embed.pages] 71417/71593 (99%)\n[embed.pages] 71482/71593 (99%)\n[embed.pages] 71548/71593 (99%)\n[embed.pages] 71593/71593 (100%)\n[embed.pages] 71593/71593 (100%) done"
+    },
+    {
+     "step": "embed-verify",
+     "code": 0,
+     "ms": 1077,
+     "tail": "[dry-run] Would embed 0 chunks (0 stale found)"
+    },
+    {
+     "step": "warm-boot",
+     "code": 0,
+     "ms": 30416,
+     "tail": "1 server start(s), each answering one read-only tool call before stopping; queued persistence effects at snapshot: 0"
+    }
+   ],
+   "meter": {
+    "usd": 2.706253810000044,
+    "requests": 55759,
+    "unpriced": 0,
+    "byModel": {
+     "openai:text-embedding-3-large": {
+      "usd": 2.706253810000044,
+      "requests": 55758
+     }
+    }
+   },
+   "ms": 3295853,
+   "coverage": {
+    "supported": true,
+    "state": "complete",
+    "pending": 0,
+    "last_pass_at": "2026-11-20T03:12:56.486Z",
+    "queued_effects": 0
+   },
+   "build_config": {},
+   "owner_phrases": {
+    "links": 0,
+    "windows": null
+   }
+  }
+ ],
+ "models": [],
+ "arms": [
+  "gbrain"
+ ],
+ "families": [
+  "H1",
+  "H2",
+  "H3",
+  "H4",
+  "H5"
+ ],
+ "repeats": 1,
+ "max_tool_chars": null,
+ "argv": [
+  "--build-slots",
+  "--world",
+  "eval/reports/cat40/hard-newest/n1/world/world.json",
+  "--gbrain-repo",
+  "../gbrain",
+  "--gbrain-ref",
+  "ae8201041c21101dc8c5127afc1be4a047049483",
+  "--gbrain-root",
+  "<slots>",
+  "--slots",
+  "5",
+  "--no-pglite-analyze",
+  "--accept-freeze-drift",
+  "docs/benchmarks/2026-11-19-cat40-hard-newest-preregistration.md: harness c5050b28db328cd62efbbf332af8e81bc037a272; drift is listed in docs/benchmarks/cat40-hard/accepted-drift.json (2026-11-19 entries: stateless OpenAI requests and per-request pricing in loop.ts, the newest seeds in schema.ts and hard.ts) (2026-11-19)",
+  "--slot-build-allowance-usd",
+  "<cap>",
+  "--budget-ledger",
+  ".budget/cat40-hard-newest-n1.sqlite",
+  "--out",
+  "eval/reports/cat40/hard-newest/n1/slots",
+  "--budget-usd",
+  "<cap>"
+ ],
+ "budget_run_id": "cat40-slot-build-2026-11-19T22-57-56-023Z-bcc70bd0",
+ "resumed": false,
+ "proxy_unattributed": {
+  "slot:slot0": {
+   "usd": 1.17e-06,
+   "requests": 1,
+   "unpriced": 0,
+   "byModel": {
+    "openai:text-embedding-3-large": {
+     "usd": 1.17e-06,
+     "requests": 1
+    }
+   }
+  },
+  "slot:slot1": {
+   "usd": 1.17e-06,
+   "requests": 1,
+   "unpriced": 0,
+   "byModel": {
+    "openai:text-embedding-3-large": {
+     "usd": 1.17e-06,
+     "requests": 1
+    }
+   }
+  },
+  "slot:slot2": {
+   "usd": 1.17e-06,
+   "requests": 1,
+   "unpriced": 0,
+   "byModel": {
+    "openai:text-embedding-3-large": {
+     "usd": 1.17e-06,
+     "requests": 1
+    }
+   }
+  },
+  "slot:slot3": {
+   "usd": 1.17e-06,
+   "requests": 1,
+   "unpriced": 0,
+   "byModel": {
+    "openai:text-embedding-3-large": {
+     "usd": 1.17e-06,
+     "requests": 1
+    }
+   }
+  },
+  "slot:slot4": {
+   "usd": 1.17e-06,
+   "requests": 1,
+   "unpriced": 0,
+   "byModel": {
+    "openai:text-embedding-3-large": {
+     "usd": 1.17e-06,
+     "requests": 1
+    }
+   }
+  }
+ },
+ "failed_cells_proxy_usd": 0,
+ "cost": {
+  "usd": 13.5319,
+  "input_tokens": 104113801,
+  "output_tokens": 0,
+  "basis": "budget ledger cat40-slot-build-2026-11-19T22-57-56-023Z-bcc70bd0: 20 paid requests, 0 charged at their reservation because usage was unavailable",
+  "ledger": "gbrain-evals/.budget/cat40-hard-newest-n1.sqlite",
+  "overshoot_usd": 0,
+  "event_loop_lag_ms": {
+   "p50": 0,
+   "p99": 1,
+   "max": 3407.1
+  }
+ },
+ "finished_at": "2026-11-20T03:37:02.271Z"
+}
