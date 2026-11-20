@@ -622,6 +622,16 @@ line.
   `2e4ccb54d26441f29c3d30983f5f5d8cbf496d6aeb665444687ae7cc1ba00242`.
 - **Pilot.** gbrain's smoke on `bg1-dev-01` (run order step 6) runs on v0.60.750.0, so the pilot shows this build
   running in the harness before any counted cell.
+- **The paired development reading (2026-11-20).** On the 20 public dev worlds, from harness commit `be9caa1e`, read by
+  claude-opus-5-5 and graded by gpt-6-astra, gbrain v0.60.750.0 answered 97.2% of all 1,280 questions, against 97.4%
+  for v0.60.741.0. The paired difference is -0.2 points (-1.1 to +0.6), inside the 1.9-point smallest visible change.
+  On current values (S1 to S5) it moved +0.1 (-1.1 to +1.4), and on questions about the past (S6 to S8) -0.8 (-2.1 to
+  +0.2). The largest class change is S8 (history), -1.9 (-5.0 to +1.3) to 94.4%, inside that class's 7.0-point smallest
+  visible change. The gaps to the other servers barely moved: on current values +2.8 (+1.1 to +4.5) over memory-bank
+  and +1.3 (-0.4 to +2.9) over extract-first, against +2.6 and +1.1 at v0.60.741.0; on questions about the past +0.6
+  (-1.3 to +2.7) and +0.6 (-1.3 to +2.5), against +1.5 and +1.5. bg1-dev-20's three questions on session s123 are now
+  answered right. Five worlds were rerun after their first runs stopped early, so every question is graded once. This
+  build's expectation is therefore the v0.60.741.0 result above, within these intervals.
 
 ## Disclosures
 
