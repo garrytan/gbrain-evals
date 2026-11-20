@@ -7,7 +7,7 @@
  *   bun eval/runner/cat40/judge-check-hard.ts plan   --world <world M world.json> --cells <M results.jsonl> --out <dir> [--seed 1]
  *   bun eval/runner/cat40/judge-check-hard.ts run    --world <...> --out <dir> --judges gpt-6.1-sol,claude-opus-5-5
  *                                                    --paid-window <unit> --window-cap-usd <n> --budget-usd <n> --budget-ledger <file>
- *   bun eval/runner/cat40/judge-check-hard.ts report --out <dir>
+ *   bun eval/runner/cat40/judge-check-hard.ts report --out <dir> --judges <a,b>
  *
  *   Items     (a) construction: 6 tasks per family, seeded; for each, a good answer (the task's accepted value, every
  *             H1 member, the count, or every item's accepted value, citing the deciding documents) and a bad one (a value
@@ -101,7 +101,7 @@ export function constructItems(world: HardWorld, seed: number): { items: CheckIt
   return { items, skipped };
 }
 
-interface CellRow { model: string; task: string; family: string; stop: string; run?: { final?: Final | null; text?: string }; claims?: HardClaims | null }
+interface CellRow { model: string; arm?: string; task: string; family: string; stop: string; run?: { final?: Final | null; text?: string }; claims?: HardClaims | null }
 
 /** The real items: submitted answers from committed cells, REAL_PER_FAMILY_READER per family and reader, seeded. */
 export function realItems(rows: CellRow[], seed: number): CheckItem[] {
@@ -111,10 +111,12 @@ export function realItems(rows: CellRow[], seed: number): CheckItem[] {
     const pool = rows.filter(r => r.family === family && r.model === reader && r.stop !== 'harness_error' && r.run?.final)
       .sort((a, b) => a.task.localeCompare(b.task));
     for (const r of shuffle(pool, rand).slice(0, REAL_PER_FAMILY_READER)) {
-      out.push({ id: `r-${reader}-${r.task}`, kind: 'real', task: r.task, family, final: r.run!.final!, text: r.run!.text, reader,
+      out.push({ id: `r-${reader}-${r.arm ?? 'arm'}-${r.task}`, kind: 'real', task: r.task, family, final: r.run!.final!, text: r.run!.text, reader,
         recorded_bad: r.claims ? r.claims.unsupported + r.claims.contradicted > 0 : null });
     }
   }
+  const dup = out.find((item, i) => out.findIndex(o => o.id === item.id) !== i);
+  if (dup) throw new Error(`real item id ${dup.id} is drawn twice; every real item needs its own id`);
   return out;
 }
 
@@ -162,6 +164,7 @@ export function report(items: CheckItem[], grades: Grade[], judges: string[]): {
   const byId = new Map(items.map(i => [i.id, i]));
   const reports = judges.map(judge => {
     const mine = grades.filter(g => g.judge === judge && byId.has(g.item));
+    const gradedItems = new Set(mine.map(g => g.item)).size;
     const construct = mine.filter(g => byId.get(g.item)!.kind === 'construct');
     const parsed = construct.filter(g => g.claims);
     const pairs = parsed.map(g => [byId.get(g.item)!.label === 'bad', isBad(g.claims!)] as [boolean, boolean]);
@@ -172,6 +175,7 @@ export function report(items: CheckItem[], grades: Grade[], judges: string[]): {
     const failures: string[] = [];
     if (kappa === null || kappa < GATE.kappa) failures.push(`kappa ${kappa === null ? 'n/a' : kappa.toFixed(3)} < ${GATE.kappa}`);
     if (good.length < GATE.minPerClass || bad.length < GATE.minPerClass) failures.push(`graded good ${good.length}, bad ${bad.length}; each needs ${GATE.minPerClass}`);
+    if (gradedItems < byId.size) failures.push(`graded ${gradedItems} of ${byId.size} items`);
     if (!mine.length || malformed / mine.length > GATE.maxMalformedShare) failures.push(`${malformed} of ${mine.length} outputs malformed after retry`);
     return {
       judge, construct_graded: pairs.length, good_graded: good.length, bad_graded: bad.length, malformed, retried: mine.filter(g => g.retried).length,
@@ -187,7 +191,7 @@ export function report(items: CheckItem[], grades: Grade[], judges: string[]): {
     const common = [...a.keys()].filter(k => b.has(k));
     pairwise = common.length ? common.filter(k => a.get(k) === b.get(k)).length / common.length : null;
   }
-  return { judges: reports, real_pairwise_agreement: pairwise, passes: reports.every(r => r.passes) };
+  return { judges: reports, real_pairwise_agreement: pairwise, passes: reports.length > 0 && reports.every(r => r.passes) };
 }
 
 if (import.meta.main) {
@@ -219,7 +223,7 @@ if (import.meta.main) {
   } else if (cmd === 'report') {
     const { items } = JSON.parse(readFileSync(join(out, 'items.json'), 'utf8')) as { items: CheckItem[] };
     const grades = readJsonl<Grade>(join(out, 'grades.jsonl'));
-    const judges = [...new Set(grades.map(g => g.judge))];
+    const judges = (flag('--judges') ?? usage('report needs --judges, the judges that must each have graded every item')).split(',');
     const r = report(items, grades, judges);
     writeFileSync(join(out, 'report.json'), JSON.stringify(r, null, 1) + '\n');
     console.log(JSON.stringify(r, null, 1));

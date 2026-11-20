@@ -213,6 +213,10 @@ function cap(text: string, max: number | null): { text: string; truncated: boole
 
 export const RETRYABLE_STATUS = [429, 500, 502, 503, 504, 529];
 
+/** A provider 5xx or 429 is a harness error (the preregistrations' definition). Anthropic and OpenAI requests retry every one a resend can fix, so every 5xx but 501 and 505; Particle retries only the listed statuses its provider module proves safe to resend. */
+export const isProviderFailure = (status: number) => status === 429 || (status >= 500 && status <= 599);
+const resendable = (status: number) => isProviderFailure(status) && status !== 501 && status !== 505;
+
 /**
  * Up to 6 attempts with exponential backoff on retryable statuses. Every attempt is recorded, a network or body-read
  * failure included, before it propagates. `compat` names an OpenAI-compatible provider (Particle): its errors are
@@ -265,7 +269,7 @@ async function postJson(fetchImpl: typeof fetch, url: string, headers: Record<st
     const info = compat ? classifyCompatError(compat, res.status, text, res.headers) : null;
     onAttempt?.({ status: 'error', response: null, error: `${res.status}: ${text.slice(0, 500)}`, ms: Date.now() - t, ...(info ? { retry_after_ms: info.retryAfterMs } : {}) });
     if (info?.kind === 'credit_exhausted' || info?.kind === 'proxy_budget') throw compatError(info);
-    if (!RETRYABLE_STATUS.includes(res.status) || (compat && (attempt === 5 || res.status === 504))) break;
+    if (!(compat ? RETRYABLE_STATUS.includes(res.status) : resendable(res.status)) || (compat && (attempt === 5 || res.status === 504))) break;
     await new Promise(r => setTimeout(r, Math.max(info?.retryAfterMs ?? 0, Math.min(60_000, 2000 * 2 ** attempt) + Math.random() * 1000)));
   }
   throw last!;
@@ -322,7 +326,7 @@ export async function runAgent(cfg: LoopConfig): Promise<AgentRun> {
     if ((e as Error).name === 'BudgetExceededError') throw e;
     run.stop = !cfg.classifyStops ? 'error'
       : isContextOverflow(e) ? 'context_overflow'
-      : e instanceof HarnessError || (e instanceof ProviderError && RETRYABLE_STATUS.includes(e.status)) ? 'harness_error'
+      : e instanceof HarnessError || (e instanceof ProviderError && isProviderFailure(e.status)) ? 'harness_error'
       : 'error';
     run.error = (e as Error).message;
     if (cfg.classifyStops && e instanceof ProviderError && (run.stop === 'error' || isBillingRefusal(e))) run.provider_error = { status: e.status, billing: isBillingRefusal(e) };

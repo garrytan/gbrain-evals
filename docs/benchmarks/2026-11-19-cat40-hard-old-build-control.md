@@ -75,7 +75,8 @@ The two builds lead in the same places (H1 and H5) and trail in the same place (
   ```bash
   C=docs/benchmarks/2026-11-19-cat40-hard-old-build-control; D=docs/benchmarks/2026-11-19-cat40-hard-newest
   f() { echo $C/$1/gbrain-old-{opus,sol}-{a,b}/attempts.jsonl $D/$1/{gbrain,fs}-{opus,sol}-{a,b}/attempts.jsonl | tr ' ' ','; }
-  python3 eval/runner/cat40/newest_analysis.py --look control --old gbrain-old-09d --world N1=$(f n1) --world N2=$(f n2)
+  python3 eval/runner/cat40/newest_analysis.py --look control --old gbrain-old-09d --world N1=$(f n1) --world N2=$(f n2) \
+    --accept-unretried 'N1|gbrain-newest|claude-opus-5-5|H4-13'
   ```
 
 ## Disclosures

@@ -145,8 +145,12 @@ Run notes:
   ```bash
   D=docs/benchmarks/2026-11-19-cat40-hard-newest
   f() { echo $D/$1/{gbrain,fs}-{opus,sol}-{a,b}/attempts.jsonl $D/$1/{gbrain,fs}-particle/attempts.jsonl | tr ' ' ','; }
-  python3 eval/runner/cat40/newest_analysis.py --world N1=$(f n1) --world N2=$(f n2)
+  python3 eval/runner/cat40/newest_analysis.py --world N1=$(f n1) --world N2=$(f n2) \
+    --accept-unretried 'N1|gbrain-newest|claude-opus-5-5|H4-13'
   ```
+
+  The analysis refuses a counted cell that ended on a provider 5xx or 429 unless it is named, so the command names the
+  one HTTP 520 cell the run notes disclose.
 
 ## Disclosures
 

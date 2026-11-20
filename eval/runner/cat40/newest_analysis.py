@@ -43,6 +43,8 @@ HALF_A = [f'{fam}-{i:02d}' for fam in FAMILIES for i in range(1, 11)]
 # The old-build control's outcome rows (its preregistration, "What the result changes").
 CONTROL_ROWS = ('regression', 'smaller regression', 'newest improved', 'not a regression')
 CONTROL_WORLDS = ('N1', 'N2')
+TASKS = [f'{fam}-{i:02d}' for fam in FAMILIES for i in range(1, TASKS_PER_WORLD // len(FAMILIES) + 1)]
+PROVIDER_FAILURE = re.compile(r'provider error (?:429|5\d\d)\b')
 INTERIM_Z, FINAL_Z, PLANNED_EFFECT, FUTILITY_CP, INFO_FRACTION = 2.80, 1.98, 5.4, 0.10, 0.5
 
 
@@ -168,18 +170,26 @@ def outcome_row(res, key='ci95'):
 
 
 def complete(worlds, arms, models, tasks=None):
-    """Planned cells absent per (world, arm, model): every world needs TASKS_PER_WORLD clean cells, or exactly the named tasks."""
-    gaps = {}
+    """Planned cells absent per (world, arm, model): exactly the worlds N1 and N2, each with every planned task id (or
+    exactly the named tasks) for every arm and reader; a missing or extra world is a gap too."""
+    want = set(TASKS if tasks is None else tasks)
+    gaps = {f'{w}|*|*': 'world missing' for w in CONTROL_WORLDS if w not in worlds}
+    gaps.update({f'{w}|*|*': 'world not planned' for w in worlds if w not in CONTROL_WORLDS})
     for w, cells in worlds.items():
         for arm in arms:
             for m in models:
                 have = {t for (a, mm, t) in cells if a == arm and mm == m}
-                if tasks is not None:
-                    if have != set(tasks):
-                        gaps[f'{w}|{arm}|{m}'] = len(set(tasks) - have) or -len(have - set(tasks))
-                elif len(have) != TASKS_PER_WORLD:
-                    gaps[f'{w}|{arm}|{m}'] = TASKS_PER_WORLD - len(have)
+                if have != want:
+                    stray = sorted(have - want)
+                    gaps[f'{w}|{arm}|{m}'] = f'{len(want - have)} missing; outside the planned task ids: {stray}' if stray else len(want - have)
     return gaps
+
+
+def unretried(worlds, accepted):
+    """Counted cells that ended on a provider 5xx or 429, a harness error the preregistration retries, unless named."""
+    return sorted(k for w, cells in worlds.items() for (a, m, t), r in cells.items()
+                  if r.get('stop') == 'error' and PROVIDER_FAILURE.search(str(r.get('error') or ''))
+                  and (k := f'{w}|{a}|{m}|{t}') not in accepted)
 
 
 def interim(worlds, G, F, B, S):
@@ -354,6 +364,7 @@ def main(argv=None):
     ap.add_argument('--json')
     ap.add_argument('--look', choices=('interim', 'final', 'control'), default='final')
     ap.add_argument('--old', default='gbrain-old-09d')
+    ap.add_argument('--accept-unretried', action='append', default=[], help='WORLD|arm|model|task of a cell that ended on a provider failure and was not retried, counted as scored; the results page must disclose it')
     args = ap.parse_args(argv)
     worlds, cost = {}, defaultdict(float)
     for spec in args.world:
@@ -361,6 +372,11 @@ def main(argv=None):
         worlds[name], c = load(files.split(','))
         for k, v in c.items():
             cost[k] += v
+    bad = unretried(worlds, set(args.accept_unretried))
+    if bad:
+        print(json.dumps({'refused': 'HARNESS_ERROR_SCORED', 'cells': bad}), file=sys.stderr)
+        print('STOP HARNESS_ERROR_SCORED: these cells ended on a provider 5xx or 429, which the preregistration retries; resume them, or name each with --accept-unretried after disclosing it', file=sys.stderr)
+        return 3
     G, F, B, S = args.gbrain, args.fs, args.resamples, args.seed
     if args.look == 'control':
         if set(worlds) != set(CONTROL_WORLDS):
@@ -370,6 +386,8 @@ def main(argv=None):
         if gaps:
             print(json.dumps({'refused': 'CONTROL_INCOMPLETE', 'missing_cells': gaps}), file=sys.stderr)
             print('STOP CONTROL_INCOMPLETE: the control needs every planned cell of the old, newest and files arms; resume the missing cells', file=sys.stderr)
+            if any(isinstance(v, str) and 'outside the planned task ids' in v for v in gaps.values()):
+                print('STOP CONTROL_INCOMPLETE: task pairs lack a cell in one arm; the arms must cover the same planned task ids', file=sys.stderr)
             return 3
         if args.transcripts:
             print('--look control takes --world-transcripts NAME=file[,file...] per world, not --transcripts', file=sys.stderr)
