@@ -64,6 +64,7 @@ The two builds lead in the same places (H1 and H5) and trail in the same place (
 - October's +8.50 for this build was on other worlds (P1 and P2), read by Opus 5.5, Sonnet 5.5 and GPT-6.1 Sol, with an earlier files agent. That comparison is unpaired, so this run says the drop doesn't meet the preregistered regression rule (the newest build could still be up to 4.50 points below October's), not which of the worlds, readers or files agent caused the rest.
 - The preregistered descriptive bridge to October (Opus 5.5 only, October's P1 and P2 beside N1 and N2) is not reported. The Opus-only difference on N1 and N2 is in the per-reader table (+4.50, -1.50 to +11.00).
 - One attempt per task, so per-family and per-reader intervals are wide. They are secondary and uncorrected.
+- **One newest-build cell was not retried as the preregistration requires.** The control reuses the newest-release run's cells, and there N1 `gbrain-opus-b` task H4-13 ended on an Anthropic server error (HTTP 520) and was scored as a wrong answer with no retry ([its run notes](2026-11-19-cat40-hard-newest.md)). A retry could only score it right or wrong: right would move newest minus old to -1.25 (-4.25 to +1.75), and on H4 to -3.75 (-11.25 to +3.75); wrong leaves the numbers above. The outcome row is "not a regression" either way, and the October build's difference from files doesn't use that cell. The reproduce command below names the cell for this reason.
 
 ## Files
 
