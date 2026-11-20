@@ -39,7 +39,7 @@ gbrain still returns its closest matches for such a question, for example messag
 
 Cost per correct answer counts the answer calls on `B`'s 220 rows only. On correct answers, particle-1 was 3.2 points behind claude-opus-5-5 (paired question bootstrap, 95% interval −2.3 to 8.6 points; descriptive, not a preregistered comparison), at about a twentieth of the cost per correct answer. The readers received a mean of 7,711 (Opus), 8,395 (Sol) and 8,393 (particle-1) tokens of context, against gbrain's 8,000-token delivery target.
 
-claude-opus-5-5 refused some questions with a provider refusal (`stop_reason: refusal`): 18 answerable and 1 unanswerable in `B`, 1 in `O` and 30 in `F`. The line nearly doubled them on answerable questions. The preregistration counts refusals as answered, so the judge graded them. Δ_O without them is below. Neither other reader refused.
+claude-opus-5-5 refused some questions with a provider refusal (`stop_reason: refusal`): 18 answerable and 1 unanswerable in `B`, 1 unanswerable in `O` and 30 answerable in `F`. The line raised them by about two thirds on answerable questions, from 18 to 30. The preregistration counts refusals as answered, so the judge graded them. Δ_O without them is below. Neither other reader refused.
 
 ### Primary 1: the line on unanswerable questions (Δ_O)
 
