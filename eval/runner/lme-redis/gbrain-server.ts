@@ -22,11 +22,28 @@
  * LME_REDIS_STUB_EMBED=1 replaces the embedding transport with a local hash (keyless tests); no other provider call is
  * stubbed, so a test runs with every key blanked and the reranker records itself as skipped.
  */
-import { mkdtempSync, readFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 export const RERANKER_MODEL = 'voyage:rerank-3-lite';
+
+/**
+ * Voyage is a paid provider, so gbrain may reach it only through a loopback host: the metering proxy
+ * (eval/runner/harness-metering-proxy.ts), which reserves each request in the experiment's ledger, or a dead keyless
+ * upstream in tests. The server refuses to start unless the brain config's `provider_base_urls.voyage` is one.
+ */
+export function voyageRoute(home: string | undefined): string {
+  const path = join(home ?? '', '.gbrain', 'config.json');
+  const url = existsSync(path) ? (JSON.parse(readFileSync(path, 'utf8')) as { provider_base_urls?: Record<string, string> }).provider_base_urls?.voyage : undefined;
+  let host = '';
+  try { host = url ? new URL(url).hostname : ''; } catch { host = ''; }
+  if (!['127.0.0.1', 'localhost', '[::1]', '::1'].includes(host)) {
+    throw new Error(`refusing to start: provider_base_urls.voyage in ${path} must point at the metering proxy or a keyless fake on a loopback host (got ${url ?? 'none'})`);
+  }
+  return url!;
+}
+const voyage = voyageRoute(process.env.GBRAIN_HOME);
 
 const G = process.env.GBRAIN_SRC;
 if (!G) throw new Error('GBRAIN_SRC must name the src/ directory of the pinned gbrain checkout');
@@ -135,7 +152,7 @@ const server = Bun.serve({
   port: Number(process.env.LME_REDIS_PORT ?? 8787), hostname: '127.0.0.1', idleTimeout: 255,
   async fetch(req) {
     const fn = routes[new URL(req.url).pathname];
-    if (!fn) return Response.json({ ok: true, brains: brains.size, gbrain_version: gbrainVersion, reranker: RERANKER_MODEL });
+    if (!fn) return Response.json({ ok: true, brains: brains.size, gbrain_version: gbrainVersion, reranker: RERANKER_MODEL, voyage_route: voyage });
     try { return Response.json(await fn(await req.json())); }
     catch (e) { return Response.json({ error: String((e as Error)?.stack ?? e) }, { status: 500 }); }
   },

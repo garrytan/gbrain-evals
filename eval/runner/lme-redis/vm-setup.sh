@@ -21,6 +21,4 @@ for f in longmemeval_s_cleaned.json longmemeval_oracle.json; do
 done
 (cd "$HOME/lme-cache/longmemeval-v1" && echo "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442  longmemeval_s_cleaned.json
 821a2034d219ab45846873dd14c14f12cfe7776e73527a483f9dac095d38620c  longmemeval_oracle.json" | sha256sum -c -)
-mkdir -p "$HOME/gbhome/.gbrain"
-echo '{"embedding_model":"voyage:voyage-4","embedding_dimensions":1024}' > "$HOME/gbhome/.gbrain/config.json"
 echo LME_REDIS_SETUP_OK

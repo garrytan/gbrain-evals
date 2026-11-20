@@ -13,6 +13,19 @@ describe('LongMemEval on Redis harness: rendering', () => {
   }, 60_000);
 });
 
+describe('LongMemEval on Redis harness: the adapter reaches Voyage only through loopback', () => {
+  for (const [label, config] of [['no config', null], ['no Voyage route', {}], ['Voyage directly', { provider_base_urls: { voyage: 'https://api.voyageai.com/v1' } }], ['a look-alike host', { provider_base_urls: { voyage: 'http://127.0.0.1.example.com/v1' } }]] as const) {
+    test(`refuses to start with ${label}`, () => {
+      const home = mkdtempSync(join(tmpdir(), 'lme-redis-route-'));
+      if (config) { mkdirSync(join(home, '.gbrain')); writeFileSync(join(home, '.gbrain/config.json'), JSON.stringify(config)); }
+      const run = Bun.spawnSync(['bun', join(DIR, 'gbrain-server.ts')], { env: { PATH: process.env.PATH ?? '', HOME: home, GBRAIN_HOME: home, GBRAIN_SRC: join(ROOT, 'node_modules/gbrain/src'), VOYAGE_API_KEY: 'dead-upstream-test', LME_REDIS_PORT: '0' }, stderr: 'pipe', timeout: 60_000 });
+      rmSync(home, { recursive: true, force: true });
+      expect(run.exitCode).not.toBe(0);
+      expect(run.stderr.toString()).toContain('refusing to start');
+    }, 90_000);
+  }
+});
+
 describe('LongMemEval on Redis harness: gbrain adapter server, keyless', () => {
   const home = mkdtempSync(join(tmpdir(), 'lme-redis-server-'));
   let server: ReturnType<typeof Bun.spawn> | undefined;
