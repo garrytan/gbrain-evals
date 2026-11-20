@@ -64,7 +64,8 @@
       "path": "src/agent_memory_benchmark/cli.py",
       "upstream_path": "agent-memory-benchmark/src/agent_memory_benchmark/cli.py",
       "upstream_blob": "ba2470fc0255c00952fa3b41d39265b8efa3b1eb",
-      "changed": false
+      "changed": true,
+      "local_sha256": "c55aeeeaaff36eea5b16cd9dff6cd2991eab995c42da55b2accb01938b225b5f"
     },
     {
       "path": "src/agent_memory_benchmark/benchmark/__init__.py",
