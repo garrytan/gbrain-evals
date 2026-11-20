@@ -19,7 +19,7 @@
     "seed_patterns": ["rs1-seed-v1:[0-9a-f]{64}", "bg1-seed-v1:[0-9a-f]{64}"]
   },
   "run_profiles": {
-    "ci-carry/tests": { "workflow": "ci.yml", "events": ["pull_request", "push"], "jobs": ["checks", "tests (1)", "tests (2)", "tests (3)", "tests (4)", "tests (5)", "tests (6)", "tested-tree"], "artifact": "tested-tree", "os": "Linux" }
+    "ci-carry/tests": { "workflow": "ci.yml", "events": ["pull_request", "push"], "jobs": ["checks", "tests (1)", "tests (2)", "tests (3)", "tests (4)", "tests (5)", "tests (6)", "harness (pytest)", "tested-tree"], "artifact": "tested-tree", "os": "Linux" }
   },
   "remote_gate": "echo 'gbrain-evals runs its test suite in CI only: push, wait for CI to pass at this tree, then rerun gstack-pregate --allow-repo-commands' >&2; exit 1",
   "remote_gate_runs": { "profiles": ["ci-carry/tests"], "inventory": "bun --no-env-file --config=/dev/null scripts/ci-tested-tree.ts inventory --lane test" },
