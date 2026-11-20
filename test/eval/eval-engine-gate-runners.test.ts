@@ -9,7 +9,7 @@ import {
 } from '../../eval/runner/eval-engine.ts';
 import type { GbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
 import { resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
-import { SliceCell, isAccessControlRefusal, remoteAccessGap } from '../../eval/runner/lifecycle/slice.ts';
+import { SliceCell, isAccessControlRefusal, remoteAccessGap, type RecordedCall } from '../../eval/runner/lifecycle/slice.ts';
 import { checkEvalEngineArgs } from '../../eval/runner/n1-knowledge-update.ts';
 import { GbrainAdapter, N14_SQL_CHECKS, n14NotApplicable, n14Verdict, parseEngine, type N14Summary } from '../../eval/runner/n14-large-page-fidelity.ts';
 import { PGLITE_HTTP_UNSUPPORTED, RUST_HTTP_UNSUPPORTED } from '../../eval/runner/n6-postgres-http.ts';
@@ -184,12 +184,35 @@ describe('remote cells the Rust build refuses with access_control', () => {
   test('a Rust remote cell that did not finish because of it is a named gap; every other cell is unchanged', () => {
     const voided = { engine: 'rust' as const, interface: 'mcp-stdio' as const, void_reason: 'Presence check failed', remote_access_refused: `put_page: ${refusal}` };
     expect(remoteAccessGap(voided)).toMatch(/^The Rust build refuses remote callers .*mcp-stdio cell cannot run: put_page:/);
-    expect(remoteAccessGap({ engine: 'rust', interface: 'mcp-http', fatal: `Error: could not register OAuth client main: ${refusal}` })).toMatch(/mcp-http cell/);
+    expect(remoteAccessGap({ engine: 'rust', interface: 'mcp-http', fatal: `Error: could not register OAuth client main: ${refusal}`, remote_calls: 0 })).toMatch(/mcp-http cell/);
     expect(remoteAccessGap({ ...voided, void_reason: undefined })).toBeNull();
     expect(remoteAccessGap({ ...voided, interface: 'cli' })).toBeNull();
     expect(remoteAccessGap({ ...voided, engine: 'pglite' })).toBeNull();
     expect(remoteAccessGap({ ...voided, remote_access_refused: null })).toBeNull();
-    expect(remoteAccessGap({ engine: 'rust', interface: 'mcp-http', fatal: 'Error: could not register OAuth client main: engine_capability_missing raw_sql' })).toBeNull();
+    expect(remoteAccessGap({ engine: 'rust', interface: 'mcp-http', fatal: 'Error: could not register OAuth client main: engine_capability_missing raw_sql', remote_calls: 0 })).toBeNull();
+  });
+  const call = (caller: RecordedCall['caller'], ok: boolean, error?: string): RecordedCall => ({ op: ok ? 'get_page' : 'put_page', args: {}, ok, error, raw: error ?? '{}', ms: 1, caller });
+  const cellOf = (calls: RecordedCall[]) => ({ remote: true, calls });
+  const gapOf = (calls: RecordedCall[], c: { fatal?: string; void_reason?: string }) => remoteAccessGap({
+    engine: 'rust', interface: 'mcp-stdio', ...c,
+    remote_access_refused: SliceCell.prototype.firstAccessRefusal.call(cellOf(calls) as unknown as SliceCell),
+    remote_calls: calls.filter(x => x.caller !== 'trusted').length,
+  });
+  test('one refused remote call, then one that succeeded, then an unrelated fatal: not a gap', () => {
+    expect(gapOf([call('primary', false, refusal), call('primary', true), call('trusted', true)], { fatal: 'TypeError: x is undefined' })).toBeNull();
+    expect(gapOf([call('primary', false, refusal), call('extra', false, 'not found')], { fatal: 'TypeError: x is undefined' })).toBeNull();
+  });
+  test('every remote call refused with access_control, then a void: a gap', () => {
+    expect(gapOf([call('primary', false, refusal), call('trusted', true), call('extra', false, refusal)], { void_reason: 'Presence check failed' })).toMatch(/mcp-stdio cell cannot run: put_page:/);
+  });
+  test('no remote calls and a fatal that is the access_control refusal: a gap, but only with no remote calls', () => {
+    const fatal = `Error: could not register OAuth client main: ${refusal}`;
+    expect(gapOf([], { fatal })).toMatch(/mcp-stdio cell cannot run: Error: could not register OAuth client main/);
+    expect(gapOf([call('primary', true)], { fatal })).toBeNull();
+    expect(remoteAccessGap({ engine: 'rust', interface: 'mcp-http', fatal })).toBeNull();
+  });
+  test('no remote calls and a raw_sql fatal: not a gap', () => {
+    expect(gapOf([], { fatal: 'Error: engine_capability_missing raw_sql' })).toBeNull();
   });
 });
 

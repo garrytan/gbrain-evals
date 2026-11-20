@@ -160,6 +160,8 @@ export interface N5CellOutcome {
   void_reason?: string;
   /** The first remote call the engine refused with access_control (SliceCell.firstAccessRefusal). */
   remote_access_refused?: string | null;
+  /** Calls the cell made as a remote (non-trusted) caller (SliceCell.remoteCalls). */
+  remote_calls?: number;
   server_version: string;
   decide: SliceCell['decideOff'];
   writes: Array<{ step: string; canary?: string; target?: string; ok: boolean; status?: string; error?: string }>;
@@ -386,6 +388,7 @@ async function runCell(world: N5World, gut: GbrainUnderTest, engine: Engine, ifa
       out.score = scoreN5({ ledger, observable: () => true, checkpoints, corrected, repeats, concurrent: out.concurrent_writes, authority: out.authority, private_canary_leaks: out.private_canary_leaks });
     }
     out.remote_access_refused = cell.firstAccessRefusal();
+    out.remote_calls = cell.remoteCalls();
     out.duration_ms = Date.now() - t0;
   }
   return out;

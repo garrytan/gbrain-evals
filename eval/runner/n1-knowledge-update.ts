@@ -259,6 +259,8 @@ export interface CellOutcome {
   void_reason?: string;
   /** The first remote call the engine refused with access_control (SliceCell.firstAccessRefusal). */
   remote_access_refused?: string | null;
+  /** Calls the cell made as a remote (non-trusted) caller (SliceCell.remoteCalls). */
+  remote_calls?: number;
   server_version: string;
   decide: SliceCell['decideOff'];
   presence: Array<{ name: string; ok: boolean; detail: string }>;
@@ -340,6 +342,7 @@ async function runCell(world: N1World, gut: GbrainUnderTest, engine: Engine, ifa
     const primary = cell.calls.filter(c => c.caller === 'primary');
     out.calls = { primary: primary.length, trusted: cell.calls.filter(c => c.caller === 'trusted').length, primary_ms: primary.map(c => c.ms) };
     out.remote_access_refused = cell.firstAccessRefusal();
+    out.remote_calls = cell.remoteCalls();
     out.duration_ms = Date.now() - t0;
   }
   return out;

@@ -42,11 +42,13 @@ export function isAccessControlRefusal(text: string): boolean {
  * Why a cell is not_applicable: a Rust cell on a remote interface (stdio or HTTP MCP) that did not finish because the
  * build refuses remote callers with engine_capability_missing, reason access_control. That is a named gap (the build
  * does not serve remote callers yet), never a pass or a fail, so the cell leaves the gate and the receipt lists it.
- * Null for every other cell, including a Rust cell that finished or failed for another reason.
+ * It counts only when every remote call the cell made was refused that way (remote_access_refused), or when the cell
+ * made no remote call and its fatal is that refusal (the HTTP cell's client registration). Null for every other cell,
+ * including a Rust cell that finished, or failed after any remote call that was not refused that way.
  */
-export function remoteAccessGap(c: { engine: Engine; interface: Iface; fatal?: string; void_reason?: string; remote_access_refused?: string | null }): string | null {
+export function remoteAccessGap(c: { engine: Engine; interface: Iface; fatal?: string; void_reason?: string; remote_access_refused?: string | null; remote_calls?: number }): string | null {
   if (c.engine !== 'rust' || c.interface === 'cli' || !(c.fatal || c.void_reason)) return null;
-  const evidence = c.remote_access_refused ?? (isAccessControlRefusal(c.fatal ?? '') ? (c.fatal ?? '').split('\n')[0]!.slice(0, 200) : null);
+  const evidence = c.remote_access_refused ?? (c.remote_calls === 0 && isAccessControlRefusal(c.fatal ?? '') ? (c.fatal ?? '').split('\n')[0]!.slice(0, 200) : null);
   return evidence ? `The Rust build refuses remote callers (engine_capability_missing, reason access_control), so the ${c.interface} cell cannot run: ${evidence}` : null;
 }
 
@@ -145,11 +147,21 @@ export class SliceCell {
     try { return await fn(); } finally { await this.primary.start(); }
   }
 
-  /** The first remote call this cell's engine refused with engine_capability_missing, reason access_control, or null. */
+  /**
+   * The first remote call, when this remote cell made at least one and the engine refused every one of them with
+   * engine_capability_missing, reason access_control. Null when any remote call succeeded or failed another way.
+   */
   firstAccessRefusal(): string | null {
     if (!this.remote) return null;
-    const c = this.calls.find(x => x.caller !== 'trusted' && !x.ok && isAccessControlRefusal(`${x.error ?? ''} ${x.raw}`));
-    return c ? `${c.op}: ${(c.error ?? c.raw).slice(0, 200)}` : null;
+    const remote = this.calls.filter(x => x.caller !== 'trusted');
+    if (!remote.length || !remote.every(x => !x.ok && isAccessControlRefusal(`${x.error ?? ''} ${x.raw}`))) return null;
+    const c = remote[0]!;
+    return `${c.op}: ${(c.error ?? c.raw).slice(0, 200)}`;
+  }
+
+  /** How many calls this cell made as a remote (non-trusted) caller. */
+  remoteCalls(): number {
+    return this.calls.filter(x => x.caller !== 'trusted').length;
   }
 
   /** Run reads as the trusted local CLI caller. On the CLI cell this is the primary itself. */
