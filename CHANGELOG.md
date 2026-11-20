@@ -2,6 +2,80 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.260] - 2026-11-20
+
+- **Redis's open LongMemEval harness is vendored, and a run of gbrain on it is preregistered.** The judge prompts, answer prompt, task-averaged metric, dataset loader and runner from [redis/agent-memory-server](https://github.com/redis/agent-memory-server) (`agent-memory-benchmark`, Apache-2.0, commit `843d2078`) now live in [eval/redis-agent-memory-benchmark/](eval/redis-agent-memory-benchmark/README.md), each file headed with what we changed, with a test that holds unchanged files to their upstream bytes. The [preregistration](docs/benchmarks/2026-11-20-longmemeval-redis-harness-preregistration.md) plans gbrain's newest release on all 500 LongMemEval-S questions with Redis's gpt-4o reader and judge, Opus 5.5, GPT-6.2 Sol and particle-1 readers, autocut on and off, whole-history and perfect-evidence arms, and a checked cross-family judge.
+
+- `bun eval/runner/prereg.ts`, the preregistration check CI runs, now refuses a new preregistration that skips the eval-loop
+  practices: its registry entry must name the decision each outcome changes, a pilot per arm on at most a tenth of that
+  arm's budget, a checked judge from another model family read per arm, and, for the highest paid tier, one interim look
+  at half the units with O'Brien-Fleming bounds and a futility stop. A quick look needs only its question, decision and
+  stop rule. It also refuses a registry entry that reuses another entry's id. Results pages for new entries carry one
+  `Settled call:` line. Plans registered before 2026-11-19 are listed
+  in [docs/benchmarks/preregistrations-grandfathered.json](docs/benchmarks/preregistrations-grandfathered.json) and keep
+  their rules; the fields are in [docs/benchmarks/PREREGISTRATION-TEMPLATE.md](docs/benchmarks/PREREGISTRATION-TEMPLATE.md#registry-entry).
+
+- The preregistration check now treats every Markdown file under `docs/` whose name contains `prereg` or ends in
+  `-protocol.md` as a preregistration that needs a registry entry, instead of two filename shapes, so a plan named
+  `PREREGISTRATION.md` or `*-protocol.md` can't skip the eval-loop practices. It also refuses any name on
+  [docs/benchmarks/preregistrations-grandfathered.json](docs/benchmarks/preregistrations-grandfathered.json) that wasn't
+  in the repository when that list was first committed, so a new plan can't be grandfathered. The 16 existing files the
+  wider match finds are added to the list.
+
+## [0.10.259] - 2026-11-19
+
+- [docs/benchmarks/2026-11-19-cat40-hard-old-build-control-preregistration.md](docs/benchmarks/2026-11-19-cat40-hard-old-build-control-preregistration.md)
+  preregisters an old-build control for the hard company questions. It runs gbrain `09d21554d` on the two new worlds of
+  the newest-release re-measure and decides whether the smaller lead is a gbrain regression.
+
+### The sharing test checks pages in an archived source
+
+- [test/eval/sharing-contract.test.ts](test/eval/sharing-contract.test.ts) adds two pages in an archived source, one public and one `visibility: private`, and gives every token a grant that names that source. Only the owner's own callers may read them, and no other caller ever does, by any read path. gbrain v0.60.744.0 (#9795) keeps them hidden, so on an older build the test leaves these two items out and says why.
+- One scenario was named as if a member joined "over the admin path", but it calls gbrain's `addMember` library function with no hook. It's now named "…joins by the addMember library call, no hook". A new scenario adds the member through gbrain's real owner admin route, `POST /admin/api/access/members`, which re-scopes the conversation archive before the member can read it. It also needs v0.60.744.0 or later.
+
+### Score a gbrain build that reads several pages in one call
+
+- [eval/runner/multi-evidence/ship-bar.ts](eval/runner/multi-evidence/ship-bar.ts) compares two multi-evidence dev-loop
+  runs of the same Cat 40 items and agents, one on gbrain's newest release and one on a build whose `get_page` takes
+  `slugs`, and checks the four-part ship bar for that build. The bar asks how many cells that need two or more pages
+  use `slugs`, how much less tool-result text each cell receives, whether correct answers drop by more than 15
+  points, and whether the sharing-contract test passes with `slugs`. Each number is paired by item and agent and comes
+  with a 95% bootstrap interval over items. Only base-arm cells are compared.
+- The dev loop's `--slots-from <ref>` builds the Cat 40 brains with one commit and runs the build under test on them, so
+  two builds that change only how pages are read run on identical brains. `--cat40-slots` sets how many brains run at
+  once. Each agent row now records the characters of every tool result it received, its `slugs` reads, the ones that
+  read two or more pages, and results that listed pages under `omitted`; a batch read counts as opening only the pages
+  it delivered.
+- [test/eval/sharing-contract.test.ts](test/eval/sharing-contract.test.ts) also reads every page through a `get_page`
+  batch that asks for it first and then for every other page, scoped and unscoped, on any build that has `slugs`. Those
+  reads answer to the same contract as a single `get_page`, and any page the batch returns, first or later, that the
+  same caller can't read on its own fails the test.
+
+- The multi-page read ship check ([eval/runner/multi-evidence/ship-bar.ts](eval/runner/multi-evidence/ship-bar.ts)) now measures the restated bar: page-read text (every `get_page` result, single or batch) per cell falls by at least 15% and total tool-result text doesn't grow, both paired with 95% intervals. It refuses a sharing-contract file that didn't run on the candidate's commit from a clean checkout or that skipped a scenario, and it refuses a comparison whose paired cells differ in gold pages, turn cap or setup. [test/eval/sharing-contract.test.ts](test/eval/sharing-contract.test.ts) now records the gbrain commit, tree state and scenario list in the file it writes, and each dev-loop row records its page-read characters and a setup digest.
+
+### Tests run against gbrain v0.60.743.0
+
+- `package.json` and `bun.lock` move the `gbrain` dependency from v0.60.733.0 (`6ce7195b4`) to v0.60.743.0
+  (`16124807c`), gbrain's newest release on 2026-11-19, 10 releases and 101 commits later.
+  [docs/gbrain-under-test.md](docs/gbrain-under-test.md#the-pin) names the new pin. No result was rerun.
+- [test/eval/sharing-contract.test.ts](test/eval/sharing-contract.test.ts) now runs its 12 scenarios in CI instead of
+  skipping, because the pin is past v0.60.738.0. Its `fetch` now refuses any host but `127.0.0.1`, and a scenario
+  fails if it called `fetch` for another host.
+- gbrain v0.60.743.0 ships a `src/core/rust-engine` folder, but its engine factory still doesn't construct a rust
+  engine. So the rust arm refuses with `rust_kind_unsupported` instead of `rust_engine_not_in_build`, and the tests
+  that run on the pinned build expect that reason.
+  [eval/runner/engine-bench/perf.ts](eval/runner/engine-bench/perf.ts) now checks rust with the shared preflight before
+  any work, so it still refuses with exit code 3. It no longer runs the PGLite arm first and then exits 1 when the rust
+  child fails.
+
+**You can now screen a day's commits for ones that may move a retrieval benchmark.**
+
+### Added
+
+- `scripts/retrieval-commit-screen.ts` reads a local git checkout of gbrain or gbrain-evals and tags every commit in a time window `yes`, `maybe` or `no`, with the files and search terms behind each tag, so you can tell which engine-bench or retrieval baselines need a rerun. It runs no `git fetch`, makes no GitHub API calls (in a partial clone, git 2.44 or newer also fetches no missing file contents) and changes no repository; the only file it writes is the `--json` path you give it.
+- [The guide](scripts/retrieval-commit-screen.md) shows how to run the screen, the tagging rules and the known gaps, and `docs/README.md` links it.
+- A change to `eval/runner/eval-engine.ts` or `eval/runner/gbrain-under-test.ts` counts as shared harness, since engine-bench imports both.
+
 ## [0.10.258] - 2026-11-19
 
 - Preregistration for re-measuring the two BEAM-10M rows on gbrain's newest release: arms P, A0 and the whole system on the sealed BEAM-10M set, paired on claude-opus-5-5 with F6 and Q1, with a judge check before any number counts ([preregistration](docs/benchmarks/2026-11-19-beam10m-newest-preregistration.md)).

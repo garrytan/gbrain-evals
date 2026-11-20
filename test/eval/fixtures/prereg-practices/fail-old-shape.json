@@ -1,0 +1,7 @@
+{
+  "id": "fixture-old-shape",
+  "preregistration": "docs/benchmarks/2026-11-20-old-preregistration.md",
+  "results": [
+    "docs/benchmarks/2026-11-20-old/**"
+  ]
+}

@@ -9,6 +9,7 @@
     { "finding": "env.kv", "paths": ["docs/benchmarks/*/counted/*/n6pg*-receipt.json", "docs/benchmarks/*/correctness/work/n6-http-postgres/receipt.json"], "pattern": "\"?client_credentials token from a client w[^\"]*", "reason": "N6's description of its expired-token probe, not a token" },
     { "finding": "env.kv", "paths": ["docs/benchmarks/predictive-measures/*/correction-*.json"], "pattern": "\"?g[0-9]+:[a-z0-9.-]+:oov-[0-9]+-p[0-9]{3}:(?:local|remote):[0-9]+\"", "reason": "episode ids in correction records' key fields" },
     { "finding": "db.url_with_password", "paths": ["docs/comparison-systems/ext-memory-bank/**/docker-compose.yml"], "pattern": "postgresql:\\/\\/(\\x68indsight):\\1@db:5432\\/\\1(?=$|[\\s\"'])", "reason": "the memory-bank bundle's internal docker-network Postgres dummy password, already on main in the bundle's own compose file" },
+    { "finding": "env.kv", "paths": ["docs/benchmarks/*/analysis/*.json"], "pattern": "\"?ci_z[0-9]\\.[0-9]{2}\"", "reason": "the name of the interval field the Cat 40 Hard analysis used (z 1.98 or 2.80), written into its analysis JSON, not a credential" },
     { "finding": "env.kv", "paths": ["test/eval/entity-h2h-cells.test.ts"], "pattern": "must-not-reach-gbrain(?=$|[\\s\"'])", "reason": "a test's sentinel key value, proving a blanked key never reaches gbrain" }
   ],
   "sealed": {

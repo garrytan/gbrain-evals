@@ -5,10 +5,14 @@
  *   bun eval/runner/multi-evidence/dev-loop.ts --out <dir> [--gbrain <tag|sha|branch>] [--gbrain-clone <path>]
  *     [--arms base[,cap2x,batch]] [--readers claude-opus-5-5,gpt-6.1-sol] [--suites a,b] [--items x,y] [--k N]
  *     [--fake | --paid --budget-ledger <path> (--budget-run-id <id> | --budget-usd <n>)] [--cat40-slot-allowance-usd 4]
+ *     [--slots-from <tag|sha|branch>] [--cat40-slots N]
  *     [--agent-noise 0.167]
  *   bun eval/runner/multi-evidence/dev-loop.ts --report <run dir> [--agent-noise 0.167]
  *
  * --gbrain defaults to gbrain's newest release: the highest vX.Y.Z tag on origin/master in the clone, after a tag fetch.
+ * --slots-from builds the Cat 40 brains with another commit and serves the build under test on them (the runner's
+ * --slot-ref), so two builds that change only how pages are read run on byte-identical brains and their cells pair on
+ * the server code alone; the two commits must share a schema. --cat40-slots sets how many brains run cells at once (5).
  *
  * The dev set (eval/data/multi-evidence/devset-v1.json, select.ts) holds the nightly's Cat 40 Hard world M tasks,
  * LongMemEval-S dev questions and public BEAM-1M dev questions whose gold has at least two items, BEAM and LME items only
@@ -36,6 +40,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { join, resolve } from 'node:path';
+import { createHash } from 'node:crypto';
 import { BudgetRun, budgetOptionsFrom, closeRun, ledgerStatus } from '../budget-ledger.ts';
 import { canonicalCells, readRecords } from '../cat40/records.ts';
 import { resolveGbrainUnderTest } from '../gbrain-under-test.ts';
@@ -103,6 +108,7 @@ export function resolveGbrainRef(clone: string, ref: string): string {
 export interface LoopArgs {
   out: string | null; report: string | null; gbrain: string | null; clone: string; arms: ArmName[]; readers: string[]; suites: string[] | null; items: string[] | null; k: number;
   fake: boolean; paid: boolean; budgetLedger: string | null; budgetRunId: string | null; budgetUsd: number | null; slotAllowanceUsd: number; agentNoise: number; fetch: boolean;
+  slotsFrom: string | null; cat40Slots: number | null;
 }
 
 export function parseArgs(argv: readonly string[]): LoopArgs {
@@ -125,6 +131,7 @@ export function parseArgs(argv: readonly string[]): LoopArgs {
     arms: (['base', 'cap2x', 'batch'] as ArmName[]).filter(a => arms.includes(a)), readers: list('--readers') ?? READERS, suites: list('--suites'), items: list('--items'),
     k: Math.max(1, Math.floor(num('--k', 1))), fake, paid, budgetLedger: flag('--budget-ledger') ? resolve(flag('--budget-ledger')!) : null, budgetRunId: flag('--budget-run-id') ?? null,
     budgetUsd: usd === undefined ? null : Number(usd), slotAllowanceUsd: num('--cat40-slot-allowance-usd', 4), agentNoise: num('--agent-noise', AGENT_NOISE), fetch: !argv.includes('--no-fetch'),
+    slotsFrom: flag('--slots-from') ?? null, cat40Slots: flag('--cat40-slots') === undefined ? null : Math.max(1, Math.floor(num('--cat40-slots', 5))),
   };
 }
 
@@ -140,7 +147,7 @@ export function planRuns(me: MeDevSet, a: Pick<LoopArgs, 'suites' | 'items' | 'r
   }).filter(r => r.items.length > 0);
 }
 
-interface Ctx extends NightContext { label: string }
+interface Ctx extends NightContext { label: string; slots: { sha?: string; n?: number } }
 
 // ─── Cat 40 ─────────────────────────────────────────────────────────
 
@@ -150,14 +157,14 @@ interface Cat40Dirs { world: string; root: string; slots: string }
 const ownRun = (ctx: Pick<NightContext, 'paid'>) => (ctx.paid ? ['--new-budget-run'] : []);
 
 async function buildCat40(run: SuiteRun, ctx: Ctx, d: Cat40Dirs): Promise<string | null> {
-  const cmds = cat40Commands(run, ctx, d.world, { ...d, cells: '' });
+  const cmds = cat40Commands(run, ctx, d.world, { ...d, cells: '' }, ctx.slots);
   if (!existsSync(d.world)) {
     for (const cmd of cmds.world) {
       const r = await runChild({ cmd, env: keylessEnv(), log: join(d.slots, 'world.log'), signal: ctx.signal });
       if (r.code !== 0) return `world build exited ${r.code ?? r.signal}: ${r.tail.split('\n').at(-1)}`;
     }
   }
-  const marker = join(d.slots, `.built-${ctx.sha}${ctx.fake ? '-keyless' : ''}`);
+  const marker = join(d.slots, `.built-${ctx.slots.sha ?? ctx.sha}${ctx.fake ? '-keyless' : ''}`);
   if (existsSync(marker)) return null;
   const env = envFor(ctx, run.suite, ['anthropic', 'openai', 'voyage']);
   const build = (i: number) => runChild({ cmd: [...cmds.slots[i], ...ownRun(ctx)], env, log: join(d.slots, `slots-${i}.log`), signal: ctx.signal });
@@ -185,8 +192,9 @@ export function cat40ArmFlags(arm: ArmName, hintFile: string | null): string[] {
  * would cost about half of each arm and can only show a follow-up arm doing worse, which this loop does not measure.
  */
 /** Why a run dir can't take this run: it holds another build's rows, or rows from the other mode (keyless or paid). */
-export function resumeRefusal(recorded: { sha?: string; fake?: boolean } | null, now: { sha: string; fake: boolean }, dir: string, label: string): string | null {
+export function resumeRefusal(recorded: { sha?: string; fake?: boolean; slots_from?: { sha: string } | null } | null, now: { sha: string; fake: boolean; slotsSha?: string | null }, dir: string, label: string): string | null {
   if (!recorded) return null;
+  if ((recorded.slots_from?.sha ?? null) !== (now.slotsSha ?? null)) return `${dir} holds cells served on brains built by ${recorded.slots_from?.sha.slice(0, 12) ?? 'the build itself'}, and this run's brains come from ${now.slotsSha?.slice(0, 12) ?? 'the build itself'}; pass a new --out`;
   if (recorded.sha && recorded.sha !== now.sha) return `${dir} holds a run of ${label} at ${recorded.sha.slice(0, 12)}, but ${label} is now ${now.sha.slice(0, 12)}; pass a new --out so the old rows aren't scored as the new build`;
   if (recorded.fake !== now.fake) return `${dir} holds a ${recorded.fake ? 'keyless (--fake)' : 'paid'} run, and this run is ${now.fake ? 'keyless' : 'paid'}; pass a new --out, because keyless and paid rows must not share a run dir`;
   return null;
@@ -214,9 +222,33 @@ async function runCat40Arm(full: SuiteRun, ctx: Ctx, arm: ArmName, d: Cat40Dirs,
     hint = join(cells, 'instructions-batch.txt');
     writeFileSync(hint, `${readFileSync(served, 'utf8').replace(/\n+$/, '')}\n\n${BATCH_HINT}\n`);
   }
-  const cmd = [...cat40Commands(run, ctx, d.world, { ...d, cells }).cells, ...cat40ArmFlags(arm, hint), ...ownRun(ctx)];
+  const cmd = [...cat40Commands(run, ctx, d.world, { ...d, cells }, ctx.slots).cells, ...cat40ArmFlags(arm, hint), ...ownRun(ctx)];
   const r = await runChild({ cmd, env: envFor(ctx, run.suite, ['anthropic', 'openai', 'voyage']), log: join(cells, '..', 'cells.log'), signal: ctx.signal });
   return r.code === 0 ? null : `cells exited ${r.code ?? r.signal}: ${r.tail.split('\n').slice(-3).join(' ')}`;
+}
+
+/** Flags that never reach a cell, or that differ between two builds by design (the build and its brains are named by gbrain_commit and slot_commit). */
+const SETUP_IGNORED_FLAGS = new Set(['--out', '--world', '--arms', '--models', '--budget-ledger', '--concurrency', '--transcripts', '--order', '--accept-freeze-drift',
+  '--tasks', '--gbrain-ref', '--gbrain-repo', '--gbrain-root', '--slot-ref', '--slots']);
+
+/**
+ * A digest of what a Cat 40 cells dir's cells ran under, apart from the gbrain build itself: the world, the commit that
+ * built the brains, the Hard identity, turn and tool limits, judge, scorer and evaluator code (experiment.json), the
+ * served instructions, the served tool names and every flag that reaches a cell. Null when experiment.json is missing.
+ */
+export function cat40Setup(cellsDir: string): string | null {
+  const exp = join(cellsDir, 'experiment.json');
+  if (!existsSync(exp)) return null;
+  const e = JSON.parse(readFileSync(exp, 'utf8')) as { world_digest?: string; slot_commit?: string; hard?: Record<string, unknown>; flags?: Record<string, unknown> };
+  const file = (f: string) => (existsSync(join(cellsDir, f)) ? readFileSync(join(cellsDir, f), 'utf8') : null);
+  const instructions = file('served-instructions.txt'), tools = file('served-tools.json');
+  const setup = {
+    world_digest: e.world_digest ?? null, slot_commit: e.slot_commit ?? null, hard: e.hard ? { ...e.hard, runner_commit: null } : null,
+    flags: Object.fromEntries(Object.entries(e.flags ?? {}).filter(([k]) => !SETUP_IGNORED_FLAGS.has(k)).sort(([a], [b]) => a.localeCompare(b))),
+    instructions: instructions === null ? null : createHash('sha256').update(instructions).digest('hex'),
+    tools: tools === null ? null : (JSON.parse(tools) as Array<{ name: string }>).map(t => t.name).sort(),
+  };
+  return createHash('sha256').update(JSON.stringify(setup)).digest('hex');
 }
 
 /** Items from a Cat 40 arm's cells: the nightly outcome row, plus each cell's transcript and turns. */
@@ -229,13 +261,14 @@ export function cat40Items(run: SuiteRun, ctx: Pick<Ctx, 'night' | 'ref' | 'sha'
   const tp = join(cellsDir, 'transcripts.jsonl');
   if (existsSync(tp)) for (const line of readFileSync(tp, 'utf8').split('\n').filter(Boolean)) { const t = JSON.parse(line); transcripts.set(t.attempt_id ?? t.key, t.tools ?? []); }
   const items: ItemRow[] = [], why: WhyRow[] = [];
+  const setup = cat40Setup(cellsDir);
   for (const o of rows) {
     const cell = cells.find(c => c.task === o.item && (ctx.fake ? true : c.model === o.reader) && c.repeat + 1 === o.trial);
     const raw = (cell?.raw ?? {}) as Record<string, any>;
     const calls = cell ? transcripts.get(cell.attempt_id) ?? transcripts.get(cell.key) ?? null : null;
     const turns = Array.isArray(raw.sessions) ? raw.sessions.reduce((n: number, s: any) => n + (s.run?.turns ?? 0), 0) : raw.run?.turns ?? null;
     const gold = [...((o.evidence.evidence_cited as string[]) ?? []), ...((o.evidence.missed_evidence as string[]) ?? [])];
-    const row = agentItem(o, { arm, ref: ctx.label, gold, calls, turns, turnCap: raw.experiment?.max_turns ?? ARMS[arm].turnCap });
+    const row = agentItem(o, { arm, ref: ctx.label, gold, calls, turns, turnCap: raw.experiment?.max_turns ?? ARMS[arm].turnCap, setup });
     items.push(row);
     if (missed(row) && calls) why.push(agentWhy(row, calls));
   }
@@ -331,9 +364,10 @@ export function powerTable(items: ItemRow[], agentNoise: number): Power[] {
   return out;
 }
 
-export function renderReport(o: { label: string; sha: string; version: string | null; arms: ArmName[]; slices: Slice[]; power: Power[]; items: ItemRow[]; why: WhyRow[]; errors: string[]; spend: Record<string, unknown> | null; fake: boolean }): string {
+export function renderReport(o: { label: string; sha: string; version: string | null; arms: ArmName[]; slices: Slice[]; power: Power[]; items: ItemRow[]; why: WhyRow[]; errors: string[]; spend: Record<string, unknown> | null; fake: boolean; slotsFrom?: { ref: string; sha: string } | null }): string {
   const L: string[] = [];
   L.push(`# Multi-evidence dev loop: gbrain ${o.label} (${o.sha.slice(0, 12)}${o.version ? `, version ${o.version}` : ''})`, '');
+  if (o.slotsFrom) L.push(`Cat 40 cells ran this build's server on brains built by ${o.slotsFrom.ref} (${o.slotsFrom.sha.slice(0, 12)}).`, '');
   if (o.fake) L.push('**Keyless run (--fake): scripted agents and a fake QA system. These numbers test the plumbing, never gbrain.**', '');
   L.push('Questions whose answer needs two or more gold items. "Delivered" is gold gbrain put in front of the model: for an agent, gold that any tool result names; for a reader, gold in the sessions it was given.', '');
   L.push('## Arms', '', ...o.arms.map(a => `- **${a}**: ${ARMS[a].about}`), '');
@@ -360,6 +394,18 @@ export function renderReport(o: { label: string; sha: string; version: string | 
       return `${arm} ${cells.filter(r => r.assemble_calls! > 0).length} of ${cells.length} cells (${cells.reduce((n, r) => n + r.assemble_calls!, 0)} calls)`;
     };
     if (o.arms.includes('batch')) L.push('', `Cells that called assemble_evidence at least once: ${used('base')}; ${used('batch')}.`);
+    L.push('');
+  }
+  const agentRows = o.items.filter(r => r.kind === 'agent' && r.harness === null && r.result_chars !== null);
+  if (agentRows.length) {
+    L.push('## Tool results and batch reads', '', 'Characters of every tool result the agent received, and get_page calls that read several pages with `slugs`.', '', '| Suite | Reader | Arm | Cells | Mean tool-result characters | Cells using slugs | Slugs calls | Slugs calls that read 2+ pages | Cells with omitted |', '|---|---|---|---|---|---|---|---|---|');
+    const groups = new Map<string, ItemRow[]>();
+    for (const r of agentRows) { const k = `${r.suite}|${r.reader}|${r.arm}`; if (!groups.has(k)) groups.set(k, []); groups.get(k)!.push(r); }
+    for (const [k, rows] of groups) {
+      const [suite, reader, arm] = k.split('|');
+      const sum = (pick: (r: ItemRow) => number | null) => rows.reduce((n, r) => n + (pick(r) ?? 0), 0);
+      L.push(`| ${suite} | ${reader} | ${arm} | ${rows.length} | ${Math.round(sum(r => r.result_chars) / rows.length)} | ${rows.filter(r => (r.slugs_calls ?? 0) > 0).length} | ${sum(r => r.slugs_calls)} | ${sum(r => r.slugs_multi)} | ${rows.filter(r => (r.omitted_calls ?? 0) > 0).length} |`);
+    }
     L.push('');
   }
   L.push('## What the set can detect', '', 'The smallest paired change in "all gold delivered" between two gbrain builds that this set detects at 80% power (two-sided, 5%), given how often two runs of one build disagree.', '', '| Suite | Rows | Same-build disagreement | Source | Smallest detectable change |', '|---|---|---|---|---|');
@@ -389,7 +435,7 @@ function score(dir: string, runs: SuiteRun[], ctx: Pick<Ctx, 'night' | 'ref' | '
 function writeOutputs(dir: string, o: Parameters<typeof renderReport>[0]): void {
   writeFileSync(join(dir, 'items.jsonl'), o.items.map(r => JSON.stringify(r)).join('\n') + (o.items.length ? '\n' : ''));
   writeFileSync(join(dir, 'why.jsonl'), o.why.map(r => JSON.stringify(r)).join('\n') + (o.why.length ? '\n' : ''));
-  writeFileSync(join(dir, 'summary.json'), JSON.stringify({ schema: 'multi-evidence-summary/1', gbrain: { ref: o.label, sha: o.sha, version: o.version }, arms: o.arms, fake: o.fake, slices: o.slices, power: o.power, spend: o.spend, errors: o.errors }, null, 2) + '\n');
+  writeFileSync(join(dir, 'summary.json'), JSON.stringify({ schema: 'multi-evidence-summary/1', gbrain: { ref: o.label, sha: o.sha, version: o.version, slots_from: o.slotsFrom ?? null }, arms: o.arms, fake: o.fake, slices: o.slices, power: o.power, spend: o.spend, errors: o.errors }, null, 2) + '\n');
   writeFileSync(join(dir, 'report.md'), renderReport(o));
 }
 
@@ -401,7 +447,7 @@ export async function main(argv: readonly string[]): Promise<number> {
     const runs = planRuns(me, run.args);
     const ctx = { night: run.night, ref: run.label, sha: run.sha, fake: run.fake, label: run.label, dir: a.report };
     const { items, why } = score(a.report, runs, ctx, run.args.arms, run.world);
-    const o = { label: run.label, sha: run.sha, version: run.version, arms: run.args.arms, slices: slices(items), power: powerTable(items, a.agentNoise), items, why, errors: run.errors ?? [], spend: run.spend ?? null, fake: run.fake };
+    const o = { label: run.label, sha: run.sha, version: run.version, arms: run.args.arms, slices: slices(items), power: powerTable(items, a.agentNoise), items, why, errors: run.errors ?? [], spend: run.spend ?? null, fake: run.fake, slotsFrom: run.slots_from ?? null };
     writeOutputs(a.report, o);
     console.log(JSON.stringify({ dir: a.report, items: items.length, missed: why.length }));
     return 0;
@@ -409,10 +455,11 @@ export async function main(argv: readonly string[]): Promise<number> {
   const release = a.gbrain ? null : newestRelease(a.clone, a.fetch);
   const label = a.gbrain ?? release!.tag;
   const sha = release?.sha ?? resolveGbrainRef(a.clone, a.gbrain!);
+  const slotsFrom = a.slotsFrom ? { ref: a.slotsFrom, sha: resolveGbrainRef(a.clone, a.slotsFrom) } : null;
   const runs = planRuns(me, a);
   if (!runs.length) throw new Error('no suite and item matches --suites and --items');
   const dir = join(a.out!, slug(label));
-  const refusal = resumeRefusal(existsSync(join(dir, 'run.json')) ? JSON.parse(readFileSync(join(dir, 'run.json'), 'utf8')) : null, { sha, fake: a.fake }, dir, label);
+  const refusal = resumeRefusal(existsSync(join(dir, 'run.json')) ? JSON.parse(readFileSync(join(dir, 'run.json'), 'utf8')) : null, { sha, fake: a.fake, slotsSha: slotsFrom?.sha ?? null }, dir, label);
   if (refusal) throw new Error(refusal);
   mkdirSync(dir, { recursive: true });
   const gut = resolveGbrainUnderTest(`${a.clone}@${sha}`);
@@ -438,11 +485,12 @@ export async function main(argv: readonly string[]): Promise<number> {
     worktree: () => Promise.reject(new Error('the dev loop runs no refresh-barrier suite')), overlayFor: () => Promise.reject(new Error('the dev loop runs no smoke suite')),
     cache: new NightlyCache(cacheRoot), paid, pg: { admin: null, template: null, pg15Admin: null }, smokeRefs: { previous: null, old: null },
     cat40SlotAllowanceUsd: a.fake ? null : a.slotAllowanceUsd, log: line => console.error(`[multi-evidence] ${line}`), signal: abort.signal,
+    slots: { ...(slotsFrom ? { sha: slotsFrom.sha } : {}), ...(a.cat40Slots !== null ? { n: a.cat40Slots } : {}) },
   };
-  const runInfo = { schema: 'multi-evidence-run/1', label, sha, version: gut.version, night: ctx.night, fake: a.fake, world, devset_digest: me.digest, budget: paid,
-    args: { arms: a.arms, readers: a.readers, suites: a.suites, items: a.items, k: a.k }, started_at: new Date().toISOString() } as Record<string, any>;
+  const runInfo = { schema: 'multi-evidence-run/1', label, sha, version: gut.version, night: ctx.night, fake: a.fake, world, devset_digest: me.digest, budget: paid, slots_from: slotsFrom,
+    args: { arms: a.arms, readers: a.readers, suites: a.suites, items: a.items, k: a.k, cat40_slots: a.cat40Slots }, started_at: new Date().toISOString() } as Record<string, any>;
   writeFileSync(join(dir, 'run.json'), JSON.stringify(runInfo, null, 2) + '\n');
-  ctx.log(`gbrain ${label} ${sha.slice(0, 12)} (${gut.version}); arms ${a.arms.join(', ')}; ${runs.map(r => `${r.suite.id} ${r.items.length}`).join(', ')}; ${a.fake ? 'keyless' : `ledger run ${paid!.runId}`}`);
+  ctx.log(`gbrain ${label} ${sha.slice(0, 12)} (${gut.version})${slotsFrom ? ` on brains built by ${slotsFrom.ref} ${slotsFrom.sha.slice(0, 12)}` : ''}; arms ${a.arms.join(', ')}; ${runs.map(r => `${r.suite.id} ${r.items.length}`).join(', ')}; ${a.fake ? 'keyless' : `ledger run ${paid!.runId}`}`);
 
   const errors: string[] = [];
   const agentRuns = runs.filter(r => r.suite.kind === 'agent'), qaRuns = runs.filter(r => r.suite.kind === 'qa');
@@ -487,7 +535,7 @@ export async function main(argv: readonly string[]): Promise<number> {
   runInfo.finished_at = new Date().toISOString(); runInfo.errors = errors; runInfo.spend = spend;
   writeFileSync(join(dir, 'run.json'), JSON.stringify(runInfo, null, 2) + '\n');
   const { items, why } = score(dir, runs, ctx, a.arms, world);
-  writeOutputs(dir, { label, sha, version: gut.version, arms: a.arms, slices: slices(items), power: powerTable(items, a.agentNoise), items, why, errors, spend, fake: a.fake });
+  writeOutputs(dir, { label, sha, version: gut.version, arms: a.arms, slices: slices(items), power: powerTable(items, a.agentNoise), items, why, errors, spend, fake: a.fake, slotsFrom });
   console.log(JSON.stringify({ dir, items: items.length, missed: why.length, errors: errors.length, report: join(dir, 'report.md') }));
   return abort.signal.aborted ? 4 : errors.length ? 5 : 0;
 }

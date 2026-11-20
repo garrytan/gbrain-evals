@@ -1,0 +1,14 @@
+{
+  "id": "fixture-quick-look",
+  "preregistration": "docs/benchmarks/2026-11-20-quick-preregistration.md",
+  "results": [
+    "docs/benchmarks/2026-11-20-quick/**"
+  ],
+  "registered": "2026-11-20",
+  "paid_tier": "quick-look",
+  "quick_look": {
+    "question": "Does the new search hint change which tool Opus calls first?",
+    "decision": "If it does, preregister a counted run; if not, drop the hint.",
+    "stop_rule": "Stop after 30 tasks or one day."
+  }
+}
