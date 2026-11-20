@@ -335,14 +335,14 @@ describe('memory-system pins (each the newest release at launch, preregistration
     const placeholder = 'dummy-key-the-proxy-injects-the-real-one';
     const fake = Bun.serve({ port: 0, fetch: req => new URL(req.url).pathname === '/_stats' ? Response.json({}) : new Response('no route', { status: 404 }) });
     const proxy = Bun.serve({ port: 0, fetch: () => Response.json({ error: { message: 'no provider route /_stats' } }, { status: 404 }) });
-    const at = (port: number) => `http://127.0.0.1:${port}/v1`;
-    const keys = { OPENAI_API_KEY: placeholder, LLM_API_KEY: placeholder, EMBEDDING_API_KEY: placeholder, EMBEDDING_ENDPOINT: at(fake.port) };
+    const at = (server: { url: URL }) => `${server.url.origin}/v1`;
+    const keys = { OPENAI_API_KEY: placeholder, LLM_API_KEY: placeholder, EMBEDDING_API_KEY: placeholder, EMBEDDING_ENDPOINT: at(fake) };
     const run = async (env: Record<string, string>) => {
       const p = Bun.spawn(['python3', path], { env: { PATH: process.env.PATH ?? '', ...env }, stdout: 'pipe', stderr: 'pipe' });
       return { status: await p.exited, stdout: await new Response(p.stdout).text() };
     };
     try {
-      for (const env of [{ ...keys, EMBEDDING_API_KEY: 'cell-token' }, { ...keys, LLM_API_KEY: 'cell-token' }, { OPENAI_API_KEY: placeholder }, { ...keys, EMBEDDING_ENDPOINT: at(proxy.port) }, { ...keys, EMBEDDING_ENDPOINT: '' }]) {
+      for (const env of [{ ...keys, EMBEDDING_API_KEY: 'cell-token' }, { ...keys, LLM_API_KEY: 'cell-token' }, { OPENAI_API_KEY: placeholder }, { ...keys, EMBEDDING_ENDPOINT: at(proxy) }, { ...keys, EMBEDDING_ENDPOINT: '' }]) {
         const r = await run(env);
         expect(r.status).toBe(2);
         expect(JSON.parse(r.stdout.trim()).refused).toContain('not the keyless stack');
