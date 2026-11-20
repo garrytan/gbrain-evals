@@ -80,8 +80,13 @@ This records what each gbrain-evals release changed and what its measurements me
   hold is asked once. This is validate.ts's first change since the
   freeze. Beforehand, `eval/custody/rs1/probe-fallback.ts` sent six refused prompts to the fallback and kept only how each
   reply ended: all six were answered.
-- **Records.** `docs/benchmarks/2026-11-08-rs1-narrow-preregistration.md` gains its amendments, and
-  `docs/benchmarks/2026-11-08-rs1-narrow-results.md` starts with the stage 1 run log. No counted RS1 result exists yet.
+- **RS1's result.** On 20 newly minted million-token BEAM conversations, gbrain v0.60.740.0 reading 8,000 tokens is
+  at most 3.5 points behind both the memory-bank server and the extract-first server under frontier judges (one-sided
+  95% lower bounds -1.2 and +1.1), and BEAM's judge agrees. It is ahead of the extract-first server and not ahead of the
+  memory-bank server. `docs/benchmarks/2026-11-08-rs1-narrow-results.md` gives the verdict, cost per correct answer, the
+  sensitivity checks, the per-reader and per-ability rows, and gbrain's pages without facts by cause (0.72% of pages).
+  `aggregates.json` and `aggregates.md` beside it hold the verdict tool's output, and the preregistration gains its
+  amendments.
 
 ## [0.10.180] - 2026-11-09
 
