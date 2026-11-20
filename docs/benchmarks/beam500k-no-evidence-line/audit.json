@@ -1,0 +1,354 @@
+{
+ "sample": "one random.Random(1) stream; readers opus, sol, particle in that order; unanswerable 7, 7, 6 then answerable 6, 7, 7 from each reader's sorted ids; order shuffled with random.Random(2)",
+ "labelled_before_judgments_were_read": true,
+ "n": 40,
+ "unanswerable": 20,
+ "rubric_agreement": {
+  "agree": 40,
+  "kappa": 1.0
+ },
+ "type_agreement": {
+  "agree": 35,
+  "kappa_3class": 0.7563946406820949,
+  "kappa_declined_vs_not": 0.8933333333333332
+ },
+ "disagreements": [
+  {
+   "item": 5,
+   "reader": "sol",
+   "qid": "25_abstention_1",
+   "hand": [
+    "W",
+    "hedged"
+   ],
+   "rubric_judge": "W",
+   "type_judge": "committed"
+  },
+  {
+   "item": 7,
+   "reader": "opus",
+   "qid": "24_instruction_following_1",
+   "hand": [
+    "C",
+    "hedged"
+   ],
+   "rubric_judge": "C",
+   "type_judge": "committed"
+  },
+  {
+   "item": 14,
+   "reader": "opus",
+   "qid": "25_preference_following_0",
+   "hand": [
+    "C",
+    "committed"
+   ],
+   "rubric_judge": "C",
+   "type_judge": "hedged"
+  },
+  {
+   "item": 28,
+   "reader": "particle",
+   "qid": "28_contradiction_resolution_0",
+   "hand": [
+    "C",
+    "committed"
+   ],
+   "rubric_judge": "C",
+   "type_judge": "declined"
+  },
+  {
+   "item": 31,
+   "reader": "opus",
+   "qid": "12_abstention_0",
+   "hand": [
+    "C",
+    "declined"
+   ],
+   "rubric_judge": "C",
+   "type_judge": "committed"
+  }
+ ],
+ "items": [
+  {
+   "item": 0,
+   "reader": "sol",
+   "qid": "31_information_extraction_0",
+   "hand_correct": true,
+   "hand_type": "committed"
+  },
+  {
+   "item": 1,
+   "reader": "opus",
+   "qid": "12_abstention_1",
+   "hand_correct": true,
+   "hand_type": "declined"
+  },
+  {
+   "item": 2,
+   "reader": "particle",
+   "qid": "20_information_extraction_1",
+   "hand_correct": true,
+   "hand_type": "committed"
+  },
+  {
+   "item": 3,
+   "reader": "particle",
+   "qid": "29_abstention_1",
+   "hand_correct": false,
+   "hand_type": "committed"
+  },
+  {
+   "item": 4,
+   "reader": "particle",
+   "qid": "20_event_ordering_0",
+   "hand_correct": false,
+   "hand_type": "committed"
+  },
+  {
+   "item": 5,
+   "reader": "sol",
+   "qid": "25_abstention_1",
+   "hand_correct": false,
+   "hand_type": "hedged"
+  },
+  {
+   "item": 6,
+   "reader": "particle",
+   "qid": "25_abstention_0",
+   "hand_correct": true,
+   "hand_type": "declined"
+  },
+  {
+   "item": 7,
+   "reader": "opus",
+   "qid": "24_instruction_following_1",
+   "hand_correct": true,
+   "hand_type": "hedged"
+  },
+  {
+   "item": 8,
+   "reader": "particle",
+   "qid": "33_summarization_1",
+   "hand_correct": false,
+   "hand_type": "committed"
+  },
+  {
+   "item": 9,
+   "reader": "particle",
+   "qid": "25_abstention_1",
+   "hand_correct": false,
+   "hand_type": "committed"
+  },
+  {
+   "item": 10,
+   "reader": "particle",
+   "qid": "20_abstention_0",
+   "hand_correct": true,
+   "hand_type": "declined"
+  },
+  {
+   "item": 11,
+   "reader": "sol",
+   "qid": "10_instruction_following_0",
+   "hand_correct": true,
+   "hand_type": "committed"
+  },
+  {
+   "item": 12,
+   "reader": "opus",
+   "qid": "28_abstention_0",
+   "hand_correct": true,
+   "hand_type": "declined"
+  },
+  {
+   "item": 13,
+   "reader": "particle",
+   "qid": "10_abstention_0",
+   "hand_correct": true,
+   "hand_type": "declined"
+  },
+  {
+   "item": 14,
+   "reader": "opus",
+   "qid": "25_preference_following_0",
+   "hand_correct": true,
+   "hand_type": "committed"
+  },
+  {
+   "item": 15,
+   "reader": "sol",
+   "qid": "21_knowledge_update_1",
+   "hand_correct": false,
+   "hand_type": "committed"
+  },
+  {
+   "item": 16,
+   "reader": "opus",
+   "qid": "18_abstention_0",
+   "hand_correct": true,
+   "hand_type": "declined"
+  },
+  {
+   "item": 17,
+   "reader": "opus",
+   "qid": "31_abstention_0",
+   "hand_correct": true,
+   "hand_type": "declined"
+  },
+  {
+   "item": 18,
+   "reader": "opus",
+   "qid": "31_information_extraction_0",
+   "hand_correct": true,
+   "hand_type": "committed"
+  },
+  {
+   "item": 19,
+   "reader": "sol",
+   "qid": "10_information_extraction_1",
+   "hand_correct": true,
+   "hand_type": "committed"
+  },
+  {
+   "item": 20,
+   "reader": "sol",
+   "qid": "25_abstention_0",
+   "hand_correct": true,
+   "hand_type": "declined"
+  },
+  {
+   "item": 21,
+   "reader": "sol",
+   "qid": "28_abstention_0",
+   "hand_correct": true,
+   "hand_type": "declined"
+  },
+  {
+   "item": 22,
+   "reader": "opus",
+   "qid": "12_instruction_following_0",
+   "hand_correct": true,
+   "hand_type": "committed"
+  },
+  {
+   "item": 23,
+   "reader": "particle",
+   "qid": "28_knowledge_update_1",
+   "hand_correct": true,
+   "hand_type": "committed"
+  },
+  {
+   "item": 24,
+   "reader": "particle",
+   "qid": "25_information_extraction_0",
+   "hand_correct": true,
+   "hand_type": "committed"
+  },
+  {
+   "item": 25,
+   "reader": "opus",
+   "qid": "25_temporal_reasoning_0",
+   "hand_correct": true,
+   "hand_type": "committed"
+  },
+  {
+   "item": 26,
+   "reader": "sol",
+   "qid": "29_instruction_following_1",
+   "hand_correct": true,
+   "hand_type": "committed"
+  },
+  {
+   "item": 27,
+   "reader": "particle",
+   "qid": "33_abstention_0",
+   "hand_correct": false,
+   "hand_type": "committed"
+  },
+  {
+   "item": 28,
+   "reader": "particle",
+   "qid": "28_contradiction_resolution_0",
+   "hand_correct": true,
+   "hand_type": "committed"
+  },
+  {
+   "item": 29,
+   "reader": "sol",
+   "qid": "12_knowledge_update_0",
+   "hand_correct": false,
+   "hand_type": "committed"
+  },
+  {
+   "item": 30,
+   "reader": "sol",
+   "qid": "21_abstention_0",
+   "hand_correct": true,
+   "hand_type": "declined"
+  },
+  {
+   "item": 31,
+   "reader": "opus",
+   "qid": "12_abstention_0",
+   "hand_correct": true,
+   "hand_type": "declined"
+  },
+  {
+   "item": 32,
+   "reader": "sol",
+   "qid": "10_abstention_0",
+   "hand_correct": false,
+   "hand_type": "committed"
+  },
+  {
+   "item": 33,
+   "reader": "sol",
+   "qid": "33_abstention_1",
+   "hand_correct": true,
+   "hand_type": "declined"
+  },
+  {
+   "item": 34,
+   "reader": "sol",
+   "qid": "20_abstention_1",
+   "hand_correct": true,
+   "hand_type": "declined"
+  },
+  {
+   "item": 35,
+   "reader": "opus",
+   "qid": "18_temporal_reasoning_1",
+   "hand_correct": false,
+   "hand_type": "committed"
+  },
+  {
+   "item": 36,
+   "reader": "sol",
+   "qid": "10_instruction_following_1",
+   "hand_correct": true,
+   "hand_type": "committed"
+  },
+  {
+   "item": 37,
+   "reader": "particle",
+   "qid": "28_summarization_1",
+   "hand_correct": true,
+   "hand_type": "committed"
+  },
+  {
+   "item": 38,
+   "reader": "opus",
+   "qid": "28_abstention_1",
+   "hand_correct": true,
+   "hand_type": "declined"
+  },
+  {
+   "item": 39,
+   "reader": "opus",
+   "qid": "21_abstention_0",
+   "hand_correct": true,
+   "hand_type": "declined"
+  }
+ ]
+}
