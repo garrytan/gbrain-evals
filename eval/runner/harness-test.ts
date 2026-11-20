@@ -13,7 +13,7 @@
  * number. The run fails if any group fails or writes no report.
  */
 import { existsSync, mkdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { resolve } from 'node:path';
 import { ensureHarness, harnessProcessEnv, PROVIDER_DIR } from './harness-env.ts';
 
 export const SLOW_FILES = ['tests/test_gbrain_provider.py', 'tests/test_comparator_server.py'];
@@ -48,7 +48,7 @@ if (import.meta.main) {
   mkdirSync(junitDir, { recursive: true });
   const rest = args.filter(a => !a.startsWith('--junit-dir='));
   const codes = await Promise.all(GROUPS.map(async (group, i) => {
-    const report = join(junitDir, `pytest-${i + 1}.xml`);
+    const report = resolve(junitDir, `pytest-${i + 1}.xml`);
     const proc = Bun.spawn([install.python, '-m', 'pytest', ...group, `--junitxml=${report}`, '-o', 'junit_family=xunit1', ...rest], { cwd: PROVIDER_DIR, env, stdout: 'pipe', stderr: 'pipe' });
     const prefix = `[pytest ${i + 1}] `;
     const [, , code] = await Promise.all([lines(proc.stdout, prefix), lines(proc.stderr, prefix), proc.exited]);
