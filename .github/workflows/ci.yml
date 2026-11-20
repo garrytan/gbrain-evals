@@ -30,7 +30,8 @@ jobs:
   # actions/checkout. This job keeps the whole .git (every branch, full history)
   # in the Actions cache: a push to main refreshes it for the new commit, and a
   # pull request builds one only when neither the PR nor main has one yet. Every
-  # other job restores it before actions/checkout, which then fetches only what
+  # other job but tested-tree, which reads only scripts/ and the tracked file
+  # list, restores it before actions/checkout, which then fetches only what
   # is new and checks out the same commit at the same depth as before. A depth-1
   # job's .git now also holds older commits' objects, so tests that look for a
   # pinned commit (five cases in test/eval/q1-reuse-check.test.ts) run instead of
@@ -194,7 +195,7 @@ jobs:
   tests:
     needs: git-cache
     if: ${{ !cancelled() }}
-    runs-on: ubicloud-standard-4-ubuntu-2604
+    runs-on: ubicloud-standard-8-ubuntu-2604
     timeout-minutes: 15
     strategy:
       fail-fast: false
@@ -220,21 +221,28 @@ jobs:
       - name: Install ripgrep
         run: sudo apt-get update -q && sudo apt-get install -y ripgrep
 
-      # test/eval/ plus the unit tests colocated under eval/. The JUnit report
-      # names the files this shard ran, for the tested-tree job below.
-      # --timings splits the files by their measured time, so a slow file no
-      # longer lands beside other slow files by its place in the sorted list,
-      # as file-count sharding did. A file missing from test/timings.json
-      # counts as a median file; when a shard nears 10 minutes, refresh the
-      # file from a main run's reports with scripts/test-timings.ts.
-      - name: Unit + integration tests (shard ${{ matrix.shard }}/${{ strategy.job-total }})
-        run: bun test --shard=${{ matrix.shard }}/${{ strategy.job-total }} --timings=test/timings.json test/eval/ eval/ --reporter=junit --reporter-outfile="$RUNNER_TEMP/tests-${{ matrix.shard }}.xml"
+      # test/eval/ plus the unit tests colocated under eval/. Each job runs
+      # four ordinary bun test --shard processes at once on its 8 vCPUs, as
+      # shards k, k+6, k+12 and k+18 of 24 (scripts/test-shards.ts --job), so
+      # the six jobs together run each of the 24 shards once. A bun test
+      # process keeps about one core busy, so one process per job left most
+      # of the runner idle. Each shard's JUnit report names the files it ran,
+      # for the tested-tree job below. --timings splits the files by their
+      # measured time, so a slow file no longer lands beside other slow files
+      # by its place in the sorted list, as file-count sharding did. A file
+      # missing from test/timings.json counts as a median file; when a shard
+      # nears 10 minutes, refresh the file from a main run's reports with
+      # scripts/test-timings.ts.
+      - name: Unit + integration tests (job ${{ matrix.shard }}/${{ strategy.job-total }}, four shards of 24)
+        env:
+          TEST_SHARDS: '4'
+        run: bun scripts/test-shards.ts --job=${{ matrix.shard }}/${{ strategy.job-total }} --junit-dir="$RUNNER_TEMP/tested-files" test/eval/ eval/
 
-      - name: Upload the files this shard ran
+      - name: Upload the files this job's shards ran
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: tested-files-${{ matrix.shard }}
-          path: ${{ runner.temp }}/tests-${{ matrix.shard }}.xml
+          path: ${{ runner.temp }}/tested-files/tests-*.xml
           if-no-files-found: error
           retention-days: 7
           overwrite: true
@@ -252,13 +260,10 @@ jobs:
     runs-on: ubicloud-standard-2-ubuntu-2604
     timeout-minutes: 5
     steps:
-      - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-        with:
-          path: .git
-          key: ${{ format('git-objects-v1-{0}', github.sha) }}
-          restore-keys: git-objects-v1-
-
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          filter: blob:none
+          sparse-checkout: scripts
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
