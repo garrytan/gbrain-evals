@@ -579,6 +579,50 @@ kept set is still the first 40 worlds that pass BG1's validation.
   either session. BG1's records don't say whether gbrain refused those two sessions; if it did, no scored question lost
   its evidence.
 
+### Amendment 6 (2026-11-20): launch amendment A, part 3: gbrain v0.60.750.0
+
+Written after 15 of the 40 worlds were minted and before any counted gbrain cell. It moves no bound, row, arm or budget
+line.
+
+- **gbrain's build.** Every BG1-C gbrain cell now runs v0.60.750.0, commit `104403ce1cde20f444eed2dc80b0024a552015b0`,
+  instead of Amendment 4's v0.60.745.0 (`8ebb7980`). gbrain tagged v0.60.750.0 at 07:50:55Z on 2026-11-20, and it is
+  the newest release tag on gbrain's master as this is written. The build freezes once counted gbrain cells start.
+- **What changed since v0.60.745.0 that could move BG1-C's gbrain row.** Read from the release notes of v0.60.746.0,
+  v0.60.747.0, v0.60.748.0 and v0.60.750.0 (there is no v0.60.749.0). BG1-C's gbrain cell writes each session with
+  `put_page` and reads with `query` and `recall` over MCP stdio, with Voyage, OpenAI and Anthropic keys only.
+  - #9849: recall, the entity card, hot memory, an entity's saved facts and search's saved-fact matches now end a slot
+    value (employer, city, role) once a later value for the same slot is saved, as the query facts block already did.
+    This bears directly on the changing-facts classes. It should help, or leave unchanged, the questions about current
+    values, and it could move the questions about history and past dates either way.
+  - #9833: newest-first fact reads no longer let a fact dated years ahead hold the top of the list. That can move any
+    class in a world that holds a fact dated in the future. The same change gives extracted fundraising amounts one tag
+    per deal, and stops a narrow tool surface passing a hidden `remember` parameter, a tool the shim doesn't call.
+  - #9853: a conversation fact the speaker asked to keep quiet ("keep this quiet", "off the record", "between us") is
+    now saved private. If a world says that and the shim's read doesn't see private rows, gbrain could lose that fact.
+  - #9832: a page holding U+0000 is now saved with the character removed instead of refused. Amendment 5 already removes
+    control characters before any server sees a world, so this changes nothing on BG1-C's worlds. On bg1-dev-20 it would
+    have kept session s123.
+  - Nothing else in the four releases names fact extraction, name tags, slot history, or `put_page`, `query` or
+    `recall` on a local brain. v0.60.748.0's move of the `gemini` alias and the Google provider's default models to
+    gemini-3.5-flash-lite doesn't reach this cell, which has no Google key. #9848's private history in `known_as_of`
+    and v0.60.747.0's private fact rows on `put_page` (#9760, #9733) apply to remote MCP callers only. The rest change
+    the Mac helper and iMessage pages, dedupe and company linking, purges, sharing and access, a `remember` parameter
+    the shim doesn't send (#9802), dream synthesis, which the shim never starts (#9840), `check-resolvable`, OpenClaw's
+    skill resolver, cost estimates, and test and CI tooling.
+- **What this build is expected to score.** Amendment 4 carried the v0.60.741.0 development result forward as
+  v0.60.745.0's expectation, because nothing between them touched facts. That no longer holds: #9849, #9833 and #9853
+  could move the changing-facts classes. A development run on the 20 public dev worlds at v0.60.750.0, from the same
+  harness commit as the v0.60.741.0 result above (`be9caa1e`), scores S1 to S8 paired against that result. The paired
+  score goes under this heading as a development reading when it lands, before the first counted gbrain cell. It changes
+  no bound, row or verdict rule.
+- **Harness commit.** `693c4136811d2641cc94803be6ee8e18c7d11f7b` on this experiment's results branch. It changes
+  `BG1C_GBRAIN_BUILD` in `eval/runner/q1/cells/bg1c.ts`, regenerates the cell set and updates the tests that name the
+  release.
+- **Cell set.** `eval/runner/q1/cells/bg1c-cells.json`, SHA-256
+  `2e4ccb54d26441f29c3d30983f5f5d8cbf496d6aeb665444687ae7cc1ba00242`.
+- **Pilot.** gbrain's smoke on `bg1-dev-01` (run order step 6) runs on v0.60.750.0, so the pilot shows this build
+  running in the harness before any counted cell.
+
 ## Disclosures
 
 - gbrain is Garry Tan's own project.
