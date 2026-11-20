@@ -32,7 +32,7 @@ header line is removed.
 | `pyproject.toml` | Removed the optional third-party provider extras. |
 | `src/agent_memory_benchmark/benchmark/runner.py` | Renames the local variable `key` to `qid` in `process()`, because gstack's secret scanner read `key = qa.question_id or ...` as a credential. Behaviour is unchanged. |
 | `src/agent_memory_benchmark/cli.py` | `run` and `judge` refuse to start unless `OPENAI_BASE_URL` (and `--base-url`, if given) points at 127.0.0.1, ::1 or localhost, so the command line can reach only the metering proxy or the keyless fake, never a paid provider directly. `test/eval/redis-harness-cli-guard.test.ts` checks it. |
-| `src/agent_memory_benchmark/datasets/longmemeval.py` | Reads the dataset at Hugging Face revision `98d7416c24c778c2fee6e6f3006e7a073259d48f` instead of `main`, so the files can't move under a run. |
+| `src/agent_memory_benchmark/datasets/longmemeval.py` | Reads the dataset at Hugging Face revision `98d7416c24c778c2fee6e6f3006e7a073259d48f` instead of `main`. A cached file is read without that download, so this run's loader also checks both files' sha256 before every load (`eval/runner/lme-redis/lme_redis.py`). |
 | `src/agent_memory_benchmark/memory/__init__.py` | Imports and registers none of the removed provider adapters, so `STORES` starts empty. |
 
 Local files, not from upstream: this README, `vendor.json` and `uv.lock`, which `uv` regenerated for the trimmed

@@ -415,7 +415,32 @@ plan and decision, not part of this one.
 
 ## Amendments
 
-None yet.
+### 2026-11-20, before any paid call
+
+- **Build and models, read again.** gbrain's newest release is still v0.60.748.0
+  (`7f162344652afc725793dd476945716e09d26104`, from `git ls-remote --tags` on 2026-11-20).
+  `bun scripts/model-freshness.ts` lists no newer Opus, GPT or Particle model than the ones this plan calls, and it
+  finds a price for every one of them. It warns about claude-sonnet-5-5, which is not a model under test here.
+- **The interim look stops only for efficacy.** Conditional power at half the units is computed under the planned
+  alternative (a true difference equal to the smallest detectable one) in the observed direction. On that basis it never
+  falls below about 21%, its value at z = 0, so the 10% futility stop can't fire. The rule stays as written (GBEV-3,
+  2026-11-20). The one look at 250 questions stops only when |z| ≥ 2.80, and otherwise the run goes to all 500.
+  A keyless test pins this.
+- **What pins the dataset.** The vendored loader downloads from revision `98d7416c`, but it reads a cached file without
+  downloading it. So the pin that holds is the sha256 check, which this run's loader runs before every load, whatever
+  the cache holds.
+- **Parity with Redis's runner.** gbrain's ranking can differ between two brains built from the same history when
+  scores tie. So for the gbrain arms, the check compares the runner's messages with our rendering of the retrieval the
+  runner's own store received, byte for byte. It reports separately how often that retrieval matched the frozen one.
+  For **full** and **oracle** the runner's messages are compared with the frozen ones directly. The reader side is the
+  keyless fake. The gbrain store embeds and reranks with Voyage, so the parity check runs inside the pilot's paid
+  window.
+- **How particle-1 and the labeller are metered.** Their requests go through the shared chat client in the driver's
+  own process, under the ledger's paid-request guard. The guard reserves each request's worst case in this experiment's
+  ledger before it is sent. This replaces the separate metering-proxy process, and the caps work the same way.
+  A particle-1 request is resent only after a failure proven to happen before sending.
+- **Labels per judge.** gemini-4-argon labels 48 answers per cross-family judge, so that at least 40 still parse.
+- **`FRONTIER_READERS` stays unchanged.** This run's driver names its readers itself and doesn't read that list.
 
 ## Disclosures
 
