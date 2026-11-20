@@ -3,7 +3,8 @@
  * tool, answers once in plain text (so the loop nudges), then submits. It records every request the loop sends and
  * can queue HTTP faults before a turn's answer. test/eval/cat40-particle-loop.test.ts drives it, and its recorded
  * request bodies for claude-opus-5-5 and gpt-6.1-sol are the byte-identity fixture
- * (test/eval/fixtures/cat40-loop-bodies.json, captured from main before the particle branch landed).
+ * (test/eval/fixtures/cat40-loop-bodies.json, captured from main before the particle branch landed; the gpt-6.1-sol
+ * bodies were recaptured when every OpenAI request became stateless, with store false and the conversation resent).
  */
 import { runAgent, type AgentRun, type Arm, type LoopConfig, type ProviderAttempt } from '../../eval/runner/cat40/loop.ts';
 

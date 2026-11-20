@@ -93,15 +93,18 @@ gbrain was cheaper per task than fs but about 2.5 times slower per task.
 
 | Arm | $ per task | p50 seconds per cell | p95 |
 |---|---|---|---|
-| fs | 0.98 | 68.5 | 141.9 |
-| pg | 0.29 | n/a | n/a |
-| gbrain | 0.69 | 170.1 | 288.5 |
+| fs | 0.99 to 1.00 (corrected 2026-11-09: cache writes were under-counted; was 0.98) | 68.5 | 141.9 |
+| pg | 0.30 (corrected 2026-11-09: cache writes were under-counted; was 0.29) | n/a | n/a |
+| gbrain | 0.72 to 0.78 (corrected 2026-11-09: cache writes were under-counted; was 0.69) | 170.1 | 288.5 |
 
 These cover the three models, agent plus gbrain-internal dollars; judge cost is excluded.
 
+Correction, 2026-11-09: the Cat 40 runner priced gpt-6.1-sol agent turns and judge calls from usage that counted OpenAI's cache writes as plain input. OpenAI reports almost every uncached token of a gpt-6.1-sol prompt of 1,027 tokens or more as a cache write, at $2.50 per million against $2.00 for input, so the dollar figures in this table and in `holdout-stats.md`, and the ledger below, were low; the table is repriced from the committed rows, with each original beside it. OpenAI also bills a request over 272,000 input tokens at long-context rates (twice the input, cached-input and cache-write prices, 1.5 times output), which the runner didn't apply; the rows don't record which requests passed that line, so where a correction is a range, its low end prices no request at those rates and its high end prices every session that could have held one. gbrain is still cheaper per task than fs, and no score or verdict changes. ([corrections](../corrections.md#openai-cache-writes))
+Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
+
 **Setup.** The five gbrain slot builds cost $2.71 each in embeddings and took 83 to 90 minutes each on a 4-core machine. The pg setup embedding cost $2.57.
 
-**Hard ledger.** $2,000.29 committed of the $2,044 cap. Program authorization $4,600 (amendment A5).
+**Hard ledger.** $2,000.29 committed of the $2,044 cap (corrected 2026-11-09: cache writes were under-counted, so this is low: 1% to 2% from the committed held-out rows, plus an unknown amount from the calibration and freeze-check rounds, whose rows aren't committed). The ledger's own booking stayed under the cap, but true provider spend was higher and may have passed it. Program authorization $4,600 (amendment A5).
 
 ## Reproduce and inspect
 
@@ -124,6 +127,7 @@ The output is committed as [holdout-stats.md](2026-10-07-model-ladder-hard/holdo
 
 ## Changelog
 
+- 2026-11-09: The cost table now counts OpenAI cache writes for gpt-6.1-sol and, as the high end of a range, OpenAI's long-context rates above 272,000 input tokens, with each original beside its corrected value, and the ledger line carries a note ([corrections](../corrections.md#openai-cache-writes)).
 - 2026-10-07: first version.
 - 2026-10-07: caveat added: the gbrain arm ran without reranking (stale Voyage endpoint in restored slots); harness fixed.
 - 2026-10-08: development-world measurement of the reranker's effect added to the caveat (+2 of 50 tasks, within noise).

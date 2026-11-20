@@ -1,0 +1,408 @@
+{
+  "schema": "engine-bench.lme-recall/1",
+  "started_at": "2026-11-17T15:35:10.844Z",
+  "finished_at": "2026-11-17T15:44:17.983Z",
+  "gbrain": {
+    "version": "0.60.735.0",
+    "overlay": {
+      "requested": "gbrain@v0.60.735.0",
+      "ref": "v0.60.735.0",
+      "commit": "dbf3d9c9456d331d59221a6e4735b46db8dcf32e",
+      "tree": "4b7d89c4d156283d68563f841f69db383c2458a7",
+      "version": "0.60.735.0",
+      "checkout_dirty": false,
+      "verified": {
+        "copy_tree": "4b7d89c4d156283d68563f841f69db383c2458a7",
+        "tree_matches": true,
+        "symlinks_under_src": 0,
+        "dir_is_realpath": true,
+        "cli_version": "0.60.735.0",
+        "cli_version_matches": true
+      },
+      "copied_not_symlinked": true
+    }
+  },
+  "dataset": {
+    "file": "longmemeval_s_cleaned.json",
+    "sha256": "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442",
+    "matches_published_sha256": true,
+    "total_questions": 500,
+    "selected": 102,
+    "abstention_selected": 6,
+    "stratify": 17,
+    "limit": null,
+    "seed": 42,
+    "question_ids": [
+      "c960da58",
+      "c8c3f81d",
+      "0862e8bf",
+      "d52b4f67",
+      "86b68151",
+      "577d4d32",
+      "15745da0",
+      "bc8a6e93",
+      "ccb36322",
+      "4fd1909e",
+      "545bd2b5",
+      "76d63226",
+      "c14c00dd",
+      "3d86fd0a",
+      "0862e8bf_abs",
+      "bc8a6e93_abs",
+      "19b5f2b3_abs",
+      "aae3761f",
+      "46a3abf7",
+      "gpt4_15e38248",
+      "80ec1f4f",
+      "gpt4_2ba83207",
+      "9d25d4e0",
+      "d851d5ba",
+      "c2ac3c61",
+      "bf659f65",
+      "gpt4_372c3eed",
+      "60bf93ed_abs",
+      "06878be2",
+      "35a27287",
+      "32260d93",
+      "195a1a1b",
+      "afdc33df",
+      "6b7dfb22",
+      "1a1907b4",
+      "09d032c9",
+      "38146c39",
+      "95228167",
+      "505af2f5",
+      "75f70248",
+      "d6233ab6",
+      "b6025781",
+      "a89d7624",
+      "1d4e3b97",
+      "0a34ad58",
+      "60036106",
+      "9ee3ecd6",
+      "ef9cf60a",
+      "a3332713",
+      "21d02d0d",
+      "09ba9854_abs",
+      "71017276",
+      "gpt4_1d4ab0c9",
+      "gpt4_18c2b244",
+      "gpt4_7a0daae1",
+      "2ebe6c90",
+      "370a8ff4",
+      "eac54adc",
+      "gpt4_85da3956",
+      "gpt4_68e94287",
+      "gpt4_e061b84g",
+      "gpt4_2655b836",
+      "08f4fc43",
+      "f0853d11",
+      "b9cfe692",
+      "b29f3365",
+      "gpt4_fe651585",
+      "gpt4_93159ced_abs",
+      "6aeb4375",
+      "71315a70",
+      "07741c44",
+      "b6019101",
+      "45dc21b6",
+      "72e3ee87",
+      "01493427",
+      "db467c8c",
+      "7a87bd0c",
+      "22d2cb42",
+      "0e4e4c46",
+      "4b24c848",
+      "f685340e",
+      "69fee5aa",
+      "10e09553",
+      "5c40ec5b",
+      "0977f2af",
+      "4c36ccef",
+      "7e00a6cb",
+      "f523d9fe",
+      "1d4da289",
+      "70b3e69b",
+      "e8a79c70",
+      "d596882b",
+      "e3fc4d6e",
+      "352ab8bd",
+      "7a8d0b71",
+      "a40e080f",
+      "8b9d4367",
+      "4baee567",
+      "561fabcd",
+      "28bcfaac",
+      "c7cf7dfd",
+      "778164c6"
+    ]
+  },
+  "shard": {
+    "worker_id": 0,
+    "total_workers": 1,
+    "questions": 102
+  },
+  "ndjson": "/home/user/.capy/work/lme/out2/dry100.ndjson",
+  "resumed_rows": 0,
+  "run_config_hashes": {
+    "pglite": "9b6317acda01e5c16330f92eba6f63b2803b8463d6e8e68a20b44418c4e45609",
+    "postgres": "5c34565c493dca730656d7fbfbc0dddf7b8e8422ec20dfc7b333c28aee7419e9",
+    "rust": "91a836e0529aba330a6a9d83e7263b95316339259eaf57dbedfd566a11c342e5"
+  },
+  "top_k": 5,
+  "arms": [
+    "keyword",
+    "vector",
+    "hybrid"
+  ],
+  "search_config": {
+    "search.mode": "balanced",
+    "search.reranker.enabled": "false",
+    "search.autocut": "false"
+  },
+  "embedder": {
+    "mode": "cache",
+    "model": "voyage:voyage-4",
+    "dimensions": 1024,
+    "cache_path": "/home/user/.capy/work/lme/cache/embed-cache-voyage_voyage-4@1024.sqlite",
+    "plumbing_only": false,
+    "note": "Vectors came from the content-addressed cache only; a miss stops the run and no provider was called."
+  },
+  "network": "every HTTP(S) request to a non-loopback host was refused during the run",
+  "engines": [
+    {
+      "kind": "pglite",
+      "status": "ran",
+      "store_strategy": "copy of a store initialized once",
+      "n_questions": 102,
+      "n_errors": 0,
+      "errors": [],
+      "recall": {
+        "keyword": {
+          "recall_all_at_5": 0.10416666666666667,
+          "recall_any_at_5": 0.1875,
+          "n_scored": 96
+        },
+        "vector": {
+          "recall_all_at_5": 0.9895833333333334,
+          "recall_any_at_5": 0.9895833333333334,
+          "n_scored": 96
+        },
+        "hybrid": {
+          "recall_all_at_5": 0.9791666666666666,
+          "recall_any_at_5": 0.9895833333333334,
+          "n_scored": 96
+        }
+      },
+      "timing_ms": {
+        "total": {
+          "mean": 3169.9,
+          "p50": 3124,
+          "p90": 3623.5,
+          "max": 3847.9
+        },
+        "open": {
+          "mean": 672.9,
+          "p50": 665.5
+        },
+        "import": {
+          "mean": 2275.4,
+          "p50": 2243.5,
+          "p90": 2630.8
+        },
+        "search_by_arm": {
+          "keyword": {
+            "mean": 11.5,
+            "p50": 11
+          },
+          "vector": {
+            "mean": 14.2,
+            "p50": 13.6
+          },
+          "hybrid": {
+            "mean": 121.1,
+            "p50": 116.7
+          }
+        }
+      },
+      "projected_full_run_minutes": 26.4
+    },
+    {
+      "kind": "postgres",
+      "status": "ran",
+      "store_strategy": "CREATE DATABASE ... TEMPLATE of a store initialized once (on the harness admin connection, not the engine)",
+      "n_questions": 102,
+      "n_errors": 0,
+      "errors": [],
+      "recall": {
+        "keyword": {
+          "recall_all_at_5": 0.10416666666666667,
+          "recall_any_at_5": 0.1875,
+          "n_scored": 96
+        },
+        "vector": {
+          "recall_all_at_5": 0.9895833333333334,
+          "recall_any_at_5": 0.9895833333333334,
+          "n_scored": 96
+        },
+        "hybrid": {
+          "recall_all_at_5": 0.9791666666666666,
+          "recall_any_at_5": 0.9895833333333334,
+          "n_scored": 96
+        }
+      },
+      "timing_ms": {
+        "total": {
+          "mean": 2114.2,
+          "p50": 2081.2,
+          "p90": 2324.6,
+          "max": 2855.2
+        },
+        "open": {
+          "mean": 440.3,
+          "p50": 445.3
+        },
+        "import": {
+          "mean": 1510.7,
+          "p50": 1477.1,
+          "p90": 1715.3
+        },
+        "search_by_arm": {
+          "keyword": {
+            "mean": 6.3,
+            "p50": 5.9
+          },
+          "vector": {
+            "mean": 12,
+            "p50": 11.4
+          },
+          "hybrid": {
+            "mean": 80,
+            "p50": 78.1
+          }
+        }
+      },
+      "projected_full_run_minutes": 17.6
+    },
+    {
+      "kind": "rust",
+      "status": "refused",
+      "reason": "rust_engine_not_in_build",
+      "message": "gbrain 0.60.735.0 has no Rust engine (src/core/rust-engine is missing), so the rust arm cannot run. Point --gbrain at a build that carries it.",
+      "n_questions": 0,
+      "n_errors": 0,
+      "errors": [],
+      "recall": {}
+    }
+  ],
+  "agreement": [
+    {
+      "arm": "keyword",
+      "engines": [
+        "pglite",
+        "postgres"
+      ],
+      "n_questions": 102,
+      "identical_top5_share": 1,
+      "identical_top5_set_share": 1
+    },
+    {
+      "arm": "vector",
+      "engines": [
+        "pglite",
+        "postgres"
+      ],
+      "n_questions": 102,
+      "identical_top5_share": 1,
+      "identical_top5_set_share": 1
+    },
+    {
+      "arm": "hybrid",
+      "engines": [
+        "pglite",
+        "postgres"
+      ],
+      "n_questions": 102,
+      "identical_top5_share": 1,
+      "identical_top5_set_share": 1
+    }
+  ],
+  "bootstrap": {
+    "seed": 20261117,
+    "draws": 10000
+  },
+  "comparisons": [
+    {
+      "arm": "keyword",
+      "a": "pglite",
+      "b": "postgres",
+      "n_questions": 102,
+      "excluded_errors": [],
+      "recall_all_delta": {
+        "n_pairs": 96,
+        "mean_a": 0.10416666666666667,
+        "mean_b": 0.10416666666666667,
+        "delta": 0,
+        "ci95": [
+          0,
+          0
+        ],
+        "p_two_sided": 1,
+        "wins_b": 0,
+        "losses_b": 0,
+        "mcnemar_p": 1
+      },
+      "identical_top5_ordered": 1,
+      "identical_top5_set": 1,
+      "n_differences": 0
+    },
+    {
+      "arm": "vector",
+      "a": "pglite",
+      "b": "postgres",
+      "n_questions": 102,
+      "excluded_errors": [],
+      "recall_all_delta": {
+        "n_pairs": 96,
+        "mean_a": 0.9895833333333334,
+        "mean_b": 0.9895833333333334,
+        "delta": 0,
+        "ci95": [
+          0,
+          0
+        ],
+        "p_two_sided": 1,
+        "wins_b": 0,
+        "losses_b": 0,
+        "mcnemar_p": 1
+      },
+      "identical_top5_ordered": 1,
+      "identical_top5_set": 1,
+      "n_differences": 0
+    },
+    {
+      "arm": "hybrid",
+      "a": "pglite",
+      "b": "postgres",
+      "n_questions": 102,
+      "excluded_errors": [],
+      "recall_all_delta": {
+        "n_pairs": 96,
+        "mean_a": 0.9791666666666666,
+        "mean_b": 0.9791666666666666,
+        "delta": 0,
+        "ci95": [
+          0,
+          0
+        ],
+        "p_two_sided": 1,
+        "wins_b": 0,
+        "losses_b": 0,
+        "mcnemar_p": 1
+      },
+      "identical_top5_ordered": 1,
+      "identical_top5_set": 1,
+      "n_differences": 0
+    }
+  ]
+}

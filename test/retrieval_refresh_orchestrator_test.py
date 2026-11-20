@@ -20,6 +20,10 @@ SUMMARY_SPEC = importlib.util.spec_from_file_location(
     "summary", Path(__file__).resolve().parents[1] / "scripts/summarize-retrieval-refresh.py")
 SUMMARY = importlib.util.module_from_spec(SUMMARY_SPEC)
 SUMMARY_SPEC.loader.exec_module(SUMMARY)
+LINKS_SPEC = importlib.util.spec_from_file_location(
+    "check_links", Path(__file__).resolve().parents[1] / "scripts/check-links.py")
+LINKS = importlib.util.module_from_spec(LINKS_SPEC)
+LINKS_SPEC.loader.exec_module(LINKS)
 
 
 def observation(identifier, keyword=False, reranker=False):
@@ -452,6 +456,39 @@ class ConcurrentMatrix(unittest.TestCase):
             self.assertNotEqual(code, 0)
             self.assertIn("--jobs", stderr)
         self.assertFalse(self.output.exists())
+
+
+class ChangelogFragmentLinks(unittest.TestCase):
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.root = Path(tmp.name) / "repo"
+        (self.root / "docs").mkdir(parents=True)
+        (self.root / "docs/page.md").write_text("# Page\n")
+        (self.root / "changelog.d").mkdir()
+        root = patch.object(LINKS, "ROOT", self.root)
+        root.start()
+        self.addCleanup(root.stop)
+
+    def errors(self, name, text):
+        (self.root / name).write_text(text)
+        return LINKS.check_local([name])[0]
+
+    def test_fragment_links_resolve_from_the_repository_root_where_the_release_puts_them(self):
+        self.assertEqual(self.errors("changelog.d/root.md", "See [page](docs/page.md).\n"), [])
+        self.assertEqual(self.errors("changelog.d/up.md", "See [page](../docs/page.md).\n"),
+                         ["changelog.d/up.md: ../docs/page.md: missing local target"])
+
+    def test_other_files_resolve_from_their_own_folder(self):
+        self.assertEqual(self.errors("changelog.d/README.md", "See [page](../docs/page.md).\n"), [])
+        self.assertEqual(self.errors("docs/other.md", "See [page](page.md).\n"), [])
+        self.assertEqual(self.errors("docs/wrong.md", "See [page](docs/page.md).\n"),
+                         ["docs/wrong.md: docs/page.md: missing local target"])
+
+    def test_html_href_links_are_checked_like_markdown_links(self):
+        self.assertEqual(self.errors("docs/html.md", '<a href="page.md">page</a>\n'), [])
+        self.assertEqual(self.errors("docs/bad.md", '<a href="missing.md">x</a>\n'),
+                         ["docs/bad.md: missing.md: missing local target"])
 
 
 if __name__ == "__main__":

@@ -1,0 +1,351 @@
+{
+ "schema_version": 1,
+ "reviewed": "2026-11-17 by the agent that ran this baseline (Capy), an independent reader that did not write the gbrain review, with the original rubric and the gbrain rerun review.json as the precedent for borderline cases; not reviewed by a person",
+ "rubric": "docs/benchmarks/2026-10-04-auto-chronicle-lift-preregistration.md, metric 2, applied as docs/benchmarks/2026-10-04-auto-chronicle-rerun/review.json applied it: a quarter result or other past change placed on the meeting day without a reporting verb is false (that review's mtg-0006 case), the same fact reported, confirmed or flagged on that day is supported; a plan written as done is false. Premature events are classified mechanically and are not listed here.",
+ "events": {
+  "plain-a/conversations/slack-deal-flow-2026-04-15/1": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-a/conversations/slack-deal-flow-2026-04-15/11": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-a/conversations/slack-deal-flow-2026-04-17/10": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-a/conversations/slack-deal-flow-2026-04-17/15": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-a/conversations/slack-halfway-partners-2026-04-14/17": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-a/conversations/slack-halfway-partners-2026-04-14/18": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-a/conversations/slack-halfway-partners-2026-04-15/16": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-a/conversations/slack-halfway-partners-2026-04-15/17": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-a/conversations/slack-halfway-partners-2026-04-16/14": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-a/conversations/slack-halfway-partners-2026-04-17/11": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-a/conversations/slack-halfway-partners-2026-04-17/13": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-a/conversations/slack-halfway-partners-2026-04-17/14": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-a/conversations/slack-halfway-partners-2026-04-17/8": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-a/conversations/slack-ops-2026-04-14/6": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-a/conversations/slack-ops-2026-04-15/6": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-a/conversations/slack-ops-2026-04-16/17": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-a/conversations/slack-ops-2026-04-16/2": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-a/conversations/slack-ops-2026-04-16/3": {
+   "class": "supported",
+   "note": "a message on that channel-day states it (the message is one of the corpus's planted prompt-injection fixtures; the event records it as a claim Bill made)"
+  },
+  "plain-a/conversations/slack-ops-2026-04-16/8": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-a/conversations/slack-ops-2026-04-17/15": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-a/conversations/slack-random-2026-04-14/2": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-a/conversations/slack-random-2026-04-15/3": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-a/conversations/slack-random-2026-04-15/6": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-a/conversations/slack-random-2026-04-16/8": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-a/conversations/slack-random-2026-04-17/1": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-a/meetings/mtg-0000/10": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, committed, reported or held on that day"
+  },
+  "plain-a/meetings/mtg-0000/12": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, committed, reported or held on that day"
+  },
+  "plain-a/meetings/mtg-0000/2": {
+   "class": "false",
+   "note": "misdated: a quarter result (Q1 ARR close) placed on the meeting day, with no reporting verb"
+  },
+  "plain-a/meetings/mtg-0000/3": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, committed, reported or held on that day"
+  },
+  "plain-a/meetings/mtg-0000/4": {
+   "class": "false",
+   "note": "misdated: a change over the quarter (CAC payback improved) placed on the meeting day, with no reporting verb"
+  },
+  "plain-a/meetings/mtg-0000/5": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, committed, reported or held on that day"
+  },
+  "plain-a/meetings/mtg-0000/6": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, committed, reported or held on that day"
+  },
+  "plain-a/meetings/mtg-0000/7": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, committed, reported or held on that day"
+  },
+  "plain-a/meetings/mtg-0000/8": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, committed, reported or held on that day"
+  },
+  "plain-a/meetings/mtg-0000/9": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, committed, reported or held on that day"
+  },
+  "plain-a/meetings/mtg-0005/10": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, committed, reported or held on that day"
+  },
+  "plain-a/meetings/mtg-0005/11": {
+   "class": "false",
+   "note": "plan written as done: the action item says to schedule a follow-up; the event says it was scheduled (borderline)"
+  },
+  "plain-a/meetings/mtg-0005/12": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, committed, reported or held on that day"
+  },
+  "plain-a/meetings/mtg-0005/2": {
+   "class": "false",
+   "note": "misdated: a quarter result (Q1 revenue came in) placed on the meeting day, with no reporting verb"
+  },
+  "plain-a/meetings/mtg-0005/3": {
+   "class": "false",
+   "note": "misdated: a past occurrence (pilots converted) the page does not date, placed on the meeting day"
+  },
+  "plain-a/meetings/mtg-0005/4": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, committed, reported or held on that day"
+  },
+  "plain-a/meetings/mtg-0005/5": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, committed, reported or held on that day"
+  },
+  "plain-a/meetings/mtg-0005/9": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, committed, reported or held on that day"
+  },
+  "plain-b/conversations/slack-deal-flow-2026-04-15/10": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-b/conversations/slack-deal-flow-2026-04-15/11": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-b/conversations/slack-deal-flow-2026-04-17/11": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-b/conversations/slack-deal-flow-2026-04-17/2": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-b/conversations/slack-halfway-partners-2026-04-14/2": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-b/conversations/slack-halfway-partners-2026-04-14/3": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-b/conversations/slack-halfway-partners-2026-04-15/18": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-b/conversations/slack-halfway-partners-2026-04-15/3": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-b/conversations/slack-halfway-partners-2026-04-16/17": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-b/conversations/slack-halfway-partners-2026-04-17/14": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-b/conversations/slack-halfway-partners-2026-04-17/2": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-b/conversations/slack-halfway-partners-2026-04-17/3": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-b/conversations/slack-ops-2026-04-13/3": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-b/conversations/slack-ops-2026-04-15/1": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-b/conversations/slack-ops-2026-04-16/1": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-b/conversations/slack-ops-2026-04-16/4": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-b/conversations/slack-ops-2026-04-16/7": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-b/conversations/slack-ops-2026-04-16/8": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-b/conversations/slack-ops-2026-04-17/12": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-b/conversations/slack-ops-2026-04-17/6": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-b/conversations/slack-random-2026-04-14/7": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-b/conversations/slack-random-2026-04-15/17": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-b/conversations/slack-random-2026-04-15/4": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-b/conversations/slack-random-2026-04-16/5": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-b/conversations/slack-random-2026-04-16/7": {
+   "class": "supported",
+   "note": "a message on that channel-day states it"
+  },
+  "plain-b/meetings/mtg-0000/10": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, committed, reported or held on that day"
+  },
+  "plain-b/meetings/mtg-0000/2": {
+   "class": "false",
+   "note": "misdated: a quarter result (Q1 ARR close) placed on the meeting day, with no reporting verb"
+  },
+  "plain-b/meetings/mtg-0000/3": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, committed, reported or held on that day"
+  },
+  "plain-b/meetings/mtg-0000/4": {
+   "class": "false",
+   "note": "misdated: a change over the quarter (CAC payback improved) placed on the meeting day, with no reporting verb"
+  },
+  "plain-b/meetings/mtg-0000/5": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, committed, reported or held on that day"
+  },
+  "plain-b/meetings/mtg-0000/6": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, committed, reported or held on that day"
+  },
+  "plain-b/meetings/mtg-0000/7": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, committed, reported or held on that day"
+  },
+  "plain-b/meetings/mtg-0000/8": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, committed, reported or held on that day"
+  },
+  "plain-b/meetings/mtg-0000/9": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, committed, reported or held on that day"
+  },
+  "plain-b/meetings/mtg-0002/2": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, committed, reported or held on that day"
+  },
+  "plain-b/meetings/mtg-0003/4": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, committed, reported or held on that day"
+  },
+  "plain-b/meetings/mtg-0003/5": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, committed, reported or held on that day"
+  },
+  "plain-b/meetings/mtg-0003/6": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, committed, reported or held on that day"
+  },
+  "plain-b/meetings/mtg-0003/7": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, committed, reported or held on that day"
+  },
+  "plain-b/meetings/mtg-0005/2": {
+   "class": "false",
+   "note": "misdated: a quarter result (Q1 revenue came in) placed on the meeting day, with no reporting verb"
+  },
+  "plain-b/meetings/mtg-0005/3": {
+   "class": "false",
+   "note": "misdated: a past occurrence (pilots converted) the page does not date, placed on the meeting day"
+  },
+  "plain-b/meetings/mtg-0005/4": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, committed, reported or held on that day"
+  },
+  "plain-b/meetings/mtg-0005/5": {
+   "class": "supported",
+   "note": "the page states it was said, decided, agreed, committed, reported or held on that day"
+  }
+ }
+}

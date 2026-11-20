@@ -1,0 +1,204 @@
+{
+ "6ce7195b4 (second run)": {
+  "gbrain_version": "0.60.733.0",
+  "one_hop_by_split": {
+   "one-hop-template": {
+    "off": {
+     "n_scored": 435,
+     "precision_at_5": 0.20551724137931124,
+     "recall_at_5": 0.7126436781609196,
+     "hit_at_1": 0.36551724137931035,
+     "hit_at_5": 0.7310344827586207,
+     "relational_fired_queries": 0,
+     "mean_returned_chunks": 4.531034482758621,
+     "mean_distinct_pages": 4.179310344827586
+    },
+    "on": {
+     "n_scored": 435,
+     "precision_at_5": 0.22068965517241493,
+     "recall_at_5": 0.7614942528735633,
+     "hit_at_1": 0.4896551724137931,
+     "hit_at_5": 0.7862068965517242,
+     "relational_fired_queries": 201,
+     "mean_returned_chunks": 4.620689655172414,
+     "mean_distinct_pages": 4.310344827586207
+    },
+    "paired": {
+     "precision_at_5": {
+      "n": 435,
+      "gains": 33,
+      "losses": 0,
+      "ties": 402
+     },
+     "recall_at_5": {
+      "n": 435,
+      "gains": 33,
+      "losses": 0,
+      "ties": 402
+     },
+     "hit_at_1": {
+      "n": 435,
+      "gains": 60,
+      "losses": 6,
+      "ties": 369
+     },
+     "hit_at_5": {
+      "n": 435,
+      "gains": 24,
+      "losses": 0,
+      "ties": 411
+     }
+    }
+   },
+   "one-hop-paraphrase": {
+    "off": {
+     "n_scored": 435,
+     "precision_at_5": 0.10942528735632187,
+     "recall_at_5": 0.3804597701149426,
+     "hit_at_1": 0.034482758620689655,
+     "hit_at_5": 0.4068965517241379,
+     "relational_fired_queries": 0,
+     "mean_returned_chunks": 4.613793103448276,
+     "mean_distinct_pages": 4.537931034482758
+    },
+    "on": {
+     "n_scored": 435,
+     "precision_at_5": 0.14896551724137966,
+     "recall_at_5": 0.5114942528735632,
+     "hit_at_1": 0.07816091954022988,
+     "hit_at_5": 0.5448275862068965,
+     "relational_fired_queries": 123,
+     "mean_returned_chunks": 4.6689655172413795,
+     "mean_distinct_pages": 4.5793103448275865
+    },
+    "paired": {
+     "precision_at_5": {
+      "n": 435,
+      "gains": 69,
+      "losses": 0,
+      "ties": 366
+     },
+     "recall_at_5": {
+      "n": 435,
+      "gains": 69,
+      "losses": 0,
+      "ties": 366
+     },
+     "hit_at_1": {
+      "n": 435,
+      "gains": 19,
+      "losses": 0,
+      "ties": 416
+     },
+     "hit_at_5": {
+      "n": 435,
+      "gains": 60,
+      "losses": 0,
+      "ties": 375
+     }
+    }
+   }
+  }
+ },
+ "77cf8e111": {
+  "gbrain_version": "0.60.169.0",
+  "one_hop_by_split": {
+   "one-hop-template": {
+    "off": {
+     "n_scored": 435,
+     "precision_at_5": 0.20367816091954116,
+     "recall_at_5": 0.718735632183908,
+     "hit_at_1": 0.4068965517241379,
+     "hit_at_5": 0.7494252873563219,
+     "relational_fired_queries": 0,
+     "mean_returned_chunks": 4.641379310344828,
+     "mean_distinct_pages": 4.289655172413793
+    },
+    "on": {
+     "n_scored": 435,
+     "precision_at_5": 0.22022988505747243,
+     "recall_at_5": 0.7710344827586207,
+     "hit_at_1": 0.5402298850574713,
+     "hit_at_5": 0.8045977011494253,
+     "relational_fired_queries": 201,
+     "mean_returned_chunks": 4.710344827586207,
+     "mean_distinct_pages": 4.4
+    },
+    "paired": {
+     "precision_at_5": {
+      "n": 435,
+      "gains": 33,
+      "losses": 0,
+      "ties": 402
+     },
+     "recall_at_5": {
+      "n": 435,
+      "gains": 33,
+      "losses": 0,
+      "ties": 402
+     },
+     "hit_at_1": {
+      "n": 435,
+      "gains": 64,
+      "losses": 6,
+      "ties": 365
+     },
+     "hit_at_5": {
+      "n": 435,
+      "gains": 24,
+      "losses": 0,
+      "ties": 411
+     }
+    }
+   },
+   "one-hop-paraphrase": {
+    "off": {
+     "n_scored": 435,
+     "precision_at_5": 0.1328735632183912,
+     "recall_at_5": 0.47593869731800764,
+     "hit_at_1": 0.06896551724137931,
+     "hit_at_5": 0.5517241379310345,
+     "relational_fired_queries": 0,
+     "mean_returned_chunks": 4.820689655172414,
+     "mean_distinct_pages": 4.744827586206896
+    },
+    "on": {
+     "n_scored": 435,
+     "precision_at_5": 0.16045977011494308,
+     "recall_at_5": 0.5719157088122606,
+     "hit_at_1": 0.2367816091954023,
+     "hit_at_5": 0.632183908045977,
+     "relational_fired_queries": 123,
+     "mean_returned_chunks": 4.86896551724138,
+     "mean_distinct_pages": 4.793103448275862
+    },
+    "paired": {
+     "precision_at_5": {
+      "n": 435,
+      "gains": 57,
+      "losses": 0,
+      "ties": 378
+     },
+     "recall_at_5": {
+      "n": 435,
+      "gains": 57,
+      "losses": 0,
+      "ties": 378
+     },
+     "hit_at_1": {
+      "n": 435,
+      "gains": 73,
+      "losses": 0,
+      "ties": 362
+     },
+     "hit_at_5": {
+      "n": 435,
+      "gains": 35,
+      "losses": 0,
+      "ties": 400
+     }
+    }
+   }
+  }
+ }
+}

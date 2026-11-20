@@ -320,7 +320,7 @@ describe('live-recall scoring and refusals', () => {
       };
       const batch2 = freezeSummary(fixtureText, fixtureQuestions, 'batch2');
       expect(await run(batch2, 'batch1')).toBe('LR_FREEZE_MISMATCH');
-      expect(await run({ ...batch2, protocol: 'batch3' })).toBe('LR_FREEZE_MISMATCH');
+      expect(await run({ ...batch2, protocol: 'batch9' })).toBe('LR_FREEZE_MISMATCH');
       expect(await run(batch2)).toBe('LR_NO_DATABASE_URL');
       expect(await run(batch2, 'batch2')).toBe('LR_NO_DATABASE_URL');
       const { protocol: _p, ...legacy } = freezeSummary(fixtureText, fixtureQuestions);

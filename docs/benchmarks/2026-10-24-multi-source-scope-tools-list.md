@@ -131,13 +131,17 @@ bun $D/summarize.ts
 
 `summarize.ts` re-grades every record from its raw tool calls and answer. Two expect lists were widened after the run, because the grader missed correct answers: "mondays" for R13 and H02, and "3 hours and 40" for R21. The `grade` field stored in each record is the grade at run time. Machine paths in the receipts are written as `<work>/...` (the scratch root that held the gbrain checkouts, brains and ledger). `results/runs.jsonl` records each run's code identity, `tools/list` sizes and ledger receipt.
 
-**Time and cost.** About 12 minutes for the scope suite and 6 for the starter suite at concurrency 6. Model spend priced from provider usage was $20.76 over 964 counted trials:
+**Time and cost.** About 12 minutes for the scope suite and 6 for the starter suite at concurrency 6. Model spend priced from provider usage was $20.76 over 964 counted trials (corrected 2026-11-09: cache writes were under-counted, so this is about 3% low):
 
 | Model | Spend |
 |---|---|
 | Opus | $8.45 |
 | Sonnet | $5.87 |
-| gpt-6.1-sol | $1.72 |
-| gpt-6-astra | $4.72 |
+| gpt-6.1-sol | $1.72 (corrected 2026-11-09: cache writes were under-counted, so this is about 12% low) |
+| gpt-6-astra | $4.72 (corrected 2026-11-09: cache writes were under-counted, so this is about 11% low) |
+
+Correction, 2026-11-09: the agent loop priced each answer's recorded usage without OpenAI's cache-write count, which the trial records show as 0, so it charged gpt-6.1-sol's and gpt-6-astra's cache writes at the input rate. OpenAI reports almost every uncached token of a gpt-6.1-sol prompt of 1,027 tokens or more as a cache write, at $2.50 per million against $2.00 for input (gpt-6-astra's at $12.50 against $10), so both models' spend and cost per trial were low. They are repriced from the usage each trial record commits. The budget ledger priced cache writes, and on every run with nothing charged at its reservation it matches the repriced records to about a tenth of a cent, so the ledger total below is unchanged. No score, verdict or ranking changes. ([corrections](../corrections.md#openai-cache-writes))
+
+Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
 
 Smoke runs before the counted runs cost $0.60. The budget ledger recorded $31.59 in total. That includes about $9.8 charged at reservation for 10 gpt-6-astra requests that were in flight when the first astra attempt hit its budget guard. Their usage was not reported, so the ledger counts the worst case.

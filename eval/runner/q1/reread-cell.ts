@@ -1,5 +1,5 @@
 /**
- * Re-read one packed arm of a Q1, F6 or RS1 cell with another reader (the particle-1 add-on, GBEV-31 / GST-1153; RS1's
+ * Re-read one packed arm of a Q1, F6, RS1 or BG1 cell with another reader (the particle-1 add-on, GBEV-31 / GST-1153; RS1's
  * particle-1 re-reads, GST-1886): every frozen context the source cell's readers read (`runs/<cell id>/contexts.ndjson`)
  * is sent byte for byte to the new reader, and each answer is judged with the cell's canonical instrument, plus, on an
  * arm with a per-reader frontier plan (RS1), the new reader's frontier judge. Nothing is retrieved or packed again.
@@ -37,7 +37,9 @@
  * (definitions.ts frontierJudgesFor, RS1's map on its arms, under `<instrument>@<judge>`); no other frontier judge runs, and an OpenAI-compatible
  * judge is refused. Output:
  * `--out/cells/<arm cell id>.reread-<reader>/` with answers.ndjson and judgments.ndjson in Q1's record schemas, and
- * receipt.json. The proxy, cell token, placeholder keys and keyless/paid marker are calibration-cell.ts's.
+ * receipt.json. A BG1 re-read's receipt (and verify.json) also carries `dataset`, the corpus record its schedule was
+ * checked against, as BG1's cells write it into run-config.json, so BG1's verdict.ts checks it against the filled
+ * manifest. The proxy, cell token, placeholder keys and keyless/paid marker are calibration-cell.ts's.
  */
 import { randomUUID } from 'node:crypto';
 import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -49,15 +51,16 @@ import { instrumentFor, type Instrument } from '../memory-qa/instruments.ts';
 import { DEFAULT_MAX_ATTEMPTS, type Outcome } from '../memory-qa/outcomes.ts';
 import { ChatClient, hasChatRoute, judgeAnswer, type ChatLike } from '../memory-qa/qa-v2.ts';
 import { answerId, answerRecord, judgmentKey, readRecords, RecordLog, sha256, type AnswerRecord } from '../memory-qa/records.ts';
-import { DEFAULT_ROUTE_CAPS, MeteringProxy, usageSplit } from '../metering-proxy.ts';
+import { DEFAULT_ROUTE_CAPS, keylessKeys, keylessUpstream, MeteringProxy, usageSplit } from '../metering-proxy.ts';
 import { DEFAULT_ROUTE_CLASSES } from '../shootout-cell.ts';
 import type { PackedContext } from '../systems/render-v2.ts';
 import { claimOut, keylessUpstreamArg } from './calibration-cell.ts';
-import { answerAppender, custodyGate, devOnly, findCell, gatherStaging, JUDGED, latestBy, metering, needsCustody, onSlot, readerMaxTokens, readPrompt, refuseCompatJudges, requiredJudges, scheduledQuestions,
+import { answerAppender, bg1GeminiKey, custodyGate, devOnly, findCell, gatherStaging, JUDGED, latestBy, metering, needsCustody, onSlot, readerMaxTokens, readPrompt, refuseCompatJudges, requiredJudges, scheduledQuestions,
   selectCellQuestions, type CellManifestId, type MeterLine, type StagedRetrieval } from './cell.ts';
-import { frontierJudgesFor, pinnedJudgeRouteCaps, policyKey, type ArmDefinition, type CellDefinition } from './cells/definitions.ts';
+import { frontierJudgesFor, isBg1Benchmark, pinnedJudgeRouteCaps, policyKey, type ArmDefinition, type CellDefinition } from './cells/definitions.ts';
 import { loadRS1Manifest } from './cells/rs1.ts';
 import { exitCodeOf, refuse, renderMessage, ScoreboardError } from './scoreboard-errors.ts';
+import { readBg1Manifest } from '../memory-qa/corpus.ts';
 
 export const REREAD_VERIFY_SCHEMA = 'gbrain-evals/q1-reread-verify/v1';
 export const REREAD_RECEIPT_SCHEMA = 'gbrain-evals/q1-reread-receipt/v1';
@@ -86,6 +89,8 @@ export interface RereadVerify {
   };
   source_config_sha256: string | null;
   problems: string[];
+  /** BG1 only: the dataset the schedule was checked against, the corpus record BG1's cells write into run-config.json; the re-read receipt carries it for verdict.ts. */
+  dataset?: Corpus['source'];
 }
 
 const noContext = (outcome: string) => sha256(`no-context|${outcome}`);
@@ -119,7 +124,8 @@ export function readingConfig(text: string): string | null {
 export function verifySources(def: CellDefinition, arm: ArmDefinition, sources: string[], corpus: Corpus, reader: string): { verify: RereadVerify; plan: PlannedRead[] | null } {
   const problems: string[] = [];
   const counts = { contexts_checked: 0, contexts_matched: 0, scheduled_questions: 0, questions_with_context: 0, questions_without_context: 0, stored_answers_cross_checked: 0, published_answers: 0, contexts_not_read: 0 };
-  const verify: RereadVerify = { schema: REREAD_VERIFY_SCHEMA, ok: false, cell: def.id, arm: arm.id, arm_cell_id: arm.cell_id, reader, sources: [], counts, source_config_sha256: null, problems };
+  const verify: RereadVerify = { schema: REREAD_VERIFY_SCHEMA, ok: false, cell: def.id, arm: arm.id, arm_cell_id: arm.cell_id, reader, sources: [], counts, source_config_sha256: null, problems,
+    ...(isBg1Benchmark(def.benchmark) ? { dataset: corpus.source } : {}) };
   const contexts: FrozenContext[] = [];
   const configs = new Map<string, string>();
   const staged: AnswerRecord[] = [];
@@ -236,6 +242,8 @@ export function prepareReread(def: CellDefinition, arm: ArmDefinition, opts: Rer
   if (def.benchmark === 'beam-rs1' && (deps.corpus ? deps.corpus.source.revision === 'unfilled' : readRs1Manifest().manifest.status !== 'filled')) throw refuse({ code: 'PREFLIGHT_FAILED', message: `beam-rs1: the RS1 manifest is unfilled, so ${arm.cell_id} cannot be re-read`,
     why: 'a re-read is scored only against the filled manifest\'s pinned bytes, and verdict.ts checks the re-read receipt\'s dataset against it', fix: { next: 'ask_user', user_message: 'the custodian fills the RS1 manifest before any RS1 re-read' } });
   if (!hasChatRoute(opts.reader)) throw refuse({ code: 'USAGE', message: `reader ${opts.reader} has no chat route`, why: 'a re-read sends each frozen prompt to one provider:model reader', fix: { next: 'run', argv: [...FRONT, '--reader', 'particle:particle-1'] } });
+  if (def.benchmark === 'bg1' && (deps.corpus ? deps.corpus.source.revision === 'unfilled' : readBg1Manifest().manifest.status !== 'filled')) throw refuse({ code: 'PREFLIGHT_FAILED', message: `bg1: the BG1 manifest is unfilled, so ${arm.cell_id} cannot be re-read`,
+    why: 'a re-read is scored only against the filled manifest\'s pinned bytes, and BG1\'s verdict.ts checks every receipt\'s dataset against it', fix: { next: 'ask_user', user_message: 'the custodian fills the BG1 manifest before any BG1 re-read' } });
   if (!deps.corpus && needsCustody(def)) custodyGate(def, out, env, `q1 reread ${arm.cell_id} with ${opts.reader}`);
   const others = existsSync(join(out, 'cells')) ? readdirSync(join(out, 'cells')).sort().filter(d => d !== rereadCellId(arm.cell_id, opts.reader)) : [];
   if (others.length) throw refuse({ code: 'USAGE', message: `${out} already holds ${others.join(', ')}; give each arm and reader its own --out`,
@@ -244,7 +252,7 @@ export function prepareReread(def: CellDefinition, arm: ArmDefinition, opts: Rer
   claimOut(out, !!opts.keyless, 'reread');
   // RS1 kept cells load only the conversations the sources staged (one launch unit's); later slots may never have been minted.
   const staged = def.kept_units ? new Set(opts.sources.flatMap(s => [...gatherStaging(def.id, [dirname(dirname(resolve(s)))]).keys()])) : null;
-  const corpus = deps.corpus ?? loadCorpus(def.benchmark, undefined, staged ?? devOnly(def) ?? undefined);
+  const corpus = deps.corpus ?? loadCorpus(def.benchmark, undefined, staged ?? devOnly(def) ?? undefined, { keyless: !!opts.keyless });
   const { verify, plan } = verifySources(def, arm, opts.sources, corpus, opts.reader);
   const frozen = join(out, 'reread-source.json');
   const resuming = existsSync(frozen);
@@ -343,6 +351,7 @@ export async function runReread(p: PreparedReread, opts: { providerProxy?: strin
     instrument: { id: instrument.id, sha256: instrument.sha256, judge: instrument.canonical_judge },
     frontier: view ? { per_reader: true, judge_by_reader: { [reader]: view.judge }, instrument_ids: [view.instrument_id] } : null,
     verify: p.verify.counts,
+    ...(p.verify.dataset ? { dataset: p.verify.dataset } : {}),
     counts: { answers: all.length, answers_promised: plan.length, judgments: judgments.size, unjudged, outcomes, truncated: all.filter(a => a.truncated).length },
     per_reader_mean: { [reader]: mean(scores) },
     ...(view ? { per_reader_frontier_mean: { [reader]: mean(viewScores) } } : {}),
@@ -393,14 +402,13 @@ if (import.meta.main) {
       why: 'stage 1\'s $60 cap covers the dry-run campaign and its particle-1 re-reads together: the campaign is capped at $60 less the re-reads\' estimate, and the re-reads share one ledger capped at that estimate', fix: { next: 'run', user_message: `rerun with --ledger-cap-usd ${stage1.toFixed(2)} or less, on the one ledger every stage 1 re-read shares` } });
     const arm = rereadArm(def, armArg);
     const out = resolve(outArg);
+    const keys = keyless ? keylessKeys() : { ...process.env, ...(isBg1Benchmark(def.benchmark) ? { GEMINI_API_KEY: bg1GeminiKey() } : {}) };
     const prepared = prepareReread(def, arm, { sources, reader, out, manifest, keyless: !!keyless });
-    const placeholder = 'keyless-not-a-provider-key';
-    const keys = keyless ? { OPENAI_API_KEY: placeholder, ANTHROPIC_API_KEY: placeholder, VOYAGE_API_KEY: placeholder, PARTICLE_API_KEY: placeholder } : { ...process.env };
     const [cellToken, controlToken] = [randomUUID(), randomUUID()];
     Object.assign(process.env, { SHOOTOUT_CELL_TOKEN: cellToken, SHOOTOUT_PROXY_CONTROL_TOKEN: controlToken });
     const lease = openRereadLease({ runId, leaseUsd, ledgerPath: resolve(ledger), capUsd: ledgerCap });
     const usageLog = join(out, 'usage.ndjson');
-    const proxy = new MeteringProxy({ ...(keyless ? { upstream: { openai: keyless, anthropic: keyless, voyage: keyless, particle: `${keyless}/particle` } } : {}), cellToken, controlToken,
+    const proxy = new MeteringProxy({ ...(keyless ? { upstream: keylessUpstream(keyless) } : {}), cellToken, controlToken,
       policy: { lease, usageLog, env: keys, routeCaps: { caps: { ...DEFAULT_ROUTE_CAPS, ...pinnedJudgeRouteCaps([arm]) }, slots: { ...DEFAULT_ROUTE_CLASSES }, defaultClass: 'extraction' } } });
     proxy.start();
     try {

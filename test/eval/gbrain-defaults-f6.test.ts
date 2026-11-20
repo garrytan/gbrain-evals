@@ -198,6 +198,20 @@ result = {"ok": a["ok"], "passes": len(a["passes"]), "spent": a["spent_usd"], "c
     expect(p({ ...okRun, pages_skipped_unparsed: 2, pages_pending: 1 })).toEqual(['pages_pending=1', 'pages_skipped_unparsed=2']);
     expect(p({ ...okRun, no_pricing_models: ['m'] })).toEqual(["unpriced extraction models ['m']"]);
   });
+  test('each failed, declined and unparsed page is named with its cause', () => {
+    const p = (run: object) => f6(`result = shim.extraction_problems(${J(run)})`).ok;
+    expect(p({
+      ...okRun, pages_failed: 1, pages_skipped_unparsed: 1,
+      failed_pages: [{ slug: 'conversations/2026-04-10/src-1', error: 'the extraction model declined 1 window(s)' }],
+      declined_windows: [{ slug: 'conversations/2026-04-10/src-1', start: '2026-04-10T09:00:00Z', end: '2026-04-10T09:05:00Z', reason: 'refusal' }],
+      unparsed_pages: [{ slug: 'conversations/2026-04-11/src-2', cause: 'no line matched any conversation format' }],
+    })).toEqual([
+      'pages_failed=1', 'pages_skipped_unparsed=1',
+      'failed conversations/2026-04-10/src-1: the extraction model declined 1 window(s)',
+      'declined conversations/2026-04-10/src-1 2026-04-10T09:00:00Z..2026-04-10T09:05:00Z (refusal)',
+      'unparsed conversations/2026-04-11/src-2: no line matched any conversation format',
+    ]);
+  });
 });
 
 describe('F6 retrieval: fact rows first, mapped to their source session', () => {
@@ -257,11 +271,25 @@ result = {"build": {k: v for k, v in a.items() if k in ("ok", "recorded", "probl
     const r = build([first, retry]).ok;
     expect(r.passes).toBe(2);
     expect(r.stored).toBe(true);
-    expect(r.build).toEqual({ ok: false, recorded: true, problems: ["extraction status 'failed' (exit 0)", 'pages_failed=2', 'pages_skipped_unparsed=1'],
+    expect(r.build).toEqual({ ok: false, recorded: true, problems: ["extraction status 'failed' (exit 0)", 'pages_failed=2', 'pages_skipped_unparsed=1',
+      ...stopped(['content_filter', 'refusal']).map(p => `failed ${p.slug}: ${p.error}`)],
       last_pass: { status: 'failed', pages_failed: 2, pages_skipped_unparsed: 1, failed_reasons: { content_filter: 1, refusal: 1 } } });
     expect(build([{ ...ok, pages_skipped_unparsed: 3 }]).ok.build).toEqual({ ok: false, recorded: true, problems: ['pages_skipped_unparsed=3'],
       last_pass: { status: 'ok', pages_failed: 0, pages_skipped_unparsed: 3, failed_reasons: {} } });
     expect(build([ok]).ok.build).toEqual({ ok: true, recorded: false, problems: [], last_pass: { status: 'ok', pages_failed: 0, pages_skipped_unparsed: 0, failed_reasons: {} } });
+  });
+
+  test('record keeps the lines naming each safety-filter page and unparsed page, and still fails on a declined window', () => {
+    const unparsed = [{ slug: 'conversations/2026-04-11/src-9', cause: 'no line matched any conversation format' }];
+    const named = build([first, { ...retry, unparsed_pages: unparsed }]).ok.build;
+    expect(named.recorded).toBe(true);
+    expect(named.problems).toContain('unparsed conversations/2026-04-11/src-9: no line matched any conversation format');
+    expect(named.problems).toContain(`failed conversations/2026-04-10/src-0: ${stopped(['content_filter'])[0].error}`);
+    const declined = build([first, { ...retry, declined_windows: [{ slug: 'conversations/2026-04-10/src-0', start: 'a', end: 'b', reason: 'refusal' }] }]);
+    expect(declined.error).toMatchObject({ kind: 'product_error' });
+    expect(declined.error.message).toContain('declined conversations/2026-04-10/src-0 a..b (refusal)');
+    const r = f6(`result = [p for p in shim.extraction_problems(${J({ ...retry, unparsed_pages: unparsed })}) if p not in shim.recordable_problems(${J({ ...retry, unparsed_pages: unparsed })}, True)]`).ok;
+    expect(r).toEqual([]);
   });
 
   test('record still fails the realization on the cap, an unpriced model, a pass without JSON, other failure reasons, unlisted failures, a first-pass failed status and pending pages', () => {

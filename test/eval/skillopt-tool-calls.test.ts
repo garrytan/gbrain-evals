@@ -117,7 +117,11 @@ describe("Sol's 651 recorded calls from #304, replayed at the installed pin", ()
     return [{ tool: m[1]!, args }];
   });
 
-  /** Per pin: the refusal classes and successful reads the 651 calls give (a call whose arguments are not JSON reads other). */
+  /**
+   * Per pin: the refusal classes and successful reads the 651 calls give (a call whose arguments are not JSON reads other).
+   * A pin without a row must give the newest row's counts, so a re-pin that changes nothing here needs no new row; when
+   * gbrain changes the counts, add a row for the new pin naming the gbrain change.
+   */
   const EXPECTED: Record<string, { refused: Record<RefusalClass, number>; read: number }> = {
     // v0.60.549.0: the window refusal still read "context applies to grep".
     a131fb20ef4aafd017f0c6a6565ce5627dc46897: { refused: { 'multi-window-selector': 0, 'known-as-of-with-read-view': 169, 'hop-chain-with-depth': 38, other: 438 }, read: 6 },
@@ -125,13 +129,18 @@ describe("Sol's 651 recorded calls from #304, replayed at the installed pin", ()
     '311a83bbefb127118acb252fe827cb047126aa4d': { refused: { 'multi-window-selector': 436, 'known-as-of-with-read-view': 169, 'hop-chain-with-depth': 8, other: 2 }, read: 36 },
     // v0.60.557.0, the ceiling attempt's pin (plan decision S, as amended 2026-11-03): each refusal's text is now MCP's JSON error (gbrain#8458), and the classes are unchanged.
     '62637c96a5a5c2e9d55594f87a33d79c2f30b54f': { refused: { 'multi-window-selector': 436, 'known-as-of-with-read-view': 169, 'hop-chain-with-depth': 8, other: 2 }, read: 36 },
+    // v0.60.623.0: gbrain#8509 (v0.60.570.0) reads one window from several selectors, so the 436 multi-selector calls read.
+    d253ec0ff12ed370ed3a846cb7da0191639c4a9e: { refused: { 'multi-window-selector': 0, 'known-as-of-with-read-view': 169, 'hop-chain-with-depth': 8, other: 2 }, read: 472 },
+    // v0.60.733.0: gbrain#9134 (v0.60.671.0) sets aside the arguments a recorded-time read or a hop chain does not use, so the
+    // 8 hop chains read, and the 169 known_as_of calls now stop on the test brain's data instead: 164 at coverage_from (it
+    // records no belief history) and 5 at an instant still in the future (invalid_params), all classed other.
+    '6ce7195b44a034f85aec811f11fbf862db376f50': { refused: { 'multi-window-selector': 0, 'known-as-of-with-read-view': 0, 'hop-chain-with-depth': 0, other: 171 }, read: 480 },
   };
 
   test('every recorded get_page, traverse_graph and get_backlinks call, classified by the refusal text this pin returns', async () => {
     expect(recorded.length).toBe(651);
     expect(loadCorpora().pages.has(SLUG.traverse_graph!)).toBe(true);
     const pin = gbrainPin().split('#')[1]!;
-    expect(Object.keys(EXPECTED)).toContain(pin);
     const records = await withHermeticEnv('n15-sol-recorded-classes', async () => {
       const engine = await openBrain();
       try {
@@ -152,7 +161,7 @@ describe("Sol's 651 recorded calls from #304, replayed at the installed pin", ()
       }
     });
     const tally = tallyRefusals(records.map(r => [r]));
-    expect({ refused: tally.refused, read: tally.read }).toEqual(EXPECTED[pin]!);
+    expect({ refused: tally.refused, read: tally.read }).toEqual(EXPECTED[pin] ?? Object.values(EXPECTED).at(-1)!);
     expect(tally.calls).toBe(651);
   }, 120_000);
 });

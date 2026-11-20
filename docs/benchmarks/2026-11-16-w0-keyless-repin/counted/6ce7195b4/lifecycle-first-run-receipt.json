@@ -1,0 +1,357 @@
+{
+ "schema": "gbrain-evals/lifecycle-experiment@1",
+ "generated_at": "2026-11-16T22:10:50.683Z",
+ "cost_usd": 0,
+ "hermetic": {
+  "embedder": "local hash embedder (litellm recipe, 64 dims)",
+  "keys_stripped": [
+   "OPENAI_API_KEY",
+   "ANTHROPIC_API_KEY",
+   "VOYAGE_API_KEY"
+  ]
+ },
+ "evals": {
+  "head": "33758dde49084527987e9f9060ec2293e61d0a09",
+  "dirty_files": [
+   "M bun.lock",
+   " M package.json"
+  ]
+ },
+ "runtime": {
+  "bun": "1.4.4",
+  "platform": "linux-x64"
+ },
+ "builds": [
+  {
+   "label": "new",
+   "description": "6ce7195b44a034f85aec811f11fbf862db376f50",
+   "ref": "6ce7195b44a034f85aec811f11fbf862db376f50",
+   "dir": "eval/reports/lifecycle/builds/new",
+   "commit": "6ce7195b44a034f85aec811f11fbf862db376f50",
+   "tree": "8fc13f1ed648e8532e776aae508af973a2a61b67",
+   "version": "0.60.733.0",
+   "verified": {
+    "copy_tree": "8fc13f1ed648e8532e776aae508af973a2a61b67",
+    "tree_matches": true,
+    "symlinks_under_src": 0,
+    "dir_is_realpath": true,
+    "cli_version": "0.60.733.0",
+    "cli_version_matches": true
+   }
+  }
+ ],
+ "engines": [
+  "pglite",
+  "postgres"
+ ],
+ "interfaces": [
+  "cli",
+  "mcp-stdio",
+  "mcp-http"
+ ],
+ "cells": [
+  {
+   "build": "new",
+   "engine": "pglite",
+   "interface": "cli",
+   "started_at": "2026-11-16T22:10:45.105Z",
+   "duration_ms": 4703,
+   "operator": [
+    {
+     "step": "init",
+     "args": [
+      "init",
+      "--pglite",
+      "--path",
+      "eval/reports/lifecycle/2026-11-16T22-10-42-454Z/new-pglite-cli/gbrain-home/brain.pglite",
+      "--embedding-model",
+      "litellm:fake-embed",
+      "--embedding-dimensions",
+      "64"
+     ],
+     "code": 1,
+     "ms": 4697,
+     "tail": "Setting up local brain with PGLite (no server needed)...\n  Embedding: litellm:fake-embed (64d)\n  Reranker: disabled (no VOYAGE_API_KEY — enable later: export VOYAGE_API_KEY=… && gbrain config set search.reranker.enabled true)\n  Setting up brain schema (v317)...\n  v142: takes.embedding resized to vector(64); existing take vectors cleared\n  312 migration(s) applied\n[init] Migrations: 14 recorded as not needed on a new brain; 5 setup migration(s) pending (0.11.0, 0.14.0, 0.22.4, 0.28.0, 0.53.0). Finish setup: gbrain apply-migrations --yes --no-autopilot-install\nError [local_conflict]: The new content directory is inside another Git worktree. Choose a separate root or explicitly initialize Git here; setup will not claim its parent repository.\nFix: eval/reports/lifecycle/2026-11-16T22-10-42-454Z/new-pglite-cli/gbrain-home/.gbrain/content/1a291bab-b277-4b39-b8f3-e20a11439e2e/default is inside the Git worktree .. Pass --content-root a path outside any repository, or add --git so the content directory gets its own repository.\nDocs: https://github.com/garrytan/gbrain/blob/v0.60.733.0/docs/guides/error-codes.md#local_conflict",
+     "errors": [
+      "Error [local_conflict]: The new content directory is inside another Git worktree. Choose a separate root or explicitly initialize Git here; setup will not claim its parent repository.",
+      "Docs: https://github.com/garrytan/gbrain/blob/v0.60.733.0/docs/guides/error-codes.md#local_conflict"
+     ]
+    }
+   ],
+   "sync_exits": {},
+   "sessions": 0,
+   "fact_events": [],
+   "forget": {
+    "ok": false,
+    "fact_id": null
+   },
+   "checkpoints": {},
+   "outage": {
+    "sync_exit": null,
+    "refused_inputs": 0,
+    "text_persisted_during_outage": [],
+    "embedded_after_recovery": [],
+    "searchable_after_recovery": []
+   },
+   "embedder": {
+    "ok_requests": 1,
+    "failed_requests": 0,
+    "ok_inputs": 1,
+    "failed_inputs": 0
+   },
+   "fatal": "Error: init failed: Setting up local brain with PGLite (no server needed)...\n  Embedding: litellm:fake-embed (64d)\n  Reranker: disabled (no VOYAGE_API_KEY — enable later: export VOYAGE_API_KEY=… && gbrain config set search.reranker.enabled true)\n  Setting up brain schema (v317)...\n  v142: takes.embedding resized to vector(64); existing take vectors cleared\n  312 migration(s) applied\n[init] Migrations: 14 recorded as not needed on a new brain; 5 setup migration(s) pending (0.11.0, 0.14.0, 0.22.4, 0.28.0, 0.53.0). Finish setup: gbrain apply-migrations --yes --no-autopilot-install\nError [local_conflict]: The new content directory is inside another Git worktree. Choose a separate root or explicitly initialize Git here; setup will not claim its parent repository.\nFix: eval/reports/lifecycle/2026-11-16T22-10-42-454Z/new-pglite-cli/gbrain-home/.gbrain/content/1a291bab-b277-4b39-b8f3-e20a11439e2e/default is inside the Git worktree .. Pass --content-root a path outside any repository, or add --git so the content directory gets its own repository.\nDocs: https://github.com/garrytan/gbrain/blob/v0.60.733.0/docs/guides/error-codes.md#local_conflict\n    at runCell (eval/runner/lifecycle-experiment.ts:203:36)\n    at async <anonymous> (eval/runner/lifecycle-experiment.ts:328:23)\n    at async main (eval/runner/lifecycle-experiment.ts:334:17)\n    at processTicksAndRejections (native:7:39)"
+  },
+  {
+   "build": "new",
+   "engine": "pglite",
+   "interface": "mcp-stdio",
+   "started_at": "2026-11-16T22:10:45.114Z",
+   "duration_ms": 4685,
+   "operator": [
+    {
+     "step": "init",
+     "args": [
+      "init",
+      "--pglite",
+      "--path",
+      "eval/reports/lifecycle/2026-11-16T22-10-42-454Z/new-pglite-mcp-stdio/gbrain-home/brain.pglite",
+      "--embedding-model",
+      "litellm:fake-embed",
+      "--embedding-dimensions",
+      "64"
+     ],
+     "code": 1,
+     "ms": 4680,
+     "tail": "Setting up local brain with PGLite (no server needed)...\n  Embedding: litellm:fake-embed (64d)\n  Reranker: disabled (no VOYAGE_API_KEY — enable later: export VOYAGE_API_KEY=… && gbrain config set search.reranker.enabled true)\n  Setting up brain schema (v317)...\n  v142: takes.embedding resized to vector(64); existing take vectors cleared\n  312 migration(s) applied\n[init] Migrations: 14 recorded as not needed on a new brain; 5 setup migration(s) pending (0.11.0, 0.14.0, 0.22.4, 0.28.0, 0.53.0). Finish setup: gbrain apply-migrations --yes --no-autopilot-install\nError [local_conflict]: The new content directory is inside another Git worktree. Choose a separate root or explicitly initialize Git here; setup will not claim its parent repository.\nFix: eval/reports/lifecycle/2026-11-16T22-10-42-454Z/new-pglite-mcp-stdio/gbrain-home/.gbrain/content/b3c6ba01-62a3-466f-b6f7-bc4704add800/default is inside the Git worktree .. Pass --content-root a path outside any repository, or add --git so the content directory gets its own repository.\nDocs: https://github.com/garrytan/gbrain/blob/v0.60.733.0/docs/guides/error-codes.md#local_conflict",
+     "errors": [
+      "Error [local_conflict]: The new content directory is inside another Git worktree. Choose a separate root or explicitly initialize Git here; setup will not claim its parent repository.",
+      "Docs: https://github.com/garrytan/gbrain/blob/v0.60.733.0/docs/guides/error-codes.md#local_conflict"
+     ]
+    }
+   ],
+   "sync_exits": {},
+   "sessions": 0,
+   "fact_events": [],
+   "forget": {
+    "ok": false,
+    "fact_id": null
+   },
+   "checkpoints": {},
+   "outage": {
+    "sync_exit": null,
+    "refused_inputs": 0,
+    "text_persisted_during_outage": [],
+    "embedded_after_recovery": [],
+    "searchable_after_recovery": []
+   },
+   "embedder": {
+    "ok_requests": 1,
+    "failed_requests": 0,
+    "ok_inputs": 1,
+    "failed_inputs": 0
+   },
+   "fatal": "Error: init failed: Setting up local brain with PGLite (no server needed)...\n  Embedding: litellm:fake-embed (64d)\n  Reranker: disabled (no VOYAGE_API_KEY — enable later: export VOYAGE_API_KEY=… && gbrain config set search.reranker.enabled true)\n  Setting up brain schema (v317)...\n  v142: takes.embedding resized to vector(64); existing take vectors cleared\n  312 migration(s) applied\n[init] Migrations: 14 recorded as not needed on a new brain; 5 setup migration(s) pending (0.11.0, 0.14.0, 0.22.4, 0.28.0, 0.53.0). Finish setup: gbrain apply-migrations --yes --no-autopilot-install\nError [local_conflict]: The new content directory is inside another Git worktree. Choose a separate root or explicitly initialize Git here; setup will not claim its parent repository.\nFix: eval/reports/lifecycle/2026-11-16T22-10-42-454Z/new-pglite-mcp-stdio/gbrain-home/.gbrain/content/b3c6ba01-62a3-466f-b6f7-bc4704add800/default is inside the Git worktree .. Pass --content-root a path outside any repository, or add --git so the content directory gets its own repository.\nDocs: https://github.com/garrytan/gbrain/blob/v0.60.733.0/docs/guides/error-codes.md#local_conflict\n    at runCell (eval/runner/lifecycle-experiment.ts:203:36)\n    at async <anonymous> (eval/runner/lifecycle-experiment.ts:328:23)\n    at async main (eval/runner/lifecycle-experiment.ts:334:17)\n    at processTicksAndRejections (native:7:39)"
+  },
+  {
+   "build": "new",
+   "engine": "pglite",
+   "interface": "mcp-http",
+   "started_at": "2026-11-16T22:10:45.119Z",
+   "duration_ms": 4483,
+   "operator": [
+    {
+     "step": "init",
+     "args": [
+      "init",
+      "--pglite",
+      "--path",
+      "eval/reports/lifecycle/2026-11-16T22-10-42-454Z/new-pglite-mcp-http/gbrain-home/brain.pglite",
+      "--embedding-model",
+      "litellm:fake-embed",
+      "--embedding-dimensions",
+      "64"
+     ],
+     "code": 1,
+     "ms": 4465,
+     "tail": "Setting up local brain with PGLite (no server needed)...\n  Embedding: litellm:fake-embed (64d)\n  Reranker: disabled (no VOYAGE_API_KEY — enable later: export VOYAGE_API_KEY=… && gbrain config set search.reranker.enabled true)\n  Setting up brain schema (v317)...\n  v142: takes.embedding resized to vector(64); existing take vectors cleared\n  312 migration(s) applied\n[init] Migrations: 14 recorded as not needed on a new brain; 5 setup migration(s) pending (0.11.0, 0.14.0, 0.22.4, 0.28.0, 0.53.0). Finish setup: gbrain apply-migrations --yes --no-autopilot-install\nError [local_conflict]: The new content directory is inside another Git worktree. Choose a separate root or explicitly initialize Git here; setup will not claim its parent repository.\nFix: eval/reports/lifecycle/2026-11-16T22-10-42-454Z/new-pglite-mcp-http/gbrain-home/.gbrain/content/0279647b-0e67-4118-b62f-2a5d90a8bece/default is inside the Git worktree .. Pass --content-root a path outside any repository, or add --git so the content directory gets its own repository.\nDocs: https://github.com/garrytan/gbrain/blob/v0.60.733.0/docs/guides/error-codes.md#local_conflict",
+     "errors": [
+      "Error [local_conflict]: The new content directory is inside another Git worktree. Choose a separate root or explicitly initialize Git here; setup will not claim its parent repository.",
+      "Docs: https://github.com/garrytan/gbrain/blob/v0.60.733.0/docs/guides/error-codes.md#local_conflict"
+     ]
+    }
+   ],
+   "sync_exits": {},
+   "sessions": 0,
+   "fact_events": [],
+   "forget": {
+    "ok": false,
+    "fact_id": null
+   },
+   "checkpoints": {},
+   "outage": {
+    "sync_exit": null,
+    "refused_inputs": 0,
+    "text_persisted_during_outage": [],
+    "embedded_after_recovery": [],
+    "searchable_after_recovery": []
+   },
+   "embedder": {
+    "ok_requests": 1,
+    "failed_requests": 0,
+    "ok_inputs": 1,
+    "failed_inputs": 0
+   },
+   "fatal": "Error: init failed: Setting up local brain with PGLite (no server needed)...\n  Embedding: litellm:fake-embed (64d)\n  Reranker: disabled (no VOYAGE_API_KEY — enable later: export VOYAGE_API_KEY=… && gbrain config set search.reranker.enabled true)\n  Setting up brain schema (v317)...\n  v142: takes.embedding resized to vector(64); existing take vectors cleared\n  312 migration(s) applied\n[init] Migrations: 14 recorded as not needed on a new brain; 5 setup migration(s) pending (0.11.0, 0.14.0, 0.22.4, 0.28.0, 0.53.0). Finish setup: gbrain apply-migrations --yes --no-autopilot-install\nError [local_conflict]: The new content directory is inside another Git worktree. Choose a separate root or explicitly initialize Git here; setup will not claim its parent repository.\nFix: eval/reports/lifecycle/2026-11-16T22-10-42-454Z/new-pglite-mcp-http/gbrain-home/.gbrain/content/0279647b-0e67-4118-b62f-2a5d90a8bece/default is inside the Git worktree .. Pass --content-root a path outside any repository, or add --git so the content directory gets its own repository.\nDocs: https://github.com/garrytan/gbrain/blob/v0.60.733.0/docs/guides/error-codes.md#local_conflict\n    at runCell (eval/runner/lifecycle-experiment.ts:203:36)\n    at async <anonymous> (eval/runner/lifecycle-experiment.ts:328:23)\n    at async main (eval/runner/lifecycle-experiment.ts:334:17)\n    at processTicksAndRejections (native:7:39)"
+  },
+  {
+   "build": "new",
+   "engine": "postgres",
+   "interface": "cli",
+   "started_at": "2026-11-16T22:10:45.122Z",
+   "duration_ms": 5454,
+   "operator": [
+    {
+     "step": "init",
+     "args": [
+      "init",
+      "--url",
+      "postgres://postgres@127.0.0.1:55462/lc_new_postgres_cli_2987",
+      "--embedding-model",
+      "litellm:fake-embed",
+      "--embedding-dimensions",
+      "64"
+     ],
+     "code": 1,
+     "ms": 5152,
+     "tail": "Connecting to database...\npgvector extension not found. Attempting to create...\npgvector extension created successfully.\nRunning schema migration...\n  Reranker: disabled (no VOYAGE_API_KEY — enable later: export VOYAGE_API_KEY=… && gbrain config set search.reranker.enabled true)\n  Setting up brain schema (v317)...\n  v142: takes.embedding resized to vector(64); existing take vectors cleared\n  312 migration(s) applied\n[init] Migrations: 14 recorded as not needed on a new brain; 5 setup migration(s) pending (0.11.0, 0.14.0, 0.22.4, 0.28.0, 0.53.0). Finish setup: gbrain apply-migrations --yes --no-autopilot-install\nError [local_conflict]: The new content directory is inside another Git worktree. Choose a separate root or explicitly initialize Git here; setup will not claim its parent repository.\nFix: eval/reports/lifecycle/2026-11-16T22-10-42-454Z/new-postgres-cli/gbrain-home/.gbrain/content/fdf18418-d66f-4342-9bb9-bae6585360f2/default is inside the Git worktree .. Pass --content-root a path outside any repository, or add --git so the content directory gets its own repository.\nDocs: https://github.com/garrytan/gbrain/blob/v0.60.733.0/docs/guides/error-codes.md#local_conflict",
+     "errors": [
+      "Error [local_conflict]: The new content directory is inside another Git worktree. Choose a separate root or explicitly initialize Git here; setup will not claim its parent repository.",
+      "Docs: https://github.com/garrytan/gbrain/blob/v0.60.733.0/docs/guides/error-codes.md#local_conflict"
+     ]
+    }
+   ],
+   "sync_exits": {},
+   "sessions": 0,
+   "fact_events": [],
+   "forget": {
+    "ok": false,
+    "fact_id": null
+   },
+   "checkpoints": {},
+   "outage": {
+    "sync_exit": null,
+    "refused_inputs": 0,
+    "text_persisted_during_outage": [],
+    "embedded_after_recovery": [],
+    "searchable_after_recovery": []
+   },
+   "embedder": {
+    "ok_requests": 1,
+    "failed_requests": 0,
+    "ok_inputs": 1,
+    "failed_inputs": 0
+   },
+   "fatal": "Error: init failed: Connecting to database...\npgvector extension not found. Attempting to create...\npgvector extension created successfully.\nRunning schema migration...\n  Reranker: disabled (no VOYAGE_API_KEY — enable later: export VOYAGE_API_KEY=… && gbrain config set search.reranker.enabled true)\n  Setting up brain schema (v317)...\n  v142: takes.embedding resized to vector(64); existing take vectors cleared\n  312 migration(s) applied\n[init] Migrations: 14 recorded as not needed on a new brain; 5 setup migration(s) pending (0.11.0, 0.14.0, 0.22.4, 0.28.0, 0.53.0). Finish setup: gbrain apply-migrations --yes --no-autopilot-install\nError [local_conflict]: The new content directory is inside another Git worktree. Choose a separate root or explicitly initialize Git here; setup will not claim its parent repository.\nFix: eval/reports/lifecycle/2026-11-16T22-10-42-454Z/new-postgres-cli/gbrain-home/.gbrain/content/fdf18418-d66f-4342-9bb9-bae6585360f2/default is inside the Git worktree .. Pass --content-root a path outside any repository, or add --git so the content directory gets its own repository.\nDocs: https://github.com/garrytan/gbrain/blob/v0.60.733.0/docs/guides/error-codes.md#local_conflict\n    at runCell (eval/runner/lifecycle-experiment.ts:203:36)\n    at async <anonymous> (eval/runner/lifecycle-experiment.ts:328:23)\n    at async main (eval/runner/lifecycle-experiment.ts:334:17)\n    at processTicksAndRejections (native:7:39)"
+  },
+  {
+   "build": "new",
+   "engine": "postgres",
+   "interface": "mcp-stdio",
+   "started_at": "2026-11-16T22:10:45.126Z",
+   "duration_ms": 5493,
+   "operator": [
+    {
+     "step": "init",
+     "args": [
+      "init",
+      "--url",
+      "postgres://postgres@127.0.0.1:55462/lc_new_postgres_mcp_stdio_2987",
+      "--embedding-model",
+      "litellm:fake-embed",
+      "--embedding-dimensions",
+      "64"
+     ],
+     "code": 1,
+     "ms": 5201,
+     "tail": "Connecting to database...\npgvector extension not found. Attempting to create...\npgvector extension created successfully.\nRunning schema migration...\n  Reranker: disabled (no VOYAGE_API_KEY — enable later: export VOYAGE_API_KEY=… && gbrain config set search.reranker.enabled true)\n  Setting up brain schema (v317)...\n  v142: takes.embedding resized to vector(64); existing take vectors cleared\n  312 migration(s) applied\n[init] Migrations: 14 recorded as not needed on a new brain; 5 setup migration(s) pending (0.11.0, 0.14.0, 0.22.4, 0.28.0, 0.53.0). Finish setup: gbrain apply-migrations --yes --no-autopilot-install\nError [local_conflict]: The new content directory is inside another Git worktree. Choose a separate root or explicitly initialize Git here; setup will not claim its parent repository.\nFix: eval/reports/lifecycle/2026-11-16T22-10-42-454Z/new-postgres-mcp-stdio/gbrain-home/.gbrain/content/c7aff6f7-a482-4752-a3b2-3f7963fe7d73/default is inside the Git worktree .. Pass --content-root a path outside any repository, or add --git so the content directory gets its own repository.\nDocs: https://github.com/garrytan/gbrain/blob/v0.60.733.0/docs/guides/error-codes.md#local_conflict",
+     "errors": [
+      "Error [local_conflict]: The new content directory is inside another Git worktree. Choose a separate root or explicitly initialize Git here; setup will not claim its parent repository.",
+      "Docs: https://github.com/garrytan/gbrain/blob/v0.60.733.0/docs/guides/error-codes.md#local_conflict"
+     ]
+    }
+   ],
+   "sync_exits": {},
+   "sessions": 0,
+   "fact_events": [],
+   "forget": {
+    "ok": false,
+    "fact_id": null
+   },
+   "checkpoints": {},
+   "outage": {
+    "sync_exit": null,
+    "refused_inputs": 0,
+    "text_persisted_during_outage": [],
+    "embedded_after_recovery": [],
+    "searchable_after_recovery": []
+   },
+   "embedder": {
+    "ok_requests": 1,
+    "failed_requests": 0,
+    "ok_inputs": 1,
+    "failed_inputs": 0
+   },
+   "fatal": "Error: init failed: Connecting to database...\npgvector extension not found. Attempting to create...\npgvector extension created successfully.\nRunning schema migration...\n  Reranker: disabled (no VOYAGE_API_KEY — enable later: export VOYAGE_API_KEY=… && gbrain config set search.reranker.enabled true)\n  Setting up brain schema (v317)...\n  v142: takes.embedding resized to vector(64); existing take vectors cleared\n  312 migration(s) applied\n[init] Migrations: 14 recorded as not needed on a new brain; 5 setup migration(s) pending (0.11.0, 0.14.0, 0.22.4, 0.28.0, 0.53.0). Finish setup: gbrain apply-migrations --yes --no-autopilot-install\nError [local_conflict]: The new content directory is inside another Git worktree. Choose a separate root or explicitly initialize Git here; setup will not claim its parent repository.\nFix: eval/reports/lifecycle/2026-11-16T22-10-42-454Z/new-postgres-mcp-stdio/gbrain-home/.gbrain/content/c7aff6f7-a482-4752-a3b2-3f7963fe7d73/default is inside the Git worktree .. Pass --content-root a path outside any repository, or add --git so the content directory gets its own repository.\nDocs: https://github.com/garrytan/gbrain/blob/v0.60.733.0/docs/guides/error-codes.md#local_conflict\n    at runCell (eval/runner/lifecycle-experiment.ts:203:36)\n    at async <anonymous> (eval/runner/lifecycle-experiment.ts:328:23)\n    at async main (eval/runner/lifecycle-experiment.ts:334:17)\n    at processTicksAndRejections (native:7:39)"
+  },
+  {
+   "build": "new",
+   "engine": "postgres",
+   "interface": "mcp-http",
+   "started_at": "2026-11-16T22:10:45.127Z",
+   "duration_ms": 5491,
+   "operator": [
+    {
+     "step": "init",
+     "args": [
+      "init",
+      "--url",
+      "postgres://postgres@127.0.0.1:55462/lc_new_postgres_mcp_http_2987",
+      "--embedding-model",
+      "litellm:fake-embed",
+      "--embedding-dimensions",
+      "64"
+     ],
+     "code": 1,
+     "ms": 5197,
+     "tail": "Connecting to database...\npgvector extension not found. Attempting to create...\npgvector extension created successfully.\nRunning schema migration...\n  Reranker: disabled (no VOYAGE_API_KEY — enable later: export VOYAGE_API_KEY=… && gbrain config set search.reranker.enabled true)\n  Setting up brain schema (v317)...\n  v142: takes.embedding resized to vector(64); existing take vectors cleared\n  312 migration(s) applied\n[init] Migrations: 14 recorded as not needed on a new brain; 5 setup migration(s) pending (0.11.0, 0.14.0, 0.22.4, 0.28.0, 0.53.0). Finish setup: gbrain apply-migrations --yes --no-autopilot-install\nError [local_conflict]: The new content directory is inside another Git worktree. Choose a separate root or explicitly initialize Git here; setup will not claim its parent repository.\nFix: eval/reports/lifecycle/2026-11-16T22-10-42-454Z/new-postgres-mcp-http/gbrain-home/.gbrain/content/31138455-887a-4353-9b5f-ffee24b33d62/default is inside the Git worktree .. Pass --content-root a path outside any repository, or add --git so the content directory gets its own repository.\nDocs: https://github.com/garrytan/gbrain/blob/v0.60.733.0/docs/guides/error-codes.md#local_conflict",
+     "errors": [
+      "Error [local_conflict]: The new content directory is inside another Git worktree. Choose a separate root or explicitly initialize Git here; setup will not claim its parent repository.",
+      "Docs: https://github.com/garrytan/gbrain/blob/v0.60.733.0/docs/guides/error-codes.md#local_conflict"
+     ]
+    }
+   ],
+   "sync_exits": {},
+   "sessions": 0,
+   "fact_events": [],
+   "forget": {
+    "ok": false,
+    "fact_id": null
+   },
+   "checkpoints": {},
+   "outage": {
+    "sync_exit": null,
+    "refused_inputs": 0,
+    "text_persisted_during_outage": [],
+    "embedded_after_recovery": [],
+    "searchable_after_recovery": []
+   },
+   "embedder": {
+    "ok_requests": 1,
+    "failed_requests": 0,
+    "ok_inputs": 1,
+    "failed_inputs": 0
+   },
+   "fatal": "Error: init failed: Connecting to database...\npgvector extension not found. Attempting to create...\npgvector extension created successfully.\nRunning schema migration...\n  Reranker: disabled (no VOYAGE_API_KEY — enable later: export VOYAGE_API_KEY=… && gbrain config set search.reranker.enabled true)\n  Setting up brain schema (v317)...\n  v142: takes.embedding resized to vector(64); existing take vectors cleared\n  312 migration(s) applied\n[init] Migrations: 14 recorded as not needed on a new brain; 5 setup migration(s) pending (0.11.0, 0.14.0, 0.22.4, 0.28.0, 0.53.0). Finish setup: gbrain apply-migrations --yes --no-autopilot-install\nError [local_conflict]: The new content directory is inside another Git worktree. Choose a separate root or explicitly initialize Git here; setup will not claim its parent repository.\nFix: eval/reports/lifecycle/2026-11-16T22-10-42-454Z/new-postgres-mcp-http/gbrain-home/.gbrain/content/31138455-887a-4353-9b5f-ffee24b33d62/default is inside the Git worktree .. Pass --content-root a path outside any repository, or add --git so the content directory gets its own repository.\nDocs: https://github.com/garrytan/gbrain/blob/v0.60.733.0/docs/guides/error-codes.md#local_conflict\n    at runCell (eval/runner/lifecycle-experiment.ts:203:36)\n    at async <anonymous> (eval/runner/lifecycle-experiment.ts:328:23)\n    at async main (eval/runner/lifecycle-experiment.ts:334:17)\n    at processTicksAndRejections (native:7:39)"
+  }
+ ]
+}

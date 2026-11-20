@@ -1,0 +1,153 @@
+{
+ "kind": "n2-judge-replay-compare",
+ "baseline_run": {
+  "file": "docs/benchmarks/2026-11-17-readme-baselines/judgment/n2-current/n2-plain-opus55.json",
+  "model": "anthropic:claude-opus-5-5",
+  "prompt_version": "plain"
+ },
+ "reference_file": "docs/benchmarks/2026-10-06-n2-judges/judge-claude-opus-5-5.json",
+ "baseline": {
+  "model": "baseline",
+  "recall_conflicts": {
+   "hits": 149,
+   "n": 150,
+   "lower95": 0.9634168322594201
+  },
+  "false_dated": {
+   "hits": 0,
+   "n": 40,
+   "upper95": 0.08809730287880241
+  },
+  "false_compatible_original": {
+   "hits": 0,
+   "n": 51,
+   "upper95": 0.06977703074953867
+  },
+  "false_compatible_pooled": {
+   "hits": 0,
+   "n": 251,
+   "upper95": 0.014589261072592764
+  },
+  "judge_errors": 0,
+  "truncations": 0,
+  "sample_false_alerts": {
+   "hits": 0,
+   "n": 300
+  },
+  "false_alerts_per_1000_candidates": 0,
+  "passes": true,
+  "failed_rules": []
+ },
+ "reference": {
+  "model": "reference",
+  "recall_conflicts": {
+   "hits": 150,
+   "n": 150,
+   "lower95": 0.9757074028338919
+  },
+  "false_dated": {
+   "hits": 0,
+   "n": 40,
+   "upper95": 0.08809730287880241
+  },
+  "false_compatible_original": {
+   "hits": 0,
+   "n": 51,
+   "upper95": 0.06977703074953867
+  },
+  "false_compatible_pooled": {
+   "hits": 0,
+   "n": 251,
+   "upper95": 0.014589261072592764
+  },
+  "judge_errors": 0,
+  "truncations": 0,
+  "sample_false_alerts": {
+   "hits": 0,
+   "n": 300
+  },
+  "false_alerts_per_1000_candidates": 0,
+  "passes": true,
+  "failed_rules": []
+ },
+ "paired": {
+  "all": {
+   "n": 741,
+   "reference_correct": 741,
+   "baseline_correct": 740,
+   "reference_only_correct": 1,
+   "baseline_only_correct": 0,
+   "p_mcnemar_two_sided": 1,
+   "baseline_minus_reference": -0.001349527665317139,
+   "ci95": [
+    -0.004048582995951417,
+    0
+   ]
+  },
+  "planted": {
+   "n": 241,
+   "reference_correct": 241,
+   "baseline_correct": 240,
+   "reference_only_correct": 1,
+   "baseline_only_correct": 0,
+   "p_mcnemar_two_sided": 1,
+   "baseline_minus_reference": -0.004149377593360996,
+   "ci95": [
+    -0.012448132780082987,
+    0
+   ]
+  },
+  "conflicts": {
+   "n": 150,
+   "reference_correct": 150,
+   "baseline_correct": 149,
+   "reference_only_correct": 1,
+   "baseline_only_correct": 0,
+   "p_mcnemar_two_sided": 1,
+   "baseline_minus_reference": -0.006666666666666667,
+   "ci95": [
+    -0.02,
+    0
+   ]
+  },
+  "dated_changes": {
+   "n": 40,
+   "reference_correct": 40,
+   "baseline_correct": 40,
+   "reference_only_correct": 0,
+   "baseline_only_correct": 0,
+   "p_mcnemar_two_sided": 1,
+   "baseline_minus_reference": 0,
+   "ci95": [
+    0,
+    0
+   ]
+  },
+  "compatible": {
+   "n": 251,
+   "reference_correct": 251,
+   "baseline_correct": 251,
+   "reference_only_correct": 0,
+   "baseline_only_correct": 0,
+   "p_mcnemar_two_sided": 1,
+   "baseline_minus_reference": 0,
+   "ci95": [
+    0,
+    0
+   ]
+  },
+  "other_pairs": {
+   "n": 300,
+   "reference_correct": 300,
+   "baseline_correct": 300,
+   "reference_only_correct": 0,
+   "baseline_only_correct": 0,
+   "p_mcnemar_two_sided": 1,
+   "baseline_minus_reference": 0,
+   "ci95": [
+    0,
+    0
+   ]
+  }
+ }
+}

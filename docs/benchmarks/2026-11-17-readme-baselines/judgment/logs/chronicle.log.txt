@@ -1,0 +1,4 @@
+[budget] chronicle-lift-v1-plain-a: estimated cost $0.60; ledger /home/user/.capy/work/gbev97/ledger.sqlite
+[lift] plain-a: 48 pages, 330 events, $0.2543
+[budget] chronicle-lift-v1-plain-b: estimated cost $0.60; ledger /home/user/.capy/work/gbev97/ledger.sqlite
+[lift] plain-b: 48 pages, 335 events, $0.2577

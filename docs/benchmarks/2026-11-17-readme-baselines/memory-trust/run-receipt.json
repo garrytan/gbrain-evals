@@ -1,0 +1,72 @@
+{
+  "what": "Cat 37 memory poisoning, plain-pg baseline arm (README baselines, memory-trust group, GBEV-97)",
+  "preregistration": {
+    "path": "docs/plans/2026-11-17-readme-baselines/PREREG.md",
+    "commit": "b9a4094b5cb7ecc987579589befc6433ba897496"
+  },
+  "runner_commit": "2eee957f301defb35bfe1913cafdb4dab1dc4bc0",
+  "runner_branch": "readme-baselines-memory-trust",
+  "command": "bun eval/runner/cat37-memory-poisoning.ts --model-arm paid --model-modes plain-pg --models <model> --repeats 2 --concurrency 8 --estimate-usd 15 --paid --budget-ledger <ledger> --budget-run-id <run> --preregistration docs/plans/2026-11-17-readme-baselines/PREREG.md --output out/<model>",
+  "machine": "Ubicloud standard-4, eu-central-h1, one VM, three model processes in parallel joined to one budget-ledger run; VM destroyed after the run",
+  "started_at": "2026-11-17T08:19:12Z",
+  "finished_at": "2026-11-17T08:30:20Z",
+  "models": [
+    "claude-opus-5-5",
+    "claude-sonnet-5-5",
+    "gpt-6.1-sol"
+  ],
+  "judge": "claude-sonnet-5-5 (memory-trust-adoption-v1:d770dccd8211fa66, max_tokens 200), as in the gbrain row",
+  "embedder": "openai:text-embedding-3-large@1536 (plain-pg vector_search and save_document)",
+  "scenarios": {
+    "seed": 37,
+    "generator_version": "cat37-gen-v1",
+    "fingerprint": "5f75068f4aaa9099a51c50f78320623f057bc8ec6e2738c1d1de7218516adbcc",
+    "count": 200,
+    "repeats": 2
+  },
+  "prompts": {
+    "session1": "45e59e8e1a529446",
+    "session2": "f6e93ce7638da98a",
+    "judge": "memory-trust-adoption-v1:d770dccd8211fa66"
+  },
+  "gbrain_pairing": {
+    "records": [
+      "docs/benchmarks/2026-10-08-memory-trust/paid/cat37-opus.receipt.json",
+      "docs/benchmarks/2026-10-08-memory-trust/paid/cat37-sonnet.receipt.json",
+      "docs/benchmarks/2026-10-08-memory-trust/paid/cat37-gpt.receipt.json",
+      "docs/benchmarks/2026-10-08-memory-trust/paid/cat37-labels-absent.receipt.json"
+    ],
+    "records_committed_in": "999a2975d",
+    "gbrain_measured": "capy/memory-trust c2f10ee8ba598f440f3e22549b9f6963784442da (v0.60.110.0)",
+    "note": "no gbrain arm was run again"
+  },
+  "gbrain_code_in_baseline": "none of gbrain's memory, search, trust or hook code loads; the budget ledger imports gbrain's price tables (src/core/model-pricing.ts, embedding-pricing.ts, model-id.ts) to price requests, as in every runner. The receipts' gbrain_version and product fields name the installed package, which this arm does not run.",
+  "source_tree_dirty": "the VM receipts record dirty: true; the run script wrote its out/ directory inside the checkout, which git sees as untracked. The runner commit is 2eee957f on origin.",
+  "spend_from_ledger": {
+    "ledger_run": "cat37-plain-pg-2026-11-17T08-19-12-327Z-d9cbe71f",
+    "claude-opus-5-5": {
+      "usd": 9.439985,
+      "requests": 2760
+    },
+    "claude-sonnet-5-5": {
+      "usd": 4.913759,
+      "requests": 2543
+    },
+    "gpt-6.1-sol": {
+      "usd": 3.118956,
+      "requests": 2374
+    },
+    "smoke": {
+      "ledger_run": "cat37-plain-pg-smoke-2026-11-17T08-13-47-284Z-6c5adb68",
+      "usd": 0.036328,
+      "requests": 24,
+      "scope": "2 scenarios x claude-sonnet-5-5, gpt-6.1-sol, 1 repeat; not counted"
+    },
+    "judge_probe": {
+      "ledger_run": "cat37-judge-probe-2026-11-17T08-31-21-162Z-2592de01",
+      "usd": 0.002578,
+      "requests": 1,
+      "scope": "one re-sent judge request to read why the judge returned no text: stop_reason max_tokens after a thinking block"
+    }
+  }
+}

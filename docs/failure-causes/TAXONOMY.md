@@ -9,19 +9,21 @@ The gap-map column links each cause to a failure mode (F1 to F16) in the gap map
 the nightly loop use. Rendered from `eval/runner/failure-causes/taxonomy.ts` by
 `bun eval/runner/failure-causes/cli.ts taxonomy --write`; edit the TypeScript, not this file.
 
-Taxonomy version `2026-11-09.1`. Stages, earliest first: `harness`, `operations`, `ingest`, `visibility`, `tool_call`, `write`, `consult`, `retrieval`, `ranking`, `open`, `presentation`, `reasoning`, `budget`. The last stage, 
+Taxonomy version `2026-11-11.2`. Stages, earliest first: `harness`, `operations`, `ingest`, `visibility`, `tool_call`, `write`, `consult`, `retrieval`, `ranking`, `open`, `presentation`, `reasoning`, `budget`. The last stage, 
 `budget`, is a fallback: a turn cap or timeout is the primary cause only when no earlier stage has a signal.
 
 | Cause | Gap map | Stage | Assigned by | gbrain can fix | Meaning | Signal |
 |---|---|---|---|---|---|---|
 | `harness_error` | eval | harness | logs | no | Our runner, judge, gold or scorer failed, so the row says nothing about gbrain. | outcome not scored, judge parse failure, stop harness_error or error, reader output cut at its limit, a known scorer artifact |
+| `item_unsupported` | eval | harness | logs | no | The benchmark item's reference answer isn't supported by the turns it cites, or it cites none, and a reader given every gold session fails it too, so the row says nothing about gbrain. | the suite's support record (eval/data/nightly/<suite>-support.json): both support validators reject the item, or it cites no turn, and the arm given every gold session fails it, with no harness error |
+| `reader_budget` | eval | harness | logs | no | The question needs more gold items than the suite gives its reader, so no ranking could deliver them all and the row says nothing about gbrain's ranking. | gold count above the reader budget its run records (memory-qa's sessions per answer, reading.breadth_sessions), with no harness error or unsupported item |
 | `operations` | F16 | operations | logs | yes | An upgrade, sync, dream cycle, purge, Postgres-version or ingest-path operation failed. | an operation step error or nonzero exit in a smoke or lifecycle record |
 | `ingest_gap` | F10 | ingest | logs | yes | The fact never reached the brain, or reached it wrong (tag wrong_stored_fact). | the gold page or chunk is absent from the store or index |
 | `privacy_hidden` | F8 | visibility | logs | yes | The gold exists but access flags, aliases or scopes hid it from this caller. Whether the hide is correct is not decided here. | visibility or private-flag fields on the gold in tool results |
 | `tool_contract` | F12 | tool_call | logs | yes | gbrain refused or rejected a call the agent meant correctly, and the failure followed from it. | an unrecovered tool error or refusal code, or a resend the scorer failed |
 | `write_integrity` | F9 | write | logs | yes | A write was lost, stuck pending, overwritten or stored twice by gbrain. | ledger and write records: missing, error pending, overwritten, a true duplicate |
 | `memory_not_consulted` | F13 | consult | logs | yes | The agent never called memory for a question that needed it. | no memory tool call in an agent-loop record |
-| `retrieval_miss` | F1 | retrieval | logs | yes | No gold evidence appeared in any retrieval result. | measured gold coverage of the retrieved results is zero |
+| `retrieval_miss` | F1 | retrieval | logs | yes | No gold evidence appeared in any retrieval result. | measured gold coverage of the retrieved results is zero, or the retriever threw (tag retrieve_error) |
 | `partial_evidence` | F7 | retrieval | logs | yes | Some but not all of the required gold was retrieved, as in cross-source or multi-hop questions. | measured gold coverage between zero and all |
 | `wrong_ranking` | F1 | ranking | logs | yes | Gold was retrieved but cut before the model saw it. | gold in the results but dropped by packing or past the delivered top-k |
 | `gold_unopened` | F13 | open | logs | yes | A search returned the gold page but the agent never opened it. | the gold id appears in search results and in no read call (agent loops only) |
@@ -34,4 +36,19 @@ Taxonomy version `2026-11-09.1`. Stages, earliest first: `harness`, `operations`
 | `timeout_latency` | F11 | budget | logs | yes | The run hit a turn cap, a wall timeout, a context overflow or a latency bound, with no earlier stage to blame. | stop turn_cap, timeout or context_overflow, with no earlier signal (otherwise a secondary cause) |
 | `unclassified` | none | none | labeller abstained, or no signal | no | No signal applies and the labeller abstained. | none |
 
-Tags qualify a cause without changing it: `wrong_stored_fact`, `scorer_artifact`, `untitled_capture_duplicate`, `recovered_tool_error`, `score_zero`, `measured_at_10`, `retrieval_or_ranking`, `said_wrong`, `unparseable_answer`, `record_session_not_recorded`, `excused_resend`, `misreport`.
+Tags qualify a cause without changing it: `wrong_stored_fact`, `scorer_artifact`, `untitled_capture_duplicate`, `recovered_tool_error`, `score_zero`, `measured_at_10`, `retrieval_or_ranking`, `said_wrong`, `unparseable_answer`, `record_session_not_recorded`, `excused_resend`, `misreport`, `turn_cap`, `retrieve_error`, `no_answer`.
+
+## Attribution buckets
+
+The weekly attribution (`cli.ts attribute`) puts each failed row of a QA suite with an answerability file and an
+oracle into one bucket, the first that applies, from its cause, its item's answerability class and the outcome
+cache's oracle row. Recoverable points are reported for reader_limited, retrieval_lost and context_use only.
+
+| Bucket | Meaning |
+|---|---|
+| `harness` | Our harness failed the row: a provider or harness error, or an answer cut off at its output limit (cause harness_error). Left out of every answerable denominator. |
+| `unsupported` | The item's answerability class is unsupported: both validators reject it (or it cites no turn) and the oracle fails it. |
+| `reader_limited` | The oracle, the same reader given only the gold evidence, fails the item too. |
+| `retrieval_lost` | The oracle passes, and the gold never reached the reader whole: missed, partly retrieved, ranked out, not opened or not stored. |
+| `context_use` | The oracle passes and the gold reached the reader, yet the answer failed. |
+| `unknown` | A step is missing: an unresolved or unchecked item, no oracle row or verdict, or gold delivery not measured. Counted, never guessed. |

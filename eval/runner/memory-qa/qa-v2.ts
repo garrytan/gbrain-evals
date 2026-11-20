@@ -19,8 +19,10 @@
  *   beam    each rubric item judged yes/no; the score is the fraction met.
  *
  * qa.ts's `judgeResponse` is the decision kit's frozen judging path; this
- * module's sends the same prompts and records an OpenAI-compatible judge's
- * receipts as it records a reader's. Q1 judges
+ * module's sends the same prompts, records an OpenAI-compatible judge's
+ * receipts as it records a reader's, and reads each reply with
+ * `judgeVerdict`, so a reply that holds no yes or no is a judge error, never
+ * a "no". Q1 judges
  * through `judgeAnswer`: the benchmark's registered instrument
  * (instruments.ts), with a malformed or empty judgment retried as a fresh
  * call and finally recorded as a judge failure, never as a "no".
@@ -90,6 +92,8 @@ export interface ChatOptions {
   attempt?: number;
   /** Finish reasons whose reply is returned but never written to the cache (outside the key; a pinned judge's truncations and refusals). */
   uncachedFinishes?: readonly string[];
+  /** A reply is written to the cache only when this holds (outside the key; a yes-or-no judge reply that holds no verdict is not). */
+  cacheIf?: (reply: { text: string; finish: string | null }) => boolean;
 }
 
 /** One failed attempt to an OpenAI-compatible provider, in attempt order. */
@@ -189,7 +193,7 @@ export class ChatClient extends BaseChatClient implements ChatLike {
     for (let attempt = 0; attempt < 5; attempt++) {
       try {
         const r = compat ? await compatChat(compat, this.compatTimeoutMs) : provider === 'anthropic' ? await anthropicChat(name, prompt, opts) : await openaiChat(name, prompt, opts);
-        if (!opts.uncachedFinishes?.includes(String(r.finish))) writeFileSync(path, JSON.stringify(r));
+        if (!opts.uncachedFinishes?.includes(String(r.finish)) && (opts.cacheIf?.(r) ?? true)) writeFileSync(path, JSON.stringify(r));
         return { ...r, cached: false, attempt_errors: attemptErrors, ...(compat ? { compat_attempts: compatAttempts } : {}) };
       } catch (e) {
         lastError = e;
@@ -276,17 +280,25 @@ function compatReceipts(receipts: UsageReceipt[], out: Omit<ChatResultV2, keyof 
 }
 
 /**
- * qa.ts's `judgeResponse` (the same prompts, output limit and verdict) recording through this module's
- * `chatWithReceipts`, so an OpenAI-compatible judge's receipts carry what each attempt sent, the response's identity
- * and the usage a failed attempt reported. An Anthropic or OpenAI judge's requests and receipts are qa.ts's.
+ * qa.ts's `judgeResponse` (the same prompts and output limit, which a Claude 5 judge is sent as `anthropicMaxTokens`'s
+ * floor) recording through this module's `chatWithReceipts`, so an OpenAI-compatible judge's receipts carry what each
+ * attempt sent, the response's identity and the usage a failed attempt reported. Each reply is read by `judgeVerdict`;
+ * its path goes on the judge's receipt as `verdict_path` and into `paths`, and a reply with no verdict throws
+ * UnansweredJudgment once both are recorded. Such a reply is not written to the cache, so a later run that asks the same
+ * question asks the judge again; a resume that keeps the error row does not, and a reply cached before this rule replays.
  */
-export async function judgeResponse(client: ChatLike, benchmark: string, judgeModel: string, q: MemoryQuestion, response: string, replicate: number, receipts?: UsageReceipt[]): Promise<number> {
+export async function judgeResponse(client: ChatLike, benchmark: string, judgeModel: string, q: MemoryQuestion, response: string, replicate: number, receipts?: UsageReceipt[], paths?: VerdictPath[]): Promise<number> {
   const prompts = judgePromptsFor(benchmark, q, response);
   let yes = 0;
   for (const p of prompts) {
     const ctx = { role: 'judge' as const, question_id: q.id, replicate, model: judgeModel, delivered: null };
-    const out = receipts ? await chatWithReceipts(client, ctx, p, { maxTokens: 10, replicate }, receipts) : await client.chat(judgeModel, p, { maxTokens: 10, replicate });
-    if (judgeYes(out.text)) yes++;
+    const opts: ChatOptions = { maxTokens: 10, replicate, cacheIf: r => judgeVerdict(r).path !== 'none' };
+    const out = receipts ? await chatWithReceipts(client, ctx, p, opts, receipts) : await client.chat(judgeModel, p, opts);
+    const verdict = judgeVerdict(out);
+    if (receipts) receipts[receipts.length - 1]!.verdict_path = verdict.path;
+    paths?.push(verdict.path);
+    if (verdict.path === 'none') throw new UnansweredJudgment(out.finish);
+    if (verdict.yes) yes++;
   }
   return yes / prompts.length;
 }
@@ -307,6 +319,38 @@ export interface PinnedJudgeSettings { effort: string; max_tokens: number }
 export const TRUNCATED_FINISHES = ['length', 'max_tokens'] as const;
 /** A pinned judge's replies kept out of the cache: truncations and refusals (Anthropic `refusal`, OpenAI `content_filter`). */
 export const UNCACHED_JUDGE_FINISHES = [...TRUNCATED_FINISHES, 'refusal', 'content_filter'] as const;
+
+/** Where a yes-or-no judge reply's verdict came from: its first three words, a standalone yes or no after them, or nowhere. */
+export type VerdictPath = NonNullable<UsageReceipt['verdict_path']>;
+/** The rule `judgeVerdict` reads a reply by, as memory-qa's run config names it. */
+export const VERDICT_RULE = 'first three words, else the last standalone yes or no of a complete reply, else a judge error';
+
+/** A judge reply that holds no verdict: a judge error the caller counts, never a "no". */
+export class UnansweredJudgment extends Error {
+  constructor(readonly finish: string | null, verdicts = 'yes or no') { super(`judge reply holds no ${verdicts} verdict (finish ${finish ?? 'unrecorded'})`); this.name = 'UnansweredJudgment'; }
+}
+
+/** A yes or no that ends its sentence or line: only closing markdown, quotes or brackets stand between it and a period, ! or ?, a line break or the end. */
+const STANDALONE_VERDICT = /\b(yes|no)\b(?=[*_"'`)\]]*(?:[.!?]|[ \t\r]*(?:\n|$)))/gi;
+
+/**
+ * The verdict of one yes-or-no judge reply. A yes or no in the first three words decides it as qa.ts's `judgeYes` reads
+ * them (head), so every reply that rule reads keeps its verdict. Otherwise a complete reply's last standalone yes or no
+ * decides it (tail), as when a Claude 5 judge reasons first and ends with "**yes**". An empty reply, one cut off at its
+ * output cap (TRUNCATED_FINISHES) with no head verdict, or one with neither has none: a judge error, never a "no".
+ */
+export function judgeVerdict(reply: { text: string; finish?: string | null }): { path: VerdictPath; yes: boolean } {
+  const text = reply.text.trim();
+  if (/\b(yes|no)\b/i.test(text.split(/\s+/).slice(0, 3).join(' '))) return { path: 'head', yes: judgeYes(text) };
+  const tail = (TRUNCATED_FINISHES as readonly string[]).includes(String(reply.finish)) ? undefined : [...text.matchAll(STANDALONE_VERDICT)].at(-1);
+  return tail ? { path: 'tail', yes: tail[1]!.toLowerCase() === 'yes' } : { path: 'none', yes: false };
+}
+
+/** A judged row's `qa_tail_verdicts`: how many of its verdicts came from a reply's tail, present only when any did. */
+export function tailVerdicts(paths: readonly VerdictPath[]): { qa_tail_verdicts?: number } {
+  const n = paths.filter(p => p === 'tail').length;
+  return n ? { qa_tail_verdicts: n } : {};
+}
 
 /** The temperature a judge is sent: the instrument's, or null for a judge that accepts only its default. */
 export const judgeTemperature = (judge: string, instrument: Pick<Instrument, 'temperature'>): number | null => sendsTemperature(judge) ? instrument.temperature : null;

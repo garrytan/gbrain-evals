@@ -1,0 +1,233 @@
+{
+ "name": "tuned",
+ "doc": "https://moj-analytical-services.github.io/splink/demos/examples/duckdb/deduplicate_50k_synthetic.html",
+ "based_on": "Splink 5 example 'Deduplicate 50k rows historical persons' (ForenameSurnameComparison with a concatenated-name column, exact matches with term-frequency adjustments, several blocking rules) and the Getting Started training steps; feature cleaning per https://moj-analytical-services.github.io/splink/topic_guides/data_preparation/feature_engineering.html",
+ "tuning": "Comparisons, blocking and both thresholds were chosen by looking only at the held-out world (seed 20261118); m and u are fitted by EM on whichever world is being scored, unsupervised",
+ "records": {
+  "normalise": true
+ },
+ "settings": {
+  "link_type": "dedupe_only",
+  "comparisons": [
+   {
+    "fn": "ForenameSurnameComparison",
+    "args": [
+     "first_name",
+     "surname"
+    ],
+    "kwargs": {
+     "forename_surname_concat_col_name": "name_concat"
+    }
+   },
+   {
+    "fn": "ArrayIntersectAtSizes",
+    "args": [
+     "emails",
+     [
+      1
+     ]
+    ]
+   },
+   {
+    "fn": "ExactMatch",
+    "args": [
+     "linkedin"
+    ]
+   },
+   {
+    "fn": "ExactMatch",
+    "args": [
+     "github"
+    ]
+   },
+   {
+    "fn": "ExactMatch",
+    "args": [
+     "company"
+    ],
+    "configure": {
+     "term_frequency_adjustments": true
+    }
+   },
+   {
+    "fn": "ExactMatch",
+    "args": [
+     "city"
+    ],
+    "configure": {
+     "term_frequency_adjustments": true
+    }
+   }
+  ],
+  "blocking_rules_to_generate_predictions": [
+   [
+    "surname"
+   ],
+   [
+    "first_name"
+   ],
+   {
+    "on": [
+     "emails"
+    ],
+    "arrays_to_explode": [
+     "emails"
+    ]
+   },
+   [
+    "linkedin"
+   ],
+   [
+    "github"
+   ]
+  ]
+ },
+ "training": [
+  {
+   "step": "estimate_probability_two_random_records_match",
+   "blocking": [
+    [
+     "first_name",
+     "surname"
+    ]
+   ],
+   "recall": 0.7
+  },
+  {
+   "step": "estimate_u_using_random_sampling",
+   "max_pairs": 1000000,
+   "seed": 1
+  },
+  {
+   "step": "estimate_parameters_using_expectation_maximisation",
+   "blocking": [
+    "first_name",
+    "surname"
+   ]
+  },
+  {
+   "step": "estimate_parameters_using_expectation_maximisation",
+   "blocking": [
+    "company"
+   ]
+  }
+ ],
+ "predict": {
+  "threshold_match_weight": -5
+ },
+ "auto": {
+  "tune": "max_pair_f1"
+ },
+ "proposed": {
+  "tune": "lowest_with_precision_at_least:0.5"
+ },
+ "proposed_note": "bench-defined review band, not Splink's: Splink documents no clerical-review range, so the lower threshold is the lowest held-out threshold whose pairwise precision is at least 0.5",
+ "companies": {
+  "doc": "https://moj-analytical-services.github.io/splink/api_docs/comparison_library.html",
+  "based_on": "These company mappings are ours: the tool's documentation has no company example, so each person field is mapped to the company field that plays the same part. This section keeps the people tuned config's approach (cleaned values, array intersection on the contact key, exact ids, term-frequency adjustments, several blocking rules) and maps it onto company fields with comparisons from Splink's comparison library",
+  "changes_from_doc": [
+   "ours: ForenameSurnameComparison becomes JaroWinklerAtThresholds on the whole cleaned company name (name_concat) at its default thresholds",
+   "ours: ArrayIntersectAtSizes('emails', [1]) becomes ArrayIntersectAtSizes('domains', [1]); blocking explodes domains as it explodes emails for people",
+   "ours: ExactMatch on linkedin is kept; github and the person's company have no company counterpart and are dropped; industry, city and country are ExactMatch with term-frequency adjustments",
+   "ours: blocking on first_name and surname becomes blocking on the first word of the name; EM blocks on the first word, then on the first listed domain"
+  ],
+  "tuning": "Comparisons, blocking and both thresholds are chosen on the held-out world (seed 20261118) only; m and u are fitted by EM on whichever world is being scored, unsupervised",
+  "settings": {
+   "link_type": "dedupe_only",
+   "comparisons": [
+    {
+     "fn": "JaroWinklerAtThresholds",
+     "args": [
+      "name_concat"
+     ]
+    },
+    {
+     "fn": "ArrayIntersectAtSizes",
+     "args": [
+      "domains",
+      [
+       1
+      ]
+     ]
+    },
+    {
+     "fn": "ExactMatch",
+     "args": [
+      "linkedin"
+     ]
+    },
+    {
+     "fn": "ExactMatch",
+     "args": [
+      "industry"
+     ],
+     "configure": {
+      "term_frequency_adjustments": true
+     }
+    },
+    {
+     "fn": "ExactMatch",
+     "args": [
+      "city"
+     ],
+     "configure": {
+      "term_frequency_adjustments": true
+     }
+    },
+    {
+     "fn": "ExactMatch",
+     "args": [
+      "country"
+     ],
+     "configure": {
+      "term_frequency_adjustments": true
+     }
+    }
+   ],
+   "blocking_rules_to_generate_predictions": [
+    [
+     "first_word"
+    ],
+    {
+     "on": [
+      "domains"
+     ],
+     "arrays_to_explode": [
+      "domains"
+     ]
+    },
+    [
+     "linkedin"
+    ]
+   ]
+  },
+  "training": [
+   {
+    "step": "estimate_probability_two_random_records_match",
+    "blocking": [
+     [
+      "name_concat"
+     ]
+    ],
+    "recall": 0.7
+   },
+   {
+    "step": "estimate_u_using_random_sampling",
+    "max_pairs": 1000000,
+    "seed": 1
+   },
+   {
+    "step": "estimate_parameters_using_expectation_maximisation",
+    "blocking": [
+     "first_word"
+    ]
+   },
+   {
+    "step": "estimate_parameters_using_expectation_maximisation",
+    "blocking": [
+     "domain"
+    ]
+   }
+  ]
+ }
+}

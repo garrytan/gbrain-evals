@@ -1,3 +1,5 @@
+> Correction, 2026-11-09: this page's dollar figures for gpt-6.1-sol count OpenAI cache writes as plain input and ignore the long-context rates above 272,000 input tokens, so they are low. The corrected cells are in the [cache-write audit](../../../audit/2026-11-09-openai-cache-writes.md#cw-ladder-holdout-holdout-stats). Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
+
 Cells: 4320. Arms: oracle, fs, fs-acl, pg, memory, gbrain-base, gbrain-next-51a30c1, gbrain-next. Models: claude-haiku-4-5, claude-sonnet-4-6, claude-sonnet-5-5, gpt-5.4-mini, gpt-5.4, gpt-6.1-sol.
 
 ### Cell counts per arm

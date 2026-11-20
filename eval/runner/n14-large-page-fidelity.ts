@@ -50,6 +50,12 @@
  *     [--native-ingest put_page|import]  (native arm write path; import = importFromFile with the brain's body policy, streamed when segmented; Amendment 2)
  *     [--engine pglite|postgres] [--pg-admin-url <url>]  (Amendment 4: postgres creates one database per child through the admin URL, or N14_PG_ADMIN_URL)
  *     [--lifecycle]                      (Amendment 4: after the round trip, forget a fence fact, soft-delete, restore and purge the page, then count residue)
+ *
+ * GBRAIN_EVAL_ENGINE=pglite|postgres|rust (engine-bench, eval/runner/eval-engine.ts) picks the engine instead of
+ * --engine (which may repeat it but not contradict it). The receipt then adds `engine` and `not_applicable`. On rust,
+ * which refuses raw SQL, each child opens the engine through openEvalEngine and every check in N14_SQL_CHECKS is
+ * not_applicable (neither pass nor fail): the verdict is the safety contracts alone, and the quality and floor rules,
+ * which read stored chunks with SQL, drop out. An unavailable engine exits 69 with no receipt. Unset, nothing changes.
  */
 import { SQL } from 'bun';
 import { spawn } from 'node:child_process';
@@ -63,6 +69,10 @@ import { budgetOptionsFrom, receiptCost, startPaidRun, type RunSummary } from '.
 import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from './gbrain-under-test.ts';
 import { gbrainPin } from './gbrain-version.ts';
 import { DECIDE_OFF, withHermeticEnv } from './hermetic-env.ts';
+import {
+  EVAL_ENGINE_ENV, EvalEngineUnavailable, evalEngineReceiptFields, openEvalEngine, preflightEvalEngine, rawSqlNotApplicable, refuseEvalEngine,
+  requestedEvalEngine, type NotApplicable,
+} from './eval-engine.ts';
 import { paidRequested, requirePaidArm } from './paid-arm.ts';
 import { attestPreregistration, type Attestation } from './prereg.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
@@ -492,9 +502,17 @@ export function summarize(arms: readonly ArmSummary[], presenceFailures: number,
 }
 
 /** The preregistered rules, applied to a summary; the registry row repeats them for all.ts. */
-export function n14Verdict(s: N14Summary): { verdict: 'pass' | 'fail'; failed: string[] } {
+export function n14Verdict(s: N14Summary, engine: { rawSql: boolean } = { rawSql: true }): { verdict: 'pass' | 'fail'; failed: string[] } {
   const failed: string[] = [];
   for (const [k, v] of Object.entries(s.safety)) if (v !== 0) failed.push(`safety.${k}=${v}`);
+  // Without raw SQL the quality and floor rules have no measurement (N14_SQL_CHECKS): not_applicable, so neither pass nor fail.
+  // The stored-page counts are not_applicable too, so an arm that ran but never stored its page measured nothing and
+  // fails, instead of passing on safety counts of zero.
+  if (!engine.rawSql) {
+    const unstored = s.arms.filter(a => a.status !== 'capability_absent' && a.roundtrip === 'not_stored').length;
+    if (unstored) failed.push(`roundtrip.not_stored=${unstored}`);
+    return { verdict: failed.length ? 'fail' : 'pass', failed };
+  }
   const { native_append_embed_ratio_max: ratio, native_recall_gap_points_max: gap } = s.quality;
   if (ratio === null || ratio > THRESHOLDS.append_embed_ratio_max) failed.push(`quality.native_append_embed_ratio_max=${ratio}`);
   if (gap === null || gap > THRESHOLDS.native_recall_gap_points_max) failed.push(`quality.native_recall_gap_points_max=${gap}`);
@@ -655,6 +673,9 @@ export class GbrainAdapter implements N14Adapter {
   #pending: PendingWrites = { writes: 0, wait_ms: 0 };
   #importFile: ((file: string, rel: string) => Promise<{ status: string; error?: string; refusal?: { code: string; message: string } }>) | null = null;
   #pg: { admin: SQL; db: string } | null = null;
+  /** False on an engine that refuses raw SQL (rust): the SQL measurements are skipped and reported not_applicable. */
+  #rawSql = true;
+  #rustDir: string | null = null;
   /** The `runOversizedBackfill` receipt when this adapter's ingest is the upgrade backfill (Amendment 1). */
   backfill: unknown = null;
 
@@ -665,7 +686,7 @@ export class GbrainAdapter implements N14Adapter {
    * makes ingest run the gbrain under test's oversized-page backfill on a brain
    * an older gbrain seeded, instead of writing the document.
    */
-  static async open(root: string, arm: Arm, embedder: Embedder, opts: { dataDir?: string; upgrade?: boolean; config?: Record<string, string>; nativeIngest?: NativeIngest; pgAdminUrl?: string } = {}): Promise<GbrainAdapter> {
+  static async open(root: string, arm: Arm, embedder: Embedder, opts: { dataDir?: string; upgrade?: boolean; config?: Record<string, string>; nativeIngest?: NativeIngest; pgAdminUrl?: string; rust?: boolean } = {}): Promise<GbrainAdapter> {
     const a = new GbrainAdapter(arm, embedder);
     a.#nativeIngest = opts.nativeIngest ?? 'put_page';
     const gut: GbrainUnderTest = { root, version: 'child', overlay: null };
@@ -684,7 +705,13 @@ export class GbrainAdapter implements N14Adapter {
       a.#runBackfill = runOversizedBackfill;
     }
     let engineConfig: Record<string, unknown> = { engine: 'pglite', database_path: opts.dataDir ?? ':memory:' };
-    if (opts.pgAdminUrl) {
+    if (opts.rust) {
+      a.#rustDir = mkdtempSync(join(tmpdir(), 'n14-rust-'));
+      const opened = await openEvalEngine({ gut, kind: 'rust', databasePath: join(a.#rustDir, 'brain.rust') });
+      engineConfig = opened.config as unknown as Record<string, unknown>;
+      a.#engine = opened.engine as unknown as PGLiteEngineType;
+      a.#rawSql = false;
+    } else if (opts.pgAdminUrl) {
       const { PostgresEngine } = await importGbrain<{ PostgresEngine: new () => PGLiteEngineType }>(gut, 'src/core/postgres-engine.ts');
       const db = `n14_${process.pid}_${randomUUID().slice(0, 8)}`;
       const admin = new SQL(opts.pgAdminUrl);
@@ -699,7 +726,7 @@ export class GbrainAdapter implements N14Adapter {
       a.#engine = new PGLiteEngine();
       await a.#engine.connect(opts.dataDir ? { database_path: opts.dataDir } : {});
     }
-    await a.#engine.initSchema();
+    if (!opts.rust) await a.#engine.initSchema();
     for (const [k, v] of Object.entries({ 'search.cache.enabled': 'false', 'search.reranker.enabled': 'false', 'search.expansion': 'false' })) await a.#engine.setConfig(k, v);
     for (const [k, v] of Object.entries(opts.config ?? {})) await a.#engine.setConfig(k, v);
     const logger = { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} };
@@ -818,6 +845,7 @@ export class GbrainAdapter implements N14Adapter {
   }
 
   async #hasSegments(): Promise<boolean> {
+    if (!this.#rawSql) return false;
     const r = await this.sql<{ t: string | null }>(`SELECT to_regclass('page_body_manifest')::text AS t`);
     return !!r[0]?.t;
   }
@@ -861,6 +889,10 @@ export class GbrainAdapter implements N14Adapter {
 
   async #ingestOutcome(writeErrors: number, first: { code: string; message: string } | null): Promise<IngestOutcome> {
     const projection = this.arm === 'managed-parts' ? null : await this.#settleProjection();
+    if (!this.#rawSql) {
+      const status: IngestOutcome['status'] = writeErrors === 0 ? 'stored' : first && /too_large|file_too_large|oversized|request_too_large/.test(first.code + first.message) ? 'refused' : 'error';
+      return { status, ...(first ? { code: first.code, message: first.message } : {}), pages: 0, chunks: 0, embed_skip: null, write_errors: writeErrors, storage: null, pending: this.#takePending(), projection };
+    }
     const docPages = await this.sql<{ n: number; chunks: number; skip: string | null }>(
       `SELECT count(*)::int AS n, coalesce(sum((SELECT count(*) FROM content_chunks c WHERE c.page_id = p.id)), 0)::int AS chunks,
               max(p.frontmatter->'embed_skip'->>'reason') AS skip
@@ -888,6 +920,7 @@ export class GbrainAdapter implements N14Adapter {
   }
 
   async storedContains(answer: string): Promise<boolean> {
+    if (!this.#rawSql) throw Object.assign(new Error('not_applicable: storedContains reads stored bodies with raw SQL'), { code: 'not_applicable' });
     const r = await this.sql<{ n: number }>(`SELECT count(*)::int AS n FROM pages WHERE deleted_at IS NULL AND slug <> $2 AND strpos(compiled_truth, $1) > 0`, [answer, CONTROL_SLUG]);
     if (Number(r[0]?.n ?? 0) > 0 || !(await this.#hasSegments())) return Number(r[0]?.n ?? 0) > 0;
     const seg = await this.sql<{ n: number }>(
@@ -898,7 +931,7 @@ export class GbrainAdapter implements N14Adapter {
 
   async search(query: string): Promise<SearchHit[]> {
     const rows = await this.call('search', { query, limit: TOP_K }) as Array<{ slug: string; chunk_id?: number | null; chunk_text?: string }>;
-    const ids = rows.map(r => r.chunk_id).filter((x): x is number => typeof x === 'number');
+    const ids = this.#rawSql ? rows.map(r => r.chunk_id).filter((x): x is number => typeof x === 'number') : [];
     const stored = new Map((ids.length ? await this.sql<{ id: number; chunk_text: string }>(`SELECT id, chunk_text FROM content_chunks WHERE id = ANY($1::int[])`, [ids]) : []).map(r => [Number(r.id), r.chunk_text]));
     return rows.slice(0, TOP_K).map(r => ({ slug: r.slug, chunk_id: typeof r.chunk_id === 'number' ? r.chunk_id : null, passage: typeof r.chunk_id === 'number' ? stored.get(r.chunk_id) ?? '' : '', delivered: r.chunk_text ?? '' }));
   }
@@ -920,7 +953,9 @@ export class GbrainAdapter implements N14Adapter {
     if (this.#gatewayReady) return;
     if (this.#embedder.kind === 'counting') {
       // The brain's own configured model and dimensions (voyage:voyage-4, 1024 at the pin), so the counted batches are the ones gbrain plans.
-      const cfg = new Map((await this.sql<{ key: string; value: string }>(`SELECT key, value FROM config WHERE key IN ('embedding_model', 'embedding_dimensions')`)).map(r => [r.key, r.value]));
+      const cfg = this.#rawSql
+        ? new Map((await this.sql<{ key: string; value: string }>(`SELECT key, value FROM config WHERE key IN ('embedding_model', 'embedding_dimensions')`)).map(r => [r.key, r.value]))
+        : new Map((await Promise.all(['embedding_model', 'embedding_dimensions'].map(async k => [k, await this.#engine.getConfig(k)] as const))).filter((e): e is readonly [string, string] => typeof e[1] === 'string'));
       const model = cfg.get('embedding_model') ?? 'voyage:voyage-4';
       const dims = Number(cfg.get('embedding_dimensions') ?? 1024);
       const provider = model.split(':')[0].toUpperCase().replace(/[^A-Z0-9]/g, '_');
@@ -956,6 +991,7 @@ export class GbrainAdapter implements N14Adapter {
   }
 
   async #chunkSnapshot(): Promise<Map<number, string>> {
+    if (!this.#rawSql) return new Map();
     const rows = await this.sql<{ id: number; h: string }>(`SELECT c.id, md5(c.chunk_text) AS h FROM content_chunks c JOIN pages p ON p.id = c.page_id WHERE p.deleted_at IS NULL AND p.slug <> $1`, [CONTROL_SLUG]);
     return new Map(rows.map(r => [Number(r.id), r.h]));
   }
@@ -1043,7 +1079,7 @@ export class GbrainAdapter implements N14Adapter {
   }
 
   async lifecycle(body: string): Promise<LifecycleOutcome | null> {
-    if (this.arm === 'managed-parts') return null;
+    if (this.arm === 'managed-parts' || !this.#rawSql) return null;
     if (body.includes(LIFECYCLE_TOKEN)) throw Object.assign(new Error(`the document already holds ${LIFECYCLE_TOKEN}`), { code: 'harness' });
     const slug = this.#ledger.slug;
     const probes = Array.from({ length: DECILES }, (_, d) => this.#ledger.needles.find(n => n.decile === d)).filter((n): n is Needle => !!n);
@@ -1166,6 +1202,7 @@ export class GbrainAdapter implements N14Adapter {
   async close(): Promise<void> {
     try { this.#gw.__setEmbedTransportForTests(null); } catch { /* best effort */ }
     await this.#engine.disconnect().catch(() => {});
+    if (this.#rustDir) rmSync(this.#rustDir, { recursive: true, force: true });
     if (this.#pg) {
       await this.#pg.admin.unsafe(`DROP DATABASE IF EXISTS ${this.#pg.db} WITH (FORCE)`).catch(() => {});
       await this.#pg.admin.close().catch(() => {});
@@ -1185,7 +1222,7 @@ function countingVector(text: string, dims: number): number[] {
 // ─── Child process ───────────────────────────────────────────────────────
 
 /** `phase` (Amendment 1 upgrade path): `seed` writes the document single-page into the file-backed brain at `dataDir`; `upgrade` opens it, backfills and probes. */
-interface ChildSpec { root: string; arm: Arm; docPath: string; ledgerPath: string; outPath: string; embed: boolean; dataDir?: string; phase?: 'seed' | 'upgrade'; config?: Record<string, string>; nativeIngest?: NativeIngest; pgAdminUrl?: string; lifecycle?: boolean }
+interface ChildSpec { root: string; arm: Arm; docPath: string; ledgerPath: string; outPath: string; embed: boolean; dataDir?: string; phase?: 'seed' | 'upgrade'; config?: Record<string, string>; nativeIngest?: NativeIngest; pgAdminUrl?: string; lifecycle?: boolean; rust?: boolean }
 interface ChildResult { ok: true; run: ArmRun; capability: NativeCapability; backfill?: unknown }
 interface SeedResult { ok: true; seed: IngestOutcome }
 
@@ -1197,7 +1234,7 @@ async function childMain(specPath: string): Promise<void> {
   const spec = JSON.parse(readFileSync(specPath, 'utf8')) as ChildSpec;
   await withHermeticEnv('n14-child', async () => {
     const ledger = JSON.parse(readFileSync(spec.ledgerPath, 'utf8')) as N14DocLedger;
-    const adapter = await GbrainAdapter.open(spec.root, spec.arm, spec.embed ? { kind: 'counting' } : { kind: 'none' }, { dataDir: spec.dataDir, upgrade: spec.phase === 'upgrade', config: spec.config, nativeIngest: spec.nativeIngest, pgAdminUrl: spec.pgAdminUrl });
+    const adapter = await GbrainAdapter.open(spec.root, spec.arm, spec.embed ? { kind: 'counting' } : { kind: 'none' }, { dataDir: spec.dataDir, upgrade: spec.phase === 'upgrade', config: spec.config, nativeIngest: spec.nativeIngest, pgAdminUrl: spec.pgAdminUrl, ...(spec.rust ? { rust: true } : {}) });
     try {
       const raw = readFileSync(spec.docPath, 'utf8');
       if (spec.phase === 'seed') {
@@ -1277,7 +1314,7 @@ export interface N14RunResult {
   runs: Array<{ tier: TierId; run: ArmRun }>;
 }
 
-export interface N14Options { gut: GbrainUnderTest; upgradeFrom?: GbrainUnderTest; tiers: TierId[]; arms: Arm[]; docs?: DocKind[]; seed: number; concurrency: number; rssLimitMb: number; workDir?: string; log?: (s: string) => void; config?: Record<string, string>; nativeIngest?: NativeIngest; pgAdminUrl?: string; lifecycle?: boolean }
+export interface N14Options { gut: GbrainUnderTest; upgradeFrom?: GbrainUnderTest; tiers: TierId[]; arms: Arm[]; docs?: DocKind[]; seed: number; concurrency: number; rssLimitMb: number; workDir?: string; log?: (s: string) => void; config?: Record<string, string>; nativeIngest?: NativeIngest; pgAdminUrl?: string; lifecycle?: boolean; rust?: boolean }
 
 /** Tiers whose children run the counting embedder (the append re-embed cost); Amendment 4 adds 24mib. */
 export const EMBED_PASS_TIERS = ['2mb', '20mb', '24mib'] as const;
@@ -1339,7 +1376,7 @@ async function runN14Hermetic(opts: N14Options): Promise<N14RunResult> {
       const timeoutMs = Math.max(300_000, Math.round(Math.max(...docs.map(x => x.ledger.bytes)) / 1e6 * 20_000));
       const outcomes = await pool(runnable, opts.concurrency, async ({ d, arm }) => {
         log(`[${tier}] ${d.ledger.id} / ${arm}: start`);
-        const o = await runChild({ root: opts.gut.root, arm, docPath: d.docPath, ledgerPath: d.ledgerPath, outPath: join(dir, `${d.ledger.id}.${arm}.result.json`), embed, config: opts.config, nativeIngest: opts.nativeIngest, pgAdminUrl: opts.pgAdminUrl, lifecycle: opts.lifecycle }, opts.rssLimitMb, timeoutMs);
+        const o = await runChild({ root: opts.gut.root, arm, docPath: d.docPath, ledgerPath: d.ledgerPath, outPath: join(dir, `${d.ledger.id}.${arm}.result.json`), embed, config: opts.config, nativeIngest: opts.nativeIngest, pgAdminUrl: opts.pgAdminUrl, lifecycle: opts.lifecycle, ...(opts.rust ? { rust: true } : {}) }, opts.rssLimitMb, timeoutMs);
         log(`[${tier}] ${d.ledger.id} / ${arm}: ${o.crash ? `CRASH ${o.crash}` : 'done'} in ${(o.wall_ms / 1000).toFixed(1)} s, peak RSS ${o.rss_peak_mb} MB`);
         return { d, arm, o };
       });
@@ -1353,7 +1390,7 @@ async function runN14Hermetic(opts: N14Options): Promise<N14RunResult> {
         const run = o.result.run;
         runs.push({ tier, run });
         tierRun.arms.push(summarizeArm(run, tier));
-        if (run.control.hits < run.control.total) {
+        if (!opts.rust && run.control.hits < run.control.total) {
           presenceFailures++;
           const msg = `control page not found in ${tier}/${d.ledger.id}/${arm}: ${run.control.missed.join(', ')}`;
           acc.error(`control:${tier}:${d.ledger.id}:${arm}`, 'harness', msg);
@@ -1395,7 +1432,7 @@ async function runN14Hermetic(opts: N14Options): Promise<N14RunResult> {
   }
   const arms = tiers.flatMap(t => t.arms);
   const summary = harnessError ? null : summarize(arms, presenceFailures, capability);
-  return { tiers, capability, summary, verdict: summary ? n14Verdict(summary) : null, acc, harnessError, ledgerSha256: ledgerFingerprint(allLedgers), runs };
+  return { tiers, capability, summary, verdict: summary ? (opts.rust ? n14Verdict(summary, { rawSql: false }) : n14Verdict(summary)) : null, acc, harnessError, ledgerSha256: ledgerFingerprint(allLedgers), runs };
 }
 
 // ─── gbrain findings ─────────────────────────────────────────────────────
@@ -1575,9 +1612,33 @@ export function parseNativeIngest(argv: readonly string[]): NativeIngest {
   return raw;
 }
 
-/** `--engine pglite|postgres` (Amendment 4); postgres needs an admin URL from `--pg-admin-url` or N14_PG_ADMIN_URL. */
-export function parseEngine(argv: readonly string[], env: NodeJS.ProcessEnv = process.env): { kind: 'pglite' } | { kind: 'postgres'; adminUrl: string } {
-  const kind = argValue(argv, '--engine') ?? 'pglite';
+// TODO(engine-bench): on rust, measure these through typed engine reads (stored chunks, segment texts, body manifest)
+// once the Rust engine exposes them, so the quality and floor rules stop being not_applicable there.
+/** Every N14 measurement that reads the database with raw SQL; each is not_applicable on an engine without it (rust). */
+export const N14_SQL_CHECKS = [
+  { check: 'N14 ingest outcome: stored page and chunk counts', why: 'count the stored pages and their content_chunks rows (on rust the ingest status comes from write errors alone)' },
+  { check: 'N14 stored needles (storedContains)', why: 'search compiled_truth and the segment texts for each needle answer' },
+  { check: 'N14 solvability control: control page needles found by keyword search', why: 'map each search hit to its stored chunk text' },
+  { check: 'N14 keyword recall@10 by decile, delivered and distractor ranks, reads of hits, and the quality rule native_recall_gap_points_max and the floor native_keyword_recall_2mb', why: 'map each search hit to its stored chunk text (content_chunks by id)' },
+  { check: 'N14 append cost: chunks rewritten and deleted, and the quality rule native_append_embed_ratio_max', why: 'snapshot the content_chunks hashes before and after the append' },
+  { check: 'N14 segmented storage: body storage, projection settle, segment round trip and segment writes', why: 'read pages, page_body_manifest and page_segment_texts' },
+  { check: 'N14 lifecycle residue (--lifecycle, exploratory)', why: 'find the fence fact row and count residue rows after the purge' },
+] as const;
+
+export function n14NotApplicable(kind: 'pglite' | 'postgres' | 'rust'): NotApplicable[] {
+  return N14_SQL_CHECKS.map(c => rawSqlNotApplicable(kind, c.check, c.why)).filter((x): x is NotApplicable => x !== null);
+}
+
+/**
+ * `--engine pglite|postgres` (Amendment 4); postgres needs an admin URL from `--pg-admin-url` or N14_PG_ADMIN_URL.
+ * GBRAIN_EVAL_ENGINE, when set, picks the engine instead (rust included); --engine may repeat it but not contradict it.
+ */
+export function parseEngine(argv: readonly string[], env: NodeJS.ProcessEnv = process.env): { kind: 'pglite' } | { kind: 'postgres'; adminUrl: string } | { kind: 'rust' } {
+  const fromEnv = requestedEvalEngine(env);
+  const flag = argValue(argv, '--engine');
+  if (fromEnv && flag !== undefined && flag !== fromEnv) throw new Error(`${EVAL_ENGINE_ENV}=${fromEnv} and --engine ${flag} disagree; drop --engine or make them match.`);
+  if (fromEnv === 'rust') return { kind: 'rust' };
+  const kind = fromEnv ?? flag ?? 'pglite';
   if (kind === 'pglite') return { kind };
   if (kind !== 'postgres') throw new Error(`--engine takes pglite or postgres, got ${kind}`);
   const adminUrl = argValue(argv, '--pg-admin-url') ?? env.N14_PG_ADMIN_URL;
@@ -1626,7 +1687,10 @@ async function main(): Promise<void> {
   const upgradeFrom = upgradeSpec ? resolveGbrainUnderTest(upgradeSpec) : undefined;
   if (upgradeFrom && !tiers.includes('2mb')) throw new Error('--upgrade-from runs on the 2mb tier; add --tiers 2mb');
   const engine = parseEngine(argv);
-  if (upgradeFrom && engine.kind === 'postgres') throw new Error('--upgrade-from runs on file-backed PGLite only');
+  if (upgradeFrom && engine.kind !== 'pglite') throw new Error('--upgrade-from runs on file-backed PGLite only');
+  if (paid && engine.kind === 'rust') throw new Error('the N14 paid arm maps hits to stored chunks with raw SQL, which the rust engine refuses; unset GBRAIN_EVAL_ENGINE for --paid');
+  const evalKind = requestedEvalEngine();
+  if (evalKind) await preflightEvalEngine(gut, evalKind);
   const lifecycle = argv.includes('--lifecycle');
   let postgresServer: string | null = null;
   if (engine.kind === 'postgres') {
@@ -1635,7 +1699,7 @@ async function main(): Promise<void> {
   }
   log(`# BrainBench N14: large-page fidelity (gbrain ${gut.version}${gut.overlay ? `, overlay ${gut.overlay.build.commit.slice(0, 7)}` : ', pinned'}; ${engine.kind}${postgresServer ? ` ${postgresServer}` : ''}; tiers ${tiers.join(', ')}; arms ${arms.join(', ')})`);
   const t0 = performance.now();
-  const r = await runN14({ gut, upgradeFrom, tiers, arms, docs, seed, concurrency, rssLimitMb, log, ...(config ? { config } : {}), ...(nativeIngest !== 'put_page' ? { nativeIngest } : {}), ...(engine.kind === 'postgres' ? { pgAdminUrl: engine.adminUrl } : {}), ...(lifecycle ? { lifecycle } : {}) });
+  const r = await runN14({ gut, upgradeFrom, tiers, arms, docs, seed, concurrency, rssLimitMb, log, ...(config ? { config } : {}), ...(nativeIngest !== 'put_page' ? { nativeIngest } : {}), ...(engine.kind === 'postgres' ? { pgAdminUrl: engine.adminUrl } : {}), ...(lifecycle ? { lifecycle } : {}), ...(engine.kind === 'rust' ? { rust: true } : {}) });
   const hermeticMs = Math.round(performance.now() - t0);
   let paidData: Record<string, unknown> | null = null;
   let paidCost: RunSummary | null = null;
@@ -1668,7 +1732,7 @@ async function main(): Promise<void> {
     ...(attestation ? { preregistration_attestation: attestation } : {}),
     execution: { source_tree: sourceTreeIdentity(), product: productIdentityFor(gut) },
     resolved_config: {
-      engine: engine.kind === 'postgres' ? `postgres ${postgresServer} (pgvector), one fresh database per (document, arm) child process, created and dropped by the harness` : 'pglite-in-memory, one brain per (document, arm) child process',
+      engine: engine.kind === 'rust' ? 'rust through openEvalEngine (GBRAIN_EVAL_ENGINE), one store per (document, arm) child process in a temp directory' : engine.kind === 'postgres' ? `postgres ${postgresServer} (pgvector), one fresh database per (document, arm) child process, created and dropped by the harness` : 'pglite-in-memory, one brain per (document, arm) child process',
       decide: DECIDE_OFF,
       caller: 'operation handlers with OperationContext { remote: false, sourceId: default }',
       tiers, arms, docs: docs ?? 'all', seed, concurrency, rss_limit_mb: rssLimitMb,
@@ -1712,6 +1776,7 @@ async function main(): Promise<void> {
       ...(paidData ?? {}),
       harness_error: r.harnessError,
     },
+    ...evalEngineReceiptFields(evalKind, evalKind ? n14NotApplicable(evalKind) : []),
   };
   writeReceipt(outPath, scrubMachinePaths(receipt));
 
@@ -1759,5 +1824,9 @@ async function main(): Promise<void> {
 }
 
 if (import.meta.main) {
-  main().catch(e => { console.error(e); process.exit(3); });
+  main().catch(e => {
+    if (e instanceof EvalEngineUnavailable) refuseEvalEngine(e, 'N14 large-page fidelity');
+    console.error(e);
+    process.exit(3);
+  });
 }

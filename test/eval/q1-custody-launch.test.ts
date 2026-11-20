@@ -14,6 +14,7 @@ import { beam10mCustodyPush, Campaign, d8CustodyPush, runRemote, type CampaignMa
 import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { freePort } from '../../eval/runner/lifecycle/slice.ts';
 import { sealedLaunchChecks } from '../../eval/runner/scoreboard-cli.ts';
+import { bg1CampaignManifest, loadCellManifest } from '../../eval/runner/q1/cell.ts';
 import { d8ManifestPath, d8Source, verifyBeam10mCustody, verifyD8Custody } from '../../eval/runner/memory-qa/corpus.ts';
 import { homedir } from 'node:os';
 
@@ -285,5 +286,20 @@ describe('doctor --for sealed', () => {
       expect(pre['sealed-out']).toMatchObject({ ok: false, detail: expect.stringMatching(/inside the VM's checkout/) });
     } finally { Object.assign(proto, orig); }
     expect(byId(sealedLaunchChecks(a.manifestPath, join(inRepo, 'doctor-state'), [], env))['sealed-out']).toMatchObject({ ok: false, detail: expect.stringMatching(/inside the repository/) });
+  });
+
+  // Value: protects=doctor --for sealed can check a BG1 campaign before its first sealed launch; fails_when=the sealed probe hands payload() a lease id the BG1 lease binding refuses, so doctor throws instead of reporting sealed-payload and sealed-out; why_new=fix-check 4's #2 (the probe's lease_id 'doctor-probe' is not the id reserve() mints, and bindBg1Lease refuses it); seam=sealedLaunchChecks on a BG1 campaign of three sealed units with a state directory outside the checkout; no_claim=the BG1 custody push, which this doctor does not check
+  test('on a BG1 campaign, sealed-payload and sealed-out pass with a probe lease reserve() would mint', () => {
+    const m = loadCellManifest('bg1');
+    const units = ['bg1.baseline-none.baseline.c0', 'bg1.baseline-none.baseline.c1', 'bg1.gbrain-defaults.rs1-stable.c0'];
+    const dir = join(tmp, `bg1-doctor-${n++}`);
+    mkdirSync(dir, { recursive: true });
+    const manifest = { ...bg1CampaignManifest(m, { units: { campaign_id: 'q1-scoreboard-bg1-doctor-t', cap_usd: 1000, units, paid_window: 'BG1-T' }, worldEnd: '2026-11-15' }), ledger: join(dir, 'campaign.sqlite') };
+    expect(manifest.cells.filter(c => c.sealed).map(c => c.id).sort()).toEqual(units);
+    writeFileSync(join(dir, 'manifest.json'), JSON.stringify(manifest, null, 2));
+    const checks = byId(sealedLaunchChecks(join(dir, 'manifest.json'), join(dir, 'state'), [], {}));
+    expect(Object.keys(checks)).toEqual(['sealed-payload', 'sealed-out']);
+    expect(checks['sealed-payload']).toMatchObject({ ok: true, detail: '3 sealed cell(s) carry a VM custody root and the custody access log' });
+    expect(checks['sealed-out']).toMatchObject({ ok: true, detail: `sealed cells write under ~/custody/out on the VM and pull to ${join(dir, 'state')}` });
   });
 });

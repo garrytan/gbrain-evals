@@ -1,0 +1,79 @@
+{
+ "schema": "gst2339-rescore-mpw2/v1",
+ "stratum": "BEAM-500K, memory proof wave 2 (28 conversations)",
+ "pair": "combined-v2 - comparator",
+ "margin": 3.5,
+ "method": "restricted wild cluster bootstrap-t, Webb weights, 9,999 draws, seed 20261010 (one-sided 95% bounds)",
+ "incomplete": 0,
+ "coverage": {
+  "cited": 504,
+  "checked": 504
+ },
+ "base": {
+  "questions": 560,
+  "conversations": 28,
+  "estimate_points": 3.11,
+  "se_points": 1.176,
+  "lower": 1.096,
+  "upper": 5.127,
+  "ahead": true,
+  "non_inferior_3_5": true,
+  "lanes": {
+   "v1": 67.73,
+   "v2": 69.38,
+   "v2-w5": 69.72,
+   "comparator": 66.27
+  }
+ },
+ "views": {
+  "supported": {
+   "questions": 346,
+   "conversations": 28,
+   "estimate_points": 4.008,
+   "se_points": 1.396,
+   "lower": 1.603,
+   "upper": 6.418,
+   "ahead": true,
+   "non_inferior_3_5": true,
+   "lanes": {
+    "v1": 73.7,
+    "v2": 77.06,
+    "v2-w5": 76.38,
+    "comparator": 73.06
+   }
+  },
+  "flagged-out": {
+   "questions": 402,
+   "conversations": 28,
+   "estimate_points": 3.947,
+   "se_points": 1.261,
+   "lower": 1.796,
+   "upper": 6.106,
+   "ahead": true,
+   "non_inferior_3_5": true,
+   "lanes": {
+    "v1": 72.89,
+    "v2": 75.53,
+    "v2-w5": 75.44,
+    "comparator": 71.59
+   }
+  },
+  "both-out": {
+   "questions": 455,
+   "conversations": 28,
+   "estimate_points": 3.232,
+   "se_points": 1.259,
+   "lower": 1.098,
+   "upper": 5.39,
+   "ahead": true,
+   "non_inferior_3_5": true,
+   "lanes": {
+    "v1": 71.15,
+    "v2": 72.87,
+    "v2-w5": 73.25,
+    "comparator": 69.64
+   }
+  }
+ },
+ "not_rescorable": "BEAM-100K and BEAM-1M strata: per-question re-judge rows are not in the repository"
+}

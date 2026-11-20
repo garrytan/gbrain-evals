@@ -10,9 +10,13 @@
  * `grep`) as absent, so 30 of the 38 `traverse_graph` calls now read; that replay fails at `a131fb20`. Every
  * recorded `get_page` call still refuses on a non-empty value. gbrain v0.60.557.0 (gbrain#8458) hands the model the
  * error an MCP caller gets for the same refused read (code, message, suggestion and a runnable `fix`), where it used
- * to hand over only the message; the four tests that read a refusal fail at `311a83bbe`. Following each refusal's
- * fix verbatim reads every two- and three-selector `get_page` call. A replay cannot show whether Sol follows it, so
- * only a live Sol rollout shows whether its page reads recover.
+ * to hand over only the message; the four tests that read a refusal fail at `311a83bbe`. gbrain v0.60.570.0
+ * (gbrain#8509) reads one window from several selectors (cursor, then around_chunk_id, then lines, then bytes)
+ * instead of refusing, so all 436 two- and three-selector `get_page` calls now read; that replay fails at
+ * `62637c96a`. gbrain v0.60.671.0 (gbrain#9134) sets aside the arguments a recorded-time read or a hop chain does not
+ * serve, so the 8 hop-chain `traverse_graph` calls read and the 169 `known_as_of` calls stop only because the test brain
+ * has no recorded page at that instant (`coverage_from`, or an instant still in the future); that replay, and the
+ * refusal test that now sends `body: outline` beside `known_as_of`, fail at `d253ec0ff`. The grep refusal remains.
  */
 import { describe, expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
@@ -23,36 +27,17 @@ import { loadCorpora } from '../../eval/generators/skillopt-method/common.ts';
 import { withHermeticEnv } from '../../eval/runner/hermetic-env.ts';
 import { readSeed } from '../../eval/runner/skillopt-method/dataset.ts';
 import { fakeReply, FRONTIER_TARGETS, openBrain, withProbeGateway, type ChatTransport } from '../../eval/runner/skillopt-method/headroom.ts';
+import { resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
+import { recordedCalls, withRegistry as withRootRegistry, type Call } from '../../eval/runner/nightly/tool-contract.ts';
 
 const PAGE = 'people/vera-chen-14';
 const TASK = { task_id: 'sol-empty-args', task: 'Who is Vera Chen?' } as BenchmarkTask;
 const SOL_EMPTY = { known_as_of: '', cursor: '', section: '', grep: '' };
 const SOL_NULL = { known_as_of: null, cursor: null, section: null, grep: null, around_chunk_id: null };
 
-type Loop = NonNullable<Parameters<typeof runRollout>[0]['toolLoopFn']>;
-type Refusal = { code?: string; message: string; suggestion?: string; fix?: { mcp?: { tool: string; arguments: object } } };
-type Handlers = Parameters<Loop>[0]['toolHandlers'];
-
-async function withRegistry<T>(registry: 'read-only' | 'write-capture', fn: (call: (tool: string, args: object) => Promise<{ ok: unknown } | { error: Refusal }>) => Promise<T>, tools = ['get_page', 'get_backlinks']): Promise<T> {
-  const engine = await openBrain();
-  try {
-    let out: T | undefined;
-    const toolLoopFn = (async ({ toolHandlers }: { toolHandlers: Handlers }) => {
-      const call = async (tool: string, args: object) => {
-        try { return { ok: await toolHandlers.get(`brain_${tool}`)!.execute(args, {} as never) }; } catch (e) {
-          const text = (e as Error).message;
-          try { return { error: JSON.parse(text) as Refusal }; } catch { return { error: { message: text } }; }
-        }
-      };
-      out = await fn(call);
-      return { messages: [], stopReason: 'end', totalTurns: 0, totalUsage: {} };
-    }) as unknown as Loop;
-    await runRollout({ engine, skillText: readSeed('query'), targetModel: FRONTIER_TARGETS.sol, task: TASK, toolLoopFn, ...(registry === 'write-capture' ? { writeCapture: true } : { allowedTools: new Set(tools) }) });
-    return out!;
-  } finally {
-    await engine.disconnect().catch(() => {});
-  }
-}
+/** The pinned SkillOpt registries, through the nightly tool-contract replay's helpers (eval/runner/nightly/tool-contract.ts). */
+const PINNED = resolveGbrainUnderTest(null).root;
+const withRegistry = <T,>(registry: 'read-only' | 'write-capture', fn: (call: Call) => Promise<T>, tools?: string[]) => withRootRegistry(PINNED, registry, fn, tools);
 
 describe("GPT-6.1 Sol's empty optional arguments in the pinned SkillOpt registries (gbrain#8429)", () => {
   test('the corpus holds the page the calls read', () => {
@@ -95,7 +80,7 @@ describe("GPT-6.1 Sol's empty optional arguments in the pinned SkillOpt registri
       for (const m of opts.messages) if (Array.isArray(m.content)) for (const b of m.content) if (b.type === 'tool-result') seen.push(b);
       if (seen.length) return fakeReply(opts, 'Vera Chen. [Source: people/vera-chen-14]');
       const blocks = [
-        { type: 'tool-call', toolCallId: 'c1', toolName: 'brain_get_page', input: { slug: PAGE, lines: { from: 1, count: 150 }, bytes: { offset: 0, length: 20000 } } },
+        { type: 'tool-call', toolCallId: 'c1', toolName: 'brain_get_page', input: { slug: PAGE, known_as_of: '2026-01-01T00:00:00Z', body: 'outline' } },
       ] as ChatResult['blocks'];
       return { ...fakeReply(opts, ''), blocks, stopReason: 'tool_calls' } as ChatResult;
     };
@@ -112,9 +97,9 @@ describe("GPT-6.1 Sol's empty optional arguments in the pinned SkillOpt registri
     expect(result!.isError).toBe(true);
     expect(JSON.parse(result!.output)).toMatchObject({
       code: 'invalid_params',
-      message: 'get_page: pass one window selector, not 2 (got lines and bytes).',
-      suggestion: expect.stringContaining('Drop `bytes` to read the lines window'),
-      fix: { mcp: { tool: 'get_page', arguments: { slug: PAGE, lines: { from: 1, count: 150 }, body: 'window' } } },
+      message: 'get_page: known_as_of does not combine with body: outline.',
+      suggestion: expect.stringContaining('Drop `body` to read the page as recorded at known_as_of'),
+      fix: { mcp: { tool: 'get_page', arguments: { slug: PAGE, known_as_of: '2026-01-01T00:00:00Z' } } },
     });
   }, 120_000);
 
@@ -139,21 +124,14 @@ describe("GPT-6.1 Sol's empty optional arguments in the pinned SkillOpt registri
   }
 });
 
-describe('what gbrain#8429 and gbrain#8444 leave refused, and where gbrain#8458\'s fix leads: the frontier probe\'s recorded Sol calls, replayed', () => {
+describe('what gbrain#8429, gbrain#8444 and gbrain#8509 leave refused, and where gbrain#8458\'s fix leads: the frontier probe\'s recorded Sol calls, replayed', () => {
   const INPUTS = join(import.meta.dir, '../../docs/benchmarks/2026-11-01-skillopt-method/probe/frontier/f0b-sol/one-shot');
   const SLUG: Record<string, string> = { get_page: PAGE, get_backlinks: PAGE, traverse_graph: 'companies/ranger-22' };
   const lines = (['query', 'briefing', 'fact-check'] as const).flatMap(skill =>
     readFileSync(join(INPUTS, `sol-${skill}-input.txt`), 'utf8').split('\n'));
-  const recorded = lines.flatMap(line => {
-    const m = /^- (get_page|traverse_graph|get_backlinks) ((?:\{|").*[}"]) returned /.exec(line);
-    if (!m) return [];
-    const input: unknown = JSON.parse(m[2]!);
-    let args: Record<string, unknown> | null = null;
-    try { args = (typeof input === 'string' ? JSON.parse(input) : input) as Record<string, unknown>; } catch { /* Sol sent arguments that are not JSON */ }
-    return [{ tool: m[1]!, args }];
-  });
+  const recorded = (['query', 'briefing', 'fact-check'] as const).flatMap(skill => recordedCalls('sol', skill));
 
-  test('every get_backlinks call and the 30 traverse_graph calls with hops: [] read; every get_page call and the 8 traverse_graph calls with a hop chain still fail, all but one on a non-empty argument; each refusal carries a suggestion, and following its fix reads all 436 multi-selector get_page calls', async () => {
+  test('every get_backlinks and traverse_graph call and the 436 multi-selector get_page calls read; of the other 171 get_page calls, the 169 known_as_of reads find no recorded page at that instant, one refuses grep beside lines and one is not JSON, and each refusal carries a suggestion', async () => {
     expect(loadCorpora().pages.has(SLUG.traverse_graph!)).toBe(true);
     for (const tool of Object.keys(SLUG)) {
       expect(recorded.filter(c => c.tool === tool).length).toBe(lines.filter(l => l.startsWith(`- ${tool} `)).length);
@@ -165,34 +143,31 @@ describe('what gbrain#8429 and gbrain#8444 leave refused, and where gbrain#8458\
       for (const c of recorded) {
         if (!c.args) { (tally[c.tool] ??= {})['arguments are not JSON'] = (tally[c.tool]!['arguments are not JSON'] ?? 0) + 1; continue; }
         const r = await call(c.tool, { ...c.args, slug: SLUG[c.tool] });
-        const rule = 'ok' in r ? 'ok' : (/^(?:get_page|traverse_graph): ([a-z_]+ (?:does not combine with|returns part of the read view|cannot be combined with)|pass one window selector, not \d \(got [a-z_ ]+\))/.exec(r.error.message)?.[1] ?? r.error.message);
+        const unrecorded = (e: { code?: string; message: string }) => e.code === 'coverage_from' || / is in the future\.$/.test(e.message);
+        const rule = 'ok' in r ? 'ok' : unrecorded(r.error) ? 'no recorded page at that instant' : (/^(?:get_page|traverse_graph): ([a-z_]+ (?:does not combine with|returns part of the read view|cannot be combined with)|pass one window selector, not \d \(got [a-z_ ]+\))/.exec(r.error.message)?.[1] ?? r.error.message);
         (tally[c.tool] ??= {})[rule] = (tally[c.tool]![rule] ?? 0) + 1;
         if ('ok' in r) continue;
-        if (r.error.code !== 'invalid_params' || !r.error.suggestion) unguided++;
+        if ((r.error.code !== 'invalid_params' && r.error.code !== 'coverage_from') || !r.error.suggestion) unguided++;
         const fix = r.error.fix?.mcp;
         const f = fix ? await call(fix.tool, fix.arguments) : null;
-        const next = !f ? 'no fix' : 'ok' in f ? 'reads' : f.error.code === 'coverage_from' || / is in the future\.$/.test(f.error.message) ? 'no recorded page at that instant' : f.error.message;
+        const next = !f ? 'no fix' : 'ok' in f ? 'reads' : unrecorded(f.error) ? 'no recorded page at that instant' : f.error.message;
         (followed[rule] ??= {})[next] = (followed[rule]![next] ?? 0) + 1;
       }
       return { tally, followed, unguided };
     }, ['get_page', 'traverse_graph', 'get_backlinks']));
     expect(unguided).toBe(0);
     expect(followed).toEqual({
-      'pass one window selector, not 2 (got lines and bytes)': { reads: 183 },
-      'pass one window selector, not 3 (got lines and bytes and around_chunk_id)': { reads: 253 },
-      'known_as_of does not combine with': { 'no recorded page at that instant': 169 },
+      'no recorded page at that instant': { 'no fix': 169 },
       'grep returns part of the read view': { 'no fix': 1 },
-      'hops cannot be combined with': { 'no fix': 8 },
     });
     expect(outcomes).toEqual({
       get_page: {
-        'pass one window selector, not 2 (got lines and bytes)': 183,
-        'pass one window selector, not 3 (got lines and bytes and around_chunk_id)': 253,
-        'known_as_of does not combine with': 169,
+        ok: 436,
+        'no recorded page at that instant': 169,
         'grep returns part of the read view': 1,
         'arguments are not JSON': 1,
       },
-      traverse_graph: { ok: 30, 'hops cannot be combined with': 8 },
+      traverse_graph: { ok: 38 },
       get_backlinks: { ok: 6 },
     });
   }, 120_000);

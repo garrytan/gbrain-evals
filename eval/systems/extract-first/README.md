@@ -11,7 +11,7 @@ are absent.
 
 | Piece | Value |
 |---|---|
-| Package | the pinned extract-first package with its `nlp` extra, `fastembed` (BM25 sparse vectors for Qdrant) and `en_core_web_sm` 3.8.0, the documented hybrid-search install. `uv.lock` resolved on 2026-10-05 with `exclude-newer` and no prereleases (qdrant-client 1.19.1, openai 3.24.0, spacy 3.8.16, fastembed 0.8.1) |
+| Package | the pinned extract-first package with its `nlp` extra, `fastembed` (BM25 sparse vectors for Qdrant) and `en_core_web_sm` 3.8.0, the documented hybrid-search install. `uv.lock` resolved on 2026-10-05 with `exclude-newer` and no prereleases, except `certifi`, raised to 2026.10.19 for a security fix on 2026-11-11 (qdrant-client 1.19.1, openai 3.24.0, spacy 3.8.16, fastembed 0.8.1) |
 | Backend | Qdrant server `v1.19.2` by digest, on the same internal network |
 | Base image | `python:3.12-slim-bookworm@sha256:54c85f3c…`, uv `0.12.3` by digest |
 | Recipe models | extraction `gpt-5-mini`, embedder `text-embedding-3-small` (1,536 dimensions): the SDK defaults, read back from the running `Memory` and reported by `/health`. The LLM config sets `is_reasoning_model=True` (see deviation 8) |
@@ -118,6 +118,12 @@ The extracted memories carried the session dates from the system line, for examp
 trip at Yosemite with her brother around June 20, 2023", although the prompt's Observation Date was 2026-10-05.
 
 ## Changelog
+
+### 2026-11-11: security fix in the lock
+`certifi` 2026.7.22 to 2026.10.19. `pyproject.toml` lets `certifi` alone past the 2026-10-05 cutoff
+(`exclude-newer-package`), so every other package keeps its 2026-10-05 resolution. Masashi-Ono0611 reported the
+advisory in [gbrain-evals#183](https://github.com/garrytan/gbrain-evals/pull/183). `uv.lock` moves from `9777b7a8` to `9c32b495`: runs started after
+this change record the new hash, and earlier results keep the hash they recorded.
 
 ### 2026-10-05: metered smoke
 Recipe sets `is_reasoning_model=True` after the first metered run showed every `gpt-5-mini` call rejected; proxy 402

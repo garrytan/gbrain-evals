@@ -1,0 +1,6706 @@
+{
+ "kind": "n2-judge-replay",
+ "model": "openai:gpt-6-luna",
+ "prompt_version": "plain",
+ "prompt": "Do these two notes contradict each other? Each note's date is shown. Answer yes or no.",
+ "max_tokens": 1024,
+ "sampling": "provider default",
+ "gbrain": "no gbrain judge or gateway; the budget ledger reads gbrain's model price table",
+ "preregistration_attestation": {
+  "preregistration": "docs/plans/2026-11-17-readme-baselines/PREREG.md",
+  "preregistration_commit": "b9a4094b5cb7ecc987579589befc6433ba897496",
+  "runner_commit": "443427ff5a4d437d870e2a19341617856e356e7d",
+  "worktree_clean_for_preregistration": true,
+  "on_origin": true,
+  "attested_at": "2026-11-17T07:39:56.655Z"
+ },
+ "concurrency": 6,
+ "wall_ms": 147448,
+ "judged": 741,
+ "errors": 0,
+ "cost": {
+  "usd": 0.030995,
+  "input_tokens": 93246,
+  "output_tokens": 43341,
+  "basis": "budget ledger n2-judge-replay-plain-openai-gpt-6-luna-2026-11-17T07-39-56-767Z-47ffa038: 741 paid requests, 0 charged at their reservation because usage was unavailable",
+  "ledger": "<work>/gbev97/ledger.sqlite",
+  "program_cap_usd": 25,
+  "overshoot_usd": 0,
+  "event_loop_lag_ms": {
+   "p50": 0,
+   "p99": 0,
+   "max": 6.1
+  }
+ },
+ "results": [
+  {
+   "id": "20261001:i001:companies/lundlex-example|companies/lunvane-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 138,
+   "output_tokens": 51,
+   "reply": "No. The notes describe different fictional companies and make no conflicting claims.",
+   "ms": 990
+  },
+  {
+   "id": "20261001:i001:notes/n2-i001-a|notes/n2-i001-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 110,
+   "output_tokens": 55,
+   "reply": "Yes. The notes give different headcounts for Lundlex Example on the same date: 108 and 188.",
+   "ms": 1275
+  },
+  {
+   "id": "20261001:i002:notes/n2-i002-a|notes/n2-i002-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 107,
+   "output_tokens": 88,
+   "reply": "Yes. The notes report different ARR figures for Talzarra Example: $7.2M and $26.2M.",
+   "ms": 1745
+  },
+  {
+   "id": "20261001:i003:companies/lundlex-example|notes/n2-i003-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 126,
+   "output_tokens": 72,
+   "reply": "No. The notes refer to different companies.",
+   "ms": 1004
+  },
+  {
+   "id": "20261001:i003:notes/n2-i003-a|notes/n2-i003-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 126,
+   "output_tokens": 46,
+   "reply": "Yes. They give different runway figures for the same date: 70 months and 31 months.",
+   "ms": 1114
+  },
+  {
+   "id": "20261001:i004:notes/n2-i004-a|notes/n2-i004-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 115,
+   "output_tokens": 52,
+   "reply": "Yes. One note says Ivoford Example has 109 pilot customers; the other says 11.",
+   "ms": 1320
+  },
+  {
+   "id": "20261001:i005:companies/cortessa-example|notes/n2-i005-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 127,
+   "output_tokens": 63,
+   "reply": "No.",
+   "ms": 1079
+  },
+  {
+   "id": "20261001:i005:notes/n2-i005-a|notes/n2-i005-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 115,
+   "output_tokens": 45,
+   "reply": "Yes. One note says the SAFE has a $331M cap; the other says $219M.",
+   "ms": 1353
+  },
+  {
+   "id": "20261001:i006:companies/ruvdlex-example|notes/n2-i006-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 138,
+   "output_tokens": 82,
+   "reply": "No.",
+   "ms": 1224
+  },
+  {
+   "id": "20261001:i006:notes/n2-i006-a|notes/n2-i006-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 131,
+   "output_tokens": 57,
+   "reply": "Yes. On January 18, 2025, one note says Ruvdlex Example is headquartered in Grennwick, while the other says Grennhaven.",
+   "ms": 1422
+  },
+  {
+   "id": "20261001:i007:companies/cortessa-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 138,
+   "output_tokens": 48,
+   "reply": "No. The notes describe different companies.",
+   "ms": 1127
+  },
+  {
+   "id": "20261001:i007:companies/talzarra-example|notes/n2-i007-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 125,
+   "output_tokens": 48,
+   "reply": "No.",
+   "ms": 906
+  },
+  {
+   "id": "20261001:i007:notes/n2-i007-a|notes/n2-i007-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 118,
+   "output_tokens": 38,
+   "reply": "Yes. The notes name different people as CEO of Cortessa Example.",
+   "ms": 1120
+  },
+  {
+   "id": "20261001:i008:notes/n2-i008-a|notes/n2-i008-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 106,
+   "output_tokens": 50,
+   "reply": "Yes. One note says the headcount is 448; the other says 444.",
+   "ms": 1840
+  },
+  {
+   "id": "20261001:i009:companies/ivotrix-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 133,
+   "output_tokens": 37,
+   "reply": "No.",
+   "ms": 844
+  },
+  {
+   "id": "20261001:i009:notes/n2-i009-a|notes/n2-i009-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 129,
+   "output_tokens": 56,
+   "reply": "Yes. They report different ARR figures for Ivotrix Example as of March 4, 2026.",
+   "ms": 1063
+  },
+  {
+   "id": "20261001:i010:companies/ivoford-example|notes/n2-i010-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 128,
+   "output_tokens": 71,
+   "reply": "No. The notes refer to different companies.",
+   "ms": 1085
+  },
+  {
+   "id": "20261001:i010:notes/n2-i010-a|notes/n2-i010-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 114,
+   "output_tokens": 50,
+   "reply": "Yes. One note says Nimbarth Example has 14 months of runway; the other says 11.",
+   "ms": 1296
+  },
+  {
+   "id": "20261001:i011:companies/jarnmora-example|notes/n2-i011-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 123,
+   "output_tokens": 46,
+   "reply": "No. The notes describe different companies.",
+   "ms": 815
+  },
+  {
+   "id": "20261001:i011:companies/lundlex-example|notes/n2-i011-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 115,
+   "output_tokens": 67,
+   "reply": "No. The notes refer to different companies.",
+   "ms": 1037
+  },
+  {
+   "id": "20261001:i011:notes/n2-i011-a|notes/n2-i011-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 100,
+   "output_tokens": 34,
+   "reply": "Yes.",
+   "ms": 984
+  },
+  {
+   "id": "20261001:i012:companies/cortessa-example|companies/ruvdlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 144,
+   "output_tokens": 59,
+   "reply": "No. The notes describe different companies and make no conflicting claims.",
+   "ms": 1022
+  },
+  {
+   "id": "20261001:i012:companies/cortessa-example|notes/n2-i012-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 137,
+   "output_tokens": 39,
+   "reply": "No. The notes describe different fictional companies.",
+   "ms": 860
+  },
+  {
+   "id": "20261001:i012:companies/lunvane-example|notes/n2-i012-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 141,
+   "output_tokens": 42,
+   "reply": "No. The notes refer to different companies.",
+   "ms": 1085
+  },
+  {
+   "id": "20261001:i012:companies/lunvane-example|notes/n2-i012-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 134,
+   "output_tokens": 66,
+   "reply": "No. The notes refer to different fictional companies.",
+   "ms": 1104
+  },
+  {
+   "id": "20261001:i012:notes/n2-i012-a|notes/n2-i012-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 129,
+   "output_tokens": 56,
+   "reply": "Yes. Both notes describe the SAFE cap as of February 8, 2026, but give different amounts: $55M and $237M.",
+   "ms": 2964
+  },
+  {
+   "id": "20261001:i013:notes/n2-i013-a|notes/n2-i013-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 110,
+   "output_tokens": 36,
+   "reply": "Yes. The notes give different headquarters for Ostloom Example.",
+   "ms": 785
+  },
+  {
+   "id": "20261001:i014:notes/n2-i014-a|notes/n2-i014-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 109,
+   "output_tokens": 45,
+   "reply": "Yes. The notes name different people as Vextrix Example’s CEO.",
+   "ms": 1160
+  },
+  {
+   "id": "20261001:i015:notes/n2-i015-a|notes/n2-i015-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 126,
+   "output_tokens": 54,
+   "reply": "Yes. Both notes report Brenwick Example’s headcount as of November 23, 2025, but give different figures.",
+   "ms": 1094
+  },
+  {
+   "id": "20261001:i016:companies/jarntrix-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 140,
+   "output_tokens": 46,
+   "reply": "No.",
+   "ms": 875
+  },
+  {
+   "id": "20261001:i016:companies/jarntrix-example|notes/n2-i016-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 134,
+   "output_tokens": 60,
+   "reply": "No.",
+   "ms": 1143
+  },
+  {
+   "id": "20261001:i016:companies/lundlex-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 134,
+   "output_tokens": 43,
+   "reply": "No.",
+   "ms": 955
+  },
+  {
+   "id": "20261001:i016:companies/lundlex-example|notes/n2-i016-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 124,
+   "output_tokens": 65,
+   "reply": "No. The notes describe different companies and make no conflicting claims.",
+   "ms": 943
+  },
+  {
+   "id": "20261001:i016:notes/n2-i016-a|notes/n2-i016-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 118,
+   "output_tokens": 55,
+   "reply": "Yes. The notes report different ARR figures for Jarntrix Example: $27.4M and $3.1M.",
+   "ms": 1050
+  },
+  {
+   "id": "20261001:i017:companies/lundlex-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 134,
+   "output_tokens": 38,
+   "reply": "No.",
+   "ms": 767
+  },
+  {
+   "id": "20261001:i017:notes/n2-i017-a|notes/n2-i017-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 106,
+   "output_tokens": 43,
+   "reply": "Yes.",
+   "ms": 927
+  },
+  {
+   "id": "20261001:i018:companies/gralquay-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 138,
+   "output_tokens": 64,
+   "reply": "No. The notes describe different companies and make no conflicting claims.",
+   "ms": 1164
+  },
+  {
+   "id": "20261001:i018:companies/gralquay-example|notes/n2-i018-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 135,
+   "output_tokens": 30,
+   "reply": "No. The notes describe different companies.",
+   "ms": 987
+  },
+  {
+   "id": "20261001:i018:notes/n2-i018-a|notes/n2-i018-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 130,
+   "output_tokens": 72,
+   "reply": "Yes. Both notes give different pilot-customer counts for Fensorn Example as of September 16, 2025: 29 and 46.",
+   "ms": 1228
+  },
+  {
+   "id": "20261001:i019:notes/n2-i019-a|notes/n2-i019-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 119,
+   "output_tokens": 49,
+   "reply": "Yes. The notes give different cap values for the same SAFE: $231M and $124M.",
+   "ms": 1246
+  },
+  {
+   "id": "20261001:i020:notes/n2-i020-a|notes/n2-i020-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 108,
+   "output_tokens": 79,
+   "reply": "Yes. The notes give different headquarters for Graltrix Example.",
+   "ms": 1240
+  },
+  {
+   "id": "20261001:i021:notes/n2-i021-a|notes/n2-i021-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 136,
+   "output_tokens": 46,
+   "reply": "Yes. Both notes state different people were CEO of Cormund Example as of June 20, 2025.",
+   "ms": 954
+  },
+  {
+   "id": "20261001:i022:notes/n2-i022-a|notes/n2-i022-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 117,
+   "output_tokens": 54,
+   "reply": "Yes. The notes give different headcounts for Nimpellow Example: 166 and 316.",
+   "ms": 1048
+  },
+  {
+   "id": "20261001:i023:companies/corwick-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 132,
+   "output_tokens": 34,
+   "reply": "No.",
+   "ms": 1577
+  },
+  {
+   "id": "20261001:i023:notes/n2-i023-a|notes/n2-i023-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 103,
+   "output_tokens": 45,
+   "reply": "Yes. They report different ARR figures: $24.3M and $1.4M.",
+   "ms": 1064
+  },
+  {
+   "id": "20261001:i024:notes/n2-i024-a|notes/n2-i024-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 129,
+   "output_tokens": 73,
+   "reply": "Yes. Both notes say that, as of April 2, 2026, Lunford Example had different runway lengths: 81 months and 8 months.",
+   "ms": 1411
+  },
+  {
+   "id": "20261001:i025:companies/gralquay-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 138,
+   "output_tokens": 42,
+   "reply": "No.",
+   "ms": 894
+  },
+  {
+   "id": "20261001:i025:companies/gralquay-example|notes/n2-i025-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 131,
+   "output_tokens": 31,
+   "reply": "No.",
+   "ms": 926
+  },
+  {
+   "id": "20261001:i025:companies/jarnmora-example|notes/n2-i025-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 131,
+   "output_tokens": 58,
+   "reply": "No. The notes describe different companies.",
+   "ms": 1054
+  },
+  {
+   "id": "20261001:i025:notes/n2-i025-a|notes/n2-i025-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 115,
+   "output_tokens": 60,
+   "reply": "Yes. One note says Keltrix Example has 282 pilot customers; the other says 100.",
+   "ms": 1343
+  },
+  {
+   "id": "20261001:i026:companies/lunvane-example|notes/n2-i026-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 125,
+   "output_tokens": 58,
+   "reply": "No. The notes describe different companies and don’t conflict.",
+   "ms": 1103
+  },
+  {
+   "id": "20261001:i026:companies/ruvdlex-example|notes/n2-i026-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 130,
+   "output_tokens": 56,
+   "reply": "No.",
+   "ms": 943
+  },
+  {
+   "id": "20261001:i026:notes/n2-i026-a|notes/n2-i026-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 107,
+   "output_tokens": 47,
+   "reply": "Yes. One note says the SAFE has a $235M cap; the other says $212M.",
+   "ms": 1076
+  },
+  {
+   "id": "20261001:i027:companies/lundlex-example|notes/n2-i027-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 136,
+   "output_tokens": 54,
+   "reply": "No. The notes describe different companies.",
+   "ms": 1025
+  },
+  {
+   "id": "20261001:i027:companies/ruvmora-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 145,
+   "output_tokens": 54,
+   "reply": "No.",
+   "ms": 1053
+  },
+  {
+   "id": "20261001:i027:companies/talzarra-example|notes/n2-i027-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 140,
+   "output_tokens": 52,
+   "reply": "No.",
+   "ms": 1110
+  },
+  {
+   "id": "20261001:i027:notes/n2-i027-a|notes/n2-i027-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 137,
+   "output_tokens": 51,
+   "reply": "Yes. For March 26, 2026, the notes give different headquarters: Iverdmouth and Talmoford.",
+   "ms": 1108
+  },
+  {
+   "id": "20261001:i028:companies/quildela-example|notes/n2-i028-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 132,
+   "output_tokens": 66,
+   "reply": "No.",
+   "ms": 1026
+  },
+  {
+   "id": "20261001:i028:notes/n2-i028-a|notes/n2-i028-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 123,
+   "output_tokens": 42,
+   "reply": "Yes. The notes name different people as CEO of Quildela Example.",
+   "ms": 1140
+  },
+  {
+   "id": "20261001:i029:notes/n2-i029-a|notes/n2-i029-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 104,
+   "output_tokens": 58,
+   "reply": "Yes. The notes give different headcounts for Lunzarra Example: 41 and 78.",
+   "ms": 1206
+  },
+  {
+   "id": "20261001:i030:companies/talzarra-example|notes/n2-i030-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 130,
+   "output_tokens": 49,
+   "reply": "No. The notes describe different companies and make no conflicting claims.",
+   "ms": 1090
+  },
+  {
+   "id": "20261001:i030:notes/n2-i030-a|notes/n2-i030-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 128,
+   "output_tokens": 47,
+   "reply": "Yes. Both notes are as of April 24, 2025, but report different ARR figures.",
+   "ms": 950
+  },
+  {
+   "id": "20261001:i031:companies/lundlex-example|notes/n2-i031-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 122,
+   "output_tokens": 51,
+   "reply": "No. The notes describe different companies.",
+   "ms": 989
+  },
+  {
+   "id": "20261001:i031:notes/n2-i031-a|notes/n2-i031-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 114,
+   "output_tokens": 46,
+   "reply": "Yes. The notes give different runway figures: 32 months and 78 months.",
+   "ms": 1174
+  },
+  {
+   "id": "20261001:i032:notes/n2-i032-a|notes/n2-i032-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 102,
+   "output_tokens": 71,
+   "reply": "Yes. The notes give different pilot-customer counts: 215 and 243.",
+   "ms": 1357
+  },
+  {
+   "id": "20261001:i033:companies/lunvane-example|companies/ruvdlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 148,
+   "output_tokens": 50,
+   "reply": "No. The notes describe different fictional companies.",
+   "ms": 951
+  },
+  {
+   "id": "20261001:i033:companies/lunvane-example|notes/n2-i033-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 141,
+   "output_tokens": 60,
+   "reply": "No. The notes refer to different companies: Luntrix Example and Lunvane Example.",
+   "ms": 1082
+  },
+  {
+   "id": "20261001:i033:notes/n2-i033-a|notes/n2-i033-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 133,
+   "output_tokens": 47,
+   "reply": "Yes. They give different SAFE caps for the same date: $34M and $348M.",
+   "ms": 1254
+  },
+  {
+   "id": "20261001:i034:companies/lundlex-example|notes/n2-i034-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 124,
+   "output_tokens": 85,
+   "reply": "No.",
+   "ms": 1177
+  },
+  {
+   "id": "20261001:i034:notes/n2-i034-a|notes/n2-i034-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 121,
+   "output_tokens": 37,
+   "reply": "Yes. The notes give different headquarters for Ruvvane Example.",
+   "ms": 905
+  },
+  {
+   "id": "20261001:i035:notes/n2-i035-a|notes/n2-i035-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 113,
+   "output_tokens": 52,
+   "reply": "Yes. One note says Dmitri Novak-Example is the CEO; the other says Kira Silva-Example is the CEO.",
+   "ms": 1374
+  },
+  {
+   "id": "20261001:i036:companies/nimtrix-example|notes/n2-i036-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 140,
+   "output_tokens": 59,
+   "reply": "No.",
+   "ms": 912
+  },
+  {
+   "id": "20261001:i036:notes/n2-i036-a|notes/n2-i036-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 127,
+   "output_tokens": 47,
+   "reply": "Yes. They report different headcounts—102 and 141—as of June 29, 2025.",
+   "ms": 1146
+  },
+  {
+   "id": "20261001:i037:notes/n2-i037-a|notes/n2-i037-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 120,
+   "output_tokens": 50,
+   "reply": "Yes. The notes report different ARR figures for Quilzarra Example on the same date.",
+   "ms": 1030
+  },
+  {
+   "id": "20261001:i038:notes/n2-i038-a|notes/n2-i038-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 105,
+   "output_tokens": 50,
+   "reply": "Yes. One note says Jarnbarth Example has 115 months of runway, while the other says 105 months.",
+   "ms": 1475
+  },
+  {
+   "id": "20261001:i039:companies/gralquay-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 138,
+   "output_tokens": 52,
+   "reply": "No. The notes describe different companies and do not make conflicting claims about the same fact.",
+   "ms": 1343
+  },
+  {
+   "id": "20261001:i039:companies/gralquay-example|notes/n2-i039-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 140,
+   "output_tokens": 60,
+   "reply": "No. The notes describe different companies.",
+   "ms": 996
+  },
+  {
+   "id": "20261001:i039:notes/n2-i039-a|notes/n2-i039-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 129,
+   "output_tokens": 78,
+   "reply": "Yes. Both notes give March 26, 2025 as the date, but report different numbers of pilot customers: 119 and 124.",
+   "ms": 1365
+  },
+  {
+   "id": "20261001:i040:companies/lunvane-example|notes/n2-i040-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 130,
+   "output_tokens": 74,
+   "reply": "No. The notes refer to different companies.",
+   "ms": 1318
+  },
+  {
+   "id": "20261001:i040:companies/ruvdlex-example|notes/n2-i040-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 132,
+   "output_tokens": 66,
+   "reply": "No. The notes refer to different companies.",
+   "ms": 952
+  },
+  {
+   "id": "20261001:i040:notes/n2-i040-a|notes/n2-i040-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 116,
+   "output_tokens": 55,
+   "reply": "Yes. The notes give different SAFE caps: $261M and $120M.",
+   "ms": 1233
+  },
+  {
+   "id": "20261001:i041:notes/n2-i041-a|notes/n2-i041-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 101,
+   "output_tokens": 60,
+   "reply": "Yes. One note says Quilford Example is headquartered in Jorvahaven; the other says it is headquartered in Dunecliff.",
+   "ms": 1188
+  },
+  {
+   "id": "20261001:i042:companies/cortrix-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 141,
+   "output_tokens": 44,
+   "reply": "No. The notes describe different companies and make no conflicting claims.",
+   "ms": 1155
+  },
+  {
+   "id": "20261001:i042:notes/n2-i042-a|notes/n2-i042-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 134,
+   "output_tokens": 27,
+   "reply": "Yes.",
+   "ms": 823
+  },
+  {
+   "id": "20261001:i043:companies/vexford-example|notes/n2-i043-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 127,
+   "output_tokens": 145,
+   "reply": "No.",
+   "ms": 1704
+  },
+  {
+   "id": "20261001:i043:notes/n2-i043-a|notes/n2-i043-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 116,
+   "output_tokens": 53,
+   "reply": "Yes. The notes give different headcounts for Talmora Example on the same date.",
+   "ms": 1544
+  },
+  {
+   "id": "20261001:i044:companies/cormora-example|notes/n2-i044-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 126,
+   "output_tokens": 80,
+   "reply": "No.",
+   "ms": 1156
+  },
+  {
+   "id": "20261001:i044:companies/lundlex-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 134,
+   "output_tokens": 44,
+   "reply": "No.",
+   "ms": 1012
+  },
+  {
+   "id": "20261001:i044:companies/talzarra-example|notes/n2-i044-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 123,
+   "output_tokens": 44,
+   "reply": "No. The notes describe different companies and make no conflicting claims.",
+   "ms": 1191
+  },
+  {
+   "id": "20261001:i044:notes/n2-i044-a|notes/n2-i044-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 109,
+   "output_tokens": 58,
+   "reply": "Yes. The notes report different ARR figures: $22.5M and $20.8M.",
+   "ms": 1221
+  },
+  {
+   "id": "20261001:i045:notes/n2-i045-a|notes/n2-i045-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 133,
+   "output_tokens": 52,
+   "reply": "Yes. They give different runway figures—59 months and 73 months—as of the same date.",
+   "ms": 1062
+  },
+  {
+   "id": "20261001:i046:companies/gralquay-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 138,
+   "output_tokens": 39,
+   "reply": "No.",
+   "ms": 1664
+  },
+  {
+   "id": "20261001:i046:companies/jarnmora-example|notes/n2-i046-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 132,
+   "output_tokens": 38,
+   "reply": "No. The notes describe different companies.",
+   "ms": 888
+  },
+  {
+   "id": "20261001:i046:companies/jarnmora-example|notes/n2-i046-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 129,
+   "output_tokens": 59,
+   "reply": "No.",
+   "ms": 966
+  },
+  {
+   "id": "20261001:i046:notes/n2-i046-a|notes/n2-i046-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 115,
+   "output_tokens": 62,
+   "reply": "Yes. One note says Drazarra Example has 260 pilot customers; the other says 75.",
+   "ms": 1232
+  },
+  {
+   "id": "20261001:i047:notes/n2-i047-a|notes/n2-i047-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 104,
+   "output_tokens": 69,
+   "reply": "Yes. The notes give different caps for the same SAFE: $283M and $408M.",
+   "ms": 1200
+  },
+  {
+   "id": "20261001:i048:notes/n2-i048-a|notes/n2-i048-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 130,
+   "output_tokens": 48,
+   "reply": "Yes. The notes give different headquarters for Morzarra Example as of December 26, 2025.",
+   "ms": 990
+  },
+  {
+   "id": "20261001:i049:companies/talzarra-example|notes/n2-i049-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 132,
+   "output_tokens": 68,
+   "reply": "No. The notes describe different companies, and their statements do not conflict.",
+   "ms": 1380
+  },
+  {
+   "id": "20261001:i049:notes/n2-i049-a|notes/n2-i049-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 125,
+   "output_tokens": 38,
+   "reply": "Yes. The notes name different people as CEO of Jarnzarra Example.",
+   "ms": 1013
+  },
+  {
+   "id": "20261001:i050:companies/talzarra-example|notes/n2-i050-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 120,
+   "output_tokens": 66,
+   "reply": "No.",
+   "ms": 1254
+  },
+  {
+   "id": "20261001:i050:notes/n2-i050-a|notes/n2-i050-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 101,
+   "output_tokens": 49,
+   "reply": "Yes. The notes give different headcounts for Fentrix Example: 111 and 453.",
+   "ms": 1022
+  },
+  {
+   "id": "20261001:i051:notes/n2-i051-a|notes/n2-i051-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 131,
+   "output_tokens": 55,
+   "reply": "Yes. For March 6, 2025, the notes report different ARR figures: $23.4M and $15.5M.",
+   "ms": 873
+  },
+  {
+   "id": "20261001:i052:notes/n2-i052-a|notes/n2-i052-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 115,
+   "output_tokens": 46,
+   "reply": "Yes. The notes give different runway figures: 28 months and 26 months.",
+   "ms": 988
+  },
+  {
+   "id": "20261001:i053:companies/gralquay-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 138,
+   "output_tokens": 57,
+   "reply": "No. The notes describe different fictional companies and do not make conflicting claims.",
+   "ms": 1101
+  },
+  {
+   "id": "20261001:i053:notes/n2-i053-a|notes/n2-i053-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 106,
+   "output_tokens": 29,
+   "reply": "Yes.",
+   "ms": 1132
+  },
+  {
+   "id": "20261001:i054:notes/n2-i054-a|notes/n2-i054-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 134,
+   "output_tokens": 46,
+   "reply": "Yes. The notes give different SAFE caps for the same date: $115M and $336M.",
+   "ms": 969
+  },
+  {
+   "id": "20261001:i055:companies/lundlex-example|notes/n2-i055-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 123,
+   "output_tokens": 77,
+   "reply": "No. The notes describe different companies.",
+   "ms": 1340
+  },
+  {
+   "id": "20261001:i055:notes/n2-i055-a|notes/n2-i055-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 112,
+   "output_tokens": 53,
+   "reply": "Yes. One note says Nimford Example is headquartered in Quillport; the other says it is headquartered in Talmovale.",
+   "ms": 1003
+  },
+  {
+   "id": "20261001:i056:notes/n2-i056-a|notes/n2-i056-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 106,
+   "output_tokens": 49,
+   "reply": "Yes. The notes name different people as CEO of Jarnmund Example.",
+   "ms": 1181
+  },
+  {
+   "id": "20261001:i057:notes/n2-i057-a|notes/n2-i057-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 129,
+   "output_tokens": 49,
+   "reply": "Yes. For May 11, 2025, the notes report different headcounts: 69 and 252.",
+   "ms": 1084
+  },
+  {
+   "id": "20261001:i058:notes/n2-i058-a|notes/n2-i058-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 119,
+   "output_tokens": 48,
+   "reply": "Yes. They report different ARR figures for Mortrix Example on the same date.",
+   "ms": 1306
+  },
+  {
+   "id": "20261001:i059:companies/ivoford-example|notes/n2-i059-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 120,
+   "output_tokens": 102,
+   "reply": "No. The notes describe different companies: Fenford Example and Ivoford Example.",
+   "ms": 1520
+  },
+  {
+   "id": "20261001:i059:companies/lundlex-example|notes/n2-i059-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 114,
+   "output_tokens": 56,
+   "reply": "No. The notes refer to different companies.",
+   "ms": 1061
+  },
+  {
+   "id": "20261001:i059:notes/n2-i059-a|notes/n2-i059-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 98,
+   "output_tokens": 47,
+   "reply": "Yes. One note says 79 months of runway; the other says 106 months.",
+   "ms": 870
+  },
+  {
+   "id": "20261001:i060:notes/n2-i060-a|notes/n2-i060-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 128,
+   "output_tokens": 47,
+   "reply": "Yes. The notes give different pilot-customer counts for the same date: 165 and 178.",
+   "ms": 862
+  },
+  {
+   "id": "20261001:i061:notes/n2-i061-a|notes/n2-i061-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 120,
+   "output_tokens": 79,
+   "reply": "Yes. One note says the SAFE has a $54M cap; the other says it has a $40M cap.",
+   "ms": 1254
+  },
+  {
+   "id": "20261001:i062:companies/lundlex-example|notes/n2-i062-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 118,
+   "output_tokens": 53,
+   "reply": "No. The notes describe different companies and make no conflicting claims.",
+   "ms": 1420
+  },
+  {
+   "id": "20261001:i062:companies/lundlex-example|notes/n2-i062-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 118,
+   "output_tokens": 43,
+   "reply": "No.",
+   "ms": 890
+  },
+  {
+   "id": "20261001:i062:notes/n2-i062-a|notes/n2-i062-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 106,
+   "output_tokens": 49,
+   "reply": "Yes. The notes give different headquarters for Nimsorn Example: Eskelport and Ostrawick.",
+   "ms": 1039
+  },
+  {
+   "id": "20261001:i063:companies/lundlex-example|notes/n2-i063-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 131,
+   "output_tokens": 55,
+   "reply": "No. The notes describe different companies and do not conflict.",
+   "ms": 980
+  },
+  {
+   "id": "20261001:i063:companies/talzarra-example|notes/n2-i063-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 132,
+   "output_tokens": 39,
+   "reply": "No.",
+   "ms": 842
+  },
+  {
+   "id": "20261001:i063:notes/n2-i063-a|notes/n2-i063-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 129,
+   "output_tokens": 93,
+   "reply": "Yes. Both notes identify different people as Nimwick Example’s CEO as of January 9, 2026.",
+   "ms": 1449
+  },
+  {
+   "id": "20261001:i064:companies/lundlex-example|companies/quildlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 135,
+   "output_tokens": 52,
+   "reply": "No.",
+   "ms": 1122
+  },
+  {
+   "id": "20261001:i064:companies/lundlex-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 134,
+   "output_tokens": 32,
+   "reply": "No. The notes describe different companies.",
+   "ms": 782
+  },
+  {
+   "id": "20261001:i064:companies/talzarra-example|notes/n2-i064-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 125,
+   "output_tokens": 37,
+   "reply": "No. The notes describe different companies.",
+   "ms": 1384
+  },
+  {
+   "id": "20261001:i064:notes/n2-i064-a|notes/n2-i064-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 113,
+   "output_tokens": 48,
+   "reply": "Yes. The notes give different headcounts for Quildlex Example: 393 and 435.",
+   "ms": 1016
+  },
+  {
+   "id": "20261001:i065:companies/lundlex-example|companies/nimdela-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 135,
+   "output_tokens": 63,
+   "reply": "No. The notes describe different companies.",
+   "ms": 1244
+  },
+  {
+   "id": "20261001:i065:companies/lundlex-example|notes/n2-i065-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 120,
+   "output_tokens": 49,
+   "reply": "No. The notes describe different companies and do not conflict.",
+   "ms": 965
+  },
+  {
+   "id": "20261001:i065:notes/n2-i065-a|notes/n2-i065-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 109,
+   "output_tokens": 68,
+   "reply": "Yes. One note reports $16.0M ARR and the other reports $18.4M ARR.",
+   "ms": 1733
+  },
+  {
+   "id": "20261001:i066:companies/ivoford-example|notes/n2-i066-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 139,
+   "output_tokens": 73,
+   "reply": "No. The notes refer to different companies: Ivonix Example and Ivoford Example.",
+   "ms": 1374
+  },
+  {
+   "id": "20261001:i066:companies/talzarra-example|notes/n2-i066-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 137,
+   "output_tokens": 48,
+   "reply": "No. The notes refer to different companies.",
+   "ms": 1055
+  },
+  {
+   "id": "20261001:i066:notes/n2-i066-a|notes/n2-i066-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 128,
+   "output_tokens": 56,
+   "reply": "Yes. The notes give different runway figures for Ivonix Example as of May 14, 2025: 49 months and 41 months.",
+   "ms": 1317
+  },
+  {
+   "id": "20261001:i067:notes/n2-i067-a|notes/n2-i067-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 115,
+   "output_tokens": 62,
+   "reply": "Yes. One note says Corzarra Example has 37 pilot customers, while the other says 49.",
+   "ms": 1202
+  },
+  {
+   "id": "20261001:i068:companies/cortessa-example|notes/n2-i068-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 126,
+   "output_tokens": 48,
+   "reply": "No. The notes refer to different companies.",
+   "ms": 1265
+  },
+  {
+   "id": "20261001:i068:companies/ruvdlex-example|notes/n2-i068-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 132,
+   "output_tokens": 50,
+   "reply": "No. The notes describe different companies.",
+   "ms": 939
+  },
+  {
+   "id": "20261001:i068:notes/n2-i068-a|notes/n2-i068-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 110,
+   "output_tokens": 68,
+   "reply": "Yes. They give different caps for the same Vexquay Example SAFE: $50M and $133M.",
+   "ms": 1557
+  },
+  {
+   "id": "20261001:i069:companies/lundlex-example|companies/pelmund-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 131,
+   "output_tokens": 58,
+   "reply": "No.",
+   "ms": 1002
+  },
+  {
+   "id": "20261001:i069:notes/n2-i069-a|notes/n2-i069-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 125,
+   "output_tokens": 59,
+   "reply": "Yes. As of March 31, 2026, one note says Pelmund Example is headquartered in Halbrora and the other says Marsdcliff.",
+   "ms": 1066
+  },
+  {
+   "id": "20261001:i070:companies/lundlex-example|notes/n2-i070-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 125,
+   "output_tokens": 55,
+   "reply": "No. The notes describe different companies and make no conflicting claims.",
+   "ms": 1057
+  },
+  {
+   "id": "20261001:i070:companies/talzarra-example|notes/n2-i070-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 128,
+   "output_tokens": 29,
+   "reply": "No.",
+   "ms": 825
+  },
+  {
+   "id": "20261001:i070:notes/n2-i070-a|notes/n2-i070-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 119,
+   "output_tokens": 29,
+   "reply": "Yes.",
+   "ms": 850
+  },
+  {
+   "id": "20261001:i071:notes/n2-i071-a|notes/n2-i071-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 99,
+   "output_tokens": 46,
+   "reply": "Yes. The notes give different headcounts for Kelmund Example: 251 and 343.",
+   "ms": 931
+  },
+  {
+   "id": "20261001:i072:companies/lundlex-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 134,
+   "output_tokens": 42,
+   "reply": "No.",
+   "ms": 901
+  },
+  {
+   "id": "20261001:i072:companies/sabzarra-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 138,
+   "output_tokens": 64,
+   "reply": "No. The notes describe different fictional companies.",
+   "ms": 1338
+  },
+  {
+   "id": "20261001:i072:notes/n2-i072-a|notes/n2-i072-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 131,
+   "output_tokens": 87,
+   "reply": "Yes. Both state ARR as of February 9, 2026, but give different figures: $5.9M and $15.9M.",
+   "ms": 1540
+  },
+  {
+   "id": "20261001:i073:companies/ivoford-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 136,
+   "output_tokens": 35,
+   "reply": "No.",
+   "ms": 837
+  },
+  {
+   "id": "20261001:i073:notes/n2-i073-a|notes/n2-i073-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 111,
+   "output_tokens": 33,
+   "reply": "Yes.",
+   "ms": 858
+  },
+  {
+   "id": "20261001:i074:companies/jarnmora-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 138,
+   "output_tokens": 42,
+   "reply": "No. The notes describe different fictional companies.",
+   "ms": 960
+  },
+  {
+   "id": "20261001:i074:companies/lundlex-example|notes/n2-i074-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 115,
+   "output_tokens": 63,
+   "reply": "No.",
+   "ms": 931
+  },
+  {
+   "id": "20261001:i074:notes/n2-i074-a|notes/n2-i074-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 103,
+   "output_tokens": 34,
+   "reply": "Yes.",
+   "ms": 751
+  },
+  {
+   "id": "20261001:i075:notes/n2-i075-a|notes/n2-i075-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 130,
+   "output_tokens": 49,
+   "reply": "Yes. The notes give different SAFE caps for October 15, 2025: $378M and $379M.",
+   "ms": 1031
+  },
+  {
+   "id": "20261001:i076:companies/orvmora-example|notes/n2-i076-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 129,
+   "output_tokens": 55,
+   "reply": "No.",
+   "ms": 1018
+  },
+  {
+   "id": "20261001:i076:notes/n2-i076-a|notes/n2-i076-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 117,
+   "output_tokens": 41,
+   "reply": "Yes. The notes give different headquarters: Marsdmouth and Kestwicliff.",
+   "ms": 1552
+  },
+  {
+   "id": "20261001:i077:notes/n2-i077-a|notes/n2-i077-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 109,
+   "output_tokens": 42,
+   "reply": "Yes. The notes name different people as CEO of Brenpellow Example.",
+   "ms": 1133
+  },
+  {
+   "id": "20261001:i078:notes/n2-i078-a|notes/n2-i078-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 126,
+   "output_tokens": 51,
+   "reply": "Yes. The notes give different headcounts for Sabmund Example on March 21, 2025: 429 and 185.",
+   "ms": 952
+  },
+  {
+   "id": "20261001:i079:companies/lundlex-example|notes/n2-i079-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 125,
+   "output_tokens": 85,
+   "reply": "No. The notes describe different companies and make no conflicting claims.",
+   "ms": 1250
+  },
+  {
+   "id": "20261001:i079:companies/sabvane-example|notes/n2-i079-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 128,
+   "output_tokens": 53,
+   "reply": "No. The notes contain different, compatible facts about Sabvane Example.",
+   "ms": 988
+  },
+  {
+   "id": "20261001:i079:notes/n2-i079-a|notes/n2-i079-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 120,
+   "output_tokens": 57,
+   "reply": "Yes. They report different ARR figures for Sabvane Example on the same date.",
+   "ms": 1470
+  },
+  {
+   "id": "20261001:i080:companies/lundlex-example|notes/n2-i080-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 118,
+   "output_tokens": 63,
+   "reply": "No. The notes describe different companies.",
+   "ms": 978
+  },
+  {
+   "id": "20261001:i080:notes/n2-i080-a|notes/n2-i080-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 106,
+   "output_tokens": 53,
+   "reply": "Yes. The notes give different runway figures for Fenmora Example: 20 months and 101 months.",
+   "ms": 1373
+  },
+  {
+   "id": "20261001:i081:companies/gralquay-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 138,
+   "output_tokens": 71,
+   "reply": "No. The notes describe different companies and make no conflicting claims about the same entity.",
+   "ms": 1272
+  },
+  {
+   "id": "20261001:i081:companies/gralquay-example|notes/n2-i081-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 141,
+   "output_tokens": 41,
+   "reply": "No. The notes refer to different companies.",
+   "ms": 809
+  },
+  {
+   "id": "20261001:i081:notes/n2-i081-a|notes/n2-i081-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 130,
+   "output_tokens": 59,
+   "reply": "Yes. On July 26, 2025, one note says Orvdlex Example had 62 pilot customers, while the other says 107.",
+   "ms": 1318
+  },
+  {
+   "id": "20261001:i082:companies/cortessa-example|notes/n2-i082-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 130,
+   "output_tokens": 40,
+   "reply": "No. The notes refer to different companies.",
+   "ms": 817
+  },
+  {
+   "id": "20261001:i082:companies/lunvane-example|notes/n2-i082-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 131,
+   "output_tokens": 58,
+   "reply": "No. The notes describe different companies.",
+   "ms": 1211
+  },
+  {
+   "id": "20261001:i082:notes/n2-i082-a|notes/n2-i082-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 119,
+   "output_tokens": 44,
+   "reply": "Yes. The notes give different caps for the same SAFE: $246M and $315M.",
+   "ms": 1037
+  },
+  {
+   "id": "20261001:i083:notes/n2-i083-a|notes/n2-i083-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 106,
+   "output_tokens": 36,
+   "reply": "Yes.",
+   "ms": 704
+  },
+  {
+   "id": "20261001:i084:notes/n2-i084-a|notes/n2-i084-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 136,
+   "output_tokens": 48,
+   "reply": "Yes. Both notes say they’re current as of September 12, 2025, but name different people as CEO.",
+   "ms": 1031
+  },
+  {
+   "id": "20261001:i085:companies/ivotessa-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 136,
+   "output_tokens": 41,
+   "reply": "No. The notes describe different fictional companies and make no conflicting claims.",
+   "ms": 988
+  },
+  {
+   "id": "20261001:i085:companies/talzarra-example|notes/n2-i085-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 126,
+   "output_tokens": 28,
+   "reply": "No.",
+   "ms": 841
+  },
+  {
+   "id": "20261001:i085:notes/n2-i085-a|notes/n2-i085-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 113,
+   "output_tokens": 32,
+   "reply": "Yes.",
+   "ms": 796
+  },
+  {
+   "id": "20261001:i086:companies/ivovane-example|notes/n2-i086-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 118,
+   "output_tokens": 124,
+   "reply": "No.",
+   "ms": 1592
+  },
+  {
+   "id": "20261001:i086:companies/lundlex-example|notes/n2-i086-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 114,
+   "output_tokens": 47,
+   "reply": "No. The notes describe different companies and don’t conflict.",
+   "ms": 1036
+  },
+  {
+   "id": "20261001:i086:companies/talzarra-example|notes/n2-i086-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 118,
+   "output_tokens": 49,
+   "reply": "No.",
+   "ms": 921
+  },
+  {
+   "id": "20261001:i086:notes/n2-i086-a|notes/n2-i086-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 101,
+   "output_tokens": 56,
+   "reply": "Yes. The notes report different ARR figures: $13.8M and $29.7M.",
+   "ms": 1505
+  },
+  {
+   "id": "20261001:i087:companies/ivoford-example|notes/n2-i087-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 134,
+   "output_tokens": 36,
+   "reply": "No. The notes describe different companies.",
+   "ms": 718
+  },
+  {
+   "id": "20261001:i087:companies/talzarra-example|notes/n2-i087-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 132,
+   "output_tokens": 36,
+   "reply": "No. The notes refer to different companies.",
+   "ms": 772
+  },
+  {
+   "id": "20261001:i087:notes/n2-i087-a|notes/n2-i087-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 128,
+   "output_tokens": 77,
+   "reply": "Yes. Both state different runway figures for Lunsorn Example as of March 24, 2026: 83 months and 51 months.",
+   "ms": 1310
+  },
+  {
+   "id": "20261001:i088:notes/n2-i088-a|notes/n2-i088-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 112,
+   "output_tokens": 63,
+   "reply": "Yes. They report different numbers of pilot customers for Orvford Example on the same date: 142 and 267.",
+   "ms": 1119
+  },
+  {
+   "id": "20261001:i089:companies/cortessa-example|companies/ruvdlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 144,
+   "output_tokens": 46,
+   "reply": "No. The notes describe different companies.",
+   "ms": 1028
+  },
+  {
+   "id": "20261001:i089:companies/cortessa-example|notes/n2-i089-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 124,
+   "output_tokens": 37,
+   "reply": "No. The notes describe different companies.",
+   "ms": 789
+  },
+  {
+   "id": "20261001:i089:notes/n2-i089-a|notes/n2-i089-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 106,
+   "output_tokens": 55,
+   "reply": "Yes. The notes give different caps for the Jarndela Example SAFE: $140M and $243M.",
+   "ms": 1064
+  },
+  {
+   "id": "20261001:i090:companies/fentessa-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 141,
+   "output_tokens": 45,
+   "reply": "No. The notes describe different fictional companies.",
+   "ms": 814
+  },
+  {
+   "id": "20261001:i090:companies/lundlex-example|notes/n2-i090-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 135,
+   "output_tokens": 38,
+   "reply": "No. The notes describe different companies.",
+   "ms": 979
+  },
+  {
+   "id": "20261001:i090:notes/n2-i090-a|notes/n2-i090-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 133,
+   "output_tokens": 46,
+   "reply": "Yes. They give different headquarters locations for Fentessa Example as of June 14, 2025.",
+   "ms": 982
+  },
+  {
+   "id": "20261001:i091:companies/lundlex-example|companies/sabquay-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 136,
+   "output_tokens": 74,
+   "reply": "No. The notes describe different companies.",
+   "ms": 1441
+  },
+  {
+   "id": "20261001:i091:companies/sabquay-example|notes/n2-i091-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 130,
+   "output_tokens": 74,
+   "reply": "No.",
+   "ms": 1504
+  },
+  {
+   "id": "20261001:i091:notes/n2-i091-a|notes/n2-i091-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 118,
+   "output_tokens": 43,
+   "reply": "Yes. The notes name different people as the CEO of Sabquay Example.",
+   "ms": 1083
+  },
+  {
+   "id": "20261001:i092:companies/ivoquay-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 141,
+   "output_tokens": 50,
+   "reply": "No. The notes describe different companies and make no conflicting claims.",
+   "ms": 1168
+  },
+  {
+   "id": "20261001:i092:companies/talzarra-example|notes/n2-i092-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 124,
+   "output_tokens": 31,
+   "reply": "No. The notes describe different companies.",
+   "ms": 858
+  },
+  {
+   "id": "20261001:i092:notes/n2-i092-a|notes/n2-i092-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 110,
+   "output_tokens": 53,
+   "reply": "Yes. The notes give different headcounts for Ivoquay Example: 485 and 317.",
+   "ms": 1136
+  },
+  {
+   "id": "20261001:i093:companies/lundlex-example|companies/nimnix-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 137,
+   "output_tokens": 57,
+   "reply": "No. The notes describe different fictional companies.",
+   "ms": 1336
+  },
+  {
+   "id": "20261001:i093:companies/nimnix-example|notes/n2-i093-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 139,
+   "output_tokens": 124,
+   "reply": "No. The notes state different facts and don’t conflict.",
+   "ms": 1836
+  },
+  {
+   "id": "20261001:i093:notes/n2-i093-a|notes/n2-i093-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 129,
+   "output_tokens": 47,
+   "reply": "Yes. Both notes give different ARR figures for Nimnix Example as of March 9, 2026.",
+   "ms": 994
+  },
+  {
+   "id": "20261001:i094:companies/lundlex-example|notes/n2-i094-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 127,
+   "output_tokens": 63,
+   "reply": "No. The notes describe different companies.",
+   "ms": 1039
+  },
+  {
+   "id": "20261001:i094:companies/lundlex-example|notes/n2-i094-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 126,
+   "output_tokens": 50,
+   "reply": "No. The notes refer to different companies.",
+   "ms": 890
+  },
+  {
+   "id": "20261001:i094:notes/n2-i094-a|notes/n2-i094-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 123,
+   "output_tokens": 48,
+   "reply": "Yes. The notes give different runway estimates for Ruvzarra Example: 56 months and 36 months.",
+   "ms": 1364
+  },
+  {
+   "id": "20261001:i095:companies/gralquay-example|notes/n2-i095-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 122,
+   "output_tokens": 42,
+   "reply": "No.",
+   "ms": 765
+  },
+  {
+   "id": "20261001:i095:companies/lundlex-example|notes/n2-i095-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 115,
+   "output_tokens": 46,
+   "reply": "No. The notes describe different companies.",
+   "ms": 940
+  },
+  {
+   "id": "20261001:i095:notes/n2-i095-a|notes/n2-i095-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 99,
+   "output_tokens": 53,
+   "reply": "Yes. One note says Ostmund Example has 252 pilot customers; the other says 248.",
+   "ms": 1112
+  },
+  {
+   "id": "20261001:i096:companies/cortessa-example|companies/ruvdlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 144,
+   "output_tokens": 56,
+   "reply": "No. The notes describe different companies and make no conflicting claims about the same facts.",
+   "ms": 1253
+  },
+  {
+   "id": "20261001:i096:notes/n2-i096-a|notes/n2-i096-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 135,
+   "output_tokens": 61,
+   "reply": "Yes. Both notes say the SAFE carried a different cap as of December 13, 2025.",
+   "ms": 1481
+  },
+  {
+   "id": "20261001:i097:companies/lundlex-example|notes/n2-i097-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 123,
+   "output_tokens": 57,
+   "reply": "No. The notes describe different companies.",
+   "ms": 1031
+  },
+  {
+   "id": "20261001:i097:notes/n2-i097-a|notes/n2-i097-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 116,
+   "output_tokens": 23,
+   "reply": "Yes.",
+   "ms": 677
+  },
+  {
+   "id": "20261001:i098:companies/lundlex-example|companies/orvwick-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 134,
+   "output_tokens": 70,
+   "reply": "No. The notes describe different fictional companies and do not conflict.",
+   "ms": 1394
+  },
+  {
+   "id": "20261001:i098:notes/n2-i098-a|notes/n2-i098-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 108,
+   "output_tokens": 60,
+   "reply": "Yes. One note identifies Dmitri Moreau-Example as CEO, while the other identifies Niko Brandt-Example.",
+   "ms": 1235
+  },
+  {
+   "id": "20261001:i099:companies/lundlex-example|notes/n2-i099-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 136,
+   "output_tokens": 50,
+   "reply": "No. The notes describe different companies.",
+   "ms": 892
+  },
+  {
+   "id": "20261001:i099:notes/n2-i099-a|notes/n2-i099-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 134,
+   "output_tokens": 54,
+   "reply": "Yes. The notes give different headcounts for Huxquay Example as of July 29, 2025: 369 and 255.",
+   "ms": 1159
+  },
+  {
+   "id": "20261001:i100:companies/kelquay-example|notes/n2-i100-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 127,
+   "output_tokens": 189,
+   "reply": "No.",
+   "ms": 1997
+  },
+  {
+   "id": "20261001:i100:companies/talzarra-example|notes/n2-i100-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 127,
+   "output_tokens": 143,
+   "reply": "No.",
+   "ms": 1911
+  },
+  {
+   "id": "20261001:i100:notes/n2-i100-a|notes/n2-i100-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 115,
+   "output_tokens": 52,
+   "reply": "Yes. The notes report different ARR figures for Kelquay Example: $14.4M and $5.8M.",
+   "ms": 1030
+  },
+  {
+   "id": "20261001:i101:notes/n2-i101-a|notes/n2-i101-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 101,
+   "output_tokens": 52,
+   "reply": "Yes. One note says 109 months of runway; the other says 91 months.",
+   "ms": 1192
+  },
+  {
+   "id": "20261001:i102:companies/gralquay-example|notes/n2-i102-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 135,
+   "output_tokens": 41,
+   "reply": "No. The notes describe different companies.",
+   "ms": 842
+  },
+  {
+   "id": "20261001:i102:notes/n2-i102-a|notes/n2-i102-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 128,
+   "output_tokens": 65,
+   "reply": "Yes. Both notes give different pilot-customer counts for Kelford Example as of March 31, 2026.",
+   "ms": 1178
+  },
+  {
+   "id": "20261001:i103:notes/n2-i103-a|notes/n2-i103-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 120,
+   "output_tokens": 29,
+   "reply": "Yes.",
+   "ms": 859
+  },
+  {
+   "id": "20261001:i104:companies/jarnloom-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 137,
+   "output_tokens": 57,
+   "reply": "No. The notes describe different companies and make no conflicting claims.",
+   "ms": 1179
+  },
+  {
+   "id": "20261001:i104:companies/jarnloom-example|notes/n2-i104-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 126,
+   "output_tokens": 55,
+   "reply": "No.",
+   "ms": 1122
+  },
+  {
+   "id": "20261001:i104:companies/talzarra-example|notes/n2-i104-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 123,
+   "output_tokens": 53,
+   "reply": "No. The notes describe different companies.",
+   "ms": 1058
+  },
+  {
+   "id": "20261001:i104:notes/n2-i104-a|notes/n2-i104-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 108,
+   "output_tokens": 52,
+   "reply": "Yes. One note says Jarnloom Example is headquartered in Fallohaven; the other says Vellastead.",
+   "ms": 1282
+  },
+  {
+   "id": "20261001:i105:notes/n2-i105-a|notes/n2-i105-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 129,
+   "output_tokens": 26,
+   "reply": "Yes.",
+   "ms": 2133
+  },
+  {
+   "id": "20261001:i106:notes/n2-i106-a|notes/n2-i106-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 112,
+   "output_tokens": 31,
+   "reply": "Yes.",
+   "ms": 2109
+  },
+  {
+   "id": "20261001:i107:companies/brenmora-example|notes/n2-i107-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 127,
+   "output_tokens": 70,
+   "reply": "No. The notes contain no conflicting claims.",
+   "ms": 2081
+  },
+  {
+   "id": "20261001:i107:notes/n2-i107-a|notes/n2-i107-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 107,
+   "output_tokens": 73,
+   "reply": "Yes. They report different ARR figures for Brenmora Example: $2.0M and $9.4M.",
+   "ms": 1693
+  },
+  {
+   "id": "20261001:i108:companies/lundlex-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 134,
+   "output_tokens": 43,
+   "reply": "No.",
+   "ms": 880
+  },
+  {
+   "id": "20261001:i108:notes/n2-i108-a|notes/n2-i108-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 137,
+   "output_tokens": 49,
+   "reply": "Yes. They give different runway figures—85 months and 92 months—as of the same date.",
+   "ms": 1241
+  },
+  {
+   "id": "20261001:i109:companies/lundlex-example|notes/n2-i109-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 121,
+   "output_tokens": 49,
+   "reply": "No.",
+   "ms": 1072
+  },
+  {
+   "id": "20261001:i109:notes/n2-i109-a|notes/n2-i109-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 112,
+   "output_tokens": 26,
+   "reply": "Yes.",
+   "ms": 625
+  },
+  {
+   "id": "20261001:i110:notes/n2-i110-a|notes/n2-i110-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 107,
+   "output_tokens": 44,
+   "reply": "Yes. One note says the SAFE has a $141M cap; the other says $86M.",
+   "ms": 1137
+  },
+  {
+   "id": "20261001:i111:companies/ruvtessa-example|notes/n2-i111-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 144,
+   "output_tokens": 61,
+   "reply": "No.",
+   "ms": 1240
+  },
+  {
+   "id": "20261001:i111:notes/n2-i111-a|notes/n2-i111-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 136,
+   "output_tokens": 49,
+   "reply": "Yes. The notes give different headquarters for Ruvtessa Example as of September 28, 2025.",
+   "ms": 1275
+  },
+  {
+   "id": "20261001:i112:companies/talzarra-example|notes/n2-i112-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 128,
+   "output_tokens": 68,
+   "reply": "No. The notes describe different companies and don’t contradict each other.",
+   "ms": 1116
+  },
+  {
+   "id": "20261001:i112:notes/n2-i112-a|notes/n2-i112-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 119,
+   "output_tokens": 43,
+   "reply": "Yes. The notes name different people as Morloom Example’s CEO.",
+   "ms": 1000
+  },
+  {
+   "id": "20261001:i113:notes/n2-i113-a|notes/n2-i113-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 106,
+   "output_tokens": 57,
+   "reply": "Yes. The notes give different headcounts for Huxbarth Example: 177 and 364.",
+   "ms": 1334
+  },
+  {
+   "id": "20261001:i114:companies/talzarra-example|notes/n2-i114-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 141,
+   "output_tokens": 60,
+   "reply": "No. The notes describe different companies.",
+   "ms": 904
+  },
+  {
+   "id": "20261001:i114:notes/n2-i114-a|notes/n2-i114-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 135,
+   "output_tokens": 74,
+   "reply": "Yes. Both state Huxmora Example’s ARR as of May 31, 2025, but give different figures: $26.8M and $11.2M.",
+   "ms": 1517
+  },
+  {
+   "id": "20261001:i115:notes/n2-i115-a|notes/n2-i115-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 118,
+   "output_tokens": 31,
+   "reply": "Yes.",
+   "ms": 744
+  },
+  {
+   "id": "20261001:i116:companies/gralquay-example|notes/n2-i116-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 123,
+   "output_tokens": 44,
+   "reply": "No. The notes refer to different companies.",
+   "ms": 944
+  },
+  {
+   "id": "20261001:i116:notes/n2-i116-a|notes/n2-i116-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 98,
+   "output_tokens": 69,
+   "reply": "Yes. One note says Corford Example has 28 pilot customers; the other says 20.",
+   "ms": 1501
+  },
+  {
+   "id": "20261001:i117:companies/lunvane-example|companies/ruvdlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 148,
+   "output_tokens": 60,
+   "reply": "No. The notes describe different companies and make no conflicting claims.",
+   "ms": 1183
+  },
+  {
+   "id": "20261001:i117:notes/n2-i117-a|notes/n2-i117-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 136,
+   "output_tokens": 53,
+   "reply": "Yes. Both notes are dated July 25, 2025, but give different SAFE caps: $71M and $361M.",
+   "ms": 1139
+  },
+  {
+   "id": "20261001:i118:notes/n2-i118-a|notes/n2-i118-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 117,
+   "output_tokens": 50,
+   "reply": "Yes. One note says Peltessa Example is headquartered in Quillmere; the other says it is headquartered in Talmocliff.",
+   "ms": 1008
+  },
+  {
+   "id": "20261001:i119:companies/lundlex-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 134,
+   "output_tokens": 53,
+   "reply": "No. The notes describe different companies and contain no conflicting facts.",
+   "ms": 1039
+  },
+  {
+   "id": "20261001:i119:notes/n2-i119-a|notes/n2-i119-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 112,
+   "output_tokens": 67,
+   "reply": "Yes. The notes name different people as CEO of Huxwick Example.",
+   "ms": 1361
+  },
+  {
+   "id": "20261001:i120:notes/n2-i120-a|notes/n2-i120-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 130,
+   "output_tokens": 50,
+   "reply": "Yes. For March 26, 2025, one note says headcount was 377 and the other says 473.",
+   "ms": 956
+  },
+  {
+   "id": "20261001:i121:companies/ostnix-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 138,
+   "output_tokens": 64,
+   "reply": "No. The notes describe different fictional companies and do not make conflicting claims.",
+   "ms": 1131
+  },
+  {
+   "id": "20261001:i121:companies/talzarra-example|notes/n2-i121-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 129,
+   "output_tokens": 76,
+   "reply": "No. The notes describe different companies and don’t make conflicting claims.",
+   "ms": 1110
+  },
+  {
+   "id": "20261001:i121:notes/n2-i121-a|notes/n2-i121-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 118,
+   "output_tokens": 50,
+   "reply": "Yes. The notes report different ARR figures for Ostnix Example on the same date.",
+   "ms": 927
+  },
+  {
+   "id": "20261001:i122:notes/n2-i122-a|notes/n2-i122-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 100,
+   "output_tokens": 46,
+   "reply": "Yes. The notes give different runway figures: 34 months and 76 months.",
+   "ms": 1155
+  },
+  {
+   "id": "20261001:i123:notes/n2-i123-a|notes/n2-i123-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 124,
+   "output_tokens": 30,
+   "reply": "Yes.",
+   "ms": 836
+  },
+  {
+   "id": "20261001:i124:notes/n2-i124-a|notes/n2-i124-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 124,
+   "output_tokens": 48,
+   "reply": "Yes. One note says the SAFE has a $232M cap; the other says it has a $117M cap.",
+   "ms": 1000
+  },
+  {
+   "id": "20261001:i125:companies/lundlex-example|notes/n2-i125-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 119,
+   "output_tokens": 57,
+   "reply": "No. The notes describe different companies.",
+   "ms": 878
+  },
+  {
+   "id": "20261001:i125:notes/n2-i125-a|notes/n2-i125-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 106,
+   "output_tokens": 49,
+   "reply": "Yes. The notes give different headquarters locations for Jarntessa Example.",
+   "ms": 988
+  },
+  {
+   "id": "20261001:i126:companies/ruvmund-example|notes/n2-i126-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 141,
+   "output_tokens": 52,
+   "reply": "No.",
+   "ms": 1250
+  },
+  {
+   "id": "20261001:i126:companies/talzarra-example|notes/n2-i126-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 139,
+   "output_tokens": 45,
+   "reply": "No. The notes describe different companies.",
+   "ms": 954
+  },
+  {
+   "id": "20261001:i126:notes/n2-i126-a|notes/n2-i126-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 136,
+   "output_tokens": 64,
+   "reply": "Yes. Both notes say they describe Ruvmund Example’s CEO as of February 14, 2025, but name different people.",
+   "ms": 1364
+  },
+  {
+   "id": "20261001:i127:notes/n2-i127-a|notes/n2-i127-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 115,
+   "output_tokens": 49,
+   "reply": "Yes. The notes give different headcounts for Brenquay Example: 80 and 83.",
+   "ms": 1065
+  },
+  {
+   "id": "20261001:i128:companies/drasorn-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 140,
+   "output_tokens": 34,
+   "reply": "No.",
+   "ms": 816
+  },
+  {
+   "id": "20261001:i128:notes/n2-i128-a|notes/n2-i128-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 109,
+   "output_tokens": 46,
+   "reply": "Yes. One note reports $9.7M ARR, while the other reports $29.5M.",
+   "ms": 1147
+  },
+  {
+   "id": "20261001:i129:companies/ivoford-example|notes/n2-i129-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 141,
+   "output_tokens": 41,
+   "reply": "No. The notes describe different companies.",
+   "ms": 990
+  },
+  {
+   "id": "20261001:i129:companies/talzarra-example|notes/n2-i129-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 130,
+   "output_tokens": 48,
+   "reply": "No. The notes describe different companies.",
+   "ms": 1120
+  },
+  {
+   "id": "20261001:i129:notes/n2-i129-a|notes/n2-i129-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 131,
+   "output_tokens": 54,
+   "reply": "Yes. As of February 12, 2025, one note says 10 months of runway and the other says 15 months.",
+   "ms": 1038
+  },
+  {
+   "id": "20261001:i130:notes/n2-i130-a|notes/n2-i130-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 114,
+   "output_tokens": 57,
+   "reply": "Yes. The notes give different pilot-customer counts for Sabmora Example on the same date: 84 and 155.",
+   "ms": 1044
+  },
+  {
+   "id": "20261001:i131:notes/n2-i131-a|notes/n2-i131-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 107,
+   "output_tokens": 48,
+   "reply": "Yes. The notes give different SAFE caps: $309M and $49M.",
+   "ms": 1299
+  },
+  {
+   "id": "20261001:i132:companies/talzarra-example|notes/n2-i132-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 129,
+   "output_tokens": 60,
+   "reply": "No. The notes describe different companies.",
+   "ms": 1680
+  },
+  {
+   "id": "20261001:i132:notes/n2-i132-a|notes/n2-i132-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 126,
+   "output_tokens": 48,
+   "reply": "Yes. They give different headquarters locations for Kelnix Example as of September 4, 2025.",
+   "ms": 1168
+  },
+  {
+   "id": "20261001:i133:companies/lundlex-example|notes/n2-i133-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 125,
+   "output_tokens": 50,
+   "reply": "No.",
+   "ms": 960
+  },
+  {
+   "id": "20261001:i133:companies/talzarra-example|notes/n2-i133-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 129,
+   "output_tokens": 70,
+   "reply": "No.",
+   "ms": 1137
+  },
+  {
+   "id": "20261001:i133:notes/n2-i133-a|notes/n2-i133-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 119,
+   "output_tokens": 35,
+   "reply": "Yes.",
+   "ms": 972
+  },
+  {
+   "id": "20261001:i134:companies/talzarra-example|notes/n2-i134-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 119,
+   "output_tokens": 59,
+   "reply": "No. The notes describe different fictional companies.",
+   "ms": 1258
+  },
+  {
+   "id": "20261001:i134:notes/n2-i134-a|notes/n2-i134-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 101,
+   "output_tokens": 67,
+   "reply": "Yes. The notes give different headcounts for Ostdela Example: 155 and 450.",
+   "ms": 1268
+  },
+  {
+   "id": "20261001:i135:companies/lundlex-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 134,
+   "output_tokens": 57,
+   "reply": "No.",
+   "ms": 1036
+  },
+  {
+   "id": "20261001:i135:companies/vexnix-example|notes/n2-i135-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 138,
+   "output_tokens": 79,
+   "reply": "No.",
+   "ms": 1427
+  },
+  {
+   "id": "20261001:i135:notes/n2-i135-a|notes/n2-i135-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 136,
+   "output_tokens": 45,
+   "reply": "Yes.",
+   "ms": 821
+  },
+  {
+   "id": "20261001:i136:companies/lundlex-example|notes/n2-i136-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 125,
+   "output_tokens": 55,
+   "reply": "No.",
+   "ms": 1591
+  },
+  {
+   "id": "20261001:i136:companies/lundlex-example|notes/n2-i136-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 121,
+   "output_tokens": 55,
+   "reply": "No.",
+   "ms": 1356
+  },
+  {
+   "id": "20261001:i136:notes/n2-i136-a|notes/n2-i136-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 116,
+   "output_tokens": 45,
+   "reply": "Yes. The notes give different runway figures: 80 months and 86 months.",
+   "ms": 963
+  },
+  {
+   "id": "20261001:i137:companies/gralquay-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 138,
+   "output_tokens": 42,
+   "reply": "No.",
+   "ms": 860
+  },
+  {
+   "id": "20261001:i137:notes/n2-i137-a|notes/n2-i137-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 104,
+   "output_tokens": 46,
+   "reply": "Yes. One note says Morvane Example has 185 pilot customers; the other says 247.",
+   "ms": 1076
+  },
+  {
+   "id": "20261001:i138:companies/lunvane-example|companies/ruvdlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 148,
+   "output_tokens": 64,
+   "reply": "No. The notes describe different companies and do not contradict each other.",
+   "ms": 1379
+  },
+  {
+   "id": "20261001:i138:companies/ruvdlex-example|notes/n2-i138-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 145,
+   "output_tokens": 42,
+   "reply": "No. The notes describe different fictional companies.",
+   "ms": 1015
+  },
+  {
+   "id": "20261001:i138:notes/n2-i138-a|notes/n2-i138-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 133,
+   "output_tokens": 51,
+   "reply": "Yes. Both notes are dated March 16, 2026, but give different SAFE caps: $245M and $135M.",
+   "ms": 1017
+  },
+  {
+   "id": "20261001:i139:notes/n2-i139-a|notes/n2-i139-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 115,
+   "output_tokens": 26,
+   "reply": "Yes.",
+   "ms": 1515
+  },
+  {
+   "id": "20261001:i140:companies/lundlex-example|companies/morquay-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 136,
+   "output_tokens": 47,
+   "reply": "No. The notes describe different fictional companies and make no conflicting claims.",
+   "ms": 910
+  },
+  {
+   "id": "20261001:i140:notes/n2-i140-a|notes/n2-i140-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 107,
+   "output_tokens": 48,
+   "reply": "Yes. The notes name different people as CEO of Morquay Example.",
+   "ms": 1220
+  },
+  {
+   "id": "20261001:i141:companies/lundlex-example|notes/n2-i141-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 126,
+   "output_tokens": 58,
+   "reply": "No. The notes describe different companies and make no conflicting claims.",
+   "ms": 1016
+  },
+  {
+   "id": "20261001:i141:companies/talzarra-example|notes/n2-i141-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 135,
+   "output_tokens": 52,
+   "reply": "No. The notes refer to different companies.",
+   "ms": 1078
+  },
+  {
+   "id": "20261001:i141:notes/n2-i141-a|notes/n2-i141-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 127,
+   "output_tokens": 49,
+   "reply": "Yes. They give different headcounts for Morford Example as of May 7, 2026: 319 and 498.",
+   "ms": 997
+  },
+  {
+   "id": "20261001:i142:companies/talzarra-example|notes/n2-i142-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 129,
+   "output_tokens": 63,
+   "reply": "No.",
+   "ms": 1215
+  },
+  {
+   "id": "20261001:i142:notes/n2-i142-a|notes/n2-i142-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 120,
+   "output_tokens": 41,
+   "reply": "Yes. The notes report different ARR figures for Orvvane Example on the same date.",
+   "ms": 1079
+  },
+  {
+   "id": "20261001:i143:companies/ivoford-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 136,
+   "output_tokens": 39,
+   "reply": "No.",
+   "ms": 2281
+  },
+  {
+   "id": "20261001:i143:notes/n2-i143-a|notes/n2-i143-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 105,
+   "output_tokens": 53,
+   "reply": "Yes. The notes give different runway figures: 116 months and 62 months.",
+   "ms": 1208
+  },
+  {
+   "id": "20261001:i144:companies/jarnmora-example|notes/n2-i144-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 135,
+   "output_tokens": 36,
+   "reply": "No.",
+   "ms": 910
+  },
+  {
+   "id": "20261001:i144:notes/n2-i144-a|notes/n2-i144-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 130,
+   "output_tokens": 58,
+   "reply": "Yes. Both notes refer to February 26, 2025, but report different numbers of pilot customers.",
+   "ms": 3172
+  },
+  {
+   "id": "20261001:i145:companies/lunvane-example|notes/n2-i145-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 131,
+   "output_tokens": 49,
+   "reply": "No. The notes refer to different companies.",
+   "ms": 998
+  },
+  {
+   "id": "20261001:i145:notes/n2-i145-a|notes/n2-i145-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 114,
+   "output_tokens": 51,
+   "reply": "Yes. The notes give different caps for the same Dratrix Example SAFE: $316M and $150M.",
+   "ms": 1181
+  },
+  {
+   "id": "20261001:i146:companies/lundlex-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 134,
+   "output_tokens": 39,
+   "reply": "No.",
+   "ms": 893
+  },
+  {
+   "id": "20261001:i146:notes/n2-i146-a|notes/n2-i146-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 102,
+   "output_tokens": 30,
+   "reply": "Yes.",
+   "ms": 697
+  },
+  {
+   "id": "20261001:i147:companies/lundlex-example|notes/n2-i147-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 131,
+   "output_tokens": 72,
+   "reply": "No. The notes describe different companies and make no conflicting claims.",
+   "ms": 1500
+  },
+  {
+   "id": "20261001:i147:notes/n2-i147-a|notes/n2-i147-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 138,
+   "output_tokens": 84,
+   "reply": "Yes. Both notes describe the CEO as of April 8, 2025, but name different people.",
+   "ms": 1462
+  },
+  {
+   "id": "20261001:i148:notes/n2-i148-a|notes/n2-i148-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 115,
+   "output_tokens": 30,
+   "reply": "Yes.",
+   "ms": 970
+  },
+  {
+   "id": "20261001:i149:companies/dradlex-example|notes/n2-i149-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 122,
+   "output_tokens": 36,
+   "reply": "No.",
+   "ms": 771
+  },
+  {
+   "id": "20261001:i149:companies/lundlex-example|notes/n2-i149-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 119,
+   "output_tokens": 51,
+   "reply": "No. The notes describe different companies and make no conflicting claims.",
+   "ms": 941
+  },
+  {
+   "id": "20261001:i149:notes/n2-i149-a|notes/n2-i149-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 106,
+   "output_tokens": 67,
+   "reply": "Yes. The notes report different ARR figures for Dradlex Example: $2.7M and $21.4M.",
+   "ms": 1805
+  },
+  {
+   "id": "20261001:i150:companies/lundlex-example|notes/n2-i150-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 132,
+   "output_tokens": 64,
+   "reply": "No. The notes refer to different companies: Lunquay Example and Lundlex Example.",
+   "ms": 1130
+  },
+  {
+   "id": "20261001:i150:notes/n2-i150-a|notes/n2-i150-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 130,
+   "output_tokens": 66,
+   "reply": "Yes. Both notes say that as of December 1, 2025, Lunquay Example had a different amount of runway: 29 months versus 112 months.",
+   "ms": 1260
+  },
+  {
+   "id": "20261001:i151:companies/lundlex-example|notes/n2-i151-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 122,
+   "output_tokens": 45,
+   "reply": "No. The notes refer to different fictional companies.",
+   "ms": 1427
+  },
+  {
+   "id": "20261001:i151:notes/n2-i151-a|notes/n2-i151-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 116,
+   "output_tokens": 42,
+   "reply": "No. The headcount could have changed between the two dates.",
+   "ms": 1053
+  },
+  {
+   "id": "20261001:i153:companies/ivoford-example|notes/n2-i153-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 130,
+   "output_tokens": 50,
+   "reply": "No. The notes describe different companies.",
+   "ms": 835
+  },
+  {
+   "id": "20261001:i153:companies/lundlex-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 134,
+   "output_tokens": 45,
+   "reply": "No.",
+   "ms": 986
+  },
+  {
+   "id": "20261001:i153:notes/n2-i153-a|notes/n2-i153-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 118,
+   "output_tokens": 127,
+   "reply": "No. The runway estimates are from different dates and could have changed; the agreement to revisit the deal is consistent.",
+   "ms": 1813
+  },
+  {
+   "id": "20261001:i154:companies/gralquay-example|companies/jarnmora-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 146,
+   "output_tokens": 47,
+   "reply": "No. The notes describe different companies and make no conflicting claims.",
+   "ms": 773
+  },
+  {
+   "id": "20261001:i154:companies/jarnmora-example|notes/n2-i154-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 133,
+   "output_tokens": 31,
+   "reply": "No.",
+   "ms": 760
+  },
+  {
+   "id": "20261001:i154:notes/n2-i154-a|notes/n2-i154-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 119,
+   "output_tokens": 60,
+   "reply": "No. The later note reports 87 pilot customers, up from 52 in the earlier note.",
+   "ms": 1162
+  },
+  {
+   "id": "20261001:i155:companies/cortessa-example|notes/n2-i155-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 135,
+   "output_tokens": 49,
+   "reply": "No. The notes describe different fictional companies: Nimvane Example and Cortessa Example.",
+   "ms": 1322
+  },
+  {
+   "id": "20261001:i156:companies/lundlex-example|companies/quilpellow-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 134,
+   "output_tokens": 28,
+   "reply": "No. The notes describe different companies.",
+   "ms": 789
+  },
+  {
+   "id": "20261001:i156:companies/talzarra-example|notes/n2-i156-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 126,
+   "output_tokens": 42,
+   "reply": "No. The notes refer to different companies.",
+   "ms": 754
+  },
+  {
+   "id": "20261001:i156:notes/n2-i156-a|notes/n2-i156-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 114,
+   "output_tokens": 54,
+   "reply": "No. The headcount could have changed from 246 to 107 between the two dates.",
+   "ms": 1137
+  },
+  {
+   "id": "20261001:i157:companies/graldlex-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 135,
+   "output_tokens": 39,
+   "reply": "No.",
+   "ms": 771
+  },
+  {
+   "id": "20261001:i157:companies/lundlex-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 134,
+   "output_tokens": 26,
+   "reply": "No.",
+   "ms": 796
+  },
+  {
+   "id": "20261001:i157:companies/talzarra-example|notes/n2-i157-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 130,
+   "output_tokens": 54,
+   "reply": "No.",
+   "ms": 911
+  },
+  {
+   "id": "20261001:i157:notes/n2-i157-a|notes/n2-i157-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 124,
+   "output_tokens": 59,
+   "reply": "No. The later note says Elena is now the CEO, which is consistent with Alice having been CEO earlier.",
+   "ms": 1577
+  },
+  {
+   "id": "20261001:i159:notes/n2-i159-a|notes/n2-i159-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 115,
+   "output_tokens": 91,
+   "reply": "No. The notes report different customer counts on different dates, and the count could have changed.",
+   "ms": 1446
+  },
+  {
+   "id": "20261001:i160:companies/ivoford-example|notes/n2-i160-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 132,
+   "output_tokens": 55,
+   "reply": "No. The notes refer to different companies.",
+   "ms": 1161
+  },
+  {
+   "id": "20261001:i160:companies/lundlex-example|notes/n2-i160-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 122,
+   "output_tokens": 53,
+   "reply": "No. The notes concern different companies.",
+   "ms": 984
+  },
+  {
+   "id": "20261001:i160:notes/n2-i160-a|notes/n2-i160-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 118,
+   "output_tokens": 55,
+   "reply": "No. The notes report different runway figures on different dates.",
+   "ms": 1601
+  },
+  {
+   "id": "20261001:i161:companies/jarnmora-example|notes/n2-i161-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 133,
+   "output_tokens": 43,
+   "reply": "No. The notes refer to different companies.",
+   "ms": 1078
+  },
+  {
+   "id": "20261001:i162:notes/n2-i162-a|notes/n2-i162-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 117,
+   "output_tokens": 76,
+   "reply": "No. The ARR could have changed between the two dates.",
+   "ms": 1281
+  },
+  {
+   "id": "20261001:i163:companies/pelpellow-example|notes/n2-i163-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 128,
+   "output_tokens": 70,
+   "reply": "No. The notes don’t state conflicting facts.",
+   "ms": 1230
+  },
+  {
+   "id": "20261001:i163:notes/n2-i163-a|notes/n2-i163-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 118,
+   "output_tokens": 71,
+   "reply": "No. The later note could reflect a change in headquarters.",
+   "ms": 1350
+  },
+  {
+   "id": "20261001:i165:companies/cortessa-example|notes/n2-i165-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 129,
+   "output_tokens": 77,
+   "reply": "No. The notes refer to different companies: Luntessa Example and Cortessa Example.",
+   "ms": 1328
+  },
+  {
+   "id": "20261001:i165:companies/lunvane-example|notes/n2-i165-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 133,
+   "output_tokens": 47,
+   "reply": "No.",
+   "ms": 1057
+  },
+  {
+   "id": "20261001:i165:notes/n2-i165-a|notes/n2-i165-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 122,
+   "output_tokens": 56,
+   "reply": "No. The SAFE cap could have changed from $317M to $238M between the two notes.",
+   "ms": 1301
+  },
+  {
+   "id": "20261001:i166:companies/talzarra-example|notes/n2-i166-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 125,
+   "output_tokens": 55,
+   "reply": "No.",
+   "ms": 1116
+  },
+  {
+   "id": "20261001:i166:notes/n2-i166-a|notes/n2-i166-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 111,
+   "output_tokens": 33,
+   "reply": "No.",
+   "ms": 1171
+  },
+  {
+   "id": "20261001:i167:companies/lundlex-example|notes/n2-i167-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 126,
+   "output_tokens": 70,
+   "reply": "No. The notes refer to different companies.",
+   "ms": 1209
+  },
+  {
+   "id": "20261001:i167:companies/talzarra-example|notes/n2-i167-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 130,
+   "output_tokens": 61,
+   "reply": "No. The notes describe different companies.",
+   "ms": 1229
+  },
+  {
+   "id": "20261001:i168:notes/n2-i168-a|notes/n2-i168-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 118,
+   "output_tokens": 104,
+   "reply": "No. The runway could have changed between the two dates, and the later note doesn’t say whether the deal was revisited.",
+   "ms": 1836
+  },
+  {
+   "id": "20261001:i169:notes/n2-i169-a|notes/n2-i169-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 124,
+   "output_tokens": 89,
+   "reply": "No. The SAFE cap could have changed from $325M to $579M between the two dates.",
+   "ms": 1700
+  },
+  {
+   "id": "20261001:i170:companies/lundlex-example|notes/n2-i170-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 128,
+   "output_tokens": 41,
+   "reply": "No. The notes describe different companies.",
+   "ms": 864
+  },
+  {
+   "id": "20261001:i171:companies/jarnquay-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 146,
+   "output_tokens": 53,
+   "reply": "No. The notes describe different companies and do not make conflicting claims.",
+   "ms": 1214
+  },
+  {
+   "id": "20261001:i171:companies/lundlex-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 134,
+   "output_tokens": 40,
+   "reply": "No.",
+   "ms": 865
+  },
+  {
+   "id": "20261001:i171:notes/n2-i171-a|notes/n2-i171-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 121,
+   "output_tokens": 79,
+   "reply": "No. The headcount could have decreased from 245 to 151 between the two dates.",
+   "ms": 1358
+  },
+  {
+   "id": "20261001:i172:companies/sabloom-example|notes/n2-i172-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 127,
+   "output_tokens": 65,
+   "reply": "No.",
+   "ms": 1295
+  },
+  {
+   "id": "20261001:i172:companies/talzarra-example|notes/n2-i172-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 126,
+   "output_tokens": 60,
+   "reply": "No. The notes describe different companies.",
+   "ms": 1172
+  },
+  {
+   "id": "20261001:i172:notes/n2-i172-a|notes/n2-i172-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 116,
+   "output_tokens": 38,
+   "reply": "No.",
+   "ms": 895
+  },
+  {
+   "id": "20261001:i174:companies/gralquay-example|companies/jarnmora-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 146,
+   "output_tokens": 40,
+   "reply": "No.",
+   "ms": 940
+  },
+  {
+   "id": "20261001:i174:companies/gralquay-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 138,
+   "output_tokens": 44,
+   "reply": "No. The notes describe different companies and make no conflicting claims.",
+   "ms": 971
+  },
+  {
+   "id": "20261001:i174:notes/n2-i174-a|notes/n2-i174-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 114,
+   "output_tokens": 68,
+   "reply": "No. The customer count could have decreased from 242 to 102 between the two dates.",
+   "ms": 1494
+  },
+  {
+   "id": "20261001:i175:companies/lundlex-example|notes/n2-i175-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 119,
+   "output_tokens": 32,
+   "reply": "No.",
+   "ms": 825
+  },
+  {
+   "id": "20261001:i175:notes/n2-i175-a|notes/n2-i175-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 107,
+   "output_tokens": 57,
+   "reply": "No. The pilot customer count increased from 268 to 490, and both notes say follow-ups are tracked in the weekly review.",
+   "ms": 950
+  },
+  {
+   "id": "20261001:i176:companies/cortessa-example|companies/ruvdlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 144,
+   "output_tokens": 52,
+   "reply": "No. The notes describe different companies.",
+   "ms": 957
+  },
+  {
+   "id": "20261001:i177:companies/lundlex-example|notes/n2-i177-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 123,
+   "output_tokens": 58,
+   "reply": "No. The notes describe different companies and make no conflicting claims.",
+   "ms": 970
+  },
+  {
+   "id": "20261001:i177:companies/talzarra-example|notes/n2-i177-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 127,
+   "output_tokens": 55,
+   "reply": "No. The notes describe different companies and don’t conflict.",
+   "ms": 991
+  },
+  {
+   "id": "20261001:i177:notes/n2-i177-a|notes/n2-i177-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 115,
+   "output_tokens": 74,
+   "reply": "No. The notes are from different dates, so the ARR could have changed.",
+   "ms": 1524
+  },
+  {
+   "id": "20261001:i178:companies/brenloom-example|notes/n2-i178-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 127,
+   "output_tokens": 38,
+   "reply": "No.",
+   "ms": 971
+  },
+  {
+   "id": "20261001:i178:companies/lundlex-example|notes/n2-i178-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 124,
+   "output_tokens": 49,
+   "reply": "No. The notes describe different companies.",
+   "ms": 964
+  },
+  {
+   "id": "20261001:i178:companies/talzarra-example|notes/n2-i178-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 128,
+   "output_tokens": 62,
+   "reply": "No.",
+   "ms": 1383
+  },
+  {
+   "id": "20261001:i178:notes/n2-i178-a|notes/n2-i178-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 118,
+   "output_tokens": 64,
+   "reply": "No. The later note says Kira Varga-Example is *now* CEO, which is consistent with a change since the earlier note.",
+   "ms": 1095
+  },
+  {
+   "id": "20261001:i179:companies/pelzarra-example|notes/n2-i179-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 132,
+   "output_tokens": 50,
+   "reply": "No.",
+   "ms": 1139
+  },
+  {
+   "id": "20261001:i180:companies/cortessa-example|notes/n2-i180-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 130,
+   "output_tokens": 71,
+   "reply": "No. The notes refer to different companies: Vextessa Example and Cortessa Example.",
+   "ms": 1109
+  },
+  {
+   "id": "20261001:i180:notes/n2-i180-a|notes/n2-i180-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 123,
+   "output_tokens": 57,
+   "reply": "No. The later note can reflect a change in the SAFE cap.",
+   "ms": 1260
+  },
+  {
+   "id": "20261001:i181:companies/ivoford-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 136,
+   "output_tokens": 35,
+   "reply": "No.",
+   "ms": 843
+  },
+  {
+   "id": "20261001:i181:companies/ivoford-example|notes/n2-i181-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 127,
+   "output_tokens": 51,
+   "reply": "No.",
+   "ms": 838
+  },
+  {
+   "id": "20261001:i181:companies/ivoford-example|notes/n2-i181-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 126,
+   "output_tokens": 53,
+   "reply": "No. The notes describe different companies.",
+   "ms": 868
+  },
+  {
+   "id": "20261001:i181:companies/lundlex-example|notes/n2-i181-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 121,
+   "output_tokens": 53,
+   "reply": "No. The notes refer to different companies.",
+   "ms": 912
+  },
+  {
+   "id": "20261001:i181:notes/n2-i181-a|notes/n2-i181-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 111,
+   "output_tokens": 69,
+   "reply": "No. The runway could have increased between the two dates, and the follow-up notes don’t conflict.",
+   "ms": 1201
+  },
+  {
+   "id": "20261001:i182:companies/jarnmora-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 138,
+   "output_tokens": 30,
+   "reply": "No.",
+   "ms": 737
+  },
+  {
+   "id": "20261001:i182:companies/jarnmora-example|notes/n2-i182-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 133,
+   "output_tokens": 46,
+   "reply": "No.",
+   "ms": 1320
+  },
+  {
+   "id": "20261001:i183:companies/lundlex-example|notes/n2-i183-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 121,
+   "output_tokens": 27,
+   "reply": "No.",
+   "ms": 945
+  },
+  {
+   "id": "20261001:i183:companies/lundlex-example|notes/n2-i183-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 123,
+   "output_tokens": 52,
+   "reply": "No. The notes refer to different companies.",
+   "ms": 972
+  },
+  {
+   "id": "20261001:i183:notes/n2-i183-a|notes/n2-i183-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 114,
+   "output_tokens": 68,
+   "reply": "No. The runway could have decreased from 72 months in March to 44 months in September.",
+   "ms": 1485
+  },
+  {
+   "id": "20261001:i184:notes/n2-i184-a|notes/n2-i184-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 122,
+   "output_tokens": 60,
+   "reply": "Yes. The notes give different headquarters: Eskeldeen and Eskelstead.",
+   "ms": 1486
+  },
+  {
+   "id": "20261001:i186:companies/kelsorn-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 139,
+   "output_tokens": 34,
+   "reply": "No.",
+   "ms": 876
+  },
+  {
+   "id": "20261001:i186:notes/n2-i186-a|notes/n2-i186-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 115,
+   "output_tokens": 65,
+   "reply": "No. The headcount could have changed from 128 in May to 35 by December.",
+   "ms": 1402
+  },
+  {
+   "id": "20261001:i187:notes/n2-i187-a|notes/n2-i187-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 117,
+   "output_tokens": 95,
+   "reply": "No. The later note reports a higher ARR, which doesn’t contradict the earlier dated figure.",
+   "ms": 1393
+  },
+  {
+   "id": "20261001:i189:companies/gralquay-example|companies/jarnmora-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 146,
+   "output_tokens": 38,
+   "reply": "No.",
+   "ms": 685
+  },
+  {
+   "id": "20261001:i189:companies/jarnmora-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 138,
+   "output_tokens": 56,
+   "reply": "No. The notes describe different companies and make no conflicting claims.",
+   "ms": 1141
+  },
+  {
+   "id": "20261001:i189:notes/n2-i189-a|notes/n2-i189-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 118,
+   "output_tokens": 58,
+   "reply": "No.",
+   "ms": 1055
+  },
+  {
+   "id": "20261001:i190:companies/cortessa-example|notes/n2-i190-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 130,
+   "output_tokens": 67,
+   "reply": "No. The notes refer to different companies.",
+   "ms": 1129
+  },
+  {
+   "id": "20261001:i190:companies/lunvane-example|companies/ruvdlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 148,
+   "output_tokens": 67,
+   "reply": "No. The notes describe different fictional companies and make no conflicting claims about the same entity.",
+   "ms": 1659
+  },
+  {
+   "id": "20261001:i190:notes/n2-i190-a|notes/n2-i190-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 125,
+   "output_tokens": 60,
+   "reply": "No. The notes are from different dates, so the SAFE cap may have changed from $41M to $73M.",
+   "ms": 1315
+  },
+  {
+   "id": "20261001:i192:companies/huxford-example|notes/n2-i192-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 131,
+   "output_tokens": 64,
+   "reply": "No.",
+   "ms": 1347
+  },
+  {
+   "id": "20261001:i192:companies/talzarra-example|notes/n2-i192-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 129,
+   "output_tokens": 63,
+   "reply": "No.",
+   "ms": 1051
+  },
+  {
+   "id": "20261001:i192:notes/n2-i192-a|notes/n2-i192-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 120,
+   "output_tokens": 65,
+   "reply": "No. The notes are from different dates, so ARR may have changed from $1.1M to $0.7M.",
+   "ms": 1574
+  },
+  {
+   "id": "20261001:i193:notes/n2-i193-a|notes/n2-i193-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 116,
+   "output_tokens": 58,
+   "reply": "No. The headcount could have grown from 338 in May to 711 in November.",
+   "ms": 1160
+  },
+  {
+   "id": "20261001:i194:companies/lundlex-example|companies/pelmora-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 135,
+   "output_tokens": 47,
+   "reply": "No. The notes describe different companies and don’t conflict.",
+   "ms": 976
+  },
+  {
+   "id": "20261001:i194:companies/pelmora-example|notes/n2-i194-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 131,
+   "output_tokens": 118,
+   "reply": "No.",
+   "ms": 1454
+  },
+  {
+   "id": "20261001:i195:notes/n2-i195-a|notes/n2-i195-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 119,
+   "output_tokens": 84,
+   "reply": "No. The notes are from different dates, so the cap could have changed.",
+   "ms": 1549
+  },
+  {
+   "id": "20261001:i196:notes/n2-i196-a|notes/n2-i196-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 116,
+   "output_tokens": 85,
+   "reply": "No. The later note updates the pilot-customer count and doesn’t contradict the earlier plan to revisit the deal.",
+   "ms": 1386
+  },
+  {
+   "id": "20261001:i198:companies/lundlex-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 134,
+   "output_tokens": 35,
+   "reply": "No.",
+   "ms": 776
+  },
+  {
+   "id": "20261001:i198:notes/n2-i198-a|notes/n2-i198-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 119,
+   "output_tokens": 67,
+   "reply": "No. The notes report different runway figures at different dates, which could reflect a change over time.",
+   "ms": 1453
+  },
+  {
+   "id": "20261001:i199:companies/jarnnix-example|notes/n2-i199-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 136,
+   "output_tokens": 45,
+   "reply": "No.",
+   "ms": 888
+  },
+  {
+   "id": "20261001:i199:notes/n2-i199-a|notes/n2-i199-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 123,
+   "output_tokens": 76,
+   "reply": "No. The notes are dated months apart, and the second says Farid is now CEO, which could reflect a change.",
+   "ms": 1311
+  },
+  {
+   "id": "20261001:i200:companies/talbarth-example|notes/n2-i200-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 129,
+   "output_tokens": 106,
+   "reply": "No. The notes state different facts about Talbarth Example and do not conflict.",
+   "ms": 1755
+  },
+  {
+   "id": "20261001:i201:companies/quiltessa-example|notes/n2-i201-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 122,
+   "output_tokens": 53,
+   "reply": "No.",
+   "ms": 952
+  },
+  {
+   "id": "20261001:i201:companies/talzarra-example|notes/n2-i201-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 126,
+   "output_tokens": 41,
+   "reply": "No. The notes describe different companies.",
+   "ms": 1319
+  },
+  {
+   "id": "20261001:i201:notes/n2-i201-a|notes/n2-i201-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 111,
+   "output_tokens": 63,
+   "reply": "No. The notes report different headcounts on different dates, so the change isn’t necessarily a contradiction.",
+   "ms": 1091
+  },
+  {
+   "id": "20261001:i202:notes/n2-i202-a|notes/n2-i202-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 112,
+   "output_tokens": 69,
+   "reply": "No. The runway increased from 43 months in January to 69 months in October.",
+   "ms": 1241
+  },
+  {
+   "id": "20261001:i203:companies/gralquay-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 138,
+   "output_tokens": 38,
+   "reply": "No.",
+   "ms": 859
+  },
+  {
+   "id": "20261001:i203:companies/gralquay-example|notes/n2-i203-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 136,
+   "output_tokens": 38,
+   "reply": "No.",
+   "ms": 909
+  },
+  {
+   "id": "20261001:i204:notes/n2-i204-a|notes/n2-i204-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 111,
+   "output_tokens": 83,
+   "reply": "No. The later note reports a lower, updated customer count; that doesn’t contradict the earlier count.",
+   "ms": 1534
+  },
+  {
+   "id": "20261001:i205:companies/lundlex-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 134,
+   "output_tokens": 32,
+   "reply": "No.",
+   "ms": 806
+  },
+  {
+   "id": "20261001:i205:companies/sabbarth-example|notes/n2-i205-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 122,
+   "output_tokens": 117,
+   "reply": "No. The notes make no conflicting claims.",
+   "ms": 1748
+  },
+  {
+   "id": "20261001:i205:notes/n2-i205-a|notes/n2-i205-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 111,
+   "output_tokens": 122,
+   "reply": "No. The later note says Sabbarth Example is now headquartered in Talmomouth, which could reflect a change since the earlier note.",
+   "ms": 1672
+  },
+  {
+   "id": "20261001:i206:companies/ivowick-example|notes/n2-i206-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 137,
+   "output_tokens": 41,
+   "reply": "No.",
+   "ms": 1003
+  },
+  {
+   "id": "20261001:i206:companies/lundlex-example|notes/n2-i206-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 132,
+   "output_tokens": 49,
+   "reply": "No. The notes describe different fictional companies and don’t conflict.",
+   "ms": 1248
+  },
+  {
+   "id": "20261001:i206:companies/talzarra-example|notes/n2-i206-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 136,
+   "output_tokens": 33,
+   "reply": "No.",
+   "ms": 719
+  },
+  {
+   "id": "20261001:i207:companies/talzarra-example|notes/n2-i207-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 127,
+   "output_tokens": 63,
+   "reply": "No. The notes describe different companies.",
+   "ms": 891
+  },
+  {
+   "id": "20261001:i207:notes/n2-i207-a|notes/n2-i207-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 119,
+   "output_tokens": 96,
+   "reply": "No. The ARR could have changed between the two dates.",
+   "ms": 1547
+  },
+  {
+   "id": "20261001:i208:companies/ostford-example|notes/n2-i208-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 125,
+   "output_tokens": 104,
+   "reply": "No.",
+   "ms": 1613
+  },
+  {
+   "id": "20261001:i208:notes/n2-i208-a|notes/n2-i208-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 116,
+   "output_tokens": 63,
+   "reply": "No. The notes are from different dates, so ARR could have increased from $28.5M to $49.1M.",
+   "ms": 1407
+  },
+  {
+   "id": "20261001:i209:companies/ivoford-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 136,
+   "output_tokens": 35,
+   "reply": "No.",
+   "ms": 930
+  },
+  {
+   "id": "20261001:i209:companies/ivoford-example|notes/n2-i209-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 130,
+   "output_tokens": 42,
+   "reply": "No. The notes describe different companies.",
+   "ms": 857
+  },
+  {
+   "id": "20261001:i209:companies/lundlex-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 134,
+   "output_tokens": 41,
+   "reply": "No.",
+   "ms": 816
+  },
+  {
+   "id": "20261001:i209:companies/lundlex-example|notes/n2-i209-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 124,
+   "output_tokens": 34,
+   "reply": "No. The notes refer to different companies.",
+   "ms": 854
+  },
+  {
+   "id": "20261001:i209:companies/talzarra-example|notes/n2-i209-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 128,
+   "output_tokens": 68,
+   "reply": "No. The notes describe different companies.",
+   "ms": 1271
+  },
+  {
+   "id": "20261001:i210:companies/cortessa-example|companies/lunvane-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 142,
+   "output_tokens": 34,
+   "reply": "No.",
+   "ms": 848
+  },
+  {
+   "id": "20261001:i210:companies/cortessa-example|companies/ruvdlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 144,
+   "output_tokens": 57,
+   "reply": "No. The notes describe different companies and do not make conflicting claims.",
+   "ms": 902
+  },
+  {
+   "id": "20261001:i210:companies/cortessa-example|notes/n2-i210-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 129,
+   "output_tokens": 49,
+   "reply": "No. The notes concern different fictional companies.",
+   "ms": 1231
+  },
+  {
+   "id": "20261001:i210:companies/lunvane-example|companies/ruvdlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 148,
+   "output_tokens": 49,
+   "reply": "No. The notes describe different companies.",
+   "ms": 1027
+  },
+  {
+   "id": "20261001:i210:notes/n2-i210-a|notes/n2-i210-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 118,
+   "output_tokens": 91,
+   "reply": "No. The later note may reflect a change in the SAFE’s cap.",
+   "ms": 1506
+  },
+  {
+   "id": "20261001:i211:companies/ostmora-example|notes/n2-i211-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 135,
+   "output_tokens": 64,
+   "reply": "No. The notes contain no contradictory statements.",
+   "ms": 1101
+  },
+  {
+   "id": "20261001:i211:companies/ostmora-example|notes/n2-i211-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 136,
+   "output_tokens": 61,
+   "reply": "No.",
+   "ms": 1418
+  },
+  {
+   "id": "20261001:i211:notes/n2-i211-a|notes/n2-i211-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 129,
+   "output_tokens": 138,
+   "reply": "No.",
+   "ms": 2246
+  },
+  {
+   "id": "20261001:i212:notes/n2-i212-a|notes/n2-i212-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 126,
+   "output_tokens": 170,
+   "reply": "No. They report different people’s opinions, which can coexist.",
+   "ms": 2333
+  },
+  {
+   "id": "20261001:i213:notes/n2-i213-a|notes/n2-i213-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 135,
+   "output_tokens": 87,
+   "reply": "Yes.",
+   "ms": 1535
+  },
+  {
+   "id": "20261001:i214:companies/dradela-example|companies/lunvane-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 143,
+   "output_tokens": 40,
+   "reply": "No.",
+   "ms": 874
+  },
+  {
+   "id": "20261001:i214:companies/talzarra-example|notes/n2-i214-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 133,
+   "output_tokens": 32,
+   "reply": "No.",
+   "ms": 647
+  },
+  {
+   "id": "20261001:i214:notes/n2-i214-a|notes/n2-i214-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 131,
+   "output_tokens": 79,
+   "reply": "No. They record different people’s opinions, which can coexist.",
+   "ms": 1172
+  },
+  {
+   "id": "20261001:i215:notes/n2-i215-a|notes/n2-i215-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 127,
+   "output_tokens": 269,
+   "reply": "No. They record different people’s opinions, which can coexist, and revisiting the deal later doesn’t contradict the first note.",
+   "ms": 2672
+  },
+  {
+   "id": "20261001:i216:companies/lunvane-example|companies/ostquay-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 144,
+   "output_tokens": 62,
+   "reply": "No. The notes describe different companies and do not conflict.",
+   "ms": 2786
+  },
+  {
+   "id": "20261001:i216:notes/n2-i216-a|notes/n2-i216-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 130,
+   "output_tokens": 89,
+   "reply": "No. Different people expressed opposing opinions, so the notes don’t contradict each other.",
+   "ms": 1562
+  },
+  {
+   "id": "20261001:i217:companies/talzarra-example|notes/n2-i217-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 137,
+   "output_tokens": 47,
+   "reply": "No.",
+   "ms": 1030
+  },
+  {
+   "id": "20261001:i217:notes/n2-i217-a|notes/n2-i217-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 134,
+   "output_tokens": 96,
+   "reply": "Yes.",
+   "ms": 1468
+  },
+  {
+   "id": "20261001:i218:companies/huxtessa-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 137,
+   "output_tokens": 59,
+   "reply": "No. The notes describe different companies and make no conflicting claims.",
+   "ms": 1051
+  },
+  {
+   "id": "20261001:i218:companies/huxtessa-example|notes/n2-i218-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 133,
+   "output_tokens": 43,
+   "reply": "No.",
+   "ms": 993
+  },
+  {
+   "id": "20261001:i218:notes/n2-i218-a|notes/n2-i218-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 130,
+   "output_tokens": 105,
+   "reply": "Yes. One says the founding team is too inexperienced for enterprise sales; the other says it is unusually strong at enterprise sales.",
+   "ms": 1789
+  },
+  {
+   "id": "20261001:i219:companies/dramund-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 136,
+   "output_tokens": 65,
+   "reply": "No.",
+   "ms": 1401
+  },
+  {
+   "id": "20261001:i219:companies/dramund-example|notes/n2-i219-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 128,
+   "output_tokens": 62,
+   "reply": "No.",
+   "ms": 939
+  },
+  {
+   "id": "20261001:i219:companies/talzarra-example|notes/n2-i219-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 131,
+   "output_tokens": 72,
+   "reply": "No. The notes concern different companies and make no conflicting claims.",
+   "ms": 1360
+  },
+  {
+   "id": "20261001:i219:notes/n2-i219-a|notes/n2-i219-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 123,
+   "output_tokens": 92,
+   "reply": "No. They report conflicting opinions from two different people, not contradictory facts.",
+   "ms": 1854
+  },
+  {
+   "id": "20261001:i220:companies/lunvane-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 142,
+   "output_tokens": 30,
+   "reply": "No.",
+   "ms": 804
+  },
+  {
+   "id": "20261001:i220:companies/talzarra-example|notes/n2-i220-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 133,
+   "output_tokens": 48,
+   "reply": "No.",
+   "ms": 1006
+  },
+  {
+   "id": "20261001:i220:notes/n2-i220-a|notes/n2-i220-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 128,
+   "output_tokens": 115,
+   "reply": "No. They report different people’s opinions, which can coexist.",
+   "ms": 1562
+  },
+  {
+   "id": "20261001:i221:companies/talzarra-example|notes/n2-i221-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 133,
+   "output_tokens": 44,
+   "reply": "No.",
+   "ms": 885
+  },
+  {
+   "id": "20261001:i221:notes/n2-i221-a|notes/n2-i221-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 125,
+   "output_tokens": 43,
+   "reply": "No. The notes report different opinions from different people.",
+   "ms": 1256
+  },
+  {
+   "id": "20261001:i222:companies/lunvane-example|notes/n2-i222-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 136,
+   "output_tokens": 62,
+   "reply": "No.",
+   "ms": 1016
+  },
+  {
+   "id": "20261001:i222:notes/n2-i222-a|notes/n2-i222-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 125,
+   "output_tokens": 62,
+   "reply": "Yes. One note says the market is overcrowded; the other says it is wide open.",
+   "ms": 1206
+  },
+  {
+   "id": "20261001:i223:notes/n2-i223-a|notes/n2-i223-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 133,
+   "output_tokens": 90,
+   "reply": "Yes.",
+   "ms": 1447
+  },
+  {
+   "id": "20261001:i224:companies/lunvane-example|notes/n2-i224-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 137,
+   "output_tokens": 63,
+   "reply": "No. The notes concern different companies and make no conflicting claims.",
+   "ms": 1270
+  },
+  {
+   "id": "20261001:i224:notes/n2-i224-a|notes/n2-i224-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 126,
+   "output_tokens": 112,
+   "reply": "Yes. One says the roadmap is too ambitious; the other says it is too timid.",
+   "ms": 1520
+  },
+  {
+   "id": "20261001:i225:companies/ivomund-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 139,
+   "output_tokens": 42,
+   "reply": "No. The notes describe different fictional companies.",
+   "ms": 949
+  },
+  {
+   "id": "20261001:i225:companies/lunvane-example|notes/n2-i225-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 134,
+   "output_tokens": 41,
+   "reply": "No.",
+   "ms": 930
+  },
+  {
+   "id": "20261001:i225:notes/n2-i225-a|notes/n2-i225-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 124,
+   "output_tokens": 57,
+   "reply": "No. The notes report different people’s opinions, which can differ without contradiction.",
+   "ms": 1079
+  },
+  {
+   "id": "20261001:i226:companies/talzarra-example|notes/n2-i226-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 133,
+   "output_tokens": 45,
+   "reply": "No. The notes refer to different companies.",
+   "ms": 917
+  },
+  {
+   "id": "20261001:i226:notes/n2-i226-a|notes/n2-i226-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 122,
+   "output_tokens": 24,
+   "reply": "No.",
+   "ms": 882
+  },
+  {
+   "id": "20261001:i227:companies/lundlex-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 134,
+   "output_tokens": 40,
+   "reply": "No.",
+   "ms": 861
+  },
+  {
+   "id": "20261001:i227:notes/n2-i227-a|notes/n2-i227-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 124,
+   "output_tokens": 42,
+   "reply": "No. Both notes report $7.4M ARR.",
+   "ms": 858
+  },
+  {
+   "id": "20261001:i228:companies/ivoford-example|notes/n2-i228-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 131,
+   "output_tokens": 41,
+   "reply": "No. The notes refer to different companies.",
+   "ms": 983
+  },
+  {
+   "id": "20261001:i228:notes/n2-i228-a|notes/n2-i228-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 117,
+   "output_tokens": 22,
+   "reply": "No.",
+   "ms": 804
+  },
+  {
+   "id": "20261001:i229:notes/n2-i229-a|notes/n2-i229-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 115,
+   "output_tokens": 46,
+   "reply": "No.",
+   "ms": 875
+  },
+  {
+   "id": "20261001:i230:companies/cortessa-example|companies/ruvdlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 144,
+   "output_tokens": 60,
+   "reply": "No. The notes describe different companies.",
+   "ms": 1070
+  },
+  {
+   "id": "20261001:i230:companies/cortessa-example|notes/n2-i230-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 133,
+   "output_tokens": 37,
+   "reply": "No. The notes refer to different companies.",
+   "ms": 857
+  },
+  {
+   "id": "20261001:i230:notes/n2-i230-a|notes/n2-i230-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 125,
+   "output_tokens": 22,
+   "reply": "No.",
+   "ms": 770
+  },
+  {
+   "id": "20261001:i231:companies/lundlex-example|notes/n2-i231-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 126,
+   "output_tokens": 65,
+   "reply": "No. The notes refer to different companies.",
+   "ms": 1219
+  },
+  {
+   "id": "20261001:i231:notes/n2-i231-a|notes/n2-i231-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 117,
+   "output_tokens": 61,
+   "reply": "No. Both notes say Fenmund Example is headquartered in Ostracliff; the follow-up details can coexist.",
+   "ms": 1201
+  },
+  {
+   "id": "20261001:i232:companies/osttessa-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 141,
+   "output_tokens": 46,
+   "reply": "No. The notes describe different companies and do not conflict.",
+   "ms": 976
+  },
+  {
+   "id": "20261001:i232:companies/talzarra-example|notes/n2-i232-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 132,
+   "output_tokens": 39,
+   "reply": "No.",
+   "ms": 746
+  },
+  {
+   "id": "20261001:i232:notes/n2-i232-a|notes/n2-i232-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 128,
+   "output_tokens": 22,
+   "reply": "No.",
+   "ms": 746
+  },
+  {
+   "id": "20261001:i233:notes/n2-i233-a|notes/n2-i233-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 132,
+   "output_tokens": 22,
+   "reply": "No.",
+   "ms": 716
+  },
+  {
+   "id": "20261001:i234:companies/brenbarth-example|notes/n2-i234-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 119,
+   "output_tokens": 106,
+   "reply": "No. The notes contain no conflicting claims.",
+   "ms": 1503
+  },
+  {
+   "id": "20261001:i234:notes/n2-i234-a|notes/n2-i234-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 116,
+   "output_tokens": 38,
+   "reply": "No. Both notes report Brenbarth Example’s ARR as $4.4M.",
+   "ms": 1296
+  },
+  {
+   "id": "20261001:i235:companies/ivoford-example|notes/n2-i235-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 135,
+   "output_tokens": 26,
+   "reply": "No.",
+   "ms": 867
+  },
+  {
+   "id": "20261001:i235:companies/lundlex-example|notes/n2-i235-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 127,
+   "output_tokens": 30,
+   "reply": "No.",
+   "ms": 712
+  },
+  {
+   "id": "20261001:i235:notes/n2-i235-a|notes/n2-i235-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 126,
+   "output_tokens": 59,
+   "reply": "No. Both notes say Vexmora Example has 88 months of runway, and the other details don’t conflict.",
+   "ms": 1384
+  },
+  {
+   "id": "20261001:i236:companies/gralquay-example|notes/n2-i236-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 132,
+   "output_tokens": 35,
+   "reply": "No. The notes refer to different companies.",
+   "ms": 736
+  },
+  {
+   "id": "20261001:i236:companies/jarnmora-example|notes/n2-i236-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 132,
+   "output_tokens": 52,
+   "reply": "No. The notes refer to different companies.",
+   "ms": 1139
+  },
+  {
+   "id": "20261001:i236:notes/n2-i236-a|notes/n2-i236-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 113,
+   "output_tokens": 38,
+   "reply": "No. Both notes say Nimloom Example has 127 pilot customers.",
+   "ms": 1137
+  },
+  {
+   "id": "20261001:i237:companies/cortessa-example|notes/n2-i237-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 129,
+   "output_tokens": 85,
+   "reply": "No. The notes describe different fictional companies, so their SAFE caps do not conflict.",
+   "ms": 1392
+  },
+  {
+   "id": "20261001:i237:notes/n2-i237-a|notes/n2-i237-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 119,
+   "output_tokens": 28,
+   "reply": "No.",
+   "ms": 1322
+  },
+  {
+   "id": "20261001:i238:notes/n2-i238-a|notes/n2-i238-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 126,
+   "output_tokens": 71,
+   "reply": "No. Both notes say Fenquay Example is headquartered in Lorncford, and the second doesn’t conflict with revisiting the deal after the next partner meeting.",
+   "ms": 1312
+  },
+  {
+   "id": "20261001:i239:companies/brensorn-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 140,
+   "output_tokens": 47,
+   "reply": "No.",
+   "ms": 1090
+  },
+  {
+   "id": "20261001:i239:notes/n2-i239-a|notes/n2-i239-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 129,
+   "output_tokens": 29,
+   "reply": "No.",
+   "ms": 749
+  },
+  {
+   "id": "20261001:i240:companies/lundlex-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 134,
+   "output_tokens": 38,
+   "reply": "No.",
+   "ms": 891
+  },
+  {
+   "id": "20261001:i240:notes/n2-i240-a|notes/n2-i240-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 125,
+   "output_tokens": 43,
+   "reply": "No. Both notes state that Kelzarra Example has 461 people.",
+   "ms": 1013
+  },
+  {
+   "id": "20261001:i241:companies/cordela-labs-example|companies/sabford-freight-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 140,
+   "output_tokens": 54,
+   "reply": "No. Both companies are stated to have 88 months of runway; the notes make no conflicting claims.",
+   "ms": 1342
+  },
+  {
+   "id": "20261001:i241:companies/cordela-labs-example|notes/n2-i241-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 124,
+   "output_tokens": 59,
+   "reply": "No. The notes refer to different companies.",
+   "ms": 1356
+  },
+  {
+   "id": "20261001:i241:companies/sabford-labs-example|companies/talnix-labs-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 144,
+   "output_tokens": 46,
+   "reply": "No. The notes describe different companies and don’t make conflicting claims.",
+   "ms": 1195
+  },
+  {
+   "id": "20261001:i241:companies/sabford-labs-example|notes/n2-i241-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 128,
+   "output_tokens": 95,
+   "reply": "No.",
+   "ms": 1339
+  },
+  {
+   "id": "20261001:i241:companies/talnix-labs-example|notes/n2-i241-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 128,
+   "output_tokens": 54,
+   "reply": "No. The notes describe different companies.",
+   "ms": 941
+  },
+  {
+   "id": "20261001:i242:companies/kelloom-robotics-example|companies/taltrix-health-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 144,
+   "output_tokens": 51,
+   "reply": "No. The notes describe different companies and do not state conflicting facts.",
+   "ms": 1308
+  },
+  {
+   "id": "20261001:i243:notes/n2-i243-a|notes/n2-i243-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 120,
+   "output_tokens": 52,
+   "reply": "No. The notes refer to different entities: Orvnix Grid Example and Orvnix Foods Example.",
+   "ms": 1093
+  },
+  {
+   "id": "20261001:i244:notes/n2-i244-a|notes/n2-i244-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 117,
+   "output_tokens": 66,
+   "reply": "No. The notes refer to different companies: Huxmund Freight Example and Huxmund Analytics Example.",
+   "ms": 1226
+  },
+  {
+   "id": "20261001:i245:companies/kelloom-robotics-example|notes/n2-i245-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 133,
+   "output_tokens": 65,
+   "reply": "No. The notes discuss different companies, so their SAFE caps do not conflict.",
+   "ms": 1386
+  },
+  {
+   "id": "20261001:i245:notes/n2-i245-a|notes/n2-i245-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 128,
+   "output_tokens": 40,
+   "reply": "No. The notes refer to different companies.",
+   "ms": 1059
+  },
+  {
+   "id": "20261001:i247:companies/vexdela-analytics-example|notes/n2-i247-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 142,
+   "output_tokens": 92,
+   "reply": "No.",
+   "ms": 1227
+  },
+  {
+   "id": "20261001:i250:companies/lundlex-example|companies/mortessa-health-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 136,
+   "output_tokens": 63,
+   "reply": "No. The notes describe different companies and make no conflicting claims.",
+   "ms": 1223
+  },
+  {
+   "id": "20261001:i250:companies/lundlex-example|notes/n2-i250-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 127,
+   "output_tokens": 42,
+   "reply": "No. The notes refer to different companies.",
+   "ms": 889
+  },
+  {
+   "id": "20261001:i250:notes/n2-i250-a|notes/n2-i250-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 123,
+   "output_tokens": 54,
+   "reply": "No. The notes refer to different companies: Taltrix Health Example and Taltrix Robotics Example.",
+   "ms": 1094
+  },
+  {
+   "id": "20261001:i251:notes/n2-i251-a|notes/n2-i251-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 120,
+   "output_tokens": 45,
+   "reply": "No. The notes refer to different organizations: Keldela Grid Example and Keldela Foods Example.",
+   "ms": 1034
+  },
+  {
+   "id": "20261001:i252:companies/huxmund-freight-example|companies/talnix-freight-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 150,
+   "output_tokens": 51,
+   "reply": "No. The notes describe different fictional companies and contain no conflicting claims.",
+   "ms": 1107
+  },
+  {
+   "id": "20261001:i252:companies/huxzarra-freight-example|companies/talnix-freight-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 150,
+   "output_tokens": 45,
+   "reply": "No. The notes describe different fictional companies.",
+   "ms": 1099
+  },
+  {
+   "id": "20261001:i252:notes/n2-i252-a|notes/n2-i252-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 127,
+   "output_tokens": 47,
+   "reply": "No. The notes describe different examples with different SAFE caps.",
+   "ms": 1039
+  },
+  {
+   "id": "20261001:i255:companies/huxzarra-analytics-example|companies/vexdela-analytics-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 152,
+   "output_tokens": 44,
+   "reply": "No. The notes describe different fictional companies.",
+   "ms": 1061
+  },
+  {
+   "id": "20261001:i255:companies/huxzarra-analytics-example|notes/n2-i255-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 133,
+   "output_tokens": 52,
+   "reply": "No.",
+   "ms": 945
+  },
+  {
+   "id": "20261001:i256:companies/talzarra-example|notes/n2-i256-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 135,
+   "output_tokens": 52,
+   "reply": "No. The notes refer to different companies and make no conflicting claims.",
+   "ms": 1191
+  },
+  {
+   "id": "20261001:i256:companies/talzarra-example|notes/n2-i256-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 131,
+   "output_tokens": 66,
+   "reply": "No. The notes refer to different companies and contain no conflicting claims.",
+   "ms": 1013
+  },
+  {
+   "id": "20261001:i256:notes/n2-i256-a|notes/n2-i256-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 128,
+   "output_tokens": 82,
+   "reply": "No. One says Avocet Analytics Example is leading; the other says Osprey Robotics Example is not.",
+   "ms": 1429
+  },
+  {
+   "id": "20261001:i257:companies/fendela-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 137,
+   "output_tokens": 52,
+   "reply": "No. The notes describe different companies and do not conflict.",
+   "ms": 1007
+  },
+  {
+   "id": "20261001:i257:notes/n2-i257-a|notes/n2-i257-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 121,
+   "output_tokens": 47,
+   "reply": "No.",
+   "ms": 1179
+  },
+  {
+   "id": "20261001:i258:companies/lundlex-example|notes/n2-i258-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 127,
+   "output_tokens": 51,
+   "reply": "No.",
+   "ms": 947
+  },
+  {
+   "id": "20261001:i258:companies/taldela-example|notes/n2-i258-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 135,
+   "output_tokens": 71,
+   "reply": "No.",
+   "ms": 1188
+  },
+  {
+   "id": "20261001:i258:notes/n2-i258-a|notes/n2-i258-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 125,
+   "output_tokens": 46,
+   "reply": "No. They refer to different funds.",
+   "ms": 1406
+  },
+  {
+   "id": "20261001:i259:companies/lundlex-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 134,
+   "output_tokens": 34,
+   "reply": "No.",
+   "ms": 1059
+  },
+  {
+   "id": "20261001:i259:companies/ruvtrix-example|notes/n2-i259-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 142,
+   "output_tokens": 57,
+   "reply": "No.",
+   "ms": 980
+  },
+  {
+   "id": "20261001:i259:companies/talzarra-example|notes/n2-i259-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 137,
+   "output_tokens": 55,
+   "reply": "No. The notes concern different companies and provide no conflicting information.",
+   "ms": 1001
+  },
+  {
+   "id": "20261001:i259:notes/n2-i259-a|notes/n2-i259-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 130,
+   "output_tokens": 50,
+   "reply": "No. The notes refer to different funds.",
+   "ms": 1210
+  },
+  {
+   "id": "20261001:i260:companies/lunmund-example|notes/n2-i260-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 129,
+   "output_tokens": 44,
+   "reply": "No.",
+   "ms": 777
+  },
+  {
+   "id": "20261001:i260:notes/n2-i260-a|notes/n2-i260-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 122,
+   "output_tokens": 47,
+   "reply": "No. The notes refer to different funds.",
+   "ms": 1447
+  },
+  {
+   "id": "20261001:i261:companies/lundlex-example|companies/ruvpellow-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 140,
+   "output_tokens": 41,
+   "reply": "No.",
+   "ms": 830
+  },
+  {
+   "id": "20261001:i261:notes/n2-i261-a|notes/n2-i261-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 128,
+   "output_tokens": 83,
+   "reply": "No. The notes refer to different funds: Dunlin Marine and Dunlin Freight.",
+   "ms": 1482
+  },
+  {
+   "id": "20261001:i262:companies/kelbarth-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 132,
+   "output_tokens": 51,
+   "reply": "No.",
+   "ms": 927
+  },
+  {
+   "id": "20261001:i262:companies/talzarra-example|notes/n2-i262-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 127,
+   "output_tokens": 44,
+   "reply": "No.",
+   "ms": 944
+  },
+  {
+   "id": "20261001:i262:notes/n2-i262-a|notes/n2-i262-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 116,
+   "output_tokens": 60,
+   "reply": "No. One says Bittern Health Example is leading; the other says Merlin Grid Example is not leading.",
+   "ms": 1168
+  },
+  {
+   "id": "20261001:i263:notes/n2-i263-a|notes/n2-i263-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 129,
+   "output_tokens": 77,
+   "reply": "No. One fund is leading the Series A, and a different fund is not.",
+   "ms": 1368
+  },
+  {
+   "id": "20261001:i264:companies/gralloom-example|notes/n2-i264-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 133,
+   "output_tokens": 53,
+   "reply": "No.",
+   "ms": 1189
+  },
+  {
+   "id": "20261001:i264:companies/lundlex-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 134,
+   "output_tokens": 51,
+   "reply": "No.",
+   "ms": 941
+  },
+  {
+   "id": "20261001:i264:notes/n2-i264-a|notes/n2-i264-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 123,
+   "output_tokens": 59,
+   "reply": "No. One fund is leading, while the other is not.",
+   "ms": 1273
+  },
+  {
+   "id": "20261001:i265:notes/n2-i265-a|notes/n2-i265-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 125,
+   "output_tokens": 87,
+   "reply": "No. One note says Heron Foods Example is leading the Series A; the other says Kestrel Health Example is not. Both can be true.",
+   "ms": 1301
+  },
+  {
+   "id": "20261001:i266:companies/talzarra-example|notes/n2-i266-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 132,
+   "output_tokens": 50,
+   "reply": "No.",
+   "ms": 1160
+  },
+  {
+   "id": "20261001:i266:notes/n2-i266-a|notes/n2-i266-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 125,
+   "output_tokens": 48,
+   "reply": "No. The notes make different claims about different funds.",
+   "ms": 1091
+  },
+  {
+   "id": "20261001:i267:companies/talzarra-example|notes/n2-i267-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 129,
+   "output_tokens": 32,
+   "reply": "No.",
+   "ms": 878
+  },
+  {
+   "id": "20261001:i267:notes/n2-i267-a|notes/n2-i267-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 123,
+   "output_tokens": 72,
+   "reply": "No. One note says Wren Foods is leading; the other says Merlin Labs is not leading. Both could be true.",
+   "ms": 1474
+  },
+  {
+   "id": "20261001:i268:companies/talzarra-example|notes/n2-i268-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 131,
+   "output_tokens": 42,
+   "reply": "No.",
+   "ms": 1018
+  },
+  {
+   "id": "20261001:i268:notes/n2-i268-a|notes/n2-i268-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 122,
+   "output_tokens": 48,
+   "reply": "No.",
+   "ms": 1109
+  },
+  {
+   "id": "20261001:i269:companies/dravane-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 134,
+   "output_tokens": 34,
+   "reply": "No.",
+   "ms": 1075
+  },
+  {
+   "id": "20261001:i269:companies/dravane-example|notes/n2-i269-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 133,
+   "output_tokens": 43,
+   "reply": "No.",
+   "ms": 1296
+  },
+  {
+   "id": "20261001:i269:companies/lundlex-example|notes/n2-i269-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 129,
+   "output_tokens": 42,
+   "reply": "No.",
+   "ms": 1095
+  },
+  {
+   "id": "20261001:i269:notes/n2-i269-a|notes/n2-i269-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 128,
+   "output_tokens": 65,
+   "reply": "No. One says Kestrel Grid Example is leading; the other says Plover Foods Example is not leading.",
+   "ms": 1262
+  },
+  {
+   "id": "20261001:i270:companies/lundlex-example|notes/n2-i270-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 126,
+   "output_tokens": 51,
+   "reply": "No. The notes describe different fictional companies and don’t make conflicting claims.",
+   "ms": 1192
+  },
+  {
+   "id": "20261001:i270:notes/n2-i270-a|notes/n2-i270-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 124,
+   "output_tokens": 57,
+   "reply": "No. One fund is leading; the other is not. Both statements can be true.",
+   "ms": 1446
+  },
+  {
+   "id": "20261011:i211:notes/n2-i211-a|notes/n2-i211-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 136,
+   "output_tokens": 226,
+   "reply": "No. They report different opinions from two people, which can both be true.",
+   "ms": 3372
+  },
+  {
+   "id": "20261011:i212:notes/n2-i212-a|notes/n2-i212-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 121,
+   "output_tokens": 65,
+   "reply": "Yes. One says the market is overcrowded; the other says it is wide open.",
+   "ms": 1435
+  },
+  {
+   "id": "20261011:i213:notes/n2-i213-a|notes/n2-i213-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 135,
+   "output_tokens": 121,
+   "reply": "Yes. The notes give opposing assessments of the founding team’s enterprise-sales ability.",
+   "ms": 1705
+  },
+  {
+   "id": "20261011:i214:notes/n2-i214-a|notes/n2-i214-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 132,
+   "output_tokens": 42,
+   "reply": "No. Different people can hold opposing views of the roadmap.",
+   "ms": 1140
+  },
+  {
+   "id": "20261011:i215:notes/n2-i215-a|notes/n2-i215-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 126,
+   "output_tokens": 62,
+   "reply": "No. Greta and Hugo express different opinions about the hiring plan; those opinions can coexist.",
+   "ms": 1117
+  },
+  {
+   "id": "20261011:i216:notes/n2-i216-a|notes/n2-i216-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 126,
+   "output_tokens": 151,
+   "reply": "No. They report different people’s opinions, which can both be true.",
+   "ms": 2431
+  },
+  {
+   "id": "20261011:i217:notes/n2-i217-a|notes/n2-i217-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 126,
+   "output_tokens": 60,
+   "reply": "Yes. One says the market is overcrowded; the other says it is wide open.",
+   "ms": 995
+  },
+  {
+   "id": "20261011:i218:notes/n2-i218-a|notes/n2-i218-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 132,
+   "output_tokens": 158,
+   "reply": "Yes. They give conflicting assessments of Kelwick Example’s founding team’s enterprise sales experience.",
+   "ms": 2576
+  },
+  {
+   "id": "20261011:i219:notes/n2-i219-a|notes/n2-i219-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 131,
+   "output_tokens": 44,
+   "reply": "No. The notes report different people’s opinions, which can coexist.",
+   "ms": 1497
+  },
+  {
+   "id": "20261011:i220:notes/n2-i220-a|notes/n2-i220-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 128,
+   "output_tokens": 78,
+   "reply": "Yes. One person describes the hiring plan as reckless, while the other describes it as overly cautious.",
+   "ms": 1188
+  },
+  {
+   "id": "20261011:i221:notes/n2-i221-a|notes/n2-i221-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 129,
+   "output_tokens": 74,
+   "reply": "No. They report different people’s opinions, which can differ without contradicting each other.",
+   "ms": 1467
+  },
+  {
+   "id": "20261011:i222:notes/n2-i222-a|notes/n2-i222-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 125,
+   "output_tokens": 159,
+   "reply": "No.",
+   "ms": 1745
+  },
+  {
+   "id": "20261011:i223:notes/n2-i223-a|notes/n2-i223-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 137,
+   "output_tokens": 84,
+   "reply": "Yes. One says the team is too inexperienced at enterprise sales; the other says it is unusually strong.",
+   "ms": 1836
+  },
+  {
+   "id": "20261011:i224:notes/n2-i224-a|notes/n2-i224-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 126,
+   "output_tokens": 161,
+   "reply": "No. They report opposing opinions from two different people, which can both be true.",
+   "ms": 2059
+  },
+  {
+   "id": "20261011:i225:notes/n2-i225-a|notes/n2-i225-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 134,
+   "output_tokens": 93,
+   "reply": "No. The notes attribute the differing opinions to two different people.",
+   "ms": 2097
+  },
+  {
+   "id": "20261011:i226:notes/n2-i226-a|notes/n2-i226-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 125,
+   "output_tokens": 41,
+   "reply": "No.",
+   "ms": 1118
+  },
+  {
+   "id": "20261011:i227:notes/n2-i227-a|notes/n2-i227-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 128,
+   "output_tokens": 23,
+   "reply": "No.",
+   "ms": 727
+  },
+  {
+   "id": "20261011:i228:notes/n2-i228-a|notes/n2-i228-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 115,
+   "output_tokens": 51,
+   "reply": "No. Both notes state that Corzarra Example has 93 months of runway.",
+   "ms": 1221
+  },
+  {
+   "id": "20261011:i229:notes/n2-i229-a|notes/n2-i229-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 114,
+   "output_tokens": 59,
+   "reply": "No. Both notes say Fentrix Example has 188 pilot customers.",
+   "ms": 1043
+  },
+  {
+   "id": "20261011:i230:notes/n2-i230-a|notes/n2-i230-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 119,
+   "output_tokens": 92,
+   "reply": "No. Both notes state a $152M cap, and the second doesn’t say the hiring or next-quarter discussion changed the investment view.",
+   "ms": 1584
+  },
+  {
+   "id": "20261011:i231:notes/n2-i231-a|notes/n2-i231-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 122,
+   "output_tokens": 44,
+   "reply": "No. Both notes say Gralwick Example is headquartered in Eskelra.",
+   "ms": 1437
+  },
+  {
+   "id": "20261011:i232:notes/n2-i232-a|notes/n2-i232-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 122,
+   "output_tokens": 24,
+   "reply": "No.",
+   "ms": 620
+  },
+  {
+   "id": "20261011:i233:notes/n2-i233-a|notes/n2-i233-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 121,
+   "output_tokens": 22,
+   "reply": "No.",
+   "ms": 624
+  },
+  {
+   "id": "20261011:i234:notes/n2-i234-a|notes/n2-i234-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 119,
+   "output_tokens": 22,
+   "reply": "No.",
+   "ms": 650
+  },
+  {
+   "id": "20261011:i235:notes/n2-i235-a|notes/n2-i235-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 123,
+   "output_tokens": 55,
+   "reply": "No. Both notes state that Huxnix Example has 39 months of runway.",
+   "ms": 1352
+  },
+  {
+   "id": "20261011:i236:notes/n2-i236-a|notes/n2-i236-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 114,
+   "output_tokens": 47,
+   "reply": "No.",
+   "ms": 1149
+  },
+  {
+   "id": "20261011:i237:notes/n2-i237-a|notes/n2-i237-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 122,
+   "output_tokens": 41,
+   "reply": "No. Both notes state that the SAFE has a $243M cap.",
+   "ms": 901
+  },
+  {
+   "id": "20261011:i238:notes/n2-i238-a|notes/n2-i238-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 117,
+   "output_tokens": 36,
+   "reply": "No.",
+   "ms": 762
+  },
+  {
+   "id": "20261011:i239:notes/n2-i239-a|notes/n2-i239-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 126,
+   "output_tokens": 53,
+   "reply": "No.",
+   "ms": 1066
+  },
+  {
+   "id": "20261011:i240:notes/n2-i240-a|notes/n2-i240-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 124,
+   "output_tokens": 25,
+   "reply": "No.",
+   "ms": 631
+  },
+  {
+   "id": "20261011:i243:notes/n2-i243-a|notes/n2-i243-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 121,
+   "output_tokens": 33,
+   "reply": "No.",
+   "ms": 920
+  },
+  {
+   "id": "20261011:i244:notes/n2-i244-a|notes/n2-i244-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 110,
+   "output_tokens": 32,
+   "reply": "No.",
+   "ms": 2156
+  },
+  {
+   "id": "20261011:i245:notes/n2-i245-a|notes/n2-i245-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 125,
+   "output_tokens": 49,
+   "reply": "No. The notes refer to different companies: Sabtrix Robotics and Sabtrix Marine.",
+   "ms": 1119
+  },
+  {
+   "id": "20261011:i250:notes/n2-i250-a|notes/n2-i250-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 122,
+   "output_tokens": 36,
+   "reply": "No. The notes refer to different companies.",
+   "ms": 730
+  },
+  {
+   "id": "20261011:i251:notes/n2-i251-a|notes/n2-i251-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 124,
+   "output_tokens": 32,
+   "reply": "No.",
+   "ms": 901
+  },
+  {
+   "id": "20261011:i252:notes/n2-i252-a|notes/n2-i252-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 122,
+   "output_tokens": 39,
+   "reply": "No.",
+   "ms": 773
+  },
+  {
+   "id": "20261011:i256:notes/n2-i256-a|notes/n2-i256-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 126,
+   "output_tokens": 92,
+   "reply": "No. One note says Heron Grid Example is leading; the other says Avocet Analytics Example is not leading. These statements are compatible.",
+   "ms": 1553
+  },
+  {
+   "id": "20261011:i257:notes/n2-i257-a|notes/n2-i257-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 132,
+   "output_tokens": 67,
+   "reply": "No. One note says Avocet Foods is leading; the other says Kestrel Foods is not leading. These statements can both be true.",
+   "ms": 1397
+  },
+  {
+   "id": "20261011:i258:notes/n2-i258-a|notes/n2-i258-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 128,
+   "output_tokens": 42,
+   "reply": "No.",
+   "ms": 858
+  },
+  {
+   "id": "20261011:i259:notes/n2-i259-a|notes/n2-i259-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 125,
+   "output_tokens": 66,
+   "reply": "No. One fund is leading, while a different fund is not.",
+   "ms": 1212
+  },
+  {
+   "id": "20261011:i260:notes/n2-i260-a|notes/n2-i260-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 124,
+   "output_tokens": 79,
+   "reply": "No. One says Heron Analytics Example is leading; the other says Wren Labs Example is not leading.",
+   "ms": 1264
+  },
+  {
+   "id": "20261011:i261:notes/n2-i261-a|notes/n2-i261-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 127,
+   "output_tokens": 73,
+   "reply": "No.",
+   "ms": 1304
+  },
+  {
+   "id": "20261011:i262:notes/n2-i262-a|notes/n2-i262-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 122,
+   "output_tokens": 88,
+   "reply": "No. One note says Heron Freight is leading; the other says Plover Labs is not leading.",
+   "ms": 1317
+  },
+  {
+   "id": "20261011:i263:notes/n2-i263-a|notes/n2-i263-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 127,
+   "output_tokens": 85,
+   "reply": "No. The notes refer to different funds: Osprey Marine is leading, while Osprey Robotics is not.",
+   "ms": 1399
+  },
+  {
+   "id": "20261011:i264:notes/n2-i264-a|notes/n2-i264-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 125,
+   "output_tokens": 81,
+   "reply": "No. One fund is leading, while the other is not.",
+   "ms": 1103
+  },
+  {
+   "id": "20261011:i265:notes/n2-i265-a|notes/n2-i265-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 117,
+   "output_tokens": 38,
+   "reply": "No.",
+   "ms": 799
+  },
+  {
+   "id": "20261011:i266:notes/n2-i266-a|notes/n2-i266-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 124,
+   "output_tokens": 95,
+   "reply": "No. One note says Curlew Grid Example is leading; the other says Kestrel Freight Example is not leading. These statements can both be true.",
+   "ms": 1528
+  },
+  {
+   "id": "20261011:i267:notes/n2-i267-a|notes/n2-i267-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 119,
+   "output_tokens": 82,
+   "reply": "No. One says Heron Labs is leading; the other says Merlin Health is not leading.",
+   "ms": 1377
+  },
+  {
+   "id": "20261011:i268:notes/n2-i268-a|notes/n2-i268-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 119,
+   "output_tokens": 68,
+   "reply": "No. One says Egret Foods is leading; the other says Curlew Freight is not leading. Both can be true.",
+   "ms": 1249
+  },
+  {
+   "id": "20261011:i269:notes/n2-i269-a|notes/n2-i269-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 124,
+   "output_tokens": 80,
+   "reply": "No. The notes refer to different funds: Shrike is leading, while Plover is not.",
+   "ms": 1161
+  },
+  {
+   "id": "20261011:i270:notes/n2-i270-a|notes/n2-i270-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 122,
+   "output_tokens": 63,
+   "reply": "No. One note says Wren Marine Example is leading; the other says Heron Robotics Example is not. Both can be true.",
+   "ms": 1294
+  },
+  {
+   "id": "20261012:i211:notes/n2-i211-a|notes/n2-i211-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 130,
+   "output_tokens": 90,
+   "reply": "No. They report different people’s opinions, which can both be true.",
+   "ms": 1416
+  },
+  {
+   "id": "20261012:i212:notes/n2-i212-a|notes/n2-i212-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 122,
+   "output_tokens": 85,
+   "reply": "No. They report different people’s opinions, which can differ without contradicting each other.",
+   "ms": 1263
+  },
+  {
+   "id": "20261012:i213:notes/n2-i213-a|notes/n2-i213-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 139,
+   "output_tokens": 54,
+   "reply": "No. They report different people’s opinions, which can differ without contradicting each other.",
+   "ms": 1084
+  },
+  {
+   "id": "20261012:i214:notes/n2-i214-a|notes/n2-i214-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 130,
+   "output_tokens": 59,
+   "reply": "No. The notes describe different people’s opinions, which can differ without contradicting each other.",
+   "ms": 1139
+  },
+  {
+   "id": "20261012:i215:notes/n2-i215-a|notes/n2-i215-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 135,
+   "output_tokens": 73,
+   "reply": "No. The notes report different people’s opinions, which can both be true; they agree on revisiting the deal.",
+   "ms": 2554
+  },
+  {
+   "id": "20261012:i216:notes/n2-i216-a|notes/n2-i216-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 131,
+   "output_tokens": 46,
+   "reply": "No. Different people can have opposing opinions about the pricing.",
+   "ms": 1448
+  },
+  {
+   "id": "20261012:i217:notes/n2-i217-a|notes/n2-i217-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 132,
+   "output_tokens": 101,
+   "reply": "No. The notes attribute different views to different people, so they do not contradict each other.",
+   "ms": 1584
+  },
+  {
+   "id": "20261012:i218:notes/n2-i218-a|notes/n2-i218-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 134,
+   "output_tokens": 258,
+   "reply": "No. They attribute opposing opinions to two different people.",
+   "ms": 2827
+  },
+  {
+   "id": "20261012:i219:notes/n2-i219-a|notes/n2-i219-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 132,
+   "output_tokens": 60,
+   "reply": "No. The notes report different people’s opinions, which can coexist, and both say the deal would be revisited after the next partner meeting.",
+   "ms": 1157
+  },
+  {
+   "id": "20261012:i220:notes/n2-i220-a|notes/n2-i220-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 128,
+   "output_tokens": 61,
+   "reply": "Yes.",
+   "ms": 928
+  },
+  {
+   "id": "20261012:i221:notes/n2-i221-a|notes/n2-i221-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 127,
+   "output_tokens": 76,
+   "reply": "No. The notes attribute the opposing pricing views to different people.",
+   "ms": 2037
+  },
+  {
+   "id": "20261012:i222:notes/n2-i222-a|notes/n2-i222-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 127,
+   "output_tokens": 70,
+   "reply": "Yes. One says the market is overcrowded; the other says it is wide open.",
+   "ms": 1385
+  },
+  {
+   "id": "20261012:i223:notes/n2-i223-a|notes/n2-i223-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 133,
+   "output_tokens": 70,
+   "reply": "No.",
+   "ms": 1010
+  },
+  {
+   "id": "20261012:i224:notes/n2-i224-a|notes/n2-i224-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 134,
+   "output_tokens": 81,
+   "reply": "No. The notes attribute the opposing views to different people.",
+   "ms": 1199
+  },
+  {
+   "id": "20261012:i225:notes/n2-i225-a|notes/n2-i225-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 128,
+   "output_tokens": 91,
+   "reply": "Yes. One note says the hiring plan is reckless; the other says it is overly cautious.",
+   "ms": 1343
+  },
+  {
+   "id": "20261012:i226:notes/n2-i226-a|notes/n2-i226-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 120,
+   "output_tokens": 42,
+   "reply": "No. Both notes state that Brenquay Example has 335 people and that follow-ups are tracked in the weekly review.",
+   "ms": 813
+  },
+  {
+   "id": "20261012:i227:notes/n2-i227-a|notes/n2-i227-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 120,
+   "output_tokens": 64,
+   "reply": "No. Both notes report $20.0M ARR, and the other statements do not conflict.",
+   "ms": 1116
+  },
+  {
+   "id": "20261012:i228:notes/n2-i228-a|notes/n2-i228-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 119,
+   "output_tokens": 60,
+   "reply": "No. Both notes say Ruvzarra Example has 123 months of runway and that follow-ups are tracked in the weekly review.",
+   "ms": 1145
+  },
+  {
+   "id": "20261012:i229:notes/n2-i229-a|notes/n2-i229-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 113,
+   "output_tokens": 33,
+   "reply": "No.",
+   "ms": 1055
+  },
+  {
+   "id": "20261012:i230:notes/n2-i230-a|notes/n2-i230-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 120,
+   "output_tokens": 46,
+   "reply": "No. Both notes say the SAFE has a $325M cap.",
+   "ms": 1098
+  },
+  {
+   "id": "20261012:i231:notes/n2-i231-a|notes/n2-i231-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 122,
+   "output_tokens": 62,
+   "reply": "No. Both notes say Ostvane Example is headquartered in Duneford; the follow-up plans don’t conflict.",
+   "ms": 1301
+  },
+  {
+   "id": "20261012:i232:notes/n2-i232-a|notes/n2-i232-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 122,
+   "output_tokens": 23,
+   "reply": "No.",
+   "ms": 1138
+  },
+  {
+   "id": "20261012:i233:notes/n2-i233-a|notes/n2-i233-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 127,
+   "output_tokens": 35,
+   "reply": "No.",
+   "ms": 742
+  },
+  {
+   "id": "20261012:i234:notes/n2-i234-a|notes/n2-i234-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 124,
+   "output_tokens": 58,
+   "reply": "No. Both notes report $11.1M ARR, and their other details can coexist.",
+   "ms": 1227
+  },
+  {
+   "id": "20261012:i235:notes/n2-i235-a|notes/n2-i235-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 118,
+   "output_tokens": 26,
+   "reply": "No.",
+   "ms": 761
+  },
+  {
+   "id": "20261012:i236:notes/n2-i236-a|notes/n2-i236-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 119,
+   "output_tokens": 30,
+   "reply": "No.",
+   "ms": 727
+  },
+  {
+   "id": "20261012:i237:notes/n2-i237-a|notes/n2-i237-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 118,
+   "output_tokens": 33,
+   "reply": "No.",
+   "ms": 1027
+  },
+  {
+   "id": "20261012:i238:notes/n2-i238-a|notes/n2-i238-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 127,
+   "output_tokens": 41,
+   "reply": "No. Both notes say Pelmora Example is headquartered in Vellastead.",
+   "ms": 1044
+  },
+  {
+   "id": "20261012:i239:notes/n2-i239-a|notes/n2-i239-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 124,
+   "output_tokens": 50,
+   "reply": "No.",
+   "ms": 891
+  },
+  {
+   "id": "20261012:i240:notes/n2-i240-a|notes/n2-i240-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 123,
+   "output_tokens": 44,
+   "reply": "No. Both notes state that Brentrix Example has 142 people.",
+   "ms": 1008
+  },
+  {
+   "id": "20261012:i243:notes/n2-i243-a|notes/n2-i243-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 116,
+   "output_tokens": 51,
+   "reply": "No. The notes refer to different entities: Pelbarth Grid Example and Pelbarth Foods Example.",
+   "ms": 1143
+  },
+  {
+   "id": "20261012:i244:notes/n2-i244-a|notes/n2-i244-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 109,
+   "output_tokens": 56,
+   "reply": "No. The notes refer to different organizations: Morbarth Freight Example and Morbarth Analytics Example.",
+   "ms": 1100
+  },
+  {
+   "id": "20261012:i245:notes/n2-i245-a|notes/n2-i245-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 125,
+   "output_tokens": 57,
+   "reply": "No. The notes describe different examples: Morzarra Robotics and Morzarra Marine.",
+   "ms": 1316
+  },
+  {
+   "id": "20261012:i251:notes/n2-i251-a|notes/n2-i251-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 114,
+   "output_tokens": 58,
+   "reply": "No. The notes refer to different entities: Draloom Grid Example and Draloom Foods Example.",
+   "ms": 1291
+  },
+  {
+   "id": "20261012:i252:notes/n2-i252-a|notes/n2-i252-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 122,
+   "output_tokens": 52,
+   "reply": "No. The notes refer to different examples: Fensorn Freight and Fensorn Analytics.",
+   "ms": 1309
+  },
+  {
+   "id": "20261012:i256:notes/n2-i256-a|notes/n2-i256-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 124,
+   "output_tokens": 60,
+   "reply": "No. One fund is leading, while another fund is not.",
+   "ms": 1190
+  },
+  {
+   "id": "20261012:i257:notes/n2-i257-a|notes/n2-i257-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 132,
+   "output_tokens": 75,
+   "reply": "No. One says Kestrel Health Example is leading; the other says Dunlin Grid Example is not leading. Both can be true.",
+   "ms": 1650
+  },
+  {
+   "id": "20261012:i258:notes/n2-i258-a|notes/n2-i258-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 127,
+   "output_tokens": 54,
+   "reply": "No. Curlew Foods leading and Heron Labs not leading are consistent.",
+   "ms": 1130
+  },
+  {
+   "id": "20261012:i259:notes/n2-i259-a|notes/n2-i259-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 124,
+   "output_tokens": 65,
+   "reply": "No. One says Shrike Analytics is leading; the other says Plover Robotics is not leading. Both can be true.",
+   "ms": 1352
+  },
+  {
+   "id": "20261012:i260:notes/n2-i260-a|notes/n2-i260-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 118,
+   "output_tokens": 59,
+   "reply": "No. One says Merlin Labs Example is leading; the other says Egret Analytics Example is not leading.",
+   "ms": 1810
+  },
+  {
+   "id": "20261012:i261:notes/n2-i261-a|notes/n2-i261-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 120,
+   "output_tokens": 69,
+   "reply": "No. One fund is leading, while a different fund is not.",
+   "ms": 1162
+  },
+  {
+   "id": "20261012:i262:notes/n2-i262-a|notes/n2-i262-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 125,
+   "output_tokens": 163,
+   "reply": "No. Wren Health leading and Avocet Labs not leading are compatible statements about different funds.",
+   "ms": 2089
+  },
+  {
+   "id": "20261012:i263:notes/n2-i263-a|notes/n2-i263-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 127,
+   "output_tokens": 87,
+   "reply": "No. One says Merlin Marine is leading; the other says Plover Analytics is not leading. Both can be true.",
+   "ms": 1417
+  },
+  {
+   "id": "20261012:i264:notes/n2-i264-a|notes/n2-i264-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 126,
+   "output_tokens": 79,
+   "reply": "No. One says Shrike Labs is leading; the other says Wren Foods is not leading.",
+   "ms": 1749
+  },
+  {
+   "id": "20261012:i265:notes/n2-i265-a|notes/n2-i265-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 125,
+   "output_tokens": 79,
+   "reply": "No. One says Egret Grid is leading; the other says Shrike Freight is not leading.",
+   "ms": 1376
+  },
+  {
+   "id": "20261012:i266:notes/n2-i266-a|notes/n2-i266-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 129,
+   "output_tokens": 48,
+   "reply": "No. The notes refer to different funds.",
+   "ms": 980
+  },
+  {
+   "id": "20261012:i267:notes/n2-i267-a|notes/n2-i267-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 122,
+   "output_tokens": 127,
+   "reply": "No. One note says Osprey is leading; the other says Egret is not leading. These statements are compatible.",
+   "ms": 1554
+  },
+  {
+   "id": "20261012:i268:notes/n2-i268-a|notes/n2-i268-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 119,
+   "output_tokens": 71,
+   "reply": "No. The notes describe different funds: Merlin is leading, while Curlew is not.",
+   "ms": 1386
+  },
+  {
+   "id": "20261012:i269:notes/n2-i269-a|notes/n2-i269-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 125,
+   "output_tokens": 65,
+   "reply": "No. One says Bittern Robotics is leading; the other says Plover Marine is not leading. These statements can both be true.",
+   "ms": 1203
+  },
+  {
+   "id": "20261012:i270:notes/n2-i270-a|notes/n2-i270-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 122,
+   "output_tokens": 66,
+   "reply": "No. One says Curlew Labs is leading; the other says Dunlin Labs is not leading. Both can be true.",
+   "ms": 1303
+  },
+  {
+   "id": "20261013:i211:notes/n2-i211-a|notes/n2-i211-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 130,
+   "output_tokens": 190,
+   "reply": "No. Different people can hold opposing views on the pricing, and agreeing to revisit the deal doesn’t necessarily change the investment view.",
+   "ms": 4074
+  },
+  {
+   "id": "20261013:i212:notes/n2-i212-a|notes/n2-i212-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 128,
+   "output_tokens": 73,
+   "reply": "No. The notes report different people’s opinions, which can both be true.",
+   "ms": 1536
+  },
+  {
+   "id": "20261013:i213:notes/n2-i213-a|notes/n2-i213-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 137,
+   "output_tokens": 27,
+   "reply": "Yes.",
+   "ms": 766
+  },
+  {
+   "id": "20261013:i214:notes/n2-i214-a|notes/n2-i214-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 125,
+   "output_tokens": 47,
+   "reply": "No. The notes attribute opposite views to different people.",
+   "ms": 1154
+  },
+  {
+   "id": "20261013:i215:notes/n2-i215-a|notes/n2-i215-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 127,
+   "output_tokens": 56,
+   "reply": "No. The notes attribute the opinions to different people.",
+   "ms": 1182
+  },
+  {
+   "id": "20261013:i216:notes/n2-i216-a|notes/n2-i216-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 120,
+   "output_tokens": 81,
+   "reply": "No. They report different opinions from different people, which can both be true.",
+   "ms": 1748
+  },
+  {
+   "id": "20261013:i217:notes/n2-i217-a|notes/n2-i217-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 125,
+   "output_tokens": 70,
+   "reply": "No. They report different people’s opinions, which can differ without contradiction.",
+   "ms": 1162
+  },
+  {
+   "id": "20261013:i218:notes/n2-i218-a|notes/n2-i218-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 136,
+   "output_tokens": 41,
+   "reply": "Yes.",
+   "ms": 944
+  },
+  {
+   "id": "20261013:i219:notes/n2-i219-a|notes/n2-i219-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 125,
+   "output_tokens": 80,
+   "reply": "Yes.",
+   "ms": 1319
+  },
+  {
+   "id": "20261013:i220:notes/n2-i220-a|notes/n2-i220-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 130,
+   "output_tokens": 52,
+   "reply": "No. The notes report different opinions from two people, which can both be true.",
+   "ms": 1235
+  },
+  {
+   "id": "20261013:i221:notes/n2-i221-a|notes/n2-i221-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 124,
+   "output_tokens": 67,
+   "reply": "No. They report different people’s opinions, which can differ without contradiction.",
+   "ms": 1188
+  },
+  {
+   "id": "20261013:i222:notes/n2-i222-a|notes/n2-i222-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 131,
+   "output_tokens": 36,
+   "reply": "No. The notes report different people’s opinions.",
+   "ms": 1002
+  },
+  {
+   "id": "20261013:i223:notes/n2-i223-a|notes/n2-i223-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 135,
+   "output_tokens": 51,
+   "reply": "Yes. One note says the team is too inexperienced for enterprise sales; the other says it is unusually strong at enterprise sales.",
+   "ms": 2200
+  },
+  {
+   "id": "20261013:i224:notes/n2-i224-a|notes/n2-i224-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 127,
+   "output_tokens": 59,
+   "reply": "No. They record different people’s opinions, which can coexist.",
+   "ms": 1162
+  },
+  {
+   "id": "20261013:i225:notes/n2-i225-a|notes/n2-i225-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 125,
+   "output_tokens": 85,
+   "reply": "No. They report different people’s opinions, which can coexist.",
+   "ms": 1378
+  },
+  {
+   "id": "20261013:i226:notes/n2-i226-a|notes/n2-i226-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 122,
+   "output_tokens": 23,
+   "reply": "No.",
+   "ms": 1012
+  },
+  {
+   "id": "20261013:i227:notes/n2-i227-a|notes/n2-i227-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 120,
+   "output_tokens": 23,
+   "reply": "No.",
+   "ms": 799
+  },
+  {
+   "id": "20261013:i228:notes/n2-i228-a|notes/n2-i228-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 119,
+   "output_tokens": 62,
+   "reply": "No. Both notes say Orvford Example has 32 months of runway, and the follow-up plans can coexist.",
+   "ms": 1123
+  },
+  {
+   "id": "20261013:i229:notes/n2-i229-a|notes/n2-i229-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 114,
+   "output_tokens": 42,
+   "reply": "No. Both notes state that Brenvane Example has 84 pilot customers.",
+   "ms": 845
+  },
+  {
+   "id": "20261013:i230:notes/n2-i230-a|notes/n2-i230-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 125,
+   "output_tokens": 58,
+   "reply": "No. Both notes say the SAFE has a $277M cap.",
+   "ms": 950
+  },
+  {
+   "id": "20261013:i231:notes/n2-i231-a|notes/n2-i231-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 127,
+   "output_tokens": 44,
+   "reply": "No.",
+   "ms": 850
+  },
+  {
+   "id": "20261013:i232:notes/n2-i232-a|notes/n2-i232-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 127,
+   "output_tokens": 39,
+   "reply": "No.",
+   "ms": 999
+  },
+  {
+   "id": "20261013:i233:notes/n2-i233-a|notes/n2-i233-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 124,
+   "output_tokens": 22,
+   "reply": "No.",
+   "ms": 900
+  },
+  {
+   "id": "20261013:i234:notes/n2-i234-a|notes/n2-i234-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 127,
+   "output_tokens": 22,
+   "reply": "No.",
+   "ms": 1268
+  },
+  {
+   "id": "20261013:i235:notes/n2-i235-a|notes/n2-i235-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 119,
+   "output_tokens": 46,
+   "reply": "No. Both notes say Vexpellow Example has 36 months of runway.",
+   "ms": 1232
+  },
+  {
+   "id": "20261013:i236:notes/n2-i236-a|notes/n2-i236-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 119,
+   "output_tokens": 50,
+   "reply": "No. Both notes say Mornix Example has 195 pilot customers.",
+   "ms": 1094
+  },
+  {
+   "id": "20261013:i237:notes/n2-i237-a|notes/n2-i237-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 122,
+   "output_tokens": 23,
+   "reply": "No.",
+   "ms": 778
+  },
+  {
+   "id": "20261013:i238:notes/n2-i238-a|notes/n2-i238-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 122,
+   "output_tokens": 64,
+   "reply": "No. Both notes place Vexloom Example’s headquarters in Marsdhaven, and the follow-up details don’t conflict.",
+   "ms": 1396
+  },
+  {
+   "id": "20261013:i239:notes/n2-i239-a|notes/n2-i239-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 123,
+   "output_tokens": 42,
+   "reply": "No.",
+   "ms": 968
+  },
+  {
+   "id": "20261013:i240:notes/n2-i240-a|notes/n2-i240-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 127,
+   "output_tokens": 29,
+   "reply": "No. The notes report the same headcount and agreement.",
+   "ms": 984
+  },
+  {
+   "id": "20261013:i243:notes/n2-i243-a|notes/n2-i243-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 119,
+   "output_tokens": 54,
+   "reply": "No. The notes refer to different companies: Talsorn Grid Example and Talsorn Foods Example.",
+   "ms": 1151
+  },
+  {
+   "id": "20261013:i244:notes/n2-i244-a|notes/n2-i244-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 122,
+   "output_tokens": 38,
+   "reply": "No. The notes refer to different companies.",
+   "ms": 791
+  },
+  {
+   "id": "20261013:i245:notes/n2-i245-a|notes/n2-i245-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 128,
+   "output_tokens": 52,
+   "reply": "No. The notes describe different companies: Ruvpellow Robotics Example and Ruvpellow Marine Example.",
+   "ms": 1019
+  },
+  {
+   "id": "20261013:i250:notes/n2-i250-a|notes/n2-i250-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 124,
+   "output_tokens": 32,
+   "reply": "No.",
+   "ms": 926
+  },
+  {
+   "id": "20261013:i251:notes/n2-i251-a|notes/n2-i251-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 124,
+   "output_tokens": 51,
+   "reply": "No. The notes refer to different companies.",
+   "ms": 846
+  },
+  {
+   "id": "20261013:i252:notes/n2-i252-a|notes/n2-i252-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 129,
+   "output_tokens": 61,
+   "reply": "No. The notes refer to different examples: Vexzarra Freight and Vexzarra Analytics.",
+   "ms": 1243
+  },
+  {
+   "id": "20261013:i256:notes/n2-i256-a|notes/n2-i256-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 127,
+   "output_tokens": 76,
+   "reply": "No. One note says Egret Robotics is leading; the other says Merlin Grid is not leading. These statements are compatible.",
+   "ms": 1531
+  },
+  {
+   "id": "20261013:i257:notes/n2-i257-a|notes/n2-i257-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 123,
+   "output_tokens": 61,
+   "reply": "No. One note says Merlin Health is leading; the other says Merlin Analytics is not.",
+   "ms": 1266
+  },
+  {
+   "id": "20261013:i258:notes/n2-i258-a|notes/n2-i258-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 128,
+   "output_tokens": 57,
+   "reply": "No. One says Dunlin is leading; the other says Avocet is not.",
+   "ms": 1042
+  },
+  {
+   "id": "20261013:i259:notes/n2-i259-a|notes/n2-i259-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 124,
+   "output_tokens": 54,
+   "reply": "No. One fund is leading the Series A; the other is not.",
+   "ms": 1050
+  },
+  {
+   "id": "20261013:i260:notes/n2-i260-a|notes/n2-i260-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 125,
+   "output_tokens": 64,
+   "reply": "No. One says Curlew Freight Example is leading; the other says Dunlin Foods Example is not leading.",
+   "ms": 1174
+  },
+  {
+   "id": "20261013:i261:notes/n2-i261-a|notes/n2-i261-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 123,
+   "output_tokens": 58,
+   "reply": "No. One fund is leading, and the other is not.",
+   "ms": 1098
+  },
+  {
+   "id": "20261013:i262:notes/n2-i262-a|notes/n2-i262-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 121,
+   "output_tokens": 70,
+   "reply": "No. One says Shrike Freight Example is leading; the other says Curlew Health Example is not leading. Both can be true.",
+   "ms": 1380
+  },
+  {
+   "id": "20261013:i263:notes/n2-i263-a|notes/n2-i263-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 123,
+   "output_tokens": 81,
+   "reply": "No. One note says Plover Marine Example is leading; the other says Egret Grid Example is not leading. Both can be true.",
+   "ms": 1809
+  },
+  {
+   "id": "20261013:i264:notes/n2-i264-a|notes/n2-i264-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 126,
+   "output_tokens": 71,
+   "reply": "No. One says Curlew Labs is leading; the other says Dunlin Analytics is not leading. Both can be true.",
+   "ms": 1232
+  },
+  {
+   "id": "20261013:i265:notes/n2-i265-a|notes/n2-i265-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 125,
+   "output_tokens": 63,
+   "reply": "No. One fund is leading, while a different fund is not.",
+   "ms": 944
+  },
+  {
+   "id": "20261013:i266:notes/n2-i266-a|notes/n2-i266-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 124,
+   "output_tokens": 75,
+   "reply": "No. One fund is leading, while a different fund is not.",
+   "ms": 1319
+  },
+  {
+   "id": "20261013:i267:notes/n2-i267-a|notes/n2-i267-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 122,
+   "output_tokens": 100,
+   "reply": "No. The notes refer to different funds: Kestrel Freight and Kestrel Foods.",
+   "ms": 1384
+  },
+  {
+   "id": "20261013:i268:notes/n2-i268-a|notes/n2-i268-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 123,
+   "output_tokens": 55,
+   "reply": "No. The notes refer to different funds: Shrike is leading, while Kestrel is not.",
+   "ms": 1110
+  },
+  {
+   "id": "20261013:i269:notes/n2-i269-a|notes/n2-i269-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 120,
+   "output_tokens": 51,
+   "reply": "No. One fund is leading, while the other is not.",
+   "ms": 905
+  },
+  {
+   "id": "20261013:i270:notes/n2-i270-a|notes/n2-i270-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 120,
+   "output_tokens": 58,
+   "reply": "No. One fund is leading, while a different fund is not.",
+   "ms": 1075
+  },
+  {
+   "id": "20261014:i211:notes/n2-i211-a|notes/n2-i211-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 125,
+   "output_tokens": 97,
+   "reply": "No. The notes report different people’s opinions, which can differ without contradiction.",
+   "ms": 1710
+  },
+  {
+   "id": "20261014:i212:notes/n2-i212-a|notes/n2-i212-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 125,
+   "output_tokens": 144,
+   "reply": "Yes. One describes the market as overcrowded, while the other describes it as wide open.",
+   "ms": 2369
+  },
+  {
+   "id": "20261014:i213:notes/n2-i213-a|notes/n2-i213-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 132,
+   "output_tokens": 123,
+   "reply": "Yes. One note says the founding team is too inexperienced at enterprise sales; the other says it is unusually strong.",
+   "ms": 1632
+  },
+  {
+   "id": "20261014:i214:notes/n2-i214-a|notes/n2-i214-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 133,
+   "output_tokens": 67,
+   "reply": "No. The notes report different people’s opinions, which can coexist.",
+   "ms": 1212
+  },
+  {
+   "id": "20261014:i215:notes/n2-i215-a|notes/n2-i215-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 130,
+   "output_tokens": 51,
+   "reply": "No. The notes report opposing opinions from two different people, which can both be true.",
+   "ms": 1292
+  },
+  {
+   "id": "20261014:i216:notes/n2-i216-a|notes/n2-i216-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 125,
+   "output_tokens": 171,
+   "reply": "No. They report different people’s opposing opinions, which can both be true.",
+   "ms": 2845
+  },
+  {
+   "id": "20261014:i217:notes/n2-i217-a|notes/n2-i217-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 123,
+   "output_tokens": 45,
+   "reply": "No. They report different people’s opinions, which can coexist.",
+   "ms": 1018
+  },
+  {
+   "id": "20261014:i218:notes/n2-i218-a|notes/n2-i218-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 132,
+   "output_tokens": 67,
+   "reply": "Yes. One note says the team is too inexperienced at enterprise sales; the other says it is unusually strong.",
+   "ms": 1185
+  },
+  {
+   "id": "20261014:i219:notes/n2-i219-a|notes/n2-i219-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 130,
+   "output_tokens": 54,
+   "reply": "Yes. One says the roadmap is too ambitious; the other says it is too timid.",
+   "ms": 1213
+  },
+  {
+   "id": "20261014:i220:notes/n2-i220-a|notes/n2-i220-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 130,
+   "output_tokens": 190,
+   "reply": "Yes. One describes the hiring plan as reckless; the other describes it as overly cautious.",
+   "ms": 2494
+  },
+  {
+   "id": "20261014:i221:notes/n2-i221-a|notes/n2-i221-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 123,
+   "output_tokens": 121,
+   "reply": "No. They report different people’s opinions, which can differ.",
+   "ms": 1689
+  },
+  {
+   "id": "20261014:i222:notes/n2-i222-a|notes/n2-i222-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 129,
+   "output_tokens": 70,
+   "reply": "Yes. One says the market is overcrowded; the other says it is wide open.",
+   "ms": 1288
+  },
+  {
+   "id": "20261014:i223:notes/n2-i223-a|notes/n2-i223-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 135,
+   "output_tokens": 74,
+   "reply": "No. The notes attribute opposing views to different people.",
+   "ms": 1393
+  },
+  {
+   "id": "20261014:i224:notes/n2-i224-a|notes/n2-i224-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 126,
+   "output_tokens": 79,
+   "reply": "Yes. One says the roadmap is too ambitious; the other says it is too timid.",
+   "ms": 1191
+  },
+  {
+   "id": "20261014:i225:notes/n2-i225-a|notes/n2-i225-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 126,
+   "output_tokens": 77,
+   "reply": "Yes. One note describes the hiring plan as reckless; the other describes it as overly cautious.",
+   "ms": 1268
+  },
+  {
+   "id": "20261014:i226:notes/n2-i226-a|notes/n2-i226-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 122,
+   "output_tokens": 55,
+   "reply": "No. Both notes state that Quilmund Example has 227 people. The other details can both be true.",
+   "ms": 1126
+  },
+  {
+   "id": "20261014:i227:notes/n2-i227-a|notes/n2-i227-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 121,
+   "output_tokens": 74,
+   "reply": "No. Both notes report $24.6M ARR, and the investment view can remain unchanged while the deal is revisited after the next partner meeting.",
+   "ms": 1394
+  },
+  {
+   "id": "20261014:i228:notes/n2-i228-a|notes/n2-i228-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 125,
+   "output_tokens": 83,
+   "reply": "No. Both notes say Huxvane Example has 89 months of runway, and the second note doesn’t contradict the plan to revisit the deal.",
+   "ms": 1602
+  },
+  {
+   "id": "20261014:i229:notes/n2-i229-a|notes/n2-i229-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 117,
+   "output_tokens": 73,
+   "reply": "No. Both notes say Orvloom Example has 194 pilot customers, and the other statements don’t conflict.",
+   "ms": 1719
+  },
+  {
+   "id": "20261014:i230:notes/n2-i230-a|notes/n2-i230-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 123,
+   "output_tokens": 46,
+   "reply": "No. Both notes state that the SAFE has a $100M cap.",
+   "ms": 952
+  },
+  {
+   "id": "20261014:i231:notes/n2-i231-a|notes/n2-i231-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 122,
+   "output_tokens": 37,
+   "reply": "No.",
+   "ms": 784
+  },
+  {
+   "id": "20261014:i232:notes/n2-i232-a|notes/n2-i232-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 130,
+   "output_tokens": 80,
+   "reply": "No.",
+   "ms": 1235
+  },
+  {
+   "id": "20261014:i233:notes/n2-i233-a|notes/n2-i233-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 120,
+   "output_tokens": 61,
+   "reply": "No. Both notes agree that Pelwick Example has 99 people; the follow-up plans can coexist.",
+   "ms": 1349
+  },
+  {
+   "id": "20261014:i234:notes/n2-i234-a|notes/n2-i234-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 123,
+   "output_tokens": 90,
+   "reply": "No. Both notes report $5.3M ARR, and revisiting the deal after a meeting doesn’t necessarily change the investment view.",
+   "ms": 1293
+  },
+  {
+   "id": "20261014:i235:notes/n2-i235-a|notes/n2-i235-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 118,
+   "output_tokens": 42,
+   "reply": "No. Both notes say Fendlex Example has 124 months of runway.",
+   "ms": 1021
+  },
+  {
+   "id": "20261014:i236:notes/n2-i236-a|notes/n2-i236-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 115,
+   "output_tokens": 39,
+   "reply": "No. Both notes say Dratessa Example has 298 pilot customers.",
+   "ms": 949
+  },
+  {
+   "id": "20261014:i237:notes/n2-i237-a|notes/n2-i237-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 123,
+   "output_tokens": 57,
+   "reply": "No. Both notes state a $24M cap, and the second note doesn’t conflict with revisiting the deal after the next partner meeting.",
+   "ms": 1232
+  },
+  {
+   "id": "20261014:i238:notes/n2-i238-a|notes/n2-i238-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 122,
+   "output_tokens": 39,
+   "reply": "No. Both notes say Osttrix Example is headquartered in Marsdvale.",
+   "ms": 1044
+  },
+  {
+   "id": "20261014:i239:notes/n2-i239-a|notes/n2-i239-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 123,
+   "output_tokens": 40,
+   "reply": "No.",
+   "ms": 783
+  },
+  {
+   "id": "20261014:i240:notes/n2-i240-a|notes/n2-i240-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 123,
+   "output_tokens": 22,
+   "reply": "No.",
+   "ms": 899
+  },
+  {
+   "id": "20261014:i243:notes/n2-i243-a|notes/n2-i243-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 121,
+   "output_tokens": 61,
+   "reply": "No. The notes refer to different companies: Ivoloom Grid Example and Ivoloom Foods Example.",
+   "ms": 1308
+  },
+  {
+   "id": "20261014:i244:notes/n2-i244-a|notes/n2-i244-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 122,
+   "output_tokens": 54,
+   "reply": "No. The notes refer to different companies: Ruvmora Freight Example and Ruvmora Analytics Example.",
+   "ms": 1098
+  },
+  {
+   "id": "20261014:i245:notes/n2-i245-a|notes/n2-i245-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 127,
+   "output_tokens": 76,
+   "reply": "No. The notes refer to different entities: Vexwick Robotics and Vexwick Marine.",
+   "ms": 1236
+  },
+  {
+   "id": "20261014:i250:notes/n2-i250-a|notes/n2-i250-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 119,
+   "output_tokens": 54,
+   "reply": "No. The notes refer to different companies: Kelpellow Health Example and Kelpellow Robotics Example.",
+   "ms": 1088
+  },
+  {
+   "id": "20261014:i251:notes/n2-i251-a|notes/n2-i251-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 121,
+   "output_tokens": 54,
+   "reply": "No. The notes refer to different companies: Gralnix Grid Example and Gralnix Foods Example.",
+   "ms": 1290
+  },
+  {
+   "id": "20261014:i252:notes/n2-i252-a|notes/n2-i252-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 117,
+   "output_tokens": 51,
+   "reply": "No. The notes refer to different companies: Corpellow Freight Example and Corpellow Analytics Example.",
+   "ms": 1407
+  },
+  {
+   "id": "20261014:i256:notes/n2-i256-a|notes/n2-i256-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 126,
+   "output_tokens": 67,
+   "reply": "No. One says Bittern Freight Example is leading; the other says Merlin Robotics Example is not leading. Both can be true.",
+   "ms": 1189
+  },
+  {
+   "id": "20261014:i257:notes/n2-i257-a|notes/n2-i257-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 122,
+   "output_tokens": 72,
+   "reply": "No. One fund is leading, and the other is not.",
+   "ms": 1473
+  },
+  {
+   "id": "20261014:i258:notes/n2-i258-a|notes/n2-i258-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 126,
+   "output_tokens": 64,
+   "reply": "No. One note says Heron Robotics is leading; the other says Wren Health is not leading. Both can be true.",
+   "ms": 1393
+  },
+  {
+   "id": "20261014:i259:notes/n2-i259-a|notes/n2-i259-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 124,
+   "output_tokens": 59,
+   "reply": "No. One note says Kestrel Freight Example is leading; the other says Avocet Freight Example is not leading.",
+   "ms": 1324
+  },
+  {
+   "id": "20261014:i260:notes/n2-i260-a|notes/n2-i260-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 127,
+   "output_tokens": 66,
+   "reply": "No. One says Heron Health is leading; the other says Bittern Health is not leading. Both could be true.",
+   "ms": 1236
+  },
+  {
+   "id": "20261014:i261:notes/n2-i261-a|notes/n2-i261-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 120,
+   "output_tokens": 62,
+   "reply": "No. One says Wren Freight is leading; the other says Merlin Labs is not leading.",
+   "ms": 1097
+  },
+  {
+   "id": "20261014:i262:notes/n2-i262-a|notes/n2-i262-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 122,
+   "output_tokens": 78,
+   "reply": "No. Note 1 says Osprey Labs Example is leading; Note 2 says Curlew Robotics Example is not leading. Both can be true.",
+   "ms": 1305
+  },
+  {
+   "id": "20261014:i263:notes/n2-i263-a|notes/n2-i263-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 123,
+   "output_tokens": 61,
+   "reply": "No. One note says Heron Grid Example is leading; the other says Bittern Robotics Example is not leading.",
+   "ms": 1355
+  },
+  {
+   "id": "20261014:i264:notes/n2-i264-a|notes/n2-i264-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 129,
+   "output_tokens": 59,
+   "reply": "No. One note says Heron Labs is leading; the other says Shrike Foods is not leading.",
+   "ms": 935
+  },
+  {
+   "id": "20261014:i265:notes/n2-i265-a|notes/n2-i265-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 120,
+   "output_tokens": 66,
+   "reply": "No. One note says Shrike Analytics Example is leading; the other says Egret Grid Example is not leading. These statements are consistent.",
+   "ms": 1275
+  },
+  {
+   "id": "20261014:i266:notes/n2-i266-a|notes/n2-i266-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 122,
+   "output_tokens": 81,
+   "reply": "No. One says Plover Grid is leading; the other says Bittern Marine is not leading. Both can be true.",
+   "ms": 1274
+  },
+  {
+   "id": "20261014:i267:notes/n2-i267-a|notes/n2-i267-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 123,
+   "output_tokens": 70,
+   "reply": "No. One says Egret Freight Example is leading; the other says Dunlin Marine Example is not leading. Both can be true.",
+   "ms": 1333
+  }
+ ]
+}

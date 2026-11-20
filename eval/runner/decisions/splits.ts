@@ -11,10 +11,14 @@
  * Dev splits are open to plan authors for iteration. Sealed splits are read
  * only by the custodian at a preregistered decision, report aggregates until
  * they retire, and count every opening (eval/decisions/splits/*.json).
+ *
+ * bg1-dev's dev list is its split file's three stage 1 worlds, which stay as frozen, followed by the BG1 dev loop's 17
+ * extra public dev worlds (BG1_DEV_EXTRA_CONVERSATIONS, GST-2854), which come from public seeds as the three do.
  */
 import { createHash } from 'node:crypto';
 import { readFileSync, existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { BG1_DEV_EXTRA_CONVERSATIONS } from '../memory-qa/bg1-names.ts';
 
 export const SPLIT_SALT = 'gbrain-evals-heldout-split-v1';
 export const SPLITS_DIR = resolve(import.meta.dir, '../../decisions/splits');
@@ -57,7 +61,7 @@ export function loadSplit(benchmark: string): SplitFile {
   if (s.schema_version !== 1 || s.benchmark !== benchmark) throw new Error(`${path} is not a split file for ${benchmark}`);
   const overlap = s.dev.filter(id => s.sealed.includes(id));
   if (overlap.length) throw new Error(`${path}: ${overlap.length} conversations are in both dev and sealed`);
-  return s;
+  return benchmark === 'bg1-dev' ? { ...s, dev: [...s.dev, ...BG1_DEV_EXTRA_CONVERSATIONS] } : s;
 }
 
 /** Conversation ids a dev run may read. The fixture has no split file and is all dev. */

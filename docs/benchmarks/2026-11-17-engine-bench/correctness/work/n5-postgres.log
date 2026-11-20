@@ -1,0 +1,43 @@
+# BrainBench N5: forgetting and withdrawal residue (gbrain 0.60.735.0, overlay dbf3d9c)
+[n5] start postgres/cli
+[n5] start postgres/mcp-stdio
+[n5] start postgres/mcp-http
+[n5] n5-postgres-mcp-stdio witness: 133 present of 147 pairs
+[n5] n5-postgres-mcp-http witness: 133 present of 147 pairs
+[n5] n5-postgres-mcp-stdio immediate: 102 present of 161 pairs
+[n5] n5-postgres-mcp-http immediate: 102 present of 161 pairs
+[n5] n5-postgres-mcp-stdio settled: 102 present of 161 pairs
+[n5] n5-postgres-mcp-http settled: 102 present of 161 pairs
+[n5] n5-postgres-mcp-stdio stale_reimport: 90 present of 161 pairs
+[n5] n5-postgres-mcp-http stale_reimport: 90 present of 161 pairs
+[n5] n5-postgres-cli witness: 139 present of 147 pairs
+[n5] n5-postgres-mcp-stdio restart: 90 present of 161 pairs
+[n5] n5-postgres-mcp-http restart: 90 present of 161 pairs
+[n5] n5-postgres-mcp-stdio concurrent: 96 present of 182 pairs
+[n5] n5-postgres-mcp-http concurrent: 96 present of 182 pairs
+[n5] done n5-postgres-mcp-stdio in 111s
+[n5] done n5-postgres-mcp-http in 112s
+[n5] n5-postgres-cli immediate: 106 present of 161 pairs
+[n5] n5-postgres-cli settled: 106 present of 161 pairs
+[n5] n5-postgres-cli stale_reimport: 92 present of 161 pairs
+[n5] n5-postgres-cli restart: 92 present of 161 pairs
+[n5] n5-postgres-cli concurrent: 99 present of 182 pairs
+[n5] done n5-postgres-cli in 350s
+
+verdict: pass
+safety contracts (postgres cells, 3 cells):
+  prohibited active outputs after forget: 0 (forgotten pairs with a witness: 184, without: 17)
+  reactivations: 0
+  collateral expirations: 0
+  unauthorized forgets applied: 0
+  private canaries in remote responses: 0
+quality metrics:
+  retained-neighbor recall: 100.0% (909 of 909 witnessed retained pairs over post-forget checkpoints)
+  reinstatement: 100.0% (6 of 6 corrected claims)
+  retained recall with the capped context_pack tier included (erratum, not gated): 100.0%
+  remote responses whose _meta hot memory carried a forgotten canary (not gated): 0
+  paraphrase still active after forget (documented gap): 6 of 6
+  postgres (report-only): prohibited 0, reactivations 0, collateral 0, unauthorized 0, leaks 0, retained 100.0%, reinstatement 100.0%
+promotion rules: pass (none failed)
+gbrain findings: see docs/benchmarks/2026-10-01-wave-bugs.md (N5-*)
+receipt: <work>/correctness/work/n5-postgres/receipt.json

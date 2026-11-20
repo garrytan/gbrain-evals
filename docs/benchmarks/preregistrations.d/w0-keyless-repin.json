@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "experiments": [
+    {
+      "id": "w0-keyless-repin-2026-11-16",
+      "preregistration": "docs/benchmarks/2026-11-16-w0-keyless-repin-preregistration.md",
+      "results": [
+        "docs/benchmarks/2026-11-16-w0-keyless-repin.md"
+      ]
+    }
+  ]
+}

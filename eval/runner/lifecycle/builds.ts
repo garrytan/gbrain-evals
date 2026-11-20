@@ -5,8 +5,10 @@
  * real location, so a symlinked overlay silently ran the pinned dependency
  * instead of the checkout under test. Each build here is a plain directory
  * extracted with `git archive`, with its own `bun install --frozen-lockfile`.
- * The runner invokes `<copy>/src/cli.ts` by absolute path and never imports
- * gbrain into its own process.
+ * The runner invokes `<copy>/src/cli.ts` by absolute path. The one thing it
+ * imports from a build into its own process is that build's
+ * `unquoteFactText`, a text helper that reads quote-fenced facts
+ * (quoted-reads.ts).
  *
  * Identity proof, recorded in the receipt:
  * - the copy's tracked files hash to the requested commit's tree (a fresh
@@ -78,6 +80,17 @@ function makeMerge(repo: string, base: string, branch: string, scratch: string):
   // Make the merge commit reachable from the source repo for archiving.
   git(repo, ['fetch', '-q', clone, `${commit}:refs/lifecycle-eval/merge-${commit.slice(0, 12)}`]);
   return { commit, branchHead, resolved };
+}
+
+/**
+ * The embedding catch-up sweep. Since v0.60.46.0 `gbrain embed` asks for spend consent and, without a terminal, exits 3
+ * (`confirmation_required`) having embedded nothing. The lifecycle embedder is a local hash embedder that costs
+ * nothing, so a build whose `embed` takes `--yes` gets it; an older build runs the command it always ran.
+ */
+export function embedStaleArgs(buildDir: string): string[] {
+  const embed = join(buildDir, 'src/commands/embed.ts');
+  const takesYes = existsSync(embed) && readFileSync(embed, 'utf8').includes("'--yes'");
+  return ['embed', '--stale', ...(takesYes ? ['--yes'] : [])];
 }
 
 export function countSymlinks(dir: string): number {

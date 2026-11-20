@@ -29,10 +29,31 @@ import { execFileSync } from 'node:child_process';
 import { appendFileSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { SQL } from 'bun';
-import { strippedKeysIn } from '../hermetic-env.ts';
+import { cliEngineConfig, rustAddonEnv } from '../eval-engine.ts';
+import { redactUrlPasswords, strippedKeysIn } from '../hermetic-env.ts';
 import { CliDriver, McpHttpClient, McpHttpDriver, McpStdioDriver, runCli, type CallResult, type Driver, type RunEnv } from './drivers.ts';
 
-export type Engine = 'pglite' | 'postgres';
+/** gbrain's typed refusal of a remote caller on an engine that does not enforce the brain's access rules itself. */
+export function isAccessControlRefusal(text: string): boolean {
+  return text.includes('engine_capability_missing') && text.includes('access_control');
+}
+
+/**
+ * Why a cell is not_applicable: a Rust cell on a remote interface (stdio or HTTP MCP) that did not finish because the
+ * build refuses remote callers with engine_capability_missing, reason access_control. That is a named gap (the build
+ * does not serve remote callers yet), never a pass or a fail, so the cell leaves the gate and the receipt lists it.
+ * It counts only when every remote call the cell made was refused that way (remote_access_refused), or when the cell
+ * made no remote call and its fatal is that refusal (the HTTP cell's client registration). Null for every other cell,
+ * including a Rust cell that finished, or failed after any remote call that was not refused that way.
+ */
+export function remoteAccessGap(c: { engine: Engine; interface: Iface; fatal?: string; void_reason?: string; remote_access_refused?: string | null; remote_calls?: number }): string | null {
+  if (c.engine !== 'rust' || c.interface === 'cli' || !(c.fatal || c.void_reason)) return null;
+  const evidence = c.remote_access_refused ?? (c.remote_calls === 0 && isAccessControlRefusal(c.fatal ?? '') ? (c.fatal ?? '').split('\n')[0]!.slice(0, 200) : null);
+  return evidence ? `The Rust build refuses remote callers (engine_capability_missing, reason access_control), so the ${c.interface} cell cannot run: ${evidence}` : null;
+}
+
+/** `rust` is selected only through GBRAIN_EVAL_ENGINE (eval/runner/eval-engine.ts); ENGINES stays the default matrix. */
+export type Engine = 'pglite' | 'postgres' | 'rust';
 export type Iface = 'cli' | 'mcp-stdio' | 'mcp-http';
 export const ENGINES: readonly Engine[] = ['pglite', 'postgres'];
 export const IFACES: readonly Iface[] = ['cli', 'mcp-stdio', 'mcp-http'];
@@ -60,7 +81,7 @@ function git(dir: string, args: string[]) {
   execFileSync('git', ['-C', dir, '-c', 'user.name=slice-eval', '-c', 'user.email=slice-eval@example.invalid', ...args], { stdio: 'ignore' });
 }
 
-const redact = (t: string) => t.replace(/gbrain_cs_[0-9a-f]+/g, 'gbrain_cs_<redacted>').replace(/(postgres(?:ql)?:\/\/[^:/@\s]+):[^@\s]+@/g, '$1:<redacted>@');
+const redact = (t: string) => redactUrlPasswords(t.replace(/gbrain_cs_[0-9a-f]+/g, 'gbrain_cs_<redacted>'), '<redacted>');
 
 /** Wraps a driver so every call is recorded. */
 class RecordingDriver implements Driver {
@@ -100,7 +121,7 @@ export class SliceCell {
     this.home = join(this.dir, 'gbrain-home');
     const env: NodeJS.ProcessEnv = {
       PATH: process.env.PATH, HOME: join(this.dir, 'user-home'), GBRAIN_HOME: this.home,
-      GBRAIN_SKIP_STARTUP_HOOKS: '1', TZ: 'UTC', LANG: 'C.UTF-8', NO_COLOR: '1',
+      GBRAIN_SKIP_STARTUP_HOOKS: '1', TZ: 'UTC', LANG: 'C.UTF-8', NO_COLOR: '1', ...rustAddonEnv(),
     };
     this.childKeys = strippedKeysIn(env);
     this.run = { buildDir: opts.buildDir, env };
@@ -124,6 +145,23 @@ export class SliceCell {
     if (!this.mustPause) return fn();
     await this.primary.close();
     try { return await fn(); } finally { await this.primary.start(); }
+  }
+
+  /**
+   * The first remote call, when this remote cell made at least one and the engine refused every one of them with
+   * engine_capability_missing, reason access_control. Null when any remote call succeeded or failed another way.
+   */
+  firstAccessRefusal(): string | null {
+    if (!this.remote) return null;
+    const remote = this.calls.filter(x => x.caller !== 'trusted');
+    if (!remote.length || !remote.every(x => !x.ok && isAccessControlRefusal(`${x.error ?? ''} ${x.raw}`))) return null;
+    const c = remote[0]!;
+    return `${c.op}: ${(c.error ?? c.raw).slice(0, 200)}`;
+  }
+
+  /** How many calls this cell made as a remote (non-trusted) caller. */
+  remoteCalls(): number {
+    return this.calls.filter(x => x.caller !== 'trusted').length;
   }
 
   /** Run reads as the trusted local CLI caller. On the CLI cell this is the primary itself. */
@@ -177,6 +215,7 @@ export class SliceCell {
     if (this.childKeys.length) throw new Error(`child environment carries provider keys: ${this.childKeys.join(', ')}`);
     const dbArgs: string[] = [];
     if (engine === 'pglite') dbArgs.push('--pglite', '--path', join(this.home, 'brain.pglite'));
+    else if (engine === 'rust') this.writeRustConfig();
     else {
       this.pgDb = `sl_${this.id.replace(/[^a-z0-9]/g, '_')}_${process.pid}`;
       const admin = new SQL(this.opts.pgAdminUrl);
@@ -187,7 +226,9 @@ export class SliceCell {
       u.pathname = `/${this.pgDb}`;
       dbArgs.push('--url', u.toString());
     }
-    const init = await this.operator('init', ['init', ...dbArgs, '--no-embedding', '--non-interactive']);
+    const init = engine === 'rust'
+      ? await this.operator('init', ['init', '--migrate-only', '--non-interactive'])
+      : await this.operator('init', ['init', ...dbArgs, '--no-embedding', '--non-interactive']);
     if (init.code !== 0) throw new Error(`init failed: ${this.operatorLog.at(-1)!.tail}`);
 
     for (const name of ['vault', ...(this.opts.extraSources ?? [])]) {
@@ -233,6 +274,18 @@ export class SliceCell {
     this.primary = new RecordingDriver(inner, this.calls, 'primary');
     await this.primary.start();
     if (inner instanceof McpStdioDriver || inner instanceof McpHttpDriver) this.serverVersion = inner.serverVersion;
+  }
+
+  /**
+   * `gbrain init` keeps its PGLite default and has no Rust flag (gbrain RUST_ENGINE.md, "Engine selection"), so a rust
+   * cell writes the CLI config itself: the engine and store path from cliEngineConfig plus the two keys
+   * `init --no-embedding` writes for a fresh brain. `init --migrate-only` then brings the schema up on that engine.
+   */
+  private writeRustConfig(): void {
+    const dir = join(this.home, '.gbrain');
+    mkdirSync(dir, { recursive: true });
+    const config = { ...cliEngineConfig('rust', { databasePath: join(this.home, 'brain.rust') }), embedding_disabled: true, schema_pack: 'gbrain-base-v2' };
+    writeFileSync(join(dir, 'config.json'), JSON.stringify(config, null, 2) + '\n');
   }
 
   stderrTail(): string[] {

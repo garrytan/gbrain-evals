@@ -1,0 +1,181 @@
+/**
+ * BG1's cell definitions (eval/runner/q1/cells/bg1.ts and bg1-cells.json) and their definitions.ts wiring: the
+ * committed manifest is fresh, the six rows and the full-context reference on the sealed set and on the three dev
+ * worlds, readers, budgets, kept units and shards, the per-reader judge map and its pinned settings, per-call judge
+ * pricing, leases from the peak reservation, particle-1's re-read plans, waves, and the stage 1 cap and its refusal.
+ */
+import { describe, expect, test } from 'bun:test';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import {
+  ALL_SETS, BG1_ASSUMPTIONS, BG1_JUDGE_BY_READER, BG1_MEASURED, BG1_SETS, bg1JudgeOf, definitionProblems, frontierJudgesFor, hoursPerMtok, isBg1Benchmark, PER_READER_JUDGE_SETTINGS,
+} from '../../eval/runner/q1/cells/definitions.ts';
+import { BG1_FC_UNITS, BG1_MANIFEST_PATH, bg1ManifestText, bg1Stage1OverCap, buildBG1Manifest, canonicalJudgeUsd, OPUS, PARTICLE, SOL, stage1CapUsd } from '../../eval/runner/q1/cells/bg1.ts';
+import { createHash } from 'node:crypto';
+import { BG1_DEV_CONVERSATIONS, BG1_KEPT_UNITS, BG1_N_FINAL, BG1_QUESTIONS_PER_WORLD } from '../../eval/runner/bg1/types.ts';
+import { campaignCells, runConfigIdentity, runConfigText } from '../../eval/runner/q1/cell.ts';
+import { instrumentFor } from '../../eval/runner/memory-qa/instruments.ts';
+
+const ROOT = join(import.meta.dir, '..', '..');
+const KINDS = new Set((JSON.parse(readFileSync(join(ROOT, 'eval/systems/kinds.json'), 'utf8')) as { kinds: Array<{ id: string }> }).kinds.map(k => k.id));
+const m = buildBG1Manifest();
+const smokeLeases = Math.round(campaignCells(m, { smoke: true }).filter(c => c.smoke && c.block === 'BG1-S1').reduce((s, c) => s + c.lease_usd, 0) * 100) / 100;
+const ASTRA = 'openai:gpt-6-astra';
+const ROWS = ['gbrain-defaults.rs1-stable', 'ext-memory-bank.recipe', 'ext-extract-first.common', 'ext-temporal-graph.shipped-0.31', 'baseline-hybrid.baseline', 'baseline-none.baseline'];
+
+describe('bg1-cells.json', () => {
+  test('the committed manifest is what bg1.ts generates', () => {
+    expect(readFileSync(BG1_MANIFEST_PATH, 'utf8')).toBe(bg1ManifestText(m));
+  });
+
+  test('six rows on the sealed set plus the full-context reference on BG1-fc10, and the same seven cells on the three dev worlds in stage 1', () => {
+    expect(m.cells.map(c => c.id)).toEqual([...ROWS.map(r => `bg1.${r}`), 'bg1-fc10.baseline-full-context.baseline']);
+    expect(m.smoke_cells.map(c => c.id)).toEqual([...ROWS, 'baseline-full-context.baseline'].map(r => `bg1-dev3.${r}`));
+    for (const c of m.cells) expect([c.block, c.benchmark, c.split, c.canonical_instrument, c.effort]).toEqual(['BG1', 'bg1', 'sealed', 'bg1', 'medium']);
+    for (const c of m.smoke_cells) expect([c.block, c.benchmark, c.split, c.set]).toEqual(['BG1-S1', 'bg1-dev', 'dev', 'BG1-dev3']);
+    for (const c of [...m.cells, ...m.smoke_cells]) expect(definitionProblems(c, KINDS)).toEqual([]);
+  });
+
+  test('the sets: the sealed headline at N_final = 30 kept worlds (Amendment 7), ten worlds for the reference and the three public dev worlds', () => {
+    expect(BG1_N_FINAL).toBe(30);
+    expect(BG1_SETS.BG1).toMatchObject({ benchmark: 'bg1', conversations: BG1_N_FINAL, questions: BG1_N_FINAL * BG1_QUESTIONS_PER_WORLD, corpus_tokens: BG1_N_FINAL * 200_000, role: 'headline' });
+    expect(BG1_SETS['BG1-fc10']).toMatchObject({ benchmark: 'bg1', conversations: 10, questions: 10 * BG1_QUESTIONS_PER_WORLD });
+    expect(BG1_SETS['BG1-dev3']).toMatchObject({ benchmark: 'bg1-dev', split: 'dev', role: 'smoke', only_conversations: [...BG1_DEV_CONVERSATIONS] });
+    for (const id of ['BG1', 'BG1-fc10', 'BG1-dev3'] as const) expect(ALL_SETS[id]).toBe(BG1_SETS[id]);
+    expect(isBg1Benchmark('bg1')).toBe(true);
+    expect(isBg1Benchmark('bg1-dev')).toBe(true);
+    expect(isBg1Benchmark('beam-rs1')).toBe(false);
+  });
+
+  test('every packed arm is 8,000 tokens read by Opus and Sol; gbrain runs arm P; the reference is a full-context arm', () => {
+    for (const c of [...m.cells, ...m.smoke_cells]) for (const a of c.arms) {
+      expect(a.readers).toEqual([OPUS, SOL]);
+      if (c.system === 'baseline-full-context') expect([a.id, a.mode]).toEqual(['whole-full-context', 'full-context']);
+      else expect([a.id, a.mode, a.budget]).toEqual([c.system === 'gbrain-defaults' ? 'p' : 'component-b8000', 'packed', 8000]);
+    }
+  });
+
+  test('launch units: six kept worlds per unit on BG1 (five shards at N_final), five on the reference (two shards), none on the dev worlds', () => {
+    for (const c of m.cells.slice(0, 6)) expect([c.kept_units, c.shards]).toEqual([BG1_KEPT_UNITS, Math.ceil(BG1_N_FINAL / BG1_KEPT_UNITS)]);
+    expect([m.cells[6].kept_units, m.cells[6].shards]).toEqual([BG1_FC_UNITS, 2]);
+    for (const c of m.smoke_cells) expect([c.kept_units ?? null, c.shards]).toEqual([null, 1]);
+  });
+
+  test('waves: A holds units 0 and 1 of each row and both reference units, B units 2 to 4 of each row (Amendment 7)', () => {
+    expect(m.waves.A).toHaveLength(6 * 2 + 2);
+    expect(m.waves.A).toContain('bg1-fc10.baseline-full-context.baseline.c1');
+    expect(m.waves.B).toEqual(ROWS.flatMap(r => [2, 3, 4].map(i => `bg1.${r}.c${i}`)));
+  });
+
+  // Value: protects=Amendment 7 regenerates wave B at N_final 30 without moving an identity field verdict.ts compares, so wave A's receipts stay readable; fails_when=a set fact the regeneration changed (worlds, questions, tokens, messages) reaches a cell's or arm's run identity, such as gbrain's extraction cap
+  test('Amendment 7: every counted cell keeps the run identity wave A ran under at the stage 2 freeze (d4b36d93)', () => {
+    const FREEZE: Record<string, string> = {
+      'bg1.gbrain-defaults.rs1-stable': '9a31b25fd6eedac550f16b2a834fe05869e39b0c772bac95c322e7974a9235b3',
+      'bg1.ext-memory-bank.recipe': 'f0e4c029bf16ecc2320ff3f481ab931232463c5d1b78da3ac04734c916cf4d9f',
+      'bg1.ext-extract-first.common': 'e7e52383b9c8100882c386cb3a2cdd89d47a04768db5a64643403703c89af45f',
+      'bg1.ext-temporal-graph.shipped-0.31': '5c6af12896a12241063f610e1dcfc164b8e3a7fb3bb00b589c1f6e49fac93a3d',
+      'bg1.baseline-hybrid.baseline': 'c0aec28214cd3d9bf7db56cbbda48a88c7426d2922e0c00f567c8189913692df',
+      'bg1.baseline-none.baseline': 'b1805b316a7c74e6a847b21870efc0efe3ccb70dfd992d310bac1b33e16ffa88',
+      'bg1-fc10.baseline-full-context.baseline': 'e23245a8373d4109228b32dc4116e57340f953eab7133960aac2732d3b9db92f',
+    };
+    const identity = (def: (typeof m.cells)[number]) => {
+      const { dataset: _d, scheduled_sha256: _s, limit: _l, ...rest } = JSON.parse(runConfigText(def, def.arms[0], { instrument: instrumentFor(def.canonical_instrument), dataset: null as never, scheduledSha: '', limit: null }));
+      return createHash('sha256').update(runConfigIdentity(JSON.stringify(rest))).digest('hex');
+    };
+    expect(Object.fromEntries(m.cells.map(def => [def.id, identity(def)]))).toEqual(FREEZE);
+  });
+});
+
+describe('judging', () => {
+  test('the judge map: Astra for Anthropic readers, Opus for OpenAI and particle readers, and any other family refused', () => {
+    expect(bg1JudgeOf(OPUS)).toBe(ASTRA);
+    expect(bg1JudgeOf(SOL)).toBe(OPUS);
+    expect(bg1JudgeOf(PARTICLE)).toBe(OPUS);
+    expect(() => bg1JudgeOf('gemini:gemini-3.8-flash')).toThrow();
+    expect(BG1_JUDGE_BY_READER).toEqual({ [OPUS]: ASTRA, [SOL]: OPUS, [PARTICLE]: OPUS });
+    for (const [reader, judge] of Object.entries(BG1_JUDGE_BY_READER)) expect(judge.split(':')[0]).not.toBe(reader.split(':')[0]);
+  });
+
+  test('five system rows and the reference get one gating judge per reader at the pinned settings; the floor gets the canonical judge only', () => {
+    for (const c of [...m.cells, ...m.smoke_cells]) for (const a of c.arms) {
+      if (c.system === 'baseline-none') { expect(a.frontier).toBeNull(); continue; }
+      expect(a.frontier).toMatchObject({ per_reader: true, judges: [OPUS, ASTRA], judge_by_reader: BG1_JUDGE_BY_READER, settings: PER_READER_JUDGE_SETTINGS });
+      expect(frontierJudgesFor(a, OPUS)).toEqual([ASTRA]);
+      expect(frontierJudgesFor(a, SOL)).toEqual([OPUS]);
+    }
+  });
+
+  test('judge lines are priced per call: the canonical judge on every answer, and the mapped gating judge per reader', () => {
+    for (const c of [...m.cells, ...m.smoke_cells]) {
+      const n = ALL_SETS[c.set].questions;
+      const rates = c.benchmark === 'bg1' ? BG1_MEASURED : BG1_ASSUMPTIONS;
+      expect(c.estimate.lines.judges).toBeCloseTo(n * 2 * (c.benchmark === 'bg1' ? BG1_MEASURED.canonical_judge_usd_per_call : canonicalJudgeUsd()), 1);
+      if (c.system === 'baseline-none') expect(c.estimate.lines.frontier_judges).toBeUndefined();
+      else expect(c.estimate.lines.frontier_judges).toBeCloseTo(n * (rates.judge_usd_per_call[ASTRA] + rates.judge_usd_per_call[OPUS]), 1);
+      expect(c.estimate.usd).toBeCloseTo(Object.values(c.estimate.lines).reduce((s, v) => s + v, 0), 1);
+    }
+  });
+
+  // Value: protects=the stage 2 freeze prices only the counted cells at stage 1's measured rates and leaves stage 1's record as it ran; fails_when=a counted cell keeps an assumed ingest or hours rate, the reference's reads skip the measured per-world rate, or stage 1's cells, estimate or cap move; why_new=the stage 2 freeze (Amendment 6); seam=definitions.ts bg1Rates and bg1.ts bg1Estimate; no_claim=what stage 2 spends
+  test('the counted cells are priced at stage 1\'s measured rates, and stage 1\'s cells keep the assumed ones', () => {
+    const systems = ['ext-memory-bank:recipe', 'ext-extract-first:common', 'ext-temporal-graph:shipped-0.31', 'baseline-hybrid:baseline'];
+    for (const [cells, rates] of [[m.cells, BG1_MEASURED], [m.smoke_cells, BG1_ASSUMPTIONS]] as const) {
+      for (const c of cells.filter(x => systems.includes(`${x.system}:${x.configuration}`))) expect(c.estimate.lines.ingest).toBeCloseTo(rates.ingest_usd_per_mtok[`${c.system}:${c.configuration}`] * ALL_SETS[c.set].corpus_tokens / 1e6, 1);
+    }
+    for (const key of Object.keys(BG1_MEASURED.hours_per_mtok)) {
+      const [system, configuration] = key.split(':');
+      expect(hoursPerMtok(system, configuration, 'bg1', 'shim')).toBe(BG1_MEASURED.hours_per_mtok[key]);
+      expect(hoursPerMtok(system, configuration, 'bg1-dev', 'shim')).toBe(BG1_ASSUMPTIONS.hours_per_mtok[key] ?? hoursPerMtok(system, configuration, 'bg1-dev', 'shim'));
+    }
+    const fc = m.cells.find(c => c.system === 'baseline-full-context')!;
+    expect(fc.estimate.lines.full_context).toBeCloseTo(ALL_SETS[fc.set].conversations * (BG1_MEASURED.full_context_read_usd_per_world[OPUS] + BG1_MEASURED.full_context_read_usd_per_world[SOL]), 1);
+    expect(m.bg1_measured).toEqual(BG1_MEASURED);
+    expect([m.stage1_estimate_usd, m.stage1_cap_usd]).toEqual([178.09, 293]);
+  });
+
+  test('every lease holds twice the peak reservation over its largest shard, a pinned judge for the rows and a whole-history read for the reference', () => {
+    for (const c of [...m.cells, ...m.smoke_cells]) {
+      expect(c.lease!.basis).toStartWith('BG1: ');
+      expect(c.lease!.usd).toBeGreaterThan(0);
+    }
+    expect(m.cells[0].lease!.basis).toContain('judge openai:gpt-6-astra at 8000 output tokens');
+    expect(m.cells[6].lease!.basis).toContain('whole-history read anthropic:claude-opus-5-5');
+  });
+});
+
+describe('re-reads and stage 1', () => {
+  test('particle-1 re-reads every packed row once, on the sealed set and in stage 1, with its gating judge on the system rows only', () => {
+    expect(m.reread_plans).toHaveLength(12);
+    for (const r of m.reread_plans) {
+      expect(r.reader).toBe(PARTICLE);
+      expect(r.judges).toEqual(r.cell.includes('baseline-none') ? ['gemini:gemini-3.8-flash'] : ['gemini:gemini-3.8-flash', OPUS]);
+      expect(r.estimate.usd).toBeGreaterThan(0);
+    }
+    expect(m.reread_plans.filter(r => r.block === 'BG1-S1')).toHaveLength(6);
+    expect(m.reread_plans.some(r => r.cell.includes('full-context'))).toBe(false);
+  });
+
+  test('stage 1 is its cells, its re-reads and the judge check, capped at min(300, the larger of the estimate / 0.75 and the smoke leases, rounded up)', () => {
+    const cells = m.smoke_cells.reduce((s, c) => s + c.estimate.usd, 0);
+    const rereads = m.reread_plans.filter(r => r.block === 'BG1-S1').reduce((s, r) => s + r.estimate.usd, 0);
+    expect(m.stage1_estimate_usd).toBeCloseTo(cells + rereads + m.judge_check.estimate_usd, 1);
+    expect(m.stage1_cap_usd).toBe(stage1CapUsd(m.stage1_estimate_usd, smokeLeases));
+    expect(m.blocks.find(b => b.id === 'BG1-S1')!.cap_usd).toBe(m.stage1_cap_usd);
+    expect(m.judge_check).toMatchObject({ dev_answers: 160, construction_items: 160 });
+  });
+
+  // Value: protects=stage 1's cap holds every lease the launch check sums for it; fails_when=the cap falls below the smoke units' leases, so BG1's launch check refuses stage 1 before any unit boots; why_new=the preregistration's Amendment 1 (each smoke unit leases twice its estimate, above the estimate / 0.75 the cap allowed); seam=campaignCells' smoke leases from the generated manifest; no_claim=what stage 1 spends
+  test('stage 1\'s cap is at or above its smoke units\' summed leases, as campaignCells prices them', () => {
+    expect(smokeLeases).toBeGreaterThan(0);
+    expect(m.stage1_cap_usd).toBeGreaterThanOrEqual(smokeLeases);
+    expect(m.blocks.find(b => b.id === 'BG1-S1')!.cap_usd).toBeGreaterThanOrEqual(smokeLeases);
+  });
+
+  test('the stage 1 refusal fires only above the cap, and writes nothing', () => {
+    expect(bg1Stage1OverCap(m)).toBeNull();
+    const over = bg1Stage1OverCap({ stage1_estimate_usd: 301, stage1_cap_usd: 300 })!;
+    expect(over.code).toBe('BG1_STAGE1_OVER_CAP');
+    expect(over.fix.next).toBe('ask_user');
+    expect(over.state).toMatchObject({ side_effects: 'none: no campaign manifest written, nothing reserved' });
+  });
+});

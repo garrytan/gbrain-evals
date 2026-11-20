@@ -304,6 +304,27 @@ describe('gbrain-shootout in process (keyless, behind a stand-in metering proxy)
   }, 300_000);
 });
 
+describe('plain-hybrid, the no-gbrain control (keyless)', () => {
+  test('hash vectors cut to one result: all 77 cases run, every searching case cites at most one belief, nothing is metered', async () => {
+    const out = join(tmp, 'plain-hybrid-k1');
+    const { err, code } = await runCli(['--system', 'plain-hybrid', '--embed', 'hash', '--policy-setting', 'k=1', '--output', out], { OPENAI_API_KEY: '' });
+    expect(code, err.slice(-2000)).toBe(0);
+    const receipt = JSON.parse(readFileSync(join(out, 'receipt.json'), 'utf8'));
+    expect([receipt.run_status, receipt.outcomes.scored, receipt.metering.mode, receipt.system.capability_system]).toEqual(['complete', 77, 'none', 'plain-hybrid']);
+    expect(receipt.policy.settings).toMatchObject({ k: '1' });
+    expect(receipt.embedding).toMatchObject({ mode: 'hash', model: 'openai:text-embedding-3-large', dims: 1536 });
+    const rows = readFileSync(join(out, 'rows.ndjson'), 'utf8').trim().split('\n').map(l => JSON.parse(l) as PmbRow);
+    expect(rows.filter(r => r.system_called).every(r => (r.search_ids ?? []).length <= 1)).toBe(true);
+  }, 300_000);
+
+  test('real embeddings need the paid flags and are refused before any request; other embedders are refused at parse', async () => {
+    const refused = await runCli(['--system', 'plain-hybrid', '--output', join(tmp, 'plain-hybrid-refused')], { OPENAI_API_KEY: '', OPENAI_BASE_URL: 'http://127.0.0.1:9', BRAINBENCH_BUDGET_LEDGER: join(tmp, 'ledger-ph.sqlite') });
+    expect(refused.code).not.toBe(0);
+    expect(refused.err).toMatch(/--paid/);
+    expect(() => parsePmbArgs(['--system', 'plain-hybrid', '--embedding-model', 'voyage:voyage-3', '--output', join(tmp, 'x')])).toThrow(/plain-hybrid embeds with/);
+  });
+});
+
 describe.skipIf(!process.env.GBRAIN_OVERLAY_SPEC)('gbrain-shootout on an overlay build (GBRAIN_OVERLAY_SPEC)', () => {
   test('all 77 cases run on the overlay, and the receipt names its commit', async () => {
     const proxy = standInProxy();

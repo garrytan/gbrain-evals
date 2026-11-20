@@ -3,9 +3,10 @@ import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
-  BudgetExceededError, BudgetRun, budgetOptionsFrom, closeLedgers, closeRun, initLedger, installPaidRequestGuard, ledgerStatus, ledgerTotals, priceRequest, readLedger,
-  receiptCost, reservationUsd, startPaidRun, usageCost, verifyLedger,
+  BudgetExceededError, BudgetRun, budgetOptionsFrom, CHAT_PRICE_OVERRIDES, chatPrice, closeLedgers, closeRun, HARNESS_CHAT_PRICES, initLedger, installPaidRequestGuard, ledgerStatus,
+  ledgerTotals, priceRequest, readLedger, receiptCost, reservationUsd, responseUsd, runInBatchLane, startPaidRun, UnpricedUsageError, usageCost, verifyLedger,
 } from '../../eval/runner/budget-ledger.ts';
+import { rowCost } from '../../eval/runner/batch/ledger.ts';
 import Anthropic from '@anthropic-ai/sdk';
 
 const dirs: string[] = [];
@@ -248,6 +249,19 @@ describe('ledger', () => {
     const [entry] = read(path).entries;
     expect(entry.status).toBe('charged-reservation');
     expect(entry.actual_usd).toBe(entry.reserved_usd);
+  });
+
+  // Value: protects=GST-2163's answer that a ledger run left open (finished_at NULL) cannot change the next window's guard; fails_when=an open run's unspent budget is held against the program cap, or its settled spend stops counting; why_new=two live-recall runs stayed open after exiting 0; seam=BudgetRun.open/reserve; no_claim=does not read Wintermute's ledger
+  test('a run left open with nothing reserved holds no budget: the next run can reserve everything the program cap has left', () => {
+    const path = freshPath();
+    const first = BudgetRun.open({ runner: 'a', budgetUsd: 60, ledgerPath: path, programCapUsd: 100 });
+    first.settle(first.reserve(10, 'spent'), { usd: 10 });
+    first.close({ finish: false });
+    expect(ledgerStatus({ ledgerPath: path })).toMatchObject({ open_runs: 1, totals: { committed_usd: 10, open_reservations_usd: 0 } });
+    const next = BudgetRun.open({ runner: 'b', budgetUsd: 90, ledgerPath: path, programCapUsd: 100 });
+    next.reserve(89.99, 'the rest');
+    expect(() => BudgetRun.open({ runner: 'c', budgetUsd: 0.02, ledgerPath: path, programCapUsd: 100 })).toThrow('program cap');
+    expect(() => first.reserve(0.02, 'after the program cap filled')).toThrow('over its $100.00 cap');
   });
 
   test('the program cap spans runs, counts open reservations, and refuses a run that does not fit', () => {
@@ -505,5 +519,140 @@ describe('streamed responses settle from their usage events', () => {
     const openai = 'event: response.completed\ndata: {"type":"response.completed","response":{"usage":{"input_tokens":40,"output_tokens":7}}}\n';
     expect(sseUsage(openai)).toEqual({ input_tokens: 40, output_tokens: 7 });
     expect(sseUsage('data: {"type":"ping"}\n')).toBeNull();
+  });
+});
+
+
+// Value: protects=GST-2163: every OpenAI row prices cache writes (30-minute and 12-hour) and its long-prompt tier, and the ledger refuses what it cannot price instead of booking it as input; fails_when=an OpenAI row lacks a write rate or tier, gpt-6-sol books writes or long prompts at the short input rate, a 12-hour write books at the 30-minute rate, or an unknown cache tier settles; why_new=gpt-6-sol had neither rate and the 12-hour lifetime was unpriced; seam=priceRequest/usageCost/installPaidRequestGuard; no_claim=does not call OpenAI (rates checked by hand against developers.openai.com/api/docs/pricing.md on 2026-11-09)
+describe('cache writes, the long-prompt tier and usage the ledger cannot price', () => {
+  const responses = 'https://api.openai.com/v1/responses';
+  const body = (model: string, extra: Record<string, unknown> = {}) => ({ model, max_output_tokens: 100, input: 'x'.repeat(3000), ...extra });
+
+  test('every OpenAI row states its cache-write rate and its long-prompt tier; an OpenAI model with neither has no price', () => {
+    const rows = Object.entries({ ...CHAT_PRICE_OVERRIDES, ...HARNESS_CHAT_PRICES }).filter(([id]) => id.startsWith('openai:'));
+    expect(rows.length).toBeGreaterThan(10);
+    for (const [id, p] of rows) {
+      expect({ id, cache_write: typeof p.cache_write }).toEqual({ id, cache_write: 'number' });
+      expect({ id, long: p.long === undefined }).toEqual({ id, long: false });
+      if (p.long) expect({ id, long_write: typeof p.long.cache_write }).toEqual({ id, long_write: 'number' });
+    }
+    expect(CHAT_PRICE_OVERRIDES['openai:gpt-6-sol']).toEqual({ input: 2, output: 10, cache_read: 0.2, cache_write: 2.5, cache_write_12h: 5,
+      long: { above_input_tokens: 272_000, input: 4, output: 15, cache_read: 0.4, cache_write: 5, cache_write_12h: 10 } });
+    // gbrain's own table lists gpt-5.6-sol with input and output only.
+    expect(chatPrice('openai:gpt-5.6-sol')).toBeUndefined();
+    expect(() => priceRequest(responses, body('gpt-5.6-sol'))).toThrow(/no chat price for openai:gpt-5.6-sol.*cache-write rates.*long: null/);
+    expect(chatPrice('openai:gpt-4o-2024-08-06')).toEqual(CHAT_PRICE_OVERRIDES['openai:gpt-4o']);
+  });
+
+  test('gpt-6-sol settles cache writes at 1.25x input and a prompt over 272K tokens at its long rates', () => {
+    const sol = priceRequest(responses, body('gpt-6-sol'))!;
+    // A gpt-6.1-sol response from the 2026-11-08 live recall capture: 2,645 input tokens, 1,789 read, 853 written.
+    const real = { input_tokens: 2645, input_tokens_details: { cache_write_tokens: 853, cached_tokens: 1789 }, output_tokens: 21, output_tokens_details: { reasoning_tokens: 0 }, total_tokens: 2666 };
+    expect(usageCost(sol, { usage: real })!.usd).toBeCloseTo((3 * 2 + 1789 * 0.2 + 853 * 2.5 + 21 * 10) / 1e6, 12);
+    const long = { input_tokens: 300_000, input_tokens_details: { cached_tokens: 100_000, cache_write_tokens: 50_000 }, output_tokens: 1000 };
+    expect(usageCost(sol, { usage: long })!.usd).toBeCloseTo((150_000 * 4 + 100_000 * 0.4 + 50_000 * 5 + 1000 * 15) / 1e6, 12);
+    expect(responseUsd('openai', 'gpt-6-sol', { usage: long })).toBeCloseTo(usageCost(sol, { usage: long })!.usd, 12);
+    const big = priceRequest(responses, body('gpt-6-sol', { input: 'x'.repeat(900_000) }))!;
+    expect(reservationUsd(big)).toBeCloseTo((big.inputTokens * 5 + 100 * 15) / 1e6, 12);
+  });
+
+  test('12-hour cache writes settle from the lifetime split, or all at the 12-hour rate when the request chose it and usage has no split', () => {
+    const twelve = priceRequest(responses, body('gpt-6.1-sol', { prompt_cache_options: { ttl: '12h' } }))!;
+    expect(twelve).toMatchObject({ cacheWritePremium: true, cacheWrite12h: true, cache_write: 2.5, cache_write_12h: 5 });
+    expect(reservationUsd(twelve)).toBeCloseTo((twelve.inputTokens * 5 + 100 * 10) / 1e6, 12);
+    const split = { input_tokens: 2000, input_tokens_details: { cached_tokens: 0, cache_write_tokens: 1000, cache_write_tokens_details: { ttl_30m_tokens: 400, ttl_12h_tokens: 600 } }, output_tokens: 10 };
+    expect(usageCost(twelve, { usage: split })!.usd).toBeCloseTo((1000 * 2 + 400 * 2.5 + 600 * 5 + 10 * 10) / 1e6, 12);
+    const unsplit = { input_tokens: 2000, input_tokens_details: { cached_tokens: 0, cache_write_tokens: 1000 }, output_tokens: 10 };
+    expect(usageCost(twelve, { usage: unsplit })!.usd).toBeCloseTo((1000 * 2 + 1000 * 5 + 10 * 10) / 1e6, 12);
+    const plain = priceRequest(responses, body('gpt-6.1-sol'))!;
+    expect(plain.cacheWrite12h).toBe(false);
+    expect(usageCost(plain, { usage: unsplit })!.usd).toBeCloseTo((1000 * 2 + 1000 * 2.5 + 10 * 10) / 1e6, 12);
+    // A breakpoint's own lifetime counts too.
+    expect(priceRequest(responses, body('gpt-6.1-sol', { input: [{ role: 'user', content: 'x', prompt_cache_breakpoint: { ttl: '12h' } }] }))!.cacheWrite12h).toBe(true);
+  });
+
+  test('a cache lifetime or retention the ledger has no write rate for is refused before sending', () => {
+    expect(() => priceRequest(responses, body('gpt-5.5', { prompt_cache_options: { ttl: '12h' } }))).toThrow(/selects the 12h cache lifetime, which has no write rate/);
+    expect(() => priceRequest(responses, body('gpt-6.1-sol', { prompt_cache_options: { ttl: '24h' } }))).toThrow(/selects the 24h cache lifetime/);
+    expect(() => priceRequest(responses, body('gpt-6.1-sol', { prompt_cache_retention: '24h' }))).toThrow(/sets prompt_cache_retention/);
+    // Before GPT-5.6 a write bills as input, so extended retention costs nothing the ledger cannot price.
+    expect(priceRequest(responses, body('gpt-4.1-mini', { prompt_cache_retention: '24h' }))).toMatchObject({ model: 'gpt-4.1-mini', cacheWritePremium: false });
+    const anthropic = { model: 'claude-opus-5-5', max_tokens: 10, system: [{ type: 'text', text: 's', cache_control: { type: 'ephemeral', ttl: '1h' } }], messages: [] };
+    expect(() => priceRequest('https://api.anthropic.com/v1/messages', anthropic)).toThrow(/selects the 1h cache lifetime/);
+    expect(priceRequest('https://api.anthropic.com/v1/messages', { ...anthropic, system: [{ type: 'text', text: 's', cache_control: { type: 'ephemeral' } }] })!.cacheWritePremium).toBe(true);
+    // Tool-call arguments and tool schemas are data: a cache_control in them selects no lifetime, one on the block itself does.
+    const call = { type: 'tool_use', id: 'toolu_1', name: 'save', input: { cache_control: { ttl: '1h' } } };
+    const toolData = { model: 'claude-opus-5-5', max_tokens: 10, tools: [{ name: 'save', input_schema: { type: 'object', examples: [{ cache_control: { ttl: '1h' } }] } }], messages: [{ role: 'assistant', content: [call] }] };
+    expect(priceRequest('https://api.anthropic.com/v1/messages', toolData)).toMatchObject({ model: 'claude-opus-5-5' });
+    expect(() => priceRequest('https://api.anthropic.com/v1/messages', { ...toolData, messages: [{ role: 'assistant', content: [{ ...call, cache_control: { type: 'ephemeral', ttl: '1h' } }] }] })).toThrow(/selects the 1h cache lifetime/);
+  });
+
+  test('usage naming a cache tier the ledger has no rate for is refused, never settled as input', () => {
+    const sol = priceRequest(responses, body('gpt-6.1-sol'))!;
+    const tier = { input_tokens: 100, input_tokens_details: { cached_tokens: 0, cache_write_tokens: 5, cache_write_tokens_details: { ttl_30m_tokens: 0, ttl_7d_tokens: 5 } }, output_tokens: 1 };
+    expect(() => usageCost(sol, { usage: tier })).toThrow(UnpricedUsageError);
+    expect(() => usageCost(sol, { usage: tier })).toThrow(/reported ttl_7d_tokens, a cache tier the budget ledger has no rate for/);
+    const opus = priceRequest('https://api.anthropic.com/v1/messages', { model: 'claude-opus-5-5', max_tokens: 10, messages: [] })!;
+    // An Opus response from the same capture: its zero 1-hour count is no tier.
+    const real = { input_tokens: 4, cache_creation_input_tokens: 1885, cache_read_input_tokens: 0, cache_creation: { ephemeral_5m_input_tokens: 1885, ephemeral_1h_input_tokens: 0 }, output_tokens: 379,
+      output_tokens_details: { thinking_tokens: 0 }, service_tier: 'standard', inference_geo: 'global', speed: 'standard' };
+    expect(usageCost(opus, { usage: real })!.usd).toBeCloseTo((4 * 4 + 1885 * 5 + 379 * 20) / 1e6, 12);
+    expect(() => usageCost(opus, { usage: { ...real, cache_creation: { ephemeral_5m_input_tokens: 1875, ephemeral_1h_input_tokens: 10 } } })).toThrow(/ephemeral_1h_input_tokens/);
+    // A priced cache field counts only at the level usageCost reads it from; at the other level it is a tier it cannot price.
+    expect(() => usageCost(sol, { usage: { input_tokens: 1000, input_tokens_details: { cached_tokens: 0 }, cache_write_tokens: 1000, output_tokens: 0 } })).toThrow(/reported cache_write_tokens, a cache tier/);
+    expect(() => usageCost(opus, { usage: { input_tokens: 10, output_tokens: 1, input_tokens_details: { cache_creation_input_tokens: 5 } } })).toThrow(/reported cache_creation_input_tokens, a cache tier/);
+    const particle = priceRequest('https://api.particle.ai/v1/chat/completions', { model: 'particle-1', max_tokens: 10, messages: [] })!;
+    expect(() => usageCost(particle, { usage: { prompt_tokens: 100, completion_tokens: 1, prompt_tokens_details: { cached_tokens: 0, cache_write_tokens: 40 } } })).toThrow(/has no cache-write rate for it/);
+    expect(() => usageCost(particle, { usage: { prompt_tokens: 100, completion_tokens: 1, prompt_cache_hit_tokens: 60 } })).toThrow(/reported prompt_cache_hit_tokens/);
+    expect(() => usageCost(sol, { usage: { input_tokens: 10, input_tokens_details: { cached_tokens: 0, cache_write_tokens: 10, cache_write_tokens_details: { ttl_12h_tokens: 10 } }, output_tokens: 1 } })).not.toThrow();
+    const mini = priceRequest(responses, body('gpt-4.1-mini'))!;
+    expect(() => usageCost(mini, { usage: { input_tokens: 10, input_tokens_details: { cached_tokens: 0, cache_write_tokens: 10, cache_write_tokens_details: { ttl_12h_tokens: 10 } }, output_tokens: 1 } })).toThrow(/has no 12-hour cache-write rate for it/);
+  });
+
+  test('a response the ledger cannot price is charged at its reservation, and every later paid request is refused before sending', async () => {
+    const path = ledgerPath();
+    const run = BudgetRun.open({ runner: 'test', budgetUsd: 1, ledgerPath: path });
+    const mock = mockFetch(() => Response.json({ usage: { input_tokens: 10, output_tokens: 1, cache_creation_input_tokens: 5, cache_creation: { ephemeral_1h_input_tokens: 5 } } }));
+    const guard = installPaidRequestGuard(run, { fetchImpl: mock.impl });
+    try {
+      await expect(send('https://api.anthropic.com/v1/messages', anthropicBody)).rejects.toThrow(UnpricedUsageError);
+      await expect(send('https://api.anthropic.com/v1/messages', anthropicBody)).rejects.toThrow(/refused before sending: an earlier response in this run reported usage the ledger cannot price \(.*ephemeral_1h_input_tokens/);
+      expect(guard.exhausted).toBe(true);
+    } finally { guard.uninstall(); }
+    expect(mock.calls).toHaveLength(1);
+    const entries = read(path).entries;
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({ status: 'charged-reservation' });
+    expect(entries[0].actual_usd).toBe(entries[0].reserved_usd);
+    expect(ledgerStatus({ ledgerPath: path, runId: run.runId }).run!.finished_at).not.toBeNull();
+    expect(() => BudgetRun.join({ runId: run.runId, ledgerPath: path })).toThrow('already finished');
+  });
+
+  test('inside an allowance, a response the ledger cannot price is charged at its reservation, and every later paid request and batch submission is refused before sending', async () => {
+    const run = BudgetRun.open({ runner: 'test', budgetUsd: 1, ledgerPath: ledgerPath() });
+    const mock = mockFetch(() => Response.json({ usage: { input_tokens: 10, output_tokens: 1, cache_creation_input_tokens: 5, cache_creation: { ephemeral_1h_input_tokens: 5 } } }));
+    const guard = installPaidRequestGuard(run, { fetchImpl: mock.impl });
+    const allowance = run.allowance(0.5, 'bulk');
+    const url = 'https://api.anthropic.com/v1/messages';
+    try {
+      await expect(allowance.run(() => send(url, anthropicBody))).rejects.toThrow(UnpricedUsageError);
+      for (const later of [() => allowance.run(() => send(url, anthropicBody)), () => send(url, anthropicBody), () => runInBatchLane('reserved', () => send('https://api.anthropic.com/v1/messages/batches', {}))]) {
+        await expect(later()).rejects.toThrow(/refused before sending: an earlier response in this run reported usage the ledger cannot price/);
+      }
+      expect(guard.exhausted).toBe(true);
+    } finally { guard.uninstall(); }
+    expect(mock.calls).toHaveLength(1);
+    const charged = allowance.close();
+    expect(charged).toMatchObject({ requests: 1, charged_reservations: 1 });
+    expect(charged.usd).toBeCloseTo(reservationUsd(priceRequest(url, anthropicBody)!), 12);
+    expect(ledgerStatus({ ledgerPath: run.ledgerPath, runId: run.runId }).run!.finished_at).not.toBeNull();
+  });
+
+  test('a batch row whose usage the ledger cannot price is charged its worst case', () => {
+    const price = priceRequest('https://api.openai.com/v1/responses', { model: 'gpt-6.1-sol', max_output_tokens: 100, input: 'x' })!;
+    const row = (usage: Record<string, unknown>) => ({ custom_id: 'r', status: 'succeeded' as const, text: 'ok', finish: 'stop', usage, response_model: null, service_tier: null, error: null });
+    const unpriced = { input_tokens: 10, input_tokens_details: { cached_tokens: 0, cache_write_tokens: 10, cache_write_tokens_details: { ttl_24h_tokens: 10 } }, output_tokens: 1 };
+    expect(rowCost(price, 0.02, row(unpriced), 0.5)).toEqual({ list_usd: 0.02, usd: 0.01, input_tokens: 0, output_tokens: 0, basis: 'worst-case' });
+    expect(rowCost(price, 0.02, row({ input_tokens: 10, output_tokens: 1 }), 0.5).basis).toBe('usage');
   });
 });

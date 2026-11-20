@@ -82,7 +82,7 @@ import { gbrainSpecFrom, HELD_GBRAIN_DEFAULTS, importGbrain, overlaySummary, pro
 import { EmbeddingCache, makeCachingTransport } from '../longmemeval-cache.ts';
 import { ndcgAtK, recallAllAtK, recallAnyAtK, uniqueInOrder, percentile } from '../metrics.ts';
 import { isoSessionDate, loadCorpus, occurrenceId, sha256, type Corpus, type MemoryQuestion, type Session } from './corpus.ts';
-import { ChatClient, DEFAULT_JUDGE, DEFAULT_READER, chatWithReceipts, factsReaderPrompt, hasChatRoute, isCompatModel, judgeResponse, packSessions, readerPrompt, repeatsTrap, approxTokens, sessionDateKey, unresolvedRelativeTime, type SavedFact } from './qa-v2.ts';
+import { ChatClient, DEFAULT_JUDGE, DEFAULT_READER, chatWithReceipts, factsReaderPrompt, hasChatRoute, isCompatModel, judgeResponse, packSessions, readerPrompt, repeatsTrap, approxTokens, sessionDateKey, tailVerdicts, unresolvedRelativeTime, type SavedFact, type VerdictPath } from './qa-v2.ts';
 import { compatRequest, modelsNotRun } from '../providers/openai-compatible.ts';
 import type { UsageReceipt } from '../usage-receipt.ts';
 import { devConversations, loadSplit } from '../decisions/splits.ts';
@@ -127,6 +127,8 @@ export interface RunArgs {
   embeddingModel: string;
   embeddingDims: number;
   categories: string[] | null;
+  /** --ids: only these question ids. */
+  ids?: string[] | null;
   limit: number | null;
   seed: number;
   topK: number;
@@ -185,6 +187,8 @@ export interface MemoryQaRow {
   qa_answer?: string;
   /** The reference date gbrain think reports it answered against (YYYY-MM-DD), as in run.ts's think lane; absent when the build reports none. */
   qa_reference_date?: string;
+  /** Verdicts read from the last standalone yes or no of a complete judge reply, not its first three words (qa-v2 `judgeVerdict`); absent when none were. */
+  qa_tail_verdicts?: number;
   qa_error?: string;
   /** One usage-receipt/v1 record per attempted reader call, every replicate. */
   qa_receipts?: UsageReceipt[];
@@ -296,7 +300,15 @@ export function parseRunArgs(argv: string[]): RunArgs {
     replay: argv.includes('--replay'),
     ingestReplicate: Number(one('--ingest-replicate') ?? 1),
     frozenFrom: one('--frozen-from') ? resolve(one('--frozen-from')!) : null,
+    ids: one('--ids') ? readIdsFile(one('--ids')!) : null,
   };
+}
+
+/** Question ids from an --ids file: one per line, blank lines and # comments ignored. */
+export function readIdsFile(path: string): string[] {
+  const ids = readFileSync(path, 'utf8').split('\n').map(l => l.replace(/#.*/, '').trim()).filter(Boolean);
+  if (!ids.length) throw new Error(`--ids ${path} lists no question ids`);
+  return ids;
 }
 
 /** Deterministic, category-stratified subset: questions sorted by sha256(seed, id) within each category, round-robin across categories. */
@@ -382,7 +394,7 @@ export function runConfigHash(a: RunArgs, gut: GbrainUnderTest, corpus: Corpus, 
     ...(a.ingestReplicate !== 1 ? { ingest_replicate: a.ingestReplicate } : {}),
     ...(Object.keys(a.policySettings).length ? { policy_settings: a.policySettings } : {}),
     ...(a.frozenFrom ? { frozen_from_sha256: createHash('sha256').update(readFileSync(a.frozenFrom)).digest('hex') } : {}),
-    ...(a.qa.mode === 'think' ? { think_reference_date: 'question date, else latest session date' } : {}) };
+    ...(a.qa.mode === 'think' ? { think_reference_date: 'question date, else latest session date' } : {}), ...(a.ids ? { ids: a.ids } : {}) };
   return createHash('sha256').update(JSON.stringify(pre)).digest('hex');
 }
 
@@ -478,6 +490,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
   const allowed = a.benchmark === 'custody' ? null : a.split === 'sealed' ? new Set(loadSplit(a.benchmark).sealed) : devConversations(a.benchmark);
   let questions = corpus.questions.filter(q => !allowed || allowed.has(q.conversation));
   if (a.categories) questions = questions.filter(q => a.categories!.includes(q.category));
+  if (a.ids) { const want = new Set(a.ids); questions = questions.filter(q => want.has(q.id)); }
   questions = selectQuestions(questions, a.limit, a.seed);
   const convIds = uniqueInOrder(questions.map(q => q.conversation)).sort();
   const myConvs = convIds.filter((_, i) => i % a.shard.count === a.shard.index);
@@ -787,6 +800,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
         let out: MemoryQaRow = { ...row, qa_context: meta as MemoryQaRow['qa_context'], ...(keepPrompt ? { qa_prompt: prompt } : {}) };
         const scores: number[] = [];
         const receipts: UsageReceipt[] = [];
+        const paths: VerdictPath[] = [];
         let tin = 0; let tout = 0; let answer = ''; let trap = 0;
         try {
           for (let r = 0; r < a.qa.runs; r++) {
@@ -795,14 +809,14 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
             catch (e) { if (budgetStop(e)) throw e; throw new Error(`reader: ${(e as Error).message}`); }
             answer = res.text; tin += res.input_tokens; tout += res.output_tokens;
             if (judge === READER_ONLY) continue;
-            scores.push(await judgeResponse(chat!, a.benchmark, judge, question, answer, r).catch(e => { if (budgetStop(e)) throw e; throw new Error(`judge: ${(e as Error).message}`); }));
+            scores.push(await judgeResponse(chat!, a.benchmark, judge, question, answer, r, undefined, paths).catch(e => { if (budgetStop(e)) throw e; throw new Error(`judge: ${(e as Error).message}`); }));
             if (question.abstention && repeatsTrap(answer, question.trap)) trap++;
           }
           // Reader-only arms (judge "none") keep the whole answer for a scorer outside this process, such as the sealed runner.
           out = judge === READER_ONLY
             ? { ...out, qa_runs: a.qa.runs, qa_input_tokens: Math.round(tin / a.qa.runs), qa_output_tokens: Math.round(tout / a.qa.runs), qa_context_tokens: Number(meta.tokens ?? 0), qa_answer: answer, qa_receipts: receipts }
             : { ...out, qa_score: scores.reduce((x, y) => x + y, 0) / scores.length, qa_scores: scores, qa_runs: scores.length, ...(question.trap ? { qa_trap: trap / scores.length } : {}),
-              qa_input_tokens: Math.round(tin / scores.length), qa_output_tokens: Math.round(tout / scores.length), qa_context_tokens: Number(meta.tokens ?? 0), qa_answer: answer.slice(0, 2000), qa_receipts: receipts };
+              qa_input_tokens: Math.round(tin / scores.length), qa_output_tokens: Math.round(tout / scores.length), qa_context_tokens: Number(meta.tokens ?? 0), qa_answer: answer.slice(0, 2000), ...tailVerdicts(paths), qa_receipts: receipts };
         } catch (e) {
           const msg = (e as Error).message.slice(0, 300);
           if (budgetStop(e)) stopped = 'budget';
@@ -906,6 +920,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
               const receipts: UsageReceipt[] = [];
               try {
                 const scores: number[] = [];
+                const paths: VerdictPath[] = [];
                 let tin = 0; let tout = 0; let answer = ''; let trap = 0; let referenceDate: string | undefined;
                 const pack = packSessions(retrieved.map(id => sessById.get(id)).filter((x): x is Session => !!x), a.qa.sessions, a.qa.budgetTokens);
                 const readFacts = a.qa.context === 'facts' ? retrieved.slice(0, a.qa.sessions).flatMap(id => factsBySession.get(id) ?? []) : [];
@@ -921,13 +936,13 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
                     const out = await chatWithReceipts(chat, { role: 'reader', question_id: q.id, replicate: r, model: a.qa.reader, delivered: null }, prompt, { maxTokens: 1024, replicate: r }, receipts);
                     answer = out.text; tin += out.input_tokens; tout += out.output_tokens;
                   }
-                  scores.push(await judgeResponse(chat, a.benchmark, a.qa.judge, q, answer, r).catch(e => { if (budgetStop(e)) throw e; throw new Error(`judge: ${(e as Error).message}`); }));
+                  scores.push(await judgeResponse(chat, a.benchmark, a.qa.judge, q, answer, r, undefined, paths).catch(e => { if (budgetStop(e)) throw e; throw new Error(`judge: ${(e as Error).message}`); }));
                   if (q.abstention && repeatsTrap(answer, q.trap)) trap++;
                 }
                 row = { ...row, qa_score: scores.reduce((x, y) => x + y, 0) / scores.length, qa_scores: scores, qa_runs: scores.length,
                   ...(q.trap ? { qa_trap: trap / scores.length } : {}), qa_input_tokens: Math.round(tin / scores.length), qa_output_tokens: Math.round(tout / scores.length),
                   qa_context_tokens: think || a.qa.context === 'facts' ? undefined : pack.tokens, qa_sessions: think || a.qa.context === 'facts' ? undefined : pack.sessions.length,
-                  ...(a.qa.context === 'facts' ? { qa_facts: readFacts.length, qa_facts_tokens: factsContextTokens(readFacts) } : {}), qa_answer: answer.slice(0, 2000), ...(referenceDate ? { qa_reference_date: referenceDate } : {}),
+                  ...(a.qa.context === 'facts' ? { qa_facts: readFacts.length, qa_facts_tokens: factsContextTokens(readFacts) } : {}), qa_answer: answer.slice(0, 2000), ...(referenceDate ? { qa_reference_date: referenceDate } : {}), ...tailVerdicts(paths),
                   ...(receipts.length ? { qa_receipts: receipts } : {}) };
               } catch (e) {
                 if (budgetStop(e)) stopped = 'budget';

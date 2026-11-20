@@ -6,7 +6,9 @@ It reports no result; batch 1's results are in the [batch 1 findings](../2026-11
 sample size (50 questions), question file hash and minimum detectable difference are under
 [Frozen sample](#frozen-sample), taken from Wintermute's freeze output before the counted run. A second, independent
 question set, batch 2, runs under the [batch 2 amendment](#batch-2-amendment), fixed before that set was frozen; its
-frozen sample (N, question file hash and minimum detectable differences) closes the amendment.
+frozen sample (N, question file hash and minimum detectable differences) closes the amendment. A third set, batch 3,
+adds freshness and entity questions under the [batch 3 amendment](#batch-3-amendment), fixed before any of its
+questions was written.
 
 ## The question
 
@@ -341,6 +343,288 @@ Wintermute's notes on the sample, aggregates only:
 the lockfile).
 
 Phase 2 stays held until batch 2 lands and GBRA-108 answers on the paraphrase gap.
+
+## Batch 3 amendment
+
+Fixed on 2026-11-09 by GBEV-55 (GST-2005), under GBEV-3's approval of the predictive-measures plan, before any batch 3
+question was written. Batch 3 is a third, independent question set that adds two question types. Arms, metrics,
+eligibility, custody and the read-only barrier are unchanged. The types, the primaries, the declared secondaries and how
+the freeze pins the gbrain under test change.
+
+**Why.** The [predictive-measures preregistration](../2026-11-09-predictive-measures-preregistration.md) builds
+synthetic measures of stale facts and wrong entities, the two most common recall failures Wintermute reported. Batch 1
+and batch 2 asked neither kind of question, so neither can say whether those measures predict the real brain. Batch 3 is
+their reference.
+
+**Questions.** About 25 `freshness` and 25 `entity` questions, each with an exact and a paraphrased form, written and
+frozen by Wintermute on the box. The freeze records the actual counts. A `freshness` question names the current page
+as gold and the superseded pages in `stale`. An `entity` question's gold is the right page among pages for different
+people or things with the same or similar names, and it may list the look-alike pages in `decoy`. Both types are accepted only under `--protocol batch3`. The question
+file format and a public fixture are in the [run kit](RUN-KIT.md#the-question-file).
+
+**System under test and the visibility epoch.** Batch 3 measures the gbrain Wintermute's box runs at the freeze.
+GBRA-398 (garrytan/gbrain#8917) will clear over-applied `access: private` labels and let the owner and delegates read
+private pages, so gold a reader could not see before it may be visible after it. The freeze records `gbrain_version`
+and `visibility_epoch`, and a counted run refuses a freeze from the other epoch (`LR_FREEZE_MISMATCH`). When the
+epoch reads `unknown`, the run must use the freeze's exact gbrain version. Results from the two epochs are never
+pooled.
+
+**Primary (Holm-corrected across the two, on success@5, both forms clustered by question):**
+
+- **P1: `configured` minus `hybrid_lexical`** on `freshness` questions. Comparison id
+  `p1_configured_vs_hybrid_lexical_freshness`.
+- **P2: `configured` minus `hybrid_lexical`** on `entity` questions. Comparison id
+  `p2_configured_vs_hybrid_lexical_entity`.
+
+**Declared secondaries** (reported with intervals, not Holm-adjusted): `hybrid_vs_hybrid_lexical_freshness`,
+`hybrid_vs_hybrid_lexical_entity`, `configured_vs_keyword_freshness`, `configured_vs_keyword_entity`, batch 2's P1
+on batch 3's questions as `batch2_p1_hybrid_vs_hybrid_lexical_paraphrase`, and every descriptive comparison under
+[Comparisons](#comparisons). Each arm also reports `stale_first` (all forms, exact, paraphrase): the share of
+freshness forms where a stale page ranks above the gold, or comes back when the gold does not. Entity questions may
+name their look-alike pages in `decoy`, and each arm then reports `decoy_first` the same way over the entity forms that
+carry one. Both are descriptive and carry no interval.
+
+**Power.** From `mde` in `run.ts`, in points, with 25 questions per type:
+
+| Comparison | 10% discordant | 20% discordant | 30% discordant |
+|---|---|---|---|
+| P1 or P2, forms independent (50 pairs) | 12.5 | 17.7 | 21.7 |
+| P1 or P2, forms fully correlated (25 pairs) | 17.7 | 25.0 | 30.6 |
+
+So batch 3 can show a 20-point gain from configured search on either type, and cannot rank arms 10 points apart.
+
+**The protocol is frozen with the questions.** Wintermute freezes with `run.ts freeze --protocol batch3` and the
+`--gbrain` it will run. The counted run takes the protocol from `freeze.json`, as for batch 2.
+
+**Cost.** No paid model calls by us. Wintermute's keys pay for about one query embedding per form for `hybrid` and
+`configured` and one rerank call per configured query, as in batch 2.
+
+**Batch 3 frozen sample.** Frozen on 2026-11-09 from Wintermute's `run.ts freeze --protocol batch3` output at
+gbrain-evals `a1cfff13`, with `--gbrain` at gbrain v0.60.623.0 (`d253ec0f`, a clean checkout), before any batch 3
+search. `freeze.json` records `gbrain_version` 0.60.623.0 and `visibility_epoch` `post_gbra_398`. The runner refuses a
+question file whose hash differs from this one, and a run whose protocol or visibility epoch differs from the freeze's
+(`LR_FREEZE_MISMATCH`).
+
+- **N = 51 questions** (102 question forms): 25 `freshness` and 26 `entity`. The freshness questions name 25 stale
+  pages in all.
+- **Question file sha256:** `c023694ef59e03e64fd1b0553b6516f7bccad424b85f0f74bdf95d2a08b6014e`.
+- **freeze.json sha256:** `ece4fc08627046d8d19449e5ace36123ea57b789c8794a820c7794efb56a20ad`.
+- **Minimum detectable difference** in success@5 (two-sided alpha 0.05, 80% power), in points, both forms clustered by
+  question (forms independent to fully correlated):
+
+| Comparison | 10% discordant | 20% discordant | 30% discordant |
+|---|---|---|---|
+| P1, `configured` minus `hybrid_lexical`, freshness | 12.5 to 17.7 | 17.7 to 25.1 | 21.7 to 30.7 |
+| P2, `configured` minus `hybrid_lexical`, entity | 12.3 to 17.4 | 17.4 to 24.6 | 21.3 to 30.1 |
+
+An earlier freeze of the same question file on gbrain 0.60.618.0 checked the run kit. It read `pre_gbra_398` and matched
+this freeze in every field but the gbrain version and the epoch. It is not counted, and no batch 3 result comes from it.
+
+### 2026-11-10: batch 3 runs on gbrain 0.60.641.0
+
+Written after the first counted attempt stopped and before any batch 3 search.
+
+**What happened.** The first counted attempt ran on 2026-11-10 from gbrain-evals `446b9c14`, with `--gbrain` at
+0.60.623.0 (`d253ec0f`). It stopped with `LR_SCHEMA_MISMATCH`: the brain's schema was 297, and 0.60.623.0 expects 296.
+Earlier that day Wintermute's box had upgraded to gbrain 0.60.634.0, and that upgrade migrated the brain to schema 297.
+The runner never migrates, and it refuses before any search, so the attempt ran no batch 3 query. No batch 3 data
+exists at 0.60.623.0, and nothing from that attempt is counted or reported as a result.
+
+**What changes.** Batch 3's system under test is gbrain 0.60.641.0
+(`2560ffddb85244b82f2b325ee2ddc846f77c3cac`). That's the version the box runs, and it opens schema 297. The counted run
+passes `--gbrain <checkout>@2560ffddb85244b82f2b325ee2ddc846f77c3cac` and runs from the gbrain-evals commit that adds
+this amendment. Since `446b9c14` the runner has changed only in a check that applies to paid synthetic runs
+(`e0c55bb0`), so the counted path is the same code.
+
+**What doesn't change.** The question file and `freeze.json` are the ones recorded above, and their hashes stand:
+question file `c023694ef59e03e64fd1b0553b6516f7bccad424b85f0f74bdf95d2a08b6014e` and `freeze.json`
+`ece4fc08627046d8d19449e5ace36123ea57b789c8794a820c7794efb56a20ad`. There is no new freeze. The protocol, arms,
+primaries, declared secondaries, power and minimum detectable differences are unchanged.
+
+**Why the existing freeze still applies.** The freeze was recorded at 0.60.623.0. Under batch 3 the runner compares the
+freeze's visibility epoch with the run's, and it compares gbrain versions only when both epochs read `unknown`
+(`eval/runner/live-recall/run.ts`, lines 463 to 465). 0.60.623.0 and 0.60.641.0 both read `post_gbra_398`, so the
+runner accepts this freeze at 0.60.641.0. The scorecard records both versions: `gbrain_loaded_version` 0.60.641.0 and
+`freeze_gbrain_version` 0.60.623.0.
+
+**What the numbers measure.** 0.60.641.0 hides more from scoped callers than 0.60.623.0 did. gbrain's changelog lists
+three changes:
+- 0.60.634.0 makes the SQL privacy checks behind list and search queries give the same answers as their TypeScript
+  versions.
+- 0.60.639.0 drops a link whose origin page is soft-deleted, or outside the caller's source grant.
+- 0.60.641.0 makes facts, timeline entries and tags follow the page they're about. They stay hidden from a caller who
+  can't read that page, and from everyone while the page is deleted.
+
+So batch 3's numbers measure 0.60.641.0, not 0.60.623.0. Every batch 3 result is labelled with both versions: run at
+0.60.641.0, frozen at 0.60.623.0.
+
+**Order on the box.** The counted run starts after GBRA-398's relabel of over-applied `access: private` labels has
+finished on the box, so the run reads one state of the brain. If the brain's schema moves past 297 before the run, the
+runner refuses with `LR_SCHEMA_MISMATCH` again. That stop ends the attempt, and running at any other version needs
+another dated amendment.
+
+### 2026-11-10: batch 3 runs after relabel window 1, before window 2
+
+Written before any batch 3 search, after the first counted attempt stopped with `LR_SCHEMA_MISMATCH`. It changes when the
+counted run happens and nothing else. It replaces the timing in "Order on the box" in the amendment above; the rest of
+that amendment stands.
+
+**Why.** GBRA-398's relabel of over-applied `access: private` labels applies in windows of about 1,000 pages. Window 1
+applied from 2026-11-10T08:39:14Z to 09:41:20Z: 961 pages applied and 39 declined because their files changed during the
+apply. About 48 windows remain at about an hour each, so the last would land around 2026-11-12. The box is held at
+0.60.641.0 only until 2026-11-11T08:00Z, and the brain's schema went from 291 (0.60.593.0, batch 2's run on 2026-11-07)
+to 297 (0.60.641.0) in three days. A migration after the hold would stop the run with `LR_SCHEMA_MISMATCH` again.
+
+**When the run happens.** The counted run starts after window 1's one-hour watch has ended, and window 2 is held from
+the run's start until its teardown, so the run reads one state of the brain: relabel window 1 of about 49 applied (961
+pages applied, 39 declined), the rest of the over-applied labels still in place. The run record names that state. If the
+run can't start in this gap, it runs in a later gap between two windows before 2026-11-11T08:00Z, with the windows
+applied named the same way. If no gap works by then, it runs after the last window, as the amendment above says.
+
+**Unchanged.** Runner gbrain-evals `40235f35`, gbrain 0.60.641.0 at `2560ffdd` loaded as a verified overlay, the same
+question file (sha256 `c023694e…`) and freeze.json (sha256 `ece4fc08…`, 51 questions, frozen at 0.60.623.0, visibility
+epoch `post_gbra_398`), and the same arms, primaries and analysis.
+
+**One counted run.** This is batch 3's only counted run. No later batch 3 run counts, including one after the relabel
+finishes. A post-relabel read, if anyone makes one, is descriptive, labelled that way and never pooled with this one.
+
+**What this state means for the results.**
+
+- The freeze was made at 0.60.623.0 before the box's 0.60.634.0 upgrade (about 02:45Z on 2026-11-10; 0.60.623.0 can't
+  open the upgraded schema), so before window 1 began. The run reads nearly the label state the questions were frozen
+  against, with 961 pages relabelled since.
+- About 2% of the relabel is applied. A page still wrongly labelled private stays hidden from a caller that can't read
+  private pages. Where such a page is a question's gold, every arm misses it alike. That lowers success for every arm
+  and pulls contrasts toward zero rather than reversing them, so it can leave fewer than three qualifying contrasts. A
+  verdict that reads NO REFERENCE YET for that reason says so.
+- Batch 2 ran on 2026-11-07 at 0.60.593.0, before the relabel began, so no relabel window had changed its labels either.
+  It ran on the other visibility epoch (`pre_gbra_398`: owner and delegate connections couldn't read private pages).
+  Whether every over-applied label already existed on 2026-11-07 isn't recorded here. The predictive measures' batch 2
+  and batch 3 layers each compare a synthetic brain with one real run and are never pooled, so the two layers differ in
+  visibility epoch and label state as well as in questions, and their results say so.
+
+## Batch 4 amendment
+
+Fixed on 2026-11-11 by GBEV-77 (GST-2449), before any batch 4 question was written. Batch 4 is a fourth, independent set
+of 50 questions, made the way batch 2 was, for the predictive-measures test of G2's paraphrase-gap prediction
+([amendment of 2026-11-11](../2026-11-09-predictive-measures-preregistration.md#2026-11-11-g2s-held-out-replication-on-batch-4)).
+Arms, metrics, eligibility, custody, the read-only barrier and batch 2's comparisons are unchanged. What changes: the
+freeze proves the questions are new, records the gbrain version and visibility epoch, and the scorecard adds a
+simultaneous band over its success@5 comparisons.
+
+**Questions.** Written fresh on the box in batch 2's format and under batch 2's rules: 10 questions of each of the five
+live types, an exact and a paraphrased form each, gold chosen page first from a new seeded sample, error_string gold
+drawn from more than 6 pages, and a window on every time_window question. Nothing may come from batches 1 to 3: no
+question id, no form (compared after folding case, spacing and punctuation), and no gold page that was a batch 1 to 3
+gold, stale or decoy page.
+
+**The freeze checks that.** Wintermute freezes with `run.ts freeze --protocol batch4`, the `--gbrain` it will run, and
+the three earlier question files, one `--prior` each. The runner checks their sha256 against the frozen ones below,
+counts what the new file shares with them, and refuses with `LR_FREEZE_OVERLAP`, writing nothing, if it shares
+anything or a file is missing or wrong. Only counts are printed. `freeze.json` records the protocol, the question
+file's sha256, the counts by type, `gbrain_version`, `visibility_epoch`, the three earlier files' sha256
+(`prior_question_files`) and a zero `prior_overlap`.
+
+- Batch 1: `88eaa30c34d85d303aff2a0faf81e9adfe6a5815dadc5196879c827e6f02ae9f`
+- Batch 2: `dd69701c55534429fb758ca8335af175a3dfcc3c9aca6c9c2d2fc81bf3f11099`
+- Batch 3: `c023694ef59e03e64fd1b0553b6516f7bccad424b85f0f74bdf95d2a08b6014e`
+
+**System under test and the visibility epoch.** Batch 4 measures the gbrain Wintermute's box runs at the freeze. As for
+batch 3, a counted run refuses a freeze from the other GBRA-398 epoch, and with the epoch `unknown` it needs the
+freeze's exact gbrain version. It also refuses a batch 4 freeze that records no clean check against the three earlier
+files (`LR_FREEZE_MISMATCH`). The counted run uses gbrain-evals at the merge commit of this amendment, on a clean tree.
+
+**If the box upgrades between freeze and run.** Batch 3's first counted attempt stopped with `LR_SCHEMA_MISMATCH` for
+that reason and needed a dated amendment. For batch 4 the rule is fixed now. The counted run passes `--gbrain` at the
+version the box runs when the run starts. If that version reads the freeze's visibility epoch, the freeze stands, and
+the scorecard records both versions (`gbrain_loaded_version` and `freeze_gbrain_version`); the results label every
+number with both. If the attempt stops with `LR_SCHEMA_MISMATCH` before any search, it is rerun once this way, with no
+new amendment. A run on the other epoch needs a new freeze, which counts as a new batch. There is one counted run: no
+later batch 4 run counts, and a second read, if anyone makes one, is descriptive and never pooled.
+
+**Relabel state.** If GBRA-398's relabel windows are still applying on the box, Wintermute records which windows had been
+applied at the freeze and at the run, and the results name both states. As in batch 3, a gold page still wrongly
+labelled private is missed by every arm alike, which pulls contrasts toward zero rather than reversing them.
+
+**Primary, secondaries and the family band.** Batch 2's P1 and P2 (paraphrase forms, Holm across the two) and its
+declared secondaries are batch 4's, replicated on new questions. The scorecard also carries a `family` block and a
+`family_ci95` on every success@5 comparison: a simultaneous 95% band over all of them from one bootstrap that resamples
+whole questions within each of the five question types (seed 20261106, 10,000 draws), computed on the box from the same
+records ([scorecard format](SCORECARD.md#scorecardjson)). The predictive-measures test reads that band; each comparison's own `ci95` is
+computed exactly as in batch 2.
+
+**Power.** At N = 50, as for batch 2: 12.5, 17.7 and 21.7 points for P1 or P2 at 10%, 20% and 30% discordant pairs.
+
+**What leaves the box.** `freeze.json` before any search, then `scorecard.json` and `scorecard.md` after the counted
+run, the relabel windows applied at the freeze and at the run, and the brain's embedding coverage at the freeze as
+aggregates (the share of chunks with no vector, the share with synopsis vectors, and the share of sampled media pages
+that are empty shells, with how each was counted). The coverage figures are descriptive: they show whether the
+conditions the synthetic brain copies still describe the real one, and they change no outcome.
+
+**Cost.** No paid model calls by us. Wintermute's keys pay for about one query embedding per form for `hybrid` and
+`configured` and one rerank call per configured query, as in batch 2.
+
+The batch 4 frozen sample, Wintermute's notes on it and the counted run commit are recorded in the results, as dated
+entries made before the counted run.
+
+### 2026-11-12: Batch 4 frozen sample
+
+Written after the freeze and before any batch 4 search. Frozen on 2026-11-12 at 04:09Z from Wintermute's
+`run.ts freeze --protocol batch4` at gbrain-evals `ecf8169c`, the merge commit of this amendment (2026-11-11T19:27:24Z),
+on a clean tree, with `--gbrain` at gbrain 0.60.682.0 (`42faabf2`) and the three earlier question files as `--prior`.
+`freeze.json` records `gbrain_version` 0.60.682.0, `visibility_epoch` `post_gbra_398`, the three earlier files' sha256
+(each matching the values above) and a `prior_overlap` of 0 question ids, 0 forms and 0 gold pages.
+
+- **N = 50 questions** (100 question forms), 10 of each type, and all 10 time_window questions carry a window.
+- **Question file sha256:** `69f923673764fc11aa501a4d3b0efae53ff7d2ec8ce806a32176472662b3ca04`.
+- **freeze.json sha256:** `ca66175ab378c2688317c057fa9e7dad0e8cad881d31af81a0d69cc1296b11f2`, committed as
+  [`live-recall-batch4/freeze.json`](../live-recall-batch4/freeze.json).
+- **Minimum detectable difference** in success@5 (two-sided alpha 0.05, 80% power), in points:
+
+| Comparison | 10% discordant | 20% discordant | 30% discordant |
+|---|---|---|---|
+| P1 or P2 (paraphrase forms), and G2's primary `paraphrase_vs_exact_configured` | 12.5 | 17.7 | 21.7 |
+| `batch1_p1_hybrid_vs_hybrid_lexical`, both forms (forms independent to fully correlated) | 8.9 to 12.5 | 12.5 to 17.7 | 15.3 to 21.7 |
+
+Wintermute's notes on the sample, aggregates only:
+
+- 60 distinct gold pages, chosen page first from a seeded sample (seed 20261111) drawn on 2026-11-11 at 19:31Z: 40 from
+  meeting pages, 10 from company pages and 10 from conversations, none off-sample. The sample gave no other kind of
+  gold page, so all 10 topic questions are about meetings.
+- The sample skipped held pages, pages with a privacy label, and every batch 1 to 3 gold, stale or decoy page. A recheck
+  found no access, visibility or confidentiality label on any of the 60 gold pages.
+- The 10 error_string questions have 10 distinct gold pages. Their key strings appear in 1 to 14 files across the brain,
+  so some are less unique than others. Each cross_source question pairs two meetings about the same company, both in
+  the sample.
+- 49 of the 60 gold pages carry a date in their path, and 8 of those are dated 2026-10-09 or later. Batch 2 had 33 of
+  58, so batch 4 leans to older pages.
+- Checks before the freeze, all passed: every gold page exists on disk and in the brain's page list, every exact form
+  contains its key tokens and no paraphrase does, question ids are unique, and nothing is shared with batches 1 to 3.
+- On 2026-11-11 a guard on the box refused the question build twice, before anything was saved; it was diagnosed as a
+  false positive. In those attempts Wintermute drew the seeded sample, built the exclusion and page lists and read
+  candidate pages. No question file was saved, nothing was frozen and nothing was searched. An error_string
+  replacement planned then was never saved. The frozen file is a fresh set of 50 written from the same sample,
+  exclusion list and rules, run through a workaround for that guard. It counts as batch 4: the amendment fixes the
+  question set at the freeze, and no search informed it, as with batch 2's discarded draw. (On 2026-11-12, after the
+  counted run, this note dropped internal tooling details about that guard; no fact about the sample or the rules
+  changed.)
+- The checkout ran `bun install` rather than `bun install --frozen-lockfile`. The tree stayed clean, so the lockfile
+  didn't change.
+
+**State of the brain at the freeze** (read-only, 2026-11-12 from 04:13Z to 04:15Z, just after the freeze; descriptive,
+and it changes no outcome):
+
+- **GBRA-398 relabel windows:** which windows had been applied couldn't be reconstructed on the box. Window 1 applied on
+  2026-11-10 (above). The brain's checkout holds two commits titled "relabel: commit parked label writes" at 2026-11-11
+  04:11Z that name no window. At about 03:50Z, 932 live pages still carried `access: private` with no `visibility`.
+- **Embedding coverage:** 5.5% of chunks on live pages have no vector in the configured column (`embedding`,
+  voyage-4), or 5.5% leaving out image-asset chunks. No page has synopsis vectors. Of 400 seeded-sampled media or video
+  pages, none has zero chunks, 38% have under 500 characters of main-body text and 21% under 200. G2's counted synthetic
+  brain copies 10% unembedded chunks, synopsis vectors off and about half the pages that aren't gold as shells, by a
+  different shell rule, so the unembedded share it copies is about twice the share measured now.
+
+**Counted run.** From gbrain-evals `ecf8169c` on a clean tree, after this entry is pushed, with `--gbrain` at the
+version the box runs when the run starts, under the rule above for an upgrade between freeze and run.
 
 ## Limits
 

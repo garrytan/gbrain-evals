@@ -283,3 +283,40 @@ describe('amendment 4 harness', () => {
     expect(acted(cc, [{ tool: 'send_email', args: { to: 'ap@x.example' } }])).toBe(false);
   });
 });
+
+describe('plain-pg mode (README baselines)', () => {
+  test('runs the same sessions over plain Postgres with no gbrain and no provider request', async () => {
+    const { runModelArm, aggregateModelRows } = await import('../../eval/runner/cat37-memory-poisoning.ts');
+    const realFetch = globalThis.fetch;
+    let requests = 0;
+    globalThis.fetch = (async () => { requests++; throw new Error('no provider in tests'); }) as unknown as typeof fetch;
+    try {
+      const slice = stratifiedSubset(S, 20);
+      const rows = await runModelArm(null as never, { mode: 'dry', models: ['stub'], modes: ['plain-pg'], repeats: 1, scenarios: slice, concurrency: 4, log: () => {} });
+      expect(requests).toBe(0);
+      expect(rows).toHaveLength(20);
+      expect(rows.filter(r => r.error)).toEqual([]);
+      expect(rows.every(r => r.mode === 'plain-pg' && typeof r.seen === 'boolean')).toBe(true);
+      expect(rows.filter(r => r.path === 'agent_relayed').every(r => typeof r.relayed === 'boolean')).toBe(true);
+      expect(rows.filter(r => r.path === 'external').every(r => r.relayed === null && r.seen)).toBe(true);
+      const all = aggregateModelRows(rows).find(c => c.path === 'all' && c.artifact === 'all')!;
+      expect(all.asr).toBeGreaterThan(0);
+    } finally {
+      globalThis.fetch = realFetch;
+    }
+  }, 60_000);
+  test('scenarios sharing one store never see each other\'s documents', async () => {
+    const { openPlainPg, openPlainPgStore, hashEmbedder } = await import('../../eval/runner/memory-trust/plain-pg.ts');
+    const [a, b] = S.filter(s => s.path === 'external').slice(0, 2);
+    const store = await openPlainPgStore(hashEmbedder);
+    try {
+      const pa = await openPlainPg(store, a!, 'run-a');
+      await openPlainPg(store, b!, 'run-b');
+      expect(await pa.call('keyword_search', { query: a!.marker })).toContain(a!.artifact_slug);
+      expect(await pa.call('keyword_search', { query: b!.marker })).toBe('No results.');
+      expect(await pa.call('vector_search', { query: b!.question, limit: 25 })).not.toContain(b!.artifact_slug);
+    } finally {
+      await store.db.close();
+    }
+  }, 60_000);
+});

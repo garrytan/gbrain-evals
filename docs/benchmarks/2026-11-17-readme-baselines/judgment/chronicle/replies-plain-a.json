@@ -1,0 +1,434 @@
+[
+  {
+    "page": "cal/evt-0000",
+    "text": "2026-04-14 | Elena sync (01:00–01:30 UTC) with Amara Okafor and Elena Rossi",
+    "error": null,
+    "input_tokens": 150,
+    "output_tokens": 38,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "cal/evt-0001",
+    "text": "2026-04-14 | Priya sync (03:00–03:30 UTC) with Amara Okafor and Priya Patel at Halfway HQ",
+    "error": null,
+    "input_tokens": 173,
+    "output_tokens": 47,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "cal/evt-0002",
+    "text": "2026-04-14 | Hannah sync (05:00–05:30 UTC) with Amara Okafor and Hannah Liu",
+    "error": null,
+    "input_tokens": 147,
+    "output_tokens": 36,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "cal/evt-0003",
+    "text": "2026-04-14 | Bill sync (07:00–07:30 UTC) with Amara Okafor and Bill Hart",
+    "error": null,
+    "input_tokens": 147,
+    "output_tokens": 36,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "cal/evt-0004",
+    "text": "2026-04-15 | Diego sync (01:00–01:30 UTC) with Amara Okafor and Diego Alvarez at Halfway HQ",
+    "error": null,
+    "input_tokens": 166,
+    "output_tokens": 43,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "cal/evt-0005",
+    "text": "2026-04-15 | Ravi sync (03:00–03:30 UTC) with Amara Okafor and Ravi Gupta",
+    "error": null,
+    "input_tokens": 157,
+    "output_tokens": 42,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "cal/evt-0006",
+    "text": "2026-04-15 | Tomoko sync with Amara Okafor and Tomoko Sato (05:00–05:30 UTC)",
+    "error": null,
+    "input_tokens": 157,
+    "output_tokens": 42,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "cal/evt-0007",
+    "text": "2026-04-15 | Diego sync (07:00–07:30 UTC) with Amara Okafor and Diego Alvarez",
+    "error": null,
+    "input_tokens": 150,
+    "output_tokens": 38,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "cal/evt-0008",
+    "text": "2026-04-16 | Marcus sync (01:00–01:30 UTC) with Amara Okafor and Marcus Reid",
+    "error": null,
+    "input_tokens": 147,
+    "output_tokens": 36,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "cal/evt-0009",
+    "text": "2026-04-16 | Kofi sync meeting (03:00–03:30 UTC) with Amara Okafor and Kofi Mensah at Halfway HQ",
+    "error": null,
+    "input_tokens": 173,
+    "output_tokens": 48,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "cal/evt-0010",
+    "text": "2026-04-16 | Mina sync (05:00–05:30 UTC) with Amara Okafor and Mina Kapoor",
+    "error": null,
+    "input_tokens": 157,
+    "output_tokens": 42,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "cal/evt-0011",
+    "text": "2026-04-16 | Priya sync (07:00–07:30 UTC) with Amara Okafor and Priya Patel",
+    "error": null,
+    "input_tokens": 157,
+    "output_tokens": 42,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "cal/evt-0012",
+    "text": "2026-04-17 | Elena sync (01:00–01:30 UTC) with Amara Okafor and Elena Rossi",
+    "error": null,
+    "input_tokens": 150,
+    "output_tokens": 38,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "cal/evt-0013",
+    "text": "2026-04-17 | Anna sync (03:00–03:30 UTC) with Amara Okafor and Anna Petrov",
+    "error": null,
+    "input_tokens": 150,
+    "output_tokens": 38,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "cal/evt-0014",
+    "text": "2026-04-17 | Lena sync (05:00–05:30 UTC) with Amara Okafor and Lena Park",
+    "error": null,
+    "input_tokens": 154,
+    "output_tokens": 40,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "cal/evt-0015",
+    "text": "2026-04-17 | Nadia sync (07:00–07:30 UTC) with Amara Okafor and Nadia Freeman",
+    "error": null,
+    "input_tokens": 154,
+    "output_tokens": 40,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "cal/evt-0016",
+    "text": "2026-04-18 | Priya sync (01:00–01:30 UTC) with Amara Okafor and Priya Patel at Halfway HQ",
+    "error": null,
+    "input_tokens": 173,
+    "output_tokens": 47,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "cal/evt-0017",
+    "text": "2026-04-18 | Nadia sync (03:00–03:30 UTC) with Amara Okafor and Nadia Freeman",
+    "error": null,
+    "input_tokens": 154,
+    "output_tokens": 40,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "cal/evt-0018",
+    "text": "2026-04-18 | Lena sync (05:00–05:30 UTC) with Amara Okafor and Lena Park",
+    "error": null,
+    "input_tokens": 154,
+    "output_tokens": 40,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "cal/evt-0019",
+    "text": "2026-04-18 | Diego sync (07:00–07:30 UTC) with Amara Okafor and Diego Alvarez",
+    "error": null,
+    "input_tokens": 150,
+    "output_tokens": 38,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "conversations/slack-deal-flow-2026-04-13",
+    "text": "2026-04-13 | Priya Patel got off a call with Nexus Robotics CFO — Q1 revenue up 40% QoQ, full deck expected by EOD next day\n2026-04-13 | Marcus Reid ran preliminary numbers on Nexus Robotics Series A ask, flagging aggressive burn rate relative to current MRR\n2026-04-13 | Amara Okafor reviewed Nexus Robotics deck and proposed slotting them in for a partner meeting next week\n2026-04-13 | Nadia Freeman flagged churn signals in Axon Labs cohort data ahead of partner meeting Thursday\n2026-04-13 | Lena Park looped in Jordan Park for technical due diligence on infra layer; he flagged concerns about Kubernetes deployment\n2026-04-13 | Amara Okafor requested Vesta Robotics deck from Marcus Reid to review before next day's partner meeting",
+    "error": null,
+    "input_tokens": 556,
+    "output_tokens": 228,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "conversations/slack-deal-flow-2026-04-14",
+    "text": "2026-04-14 | Canopy Robotics seed deck received; unit economics reviewed\n2026-04-14 | First pass completed on Jordan Park intro deck\n2026-04-14 | Looped back with Jordan Park on Nexus term sheet; aligned on pro-rata but board seat language needs revision before sending\n2026-04-14 | Meridian Robotics Series A deck pulled and comps run\n2026-04-14 | Quantum Materials deck reviewed; customer concentration red flags noted\n2026-04-14 | Luminos sync pushed to 10:30\n2026-04-14 | Terraform Industries closed Series B at $180M valuation\n2026-04-14 | Helios Robotics unit economics modeled overnight; go-to-market timeline concerns flagged\n2026-04-14 | Call with Helios Robotics founder; go-to-market noted as underbaked\n2026-04-14 | Call with Canopy Robotics founders; bridge round discussed, close target end of month\n2026-04-14 | Jordan Park looped in for technical DD on infrastructure play; findings expected by Thursday\n2026-04-14 | Helios Robotics flagged for partner review this week\n2026-04-14 | Phantom Robotics numbers re-run; moved to partner review\n2026-04-14 | Mina Kapoor looped in for technical DD on ML claims; findings expected by end of week\n2026-04-14 | Bill Hart looped in to review IP portfolio before founder call\n2026-04-14 | Kuiper Labs reference calls completed; two former customers flagged implementation timelines running 2-3x longer than quoted\n2026-04-14 | Priya Patel and Elena Rossi aligned on moving forward with technical DD; data room access to be arranged\n2026-04-14 | Call with Vertex Robotics CTO; moved to bullish, deep dive to be scheduled",
+    "error": null,
+    "input_tokens": 1441,
+    "output_tokens": 467,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "conversations/slack-deal-flow-2026-04-15",
+    "text": "2026-04-15 | Sarah Chen preparing revised term sheet and diligence checklist for Phantom Robotics, due EOD next day\n2026-04-15 | Kofi Mensah flagged Helios Robotics in the pipeline, wants to dig deeper on unit economics and manufacturing partnerships\n2026-04-15 | Amara Okafor completed second pass on Nexus Robotics deck, found unit economics stronger than initially thought\n2026-04-15 | Ravi Gupta flagged Nextera Robotics valuation as steep but noted strong founding team experience in industrial automation\n2026-04-15 | Diego Alvarez offered to contact his source at Helios Robotics' Series A lead to assess runway situation\n2026-04-15 | Amara Okafor planned to reach out directly to a founder (flagged by Jordan Park) to set up a call\n2026-04-15 | Tomoko Sato had a call with Cognivault founder, who is asking for $45M pre-money valuation\n2026-04-15 | Priya Patel had a call with Terraform Labs founders, who reported 40% MoM growth and are targeting Series A close by end of May\n2026-04-15 | Amara Okafor requested industrial automation comps be pulled for Helios Robotics ahead of Thursday sync\n2026-04-15 | Bill Hart reviewed Quantum Circuit financials, noted high burn rate but strong technology moat\n2026-04-15 | Ravi Gupta reviewed Phantom Robotics financials, flagging burn rate higher than deck suggested\n2026-04-15 | Amara Okafor requested Sarah Chen pull the latest Vela Therapeutics deck into the deal room\n2026-04-15 | Lena Park pulled Quillit deck and ran comps, noting strong ARR growth but long CAC payback period\n2026-04-15 | Kofi Mensah circled back with Verda Robotics on revised term sheet, noting flexibility on board seat structure\n2026-04-15 | Amara Okafor and Tomoko Sato aligned on scheduling a partner meeting for an unnamed company (Tomoko bullish on technical approach)\n2026-04-15 | Tomoko Sato had a call with Greenloop Logistics, who are moving fast on Series A; wants deeper look at unit economics\n2026-04-15 | Sarah Chen looped in Ravi Gupta over concerns about unit economics for an unnamed company ahead of a second meeting\n2026-04-15 | Amara Okafor spoke with Anna Petrov, who flagged burn rate concerns on an unnamed company; sync planned for next day",
+    "error": null,
+    "input_tokens": 1449,
+    "output_tokens": 645,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "conversations/slack-deal-flow-2026-04-16",
+    "text": "2026-04-16 | Sarah Chen flagged Nutrigenix for deeper dive based on clinical trial data; offered to prep memo for Monday meeting\n2026-04-16 | Priya Patel asked Anna Petrov to pull customer retention metrics from last three quarters before partner meeting\n2026-04-16 | Amara Okafor noted Anna Petrov flagged concerns about a company's burn rate; suggested digging in before partner meeting\n2026-04-16 | Diego Alvarez found undisclosed dilution from bridge round in cap table review; asked about flagging in memo\n2026-04-16 | Sarah Chen noted Quantum Mesh metrics improved since pass (revenue up 40%, two enterprise contracts closed); suggested second look\n2026-04-16 | Amara Okafor flagged Nimbus Robotics as having potential but needing clearer path to unit economics; requested latest financials\n2026-04-16 | Elena Rossi reported Nexus Robotics technical due diligence came back stronger than expected; requested 30 min with Amara to discuss term sheet\n2026-04-16 | Lena Park noted Quilltree has strong NRR but CAC payback longer than claimed; offered to flag for Monday IC prep\n2026-04-16 | Amara Okafor proposed moving Terraform Dynamics to next stage; requested deep dive with founding team early next week\n2026-04-16 | Anna Petrov reported Helios Robotics has solid revenue growth but higher burn rate than disclosed; offered to flag for Monday partners meeting\n2026-04-16 | Kofi Mensah relayed Nexus Robotics founder pushing for term sheet by end of week; requested sync with Amara on valuation\n2026-04-16 | Amara Okafor reported bullish on Nimbus Robotics technical moat after CTO call; proposed adding to IC agenda next week\n2026-04-16 | Nadia Freeman found Quantex unit economics stronger than initially thought; suggested deeper dive with CFO next week\n2026-04-16 | Ravi Gupta requested latest Vela Robotics financials before reconnecting with founders next week\n2026-04-16 | Amara Okafor found stronger unit economics on further review; proposed looping in Priya for technical diligence before partner meeting\n2026-04-16 | Mina Kapoor noted Nile Analytics has solid customer retention but red flags in sales cycle length; offered to walk through notes\n2026-04-16 | Bill Hart reported Quantum Yield revised deck addresses prior concerns; ready to schedule partner meeting\n2026-04-16 | Amara Okafor reported Luminex founders open to bridge round structure; requested sync with Ravi Gupta on terms before Friday deadline",
+    "error": null,
+    "input_tokens": 1460,
+    "output_tokens": 661,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "conversations/slack-deal-flow-2026-04-17",
+    "text": "2026-04-17 | Kofi Mensah noted timeline concerns and suggested syncing with Anna Petrov about burn rate reservations from diligence\n2026-04-17 | Ravi Gupta flagged NovaTech for priority review based on solid Series A metrics\n2026-04-17 | Amara Okafor circled back on Nexus Robotics materials, noted stronger unit economics, proposed syncing to discuss partner review\n2026-04-17 | Hannah Liu looped in Tomoko Sato to compare traction metrics before partner meeting\n2026-04-17 | Diego Alvarez flagged Synthesis Bio's Series A deck as having solid unit economics worth a deeper look\n2026-04-17 | Amara Okafor looped in Nadia Freeman for regulatory landscape insights and requested compliance deep dive notes\n2026-04-17 | Anna Petrov pulled Cobalt Robotics deck for comparison on warehouse automation metrics\n2026-04-17 | Sarah Chen requested cap table docs from data room ahead of Monday's partner meeting\n2026-04-17 | Amara Okafor recommended adding Nexus Robotics to Monday's pipeline review\n2026-04-17 | Elena Rossi recommended moving Meridian Robotics to partner review based on strong unit economics call\n2026-04-17 | Hannah Liu reported Quantum Circuits founder is open to a call next Tuesday\n2026-04-17 | Amara Okafor raised concerns about Meridian Robotics' aggressive Q3 go-to-market timeline after founder call\n2026-04-17 | Ravi Gupta shared updated market comp analysis showing strong expansion metrics for Nile\n2026-04-17 | Mina Kapoor looped in Ravi Gupta for context on founding team from seed round conversations\n2026-04-17 | Amara Okafor requested latest retention numbers from Jordan Park ahead of tomorrow's call",
+    "error": null,
+    "input_tokens": 1216,
+    "output_tokens": 463,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "conversations/slack-halfway-partners-2026-04-13",
+    "text": "2026-04-13 | Halfway Capital Fund III completed its first close at $85M (targeting $150M final close by end of Q3)\n2026-04-13 | Sarah Chen planned to circle back with Amara Okafor after her board meeting the following day to align on next steps before sending a term sheet\n2026-04-13 | Nadia Freeman suggested scheduling a deeper dive with Amara Okafor before the next partner meeting\n2026-04-13 | Amara Okafor indicated comfort with proposed terms and aimed for a Thursday close if legal could turn things around\n2026-04-13 | Marcus Reid noted Lena Park had flagged timeline concerns and suggested pushing for better terms by waiting through Q2\n2026-04-13 | Kofi Mensah requested Amara Okafor pull together updated cap table analysis for Vela Optics bridge round ahead of Thursday's partner meeting",
+    "error": null,
+    "input_tokens": 521,
+    "output_tokens": 218,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "conversations/slack-halfway-partners-2026-04-14",
+    "text": "2026-04-14 | Amara Okafor pushed to prioritize Tempo Health follow-on before end of quarter\n2026-04-14 | Ravi Gupta suggested holding off on term sheet until Greenloop Packaging situation is resolved\n2026-04-14 | Lena Park agreed to prep a risk assessment before Thursday's call\n2026-04-14 | Amara Okafor reviewed Armada Logistics deck and proposed moving to term sheet\n2026-04-14 | Elena Rossi reported Nexus Robotics is ahead of projections on Series B metrics and requested sync with Amara on follow-on\n2026-04-14 | Kofi Mensah planned to sync with Amara after her board meetings to regroup on term sheet revisions Friday\n2026-04-14 | Amara Okafor leaned toward $2.5M allocation, requested Elena's competitive landscape analysis before committing\n2026-04-14 | Bill Hart flagged timeline concerns and noted Sarah Chen is pulling updated projections for Thursday sync\n2026-04-14 | Hannah Liu flagged need to address Amara's governance structure concerns before finalizing term sheet\n2026-04-14 | Amara Okafor reported Priya Patel raised concerns about liquidation preferences in Helios Series A terms\n2026-04-14 | Lena Park called for revisiting allocation before Thursday's meeting\n2026-04-14 | Tomoko Sato flagged non-standard liquidation preference clauses in Cognivue term sheet flagged by legal\n2026-04-14 | Amara Okafor leaned toward passing on Tideline Robotics due to unit economics and go-to-market concerns\n2026-04-14 | Kofi Mensah requested a follow-up call with DataMesh founders before committing to bridge terms\n2026-04-14 | Diego Alvarez flagged he would be 15 minutes late to LP call prep due to last-minute Terraform Industries conflict\n2026-04-14 | Amara Okafor proposed moving forward with term sheet for Nexus Labs by end of week\n2026-04-14 | Kofi Mensah expressed support for moving Pendulum to due diligence\n2026-04-14 | Lena Park flagged IP concerns raised by Daria during legal review of Vela Bio",
+    "error": null,
+    "input_tokens": 1435,
+    "output_tokens": 568,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "conversations/slack-halfway-partners-2026-04-15",
+    "text": "2026-04-15 | Kenji confirmed comfortable moving forward with term sheet; Amara to send final version next morning\n2026-04-15 | Anna flagged need to discuss Cognify's aggressive burn rate before Thursday sync\n2026-04-15 | Kofi planned to sync with Amara to pressure test Cognify's unit economics\n2026-04-15 | Amara completed review of Notion follow-on materials; flagged need to dig into enterprise retention before committing to pro-rata\n2026-04-15 | Jordan planned to sync with Amara to try to move up diligence calls before next week's board meeting\n2026-04-15 | Nadia planned to sync with Amara to finalize position before Thursday call\n2026-04-15 | Amara flagged she will be dialing into LP meeting from Lagos next week with shifted office hours\n2026-04-15 | Kofi got off call with Amara flagging concerns about Nexus Robotics term sheet liquidation preferences for afternoon partners meeting\n2026-04-15 | Diego's sensitivity analysis showed Nexus Robotics path to profitability extends to Q3 2028 under realistic assumptions\n2026-04-15 | Amara raised questions about burn discipline and planning quality in context of a company's fast return for more funding\n2026-04-15 | Jordan planned to circle back with Terraflow founders next week on Series B expectations before committing to follow-on\n2026-04-15 | Sarah got off call with Synthesis AI founders; impressed with technical depth but wanted Amara's read on market timing\n2026-04-15 | Amara completed reference check on Tomoko Sato; two former colleagues gave glowing feedback on operational instincts\n2026-04-15 | Sarah planned to reach out to Anna to schedule follow-up call on go-to-market timeline before finalizing terms\n2026-04-15 | Tomoko flagged concerns about Phantom Robotics' optimistic burn rate assumptions ahead of Friday vote\n2026-04-15 | Amara reviewed Prism Analytics materials and leaned toward passing due to unit economics not holding up\n2026-04-15 | Lena got off call with Tomoko flagging Meridian burn rate concerns ahead of Thursday IC meeting\n2026-04-15 | Mira Patel confirmed for Thursday deep dive on Stratos infrastructure roadmap; Elena to send calendar invite next morning",
+    "error": null,
+    "input_tokens": 1391,
+    "output_tokens": 576,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "conversations/slack-halfway-partners-2026-04-16",
+    "text": "2026-04-16 | Amara Okafor confirmed with Sarah Chen that they are comfortable moving forward with the term sheet as-is, with diligence to close by end of week and docs to legal Monday\n2026-04-16 | Marcus Reid raised concern that if Vertex cannot close their Series B by end of Q2, the team should revisit their position before the next board meeting\n2026-04-16 | Elena Rossi said she wants to see stronger unit economics from Phantom Neuro before committing to lead, but is open to a second look if they provide updated customer acquisition costs next quarter\n2026-04-16 | Amara Okafor flagged an upcoming meeting with Synth Bio founders the next morning to discuss bridge round terms\n2026-04-16 | Hannah Liu planned to sync with Amara to explore pushing the diligence deadline by a week\n2026-04-16 | Tomoko Sato reported that Marcus is confident the Aerion technical review can close by end of week if API documentation is received that day\n2026-04-16 | Amara Okafor reviewed Helios Robotics materials and proposed prioritizing founder references before the next partner meeting\n2026-04-16 | Marcus Reid suggested syncing with Amara before the Friday call to align on term sheet revisions, noting her thoughts on liquidation preferences\n2026-04-16 | Mina Kapoor completed a diligence call with Phantom AI's CTO, found technical architecture solid but raised concerns about their go-to-market timeline, and requested an afternoon sync before the next day's partner meeting\n2026-04-16 | Amara Okafor proposed moving Nexus Robotics to the next partners meeting agenda given their accelerating Series A timeline and an end-of-month decision deadline\n2026-04-16 | Elena Rossi flagged concerns about Greenfield Robotics term sheet liquidation preferences and requested a sync before Monday's call\n2026-04-16 | Anna Petrov planned to sync with Amara the next day to finalize their position before a board call\n2026-04-16 | Amara Okafor reported that Elena Rossi is aligned on the timeline and set a goal to have a term sheet drafted by end of week\n2026-04-16 | Diego Alvarez announced he would be offline the next day for a family event and asked the team to loop in Amara on any urgent Stratos deal matters\n2026-04-16 | Sarah Chen planned to sync with legal the next day to have an updated term sheet ready before a founder call on Friday\n2026-04-16 | Amara Okafor reported increased confidence in Meridian Labs after reviewing their technical docs and proposed a 30-minute alignment meeting before the Friday founder call\n2026-04-16 | Elena Rossi planned to sync with Amara the next day to finalize their position on the board seat question before the Friday call\n2026-04-16 | Anna Petrov planned to sync with Kofi Mensah the next day to get clearer answers on their manufacturing roadmap before committing to next steps",
+    "error": null,
+    "input_tokens": 1411,
+    "output_tokens": 725,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "conversations/slack-halfway-partners-2026-04-17",
+    "text": "2026-04-17 | Amara Okafor plans to move forward with Cognito Labs term sheet early next week, asks for concerns by EOD Friday\n2026-04-17 | Kofi Mensah plans to sync with Amara to pressure-test revenue assumptions\n2026-04-17 | Nadia Freeman plans to sync with Mina Kapoor to get clarity on runway assumptions before Wednesday call\n2026-04-17 | Amara Okafor flagged Archivo's enterprise data governance approach as more differentiated than initially thought, suggested deeper dive at Monday's IC meeting\n2026-04-17 | Bill Hart plans to sync with Amara on due diligence gaps before Monday, focused on technical audit scope\n2026-04-17 | Lena Park flagged Kollektiv deal movement — lead investor reached out about accelerating timeline\n2026-04-17 | Amara Okafor proposed scheduling a sync with Remedy founders before end of week to review Q1 metrics and path to profitability\n2026-04-17 | Elena Rossi raised concern that Phantom AI's go-to-market is underbaked despite strong technical team\n2026-04-17 | Mina Kapoor flagged that Qubit's valuation feels stretched even accounting for government contract pipeline\n2026-04-17 | Amara Okafor reported strong Q1 numbers and ahead-of-schedule carbon capture milestones from Terraform Industries, proposed greenlighting follow-on by end of month\n2026-04-17 | Jordan Park flagged need to discuss reserve strategy for Tempo AI and Quilted, both likely raising bridge rounds in Q3\n2026-04-17 | Kofi Mensah spoke with Marcus Chen about Tideline term sheet — pushback on pro-rata rights, possible compromise on board observer seat\n2026-04-17 | Amara Okafor proposed greenlighting Prisma Health follow-on based on strong Q1 numbers and founder-friendly round terms\n2026-04-17 | Hannah Liu plans to loop in Derek on technical diligence before committing to next steps\n2026-04-17 | Marcus Reid flagged high customer concentration risk — top 3 accounts ~40% of ARR",
+    "error": null,
+    "input_tokens": 1251,
+    "output_tokens": 529,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "conversations/slack-ops-2026-04-13",
+    "text": "2026-04-13 | Marcus Reid asked for confirmation that updated financials from Stratos and Beacon Health were available for the Q1 portfolio review docs, noting Amara Okafor wanted everything finalized by EOD Wednesday\n2026-04-13 | Amara Okafor said she would loop in Marcus (Chen) the next day to sort out the LP reporting timeline before the quarterly call\n2026-04-13 | Hannah Liu requested an updated cap table from Bill Hart for the Meridian deal ahead of the next day's partner meeting\n2026-04-13 | Sarah Chen reported that Halfway Capital's Q1 expenses came in 12% under budget, with a full breakdown to be ready for the next day's ops sync\n2026-04-13 | Amara Okafor said she would sync with Priya Sharma the next morning to sort wire instructions before EOD\n2026-04-13 | Kofi Mensah pushed updated wire instructions to the shared drive and offered to walk treasury through the format changes the next day",
+    "error": null,
+    "input_tokens": 502,
+    "output_tokens": 242,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "conversations/slack-ops-2026-04-14",
+    "text": "2026-04-14 | Nadia Freeman pushed LP reporting template updates to the shared drive\n2026-04-14 | Amara Okafor asked Jordan Park to pull Q1 fund performance summary before LP call, needed by 9am ET\n2026-04-14 | Mina Kapoor finished reconciling Q1 LP reports and uploaded them to the shared drive, flagging Bodhi Fund distributions for Amara's review\n2026-04-14 | Bill Hart reported Q1 fund admin costs tracking ~12% under budget\n2026-04-14 | Amara Okafor asked Ravi Gupta to pull updated LP reporting template before 9am sync\n2026-04-14 | Bill Hart began updating the Q2 LP Report template, draft expected by EOD next day\n2026-04-14 | Anna Petrov announced she would run the weekly ops sync in Amara's absence due to Amara traveling for Cortex Robotics board meeting\n2026-04-14 | Amara Okafor requested a sync with Sarah on wire timing for Cognify before EOD\n2026-04-14 | Jordan Park received updated cap table from Verde Climate Solutions and flagged a discrepancy in the Series A share count\n2026-04-14 | Anna Petrov planned to sync with Amara to get sign-off on updated LP reporting template before Friday send\n2026-04-14 | Amara Okafor requested latest fund admin reconciliation pulled from Carta before EOD ahead of Thursday LP call\n2026-04-14 | Elena Rossi began updating LP reporting template based on prior quarterly review feedback, draft to be shared by EOD next day\n2026-04-14 | Marcus Reid reported two LPs still outstanding on Q2 fund admin docs, following up to wrap by EOW\n2026-04-14 | Amara Okafor asked Anna Petrov to confirm wire instructions went out before EOD\n2026-04-14 | Mina Kapoor completed compliance check for Q1 financials with no flags\n2026-04-14 | Tomoko Sato received updated cap table from Quilr and planned to upload to data room that night\n2026-04-14 | Amara Okafor noted Cloudline had closed a Series B and questioned the speed given their recent Series A\n2026-04-14 | Mina Kapoor finished reconciling Q1 numbers with Kira Johnson, final report to be delivered by EOD next day",
+    "error": null,
+    "input_tokens": 1393,
+    "output_tokens": 591,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "conversations/slack-ops-2026-04-15",
+    "text": "2026-04-15 | Anna Petrov finished final round of LP data room updates and asked Elena Rossi to double-check the Q1 portfolio summary\n2026-04-15 | Amara Okafor finished finalizing the Glint term sheet draft\n2026-04-15 | Kofi Mensah finished final reconciliation on the Q1 fund admin report, aligned with Apex\n2026-04-15 | Bill Hart announced he will run the Q2 ops review sync instead of Amara, who is tied up with the Phantom board meeting\n2026-04-15 | Amara Okafor planned to loop in Jamie to sort wire instructions before EOD\n2026-04-15 | Anna Petrov confirmed Synthesis Bio funds cleared at 6:47am PT with First Republic\n2026-04-15 | Marcus Reid flagged discrepancies in Halfway Capital Q1 travel reimbursements\n2026-04-15 | Amara Okafor planned to loop in Marcus to wrap up Q1 fund admin reconciliation before LP call Friday\n2026-04-15 | Elena Rossi requested updated LP reporting template from Marcus Reid for quarterly call\n2026-04-15 | Priya Patel asked jordan-park to confirm Q2 capital call wire instructions went out\n2026-04-15 | Amara Okafor planned to loop in Derek to finish Q1 fund admin reconciliation by EOD next day\n2026-04-15 | Lena Park finished reconciling Q1 numbers and planned to push updated spreadsheet to shared drive\n2026-04-15 | Priya Patel looped in Mina Kapoor on LP reporting updates and requested Q1 metrics doc\n2026-04-15 | Amara Okafor announced she will be OOO tomorrow for a Velar Robotics board meeting\n2026-04-15 | Elena Rossi asked Priya Patel to confirm wire for Chiron seed extension went out\n2026-04-15 | Anna Petrov asked Marcus Reid to pull updated cap table for Greenloop before tomorrow's call\n2026-04-15 | Amara Okafor planned to loop in Sarah to align on new expense approval workflow\n2026-04-15 | Kofi Mensah asked Mina Kapoor to check if Helios Robotics tranche wire instructions were updated in the system",
+    "error": null,
+    "input_tokens": 1419,
+    "output_tokens": 572,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "conversations/slack-ops-2026-04-16",
+    "text": "2026-04-16 | Diego Alvarez asked Ravi Gupta to pull latest portfolio company headcount numbers for LP update deck due EOW\n2026-04-16 | Amara Okafor asked Elena Rossi to pull latest numbers before sync to align on runway projections\n2026-04-16 | Bill Hart flagged in system notes that Axiom Partners should be pre-cleared for expedited onboarding\n2026-04-16 | Sarah Chen reported Q2 budget is tracking 8% under forecast and will drop full breakdown in shared folder by EOD\n2026-04-16 | Amara Okafor said she will loop in legal before EOD on compliance\n2026-04-16 | Mina Kapoor announced she will run Q2 board deck reviews while Amara is out, with portfolio updates due EOD Thursday\n2026-04-16 | Kofi Mensah asked lena-park to pull updated cap table for Forma before 10am sync\n2026-04-16 | Amara Okafor asked Ravi Gupta to summarize current fund admin bandwidth ahead of Q2 close\n2026-04-16 | Diego Alvarez confirmed Canopy Robotics wire cleared and sent confirmation to Amara\n2026-04-16 | Elena Rossi looped in Nadia Freeman on wire instructions pending treasury sign-off\n2026-04-16 | Amara Okafor approved revised Series A docs and cleared wire pending legal confirmation\n2026-04-16 | Anna Petrov confirmed updated wire instructions for Cognify Labs verified with their CFO\n2026-04-16 | Tomoko Sato confirmed Q1 narrative draft can be pushed to Monday without impacting board deck\n2026-04-16 | Amara Okafor proposed syncing with Derek tomorrow to finalize wire instructions before Quartzy close\n2026-04-16 | Ravi Gupta uploaded updated LP commitment schedule to shared drive\n2026-04-16 | Nadia Freeman asked Kofi Mensah for updated fund admin contact list for Q2 LP reporting package\n2026-04-16 | Amara Okafor asked for confirmation on status of updated DocuSign templates due EOD tomorrow\n2026-04-16 | Tomoko Sato completed final reconciliation; wire expected to hit Meridian's account next morning",
+    "error": null,
+    "input_tokens": 1322,
+    "output_tokens": 564,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "conversations/slack-ops-2026-04-17",
+    "text": "2026-04-17 | Marcus Reid flagged inconsistencies in Q1 LP Report metrics needing Amara's sign-off before distribution\n2026-04-17 | Amara Okafor completed Plexora term sheet review, flagged liquidation preference items for legal discussion\n2026-04-17 | Mina Kapoor processed and uploaded Q1 LP reports to shared drive\n2026-04-17 | Ravi Gupta completed Q1 compliance review; found Stratos needs updated cap table by end of week\n2026-04-17 | Amara Okafor reviewed LP Agreement v3 and confirmed carry allocation is correct; moving to signatures\n2026-04-17 | Anna Petrov reported 7 of 12 portfolio companies responded to Q1 reporting requests; following up with remaining five\n2026-04-17 | Lena Park updated portfolio dashboard with Stratos and Mira Health revenue numbers; still awaiting two others\n2026-04-17 | Amara Okafor announced she will be out of office Monday for a Vela Systems board meeting\n2026-04-17 | Anna Petrov completed final Q1 investor reporting reconciliations; queued for review before Monday send\n2026-04-17 | Sarah Chen looped in Anna Petrov regarding bank wire transfer turnaround context\n2026-04-17 | Amara Okafor followed up requesting confirmation that SVB processed the Meridian tranche before COB the prior day\n2026-04-17 | Bill Hart confirmed wire transfer for Phantom AI cleared\n2026-04-17 | Diego Alvarez requested Q1 expense reports from Mina Kapoor for pre-partner meeting reconciliation\n2026-04-17 | Amara Okafor looped in Mina Kapoor to resolve signing workflow before EOD\n2026-04-17 | Ravi Gupta confirmed wire sent for Photon Bio bridge round; expected to arrive Monday",
+    "error": null,
+    "input_tokens": 1185,
+    "output_tokens": 471,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "conversations/slack-random-2026-04-13",
+    "text": "2026-04-13 | Amara Okafor recommended a coffee shop with a pour-over bar on Valencia\n2026-04-13 | Sarah Chen asked who is bringing their dog to the office the next day\n2026-04-13 | Hannah Liu told Tomoko Sato the taco truck on 3rd is better than the place they visited\n2026-04-13 | Amara Okafor conceded the pineapple pizza debate but defended her stance on the break room coffee\n2026-04-13 | Mina Kapoor noted that Anna Petrov had predicted something was off the week before\n2026-04-13 | Diego Alvarez argued that pineapple on pizza is actually good",
+    "error": null,
+    "input_tokens": 466,
+    "output_tokens": 174,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "conversations/slack-random-2026-04-14",
+    "text": "2026-04-14 | Amara Okafor admitted defeat on a documentary being better than expected, still skeptical about the sequel\n2026-04-14 | Lena Park called out Marcus Reid for falling asleep during a documentary screening the previous month\n2026-04-14 | Sarah Chen wrapped up portfolio review work and asked if anyone was watching a new sci-fi series on Netflix\n2026-04-14 | Amara Okafor confirmed she is joining Nadia Freeman's hiking trip next month\n2026-04-14 | Bill Hart thanked Hannah Liu for a restaurant recommendation he used for his anniversary dinner\n2026-04-14 | Tomoko Sato reported trying the ramen Priya Patel recommended the previous week\n2026-04-14 | Amara Okafor revealed she is the one who keeps restocking the oat milk at the office\n2026-04-14 | Nadia Freeman's cat knocked coffee onto her keyboard during a portfolio call\n2026-04-14 | Marcus Reid finished reading \"The Hard Thing About Hard Things\" and found it changed how he thinks about founder conversations\n2026-04-14 | Elena Rossi noted that Amara Okafor posted an article about founder mental health in #general\n2026-04-14 | Amara Okafor tried a cold plunge over the weekend and is now sold on it\n2026-04-14 | Sarah Chen's succulent fell off her desk when she sneezed\n2026-04-14 | Sarah Chen asked who would bring good snacks to the offsite next week\n2026-04-14 | Bill Hart mass-deleted around 200 unread emails and declared inbox zero",
+    "error": null,
+    "input_tokens": 1209,
+    "output_tokens": 398,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "conversations/slack-random-2026-04-15",
+    "text": "2026-04-15 | Amara Okafor got back from dinner and defended pineapple on pizza\n2026-04-15 | Elena Rossi stayed up late finishing board deck reviews\n2026-04-15 | Anna Petrov returned from a late night debugging session\n2026-04-15 | Bill Hart checked in from an early morning gym session and noted an incredible sunrise\n2026-04-15 | Amara Okafor offered to do a group Blue Bottle coffee run around 10:30\n2026-04-15 | Lena Park signed up for a ceramics class with her first session that evening\n2026-04-15 | Priya Patel recommended a new Ethiopian place on Valencia to Hannah Liu\n2026-04-15 | Tomoko Sato signed up for a pottery class\n2026-04-15 | Ravi Gupta recommended the ramen place on 18th, praising their spicy miso\n2026-04-15 | Kofi Mensah recalled Nadia Freeman explaining blockchain to her mom over FaceTime in a hotel lobby",
+    "error": null,
+    "input_tokens": 1190,
+    "output_tokens": 263,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "conversations/slack-random-2026-04-16",
+    "text": "2026-04-16 | Elena Rossi ordered an air fryer\n2026-04-16 | Sarah Chen working late on Q1 reports\n2026-04-16 | Kofi Mensah watched a documentary about the early days of Stripe\n2026-04-16 | Amara Okafor and Lena Park discussed a podcast episode on founder burnout, with plan to share it in the founders Slack\n2026-04-16 | Nadia Freeman suggested a coffee run to the nearby oat milk latte spot\n2026-04-16 | Marcus Reid flagged a half-eaten burrito left in the third floor fridge since Monday\n2026-04-16 | Lena Park noted Marcus Reid owes everyone coffee after a demo disaster the previous week\n2026-04-16 | Diego Alvarez mentioned an upcoming Austin trip next month",
+    "error": null,
+    "input_tokens": 1208,
+    "output_tokens": 205,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "conversations/slack-random-2026-04-17",
+    "text": "2026-04-17 | Mina Kapoor working late on deck for LP meeting\n2026-04-17 | Kofi Mensah plans to take kids hiking on a new trail in Marin over the weekend\n2026-04-17 | Sarah Chen discovered a ramen spot near the office and proposed a team lunch next week\n2026-04-17 | Nadia Freeman finished a 1000-piece puzzle over the weekend; her cat knocked half of it off the table\n2026-04-17 | Ravi Gupta recommended a lamb kofta place on Valencia Street, having visited the day before\n2026-04-17 | Amara Okafor shared a podcast episode on founder mental health with portfolio CEOs",
+    "error": null,
+    "input_tokens": 970,
+    "output_tokens": 175,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "meetings/mtg-0000",
+    "text": "2026-04-14 | Amara Okafor and Elena Rossi met to review Meridian Robotics Q1 2026 performance and discuss Series B timing\n2026-04-14 | Meridian Robotics closed Q1 2026 with $2.1M ARR, up 34% from Q4 2025\n2026-04-14 | Meridian Robotics customer retention reported at 94%\n2026-04-14 | Meridian Robotics CAC payback period improved to 14 months (down from 18 months), attributed to Thornfield Industrial channel partnership\n2026-04-14 | Amara and Elena agreed to begin Series B conversations in Q3 2026\n2026-04-14 | Elena disclosed inbound interest from Northvane Partners for Series B\n2026-04-14 | Amara offered to introduce Elena to Marcus Reid at Arcline Ventures\n2026-04-14 | Meridian Robotics engineering headcount reported at 23, with plans to hire 4 more by end of Q2 2026\n2026-04-14 | Elena flagged VP Engineering search is taking longer than expected\n2026-04-14 | Amara agreed to send intro email to Marcus Reid by Friday (2026-04-17)\n2026-04-21 | Elena Rossi to share updated investor deck draft (due date set)\n2026-04-14 | Amara agreed to pull VP Eng candidates from Halfway Capital talent network\n2026-05-01 | Follow-up meeting scheduled for early May to review Series B strategy (approximate)",
+    "error": null,
+    "input_tokens": 683,
+    "output_tokens": 387,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "meetings/mtg-0001",
+    "text": "2026-04-14 | Amara Okafor met with Priya Patel for a coffee sync to discuss NovaBio's Series B, including founding team dynamics, cap table structure, burn rate concerns, and regulatory questions",
+    "error": null,
+    "input_tokens": 511,
+    "output_tokens": 57,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "meetings/mtg-0002",
+    "text": "2026-04-15 | Amara Okafor and Diego Alvarez held a Series B planning call for Threshold Robotics\n2026-04-15 | Diego to send updated metrics deck by end of April\n2026-05-01 | Diego to arrange intro call between Amara and Threshold CEO Jordan Park (early May)\n2026-08-01 | Halfway Capital to begin Series B diligence (late August)\n2026-09-01 | Threshold Robotics plans to kick off Series B process (late Q3/September)\n2026-12-31 | Threshold Robotics aims to close Series B before year-end",
+    "error": null,
+    "input_tokens": 529,
+    "output_tokens": 157,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "meetings/mtg-0003",
+    "text": "2026-04-16 | Amara Okafor and Marcus Reid held a deep dive on Solaris Grid Storage Series A, covering unit economics, LCOE trajectory, offtake structure, capacity factors, and interconnection timeline; decided to move Solaris to full diligence with Amara leading and Marcus to schedule a technical deep-dive with the CTO",
+    "error": null,
+    "input_tokens": 587,
+    "output_tokens": 86,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "meetings/mtg-0004",
+    "text": "2026-03-?? | Lumina Health closed their Series B at a $180M valuation\n2026-04-17 | Amara Okafor and Elena Rossi met for quarterly catch-up to discuss portfolio strategy and co-investment opportunities",
+    "error": null,
+    "input_tokens": 680,
+    "output_tokens": 63,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "meetings/mtg-0005",
+    "text": "2026-04-18 | Portfolio review meeting with Priya Patel covering CarbonLoop Q1 performance\n2026-04-18 | CarbonLoop Q1 revenue came in at $2.1M, ahead of $1.8M projection\n2026-04-18 | Three Fortune 500 pilots converted to paid contracts\n2026-04-18 | Burn multiple confirmed at 1.8, down from six months prior\n2026-04-18 | Flagged that only 2 of 5 senior engineering roles opened in Q4 have been filled\n2026-04-18 | Approved bridge extension terms\n2026-04-18 | Green-lit Series B prep timeline for Q3\n2026-04-18 | Decided to hold off on board observer seat until after next funding round\n2026-04-18 | Priya to send recruiting firm intros by end of week\n2026-04-18 | Amara to review updated board deck before May meeting\n2026-04-18 | Follow-up with CarbonLoop CEO scheduled for ~3 weeks out\n2026-04-18 | Priya to draft Series B positioning memo",
+    "error": null,
+    "input_tokens": 537,
+    "output_tokens": 281,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "meetings/mtg-0006",
+    "text": "2026-04-17 | Helios Energy board formally approved the new director appointment\n2026-04-18 | Kofi Mensah and Amara Okafor met to discuss the Helios Energy investment and board changes\n2026-05-01 | Amara Okafor takes the Helios Energy board seat, replacing the outgoing independent director\n2026-05-15 | Amara Okafor to attend Helios Energy board meeting in person in Austin",
+    "error": null,
+    "input_tokens": 557,
+    "output_tokens": 117,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  },
+  {
+    "page": "meetings/mtg-0007",
+    "text": "2026-04-19 | Portfolio review meeting between Amara Okafor and Elena Rossi covering Codex Robotics Q1 2026 performance\n2026-04-25 | Elena Rossi to send updated cap table and bridge round terms to Amara Okafor (deadline)\n2026-05-15 | Amara Okafor to attend Codex Robotics Q2 board meeting in person",
+    "error": null,
+    "input_tokens": 573,
+    "output_tokens": 106,
+    "finish": "end_turn",
+    "response_model": "claude-sonnet-4-6"
+  }
+]

@@ -4,11 +4,17 @@
 # benchmarks (LongMemEval embeds, judge-based cats) run manually and land
 # receipts; see TODOS.md and eval/RUNBOOK.md. Actions are pinned to commit
 # SHAs; bun is pinned by `bun-version` below; installs are frozen-lockfile.
-# The unit suite is split across four shard jobs (ordinary `bun test
-# --shard`, not the experimental parallel worker mode), all loading a
-# shared pre-migrated PGLite snapshot (test/support/pglite-snapshot.ts).
+# The unit suite is split across six shard jobs (ordinary `bun test
+# --shard`, not the experimental parallel worker mode), balanced by the
+# per-file times in test/timings.json, all loading a shared pre-migrated
+# PGLite snapshot (test/support/pglite-snapshot.ts).
 # Per-job timeouts bound every job well above its observed runtime rather
 # than hoping for it.
+# Jobs run on Ubicloud runners on Ubuntu 26.04, the image ubuntu-latest
+# used: 4 vCPU and 16 GB for the checks, BrainBench, test and harness jobs,
+# the size of GitHub's hosted runner, and 2 vCPU for the small jobs. GitHub's
+# hosted runners are one pool for every repository on the account, and a PR
+# run waited about 42 minutes for them at p95 in November 2026 (GST-3302).
 name: ci
 
 on:
@@ -24,19 +30,25 @@ jobs:
   # actions/checkout. This job keeps the whole .git (every branch, full history)
   # in the Actions cache: a push to main refreshes it for the new commit, and a
   # pull request builds one only when neither the PR nor main has one yet. Every
-  # other job restores it before actions/checkout, which then fetches only what
+  # other job but tested-tree, which reads only scripts/ and the tracked file
+  # list, restores it before actions/checkout, which then fetches only what
   # is new and checks out the same commit at the same depth as before. A depth-1
   # job's .git now also holds older commits' objects, so tests that look for a
   # pinned commit (five cases in test/eval/q1-reuse-check.test.ts) run instead of
   # skipping; without a cache they skip, as before. The save follows a checkout
-  # with persist-credentials: false and refuses a stored credential. Every job
-  # that runs a check runs even when this one fails, checking out from GitHub as
-  # before, so a broken cache never turns a check into a skipped one. The run
-  # still fails on git-cache until a rerun rebuilds the cache, and tested-tree,
-  # which runs no tests, keeps its default condition, which reads every upstream
-  # job, so it is skipped and that run carries nothing.
+  # with persist-credentials: false and refuses a stored credential. The jobs
+  # that run checks don't wait for this one: they start at once and restore the
+  # newest cache already saved, which main's last push left (a pull request run
+  # found one every time from 2026-11-16 to 2026-11-20), so the cache no longer
+  # adds a wave of runner start-up to every run. Without one they check out from
+  # GitHub as before, so a broken cache never turns a check into a skipped one.
+  # A run that finds no cache skips the five pinned-commit cases while git-cache
+  # builds one, and tested-tree still records that run as tested.
+  # The run still fails on git-cache until a rerun rebuilds the cache, and
+  # tested-tree, which runs no tests, needs git-cache and keeps its default
+  # condition, so it is skipped and that run carries nothing.
   git-cache:
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-2-ubuntu-2604
     timeout-minutes: 20
     steps:
       - id: cache
@@ -64,9 +76,7 @@ jobs:
           key: ${{ format('git-objects-v1-{0}', github.sha) }}
 
   checks:
-    needs: git-cache
-    if: ${{ !cancelled() }}
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-4-ubuntu-2604
     timeout-minutes: 20
     steps:
       - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
@@ -124,9 +134,7 @@ jobs:
   # external gbrain checkout and records a skip; BRAINBENCH_ALLOW_SKIP
   # acknowledges receipt-declared skips.
   brainbench:
-    needs: git-cache
-    if: ${{ !cancelled() }}
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-4-ubuntu-2604
     timeout-minutes: 20
     strategy:
       fail-fast: false
@@ -161,9 +169,7 @@ jobs:
           retention-days: 14
 
   prereg-order:
-    needs: git-cache
-    if: ${{ !cancelled() }}
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-2-ubuntu-2604
     timeout-minutes: 5
     steps:
       - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
@@ -186,14 +192,12 @@ jobs:
         run: bun eval/runner/prereg.ts
 
   tests:
-    needs: git-cache
-    if: ${{ !cancelled() }}
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-8-ubuntu-2604
     timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: [1, 2, 3, 4, 5, 6]
     steps:
       - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
@@ -214,39 +218,49 @@ jobs:
       - name: Install ripgrep
         run: sudo apt-get update -q && sudo apt-get install -y ripgrep
 
-      # test/eval/ plus the unit tests colocated under eval/. The JUnit report
-      # names the files this shard ran, for the tested-tree job below.
-      - name: Unit + integration tests (shard ${{ matrix.shard }}/4)
-        run: bun test --shard=${{ matrix.shard }}/4 test/eval/ eval/ --reporter=junit --reporter-outfile="$RUNNER_TEMP/tests-${{ matrix.shard }}.xml"
+      # test/eval/ plus the unit tests colocated under eval/. Each job runs
+      # four ordinary bun test --shard processes at once on its 8 vCPUs, as
+      # shards k, k+6, k+12 and k+18 of 24 (scripts/test-shards.ts --job), so
+      # the six jobs together run each of the 24 shards once. A bun test
+      # process keeps about one core busy, so one process per job left most
+      # of the runner idle. Each shard's JUnit report names the files it ran,
+      # for the tested-tree job below. --timings splits the files by their
+      # measured time, so a slow file no longer lands beside other slow files
+      # by its place in the sorted list, as file-count sharding did. A file
+      # missing from test/timings.json counts as a median file; when a shard
+      # nears 10 minutes, refresh the file from a main run's reports with
+      # scripts/test-timings.ts.
+      - name: Unit + integration tests (job ${{ matrix.shard }}/${{ strategy.job-total }}, four shards of 24)
+        env:
+          TEST_SHARDS: '4'
+        run: bun scripts/test-shards.ts --job=${{ matrix.shard }}/${{ strategy.job-total }} --junit-dir="$RUNNER_TEMP/tested-files" test/eval/ eval/
 
-      - name: Upload the files this shard ran
+      - name: Upload the files this job's shards ran
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: tested-files-${{ matrix.shard }}
-          path: ${{ runner.temp }}/tests-${{ matrix.shard }}.xml
+          path: ${{ runner.temp }}/tested-files/tests-*.xml
           if-no-files-found: error
           retention-days: 7
           overwrite: true
 
   # The tested tree for gstack's CI carry (gstack docs/pregate.md#ci-carry).
-  # After the checks job and all four test shards pass, tree.json records this
-  # run, the tree it tested and every test file it ran: the Bun files from the
-  # shards' JUnit reports and the Python tests the checks job runs. gstack's
-  # pregate and /ship read it from a green run at the same clean tree
+  # After the checks job, every test shard and the harness jobs pass, tree.json
+  # records this run, the tree it tested and every test file it ran: the Bun
+  # files from the shards' JUnit reports, the harness Python tests from the
+  # harness pytest run's JUnit report and the Python tests the checks job runs.
+  # gstack's pregate and /ship read it from a green run at the same clean tree
   # (.gstack/pregate.json run_profiles and ship_lanes_from) instead of running
   # the suite again. It runs no tests itself.
   tested-tree:
-    needs: [checks, tests]
-    runs-on: ubuntu-latest
+    needs: [git-cache, checks, tests, harness]
+    runs-on: ubicloud-standard-2-ubuntu-2604
     timeout-minutes: 5
     steps:
-      - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-        with:
-          path: .git
-          key: ${{ format('git-objects-v1-{0}', github.sha) }}
-          restore-keys: git-objects-v1-
-
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          filter: blob:none
+          sparse-checkout: scripts
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
@@ -280,9 +294,7 @@ jobs:
   # is a paid, ledger-reserved judge with no keyless fixture provider yet.
   # Wiring the fixture through it is gbrain-evals issue #195.
   scoreboard:
-    needs: git-cache
-    if: ${{ !cancelled() }}
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-2-ubuntu-2604
     timeout-minutes: 10
     steps:
       - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
@@ -312,9 +324,7 @@ jobs:
   # refused unread. gitleaks is pinned by version and sha256; findings are
   # redacted in the log.
   receipt-secrets:
-    needs: git-cache
-    if: ${{ !cancelled() }}
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-2-ubuntu-2604
     timeout-minutes: 5
     steps:
       - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
@@ -351,9 +361,7 @@ jobs:
   # prints a warning on the run, and bumping the key's v1 replaces the entry.
   # The venv is still built on every run.
   harness:
-    needs: git-cache
-    if: ${{ !cancelled() }}
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-4-ubuntu-2604
     timeout-minutes: 30
     strategy:
       fail-fast: false
@@ -395,9 +403,26 @@ jobs:
           path: .harness/packs
           key: ${{ steps.harness-pack.outputs.cache-primary-key }}
 
+      # The JUnit report names the harness test files pytest ran, for the
+      # tested-tree job; xunit1 is the report format that names each case's file.
+      # Three pytest processes at once: the two slowest files alone and the rest
+      # together (eval/runner/harness-test.ts GROUPS), each writing its JUnit
+      # report as pytest-<n>.xml. In one process the suite took about 5 minutes,
+      # most of it spent waiting on the gbrain and comparator processes the two
+      # slowest files start.
       - name: Harness wrapper tests (pytest)
         if: matrix.suite == 'pytest'
-        run: bun run harness:test
+        run: bun run harness:test --junit-dir="$RUNNER_TEMP/pytest"
+
+      - name: Upload the files pytest ran
+        if: matrix.suite == 'pytest'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: tested-files-pytest
+          path: ${{ runner.temp }}/pytest/pytest-*.xml
+          if-no-files-found: error
+          retention-days: 7
+          overwrite: true
 
       - name: Metering proxy and launcher tests
         if: matrix.suite == 'proxy'

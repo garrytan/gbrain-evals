@@ -29,6 +29,7 @@ services:
         GBRAIN_SHA: ${GBRAIN_SHA:-f05943e653fd9d938b343b1774a35325ba792271}
         # Unset, the arg is left out and the Dockerfile's default Bun image (Q1's) is used.
         GBRAIN_BUN_IMAGE:
+        GBRAIN_FAKETIME_LIB: ${GBRAIN_FAKETIME_LIB:-0}
     environment:
       SHIM_CONFIG: ${SHIM_CONFIG:-recipe}
       SHIM_PORT: "8700"
@@ -40,6 +41,11 @@ services:
       GBRAIN_F6_BUILD_PROBLEMS: ${GBRAIN_F6_BUILD_PROBLEMS:-}
       GBRAIN_LAUNCH_SHA: ${GBRAIN_SHA:-}
       GBRAIN_SHIPPED_FALLBACKS: ${GBRAIN_SHIPPED_FALLBACKS:-no_text_chunks,redaction_unmapped}
+      # BG1's dev loop only: GBRAIN_FAKETIME is a libfaketime offset in seconds that moves the container's wall clock
+      # back to the dev worlds' question day (eval/runner/bg1/dev-loop.ts). Unset, nothing is preloaded.
+      FAKETIME: ${GBRAIN_FAKETIME:-}
+      FAKETIME_DONT_FAKE_MONOTONIC: ${GBRAIN_FAKETIME:+1}
+      LD_PRELOAD: ${GBRAIN_FAKETIME:+/usr/local/lib/libfaketime.so.1}
       VOYAGE_API_KEY: ${SHOOTOUT_CELL_TOKEN:-dummy-key-the-proxy-injects-the-real-one}
       OPENAI_API_KEY: ${SHOOTOUT_CELL_TOKEN:-sk-dummy-key-the-proxy-injects-the-real-one}
       ANTHROPIC_API_KEY: ${SHOOTOUT_CELL_TOKEN:-sk-ant-dummy-key-the-proxy-injects-the-real-one}

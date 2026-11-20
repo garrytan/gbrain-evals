@@ -1,0 +1,5996 @@
+{
+ "schema": "gst2339-analysis-full/v1",
+ "summary": {
+  "all": {
+   "items": 324,
+   "checked": 324,
+   "not_checked": 0,
+   "validator_error_items": 0,
+   "pass": 219,
+   "fail_any": 105,
+   "fail_any_pct": 32.4,
+   "ci_any": [
+    27.5,
+    37.7
+   ],
+   "support_fail": 103,
+   "both": 67,
+   "both_pct": 20.7,
+   "ci_both": [
+    16.6,
+    25.4
+   ],
+   "gemini_only": 25,
+   "haiku_only": 11,
+   "uncited": 2,
+   "other_gates": []
+  },
+  "by_scale": {
+   "beam-100k": {
+    "items": 72,
+    "checked": 72,
+    "not_checked": 0,
+    "validator_error_items": 0,
+    "pass": 55,
+    "fail_any": 17,
+    "fail_any_pct": 23.6,
+    "ci_any": [
+     15.3,
+     34.6
+    ],
+    "support_fail": 17,
+    "both": 11,
+    "both_pct": 15.3,
+    "ci_both": [
+     8.8,
+     25.3
+    ],
+    "gemini_only": 5,
+    "haiku_only": 1,
+    "uncited": 0,
+    "other_gates": []
+   },
+   "beam-1m": {
+    "items": 126,
+    "checked": 126,
+    "not_checked": 0,
+    "validator_error_items": 0,
+    "pass": 79,
+    "fail_any": 47,
+    "fail_any_pct": 37.3,
+    "ci_any": [
+     29.4,
+     46.0
+    ],
+    "support_fail": 45,
+    "both": 33,
+    "both_pct": 26.2,
+    "ci_both": [
+     19.3,
+     34.5
+    ],
+    "gemini_only": 8,
+    "haiku_only": 4,
+    "uncited": 2,
+    "other_gates": []
+   },
+   "beam-500k": {
+    "items": 126,
+    "checked": 126,
+    "not_checked": 0,
+    "validator_error_items": 0,
+    "pass": 85,
+    "fail_any": 41,
+    "fail_any_pct": 32.5,
+    "ci_any": [
+     25.0,
+     41.1
+    ],
+    "support_fail": 41,
+    "both": 23,
+    "both_pct": 18.3,
+    "ci_both": [
+     12.5,
+     25.9
+    ],
+    "gemini_only": 12,
+    "haiku_only": 6,
+    "uncited": 0,
+    "other_gates": []
+   }
+  },
+  "by_row": {
+   "mpw2": {
+    "items": 324,
+    "checked": 324,
+    "not_checked": 0,
+    "validator_error_items": 0,
+    "pass": 219,
+    "fail_any": 105,
+    "fail_any_pct": 32.4,
+    "ci_any": [
+     27.5,
+     37.7
+    ],
+    "support_fail": 103,
+    "both": 67,
+    "both_pct": 20.7,
+    "ci_both": [
+     16.6,
+     25.4
+    ],
+    "gemini_only": 25,
+    "haiku_only": 11,
+    "uncited": 2,
+    "other_gates": []
+   }
+  },
+  "by_ability": {
+   "contradiction_resolution": {
+    "items": 36,
+    "checked": 36,
+    "not_checked": 0,
+    "validator_error_items": 0,
+    "pass": 21,
+    "fail_any": 15,
+    "fail_any_pct": 41.7,
+    "ci_any": [
+     27.1,
+     57.8
+    ],
+    "support_fail": 15,
+    "both": 11,
+    "both_pct": 30.6,
+    "ci_both": [
+     18.0,
+     46.9
+    ],
+    "gemini_only": 4,
+    "haiku_only": 0,
+    "uncited": 0,
+    "other_gates": []
+   },
+   "event_ordering": {
+    "items": 36,
+    "checked": 36,
+    "not_checked": 0,
+    "validator_error_items": 0,
+    "pass": 27,
+    "fail_any": 9,
+    "fail_any_pct": 25.0,
+    "ci_any": [
+     13.8,
+     41.1
+    ],
+    "support_fail": 9,
+    "both": 6,
+    "both_pct": 16.7,
+    "ci_both": [
+     7.9,
+     31.9
+    ],
+    "gemini_only": 3,
+    "haiku_only": 0,
+    "uncited": 0,
+    "other_gates": []
+   },
+   "information_extraction": {
+    "items": 36,
+    "checked": 36,
+    "not_checked": 0,
+    "validator_error_items": 0,
+    "pass": 30,
+    "fail_any": 6,
+    "fail_any_pct": 16.7,
+    "ci_any": [
+     7.9,
+     31.9
+    ],
+    "support_fail": 6,
+    "both": 5,
+    "both_pct": 13.9,
+    "ci_both": [
+     6.1,
+     28.7
+    ],
+    "gemini_only": 0,
+    "haiku_only": 1,
+    "uncited": 0,
+    "other_gates": []
+   },
+   "instruction_following": {
+    "items": 36,
+    "checked": 36,
+    "not_checked": 0,
+    "validator_error_items": 0,
+    "pass": 31,
+    "fail_any": 5,
+    "fail_any_pct": 13.9,
+    "ci_any": [
+     6.1,
+     28.7
+    ],
+    "support_fail": 5,
+    "both": 4,
+    "both_pct": 11.1,
+    "ci_both": [
+     4.4,
+     25.3
+    ],
+    "gemini_only": 0,
+    "haiku_only": 1,
+    "uncited": 0,
+    "other_gates": []
+   },
+   "knowledge_update": {
+    "items": 36,
+    "checked": 36,
+    "not_checked": 0,
+    "validator_error_items": 0,
+    "pass": 27,
+    "fail_any": 9,
+    "fail_any_pct": 25.0,
+    "ci_any": [
+     13.8,
+     41.1
+    ],
+    "support_fail": 9,
+    "both": 5,
+    "both_pct": 13.9,
+    "ci_both": [
+     6.1,
+     28.7
+    ],
+    "gemini_only": 4,
+    "haiku_only": 0,
+    "uncited": 0,
+    "other_gates": []
+   },
+   "multi_session_reasoning": {
+    "items": 36,
+    "checked": 36,
+    "not_checked": 0,
+    "validator_error_items": 0,
+    "pass": 16,
+    "fail_any": 20,
+    "fail_any_pct": 55.6,
+    "ci_any": [
+     39.6,
+     70.5
+    ],
+    "support_fail": 20,
+    "both": 16,
+    "both_pct": 44.4,
+    "ci_both": [
+     29.5,
+     60.4
+    ],
+    "gemini_only": 3,
+    "haiku_only": 1,
+    "uncited": 0,
+    "other_gates": []
+   },
+   "preference_following": {
+    "items": 36,
+    "checked": 36,
+    "not_checked": 0,
+    "validator_error_items": 0,
+    "pass": 29,
+    "fail_any": 7,
+    "fail_any_pct": 19.4,
+    "ci_any": [
+     9.8,
+     35.0
+    ],
+    "support_fail": 6,
+    "both": 0,
+    "both_pct": 0.0,
+    "ci_both": [
+     0,
+     9.6
+    ],
+    "gemini_only": 6,
+    "haiku_only": 0,
+    "uncited": 1,
+    "other_gates": []
+   },
+   "summarization": {
+    "items": 36,
+    "checked": 36,
+    "not_checked": 0,
+    "validator_error_items": 0,
+    "pass": 14,
+    "fail_any": 22,
+    "fail_any_pct": 61.1,
+    "ci_any": [
+     44.9,
+     75.2
+    ],
+    "support_fail": 21,
+    "both": 14,
+    "both_pct": 38.9,
+    "ci_both": [
+     24.8,
+     55.1
+    ],
+    "gemini_only": 1,
+    "haiku_only": 6,
+    "uncited": 1,
+    "other_gates": []
+   },
+   "temporal_reasoning": {
+    "items": 36,
+    "checked": 36,
+    "not_checked": 0,
+    "validator_error_items": 0,
+    "pass": 24,
+    "fail_any": 12,
+    "fail_any_pct": 33.3,
+    "ci_any": [
+     20.2,
+     49.7
+    ],
+    "support_fail": 12,
+    "both": 6,
+    "both_pct": 16.7,
+    "ci_both": [
+     7.9,
+     31.9
+    ],
+    "gemini_only": 4,
+    "haiku_only": 2,
+    "uncited": 0,
+    "other_gates": []
+   }
+  },
+  "by_conversation": {
+   "100k-1": "2/18",
+   "100k-4": "5/18",
+   "100k-16": "3/18",
+   "100k-19": "7/18",
+   "1m-2": "6/18",
+   "1m-3": "9/18",
+   "1m-20": "6/18",
+   "1m-24": "7/18",
+   "1m-28": "6/18",
+   "1m-30": "6/18",
+   "1m-32": "7/18",
+   "500k-10": "5/18",
+   "500k-18": "7/18",
+   "500k-20": "3/18",
+   "500k-24": "6/18",
+   "500k-25": "5/18",
+   "500k-29": "6/18",
+   "500k-33": "9/18"
+  },
+  "ambiguous_citation_items": 0,
+  "unmapped_citation_items": 0,
+  "conversations": {
+   "100k-1": {
+    "scale": "beam-100k",
+    "status": "regenerate",
+    "reasons": [],
+    "tokens": 115318,
+    "validator_errors": 0,
+    "renumbered": false,
+    "sealed": false
+   },
+   "100k-4": {
+    "scale": "beam-100k",
+    "status": "regenerate",
+    "reasons": [],
+    "tokens": 99824,
+    "validator_errors": 0,
+    "renumbered": false,
+    "sealed": false
+   },
+   "100k-16": {
+    "scale": "beam-100k",
+    "status": "regenerate",
+    "reasons": [],
+    "tokens": 116925,
+    "validator_errors": 0,
+    "renumbered": false,
+    "sealed": false
+   },
+   "100k-19": {
+    "scale": "beam-100k",
+    "status": "regenerate",
+    "reasons": [],
+    "tokens": 120414,
+    "validator_errors": 0,
+    "renumbered": false,
+    "sealed": false
+   },
+   "1m-2": {
+    "scale": "beam-1m",
+    "status": "regenerate",
+    "reasons": [],
+    "tokens": 926665,
+    "validator_errors": 0,
+    "renumbered": false,
+    "sealed": false
+   },
+   "1m-3": {
+    "scale": "beam-1m",
+    "status": "regenerate",
+    "reasons": [],
+    "tokens": 811370,
+    "validator_errors": 0,
+    "renumbered": false,
+    "sealed": false
+   },
+   "1m-20": {
+    "scale": "beam-1m",
+    "status": "regenerate",
+    "reasons": [],
+    "tokens": 983631,
+    "validator_errors": 0,
+    "renumbered": false,
+    "sealed": false
+   },
+   "1m-24": {
+    "scale": "beam-1m",
+    "status": "regenerate",
+    "reasons": [],
+    "tokens": 1000024,
+    "validator_errors": 0,
+    "renumbered": false,
+    "sealed": false
+   },
+   "1m-28": {
+    "scale": "beam-1m",
+    "status": "regenerate",
+    "reasons": [],
+    "tokens": 992883,
+    "validator_errors": 0,
+    "renumbered": false,
+    "sealed": false
+   },
+   "1m-30": {
+    "scale": "beam-1m",
+    "status": "regenerate",
+    "reasons": [],
+    "tokens": 995119,
+    "validator_errors": 0,
+    "renumbered": false,
+    "sealed": false
+   },
+   "1m-32": {
+    "scale": "beam-1m",
+    "status": "regenerate",
+    "reasons": [],
+    "tokens": 849546,
+    "validator_errors": 0,
+    "renumbered": false,
+    "sealed": false
+   },
+   "500k-10": {
+    "scale": "beam-500k",
+    "status": "regenerate",
+    "reasons": [],
+    "tokens": 599683,
+    "validator_errors": 0,
+    "renumbered": false,
+    "sealed": false
+   },
+   "500k-18": {
+    "scale": "beam-500k",
+    "status": "regenerate",
+    "reasons": [],
+    "tokens": 475919,
+    "validator_errors": 0,
+    "renumbered": false,
+    "sealed": false
+   },
+   "500k-20": {
+    "scale": "beam-500k",
+    "status": "regenerate",
+    "reasons": [],
+    "tokens": 522502,
+    "validator_errors": 0,
+    "renumbered": false,
+    "sealed": false
+   },
+   "500k-24": {
+    "scale": "beam-500k",
+    "status": "regenerate",
+    "reasons": [],
+    "tokens": 431325,
+    "validator_errors": 0,
+    "renumbered": false,
+    "sealed": false
+   },
+   "500k-25": {
+    "scale": "beam-500k",
+    "status": "regenerate",
+    "reasons": [],
+    "tokens": 509044,
+    "validator_errors": 0,
+    "renumbered": false,
+    "sealed": false
+   },
+   "500k-29": {
+    "scale": "beam-500k",
+    "status": "regenerate",
+    "reasons": [],
+    "tokens": 484980,
+    "validator_errors": 0,
+    "renumbered": false,
+    "sealed": false
+   },
+   "500k-33": {
+    "scale": "beam-500k",
+    "status": "regenerate",
+    "reasons": [],
+    "tokens": 439188,
+    "validator_errors": 0,
+    "renumbered": false,
+    "sealed": false
+   }
+  }
+ },
+ "items": [
+  {
+   "id": "100k-1:contradiction_resolution:0",
+   "scale": "beam-100k",
+   "conversation": "100k-1",
+   "ability": "contradiction_resolution",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-1:contradiction_resolution:1",
+   "scale": "beam-100k",
+   "conversation": "100k-1",
+   "ability": "contradiction_resolution",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-1:event_ordering:0",
+   "scale": "beam-100k",
+   "conversation": "100k-1",
+   "ability": "event_ordering",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 3,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-1:event_ordering:1",
+   "scale": "beam-100k",
+   "conversation": "100k-1",
+   "ability": "event_ordering",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 4,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-1:information_extraction:0",
+   "scale": "beam-100k",
+   "conversation": "100k-1",
+   "ability": "information_extraction",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-1:information_extraction:1",
+   "scale": "beam-100k",
+   "conversation": "100k-1",
+   "ability": "information_extraction",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-1:instruction_following:0",
+   "scale": "beam-100k",
+   "conversation": "100k-1",
+   "ability": "instruction_following",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-1:instruction_following:1",
+   "scale": "beam-100k",
+   "conversation": "100k-1",
+   "ability": "instruction_following",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-1:knowledge_update:0",
+   "scale": "beam-100k",
+   "conversation": "100k-1",
+   "ability": "knowledge_update",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-1:knowledge_update:1",
+   "scale": "beam-100k",
+   "conversation": "100k-1",
+   "ability": "knowledge_update",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-1:multi_session_reasoning:0",
+   "scale": "beam-100k",
+   "conversation": "100k-1",
+   "ability": "multi_session_reasoning",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 3,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-1:multi_session_reasoning:1",
+   "scale": "beam-100k",
+   "conversation": "100k-1",
+   "ability": "multi_session_reasoning",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 3,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-1:preference_following:0",
+   "scale": "beam-100k",
+   "conversation": "100k-1",
+   "ability": "preference_following",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-1:preference_following:1",
+   "scale": "beam-100k",
+   "conversation": "100k-1",
+   "ability": "preference_following",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-1:summarization:0",
+   "scale": "beam-100k",
+   "conversation": "100k-1",
+   "ability": "summarization",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 10,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-1:summarization:1",
+   "scale": "beam-100k",
+   "conversation": "100k-1",
+   "ability": "summarization",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 11,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-1:temporal_reasoning:0",
+   "scale": "beam-100k",
+   "conversation": "100k-1",
+   "ability": "temporal_reasoning",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-1:temporal_reasoning:1",
+   "scale": "beam-100k",
+   "conversation": "100k-1",
+   "ability": "temporal_reasoning",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-4:contradiction_resolution:0",
+   "scale": "beam-100k",
+   "conversation": "100k-4",
+   "ability": "contradiction_resolution",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-4:contradiction_resolution:1",
+   "scale": "beam-100k",
+   "conversation": "100k-4",
+   "ability": "contradiction_resolution",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-4:event_ordering:0",
+   "scale": "beam-100k",
+   "conversation": "100k-4",
+   "ability": "event_ordering",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 9,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-4:event_ordering:1",
+   "scale": "beam-100k",
+   "conversation": "100k-4",
+   "ability": "event_ordering",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 10,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-4:information_extraction:0",
+   "scale": "beam-100k",
+   "conversation": "100k-4",
+   "ability": "information_extraction",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-4:information_extraction:1",
+   "scale": "beam-100k",
+   "conversation": "100k-4",
+   "ability": "information_extraction",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-4:instruction_following:0",
+   "scale": "beam-100k",
+   "conversation": "100k-4",
+   "ability": "instruction_following",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 4,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-4:instruction_following:1",
+   "scale": "beam-100k",
+   "conversation": "100k-4",
+   "ability": "instruction_following",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 4,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-4:knowledge_update:0",
+   "scale": "beam-100k",
+   "conversation": "100k-4",
+   "ability": "knowledge_update",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-4:knowledge_update:1",
+   "scale": "beam-100k",
+   "conversation": "100k-4",
+   "ability": "knowledge_update",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-4:multi_session_reasoning:0",
+   "scale": "beam-100k",
+   "conversation": "100k-4",
+   "ability": "multi_session_reasoning",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-4:multi_session_reasoning:1",
+   "scale": "beam-100k",
+   "conversation": "100k-4",
+   "ability": "multi_session_reasoning",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-4:preference_following:0",
+   "scale": "beam-100k",
+   "conversation": "100k-4",
+   "ability": "preference_following",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-4:preference_following:1",
+   "scale": "beam-100k",
+   "conversation": "100k-4",
+   "ability": "preference_following",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-4:summarization:0",
+   "scale": "beam-100k",
+   "conversation": "100k-4",
+   "ability": "summarization",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 5,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-4:summarization:1",
+   "scale": "beam-100k",
+   "conversation": "100k-4",
+   "ability": "summarization",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 11,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-4:temporal_reasoning:0",
+   "scale": "beam-100k",
+   "conversation": "100k-4",
+   "ability": "temporal_reasoning",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5"
+   ],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-4:temporal_reasoning:1",
+   "scale": "beam-100k",
+   "conversation": "100k-4",
+   "ability": "temporal_reasoning",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-16:contradiction_resolution:0",
+   "scale": "beam-100k",
+   "conversation": "100k-16",
+   "ability": "contradiction_resolution",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-16:contradiction_resolution:1",
+   "scale": "beam-100k",
+   "conversation": "100k-16",
+   "ability": "contradiction_resolution",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-16:event_ordering:0",
+   "scale": "beam-100k",
+   "conversation": "100k-16",
+   "ability": "event_ordering",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 4,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-16:event_ordering:1",
+   "scale": "beam-100k",
+   "conversation": "100k-16",
+   "ability": "event_ordering",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 8,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-16:information_extraction:0",
+   "scale": "beam-100k",
+   "conversation": "100k-16",
+   "ability": "information_extraction",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-16:information_extraction:1",
+   "scale": "beam-100k",
+   "conversation": "100k-16",
+   "ability": "information_extraction",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-16:instruction_following:0",
+   "scale": "beam-100k",
+   "conversation": "100k-16",
+   "ability": "instruction_following",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-16:instruction_following:1",
+   "scale": "beam-100k",
+   "conversation": "100k-16",
+   "ability": "instruction_following",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-16:knowledge_update:0",
+   "scale": "beam-100k",
+   "conversation": "100k-16",
+   "ability": "knowledge_update",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 3,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-16:knowledge_update:1",
+   "scale": "beam-100k",
+   "conversation": "100k-16",
+   "ability": "knowledge_update",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-16:multi_session_reasoning:0",
+   "scale": "beam-100k",
+   "conversation": "100k-16",
+   "ability": "multi_session_reasoning",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-16:multi_session_reasoning:1",
+   "scale": "beam-100k",
+   "conversation": "100k-16",
+   "ability": "multi_session_reasoning",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 10,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-16:preference_following:0",
+   "scale": "beam-100k",
+   "conversation": "100k-16",
+   "ability": "preference_following",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-16:preference_following:1",
+   "scale": "beam-100k",
+   "conversation": "100k-16",
+   "ability": "preference_following",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-16:summarization:0",
+   "scale": "beam-100k",
+   "conversation": "100k-16",
+   "ability": "summarization",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 6,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-16:summarization:1",
+   "scale": "beam-100k",
+   "conversation": "100k-16",
+   "ability": "summarization",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 5,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-16:temporal_reasoning:0",
+   "scale": "beam-100k",
+   "conversation": "100k-16",
+   "ability": "temporal_reasoning",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-16:temporal_reasoning:1",
+   "scale": "beam-100k",
+   "conversation": "100k-16",
+   "ability": "temporal_reasoning",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-19:contradiction_resolution:0",
+   "scale": "beam-100k",
+   "conversation": "100k-19",
+   "ability": "contradiction_resolution",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-19:contradiction_resolution:1",
+   "scale": "beam-100k",
+   "conversation": "100k-19",
+   "ability": "contradiction_resolution",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-19:event_ordering:0",
+   "scale": "beam-100k",
+   "conversation": "100k-19",
+   "ability": "event_ordering",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 4,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-19:event_ordering:1",
+   "scale": "beam-100k",
+   "conversation": "100k-19",
+   "ability": "event_ordering",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 7,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-19:information_extraction:0",
+   "scale": "beam-100k",
+   "conversation": "100k-19",
+   "ability": "information_extraction",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-19:information_extraction:1",
+   "scale": "beam-100k",
+   "conversation": "100k-19",
+   "ability": "information_extraction",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-19:instruction_following:0",
+   "scale": "beam-100k",
+   "conversation": "100k-19",
+   "ability": "instruction_following",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-19:instruction_following:1",
+   "scale": "beam-100k",
+   "conversation": "100k-19",
+   "ability": "instruction_following",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-19:knowledge_update:0",
+   "scale": "beam-100k",
+   "conversation": "100k-19",
+   "ability": "knowledge_update",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-19:knowledge_update:1",
+   "scale": "beam-100k",
+   "conversation": "100k-19",
+   "ability": "knowledge_update",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-19:multi_session_reasoning:0",
+   "scale": "beam-100k",
+   "conversation": "100k-19",
+   "ability": "multi_session_reasoning",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-19:multi_session_reasoning:1",
+   "scale": "beam-100k",
+   "conversation": "100k-19",
+   "ability": "multi_session_reasoning",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 3,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-19:preference_following:0",
+   "scale": "beam-100k",
+   "conversation": "100k-19",
+   "ability": "preference_following",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-19:preference_following:1",
+   "scale": "beam-100k",
+   "conversation": "100k-19",
+   "ability": "preference_following",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-19:summarization:0",
+   "scale": "beam-100k",
+   "conversation": "100k-19",
+   "ability": "summarization",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 5,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-19:summarization:1",
+   "scale": "beam-100k",
+   "conversation": "100k-19",
+   "ability": "summarization",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 4,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-19:temporal_reasoning:0",
+   "scale": "beam-100k",
+   "conversation": "100k-19",
+   "ability": "temporal_reasoning",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "100k-19:temporal_reasoning:1",
+   "scale": "beam-100k",
+   "conversation": "100k-19",
+   "ability": "temporal_reasoning",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-2:contradiction_resolution:0",
+   "scale": "beam-1m",
+   "conversation": "1m-2",
+   "ability": "contradiction_resolution",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-2:contradiction_resolution:1",
+   "scale": "beam-1m",
+   "conversation": "1m-2",
+   "ability": "contradiction_resolution",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-2:event_ordering:0",
+   "scale": "beam-1m",
+   "conversation": "1m-2",
+   "ability": "event_ordering",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 13,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-2:event_ordering:1",
+   "scale": "beam-1m",
+   "conversation": "1m-2",
+   "ability": "event_ordering",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 15,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-2:information_extraction:0",
+   "scale": "beam-1m",
+   "conversation": "1m-2",
+   "ability": "information_extraction",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-2:information_extraction:1",
+   "scale": "beam-1m",
+   "conversation": "1m-2",
+   "ability": "information_extraction",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5"
+   ],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-2:instruction_following:0",
+   "scale": "beam-1m",
+   "conversation": "1m-2",
+   "ability": "instruction_following",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-2:instruction_following:1",
+   "scale": "beam-1m",
+   "conversation": "1m-2",
+   "ability": "instruction_following",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-2:knowledge_update:0",
+   "scale": "beam-1m",
+   "conversation": "1m-2",
+   "ability": "knowledge_update",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 3,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-2:knowledge_update:1",
+   "scale": "beam-1m",
+   "conversation": "1m-2",
+   "ability": "knowledge_update",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-2:multi_session_reasoning:0",
+   "scale": "beam-1m",
+   "conversation": "1m-2",
+   "ability": "multi_session_reasoning",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 5,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-2:multi_session_reasoning:1",
+   "scale": "beam-1m",
+   "conversation": "1m-2",
+   "ability": "multi_session_reasoning",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 14,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-2:preference_following:0",
+   "scale": "beam-1m",
+   "conversation": "1m-2",
+   "ability": "preference_following",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-2:preference_following:1",
+   "scale": "beam-1m",
+   "conversation": "1m-2",
+   "ability": "preference_following",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 3,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-2:summarization:0",
+   "scale": "beam-1m",
+   "conversation": "1m-2",
+   "ability": "summarization",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 33,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-2:summarization:1",
+   "scale": "beam-1m",
+   "conversation": "1m-2",
+   "ability": "summarization",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 30,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-2:temporal_reasoning:0",
+   "scale": "beam-1m",
+   "conversation": "1m-2",
+   "ability": "temporal_reasoning",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-2:temporal_reasoning:1",
+   "scale": "beam-1m",
+   "conversation": "1m-2",
+   "ability": "temporal_reasoning",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-3:contradiction_resolution:0",
+   "scale": "beam-1m",
+   "conversation": "1m-3",
+   "ability": "contradiction_resolution",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-3:contradiction_resolution:1",
+   "scale": "beam-1m",
+   "conversation": "1m-3",
+   "ability": "contradiction_resolution",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-3:event_ordering:0",
+   "scale": "beam-1m",
+   "conversation": "1m-3",
+   "ability": "event_ordering",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 19,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-3:event_ordering:1",
+   "scale": "beam-1m",
+   "conversation": "1m-3",
+   "ability": "event_ordering",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 20,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-3:information_extraction:0",
+   "scale": "beam-1m",
+   "conversation": "1m-3",
+   "ability": "information_extraction",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-3:information_extraction:1",
+   "scale": "beam-1m",
+   "conversation": "1m-3",
+   "ability": "information_extraction",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-3:instruction_following:0",
+   "scale": "beam-1m",
+   "conversation": "1m-3",
+   "ability": "instruction_following",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-3:instruction_following:1",
+   "scale": "beam-1m",
+   "conversation": "1m-3",
+   "ability": "instruction_following",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5"
+   ],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-3:knowledge_update:0",
+   "scale": "beam-1m",
+   "conversation": "1m-3",
+   "ability": "knowledge_update",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 3,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-3:knowledge_update:1",
+   "scale": "beam-1m",
+   "conversation": "1m-3",
+   "ability": "knowledge_update",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-3:multi_session_reasoning:0",
+   "scale": "beam-1m",
+   "conversation": "1m-3",
+   "ability": "multi_session_reasoning",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 3,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-3:multi_session_reasoning:1",
+   "scale": "beam-1m",
+   "conversation": "1m-3",
+   "ability": "multi_session_reasoning",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 4,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-3:preference_following:0",
+   "scale": "beam-1m",
+   "conversation": "1m-3",
+   "ability": "preference_following",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 5,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-3:preference_following:1",
+   "scale": "beam-1m",
+   "conversation": "1m-3",
+   "ability": "preference_following",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "uncited"
+   ],
+   "cited": 0,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-3:summarization:0",
+   "scale": "beam-1m",
+   "conversation": "1m-3",
+   "ability": "summarization",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5"
+   ],
+   "cited": 16,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-3:summarization:1",
+   "scale": "beam-1m",
+   "conversation": "1m-3",
+   "ability": "summarization",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5"
+   ],
+   "cited": 25,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-3:temporal_reasoning:0",
+   "scale": "beam-1m",
+   "conversation": "1m-3",
+   "ability": "temporal_reasoning",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-3:temporal_reasoning:1",
+   "scale": "beam-1m",
+   "conversation": "1m-3",
+   "ability": "temporal_reasoning",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-20:contradiction_resolution:0",
+   "scale": "beam-1m",
+   "conversation": "1m-20",
+   "ability": "contradiction_resolution",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-20:contradiction_resolution:1",
+   "scale": "beam-1m",
+   "conversation": "1m-20",
+   "ability": "contradiction_resolution",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-20:event_ordering:0",
+   "scale": "beam-1m",
+   "conversation": "1m-20",
+   "ability": "event_ordering",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 28,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-20:event_ordering:1",
+   "scale": "beam-1m",
+   "conversation": "1m-20",
+   "ability": "event_ordering",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 27,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-20:information_extraction:0",
+   "scale": "beam-1m",
+   "conversation": "1m-20",
+   "ability": "information_extraction",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-20:information_extraction:1",
+   "scale": "beam-1m",
+   "conversation": "1m-20",
+   "ability": "information_extraction",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-20:instruction_following:0",
+   "scale": "beam-1m",
+   "conversation": "1m-20",
+   "ability": "instruction_following",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-20:instruction_following:1",
+   "scale": "beam-1m",
+   "conversation": "1m-20",
+   "ability": "instruction_following",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-20:knowledge_update:0",
+   "scale": "beam-1m",
+   "conversation": "1m-20",
+   "ability": "knowledge_update",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 5,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-20:knowledge_update:1",
+   "scale": "beam-1m",
+   "conversation": "1m-20",
+   "ability": "knowledge_update",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 7,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-20:multi_session_reasoning:0",
+   "scale": "beam-1m",
+   "conversation": "1m-20",
+   "ability": "multi_session_reasoning",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-20:multi_session_reasoning:1",
+   "scale": "beam-1m",
+   "conversation": "1m-20",
+   "ability": "multi_session_reasoning",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 5,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-20:preference_following:0",
+   "scale": "beam-1m",
+   "conversation": "1m-20",
+   "ability": "preference_following",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 3,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-20:preference_following:1",
+   "scale": "beam-1m",
+   "conversation": "1m-20",
+   "ability": "preference_following",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 4,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-20:summarization:0",
+   "scale": "beam-1m",
+   "conversation": "1m-20",
+   "ability": "summarization",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 38,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-20:summarization:1",
+   "scale": "beam-1m",
+   "conversation": "1m-20",
+   "ability": "summarization",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "uncited"
+   ],
+   "cited": 0,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-20:temporal_reasoning:0",
+   "scale": "beam-1m",
+   "conversation": "1m-20",
+   "ability": "temporal_reasoning",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-20:temporal_reasoning:1",
+   "scale": "beam-1m",
+   "conversation": "1m-20",
+   "ability": "temporal_reasoning",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 5,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-24:contradiction_resolution:0",
+   "scale": "beam-1m",
+   "conversation": "1m-24",
+   "ability": "contradiction_resolution",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-24:contradiction_resolution:1",
+   "scale": "beam-1m",
+   "conversation": "1m-24",
+   "ability": "contradiction_resolution",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 4,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-24:event_ordering:0",
+   "scale": "beam-1m",
+   "conversation": "1m-24",
+   "ability": "event_ordering",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 9,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-24:event_ordering:1",
+   "scale": "beam-1m",
+   "conversation": "1m-24",
+   "ability": "event_ordering",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 19,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-24:information_extraction:0",
+   "scale": "beam-1m",
+   "conversation": "1m-24",
+   "ability": "information_extraction",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-24:information_extraction:1",
+   "scale": "beam-1m",
+   "conversation": "1m-24",
+   "ability": "information_extraction",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 4,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-24:instruction_following:0",
+   "scale": "beam-1m",
+   "conversation": "1m-24",
+   "ability": "instruction_following",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-24:instruction_following:1",
+   "scale": "beam-1m",
+   "conversation": "1m-24",
+   "ability": "instruction_following",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-24:knowledge_update:0",
+   "scale": "beam-1m",
+   "conversation": "1m-24",
+   "ability": "knowledge_update",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 4,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-24:knowledge_update:1",
+   "scale": "beam-1m",
+   "conversation": "1m-24",
+   "ability": "knowledge_update",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-24:multi_session_reasoning:0",
+   "scale": "beam-1m",
+   "conversation": "1m-24",
+   "ability": "multi_session_reasoning",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 5,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-24:multi_session_reasoning:1",
+   "scale": "beam-1m",
+   "conversation": "1m-24",
+   "ability": "multi_session_reasoning",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 3,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-24:preference_following:0",
+   "scale": "beam-1m",
+   "conversation": "1m-24",
+   "ability": "preference_following",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 3,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-24:preference_following:1",
+   "scale": "beam-1m",
+   "conversation": "1m-24",
+   "ability": "preference_following",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 3,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-24:summarization:0",
+   "scale": "beam-1m",
+   "conversation": "1m-24",
+   "ability": "summarization",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 10,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-24:summarization:1",
+   "scale": "beam-1m",
+   "conversation": "1m-24",
+   "ability": "summarization",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 21,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-24:temporal_reasoning:0",
+   "scale": "beam-1m",
+   "conversation": "1m-24",
+   "ability": "temporal_reasoning",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 6,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-24:temporal_reasoning:1",
+   "scale": "beam-1m",
+   "conversation": "1m-24",
+   "ability": "temporal_reasoning",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 5,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-28:contradiction_resolution:0",
+   "scale": "beam-1m",
+   "conversation": "1m-28",
+   "ability": "contradiction_resolution",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 6,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-28:contradiction_resolution:1",
+   "scale": "beam-1m",
+   "conversation": "1m-28",
+   "ability": "contradiction_resolution",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 7,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-28:event_ordering:0",
+   "scale": "beam-1m",
+   "conversation": "1m-28",
+   "ability": "event_ordering",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 32,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-28:event_ordering:1",
+   "scale": "beam-1m",
+   "conversation": "1m-28",
+   "ability": "event_ordering",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 41,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-28:information_extraction:0",
+   "scale": "beam-1m",
+   "conversation": "1m-28",
+   "ability": "information_extraction",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-28:information_extraction:1",
+   "scale": "beam-1m",
+   "conversation": "1m-28",
+   "ability": "information_extraction",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 3,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-28:instruction_following:0",
+   "scale": "beam-1m",
+   "conversation": "1m-28",
+   "ability": "instruction_following",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-28:instruction_following:1",
+   "scale": "beam-1m",
+   "conversation": "1m-28",
+   "ability": "instruction_following",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-28:knowledge_update:0",
+   "scale": "beam-1m",
+   "conversation": "1m-28",
+   "ability": "knowledge_update",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 4,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-28:knowledge_update:1",
+   "scale": "beam-1m",
+   "conversation": "1m-28",
+   "ability": "knowledge_update",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 5,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-28:multi_session_reasoning:0",
+   "scale": "beam-1m",
+   "conversation": "1m-28",
+   "ability": "multi_session_reasoning",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 3,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-28:multi_session_reasoning:1",
+   "scale": "beam-1m",
+   "conversation": "1m-28",
+   "ability": "multi_session_reasoning",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 5,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-28:preference_following:0",
+   "scale": "beam-1m",
+   "conversation": "1m-28",
+   "ability": "preference_following",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 3,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-28:preference_following:1",
+   "scale": "beam-1m",
+   "conversation": "1m-28",
+   "ability": "preference_following",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 3,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-28:summarization:0",
+   "scale": "beam-1m",
+   "conversation": "1m-28",
+   "ability": "summarization",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 16,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-28:summarization:1",
+   "scale": "beam-1m",
+   "conversation": "1m-28",
+   "ability": "summarization",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 23,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-28:temporal_reasoning:0",
+   "scale": "beam-1m",
+   "conversation": "1m-28",
+   "ability": "temporal_reasoning",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 6,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-28:temporal_reasoning:1",
+   "scale": "beam-1m",
+   "conversation": "1m-28",
+   "ability": "temporal_reasoning",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-30:contradiction_resolution:0",
+   "scale": "beam-1m",
+   "conversation": "1m-30",
+   "ability": "contradiction_resolution",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 3,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-30:contradiction_resolution:1",
+   "scale": "beam-1m",
+   "conversation": "1m-30",
+   "ability": "contradiction_resolution",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 5,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-30:event_ordering:0",
+   "scale": "beam-1m",
+   "conversation": "1m-30",
+   "ability": "event_ordering",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 33,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-30:event_ordering:1",
+   "scale": "beam-1m",
+   "conversation": "1m-30",
+   "ability": "event_ordering",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 42,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-30:information_extraction:0",
+   "scale": "beam-1m",
+   "conversation": "1m-30",
+   "ability": "information_extraction",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-30:information_extraction:1",
+   "scale": "beam-1m",
+   "conversation": "1m-30",
+   "ability": "information_extraction",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-30:instruction_following:0",
+   "scale": "beam-1m",
+   "conversation": "1m-30",
+   "ability": "instruction_following",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-30:instruction_following:1",
+   "scale": "beam-1m",
+   "conversation": "1m-30",
+   "ability": "instruction_following",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-30:knowledge_update:0",
+   "scale": "beam-1m",
+   "conversation": "1m-30",
+   "ability": "knowledge_update",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 5,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-30:knowledge_update:1",
+   "scale": "beam-1m",
+   "conversation": "1m-30",
+   "ability": "knowledge_update",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 4,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-30:multi_session_reasoning:0",
+   "scale": "beam-1m",
+   "conversation": "1m-30",
+   "ability": "multi_session_reasoning",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 4,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-30:multi_session_reasoning:1",
+   "scale": "beam-1m",
+   "conversation": "1m-30",
+   "ability": "multi_session_reasoning",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 3,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-30:preference_following:0",
+   "scale": "beam-1m",
+   "conversation": "1m-30",
+   "ability": "preference_following",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-30:preference_following:1",
+   "scale": "beam-1m",
+   "conversation": "1m-30",
+   "ability": "preference_following",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 3,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-30:summarization:0",
+   "scale": "beam-1m",
+   "conversation": "1m-30",
+   "ability": "summarization",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 21,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-30:summarization:1",
+   "scale": "beam-1m",
+   "conversation": "1m-30",
+   "ability": "summarization",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 6,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-30:temporal_reasoning:0",
+   "scale": "beam-1m",
+   "conversation": "1m-30",
+   "ability": "temporal_reasoning",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 7,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-30:temporal_reasoning:1",
+   "scale": "beam-1m",
+   "conversation": "1m-30",
+   "ability": "temporal_reasoning",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 6,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-32:contradiction_resolution:0",
+   "scale": "beam-1m",
+   "conversation": "1m-32",
+   "ability": "contradiction_resolution",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 4,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-32:contradiction_resolution:1",
+   "scale": "beam-1m",
+   "conversation": "1m-32",
+   "ability": "contradiction_resolution",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 3,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-32:event_ordering:0",
+   "scale": "beam-1m",
+   "conversation": "1m-32",
+   "ability": "event_ordering",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 34,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-32:event_ordering:1",
+   "scale": "beam-1m",
+   "conversation": "1m-32",
+   "ability": "event_ordering",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 30,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-32:information_extraction:0",
+   "scale": "beam-1m",
+   "conversation": "1m-32",
+   "ability": "information_extraction",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-32:information_extraction:1",
+   "scale": "beam-1m",
+   "conversation": "1m-32",
+   "ability": "information_extraction",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-32:instruction_following:0",
+   "scale": "beam-1m",
+   "conversation": "1m-32",
+   "ability": "instruction_following",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-32:instruction_following:1",
+   "scale": "beam-1m",
+   "conversation": "1m-32",
+   "ability": "instruction_following",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-32:knowledge_update:0",
+   "scale": "beam-1m",
+   "conversation": "1m-32",
+   "ability": "knowledge_update",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 6,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-32:knowledge_update:1",
+   "scale": "beam-1m",
+   "conversation": "1m-32",
+   "ability": "knowledge_update",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 5,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-32:multi_session_reasoning:0",
+   "scale": "beam-1m",
+   "conversation": "1m-32",
+   "ability": "multi_session_reasoning",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 12,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-32:multi_session_reasoning:1",
+   "scale": "beam-1m",
+   "conversation": "1m-32",
+   "ability": "multi_session_reasoning",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 8,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-32:preference_following:0",
+   "scale": "beam-1m",
+   "conversation": "1m-32",
+   "ability": "preference_following",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 3,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-32:preference_following:1",
+   "scale": "beam-1m",
+   "conversation": "1m-32",
+   "ability": "preference_following",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 3,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-32:summarization:0",
+   "scale": "beam-1m",
+   "conversation": "1m-32",
+   "ability": "summarization",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 26,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-32:summarization:1",
+   "scale": "beam-1m",
+   "conversation": "1m-32",
+   "ability": "summarization",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 3,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-32:temporal_reasoning:0",
+   "scale": "beam-1m",
+   "conversation": "1m-32",
+   "ability": "temporal_reasoning",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 5,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "1m-32:temporal_reasoning:1",
+   "scale": "beam-1m",
+   "conversation": "1m-32",
+   "ability": "temporal_reasoning",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 3,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-10:contradiction_resolution:0",
+   "scale": "beam-500k",
+   "conversation": "500k-10",
+   "ability": "contradiction_resolution",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-10:contradiction_resolution:1",
+   "scale": "beam-500k",
+   "conversation": "500k-10",
+   "ability": "contradiction_resolution",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-10:event_ordering:0",
+   "scale": "beam-500k",
+   "conversation": "500k-10",
+   "ability": "event_ordering",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 13,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-10:event_ordering:1",
+   "scale": "beam-500k",
+   "conversation": "500k-10",
+   "ability": "event_ordering",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 10,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-10:information_extraction:0",
+   "scale": "beam-500k",
+   "conversation": "500k-10",
+   "ability": "information_extraction",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-10:information_extraction:1",
+   "scale": "beam-500k",
+   "conversation": "500k-10",
+   "ability": "information_extraction",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-10:instruction_following:0",
+   "scale": "beam-500k",
+   "conversation": "500k-10",
+   "ability": "instruction_following",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 6,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-10:instruction_following:1",
+   "scale": "beam-500k",
+   "conversation": "500k-10",
+   "ability": "instruction_following",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-10:knowledge_update:0",
+   "scale": "beam-500k",
+   "conversation": "500k-10",
+   "ability": "knowledge_update",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-10:knowledge_update:1",
+   "scale": "beam-500k",
+   "conversation": "500k-10",
+   "ability": "knowledge_update",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-10:multi_session_reasoning:0",
+   "scale": "beam-500k",
+   "conversation": "500k-10",
+   "ability": "multi_session_reasoning",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 8,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-10:multi_session_reasoning:1",
+   "scale": "beam-500k",
+   "conversation": "500k-10",
+   "ability": "multi_session_reasoning",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 4,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-10:preference_following:0",
+   "scale": "beam-500k",
+   "conversation": "500k-10",
+   "ability": "preference_following",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-10:preference_following:1",
+   "scale": "beam-500k",
+   "conversation": "500k-10",
+   "ability": "preference_following",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 4,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-10:summarization:0",
+   "scale": "beam-500k",
+   "conversation": "500k-10",
+   "ability": "summarization",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 8,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-10:summarization:1",
+   "scale": "beam-500k",
+   "conversation": "500k-10",
+   "ability": "summarization",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 3,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-10:temporal_reasoning:0",
+   "scale": "beam-500k",
+   "conversation": "500k-10",
+   "ability": "temporal_reasoning",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-10:temporal_reasoning:1",
+   "scale": "beam-500k",
+   "conversation": "500k-10",
+   "ability": "temporal_reasoning",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 3,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-18:contradiction_resolution:0",
+   "scale": "beam-500k",
+   "conversation": "500k-18",
+   "ability": "contradiction_resolution",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-18:contradiction_resolution:1",
+   "scale": "beam-500k",
+   "conversation": "500k-18",
+   "ability": "contradiction_resolution",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 3,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-18:event_ordering:0",
+   "scale": "beam-500k",
+   "conversation": "500k-18",
+   "ability": "event_ordering",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 17,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-18:event_ordering:1",
+   "scale": "beam-500k",
+   "conversation": "500k-18",
+   "ability": "event_ordering",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 19,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-18:information_extraction:0",
+   "scale": "beam-500k",
+   "conversation": "500k-18",
+   "ability": "information_extraction",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-18:information_extraction:1",
+   "scale": "beam-500k",
+   "conversation": "500k-18",
+   "ability": "information_extraction",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-18:instruction_following:0",
+   "scale": "beam-500k",
+   "conversation": "500k-18",
+   "ability": "instruction_following",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-18:instruction_following:1",
+   "scale": "beam-500k",
+   "conversation": "500k-18",
+   "ability": "instruction_following",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-18:knowledge_update:0",
+   "scale": "beam-500k",
+   "conversation": "500k-18",
+   "ability": "knowledge_update",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-18:knowledge_update:1",
+   "scale": "beam-500k",
+   "conversation": "500k-18",
+   "ability": "knowledge_update",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 3,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-18:multi_session_reasoning:0",
+   "scale": "beam-500k",
+   "conversation": "500k-18",
+   "ability": "multi_session_reasoning",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-18:multi_session_reasoning:1",
+   "scale": "beam-500k",
+   "conversation": "500k-18",
+   "ability": "multi_session_reasoning",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 3,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-18:preference_following:0",
+   "scale": "beam-500k",
+   "conversation": "500k-18",
+   "ability": "preference_following",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-18:preference_following:1",
+   "scale": "beam-500k",
+   "conversation": "500k-18",
+   "ability": "preference_following",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-18:summarization:0",
+   "scale": "beam-500k",
+   "conversation": "500k-18",
+   "ability": "summarization",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5"
+   ],
+   "cited": 17,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-18:summarization:1",
+   "scale": "beam-500k",
+   "conversation": "500k-18",
+   "ability": "summarization",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 6,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-18:temporal_reasoning:0",
+   "scale": "beam-500k",
+   "conversation": "500k-18",
+   "ability": "temporal_reasoning",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-18:temporal_reasoning:1",
+   "scale": "beam-500k",
+   "conversation": "500k-18",
+   "ability": "temporal_reasoning",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5"
+   ],
+   "cited": 3,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-20:contradiction_resolution:0",
+   "scale": "beam-500k",
+   "conversation": "500k-20",
+   "ability": "contradiction_resolution",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-20:contradiction_resolution:1",
+   "scale": "beam-500k",
+   "conversation": "500k-20",
+   "ability": "contradiction_resolution",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-20:event_ordering:0",
+   "scale": "beam-500k",
+   "conversation": "500k-20",
+   "ability": "event_ordering",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 8,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-20:event_ordering:1",
+   "scale": "beam-500k",
+   "conversation": "500k-20",
+   "ability": "event_ordering",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 12,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-20:information_extraction:0",
+   "scale": "beam-500k",
+   "conversation": "500k-20",
+   "ability": "information_extraction",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-20:information_extraction:1",
+   "scale": "beam-500k",
+   "conversation": "500k-20",
+   "ability": "information_extraction",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-20:instruction_following:0",
+   "scale": "beam-500k",
+   "conversation": "500k-20",
+   "ability": "instruction_following",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-20:instruction_following:1",
+   "scale": "beam-500k",
+   "conversation": "500k-20",
+   "ability": "instruction_following",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-20:knowledge_update:0",
+   "scale": "beam-500k",
+   "conversation": "500k-20",
+   "ability": "knowledge_update",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 3,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-20:knowledge_update:1",
+   "scale": "beam-500k",
+   "conversation": "500k-20",
+   "ability": "knowledge_update",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-20:multi_session_reasoning:0",
+   "scale": "beam-500k",
+   "conversation": "500k-20",
+   "ability": "multi_session_reasoning",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-20:multi_session_reasoning:1",
+   "scale": "beam-500k",
+   "conversation": "500k-20",
+   "ability": "multi_session_reasoning",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-20:preference_following:0",
+   "scale": "beam-500k",
+   "conversation": "500k-20",
+   "ability": "preference_following",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-20:preference_following:1",
+   "scale": "beam-500k",
+   "conversation": "500k-20",
+   "ability": "preference_following",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-20:summarization:0",
+   "scale": "beam-500k",
+   "conversation": "500k-20",
+   "ability": "summarization",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-20:summarization:1",
+   "scale": "beam-500k",
+   "conversation": "500k-20",
+   "ability": "summarization",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 12,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-20:temporal_reasoning:0",
+   "scale": "beam-500k",
+   "conversation": "500k-20",
+   "ability": "temporal_reasoning",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-20:temporal_reasoning:1",
+   "scale": "beam-500k",
+   "conversation": "500k-20",
+   "ability": "temporal_reasoning",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-24:contradiction_resolution:0",
+   "scale": "beam-500k",
+   "conversation": "500k-24",
+   "ability": "contradiction_resolution",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-24:contradiction_resolution:1",
+   "scale": "beam-500k",
+   "conversation": "500k-24",
+   "ability": "contradiction_resolution",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-24:event_ordering:0",
+   "scale": "beam-500k",
+   "conversation": "500k-24",
+   "ability": "event_ordering",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 15,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-24:event_ordering:1",
+   "scale": "beam-500k",
+   "conversation": "500k-24",
+   "ability": "event_ordering",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 7,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-24:information_extraction:0",
+   "scale": "beam-500k",
+   "conversation": "500k-24",
+   "ability": "information_extraction",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-24:information_extraction:1",
+   "scale": "beam-500k",
+   "conversation": "500k-24",
+   "ability": "information_extraction",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-24:instruction_following:0",
+   "scale": "beam-500k",
+   "conversation": "500k-24",
+   "ability": "instruction_following",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-24:instruction_following:1",
+   "scale": "beam-500k",
+   "conversation": "500k-24",
+   "ability": "instruction_following",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-24:knowledge_update:0",
+   "scale": "beam-500k",
+   "conversation": "500k-24",
+   "ability": "knowledge_update",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-24:knowledge_update:1",
+   "scale": "beam-500k",
+   "conversation": "500k-24",
+   "ability": "knowledge_update",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-24:multi_session_reasoning:0",
+   "scale": "beam-500k",
+   "conversation": "500k-24",
+   "ability": "multi_session_reasoning",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-24:multi_session_reasoning:1",
+   "scale": "beam-500k",
+   "conversation": "500k-24",
+   "ability": "multi_session_reasoning",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 3,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-24:preference_following:0",
+   "scale": "beam-500k",
+   "conversation": "500k-24",
+   "ability": "preference_following",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-24:preference_following:1",
+   "scale": "beam-500k",
+   "conversation": "500k-24",
+   "ability": "preference_following",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-24:summarization:0",
+   "scale": "beam-500k",
+   "conversation": "500k-24",
+   "ability": "summarization",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 12,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-24:summarization:1",
+   "scale": "beam-500k",
+   "conversation": "500k-24",
+   "ability": "summarization",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 34,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-24:temporal_reasoning:0",
+   "scale": "beam-500k",
+   "conversation": "500k-24",
+   "ability": "temporal_reasoning",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-24:temporal_reasoning:1",
+   "scale": "beam-500k",
+   "conversation": "500k-24",
+   "ability": "temporal_reasoning",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-25:contradiction_resolution:0",
+   "scale": "beam-500k",
+   "conversation": "500k-25",
+   "ability": "contradiction_resolution",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-25:contradiction_resolution:1",
+   "scale": "beam-500k",
+   "conversation": "500k-25",
+   "ability": "contradiction_resolution",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-25:event_ordering:0",
+   "scale": "beam-500k",
+   "conversation": "500k-25",
+   "ability": "event_ordering",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 15,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-25:event_ordering:1",
+   "scale": "beam-500k",
+   "conversation": "500k-25",
+   "ability": "event_ordering",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 10,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-25:information_extraction:0",
+   "scale": "beam-500k",
+   "conversation": "500k-25",
+   "ability": "information_extraction",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-25:information_extraction:1",
+   "scale": "beam-500k",
+   "conversation": "500k-25",
+   "ability": "information_extraction",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-25:instruction_following:0",
+   "scale": "beam-500k",
+   "conversation": "500k-25",
+   "ability": "instruction_following",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-25:instruction_following:1",
+   "scale": "beam-500k",
+   "conversation": "500k-25",
+   "ability": "instruction_following",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-25:knowledge_update:0",
+   "scale": "beam-500k",
+   "conversation": "500k-25",
+   "ability": "knowledge_update",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-25:knowledge_update:1",
+   "scale": "beam-500k",
+   "conversation": "500k-25",
+   "ability": "knowledge_update",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-25:multi_session_reasoning:0",
+   "scale": "beam-500k",
+   "conversation": "500k-25",
+   "ability": "multi_session_reasoning",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 4,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-25:multi_session_reasoning:1",
+   "scale": "beam-500k",
+   "conversation": "500k-25",
+   "ability": "multi_session_reasoning",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 4,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-25:preference_following:0",
+   "scale": "beam-500k",
+   "conversation": "500k-25",
+   "ability": "preference_following",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-25:preference_following:1",
+   "scale": "beam-500k",
+   "conversation": "500k-25",
+   "ability": "preference_following",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-25:summarization:0",
+   "scale": "beam-500k",
+   "conversation": "500k-25",
+   "ability": "summarization",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 5,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-25:summarization:1",
+   "scale": "beam-500k",
+   "conversation": "500k-25",
+   "ability": "summarization",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 24,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-25:temporal_reasoning:0",
+   "scale": "beam-500k",
+   "conversation": "500k-25",
+   "ability": "temporal_reasoning",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-25:temporal_reasoning:1",
+   "scale": "beam-500k",
+   "conversation": "500k-25",
+   "ability": "temporal_reasoning",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-29:contradiction_resolution:0",
+   "scale": "beam-500k",
+   "conversation": "500k-29",
+   "ability": "contradiction_resolution",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-29:contradiction_resolution:1",
+   "scale": "beam-500k",
+   "conversation": "500k-29",
+   "ability": "contradiction_resolution",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-29:event_ordering:0",
+   "scale": "beam-500k",
+   "conversation": "500k-29",
+   "ability": "event_ordering",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 11,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-29:event_ordering:1",
+   "scale": "beam-500k",
+   "conversation": "500k-29",
+   "ability": "event_ordering",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 12,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-29:information_extraction:0",
+   "scale": "beam-500k",
+   "conversation": "500k-29",
+   "ability": "information_extraction",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-29:information_extraction:1",
+   "scale": "beam-500k",
+   "conversation": "500k-29",
+   "ability": "information_extraction",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-29:instruction_following:0",
+   "scale": "beam-500k",
+   "conversation": "500k-29",
+   "ability": "instruction_following",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-29:instruction_following:1",
+   "scale": "beam-500k",
+   "conversation": "500k-29",
+   "ability": "instruction_following",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-29:knowledge_update:0",
+   "scale": "beam-500k",
+   "conversation": "500k-29",
+   "ability": "knowledge_update",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-29:knowledge_update:1",
+   "scale": "beam-500k",
+   "conversation": "500k-29",
+   "ability": "knowledge_update",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-29:multi_session_reasoning:0",
+   "scale": "beam-500k",
+   "conversation": "500k-29",
+   "ability": "multi_session_reasoning",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 4,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-29:multi_session_reasoning:1",
+   "scale": "beam-500k",
+   "conversation": "500k-29",
+   "ability": "multi_session_reasoning",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5"
+   ],
+   "cited": 4,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-29:preference_following:0",
+   "scale": "beam-500k",
+   "conversation": "500k-29",
+   "ability": "preference_following",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-29:preference_following:1",
+   "scale": "beam-500k",
+   "conversation": "500k-29",
+   "ability": "preference_following",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-29:summarization:0",
+   "scale": "beam-500k",
+   "conversation": "500k-29",
+   "ability": "summarization",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 3,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-29:summarization:1",
+   "scale": "beam-500k",
+   "conversation": "500k-29",
+   "ability": "summarization",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5"
+   ],
+   "cited": 6,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-29:temporal_reasoning:0",
+   "scale": "beam-500k",
+   "conversation": "500k-29",
+   "ability": "temporal_reasoning",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-29:temporal_reasoning:1",
+   "scale": "beam-500k",
+   "conversation": "500k-29",
+   "ability": "temporal_reasoning",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-33:contradiction_resolution:0",
+   "scale": "beam-500k",
+   "conversation": "500k-33",
+   "ability": "contradiction_resolution",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-33:contradiction_resolution:1",
+   "scale": "beam-500k",
+   "conversation": "500k-33",
+   "ability": "contradiction_resolution",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-33:event_ordering:0",
+   "scale": "beam-500k",
+   "conversation": "500k-33",
+   "ability": "event_ordering",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 12,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-33:event_ordering:1",
+   "scale": "beam-500k",
+   "conversation": "500k-33",
+   "ability": "event_ordering",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 8,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-33:information_extraction:0",
+   "scale": "beam-500k",
+   "conversation": "500k-33",
+   "ability": "information_extraction",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-33:information_extraction:1",
+   "scale": "beam-500k",
+   "conversation": "500k-33",
+   "ability": "information_extraction",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-33:instruction_following:0",
+   "scale": "beam-500k",
+   "conversation": "500k-33",
+   "ability": "instruction_following",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-33:instruction_following:1",
+   "scale": "beam-500k",
+   "conversation": "500k-33",
+   "ability": "instruction_following",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 3,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-33:knowledge_update:0",
+   "scale": "beam-500k",
+   "conversation": "500k-33",
+   "ability": "knowledge_update",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-33:knowledge_update:1",
+   "scale": "beam-500k",
+   "conversation": "500k-33",
+   "ability": "knowledge_update",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-33:multi_session_reasoning:0",
+   "scale": "beam-500k",
+   "conversation": "500k-33",
+   "ability": "multi_session_reasoning",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 10,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-33:multi_session_reasoning:1",
+   "scale": "beam-500k",
+   "conversation": "500k-33",
+   "ability": "multi_session_reasoning",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-33:preference_following:0",
+   "scale": "beam-500k",
+   "conversation": "500k-33",
+   "ability": "preference_following",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-33:preference_following:1",
+   "scale": "beam-500k",
+   "conversation": "500k-33",
+   "ability": "preference_following",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 1,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-33:summarization:0",
+   "scale": "beam-500k",
+   "conversation": "500k-33",
+   "ability": "summarization",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5"
+   ],
+   "cited": 6,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-33:summarization:1",
+   "scale": "beam-500k",
+   "conversation": "500k-33",
+   "ability": "summarization",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5"
+   ],
+   "cited": 14,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-33:temporal_reasoning:0",
+   "scale": "beam-500k",
+   "conversation": "500k-33",
+   "ability": "temporal_reasoning",
+   "index": 0,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 2,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  },
+  {
+   "id": "500k-33:temporal_reasoning:1",
+   "scale": "beam-500k",
+   "conversation": "500k-33",
+   "ability": "temporal_reasoning",
+   "index": 1,
+   "rows": [
+    "mpw2"
+   ],
+   "checked": true,
+   "gates": [],
+   "cited": 3,
+   "ambiguous": 0,
+   "unmapped": 0,
+   "renumbered": false
+  }
+ ]
+}

@@ -7,11 +7,16 @@
  *   bun eval/runner/live-recall/tasks.ts freeze (--fixture | --tasks <private.jsonl> --gbrain <checkout>@<commit>
  *     [--database-url-env LIVE_RECALL_DATABASE_URL]) --out <freeze.json>
  *   bun eval/runner/live-recall/tasks.ts estimate --tasks <private.jsonl> --freeze <freeze.json> --smoke <smoke run dir>
- *     --gbrain <checkout>@<commit> [--database-url-env ...] [--out <estimate.json>]
- *   bun eval/runner/live-recall/tasks.ts run (--fixture | --tasks <private.jsonl> --freeze <freeze.json> --gbrain ...)
- *     --budget-usd <dollars> --budget-ledger <ledger> [--forms paraphrase,exact] [--arms A,B,C,D] [--models <ids>]
- *     [--limit <tasks>] [--concurrency 4] [--out <run dir>] [--resume [--window-note <id>]]
+ *     --smoke-check <smoke judge-check dir> --gbrain <checkout>@<commit> [--database-url-env ...] [--out <estimate.json>]
+ *   bun eval/runner/live-recall/tasks.ts judge-check (--fixture | --tasks <private.jsonl> --freeze <freeze.json> --gbrain ...)
+ *     --budget-usd <dollars> --budget-ledger <ledger> [--limit 20] [--out <judge-check dir>] [--resume [--window-note <id>]]
+ *     [--truncation-waiver <GBEV-3 note>]
+ *   bun eval/runner/live-recall/tasks.ts run (--fixture | --tasks <private.jsonl> --freeze <freeze.json> --gbrain ...
+ *     --judge-check <judge-check.json> [--judge-check-waiver <GBEV-3 note>]) --budget-usd <dollars> --budget-ledger <ledger>
+ *     [--forms paraphrase,exact] [--arms A,B,C,D] [--models <ids>] [--limit <tasks>] [--concurrency 4] [--out <run dir>]
+ *     [--resume [--window-note <id>] [--truncation-waiver <GBEV-3 note>]]
  *   bun eval/runner/live-recall/tasks.ts judge <run dir> [--window-note <extension id> --budget-usd <new cap>]
+ *     [--truncation-waiver <GBEV-3 note>]
  *   bun eval/runner/live-recall/tasks.ts audit <run dir> [--n 30]
  *   bun eval/runner/live-recall/tasks.ts score <run dir> [--audit-grades <grades.jsonl>]
  *
@@ -22,15 +27,16 @@
  * call, and every embedding and rerank call gbrain makes, goes through the budget ledger's paid-request guard; a refused
  * reservation is a cap stop that pauses the run, incomplete, at its cap until GBEV-3 extends it and a --resume (or judge)
  * with --window-note <extension id> and a higher --budget-usd continues it. Each run directory has its own ledger run, so
- * its cost sums count only its own spend. The protocol is docs/benchmarks/live-recall/PHASE2-PREREGISTRATION.md;
+ * its cost sums count only its own spend; the session that leaves the directory owing no paid call finishes that run, and
+ * `judge` on such a directory makes no call and finishes it. The protocol is docs/benchmarks/live-recall/PHASE2-PREREGISTRATION.md;
  * the steps, abort codes and recovery are in RUN-KIT.md, "Phase 2". Exit status: 0 complete, 1 incomplete, 2 usage error,
- * 3 abort, 4 unexpected error, 5 a freeze under 60 kept tasks, 6 cap stop.
+ * 3 abort, 4 unexpected error, 5 a freeze under 60 kept tasks, 6 cap stop, 7 a judge check that did not pass (R78).
  */
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-import { budgetOptionsFrom, readLedger, setRunBudget, type BudgetRun, type PaidRequestGuard } from '../budget-ledger.ts';
+import { budgetOptionsFrom, closeRun, readLedger, setRunBudget, type BudgetRun, type PaidRequestGuard } from '../budget-ledger.ts';
 import { priceUsage, provider, type Usage } from '../cat40/loop.ts';
 import { gbrainSpecFrom, importGbrain, resolveGbrainUnderTest, type GbrainUnderTest } from '../gbrain-under-test.ts';
 import { gbrainPin } from '../gbrain-version.ts';
@@ -42,8 +48,8 @@ import {
   ARMS, EFFORT, FORMS, MAX_ATTEMPTS, MAX_OUTPUT_TOKENS, MAX_TURNS, PASTE_CHARS, PASTE_PAGES, TOOL_RESULT_CHARS, episodeKey, judgeEpisode, openReader, runEpisode,
   type AnswerRecord, type EpisodeContext, type GbrainReader, type JudgeRecord, type Task, type TaskArm, type TaskForm,
 } from './task-arms.ts';
-import { JUDGE_PAGE_CHARS, MODELS, judgeFor, secondJudgeFor } from './task-judge.ts';
-import { SEED, TYPES, buildTaskScorecard, checkOutbound, primaryMdd, renderTaskMarkdown, taskNeedles } from './task-scorecard.ts';
+import { JUDGE_PAGE_CHARS, LABELLERS, LABEL_EFFORT, MODELS, judgeFor, secondJudgeFor } from './task-judge.ts';
+import { JUDGE_CHECK_KAPPA, JUDGE_CHECK_MIN_LABELS, JUDGE_CHECK_SCHEMA, SEED, TRUNCATION_CAP, TYPES, buildTaskScorecard, checkOutbound, goldClusterSummary, judgeCheck, primaryMdd, renderTaskMarkdown, taskNeedles } from './task-scorecard.ts';
 
 const REPO_ROOT = resolve(import.meta.dir, '../../..');
 export const FIXTURE_TASKS = join(FIXTURE_DIR, 'tasks.jsonl');
@@ -54,8 +60,17 @@ export const MIN_TASKS = 60;
 /** Fewer kept tasks than this prints a notice: replacement tasks and a new freeze come before accepting lower power. */
 export const TARGET_TASKS = 100;
 /** The counted run's starting cap; a higher cap comes only from a --resume that extends a cap stop (extendCap). */
-export const COUNTED_CAP_USD = 360;
+export const COUNTED_CAP_USD = 700;
 export const SMOKE_CAP_USD = 10;
+/** The judge check (R78): paraphrase answers on this many frozen tasks, spread over the types, labelled before the run. */
+export const JUDGE_CHECK_TASKS = 20;
+/** The label floor: under JUDGE_CHECK_MIN_LABELS labels, the check adds this many tasks at a time, up to the maximum. */
+export const JUDGE_CHECK_STEP = 10;
+export const JUDGE_CHECK_MAX_TASKS = 40;
+/** A judge whose truncated calls pass TRUNCATION_CAP of its rows, counted over at least this many rows, stops the check or run. */
+export const TRUNCATION_FLOOR = 100;
+/** The judge check's starting cap, a runaway stop like the counted run's. */
+export const JUDGE_CHECK_CAP_USD = 200;
 /** The cost gate: the projected paraphrase pass may use at most this share of the cap, and the total at most the cap. */
 export const COST_GATE_SHARE = 0.75;
 export const TASK_CONCURRENCY = 4;
@@ -69,19 +84,25 @@ export const SECOND_JUDGE_ARMS: readonly TaskArm[] = ['B', 'C', 'D'];
  */
 const RESUME_IDENTITY = [
   'harness_digest', 'gbrain_loaded_version', 'gbrain_loaded_commit', 'schema_version', 'barrier', 'source_id', 'search_mode', 'reranker_enabled', 'reranker_model', 'embedding_model',
-  'crag_escalation', 'crag_think', 'result_cache', 'tool_defs_digest', 'models', 'arms', 'forms', 'kept_ids',
+  'crag_escalation', 'crag_think', 'result_cache', 'tool_defs_digest', 'models', 'arms', 'forms', 'kept_ids', 'judges', 'labellers', 'label_effort',
 ] as const;
 const AUDIT_ROWS = 30;
 const KEY_ENV = { anthropic: 'ANTHROPIC_API_KEY', openai: 'OPENAI_API_KEY', particle: 'PARTICLE_API_KEY' } as const;
-const HARNESS_FILES = [
+export const HARNESS_FILES = [
   'eval/runner/live-recall/tasks.ts', 'eval/runner/live-recall/task-arms.ts', 'eval/runner/live-recall/task-judge.ts', 'eval/runner/live-recall/task-scorecard.ts',
   'eval/runner/live-recall/brain.ts', 'eval/runner/live-recall/run.ts', 'eval/runner/live-recall/scorecard.ts', 'eval/runner/cat40/loop.ts',
   'eval/runner/budget-ledger.ts', 'eval/runner/refresh-barrier/ledger.ts', 'eval/runner/providers/openai-compatible.ts', 'eval/runner/stats/paired.ts', 'eval/runner/q2/stats.ts',
+  'eval/runner/q1/usage.ts', 'eval/runner/usage-receipt.ts', 'eval/runner/metering-proxy.ts', 'eval/runner/metrics.ts',
+  'node_modules/gbrain/src/core/embedding-pricing.ts', 'node_modules/gbrain/src/core/model-pricing.ts', 'node_modules/gbrain/src/core/model-id.ts',
 ];
 
 const sha256 = (text: string) => createHash('sha256').update(text).digest('hex');
 
-/** sha256 over the runner's own source files, recorded in run identity so a counted run names the exact harness. */
+/**
+ * sha256 over the runner's own source files, the cost path it prices with (the usage parser, receipts, the metering
+ * deadline and gbrain's model and embedding prices) and the shared metrics its scorecard uses, recorded in run identity
+ * so a counted run names the exact harness.
+ */
 export function harnessDigest(): string {
   const h = createHash('sha256');
   for (const f of HARNESS_FILES) h.update(f + '\0').update(readFileSync(join(REPO_ROOT, f))).update('\0');
@@ -123,6 +144,7 @@ export function parseTasks(source: string): Array<{ line: number; task: Task }> 
     if (g.acceptable_variants !== undefined && (!Array.isArray(g.acceptable_variants) || !g.acceptable_variants.every(text))) throw bad('gold_answer.acceptable_variants');
     if (t.window !== undefined && !(typeof t.window?.since === 'string' && DATE.test(t.window.since) && typeof t.window?.until === 'string' && DATE.test(t.window.until))) throw bad('window');
     if (!(GOLD_FOUND_BY as readonly unknown[]).includes(t.gold_found_by)) throw bad('gold_found_by');
+    if (t.replacement !== undefined && typeof t.replacement !== 'boolean') throw bad('replacement');
     ids.add(t.id);
     out.push({
       line: i + 1,
@@ -130,6 +152,7 @@ export function parseTasks(source: string): Array<{ line: number; task: Task }> 
         id: t.id, type: t.type, source_question: t.source_question, forms: { paraphrase: t.forms.paraphrase, exact: t.forms.exact }, gold_pages: t.gold_pages,
         gold_answer: { text: g.text, required_facts: facts.map((f: any) => ({ id: f.id, fact: f.fact })), ...(g.acceptable_variants ? { acceptable_variants: g.acceptable_variants } : {}) },
         ...(t.window ? { window: { since: t.window.since, until: t.window.until } } : {}), gold_found_by: t.gold_found_by,
+        ...(t.replacement ? { replacement: true } : {}),
       },
     });
   });
@@ -159,6 +182,7 @@ export async function goldCheck(reader: GbrainReader, tasks: Array<{ line: numbe
 
 /** freeze.json: numbers only. */
 export function freezeSummary(source: string, parsed: Array<{ line: number; task: Task }>, kept: Array<{ line: number; task: Task }>, gut: GbrainUnderTest) {
+  const clusters = goldClusterSummary(kept.map(k => k.task));
   return {
     schema: FREEZE_SCHEMA,
     tasks_sha256: sha256(source),
@@ -169,7 +193,8 @@ export function freezeSummary(source: string, parsed: Array<{ line: number; task
     dropped_unreachable: parsed.length - kept.length,
     kept_lines: kept.map(k => k.line).sort((a, b) => a - b),
     by_type: byType(kept.map(k => k.task)),
-    mdd_primaries: primaryMdd(kept.length),
+    gold_clusters: clusters,
+    mdd_primaries: primaryMdd(clusters.n),
   };
 }
 
@@ -179,7 +204,7 @@ export async function writeFreeze(reader: GbrainReader, source: string, parsed: 
   say('gold pages reachable from the reader\'s source: ' + gold.reachable + ' of ' + gold.gold);
   const summary = freezeSummary(source, parsed, gold.kept, gut);
   writeJson(out, summary);
-  say('freeze ' + out + ': ' + summary.n_submitted + ' submitted, ' + summary.n_kept + ' kept, ' + summary.dropped_unreachable + ' dropped as unreachable to a remote caller; MDD at alpha 0.05 with 20% discordant pairs ' + (100 * (summary.mdd_primaries.pd20.alpha_05 ?? 0)).toFixed(1) + ' points (' + (100 * (summary.mdd_primaries.pd20.holm_0125 ?? 0)).toFixed(1) + ' at Holm\'s tightest)');
+  say('freeze ' + out + ': ' + summary.n_submitted + ' submitted, ' + summary.n_kept + ' kept, ' + summary.dropped_unreachable + ' dropped as unreachable to a remote caller; ' + summary.gold_clusters.n + ' gold clusters' + (summary.gold_clusters.shared.length ? ' (' + summary.gold_clusters.shared.length + ' shared, sizes ' + summary.gold_clusters.shared.join(', ') + ')' : '') + '; MDD at alpha 0.05 with 20% discordant pairs over ' + summary.gold_clusters.n + ' clusters ' + (100 * (summary.mdd_primaries.pd20.alpha_05 ?? 0)).toFixed(1) + ' points (' + (100 * (summary.mdd_primaries.pd20.holm_0125 ?? 0)).toFixed(1) + ' at Holm\'s tightest)');
   return summary;
 }
 
@@ -191,11 +216,30 @@ interface Brain {
   crag: { escalation: boolean; think: boolean }; resultCache: boolean | null; close: () => Promise<void>;
 }
 
-/** Refuse a brain whose remote read policy, read fresh, shows private pages to remote callers. */
-export async function assertPrivate(gut: GbrainUnderTest, engine: any): Promise<void> {
+/**
+ * Refuse a brain that would show the runner a page gbrain hides from an unbound remote caller. Each check fails closed:
+ * - the operator opt-out (search.remote_private_pages), read fresh, and privacy aliases turned off (visibility.honor_aliases);
+ * - a stdio session bound to a member (config mcp.stdio_member, set at all), or the caller access gbrain's dispatcher
+ *   would give the runner's own calls showing an identity, a granted source or the brain owner's relaxed view
+ *   (garrytan/gbrain#8917, 0.60.623.0 and later);
+ * - with a reader, any response it saw under a wider view (_meta.access), and a get_page of one page gbrain hides from an
+ *   unbound remote caller that comes back readable.
+ */
+export async function assertPrivate(gut: GbrainUnderTest, engine: any, reader?: GbrainReader): Promise<void> {
   const visibility = await importGbrain<any>(gut, 'src/core/search/private-visibility.ts');
   const relaxed = typeof visibility.readRemotePolicyNow === 'function' ? (await visibility.readRemotePolicyNow(engine)).privacyRelaxed : await visibility.remotePrivacyRelaxed(engine);
   if (relaxed !== false) throw new LiveRecallAbort('LR_PRIVACY_RELAXED', 'search.remote_private_pages relaxes remote private-page visibility');
+  const aliases = await engine.getConfig(visibility.HONOR_ALIASES_KEY ?? 'visibility.honor_aliases').then((v: unknown) => String(v ?? '').trim().toLowerCase(), () => 'unreadable');
+  if (['false', '0', 'off', 'no', 'unreadable'].includes(aliases)) throw new LiveRecallAbort('LR_PRIVACY_RELAXED', 'visibility.honor_aliases is off or unreadable, so gbrain may show access: private pages to remote callers');
+  const caller = await importGbrain<any>(gut, 'src/core/access/caller.ts').catch(() => null);
+  const bound = String((await engine.getConfig(caller?.STDIO_MEMBER_KEY ?? 'mcp.stdio_member').catch(() => 'unreadable')) ?? '').trim();
+  const access = typeof caller?.remoteCallerAccess === 'function' ? await caller.remoteCallerAccess(engine, undefined, undefined, 'stdio') : null;
+  const wider = access && (('owner' in access && access.owner !== false) || access.hidePrivate !== true || [access.identity, access.audienceIdentities, access.privateReadableSources].some(l => !Array.isArray(l) || l.length > 0));
+  if (bound || wider) throw new LiveRecallAbort('LR_PRIVACY_RELAXED', 'the runner\'s stdio session is bound to a member or reads as the brain owner');
+  if (!reader) return;
+  const breach = reader.breach();
+  if (breach) throw new LiveRecallAbort('LR_PRIVACY_RELAXED', 'gbrain answered the runner under ' + breach);
+  if (await reader.privateProbe() === 'readable') throw new LiveRecallAbort('LR_PRIVACY_RELAXED', 'a page gbrain hides from an unbound remote caller came back readable');
 }
 
 /**
@@ -232,6 +276,7 @@ async function openBrain(o: { fixture: boolean; gut: GbrainUnderTest; databaseUr
     const config = async (key: string) => (await engine.getConfig(key).catch(() => null)) === 'true';
     const cache = await importGbrain<any>(o.gut, 'src/core/search/query-cache.ts').catch(() => null);
     const reader = await openReader(o.gut, engine, Boolean(knobs.reranker_enabled), capped);
+    await assertPrivate(o.gut, engine, reader);
     return {
       engine, barrier, connection, schemaVersion, counters, reader, knobs, embeddingModel,
       crag: { escalation: await config('search.crag_escalation'), think: await config('search.crag_think') },
@@ -285,10 +330,17 @@ export function loadRecords(path: string): { records: RunRecord[]; torn: number 
 }
 
 /** The run's records by key. Opening ends an unterminated last line, torn or whole, so the next record starts its own line. */
+/** One judge, second-judge or label call as the truncation rule counts it. */
+export interface JudgeCall { judge: string; effort?: string; kind?: string; truncated?: boolean }
+
 export class RecordStore {
   readonly answers = new Map<string, AnswerRecord>();
   readonly judges = new Map<string, JudgeRecord>();
+  /** Judge-check labels by episode key and labeller. */
+  readonly labels = new Map<string, JudgeRecord>();
   readonly judges2 = new Map<string, JudgeRecord>();
+  /** Every judge, second-judge and label call ever recorded, superseded ones included, for the truncation stop. */
+  readonly calls: JudgeCall[] = [];
   readonly torn: number;
   constructor(private readonly path: string) {
     const { records, torn } = loadRecords(path);
@@ -299,7 +351,9 @@ export class RecordStore {
   }
   get size() { return this.answers.size; }
   private index(r: RunRecord) {
-    if (r.kind === 'answer') this.answers.set(r.key, r);
+    if (r.kind === 'answer') { this.answers.set(r.key, r); return; }
+    this.calls.push({ judge: r.judge, effort: r.effort, kind: r.kind, truncated: r.truncated === true });
+    if (r.kind === 'label') this.labels.set(r.key + '|' + r.judge, r);
     else (r.kind === 'judge' ? this.judges : this.judges2).set(r.key, r);
   }
   /** One record, appended synchronously, so concurrent episodes never interleave a line. */
@@ -385,6 +439,85 @@ function limiter() {
 
 const judgedAfter = (a: AnswerRecord, j: JudgeRecord | undefined) => j !== undefined && j.at >= a.at;
 const needsSecondJudge = (a: AnswerRecord) => a.form === 'paraphrase' && SECOND_JUDGE_ARMS.includes(a.arm) && secondJudgeFor(a.model) !== null;
+/** The labellers for a model's answer, its counted judge first, so that judge's prompt is still in the provider's cache. */
+const labelOrder = (model: string) => [judgeFor(model), ...LABELLERS.filter(l => l !== judgeFor(model))];
+
+/**
+ * The judge calls `tasks.ts judge` still owes one answered episode, in order: its judge, then every labeller on a judge
+ * check, otherwise its second judge where one reads it. A call is owed when its record is missing, older than the answer,
+ * or a judge error that did not hit the output-token cap (a truncated call stays a judge error, as the preregistration says).
+ */
+function judgeCallsDue(run: RunFile, store: RecordStore, a: AnswerRecord): Array<{ judge: string; kind: JudgeRecord['kind'] }> {
+  const due = (x: JudgeRecord | undefined) => !judgedAfter(a, x) || (x!.status === 'judge_error' && !x!.truncated);
+  const calls = due(store.judges.get(a.key)) ? [{ judge: judgeFor(a.model), kind: 'judge' as const }] : [];
+  if (run.identity.labellers) return [...calls, ...labelOrder(a.model).filter(l => due(store.labels.get(a.key + '|' + l))).map(l => ({ judge: l, kind: 'label' as const }))];
+  return needsSecondJudge(a) && due(store.judges2.get(a.key)) ? [...calls, { judge: secondJudgeFor(a.model)!, kind: 'judge2' as const }] : calls;
+}
+
+/**
+ * Whether a run directory owes no paid call: it has a run.json, no cap stop or truncation stop is outstanding, every
+ * planned episode is answered or out of attempts, and `tasks.ts judge` would make no call. Only then is its ledger run
+ * finished; until then the run stays open for the next session (a resume, an extension or a judge pass) to join.
+ */
+export function owesNoCalls(dir: string): boolean {
+  const p = paths(dir);
+  if (!existsSync(p.run) || existsSync(p.capStop)) return false;
+  const run = readRun(dir), store = new RecordStore(p.records), kept = new Set(run.kept_ids);
+  if (truncationStopped(store.calls, waivedOf(run.truncation_waivers ?? []))) return false;
+  const answered = run.kept_ids.every(task => run.forms.every(form => run.arms.every(arm => run.models.every(model => {
+    const a = store.answers.get(episodeKey(form, task, arm, model));
+    return a !== undefined && !(a.status === 'harness_error' && a.attempt < MAX_ATTEMPTS);
+  }))));
+  return answered && [...store.answers.values()].every(a => a.status !== 'answered' || !kept.has(a.task) || judgeCallsDue(run, store, a).length === 0);
+}
+
+/**
+ * Stop the check or run once a judge model's truncated counted-judge calls (judge and second judge, split by model and
+ * effort; labels only fail the judge check) pass TRUNCATION_CAP of all its calls in that split, earlier attempts at a
+ * re-judged answer included, so judging again never clears a stop. While judging, the share is taken of at least
+ * `floor` calls, so one truncation among a judge's first calls does not stop a run whose rate cannot be read yet; a
+ * finished counted run is checked with floor 1, the plain rate. Only GBEV-3's waiver lifts a stop: `waived` holds the
+ * truncations it covered, per model and effort, and the stop re-arms on the next ones past the share.
+ */
+export function checkTruncation(rows: Iterable<JudgeCall>, floor = TRUNCATION_FLOOR, waived: Waived = {}): void {
+  const by = new Map<string, { judge: string; effort: string; rows: number; truncated: number }>();
+  for (const r of rows) {
+    if (r.kind === 'label') continue;
+    const effort = r.effort ?? EFFORT, key = r.judge + '|' + effort;
+    const c = by.get(key) ?? { judge: r.judge, effort, rows: 0, truncated: 0 };
+    c.rows++;
+    if (r.truncated) c.truncated++;
+    by.set(key, c);
+  }
+  for (const c of by.values()) if (c.truncated - (waived[c.judge]?.[c.effort] ?? 0) > TRUNCATION_CAP * Math.max(floor, c.rows)) {
+    throw new LiveRecallAbort('LR_JUDGE_TRUNCATED', c.judge + ' at effort ' + c.effort + ' hit its ' + MAX_OUTPUT_TOKENS + '-token output cap on ' + c.truncated + ' of ' + c.rows + ' judge calls' + (waived[c.judge]?.[c.effort] ? ' (' + waived[c.judge]![c.effort] + ' waived by GBEV-3)' : '') + ', above ' + 100 * TRUNCATION_CAP + '%');
+  }
+}
+
+/** Truncations per judge model and effort, by model then effort. */
+export type Waived = Record<string, Record<string, number>>;
+/** GBEV-3's written note lifting a truncation stop: the truncated counted-judge calls it covers, per model and effort. */
+export interface TruncationWaiver { note: string; by: 'agent:GBEV-3'; at: string; waived: Waived }
+
+/**
+ * The waivers so far, plus a new one from --truncation-waiver covering every truncated counted-judge call recorded now.
+ * Each note is used once, and only while a stop is outstanding, so a note never lifts a later stop.
+ */
+export function truncationWaivers(previous: TruncationWaiver[] | null | undefined, note: string | null | undefined, calls: JudgeCall[]): TruncationWaiver[] {
+  const out = [...(previous ?? [])];
+  if (note === null || note === undefined) return out;
+  if (!NOTE.test(note)) throw new LiveRecallAbort('LR_JUDGE_TRUNCATED', '--truncation-waiver takes GBEV-3\'s note id');
+  if (out.some(w => w.note === note)) throw new LiveRecallAbort('LR_JUDGE_TRUNCATED', 'truncation waiver ' + note + ' was already used; drop the flag, and a new stop needs a new note from GBEV-3');
+  if (!truncationStopped(calls, waivedOf(out))) throw new LiveRecallAbort('LR_JUDGE_TRUNCATED', '--truncation-waiver given with no truncation stop outstanding; run without it');
+  const waived: Waived = {};
+  for (const c of calls) if (c.kind !== 'label' && c.truncated) (waived[c.judge] ??= {})[c.effort ?? EFFORT] = (waived[c.judge]?.[c.effort ?? EFFORT] ?? 0) + 1;
+  return [...out, { note, by: 'agent:GBEV-3', at: new Date().toISOString(), waived }];
+}
+const waivedOf = (w: TruncationWaiver[]): Waived => w[w.length - 1]?.waived ?? {};
+/** Whether a truncation stop is outstanding at the plain rate after the waivers so far. */
+function truncationStopped(calls: JudgeCall[], waived: Waived): boolean {
+  try { checkTruncation(calls, 1, waived); return false; } catch (e) { if (e instanceof LiveRecallAbort && e.code === 'LR_JUDGE_TRUNCATED') return true; throw e; }
+}
 
 // ─── run ───────────────────────────────────────────────────────────────────────────────────────────────────────────
 
@@ -397,6 +530,14 @@ export interface RunOptions {
   forms: TaskForm[]; arms: TaskArm[]; models: string[];
   limit: number | null; concurrency: number; resume: boolean; windowNote: string | null;
   paid: Paid;
+  /** A judge-check run: every answer also gets both labellers' verdicts, and no second judge. */
+  judgeCheck?: boolean;
+  /** The judge check's own label-floor extension, inside the session that started it, so it needs no new window note. */
+  continuing?: boolean;
+  /** A counted run's judge-check.json, and GBEV-3's waiver note when that check did not pass. */
+  judgeCheckPath?: string | null; judgeCheckWaiver?: string | null;
+  /** GBEV-3's note lifting an LR_JUDGE_TRUNCATED stop for the truncations recorded so far. */
+  truncationWaiver?: string | null;
 }
 
 interface RunFile {
@@ -407,12 +548,18 @@ interface RunFile {
   custody: { readonly_verified_start: boolean; readonly_verified_end: boolean | null; guard_refusals: Record<string, number> };
   budget: { runner: string; run_id: string; ledger_path: string; cap_usd: number; extensions?: CapExtension[] };
   forms: TaskForm[]; arms: TaskArm[]; models: string[];
+  /** The judge check a counted run started from: its file hash, verdicts and any waiver. */
+  judge_check?: Record<string, unknown> | null;
+  /** A judge-check run's task counts, one per label-floor step. */
+  judge_check_steps?: number[] | null;
+  /** GBEV-3's truncation waivers, oldest first. */
+  truncation_waivers?: TruncationWaiver[];
 }
 
 /** One extension past a cap stop: the cap it lifted, the new cap, GBEV-3's extension id and the cap stop it supersedes. */
 interface CapExtension { from_usd: number; to_usd: number; window_note: string; at: string; cap_stop: Record<string, unknown> }
 
-const paths = (dir: string) => ({ run: join(dir, 'run.json'), records: join(dir, 'records.local.jsonl'), capStop: join(dir, 'cap-stop.json'), auditKey: join(dir, 'audit-key.local.json'), auditRows: join(dir, 'audit-rows.local.jsonl') });
+const paths = (dir: string) => ({ run: join(dir, 'run.json'), records: join(dir, 'records.local.jsonl'), capStop: join(dir, 'cap-stop.json'), auditKey: join(dir, 'audit-key.local.json'), auditRows: join(dir, 'audit-rows.local.jsonl'), judgeCheck: join(dir, 'judge-check.json') });
 const readRun = (dir: string): RunFile => JSON.parse(readFileSync(paths(dir).run, 'utf8'));
 const writeJson = (path: string, value: unknown) => writeFileSync(path, JSON.stringify(value, null, 2) + '\n', { mode: 0o600 });
 
@@ -422,11 +569,33 @@ function git(args: string[]): string {
 
 /**
  * The ledger runner of a run directory: the one its run.json records, else one named for the directory. Every session of
- * a directory joins that ledger run, which a cap stop leaves open for an extension, and no other directory shares it.
+ * a directory joins that ledger run, which stays open while the directory owes paid calls (owesNoCalls: a cap stop
+ * waiting for an extension, an unanswered or unjudged episode), and no other directory shares it.
  */
-export function ledgerRunner(dir: string, fixture: boolean): string {
+export function ledgerRunner(dir: string, fixture: boolean, judgeCheck = false): string {
   if (existsSync(paths(dir).run)) return readRun(dir).budget.runner;
-  return (fixture ? 'live-recall-phase2-smoke-' : 'live-recall-phase2-') + sha256(resolve(dir)).slice(0, 12);
+  return 'live-recall-phase2-' + (fixture ? 'smoke-' : '') + (judgeCheck ? 'judge-check-' : '') + sha256(resolve(dir)).slice(0, 12);
+}
+
+const NOTE = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$/;
+
+/**
+ * A counted run's judge check (R78): the judge-check.json `tasks.ts judge-check` wrote for this task file and harness.
+ * A check that did not pass stops the run unless GBEV-3 waives it with a note, which the scorecard reports.
+ */
+export function readJudgeCheck(path: string | null | undefined, source: string, waiver: string | null | undefined, need: { models: string[]; arms: string[] }) {
+  if (!path) throw new LiveRecallAbort('LR_JUDGE_CHECK', 'a counted run needs --judge-check <judge-check.json>');
+  const text = readFileSync(path, 'utf8');
+  const c = JSON.parse(text);
+  if (c?.schema !== JUDGE_CHECK_SCHEMA || c.tasks_sha256 !== sha256(source)) throw new LiveRecallAbort('LR_JUDGE_CHECK', 'judge-check.json was not made on this task file');
+  if (c.run?.harness_digest !== harnessDigest() || c.run?.control !== false) throw new LiveRecallAbort('LR_JUDGE_CHECK', 'judge-check.json was made on another harness or on the fixture');
+  const covers = (have: unknown, want: string[]) => Array.isArray(have) && want.every(x => have.includes(x));
+  if (c.stop !== null || c.complete !== true || !(c.n_tasks_checked >= JUDGE_CHECK_TASKS) || !covers(c.run?.models, need.models) || !covers(c.run?.arms, need.arms)) {
+    throw new LiveRecallAbort('LR_JUDGE_CHECK', 'judge-check.json is unfinished or paused at its cap, or does not cover ' + JUDGE_CHECK_TASKS + ' finished tasks and this run\'s models and arms');
+  }
+  if (waiver !== null && waiver !== undefined && !NOTE.test(waiver)) throw new LiveRecallAbort('LR_JUDGE_CHECK', '--judge-check-waiver takes GBEV-3\'s note id');
+  if (c.passed !== true && !waiver) throw new LiveRecallAbort('LR_JUDGE_CHECK', 'the judge check did not pass; send judge-check.json to GBEV-3 before any counted call');
+  return { judge_check_sha256: sha256(text), passed: c.passed === true, waiver: c.passed === true ? null : waiver!, judges: c.judges };
 }
 
 /** One ledger run's spend across every session that joined it, never another run's, and the cap it records now. */
@@ -475,9 +644,11 @@ export type RunResult = 'complete' | 'incomplete' | 'cap_stop';
 export async function runTaskSet(o: RunOptions, say: (line: string) => void): Promise<{ result: RunResult; scorecard: string; markdown: string }> {
   const p = paths(o.out);
   mkdirSync(o.out, { recursive: true, mode: 0o700 });
-  if (existsSync(p.capStop)) extendCap(o.out, o.paid, o.resume ? o.windowNote : null, say);
-  if (o.resume && !o.fixture && !o.windowNote) throw new LiveRecallAbort('LR_RESUME_NEEDS_WINDOW', 'a counted --resume needs --window-note');
   const store = new RecordStore(p.records);
+  const waivers = truncationWaivers(existsSync(p.run) ? readRun(o.out).truncation_waivers : null, o.truncationWaiver, store.calls), waived = waivedOf(waivers);
+  checkTruncation(store.calls, TRUNCATION_FLOOR, waived);
+  if (existsSync(p.capStop)) extendCap(o.out, o.paid, o.resume ? o.windowNote : null, say);
+  if (o.resume && !o.fixture && !o.windowNote && !o.continuing) throw new LiveRecallAbort('LR_RESUME_NEEDS_WINDOW', 'a counted --resume needs --window-note');
   if (store.size > 0 && !o.resume) throw new Error('the run directory already holds records; pass --resume to continue it');
   const source = readFileSync(o.tasksPath, 'utf8');
   const parsed = parseTasks(source);
@@ -489,6 +660,7 @@ export async function runTaskSet(o: RunOptions, say: (line: string) => void): Pr
   }
   const previous = o.resume && existsSync(p.run) ? readRun(o.out) : null;
   if (previous && previous.tasks_sha256 !== sha256(source)) throw new LiveRecallAbort('LR_FREEZE_MISMATCH', 'the resumed run was made on another task file');
+  const judgeCheckRef = o.fixture || o.judgeCheck ? null : previous?.judge_check ?? readJudgeCheck(o.judgeCheckPath, source, o.judgeCheckWaiver, { models: o.models, arms: o.arms });
   const startedAt = new Date().toISOString();
   const refusals = watchRefusals();
   const brain = await openBrain(o, refusals.capped).catch(e => { refusals.restore(); throw e; });
@@ -512,7 +684,10 @@ export async function runTaskSet(o: RunOptions, say: (line: string) => void): Pr
     }
     let tasks = candidates.map(c => c.task);
     if (o.limit !== null) tasks = spread(tasks, o.limit);
-    if (previous) {
+    if (previous && o.judgeCheck) {
+      const ids = new Set(tasks.map(t => t.id));
+      if (!previous.kept_ids.every(id => ids.has(id))) throw new LiveRecallAbort('LR_FREEZE_MISMATCH', 'the judge check\'s tasks are not a superset of its first session\'s');
+    } else if (previous) {
       const ids = new Set(previous.kept_ids);
       tasks = tasks.filter(t => ids.has(t.id));
     }
@@ -532,7 +707,8 @@ export async function runTaskSet(o: RunOptions, say: (line: string) => void): Pr
         search_mode: String(brain.knobs.resolved_mode), reranker_enabled: Boolean(brain.knobs.reranker_enabled), reranker_model: String(brain.knobs.reranker_model), embedding_model: brain.embeddingModel,
         source_scope_default: brain.reader.sourceId === 'default', privacy_posture: 'remote', remote_private_pages: false,
         crag_escalation: brain.crag.escalation, crag_think: brain.crag.think, result_cache: brain.resultCache, tool_defs_digest: sha256(JSON.stringify(brain.reader.tools)),
-        models: o.models, arms: o.arms, forms: o.forms, judges: Object.fromEntries(o.models.map(m => [m, judgeFor(m)])), second_judge_model: 'claude-opus-5-5',
+        models: o.models, arms: o.arms, forms: o.forms, judges: Object.fromEntries(o.models.map(m => [m, judgeFor(m)])), second_judge_model: o.judgeCheck ? null : 'claude-opus-5-5',
+        labellers: o.judgeCheck ? [...LABELLERS] : null, label_effort: o.judgeCheck ? LABEL_EFFORT : null,
         effort: EFFORT, max_output_tokens: MAX_OUTPUT_TOKENS, max_turns: MAX_TURNS, tool_result_chars: TOOL_RESULT_CHARS, paste_pages: PASTE_PAGES, paste_chars: PASTE_CHARS,
         budget_usd: previous?.identity.budget_usd ?? o.paid.capUsd, window_note: o.windowNote, concurrency: o.concurrency, openai_store: false,
       },
@@ -540,12 +716,14 @@ export async function runTaskSet(o: RunOptions, say: (line: string) => void): Pr
       gold_page_chars_mean: await goldPageChars(brain.reader, tasks),
       custody: { readonly_verified_start: true, readonly_verified_end: null, guard_refusals: brain.counters.refusals },
       budget: { runner: o.paid.runner, run_id: o.paid.run.runId, ledger_path: o.paid.ledgerPath, cap_usd: ledgerSpend(o.paid.ledgerPath, o.paid.run.runId).cap_usd, extensions: previous?.budget.extensions ?? [] },
-      forms: o.forms, arms: o.arms, models: o.models,
+      forms: o.forms, arms: o.arms, models: o.models, judge_check: judgeCheckRef,
+      judge_check_steps: o.judgeCheck ? [...new Set([...(previous?.judge_check_steps ?? []), tasks.length])] : null,
+      truncation_waivers: waivers,
     };
     if (previous) {
       const was: Record<string, unknown> = { ...previous.identity, kept_ids: previous.kept_ids, source_id: previous.source_id }, now: Record<string, unknown> = { ...run.identity, kept_ids: run.kept_ids, source_id: run.source_id };
       const norm = (v: unknown) => JSON.stringify(Array.isArray(v) ? [...v].sort() : v);
-      const changed = RESUME_IDENTITY.filter(k => norm(was[k]) !== norm(now[k]));
+      const changed = RESUME_IDENTITY.filter(k => !(o.judgeCheck && k === 'kept_ids') && norm(was[k]) !== norm(now[k]));
       if (changed.length) throw new LiveRecallAbort('LR_FREEZE_MISMATCH', 'the resume differs from the first session in ' + changed.join(', '));
     }
     writeJson(p.run, run);
@@ -559,20 +737,23 @@ export async function runTaskSet(o: RunOptions, say: (line: string) => void): Pr
       while (!a || (a.status === 'harness_error' && a.attempt < MAX_ATTEMPTS)) {
         if (stopped()) return;
         a = await runEpisode(ctx, task, form, arm, model, (a?.attempt ?? 0) + 1);
-        await assertPrivate(o.gut, brain.engine);
+        await assertPrivate(o.gut, brain.engine, brain.reader);
         if (a.status === 'degraded') await preflight(brain.reader).catch(e => { ctx.capCheck(); throw e; });
         store.write(a);
       }
       if (a.status !== 'answered') return;
-      if (!judgedAfter(a, store.judges.get(a.key))) store.write(await judgeEpisode(ctx, task, a, judgeFor(model), 'judge'));
-      if (needsSecondJudge(a) && !judgedAfter(a, store.judges2.get(a.key))) store.write(await judgeEpisode(ctx, task, a, secondJudgeFor(model)!, 'judge2'));
+      const judged = (r: JudgeRecord) => { store.write(r); checkTruncation(store.calls, TRUNCATION_FLOOR, waived); };
+      if (!judgedAfter(a, store.judges.get(a.key))) judged(await judgeEpisode(ctx, task, a, judgeFor(model), 'judge'));
+      if (o.judgeCheck) {
+        for (const l of labelOrder(model)) if (!stopped() && !judgedAfter(a, store.labels.get(a.key + '|' + l))) judged(await judgeEpisode(ctx, task, a, l, 'label', LABEL_EFFORT));
+      } else if (needsSecondJudge(a) && !judgedAfter(a, store.judges2.get(a.key))) judged(await judgeEpisode(ctx, task, a, secondJudgeFor(model)!, 'judge2'));
     };
     for (const form of FORMS.filter(f => o.forms.includes(f))) {
       let done = 0;
       await pool(tasks, o.concurrency, async task => {
         try {
           if (stopped()) return;
-          await assertPrivate(o.gut, brain.engine);
+          await assertPrivate(o.gut, brain.engine, brain.reader);
           for (const [arm, model] of cellOrder(task.id, o.arms, o.models)) {
             if (stopped()) return;
             await cell(form, task, arm, model);
@@ -596,6 +777,7 @@ export async function runTaskSet(o: RunOptions, say: (line: string) => void): Pr
     run.custody.readonly_verified_end = true;
     run.identity.finished_at = new Date().toISOString();
     writeJson(p.run, run);
+    if (!o.judgeCheck && !halt.cap) checkTruncation(store.calls, 1, waived);
   } finally {
     refusals.restore();
     await brain.close();
@@ -615,17 +797,21 @@ function runTasksOf(run: RunFile): Task[] {
 }
 
 /**
- * Judge every answered episode whose judge is missing, older than the answer, or a judge_error; never re-answers. A
+ * Judge every answered episode whose judge is missing, older than the answer, or a judge_error that did not hit the
+ * output-token cap (a truncated call stays a judge error, as the preregistration says); never re-answers. A
  * failure other than a cap stop (LR_PROVIDER_REJECTED included) stops new judge calls and is thrown once the calls in
  * flight finish, so the caller never uninstalls the paid-request guard under a live call. An outstanding cap stop needs
  * an extension, as a --resume does.
  */
-export async function judgeRunDir(dir: string, paid: Paid, say: (line: string) => void, windowNote: string | null = null): Promise<number> {
+export async function judgeRunDir(dir: string, paid: Paid, say: (line: string) => void, windowNote: string | null = null, truncationWaiver: string | null = null): Promise<number> {
   const p = paths(dir);
+  const store = new RecordStore(p.records);
+  const waivers = truncationWaivers(readRun(dir).truncation_waivers, truncationWaiver, store.calls), waived = waivedOf(waivers);
+  checkTruncation(store.calls, TRUNCATION_FLOOR, waived);
   if (existsSync(p.capStop)) extendCap(dir, paid, windowNote, say);
   const run = readRun(dir);
+  if (truncationWaiver !== null) { run.truncation_waivers = waivers; writeJson(p.run, run); }
   const tasks = new Map(runTasksOf(run).map(t => [t.id, t]));
-  const store = new RecordStore(p.records);
   const refusals = watchRefusals();
   const ctx = { limit: limiter(), capCheck: refusals.check };
   let judged = 0;
@@ -633,15 +819,14 @@ export async function judgeRunDir(dir: string, paid: Paid, say: (line: string) =
   const stopped = () => halt.cap !== null || halt.fatal !== null;
   try {
     const todo = [...store.answers.values()].filter(a => a.status === 'answered' && tasks.has(a.task));
+    const write = (r: JudgeRecord) => { store.write(r); judged++; checkTruncation(store.calls, TRUNCATION_FLOOR, waived); };
     await pool(todo, TASK_CONCURRENCY, async a => {
-      if (stopped()) return;
       const task = tasks.get(a.task)!;
       try {
-        const j = store.judges.get(a.key);
-        if (!judgedAfter(a, j) || j!.status === 'judge_error') { store.write(await judgeEpisode(ctx, task, a, judgeFor(a.model), 'judge')); judged++; }
-        if (stopped()) return;
-        const j2 = store.judges2.get(a.key);
-        if (needsSecondJudge(a) && (!judgedAfter(a, j2) || j2!.status === 'judge_error')) { store.write(await judgeEpisode(ctx, task, a, secondJudgeFor(a.model)!, 'judge2')); judged++; }
+        for (const call of judgeCallsDue(run, store, a)) {
+          if (stopped()) return;
+          write(await judgeEpisode(ctx, task, a, call.judge, call.kind, call.kind === 'label' ? LABEL_EFFORT : undefined));
+        }
       } catch (e) {
         if (isCapStop(e)) halt.cap ??= e as Error;
         else halt.fatal ??= e;
@@ -654,6 +839,7 @@ export async function judgeRunDir(dir: string, paid: Paid, say: (line: string) =
   }
   if (halt.fatal) throw halt.fatal;
   say(judged + ' judge calls made');
+  if (!run.identity.labellers && !halt.cap) checkTruncation(store.calls, 1, waived);
   return judged;
 }
 
@@ -701,9 +887,11 @@ export function scoreRunDir(dir: string, opts: { auditGrades?: string } = {}): {
   const { records } = loadRecords(p.records);
   const card = buildTaskScorecard({
     tasks, forms: run.forms, arms: run.arms, models: run.models, records, task_summary: run.task_summary, custody: run.custody,
-    identity: { ...run.identity, final_cap_usd: run.budget.cap_usd, cap_extensions: run.budget.extensions?.length ?? 0 },
+    identity: { ...run.identity, final_cap_usd: run.budget.cap_usd, cap_extensions: run.budget.extensions?.length ?? 0, truncation_waivers: run.truncation_waivers ?? [] },
     stop: existsSync(p.capStop) ? 'LR_CAP_STOP' : null, ledger_usd: ledgerUsd(run.budget), audit: opts.auditGrades ? auditAgreement(dir, opts.auditGrades) : null,
+    judge_check: run.judge_check ?? null,
   });
+  if (run.identity.labellers) return { scorecard: '', markdown: '', complete: card.status === 'complete' };
   const json = JSON.stringify(card, null, 2) + '\n';
   const markdown = renderTaskMarkdown(card);
   checkOutbound(json, markdown, taskNeedles(tasks, records));
@@ -713,30 +901,122 @@ export function scoreRunDir(dir: string, opts: { auditGrades?: string } = {}): {
   return { scorecard, markdown: md, complete: card.status === 'complete' };
 }
 
-// ─── estimate ──────────────────────────────────────────────────────────────────────────────────────────────────────
+/**
+ * judge-check.json from a judge-check run directory: the R78 numbers, the identity a counted run checks it against and
+ * the cost, checked like the scorecard before it is written. Re-runnable after `tasks.ts judge` repairs a judge error.
+ * n_tasks_checked counts the tasks whose every cell has its final answer and, when answered, its counted verdict and
+ * both labels; a check is complete, and can pass, only when that is every planned task and no cap stop is outstanding.
+ */
+export function writeJudgeCheck(dir: string) {
+  const run = readRun(dir);
+  if (!run.identity.labellers) throw new Error(dir + ' is not a judge-check run');
+  const { records } = loadRecords(paths(dir).records);
+  const id = run.identity;
+  const roles = { answer: 0, summariser: 0, judge: 0, label: 0 };
+  for (const r of records) {
+    if (r.kind === 'answer') { roles.answer += r.roles.answer?.usd ?? 0; roles.summariser += r.roles.summariser?.usd ?? 0; }
+    else if (r.kind === 'judge' || r.kind === 'label') roles[r.kind] += r.usd;
+  }
+  const r4 = (x: number) => Math.round(x * 1e4) / 1e4;
+  const steps = (run.judge_check_steps ?? [run.kept_ids.length]).map(n => {
+    const ids = new Set(run.kept_ids.slice(0, n));
+    const c = judgeCheck(records.filter(r => ids.has(r.key.split('|')[1]!)));
+    return { n_tasks: n, labels: Object.fromEntries(Object.entries(c.judges).map(([j, x]: [string, any]) => [j, { correct: x.correct.n_labelled, correct_grounded: x.correct_grounded.n_labelled }])) };
+  });
+  const store = new RecordStore(paths(dir).records);
+  const finished = run.kept_ids.filter(task => run.forms.every(form => run.arms.every(arm => run.models.every(model => {
+    const key = episodeKey(form, task, arm, model), a = store.answers.get(key);
+    if (!a || (a.status === 'harness_error' && a.attempt < MAX_ATTEMPTS)) return false;
+    return a.status !== 'answered' || [store.judges.get(key), ...LABELLERS.map(l => store.labels.get(key + '|' + l))].every(j => judgedAfter(a, j));
+  }))));
+  const stop = existsSync(paths(dir).capStop) ? 'LR_CAP_STOP' : null, complete = stop === null && finished.length === run.kept_ids.length;
+  const measured = judgeCheck(records);
+  const check = {
+    ...measured, passed: measured.passed && complete, tasks_sha256: run.tasks_sha256, n_tasks_checked: finished.length, complete, steps, stop,
+    run: {
+      started_at: id.started_at, finished_at: id.finished_at, runner_commit: id.runner_commit, runner_dirty: id.runner_dirty, harness_digest: id.harness_digest,
+      gbrain_loaded_version: id.gbrain_loaded_version, gbrain_loaded_commit: id.gbrain_loaded_commit, schema_version: id.schema_version, control: id.control,
+      effort: id.effort, labellers: id.labellers, label_effort: id.label_effort, models: id.models, arms: id.arms, truncation_waivers: run.truncation_waivers ?? [],
+    },
+    cost: { model_calls_usd: r4(roles.answer + roles.summariser + roles.judge + roles.label), by_role_usd: { answer: r4(roles.answer), summariser: r4(roles.summariser), judge: r4(roles.judge), label: r4(roles.label) }, ledger_usd: (u => (u === null ? null : r4(u)))(ledgerUsd(run.budget)) },
+  };
+  const json = JSON.stringify(check, null, 2) + '\n';
+  checkOutbound(json, '', taskNeedles(runTasksOf(run), records));
+  writeFileSync(paths(dir).judgeCheck, json);
+  return check;
+}
 
-export interface Estimate { per_task_form_usd: number; second_judge_per_task_usd: number; paraphrase_usd: number; total_usd: number; cap_usd: number; page_factor: Record<string, number>; passed: boolean }
+/** True when any counted judge has fewer than JUDGE_CHECK_MIN_LABELS labels on either primary metric. */
+export const labelsShort = (c: ReturnType<typeof judgeCheck>) => Object.values(c.judges).some((j: any) => j.correct.n_labelled < JUDGE_CHECK_MIN_LABELS || j.correct_grounded.n_labelled < JUDGE_CHECK_MIN_LABELS);
 
 /**
- * Project the counted cost from the smoke's measured usage per episode. Input tokens of every role that reads pages are
- * scaled by the ratio of the frozen gold pages' mean size to the smoke's, each side capped at what that role reads of a
- * page (B and C's summariser: a tool result; D: a pasted page; the judge: a cited page); A, C's answerer and every output
- * stay as measured.
+ * The judge check with its label floor (R78): paraphrase answers on JUDGE_CHECK_TASKS frozen tasks, then, while any
+ * counted judge has fewer than JUDGE_CHECK_MIN_LABELS labels on either primary metric, JUDGE_CHECK_STEP more at a time
+ * up to JUDGE_CHECK_MAX_TASKS, in the same run directory and ledger run. Only the label count extends it; the pass rule
+ * is applied once, to the final set, and judge-check.json lists every step. The floor is for the box's check: a fixture
+ * check runs its tasks once, so the paid smoke stays inside its cap.
  */
-export function estimateCost(smoke: RunRecord[], smokePageChars: number, pageChars: number, n: number, forms: number, capUsd: number, models: readonly string[] = MODELS, arms: readonly TaskArm[] = ARMS): Estimate {
+export async function runJudgeCheck(o: RunOptions, say: (line: string) => void, floor = !o.fixture): Promise<{ result: RunResult; check: ReturnType<typeof writeJudgeCheck> }> {
+  let n = Math.max(o.limit ?? JUDGE_CHECK_TASKS, existsSync(paths(o.out).run) ? readRun(o.out).kept_ids.length : 0);
+  for (let first = true; ; first = false) {
+    rmSync(paths(o.out).judgeCheck, { force: true });
+    const r = await runTaskSet({ ...o, forms: ['paraphrase'], judgeCheck: true, limit: n, resume: o.resume || !first, continuing: o.continuing || !first, truncationWaiver: first ? o.truncationWaiver : null }, say);
+    const c = writeJudgeCheck(o.out);
+    if (r.result !== 'complete' || !c.complete || !floor || !labelsShort(c) || n >= JUDGE_CHECK_MAX_TASKS || readRun(o.out).kept_ids.length < n) return { result: r.result, check: c };
+    n = Math.min(n + JUDGE_CHECK_STEP, JUDGE_CHECK_MAX_TASKS);
+    say('judge check: a judge has fewer than ' + JUDGE_CHECK_MIN_LABELS + ' labels on a primary metric; adding frozen tasks up to ' + n);
+  }
+}
+
+/** The judge check as terminal lines: per counted judge and metric, labels, kappas, catches and false fails. */
+function sayJudgeCheck(c: ReturnType<typeof writeJudgeCheck>, say: (line: string) => void): void {
+  for (const [judge, j] of Object.entries(c.judges) as Array<[string, any]>) for (const metric of ['correct', 'correct_grounded'] as const) {
+    const s = j[metric];
+    say('judge check ' + judge + ' on ' + j.answer_models.join(' and ') + ', ' + metric + ': ' + (s.passed ? 'pass' : 'FAIL') + '; ' + s.n_labelled + ' labels of ' + s.n_rows + ' rows (' + s.unusable + ' unusable), labellers kappa ' + (s.labeller_kappa ?? 'n/a') + ', judge kappa ' + (s.kappa ?? 'n/a') + ', caught ' + s.caught + ' of ' + s.n_bad + ' bad, failed ' + s.false_fails + ' of ' + s.n_good + ' good');
+    for (const m of j.answer_models.length > 1 ? j.answer_models : []) {
+      const b = j.by_model[m][metric];
+      say('  ' + m + ' rows alone: ' + b.n_labelled + ' labels, judge kappa ' + (b.kappa ?? 'n/a') + (b.n_labelled >= JUDGE_CHECK_MIN_LABELS && !((b.kappa ?? -1) >= JUDGE_CHECK_KAPPA) ? ' (under ' + JUDGE_CHECK_KAPPA + ': reported in the findings, does not gate)' : ''));
+    }
+  }
+  if (!c.complete) say('judge check INCOMPLETE: ' + c.n_tasks_checked + ' of ' + c.steps[c.steps.length - 1]!.n_tasks + ' tasks finished' + (c.stop ? ', paused at its cap' : '') + '; it cannot pass until `tasks.ts judge-check --resume` finishes it in a window GBEV-3 grants');
+  for (const [judge, byEffort] of Object.entries(c.truncation)) for (const [effort, t] of Object.entries(byEffort)) say('judge check ' + judge + ' at effort ' + effort + ': ' + t.truncated + ' of ' + t.rows + ' calls truncated at the output cap');
+  say('judge check over ' + c.steps.map(s => s.n_tasks).join(', then ') + ' tasks ' + (c.passed ? 'passed' : 'NOT PASSED: send judge-check.json to GBEV-3 before any counted call') + '; model calls $' + c.cost.model_calls_usd.toFixed(4) + ' (labels $' + c.cost.by_role_usd.label.toFixed(4) + ')');
+}
+
+// ─── estimate ──────────────────────────────────────────────────────────────────────────────────────────────────────
+
+export interface Estimate {
+  per_task_form_usd: number; judge_per_task_form_usd: Record<string, number>; second_judge_per_task_usd: number; paraphrase_usd: number; total_usd: number; cap_usd: number;
+  judge_check_tasks: number; judge_check_labels_per_task_usd: number | null; judge_check_usd: number | null; judge_check_max_usd: number | null; judge_check_cap_usd: number;
+  page_factor: Record<string, number>; passed: boolean;
+}
+
+/**
+ * Project the counted cost from the smoke's measured usage per episode, and the judge check's from a fixture judge
+ * check's labels. Input tokens of every role that reads pages are scaled by the ratio of the frozen gold pages' mean size
+ * to the smoke's, each side capped at what that role reads of a page (B and C's summariser: a tool result; D: a pasted
+ * page; the judge and the labellers: a cited page); A, C's answerer and every output stay as measured. Each judge's cost
+ * is shown on its own line. The smoke must have been judged by today's judges.
+ */
+export function estimateCost(smoke: RunRecord[], smokePageChars: number, pageChars: number, n: number, forms: number, capUsd: number, models: readonly string[] = MODELS, arms: readonly TaskArm[] = ARMS, check: RunRecord[] | null = null): Estimate {
   const factor = (cap: number) => Math.max(1, Math.min(pageChars, cap) / Math.max(1, Math.min(smokePageChars, cap)));
   const f = { tool: factor(TOOL_RESULT_CHARS), paste: factor(PASTE_CHARS), judge: factor(JUDGE_PAGE_CHARS) };
   const scale = (u: Usage, k: number): Usage => ({ input: u.input * k, cache_read: u.cache_read * k, cache_write: u.cache_write * k, output: u.output, requests: u.requests });
   const avg = (xs: number[]) => xs.reduce((s, x) => s + x, 0) / xs.length;
   const mean = (xs: Usage[]): Usage | null => xs.length ? { input: avg(xs.map(x => x.input)), output: avg(xs.map(x => x.output)), cache_read: avg(xs.map(x => x.cache_read)), cache_write: avg(xs.map(x => x.cache_write)), requests: avg(xs.map(x => x.requests)) } : null;
   const answers = smoke.filter((r): r is AnswerRecord => r.kind === 'answer');
-  const judgesOf = (kind: JudgeRecord['kind'], keys: Set<string>) => smoke.filter((r): r is JudgeRecord => r.kind === kind && keys.has(r.key)).map(r => r.usage);
+  const judgesOf = (records: RunRecord[], kind: JudgeRecord['kind'], keys: Set<string>, judge: string) => {
+    const js = records.filter((r): r is JudgeRecord => r.kind === kind && keys.has(r.key));
+    if (js.some(j => j.judge !== judge)) throw new Error('the smoke was judged by another model than ' + judge + '; run a new smoke with today\'s judges');
+    return mean(js.map(r => r.usage));
+  };
+  const byJudge: Record<string, number> = {};
   let perTaskForm = 0, secondJudge = 0;
   for (const arm of arms) for (const model of models) {
     const rows = answers.filter(a => a.arm === arm && a.model === model);
     const keys = new Set(rows.map(a => a.key));
     const answer = mean(rows.flatMap(a => (a.roles.answer ? [a.roles.answer.usage] : [])));
-    const judge = mean(judgesOf('judge', keys));
+    const judge = judgesOf(smoke, 'judge', keys, judgeFor(model));
     if (!answer || !judge) throw new Error('the smoke has no ' + (answer ? 'judged ' : '') + 'episode for arm ' + arm + ' and ' + model);
     perTaskForm += priceUsage(model, scale(answer, arm === 'B' ? f.tool : arm === 'D' ? f.paste : 1));
     if (arm === 'C') {
@@ -744,20 +1024,39 @@ export function estimateCost(smoke: RunRecord[], smokePageChars: number, pageCha
       if (!summariser) throw new Error('the smoke has no summariser call for ' + model);
       perTaskForm += priceUsage(model, scale(summariser, f.tool));
     }
-    perTaskForm += priceUsage(judgeFor(model), scale(judge, arm === 'A' ? 1 : f.judge));
+    const judged = priceUsage(judgeFor(model), scale(judge, arm === 'A' ? 1 : f.judge));
+    perTaskForm += judged;
+    byJudge[judgeFor(model)] = (byJudge[judgeFor(model)] ?? 0) + judged;
     const second = secondJudgeFor(model);
     if (second && SECOND_JUDGE_ARMS.includes(arm)) {
-      const j2 = mean(judgesOf('judge2', keys));
+      const j2 = judgesOf(smoke, 'judge2', keys, second);
       if (!j2) throw new Error('the smoke has no second-judge call for arm ' + arm);
       secondJudge += priceUsage(second, scale(j2, f.judge));
     }
   }
+  let labels: number | null = null;
+  if (check) {
+    labels = 0;
+    const checked = check.filter((r): r is AnswerRecord => r.kind === 'answer');
+    for (const arm of arms) for (const model of models) for (const l of LABELLERS) {
+      const keys = new Set(checked.filter(a => a.arm === arm && a.model === model).map(a => a.key));
+      const u = judgesOf(check.filter(r => r.kind !== 'label' || r.judge === l), 'label', keys, l);
+      if (!u) throw new Error('the judge-check smoke has no ' + l + ' label for arm ' + arm + ' and ' + model);
+      labels += priceUsage(l, scale(u, arm === 'A' ? 1 : f.judge));
+    }
+  }
+  const checkTasks = Math.min(JUDGE_CHECK_TASKS, n);
+  const judgeCheckUsd = labels === null ? null : checkTasks * (perTaskForm + labels);
   const paraphrase = n * (perTaskForm + secondJudge);
   const total = paraphrase + (forms > 1 ? n * perTaskForm * (forms - 1) : 0);
   const r2 = (x: number) => Math.round(x * 100) / 100;
   return {
-    per_task_form_usd: r2(perTaskForm), second_judge_per_task_usd: r2(secondJudge), paraphrase_usd: r2(paraphrase), total_usd: r2(total), cap_usd: capUsd,
-    page_factor: { tool_result: r2(f.tool), paste: r2(f.paste), judge: r2(f.judge) }, passed: paraphrase <= COST_GATE_SHARE * capUsd && total <= capUsd,
+    per_task_form_usd: r2(perTaskForm), judge_per_task_form_usd: Object.fromEntries(Object.entries(byJudge).map(([j, x]) => [j, r2(x)])), second_judge_per_task_usd: r2(secondJudge),
+    paraphrase_usd: r2(paraphrase), total_usd: r2(total), cap_usd: capUsd,
+    judge_check_tasks: checkTasks, judge_check_labels_per_task_usd: labels === null ? null : r2(labels), judge_check_usd: judgeCheckUsd === null ? null : r2(judgeCheckUsd),
+    judge_check_max_usd: labels === null ? null : r2(Math.min(JUDGE_CHECK_MAX_TASKS, n) * (perTaskForm + labels)), judge_check_cap_usd: JUDGE_CHECK_CAP_USD,
+    page_factor: { tool_result: r2(f.tool), paste: r2(f.paste), judge: r2(f.judge) },
+    passed: paraphrase <= COST_GATE_SHARE * capUsd && total <= capUsd && (judgeCheckUsd === null || judgeCheckUsd <= JUDGE_CHECK_CAP_USD),
   };
 }
 
@@ -814,7 +1113,7 @@ function openPaid(argv: string[], runner: string, capUsd: number): Paid {
   return { ...paid, runner, capUsd, ledgerPath: options.ledgerPath };
 }
 
-async function main(argv: string[]): Promise<number> {
+export async function main(argv: string[]): Promise<number> {
   const command = argv[0];
   const fixture = argv.includes('--fixture');
   const tasksPath = fixture ? FIXTURE_TASKS : flag(argv, '--tasks');
@@ -833,8 +1132,8 @@ async function main(argv: string[]): Promise<number> {
   }
   if (command === 'freeze' || command === 'estimate') {
     const out = flag(argv, '--out');
-    if (!tasksPath || (command === 'freeze' && !out) || (command === 'estimate' && (!flag(argv, '--freeze') || !flag(argv, '--smoke')))) {
-      console.error('usage: tasks.ts freeze (--fixture | --tasks <file> --gbrain <checkout>@<commit>) --out <freeze.json>\n       tasks.ts estimate --tasks <file> --freeze <freeze.json> --smoke <smoke run dir> --gbrain <checkout>@<commit> [--out <estimate.json>]');
+    if (!tasksPath || (command === 'freeze' && !out) || (command === 'estimate' && (!flag(argv, '--freeze') || !flag(argv, '--smoke') || !flag(argv, '--smoke-check')))) {
+      console.error('usage: tasks.ts freeze (--fixture | --tasks <file> --gbrain <checkout>@<commit>) --out <freeze.json>\n       tasks.ts estimate --tasks <file> --freeze <freeze.json> --smoke <smoke run dir> --smoke-check <smoke judge-check dir> --gbrain <checkout>@<commit> [--out <estimate.json>]');
       return 2;
     }
     return withLog(join(dirname(resolve(out ?? flag(argv, '--freeze')!)), command + '-log'), async say => {
@@ -853,12 +1152,13 @@ async function main(argv: string[]): Promise<number> {
         if (frozen?.schema !== FREEZE_SCHEMA || frozen.tasks_sha256 !== sha256(source)) throw new LiveRecallAbort('LR_FREEZE_MISMATCH', 'task file hash differs from the freeze');
         const lines = new Set<number>(frozen.kept_lines);
         const kept = parsed.filter(t => lines.has(t.line)).map(t => t.task);
-        const smokeDir = flag(argv, '--smoke')!;
+        const smokeDir = flag(argv, '--smoke')!, checkDir = flag(argv, '--smoke-check')!;
         const smokeRun = readRun(smokeDir);
-        const e = estimateCost(loadRecords(paths(smokeDir).records).records, smokeRun.gold_page_chars_mean, await goldPageChars(brain.reader, kept), kept.length, FORMS.length, COUNTED_CAP_USD);
+        const e = estimateCost(loadRecords(paths(smokeDir).records).records, smokeRun.gold_page_chars_mean, await goldPageChars(brain.reader, kept), kept.length, FORMS.length, COUNTED_CAP_USD, MODELS, ARMS, loadRecords(paths(checkDir).records).records);
         if (out) writeJson(out, e);
-        say('estimate: $' + e.per_task_form_usd.toFixed(2) + ' per task form (+$' + e.second_judge_per_task_usd.toFixed(2) + ' second judge per paraphrase task), page factors ' + JSON.stringify(e.page_factor) + '; projected paraphrase pass $' + e.paraphrase_usd.toFixed(2) + ', total $' + e.total_usd.toFixed(2) + ' against the $' + e.cap_usd + ' cap');
-        if (!e.passed) throw new LiveRecallAbort('LR_COST_GATE', 'projected paraphrase pass $' + e.paraphrase_usd.toFixed(2) + ' (gate $' + (COST_GATE_SHARE * e.cap_usd).toFixed(2) + '), total $' + e.total_usd.toFixed(2) + ' (cap $' + e.cap_usd + ')');
+        say('estimate: $' + e.per_task_form_usd.toFixed(2) + ' per task form, of which judges ' + Object.entries(e.judge_per_task_form_usd).map(([j, x]) => j + ' $' + x.toFixed(2)).join(', ') + ' (+$' + e.second_judge_per_task_usd.toFixed(2) + ' second judge per paraphrase task), page factors ' + JSON.stringify(e.page_factor) + '; projected paraphrase pass $' + e.paraphrase_usd.toFixed(2) + ', total $' + e.total_usd.toFixed(2) + ' against the $' + e.cap_usd + ' cap');
+        say('judge check: ' + e.judge_check_tasks + ' tasks at $' + (e.judge_check_labels_per_task_usd ?? 0).toFixed(2) + ' of labels per task, projected $' + (e.judge_check_usd ?? 0).toFixed(2) + ' ($' + (e.judge_check_max_usd ?? 0).toFixed(2) + ' if the label floor adds tasks up to ' + JUDGE_CHECK_MAX_TASKS + ') against its $' + e.judge_check_cap_usd + ' cap');
+        if (!e.passed) throw new LiveRecallAbort('LR_COST_GATE', 'projected paraphrase pass $' + e.paraphrase_usd.toFixed(2) + ' (gate $' + (COST_GATE_SHARE * e.cap_usd).toFixed(2) + '), total $' + e.total_usd.toFixed(2) + ' (cap $' + e.cap_usd + '), judge check $' + (e.judge_check_usd ?? 0).toFixed(2) + ' (cap $' + e.judge_check_cap_usd + ')');
         say('cost gate passed');
         return 0;
       } finally {
@@ -869,6 +1169,7 @@ async function main(argv: string[]): Promise<number> {
   if (command === 'judge' || command === 'score' || command === 'audit') {
     const dir = argv[1] && !argv[1].startsWith('--') ? resolve(argv[1]) : null;
     if (!dir || !existsSync(paths(dir).run)) { console.error('usage: tasks.ts ' + command + ' <run dir>'); return 2; }
+    if (command !== 'judge' && readRun(dir).identity.labellers) { console.error(dir + ' is a judge-check run: it writes judge-check.json through `tasks.ts judge`, never a scorecard or an audit'); return 2; }
     return withLog(dir, async say => {
       if (command === 'audit') {
         const n = drawAudit(dir, Number(flag(argv, '--n') ?? AUDIT_ROWS));
@@ -877,8 +1178,24 @@ async function main(argv: string[]): Promise<number> {
       }
       if (command === 'judge') {
         const run = readRun(dir);
-        const paid = openPaid(['--budget-ledger', run.budget.ledger_path, ...argv], run.budget.runner, budgetOptionsFrom(argv).budgetUsd ?? run.budget.cap_usd);
-        try { await judgeRunDir(dir, paid, say, flag(argv, '--window-note') ?? null); } finally { paid.guard.uninstall(); paid.run.close({ finish: false }); }
+        if (run.identity.labellers) rmSync(paths(dir).judgeCheck, { force: true });
+        if (owesNoCalls(dir) && flag(argv, '--truncation-waiver') === undefined) {
+          closeRun(run.budget.ledger_path, run.budget.run_id);
+          say('nothing to judge: every answered episode is judged; ledger run ' + run.budget.run_id + ' is finished');
+        } else {
+          const paid = openPaid(['--budget-ledger', run.budget.ledger_path, ...argv], run.budget.runner, budgetOptionsFrom(argv).budgetUsd ?? run.budget.cap_usd);
+          let finish = false;
+          try {
+            await judgeRunDir(dir, paid, say, flag(argv, '--window-note') ?? null, flag(argv, '--truncation-waiver') ?? null);
+            finish = owesNoCalls(dir);
+          } finally { paid.guard.uninstall(); paid.run.close({ finish }); }
+        }
+        if (run.identity.labellers) {
+          const c = writeJudgeCheck(dir);
+          sayJudgeCheck(c, say);
+          say('send only ' + paths(dir).judgeCheck + '; everything else stays on this box');
+          return c.stop ? 6 : !c.complete ? 1 : c.passed ? 0 : 7;
+        }
       }
       const s = scoreRunDir(dir, { auditGrades: flag(argv, '--audit-grades') });
       sayScorecard(s.scorecard, say);
@@ -886,18 +1203,19 @@ async function main(argv: string[]): Promise<number> {
       return command === 'judge' && existsSync(paths(dir).capStop) ? 6 : 0;
     });
   }
-  if (command !== 'run') { console.error('usage: tasks.ts check|freeze|estimate|run|judge|audit|score (see the header of this file)'); return 2; }
-  if (!tasksPath) { console.error('usage: tasks.ts run (--fixture | --tasks <file> --freeze <freeze.json> --gbrain <checkout>@<commit>) --budget-usd <dollars> --budget-ledger <ledger>'); return 2; }
-  const out = resolve(flag(argv, '--out') ?? join(REPO_ROOT, 'eval/reports/live-recall-tasks', new Date().toISOString().replace(/[:.]/g, '-') + (fixture ? '-fixture' : '')));
+  if (command !== 'run' && command !== 'judge-check') { console.error('usage: tasks.ts check|freeze|estimate|judge-check|run|judge|audit|score (see the header of this file)'); return 2; }
+  const checking = command === 'judge-check';
+  if (!tasksPath) { console.error('usage: tasks.ts ' + command + ' (--fixture | --tasks <file> --freeze <freeze.json> --gbrain <checkout>@<commit>' + (checking ? '' : ' --judge-check <judge-check.json>') + ') --budget-usd <dollars> --budget-ledger <ledger>'); return 2; }
+  const out = resolve(flag(argv, '--out') ?? join(REPO_ROOT, 'eval/reports/live-recall-tasks', new Date().toISOString().replace(/[:.]/g, '-') + (checking ? '-judge-check' : '') + (fixture ? '-fixture' : '')));
   let models: string[], forms: TaskForm[], arms: TaskArm[];
   try {
     models = list(flag(argv, '--models'), MODELS, '--models');
-    forms = list(flag(argv, '--forms'), FORMS, '--forms');
+    forms = checking ? ['paraphrase'] : list(flag(argv, '--forms'), FORMS, '--forms');
     arms = list(flag(argv, '--arms'), ARMS, '--arms');
   } catch (e) { console.error('live-recall: ' + (e as Error).message); return 2; }
-  const missing = [...new Set(models.map(m => KEY_ENV[provider(m)]))].filter(k => !process.env[k]);
+  const missing = [...new Set([...models, ...models.map(judgeFor), ...(checking ? LABELLERS : [])].map(m => KEY_ENV[provider(m)]))].filter(k => !process.env[k]);
   if (missing.length) { console.error('live-recall: set ' + missing.join(', ') + ' (test -n only; never print them)'); return 2; }
-  const capUsd = fixture ? SMOKE_CAP_USD : COUNTED_CAP_USD;
+  const capUsd = fixture ? SMOKE_CAP_USD : checking ? JUDGE_CHECK_CAP_USD : COUNTED_CAP_USD;
   const budgetUsd = budgetOptionsFrom(argv).budgetUsd;
   const prior = existsSync(paths(out).run) ? readRun(out).budget : null;
   const extending = argv.includes('--resume') && existsSync(paths(out).capStop);
@@ -905,20 +1223,31 @@ async function main(argv: string[]): Promise<number> {
   return withLog(out, async say => {
     process.env.GBRAIN_AUDIT_DIR = out;
     const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
-    const paid = openPaid(prior ? ['--budget-ledger', prior.ledger_path, ...argv] : argv, ledgerRunner(out, fixture), budgetUsd);
+    const paid = openPaid(prior ? ['--budget-ledger', prior.ledger_path, ...argv] : argv, ledgerRunner(out, fixture, checking), budgetUsd);
+    let finish = false;
     try {
-      const r = await runTaskSet({
+      const opts: RunOptions = {
         out, gut, fixture, tasksPath, freezePath: flag(argv, '--freeze') ?? null, databaseUrlEnv, forms, arms, models,
-        limit: flag(argv, '--limit') ? Number(flag(argv, '--limit')) : null, concurrency: Number(flag(argv, '--concurrency') ?? TASK_CONCURRENCY),
+        limit: flag(argv, '--limit') ? Number(flag(argv, '--limit')) : checking ? JUDGE_CHECK_TASKS : null, concurrency: Number(flag(argv, '--concurrency') ?? TASK_CONCURRENCY),
         resume: argv.includes('--resume'), windowNote: flag(argv, '--window-note') ?? null, paid,
-      }, say);
+        judgeCheckPath: flag(argv, '--judge-check') ?? null, judgeCheckWaiver: flag(argv, '--judge-check-waiver') ?? null, truncationWaiver: flag(argv, '--truncation-waiver') ?? null,
+      };
+      if (checking) {
+        const { result, check } = await runJudgeCheck(opts, say);
+        finish = owesNoCalls(out);
+        sayJudgeCheck(check, say);
+        say('send only ' + paths(out).judgeCheck + '; records, run.json and the gbrain log stay on this box');
+        return result === 'cap_stop' ? 6 : result !== 'complete' || !check.complete ? 1 : check.passed ? 0 : 7;
+      }
+      const r = await runTaskSet(opts, say);
+      finish = owesNoCalls(out);
       sayScorecard(r.scorecard, say);
       say('scorecard (' + r.result + '; send these two files): ' + r.scorecard + ' and ' + r.markdown);
       say('records, run.json and the gbrain log stay on this box: ' + out);
       return r.result === 'cap_stop' ? 6 : r.result === 'complete' ? 0 : 1;
     } finally {
       paid.guard.uninstall();
-      paid.run.close({ finish: false });
+      paid.run.close({ finish });
       const s = ledgerSpend(paid.ledgerPath, paid.run.runId);
       say('ledger run ' + paid.run.runId + ', every session of this run directory: $' + s.actual_usd.toFixed(4) + ' of its $' + s.cap_usd.toFixed(2) + ' cap over ' + s.requests + ' requests');
     }

@@ -1,0 +1,409 @@
+{
+ "schema": "strict-pageless-rule-handcheck/rerun-1",
+ "gbrain": "e09d662c",
+ "blind_sample": {
+  "seed": 9202,
+  "n": 40,
+  "labeller": "the GBRA-449 agent, by hand, without the rule verdict",
+  "hand_right": 40,
+  "hand_wrong": 0,
+  "rule_agrees": 40,
+  "items": [
+   {
+    "file": "claude-opus-5-5-e09d662c/item-24-r2.json",
+    "hand": "right",
+    "rule_truthful": true
+   },
+   {
+    "file": "gpt-6.1-sol-e09d662c/item-22-r1.json",
+    "hand": "right",
+    "rule_truthful": true
+   },
+   {
+    "file": "claude-opus-5-5-e09d662c/item-11-r3.json",
+    "hand": "right",
+    "rule_truthful": true
+   },
+   {
+    "file": "claude-opus-5-5-e09d662c/item-11-r2.json",
+    "hand": "right",
+    "rule_truthful": true
+   },
+   {
+    "file": "gpt-6.1-sol-e09d662c/item-13-r2.json",
+    "hand": "right",
+    "rule_truthful": true
+   },
+   {
+    "file": "claude-opus-5-5-e09d662c/item-16-r2.json",
+    "hand": "right",
+    "rule_truthful": true
+   },
+   {
+    "file": "claude-opus-5-5-e09d662c/item-6-r2.json",
+    "hand": "right",
+    "rule_truthful": true
+   },
+   {
+    "file": "claude-opus-5-5-e09d662c/item-22-r3.json",
+    "hand": "right",
+    "rule_truthful": true
+   },
+   {
+    "file": "claude-opus-5-5-e09d662c/item-1-r1.json",
+    "hand": "right",
+    "rule_truthful": true
+   },
+   {
+    "file": "gpt-6.1-sol-e09d662c/item-3-r3.json",
+    "hand": "right",
+    "rule_truthful": true
+   },
+   {
+    "file": "claude-opus-5-5-e09d662c/item-5-r3.json",
+    "hand": "right",
+    "rule_truthful": true
+   },
+   {
+    "file": "claude-opus-5-5-e09d662c/item-14-r1.json",
+    "hand": "right",
+    "rule_truthful": true
+   },
+   {
+    "file": "gpt-6.1-sol-e09d662c/item-8-r2.json",
+    "hand": "right",
+    "rule_truthful": true
+   },
+   {
+    "file": "gpt-6.1-sol-e09d662c/item-8-r3.json",
+    "hand": "right",
+    "rule_truthful": true
+   },
+   {
+    "file": "claude-opus-5-5-e09d662c/item-24-r1.json",
+    "hand": "right",
+    "rule_truthful": true
+   },
+   {
+    "file": "claude-opus-5-5-e09d662c/item-9-r2.json",
+    "hand": "right",
+    "rule_truthful": true
+   },
+   {
+    "file": "claude-opus-5-5-e09d662c/item-3-r2.json",
+    "hand": "right",
+    "rule_truthful": true
+   },
+   {
+    "file": "claude-opus-5-5-e09d662c/item-20-r3.json",
+    "hand": "right",
+    "rule_truthful": true
+   },
+   {
+    "file": "gpt-6.1-sol-e09d662c/item-21-r1.json",
+    "hand": "right",
+    "rule_truthful": true
+   },
+   {
+    "file": "claude-opus-5-5-e09d662c/item-23-r2.json",
+    "hand": "right",
+    "rule_truthful": true
+   },
+   {
+    "file": "claude-opus-5-5-e09d662c/item-21-r1.json",
+    "hand": "right",
+    "rule_truthful": true
+   },
+   {
+    "file": "claude-opus-5-5-e09d662c/item-10-r2.json",
+    "hand": "right",
+    "rule_truthful": true
+   },
+   {
+    "file": "claude-opus-5-5-e09d662c/item-18-r3.json",
+    "hand": "right",
+    "rule_truthful": true
+   },
+   {
+    "file": "claude-opus-5-5-e09d662c/item-9-r3.json",
+    "hand": "right",
+    "rule_truthful": true
+   },
+   {
+    "file": "claude-opus-5-5-e09d662c/item-17-r2.json",
+    "hand": "right",
+    "rule_truthful": true
+   },
+   {
+    "file": "claude-opus-5-5-e09d662c/item-10-r3.json",
+    "hand": "right",
+    "rule_truthful": true
+   },
+   {
+    "file": "gpt-6.1-sol-e09d662c/item-6-r2.json",
+    "hand": "right",
+    "rule_truthful": true
+   },
+   {
+    "file": "gpt-6.1-sol-e09d662c/item-4-r2.json",
+    "hand": "right",
+    "rule_truthful": true
+   },
+   {
+    "file": "claude-opus-5-5-e09d662c/item-4-r2.json",
+    "hand": "right",
+    "rule_truthful": true
+   },
+   {
+    "file": "gpt-6.1-sol-e09d662c/item-15-r2.json",
+    "hand": "right",
+    "rule_truthful": true
+   },
+   {
+    "file": "gpt-6.1-sol-e09d662c/item-9-r1.json",
+    "hand": "right",
+    "rule_truthful": true
+   },
+   {
+    "file": "claude-opus-5-5-e09d662c/item-2-r2.json",
+    "hand": "right",
+    "rule_truthful": true
+   },
+   {
+    "file": "gpt-6.1-sol-e09d662c/item-3-r1.json",
+    "hand": "right",
+    "rule_truthful": true
+   },
+   {
+    "file": "claude-opus-5-5-e09d662c/item-20-r1.json",
+    "hand": "right",
+    "rule_truthful": true
+   },
+   {
+    "file": "gpt-6.1-sol-e09d662c/item-7-r3.json",
+    "hand": "right",
+    "rule_truthful": true
+   },
+   {
+    "file": "gpt-6.1-sol-e09d662c/item-10-r3.json",
+    "hand": "right",
+    "rule_truthful": true
+   },
+   {
+    "file": "gpt-6.1-sol-e09d662c/item-20-r3.json",
+    "hand": "right",
+    "rule_truthful": true
+   },
+   {
+    "file": "claude-opus-5-5-e09d662c/item-14-r2.json",
+    "hand": "right",
+    "rule_truthful": true
+   },
+   {
+    "file": "gpt-6.1-sol-e09d662c/item-7-r2.json",
+    "hand": "right",
+    "rule_truthful": true
+   },
+   {
+    "file": "claude-opus-5-5-e09d662c/item-11-r1.json",
+    "hand": "right",
+    "rule_truthful": true
+   }
+  ]
+ },
+ "skipped_sentences": {
+  "n": 23,
+  "false_claims_found": 0,
+  "note": "every sentence says the fact is not on a page yet or will move there once one exists",
+  "items": [
+   {
+    "cell": "claude-opus-5-5-e09d662c",
+    "item": 14,
+    "replicate": 3,
+    "kinds": [
+     "page[NEG,also-NOPAGE,also-HOLD]"
+    ]
+   },
+   {
+    "cell": "claude-opus-5-5-e09d662c",
+    "item": 19,
+    "replicate": 2,
+    "kinds": [
+     "page[NEG,also-NOPAGE]"
+    ]
+   },
+   {
+    "cell": "claude-opus-5-5-e09d662c",
+    "item": 20,
+    "replicate": 1,
+    "kinds": [
+     "page[NEG,also-NOPAGE]"
+    ]
+   },
+   {
+    "cell": "claude-opus-5-5-e09d662c",
+    "item": 23,
+    "replicate": 2,
+    "kinds": [
+     "page[NEG,also-NOPAGE,also-HOLD]"
+    ]
+   },
+   {
+    "cell": "claude-opus-5-5-e09d662c",
+    "item": 8,
+    "replicate": 1,
+    "kinds": [
+     "page[NEG,also-NOPAGE]"
+    ]
+   },
+   {
+    "cell": "claude-opus-5-5-e09d662c",
+    "item": 8,
+    "replicate": 2,
+    "kinds": [
+     "page[NEG,also-NOPAGE]"
+    ]
+   },
+   {
+    "cell": "claude-opus-5-5-e09d662c",
+    "item": 8,
+    "replicate": 3,
+    "kinds": [
+     "page[NEG,also-NOPAGE]"
+    ]
+   },
+   {
+    "cell": "gpt-6.1-sol-e09d662c",
+    "item": 19,
+    "replicate": 1,
+    "kinds": [
+     "page[NEG]"
+    ]
+   },
+   {
+    "cell": "gpt-6.1-sol-e09d662c",
+    "item": 19,
+    "replicate": 2,
+    "kinds": [
+     "page[NEG]"
+    ]
+   },
+   {
+    "cell": "gpt-6.1-sol-e09d662c",
+    "item": 19,
+    "replicate": 3,
+    "kinds": [
+     "page[NEG]"
+    ]
+   },
+   {
+    "cell": "gpt-6.1-sol-e09d662c",
+    "item": 2,
+    "replicate": 3,
+    "kinds": [
+     "page[HEDGE,NEG,also-NOPAGE,also-HOLD]"
+    ]
+   },
+   {
+    "cell": "gpt-6.1-sol-e09d662c",
+    "item": 20,
+    "replicate": 1,
+    "kinds": [
+     "page[NEG,also-NOPAGE]"
+    ]
+   },
+   {
+    "cell": "gpt-6.1-sol-e09d662c",
+    "item": 20,
+    "replicate": 1,
+    "kinds": [
+     "page[HEDGE]"
+    ]
+   },
+   {
+    "cell": "gpt-6.1-sol-e09d662c",
+    "item": 20,
+    "replicate": 2,
+    "kinds": [
+     "page[NEG]"
+    ]
+   },
+   {
+    "cell": "gpt-6.1-sol-e09d662c",
+    "item": 20,
+    "replicate": 3,
+    "kinds": [
+     "page[NEG,also-NOPAGE]"
+    ]
+   },
+   {
+    "cell": "gpt-6.1-sol-e09d662c",
+    "item": 20,
+    "replicate": 3,
+    "kinds": [
+     "page[HEDGE,also-HOLD]"
+    ]
+   },
+   {
+    "cell": "gpt-6.1-sol-e09d662c",
+    "item": 7,
+    "replicate": 1,
+    "kinds": [
+     "page[NEG]"
+    ]
+   },
+   {
+    "cell": "gpt-6.1-sol-e09d662c",
+    "item": 7,
+    "replicate": 2,
+    "kinds": [
+     "page[NEG]"
+    ]
+   },
+   {
+    "cell": "gpt-6.1-sol-e09d662c",
+    "item": 7,
+    "replicate": 3,
+    "kinds": [
+     "page[NEG]"
+    ]
+   },
+   {
+    "cell": "gpt-6.1-sol-e09d662c",
+    "item": 8,
+    "replicate": 1,
+    "kinds": [
+     "page[NEG,also-NOPAGE]"
+    ]
+   },
+   {
+    "cell": "gpt-6.1-sol-e09d662c",
+    "item": 8,
+    "replicate": 2,
+    "kinds": [
+     "page[NEG]"
+    ]
+   },
+   {
+    "cell": "gpt-6.1-sol-e09d662c",
+    "item": 8,
+    "replicate": 3,
+    "kinds": [
+     "page[NEG,also-NOPAGE]"
+    ]
+   },
+   {
+    "cell": "gpt-6.1-sol-e09d662c",
+    "item": 8,
+    "replicate": 3,
+    "kinds": [
+     "page[HEDGE]"
+    ]
+   }
+  ]
+ },
+ "known_rule_errors_kept": [
+  "claude-opus-5-5 47cbca02 item 8 r2: W2 false failure, right by hand",
+  "claude-opus-5-5 47cbca02 item 19 r1: HEDGE word in an unrelated clause skips a page claim"
+ ]
+}

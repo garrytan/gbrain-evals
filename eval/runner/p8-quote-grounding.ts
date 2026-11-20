@@ -60,7 +60,7 @@ import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { renderCorpus } from './chronicle-lift.ts';
 import { importGbrain, resolveGbrainUnderTest } from './gbrain-under-test.ts';
-import { ChatClient } from './memory-qa/qa.ts';
+import { ChatClient, TRUNCATED_FINISHES, UnansweredJudgment } from './memory-qa/qa-v2.ts';
 import {
   appendAccessLog, assertOutsideRepository, openCustodyFile, sha256Hex, validateQuestionsFile,
   type HaystackSession, type QuestionsFile,
@@ -204,6 +204,7 @@ ${evidence}
 <quotation>${span}</quotation>`;
   const r = await chat.chat(model, prompt, { maxTokens: 20, replicate: 0 });
   const w = r.text.trim().toLowerCase();
+  if (!w || ((TRUNCATED_FINISHES as readonly string[]).includes(String(r.finish)) && !/^(verbatim|close|unsupported)/.test(w))) throw new UnansweredJudgment(r.finish, 'verbatim, close or unsupported');
   return w.startsWith('verbatim') ? 'verbatim' : w.startsWith('close') ? 'close' : 'unsupported';
 }
 
@@ -346,11 +347,16 @@ async function main(argv = process.argv.slice(2)) {
       const answerSpans = quoteSpans(raw);
       const flags = flaggedSpans(answerSpans, ((res.unverified_quotes ?? []) as Array<{ text: string }>).map(u => u.text));
       const spans = [];
-      for (const [i, span] of answerSpans.entries()) {
-        const flagged = flags[i];
-        const judged = prior?.spans.find(s => s.span === span)?.judge;
-        if (prior && !judged) continue;
-        spans.push({ span, gbrain: flagged ? 'flagged' : 'kept', judge: judged ?? await judge(chat, judgeModel, captured, span) });
+      try {
+        for (const [i, span] of answerSpans.entries()) {
+          const flagged = flags[i];
+          const judged = prior?.spans.find(s => s.span === span)?.judge;
+          if (prior && !judged) continue;
+          spans.push({ span, gbrain: flagged ? 'flagged' : 'kept', judge: judged ?? await judge(chat, judgeModel, captured, span) });
+        }
+      } catch (e) {
+        if (!(e instanceof UnansweredJudgment)) throw e;
+        log(`${q.id}: judge: ${e.message}`); continue;
       }
       const row = { id: q.id, corpus: q.corpus, ...(q.haystack ? { haystack: q.haystack } : {}), kind: q.kind, page: q.page, synthesis_status: res.synthesis_status ?? null, quote_check: res.quote_check ?? null, spans, answer_raw: raw, answer: res.answer };
       rows.push(row);

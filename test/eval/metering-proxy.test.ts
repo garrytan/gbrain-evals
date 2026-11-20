@@ -127,6 +127,29 @@ describe('lease mode forwarding', () => {
     } finally { proxy.stop(); }
   });
 
+  // Value: protects=GST-2163: lease mode fails closed on usage the ledger cannot price; fails_when=a response naming an unpriced cache tier settles below its reservation or the proxy keeps forwarding after it; why_new=usageCost now refuses unpriced cache tiers; seam=MeteringProxy lease forward; no_claim=does not call a provider
+  test('a response the ledger cannot price is charged at its reservation and answered 402, and nothing more is forwarded', async () => {
+    const lease = BudgetRun.openLease({ runId: 'lease-unpriced', leaseUsd: 1, ledgerPath: ledgerFile() });
+    const up = fakeUpstream(() => Response.json({ usage: { prompt_tokens: 10, completion_tokens: 5, prompt_tokens_details: { cached_tokens: 0, cache_write_tokens: 3, cache_write_tokens_details: { ttl_7d_tokens: 3 } } } }));
+    const { proxy, post, usageLog } = leased(lease, up.fetchImpl);
+    try {
+      const first = await post('/c/openai/v1/chat/completions', chat('gpt-6.1-sol'));
+      expect(first.status).toBe(402);
+      expect(((await first.json()) as { error: { message: string } }).error.message).toContain('charged at its reservation');
+      const second = await post('/c/openai/v1/chat/completions', chat('gpt-6.1-sol'));
+      expect(second.status).toBe(402);
+      expect(((await second.json()) as { error: { message: string } }).error.message).toContain('forwards nothing more');
+      expect(up.seen).toHaveLength(1);
+      expect(proxy.status().unpriced_usage).toContain('ttl_7d_tokens');
+      const lines = readFileSync(usageLog, 'utf8').trim().split('\n').map(l => JSON.parse(l));
+      expect(lines.map(l => [l.outcome, l.charged_reservation ?? null])).toEqual([['forwarded', true], ['refused', null]]);
+      expect(lines[0].reason).toContain('ttl_7d_tokens');
+      expect(ledgerStatus({ ledgerPath: lease.ledgerPath, runId: 'lease-unpriced' }).run!.committed_usd).toBeCloseTo(lines[0].reserved_usd, 12);
+      expect(ledgerStatus({ ledgerPath: lease.ledgerPath, runId: 'lease-unpriced' }).run!.finished_at).not.toBeNull();
+      expect(() => BudgetRun.openLease({ runId: 'lease-unpriced', leaseUsd: 1, ledgerPath: lease.ledgerPath })).toThrow('a closed lease is never reopened');
+    } finally { proxy.stop(); }
+  });
+
   test('the input reservation is bounded by request bytes, not bytes over three', async () => {
     const lease = BudgetRun.openLease({ runId: 'lease-e', leaseUsd: 1, ledgerPath: ledgerFile() });
     let reserved = 0;
@@ -331,6 +354,28 @@ describe('in-process mode (Cat 40 callers)', () => {
       const failed = await proxy.finalize('slot:slot0');
       expect(failed.usd).toBeCloseTo(reservationUsd(priceRequest('https://api.anthropic.com/v1/messages', body)!), 9);
       expect(failed.unpriced).toBe(1);
+    } finally { proxy.stop(); }
+  });
+
+  // Value: protects=GST-2163: in-process mode fails closed on usage the ledger cannot price; fails_when=a response naming an unpriced cache tier is metered below its reservation or a later paid request is forwarded; why_new=usageCost now refuses unpriced cache tiers; seam=MeteringProxy in-process forward; no_claim=does not call a provider
+  test('a response the ledger cannot price is metered at its reservation and answered 402, and no later paid request is forwarded', async () => {
+    const up = fakeUpstream(() => Response.json({ usage: { input_tokens: 10, output_tokens: 1, cache_creation_input_tokens: 5, cache_creation: { ephemeral_1h_input_tokens: 5 } } }));
+    const proxy = new MeteringProxy({ fetchImpl: up.fetchImpl });
+    proxy.start();
+    const body = { model: 'claude-sonnet-4-6', max_tokens: 100, messages: [{ role: 'user', content: 'x' }] };
+    const call = () => fetch(`http://127.0.0.1:${proxy.port}/slot0/anthropic/v1/messages`, { method: 'POST', body: JSON.stringify(body) });
+    try {
+      const first = await call();
+      expect(first.status).toBe(402);
+      expect(((await first.json()) as { error: { message: string } }).error.message).toContain('charged at its reservation');
+      const second = await call();
+      expect(second.status).toBe(402);
+      expect(((await second.json()) as { error: { message: string } }).error.message).toContain('an earlier response reported usage the ledger cannot price');
+      expect(up.seen).toHaveLength(1);
+      const meter = await proxy.finalize('slot:slot0');
+      expect(meter.usd).toBeCloseTo(reservationUsd(priceRequest('https://api.anthropic.com/v1/messages', body)!), 9);
+      expect(meter.unpriced).toBe(1);
+      expect(proxy.status().unpriced_usage).toContain('ephemeral_1h_input_tokens');
     } finally { proxy.stop(); }
   });
 });

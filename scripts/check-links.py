@@ -2,7 +2,9 @@
 """Check every link in the repository's own Markdown (docs audit B12).
 
 Local mode (default, run by `bun run validate` and CI): every relative link and
-heading anchor in every tracked Markdown file must resolve. Corpus content is
+heading anchor in every tracked Markdown file must resolve, from the file's own
+folder except in a changelog.d/ entry, which resolves from the repository root
+because the release copies it into CHANGELOG.md. Corpus content is
 skipped because its wiki-style slugs are benchmark inputs, not doc links:
 eval/data/** and docs/benchmarks/**/artifacts/**.
 
@@ -26,7 +28,7 @@ anchors = import_module("verify-documentation-refresh").anchors
 
 ROOT = Path(__file__).resolve().parent.parent
 SKIP = (re.compile(r"^eval/data/"), re.compile(r"^docs/benchmarks/.*/artifacts/"))
-LINK = re.compile(r"!?\[[^\]]*\]\(([^\n]+?)\)")
+LINK = re.compile(r"!?\[[^\]]*\]\(([^\n]+?)\)|\bhref=\"([^\"]+)\"")
 BLOCKED = {401, 403, 429}
 
 
@@ -38,8 +40,8 @@ def markdown_files():
 def links(path):
     text = re.sub(r"```.*?```", "", path.read_text(), flags=re.S)
     text = re.sub(r"`[^`\n]*`", "", text)
-    for raw in LINK.findall(text):
-        yield raw.strip().split(' "')[0].strip("<>")
+    for markdown, html in LINK.findall(text):
+        yield (markdown or html).strip().split(' "')[0].strip("<>")
 
 
 def check_local(files):
@@ -53,7 +55,8 @@ def check_local(files):
             if re.match(r"^[a-zA-Z][a-zA-Z0-9+.-]*:", link):
                 continue
             target, _, anchor = urllib.parse.unquote(link).partition("#")
-            destination = (path.parent / target).resolve() if target else path
+            base = ROOT if Path(file).parent == Path("changelog.d") and Path(file).name != "README.md" else path.parent
+            destination = (base / target).resolve() if target else path
             if not destination.exists():
                 errors.append(f"{file}: {link}: missing local target")
             elif anchor and destination.suffix.lower() == ".md" and anchor not in anchors(destination.read_text()):

@@ -94,4 +94,12 @@ describe('oracle gate (gate 2)', () => {
     expect(confirmOracleGate(errored)).toMatchObject({ incomplete: 1, pass: false });
     expect(confirmOracleGate([...errored, rec(HARD_MODELS[0], tasks[0], true, 'submitted', 2)])).toMatchObject({ cells: 300, successes: 300, pass: true });
   });
+  test('a run that names its own readers gates on readers x 100 cells and leaves other models out (newest-build re-measure)', () => {
+    const readers = ['claude-opus-5-5', 'gpt-6.2-sol'];
+    const two = (failures: number) => [...readers.flatMap(m => tasks.map((t, i) => rec(m, t, !(m === readers[0] && i < failures)))), ...tasks.map(t => rec('particle-1', t, false))];
+    expect(confirmOracleGate(two(10), readers)).toMatchObject({ cells: 200, planned: 200, successes: 190, pass: true });
+    expect(confirmOracleGate(two(11), readers)).toMatchObject({ cells: 200, successes: 189, pass: false });
+    const missing = two(0).filter(r => !(r.model === readers[1] && r.task === tasks[0]));
+    expect(confirmOracleGate(missing, readers).pass).toBe(false);
+  });
 });

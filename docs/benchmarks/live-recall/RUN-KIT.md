@@ -67,6 +67,41 @@ All commands run from the repository root.
    bun eval/runner/live-recall/run.ts freeze --questions <questions.jsonl> --out freeze.json --protocol batch2
    ```
 
+   For batch 3 (freshness and entity questions), freeze with `--protocol batch3` and the same `--gbrain` you will run
+   with. The freeze then also records `gbrain_version` and `visibility_epoch`: which side of GBRA-398
+   (garrytan/gbrain#8917, the owner and its delegates read private pages, and over-applied `access: private` labels
+   are cleared) that gbrain falls on. A counted run whose own epoch differs from the freeze's is refused with
+   `LR_FREEZE_MISMATCH`, because gold a remote reader could not see before the change may be visible after it. The
+   epoch reads `pre_gbra_398` up to gbrain 0.60.622.0 and `post_gbra_398` from 0.60.623.0, the first release that
+   carries the change (`eval/runner/live-recall/visibility-epoch.ts`). A version string that doesn't parse reads
+   `unknown`, and then the run must also use the freeze's exact gbrain version, because an unknown epoch can't show
+   which side it is on.
+
+   ```bash
+   bun eval/runner/live-recall/run.ts freeze --questions <questions.jsonl> --out freeze.json --protocol batch3 \
+     --gbrain <gbrain checkout>@<commit>
+   ```
+
+   For batch 4 (a fourth set made like batch 2, [batch 4 amendment](PREREGISTRATION.md#batch-4-amendment)), check out
+   the gbrain-evals commit the request names, then freeze with `--protocol batch4`, the same `--gbrain` you will run
+   with, and the three earlier question files on the box, one `--prior` each, in any order. The runner checks each
+   file's sha256 against batches 1 to 3's, then counts the question ids, forms (after folding case, spacing and
+   punctuation) and gold pages the new file shares with them. Anything shared, or a missing or wrong file, refuses with
+   [`LR_FREEZE_OVERLAP`](#lr_freeze_overlap) and writes nothing. Only counts are printed. `freeze.json` also records
+   the epoch fields batch 3's does, the three files' sha256 (`prior_question_files`) and a zero `prior_overlap`.
+
+   ```bash
+   bun eval/runner/live-recall/run.ts freeze --questions <batch 4 questions.jsonl> --out freeze.json --protocol batch4 \
+     --gbrain <gbrain checkout>@<commit> \
+     --prior <batch 1 questions.jsonl> --prior <batch 2 questions.jsonl> --prior <batch 3 questions.jsonl>
+   ```
+
+   The earlier files' sha256 values:
+
+   - Batch 1: `88eaa30c34d85d303aff2a0faf81e9adfe6a5815dadc5196879c827e6f02ae9f`
+   - Batch 2: `dd69701c55534429fb758ca8335af175a3dfcc3c9aca6c9c2d2fc81bf3f11099`
+   - Batch 3: `c023694ef59e03e64fd1b0553b6516f7bccad424b85f0f74bdf95d2a08b6014e`
+
 5. **Run**, after we confirm the freeze is committed:
 
    ```bash
@@ -78,6 +113,13 @@ All commands run from the repository root.
    For batch 2's counted run, pass the gbrain commit of v0.60.593.0, the release the box runs after its 2026-11-07
    upgrade, instead of `52b9ccae` ([batch 2 amendment](PREREGISTRATION.md#batch-2-amendment)). A second run of the
    same batch 2 file at `52b9ccae` is what the pooled and version-change secondaries need.
+
+   For batch 4's counted run, use the same gbrain-evals commit as the freeze, on a clean tree, and pass `--gbrain` at the
+   version the box runs when the run starts. If the box upgraded since the freeze and that version reads the same
+   visibility epoch, the freeze stands and the scorecard records both versions. If the run stops with
+   [`LR_SCHEMA_MISMATCH`](#lr_schema_mismatch), rerun it once at the box's current version; no new freeze or
+   amendment is needed. Send the GBRA-398 relabel windows applied at the freeze and at the run, and the brain's embedding
+   coverage at the freeze as aggregates, with the scorecard. There is one counted batch 4 run.
 
    Before the first question, the runner sends one public probe query through every arm and stops with
    [`LR_ARM_PREFLIGHT`](#lr_arm_preflight) if any arm errors, is refused a model call, fails its reranker open or
@@ -131,6 +173,25 @@ JSONL, one question per line. Fields the runner does not know are ignored, so yo
   `other_search` or `unknown`. Page first is what we ask for.
 - `window` (optional, time_window only): `{"since": "YYYY-MM-DD", "until": "YYYY-MM-DD"}`.
 
+**Batch 3 adds two types**, accepted only under `--protocol batch3` (batch 1 and batch 2 still refuse them):
+
+- `freshness`: the brain holds an old fact on one page and the newer fact on another. `gold` is the newer page, and
+  `stale` (required, freshness only) lists the pages that hold the superseded fact, none of them gold. The question
+  asks for the current value. The runner scores success@5 on the gold and reports how often a stale page outranks
+  the gold.
+- `entity`: two or more pages share a name (two people called the same thing, a company named like its founder's
+  handle, a father and son). `gold` is the right one, and the question carries the detail that tells them apart.
+  `decoy` (optional, entity only) lists the look-alike pages in the same `{"slug": ...}` form, none of them gold; the
+  runner then reports how often one outranks the gold. A question with an absent decoy page is dropped like one with
+  an absent stale page.
+
+```json
+{"id":"fr-2","type":"freshness","forms":{"exact":"What is the annual price of the Brightline Sensors contract?","paraphrase":"How much do we pay each year for the lidar supplier now?"},"gold":[{"slug":"notes/2026-07-15-brightline-renewal"}],"stale":[{"slug":"vendors/brightline-sensors"}],"gold_found_by":"page_first"}
+```
+
+(From the public batch 3 fixture, `eval/data/live-recall-v1/questions-batch3.jsonl`; `run --fixture --protocol batch3`
+scores it keylessly; its entity lines carry `decoy`.) A question with an absent stale page is dropped like one with an absent gold page.
+
 **From `evals/recall/questions.jsonl`.** Its gold is message ids in OpenClaw's session index, which is a different
 search system. Here gold must be the gbrain page that holds the answer: if a session is imported into gbrain, use that
 page's slug; if the answer lives only in the session index, leave the question out, because gbrain cannot find it. Its
@@ -160,21 +221,24 @@ The runner searches only a database that proves, by itself, that this run cannot
 Phase 2 asks whether gbrain retrieval changes the answers a model gives about Garry's brain
 ([preregistration](PHASE2-PREREGISTRATION.md)). Each task goes to claude-opus-5-5, particle-1 and gpt-6.1-sol in four
 arms (no retrieval, gbrain's own read tools, a summarising helper, and the top five pages pasted in), a judge from
-another model family grades each answer against the gold answer, and the runner writes an aggregate scorecard. Every
+another model family (gpt-6-astra for claude-opus-5-5 and particle-1, claude-opus-5-5 for gpt-6.1-sol) grades each
+answer against the gold answer, and the runner writes an aggregate scorecard. Before the counted run, a judge check
+grades 240 answers on 20 of the frozen tasks twice more, once by each judge model, to measure the judges. Every
 model call carries task text, and the gbrain arms carry retrieved page text, to Anthropic, OpenAI and Particle; Garry
 agreed to that for this eval (T1, 2026-11-07). The runner reads the brain only as gbrain's untrusted remote caller, so
 gbrain hides pages flagged private from the models and the judge. gbrain caches its privacy setting for 30 seconds, so
 if someone relaxes it mid-run, pages served inside that window can reach a model before the runner notices.
 
 Only these leave the box: `freeze.json` (counts, a hash and power numbers), the freeze's reachability line (two counts),
-the `estimate` line (dollars), and the run's `scorecard.json` and `scorecard.md` (aggregates). The task file, `tasks.meta.json`, the run's records, page
+the `estimate` lines (dollars), the judge check's `judge-check.json` (counts, rates and kappas), and the run's
+`scorecard.json` and `scorecard.md` (aggregates). The task file, `tasks.meta.json`, the run's records, page
 snapshots, audit rows and gbrain's log stay.
 
 ### Phase 2: what you need
 
 - This repository at the commit named in the run request, installed with `bun install`.
-- The gbrain checkout the box runs, passed as `--gbrain /data/gbrain@27f8b9d6287c` (0.60.593.0). The runner loads that
-  commit from a verified overlay copy; the checkout is not changed.
+- The gbrain checkout the box runs, passed as `--gbrain /data/gbrain@98dda48fb9fd` (0.60.613.0, schema 296). The runner
+  loads that commit from a verified overlay copy; the checkout is not changed.
 - A read-only barrier, as for phase 1. For the counted run, the no-write role ALPH-72 creates just before the run, its
   URL in `LIVE_RECALL_DATABASE_URL`. `freeze` and `estimate` read the brain too; a `snapshot.sh` copy (phase 1, step
   1) works for them.
@@ -182,9 +246,12 @@ snapshots, audit rows and gbrain's log stay.
   embeddings and reranking, exported in the shell. Check each with `test -n "$NAME"`; never print one.
 - The shell rules from phase 1: run as the user whose `~/.gbrain/config.json` serves the brain, with
   `GBRAIN_DIRECT_DATABASE_URL` unset. `GBRAIN_REMOTE_PRIVATE_PAGES` is removed from the runner's own process; if the
-  brain's config sets `search.remote_private_pages`, the runner refuses to start.
+  brain's config sets `search.remote_private_pages`, or turns privacy aliases off (`visibility.honor_aliases` false, 0, off
+  or no, or unreadable), the runner refuses to start. It also refuses when gbrain would read
+  its calls as a member or as the brain owner: config `mcp.stdio_member` set to anyone (or unreadable), or, from gbrain 0.60.623.0,
+  `access.owner_member` naming the member its session is bound to. An owner-bound session sees private pages.
 - A budget ledger on the box, for example `/data/ops/live-recall/phase2/ledger.sqlite`. The first paid command on a new
-  ledger also takes `--program-cap-usd 360`.
+  ledger also takes `--program-cap-usd 900`, which covers the judge check's $200 cap and the counted run's $700.
 
 ### Phase 2: the task file
 
@@ -209,6 +276,8 @@ JSONL, one task per line, kept on the box outside this repository. This line is 
   `gold_answer.acceptable_variants` (optional): other wordings of the answer that also count.
 - `gold_found_by`: `page_first`, `memory`, `gbrain_search`, `other_search` or `unknown`, as in phase 1.
 - `window` (optional): `{"since": "YYYY-MM-DD", "until": "YYYY-MM-DD"}`.
+- `replacement` (optional): `true` on a task written after the first freeze to replace one whose gold a remote caller
+  could not open. The scorecard compares these with the original tasks, descriptively.
 
 ### Phase 2: steps
 
@@ -232,25 +301,48 @@ All commands run from the repository root.
 
    ```bash
    bun eval/runner/live-recall/tasks.ts freeze --tasks <tasks.jsonl> --out freeze.json \
-     --gbrain /data/gbrain@27f8b9d6287c --database-url-env LIVE_RECALL_DATABASE_URL
+     --gbrain /data/gbrain@98dda48fb9fd --database-url-env LIVE_RECALL_DATABASE_URL
    ```
 
-3. **Estimate the cost** (the cost gate). `--smoke` is the public smoke's run directory, which comes with the run
-   request. It reads the frozen gold pages' sizes and makes no model call. It ends with `cost gate passed`, or stops
-   with [`LR_COST_GATE`](#lr_cost_gate); send the line either way.
+3. **Estimate the cost** (the cost gate). `--smoke` and `--smoke-check` are the public smoke's run directory and its
+   fixture judge check's, which come with the run request. It reads the frozen gold pages' sizes and makes no model
+   call. It prints each judge's share on its own line and the judge check's projection over 20 tasks and over 40 (the
+   most the label floor can add), and ends with `cost gate passed`, or stops with [`LR_COST_GATE`](#lr_cost_gate); send the lines either way.
 
    ```bash
    bun eval/runner/live-recall/tasks.ts estimate --tasks <tasks.jsonl> --freeze freeze.json --smoke <smoke run dir> \
-     --gbrain /data/gbrain@27f8b9d6287c --database-url-env LIVE_RECALL_DATABASE_URL --out estimate.json
+     --smoke-check <smoke judge-check dir> --gbrain /data/gbrain@98dda48fb9fd \
+     --database-url-env LIVE_RECALL_DATABASE_URL --out estimate.json
    ```
 
-4. **Run**, in the window GBEV-3 grants, after we confirm the freeze numbers are committed. Start it detached (for
-   example in `tmux`): it takes hours, and the paraphrase pass finishes before the exact pass starts.
+4. **Judge check**, in the window GBEV-3 grants, before the run. It answers the paraphrase form of 20 frozen tasks in
+   every arm and model, judges each answer as the run will, and has both judge models grade every answer again. It
+   prints one line per judge and metric, one per judge model with its calls truncated at the output cap, and writes
+   `judge-check.json` in its own run directory. If after 20 tasks a judge has fewer than 40 labels on either metric, it
+   adds 10 more frozen tasks at a time, up to 40, by itself in the same directory and under the same cap (the label
+   floor; a `--fixture` check runs its tasks once); `judge-check.json` lists every step. Exit status 0 means it passed; send `judge-check.json`. Exit status 7
+   means a judge did not pass: send `judge-check.json` to GBEV-3 and run nothing counted until GBEV-3 answers. Exit
+   status 1 means the check is unfinished: some answer, verdict or label is missing. It cannot pass until the same
+   command with `--resume` finishes it in a window GBEV-3 grants; re-judging (step 6) repairs judge errors but never
+   answers. A cap stop (6), a truncation stop
+   ([`LR_JUDGE_TRUNCATED`](#lr_judge_truncated)) and a resume work as for the run.
+
+   ```bash
+   bun eval/runner/live-recall/tasks.ts judge-check --tasks <tasks.jsonl> --freeze freeze.json \
+     --gbrain /data/gbrain@98dda48fb9fd --database-url-env LIVE_RECALL_DATABASE_URL \
+     --budget-usd 200 --budget-ledger <ledger> --program-cap-usd 900 --out <judge-check dir>
+   ```
+
+5. **Run**, in the same window, after we confirm the freeze numbers are committed and the judge check passed. Start it
+   detached (for example in `tmux`): it takes hours, and the paraphrase pass finishes before the exact pass starts. It
+   refuses to start without a passing judge check made on the same task file and harness digest
+   ([`LR_JUDGE_CHECK`](#lr_judge_check)).
 
    ```bash
    bun eval/runner/live-recall/tasks.ts run --tasks <tasks.jsonl> --freeze freeze.json \
-     --gbrain /data/gbrain@27f8b9d6287c --database-url-env LIVE_RECALL_DATABASE_URL \
-     --budget-usd 360 --budget-ledger <ledger> --program-cap-usd 360 --out <run dir>
+     --gbrain /data/gbrain@98dda48fb9fd --database-url-env LIVE_RECALL_DATABASE_URL \
+     --judge-check <judge-check dir>/judge-check.json \
+     --budget-usd 700 --budget-ledger <ledger> --program-cap-usd 900 --out <run dir>
    ```
 
    Before the first task the runner proves the barrier, refuses a brain that shows private pages to remote callers
@@ -260,16 +352,19 @@ All commands run from the repository root.
    line, the task counts, the preflight result, progress every 10 tasks per pass,
    any [`LR_JUDGE_ERROR`](#lr_judge_error) or [`LR_CELL_INVALID`](#lr_cell_invalid) count, the output paths and the
    ledger total for this run directory across all its sessions. Exit status: 0 complete, 1 incomplete (some episode is
-   missing or unjudged), 6 cap stop, paused at the cap ([`LR_CAP_STOP`](#lr_cap_stop)), 3 abort, 4 unexpected error.
+   missing or unjudged), 6 cap stop, paused at the cap ([`LR_CAP_STOP`](#lr_cap_stop)), 3 abort (including
+   [`LR_JUDGE_TRUNCATED`](#lr_judge_truncated)), 4 unexpected error.
 
-5. **Re-judge, if asked.** If the run printed `LR_JUDGE_ERROR`, re-judge those answers without re-answering. It joins
-   the run's ledger run and cap, and after a cap stop it needs the extension's two flags ([`LR_CAP_STOP`](#lr_cap_stop)).
+6. **Re-judge, if asked.** If the run or the judge check printed `LR_JUDGE_ERROR`, re-judge those answers without
+   re-answering (`tasks.ts judge <judge-check dir>` also re-labels, rewrites `judge-check.json`, exits 1 if an answer is
+   still missing and 7 if the finished check does not pass). It joins the run's
+   ledger run and cap, and after a cap stop it needs the extension's two flags ([`LR_CAP_STOP`](#lr_cap_stop)).
 
    ```bash
    bun eval/runner/live-recall/tasks.ts judge <run dir>
    ```
 
-6. **Audit 30 answers.** This draws 30 judged answers, blind to arm and model, into `audit-rows.local.jsonl` in the run
+7. **Audit 30 answers.** This draws 30 judged answers, blind to arm and model, into `audit-rows.local.jsonl` in the run
    directory. Grade each against its gold answer and write one line per row, `{"row": 1, "correct": true}`, to a file
    on the box. Then rescore with the grades; only the agreement count reaches the scorecard.
 
@@ -278,9 +373,9 @@ All commands run from the repository root.
    bun eval/runner/live-recall/tasks.ts score <run dir> --audit-grades <grades.jsonl>
    ```
 
-7. **Send** `scorecard.json` and `scorecard.md` from the run directory. Keep everything else in it on the box.
+8. **Send** `scorecard.json` and `scorecard.md` from the run directory. Keep everything else in it on the box.
 
-8. **Remove the role** (ALPH-72) and send the teardown proof to GBRA-108.
+9. **Remove the role** (ALPH-72) and send the teardown proof to GBRA-108.
 
 If the run stops for any reason other than a cap stop (the machine restarted, a provider refused a key:
 [`LR_PROVIDER_REJECTED`](#lr_provider_rejected)), continue it with the same command plus `--resume --window-note <id>`, where the id is from GBEV-3's window note. A resume judges answered episodes
@@ -357,7 +452,10 @@ The question file has a problem at the line and field named. Fix it and freeze a
 ### LR_FREEZE_MISMATCH
 
 The question file's hash differs from `freeze.json`, or a counted run was started without `--questions` and
-`--freeze`. Freeze this exact file and send the new numbers before the counted run. From `compare`, it means the two
+`--freeze`. Under batch 3 and batch 4 it also means the freeze records no `visibility_epoch`, or its epoch differs from the run's
+(GBRA-398), or both epochs read `unknown` and the gbrain versions differ: freeze again with the gbrain you run. Under
+batch 4 it also means the freeze records no clean check against the three earlier question files
+(`prior_question_files`, `prior_overlap`): freeze again with the three `--prior` files. Freeze this exact file and send the new numbers before the counted run. From `compare`, it means the two
 run directories were made on different question files. In phase 2 it means the task file's hash differs from
 `freeze.json`, or the kept line count does not match it: run with the frozen file, or freeze again. On a phase 2
 `--resume` it means the resume differs from the session that started the run directory in its harness digest, loaded
@@ -365,6 +463,14 @@ gbrain version or commit, schema version, barrier kind, the source it reads, con
 mode, reranker or embedding model, CRAG settings, result cache flag, tool definitions), models, arms, forms or kept
 tasks (the detail names which). Resume with the same harness, barrier, source, brain configuration and flags, or start
 a new run directory.
+
+### LR_FREEZE_OVERLAP
+
+A batch 4 freeze found a problem with the held-out check, and wrote nothing. Either the three `--prior` files aren't
+batches 1 to 3 (one is missing, repeated or has another sha256; the detail names the first 12 characters of each missing
+hash and how many files were given), or the new question file shares question ids, forms or gold pages with them (the
+detail gives the three counts). Pass the right files, or replace the shared questions, and freeze again. A gold page
+counts as shared when it was a gold, stale or decoy page in batches 1 to 3.
 
 ### LR_COMPARE_CONTROL
 
@@ -399,10 +505,17 @@ Phase 2: the task file has a problem at the line and field named. Fix it and fre
 
 ### LR_PRIVACY_RELAXED
 
-Phase 2: the brain's config shows private pages to remote callers (`search.remote_private_pages`). At the start nothing
-runs. The runner reads the policy again before every task and after every episode, so a change during the run stops it
-with no record for the episode that just ran. gbrain caches the setting for 30 seconds, so pages it served inside that
-window may have reached a model. The runner never relaxes or works around it; GBEV-3 decides.
+Phase 2: the runner would see pages gbrain hides from an unbound remote caller. The brain's config shows private pages
+to remote callers (`search.remote_private_pages`) or turns privacy aliases such as `access: private` off
+(`visibility.honor_aliases`), or gbrain would read the runner's calls as a member or as the brain
+owner (`mcp.stdio_member` set, or `access.owner_member` naming that member), or a gbrain response reported a wider view
+than an unbound caller's in `_meta.access` (that response's text never reaches a model), or a page gbrain hides from an
+unbound caller came back readable. At the start nothing runs. The runner checks again before every task and after every
+episode, each time reading one page gbrain hides from an unbound caller when the brain has one, so a change during the
+run stops it with no record for the episode that just ran. gbrain caches the setting for 30 seconds, so pages it served inside that
+window may have reached a model. `visibility.honor_aliases` has no per-response signal in `_meta.access`, so once gbrain
+picks up `off`, the episodes already running can show alias-private pages to a model until they end, and turning it off
+and back on between two checks can go unnoticed. The runner never relaxes or works around it; GBEV-3 decides.
 
 ### LR_CAP_STOP
 
@@ -414,14 +527,14 @@ command, `--budget-usd` set to the new cap, plus `--resume --window-note <extens
 
 ```bash
 bun eval/runner/live-recall/tasks.ts run --tasks <tasks.jsonl> --freeze freeze.json \
-  --gbrain /data/gbrain@27f8b9d6287c --database-url-env LIVE_RECALL_DATABASE_URL \
+  --gbrain /data/gbrain@98dda48fb9fd --database-url-env LIVE_RECALL_DATABASE_URL \
   --budget-ledger <ledger> --program-cap-usd <program cap> --out <run dir> \
   --resume --window-note <extension id> --budget-usd <new cap>
 ```
 
 The resume raises the ledger run's budget through the ledger, records the old cap, the new cap, the extension id and
 the time in `run.json`, and reruns the episodes the cap refused; finished episodes are never answered again. The ledger
-refuses a run budget above its program cap, which the counted command set to 360, so first raise the program cap with
+refuses a run budget above its program cap, which the first paid command set to 900, so first raise the program cap with
 the ledger's own command, the extension id as the reason, and pass the same number as `--program-cap-usd` above and in
 any later resume:
 
@@ -440,7 +553,7 @@ degraded searches. The scorecard marks it invalid and reports its comparisons un
 
 ### LR_JUDGE_ERROR
 
-Phase 2, not an abort: some judge outputs failed to parse twice. Run `tasks.ts judge <run dir>` (step 5), which
+Phase 2, not an abort: some judge outputs failed to parse twice. Run `tasks.ts judge <run dir>` (step 6), which
 re-judges them without re-answering, then send the new scorecard.
 
 ### LR_RESUME_NEEDS_WINDOW
@@ -450,8 +563,31 @@ through ALPH-72 for a window note.
 
 ### LR_COST_GATE
 
-Phase 2: the projected counted cost breaks the cost gate (the paraphrase pass over $270, 75% of the $360 cap, or the
-total over the cap). Send the estimate line to GBEV-3 through ALPH-72; no counted call runs until GBEV-3 answers.
+Phase 2: the projected counted cost breaks the cost gate (the paraphrase pass over $525, 75% of the $700 cap, the total
+over the cap, or the judge check's 20 tasks over its $200 cap). Send the estimate lines to GBEV-3 through ALPH-72; no counted call
+runs until GBEV-3 answers.
+
+### LR_JUDGE_CHECK
+
+Phase 2: the counted run has no passing judge check. `tasks.ts run` needs `--judge-check <judge-check.json>` from
+`tasks.ts judge-check` on the same task file and harness digest, finished (every planned task answered, judged and
+labelled), covering at least 20 tasks and every model and arm the run asks for, with no cap stop, and that check must
+have passed. A check paused at its cap is finished first (resume it
+in the window GBEV-3 grants). If the judge check did not pass (it exits with status 7), send `judge-check.json` to GBEV-3 through ALPH-72 and run
+nothing counted. If GBEV-3 decides to go ahead anyway, add `--judge-check-waiver <note id>` with GBEV-3's note id; the
+scorecard reports the waiver.
+
+### LR_JUDGE_TRUNCATED
+
+Phase 2: a judge model hit its 8192-token output cap on more than 1% of its counted-judge calls at one effort (while it
+has fewer than 100, on more than one), so the judge check or the run stopped; the line names the model, the effort and
+the counts. Each truncated call is recorded as a judge error and nothing in it is counted. Judging again does not clear
+the count: it covers every judge call, and a resume or re-judge checks it before any new call or cap extension. Send
+the line to GBEV-3 through ALPH-77 and run nothing more until GBEV-3 answers. If GBEV-3 decides to go on, it gives a
+written note id; continue with the same command plus `--truncation-waiver <note id>` (and, for a counted resume, the
+`--window-note` it needs anyway). The waiver covers only the truncations recorded so far, `run.json` and the scorecard
+record it, and the stop comes back if new truncations pass 1% again. A note works once and only while a stop is
+outstanding: drop the flag on any later resume, and bring a new stop back to GBEV-3 for a new note.
 
 ### LR_PROVIDER_REJECTED
 

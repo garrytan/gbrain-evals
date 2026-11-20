@@ -1,0 +1,292 @@
+{
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "cat35-transcript-distill",
+  "gbrain_version": "0.60.733.0",
+  "gbrain_pin": "github:garrytan/gbrain#6ce7195b44a034f85aec811f11fbf862db376f50",
+  "started_at": "2026-11-17T07:47:23.239Z",
+  "finished_at": "2026-11-17T07:52:29.020Z",
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 0,
+  "n_scored": 0,
+  "completion_rate": 0,
+  "errors": [],
+  "publishable": false,
+  "resolved_config": {
+    "mode": "partial",
+    "lanes": [],
+    "transcripts": 24,
+    "corpus_sha": "5fce384e57839be4d9adc231849718463af5235061b698576f63ff587cd22eef",
+    "judge_prompt_version": "2026-09-28-v2",
+    "input_allowlist": [
+      "cat35.sut.source@1",
+      "cat35.judge.coverage@1",
+      "cat35.judge.leak@1",
+      "cat35.judge.usability@1"
+    ],
+    "external_lane": {
+      "name": "gbrain-aug25",
+      "dir": "<work>/gbev97/cat35-gbrain-aug25-docs",
+      "max_bytes": 65536,
+      "files": [
+        {
+          "transcript_id": "coding-reflection-01",
+          "file": "coding-reflection-01.md",
+          "bytes": 6492,
+          "sha256": "8573a0d4098db216280a2186b3930788187636ec3652ef78e64de982a9ef5b27",
+          "claims": 36
+        },
+        {
+          "transcript_id": "coding-reflection-02",
+          "file": "coding-reflection-02.md",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "claims": 0
+        },
+        {
+          "transcript_id": "coding-reflection-03",
+          "file": "coding-reflection-03.md",
+          "bytes": 4958,
+          "sha256": "000a3825df97665d43a49db0c3668fd0723c744542c99d5f165bf7599f2304ef",
+          "claims": 27
+        },
+        {
+          "transcript_id": "coding-reflection-04",
+          "file": "coding-reflection-04.md",
+          "bytes": 7696,
+          "sha256": "17eff1f507c8798f5a35fa4581a648f846c74f84e89f4c0f8d9c79b466ca5cdd",
+          "claims": 53
+        },
+        {
+          "transcript_id": "emotional-processing-01",
+          "file": "emotional-processing-01.md",
+          "bytes": 7063,
+          "sha256": "02fc8bd72aeb1a83f6cf862c967f6945159a3bc99e847829bc6a339f75b0177a",
+          "claims": 48
+        },
+        {
+          "transcript_id": "emotional-processing-02",
+          "file": "emotional-processing-02.md",
+          "bytes": 6561,
+          "sha256": "70741a4243d7f177f628069883f40ad6149322612c61a675d21bfb9d39ada8c3",
+          "claims": 43
+        },
+        {
+          "transcript_id": "emotional-processing-03",
+          "file": "emotional-processing-03.md",
+          "bytes": 5062,
+          "sha256": "65ac3b2d5391d69680f50e0aad6bc9d72ae9ca434a2f914a1cee14f27535b971",
+          "claims": 30
+        },
+        {
+          "transcript_id": "emotional-processing-04",
+          "file": "emotional-processing-04.md",
+          "bytes": 9717,
+          "sha256": "de060913a67f049d7eff9879b844fc41010845998a299c50ef9072845d61a13c",
+          "claims": 51
+        },
+        {
+          "transcript_id": "mixed-routine-signal-01",
+          "file": "mixed-routine-signal-01.md",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "claims": 0
+        },
+        {
+          "transcript_id": "mixed-routine-signal-02",
+          "file": "mixed-routine-signal-02.md",
+          "bytes": 4559,
+          "sha256": "e57bd7f999d5e255074e681b72dbdc43c9bb37340484e572ef869b6029810db3",
+          "claims": 27
+        },
+        {
+          "transcript_id": "mixed-routine-signal-03",
+          "file": "mixed-routine-signal-03.md",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "claims": 0
+        },
+        {
+          "transcript_id": "mixed-routine-signal-04",
+          "file": "mixed-routine-signal-04.md",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "claims": 0
+        },
+        {
+          "transcript_id": "people-deal-01",
+          "file": "people-deal-01.md",
+          "bytes": 5190,
+          "sha256": "c428175cae6b86b39eb80a03a162f6fe41a1fbb94c583b6ea39f2a66f59a5444",
+          "claims": 39
+        },
+        {
+          "transcript_id": "people-deal-02",
+          "file": "people-deal-02.md",
+          "bytes": 7378,
+          "sha256": "b39eb7515ccef04fa197754eb952c2f23a329b031d92b1911c0e54cd4861daa2",
+          "claims": 54
+        },
+        {
+          "transcript_id": "people-deal-03",
+          "file": "people-deal-03.md",
+          "bytes": 6584,
+          "sha256": "fe05f4585ce5090baa3f1a59a08ee9fb4831be20b22389ce6397860dd9e0d847",
+          "claims": 42
+        },
+        {
+          "transcript_id": "people-deal-04",
+          "file": "people-deal-04.md",
+          "bytes": 10516,
+          "sha256": "d3248e9ae5739b4388aa323e42053ddc1c6e72f3126fe7785f4f12a5fadac44b",
+          "claims": 62
+        },
+        {
+          "transcript_id": "pure-routine-01",
+          "file": "pure-routine-01.md",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "claims": 0
+        },
+        {
+          "transcript_id": "pure-routine-02",
+          "file": "pure-routine-02.md",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "claims": 0
+        },
+        {
+          "transcript_id": "pure-routine-03",
+          "file": "pure-routine-03.md",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "claims": 0
+        },
+        {
+          "transcript_id": "pure-routine-04",
+          "file": "pure-routine-04.md",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "claims": 0
+        },
+        {
+          "transcript_id": "startup-ideation-01",
+          "file": "startup-ideation-01.md",
+          "bytes": 8181,
+          "sha256": "ac4f59ac884594df127c42e35ca7c23738d2035820944301f7938f8813ad4e09",
+          "claims": 51
+        },
+        {
+          "transcript_id": "startup-ideation-02",
+          "file": "startup-ideation-02.md",
+          "bytes": 5150,
+          "sha256": "b74cb27a4826b1f33f16ab5579c42fb8139da9af3f0531785fab5b4704111161",
+          "claims": 32
+        },
+        {
+          "transcript_id": "startup-ideation-03",
+          "file": "startup-ideation-03.md",
+          "bytes": 6403,
+          "sha256": "688bcc00b8b2778b22d76b2c3fd2d848d2fa3d604aeefbae484e43915eaddf53",
+          "claims": 47
+        },
+        {
+          "transcript_id": "startup-ideation-04",
+          "file": "startup-ideation-04.md",
+          "bytes": 8505,
+          "sha256": "bcc50fe42ae88ca49719c493c1da8bf8147c9ac07bba4728bfa28f59a48e6db2",
+          "claims": 62
+        }
+      ],
+      "missing": [],
+      "provenance": "The harness read these documents from --external-dir as they were and has no record of how they were made: which system, version, model, prompt or inputs produced them, or whether that system saw the answer keys. This lane's scores are only as trustworthy as the documents, so a run with an external lane is never publishable."
+    },
+    "transcript_mode": "real",
+    "control_inputs": {},
+    "judge_transport": "Anthropic Messages API",
+    "temperature_sent": {
+      "judge": 0
+    },
+    "tool_choice_sent": {
+      "judge": "tool"
+    },
+    "dream_model": "anthropic:claude-opus-5-5",
+    "triage_model": "anthropic:claude-opus-5-5",
+    "facts_model": "anthropic:claude-opus-5-5",
+    "max_turns": 16,
+    "triage_threshold": 0.5,
+    "subagent_timeout_ms": 600000,
+    "dream_concurrency": 2,
+    "detailed_receipt": "eval/reports/cat35-transcript-distill/2026-11-17-074723-cat35.json"
+  },
+  "judge": {
+    "model": "claude-sonnet-4-6",
+    "temperature": 0,
+    "rubric_version": "2026-09-28-v2"
+  },
+  "data": {
+    "coverage_by_lane": {},
+    "gates": {
+      "verbatim_coverage": null,
+      "judge_failed_rate": true,
+      "dream_emission": null,
+      "external_judge_failed_rate": true
+    },
+    "judge_failed_rate": 0,
+    "external_cost_usd": 1.22,
+    "detailed_receipt": "eval/reports/cat35-transcript-distill/2026-11-17-074723-cat35.json"
+  },
+  "cost": {
+    "usd": 1.220043,
+    "input_tokens": 255666,
+    "output_tokens": 30203,
+    "basis": "budget ledger cat35-transcript-distill-2026-11-17T07-47-23-345Z-201d385d: 71 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": "<work>/gbev97/ledger.sqlite",
+    "program_cap_usd": 25,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 0,
+      "max": 22.1
+    }
+  },
+  "preregistration_attestation": {
+    "preregistration": "docs/plans/2026-11-17-readme-baselines/PREREG.md",
+    "preregistration_commit": "b9a4094b5cb7ecc987579589befc6433ba897496",
+    "runner_commit": "443427ff5a4d437d870e2a19341617856e356e7d",
+    "worktree_clean_for_preregistration": true,
+    "on_origin": true,
+    "attested_at": "2026-11-17T07:47:23.282Z"
+  },
+  "delivered_tokens": {
+    "tokens": 255666,
+    "basis": "provider-reported input tokens of every paid request (judges, fact extraction, dream synthesis and subagents), from the budget ledger"
+  },
+  "accounting": {
+    "planned": 0,
+    "attempted": 0,
+    "scored": 0,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "latency_ms": null,
+  "execution": {
+    "source_tree": {
+      "sha256": "483cff18e0700aa2ff5ea9fd377339f870955e94b07a54698daf016dcc23a779",
+      "scheme": "git-index-blob-v1",
+      "files": 16192,
+      "git_head": "443427ff5a4d437d870e2a19341617856e356e7d",
+      "dirty": true
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#6ce7195b44a034f85aec811f11fbf862db376f50",
+      "declared_sha": "6ce7195b44a034f85aec811f11fbf862db376f50",
+      "version": "0.60.733.0",
+      "package_sha256": "3d0df978d2bd2e5837eb196a8c604762a62eea88a0010efb8a612ff5bf0a20cf",
+      "loaded_git_head": null
+    }
+  }
+}

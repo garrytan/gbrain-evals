@@ -1,0 +1,15 @@
+[budget] n2-judge-replay-plain-openai-gpt-6-luna: estimated cost $0.10; ledger /home/user/.capy/work/gbev97/ledger.sqlite
+[w9] openai:gpt-6-luna: 50/741
+[w9] openai:gpt-6-luna: 100/741
+[w9] openai:gpt-6-luna: 150/741
+[w9] openai:gpt-6-luna: 200/741
+[w9] openai:gpt-6-luna: 250/741
+[w9] openai:gpt-6-luna: 300/741
+[w9] openai:gpt-6-luna: 350/741
+[w9] openai:gpt-6-luna: 400/741
+[w9] openai:gpt-6-luna: 450/741
+[w9] openai:gpt-6-luna: 500/741
+[w9] openai:gpt-6-luna: 550/741
+[w9] openai:gpt-6-luna: 600/741
+[w9] openai:gpt-6-luna: 650/741
+[w9] openai:gpt-6-luna: 700/741

@@ -7524,9 +7524,9 @@
       "claim_id": "particle-w10b-replay-report",
       "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Changelog",
       "artifact_path": "docs/benchmarks/2026-11-01-longmemeval-particle-replay/REPORT.md",
-      "artifact_sha256": "5cfc883a32b6b630c370979cd663f54169ae60ae11b91c3ffb3a118496c9242b",
+      "artifact_sha256": "9426eabb925f09fb0641823444fb119579da7d1a303768c94a9c8bb8a2cd14c6",
       "status": "covered",
-      "note": "The replay report as merged in #247 (sha256 ee057662743ab8c04dc1d4a07e0f396697f8cf42f3fdabe9a915bba4342b8eca at 095d8711) plus, added on 2026-11-01, the disclosure note under its title and a dated note beside each cost figure docs/corrections.md corrects, and on 2026-11-02 a note with the gbrain and OpenAI disclosure lines and a wording note that the preference questions are the largest share of the gap to Opus 5.5, not most of it. It keeps its original figures; docs/corrections.md carries the three cost corrections the recheck found."
+      "note": "The replay report as merged in #247 (sha256 ee057662743ab8c04dc1d4a07e0f396697f8cf42f3fdabe9a915bba4342b8eca at 095d8711) plus, added on 2026-11-01, the disclosure note under its title and a dated note beside each cost figure docs/corrections.md corrects, and on 2026-11-02 a note with the gbrain and OpenAI disclosure lines and a wording note that the preference questions are the largest share of the gap to Opus 5.5, not most of it, and on 2026-11-10 a note that its whole-history costs are for one question per history, read once, so no read could use a prompt cache. It keeps its original figures; docs/corrections.md carries the three cost corrections the recheck found."
     },
     {
       "claim_id": "particle-w10b-comparator-rows-w10b-opus55-notes",

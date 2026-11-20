@@ -20,6 +20,16 @@
  *   score    keyless: per model N2's rules with exact Clopper-Pearson bounds,
  *            paired exact McNemar against Haiku's receipt verdicts, weighted
  *            false alerts, cost per 1,000 judged pairs.
+ *
+ * No-gbrain baseline (docs/plans/2026-11-17-readme-baselines/PREREG.md):
+ *   select --population   every captured pair (planted pairs as 'planted', the
+ *                         rest as 'sample'), for the full 2,680-pair N2 run.
+ *   judge --prompt plain  the same pairs and model, asked plainly whether two
+ *                         dated notes contradict (plain-baseline.ts), with no
+ *                         gbrain judge or gateway; yes is 'contradiction'.
+ *   compare               keyless: scoreModel for a baseline judge file and a
+ *                         reference (a judge file or a paid N2 receipt), with
+ *                         paired exact McNemar on correctness per class.
  */
 import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -30,7 +40,8 @@ import { withHermeticEnv } from './hermetic-env.ts';
 import { JUDGE_MODEL, oracleVerdict } from './n2-contradiction-surfacing.ts';
 import { attestPreregistration } from './prereg.ts';
 import { clopperPearson } from './stats/exact.ts';
-import { exactMcNemar, holmAdjusted, seededRandom, type PairedItem } from './stats/paired.ts';
+import { clusteredPairedDelta, exactMcNemar, holmAdjusted, seededRandom, type PairedItem } from './stats/paired.ts';
+import { n2PlainPrompt, N2_PLAIN_QUESTION, parseYesNo, plainCall } from './plain-baseline.ts';
 import { N2_GENERATOR_VERSION, generateN2World, n2Gold, pairKey, renderN2Page } from '../generators/n2-contradiction-gen.ts';
 
 const TOP_K = 5;
@@ -53,6 +64,9 @@ export interface CapturedPair {
   gold_item: string | null;
 }
 export interface Capture { seed: number; generator_version: string; world_fingerprint: string; gbrain: unknown; prompt_version: string; offered: number; pairs: CapturedPair[] }
+
+/** A JSON file, gunzipped first when its name ends in .gz. */
+const readJson = (path: string): unknown => { const raw = readFileSync(path); return JSON.parse((path.endsWith('.gz') ? Buffer.from(Bun.gunzipSync(raw)) : raw).toString('utf8')); };
 
 const arg = (argv: readonly string[], flag: string) => {
   const at = argv.indexOf(flag);
@@ -148,25 +162,50 @@ export function selectPairs(main: Capture, fresh: Capture[]): SelectedPair[] {
   return [...planted, ...sample, ...freshPool.slice(0, FRESH_SIZE)];
 }
 
-export interface Judged { id: string; verdict: string | null; error: string | null; input_tokens: number; output_tokens: number; ms: number }
+/** Every captured pair: planted pairs judged under their own item as 'planted', every other judgment as 'sample' (a census, not a draw). */
+export function populationPairs(main: Capture): SelectedPair[] {
+  return main.pairs.map(p => ({ ...p, split: p.gold_class === 'unplanted' ? 'sample' as const : 'planted' as const, seed: main.seed, id: `${main.seed}:${p.item}:${p.key}` }));
+}
+
+export interface Judged { id: string; verdict: string | null; error: string | null; input_tokens: number; output_tokens: number; ms: number; reply?: string }
+
+/** The plain arm's output limit: the gbrain judge's 1,024 tokens, so the two arms get the same room. */
+export const PLAIN_MAX_TOKENS = 1024;
+
+/** One pair through the plain yes/no prompt; a reply opening with neither word is a judge error. */
+export async function judgePlain(model: string, p: Pick<SelectedPair, 'a' | 'b'>, fetchImpl?: typeof fetch): Promise<Omit<Judged, 'id' | 'ms'>> {
+  const r = await plainCall(model, n2PlainPrompt(p.a, p.b), PLAIN_MAX_TOKENS, { fetchImpl });
+  const verdict = r.error ? null : parseYesNo(r.text);
+  return { verdict, error: r.error ?? (verdict ? null : `unparseable reply: ${r.text.slice(0, 120)}`), input_tokens: r.input_tokens, output_tokens: r.output_tokens, reply: r.text.slice(0, 200) };
+}
 
 async function judge(argv: readonly string[]) {
   const model = arg(argv, '--model');
-  const selected = JSON.parse(readFileSync(arg(argv, '--selection')!, 'utf8')) as { pairs: SelectedPair[] };
+  const selected = readJson(arg(argv, '--selection')!) as { pairs: SelectedPair[] };
   const prereg = arg(argv, '--preregistration');
   if (!model || !prereg) throw new Error('judge needs --model <provider:model> --selection <file> --preregistration <file> --output <file>');
+  const promptKind = arg(argv, '--prompt') ?? 'gbrain';
+  if (promptKind !== 'gbrain' && promptKind !== 'plain') throw new Error(`--prompt must be gbrain or plain, got ${promptKind}`);
   const attestation = attestPreregistration(prereg);
   const concurrency = Number(arg(argv, '--concurrency') ?? 6);
-  const { run, guard } = startPaidRun(`n2-judge-replay-${model.replace(/[^a-z0-9.-]+/gi, '-')}`, { ...budgetOptionsFrom(argv), estimateUsd: Number(arg(argv, '--estimate-usd') ?? 5) });
-  const { configureGateway, chat } = await import('../../node_modules/gbrain/src/core/ai/gateway.ts');
-  const { judgeContradiction } = await import('../../node_modules/gbrain/src/core/eval-contradictions/judge.ts');
-  const { PROMPT_VERSION } = await import('../../node_modules/gbrain/src/core/eval-contradictions/types.ts');
-  configureGateway({ chat_model: model, env: process.env as Record<string, string | undefined> });
-  const truncatingChat: typeof chat = async (opts) => {
-    const res = await chat(opts);
-    if (res.stopReason === 'length') throw new Error(`truncated at the ${opts.maxTokens}-token output limit`);
-    return res;
-  };
+  const { run, guard } = startPaidRun(`n2-judge-replay-${promptKind === 'plain' ? 'plain-' : ''}${model.replace(/[^a-z0-9.-]+/gi, '-')}`, { ...budgetOptionsFrom(argv), estimateUsd: Number(arg(argv, '--estimate-usd') ?? 5) });
+  let promptVersion = 'plain';
+  let judgeOne = (p: SelectedPair) => judgePlain(model, p);
+  if (promptKind === 'gbrain') {
+    const { configureGateway, chat } = await import('../../node_modules/gbrain/src/core/ai/gateway.ts');
+    const { judgeContradiction } = await import('../../node_modules/gbrain/src/core/eval-contradictions/judge.ts');
+    ({ PROMPT_VERSION: promptVersion } = await import('../../node_modules/gbrain/src/core/eval-contradictions/types.ts'));
+    configureGateway({ chat_model: model, env: process.env as Record<string, string | undefined> });
+    const truncatingChat: typeof chat = async (opts) => {
+      const res = await chat(opts);
+      if (res.stopReason === 'length') throw new Error(`truncated at the ${opts.maxTokens}-token output limit`);
+      return res;
+    };
+    judgeOne = async (p) => {
+      const o = await judgeContradiction({ query: p.query, a: p.a, b: p.b, model, chatFn: truncatingChat } as never) as { verdict: { verdict: string }; usage: { inputTokens: number; outputTokens: number } };
+      return { verdict: o.verdict.verdict, error: null, input_tokens: o.usage.inputTokens, output_tokens: o.usage.outputTokens };
+    };
+  }
   const results: Judged[] = [];
   const queue = [...selected.pairs];
   const started = Date.now();
@@ -176,8 +215,7 @@ async function judge(argv: readonly string[]) {
         const t = Date.now();
         if (guard.exhausted) { results.push({ id: p.id, verdict: null, error: 'budget exhausted: not judged', input_tokens: 0, output_tokens: 0, ms: 0 }); continue; }
         try {
-          const o = await judgeContradiction({ query: p.query, a: p.a, b: p.b, model, chatFn: truncatingChat } as never) as { verdict: { verdict: string }; usage: { inputTokens: number; outputTokens: number } };
-          results.push({ id: p.id, verdict: o.verdict.verdict, error: null, input_tokens: o.usage.inputTokens, output_tokens: o.usage.outputTokens, ms: Date.now() - t });
+          results.push({ id: p.id, ...await judgeOne(p), ms: Date.now() - t });
         } catch (e) {
           results.push({ id: p.id, verdict: null, error: String((e as Error).message ?? e).slice(0, 300), input_tokens: 0, output_tokens: 0, ms: Date.now() - t });
         }
@@ -189,7 +227,9 @@ async function judge(argv: readonly string[]) {
   }
   const cost = receiptCost(run.close());
   results.sort((x, y) => x.id.localeCompare(y.id));
-  return { kind: 'n2-judge-replay', model, prompt_version: PROMPT_VERSION, gbrain: 'node_modules/gbrain (the round pin)', preregistration_attestation: attestation, concurrency,
+  return { kind: 'n2-judge-replay', model, prompt_version: promptVersion,
+    ...(promptKind === 'plain' ? { prompt: N2_PLAIN_QUESTION, max_tokens: PLAIN_MAX_TOKENS, sampling: 'provider default', gbrain: 'no gbrain judge or gateway; the budget ledger reads gbrain\'s model price table' } : { gbrain: 'node_modules/gbrain (the round pin)' }),
+    preregistration_attestation: attestation, concurrency,
     wall_ms: Date.now() - started, judged: results.length, errors: results.filter(r => r.error).length, cost, results };
 }
 
@@ -249,6 +289,39 @@ export function pairedVsReference(pairs: SelectedPair[], model: Map<string, { ve
   return exactMcNemar(items);
 }
 
+/** Verdicts of a reference run keyed by selection id: a judge file's results, or a paid N2 receipt's judgments at the selection's seed. */
+export function referenceVerdicts(ref: { results?: Judged[]; data?: { paid: { judgments: ReceiptJudgment[] } } }, seed: number): Map<string, { verdict: string | null; error: string | null }> {
+  if (ref.results) return new Map(ref.results.map(r => [r.id, r]));
+  if (ref.data?.paid) return new Map(ref.data.paid.judgments.map(j => [`${seed}:${j.q}:${pairKey(j.a, j.b)}`, { verdict: j.verdict, error: j.error }]));
+  throw new Error('reference is neither a judge file (results) nor a paid N2 receipt (data.paid.judgments)');
+}
+
+/**
+ * Baseline against reference on the same pairs: N2's rules for each, and per class an exact McNemar on correctness
+ * (contradiction called exactly on planted conflicts) with the paired difference in proportion correct
+ * (baseline minus reference) and its 95% bootstrap interval.
+ */
+export function comparePaired(pairs: SelectedPair[], baseline: Map<string, { verdict: string | null; error: string | null }>, reference: Map<string, { verdict: string | null; error: string | null }>, opts: { offeredTotal: number; othersTotal: number; pooled: boolean }) {
+  const missing = pairs.filter(p => !baseline.has(p.id) || !reference.has(p.id)).map(p => p.id);
+  if (missing.length) throw new Error(`${missing.length} pairs lack a verdict in one arm (first ${missing[0]}); a paired comparison needs both`);
+  const correct = (p: SelectedPair, v: string | null) => (isContradiction(v) === (p.gold_class === 'contradiction') ? 1 : 0);
+  const groups: Record<string, SelectedPair[]> = {
+    all: pairs, planted: pairs.filter(p => p.split === 'planted'),
+    conflicts: pairs.filter(p => p.split === 'planted' && p.gold_class === 'contradiction'),
+    dated_changes: pairs.filter(p => p.split === 'planted' && p.gold_class === 'temporal'),
+    compatible: pairs.filter(p => p.gold_class === 'compatible'),
+    other_pairs: pairs.filter(p => p.split === 'sample'),
+  };
+  const paired = Object.fromEntries(Object.entries(groups).filter(([, ps]) => ps.length).map(([name, ps]) => {
+    const items: PairedItem[] = ps.map(p => ({ id: p.id, cluster: p.id, a: correct(p, reference.get(p.id)!.verdict), b: correct(p, baseline.get(p.id)!.verdict) }));
+    const m = exactMcNemar(items);
+    const d = clusteredPairedDelta(items, { seed: SAMPLE_SEED, draws: 10_000 });
+    return [name, { n: ps.length, reference_correct: m.both_pass + m.losses, baseline_correct: m.both_pass + m.wins, reference_only_correct: m.losses, baseline_only_correct: m.wins,
+      p_mcnemar_two_sided: m.p_two_sided, baseline_minus_reference: d.delta, ci95: d.ci95 }];
+  }));
+  return { baseline: scoreModel('baseline', pairs, baseline, opts), reference: scoreModel('reference', pairs, reference, opts), paired };
+}
+
 function score(argv: readonly string[]) {
   const selection = JSON.parse(readFileSync(arg(argv, '--selection')!, 'utf8')) as { pairs: SelectedPair[]; offered_total: number; others_total: number };
   const receipt = JSON.parse(readFileSync(arg(argv, '--receipt')!, 'utf8')) as { data: { paid: { judgments: ReceiptJudgment[] } } };
@@ -283,15 +356,24 @@ async function main(): Promise<void> {
     result = verifyCapture(cap, { ledgerSha: receipt.hashes.ledger_sha256, judgments: receipt.data.paid.judgments });
     if (!(result as { ok: boolean }).ok) process.exitCode = 1;
   } else if (cmd === 'select') {
-    const main = JSON.parse(readFileSync(arg(rest, '--capture')!, 'utf8')) as Capture;
-    const fresh = rest.filter(a => a.endsWith('.json') && a !== arg(rest, '--capture') && a !== output).map(f => JSON.parse(readFileSync(f, 'utf8')) as Capture);
-    const pairs = selectPairs(main, fresh);
+    const capturePath = arg(rest, '--capture')!;
+    const main = readJson(capturePath) as Capture;
+    const fresh = rest.filter(a => a.endsWith('.json') && a !== capturePath && a !== output).map(f => JSON.parse(readFileSync(f, 'utf8')) as Capture);
+    const pairs = rest.includes('--population') ? populationPairs(main) : selectPairs(main, fresh);
     result = { seed: main.seed, world_fingerprint: main.world_fingerprint, offered_total: main.pairs.length, others_total: main.pairs.filter(p => p.gold_class === 'unplanted').length,
       sample_seed: SAMPLE_SEED, fresh_seeds: fresh.map(c => c.seed), counts: { planted: pairs.filter(p => p.split === 'planted').length, sample: pairs.filter(p => p.split === 'sample').length, fresh: pairs.filter(p => p.split === 'fresh').length },
       sha256: createHash('sha256').update(JSON.stringify(pairs.map(p => [p.id, p.query, p.a, p.b]))).digest('hex'), pairs };
   } else if (cmd === 'judge') result = await judge(rest);
+  else if (cmd === 'compare') {
+    const selection = readJson(arg(rest, '--selection')!) as { pairs: SelectedPair[]; offered_total: number; others_total: number };
+    const baseline = JSON.parse(readFileSync(arg(rest, '--baseline')!, 'utf8')) as { model: string; prompt_version: string; results: Judged[] };
+    const reference = JSON.parse(readFileSync(arg(rest, '--reference')!, 'utf8'));
+    const seed = selection.pairs[0]!.seed;
+    result = { kind: 'n2-judge-replay-compare', baseline_run: { file: arg(rest, '--baseline'), model: baseline.model, prompt_version: baseline.prompt_version }, reference_file: arg(rest, '--reference'),
+      ...comparePaired(selection.pairs, referenceVerdicts(baseline, seed), referenceVerdicts(reference, seed), { offeredTotal: selection.offered_total, othersTotal: selection.others_total, pooled: rest.includes('--pooled') }) };
+  }
   else if (cmd === 'score') result = score(rest);
-  else throw new Error('usage: n2-judge-replay.ts capture|verify|select|judge|score (see the header)');
+  else throw new Error('usage: n2-judge-replay.ts capture|verify|select|judge|score|compare (see the header)');
   const text = JSON.stringify(result, null, 1) + '\n';
   if (output) { mkdirSync(dirname(output), { recursive: true }); writeFileSync(output, text); }
   else process.stdout.write(text);

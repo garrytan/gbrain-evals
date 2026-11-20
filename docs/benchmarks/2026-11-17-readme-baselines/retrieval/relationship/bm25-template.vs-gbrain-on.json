@@ -1,0 +1,895 @@
+{
+  "gbrain_receipt": "docs/benchmarks/2026-10-01-n9-multi-hop/relational-ab-3a284ae-paid.receipt.json",
+  "gbrain_pin": "github:garrytan/gbrain#3a284aea26889b77c633aebb4149c3016d834ee6",
+  "ingestion_orders_match": true,
+  "gbrain_arm": "on",
+  "runs": 435,
+  "questions": 145,
+  "mismatches": [],
+  "baseline_recall_at_5": 0.624367816091954,
+  "gbrain_recall_at_5": 0.7632183908045979,
+  "runs_gbrain_better": 105,
+  "runs_baseline_better": 24,
+  "questions_gbrain_better": 35,
+  "questions_baseline_better": 8,
+  "questions_same": 102,
+  "sign_test_p": 0.000041934157934520044,
+  "mean_diff_gbrain_minus_baseline": 0.13885057471264367,
+  "ci95_bootstrap_questions": [
+    0.07816091954022988,
+    0.20287356321839087
+  ],
+  "classification": "win",
+  "per_question": [
+    {
+      "query_id": "q-0001",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0002",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0003",
+      "baseline": 0.3333333333333333,
+      "gbrain": 0,
+      "diff": -0.3333333333333333
+    },
+    {
+      "query_id": "q-0004",
+      "baseline": 0.25,
+      "gbrain": 0,
+      "diff": -0.25
+    },
+    {
+      "query_id": "q-0005",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0006",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0007",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0008",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0009",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0010",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0011",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0012",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0013",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0014",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0015",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0016",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0017",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0018",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0019",
+      "baseline": 0.20000000000000004,
+      "gbrain": 0,
+      "diff": -0.20000000000000004
+    },
+    {
+      "query_id": "q-0020",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0021",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0022",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0023",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0024",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0025",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0026",
+      "baseline": 0,
+      "gbrain": 1,
+      "diff": 1
+    },
+    {
+      "query_id": "q-0027",
+      "baseline": 0,
+      "gbrain": 0.5,
+      "diff": 0.5
+    },
+    {
+      "query_id": "q-0028",
+      "baseline": 0,
+      "gbrain": 0.5,
+      "diff": 0.5
+    },
+    {
+      "query_id": "q-0029",
+      "baseline": 0.5,
+      "gbrain": 0.5,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0030",
+      "baseline": 0.5,
+      "gbrain": 0.5,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0031",
+      "baseline": 0,
+      "gbrain": 0.5,
+      "diff": 0.5
+    },
+    {
+      "query_id": "q-0032",
+      "baseline": 0.5,
+      "gbrain": 1,
+      "diff": 0.5
+    },
+    {
+      "query_id": "q-0033",
+      "baseline": 0.5,
+      "gbrain": 1,
+      "diff": 0.5
+    },
+    {
+      "query_id": "q-0034",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0035",
+      "baseline": 0.5,
+      "gbrain": 1,
+      "diff": 0.5
+    },
+    {
+      "query_id": "q-0036",
+      "baseline": 0.5,
+      "gbrain": 1,
+      "diff": 0.5
+    },
+    {
+      "query_id": "q-0037",
+      "baseline": 0.5,
+      "gbrain": 1,
+      "diff": 0.5
+    },
+    {
+      "query_id": "q-0038",
+      "baseline": 0.5,
+      "gbrain": 0.5,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0039",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0040",
+      "baseline": 1,
+      "gbrain": 0,
+      "diff": -1
+    },
+    {
+      "query_id": "q-0041",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0042",
+      "baseline": 1,
+      "gbrain": 0,
+      "diff": -1
+    },
+    {
+      "query_id": "q-0043",
+      "baseline": 0,
+      "gbrain": 1,
+      "diff": 1
+    },
+    {
+      "query_id": "q-0044",
+      "baseline": 0,
+      "gbrain": 1,
+      "diff": 1
+    },
+    {
+      "query_id": "q-0045",
+      "baseline": 0.5,
+      "gbrain": 1,
+      "diff": 0.5
+    },
+    {
+      "query_id": "q-0046",
+      "baseline": 0,
+      "gbrain": 0.5,
+      "diff": 0.5
+    },
+    {
+      "query_id": "q-0047",
+      "baseline": 0.5,
+      "gbrain": 1,
+      "diff": 0.5
+    },
+    {
+      "query_id": "q-0048",
+      "baseline": 0.5,
+      "gbrain": 0.5,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0049",
+      "baseline": 0.5,
+      "gbrain": 1,
+      "diff": 0.5
+    },
+    {
+      "query_id": "q-0050",
+      "baseline": 0.5,
+      "gbrain": 1,
+      "diff": 0.5
+    },
+    {
+      "query_id": "q-0051",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0052",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0053",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0054",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0055",
+      "baseline": 1,
+      "gbrain": 0.5,
+      "diff": -0.5
+    },
+    {
+      "query_id": "q-0056",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0057",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0058",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0059",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0060",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0061",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0062",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0063",
+      "baseline": 0.5,
+      "gbrain": 0.5,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0064",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0065",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0066",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0067",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0068",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0069",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0070",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0071",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0072",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0073",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0074",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0075",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0076",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0077",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0078",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0079",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0080",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0081",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0082",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0083",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0084",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0085",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0086",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0087",
+      "baseline": 1,
+      "gbrain": 0.5,
+      "diff": -0.5
+    },
+    {
+      "query_id": "q-0088",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0089",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0090",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0091",
+      "baseline": 0,
+      "gbrain": 1,
+      "diff": 1
+    },
+    {
+      "query_id": "q-0092",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0093",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0094",
+      "baseline": 0,
+      "gbrain": 1,
+      "diff": 1
+    },
+    {
+      "query_id": "q-0095",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0096",
+      "baseline": 0.5,
+      "gbrain": 1,
+      "diff": 0.5
+    },
+    {
+      "query_id": "q-0097",
+      "baseline": 0,
+      "gbrain": 1,
+      "diff": 1
+    },
+    {
+      "query_id": "q-0098",
+      "baseline": 0.5,
+      "gbrain": 1,
+      "diff": 0.5
+    },
+    {
+      "query_id": "q-0099",
+      "baseline": 0.75,
+      "gbrain": 1,
+      "diff": 0.25
+    },
+    {
+      "query_id": "q-0100",
+      "baseline": 0,
+      "gbrain": 0.5,
+      "diff": 0.5
+    },
+    {
+      "query_id": "q-0101",
+      "baseline": 0,
+      "gbrain": 0.6666666666666666,
+      "diff": 0.6666666666666666
+    },
+    {
+      "query_id": "q-0102",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0103",
+      "baseline": 0,
+      "gbrain": 1,
+      "diff": 1
+    },
+    {
+      "query_id": "q-0104",
+      "baseline": 0,
+      "gbrain": 1,
+      "diff": 1
+    },
+    {
+      "query_id": "q-0105",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0106",
+      "baseline": 0.6666666666666666,
+      "gbrain": 1,
+      "diff": 0.33333333333333337
+    },
+    {
+      "query_id": "q-0107",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0108",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0109",
+      "baseline": 0,
+      "gbrain": 1,
+      "diff": 1
+    },
+    {
+      "query_id": "q-0110",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0111",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0112",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0113",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0114",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0115",
+      "baseline": 0,
+      "gbrain": 1,
+      "diff": 1
+    },
+    {
+      "query_id": "q-0116",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0117",
+      "baseline": 0.3333333333333333,
+      "gbrain": 1,
+      "diff": 0.6666666666666667
+    },
+    {
+      "query_id": "q-0118",
+      "baseline": 0,
+      "gbrain": 1,
+      "diff": 1
+    },
+    {
+      "query_id": "q-0119",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0120",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0121",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0122",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0123",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0124",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0125",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0126",
+      "baseline": 0,
+      "gbrain": 1,
+      "diff": 1
+    },
+    {
+      "query_id": "q-0127",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0128",
+      "baseline": 0,
+      "gbrain": 1,
+      "diff": 1
+    },
+    {
+      "query_id": "q-0129",
+      "baseline": 1,
+      "gbrain": 0,
+      "diff": -1
+    },
+    {
+      "query_id": "q-0130",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0131",
+      "baseline": 0,
+      "gbrain": 1,
+      "diff": 1
+    },
+    {
+      "query_id": "q-0132",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0133",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0134",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0135",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0136",
+      "baseline": 0,
+      "gbrain": 1,
+      "diff": 1
+    },
+    {
+      "query_id": "q-0137",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0138",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0139",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0140",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0141",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0142",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0143",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0144",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0145",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    }
+  ]
+}

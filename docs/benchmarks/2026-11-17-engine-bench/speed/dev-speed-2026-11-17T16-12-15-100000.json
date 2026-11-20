@@ -1,0 +1,217 @@
+{
+  "schema_version": 1,
+  "benchmark": "engine-bench",
+  "stage": "speed",
+  "counted": false,
+  "preregistration_attestation": null,
+  "generated_at": "2026-11-17T16:12:15.133Z",
+  "run_seconds": 4414.497,
+  "command": "bun eval/runner/engine-bench/perf.ts --dev --scale 100000 --engines postgres --cold-reps 1 --gbrain ~/gbrain@v0.60.734.0 --out out",
+  "options": {
+    "scale": 100000,
+    "seed": 1337,
+    "iters": 2000,
+    "warmup": 100,
+    "coldReps": 1,
+    "tpReps": 10,
+    "tpSeconds": 5
+  },
+  "gbrain": {
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#6ce7195b44a034f85aec811f11fbf862db376f50",
+      "declared_sha": "6ce7195b44a034f85aec811f11fbf862db376f50",
+      "version": "0.60.734.0",
+      "package_sha256": "1dbd1dcc17516f601779611b52ca0085645617992420e5703df0e22d87d7b72e",
+      "loaded_git_head": "a278ddf45887e10f70e91e6c78e63d6822d4e492"
+    },
+    "overlay": {
+      "requested": "gbrain@v0.60.734.0",
+      "ref": "v0.60.734.0",
+      "commit": "a278ddf45887e10f70e91e6c78e63d6822d4e492",
+      "tree": "42cce110388478aa0ef90c12d4d28dea93fc9401",
+      "version": "0.60.734.0",
+      "checkout_dirty": false,
+      "verified": {
+        "copy_tree": "42cce110388478aa0ef90c12d4d28dea93fc9401",
+        "tree_matches": true,
+        "symlinks_under_src": 0,
+        "dir_is_realpath": true,
+        "cli_version": "0.60.734.0",
+        "cli_version_matches": true
+      },
+      "copied_not_symlinked": true
+    },
+    "version": "0.60.734.0"
+  },
+  "evals_commit": "46bb888eecdbb40301c70ae3f29781cbe7953d0c",
+  "machine": {
+    "cpu_model": "AMD EPYC 9454P 48-Core Processor",
+    "logical_cpus": 16,
+    "memory_gb": 62.8,
+    "os": "linux 6.8.0-106-generic",
+    "bun": "1.4.4",
+    "docker": "Docker version 29.1.3, build 29.1.3-0ubuntu3~24.04.2",
+    "load_average_at_launch": [
+      1.39,
+      1.33,
+      1.2
+    ]
+  },
+  "embedder": {
+    "model": "hash-embed-v1",
+    "dims": 1024,
+    "installed_as": "voyage:voyage-4",
+    "note": "seeded feature hashing at gbrain embed-transport seam; no provider calls"
+  },
+  "search_config": {
+    "search.mode": "balanced",
+    "search.reranker.enabled": "false",
+    "search.autocut": "false",
+    "search.expansion.enabled": "false"
+  },
+  "margins": {
+    "latency_ratio": 1.1,
+    "throughput_ratio": 0.9,
+    "point_ratio": 1.1,
+    "exception_ratio": 1.5,
+    "bootstrap_draws": 10000,
+    "quantile_draws": 2000
+  },
+  "core_ops": [
+    "get_page",
+    "put_page",
+    "search_keyword",
+    "search_vector",
+    "search_hybrid"
+  ],
+  "speed": {
+    "applies": false,
+    "reason": "no Rust arm in this run; the speed rule decides only Rust against the TypeScript engines"
+  },
+  "arms": {
+    "postgres": {
+      "id": "postgres",
+      "label": "Postgres + pgvector",
+      "kind": "PostgreSQL server with pgvector in a local Docker container, stock configuration, reached over loopback TCP",
+      "info": {
+        "image": "pgvector/pgvector:pg16",
+        "image_digest": "pgvector/pgvector@sha256:484e838076e04939d27d3e176e91c86eea96236126023be8d3059761122e579f",
+        "settings": {
+          "effective_cache_size": "5242888kB",
+          "fsync": "on",
+          "maintenance_work_mem": "65536kB",
+          "max_connections": "200",
+          "max_parallel_workers_per_gather": "2",
+          "max_wal_size": "1024MB",
+          "random_page_cost": "4",
+          "server_version": "16.16 (Debian 16.16-1.pgdg12+1)",
+          "shared_buffers": "163848kB",
+          "synchronous_commit": "on",
+          "work_mem": "4096kB"
+        },
+        "resource_limits": "none (the container can use every host CPU and all memory)",
+        "server_stats": "host cgroup v2 files of the container",
+        "pool_max": 24,
+        "pgvector_extension_version": "0.8.7"
+      },
+      "run": {
+        "dataset": {
+          "pages": 100000,
+          "base_pages": 240,
+          "filler_pages": 99760,
+          "links": 200013,
+          "timeline": 301638,
+          "quality_queries": 71,
+          "probes": 400
+        },
+        "dataset_fingerprint": "11095ed0ac6b6ac3d3437d8d72e38e8f6a55fe5e55ef6925a7b9a59c69eea4cb",
+        "open_and_init_schema_ms": 3900.965128,
+        "import": {
+          "pages": 100000,
+          "pages_per_sec": 24.247478296082377,
+          "page_import_seconds": 4124.140200433,
+          "links": {
+            "rows_requested": 200013,
+            "rows_written": 200013,
+            "seconds": 14.681629713000264
+          },
+          "timeline_entries": {
+            "rows_requested": 301638,
+            "rows_written": 301635,
+            "seconds": 21.002681226999965
+          },
+          "analyze_seconds": 2.481127663000021,
+          "analyze_note": "ANALYZE after import, counted in total_seconds, so the planner has statistics as a maintained brain would",
+          "total_seconds": 4162.305639036,
+          "corpus_pages_per_sec": 24.025145837959233,
+          "client_cpu_seconds": 946.069732,
+          "put_page_during_import": {
+            "n": 100000,
+            "p50_ms": 41.21053999988362,
+            "p95_ms": 51.39841300016269,
+            "p99_ms": 58.18937400006689,
+            "mean_ms": 41.23692405555051,
+            "min_ms": 15.207953999983147,
+            "max_ms": 887.1821830000263
+          }
+        },
+        "quality_control": {
+          "note": "hash embeddings: an engine-to-engine control, not a retrieval-quality claim",
+          "keyword": {
+            "recall_at_5": 0.09154929577464789,
+            "ndcg_at_10": 0.09201222509737529,
+            "n_queries": 71,
+            "empty_result_rate": 0.7887323943661971
+          },
+          "vector": {
+            "recall_at_5": 0,
+            "ndcg_at_10": 0,
+            "n_queries": 71,
+            "empty_result_rate": 0
+          },
+          "hybrid": {
+            "recall_at_5": 0.09859154929577464,
+            "ndcg_at_10": 0.07879926879295288,
+            "n_queries": 71,
+            "empty_result_rate": 0
+          }
+        },
+        "stats": {
+          "page_count": 100000,
+          "chunk_count": 200004,
+          "embedded_count": 200004
+        },
+        "memory": {
+          "client_peak_rss_bytes": 1396240384,
+          "client_steady_rss_bytes": 737337344,
+          "client_baseline_rss_bytes": 929247232,
+          "client_engine_peak_rss_bytes": 466993152,
+          "client_engine_steady_rss_bytes": 0,
+          "method": "VmHWM and VmRSS of the benchmark process from /proc/self/status (includes the WASM heap for PGLite and the addon for Rust). Baseline is VmRSS after the dataset is built and before the engine opens; engine RSS is that value minus baseline. Steady is VmRSS after 2,000 mixed reads that follow the import.",
+          "server_peak_working_set_bytes": 501960704,
+          "server_method": "container cgroup memory.current minus inactive_file (the docker stats definition), sampled every 100 ms"
+        }
+      },
+      "disk": {
+        "total_bytes": 4698383214,
+        "method": "du -sb of PGDATA inside the container after CHECKPOINT"
+      },
+      "engine_rss_bytes": 968953856,
+      "cold_start": {
+        "reps": [
+          {
+            "open_ms": 491.4611530000001,
+            "first_answer_ms": 319.3936839999999,
+            "total_ms": 810.854837,
+            "first_rows": 6,
+            "client_cpu_ms": 489.101
+          }
+        ],
+        "median_total_ms": 810.854837,
+        "method": "each rep: a fresh process opens the existing store (connect and initSchema) and answers listPages and one keyword query. For Postgres the server keeps running, so this is a gbrain process start against a warm server. Module load is excluded; the OS file cache is warm."
+      }
+    }
+  },
+  "pairs": {}
+}

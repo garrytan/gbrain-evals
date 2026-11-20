@@ -6,10 +6,13 @@ Preregistration `PREREGISTRATION.md` (sha256 `ffb3df20a112567fe8e83e57a38daaaaac
 
 | Build | Model | Success | Notice shown | Called takes_list/search | unknown_tool after notice | Leaks / unsafe writes | Cost |
 |---|---|---|---|---|---|---|---|
-| master | gpt-6.1-sol | 1/10 (8 over-refusals) | 0 | 1 | 0 | 0 / 0 | $0.36 |
+| master | gpt-6.1-sol | 1/10 (8 over-refusals) | 0 | 1 | 0 | 0 / 0 | $0.43 (corrected 2026-11-09: cache writes were under-counted; was $0.36) |
 | d2d4 | claude-opus-5-5 | 10/10 | 10 | 10 | 0 | 0 / 0 | $1.26 |
 | d2d4 | claude-sonnet-5-5 | 10/10 | 10 | 10 | 0 | 0 / 0 | $0.82 |
-| d2d4 | gpt-6.1-sol | 10/10 | 10 | 10 | 0 | 0 / 0 | $0.14 |
+| d2d4 | gpt-6.1-sol | 10/10 | 10 | 10 | 0 | 0 / 0 | $0.16 (corrected 2026-11-09: cache writes were under-counted; was $0.14) |
+
+Correction, 2026-11-09: the Cat 40 runner priced gpt-6.1-sol turns from usage that counted OpenAI's cache writes as plain input. OpenAI reports almost every uncached token of a gpt-6.1-sol prompt of 1,027 tokens or more as a cache write, at $2.50 per million against $2.00 for input, so the gpt-6.1-sol costs in this table were low; they're repriced from the committed rows, and they now match the ledger's runs to the cent. No pass or fail changes. ([corrections](../../corrections.md#openai-cache-writes))
+Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
 
 1. Efficacy: gpt-6.1-sol 10/10 on d2d4 vs 1/10 on master (+9; bar: ≥5 and ≥+4). Pass.
 2. No single-model collapse: every model 10/10 (bar ≥5). Pass. Every model is at the 10/10 ceiling, so this smoke can't rank them.

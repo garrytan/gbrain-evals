@@ -1,0 +1,592 @@
+{
+  "schema_version": "engine-bench-correctness/v1",
+  "runner": "engine-bench/correctness",
+  "generated_at": "2026-11-17T15:35:05.048Z",
+  "gbrain": {
+    "version": "0.60.735.0",
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#6ce7195b44a034f85aec811f11fbf862db376f50",
+      "declared_sha": "6ce7195b44a034f85aec811f11fbf862db376f50",
+      "version": "0.60.735.0",
+      "package_sha256": "007864e2898ebddaa6234320a41d45abab3fa20878080adb1dd34562c1b860c9",
+      "loaded_git_head": "dbf3d9c9456d331d59221a6e4735b46db8dcf32e"
+    },
+    "overlay": {
+      "requested": "gbrain@v0.60.735.0",
+      "ref": "v0.60.735.0",
+      "commit": "dbf3d9c9456d331d59221a6e4735b46db8dcf32e",
+      "tree": "4b7d89c4d156283d68563f841f69db383c2458a7",
+      "version": "0.60.735.0",
+      "checkout_dirty": false,
+      "verified": {
+        "copy_tree": "4b7d89c4d156283d68563f841f69db383c2458a7",
+        "tree_matches": true,
+        "symlinks_under_src": 0,
+        "dir_is_realpath": true,
+        "cli_version": "0.60.735.0",
+        "cli_version_matches": true
+      },
+      "copied_not_symlinked": true
+    },
+    "rust_engine_in_build": false,
+    "spec": "<work>/gbrain@v0.60.735.0"
+  },
+  "engines": [
+    "pglite",
+    "postgres"
+  ],
+  "rule": "A check passes on Rust when its verdict is pass and every contract count equals the count on both TypeScript engines. When a TypeScript engine fails a contract (or the TypeScript engines disagree), that is a gbrain finding and Rust must be no worse than the better TypeScript engine. A contract whose measurement is not_applicable on an engine counts as neither; a check with every contract not_applicable is unmeasured there. Exit 69 is refused, never fail.",
+  "keyless": {
+    "child_env_stripped": [
+      "AGENTRUN_API_KEY",
+      "ANTHROPIC_API_KEY",
+      "EXA_API_KEY",
+      "GEMINI_API_KEY",
+      "OPENAI_API_KEY",
+      "PARTICLE_API_KEY",
+      "UBICLOUD_API_KEY",
+      "VOYAGE_API_KEY"
+    ],
+    "provider_calls": 0
+  },
+  "checks": [
+    {
+      "id": "n1",
+      "label": "N1 knowledge update (full)",
+      "runner": "eval/runner/n1-knowledge-update.ts",
+      "args": [],
+      "contracts": [
+        {
+          "id": "stale_served",
+          "path": "data.metrics.stale_served"
+        },
+        {
+          "id": "private_value_leaks",
+          "path": "data.metrics.private_value_leaks"
+        },
+        {
+          "id": "acknowledged_writes_lost",
+          "path": "data.metrics.acknowledged_writes_lost"
+        }
+      ],
+      "engines": {
+        "pglite": {
+          "engine": "pglite",
+          "exit_code": 0,
+          "wall_ms": 365765,
+          "log": "<work>/correctness/work/n1-pglite.log",
+          "receipt": "<work>/correctness/work/n1-pglite/receipt.json",
+          "contracts": {
+            "stale_served": {
+              "value": 0
+            },
+            "private_value_leaks": {
+              "value": 0
+            },
+            "acknowledged_writes_lost": {
+              "value": 0
+            }
+          },
+          "not_applicable": [],
+          "receipt_verdict": "pass",
+          "status": "pass"
+        },
+        "postgres": {
+          "engine": "postgres",
+          "exit_code": 0,
+          "wall_ms": 247749,
+          "log": "<work>/correctness/work/n1-postgres.log",
+          "receipt": "<work>/correctness/work/n1-postgres/receipt.json",
+          "contracts": {
+            "stale_served": {
+              "value": 0
+            },
+            "private_value_leaks": {
+              "value": 0
+            },
+            "acknowledged_writes_lost": {
+              "value": 0
+            }
+          },
+          "not_applicable": [],
+          "receipt_verdict": "pass",
+          "status": "pass"
+        }
+      },
+      "typescript": {
+        "compared": [
+          "pglite",
+          "postgres"
+        ],
+        "differences": []
+      },
+      "rust": null
+    },
+    {
+      "id": "n5",
+      "label": "N5 forget residue (full)",
+      "runner": "eval/runner/n5-forget-residue.ts",
+      "args": [],
+      "contracts": [
+        {
+          "id": "prohibited_active_outputs",
+          "path": "data.metrics.prohibited_active_outputs"
+        },
+        {
+          "id": "reactivations",
+          "path": "data.metrics.reactivations"
+        },
+        {
+          "id": "collateral_expirations",
+          "path": "data.metrics.collateral_expirations"
+        },
+        {
+          "id": "unauthorized_forgets_applied",
+          "path": "data.metrics.unauthorized_forgets_applied"
+        },
+        {
+          "id": "private_canary_leaks",
+          "path": "data.metrics.private_canary_leaks"
+        }
+      ],
+      "engines": {
+        "pglite": {
+          "engine": "pglite",
+          "exit_code": 0,
+          "wall_ms": 559190,
+          "log": "<work>/correctness/work/n5-pglite.log",
+          "receipt": "<work>/correctness/work/n5-pglite/receipt.json",
+          "contracts": {
+            "prohibited_active_outputs": {
+              "value": 0
+            },
+            "reactivations": {
+              "value": 0
+            },
+            "collateral_expirations": {
+              "value": 0
+            },
+            "unauthorized_forgets_applied": {
+              "value": 0
+            },
+            "private_canary_leaks": {
+              "value": 0
+            }
+          },
+          "not_applicable": [],
+          "receipt_verdict": "pass",
+          "status": "pass"
+        },
+        "postgres": {
+          "engine": "postgres",
+          "exit_code": 0,
+          "wall_ms": 352542,
+          "log": "<work>/correctness/work/n5-postgres.log",
+          "receipt": "<work>/correctness/work/n5-postgres/receipt.json",
+          "contracts": {
+            "prohibited_active_outputs": {
+              "value": 0
+            },
+            "reactivations": {
+              "value": 0
+            },
+            "collateral_expirations": {
+              "value": 0
+            },
+            "unauthorized_forgets_applied": {
+              "value": 0
+            },
+            "private_canary_leaks": {
+              "value": 0
+            }
+          },
+          "not_applicable": [],
+          "receipt_verdict": "pass",
+          "status": "pass"
+        }
+      },
+      "typescript": {
+        "compared": [
+          "pglite",
+          "postgres"
+        ],
+        "differences": []
+      },
+      "rust": null
+    },
+    {
+      "id": "n6",
+      "label": "N6 visibility fuzz (in process)",
+      "runner": "eval/runner/n6-visibility-fuzz.ts",
+      "args": [],
+      "contracts": [
+        {
+          "id": "content_leak_probes",
+          "path": "data.metrics.content_leak_probes"
+        },
+        {
+          "id": "existence_leak_probes",
+          "path": "data.metrics.existence_leak_probes"
+        },
+        {
+          "id": "oracle_probes",
+          "path": "data.metrics.oracle_probes"
+        },
+        {
+          "id": "gate_bypasses",
+          "path": "data.metrics.gate_bypasses"
+        },
+        {
+          "id": "sealed_chunk_violations",
+          "path": "data.metrics.sealed_chunk_violations",
+          "na_check": "N6 safety: sealed fence markers absent from content_chunks"
+        }
+      ],
+      "engines": {
+        "pglite": {
+          "engine": "pglite",
+          "exit_code": 0,
+          "wall_ms": 139158,
+          "log": "<work>/correctness/work/n6-pglite.log",
+          "receipt": "<work>/correctness/work/n6-pglite/receipt.json",
+          "contracts": {
+            "content_leak_probes": {
+              "value": 0
+            },
+            "existence_leak_probes": {
+              "value": 0
+            },
+            "oracle_probes": {
+              "value": 0
+            },
+            "gate_bypasses": {
+              "value": 0
+            },
+            "sealed_chunk_violations": {
+              "value": 0
+            }
+          },
+          "not_applicable": [],
+          "receipt_verdict": "pass",
+          "status": "pass"
+        },
+        "postgres": {
+          "engine": "postgres",
+          "exit_code": 0,
+          "wall_ms": 281456,
+          "log": "<work>/correctness/work/n6-postgres.log",
+          "receipt": "<work>/correctness/work/n6-postgres/receipt.json",
+          "contracts": {
+            "content_leak_probes": {
+              "value": 0
+            },
+            "existence_leak_probes": {
+              "value": 0
+            },
+            "oracle_probes": {
+              "value": 0
+            },
+            "gate_bypasses": {
+              "value": 0
+            },
+            "sealed_chunk_violations": {
+              "value": 0
+            }
+          },
+          "not_applicable": [],
+          "receipt_verdict": "pass",
+          "status": "pass"
+        }
+      },
+      "typescript": {
+        "compared": [
+          "pglite",
+          "postgres"
+        ],
+        "differences": []
+      },
+      "rust": null
+    },
+    {
+      "id": "n6-http",
+      "label": "N6 over HTTP (gbrain serve --http)",
+      "runner": "eval/runner/n6-postgres-http.ts",
+      "args": [],
+      "contracts": [
+        {
+          "id": "leaks",
+          "path": "data.verdict.leaks"
+        },
+        {
+          "id": "oracles",
+          "path": "data.verdict.oracles"
+        },
+        {
+          "id": "accepted_invalid_principals",
+          "path": "data.verdict.accepted"
+        }
+      ],
+      "engines": {
+        "pglite": {
+          "engine": "pglite",
+          "exit_code": 69,
+          "wall_ms": 1071,
+          "log": "<work>/correctness/work/n6-http-pglite.log",
+          "refusal_reason": "engine_not_supported_by_runner",
+          "refusal_message": "N6 Postgres over HTTP did not run on engine pglite. EvalEngineUnavailable (engine_not_supported_by_runner): n6-postgres-http seeds the brain and runs the trusted local replays in process while `gbrain serve --http` holds the same database, because the server's persistence consumer drains the journaled seed writes; PGLite admits one process, so that order needs the pause-and-restart pattern of lifecycle/slice.ts. The pooled-connection condition also samples pg_stat_activity, and the database is created and dropped with Postgres admin SQL. Use n6-visibility-fuzz.ts (in process) for PGLite. No receipt or verdict was written (exit 69).",
+          "contracts": {
+            "leaks": {
+              "value": null
+            },
+            "oracles": {
+              "value": null
+            },
+            "accepted_invalid_principals": {
+              "value": null
+            }
+          },
+          "not_applicable": [],
+          "status": "refused"
+        },
+        "postgres": {
+          "engine": "postgres",
+          "exit_code": 0,
+          "wall_ms": 149203,
+          "log": "<work>/correctness/work/n6-http-postgres.log",
+          "receipt": "<work>/correctness/work/n6-http-postgres/receipt.json",
+          "contracts": {
+            "leaks": {
+              "value": 0
+            },
+            "oracles": {
+              "value": 0
+            },
+            "accepted_invalid_principals": {
+              "value": 0
+            }
+          },
+          "not_applicable": [],
+          "receipt_verdict": "pass",
+          "status": "pass"
+        }
+      },
+      "typescript": {
+        "compared": [
+          "postgres"
+        ],
+        "differences": []
+      },
+      "rust": null
+    },
+    {
+      "id": "n12",
+      "label": "N12 format fidelity",
+      "runner": "eval/runner/n12-format-fidelity.ts",
+      "args": [],
+      "contracts": [
+        {
+          "id": "fabricated_turns",
+          "path": "data.honesty.fabricated"
+        },
+        {
+          "id": "noise_leaks",
+          "path": "data.adapters.noise_leaks"
+        },
+        {
+          "id": "invented_timestamps",
+          "path": "data.adapters.invented_timestamps"
+        },
+        {
+          "id": "false_attended",
+          "path": "data.attendance.false_attended"
+        }
+      ],
+      "engines": {
+        "pglite": {
+          "engine": "pglite",
+          "exit_code": 0,
+          "wall_ms": 10626,
+          "log": "<work>/correctness/work/n12-pglite.log",
+          "receipt": "<work>/correctness/work/n12-pglite/receipt.json",
+          "contracts": {
+            "fabricated_turns": {
+              "value": 0
+            },
+            "noise_leaks": {
+              "value": 0
+            },
+            "invented_timestamps": {
+              "value": 0
+            },
+            "false_attended": {
+              "value": 0
+            }
+          },
+          "not_applicable": [],
+          "receipt_verdict": "pass",
+          "status": "pass"
+        },
+        "postgres": {
+          "engine": "postgres",
+          "exit_code": 0,
+          "wall_ms": 10356,
+          "log": "<work>/correctness/work/n12-postgres.log",
+          "receipt": "<work>/correctness/work/n12-postgres/receipt.json",
+          "contracts": {
+            "fabricated_turns": {
+              "value": 0
+            },
+            "noise_leaks": {
+              "value": 0
+            },
+            "invented_timestamps": {
+              "value": 0
+            },
+            "false_attended": {
+              "value": 0
+            }
+          },
+          "not_applicable": [],
+          "receipt_verdict": "pass",
+          "status": "pass"
+        }
+      },
+      "typescript": {
+        "compared": [
+          "pglite",
+          "postgres"
+        ],
+        "differences": []
+      },
+      "rust": null
+    },
+    {
+      "id": "n14",
+      "label": "N14 large-page fidelity",
+      "runner": "eval/runner/n14-large-page-fidelity.ts",
+      "args": [
+        "--tiers",
+        "2mb"
+      ],
+      "contracts": [
+        {
+          "id": "crashes",
+          "path": "data.safety.crashes"
+        },
+        {
+          "id": "responses_over_cap",
+          "path": "data.safety.responses_over_cap"
+        },
+        {
+          "id": "roundtrip_byte_loss",
+          "path": "data.safety.roundtrip_byte_loss"
+        },
+        {
+          "id": "presence_failures",
+          "path": "data.safety.presence_failures"
+        }
+      ],
+      "engines": {
+        "pglite": {
+          "engine": "pglite",
+          "exit_code": 0,
+          "wall_ms": 94165,
+          "log": "<work>/correctness/work/n14-pglite.log",
+          "receipt": "<work>/correctness/work/n14-pglite/receipt.json",
+          "contracts": {
+            "crashes": {
+              "value": 0
+            },
+            "responses_over_cap": {
+              "value": 0
+            },
+            "roundtrip_byte_loss": {
+              "value": 0
+            },
+            "presence_failures": {
+              "value": 0
+            }
+          },
+          "not_applicable": [],
+          "receipt_verdict": "pass",
+          "status": "pass"
+        },
+        "postgres": {
+          "engine": "postgres",
+          "exit_code": 0,
+          "wall_ms": 72825,
+          "log": "<work>/correctness/work/n14-postgres.log",
+          "receipt": "<work>/correctness/work/n14-postgres/receipt.json",
+          "contracts": {
+            "crashes": {
+              "value": 0
+            },
+            "responses_over_cap": {
+              "value": 0
+            },
+            "roundtrip_byte_loss": {
+              "value": 0
+            },
+            "presence_failures": {
+              "value": 0
+            }
+          },
+          "not_applicable": [],
+          "receipt_verdict": "pass",
+          "status": "pass"
+        }
+      },
+      "typescript": {
+        "compared": [
+          "pglite",
+          "postgres"
+        ],
+        "differences": []
+      },
+      "rust": null
+    }
+  ],
+  "findings": [],
+  "summary": {
+    "rust": null,
+    "errored": [],
+    "findings": 0,
+    "wall_ms": {
+      "n1": {
+        "pglite": 365765,
+        "postgres": 247749
+      },
+      "n5": {
+        "pglite": 559190,
+        "postgres": 352542
+      },
+      "n6": {
+        "pglite": 139158,
+        "postgres": 281456
+      },
+      "n6-http": {
+        "pglite": 1071,
+        "postgres": 149203
+      },
+      "n12": {
+        "pglite": 10626,
+        "postgres": 10356
+      },
+      "n14": {
+        "pglite": 94165,
+        "postgres": 72825
+      }
+    },
+    "total_wall_ms": 2285005
+  },
+  "environment": {
+    "platform": "linux-x64",
+    "bun": "1.4.4",
+    "postgres": {
+      "source": "local container",
+      "image": "pgvector/pgvector:pg16",
+      "image_digest": "pgvector/pgvector@sha256:484e838076e04939d27d3e176e91c86eea96236126023be8d3059761122e579f"
+    }
+  }
+}

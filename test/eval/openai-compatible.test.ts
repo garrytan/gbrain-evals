@@ -162,6 +162,16 @@ describe('errors and the credit stop', () => {
     }
   });
 
+  // Value: protects=a 402 from a provider other than Particle names that provider; fails_when=a Gemini 402 through the compat client reads "Particle credit exhausted"; why_new=BG1's wave A re-reads stopped on Google's 402 for the Gemini judge and the stop sent the operator to Particle; seam=classifyCompatError and compatError; no_claim=what each provider's 402 body says
+  test('a 402 from another provider is the same budget stop, named for that provider', () => {
+    const e = compatError(classifyCompatError('gemini', 402, '{"error":{"code":402}}'));
+    expect(e).toBeInstanceOf(ParticleCreditExhausted);
+    expect(e).toBeInstanceOf(BudgetExceededError);
+    expect(e.message.startsWith('budget: gemini answered HTTP 402')).toBe(true);
+    expect(e.message).not.toContain('Particle');
+    expect((e as ParticleCreditExhausted).provider).toBe('gemini');
+  });
+
   test('a 402 carrying either metering proxy\'s marker stays a budget stop, never credit exhaustion', () => {
     const lease = JSON.stringify({ error: { kind: 'budget', type: 'budget', message: 'metering proxy: refused before forwarding: lease exhausted' } });
     const harness = JSON.stringify({ type: 'error', error: { type: REFUSAL_TYPE, code: 402, status: REFUSAL_TYPE.toUpperCase(), message: 'run budget exhausted' } });

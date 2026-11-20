@@ -1,0 +1,115 @@
+{
+  "schema": "gbrain-evals/scale-latency-scorecard/v1",
+  "pages": 300034,
+  "chunks": 320959,
+  "embedding_dim": 1024,
+  "embedding_model": "voyage:voyage-4",
+  "gbrain_version": "0.60.549.0",
+  "engine": "postgres",
+  "search_config": {
+    "resolved_mode": "tokenmax",
+    "reranker_enabled": true,
+    "reranker_model": "voyage:rerank-2.5",
+    "expansion": false,
+    "keyword_statement_timeout_ms": 8000
+  },
+  "transports": "stub_in_process",
+  "seed": 55,
+  "warmup": 3,
+  "ops": {
+    "query": {
+      "n": 200,
+      "p50_ms": 1104.7,
+      "p95_ms": 3194.2,
+      "errors": 0
+    },
+    "search": {
+      "n": 200,
+      "p50_ms": 557.2,
+      "p95_ms": 1752.6,
+      "errors": 0
+    },
+    "get": {
+      "n": 200,
+      "p50_ms": 4.5,
+      "p95_ms": 8.4,
+      "errors": 0
+    },
+    "entity": {
+      "n": 200,
+      "p50_ms": 2330.8,
+      "p95_ms": 2534.9,
+      "errors": 0
+    },
+    "recall": {
+      "n": 200,
+      "p50_ms": 2273,
+      "p95_ms": 2485.7,
+      "errors": 0
+    },
+    "remember": {
+      "n": 200,
+      "p50_ms": 87.7,
+      "p95_ms": 107.9,
+      "errors": 0
+    },
+    "sync": {
+      "n": 30,
+      "p50_ms": 348.4,
+      "p95_ms": 376.6,
+      "errors": 0
+    }
+  },
+  "statement_timeout_fall_opens": 0,
+  "fall_opens_by_op": {},
+  "degraded_stages": {
+    "keyword_candidates_incomplete": 285
+  },
+  "ai_refused": {},
+  "calibration": {
+    "role": "calibration_only",
+    "reference": "wintermute_counted",
+    "factor": 2,
+    "provider_latency": "not_included",
+    "ops": {
+      "query": {
+        "ref_p50_ms": 10100,
+        "ref_p95_ms": 30100,
+        "p50_ratio": 0.10937623762376238,
+        "p95_ratio": 0.10611960132890365,
+        "within_factor": false
+      },
+      "search": {
+        "ref_p50_ms": 9800,
+        "ref_p95_ms": 30400,
+        "p50_ratio": 0.05685714285714286,
+        "p95_ratio": 0.05765131578947368,
+        "within_factor": false
+      },
+      "get": {
+        "ref_p50_ms": 2800,
+        "ref_p95_ms": 10900,
+        "p50_ratio": 0.0016071428571428571,
+        "p95_ratio": 0.0007706422018348624,
+        "within_factor": false
+      },
+      "entity": null,
+      "recall": null,
+      "remember": {
+        "ref_p50_ms": 8200,
+        "ref_p95_ms": 42700,
+        "p50_ratio": 0.010695121951219513,
+        "p95_ratio": 0.0025269320843091334,
+        "within_factor": false
+      },
+      "sync": {
+        "ref_p50_ms": 3700,
+        "ref_p95_ms": 120000,
+        "p50_ratio": 0.09416216216216215,
+        "p95_ratio": 0.0031383333333333337,
+        "within_factor": false
+      }
+    },
+    "within_factor_all": false
+  }
+}

@@ -4,7 +4,13 @@
  * never runs a counted cell and writes no scoreboard number.
  *
  *   bun eval/runner/q1/calibration-cell.ts --reader particle:particle-1 --out <dir> --budget-ledger <file> --run-id <id> --lease-usd <n>
- *     [--cell s3-smoke.baseline-hybrid.baseline] [--keyless-upstream http://127.0.0.1:<fake_provider.py port>]
+ *     [--cell s3-smoke.baseline-hybrid.baseline]
+ *     (--keyless-upstream http://127.0.0.1:<fake_provider.py port> | --paid-window <unit> --window-cap-usd <n> --ledger-cap-usd <n>)
+ *
+ * A run without --keyless-upstream spends real keys, so it needs the granted paid window's unit and cap and a
+ * --ledger-cap-usd within that cap (eval/runner/paid-arm.ts, the shared window guard); otherwise it exits 2 before any
+ * lease or output. Its lease opens under that ceiling (reread-cell.ts openRereadLease): every lease on the ledger
+ * shares it, so the leases of one window never pass the window cap.
  *
  * The proxy holds the provider keys from this environment and Q1's route caps and classes, and spends the lease; the
  * cell sees this run's cell token as its keys, and the proxy answers only that token and this run's control token. `--keyless-upstream` sends every provider to eval/systems/_shim/fake_provider.py instead
@@ -19,12 +25,14 @@ import { randomUUID } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { BudgetRun } from '../budget-ledger.ts';
-import { DEFAULT_ROUTE_CAPS, MeteringProxy, usageSplit } from '../metering-proxy.ts';
+import { DEFAULT_ROUTE_CAPS, keylessKeys, keylessUpstream, MeteringProxy, usageSplit } from '../metering-proxy.ts';
+import { requireRs1Window } from '../paid-arm.ts';
 import { DEFAULT_ROUTE_CLASSES } from '../shootout-cell.ts';
 import { measureCalibration, readerTokenizer } from '../systems/render-v2.ts';
 import { calibrate, calibrationSamples } from './calibrate.ts';
 import { findCell, runCell } from './cell.ts';
 import type { CellDefinition } from './cells/definitions.ts';
+import { openRereadLease } from './reread-cell.ts';
 import { refuse } from './scoreboard-errors.ts';
 
 /** The cell's packed arm read by `reader` alone, without frontier judges; a cell outside the dev split, or with no packed arm, is refused. */
@@ -63,24 +71,27 @@ if (import.meta.main) {
   const one = (n: string) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : undefined; };
   const [reader, outArg, ledger, runId, leaseUsd] = [one('--reader'), one('--out'), one('--budget-ledger'), one('--run-id'), Number(one('--lease-usd'))];
   if (!reader || !outArg || !ledger || !runId || !(leaseUsd > 0)) {
-    console.error('usage: bun eval/runner/q1/calibration-cell.ts --reader <provider:model> --out <dir> --budget-ledger <file> --run-id <id> --lease-usd <n> [--cell <dev smoke cell>] [--keyless-upstream <url>]');
+    console.error('usage: bun eval/runner/q1/calibration-cell.ts --reader <provider:model> --out <dir> --budget-ledger <file> --run-id <id> --lease-usd <n> [--cell <dev smoke cell>] (--keyless-upstream <url> | --paid-window <unit> --window-cap-usd <n> --ledger-cap-usd <n>)');
     process.exit(2);
   }
   let keyless: string | null;
-  try { keyless = keylessUpstreamArg(argv); }
-  catch (e) { console.error((e as Error).message); process.exit(2); }
+  const ledgerCap = Number(one('--ledger-cap-usd'));
+  try {
+    keyless = keylessUpstreamArg(argv);
+    requireRs1Window(argv, { what: 'a calibration cell without --keyless-upstream', keyless: !!keyless, caps: () => [{ label: '--ledger-cap-usd', usd: ledgerCap > 0 ? ledgerCap : null }, { label: '--lease-usd', usd: leaseUsd }] });
+  } catch (e) { console.error((e as Error).message); process.exit(2); }
   const out = resolve(outArg);
   mkdirSync(out, { recursive: true });
   try { claimOut(out, !!keyless); }
   catch (e) { console.error((e as Error).message); process.exit(2); }
   const def = calibrationCell(findCell(one('--cell') ?? 's3-smoke.baseline-hybrid.baseline'), reader);
-  const placeholder = 'keyless-not-a-provider-key';
-  const keys = keyless ? { OPENAI_API_KEY: placeholder, ANTHROPIC_API_KEY: placeholder, VOYAGE_API_KEY: placeholder, PARTICLE_API_KEY: placeholder } : { ...process.env };
+  const keys = keyless ? keylessKeys() : { ...process.env };
   const [cellToken, controlToken] = [randomUUID(), randomUUID()];
   Object.assign(process.env, { GBRAIN_EVALS_QA_CACHE: join(out, 'qa-cache'), GBRAIN_EVALS_EMBED_CACHE: join(out, 'embed-cache'), SHOOTOUT_CELL_TOKEN: cellToken, SHOOTOUT_PROXY_CONTROL_TOKEN: controlToken });
-  const lease = BudgetRun.openLease({ runId, leaseUsd, ledgerPath: resolve(ledger), runner: 'q1-calibration-cell' });
+  const lease = keyless ? BudgetRun.openLease({ runId, leaseUsd, ledgerPath: resolve(ledger), runner: 'q1-calibration-cell' })
+    : openRereadLease({ runId, leaseUsd, ledgerPath: resolve(ledger), capUsd: ledgerCap, runner: 'q1-calibration-cell' });
   const usageLog = join(out, 'usage.ndjson');
-  const proxy = new MeteringProxy({ ...(keyless ? { upstream: { openai: keyless, anthropic: keyless, voyage: keyless, particle: `${keyless}/particle` } } : {}), cellToken, controlToken,
+  const proxy = new MeteringProxy({ ...(keyless ? { upstream: keylessUpstream(keyless) } : {}), cellToken, controlToken,
     policy: { lease, usageLog, env: keys, routeCaps: { caps: { ...DEFAULT_ROUTE_CAPS }, slots: { ...DEFAULT_ROUTE_CLASSES }, defaultClass: 'extraction' } } });
   proxy.start();
   try {

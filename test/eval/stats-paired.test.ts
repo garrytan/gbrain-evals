@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import {
   clusteredPairedDelta, exactMcNemar, holmAdjusted, minimumDiscordantForSignificance, nonInferiorityP, normalQuantile,
-  pairObservations, PairingError, powerNote, seededRandom, type Observation, type PairedItem,
+  fiellerRatio, pairObservations, PairingError, powerNote, seededRandom, simultaneousBand, type Observation, type PairedItem,
 } from '../../eval/runner/stats/paired.ts';
 import { clusteredRegressionStatistics, type RegressionMetricSpec } from '../../eval/runner/situation-recall-regression.ts';
 
@@ -134,5 +134,80 @@ describe('known paired datasets', () => {
     expect(first.p_method).toBe('monte-carlo-sign-flip');
     expect(first.ci95![0]).toBeLessThan(first.delta);
     expect(first.ci95![1]).toBeGreaterThan(first.delta);
+  });
+});
+
+describe('simultaneous band over shared clusters', () => {
+  const rng = seededRandom(7);
+  const questions = Array.from({ length: 50 }, (_, i) => 'q' + String(i).padStart(2, '0'));
+  const member = (id: string, pA: number, pB: number, perQuestion = 1): { id: string; pairs: PairedItem[] } => ({
+    id,
+    pairs: questions.flatMap(q => Array.from({ length: perQuestion }, (_, k) => ({ id: q + ':' + k, cluster: q, a: rng() < pA ? 1 : 0, b: rng() < pB ? 1 : 0 }))),
+  });
+  const family = [member('m1', 0.4, 0.7), member('m2', 0.5, 0.5, 2), member('m3', 0.8, 0.4), member('m4', 0.3, 0.35, 2)];
+  const opts = { seed: 20261106, draws: 2000 };
+
+  test('each band is the delta plus or minus the shared critical value times its bootstrap error, and it is reproducible', () => {
+    const band = simultaneousBand(family, opts);
+    expect(band).toMatchObject({ method: 'max_t_cluster_bootstrap', level: 0.95, seed: 20261106, draws: 2000, n_clusters: 50 });
+    for (const m of band.members) {
+      expect(m.ci![0]).toBeCloseTo(m.delta - band.critical_value! * m.se_boot!, 10);
+      expect(m.ci![1]).toBeCloseTo(m.delta + band.critical_value! * m.se_boot!, 10);
+    }
+    expect(band.members.map(m => m.id)).toEqual(['m1', 'm2', 'm3', 'm4']);
+    expect(simultaneousBand(family, opts)).toEqual(band);
+  });
+
+  test('the critical value sits above one interval\'s and at or below Bonferroni\'s split over the same members', () => {
+    const band = simultaneousBand(family, opts);
+    expect(band.critical_value!).toBeGreaterThan(normalQuantile(0.975));
+    expect(band.bonferroni_critical_value).toBeCloseTo(normalQuantile(1 - 0.05 / 8), 10);
+    expect(band.critical_value!).toBeLessThan(band.bonferroni_critical_value + 0.15);
+    const single = simultaneousBand([family[0]!], opts);
+    expect(single.critical_value!).toBeGreaterThan(1.7);
+    expect(single.critical_value!).toBeLessThan(2.3);
+  });
+
+  test('a duplicated member adds no width, and a member that never varies keeps a zero-width band outside the max', () => {
+    const one = simultaneousBand([family[0]!], opts);
+    const twice = simultaneousBand([family[0]!, { ...family[0]!, id: 'copy' }], opts);
+    expect(twice.critical_value).toBe(one.critical_value);
+    const flat = { id: 'flat', pairs: questions.map(q => ({ id: q, cluster: q, a: 1, b: 1 })) };
+    const withFlat = simultaneousBand([family[0]!, flat], opts);
+    expect(withFlat.critical_value).toBe(one.critical_value);
+    expect(withFlat.members[1]).toMatchObject({ id: 'flat', delta: 0, se_boot: 0, ci: [0, 0] });
+  });
+
+  test('resampling within strata keeps a member that covers one stratum banded and finite; without strata it may get no band', () => {
+    const strata = Object.fromEntries(questions.map((q, i) => [q, 't' + (i % 5)]));
+    const windowLike = { id: 'window', pairs: questions.filter((_, i) => i % 5 === 2).map(q => ({ id: q, cluster: q, a: rng() < 0.5 ? 1 : 0, b: rng() < 0.6 ? 1 : 0 })) };
+    const band = simultaneousBand([...family, windowLike], { ...opts, strata });
+    expect(band.n_strata).toBe(5);
+    const w = band.members.find(m => m.id === 'window')!;
+    expect(w.ci).not.toBeNull();
+    for (const m of band.members) for (const x of [m.delta, m.se_boot, ...(m.ci ?? [])]) expect(Number.isFinite(x)).toBe(true);
+    expect(Number.isFinite(band.critical_value!)).toBe(true);
+    const sparse = { id: 'sparse', pairs: [{ id: 'q00', cluster: 'q00', a: 0, b: 1 }, { id: 'q01', cluster: 'q01', a: 1, b: 1 }] };
+    const unstratified = simultaneousBand([...family, sparse], opts);
+    expect(unstratified.members.find(m => m.id === 'sparse')).toMatchObject({ se_boot: null, ci: null });
+    expect(Number.isFinite(unstratified.critical_value!)).toBe(true);
+  });
+
+  test('Fieller\'s ratio interval from two intervals, unbounded when the denominator\'s interval nears zero', () => {
+    const r = fiellerRatio({ estimate: -0.07, lo: -0.12, hi: -0.03 }, { estimate: -0.4, lo: -0.56, hi: -0.24 });
+    expect(r.estimate).toBeCloseTo(0.175, 10);
+    expect(r.lo!).toBeCloseTo(0.060, 3);
+    expect(r.hi!).toBeCloseTo(0.357, 3);
+    expect(fiellerRatio({ estimate: 0.1, lo: 0, hi: 0.2 }, { estimate: 0.05, lo: -0.1, hi: 0.2 })).toEqual({ estimate: 2, lo: null, hi: null });
+  });
+
+  test('fewer than two clusters leaves no band, and bad input refuses', () => {
+    const lone = simultaneousBand([{ id: 'x', pairs: [{ id: 'a', cluster: 'c', a: 0, b: 1 }] }], opts);
+    expect(lone.critical_value).toBeNull();
+    expect(lone.members[0]!.ci).toBeNull();
+    expect(() => simultaneousBand([], opts)).toThrow('at least one member');
+    expect(() => simultaneousBand([family[0]!, family[0]!], opts)).toThrow('unique');
+    expect(() => simultaneousBand(family, { seed: 1, draws: 999 })).toThrow('1000 draws');
+    expect(() => simultaneousBand([{ id: 'x', pairs: [] }], opts)).toThrow('invalid paired observations');
   });
 });

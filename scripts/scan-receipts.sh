@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Secret scan of published receipts (docs/scoreboard.md): gitleaks over every receipts/ directory and every
-# scoreboard receipt tree under docs/benchmarks/, and over the members of every compressed receipt (gzip file or
+# Secret scan of published receipts (docs/scoreboard.md): gitleaks over every receipts/ directory, every
+# scoreboard receipt tree under docs/benchmarks/ and the keyless re-pin's counted/ tree, and over the members of every compressed receipt (gzip file or
 # tarball) under docs/benchmarks, results, baselines and qrels, the roots test/eval/receipt-machine-paths.test.ts
 # reads, which gitleaks cannot open itself (#221). A compressed receipt is found by its leading bytes as well as its
 # name. One whose entry in test/eval/fixtures/reviewed-compressed-receipts.json matches its current sha256 and names
@@ -32,7 +32,7 @@ while IFS= read -r dir; do
   echo "scanning $dir"
   scanned=$((scanned + 1))
   "$bin" dir "$dir" --no-banner --redact --exit-code 1 || status=1
-done < <(find docs/benchmarks -type d \( -name receipts -o -name '*-scoreboard' \) | sort)
+done < <(find docs/benchmarks -type d \( -name receipts -o -name '*-scoreboard' -o -path docs/benchmarks/2026-11-16-w0-keyless-repin/counted \) | sort)
 # gitleaks reads a file in 10,000-byte chunks, drops the rest of a file at a chunk whose first bytes look like a
 # binary format, and skips some paths (.svg, .bin, node_modules). So each member, which must be UTF-8 text without NUL
 # bytes, is cut into overlapping windows, each written as a numbered piece under a fixed header line. A piece is

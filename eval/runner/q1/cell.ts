@@ -82,7 +82,7 @@ import { DecideError, renderOperatorMessage } from '../decisions/errors.ts';
 import { loadSplit } from '../decisions/splits.ts';
 import { ndcgAtK, percentile, recallAllAtK, recallAnyAtK } from '../metrics.ts';
 import { DEFAULT_ROUTE_CAPS, ProxyControl, upstreamTrouble, type Meter, type Phase } from '../metering-proxy.ts';
-import { loadCorpus, readRs1Manifest, rs1UnitConversations, type Corpus, type MemoryQuestion, type Rs1Manifest, type Session } from '../memory-qa/corpus.ts';
+import { bg1RunClock, bg1UnitConversations, bg1WorldEnd, loadCorpus, readBg1Manifest, readRs1Manifest, rs1UnitConversations, type Bg1Manifest, type Corpus, type MemoryQuestion, type Rs1Manifest, type Session } from '../memory-qa/corpus.ts';
 import { ContextStore } from '../memory-qa/arms.ts';
 import { instrumentFor, type Instrument } from '../memory-qa/instruments.ts';
 import { DEFAULT_MAX_ATTEMPTS, OUTCOMES, type Outcome } from '../memory-qa/outcomes.ts';
@@ -92,18 +92,22 @@ import { failureRow, hashEmbed, readinessProbe, selectQuestions } from '../memor
 import { checkSealedDestinations, sealedPaths } from '../memory-qa/sealed-profile.ts';
 import { ledgerCaps, PaidArmRefusal, requirePaidArm, requireRs1Window, WindowRefusal } from '../paid-arm.ts';
 import { COMPAT_PROVIDERS, JUDGE_PROVIDERS, compatMayHaveBilled } from '../providers/openai-compatible.ts';
-import { appendAccessLog } from '../sealed-confirmation-lib.ts';
-import { DEFAULT_ROUTE_CLASSES, Q1_CAMPAIGN_ID, type CampaignManifest as Q1Campaign, type CellSpec } from '../shootout-cell.ts';
+import { appendAccessLog, sha256File } from '../sealed-confirmation-lib.ts';
+import { DEFAULT_ROUTE_CLASSES, EXECUTES, Q1_CAMPAIGN_ID, type CampaignManifest as Q1Campaign, type CellSpec } from '../shootout-cell.ts';
 import { AgentRuntimeSystem } from '../systems/agent-runtime.ts';
 import { answerFullContext, FullContextSystem, NoMemorySystem, PlainHybridSystem, type FitTokenizer } from '../systems/baselines.ts';
 import { FILE_AGENT_SYSTEM, FileAgentSystem, type AnsweringSystem } from '../systems/file-agent.ts';
+import { GBRAIN_AGENT_SYSTEM, GbrainAgentSystem } from '../systems/gbrain-agent.ts';
 import { HttpMemorySystem } from '../systems/http.ts';
 import { encodingCount, NATIVE_READER_TEMPLATE, packContext, readerCounter, readerTokenizer, RENDERER_VERSION, strictSources, validateSources, type PackCounter, type PackedContext } from '../systems/render-v2.ts';
 import { Sanitizer, SanitizerLeakError, type IngestStep } from '../systems/sanitize.ts';
 import { answerModes, passiveUnsupported, policyKnobs, type CapabilityRecord, type Item, type MemorySystem, type OwnAnswerSystem, type RetrievalPolicy, type SessionInput, type OwnAnswer } from '../systems/types.ts';
-import { ALL_SETS, definitionProblems, F6_ASSUMPTIONS, frontierJudgesFor, launchPrefix, loadManifest, MANIFEST_PATH, pinnedJudgeRouteCaps, policyKey, shimLaunch, type ArmDefinition, type CellDefinition, type JudgeSettings, type Manifest, type RetrievalIdentity, type Selection } from './cells/definitions.ts';
+import { ALL_SETS, definitionProblems, estimateCell, F6_ASSUMPTIONS, frontierJudgesFor, launchPrefix, loadManifest, MANIFEST_PATH, pinnedJudgeRouteCaps, policyKey, shimLaunch, type ArmDefinition, type CellDefinition, type JudgeSettings, type Manifest, type RetrievalIdentity, type Selection } from './cells/definitions.ts';
 import { F6_MANIFEST_PATH, loadF6Manifest } from './cells/f6.ts';
 import { loadRS1Manifest, stage1OverCap, type RS1Manifest } from './cells/rs1.ts';
+import { bg1Stage1OverCap, loadBG1Manifest, type BG1Manifest } from './cells/bg1.ts';
+import { isBg1Benchmark } from './cells/definitions.ts';
+import { ledgerCaps as bg1LedgerCaps, requireRs1Window as requireBg1Window, WindowRefusal as Bg1WindowRefusal } from '../paid-arm.ts';
 import { exitCodeOf, refuse, renderMessage, ScoreboardError, type ScoreboardMessage } from './scoreboard-errors.ts';
 import type { UsageReceipt } from '../usage-receipt.ts';
 import { answerUsage, normalizeUsage, readerConvention } from './usage.ts';
@@ -166,6 +170,11 @@ export function keptUnit(def: Pick<CellDefinition, 'id' | 'shards' | 'kept_units
   if (shard.count !== def.shards) throw refuse(usage(`${def.id} runs as ${def.shards} launch units of ${def.kept_units} kept conversations; --shard must be i/${def.shards}`));
   return rs1UnitConversations(manifest, shard.index, def.kept_units!);
 }
+/** BG1: this launch unit's worlds from the custodian's kept list (corpus.ts bg1UnitConversations); the shard must be one of the cell's units. */
+export function bg1KeptUnit(def: Pick<CellDefinition, 'id' | 'shards' | 'kept_units'>, shard: { index: number; count: number }, manifest: Bg1Manifest = readBg1Manifest().manifest): string[] {
+  if (shard.count !== def.shards) throw refuse(usage(`${def.id} runs as ${def.shards} launch units of ${def.kept_units} kept worlds; --shard must be i/${def.shards}`));
+  return bg1UnitConversations(manifest, shard.index, def.kept_units!);
+}
 
 // ─── Selection ───────────────────────────────────────────────────────
 
@@ -188,6 +197,12 @@ const groupBy = (qs: readonly MemoryQuestion[], key: (q: MemoryQuestion) => stri
 export function selectCellQuestions(questions: readonly MemoryQuestion[], sel: Selection): MemoryQuestion[] {
   const order = (qs: MemoryQuestion[]) => [...qs].sort((a, b) => (a.conversation === b.conversation ? (a.id < b.id ? -1 : 1) : a.conversation < b.conversation ? -1 : 1));
   if (sel.kind === 'all') return order([...questions]);
+  if (sel.kind === 'ids') {
+    const named = questions.filter(q => sel.ids.includes(q.id));
+    if (named.length !== new Set(sel.ids).size) throw refuse({ code: 'USAGE', message: `the selection names ${new Set(sel.ids).size} question ids, and only ${named.length} are in the loaded split`,
+      why: 'an ids selection names the exact questions a cell runs, so a missing one means the corpus is not the one the cell was defined on', fix: { next: 'report', user_message: 'check the cell\'s benchmark, split and only_conversations against its ids' } });
+    return order(named);
+  }
   if (sel.kind === 'shootout-slice') return order(selectQuestions([...questions], sel.limit, sel.seed));
   if (sel.kind === 'per-conversation') return order([...groupBy(questions, q => q.conversation).values()].flatMap(qs => roundRobin(groupBy(qs, q => q.category), sel.per_conversation, sel.seed)));
   const floor: MemoryQuestion[] = [];
@@ -280,6 +295,8 @@ export interface CellOptions {
   frontier?: boolean;
   systemUrl?: string | null;
   providerProxy?: string | null;
+  /** BG1: the run's lease proxy reports a keyless upstream (bg1CellWindow), so a bg1-dev load may read the template fixtures. */
+  keyless?: boolean;
   finishTimeoutS?: number;
   probeTimeoutMs?: number;
   probeIntervalMs?: number;
@@ -315,6 +332,8 @@ export interface CellDeps {
   fitTokenizer?: (reader: string) => FitTokenizer;
   /** RS1 kept cells: the filled manifest whose kept list names the unit's conversations (default: corpus.ts readRs1Manifest). */
   rs1Manifest?: Rs1Manifest;
+  /** BG1 kept cells: the filled manifest whose kept list names the unit's worlds (default: corpus.ts readBg1Manifest). */
+  bg1Manifest?: Bg1Manifest;
 }
 
 export interface ArmResult { cell_id: string; dir: string; status: 'complete' | 'partial' | 'invalid'; config_sha256: string; answers: number; judgments: number; rows: number; readers: string[] }
@@ -483,6 +502,10 @@ export function systemFor(def: CellDefinition, opts: CellOptions, sanitizer: San
     case 'baseline-hybrid': return new PlainHybridSystem(opts.embed === 'hash' ? async texts => texts.map(t => hashEmbed(t, PG_EMBED_DIMS))
       : cachedOpenAIEmbedder(join(process.env.GBRAIN_EVALS_EMBED_CACHE ?? join(homedir(), '.cache', 'gbrain-evals', 'embed-cache'), 'plain-hybrid-te3l-1536.json'), fetch, opts.providerProxy ? `${opts.providerProxy}/${def.system}/openai/v1` : undefined), opts.embed === 'hash' ? `hash@${PG_EMBED_DIMS} (keyless control)` : undefined);
     case 'baseline-file-agent': return new FileAgentSystem({ workDir: join(opts.out, 'runs', def.id, 'file-agent'), effort: def.effort });
+    case 'gbrain-defaults':
+      if (opts.providerProxy) throw refuse({ code: 'NOT_YET_AVAILABLE', message: `cell ${def.id} runs the gbrain agent in process, and a metering proxy was given`,
+        why: 'gbrain\'s own embedding and reranker calls go to the provider from this process, where the budget ledger reserves them; they would not reach the proxy', fix: { next: 'run', argv: [...FRONT, 'run', '--cell', def.id, '--paid', '--budget-run-id', '<id>'], user_message: 'run the cell under a budget ledger run, without --provider-proxy or SHOOTOUT_PROXY' } });
+      return new GbrainAgentSystem({ workDir: join(opts.out, 'runs', def.id, 'gbrain-agent'), effort: def.effort, embed: opts.embed });
     case 'ext-agent-runtime': return new AgentRuntimeSystem();
     default: throw refuse({ code: 'NOT_YET_AVAILABLE', message: `no in-process system for ${def.system}`, why: 'only harness controls and answering systems run in process', fix: { next: 'report', user_message: `check ${def.id}'s runner in eval/runner/q1/cells/definitions.ts` } });
   }
@@ -508,7 +531,7 @@ export function armReaders(arm: ArmDefinition, cap: CapabilityRecord): string[] 
 
 // ─── Run config ──────────────────────────────────────────────────────
 
-const PROMPTS: Record<string, string> = { native: NATIVE_READER_TEMPLATE, rehydrated: READER_TEMPLATE, agent: FILE_AGENT_SYSTEM };
+const PROMPTS: Record<string, string> = { native: NATIVE_READER_TEMPLATE, rehydrated: READER_TEMPLATE, agent: FILE_AGENT_SYSTEM, 'gbrain-agent': GBRAIN_AGENT_SYSTEM };
 
 /**
  * Launch-control fields of a cell definition: how its units are leased, laid out on VMs, snapshotted and sent back to
@@ -522,7 +545,7 @@ export function runConfigText(def: CellDefinition, arm: ArmDefinition, ctx: { in
   const { estimate: _e, arms: _a, ...rest } = def;
   const cell = Object.fromEntries(Object.entries(rest).filter(([k]) => !(LAUNCH_CONTROL_FIELDS as readonly string[]).includes(k)));
   const counter = arm.mode === 'packed' || arm.mode === 'native-default' ? readerCounter(arm.readers).identity : arm.mode === 'full-context' ? arm.readers.map(r => ({ reader: r, ...readerTokenizer(r) })) : null;
-  const prompt = arm.mode === 'full-context' ? PROMPTS.rehydrated : arm.mode === 'agent' && def.system === 'baseline-file-agent' ? PROMPTS.agent : arm.mode === 'packed' || arm.mode === 'native-default' ? PROMPTS.native : null;
+  const prompt = arm.mode === 'full-context' ? PROMPTS.rehydrated : arm.mode === 'agent' && def.system === 'baseline-file-agent' ? PROMPTS.agent : arm.mode === 'agent' && def.system === 'gbrain-defaults' ? PROMPTS['gbrain-agent'] : arm.mode === 'packed' || arm.mode === 'native-default' ? PROMPTS.native : null;
   const raised = arm.mode === 'packed' || arm.mode === 'native-default' || arm.mode === 'full-context' ? arm.readers.filter(r => readerMaxTokens(r) !== READER_MAX_TOKENS) : [];
   return JSON.stringify({
     schema: RUN_CONFIG_SCHEMA, cell_id: arm.cell_id, run_cell: def.id, cell, arm,
@@ -629,8 +652,8 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
   if (custody) custodyGate(def, out, env, `q1 cell ${def.id}`);
   mkdirSync(out, { recursive: true });
   const shard = opts.shard ?? { index: 0, count: 1 };
-  const unitConvs = def.kept_units ? keptUnit(def, shard, deps.rs1Manifest) : null;
-  const corpus = deps.corpus ?? loadCorpus(def.benchmark, undefined, unitConvs ? new Set(unitConvs) : devOnly(def) ?? undefined);
+  const unitConvs = !def.kept_units ? null : def.benchmark === 'bg1' ? bg1KeptUnit(def, shard, deps.bg1Manifest) : keptUnit(def, shard, deps.rs1Manifest);
+  const corpus = deps.corpus ?? loadCorpus(def.benchmark, undefined, unitConvs ? new Set(unitConvs) : devOnly(def) ?? undefined, { keyless: opts.keyless });
   const selected = scheduledQuestions(def, corpus, opts.limit ?? null).filter(q => !unitConvs || unitConvs.includes(q.conversation));
   const convIds = [...new Set(selected.map(q => q.conversation))].sort().filter((_, i) => unitConvs || i % shard.count === shard.index);
   const armQs = new Map(arms.map(a => [a.id, new Set((a.questions ? selectCellQuestions(selected, a.questions) : selected).map(q => q.id))]));
@@ -1397,25 +1420,20 @@ export function pinnedImages(root = resolve(import.meta.dir, '../../..')): Recor
 }
 
 /** Repository paths every Q1 cell executes (their git tree enters the campaign hash). */
-export const EXECUTES = ['eval/runner/q1/cell.ts', 'eval/runner/q1/cells', 'eval/runner/q1/scoreboard-errors.ts', 'eval/runner/q1/usage.ts', 'eval/runner/memory-qa', 'eval/runner/systems', 'eval/runner/cat40', 'eval/runner/decisions', 'eval/runner/providers',
-  'eval/runner/metering-proxy.ts', 'eval/runner/budget-ledger.ts', 'eval/runner/usage-receipt.ts', 'eval/runner/openai-judge-shim.ts', 'eval/runner/paid-arm.ts', 'eval/runner/metrics.ts', 'eval/runner/sealed-confirmation-lib.ts', 'eval/runner/shootout-cell.ts',
-  'eval/runner/evidence-delivery', 'eval/runner/gbrain-under-test.ts', 'eval/runner/lifecycle/builds.ts',
-  'eval/runner/longmemeval-cache.ts', 'eval/runner/receipt.ts', 'scripts/ubicloud/ubi-runner.sh', 'eval/runner/situation-recall-provenance.ts', 'eval/generators/model-ladder-gen.ts',
-  'eval/systems/PROTOCOL.md', 'eval/systems/_fake', 'eval/systems/_shim', 'eval/systems/bootstrap.sh', 'eval/systems/gbrain-defaults', 'eval/systems/kinds.json',
-  'eval/systems/name-guard-baseline.json', 'docs/comparison-systems', 'eval/decisions', 'package.json', 'bun.lock'];
+export { EXECUTES };
 
 const VM_VCPU = 4;
 /** The provider keys a cell's VM receives (ubi-runner --pass): only its metering proxy reads them; the cell sees dummy keys. */
 const PROVIDER_KEYS = { openai: 'OPENAI_API_KEY', anthropic: 'ANTHROPIC_API_KEY', voyage: 'VOYAGE_API_KEY', particle: COMPAT_PROVIDERS.particle.key_env } as const;
 /** Waves: T1 first (S1 shim shards packed under the overnight cap), then each T2 set after T1 settles, in the preregistered scope-reduction order reversed. */
-const T2_WAVES: Record<string, number> = { 'T2-S2b': 1, 'T2-S3': 2, 'T2-S2a': 3, 'T2-S4-S5': 4, 'F6-T2': 1, 'F6-D8': 2, 'F6-S4': 3, 'F6-dry': 1, 'F6-P1': 1, 'RS1-S1': 1, RS1: 1 };
+const T2_WAVES: Record<string, number> = { 'T2-S2b': 1, 'T2-S3': 2, 'T2-S2a': 3, 'T2-S4-S5': 4, 'F6-T2': 1, 'F6-D8': 2, 'F6-S4': 3, 'F6-dry': 1, 'F6-P1': 1, 'RS1-S1': 1, RS1: 1, 'BG1-S1': 1, BG1: 1 };
 
 /** In-process systems whose adapter drives the bundle's own container: the unit builds it at setup and brings it up around the run like a shim stack (A19). */
 const IN_PROCESS_STACKS = new Set(['ext-agent-runtime']);
 
 /** One launch unit per cell, or per conversation shard for an S1 shim cell, in the shootout campaign's cell format; `addons` adds the manifest's addon_cells (a unit selection's campaign). */
-export type CellManifestId = 'q1' | 'f6' | 'rs1';
-const CELL_MANIFESTS: readonly CellManifestId[] = ['q1', 'f6', 'rs1'];
+export type CellManifestId = 'q1' | 'f6' | 'rs1' | 'bg1';
+const CELL_MANIFESTS: readonly CellManifestId[] = ['q1', 'f6', 'rs1', 'bg1'];
 
 export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight?: number; cellManifest?: CellManifestId; addons?: boolean; paidWindow?: { unit: string; cap_usd: number } } = {}): CellSpec[] {
   const perWave = Math.floor((opts.vcpuCapNight ?? 200) / VM_VCPU);
@@ -1497,6 +1515,61 @@ export function campaignManifest(m: Manifest, opts: { smoke?: boolean; sealed?: 
   };
 }
 
+/** paid_window: the granted paid window a BG1 campaign runs in; every unit's command passes it, and cap_usd as the window cap. */
+export interface Bg1UnitSelection extends UnitSelection { paid_window: string }
+
+/** BG1's Gemini key variable: the custody host's ~/.config/gbrain-evals/bg1.env names it, and no BG1 unit reads GEMINI_API_KEY. */
+export const BG1_GEMINI_KEY_ENV = 'BG1_GEMINI_API_KEY';
+
+/** Gemini's key for a paid BG1 run that holds its own provider keys (a re-read's lease proxy, a run without a lease proxy): BG1_GEMINI_API_KEY, never GEMINI_API_KEY. */
+export function bg1GeminiKey(env: Record<string, string | undefined> = process.env): string {
+  const key = env[BG1_GEMINI_KEY_ENV];
+  if (key) return key;
+  throw refuse({ code: 'KEY_MISSING', message: `${BG1_GEMINI_KEY_ENV} is not set`, why: 'BG1\'s canonical Gemini judge spends BG1\'s own key, never the shell\'s GEMINI_API_KEY',
+    fix: { next: 'ask_user', user_message: `export ${BG1_GEMINI_KEY_ENV} from the custody host's bg1.env` } });
+}
+
+/** BG1's committed data, which BG1 campaigns add to EXECUTES so the campaign hash covers it. */
+export const BG1_DATA_PATHS = ['eval/data/changing-facts-v1'];
+
+/**
+ * BG1's campaign manifest: campaignManifest over a unit selection that names its granted paid window, with every unit's
+ * run naming bg1-cells.json and carrying --paid-window and --window-cap-usd, so bg1CellWindow lets the unit spend only
+ * inside that window. A BG1 campaign without such a selection is refused before any file is written. Every unit's
+ * canonical judge is Gemini, so its VM also receives BG1_GEMINI_API_KEY, which runRemote hands the lease proxy as
+ * Gemini's key (gemini_key_env); every other campaign's providers and passes are campaignManifest's own. A sealed unit
+ * carries its index and size in kept worlds (bg1_unit), so the custodian pushes only that unit's worlds (bg1CustodyPush).
+ * Every unit's command exports the campaign's world end (GBRAIN_EVALS_BG1_WORLD_END: `worldEnd`, else the planning
+ * shell's), so its VM's run and loaders resolve dates from the same world end as every other unit of the campaign.
+ * Data paths (the stage 2 freeze): the campaign hash also covers BG1's committed data (BG1_DATA_PATHS, the dev worlds a
+ * smoke unit reads), and a campaign with sealed units records the SHA-256 of the custodian's filled manifest
+ * (`bg1Manifest`, else GBRAIN_EVALS_BG1_MANIFEST), which pins every sealed world; Campaign.custodyPush refuses a sealed
+ * unit without it.
+ */
+export function bg1CampaignManifest(m: Manifest, opts: { smoke?: boolean; sealed?: { cap_usd: number }; smokeOnly?: boolean; units?: Partial<Bg1UnitSelection>; worldEnd?: string; bg1Manifest?: string } = {}): Q1Campaign {
+  const u = opts.units;
+  if (!u?.paid_window || !/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(u.paid_window) || !(Number(u.cap_usd) > 0)) throw refuse({ code: 'PAID_FLAGS_MISSING', message: 'a BG1 campaign needs a unit selection (--units) naming its granted paid window as paid_window, with the window cap as cap_usd',
+    why: 'every BG1 unit spends real keys, so its command carries the granted window and the unit refuses outside it', fix: { next: 'run', argv: [...FRONT, 'plan', '--manifest', 'bg1', '--units', '<selection with paid_window and cap_usd>', '--campaign-out', '<file>'] } });
+  const { paid_window, ...units } = u as Bg1UnitSelection;
+  const worldEnd = bg1WorldEnd({ worldEnd: opts.worldEnd });
+  const campaign = campaignManifest(m, { ...opts, units: { ...units, cell_manifest: 'bg1' } });
+  const out = ' --out "$SHOOTOUT_OUT"';
+  const defs = [...m.cells, ...(m.smoke_cells ?? []), ...(m.addon_cells ?? [])];
+  const unitOf = (id: string) => {
+    const shard = /^(.+)\.c(\d+)$/.exec(id);
+    const def = defs.find(d => (d.shards > 1 ? d.id === shard?.[1] : d.id === id));
+    return def?.kept_units ? { index: def.shards > 1 ? Number(shard![2]) : 0, size: def.kept_units } : undefined;
+  };
+  const filled = opts.bg1Manifest ?? process.env.GBRAIN_EVALS_BG1_MANIFEST;
+  const recorded = campaign.cells.some(c => c.sealed) && filled && existsSync(filled) ? { bg1_manifest_sha256: sha256File(filled) } : {};
+  return { ...campaign, executes: [...(campaign.executes ?? []), ...BG1_DATA_PATHS], ...recorded, cells: campaign.cells.map(cell => {
+    if (cell.command.split(out).length !== 2) throw new Error(`BG1 unit ${cell.id} has no single${out} in its command to put the paid window before`);
+    const unit = cell.sealed ? unitOf(cell.id) : undefined;
+    return { ...cell, providers: [...(cell.providers ?? []), 'gemini'], pass: [...(cell.pass ?? []), BG1_GEMINI_KEY_ENV], gemini_key_env: BG1_GEMINI_KEY_ENV, ...(unit ? { bg1_unit: unit } : {}),
+      command: `export GBRAIN_EVALS_BG1_WORLD_END=${worldEnd}; ${cell.command.replace(out, () => ` --paid-window ${paid_window} --window-cap-usd ${units.cap_usd}${out}`)}` };
+  }) };
+}
+
 export function renderPlan(m: Manifest): string {
   const cells = campaignCells(m);
   const waves = [...new Set(cells.map(c => c.wave!))].sort((a, b) => a - b).map(w => ({ w, n: cells.filter(c => c.wave === w).length, hours: Math.max(...cells.filter(c => c.wave === w).map(c => c.expected_hours ?? 0)), blocks: [...new Set(cells.filter(c => c.wave === w).map(c => c.block))].join(', ') }));
@@ -1523,10 +1596,10 @@ export function renderPlan(m: Manifest): string {
 
 // ─── CLI ─────────────────────────────────────────────────────────────
 
-/** The cell manifest `--manifest` names: q1 (default), f6 or rs1. */
+/** The cell manifest `--manifest` names: q1 (default), f6, rs1 or bg1. */
 export function loadCellManifest(which?: string): Manifest {
-  if (which !== undefined && !(CELL_MANIFESTS as readonly string[]).includes(which)) throw refuse(usage(`--manifest takes q1 or f6 (or rs1 for RS1's cells), not ${which}`));
-  return which === 'f6' ? loadF6Manifest() : which === 'rs1' ? loadRS1Manifest() : loadManifest();
+  if (which !== undefined && !(CELL_MANIFESTS as readonly string[]).includes(which)) throw refuse(usage(`--manifest takes q1 or f6 (or rs1 for RS1's cells, bg1 for BG1's), not ${which}`));
+  return which === 'f6' ? loadF6Manifest() : which === 'rs1' ? loadRS1Manifest() : which === 'bg1' ? loadBG1Manifest() : loadManifest();
 }
 
 export function findCell(id: string, given?: Manifest, manifest?: string): CellDefinition {
@@ -1552,9 +1625,39 @@ function reanswerOutcomes(raw: string | undefined): Outcome[] | null {
 
 const usage = (message: string): ScoreboardMessage => ({ code: 'USAGE', message, why: 'the cell runner has four subcommands: plan, show, run, merge', fix: { next: 'run', argv: [...FRONT, 'plan'] } });
 
+/**
+ * BG1's paid-window guard for `run` on a BG1 cell (eval/runner/paid-arm.ts, the shared window guard): a run needs the
+ * granted window (--paid-window <unit> --window-cap-usd <n>) unless its lease proxy itself reports a keyless upstream
+ * (GET /__proxy/status; an inherited SHOOTOUT_KEYLESS_UPSTREAM is never trusted). Under a lease proxy the cap checked is
+ * the lease that status reports in lease mode, and a SHOOTOUT_LEASE_USD that differs from it (or is not a number) refuses; without one it is
+ * the ledger's program cap and the run's budget. Refuses with exit 2 before any provider client, corpus or output exists.
+ * Returns whether the lease proxy reports a keyless upstream, the one case a bg1-dev load may read the template fixtures.
+ */
+export async function bg1CellWindow(argv: string[], def: CellDefinition, env: Record<string, string | undefined> = process.env): Promise<boolean> {
+  const one = (n: string) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : undefined; };
+  const proxy = (one('--provider-proxy') ?? env.SHOOTOUT_PROXY ?? '').replace(/\/$/, '') || null;
+  const status = proxy ? await fetch(`${proxy}/__proxy/status`, { signal: AbortSignal.timeout(5000) }).then(r => r.json() as Promise<{ keyless?: unknown; mode?: unknown; lease_usd?: unknown } | null>).catch(() => null) : null;
+  const held = status?.mode === 'lease' && typeof status.lease_usd === 'number' && status.lease_usd > 0 ? status.lease_usd : null;
+  const named = env.SHOOTOUT_LEASE_USD;
+  const differs = !!named && held !== null && !(Math.abs(Number(named) - held) <= 1e-9);
+  try {
+    requireBg1Window(argv, { what: `BG1 cell ${def.id}`, keyless: status?.keyless === true,
+      caps: () => proxy ? [{ label: differs ? `the lease proxy's lease (its status reports ${held}, SHOOTOUT_LEASE_USD names ${named})` : "the lease proxy's lease (GET /__proxy/status in lease mode)", usd: differs ? null : held }] : bg1LedgerCaps(budgetOptionsFrom(argv).ledgerPath, one('--budget-run-id')) });
+  } catch (e) {
+    if (!(e instanceof Bg1WindowRefusal)) throw e;
+    throw refuse({ code: 'PAID_FLAGS_MISSING', message: e.message, why: 'every BG1 cell that can spend real keys runs inside a granted paid window, and no cap it spends under exceeds the window cap',
+      fix: { next: 'run', argv: [...FRONT, 'run', '--cell', def.id, '--manifest', 'bg1', '--paid-window', '<granted unit>', '--window-cap-usd', '<granted cap>'] } });
+  }
+  return status?.keyless === true;
+}
+
 /** The paid-run guard for `run` without a lease proxy: --paid and an open ledger run with room for the estimate. */
-export function paidGuard(argv: string[], def: CellDefinition, limit: number | null): number {
-  const estimate = Math.round((limit ? def.estimate.usd * Math.min(1, limit / ALL_SETS[def.set].questions) + (def.estimate.lines.ingest ?? 0) : def.estimate.usd) * 100) / 100;
+/** Refuses a run the budget run can't cover: the estimate of the arms it runs (every arm without --arms), cut to --limit's share. */
+export function paidGuard(argv: string[], def: CellDefinition, limit: number | null, arms: readonly string[] | null = null): number {
+  const { estimate: whole, ...rest } = def;
+  const picked = arms ? def.arms.filter(a => arms.includes(a.id)) : def.arms;
+  const cell = picked.length && picked.length < def.arms.length ? estimateCell({ ...rest, arms: picked }) : whole;
+  const estimate = Math.round((limit ? cell.usd * Math.min(1, limit / ALL_SETS[def.set].questions) + (cell.lines.ingest ?? 0) : cell.usd) * 100) / 100;
   try { requirePaidArm(argv, { arm: `q1 cell ${def.id}`, estimateUsd: estimate, ledgerPath: budgetOptionsFrom(argv).ledgerPath }); }
   catch (e) {
     if (!(e instanceof PaidArmRefusal)) throw e;
@@ -1593,9 +1696,10 @@ export async function main(argv: string[]): Promise<number> {
   if (sub === 'plan') {
     // --manifest f6: F6's manifest (eval/runner/q1/cells/f6-cells.json); --dry-run-only keeps its dry-run cells alone;
     // --manifest rs1: RS1's (rs1-cells.json), refused while its stage 1 estimate is above stage 1's cap;
+    // --manifest bg1: BG1's (bg1-cells.json), refused the same way at BG1's stage 1 cap;
     // --units <file>: a UnitSelection (JSON), the named units alone under its own campaign id and cap.
     const m = loadCellManifest(one('--manifest'));
-    const over = one('--manifest') === 'rs1' ? stage1OverCap(m as RS1Manifest) : null;
+    const over = one('--manifest') === 'rs1' ? stage1OverCap(m as RS1Manifest) : one('--manifest') === 'bg1' ? bg1Stage1OverCap(m as BG1Manifest) : null;
     if (over) throw refuse(over);
     const campaignOut = one('--campaign-out');
     const sealedCap = one('--sealed-cap-usd');
@@ -1604,7 +1708,7 @@ export async function main(argv: string[]): Promise<number> {
     const unitsFile = one('--units');
     if (unitsFile && !campaignOut) throw refuse(usage('--units needs --campaign-out <file>'));
     const units = unitsFile ? JSON.parse(readFileSync(resolve(unitsFile), 'utf8')) as UnitSelection : undefined;
-    if (campaignOut) { writeAtomic(resolve(campaignOut), JSON.stringify(campaignManifest(m, { smoke: smokeOnly || argv.includes('--with-smoke'), smokeOnly, sealed: sealedCap ? { cap_usd: Number(sealedCap) } : undefined, units }), null, 2) + '\n'); console.error(`campaign manifest written to ${campaignOut}; next: bun run eval:scoreboard plan --campaign ${campaignOut}`); }
+    if (campaignOut) { writeAtomic(resolve(campaignOut), JSON.stringify((one('--manifest') === 'bg1' ? bg1CampaignManifest : campaignManifest)(m, { smoke: smokeOnly || argv.includes('--with-smoke'), smokeOnly, sealed: sealedCap ? { cap_usd: Number(sealedCap) } : undefined, units }), null, 2) + '\n'); console.error(`campaign manifest written to ${campaignOut}; next: bun run eval:scoreboard plan --campaign ${campaignOut}`); }
     console.log(json ? JSON.stringify({ ...m, waves: campaignCells(m).map(c => ({ id: c.id, wave: c.wave, lease_usd: c.lease_usd })) }, null, 2) : renderPlan(m));
     return 0;
   }
@@ -1622,6 +1726,8 @@ export async function main(argv: string[]): Promise<number> {
     const id = one('--cell');
     if (!id) throw refuse(usage(`${sub} needs --cell <id>`));
     const def = findCell(id, undefined, one('--manifest'));
+    let keyless = false;
+    if (sub === 'run' && isBg1Benchmark(def.benchmark)) { keyless = await bg1CellWindow(argv, def); bg1RunClock(); if (!(one('--provider-proxy') ?? process.env.SHOOTOUT_PROXY)) process.env.GEMINI_API_KEY = bg1GeminiKey(); }
     const out = resolve(one('--out') ?? process.env.SHOOTOUT_OUT ?? join(REPO_ROOT, 'eval/reports/q1', def.id));
     if (sub === 'merge') {
       const from = many('--from').map(f => resolve(f));
@@ -1639,13 +1745,13 @@ export async function main(argv: string[]): Promise<number> {
     const proxy = (one('--provider-proxy') ?? process.env.SHOOTOUT_PROXY ?? '').replace(/\/$/, '') || null;
     if (one('--manifest') === 'rs1') rs1CellWindow(argv, def, proxy);
     if (!proxy) {
-      paidGuard(argv, def, limit);
-      startPaidRun(`q1-cell:${def.id}`, { ...budgetOptionsFrom(argv), estimateUsd: def.estimate.usd });
+      const estimate = paidGuard(argv, def, limit, one('--arms')?.split(',') ?? null);
+      startPaidRun(`q1-cell:${def.id}`, { ...budgetOptionsFrom(argv), estimateUsd: estimate });
     }
     const shardRaw = one('--shard') ?? '0/1';
     const [si, sn] = shardRaw.split('/').map(Number);
     if (!Number.isInteger(si) || !Number.isInteger(sn) || sn < 1 || si < 0 || si >= sn) throw refuse(usage('--shard must look like i/n with 0 <= i < n'));
-    const result = await runCell(def, { out, limit, shard: { index: si, count: sn }, arms: one('--arms')?.split(',') ?? null, systemUrl: one('--system-url') ?? null, providerProxy: proxy,
+    const result = await runCell(def, { out, limit, shard: { index: si, count: sn }, arms: one('--arms')?.split(',') ?? null, systemUrl: one('--system-url') ?? null, providerProxy: proxy, keyless,
       maxAttempts: one('--max-attempts') ? Number(one('--max-attempts')) : undefined, frontier: !argv.includes('--no-frontier'),
       finishTimeoutS: one('--finish-timeout-s') ? Number(one('--finish-timeout-s')) : undefined, probeTimeoutMs: one('--probe-timeout-s') ? Number(one('--probe-timeout-s')) * 1000 : undefined,
       reanswerInvalidBefore: one('--reanswer-invalid-before') ?? null, reanswerOutcomes: reanswerOutcomes(one('--reanswer-outcomes')), freshBefore: one('--fresh-before') ?? null });

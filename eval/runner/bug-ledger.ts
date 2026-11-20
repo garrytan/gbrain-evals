@@ -81,13 +81,15 @@ export interface BugEntry {
   cause?: string;
   /** The classifier rule that counted it. */
   rule_id?: string;
-  /** Repository-root command that must pass once the fix lands; the nightly loop runs it for fixed entries. */
+  /** `bun test <test file under test/>`, optionally with `-t '<name>'`: must pass once the fix lands; the nightly loop runs it for fixed entries. */
   regression_check?: string;
 }
 
 export interface BugLedger { schema_version: 1; entries: BugEntry[] }
 
 const nonEmpty = (v: unknown) => typeof v === 'string' && v.trim().length > 0;
+/** A regression check is one bun test file in test/, never a free-form shell command, because the nightly loop runs it. */
+const REGRESSION_CHECK = /^bun test test\/(?!.*\.\.)[\w/.-]+\.test\.ts(?: -t '[\w .:,()#-]+')?$/;
 
 export function validateBugEntry(e: unknown): string[] {
   if (!e || typeof e !== 'object') return ['entry is not an object'];
@@ -106,7 +108,7 @@ export function validateBugEntry(e: unknown): string[] {
   if (b.status === 'closed' && (!nonEmpty(b.reason) || !nonEmpty(b.fixing_pr))) v.push(`${id}: a closed entry needs a reason and fixing_pr`);
   if (b.cause !== undefined && !isCause(b.cause)) v.push(`${id}: cause must be a failure-cause id (eval/runner/failure-causes/taxonomy.ts)`);
   if (b.rule_id !== undefined && !nonEmpty(b.rule_id)) v.push(`${id}: rule_id must be a classifier rule id`);
-  if (b.regression_check !== undefined && !nonEmpty(b.regression_check)) v.push(`${id}: regression_check must be a repository-root command`);
+  if (b.regression_check !== undefined && (typeof b.regression_check !== 'string' || !REGRESSION_CHECK.test(b.regression_check))) v.push(`${id}: regression_check must be bun test <file under test/>.test.ts, optionally with -t '<name>'`);
   if (b.fixing_commit !== undefined && (typeof b.fixing_commit !== 'string' || !/^[0-9a-f]{40}$/.test(b.fixing_commit))) v.push(`${id}: fixing_commit must be a full 40-character commit`);
   const checkReview = (value: unknown, at: string) => {
     const r = value as Record<string, unknown> | null;

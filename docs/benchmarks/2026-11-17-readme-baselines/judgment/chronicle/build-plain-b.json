@@ -1,0 +1,43 @@
+{
+  "arm": "plain-b",
+  "kind": "no-gbrain plain baseline",
+  "started": "2026-11-17T07:41:24.178Z",
+  "finished": "2026-11-17T07:42:10.069Z",
+  "model": "anthropic:claude-sonnet-4-6",
+  "instruction": "List the events that happened, one per line, as: YYYY-MM-DD | what",
+  "max_tokens": 4096,
+  "sampling": "provider default",
+  "gbrain": "no gbrain build, import or phase ran",
+  "gbrain_evals": {
+    "git_head": "443427ff5a4d437d870e2a19341617856e356e7d",
+    "dirty": false
+  },
+  "judged": 48,
+  "failed": 0,
+  "events": 335,
+  "meter": {
+    "usd": 0.257691,
+    "byModel": {
+      "anthropic:claude-sonnet-4-6": {
+        "usd": 0.257691,
+        "requests": 48
+      }
+    },
+    "unpriced": 0
+  },
+  "spent_usd_recorded": 0.257691,
+  "cost": {
+    "usd": 0.257691,
+    "input_tokens": 30772,
+    "output_tokens": 11025,
+    "basis": "budget ledger chronicle-lift-v1-plain-b-2026-11-17T07-41-24-179Z-17577267: 48 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": "<work>/gbev97/ledger.sqlite",
+    "program_cap_usd": 25,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 0,
+      "max": 5
+    }
+  }
+}

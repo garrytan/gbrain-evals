@@ -1,0 +1,6 @@
+model name	: AMD EPYC 9454P 48-Core Processor
+16
+               total        used        free      shared  buff/cache   available
+Mem:              62           1          45           0          16          61
+Swap:              0           0           0
+/home/ubi/.gbrain absent after the run

@@ -67,7 +67,8 @@ titles, so it is reported separately.
 ## Two behaviors pinned by keyless fixtures
 
 `test/eval/gbrain-query-system.test.ts` checks both on real PGLite brains with hash vectors. At the pinned gbrain
-(`62637c96a`, v0.60.557.0; gbrain #6367 fixed both in v0.60.124.0):
+([the pin](../../../../docs/gbrain-under-test.md#the-pin)), which CI tests on every pull request (gbrain #6367 fixed both in
+v0.60.124.0):
 
 1. **`auto` stays inside an explicit 8,000-token budget.** With 25 hits over long conversations, conversations that no
    longer fit are dropped at the budget floor instead of spilling outside it (`over_budget: false`,
@@ -95,6 +96,21 @@ const live = await c.live('live-parity', question, 25, 8000);
 ```
 
 ## Changelog
+
+### 2026-11-16: The fixtures section links the pin
+
+The fixtures section links [the pin](../../../../docs/gbrain-under-test.md#the-pin) instead of naming `6ce7195b4`
+(v0.60.733.0), and says CI tests both fixtures on every pull request, so it stays true when the pin moves.
+
+### 2026-11-16: fixtures section names the v0.60.733.0 pin
+
+The fixtures section names the current pin, `6ce7195b4` (v0.60.733.0), gbrain's newest release, where both fixtures
+still pass (was `d253ec0ff`, v0.60.623.0).
+
+### 2026-11-09: fixtures section names the v0.60.623.0 pin
+
+The fixtures section names the current pin, `d253ec0ff` (v0.60.623.0), where both fixtures still pass (was
+`62637c96a`, v0.60.557.0).
 
 ### 2026-11-03: fixtures section names the v0.60.557.0 pin
 

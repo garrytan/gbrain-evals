@@ -41,6 +41,12 @@
  * Usage: bun eval/runner/n5-forget-residue.ts [--seed N] [--output <dir>] [--gbrain <checkout>[@ref]]
  *          [--engines pglite,postgres] [--interfaces cli,mcp-stdio,mcp-http] [--pg-url <url>] [--concurrency N] [--json]
  *        bun eval/runner/n5-forget-residue.ts --slice ci [--output <dir>]
+ *
+ * GBRAIN_EVAL_ENGINE=pglite|postgres|rust (engine-bench, eval/runner/eval-engine.ts) runs that one engine instead of
+ * the --engines list (with --slice ci too) and gates on its cells. A rust cell writes its CLI config with
+ * cliEngineConfig. The receipt then adds `engine` and `not_applicable` (empty: this runner reads and writes only
+ * through gbrain's CLI and operations, never raw SQL). An unavailable engine exits 69 with no receipt. Unset, the
+ * runner is unchanged.
  */
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
@@ -50,14 +56,15 @@ import { gbrainSpecFrom, overlaySummary, productIdentityFor, resolveGbrainUnderT
 import { gbrainPin } from './gbrain-version.ts';
 import { DECIDE_OFF, withHermeticEnv } from './hermetic-env.ts';
 import type { Driver } from './lifecycle/drivers.ts';
+import { EvalEngineUnavailable, evalEngineReceiptFields, preflightEvalEngine, refuseEvalEngine, requestedEvalEngine } from './eval-engine.ts';
 import {
   fenceRowTokens, pairKey, scoreN5, sumN5,
   type AuthorityAttempt, type CheckpointObs, type N5Metrics, type N5Score, type RememberOutcome,
 } from './lifecycle/n5-score.ts';
-import { ENGINES, IFACES, SliceCell, asRows, postgresReachable, runMatrix, type Engine, type Iface } from './lifecycle/slice.ts';
+import { ENGINES, IFACES, SliceCell, asRows, postgresReachable, remoteAccessGap, runMatrix, type Engine, type Iface } from './lifecycle/slice.ts';
 import { registryEntry } from '../registry.ts';
 import { evaluatePromotion } from './promotion.ts';
-import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, latencySummary, noModelSpend, receiptPath, sourceTreeIdentity, writeReceipt, type Receipt } from './receipt.ts';
+import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, latencySummary, noModelSpend, receiptPath, scrubMachinePaths, sourceTreeIdentity, writeReceipt, type Receipt } from './receipt.ts';
 import {
   ACTIVE_TIERS, CHECKPOINTS, N5_DEFAULT_SEED, N5_GENERATOR_VERSION, generateN5World, isForgottenAt, privateTokens, renderInitialPage, writtenBy,
   type ActiveTier, type Canary, type N5Checkpoint, type N5Ledger, type N5World,
@@ -151,6 +158,10 @@ export interface N5CellOutcome {
   duration_ms: number;
   fatal?: string;
   void_reason?: string;
+  /** The first remote call the engine refused with access_control (SliceCell.firstAccessRefusal). */
+  remote_access_refused?: string | null;
+  /** Calls the cell made as a remote (non-trusted) caller (SliceCell.remoteCalls). */
+  remote_calls?: number;
   server_version: string;
   decide: SliceCell['decideOff'];
   writes: Array<{ step: string; canary?: string; target?: string; ok: boolean; status?: string; error?: string }>;
@@ -376,6 +387,8 @@ async function runCell(world: N5World, gut: GbrainUnderTest, engine: Engine, ifa
     if (!out.fatal && !out.void_reason) {
       out.score = scoreN5({ ledger, observable: () => true, checkpoints, corrected, repeats, concurrent: out.concurrent_writes, authority: out.authority, private_canary_leaks: out.private_canary_leaks });
     }
+    out.remote_access_refused = cell.firstAccessRefusal();
+    out.remote_calls = cell.remoteCalls();
     out.duration_ms = Date.now() - t0;
   }
   return out;
@@ -444,9 +457,12 @@ async function main(): Promise<void> {
   if (sliceName !== undefined && sliceName !== N5_CI_SLICE.name) throw new Error(`--slice takes ${N5_CI_SLICE.name}, not ${sliceName}`);
   const slice = sliceName ? N5_CI_SLICE : null;
   if (slice && (argValue(argv, '--engines') || argValue(argv, '--interfaces') || argValue(argv, '--seed'))) throw new Error('--slice ci fixes the seed, engine and interface; drop --seed, --engines and --interfaces');
-  const engines = slice ? [...slice.engines] : (argValue(argv, '--engines') ?? 'pglite,postgres').split(',') as Engine[];
+  const evalKind = requestedEvalEngine();
+  const listed = argValue(argv, '--engines');
+  if (evalKind && listed !== undefined && listed !== evalKind) throw new Error(`GBRAIN_EVAL_ENGINE=${evalKind} and --engines ${listed} disagree; drop --engines or make them match.`);
+  const engines = evalKind ? [evalKind] : slice ? [...slice.engines] : (argValue(argv, '--engines') ?? 'pglite,postgres').split(',') as Engine[];
   const ifaces = slice ? [...slice.interfaces] : (argValue(argv, '--interfaces') ?? IFACES.join(',')).split(',') as Iface[];
-  for (const e of engines) if (!ENGINES.includes(e)) throw new Error(`--engines takes ${ENGINES.join(',')}, not ${e}`);
+  if (!evalKind) for (const e of engines) if (!ENGINES.includes(e)) throw new Error(`--engines takes ${ENGINES.join(',')}, not ${e}`);
   for (const i of ifaces) if (!IFACES.includes(i)) throw new Error(`--interfaces takes ${IFACES.join(',')}, not ${i}`);
   const pgAdminUrl = argValue(argv, '--pg-url') ?? process.env.LIFECYCLE_PG_URL ?? 'postgres://postgres@127.0.0.1:55432/postgres';
   const concurrency = Number(argValue(argv, '--concurrency') ?? '3');
@@ -457,12 +473,14 @@ async function main(): Promise<void> {
   mkdirSync(work, { recursive: true });
   const startedAt = new Date().toISOString();
   const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
+  if (evalKind) await preflightEvalEngine(gut, evalKind);
   log(`# BrainBench N5${slice ? ' CI slice' : ''}: forgetting and withdrawal residue (gbrain ${gut.version}${gut.overlay ? `, overlay ${gut.overlay.build.commit.slice(0, 7)}` : ', pinned'})`);
 
   const fullWorld = generateN5World({ seed });
   const world = slice ? sliceN5World(fullWorld, slice.entities) : fullWorld;
   const result = await withHermeticEnv('n5', async () => {
     const pgDown = engines.includes('postgres') ? await postgresReachable(pgAdminUrl) : null;
+    if (evalKind === 'postgres' && pgDown) throw new EvalEngineUnavailable('postgres', 'postgres_unreachable', `Postgres at --pg-url is unreachable: ${pgDown}`);
     const runEngines = engines.filter(e => e !== 'postgres' || !pgDown);
     const cells = await runMatrix(runEngines, ifaces, concurrency, 47400, (engine, iface, port) => {
       log(`[n5] start ${engine}/${iface}`);
@@ -471,7 +489,11 @@ async function main(): Promise<void> {
     return { cells, pgDown };
   });
 
-  const pglite = result.cells.filter(c => c.engine === 'pglite');
+  const gateLabel = evalKind ?? 'PGLite';
+  const accessGaps = result.cells.flatMap(c => { const reason = remoteAccessGap(c); return reason ? [{ id: c.id, check: `N5 ${c.interface} cell`, reason }] : []; });
+  const gapIds = new Set(accessGaps.map(g => g.id));
+  const pglite = result.cells.filter(c => c.engine === (evalKind ?? 'pglite') && !gapIds.has(c.id));
+  const pgliteCells = result.cells.filter(c => c.engine === 'pglite');
   const postgres = result.cells.filter(c => c.engine === 'postgres');
   const metrics = aggregateN5(pglite);
   const metricsPg = postgres.length ? aggregateN5(postgres) : null;
@@ -490,7 +512,7 @@ async function main(): Promise<void> {
     reinstatement_rate: { value: metrics.reinstatement_rate, threshold: 1, pass: metrics.reinstatement_rate === 1 },
   };
   const verdict = Object.values(safety).every(Boolean) ? 'pass' : 'fail';
-  const harnessErrors = result.cells.filter(c => c.fatal || c.void_reason).map(c => ({ probe_id: c.id, origin: 'harness' as const, message: (c.void_reason ?? c.fatal ?? '').slice(0, 500) }));
+  const harnessErrors = result.cells.filter(c => (c.fatal || c.void_reason) && !gapIds.has(c.id)).map(c => ({ probe_id: c.id, origin: 'harness' as const, message: (c.void_reason ?? c.fatal ?? '').slice(0, 500) }));
   const nPairs = pglite.reduce((n, c) => n + Object.values(c.checkpoints).reduce((m, cp) => m + Object.keys(cp ?? {}).length, 0), 0);
   const sumBy = (cells: readonly N5CellOutcome[], key: 'by_tier' | 'by_checkpoint') => {
     const outAgg: Record<string, Record<string, number>> = {};
@@ -516,19 +538,19 @@ async function main(): Promise<void> {
     gbrain_version: gut.version,
     gbrain_pin: gbrainPin(),
     execution: { source_tree: sourceTreeIdentity(), product: productIdentityFor(gut) },
-    latency_ms: latencySummary(pglite.flatMap(c => c.calls.primary_ms), 'primary-transport call latency over the PGLite cells'),
+    latency_ms: latencySummary(pglite.flatMap(c => c.calls.primary_ms), `primary-transport call latency over the ${gateLabel} cells`),
     resolved_config: {
       decide: DECIDE_OFF,
       decide_status_per_cell: Object.fromEntries(result.cells.map(c => [c.id, c.decide.ok ? 'all slots off' : c.decide])),
       engines: { requested: engines, run: [...new Set(result.cells.map(c => c.engine))], postgres_unreachable: result.pgDown },
       interfaces: ifaces,
       harness: 'eval/runner/lifecycle/slice.ts (lifecycle drivers: trusted local CLI `gbrain call`, stdio `gbrain serve`, HTTP `gbrain serve --http` with OAuth client_credentials clients: main read+write on vault, reader read-only on vault, foreign read+write on another source)',
-      init: '`gbrain init --no-embedding --non-interactive` (managed persistence, keyword search only), git vaults as sources',
+      init: evalKind === 'rust' ? 'a CLI config written with cliEngineConfig(rust) plus embedding_disabled and schema_pack gbrain-base-v2, then `gbrain init --migrate-only --non-interactive` (gbrain init has no Rust flag); git vaults as sources' : '`gbrain init --no-embedding --non-interactive` (managed persistence, keyword search only), git vaults as sources',
       seed, generator_version: N5_GENERATOR_VERSION, ledger_sha256: world.fingerprint,
       slice: slice ? { ...slice, full_ledger_sha256: fullWorld.fingerprint, canaries: world.ledger.canaries.map(c => c.id) } : null,
       checkpoints: CHECKPOINTS, active_tiers: ACTIVE_TIERS,
       contract: 'src/core/facts/forget.ts header and docs/guides/memory-boundaries.md at the tested commit',
-      gating_scope: 'data.metrics aggregates the PGLite cells; data.metrics_postgres is report-only outside CI',
+      gating_scope: evalKind ? `data.metrics aggregates the ${evalKind} cells (GBRAIN_EVAL_ENGINE=${evalKind})` : 'data.metrics aggregates the PGLite cells; data.metrics_postgres is report-only outside CI',
       gbrain_overlay: overlaySummary(gut),
     },
     hashes: { ledger_sha256: world.fingerprint, ...(slice ? { full_ledger_sha256: fullWorld.fingerprint } : {}) },
@@ -561,7 +583,7 @@ async function main(): Promise<void> {
       },
       meta_hot_memory_residue: {
         scope: 'reported, not gated (a tier found during development, after the rules were frozen): remote responses whose MCP _meta.brain_hot_memory still carried a canary after its forget returned',
-        pglite: { responses: pglite.reduce((n, c) => n + c.meta_residue.responses, 0), canaries: pglite.reduce((n, c) => n + c.meta_residue.canaries.length, 0), cells_with_residue: pglite.filter(c => c.meta_residue.responses > 0).map(c => c.id) },
+        pglite: { responses: pgliteCells.reduce((n, c) => n + c.meta_residue.responses, 0), canaries: pgliteCells.reduce((n, c) => n + c.meta_residue.canaries.length, 0), cells_with_residue: pgliteCells.filter(c => c.meta_residue.responses > 0).map(c => c.id) },
         postgres: { responses: postgres.reduce((n, c) => n + c.meta_residue.responses, 0), canaries: postgres.reduce((n, c) => n + c.meta_residue.canaries.length, 0), cells_with_residue: postgres.filter(c => c.meta_residue.responses > 0).map(c => c.id) },
         witnessed_before_forget: result.cells.reduce((n, c) => n + c.meta_residue.witnessed_before_forget.length, 0),
         evidence: result.cells.flatMap(c => c.meta_residue.evidence.map(e => ({ cell: c.id, ...e }))).slice(0, 20),
@@ -571,12 +593,13 @@ async function main(): Promise<void> {
       leak_evidence: result.cells.flatMap(c => c.leak_evidence.map(e => ({ cell: c.id, ...e }))).slice(0, 20),
       cells: result.cells.map(c => ({ ...c, calls: { primary: c.calls.primary, trusted: c.calls.trusted, extra: c.calls.extra } })),
     },
+    ...evalEngineReceiptFields(evalKind, accessGaps.map(g => ({ status: 'not_applicable' as const, engine: 'rust' as const, check: g.check, reason: g.reason }))),
   };
-  writeReceipt(outPath, receipt);
+  writeReceipt(outPath, scrubMachinePaths(receipt));
   const outcome = evaluatePromotion(entry.promotion!, receipt);
 
   log(`\nverdict: ${runStatus === 'error' ? `error (${harnessErrors.map(e => e.message).join('; ').slice(0, 400)})` : verdict}`);
-  log(`safety contracts (PGLite cells, ${pglite.length} cells):`);
+  log(`safety contracts (${gateLabel} cells, ${pglite.length} cells):`);
   log(`  prohibited active outputs after forget: ${metrics.prohibited_active_outputs} (forgotten pairs with a witness: ${metrics.forgotten_pairs_with_signal}, without: ${metrics.forgotten_pairs_without_witness})`);
   log(`  reactivations: ${metrics.reactivations}`);
   log(`  collateral expirations: ${metrics.collateral_expirations}`);
@@ -597,5 +620,9 @@ async function main(): Promise<void> {
 }
 
 if (import.meta.main) {
-  main().catch(e => { console.error(e); process.exit(3); });
+  main().catch(e => {
+    if (e instanceof EvalEngineUnavailable) refuseEvalEngine(e, 'N5 forgetting residue');
+    console.error(e);
+    process.exit(3);
+  });
 }

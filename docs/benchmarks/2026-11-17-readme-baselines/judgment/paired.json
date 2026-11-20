@@ -1,0 +1,396 @@
+{
+ "kind": "readme-baselines-judgment-paired",
+ "chronicle": {
+  "wrong_events_per_labeled_page": {
+   "n": 28,
+   "mean_gbrain": 0.03571428571428571,
+   "mean_baseline": 0.44642857142857145,
+   "baseline_minus_gbrain": 0.4107142857142857,
+   "ci95": [
+    0.08928571428571429,
+    0.7857142857142857
+   ],
+   "gbrain_higher": 0,
+   "baseline_higher": 5,
+   "ties": 23,
+   "p_sign_two_sided": 0.0625,
+   "clusters": 28
+  },
+  "recall_per_labeled_event_runs_found_0_to_2": {
+   "n": 38,
+   "mean_gbrain": 1.9736842105263157,
+   "mean_baseline": 1.8157894736842106,
+   "baseline_minus_gbrain": -0.15789473684210525,
+   "ci95": [
+    -0.325,
+    0
+   ],
+   "gbrain_higher": 5,
+   "baseline_higher": 0,
+   "ties": 33,
+   "p_sign_two_sided": 0.0625,
+   "clusters": 28
+  },
+  "gbrain": {
+   "on-a": {
+    "matched": 37,
+    "premature": 0,
+    "false": 1,
+    "wrong_per_labeled_page": 0.03571428571428571,
+    "events_written": 309,
+    "slack_sample_false": 1,
+    "slack_premature": 0,
+    "controls_judged": 0,
+    "cost_per_judged_page": 0.0105045625
+   },
+   "on-b": {
+    "matched": 38,
+    "premature": 0,
+    "false": 1,
+    "wrong_per_labeled_page": 0.03571428571428571,
+    "events_written": 300,
+    "slack_sample_false": 0,
+    "slack_premature": 0,
+    "controls_judged": 0,
+    "cost_per_judged_page": 0.010507375000000001
+   }
+  },
+  "baseline": {
+   "plain-a": {
+    "matched": 33,
+    "premature": 10,
+    "false": 5,
+    "wrong_per_labeled_page": 0.5357142857142857,
+    "events_written": 330,
+    "slack_sample_false": 0,
+    "slack_premature": 0,
+    "controls_judged": 0,
+    "cost_per_judged_page": 0.00529825
+   },
+   "plain-b": {
+    "matched": 36,
+    "premature": 6,
+    "false": 4,
+    "wrong_per_labeled_page": 0.35714285714285715,
+    "events_written": 335,
+    "slack_sample_false": 0,
+    "slack_premature": 0,
+    "controls_judged": 0,
+    "cost_per_judged_page": 0.0053685625
+   }
+  }
+ },
+ "cat35_primary": {
+  "items_paired": 165,
+  "items_excluded_for_a_judge_failure_in_either_arm": [
+   "startup-ideation-02-g01",
+   "startup-ideation-02-g02",
+   "startup-ideation-02-g03",
+   "startup-ideation-02-g04",
+   "startup-ideation-02-g05",
+   "startup-ideation-02-g06",
+   "startup-ideation-02-g07",
+   "startup-ideation-02-g08"
+  ],
+  "judged_credit": {
+   "n": 165,
+   "mean_gbrain": 0.8727272727272727,
+   "mean_baseline": 0.796969696969697,
+   "baseline_minus_gbrain": -0.07575757575757576,
+   "ci95": [
+    -0.14411764705882352,
+    -0.00625
+   ],
+   "gbrain_higher": 33,
+   "baseline_higher": 13,
+   "ties": 119,
+   "p_sign_two_sided": 0.004533861582189047,
+   "clusters": 19
+  },
+  "evidence_verified_credit": {
+   "n": 165,
+   "mean_gbrain": 0.7363636363636363,
+   "mean_baseline": 0.6787878787878788,
+   "baseline_minus_gbrain": -0.05757575757575758,
+   "ci95": [
+    -0.1625,
+    0.046583850931677016
+   ],
+   "gbrain_higher": 41,
+   "baseline_higher": 31,
+   "ties": 93,
+   "p_sign_two_sided": 0.2887842804141049,
+   "clusters": 19
+  },
+  "gbrain": {
+   "coverage": {
+    "macro": 0.8813888888888888,
+    "micro": 0.8757225433526011,
+    "strict": 0.8208092485549133,
+    "partial_rate": 0.10982658959537572,
+    "ci_lo": 0.8200694444444446,
+    "ci_hi": 0.9350694444444445
+   },
+   "hallucination": {
+    "claims": 782,
+    "verifiable": 645,
+    "ungrounded": 45,
+    "rate": 0.06976744186046512
+   },
+   "distractor_leakage": {
+    "hits": 1,
+    "confirmed": 1,
+    "denominator": 86,
+    "rate": 0.011627906976744186
+   },
+   "usability": {
+    "satisfied": 109,
+    "total": 120,
+    "rate": 0.9083333333333333
+   },
+   "quote_fidelity": {
+    "total": 139,
+    "grounded": 115,
+    "rate": 0.8273381294964028
+   },
+   "emission": {
+    "expected_high": 20,
+    "emitted": 20,
+    "rate": 1
+   },
+   "attribution_hazards": [
+    {
+     "hazard_id": "coding-reflection-01-h01",
+     "transcript_id": "coding-reflection-01",
+     "type": "agent-proposed-user-decided",
+     "violated": false
+    },
+    {
+     "hazard_id": "coding-reflection-02-h01",
+     "transcript_id": "coding-reflection-02",
+     "type": "killed-process-not-completed",
+     "violated": false
+    }
+   ],
+   "judge_model": "claude-sonnet-4-6",
+   "judge_prompt_version": "2026-08-16-v1"
+  },
+  "baseline": {
+   "coverage": {
+    "macro": 0.8029239766081873,
+    "micro": 0.796969696969697,
+    "strict": 0.6909090909090909,
+    "partial_rate": 0.21212121212121213,
+    "ci_lo": 0.7424707602339181,
+    "ci_hi": 0.8641081871345029,
+    "n_items": 165,
+    "judge_failed_excluded": 8,
+    "joint_macro": 0.6845760233918129,
+    "joint_ci_lo": 0.5793128654970761,
+    "joint_ci_hi": 0.7871345029239766,
+    "joint_n_items": 165,
+    "joint_excluded": 8
+   },
+   "hallucination": {
+    "claims": 431,
+    "verifiable": 410,
+    "ungrounded": 11,
+    "rate": 0.026829268292682926
+   },
+   "distractor_leakage": {
+    "hits": 0,
+    "confirmed": 0,
+    "denominator": 86,
+    "judge_failed": 0,
+    "rate": 0
+   },
+   "usability": {
+    "satisfied": 71,
+    "total": 140,
+    "rate": 0.5071428571428571
+   },
+   "quote_fidelity": {
+    "total": 0,
+    "grounded": 0,
+    "rate": 1
+   },
+   "emission": {
+    "expected_high": 20,
+    "emitted": 0,
+    "rate": 0
+   },
+   "attribution_hazards": [
+    {
+     "lane": "plain",
+     "hazard_id": "coding-reflection-01-h01",
+     "transcript_id": "coding-reflection-01",
+     "type": "agent-proposed-user-decided",
+     "violated": false
+    },
+    {
+     "lane": "plain",
+     "hazard_id": "coding-reflection-02-h01",
+     "transcript_id": "coding-reflection-02",
+     "type": "killed-process-not-completed",
+     "violated": false
+    }
+   ],
+   "judge_model": "claude-sonnet-4-6",
+   "judge_prompt_version": "2026-09-28-v2"
+  }
+ },
+ "cat35_judge_drift_control": {
+  "items_paired": 165,
+  "items_excluded_for_a_judge_failure_in_either_arm": [
+   "people-deal-02-g01",
+   "people-deal-02-g02",
+   "people-deal-02-g03",
+   "people-deal-02-g04",
+   "people-deal-02-g05",
+   "people-deal-02-g06",
+   "people-deal-02-g07",
+   "people-deal-02-g08"
+  ],
+  "judged_credit": {
+   "n": 165,
+   "mean_gbrain": 0.6454545454545455,
+   "mean_baseline": 0.6545454545454545,
+   "baseline_minus_gbrain": 0.00909090909090909,
+   "ci95": [
+    -0.003067484662576687,
+    0.02147239263803681
+   ],
+   "gbrain_higher": 2,
+   "baseline_higher": 5,
+   "ties": 158,
+   "p_sign_two_sided": 0.453125,
+   "clusters": 19
+  },
+  "evidence_verified_credit": {
+   "n": 165,
+   "mean_gbrain": 0.5151515151515151,
+   "mean_baseline": 0.49696969696969695,
+   "baseline_minus_gbrain": -0.01818181818181818,
+   "ci95": [
+    -0.06647398843930635,
+    0.02147239263803681
+   ],
+   "gbrain_higher": 8,
+   "baseline_higher": 7,
+   "ties": 150,
+   "p_sign_two_sided": 1,
+   "clusters": 19
+  },
+  "gbrain": {
+   "coverage": {
+    "macro": 0.6145833333333334,
+    "micro": 0.615606936416185,
+    "strict": 0.5606936416184971,
+    "partial_rate": 0.10982658959537572,
+    "ci_lo": 0.44951388888888894,
+    "ci_hi": 0.7761111111111112
+   },
+   "hallucination": {
+    "claims": 704,
+    "verifiable": 512,
+    "ungrounded": 72,
+    "rate": 0.140625
+   },
+   "distractor_leakage": {
+    "hits": 3,
+    "confirmed": 0,
+    "rate": 0
+   },
+   "usability": null,
+   "quote_fidelity": {
+    "total": 251,
+    "grounded": 114,
+    "rate": 0.4541832669322709
+   },
+   "emission": {
+    "expected_high": 20,
+    "emitted": 16,
+    "rate": 0.8
+   },
+   "attribution_hazards": [
+    {
+     "hazard_id": "coding-reflection-01-h01",
+     "transcript_id": "coding-reflection-01",
+     "type": "agent-proposed-user-decided",
+     "violated": false
+    },
+    {
+     "hazard_id": "coding-reflection-02-h01",
+     "transcript_id": "coding-reflection-02",
+     "type": "killed-process-not-completed",
+     "violated": null
+    }
+   ],
+   "judge_model": "claude-sonnet-4-6",
+   "judge_prompt_version": "2026-08-16-v1"
+  },
+  "baseline": {
+   "coverage": {
+    "macro": 0.6557748538011696,
+    "micro": 0.6545454545454545,
+    "strict": 0.6060606060606061,
+    "partial_rate": 0.09696969696969697,
+    "ci_lo": 0.4927631578947369,
+    "ci_hi": 0.8001461988304094,
+    "n_items": 165,
+    "judge_failed_excluded": 8,
+    "joint_macro": 0.4967105263157895,
+    "joint_ci_lo": 0.3652046783625731,
+    "joint_ci_hi": 0.61593567251462,
+    "joint_n_items": 165,
+    "joint_excluded": 8
+   },
+   "hallucination": {
+    "claims": 704,
+    "verifiable": 505,
+    "ungrounded": 59,
+    "rate": 0.11683168316831684
+   },
+   "distractor_leakage": {
+    "hits": 3,
+    "confirmed": 0,
+    "denominator": 86,
+    "judge_failed": 0,
+    "rate": 0
+   },
+   "usability": {
+    "satisfied": 73,
+    "total": 96,
+    "rate": 0.7604166666666666
+   },
+   "quote_fidelity": {
+    "total": 0,
+    "grounded": 0,
+    "rate": 1
+   },
+   "emission": {
+    "expected_high": 20,
+    "emitted": 0,
+    "rate": 0
+   },
+   "attribution_hazards": [
+    {
+     "lane": "gbrain-aug25",
+     "hazard_id": "coding-reflection-01-h01",
+     "transcript_id": "coding-reflection-01",
+     "type": "agent-proposed-user-decided",
+     "violated": false
+    },
+    {
+     "lane": "gbrain-aug25",
+     "hazard_id": "coding-reflection-02-h01",
+     "transcript_id": "coding-reflection-02",
+     "type": "killed-process-not-completed",
+     "violated": null
+    }
+   ],
+   "judge_model": "claude-sonnet-4-6",
+   "judge_prompt_version": "2026-09-28-v2"
+  }
+ }
+}

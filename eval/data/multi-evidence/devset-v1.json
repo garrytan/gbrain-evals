@@ -1,0 +1,795 @@
+{
+  "schema": "multi-evidence-devset/1",
+  "version": 1,
+  "rule": "Nightly dev-set items whose gold has at least 2 items; QA items only when their answerability class is supported or partial.",
+  "nightly_devset": {
+    "path": "eval/data/nightly/devset-v2.json",
+    "digest": "cd598f33a5a71d4b9fe1bc0631efadc1b19ba1b8ad4fb8cafdd2dcc8eb42edc4"
+  },
+  "suites": [
+    {
+      "id": "cat40-hard-m",
+      "kind": "agent",
+      "about": "Cat 40 Hard world M (public seed 20261021, 50k documents): company questions an agent answers through gbrain MCP",
+      "source": "docs/benchmarks/2026-10-10-model-ladder-hard-confirmation/main-cells/results.jsonl (gbrain-hard arm); gold from the world's gold.evidence",
+      "config": {
+        "stable_trials": 1
+      },
+      "items": [
+        {
+          "id": "H1-02",
+          "gold": 18
+        },
+        {
+          "id": "H1-03",
+          "gold": 21
+        },
+        {
+          "id": "H1-04",
+          "gold": 44
+        },
+        {
+          "id": "H1-05",
+          "gold": 27
+        },
+        {
+          "id": "H1-06",
+          "gold": 24
+        },
+        {
+          "id": "H1-07",
+          "gold": 20
+        },
+        {
+          "id": "H1-09",
+          "gold": 37
+        },
+        {
+          "id": "H1-10",
+          "gold": 40
+        },
+        {
+          "id": "H1-11",
+          "gold": 49
+        },
+        {
+          "id": "H1-12",
+          "gold": 17
+        },
+        {
+          "id": "H1-15",
+          "gold": 46
+        },
+        {
+          "id": "H1-16",
+          "gold": 35
+        },
+        {
+          "id": "H1-17",
+          "gold": 50
+        },
+        {
+          "id": "H1-18",
+          "gold": 24
+        },
+        {
+          "id": "H2-14",
+          "gold": 10
+        },
+        {
+          "id": "H3-08",
+          "gold": 15
+        },
+        {
+          "id": "H4-08",
+          "gold": 11
+        },
+        {
+          "id": "H4-11",
+          "gold": 8
+        },
+        {
+          "id": "H4-17",
+          "gold": 9
+        },
+        {
+          "id": "H4-18",
+          "gold": 10
+        },
+        {
+          "id": "H4-19",
+          "gold": 5
+        },
+        {
+          "id": "H2-01",
+          "gold": 6
+        },
+        {
+          "id": "H3-01",
+          "gold": 10
+        },
+        {
+          "id": "H4-01",
+          "gold": 4
+        }
+      ]
+    },
+    {
+      "id": "lme-s-hard",
+      "kind": "qa",
+      "about": "LongMemEval-S questions a frontier reader on gbrain retrieval got wrong, plus spread-out canaries",
+      "source": "docs/benchmarks/2026-10-07-longmemeval-w10b-reader-replay/arms/{w10b-opus55-notes,w10b-sol-notes}/rows.ndjson (official judge); gold from the lme-s corpus, classes from eval/data/answerability/lme-s.json",
+      "config": {
+        "benchmark": "lme-s",
+        "split": "dev",
+        "qa_max_tokens": 8192
+      },
+      "items": [
+        {
+          "id": "08f4fc43",
+          "gold": 2,
+          "class": "supported"
+        },
+        {
+          "id": "0a995998",
+          "gold": 3,
+          "class": "supported"
+        },
+        {
+          "id": "10d9b85a",
+          "gold": 2,
+          "class": "supported"
+        },
+        {
+          "id": "2133c1b5",
+          "gold": 2,
+          "class": "supported"
+        },
+        {
+          "id": "37f165cf",
+          "gold": 2,
+          "class": "partial"
+        },
+        {
+          "id": "51c32626",
+          "gold": 2,
+          "class": "partial"
+        },
+        {
+          "id": "61f8c8f8",
+          "gold": 2,
+          "class": "supported"
+        },
+        {
+          "id": "7024f17c",
+          "gold": 3,
+          "class": "supported"
+        },
+        {
+          "id": "7405e8b1",
+          "gold": 2,
+          "class": "partial"
+        },
+        {
+          "id": "81507db6",
+          "gold": 5,
+          "class": "supported"
+        },
+        {
+          "id": "88432d0a",
+          "gold": 4,
+          "class": "supported"
+        },
+        {
+          "id": "8e91e7d9",
+          "gold": 2,
+          "class": "supported"
+        },
+        {
+          "id": "92a0aa75",
+          "gold": 2,
+          "class": "supported"
+        },
+        {
+          "id": "9a707b81",
+          "gold": 2,
+          "class": "supported"
+        },
+        {
+          "id": "9ee3ecd6",
+          "gold": 2,
+          "class": "supported"
+        },
+        {
+          "id": "a2f3aa27",
+          "gold": 2,
+          "class": "partial"
+        },
+        {
+          "id": "a3838d2b",
+          "gold": 6,
+          "class": "supported"
+        },
+        {
+          "id": "bf659f65",
+          "gold": 3,
+          "class": "supported"
+        },
+        {
+          "id": "d851d5ba",
+          "gold": 4,
+          "class": "supported"
+        },
+        {
+          "id": "dd2973ad",
+          "gold": 2,
+          "class": "partial"
+        },
+        {
+          "id": "e3038f8c",
+          "gold": 4,
+          "class": "supported"
+        },
+        {
+          "id": "gpt4_0a05b494",
+          "gold": 2,
+          "class": "partial"
+        },
+        {
+          "id": "gpt4_2f8be40d",
+          "gold": 3,
+          "class": "partial"
+        },
+        {
+          "id": "gpt4_59149c77",
+          "gold": 2,
+          "class": "supported"
+        },
+        {
+          "id": "gpt4_68e94287",
+          "gold": 2,
+          "class": "supported"
+        },
+        {
+          "id": "gpt4_731e37d7",
+          "gold": 4,
+          "class": "supported"
+        },
+        {
+          "id": "gpt4_7fce9456",
+          "gold": 5,
+          "class": "supported"
+        },
+        {
+          "id": "gpt4_a1b77f9c",
+          "gold": 6,
+          "class": "supported"
+        },
+        {
+          "id": "gpt4_d6585ce9",
+          "gold": 5,
+          "class": "supported"
+        },
+        {
+          "id": "9bbe84a2",
+          "gold": 2,
+          "class": "supported"
+        },
+        {
+          "id": "gpt4_1a1dc16d",
+          "gold": 2,
+          "class": "supported"
+        }
+      ]
+    },
+    {
+      "id": "beam-1m-hard",
+      "kind": "qa",
+      "about": "Every answerable question (supported or partial) of the public BEAM-1M dev conversations whose items are support-checked",
+      "source": "eval/data/answerability/beam-1m.json (supported or partial); roles from docs/benchmarks/2026-10-08-beam-1m-failure-analysis/arms/{a2-top5-opus55,a2-top5-gpt61sol}; gold from the beam-1m corpus, classes from eval/data/answerability/beam-1m.json",
+      "config": {
+        "benchmark": "beam-1m",
+        "split": "dev",
+        "conversations": [
+          "1m-2",
+          "1m-20",
+          "1m-24",
+          "1m-25",
+          "1m-28",
+          "1m-3",
+          "1m-30",
+          "1m-32"
+        ],
+        "qa_max_tokens": 8192
+      },
+      "items": [
+        {
+          "id": "1m-20:contradiction_resolution:1",
+          "gold": 2,
+          "class": "supported"
+        },
+        {
+          "id": "1m-20:event_ordering:0",
+          "gold": 24,
+          "class": "supported"
+        },
+        {
+          "id": "1m-20:event_ordering:1",
+          "gold": 21,
+          "class": "supported"
+        },
+        {
+          "id": "1m-20:information_extraction:1",
+          "gold": 2,
+          "class": "supported"
+        },
+        {
+          "id": "1m-20:knowledge_update:0",
+          "gold": 3,
+          "class": "supported"
+        },
+        {
+          "id": "1m-20:knowledge_update:1",
+          "gold": 4,
+          "class": "supported"
+        },
+        {
+          "id": "1m-20:multi_session_reasoning:0",
+          "gold": 2,
+          "class": "supported"
+        },
+        {
+          "id": "1m-20:multi_session_reasoning:1",
+          "gold": 2,
+          "class": "supported"
+        },
+        {
+          "id": "1m-20:preference_following:0",
+          "gold": 3,
+          "class": "supported"
+        },
+        {
+          "id": "1m-20:preference_following:1",
+          "gold": 3,
+          "class": "supported"
+        },
+        {
+          "id": "1m-20:temporal_reasoning:0",
+          "gold": 2,
+          "class": "supported"
+        },
+        {
+          "id": "1m-20:temporal_reasoning:1",
+          "gold": 5,
+          "class": "supported"
+        },
+        {
+          "id": "1m-24:contradiction_resolution:0",
+          "gold": 2,
+          "class": "supported"
+        },
+        {
+          "id": "1m-24:contradiction_resolution:1",
+          "gold": 4,
+          "class": "supported"
+        },
+        {
+          "id": "1m-24:event_ordering:0",
+          "gold": 9,
+          "class": "supported"
+        },
+        {
+          "id": "1m-24:event_ordering:1",
+          "gold": 19,
+          "class": "partial"
+        },
+        {
+          "id": "1m-24:information_extraction:1",
+          "gold": 4,
+          "class": "supported"
+        },
+        {
+          "id": "1m-24:knowledge_update:0",
+          "gold": 4,
+          "class": "partial"
+        },
+        {
+          "id": "1m-24:multi_session_reasoning:0",
+          "gold": 5,
+          "class": "partial"
+        },
+        {
+          "id": "1m-24:multi_session_reasoning:1",
+          "gold": 3,
+          "class": "partial"
+        },
+        {
+          "id": "1m-24:preference_following:0",
+          "gold": 3,
+          "class": "supported"
+        },
+        {
+          "id": "1m-24:preference_following:1",
+          "gold": 3,
+          "class": "supported"
+        },
+        {
+          "id": "1m-24:summarization:0",
+          "gold": 10,
+          "class": "partial"
+        },
+        {
+          "id": "1m-24:summarization:1",
+          "gold": 21,
+          "class": "supported"
+        },
+        {
+          "id": "1m-24:temporal_reasoning:0",
+          "gold": 6,
+          "class": "supported"
+        },
+        {
+          "id": "1m-24:temporal_reasoning:1",
+          "gold": 5,
+          "class": "supported"
+        },
+        {
+          "id": "1m-25:contradiction_resolution:0",
+          "gold": 4,
+          "class": "supported"
+        },
+        {
+          "id": "1m-25:contradiction_resolution:1",
+          "gold": 3,
+          "class": "supported"
+        },
+        {
+          "id": "1m-25:event_ordering:0",
+          "gold": 24,
+          "class": "supported"
+        },
+        {
+          "id": "1m-25:event_ordering:1",
+          "gold": 19,
+          "class": "supported"
+        },
+        {
+          "id": "1m-25:information_extraction:1",
+          "gold": 2,
+          "class": "supported"
+        },
+        {
+          "id": "1m-25:knowledge_update:0",
+          "gold": 4,
+          "class": "supported"
+        },
+        {
+          "id": "1m-25:knowledge_update:1",
+          "gold": 4,
+          "class": "supported"
+        },
+        {
+          "id": "1m-25:multi_session_reasoning:0",
+          "gold": 2,
+          "class": "supported"
+        },
+        {
+          "id": "1m-25:multi_session_reasoning:1",
+          "gold": 7,
+          "class": "supported"
+        },
+        {
+          "id": "1m-25:preference_following:0",
+          "gold": 3,
+          "class": "supported"
+        },
+        {
+          "id": "1m-25:preference_following:1",
+          "gold": 3,
+          "class": "supported"
+        },
+        {
+          "id": "1m-25:summarization:0",
+          "gold": 20,
+          "class": "supported"
+        },
+        {
+          "id": "1m-25:temporal_reasoning:0",
+          "gold": 4,
+          "class": "supported"
+        },
+        {
+          "id": "1m-28:contradiction_resolution:0",
+          "gold": 4,
+          "class": "supported"
+        },
+        {
+          "id": "1m-28:contradiction_resolution:1",
+          "gold": 4,
+          "class": "partial"
+        },
+        {
+          "id": "1m-28:event_ordering:0",
+          "gold": 30,
+          "class": "supported"
+        },
+        {
+          "id": "1m-28:event_ordering:1",
+          "gold": 32,
+          "class": "supported"
+        },
+        {
+          "id": "1m-28:information_extraction:0",
+          "gold": 2,
+          "class": "partial"
+        },
+        {
+          "id": "1m-28:information_extraction:1",
+          "gold": 3,
+          "class": "supported"
+        },
+        {
+          "id": "1m-28:knowledge_update:0",
+          "gold": 4,
+          "class": "supported"
+        },
+        {
+          "id": "1m-28:knowledge_update:1",
+          "gold": 3,
+          "class": "supported"
+        },
+        {
+          "id": "1m-28:multi_session_reasoning:0",
+          "gold": 3,
+          "class": "partial"
+        },
+        {
+          "id": "1m-28:preference_following:0",
+          "gold": 3,
+          "class": "supported"
+        },
+        {
+          "id": "1m-28:preference_following:1",
+          "gold": 3,
+          "class": "supported"
+        },
+        {
+          "id": "1m-28:summarization:1",
+          "gold": 21,
+          "class": "supported"
+        },
+        {
+          "id": "1m-28:temporal_reasoning:0",
+          "gold": 6,
+          "class": "supported"
+        },
+        {
+          "id": "1m-28:temporal_reasoning:1",
+          "gold": 2,
+          "class": "supported"
+        },
+        {
+          "id": "1m-2:event_ordering:0",
+          "gold": 11,
+          "class": "partial"
+        },
+        {
+          "id": "1m-2:event_ordering:1",
+          "gold": 14,
+          "class": "supported"
+        },
+        {
+          "id": "1m-2:instruction_following:0",
+          "gold": 2,
+          "class": "supported"
+        },
+        {
+          "id": "1m-2:knowledge_update:0",
+          "gold": 3,
+          "class": "supported"
+        },
+        {
+          "id": "1m-2:knowledge_update:1",
+          "gold": 2,
+          "class": "supported"
+        },
+        {
+          "id": "1m-2:multi_session_reasoning:0",
+          "gold": 4,
+          "class": "supported"
+        },
+        {
+          "id": "1m-2:multi_session_reasoning:1",
+          "gold": 5,
+          "class": "supported"
+        },
+        {
+          "id": "1m-2:preference_following:1",
+          "gold": 2,
+          "class": "supported"
+        },
+        {
+          "id": "1m-2:summarization:0",
+          "gold": 15,
+          "class": "supported"
+        },
+        {
+          "id": "1m-2:summarization:1",
+          "gold": 14,
+          "class": "supported"
+        },
+        {
+          "id": "1m-2:temporal_reasoning:0",
+          "gold": 2,
+          "class": "supported"
+        },
+        {
+          "id": "1m-2:temporal_reasoning:1",
+          "gold": 2,
+          "class": "supported"
+        },
+        {
+          "id": "1m-30:contradiction_resolution:0",
+          "gold": 3,
+          "class": "supported"
+        },
+        {
+          "id": "1m-30:contradiction_resolution:1",
+          "gold": 5,
+          "class": "supported"
+        },
+        {
+          "id": "1m-30:event_ordering:0",
+          "gold": 23,
+          "class": "partial"
+        },
+        {
+          "id": "1m-30:event_ordering:1",
+          "gold": 30,
+          "class": "supported"
+        },
+        {
+          "id": "1m-30:knowledge_update:0",
+          "gold": 3,
+          "class": "supported"
+        },
+        {
+          "id": "1m-30:knowledge_update:1",
+          "gold": 4,
+          "class": "supported"
+        },
+        {
+          "id": "1m-30:multi_session_reasoning:0",
+          "gold": 3,
+          "class": "supported"
+        },
+        {
+          "id": "1m-30:preference_following:0",
+          "gold": 2,
+          "class": "supported"
+        },
+        {
+          "id": "1m-30:preference_following:1",
+          "gold": 3,
+          "class": "supported"
+        },
+        {
+          "id": "1m-30:summarization:1",
+          "gold": 5,
+          "class": "supported"
+        },
+        {
+          "id": "1m-30:temporal_reasoning:1",
+          "gold": 5,
+          "class": "supported"
+        },
+        {
+          "id": "1m-32:contradiction_resolution:0",
+          "gold": 4,
+          "class": "supported"
+        },
+        {
+          "id": "1m-32:event_ordering:0",
+          "gold": 29,
+          "class": "supported"
+        },
+        {
+          "id": "1m-32:event_ordering:1",
+          "gold": 24,
+          "class": "partial"
+        },
+        {
+          "id": "1m-32:knowledge_update:0",
+          "gold": 6,
+          "class": "supported"
+        },
+        {
+          "id": "1m-32:knowledge_update:1",
+          "gold": 4,
+          "class": "supported"
+        },
+        {
+          "id": "1m-32:multi_session_reasoning:1",
+          "gold": 8,
+          "class": "partial"
+        },
+        {
+          "id": "1m-32:preference_following:0",
+          "gold": 3,
+          "class": "supported"
+        },
+        {
+          "id": "1m-32:preference_following:1",
+          "gold": 3,
+          "class": "supported"
+        },
+        {
+          "id": "1m-32:summarization:1",
+          "gold": 3,
+          "class": "supported"
+        },
+        {
+          "id": "1m-32:temporal_reasoning:1",
+          "gold": 3,
+          "class": "supported"
+        },
+        {
+          "id": "1m-3:contradiction_resolution:1",
+          "gold": 2,
+          "class": "supported"
+        },
+        {
+          "id": "1m-3:event_ordering:0",
+          "gold": 15,
+          "class": "partial"
+        },
+        {
+          "id": "1m-3:event_ordering:1",
+          "gold": 18,
+          "class": "supported"
+        },
+        {
+          "id": "1m-3:instruction_following:0",
+          "gold": 2,
+          "class": "supported"
+        },
+        {
+          "id": "1m-3:knowledge_update:0",
+          "gold": 2,
+          "class": "supported"
+        },
+        {
+          "id": "1m-3:knowledge_update:1",
+          "gold": 2,
+          "class": "supported"
+        },
+        {
+          "id": "1m-3:multi_session_reasoning:0",
+          "gold": 3,
+          "class": "partial"
+        },
+        {
+          "id": "1m-3:multi_session_reasoning:1",
+          "gold": 4,
+          "class": "partial"
+        },
+        {
+          "id": "1m-3:preference_following:0",
+          "gold": 3,
+          "class": "supported"
+        },
+        {
+          "id": "1m-3:summarization:0",
+          "gold": 7,
+          "class": "supported"
+        },
+        {
+          "id": "1m-3:summarization:1",
+          "gold": 8,
+          "class": "supported"
+        }
+      ]
+    }
+  ],
+  "digest": "e5cf33010df854eb96c46d1c61956ce064051628dacc128f6f17afd642fbe46b"
+}

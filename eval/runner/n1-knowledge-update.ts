@@ -43,6 +43,12 @@
  * Usage: bun eval/runner/n1-knowledge-update.ts [--seed N] [--output <dir>] [--gbrain <checkout>[@ref]]
  *          [--engines pglite,postgres] [--interfaces cli,mcp-stdio,mcp-http] [--pg-url <url>] [--concurrency N] [--json]
  *        bun eval/runner/n1-knowledge-update.ts --slice ci [--output <dir>]
+ *
+ * GBRAIN_EVAL_ENGINE=pglite|postgres|rust (engine-bench, eval/runner/eval-engine.ts) runs that one engine instead of
+ * the --engines list (with --slice ci too) and gates on its cells; the in-process ontology arm opens the same engine.
+ * A rust cell writes its CLI config with cliEngineConfig. The receipt then adds `engine` and `not_applicable` (empty:
+ * this runner reads and writes only through gbrain's CLI and operations, never raw SQL). An unavailable engine exits
+ * 69 with no receipt. Unset, the runner is unchanged.
  */
 import { mkdirSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -52,12 +58,16 @@ import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resol
 import { gbrainPin } from './gbrain-version.ts';
 import { DECIDE_OFF, withHermeticEnv } from './hermetic-env.ts';
 import type { Driver } from './lifecycle/drivers.ts';
+import {
+  EvalEngineUnavailable, evalEngineReceiptFields, openScratchEvalEngine, preflightEvalEngine, refuseEvalEngine, requestedEvalEngine,
+  type EvalEngineKind, type ScratchEvalEngine,
+} from './eval-engine.ts';
 import { loadFactUnquote, storedFactText, type Unquote } from './quoted-reads.ts';
 import {
   breakdown, n1Metrics, recallTokens, scoreExposure, scoreN1Probe, searchRowTokens,
   type ExposureRow, type N1Answer, type N1Metrics, type N1Row,
 } from './lifecycle/n1-score.ts';
-import { ENGINES, IFACES, SliceCell, asRows, collectStrings, postgresReachable, runMatrix, type Engine, type Iface } from './lifecycle/slice.ts';
+import { ENGINES, IFACES, SliceCell, asRows, collectStrings, postgresReachable, remoteAccessGap, runMatrix, type Engine, type Iface } from './lifecycle/slice.ts';
 import { registryEntry } from '../registry.ts';
 import { evaluatePromotion } from './promotion.ts';
 import { budgetOptionsFrom, receiptCost, startPaidRun } from './budget-ledger.ts';
@@ -247,6 +257,10 @@ export interface CellOutcome {
   duration_ms: number;
   fatal?: string;
   void_reason?: string;
+  /** The first remote call the engine refused with access_control (SliceCell.firstAccessRefusal). */
+  remote_access_refused?: string | null;
+  /** Calls the cell made as a remote (non-trusted) caller (SliceCell.remoteCalls). */
+  remote_calls?: number;
   server_version: string;
   decide: SliceCell['decideOff'];
   presence: Array<{ name: string; ok: boolean; detail: string }>;
@@ -327,6 +341,8 @@ async function runCell(world: N1World, gut: GbrainUnderTest, engine: Engine, ifa
     }
     const primary = cell.calls.filter(c => c.caller === 'primary');
     out.calls = { primary: primary.length, trusted: cell.calls.filter(c => c.caller === 'trusted').length, primary_ms: primary.map(c => c.ms) };
+    out.remote_access_refused = cell.firstAccessRefusal();
+    out.remote_calls = cell.remoteCalls();
     out.duration_ms = Date.now() - t0;
   }
   return out;
@@ -336,19 +352,25 @@ async function runCell(world: N1World, gut: GbrainUnderTest, engine: Engine, ifa
 
 export interface OntologyArm { rows: N1Row[]; exposure: ExposureRow[]; writes: Array<{ chain: string; action: string; ok: boolean; error?: string }>; error?: string }
 
-async function ontologyUnmanagedArm(gut: GbrainUnderTest, ledger: N1Ledger): Promise<OntologyArm> {
+async function ontologyUnmanagedArm(gut: GbrainUnderTest, ledger: N1Ledger, evalEngine: { kind: EvalEngineKind; pgAdminUrl: string } | null = null): Promise<OntologyArm> {
   const out: OntologyArm = { rows: [], exposure: [], writes: [] };
   type EngineModule = { PGLiteEngine: new () => { connect(c: object): Promise<void>; initSchema(): Promise<void>; disconnect(): Promise<void> } };
   type Op = { name: string; handler: (ctx: OperationContext, p: Record<string, unknown>) => Promise<unknown> };
   const { PGLiteEngine } = await importGbrain<EngineModule>(gut, 'src/core/pglite-engine.ts');
   const { operations } = await importGbrain<{ operations: Op[] }>(gut, 'src/core/operations.ts');
   const unquote = await loadFactUnquote(gut);
-  const engine = new PGLiteEngine();
+  let scratch: ScratchEvalEngine | null = null;
+  let engine: InstanceType<EngineModule['PGLiteEngine']> | null = null;
   try {
-    await engine.connect({});
-    await engine.initSchema();
+    scratch = evalEngine ? await openScratchEvalEngine({ gut, kind: evalEngine.kind, label: 'n1onto', pgAdminUrl: evalEngine.pgAdminUrl }) : null;
+    engine = scratch ? scratch.engine as unknown as InstanceType<EngineModule['PGLiteEngine']> : new PGLiteEngine();
+    if (!scratch) {
+      await engine.connect({});
+      await engine.initSchema();
+    }
+    const config = scratch && scratch.kind !== 'pglite' ? scratch.config : { engine: 'pglite', database_path: ':memory:' };
     const logger = { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} };
-    const ctx = (remote: boolean) => ({ engine, config: { engine: 'pglite', database_path: ':memory:' }, logger, dryRun: false, remote, sourceId: 'default' }) as unknown as OperationContext;
+    const ctx = (remote: boolean) => ({ engine, config, logger, dryRun: false, remote, sourceId: 'default' }) as unknown as OperationContext;
     const op = (name: string, remote: boolean, p: Record<string, unknown>) => operations.find(o => o.name === name)!.handler(ctx(remote), p);
     const write = async (round: Round) => {
       for (const it of writePlan(ledger, round).filter(x => x.op === 'ontology_propose')) {
@@ -379,7 +401,8 @@ async function ontologyUnmanagedArm(gut: GbrainUnderTest, ledger: N1Ledger): Pro
   } catch (e) {
     out.error = (e as Error).stack ?? String(e);
   } finally {
-    await engine.disconnect().catch(() => {});
+    if (scratch) await scratch.close();
+    else await engine?.disconnect().catch(() => {});
   }
   return out;
 }
@@ -487,6 +510,16 @@ function argValue(argv: readonly string[], flag: string): string | undefined {
 
 const pct = (x: number | null) => (x === null ? 'n/a' : `${(x * 100).toFixed(1)}%`);
 
+/** How a rust cell is initialised (lifecycle/slice.ts writeRustConfig). */
+export const RUST_INIT = 'a CLI config written with cliEngineConfig(rust) plus embedding_disabled and schema_pack gbrain-base-v2, then `gbrain init --migrate-only --non-interactive` (gbrain init has no Rust flag); a git vault as the default source';
+
+/** GBRAIN_EVAL_ENGINE picks the one engine; --engines may repeat it but not contradict it, and the paid arm stays PGLite-only. */
+export function checkEvalEngineArgs(kind: EvalEngineKind, argv: readonly string[]): void {
+  const listed = argValue(argv, '--engines');
+  if (listed !== undefined && listed !== kind) throw new Error(`GBRAIN_EVAL_ENGINE=${kind} and --engines ${listed} disagree; drop --engines or make them match.`);
+  if (paidRequested(argv)) throw new Error('The paid arm runs on in-memory PGLite only; unset GBRAIN_EVAL_ENGINE for --paid.');
+}
+
 async function main(): Promise<void> {
   const argv = process.argv.slice(2);
   const json = argv.includes('--json');
@@ -497,9 +530,11 @@ async function main(): Promise<void> {
   if (sliceName !== undefined && sliceName !== N1_CI_SLICE.name) throw new Error(`--slice takes ${N1_CI_SLICE.name}, not ${sliceName}`);
   const slice = sliceName ? N1_CI_SLICE : null;
   if (slice && (argValue(argv, '--engines') || argValue(argv, '--interfaces') || argValue(argv, '--seed') || paidRequested(argv))) throw new Error('--slice ci fixes the seed, engine and interface; drop --seed, --engines, --interfaces and --paid');
-  const engines = slice ? [...slice.engines] : (argValue(argv, '--engines') ?? 'pglite,postgres').split(',') as Engine[];
+  const evalKind = requestedEvalEngine();
+  if (evalKind) checkEvalEngineArgs(evalKind, argv);
+  const engines = evalKind ? [evalKind] : slice ? [...slice.engines] : (argValue(argv, '--engines') ?? 'pglite,postgres').split(',') as Engine[];
   const ifaces = slice ? [...slice.interfaces] : (argValue(argv, '--interfaces') ?? IFACES.join(',')).split(',') as Iface[];
-  for (const e of engines) if (!ENGINES.includes(e)) throw new Error(`--engines takes ${ENGINES.join(',')}, not ${e}`);
+  if (!evalKind) for (const e of engines) if (!ENGINES.includes(e)) throw new Error(`--engines takes ${ENGINES.join(',')}, not ${e}`);
   for (const i of ifaces) if (!IFACES.includes(i)) throw new Error(`--interfaces takes ${IFACES.join(',')}, not ${i}`);
   const pgAdminUrl = argValue(argv, '--pg-url') ?? process.env.LIFECYCLE_PG_URL ?? 'postgres://postgres@127.0.0.1:55432/postgres';
   const concurrency = Number(argValue(argv, '--concurrency') ?? '3');
@@ -510,6 +545,7 @@ async function main(): Promise<void> {
   mkdirSync(work, { recursive: true });
   const startedAt = new Date().toISOString();
   const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
+  if (evalKind) await preflightEvalEngine(gut, evalKind);
   log(`# BrainBench N1${slice ? ' CI slice' : ''}: knowledge update and supersession (gbrain ${gut.version}${gut.overlay ? `, overlay ${gut.overlay.build.commit.slice(0, 7)}` : ', pinned'})`);
 
   const fullWorld = generateN1World({ seed });
@@ -548,20 +584,25 @@ async function main(): Promise<void> {
   }
   const result = await withHermeticEnv('n1', async () => {
     const pgDown = engines.includes('postgres') ? await postgresReachable(pgAdminUrl) : null;
+    if (evalKind === 'postgres' && pgDown) throw new EvalEngineUnavailable('postgres', 'postgres_unreachable', `Postgres at --pg-url is unreachable: ${pgDown}`);
     const runEngines = engines.filter(e => e !== 'postgres' || !pgDown);
     const cells = await runMatrix(runEngines, ifaces, concurrency, 47300, (engine, iface, port) => {
       log(`[n1] start ${engine}/${iface}`);
       return runCell(world, gut, engine, iface, { work, pgAdminUrl, port, log }).then(c => { log(`[n1] done ${c.id} in ${Math.round(c.duration_ms / 1000)}s${c.fatal ? ` FATAL ${c.fatal.split('\n')[0]}` : c.void_reason ? ` VOID ${c.void_reason}` : ''}`); return c; });
     });
-    const ontology = await ontologyUnmanagedArm(gut, world.ledger);
+    const ontology = await ontologyUnmanagedArm(gut, world.ledger, evalKind ? { kind: evalKind, pgAdminUrl } : null);
     return { cells, ontology, pgDown };
   });
 
-  const pglite = result.cells.filter(c => c.engine === 'pglite');
+  const gateEngine: Engine = evalKind ?? 'pglite';
+  const gateLabel = evalKind ?? 'PGLite';
+  const accessGaps = result.cells.flatMap(c => { const reason = remoteAccessGap(c); return reason ? [{ id: c.id, check: `N1 ${c.interface} cell`, reason }] : []; });
+  const gapIds = new Set(accessGaps.map(g => g.id));
+  const pglite = result.cells.filter(c => c.engine === gateEngine && !gapIds.has(c.id));
   const postgres = result.cells.filter(c => c.engine === 'postgres');
   const metrics = aggregate(pglite);
   const metricsPg = postgres.length ? aggregate(postgres) : null;
-  const harnessErrors = result.cells.filter(c => c.fatal || c.void_reason).map(c => ({ probe_id: c.id, origin: 'harness' as const, message: (c.void_reason ?? c.fatal ?? '').slice(0, 500) }));
+  const harnessErrors = result.cells.filter(c => (c.fatal || c.void_reason) && !gapIds.has(c.id)).map(c => ({ probe_id: c.id, origin: 'harness' as const, message: (c.void_reason ?? c.fatal ?? '').slice(0, 500) }));
   const allRows = pglite.flatMap(c => Object.values(c.checkpoints).flatMap(cp => cp!.rows));
   const sutErrors = allRows.filter(r => r.error).slice(0, 50).map(r => ({ probe_id: r.probe_id, origin: 'sut' as const, message: r.error!.slice(0, 300) }));
   const entry = registryEntry(slice ? 'N1-ci' : 'N1')!;
@@ -594,14 +635,14 @@ async function main(): Promise<void> {
     gbrain_version: gut.version,
     gbrain_pin: gbrainPin(),
     execution: { source_tree: sourceTreeIdentity(), product: productIdentityFor(gut) },
-    latency_ms: latencySummary(allPrimaryMs, 'primary-transport call latency over the PGLite cells'),
+    latency_ms: latencySummary(allPrimaryMs, `primary-transport call latency over the ${gateLabel} cells`),
     resolved_config: {
       decide: DECIDE_OFF,
       decide_status_per_cell: Object.fromEntries(result.cells.map(c => [c.id, c.decide.ok ? 'all slots off' : c.decide])),
       engines: { requested: engines, run: [...new Set(result.cells.map(c => c.engine))], postgres_unreachable: result.pgDown },
       interfaces: ifaces,
       harness: 'eval/runner/lifecycle/slice.ts (lifecycle drivers: trusted local CLI `gbrain call`, stdio `gbrain serve`, HTTP `gbrain serve --http` with an OAuth client_credentials client bound to the vault source)',
-      init: '`gbrain init --no-embedding --non-interactive` (managed persistence, keyword search only), a git vault as the default source',
+      init: evalKind === 'rust' ? RUST_INIT : '`gbrain init --no-embedding --non-interactive` (managed persistence, keyword search only), a git vault as the default source',
       seed, generator_version: N1_GENERATOR_VERSION, ledger_sha256: world.fingerprint,
       slice: slice ? { ...slice, full_ledger_sha256: fullWorld.fingerprint } : null,
       checkpoints: CHECKPOINTS,
@@ -610,7 +651,7 @@ async function main(): Promise<void> {
         ontology: 'valid time: latest valid_from on or before the as-of day, later recorded wins ties (ontologyValueAt, the N3 semantics)',
         trajectory: 'every unstruck point charted in date order; struck (corrected) points are not',
       },
-      gating_scope: 'data.metrics aggregates the PGLite cells; data.metrics_postgres is report-only outside CI',
+      gating_scope: evalKind ? `data.metrics aggregates the ${evalKind} cells (GBRAIN_EVAL_ENGINE=${evalKind})` : 'data.metrics aggregates the PGLite cells; data.metrics_postgres is report-only outside CI',
       gbrain_overlay: overlaySummary(gut),
     },
     hashes: { ledger_sha256: world.fingerprint, ...(slice ? { full_ledger_sha256: fullWorld.fingerprint } : {}) },
@@ -639,12 +680,13 @@ async function main(): Promise<void> {
       failures: allRows.filter(r => !r.pass || r.stale).slice(0, 200),
       cells: result.cells.map(c => ({ ...c, calls: { primary: c.calls.primary, trusted: c.calls.trusted } })),
     },
+    ...evalEngineReceiptFields(evalKind, accessGaps.map(g => ({ status: 'not_applicable' as const, engine: 'rust' as const, check: g.check, reason: g.reason }))),
   };
   writeReceipt(outPath, scrubMachinePaths(receipt));
   const outcome = evaluatePromotion(entry.promotion!, receipt);
 
   log(`\nverdict: ${runStatus === 'error' ? `error (${harnessErrors.map(e => e.message).join('; ').slice(0, 400)})` : verdict}`);
-  log(`safety contracts (PGLite cells, ${pglite.length} cells):`);
+  log(`safety contracts (${gateLabel} cells, ${pglite.length} cells):`);
   log(`  stale values served as current: ${metrics.stale_served} of ${metrics.current_value_probes + metrics.history_probes} current-value and history probes`);
   log(`  private values in remote responses: ${metrics.private_value_leaks} (exposure probes with signal: ${metrics.exposure_probes_with_signal} of ${metrics.exposure_probes})`);
   log(`  acknowledged writes lost: ${metrics.acknowledged_writes_lost}`);
@@ -664,6 +706,7 @@ async function main(): Promise<void> {
 if (import.meta.main) {
   main().catch(e => {
     if (e instanceof PaidArmRefusal) { console.error(e.message); process.exit(2); }
+    if (e instanceof EvalEngineUnavailable) refuseEvalEngine(e, 'N1 knowledge update');
     console.error(e);
     process.exit(3);
   });

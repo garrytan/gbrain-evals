@@ -22,6 +22,12 @@
  *                 lines aligned to the rubric list by BEAM's
  *                 `llm_equivalence` prompt, then Kendall tau-b, normalized
  *                 to (tau + 1) / 2. Judge gpt-4.1-mini, temperature 0.
+ *   bg1, bg1-dev  BG1's short-answer judge (this repository's changing-facts
+ *                 preregistration): the question, the plan's gold and its
+ *                 accepted forms, the slot's stale values and the response,
+ *                 one JSON verdict of correct 1 or 0; an ordered question is
+ *                 correct only when the whole list is right. Canonical judge
+ *                 gemini-3.8-flash, temperature 0, descriptive for every row.
  *
  * Parsing departs from the official code in one direction only: an output
  * the official code would read as "no" or crash on because it is empty or
@@ -227,6 +233,81 @@ function beamInstrument(id: string): Instrument {
   };
 }
 
+// ─── BG1 (changing facts) ────────────────────────────────────────────
+
+/**
+ * BG1's short-answer judge (docs/benchmarks/2026-11-09-changing-facts-battleground-preregistration.md, "Readers and
+ * judges"): the question, the plan's gold answer, its accepted forms, the slot's stale values and the response, graded
+ * as one JSON verdict, correct 1 or 0. An ordered question (s8_history) is correct only when the whole list is right.
+ * Gold, accepted forms and stale values come from the world plan (eval/generators/changing-facts-gen.ts), never from a
+ * model.
+ */
+export const BG1_JUDGE_PROMPT = [
+  'You are grading one answer to a question about a long chat history in which facts change over time.',
+  '',
+  'Question: {}',
+  'Correct answer: {}',
+  'Accepted forms of the correct value: {}',
+  'Wrong values for this question (earlier, corrected, withdrawn, unsigned or not yet in effect): {}',
+  '{}',
+  'Response: {}',
+  '',
+  'The response is correct when it gives the correct answer as its answer, in an accepted form or a clear paraphrase.',
+  'It is wrong when it gives a wrong value or any other value as its answer, hedges between the correct value and a',
+  'wrong one without choosing, or does not answer. Naming a wrong value as past history is fine when the response',
+  'clearly gives the correct answer as the answer to the question.',
+  '',
+  'Reply with JSON only: {"correct": 1} or {"correct": 0}.',
+].join('\n');
+export const BG1_ORDERED_RULE = 'This question asks for a list in order: the response is correct only when it lists every value of the correct answer, in that order, with no wrong value in the list.';
+export const BG1_UNORDERED_RULE = 'This question asks for one current answer.';
+
+/** The BG1 judge prompt for one question and response. */
+export function bg1JudgePrompt(q: MemoryQuestion, response: string): string {
+  const f = q.bg1;
+  if (!f) throw new Error(`question ${q.id} has no BG1 fields, so the bg1 instrument cannot grade it`);
+  const list = (xs: readonly string[]) => (xs.length ? xs.map(x => JSON.stringify(x)).join(f.ordered ? ' then ' : ', ') : '(none)');
+  return pyFormat(BG1_JUDGE_PROMPT, q.question, q.answer ?? '', list(f.gold_values), f.stale_values.length ? f.stale_values.map(x => JSON.stringify(x)).join(', ') : '(none)', f.ordered ? BG1_ORDERED_RULE : BG1_UNORDERED_RULE, response);
+}
+
+/** A JSON object whose `correct` is 0 or 1 (or false or true), optionally fenced; anything else is malformed. */
+export function parseBg1Verdict(raw: string): Parsed {
+  let s = raw.trim();
+  if (!s) return { ok: false, reason: 'empty judgment' };
+  const fenced = /^```(?:json)?\s*(\{.*\})\s*```$/s.exec(s);
+  if (fenced) s = fenced[1].trim();
+  let obj: unknown;
+  try { obj = JSON.parse(s); } catch {
+    const m = /\{[^{}]*\}/s.exec(s);
+    if (!m) return { ok: false, reason: 'no JSON verdict in judgment' };
+    try { obj = JSON.parse(m[0]); } catch { return { ok: false, reason: 'no JSON verdict in judgment' }; }
+  }
+  if (!obj || typeof obj !== 'object' || Array.isArray(obj) || !('correct' in obj)) return { ok: false, reason: 'judgment JSON has no correct field' };
+  const v = (obj as { correct: unknown }).correct;
+  if (v === 1 || v === true) return { ok: true, value: 1 };
+  if (v === 0 || v === false) return { ok: true, value: 0 };
+  return { ok: false, reason: `judgment correct ${JSON.stringify(v)} is not 0 or 1` };
+}
+
+/** BG1's canonical judge: descriptive, the same for every row (gating judges are per reader, frontier.judge_by_reader). */
+export const BG1_CANONICAL_JUDGE = 'gemini:gemini-3.8-flash';
+
+function bg1Instrument(id: string): Instrument {
+  const settings = { max_tokens: 1024, parser: 'bg1-json-correct-v1', aggregation: 'single-verdict' };
+  const base = {
+    id, version: 'v1', canonical_judge: BG1_CANONICAL_JUDGE, temperature: 0,
+    source: { repository: 'https://github.com/garrytan/gbrain-evals', commit: 'in-tree', files: ['eval/runner/memory-qa/instruments.ts'] },
+    templates: { verdict: BG1_JUDGE_PROMPT, ordered: BG1_ORDERED_RULE, unordered: BG1_UNORDERED_RULE },
+  };
+  return {
+    ...base, sha256: instrumentHash({ ...base, ...settings }),
+    async score(q, response, ask) {
+      const { value } = await ask({ kind: 'verdict', prompt: bg1JudgePrompt(q, response), max_tokens: settings.max_tokens, parse: parseBg1Verdict });
+      return { score: value, detail: { stratum: q.bg1!.stratum, ordered: q.bg1!.ordered === true } };
+    },
+  };
+}
+
 const canonical = (v: unknown): unknown => Array.isArray(v) ? v.map(canonical)
   : v && typeof v === 'object' ? Object.fromEntries(Object.keys(v).sort().map(k => [k, canonical((v as Record<string, unknown>)[k])])) : v;
 
@@ -258,11 +339,14 @@ export const INSTRUMENTS: Readonly<Record<string, Instrument>> = Object.freeze({
  * Instruments for reserve sets added after the Q1 registry above was pinned (test/eval/q1-instruments.test.ts holds
  * its hashes). beam-d8, the D8 long-history reserve in BEAM's generator format, is judged by BEAM's rubric
  * instrument under its own id. beam-rs1, the RS1 ranking set minted in custody with BEAM's generator, is judged the
- * same way under its own id, with BEAM's canonical judge (gpt-4.1-mini).
+ * same way under its own id, with BEAM's canonical judge (gpt-4.1-mini). bg1 (sealed) and bg1-dev (the public dev
+ * worlds), BG1's changing-facts histories, share BG1's short-answer instrument, each under its own id.
  */
 export const RESERVE_INSTRUMENTS: Readonly<Record<string, Instrument>> = Object.freeze({
   'beam-d8': beamInstrument('beam-d8'),
   'beam-rs1': beamInstrument('beam-rs1'),
+  bg1: bg1Instrument('bg1'),
+  'bg1-dev': bg1Instrument('bg1-dev'),
 });
 
 /** The instrument for a benchmark; explicit per benchmark, no prefix guessing. */

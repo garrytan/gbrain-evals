@@ -1,0 +1,5631 @@
+{
+  "schema": "live-recall-task-scorecard/v1",
+  "status": "complete",
+  "stop": null,
+  "run": {
+    "started_at": "2026-11-09T15:03:30.350Z",
+    "finished_at": "2026-11-09T18:13:27.759Z",
+    "runner_commit": "4740c1f35f85d2661b149a88cfd8127c00dc005c",
+    "runner_dirty": false,
+    "harness_digest": "d27425cc958de472b3e04b843bb199123b94b24820cd7963f89f0145ca7c1e18",
+    "gbrain_pin_version": "0.60.557.0",
+    "gbrain_pin_commit": "62637c96a5a5c2e9d55594f87a33d79c2f30b54f",
+    "gbrain_loaded_version": "0.60.613.0",
+    "gbrain_loaded_commit": "98dda48fb9fd339609d6d4eef009811280ff648d",
+    "gbrain_overlay": true,
+    "schema_version": 296,
+    "engine": "postgres",
+    "barrier": "no_write_privilege",
+    "connection": "session_pooler",
+    "control": false,
+    "search_mode": "tokenmax",
+    "reranker_enabled": true,
+    "reranker_model": "voyage:rerank-2.5",
+    "embedding_model": "voyage:voyage-4",
+    "source_scope_default": true,
+    "privacy_posture": "remote",
+    "remote_private_pages": false,
+    "crag_escalation": false,
+    "crag_think": false,
+    "result_cache": false,
+    "tool_defs_digest": "33c1e118653f29efba9844556bd5046e75b87e657633d8c9242d5455993a4954",
+    "models": [
+      "claude-opus-5-5",
+      "gpt-6.1-sol",
+      "particle-1"
+    ],
+    "arms": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "forms": [
+      "paraphrase",
+      "exact"
+    ],
+    "judges": {
+      "claude-opus-5-5": "gpt-6-astra",
+      "gpt-6.1-sol": "claude-opus-5-5",
+      "particle-1": "gpt-6-astra"
+    },
+    "second_judge_model": "claude-opus-5-5",
+    "labellers": null,
+    "label_effort": null,
+    "effort": "medium",
+    "max_output_tokens": 8192,
+    "max_turns": 12,
+    "tool_result_chars": 16000,
+    "paste_pages": 5,
+    "paste_chars": 8000,
+    "window_note": null,
+    "concurrency": 4,
+    "openai_store": false,
+    "truncation_waivers": []
+  },
+  "tasks": {
+    "submitted": 100,
+    "kept_at_freeze": 99,
+    "dropped_unreachable": 1,
+    "gold_missing_at_run": 0,
+    "sha_prefix": "0b849b89178b",
+    "n_frozen": 99,
+    "kept_at_run": 99,
+    "by_type": {
+      "identifier": 19,
+      "error_string": 20,
+      "time_window": 20,
+      "cross_source": 20,
+      "topic": 20
+    },
+    "gold_found_by": {
+      "page_first": 78,
+      "memory": 0,
+      "gbrain_search": 0,
+      "other_search": 21,
+      "unknown": 0
+    },
+    "gold_clusters": {
+      "n": 87,
+      "shared": [
+        3,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "mdd_primaries": {
+      "pd10": {
+        "alpha_05": 0.095,
+        "holm_0125": 0.1132
+      },
+      "pd20": {
+        "alpha_05": 0.1343,
+        "holm_0125": 0.1601
+      },
+      "pd30": {
+        "alpha_05": 0.1645,
+        "holm_0125": 0.1961
+      }
+    }
+  },
+  "cells": {
+    "paraphrase": {
+      "A": {
+        "claude-opus-5-5": {
+          "n_tasks": 99,
+          "counted": 99,
+          "model_errors": 0,
+          "excluded": {
+            "harness_error": 0,
+            "timed_out": 0,
+            "degraded": 0,
+            "judge_error": 0,
+            "unjudged": 0,
+            "not_run": 0
+          },
+          "invalid": false,
+          "invalid_reason": null,
+          "rates": {
+            "correct": {
+              "k": 13,
+              "n": 99,
+              "point": 0.1313,
+              "ci95": [
+                0.07,
+                0.2041
+              ]
+            },
+            "correct_grounded": null,
+            "partial": {
+              "k": 15,
+              "n": 99,
+              "point": 0.1515,
+              "ci95": [
+                0.0833,
+                0.2245
+              ]
+            },
+            "abstained": {
+              "k": 84,
+              "n": 99,
+              "point": 0.8485,
+              "ci95": [
+                0.7708,
+                0.9158
+              ]
+            },
+            "no_answer": {
+              "k": 0,
+              "n": 99,
+              "point": 0,
+              "ci95": [
+                0,
+                0
+              ]
+            },
+            "confidently_wrong": {
+              "k": 2,
+              "n": 99,
+              "point": 0.0202,
+              "ci95": [
+                0,
+                0.0515
+              ]
+            },
+            "contradicted": {
+              "k": 2,
+              "n": 99,
+              "point": 0.0202,
+              "ci95": [
+                0,
+                0.051
+              ]
+            }
+          },
+          "citations": {
+            "mean_per_answer": 0,
+            "supported_share": null
+          },
+          "exposure": {
+            "searched": null,
+            "gold_seen": null,
+            "gold_opened": null,
+            "gold_cited": null,
+            "summary_gold_cited": null,
+            "pasted_gold": null
+          },
+          "turns_mean": 1,
+          "tool_calls_mean": 0,
+          "latency_ms": {
+            "p50": 4138,
+            "p95": 8437
+          },
+          "tokens": {
+            "input": 396,
+            "output": 38655,
+            "cache_read": 54252,
+            "cache_write": 10795
+          },
+          "answer_cost_per_correct_usd": 0.0646
+        },
+        "gpt-6.1-sol": {
+          "n_tasks": 99,
+          "counted": 99,
+          "model_errors": 0,
+          "excluded": {
+            "harness_error": 0,
+            "timed_out": 0,
+            "degraded": 0,
+            "judge_error": 0,
+            "unjudged": 0,
+            "not_run": 0
+          },
+          "invalid": false,
+          "invalid_reason": null,
+          "rates": {
+            "correct": {
+              "k": 9,
+              "n": 99,
+              "point": 0.0909,
+              "ci95": [
+                0.0396,
+                0.1531
+              ]
+            },
+            "correct_grounded": null,
+            "partial": {
+              "k": 9,
+              "n": 99,
+              "point": 0.0909,
+              "ci95": [
+                0.04,
+                0.1515
+              ]
+            },
+            "abstained": {
+              "k": 81,
+              "n": 99,
+              "point": 0.8182,
+              "ci95": [
+                0.7379,
+                0.8889
+              ]
+            },
+            "no_answer": {
+              "k": 0,
+              "n": 99,
+              "point": 0,
+              "ci95": [
+                0,
+                0
+              ]
+            },
+            "confidently_wrong": {
+              "k": 9,
+              "n": 99,
+              "point": 0.0909,
+              "ci95": [
+                0.04,
+                0.1515
+              ]
+            },
+            "contradicted": {
+              "k": 1,
+              "n": 99,
+              "point": 0.0101,
+              "ci95": [
+                0,
+                0.0319
+              ]
+            }
+          },
+          "citations": {
+            "mean_per_answer": 0,
+            "supported_share": null
+          },
+          "exposure": {
+            "searched": null,
+            "gold_seen": null,
+            "gold_opened": null,
+            "gold_cited": null,
+            "summary_gold_cited": null,
+            "pasted_gold": null
+          },
+          "turns_mean": 1,
+          "tool_calls_mean": 0,
+          "latency_ms": {
+            "p50": 3955,
+            "p95": 9821
+          },
+          "tokens": {
+            "input": 22639,
+            "output": 14644,
+            "cache_read": 0,
+            "cache_write": 0
+          },
+          "answer_cost_per_correct_usd": 0.0213
+        },
+        "particle-1": {
+          "n_tasks": 99,
+          "counted": 99,
+          "model_errors": 0,
+          "excluded": {
+            "harness_error": 0,
+            "timed_out": 0,
+            "degraded": 0,
+            "judge_error": 0,
+            "unjudged": 0,
+            "not_run": 0
+          },
+          "invalid": false,
+          "invalid_reason": null,
+          "rates": {
+            "correct": {
+              "k": 9,
+              "n": 99,
+              "point": 0.0909,
+              "ci95": [
+                0.04,
+                0.1515
+              ]
+            },
+            "correct_grounded": null,
+            "partial": {
+              "k": 9,
+              "n": 99,
+              "point": 0.0909,
+              "ci95": [
+                0.04,
+                0.1495
+              ]
+            },
+            "abstained": {
+              "k": 89,
+              "n": 99,
+              "point": 0.899,
+              "ci95": [
+                0.8333,
+                0.9515
+              ]
+            },
+            "no_answer": {
+              "k": 0,
+              "n": 99,
+              "point": 0,
+              "ci95": [
+                0,
+                0
+              ]
+            },
+            "confidently_wrong": {
+              "k": 1,
+              "n": 99,
+              "point": 0.0101,
+              "ci95": [
+                0,
+                0.0319
+              ]
+            },
+            "contradicted": {
+              "k": 2,
+              "n": 99,
+              "point": 0.0202,
+              "ci95": [
+                0,
+                0.0521
+              ]
+            }
+          },
+          "citations": {
+            "mean_per_answer": 0,
+            "supported_share": null
+          },
+          "exposure": {
+            "searched": null,
+            "gold_seen": null,
+            "gold_opened": null,
+            "gold_cited": null,
+            "summary_gold_cited": null,
+            "pasted_gold": null
+          },
+          "turns_mean": 1.0303,
+          "tool_calls_mean": 0,
+          "latency_ms": {
+            "p50": 3050,
+            "p95": 12707
+          },
+          "tokens": {
+            "input": 14149,
+            "output": 57687,
+            "cache_read": 42240,
+            "cache_write": 0
+          },
+          "answer_cost_per_correct_usd": 0.0069
+        }
+      },
+      "B": {
+        "claude-opus-5-5": {
+          "n_tasks": 99,
+          "counted": 98,
+          "model_errors": 0,
+          "excluded": {
+            "harness_error": 0,
+            "timed_out": 0,
+            "degraded": 1,
+            "judge_error": 0,
+            "unjudged": 0,
+            "not_run": 0
+          },
+          "invalid": false,
+          "invalid_reason": null,
+          "rates": {
+            "correct": {
+              "k": 85,
+              "n": 98,
+              "point": 0.8673,
+              "ci95": [
+                0.7879,
+                0.9381
+              ]
+            },
+            "correct_grounded": {
+              "k": 67,
+              "n": 98,
+              "point": 0.6837,
+              "ci95": [
+                0.5859,
+                0.7813
+              ]
+            },
+            "partial": {
+              "k": 10,
+              "n": 98,
+              "point": 0.102,
+              "ci95": [
+                0.049,
+                0.165
+              ]
+            },
+            "abstained": {
+              "k": 2,
+              "n": 98,
+              "point": 0.0204,
+              "ci95": [
+                0,
+                0.0521
+              ]
+            },
+            "no_answer": {
+              "k": 2,
+              "n": 98,
+              "point": 0.0204,
+              "ci95": [
+                0,
+                0.0505
+              ]
+            },
+            "confidently_wrong": {
+              "k": 9,
+              "n": 98,
+              "point": 0.0918,
+              "ci95": [
+                0.0404,
+                0.1515
+              ]
+            },
+            "contradicted": {
+              "k": 2,
+              "n": 98,
+              "point": 0.0204,
+              "ci95": [
+                0,
+                0.0515
+              ]
+            }
+          },
+          "citations": {
+            "mean_per_answer": 2.3438,
+            "supported_share": 0.8889
+          },
+          "exposure": {
+            "searched": 1,
+            "gold_seen": 0.8586,
+            "gold_opened": 0.2828,
+            "gold_cited": 0.8283,
+            "summary_gold_cited": null,
+            "pasted_gold": null
+          },
+          "turns_mean": 4.0404,
+          "tool_calls_mean": 3.4545,
+          "latency_ms": {
+            "p50": 16522,
+            "p95": 48942
+          },
+          "tokens": {
+            "input": 1016,
+            "output": 106705,
+            "cache_read": 5183778,
+            "cache_write": 1548593
+          },
+          "answer_cost_per_correct_usd": 0.1284
+        },
+        "gpt-6.1-sol": {
+          "n_tasks": 99,
+          "counted": 99,
+          "model_errors": 0,
+          "excluded": {
+            "harness_error": 0,
+            "timed_out": 0,
+            "degraded": 0,
+            "judge_error": 0,
+            "unjudged": 0,
+            "not_run": 0
+          },
+          "invalid": false,
+          "invalid_reason": null,
+          "rates": {
+            "correct": {
+              "k": 72,
+              "n": 99,
+              "point": 0.7273,
+              "ci95": [
+                0.6381,
+                0.8137
+              ]
+            },
+            "correct_grounded": {
+              "k": 68,
+              "n": 99,
+              "point": 0.6869,
+              "ci95": [
+                0.5941,
+                0.7778
+              ]
+            },
+            "partial": {
+              "k": 19,
+              "n": 99,
+              "point": 0.1919,
+              "ci95": [
+                0.1176,
+                0.27
+              ]
+            },
+            "abstained": {
+              "k": 0,
+              "n": 99,
+              "point": 0,
+              "ci95": [
+                0,
+                0
+              ]
+            },
+            "no_answer": {
+              "k": 6,
+              "n": 99,
+              "point": 0.0606,
+              "ci95": [
+                0.02,
+                0.1111
+              ]
+            },
+            "confidently_wrong": {
+              "k": 21,
+              "n": 99,
+              "point": 0.2121,
+              "ci95": [
+                0.1354,
+                0.2913
+              ]
+            },
+            "contradicted": {
+              "k": 2,
+              "n": 99,
+              "point": 0.0202,
+              "ci95": [
+                0,
+                0.05
+              ]
+            }
+          },
+          "citations": {
+            "mean_per_answer": 1.2688,
+            "supported_share": 0.9237
+          },
+          "exposure": {
+            "searched": 1,
+            "gold_seen": 0.8788,
+            "gold_opened": 0.7172,
+            "gold_cited": 0.7071,
+            "summary_gold_cited": null,
+            "pasted_gold": null
+          },
+          "turns_mean": 4.8384,
+          "tool_calls_mean": 4.2828,
+          "latency_ms": {
+            "p50": 17745,
+            "p95": 48991
+          },
+          "tokens": {
+            "input": 1437,
+            "output": 28595,
+            "cache_read": 4242507,
+            "cache_write": 1369881
+          },
+          "answer_cost_per_correct_usd": 0.0575
+        },
+        "particle-1": {
+          "n_tasks": 99,
+          "counted": 97,
+          "model_errors": 0,
+          "excluded": {
+            "harness_error": 0,
+            "timed_out": 0,
+            "degraded": 2,
+            "judge_error": 0,
+            "unjudged": 0,
+            "not_run": 0
+          },
+          "invalid": false,
+          "invalid_reason": null,
+          "rates": {
+            "correct": {
+              "k": 66,
+              "n": 97,
+              "point": 0.6804,
+              "ci95": [
+                0.5849,
+                0.7753
+              ]
+            },
+            "correct_grounded": {
+              "k": 53,
+              "n": 97,
+              "point": 0.5464,
+              "ci95": [
+                0.4412,
+                0.6526
+              ]
+            },
+            "partial": {
+              "k": 13,
+              "n": 97,
+              "point": 0.134,
+              "ci95": [
+                0.0722,
+                0.2041
+              ]
+            },
+            "abstained": {
+              "k": 0,
+              "n": 97,
+              "point": 0,
+              "ci95": [
+                0,
+                0
+              ]
+            },
+            "no_answer": {
+              "k": 17,
+              "n": 97,
+              "point": 0.1753,
+              "ci95": [
+                0.1075,
+                0.2474
+              ]
+            },
+            "confidently_wrong": {
+              "k": 14,
+              "n": 97,
+              "point": 0.1443,
+              "ci95": [
+                0.0792,
+                0.2143
+              ]
+            },
+            "contradicted": {
+              "k": 2,
+              "n": 97,
+              "point": 0.0206,
+              "ci95": [
+                0,
+                0.0521
+              ]
+            }
+          },
+          "citations": {
+            "mean_per_answer": 2.1125,
+            "supported_share": 0.8402
+          },
+          "exposure": {
+            "searched": 1,
+            "gold_seen": 0.9394,
+            "gold_opened": 0.7172,
+            "gold_cited": 0.7172,
+            "summary_gold_cited": null,
+            "pasted_gold": null
+          },
+          "turns_mean": 6.2323,
+          "tool_calls_mean": 9.6465,
+          "latency_ms": {
+            "p50": 26478,
+            "p95": 88353
+          },
+          "tokens": {
+            "input": 12579989,
+            "output": 162255,
+            "cache_read": 3054336,
+            "cache_write": 0
+          },
+          "answer_cost_per_correct_usd": 0.0515
+        }
+      },
+      "C": {
+        "claude-opus-5-5": {
+          "n_tasks": 99,
+          "counted": 99,
+          "model_errors": 0,
+          "excluded": {
+            "harness_error": 0,
+            "timed_out": 0,
+            "degraded": 0,
+            "judge_error": 0,
+            "unjudged": 0,
+            "not_run": 0
+          },
+          "invalid": false,
+          "invalid_reason": null,
+          "rates": {
+            "correct": {
+              "k": 83,
+              "n": 99,
+              "point": 0.8384,
+              "ci95": [
+                0.767,
+                0.9063
+              ]
+            },
+            "correct_grounded": {
+              "k": 53,
+              "n": 99,
+              "point": 0.5354,
+              "ci95": [
+                0.4286,
+                0.6408
+              ]
+            },
+            "partial": {
+              "k": 12,
+              "n": 99,
+              "point": 0.1212,
+              "ci95": [
+                0.0612,
+                0.1856
+              ]
+            },
+            "abstained": {
+              "k": 7,
+              "n": 99,
+              "point": 0.0707,
+              "ci95": [
+                0.0294,
+                0.1224
+              ]
+            },
+            "no_answer": {
+              "k": 0,
+              "n": 99,
+              "point": 0,
+              "ci95": [
+                0,
+                0
+              ]
+            },
+            "confidently_wrong": {
+              "k": 9,
+              "n": 99,
+              "point": 0.0909,
+              "ci95": [
+                0.0396,
+                0.15
+              ]
+            },
+            "contradicted": {
+              "k": 3,
+              "n": 99,
+              "point": 0.0303,
+              "ci95": [
+                0,
+                0.0693
+              ]
+            }
+          },
+          "citations": {
+            "mean_per_answer": 3.0202,
+            "supported_share": 0.8328
+          },
+          "exposure": {
+            "searched": 1,
+            "gold_seen": 0.8384,
+            "gold_opened": 0.1717,
+            "gold_cited": 0.798,
+            "summary_gold_cited": 0.798,
+            "pasted_gold": null
+          },
+          "turns_mean": 4.6364,
+          "tool_calls_mean": 3.202,
+          "latency_ms": {
+            "p50": 22301,
+            "p95": 57384
+          },
+          "tokens": {
+            "input": 1314,
+            "output": 162979,
+            "cache_read": 4602496,
+            "cache_write": 1576650
+          },
+          "answer_cost_per_correct_usd": 0.1454
+        },
+        "gpt-6.1-sol": {
+          "n_tasks": 99,
+          "counted": 98,
+          "model_errors": 0,
+          "excluded": {
+            "harness_error": 0,
+            "timed_out": 0,
+            "degraded": 1,
+            "judge_error": 0,
+            "unjudged": 0,
+            "not_run": 0
+          },
+          "invalid": false,
+          "invalid_reason": null,
+          "rates": {
+            "correct": {
+              "k": 77,
+              "n": 98,
+              "point": 0.7857,
+              "ci95": [
+                0.703,
+                0.8646
+              ]
+            },
+            "correct_grounded": {
+              "k": 73,
+              "n": 98,
+              "point": 0.7449,
+              "ci95": [
+                0.6556,
+                0.8298
+              ]
+            },
+            "partial": {
+              "k": 17,
+              "n": 98,
+              "point": 0.1735,
+              "ci95": [
+                0.101,
+                0.2525
+              ]
+            },
+            "abstained": {
+              "k": 2,
+              "n": 98,
+              "point": 0.0204,
+              "ci95": [
+                0,
+                0.0526
+              ]
+            },
+            "no_answer": {
+              "k": 0,
+              "n": 98,
+              "point": 0,
+              "ci95": [
+                0,
+                0
+              ]
+            },
+            "confidently_wrong": {
+              "k": 19,
+              "n": 98,
+              "point": 0.1939,
+              "ci95": [
+                0.1183,
+                0.2752
+              ]
+            },
+            "contradicted": {
+              "k": 4,
+              "n": 98,
+              "point": 0.0408,
+              "ci95": [
+                0.0099,
+                0.0833
+              ]
+            }
+          },
+          "citations": {
+            "mean_per_answer": 1.2959,
+            "supported_share": 0.9291
+          },
+          "exposure": {
+            "searched": 1,
+            "gold_seen": 0.8889,
+            "gold_opened": 0.6768,
+            "gold_cited": 0.6667,
+            "summary_gold_cited": 0.6869,
+            "pasted_gold": null
+          },
+          "turns_mean": 5.9192,
+          "tool_calls_mean": 4.7374,
+          "latency_ms": {
+            "p50": 20502,
+            "p95": 59711
+          },
+          "tokens": {
+            "input": 40276,
+            "output": 48693,
+            "cache_read": 4669935,
+            "cache_write": 1578062
+          },
+          "answer_cost_per_correct_usd": 0.0647
+        },
+        "particle-1": {
+          "n_tasks": 99,
+          "counted": 98,
+          "model_errors": 0,
+          "excluded": {
+            "harness_error": 0,
+            "timed_out": 0,
+            "degraded": 1,
+            "judge_error": 0,
+            "unjudged": 0,
+            "not_run": 0
+          },
+          "invalid": false,
+          "invalid_reason": null,
+          "rates": {
+            "correct": {
+              "k": 67,
+              "n": 98,
+              "point": 0.6837,
+              "ci95": [
+                0.5957,
+                0.7732
+              ]
+            },
+            "correct_grounded": {
+              "k": 40,
+              "n": 98,
+              "point": 0.4082,
+              "ci95": [
+                0.3168,
+                0.5052
+              ]
+            },
+            "partial": {
+              "k": 11,
+              "n": 98,
+              "point": 0.1122,
+              "ci95": [
+                0.0526,
+                0.1789
+              ]
+            },
+            "abstained": {
+              "k": 19,
+              "n": 98,
+              "point": 0.1939,
+              "ci95": [
+                0.1209,
+                0.2673
+              ]
+            },
+            "no_answer": {
+              "k": 0,
+              "n": 98,
+              "point": 0,
+              "ci95": [
+                0,
+                0
+              ]
+            },
+            "confidently_wrong": {
+              "k": 12,
+              "n": 98,
+              "point": 0.1224,
+              "ci95": [
+                0.0619,
+                0.19
+              ]
+            },
+            "contradicted": {
+              "k": 1,
+              "n": 98,
+              "point": 0.0102,
+              "ci95": [
+                0,
+                0.0313
+              ]
+            }
+          },
+          "citations": {
+            "mean_per_answer": 2.7449,
+            "supported_share": 0.8327
+          },
+          "exposure": {
+            "searched": 1,
+            "gold_seen": 0.9293,
+            "gold_opened": 0.6869,
+            "gold_cited": 0.6869,
+            "summary_gold_cited": 0.697,
+            "pasted_gold": null
+          },
+          "turns_mean": 7.6768,
+          "tool_calls_mean": 10.9394,
+          "latency_ms": {
+            "p50": 40898,
+            "p95": 96580
+          },
+          "tokens": {
+            "input": 13918917,
+            "output": 249334,
+            "cache_read": 4067840,
+            "cache_write": 0
+          },
+          "answer_cost_per_correct_usd": 0.0575
+        }
+      },
+      "D": {
+        "claude-opus-5-5": {
+          "n_tasks": 99,
+          "counted": 97,
+          "model_errors": 0,
+          "excluded": {
+            "harness_error": 0,
+            "timed_out": 0,
+            "degraded": 2,
+            "judge_error": 0,
+            "unjudged": 0,
+            "not_run": 0
+          },
+          "invalid": false,
+          "invalid_reason": null,
+          "rates": {
+            "correct": {
+              "k": 51,
+              "n": 97,
+              "point": 0.5258,
+              "ci95": [
+                0.419,
+                0.6413
+              ]
+            },
+            "correct_grounded": {
+              "k": 47,
+              "n": 97,
+              "point": 0.4845,
+              "ci95": [
+                0.3776,
+                0.5978
+              ]
+            },
+            "partial": {
+              "k": 21,
+              "n": 97,
+              "point": 0.2165,
+              "ci95": [
+                0.1209,
+                0.3158
+              ]
+            },
+            "abstained": {
+              "k": 37,
+              "n": 97,
+              "point": 0.3814,
+              "ci95": [
+                0.2717,
+                0.4896
+              ]
+            },
+            "no_answer": {
+              "k": 0,
+              "n": 97,
+              "point": 0,
+              "ci95": [
+                0,
+                0
+              ]
+            },
+            "confidently_wrong": {
+              "k": 9,
+              "n": 97,
+              "point": 0.0928,
+              "ci95": [
+                0.0323,
+                0.1613
+              ]
+            },
+            "contradicted": {
+              "k": 5,
+              "n": 97,
+              "point": 0.0515,
+              "ci95": [
+                0.0102,
+                0.1068
+              ]
+            }
+          },
+          "citations": {
+            "mean_per_answer": 2.567,
+            "supported_share": 0.9438
+          },
+          "exposure": {
+            "searched": null,
+            "gold_seen": null,
+            "gold_opened": null,
+            "gold_cited": 0.6061,
+            "summary_gold_cited": null,
+            "pasted_gold": 0.6364
+          },
+          "turns_mean": 0.9899,
+          "tool_calls_mean": 0,
+          "latency_ms": {
+            "p50": 10813,
+            "p95": 18125
+          },
+          "tokens": {
+            "input": 392,
+            "output": 73577,
+            "cache_read": 57721,
+            "cache_write": 1187615
+          },
+          "answer_cost_per_correct_usd": 0.1455
+        },
+        "gpt-6.1-sol": {
+          "n_tasks": 99,
+          "counted": 97,
+          "model_errors": 0,
+          "excluded": {
+            "harness_error": 0,
+            "timed_out": 0,
+            "degraded": 2,
+            "judge_error": 0,
+            "unjudged": 0,
+            "not_run": 0
+          },
+          "invalid": false,
+          "invalid_reason": null,
+          "rates": {
+            "correct": {
+              "k": 41,
+              "n": 97,
+              "point": 0.4227,
+              "ci95": [
+                0.32,
+                0.5319
+              ]
+            },
+            "correct_grounded": {
+              "k": 41,
+              "n": 97,
+              "point": 0.4227,
+              "ci95": [
+                0.32,
+                0.5319
+              ]
+            },
+            "partial": {
+              "k": 33,
+              "n": 97,
+              "point": 0.3402,
+              "ci95": [
+                0.2371,
+                0.4423
+              ]
+            },
+            "abstained": {
+              "k": 19,
+              "n": 97,
+              "point": 0.1959,
+              "ci95": [
+                0.1158,
+                0.2828
+              ]
+            },
+            "no_answer": {
+              "k": 0,
+              "n": 97,
+              "point": 0,
+              "ci95": [
+                0,
+                0
+              ]
+            },
+            "confidently_wrong": {
+              "k": 37,
+              "n": 97,
+              "point": 0.3814,
+              "ci95": [
+                0.2747,
+                0.4896
+              ]
+            },
+            "contradicted": {
+              "k": 4,
+              "n": 97,
+              "point": 0.0412,
+              "ci95": [
+                0,
+                0.0952
+              ]
+            }
+          },
+          "citations": {
+            "mean_per_answer": 1.0619,
+            "supported_share": 0.9903
+          },
+          "exposure": {
+            "searched": null,
+            "gold_seen": null,
+            "gold_opened": null,
+            "gold_cited": 0.5253,
+            "summary_gold_cited": null,
+            "pasted_gold": 0.6364
+          },
+          "turns_mean": 0.9798,
+          "tool_calls_mean": 0,
+          "latency_ms": {
+            "p50": 6883,
+            "p95": 13526
+          },
+          "tokens": {
+            "input": 291,
+            "output": 11528,
+            "cache_read": 22059,
+            "cache_write": 774852
+          },
+          "answer_cost_per_correct_usd": 0.0501
+        },
+        "particle-1": {
+          "n_tasks": 99,
+          "counted": 97,
+          "model_errors": 0,
+          "excluded": {
+            "harness_error": 0,
+            "timed_out": 0,
+            "degraded": 2,
+            "judge_error": 0,
+            "unjudged": 0,
+            "not_run": 0
+          },
+          "invalid": false,
+          "invalid_reason": null,
+          "rates": {
+            "correct": {
+              "k": 49,
+              "n": 97,
+              "point": 0.5052,
+              "ci95": [
+                0.4,
+                0.6186
+              ]
+            },
+            "correct_grounded": {
+              "k": 46,
+              "n": 97,
+              "point": 0.4742,
+              "ci95": [
+                0.3711,
+                0.587
+              ]
+            },
+            "partial": {
+              "k": 24,
+              "n": 97,
+              "point": 0.2474,
+              "ci95": [
+                0.1505,
+                0.3462
+              ]
+            },
+            "abstained": {
+              "k": 36,
+              "n": 97,
+              "point": 0.3711,
+              "ci95": [
+                0.2626,
+                0.4752
+              ]
+            },
+            "no_answer": {
+              "k": 0,
+              "n": 97,
+              "point": 0,
+              "ci95": [
+                0,
+                0
+              ]
+            },
+            "confidently_wrong": {
+              "k": 12,
+              "n": 97,
+              "point": 0.1237,
+              "ci95": [
+                0.0588,
+                0.2
+              ]
+            },
+            "contradicted": {
+              "k": 5,
+              "n": 97,
+              "point": 0.0515,
+              "ci95": [
+                0.0101,
+                0.11
+              ]
+            }
+          },
+          "citations": {
+            "mean_per_answer": 2.5876,
+            "supported_share": 0.9363
+          },
+          "exposure": {
+            "searched": null,
+            "gold_seen": null,
+            "gold_opened": null,
+            "gold_cited": 0.5859,
+            "summary_gold_cited": null,
+            "pasted_gold": 0.6364
+          },
+          "turns_mean": 0.9899,
+          "tool_calls_mean": 0,
+          "latency_ms": {
+            "p50": 8463,
+            "p95": 20201
+          },
+          "tokens": {
+            "input": 831751,
+            "output": 60959,
+            "cache_read": 29184,
+            "cache_write": 0
+          },
+          "answer_cost_per_correct_usd": 0.0055
+        }
+      }
+    },
+    "exact": {
+      "A": {
+        "claude-opus-5-5": {
+          "n_tasks": 99,
+          "counted": 99,
+          "model_errors": 0,
+          "excluded": {
+            "harness_error": 0,
+            "timed_out": 0,
+            "degraded": 0,
+            "judge_error": 0,
+            "unjudged": 0,
+            "not_run": 0
+          },
+          "invalid": false,
+          "invalid_reason": null,
+          "rates": {
+            "correct": {
+              "k": 16,
+              "n": 99,
+              "point": 0.1616,
+              "ci95": [
+                0.0928,
+                0.24
+              ]
+            },
+            "correct_grounded": null,
+            "partial": {
+              "k": 28,
+              "n": 99,
+              "point": 0.2828,
+              "ci95": [
+                0.1961,
+                0.3763
+              ]
+            },
+            "abstained": {
+              "k": 81,
+              "n": 99,
+              "point": 0.8182,
+              "ci95": [
+                0.7368,
+                0.89
+              ]
+            },
+            "no_answer": {
+              "k": 0,
+              "n": 99,
+              "point": 0,
+              "ci95": [
+                0,
+                0
+              ]
+            },
+            "confidently_wrong": {
+              "k": 2,
+              "n": 99,
+              "point": 0.0202,
+              "ci95": [
+                0,
+                0.0521
+              ]
+            },
+            "contradicted": {
+              "k": 2,
+              "n": 99,
+              "point": 0.0202,
+              "ci95": [
+                0,
+                0.0515
+              ]
+            }
+          },
+          "citations": {
+            "mean_per_answer": 0,
+            "supported_share": null
+          },
+          "exposure": {
+            "searched": null,
+            "gold_seen": null,
+            "gold_opened": null,
+            "gold_cited": null,
+            "summary_gold_cited": null,
+            "pasted_gold": null
+          },
+          "turns_mean": 1,
+          "tool_calls_mean": 0,
+          "latency_ms": {
+            "p50": 4057,
+            "p95": 8902
+          },
+          "tokens": {
+            "input": 396,
+            "output": 39487,
+            "cache_read": 54252,
+            "cache_write": 11175
+          },
+          "answer_cost_per_correct_usd": 0.0536
+        },
+        "gpt-6.1-sol": {
+          "n_tasks": 99,
+          "counted": 99,
+          "model_errors": 0,
+          "excluded": {
+            "harness_error": 0,
+            "timed_out": 0,
+            "degraded": 0,
+            "judge_error": 0,
+            "unjudged": 0,
+            "not_run": 0
+          },
+          "invalid": false,
+          "invalid_reason": null,
+          "rates": {
+            "correct": {
+              "k": 7,
+              "n": 99,
+              "point": 0.0707,
+              "ci95": [
+                0.0215,
+                0.125
+              ]
+            },
+            "correct_grounded": null,
+            "partial": {
+              "k": 17,
+              "n": 99,
+              "point": 0.1717,
+              "ci95": [
+                0.0947,
+                0.2571
+              ]
+            },
+            "abstained": {
+              "k": 80,
+              "n": 99,
+              "point": 0.8081,
+              "ci95": [
+                0.7216,
+                0.8854
+              ]
+            },
+            "no_answer": {
+              "k": 0,
+              "n": 99,
+              "point": 0,
+              "ci95": [
+                0,
+                0
+              ]
+            },
+            "confidently_wrong": {
+              "k": 12,
+              "n": 99,
+              "point": 0.1212,
+              "ci95": [
+                0.0594,
+                0.1942
+              ]
+            },
+            "contradicted": {
+              "k": 1,
+              "n": 99,
+              "point": 0.0101,
+              "ci95": [
+                0,
+                0.0316
+              ]
+            }
+          },
+          "citations": {
+            "mean_per_answer": 0,
+            "supported_share": null
+          },
+          "exposure": {
+            "searched": null,
+            "gold_seen": null,
+            "gold_opened": null,
+            "gold_cited": null,
+            "summary_gold_cited": null,
+            "pasted_gold": null
+          },
+          "turns_mean": 1,
+          "tool_calls_mean": 0,
+          "latency_ms": {
+            "p50": 3307,
+            "p95": 7623
+          },
+          "tokens": {
+            "input": 22733,
+            "output": 12973,
+            "cache_read": 0,
+            "cache_write": 0
+          },
+          "answer_cost_per_correct_usd": 0.025
+        },
+        "particle-1": {
+          "n_tasks": 99,
+          "counted": 99,
+          "model_errors": 0,
+          "excluded": {
+            "harness_error": 0,
+            "timed_out": 0,
+            "degraded": 0,
+            "judge_error": 0,
+            "unjudged": 0,
+            "not_run": 0
+          },
+          "invalid": false,
+          "invalid_reason": null,
+          "rates": {
+            "correct": {
+              "k": 8,
+              "n": 99,
+              "point": 0.0808,
+              "ci95": [
+                0.0303,
+                0.1383
+              ]
+            },
+            "correct_grounded": null,
+            "partial": {
+              "k": 24,
+              "n": 99,
+              "point": 0.2424,
+              "ci95": [
+                0.16,
+                0.3333
+              ]
+            },
+            "abstained": {
+              "k": 86,
+              "n": 99,
+              "point": 0.8687,
+              "ci95": [
+                0.7959,
+                0.9307
+              ]
+            },
+            "no_answer": {
+              "k": 0,
+              "n": 99,
+              "point": 0,
+              "ci95": [
+                0,
+                0
+              ]
+            },
+            "confidently_wrong": {
+              "k": 5,
+              "n": 99,
+              "point": 0.0505,
+              "ci95": [
+                0.0102,
+                0.099
+              ]
+            },
+            "contradicted": {
+              "k": 2,
+              "n": 99,
+              "point": 0.0202,
+              "ci95": [
+                0,
+                0.0515
+              ]
+            }
+          },
+          "citations": {
+            "mean_per_answer": 0,
+            "supported_share": null
+          },
+          "exposure": {
+            "searched": null,
+            "gold_seen": null,
+            "gold_opened": null,
+            "gold_cited": null,
+            "summary_gold_cited": null,
+            "pasted_gold": null
+          },
+          "turns_mean": 1.0101,
+          "tool_calls_mean": 0,
+          "latency_ms": {
+            "p50": 2981,
+            "p95": 10544
+          },
+          "tokens": {
+            "input": 9877,
+            "output": 46228,
+            "cache_read": 45312,
+            "cache_write": 0
+          },
+          "answer_cost_per_correct_usd": 0.0063
+        }
+      },
+      "B": {
+        "claude-opus-5-5": {
+          "n_tasks": 99,
+          "counted": 99,
+          "model_errors": 0,
+          "excluded": {
+            "harness_error": 0,
+            "timed_out": 0,
+            "degraded": 0,
+            "judge_error": 0,
+            "unjudged": 0,
+            "not_run": 0
+          },
+          "invalid": false,
+          "invalid_reason": null,
+          "rates": {
+            "correct": {
+              "k": 80,
+              "n": 99,
+              "point": 0.8081,
+              "ci95": [
+                0.7255,
+                0.8846
+              ]
+            },
+            "correct_grounded": {
+              "k": 66,
+              "n": 99,
+              "point": 0.6667,
+              "ci95": [
+                0.5714,
+                0.7596
+              ]
+            },
+            "partial": {
+              "k": 19,
+              "n": 99,
+              "point": 0.1919,
+              "ci95": [
+                0.1154,
+                0.2745
+              ]
+            },
+            "abstained": {
+              "k": 1,
+              "n": 99,
+              "point": 0.0101,
+              "ci95": [
+                0,
+                0.0316
+              ]
+            },
+            "no_answer": {
+              "k": 0,
+              "n": 99,
+              "point": 0,
+              "ci95": [
+                0,
+                0
+              ]
+            },
+            "confidently_wrong": {
+              "k": 18,
+              "n": 99,
+              "point": 0.1818,
+              "ci95": [
+                0.1078,
+                0.2626
+              ]
+            },
+            "contradicted": {
+              "k": 1,
+              "n": 99,
+              "point": 0.0101,
+              "ci95": [
+                0,
+                0.0309
+              ]
+            }
+          },
+          "citations": {
+            "mean_per_answer": 2.1111,
+            "supported_share": 0.89
+          },
+          "exposure": {
+            "searched": 1,
+            "gold_seen": 0.9495,
+            "gold_opened": 0.2424,
+            "gold_cited": 0.8889,
+            "summary_gold_cited": null,
+            "pasted_gold": null
+          },
+          "turns_mean": 2.9495,
+          "tool_calls_mean": 2.1616,
+          "latency_ms": {
+            "p50": 11462,
+            "p95": 29052
+          },
+          "tokens": {
+            "input": 810,
+            "output": 84672,
+            "cache_read": 2212693,
+            "cache_write": 961332
+          },
+          "answer_cost_per_correct_usd": 0.0868
+        },
+        "gpt-6.1-sol": {
+          "n_tasks": 99,
+          "counted": 98,
+          "model_errors": 0,
+          "excluded": {
+            "harness_error": 0,
+            "timed_out": 0,
+            "degraded": 1,
+            "judge_error": 0,
+            "unjudged": 0,
+            "not_run": 0
+          },
+          "invalid": false,
+          "invalid_reason": null,
+          "rates": {
+            "correct": {
+              "k": 76,
+              "n": 98,
+              "point": 0.7755,
+              "ci95": [
+                0.6875,
+                0.8557
+              ]
+            },
+            "correct_grounded": {
+              "k": 69,
+              "n": 98,
+              "point": 0.7041,
+              "ci95": [
+                0.6087,
+                0.7925
+              ]
+            },
+            "partial": {
+              "k": 21,
+              "n": 98,
+              "point": 0.2143,
+              "ci95": [
+                0.134,
+                0.3
+              ]
+            },
+            "abstained": {
+              "k": 0,
+              "n": 98,
+              "point": 0,
+              "ci95": [
+                0,
+                0
+              ]
+            },
+            "no_answer": {
+              "k": 0,
+              "n": 98,
+              "point": 0,
+              "ci95": [
+                0,
+                0
+              ]
+            },
+            "confidently_wrong": {
+              "k": 22,
+              "n": 98,
+              "point": 0.2245,
+              "ci95": [
+                0.1443,
+                0.3125
+              ]
+            },
+            "contradicted": {
+              "k": 1,
+              "n": 98,
+              "point": 0.0102,
+              "ci95": [
+                0,
+                0.0309
+              ]
+            }
+          },
+          "citations": {
+            "mean_per_answer": 1.2551,
+            "supported_share": 0.9431
+          },
+          "exposure": {
+            "searched": 1,
+            "gold_seen": 0.9293,
+            "gold_opened": 0.6667,
+            "gold_cited": 0.7576,
+            "summary_gold_cited": null,
+            "pasted_gold": null
+          },
+          "turns_mean": 3.5556,
+          "tool_calls_mean": 2.9596,
+          "latency_ms": {
+            "p50": 11565,
+            "p95": 23922
+          },
+          "tokens": {
+            "input": 1056,
+            "output": 23365,
+            "cache_read": 1799165,
+            "cache_write": 843647
+          },
+          "answer_cost_per_correct_usd": 0.0332
+        },
+        "particle-1": {
+          "n_tasks": 99,
+          "counted": 99,
+          "model_errors": 0,
+          "excluded": {
+            "harness_error": 0,
+            "timed_out": 0,
+            "degraded": 0,
+            "judge_error": 0,
+            "unjudged": 0,
+            "not_run": 0
+          },
+          "invalid": false,
+          "invalid_reason": null,
+          "rates": {
+            "correct": {
+              "k": 82,
+              "n": 99,
+              "point": 0.8283,
+              "ci95": [
+                0.75,
+                0.899
+              ]
+            },
+            "correct_grounded": {
+              "k": 60,
+              "n": 99,
+              "point": 0.6061,
+              "ci95": [
+                0.5055,
+                0.7053
+              ]
+            },
+            "partial": {
+              "k": 15,
+              "n": 99,
+              "point": 0.1515,
+              "ci95": [
+                0.0833,
+                0.2255
+              ]
+            },
+            "abstained": {
+              "k": 0,
+              "n": 99,
+              "point": 0,
+              "ci95": [
+                0,
+                0
+              ]
+            },
+            "no_answer": {
+              "k": 2,
+              "n": 99,
+              "point": 0.0202,
+              "ci95": [
+                0,
+                0.0521
+              ]
+            },
+            "confidently_wrong": {
+              "k": 15,
+              "n": 99,
+              "point": 0.1515,
+              "ci95": [
+                0.0833,
+                0.2255
+              ]
+            },
+            "contradicted": {
+              "k": 1,
+              "n": 99,
+              "point": 0.0101,
+              "ci95": [
+                0,
+                0.0309
+              ]
+            }
+          },
+          "citations": {
+            "mean_per_answer": 2,
+            "supported_share": 0.8557
+          },
+          "exposure": {
+            "searched": 1,
+            "gold_seen": 0.9697,
+            "gold_opened": 0.7172,
+            "gold_cited": 0.8485,
+            "summary_gold_cited": null,
+            "pasted_gold": null
+          },
+          "turns_mean": 4.1616,
+          "tool_calls_mean": 5.1818,
+          "latency_ms": {
+            "p50": 13223,
+            "p95": 36833
+          },
+          "tokens": {
+            "input": 4271049,
+            "output": 91240,
+            "cache_read": 1552128,
+            "cache_write": 0
+          },
+          "answer_cost_per_correct_usd": 0.0147
+        }
+      },
+      "C": {
+        "claude-opus-5-5": {
+          "n_tasks": 99,
+          "counted": 99,
+          "model_errors": 0,
+          "excluded": {
+            "harness_error": 0,
+            "timed_out": 0,
+            "degraded": 0,
+            "judge_error": 0,
+            "unjudged": 0,
+            "not_run": 0
+          },
+          "invalid": false,
+          "invalid_reason": null,
+          "rates": {
+            "correct": {
+              "k": 84,
+              "n": 99,
+              "point": 0.8485,
+              "ci95": [
+                0.7708,
+                0.9175
+              ]
+            },
+            "correct_grounded": {
+              "k": 61,
+              "n": 99,
+              "point": 0.6162,
+              "ci95": [
+                0.5208,
+                0.7075
+              ]
+            },
+            "partial": {
+              "k": 14,
+              "n": 99,
+              "point": 0.1414,
+              "ci95": [
+                0.0737,
+                0.2165
+              ]
+            },
+            "abstained": {
+              "k": 4,
+              "n": 99,
+              "point": 0.0404,
+              "ci95": [
+                0.0098,
+                0.0825
+              ]
+            },
+            "no_answer": {
+              "k": 0,
+              "n": 99,
+              "point": 0,
+              "ci95": [
+                0,
+                0
+              ]
+            },
+            "confidently_wrong": {
+              "k": 11,
+              "n": 99,
+              "point": 0.1111,
+              "ci95": [
+                0.0532,
+                0.1753
+              ]
+            },
+            "contradicted": {
+              "k": 2,
+              "n": 99,
+              "point": 0.0202,
+              "ci95": [
+                0,
+                0.05
+              ]
+            }
+          },
+          "citations": {
+            "mean_per_answer": 2.7273,
+            "supported_share": 0.8593
+          },
+          "exposure": {
+            "searched": 1,
+            "gold_seen": 0.9495,
+            "gold_opened": 0.1717,
+            "gold_cited": 0.9091,
+            "summary_gold_cited": 0.9091,
+            "pasted_gold": null
+          },
+          "turns_mean": 3.7778,
+          "tool_calls_mean": 2.1414,
+          "latency_ms": {
+            "p50": 17625,
+            "p95": 36963
+          },
+          "tokens": {
+            "input": 1144,
+            "output": 142951,
+            "cache_read": 2116224,
+            "cache_write": 1042142
+          },
+          "answer_cost_per_correct_usd": 0.1012
+        },
+        "gpt-6.1-sol": {
+          "n_tasks": 99,
+          "counted": 99,
+          "model_errors": 0,
+          "excluded": {
+            "harness_error": 0,
+            "timed_out": 0,
+            "degraded": 0,
+            "judge_error": 0,
+            "unjudged": 0,
+            "not_run": 0
+          },
+          "invalid": false,
+          "invalid_reason": null,
+          "rates": {
+            "correct": {
+              "k": 73,
+              "n": 99,
+              "point": 0.7374,
+              "ci95": [
+                0.6495,
+                0.8229
+              ]
+            },
+            "correct_grounded": {
+              "k": 65,
+              "n": 99,
+              "point": 0.6566,
+              "ci95": [
+                0.5612,
+                0.75
+              ]
+            },
+            "partial": {
+              "k": 25,
+              "n": 99,
+              "point": 0.2525,
+              "ci95": [
+                0.17,
+                0.3398
+              ]
+            },
+            "abstained": {
+              "k": 0,
+              "n": 99,
+              "point": 0,
+              "ci95": [
+                0,
+                0
+              ]
+            },
+            "no_answer": {
+              "k": 0,
+              "n": 99,
+              "point": 0,
+              "ci95": [
+                0,
+                0
+              ]
+            },
+            "confidently_wrong": {
+              "k": 26,
+              "n": 99,
+              "point": 0.2626,
+              "ci95": [
+                0.1771,
+                0.3505
+              ]
+            },
+            "contradicted": {
+              "k": 2,
+              "n": 99,
+              "point": 0.0202,
+              "ci95": [
+                0,
+                0.0505
+              ]
+            }
+          },
+          "citations": {
+            "mean_per_answer": 1.3333,
+            "supported_share": 0.9242
+          },
+          "exposure": {
+            "searched": 1,
+            "gold_seen": 0.9091,
+            "gold_opened": 0.5354,
+            "gold_cited": 0.7172,
+            "summary_gold_cited": 0.7172,
+            "pasted_gold": null
+          },
+          "turns_mean": 4.5455,
+          "tool_calls_mean": 3.1212,
+          "latency_ms": {
+            "p50": 13193,
+            "p95": 36187
+          },
+          "tokens": {
+            "input": 39456,
+            "output": 41299,
+            "cache_read": 1980468,
+            "cache_write": 888957
+          },
+          "answer_cost_per_correct_usd": 0.0399
+        },
+        "particle-1": {
+          "n_tasks": 99,
+          "counted": 99,
+          "model_errors": 0,
+          "excluded": {
+            "harness_error": 0,
+            "timed_out": 0,
+            "degraded": 0,
+            "judge_error": 0,
+            "unjudged": 0,
+            "not_run": 0
+          },
+          "invalid": false,
+          "invalid_reason": null,
+          "rates": {
+            "correct": {
+              "k": 81,
+              "n": 99,
+              "point": 0.8182,
+              "ci95": [
+                0.74,
+                0.8889
+              ]
+            },
+            "correct_grounded": {
+              "k": 48,
+              "n": 99,
+              "point": 0.4848,
+              "ci95": [
+                0.39,
+                0.581
+              ]
+            },
+            "partial": {
+              "k": 17,
+              "n": 99,
+              "point": 0.1717,
+              "ci95": [
+                0.1031,
+                0.2475
+              ]
+            },
+            "abstained": {
+              "k": 2,
+              "n": 99,
+              "point": 0.0202,
+              "ci95": [
+                0,
+                0.0521
+              ]
+            },
+            "no_answer": {
+              "k": 0,
+              "n": 99,
+              "point": 0,
+              "ci95": [
+                0,
+                0
+              ]
+            },
+            "confidently_wrong": {
+              "k": 16,
+              "n": 99,
+              "point": 0.1616,
+              "ci95": [
+                0.0928,
+                0.2366
+              ]
+            },
+            "contradicted": {
+              "k": 2,
+              "n": 99,
+              "point": 0.0202,
+              "ci95": [
+                0,
+                0.051
+              ]
+            }
+          },
+          "citations": {
+            "mean_per_answer": 2.9091,
+            "supported_share": 0.7882
+          },
+          "exposure": {
+            "searched": 1,
+            "gold_seen": 0.9798,
+            "gold_opened": 0.6364,
+            "gold_cited": 0.8788,
+            "summary_gold_cited": 0.8889,
+            "pasted_gold": null
+          },
+          "turns_mean": 5.3434,
+          "tool_calls_mean": 5.7475,
+          "latency_ms": {
+            "p50": 19296,
+            "p95": 51835
+          },
+          "tokens": {
+            "input": 5166744,
+            "output": 169394,
+            "cache_read": 1742592,
+            "cache_write": 0
+          },
+          "answer_cost_per_correct_usd": 0.0187
+        }
+      },
+      "D": {
+        "claude-opus-5-5": {
+          "n_tasks": 99,
+          "counted": 97,
+          "model_errors": 0,
+          "excluded": {
+            "harness_error": 0,
+            "timed_out": 0,
+            "degraded": 2,
+            "judge_error": 0,
+            "unjudged": 0,
+            "not_run": 0
+          },
+          "invalid": false,
+          "invalid_reason": null,
+          "rates": {
+            "correct": {
+              "k": 61,
+              "n": 97,
+              "point": 0.6289,
+              "ci95": [
+                0.5253,
+                0.7333
+              ]
+            },
+            "correct_grounded": {
+              "k": 58,
+              "n": 97,
+              "point": 0.5979,
+              "ci95": [
+                0.4949,
+                0.7021
+              ]
+            },
+            "partial": {
+              "k": 17,
+              "n": 97,
+              "point": 0.1753,
+              "ci95": [
+                0.0968,
+                0.2581
+              ]
+            },
+            "abstained": {
+              "k": 31,
+              "n": 97,
+              "point": 0.3196,
+              "ci95": [
+                0.2198,
+                0.4227
+              ]
+            },
+            "no_answer": {
+              "k": 0,
+              "n": 97,
+              "point": 0,
+              "ci95": [
+                0,
+                0
+              ]
+            },
+            "confidently_wrong": {
+              "k": 5,
+              "n": 97,
+              "point": 0.0515,
+              "ci95": [
+                0.0103,
+                0.1
+              ]
+            },
+            "contradicted": {
+              "k": 2,
+              "n": 97,
+              "point": 0.0206,
+              "ci95": [
+                0,
+                0.05
+              ]
+            }
+          },
+          "citations": {
+            "mean_per_answer": 2.3711,
+            "supported_share": 0.9696
+          },
+          "exposure": {
+            "searched": null,
+            "gold_seen": null,
+            "gold_opened": null,
+            "gold_cited": 0.6869,
+            "summary_gold_cited": null,
+            "pasted_gold": 0.7273
+          },
+          "turns_mean": 0.9798,
+          "tool_calls_mean": 0,
+          "latency_ms": {
+            "p50": 9051,
+            "p95": 15860
+          },
+          "tokens": {
+            "input": 388,
+            "output": 60209,
+            "cache_read": 53350,
+            "cache_write": 1195954
+          },
+          "answer_cost_per_correct_usd": 0.118
+        },
+        "gpt-6.1-sol": {
+          "n_tasks": 99,
+          "counted": 97,
+          "model_errors": 0,
+          "excluded": {
+            "harness_error": 0,
+            "timed_out": 0,
+            "degraded": 2,
+            "judge_error": 0,
+            "unjudged": 0,
+            "not_run": 0
+          },
+          "invalid": false,
+          "invalid_reason": null,
+          "rates": {
+            "correct": {
+              "k": 49,
+              "n": 97,
+              "point": 0.5052,
+              "ci95": [
+                0.402,
+                0.6122
+              ]
+            },
+            "correct_grounded": {
+              "k": 49,
+              "n": 97,
+              "point": 0.5052,
+              "ci95": [
+                0.402,
+                0.6122
+              ]
+            },
+            "partial": {
+              "k": 29,
+              "n": 97,
+              "point": 0.299,
+              "ci95": [
+                0.2041,
+                0.4
+              ]
+            },
+            "abstained": {
+              "k": 21,
+              "n": 97,
+              "point": 0.2165,
+              "ci95": [
+                0.1373,
+                0.3
+              ]
+            },
+            "no_answer": {
+              "k": 0,
+              "n": 97,
+              "point": 0,
+              "ci95": [
+                0,
+                0
+              ]
+            },
+            "confidently_wrong": {
+              "k": 27,
+              "n": 97,
+              "point": 0.2784,
+              "ci95": [
+                0.1848,
+                0.3776
+              ]
+            },
+            "contradicted": {
+              "k": 1,
+              "n": 97,
+              "point": 0.0103,
+              "ci95": [
+                0,
+                0.0326
+              ]
+            }
+          },
+          "citations": {
+            "mean_per_answer": 1.0825,
+            "supported_share": 1
+          },
+          "exposure": {
+            "searched": null,
+            "gold_seen": null,
+            "gold_opened": null,
+            "gold_cited": 0.596,
+            "summary_gold_cited": null,
+            "pasted_gold": 0.7273
+          },
+          "turns_mean": 0.9798,
+          "tool_calls_mean": 0,
+          "latency_ms": {
+            "p50": 5837,
+            "p95": 10094
+          },
+          "tokens": {
+            "input": 291,
+            "output": 11584,
+            "cache_read": 0,
+            "cache_write": 812478
+          },
+          "answer_cost_per_correct_usd": 0.0438
+        },
+        "particle-1": {
+          "n_tasks": 99,
+          "counted": 97,
+          "model_errors": 0,
+          "excluded": {
+            "harness_error": 0,
+            "timed_out": 0,
+            "degraded": 2,
+            "judge_error": 0,
+            "unjudged": 0,
+            "not_run": 0
+          },
+          "invalid": false,
+          "invalid_reason": null,
+          "rates": {
+            "correct": {
+              "k": 57,
+              "n": 97,
+              "point": 0.5876,
+              "ci95": [
+                0.4848,
+                0.6923
+              ]
+            },
+            "correct_grounded": {
+              "k": 55,
+              "n": 97,
+              "point": 0.567,
+              "ci95": [
+                0.4608,
+                0.6768
+              ]
+            },
+            "partial": {
+              "k": 22,
+              "n": 97,
+              "point": 0.2268,
+              "ci95": [
+                0.1413,
+                0.3163
+              ]
+            },
+            "abstained": {
+              "k": 31,
+              "n": 97,
+              "point": 0.3196,
+              "ci95": [
+                0.2198,
+                0.4227
+              ]
+            },
+            "no_answer": {
+              "k": 0,
+              "n": 97,
+              "point": 0,
+              "ci95": [
+                0,
+                0
+              ]
+            },
+            "confidently_wrong": {
+              "k": 9,
+              "n": 97,
+              "point": 0.0928,
+              "ci95": [
+                0.04,
+                0.1563
+              ]
+            },
+            "contradicted": {
+              "k": 2,
+              "n": 97,
+              "point": 0.0206,
+              "ci95": [
+                0,
+                0.0515
+              ]
+            }
+          },
+          "citations": {
+            "mean_per_answer": 2.2784,
+            "supported_share": 0.9412
+          },
+          "exposure": {
+            "searched": null,
+            "gold_seen": null,
+            "gold_opened": null,
+            "gold_cited": 0.697,
+            "summary_gold_cited": null,
+            "pasted_gold": 0.7273
+          },
+          "turns_mean": 0.9899,
+          "tool_calls_mean": 0,
+          "latency_ms": {
+            "p50": 8300,
+            "p95": 15201
+          },
+          "tokens": {
+            "input": 840727,
+            "output": 51386,
+            "cache_read": 28928,
+            "cache_write": 0
+          },
+          "answer_cost_per_correct_usd": 0.0046
+        }
+      }
+    },
+    "pooled": {
+      "A": {
+        "claude-opus-5-5": {
+          "n_tasks": 198,
+          "counted": 198,
+          "model_errors": 0,
+          "excluded": {
+            "harness_error": 0,
+            "timed_out": 0,
+            "degraded": 0,
+            "judge_error": 0,
+            "unjudged": 0,
+            "not_run": 0
+          },
+          "invalid": false,
+          "invalid_reason": null,
+          "rates": {
+            "correct": {
+              "k": 29,
+              "n": 198,
+              "point": 0.1465,
+              "ci95": [
+                0.09,
+                0.21
+              ]
+            },
+            "correct_grounded": null,
+            "partial": {
+              "k": 43,
+              "n": 198,
+              "point": 0.2172,
+              "ci95": [
+                0.155,
+                0.2828
+              ]
+            },
+            "abstained": {
+              "k": 165,
+              "n": 198,
+              "point": 0.8333,
+              "ci95": [
+                0.766,
+                0.8929
+              ]
+            },
+            "no_answer": {
+              "k": 0,
+              "n": 198,
+              "point": 0,
+              "ci95": [
+                0,
+                0
+              ]
+            },
+            "confidently_wrong": {
+              "k": 4,
+              "n": 198,
+              "point": 0.0202,
+              "ci95": [
+                0,
+                0.0479
+              ]
+            },
+            "contradicted": {
+              "k": 4,
+              "n": 198,
+              "point": 0.0202,
+              "ci95": [
+                0.0049,
+                0.0412
+              ]
+            }
+          },
+          "citations": {
+            "mean_per_answer": 0,
+            "supported_share": null
+          },
+          "exposure": {
+            "searched": null,
+            "gold_seen": null,
+            "gold_opened": null,
+            "gold_cited": null,
+            "summary_gold_cited": null,
+            "pasted_gold": null
+          },
+          "turns_mean": 1,
+          "tool_calls_mean": 0,
+          "latency_ms": {
+            "p50": 4098,
+            "p95": 8577
+          },
+          "tokens": null,
+          "answer_cost_per_correct_usd": null
+        },
+        "gpt-6.1-sol": {
+          "n_tasks": 198,
+          "counted": 198,
+          "model_errors": 0,
+          "excluded": {
+            "harness_error": 0,
+            "timed_out": 0,
+            "degraded": 0,
+            "judge_error": 0,
+            "unjudged": 0,
+            "not_run": 0
+          },
+          "invalid": false,
+          "invalid_reason": null,
+          "rates": {
+            "correct": {
+              "k": 16,
+              "n": 198,
+              "point": 0.0808,
+              "ci95": [
+                0.0365,
+                0.1337
+              ]
+            },
+            "correct_grounded": null,
+            "partial": {
+              "k": 26,
+              "n": 198,
+              "point": 0.1313,
+              "ci95": [
+                0.0816,
+                0.1869
+              ]
+            },
+            "abstained": {
+              "k": 161,
+              "n": 198,
+              "point": 0.8131,
+              "ci95": [
+                0.7421,
+                0.8775
+              ]
+            },
+            "no_answer": {
+              "k": 0,
+              "n": 198,
+              "point": 0,
+              "ci95": [
+                0,
+                0
+              ]
+            },
+            "confidently_wrong": {
+              "k": 21,
+              "n": 198,
+              "point": 0.1061,
+              "ci95": [
+                0.0567,
+                0.1633
+              ]
+            },
+            "contradicted": {
+              "k": 2,
+              "n": 198,
+              "point": 0.0101,
+              "ci95": [
+                0,
+                0.026
+              ]
+            }
+          },
+          "citations": {
+            "mean_per_answer": 0,
+            "supported_share": null
+          },
+          "exposure": {
+            "searched": null,
+            "gold_seen": null,
+            "gold_opened": null,
+            "gold_cited": null,
+            "summary_gold_cited": null,
+            "pasted_gold": null
+          },
+          "turns_mean": 1,
+          "tool_calls_mean": 0,
+          "latency_ms": {
+            "p50": 3549,
+            "p95": 9727
+          },
+          "tokens": null,
+          "answer_cost_per_correct_usd": null
+        },
+        "particle-1": {
+          "n_tasks": 198,
+          "counted": 198,
+          "model_errors": 0,
+          "excluded": {
+            "harness_error": 0,
+            "timed_out": 0,
+            "degraded": 0,
+            "judge_error": 0,
+            "unjudged": 0,
+            "not_run": 0
+          },
+          "invalid": false,
+          "invalid_reason": null,
+          "rates": {
+            "correct": {
+              "k": 17,
+              "n": 198,
+              "point": 0.0859,
+              "ci95": [
+                0.0433,
+                0.1368
+              ]
+            },
+            "correct_grounded": null,
+            "partial": {
+              "k": 33,
+              "n": 198,
+              "point": 0.1667,
+              "ci95": [
+                0.1173,
+                0.2194
+              ]
+            },
+            "abstained": {
+              "k": 175,
+              "n": 198,
+              "point": 0.8838,
+              "ci95": [
+                0.8267,
+                0.9323
+              ]
+            },
+            "no_answer": {
+              "k": 0,
+              "n": 198,
+              "point": 0,
+              "ci95": [
+                0,
+                0
+              ]
+            },
+            "confidently_wrong": {
+              "k": 6,
+              "n": 198,
+              "point": 0.0303,
+              "ci95": [
+                0.0098,
+                0.0567
+              ]
+            },
+            "contradicted": {
+              "k": 4,
+              "n": 198,
+              "point": 0.0202,
+              "ci95": [
+                0,
+                0.0474
+              ]
+            }
+          },
+          "citations": {
+            "mean_per_answer": 0,
+            "supported_share": null
+          },
+          "exposure": {
+            "searched": null,
+            "gold_seen": null,
+            "gold_opened": null,
+            "gold_cited": null,
+            "summary_gold_cited": null,
+            "pasted_gold": null
+          },
+          "turns_mean": 1.0202,
+          "tool_calls_mean": 0,
+          "latency_ms": {
+            "p50": 3026,
+            "p95": 12553
+          },
+          "tokens": null,
+          "answer_cost_per_correct_usd": null
+        }
+      },
+      "B": {
+        "claude-opus-5-5": {
+          "n_tasks": 198,
+          "counted": 197,
+          "model_errors": 0,
+          "excluded": {
+            "harness_error": 0,
+            "timed_out": 0,
+            "degraded": 1,
+            "judge_error": 0,
+            "unjudged": 0,
+            "not_run": 0
+          },
+          "invalid": false,
+          "invalid_reason": null,
+          "rates": {
+            "correct": {
+              "k": 165,
+              "n": 197,
+              "point": 0.8376,
+              "ci95": [
+                0.768,
+                0.9011
+              ]
+            },
+            "correct_grounded": {
+              "k": 133,
+              "n": 197,
+              "point": 0.6751,
+              "ci95": [
+                0.5962,
+                0.7512
+              ]
+            },
+            "partial": {
+              "k": 29,
+              "n": 197,
+              "point": 0.1472,
+              "ci95": [
+                0.0913,
+                0.2087
+              ]
+            },
+            "abstained": {
+              "k": 3,
+              "n": 197,
+              "point": 0.0152,
+              "ci95": [
+                0,
+                0.0352
+              ]
+            },
+            "no_answer": {
+              "k": 2,
+              "n": 197,
+              "point": 0.0102,
+              "ci95": [
+                0,
+                0.0251
+              ]
+            },
+            "confidently_wrong": {
+              "k": 27,
+              "n": 197,
+              "point": 0.1371,
+              "ci95": [
+                0.0841,
+                0.1939
+              ]
+            },
+            "contradicted": {
+              "k": 3,
+              "n": 197,
+              "point": 0.0152,
+              "ci95": [
+                0,
+                0.034
+              ]
+            }
+          },
+          "citations": {
+            "mean_per_answer": 2.2256,
+            "supported_share": 0.8894
+          },
+          "exposure": {
+            "searched": 1,
+            "gold_seen": 0.904,
+            "gold_opened": 0.2626,
+            "gold_cited": 0.8586,
+            "summary_gold_cited": null,
+            "pasted_gold": null
+          },
+          "turns_mean": 3.4949,
+          "tool_calls_mean": 2.8081,
+          "latency_ms": {
+            "p50": 14461,
+            "p95": 45669
+          },
+          "tokens": null,
+          "answer_cost_per_correct_usd": null
+        },
+        "gpt-6.1-sol": {
+          "n_tasks": 198,
+          "counted": 197,
+          "model_errors": 0,
+          "excluded": {
+            "harness_error": 0,
+            "timed_out": 0,
+            "degraded": 1,
+            "judge_error": 0,
+            "unjudged": 0,
+            "not_run": 0
+          },
+          "invalid": false,
+          "invalid_reason": null,
+          "rates": {
+            "correct": {
+              "k": 148,
+              "n": 197,
+              "point": 0.7513,
+              "ci95": [
+                0.68,
+                0.8191
+              ]
+            },
+            "correct_grounded": {
+              "k": 137,
+              "n": 197,
+              "point": 0.6954,
+              "ci95": [
+                0.6188,
+                0.7704
+              ]
+            },
+            "partial": {
+              "k": 40,
+              "n": 197,
+              "point": 0.203,
+              "ci95": [
+                0.1399,
+                0.2698
+              ]
+            },
+            "abstained": {
+              "k": 0,
+              "n": 197,
+              "point": 0,
+              "ci95": [
+                0,
+                0
+              ]
+            },
+            "no_answer": {
+              "k": 6,
+              "n": 197,
+              "point": 0.0305,
+              "ci95": [
+                0.0101,
+                0.0556
+              ]
+            },
+            "confidently_wrong": {
+              "k": 43,
+              "n": 197,
+              "point": 0.2183,
+              "ci95": [
+                0.1558,
+                0.2849
+              ]
+            },
+            "contradicted": {
+              "k": 3,
+              "n": 197,
+              "point": 0.0152,
+              "ci95": [
+                0,
+                0.034
+              ]
+            }
+          },
+          "citations": {
+            "mean_per_answer": 1.2618,
+            "supported_share": 0.9336
+          },
+          "exposure": {
+            "searched": 1,
+            "gold_seen": 0.904,
+            "gold_opened": 0.6919,
+            "gold_cited": 0.7323,
+            "summary_gold_cited": null,
+            "pasted_gold": null
+          },
+          "turns_mean": 4.197,
+          "tool_calls_mean": 3.6212,
+          "latency_ms": {
+            "p50": 13931,
+            "p95": 41390
+          },
+          "tokens": null,
+          "answer_cost_per_correct_usd": null
+        },
+        "particle-1": {
+          "n_tasks": 198,
+          "counted": 196,
+          "model_errors": 0,
+          "excluded": {
+            "harness_error": 0,
+            "timed_out": 0,
+            "degraded": 2,
+            "judge_error": 0,
+            "unjudged": 0,
+            "not_run": 0
+          },
+          "invalid": false,
+          "invalid_reason": null,
+          "rates": {
+            "correct": {
+              "k": 148,
+              "n": 196,
+              "point": 0.7551,
+              "ci95": [
+                0.6923,
+                0.8168
+              ]
+            },
+            "correct_grounded": {
+              "k": 113,
+              "n": 196,
+              "point": 0.5765,
+              "ci95": [
+                0.4974,
+                0.6576
+              ]
+            },
+            "partial": {
+              "k": 28,
+              "n": 196,
+              "point": 0.1429,
+              "ci95": [
+                0.0928,
+                0.197
+              ]
+            },
+            "abstained": {
+              "k": 0,
+              "n": 196,
+              "point": 0,
+              "ci95": [
+                0,
+                0
+              ]
+            },
+            "no_answer": {
+              "k": 19,
+              "n": 196,
+              "point": 0.0969,
+              "ci95": [
+                0.0591,
+                0.1373
+              ]
+            },
+            "confidently_wrong": {
+              "k": 29,
+              "n": 196,
+              "point": 0.148,
+              "ci95": [
+                0.0984,
+                0.2021
+              ]
+            },
+            "contradicted": {
+              "k": 3,
+              "n": 196,
+              "point": 0.0153,
+              "ci95": [
+                0,
+                0.0337
+              ]
+            }
+          },
+          "citations": {
+            "mean_per_answer": 2.0508,
+            "supported_share": 0.8485
+          },
+          "exposure": {
+            "searched": 1,
+            "gold_seen": 0.9545,
+            "gold_opened": 0.7172,
+            "gold_cited": 0.7828,
+            "summary_gold_cited": null,
+            "pasted_gold": null
+          },
+          "turns_mean": 5.197,
+          "tool_calls_mean": 7.4141,
+          "latency_ms": {
+            "p50": 16660,
+            "p95": 73031
+          },
+          "tokens": null,
+          "answer_cost_per_correct_usd": null
+        }
+      },
+      "C": {
+        "claude-opus-5-5": {
+          "n_tasks": 198,
+          "counted": 198,
+          "model_errors": 0,
+          "excluded": {
+            "harness_error": 0,
+            "timed_out": 0,
+            "degraded": 0,
+            "judge_error": 0,
+            "unjudged": 0,
+            "not_run": 0
+          },
+          "invalid": false,
+          "invalid_reason": null,
+          "rates": {
+            "correct": {
+              "k": 167,
+              "n": 198,
+              "point": 0.8434,
+              "ci95": [
+                0.7843,
+                0.8971
+              ]
+            },
+            "correct_grounded": {
+              "k": 114,
+              "n": 198,
+              "point": 0.5758,
+              "ci95": [
+                0.5,
+                0.652
+              ]
+            },
+            "partial": {
+              "k": 26,
+              "n": 198,
+              "point": 0.1313,
+              "ci95": [
+                0.0798,
+                0.1869
+              ]
+            },
+            "abstained": {
+              "k": 11,
+              "n": 198,
+              "point": 0.0556,
+              "ci95": [
+                0.0258,
+                0.09
+              ]
+            },
+            "no_answer": {
+              "k": 0,
+              "n": 198,
+              "point": 0,
+              "ci95": [
+                0,
+                0
+              ]
+            },
+            "confidently_wrong": {
+              "k": 20,
+              "n": 198,
+              "point": 0.101,
+              "ci95": [
+                0.0556,
+                0.151
+              ]
+            },
+            "contradicted": {
+              "k": 5,
+              "n": 198,
+              "point": 0.0253,
+              "ci95": [
+                0.0052,
+                0.0472
+              ]
+            }
+          },
+          "citations": {
+            "mean_per_answer": 2.8737,
+            "supported_share": 0.8453
+          },
+          "exposure": {
+            "searched": 1,
+            "gold_seen": 0.8939,
+            "gold_opened": 0.1717,
+            "gold_cited": 0.8535,
+            "summary_gold_cited": 0.8535,
+            "pasted_gold": null
+          },
+          "turns_mean": 4.2071,
+          "tool_calls_mean": 2.6717,
+          "latency_ms": {
+            "p50": 19218,
+            "p95": 52697
+          },
+          "tokens": null,
+          "answer_cost_per_correct_usd": null
+        },
+        "gpt-6.1-sol": {
+          "n_tasks": 198,
+          "counted": 197,
+          "model_errors": 0,
+          "excluded": {
+            "harness_error": 0,
+            "timed_out": 0,
+            "degraded": 1,
+            "judge_error": 0,
+            "unjudged": 0,
+            "not_run": 0
+          },
+          "invalid": false,
+          "invalid_reason": null,
+          "rates": {
+            "correct": {
+              "k": 150,
+              "n": 197,
+              "point": 0.7614,
+              "ci95": [
+                0.6985,
+                0.82
+              ]
+            },
+            "correct_grounded": {
+              "k": 138,
+              "n": 197,
+              "point": 0.7005,
+              "ci95": [
+                0.6324,
+                0.765
+              ]
+            },
+            "partial": {
+              "k": 42,
+              "n": 197,
+              "point": 0.2132,
+              "ci95": [
+                0.1538,
+                0.276
+              ]
+            },
+            "abstained": {
+              "k": 2,
+              "n": 197,
+              "point": 0.0102,
+              "ci95": [
+                0,
+                0.0263
+              ]
+            },
+            "no_answer": {
+              "k": 0,
+              "n": 197,
+              "point": 0,
+              "ci95": [
+                0,
+                0
+              ]
+            },
+            "confidently_wrong": {
+              "k": 45,
+              "n": 197,
+              "point": 0.2284,
+              "ci95": [
+                0.1698,
+                0.2902
+              ]
+            },
+            "contradicted": {
+              "k": 6,
+              "n": 197,
+              "point": 0.0305,
+              "ci95": [
+                0.0102,
+                0.0547
+              ]
+            }
+          },
+          "citations": {
+            "mean_per_answer": 1.3147,
+            "supported_share": 0.9266
+          },
+          "exposure": {
+            "searched": 1,
+            "gold_seen": 0.899,
+            "gold_opened": 0.6061,
+            "gold_cited": 0.6919,
+            "summary_gold_cited": 0.702,
+            "pasted_gold": null
+          },
+          "turns_mean": 5.2323,
+          "tool_calls_mean": 3.9293,
+          "latency_ms": {
+            "p50": 17195,
+            "p95": 47835
+          },
+          "tokens": null,
+          "answer_cost_per_correct_usd": null
+        },
+        "particle-1": {
+          "n_tasks": 198,
+          "counted": 197,
+          "model_errors": 0,
+          "excluded": {
+            "harness_error": 0,
+            "timed_out": 0,
+            "degraded": 1,
+            "judge_error": 0,
+            "unjudged": 0,
+            "not_run": 0
+          },
+          "invalid": false,
+          "invalid_reason": null,
+          "rates": {
+            "correct": {
+              "k": 148,
+              "n": 197,
+              "point": 0.7513,
+              "ci95": [
+                0.6859,
+                0.8141
+              ]
+            },
+            "correct_grounded": {
+              "k": 88,
+              "n": 197,
+              "point": 0.4467,
+              "ci95": [
+                0.3731,
+                0.5228
+              ]
+            },
+            "partial": {
+              "k": 28,
+              "n": 197,
+              "point": 0.1421,
+              "ci95": [
+                0.0905,
+                0.199
+              ]
+            },
+            "abstained": {
+              "k": 21,
+              "n": 197,
+              "point": 0.1066,
+              "ci95": [
+                0.066,
+                0.151
+              ]
+            },
+            "no_answer": {
+              "k": 0,
+              "n": 197,
+              "point": 0,
+              "ci95": [
+                0,
+                0
+              ]
+            },
+            "confidently_wrong": {
+              "k": 28,
+              "n": 197,
+              "point": 0.1421,
+              "ci95": [
+                0.0905,
+                0.1981
+              ]
+            },
+            "contradicted": {
+              "k": 3,
+              "n": 197,
+              "point": 0.0152,
+              "ci95": [
+                0,
+                0.0335
+              ]
+            }
+          },
+          "citations": {
+            "mean_per_answer": 2.8274,
+            "supported_share": 0.8097
+          },
+          "exposure": {
+            "searched": 1,
+            "gold_seen": 0.9545,
+            "gold_opened": 0.6616,
+            "gold_cited": 0.7828,
+            "summary_gold_cited": 0.7929,
+            "pasted_gold": null
+          },
+          "turns_mean": 6.5101,
+          "tool_calls_mean": 8.3434,
+          "latency_ms": {
+            "p50": 24896,
+            "p95": 87914
+          },
+          "tokens": null,
+          "answer_cost_per_correct_usd": null
+        }
+      },
+      "D": {
+        "claude-opus-5-5": {
+          "n_tasks": 198,
+          "counted": 194,
+          "model_errors": 0,
+          "excluded": {
+            "harness_error": 0,
+            "timed_out": 0,
+            "degraded": 4,
+            "judge_error": 0,
+            "unjudged": 0,
+            "not_run": 0
+          },
+          "invalid": false,
+          "invalid_reason": null,
+          "rates": {
+            "correct": {
+              "k": 112,
+              "n": 194,
+              "point": 0.5773,
+              "ci95": [
+                0.4878,
+                0.672
+              ]
+            },
+            "correct_grounded": {
+              "k": 105,
+              "n": 194,
+              "point": 0.5412,
+              "ci95": [
+                0.4545,
+                0.6321
+              ]
+            },
+            "partial": {
+              "k": 38,
+              "n": 194,
+              "point": 0.1959,
+              "ci95": [
+                0.1237,
+                0.2727
+              ]
+            },
+            "abstained": {
+              "k": 68,
+              "n": 194,
+              "point": 0.3505,
+              "ci95": [
+                0.2582,
+                0.4422
+              ]
+            },
+            "no_answer": {
+              "k": 0,
+              "n": 194,
+              "point": 0,
+              "ci95": [
+                0,
+                0
+              ]
+            },
+            "confidently_wrong": {
+              "k": 14,
+              "n": 194,
+              "point": 0.0722,
+              "ci95": [
+                0.0359,
+                0.1146
+              ]
+            },
+            "contradicted": {
+              "k": 7,
+              "n": 194,
+              "point": 0.0361,
+              "ci95": [
+                0.0052,
+                0.0769
+              ]
+            }
+          },
+          "citations": {
+            "mean_per_answer": 2.4691,
+            "supported_share": 0.9562
+          },
+          "exposure": {
+            "searched": null,
+            "gold_seen": null,
+            "gold_opened": null,
+            "gold_cited": 0.6465,
+            "summary_gold_cited": null,
+            "pasted_gold": 0.6818
+          },
+          "turns_mean": 0.9848,
+          "tool_calls_mean": 0,
+          "latency_ms": {
+            "p50": 9978,
+            "p95": 17654
+          },
+          "tokens": null,
+          "answer_cost_per_correct_usd": null
+        },
+        "gpt-6.1-sol": {
+          "n_tasks": 198,
+          "counted": 194,
+          "model_errors": 0,
+          "excluded": {
+            "harness_error": 0,
+            "timed_out": 0,
+            "degraded": 4,
+            "judge_error": 0,
+            "unjudged": 0,
+            "not_run": 0
+          },
+          "invalid": false,
+          "invalid_reason": null,
+          "rates": {
+            "correct": {
+              "k": 90,
+              "n": 194,
+              "point": 0.4639,
+              "ci95": [
+                0.3762,
+                0.5549
+              ]
+            },
+            "correct_grounded": {
+              "k": 90,
+              "n": 194,
+              "point": 0.4639,
+              "ci95": [
+                0.3762,
+                0.5549
+              ]
+            },
+            "partial": {
+              "k": 62,
+              "n": 194,
+              "point": 0.3196,
+              "ci95": [
+                0.24,
+                0.4022
+              ]
+            },
+            "abstained": {
+              "k": 40,
+              "n": 194,
+              "point": 0.2062,
+              "ci95": [
+                0.1392,
+                0.276
+              ]
+            },
+            "no_answer": {
+              "k": 0,
+              "n": 194,
+              "point": 0,
+              "ci95": [
+                0,
+                0
+              ]
+            },
+            "confidently_wrong": {
+              "k": 64,
+              "n": 194,
+              "point": 0.3299,
+              "ci95": [
+                0.2487,
+                0.4115
+              ]
+            },
+            "contradicted": {
+              "k": 5,
+              "n": 194,
+              "point": 0.0258,
+              "ci95": [
+                0,
+                0.0591
+              ]
+            }
+          },
+          "citations": {
+            "mean_per_answer": 1.0722,
+            "supported_share": 0.9952
+          },
+          "exposure": {
+            "searched": null,
+            "gold_seen": null,
+            "gold_opened": null,
+            "gold_cited": 0.5606,
+            "summary_gold_cited": null,
+            "pasted_gold": 0.6818
+          },
+          "turns_mean": 0.9798,
+          "tool_calls_mean": 0,
+          "latency_ms": {
+            "p50": 6548,
+            "p95": 13177
+          },
+          "tokens": null,
+          "answer_cost_per_correct_usd": null
+        },
+        "particle-1": {
+          "n_tasks": 198,
+          "counted": 194,
+          "model_errors": 0,
+          "excluded": {
+            "harness_error": 0,
+            "timed_out": 0,
+            "degraded": 4,
+            "judge_error": 0,
+            "unjudged": 0,
+            "not_run": 0
+          },
+          "invalid": false,
+          "invalid_reason": null,
+          "rates": {
+            "correct": {
+              "k": 106,
+              "n": 194,
+              "point": 0.5464,
+              "ci95": [
+                0.4579,
+                0.6393
+              ]
+            },
+            "correct_grounded": {
+              "k": 101,
+              "n": 194,
+              "point": 0.5206,
+              "ci95": [
+                0.4328,
+                0.6124
+              ]
+            },
+            "partial": {
+              "k": 46,
+              "n": 194,
+              "point": 0.2371,
+              "ci95": [
+                0.1658,
+                0.3112
+              ]
+            },
+            "abstained": {
+              "k": 67,
+              "n": 194,
+              "point": 0.3454,
+              "ci95": [
+                0.2527,
+                0.4378
+              ]
+            },
+            "no_answer": {
+              "k": 0,
+              "n": 194,
+              "point": 0,
+              "ci95": [
+                0,
+                0
+              ]
+            },
+            "confidently_wrong": {
+              "k": 21,
+              "n": 194,
+              "point": 0.1082,
+              "ci95": [
+                0.0657,
+                0.1559
+              ]
+            },
+            "contradicted": {
+              "k": 7,
+              "n": 194,
+              "point": 0.0361,
+              "ci95": [
+                0.01,
+                0.0714
+              ]
+            }
+          },
+          "citations": {
+            "mean_per_answer": 2.433,
+            "supported_share": 0.9386
+          },
+          "exposure": {
+            "searched": null,
+            "gold_seen": null,
+            "gold_opened": null,
+            "gold_cited": 0.6414,
+            "summary_gold_cited": null,
+            "pasted_gold": 0.6818
+          },
+          "turns_mean": 0.9899,
+          "tool_calls_mean": 0,
+          "latency_ms": {
+            "p50": 8397,
+            "p95": 18921
+          },
+          "tokens": null,
+          "answer_cost_per_correct_usd": null
+        }
+      }
+    }
+  },
+  "comparisons": [
+    {
+      "id": "p1_b_vs_a_opus",
+      "primary": "P1",
+      "form": "paraphrase",
+      "model": "claude-opus-5-5",
+      "a": "A",
+      "b": "B",
+      "metric": "correct",
+      "untested": false,
+      "n_pairs": 98,
+      "mean_a": 0.1327,
+      "mean_b": 0.8673,
+      "delta": 0.7347,
+      "ci95": [
+        0.6392,
+        0.8247
+      ],
+      "worse_tasks": 0,
+      "reading": "b_higher",
+      "mcnemar": {
+        "wins": 72,
+        "losses": 0,
+        "discordant": 72,
+        "p_two_sided": 0
+      },
+      "p_two_sided": 0,
+      "p_holm": 0,
+      "mde": 0.1341
+    },
+    {
+      "id": "p1_b_vs_a_particle",
+      "primary": "P1",
+      "form": "paraphrase",
+      "model": "particle-1",
+      "a": "A",
+      "b": "B",
+      "metric": "correct",
+      "untested": false,
+      "n_pairs": 97,
+      "mean_a": 0.0928,
+      "mean_b": 0.6804,
+      "delta": 0.5876,
+      "ci95": [
+        0.4854,
+        0.6875
+      ],
+      "worse_tasks": 0,
+      "reading": "b_higher",
+      "mcnemar": {
+        "wins": 57,
+        "losses": 0,
+        "discordant": 57,
+        "p_two_sided": 0
+      },
+      "p_two_sided": 0,
+      "p_holm": 0,
+      "mde": 0.1435
+    },
+    {
+      "id": "p2_c_vs_b_opus",
+      "primary": "P2",
+      "form": "paraphrase",
+      "model": "claude-opus-5-5",
+      "a": "B",
+      "b": "C",
+      "metric": "correct_grounded",
+      "untested": false,
+      "n_pairs": 98,
+      "mean_a": 0.6837,
+      "mean_b": 0.5408,
+      "delta": -0.1429,
+      "ci95": [
+        -0.2211,
+        -0.0632
+      ],
+      "worse_tasks": 16,
+      "reading": "b_lower",
+      "mcnemar": {
+        "wins": 2,
+        "losses": 16,
+        "discordant": 18,
+        "p_two_sided": 0.0013
+      },
+      "p_two_sided": 0.0013,
+      "p_holm": 0.0026,
+      "mde": 0.1117
+    },
+    {
+      "id": "p2_c_vs_b_particle",
+      "primary": "P2",
+      "form": "paraphrase",
+      "model": "particle-1",
+      "a": "B",
+      "b": "C",
+      "metric": "correct_grounded",
+      "untested": false,
+      "n_pairs": 97,
+      "mean_a": 0.5464,
+      "mean_b": 0.4021,
+      "delta": -0.1443,
+      "ci95": [
+        -0.25,
+        -0.0408
+      ],
+      "worse_tasks": 21,
+      "reading": "b_lower",
+      "mcnemar": {
+        "wins": 7,
+        "losses": 21,
+        "discordant": 28,
+        "p_two_sided": 0.0125
+      },
+      "p_two_sided": 0.0125,
+      "p_holm": 0.0125,
+      "mde": 0.1488
+    },
+    {
+      "id": "b_vs_a_correct_paraphrase_opus",
+      "primary": null,
+      "form": "paraphrase",
+      "model": "claude-opus-5-5",
+      "a": "A",
+      "b": "B",
+      "metric": "correct",
+      "untested": false,
+      "n_pairs": 98,
+      "mean_a": 0.1327,
+      "mean_b": 0.8673,
+      "delta": 0.7347,
+      "ci95": [
+        0.6392,
+        0.8247
+      ],
+      "worse_tasks": 0,
+      "reading": "b_higher",
+      "mcnemar": {
+        "wins": 72,
+        "losses": 0,
+        "discordant": 72,
+        "p_two_sided": 0
+      },
+      "p_two_sided": 0,
+      "p_holm": null,
+      "mde": 0.1341
+    },
+    {
+      "id": "c_vs_b_correct_grounded_paraphrase_opus",
+      "primary": null,
+      "form": "paraphrase",
+      "model": "claude-opus-5-5",
+      "a": "B",
+      "b": "C",
+      "metric": "correct_grounded",
+      "untested": false,
+      "n_pairs": 98,
+      "mean_a": 0.6837,
+      "mean_b": 0.5408,
+      "delta": -0.1429,
+      "ci95": [
+        -0.2211,
+        -0.0632
+      ],
+      "worse_tasks": 16,
+      "reading": "b_lower",
+      "mcnemar": {
+        "wins": 2,
+        "losses": 16,
+        "discordant": 18,
+        "p_two_sided": 0.0013
+      },
+      "p_two_sided": 0.0013,
+      "p_holm": null,
+      "mde": 0.1117
+    },
+    {
+      "id": "c_vs_b_correct_paraphrase_opus",
+      "primary": null,
+      "form": "paraphrase",
+      "model": "claude-opus-5-5",
+      "a": "B",
+      "b": "C",
+      "metric": "correct",
+      "untested": false,
+      "n_pairs": 98,
+      "mean_a": 0.8673,
+      "mean_b": 0.8367,
+      "delta": -0.0306,
+      "ci95": [
+        -0.0918,
+        0.03
+      ],
+      "worse_tasks": 6,
+      "reading": "no_measurable_difference",
+      "mcnemar": {
+        "wins": 3,
+        "losses": 6,
+        "discordant": 9,
+        "p_two_sided": 0.5078
+      },
+      "p_two_sided": 0.5078,
+      "p_holm": null,
+      "mde": 0.0856
+    },
+    {
+      "id": "d_vs_b_correct_paraphrase_opus",
+      "primary": null,
+      "form": "paraphrase",
+      "model": "claude-opus-5-5",
+      "a": "B",
+      "b": "D",
+      "metric": "correct",
+      "untested": false,
+      "n_pairs": 96,
+      "mean_a": 0.8646,
+      "mean_b": 0.5208,
+      "delta": -0.3437,
+      "ci95": [
+        -0.4554,
+        -0.236
+      ],
+      "worse_tasks": 34,
+      "reading": "b_lower",
+      "mcnemar": {
+        "wins": 1,
+        "losses": 34,
+        "discordant": 35,
+        "p_two_sided": 0
+      },
+      "p_two_sided": 0,
+      "p_holm": null,
+      "mde": 0.1582
+    },
+    {
+      "id": "d_vs_b_correct_grounded_paraphrase_opus",
+      "primary": null,
+      "form": "paraphrase",
+      "model": "claude-opus-5-5",
+      "a": "B",
+      "b": "D",
+      "metric": "correct_grounded",
+      "untested": false,
+      "n_pairs": 96,
+      "mean_a": 0.6771,
+      "mean_b": 0.4792,
+      "delta": -0.1979,
+      "ci95": [
+        -0.3125,
+        -0.087
+      ],
+      "worse_tasks": 25,
+      "reading": "b_lower",
+      "mcnemar": {
+        "wins": 6,
+        "losses": 25,
+        "discordant": 31,
+        "p_two_sided": 0.0009
+      },
+      "p_two_sided": 0.002,
+      "p_holm": null,
+      "mde": 0.1616
+    },
+    {
+      "id": "b_vs_a_correct_exact_opus",
+      "primary": null,
+      "form": "exact",
+      "model": "claude-opus-5-5",
+      "a": "A",
+      "b": "B",
+      "metric": "correct",
+      "untested": false,
+      "n_pairs": 99,
+      "mean_a": 0.1616,
+      "mean_b": 0.8081,
+      "delta": 0.6465,
+      "ci95": [
+        0.5474,
+        0.7396
+      ],
+      "worse_tasks": 0,
+      "reading": "b_higher",
+      "mcnemar": {
+        "wins": 64,
+        "losses": 0,
+        "discordant": 64,
+        "p_two_sided": 0
+      },
+      "p_two_sided": 0,
+      "p_holm": null,
+      "mde": 0.1384
+    },
+    {
+      "id": "c_vs_b_correct_grounded_exact_opus",
+      "primary": null,
+      "form": "exact",
+      "model": "claude-opus-5-5",
+      "a": "B",
+      "b": "C",
+      "metric": "correct_grounded",
+      "untested": false,
+      "n_pairs": 99,
+      "mean_a": 0.6667,
+      "mean_b": 0.6162,
+      "delta": -0.0505,
+      "ci95": [
+        -0.1277,
+        0.0217
+      ],
+      "worse_tasks": 10,
+      "reading": "no_measurable_difference",
+      "mcnemar": {
+        "wins": 5,
+        "losses": 10,
+        "discordant": 15,
+        "p_two_sided": 0.3018
+      },
+      "p_two_sided": 0.3018,
+      "p_holm": null,
+      "mde": 0.1095
+    },
+    {
+      "id": "c_vs_b_correct_exact_opus",
+      "primary": null,
+      "form": "exact",
+      "model": "claude-opus-5-5",
+      "a": "B",
+      "b": "C",
+      "metric": "correct",
+      "untested": false,
+      "n_pairs": 99,
+      "mean_a": 0.8081,
+      "mean_b": 0.8485,
+      "delta": 0.0404,
+      "ci95": [
+        0,
+        0.0909
+      ],
+      "worse_tasks": 1,
+      "reading": "no_measurable_difference",
+      "mcnemar": {
+        "wins": 5,
+        "losses": 1,
+        "discordant": 6,
+        "p_two_sided": 0.2188
+      },
+      "p_two_sided": 0.2188,
+      "p_holm": null,
+      "mde": 0.069
+    },
+    {
+      "id": "d_vs_b_correct_exact_opus",
+      "primary": null,
+      "form": "exact",
+      "model": "claude-opus-5-5",
+      "a": "B",
+      "b": "D",
+      "metric": "correct",
+      "untested": false,
+      "n_pairs": 97,
+      "mean_a": 0.8041,
+      "mean_b": 0.6289,
+      "delta": -0.1753,
+      "ci95": [
+        -0.2816,
+        -0.0659
+      ],
+      "worse_tasks": 23,
+      "reading": "b_lower",
+      "mcnemar": {
+        "wins": 6,
+        "losses": 23,
+        "discordant": 29,
+        "p_two_sided": 0.0023
+      },
+      "p_two_sided": 0.0051,
+      "p_holm": null,
+      "mde": 0.1554
+    },
+    {
+      "id": "d_vs_b_correct_grounded_exact_opus",
+      "primary": null,
+      "form": "exact",
+      "model": "claude-opus-5-5",
+      "a": "B",
+      "b": "D",
+      "metric": "correct_grounded",
+      "untested": false,
+      "n_pairs": 97,
+      "mean_a": 0.6598,
+      "mean_b": 0.5979,
+      "delta": -0.0619,
+      "ci95": [
+        -0.1735,
+        0.0526
+      ],
+      "worse_tasks": 18,
+      "reading": "no_measurable_difference",
+      "mcnemar": {
+        "wins": 12,
+        "losses": 18,
+        "discordant": 30,
+        "p_two_sided": 0.3616
+      },
+      "p_two_sided": 0.3794,
+      "p_holm": null,
+      "mde": 0.1611
+    },
+    {
+      "id": "b_vs_a_correct_pooled_opus",
+      "primary": null,
+      "form": "pooled",
+      "model": "claude-opus-5-5",
+      "a": "A",
+      "b": "B",
+      "metric": "correct",
+      "untested": false,
+      "n_pairs": 197,
+      "mean_a": 0.1472,
+      "mean_b": 0.8376,
+      "delta": 0.6904,
+      "ci95": [
+        0.6096,
+        0.767
+      ],
+      "worse_tasks": 0,
+      "reading": "b_higher",
+      "mcnemar": null,
+      "p_two_sided": 0.0001,
+      "p_holm": null,
+      "mde": 0.1134
+    },
+    {
+      "id": "c_vs_b_correct_grounded_pooled_opus",
+      "primary": null,
+      "form": "pooled",
+      "model": "claude-opus-5-5",
+      "a": "B",
+      "b": "C",
+      "metric": "correct_grounded",
+      "untested": false,
+      "n_pairs": 197,
+      "mean_a": 0.6751,
+      "mean_b": 0.5787,
+      "delta": -0.0964,
+      "ci95": [
+        -0.1538,
+        -0.041
+      ],
+      "worse_tasks": 23,
+      "reading": "b_lower",
+      "mcnemar": null,
+      "p_two_sided": 0.0026,
+      "p_holm": null,
+      "mde": 0.0814
+    },
+    {
+      "id": "c_vs_b_correct_pooled_opus",
+      "primary": null,
+      "form": "pooled",
+      "model": "claude-opus-5-5",
+      "a": "B",
+      "b": "C",
+      "metric": "correct",
+      "untested": false,
+      "n_pairs": 197,
+      "mean_a": 0.8376,
+      "mean_b": 0.8426,
+      "delta": 0.0051,
+      "ci95": [
+        -0.0348,
+        0.0471
+      ],
+      "worse_tasks": 7,
+      "reading": "no_measurable_difference",
+      "mcnemar": null,
+      "p_two_sided": 1,
+      "p_holm": null,
+      "mde": 0.059
+    },
+    {
+      "id": "d_vs_b_correct_pooled_opus",
+      "primary": null,
+      "form": "pooled",
+      "model": "claude-opus-5-5",
+      "a": "B",
+      "b": "D",
+      "metric": "correct",
+      "untested": false,
+      "n_pairs": 193,
+      "mean_a": 0.8342,
+      "mean_b": 0.5751,
+      "delta": -0.2591,
+      "ci95": [
+        -0.3529,
+        -0.1649
+      ],
+      "worse_tasks": 41,
+      "reading": "b_lower",
+      "mcnemar": null,
+      "p_two_sided": 0.0001,
+      "p_holm": null,
+      "mde": 0.1348
+    },
+    {
+      "id": "d_vs_b_correct_grounded_pooled_opus",
+      "primary": null,
+      "form": "pooled",
+      "model": "claude-opus-5-5",
+      "a": "B",
+      "b": "D",
+      "metric": "correct_grounded",
+      "untested": false,
+      "n_pairs": 193,
+      "mean_a": 0.6684,
+      "mean_b": 0.5389,
+      "delta": -0.1295,
+      "ci95": [
+        -0.2189,
+        -0.041
+      ],
+      "worse_tasks": 35,
+      "reading": "b_lower",
+      "mcnemar": null,
+      "p_two_sided": 0.0077,
+      "p_holm": null,
+      "mde": 0.1282
+    },
+    {
+      "id": "b_vs_a_correct_paraphrase_sol",
+      "primary": null,
+      "form": "paraphrase",
+      "model": "gpt-6.1-sol",
+      "a": "A",
+      "b": "B",
+      "metric": "correct",
+      "untested": false,
+      "n_pairs": 99,
+      "mean_a": 0.0909,
+      "mean_b": 0.7273,
+      "delta": 0.6364,
+      "ci95": [
+        0.5392,
+        0.7282
+      ],
+      "worse_tasks": 0,
+      "reading": "b_higher",
+      "mcnemar": {
+        "wins": 63,
+        "losses": 0,
+        "discordant": 63,
+        "p_two_sided": 0
+      },
+      "p_two_sided": 0,
+      "p_holm": null,
+      "mde": 0.1351
+    },
+    {
+      "id": "c_vs_b_correct_grounded_paraphrase_sol",
+      "primary": null,
+      "form": "paraphrase",
+      "model": "gpt-6.1-sol",
+      "a": "B",
+      "b": "C",
+      "metric": "correct_grounded",
+      "untested": false,
+      "n_pairs": 98,
+      "mean_a": 0.6939,
+      "mean_b": 0.7449,
+      "delta": 0.051,
+      "ci95": [
+        -0.0306,
+        0.1237
+      ],
+      "worse_tasks": 5,
+      "reading": "no_measurable_difference",
+      "mcnemar": {
+        "wins": 10,
+        "losses": 5,
+        "discordant": 15,
+        "p_two_sided": 0.3018
+      },
+      "p_two_sided": 0.3018,
+      "p_holm": null,
+      "mde": 0.1084
+    },
+    {
+      "id": "c_vs_b_correct_paraphrase_sol",
+      "primary": null,
+      "form": "paraphrase",
+      "model": "gpt-6.1-sol",
+      "a": "B",
+      "b": "C",
+      "metric": "correct",
+      "untested": false,
+      "n_pairs": 98,
+      "mean_a": 0.7347,
+      "mean_b": 0.7857,
+      "delta": 0.051,
+      "ci95": [
+        -0.0213,
+        0.1215
+      ],
+      "worse_tasks": 4,
+      "reading": "no_measurable_difference",
+      "mcnemar": {
+        "wins": 9,
+        "losses": 4,
+        "discordant": 13,
+        "p_two_sided": 0.2668
+      },
+      "p_two_sided": 0.2668,
+      "p_holm": null,
+      "mde": 0.1013
+    },
+    {
+      "id": "d_vs_b_correct_paraphrase_sol",
+      "primary": null,
+      "form": "paraphrase",
+      "model": "gpt-6.1-sol",
+      "a": "B",
+      "b": "D",
+      "metric": "correct",
+      "untested": false,
+      "n_pairs": 97,
+      "mean_a": 0.7216,
+      "mean_b": 0.4227,
+      "delta": -0.299,
+      "ci95": [
+        -0.4124,
+        -0.1837
+      ],
+      "worse_tasks": 34,
+      "reading": "b_lower",
+      "mcnemar": {
+        "wins": 5,
+        "losses": 34,
+        "discordant": 39,
+        "p_two_sided": 0
+      },
+      "p_two_sided": 0,
+      "p_holm": null,
+      "mde": 0.1651
+    },
+    {
+      "id": "d_vs_b_correct_grounded_paraphrase_sol",
+      "primary": null,
+      "form": "paraphrase",
+      "model": "gpt-6.1-sol",
+      "a": "B",
+      "b": "D",
+      "metric": "correct_grounded",
+      "untested": false,
+      "n_pairs": 97,
+      "mean_a": 0.6804,
+      "mean_b": 0.4227,
+      "delta": -0.2577,
+      "ci95": [
+        -0.3679,
+        -0.1458
+      ],
+      "worse_tasks": 30,
+      "reading": "b_lower",
+      "mcnemar": {
+        "wins": 5,
+        "losses": 30,
+        "discordant": 35,
+        "p_two_sided": 0
+      },
+      "p_two_sided": 0.0001,
+      "p_holm": null,
+      "mde": 0.1594
+    },
+    {
+      "id": "b_vs_a_correct_exact_sol",
+      "primary": null,
+      "form": "exact",
+      "model": "gpt-6.1-sol",
+      "a": "A",
+      "b": "B",
+      "metric": "correct",
+      "untested": false,
+      "n_pairs": 98,
+      "mean_a": 0.0714,
+      "mean_b": 0.7755,
+      "delta": 0.7041,
+      "ci95": [
+        0.6082,
+        0.7941
+      ],
+      "worse_tasks": 0,
+      "reading": "b_higher",
+      "mcnemar": {
+        "wins": 69,
+        "losses": 0,
+        "discordant": 69,
+        "p_two_sided": 0
+      },
+      "p_two_sided": 0,
+      "p_holm": null,
+      "mde": 0.1341
+    },
+    {
+      "id": "c_vs_b_correct_grounded_exact_sol",
+      "primary": null,
+      "form": "exact",
+      "model": "gpt-6.1-sol",
+      "a": "B",
+      "b": "C",
+      "metric": "correct_grounded",
+      "untested": false,
+      "n_pairs": 98,
+      "mean_a": 0.7041,
+      "mean_b": 0.6531,
+      "delta": -0.051,
+      "ci95": [
+        -0.1287,
+        0.0211
+      ],
+      "worse_tasks": 9,
+      "reading": "no_measurable_difference",
+      "mcnemar": {
+        "wins": 4,
+        "losses": 9,
+        "discordant": 13,
+        "p_two_sided": 0.2668
+      },
+      "p_two_sided": 0.3071,
+      "p_holm": null,
+      "mde": 0.1091
+    },
+    {
+      "id": "c_vs_b_correct_exact_sol",
+      "primary": null,
+      "form": "exact",
+      "model": "gpt-6.1-sol",
+      "a": "B",
+      "b": "C",
+      "metric": "correct",
+      "untested": false,
+      "n_pairs": 98,
+      "mean_a": 0.7755,
+      "mean_b": 0.7347,
+      "delta": -0.0408,
+      "ci95": [
+        -0.098,
+        0.0106
+      ],
+      "worse_tasks": 6,
+      "reading": "no_measurable_difference",
+      "mcnemar": {
+        "wins": 2,
+        "losses": 6,
+        "discordant": 8,
+        "p_two_sided": 0.2891
+      },
+      "p_two_sided": 0.2891,
+      "p_holm": null,
+      "mde": 0.0794
+    },
+    {
+      "id": "d_vs_b_correct_exact_sol",
+      "primary": null,
+      "form": "exact",
+      "model": "gpt-6.1-sol",
+      "a": "B",
+      "b": "D",
+      "metric": "correct",
+      "untested": false,
+      "n_pairs": 96,
+      "mean_a": 0.7708,
+      "mean_b": 0.5104,
+      "delta": -0.2604,
+      "ci95": [
+        -0.3627,
+        -0.1591
+      ],
+      "worse_tasks": 26,
+      "reading": "b_lower",
+      "mcnemar": {
+        "wins": 1,
+        "losses": 26,
+        "discordant": 27,
+        "p_two_sided": 0
+      },
+      "p_two_sided": 0,
+      "p_holm": null,
+      "mde": 0.1459
+    },
+    {
+      "id": "d_vs_b_correct_grounded_exact_sol",
+      "primary": null,
+      "form": "exact",
+      "model": "gpt-6.1-sol",
+      "a": "B",
+      "b": "D",
+      "metric": "correct_grounded",
+      "untested": false,
+      "n_pairs": 96,
+      "mean_a": 0.7083,
+      "mean_b": 0.5104,
+      "delta": -0.1979,
+      "ci95": [
+        -0.297,
+        -0.0978
+      ],
+      "worse_tasks": 21,
+      "reading": "b_lower",
+      "mcnemar": {
+        "wins": 2,
+        "losses": 21,
+        "discordant": 23,
+        "p_two_sided": 0.0001
+      },
+      "p_two_sided": 0.0005,
+      "p_holm": null,
+      "mde": 0.1407
+    },
+    {
+      "id": "b_vs_a_correct_pooled_sol",
+      "primary": null,
+      "form": "pooled",
+      "model": "gpt-6.1-sol",
+      "a": "A",
+      "b": "B",
+      "metric": "correct",
+      "untested": false,
+      "n_pairs": 197,
+      "mean_a": 0.0812,
+      "mean_b": 0.7513,
+      "delta": 0.6701,
+      "ci95": [
+        0.5882,
+        0.7452
+      ],
+      "worse_tasks": 0,
+      "reading": "b_higher",
+      "mcnemar": null,
+      "p_two_sided": 0.0001,
+      "p_holm": null,
+      "mde": 0.1119
+    },
+    {
+      "id": "c_vs_b_correct_grounded_pooled_sol",
+      "primary": null,
+      "form": "pooled",
+      "model": "gpt-6.1-sol",
+      "a": "B",
+      "b": "C",
+      "metric": "correct_grounded",
+      "untested": false,
+      "n_pairs": 196,
+      "mean_a": 0.699,
+      "mean_b": 0.699,
+      "delta": 0,
+      "ci95": [
+        -0.0532,
+        0.0538
+      ],
+      "worse_tasks": 13,
+      "reading": "no_measurable_difference",
+      "mcnemar": null,
+      "p_two_sided": 1,
+      "p_holm": null,
+      "mde": 0.0787
+    },
+    {
+      "id": "c_vs_b_correct_pooled_sol",
+      "primary": null,
+      "form": "pooled",
+      "model": "gpt-6.1-sol",
+      "a": "B",
+      "b": "C",
+      "metric": "correct",
+      "untested": false,
+      "n_pairs": 196,
+      "mean_a": 0.7551,
+      "mean_b": 0.7602,
+      "delta": 0.0051,
+      "ci95": [
+        -0.0421,
+        0.0532
+      ],
+      "worse_tasks": 10,
+      "reading": "no_measurable_difference",
+      "mcnemar": null,
+      "p_two_sided": 1,
+      "p_holm": null,
+      "mde": 0.0689
+    },
+    {
+      "id": "d_vs_b_correct_pooled_sol",
+      "primary": null,
+      "form": "pooled",
+      "model": "gpt-6.1-sol",
+      "a": "B",
+      "b": "D",
+      "metric": "correct",
+      "untested": false,
+      "n_pairs": 193,
+      "mean_a": 0.7461,
+      "mean_b": 0.4663,
+      "delta": -0.2798,
+      "ci95": [
+        -0.3719,
+        -0.1878
+      ],
+      "worse_tasks": 42,
+      "reading": "b_lower",
+      "mcnemar": null,
+      "p_two_sided": 0.0001,
+      "p_holm": null,
+      "mde": 0.1339
+    },
+    {
+      "id": "d_vs_b_correct_grounded_pooled_sol",
+      "primary": null,
+      "form": "pooled",
+      "model": "gpt-6.1-sol",
+      "a": "B",
+      "b": "D",
+      "metric": "correct_grounded",
+      "untested": false,
+      "n_pairs": 193,
+      "mean_a": 0.6943,
+      "mean_b": 0.4663,
+      "delta": -0.228,
+      "ci95": [
+        -0.3171,
+        -0.1405
+      ],
+      "worse_tasks": 39,
+      "reading": "b_lower",
+      "mcnemar": null,
+      "p_two_sided": 0.0001,
+      "p_holm": null,
+      "mde": 0.1276
+    },
+    {
+      "id": "b_vs_a_correct_paraphrase_particle",
+      "primary": null,
+      "form": "paraphrase",
+      "model": "particle-1",
+      "a": "A",
+      "b": "B",
+      "metric": "correct",
+      "untested": false,
+      "n_pairs": 97,
+      "mean_a": 0.0928,
+      "mean_b": 0.6804,
+      "delta": 0.5876,
+      "ci95": [
+        0.4854,
+        0.6875
+      ],
+      "worse_tasks": 0,
+      "reading": "b_higher",
+      "mcnemar": {
+        "wins": 57,
+        "losses": 0,
+        "discordant": 57,
+        "p_two_sided": 0
+      },
+      "p_two_sided": 0,
+      "p_holm": null,
+      "mde": 0.1435
+    },
+    {
+      "id": "c_vs_b_correct_grounded_paraphrase_particle",
+      "primary": null,
+      "form": "paraphrase",
+      "model": "particle-1",
+      "a": "B",
+      "b": "C",
+      "metric": "correct_grounded",
+      "untested": false,
+      "n_pairs": 97,
+      "mean_a": 0.5464,
+      "mean_b": 0.4021,
+      "delta": -0.1443,
+      "ci95": [
+        -0.25,
+        -0.0408
+      ],
+      "worse_tasks": 21,
+      "reading": "b_lower",
+      "mcnemar": {
+        "wins": 7,
+        "losses": 21,
+        "discordant": 28,
+        "p_two_sided": 0.0125
+      },
+      "p_two_sided": 0.0125,
+      "p_holm": null,
+      "mde": 0.1488
+    },
+    {
+      "id": "c_vs_b_correct_paraphrase_particle",
+      "primary": null,
+      "form": "paraphrase",
+      "model": "particle-1",
+      "a": "B",
+      "b": "C",
+      "metric": "correct",
+      "untested": false,
+      "n_pairs": 97,
+      "mean_a": 0.6804,
+      "mean_b": 0.6804,
+      "delta": 0,
+      "ci95": [
+        -0.0833,
+        0.08
+      ],
+      "worse_tasks": 9,
+      "reading": "no_measurable_difference",
+      "mcnemar": {
+        "wins": 9,
+        "losses": 9,
+        "discordant": 18,
+        "p_two_sided": 1
+      },
+      "p_two_sided": 1,
+      "p_holm": null,
+      "mde": 0.1162
+    },
+    {
+      "id": "d_vs_b_correct_paraphrase_particle",
+      "primary": null,
+      "form": "paraphrase",
+      "model": "particle-1",
+      "a": "B",
+      "b": "D",
+      "metric": "correct",
+      "untested": false,
+      "n_pairs": 95,
+      "mean_a": 0.6737,
+      "mean_b": 0.4947,
+      "delta": -0.1789,
+      "ci95": [
+        -0.2917,
+        -0.0659
+      ],
+      "worse_tasks": 24,
+      "reading": "b_lower",
+      "mcnemar": {
+        "wins": 7,
+        "losses": 24,
+        "discordant": 31,
+        "p_two_sided": 0.0033
+      },
+      "p_two_sided": 0.0056,
+      "p_holm": null,
+      "mde": 0.1613
+    },
+    {
+      "id": "d_vs_b_correct_grounded_paraphrase_particle",
+      "primary": null,
+      "form": "paraphrase",
+      "model": "particle-1",
+      "a": "B",
+      "b": "D",
+      "metric": "correct_grounded",
+      "untested": false,
+      "n_pairs": 95,
+      "mean_a": 0.5474,
+      "mean_b": 0.4632,
+      "delta": -0.0842,
+      "ci95": [
+        -0.1978,
+        0.0313
+      ],
+      "worse_tasks": 19,
+      "reading": "no_measurable_difference",
+      "mcnemar": {
+        "wins": 11,
+        "losses": 19,
+        "discordant": 30,
+        "p_two_sided": 0.2005
+      },
+      "p_two_sided": 0.216,
+      "p_holm": null,
+      "mde": 0.1648
+    },
+    {
+      "id": "b_vs_a_correct_exact_particle",
+      "primary": null,
+      "form": "exact",
+      "model": "particle-1",
+      "a": "A",
+      "b": "B",
+      "metric": "correct",
+      "untested": false,
+      "n_pairs": 99,
+      "mean_a": 0.0808,
+      "mean_b": 0.8283,
+      "delta": 0.7475,
+      "ci95": [
+        0.6596,
+        0.8316
+      ],
+      "worse_tasks": 0,
+      "reading": "b_higher",
+      "mcnemar": {
+        "wins": 74,
+        "losses": 0,
+        "discordant": 74,
+        "p_two_sided": 0
+      },
+      "p_two_sided": 0,
+      "p_holm": null,
+      "mde": 0.1252
+    },
+    {
+      "id": "c_vs_b_correct_grounded_exact_particle",
+      "primary": null,
+      "form": "exact",
+      "model": "particle-1",
+      "a": "B",
+      "b": "C",
+      "metric": "correct_grounded",
+      "untested": false,
+      "n_pairs": 99,
+      "mean_a": 0.6061,
+      "mean_b": 0.4848,
+      "delta": -0.1212,
+      "ci95": [
+        -0.2268,
+        -0.0105
+      ],
+      "worse_tasks": 21,
+      "reading": "b_lower",
+      "mcnemar": {
+        "wins": 9,
+        "losses": 21,
+        "discordant": 30,
+        "p_two_sided": 0.0428
+      },
+      "p_two_sided": 0.0498,
+      "p_holm": null,
+      "mde": 0.1558
+    },
+    {
+      "id": "c_vs_b_correct_exact_particle",
+      "primary": null,
+      "form": "exact",
+      "model": "particle-1",
+      "a": "B",
+      "b": "C",
+      "metric": "correct",
+      "untested": false,
+      "n_pairs": 99,
+      "mean_a": 0.8283,
+      "mean_b": 0.8182,
+      "delta": -0.0101,
+      "ci95": [
+        -0.0849,
+        0.0632
+      ],
+      "worse_tasks": 8,
+      "reading": "no_measurable_difference",
+      "mcnemar": {
+        "wins": 7,
+        "losses": 8,
+        "discordant": 15,
+        "p_two_sided": 1
+      },
+      "p_two_sided": 1,
+      "p_holm": null,
+      "mde": 0.1101
+    },
+    {
+      "id": "d_vs_b_correct_exact_particle",
+      "primary": null,
+      "form": "exact",
+      "model": "particle-1",
+      "a": "B",
+      "b": "D",
+      "metric": "correct",
+      "untested": false,
+      "n_pairs": 97,
+      "mean_a": 0.8247,
+      "mean_b": 0.5876,
+      "delta": -0.2371,
+      "ci95": [
+        -0.3469,
+        -0.1277
+      ],
+      "worse_tasks": 26,
+      "reading": "b_lower",
+      "mcnemar": {
+        "wins": 3,
+        "losses": 26,
+        "discordant": 29,
+        "p_two_sided": 0
+      },
+      "p_two_sided": 0.0002,
+      "p_holm": null,
+      "mde": 0.1589
+    },
+    {
+      "id": "d_vs_b_correct_grounded_exact_particle",
+      "primary": null,
+      "form": "exact",
+      "model": "particle-1",
+      "a": "B",
+      "b": "D",
+      "metric": "correct_grounded",
+      "untested": false,
+      "n_pairs": 97,
+      "mean_a": 0.5979,
+      "mean_b": 0.567,
+      "delta": -0.0309,
+      "ci95": [
+        -0.16,
+        0.0968
+      ],
+      "worse_tasks": 19,
+      "reading": "no_measurable_difference",
+      "mcnemar": {
+        "wins": 16,
+        "losses": 19,
+        "discordant": 35,
+        "p_two_sided": 0.7359
+      },
+      "p_two_sided": 0.757,
+      "p_holm": null,
+      "mde": 0.1849
+    },
+    {
+      "id": "b_vs_a_correct_pooled_particle",
+      "primary": null,
+      "form": "pooled",
+      "model": "particle-1",
+      "a": "A",
+      "b": "B",
+      "metric": "correct",
+      "untested": false,
+      "n_pairs": 196,
+      "mean_a": 0.0867,
+      "mean_b": 0.7551,
+      "delta": 0.6684,
+      "ci95": [
+        0.598,
+        0.7366
+      ],
+      "worse_tasks": 0,
+      "reading": "b_higher",
+      "mcnemar": null,
+      "p_two_sided": 0.0001,
+      "p_holm": null,
+      "mde": 0.0981
+    },
+    {
+      "id": "c_vs_b_correct_grounded_pooled_particle",
+      "primary": null,
+      "form": "pooled",
+      "model": "particle-1",
+      "a": "B",
+      "b": "C",
+      "metric": "correct_grounded",
+      "untested": false,
+      "n_pairs": 196,
+      "mean_a": 0.5765,
+      "mean_b": 0.4439,
+      "delta": -0.1327,
+      "ci95": [
+        -0.2092,
+        -0.0537
+      ],
+      "worse_tasks": 35,
+      "reading": "b_lower",
+      "mcnemar": null,
+      "p_two_sided": 0.0022,
+      "p_holm": null,
+      "mde": 0.11
+    },
+    {
+      "id": "c_vs_b_correct_pooled_particle",
+      "primary": null,
+      "form": "pooled",
+      "model": "particle-1",
+      "a": "B",
+      "b": "C",
+      "metric": "correct",
+      "untested": false,
+      "n_pairs": 196,
+      "mean_a": 0.7551,
+      "mean_b": 0.75,
+      "delta": -0.0051,
+      "ci95": [
+        -0.0573,
+        0.0462
+      ],
+      "worse_tasks": 14,
+      "reading": "no_measurable_difference",
+      "mcnemar": null,
+      "p_two_sided": 1,
+      "p_holm": null,
+      "mde": 0.0747
+    },
+    {
+      "id": "d_vs_b_correct_pooled_particle",
+      "primary": null,
+      "form": "pooled",
+      "model": "particle-1",
+      "a": "B",
+      "b": "D",
+      "metric": "correct",
+      "untested": false,
+      "n_pairs": 192,
+      "mean_a": 0.75,
+      "mean_b": 0.5417,
+      "delta": -0.2083,
+      "ci95": [
+        -0.2974,
+        -0.116
+      ],
+      "worse_tasks": 36,
+      "reading": "b_lower",
+      "mcnemar": null,
+      "p_two_sided": 0.0002,
+      "p_holm": null,
+      "mde": 0.1296
+    },
+    {
+      "id": "d_vs_b_correct_grounded_pooled_particle",
+      "primary": null,
+      "form": "pooled",
+      "model": "particle-1",
+      "a": "B",
+      "b": "D",
+      "metric": "correct_grounded",
+      "untested": false,
+      "n_pairs": 192,
+      "mean_a": 0.5729,
+      "mean_b": 0.5156,
+      "delta": -0.0573,
+      "ci95": [
+        -0.1505,
+        0.0374
+      ],
+      "worse_tasks": 28,
+      "reading": "no_measurable_difference",
+      "mcnemar": null,
+      "p_two_sided": 0.2894,
+      "p_holm": null,
+      "mde": 0.1342
+    }
+  ],
+  "by_origin": {
+    "original": {
+      "n_tasks": 37,
+      "by_type": {
+        "identifier": 13,
+        "error_string": 19,
+        "time_window": 2,
+        "cross_source": 0,
+        "topic": 3
+      },
+      "comparisons": [
+        {
+          "id": "p1_b_vs_a_opus",
+          "primary": null,
+          "form": "paraphrase",
+          "model": "claude-opus-5-5",
+          "a": "A",
+          "b": "B",
+          "metric": "correct",
+          "untested": false,
+          "n_pairs": 37,
+          "mean_a": 0.1081,
+          "mean_b": 0.8649,
+          "delta": 0.7568,
+          "ci95": [
+            0.6,
+            0.8947
+          ],
+          "worse_tasks": 0,
+          "reading": "b_higher",
+          "mcnemar": {
+            "wins": 28,
+            "losses": 0,
+            "discordant": 28,
+            "p_two_sided": 0
+          },
+          "p_two_sided": 0,
+          "p_holm": null,
+          "mde": 0.2183
+        },
+        {
+          "id": "p1_b_vs_a_particle",
+          "primary": null,
+          "form": "paraphrase",
+          "model": "particle-1",
+          "a": "A",
+          "b": "B",
+          "metric": "correct",
+          "untested": false,
+          "n_pairs": 37,
+          "mean_a": 0.0541,
+          "mean_b": 0.7297,
+          "delta": 0.6757,
+          "ci95": [
+            0.5135,
+            0.8333
+          ],
+          "worse_tasks": 0,
+          "reading": "b_higher",
+          "mcnemar": {
+            "wins": 25,
+            "losses": 0,
+            "discordant": 25,
+            "p_two_sided": 0
+          },
+          "p_two_sided": 0,
+          "p_holm": null,
+          "mde": 0.2334
+        },
+        {
+          "id": "p2_c_vs_b_opus",
+          "primary": null,
+          "form": "paraphrase",
+          "model": "claude-opus-5-5",
+          "a": "B",
+          "b": "C",
+          "metric": "correct_grounded",
+          "untested": false,
+          "n_pairs": 37,
+          "mean_a": 0.6757,
+          "mean_b": 0.5676,
+          "delta": -0.1081,
+          "ci95": [
+            -0.2432,
+            0
+          ],
+          "worse_tasks": 5,
+          "reading": "no_measurable_difference",
+          "mcnemar": {
+            "wins": 1,
+            "losses": 5,
+            "discordant": 6,
+            "p_two_sided": 0.2188
+          },
+          "p_two_sided": 0.2188,
+          "p_holm": null,
+          "mde": 0.182
+        },
+        {
+          "id": "p2_c_vs_b_particle",
+          "primary": null,
+          "form": "paraphrase",
+          "model": "particle-1",
+          "a": "B",
+          "b": "C",
+          "metric": "correct_grounded",
+          "untested": false,
+          "n_pairs": 37,
+          "mean_a": 0.5946,
+          "mean_b": 0.3514,
+          "delta": -0.2432,
+          "ci95": [
+            -0.3889,
+            -0.1111
+          ],
+          "worse_tasks": 9,
+          "reading": "b_lower",
+          "mcnemar": {
+            "wins": 0,
+            "losses": 9,
+            "discordant": 9,
+            "p_two_sided": 0.0039
+          },
+          "p_two_sided": 0.0039,
+          "p_holm": null,
+          "mde": 0.1968
+        }
+      ]
+    },
+    "replacement": {
+      "n_tasks": 62,
+      "by_type": {
+        "identifier": 6,
+        "error_string": 1,
+        "time_window": 18,
+        "cross_source": 20,
+        "topic": 17
+      },
+      "comparisons": [
+        {
+          "id": "p1_b_vs_a_opus",
+          "primary": null,
+          "form": "paraphrase",
+          "model": "claude-opus-5-5",
+          "a": "A",
+          "b": "B",
+          "metric": "correct",
+          "untested": false,
+          "n_pairs": 61,
+          "mean_a": 0.1475,
+          "mean_b": 0.8689,
+          "delta": 0.7213,
+          "ci95": [
+            0.5965,
+            0.8358
+          ],
+          "worse_tasks": 0,
+          "reading": "b_higher",
+          "mcnemar": {
+            "wins": 44,
+            "losses": 0,
+            "discordant": 44,
+            "p_two_sided": 0
+          },
+          "p_two_sided": 0,
+          "p_holm": null,
+          "mde": 0.1719
+        },
+        {
+          "id": "p1_b_vs_a_particle",
+          "primary": null,
+          "form": "paraphrase",
+          "model": "particle-1",
+          "a": "A",
+          "b": "B",
+          "metric": "correct",
+          "untested": false,
+          "n_pairs": 60,
+          "mean_a": 0.1167,
+          "mean_b": 0.65,
+          "delta": 0.5333,
+          "ci95": [
+            0.4074,
+            0.6557
+          ],
+          "worse_tasks": 0,
+          "reading": "b_higher",
+          "mcnemar": {
+            "wins": 32,
+            "losses": 0,
+            "discordant": 32,
+            "p_two_sided": 0
+          },
+          "p_two_sided": 0,
+          "p_holm": null,
+          "mde": 0.1798
+        },
+        {
+          "id": "p2_c_vs_b_opus",
+          "primary": null,
+          "form": "paraphrase",
+          "model": "claude-opus-5-5",
+          "a": "B",
+          "b": "C",
+          "metric": "correct_grounded",
+          "untested": false,
+          "n_pairs": 61,
+          "mean_a": 0.6885,
+          "mean_b": 0.5246,
+          "delta": -0.1639,
+          "ci95": [
+            -0.2667,
+            -0.0667
+          ],
+          "worse_tasks": 11,
+          "reading": "b_lower",
+          "mcnemar": {
+            "wins": 1,
+            "losses": 11,
+            "discordant": 12,
+            "p_two_sided": 0.0063
+          },
+          "p_two_sided": 0.0063,
+          "p_holm": null,
+          "mde": 0.1415
+        },
+        {
+          "id": "p2_c_vs_b_particle",
+          "primary": null,
+          "form": "paraphrase",
+          "model": "particle-1",
+          "a": "B",
+          "b": "C",
+          "metric": "correct_grounded",
+          "untested": false,
+          "n_pairs": 60,
+          "mean_a": 0.5167,
+          "mean_b": 0.4333,
+          "delta": -0.0833,
+          "ci95": [
+            -0.2241,
+            0.0526
+          ],
+          "worse_tasks": 12,
+          "reading": "no_measurable_difference",
+          "mcnemar": {
+            "wins": 7,
+            "losses": 12,
+            "discordant": 19,
+            "p_two_sided": 0.3593
+          },
+          "p_two_sided": 0.3593,
+          "p_holm": null,
+          "mde": 0.2042
+        }
+      ]
+    }
+  },
+  "judge_agreement": {
+    "second_judge_correct": {
+      "n": 275,
+      "agree": 271,
+      "kappa": 0.9673
+    },
+    "audit": {
+      "n": 30,
+      "agree": 29
+    }
+  },
+  "judges": {
+    "gpt-6-astra": {
+      "rows": 1551,
+      "truncated": 0,
+      "versions": [
+        "gpt-6-astra"
+      ]
+    },
+    "claude-opus-5-5": {
+      "rows": 1055,
+      "truncated": 0,
+      "versions": [
+        "claude-opus-5-5"
+      ]
+    }
+  },
+  "judge_check": {
+    "judge_check_sha256": "0f55927916ab4273e5daa431b40f8bdb5e4983f647c2f8cd2caee1da5ee3fd1f",
+    "passed": true,
+    "waiver": null,
+    "judges": {
+      "gpt-6-astra": {
+        "answer_models": [
+          "claude-opus-5-5",
+          "particle-1"
+        ],
+        "correct": {
+          "n_rows": 143,
+          "unusable": 0,
+          "labeller_agree": 143,
+          "labeller_kappa": 1,
+          "n_labelled": 143,
+          "n_bad": 69,
+          "n_good": 74,
+          "caught": 69,
+          "false_fails": 0,
+          "catch_rate": 1,
+          "false_fail_rate": 0,
+          "kappa": 1,
+          "passed": true
+        },
+        "correct_grounded": {
+          "n_rows": 104,
+          "unusable": 0,
+          "labeller_agree": 102,
+          "labeller_kappa": 0.9616,
+          "n_labelled": 102,
+          "n_bad": 51,
+          "n_good": 51,
+          "caught": 51,
+          "false_fails": 0,
+          "catch_rate": 1,
+          "false_fail_rate": 0,
+          "kappa": 1,
+          "passed": true
+        },
+        "by_model": {
+          "claude-opus-5-5": {
+            "correct": {
+              "n_rows": 76,
+              "unusable": 0,
+              "labeller_agree": 76,
+              "labeller_kappa": 1,
+              "n_labelled": 76,
+              "n_bad": 32,
+              "n_good": 44,
+              "caught": 32,
+              "false_fails": 0,
+              "catch_rate": 1,
+              "false_fail_rate": 0,
+              "kappa": 1,
+              "passed": true
+            },
+            "correct_grounded": {
+              "n_rows": 56,
+              "unusable": 0,
+              "labeller_agree": 55,
+              "labeller_kappa": 0.9637,
+              "n_labelled": 55,
+              "n_bad": 24,
+              "n_good": 31,
+              "caught": 24,
+              "false_fails": 0,
+              "catch_rate": 1,
+              "false_fail_rate": 0,
+              "kappa": 1,
+              "passed": true
+            }
+          },
+          "particle-1": {
+            "correct": {
+              "n_rows": 67,
+              "unusable": 0,
+              "labeller_agree": 67,
+              "labeller_kappa": 1,
+              "n_labelled": 67,
+              "n_bad": 37,
+              "n_good": 30,
+              "caught": 37,
+              "false_fails": 0,
+              "catch_rate": 1,
+              "false_fail_rate": 0,
+              "kappa": 1,
+              "passed": true
+            },
+            "correct_grounded": {
+              "n_rows": 48,
+              "unusable": 0,
+              "labeller_agree": 47,
+              "labeller_kappa": 0.9574,
+              "n_labelled": 47,
+              "n_bad": 27,
+              "n_good": 20,
+              "caught": 27,
+              "false_fails": 0,
+              "catch_rate": 1,
+              "false_fail_rate": 0,
+              "kappa": 1,
+              "passed": true
+            }
+          }
+        }
+      },
+      "claude-opus-5-5": {
+        "answer_models": [
+          "gpt-6.1-sol"
+        ],
+        "correct": {
+          "n_rows": 74,
+          "unusable": 0,
+          "labeller_agree": 71,
+          "labeller_kappa": 0.9188,
+          "n_labelled": 71,
+          "n_bad": 37,
+          "n_good": 34,
+          "caught": 37,
+          "false_fails": 0,
+          "catch_rate": 1,
+          "false_fail_rate": 0,
+          "kappa": 1,
+          "passed": true
+        },
+        "correct_grounded": {
+          "n_rows": 54,
+          "unusable": 0,
+          "labeller_agree": 52,
+          "labeller_kappa": 0.9255,
+          "n_labelled": 52,
+          "n_bad": 24,
+          "n_good": 28,
+          "caught": 24,
+          "false_fails": 0,
+          "catch_rate": 1,
+          "false_fail_rate": 0,
+          "kappa": 1,
+          "passed": true
+        },
+        "by_model": {
+          "gpt-6.1-sol": {
+            "correct": {
+              "n_rows": 74,
+              "unusable": 0,
+              "labeller_agree": 71,
+              "labeller_kappa": 0.9188,
+              "n_labelled": 71,
+              "n_bad": 37,
+              "n_good": 34,
+              "caught": 37,
+              "false_fails": 0,
+              "catch_rate": 1,
+              "false_fail_rate": 0,
+              "kappa": 1,
+              "passed": true
+            },
+            "correct_grounded": {
+              "n_rows": 54,
+              "unusable": 0,
+              "labeller_agree": 52,
+              "labeller_kappa": 0.9255,
+              "n_labelled": 52,
+              "n_bad": 24,
+              "n_good": 28,
+              "caught": 24,
+              "false_fails": 0,
+              "catch_rate": 1,
+              "false_fail_rate": 0,
+              "kappa": 1,
+              "passed": true
+            }
+          }
+        }
+      }
+    }
+  },
+  "custody": {
+    "readonly_verified_start": true,
+    "readonly_verified_end": true,
+    "guard_refusals": {
+      "insert": 12059,
+      "other": 3598,
+      "telemetry_write": 398,
+      "delete": 63,
+      "set_session": 8
+    },
+    "ai_refusals": {},
+    "degraded_stages": {
+      "keyword_candidates_incomplete": 1076,
+      "safe_index_pending": 1188,
+      "projection_pending": 1188,
+      "keyword_arm_failed": 18,
+      "keyword_count_unavailable": 8,
+      "vector_candidates_incomplete": 36,
+      "keyword_relaxed_carried": 25
+    }
+  }
+}

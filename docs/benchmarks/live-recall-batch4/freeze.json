@@ -1,0 +1,57 @@
+{
+  "schema": "live-recall-freeze/v1",
+  "protocol": "batch4",
+  "questions_sha256": "69f923673764fc11aa501a4d3b0efae53ff7d2ec8ce806a32176472662b3ca04",
+  "n_questions": 50,
+  "by_type": {
+    "identifier": 10,
+    "error_string": 10,
+    "time_window": 10,
+    "cross_source": 10,
+    "topic": 10
+  },
+  "windowed_time_window": 10,
+  "mde_success_at_5": {
+    "p1_paraphrase": {
+      "pd10": 0.1253,
+      "pd20": 0.1772,
+      "pd30": 0.217
+    },
+    "p2_paraphrase": {
+      "pd10": 0.1253,
+      "pd20": 0.1772,
+      "pd30": 0.217
+    },
+    "batch1_p1_both_forms_range": {
+      "pd10": [
+        0.0886,
+        0.1253
+      ],
+      "pd20": [
+        0.1253,
+        0.1772
+      ],
+      "pd30": [
+        0.1534,
+        0.217
+      ]
+    },
+    "g2_primary_paraphrase_vs_exact_configured": {
+      "pd10": 0.1253,
+      "pd20": 0.1772,
+      "pd30": 0.217
+    }
+  },
+  "gbrain_version": "0.60.682.0",
+  "visibility_epoch": "post_gbra_398",
+  "prior_question_files": [
+    "88eaa30c34d85d303aff2a0faf81e9adfe6a5815dadc5196879c827e6f02ae9f",
+    "dd69701c55534429fb758ca8335af175a3dfcc3c9aca6c9c2d2fc81bf3f11099",
+    "c023694ef59e03e64fd1b0553b6516f7bccad424b85f0f74bdf95d2a08b6014e"
+  ],
+  "prior_overlap": {
+    "question_ids": 0,
+    "forms": 0,
+    "gold_pages": 0
+  }
+}

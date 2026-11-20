@@ -13,7 +13,7 @@ import { join } from 'node:path';
 import { BudgetRun, closeLedgers, initLedger } from '../../eval/runner/budget-ledger.ts';
 import { resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
 import { loadCorpus } from '../../eval/runner/memory-qa/corpus.ts';
-import { ChatClient } from '../../eval/runner/memory-qa/qa-v2.ts';
+import { ChatClient, VERDICT_RULE } from '../../eval/runner/memory-qa/qa-v2.ts';
 import * as memoryQa from '../../eval/runner/memory-qa/run.ts';
 import * as systems from '../../eval/runner/memory-qa/run-systems.ts';
 
@@ -41,14 +41,15 @@ const PARTICLE_OK = {
 };
 const OPENAI_YES = { model: 'gpt-4o-mini', choices: [{ finish_reason: 'stop', message: { content: 'yes' } }], usage: { prompt_tokens: 300, completion_tokens: 1 } };
 const ANTHROPIC_OK = { id: 'msg_1', type: 'message', role: 'assistant', model: 'claude-sonnet-5-5', content: [{ type: 'text', text: '85 dollars' }], stop_reason: 'end_turn', stop_sequence: null, usage: { input_tokens: 100, output_tokens: 10 } };
+const ANTHROPIC_YES = { ...ANTHROPIC_OK, content: [{ type: 'text', text: 'Yes' }], usage: { input_tokens: 100, output_tokens: 1 } };
 
 /** Mock fetch: Particle, OpenAI and Anthropic each answer with one canned success. Records every request. */
-function serve() {
+function serve(anthropic: object = ANTHROPIC_OK) {
   const seen: Array<{ host: string; body: Record<string, any> }> = [];
   globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = new URL(input instanceof Request ? input.url : String(input));
     seen.push({ host: url.hostname, body: JSON.parse(String(init?.body)) });
-    const body = { 'api.particle.ai': PARTICLE_OK, 'api.openai.com': OPENAI_YES, 'api.anthropic.com': ANTHROPIC_OK }[url.hostname];
+    const body = { 'api.particle.ai': PARTICLE_OK, 'api.openai.com': OPENAI_YES, 'api.anthropic.com': anthropic }[url.hostname];
     if (!body) throw new Error(`unexpected request to ${url.hostname}`);
     return new Response(JSON.stringify(body), { status: 200, headers: { 'content-type': 'application/json' } });
   }) as typeof fetch;
@@ -141,7 +142,7 @@ describe('the run config hash covers how the reading lane judges (#248)', () => 
     const gut = resolveGbrainUnderTest(null), corpus = loadCorpus('fixture');
     const args = (judge: string, reader = 'openai:gpt-4o-mini', extra: string[] = []) => memoryQa.parseRunArgs(['--benchmark', 'fixture', '--qa', 'reader', '--qa-context', 'oracle', '--reader', reader, '--judge', judge, ...extra, '--output', join(tmp(), 'out')]);
     const reading = (a: memoryQa.RunArgs) => memoryQa.runConfigPreimage(a, gut, corpus).reading;
-    expect(reading(args('anthropic:claude-sonnet-5-5'))).toEqual({ judging: 'qa-v2 judgeResponse', judge_max_tokens_sent: 2000, reader_max_tokens_sent: 1024 });
+    expect(reading(args('anthropic:claude-sonnet-5-5'))).toEqual({ judging: 'qa-v2 judgeResponse', verdict: VERDICT_RULE, judge_max_tokens_sent: 2000, reader_max_tokens_sent: 1024 });
     expect(reading(args('openai:gpt-4o-2024-08-06'))).toMatchObject({ judge_max_tokens_sent: 10 });
     expect(reading(args('openai:gpt-4o-mini', 'particle:particle-1'))).toMatchObject({ reader_max_tokens_sent: 16_000 });
     expect(reading(args('openai:gpt-4o-mini', 'openai:gpt-6.1-sol', ['--qa-max-tokens', '512']))).toMatchObject({ reader_max_tokens_sent: 2000 });
@@ -149,7 +150,7 @@ describe('the run config hash covers how the reading lane judges (#248)', () => 
     expect(memoryQa.runConfigHash(a, gut, corpus)).toBe(createHash('sha256').update(JSON.stringify(memoryQa.runConfigPreimage(a, gut, corpus))).digest('hex'));
     const retrievalOnly = memoryQa.parseRunArgs(['--benchmark', 'fixture', '--output', join(tmp(), 'none')]);
     expect('reading' in memoryQa.runConfigPreimage(retrievalOnly, gut, corpus)).toBe(false);
-    const mock = serve();
+    const mock = serve(ANTHROPIC_YES);
     const q = corpus.questions[0];
     const row = await memoryQa.readAndJudge({ benchmark: 'fixture', qa: a.qa, q, chat: new ChatClient(process.env.GBRAIN_EVALS_QA_CACHE!, () => 0), think: null, prompt: 'What did the vet visit cost?', countTokens: null });
     expect(row.qa_error).toBeUndefined();

@@ -1,0 +1,2502 @@
+{
+ "21436231": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 495272
+ },
+ "41698283": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 488976
+ },
+ "59524333": {
+  "sessions": 44,
+  "truncated": 0,
+  "chars": 497899
+ },
+ "60036106": {
+  "sessions": 44,
+  "truncated": 0,
+  "chars": 501714
+ },
+ "60159905": {
+  "sessions": 44,
+  "truncated": 0,
+  "chars": 506486
+ },
+ "65240037": {
+  "sessions": 51,
+  "truncated": 0,
+  "chars": 504881
+ },
+ "71017276": {
+  "sessions": 49,
+  "truncated": 0,
+  "chars": 487178
+ },
+ "71017277": {
+  "sessions": 51,
+  "truncated": 0,
+  "chars": 510308
+ },
+ "95228167": {
+  "sessions": 49,
+  "truncated": 0,
+  "chars": 503586
+ },
+ "001be529": {
+  "sessions": 51,
+  "truncated": 0,
+  "chars": 501181
+ },
+ "00ca467f": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 512892
+ },
+ "0100672e": {
+  "sessions": 49,
+  "truncated": 0,
+  "chars": 516218
+ },
+ "01493427": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 502575
+ },
+ "031748ae": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 512634
+ },
+ "031748ae_abs": {
+  "sessions": 52,
+  "truncated": 0,
+  "chars": 512882
+ },
+ "06878be2": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 508770
+ },
+ "06db6396": {
+  "sessions": 51,
+  "truncated": 0,
+  "chars": 511389
+ },
+ "06f04340": {
+  "sessions": 55,
+  "truncated": 0,
+  "chars": 504108
+ },
+ "07741c44": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 522327
+ },
+ "07741c45": {
+  "sessions": 49,
+  "truncated": 0,
+  "chars": 485537
+ },
+ "078150f1": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 495783
+ },
+ "07b6f563": {
+  "sessions": 52,
+  "truncated": 0,
+  "chars": 512245
+ },
+ "0862e8bf": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 489974
+ },
+ "0862e8bf_abs": {
+  "sessions": 52,
+  "truncated": 0,
+  "chars": 498054
+ },
+ "08e075c7": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 511907
+ },
+ "08f4fc43": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 510928
+ },
+ "0977f2af": {
+  "sessions": 44,
+  "truncated": 0,
+  "chars": 495777
+ },
+ "099778bb": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 524703
+ },
+ "09ba9854": {
+  "sessions": 44,
+  "truncated": 0,
+  "chars": 498869
+ },
+ "09ba9854_abs": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 506028
+ },
+ "09d032c9": {
+  "sessions": 43,
+  "truncated": 0,
+  "chars": 494835
+ },
+ "0a34ad58": {
+  "sessions": 42,
+  "truncated": 0,
+  "chars": 510255
+ },
+ "0a995998": {
+  "sessions": 44,
+  "truncated": 0,
+  "chars": 510861
+ },
+ "0bb5a684": {
+  "sessions": 42,
+  "truncated": 0,
+  "chars": 515369
+ },
+ "0bc8ad92": {
+  "sessions": 49,
+  "truncated": 0,
+  "chars": 494911
+ },
+ "0bc8ad93": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 511014
+ },
+ "0db4c65d": {
+  "sessions": 44,
+  "truncated": 0,
+  "chars": 486635
+ },
+ "0ddfec37": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 491178
+ },
+ "0ddfec37_abs": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 504072
+ },
+ "0e4e4c46": {
+  "sessions": 49,
+  "truncated": 0,
+  "chars": 510244
+ },
+ "0e5e2d1a": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 502984
+ },
+ "0ea62687": {
+  "sessions": 43,
+  "truncated": 0,
+  "chars": 501295
+ },
+ "0edc2aef": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 515708
+ },
+ "0f05491a": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 495271
+ },
+ "10d9b85a": {
+  "sessions": 44,
+  "truncated": 0,
+  "chars": 504684
+ },
+ "10e09553": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 493171
+ },
+ "118b2229": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 497977
+ },
+ "1192316e": {
+  "sessions": 42,
+  "truncated": 0,
+  "chars": 500168
+ },
+ "129d1232": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 499379
+ },
+ "1568498a": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 493015
+ },
+ "15745da0": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 502986
+ },
+ "15745da0_abs": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 492798
+ },
+ "157a136e": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 508060
+ },
+ "16c90bf4": {
+  "sessions": 55,
+  "truncated": 0,
+  "chars": 508557
+ },
+ "184da446": {
+  "sessions": 42,
+  "truncated": 0,
+  "chars": 494482
+ },
+ "18bc8abd": {
+  "sessions": 44,
+  "truncated": 0,
+  "chars": 488553
+ },
+ "18dcd5a5": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 512730
+ },
+ "1903aded": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 503762
+ },
+ "195a1a1b": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 511669
+ },
+ "19b5f2b3": {
+  "sessions": 43,
+  "truncated": 0,
+  "chars": 496962
+ },
+ "19b5f2b3_abs": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 496792
+ },
+ "1a1907b4": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 518508
+ },
+ "1a8a66a6": {
+  "sessions": 51,
+  "truncated": 0,
+  "chars": 514734
+ },
+ "1b9b7252": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 497820
+ },
+ "1c0ddc50": {
+  "sessions": 51,
+  "truncated": 0,
+  "chars": 505601
+ },
+ "1c549ce4": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 503492
+ },
+ "1cea1afa": {
+  "sessions": 49,
+  "truncated": 0,
+  "chars": 507483
+ },
+ "1d4da289": {
+  "sessions": 55,
+  "truncated": 0,
+  "chars": 521075
+ },
+ "1d4e3b97": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 499513
+ },
+ "1da05512": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 511201
+ },
+ "1de5cff2": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 505276
+ },
+ "1e043500": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 513093
+ },
+ "1f2b8d4f": {
+  "sessions": 51,
+  "truncated": 0,
+  "chars": 503936
+ },
+ "1faac195": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 488764
+ },
+ "2133c1b5": {
+  "sessions": 51,
+  "truncated": 0,
+  "chars": 506200
+ },
+ "2133c1b5_abs": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 492936
+ },
+ "21d02d0d": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 509980
+ },
+ "22d2cb42": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 501452
+ },
+ "2311e44b": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 509907
+ },
+ "2311e44b_abs": {
+  "sessions": 49,
+  "truncated": 0,
+  "chars": 510917
+ },
+ "2318644b": {
+  "sessions": 41,
+  "truncated": 0,
+  "chars": 483825
+ },
+ "25e5aa4f": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 505674
+ },
+ "2698e78f": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 501159
+ },
+ "2698e78f_abs": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 498146
+ },
+ "26bdc477": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 516036
+ },
+ "27016adc": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 514221
+ },
+ "2788b940": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 496744
+ },
+ "28bcfaac": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 499339
+ },
+ "28dc39ac": {
+  "sessions": 38,
+  "truncated": 0,
+  "chars": 489922
+ },
+ "29f2956b": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 487563
+ },
+ "29f2956b_abs": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 517927
+ },
+ "2a1811e2": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 516930
+ },
+ "2b8f3739": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 515502
+ },
+ "2bf43736": {
+  "sessions": 44,
+  "truncated": 0,
+  "chars": 503034
+ },
+ "2c63a862": {
+  "sessions": 54,
+  "truncated": 0,
+  "chars": 508220
+ },
+ "2ce6a0f2": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 510385
+ },
+ "2e6d26dc": {
+  "sessions": 54,
+  "truncated": 0,
+  "chars": 496847
+ },
+ "2ebe6c90": {
+  "sessions": 43,
+  "truncated": 0,
+  "chars": 501364
+ },
+ "2ebe6c92": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 501116
+ },
+ "311778f1": {
+  "sessions": 52,
+  "truncated": 0,
+  "chars": 525308
+ },
+ "32260d93": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 493710
+ },
+ "3249768e": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 503548
+ },
+ "352ab8bd": {
+  "sessions": 49,
+  "truncated": 0,
+  "chars": 498496
+ },
+ "35a27287": {
+  "sessions": 51,
+  "truncated": 0,
+  "chars": 500141
+ },
+ "36580ce8": {
+  "sessions": 55,
+  "truncated": 0,
+  "chars": 499350
+ },
+ "36b9f61e": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 506796
+ },
+ "370a8ff4": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 498282
+ },
+ "37d43f65": {
+  "sessions": 49,
+  "truncated": 0,
+  "chars": 498868
+ },
+ "37f165cf": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 508342
+ },
+ "38146c39": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 501468
+ },
+ "3a704032": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 505689
+ },
+ "3b6f954b": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 496140
+ },
+ "3ba21379": {
+  "sessions": 44,
+  "truncated": 0,
+  "chars": 497049
+ },
+ "3c1045c8": {
+  "sessions": 52,
+  "truncated": 0,
+  "chars": 492461
+ },
+ "3d86fd0a": {
+  "sessions": 55,
+  "truncated": 0,
+  "chars": 492784
+ },
+ "3e321797": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 514121
+ },
+ "3f1e9474": {
+  "sessions": 52,
+  "truncated": 0,
+  "chars": 514906
+ },
+ "3fdac837": {
+  "sessions": 44,
+  "truncated": 0,
+  "chars": 483876
+ },
+ "3fe836c9": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 507643
+ },
+ "4100d0a0": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 507709
+ },
+ "41275add": {
+  "sessions": 53,
+  "truncated": 0,
+  "chars": 508631
+ },
+ "42ec0761": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 504057
+ },
+ "4388e9dd": {
+  "sessions": 43,
+  "truncated": 0,
+  "chars": 495400
+ },
+ "45dc21b6": {
+  "sessions": 49,
+  "truncated": 0,
+  "chars": 487594
+ },
+ "46a3abf7": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 516554
+ },
+ "488d3006": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 501567
+ },
+ "4adc0475": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 513214
+ },
+ "4b24c848": {
+  "sessions": 51,
+  "truncated": 0,
+  "chars": 507562
+ },
+ "4baee567": {
+  "sessions": 49,
+  "truncated": 0,
+  "chars": 493295
+ },
+ "4bc144e2": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 505951
+ },
+ "4c36ccef": {
+  "sessions": 49,
+  "truncated": 0,
+  "chars": 504585
+ },
+ "4d6b87c8": {
+  "sessions": 52,
+  "truncated": 0,
+  "chars": 497168
+ },
+ "4dfccbf7": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 507584
+ },
+ "4dfccbf8": {
+  "sessions": 43,
+  "truncated": 0,
+  "chars": 509423
+ },
+ "4f54b7c9": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 469005
+ },
+ "4fd1909e": {
+  "sessions": 55,
+  "truncated": 0,
+  "chars": 507609
+ },
+ "5025383b": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 481434
+ },
+ "505af2f5": {
+  "sessions": 53,
+  "truncated": 0,
+  "chars": 503186
+ },
+ "50635ada": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 504584
+ },
+ "51a45a95": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 516897
+ },
+ "51b23612": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 499256
+ },
+ "51c32626": {
+  "sessions": 51,
+  "truncated": 0,
+  "chars": 510308
+ },
+ "54026fce": {
+  "sessions": 49,
+  "truncated": 0,
+  "chars": 499450
+ },
+ "545bd2b5": {
+  "sessions": 44,
+  "truncated": 0,
+  "chars": 492570
+ },
+ "55241a1f": {
+  "sessions": 49,
+  "truncated": 0,
+  "chars": 505947
+ },
+ "561fabcd": {
+  "sessions": 49,
+  "truncated": 0,
+  "chars": 494853
+ },
+ "577d4d32": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 515243
+ },
+ "57f827a0": {
+  "sessions": 51,
+  "truncated": 0,
+  "chars": 511130
+ },
+ "5809eb10": {
+  "sessions": 52,
+  "truncated": 0,
+  "chars": 507786
+ },
+ "5831f84d": {
+  "sessions": 40,
+  "truncated": 0,
+  "chars": 498068
+ },
+ "58470ed2": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 511824
+ },
+ "58bf7951": {
+  "sessions": 57,
+  "truncated": 0,
+  "chars": 504760
+ },
+ "58ef2f1c": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 498423
+ },
+ "5a4f22c0": {
+  "sessions": 49,
+  "truncated": 0,
+  "chars": 513043
+ },
+ "5a7937c8": {
+  "sessions": 42,
+  "truncated": 0,
+  "chars": 487003
+ },
+ "5c40ec5b": {
+  "sessions": 51,
+  "truncated": 0,
+  "chars": 499497
+ },
+ "5d3d2817": {
+  "sessions": 53,
+  "truncated": 0,
+  "chars": 511567
+ },
+ "5e1b23de": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 498105
+ },
+ "603deb26": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 509711
+ },
+ "60472f9c": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 476018
+ },
+ "6071bd76": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 500512
+ },
+ "60bf93ed": {
+  "sessions": 51,
+  "truncated": 0,
+  "chars": 508739
+ },
+ "60bf93ed_abs": {
+  "sessions": 51,
+  "truncated": 0,
+  "chars": 506731
+ },
+ "60d45044": {
+  "sessions": 51,
+  "truncated": 0,
+  "chars": 502493
+ },
+ "618f13b2": {
+  "sessions": 49,
+  "truncated": 0,
+  "chars": 520938
+ },
+ "61f8c8f8": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 519421
+ },
+ "6222b6eb": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 521551
+ },
+ "6456829e": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 505446
+ },
+ "6456829e_abs": {
+  "sessions": 53,
+  "truncated": 0,
+  "chars": 493745
+ },
+ "6613b389": {
+  "sessions": 41,
+  "truncated": 0,
+  "chars": 507826
+ },
+ "66f24dbb": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 498324
+ },
+ "67e0d0f2": {
+  "sessions": 52,
+  "truncated": 0,
+  "chars": 511958
+ },
+ "681a1674": {
+  "sessions": 49,
+  "truncated": 0,
+  "chars": 506734
+ },
+ "69fee5aa": {
+  "sessions": 49,
+  "truncated": 0,
+  "chars": 497295
+ },
+ "6a1eabeb": {
+  "sessions": 40,
+  "truncated": 0,
+  "chars": 492950
+ },
+ "6a27ffc2": {
+  "sessions": 51,
+  "truncated": 0,
+  "chars": 503221
+ },
+ "6ade9755": {
+  "sessions": 51,
+  "truncated": 0,
+  "chars": 501117
+ },
+ "6ae235be": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 511661
+ },
+ "6aeb4375": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 486433
+ },
+ "6aeb4375_abs": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 502880
+ },
+ "6b168ec8": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 514666
+ },
+ "6b7dfb22": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 509073
+ },
+ "6c49646a": {
+  "sessions": 43,
+  "truncated": 0,
+  "chars": 511724
+ },
+ "6cb6f249": {
+  "sessions": 41,
+  "truncated": 0,
+  "chars": 489275
+ },
+ "6d550036": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 483502
+ },
+ "6e984301": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 521832
+ },
+ "6e984302": {
+  "sessions": 43,
+  "truncated": 0,
+  "chars": 504891
+ },
+ "6f9b354f": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 521476
+ },
+ "7024f17c": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 507940
+ },
+ "70b3e69b": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 509408
+ },
+ "71315a70": {
+  "sessions": 53,
+  "truncated": 0,
+  "chars": 514974
+ },
+ "7161e7e2": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 500277
+ },
+ "71a3fd6b": {
+  "sessions": 44,
+  "truncated": 0,
+  "chars": 500651
+ },
+ "720133ac": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 513921
+ },
+ "726462e0": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 498069
+ },
+ "72e3ee87": {
+  "sessions": 51,
+  "truncated": 0,
+  "chars": 503899
+ },
+ "73d42213": {
+  "sessions": 49,
+  "truncated": 0,
+  "chars": 501812
+ },
+ "7401057b": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 481396
+ },
+ "7405e8b1": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 508467
+ },
+ "7527f7e2": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 510568
+ },
+ "75499fd8": {
+  "sessions": 52,
+  "truncated": 0,
+  "chars": 505970
+ },
+ "75832dbd": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 496042
+ },
+ "75f70248": {
+  "sessions": 42,
+  "truncated": 0,
+  "chars": 518504
+ },
+ "76d63226": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 500147
+ },
+ "778164c6": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 491412
+ },
+ "77eafa52": {
+  "sessions": 51,
+  "truncated": 0,
+  "chars": 511098
+ },
+ "7a87bd0c": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 517809
+ },
+ "7a8d0b71": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 504738
+ },
+ "7e00a6cb": {
+  "sessions": 62,
+  "truncated": 0,
+  "chars": 501894
+ },
+ "7e974930": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 486590
+ },
+ "8077ef71": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 494821
+ },
+ "80ec1f4f": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 507076
+ },
+ "80ec1f4f_abs": {
+  "sessions": 44,
+  "truncated": 0,
+  "chars": 501985
+ },
+ "81507db6": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 521531
+ },
+ "830ce83f": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 499358
+ },
+ "8464fc84": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 500190
+ },
+ "852ce960": {
+  "sessions": 39,
+  "truncated": 1,
+  "chars": 486164
+ },
+ "853b0a1d": {
+  "sessions": 52,
+  "truncated": 0,
+  "chars": 504461
+ },
+ "8550ddae": {
+  "sessions": 42,
+  "truncated": 0,
+  "chars": 501604
+ },
+ "85fa3a3f": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 501791
+ },
+ "86b68151": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 509244
+ },
+ "86f00804": {
+  "sessions": 43,
+  "truncated": 0,
+  "chars": 489366
+ },
+ "8752c811": {
+  "sessions": 56,
+  "truncated": 0,
+  "chars": 498062
+ },
+ "87f22b4a": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 510686
+ },
+ "88432d0a": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 515873
+ },
+ "88432d0a_abs": {
+  "sessions": 44,
+  "truncated": 0,
+  "chars": 495414
+ },
+ "89527b6b": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 502027
+ },
+ "8979f9ec": {
+  "sessions": 43,
+  "truncated": 0,
+  "chars": 512508
+ },
+ "89941a93": {
+  "sessions": 51,
+  "truncated": 0,
+  "chars": 513675
+ },
+ "89941a94": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 513101
+ },
+ "8a137a7f": {
+  "sessions": 51,
+  "truncated": 0,
+  "chars": 495389
+ },
+ "8a2466db": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 508996
+ },
+ "8aef76bc": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 505448
+ },
+ "8b9d4367": {
+  "sessions": 53,
+  "truncated": 0,
+  "chars": 510941
+ },
+ "8c18457d": {
+  "sessions": 41,
+  "truncated": 0,
+  "chars": 497363
+ },
+ "8cf4d046": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 495196
+ },
+ "8cf51dda": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 502598
+ },
+ "8e91e7d9": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 507803
+ },
+ "8e9d538c": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 489870
+ },
+ "8ebdbe50": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 505074
+ },
+ "8fb83627": {
+  "sessions": 44,
+  "truncated": 0,
+  "chars": 496339
+ },
+ "91b15a6e": {
+  "sessions": 49,
+  "truncated": 0,
+  "chars": 504703
+ },
+ "92a0aa75": {
+  "sessions": 42,
+  "truncated": 0,
+  "chars": 508582
+ },
+ "945e3d21": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 513078
+ },
+ "94f70d80": {
+  "sessions": 49,
+  "truncated": 0,
+  "chars": 503698
+ },
+ "95bcc1c8": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 508466
+ },
+ "982b5123": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 514891
+ },
+ "982b5123_abs": {
+  "sessions": 44,
+  "truncated": 0,
+  "chars": 511943
+ },
+ "993da5e2": {
+  "sessions": 49,
+  "truncated": 0,
+  "chars": 503794
+ },
+ "9a707b81": {
+  "sessions": 54,
+  "truncated": 0,
+  "chars": 496151
+ },
+ "9a707b82": {
+  "sessions": 53,
+  "truncated": 0,
+  "chars": 511364
+ },
+ "9aaed6a3": {
+  "sessions": 51,
+  "truncated": 0,
+  "chars": 511153
+ },
+ "9bbe84a2": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 498322
+ },
+ "9d25d4e0": {
+  "sessions": 44,
+  "truncated": 0,
+  "chars": 515087
+ },
+ "9ea5eabc": {
+  "sessions": 53,
+  "truncated": 0,
+  "chars": 487293
+ },
+ "9ee3ecd6": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 501090
+ },
+ "a06e4cfe": {
+  "sessions": 53,
+  "truncated": 0,
+  "chars": 515887
+ },
+ "a08a253f": {
+  "sessions": 53,
+  "truncated": 0,
+  "chars": 495192
+ },
+ "a11281a2": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 509348
+ },
+ "a1cc6108": {
+  "sessions": 43,
+  "truncated": 0,
+  "chars": 501142
+ },
+ "a1eacc2a": {
+  "sessions": 44,
+  "truncated": 0,
+  "chars": 511792
+ },
+ "a2f3aa27": {
+  "sessions": 44,
+  "truncated": 0,
+  "chars": 500370
+ },
+ "a3045048": {
+  "sessions": 53,
+  "truncated": 0,
+  "chars": 506369
+ },
+ "a3332713": {
+  "sessions": 42,
+  "truncated": 0,
+  "chars": 500182
+ },
+ "a346bb18": {
+  "sessions": 49,
+  "truncated": 0,
+  "chars": 513441
+ },
+ "a3838d2b": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 495361
+ },
+ "a40e080f": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 504401
+ },
+ "a4996e51": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 508168
+ },
+ "a82c026e": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 510817
+ },
+ "a89d7624": {
+  "sessions": 49,
+  "truncated": 0,
+  "chars": 507889
+ },
+ "a96c20ee": {
+  "sessions": 51,
+  "truncated": 0,
+  "chars": 500576
+ },
+ "a96c20ee_abs": {
+  "sessions": 53,
+  "truncated": 0,
+  "chars": 519589
+ },
+ "a9f6b44c": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 505700
+ },
+ "aae3761f": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 486581
+ },
+ "ac031881": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 494574
+ },
+ "ad7109d1": {
+  "sessions": 44,
+  "truncated": 0,
+  "chars": 496537
+ },
+ "af082822": {
+  "sessions": 43,
+  "truncated": 0,
+  "chars": 497483
+ },
+ "af8d2e46": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 494006
+ },
+ "afdc33df": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 517873
+ },
+ "affe2881": {
+  "sessions": 44,
+  "truncated": 0,
+  "chars": 497478
+ },
+ "b01defab": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 517355
+ },
+ "b0479f84": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 505046
+ },
+ "b29f3365": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 516407
+ },
+ "b320f3f8": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 491591
+ },
+ "b3c15d39": {
+  "sessions": 51,
+  "truncated": 0,
+  "chars": 477939
+ },
+ "b46e15ed": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 507622
+ },
+ "b46e15ee": {
+  "sessions": 42,
+  "truncated": 0,
+  "chars": 492256
+ },
+ "b5ef892d": {
+  "sessions": 52,
+  "truncated": 0,
+  "chars": 510618
+ },
+ "b6019101": {
+  "sessions": 49,
+  "truncated": 0,
+  "chars": 512171
+ },
+ "b6025781": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 506621
+ },
+ "b759caee": {
+  "sessions": 53,
+  "truncated": 0,
+  "chars": 514527
+ },
+ "b86304ba": {
+  "sessions": 41,
+  "truncated": 0,
+  "chars": 474695
+ },
+ "b9cfe692": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 505137
+ },
+ "ba358f49": {
+  "sessions": 41,
+  "truncated": 0,
+  "chars": 498483
+ },
+ "ba358f49_abs": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 513697
+ },
+ "ba61f0b9": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 510541
+ },
+ "bb7c3b45": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 497277
+ },
+ "bbf86515": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 488863
+ },
+ "bc149d6b": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 496820
+ },
+ "bc8a6e93": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 504027
+ },
+ "bc8a6e93_abs": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 511186
+ },
+ "bcbe585f": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 508240
+ },
+ "bf659f65": {
+  "sessions": 52,
+  "truncated": 0,
+  "chars": 502806
+ },
+ "c14c00dd": {
+  "sessions": 51,
+  "truncated": 0,
+  "chars": 511250
+ },
+ "c18a7dc8": {
+  "sessions": 49,
+  "truncated": 0,
+  "chars": 518285
+ },
+ "c19f7a0b": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 498473
+ },
+ "c2ac3c61": {
+  "sessions": 53,
+  "truncated": 0,
+  "chars": 520490
+ },
+ "c4a1ceb8": {
+  "sessions": 49,
+  "truncated": 0,
+  "chars": 508836
+ },
+ "c4ea545c": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 508131
+ },
+ "c4f10528": {
+  "sessions": 44,
+  "truncated": 0,
+  "chars": 504235
+ },
+ "c5e8278d": {
+  "sessions": 44,
+  "truncated": 0,
+  "chars": 501655
+ },
+ "c6853660": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 509528
+ },
+ "c7cf7dfd": {
+  "sessions": 51,
+  "truncated": 0,
+  "chars": 502986
+ },
+ "c7dc5443": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 507636
+ },
+ "c8090214": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 481202
+ },
+ "c8090214_abs": {
+  "sessions": 53,
+  "truncated": 0,
+  "chars": 505783
+ },
+ "c8c3f81d": {
+  "sessions": 52,
+  "truncated": 0,
+  "chars": 509788
+ },
+ "c8f1aeed": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 493781
+ },
+ "c960da58": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 498784
+ },
+ "c9f37c46": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 493485
+ },
+ "caf03d32": {
+  "sessions": 51,
+  "truncated": 0,
+  "chars": 498425
+ },
+ "caf9ead2": {
+  "sessions": 43,
+  "truncated": 0,
+  "chars": 511042
+ },
+ "cc06de0d": {
+  "sessions": 42,
+  "truncated": 0,
+  "chars": 503179
+ },
+ "cc539528": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 504292
+ },
+ "cc5ded98": {
+  "sessions": 53,
+  "truncated": 0,
+  "chars": 479737
+ },
+ "cc6d1ec1": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 492352
+ },
+ "ccb36322": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 500652
+ },
+ "ce6d2d27": {
+  "sessions": 51,
+  "truncated": 0,
+  "chars": 503971
+ },
+ "ceb54acb": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 499842
+ },
+ "cf22b7bf": {
+  "sessions": 55,
+  "truncated": 0,
+  "chars": 502910
+ },
+ "d01c6aa8": {
+  "sessions": 42,
+  "truncated": 0,
+  "chars": 503975
+ },
+ "d23cf73b": {
+  "sessions": 51,
+  "truncated": 0,
+  "chars": 502432
+ },
+ "d24813b1": {
+  "sessions": 44,
+  "truncated": 0,
+  "chars": 487604
+ },
+ "d3ab962e": {
+  "sessions": 49,
+  "truncated": 0,
+  "chars": 507116
+ },
+ "d52b4f67": {
+  "sessions": 52,
+  "truncated": 0,
+  "chars": 508487
+ },
+ "d596882b": {
+  "sessions": 44,
+  "truncated": 0,
+  "chars": 508770
+ },
+ "d6062bb9": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 516956
+ },
+ "d6233ab6": {
+  "sessions": 44,
+  "truncated": 0,
+  "chars": 499773
+ },
+ "d682f1a2": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 496688
+ },
+ "d7c942c3": {
+  "sessions": 49,
+  "truncated": 0,
+  "chars": 506532
+ },
+ "d851d5ba": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 508455
+ },
+ "d905b33f": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 506310
+ },
+ "dad224aa": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 508060
+ },
+ "db467c8c": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 506585
+ },
+ "dc439ea3": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 504392
+ },
+ "dccbc061": {
+  "sessions": 49,
+  "truncated": 0,
+  "chars": 493161
+ },
+ "dcfa8644": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 489339
+ },
+ "dd2973ad": {
+  "sessions": 49,
+  "truncated": 0,
+  "chars": 507965
+ },
+ "dfde3500": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 511908
+ },
+ "e01b8e2f": {
+  "sessions": 53,
+  "truncated": 0,
+  "chars": 502215
+ },
+ "e25c3b8d": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 509821
+ },
+ "e3038f8c": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 507048
+ },
+ "e3fc4d6e": {
+  "sessions": 53,
+  "truncated": 0,
+  "chars": 513951
+ },
+ "e47becba": {
+  "sessions": 53,
+  "truncated": 0,
+  "chars": 501586
+ },
+ "e48988bc": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 520262
+ },
+ "e493bb7c": {
+  "sessions": 51,
+  "truncated": 0,
+  "chars": 513387
+ },
+ "e4e14d04": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 507911
+ },
+ "e56a43b9": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 494329
+ },
+ "e5ba910e_abs": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 498050
+ },
+ "e6041065": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 500477
+ },
+ "e61a7584": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 509587
+ },
+ "e66b632c": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 506854
+ },
+ "e831120c": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 491665
+ },
+ "e8a79c70": {
+  "sessions": 44,
+  "truncated": 0,
+  "chars": 506379
+ },
+ "e9327a54": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 496056
+ },
+ "e982271f": {
+  "sessions": 54,
+  "truncated": 0,
+  "chars": 520234
+ },
+ "eac54adc": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 506900
+ },
+ "eac54add": {
+  "sessions": 43,
+  "truncated": 0,
+  "chars": 499038
+ },
+ "eaca4986": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 509876
+ },
+ "eace081b": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 509725
+ },
+ "ec81a493": {
+  "sessions": 51,
+  "truncated": 0,
+  "chars": 528940
+ },
+ "ed4ddc30": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 498828
+ },
+ "edced276": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 498880
+ },
+ "edced276_abs": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 498236
+ },
+ "eeda8a6d": {
+  "sessions": 49,
+  "truncated": 0,
+  "chars": 513019
+ },
+ "eeda8a6d_abs": {
+  "sessions": 49,
+  "truncated": 0,
+  "chars": 489249
+ },
+ "ef66a6e5": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 491541
+ },
+ "ef9cf60a": {
+  "sessions": 54,
+  "truncated": 0,
+  "chars": 511837
+ },
+ "efc3f7c2": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 504562
+ },
+ "f0853d11": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 504822
+ },
+ "f0e564bc": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 496553
+ },
+ "f35224e0": {
+  "sessions": 53,
+  "truncated": 0,
+  "chars": 506927
+ },
+ "f4f1d8a4": {
+  "sessions": 52,
+  "truncated": 0,
+  "chars": 513633
+ },
+ "f4f1d8a4_abs": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 509648
+ },
+ "f523d9fe": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 515694
+ },
+ "f685340e": {
+  "sessions": 41,
+  "truncated": 0,
+  "chars": 501812
+ },
+ "f685340e_abs": {
+  "sessions": 43,
+  "truncated": 0,
+  "chars": 509898
+ },
+ "f8c5f88b": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 503412
+ },
+ "f9e8c073": {
+  "sessions": 53,
+  "truncated": 0,
+  "chars": 514434
+ },
+ "faba32e5": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 516858
+ },
+ "fca70973": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 489128
+ },
+ "fca762bc": {
+  "sessions": 42,
+  "truncated": 0,
+  "chars": 499096
+ },
+ "fea54f57": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 503021
+ },
+ "gpt4_0a05b494": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 497701
+ },
+ "gpt4_0b2f1d21": {
+  "sessions": 53,
+  "truncated": 0,
+  "chars": 484630
+ },
+ "gpt4_15e38248": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 506527
+ },
+ "gpt4_18c2b244": {
+  "sessions": 44,
+  "truncated": 0,
+  "chars": 525380
+ },
+ "gpt4_1916e0ea": {
+  "sessions": 56,
+  "truncated": 0,
+  "chars": 510872
+ },
+ "gpt4_194be4b3": {
+  "sessions": 44,
+  "truncated": 0,
+  "chars": 491409
+ },
+ "gpt4_1a1dc16d": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 514630
+ },
+ "gpt4_1d4ab0c9": {
+  "sessions": 53,
+  "truncated": 0,
+  "chars": 499832
+ },
+ "gpt4_1d80365e": {
+  "sessions": 51,
+  "truncated": 0,
+  "chars": 517649
+ },
+ "gpt4_1e4a8aeb": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 511104
+ },
+ "gpt4_1e4a8aec": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 497261
+ },
+ "gpt4_213fd887": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 495643
+ },
+ "gpt4_21adecb5": {
+  "sessions": 52,
+  "truncated": 0,
+  "chars": 514578
+ },
+ "gpt4_2312f94c": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 491221
+ },
+ "gpt4_2487a7cb": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 509265
+ },
+ "gpt4_2655b836": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 513253
+ },
+ "gpt4_2ba83207": {
+  "sessions": 53,
+  "truncated": 0,
+  "chars": 507245
+ },
+ "gpt4_2c50253f": {
+  "sessions": 56,
+  "truncated": 0,
+  "chars": 515331
+ },
+ "gpt4_2d58bcd6": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 487998
+ },
+ "gpt4_2f56ae70": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 493934
+ },
+ "gpt4_2f584639": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 491992
+ },
+ "gpt4_2f8be40d": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 505783
+ },
+ "gpt4_2f91af09": {
+  "sessions": 53,
+  "truncated": 0,
+  "chars": 514948
+ },
+ "gpt4_31ff4165": {
+  "sessions": 42,
+  "truncated": 0,
+  "chars": 485081
+ },
+ "gpt4_372c3eed": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 508500
+ },
+ "gpt4_372c3eed_abs": {
+  "sessions": 44,
+  "truncated": 0,
+  "chars": 511313
+ },
+ "gpt4_385a5000": {
+  "sessions": 51,
+  "truncated": 0,
+  "chars": 497341
+ },
+ "gpt4_45189cb4": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 499713
+ },
+ "gpt4_468eb063": {
+  "sessions": 44,
+  "truncated": 0,
+  "chars": 489126
+ },
+ "gpt4_468eb064": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 504810
+ },
+ "gpt4_483dd43c": {
+  "sessions": 52,
+  "truncated": 0,
+  "chars": 497499
+ },
+ "gpt4_4929293a": {
+  "sessions": 44,
+  "truncated": 0,
+  "chars": 524599
+ },
+ "gpt4_4929293b": {
+  "sessions": 49,
+  "truncated": 0,
+  "chars": 518446
+ },
+ "gpt4_4cd9eba1": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 513850
+ },
+ "gpt4_4edbafa2": {
+  "sessions": 41,
+  "truncated": 0,
+  "chars": 500708
+ },
+ "gpt4_4ef30696": {
+  "sessions": 49,
+  "truncated": 0,
+  "chars": 504216
+ },
+ "gpt4_4fc4f797": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 498490
+ },
+ "gpt4_5438fa52": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 496940
+ },
+ "gpt4_5501fe77": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 522627
+ },
+ "gpt4_59149c77": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 513946
+ },
+ "gpt4_59149c78": {
+  "sessions": 51,
+  "truncated": 0,
+  "chars": 509976
+ },
+ "gpt4_59c863d7": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 502734
+ },
+ "gpt4_5dcc0aab": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 513033
+ },
+ "gpt4_61e13b3c": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 501789
+ },
+ "gpt4_65aabe59": {
+  "sessions": 42,
+  "truncated": 0,
+  "chars": 495253
+ },
+ "gpt4_68e94287": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 507553
+ },
+ "gpt4_68e94288": {
+  "sessions": 44,
+  "truncated": 0,
+  "chars": 495100
+ },
+ "gpt4_6dc9b45b": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 489824
+ },
+ "gpt4_6ed717ea": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 511756
+ },
+ "gpt4_70e84552": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 494902
+ },
+ "gpt4_70e84552_abs": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 505802
+ },
+ "gpt4_731e37d7": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 499832
+ },
+ "gpt4_74aed68e": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 508959
+ },
+ "gpt4_76048e76": {
+  "sessions": 44,
+  "truncated": 0,
+  "chars": 502336
+ },
+ "gpt4_78cf46a3": {
+  "sessions": 49,
+  "truncated": 0,
+  "chars": 499051
+ },
+ "gpt4_7a0daae1": {
+  "sessions": 61,
+  "truncated": 0,
+  "chars": 509485
+ },
+ "gpt4_7abb270c": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 490487
+ },
+ "gpt4_7bc6cf22": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 516414
+ },
+ "gpt4_7ca326fa": {
+  "sessions": 54,
+  "truncated": 0,
+  "chars": 495215
+ },
+ "gpt4_7ddcf75f": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 496941
+ },
+ "gpt4_7de946e7": {
+  "sessions": 49,
+  "truncated": 0,
+  "chars": 514679
+ },
+ "gpt4_7f6b06db": {
+  "sessions": 52,
+  "truncated": 0,
+  "chars": 489576
+ },
+ "gpt4_7fce9456": {
+  "sessions": 44,
+  "truncated": 0,
+  "chars": 511801
+ },
+ "gpt4_8279ba02": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 489560
+ },
+ "gpt4_8279ba03": {
+  "sessions": 43,
+  "truncated": 0,
+  "chars": 513045
+ },
+ "gpt4_85da3956": {
+  "sessions": 53,
+  "truncated": 0,
+  "chars": 499661
+ },
+ "gpt4_88806d6e": {
+  "sessions": 49,
+  "truncated": 0,
+  "chars": 524485
+ },
+ "gpt4_8c8961ae": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 506425
+ },
+ "gpt4_8e165409": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 493620
+ },
+ "gpt4_93159ced": {
+  "sessions": 42,
+  "truncated": 0,
+  "chars": 510666
+ },
+ "gpt4_93159ced_abs": {
+  "sessions": 44,
+  "truncated": 0,
+  "chars": 490744
+ },
+ "gpt4_93f6379c": {
+  "sessions": 42,
+  "truncated": 0,
+  "chars": 517082
+ },
+ "gpt4_98f46fc6": {
+  "sessions": 49,
+  "truncated": 0,
+  "chars": 514333
+ },
+ "gpt4_9a159967": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 519934
+ },
+ "gpt4_a1b77f9c": {
+  "sessions": 49,
+  "truncated": 0,
+  "chars": 503136
+ },
+ "gpt4_a2d1d1f6": {
+  "sessions": 44,
+  "truncated": 0,
+  "chars": 510502
+ },
+ "gpt4_a56e767c": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 508559
+ },
+ "gpt4_ab202e7f": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 502481
+ },
+ "gpt4_af6db32f": {
+  "sessions": 42,
+  "truncated": 0,
+  "chars": 511710
+ },
+ "gpt4_b0863698": {
+  "sessions": 42,
+  "truncated": 0,
+  "chars": 512683
+ },
+ "gpt4_b4a80587": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 505904
+ },
+ "gpt4_b5700ca0": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 510430
+ },
+ "gpt4_b5700ca9": {
+  "sessions": 52,
+  "truncated": 0,
+  "chars": 501266
+ },
+ "gpt4_c27434e8": {
+  "sessions": 51,
+  "truncated": 0,
+  "chars": 504192
+ },
+ "gpt4_c27434e8_abs": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 504661
+ },
+ "gpt4_cd90e484": {
+  "sessions": 52,
+  "truncated": 0,
+  "chars": 505774
+ },
+ "gpt4_d12ceb0e": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 497361
+ },
+ "gpt4_d31cdae3": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 486751
+ },
+ "gpt4_d6585ce8": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 495029
+ },
+ "gpt4_d6585ce9": {
+  "sessions": 42,
+  "truncated": 0,
+  "chars": 495407
+ },
+ "gpt4_d84a3211": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 505863
+ },
+ "gpt4_d9af6064": {
+  "sessions": 51,
+  "truncated": 0,
+  "chars": 509147
+ },
+ "gpt4_e05b82a6": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 512116
+ },
+ "gpt4_e061b84f": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 486660
+ },
+ "gpt4_e061b84g": {
+  "sessions": 58,
+  "truncated": 0,
+  "chars": 499950
+ },
+ "gpt4_e072b769": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 512963
+ },
+ "gpt4_e414231e": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 510668
+ },
+ "gpt4_e414231f": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 497719
+ },
+ "gpt4_ec93e27f": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 505664
+ },
+ "gpt4_f2262a51": {
+  "sessions": 45,
+  "truncated": 0,
+  "chars": 500032
+ },
+ "gpt4_f420262c": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 493711
+ },
+ "gpt4_f420262d": {
+  "sessions": 43,
+  "truncated": 0,
+  "chars": 501961
+ },
+ "gpt4_f49edff3": {
+  "sessions": 47,
+  "truncated": 0,
+  "chars": 500548
+ },
+ "gpt4_fa19884c": {
+  "sessions": 46,
+  "truncated": 0,
+  "chars": 487751
+ },
+ "gpt4_fa19884d": {
+  "sessions": 50,
+  "truncated": 0,
+  "chars": 510506
+ },
+ "gpt4_fe651585": {
+  "sessions": 48,
+  "truncated": 0,
+  "chars": 488454
+ },
+ "gpt4_fe651585_abs": {
+  "sessions": 49,
+  "truncated": 0,
+  "chars": 497818
+ }
+}

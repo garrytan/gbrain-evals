@@ -61,7 +61,14 @@
  * volunteer_context resolves the page for the trusted caller and its probes
  * carry signal (docs/benchmarks/2026-10-06-n8-privacy-gate-preregistration.md).
  *
- * Usage: bun eval/runner/n6-visibility-fuzz.ts [--seed N] [--gbrain <path>[@ref]] [--output <dir>] [--only op1,op2] [--attest <preregistration.md>] [--json]
+ * Usage: bun eval/runner/n6-visibility-fuzz.ts [--seed N] [--gbrain <path>[@ref]] [--output <dir>] [--only op1,op2] [--attest <preregistration.md>] [--json] [--pg-url <admin url>]
+ *
+ * GBRAIN_EVAL_ENGINE=pglite|postgres|rust (engine-bench, eval/runner/eval-engine.ts) opens the brain through
+ * openScratchEvalEngine (postgres: a fresh database through --pg-url or LIFECYCLE_PG_URL). The receipt then adds
+ * `engine` and `not_applicable`. On rust, which refuses raw SQL, the SQL presence counts, the sealed-chunk check and
+ * the contradiction-report seeding are not_applicable (neither pass nor fail) and the sources are created through
+ * gbrain's own addSource; the probes still run. An unavailable engine exits 69 with no receipt. Unset, the runner is
+ * unchanged.
  */
 import { existsSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
@@ -71,6 +78,10 @@ import { generateN6World, ledgerFingerprint, personIntro, N6_DEFAULT_SEED, N6_GE
 import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from './gbrain-under-test.ts';
 import { gbrainPin } from './gbrain-version.ts';
 import { DECIDE_OFF, withHermeticEnv } from './hermetic-env.ts';
+import {
+  evalEngineReceiptFields, openScratchEvalEngine, preflightEvalEngine, rawSqlNotApplicable, supportsRawSql,
+  EvalEngineUnavailable, refuseEvalEngine, requestedEvalEngine, type EvalEngineKind, type NotApplicable,
+} from './eval-engine.ts';
 import { attestPreregistration, type Attestation } from './prereg.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
 import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, noModelSpend, receiptPath, sourceTreeIdentity, writeReceipt, type Receipt } from './receipt.ts';
@@ -380,6 +391,8 @@ export interface Gbrain {
   buildBrainTools: (opts: Record<string, unknown>) => Array<{ name: string; execute(input: unknown, ctx: unknown): Promise<unknown> }>;
   /** gbrain's belief ledger switch, so recorded-time reads (`known_as_of`) have coverage of the seeded writes (absent before W1). */
   belief?: { enableBeliefLedger: (engine: unknown, sourceId: string) => Promise<unknown> };
+  /** gbrain's own source creation (src/core/sources-ops.ts addSource), loaded only for an engine without raw SQL. */
+  sources?: { addSource: (engine: unknown, opts: { id: string; name?: string }) => Promise<unknown> };
   /** gbrain's contradiction probe and its run writer, to store a report for find_contradictions (absent on builds without them). */
   contradictions?: {
     runContradictionProbe: (opts: Record<string, unknown>) => Promise<{ report: { duration_ms: number; per_query: Array<{ contradictions: unknown[] }> } }>;
@@ -387,7 +400,7 @@ export interface Gbrain {
   };
 }
 
-export async function loadGbrain(gut: GbrainUnderTest): Promise<Gbrain> {
+export async function loadGbrain(gut: GbrainUnderTest, kind: EvalEngineKind = 'pglite'): Promise<Gbrain> {
   const [ops, pglite, dispatch, scope, tools] = await Promise.all([
     importGbrain<{ operations: Operation[] }>(gut, 'src/core/operations.ts'),
     importGbrain<{ PGLiteEngine: Gbrain['PGLiteEngine'] }>(gut, 'src/core/pglite-engine.ts'),
@@ -401,7 +414,9 @@ export async function loadGbrain(gut: GbrainUnderTest): Promise<Gbrain> {
     ? { runContradictionProbe: probe.runContradictionProbe, writeRunRow: trends.writeRunRow } : undefined;
   const ledger = await importGbrain<Partial<NonNullable<Gbrain['belief']>>>(gut, 'src/core/belief/coverage.ts').catch((): Partial<NonNullable<Gbrain['belief']>> => ({}));
   const belief = ledger.enableBeliefLedger ? { enableBeliefLedger: ledger.enableBeliefLedger } : undefined;
-  return { operations: ops.operations, PGLiteEngine: pglite.PGLiteEngine, dispatchToolCall: dispatch.dispatchToolCall, operationScopesAllowed: scope.operationScopesAllowed, buildBrainTools: tools.buildBrainTools, belief, contradictions };
+  const g: Gbrain = { operations: ops.operations, PGLiteEngine: pglite.PGLiteEngine, dispatchToolCall: dispatch.dispatchToolCall, operationScopesAllowed: scope.operationScopesAllowed, buildBrainTools: tools.buildBrainTools, belief, contradictions };
+  if (!supportsRawSql(kind)) g.sources = await importGbrain<NonNullable<Gbrain['sources']>>(gut, 'src/core/sources-ops.ts');
+  return g;
 }
 
 const CONFIG = { engine: 'pglite', database_path: ':memory:' } as OperationContext['config'];
@@ -548,10 +563,15 @@ async function withTimeout(p: Promise<CallOutcome>): Promise<CallOutcome> {
 // ─── Seeding and presence ──────────────────────────────────────────────
 
 /** Writes the ledger through gbrain's own write path as the trusted local caller. Engine-agnostic (PGLite or Postgres). */
-export async function seed(g: Gbrain, engine: N6Engine, ledger: N6Ledger, config: OperationContext['config'] = CONFIG): Promise<string[]> {
+export async function seed(g: Gbrain, engine: N6Engine, ledger: N6Ledger, config: OperationContext['config'] = CONFIG, kind: EvalEngineKind = 'pglite', notApplicable: NotApplicable[] = []): Promise<string[]> {
   const errors: string[] = [];
   // Only missing sources are inserted (no row, no trigger): on Postgres the caller adds them through writer administration first.
+  // An engine without raw SQL (rust) creates them through gbrain's own addSource, the path `gbrain sources add` takes.
   for (const s of ledger.sources) {
+    if (!supportsRawSql(kind)) {
+      try { await g.sources!.addSource(engine, { id: s, name: s }); } catch (err) { errors.push(`addSource ${s}: ${err instanceof Error ? err.message : String(err)}`); }
+      continue;
+    }
     await engine.executeRaw(`INSERT INTO sources (id, name, config) SELECT $1::text, $1::text, '{}'::jsonb WHERE NOT EXISTS (SELECT 1 FROM sources WHERE id = $1::text)`, [s]);
   }
   // A build with recorded-time reads gets the belief ledger on every source before any write, so known_as_of answers from the seeded history.
@@ -587,7 +607,9 @@ export async function seed(g: Gbrain, engine: N6Engine, ledger: N6Ledger, config
     const r = await local(byName('put_raw_data'), { slug: d.slug, source: d.source, data: d.data });
     if (!r.ok) errors.push(`put_raw_data ${d.slug}: ${r.raw.slice(0, 200)}`);
   }
-  try { await seedContradictionReport(g, engine, ledger); } catch (err) { errors.push(`contradiction report: ${err instanceof Error ? err.message : String(err)}`); }
+  const noReport = rawSqlNotApplicable(kind, N6_SQL_CHECKS.contradiction_report.check, N6_SQL_CHECKS.contradiction_report.why);
+  if (noReport) notApplicable.push(noReport);
+  else try { await seedContradictionReport(g, engine, ledger); } catch (err) { errors.push(`contradiction report: ${err instanceof Error ? err.message : String(err)}`); }
   return errors;
 }
 
@@ -641,8 +663,20 @@ async function newEngine(g: Gbrain) {
 
 export interface PresenceResult { name: string; pass: boolean; detail: string }
 
-export async function presence(engine: N6Engine, ledger: N6Ledger, local: Caller, getPage: Operation, opByName: (name: string) => Operation): Promise<{ checks: PresenceResult[]; sealed_chunk_violations: string[] }> {
+/** Every N6 step that reads or writes the database with raw SQL; each is not_applicable on an engine without it (rust). */
+export const N6_SQL_CHECKS = {
+  pages_stored: { check: 'N6 presence: every ledger page stored in its source', why: 'count the stored pages per source' },
+  take_indexed: { check: 'N6 presence: held take row indexed', why: 'count the held takes rows' },
+  fact_indexed: { check: 'N6 presence: private fact row indexed', why: 'count the private facts rows' },
+  timeline_indexed: { check: 'N6 presence: private page timeline indexed', why: 'count timeline_entries joined to pages' },
+  link_indexed: { check: 'N6 presence: private page links to the public hub', why: 'count links joined to pages' },
+  sealed_chunks: { check: 'N6 safety: sealed fence markers absent from content_chunks', why: 'search content_chunks for the protected Takes and Facts fence markers' },
+  contradiction_report: { check: 'N6 seed: stored contradiction report for find_contradictions', why: 'fetch the chunks of each class\'s pages for the fixture retrieval behind the stored report (setup; find_contradictions then has no stored report and its probes carry no signal)' },
+} as const;
+
+export async function presence(engine: N6Engine, ledger: N6Ledger, local: Caller, getPage: Operation, opByName: (name: string) => Operation, kind: EvalEngineKind = 'pglite', notApplicable: NotApplicable[] = []): Promise<{ checks: PresenceResult[]; sealed_chunk_violations: string[] }> {
   const checks: PresenceResult[] = [];
+  if (!supportsRawSql(kind)) return presenceWithoutSql(ledger, local, getPage, opByName, kind, notApplicable);
   const count = async (sql: string, params: unknown[]) => Number((await engine.executeRaw<{ n: number }>(sql, params))[0]?.n ?? 0);
   let found = 0;
   for (const p of ledger.pages) found += await count('SELECT count(*)::int AS n FROM pages WHERE source_id=$1 AND slug=$2 AND deleted_at IS NULL', [p.source_id, p.slug]);
@@ -658,19 +692,33 @@ export async function presence(engine: N6Engine, ledger: N6Ledger, local: Caller
   checks.push({ name: 'private page timeline indexed', pass: tl >= 1, detail: `${tl} entr(ies)` });
   const links = await count(`SELECT count(*)::int AS n FROM links l JOIN pages f ON f.id=l.from_page_id JOIN pages t ON t.id=l.to_page_id WHERE f.slug=$1 AND t.slug=$2`, [page.protected.slug, ledger.hub_slug]);
   checks.push({ name: 'private page links to the public hub', pass: links >= 1, detail: `${links} link(s)` });
-  // Positive controls: the trusted local caller can read every protected marker, so a remote miss means filtering, not absence.
-  for (const c of ledger.classes) {
-    const [opName, params] = CONTROL_READ[c.class]?.(c.protected) ?? ['get_page', { slug: c.protected.slug, ...(c.protected.source_id ? { source_id: c.protected.source_id } : {}) }];
-    const r = await local(opName === 'get_page' ? getPage : opByName(opName), params);
-    const seen = c.protected_markers.filter(m => r.raw.includes(m));
-    checks.push({ name: `local ${opName} reads ${c.class} markers`, pass: seen.length > 0, detail: `${seen.length}/${c.protected_markers.length} markers${r.ok ? '' : `; ${r.raw.slice(0, 160)}`}` });
-  }
+  checks.push(...await positiveControls(ledger, local, getPage, opByName));
   const sealed: string[] = [];
   for (const m of [take.protected.query, fact.protected.query]) {
     const n = await count(`SELECT count(*)::int AS n FROM content_chunks WHERE chunk_text LIKE '%' || $1 || '%'`, [m]);
     if (n) sealed.push(`${n} content_chunks row(s) contain protected fence marker ${m}`);
   }
   return { checks, sealed_chunk_violations: sealed };
+}
+
+/** The presence step on an engine without raw SQL: the SQL counts and the sealed-chunk check are not_applicable; the positive controls run. */
+async function presenceWithoutSql(ledger: N6Ledger, local: Caller, getPage: Operation, opByName: (name: string) => Operation, kind: EvalEngineKind, notApplicable: NotApplicable[]): Promise<{ checks: PresenceResult[]; sealed_chunk_violations: string[] }> {
+  for (const k of ['pages_stored', 'take_indexed', 'fact_indexed', 'timeline_indexed', 'link_indexed', 'sealed_chunks'] as const) {
+    notApplicable.push(rawSqlNotApplicable(kind, N6_SQL_CHECKS[k].check, N6_SQL_CHECKS[k].why)!);
+  }
+  return { checks: await positiveControls(ledger, local, getPage, opByName), sealed_chunk_violations: [] };
+}
+
+// Positive controls: the trusted local caller can read every protected marker, so a remote miss means filtering, not absence.
+async function positiveControls(ledger: N6Ledger, local: Caller, getPage: Operation, opByName: (name: string) => Operation): Promise<PresenceResult[]> {
+  const checks: PresenceResult[] = [];
+  for (const c of ledger.classes) {
+    const [opName, params] = CONTROL_READ[c.class]?.(c.protected) ?? ['get_page', { slug: c.protected.slug, ...(c.protected.source_id ? { source_id: c.protected.source_id } : {}) }];
+    const r = await local(opName === 'get_page' ? getPage : opByName(opName), params);
+    const seen = c.protected_markers.filter(m => r.raw.includes(m));
+    checks.push({ name: `local ${opName} reads ${c.class} markers`, pass: seen.length > 0, detail: `${seen.length}/${c.protected_markers.length} markers${r.ok ? '' : `; ${r.raw.slice(0, 160)}`}` });
+  }
+  return checks;
 }
 
 const EXPANDED_UNITS = new Set(['window', 'section', 'page']);
@@ -703,7 +751,7 @@ export function uncoveredReason(s: OpSummary, rows: readonly ProbeRow[]): string
 
 // ─── Main run ──────────────────────────────────────────────────────────
 
-export interface N6Options { seed?: number; gbrainSpec?: string | null; only?: string[]; reportsDir?: string; outputDir?: string; quiet?: boolean; attestation?: Attestation | null }
+export interface N6Options { seed?: number; gbrainSpec?: string | null; only?: string[]; reportsDir?: string; outputDir?: string; quiet?: boolean; attestation?: Attestation | null; evalEngine?: { kind: EvalEngineKind; pgAdminUrl: string } | null }
 
 export interface OpSummary {
   op: string;
@@ -728,15 +776,21 @@ async function runN6Hermetic(options: N6Options) {
   const seedValue = options.seed ?? N6_DEFAULT_SEED;
   const ledger = generateN6World(seedValue);
   const gut = resolveGbrainUnderTest(options.gbrainSpec ?? null);
-  const g = await loadGbrain(gut);
-  const engine = await newEngine(g);
-  const callers = makeCallers(g, engine);
+  const evalKind = options.evalEngine?.kind ?? null;
+  const kind = evalKind ?? 'pglite';
+  if (evalKind) await preflightEvalEngine(gut, evalKind);
+  const g = await loadGbrain(gut, kind);
+  const scratch = options.evalEngine ? await openScratchEvalEngine({ gut, kind: options.evalEngine.kind, label: 'n6', pgAdminUrl: options.evalEngine.pgAdminUrl }) : null;
+  const engine = scratch ? scratch.engine as unknown as Awaited<ReturnType<typeof newEngine>> : await newEngine(g);
+  const config = scratch && scratch.kind !== 'pglite' ? scratch.config as OperationContext['config'] : CONFIG;
+  const callers = makeCallers(g, engine, config);
   const getPage = g.operations.find(o => o.name === 'get_page')!;
+  const notApplicable: NotApplicable[] = [];
 
-  const seedErrors = await seed(g, engine, ledger);
+  const seedErrors = await seed(g, engine, ledger, config, kind, notApplicable);
   await new Promise(resolve => setTimeout(resolve, 50));
   const knownAsOf = new Date().toISOString();
-  const pres = await presence(engine, ledger, callers.local, getPage, name => g.operations.find(o => o.name === name)!);
+  const pres = await presence(engine, ledger, callers.local, getPage, name => g.operations.find(o => o.name === name)!, kind, notApplicable);
   const presenceOk = seedErrors.length === 0 && pres.checks.every(c => c.pass);
 
   const forbiddenMarkers = ledger.classes.flatMap(c => c.protected_markers);
@@ -896,7 +950,8 @@ async function runN6Hermetic(options: N6Options) {
       }
     }
   }
-  await engine.disconnect();
+  if (scratch) await scratch.close();
+  else await engine.disconnect();
 
   // Accounting: one scored unit per exposed protected probe and per executed gate.
   const exposedRows = rows.filter(r => r.status !== 'not_exposed');
@@ -1003,7 +1058,7 @@ async function runN6Hermetic(options: N6Options) {
       source: 'runner',
     },
     resolved_config: {
-      engine: 'pglite (in-memory)',
+      engine: evalKind ? `${evalKind} through openScratchEvalEngine (GBRAIN_EVAL_ENGINE)` : 'pglite (in-memory)',
       decide: DECIDE_OFF,
       seed: seedValue,
       generator_version: N6_GENERATOR_VERSION,
@@ -1013,7 +1068,7 @@ async function runN6Hermetic(options: N6Options) {
       call_timeout_ms: CALL_TIMEOUT_MS,
       only: options.only ?? null,
       gbrain_overlay: overlaySummary(gut),
-      not_exercised: ['network transport and OAuth token verification (serve-http tools/call replayed in process)', 'Postgres engine', 'write ops executed by write-scoped callers', 'gates on ops without a required param (safety)'],
+      not_exercised: ['network transport and OAuth token verification (serve-http tools/call replayed in process)', ...(evalKind === 'postgres' ? [] : ['Postgres engine']), 'write ops executed by write-scoped callers', 'gates on ops without a required param (safety)'],
     },
     hashes: { ledger_sha256: ledgerFingerprint(ledger) },
     started_at: startedAt,
@@ -1031,6 +1086,7 @@ async function runN6Hermetic(options: N6Options) {
       gates,
       no_signal_samples: exposedRows.filter(r => r.status === 'no_signal').slice(0, 60),
     },
+    ...evalEngineReceiptFields(evalKind, notApplicable),
   };
   const file = options.outputDir ? join(options.outputDir, 'receipt.json') : receiptPath(N6_CATEGORY, options.reportsDir);
   writeReceipt(file, (options.attestation ? { ...receipt, preregistration_attestation: options.attestation } : receipt) as Receipt);
@@ -1044,10 +1100,16 @@ if (import.meta.main) {
   const seedArg = flag('--seed');
   const only = flag('--only');
   const attest = flag('--attest');
-  runN6({ seed: seedArg ? Number(seedArg) : undefined, gbrainSpec: gbrainSpecFrom(argv), only: only ? only.split(',') : undefined, outputDir: flag('--output'), attestation: attest ? attestPreregistration(attest) : null })
+  const evalKind = requestedEvalEngine();
+  const evalEngine = evalKind ? { kind: evalKind, pgAdminUrl: flag('--pg-url') ?? process.env.LIFECYCLE_PG_URL ?? 'postgres://postgres@127.0.0.1:55432/postgres' } : null;
+  runN6({ seed: seedArg ? Number(seedArg) : undefined, gbrainSpec: gbrainSpecFrom(argv), only: only ? only.split(',') : undefined, outputDir: flag('--output'), attestation: attest ? attestPreregistration(attest) : null, evalEngine })
     .then(({ receipt }) => {
       if (argv.includes('--json')) console.log(JSON.stringify(receipt.data, null, 2));
       process.exit(receipt.run_status === 'completed' ? 0 : 1);
     })
-    .catch(err => { console.error(err); process.exit(1); });
+    .catch(err => {
+      if (err instanceof EvalEngineUnavailable) refuseEvalEngine(err, 'N6 visibility fuzz');
+      console.error(err);
+      process.exit(1);
+    });
 }

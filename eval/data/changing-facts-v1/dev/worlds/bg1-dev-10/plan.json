@@ -1,0 +1,5396 @@
+{
+ "schema": "gbrain-evals/bg1-plan/v1",
+ "generator": "changing-facts-gen@1",
+ "id": "bg1-dev-10",
+ "seed": "bg1-dev-seed-v1:bg1-dev-10",
+ "gold_audit": true,
+ "world_end_weekday": "Sunday",
+ "entities": [
+  {
+   "id": "company-01",
+   "type": "company",
+   "name": "Halcyon Freight"
+  },
+  {
+   "id": "person-01",
+   "type": "person",
+   "name": "Desmond Lefebvre"
+  },
+  {
+   "id": "project-01",
+   "type": "project",
+   "name": "Project Lodestar"
+  },
+  {
+   "id": "person-02",
+   "type": "person",
+   "name": "Mirela Novak"
+  },
+  {
+   "id": "person-03",
+   "type": "person",
+   "name": "Talia Whitlock"
+  },
+  {
+   "id": "company-02",
+   "type": "company",
+   "name": "Lowmoor Retail"
+  },
+  {
+   "id": "project-02",
+   "type": "project",
+   "name": "Project Kestrel"
+  },
+  {
+   "id": "deal-01",
+   "type": "deal",
+   "name": "Tamsin"
+  },
+  {
+   "id": "project-03",
+   "type": "project",
+   "name": "Project Tamarind"
+  },
+  {
+   "id": "company-03",
+   "type": "company",
+   "name": "Quayside Health"
+  },
+  {
+   "id": "person-04",
+   "type": "person",
+   "name": "Yusuf Delacroix"
+  },
+  {
+   "id": "person-05",
+   "type": "person",
+   "name": "Delphine Takahashi"
+  },
+  {
+   "id": "deal-02",
+   "type": "deal",
+   "name": "Beacon"
+  },
+  {
+   "id": "deal-03",
+   "type": "deal",
+   "name": "Cobalt"
+  },
+  {
+   "id": "deal-04",
+   "type": "deal",
+   "name": "Harbor"
+  },
+  {
+   "id": "deal-05",
+   "type": "deal",
+   "name": "Marlow"
+  },
+  {
+   "id": "project-04",
+   "type": "project",
+   "name": "Project Mistletoe"
+  },
+  {
+   "id": "company-04",
+   "type": "company",
+   "name": "Elderflower Travel"
+  },
+  {
+   "id": "company-05",
+   "type": "company",
+   "name": "Corbel Systems"
+  },
+  {
+   "id": "person-01-twin",
+   "type": "person",
+   "name": "Desmond Lefevre",
+   "twin_of": "person-01"
+  },
+  {
+   "id": "project-01-twin",
+   "type": "project",
+   "name": "Project Lodestone",
+   "twin_of": "project-01"
+  },
+  {
+   "id": "person-05-twin",
+   "type": "person",
+   "name": "Delphine Takayama",
+   "twin_of": "person-05"
+  },
+  {
+   "id": "project-02-twin",
+   "type": "project",
+   "name": "Project Kessel",
+   "twin_of": "project-02"
+  },
+  {
+   "id": "person-04-twin",
+   "type": "person",
+   "name": "Yusuf Delacourt",
+   "twin_of": "person-04"
+  },
+  {
+   "id": "company-01-twin",
+   "type": "company",
+   "name": "Halcyon Ferries",
+   "twin_of": "company-01"
+  },
+  {
+   "id": "company-03-twin",
+   "type": "company",
+   "name": "Quayside Homes",
+   "twin_of": "company-03"
+  },
+  {
+   "id": "deal-03-twin",
+   "type": "deal",
+   "name": "Cobalt Bay",
+   "twin_of": "deal-03"
+  },
+  {
+   "id": "project-04-twin",
+   "type": "project",
+   "name": "Project Mistlethrush",
+   "twin_of": "project-04"
+  },
+  {
+   "id": "person-02-twin",
+   "type": "person",
+   "name": "Mirela Novacek",
+   "twin_of": "person-02"
+  }
+ ],
+ "slots": [
+  {
+   "id": "company-01.ops_lead",
+   "entity": "company-01",
+   "kind": "ops_lead",
+   "stratum": "s1_updated",
+   "events": [
+    {
+     "id": "company-01.ops_lead#0",
+     "type": "state",
+     "value": "Zainab Tanaka",
+     "session": "s033",
+     "said": -423,
+     "valid_from": -423
+    },
+    {
+     "id": "company-01.ops_lead#1",
+     "type": "change",
+     "value": "Ximena Larsen",
+     "session": "s119",
+     "said": -123,
+     "valid_from": -123
+    },
+    {
+     "id": "company-01.ops_lead#2",
+     "type": "scheduled",
+     "value": "Cosima Quigley",
+     "session": "s139",
+     "said": -13,
+     "valid_from": 106
+    }
+   ],
+   "intent": {
+    "now": "Ximena Larsen",
+    "history": [
+     "Zainab Tanaka",
+     "Ximena Larsen"
+    ]
+   }
+  },
+  {
+   "id": "person-01.employer",
+   "entity": "person-01",
+   "kind": "employer",
+   "stratum": "s1_updated",
+   "events": [
+    {
+     "id": "person-01.employer#0",
+     "type": "state",
+     "value": "Tarnwood Logistics",
+     "session": "s014",
+     "said": -495,
+     "valid_from": -495
+    },
+    {
+     "id": "person-01.employer#1",
+     "type": "change",
+     "value": "Emberly Energy",
+     "session": "s094",
+     "said": -206,
+     "valid_from": -206
+    }
+   ],
+   "intent": {
+    "now": "Emberly Energy",
+    "history": [
+     "Tarnwood Logistics",
+     "Emberly Energy"
+    ]
+   }
+  },
+  {
+   "id": "company-01.hq",
+   "entity": "company-01",
+   "kind": "hq",
+   "stratum": "s1_updated",
+   "events": [
+    {
+     "id": "company-01.hq#0",
+     "type": "state",
+     "value": "Lisbon",
+     "session": "s016",
+     "said": -489,
+     "valid_from": -489
+    },
+    {
+     "id": "company-01.hq#1",
+     "type": "change",
+     "value": "Bordeaux",
+     "session": "s047",
+     "said": -381,
+     "valid_from": -381
+    },
+    {
+     "id": "company-01.hq#2",
+     "type": "change",
+     "value": "Brno",
+     "session": "s084",
+     "said": -239,
+     "valid_from": -239
+    },
+    {
+     "id": "company-01.hq#3",
+     "type": "change",
+     "value": "Kyoto",
+     "session": "s128",
+     "said": -80,
+     "valid_from": -80
+    }
+   ],
+   "intent": {
+    "now": "Kyoto",
+    "history": [
+     "Lisbon",
+     "Bordeaux",
+     "Brno",
+     "Kyoto"
+    ]
+   }
+  },
+  {
+   "id": "project-01.lead",
+   "entity": "project-01",
+   "kind": "lead",
+   "stratum": "s1_updated",
+   "events": [
+    {
+     "id": "project-01.lead#0",
+     "type": "state",
+     "value": "Valentin Rossi",
+     "session": "s030",
+     "said": -436,
+     "valid_from": -436
+    },
+    {
+     "id": "project-01.lead#1",
+     "type": "late",
+     "value": "Viktor Holm",
+     "session": "s128",
+     "said": -80,
+     "valid_from": -125
+    }
+   ],
+   "intent": {
+    "now": "Viktor Holm",
+    "history": [
+     "Valentin Rossi",
+     "Viktor Holm"
+    ]
+   }
+  },
+  {
+   "id": "person-02.city",
+   "entity": "person-02",
+   "kind": "city",
+   "stratum": "s1_updated",
+   "events": [
+    {
+     "id": "person-02.city#0",
+     "type": "state",
+     "value": "Bologna",
+     "session": "s006",
+     "said": -527,
+     "valid_from": -527
+    },
+    {
+     "id": "person-02.city#1",
+     "type": "change",
+     "value": "Lyon",
+     "session": "s039",
+     "said": -399,
+     "valid_from": -399
+    },
+    {
+     "id": "person-02.city#2",
+     "type": "late",
+     "value": "Rotterdam",
+     "session": "s097",
+     "said": -201,
+     "valid_from": -231
+    },
+    {
+     "id": "person-02.city#3",
+     "type": "change",
+     "value": "Accra",
+     "session": "s122",
+     "said": -114,
+     "valid_from": -114
+    },
+    {
+     "id": "person-02.city#4",
+     "type": "scheduled",
+     "value": "Utrecht",
+     "session": "s125",
+     "said": -94,
+     "valid_from": 114
+    }
+   ],
+   "intent": {
+    "now": "Accra",
+    "history": [
+     "Bologna",
+     "Lyon",
+     "Rotterdam",
+     "Accra"
+    ]
+   }
+  },
+  {
+   "id": "person-03.role",
+   "entity": "person-03",
+   "kind": "role",
+   "stratum": "s1_updated",
+   "events": [
+    {
+     "id": "person-03.role#0",
+     "type": "state",
+     "value": "Head of Platform",
+     "session": "s009",
+     "said": -518,
+     "valid_from": -518
+    },
+    {
+     "id": "person-03.role#1",
+     "type": "change",
+     "value": "Field CTO",
+     "session": "s069",
+     "said": -303,
+     "valid_from": -303
+    },
+    {
+     "id": "person-03.role#2",
+     "type": "late",
+     "value": "Programme Director",
+     "session": "s130",
+     "said": -67,
+     "valid_from": -122
+    }
+   ],
+   "intent": {
+    "now": "Programme Director",
+    "history": [
+     "Head of Platform",
+     "Field CTO",
+     "Programme Director"
+    ]
+   }
+  },
+  {
+   "id": "person-01.city",
+   "entity": "person-01",
+   "kind": "city",
+   "stratum": "s2_corrected",
+   "events": [
+    {
+     "id": "person-01.city#0",
+     "type": "state",
+     "value": "Oslo",
+     "session": "s104",
+     "said": -191,
+     "valid_from": -191
+    },
+    {
+     "id": "person-01.city#1",
+     "type": "correct",
+     "value": "Galway",
+     "session": "s117",
+     "said": -129,
+     "valid_from": -191,
+     "replaces": "person-01.city#0"
+    }
+   ],
+   "intent": {
+    "now": "Galway",
+    "history": [
+     "Galway"
+    ]
+   }
+  },
+  {
+   "id": "person-02.role",
+   "entity": "person-02",
+   "kind": "role",
+   "stratum": "s2_corrected",
+   "events": [
+    {
+     "id": "person-02.role#0",
+     "type": "state",
+     "value": "Analytics Manager",
+     "session": "s011",
+     "said": -503,
+     "valid_from": -503
+    },
+    {
+     "id": "person-02.role#1",
+     "type": "correct",
+     "value": "Compliance Officer",
+     "session": "s044",
+     "said": -385,
+     "valid_from": -503,
+     "replaces": "person-02.role#0"
+    }
+   ],
+   "intent": {
+    "now": "Compliance Officer",
+    "history": [
+     "Compliance Officer"
+    ]
+   }
+  },
+  {
+   "id": "company-02.hq",
+   "entity": "company-02",
+   "kind": "hq",
+   "stratum": "s2_corrected",
+   "events": [
+    {
+     "id": "company-02.hq#0",
+     "type": "state",
+     "value": "Malmo",
+     "session": "s005",
+     "said": -529,
+     "valid_from": -529
+    },
+    {
+     "id": "company-02.hq#1",
+     "type": "change",
+     "value": "Prague",
+     "session": "s037",
+     "said": -405,
+     "valid_from": -405
+    },
+    {
+     "id": "company-02.hq#2",
+     "type": "correct",
+     "value": "Riga",
+     "session": "s047",
+     "said": -381,
+     "valid_from": -405,
+     "replaces": "company-02.hq#1"
+    }
+   ],
+   "intent": {
+    "now": "Riga",
+    "history": [
+     "Malmo",
+     "Riga"
+    ]
+   }
+  },
+  {
+   "id": "project-02.lead",
+   "entity": "project-02",
+   "kind": "lead",
+   "stratum": "s2_corrected",
+   "events": [
+    {
+     "id": "project-02.lead#0",
+     "type": "state",
+     "value": "Gideon Raman",
+     "session": "s026",
+     "said": -453,
+     "valid_from": -453
+    },
+    {
+     "id": "project-02.lead#1",
+     "type": "change",
+     "value": "Matteo Zoric",
+     "session": "s090",
+     "said": -225,
+     "valid_from": -225
+    },
+    {
+     "id": "project-02.lead#2",
+     "type": "correct",
+     "value": "Ilse Nilsen",
+     "session": "s110",
+     "said": -151,
+     "valid_from": -225,
+     "replaces": "project-02.lead#1"
+    }
+   ],
+   "intent": {
+    "now": "Ilse Nilsen",
+    "history": [
+     "Gideon Raman",
+     "Ilse Nilsen"
+    ]
+   }
+  },
+  {
+   "id": "deal-01.price",
+   "entity": "deal-01",
+   "kind": "price",
+   "stratum": "s2_corrected",
+   "events": [
+    {
+     "id": "deal-01.price#0",
+     "type": "state",
+     "value": "$228,000",
+     "session": "s107",
+     "said": -160,
+     "valid_from": -160
+    },
+    {
+     "id": "deal-01.price#1",
+     "type": "correct",
+     "value": "$52,000",
+     "session": "s139",
+     "said": -13,
+     "valid_from": -160,
+     "replaces": "deal-01.price#0"
+    }
+   ],
+   "intent": {
+    "now": "$52,000",
+    "history": [
+     "$52,000"
+    ]
+   }
+  },
+  {
+   "id": "project-03.vendor",
+   "entity": "project-03",
+   "kind": "vendor",
+   "stratum": "s2_corrected",
+   "events": [
+    {
+     "id": "project-03.vendor#0",
+     "type": "state",
+     "value": "Rookwood Design",
+     "session": "s036",
+     "said": -411,
+     "valid_from": -411
+    },
+    {
+     "id": "project-03.vendor#1",
+     "type": "change",
+     "value": "Oakhaven Health",
+     "session": "s068",
+     "said": -305,
+     "valid_from": -305
+    },
+    {
+     "id": "project-03.vendor#2",
+     "type": "correct",
+     "value": "Northgate Freight",
+     "session": "s094",
+     "said": -206,
+     "valid_from": -305,
+     "replaces": "project-03.vendor#1"
+    }
+   ],
+   "intent": {
+    "now": "Northgate Freight",
+    "history": [
+     "Rookwood Design",
+     "Northgate Freight"
+    ]
+   }
+  },
+  {
+   "id": "project-01.vendor",
+   "entity": "project-01",
+   "kind": "vendor",
+   "stratum": "s3_repeated_stale",
+   "events": [
+    {
+     "id": "project-01.vendor#0",
+     "type": "state",
+     "value": "Vellumworks Print",
+     "session": "s020",
+     "said": -466,
+     "valid_from": -466
+    },
+    {
+     "id": "project-01.vendor#1",
+     "type": "mention",
+     "value": "Vellumworks Print",
+     "session": "s023",
+     "said": -458,
+     "valid_from": null
+    },
+    {
+     "id": "project-01.vendor#2",
+     "type": "mention",
+     "value": "Vellumworks Print",
+     "session": "s038",
+     "said": -401,
+     "valid_from": null
+    },
+    {
+     "id": "project-01.vendor#3",
+     "type": "mention",
+     "value": "Vellumworks Print",
+     "session": "s057",
+     "said": -342,
+     "valid_from": null
+    },
+    {
+     "id": "project-01.vendor#4",
+     "type": "mention",
+     "value": "Vellumworks Print",
+     "session": "s065",
+     "said": -312,
+     "valid_from": null
+    },
+    {
+     "id": "project-01.vendor#5",
+     "type": "mention",
+     "value": "Vellumworks Print",
+     "session": "s075",
+     "said": -275,
+     "valid_from": null
+    },
+    {
+     "id": "project-01.vendor#6",
+     "type": "mention",
+     "value": "Vellumworks Print",
+     "session": "s079",
+     "said": -254,
+     "valid_from": null
+    },
+    {
+     "id": "project-01.vendor#7",
+     "type": "mention",
+     "value": "Vellumworks Print",
+     "session": "s085",
+     "said": -233,
+     "valid_from": null
+    },
+    {
+     "id": "project-01.vendor#8",
+     "type": "mention",
+     "value": "Vellumworks Print",
+     "session": "s086",
+     "said": -232,
+     "valid_from": null
+    },
+    {
+     "id": "project-01.vendor#9",
+     "type": "mention",
+     "value": "Vellumworks Print",
+     "session": "s107",
+     "said": -160,
+     "valid_from": null
+    },
+    {
+     "id": "project-01.vendor#10",
+     "type": "mention",
+     "value": "Vellumworks Print",
+     "session": "s111",
+     "said": -150,
+     "valid_from": null
+    },
+    {
+     "id": "project-01.vendor#11",
+     "type": "mention",
+     "value": "Vellumworks Print",
+     "session": "s115",
+     "said": -137,
+     "valid_from": null
+    },
+    {
+     "id": "project-01.vendor#12",
+     "type": "mention",
+     "value": "Vellumworks Print",
+     "session": "s121",
+     "said": -118,
+     "valid_from": null
+    },
+    {
+     "id": "project-01.vendor#13",
+     "type": "mention",
+     "value": "Vellumworks Print",
+     "session": "s122",
+     "said": -114,
+     "valid_from": null
+    },
+    {
+     "id": "project-01.vendor#14",
+     "type": "change",
+     "value": "Quillfeather Media",
+     "session": "s133",
+     "said": -47,
+     "valid_from": -47
+    }
+   ],
+   "intent": {
+    "now": "Quillfeather Media",
+    "history": [
+     "Vellumworks Print",
+     "Quillfeather Media"
+    ]
+   }
+  },
+  {
+   "id": "person-03.city",
+   "entity": "person-03",
+   "kind": "city",
+   "stratum": "s3_repeated_stale",
+   "events": [
+    {
+     "id": "person-03.city#0",
+     "type": "state",
+     "value": "Busan",
+     "session": "s013",
+     "said": -497,
+     "valid_from": -497
+    },
+    {
+     "id": "person-03.city#1",
+     "type": "mention",
+     "value": "Busan",
+     "session": "s026",
+     "said": -453,
+     "valid_from": null
+    },
+    {
+     "id": "person-03.city#2",
+     "type": "mention",
+     "value": "Busan",
+     "session": "s086",
+     "said": -232,
+     "valid_from": null
+    },
+    {
+     "id": "person-03.city#3",
+     "type": "mention",
+     "value": "Busan",
+     "session": "s094",
+     "said": -206,
+     "valid_from": null
+    },
+    {
+     "id": "person-03.city#4",
+     "type": "mention",
+     "value": "Busan",
+     "session": "s107",
+     "said": -160,
+     "valid_from": null
+    },
+    {
+     "id": "person-03.city#5",
+     "type": "mention",
+     "value": "Busan",
+     "session": "s111",
+     "said": -150,
+     "valid_from": null
+    },
+    {
+     "id": "person-03.city#6",
+     "type": "mention",
+     "value": "Busan",
+     "session": "s112",
+     "said": -147,
+     "valid_from": null
+    },
+    {
+     "id": "person-03.city#7",
+     "type": "mention",
+     "value": "Busan",
+     "session": "s125",
+     "said": -94,
+     "valid_from": null
+    },
+    {
+     "id": "person-03.city#8",
+     "type": "change",
+     "value": "Bergen",
+     "session": "s135",
+     "said": -37,
+     "valid_from": -37
+    }
+   ],
+   "intent": {
+    "now": "Bergen",
+    "history": [
+     "Busan",
+     "Bergen"
+    ]
+   }
+  },
+  {
+   "id": "company-02.ops_lead",
+   "entity": "company-02",
+   "kind": "ops_lead",
+   "stratum": "s3_repeated_stale",
+   "events": [
+    {
+     "id": "company-02.ops_lead#0",
+     "type": "state",
+     "value": "Emeka Grieve",
+     "session": "s006",
+     "said": -527,
+     "valid_from": -527
+    },
+    {
+     "id": "company-02.ops_lead#1",
+     "type": "mention",
+     "value": "Emeka Grieve",
+     "session": "s008",
+     "said": -519,
+     "valid_from": null
+    },
+    {
+     "id": "company-02.ops_lead#2",
+     "type": "mention",
+     "value": "Emeka Grieve",
+     "session": "s048",
+     "said": -376,
+     "valid_from": null
+    },
+    {
+     "id": "company-02.ops_lead#3",
+     "type": "mention",
+     "value": "Emeka Grieve",
+     "session": "s049",
+     "said": -373,
+     "valid_from": null
+    },
+    {
+     "id": "company-02.ops_lead#4",
+     "type": "mention",
+     "value": "Emeka Grieve",
+     "session": "s086",
+     "said": -232,
+     "valid_from": null
+    },
+    {
+     "id": "company-02.ops_lead#5",
+     "type": "mention",
+     "value": "Emeka Grieve",
+     "session": "s106",
+     "said": -163,
+     "valid_from": null
+    },
+    {
+     "id": "company-02.ops_lead#6",
+     "type": "mention",
+     "value": "Emeka Grieve",
+     "session": "s115",
+     "said": -137,
+     "valid_from": null
+    },
+    {
+     "id": "company-02.ops_lead#7",
+     "type": "mention",
+     "value": "Emeka Grieve",
+     "session": "s117",
+     "said": -129,
+     "valid_from": null
+    },
+    {
+     "id": "company-02.ops_lead#8",
+     "type": "change",
+     "value": "Elif Coelho",
+     "session": "s132",
+     "said": -48,
+     "valid_from": -48
+    }
+   ],
+   "intent": {
+    "now": "Elif Coelho",
+    "history": [
+     "Emeka Grieve",
+     "Elif Coelho"
+    ]
+   }
+  },
+  {
+   "id": "company-03.ops_lead",
+   "entity": "company-03",
+   "kind": "ops_lead",
+   "stratum": "s3_repeated_stale",
+   "events": [
+    {
+     "id": "company-03.ops_lead#0",
+     "type": "state",
+     "value": "Odile Osei",
+     "session": "s008",
+     "said": -519,
+     "valid_from": -519
+    },
+    {
+     "id": "company-03.ops_lead#1",
+     "type": "mention",
+     "value": "Odile Osei",
+     "session": "s016",
+     "said": -489,
+     "valid_from": null
+    },
+    {
+     "id": "company-03.ops_lead#2",
+     "type": "mention",
+     "value": "Odile Osei",
+     "session": "s021",
+     "said": -464,
+     "valid_from": null
+    },
+    {
+     "id": "company-03.ops_lead#3",
+     "type": "mention",
+     "value": "Odile Osei",
+     "session": "s038",
+     "said": -401,
+     "valid_from": null
+    },
+    {
+     "id": "company-03.ops_lead#4",
+     "type": "mention",
+     "value": "Odile Osei",
+     "session": "s054",
+     "said": -357,
+     "valid_from": null
+    },
+    {
+     "id": "company-03.ops_lead#5",
+     "type": "mention",
+     "value": "Odile Osei",
+     "session": "s068",
+     "said": -305,
+     "valid_from": null
+    },
+    {
+     "id": "company-03.ops_lead#6",
+     "type": "mention",
+     "value": "Odile Osei",
+     "session": "s073",
+     "said": -282,
+     "valid_from": null
+    },
+    {
+     "id": "company-03.ops_lead#7",
+     "type": "mention",
+     "value": "Odile Osei",
+     "session": "s083",
+     "said": -247,
+     "valid_from": null
+    },
+    {
+     "id": "company-03.ops_lead#8",
+     "type": "mention",
+     "value": "Odile Osei",
+     "session": "s103",
+     "said": -191,
+     "valid_from": null
+    },
+    {
+     "id": "company-03.ops_lead#9",
+     "type": "mention",
+     "value": "Odile Osei",
+     "session": "s106",
+     "said": -163,
+     "valid_from": null
+    },
+    {
+     "id": "company-03.ops_lead#10",
+     "type": "mention",
+     "value": "Odile Osei",
+     "session": "s115",
+     "said": -137,
+     "valid_from": null
+    },
+    {
+     "id": "company-03.ops_lead#11",
+     "type": "mention",
+     "value": "Odile Osei",
+     "session": "s121",
+     "said": -118,
+     "valid_from": null
+    },
+    {
+     "id": "company-03.ops_lead#12",
+     "type": "mention",
+     "value": "Odile Osei",
+     "session": "s127",
+     "said": -83,
+     "valid_from": null
+    },
+    {
+     "id": "company-03.ops_lead#13",
+     "type": "change",
+     "value": "Sanne Kiplagat",
+     "session": "s128",
+     "said": -80,
+     "valid_from": -80
+    }
+   ],
+   "intent": {
+    "now": "Sanne Kiplagat",
+    "history": [
+     "Odile Osei",
+     "Sanne Kiplagat"
+    ]
+   }
+  },
+  {
+   "id": "person-04.employer",
+   "entity": "person-04",
+   "kind": "employer",
+   "stratum": "s3_repeated_stale",
+   "events": [
+    {
+     "id": "person-04.employer#0",
+     "type": "state",
+     "value": "Goldcrest Insurance",
+     "session": "s021",
+     "said": -464,
+     "valid_from": -464
+    },
+    {
+     "id": "person-04.employer#1",
+     "type": "mention",
+     "value": "Goldcrest Insurance",
+     "session": "s023",
+     "said": -458,
+     "valid_from": null
+    },
+    {
+     "id": "person-04.employer#2",
+     "type": "mention",
+     "value": "Goldcrest Insurance",
+     "session": "s034",
+     "said": -419,
+     "valid_from": null
+    },
+    {
+     "id": "person-04.employer#3",
+     "type": "mention",
+     "value": "Goldcrest Insurance",
+     "session": "s067",
+     "said": -308,
+     "valid_from": null
+    },
+    {
+     "id": "person-04.employer#4",
+     "type": "mention",
+     "value": "Goldcrest Insurance",
+     "session": "s080",
+     "said": -253,
+     "valid_from": null
+    },
+    {
+     "id": "person-04.employer#5",
+     "type": "mention",
+     "value": "Goldcrest Insurance",
+     "session": "s102",
+     "said": -191,
+     "valid_from": null
+    },
+    {
+     "id": "person-04.employer#6",
+     "type": "mention",
+     "value": "Goldcrest Insurance",
+     "session": "s112",
+     "said": -147,
+     "valid_from": null
+    },
+    {
+     "id": "person-04.employer#7",
+     "type": "mention",
+     "value": "Goldcrest Insurance",
+     "session": "s118",
+     "said": -126,
+     "valid_from": null
+    },
+    {
+     "id": "person-04.employer#8",
+     "type": "change",
+     "value": "Hazelpoint Consulting",
+     "session": "s119",
+     "said": -123,
+     "valid_from": -123
+    }
+   ],
+   "intent": {
+    "now": "Hazelpoint Consulting",
+    "history": [
+     "Goldcrest Insurance",
+     "Hazelpoint Consulting"
+    ]
+   }
+  },
+  {
+   "id": "person-05.employer",
+   "entity": "person-05",
+   "kind": "employer",
+   "stratum": "s3_repeated_stale",
+   "events": [
+    {
+     "id": "person-05.employer#0",
+     "type": "state",
+     "value": "Thistledown Textiles",
+     "session": "s008",
+     "said": -519,
+     "valid_from": -519
+    },
+    {
+     "id": "person-05.employer#1",
+     "type": "mention",
+     "value": "Thistledown Textiles",
+     "session": "s011",
+     "said": -503,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.employer#2",
+     "type": "mention",
+     "value": "Thistledown Textiles",
+     "session": "s016",
+     "said": -489,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.employer#3",
+     "type": "mention",
+     "value": "Thistledown Textiles",
+     "session": "s028",
+     "said": -441,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.employer#4",
+     "type": "mention",
+     "value": "Thistledown Textiles",
+     "session": "s046",
+     "said": -385,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.employer#5",
+     "type": "mention",
+     "value": "Thistledown Textiles",
+     "session": "s084",
+     "said": -239,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.employer#6",
+     "type": "mention",
+     "value": "Thistledown Textiles",
+     "session": "s096",
+     "said": -201,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.employer#7",
+     "type": "mention",
+     "value": "Thistledown Textiles",
+     "session": "s103",
+     "said": -191,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.employer#8",
+     "type": "change",
+     "value": "Copperleaf Systems",
+     "session": "s123",
+     "said": -113,
+     "valid_from": -113
+    }
+   ],
+   "intent": {
+    "now": "Copperleaf Systems",
+    "history": [
+     "Thistledown Textiles",
+     "Copperleaf Systems"
+    ]
+   }
+  },
+  {
+   "id": "deal-01.discount",
+   "entity": "deal-01",
+   "kind": "discount",
+   "stratum": "s4_conflicting",
+   "events": [
+    {
+     "id": "deal-01.discount#0",
+     "type": "source",
+     "value": "17%",
+     "session": "s100",
+     "said": -193,
+     "valid_from": -193,
+     "source": "owner_confirmed"
+    },
+    {
+     "id": "deal-01.discount#1",
+     "type": "source",
+     "value": "35%",
+     "session": "s110",
+     "said": -151,
+     "valid_from": -151,
+     "source": "draft"
+    },
+    {
+     "id": "deal-01.discount#2",
+     "type": "source",
+     "value": "16%",
+     "session": "s121",
+     "said": -118,
+     "valid_from": -118,
+     "source": "recap"
+    }
+   ],
+   "intent": {
+    "now": "17%",
+    "history": [
+     "17%"
+    ]
+   }
+  },
+  {
+   "id": "deal-02.price",
+   "entity": "deal-02",
+   "kind": "price",
+   "stratum": "s4_conflicting",
+   "events": [
+    {
+     "id": "deal-02.price#0",
+     "type": "source",
+     "value": "$266,000",
+     "session": "s062",
+     "said": -333,
+     "valid_from": -333,
+     "source": "owner_confirmed"
+    },
+    {
+     "id": "deal-02.price#1",
+     "type": "source",
+     "value": "$270,000",
+     "session": "s071",
+     "said": -289,
+     "valid_from": -289,
+     "source": "draft"
+    },
+    {
+     "id": "deal-02.price#2",
+     "type": "source",
+     "value": "$110,000",
+     "session": "s074",
+     "said": -276,
+     "valid_from": -276,
+     "source": "recap"
+    },
+    {
+     "id": "deal-02.price#3",
+     "type": "source",
+     "value": "$38,000",
+     "session": "s077",
+     "said": -269,
+     "valid_from": -269,
+     "source": "draft"
+    },
+    {
+     "id": "deal-02.price#4",
+     "type": "source",
+     "value": "$142,000",
+     "session": "s080",
+     "said": -253,
+     "valid_from": -253,
+     "source": "agent_note"
+    }
+   ],
+   "intent": {
+    "now": "$266,000",
+    "history": [
+     "$266,000"
+    ]
+   }
+  },
+  {
+   "id": "deal-02.term",
+   "entity": "deal-02",
+   "kind": "term",
+   "stratum": "s4_conflicting",
+   "events": [
+    {
+     "id": "deal-02.term#0",
+     "type": "source",
+     "value": "66 months",
+     "session": "s079",
+     "said": -254,
+     "valid_from": -254,
+     "source": "recap"
+    },
+    {
+     "id": "deal-02.term#1",
+     "type": "source",
+     "value": "15 months",
+     "session": "s088",
+     "said": -231,
+     "valid_from": -231,
+     "source": "executed"
+    },
+    {
+     "id": "deal-02.term#2",
+     "type": "source",
+     "value": "33 months",
+     "session": "s104",
+     "said": -191,
+     "valid_from": -191,
+     "source": "draft"
+    }
+   ],
+   "intent": {
+    "now": "15 months",
+    "history": [
+     "15 months"
+    ]
+   }
+  },
+  {
+   "id": "deal-03.term",
+   "entity": "deal-03",
+   "kind": "term",
+   "stratum": "s4_conflicting",
+   "events": [
+    {
+     "id": "deal-03.term#0",
+     "type": "source",
+     "value": "21 months",
+     "session": "s113",
+     "said": -138,
+     "valid_from": -138,
+     "source": "owner_confirmed"
+    },
+    {
+     "id": "deal-03.term#1",
+     "type": "source",
+     "value": "18 months",
+     "session": "s117",
+     "said": -129,
+     "valid_from": -129,
+     "source": "draft"
+    },
+    {
+     "id": "deal-03.term#2",
+     "type": "source",
+     "value": "30 months",
+     "session": "s118",
+     "said": -126,
+     "valid_from": -126,
+     "source": "recap"
+    },
+    {
+     "id": "deal-03.term#3",
+     "type": "source",
+     "value": "27 months",
+     "session": "s124",
+     "said": -111,
+     "valid_from": -111,
+     "source": "draft"
+    },
+    {
+     "id": "deal-03.term#4",
+     "type": "source",
+     "value": "9 months",
+     "session": "s130",
+     "said": -67,
+     "valid_from": -67,
+     "source": "recap"
+    }
+   ],
+   "intent": {
+    "now": "21 months",
+    "history": [
+     "21 months"
+    ]
+   }
+  },
+  {
+   "id": "deal-04.term",
+   "entity": "deal-04",
+   "kind": "term",
+   "stratum": "s4_conflicting",
+   "events": [
+    {
+     "id": "deal-04.term#0",
+     "type": "source",
+     "value": "63 months",
+     "session": "s078",
+     "said": -258,
+     "valid_from": -258,
+     "source": "recap"
+    },
+    {
+     "id": "deal-04.term#1",
+     "type": "source",
+     "value": "45 months",
+     "session": "s087",
+     "said": -232,
+     "valid_from": -232,
+     "source": "executed"
+    },
+    {
+     "id": "deal-04.term#2",
+     "type": "source",
+     "value": "42 months",
+     "session": "s092",
+     "said": -215,
+     "valid_from": -215,
+     "source": "draft"
+    },
+    {
+     "id": "deal-04.term#3",
+     "type": "source",
+     "value": "54 months",
+     "session": "s093",
+     "said": -207,
+     "valid_from": -207,
+     "source": "agent_note"
+    },
+    {
+     "id": "deal-04.term#4",
+     "type": "source",
+     "value": "39 months",
+     "session": "s109",
+     "said": -153,
+     "valid_from": -153,
+     "source": "draft"
+    }
+   ],
+   "intent": {
+    "now": "45 months",
+    "history": [
+     "45 months"
+    ]
+   }
+  },
+  {
+   "id": "deal-05.seats",
+   "entity": "deal-05",
+   "kind": "seats",
+   "stratum": "s4_conflicting",
+   "events": [
+    {
+     "id": "deal-05.seats#0",
+     "type": "source",
+     "value": "660 seats",
+     "session": "s106",
+     "said": -163,
+     "valid_from": -163,
+     "source": "agent_note"
+    },
+    {
+     "id": "deal-05.seats#1",
+     "type": "source",
+     "value": "410 seats",
+     "session": "s108",
+     "said": -158,
+     "valid_from": -158,
+     "source": "executed"
+    },
+    {
+     "id": "deal-05.seats#2",
+     "type": "source",
+     "value": "530 seats",
+     "session": "s114",
+     "said": -138,
+     "valid_from": -138,
+     "source": "recap"
+    },
+    {
+     "id": "deal-05.seats#3",
+     "type": "source",
+     "value": "290 seats",
+     "session": "s118",
+     "said": -126,
+     "valid_from": -126,
+     "source": "agent_note"
+    },
+    {
+     "id": "deal-05.seats#4",
+     "type": "source",
+     "value": "840 seats",
+     "session": "s127",
+     "said": -83,
+     "valid_from": -83,
+     "source": "recap"
+    }
+   ],
+   "intent": {
+    "now": "410 seats",
+    "history": [
+     "410 seats"
+    ]
+   }
+  },
+  {
+   "id": "company-03.merger",
+   "entity": "company-03",
+   "kind": "merger",
+   "stratum": "s5_withdrawn",
+   "events": [
+    {
+     "id": "company-03.merger#0",
+     "type": "plan",
+     "value": "Saltmarsh Marine",
+     "session": "s040",
+     "said": -397,
+     "valid_from": -397
+    },
+    {
+     "id": "company-03.merger#1",
+     "type": "plan",
+     "value": "Saltmarsh Marine",
+     "session": "s046",
+     "said": -385,
+     "valid_from": -385
+    },
+    {
+     "id": "company-03.merger#2",
+     "type": "withdraw",
+     "value": "Saltmarsh Marine",
+     "session": "s123",
+     "said": -113,
+     "valid_from": null,
+     "rumour": false
+    }
+   ],
+   "intent": {
+    "now": null,
+    "history": []
+   }
+  },
+  {
+   "id": "project-02.pilot",
+   "entity": "project-02",
+   "kind": "pilot",
+   "stratum": "s5_withdrawn",
+   "events": [
+    {
+     "id": "project-02.pilot#0",
+     "type": "plan",
+     "value": "Ironbark Security",
+     "session": "s025",
+     "said": -453,
+     "valid_from": -453
+    },
+    {
+     "id": "project-02.pilot#1",
+     "type": "plan",
+     "value": "Ironbark Security",
+     "session": "s036",
+     "said": -411,
+     "valid_from": -411
+    },
+    {
+     "id": "project-02.pilot#2",
+     "type": "plan",
+     "value": "Ironbark Security",
+     "session": "s043",
+     "said": -388,
+     "valid_from": -388
+    },
+    {
+     "id": "project-02.pilot#3",
+     "type": "withdraw",
+     "value": "Ironbark Security",
+     "session": "s110",
+     "said": -151,
+     "valid_from": null,
+     "rumour": true
+    }
+   ],
+   "intent": {
+    "now": null,
+    "history": []
+   }
+  },
+  {
+   "id": "project-04.pilot",
+   "entity": "project-04",
+   "kind": "pilot",
+   "stratum": "s5_withdrawn",
+   "events": [
+    {
+     "id": "project-04.pilot#0",
+     "type": "plan",
+     "value": "Kettlebrook Brewing",
+     "session": "s055",
+     "said": -352,
+     "valid_from": -352
+    },
+    {
+     "id": "project-04.pilot#1",
+     "type": "plan",
+     "value": "Kettlebrook Brewing",
+     "session": "s059",
+     "said": -338,
+     "valid_from": -338
+    },
+    {
+     "id": "project-04.pilot#2",
+     "type": "plan",
+     "value": "Kettlebrook Brewing",
+     "session": "s063",
+     "said": -316,
+     "valid_from": -316
+    },
+    {
+     "id": "project-04.pilot#3",
+     "type": "withdraw",
+     "value": "Kettlebrook Brewing",
+     "session": "s124",
+     "said": -111,
+     "valid_from": null,
+     "rumour": false
+    }
+   ],
+   "intent": {
+    "now": null,
+    "history": []
+   }
+  },
+  {
+   "id": "project-03.pilot",
+   "entity": "project-03",
+   "kind": "pilot",
+   "stratum": "s5_withdrawn",
+   "events": [
+    {
+     "id": "project-03.pilot#0",
+     "type": "plan",
+     "value": "Kinglet Telecom",
+     "session": "s014",
+     "said": -495,
+     "valid_from": -495
+    },
+    {
+     "id": "project-03.pilot#1",
+     "type": "plan",
+     "value": "Kinglet Telecom",
+     "session": "s026",
+     "said": -453,
+     "valid_from": -453
+    },
+    {
+     "id": "project-03.pilot#2",
+     "type": "withdraw",
+     "value": "Kinglet Telecom",
+     "session": "s043",
+     "said": -388,
+     "valid_from": null,
+     "rumour": true
+    }
+   ],
+   "intent": {
+    "now": null,
+    "history": []
+   }
+  },
+  {
+   "id": "company-04.offsite",
+   "entity": "company-04",
+   "kind": "offsite",
+   "stratum": "s5_withdrawn",
+   "events": [
+    {
+     "id": "company-04.offsite#0",
+     "type": "plan",
+     "value": "Denver",
+     "session": "s085",
+     "said": -233,
+     "valid_from": -233
+    },
+    {
+     "id": "company-04.offsite#1",
+     "type": "plan",
+     "value": "Denver",
+     "session": "s090",
+     "said": -225,
+     "valid_from": -225
+    },
+    {
+     "id": "company-04.offsite#2",
+     "type": "plan",
+     "value": "Denver",
+     "session": "s093",
+     "said": -207,
+     "valid_from": -207
+    },
+    {
+     "id": "company-04.offsite#3",
+     "type": "withdraw",
+     "value": "Denver",
+     "session": "s120",
+     "said": -121,
+     "valid_from": null,
+     "rumour": false
+    }
+   ],
+   "intent": {
+    "now": null,
+    "history": []
+   }
+  },
+  {
+   "id": "company-05.merger",
+   "entity": "company-05",
+   "kind": "merger",
+   "stratum": "s5_withdrawn",
+   "events": [
+    {
+     "id": "company-05.merger#0",
+     "type": "plan",
+     "value": "Quarryhill Materials",
+     "session": "s028",
+     "said": -441,
+     "valid_from": -441
+    },
+    {
+     "id": "company-05.merger#1",
+     "type": "withdraw",
+     "value": "Quarryhill Materials",
+     "session": "s091",
+     "said": -221,
+     "valid_from": null,
+     "rumour": false
+    }
+   ],
+   "intent": {
+    "now": null,
+    "history": []
+   }
+  },
+  {
+   "id": "person-01-twin.employer",
+   "entity": "person-01-twin",
+   "kind": "employer",
+   "stratum": "decoy",
+   "twin_slot": "person-01.employer",
+   "events": [
+    {
+     "id": "person-01-twin.employer#0",
+     "type": "state",
+     "value": "Brightline Analytics",
+     "session": "s037",
+     "said": -405,
+     "valid_from": -405
+    }
+   ],
+   "intent": {
+    "now": "Brightline Analytics",
+    "history": [
+     "Brightline Analytics"
+    ]
+   }
+  },
+  {
+   "id": "project-01-twin.vendor",
+   "entity": "project-01-twin",
+   "kind": "vendor",
+   "stratum": "decoy",
+   "twin_slot": "project-01.vendor",
+   "events": [
+    {
+     "id": "project-01-twin.vendor#0",
+     "type": "state",
+     "value": "Jasperwood Furniture",
+     "session": "s078",
+     "said": -258,
+     "valid_from": -258
+    }
+   ],
+   "intent": {
+    "now": "Jasperwood Furniture",
+    "history": [
+     "Jasperwood Furniture"
+    ]
+   }
+  },
+  {
+   "id": "person-05-twin.employer",
+   "entity": "person-05-twin",
+   "kind": "employer",
+   "stratum": "decoy",
+   "twin_slot": "person-05.employer",
+   "events": [
+    {
+     "id": "person-05-twin.employer#0",
+     "type": "state",
+     "value": "Foxglove Cosmetics",
+     "session": "s063",
+     "said": -316,
+     "valid_from": -316
+    }
+   ],
+   "intent": {
+    "now": "Foxglove Cosmetics",
+    "history": [
+     "Foxglove Cosmetics"
+    ]
+   }
+  },
+  {
+   "id": "project-02-twin.pilot",
+   "entity": "project-02-twin",
+   "kind": "pilot",
+   "stratum": "decoy",
+   "twin_slot": "project-02.pilot",
+   "events": [
+    {
+     "id": "project-02-twin.pilot#0",
+     "type": "plan",
+     "value": "Cinderford Steel",
+     "session": "s072",
+     "said": -285,
+     "valid_from": -285
+    }
+   ],
+   "intent": {
+    "now": "Cinderford Steel",
+    "history": [
+     "Cinderford Steel"
+    ]
+   }
+  },
+  {
+   "id": "person-04-twin.employer",
+   "entity": "person-04-twin",
+   "kind": "employer",
+   "stratum": "decoy",
+   "twin_slot": "person-04.employer",
+   "events": [
+    {
+     "id": "person-04-twin.employer#0",
+     "type": "state",
+     "value": "Lindenhall Bank",
+     "session": "s030",
+     "said": -436,
+     "valid_from": -436
+    }
+   ],
+   "intent": {
+    "now": "Lindenhall Bank",
+    "history": [
+     "Lindenhall Bank"
+    ]
+   }
+  },
+  {
+   "id": "company-01-twin.ops_lead",
+   "entity": "company-01-twin",
+   "kind": "ops_lead",
+   "stratum": "decoy",
+   "twin_slot": "company-01.ops_lead",
+   "events": [
+    {
+     "id": "company-01-twin.ops_lead#0",
+     "type": "state",
+     "value": "Hiro Weber",
+     "session": "s119",
+     "said": -123,
+     "valid_from": -123
+    }
+   ],
+   "intent": {
+    "now": "Hiro Weber",
+    "history": [
+     "Hiro Weber"
+    ]
+   }
+  },
+  {
+   "id": "company-03-twin.merger",
+   "entity": "company-03-twin",
+   "kind": "merger",
+   "stratum": "decoy",
+   "twin_slot": "company-03.merger",
+   "events": [
+    {
+     "id": "company-03-twin.merger#0",
+     "type": "plan",
+     "value": "Fernhollow Labs",
+     "session": "s080",
+     "said": -253,
+     "valid_from": -253
+    }
+   ],
+   "intent": {
+    "now": "Fernhollow Labs",
+    "history": [
+     "Fernhollow Labs"
+    ]
+   }
+  },
+  {
+   "id": "deal-03-twin.term",
+   "entity": "deal-03-twin",
+   "kind": "term",
+   "stratum": "decoy",
+   "twin_slot": "deal-03.term",
+   "events": [
+    {
+     "id": "deal-03-twin.term#0",
+     "type": "source",
+     "value": "51 months",
+     "session": "s116",
+     "said": -129,
+     "valid_from": -129,
+     "source": "executed"
+    }
+   ],
+   "intent": {
+    "now": "51 months",
+    "history": [
+     "51 months"
+    ]
+   }
+  },
+  {
+   "id": "project-04-twin.pilot",
+   "entity": "project-04-twin",
+   "kind": "pilot",
+   "stratum": "decoy",
+   "twin_slot": "project-04.pilot",
+   "events": [
+    {
+     "id": "project-04-twin.pilot#0",
+     "type": "plan",
+     "value": "Umberfield Mining",
+     "session": "s009",
+     "said": -518,
+     "valid_from": -518
+    }
+   ],
+   "intent": {
+    "now": "Umberfield Mining",
+    "history": [
+     "Umberfield Mining"
+    ]
+   }
+  },
+  {
+   "id": "person-02-twin.city",
+   "entity": "person-02-twin",
+   "kind": "city",
+   "stratum": "decoy",
+   "twin_slot": "person-02.city",
+   "events": [
+    {
+     "id": "person-02-twin.city#0",
+     "type": "state",
+     "value": "Vilnius",
+     "session": "s102",
+     "said": -191,
+     "valid_from": -191
+    }
+   ],
+   "intent": {
+    "now": "Vilnius",
+    "history": [
+     "Vilnius"
+    ]
+   }
+  }
+ ],
+ "sessions": [
+  {
+   "id": "s001",
+   "day": -542,
+   "time": "12:00",
+   "topic": "a podcast episode",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s002",
+   "day": -542,
+   "time": "20:40",
+   "topic": "a podcast episode",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s003",
+   "day": -535,
+   "time": "09:35",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s004",
+   "day": -532,
+   "time": "15:35",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s005",
+   "day": -529,
+   "time": "15:20",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": [
+    {
+     "text": "Lowmoor Retail is headquartered in Malmo.",
+     "slot": "company-02.hq",
+     "event": "company-02.hq#0",
+     "values": [
+      "Malmo"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s006",
+   "day": -527,
+   "time": "08:20",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": [
+    {
+     "text": "For the record, Mirela Novak lives in Bologna.",
+     "slot": "person-02.city",
+     "event": "person-02.city#0",
+     "values": [
+      "Bologna"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Writing this down so I remember: Emeka Grieve is the head of operations at Lowmoor Retail.",
+     "slot": "company-02.ops_lead",
+     "event": "company-02.ops_lead#0",
+     "values": [
+      "Emeka Grieve"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s007",
+   "day": -522,
+   "time": "14:55",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s008",
+   "day": -519,
+   "time": "19:20",
+   "topic": "a podcast episode",
+   "long": false,
+   "lines": [
+    {
+     "text": "For the record, Delphine Takahashi works at Thistledown Textiles.",
+     "slot": "person-05.employer",
+     "event": "person-05.employer#0",
+     "values": [
+      "Thistledown Textiles"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Emeka Grieve rearranged the warehouse shifts at Lowmoor Retail.",
+     "slot": "company-02.ops_lead",
+     "event": "company-02.ops_lead#1",
+     "values": [
+      "Emeka Grieve"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "For the record, Odile Osei is the head of operations at Quayside Health.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#0",
+     "values": [
+      "Odile Osei"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s009",
+   "day": -518,
+   "time": "18:55",
+   "topic": "a board game night",
+   "long": false,
+   "lines": [
+    {
+     "text": "Quick note for later: Talia Whitlock works as Head of Platform.",
+     "slot": "person-03.role",
+     "event": "person-03.role#0",
+     "values": [
+      "Head of Platform"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Project Mistlethrush is running a pilot with Umberfield Mining.",
+     "slot": "project-04-twin.pilot",
+     "event": "project-04-twin.pilot#0",
+     "values": [
+      "Umberfield Mining"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s010",
+   "day": -511,
+   "time": "11:05",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s011",
+   "day": -503,
+   "time": "15:35",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, Delphine Takahashi got a new badge photo at Thistledown Textiles.",
+     "slot": "person-05.employer",
+     "event": "person-05.employer#1",
+     "values": [
+      "Thistledown Textiles"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Quick note for later: Mirela Novak works as Analytics Manager.",
+     "slot": "person-02.role",
+     "event": "person-02.role#0",
+     "values": [
+      "Analytics Manager"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s012",
+   "day": -498,
+   "time": "21:55",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s013",
+   "day": -497,
+   "time": "11:10",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": [
+    {
+     "text": "Quick note for later: Talia Whitlock is based in Busan.",
+     "slot": "person-03.city",
+     "event": "person-03.city#0",
+     "values": [
+      "Busan"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s014",
+   "day": -495,
+   "time": "15:05",
+   "topic": "a jigsaw puzzle",
+   "long": false,
+   "lines": [
+    {
+     "text": "Quick note for later: Desmond Lefebvre works at Tarnwood Logistics.",
+     "slot": "person-01.employer",
+     "event": "person-01.employer#0",
+     "values": [
+      "Tarnwood Logistics"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Big news: Project Tamarind is running a pilot with Kinglet Telecom.",
+     "slot": "project-03.pilot",
+     "event": "project-03.pilot#0",
+     "values": [
+      "Kinglet Telecom"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s015",
+   "day": -492,
+   "time": "08:50",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s016",
+   "day": -489,
+   "time": "17:35",
+   "topic": "a language exchange",
+   "long": false,
+   "lines": [
+    {
+     "text": "Delphine Takahashi was stuck in a long all-hands at Thistledown Textiles.",
+     "slot": "person-05.employer",
+     "event": "person-05.employer#2",
+     "values": [
+      "Thistledown Textiles"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Side note, Odile Osei signed off on the Quayside Health supplier list.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#1",
+     "values": [
+      "Odile Osei"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Quick note for later: Halcyon Freight is headquartered in Lisbon.",
+     "slot": "company-01.hq",
+     "event": "company-01.hq#0",
+     "values": [
+      "Lisbon"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s017",
+   "day": -478,
+   "time": "16:05",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s018",
+   "day": -478,
+   "time": "21:15",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s019",
+   "day": -466,
+   "time": "15:05",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s020",
+   "day": -466,
+   "time": "20:30",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": [
+    {
+     "text": "For the record, Project Lodestar buys from Vellumworks Print.",
+     "slot": "project-01.vendor",
+     "event": "project-01.vendor#0",
+     "values": [
+      "Vellumworks Print"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s021",
+   "day": -464,
+   "time": "12:05",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: Odile Osei is still untangling the Quayside Health shipping backlog.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#2",
+     "values": [
+      "Odile Osei"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Quick note for later: Yusuf Delacroix is employed by Goldcrest Insurance.",
+     "slot": "person-04.employer",
+     "event": "person-04.employer#0",
+     "values": [
+      "Goldcrest Insurance"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s022",
+   "day": -464,
+   "time": "15:40",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s023",
+   "day": -458,
+   "time": "15:25",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: Yusuf Delacroix is buried in quarter planning at Goldcrest Insurance.",
+     "slot": "person-04.employer",
+     "event": "person-04.employer#1",
+     "values": [
+      "Goldcrest Insurance"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Funny timing: the Vellumworks Print support desk fixed the Project Lodestar outage.",
+     "slot": "project-01.vendor",
+     "event": "project-01.vendor#1",
+     "values": [
+      "Vellumworks Print"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s024",
+   "day": -454,
+   "time": "14:00",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s025",
+   "day": -453,
+   "time": "14:20",
+   "topic": "restoring an old bicycle",
+   "long": true,
+   "lines": [
+    {
+     "text": "Project Kestrel is running a pilot with Ironbark Security.",
+     "slot": "project-02.pilot",
+     "event": "project-02.pilot#0",
+     "values": [
+      "Ironbark Security"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s026",
+   "day": -453,
+   "time": "16:10",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: Talia Whitlock is hosting the book club at home in Busan this month.",
+     "slot": "person-03.city",
+     "event": "person-03.city#1",
+     "values": [
+      "Busan"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Big news: Project Tamarind signed Kinglet Telecom as its pilot customer.",
+     "slot": "project-03.pilot",
+     "event": "project-03.pilot#1",
+     "values": [
+      "Kinglet Telecom"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "For the record, Gideon Raman leads Project Kestrel.",
+     "slot": "project-02.lead",
+     "event": "project-02.lead#0",
+     "values": [
+      "Gideon Raman"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s027",
+   "day": -449,
+   "time": "09:20",
+   "topic": "a language exchange",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s028",
+   "day": -441,
+   "time": "16:20",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, Delphine Takahashi said the coffee at Thistledown Textiles is still terrible.",
+     "slot": "person-05.employer",
+     "event": "person-05.employer#3",
+     "values": [
+      "Thistledown Textiles"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Corbel Systems is merging with Quarryhill Materials.",
+     "slot": "company-05.merger",
+     "event": "company-05.merger#0",
+     "values": [
+      "Quarryhill Materials"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s029",
+   "day": -437,
+   "time": "10:20",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s030",
+   "day": -436,
+   "time": "14:00",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": [
+    {
+     "text": "Writing this down so I remember: Yusuf Delacourt is employed by Lindenhall Bank.",
+     "slot": "person-04-twin.employer",
+     "event": "person-04-twin.employer#0",
+     "values": [
+      "Lindenhall Bank"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Quick note for later: Valentin Rossi is the lead on Project Lodestar.",
+     "slot": "project-01.lead",
+     "event": "project-01.lead#0",
+     "values": [
+      "Valentin Rossi"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s031",
+   "day": -434,
+   "time": "15:35",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s032",
+   "day": -430,
+   "time": "21:30",
+   "topic": "a language exchange",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s033",
+   "day": -423,
+   "time": "18:05",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": [
+    {
+     "text": "Writing this down so I remember: Zainab Tanaka runs operations at Halcyon Freight.",
+     "slot": "company-01.ops_lead",
+     "event": "company-01.ops_lead#0",
+     "values": [
+      "Zainab Tanaka"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s034",
+   "day": -419,
+   "time": "15:25",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, Yusuf Delacroix is buried in quarter planning at Goldcrest Insurance.",
+     "slot": "person-04.employer",
+     "event": "person-04.employer#2",
+     "values": [
+      "Goldcrest Insurance"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s035",
+   "day": -417,
+   "time": "12:00",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s036",
+   "day": -411,
+   "time": "12:50",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": [
+    {
+     "text": "Keep this quiet for now, but Project Kestrel is running a pilot with Ironbark Security.",
+     "slot": "project-02.pilot",
+     "event": "project-02.pilot#1",
+     "values": [
+      "Ironbark Security"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Project Tamarind buys from Rookwood Design.",
+     "slot": "project-03.vendor",
+     "event": "project-03.vendor#0",
+     "values": [
+      "Rookwood Design"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s037",
+   "day": -405,
+   "time": "11:50",
+   "topic": "restoring an old bicycle",
+   "long": false,
+   "lines": [
+    {
+     "text": "Quick note for later: Desmond Lefevre is employed by Brightline Analytics.",
+     "slot": "person-01-twin.employer",
+     "event": "person-01-twin.employer#0",
+     "values": [
+      "Brightline Analytics"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Update: Lowmoor Retail moved its headquarters to Prague.",
+     "slot": "company-02.hq",
+     "event": "company-02.hq#1",
+     "values": [
+      "Prague"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s038",
+   "day": -401,
+   "time": "16:35",
+   "topic": "restoring an old bicycle",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: I renewed the Project Lodestar support plan with Vellumworks Print.",
+     "slot": "project-01.vendor",
+     "event": "project-01.vendor#2",
+     "values": [
+      "Vellumworks Print"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Funny timing: Odile Osei rearranged the warehouse shifts at Quayside Health.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#3",
+     "values": [
+      "Odile Osei"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s039",
+   "day": -399,
+   "time": "10:40",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": [
+    {
+     "text": "Update: Mirela Novak relocated to Lyon.",
+     "slot": "person-02.city",
+     "event": "person-02.city#1",
+     "values": [
+      "Lyon"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s040",
+   "day": -397,
+   "time": "15:05",
+   "topic": "a board game night",
+   "long": false,
+   "lines": [
+    {
+     "text": "Keep this quiet for now, but Quayside Health is merging with Saltmarsh Marine.",
+     "slot": "company-03.merger",
+     "event": "company-03.merger#0",
+     "values": [
+      "Saltmarsh Marine"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s041",
+   "day": -393,
+   "time": "08:25",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s042",
+   "day": -393,
+   "time": "14:10",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s043",
+   "day": -388,
+   "time": "14:00",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": [
+    {
+     "text": "Forget what I said earlier about how Project Tamarind is running a pilot with Kinglet Telecom; that was only a rumour and it is not happening.",
+     "slot": "project-03.pilot",
+     "event": "project-03.pilot#2",
+     "values": [
+      "Kinglet Telecom"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Project Kestrel signed Ironbark Security as its pilot customer.",
+     "slot": "project-02.pilot",
+     "event": "project-02.pilot#2",
+     "values": [
+      "Ironbark Security"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s044",
+   "day": -385,
+   "time": "12:25",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": [
+    {
+     "text": "I need to fix something I told you: not Analytics Manager. In fact Mirela Novak holds the title Compliance Officer.",
+     "slot": "person-02.role",
+     "event": "person-02.role#1",
+     "values": [
+      "Analytics Manager",
+      "Compliance Officer"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s045",
+   "day": -385,
+   "time": "17:15",
+   "topic": "restoring an old bicycle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s046",
+   "day": -385,
+   "time": "19:55",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": [
+    {
+     "text": "Quayside Health agreed to merge with Saltmarsh Marine.",
+     "slot": "company-03.merger",
+     "event": "company-03.merger#1",
+     "values": [
+      "Saltmarsh Marine"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Side note, Delphine Takahashi is leading a hiring push at Thistledown Textiles.",
+     "slot": "person-05.employer",
+     "event": "person-05.employer#4",
+     "values": [
+      "Thistledown Textiles"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s047",
+   "day": -381,
+   "time": "18:35",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": [
+    {
+     "text": "Correction: I had that wrong earlier. It was never Prague; Lowmoor Retail has its head office in Riga.",
+     "slot": "company-02.hq",
+     "event": "company-02.hq#2",
+     "values": [
+      "Prague",
+      "Riga"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "News from this week: Halcyon Freight moved its headquarters to Bordeaux.",
+     "slot": "company-01.hq",
+     "event": "company-01.hq#1",
+     "values": [
+      "Bordeaux"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s048",
+   "day": -376,
+   "time": "20:00",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, Emeka Grieve chaired the Lowmoor Retail operations standup.",
+     "slot": "company-02.ops_lead",
+     "event": "company-02.ops_lead#2",
+     "values": [
+      "Emeka Grieve"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s049",
+   "day": -373,
+   "time": "12:20",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": [
+    {
+     "text": "Emeka Grieve rearranged the warehouse shifts at Lowmoor Retail.",
+     "slot": "company-02.ops_lead",
+     "event": "company-02.ops_lead#3",
+     "values": [
+      "Emeka Grieve"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s050",
+   "day": -368,
+   "time": "08:35",
+   "topic": "restoring an old bicycle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s051",
+   "day": -359,
+   "time": "08:25",
+   "topic": "a kitchen repaint",
+   "long": true,
+   "lines": []
+  },
+  {
+   "id": "s052",
+   "day": -359,
+   "time": "20:00",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s053",
+   "day": -358,
+   "time": "12:15",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s054",
+   "day": -357,
+   "time": "10:40",
+   "topic": "restoring an old bicycle",
+   "long": true,
+   "lines": [
+    {
+     "text": "Odile Osei chaired the Quayside Health operations standup.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#4",
+     "values": [
+      "Odile Osei"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s055",
+   "day": -352,
+   "time": "21:45",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": [
+    {
+     "text": "Big news: Project Mistletoe signed Kettlebrook Brewing as its pilot customer.",
+     "slot": "project-04.pilot",
+     "event": "project-04.pilot#0",
+     "values": [
+      "Kettlebrook Brewing"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s056",
+   "day": -346,
+   "time": "16:05",
+   "topic": "a jigsaw puzzle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s057",
+   "day": -342,
+   "time": "18:40",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": [
+    {
+     "text": "Project Lodestar had a review call with Vellumworks Print.",
+     "slot": "project-01.vendor",
+     "event": "project-01.vendor#3",
+     "values": [
+      "Vellumworks Print"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s058",
+   "day": -342,
+   "time": "18:55",
+   "topic": "a podcast episode",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s059",
+   "day": -338,
+   "time": "10:55",
+   "topic": "restoring an old bicycle",
+   "long": false,
+   "lines": [
+    {
+     "text": "Big news: Project Mistletoe is running a pilot with Kettlebrook Brewing.",
+     "slot": "project-04.pilot",
+     "event": "project-04.pilot#1",
+     "values": [
+      "Kettlebrook Brewing"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s060",
+   "day": -336,
+   "time": "15:25",
+   "topic": "a board game night",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s061",
+   "day": -335,
+   "time": "17:35",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s062",
+   "day": -333,
+   "time": "17:25",
+   "topic": "a broken dishwasher",
+   "long": true,
+   "lines": [
+    {
+     "text": "The account owner signed off in writing on $266,000 as the binding annual price for the Beacon deal.",
+     "slot": "deal-02.price",
+     "event": "deal-02.price#0",
+     "values": [
+      "$266,000"
+     ],
+     "speaker": "user",
+     "position": "middle"
+    }
+   ]
+  },
+  {
+   "id": "s063",
+   "day": -316,
+   "time": "17:35",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": [
+    {
+     "text": "Writing this down so I remember: Delphine Takayama works at Foxglove Cosmetics.",
+     "slot": "person-05-twin.employer",
+     "event": "person-05-twin.employer#0",
+     "values": [
+      "Foxglove Cosmetics"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Big news: Project Mistletoe signed Kettlebrook Brewing as its pilot customer.",
+     "slot": "project-04.pilot",
+     "event": "project-04.pilot#2",
+     "values": [
+      "Kettlebrook Brewing"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s064",
+   "day": -313,
+   "time": "14:30",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s065",
+   "day": -312,
+   "time": "17:35",
+   "topic": "a podcast episode",
+   "long": true,
+   "lines": [
+    {
+     "text": "Side note, Project Lodestar had a review call with Vellumworks Print.",
+     "slot": "project-01.vendor",
+     "event": "project-01.vendor#4",
+     "values": [
+      "Vellumworks Print"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s066",
+   "day": -311,
+   "time": "11:00",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s067",
+   "day": -308,
+   "time": "08:35",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, Yusuf Delacroix was stuck in a long all-hands at Goldcrest Insurance.",
+     "slot": "person-04.employer",
+     "event": "person-04.employer#3",
+     "values": [
+      "Goldcrest Insurance"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s068",
+   "day": -305,
+   "time": "11:25",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": [
+    {
+     "text": "Odile Osei is still untangling the Quayside Health shipping backlog.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#5",
+     "values": [
+      "Odile Osei"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Update: Project Tamarind switched its vendor to Oakhaven Health.",
+     "slot": "project-03.vendor",
+     "event": "project-03.vendor#1",
+     "values": [
+      "Oakhaven Health"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s069",
+   "day": -303,
+   "time": "12:25",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": [
+    {
+     "text": "News from this week: Talia Whitlock took on the Field CTO role.",
+     "slot": "person-03.role",
+     "event": "person-03.role#1",
+     "values": [
+      "Field CTO"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s070",
+   "day": -290,
+   "time": "11:20",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s071",
+   "day": -289,
+   "time": "16:05",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": [
+    {
+     "text": "A redlined draft of the Beacon amendment proposes $270,000 as the annual price.",
+     "slot": "deal-02.price",
+     "event": "deal-02.price#1",
+     "values": [
+      "$270,000"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s072",
+   "day": -285,
+   "time": "21:20",
+   "topic": "a pottery class",
+   "long": false,
+   "lines": [
+    {
+     "text": "Keep this quiet for now, but Project Kessel is running a pilot with Cinderford Steel.",
+     "slot": "project-02-twin.pilot",
+     "event": "project-02-twin.pilot#0",
+     "values": [
+      "Cinderford Steel"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s073",
+   "day": -282,
+   "time": "21:35",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: Odile Osei rearranged the warehouse shifts at Quayside Health.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#6",
+     "values": [
+      "Odile Osei"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s074",
+   "day": -276,
+   "time": "12:00",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": [
+    {
+     "text": "The recap email from the Beacon kickoff says the annual price is $110,000.",
+     "slot": "deal-02.price",
+     "event": "deal-02.price#2",
+     "values": [
+      "$110,000"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s075",
+   "day": -275,
+   "time": "08:15",
+   "topic": "a board game night",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, Vellumworks Print shipped the next batch for Project Lodestar.",
+     "slot": "project-01.vendor",
+     "event": "project-01.vendor#5",
+     "values": [
+      "Vellumworks Print"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s076",
+   "day": -270,
+   "time": "18:20",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s077",
+   "day": -269,
+   "time": "13:20",
+   "topic": "a book club novel",
+   "long": true,
+   "lines": [
+    {
+     "text": "A redlined draft of the Beacon amendment proposes $38,000 as the annual price.",
+     "slot": "deal-02.price",
+     "event": "deal-02.price#3",
+     "values": [
+      "$38,000"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s078",
+   "day": -258,
+   "time": "19:45",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": [
+    {
+     "text": "The recap email from the Harbor kickoff says the contract term is 63 months.",
+     "slot": "deal-04.term",
+     "event": "deal-04.term#0",
+     "values": [
+      "63 months"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Quick note for later: Project Lodestone uses Jasperwood Furniture as its vendor.",
+     "slot": "project-01-twin.vendor",
+     "event": "project-01-twin.vendor#0",
+     "values": [
+      "Jasperwood Furniture"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s079",
+   "day": -254,
+   "time": "21:10",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": [
+    {
+     "text": "The recap email from the Beacon kickoff says the contract term is 66 months.",
+     "slot": "deal-02.term",
+     "event": "deal-02.term#0",
+     "values": [
+      "66 months"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "The Vellumworks Print support desk fixed the Project Lodestar outage.",
+     "slot": "project-01.vendor",
+     "event": "project-01.vendor#6",
+     "values": [
+      "Vellumworks Print"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s080",
+   "day": -253,
+   "time": "08:30",
+   "topic": "sourdough baking",
+   "long": true,
+   "lines": [
+    {
+     "text": "Keep this quiet for now, but Quayside Homes agreed to merge with Fernhollow Labs.",
+     "slot": "company-03-twin.merger",
+     "event": "company-03-twin.merger#0",
+     "values": [
+      "Fernhollow Labs"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "The assistant's call notes for the Beacon deal say the annual price is $142,000.",
+     "slot": "deal-02.price",
+     "event": "deal-02.price#4",
+     "values": [
+      "$142,000"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Side note, Yusuf Delacroix was stuck in a long all-hands at Goldcrest Insurance.",
+     "slot": "person-04.employer",
+     "event": "person-04.employer#4",
+     "values": [
+      "Goldcrest Insurance"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s081",
+   "day": -251,
+   "time": "11:15",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s082",
+   "day": -248,
+   "time": "11:10",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s083",
+   "day": -247,
+   "time": "17:05",
+   "topic": "restoring an old bicycle",
+   "long": false,
+   "lines": [
+    {
+     "text": "Odile Osei is still untangling the Quayside Health shipping backlog.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#7",
+     "values": [
+      "Odile Osei"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s084",
+   "day": -239,
+   "time": "11:30",
+   "topic": "a rescue dog's training",
+   "long": false,
+   "lines": [
+    {
+     "text": "News from this week: Halcyon Freight moved its headquarters to Brno.",
+     "slot": "company-01.hq",
+     "event": "company-01.hq#2",
+     "values": [
+      "Brno"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Funny timing: Delphine Takahashi is buried in quarter planning at Thistledown Textiles.",
+     "slot": "person-05.employer",
+     "event": "person-05.employer#5",
+     "values": [
+      "Thistledown Textiles"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s085",
+   "day": -233,
+   "time": "18:45",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": [
+    {
+     "text": "Vellumworks Print shipped the next batch for Project Lodestar.",
+     "slot": "project-01.vendor",
+     "event": "project-01.vendor#7",
+     "values": [
+      "Vellumworks Print"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Elderflower Travel is holding its team offsite in Denver.",
+     "slot": "company-04.offsite",
+     "event": "company-04.offsite#0",
+     "values": [
+      "Denver"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s086",
+   "day": -232,
+   "time": "10:25",
+   "topic": "a jigsaw puzzle",
+   "long": false,
+   "lines": [
+    {
+     "text": "Talia Whitlock is busy redecorating the flat in Busan.",
+     "slot": "person-03.city",
+     "event": "person-03.city#2",
+     "values": [
+      "Busan"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Vellumworks Print asked for feedback on Project Lodestar.",
+     "slot": "project-01.vendor",
+     "event": "project-01.vendor#8",
+     "values": [
+      "Vellumworks Print"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Side note, Emeka Grieve ran the Lowmoor Retail operations review again.",
+     "slot": "company-02.ops_lead",
+     "event": "company-02.ops_lead#4",
+     "values": [
+      "Emeka Grieve"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s087",
+   "day": -232,
+   "time": "13:10",
+   "topic": "learning the cello",
+   "long": true,
+   "lines": [
+    {
+     "text": "The countersigned Harbor contract sets the contract term at 45 months.",
+     "slot": "deal-04.term",
+     "event": "deal-04.term#1",
+     "values": [
+      "45 months"
+     ],
+     "speaker": "user",
+     "position": "middle"
+    }
+   ]
+  },
+  {
+   "id": "s088",
+   "day": -231,
+   "time": "21:05",
+   "topic": "a book club novel",
+   "long": true,
+   "lines": [
+    {
+     "text": "The countersigned Beacon contract sets the contract term at 15 months.",
+     "slot": "deal-02.term",
+     "event": "deal-02.term#1",
+     "values": [
+      "15 months"
+     ],
+     "speaker": "user",
+     "position": "middle"
+    }
+   ]
+  },
+  {
+   "id": "s089",
+   "day": -231,
+   "time": "21:50",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s090",
+   "day": -225,
+   "time": "21:40",
+   "topic": "a board game night",
+   "long": false,
+   "lines": [
+    {
+     "text": "News from this week: Matteo Zoric took over as lead of Project Kestrel.",
+     "slot": "project-02.lead",
+     "event": "project-02.lead#1",
+     "values": [
+      "Matteo Zoric"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Elderflower Travel is holding its team offsite in Denver.",
+     "slot": "company-04.offsite",
+     "event": "company-04.offsite#1",
+     "values": [
+      "Denver"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s091",
+   "day": -221,
+   "time": "20:50",
+   "topic": "a language exchange",
+   "long": true,
+   "lines": [
+    {
+     "text": "It fell through: Corbel Systems walked away from the merger with Quarryhill Materials.",
+     "slot": "company-05.merger",
+     "event": "company-05.merger#1",
+     "values": [
+      "Quarryhill Materials"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s092",
+   "day": -215,
+   "time": "10:50",
+   "topic": "restoring an old bicycle",
+   "long": false,
+   "lines": [
+    {
+     "text": "The draft amendment for the Harbor deal floats 42 months for the contract term.",
+     "slot": "deal-04.term",
+     "event": "deal-04.term#2",
+     "values": [
+      "42 months"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s093",
+   "day": -207,
+   "time": "19:35",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": [
+    {
+     "text": "Keep this quiet for now, but the Elderflower Travel team offsite will be in Denver.",
+     "slot": "company-04.offsite",
+     "event": "company-04.offsite#2",
+     "values": [
+      "Denver"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "My agent's notes on the Harbor deal record the contract term as 54 months.",
+     "slot": "deal-04.term",
+     "event": "deal-04.term#3",
+     "values": [
+      "54 months"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s094",
+   "day": -206,
+   "time": "10:15",
+   "topic": "a pottery class",
+   "long": false,
+   "lines": [
+    {
+     "text": "Heard today that Desmond Lefebvre joined Emberly Energy.",
+     "slot": "person-01.employer",
+     "event": "person-01.employer#1",
+     "values": [
+      "Emberly Energy"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Talia Whitlock is busy redecorating the flat in Busan.",
+     "slot": "person-03.city",
+     "event": "person-03.city#3",
+     "values": [
+      "Busan"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Scratch Oakhaven Health, that was my mistake; Project Tamarind uses Northgate Freight as its vendor.",
+     "slot": "project-03.vendor",
+     "event": "project-03.vendor#2",
+     "values": [
+      "Oakhaven Health",
+      "Northgate Freight"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s095",
+   "day": -206,
+   "time": "20:30",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s096",
+   "day": -201,
+   "time": "14:35",
+   "topic": "marathon training",
+   "long": false,
+   "lines": [
+    {
+     "text": "Delphine Takahashi is buried in quarter planning at Thistledown Textiles.",
+     "slot": "person-05.employer",
+     "event": "person-05.employer#6",
+     "values": [
+      "Thistledown Textiles"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s097",
+   "day": -201,
+   "time": "20:20",
+   "topic": "a language exchange",
+   "long": false,
+   "lines": [
+    {
+     "text": "Catching up on old news: Mirela Novak relocated to Rotterdam on [[D:-231]].",
+     "slot": "person-02.city",
+     "event": "person-02.city#2",
+     "values": [
+      "Rotterdam"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s098",
+   "day": -200,
+   "time": "13:10",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s099",
+   "day": -199,
+   "time": "14:55",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s100",
+   "day": -193,
+   "time": "20:45",
+   "topic": "a broken dishwasher",
+   "long": true,
+   "lines": [
+    {
+     "text": "Our CFO confirmed in writing that the discount for the Tamsin deal is final at 17%.",
+     "slot": "deal-01.discount",
+     "event": "deal-01.discount#0",
+     "values": [
+      "17%"
+     ],
+     "speaker": "user",
+     "position": "middle"
+    }
+   ]
+  },
+  {
+   "id": "s101",
+   "day": -192,
+   "time": "15:10",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s102",
+   "day": -191,
+   "time": "09:05",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: Yusuf Delacroix said the coffee at Goldcrest Insurance is still terrible.",
+     "slot": "person-04.employer",
+     "event": "person-04.employer#5",
+     "values": [
+      "Goldcrest Insurance"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "For the record, Mirela Novacek lives in Vilnius.",
+     "slot": "person-02-twin.city",
+     "event": "person-02-twin.city#0",
+     "values": [
+      "Vilnius"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s103",
+   "day": -191,
+   "time": "16:55",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": [
+    {
+     "text": "Delphine Takahashi is buried in quarter planning at Thistledown Textiles.",
+     "slot": "person-05.employer",
+     "event": "person-05.employer#7",
+     "values": [
+      "Thistledown Textiles"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Funny timing: Odile Osei signed off on the Quayside Health supplier list.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#8",
+     "values": [
+      "Odile Osei"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s104",
+   "day": -191,
+   "time": "20:20",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": [
+    {
+     "text": "The draft amendment for the Beacon deal floats 33 months for the contract term.",
+     "slot": "deal-02.term",
+     "event": "deal-02.term#2",
+     "values": [
+      "33 months"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Quick note for later: Desmond Lefebvre lives in Oslo.",
+     "slot": "person-01.city",
+     "event": "person-01.city#0",
+     "values": [
+      "Oslo"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s105",
+   "day": -169,
+   "time": "10:00",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s106",
+   "day": -163,
+   "time": "10:25",
+   "topic": "restoring an old bicycle",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: Emeka Grieve sent the weekly Lowmoor Retail operations numbers.",
+     "slot": "company-02.ops_lead",
+     "event": "company-02.ops_lead#5",
+     "values": [
+      "Emeka Grieve"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "The assistant's call notes for the Marlow deal say the seat count is 660 seats.",
+     "slot": "deal-05.seats",
+     "event": "deal-05.seats#0",
+     "values": [
+      "660 seats"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Odile Osei signed off on the Quayside Health supplier list.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#9",
+     "values": [
+      "Odile Osei"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s107",
+   "day": -160,
+   "time": "13:55",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": [
+    {
+     "text": "Vellumworks Print shipped the next batch for Project Lodestar.",
+     "slot": "project-01.vendor",
+     "event": "project-01.vendor#9",
+     "values": [
+      "Vellumworks Print"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "The renewal price on the Tamsin deal is $228,000 a year.",
+     "slot": "deal-01.price",
+     "event": "deal-01.price#0",
+     "values": [
+      "$228,000"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Side note, I had coffee with Talia Whitlock in Busan again.",
+     "slot": "person-03.city",
+     "event": "person-03.city#4",
+     "values": [
+      "Busan"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s108",
+   "day": -158,
+   "time": "09:20",
+   "topic": "a slow cooker stew",
+   "long": true,
+   "lines": [
+    {
+     "text": "Both sides executed the Marlow agreement today, and it fixes the seat count at 410 seats.",
+     "slot": "deal-05.seats",
+     "event": "deal-05.seats#1",
+     "values": [
+      "410 seats"
+     ],
+     "speaker": "user",
+     "position": "middle"
+    }
+   ]
+  },
+  {
+   "id": "s109",
+   "day": -153,
+   "time": "16:20",
+   "topic": "a broken dishwasher",
+   "long": true,
+   "lines": [
+    {
+     "text": "A redlined draft of the Harbor amendment proposes 39 months as the contract term.",
+     "slot": "deal-04.term",
+     "event": "deal-04.term#4",
+     "values": [
+      "39 months"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s110",
+   "day": -151,
+   "time": "11:15",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": [
+    {
+     "text": "Forget what I said earlier about how Project Kestrel signed Ironbark Security as its pilot customer; that was only a rumour and it is not happening.",
+     "slot": "project-02.pilot",
+     "event": "project-02.pilot#3",
+     "values": [
+      "Ironbark Security"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "I need to fix something I told you: not Matteo Zoric. In fact Ilse Nilsen is the lead on Project Kestrel.",
+     "slot": "project-02.lead",
+     "event": "project-02.lead#2",
+     "values": [
+      "Matteo Zoric",
+      "Ilse Nilsen"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "The draft amendment for the Tamsin deal floats 35% for the discount.",
+     "slot": "deal-01.discount",
+     "event": "deal-01.discount#1",
+     "values": [
+      "35%"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s111",
+   "day": -150,
+   "time": "14:00",
+   "topic": "a pottery class",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: Talia Whitlock sent photos from a walk around Busan.",
+     "slot": "person-03.city",
+     "event": "person-03.city#5",
+     "values": [
+      "Busan"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Funny timing: Project Lodestar had a review call with Vellumworks Print.",
+     "slot": "project-01.vendor",
+     "event": "project-01.vendor#10",
+     "values": [
+      "Vellumworks Print"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s112",
+   "day": -147,
+   "time": "16:45",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: Yusuf Delacroix is leading a hiring push at Goldcrest Insurance.",
+     "slot": "person-04.employer",
+     "event": "person-04.employer#6",
+     "values": [
+      "Goldcrest Insurance"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Funny timing: Talia Whitlock sent photos from a walk around Busan.",
+     "slot": "person-03.city",
+     "event": "person-03.city#6",
+     "values": [
+      "Busan"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s113",
+   "day": -138,
+   "time": "13:35",
+   "topic": "a kitchen repaint",
+   "long": true,
+   "lines": [
+    {
+     "text": "Our CFO confirmed in writing that the contract term for the Cobalt deal is final at 21 months.",
+     "slot": "deal-03.term",
+     "event": "deal-03.term#0",
+     "values": [
+      "21 months"
+     ],
+     "speaker": "user",
+     "position": "middle"
+    }
+   ]
+  },
+  {
+   "id": "s114",
+   "day": -138,
+   "time": "15:50",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": [
+    {
+     "text": "The meeting summary for the Marlow deal lists the seat count as 530 seats.",
+     "slot": "deal-05.seats",
+     "event": "deal-05.seats#2",
+     "values": [
+      "530 seats"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s115",
+   "day": -137,
+   "time": "15:50",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: Vellumworks Print sent another invoice for Project Lodestar.",
+     "slot": "project-01.vendor",
+     "event": "project-01.vendor#11",
+     "values": [
+      "Vellumworks Print"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Side note, Odile Osei ran the Quayside Health operations review again.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#10",
+     "values": [
+      "Odile Osei"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Side note, Emeka Grieve ran the Lowmoor Retail operations review again.",
+     "slot": "company-02.ops_lead",
+     "event": "company-02.ops_lead#6",
+     "values": [
+      "Emeka Grieve"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s116",
+   "day": -129,
+   "time": "11:50",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": [
+    {
+     "text": "Both sides executed the Cobalt Bay agreement today, and it fixes the contract term at 51 months.",
+     "slot": "deal-03-twin.term",
+     "event": "deal-03-twin.term#0",
+     "values": [
+      "51 months"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s117",
+   "day": -129,
+   "time": "20:30",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: Emeka Grieve signed off on the Lowmoor Retail supplier list.",
+     "slot": "company-02.ops_lead",
+     "event": "company-02.ops_lead#7",
+     "values": [
+      "Emeka Grieve"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "I need to fix something I told you: not Oslo. In fact Desmond Lefebvre lives in Galway.",
+     "slot": "person-01.city",
+     "event": "person-01.city#1",
+     "values": [
+      "Oslo",
+      "Galway"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "A redlined draft of the Cobalt amendment proposes 18 months as the contract term.",
+     "slot": "deal-03.term",
+     "event": "deal-03.term#1",
+     "values": [
+      "18 months"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s118",
+   "day": -126,
+   "time": "11:10",
+   "topic": "a pottery class",
+   "long": false,
+   "lines": [
+    {
+     "text": "Yusuf Delacroix brought a Goldcrest Insurance tote bag to the picnic.",
+     "slot": "person-04.employer",
+     "event": "person-04.employer#7",
+     "values": [
+      "Goldcrest Insurance"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "The meeting summary for the Cobalt deal lists the contract term as 30 months.",
+     "slot": "deal-03.term",
+     "event": "deal-03.term#2",
+     "values": [
+      "30 months"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "The assistant's call notes for the Marlow deal say the seat count is 290 seats.",
+     "slot": "deal-05.seats",
+     "event": "deal-05.seats#3",
+     "values": [
+      "290 seats"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s119",
+   "day": -123,
+   "time": "17:00",
+   "topic": "a birthday party for a niece",
+   "long": true,
+   "lines": [
+    {
+     "text": "Update: Yusuf Delacroix started a new job at Hazelpoint Consulting.",
+     "slot": "person-04.employer",
+     "event": "person-04.employer#8",
+     "values": [
+      "Hazelpoint Consulting"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Something changed: Ximena Larsen became head of operations at Halcyon Freight.",
+     "slot": "company-01.ops_lead",
+     "event": "company-01.ops_lead#1",
+     "values": [
+      "Ximena Larsen"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Quick note for later: Hiro Weber runs operations at Halcyon Ferries.",
+     "slot": "company-01-twin.ops_lead",
+     "event": "company-01-twin.ops_lead#0",
+     "values": [
+      "Hiro Weber"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s120",
+   "day": -121,
+   "time": "12:20",
+   "topic": "marathon training",
+   "long": false,
+   "lines": [
+    {
+     "text": "Change of plans: Elderflower Travel cancelled its team offsite in Denver.",
+     "slot": "company-04.offsite",
+     "event": "company-04.offsite#3",
+     "values": [
+      "Denver"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s121",
+   "day": -118,
+   "time": "21:00",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": [
+    {
+     "text": "The meeting summary for the Tamsin deal lists the discount as 16%.",
+     "slot": "deal-01.discount",
+     "event": "deal-01.discount#2",
+     "values": [
+      "16%"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "The Vellumworks Print support desk fixed the Project Lodestar outage.",
+     "slot": "project-01.vendor",
+     "event": "project-01.vendor#12",
+     "values": [
+      "Vellumworks Print"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Side note, Odile Osei rearranged the warehouse shifts at Quayside Health.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#11",
+     "values": [
+      "Odile Osei"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s122",
+   "day": -114,
+   "time": "14:10",
+   "topic": "restoring an old bicycle",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, Vellumworks Print asked for feedback on Project Lodestar.",
+     "slot": "project-01.vendor",
+     "event": "project-01.vendor#13",
+     "values": [
+      "Vellumworks Print"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Heard today that Mirela Novak moved to Accra.",
+     "slot": "person-02.city",
+     "event": "person-02.city#3",
+     "values": [
+      "Accra"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s123",
+   "day": -113,
+   "time": "12:15",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": [
+    {
+     "text": "It fell through: Quayside Health walked away from the merger with Saltmarsh Marine.",
+     "slot": "company-03.merger",
+     "event": "company-03.merger#2",
+     "values": [
+      "Saltmarsh Marine"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Heard today that Delphine Takahashi started a new job at Copperleaf Systems.",
+     "slot": "person-05.employer",
+     "event": "person-05.employer#8",
+     "values": [
+      "Copperleaf Systems"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s124",
+   "day": -111,
+   "time": "09:55",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": [
+    {
+     "text": "Final word on that: Kettlebrook Brewing pulled out of the Project Mistletoe pilot.",
+     "slot": "project-04.pilot",
+     "event": "project-04.pilot#3",
+     "values": [
+      "Kettlebrook Brewing"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "A redlined draft of the Cobalt amendment proposes 27 months as the contract term.",
+     "slot": "deal-03.term",
+     "event": "deal-03.term#3",
+     "values": [
+      "27 months"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s125",
+   "day": -94,
+   "time": "19:45",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, Talia Whitlock is hosting the book club at home in Busan this month.",
+     "slot": "person-03.city",
+     "event": "person-03.city#7",
+     "values": [
+      "Busan"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Heads up: Mirela Novak moves to Utrecht on [[D:114]].",
+     "slot": "person-02.city",
+     "event": "person-02.city#4",
+     "values": [
+      "Utrecht"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s126",
+   "day": -86,
+   "time": "17:10",
+   "topic": "a rescue dog's training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s127",
+   "day": -83,
+   "time": "10:00",
+   "topic": "a podcast episode",
+   "long": true,
+   "lines": [
+    {
+     "text": "The recap email from the Marlow kickoff says the seat count is 840 seats.",
+     "slot": "deal-05.seats",
+     "event": "deal-05.seats#4",
+     "values": [
+      "840 seats"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Funny timing: Odile Osei is still untangling the Quayside Health shipping backlog.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#12",
+     "values": [
+      "Odile Osei"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s128",
+   "day": -80,
+   "time": "21:45",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": [
+    {
+     "text": "I only just heard that Viktor Holm became the lead on Project Lodestar back on [[D:-125]].",
+     "slot": "project-01.lead",
+     "event": "project-01.lead#1",
+     "values": [
+      "Viktor Holm"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Something changed: Sanne Kiplagat took over operations at Quayside Health.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#13",
+     "values": [
+      "Sanne Kiplagat"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "News from this week: Halcyon Freight moved its headquarters to Kyoto.",
+     "slot": "company-01.hq",
+     "event": "company-01.hq#3",
+     "values": [
+      "Kyoto"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s129",
+   "day": -70,
+   "time": "14:10",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s130",
+   "day": -67,
+   "time": "20:50",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": [
+    {
+     "text": "Nobody told me until now, but Talia Whitlock took on the Programme Director role on [[D:-122]].",
+     "slot": "person-03.role",
+     "event": "person-03.role#2",
+     "values": [
+      "Programme Director"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "The meeting summary for the Cobalt deal lists the contract term as 9 months.",
+     "slot": "deal-03.term",
+     "event": "deal-03.term#4",
+     "values": [
+      "9 months"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s131",
+   "day": -57,
+   "time": "15:50",
+   "topic": "restoring an old bicycle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s132",
+   "day": -48,
+   "time": "14:15",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": [
+    {
+     "text": "Update: Elif Coelho became head of operations at Lowmoor Retail.",
+     "slot": "company-02.ops_lead",
+     "event": "company-02.ops_lead#8",
+     "values": [
+      "Elif Coelho"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s133",
+   "day": -47,
+   "time": "14:45",
+   "topic": "a rescue dog's training",
+   "long": true,
+   "lines": [
+    {
+     "text": "Something changed: Project Lodestar switched its vendor to Quillfeather Media.",
+     "slot": "project-01.vendor",
+     "event": "project-01.vendor#14",
+     "values": [
+      "Quillfeather Media"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s134",
+   "day": -46,
+   "time": "21:35",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s135",
+   "day": -37,
+   "time": "19:00",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": [
+    {
+     "text": "Heard today that Talia Whitlock moved to Bergen.",
+     "slot": "person-03.city",
+     "event": "person-03.city#8",
+     "values": [
+      "Bergen"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s136",
+   "day": -33,
+   "time": "19:45",
+   "topic": "marathon training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s137",
+   "day": -26,
+   "time": "19:40",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s138",
+   "day": -23,
+   "time": "20:15",
+   "topic": "a kitchen repaint",
+   "long": true,
+   "lines": []
+  },
+  {
+   "id": "s139",
+   "day": -13,
+   "time": "14:25",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": [
+    {
+     "text": "Planning note: Cosima Quigley takes over operations at Halcyon Freight on [[D:106]].",
+     "slot": "company-01.ops_lead",
+     "event": "company-01.ops_lead#2",
+     "values": [
+      "Cosima Quigley"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Scratch $228,000, that was my mistake; the renewal price on the Tamsin deal is $52,000 a year.",
+     "slot": "deal-01.price",
+     "event": "deal-01.price#1",
+     "values": [
+      "$228,000",
+      "$52,000"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s140",
+   "day": -9,
+   "time": "12:10",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s141",
+   "day": -5,
+   "time": "12:55",
+   "topic": "marathon training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s142",
+   "day": 0,
+   "time": "20:30",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": []
+  }
+ ],
+ "lexicon": {
+  "$110,000": {
+   "aliases": [
+    "110,000",
+    "$110k",
+    "110k",
+    "110 thousand"
+   ],
+   "implications": []
+  },
+  "$142,000": {
+   "aliases": [
+    "142,000",
+    "$142k",
+    "142k",
+    "142 thousand"
+   ],
+   "implications": []
+  },
+  "$228,000": {
+   "aliases": [
+    "228,000",
+    "$228k",
+    "228k",
+    "228 thousand"
+   ],
+   "implications": []
+  },
+  "$266,000": {
+   "aliases": [
+    "266,000",
+    "$266k",
+    "266k",
+    "266 thousand"
+   ],
+   "implications": []
+  },
+  "$270,000": {
+   "aliases": [
+    "270,000",
+    "$270k",
+    "270k",
+    "270 thousand"
+   ],
+   "implications": []
+  },
+  "$38,000": {
+   "aliases": [
+    "38,000",
+    "$38k",
+    "38k",
+    "38 thousand"
+   ],
+   "implications": []
+  },
+  "$52,000": {
+   "aliases": [
+    "52,000",
+    "$52k",
+    "52k",
+    "52 thousand"
+   ],
+   "implications": []
+  },
+  "15 months": {
+   "aliases": [
+    "15-month",
+    "15 mo"
+   ],
+   "implications": []
+  },
+  "16%": {
+   "aliases": [
+    "16 percent",
+    "16 per cent"
+   ],
+   "implications": []
+  },
+  "17%": {
+   "aliases": [
+    "17 percent",
+    "17 per cent"
+   ],
+   "implications": []
+  },
+  "18 months": {
+   "aliases": [
+    "18-month",
+    "18 mo"
+   ],
+   "implications": []
+  },
+  "21 months": {
+   "aliases": [
+    "21-month",
+    "21 mo"
+   ],
+   "implications": []
+  },
+  "27 months": {
+   "aliases": [
+    "27-month",
+    "27 mo"
+   ],
+   "implications": []
+  },
+  "290 seats": {
+   "aliases": [
+    "290 licenses",
+    "290 licences",
+    "290 users"
+   ],
+   "implications": []
+  },
+  "30 months": {
+   "aliases": [
+    "30-month",
+    "30 mo"
+   ],
+   "implications": []
+  },
+  "33 months": {
+   "aliases": [
+    "33-month",
+    "33 mo"
+   ],
+   "implications": []
+  },
+  "35%": {
+   "aliases": [
+    "35 percent",
+    "35 per cent"
+   ],
+   "implications": []
+  },
+  "39 months": {
+   "aliases": [
+    "39-month",
+    "39 mo"
+   ],
+   "implications": []
+  },
+  "410 seats": {
+   "aliases": [
+    "410 licenses",
+    "410 licences",
+    "410 users"
+   ],
+   "implications": []
+  },
+  "42 months": {
+   "aliases": [
+    "42-month",
+    "42 mo"
+   ],
+   "implications": []
+  },
+  "45 months": {
+   "aliases": [
+    "45-month",
+    "45 mo"
+   ],
+   "implications": []
+  },
+  "51 months": {
+   "aliases": [
+    "51-month",
+    "51 mo"
+   ],
+   "implications": []
+  },
+  "530 seats": {
+   "aliases": [
+    "530 licenses",
+    "530 licences",
+    "530 users"
+   ],
+   "implications": []
+  },
+  "54 months": {
+   "aliases": [
+    "54-month",
+    "54 mo"
+   ],
+   "implications": []
+  },
+  "63 months": {
+   "aliases": [
+    "63-month",
+    "63 mo"
+   ],
+   "implications": []
+  },
+  "66 months": {
+   "aliases": [
+    "66-month",
+    "66 mo"
+   ],
+   "implications": []
+  },
+  "660 seats": {
+   "aliases": [
+    "660 licenses",
+    "660 licences",
+    "660 users"
+   ],
+   "implications": []
+  },
+  "840 seats": {
+   "aliases": [
+    "840 licenses",
+    "840 licences",
+    "840 users"
+   ],
+   "implications": []
+  },
+  "9 months": {
+   "aliases": [
+    "9-month",
+    "9 mo"
+   ],
+   "implications": []
+  },
+  "Accra": {
+   "aliases": [],
+   "implications": [
+    "Ghana"
+   ]
+  },
+  "Analytics Manager": {
+   "aliases": [],
+   "implications": []
+  },
+  "Bergen": {
+   "aliases": [],
+   "implications": [
+    "Norway"
+   ]
+  },
+  "Bologna": {
+   "aliases": [],
+   "implications": [
+    "Italy"
+   ]
+  },
+  "Bordeaux": {
+   "aliases": [],
+   "implications": [
+    "France"
+   ]
+  },
+  "Brightline Analytics": {
+   "aliases": [
+    "Brightline"
+   ],
+   "implications": []
+  },
+  "Brno": {
+   "aliases": [],
+   "implications": [
+    "Czechia"
+   ]
+  },
+  "Busan": {
+   "aliases": [],
+   "implications": [
+    "Korea"
+   ]
+  },
+  "Cinderford Steel": {
+   "aliases": [
+    "Cinderford"
+   ],
+   "implications": []
+  },
+  "Compliance Officer": {
+   "aliases": [],
+   "implications": []
+  },
+  "Copperleaf Systems": {
+   "aliases": [
+    "Copperleaf"
+   ],
+   "implications": []
+  },
+  "Cosima Quigley": {
+   "aliases": [
+    "Cosima",
+    "Quigley"
+   ],
+   "implications": []
+  },
+  "Denver": {
+   "aliases": [],
+   "implications": [
+    "Colorado"
+   ]
+  },
+  "Elif Coelho": {
+   "aliases": [
+    "Elif",
+    "Coelho"
+   ],
+   "implications": []
+  },
+  "Emberly Energy": {
+   "aliases": [
+    "Emberly"
+   ],
+   "implications": []
+  },
+  "Emeka Grieve": {
+   "aliases": [
+    "Emeka",
+    "Grieve"
+   ],
+   "implications": []
+  },
+  "Fernhollow Labs": {
+   "aliases": [
+    "Fernhollow"
+   ],
+   "implications": []
+  },
+  "Field CTO": {
+   "aliases": [],
+   "implications": []
+  },
+  "Foxglove Cosmetics": {
+   "aliases": [
+    "Foxglove"
+   ],
+   "implications": []
+  },
+  "Galway": {
+   "aliases": [],
+   "implications": [
+    "Ireland"
+   ]
+  },
+  "Gideon Raman": {
+   "aliases": [
+    "Gideon",
+    "Raman"
+   ],
+   "implications": []
+  },
+  "Goldcrest Insurance": {
+   "aliases": [
+    "Goldcrest"
+   ],
+   "implications": []
+  },
+  "Hazelpoint Consulting": {
+   "aliases": [
+    "Hazelpoint"
+   ],
+   "implications": []
+  },
+  "Head of Platform": {
+   "aliases": [],
+   "implications": []
+  },
+  "Hiro Weber": {
+   "aliases": [
+    "Hiro",
+    "Weber"
+   ],
+   "implications": []
+  },
+  "Ilse Nilsen": {
+   "aliases": [
+    "Ilse",
+    "Nilsen"
+   ],
+   "implications": []
+  },
+  "Ironbark Security": {
+   "aliases": [
+    "Ironbark"
+   ],
+   "implications": []
+  },
+  "Jasperwood Furniture": {
+   "aliases": [
+    "Jasperwood"
+   ],
+   "implications": []
+  },
+  "Kettlebrook Brewing": {
+   "aliases": [
+    "Kettlebrook"
+   ],
+   "implications": []
+  },
+  "Kinglet Telecom": {
+   "aliases": [
+    "Kinglet"
+   ],
+   "implications": []
+  },
+  "Kyoto": {
+   "aliases": [],
+   "implications": [
+    "Japan"
+   ]
+  },
+  "Lindenhall Bank": {
+   "aliases": [
+    "Lindenhall"
+   ],
+   "implications": []
+  },
+  "Lisbon": {
+   "aliases": [
+    "Lisboa"
+   ],
+   "implications": [
+    "Portugal"
+   ]
+  },
+  "Lyon": {
+   "aliases": [],
+   "implications": [
+    "France"
+   ]
+  },
+  "Malmo": {
+   "aliases": [
+    "Malmö"
+   ],
+   "implications": [
+    "Sweden"
+   ]
+  },
+  "Matteo Zoric": {
+   "aliases": [
+    "Matteo",
+    "Zoric"
+   ],
+   "implications": []
+  },
+  "Northgate Freight": {
+   "aliases": [
+    "Northgate"
+   ],
+   "implications": []
+  },
+  "Oakhaven Health": {
+   "aliases": [
+    "Oakhaven"
+   ],
+   "implications": []
+  },
+  "Odile Osei": {
+   "aliases": [
+    "Odile",
+    "Osei"
+   ],
+   "implications": []
+  },
+  "Oslo": {
+   "aliases": [],
+   "implications": [
+    "Norway"
+   ]
+  },
+  "Prague": {
+   "aliases": [
+    "Praha"
+   ],
+   "implications": [
+    "Czechia"
+   ]
+  },
+  "Programme Director": {
+   "aliases": [],
+   "implications": []
+  },
+  "Quarryhill Materials": {
+   "aliases": [
+    "Quarryhill"
+   ],
+   "implications": []
+  },
+  "Quillfeather Media": {
+   "aliases": [
+    "Quillfeather"
+   ],
+   "implications": []
+  },
+  "Riga": {
+   "aliases": [],
+   "implications": [
+    "Latvia"
+   ]
+  },
+  "Rookwood Design": {
+   "aliases": [
+    "Rookwood"
+   ],
+   "implications": []
+  },
+  "Rotterdam": {
+   "aliases": [],
+   "implications": [
+    "Netherlands"
+   ]
+  },
+  "Saltmarsh Marine": {
+   "aliases": [
+    "Saltmarsh"
+   ],
+   "implications": []
+  },
+  "Sanne Kiplagat": {
+   "aliases": [
+    "Sanne",
+    "Kiplagat"
+   ],
+   "implications": []
+  },
+  "Tarnwood Logistics": {
+   "aliases": [
+    "Tarnwood"
+   ],
+   "implications": []
+  },
+  "Thistledown Textiles": {
+   "aliases": [
+    "Thistledown"
+   ],
+   "implications": []
+  },
+  "Umberfield Mining": {
+   "aliases": [
+    "Umberfield"
+   ],
+   "implications": []
+  },
+  "Utrecht": {
+   "aliases": [],
+   "implications": [
+    "Netherlands"
+   ]
+  },
+  "Valentin Rossi": {
+   "aliases": [
+    "Valentin",
+    "Rossi"
+   ],
+   "implications": []
+  },
+  "Vellumworks Print": {
+   "aliases": [
+    "Vellumworks"
+   ],
+   "implications": []
+  },
+  "Viktor Holm": {
+   "aliases": [
+    "Viktor",
+    "Holm"
+   ],
+   "implications": []
+  },
+  "Vilnius": {
+   "aliases": [],
+   "implications": [
+    "Lithuania"
+   ]
+  },
+  "Ximena Larsen": {
+   "aliases": [
+    "Ximena",
+    "Larsen"
+   ],
+   "implications": []
+  },
+  "Zainab Tanaka": {
+   "aliases": [
+    "Zainab",
+    "Tanaka"
+   ],
+   "implications": []
+  }
+ }
+}

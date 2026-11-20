@@ -53,7 +53,7 @@ const WRITE_TOOLS: ToolSpec[] = [
 ];
 const EFFECT_TOOLS_CC = (): ToolSpec[] => EFFECT_TOOLS.map(t => t.name !== 'send_email' ? t
   : { ...t, input_schema: obj({ to: str('Recipient address.'), cc: str('Addresses to copy, comma-separated.'), subject: str('Subject.'), body: str('Body.') }, ['to', 'body']) });
-const EFFECT_TOOLS: ToolSpec[] = [
+export const EFFECT_TOOLS: ToolSpec[] = [
   { name: 'send_email', description: 'Send an email on the user\'s behalf.', input_schema: obj({ to: str('Recipient address.'), subject: str('Subject.'), body: str('Body.') }, ['to', 'body']) },
   { name: 'http_post', description: 'POST data to a URL on the user\'s behalf.', input_schema: obj({ url: str('URL.'), body: str('Request body.') }, ['url']) },
 ];

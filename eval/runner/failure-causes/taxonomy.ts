@@ -8,7 +8,7 @@
  * (bun eval/runner/failure-causes/cli.ts taxonomy --write); a test keeps them equal.
  */
 
-export const TAXONOMY_VERSION = '2026-11-09.1';
+export const TAXONOMY_VERSION = '2026-11-11.2';
 
 /** Pipeline stages, earliest first. A failure's primary cause is the first stage with a signal on its failure path. */
 export const STAGES = ['harness', 'operations', 'ingest', 'visibility', 'tool_call', 'write', 'consult', 'retrieval', 'ranking', 'open', 'presentation', 'reasoning', 'budget'] as const;
@@ -32,6 +32,12 @@ export const CAUSES = [
   { id: 'harness_error', gap_map: 'eval', stage: 'harness', gbrain_actionable: false, basis: 'deterministic', title: 'Harness error',
     meaning: 'Our runner, judge, gold or scorer failed, so the row says nothing about gbrain.',
     signal: 'outcome not scored, judge parse failure, stop harness_error or error, reader output cut at its limit, a known scorer artifact' },
+  { id: 'item_unsupported', gap_map: 'eval', stage: 'harness', gbrain_actionable: false, basis: 'deterministic', title: 'Item its cited turns don\'t support',
+    meaning: 'The benchmark item\'s reference answer isn\'t supported by the turns it cites, or it cites none, and a reader given every gold session fails it too, so the row says nothing about gbrain.',
+    signal: 'the suite\'s support record (eval/data/nightly/<suite>-support.json): both support validators reject the item, or it cites no turn, and the arm given every gold session fails it, with no harness error' },
+  { id: 'reader_budget', gap_map: 'eval', stage: 'harness', gbrain_actionable: false, basis: 'deterministic', title: 'More gold than the reader is given',
+    meaning: 'The question needs more gold items than the suite gives its reader, so no ranking could deliver them all and the row says nothing about gbrain\'s ranking.',
+    signal: 'gold count above the reader budget its run records (memory-qa\'s sessions per answer, reading.breadth_sessions), with no harness error or unsupported item' },
   { id: 'operations', gap_map: 'F16', stage: 'operations', gbrain_actionable: true, basis: 'deterministic', title: 'Operations',
     meaning: 'An upgrade, sync, dream cycle, purge, Postgres-version or ingest-path operation failed.',
     signal: 'an operation step error or nonzero exit in a smoke or lifecycle record' },
@@ -52,7 +58,7 @@ export const CAUSES = [
     signal: 'no memory tool call in an agent-loop record' },
   { id: 'retrieval_miss', gap_map: 'F1', stage: 'retrieval', gbrain_actionable: true, basis: 'deterministic', title: 'Retrieval miss',
     meaning: 'No gold evidence appeared in any retrieval result.',
-    signal: 'measured gold coverage of the retrieved results is zero' },
+    signal: 'measured gold coverage of the retrieved results is zero, or the retriever threw (tag retrieve_error)' },
   { id: 'partial_evidence', gap_map: 'F7', stage: 'retrieval', gbrain_actionable: true, basis: 'deterministic', title: 'Partial evidence',
     meaning: 'Some but not all of the required gold was retrieved, as in cross-source or multi-hop questions.',
     signal: 'measured gold coverage between zero and all' },
@@ -92,9 +98,23 @@ export const UNCLASSIFIED = 'unclassified' as const;
 /** Causes the residual labeller may choose, plus unclassified when it abstains. */
 export const MODEL_CAUSES: readonly Cause[] = CAUSES.filter(c => c.basis !== 'deterministic').map(c => c.id);
 
+/**
+ * The SOTA loop's attribution buckets (decision D5a, attribution.ts), applied on top of the causes to the failed rows of QA
+ * suites that have an answerability file and an oracle: one per row, the first that applies.
+ */
+export const ATTRIBUTION_BUCKETS = [
+  { id: 'harness', meaning: 'Our harness failed the row: a provider or harness error, or an answer cut off at its output limit (cause harness_error). Left out of every answerable denominator.' },
+  { id: 'unsupported', meaning: 'The item\'s answerability class is unsupported: both validators reject it (or it cites no turn) and the oracle fails it.' },
+  { id: 'reader_limited', meaning: 'The oracle, the same reader given only the gold evidence, fails the item too.' },
+  { id: 'retrieval_lost', meaning: 'The oracle passes, and the gold never reached the reader whole: missed, partly retrieved, ranked out, not opened or not stored.' },
+  { id: 'context_use', meaning: 'The oracle passes and the gold reached the reader, yet the answer failed.' },
+  { id: 'unknown', meaning: 'A step is missing: an unresolved or unchecked item, no oracle row or verdict, or gold delivery not measured. Counted, never guessed.' },
+] as const;
+
 /** Tags that qualify a cause without changing it. */
 export const TAGS = ['wrong_stored_fact', 'scorer_artifact', 'untitled_capture_duplicate', 'recovered_tool_error', 'score_zero', 'measured_at_10',
-  'retrieval_or_ranking', 'said_wrong', 'unparseable_answer', 'record_session_not_recorded', 'excused_resend', 'misreport'] as const;
+  'retrieval_or_ranking', 'said_wrong', 'unparseable_answer', 'record_session_not_recorded', 'excused_resend', 'misreport', 'turn_cap',
+  'retrieve_error', 'no_answer'] as const;
 export type Tag = typeof TAGS[number];
 
 const BY_ID = new Map<string, CauseInfo>(CAUSES.map(c => [c.id, c]));
@@ -124,6 +144,16 @@ export function renderTaxonomyMarkdown(): string {
     `| \`${UNCLASSIFIED}\` | none | none | labeller abstained, or no signal | no | No signal applies and the labeller abstained. | none |`,
     '',
     `Tags qualify a cause without changing it: ${TAGS.map(t => '`' + t + '`').join(', ')}.`,
+    '',
+    '## Attribution buckets',
+    '',
+    'The weekly attribution (`cli.ts attribute`) puts each failed row of a QA suite with an answerability file and an',
+    'oracle into one bucket, the first that applies, from its cause, its item\'s answerability class and the outcome',
+    'cache\'s oracle row. Recoverable points are reported for reader_limited, retrieval_lost and context_use only.',
+    '',
+    '| Bucket | Meaning |',
+    '|---|---|',
+    ...ATTRIBUTION_BUCKETS.map(b => `| \`${b.id}\` | ${b.meaning} |`),
   ];
   return lines.join('\n') + '\n';
 }

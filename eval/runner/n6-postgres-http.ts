@@ -26,6 +26,11 @@
  *   bun eval/runner/n6-postgres-http.ts [--pg-url <admin url>] [--output <dir>] [--attest <prereg.md>] [--concurrency 8] [--only op1,op2] [--gbrain <checkout>[@ref]]
  *   bun eval/runner/n6-postgres-http.ts --control-remote-private-pages --only get_page,search   # negative control: must fail
  *   bun eval/runner/n6-postgres-http.ts rescore <receipt.json>     # keyless, recomputes the verdict from the stored cells
+ *
+ * GBRAIN_EVAL_ENGINE (engine-bench, eval/runner/eval-engine.ts): postgres runs as above and the receipt adds `engine`
+ * and `not_applicable` (empty: every raw-SQL step runs on Postgres). pglite and rust refuse with
+ * EvalEngineUnavailable (engine_not_supported_by_runner, exit 69, no receipt; rust refuses first with the build's own
+ * reason). PGLITE_HTTP_UNSUPPORTED and RUST_HTTP_UNSUPPORTED say why. Unset, the runner is unchanged.
  */
 import { spawn, type ChildProcess } from 'node:child_process';
 import { randomBytes, randomUUID } from 'node:crypto';
@@ -46,6 +51,7 @@ import {
   beliefsBreakdown, beliefsOutcome, beliefsView, type BeliefsOutcome,
 } from './n6-visibility-fuzz.ts';
 import { attestPreregistration, type Attestation } from './prereg.ts';
+import { EvalEngineUnavailable, evalEngineReceiptFields, preflightEvalEngine, refuseEvalEngine, requestedEvalEngine, type EvalEngineKind } from './eval-engine.ts';
 import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, noModelSpend, sourceTreeIdentity, writeReceipt, type Receipt } from './receipt.ts';
 
 export const CATEGORY = 'n6-postgres-http';
@@ -274,7 +280,12 @@ async function callInSession(port: number, token: string, op: string, args: Reco
 
 // ─── Run ───────────────────────────────────────────────────────────────
 
-export interface PgHttpOptions { /** Negative control: start the server with gbrain's operator escape hatch GBRAIN_REMOTE_PRIVATE_PAGES=1, so private pages must be caught as leaks. */ controlRemotePrivatePages?: boolean; pgAdminUrl: string; outputDir: string; concurrency: number; only?: string[]; gbrainSpec: string | null; attestation: Attestation | null; log: (s: string) => void }
+/** Why this runner does not run PGLite over HTTP without being rewritten. */
+export const PGLITE_HTTP_UNSUPPORTED = 'n6-postgres-http seeds the brain and runs the trusted local replays in process while `gbrain serve --http` holds the same database, because the server\'s persistence consumer drains the journaled seed writes; PGLite admits one process, so that order needs the pause-and-restart pattern of lifecycle/slice.ts. The pooled-connection condition also samples pg_stat_activity, and the database is created and dropped with Postgres admin SQL. Use n6-visibility-fuzz.ts (in process) for PGLite.';
+/** Why this runner does not run the Rust engine over HTTP yet. */
+export const RUST_HTTP_UNSUPPORTED = 'gbrain init has no Rust flag (users reach Rust through gbrain migrate --to rust), so the CLI-initialised brain this runner serves cannot be a Rust brain yet; its pooled-connection condition (pg_stat_activity) and its database provisioning (CREATE DATABASE) are Postgres-only raw SQL that Rust refuses.';
+
+export interface PgHttpOptions { evalEngine?: EvalEngineKind | null; /** Negative control: start the server with gbrain's operator escape hatch GBRAIN_REMOTE_PRIVATE_PAGES=1, so private pages must be caught as leaks. */ controlRemotePrivatePages?: boolean; pgAdminUrl: string; outputDir: string; concurrency: number; only?: string[]; gbrainSpec: string | null; attestation: Attestation | null; log: (s: string) => void }
 
 interface Task { principal: Principal; op: Operation; unit: { id: string; protected: N6Target | null; cls?: N6ClassSpec }; variantId: string; scope: string; prot: Record<string, unknown>; ghost?: Record<string, unknown>; twin?: Record<string, unknown>; replayKey: string }
 
@@ -292,6 +303,10 @@ async function runPgHttpHermetic(opts: PgHttpOptions) {
   const startedAt = new Date().toISOString();
   const ledger = generateN6World(N6_DEFAULT_SEED);
   const gut = resolveGbrainUnderTest(opts.gbrainSpec);
+  if (opts.evalEngine) {
+    await preflightEvalEngine(gut, opts.evalEngine);
+    if (opts.evalEngine !== 'postgres') throw new EvalEngineUnavailable(opts.evalEngine, 'engine_not_supported_by_runner', opts.evalEngine === 'rust' ? RUST_HTTP_UNSUPPORTED : PGLITE_HTTP_UNSUPPORTED);
+  }
   const g = await loadGbrain(gut);
   const { PostgresEngine } = await importGbrain<{ PostgresEngine: new () => { connect(c: unknown): Promise<void>; disconnect(): Promise<void>; executeRaw<T = Record<string, unknown>>(sql: string, params?: unknown[]): Promise<T[]> } }>(gut, 'src/core/postgres-engine.ts');
   const work = mkdtempSync(join(tmpdir(), 'n6pg-'));
@@ -315,7 +330,12 @@ async function runPgHttpHermetic(opts: PgHttpOptions) {
 
   const db = `n6pg_${process.pid}_${Date.now()}`;
   const admin = new SQL(opts.pgAdminUrl);
-  await admin.unsafe(`CREATE DATABASE ${db}`);
+  try {
+    await admin.unsafe(`CREATE DATABASE ${db}`);
+  } catch (e) {
+    if (opts.evalEngine) throw new EvalEngineUnavailable('postgres', 'postgres_unreachable', `Could not create the run's Postgres database: ${(e as Error).message}`);
+    throw e;
+  }
   const dbUrl = (() => { const u = new URL(opts.pgAdminUrl); u.pathname = `/${db}`; return u.toString(); })();
   const pgVersion = String((await admin.unsafe('SELECT version() AS v'))[0]?.v ?? '');
   let server: ChildProcess | null = null;
@@ -626,6 +646,7 @@ async function runPgHttpHermetic(opts: PgHttpOptions) {
         no_signal_by_cell: Object.fromEntries(cells.filter(c => !c.covered && c.reason).map(c => [`${c.principal}:${c.op}`, c.reason])),
         server_log_tail: serverLog.slice(-40),
       },
+      ...evalEngineReceiptFields(opts.evalEngine ?? null),
     };
     const file = join(opts.outputDir, 'receipt.json');
     writeReceipt(file, (opts.attestation ? { ...receipt, preregistration_attestation: opts.attestation } : receipt) as Receipt);
@@ -666,5 +687,10 @@ if (import.meta.main) {
     outputDir, concurrency: Number(flag('--concurrency') ?? 8), only: only ? only.split(',') : undefined,
     controlRemotePrivatePages: argv.includes('--control-remote-private-pages'),
     gbrainSpec: gbrainSpecFrom(argv), attestation: attest ? attestPreregistration(attest) : null, log: s => console.log(s),
-  }).then(r => process.exit(r.verdict.pass ? 0 : 1)).catch(e => { console.error(e); process.exit(3); });
+    evalEngine: requestedEvalEngine(),
+  }).then(r => process.exit(r.verdict.pass ? 0 : 1)).catch(e => {
+    if (e instanceof EvalEngineUnavailable) refuseEvalEngine(e, 'N6 Postgres over HTTP');
+    console.error(e);
+    process.exit(3);
+  });
 }

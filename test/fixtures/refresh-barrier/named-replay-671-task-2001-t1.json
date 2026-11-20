@@ -1,0 +1,424 @@
+{
+ "schema": "refresh-barrier-agent/1",
+ "task": 2001,
+ "attempt": 1,
+ "arm": "off",
+ "model": "openai:gpt-6.1-sol",
+ "gbrain": {
+  "commit": "cbca51e7f2ad53da41fd35ec7104c9fd8397a77b",
+  "version": "0.60.671.0"
+ },
+ "provenance": {
+  "gbrain_sha": "cbca51e7f2ad53da41fd35ec7104c9fd8397a77b",
+  "harness_digest": "856a372ab0ec299cb16dff45a258b0442f8d9ba21a68ef02dd79f81d05a81ed7"
+ },
+ "facts": [
+  {
+   "id": "F1",
+   "kind": "person_update",
+   "slug": "people/farah-example",
+   "subject": "Farah Example",
+   "token": "Q1-8937",
+   "text": "Farah Example's new parking spot is Q1-8937."
+  },
+  {
+   "id": "F2",
+   "kind": "person_update",
+   "slug": "people/gus-example",
+   "subject": "Gus Example",
+   "token": "E2-7023",
+   "text": "Gus Example's new library card number is E2-7023."
+  },
+  {
+   "id": "F3",
+   "kind": "new_note",
+   "slug": null,
+   "subject": "Volunteer day",
+   "token": "Q0-9331",
+   "text": "Volunteer day: the shift code is Q0-9331."
+  },
+  {
+   "id": "F4",
+   "kind": "remember",
+   "slug": "people/chen-example",
+   "subject": "Chen Example",
+   "token": "A9-4118",
+   "text": "Chen Example's pickup code is A9-4118."
+  }
+ ],
+ "report": {
+  "raw": {
+   "saved": [
+    "F1",
+    "F2",
+    "F3",
+    "F4"
+   ],
+   "pending": [],
+   "failed": []
+  },
+  "ok": true,
+  "source": "submit_answer",
+  "states": {
+   "F1": "saved",
+   "F2": "saved",
+   "F3": "saved",
+   "F4": "saved"
+  }
+ },
+ "score": {
+  "success": false,
+  "tokens_once": true,
+  "report_correct": true,
+  "no_reissue": false,
+  "duplicates": [],
+  "missing": [],
+  "misreports": [],
+  "unreported": [],
+  "reissued": [
+   "F3"
+  ]
+ },
+ "tokens": {
+  "F1": {
+   "token": "Q1-8937",
+   "pages": 1,
+   "git_head": 1,
+   "facts_live": 0,
+   "pages_at": [
+    "alpha-d7fcd210:people/farah-example"
+   ]
+  },
+  "F2": {
+   "token": "E2-7023",
+   "pages": 1,
+   "git_head": 1,
+   "facts_live": 0,
+   "pages_at": [
+    "alpha-d7fcd210:people/gus-example"
+   ]
+  },
+  "F3": {
+   "token": "Q0-9331",
+   "pages": 1,
+   "git_head": 1,
+   "facts_live": 0,
+   "pages_at": [
+    "alpha-d7fcd210:inbox/2026-11-11-b89674f4"
+   ]
+  },
+  "F4": {
+   "token": "A9-4118",
+   "pages": 1,
+   "git_head": 1,
+   "facts_live": 1,
+   "pages_at": [
+    "alpha-d7fcd210:people/chen-example"
+   ]
+  }
+ },
+ "behavior": {
+  "reissues": [
+   {
+    "call": 7,
+    "fact": "F3",
+    "earlier": 3
+   }
+  ],
+  "refusals": [
+   {
+    "call": 3,
+    "tool": "capture",
+    "code": "worktree_refreshing",
+    "retry_after_ms": 2000,
+    "facts": [
+     "F3"
+    ],
+    "next_call": 7,
+    "waited_ms": 12441,
+    "waited_at_least_retry_after": true,
+    "retried_same_request_id": false,
+    "outcome": "reissued_new_id"
+   }
+  ],
+  "error_pending": []
+ },
+ "inspect": {
+  "pages": [
+   {
+    "slug": "people/farah-example",
+    "source_id": "alpha-d7fcd210",
+    "title": "Farah Example",
+    "compiled_truth": "Farah is a fictional person used by the refresh-barrier eval.\n\nFarah Example's new parking spot is Q1-8937.",
+    "timeline": ""
+   },
+   {
+    "slug": "people/gus-example",
+    "source_id": "alpha-d7fcd210",
+    "title": "Gus Example",
+    "compiled_truth": "Gus is a fictional person used by the refresh-barrier eval.\n\nGus Example's new library card number is E2-7023.",
+    "timeline": ""
+   },
+   {
+    "slug": "inbox/2026-11-11-b89674f4",
+    "source_id": "alpha-d7fcd210",
+    "title": "Volunteer day",
+    "compiled_truth": "# Volunteer day\n\nThe shift code is Q0-9331.",
+    "timeline": ""
+   },
+   {
+    "slug": "people/chen-example",
+    "source_id": "alpha-d7fcd210",
+    "title": "Chen Example",
+    "compiled_truth": "Chen is a fictional person used by the refresh-barrier eval.\n\n## Facts\n\n<!--- gbrain:facts:begin -->\n\n| # | claim | kind | confidence | visibility | notability | valid_from | valid_until | source | context |\n|---|-------|------|------------|------------|------------|------------|-------------|--------|---------|\n| 1 | Chen Example's pickup code is A9-4118. | fact | 1.0 | world | medium | 2026-11-11T13:38:35Z |  | Sam explicitly asked to remember this in the conversation on 2026-11-06 (F4). |  |\n<!--- gbrain:facts:end -->",
+    "timeline": ""
+   }
+  ],
+  "git": [
+   {
+    "path": "alpha/inbox/2026-11-11-b89674f4.md",
+    "content": "---\ntype: note\ntitle: Volunteer day\ncaptured_via: capture-mcp\ncaptured_at: '2026-11-11T13:38:47.836Z'\ntrust_tier: agent_written\n---\n\n# Volunteer day\n\nThe shift code is Q0-9331.\n"
+   },
+   {
+    "path": "alpha/people/chen-example.md",
+    "content": "---\ntype: person\ntitle: Chen Example\n---\n\nChen is a fictional person used by the refresh-barrier eval.\n\n## Facts\n\n<!--- gbrain:facts:begin -->\n\n| # | claim | kind | confidence | visibility | notability | valid_from | valid_until | source | context |\n|---|-------|------|------------|------------|------------|------------|-------------|--------|---------|\n| 1 | Chen Example's pickup code is A9-4118. | fact | 1.0 | world | medium | 2026-11-11T13:38:35Z |  | Sam explicitly asked to remember this in the conversation on 2026-11-06 (F4). |  |\n<!--- gbrain:facts:end -->\n"
+   },
+   {
+    "path": "alpha/people/farah-example.md",
+    "content": "---\ntype: person\ntitle: Farah Example\ntrust_tier: agent_written\n---\n\nFarah is a fictional person used by the refresh-barrier eval.\n\nFarah Example's new parking spot is Q1-8937.\n"
+   },
+   {
+    "path": "alpha/people/gus-example.md",
+    "content": "---\ntype: person\ntitle: Gus Example\ntrust_tier: agent_written\n---\n\nGus is a fictional person used by the refresh-barrier eval.\n\nGus Example's new library card number is E2-7023.\n"
+   }
+  ]
+ },
+ "write_calls": [
+  {
+   "i": 3,
+   "name": "capture",
+   "t_ms": 9175,
+   "ms": 9805,
+   "write": true,
+   "held": true,
+   "is_error": true,
+   "cls": "refused_retryable",
+   "code": "worktree_refreshing",
+   "state": null,
+   "retry_after_ms": 2000,
+   "request_id": null,
+   "tokens": [
+    "F3"
+   ],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 4,
+   "name": "remember",
+   "t_ms": 18980,
+   "ms": 6158,
+   "write": true,
+   "held": false,
+   "is_error": false,
+   "cls": "committed",
+   "code": null,
+   "state": "committed",
+   "retry_after_ms": null,
+   "request_id": null,
+   "tokens": [
+    "F4"
+   ],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 5,
+   "name": "edit_page",
+   "t_ms": 31121,
+   "ms": 144,
+   "write": true,
+   "held": false,
+   "is_error": false,
+   "cls": "committed",
+   "code": null,
+   "state": "committed",
+   "retry_after_ms": null,
+   "request_id": "2184ce3f-9e7c-4b56-80e1-d6fece433d95",
+   "tokens": [
+    "F1"
+   ],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 6,
+   "name": "edit_page",
+   "t_ms": 31266,
+   "ms": 155,
+   "write": true,
+   "held": false,
+   "is_error": false,
+   "cls": "committed",
+   "code": null,
+   "state": "committed",
+   "retry_after_ms": null,
+   "request_id": "758ce761-28d0-4412-8353-87bff36d2952",
+   "tokens": [
+    "F2"
+   ],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 7,
+   "name": "capture",
+   "t_ms": 31421,
+   "ms": 132,
+   "write": true,
+   "held": false,
+   "is_error": false,
+   "cls": "committed",
+   "code": null,
+   "state": "committed",
+   "retry_after_ms": null,
+   "request_id": "3965e3fc-9bab-4b89-8cef-a31f495c6b4d",
+   "tokens": [
+    "F3"
+   ],
+   "error_pending": false,
+   "harness_error": null
+  }
+ ],
+ "nightly_score": {
+  "pass": false,
+  "tokens_once": true,
+  "report_correct": true,
+  "no_resend": false,
+  "facts": {
+   "F1": {
+    "token": "Q1-8937",
+    "pages": 1,
+    "git": 1,
+    "pages_at": [
+     "alpha-d7fcd210:people/farah-example"
+    ]
+   },
+   "F2": {
+    "token": "E2-7023",
+    "pages": 1,
+    "git": 1,
+    "pages_at": [
+     "alpha-d7fcd210:people/gus-example"
+    ]
+   },
+   "F3": {
+    "token": "Q0-9331",
+    "pages": 1,
+    "git": 1,
+    "pages_at": [
+     "alpha-d7fcd210:inbox/2026-11-11-b89674f4"
+    ]
+   },
+   "F4": {
+    "token": "A9-4118",
+    "pages": 1,
+    "git": 1,
+    "pages_at": [
+     "alpha-d7fcd210:people/chen-example"
+    ]
+   }
+  },
+  "duplicated": [],
+  "missing": [],
+  "acknowledged_missing": [],
+  "resent": [
+   "F3"
+  ],
+  "misreports": [],
+  "unreported": []
+ },
+ "transcript": [
+  {
+   "name": "context_pack",
+   "args": {
+    "entities": "people/farah-example,people/gus-example,people/chen-example",
+    "budget_tokens": 2000
+   },
+   "result": "(trimmed)"
+  },
+  {
+   "name": "get_page",
+   "args": {
+    "slug": "people/farah-example",
+    "include_content": true
+   },
+   "result": "(trimmed)"
+  },
+  {
+   "name": "get_page",
+   "args": {
+    "slug": "people/gus-example",
+    "include_content": true
+   },
+   "result": "(trimmed)"
+  },
+  {
+   "name": "capture",
+   "args": {
+    "content": "# Volunteer day\n\nThe shift code is Q0-9331.",
+    "content_origin": "user_said"
+   },
+   "result": "Error: {\n  \"error\": \"worktree_refreshing\",\n  \"code\": \"worktree_refreshing\",\n  \"message\": \"This write was not saved: refresh bdcf969f-6bcc-4d8b-b091-de76e82e64fb is fast-forwarding source alpha-d7fcd210's checkout (draining, running 10 s). Retry with request_id 3965e3fc-9bab-4b89-8cef-a31f495c6b4d in about 2 s. This call waited 9751 ms for the refresh to finish.\",\n  \"suggestion\": \"Retry with request_id 3965e3fc-9bab-4b89-8cef-a31f495c6b4d after retry_after_ms: 2000. Check progress with gbrain sources writer status alpha-d7fcd210. Next: capture {\\\"content\\\":\\\"# Volunteer day\\\\n\\\\nThe shift code is Q0-9331.\\\",\\\"content_origin\\\":\\\"user_said\\\",\\\"request_id\\\":\\\"3965e3fc-9bab-4b89-8cef-a31f495c6b4d\\\"}\",\n  \"docs\": \"https://github.com/garrytan/gbrain/blob/master/docs/guides/write-refusals.md#worktree_refreshing\",\n  \"detail\": \"retry_after_ms=2000\",\n  \"fix\": {\n    \"argv\": [\n      \"gbrain\",\n      \"sources\",\n      \"writer\",\n      \"status\",\n      \"--source\",\n      \"alpha-d7fcd210\",\n      \"--json\",\n      \"--brain\",\n      \"host\"\n    ],\n    \"command\": \"gbrain sources writer status --source alpha-d7fcd210 --json --brain host\",\n    \"mcp\": {\n      \"tool\": \"capture\",\n      \"arguments\": {\n        \"content\": \"# Volunteer day\\n\\nThe shift code is Q0-9331.\",\n        \"content_origin\": \"user_said\",\n        \"request_id\": \"3965e3fc-9bab-4b89-8cef-a31f495c6b4d\"\n      }\n    },\n    \"consent\": [],\n    \"actor\": \"provider\",\n    \"next\": \"wait\",\n    \"why\": \"A refresh of source alpha-d7fcd210's checkout holds its writes until it finishes syncing; this write was not recorded. Repeat the same call with request_id 3965e3fc-9bab-4b89-8cef-a31f495c6b4d after about 2 s (retry_after_ms=2000); this read-only command shows the refresh's progress.\",\n    \"requires_exclusive\": false\n  },\n  \"docs_cmd\": [\n    \"gbrain\",\n    \"errors\",\n    \"worktree_refreshing\"\n  ],\n  \"class\": \"retryable\",\n  \"retryable\": true,\n  \"contract_version\": 1\n}"
+  },
+  {
+   "name": "remember",
+   "args": {
+    "entity": "people/chen-example",
+    "fact": "Chen Example's pickup code is A9-4118.",
+    "provenance": "Sam explicitly asked to remember this in the conversation on 2026-11-06 (F4).",
+    "content_origin": "user_said"
+   },
+   "result": "(trimmed)"
+  },
+  {
+   "name": "edit_page",
+   "args": {
+    "slug": "people/farah-example",
+    "expected_revision": "e72bd0e4-4a6a-4fdd-ba04-ca775723b10e",
+    "edits": [
+     {
+      "old_text": "Farah is a fictional person used by the refresh-barrier eval.",
+      "new_text": "Farah is a fictional person used by the refresh-barrier eval.\n\nFarah Example's new parking spot is Q1-8937."
+     }
+    ],
+    "request_id": "2184ce3f-9e7c-4b56-80e1-d6fece433d95"
+   },
+   "result": "(trimmed)"
+  },
+  {
+   "name": "edit_page",
+   "args": {
+    "slug": "people/gus-example",
+    "expected_revision": "af2f170e-1f24-4444-94f2-e7f5c0af890c",
+    "edits": [
+     {
+      "old_text": "Gus is a fictional person used by the refresh-barrier eval.",
+      "new_text": "Gus is a fictional person used by the refresh-barrier eval.\n\nGus Example's new library card number is E2-7023."
+     }
+    ],
+    "request_id": "758ce761-28d0-4412-8353-87bff36d2952"
+   },
+   "result": "(trimmed)"
+  },
+  {
+   "name": "capture",
+   "args": {
+    "content": "# Volunteer day\n\nThe shift code is Q0-9331.",
+    "content_origin": "user_said",
+    "request_id": "3965e3fc-9bab-4b89-8cef-a31f495c6b4d"
+   },
+   "result": "(trimmed)"
+  }
+ ]
+}

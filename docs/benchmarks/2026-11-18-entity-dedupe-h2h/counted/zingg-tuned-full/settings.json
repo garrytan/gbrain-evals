@@ -1,0 +1,136 @@
+{
+  "people": {
+    "version": "0.7.0",
+    "entity": "people",
+    "seed": null,
+    "label_rounds": [
+      {
+        "round": 1,
+        "pairs_offered": 12,
+        "match": 1,
+        "distinct": 11
+      },
+      {
+        "round": 2,
+        "pairs_offered": 20,
+        "match": 0,
+        "distinct": 20
+      },
+      {
+        "round": 3,
+        "pairs_offered": 20,
+        "match": 9,
+        "distinct": 11
+      },
+      {
+        "round": 4,
+        "pairs_offered": 20,
+        "match": 15,
+        "distinct": 5
+      },
+      {
+        "round": 5,
+        "pairs_offered": 20,
+        "match": 8,
+        "distinct": 12
+      },
+      {
+        "round": 6,
+        "pairs_offered": 20,
+        "match": 5,
+        "distinct": 15
+      },
+      {
+        "round": 7,
+        "pairs_offered": 20,
+        "match": 12,
+        "distinct": 8
+      },
+      {
+        "round": 8,
+        "pairs_offered": 20,
+        "match": 8,
+        "distinct": 12
+      },
+      {
+        "round": 9,
+        "pairs_offered": 20,
+        "match": 14,
+        "distinct": 6
+      },
+      {
+        "round": 10,
+        "pairs_offered": 20,
+        "match": 9,
+        "distinct": 11
+      }
+    ]
+  },
+  "companies": {
+    "version": "0.7.0",
+    "entity": "companies",
+    "seed": null,
+    "label_rounds": [
+      {
+        "round": 1,
+        "pairs_offered": 18,
+        "match": 0,
+        "distinct": 18
+      },
+      {
+        "round": 2,
+        "pairs_offered": 20,
+        "match": 4,
+        "distinct": 16
+      },
+      {
+        "round": 3,
+        "pairs_offered": 20,
+        "match": 9,
+        "distinct": 11
+      },
+      {
+        "round": 4,
+        "pairs_offered": 20,
+        "match": 10,
+        "distinct": 10
+      },
+      {
+        "round": 5,
+        "pairs_offered": 20,
+        "match": 10,
+        "distinct": 10
+      },
+      {
+        "round": 6,
+        "pairs_offered": 20,
+        "match": 10,
+        "distinct": 10
+      },
+      {
+        "round": 7,
+        "pairs_offered": 20,
+        "match": 10,
+        "distinct": 10
+      },
+      {
+        "round": 8,
+        "pairs_offered": 20,
+        "match": 10,
+        "distinct": 10
+      },
+      {
+        "round": 9,
+        "pairs_offered": 20,
+        "match": 10,
+        "distinct": 10
+      },
+      {
+        "round": 10,
+        "pairs_offered": 20,
+        "match": 10,
+        "distinct": 10
+      }
+    ]
+  }
+}

@@ -459,6 +459,13 @@ def extraction_problems(run: dict[str, Any]) -> list[str]:
             out.append(f"{key}={run.get(key)}")
     if run.get("no_pricing_models"):
         out.append(f"unpriced extraction models {run.get('no_pricing_models')}")
+    # gbrain names each page and its cause (GST-3251): failed pages, windows the model declined, unparsed pages.
+    for p in run.get("failed_pages") or []:
+        out.append(f"failed {p.get('slug')}: {p.get('error')}")
+    for w in run.get("declined_windows") or []:
+        out.append(f"declined {w.get('slug')} {w.get('start')}..{w.get('end')} ({w.get('reason')})")
+    for p in run.get("unparsed_pages") or []:
+        out.append(f"unparsed {p.get('slug')}: {p.get('cause')}")
     return out
 
 
@@ -474,12 +481,17 @@ def failed_page_reasons(run: dict[str, Any]) -> dict[str, int]:
 
 def recordable_problems(run: dict[str, Any], retry: bool) -> list[str]:
     """The last pass's problems GBRAIN_F6_BUILD_PROBLEMS=record records: its unparsed pages, and its failed pages with the
-    status they cause when gbrain lists every one and each stopped on the provider's safety filter. A 'failed' status is
-    recorded only on a retry pass, which tries only the pages an earlier pass failed."""
-    out = [f"pages_skipped_unparsed={run.get('pages_skipped_unparsed')}"] if int(run.get("pages_skipped_unparsed") or 0) else []
+    status they cause when gbrain lists every one and each stopped on the provider's safety filter, each with the line
+    extraction_problems names its pages by. A 'failed' status is recorded only on a retry pass, which tries only the pages
+    an earlier pass failed. A declined window is never recorded."""
+    out = []
+    if int(run.get("pages_skipped_unparsed") or 0):
+        out.append(f"pages_skipped_unparsed={run.get('pages_skipped_unparsed')}")
+        out += [f"unparsed {p.get('slug')}: {p.get('cause')}" for p in run.get("unparsed_pages") or []]
     failed = int(run.get("pages_failed") or 0)
     if failed and len(run.get("failed_pages") or []) == failed and set(failed_page_reasons(run)) <= set(SAFETY_FILTER_REASONS):
         out.append(f"pages_failed={run.get('pages_failed')}")
+        out += [f"failed {p.get('slug')}: {p.get('error')}" for p in run.get("failed_pages") or []]
         if run.get("status") == "partial" or (run.get("status") == "failed" and retry):
             out.append(f"extraction status {run.get('status')!r} (exit {run.get('exit')})")
     return out

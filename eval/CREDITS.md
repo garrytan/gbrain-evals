@@ -2,7 +2,7 @@
 
 BrainBench combines project-authored tests, public benchmark material and comparison implementations.
 Attribution matters because a test written by a project's authors supplies different evidence from an independent submission.
-Everything above [Changelog](#changelog) is current as of the gbrain this repository pins, master `62637c96a` (v0.60.557.0).
+Everything above [Changelog](#changelog) is current as of the gbrain this repository pins ([the pin](../docs/gbrain-under-test.md#the-pin)).
 
 ## Project work
 
@@ -39,6 +39,11 @@ The benchmark data, its public conversations and probing questions, is CC BY-SA 
 The dataset manifests in `eval/decisions/datasets/` record the data license and commit and hold hashes, not dataset text.
 The RS1 set is written by that MIT-licensed generator from new private topics rather than adapted from BEAM's conversations; the [narrowed RS1 preregistration](../docs/benchmarks/2026-11-08-rs1-narrow-preregistration.md#licenses-and-attribution) gives its share-alike position.
 
+LongMemEval, the benchmark from *LongMemEval: Benchmarking Chat Assistants on Long-Term Interactive Memory* by Di Wu and coauthors ([arXiv 2410.10813](https://arxiv.org/abs/2410.10813); [xiaowu0162/LongMemEval](https://github.com/xiaowu0162/LongMemEval)), is MIT-licensed for its code ([LICENSE](https://github.com/xiaowu0162/LongMemEval/blob/main/LICENSE)) and its cleaned data ([dataset card](https://huggingface.co/datasets/xiaowu0162/longmemeval-cleaned), `license: mit`).
+The nightly `lme-s-hard` suite and the SOTA loop's LongMemEval rows use its cleaned S split; the Q1 LongMemEval-M selection in `eval/decisions/datasets/` records the M file's revision and hash.
+
+Redis's open LongMemEval harness, `agent-memory-benchmark` in [redis/agent-memory-server](https://github.com/redis/agent-memory-server) (Apache-2.0), supplies the judge prompts, answer prompt, task-averaged metric, dataset loader and runner that make a gbrain LongMemEval number comparable with Redis's published table. The parts we use are vendored at commit `843d2078` in [redis-agent-memory-benchmark/](redis-agent-memory-benchmark/README.md), with the upstream commit, each file's changes and Redis's published results table (MIT, from [redis/redis-ai-research-public](https://github.com/redis/redis-ai-research-public)).
+
 The [PrecisionMemBench attribution](precisionmembench/ATTRIBUTION.md) names the upstream author, license, pinned revision and local adaptations. Other external benchmark sources are identified in their individual reports.
 
 ## Influences
@@ -51,6 +56,33 @@ A **Codex** review challenged whether the early suite established anything beyon
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-11-20: Redis's LongMemEval harness credited
+
+Added Redis's `agent-memory-benchmark` under "Data and upstream work", because its judge prompts, answer prompt,
+metric, loader and runner are now vendored in `eval/redis-agent-memory-benchmark/` for the
+[LongMemEval run on Redis's harness](../docs/benchmarks/2026-11-20-longmemeval-redis-harness-preregistration.md).
+
+### 2026-11-16: The opening links the pin
+
+The opening links [the pin](../docs/gbrain-under-test.md#the-pin) instead of naming `6ce7195b4` (v0.60.733.0), so a
+re-pin no longer changes this page.
+
+### 2026-11-16: The opening names `6ce7195b4`
+
+The opening names gbrain master `6ce7195b4` (v0.60.733.0), gbrain's newest release, as the pin the page is current for
+(was `d253ec0ff`, v0.60.623.0). Nothing else on the page changed.
+
+### 2026-11-12: LongMemEval's license
+
+"Data and upstream work" now credits LongMemEval and records that its code and its cleaned data are both MIT. The page
+had not named it, although the nightly `lme-s-hard` suite, Q1 and the SOTA loop's LongMemEval rows all use it. No other
+credit changed.
+
+### 2026-11-09: The opening names `d253ec0ff`
+
+The opening names gbrain master `d253ec0ff` (v0.60.623.0) as the pin the page is current for (was `62637c96a`,
+v0.60.557.0). Nothing else on the page changed.
 
 ### 2026-11-08: BEAM's code and data licenses
 

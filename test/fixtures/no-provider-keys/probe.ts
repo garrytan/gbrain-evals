@@ -5,8 +5,8 @@ import { spawnSync } from 'node:child_process';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { PROVIDER_KEYS } from '../../support/no-provider-keys.ts';
 
-const PROVIDER_KEYS = ['ANTHROPIC_API_KEY', 'OPENAI_API_KEY', 'GEMINI_API_KEY', 'PARTICLE_API_KEY', 'VOYAGE_API_KEY'];
 const seen = `console.log(JSON.stringify(${JSON.stringify(PROVIDER_KEYS)}.filter(k => process.env[k])))`;
 const dotenvDir = mkdtempSync(join(tmpdir(), 'no-provider-keys-'));
 writeFileSync(join(dotenvDir, '.env'), PROVIDER_KEYS.map(k => `${k}=dotenv-held-${k.toLowerCase()}`).join('\n') + '\n');

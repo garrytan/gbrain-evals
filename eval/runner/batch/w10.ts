@@ -13,20 +13,27 @@
  *
  * Flags: --budget-ledger <path> (default: the round's ledger), --list-price
  * (allow a full submission at factor 1.0 when no pilot confirmed the batch
- * discount). Workstream caps are the plan's: W10a $28, W10b $107, W10c $50,
+ * discount), --budget-usd <n> (RB-LME only: its run's runaway cap when the run
+ * first opens), --parallel (RB-LME only: submit while another batch is open). Workstream caps are the plan's: W10a $28, W10b $107, W10c $50,
  * W8's LongMemEval control $5.
+ *
+ * RB-LME (docs/plans/2026-11-17-readme-baselines/PREREG.md) adds the no-gbrain
+ * reader arms `rb-*`: they need RB_GBRAIN_DIR (a gbrain checkout at c5fb0201,
+ * whose renderers drew the gbrain rows they pair with) and, with
+ * W10_MANIFEST_DIR, keep their manifests beside their results.
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { join, relative, resolve } from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { BudgetRun, installPaidRequestGuard, ledgerStatus, readLedger } from '../budget-ledger.ts';
 import { attestPreregistration, type Attestation } from '../prereg.ts';
 import { buildManifest, freezeManifest, JUDGE_SECONDARY, MODEL_SETTINGS, readManifest, sha256, type ArmManifest } from './manifest.ts';
 import {
-  HOUSE_DIRECT_PROTOCOL, HOUSE_NOTES_PROTOCOL, JUDGE_PROTOCOL, OFFICIAL_PROTOCOL, assertFitsWindow, fullHistoryText, judgeBody, loadDataset, loadReplay,
+  HOUSE_DIRECT_PROTOCOL, HOUSE_NOTES_PROTOCOL, JUDGE_PROTOCOL, OFFICIAL_PROTOCOL, assertFitsWindow, fullHistoryText, houseNotesText, judgeBody, loadDataset, loadHouseRenderer, loadReplay,
   officialPromptFromReplay, officialReaderBody, parseSessionBlocks, readNdjson, readerBody, removeSessionBlock, reportType, seededPermutation, seededSample, stratifiedSample,
-  swapSessions, type Question, type ReplayRow,
+  swapSessions, type HouseRenderer, type Question, type ReplayRow,
 } from './sources.ts';
 import { anthropicTransport, openAiTransport } from './transport.ts';
 import { BatchLane } from './submit.ts';
@@ -36,16 +43,18 @@ import { sessionIdFromSlug } from '../../../node_modules/gbrain/src/eval/longmem
 const ROOT = resolve(import.meta.dir, '../../..');
 const OPAQUE = join(ROOT, 'docs/benchmarks/2026-09-29-longmemeval-opaque-qa');
 export const STATE_DIR = process.env.W10_STATE_DIR ?? join(homedir(), '.capy/work/lane-c/w10');
-export const MANIFEST_DIR = join(ROOT, 'docs/benchmarks/2026-10-06-longmemeval-w10-manifests');
+export const MANIFEST_DIR = process.env.W10_MANIFEST_DIR ? resolve(process.env.W10_MANIFEST_DIR) : join(ROOT, 'docs/benchmarks/2026-10-06-longmemeval-w10-manifests');
 const DATASET = process.env.LME_DATASET ?? join(homedir(), '.capy/work/lane-c/data/longmemeval_s_cleaned.json');
 export const DEFAULT_LEDGER = '/workspace/gbrain-evals/.budget/followups-2026-10.sqlite';
 export const SEED = 20261006;
 export const PILOT_SIZE = 10;
 export const PREREGISTERED_FACTOR = 0.5;
 
-export type Workstream = 'W10a' | 'W10b' | 'W10c' | 'W8-LME';
-export const CAPS: Record<Workstream, number> = { W10a: 28, W10b: 107, W10c: 50, 'W8-LME': 5 };
+/** RB-LME: the no-gbrain baselines for README's LongMemEval answer rows; its cap is the operator's --budget-usd, not a committed figure. */
+export type Workstream = 'W10a' | 'W10b' | 'W10c' | 'W8-LME' | 'RB-LME';
+export const CAPS: Record<Exclude<Workstream, 'RB-LME'>, number> = { W10a: 28, W10b: 107, W10c: 50, 'W8-LME': 5 };
 export const PREREG: Record<Workstream, string> = {
+  'RB-LME': 'docs/plans/2026-11-17-readme-baselines/PREREG.md',
   W10a: 'docs/benchmarks/2026-10-06-longmemeval-w10-preregistration.md',
   W10b: 'docs/benchmarks/2026-10-06-longmemeval-w10-preregistration.md',
   W10c: 'docs/benchmarks/2026-10-06-longmemeval-w10-preregistration.md',
@@ -138,6 +147,67 @@ export function topGoldSession(row: ReplayRow): string | null {
   return null;
 }
 
+// ─── README baselines (RB-LME) ──────────────────────────────────────
+
+/** The gbrain build whose renderers drew the gbrain rows these baselines pair with (W10a's capture). */
+export const RB_RENDER_COMMIT = 'c5fb0201d1960a0a5a81c35d77718311b03154b7';
+/** Plain hybrid's committed retrieval rows (eval/runner/lme-plain-hybrid.ts). */
+export const RB_RETRIEVAL = 'docs/benchmarks/2026-11-17-readme-baselines/longmemeval/retrieval/rows.ndjson.gz';
+
+let _rbRenderer: Promise<HouseRenderer> | null = null;
+let _rbLoaded: HouseRenderer | null = null;
+/** c5fb0201's renderers from a checkout named by RB_GBRAIN_DIR; refuses any other commit. Load it before building an RB-LME arm. */
+export function rbRenderer(): Promise<HouseRenderer> {
+  return (_rbRenderer ??= (async () => {
+    const dir = process.env.RB_GBRAIN_DIR;
+    if (!dir) throw new Error(`RB-LME arms render with gbrain ${RB_RENDER_COMMIT.slice(0, 8)}: set RB_GBRAIN_DIR to a checkout of that commit`);
+    const head = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: dir, encoding: 'utf8' }).trim();
+    if (head !== RB_RENDER_COMMIT) throw new Error(`RB_GBRAIN_DIR is at ${head.slice(0, 12)}, not ${RB_RENDER_COMMIT.slice(0, 12)}`);
+    return (_rbLoaded = await loadHouseRenderer(dir));
+  })());
+}
+
+/** Plain hybrid's top `k` sessions per question, as haystack indices in rank order. */
+export function rbHybridTop(k: number, path = join(ROOT, RB_RETRIEVAL)): Map<string, number[]> {
+  const rows = readNdjson(path);
+  if (rows.length !== 500 || rows.some(r => r.error)) throw new Error(`${relative(ROOT, path)}: expected 500 retrieval rows without errors`);
+  if (new Set(rows.map(r => r.question_id)).size !== 500) throw new Error(`${relative(ROOT, path)}: expected 500 distinct question ids`);
+  return new Map(rows.map(r => [r.question_id as string, (r.question_top as Array<{ index: number }>).slice(0, k).map(x => x.index)]));
+}
+
+/** An RB-LME reader arm: the house notes prompt over each question's sessions as `pick` chooses them, rendered by c5fb0201. */
+function rbArm(id: string, model: string, label: string, pick: () => (q: Question) => number[] | null | undefined, maxOutputTokens?: number): ArmDef {
+  return {
+    id, workstream: 'RB-LME', model, maxOutputTokens, build: () => {
+      const r = _rbLoaded;
+      if (!r) throw new Error(`${id}: load gbrain ${RB_RENDER_COMMIT.slice(0, 8)}'s renderers with rbRenderer() before building`);
+      const ds = dataset();
+      const choose = pick();
+      const bodies = new Map<string, Record<string, unknown>>();
+      const meta: Record<string, unknown> = {};
+      for (const qid of allIds()) {
+        const q = ds.get(qid)!;
+        const picked = choose(q);
+        if (picked === undefined) throw new Error(`${id}/${qid}: no retrieval row for this question`);
+        const text = houseNotesText(q, picked, r);
+        const leaked = q.haystack_session_ids.filter(s => s.startsWith('answer_') && (text.user.includes(s) || text.system.includes(s)));
+        if (leaked.length) throw new Error(`${id}/${qid}: the prompt carries ${leaked.length} answer_ session id(s)`);
+        bodies.set(qid, readerBody(model, text, maxOutputTokens ?? MODEL_SETTINGS[model].max_output_tokens, maxOutputTokens));
+        meta[qid] = { sessions: text.sessions, truncated: text.truncated, chars: text.chars };
+      }
+      return { bodies, source: `${label}, house notes prompt rendered by gbrain ${RB_RENDER_COMMIT.slice(0, 8)} (haystackToPages + renderChatBlock at 60,000 chars per session + buildReaderRequest), all 500 questions, dataset sha256 d6f21ea9`, protocol: HOUSE_NOTES_PROTOCOL, meta };
+    },
+  };
+}
+
+const RB_HYBRID = 'plain hybrid (PlainHybridSystem: Postgres full-text plus pgvector over text-embedding-3-large at 1,536 dims, RRF k=60) top 5 sessions in rank order, from ' + RB_RETRIEVAL;
+export const RB_ARMS: ArmDef[] = [
+  rbArm('rb-sonnet55-full', 'claude-sonnet-5-5', 'every haystack session in haystack order (W10c\'s whole-history arm at W10a\'s settings)', () => () => null, W10A_MAX_OUTPUT),
+  rbArm('rb-sonnet55-hybrid5', 'claude-sonnet-5-5', RB_HYBRID, () => { const top = rbHybridTop(5); return q => top.get(q.question_id); }, W10A_MAX_OUTPUT),
+  rbArm('rb-sonnet55-none', 'claude-sonnet-5-5', 'no sessions: the question alone', () => () => [], W10A_MAX_OUTPUT),
+  rbArm('rb-opus55-hybrid5', 'claude-opus-5-5', RB_HYBRID, () => { const top = rbHybridTop(5); return q => top.get(q.question_id); }),
+];
+
 export const ARMS: Record<string, ArmDef> = Object.fromEntries(([
   { id: 'w10b-sonnet55-notes', workstream: 'W10b', model: 'claude-sonnet-5-5', build: () => ({ bodies: fromReplay(r1, 'claude-sonnet-5-5')(), source: R1_SRC, protocol: HOUSE_NOTES_PROTOCOL }) },
   { id: 'w10b-sonnet55-direct', workstream: 'W10b', model: 'claude-sonnet-5-5', build: () => ({ bodies: fromReplay(r2, 'claude-sonnet-5-5')(), source: R2_SRC, protocol: HOUSE_DIRECT_PROTOCOL }) },
@@ -203,6 +273,7 @@ export const ARMS: Record<string, ArmDef> = Object.fromEntries(([
       return { bodies, source: `${R1_SRC}; the top-ranked retrieved gold session removed from the reader text where one was shown (W8 partial fault, report-only), seeded 50 of the control's 100 questions (seed ${SEED + 2})`, protocol: HOUSE_NOTES_PROTOCOL, meta };
     },
   },
+  ...RB_ARMS,
 ] as ArmDef[]).map(a => [a.id, a]));
 
 // ─── State ──────────────────────────────────────────────────────────
@@ -238,19 +309,24 @@ export function attest(ws: Workstream): Attestation {
   return all[ws];
 }
 
-export function budgetRun(ws: Workstream, ledgerPath: string): BudgetRun {
+export function budgetRun(ws: Workstream, ledgerPath: string, budgetUsd?: number): BudgetRun {
   const path = join(STATE_DIR, 'runs.json');
   const runs = jsonFile<Record<string, string>>(path, {});
   if (runs[ws]) return BudgetRun.join({ runId: runs[ws], ledgerPath });
-  const run = BudgetRun.open({ runner: `${ws.toLowerCase()}-batch`, budgetUsd: CAPS[ws], ledgerPath });
+  const cap = ws === 'RB-LME' ? budgetUsd : CAPS[ws];
+  if (!cap) throw new Error(`${ws} has no committed cap: pass --budget-usd <dollars> when its run opens`);
+  const run = BudgetRun.open({ runner: `${ws.toLowerCase()}-batch`, budgetUsd: cap, ledgerPath });
   runs[ws] = run.runId;
   writeJson(path, runs);
   return run;
 }
 
-function lane(run: BudgetRun): BatchLane {
-  return new BatchLane({ statePath: join(STATE_DIR, 'batch-state.sqlite'), transports: { openai: openAiTransport(), anthropic: anthropicTransport() }, run });
+function lane(run: BudgetRun, parallel = false): BatchLane {
+  return new BatchLane({ statePath: join(STATE_DIR, 'batch-state.sqlite'), transports: { openai: openAiTransport(), anthropic: anthropicTransport() }, run, parallel });
 }
+
+/** --parallel lets an RB-LME batch open beside unsettled ones; the ledger's caps still bound the sum of open reservations. Other workstreams keep one batch at a time. */
+export const parallelFor = (ws: Workstream, argv: readonly string[]) => ws === 'RB-LME' && argv.includes('--parallel');
 
 // ─── Judges ─────────────────────────────────────────────────────────
 
@@ -328,7 +404,7 @@ export function exportArm(l: BatchLane, arm: string, dir: string): Record<string
   mkdirSync(dir, { recursive: true });
   writeFileSync(join(dir, 'rows.ndjson'), rows.map((r: ReaderRow, k) => JSON.stringify({ ...r, official: scored[k].official, secondary: scored[k].secondary, correct_official: scored[k].correct_official, correct_secondary: scored[k].correct_secondary })).join('\n') + '\n');
   const receipt = {
-    schema_version: 1, arm_id: arm, workstream: manifest.workstream, model: manifest.model, manifest: `docs/benchmarks/2026-10-06-longmemeval-w10-manifests/${arm}.json`, manifest_sha256: sha256(readFileSync(manifestPath(arm))),
+    schema_version: 1, arm_id: arm, workstream: manifest.workstream, model: manifest.model, manifest: relative(ROOT, manifestPath(arm)), manifest_sha256: sha256(readFileSync(manifestPath(arm))),
     summary, intents, factors, preregistration_attestation: jsonFile<Record<string, Attestation>>(join(STATE_DIR, 'attestations.json'), {})[manifest.workstream] ?? null,
   };
   writeJson(join(dir, 'receipt.json'), receipt);
@@ -341,10 +417,12 @@ async function main(argv: string[]) {
   if (cmd === 'build') {
     const def = ARMS[arm];
     if (!def) throw new Error(`unknown arm ${arm}; arms: ${Object.keys(ARMS).join(', ')}`);
+    if (def.workstream === 'RB-LME') await rbRenderer();
     const built = def.build();
     const s = MODEL_SETTINGS[def.model];
     const manifest = buildManifest({ arm_id: def.id, workstream: def.workstream, kind: 'reader', provider: s.provider, model: def.model, max_output_tokens: def.maxOutputTokens ?? s.max_output_tokens, reasoning_effort: s.effort, protocol: built.protocol, source: built.source, denominator: built.bodies.size, bodies: built.bodies, ...(def.maxOutputTokens ? { outputFloor: def.maxOutputTokens } : {}) });
-    for (const body of built.bodies.values()) if (JSON.stringify(body).includes('answer_')) throw new Error(`${arm}: a request body carries an answer_ session id`);
+    // RB-LME arms check each question's own answer_ session ids instead: whole histories hold source code with `answer_start`.
+    if (def.workstream !== 'RB-LME') for (const body of built.bodies.values()) if (JSON.stringify(body).includes('answer_')) throw new Error(`${arm}: a request body carries an answer_ session id`);
     freezeManifest(manifestPath(arm), manifest);
     saveBodies(arm, built.bodies);
     if (built.meta) writeJson(join(MANIFEST_DIR, `${arm}.meta.json`), built.meta);
@@ -377,20 +455,21 @@ async function main(argv: string[]) {
     const bodies = loadBodies(arm);
     const p = await l.plan(manifest, bodies);
     const atBatch = p.list_worst_usd * PREREGISTERED_FACTOR;
-    if (ARMS[arm]?.workstream === 'W10c') for (const [q, b] of bodies) {
+    if (ARMS[arm]?.workstream === 'W10c' || arm === 'rb-sonnet55-full') for (const [q, b] of bodies) {
       const sha = manifest.requests.find(r => r.question_id === q)!.body_sha256;
       assertFitsWindow(manifest.model, q, await l.inputTokens(manifest.provider, sha, b), manifest.max_output_tokens);
     }
-    console.log(JSON.stringify({ arm, ...p, worst_at_batch_factor_usd: atBatch, cap_usd: CAPS[ARMS[arm]?.workstream ?? 'W10b'] }));
+    const ws = ARMS[arm]?.workstream ?? 'W10b';
+    console.log(JSON.stringify({ arm, ...p, worst_at_batch_factor_usd: atBatch, ...(ws === 'RB-LME' ? {} : { cap_usd: CAPS[ws] }) }));
     return;
   }
   const att = attest(ws!);
-  const run = budgetRun(ws!, ledgerPath);
+  const run = budgetRun(ws!, ledgerPath, flag(argv, '--budget-usd') ? Number(flag(argv, '--budget-usd')) : undefined);
   const guard = installPaidRequestGuard(run);
   try {
-    const l = lane(run);
+    const l = lane(run, parallelFor(ws!, argv));
     if (cmd === 'run' || cmd === 'retry') {
-      if (arm.startsWith('w10c-') && arm.endsWith('-full')) {
+      if ((arm.startsWith('w10c-') && arm.endsWith('-full')) || arm === 'rb-sonnet55-full') {
         const manifest = readManifest(manifestPath(arm));
         for (const [q, b] of loadBodies(arm)) assertFitsWindow(manifest.model, q, await l.inputTokens(manifest.provider, manifest.requests.find(r => r.question_id === q)!.body_sha256, b), manifest.max_output_tokens);
       }

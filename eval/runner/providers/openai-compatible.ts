@@ -20,6 +20,12 @@
  * https://generativelanguage.googleapis.com/v1beta/openai with the bearer key GEMINI_API_KEY. gemini-4-argon thinks
  * at the effort sent (`low`, `medium` or `high`), and its thinking shares the output limit, so every request sends an
  * output limit with room for thinking (the row's output floor). It is a judge only: GST-1365's third-family referee.
+ * gemini-3.8-flash (aistudio.google.com/docs/models/gemini-3.8-flash and /docs/thinking, checked 2026-11-09: input
+ * 1,048,576 tokens, output 65,536; thinking always on, Google's default medium, levels low, medium and high, `minimal`
+ * an error) is BG1's canonical judge. Google's advice is to lower the thinking level rather than set a small output
+ * limit, so it runs at low with a 2,048-token floor, the metering proxy's default judge route cap, and its calls pass
+ * the proxy's judge route as they are. Whether low thinking leaves a verdict room in 2,048 tokens is unmeasured until
+ * stage 1's smoke.
  *
  * Credit stop: Particle is prepaid, and an empty balance answers HTTP 402. Any 402 on a request here that carries
  * neither metering proxy's own marker is credit exhaustion and becomes `ParticleCreditExhausted`, which keeps
@@ -100,7 +106,7 @@ export const JUDGE_PROVIDERS: Readonly<Record<string, CompatProvider>> = {
     key_env: 'GEMINI_API_KEY',
     output_limit_field: 'max_completion_tokens',
     usage: 'openai',
-    source: 'ai.google.dev/gemini-api/docs/openai and GET /v1beta/models (gemini-4-argon listed), checked 2026-11-04',
+    source: 'ai.google.dev/gemini-api/docs/openai and GET /v1beta/models (gemini-4-argon listed), checked 2026-11-04; gemini-3.8-flash from aistudio.google.com/docs/models/gemini-3.8-flash and /docs/thinking, checked 2026-11-09',
     models: {
       'gemini-4-argon': {
         request_id: 'gemini-4-argon',
@@ -109,6 +115,15 @@ export const JUDGE_PROVIDERS: Readonly<Record<string, CompatProvider>> = {
         output_ceiling: 65_536,
         default_effort: 'high',
         output_floor: 8_192,
+        efforts: { low: 'low', medium: 'medium', high: 'high' },
+      },
+      'gemini-3.8-flash': {
+        request_id: 'gemini-3.8-flash',
+        response_model: 'gemini-3.8-flash',
+        context_tokens: 1_048_576,
+        output_ceiling: 65_536,
+        default_effort: 'low',
+        output_floor: 2_048,
         efforts: { low: 'low', medium: 'medium', high: 'high' },
       },
     },
@@ -376,17 +391,22 @@ export function compatMayHaveBilled(e: unknown): boolean {
   return compatTimedOut(e) || compatConnectionLost(e) || (typeof status === 'number' && status >= 200 && status < 300);
 }
 
-/** Particle answered 402 without a proxy's marker: the prepaid balance is empty. Throw it after the failing attempt's receipt is written. */
+/**
+ * A provider answered 402 without a proxy's marker: Particle's prepaid balance is empty, or another provider's billing
+ * refused the request. The message names the provider the request went to. Throw it after the failing attempt's receipt is written.
+ */
 export class ParticleCreditExhausted extends BudgetExceededError {
   readonly status = 402;
-  constructor(readonly body: string) {
-    super(`budget: Particle credit exhausted (HTTP 402); top up the balance at platform.particle.ai before rerunning. Body: ${body.slice(0, 300)}`);
+  constructor(readonly body: string, readonly provider = 'particle') {
+    super(provider === 'particle'
+      ? `budget: Particle credit exhausted (HTTP 402); top up the balance at platform.particle.ai before rerunning. Body: ${body.slice(0, 300)}`
+      : `budget: ${provider} answered HTTP 402, so its billing refused the request; check that provider's account before rerunning. Body: ${body.slice(0, 300)}`);
   }
 }
 
 /** The error to throw for a classified answer: the credit stop, a proxy's budget stop, or a CompatHttpError. */
 export function compatError(info: CompatErrorInfo): Error {
-  if (info.kind === 'credit_exhausted') return new ParticleCreditExhausted(info.body);
+  if (info.kind === 'credit_exhausted') return new ParticleCreditExhausted(info.body, info.provider);
   if (info.kind === 'proxy_budget') return Object.assign(new BudgetExceededError(`budget: the metering proxy refused the ${info.provider} request (HTTP ${info.status}): ${info.body.slice(0, 300)}`), { status: info.status, body: info.body });
   return new CompatHttpError(info);
 }

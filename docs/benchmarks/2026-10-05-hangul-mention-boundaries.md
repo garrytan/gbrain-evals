@@ -17,7 +17,11 @@ Before the change, a Hangul name had to start a word but anything could follow i
 
 **Gazetteer.** 30 linkable titles: 20 common Korean given names, 5 full names, 3 two-syllable titles that are also common words, and 2 made-up company names. All are generic, so none names a real person or company. `scripts/scan.ts` runs the real matcher from a gbrain checkout (`GBRAIN_DIR`): `buildGazetteer` on PGLite, then `findMentionedEntities` one sentence at a time, so every occurrence counts.
 
-**Labels.** `scripts/label.py` asks `gpt-6.1-sol` to label each match in context, assuming an entity with that exact name exists. Total cost was $0.36.
+**Labels.** `scripts/label.py` asks `gpt-6.1-sol` to label each match in context, assuming an entity with that exact name exists. Total cost was $0.36 (not recomputed 2026-11-09: the usage is not committed; cache writes were under-counted, so this is about 19% low).
+
+Correction, 2026-11-09: `scripts/label.py` prices every prompt token at the gpt-6.1-sol input rate. OpenAI reports almost every uncached token of a gpt-6.1-sol prompt of 1,027 tokens or more as a cache write, at $2.50 per million against $2.00 for input, and by their character counts most of the 67 labeling batches (up to 40 matches each, roughly 2,000 prompt tokens) were over that size, so the cost was low. The script printed only its total, so the figure is an estimate from the batch sizes. No label or result changes. ([corrections](../corrections.md#openai-cache-writes))
+
+Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
 
 - **NAME:** the string is used as a name.
 - **WORD:** an ordinary word with the same spelling, standing as its own word, such as 우리 "we" or 지원 "support".
@@ -33,4 +37,5 @@ Before the change, a Hangul name had to start a word but anything could follow i
 
 ## Changelog
 
+- 2026-11-09: the labeling cost now carries a dated note that gpt-6.1-sol cache writes were under-counted; the original figure stays beside it.
 - 2026-10-05: first version, mirroring gbrain #6080.

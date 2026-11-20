@@ -1,0 +1,1767 @@
+{
+  "schema": "gbrain-evals/bg1-verdict/v1",
+  "set": "BG1",
+  "worlds": 30,
+  "planned": 1920,
+  "common": 1920,
+  "drops": {
+    "planned": 1920,
+    "dropped": 0,
+    "share": 0,
+    "by": {}
+  },
+  "invalid_reasons": [],
+  "fill": {
+    "gbrain": {
+      "mean_fill": 0.9828,
+      "pass": true
+    },
+    "memory-bank": {
+      "mean_fill": 0.9833,
+      "pass": true
+    },
+    "extract-first": {
+      "mean_fill": 0.9952,
+      "pass": true
+    },
+    "temporal-graph": {
+      "mean_fill": 0.9784,
+      "pass": true
+    },
+    "hybrid": {
+      "mean_fill": 0.9953,
+      "pass": true
+    }
+  },
+  "primary": {
+    "strata": [
+      "s1_updated",
+      "s2_corrected",
+      "s3_repeated_stale",
+      "s4_conflicting",
+      "s5_withdrawn"
+    ],
+    "holm_over": [
+      "memory-bank",
+      "extract-first",
+      "temporal-graph"
+    ],
+    "drops": {
+      "planned": 1200,
+      "dropped": 0,
+      "share": 0,
+      "by": {}
+    },
+    "comparisons": [
+      {
+        "row": "memory-bank",
+        "worlds": 30,
+        "questions": 1200,
+        "verdict": "no measurable difference",
+        "descriptive": null,
+        "test": {
+          "n": 30,
+          "mean": -0.44444444444444453,
+          "sd": 5.149737435804537,
+          "se": 0.9402091196063191,
+          "df": 29,
+          "t": -0.4727080765080652,
+          "p_ahead": 0.6800200693506799,
+          "p_behind": 0.31997993064932,
+          "ci95": [
+            -2.3673880056665797,
+            1.4784991167776904
+          ],
+          "p_ahead_holm": 1,
+          "p_behind_holm": 0.63995986129864,
+          "verdict": "no measurable difference",
+          "bonferroni": {
+            "alpha": 0.016666666666666666,
+            "lower": -2.5451818479140047,
+            "upper": 1.6562929590251154
+          },
+          "beyond_margin": false
+        },
+        "worse": 109,
+        "better": 140,
+        "same": 951,
+        "wild": {
+          "estimate": -0.4444,
+          "p": 0.639,
+          "ci95": [
+            -2.354,
+            1.4659
+          ],
+          "method": "restricted wild cluster bootstrap-t over worlds, question-weighted, Webb weights, 9999 draws, seed 20261109, two-sided"
+        }
+      },
+      {
+        "row": "extract-first",
+        "worlds": 30,
+        "questions": 1200,
+        "verdict": "no measurable difference",
+        "descriptive": null,
+        "test": {
+          "n": 30,
+          "mean": -1.7777777777777781,
+          "sd": 5.591169373938829,
+          "se": 1.020803196312778,
+          "df": 29,
+          "t": -1.7415480125838676,
+          "p_ahead": 0.9539062992195995,
+          "p_behind": 0.04609370078040053,
+          "ci95": [
+            -3.8655547336602623,
+            0.309999178104706
+          ],
+          "p_ahead_holm": 1,
+          "p_behind_holm": 0.13828110234120158,
+          "verdict": "no measurable difference",
+          "bonferroni": {
+            "alpha": 0.016666666666666666,
+            "lower": -4.058588941334078,
+            "upper": 0.5030333857785214
+          },
+          "beyond_margin": false
+        },
+        "worse": 123,
+        "better": 107,
+        "same": 970,
+        "wild": {
+          "estimate": -1.7778,
+          "p": 0.0876,
+          "ci95": [
+            -3.8534,
+            0.2963
+          ],
+          "method": "restricted wild cluster bootstrap-t over worlds, question-weighted, Webb weights, 9999 draws, seed 20261109, two-sided"
+        }
+      },
+      {
+        "row": "temporal-graph",
+        "worlds": 30,
+        "questions": 1200,
+        "verdict": "ahead",
+        "descriptive": null,
+        "test": {
+          "n": 30,
+          "mean": 20.88888888888889,
+          "sd": 8.673884409738934,
+          "se": 1.5836273841354656,
+          "df": 29,
+          "t": 13.190532759252935,
+          "p_ahead": 4.39648317751562e-14,
+          "p_behind": 0.999999999999956,
+          "ci95": [
+            17.6500072207623,
+            24.127770557015477
+          ],
+          "p_ahead_holm": 1.318944953254686e-13,
+          "p_behind_holm": 0.999999999999956,
+          "verdict": "ahead",
+          "bonferroni": {
+            "alpha": 0.016666666666666666,
+            "lower": 17.35054278094536,
+            "upper": 24.427234996832418
+          },
+          "beyond_margin": true
+        },
+        "worse": 84,
+        "better": 364,
+        "same": 752,
+        "wild": {
+          "estimate": 20.8889,
+          "p": 0.0001,
+          "ci95": [
+            17.7188,
+            24.1328
+          ],
+          "method": "restricted wild cluster bootstrap-t over worlds, question-weighted, Webb weights, 9999 draws, seed 20261109, two-sided"
+        }
+      }
+    ],
+    "worst_case": {
+      "verdicts": [
+        "no measurable difference",
+        "no measurable difference",
+        "ahead"
+      ],
+      "disagrees": false
+    }
+  },
+  "time_indexed": {
+    "strata": [
+      "s6_as_of",
+      "s7_as_known",
+      "s8_history"
+    ],
+    "holm_over": [
+      "memory-bank",
+      "extract-first",
+      "temporal-graph"
+    ],
+    "drops": {
+      "planned": 720,
+      "dropped": 0,
+      "share": 0,
+      "by": {}
+    },
+    "comparisons": [
+      {
+        "row": "memory-bank",
+        "worlds": 30,
+        "questions": 720,
+        "verdict": "behind",
+        "descriptive": null,
+        "test": {
+          "n": 30,
+          "mean": -10.324074074074073,
+          "sd": 7.125824149019744,
+          "se": 1.300991542411056,
+          "df": 29,
+          "t": -7.935542805252242,
+          "p_ahead": 0.9999999952827883,
+          "p_behind": 4.717211692256573e-9,
+          "ci95": [
+            -12.984900540776833,
+            -7.6632476073713125
+          ],
+          "p_ahead_holm": 1,
+          "p_behind_holm": 1.4151635076769719e-8,
+          "verdict": "behind",
+          "bonferroni": {
+            "alpha": 0.016666666666666666,
+            "lower": -13.230918453423243,
+            "upper": -7.417229694724902
+          },
+          "beyond_margin": true
+        },
+        "worse": 123,
+        "better": 25,
+        "same": 572,
+        "wild": {
+          "estimate": -10.3241,
+          "p": 0.0001,
+          "ci95": [
+            -13.019,
+            -7.6887
+          ],
+          "method": "restricted wild cluster bootstrap-t over worlds, question-weighted, Webb weights, 9999 draws, seed 20261109, two-sided"
+        }
+      },
+      {
+        "row": "extract-first",
+        "worlds": 30,
+        "questions": 720,
+        "verdict": "behind",
+        "descriptive": null,
+        "test": {
+          "n": 30,
+          "mean": -8.055555555555554,
+          "sd": 7.415983222201866,
+          "se": 1.3539670989599362,
+          "df": 29,
+          "t": -5.949594758796954,
+          "p_ahead": 0.9999990854136244,
+          "p_behind": 9.1458637561011e-7,
+          "ci95": [
+            -10.82472920082055,
+            -5.286381910290558
+          ],
+          "p_ahead_holm": 1,
+          "p_behind_holm": 0.00000182917275122022,
+          "verdict": "behind",
+          "bonferroni": {
+            "alpha": 0.016666666666666666,
+            "lower": -11.080764807985775,
+            "upper": -5.030346303125333
+          },
+          "beyond_margin": true
+        },
+        "worse": 124,
+        "better": 49,
+        "same": 547,
+        "wild": {
+          "estimate": -8.0556,
+          "p": 0.0001,
+          "ci95": [
+            -10.8414,
+            -5.2798
+          ],
+          "method": "restricted wild cluster bootstrap-t over worlds, question-weighted, Webb weights, 9999 draws, seed 20261109, two-sided"
+        }
+      },
+      {
+        "row": "temporal-graph",
+        "worlds": 30,
+        "questions": 720,
+        "verdict": "ahead",
+        "descriptive": null,
+        "test": {
+          "n": 30,
+          "mean": 5.416666666666668,
+          "sd": 8.109624988508152,
+          "se": 1.480608179704496,
+          "df": 29,
+          "t": 3.658406552736823,
+          "p_ahead": 0.0005013301158222072,
+          "p_behind": 0.9994986698841778,
+          "ci95": [
+            2.3884829291512046,
+            8.44485040418213
+          ],
+          "p_ahead_holm": 0.0015039903474666216,
+          "p_behind_holm": 0.9994986698841778,
+          "verdict": "ahead",
+          "bonferroni": {
+            "alpha": 0.016666666666666666,
+            "lower": 2.10849945351458,
+            "upper": 8.724833879818757
+          },
+          "beyond_margin": false
+        },
+        "worse": 82,
+        "better": 135,
+        "same": 503,
+        "wild": {
+          "estimate": 5.4167,
+          "p": 0.0007,
+          "ci95": [
+            2.4064,
+            8.4446
+          ],
+          "method": "restricted wild cluster bootstrap-t over worlds, question-weighted, Webb weights, 9999 draws, seed 20261109, two-sided"
+        }
+      }
+    ]
+  },
+  "design_control": {
+    "comparison": {
+      "row": "hybrid",
+      "worlds": 30,
+      "questions": 1200,
+      "verdict": "ahead",
+      "descriptive": null,
+      "test": {
+        "n": 30,
+        "mean": 73.66666666666666,
+        "sd": 9.92452359473116,
+        "se": 1.8119618151088384,
+        "df": 29,
+        "t": 40.65575005632321,
+        "p_ahead": 0,
+        "p_behind": 1,
+        "ci95": [
+          69.96078865199387,
+          77.37254468133945
+        ],
+        "p_ahead_holm": 0,
+        "p_behind_holm": 1,
+        "verdict": "ahead",
+        "bonferroni": {
+          "alpha": 0.05,
+          "lower": 70.58791337556961,
+          "upper": 76.7454199577637
+        },
+        "beyond_margin": true
+      },
+      "worse": 21,
+      "better": 926,
+      "same": 253,
+      "wild": {
+        "estimate": 73.6667,
+        "p": 0.0001,
+        "ci95": [
+          69.9703,
+          77.4107
+        ],
+        "method": "restricted wild cluster bootstrap-t over worlds, question-weighted, Webb weights, 9999 draws, seed 20261109, two-sided"
+      }
+    },
+    "attributable_to_design": true,
+    "note": null
+  },
+  "cost_per_correct": {
+    "table": [
+      {
+        "reader": "anthropic:claude-opus-5-5",
+        "usd_per_correct": {
+          "gbrain": 0.055,
+          "memory-bank": 0.0478,
+          "extract-first": 0.1045,
+          "temporal-graph": 0.1226,
+          "hybrid": 0.2803,
+          "floor": null
+        }
+      },
+      {
+        "reader": "particle:particle-1",
+        "usd_per_correct": {
+          "gbrain": 0.0079,
+          "memory-bank": 0.0082,
+          "extract-first": 0.066,
+          "temporal-graph": 0.067,
+          "hybrid": 0.0135,
+          "floor": null
+        }
+      },
+      {
+        "reader": "openai:gpt-6.1-sol",
+        "usd_per_correct": {
+          "gbrain": 0.0216,
+          "memory-bank": 0.0211,
+          "extract-first": 0.0772,
+          "temporal-graph": 0.0813,
+          "hybrid": 0.0892,
+          "floor": null
+        }
+      }
+    ],
+    "method": "world cluster bootstrap of the ratio, 9999 draws, seed 20261109; ahead means gbrain's cost per correct answer is below the comparator's",
+    "comparisons": [
+      {
+        "row": "memory-bank",
+        "ratio": 1.0933,
+        "ci95": [
+          1.074,
+          1.1125
+        ],
+        "p_ahead": 1,
+        "p_behind": 0.0001,
+        "note": null,
+        "p_ahead_holm": 1,
+        "p_behind_holm": 0.0003,
+        "verdict": "behind"
+      },
+      {
+        "row": "extract-first",
+        "ratio": 0.3443,
+        "ci95": [
+          0.3384,
+          0.3502
+        ],
+        "p_ahead": 0.0001,
+        "p_behind": 1,
+        "note": null,
+        "p_ahead_holm": 0.0003,
+        "p_behind_holm": 1,
+        "verdict": "ahead"
+      },
+      {
+        "row": "temporal-graph",
+        "ratio": 0.3152,
+        "ci95": [
+          0.3061,
+          0.3245
+        ],
+        "p_ahead": 0.0001,
+        "p_behind": 1,
+        "note": null,
+        "p_ahead_holm": 0.0003,
+        "p_behind_holm": 1,
+        "verdict": "ahead"
+      }
+    ]
+  },
+  "per_reader": [
+    {
+      "reader": "anthropic:claude-opus-5-5",
+      "rows": {
+        "memory-bank": {
+          "worlds": 30,
+          "mean": -2.1667,
+          "ci95": [
+            -4.0928,
+            -0.2405
+          ],
+          "note": "unadjusted"
+        },
+        "extract-first": {
+          "worlds": 30,
+          "mean": -3.75,
+          "ci95": [
+            -6.0069,
+            -1.4931
+          ],
+          "note": "unadjusted"
+        },
+        "temporal-graph": {
+          "worlds": 30,
+          "mean": 20.3333,
+          "ci95": [
+            17.0559,
+            23.6108
+          ],
+          "note": "unadjusted"
+        },
+        "hybrid": {
+          "worlds": 30,
+          "mean": 73.9167,
+          "ci95": [
+            70.1134,
+            77.72
+          ],
+          "note": "unadjusted"
+        }
+      }
+    },
+    {
+      "reader": "openai:gpt-6.1-sol",
+      "rows": {
+        "memory-bank": {
+          "worlds": 30,
+          "mean": -0.75,
+          "ci95": [
+            -2.931,
+            1.431
+          ],
+          "note": "unadjusted"
+        },
+        "extract-first": {
+          "worlds": 30,
+          "mean": -0.25,
+          "ci95": [
+            -2.6313,
+            2.1313
+          ],
+          "note": "unadjusted"
+        },
+        "temporal-graph": {
+          "worlds": 30,
+          "mean": 22.6667,
+          "ci95": [
+            19.0893,
+            26.244
+          ],
+          "note": "unadjusted"
+        },
+        "hybrid": {
+          "worlds": 30,
+          "mean": 76.1667,
+          "ci95": [
+            72.5826,
+            79.7507
+          ],
+          "note": "unadjusted"
+        }
+      }
+    },
+    {
+      "reader": "particle:particle-1",
+      "rows": {
+        "memory-bank": {
+          "worlds": 30,
+          "mean": 1.5833,
+          "ci95": [
+            -0.9935,
+            4.1602
+          ],
+          "note": "unadjusted"
+        },
+        "extract-first": {
+          "worlds": 30,
+          "mean": -1.3333,
+          "ci95": [
+            -3.7693,
+            1.1026
+          ],
+          "note": "unadjusted"
+        },
+        "temporal-graph": {
+          "worlds": 30,
+          "mean": 19.6667,
+          "ci95": [
+            16.3527,
+            22.9806
+          ],
+          "note": "unadjusted"
+        },
+        "hybrid": {
+          "worlds": 30,
+          "mean": 70.9167,
+          "ci95": [
+            66.9147,
+            74.9186
+          ],
+          "note": "unadjusted"
+        }
+      }
+    }
+  ],
+  "per_stratum": [
+    {
+      "stratum": "s1_updated",
+      "rows": {
+        "memory-bank": {
+          "worlds": 30,
+          "mean": -4.3056,
+          "ci95": [
+            -7.5866,
+            -1.0245
+          ],
+          "note": "unadjusted"
+        },
+        "extract-first": {
+          "worlds": 30,
+          "mean": 1.9444,
+          "ci95": [
+            -3.4874,
+            7.3763
+          ],
+          "note": "unadjusted"
+        },
+        "temporal-graph": {
+          "worlds": 30,
+          "mean": 5.9722,
+          "ci95": [
+            1.0237,
+            10.9208
+          ],
+          "note": "unadjusted"
+        },
+        "hybrid": {
+          "worlds": 30,
+          "mean": 72.5,
+          "ci95": [
+            65.1841,
+            79.8159
+          ],
+          "note": "unadjusted"
+        }
+      }
+    },
+    {
+      "stratum": "s2_corrected",
+      "rows": {
+        "memory-bank": {
+          "worlds": 30,
+          "mean": 1.1111,
+          "ci95": [
+            -2.9323,
+            5.1546
+          ],
+          "note": "unadjusted"
+        },
+        "extract-first": {
+          "worlds": 30,
+          "mean": -0.9722,
+          "ci95": [
+            -3.6102,
+            1.6657
+          ],
+          "note": "unadjusted"
+        },
+        "temporal-graph": {
+          "worlds": 30,
+          "mean": 15.1389,
+          "ci95": [
+            9.3536,
+            20.9242
+          ],
+          "note": "unadjusted"
+        },
+        "hybrid": {
+          "worlds": 30,
+          "mean": 72.7778,
+          "ci95": [
+            66.2694,
+            79.2862
+          ],
+          "note": "unadjusted"
+        }
+      }
+    },
+    {
+      "stratum": "s3_repeated_stale",
+      "rows": {
+        "memory-bank": {
+          "worlds": 30,
+          "mean": -2.5,
+          "ci95": [
+            -8.1557,
+            3.1557
+          ],
+          "note": "unadjusted"
+        },
+        "extract-first": {
+          "worlds": 30,
+          "mean": 0.9722,
+          "ci95": [
+            -3.7342,
+            5.6787
+          ],
+          "note": "unadjusted"
+        },
+        "temporal-graph": {
+          "worlds": 30,
+          "mean": 5.4167,
+          "ci95": [
+            -0.6732,
+            11.5066
+          ],
+          "note": "unadjusted"
+        },
+        "hybrid": {
+          "worlds": 30,
+          "mean": 73.3333,
+          "ci95": [
+            65.4358,
+            81.2308
+          ],
+          "note": "unadjusted"
+        }
+      }
+    },
+    {
+      "stratum": "s4_conflicting",
+      "rows": {
+        "memory-bank": {
+          "worlds": 30,
+          "mean": 9.8611,
+          "ci95": [
+            5.6846,
+            14.0376
+          ],
+          "note": "unadjusted"
+        },
+        "extract-first": {
+          "worlds": 30,
+          "mean": -1.25,
+          "ci95": [
+            -4.4711,
+            1.9711
+          ],
+          "note": "unadjusted"
+        },
+        "temporal-graph": {
+          "worlds": 30,
+          "mean": 50.9722,
+          "ci95": [
+            43.2017,
+            58.7427
+          ],
+          "note": "unadjusted"
+        },
+        "hybrid": {
+          "worlds": 30,
+          "mean": 80.5556,
+          "ci95": [
+            75.9269,
+            85.1842
+          ],
+          "note": "unadjusted"
+        }
+      }
+    },
+    {
+      "stratum": "s5_withdrawn",
+      "rows": {
+        "memory-bank": {
+          "worlds": 30,
+          "mean": -6.3889,
+          "ci95": [
+            -12.1489,
+            -0.6289
+          ],
+          "note": "unadjusted"
+        },
+        "extract-first": {
+          "worlds": 30,
+          "mean": -9.5833,
+          "ci95": [
+            -15.0978,
+            -4.0689
+          ],
+          "note": "unadjusted"
+        },
+        "temporal-graph": {
+          "worlds": 30,
+          "mean": 26.9444,
+          "ci95": [
+            19.1841,
+            34.7048
+          ],
+          "note": "unadjusted"
+        },
+        "hybrid": {
+          "worlds": 30,
+          "mean": 69.1667,
+          "ci95": [
+            62.7244,
+            75.6089
+          ],
+          "note": "unadjusted"
+        }
+      }
+    },
+    {
+      "stratum": "s6_as_of",
+      "rows": {
+        "memory-bank": {
+          "worlds": 30,
+          "mean": -5.9722,
+          "ci95": [
+            -9.2328,
+            -2.7116
+          ],
+          "note": "unadjusted"
+        },
+        "extract-first": {
+          "worlds": 30,
+          "mean": -3.4722,
+          "ci95": [
+            -6.8928,
+            -0.0517
+          ],
+          "note": "unadjusted"
+        },
+        "temporal-graph": {
+          "worlds": 30,
+          "mean": -1.3889,
+          "ci95": [
+            -5.5423,
+            2.7645
+          ],
+          "note": "unadjusted"
+        },
+        "hybrid": {
+          "worlds": 30,
+          "mean": 64.0278,
+          "ci95": [
+            58.3886,
+            69.6669
+          ],
+          "note": "unadjusted"
+        }
+      }
+    },
+    {
+      "stratum": "s7_as_known",
+      "rows": {
+        "memory-bank": {
+          "worlds": 30,
+          "mean": -9.1667,
+          "ci95": [
+            -12.5459,
+            -5.7875
+          ],
+          "note": "unadjusted"
+        },
+        "extract-first": {
+          "worlds": 30,
+          "mean": -10.1389,
+          "ci95": [
+            -14.0936,
+            -6.1842
+          ],
+          "note": "unadjusted"
+        },
+        "temporal-graph": {
+          "worlds": 30,
+          "mean": 19.0278,
+          "ci95": [
+            13.3414,
+            24.7141
+          ],
+          "note": "unadjusted"
+        },
+        "hybrid": {
+          "worlds": 30,
+          "mean": 62.5,
+          "ci95": [
+            55.1568,
+            69.8432
+          ],
+          "note": "unadjusted"
+        }
+      }
+    },
+    {
+      "stratum": "s8_history",
+      "rows": {
+        "memory-bank": {
+          "worlds": 30,
+          "mean": -15.8333,
+          "ci95": [
+            -22.1288,
+            -9.5379
+          ],
+          "note": "unadjusted"
+        },
+        "extract-first": {
+          "worlds": 30,
+          "mean": -10.5556,
+          "ci95": [
+            -16.6944,
+            -4.4167
+          ],
+          "note": "unadjusted"
+        },
+        "temporal-graph": {
+          "worlds": 30,
+          "mean": -1.3889,
+          "ci95": [
+            -8.6789,
+            5.9011
+          ],
+          "note": "unadjusted"
+        },
+        "hybrid": {
+          "worlds": 30,
+          "mean": 75.5556,
+          "ci95": [
+            70.5893,
+            80.5218
+          ],
+          "note": "unadjusted"
+        }
+      }
+    }
+  ],
+  "canonical_view": {
+    "note": "descriptive: the canonical gemini-3.8-flash judge on every answer; only the gating view decides",
+    "common": 1920,
+    "primary": [
+      {
+        "row": "memory-bank",
+        "worlds": 30,
+        "words": "no measurable difference",
+        "mean": -0.9722,
+        "ci95": [
+          -2.9165,
+          0.972
+        ]
+      },
+      {
+        "row": "extract-first",
+        "worlds": 30,
+        "words": "no measurable difference",
+        "mean": -1.9722,
+        "ci95": [
+          -4.1226,
+          0.1782
+        ]
+      },
+      {
+        "row": "temporal-graph",
+        "worlds": 30,
+        "words": "ahead",
+        "mean": 20.8056,
+        "ci95": [
+          17.5292,
+          24.0819
+        ]
+      }
+    ]
+  },
+  "row_means": {
+    "gbrain": {
+      "anthropic:claude-opus-5-5": 90.1042,
+      "openai:gpt-6.1-sol": 91.0417,
+      "particle:particle-1": 84.8438
+    },
+    "memory-bank": {
+      "anthropic:claude-opus-5-5": 95,
+      "openai:gpt-6.1-sol": 95.4688,
+      "particle:particle-1": 87.9688
+    },
+    "extract-first": {
+      "anthropic:claude-opus-5-5": 95.625,
+      "openai:gpt-6.1-sol": 93.3854,
+      "particle:particle-1": 89.375
+    },
+    "temporal-graph": {
+      "anthropic:claude-opus-5-5": 74.5833,
+      "openai:gpt-6.1-sol": 74.5833,
+      "particle:particle-1": 71.5625
+    },
+    "hybrid": {
+      "anthropic:claude-opus-5-5": 16.875,
+      "openai:gpt-6.1-sol": 17.1354,
+      "particle:particle-1": 18.0729
+    },
+    "floor": {
+      "anthropic:claude-opus-5-5": 0,
+      "openai:gpt-6.1-sol": 0,
+      "particle:particle-1": 0
+    }
+  },
+  "matcher": {
+    "gating": {
+      "view": "gating",
+      "answers": 28800,
+      "decisive": 9980,
+      "agreement": 0.8549,
+      "kappa": 0.6822,
+      "table": {
+        "correct": {
+          "judged_correct": 2770,
+          "judged_wrong": 454
+        },
+        "stale": {
+          "judged_correct": 474,
+          "judged_wrong": 2737
+        },
+        "decoy": {
+          "judged_correct": 510,
+          "judged_wrong": 300
+        },
+        "other": {
+          "judged_correct": 10,
+          "judged_wrong": 2725
+        },
+        "unclear": {
+          "judged_correct": 17272,
+          "judged_wrong": 1548
+        }
+      }
+    },
+    "canonical": {
+      "view": "canonical",
+      "answers": 34560,
+      "decisive": 15740,
+      "agreement": 0.8881,
+      "kappa": 0.6862,
+      "table": {
+        "correct": {
+          "judged_correct": 2773,
+          "judged_wrong": 731
+        },
+        "stale": {
+          "judged_correct": 505,
+          "judged_wrong": 2706
+        },
+        "decoy": {
+          "judged_correct": 512,
+          "judged_wrong": 298
+        },
+        "other": {
+          "judged_correct": 14,
+          "judged_wrong": 8201
+        },
+        "unclear": {
+          "judged_correct": 17313,
+          "judged_wrong": 1507
+        }
+      }
+    }
+  },
+  "exposure": {
+    "extract-first": {
+      "all": {
+        "contexts": 1920,
+        "gold_rate": 0.9609,
+        "stale_rate": 0.8734,
+        "gold_only_rate": 0.1229,
+        "deciding_line_rate": null,
+        "deciding_line_checked": 0
+      },
+      "by_stratum": {
+        "s1_updated": {
+          "contexts": 240,
+          "gold_rate": 0.9792,
+          "stale_rate": 1,
+          "gold_only_rate": 0,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s2_corrected": {
+          "contexts": 240,
+          "gold_rate": 1,
+          "stale_rate": 1,
+          "gold_only_rate": 0,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s3_repeated_stale": {
+          "contexts": 240,
+          "gold_rate": 0.9833,
+          "stale_rate": 1,
+          "gold_only_rate": 0,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s4_conflicting": {
+          "contexts": 240,
+          "gold_rate": 0.9792,
+          "stale_rate": 0.9958,
+          "gold_only_rate": 0.0042,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s5_withdrawn": {
+          "contexts": 240,
+          "gold_rate": 0.7958,
+          "stale_rate": 1,
+          "gold_only_rate": 0,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s6_as_of": {
+          "contexts": 240,
+          "gold_rate": 0.9833,
+          "stale_rate": 0.9917,
+          "gold_only_rate": 0.0083,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s7_as_known": {
+          "contexts": 240,
+          "gold_rate": 0.9958,
+          "stale_rate": 1,
+          "gold_only_rate": 0,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s8_history": {
+          "contexts": 240,
+          "gold_rate": 0.9708,
+          "stale_rate": 0,
+          "gold_only_rate": 0.9708,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        }
+      }
+    },
+    "gbrain": {
+      "all": {
+        "contexts": 1920,
+        "gold_rate": 0.8969,
+        "stale_rate": 0.8583,
+        "gold_only_rate": 0.1151,
+        "deciding_line_rate": 0.9292,
+        "deciding_line_checked": 240
+      },
+      "by_stratum": {
+        "s1_updated": {
+          "contexts": 240,
+          "gold_rate": 0.9542,
+          "stale_rate": 0.9917,
+          "gold_only_rate": 0.0042,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s2_corrected": {
+          "contexts": 240,
+          "gold_rate": 0.9792,
+          "stale_rate": 1,
+          "gold_only_rate": 0,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s3_repeated_stale": {
+          "contexts": 240,
+          "gold_rate": 0.9458,
+          "stale_rate": 1,
+          "gold_only_rate": 0,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s4_conflicting": {
+          "contexts": 240,
+          "gold_rate": 0.975,
+          "stale_rate": 1,
+          "gold_only_rate": 0,
+          "deciding_line_rate": 0.9292,
+          "deciding_line_checked": 240
+        },
+        "s5_withdrawn": {
+          "contexts": 240,
+          "gold_rate": 0.6042,
+          "stale_rate": 0.9958,
+          "gold_only_rate": 0,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s6_as_of": {
+          "contexts": 240,
+          "gold_rate": 0.95,
+          "stale_rate": 0.9167,
+          "gold_only_rate": 0.0792,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s7_as_known": {
+          "contexts": 240,
+          "gold_rate": 0.9583,
+          "stale_rate": 0.9625,
+          "gold_only_rate": 0.0292,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s8_history": {
+          "contexts": 240,
+          "gold_rate": 0.8083,
+          "stale_rate": 0,
+          "gold_only_rate": 0.8083,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        }
+      }
+    },
+    "hybrid": {
+      "all": {
+        "contexts": 1920,
+        "gold_rate": 0.2318,
+        "stale_rate": 0.4031,
+        "gold_only_rate": 0.124,
+        "deciding_line_rate": 0.1042,
+        "deciding_line_checked": 240
+      },
+      "by_stratum": {
+        "s1_updated": {
+          "contexts": 240,
+          "gold_rate": 0.2125,
+          "stale_rate": 0.4708,
+          "gold_only_rate": 0.1333,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s2_corrected": {
+          "contexts": 240,
+          "gold_rate": 0.2333,
+          "stale_rate": 0.4875,
+          "gold_only_rate": 0,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s3_repeated_stale": {
+          "contexts": 240,
+          "gold_rate": 0.2,
+          "stale_rate": 0.7917,
+          "gold_only_rate": 0.05,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s4_conflicting": {
+          "contexts": 240,
+          "gold_rate": 0.1042,
+          "stale_rate": 0.5208,
+          "gold_only_rate": 0.0625,
+          "deciding_line_rate": 0.1042,
+          "deciding_line_checked": 240
+        },
+        "s5_withdrawn": {
+          "contexts": 240,
+          "gold_rate": 0.4125,
+          "stale_rate": 0.4333,
+          "gold_only_rate": 0.2208,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s6_as_of": {
+          "contexts": 240,
+          "gold_rate": 0.4333,
+          "stale_rate": 0.2667,
+          "gold_only_rate": 0.3667,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s7_as_known": {
+          "contexts": 240,
+          "gold_rate": 0.2292,
+          "stale_rate": 0.2542,
+          "gold_only_rate": 0.1292,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s8_history": {
+          "contexts": 240,
+          "gold_rate": 0.0292,
+          "stale_rate": 0,
+          "gold_only_rate": 0.0292,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        }
+      }
+    },
+    "memory-bank": {
+      "all": {
+        "contexts": 1920,
+        "gold_rate": 0.9255,
+        "stale_rate": 0.8693,
+        "gold_only_rate": 0.1281,
+        "deciding_line_rate": null,
+        "deciding_line_checked": 0
+      },
+      "by_stratum": {
+        "s1_updated": {
+          "contexts": 240,
+          "gold_rate": 0.9917,
+          "stale_rate": 1,
+          "gold_only_rate": 0,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s2_corrected": {
+          "contexts": 240,
+          "gold_rate": 0.9708,
+          "stale_rate": 0.9917,
+          "gold_only_rate": 0.0083,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s3_repeated_stale": {
+          "contexts": 240,
+          "gold_rate": 0.9708,
+          "stale_rate": 1,
+          "gold_only_rate": 0,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s4_conflicting": {
+          "contexts": 240,
+          "gold_rate": 0.9833,
+          "stale_rate": 0.9875,
+          "gold_only_rate": 0.0125,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s5_withdrawn": {
+          "contexts": 240,
+          "gold_rate": 0.5208,
+          "stale_rate": 1,
+          "gold_only_rate": 0,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s6_as_of": {
+          "contexts": 240,
+          "gold_rate": 0.9958,
+          "stale_rate": 0.9875,
+          "gold_only_rate": 0.0125,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s7_as_known": {
+          "contexts": 240,
+          "gold_rate": 0.9917,
+          "stale_rate": 0.9875,
+          "gold_only_rate": 0.0125,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s8_history": {
+          "contexts": 240,
+          "gold_rate": 0.9792,
+          "stale_rate": 0,
+          "gold_only_rate": 0.9792,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        }
+      }
+    },
+    "temporal-graph": {
+      "all": {
+        "contexts": 1920,
+        "gold_rate": 0.8151,
+        "stale_rate": 0.8396,
+        "gold_only_rate": 0.1302,
+        "deciding_line_rate": null,
+        "deciding_line_checked": 0
+      },
+      "by_stratum": {
+        "s1_updated": {
+          "contexts": 240,
+          "gold_rate": 0.9167,
+          "stale_rate": 0.9875,
+          "gold_only_rate": 0.0125,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s2_corrected": {
+          "contexts": 240,
+          "gold_rate": 0.8625,
+          "stale_rate": 0.9708,
+          "gold_only_rate": 0.0042,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s3_repeated_stale": {
+          "contexts": 240,
+          "gold_rate": 0.9208,
+          "stale_rate": 1,
+          "gold_only_rate": 0,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s4_conflicting": {
+          "contexts": 240,
+          "gold_rate": 0.4583,
+          "stale_rate": 0.8917,
+          "gold_only_rate": 0.0667,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s5_withdrawn": {
+          "contexts": 240,
+          "gold_rate": 0.6125,
+          "stale_rate": 1,
+          "gold_only_rate": 0,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s6_as_of": {
+          "contexts": 240,
+          "gold_rate": 0.975,
+          "stale_rate": 0.9333,
+          "gold_only_rate": 0.0667,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s7_as_known": {
+          "contexts": 240,
+          "gold_rate": 0.9375,
+          "stale_rate": 0.9333,
+          "gold_only_rate": 0.0542,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s8_history": {
+          "contexts": 240,
+          "gold_rate": 0.8375,
+          "stale_rate": 0,
+          "gold_only_rate": 0.8375,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        }
+      }
+    }
+  },
+  "judges": {
+    "versions": {
+      "anthropic:claude-opus-5-5": [
+        "claude-opus-5-5"
+      ],
+      "openai:gpt-6-astra": [
+        "gpt-6-astra"
+      ]
+    },
+    "mixed_snapshot": []
+  },
+  "judge_check": {
+    "schema": "gbrain-evals/bg1-judge-check/v1",
+    "items": {
+      "real": 160,
+      "construction": 160
+    },
+    "inter_judge": {
+      "kappa": 0.95,
+      "ci95": [
+        0.9158,
+        0.9842
+      ],
+      "n": 320
+    },
+    "labelled": {
+      "items": 312,
+      "pass": 153,
+      "fail": 159
+    },
+    "judges": {
+      "openai:gpt-6-astra": {
+        "graded": 320,
+        "truncation": {
+          "k": 0,
+          "n": 320,
+          "rate": 0,
+          "ci95": [
+            0,
+            0.0119
+          ]
+        },
+        "construction": {
+          "catch": {
+            "k": 80,
+            "n": 80,
+            "rate": 1,
+            "ci95": [
+              0.9542,
+              1
+            ]
+          },
+          "catch_by_kind": {
+            "decoy": {
+              "k": 8,
+              "n": 8,
+              "rate": 1,
+              "ci95": [
+                0.6756,
+                1
+              ]
+            },
+            "stale": {
+              "k": 34,
+              "n": 34,
+              "rate": 1,
+              "ci95": [
+                0.8985,
+                1
+              ]
+            },
+            "withdrawn": {
+              "k": 11,
+              "n": 11,
+              "rate": 1,
+              "ci95": [
+                0.7412,
+                1
+              ]
+            },
+            "wrong_date": {
+              "k": 17,
+              "n": 17,
+              "rate": 1,
+              "ci95": [
+                0.8157,
+                1
+              ]
+            },
+            "wrong_order": {
+              "k": 10,
+              "n": 10,
+              "rate": 1,
+              "ci95": [
+                0.7225,
+                1
+              ]
+            }
+          },
+          "false_fail": {
+            "k": 0,
+            "n": 80,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.0458
+            ]
+          },
+          "kappa": 1,
+          "kappa_ci95": [
+            1,
+            1
+          ],
+          "n": 160
+        }
+      },
+      "anthropic:claude-opus-5-5": {
+        "graded": 320,
+        "truncation": {
+          "k": 0,
+          "n": 320,
+          "rate": 0,
+          "ci95": [
+            0,
+            0.0119
+          ]
+        },
+        "construction": {
+          "catch": {
+            "k": 80,
+            "n": 80,
+            "rate": 1,
+            "ci95": [
+              0.9542,
+              1
+            ]
+          },
+          "catch_by_kind": {
+            "decoy": {
+              "k": 8,
+              "n": 8,
+              "rate": 1,
+              "ci95": [
+                0.6756,
+                1
+              ]
+            },
+            "stale": {
+              "k": 34,
+              "n": 34,
+              "rate": 1,
+              "ci95": [
+                0.8985,
+                1
+              ]
+            },
+            "withdrawn": {
+              "k": 11,
+              "n": 11,
+              "rate": 1,
+              "ci95": [
+                0.7412,
+                1
+              ]
+            },
+            "wrong_date": {
+              "k": 17,
+              "n": 17,
+              "rate": 1,
+              "ci95": [
+                0.8157,
+                1
+              ]
+            },
+            "wrong_order": {
+              "k": 10,
+              "n": 10,
+              "rate": 1,
+              "ci95": [
+                0.7225,
+                1
+              ]
+            }
+          },
+          "false_fail": {
+            "k": 0,
+            "n": 80,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.0458
+            ]
+          },
+          "kappa": 1,
+          "kappa_ci95": [
+            1,
+            1
+          ],
+          "n": 160
+        }
+      }
+    },
+    "matcher": {
+      "construction": {
+        "catch": {
+          "k": 80,
+          "n": 80,
+          "rate": 1,
+          "ci95": [
+            0.9542,
+            1
+          ]
+        },
+        "catch_by_kind": {
+          "decoy": {
+            "k": 8,
+            "n": 8,
+            "rate": 1,
+            "ci95": [
+              0.6756,
+              1
+            ]
+          },
+          "stale": {
+            "k": 34,
+            "n": 34,
+            "rate": 1,
+            "ci95": [
+              0.8985,
+              1
+            ]
+          },
+          "withdrawn": {
+            "k": 11,
+            "n": 11,
+            "rate": 1,
+            "ci95": [
+              0.7412,
+              1
+            ]
+          },
+          "wrong_date": {
+            "k": 17,
+            "n": 17,
+            "rate": 1,
+            "ci95": [
+              0.8157,
+              1
+            ]
+          },
+          "wrong_order": {
+            "k": 10,
+            "n": 10,
+            "rate": 1,
+            "ci95": [
+              0.7225,
+              1
+            ]
+          }
+        },
+        "false_fail": {
+          "k": 0,
+          "n": 80,
+          "rate": 0,
+          "ci95": [
+            0,
+            0.0458
+          ]
+        },
+        "kappa": 1,
+        "kappa_ci95": [
+          1,
+          1
+        ],
+        "n": 160
+      },
+      "real_agreement": {
+        "openai:gpt-6-astra": {
+          "n": 78,
+          "agreement": 0.9487,
+          "kappa": 0.7886
+        },
+        "anthropic:claude-opus-5-5": {
+          "n": 78,
+          "agreement": 0.9103,
+          "kappa": 0.6667
+        }
+      },
+      "note": "descriptive; an unclear reading is left out"
+    },
+    "gates": [
+      {
+        "gate": "astra_opus_kappa",
+        "value": 0.95,
+        "line": 0.6,
+        "pass": true
+      },
+      {
+        "gate": "construction_kappa:openai:gpt-6-astra",
+        "value": 1,
+        "line": 0.6,
+        "pass": true
+      },
+      {
+        "gate": "construction_kappa:anthropic:claude-opus-5-5",
+        "value": 1,
+        "line": 0.6,
+        "pass": true
+      },
+      {
+        "gate": "labelled_items",
+        "value": 312,
+        "line": 40,
+        "pass": true
+      },
+      {
+        "gate": "labelled_per_class",
+        "value": 153,
+        "line": 15,
+        "pass": true
+      },
+      {
+        "gate": "truncation:openai:gpt-6-astra",
+        "value": 0,
+        "line": 0.01,
+        "pass": true
+      },
+      {
+        "gate": "truncation:anthropic:claude-opus-5-5",
+        "value": 0,
+        "line": 0.01,
+        "pass": true
+      }
+    ],
+    "stop": false
+  }
+}

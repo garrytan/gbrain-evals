@@ -153,14 +153,14 @@ describe('judges', () => {
 
 describe('the R78 judge map reaches RS1 alone (F5)', () => {
   // Value: protects=Q1's and F6's published cell manifests and digests; fails_when=the R78 gating-judge map, the pinned settings or their route caps change a Q1 or F6 cell; why_new=R78 review F5; seam=none; no_claim=RS1's own cells
-  test('Q1 and F6 generate byte-identical manifests to the ones published before R78, and none of their arms judges per reader', () => {
+  test('Q1 and F6 generate byte-identical manifests to the ones main publishes, and none of their arms outside the SOTA loop\'s own cells judges per reader', () => {
     const digest = (s: string) => createHash('sha256').update(s).digest('hex');
-    expect(digest(manifestText())).toBe('29f6cf497b494239a303ed4d869f0df317119231c8a86c98144127871251787c');
+    expect(digest(manifestText())).toBe('a013b1b226e3f0d67c5488f4197ac2edcb5eecdb03649d81bc70ce77ff36a113');
     expect(digest(f6ManifestText())).toBe('fea479a014cdb5dcb352511f00999d5422d55ef759d265bf9a36c176509ca87e');
     expect(readFileSync(MANIFEST_PATH, 'utf8')).toBe(manifestText());
     expect(readFileSync(F6_MANIFEST_PATH, 'utf8')).toBe(f6ManifestText());
     const q1 = buildManifest(), f6 = buildF6Manifest();
-    const arms = [q1, f6].flatMap(m => [...m.cells, ...(m.smoke_cells ?? []), ...(m.addon_cells ?? [])].flatMap(c => c.arms));
+    const arms = [q1, f6].flatMap(m => [...m.cells, ...(m.smoke_cells ?? []), ...(m.addon_cells ?? [])].filter(c => !c.set.startsWith('SOTA-')).flatMap(c => c.arms));
     expect(arms.length).toBeGreaterThan(0);
     expect(arms.filter(a => a.frontier?.per_reader || a.frontier?.settings).map(a => a.cell_id)).toEqual([]);
   });

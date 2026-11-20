@@ -1,0 +1,51 @@
+[
+  {
+    "id": "live-recall-b1",
+    "file": "live-recall-b1.json",
+    "sha256": "12de227d1cb232b48b1011c9f0d7218ed695c15258840d97327358a1feae81e9",
+    "status": "available"
+  },
+  {
+    "id": "live-recall-b2",
+    "file": "live-recall-b2.json",
+    "sha256": "7cb0d87b2fe8f158b2bfa3f0288ba74ad3ce41f6eddd2243a120f3eff0cb2b6e",
+    "status": "available"
+  },
+  {
+    "id": "live-recall-b3",
+    "file": "live-recall-b3.json",
+    "sha256": "7455768f739be6a8853dab3a56ce6f5abe1f154a5a4292f04091e1ec93d6aea2",
+    "status": "available"
+  },
+  {
+    "id": "live-recall-b4",
+    "file": "live-recall-b4.json",
+    "sha256": "f02431be1f7ae7de819caa1765eb8097e7b6dc70c4e2a457f607541718093d0b",
+    "status": "available"
+  },
+  {
+    "id": "phase2-agent",
+    "file": "phase2-agent.json",
+    "status": "pending"
+  },
+  {
+    "id": "miss-log-weekly",
+    "file": "miss-log-weekly.json",
+    "status": "pending"
+  },
+  {
+    "id": "replay-pins",
+    "file": "replay-pins.json",
+    "status": "pending"
+  },
+  {
+    "id": "latency-pins",
+    "file": "latency-pins.json",
+    "status": "pending"
+  },
+  {
+    "id": "phase2-freeze-out-of-view",
+    "file": "phase2-freeze-out-of-view.json",
+    "status": "pending"
+  }
+]

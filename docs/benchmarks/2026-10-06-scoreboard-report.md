@@ -163,6 +163,10 @@ a local copy. When the full receipt is released, `check --commit` recomputes it 
      reserves the request's byte count as input tokens, about 3.6 times as much, so the $20 lease admitted one reading
      at a time. The lease was raised to $110 inside the A24 cap and the cell resumed; it settled complete, 720 of 720
      answers, at $191.34 measured across its seven leases. The receipt carries the same disclosure.
+     *Note added 2026-11-10:* that figure was measured with a harness that never let a later question hit OpenAI's
+     prompt cache. Each of the 20 GPT-6.1 Sol questions wrote its conversation's whole history to the cache again, and
+     no later question read it back, so the figure overstates that arm's cost. The reader now ends the history with a cache breakpoint
+     ([corrections](../corrections.md#full-context-reads-and-openais-prompt-cache)).
    - **gbrain synthesize model.** `whole-synthesize` answers with `claude-opus-4-7`, gbrain's shipped default at the
      pin (owner's ruling, 2026-10-16).
 8. **Per-reader accuracy, frontier-judge agreement and derived columns.** Per-reader means; frontier-judge agreement

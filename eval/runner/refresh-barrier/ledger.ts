@@ -17,7 +17,7 @@ export function openBudgetItem(item: BudgetItem, options: BudgetOptions) {
   return withFileLock(`${options.ledgerPath}.${item.runner}.open.lock`, () => {
     const runs = readLedger(options.ledgerPath).runs.filter(r => r.runner === item.runner);
     const open = runs.find(r => r.finished_at === null);
-    if (runs.length && !open) throw new Error(`budget run ${item.runner} is finished in ${options.ledgerPath}; a cap stop ends that part INCOMPLETE and is never retried`);
+    if (runs.length && !open) throw new Error(`budget run ${item.runner} is finished in ${options.ledgerPath} and is never reopened: its work is done, or a cap stop ends that part INCOMPLETE and is never retried`);
     return startPaidRun(item.runner, { ...options, budgetUsd: item.cap_usd, runId: open?.run_id ?? null, estimateUsd: null });
   });
 }

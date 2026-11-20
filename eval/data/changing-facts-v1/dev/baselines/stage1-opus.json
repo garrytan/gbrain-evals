@@ -1,0 +1,1969 @@
+{
+ "schema": "gbrain-evals/bg1-dev-baselines/v1",
+ "note": "claude-opus-5-5 answers on the three BG1 dev worlds, graded by gpt-6-astra at the pinned judge settings, with exposure from each frozen context (eval/runner/bg1/exposure.ts). Written by bun eval/runner/bg1/dev-loop.ts baselines.",
+ "world_end": "2026-11-08",
+ "reader": "anthropic:claude-opus-5-5",
+ "judge": "openai:gpt-6-astra",
+ "rows": {
+  "ext-memory-bank": {
+   "source": "BG1 stage 1, bg1-dev3.ext-memory-bank.recipe-a1-961b852d",
+   "settings": {
+    "reader": "anthropic:claude-opus-5-5",
+    "effort": "medium",
+    "max_tokens": 2048,
+    "prompt_sha256": "215660c5a2fb85c3068e09b2b02f047c9557393b505ef22c59c08918addfd3be",
+    "renderer": "memory-render-v2",
+    "instrument_sha256": "1900e6d89ba17b7745f5ee7dc00084ad69a01294007aa259ed907a84b3468439",
+    "mode": "packed",
+    "budget": 8000,
+    "judge": "openai:gpt-6-astra",
+    "judge_settings": {
+     "effort": "medium",
+     "max_tokens": 8000
+    }
+   },
+   "questions": {
+    "bg1-dev-01:s1_updated:0": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s1_updated:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s1_updated:2": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s1_updated:3": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s1_updated:4": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s1_updated:5": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s1_updated:6": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s1_updated:7": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s2_corrected:0": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s2_corrected:1": {
+     "score": 0,
+     "gold": false,
+     "stale": true
+    },
+    "bg1-dev-01:s2_corrected:2": {
+     "score": 0,
+     "gold": false,
+     "stale": true
+    },
+    "bg1-dev-01:s2_corrected:3": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s2_corrected:4": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s2_corrected:5": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s2_corrected:6": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s2_corrected:7": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s3_repeated_stale:0": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s3_repeated_stale:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s3_repeated_stale:2": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s3_repeated_stale:3": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s3_repeated_stale:4": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s3_repeated_stale:5": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s3_repeated_stale:6": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s3_repeated_stale:7": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s4_conflicting:0": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s4_conflicting:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s4_conflicting:2": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s4_conflicting:3": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s4_conflicting:4": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s4_conflicting:5": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s4_conflicting:6": {
+     "score": 0,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s4_conflicting:7": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s5_withdrawn:0": {
+     "score": 0,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s5_withdrawn:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s5_withdrawn:2": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s5_withdrawn:3": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s5_withdrawn:4": {
+     "score": 1,
+     "gold": false,
+     "stale": true
+    },
+    "bg1-dev-01:s5_withdrawn:5": {
+     "score": 1,
+     "gold": false,
+     "stale": true
+    },
+    "bg1-dev-01:s5_withdrawn:6": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s5_withdrawn:7": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s6_as_of:0": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s6_as_of:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s6_as_of:2": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s6_as_of:3": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s6_as_of:4": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s6_as_of:5": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s6_as_of:6": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s6_as_of:7": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s7_as_known:0": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s7_as_known:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s7_as_known:2": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s7_as_known:3": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s7_as_known:4": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s7_as_known:5": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s7_as_known:6": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s7_as_known:7": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s8_history:0": {
+     "score": 1,
+     "gold": true,
+     "stale": false
+    },
+    "bg1-dev-01:s8_history:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s8_history:2": {
+     "score": 1,
+     "gold": true,
+     "stale": false
+    },
+    "bg1-dev-01:s8_history:3": {
+     "score": 1,
+     "gold": true,
+     "stale": false
+    },
+    "bg1-dev-01:s8_history:4": {
+     "score": 1,
+     "gold": true,
+     "stale": false
+    },
+    "bg1-dev-01:s8_history:5": {
+     "score": 1,
+     "gold": true,
+     "stale": false
+    },
+    "bg1-dev-01:s8_history:6": {
+     "score": 1,
+     "gold": true,
+     "stale": false
+    },
+    "bg1-dev-01:s8_history:7": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s1_updated:0": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s1_updated:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s1_updated:2": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s1_updated:3": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s1_updated:4": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s1_updated:5": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s1_updated:6": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s1_updated:7": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s2_corrected:0": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s2_corrected:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s2_corrected:2": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s2_corrected:3": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s2_corrected:4": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s2_corrected:5": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s2_corrected:6": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s2_corrected:7": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s3_repeated_stale:0": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s3_repeated_stale:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s3_repeated_stale:2": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s3_repeated_stale:3": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s3_repeated_stale:4": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s3_repeated_stale:5": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s3_repeated_stale:6": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s3_repeated_stale:7": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s4_conflicting:0": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s4_conflicting:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s4_conflicting:2": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s4_conflicting:3": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s4_conflicting:4": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s4_conflicting:5": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s4_conflicting:6": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s4_conflicting:7": {
+     "score": 1,
+     "gold": true,
+     "stale": false
+    },
+    "bg1-dev-02:s5_withdrawn:0": {
+     "score": 1,
+     "gold": false,
+     "stale": true
+    },
+    "bg1-dev-02:s5_withdrawn:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s5_withdrawn:2": {
+     "score": 1,
+     "gold": false,
+     "stale": true
+    },
+    "bg1-dev-02:s5_withdrawn:3": {
+     "score": 1,
+     "gold": false,
+     "stale": true
+    },
+    "bg1-dev-02:s5_withdrawn:4": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s5_withdrawn:5": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s5_withdrawn:6": {
+     "score": 0,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s5_withdrawn:7": {
+     "score": 0,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s6_as_of:0": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s6_as_of:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s6_as_of:2": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s6_as_of:3": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s6_as_of:4": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s6_as_of:5": {
+     "score": 0,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s6_as_of:6": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s6_as_of:7": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s7_as_known:0": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s7_as_known:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s7_as_known:2": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s7_as_known:3": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s7_as_known:4": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s7_as_known:5": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s7_as_known:6": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s7_as_known:7": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s8_history:0": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s8_history:1": {
+     "score": 1,
+     "gold": true,
+     "stale": false
+    },
+    "bg1-dev-02:s8_history:2": {
+     "score": 1,
+     "gold": true,
+     "stale": false
+    },
+    "bg1-dev-02:s8_history:3": {
+     "score": 1,
+     "gold": true,
+     "stale": false
+    },
+    "bg1-dev-02:s8_history:4": {
+     "score": 1,
+     "gold": true,
+     "stale": false
+    },
+    "bg1-dev-02:s8_history:5": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s8_history:6": {
+     "score": 1,
+     "gold": true,
+     "stale": false
+    },
+    "bg1-dev-02:s8_history:7": {
+     "score": 1,
+     "gold": true,
+     "stale": false
+    },
+    "bg1-dev-03:s1_updated:0": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s1_updated:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s1_updated:2": {
+     "score": 0,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s1_updated:3": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s1_updated:4": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s1_updated:5": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s1_updated:6": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s1_updated:7": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s2_corrected:0": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s2_corrected:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s2_corrected:2": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s2_corrected:3": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s2_corrected:4": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s2_corrected:5": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s2_corrected:6": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s2_corrected:7": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s3_repeated_stale:0": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s3_repeated_stale:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s3_repeated_stale:2": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s3_repeated_stale:3": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s3_repeated_stale:4": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s3_repeated_stale:5": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s3_repeated_stale:6": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s3_repeated_stale:7": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s4_conflicting:0": {
+     "score": 1,
+     "gold": false,
+     "stale": true
+    },
+    "bg1-dev-03:s4_conflicting:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s4_conflicting:2": {
+     "score": 0,
+     "gold": false,
+     "stale": true
+    },
+    "bg1-dev-03:s4_conflicting:3": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s4_conflicting:4": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s4_conflicting:5": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s4_conflicting:6": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s4_conflicting:7": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s5_withdrawn:0": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s5_withdrawn:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s5_withdrawn:2": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s5_withdrawn:3": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s5_withdrawn:4": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s5_withdrawn:5": {
+     "score": 1,
+     "gold": false,
+     "stale": true
+    },
+    "bg1-dev-03:s5_withdrawn:6": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s5_withdrawn:7": {
+     "score": 1,
+     "gold": false,
+     "stale": true
+    },
+    "bg1-dev-03:s6_as_of:0": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s6_as_of:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s6_as_of:2": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s6_as_of:3": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s6_as_of:4": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s6_as_of:5": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s6_as_of:6": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s6_as_of:7": {
+     "score": 0,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s7_as_known:0": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s7_as_known:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s7_as_known:2": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s7_as_known:3": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s7_as_known:4": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s7_as_known:5": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s7_as_known:6": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s7_as_known:7": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s8_history:0": {
+     "score": 1,
+     "gold": true,
+     "stale": false
+    },
+    "bg1-dev-03:s8_history:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s8_history:2": {
+     "score": 1,
+     "gold": true,
+     "stale": false
+    },
+    "bg1-dev-03:s8_history:3": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s8_history:4": {
+     "score": 1,
+     "gold": true,
+     "stale": false
+    },
+    "bg1-dev-03:s8_history:5": {
+     "score": 1,
+     "gold": true,
+     "stale": false
+    },
+    "bg1-dev-03:s8_history:6": {
+     "score": 1,
+     "gold": true,
+     "stale": false
+    },
+    "bg1-dev-03:s8_history:7": {
+     "score": 1,
+     "gold": true,
+     "stale": false
+    }
+   }
+  },
+  "ext-extract-first": {
+   "source": "BG1 stage 1, bg1-dev3.ext-extract-first.common-a1-7a7c53d3",
+   "settings": {
+    "reader": "anthropic:claude-opus-5-5",
+    "effort": "medium",
+    "max_tokens": 2048,
+    "prompt_sha256": "215660c5a2fb85c3068e09b2b02f047c9557393b505ef22c59c08918addfd3be",
+    "renderer": "memory-render-v2",
+    "instrument_sha256": "1900e6d89ba17b7745f5ee7dc00084ad69a01294007aa259ed907a84b3468439",
+    "mode": "packed",
+    "budget": 8000,
+    "judge": "openai:gpt-6-astra",
+    "judge_settings": {
+     "effort": "medium",
+     "max_tokens": 8000
+    }
+   },
+   "questions": {
+    "bg1-dev-01:s1_updated:0": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s1_updated:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s1_updated:2": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s1_updated:3": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s1_updated:4": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s1_updated:5": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s1_updated:6": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s1_updated:7": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s2_corrected:0": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s2_corrected:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s2_corrected:2": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s2_corrected:3": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s2_corrected:4": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s2_corrected:5": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s2_corrected:6": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s2_corrected:7": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s3_repeated_stale:0": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s3_repeated_stale:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s3_repeated_stale:2": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s3_repeated_stale:3": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s3_repeated_stale:4": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s3_repeated_stale:5": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s3_repeated_stale:6": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s3_repeated_stale:7": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s4_conflicting:0": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s4_conflicting:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s4_conflicting:2": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s4_conflicting:3": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s4_conflicting:4": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s4_conflicting:5": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s4_conflicting:6": {
+     "score": 0,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s4_conflicting:7": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s5_withdrawn:0": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s5_withdrawn:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s5_withdrawn:2": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s5_withdrawn:3": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s5_withdrawn:4": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s5_withdrawn:5": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s5_withdrawn:6": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s5_withdrawn:7": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s6_as_of:0": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s6_as_of:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s6_as_of:2": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s6_as_of:3": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s6_as_of:4": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s6_as_of:5": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s6_as_of:6": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s6_as_of:7": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s7_as_known:0": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s7_as_known:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s7_as_known:2": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s7_as_known:3": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s7_as_known:4": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s7_as_known:5": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s7_as_known:6": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s7_as_known:7": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s8_history:0": {
+     "score": 1,
+     "gold": true,
+     "stale": false
+    },
+    "bg1-dev-01:s8_history:1": {
+     "score": 0,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-01:s8_history:2": {
+     "score": 1,
+     "gold": true,
+     "stale": false
+    },
+    "bg1-dev-01:s8_history:3": {
+     "score": 1,
+     "gold": true,
+     "stale": false
+    },
+    "bg1-dev-01:s8_history:4": {
+     "score": 1,
+     "gold": true,
+     "stale": false
+    },
+    "bg1-dev-01:s8_history:5": {
+     "score": 1,
+     "gold": true,
+     "stale": false
+    },
+    "bg1-dev-01:s8_history:6": {
+     "score": 1,
+     "gold": true,
+     "stale": false
+    },
+    "bg1-dev-01:s8_history:7": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s1_updated:0": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s1_updated:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s1_updated:2": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s1_updated:3": {
+     "score": 0,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s1_updated:4": {
+     "score": 0,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s1_updated:5": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s1_updated:6": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s1_updated:7": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s2_corrected:0": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s2_corrected:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s2_corrected:2": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s2_corrected:3": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s2_corrected:4": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s2_corrected:5": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s2_corrected:6": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s2_corrected:7": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s3_repeated_stale:0": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s3_repeated_stale:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s3_repeated_stale:2": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s3_repeated_stale:3": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s3_repeated_stale:4": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s3_repeated_stale:5": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s3_repeated_stale:6": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s3_repeated_stale:7": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s4_conflicting:0": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s4_conflicting:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s4_conflicting:2": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s4_conflicting:3": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s4_conflicting:4": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s4_conflicting:5": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s4_conflicting:6": {
+     "score": 0,
+     "gold": false,
+     "stale": true
+    },
+    "bg1-dev-02:s4_conflicting:7": {
+     "score": 0,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s5_withdrawn:0": {
+     "score": 1,
+     "gold": false,
+     "stale": true
+    },
+    "bg1-dev-02:s5_withdrawn:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s5_withdrawn:2": {
+     "score": 1,
+     "gold": false,
+     "stale": true
+    },
+    "bg1-dev-02:s5_withdrawn:3": {
+     "score": 1,
+     "gold": false,
+     "stale": true
+    },
+    "bg1-dev-02:s5_withdrawn:4": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s5_withdrawn:5": {
+     "score": 1,
+     "gold": false,
+     "stale": true
+    },
+    "bg1-dev-02:s5_withdrawn:6": {
+     "score": 0,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s5_withdrawn:7": {
+     "score": 0,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s6_as_of:0": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s6_as_of:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s6_as_of:2": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s6_as_of:3": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s6_as_of:4": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s6_as_of:5": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s6_as_of:6": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s6_as_of:7": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s7_as_known:0": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s7_as_known:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s7_as_known:2": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s7_as_known:3": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s7_as_known:4": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s7_as_known:5": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s7_as_known:6": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s7_as_known:7": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s8_history:0": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s8_history:1": {
+     "score": 0,
+     "gold": true,
+     "stale": false
+    },
+    "bg1-dev-02:s8_history:2": {
+     "score": 1,
+     "gold": true,
+     "stale": false
+    },
+    "bg1-dev-02:s8_history:3": {
+     "score": 1,
+     "gold": true,
+     "stale": false
+    },
+    "bg1-dev-02:s8_history:4": {
+     "score": 1,
+     "gold": true,
+     "stale": false
+    },
+    "bg1-dev-02:s8_history:5": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-02:s8_history:6": {
+     "score": 1,
+     "gold": true,
+     "stale": false
+    },
+    "bg1-dev-02:s8_history:7": {
+     "score": 1,
+     "gold": true,
+     "stale": false
+    },
+    "bg1-dev-03:s1_updated:0": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s1_updated:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s1_updated:2": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s1_updated:3": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s1_updated:4": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s1_updated:5": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s1_updated:6": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s1_updated:7": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s2_corrected:0": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s2_corrected:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s2_corrected:2": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s2_corrected:3": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s2_corrected:4": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s2_corrected:5": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s2_corrected:6": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s2_corrected:7": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s3_repeated_stale:0": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s3_repeated_stale:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s3_repeated_stale:2": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s3_repeated_stale:3": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s3_repeated_stale:4": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s3_repeated_stale:5": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s3_repeated_stale:6": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s3_repeated_stale:7": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s4_conflicting:0": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s4_conflicting:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s4_conflicting:2": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s4_conflicting:3": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s4_conflicting:4": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s4_conflicting:5": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s4_conflicting:6": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s4_conflicting:7": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s5_withdrawn:0": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s5_withdrawn:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s5_withdrawn:2": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s5_withdrawn:3": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s5_withdrawn:4": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s5_withdrawn:5": {
+     "score": 0,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s5_withdrawn:6": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s5_withdrawn:7": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s6_as_of:0": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s6_as_of:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s6_as_of:2": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s6_as_of:3": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s6_as_of:4": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s6_as_of:5": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s6_as_of:6": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s6_as_of:7": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s7_as_known:0": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s7_as_known:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s7_as_known:2": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s7_as_known:3": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s7_as_known:4": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s7_as_known:5": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s7_as_known:6": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s7_as_known:7": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s8_history:0": {
+     "score": 1,
+     "gold": true,
+     "stale": false
+    },
+    "bg1-dev-03:s8_history:1": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s8_history:2": {
+     "score": 1,
+     "gold": true,
+     "stale": false
+    },
+    "bg1-dev-03:s8_history:3": {
+     "score": 1,
+     "gold": true,
+     "stale": true
+    },
+    "bg1-dev-03:s8_history:4": {
+     "score": 0,
+     "gold": false,
+     "stale": false
+    },
+    "bg1-dev-03:s8_history:5": {
+     "score": 1,
+     "gold": true,
+     "stale": false
+    },
+    "bg1-dev-03:s8_history:6": {
+     "score": 1,
+     "gold": true,
+     "stale": false
+    },
+    "bg1-dev-03:s8_history:7": {
+     "score": 1,
+     "gold": true,
+     "stale": false
+    }
+   }
+  }
+ }
+}

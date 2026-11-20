@@ -1,0 +1,997 @@
+{
+  "gbrain_report": "docs/benchmarks/2026-09-09-retrieval-refresh/precision-hybrid/attempt-2/2026-09-09-gbrain-hybrid-body-text-openai-text-embedding-3-large-1536.json",
+  "gbrain_provider": "gbrain-hybrid-body-text",
+  "gbrain_upstream": {
+    "meanLatencyMs": 217.75,
+    "p50LatencyMs": 213.51,
+    "p95LatencyMs": 337.51,
+    "caseCount": 77,
+    "meanPrecision": 0.0565,
+    "meanRecall": 0.9884,
+    "totalPassed": 7,
+    "totalCases": 77,
+    "passRate": 0.0909,
+    "activeRetrievalPasses": 0,
+    "passTypes": {
+      "activeRetrieval": 0,
+      "structural": 5,
+      "triviallyEmpty": 2
+    },
+    "categories": [
+      {
+        "category": "Alias resolution",
+        "caseCount": 23,
+        "passed": 0,
+        "failed": 23,
+        "meanPrecision": 0.1014,
+        "meanRecall": 1
+      },
+      {
+        "category": "Scope disambiguation",
+        "caseCount": 12,
+        "passed": 0,
+        "failed": 12,
+        "meanPrecision": 0.0241,
+        "meanRecall": 0.875
+      },
+      {
+        "category": "Fuzzy matching and prefix guards",
+        "caseCount": 7,
+        "passed": 0,
+        "failed": 7,
+        "meanPrecision": 0.0397,
+        "meanRecall": 1
+      },
+      {
+        "category": "Type routing and open questions",
+        "caseCount": 6,
+        "passed": 0,
+        "failed": 6,
+        "meanPrecision": 0.0093,
+        "meanRecall": 1
+      },
+      {
+        "category": "Design boundary cases",
+        "caseCount": 6,
+        "passed": 2,
+        "failed": 4,
+        "meanPrecision": 0.0139,
+        "meanRecall": 1
+      },
+      {
+        "category": "Budget eviction and capacity",
+        "caseCount": 5,
+        "passed": 3,
+        "failed": 2,
+        "meanPrecision": 0.1111,
+        "meanRecall": 1
+      },
+      {
+        "category": "Persona prelude content",
+        "caseCount": 4,
+        "passed": 1,
+        "failed": 3,
+        "meanPrecision": 0,
+        "meanRecall": null
+      },
+      {
+        "category": "Relation expansion",
+        "caseCount": 4,
+        "passed": 0,
+        "failed": 4,
+        "meanPrecision": 0.1111,
+        "meanRecall": 1
+      },
+      {
+        "category": "Supersession chain exclusion",
+        "caseCount": 3,
+        "passed": 0,
+        "failed": 3,
+        "meanPrecision": 0,
+        "meanRecall": null
+      },
+      {
+        "category": "Ranking stability",
+        "caseCount": 3,
+        "passed": 1,
+        "failed": 2,
+        "meanPrecision": 0.0833,
+        "meanRecall": 1
+      },
+      {
+        "category": "Counter-signal retrieval",
+        "caseCount": 2,
+        "passed": 0,
+        "failed": 2,
+        "meanPrecision": 0.0556,
+        "meanRecall": 1
+      },
+      {
+        "category": "Cross-user isolation",
+        "caseCount": 1,
+        "passed": 0,
+        "failed": 1,
+        "meanPrecision": 0,
+        "meanRecall": null
+      },
+      {
+        "category": "Cold start behavior",
+        "caseCount": 1,
+        "passed": 0,
+        "failed": 1,
+        "meanPrecision": 0,
+        "meanRecall": null
+      }
+    ]
+  },
+  "baseline_run": "docs/benchmarks/2026-11-17-readme-baselines/retrieval/precisionmembench/plain-hybrid-default",
+  "baseline_policy": {
+    "name": "plain-hybrid:vendor-default",
+    "mode": "vendor-default",
+    "settings": {
+      "k": 10
+    },
+    "settings_source": "settings"
+  },
+  "baseline_upstream": {
+    "meanLatencyMs": 3.91,
+    "p50LatencyMs": 3.92,
+    "p95LatencyMs": 5.47,
+    "caseCount": 77,
+    "meanPrecision": 0.1027,
+    "meanRecall": 0.9845,
+    "totalPassed": 9,
+    "totalCases": 77,
+    "passRate": 0.1169,
+    "activeRetrievalPasses": 0,
+    "passTypes": {
+      "activeRetrieval": 0,
+      "structural": 6,
+      "triviallyEmpty": 3
+    },
+    "categories": [
+      {
+        "category": "Alias resolution",
+        "caseCount": 23,
+        "passed": 0,
+        "failed": 23,
+        "meanPrecision": 0.1814,
+        "meanRecall": 0.9924
+      },
+      {
+        "category": "Scope disambiguation",
+        "caseCount": 12,
+        "passed": 0,
+        "failed": 12,
+        "meanPrecision": 0.0397,
+        "meanRecall": 0.875
+      },
+      {
+        "category": "Fuzzy matching and prefix guards",
+        "caseCount": 7,
+        "passed": 0,
+        "failed": 7,
+        "meanPrecision": 0.0765,
+        "meanRecall": 1
+      },
+      {
+        "category": "Type routing and open questions",
+        "caseCount": 6,
+        "passed": 0,
+        "failed": 6,
+        "meanPrecision": 0.0167,
+        "meanRecall": 1
+      },
+      {
+        "category": "Design boundary cases",
+        "caseCount": 6,
+        "passed": 2,
+        "failed": 4,
+        "meanPrecision": 0.0278,
+        "meanRecall": 1
+      },
+      {
+        "category": "Budget eviction and capacity",
+        "caseCount": 5,
+        "passed": 3,
+        "failed": 2,
+        "meanPrecision": 0.1389,
+        "meanRecall": 1
+      },
+      {
+        "category": "Persona prelude content",
+        "caseCount": 4,
+        "passed": 1,
+        "failed": 3,
+        "meanPrecision": 0,
+        "meanRecall": null
+      },
+      {
+        "category": "Relation expansion",
+        "caseCount": 4,
+        "passed": 0,
+        "failed": 4,
+        "meanPrecision": 0.2167,
+        "meanRecall": 1
+      },
+      {
+        "category": "Supersession chain exclusion",
+        "caseCount": 3,
+        "passed": 0,
+        "failed": 3,
+        "meanPrecision": 0,
+        "meanRecall": null
+      },
+      {
+        "category": "Ranking stability",
+        "caseCount": 3,
+        "passed": 1,
+        "failed": 2,
+        "meanPrecision": 0.1667,
+        "meanRecall": 1
+      },
+      {
+        "category": "Counter-signal retrieval",
+        "caseCount": 2,
+        "passed": 0,
+        "failed": 2,
+        "meanPrecision": 0.1056,
+        "meanRecall": 1
+      },
+      {
+        "category": "Cross-user isolation",
+        "caseCount": 1,
+        "passed": 1,
+        "failed": 0,
+        "meanPrecision": 0,
+        "meanRecall": null
+      },
+      {
+        "category": "Cold start behavior",
+        "caseCount": 1,
+        "passed": 1,
+        "failed": 0,
+        "meanPrecision": null,
+        "meanRecall": null
+      }
+    ]
+  },
+  "baseline_outcomes": {
+    "scored": 77,
+    "retrieval_error": 0,
+    "unsupported": 0,
+    "turn_cap": 0,
+    "context_overflow": 0,
+    "ingest_degraded": 0,
+    "reader_error": 0,
+    "judge_error": 0,
+    "harness_invalid": 0,
+    "budget_not_run": 0,
+    "does_not_fit": 0
+  },
+  "contract": "vendored upstream scorer: mean per-case precision over cases where it is defined, mean recall over cases where it is defined",
+  "all_cases": {
+    "precision": {
+      "n_pairs": 69,
+      "baseline_mean": 0.10266955266955262,
+      "gbrain_mean": 0.05732689210950078,
+      "delta_gbrain_minus_baseline": -0.04534266056005185,
+      "ci95": [
+        -0.06074879227053136,
+        -0.03220141372315285
+      ],
+      "p_sign_flip": 0.00009999000099990002,
+      "p_method": "monte-carlo-sign-flip",
+      "cases_gbrain_better": 0,
+      "cases_baseline_better": 42,
+      "cases_same": 27,
+      "p_sign_test": 4.547473508864641e-13,
+      "p_holm": 0.00019998000199980003,
+      "classification": "loss"
+    },
+    "recall": {
+      "n_pairs": 43,
+      "baseline_mean": 0.9844961240310076,
+      "gbrain_mean": 0.9883720930232558,
+      "delta_gbrain_minus_baseline": 0.003875968992248061,
+      "ci95": [
+        0,
+        0.011627906976744184
+      ],
+      "p_sign_flip": 1,
+      "p_method": "monte-carlo-sign-flip",
+      "cases_gbrain_better": 1,
+      "cases_baseline_better": 0,
+      "cases_same": 42,
+      "p_sign_test": 1,
+      "p_holm": 1,
+      "classification": "no measurable difference"
+    }
+  },
+  "search_only": {
+    "precision": {
+      "n_pairs": 40,
+      "baseline_mean": 0.1474224386724386,
+      "gbrain_mean": 0.08055555555555552,
+      "delta_gbrain_minus_baseline": -0.06686688311688313,
+      "ci95": [
+        -0.0910732323232323,
+        -0.047026515151515166
+      ],
+      "p_sign_flip": 0.00009999000099990002,
+      "p_method": "monte-carlo-sign-flip",
+      "cases_gbrain_better": 0,
+      "cases_baseline_better": 34,
+      "cases_same": 6,
+      "p_sign_test": 1.1641532182693481e-10
+    },
+    "recall": {
+      "n_pairs": 34,
+      "baseline_mean": 0.9950980392156862,
+      "gbrain_mean": 1,
+      "delta_gbrain_minus_baseline": 0.0049019607843137246,
+      "ci95": [
+        0,
+        0.014705882352941173
+      ],
+      "p_sign_flip": 1,
+      "p_method": "monte-carlo-sign-flip",
+      "cases_gbrain_better": 1,
+      "cases_baseline_better": 0,
+      "cases_same": 33,
+      "p_sign_test": 1
+    }
+  },
+  "without_isolation_case": {
+    "precision": {
+      "n_pairs": 68,
+      "baseline_mean": 0.10417939903234016,
+      "gbrain_mean": 0.05816993464052285,
+      "delta_gbrain_minus_baseline": -0.04600946439181732,
+      "ci95": [
+        -0.0614559460147695,
+        -0.03262827858416094
+      ],
+      "p_sign_flip": 0.00009999000099990002,
+      "p_method": "monte-carlo-sign-flip",
+      "cases_gbrain_better": 0,
+      "cases_baseline_better": 42,
+      "cases_same": 26,
+      "p_sign_test": 4.547473508864641e-13
+    },
+    "recall": {
+      "n_pairs": 43,
+      "baseline_mean": 0.9844961240310076,
+      "gbrain_mean": 0.9883720930232558,
+      "delta_gbrain_minus_baseline": 0.003875968992248061,
+      "ci95": [
+        0,
+        0.011627906976744184
+      ],
+      "p_sign_flip": 1,
+      "p_method": "monte-carlo-sign-flip",
+      "cases_gbrain_better": 1,
+      "cases_baseline_better": 0,
+      "cases_same": 42,
+      "p_sign_test": 1
+    }
+  },
+  "per_case": [
+    {
+      "case_id": "happy-stack-repository-layer",
+      "category": "Type routing and open questions",
+      "gbrain_precision": 0,
+      "baseline_precision": 0,
+      "gbrain_recall": null,
+      "baseline_recall": null
+    },
+    {
+      "case_id": "happy-alias-match-kubernetes",
+      "category": "Alias resolution",
+      "gbrain_precision": 0.05555555555555555,
+      "baseline_precision": 0.1111111111111111,
+      "gbrain_recall": 1,
+      "baseline_recall": 1
+    },
+    {
+      "case_id": "alias-kube-resolves",
+      "category": "Alias resolution",
+      "gbrain_precision": 0.1111111111111111,
+      "baseline_precision": 0.2,
+      "gbrain_recall": 1,
+      "baseline_recall": 1
+    },
+    {
+      "case_id": "alias-gha-resolves",
+      "category": "Alias resolution",
+      "gbrain_precision": 0.05555555555555555,
+      "baseline_precision": 0.1,
+      "gbrain_recall": 1,
+      "baseline_recall": 1
+    },
+    {
+      "case_id": "long-query-rambling-kubernetes",
+      "category": "Alias resolution",
+      "gbrain_precision": 0.05555555555555555,
+      "baseline_precision": 0.1,
+      "gbrain_recall": 1,
+      "baseline_recall": 1
+    },
+    {
+      "case_id": "out-of-scope-coin-collecting",
+      "category": "Scope disambiguation",
+      "gbrain_precision": 0,
+      "baseline_precision": 0,
+      "gbrain_recall": null,
+      "baseline_recall": null
+    },
+    {
+      "case_id": "happy-writing-scope",
+      "category": "Scope disambiguation",
+      "gbrain_precision": 0,
+      "baseline_precision": 0,
+      "gbrain_recall": null,
+      "baseline_recall": null
+    },
+    {
+      "case_id": "conflict-scope-disambiguation-redis-writing",
+      "category": "Scope disambiguation",
+      "gbrain_precision": 0.1111111111111111,
+      "baseline_precision": 0.14285714285714285,
+      "gbrain_recall": 1,
+      "baseline_recall": 1
+    },
+    {
+      "case_id": "conflict-scope-disambiguation-redis-code",
+      "category": "Scope disambiguation",
+      "gbrain_precision": 0.05555555555555555,
+      "baseline_precision": 0.1111111111111111,
+      "gbrain_recall": 1,
+      "baseline_recall": 1
+    },
+    {
+      "case_id": "multi-scope-redis-both-surfaces",
+      "category": "Scope disambiguation",
+      "gbrain_precision": 0.06666666666666667,
+      "baseline_precision": 0.1111111111111111,
+      "gbrain_recall": 0.5,
+      "baseline_recall": 0.5
+    },
+    {
+      "case_id": "conflict-mongodb-supersedes-sqlalchemy",
+      "category": "Supersession chain exclusion",
+      "gbrain_precision": 0,
+      "baseline_precision": 0,
+      "gbrain_recall": null,
+      "baseline_recall": null
+    },
+    {
+      "case_id": "edge-empty-query",
+      "category": "Design boundary cases",
+      "gbrain_precision": null,
+      "baseline_precision": null,
+      "gbrain_recall": null,
+      "baseline_recall": null
+    },
+    {
+      "case_id": "edge-short-query-raw-passthrough",
+      "category": "Alias resolution",
+      "gbrain_precision": 0.05555555555555555,
+      "baseline_precision": 0.1,
+      "gbrain_recall": 1,
+      "baseline_recall": 1
+    },
+    {
+      "case_id": "isolation-user-scoping",
+      "category": "Cross-user isolation",
+      "gbrain_precision": 0,
+      "baseline_precision": 0,
+      "gbrain_recall": null,
+      "baseline_recall": null
+    },
+    {
+      "case_id": "questions-pinned-active-only",
+      "category": "Type routing and open questions",
+      "gbrain_precision": 0,
+      "baseline_precision": 0,
+      "gbrain_recall": null,
+      "baseline_recall": null
+    },
+    {
+      "case_id": "alias-ts-resolves",
+      "category": "Alias resolution",
+      "gbrain_precision": 0.05555555555555555,
+      "baseline_precision": 0.1,
+      "gbrain_recall": 1,
+      "baseline_recall": 1
+    },
+    {
+      "case_id": "alias-mongo-resolves",
+      "category": "Alias resolution",
+      "gbrain_precision": 0.05555555555555555,
+      "baseline_precision": 0.1111111111111111,
+      "gbrain_recall": 1,
+      "baseline_recall": 1
+    },
+    {
+      "case_id": "alias-reactjs-resolves",
+      "category": "Alias resolution",
+      "gbrain_precision": 0.05555555555555555,
+      "baseline_precision": 0.1111111111111111,
+      "gbrain_recall": 1,
+      "baseline_recall": 1
+    },
+    {
+      "case_id": "alias-protagonist-resolves",
+      "category": "Alias resolution",
+      "gbrain_precision": 0.1111111111111111,
+      "baseline_precision": 0.125,
+      "gbrain_recall": 1,
+      "baseline_recall": 1
+    },
+    {
+      "case_id": "canonical-name-match-mara",
+      "category": "Alias resolution",
+      "gbrain_precision": 0,
+      "baseline_precision": 0,
+      "gbrain_recall": null,
+      "baseline_recall": null
+    },
+    {
+      "case_id": "alias-pov-shift-resolves",
+      "category": "Alias resolution",
+      "gbrain_precision": 0.1111111111111111,
+      "baseline_precision": 0.14285714285714285,
+      "gbrain_recall": 1,
+      "baseline_recall": 1
+    },
+    {
+      "case_id": "alias-base-class-retrieves-composition",
+      "category": "Alias resolution",
+      "gbrain_precision": 0.05555555555555555,
+      "baseline_precision": 0.1111111111111111,
+      "gbrain_recall": 1,
+      "baseline_recall": 1
+    },
+    {
+      "case_id": "alias-exceptions-retrieves-error-handling",
+      "category": "Alias resolution",
+      "gbrain_precision": 0.05555555555555555,
+      "baseline_precision": 0.1111111111111111,
+      "gbrain_recall": 1,
+      "baseline_recall": 1
+    },
+    {
+      "case_id": "filter-resolved-at-excluded",
+      "category": "Type routing and open questions",
+      "gbrain_precision": 0,
+      "baseline_precision": 0,
+      "gbrain_recall": null,
+      "baseline_recall": null
+    },
+    {
+      "case_id": "scope-bleed-questions-code-excludes-writing",
+      "category": "Scope disambiguation",
+      "gbrain_precision": 0,
+      "baseline_precision": 0,
+      "gbrain_recall": null,
+      "baseline_recall": null
+    },
+    {
+      "case_id": "persona-prelude-content-present",
+      "category": "Persona prelude content",
+      "gbrain_precision": 0,
+      "baseline_precision": 0,
+      "gbrain_recall": null,
+      "baseline_recall": null
+    },
+    {
+      "case_id": "edge-short-query-score-clears",
+      "category": "Alias resolution",
+      "gbrain_precision": 0.05555555555555555,
+      "baseline_precision": 0.1111111111111111,
+      "gbrain_recall": 1,
+      "baseline_recall": 1
+    },
+    {
+      "case_id": "edge-whitespace-query",
+      "category": "Design boundary cases",
+      "gbrain_precision": null,
+      "baseline_precision": null,
+      "gbrain_recall": null,
+      "baseline_recall": null
+    },
+    {
+      "case_id": "score-boundary-weak-match-filtered",
+      "category": "Design boundary cases",
+      "gbrain_precision": 0,
+      "baseline_precision": 0,
+      "gbrain_recall": null,
+      "baseline_recall": null
+    },
+    {
+      "case_id": "user-edited-cross-scope-surfaces",
+      "category": "Scope disambiguation",
+      "gbrain_precision": 0,
+      "baseline_precision": 0,
+      "gbrain_recall": null,
+      "baseline_recall": null
+    },
+    {
+      "case_id": "user-edited-absent-without-flag",
+      "category": "Scope disambiguation",
+      "gbrain_precision": 0,
+      "baseline_precision": 0,
+      "gbrain_recall": null,
+      "baseline_recall": null
+    },
+    {
+      "case_id": "ranking-canonical-name-over-content",
+      "category": "Ranking stability",
+      "gbrain_precision": 0.05555555555555555,
+      "baseline_precision": 0.1111111111111111,
+      "gbrain_recall": 1,
+      "baseline_recall": 1
+    },
+    {
+      "case_id": "messy-typo-blind-spot",
+      "category": "Fuzzy matching and prefix guards",
+      "gbrain_precision": 0.05555555555555555,
+      "baseline_precision": 0.1111111111111111,
+      "gbrain_recall": 1,
+      "baseline_recall": 1
+    },
+    {
+      "case_id": "messy-all-caps-case-insensitive",
+      "category": "Alias resolution",
+      "gbrain_precision": 0.05555555555555555,
+      "baseline_precision": 0.1111111111111111,
+      "gbrain_recall": 1,
+      "baseline_recall": 1
+    },
+    {
+      "case_id": "messy-filler-heavy-extraction",
+      "category": "Alias resolution",
+      "gbrain_precision": 0.05555555555555555,
+      "baseline_precision": 0.125,
+      "gbrain_recall": 1,
+      "baseline_recall": 1
+    },
+    {
+      "case_id": "messy-negation-surfaces-topic",
+      "category": "Alias resolution",
+      "gbrain_precision": 0.05555555555555555,
+      "baseline_precision": 0.1111111111111111,
+      "gbrain_recall": 1,
+      "baseline_recall": 1
+    },
+    {
+      "case_id": "messy-compound-surfaces-two-beliefs",
+      "category": "Alias resolution",
+      "gbrain_precision": 0.1111111111111111,
+      "baseline_precision": 0.16666666666666666,
+      "gbrain_recall": 1,
+      "baseline_recall": 1
+    },
+    {
+      "case_id": "cap-stress-compound-six-entities",
+      "category": "Alias resolution",
+      "gbrain_precision": 0.3333333333333333,
+      "baseline_precision": 0.6666666666666666,
+      "gbrain_recall": 1,
+      "baseline_recall": 1
+    },
+    {
+      "case_id": "cap-stress-kitchen-sink-exceeds-twelve",
+      "category": "Alias resolution",
+      "gbrain_precision": 0.3888888888888889,
+      "baseline_precision": 0.7,
+      "gbrain_recall": 1,
+      "baseline_recall": 1
+    },
+    {
+      "case_id": "cap-stress-late-position-entity-at-risk",
+      "category": "Alias resolution",
+      "gbrain_precision": 0.3333333333333333,
+      "baseline_precision": 0.5555555555555556,
+      "gbrain_recall": 1,
+      "baseline_recall": 0.8333333333333334
+    },
+    {
+      "case_id": "fuzzy-single-edit-fires-non-pinned",
+      "category": "Fuzzy matching and prefix guards",
+      "gbrain_precision": 0.05555555555555555,
+      "baseline_precision": 0.09090909090909091,
+      "gbrain_recall": 1,
+      "baseline_recall": 1
+    },
+    {
+      "case_id": "fuzzy-scope-filter-discriminates-after-fuzzy-fires",
+      "category": "Fuzzy matching and prefix guards",
+      "gbrain_precision": 0.05555555555555555,
+      "baseline_precision": 0.1111111111111111,
+      "gbrain_recall": 1,
+      "baseline_recall": 1
+    },
+    {
+      "case_id": "fuzzy-prefix-blocks-transitive-match",
+      "category": "Fuzzy matching and prefix guards",
+      "gbrain_precision": 0,
+      "baseline_precision": 0,
+      "gbrain_recall": null,
+      "baseline_recall": null
+    },
+    {
+      "case_id": "fuzzy-abbreviation-prefix-blind-spot",
+      "category": "Fuzzy matching and prefix guards",
+      "gbrain_precision": 0,
+      "baseline_precision": 0,
+      "gbrain_recall": null,
+      "baseline_recall": null
+    },
+    {
+      "case_id": "fuzzy-two-edit-transposition-blocked",
+      "category": "Fuzzy matching and prefix guards",
+      "gbrain_precision": 0.05555555555555555,
+      "baseline_precision": 0.1111111111111111,
+      "gbrain_recall": 1,
+      "baseline_recall": 1
+    },
+    {
+      "case_id": "fuzzy-single-term-only-signal",
+      "category": "Fuzzy matching and prefix guards",
+      "gbrain_precision": 0.05555555555555555,
+      "baseline_precision": 0.1111111111111111,
+      "gbrain_recall": 1,
+      "baseline_recall": 1
+    },
+    {
+      "case_id": "universal-scope-belief-content-in-persona-prelude",
+      "category": "Persona prelude content",
+      "gbrain_precision": 0,
+      "baseline_precision": 0,
+      "gbrain_recall": null,
+      "baseline_recall": null
+    },
+    {
+      "case_id": "type-isolation-open-question-not-in-relevant",
+      "category": "Type routing and open questions",
+      "gbrain_precision": 0,
+      "baseline_precision": 0,
+      "gbrain_recall": null,
+      "baseline_recall": null
+    },
+    {
+      "case_id": "multi-hop-supersession-chain-all-excluded",
+      "category": "Supersession chain exclusion",
+      "gbrain_precision": 0,
+      "baseline_precision": 0,
+      "gbrain_recall": null,
+      "baseline_recall": null
+    },
+    {
+      "case_id": "cross-scope-one-empty-domain-does-not-degrade",
+      "category": "Scope disambiguation",
+      "gbrain_precision": 0.05555555555555555,
+      "baseline_precision": 0.1111111111111111,
+      "gbrain_recall": 1,
+      "baseline_recall": 1
+    },
+    {
+      "case_id": "ranking-orderedbefore-alias-beats-content",
+      "category": "Ranking stability",
+      "gbrain_precision": 0.1111111111111111,
+      "baseline_precision": 0.2222222222222222,
+      "gbrain_recall": 1,
+      "baseline_recall": 1
+    },
+    {
+      "case_id": "cold-start-user-no-beliefs",
+      "category": "Cold start behavior",
+      "gbrain_precision": 0,
+      "baseline_precision": null,
+      "gbrain_recall": null,
+      "baseline_recall": null
+    },
+    {
+      "case_id": "narrator-voice-pinned-in-own-scope",
+      "category": "Persona prelude content",
+      "gbrain_precision": null,
+      "baseline_precision": null,
+      "gbrain_recall": null,
+      "baseline_recall": null
+    },
+    {
+      "case_id": "multi-scope-prelude-uses-primary-scope-only",
+      "category": "Persona prelude content",
+      "gbrain_precision": 0,
+      "baseline_precision": 0,
+      "gbrain_recall": null,
+      "baseline_recall": null
+    },
+    {
+      "case_id": "why-it-matters-not-indexed-blind-spot",
+      "category": "Design boundary cases",
+      "gbrain_precision": 0,
+      "baseline_precision": 0,
+      "gbrain_recall": null,
+      "baseline_recall": null
+    },
+    {
+      "case_id": "budget-ceiling-evicts-relevant-beliefs",
+      "category": "Budget eviction and capacity",
+      "gbrain_precision": null,
+      "baseline_precision": null,
+      "gbrain_recall": null,
+      "baseline_recall": null
+    },
+    {
+      "case_id": "negative-guidance-mongoose",
+      "category": "Counter-signal retrieval",
+      "gbrain_precision": 0.05555555555555555,
+      "baseline_precision": 0.1,
+      "gbrain_recall": 1,
+      "baseline_recall": 1
+    },
+    {
+      "case_id": "recency-tiebreak-reinforcement",
+      "category": "Ranking stability",
+      "gbrain_precision": null,
+      "baseline_precision": null,
+      "gbrain_recall": null,
+      "baseline_recall": null
+    },
+    {
+      "case_id": "preference-flood-relevant-entity-survives",
+      "category": "Budget eviction and capacity",
+      "gbrain_precision": 0.16666666666666666,
+      "baseline_precision": 0.16666666666666666,
+      "gbrain_recall": 1,
+      "baseline_recall": 1
+    },
+    {
+      "case_id": "cross-scope-non-user-edited-blocked",
+      "category": "Scope disambiguation",
+      "gbrain_precision": 0,
+      "baseline_precision": 0,
+      "gbrain_recall": null,
+      "baseline_recall": null
+    },
+    {
+      "case_id": "alias-two-word-shingle-dead-letter",
+      "category": "Alias resolution",
+      "gbrain_precision": 0.05555555555555555,
+      "baseline_precision": 0.1111111111111111,
+      "gbrain_recall": 1,
+      "baseline_recall": 1
+    },
+    {
+      "case_id": "alias-dlq-abbreviation-resolves",
+      "category": "Alias resolution",
+      "gbrain_precision": 0.05555555555555555,
+      "baseline_precision": 0.09090909090909091,
+      "gbrain_recall": 1,
+      "baseline_recall": 1
+    },
+    {
+      "case_id": "counter-signal-jest-surfaces-vitest",
+      "category": "Counter-signal retrieval",
+      "gbrain_precision": 0.05555555555555555,
+      "baseline_precision": 0.1111111111111111,
+      "gbrain_recall": 1,
+      "baseline_recall": 1
+    },
+    {
+      "case_id": "relation-type-expands-participants",
+      "category": "Relation expansion",
+      "gbrain_precision": 0.1111111111111111,
+      "baseline_precision": 0.2,
+      "gbrain_recall": 1,
+      "baseline_recall": 1
+    },
+    {
+      "case_id": "relation-participant-open-question-routes-correctly",
+      "category": "Relation expansion",
+      "gbrain_precision": 0.1111111111111111,
+      "baseline_precision": 0.2222222222222222,
+      "gbrain_recall": 1,
+      "baseline_recall": 1
+    },
+    {
+      "case_id": "relation-expansion-respects-scope-filter",
+      "category": "Relation expansion",
+      "gbrain_precision": 0.1111111111111111,
+      "baseline_precision": 0.2222222222222222,
+      "gbrain_recall": 1,
+      "baseline_recall": 1
+    },
+    {
+      "case_id": "subtype-expertise-retrieval",
+      "category": "Type routing and open questions",
+      "gbrain_precision": 0.05555555555555555,
+      "baseline_precision": 0.1,
+      "gbrain_recall": 1,
+      "baseline_recall": 1
+    },
+    {
+      "case_id": "pinned-plus-resolved-excluded-from-questions",
+      "category": "Type routing and open questions",
+      "gbrain_precision": 0,
+      "baseline_precision": 0,
+      "gbrain_recall": null,
+      "baseline_recall": null
+    },
+    {
+      "case_id": "zero-reinforcement-fresh-belief-surfaces",
+      "category": "Budget eviction and capacity",
+      "gbrain_precision": 0.05555555555555555,
+      "baseline_precision": 0.1111111111111111,
+      "gbrain_recall": 1,
+      "baseline_recall": 1
+    },
+    {
+      "case_id": "budget-zero-graceful-empty",
+      "category": "Budget eviction and capacity",
+      "gbrain_precision": null,
+      "baseline_precision": null,
+      "gbrain_recall": null,
+      "baseline_recall": null
+    },
+    {
+      "case_id": "budget-one-pinned-wins-over-relevant",
+      "category": "Budget eviction and capacity",
+      "gbrain_precision": null,
+      "baseline_precision": null,
+      "gbrain_recall": null,
+      "baseline_recall": null
+    },
+    {
+      "case_id": "multi-scope-code-writing-dedup-no-double-surface",
+      "category": "Scope disambiguation",
+      "gbrain_precision": 0,
+      "baseline_precision": 0,
+      "gbrain_recall": null,
+      "baseline_recall": null
+    },
+    {
+      "case_id": "empty-alias-belief-content-path-only",
+      "category": "Design boundary cases",
+      "gbrain_precision": 0,
+      "baseline_precision": 0,
+      "gbrain_recall": null,
+      "baseline_recall": null
+    },
+    {
+      "case_id": "universal-scope-explicit-query-no-relevant",
+      "category": "Scope disambiguation",
+      "gbrain_precision": 0,
+      "baseline_precision": 0,
+      "gbrain_recall": null,
+      "baseline_recall": null
+    },
+    {
+      "case_id": "negation-query-still-surfaces-rejected-tool",
+      "category": "Design boundary cases",
+      "gbrain_precision": 0.05555555555555555,
+      "baseline_precision": 0.1111111111111111,
+      "gbrain_recall": 1,
+      "baseline_recall": 1
+    },
+    {
+      "case_id": "superseded-chain-query-terminal-only",
+      "category": "Supersession chain exclusion",
+      "gbrain_precision": 0,
+      "baseline_precision": 0,
+      "gbrain_recall": null,
+      "baseline_recall": null
+    },
+    {
+      "case_id": "relation-does-not-appear-as-entity",
+      "category": "Relation expansion",
+      "gbrain_precision": 0.1111111111111111,
+      "baseline_precision": 0.2222222222222222,
+      "gbrain_recall": 1,
+      "baseline_recall": 1
+    }
+  ]
+}

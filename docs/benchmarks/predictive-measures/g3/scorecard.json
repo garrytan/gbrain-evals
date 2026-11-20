@@ -1,0 +1,776 @@
+{
+  "mode": "paid",
+  "counted": true,
+  "unit": "g3",
+  "plan": {
+    "unit": "g3",
+    "tasks": 60,
+    "surfaces": 2,
+    "k": 4,
+    "models": [
+      "claude-opus-5-5",
+      "gpt-6.1-sol",
+      "particle-1"
+    ],
+    "episodes": 1440,
+    "digest": "aa5989c87cdd61775317d432c1decf8dcc5be8f53bef0809eb9b1672e3ab1e09",
+    "per_model": [
+      {
+        "model": "claude-opus-5-5",
+        "episodes": 480
+      },
+      {
+        "model": "gpt-6.1-sol",
+        "episodes": 480
+      },
+      {
+        "model": "particle-1",
+        "episodes": 480
+      }
+    ],
+    "exposure": {
+      "cli": {
+        "source_changed": 8,
+        "missing_provenance": 53,
+        "ambiguous_entity": 8,
+        "fact_and_items": 8,
+        "scope_denied": 7,
+        "commit_paths_invalid": 7,
+        "sources_without_brain": 7,
+        "two_range_read": 7
+      },
+      "mcp": {
+        "source_changed": 8,
+        "missing_provenance": 53,
+        "ambiguous_entity": 8,
+        "fact_and_items": 8,
+        "scope_denied": 7,
+        "commit_paths_invalid": 0,
+        "sources_without_brain": 0,
+        "two_range_read": 7
+      }
+    }
+  },
+  "preregistration_attestation": {
+    "preregistration": "docs/benchmarks/2026-11-09-predictive-measures-preregistration.md",
+    "preregistration_commit": "a1cfff13fbabc2eb9cd019638b4d3a967a71cbc9",
+    "runner_commit": "a1cfff13fbabc2eb9cd019638b4d3a967a71cbc9",
+    "worktree_clean_for_preregistration": true,
+    "on_origin": true,
+    "attested_at": "2026-11-09T23:22:32.882Z"
+  },
+  "gbrain_version": "0.60.557.0",
+  "overlay": null,
+  "status": "complete",
+  "ran": 1440,
+  "skipped": {
+    "done": 0,
+    "errored": 0,
+    "in_flight": 0
+  },
+  "pause_reason": null,
+  "done": 1440,
+  "errored": [],
+  "errored_by_model": {
+    "claude-opus-5-5": 0,
+    "gpt-6.1-sol": 0,
+    "particle-1": 0
+  },
+  "scorecards": [
+    {
+      "unit": "G3",
+      "model": "claude-opus-5-5",
+      "surface": "cli",
+      "episodes": 240,
+      "tasks": 60,
+      "calls": 779,
+      "refusals": 62,
+      "refusals_per_100_calls": {
+        "source_changed": 4.10783055198973,
+        "missing_provenance": 0,
+        "ambiguous_entity": 0,
+        "fact_and_items": 0,
+        "scope_denied": 3.594351732991014,
+        "commit_paths_invalid": 0,
+        "sources_without_brain": 0,
+        "two_range_read": 0,
+        "other": 0.25673940949935814,
+        "all": 7.958921694480103
+      },
+      "by_cause": {
+        "source_changed": {
+          "exposed_episodes": 32,
+          "refused_episodes": 32,
+          "refusal_rate_given_exposure": 1,
+          "refusals": 32,
+          "recovered": 0,
+          "recovery_share": 0,
+          "never_retried": 32
+        },
+        "missing_provenance": {
+          "exposed_episodes": 212,
+          "refused_episodes": 0,
+          "refusal_rate_given_exposure": 0,
+          "refusals": 0,
+          "recovered": 0,
+          "recovery_share": null,
+          "never_retried": 0
+        },
+        "ambiguous_entity": {
+          "exposed_episodes": 32,
+          "refused_episodes": 0,
+          "refusal_rate_given_exposure": 0,
+          "refusals": 0,
+          "recovered": 0,
+          "recovery_share": null,
+          "never_retried": 0
+        },
+        "fact_and_items": {
+          "exposed_episodes": 32,
+          "refused_episodes": 0,
+          "refusal_rate_given_exposure": 0,
+          "refusals": 0,
+          "recovered": 0,
+          "recovery_share": null,
+          "never_retried": 0
+        },
+        "scope_denied": {
+          "exposed_episodes": 28,
+          "refused_episodes": 28,
+          "refusal_rate_given_exposure": 1,
+          "refusals": 28,
+          "recovered": 0,
+          "recovery_share": 0,
+          "never_retried": 28
+        },
+        "commit_paths_invalid": {
+          "exposed_episodes": 28,
+          "refused_episodes": 0,
+          "refusal_rate_given_exposure": 0,
+          "refusals": 0,
+          "recovered": 0,
+          "recovery_share": null,
+          "never_retried": 0
+        },
+        "sources_without_brain": {
+          "exposed_episodes": 28,
+          "refused_episodes": 0,
+          "refusal_rate_given_exposure": 0,
+          "refusals": 0,
+          "recovered": 0,
+          "recovery_share": null,
+          "never_retried": 0
+        },
+        "two_range_read": {
+          "exposed_episodes": 28,
+          "refused_episodes": 0,
+          "refusal_rate_given_exposure": 0,
+          "refusals": 0,
+          "recovered": 0,
+          "recovery_share": null,
+          "never_retried": 0
+        }
+      },
+      "recovery_share": 0.016129032258064516,
+      "never_retried": 61,
+      "reported_done_not_landed": 0,
+      "correct": 208,
+      "pass_hat_k": {
+        "k": 4,
+        "value": 0.8666666666666667,
+        "curve": [
+          0.8666666666666667,
+          0.8666666666666667,
+          0.8666666666666667,
+          0.8666666666666667
+        ]
+      },
+      "usd": 7.3035923999999985,
+      "cost_per_correct_usd": 0.03511342499999999,
+      "failure_causes": {
+        "tool_contract": 32
+      },
+      "errored_usd": 0
+    },
+    {
+      "unit": "G3",
+      "model": "claude-opus-5-5",
+      "surface": "mcp",
+      "episodes": 240,
+      "tasks": 60,
+      "calls": 483,
+      "refusals": 61,
+      "refusals_per_100_calls": {
+        "source_changed": 6.625258799171843,
+        "missing_provenance": 0,
+        "ambiguous_entity": 0,
+        "fact_and_items": 0,
+        "scope_denied": 5.797101449275362,
+        "commit_paths_invalid": 0,
+        "sources_without_brain": 0,
+        "two_range_read": 0,
+        "other": 0.2070393374741201,
+        "all": 12.629399585921325
+      },
+      "by_cause": {
+        "source_changed": {
+          "exposed_episodes": 32,
+          "refused_episodes": 32,
+          "refusal_rate_given_exposure": 1,
+          "refusals": 32,
+          "recovered": 0,
+          "recovery_share": 0,
+          "never_retried": 32
+        },
+        "missing_provenance": {
+          "exposed_episodes": 212,
+          "refused_episodes": 0,
+          "refusal_rate_given_exposure": 0,
+          "refusals": 0,
+          "recovered": 0,
+          "recovery_share": null,
+          "never_retried": 0
+        },
+        "ambiguous_entity": {
+          "exposed_episodes": 32,
+          "refused_episodes": 0,
+          "refusal_rate_given_exposure": 0,
+          "refusals": 0,
+          "recovered": 0,
+          "recovery_share": null,
+          "never_retried": 0
+        },
+        "fact_and_items": {
+          "exposed_episodes": 32,
+          "refused_episodes": 0,
+          "refusal_rate_given_exposure": 0,
+          "refusals": 0,
+          "recovered": 0,
+          "recovery_share": null,
+          "never_retried": 0
+        },
+        "scope_denied": {
+          "exposed_episodes": 28,
+          "refused_episodes": 28,
+          "refusal_rate_given_exposure": 1,
+          "refusals": 28,
+          "recovered": 0,
+          "recovery_share": 0,
+          "never_retried": 28
+        },
+        "commit_paths_invalid": {
+          "exposed_episodes": 0,
+          "refused_episodes": 0,
+          "refusal_rate_given_exposure": null,
+          "refusals": 0,
+          "recovered": 0,
+          "recovery_share": null,
+          "never_retried": 0
+        },
+        "sources_without_brain": {
+          "exposed_episodes": 0,
+          "refused_episodes": 0,
+          "refusal_rate_given_exposure": null,
+          "refusals": 0,
+          "recovered": 0,
+          "recovery_share": null,
+          "never_retried": 0
+        },
+        "two_range_read": {
+          "exposed_episodes": 28,
+          "refused_episodes": 0,
+          "refusal_rate_given_exposure": 0,
+          "refusals": 0,
+          "recovered": 0,
+          "recovery_share": null,
+          "never_retried": 0
+        }
+      },
+      "recovery_share": 0,
+      "never_retried": 61,
+      "reported_done_not_landed": 0,
+      "correct": 184,
+      "pass_hat_k": {
+        "k": 4,
+        "value": 0.75,
+        "curve": [
+          0.7666666666666667,
+          0.7527777777777778,
+          0.75,
+          0.75
+        ]
+      },
+      "usd": 13.834889600000002,
+      "cost_per_correct_usd": 0.07518961739130436,
+      "failure_causes": {
+        "tool_contract": 32,
+        "write_integrity": 24
+      },
+      "errored_usd": 0
+    },
+    {
+      "unit": "G3",
+      "model": "gpt-6.1-sol",
+      "surface": "cli",
+      "episodes": 240,
+      "tasks": 60,
+      "calls": 886,
+      "refusals": 64,
+      "refusals_per_100_calls": {
+        "source_changed": 3.6117381489841986,
+        "missing_provenance": 0,
+        "ambiguous_entity": 0,
+        "fact_and_items": 0,
+        "scope_denied": 3.160270880361174,
+        "commit_paths_invalid": 0,
+        "sources_without_brain": 0,
+        "two_range_read": 0,
+        "other": 0.45146726862302483,
+        "all": 7.223476297968397
+      },
+      "by_cause": {
+        "source_changed": {
+          "exposed_episodes": 32,
+          "refused_episodes": 32,
+          "refusal_rate_given_exposure": 1,
+          "refusals": 32,
+          "recovered": 1,
+          "recovery_share": 0.03125,
+          "never_retried": 31
+        },
+        "missing_provenance": {
+          "exposed_episodes": 212,
+          "refused_episodes": 0,
+          "refusal_rate_given_exposure": 0,
+          "refusals": 0,
+          "recovered": 0,
+          "recovery_share": null,
+          "never_retried": 0
+        },
+        "ambiguous_entity": {
+          "exposed_episodes": 32,
+          "refused_episodes": 0,
+          "refusal_rate_given_exposure": 0,
+          "refusals": 0,
+          "recovered": 0,
+          "recovery_share": null,
+          "never_retried": 0
+        },
+        "fact_and_items": {
+          "exposed_episodes": 32,
+          "refused_episodes": 0,
+          "refusal_rate_given_exposure": 0,
+          "refusals": 0,
+          "recovered": 0,
+          "recovery_share": null,
+          "never_retried": 0
+        },
+        "scope_denied": {
+          "exposed_episodes": 28,
+          "refused_episodes": 28,
+          "refusal_rate_given_exposure": 1,
+          "refusals": 28,
+          "recovered": 0,
+          "recovery_share": 0,
+          "never_retried": 28
+        },
+        "commit_paths_invalid": {
+          "exposed_episodes": 28,
+          "refused_episodes": 0,
+          "refusal_rate_given_exposure": 0,
+          "refusals": 0,
+          "recovered": 0,
+          "recovery_share": null,
+          "never_retried": 0
+        },
+        "sources_without_brain": {
+          "exposed_episodes": 28,
+          "refused_episodes": 0,
+          "refusal_rate_given_exposure": 0,
+          "refusals": 0,
+          "recovered": 0,
+          "recovery_share": null,
+          "never_retried": 0
+        },
+        "two_range_read": {
+          "exposed_episodes": 28,
+          "refused_episodes": 0,
+          "refusal_rate_given_exposure": 0,
+          "refusals": 0,
+          "recovered": 0,
+          "recovery_share": null,
+          "never_retried": 0
+        }
+      },
+      "recovery_share": 0.015625,
+      "never_retried": 63,
+      "reported_done_not_landed": 0,
+      "correct": 209,
+      "pass_hat_k": {
+        "k": 4,
+        "value": 0.8666666666666667,
+        "curve": [
+          0.8708333333333333,
+          0.8666666666666667,
+          0.8666666666666667,
+          0.8666666666666667
+        ]
+      },
+      "usd": 3.2072577999999994,
+      "cost_per_correct_usd": 0.015345731100478465,
+      "failure_causes": {
+        "tool_contract": 31
+      },
+      "errored_usd": 0
+    },
+    {
+      "unit": "G3",
+      "model": "gpt-6.1-sol",
+      "surface": "mcp",
+      "episodes": 240,
+      "tasks": 60,
+      "calls": 1065,
+      "refusals": 118,
+      "refusals_per_100_calls": {
+        "source_changed": 3.004694835680751,
+        "missing_provenance": 0,
+        "ambiguous_entity": 0,
+        "fact_and_items": 0,
+        "scope_denied": 2.6291079812206575,
+        "commit_paths_invalid": 0,
+        "sources_without_brain": 0,
+        "two_range_read": 0,
+        "other": 5.446009389671362,
+        "all": 11.07981220657277
+      },
+      "by_cause": {
+        "source_changed": {
+          "exposed_episodes": 32,
+          "refused_episodes": 32,
+          "refusal_rate_given_exposure": 1,
+          "refusals": 32,
+          "recovered": 0,
+          "recovery_share": 0,
+          "never_retried": 32
+        },
+        "missing_provenance": {
+          "exposed_episodes": 212,
+          "refused_episodes": 0,
+          "refusal_rate_given_exposure": 0,
+          "refusals": 0,
+          "recovered": 0,
+          "recovery_share": null,
+          "never_retried": 0
+        },
+        "ambiguous_entity": {
+          "exposed_episodes": 32,
+          "refused_episodes": 0,
+          "refusal_rate_given_exposure": 0,
+          "refusals": 0,
+          "recovered": 0,
+          "recovery_share": null,
+          "never_retried": 0
+        },
+        "fact_and_items": {
+          "exposed_episodes": 32,
+          "refused_episodes": 0,
+          "refusal_rate_given_exposure": 0,
+          "refusals": 0,
+          "recovered": 0,
+          "recovery_share": null,
+          "never_retried": 0
+        },
+        "scope_denied": {
+          "exposed_episodes": 28,
+          "refused_episodes": 28,
+          "refusal_rate_given_exposure": 1,
+          "refusals": 28,
+          "recovered": 0,
+          "recovery_share": 0,
+          "never_retried": 28
+        },
+        "commit_paths_invalid": {
+          "exposed_episodes": 0,
+          "refused_episodes": 0,
+          "refusal_rate_given_exposure": null,
+          "refusals": 0,
+          "recovered": 0,
+          "recovery_share": null,
+          "never_retried": 0
+        },
+        "sources_without_brain": {
+          "exposed_episodes": 0,
+          "refused_episodes": 0,
+          "refusal_rate_given_exposure": null,
+          "refusals": 0,
+          "recovered": 0,
+          "recovery_share": null,
+          "never_retried": 0
+        },
+        "two_range_read": {
+          "exposed_episodes": 28,
+          "refused_episodes": 0,
+          "refusal_rate_given_exposure": 0,
+          "refusals": 0,
+          "recovered": 0,
+          "recovery_share": null,
+          "never_retried": 0
+        }
+      },
+      "recovery_share": 0.2966101694915254,
+      "never_retried": 72,
+      "reported_done_not_landed": 0,
+      "correct": 180,
+      "pass_hat_k": {
+        "k": 4,
+        "value": 0.75,
+        "curve": [
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ]
+      },
+      "usd": 6.156355699999997,
+      "cost_per_correct_usd": 0.034201976111111095,
+      "failure_causes": {
+        "tool_contract": 33,
+        "write_integrity": 27
+      },
+      "errored_usd": 0
+    },
+    {
+      "unit": "G3",
+      "model": "particle-1",
+      "surface": "cli",
+      "episodes": 240,
+      "tasks": 60,
+      "calls": 2274,
+      "refusals": 426,
+      "refusals_per_100_calls": {
+        "source_changed": 1.2313104661389622,
+        "missing_provenance": 1.8029903254177662,
+        "ambiguous_entity": 0,
+        "fact_and_items": 0.7915567282321899,
+        "scope_denied": 3.0782761653474053,
+        "commit_paths_invalid": 1.187335092348285,
+        "sources_without_brain": 4.925241864555849,
+        "two_range_read": 0,
+        "other": 5.716798592788039,
+        "all": 18.733509234828496
+      },
+      "by_cause": {
+        "source_changed": {
+          "exposed_episodes": 32,
+          "refused_episodes": 28,
+          "refusal_rate_given_exposure": 0.875,
+          "refusals": 28,
+          "recovered": 27,
+          "recovery_share": 0.9642857142857143,
+          "never_retried": 1
+        },
+        "missing_provenance": {
+          "exposed_episodes": 212,
+          "refused_episodes": 41,
+          "refusal_rate_given_exposure": 0.19339622641509435,
+          "refusals": 41,
+          "recovered": 25,
+          "recovery_share": 0.6097560975609756,
+          "never_retried": 0
+        },
+        "ambiguous_entity": {
+          "exposed_episodes": 32,
+          "refused_episodes": 0,
+          "refusal_rate_given_exposure": 0,
+          "refusals": 0,
+          "recovered": 0,
+          "recovery_share": null,
+          "never_retried": 0
+        },
+        "fact_and_items": {
+          "exposed_episodes": 32,
+          "refused_episodes": 18,
+          "refusal_rate_given_exposure": 0.5625,
+          "refusals": 18,
+          "recovered": 17,
+          "recovery_share": 0.9444444444444444,
+          "never_retried": 1
+        },
+        "scope_denied": {
+          "exposed_episodes": 28,
+          "refused_episodes": 28,
+          "refusal_rate_given_exposure": 1,
+          "refusals": 70,
+          "recovered": 17,
+          "recovery_share": 0.24285714285714285,
+          "never_retried": 30
+        },
+        "commit_paths_invalid": {
+          "exposed_episodes": 28,
+          "refused_episodes": 21,
+          "refusal_rate_given_exposure": 0.75,
+          "refusals": 27,
+          "recovered": 6,
+          "recovery_share": 0.2222222222222222,
+          "never_retried": 16
+        },
+        "sources_without_brain": {
+          "exposed_episodes": 28,
+          "refused_episodes": 0,
+          "refusal_rate_given_exposure": 0,
+          "refusals": 112,
+          "recovered": 67,
+          "recovery_share": 0.5982142857142857,
+          "never_retried": 29
+        },
+        "two_range_read": {
+          "exposed_episodes": 28,
+          "refused_episodes": 0,
+          "refusal_rate_given_exposure": 0,
+          "refusals": 0,
+          "recovered": 0,
+          "recovery_share": null,
+          "never_retried": 0
+        }
+      },
+      "recovery_share": 0.5657276995305164,
+      "never_retried": 119,
+      "reported_done_not_landed": 6,
+      "correct": 218,
+      "pass_hat_k": {
+        "k": 4,
+        "value": 0.6833333333333333,
+        "curve": [
+          0.9083333333333333,
+          0.825,
+          0.75,
+          0.6833333333333333
+        ]
+      },
+      "usd": 2.4673712200000004,
+      "cost_per_correct_usd": 0.01131821660550459,
+      "failure_causes": {
+        "model_error": 16,
+        "write_integrity": 6
+      },
+      "errored_usd": 0
+    },
+    {
+      "unit": "G3",
+      "model": "particle-1",
+      "surface": "mcp",
+      "episodes": 240,
+      "tasks": 60,
+      "calls": 1304,
+      "refusals": 118,
+      "refusals_per_100_calls": {
+        "source_changed": 2.8374233128834354,
+        "missing_provenance": 0,
+        "ambiguous_entity": 0,
+        "fact_and_items": 0,
+        "scope_denied": 2.914110429447853,
+        "commit_paths_invalid": 0,
+        "sources_without_brain": 0,
+        "two_range_read": 0,
+        "other": 3.2975460122699385,
+        "all": 9.049079754601227
+      },
+      "by_cause": {
+        "source_changed": {
+          "exposed_episodes": 32,
+          "refused_episodes": 32,
+          "refusal_rate_given_exposure": 1,
+          "refusals": 37,
+          "recovered": 24,
+          "recovery_share": 0.6486486486486487,
+          "never_retried": 12
+        },
+        "missing_provenance": {
+          "exposed_episodes": 212,
+          "refused_episodes": 0,
+          "refusal_rate_given_exposure": 0,
+          "refusals": 0,
+          "recovered": 0,
+          "recovery_share": null,
+          "never_retried": 0
+        },
+        "ambiguous_entity": {
+          "exposed_episodes": 32,
+          "refused_episodes": 0,
+          "refusal_rate_given_exposure": 0,
+          "refusals": 0,
+          "recovered": 0,
+          "recovery_share": null,
+          "never_retried": 0
+        },
+        "fact_and_items": {
+          "exposed_episodes": 32,
+          "refused_episodes": 0,
+          "refusal_rate_given_exposure": 0,
+          "refusals": 0,
+          "recovered": 0,
+          "recovery_share": null,
+          "never_retried": 0
+        },
+        "scope_denied": {
+          "exposed_episodes": 28,
+          "refused_episodes": 28,
+          "refusal_rate_given_exposure": 1,
+          "refusals": 38,
+          "recovered": 0,
+          "recovery_share": 0,
+          "never_retried": 37
+        },
+        "commit_paths_invalid": {
+          "exposed_episodes": 0,
+          "refused_episodes": 0,
+          "refusal_rate_given_exposure": null,
+          "refusals": 0,
+          "recovered": 0,
+          "recovery_share": null,
+          "never_retried": 0
+        },
+        "sources_without_brain": {
+          "exposed_episodes": 0,
+          "refused_episodes": 0,
+          "refusal_rate_given_exposure": null,
+          "refusals": 0,
+          "recovered": 0,
+          "recovery_share": null,
+          "never_retried": 0
+        },
+        "two_range_read": {
+          "exposed_episodes": 28,
+          "refused_episodes": 0,
+          "refusal_rate_given_exposure": 0,
+          "refusals": 0,
+          "recovered": 0,
+          "recovery_share": null,
+          "never_retried": 0
+        }
+      },
+      "recovery_share": 0.5423728813559322,
+      "never_retried": 52,
+      "reported_done_not_landed": 1,
+      "correct": 223,
+      "pass_hat_k": {
+        "k": 4,
+        "value": 0.8333333333333334,
+        "curve": [
+          0.9291666666666667,
+          0.8833333333333333,
+          0.8541666666666666,
+          0.8333333333333334
+        ]
+      },
+      "usd": 5.678531619999998,
+      "cost_per_correct_usd": 0.02546426735426008,
+      "failure_causes": {
+        "tool_contract": 12,
+        "model_error": 4,
+        "write_integrity": 1
+      },
+      "errored_usd": 0
+    }
+  ]
+}

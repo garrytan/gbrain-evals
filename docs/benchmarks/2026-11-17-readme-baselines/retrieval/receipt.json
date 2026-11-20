@@ -1,0 +1,114 @@
+{
+  "group": "retrieval",
+  "preregistration": "docs/plans/2026-11-17-readme-baselines/PREREG.md",
+  "preregistration_commit": "b9a4094b5cb7ecc987579589befc6433ba897496",
+  "code_commit": "79dd7f16e2129e68128abb479a5d971a6436d03f",
+  "code_note": "The runs ran from the working tree that became code_commit; the file hashes below match it (each rows file also records runner_sha256).",
+  "file_sha256": {
+    "eval/runner/retrieval-baselines.ts": "8bd6b43c04ea2eba29416f4cdcccddf0760d849dc2a19a54b4e23f04273edf4b",
+    "eval/runner/precisionmembench-system.ts": "3ef967eadaf0aa70f14395fb206c1ee5847bc0b37e4fa4af689a61fe854b0b25",
+    "eval/runner/systems/baselines.ts": "ee107b1cf3ecf88ec1cd44853d9f1e932b270891944a2f5642a4831b68f77a34",
+    "eval/runner/adapters/grep-only.ts": "7c2841ef9bdd584580996de7de6d9acb8f307530721e5ef58990f46ea84be546",
+    "eval/runner/adapters/vector.ts": "aeb82b0caebb52d8ac7456fdee1fa69cf24e7734453056a3a0dabc2e04906333"
+  },
+  "run_date": "2026-11-17",
+  "machine": "Capy cloud machine (minutes of work; no Ubicloud VM was created)",
+  "models": {
+    "embedder": "openai:text-embedding-3-large at 1,536 dimensions (vector and plain-hybrid arms); BM25 is keyless",
+    "reader": "none (retrieval-only rows)",
+    "judge": "none (retrieval-only rows)"
+  },
+  "gbrain_code_in_arms": "none in bm25 and plain-hybrid; the vector arm calls only gbrain's embedding client (gbrain/embedding, package pin github:garrytan/gbrain#6ce7195b44a034f85aec811f11fbf862db376f50) to embed. The budget ledger prices requests with gbrain's pricing tables, as every paid runner does.",
+  "gbrain_rows_paired": {
+    "relationship": {
+      "receipt": "docs/benchmarks/2026-10-01-n9-multi-hop/relational-ab-3a284ae-paid.receipt.json",
+      "gbrain": "3a284aea26889b77c633aebb4149c3016d834ee6",
+      "arm": "relational retrieval on (off for context)",
+      "split": "paraphrase, 145 questions x seeds 1-3"
+    },
+    "attendance": {
+      "receipt": "docs/benchmarks/2026-10-06-attendance-world/n9-hermetic-world-v1-attendees.json",
+      "gbrain": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
+      "arm": "relational retrieval on, keyword path (no embeddings)",
+      "split": "one-hop template 'Who attended X?', 50 meetings x seeds 1-3 (paraphrase for context)"
+    },
+    "precisionmembench": {
+      "report": "docs/benchmarks/2026-09-09-retrieval-refresh/precision-adaptive-rerank/attempt-2/2026-09-09-gbrain-adaptive-body-text-e1-o1-rerank-openai-text-embedding-3-large-1536-min1.json",
+      "gbrain": "2efaaf8f8a817b5b82e023383618fdcdb1cc5f7d",
+      "arm": "tight adaptive + Voyage rerank-2.5 (broad hybrid report attempt-2 for context)"
+    }
+  },
+  "budget_ledger_run": "readme-baselines-retrieval-2026-11-17T07-36-22-517Z-a39fd34c",
+  "runs": [
+    {
+      "arm": "bm25",
+      "what": "relationship paraphrase",
+      "file": "relationship/bm25-paraphrase.rows.json",
+      "usd": 0,
+      "requests": 0
+    },
+    {
+      "arm": "bm25",
+      "what": "relationship template (context)",
+      "file": "relationship/bm25-template.rows.json",
+      "usd": 0,
+      "requests": 0
+    },
+    {
+      "arm": "vector",
+      "what": "relationship paraphrase",
+      "file": "relationship/vector-paraphrase.rows.json",
+      "usd": 0.062542,
+      "requests": 450,
+      "input_tokens": 481092
+    },
+    {
+      "arm": "plain-hybrid",
+      "what": "relationship paraphrase",
+      "file": "relationship/hybrid-paraphrase.rows.json",
+      "usd": 0.020838,
+      "requests": 385,
+      "input_tokens": 160291
+    },
+    {
+      "arm": "bm25",
+      "what": "attendance template and paraphrase",
+      "file": "attendance/bm25-*.rows.json",
+      "usd": 0,
+      "requests": 0
+    },
+    {
+      "arm": "plain-hybrid",
+      "what": "attendance template",
+      "file": "attendance/hybrid-template.rows.json",
+      "usd": 0.00435,
+      "requests": 100,
+      "input_tokens": 33465
+    },
+    {
+      "arm": "plain-hybrid",
+      "what": "attendance paraphrase (embeddings cached)",
+      "file": "attendance/hybrid-paraphrase.rows.json",
+      "usd": 0,
+      "requests": 0
+    },
+    {
+      "arm": "plain-hybrid k=1",
+      "what": "PrecisionMemBench",
+      "file": "precisionmembench/plain-hybrid-k1/",
+      "usd": 0.000313,
+      "requests": 108,
+      "input_tokens": 2406
+    },
+    {
+      "arm": "plain-hybrid k=10 (default)",
+      "what": "PrecisionMemBench (embeddings cached)",
+      "file": "precisionmembench/plain-hybrid-default/",
+      "usd": 0,
+      "requests": 0
+    }
+  ],
+  "spend_source": "budget ledger usage fields (provider-reported input tokens); every request reconciled, none charged at its reservation",
+  "ubicloud_vms_created": 0,
+  "path_note": "The ledger path in each run's cost field was rewritten from the machine's absolute checkout path to the repository-relative .budget/ledger.sqlite before commit; nothing else in the raw outputs was changed."
+}
