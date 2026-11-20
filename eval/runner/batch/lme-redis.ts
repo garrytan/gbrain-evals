@@ -26,7 +26,7 @@
  * ledger and the tracking issue, never in this repository.
  */
 import { spawnSync } from 'node:child_process';
-import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { gunzipSync, gzipSync } from 'node:zlib';
@@ -168,6 +168,20 @@ export function parseArm(arm: string): { reader: AnyReader; memories: Memories }
 }
 
 /** Question ids of a stage: the pilot is the last 25 in seed-42 order; the counted halves split all 500 at 250 (R113). */
+/**
+ * Why a counted stage may not start: no pilot answer counts, yet the pilot's 25 questions are counted questions too, so
+ * a batch state or particle rows left from the pilot or the judge check would answer them. Empty when the state is clean.
+ */
+export function heldPilotWork(stage: string, runs: Record<string, string>, intentRunIds: string[], stateDir: string): string {
+  if (!stage.startsWith('counted')) return '';
+  const early = new Set([runs.pilot, runs['judge-check']].filter(Boolean));
+  const intents = intentRunIds.filter(id => early.has(id)).length;
+  const particle = join(stateDir, 'particle');
+  const rows = existsSync(particle) && readdirSync(particle).some(f => f.endsWith('.rows.jsonl'));
+  if (!intents && !rows) return '';
+  return `${stage}: the state still holds pilot work (${intents} batch intents${rows ? ', particle rows' : ''}); no pilot answer counts, so archive it first (vm-stage.sh archive-pilot)`;
+}
+
 export function stageIds(order: string[], which: string): string[] {
   if (which === 'pilot') return order.slice(-PILOT_SIZE);
   if (which === 'first-half') return order.slice(0, HALF);
@@ -394,6 +408,8 @@ async function main(argv: string[]) {
   if (!stage) throw new Error(`${cmd} needs --stage <${STAGES.join('|')}>`);
   attestPreregistration(PREREG, ROOT);
   const run = stageRun(stage, ledgerPath, flag(argv, '--budget-usd') ? Number(flag(argv, '--budget-usd')) : undefined);
+  const held = heldPilotWork(stage, jsonFile<Record<string, string>>(join(STATE_DIR, 'runs.json'), {}), lane(run).intents().map(i => i.budget_run_id), STATE_DIR);
+  if (held) throw new Error(held);
   const guard = installPaidRequestGuard(run);
   try {
     const l = lane(run);

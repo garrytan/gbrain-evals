@@ -147,3 +147,19 @@ describe('LongMemEval on Redis harness: judges and stages', () => {
     expect(() => L.parseArm('particle--agent-default')).toThrow(/unknown arm/);
   });
 });
+
+describe('LongMemEval on Redis harness: counted stages refuse pilot leftovers', () => {
+  test('a counted stage refuses while pilot or judge-check intents or particle rows remain, and a clean state passes', () => {
+    const dir = mkdtempSync(join(tmp, 'held-'));
+    const runs = { pilot: 'run-pilot', 'judge-check': 'run-jc', 'counted-first-half': 'run-c1' };
+    expect(L.heldPilotWork('pilot', runs, ['run-pilot'], dir)).toBe('');
+    expect(L.heldPilotWork('counted-first-half', runs, ['run-c1'], dir)).toBe('');
+    expect(L.heldPilotWork('counted-first-half', runs, ['run-pilot', 'run-c1'], dir)).toContain('1 batch intents');
+    expect(L.heldPilotWork('counted-second-half', runs, ['run-jc'], dir)).toContain('archive it first');
+    mkdirSync(join(dir, 'particle'));
+    writeFileSync(join(dir, 'particle', 'off.texts.ndjson.gz'), '');
+    expect(L.heldPilotWork('counted-first-half', runs, [], dir)).toBe('');
+    writeFileSync(join(dir, 'particle', 'off.rows.jsonl'), '{}\n');
+    expect(L.heldPilotWork('counted-first-half', runs, [], dir)).toContain('particle rows');
+  });
+});

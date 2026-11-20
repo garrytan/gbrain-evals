@@ -482,6 +482,32 @@ protocol judge had none.
 - The results say that the Opus judge's unparsable rate on the controls was 1.5% under the original parse, which is
   above the 1% gate, and give its rate under this one.
 
+### 2026-11-20, after the pilot, before any counted unit: the counted run measures gbrain v0.60.752.0
+
+The counted run has not started, so it moves to gbrain's newest release at launch (R100): **v0.60.752.0**,
+`1f8d079d13c10d511c919cf69dd1e4c0137fbfcd` (tagged 2026-11-20, read from `git ls-remote --tags` that day; 749 was
+never published). The tags are read again just before the first counted unit, and a newer release moves the pin by
+another dated amendment. Once the first counted unit runs, the build is frozen for this experiment. The pilot ran on
+v0.60.748.0 and stays development data.
+
+- **What changed since v0.60.748.0** (`git log v0.60.748.0..v0.60.752.0`, 30 commits): page writes keep text that
+  holds U+0000, with that character removed; fact reads end an employer, city or role once a newer one is saved, and
+  rank far-future facts by when they were written; a conversation fact the speaker asked to keep quiet is saved
+  private; conversation fact extraction keeps a page's other facts when the model declines one window; a chat refusal
+  is reported as a refusal; and changes to Apple Contacts, iMessage, OpenClaw setup, identity and admin tools.
+- **Could they move this run's retrieval?** Not in any way we can see. `query`'s own path (`src/core/ops/search.ts`,
+  `src/core/search/hybrid.ts`, `autocut.ts`, `mode.ts`), page import (`src/core/import-file.ts`) and gbrain's
+  LongMemEval adapter (`src/eval/longmemeval`) are byte-identical between the two tags, and autocut is still off in
+  every mode. `query` does read saved facts, and those readers changed. But the benchmark brains hold no facts: the
+  adapter configures no chat model, and every pilot query made only embedding and rerank calls. LongMemEval Small holds
+  no U+0000. So we expect the same retrieval up to the reranker's call-to-call noise. The retrieval is frozen again on
+  the new build for all 500 questions, and the results report how often each arm's context matches the pilot freeze.
+- **No pilot answer counts, now enforced.** The batch state answers a question once per arm, so the pilot's 25
+  questions, which the counted run asks again, would have reused their pilot answers. A counted stage now refuses to
+  start while the batch state holds a pilot or judge-check batch or any particle-1 row. Before the counted wave, the
+  pilot's answers, judgments, labels and freeze move to an archive, and the batch state keeps only its confirmed batch
+  discounts. A keyless test pins the refusal.
+
 ## Disclosures
 
 - gbrain is Garry Tan's own project.

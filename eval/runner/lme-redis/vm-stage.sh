@@ -78,6 +78,17 @@ run() {
       for m in off on full oracle; do $DRV particle "particle--$m" --stage pilot --ids pilot --budget-ledger "$LEDGER" || return 1; done ;;
     label)
       for j in opus astra; do $DRV label $j --stage pilot --ids pilot --budget-ledger "$LEDGER" || return 1; done ;;
+    archive-pilot)  # before the counted wave: no pilot answer counts, so pilot answers and the pilot freeze move aside
+      local A="$LME_REDIS_STATE_DIR/pilot-archive"
+      [ -e "$A" ] && { echo "$A already exists" >&2; return 1; }
+      mkdir -p "$A/manifests" "$A/bodies"
+      cp "$LME_REDIS_STATE_DIR/batch-state.sqlite" "$A/" || return 1
+      python3 -c "import sqlite3,sys; c=sqlite3.connect(sys.argv[1]); c.execute('DELETE FROM results'); c.execute('DELETE FROM intents'); c.commit()" "$LME_REDIS_STATE_DIR/batch-state.sqlite" || return 1
+      for d in frozen particle judge-messages labels answers report parity; do [ -e "$LME_REDIS_STATE_DIR/$d" ] && mv "$LME_REDIS_STATE_DIR/$d" "$A/"; done
+      for f in "$LME_REDIS_MANIFEST_DIR"/*--*.json; do case $(basename "$f") in controls--*) ;; *) mv "$f" "$A/manifests/" ;; esac; done
+      [ -e "$LME_REDIS_MANIFEST_DIR/reuse.json" ] && mv "$LME_REDIS_MANIFEST_DIR/reuse.json" "$A/manifests/"
+      for f in "$LME_REDIS_STATE_DIR"/bodies/*.ndjson.gz; do case $(basename "$f") in controls--*) ;; *) mv "$f" "$A/bodies/" ;; esac; done
+      cp "$LME_REDIS_STATE_DIR/order.json" "$A/" ;;
     poll)
       $DRV poll --stage "${STAGE:-pilot}" --budget-ledger "$LEDGER" ;;
     *) echo "unknown step $step" >&2; return 2 ;;

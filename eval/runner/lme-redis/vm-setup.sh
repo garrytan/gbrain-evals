@@ -3,8 +3,8 @@
 # synced gbrain-evals checkout). Keyless: it installs the toolchain, the pinned gbrain release and the vendored harness,
 # and fetches both LongMemEval files at their pinned Hugging Face revision; lme_redis.py checks their sha256 on load.
 set -euo pipefail
-GBRAIN_TAG=${GBRAIN_TAG:-v0.60.748.0}
-GBRAIN_SHA=${GBRAIN_SHA:-7f162344652afc725793dd476945716e09d26104}
+GBRAIN_TAG=${GBRAIN_TAG:-v0.60.752.0}
+GBRAIN_SHA=${GBRAIN_SHA:-1f8d079d13c10d511c919cf69dd1e4c0137fbfcd}
 sudo apt-get update -qq && sudo apt-get install -y -qq unzip git curl python3 >/dev/null
 curl -fsSL https://bun.sh/install | bash -s bun-v1.4.4 >/dev/null
 curl -LsSf https://astral.sh/uv/install.sh | sh >/dev/null
