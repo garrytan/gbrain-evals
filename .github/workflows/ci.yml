@@ -30,7 +30,8 @@ jobs:
   # actions/checkout. This job keeps the whole .git (every branch, full history)
   # in the Actions cache: a push to main refreshes it for the new commit, and a
   # pull request builds one only when neither the PR nor main has one yet. Every
-  # other job restores it before actions/checkout, which then fetches only what
+  # other job but tested-tree, which reads only scripts/ and the tracked file
+  # list, restores it before actions/checkout, which then fetches only what
   # is new and checks out the same commit at the same depth as before. A depth-1
   # job's .git now also holds older commits' objects, so tests that look for a
   # pinned commit (five cases in test/eval/q1-reuse-check.test.ts) run instead of
