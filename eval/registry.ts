@@ -1417,6 +1417,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'w6-embedding-matrix.ts': { role: 'keyless summary of the 2026-10-06 embedding matrix (Cat 13 held-out and Cat 18b receipts)' },
   'w8-negative-controls.ts': { role: 'keyless summary of the 2026-10-06 live negative controls (ratio rule, signal floors, injection checks)' },
   'chronicle-lift.ts': { role: 'auto_chronicle off-versus-on experiment (docs/benchmarks/2026-10-04-auto-chronicle-lift-preregistration.md); paid, not dispatched' },
+  'beam-no-evidence.ts': { role: 'BEAM-500K "no evidence found" run: the answer-type label from a cross-family judge and the judge check against construction items (docs/benchmarks/2026-11-19-beam500k-no-evidence-line-preregistration.md)' },
   'belief-weekly-probes.ts': { role: 'keyless W11 sealed confirmation of gbrain W4: the W4 weekly-change probe on a --gbrain build, with custodian phrasing and seeds (docs/benchmarks/2026-10-17-w11-w4-sealed-confirmation-preregistration.md)' },
   'budget-ledger.ts': { role: 'shared paid-run reservation ledger' },
   'bug-ledger.ts': { role: 'shared gbrain bug ledger: validated entries and the Markdown view' },

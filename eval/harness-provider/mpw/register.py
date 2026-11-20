@@ -104,6 +104,9 @@ def install() -> None:
     from .anthropic_llm import AnthropicLLM
 
     llm_pkg.REGISTRY["anthropic"] = AnthropicLLM
+    from .particle_llm import ParticleLLM
+
+    llm_pkg.REGISTRY["particle"] = ParticleLLM
     modes_pkg.REGISTRY["agentic-rag"] = _fixed_agentic_rag()
 
     from .comparator_provider import ComparatorMemoryProvider
