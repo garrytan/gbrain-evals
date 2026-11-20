@@ -304,6 +304,7 @@ async def freeze(args: argparse.Namespace) -> int:
         order = order[: args.limit]
     out = Path(args.out)
     (out / "messages").mkdir(parents=True, exist_ok=True)
+    (out / "order.json").write_text(json.dumps([str(e.qa_pairs[0].question_id) for e in order]) + "\n")
     done: set[str] = set()
     retrieval_path = out / "retrieval.jsonl"
     if retrieval_path.exists():
