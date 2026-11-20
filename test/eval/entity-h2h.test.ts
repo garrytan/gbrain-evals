@@ -329,20 +329,31 @@ describe('memory-system pins (each the newest release at launch, preregistration
     expect(JSON.parse(r.stdout)).toEqual({ 2048: [200, 2048], 2049: [400, "Invalid 'input': array length must be 2048 or less."] });
   });
 
-  // Value: protects=a counted cell's lease from the Amendment 5 diagnostic; fails_when=batch_limit_check.py builds an embedder in a container whose provider keys are not all the compose file's keyless placeholder
-  test("ext-graph-pipeline's batch-limit check refuses before embedding unless every provider key is the keyless placeholder", () => {
+  // Value: protects=a counted cell's lease from the Amendment 5 diagnostic; fails_when=batch_limit_check.py builds an embedder when a provider key isn't the keyless placeholder or when its embedding host doesn't answer the fake provider's /_stats route (the metering proxy answers 404)
+  test("ext-graph-pipeline's batch-limit check refuses before embedding unless its keys are placeholders and its embedder reaches the fake provider", async () => {
     const path = resolve(import.meta.dir, '../../docs/comparison-systems/ext-graph-pipeline/entity-h2h/batch_limit_check.py');
     const placeholder = 'dummy-key-the-proxy-injects-the-real-one';
-    const keys = { OPENAI_API_KEY: placeholder, LLM_API_KEY: placeholder, EMBEDDING_API_KEY: placeholder };
-    const run = (env: Record<string, string>) => spawnSync('python3', [path], { encoding: 'utf8', env: { PATH: process.env.PATH ?? '', ...env } });
-    for (const env of [{ ...keys, EMBEDDING_API_KEY: 'cell-token' }, { ...keys, LLM_API_KEY: 'cell-token' }, { OPENAI_API_KEY: placeholder }]) {
-      const r = run(env);
-      expect(r.status).toBe(2);
-      expect(JSON.parse(r.stdout.trim()).refused).toContain('not the keyless stack');
+    const fake = Bun.serve({ port: 0, fetch: req => new URL(req.url).pathname === '/_stats' ? Response.json({}) : new Response('no route', { status: 404 }) });
+    const proxy = Bun.serve({ port: 0, fetch: () => Response.json({ error: { message: 'no provider route /_stats' } }, { status: 404 }) });
+    const at = (port: number) => `http://127.0.0.1:${port}/v1`;
+    const keys = { OPENAI_API_KEY: placeholder, LLM_API_KEY: placeholder, EMBEDDING_API_KEY: placeholder, EMBEDDING_ENDPOINT: at(fake.port) };
+    const run = async (env: Record<string, string>) => {
+      const p = Bun.spawn(['python3', path], { env: { PATH: process.env.PATH ?? '', ...env }, stdout: 'pipe', stderr: 'pipe' });
+      return { status: await p.exited, stdout: await new Response(p.stdout).text() };
+    };
+    try {
+      for (const env of [{ ...keys, EMBEDDING_API_KEY: 'cell-token' }, { ...keys, LLM_API_KEY: 'cell-token' }, { OPENAI_API_KEY: placeholder }, { ...keys, EMBEDDING_ENDPOINT: at(proxy.port) }, { ...keys, EMBEDDING_ENDPOINT: '' }]) {
+        const r = await run(env);
+        expect(r.status).toBe(2);
+        expect(JSON.parse(r.stdout.trim()).refused).toContain('not the keyless stack');
+      }
+      const keyless = await run(keys);
+      expect(keyless.status).not.toBe(2);
+      expect(keyless.stdout).not.toContain('refused');
+    } finally {
+      fake.stop(true);
+      proxy.stop(true);
     }
-    const keyless = run(keys);
-    expect(keyless.status).not.toBe(2);
-    expect(keyless.stdout).not.toContain('refused');
   });
 
   test('the dry run prints each memory system\'s pinned release and lock from its entity-h2h bundle', () => {
