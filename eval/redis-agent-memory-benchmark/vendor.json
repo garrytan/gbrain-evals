@@ -27,6 +27,12 @@
       }
     ]
   },
+  "not_vendored": [
+    {
+      "upstream_path": "agent-memory-benchmark/tests",
+      "reason": "CI runs no Python tests outside test/, so a copy here would go untested. Run them from upstream at 843d2078830f7297882316efb1aae0fb7ae1481f. On 2026-11-19, before they were dropped from this copy, all 37 tests in the four keyless test files we had copied (with the one test that imports the removed provider adapters taken out) passed with no keys against these sources."
+    }
+  ],
   "files": [
     {
       "path": "LICENSE",
@@ -145,37 +151,6 @@
       "path": "src/agent_memory_benchmark/prompts/judge.py",
       "upstream_path": "agent-memory-benchmark/src/agent_memory_benchmark/prompts/judge.py",
       "upstream_blob": "8a898ebb38065ae899d4b36622d2796772e5d7e2",
-      "changed": false
-    },
-    {
-      "path": "tests/conftest.py",
-      "upstream_path": "agent-memory-benchmark/tests/conftest.py",
-      "upstream_blob": "0908a1f5f54540d0e53a73b2fc519c11d83b14d6",
-      "changed": false
-    },
-    {
-      "path": "tests/test_datasets.py",
-      "upstream_path": "agent-memory-benchmark/tests/test_datasets.py",
-      "upstream_blob": "46fa19463d45804644d938b11c3bc9ed67a96c85",
-      "changed": false
-    },
-    {
-      "path": "tests/test_judge.py",
-      "upstream_path": "agent-memory-benchmark/tests/test_judge.py",
-      "upstream_blob": "c69d1e3ae9f1f9ebe10be676ce93d8eb3e39ccf8",
-      "changed": false
-    },
-    {
-      "path": "tests/test_memory_base.py",
-      "upstream_path": "agent-memory-benchmark/tests/test_memory_base.py",
-      "upstream_blob": "53a8c83af32388b7e354eb328d48c25574203d82",
-      "changed": true,
-      "local_sha256": "8d4c443165e6f4672cb941705bc68d01680d3020f886c070dd7b1381b8d44b5b"
-    },
-    {
-      "path": "tests/test_models_and_runner.py",
-      "upstream_path": "agent-memory-benchmark/tests/test_models_and_runner.py",
-      "upstream_blob": "4a6c55da27b5e4f0e6eace99bcd9031847078368",
       "changed": false
     }
   ]

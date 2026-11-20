@@ -9,9 +9,9 @@ code: it is a copy of [redis/agent-memory-server](https://github.com/redis/agent
   this copy was taken on 2026-11-19). The copy is pinned to that commit and does not track `main`.
 - **What we took:** the official LongMemEval judge prompts and Redis's yes/no scorer, the shared answer prompt, the
   task-averaged accuracy metric, the LongMemEval dataset loader with its seed-42 question order, the memory-store
-  contract and the resumable runner and command line, plus four of upstream's keyless test files.
+  contract and the resumable runner and command line.
 - **What we left out:** the nine third-party provider adapters (`memory/*_store.py`), their docs and tests, upstream's
-  README and its `uv.lock`.
+  README and its `uv.lock`, and upstream's own tests (see below).
 - **Reference results:** [redis-longmemeval-results.json](../../docs/comparison-systems/redis-longmemeval-results.json) is Redis's published LongMemEval
   table (task-averaged accuracy for each Redis strategy, with per-task figures), copied unchanged from
   [redis/redis-ai-research-public](https://github.com/redis/redis-ai-research-public) at
@@ -33,7 +33,6 @@ header line is removed.
 | `src/agent_memory_benchmark/benchmark/runner.py` | Renames the local variable `key` to `qid` in `process()`, because gstack's secret scanner read `key = qa.question_id or ...` as a credential. Behaviour is unchanged. |
 | `src/agent_memory_benchmark/datasets/longmemeval.py` | Reads the dataset at Hugging Face revision `98d7416c24c778c2fee6e6f3006e7a073259d48f` instead of `main`, so the files can't move under a run. |
 | `src/agent_memory_benchmark/memory/__init__.py` | Imports and registers none of the removed provider adapters, so `STORES` starts empty. |
-| `tests/test_memory_base.py` | Dropped the one test that imports removed provider adapters. |
 
 Local files, not from upstream: this README, `vendor.json` and `uv.lock`, which `uv` regenerated for the trimmed
 dependency list.
@@ -43,11 +42,9 @@ branch of the experiment that uses this copy, named in its
 [preregistration](../../docs/benchmarks/2026-11-20-longmemeval-redis-harness-preregistration.md), and never change a
 file here.
 
-## Run the copied tests
+## Upstream's tests
 
-No keys are needed, and the tests make no network calls:
-
-```sh
-cd eval/redis-agent-memory-benchmark
-uv run --python 3.12 --group dev pytest -q
-```
+Upstream's tests are not copied here, because CI runs no Python tests outside `test/`, so a copy would go untested.
+Run them from upstream at `843d2078830f7297882316efb1aae0fb7ae1481f`. On 2026-11-19, before we dropped them from this
+copy, all 37 tests in the four keyless test files we had copied (with the one test that imports the removed provider
+adapters taken out) passed with no keys against these sources.
