@@ -6,8 +6,9 @@
 #
 # It never checks out or runs pull-request code, and the job has no token
 # permissions. issue_comment and pull_request_target run in the base
-# repository's context, so they ring for fork pull requests too; review and
-# review-comment events get the secret only for branches in this repository.
+# repository's context, so they ring for fork pull requests too. GitHub gives
+# review and review-comment events the secret only for branches in this
+# repository, so those two ring only for such branches.
 name: vorflux-hook
 
 on:
@@ -32,9 +33,11 @@ jobs:
         && contains(github.event.issue.labels.*.name, 'vorflux'))
       || (github.event_name == 'pull_request_review'
         && github.event.review.user.login == 'capy-ai[bot]'
+        && github.event.pull_request.head.repo.full_name == github.repository
         && contains(github.event.pull_request.labels.*.name, 'vorflux'))
       || (github.event_name == 'pull_request_review_comment'
         && github.event.comment.user.login == 'capy-ai[bot]'
+        && github.event.pull_request.head.repo.full_name == github.repository
         && contains(github.event.pull_request.labels.*.name, 'vorflux'))
       || (github.event_name == 'pull_request_target'
         && github.event.action == 'closed'

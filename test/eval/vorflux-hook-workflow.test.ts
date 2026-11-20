@@ -23,7 +23,7 @@ function evaluate(expression: string, context: Record<string, unknown>): any {
 }
 
 function rings(eventName: string, event: Record<string, unknown>): boolean {
-  return Boolean(evaluate(job.if, { github: { event_name: eventName, event }, secrets: {} }));
+  return Boolean(evaluate(job.if, { github: { event_name: eventName, event, repository: 'garrytan/gbrain-evals' }, secrets: {} }));
 }
 
 function stepEnv(eventName: string, event: Record<string, unknown>, hookUrl: string): Record<string, string> {
@@ -60,7 +60,7 @@ const capy = { login: 'capy-ai[bot]' };
 const human = { login: 'garrytan' };
 const labelled = [{ name: 'documentation' }, { name: 'vorflux' }];
 const pr = (extra: Record<string, unknown> = {}) => ({
-  number: 547, labels: labelled, head: { sha: 'headsha547' }, html_url: 'https://github.com/garrytan/gbrain-evals/pull/547',
+  number: 547, labels: labelled, head: { sha: 'headsha547', repo: { full_name: 'garrytan/gbrain-evals' } }, html_url: 'https://github.com/garrytan/gbrain-evals/pull/547',
   merged: false, merge_commit_sha: 'testmergesha', closed_at: null, ...extra,
 });
 const prComment = (user = capy, labels = labelled, pullRequest: unknown = { url: 'x' }) => ({
@@ -125,6 +125,13 @@ describe('Vorflux hook workflow: who rings', () => {
     expect(rings('pull_request_review_comment', reviewComment(human))).toBe(false);
     expect(rings('pull_request_target', closed(true, []))).toBe(false);
     expect(rings('pull_request_target', { ...closed(false), action: 'opened' })).toBe(false);
+  });
+
+  test('a review or review comment on a fork pull request starts no runner, because GitHub gives it no secret', () => {
+    const fork = { sha: 'forksha', repo: { full_name: 'someone/gbrain-evals' } };
+    expect(rings('pull_request_review', { ...review(), pull_request: pr({ head: fork }) })).toBe(false);
+    expect(rings('pull_request_review_comment', { ...reviewComment(), pull_request: pr({ head: fork }) })).toBe(false);
+    expect(rings('pull_request_target', { ...closed(true), pull_request: pr({ merged: true, head: fork }) })).toBe(true);
   });
 });
 
