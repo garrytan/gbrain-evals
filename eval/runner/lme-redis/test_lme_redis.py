@@ -66,26 +66,34 @@ class Tests(unittest.TestCase):
         ex = Example().inner
         texts = [session_text(ex.sessions[i]) for i in (0, 2)]
         self.assertEqual(L.delivery(ROW, texts, [0, 2]),
-                         {"evidence_turns": 1, "delivered": 0, "all_delivered": False, "window_rule": None, "conversation_level": 0})
+                         {"evidence_turns": 1, "delivered": 0, "all_delivered": False, "partial": 0, "split_rule": None,
+                          "conversation_level": 0})
         held = L.delivery(ROW, [session_text(ex.sessions[1])], [1])
         self.assertEqual((held["delivered"], held["all_delivered"], held["conversation_level"]), (1, True, 1))
 
-    def test_passages_deliver_by_first_80_normalised_characters(self):
+    def test_a_passage_holding_the_whole_turn_delivers_it_after_normalisation(self):
         quoted = "[excerpt]\n**user:** I ADOPTED a beagle named Biscuit\n last week.\n"
-        self.assertEqual(L.delivery(ROW, [quoted], None)["delivered"], 1)
-        self.assertEqual(L.delivery(ROW, ["I adopted a beagle"], None)["delivered"], 0)
-        self.assertEqual(L.delivery(ROW, ["nothing here"], None),
-                         {"evidence_turns": 1, "delivered": 0, "all_delivered": False, "window_rule": 0, "conversation_level": None})
+        self.assertEqual(L.delivery(ROW, [quoted], None, [1])["delivered"], 1)
+        self.assertEqual(L.delivery(ROW, ["nothing here"], None, [1]),
+                         {"evidence_turns": 1, "delivered": 0, "all_delivered": False, "partial": 0, "split_rule": 0,
+                          "conversation_level": None})
 
-    def test_a_long_turn_split_across_passages_counts_by_any_80_character_window(self):
+    def test_a_passage_that_keeps_the_opening_but_cuts_the_answer_is_not_delivered(self):
+        got = L.delivery(ROW, ["**user:** I adopted a beagle named"], None, [1])
+        self.assertEqual((got["delivered"], got["partial"], got["all_delivered"]), (0, 1, False))
+
+    def test_a_turn_split_across_passages_of_its_conversation_counts_when_they_cover_all_of_it(self):
         long = " ".join(f"word{i}" for i in range(60))
-        row = {**ROW, "haystack_sessions": [[{"role": "user", "content": long, "has_answer": True}]],
-               "haystack_dates": ["2023/05/20 (Sat) 02:21"]}
-        tail = long[len(long) // 2:]
-        got = L.delivery(row, ["unrelated", tail], None)
-        self.assertEqual((got["delivered"], got["window_rule"]), (1, 1))
-        self.assertEqual(L.delivery(row, [long[:60], long[-60:]], None)["delivered"], 0)
-        self.assertEqual(L.delivery(row, [long], None)["window_rule"], 0)
+        row = {**ROW, "haystack_sessions": [[{"role": "user", "content": long, "has_answer": True}],
+                                            [{"role": "user", "content": "other"}]],
+               "haystack_dates": ["2023/05/20 (Sat) 02:21", "2023/05/21 (Sun) 10:00"]}
+        head, tail = long[: len(long) // 2 + 10], long[len(long) // 2 - 10:]
+        got = L.delivery(row, ["unrelated", head, tail], None, [1, 0, 0])
+        self.assertEqual((got["delivered"], got["split_rule"], got["partial"]), (1, 1, 0))
+        other_conversation = L.delivery(row, [head, tail], None, [0, 1])
+        self.assertEqual((other_conversation["delivered"], other_conversation["partial"]), (0, 1))
+        gap = L.delivery(row, [long[:150], long[200:]], None, [0, 0])
+        self.assertEqual((gap["delivered"], gap["partial"]), (0, 1))
 
     def test_degraded_means_no_reranker_or_any_degraded_stage(self):
         self.assertFalse(L.degraded({"op": {"degraded": [], "reranker": "voyage:rerank-3-lite"}}))

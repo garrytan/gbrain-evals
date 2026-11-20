@@ -94,40 +94,68 @@ def norm(text: str) -> str:
     return " ".join(_SUPPLEMENTARY_UTF8_RE.sub("", text).lower().split())
 
 
-WINDOW = 80
+MIN_RUN = 16
 
 
-def delivery(row: dict, texts: list[str], sessions: list[int] | None) -> dict[str, Any]:
-    """Turn-level delivery of the evidence turns (`has_answer`) into a prompt's memories.
+def _covered(turn: str, passages: list[str]) -> int:
+    """How many characters of `turn` the passages cover together: each passage contributes the runs of at least
+    MIN_RUN characters it shares with the turn, taken greedily from the turn's start."""
+    mark = bytearray(len(turn))
+    for p in passages:
+        s = 0
+        while s < len(turn):
+            lo, hi = 0, len(turn) - s
+            while lo < hi:
+                mid = (lo + hi + 1) // 2
+                if turn[s:s + mid] in p:
+                    lo = mid
+                else:
+                    hi = mid - 1
+            if lo >= MIN_RUN:
+                mark[s:s + lo] = b"\x01" * lo
+                s += lo
+            else:
+                s += 1
+    return sum(mark)
 
-    `texts` is what the prompt holds, one string per conversation (whole arms) or per passage. A turn is delivered
-    when its first 80 normalised characters appear in one of them. For passages, a turn whose first 80 characters are
-    in none of them still counts when any 80-character window of it appears in one, and `window_rule` counts those.
-    `conversation_level` counts turns whose conversation is in the prompt (whole arms only).
+
+def delivery(row: dict, texts: list[str], sessions: list[int] | None,
+             passage_sessions: list[int] | None = None) -> dict[str, Any]:
+    """Turn-level delivery of the evidence turns (`has_answer`) into a prompt's memories (preregistration, "Evidence
+    delivered, at turn level").
+
+    `texts` is what the prompt holds, one string per conversation (whole arms, `sessions` their indices) or per
+    passage (`sessions` None, `passage_sessions` each passage's conversation). A turn is delivered only when its whole
+    normalised text appears in one of them. For passages, a turn split across passages still counts when the passages
+    from its conversation together cover every character of it (`split_rule` counts those). A turn present only in
+    part counts as not delivered and is counted in `partial`. `conversation_level` counts turns whose conversation is
+    in the prompt (whole arms only).
     """
     turns = evidence_turns(row)
     held = [norm(t) for t in texts]
     passages = sessions is None
-    windows: set[str] = set()
-    if passages:
-        for h in held:
-            windows.update(h[i:i + WINDOW] for i in range(max(1, len(h) - WINDOW + 1)))
-    delivered = window_rule = 0
-    for _, text in turns:
+    delivered = split_rule = partial = 0
+    for idx, text in turns:
         t = norm(text)
         if not t:
             continue
-        head = t[:WINDOW]
-        if any(head in h for h in held):
+        if any(t in h for h in held):
             delivered += 1
-        elif passages and len(t) > WINDOW and any(t[i:i + WINDOW] in windows for i in range(len(t) - WINDOW + 1)):
+            continue
+        if not passages:
+            continue
+        covered = _covered(t, [h for h, i in zip(held, passage_sessions or []) if i == idx])
+        if passages and covered == len(t):
             delivered += 1
-            window_rule += 1
+            split_rule += 1
+        elif covered:
+            partial += 1
     return {
         "evidence_turns": len(turns),
         "delivered": delivered,
         "all_delivered": bool(turns) and delivered == len(turns),
-        "window_rule": window_rule if passages else None,
+        "partial": partial,
+        "split_rule": split_rule if passages else None,
         "conversation_level": None if passages else sum(1 for i, _ in turns if i in set(sessions)),
     }
 
@@ -191,7 +219,7 @@ def sha(text: str) -> str:
 
 
 def message_line(arm: str, example: Any, context: str, sessions: list[int], row: dict,
-                 passages: list[str] | None) -> dict[str, Any]:
+                 passages: list[str] | None, passage_sessions: list[int] | None = None) -> dict[str, Any]:
     qa = example.qa_pairs[0]
     messages = build_prompt(context, qa.question, question_date=example.metadata.get("question_date"))
     return {
@@ -203,7 +231,7 @@ def message_line(arm: str, example: Any, context: str, sessions: list[int], row:
         "messages_sha256": sha(json.dumps(messages, ensure_ascii=False, sort_keys=True)),
         "sessions": sessions,
         "delivery": delivery(row, passages if passages is not None else [session_text(example.sessions[i]) for i in sessions],
-                             None if passages is not None else sessions),
+                             None if passages is not None else sessions, passage_sessions),
     }
 
 
@@ -347,7 +375,8 @@ async def freeze(args: argparse.Namespace) -> int:
             lines = {}
             for arm, result in queries.items():
                 context, sessions, passages = gbrain_context(arm, example, result["results"])
-                lines[arm] = message_line(arm, example, context, sessions, row, passages)
+                lines[arm] = message_line(arm, example, context, sessions, row, passages,
+                                          [r["idx"] for r in result["results"]] if passages is not None else None)
             lines["full"] = message_line("full", example, whole_context(example, list(range(len(example.sessions)))),
                                          list(range(len(example.sessions))), row, None)
             o = oracle_by_id[qid]
