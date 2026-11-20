@@ -30,6 +30,20 @@ def never_sent(error: Exception) -> bool:
     return getattr(error, "status_code", None) == 502 and UNREACHABLE in str(getattr(error, "body", None) or error)
 
 
+def _fit(parsed: dict, schema: Schema) -> dict | None:
+    """The reply's object with each string field as a string: a list of strings becomes its lines joined by newlines
+    (particle-1 sometimes lists the steps of an ordering answer); any other non-string value is no structured response."""
+    out = dict(parsed)
+    for key, spec in schema.properties.items():
+        if key not in out or (spec or {}).get("type") != "string" or isinstance(out[key], str):
+            continue
+        value = out[key]
+        if not (isinstance(value, list) and all(isinstance(v, str) for v in value)):
+            return None
+        out[key] = "\n".join(value)
+    return out
+
+
 class ParticleLLM(LLM):
     def __init__(self, model: str = MODEL):
         if model != MODEL:
@@ -74,7 +88,9 @@ class ParticleLLM(LLM):
             try:
                 parsed = json.loads(text[start:end + 1])
                 if isinstance(parsed, dict) and all(k in parsed for k in schema.required):
-                    return parsed
+                    fitted = _fit(parsed, schema)
+                    if fitted is not None:
+                        return fitted
             except json.JSONDecodeError:
                 pass
         raise RuntimeError(f"{self.model_id} returned no structured response (finish_reason={choice.finish_reason})")

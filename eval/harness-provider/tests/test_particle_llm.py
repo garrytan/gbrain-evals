@@ -72,6 +72,18 @@ def test_a_reply_without_the_json_object_is_an_error(monkeypatch, llm):
         llm.generate("q", SCHEMA)
 
 
+def test_a_list_of_strings_in_a_string_field_is_read_as_its_lines(monkeypatch, llm):
+    _replies(monkeypatch, llm, _Resp('{"reasoning": "r", "answer": ["2024-05-02 first", "2024-07-07 second"]}'))
+    assert llm.generate("q", SCHEMA) == {"reasoning": "r", "answer": "2024-05-02 first\n2024-07-07 second"}
+
+
+def test_any_other_non_string_answer_is_an_error(monkeypatch, llm):
+    _replies(monkeypatch, llm, _Resp('{"reasoning": "r", "answer": {"first": "x"}}'), _Resp('{"reasoning": "r", "answer": ["x", 2]}'))
+    for _ in range(2):
+        with pytest.raises(RuntimeError, match="no structured response"):
+            llm.generate("q", SCHEMA)
+
+
 def test_a_request_that_may_have_reached_particle_is_never_sent_again(monkeypatch, llm):
     for error in (_error(504, {"error": {"code": "mpw_proxy_upstream_lost"}}), _error(429, {"error": "rate"}), _error(500, {"error": "x"})):
         calls = _replies(monkeypatch, llm, error, _Resp('{"reasoning": "", "answer": "a"}'))
