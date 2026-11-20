@@ -1,0 +1,141 @@
+{
+  "system": "zingg",
+  "version": "0.7.0",
+  "edition": "Community",
+  "config": "tuned",
+  "config_file": "configs/zingg-tuned.json",
+  "doc": "https://docs.zingg.ai/zingg/zingg-concepts/zingg-configuration/field-definition/match-types.md",
+  "world": "<er-h2h>/worlds/s20261117",
+  "held_out": "<er-h2h>/worlds/s20261118",
+  "spark_master": "local[*]",
+  "phases": [
+    {
+      "phase": "findTrainingData",
+      "seconds": 8.68,
+      "log": "<er-h2h>/out/zingg-tuned-work/logs/00-findTrainingData.log"
+    },
+    {
+      "phase": "findTrainingData",
+      "seconds": 70.25,
+      "log": "<er-h2h>/out/zingg-tuned-work/logs/01-findTrainingData.log"
+    },
+    {
+      "phase": "findTrainingData",
+      "seconds": 65.04,
+      "log": "<er-h2h>/out/zingg-tuned-work/logs/02-findTrainingData.log"
+    },
+    {
+      "phase": "findTrainingData",
+      "seconds": 75.5,
+      "log": "<er-h2h>/out/zingg-tuned-work/logs/03-findTrainingData.log"
+    },
+    {
+      "phase": "findTrainingData",
+      "seconds": 90.16,
+      "log": "<er-h2h>/out/zingg-tuned-work/logs/04-findTrainingData.log"
+    },
+    {
+      "phase": "findTrainingData",
+      "seconds": 87.87,
+      "log": "<er-h2h>/out/zingg-tuned-work/logs/05-findTrainingData.log"
+    },
+    {
+      "phase": "findTrainingData",
+      "seconds": 86.9,
+      "log": "<er-h2h>/out/zingg-tuned-work/logs/06-findTrainingData.log"
+    },
+    {
+      "phase": "findTrainingData",
+      "seconds": 82.53,
+      "log": "<er-h2h>/out/zingg-tuned-work/logs/07-findTrainingData.log"
+    },
+    {
+      "phase": "findTrainingData",
+      "seconds": 87.59,
+      "log": "<er-h2h>/out/zingg-tuned-work/logs/08-findTrainingData.log"
+    },
+    {
+      "phase": "findTrainingData",
+      "seconds": 91.04,
+      "log": "<er-h2h>/out/zingg-tuned-work/logs/09-findTrainingData.log"
+    },
+    {
+      "phase": "train",
+      "seconds": 84.82,
+      "log": "<er-h2h>/out/zingg-tuned-work/logs/10-train.log"
+    },
+    {
+      "phase": "match",
+      "seconds": 15.88,
+      "log": "<er-h2h>/out/zingg-tuned-work/logs/11-match.log"
+    }
+  ],
+  "label_rounds": [
+    {
+      "round": 1,
+      "pairs_offered": 21,
+      "match": 3,
+      "distinct": 18
+    },
+    {
+      "round": 2,
+      "pairs_offered": 20,
+      "match": 4,
+      "distinct": 16
+    },
+    {
+      "round": 3,
+      "pairs_offered": 20,
+      "match": 3,
+      "distinct": 17
+    },
+    {
+      "round": 4,
+      "pairs_offered": 20,
+      "match": 13,
+      "distinct": 7
+    },
+    {
+      "round": 5,
+      "pairs_offered": 20,
+      "match": 9,
+      "distinct": 11
+    },
+    {
+      "round": 6,
+      "pairs_offered": 20,
+      "match": 10,
+      "distinct": 10
+    },
+    {
+      "round": 7,
+      "pairs_offered": 20,
+      "match": 10,
+      "distinct": 10
+    },
+    {
+      "round": 8,
+      "pairs_offered": 20,
+      "match": 10,
+      "distinct": 10
+    },
+    {
+      "round": 9,
+      "pairs_offered": 20,
+      "match": 10,
+      "distinct": 10
+    },
+    {
+      "round": 10,
+      "pairs_offered": 20,
+      "match": 10,
+      "distinct": 10
+    }
+  ],
+  "labels": {
+    "match": 82,
+    "distinct": 119,
+    "rounds": 10
+  },
+  "proposed_tier": "none: Zingg Community exposes no match threshold and no review band"
+}

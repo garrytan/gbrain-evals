@@ -1,0 +1,28 @@
+{
+  "cell": "entity-h2h",
+  "system": "ext-graph-pipeline",
+  "config": "tuned:similarity-0.70",
+  "model": "openai:gpt-6.2-sol",
+  "world": {
+    "seed": 1975418963,
+    "per_family": 20,
+    "pages": 2106,
+    "people_ledger_sha256": "da556967bbe5c1529dfccebdcf14862e72baacdcd37f39833dd714563487a0c2",
+    "company_ledger_sha256": "dc2391abf9cae7e8cab1122267b0bd739f404aa8d3a66cb122be7ee731929d06"
+  },
+  "status": "complete",
+  "attempts": [
+    {
+      "n": 1,
+      "kind": "first",
+      "status": "complete",
+      "started_at": "2026-11-20T06:37:36.400Z",
+      "finished_at": "2026-11-20T15:04:01.524Z",
+      "done": 2106
+    }
+  ],
+  "stack": {
+    "kind": "tuned",
+    "setting": "similarity-0.70"
+  }
+}

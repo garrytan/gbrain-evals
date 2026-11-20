@@ -46,7 +46,7 @@ export interface CellState {
   config: string;
   model: string | null;
   world_dir: string;
-  world: { seed: number; per_family: number; pages: number; people_ledger_sha256: string; company_ledger_sha256: string };
+  world: { seed: number; per_family: number; pages: number; people_ledger_sha256: string; company_ledger_sha256: string; smoke?: true };
   projected_usd: number;
   stop_usd: number;
   /** complete, failed (infrastructure) after a second failure, or open while attempts may still run. */

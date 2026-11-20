@@ -160,6 +160,11 @@ behaviour, such as `forget` leaving nothing behind or a sync catching up, where 
 </tr>
 <tr><th valign="top" align="left" colspan="3">Keeping memory correct, private and safe</th></tr>
 <tr>
+<td valign="top">Joining different people or companies in a synthetic stress test (fewer false merges is better, with recall within 10 points)<br><sub>gbrain <code>0a008fe5</code> (v0.60.738.0) · <a href="docs/benchmarks/2026-11-18-entity-dedupe-h2h.md">Duplicate-finder head-to-head</a></sub></td>
+<td valign="top">Automatic merges on the same 676 different-entity pairs: 422 for <code>ext-extract-first</code>, 423 for <code>ext-memory-bank</code>, and 438 for patched default <code>ext-graph-pipeline</code>. The temporal-graph system found more real duplicates, and the tuned graph-pipeline setting made fewer false merges but left more pages unresolved.</td>
+<td valign="top"><h3>360 of 676 proposed, 9.17 to 11.54 points fewer</h3>The proposed tier found 290 of 436 real pairs, within the recall margin against those three settings, people and companies combined. On companies alone, no comparison clears both tests: gbrain's company recall is higher than all three, but none of the company false-merge differences was detected at this sample size (gbrain 64 of 188, against 62, 68 and 53). In the measured automatic tier, 36 of 488 different-person pairs joined and 0 of 188 different-company pairs joined. The shipping design doesn't auto-link people.</td>
+</tr>
+<tr>
 <td valign="top">An attacker's false claim from an email or a relayed tool result, adopted in a later session (fewer is better; Opus 5.5, Sonnet 5.5, GPT-6.1 Sol)<br><sub>gbrain <code>c2f10ee8</code> to <code>5b9c814b</code> (shipped as <code>d4dc2d4d8</code>); keyless at <code>6ce7195b4</code> · <a href="docs/benchmarks/2026-10-08-memory-trust-results-paid.md">Memory trust</a> · <a href="docs/benchmarks/2026-11-17-readme-baselines/memory-trust/results.md">Baseline</a></sub></td>
 <td valign="top">an agent with a plain Postgres memory and no trust labels: 6.6% (Opus 5.5), 12.1% (Sonnet 5.5) and 12.1% (GPT-6.1 Sol) of sessions, with gbrain ahead on all three (p = 0.02, 2e-6 and 0.0005); 1 of 355 instruction-worded injections followed</td>
 <td valign="top"><h3>Fewer adopted on all three models</h3><b>1.5% to 5%</b> of sessions with trust labels shown, 5.1% to 10.6% with them stripped; <b>0 of 360</b> instruction-worded injections followed per model; the checks that need no API keys pass at the pin, and CI runs them on every pull request</td>
@@ -632,6 +637,12 @@ Garry Tan runs Y Combinator.
 [Disclosures](docs/disclosures.md) lists every relationship and where each line goes.
 
 ## Changelog
+
+### 2026-11-20: Add the duplicate-finder head-to-head
+
+The current results table adds the [counted pair counts](https://github.com/garrytan/gbrain-evals/commit/13ccd7f59ef9aa3f6e1a815464fe25560ec88fd8) for gbrain `0a008fe5`.
+It now separates the proposed-tier comparison against three memory-system settings from the automatic person-linking
+errors that led the team to keep person linking in review.
 
 ### 2026-11-20: The hard company questions' smaller lead is not a gbrain regression
 

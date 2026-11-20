@@ -41,13 +41,25 @@ describe('entity-h2h ubicloud run.sh, with a fake runner', () => {
     expect(r.status).toBe(0);
     const [line] = f.launches();
     expect(line).toContain('-s standard-8');
-    expect(line).toContain('--setup eval/runner/entity-h2h/ubicloud/setup.sh --env ENTITY_H2H_SYSTEM=ext-temporal-graph --pass ENTITY_H2H_SEED --pass OPENAI_API_KEY');
+    expect(line).toContain('--setup eval/runner/entity-h2h/ubicloud/setup.sh --env ENTITY_H2H_SYSTEM=ext-temporal-graph --env ENTITY_H2H_WORLD=full --pass ENTITY_H2H_SEED --pass OPENAI_API_KEY');
     expect(line).toContain(`--push ${f.cells}/tg-default:work/tg-default --pull work/tg-default:${f.cells}`);
     expect(line).toContain('-- bash eval/runner/entity-h2h/ubicloud/vm-run.sh tg-default ext-temporal-graph default 107.51 run 1 none');
     for (const v of Object.values(DUMMIES)) expect(line).not.toContain(v);
     expect(f.runEnv()).toEqual(['quota=464 crew=208 owner=gbev99 reap=0']);
     expect(existsSync(join(f.cells, 'tg-default.in-flight'))).toBe(false);
     expect(r.stdout).toContain('teardown check: no VMs of owner gbev99 remain');
+  });
+
+  // Value: protects=a re-smoke launch writes the smoke world on its VM; fails_when=ENTITY_H2H_WORLD is dropped, or an unknown value boots a VM
+  test('ENTITY_H2H_WORLD=smoke reaches the VM by name, and any value but full or smoke refuses before a VM starts', () => {
+    const f = fakeRunner('smoke');
+    expect(f.launch(['launch', 'mb-smoke', 'ext-memory-bank', 'default', '0.23'], { ...DUMMIES, ENTITY_H2H_WORLD: 'smoke' }).status).toBe(0);
+    expect(f.launches()).toEqual([expect.stringContaining('--env ENTITY_H2H_SYSTEM=ext-memory-bank --env ENTITY_H2H_WORLD=smoke --pass ENTITY_H2H_SEED')]);
+    expect(f.launches()[0]).toContain('vm-run.sh mb-smoke ext-memory-bank default 0.23 run 1 none 2');
+    expect(f.launch(['launch', 'mb-t', 'ext-memory-bank', 'tuning:default', '0.23'], { ...DUMMIES, ENTITY_H2H_WORLD: 'smoke' }).stderr).toContain('the smoke world runs config default only');
+    const bad = f.launch(['launch', 'mb-x', 'ext-memory-bank', 'default', '0.23'], { ...DUMMIES, ENTITY_H2H_WORLD: 'tiny' });
+    expect([bad.status, bad.stderr]).toEqual([2, expect.stringContaining('ENTITY_H2H_WORLD is full or smoke')]);
+    expect(f.launches()).toHaveLength(1);
   });
 
   test('refuses a missing key or seed, a raised vCPU line, a system that is not a memory kind, a live VM of its owner and a second launch of a cell', () => {
@@ -85,8 +97,9 @@ describe('entity-h2h ubicloud run.sh, with a fake runner', () => {
       attempts: [{ n: 1, kind: 'first', status: 'crashed', pid: 1, started_at: 'x', finished_at: 'x', paid: { budget_ledger: '../attempt-1/lease.sqlite', run_id: 'entity-h2h-mb-a1', usage_log: '../attempt-1/usage.ndjson' }, done: 3, reason: 'vm lost' }] };
     writeFileSync(join(cellDir, 'cell.json'), JSON.stringify(cell));
     expect(f.launch(['restart', 'nope', '0.2']).stderr).toContain('launch the cell first');
-    const r = f.launch(['restart', 'mb', '0.29']);
+    const r = f.launch(['restart', 'mb', '0.29'], { ...DUMMIES, ENTITY_H2H_WORLD: 'smoke' });
     expect(r.status).toBe(0);
+    expect(f.launches()).toEqual([expect.stringContaining('--env ENTITY_H2H_WORLD=full')]);
     expect(existsSync(join(cellDir, 'reconcile-entity-h2h-mb-a1.json'))).toBe(true);
     expect(f.launches()).toEqual([expect.stringContaining('vm-run.sh mb ext-memory-bank from-cell 0.29 restart 2 none 1')]);
     writeFileSync(join(att, 'usage.ndjson'), [1, 2].map(n => JSON.stringify({ at: 'x', key: 'k', request_id: `entity-h2h-mb-a1-${n}`, provider: 'openai', model: 'm', outcome: 'forwarded', actual_usd: 1 })).join('\n') + '\n');
@@ -139,6 +152,27 @@ describe('entity-h2h ubicloud run.sh, with a fake runner', () => {
     expect(f.launch(['launch', 't9', 'ext-memory-bank', 'tuned', '1.5', choice]).status).toBe(0);
     expect(f.launches()).toEqual([expect.stringContaining(`vm-run.sh t8 ext-memory-bank tuning:${names[0]} 1.5 run 1 none 5`), expect.stringContaining('vm-run.sh t8b ext-memory-bank tuning:default 1.5 run 1 none 5'), expect.stringContaining('vm-run.sh t9 ext-memory-bank tuned 1.5 run 1 none 20')]);
     expect(JSON.parse(readFileSync(join(f.cells, 't9', 'choice.json'), 'utf8')).setting).toBe(names[1]);
+  });
+
+  // Value: protects=Amendment 4, ext-extract-first's ingest drains each page so its last /finish fits the timeout and the 345-page checkpoint sees its extraction spend; fails_when=vm-run.sh drops --drain-each for ext-extract-first in run, restart or continue, or passes it to any other system.
+  test('vm-run.sh passes --drain-each to ext-extract-first in every mode, and to no other system', () => {
+    const root = join(dir, 'vm-drain');
+    const bin = join(root, 'bin');
+    mkdirSync(join(root, 'eval/systems'), { recursive: true });
+    mkdirSync(bin, { recursive: true });
+    writeFileSync(join(root, 'eval/systems/bootstrap.sh'), '[ "$1" != proxy ] || mkdir -p "$7"\nexit 0\n');
+    writeFileSync(join(bin, 'bun'), `#!/usr/bin/env bash\ncase "$2" in run|restart|continue) echo "$*" >> "$(dirname "$(dirname "$0")")/calls" ;; esac\nexit 0\n`, { mode: 0o755 });
+    const call = (cell: string, system: string, mode: string) => {
+      const r = spawnSync('bash', [join(REPO, 'eval/runner/entity-h2h/ubicloud/vm-run.sh'), cell, system, 'default', '1', mode, '1', '2'], { cwd: root, env: { PATH: `${bin}:${process.env.PATH}`, HOME: join(root, 'home'), ENTITY_H2H_SEED: '424242' }, encoding: 'utf8' });
+      expect(r.status).toBe(0);
+      return readFileSync(join(root, 'calls'), 'utf8').trim().split('\n').at(-1)!;
+    };
+    for (const mode of ['run', 'restart', 'continue']) {
+      const ef = call(`ef-${mode}`, 'ext-extract-first', mode);
+      expect(ef).toStartWith(`eval/runner/entity-h2h/run.ts ${mode} `);
+      expect(ef).toEndWith('--drain-each');
+      for (const other of ['ext-memory-bank', 'ext-graph-pipeline', 'ext-temporal-graph']) expect(call(`${other}-${mode}`, other, mode)).not.toContain('--drain-each');
+    }
   });
 
   test('the VM scripts parse', () => {

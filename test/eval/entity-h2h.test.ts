@@ -59,6 +59,23 @@ describe('world', () => {
     expect(ingestOrder(buildWorld(8, 1)).map(p => p.key)).not.toEqual(a);
   });
 
+  // Value: protects=the re-smoke runs on the 2026-11-17 smoke's own world; fails_when=--smoke builds another ledger, page set or order, or a manifest drops its smoke flag and still loads
+  test('the smoke world is the 2026-11-17 smoke world: version-1 people ledger 7db1e1f4, instance 0 of each family, ledger order', () => {
+    const dir = join(tmp, 'smoke');
+    const w = writeH2hWorld(dir, DEV_SEED, 2, true);
+    expect([w.smoke, w.pages.length, w.companies.pages.length, w.people.generator_version]).toEqual([true, 69, 0, 1]);
+    expect(w.fingerprints.people).toBe('7db1e1f4062f62c389a8fbee734fe3e05281392e78dd0673de018e536ff05ccb');
+    expect(w.people.pages.every(p => p.instance === 0)).toBe(true);
+    expect(w.pairs.every(p => w.gold.has(p.a) && w.gold.has(p.b))).toBe(true);
+    const loaded = loadWorld(dir);
+    expect(ingestOrder(loaded).map(p => p.key)).toEqual(loaded.pages.map(p => p.key));
+    expect(buildWorld(DEV_SEED, 2).fingerprints.people).not.toBe(w.fingerprints.people);
+    const m = JSON.parse(readFileSync(join(dir, 'world.json'), 'utf8'));
+    delete m.smoke;
+    writeFileSync(join(dir, 'world.json'), JSON.stringify(m));
+    expect(() => loadWorld(dir)).toThrow();
+  });
+
   test('labels come only from the held-out seed', () => {
     expect(() => heldOutLabels(small)).toThrow(/only from held-out seed 20261118/);
     const h = heldOutLabels(buildWorld(HELD_OUT_SEED, 1));
@@ -240,7 +257,8 @@ describe('memory readout', () => {
 
 describe('spend projection', () => {
   test('stops are 1.5 times a memory system\'s projected cost and the matcher\'s projected cost, rounded up to a cent', () => {
-    expect(memoryStop('ext-temporal-graph', 1886)).toEqual({ projected_usd: 0.038 * 1886, stop_usd: 107.51 });
+    expect(memoryStop('ext-temporal-graph', 2106)).toEqual({ projected_usd: 0.03431286 * 2106, stop_usd: 108.4 });
+    expect([memoryStop('ext-graph-pipeline', 2106).stop_usd, memoryStop('ext-extract-first', 2106).stop_usd, memoryStop('ext-memory-bank', 2106).stop_usd]).toEqual([15.97, 14.22, 7.04]);
     expect(matcherStop('particle:particle-1', 21574).stop_usd).toBe(4.54);
   });
 
@@ -277,6 +295,65 @@ describe('memory-system pins (each the newest release at launch, preregistration
     const rec = JSON.parse(bundle('ext-temporal-graph', 'capability.json'));
     expect(JSON.stringify(rec.provider_routes)).not.toContain('reasoning effort none');
     expect(rec.deviations_from_vendor_code.some((d: string) => d.includes('reasoning to None') && d.includes('Amendment 3'))).toBe(true);
+  });
+
+  // Value: protects=ext-graph-pipeline's finish step on the counted world, whose consolidation embeds more than 2,048 names in one request; fails_when=the shim stops adding OpenAI's batch-limit wording to the embedder's split-and-retry pattern, the pattern stops matching OpenAI's 400, or the keyless fake stops refusing over-limit batches the way OpenAI does
+  test("ext-graph-pipeline's entity-h2h shim routes OpenAI's 2,048-input embeddings 400 into the embedder's split-and-retry path, and the keyless fake sends that 400 (Amendment 5)", () => {
+    const shim = bundle('ext-graph-pipeline', 'entity_h2h.py');
+    const limit = shim.match(/^OPENAI_BATCH_LIMIT = r"(.+)"$/m)?.[1];
+    expect(limit).toBeDefined();
+    expect(shim).toContain('litellm_embedding._EMBED_LENGTH_ERROR_RE = re.compile(f"{litellm_embedding._EMBED_LENGTH_ERROR_RE.pattern}|{OPENAI_BATCH_LIMIT}",');
+    expect(shim).toMatch(/importlib\.import_module\("\w+\.infrastructure\.databases\.vector\.embeddings\.LiteLLMEmbeddingEngine"\)/);
+    const wording = new RegExp(limit!, 'i');
+    expect(wording.test("litellm.BadRequestError: OpenAIException - Error code: 400 - Invalid 'input': array length must be 2048 or less.")).toBe(true);
+    expect(wording.test("Error code: 400 - Invalid 'input': must not be empty")).toBe(false);
+    const rec = JSON.parse(bundle('ext-graph-pipeline', 'capability.json'));
+    expect(rec.deviations_from_vendor_code.some((d: string) => d.includes('array length must be 2048 or less') && d.includes('Amendment 5'))).toBe(true);
+    const script = [
+      'import importlib.util, json, sys, threading, urllib.request, urllib.error',
+      'from http.server import ThreadingHTTPServer',
+      'spec = importlib.util.spec_from_file_location("fp", sys.argv[1]); fp = importlib.util.module_from_spec(spec); spec.loader.exec_module(fp)',
+      'srv = ThreadingHTTPServer(("127.0.0.1", 0), fp.pinned.Handler); threading.Thread(target=srv.serve_forever, daemon=True).start()',
+      'out = {}',
+      'for n in (2048, 2049):',
+      '    body = json.dumps({"model": "text-embedding-3-small", "dimensions": 4, "input": ["x"] * n}).encode()',
+      '    req = urllib.request.Request(f"http://127.0.0.1:{srv.server_address[1]}/v1/embeddings", data=body, headers={"Content-Type": "application/json"})',
+      '    try:',
+      '        r = urllib.request.urlopen(req, timeout=30); out[n] = [r.status, len(json.load(r)["data"])]',
+      '    except urllib.error.HTTPError as e:',
+      '        out[n] = [e.code, json.load(e)["error"]["message"]]',
+      'srv.shutdown(); print(json.dumps(out))',
+    ].join('\n');
+    const r = spawnSync('python3', ['-I', '-c', script, resolve(import.meta.dir, '../../docs/comparison-systems/ext-graph-pipeline/entity-h2h/fake_provider.py')], { encoding: 'utf8' });
+    expect(r.status).toBe(0);
+    expect(JSON.parse(r.stdout)).toEqual({ 2048: [200, 2048], 2049: [400, "Invalid 'input': array length must be 2048 or less."] });
+  });
+
+  // Value: protects=a counted cell's lease from the Amendment 5 diagnostic; fails_when=batch_limit_check.py builds an embedder when a provider key isn't the keyless placeholder or when its embedding host doesn't answer the fake provider's /_stats route (the metering proxy answers 404)
+  test("ext-graph-pipeline's batch-limit check refuses before embedding unless its keys are placeholders and its embedder reaches the fake provider", async () => {
+    const path = resolve(import.meta.dir, '../../docs/comparison-systems/ext-graph-pipeline/entity-h2h/batch_limit_check.py');
+    const placeholder = 'dummy-key-the-proxy-injects-the-real-one';
+    const fake = Bun.serve({ port: 0, fetch: req => new URL(req.url).pathname === '/_stats' ? Response.json({}) : new Response('no route', { status: 404 }) });
+    const proxy = Bun.serve({ port: 0, fetch: () => Response.json({ error: { message: 'no provider route /_stats' } }, { status: 404 }) });
+    const at = (server: { url: URL }) => `${server.url.origin}/v1`;
+    const keys = { OPENAI_API_KEY: placeholder, LLM_API_KEY: placeholder, EMBEDDING_API_KEY: placeholder, EMBEDDING_ENDPOINT: at(fake) };
+    const run = async (env: Record<string, string>) => {
+      const p = Bun.spawn(['python3', path], { env: { PATH: process.env.PATH ?? '', ...env }, stdout: 'pipe', stderr: 'pipe' });
+      return { status: await p.exited, stdout: await new Response(p.stdout).text() };
+    };
+    try {
+      for (const env of [{ ...keys, EMBEDDING_API_KEY: 'cell-token' }, { ...keys, LLM_API_KEY: 'cell-token' }, { OPENAI_API_KEY: placeholder }, { ...keys, EMBEDDING_ENDPOINT: at(proxy) }, { ...keys, EMBEDDING_ENDPOINT: '' }]) {
+        const r = await run(env);
+        expect(r.status).toBe(2);
+        expect(JSON.parse(r.stdout.trim()).refused).toContain('not the keyless stack');
+      }
+      const keyless = await run(keys);
+      expect(keyless.status).not.toBe(2);
+      expect(keyless.stdout).not.toContain('refused');
+    } finally {
+      fake.stop(true);
+      proxy.stop(true);
+    }
   });
 
   test('the dry run prints each memory system\'s pinned release and lock from its entity-h2h bundle', () => {
