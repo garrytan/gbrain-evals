@@ -1,0 +1,36 @@
+{
+ "judges": [
+  {
+   "judge": "gpt-6.1-sol",
+   "construct_graded": 60,
+   "good_graded": 30,
+   "bad_graded": 30,
+   "malformed": 0,
+   "retried": 0,
+   "kappa": 0.9666666666666666,
+   "catch_rate": 1,
+   "false_fail_rate": 0.03333333333333333,
+   "real_graded": 40,
+   "real_agreement_with_recorded": 0.975,
+   "passes": true,
+   "failures": []
+  },
+  {
+   "judge": "claude-opus-5-5",
+   "construct_graded": 60,
+   "good_graded": 30,
+   "bad_graded": 30,
+   "malformed": 0,
+   "retried": 0,
+   "kappa": 1,
+   "catch_rate": 1,
+   "false_fail_rate": 0,
+   "real_graded": 40,
+   "real_agreement_with_recorded": 0.9,
+   "passes": true,
+   "failures": []
+  }
+ ],
+ "real_pairwise_agreement": 0.9230769230769231,
+ "passes": true
+}

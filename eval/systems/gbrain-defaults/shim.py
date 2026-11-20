@@ -435,6 +435,13 @@ def extraction_problems(run: dict[str, Any]) -> list[str]:
             out.append(f"{key}={run.get(key)}")
     if run.get("no_pricing_models"):
         out.append(f"unpriced extraction models {run.get('no_pricing_models')}")
+    # gbrain names each page and its cause (GST-3251): failed pages, windows the model declined, unparsed pages.
+    for p in run.get("failed_pages") or []:
+        out.append(f"failed {p.get('slug')}: {p.get('error')}")
+    for w in run.get("declined_windows") or []:
+        out.append(f"declined {w.get('slug')} {w.get('start')}..{w.get('end')} ({w.get('reason')})")
+    for p in run.get("unparsed_pages") or []:
+        out.append(f"unparsed {p.get('slug')}: {p.get('cause')}")
     return out
 
 

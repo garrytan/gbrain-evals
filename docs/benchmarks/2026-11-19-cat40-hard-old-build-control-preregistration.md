@@ -93,11 +93,19 @@ Each world runs on its own Ubicloud VM, detached, with one budget ledger and one
 
 ## Recorded before cells
 
-(appended before the first counted cell)
+Recorded 2026-11-19, after the gates and before any counted control cell. The records are in [2026-11-19-cat40-hard-old-build-control/](2026-11-19-cat40-hard-old-build-control/).
+
+- **Harness.** Commit `b92b3daa5870f91548a2cfc7448ae1fe0e0b0f00` on the results branch: the control program, the analysis control mode, served-model recording and the amendment below. CI passed at this commit, and every receipt names it with a clean tree. Freeze drift is accepted through the November 19 entries and the control's `loop.ts` entry (`8e18713303bb`) in [accepted-drift.json](cat40-hard/accepted-drift.json).
+- **Build.** gbrain `09d21554d7ab75cc5643a7f5a0e7f163aa4dae5b` (v0.60.189.0), with the source tree verified and the CLI version matching, on surface `starter` and no advertised surface.
+- **Gate 1, worlds.** N1 digest `647d6123621842a5b43ec7291e94b440e18bd03bb0209f6b94c46d36cd5f52ac`; N2 `08120edcd14f7151ef2f785d1e62ec40639ede8fc28c49924c846b28262e3814`. Both match their records.
+- **Gate 2, slots.** Five slots per world, built by `09d21554d`. Every build step exited 0, mention coverage is complete with 0 pending, and there are 0 queued persistence effects at the snapshot. The write, restore and rerank probes passed on every slot. The config reads back `{}`, with 0 owner-phrase links. Ledger runs: N1 `cat40-slot-build-2026-11-19T14-47-30-982Z-cb1357a8`, N2 `cat40-slot-build-2026-11-19T14-50-49-956Z-5418f048`.
+- **Gate 3, smokes.** For each reader and world, five `gbrain-old` cells (one per family) all submitted, with no harness error, and all five succeeded. The agents answered through the build's own tools (search, get_page, entity, get_backlinks, context_pack, remember and recall). Every session's served model id equals the requested one: `claude-opus-5-5` and `gpt-6.2-sol`. The build serves 35 tools on starter, `request_tools` among them; v0.60.742.0 serves the same list plus `memory_conversation_mode`. Ledger runs: N1 Opus `cat40-model-ladder-2026-11-19T18-42-51-065Z-5a5092a3`, N1 Sol `cat40-model-ladder-2026-11-19T18-46-38-947Z-ababa3da`, N2 Opus `cat40-model-ladder-2026-11-19T18-45-37-692Z-d2f666ae`, N2 Sol `cat40-model-ladder-2026-11-19T18-49-18-756Z-9401ae41`.
 
 ## Amendments
 
-(none)
+- **2026-11-19, before any paid control request: two harness details the text above left implicit.** Nothing in the arms, worlds, gates, outcome rows or budget changes.
+  1. Besides the label, ledger, budget, build commit and explicit surface, each control gbrain step has its own output directory (under `eval/reports/cat40/hard-control/`), its own slot directory, and its own freeze-drift note naming this preregistration and the control's harness commit. The keyless test ([cat40-hard-old-build-control.test.ts](../../test/eval/cat40-hard-old-build-control.test.ts)) sets aside exactly those flags and requires every other argument to match the November 19 receipts, the task lists of that run's two halves included. The control runs both halves one after the other with no look between them.
+  2. To record the served model id, the agent loop (`eval/runner/cat40/loop.ts`) now keeps the `model` field of each Anthropic and OpenAI response as `served_models` on every session's run. Request bodies, retries and pricing are unchanged (pinned by `test/eval/cat40-particle-loop.test.ts`), and the new file hash is listed in [accepted-drift.json](cat40-hard/accepted-drift.json) and [calibration.md](cat40-hard/calibration.md).
 
 ## Disclosures
 
