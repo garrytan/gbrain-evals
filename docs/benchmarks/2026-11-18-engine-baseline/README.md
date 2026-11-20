@@ -47,7 +47,7 @@ Cold is the scored first pass on a freshly imported brain; warm is the repeat pa
 
 Cells are mean [min to max, sample sd] across the scored runs. Raw numbers: [summary.json](summary.json), [table.md](table.md).
 
-**Cost per query.** The storage engines make no paid calls. All paid work is embedding, and it is the same for every engine: the warm-up run embedded the corpus chunks once (ingest, a one-time cost per corpus) and the 548 probe texts. Its query phase measured about $0.0000009 per query (text-embedding-3-large, uncached). The six scored runs read every vector, corpus and probe, from the shared cache and made zero paid requests.
+**Query size.** The storage engines make no paid calls. All paid work is embedding, and it is the same for every engine: the warm-up run embedded the corpus chunks once (ingest, a one-time step per corpus) and the 548 probe texts. We size a query in tokens counted with tiktoken's `cl100k_base` encoding, the tokenizer of text-embedding-3-large, not by characters divided by 4. The 548 probes average 6.72 tokens each. The six scored runs read every vector, corpus and probe, from the shared cache and made zero paid requests.
 
 ## What we observed
 
@@ -67,6 +67,23 @@ A keyword-only run on Rust does work (import with `noEmbed`, then hybrid search 
 - The PGLite gap is likely the cost of single-threaded WASM Postgres against a native server on 8 vCPUs, not network or tuning. We did not profile it.
 - Both engines run the same SQL and pgvector code paths. On a 240-page corpus the candidate sets are small, so approximate-index effects did not change any ranking. A larger corpus could separate them.
 
+## Method
+
+These rules apply to every run in this folder and to later runs of this baseline.
+
+- **Cold and warm passes.** `--warm-passes 1` gives two passes over the same 548 probes on the same brain, in the same process. The cold pass is the first query pass after import, and it is the only scored pass. The warm pass repeats every probe, is timed and is not scored. We report cold p50/p95 and warm p50/p95 separately and never pool them. The OS page cache is not dropped between passes, so "cold" means the first pass after import, not a cold disk.
+- **Postgres locale.** Text ordering in Postgres depends on the database's collation, so a locale change can move ties in a ranked list. We record the locale from the `pg_database` catalog, because PostgreSQL 16 and later removed `SHOW lc_collate`:
+
+  ```sql
+  SELECT datname, datcollate, datctype, datlocprovider, pg_encoding_to_char(encoding) FROM pg_database;
+  ```
+
+  Runs from 2026-11-20 record `en_US.UTF-8` for both `datcollate` and `datctype`, the libc provider (`datlocprovider = c`) and `UTF8` encoding. The two builds reported above (6ad51d6b and dbc85b2d) did not record the locale, so a Postgres difference between those runs and later ones may come partly from the locale.
+- **Query size.** Token counts use tiktoken `cl100k_base` (mean 6.72 tokens per probe), as above.
+- **Degraded warm searches.** A warm repeat can come back degraded (for example, with its vector arm off), and its latency then measures a different search path. [PR 547](https://github.com/garrytan/gbrain-evals/pull/547) adds a per-search degraded flag and reason to the warm pass and a `warm_excluded_degraded` count, so those repeats can be left out of warm latency. At our last read (2026-11-20), PR 547 was not merged into main, so receipts from main do not carry these fields yet.
+- **Excluded repeats are shown (GBEV-3).** Any published warm p95 shows, beside it, how many degraded repeats were excluded and their reasons, including when the count is 0.
+- **Rust engine results.** Rust numbers stay out of the results tables on main until a named gbrain release can select the Rust engine. That is expected through `engine: "rust"` in the config and `gbrain init`, from 2026-11-21. Until then, a Rust run from a branch build is a diagnostic: it can show whether the engine works, not a result to compare.
+
 ## What is comparable and what is not
 
 Comparable: one gbrain build, one machine, one corpus, the same 548 probes and graded gold, byte-identical vectors from one cache, the same search pins (balanced mode, reranker off, autocut off, expansion off), serial runs with nothing else running, interleaved PGLite and Postgres order.
@@ -75,7 +92,7 @@ Not comparable or limited:
 
 - **Environment.** Postgres runs natively in a Docker container and is reached over local TCP; PGLite runs inside the bench process as WASM. The latency gap measures this whole setup, not the storage engines alone.
 - **Build.** The gbrain code under test is `rust-cli-members` at 6ad51d6b90dd for the first build and `rust-engine/lane6-import-embedding-column` at dbc85b2d1911 for the second, neither on master and neither the `package.json` pin (6ce7195b44a0, which has no Rust engine). Receipts record each. Rows are reported per build, never pooled.
-- **Warm pass.** `--warm-passes` repeats the probes on the same brain in the same process. "Cold" means the first query pass after import, not a cold OS page cache; the store was never evicted from memory.
+- **Warm pass.** `--warm-passes` repeats the probes on the same brain in the same process. "Cold" means the first query pass after import, not a cold OS page cache; the store was never evicted from memory. See [Method](#method).
 - **Small, synthetic corpus.** 240 pages of world-v1. Zero variance here comes from a deterministic pipeline and cached vectors, not from a large sample. It says nothing about engine behavior at 100k pages.
 - **Latency resolution.** Per-query times use `Date.now()` (1 ms) and include the cached query-embedding lookup, which is the same for every engine.
 - **Preregistration.** The prediction and stop rule ([PREREGISTRATION.md](PREREGISTRATION.md)) were written before any paid run, but kept locally, not committed to origin first, so this is not an attested preregistration under `eval/runner/prereg.ts` and is not listed in `preregistrations.json`. One prediction failed: we predicted Docker Postgres would be slower than PGLite; it was faster.
@@ -84,7 +101,7 @@ Not comparable or limited:
 ## Reproduce
 
 1. Check out this branch; link the gbrain build under test as `node_modules/gbrain` (`rust-cli-members` at 6ad51d6b90dd) and build its addon (`rust/target/addon/gbrain_engine.linux-x64-glibc.node`).
-2. Start Postgres: `docker run -d --name bench-pg -p 127.0.0.1:55432:5432 -e POSTGRES_HOST_AUTH_METHOD=trust pgvector/pgvector@sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47 -c max_connections=200 -c shared_buffers=512MB`.
+2. Start Postgres, with its port published on the loopback interface only and the locale pinned: `docker run -d --name bench-pg -p <loopback>:55432:5432 -e POSTGRES_HOST_AUTH_METHOD=trust -e LANG=en_US.utf8 -e POSTGRES_INITDB_ARGS="--locale=en_US.UTF-8 --encoding=UTF8" pgvector/pgvector@sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47 -c max_connections=200 -c shared_buffers=512MB`. Record the locale with the `pg_database` query in [Method](#method). The two builds above started the container without the locale flags and did not record the locale.
 3. Create a budget ledger: `bun eval/runner/budget-ledger.ts init --budget-ledger /var/tmp/bench-ledger.sqlite --program-cap-usd <your cap> --reason "engine baseline"`.
 4. With `OPENAI_API_KEY` set, run one warm-up and then the scored runs, serially:
 
@@ -114,7 +131,8 @@ The five runs took about 7 minutes in all (PGLite about 4 minutes with the repea
 
 - nDCG@5 and P@5 (graded) are the values cat13 stores per probe (graded gold: target concept 3, co-occurrence peer 1; P@5 counts grade 1 or more).
 - R@5: share of the probe's grade-3 targets in the top 5. MRR@5: 1 / rank of the first grade-3 target in the top 5, else 0. Both are computed by [harness/summarize.py](harness/summarize.py) from the saved rows.
-- p50 and p95: nearest-rank percentiles of the per-probe `latency_ms` (the adapter's `query()` call), per run.
+- p50 and p95: nearest-rank percentiles of the per-probe `latency_ms` (the adapter's `query()` call), per run. Cold and warm passes are reported apart; a warm p95 carries its count of excluded degraded repeats (see [Method](#method)).
+- Query tokens: tiktoken `cl100k_base` count of each probe text.
 
 ## Files
 
@@ -125,4 +143,4 @@ The five runs took about 7 minutes in all (PGLite about 4 minutes with the repea
 - [environment.json](environment.json): commits, addon hashes, Postgres image digest, machine, run order for both builds.
 - [head-dbc85b2d/](head-dbc85b2d/): the second build: repro output, receipts and logs of the five runs, [summary.json](head-dbc85b2d/summary.json), [table.md](head-dbc85b2d/table.md), the control rows (`per-query.jsonl.gz`), the invalid Rust rows and the top-5 comparisons.
 - [harness/](harness/): the run script, the summarizer, [compare-top5.py](harness/compare-top5.py) and the Rust repro.
-- Harness change in this branch: `eval/runner/adapters/gbrain-inline.ts`, `eval/runner/cat13-conceptual.ts`, `eval/runner/eval-engine.ts`.
+- Harness: the engine arm (`eval/runner/adapters/gbrain-inline.ts`, `eval/runner/cat13-conceptual.ts`, `eval/runner/eval-engine.ts`) is on main through [PR 523](https://github.com/garrytan/gbrain-evals/pull/523).
