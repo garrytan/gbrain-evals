@@ -122,6 +122,23 @@ describe('LongMemEval on Redis harness: judges and stages', () => {
     expect(again.ran).toBe(0);
   });
 
+  test('the labeller\'s verdict is its last Label line', () => {
+    expect(['Reasoning... Label: yes', 'Label: no\nWait. Label: **yes**', 'label:no', 'yes', null].map(L.parseLabel)).toEqual([1, 1, 0, -1, -1]);
+  });
+
+  test('a judge\'s real set spans every arm and holds 15 protocol-wrong answers where there are that many', () => {
+    const arms = ['opus--off', 'opus--on', 'opus--full', 'opus--oracle', 'particle--off'];
+    const cands = arms.flatMap(arm => Array.from({ length: 20 }, (_, i) => ({ key: `${arm}/q${i}`, arm, question_id: `q${i}`, protocol_wrong: i < 4 })));
+    const picked = L.labelSelection(cands);
+    expect(picked.length).toBe(48);
+    expect(new Set(picked.map(p => p.key)).size).toBe(48);
+    expect(new Set(picked.map(p => p.arm))).toEqual(new Set(arms));
+    expect(picked.filter(p => p.protocol_wrong).length).toBeGreaterThanOrEqual(15);
+    expect(L.labelSelection(cands)).toEqual(picked);
+    const few = cands.map(c => ({ ...c, protocol_wrong: c.key === 'opus--off/q0' }));
+    expect(L.labelSelection(few).filter(p => p.protocol_wrong).length).toBe(1);
+  });
+
   test('an unknown arm is refused before anything is read', () => {
     expect(() => L.parseArm('opus--agent-default')).toThrow(/unknown arm/);
     expect(L.parseArm('gpt4o--agent-default')).toEqual({ reader: 'gpt4o', memories: 'agent-default' });

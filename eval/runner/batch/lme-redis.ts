@@ -9,6 +9,7 @@
  *   bun eval/runner/batch/lme-redis.ts judge <arm> protocol|cross --stage <id> [--ids ...]
  *   bun eval/runner/batch/lme-redis.ts particle particle--<memories> --stage <id> [--ids ...]
  *   bun eval/runner/batch/lme-redis.ts judge-controls protocol|opus|astra --controls <jsonl> --stage judge-check
+ *   bun eval/runner/batch/lme-redis.ts label opus|astra --stage pilot --ids pilot      gemini-4-argon labels for a judge's real set
  *   bun eval/runner/batch/lme-redis.ts poll --stage <id>
  *   bun eval/runner/batch/lme-redis.ts status
  *
@@ -30,6 +31,7 @@ import { join, resolve } from 'node:path';
 import { gunzipSync, gzipSync } from 'node:zlib';
 import { BudgetRun, installPaidRequestGuard, ledgerStatus } from '../budget-ledger.ts';
 import { attestPreregistration } from '../prereg.ts';
+import { seededPermutation } from './sources.ts';
 import { buildManifest, freezeManifest, readManifest, sha256, type ArmManifest, type Provider } from './manifest.ts';
 import { ChatClient, chatWithReceipts } from '../memory-qa/qa-v2.ts';
 import { BatchLane, type StoredResult } from './submit.ts';
@@ -271,6 +273,43 @@ export async function runParticle(memories: Memories, ids: string[], client: { c
   return { ran, stopped };
 }
 
+/** The real-answer labeller (preregistration, "Judge check" step 2): a third family that neither reads nor judges here. */
+export const LABELLER = { model: 'gemini:gemini-4-argon', effort: 'high', max_output_tokens: 8192 } as const;
+export const LABEL_SUFFIX = '\n\nThink it through first. Then end your reply with exactly one line, either "Label: yes" or "Label: no".';
+export const LABEL_SEED = Number.parseInt(sha256('lme-redis-harness').slice(0, 8), 16);
+export const LABELS_PER_JUDGE = 48;
+export const LABEL_WRONG_MIN = 15;
+
+/** The labeller's verdict: the last "Label: yes|no" line of its reply, else none. */
+export function parseLabel(raw: string | null): 0 | 1 | -1 {
+  const m = [...(raw ?? '').matchAll(/label:\s*\**\s*(yes|no)\b/gi)].at(-1);
+  return !m ? -1 : m[1].toLowerCase() === 'yes' ? 1 : 0;
+}
+
+export interface LabelCandidate { key: string; arm: string; question_id: string; protocol_wrong: boolean }
+
+/**
+ * The answers one cross-family judge's real set labels: `n` of the answers it grades, seeded, taken round-robin over the
+ * arms so every arm is in, with at least `wrongMin` the protocol judge marked wrong where there are that many.
+ */
+export function labelSelection(candidates: LabelCandidate[], n = LABELS_PER_JUDGE, wrongMin = LABEL_WRONG_MIN, seed = LABEL_SEED): LabelCandidate[] {
+  const order = seededPermutation(candidates.map(c => c.key), seed);
+  const byKey = new Map(candidates.map(c => [c.key, c]));
+  const shuffled = order.map(k => byKey.get(k)!);
+  const picked: LabelCandidate[] = [];
+  const take = (pool: LabelCandidate[], want: number) => {
+    const arms = [...new Set(pool.map(c => c.arm))].sort();
+    const queues = new Map(arms.map(a => [a, pool.filter(c => c.arm === a && !picked.includes(c))]));
+    for (let i = 0; picked.length < want && [...queues.values()].some(q => q.length); i++) {
+      const next = queues.get(arms[i % arms.length])!.shift();
+      if (next) picked.push(next);
+    }
+  };
+  take(shuffled.filter(c => c.protocol_wrong), Math.min(wrongMin, n));
+  take(shuffled, n);
+  return picked;
+}
+
 /** The strict cross-family parse: the reply's first word, lowercased and stripped of punctuation, must be yes or no. */
 export function strictVerdict(raw: string | null): 0 | 1 | -1 {
   const first = (raw ?? '').trim().split(/\s+/)[0]?.toLowerCase().replace(/[^a-z]/g, '') ?? '';
@@ -382,6 +421,34 @@ async function main(argv: string[]) {
         saveBodies(id, bodies);
       }
       await submit(l, run, readManifest(manifestPath(id)), loadBodies(id), ids, argv.includes('--list-price'));
+    } else if (cmd === 'label') {
+      const judge = arm as 'opus' | 'astra';
+      const graded = (Object.keys(READERS) as AnyReader[]).concat('particle').filter(r => crossJudge(r) === judge);
+      if (!graded.length || (judge !== 'opus' && judge !== 'astra')) throw new Error('label takes opus or astra (the cross-family judge whose real set it labels)');
+      const candidates: LabelCandidate[] = [];
+      const prompts = new Map<string, string>();
+      for (const reader of graded) for (const memories of reader === 'particle' ? PARTICLE.memories : READERS[reader as Reader].memories) {
+        const a = armId(reader, memories);
+        const messagesPath = join(STATE_DIR, 'judge-messages', `${a}.jsonl`);
+        if (!existsSync(messagesPath)) continue;
+        const protocol = l.results(judgeArmId(a, 'protocol'));
+        for (const m of readJsonl<{ item_id: string; messages: JudgeMessages }>(messagesPath)) {
+          if (!ids.includes(m.item_id) || !protocol.has(m.item_id)) continue;
+          const key = `${a}/${m.item_id}`;
+          prompts.set(key, m.messages[0].content);
+          candidates.push({ key, arm: a, question_id: m.item_id, protocol_wrong: redisVerdict(protocol.get(m.item_id)!.text) === 0 });
+        }
+      }
+      const picked = labelSelection(candidates);
+      const client = new ChatClient(join(STATE_DIR, 'labels', 'cache'), undefined, PARTICLE.timeout_ms);
+      const path = join(STATE_DIR, 'labels', `${judge}.jsonl`);
+      mkdirSync(join(STATE_DIR, 'labels'), { recursive: true });
+      const done = new Set(existsSync(path) ? readJsonl<{ key: string }>(path).map(r => r.key) : []);
+      for (const c of picked.filter(p => !done.has(p.key))) {
+        const r = await client.chat(LABELLER.model, prompts.get(c.key)! + LABEL_SUFFIX, { maxTokens: LABELLER.max_output_tokens, replicate: 0, effort: LABELLER.effort });
+        appendFileSync(path, JSON.stringify({ ...c, labeller: LABELLER.model, raw: r.text, label: parseLabel(r.text ?? null), finish: r.finish ?? null }) + '\n');
+      }
+      console.log(JSON.stringify({ judge, candidates: candidates.length, labelled: picked.length, protocol_wrong: picked.filter(p => p.protocol_wrong).length }));
     } else if (cmd === 'judge-controls') {
       const judge = arm as keyof typeof JUDGES;
       if (!JUDGES[judge]) throw new Error(`judge-controls takes ${Object.keys(JUDGES).join(', ')}`);
