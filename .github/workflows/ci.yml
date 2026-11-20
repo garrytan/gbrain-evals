@@ -235,14 +235,15 @@ jobs:
           overwrite: true
 
   # The tested tree for gstack's CI carry (gstack docs/pregate.md#ci-carry).
-  # After the checks job and all four test shards pass, tree.json records this
-  # run, the tree it tested and every test file it ran: the Bun files from the
-  # shards' JUnit reports and the Python tests the checks job runs. gstack's
-  # pregate and /ship read it from a green run at the same clean tree
+  # After the checks job, every test shard and the harness jobs pass, tree.json
+  # records this run, the tree it tested and every test file it ran: the Bun
+  # files from the shards' JUnit reports, the harness Python tests from the
+  # harness pytest run's JUnit report and the Python tests the checks job runs.
+  # gstack's pregate and /ship read it from a green run at the same clean tree
   # (.gstack/pregate.json run_profiles and ship_lanes_from) instead of running
   # the suite again. It runs no tests itself.
   tested-tree:
-    needs: [checks, tests]
+    needs: [checks, tests, harness]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -401,9 +402,21 @@ jobs:
           path: .harness/packs
           key: ${{ steps.harness-pack.outputs.cache-primary-key }}
 
+      # The JUnit report names the harness test files pytest ran, for the
+      # tested-tree job; xunit1 is the report format that names each case's file.
       - name: Harness wrapper tests (pytest)
         if: matrix.suite == 'pytest'
-        run: bun run harness:test
+        run: bun run harness:test --junitxml="$RUNNER_TEMP/pytest.xml" -o junit_family=xunit1
+
+      - name: Upload the files pytest ran
+        if: matrix.suite == 'pytest'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: tested-files-pytest
+          path: ${{ runner.temp }}/pytest.xml
+          if-no-files-found: error
+          retention-days: 7
+          overwrite: true
 
       - name: Metering proxy and launcher tests
         if: matrix.suite == 'proxy'
