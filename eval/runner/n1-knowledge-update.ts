@@ -67,7 +67,7 @@ import {
   breakdown, n1Metrics, recallTokens, scoreExposure, scoreN1Probe, searchRowTokens,
   type ExposureRow, type N1Answer, type N1Metrics, type N1Row,
 } from './lifecycle/n1-score.ts';
-import { ENGINES, IFACES, SliceCell, asRows, collectStrings, postgresReachable, runMatrix, type Engine, type Iface } from './lifecycle/slice.ts';
+import { ENGINES, IFACES, SliceCell, asRows, collectStrings, postgresReachable, remoteAccessGap, runMatrix, type Engine, type Iface } from './lifecycle/slice.ts';
 import { registryEntry } from '../registry.ts';
 import { evaluatePromotion } from './promotion.ts';
 import { budgetOptionsFrom, receiptCost, startPaidRun } from './budget-ledger.ts';
@@ -257,6 +257,8 @@ export interface CellOutcome {
   duration_ms: number;
   fatal?: string;
   void_reason?: string;
+  /** The first remote call the engine refused with access_control (SliceCell.firstAccessRefusal). */
+  remote_access_refused?: string | null;
   server_version: string;
   decide: SliceCell['decideOff'];
   presence: Array<{ name: string; ok: boolean; detail: string }>;
@@ -337,6 +339,7 @@ async function runCell(world: N1World, gut: GbrainUnderTest, engine: Engine, ifa
     }
     const primary = cell.calls.filter(c => c.caller === 'primary');
     out.calls = { primary: primary.length, trusted: cell.calls.filter(c => c.caller === 'trusted').length, primary_ms: primary.map(c => c.ms) };
+    out.remote_access_refused = cell.firstAccessRefusal();
     out.duration_ms = Date.now() - t0;
   }
   return out;
@@ -590,11 +593,13 @@ async function main(): Promise<void> {
 
   const gateEngine: Engine = evalKind ?? 'pglite';
   const gateLabel = evalKind ?? 'PGLite';
-  const pglite = result.cells.filter(c => c.engine === gateEngine);
+  const accessGaps = result.cells.flatMap(c => { const reason = remoteAccessGap(c); return reason ? [{ id: c.id, check: `N1 ${c.interface} cell`, reason }] : []; });
+  const gapIds = new Set(accessGaps.map(g => g.id));
+  const pglite = result.cells.filter(c => c.engine === gateEngine && !gapIds.has(c.id));
   const postgres = result.cells.filter(c => c.engine === 'postgres');
   const metrics = aggregate(pglite);
   const metricsPg = postgres.length ? aggregate(postgres) : null;
-  const harnessErrors = result.cells.filter(c => c.fatal || c.void_reason).map(c => ({ probe_id: c.id, origin: 'harness' as const, message: (c.void_reason ?? c.fatal ?? '').slice(0, 500) }));
+  const harnessErrors = result.cells.filter(c => (c.fatal || c.void_reason) && !gapIds.has(c.id)).map(c => ({ probe_id: c.id, origin: 'harness' as const, message: (c.void_reason ?? c.fatal ?? '').slice(0, 500) }));
   const allRows = pglite.flatMap(c => Object.values(c.checkpoints).flatMap(cp => cp!.rows));
   const sutErrors = allRows.filter(r => r.error).slice(0, 50).map(r => ({ probe_id: r.probe_id, origin: 'sut' as const, message: r.error!.slice(0, 300) }));
   const entry = registryEntry(slice ? 'N1-ci' : 'N1')!;
@@ -672,7 +677,7 @@ async function main(): Promise<void> {
       failures: allRows.filter(r => !r.pass || r.stale).slice(0, 200),
       cells: result.cells.map(c => ({ ...c, calls: { primary: c.calls.primary, trusted: c.calls.trusted } })),
     },
-    ...evalEngineReceiptFields(evalKind),
+    ...evalEngineReceiptFields(evalKind, accessGaps.map(g => ({ status: 'not_applicable' as const, engine: 'rust' as const, check: g.check, reason: g.reason }))),
   };
   writeReceipt(outPath, scrubMachinePaths(receipt));
   const outcome = evaluatePromotion(entry.promotion!, receipt);

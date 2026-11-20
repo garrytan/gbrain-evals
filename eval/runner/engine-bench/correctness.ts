@@ -157,7 +157,8 @@ export interface CheckRow {
   contracts: Contract[];
   engines: Partial<Record<EvalEngineKind, EngineRow>>;
   typescript: { compared: EvalEngineKind[]; differences: string[] };
-  rust: { verdict: RustVerdict; reasons: string[] } | null;
+  /** gaps: every step the Rust receipt lists as not_applicable, each a named gap whatever the verdict. */
+  rust: { verdict: RustVerdict; reasons: string[]; gaps: NotApplicable[] } | null;
 }
 export interface CorrectnessReceipt {
   schema_version: typeof CORRECTNESS_SCHEMA_VERSION;
@@ -257,7 +258,7 @@ export function compareCheck(check: CheckSpec, runs: EngineRun[]): { row: CheckR
       else if (compared === 0) { verdict = 'unmeasured'; reasons.push('no TypeScript engine measured this check, so there is no count to compare'); }
       else verdict = 'pass';
     }
-    rust = { verdict, reasons };
+    rust = { verdict, reasons, gaps: rustRow.not_applicable ?? [] };
   }
   return {
     row: { id: check.id, label: check.label, runner: check.script, args: check.args, contracts: check.contracts, engines, typescript: { compared: ts, differences }, rust },
@@ -392,7 +393,8 @@ export function summaryLines(r: CorrectnessReceipt): string[] {
   const lines = [`correctness: gbrain ${r.gbrain.version}, engines ${r.engines.join(',')}, rust ${r.summary.rust ?? 'not run'}, ${r.findings.length} finding(s), ${Math.round(r.summary.total_wall_ms / 1000)}s`];
   for (const c of r.checks) {
     const cells = Object.values(c.engines).map(e => `${e!.engine} ${e!.status}${e!.refusal_reason ? ` (${e!.refusal_reason})` : ''} ${Math.round(e!.wall_ms / 1000)}s`);
-    lines.push(`  ${c.id}: ${cells.join(', ')}${c.rust ? `; rust ${c.rust.verdict}` : ''}`);
+    lines.push(`  ${c.id}: ${cells.join(', ')}${c.rust ? `; rust ${c.rust.verdict}${c.rust.gaps.length ? `, ${c.rust.gaps.length} gap(s)` : ''}` : ''}`);
+    for (const g of c.rust?.gaps ?? []) lines.push(`    gap: ${g.check}: ${g.reason.slice(0, 160)}`);
   }
   for (const f of r.findings) lines.push(`  finding ${f.check}${f.contract ? `.${f.contract}` : ''}: ${f.detail}`);
   return lines;

@@ -49,7 +49,7 @@ describe('parseRefusal', () => {
 describe('compareCheck', () => {
   test('rust passes when its verdict is pass and every count equals both TypeScript engines', () => {
     const { row, findings } = compareCheck(CHECK, [run('pglite', 'pass', { leaks: 0, sealed: 0 }), run('postgres', 'pass', { leaks: 0, sealed: 0 }), run('rust', 'pass', { leaks: 0, sealed: 0 })]);
-    expect(row.rust).toEqual({ verdict: 'pass', reasons: [] });
+    expect(row.rust).toEqual({ verdict: 'pass', reasons: [], gaps: [] });
     expect(findings).toEqual([]);
     expect(row.typescript.compared).toEqual(['pglite', 'postgres']);
   });
@@ -77,7 +77,7 @@ describe('compareCheck', () => {
     expect(r.contracts.sealed).toEqual({ value: null, not_applicable: SEALED_NA });
     const { row } = compareCheck(CHECK, [run('pglite', 'pass', { leaks: 0, sealed: 0 }), run('postgres', 'pass', { leaks: 0, sealed: 0 }), r]);
     expect(row.engines.rust!.status).toBe('pass');
-    expect(row.rust).toEqual({ verdict: 'pass', reasons: ['sealed not_applicable'] });
+    expect(row.rust).toEqual({ verdict: 'pass', reasons: ['sealed not_applicable'], gaps: [SEALED_NA] });
     expect(row.engines.rust!.not_applicable).toEqual([SEALED_NA]);
   });
   test('a check whose every contract is not_applicable on rust is unmeasured', () => {
@@ -91,13 +91,13 @@ describe('compareCheck', () => {
   test('exit 69 is refused with its reason, never fail', () => {
     const { row } = compareCheck(CHECK, [run('pglite', 'pass', { leaks: 0, sealed: 0 }), refused('rust')]);
     expect(row.engines.rust!.status).toBe('refused');
-    expect(row.rust).toEqual({ verdict: 'refused', reasons: ['refused (rust_engine_not_in_build)'] });
+    expect(row.rust).toEqual({ verdict: 'refused', reasons: ['refused (rust_engine_not_in_build)'], gaps: [] });
   });
   test('a rust runner error is a failure when a TypeScript engine measured the check', () => {
     const crashed = { engine: 'rust' as const, exit_code: 3, wall_ms: 1, log: 'x', error: 'exit 3, no receipt: crash' };
     const { row } = compareCheck(CHECK, [run('pglite', 'pass', { leaks: 0, sealed: 0 }), readRun(CHECK, crashed, null)]);
     expect(row.engines.rust!.status).toBe('error');
-    expect(row.rust).toEqual({ verdict: 'fail', reasons: ['runner error: exit 3, no receipt: crash'] });
+    expect(row.rust).toEqual({ verdict: 'fail', reasons: ['runner error: exit 3, no receipt: crash'], gaps: [] });
   });
   test('rust is unmeasured when no TypeScript engine measured the check', () => {
     const { row } = compareCheck(CHECK, [refused('pglite', 'engine_not_supported_by_runner'), run('rust', 'pass', { leaks: 0, sealed: 0 })]);

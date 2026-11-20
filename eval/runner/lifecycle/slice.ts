@@ -33,6 +33,23 @@ import { cliEngineConfig, rustAddonEnv } from '../eval-engine.ts';
 import { redactUrlPasswords, strippedKeysIn } from '../hermetic-env.ts';
 import { CliDriver, McpHttpClient, McpHttpDriver, McpStdioDriver, runCli, type CallResult, type Driver, type RunEnv } from './drivers.ts';
 
+/** gbrain's typed refusal of a remote caller on an engine that does not enforce the brain's access rules itself. */
+export function isAccessControlRefusal(text: string): boolean {
+  return text.includes('engine_capability_missing') && text.includes('access_control');
+}
+
+/**
+ * Why a cell is not_applicable: a Rust cell on a remote interface (stdio or HTTP MCP) that did not finish because the
+ * build refuses remote callers with engine_capability_missing, reason access_control. That is a named gap (the build
+ * does not serve remote callers yet), never a pass or a fail, so the cell leaves the gate and the receipt lists it.
+ * Null for every other cell, including a Rust cell that finished or failed for another reason.
+ */
+export function remoteAccessGap(c: { engine: Engine; interface: Iface; fatal?: string; void_reason?: string; remote_access_refused?: string | null }): string | null {
+  if (c.engine !== 'rust' || c.interface === 'cli' || !(c.fatal || c.void_reason)) return null;
+  const evidence = c.remote_access_refused ?? (isAccessControlRefusal(c.fatal ?? '') ? (c.fatal ?? '').split('\n')[0]!.slice(0, 200) : null);
+  return evidence ? `The Rust build refuses remote callers (engine_capability_missing, reason access_control), so the ${c.interface} cell cannot run: ${evidence}` : null;
+}
+
 /** `rust` is selected only through GBRAIN_EVAL_ENGINE (eval/runner/eval-engine.ts); ENGINES stays the default matrix. */
 export type Engine = 'pglite' | 'postgres' | 'rust';
 export type Iface = 'cli' | 'mcp-stdio' | 'mcp-http';
@@ -126,6 +143,13 @@ export class SliceCell {
     if (!this.mustPause) return fn();
     await this.primary.close();
     try { return await fn(); } finally { await this.primary.start(); }
+  }
+
+  /** The first remote call this cell's engine refused with engine_capability_missing, reason access_control, or null. */
+  firstAccessRefusal(): string | null {
+    if (!this.remote) return null;
+    const c = this.calls.find(x => x.caller !== 'trusted' && !x.ok && isAccessControlRefusal(`${x.error ?? ''} ${x.raw}`));
+    return c ? `${c.op}: ${(c.error ?? c.raw).slice(0, 200)}` : null;
   }
 
   /** Run reads as the trusted local CLI caller. On the CLI cell this is the primary itself. */
