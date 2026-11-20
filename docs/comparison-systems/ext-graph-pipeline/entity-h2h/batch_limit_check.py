@@ -6,14 +6,23 @@ OpenAI's 400 (fake_provider.py). It embeds 5,000 names in one embed_text call, t
   docker compose exec -T cognee python - < batch_limit_check.py              # with entity_h2h.py's fix: passes
   docker compose exec -T cognee python - --unpatched < batch_limit_check.py  # without it: the 400 comes back
 
-Prints one JSON line and exits 0 when the outcome is the expected one for the mode, 1 otherwise.
+Prints one JSON line and exits 0 when the outcome is the expected one for the mode, 1 otherwise. It refuses with exit 2,
+before it builds an embedder, unless every provider key in the container is the compose file's keyless placeholder: a
+paid stack sets them to the cell's token, and the metering proxy refuses requests that carry the placeholder.
 """
 import asyncio
 import json
+import os
 import sys
 
-sys.path.insert(0, "/app/cognee")
 unpatched = "--unpatched" in sys.argv
+PLACEHOLDER = "dummy-key-the-proxy-injects-the-real-one"
+KEYS = ("OPENAI_API_KEY", "LLM_API_KEY", "EMBEDDING_API_KEY")
+if any(os.environ.get(k) != PLACEHOLDER for k in KEYS):
+    print(json.dumps({"mode": "unpatched" if unpatched else "patched", "refused": "not the keyless stack: a provider key is set or missing"}))
+    sys.exit(2)
+
+sys.path.insert(0, "/app/cognee")
 if not unpatched:
     import entity_h2h  # noqa: F401
 from cognee.infrastructure.databases.vector.embeddings.get_embedding_engine import get_embedding_engine  # noqa: E402

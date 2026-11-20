@@ -329,6 +329,22 @@ describe('memory-system pins (each the newest release at launch, preregistration
     expect(JSON.parse(r.stdout)).toEqual({ 2048: [200, 2048], 2049: [400, "Invalid 'input': array length must be 2048 or less."] });
   });
 
+  // Value: protects=a counted cell's lease from the Amendment 5 diagnostic; fails_when=batch_limit_check.py builds an embedder in a container whose provider keys are not all the compose file's keyless placeholder
+  test("ext-graph-pipeline's batch-limit check refuses before embedding unless every provider key is the keyless placeholder", () => {
+    const path = resolve(import.meta.dir, '../../docs/comparison-systems/ext-graph-pipeline/entity-h2h/batch_limit_check.py');
+    const placeholder = 'dummy-key-the-proxy-injects-the-real-one';
+    const keys = { OPENAI_API_KEY: placeholder, LLM_API_KEY: placeholder, EMBEDDING_API_KEY: placeholder };
+    const run = (env: Record<string, string>) => spawnSync('python3', [path], { encoding: 'utf8', env: { PATH: process.env.PATH ?? '', ...env } });
+    for (const env of [{ ...keys, EMBEDDING_API_KEY: 'cell-token' }, { ...keys, LLM_API_KEY: 'cell-token' }, { OPENAI_API_KEY: placeholder }]) {
+      const r = run(env);
+      expect(r.status).toBe(2);
+      expect(JSON.parse(r.stdout.trim()).refused).toContain('not the keyless stack');
+    }
+    const keyless = run(keys);
+    expect(keyless.status).not.toBe(2);
+    expect(keyless.stdout).not.toContain('refused');
+  });
+
   test('the dry run prints each memory system\'s pinned release and lock from its entity-h2h bundle', () => {
     const d = dryRun(DEV_SEED, 20);
     for (const [kind, version] of Object.entries(PINNED)) {
