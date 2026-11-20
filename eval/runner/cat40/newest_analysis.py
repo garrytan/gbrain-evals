@@ -4,7 +4,12 @@
 Usage:
   python3 eval/runner/cat40/newest_analysis.py --world N1=<attempts or results.jsonl>[,<more>] --world N2=<...> \
       [--transcripts <transcripts.jsonl>[,<more>]] [--judge-check <report.json>] [--gbrain gbrain-newest] [--fs fs] \
-      [--resamples 10000] [--seed 1] [--json out.json] [--look interim|final]
+      [--resamples 10000] [--seed 1] [--json out.json] [--look interim|final|control] [--old gbrain-old-09d]
+      [--world-transcripts N1=<transcripts.jsonl>[,<more>] ...]  (--look control only)
+
+--look control is the old-build control (docs/benchmarks/2026-11-19-cat40-hard-old-build-control-preregistration.md):
+each world's files list holds the old build's cells beside the newest run's gbrain and files cells. It reports Delta_old
+(old minus files) and newest minus old with 95% intervals from the same resample draws, and the control's outcome row.
 
 --look interim is the one look at half the tasks (R113; amendment of 2026-11-19): it reads exactly half A (tasks 01 to
 10 of each family) and stops for a difference at |z| >= 2.80, or for futility when conditional power under the planned
@@ -35,6 +40,11 @@ HIDDEN_SEARCH_OPTIONS = ('snippet_chars', 'mode', 'token_budget')
 # The one interim look (R113, amendment of 2026-11-19): O'Brien-Fleming bounds at half the tasks, futility on
 # conditional power under the planned effect (the 80%-power detectable difference), and the final critical value.
 HALF_A = [f'{fam}-{i:02d}' for fam in FAMILIES for i in range(1, 11)]
+# The old-build control's outcome rows (its preregistration, "What the result changes").
+CONTROL_ROWS = ('regression', 'smaller regression', 'newest improved', 'not a regression')
+CONTROL_WORLDS = ('N1', 'N2')
+TASKS = [f'{fam}-{i:02d}' for fam in FAMILIES for i in range(1, TASKS_PER_WORLD // len(FAMILIES) + 1)]
+PROVIDER_FAILURE = re.compile(r'provider error (?:429|5\d\d)\b')
 INTERIM_Z, FINAL_Z, PLANNED_EFFECT, FUTILITY_CP, INFO_FRACTION = 2.80, 1.98, 5.4, 0.10, 0.5
 
 
@@ -160,18 +170,26 @@ def outcome_row(res, key='ci95'):
 
 
 def complete(worlds, arms, models, tasks=None):
-    """Planned cells absent per (world, arm, model): every world needs TASKS_PER_WORLD clean cells, or exactly the named tasks."""
-    gaps = {}
+    """Planned cells absent per (world, arm, model): exactly the worlds N1 and N2, each with every planned task id (or
+    exactly the named tasks) for every arm and reader; a missing or extra world is a gap too."""
+    want = set(TASKS if tasks is None else tasks)
+    gaps = {f'{w}|*|*': 'world missing' for w in CONTROL_WORLDS if w not in worlds}
+    gaps.update({f'{w}|*|*': 'world not planned' for w in worlds if w not in CONTROL_WORLDS})
     for w, cells in worlds.items():
         for arm in arms:
             for m in models:
                 have = {t for (a, mm, t) in cells if a == arm and mm == m}
-                if tasks is not None:
-                    if have != set(tasks):
-                        gaps[f'{w}|{arm}|{m}'] = len(set(tasks) - have) or -len(have - set(tasks))
-                elif len(have) != TASKS_PER_WORLD:
-                    gaps[f'{w}|{arm}|{m}'] = TASKS_PER_WORLD - len(have)
+                if have != want:
+                    stray = sorted(have - want)
+                    gaps[f'{w}|{arm}|{m}'] = f'{len(want - have)} missing; outside the planned task ids: {stray}' if stray else len(want - have)
     return gaps
+
+
+def unretried(worlds, accepted):
+    """Counted cells that ended on a provider 5xx or 429, a harness error the preregistration retries, unless named."""
+    return sorted(k for w, cells in worlds.items() for (a, m, t), r in cells.items()
+                  if r.get('stop') == 'error' and PROVIDER_FAILURE.search(str(r.get('error') or ''))
+                  and (k := f'{w}|{a}|{m}|{t}') not in accepted)
 
 
 def interim(worlds, G, F, B, S):
@@ -199,6 +217,91 @@ def interim(worlds, G, F, B, S):
     return res
 
 
+def control_row(delta_old, newest_minus_old):
+    """Delta_old at +5.3 or more is a regression whatever the paired interval shows; below it the paired newest-minus-old
+    95% interval decides: below 0 a smaller regression, above 0 an improvement, otherwise not a regression."""
+    if delta_old['delta_pp'] >= HOLD_AT:
+        return 'regression'
+    lo, hi = newest_minus_old['ci95']
+    if hi < 0:
+        return 'smaller regression'
+    if lo > 0:
+        return 'newest improved'
+    return 'not a regression'
+
+
+def without(worlds, drop):
+    """The same cells without every arm's cell for each dropped (world, model, task): the widened-session sensitivity."""
+    return {w: {k: r for k, r in cells.items() if (w, k[1], k[2]) not in drop} for w, cells in worlds.items()}
+
+
+def control(worlds, cost, O, G, F, B, S, transcripts=None):
+    """The old-build control. Both differences use one draw sequence: every arm covers the same tasks per world, so each
+    Comparison's random.Random(S) stream draws the same tasks (checked below). transcripts maps each world to its own
+    transcript files, because attempt ids don't name the world."""
+    old = Comparison(worlds, O, F, 'success', FRONTIER)
+    nmo = Comparison(worlds, G, O, 'success', FRONTIER)
+    if old.tasks != nmo.tasks:
+        raise ValueError('the old, newest and files arms do not cover the same tasks; the paired draws would differ')
+    d_old, d_nmo = old.run(B, S), nmo.run(B, S)
+    if d_old['missing_pairs'] or d_nmo['missing_pairs']:
+        raise ValueError(f"{d_old['missing_pairs'] + d_nmo['missing_pairs']} task pairs lack a cell in one arm; the arms must cover the same task ids")
+    row = control_row(d_old, d_nmo)
+    out = {'look': 'control', 'resamples': B, 'seed': S, 'arms': {'old': O, 'newest': G, 'fs': F}, 'readers_pooled': FRONTIER,
+           'delta_old': d_old, 'newest_minus_old': d_nmo, 'outcome_row': row, 'threshold_regression_at_or_above': HOLD_AT,
+           'note': 'newest lower, within noise' if row == 'not a regression' and d_nmo['delta_pp'] < 0 else None,
+           'per_reader': {}, 'per_world': {}, 'per_family': {}, 'secondary': {}, 'first_table': {}}
+    for m in FRONTIER:
+        out['per_reader'][m] = {'delta_old': Comparison(worlds, O, F, 'success', [m]).run(B, S),
+                                'newest_minus_old': Comparison(worlds, G, O, 'success', [m]).run(B, S)}
+    for w in sorted(worlds):
+        one = {w: worlds[w]}
+        out['per_world'][w] = {'delta_old': Comparison(one, O, F, 'success', FRONTIER).run(B, S),
+                               'newest_minus_old': Comparison(one, G, O, 'success', FRONTIER).run(B, S)}
+    fams = [(f, lambda r, f=f: r['family'] == f) for f in FAMILIES]
+    fams += [('H4+long', lambda r: r['family'] == 'H4' and '+long' in str(r.get('variant', ''))),
+             ('H4-not-long', lambda r: r['family'] == 'H4' and '+long' not in str(r.get('variant', '')))]
+    for name, flt in fams:
+        out['per_family'][name] = {'delta_old': Comparison(worlds, O, F, 'success', FRONTIER, task_filter=flt).run(B, S),
+                                   'newest_minus_old': Comparison(worlds, G, O, 'success', FRONTIER, task_filter=flt).run(B, S),
+                                   'delta_newest': Comparison(worlds, G, F, 'success', FRONTIER, task_filter=flt).run(B, S)}
+    out['h4_regression'] = out['per_family']['H4']['newest_minus_old']['ci95'][1] < 0
+    for what in ('wrong_value', 'wrong_submitted', 'not_submitted', 'turn_cap'):
+        out['secondary'][what] = {'delta_old': Comparison(worlds, O, F, what, FRONTIER).run(B, S),
+                                  'newest_minus_old': Comparison(worlds, G, O, what, FRONTIER).run(B, S)}
+    for m in FRONTIER:
+        for arm in (O, G, F):
+            n = sum(1 for cells in worlds.values() for (a, mm, _), r in cells.items() if a == arm and mm == m and r['score'].get('success'))
+            usd = cost.get((arm, m), 0.0)
+            out['first_table'][f'{arm}|{m}'] = {'successes': n, 'cost_per_correct_usd': round(usd / n, 4) if n else None}
+    out['first_table'][f'{O}|{PARTICLE}'] = 'not run in this control (the decision reads only the frontier readers)'
+    if transcripts:
+        out['tool_calls'], widened = {}, set()
+        if set(transcripts) != set(worlds):
+            raise ValueError(f'the widened-session sensitivity needs transcripts for every world: {sorted(set(worlds) - set(transcripts))} missing')
+        for w, paths in sorted(transcripts.items()):
+            seen = set()
+            for p in paths:
+                with open(p) as f:
+                    seen |= {json.loads(line).get('attempt_id') for line in f if line.strip()}
+            lacking = {r['attempt_id'] for k, r in worlds[w].items() if k[0] in (O, G)} - seen
+            if lacking:
+                raise ValueError(f'{w}: {len(lacking)} old- or newest-build attempts have no transcript; the widened-session sensitivity needs them all')
+            for label in (O, G):
+                stats, wid = tool_stats(paths, label, worlds_of={w: worlds[w]})
+                for k, v in stats.items():
+                    if k.split('|')[0] == label:
+                        acc = out['tool_calls'].setdefault(k, {})
+                        for kk, vv in v.items():
+                            acc[kk] = acc.get(kk, 0) + vv
+                widened |= wid
+        cut = without(worlds, widened)
+        out['without_widened_sessions'] = {'dropped_pairs': len(widened),
+                                           'delta_old': Comparison(cut, O, F, 'success', FRONTIER).run(B, S),
+                                           'newest_minus_old': Comparison(cut, G, O, 'success', FRONTIER).run(B, S)}
+    return out
+
+
 def claims_summary(worlds, arm, model):
     rows = [r for cells in worlds.values() for (a, m, _), r in cells.items() if a == arm and m == model and r.get('claims')]
     if not rows:
@@ -207,8 +310,14 @@ def claims_summary(worlds, arm, model):
     return {'answers_judged': len(rows), 'mean_bad_claims': round(sum(bad) / len(rows), 3), 'share_with_bad_claim': round(sum(1 for b in bad if b) / len(rows), 3)}
 
 
-def tool_stats(paths, gbrain_label):
+def tool_stats(paths, gbrain_label, worlds_of=None):
+    """Tool-call counts per arm and reader. With worlds_of, also returns the (world, model, task) of every gbrain_label cell
+    whose session widened itself to the full surface with request_tools, located by its attempt id in those worlds."""
     out = defaultdict(lambda: defaultdict(int))
+    widened = set()
+    where = {}
+    if worlds_of is not None:
+        where = {r['attempt_id']: (w, k[1], k[2]) for w, cells in worlds_of.items() for k, r in cells.items() if k[0] == gbrain_label}
     for p in paths:
         with open(p) as f:
             for line in f:
@@ -217,6 +326,11 @@ def tool_stats(paths, gbrain_label):
                 r = json.loads(line)
                 model, arm = r['key'].split('|')[:2]
                 s = out[f'{arm}|{model}']
+                if arm == gbrain_label and any(c.get('name') == 'request_tools' and '"surface":"full"' in str(c.get('result', '')).replace(' ', '')
+                                               and '"previous":"starter"' in str(c.get('result', '')).replace(' ', '') for c in r.get('tools', [])):
+                    s['cells_widened_to_full'] += 1
+                    if r.get('attempt_id') in where:
+                        widened.add(where[r['attempt_id']])
                 for c in r.get('tools', []):
                     name, args, result = c.get('name', ''), c.get('args') or {}, str(c.get('result', ''))
                     s[f'calls:{name}'] += 1
@@ -233,20 +347,24 @@ def tool_stats(paths, gbrain_label):
                             s['search_no_limit'] += 1
                         if re.search(r'"results"\s*:\s*\[\s*\]|\bno results\b|\b0 results\b', result, re.I):
                             s['search_empty'] += 1
-    return {k: dict(v) for k, v in sorted(out.items())}
+    stats = {k: dict(v) for k, v in sorted(out.items())}
+    return (stats, widened) if worlds_of is not None else stats
 
 
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument('--world', action='append', required=True, help='NAME=file[,file...]')
     ap.add_argument('--transcripts')
+    ap.add_argument('--world-transcripts', action='append', help='--look control: NAME=transcripts.jsonl[,...] per world')
     ap.add_argument('--judge-check')
     ap.add_argument('--gbrain', default='gbrain-newest')
     ap.add_argument('--fs', default='fs')
     ap.add_argument('--resamples', type=int, default=10000)
     ap.add_argument('--seed', type=int, default=1)
     ap.add_argument('--json')
-    ap.add_argument('--look', choices=('interim', 'final'), default='final')
+    ap.add_argument('--look', choices=('interim', 'final', 'control'), default='final')
+    ap.add_argument('--old', default='gbrain-old-09d')
+    ap.add_argument('--accept-unretried', action='append', default=[], help='WORLD|arm|model|task of a cell that ended on a provider failure and was not retried, counted as scored; the results page must disclose it')
     args = ap.parse_args(argv)
     worlds, cost = {}, defaultdict(float)
     for spec in args.world:
@@ -254,7 +372,41 @@ def main(argv=None):
         worlds[name], c = load(files.split(','))
         for k, v in c.items():
             cost[k] += v
+    bad = unretried(worlds, set(args.accept_unretried))
+    if bad:
+        print(json.dumps({'refused': 'HARNESS_ERROR_SCORED', 'cells': bad}), file=sys.stderr)
+        print('STOP HARNESS_ERROR_SCORED: these cells ended on a provider 5xx or 429, which the preregistration retries; resume them, or name each with --accept-unretried after disclosing it', file=sys.stderr)
+        return 3
     G, F, B, S = args.gbrain, args.fs, args.resamples, args.seed
+    if args.look == 'control':
+        if set(worlds) != set(CONTROL_WORLDS):
+            print(f'STOP CONTROL_INCOMPLETE: the control reads exactly the worlds {list(CONTROL_WORLDS)}, got {sorted(worlds)}', file=sys.stderr)
+            return 3
+        gaps = complete(worlds, [args.old, G, F], FRONTIER)
+        if gaps:
+            print(json.dumps({'refused': 'CONTROL_INCOMPLETE', 'missing_cells': gaps}), file=sys.stderr)
+            print('STOP CONTROL_INCOMPLETE: the control needs every planned cell of the old, newest and files arms; resume the missing cells', file=sys.stderr)
+            if any(isinstance(v, str) and 'outside the planned task ids' in v for v in gaps.values()):
+                print('STOP CONTROL_INCOMPLETE: task pairs lack a cell in one arm; the arms must cover the same planned task ids', file=sys.stderr)
+            return 3
+        if args.transcripts:
+            print('--look control takes --world-transcripts NAME=file[,file...] per world, not --transcripts', file=sys.stderr)
+            return 2
+        wt = dict(spec.split('=', 1) for spec in args.world_transcripts or [])
+        if set(wt) - set(worlds):
+            print(f'--world-transcripts names worlds not given with --world: {sorted(set(wt) - set(worlds))}', file=sys.stderr)
+            return 2
+        try:
+            out = control(worlds, cost, args.old, G, F, B, S, {w: f.split(',') for w, f in wt.items()} or None)
+        except ValueError as e:
+            print(f'STOP CONTROL_INCOMPLETE: {e}', file=sys.stderr)
+            return 3
+        if args.json:
+            with open(args.json, 'w') as f:
+                f.write(json.dumps(out, indent=1, allow_nan=False))
+        d, n = out['delta_old'], out['newest_minus_old']
+        print(f"control: old - files {d['delta_pp']:+.2f} pp [{d['ci95'][0]:+.2f}, {d['ci95'][1]:+.2f}]; newest - old {n['delta_pp']:+.2f} pp [{n['ci95'][0]:+.2f}, {n['ci95'][1]:+.2f}]; outcome row: {out['outcome_row']}{'; ' + out['note'] if out['note'] else ''}; H4 regression: {out['h4_regression']}")
+        return 0
     if args.look == 'interim':
         gaps = complete(worlds, [G, F], FRONTIER, HALF_A)
         if gaps:

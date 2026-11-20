@@ -31,12 +31,13 @@ capability and what changed between those commits and the pin.
   answers call them.** Opus 5.5 goes from 13.3% with no retrieval to 86.7%, and particle-1 from 9.3% to 68.0%. A
   summarising helper between gbrain and the model added no right answers and cut answers that are right and cite only
   supporting pages by 14.3 points for Opus and 14.4 for particle-1.
-- **We learned that on hard questions about a large company's documents, gbrain's newest release is level with an
-  agent that greps the same files, and behind it where sources disagree. You should not expect gbrain to beat a grep
-  agent on such a document set until we know why its earlier lead shrank.** On two new worlds gbrain v0.60.742.0 got
-  81.25% right against 78.75% (+2.50 points, interval -1.50 to +6.50), and trailed by 16.25 points where sources
-  disagree. October builds led by 7.7 to 13.0 points on other worlds; whether the build or the worlds changed is not yet
-  known.
+- **We learned that on hard questions about a large company's documents, gbrain is near level with an agent that
+  greps the same files on two new worlds, at its newest release and at an October build alike, and behind it where
+  sources disagree. You should measure a memory tool on more than one world, with today's readers, before quoting its
+  lead.** On two new worlds gbrain v0.60.742.0 got 81.25% right against 78.75% (+2.50 points, interval -1.50 to +6.50),
+  and trailed by 16.25 points where sources disagree. The October build `09d21554d`, which led by 8.50 on other worlds,
+  got 82.75% on the same tasks (+4.00, 0.00 to +8.25; the newest build scored 1.50 points below it, -4.50 to +1.50), so
+  the smaller lead is not a gbrain regression.
 - **We learned that gbrain beats the plain Postgres search a developer would build first: full-text plus pgvector,
   fused by rank. You should use gbrain rather than hand-roll that search for an agent's memory.** On LongMemEval it
   found every conversation a question needs in its top five for 451 of 470 questions against 414, and its results gave
@@ -79,7 +80,7 @@ behaviour, such as `forget` leaving nothing behind or a sync catching up, where 
 <tr>
 <td valign="top">Hard questions about a large, messy company, answered correctly by agents (two new worlds of about 55,000 documents; Opus 5.5 and GPT-6.2 Sol)<br><sub>gbrain <code>ae8201041</code> (v0.60.742.0) · <a href="docs/benchmarks/2026-11-19-cat40-hard-newest.md">Hard company questions, newest build</a></sub></td>
 <td valign="top">the same files with <code>grep</code>: 315 of 400 (78.75%)</td>
-<td valign="top"><h3>Level: +2.50 points</h3><b>325 of 400 (81.25%)</b>; the gain's interval is -1.50 to +6.50, so the two are at parity; why this is below earlier builds' leads (the build or the worlds) is not yet known³</td>
+<td valign="top"><h3>Level: +2.50 points</h3><b>325 of 400 (81.25%)</b>; the gain's interval is -1.50 to +6.50, so the two are at parity; an October build scores within noise of the newest on these worlds, so the smaller lead than October's is not a gbrain regression³</td>
 </tr>
 <tr>
 <td valign="top">The same hard company questions, particle-1 (a low-cost reader)<br><sub>gbrain <code>ae8201041</code> (v0.60.742.0) · <a href="docs/benchmarks/2026-11-19-cat40-hard-newest.md">Hard company questions, newest build</a></sub></td>
@@ -226,8 +227,11 @@ behaviour, such as `forget` leaving nothing behind or a sync catching up, where 
    ([October 10](docs/benchmarks/2026-10-10-model-ladder-hard-confirmation.md); Opus 5.5, Sonnet 5.5 and GPT-6.1 Sol),
    and `4e10136b4` by 10.67 on two sealed worlds and by 12.50 on two public ones with owner-phrase links on, a setting
    that doesn't ship ([October 15](docs/benchmarks/2026-10-15-cat40-next-confirm/README.md)). Different worlds can't be
-   paired by task, so those comparisons are unpaired. An old-build control on the new worlds will say whether the build or the worlds moved
-   the number.
+   paired by task, so those comparisons are unpaired. `09d21554d` led by 8.50 on public worlds P1 and P2 in October; on
+   the new worlds' tasks it led files by +4.00 (0.00 to +8.25), and the newest build scored 1.50 points below it (-4.50
+   to +1.50), so the control found no regression from the build, though its interval allows up to 4.50 points
+   ([old-build control](docs/benchmarks/2026-11-19-cat40-hard-old-build-control.md)). The rest of the drop comes from the worlds,
+   the readers or the files agent, and that run can't say which.
 4. gbrain trailed by a similar amount on world M in October (-15.0 at `3e4ff61ce`). Most of the gap is in questions
    whose deciding document is long (-18.18 points, 54 against 66 of 66 cells).
 5. The gap sits in questions that need several conversations, and LongMemEval-S was used to tune gbrain. The whole
@@ -470,7 +474,9 @@ the same reranker 128 ([matched comparison](docs/benchmarks/2026-10-02-concept-v
 ## Known limits
 
 - gbrain trails plain files on hard company questions whose sources disagree: 66 against 79 of 80 right at v0.60.742.0
-  (-16.25 points), as at earlier builds ([hard company questions, newest build](docs/benchmarks/2026-11-19-cat40-hard-newest.md)).
+  (-16.25 points), as at earlier builds, `09d21554d` included (-11.25 on the same tasks)
+  ([hard company questions, newest build](docs/benchmarks/2026-11-19-cat40-hard-newest.md);
+  [old-build control](docs/benchmarks/2026-11-19-cat40-hard-old-build-control.md)).
 - A timeline read on a 1,000-page brain took about 0.075 ms at `77cf8e111` against 0.045 ms before gbrain's Foundations
   1 release (0.075 and 0.078 ms on the two hosts measured). It has not been measured at the pin. This and the next three
   items are open entries in the [bug ledger](docs/benchmarks/2026-10-01-wave-bugs.md).
@@ -626,6 +632,13 @@ Garry Tan runs Y Combinator.
 [Disclosures](docs/disclosures.md) lists every relationship and where each line goes.
 
 ## Changelog
+
+### 2026-11-20: The hard company questions' smaller lead is not a gbrain regression
+
+The old-build control reported: gbrain's October build `09d21554d` scores within noise of v0.60.742.0 on the two new worlds
+(+4.00 over files, newest minus October -1.50, -4.50 to +1.50). The "We learned" line, the hard-company row and
+footnote 3 now say the smaller lead is not a gbrain regression, replacing "not yet known", and the known-limits line
+adds the October build's -11.25 where sources disagree.
 
 ### 2026-11-20: Hard company questions, particle-1 row
 

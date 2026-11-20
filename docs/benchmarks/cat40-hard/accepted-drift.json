@@ -48,6 +48,11 @@
       "sha256": "df9039e79b33ba8003d35ee9693994f488da9c43fa8734bd14ce6b80156734df",
       "date": "2026-11-19",
       "note": "loop.ts at main ef3200db for the newest-build re-measure (docs/benchmarks/2026-11-19-cat40-hard-newest-preregistration.md): OpenAI agent requests are stateless (store false, encrypted reasoning items, the whole conversation resent, no previous_response_id; 1b7d5cfe), so a gpt-6.2-sol cell sees the same conversation through a different request shape; each response is priced as the budget ledger settles it, cache writes and long prompts included (ab2e1142); billing refusals are classified when classifyStops is set (494951d4, a0c8e228); and particle-1 report fixes (bd7d30b2, 2fa9e8ac). Anthropic request bodies are unchanged. No stored cell is paired with a new one: every arm reruns on new worlds."
+    },
+    {
+      "sha256": "8e18713303bbdee7dc802dfc3acd2819b8bd77f3104366e4308a35189f35537d",
+      "date": "2026-11-19",
+      "note": "loop.ts for the old-build control (docs/benchmarks/2026-11-19-cat40-hard-old-build-control-preregistration.md): Anthropic and OpenAI runs record each distinct model id the provider said served a turn (the response's model field) as served_models, which Hard attempts keep under each session's run. Request bodies, retries, pricing and the particle-1 path are unchanged (test/eval/cat40-particle-loop.test.ts pins the bodies; test/eval/cat40-hard-old-build-control.test.ts pins the recording). No model cell changes."
     }
   ],
   "eval/runner/cat40/arms.ts": [

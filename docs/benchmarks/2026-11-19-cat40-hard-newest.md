@@ -2,7 +2,7 @@
 
 Measured 2026-11-19 on gbrain v0.60.742.0 ([`ae8201041`](https://github.com/garrytan/gbrain/commit/ae8201041c21101dc8c5127afc1be4a047049483)), preregistered in [the November 19 preregistration](2026-11-19-cat40-hard-newest-preregistration.md), with its dated records and amendments. The particle-1 cells ran on 2026-11-20 on the same build and worlds, after the frontier cells.
 
-- **We learned that on two new worlds, gbrain v0.60.742.0 is level with plain files on hard company questions, and that what lead it has sits in questions over many records (H1) and over several recording sessions (H5).** gbrain and the files agent got 325 and 315 of 400 answers right (two frontier readers, 200 tasks on two new worlds of about 55,000 documents). That gap's interval is -1.5 to +6.5 points, so the two are at parity. The leads published for October builds on other worlds were +12.5 and +7.7. The worlds are new as well as the build, so this run can't say which of the two moved the number; an old-build control on the same worlds will. **You should not quote the October lead for the current release until that control reports.** (The preregistration's sentence for a drop said the lead fell between builds. That can't be said while the worlds also changed, so it is held until the control reports.)
+- **We learned that on two new worlds, gbrain v0.60.742.0 is level with plain files on hard company questions, and that what lead it has sits in questions over many records (H1) and over several recording sessions (H5).** gbrain and the files agent got 325 and 315 of 400 answers right (two frontier readers, 200 tasks on two new worlds of about 55,000 documents). That gap's interval is -1.5 to +6.5 points, so the two are at parity. The leads published for October builds on other worlds were +12.5 and +7.7. The worlds are new as well as the build, so this run alone can't say which of the two moved the number. The [old-build control](2026-11-19-cat40-hard-old-build-control.md) on the same tasks since found the October build `09d21554d` near level too (+4.00; newest minus October -1.50, -4.50 to +1.50), so the smaller lead is not a gbrain regression. **You should not quote the October lead for the current release.** (The preregistration's sentence for a drop said the lead fell between builds. The control shows it didn't, so that sentence isn't used.)
 - **We learned that gbrain still trails plain files when sources disagree** (H4: -16.25 points, -23.75 to -10.0), as it did on world M in October (-15.0). **You should check the governing documents yourself when the documents behind an answer conflict.**
 - **We learned that gbrain helps a low-cost reader far more than a frontier one, and that it costs less per right answer.** particle-1 got 67 of 200 right with gbrain and 6 of 200 with plain files (+30.5 points, 95% interval +24.5 to +37.0), kept apart from the headline as preregistered. With files it ran out of its 16 turns in 184 of 200 cells. It is still far behind a frontier reader: Opus 5.5 with gbrain got 158 of 200, 45.5 points more (+38.5 to +52.5). Per right answer, gbrain cost $0.42 against $4.39 for files with particle-1, and $1.02 against $2.24 with Opus 5.5; for GPT-6.2 Sol the two cost about the same, $0.45 against $0.41. **You should give a low-cost model a search tool like gbrain, not raw files, on a corpus this size, and not expect it to match a frontier reader.**
 
@@ -129,7 +129,7 @@ Run notes:
 
 ## Limits
 
-- Both the build and the worlds changed since the published rows. The comparison with them is unpaired, and the readers changed too: GPT-6.2 Sol replaced GPT-6.1 Sol, and Sonnet 5.5 was dropped. The drop is a fact about these worlds on this build, and its cause is not yet known.
+- Both the build and the worlds changed since the published rows. The comparison with them is unpaired, and the readers changed too: GPT-6.2 Sol replaced GPT-6.1 Sol, and Sonnet 5.5 was dropped. The drop is a fact about these worlds on this build. The [old-build control](2026-11-19-cat40-hard-old-build-control.md) found no regression from the build under its preregistered rule, though its interval allows the newest build up to 4.50 points below October's; the rest of the drop comes from the worlds, the readers or the files agent, and neither run can say which.
 - These worlds come from the public generator. They compare with world M and the public half, not with the sealed worlds (+13.0 and +10.67), which this run doesn't re-measure.
 - One attempt per task, so per-family and per-reader intervals are wide. They are secondary and uncorrected.
 - particle-1 hit the 16-turn cap in most cells, 184 of 200 with files and 111 of 200 with gbrain. Its rows measure how far it gets within 16 turns on 55,000 documents, and a higher cap could change both.
@@ -145,8 +145,12 @@ Run notes:
   ```bash
   D=docs/benchmarks/2026-11-19-cat40-hard-newest
   f() { echo $D/$1/{gbrain,fs}-{opus,sol}-{a,b}/attempts.jsonl $D/$1/{gbrain,fs}-particle/attempts.jsonl | tr ' ' ','; }
-  python3 eval/runner/cat40/newest_analysis.py --world N1=$(f n1) --world N2=$(f n2)
+  python3 eval/runner/cat40/newest_analysis.py --world N1=$(f n1) --world N2=$(f n2) \
+    --accept-unretried 'N1|gbrain-newest|claude-opus-5-5|H4-13'
   ```
+
+  The analysis refuses a counted cell that ended on a provider 5xx or 429 unless it is named, so the command names the
+  one HTTP 520 cell the run notes disclose.
 
 ## Disclosures
 
