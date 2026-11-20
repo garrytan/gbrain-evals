@@ -53,6 +53,11 @@
       "sha256": "8e18713303bbdee7dc802dfc3acd2819b8bd77f3104366e4308a35189f35537d",
       "date": "2026-11-19",
       "note": "loop.ts for the old-build control (docs/benchmarks/2026-11-19-cat40-hard-old-build-control-preregistration.md): Anthropic and OpenAI runs record each distinct model id the provider said served a turn (the response's model field) as served_models, which Hard attempts keep under each session's run. Request bodies, retries, pricing and the particle-1 path are unchanged (test/eval/cat40-particle-loop.test.ts pins the bodies; test/eval/cat40-hard-old-build-control.test.ts pins the recording). No model cell changes."
+    },
+    {
+      "sha256": "6140ec3bb5c2684f8ac2cb00f833c1bc3ef1dfab9346db66dcdd2308f472ec5b",
+      "date": "2026-11-20",
+      "note": "loop.ts at main a4c8bee28 (#538): Anthropic and OpenAI requests retry every provider 5xx a resend can fix (all but 501 and 505), such as Cloudflare's 520, where they used to retry only 429, 500, 502, 503, 504 and 529, and every 5xx or 429 that ends a run is classified harness_error, the preregistrations' definition. Request bodies, pricing and the particle-1 path are unchanged (test/eval/cat40-particle-loop.test.ts; test/eval/cat40-hard-fail-closed.test.ts pins the retries). A cell that used to end on such a status unretried now gets the retry its preregistration asks for; no stored cell changes."
     }
   ],
   "eval/runner/cat40/arms.ts": [
