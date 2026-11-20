@@ -11,6 +11,7 @@
  *   bun eval/runner/batch/lme-redis.ts judge-controls protocol|opus|astra --controls <jsonl> --stage judge-check
  *   bun eval/runner/batch/lme-redis.ts label opus|astra --stage pilot --ids pilot      gemini-4-argon labels for a judge's real set
  *   bun eval/runner/batch/lme-redis.ts poll --stage <id>
+ *   bun eval/runner/batch/lme-redis.ts open-stage <stage> --budget-usd <n>               the stage's budget run (for the metering proxy)
  *   bun eval/runner/batch/lme-redis.ts status
  *
  * An arm is `<reader>--<memories>`, for example `opus--off`. The bodies wrap the frozen messages the vendored Python
@@ -375,6 +376,11 @@ async function main(argv: string[]) {
     parseArm(arm);
     const l = lane({ runId: 'plan-only', ledgerPath } as unknown as BudgetRun);
     console.log(JSON.stringify({ arm, ...(await l.plan(readManifest(manifestPath(arm)), loadBodies(arm))) }));
+    return;
+  }
+  if (cmd === 'open-stage') {
+    const run = stageRun(arm, ledgerPath, flag(argv, '--budget-usd') ? Number(flag(argv, '--budget-usd')) : undefined);
+    console.log(JSON.stringify({ stage: arm, run_id: run.runId, ledger: run.ledgerPath }));
     return;
   }
   const stage = flag(argv, '--stage');
