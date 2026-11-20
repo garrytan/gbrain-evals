@@ -130,7 +130,7 @@ const KEPT: Partial<Record<BG1SetId, number>> = { BG1: BG1_KEPT_UNITS, 'BG1-fc10
  * v0.60.593.0. RS1 later moved rs1-stable to gbrain's newest release and added its two switches (GST-1886's amendments
  * of 2026-11-16 to 2026-11-19); BG1 keeps its own.
  */
-const BG1_GBRAIN_LAUNCH = { env: { GBRAIN_BUN_IMAGE: RS1_ASSUMPTIONS.bun_image, GBRAIN_F6: '1', GBRAIN_SHA: '27f8b9d6287c2ba635532c7d3bc015c50e1d769b' }, config: 'recipe' };
+const BG1_GBRAIN_LAUNCH: NonNullable<CellDefinition['launch']> = { env: { GBRAIN_BUN_IMAGE: RS1_ASSUMPTIONS.bun_image, GBRAIN_F6: '1', GBRAIN_SHA: '27f8b9d6287c2ba635532c7d3bc015c50e1d769b' }, config: 'recipe' };
 const cell = (set: BG1SetId, block: BG1BlockId, system: string, configuration: string, arms: ArmSpec[]) => {
   const made = makeCell(set, system, configuration, arms, {
     block, probes: noProbes(set), ...(KEPT[set] ? { keptUnits: KEPT[set] } : {}),
