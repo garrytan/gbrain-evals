@@ -408,7 +408,8 @@ def judge_line(item_id: str, qa: Any, response: str, **extra: Any) -> dict[str, 
 def controls(examples: list[Any]) -> list[dict[str, Any]]:
     """The judge check's 200 known-answer items (preregistration, "Judge check" step 1): 50 Small questions outside the
     pilot's last 25 in seed-42 order, 40 answerable spread over the six types and 10 abstention, drawn with the seed
-    `lme-redis-harness`, four answers each with a known verdict."""
+    `lme-redis-harness`, four answers each with a known verdict. Item ids are `<question id>__<g|o|a|h>`, short enough
+    for a batch custom id."""
     order = seed42(examples)
     pool = order[: len(order) - PILOT_SIZE]
     rng = random.Random(CONTROL_SEED)
@@ -439,13 +440,13 @@ def controls(examples: list[Any]) -> list[dict[str, Any]]:
     for k, qa in enumerate(golds):
         abs_q = str(qa.question_id).endswith("_abs")
         other = golds[donors[k]].answer
-        for kind, response, expected in (
-            ("gold", qa.answer, True),
-            ("other-gold", other, False),
-            ("abstain", ABSTAIN_REPLY, abs_q),
-            ("hedged-gold", f"I think it was {qa.answer}, though I'm not certain.", True),
+        for code, kind, response, expected in (
+            ("g", "gold", qa.answer, True),
+            ("o", "other-gold", other, False),
+            ("a", "abstain", ABSTAIN_REPLY, abs_q),
+            ("h", "hedged-gold", f"I think it was {qa.answer}, though I'm not certain.", True),
         ):
-            items.append(judge_line(f"{qa.question_id}~{kind}", qa, response, kind=kind, expected=expected))
+            items.append(judge_line(f"{qa.question_id}__{code}", qa, response, kind=kind, expected=expected))
     return items
 
 

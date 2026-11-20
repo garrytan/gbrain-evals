@@ -8,6 +8,7 @@
  *   bun eval/runner/batch/lme-redis.ts run <arm> --stage <id> [--ids pilot|first-half|second-half|all]
  *   bun eval/runner/batch/lme-redis.ts judge <arm> protocol|cross --stage <id> [--ids ...]
  *   bun eval/runner/batch/lme-redis.ts particle particle--<memories> --stage <id> [--ids ...]
+ *   bun eval/runner/batch/lme-redis.ts judge-controls protocol|opus|astra --controls <jsonl> --stage judge-check
  *   bun eval/runner/batch/lme-redis.ts poll --stage <id>
  *   bun eval/runner/batch/lme-redis.ts status
  *
@@ -381,6 +382,25 @@ async function main(argv: string[]) {
         saveBodies(id, bodies);
       }
       await submit(l, run, readManifest(manifestPath(id)), loadBodies(id), ids, argv.includes('--list-price'));
+    } else if (cmd === 'judge-controls') {
+      const judge = arm as keyof typeof JUDGES;
+      if (!JUDGES[judge]) throw new Error(`judge-controls takes ${Object.keys(JUDGES).join(', ')}`);
+      const controls = flag(argv, '--controls');
+      if (!controls) throw new Error('judge-controls needs --controls <controls.jsonl from lme_redis.py controls>');
+      const id = `controls--${judge}`;
+      if (!existsSync(manifestPath(id))) {
+        const items = readJsonl<{ item_id: string; messages: JudgeMessages }>(resolve(controls));
+        const j = JUDGES[judge];
+        const bodies = new Map(items.map(i => [i.item_id, j.body(i.messages)]));
+        freezeManifest(manifestPath(id), buildManifest({
+          arm_id: id, workstream: WORKSTREAM, kind: 'judge', provider: j.provider, model: j.model, max_output_tokens: j.max_output_tokens, reasoning_effort: j.effort,
+          protocol: { name: 'LongMemEval official judge prompts (vendored prompts/judge.py)', sha256: sha256(readFileSync(join(ROOT, 'eval/redis-agent-memory-benchmark/src/agent_memory_benchmark/prompts/judge.py'))) },
+          source: `${j.describe}, over the judge check's 200 known-answer controls`, denominator: bodies.size, bodies, ...(j.effort ? { outputFloor: j.max_output_tokens } : {}),
+        }));
+        saveBodies(id, bodies);
+      }
+      const manifest = readManifest(manifestPath(id));
+      await submit(l, run, manifest, loadBodies(id), manifest.requests.map(r => r.question_id), argv.includes('--list-price'));
     } else throw new Error(`unknown command ${cmd}`);
   } finally {
     guard.uninstall();

@@ -184,6 +184,7 @@ class Tests(unittest.TestCase):
             if i["kind"] == "abstain":
                 self.assertEqual(i["expected"], i["question_id"].endswith("_abs"))
         self.assertEqual(L.controls(examples), items)
+        self.assertTrue(all(len(i["item_id"]) <= 27 and i["item_id"].rsplit("__", 1)[1] in "goah" for i in items))
 
     def test_query_params_are_the_preregistered_three(self):
         self.assertEqual(L.QUERY_PARAMS, {"off": {"limit": 10, "autocut": False}, "on": {"limit": 10}, "agent-default": {}})
