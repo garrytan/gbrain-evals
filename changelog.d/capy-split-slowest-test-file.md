@@ -4,4 +4,5 @@
   `test/eval/predictive-g3-careless.test.ts`), sharing `test/support/predictive-g3.ts`, so CI's shards can place them
   apart. Every assertion is kept: each episode is checked as before, each file checks the causes it met, and
   `predictive-cli-arm.test.ts` still checks the total of 14 surface-cause pairs (13 when gbrain reads two ranges).
-  `test/timings.json` lists the new files with their share of the old file's time until the next refresh from CI.
+  `test/timings.json` is refreshed from three main runs and this change's own run: it listed 402 of the 474 test files
+  and several files were a minute or more off, so one run's shards ranged from 336 to 632 s of tests.
