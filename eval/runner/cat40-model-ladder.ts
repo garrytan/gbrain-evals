@@ -74,7 +74,7 @@ import { PgArm, PgStore, cachedOpenAIEmbedder } from './cat40/pg-arm.ts';
 import { GbrainArm, instructionsOverride, cellLabel, assertNoGbrainFsCollision, GBRAIN_FS_READ_TOOLS, type CellArm, GbrainPool, GbrainSlot, MeteringProxy, rerankProbe, restoreProbe, parseConfigPairs, BUILD_TIME_CONFIG_KEYS, type RestoreProbeRecord, SERVE_BOOT_TIMEOUT_SECONDS, STAGED_SOURCE_ADD_DOCS, STAGED_SYNC_BATCH, coverageProblem, type Meter, type SlotBuild, type SlotCoverage } from './cat40/gbrain-arm.ts';
 import { scoreTask, judgePrompt, parseClaims, JUDGE_PROMPT_VERSION, type TaskScore, type ClaimVerdicts } from './cat40/score.ts';
 import { budgetOptionsFrom, startPaidRun, receiptCost, type BudgetRun, type PaidRequestGuard } from './budget-ledger.ts';
-import { HARD_FAMILIES, isHardWorld, type HardWorld, type HardTask } from '../generators/hard/schema.ts';
+import { HARD_FAMILIES, HARD_SEEDS, isHardWorld, type HardWorld, type HardTask } from '../generators/hard/schema.ts';
 import { hardWorldDigest } from '../generators/model-ladder-hard.ts';
 import {
   HardStop, hardRefusals, checkHardWorld, identityOf, identityRefusal, requiresFreeze, oracleOversize, runHardCell, runWithRetries, hardTranscripts, codeHashes, settingsDigest,
@@ -563,7 +563,7 @@ export async function main(argv = process.argv.slice(2)) {
   if (!scripted && !buildSlots) {
     const judgeFlag = flag(argv, '--judge');
     if (judgeFlag && isParticle(judgeFlag)) throw new UsageError(`--judge ${judgeFlag}: particle-1 never judges a cell; pass --judge gpt-6.1-sol`);
-    if (hard && models.some(isParticle)) throw new UsageError('particle-1 does not run on Hard worlds: the Hard campaign keeps its model list (amendment A6), and its freeze does not cover the particle transport (eval/runner/providers); the next Cat 40 preregistration that lists particle-1 adds both');
+    if (hard && models.some(isParticle) && !(HARD_SEEDS.newest as readonly number[]).includes(raw.seed)) throw new UsageError('particle-1 does not run on Hard worlds: the Hard campaign keeps its model list (amendment A6), and its freeze does not cover the particle transport (eval/runner/providers); only the newest-build re-measure lists it (docs/benchmarks/2026-11-19-cat40-hard-newest-preregistration.md), on its two worlds (HARD_SEEDS.newest)');
     if (!hard && models.some(isParticle) && (judgeFlag ?? 'gpt-5.4-mini') === 'gpt-5.4-mini') throw new UsageError('a run with particle-1 needs its claims judge passed explicitly (--judge gpt-6.1-sol, or --judge none): the v1 default, gpt-5.4-mini, is a model the model rules never run');
   }
   const exploratory = arms.includes('gbrain-fs');

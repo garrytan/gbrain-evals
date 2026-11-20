@@ -1,0 +1,430 @@
+{
+ "resamples": 10000,
+ "seed": 1,
+ "arms": {
+  "gbrain": "gbrain-newest",
+  "fs": "fs"
+ },
+ "readers_pooled": [
+  "claude-opus-5-5",
+  "gpt-6.2-sol"
+ ],
+ "headline": {
+  "delta_pp": 2.5,
+  "ci95": [
+   -1.25,
+   6.5
+  ],
+  "tasks": 200,
+  "cells": 400,
+  "a_count": 325.0,
+  "b_count": 315.0,
+  "missing_pairs": 0,
+  "se_pp": 1.979,
+  "ci_z1.98": [
+   -1.5,
+   6.5
+  ],
+  "interval_key": "ci_z1.98",
+  "wording": "parity",
+  "comparison": "drops",
+  "outcome_row": "drops",
+  "thresholds": {
+   "holds_at_or_above": 5.3,
+   "rises_above": 16.6
+  }
+ },
+ "per_reader": {
+  "claude-opus-5-5": {
+   "delta_pp": 3.0,
+   "ci95": [
+    -3.0,
+    9.5
+   ],
+   "tasks": 200,
+   "cells": 200,
+   "a_count": 158.0,
+   "b_count": 152.0,
+   "missing_pairs": 0,
+   "se_pp": 3.189
+  },
+  "gpt-6.2-sol": {
+   "delta_pp": 2.0,
+   "ci95": [
+    -2.5,
+    6.5
+   ],
+   "tasks": 200,
+   "cells": 200,
+   "a_count": 167.0,
+   "b_count": 163.0,
+   "missing_pairs": 0,
+   "se_pp": 2.317
+  },
+  "particle-1": {
+   "delta_pp": 30.5,
+   "ci95": [
+    24.5,
+    37.0
+   ],
+   "tasks": 200,
+   "cells": 200,
+   "a_count": 67.0,
+   "b_count": 6.0,
+   "missing_pairs": 0,
+   "se_pp": 3.242
+  }
+ },
+ "per_family": {
+  "H1": {
+   "delta_pp": 16.25,
+   "ci95": [
+    7.5,
+    25.0
+   ],
+   "tasks": 40,
+   "cells": 80,
+   "a_count": 32.0,
+   "b_count": 19.0,
+   "missing_pairs": 0,
+   "se_pp": 4.462
+  },
+  "H2": {
+   "delta_pp": 0.0,
+   "ci95": [
+    -7.5,
+    6.25
+   ],
+   "tasks": 40,
+   "cells": 80,
+   "a_count": 76.0,
+   "b_count": 76.0,
+   "missing_pairs": 0,
+   "se_pp": 3.338
+  },
+  "H3": {
+   "delta_pp": 0.0,
+   "ci95": [
+    -8.75,
+    10.0
+   ],
+   "tasks": 40,
+   "cells": 80,
+   "a_count": 71.0,
+   "b_count": 71.0,
+   "missing_pairs": 0,
+   "se_pp": 4.653
+  },
+  "H4": {
+   "delta_pp": -16.25,
+   "ci95": [
+    -23.75,
+    -10.0
+   ],
+   "tasks": 40,
+   "cells": 80,
+   "a_count": 66.0,
+   "b_count": 79.0,
+   "missing_pairs": 0,
+   "se_pp": 3.623,
+   "level_or_behind": true
+  },
+  "H5": {
+   "delta_pp": 12.5,
+   "ci95": [
+    6.25,
+    20.0
+   ],
+   "tasks": 40,
+   "cells": 80,
+   "a_count": 80.0,
+   "b_count": 70.0,
+   "missing_pairs": 0,
+   "se_pp": 3.425
+  },
+  "H4+long": {
+   "delta_pp": -18.18,
+   "ci95": [
+    -25.76,
+    -10.61
+   ],
+   "tasks": 33,
+   "cells": 66,
+   "a_count": 54.0,
+   "b_count": 66.0,
+   "missing_pairs": 0,
+   "se_pp": 4.112
+  },
+  "H4-not-long": {
+   "delta_pp": -7.14,
+   "ci95": [
+    -21.43,
+    0.0
+   ],
+   "tasks": 7,
+   "cells": 14,
+   "a_count": 12.0,
+   "b_count": 13.0,
+   "missing_pairs": 0,
+   "se_pp": 6.399
+  }
+ },
+ "per_world": {
+  "N1": {
+   "delta_pp": 1.5,
+   "ci95": [
+    -3.5,
+    7.0
+   ],
+   "tasks": 100,
+   "cells": 200,
+   "a_count": 162.0,
+   "b_count": 159.0,
+   "missing_pairs": 0,
+   "se_pp": 2.651
+  },
+  "N2": {
+   "delta_pp": 3.5,
+   "ci95": [
+    -2.0,
+    9.0
+   ],
+   "tasks": 100,
+   "cells": 200,
+   "a_count": 163.0,
+   "b_count": 156.0,
+   "missing_pairs": 0,
+   "se_pp": 2.833
+  }
+ },
+ "secondary": {
+  "wrong_value": {
+   "delta_pp": 0.75,
+   "ci95": [
+    -1.75,
+    3.5
+   ],
+   "tasks": 200,
+   "cells": 400,
+   "a_count": 17.0,
+   "b_count": 14.0,
+   "missing_pairs": 0,
+   "se_pp": 1.335
+  },
+  "wrong_submitted": {
+   "delta_pp": 2.0,
+   "ci95": [
+    -0.75,
+    5.0
+   ],
+   "tasks": 200,
+   "cells": 400,
+   "a_count": 24.0,
+   "b_count": 16.0,
+   "missing_pairs": 0,
+   "se_pp": 1.523
+  },
+  "not_submitted": {
+   "delta_pp": -4.5,
+   "ci95": [
+    -7.75,
+    -1.25
+   ],
+   "tasks": 200,
+   "cells": 400,
+   "a_count": 51.0,
+   "b_count": 69.0,
+   "missing_pairs": 0,
+   "se_pp": 1.643
+  },
+  "turn_cap": {
+   "delta_pp": -3.75,
+   "ci95": [
+    -7.0,
+    -0.75
+   ],
+   "tasks": 200,
+   "cells": 400,
+   "a_count": 50.0,
+   "b_count": 65.0,
+   "missing_pairs": 0,
+   "se_pp": 1.6
+  }
+ },
+ "first_table": {
+  "gbrain-newest|claude-opus-5-5": {
+   "successes": 158,
+   "cost_per_correct_usd": 1.0183
+  },
+  "fs|claude-opus-5-5": {
+   "successes": 152,
+   "cost_per_correct_usd": 2.2363
+  },
+  "gbrain-newest|gpt-6.2-sol": {
+   "successes": 167,
+   "cost_per_correct_usd": 0.449
+  },
+  "fs|gpt-6.2-sol": {
+   "successes": 163,
+   "cost_per_correct_usd": 0.408
+  },
+  "gbrain-newest|particle-1": {
+   "successes": 67,
+   "cost_per_correct_usd": 0.4206
+  },
+  "fs|particle-1": {
+   "successes": 6,
+   "cost_per_correct_usd": 4.3866
+  }
+ },
+ "claims": {
+  "gbrain-newest|claude-opus-5-5": {
+   "answers_judged": 171,
+   "mean_bad_claims": 2.69,
+   "share_with_bad_claim": 0.754,
+   "judge": "gpt-6.1-sol",
+   "counted": true
+  },
+  "fs|claude-opus-5-5": {
+   "answers_judged": 157,
+   "mean_bad_claims": 2.395,
+   "share_with_bad_claim": 0.758,
+   "judge": "gpt-6.1-sol",
+   "counted": true
+  },
+  "gbrain-newest|gpt-6.2-sol": {
+   "answers_judged": 178,
+   "mean_bad_claims": 0.124,
+   "share_with_bad_claim": 0.096,
+   "judge": "claude-opus-5-5",
+   "counted": true
+  },
+  "fs|gpt-6.2-sol": {
+   "answers_judged": 174,
+   "mean_bad_claims": 0.31,
+   "share_with_bad_claim": 0.178,
+   "judge": "claude-opus-5-5",
+   "counted": true
+  },
+  "gbrain-newest|particle-1": {
+   "answers_judged": 89,
+   "mean_bad_claims": 4.281,
+   "share_with_bad_claim": 0.91,
+   "judge": "gpt-6.1-sol",
+   "counted": true
+  },
+  "fs|particle-1": {
+   "answers_judged": 6,
+   "mean_bad_claims": 4.333,
+   "share_with_bad_claim": 1.0,
+   "judge": "gpt-6.1-sol",
+   "counted": true
+  }
+ },
+ "tool_calls": {
+  "fs|claude-opus-5-5": {
+   "calls:list_dir": 621,
+   "calls:grep": 1999,
+   "calls:read_file": 3982,
+   "calls:write_file": 490
+  },
+  "fs|gpt-6.2-sol": {
+   "calls:grep": 5216,
+   "calls:list_dir": 841,
+   "calls:read_file": 4205,
+   "calls:write_file": 162
+  },
+  "fs|particle-1": {
+   "calls:list_dir": 2211,
+   "calls:read_file": 5131,
+   "calls:grep": 4331,
+   "calls:write_file": 195
+  },
+  "gbrain-newest|claude-opus-5-5": {
+   "calls:entity": 365,
+   "calls:get_backlinks": 643,
+   "calls:get_page": 544,
+   "calls:search": 1541,
+   "search": 1541,
+   "search_no_limit": 666,
+   "calls:query": 55,
+   "calls:whoami": 59,
+   "calls:remember": 167,
+   "calls:recall": 132,
+   "calls:forget": 24,
+   "search_empty": 109,
+   "calls:list_pages": 48,
+   "calls:add_timeline_entry": 1,
+   "calls:synthesize": 15,
+   "calls:list_skills": 6,
+   "calls:resolve_slugs": 6,
+   "calls:request_tools": 7,
+   "calls:get_stats": 1,
+   "calls:search_exact": 17,
+   "calls:context_pack": 3
+  },
+  "gbrain-newest|gpt-6.2-sol": {
+   "calls:context_pack": 360,
+   "calls:search": 3166,
+   "search": 3166,
+   "search_empty": 404,
+   "calls:get_page": 956,
+   "calls:query": 48,
+   "search_no_limit": 323,
+   "calls:whoami": 115,
+   "calls:list_skills": 27,
+   "calls:request_tools": 95,
+   "calls:remember": 192,
+   "calls:forget": 91,
+   "calls:recall": 98,
+   "calls:entity": 72,
+   "calls:list_pages": 49,
+   "calls:submit_agent": 7,
+   "calls:synthesize": 6,
+   "calls:traverse_graph": 1,
+   "calls:get_backlinks": 24,
+   "calls:search_exact": 147,
+   "search_with:snippet_chars": 329,
+   "calls:resolve_slugs": 23,
+   "calls:get_stats": 13,
+   "calls:find_pages": 6,
+   "search_with:token_budget": 36,
+   "calls:assemble_evidence": 1
+  },
+  "gbrain-newest|particle-1": {
+   "calls:entity": 400,
+   "calls:search": 5308,
+   "search": 5308,
+   "search_no_limit": 579,
+   "search_empty": 1229,
+   "calls:get_backlinks": 220,
+   "calls:resolve_slugs": 26,
+   "calls:get_page": 1853,
+   "calls:list_pages": 348,
+   "calls:context_pack": 148,
+   "calls:query": 86,
+   "calls:list_skills": 88,
+   "calls:remember": 231,
+   "calls:edit_page": 322,
+   "calls:put_page": 210,
+   "calls:recall": 226,
+   "calls:add_timeline_entry": 296,
+   "calls:forget": 138,
+   "calls:request_tools": 44,
+   "calls:search_exact": 106,
+   "calls:find_pages": 29,
+   "search_with:snippet_chars": 15,
+   "calls:whoami": 50,
+   "calls:synthesize": 16,
+   "calls:list_brain_skillpack": 4,
+   "calls:get_recent_salience": 7,
+   "calls:get_stats": 12,
+   "calls:sources_list": 1,
+   "calls:capture": 28,
+   "calls:get_skill": 1,
+   "calls:schema_stats": 2,
+   "calls:traverse_graph": 2,
+   "search_with:token_budget": 1
+  }
+ }
+}
