@@ -311,10 +311,17 @@ export function labelSelection(candidates: LabelCandidate[], n = LABELS_PER_JUDG
   return picked;
 }
 
-/** The strict cross-family parse: the reply's first word, lowercased and stripped of punctuation, must be yes or no. */
+/**
+ * The strict cross-family parse: the reply's first word, lowercased and stripped of punctuation and markdown, must be yes
+ * or no; when it isn't, the last non-empty line, stripped the same way, must be exactly yes or no (amendment, 2026-11-20).
+ */
 export function strictVerdict(raw: string | null): 0 | 1 | -1 {
-  const first = (raw ?? '').trim().split(/\s+/)[0]?.toLowerCase().replace(/[^a-z]/g, '') ?? '';
-  return first === 'yes' ? 1 : first === 'no' ? 0 : -1;
+  const word = (s: string | undefined) => (s ?? '').toLowerCase().replace(/[^a-z]/g, '');
+  const text = (raw ?? '').trim();
+  const first = word(text.split(/\s+/)[0]);
+  if (first === 'yes' || first === 'no') return first === 'yes' ? 1 : 0;
+  const last = word(text.split('\n').filter(l => l.trim()).at(-1));
+  return last === 'yes' ? 1 : last === 'no' ? 0 : -1;
 }
 
 /** Redis's scorer (benchmark/judge.py _score): "yes" anywhere is 1, else "no" anywhere is 0, else unparsable. */

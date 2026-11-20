@@ -468,6 +468,20 @@ two contexts differed differ only through reranker scores that vary slightly bet
   for all 500 questions with the new parameters before any reader runs. The first freeze is kept, unscored, as the
   record of the default's behaviour.
 
+### 2026-11-20, after the judge check, before any counted unit: the strict parse reads a last-line verdict
+
+Under the strict parse as written, claude-opus-5-5 failed the judge check's unparsable gate: 3 of its 200 control
+replies (1.5%) opened with a sentence and gave the verdict alone on the last line ("…so it doesn't contain the correct
+answer.\n\nno"), and one of its pilot replies did the same. Each verdict was unambiguous. gpt-6.2-astra and the
+protocol judge had none.
+
+- **The strict parse now has one fallback.** The first word, lowercased and stripped of punctuation and markdown, must
+  be yes or no. When it isn't, the last non-empty line, stripped the same way, must be exactly yes or no. Anything else
+  stays unparsable. Redis's own parse is unchanged and still recorded beside it.
+- Every reply already recorded is rescored under the new parse with no new request, and the judge check is read again.
+- The results say that the Opus judge's unparsable rate on the controls was 1.5% under the original parse, which is
+  above the 1% gate, and give its rate under this one.
+
 ## Disclosures
 
 - gbrain is Garry Tan's own project.

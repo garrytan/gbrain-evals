@@ -83,6 +83,7 @@ describe('LongMemEval on Redis harness: judges and stages', () => {
 
   test('verdict parses: strict first word for cross-family judges, Redis\'s substring rule beside it', () => {
     expect(['Yes.', 'no', ' NO, because', 'The answer is yes', '', null].map(L.strictVerdict)).toEqual([1, 0, 0, -1, -1, -1]);
+    expect(["It doesn't give 5.\n\nno", 'It matches.\n\n**Yes**', 'Reasoning first.\nThe answer is no', 'Reasoning.\n\nno, it does not', 'Reasoning.\n\n'].map(L.strictVerdict)).toEqual([0, 1, -1, -1, -1]);
     expect(['Yes.', 'no', 'The answer is yes', 'nope', 'maybe', null].map(L.redisVerdict)).toEqual([1, 0, 1, 0, -1, -1]);
   });
 
