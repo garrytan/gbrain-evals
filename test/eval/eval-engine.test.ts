@@ -58,6 +58,15 @@ describe('Rust addon', () => {
     expect(rustAddonEnv({ GBRAIN_RUST_ENGINE_ADDON: '  ' })).toEqual({});
     expect(rustAddonEnv({})).toEqual({});
   });
+  test('rustAddonEnv resolves a relative path, so children started in another directory load the file this process hashes', () => {
+    expect(rustAddonEnv({ GBRAIN_RUST_ENGINE_ADDON: 'build/x.node' })).toEqual({ GBRAIN_RUST_ENGINE_ADDON: join(process.cwd(), 'build/x.node') });
+  });
+  test('rustAddonIdentity records an unreadable addon file instead of throwing away the receipt', () => {
+    const gut = fakeGbrain(null);
+    const id = rustAddonIdentity(gut, { PATH: process.env.PATH, GBRAIN_RUST_ENGINE_ADDON: join(gut.root, 'missing.node') })!;
+    expect(id.sha256).toBeNull();
+    expect(id.read_error).toContain('missing.node');
+  });
   test('rustAddonIdentity records the file digest and the exports gbrain\'s loader returns, in a child with no provider key', () => {
     const gut = fakeGbrain(null);
     const addon = join(gut.root, 'x.node');

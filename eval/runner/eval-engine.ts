@@ -62,13 +62,15 @@ export const RUST_ENGINE_DIR = 'src/core/rust-engine';
  */
 export function rustAddonEnv(env: Record<string, string | undefined> = process.env): { GBRAIN_RUST_ENGINE_ADDON?: string } {
   const path = env.GBRAIN_RUST_ENGINE_ADDON?.trim();
-  return path ? { GBRAIN_RUST_ENGINE_ADDON: path } : {};
+  return path ? { GBRAIN_RUST_ENGINE_ADDON: resolve(path) } : {};
 }
 
 /** The Rust addon a run loaded: its file digest (engine_build hashes the Rust sources, not the file) and its exports. */
 export interface RustAddonIdentity {
-  sha256: string;
-  bytes: number;
+  sha256: string | null;
+  bytes: number | null;
+  /** Why the addon file could not be read; the receipt keeps the run instead of throwing. */
+  read_error?: string;
   target?: string;
   engine_build?: string;
   engine_abi?: number;
@@ -85,7 +87,8 @@ export interface RustAddonIdentity {
 export function rustAddonIdentity(gut: Pick<GbrainUnderTest, 'root'>, env: Record<string, string | undefined> = process.env): RustAddonIdentity | null {
   const path = rustAddonEnv(env).GBRAIN_RUST_ENGINE_ADDON;
   if (!path) return null;
-  const bytes = readFileSync(path);
+  let bytes: Buffer;
+  try { bytes = readFileSync(path); } catch (e) { return { sha256: null, bytes: null, read_error: (e instanceof Error ? e.message : String(e)).slice(0, 300) }; }
   const id: RustAddonIdentity = { sha256: createHash('sha256').update(bytes).digest('hex'), bytes: bytes.length };
   const loader = resolve(gut.root, RUST_ENGINE_DIR, 'addon-loader.ts');
   const script = `const a = await (await import(${JSON.stringify(loader)})).loadRustAddon(); console.log(JSON.stringify({ target: a.target, engine_build: a.engineBuild, engine_abi: a.engineAbi, catalog_version: a.catalogVersion, format_versions: a.formatVersions }));`;

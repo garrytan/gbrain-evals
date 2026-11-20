@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'bun:test';
+import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -35,6 +36,16 @@ describe('correctness checks table', () => {
     expect(sealed.na_check).toBe(N6_SQL_CHECKS.sealed_chunks.check);
     expect(checks.find(c => c.id === 'n14')!.args).toEqual(['--tiers', '2mb']);
     expect(correctnessChecks({ n14Tiers: '2mb,8mb' }).find(c => c.id === 'n14')!.args).toEqual(['--tiers', '2mb,8mb']);
+  });
+});
+
+describe('correctness command line', () => {
+  test('refuses to start without --gbrain <checkout>@<ref>, before any check or container starts', () => {
+    const home = mkdtempSync(join(tmpdir(), 'correctness-cli-'));
+    const r = spawnSync(process.execPath, [join(import.meta.dir, '../../eval/runner/engine-bench/correctness.ts'), '--dev', '--pg-url', 'postgres://127.0.0.1:1/none'], { env: { PATH: process.env.PATH, HOME: home }, encoding: 'utf8', timeout: 60_000 });
+    expect(r.status).toBe(3);
+    expect(r.stderr).toContain('correctness needs --gbrain <checkout>@<ref>');
+    expect(r.stdout).not.toContain('receipt:');
   });
 });
 
