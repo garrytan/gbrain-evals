@@ -44,7 +44,7 @@ describe('test timings for time-balanced shards', () => {
   test('CI and the local shard runner read the committed timings, which name repo-relative files in whole ms', () => {
     const ci = readFileSync(new URL('../../.github/workflows/ci.yml', import.meta.url), 'utf8');
     const shards = readFileSync(new URL('../../scripts/test-shards.ts', import.meta.url), 'utf8');
-    expect(ci).toContain('--timings=test/timings.json');
+    expect(ci).toContain('run: bun scripts/test-shards.ts --job=');
     expect(shards).toContain("'--timings=test/timings.json'");
     const timings = JSON.parse(readFileSync(new URL('../timings.json', import.meta.url), 'utf8'));
     expect(timings.version).toBe(1);
