@@ -133,9 +133,12 @@ describe('CI carry wiring (.gstack/pregate.json and ci.yml)', () => {
 
   test('every shard uploads the JUnit report of the files it ran, and tested-tree records them after the checks job and every shard pass', () => {
     const tests = job('tests');
-    expect(tests).toContain('bun test --shard=${{ matrix.shard }}/${{ strategy.job-total }} --timings=test/timings.json test/eval/ eval/ --reporter=junit --reporter-outfile="$RUNNER_TEMP/tests-${{ matrix.shard }}.xml"');
+    expect(tests).toContain('bun scripts/test-shards.ts --job=${{ matrix.shard }}/${{ strategy.job-total }} --junit-dir="$RUNNER_TEMP/tested-files" test/eval/ eval/');
+    const runner = readFileSync(new URL('../../scripts/test-shards.ts', import.meta.url), 'utf8');
+    expect(runner).toContain("'--reporter=junit', `--reporter-outfile=${join(junitDir, `tests-${shard}.xml`)}`");
     expect(tests).toContain('name: tested-files-${{ matrix.shard }}');
-    expect(tests).toContain('path: ${{ runner.temp }}/tests-${{ matrix.shard }}.xml');
+    expect(tests).toContain('path: ${{ runner.temp }}/tested-files/tests-*.xml');
+    expect(tests).toContain('if-no-files-found: error');
     const record = job('tested-tree');
     expect(record).toContain('needs: [checks, tests]');
     expect(record).not.toMatch(/^\s+if:/m);
