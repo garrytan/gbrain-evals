@@ -10,7 +10,8 @@
     { "finding": "env.kv", "paths": ["docs/benchmarks/predictive-measures/*/correction-*.json"], "pattern": "\"?g[0-9]+:[a-z0-9.-]+:oov-[0-9]+-p[0-9]{3}:(?:local|remote):[0-9]+\"", "reason": "episode ids in correction records' key fields" },
     { "finding": "db.url_with_password", "paths": ["docs/comparison-systems/ext-memory-bank/**/docker-compose.yml"], "pattern": "postgresql:\\/\\/(\\x68indsight):\\1@db:5432\\/\\1(?=$|[\\s\"'])", "reason": "the memory-bank bundle's internal docker-network Postgres dummy password, already on main in the bundle's own compose file" },
     { "finding": "env.kv", "paths": ["docs/benchmarks/*/analysis/*.json"], "pattern": "\"?ci_z[0-9]\\.[0-9]{2}\"", "reason": "the name of the interval field the Cat 40 Hard analysis used (z 1.98 or 2.80), written into its analysis JSON, not a credential" },
-    { "finding": "env.kv", "paths": ["test/eval/entity-h2h-cells.test.ts"], "pattern": "must-not-reach-gbrain(?=$|[\\s\"'])", "reason": "a test's sentinel key value, proving a blanked key never reaches gbrain" }
+    { "finding": "env.kv", "paths": ["test/eval/entity-h2h-cells.test.ts"], "pattern": "must-not-reach-gbrain(?=$|[\\s\"'])", "reason": "a test's sentinel key value, proving a blanked key never reaches gbrain" },
+    { "finding": "env.kv", "paths": ["docs/benchmarks/2026-11-18-entity-dedupe-h2h/counted/*/subjects.json", "docs/benchmarks/2026-11-18-entity-dedupe-h2h/counted/*/hand-check-sample.json"], "pattern": "\"?(?:home|work):(?:companies\\/)?[a-z0-9]+(?:-[a-z0-9]+)*\"", "reason": "the duplicate-finder head-to-head's generated page keys (source, then name slug) in the key fields of its unresolved-subject lists and hand-check samples, not credentials" }
   ],
   "sealed": {
     "paths": ["**/rs1-custody*", "**/rs1-custody*/**", "**/*.rs1-seed", "**/bg1-custody*", "**/bg1-custody*/**", "**/*.bg1-seed", "**/*.bg1-phrasing.json"],

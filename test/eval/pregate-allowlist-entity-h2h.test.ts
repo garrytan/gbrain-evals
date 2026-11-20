@@ -6,6 +6,7 @@ const pregate = JSON.parse(readFileSync(new URL('../../.gstack/pregate.json', im
 const byFinding = (finding: string, path: string) => pregate.allowlist.find(e => e.finding === finding && e.paths!.includes(path))!;
 const dbUrl = byFinding('db.url_with_password', 'docs/comparison-systems/ext-memory-bank/**/docker-compose.yml');
 const sentinel = byFinding('env.kv', 'test/eval/entity-h2h-cells.test.ts');
+const pageKey = byFinding('env.kv', 'docs/benchmarks/2026-11-18-entity-dedupe-h2h/counted/*/subjects.json');
 
 /** gstack's pregate tests an allowlist pattern from where the flagged value starts, ending at a token boundary. */
 const covers = (entry: Entry, value: string) => new RegExp(`^(?:${entry.pattern})(?![\\w-])`).test(value);
@@ -47,11 +48,20 @@ describe('secrets allowlist: the entity-dedupe head-to-head harness', () => {
     expect(inScope(sentinel, 'test/eval/entity-h2h.test.ts')).toBe(false);
   });
 
+  test("covers the counted run's generated page keys, in its subject lists and hand-check samples only", () => {
+    for (const key of ['home:yara-mabry', 'work:companies/saltvale', 'home:s-vance']) expect(covers(pageKey, `"${key}"`)).toBe(true);
+    for (const value of ['"home:yara-mabry/../x"', '"home:Yara-Mabry"', '"cloud:yara-mabry"', '"home:yara_mabry"', '"home:yara-mabry:hunter2"', '"home:companies/a/b"']) expect(covers(pageKey, value)).toBe(false);
+    const R = 'docs/benchmarks/2026-11-18-entity-dedupe-h2h/counted';
+    for (const path of [`${R}/ext-memory-bank/subjects.json`, `${R}/gpt/hand-check-sample.json`]) expect(inScope(pageKey, path)).toBe(true);
+    for (const path of [`${R}/subjects.json`, `${R}/gbrain/finder.json`, `${R}/ext-memory-bank/output.json`, 'docs/benchmarks/2026-11-17-person-dedupe/counted/x/subjects.json']) expect(inScope(pageKey, path)).toBe(false);
+  });
+
   test('still flags a real-looking key at either path', () => {
     for (const value of realShaped) {
       expect(covers(sentinel, value)).toBe(false);
       expect(covers(sentinel, `must-not-reach-gbrain-${value}`)).toBe(false);
       expect(covers(dbUrl, pgUrl(product, value))).toBe(false);
+      expect(covers(pageKey, `"${value}"`)).toBe(false);
     }
   });
 });
