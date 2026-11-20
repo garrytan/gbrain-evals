@@ -222,10 +222,13 @@ yes/no scorer.
 - **Evidence delivered, at turn level** (GBRA-108's requirement after GBEV-112): for each answerable question and arm,
   whether every turn LongMemEval marks `has_answer` appears in the reader's prompt, and how many such turns appear. A
   turn's text is first normalised the way the loader does (supplementary-plane characters such as emoji removed), then
-  whitespace and case are normalised on both sides. A turn counts as delivered when its first 80 normalised characters
-  appear in one conversation or one passage of the prompt; for passages, a turn split across a passage boundary counts
-  as delivered when any 80-character window of it appears, and the results count how often that rule was needed. Reported for every arm, in the pilot and in the
-  results. For the arms that deliver whole conversations it equals conversation-level delivery unless a turn was lost,
+  whitespace and case are normalised on both sides. A turn counts as delivered only when its whole normalised text
+  appears in one conversation or one passage of the prompt; a turn split across passages counts as delivered when the
+  passages from its conversation together cover every character of it, and the results count how often that rule was
+  needed. A turn present only in part (its opening kept and its answer cut, for example) counts as not delivered, and
+  the results report partial turns separately. The results branch adds a keyless test in which a passage keeps a turn's
+  opening but drops its answer, and that turn must count as not delivered. Reported for every arm, in the pilot and in
+  the results. For the arms that deliver whole conversations it equals conversation-level delivery unless a turn was lost,
   and the results report both. For **agent-default**, which delivers passages, it is the one that counts. Autocut
   drops whole conversations, never parts of one, so for **off** against **on** the two levels agree; the results
   check that they do.
