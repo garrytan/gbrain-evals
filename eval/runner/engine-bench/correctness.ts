@@ -37,7 +37,7 @@ import { createWriteStream, existsSync, mkdirSync, mkdtempSync, readFileSync, rm
 import { tmpdir } from 'node:os';
 import { join, relative, resolve } from 'node:path';
 import {
-  EVAL_ENGINE_ENV, EVAL_ENGINE_REFUSED_EXIT, EVAL_ENGINES, rustEngineInBuild, type EvalEngineKind, type NotApplicable,
+  EVAL_ENGINE_ENV, EVAL_ENGINE_REFUSED_EXIT, EVAL_ENGINES, rustAddonIdentity, rustEngineInBuild, type EvalEngineKind, type NotApplicable, type RustAddonIdentity,
 } from '../eval-engine.ts';
 import { gbrainSpecFrom, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from '../gbrain-under-test.ts';
 import { strippedKeysIn } from '../hermetic-env.ts';
@@ -157,13 +157,14 @@ export interface CheckRow {
   contracts: Contract[];
   engines: Partial<Record<EvalEngineKind, EngineRow>>;
   typescript: { compared: EvalEngineKind[]; differences: string[] };
-  rust: { verdict: RustVerdict; reasons: string[] } | null;
+  /** gaps: every step the Rust receipt lists as not_applicable, each a named gap whatever the verdict. */
+  rust: { verdict: RustVerdict; reasons: string[]; gaps: NotApplicable[] } | null;
 }
 export interface CorrectnessReceipt {
   schema_version: typeof CORRECTNESS_SCHEMA_VERSION;
   runner: typeof CORRECTNESS_RUNNER;
   generated_at: string;
-  gbrain: { version: string; product: ReturnType<typeof productIdentityFor>; overlay: Record<string, unknown> | null; rust_engine_in_build: boolean; spec: string | null };
+  gbrain: { version: string; product: ReturnType<typeof productIdentityFor>; overlay: Record<string, unknown> | null; rust_engine_in_build: boolean; rust_addon: RustAddonIdentity | null; spec: string | null };
   engines: EvalEngineKind[];
   rule: string;
   keyless: { child_env_stripped: string[]; provider_calls: 0 };
@@ -257,7 +258,7 @@ export function compareCheck(check: CheckSpec, runs: EngineRun[]): { row: CheckR
       else if (compared === 0) { verdict = 'unmeasured'; reasons.push('no TypeScript engine measured this check, so there is no count to compare'); }
       else verdict = 'pass';
     }
-    rust = { verdict, reasons };
+    rust = { verdict, reasons, gaps: rustRow.not_applicable ?? [] };
   }
   return {
     row: { id: check.id, label: check.label, runner: check.script, args: check.args, contracts: check.contracts, engines, typescript: { compared: ts, differences }, rust },
@@ -366,7 +367,7 @@ export async function runCorrectness(o: CorrectnessOptions): Promise<{ receipt: 
     schema_version: CORRECTNESS_SCHEMA_VERSION,
     runner: CORRECTNESS_RUNNER,
     generated_at: new Date().toISOString(),
-    gbrain: { version: o.gut.version, product: productIdentityFor(o.gut), overlay: overlaySummary(o.gut), rust_engine_in_build: rustEngineInBuild(o.gut), spec },
+    gbrain: { version: o.gut.version, product: productIdentityFor(o.gut), overlay: overlaySummary(o.gut), rust_engine_in_build: rustEngineInBuild(o.gut), rust_addon: engines.includes('rust') ? rustAddonIdentity(o.gut) : null, spec },
     engines,
     rule: PARITY_RULE,
     keyless: { child_env_stripped: strippedKeysIn(process.env), provider_calls: 0 },
@@ -392,7 +393,8 @@ export function summaryLines(r: CorrectnessReceipt): string[] {
   const lines = [`correctness: gbrain ${r.gbrain.version}, engines ${r.engines.join(',')}, rust ${r.summary.rust ?? 'not run'}, ${r.findings.length} finding(s), ${Math.round(r.summary.total_wall_ms / 1000)}s`];
   for (const c of r.checks) {
     const cells = Object.values(c.engines).map(e => `${e!.engine} ${e!.status}${e!.refusal_reason ? ` (${e!.refusal_reason})` : ''} ${Math.round(e!.wall_ms / 1000)}s`);
-    lines.push(`  ${c.id}: ${cells.join(', ')}${c.rust ? `; rust ${c.rust.verdict}` : ''}`);
+    lines.push(`  ${c.id}: ${cells.join(', ')}${c.rust ? `; rust ${c.rust.verdict}${c.rust.gaps.length ? `, ${c.rust.gaps.length} gap(s)` : ''}` : ''}`);
+    for (const g of c.rust?.gaps ?? []) lines.push(`    gap: ${g.check}: ${g.reason.slice(0, 160)}`);
   }
   for (const f of r.findings) lines.push(`  finding ${f.check}${f.contract ? `.${f.contract}` : ''}: ${f.detail}`);
   return lines;
@@ -407,6 +409,7 @@ function flag(argv: string[], name: string): string | undefined {
 async function main(argv: string[]): Promise<number> {
   const run = countedRun(argv, REPO_ROOT);
   const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
+  if (!gut.overlay) throw new Error('correctness needs --gbrain <checkout>@<ref>: every check must run the named gbrain commit, and without an overlay no run has a commit to match, so every run would error at the end.');
   const engines = enginesFrom(argv);
   const all = correctnessChecks({ n14Tiers: flag(argv, '--n14-tiers') });
   const only = flag(argv, '--checks')?.split(',').map(s => s.trim()).filter(Boolean);

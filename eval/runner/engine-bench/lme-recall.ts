@@ -54,7 +54,7 @@ import { SQL } from 'bun';
 import { embedMany as aiSdkEmbedMany } from 'ai';
 import type { BrainEngine } from 'gbrain/engine';
 import type { SearchResult } from 'gbrain/types';
-import { EvalEngineUnavailable, EVAL_ENGINES, openEvalEngine, type EvalEngineKind } from '../eval-engine.ts';
+import { EvalEngineUnavailable, EVAL_ENGINES, openEvalEngine, rustAddonIdentity, type EvalEngineKind, type RustAddonIdentity } from '../eval-engine.ts';
 import { gbrainSpecFrom, importGbrain, overlaySummary, resolveGbrainUnderTest, type GbrainUnderTest } from '../gbrain-under-test.ts';
 import { PINNED_SEARCH_CONFIG, canonicalJson, isAbsQuestion, normalizeSessions, stratifiedSample, sutPages, type Question } from '../longmemeval.ts';
 import { EmbeddingCache, makeCachingTransport } from '../longmemeval-cache.ts';
@@ -523,7 +523,7 @@ export interface LmeRecallReceipt extends RowsSummary {
   finished_at: string;
   counted: boolean;
   preregistration_attestation: Attestation | null;
-  gbrain: { version: string; overlay: Record<string, unknown> | null };
+  gbrain: { version: string; overlay: Record<string, unknown> | null; rust_addon: RustAddonIdentity | null };
   dataset: {
     file: string; sha256: string; matches_published_sha256: boolean; total_questions: number; selected: number; abstention_selected: number;
     stratify: number | null; limit: number | null; seed: number; question_ids: string[];
@@ -778,7 +778,7 @@ export async function runLmeRecall(o: RunLmeRecallOptions): Promise<LmeRecallRec
     schema: LME_RECALL_SCHEMA,
     started_at, finished_at: new Date().toISOString(),
     counted: attestation !== null, preregistration_attestation: attestation,
-    gbrain: { version: o.gut.version, overlay: overlaySummary(o.gut) },
+    gbrain: { version: o.gut.version, overlay: overlaySummary(o.gut), rust_addon: o.engines.includes('rust') ? rustAddonIdentity(o.gut) : null },
     dataset: {
       file: basename(ds.path), sha256: ds.sha256, matches_published_sha256: ds.sha256 === PUBLISHED_LME_S_SHA256, total_questions: ds.totalQuestions,
       selected: ds.questions.length, abstention_selected: ds.questions.filter(q => isAbsQuestion(q.question_id)).length,
