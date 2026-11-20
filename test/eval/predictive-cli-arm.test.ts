@@ -1,5 +1,6 @@
 /**
- * The CLI arm's sandbox (GBEV-55 gate change E1) and the G3 causes on the pinned gbrain.
+ * The CLI arm's sandbox (GBEV-55 gate change E1) and the G3 exposure total on the pinned gbrain. The G3 episodes
+ * themselves run in test/eval/predictive-g3-*.test.ts, two causes a file (test/support/predictive-g3.ts).
  *
  * Keyless: provider keys are deleted from this process for the file, every model is scripted, and the loop's fetch is
  * a dead upstream that throws, so no test can reach a provider. gbrain itself runs for real: the pinned CLI and
@@ -11,14 +12,12 @@ import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, 
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { brainChildEnv, GbrainCliArm, GbrainMcpArm, SyntheticBrain, validateArgv } from '../../eval/runner/predictive/cli-arm.ts';
-import { runWriteEpisode, scriptedWritePolicy } from '../../eval/runner/predictive/episodes.ts';
-import { multiWindowReads, type RefusalEvent } from '../../eval/runner/predictive/write-contract.ts';
+import { multiWindowReads } from '../../eval/runner/predictive/write-contract.ts';
 import { resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
 import { HERMETIC_KEY_PATTERN, HERMETIC_STRIPPED_KEYS } from '../../eval/runner/hermetic-env.ts';
-import { G3_CAUSES, generateWriteTasks } from '../../eval/generators/write-contract-gen.ts';
+import { g3MetPairs } from '../support/predictive-g3.ts';
 
 const saved: Record<string, string | undefined> = {};
-const deadFetch = (() => { throw new Error('dead upstream: tests never call a provider'); }) as unknown as typeof fetch;
 beforeAll(() => {
   for (const k of Object.keys(process.env)) if ((HERMETIC_STRIPPED_KEYS as readonly string[]).includes(k) || HERMETIC_KEY_PATTERN.test(k) || /PARTICLE|UBICLOUD/.test(k)) { saved[k] = process.env[k]; delete process.env[k]; }
 });
@@ -109,34 +108,8 @@ describe('E1: the operator default brain stays untouched', () => {
 });
 
 describe('G3 causes reproduce on the pinned gbrain', () => {
-  const tasks = G3_CAUSES.map(c => generateWriteTasks({ n: 8 }).find(t => t.cause === c)!);
-  test('a recovering fake passes every cause on both surfaces and meets the cause wherever it is exposed', async () => {
+  test('the recovering fake meets a cause on 14 surface-cause pairs, or 13 when gbrain reads two ranges', () => {
     const reads = multiWindowReads(resolveGbrainUnderTest(null).version);
-    const seen: string[] = [];
-    for (const task of tasks) for (const surface of ['cli', 'mcp'] as const) {
-      const e = await runWriteEpisode({ task, surface, trial: 0, model: 'scripted-fake', fetchImpl: deadFetch, scripted: scriptedWritePolicy(task, surface, 'recovering') });
-      expect({ id: task.id, surface, cause: e.cause }).toEqual({ id: task.id, surface, cause: 'correct' });
-      expect(e.reported_done_not_landed).toBe(0);
-      const met = e.refusals.some(r => r.cause === task.cause);
-      if (reads && task.cause === 'two_range_read') {
-        const refusals: RefusalEvent[] = surface === 'mcp' ? [] : [{ cause: 'two_range_read', code: null, family: 'get', call: 0, retried: true, recovered: true }];
-        expect({ id: task.id, surface, refusals: e.refusals }).toEqual({ id: task.id, surface, refusals });
-      } else {
-        expect({ id: task.id, surface, met }).toEqual({ id: task.id, surface, met: task.exposure[surface][task.cause] === 1 });
-      }
-      if (met) seen.push(`${surface}:${task.cause}`);
-    }
-    expect(seen.length).toBe(reads ? 8 + 5 : 8 + 6);
-  }, 600_000);
-
-  test('a careless fake that reports every write as landed is caught as reported done, not landed', async () => {
-    for (const cause of ['missing_provenance', 'source_changed', 'scope_denied'] as const) {
-      const task = tasks.find(t => t.cause === cause)!;
-      const e = await runWriteEpisode({ task, surface: 'cli', trial: 0, model: 'scripted-fake', fetchImpl: deadFetch, scripted: scriptedWritePolicy(task, 'cli', 'careless') });
-      expect(e.success).toBe(false);
-      expect(e.reported_done_not_landed).toBe(1);
-      expect(e.cause).toBe('write_integrity');
-      expect(e.refusals.map(r => [r.cause, r.retried])).toEqual([[cause, false]]);
-    }
-  }, 300_000);
+    expect(g3MetPairs(reads).length).toBe(reads ? 8 + 5 : 8 + 6);
+  });
 });
