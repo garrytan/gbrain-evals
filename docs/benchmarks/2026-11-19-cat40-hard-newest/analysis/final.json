@@ -62,12 +62,17 @@
    "se_pp": 2.317
   },
   "particle-1": {
-   "incomplete": {
-    "N1|gbrain-newest|particle-1": 100,
-    "N1|fs|particle-1": 100,
-    "N2|gbrain-newest|particle-1": 100,
-    "N2|fs|particle-1": 100
-   }
+   "delta_pp": 30.5,
+   "ci95": [
+    24.5,
+    37.0
+   ],
+   "tasks": 200,
+   "cells": 200,
+   "a_count": 67.0,
+   "b_count": 6.0,
+   "missing_pairs": 0,
+   "se_pp": 3.242
   }
  },
  "per_family": {
@@ -264,12 +269,12 @@
    "cost_per_correct_usd": 0.408
   },
   "gbrain-newest|particle-1": {
-   "successes": 0,
-   "cost_per_correct_usd": null
+   "successes": 67,
+   "cost_per_correct_usd": 0.4206
   },
   "fs|particle-1": {
-   "successes": 0,
-   "cost_per_correct_usd": null
+   "successes": 6,
+   "cost_per_correct_usd": 4.3866
   }
  },
  "claims": {
@@ -300,6 +305,20 @@
    "share_with_bad_claim": 0.178,
    "judge": "claude-opus-5-5",
    "counted": true
+  },
+  "gbrain-newest|particle-1": {
+   "answers_judged": 89,
+   "mean_bad_claims": 4.281,
+   "share_with_bad_claim": 0.91,
+   "judge": "gpt-6.1-sol",
+   "counted": true
+  },
+  "fs|particle-1": {
+   "answers_judged": 6,
+   "mean_bad_claims": 4.333,
+   "share_with_bad_claim": 1.0,
+   "judge": "gpt-6.1-sol",
+   "counted": true
   }
  },
  "tool_calls": {
@@ -314,6 +333,12 @@
    "calls:list_dir": 841,
    "calls:read_file": 4205,
    "calls:write_file": 162
+  },
+  "fs|particle-1": {
+   "calls:list_dir": 2211,
+   "calls:read_file": 5131,
+   "calls:grep": 4331,
+   "calls:write_file": 195
   },
   "gbrain-newest|claude-opus-5-5": {
    "calls:entity": 365,
@@ -365,6 +390,41 @@
    "calls:find_pages": 6,
    "search_with:token_budget": 36,
    "calls:assemble_evidence": 1
+  },
+  "gbrain-newest|particle-1": {
+   "calls:entity": 400,
+   "calls:search": 5308,
+   "search": 5308,
+   "search_no_limit": 579,
+   "search_empty": 1229,
+   "calls:get_backlinks": 220,
+   "calls:resolve_slugs": 26,
+   "calls:get_page": 1853,
+   "calls:list_pages": 348,
+   "calls:context_pack": 148,
+   "calls:query": 86,
+   "calls:list_skills": 88,
+   "calls:remember": 231,
+   "calls:edit_page": 322,
+   "calls:put_page": 210,
+   "calls:recall": 226,
+   "calls:add_timeline_entry": 296,
+   "calls:forget": 138,
+   "calls:request_tools": 44,
+   "calls:search_exact": 106,
+   "calls:find_pages": 29,
+   "search_with:snippet_chars": 15,
+   "calls:whoami": 50,
+   "calls:synthesize": 16,
+   "calls:list_brain_skillpack": 4,
+   "calls:get_recent_salience": 7,
+   "calls:get_stats": 12,
+   "calls:sources_list": 1,
+   "calls:capture": 28,
+   "calls:get_skill": 1,
+   "calls:schema_stats": 2,
+   "calls:traverse_graph": 2,
+   "search_with:token_budget": 1
   }
  }
 }
