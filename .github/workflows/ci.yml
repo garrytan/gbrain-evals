@@ -36,12 +36,17 @@ jobs:
   # job's .git now also holds older commits' objects, so tests that look for a
   # pinned commit (five cases in test/eval/q1-reuse-check.test.ts) run instead of
   # skipping; without a cache they skip, as before. The save follows a checkout
-  # with persist-credentials: false and refuses a stored credential. Every job
-  # that runs a check runs even when this one fails, checking out from GitHub as
-  # before, so a broken cache never turns a check into a skipped one. The run
-  # still fails on git-cache until a rerun rebuilds the cache, and tested-tree,
-  # which runs no tests, keeps its default condition, which reads every upstream
-  # job, so it is skipped and that run carries nothing.
+  # with persist-credentials: false and refuses a stored credential. The jobs
+  # that run checks don't wait for this one: they start at once and restore the
+  # newest cache already saved, which main's last push left (a pull request run
+  # found one every time from 2026-11-16 to 2026-11-20), so the cache no longer
+  # adds a wave of runner start-up to every run. Without one they check out from
+  # GitHub as before, so a broken cache never turns a check into a skipped one.
+  # A run that finds no cache skips the five pinned-commit cases while git-cache
+  # builds one, and tested-tree still records that run as tested.
+  # The run still fails on git-cache until a rerun rebuilds the cache, and
+  # tested-tree, which runs no tests, needs git-cache and keeps its default
+  # condition, so it is skipped and that run carries nothing.
   git-cache:
     runs-on: ubicloud-standard-2-ubuntu-2604
     timeout-minutes: 20
@@ -71,8 +76,6 @@ jobs:
           key: ${{ format('git-objects-v1-{0}', github.sha) }}
 
   checks:
-    needs: git-cache
-    if: ${{ !cancelled() }}
     runs-on: ubicloud-standard-4-ubuntu-2604
     timeout-minutes: 20
     steps:
@@ -131,8 +134,6 @@ jobs:
   # external gbrain checkout and records a skip; BRAINBENCH_ALLOW_SKIP
   # acknowledges receipt-declared skips.
   brainbench:
-    needs: git-cache
-    if: ${{ !cancelled() }}
     runs-on: ubicloud-standard-4-ubuntu-2604
     timeout-minutes: 20
     strategy:
@@ -168,8 +169,6 @@ jobs:
           retention-days: 14
 
   prereg-order:
-    needs: git-cache
-    if: ${{ !cancelled() }}
     runs-on: ubicloud-standard-2-ubuntu-2604
     timeout-minutes: 5
     steps:
@@ -193,8 +192,6 @@ jobs:
         run: bun eval/runner/prereg.ts
 
   tests:
-    needs: git-cache
-    if: ${{ !cancelled() }}
     runs-on: ubicloud-standard-8-ubuntu-2604
     timeout-minutes: 15
     strategy:
@@ -256,7 +253,7 @@ jobs:
   # (.gstack/pregate.json run_profiles and ship_lanes_from) instead of running
   # the suite again. It runs no tests itself.
   tested-tree:
-    needs: [checks, tests, harness]
+    needs: [git-cache, checks, tests, harness]
     runs-on: ubicloud-standard-2-ubuntu-2604
     timeout-minutes: 5
     steps:
@@ -297,8 +294,6 @@ jobs:
   # is a paid, ledger-reserved judge with no keyless fixture provider yet.
   # Wiring the fixture through it is gbrain-evals issue #195.
   scoreboard:
-    needs: git-cache
-    if: ${{ !cancelled() }}
     runs-on: ubicloud-standard-2-ubuntu-2604
     timeout-minutes: 10
     steps:
@@ -329,8 +324,6 @@ jobs:
   # refused unread. gitleaks is pinned by version and sha256; findings are
   # redacted in the log.
   receipt-secrets:
-    needs: git-cache
-    if: ${{ !cancelled() }}
     runs-on: ubicloud-standard-2-ubuntu-2604
     timeout-minutes: 5
     steps:
@@ -368,8 +361,6 @@ jobs:
   # prints a warning on the run, and bumping the key's v1 replaces the entry.
   # The venv is still built on every run.
   harness:
-    needs: git-cache
-    if: ${{ !cancelled() }}
     runs-on: ubicloud-standard-4-ubuntu-2604
     timeout-minutes: 30
     strategy:
