@@ -26,12 +26,17 @@ DRV="bun $REPO/eval/runner/batch/lme-redis.ts"
 PY="uv run -q --project $REPO/eval/redis-agent-memory-benchmark python $REPO/eval/runner/lme-redis/lme_redis.py"
 BATCH_ARMS="gpt4o--off gpt4o--on gpt4o--agent-default gpt4o--full gpt4o--oracle opus--off opus--on opus--full opus--oracle sol--off sol--on sol--full sol--oracle"
 
+only_env() {  # only_env "NAMES" CMD...: runs CMD with just the named variables, none of them on a command line
+  local keep=" $1 " v; shift
+  for v in $(compgen -e); do [[ $keep == *" $v "* ]] || unset "$v"; done
+  exec "$@"
+}
 voyage_up() {  # starts the metering proxy and the gbrain adapter for stage $1
   local run_id; run_id=$(python3 -c "import json;print(json.load(open('$LME_REDIS_STATE_DIR/runs.json'))['$1'])")
   rm -f "$LME_REDIS_STATE_DIR/proxy-ready.json"
-  env -i HOME="$HOME" PATH="$PATH" VOYAGE_API_KEY="$VOYAGE_API_KEY" bun "$REPO/eval/runner/harness-metering-proxy.ts" --budget-ledger "$LEDGER" --budget-run-id "$run_id" \
+  (only_env "HOME PATH VOYAGE_API_KEY" bun "$REPO/eval/runner/harness-metering-proxy.ts" --budget-ledger "$LEDGER" --budget-run-id "$run_id" \
     --cell-id "lme-redis-$1" --labels gbrain --ready-file "$LME_REDIS_STATE_DIR/proxy-ready.json" --request-log "$LME_REDIS_STATE_DIR/proxy-$1.jsonl" \
-    --bodies-dir "$LME_REDIS_STATE_DIR/proxy-bodies" > "$LOGS/proxy-$1.log" 2>&1 &
+    --bodies-dir "$LME_REDIS_STATE_DIR/proxy-bodies") > "$LOGS/proxy-$1.log" 2>&1 &
   PROXY_PID=$!
   for _ in $(seq 60); do [ -s "$LME_REDIS_STATE_DIR/proxy-ready.json" ] && break; sleep 1; done
   local base token
@@ -39,8 +44,8 @@ voyage_up() {  # starts the metering proxy and the gbrain adapter for stage $1
   token=$(python3 -c "import json;print(json.load(open('$LME_REDIS_STATE_DIR/proxy-ready.json'))['env']['gbrain']['VOYAGE_API_KEY'])")
   mkdir -p "$HOME/gbhome/.gbrain"
   printf '{"embedding_model":"voyage:voyage-4","embedding_dimensions":1024,"provider_base_urls":{"voyage":"%s"}}\n' "$base" > "$HOME/gbhome/.gbrain/config.json"
-  env -i HOME="$HOME" PATH="$PATH" GBRAIN_HOME="$HOME/gbhome" GBRAIN_SRC="$HOME/gbrain/src" VOYAGE_API_KEY="$token" LME_REDIS_PORT=8787 \
-    bun "$REPO/eval/runner/lme-redis/gbrain-server.ts" > "$LOGS/server-$1.log" 2>&1 &
+  (export GBRAIN_HOME="$HOME/gbhome" GBRAIN_SRC="$HOME/gbrain/src" VOYAGE_API_KEY="$token" LME_REDIS_PORT=8787
+   only_env "HOME PATH GBRAIN_HOME GBRAIN_SRC VOYAGE_API_KEY LME_REDIS_PORT" bun "$REPO/eval/runner/lme-redis/gbrain-server.ts") > "$LOGS/server-$1.log" 2>&1 &
   SERVER_PID=$!
   for _ in $(seq 60); do curl -sf 127.0.0.1:8787/ >/dev/null && break; sleep 1; done
   unset VOYAGE_API_KEY
