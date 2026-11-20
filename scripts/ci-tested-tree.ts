@@ -126,7 +126,7 @@ function record(args: string[]): void {
   const missing = listed.filter(f => !ran.has(f));
   const extra = rec.files.filter(f => !listed.includes(f));
   const lines = [`TESTED_TREE: run ${rec.run_id}/${rec.run_attempt} ${rec.event} head ${rec.head_sha.slice(0, 12)} tree ${rec.tree.slice(0, 12)} files=${rec.files.length} tests=${rec.tests} os=${rec.os}`];
-  if (missing.length) lines.push(`::error::${missing.length} inventory file(s) did not run, so no /ship lane could carry from this run (a test file must register at least one test; a skipped one counts; a harness file's report comes from the harness job's pytest run): ${missing.slice(0, 10).join(', ')}`);
+  if (missing.length) lines.push(`::error::${missing.length} inventory file(s) did not run, so no /ship lane could carry from this run (a test file must register at least one test; a skipped one counts; a harness Python file counts only for tests defined in it, because pytest's report names the file that defines each test, so a test it inherits or imports counts for that other file): ${missing.slice(0, 10).join(', ')}`);
   if (extra.length) lines.push(`::warning::${extra.length} file(s) ran that the inventory does not list: ${extra.slice(0, 10).join(', ')}`);
   for (const line of lines) console.log(line);
   if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${lines.map(l => l.replace(/^::error::/, 'Error: ').replace(/^::warning::/, 'Warning: ')).join('\n')}\n`);
