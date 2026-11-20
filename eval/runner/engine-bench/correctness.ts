@@ -37,7 +37,7 @@ import { createWriteStream, existsSync, mkdirSync, mkdtempSync, readFileSync, rm
 import { tmpdir } from 'node:os';
 import { join, relative, resolve } from 'node:path';
 import {
-  EVAL_ENGINE_ENV, EVAL_ENGINE_REFUSED_EXIT, EVAL_ENGINES, rustEngineInBuild, type EvalEngineKind, type NotApplicable,
+  EVAL_ENGINE_ENV, EVAL_ENGINE_REFUSED_EXIT, EVAL_ENGINES, rustAddonIdentity, rustEngineInBuild, type EvalEngineKind, type NotApplicable, type RustAddonIdentity,
 } from '../eval-engine.ts';
 import { gbrainSpecFrom, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from '../gbrain-under-test.ts';
 import { strippedKeysIn } from '../hermetic-env.ts';
@@ -163,7 +163,7 @@ export interface CorrectnessReceipt {
   schema_version: typeof CORRECTNESS_SCHEMA_VERSION;
   runner: typeof CORRECTNESS_RUNNER;
   generated_at: string;
-  gbrain: { version: string; product: ReturnType<typeof productIdentityFor>; overlay: Record<string, unknown> | null; rust_engine_in_build: boolean; spec: string | null };
+  gbrain: { version: string; product: ReturnType<typeof productIdentityFor>; overlay: Record<string, unknown> | null; rust_engine_in_build: boolean; rust_addon: RustAddonIdentity | null; spec: string | null };
   engines: EvalEngineKind[];
   rule: string;
   keyless: { child_env_stripped: string[]; provider_calls: 0 };
@@ -366,7 +366,7 @@ export async function runCorrectness(o: CorrectnessOptions): Promise<{ receipt: 
     schema_version: CORRECTNESS_SCHEMA_VERSION,
     runner: CORRECTNESS_RUNNER,
     generated_at: new Date().toISOString(),
-    gbrain: { version: o.gut.version, product: productIdentityFor(o.gut), overlay: overlaySummary(o.gut), rust_engine_in_build: rustEngineInBuild(o.gut), spec },
+    gbrain: { version: o.gut.version, product: productIdentityFor(o.gut), overlay: overlaySummary(o.gut), rust_engine_in_build: rustEngineInBuild(o.gut), rust_addon: engines.includes('rust') ? rustAddonIdentity(o.gut) : null, spec },
     engines,
     rule: PARITY_RULE,
     keyless: { child_env_stripped: strippedKeysIn(process.env), provider_calls: 0 },
@@ -407,6 +407,7 @@ function flag(argv: string[], name: string): string | undefined {
 async function main(argv: string[]): Promise<number> {
   const run = countedRun(argv, REPO_ROOT);
   const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
+  if (!gut.overlay) throw new Error('correctness needs --gbrain <checkout>@<ref>: every check must run the named gbrain commit, and without an overlay no run has a commit to match, so every run would error at the end.');
   const engines = enginesFrom(argv);
   const all = correctnessChecks({ n14Tiers: flag(argv, '--n14-tiers') });
   const only = flag(argv, '--checks')?.split(',').map(s => s.trim()).filter(Boolean);

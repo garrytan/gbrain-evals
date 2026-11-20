@@ -1,0 +1,3 @@
+Engine-bench is ready to run on gbrain's Rust engine. Each run now passes the Rust addon (`GBRAIN_RUST_ENGINE_ADDON`) to every gbrain process it starts, and each stage receipt records the addon's SHA-256 and build. N14 large pages now fail on Rust when nothing was stored instead of passing.
+The correctness stage refuses to start without `--gbrain <checkout>@<ref>`. The launcher log keeps running when the command it started reports an error, and keeps the end of that command's log.
+The engine-bench preregistration has a 2026-11-20 amendment. It records gbrain's maintainers' dates, how a user selects Rust, and that Rust must match PGLite on `stale`.

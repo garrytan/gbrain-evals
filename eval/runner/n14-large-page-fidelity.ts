@@ -506,7 +506,13 @@ export function n14Verdict(s: N14Summary, engine: { rawSql: boolean } = { rawSql
   const failed: string[] = [];
   for (const [k, v] of Object.entries(s.safety)) if (v !== 0) failed.push(`safety.${k}=${v}`);
   // Without raw SQL the quality and floor rules have no measurement (N14_SQL_CHECKS): not_applicable, so neither pass nor fail.
-  if (!engine.rawSql) return { verdict: failed.length ? 'fail' : 'pass', failed };
+  // The stored-page counts are not_applicable too, so an arm that ran but never stored its page measured nothing and
+  // fails, instead of passing on safety counts of zero.
+  if (!engine.rawSql) {
+    const unstored = s.arms.filter(a => a.status !== 'capability_absent' && a.roundtrip === 'not_stored').length;
+    if (unstored) failed.push(`roundtrip.not_stored=${unstored}`);
+    return { verdict: failed.length ? 'fail' : 'pass', failed };
+  }
   const { native_append_embed_ratio_max: ratio, native_recall_gap_points_max: gap } = s.quality;
   if (ratio === null || ratio > THRESHOLDS.append_embed_ratio_max) failed.push(`quality.native_append_embed_ratio_max=${ratio}`);
   if (gap === null || gap > THRESHOLDS.native_recall_gap_points_max) failed.push(`quality.native_recall_gap_points_max=${gap}`);

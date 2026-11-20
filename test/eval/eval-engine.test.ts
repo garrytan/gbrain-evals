@@ -1,10 +1,11 @@
 import { describe, expect, test } from 'bun:test';
+import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
   EvalEngineUnavailable, cliEngineConfig, evalEngineKind, evalEngineRequested, isCapabilityMissing, openEvalEngine,
-  rawSqlNotApplicable, rustAddonRefusal, supportsRawSql,
+  rawSqlNotApplicable, rustAddonEnv, rustAddonIdentity, rustAddonRefusal, supportsRawSql,
 } from '../../eval/runner/eval-engine.ts';
 import { resolveGbrainUnderTest, type GbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
 
@@ -48,6 +49,32 @@ describe('raw SQL checks', () => {
     expect(isCapabilityMissing({ code: 'engine_capability_missing' })).toBe(true);
     expect(isCapabilityMissing({ code: 'legacy', canonical: 'engine_capability_missing' })).toBe(true);
     expect(isCapabilityMissing(new Error('x'))).toBe(false);
+  });
+});
+
+describe('Rust addon', () => {
+  test('rustAddonEnv passes only GBRAIN_RUST_ENGINE_ADDON, and nothing when it is unset or blank', () => {
+    expect(rustAddonEnv({ GBRAIN_RUST_ENGINE_ADDON: ' /a/x.node ', OPENAI_API_KEY: 'k' })).toEqual({ GBRAIN_RUST_ENGINE_ADDON: '/a/x.node' });
+    expect(rustAddonEnv({ GBRAIN_RUST_ENGINE_ADDON: '  ' })).toEqual({});
+    expect(rustAddonEnv({})).toEqual({});
+  });
+  test('rustAddonIdentity records the file digest and the exports gbrain\'s loader returns, in a child with no provider key', () => {
+    const gut = fakeGbrain(null);
+    const addon = join(gut.root, 'x.node');
+    writeFileSync(addon, 'addon bytes');
+    writeFileSync(join(gut.root, 'src/core/rust-engine/addon-loader.ts'), "export async function loadRustAddon() { return { target: 'linux-x64-glibc', engineBuild: 'b1', engineAbi: 3, catalogVersion: 7, formatVersions: [2], keys: Object.keys(process.env).filter(k => /API_KEY/.test(k)) }; }");
+    const id = rustAddonIdentity(gut, { PATH: process.env.PATH, GBRAIN_RUST_ENGINE_ADDON: addon, OPENAI_API_KEY: 'k' });
+    expect(id).toEqual({ sha256: createHash('sha256').update('addon bytes').digest('hex'), bytes: 11, target: 'linux-x64-glibc', engine_build: 'b1', engine_abi: 3, catalog_version: 7, format_versions: [2] });
+    expect(rustAddonIdentity(gut, { PATH: process.env.PATH })).toBeNull();
+  });
+  test('rustAddonIdentity keeps the digest when the exports cannot be read', () => {
+    const gut = fakeGbrain(null);
+    const addon = join(gut.root, 'x.node');
+    writeFileSync(addon, 'addon bytes');
+    writeFileSync(join(gut.root, 'src/core/rust-engine/addon-loader.ts'), "export async function loadRustAddon() { throw new Error('rust_engine_addon_mismatch'); }");
+    const id = rustAddonIdentity(gut, { PATH: process.env.PATH, GBRAIN_RUST_ENGINE_ADDON: addon })!;
+    expect(id.sha256).toBe(createHash('sha256').update('addon bytes').digest('hex'));
+    expect(id.exports_error).toContain('rust_engine_addon_mismatch');
   });
 });
 

@@ -12,11 +12,11 @@
  * engine_capability_missing, reason raw_sql; plan decision D18), so a check that reads or writes the database with
  * raw SQL reports not_applicable on it (rawSqlNotApplicable) and counts as neither a pass nor a fail.
  */
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { SQL } from 'bun';
 import type { BrainEngine } from 'gbrain/engine';
 import type { EngineConfig } from 'gbrain/types';
@@ -54,6 +54,54 @@ export class EvalEngineUnavailable extends Error {
 
 /** Where the Rust engine's TypeScript side lives in a gbrain build that carries it (RUST_ENGINE.md, "Binding"). */
 export const RUST_ENGINE_DIR = 'src/core/rust-engine';
+
+/**
+ * GBRAIN_RUST_ENGINE_ADDON for a child environment built from nothing. gbrain's addon loader reads it before any
+ * installed addon, and a locally built addon (`bun run rust:build`) is found only through it, so every gbrain child
+ * the harness spawns, and the store this process opens, resolve the same addon file. Empty when unset.
+ */
+export function rustAddonEnv(env: Record<string, string | undefined> = process.env): { GBRAIN_RUST_ENGINE_ADDON?: string } {
+  const path = env.GBRAIN_RUST_ENGINE_ADDON?.trim();
+  return path ? { GBRAIN_RUST_ENGINE_ADDON: path } : {};
+}
+
+/** The Rust addon a run loaded: its file digest (engine_build hashes the Rust sources, not the file) and its exports. */
+export interface RustAddonIdentity {
+  sha256: string;
+  bytes: number;
+  target?: string;
+  engine_build?: string;
+  engine_abi?: number;
+  catalog_version?: number;
+  format_versions?: unknown[];
+  /** Why the exports could not be read; the digest still stands. */
+  exports_error?: string;
+}
+
+/**
+ * Identify the addon at GBRAIN_RUST_ENGINE_ADDON: its SHA-256, and the exports gbrain's own loader reads from it, read
+ * in a child process with no provider key and only the addon path set. Null when the variable is unset.
+ */
+export function rustAddonIdentity(gut: Pick<GbrainUnderTest, 'root'>, env: Record<string, string | undefined> = process.env): RustAddonIdentity | null {
+  const path = rustAddonEnv(env).GBRAIN_RUST_ENGINE_ADDON;
+  if (!path) return null;
+  const bytes = readFileSync(path);
+  const id: RustAddonIdentity = { sha256: createHash('sha256').update(bytes).digest('hex'), bytes: bytes.length };
+  const loader = resolve(gut.root, RUST_ENGINE_DIR, 'addon-loader.ts');
+  const script = `const a = await (await import(${JSON.stringify(loader)})).loadRustAddon(); console.log(JSON.stringify({ target: a.target, engine_build: a.engineBuild, engine_abi: a.engineAbi, catalog_version: a.catalogVersion, format_versions: a.formatVersions }));`;
+  const home = mkdtempSync(join(tmpdir(), 'eval-engine-rust-addon-'));
+  try {
+    const r = spawnSync(process.execPath, ['-e', script], { env: { PATH: env.PATH, HOME: home, GBRAIN_HOME: home, GBRAIN_RUST_ENGINE_ADDON: path }, cwd: home, encoding: 'utf8', timeout: 60_000 });
+    const line = (r.stdout ?? '').trim().split('\n').at(-1) ?? '';
+    try { return { ...id, ...JSON.parse(line) }; } catch {
+      const lines = (r.stderr ?? '').trim().split('\n');
+      const why = lines.find(l => /^\s*(error|[A-Za-z]*Error)\b/.test(l)) ?? lines.at(-1) ?? '';
+      return { ...id, exports_error: `exit ${r.status ?? r.signal}: ${why.trim().slice(0, 300)}` };
+    }
+  } finally {
+    rmSync(home, { recursive: true, force: true });
+  }
+}
 
 /** Static check, no import: does the gbrain under test carry the Rust engine at all? */
 export function rustEngineInBuild(gut: Pick<GbrainUnderTest, 'root'>): boolean {
@@ -163,10 +211,7 @@ export function initRustBrain(gut: Pick<GbrainUnderTest, 'root' | 'version'>, da
     mkdirSync(join(home, '.gbrain'), { recursive: true });
     const config = { ...cliEngineConfig('rust', { databasePath }), embedding_disabled: true, schema_pack: 'gbrain-base-v2' };
     writeFileSync(join(home, '.gbrain', 'config.json'), `${JSON.stringify(config, null, 2)}\n`);
-    // GBRAIN_RUST_ENGINE_ADDON passes through: a locally built addon (`bun run rust:build`) is found only through it,
-    // and the store this process opens next resolves the same addon.
-    const addon = process.env.GBRAIN_RUST_ENGINE_ADDON;
-    const env = { PATH: process.env.PATH, HOME: home, GBRAIN_HOME: home, GBRAIN_SKIP_STARTUP_HOOKS: '1', TZ: 'UTC', NO_COLOR: '1', ...(addon ? { GBRAIN_RUST_ENGINE_ADDON: addon } : {}) };
+    const env = { PATH: process.env.PATH, HOME: home, GBRAIN_HOME: home, GBRAIN_SKIP_STARTUP_HOOKS: '1', TZ: 'UTC', NO_COLOR: '1', ...rustAddonEnv() };
     const r = spawnSync(process.execPath, [join(gut.root, 'src/cli.ts'), 'init', '--migrate-only', '--non-interactive'], { env, cwd: home, encoding: 'utf8', timeout: 300_000 });
     if (r.status === 0) return;
     const out = `${r.stderr ?? ''}\n${r.stdout ?? ''}`.trim();

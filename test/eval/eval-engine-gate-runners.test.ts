@@ -163,10 +163,14 @@ describe('N14 engine selection', () => {
     expect(na.every(x => x.status === 'not_applicable' && /raw_sql/.test(x.reason))).toBe(true);
   });
   test('without raw SQL the quality and floor rules count as neither pass nor fail; safety still gates', () => {
-    const s = { safety: { crashes: 0, responses_over_cap: 0, roundtrip_byte_loss: 0, presence_failures: 0 }, quality: { native_append_embed_ratio_max: null, native_recall_gap_points_max: null }, floor: { native_keyword_recall_2mb: null } } as unknown as N14Summary;
+    const s = { safety: { crashes: 0, responses_over_cap: 0, roundtrip_byte_loss: 0, presence_failures: 0 }, quality: { native_append_embed_ratio_max: null, native_recall_gap_points_max: null }, floor: { native_keyword_recall_2mb: null }, arms: [{ status: 'ran', roundtrip: 'match' }, { status: 'capability_absent', roundtrip: 'not_stored' }] } as unknown as N14Summary;
     expect(n14Verdict(s).verdict).toBe('fail');
     expect(n14Verdict(s, { rawSql: false })).toEqual({ verdict: 'pass', failed: [] });
     expect(n14Verdict({ ...s, safety: { ...s.safety, crashes: 1 } }, { rawSql: false }).verdict).toBe('fail');
+  });
+  test('without raw SQL an arm that ran but stored nothing fails instead of passing on zero safety counts', () => {
+    const s = { safety: { crashes: 0, responses_over_cap: 0, roundtrip_byte_loss: 0, presence_failures: 0 }, quality: { native_append_embed_ratio_max: null, native_recall_gap_points_max: null }, floor: { native_keyword_recall_2mb: null }, arms: [{ status: 'ran', roundtrip: 'not_stored' }, { status: 'ran', roundtrip: 'not_stored' }, { status: 'ran', roundtrip: 'match' }] } as unknown as N14Summary;
+    expect(n14Verdict(s, { rawSql: false })).toEqual({ verdict: 'fail', failed: ['roundtrip.not_stored=2'] });
   });
 });
 

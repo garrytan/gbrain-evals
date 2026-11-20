@@ -29,7 +29,7 @@ import { execFileSync } from 'node:child_process';
 import { appendFileSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { SQL } from 'bun';
-import { cliEngineConfig } from '../eval-engine.ts';
+import { cliEngineConfig, rustAddonEnv } from '../eval-engine.ts';
 import { redactUrlPasswords, strippedKeysIn } from '../hermetic-env.ts';
 import { CliDriver, McpHttpClient, McpHttpDriver, McpStdioDriver, runCli, type CallResult, type Driver, type RunEnv } from './drivers.ts';
 
@@ -102,7 +102,7 @@ export class SliceCell {
     this.home = join(this.dir, 'gbrain-home');
     const env: NodeJS.ProcessEnv = {
       PATH: process.env.PATH, HOME: join(this.dir, 'user-home'), GBRAIN_HOME: this.home,
-      GBRAIN_SKIP_STARTUP_HOOKS: '1', TZ: 'UTC', LANG: 'C.UTF-8', NO_COLOR: '1',
+      GBRAIN_SKIP_STARTUP_HOOKS: '1', TZ: 'UTC', LANG: 'C.UTF-8', NO_COLOR: '1', ...rustAddonEnv(),
     };
     this.childKeys = strippedKeysIn(env);
     this.run = { buildDir: opts.buildDir, env };
