@@ -11,11 +11,13 @@
  * TEST_SHARDS sets how many processes run at once (default: min(4, CPU count)). Alone, they are the whole suite in
  * TEST_SHARDS shards. With --job=k/n, as CI's n shard jobs run it, job k runs its TEST_SHARDS processes as shards
  * k, k+n, k+2n, ... of n*TEST_SHARDS, so the n jobs together run every shard exactly once. --junit-dir writes each
- * shard's JUnit report there as tests-<shard>.xml, for CI's tested-tree job. With --job, each line prints as it
+ * shard's JUnit report there as tests-<shard>.xml, for CI's tested-tree job, and fails a shard whose report is
+ * missing, since Bun exits 0 when it cannot write one. With --job, each line prints as it
  * arrives, led by its shard's number, so a shard that hangs still shows where; otherwise each shard prints whole at the end. Shards split the files by the CI times in
  * test/timings.json (scripts/test-timings.ts), and the script runs from the repository root, where Bun resolves that
  * file's relative paths.
  */
+import { existsSync, mkdirSync } from 'node:fs';
 import { cpus } from 'node:os';
 import { join } from 'node:path';
 
@@ -46,6 +48,8 @@ async function runShard(shard: number, shards: number, paths: string[], junitDir
   const junit = junitDir ? ['--reporter=junit', `--reporter-outfile=${join(junitDir, `tests-${shard}.xml`)}`] : [];
   const proc = Bun.spawn([process.execPath, 'test', `--shard=${shard}/${shards}`, '--timings=test/timings.json', ...paths, ...junit], { stdout: 'pipe', stderr: 'pipe' });
   const [stdout, stderr, code] = await Promise.all([stream(proc.stdout, shard, live), stream(proc.stderr, shard, live), proc.exited]);
+  const report = junitDir && join(junitDir, `tests-${shard}.xml`);
+  if (report && !existsSync(report)) return { shard, code: code || 1, output: `${stdout}${stderr}\nno JUnit report at ${report}\n` };
   return { shard, code, output: stdout + stderr };
 }
 
@@ -76,6 +80,7 @@ if (import.meta.main) {
   const rest = args.filter(a => !a.startsWith('--job=') && !a.startsWith('--junit-dir='));
   const paths = rest.length ? rest : ['test/eval/', 'eval/'];
   const { shards, of } = jobShards(job!, jobs!, procs);
+  if (junitDir) mkdirSync(junitDir, { recursive: true });
   const started = Date.now();
   const live = flag('job') !== undefined;
   const results = await Promise.all(shards.map(s => runShard(s, of, paths, junitDir, live)));
