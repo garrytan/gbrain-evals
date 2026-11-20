@@ -150,6 +150,41 @@ class Tests(unittest.TestCase):
         self.assertEqual(L._question_date(system), ROW["question_date"])
         self.assertIsNone(L._question_date(build_prompt("ctx", "q?")[0]["content"]))
 
+    def test_judge_messages_are_the_vendored_official_prompt(self):
+        from agent_memory_benchmark.prompts.judge import build_judge_prompt
+
+        qa = Example().inner.qa_pairs[0]
+        line = L.judge_line("q1~x", qa, "Biscuit, I think")
+        self.assertEqual(line["messages"], [{"role": "user", "content": build_judge_prompt(
+            question=qa.question, answer=qa.answer, response="Biscuit, I think", question_type=qa.question_type, abstain=False)}])
+        abs_qa = type(qa)(question="q", answer="none", question_id="q9_abs", question_type="multi-session")
+        self.assertIn("unanswerable", L.judge_messages(abs_qa, "x")[0]["content"])
+
+    def test_controls_are_200_items_over_50_questions_outside_the_pilot(self):
+        from agent_memory_benchmark.datasets.models import DatasetExample, QAPair
+
+        types = ["single-session-user", "single-session-assistant", "single-session-preference", "multi-session",
+                 "temporal-reasoning", "knowledge-update"]
+        examples = [DatasetExample(sessions=[], qa_pairs=[QAPair(question=f"q{i}", answer=f"a{i}",
+                    question_id=f"id{i}" + ("_abs" if i % 10 == 0 else ""), question_type=types[i % 6])])
+                    for i in range(300)]
+        items = L.controls(examples)
+        self.assertEqual(len(items), 200)
+        qids = {i["question_id"] for i in items}
+        self.assertEqual(len(qids), 50)
+        pilot = {str(e.qa_pairs[0].question_id) for e in L.seed42(examples)[-L.PILOT_SIZE:]}
+        self.assertFalse(qids & pilot)
+        self.assertEqual(sum(q.endswith("_abs") for q in qids), 10)
+        answerable_types = {i["question_type"] for i in items if not i["question_id"].endswith("_abs")}
+        self.assertEqual(answerable_types, set(types))
+        for i in items:
+            if i["kind"] == "other-gold":
+                self.assertFalse(i["expected"])
+                self.assertNotIn(f"Correct Answer: a{i['question_id'][2:].removesuffix('_abs')}\n\nModel Response: a{i['question_id'][2:].removesuffix('_abs')}\n", i["messages"][0]["content"])
+            if i["kind"] == "abstain":
+                self.assertEqual(i["expected"], i["question_id"].endswith("_abs"))
+        self.assertEqual(L.controls(examples), items)
+
     def test_query_params_are_the_preregistered_three(self):
         self.assertEqual(L.QUERY_PARAMS, {"off": {"limit": 10, "autocut": False}, "on": {"limit": 10}, "agent-default": {}})
 

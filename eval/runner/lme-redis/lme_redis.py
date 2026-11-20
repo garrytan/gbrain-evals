@@ -383,6 +383,71 @@ async def freeze(args: argparse.Namespace) -> int:
     return 0
 
 
+ABSTAIN_REPLY = "I don't have enough information to answer that."
+CONTROL_SEED = "lme-redis-harness"
+PILOT_SIZE = 25
+
+
+def judge_messages(qa: Any, response: str) -> list[dict[str, str]]:
+    """The vendored official judge prompt as Redis's judge sends it: one user message."""
+    from agent_memory_benchmark.prompts.judge import build_judge_prompt
+
+    qid = str(qa.question_id)
+    prompt = build_judge_prompt(question=qa.question, answer=qa.answer, response=response,
+                                question_type=qa.question_type, abstain=qid.endswith("_abs"))
+    return [{"role": "user", "content": prompt}]
+
+
+def judge_line(item_id: str, qa: Any, response: str, **extra: Any) -> dict[str, Any]:
+    messages = judge_messages(qa, response)
+    return {"item_id": item_id, "question_id": str(qa.question_id), "question_type": qa.question_type,
+            "messages": messages, "messages_sha256": sha(_canon(messages)), **extra}
+
+
+def controls(examples: list[Any]) -> list[dict[str, Any]]:
+    """The judge check's 200 known-answer items (preregistration, "Judge check" step 1): 50 Small questions outside the
+    pilot's last 25 in seed-42 order, 40 answerable spread over the six types and 10 abstention, drawn with the seed
+    `lme-redis-harness`, four answers each with a known verdict."""
+    order = seed42(examples)
+    pool = order[: len(order) - PILOT_SIZE]
+    rng = random.Random(CONTROL_SEED)
+    abstain = [e for e in pool if str(e.qa_pairs[0].question_id).endswith("_abs")]
+    answerable = [e for e in pool if not str(e.qa_pairs[0].question_id).endswith("_abs")]
+    by_type: dict[str, list[Any]] = {}
+    for e in answerable:
+        by_type.setdefault(e.qa_pairs[0].question_type, []).append(e)
+    types = sorted(by_type)
+    for t in types:
+        rng.shuffle(by_type[t])
+    chosen: list[Any] = []
+    i = 0
+    while len(chosen) < 40:
+        t = types[i % len(types)]
+        if by_type[t]:
+            chosen.append(by_type[t].pop())
+        i += 1
+    chosen += rng.sample(abstain, 10)
+    golds = [e.qa_pairs[0] for e in chosen]
+    donors = list(range(len(golds)))
+    rng.shuffle(donors)
+    for k in range(len(donors)):
+        if donors[k] == k:
+            j = (k + 1) % len(donors)
+            donors[k], donors[j] = donors[j], donors[k]
+    items = []
+    for k, qa in enumerate(golds):
+        abs_q = str(qa.question_id).endswith("_abs")
+        other = golds[donors[k]].answer
+        for kind, response, expected in (
+            ("gold", qa.answer, True),
+            ("other-gold", other, False),
+            ("abstain", ABSTAIN_REPLY, abs_q),
+            ("hedged-gold", f"I think it was {qa.answer}, though I'm not certain.", True),
+        ):
+            items.append(judge_line(f"{qa.question_id}~{kind}", qa, response, kind=kind, expected=expected))
+    return items
+
+
 class _FakeOpenAI:
     """A local keyless stand-in for OpenAI chat completions: records every request body, answers a fixed string."""
 
@@ -497,6 +562,13 @@ def main(argv: list[str] | None = None) -> int:
     f.add_argument("--concurrency", type=int, default=4)
     f.add_argument("--limit", type=int, default=0)
     f.add_argument("--last", type=int, default=0)
+    c = sub.add_parser("controls")
+    c.add_argument("--cache-dir", type=Path, required=True)
+    c.add_argument("--out", type=Path, required=True)
+    j = sub.add_parser("judge-messages")
+    j.add_argument("--cache-dir", type=Path, required=True)
+    j.add_argument("--answers", type=Path, required=True, help="JSONL of {item_id, question_id, answer}")
+    j.add_argument("--out", type=Path, required=True)
     p = sub.add_parser("parity")
     p.add_argument("--cache-dir", type=Path, required=True)
     p.add_argument("--frozen", type=Path, required=True)
@@ -504,7 +576,24 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--server-url", default="http://127.0.0.1:8787")
     p.add_argument("--limit", type=int, default=3)
     args = parser.parse_args(argv)
+    if args.command == "controls":
+        examples, _ = load_split("small", args.cache_dir)
+        write_jsonl(args.out, controls(examples))
+        return 0
+    if args.command == "judge-messages":
+        examples, _ = load_split("small", args.cache_dir)
+        by_id = {str(e.qa_pairs[0].question_id): e.qa_pairs[0] for e in examples}
+        rows = [json.loads(line) for line in args.answers.read_text(encoding="utf-8").split("\n") if line.strip()]
+        write_jsonl(args.out, [judge_line(r["item_id"], by_id[r["question_id"]], r["answer"]) for r in rows])
+        return 0
     return asyncio.run(freeze(args) if args.command == "freeze" else parity(args))
+
+
+def write_jsonl(path: Path, rows: list[dict]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as f:
+        for row in rows:
+            f.write(json.dumps(row, ensure_ascii=False) + "\n")
 
 
 if __name__ == "__main__":
