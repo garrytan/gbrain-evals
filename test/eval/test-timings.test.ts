@@ -26,7 +26,7 @@ describe('test timings for time-balanced shards', () => {
   test("a run's download directory yields the shards' Bun reports, not the harness pytest report that shares the tested-files-* pattern", () => {
     const dir = mkdtempSync(join(tmpdir(), 'test-timings-'));
     try {
-      for (const [sub, file] of [['tested-files-2', 'tests-2.xml'], ['tested-files-1', 'tests-1.xml'], ['tested-files-pytest', 'pytest.xml']]) {
+      for (const [sub, file] of [['tested-files-2', 'tests-2.xml'], ['tested-files-1', 'tests-1.xml'], ['tested-files-pytest', 'pytest.xml'], ['tested-files-pytest', 'pytest-2.xml']]) {
         mkdirSync(join(dir, sub!), { recursive: true });
         writeFileSync(join(dir, sub!, file!), '<testsuites />');
       }

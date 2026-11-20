@@ -409,16 +409,21 @@ jobs:
 
       # The JUnit report names the harness test files pytest ran, for the
       # tested-tree job; xunit1 is the report format that names each case's file.
+      # Three pytest processes at once: the two slowest files alone and the rest
+      # together (eval/runner/harness-test.ts GROUPS), each writing its JUnit
+      # report as pytest-<n>.xml. In one process the suite took about 5 minutes,
+      # most of it spent waiting on the gbrain and comparator processes the two
+      # slowest files start.
       - name: Harness wrapper tests (pytest)
         if: matrix.suite == 'pytest'
-        run: bun run harness:test --junitxml="$RUNNER_TEMP/pytest.xml" -o junit_family=xunit1
+        run: bun run harness:test --junit-dir="$RUNNER_TEMP/pytest"
 
       - name: Upload the files pytest ran
         if: matrix.suite == 'pytest'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: tested-files-pytest
-          path: ${{ runner.temp }}/pytest.xml
+          path: ${{ runner.temp }}/pytest/pytest-*.xml
           if-no-files-found: error
           retention-days: 7
           overwrite: true
