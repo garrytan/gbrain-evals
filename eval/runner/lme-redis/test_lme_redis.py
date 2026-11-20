@@ -195,7 +195,7 @@ class Tests(unittest.TestCase):
         self.assertTrue(all(len(i["item_id"]) <= 27 and i["item_id"].rsplit("__", 1)[1] in "goah" for i in items))
 
     def test_query_params_are_the_preregistered_three(self):
-        self.assertEqual(L.QUERY_PARAMS, {"off": {"limit": 10, "autocut": False}, "on": {"limit": 10}, "agent-default": {}})
+        self.assertEqual(L.QUERY_PARAMS, {"off": {"limit": 10, "autocut": False}, "on": {"limit": 10, "autocut": True}, "agent-default": {}})
 
 
 if __name__ == "__main__":

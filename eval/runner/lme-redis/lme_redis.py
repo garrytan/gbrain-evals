@@ -43,7 +43,7 @@ FILES = {"small": "longmemeval_s_cleaned.json", "oracle": "longmemeval_oracle.js
 TOP_SESSIONS = 5
 QUERY_PARAMS: dict[str, dict[str, Any]] = {
     "off": {"limit": 10, "autocut": False},
-    "on": {"limit": 10},
+    "on": {"limit": 10, "autocut": True},
     "agent-default": {},
 }
 ARMS = ("off", "on", "agent-default", "full", "oracle")

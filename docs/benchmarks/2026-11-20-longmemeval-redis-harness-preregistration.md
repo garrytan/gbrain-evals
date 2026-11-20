@@ -447,6 +447,27 @@ plan and decision, not part of this one.
   A keyless run through the metering proxy, against a fake Voyage, found this before any paid call: the old field read
   came back empty on every query, so every question would have been marked degraded.
 
+### 2026-11-20, before any pilot read: the on arm turns autocut on
+
+The freeze showed that **on** as written measured nothing. gbrain v0.60.748.0 turns autocut off in every search mode
+(`src/core/search/mode.ts`: "OFF in every bundle"), and `query` with the parameter left out falls back to that. So
+`query {limit: 10}` kept 8 to 10 conversations on all 500 questions, the same as **off**. The 32 questions where the
+two contexts differed differ only through reranker scores that vary slightly between calls. A 24-question probe with
+`{limit: 10, autocut: true}` on real Voyage scores cut 18 questions to 1 or 2 conversations. No reader had run.
+
+- **on** is now `query {limit: 10, autocut: true}`, autocut forced on. **off** is unchanged. The pair still differs only
+  in autocut.
+- **The autocut question becomes "would turning autocut back on cost answers?"** The primary test, its bound, the
+  detectable difference and the model are unchanged. The decision table reads: if **off** wins clearly, or there is
+  no measurable difference, gbrain keeps autocut off and GBRA-108 hears the paired numbers and the turn-level delivery
+  counts; if **on** wins clearly, GBRA-108 hears the case for turning it back on, with the same numbers.
+- **agent-default, corrected.** `query {}` runs with autocut off at this build, and gbrain's cap of 3 pages per answer
+  is what trims it: it delivered 3 conversations on 496 of 500 questions. The arm and its parameters are unchanged;
+  only its description was wrong.
+- The pilot bar "**on** cuts below 5 conversations on at least one question" stays, and the retrieval is frozen again
+  for all 500 questions with the new parameters before any reader runs. The first freeze is kept, unscored, as the
+  record of the default's behaviour.
+
 ## Disclosures
 
 - gbrain is Garry Tan's own project.
