@@ -39,7 +39,7 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { SQL } from 'bun';
 import {
   EVAL_ENGINES, EvalEngineUnavailable, RUST_ENGINE_DIR, cliEngineConfig, evalEngineKind, evalEngineRequested, openEvalEngine,
-  rustEngineInBuild, type EvalEngineKind,
+  rustAddonEnv, rustAddonIdentity, rustEngineInBuild, type EvalEngineKind, type RustAddonIdentity,
 } from '../eval-engine.ts';
 import { gbrainSpecFrom, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from '../gbrain-under-test.ts';
 import { strippedKeysIn } from '../hermetic-env.ts';
@@ -481,6 +481,7 @@ export function compareCaptures(engines: EngineCapture[]): Comparison {
 export function childEnv(home: string, userHome: string): NodeJS.ProcessEnv {
   const env: NodeJS.ProcessEnv = {
     PATH: process.env.PATH, HOME: userHome, GBRAIN_HOME: home, GBRAIN_SKIP_STARTUP_HOOKS: '1', TZ: 'UTC', LANG: 'C.UTF-8', NO_COLOR: '1',
+    ...rustAddonEnv(),
   };
   const keys = strippedKeysIn(env);
   if (keys.length) throw new Error(`child environment carries provider keys: ${keys.join(', ')}`);
@@ -800,7 +801,7 @@ export interface SurfaceParityReceipt {
   schema_version: typeof SURFACE_PARITY_SCHEMA_VERSION;
   runner: typeof SURFACE_PARITY_RUNNER;
   generated_at: string;
-  gbrain: { version: string; product: ReturnType<typeof productIdentityFor>; overlay: Record<string, unknown> | null; rust_engine_in_build: boolean };
+  gbrain: { version: string; product: ReturnType<typeof productIdentityFor>; overlay: Record<string, unknown> | null; rust_engine_in_build: boolean; rust_addon: RustAddonIdentity | null };
   input_fingerprint: ReturnType<typeof inputFingerprint>;
   keyless: { config: { embedding_disabled: true }; import_flags: string[]; child_env: string[]; mcp_session_env: typeof MCP_SESSION_ENV; mcp_session_env_why: string; provider_calls: 0 };
   engines: Record<string, { status: EngineCapture['status']; reason?: string; refusal_reason?: string; setup: EngineCapture['setup']; settles: EngineCapture['settles']; postgres_version?: string; captures: number }>;
@@ -910,7 +911,7 @@ export function buildReceipt(gut: GbrainUnderTest, captures: EngineCapture[], co
     schema_version: SURFACE_PARITY_SCHEMA_VERSION,
     runner: SURFACE_PARITY_RUNNER,
     generated_at: new Date().toISOString(),
-    gbrain: { version: gut.version, product: productIdentityFor(gut), overlay: overlaySummary(gut), rust_engine_in_build: rustEngineInBuild(gut) },
+    gbrain: { version: gut.version, product: productIdentityFor(gut), overlay: overlaySummary(gut), rust_engine_in_build: rustEngineInBuild(gut), rust_addon: captures.some(c => c.kind === 'rust') ? rustAddonIdentity(gut) : null },
     input_fingerprint: inputFingerprint(corpus, script),
     keyless: {
       config: { embedding_disabled: true }, import_flags: ['--no-embed'],
