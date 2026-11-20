@@ -207,6 +207,9 @@ def message_line(arm: str, example: Any, context: str, sessions: list[int], row:
     }
 
 
+RECORDED: dict[tuple[str, str], tuple[list[SessionLike], list[dict]]] = {}
+
+
 class GBrainArmStore(AnsweringStore):
     """A store for the vendored runner: one gbrain arm (off, on or agent-default), rendered as freeze renders it."""
 
@@ -242,6 +245,7 @@ class GBrainArmStore(AnsweringStore):
         class _Example:
             sessions = self._sessions
 
+        RECORDED[(self._arm, question)] = (list(self._sessions), result["results"])
         context, _, _ = gbrain_context(self._arm, _Example, result["results"])
         return await self._answer(context, question, question_date)
 
@@ -303,7 +307,7 @@ async def freeze(args: argparse.Namespace) -> int:
     done: set[str] = set()
     retrieval_path = out / "retrieval.jsonl"
     if retrieval_path.exists():
-        done = {json.loads(line)["question_id"] for line in retrieval_path.read_text().splitlines() if line.strip()}
+        done = {json.loads(line)["question_id"] for line in retrieval_path.read_text().split("\n") if line.strip()}
     handles = {arm: (out / "messages" / f"{arm}.jsonl").open("a", encoding="utf-8") for arm in ARMS}
     semaphore = asyncio.Semaphore(args.concurrency)
     lock = asyncio.Lock()
@@ -379,6 +383,110 @@ async def freeze(args: argparse.Namespace) -> int:
     return 0
 
 
+class _FakeOpenAI:
+    """A local keyless stand-in for OpenAI chat completions: records every request body, answers a fixed string."""
+
+    def __init__(self) -> None:
+        import threading
+        from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+        self.bodies: list[dict] = []
+        fake = self
+
+        class Handler(BaseHTTPRequestHandler):
+            def do_POST(self) -> None:  # noqa: N802
+                body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+                fake.bodies.append(body)
+                reply = json.dumps({
+                    "id": "fake", "object": "chat.completion", "created": 0, "model": body.get("model", ""),
+                    "choices": [{"index": 0, "message": {"role": "assistant", "content": "FAKE"}, "finish_reason": "stop"}],
+                    "usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
+                }).encode()
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(reply)))
+                self.end_headers()
+                self.wfile.write(reply)
+
+            def log_message(self, *_args: Any) -> None:
+                return None
+
+        self.server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        self.url = f"http://127.0.0.1:{self.server.server_address[1]}/v1"
+        threading.Thread(target=self.server.serve_forever, daemon=True).start()
+
+
+def _question_date(system: str) -> str | None:
+    match = re.search(r"\nCurrent date/time: (.*)\n", system)
+    return match.group(1) if match else None
+
+
+def _canon(messages: list[dict]) -> str:
+    return json.dumps(messages, ensure_ascii=False)
+
+
+async def parity(args: argparse.Namespace) -> int:
+    """Redis's own runner, end to end on the first N questions, against a keyless fake: the messages it sends must
+    equal the frozen messages byte for byte, arm by arm."""
+    import os
+
+    from agent_memory_benchmark.benchmark.runner import run_longmemeval_v1
+    from agent_memory_benchmark.memory import llm
+
+    fake = _FakeOpenAI()
+    os.environ["OPENAI_BASE_URL"] = fake.url
+    os.environ["OPENAI_API_KEY"] = "keyless-fake"
+    llm._client = None
+    register_stores()
+    frozen = {
+        arm: {json.loads(line)["messages"][1]["content"]: json.loads(line)
+              for line in (Path(args.frozen) / "messages" / f"{arm}.jsonl").read_text().split("\n") if line.strip()}
+        for arm in ARMS
+    }
+    runs = [(arm, "gbrain-arm", "small", {"arm": arm, "server_url": args.server_url}) for arm in QUERY_PARAMS]
+    runs += [("full", "full-context", "small", {}), ("oracle", "full-context", "oracle", {})]
+    report: dict[str, Any] = {}
+    for arm, provider, split, params in runs:
+        fake.bodies.clear()
+        RECORDED.clear()
+        await run_longmemeval_v1(provider=provider, split=split, results_root=Path(args.out), run_name=f"parity-{arm}",
+                                 provider_params=params, limit=None if split == "oracle" else args.limit,
+                                 cache_dir=args.cache_dir)
+        sent = {b["messages"][1]["content"]: b for b in fake.bodies}
+        with (Path(args.out) / f"sent-{arm}.jsonl").open("w", encoding="utf-8") as f:
+            for b in fake.bodies:
+                f.write(json.dumps(b, ensure_ascii=False) + "\n")
+        compared = [q for q in frozen[arm] if q in sent]
+        if arm in QUERY_PARAMS:
+            # gbrain's ranking can differ between two retrievals of the same brain (ties), so the runner's messages are
+            # checked against our rendering of the retrieval the runner's own store received, and the frozen file's
+            # retrieval is compared with it separately.
+            mismatched, same_retrieval = [], 0
+            for q in compared:
+                sessions, results = RECORDED[(arm, q)]
+
+                class _Ex:
+                    pass
+
+                _Ex.sessions = sessions
+                context, _, _ = gbrain_context(arm, _Ex, results)
+                date = frozen[arm][q]["messages"][0]["content"]
+                ours = build_prompt(context, q, question_date=_question_date(date))
+                if _canon(sent[q]["messages"]) != _canon(ours):
+                    mismatched.append(frozen[arm][q]["question_id"])
+                same_retrieval += _canon(ours) == _canon(frozen[arm][q]["messages"])
+        else:
+            same_retrieval = None
+            mismatched = [frozen[arm][q]["question_id"] for q in compared
+                          if _canon(sent[q]["messages"]) != _canon(frozen[arm][q]["messages"])]
+        report[arm] = {"compared": len(compared), "mismatched": mismatched, "same_as_frozen_retrieval": same_retrieval,
+                       "runner_request": {k: v for k, v in next(iter(sent.values()), {}).items() if k != "messages"}}
+    fake.server.shutdown()
+    ok = all(r["compared"] >= min(args.limit, len(frozen[a])) and not r["mismatched"] for a, r in report.items())
+    print(json.dumps({"parity": "ok" if ok else "FAILED", "arms": report}, indent=2))
+    return 0 if ok else 1
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="lme_redis")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -389,8 +497,14 @@ def main(argv: list[str] | None = None) -> int:
     f.add_argument("--concurrency", type=int, default=4)
     f.add_argument("--limit", type=int, default=0)
     f.add_argument("--last", type=int, default=0)
+    p = sub.add_parser("parity")
+    p.add_argument("--cache-dir", type=Path, required=True)
+    p.add_argument("--frozen", type=Path, required=True)
+    p.add_argument("--out", type=Path, required=True)
+    p.add_argument("--server-url", default="http://127.0.0.1:8787")
+    p.add_argument("--limit", type=int, default=3)
     args = parser.parse_args(argv)
-    return asyncio.run(freeze(args))
+    return asyncio.run(freeze(args) if args.command == "freeze" else parity(args))
 
 
 if __name__ == "__main__":

@@ -145,6 +145,11 @@ class Tests(unittest.TestCase):
                 L.load_split("small", Path(d))
             self.assertIn("refusing to load", str(caught.exception))
 
+    def test_parity_reads_the_question_date_back_from_a_prompt(self):
+        system = build_prompt("ctx", "q?", question_date=ROW["question_date"])[0]["content"]
+        self.assertEqual(L._question_date(system), ROW["question_date"])
+        self.assertIsNone(L._question_date(build_prompt("ctx", "q?")[0]["content"]))
+
     def test_query_params_are_the_preregistered_three(self):
         self.assertEqual(L.QUERY_PARAMS, {"off": {"limit": 10, "autocut": False}, "on": {"limit": 10}, "agent-default": {}})
 
