@@ -1,0 +1,96 @@
+# Wakes Vorflux's bot when we reply on one of its pull requests, instead of
+# leaving it to find our replies on its hourly clock. It POSTs a small JSON
+# notice to the Actions secret VORFLUX_HOOK_URL when capy-ai[bot] comments,
+# reviews or leaves a review comment on a pull request labelled `vorflux`, or
+# when such a pull request is merged or closed. Nothing else starts a runner.
+#
+# It never checks out or runs pull-request code, and the job has no token
+# permissions. issue_comment and pull_request_target run in the base
+# repository's context, so they ring for fork pull requests too. GitHub gives
+# review and review-comment events the secret only for branches in this
+# repository, so those two ring only for such branches.
+name: vorflux-hook
+
+on:
+  issue_comment: # zizmor: ignore[dangerous-triggers] no checkout, no PR code, no token permissions
+    types: [created]
+  pull_request_review:
+    types: [submitted]
+  pull_request_review_comment:
+    types: [created]
+  pull_request_target: # zizmor: ignore[dangerous-triggers] closed only; no checkout, no PR code, no token permissions
+    types: [closed]
+
+permissions: {}
+
+jobs:
+  notify:
+    name: Notify Vorflux
+    if: >-
+      (github.event_name == 'issue_comment'
+        && github.event.issue.pull_request
+        && github.event.comment.user.login == 'capy-ai[bot]'
+        && contains(github.event.issue.labels.*.name, 'vorflux'))
+      || (github.event_name == 'pull_request_review'
+        && github.event.review.user.login == 'capy-ai[bot]'
+        && github.event.pull_request.head.repo.full_name == github.repository
+        && contains(github.event.pull_request.labels.*.name, 'vorflux'))
+      || (github.event_name == 'pull_request_review_comment'
+        && github.event.comment.user.login == 'capy-ai[bot]'
+        && github.event.pull_request.head.repo.full_name == github.repository
+        && contains(github.event.pull_request.labels.*.name, 'vorflux'))
+      || (github.event_name == 'pull_request_target'
+        && github.event.action == 'closed'
+        && contains(github.event.pull_request.labels.*.name, 'vorflux'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Notify Vorflux
+        env:
+          HOOK_URL: ${{ secrets.VORFLUX_HOOK_URL }}
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          EVENT_NAME: ${{ github.event_name }}
+          PR_NUMBER: ${{ github.event.issue.number || github.event.pull_request.number }}
+          COMMENT_ID: ${{ github.event.comment.id }}
+          REVIEW_ID: ${{ github.event.review.id }}
+          AUTHOR: ${{ github.event.comment.user.login || github.event.review.user.login || github.event.sender.login }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          HTML_URL: ${{ github.event.comment.html_url || github.event.review.html_url || github.event.pull_request.html_url }}
+          MERGED: ${{ github.event.pull_request.merged }}
+          MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+          CLOSED_AT: ${{ github.event.pull_request.closed_at }}
+        run: |
+          set -euo pipefail
+          if [ -z "${HOOK_URL:-}" ]; then
+            echo "::error::The Actions secret VORFLUX_HOOK_URL is empty or missing, so Vorflux was not notified. Set it under Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+          case "$EVENT_NAME" in
+            issue_comment|pull_request_review_comment) event=comment; key="$EVENT_NAME/$COMMENT_ID" ;;
+            pull_request_review) event=review; key="$EVENT_NAME/$REVIEW_ID" ;;
+            pull_request_target)
+              if [ "$MERGED" = true ]; then event=merged; key="merged/$MERGE_SHA"; else event=closed; key="closed/$CLOSED_AT"; fi ;;
+            *) echo "::error::Unexpected event $EVENT_NAME"; exit 1 ;;
+          esac
+          if [ -z "$HEAD_SHA" ]; then
+            HEAD_SHA=$(gh api "repos/$REPO/pulls/$PR_NUMBER" --jq .head.sha) || {
+              echo "::warning::Could not read the pull request's head commit; sending head_sha as null."
+              HEAD_SHA=
+            }
+          fi
+          body=$(jq -cn \
+            --arg repo "$REPO" --arg pr "$PR_NUMBER" --arg event "$event" --arg github_event "$EVENT_NAME" \
+            --arg author "$AUTHOR" --arg head_sha "$HEAD_SHA" --arg html_url "$HTML_URL" \
+            --arg delivery_id "$REPO#$PR_NUMBER/$key" \
+            --arg comment_id "$COMMENT_ID" --arg review_id "$REVIEW_ID" --arg merge_commit_sha "$MERGE_SHA" \
+            '{repo: $repo, pr: ($pr | tonumber), event: $event, github_event: $github_event, author: $author,
+              head_sha: (if $head_sha == "" then null else $head_sha end), html_url: $html_url, delivery_id: $delivery_id}
+             + (if $event == "comment" then {comment_id: ($comment_id | tonumber)}
+                elif $event == "review" then {review_id: ($review_id | tonumber)}
+                elif $event == "merged" then {merge_commit_sha: $merge_commit_sha}
+                else {} end)')
+          echo "Sending: $body"
+          curl --fail-with-body --silent --show-error --max-time 20 \
+            --retry 3 --retry-delay 5 --retry-connrefused \
+            -H 'Content-Type: application/json' --data "$body" "$HOOK_URL"
