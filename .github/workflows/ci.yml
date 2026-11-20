@@ -41,6 +41,8 @@ jobs:
   # found one every time from 2026-11-16 to 2026-11-20), so the cache no longer
   # adds a wave of runner start-up to every run. Without one they check out from
   # GitHub as before, so a broken cache never turns a check into a skipped one.
+  # A run that finds no cache skips the five pinned-commit cases while git-cache
+  # builds one, and tested-tree still records that run as tested.
   # The run still fails on git-cache until a rerun rebuilds the cache, and
   # tested-tree, which runs no tests, needs git-cache and keeps its default
   # condition, so it is skipped and that run carries nothing.
