@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "experiments": [
+    {
+      "id": "longmemeval-redis-harness",
+      "preregistration": "docs/benchmarks/2026-11-20-longmemeval-redis-harness-preregistration.md",
+      "results": [
+        "docs/benchmarks/2026-11-20-longmemeval-redis-harness/**",
+        "docs/benchmarks/2026-11-20-longmemeval-redis-harness.md"
+      ],
+      "results_page": "docs/benchmarks/2026-11-20-longmemeval-redis-harness.md",
+      "registered": "2026-11-20",
+      "paid_tier": "over-500",
+      "decision": [
+        {
+          "if": "autocut off beats autocut on for claude-opus-5-5 at the final O'Brien-Fleming bound, gpt-6.2-sol points the same way, and off delivers every answer turn on more questions",
+          "then": "send Garry, through GBRA-108, a change to turn query's autocut default off (or floor it) for memory questions, with the paired numbers"
+        },
+        {
+          "if": "no measurable autocut difference (interval includes 0)",
+          "then": "no default change; tell GBRA-108 the quick look's 12-point drop came with the limit and passage changes"
+        },
+        {
+          "if": "autocut on beats off",
+          "then": "keep autocut on and close the lead"
+        },
+        {
+          "if": "a frontier reader closes the gap to README's 93.6% on off (point estimate at least 92.6% and Wilson interval including 93.6%)",
+          "then": "the gap was the reader: reader work goes ahead of retrieval work, starting with gbrain's own answer path on that reader"
+        },
+        {
+          "if": "both frontier readers fall short of 93.6% on off (interval upper end below it) and each one's oracle also falls short",
+          "then": "the one-shot answer prompt is the limit: reader-prompt work (a notes step) goes ahead of retrieval"
+        },
+        {
+          "if": "a frontier reader falls short on off but its oracle closes the gap and oracle minus off passes its Holm-adjusted test",
+          "then": "retrieval is the gap: retrieval work goes ahead of reader work, starting where off missed an answer turn"
+        },
+        {
+          "if": "any other reader-gap combination, or a result not distinguishable at this sample size",
+          "then": "no reordering of reader and retrieval work; the results name which rows were not distinguishable"
+        },
+        {
+          "if": "gpt-4o's task-averaged interval on off lies above, includes or lies below Redis's 86.14%",
+          "then": "README's comparison section gets a matched-harness row saying above, level or behind, with no ranking word; behind also gets a why-null pass"
+        }
+      ],
+      "arms": [
+        "off",
+        "on",
+        "agent-default",
+        "full",
+        "oracle"
+      ],
+      "pilots": [
+        {
+          "arm": "off",
+          "max_budget_fraction": 0.1,
+          "part_under_test_ran": "every pilot query reranked with no degraded stage, sent {limit: 10, autocut: false}, and turn-level delivery is counted",
+          "judge_passes": "both judges return a parsable verdict on every pilot answer; pilot answers supply the labelled real-answer set for the kappa check",
+          "units_supplied_at_rate": "each reader's pilot batch finishes inside the provider window with the batch discount confirmed in the ledger, and particle-1 sustains the planned concurrency"
+        },
+        {
+          "arm": "on",
+          "max_budget_fraction": 0.1,
+          "part_under_test_ran": "every pilot query reranked with no degraded stage, sent {limit: 10}, and autocut cut below 5 conversations on at least one pilot question",
+          "judge_passes": "both judges return a parsable verdict on every pilot answer; pilot answers supply the labelled real-answer set for the kappa check",
+          "units_supplied_at_rate": "each reader's pilot batch finishes inside the provider window with the batch discount confirmed in the ledger, and particle-1 sustains the planned concurrency"
+        },
+        {
+          "arm": "agent-default",
+          "max_budget_fraction": 0.1,
+          "part_under_test_ran": "every pilot query reranked with no degraded stage, sent {}, and turn-level delivery of has_answer turns is counted over the delivered passages",
+          "judge_passes": "both judges return a parsable verdict on every pilot answer; pilot answers supply the labelled real-answer set for the kappa check",
+          "units_supplied_at_rate": "each reader's pilot batch finishes inside the provider window with the batch discount confirmed in the ledger, and particle-1 sustains the planned concurrency"
+        },
+        {
+          "arm": "full",
+          "max_budget_fraction": 0.1,
+          "part_under_test_ran": "every context holds every history conversation and every has_answer turn",
+          "judge_passes": "both judges return a parsable verdict on every pilot answer; pilot answers supply the labelled real-answer set for the kappa check",
+          "units_supplied_at_rate": "each reader's pilot batch finishes inside the provider window with the batch discount confirmed in the ledger, and particle-1 sustains the planned concurrency"
+        },
+        {
+          "arm": "oracle",
+          "max_budget_fraction": 0.1,
+          "part_under_test_ran": "every context holds every evidence conversation from the oracle file and every has_answer turn",
+          "judge_passes": "both judges return a parsable verdict on every pilot answer; pilot answers supply the labelled real-answer set for the kappa check",
+          "units_supplied_at_rate": "each reader's pilot batch finishes inside the provider window with the batch discount confirmed in the ledger, and particle-1 sustains the planned concurrency"
+        }
+      ],
+      "judge_check": {
+        "judges": [
+          {
+            "model": "gpt-6.2-astra",
+            "grades": [
+              "claude-opus-5-5",
+              "particle:particle-1"
+            ],
+            "labelled_outputs": 40,
+            "kappa_min": 0.6
+          },
+          {
+            "model": "claude-opus-5-5",
+            "grades": [
+              "gpt-4o-2024-08-06",
+              "gpt-6.2-sol"
+            ],
+            "labelled_outputs": 40,
+            "kappa_min": 0.6
+          }
+        ],
+        "read_per_arm": true
+      },
+      "interim_look": {
+        "at_units_fraction": 0.5,
+        "bounds": "obrien-fleming",
+        "alpha": 0.05,
+        "futility_stop": "stop the on arm when conditional power to detect the recorded smallest detectable difference (planned 3.6 points) at the final look falls below 10%"
+      }
+    }
+  ]
+}
