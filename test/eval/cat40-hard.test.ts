@@ -14,7 +14,7 @@ import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSy
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import {
-  DEFAULT_HARD_KNOBS, HARD_KNOB_KEYS, HARD_FAMILIES, KNOB_PRIORITY, validateKnobs, knobDigest, RECORDED, type HardKnobs, type HardTask, type HardWorld,
+  DEFAULT_HARD_KNOBS, HARD_KNOB_KEYS, HARD_FAMILIES, HARD_SEEDS, KNOB_PRIORITY, validateKnobs, knobDigest, RECORDED, type HardKnobs, type HardTask, type HardWorld,
 } from '../../eval/generators/hard/schema.ts';
 import { eventAsOf, valueAsOf, correctionOf, statedValue, nameRegistry, evaluatePredicate, type ValueEvent, type PredicateFacts } from '../../eval/generators/hard/semantics.ts';
 import { hardWorldProblems } from '../../eval/generators/hard/validate.ts';
@@ -382,6 +382,12 @@ describe('runner (T1, T2, T6: CEO-F3, CEO-F12, DX-F3, DX-F7, ENG-F1, ENG-F2, ENG
   });
   test('particle-1 does not run on Hard worlds: amendment A6 keeps the model list, and the Hard freeze does not cover its transport', async () => {
     await expect(main(['--world', writeWorld(world), '--models', 'particle-1', '--judge', 'gpt-6.1-sol', '--arms', 'fs', '--out', tmp(), '--preflight'])).rejects.toThrow('particle-1 does not run on Hard worlds');
+  });
+  test('particle-1 passes that guard only on the newest-build re-measure\'s two worlds (HARD_SEEDS.newest), which still need the frozen knobs', async () => {
+    const newest = generateHardWorld(HARD_SEEDS.newest[0]);
+    const err = await main(['--world', writeWorld(newest), '--models', 'particle-1', '--judge', 'gpt-6.1-sol', '--arms', 'fs', '--out', tmp(), '--preflight']).then(() => null, e => e as Error);
+    expect(err?.message ?? '').not.toContain('particle-1 does not run on Hard worlds');
+    expect(String((err as { code?: string } | null)?.code ?? err?.message)).toContain('HARD_KNOBS_NOT_FROZEN');
   });
   test('strict flags: unknown flags, missing values, non-numbers and empty selections are refused; --help prints usage', () => {
     expect(() => checkRunnerFlags(['--bogus'])).toThrow('unknown flag --bogus');

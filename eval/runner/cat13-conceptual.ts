@@ -95,7 +95,7 @@
 
 import { readdirSync, readFileSync, mkdirSync, writeFileSync } from 'fs';
 import { createHash } from 'crypto';
-import { join, dirname } from 'path';
+import { basename, join, dirname } from 'path';
 import {
   configureGateway, __setEmbedTransportForTests, getEmbeddingModel, getEmbeddingDimensions,
 } from 'gbrain/ai/gateway';
@@ -1062,6 +1062,8 @@ export interface WarmPassStats {
   /** Repeat queries whose top-5 page ids differed from the scored first pass. */
   top5_changed: number;
   failures: number;
+  /** Ledger spend of the warm passes alone (live runs only); the first pass's query cost leaves it out. */
+  cost_usd: number | null;
 }
 
 /** Query-phase cost and latency of one adapter run (live runs only for cost). */
@@ -1106,6 +1108,8 @@ export async function scoreAdapter(
   const spentStart = opts.spentUsd?.() ?? null;
   const state = await adapter.init(publicPages, { name: adapter.name, ...(opts.initConfig ?? {}) });
   const spentAfterInit = opts.spentUsd?.() ?? null;
+  // Teardown runs even when scoring throws, so no scratch database or Rust temp directory is left behind.
+  try {
   const latencies: number[] = [];
 
   // Read the gateway AFTER init: adapters that call configureGateway themselves
@@ -1190,6 +1194,7 @@ export async function scoreAdapter(
 
   let warm: WarmPassStats | undefined;
   if (opts.warmPasses) {
+    const spentBeforeWarm = opts.spentUsd?.() ?? null;
     const warmLatencies: number[] = [];
     let changed = 0;
     let failures = 0;
@@ -1204,15 +1209,19 @@ export async function scoreAdapter(
           (row.warm_latency_ms ??= []).push(ms);
           const ids = results.slice(0, TOP_K).map(r => r.page_id).join('\n');
           if (ids !== row.ranked_pages.map(r => r.page_id).join('\n')) changed += 1;
-        } catch {
+        } catch (err) {
+          // A budget-ledger refusal stops the run like any other paid request; it is not a failed repeat query.
+          if (err instanceof BudgetExceededError) throw err;
           failures += 1;
         }
       }
     }
-    warm = { passes: opts.warmPasses, query_ms: phaseStats(warmLatencies, { start: null, afterInit: null, end: null }, 0).query_ms, top5_changed: changed, failures };
+    const spentAfterWarm = opts.spentUsd?.() ?? null;
+    warm = {
+      passes: opts.warmPasses, query_ms: phaseStats(warmLatencies, { start: null, afterInit: null, end: null }, 0).query_ms, top5_changed: changed, failures,
+      cost_usd: spentBeforeWarm !== null && spentAfterWarm !== null ? spentAfterWarm - spentBeforeWarm : null,
+    };
   }
-
-  if (adapter.teardown) await adapter.teardown(state);
 
   const all = finalizeAccum(overall);
   return {
@@ -1239,6 +1248,9 @@ export async function scoreAdapter(
     ...(gatewayAfterInit ? { gatewayAfterInit } : {}),
     ...(observed ? { observed } : {}),
   };
+  } finally {
+    if (adapter.teardown) await adapter.teardown(state);
+  }
 }
 
 // ─── Runner ───────────────────────────────────────────────────────
@@ -1367,6 +1379,19 @@ function parseNonNegativeInt(raw: string, flag: string): number {
   const n = Number(raw);
   if (!Number.isInteger(n) || n < 0) throw new Error(`${flag} must be a non-negative integer, got '${raw}'`);
   return n;
+}
+
+/** `loopback` when the Postgres admin URL points at this machine, else `remote`; the receipt never names the host. */
+export function postgresServerKind(url: string): 'loopback' | 'remote' | 'unparsed' {
+  let parsed: URL;
+  try { parsed = new URL(url); } catch { return 'unparsed'; }
+  // A `?host=/path` socket directory or an empty host means a Unix socket on this machine.
+  const hostParam = parsed.searchParams.get('host');
+  if (hostParam?.startsWith('/')) return 'loopback';
+  const host = parsed.hostname.replace(/^\[|\]$/g, '').replace(/\.$/, '').toLowerCase();
+  if (host === '' || host === 'localhost' || host === '0.0.0.0' || host === '::1' || host === '::') return 'loopback';
+  // IPv4 loopback, plain or IPv4-mapped IPv6 (the URL parser writes ::ffff:127.0.0.1 as ::ffff:7f00:1).
+  return /^127\./.test(host) || /^::ffff:(127\.|7f[0-9a-f]{2}:)/.test(host) ? 'loopback' : 'remote';
 }
 
 /**
@@ -1530,9 +1555,10 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
       kind: opts.engine ?? 'pglite',
       selected_by: opts.engine ? 'GBRAIN_EVAL_ENGINE' : 'default (in-memory PGLite)',
       applies_to: ['gbrain'],
-      ...(opts.engine === 'postgres' ? { postgres_admin_url_host: opts.pgUrl ? new URL(opts.pgUrl).host : null } : {}),
+      // Receipts are public: record only whether the server was local, never its host name or address.
+      ...(opts.engine === 'postgres' ? { postgres_server: opts.pgUrl ? postgresServerKind(opts.pgUrl) : null } : {}),
     },
-    embed_cache: opts.embedCache ? { path: opts.embedCache, stats: embedCache?.stats ?? null } : null,
+    embed_cache: opts.embedCache ? { file: basename(opts.embedCache), stats: embedCache?.stats ?? null } : null,
     warm_passes: opts.warmPasses ?? 0,
   });
   let embedCache: EmbeddingCache | null = null;
@@ -1606,20 +1632,22 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
   // database, Rust in a build without the engine or with no loadable addon. The skipped receipt is written like any other.
   if (opts.engine) {
     const refused = (e: EvalEngineUnavailable): Cat13RunResult => {
-      const receipt: Receipt = { ...baseReceipt(), run_status: 'skipped', skip_reason: `engine_refused: ${e.reason}: ${e.message}`, n_total: 0, n_scored: 0, completion_rate: 0, errors: [], publishable: false, resolved_config: cellConfig() };
+      const receipt: Receipt = { ...baseReceipt(), run_status: 'skipped', skip_reason: `engine_refused: ${e.reason}`, n_total: 0, n_scored: 0, completion_rate: 0, errors: [], publishable: false, resolved_config: cellConfig() };
       writeReceipt(receiptFile, receipt);
-      console.error(evalEngineRefusalMessage(e, 'cat13'));
+      // The detail (it can name a database role or server) goes to stderr only; the public receipt keeps the reason code.
+      console.error(evalEngineRefusalMessage(e, 'cat13', { skippedReceipt: receiptFile }));
       return { receipt, results: [], exitCode: EVAL_ENGINE_REFUSED_EXIT };
     };
     try {
       if (opts.engine === 'postgres') {
         if (!opts.pgUrl) throw new EvalEngineUnavailable('postgres', 'postgres_url_missing', 'engine=postgres needs --pg-url or LIFECYCLE_PG_URL');
         try {
-          const probe = await openScratchEvalEngine({ gut: resolveGbrainUnderTest(null), kind: 'postgres', label: 'cat13_preflight', pgAdminUrl: opts.pgUrl, initSchema: false });
+          // Bring the schema up in the preflight too, so a server without pgvector refuses here, before the other arms pay.
+          const probe = await openScratchEvalEngine({ gut: resolveGbrainUnderTest(null), kind: 'postgres', label: 'cat13_preflight', pgAdminUrl: opts.pgUrl, initSchema: true });
           await probe.close();
         } catch (e) {
           if (e instanceof EvalEngineUnavailable) throw e;
-          throw new EvalEngineUnavailable('postgres', 'postgres_unreachable', `Could not open a scratch Postgres brain: ${(e as Error).message}`);
+          throw new EvalEngineUnavailable('postgres', 'postgres_unreachable', `Could not open a scratch Postgres brain with gbrain's schema (the server needs pgvector): ${(e as Error).message}`);
         }
       } else {
         await preflightEvalEngine(resolveGbrainUnderTest(null), opts.engine);
@@ -1634,7 +1662,10 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
   const attestation = !stubEmbed && opts.preregistration ? attestPreregistration(opts.preregistration) : null;
   if (!stubEmbed) {
     try {
-      paid = startPaidRun(CATEGORY, { ...(opts.budget ?? budgetOptionsFrom([])), estimateUsd: opts.estimateUsd ?? registryEntry('concept-search')!.cost_estimate.usd });
+      // Each warm pass repeats every live query embed, so the registry estimate scales with 1 + warmPasses.
+      const registryEstimate = registryEntry('concept-search')!.cost_estimate.usd;
+      const estimateUsd = opts.estimateUsd ?? (registryEstimate === null ? null : registryEstimate * (1 + (opts.warmPasses ?? 0)));
+      paid = startPaidRun(CATEGORY, { ...(opts.budget ?? budgetOptionsFrom([])), estimateUsd });
     } catch (error) {
       if (error instanceof BudgetExceededError) return skipped(`budget: ${error.message}`);
       throw error;

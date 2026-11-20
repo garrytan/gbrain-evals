@@ -128,6 +128,13 @@ describe('adapter commands', () => {
     expect(fake.slots.flat().join(' ')).not.toContain('--budget');
     expect(fake.slots.every(cmd => cmd.includes('--keyless-slots'))).toBe(true);
     expect(() => cat40Commands(run, ctx({ cat40SlotAllowanceUsd: null }), '/w', dirs)).toThrow('--cat40-slot-allowance-usd');
+    const reuse = cat40Commands(run, ctx(), '/w', dirs, { sha: 'f'.repeat(40), n: 3 });
+    expect(reuse.slots).toHaveLength(3);
+    reuse.slots.forEach(cmd => { expect(cmd.join(' ')).toContain('--gbrain-ref ' + 'f'.repeat(40) + ' '); expect(cmd).not.toContain('--slot-ref'); });
+    expect(reuse.cells.join(' ')).toContain('--slots 3');
+    expect(reuse.cells.join(' ')).toContain('--slot-ref ' + 'f'.repeat(40));
+    expect(reuse.cells.join(' ')).not.toContain('--gbrain-ref ' + 'f'.repeat(40));
+    expect(paid.cells).not.toContain('--slot-ref');
   });
 
   test('Cat 40: the suite carries the newest cells receipt\'s dev-set label and drifted files', () => {

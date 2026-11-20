@@ -1,0 +1,18 @@
+{
+  "cells": 200,
+  "planned": 200,
+  "successes": 196,
+  "rate": 0.98,
+  "by_model": {
+    "claude-opus-5-5": {
+      "cells": 100,
+      "successes": 98
+    },
+    "gpt-6.2-sol": {
+      "cells": 100,
+      "successes": 98
+    }
+  },
+  "incomplete": 0,
+  "pass": true
+}

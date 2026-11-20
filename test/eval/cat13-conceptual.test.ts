@@ -54,6 +54,7 @@ import {
   splitConcepts,
   probeSubset,
   parseCat13Argv,
+  postgresServerKind,
   DEFAULT_EMBEDDING_MODEL,
   DEFAULT_EMBED_DIMS,
   CAT13_RERANK_MODEL_PIN,
@@ -62,6 +63,8 @@ import {
 } from '../../eval/runner/cat13-conceptual.ts';
 import { ProbeAccounting } from '../../eval/runner/probe-accounting.ts';
 import { loadReceipt } from '../../eval/runner/receipt.ts';
+import { BudgetExceededError } from '../../eval/runner/budget-ledger.ts';
+import { EvalEngineUnavailable, evalEngineRefusalMessage } from '../../eval/runner/eval-engine.ts';
 import type { Adapter, Query, RankedDoc } from '../../eval/runner/types.ts';
 
 const CORPUS_DIR = join(import.meta.dir, '..', '..', 'eval', 'data', 'world-v1');
@@ -822,6 +825,53 @@ describe('cat13 storage engine for the gbrain arm', () => {
     const { receipt, exitCode } = await runCat13({ stubEmbed: true, only: 'gbrain', engine: 'postgres', pgUrl: 'postgres://nobody@127.0.0.1:1/none', targetProbes: 30, reportsDir, quiet: true });
     expect(exitCode).toBe(69);
     expect(String(receipt.skip_reason)).toContain('postgres_unreachable');
+    // Receipts are public: the engine block says only whether the server was local, never its host or user.
+    const engine = (receipt.resolved_config as { engine: Record<string, unknown> }).engine;
+    expect(engine.postgres_server).toBe('loopback');
+    expect(JSON.stringify(engine)).not.toContain('nobody');
+    // The server's error text can name a role, so the receipt keeps only the reason code.
+    expect(receipt.skip_reason).toBe('engine_refused: postgres_unreachable');
+  });
+
+  test('postgresServerKind names no host: loopback, remote or unparsed', () => {
+    expect(postgresServerKind('postgres://u@127.0.0.1:5432/db')).toBe('loopback');
+    expect(postgresServerKind('postgres://u@localhost/db')).toBe('loopback');
+    expect(postgresServerKind('postgres://u@[::1]:5432/db')).toBe('loopback');
+    expect(postgresServerKind('postgres://u@db.example.com:5432/db')).toBe('remote');
+    expect(postgresServerKind('not a url')).toBe('unparsed');
+    for (const local of ['postgres://u@0.0.0.0/db', 'postgres://u@localhost./db', 'postgres://u@[::ffff:127.0.0.1]/db', 'postgres:///db?host=/var/run/postgresql', 'postgres://u@LOCALHOST/db']) {
+      expect(postgresServerKind(local)).toBe('loopback');
+    }
+    expect(postgresServerKind('postgres://u@[::ffff:10.0.0.1]/db')).toBe('remote');
+  });
+
+  test('the refusal line says when a skipped receipt was written, and keeps the parseable prefix', () => {
+    const e = new EvalEngineUnavailable('postgres', 'postgres_url_missing', 'no url.');
+    expect(evalEngineRefusalMessage(e, 'cat13')).toMatch(/No receipt or verdict was written \(exit 69\)/);
+    const withReceipt = evalEngineRefusalMessage(e, 'cat13', { skippedReceipt: 'r/receipt.json' });
+    expect(withReceipt).toMatch(/^REFUSED: cat13 .*EvalEngineUnavailable \(postgres_url_missing\)/);
+    expect(withReceipt).toMatch(/A skipped receipt was written to r\/receipt.json; no verdict was written \(exit 69\)/);
+  });
+
+  test('warm passes: a budget refusal stops the run, teardown still runs, and warm spend is recorded apart', async () => {
+    const { probes, gradesByQuery } = syntheticProbes();
+    let calls = 0;
+    let tornDown = 0;
+    const budgetStop: Adapter = {
+      name: 'budget-stop',
+      async init() { return {}; },
+      async query() { calls += 1; if (calls > probes.length) throw new BudgetExceededError('ledger cap reached'); return []; },
+      async teardown() { tornDown += 1; },
+    };
+    await expect(scoreAdapter(budgetStop, [], probes, gradesByQuery, new ProbeAccounting(probes.length), { warmPasses: 1 }))
+      .rejects.toBeInstanceOf(BudgetExceededError);
+    expect(tornDown).toBe(1);
+
+    let spent = 0;
+    const paying: Adapter = { name: 'paying', async init() { return {}; }, async query() { spent += 1; return []; } };
+    const r = await scoreAdapter(paying, [], probes, gradesByQuery, new ProbeAccounting(probes.length), { warmPasses: 2, spentUsd: () => spent });
+    expect(r.phase?.query_cost_usd).toBe(probes.length);
+    expect(r.warm?.cost_usd).toBe(2 * probes.length);
   });
 
   test('runCat13 itself refuses --embed-cache with stub mode (the paid guard is off under the stub)', async () => {

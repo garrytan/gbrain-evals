@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "experiments": [
+    {
+      "id": "cat40-hard-old-build-control",
+      "preregistration": "docs/benchmarks/2026-11-19-cat40-hard-old-build-control-preregistration.md",
+      "results": [
+        "docs/benchmarks/2026-11-19-cat40-hard-old-build-control/**",
+        "docs/benchmarks/2026-11-19-cat40-hard-old-build-control.md"
+      ]
+    }
+  ]
+}
