@@ -14,7 +14,7 @@ import { resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
 import type { HardTask } from '../../eval/generators/hard/schema.ts';
 import type { MemoryQuestion } from '../../eval/runner/memory-qa/corpus.ts';
 import { classify, nightlyFailure } from '../../eval/runner/failure-causes/index.ts';
-import { cat40Commands, cat40DevSet, cat40Rows, episodeRows, judgeFor, latestRowPerItem, outcome, qaCommand, qaRows, replayAdapter, seedRanges, skippedRows, smokeRows, SUITE_FACTS, toolErrorFromText,
+import { cat40CellGroups, cat40Commands, cat40DevSet, cat40JudgeFor, cat40Rows, episodeRows, judgeFor, latestRowPerItem, outcome, qaCommand, qaRows, replayAdapter, seedRanges, skippedRows, smokeRows, SUITE_FACTS, toolErrorFromText,
   trialRows, type NightContext, type SuiteRun } from '../../eval/runner/nightly/adapters.ts';
 import { canonicalDigest, loadDevSet } from '../../eval/runner/nightly/devset.ts';
 import { NightlyCache } from '../../eval/runner/nightly/judge-cache.ts';
@@ -39,17 +39,17 @@ const suiteRun = (id: string, items?: string[], o: Partial<SuiteRun> = {}): Suit
 };
 
 describe('tiers and the ancestor check', () => {
-  test('nightly: the five cheap suites, agent suites on gpt-6.1-sol at k = 3, keyless suites with no reader', () => {
+  test('nightly: the five cheap suites, agent suites on gpt-6.2-sol at k = 3, keyless suites with no reader', () => {
     const p = plan('--tier', 'nightly');
     expect(p.map(r => r.suite.id).sort()).toEqual(['concurrent-writers', 'refresh-barrier-agents', 'refused-write-agents', 'system-smokes', 'tool-contract-replay']);
-    expect(p.find(r => r.suite.id === 'refused-write-agents')).toMatchObject({ readers: ['gpt-6.1-sol'], k: 3 });
+    expect(p.find(r => r.suite.id === 'refused-write-agents')).toMatchObject({ readers: ['gpt-6.2-sol'], k: 3 });
     expect(p.find(r => r.suite.id === 'concurrent-writers')).toMatchObject({ readers: [null], k: 1 });
   });
 
   test('matrix: every suite, both frontier readers, k = 3 on agent suites and 1 on QA; smoke: every item once', () => {
     const m = plan('--tier', 'matrix');
     expect(m.length).toBe(devset.suites.length);
-    expect(m.find(r => r.suite.id === 'cat40-hard-m')).toMatchObject({ readers: ['claude-opus-5-5', 'gpt-6.1-sol'], k: 3, items: devset.suites.find(s => s.id === 'cat40-hard-m')!.items });
+    expect(m.find(r => r.suite.id === 'cat40-hard-m')).toMatchObject({ readers: ['claude-opus-5-5', 'gpt-6.2-sol'], k: 3, items: devset.suites.find(s => s.id === 'cat40-hard-m')!.items });
     expect(m.find(r => r.suite.id === 'lme-s-hard')).toMatchObject({ k: 1 });
     expect(plan('--tier', 'smoke').every(r => r.k === 1)).toBe(true);
   });
@@ -102,10 +102,12 @@ describe('adapter commands', () => {
   test('readers and judges: GPT-6 Astra judges Claude and particle-1 rows, so the two share a judge, and Claude Opus 5.5 judges GPT rows', () => {
     expect(qualifiedModel('claude-opus-5-5')).toBe('anthropic:claude-opus-5-5');
     expect(qualifiedModel('gpt-6.1-sol')).toBe('openai:gpt-6.1-sol');
-    expect(judgeFor('claude-opus-5-5')).toBe('openai:gpt-6-astra');
-    expect(judgeFor('particle-1')).toBe('openai:gpt-6-astra');
-    expect(judgeFor('particle:particle-1')).toBe('openai:gpt-6-astra');
-    expect(judgeFor('gpt-6.1-sol')).toBe('anthropic:claude-opus-5-5');
+    expect(judgeFor('claude-opus-5-5')).toBe('openai:gpt-6.2-astra');
+    expect(judgeFor('particle-1')).toBe('openai:gpt-6.2-astra');
+    expect(judgeFor('particle:particle-1')).toBe('openai:gpt-6.2-astra');
+    expect(judgeFor('gpt-6.2-sol')).toBe('anthropic:claude-opus-5-5');
+    expect(cat40JudgeFor('claude-opus-5-5')).toBe('gpt-6.2-sol');
+    expect(cat40JudgeFor('gpt-6.2-sol')).toBe('claude-opus-5-5');
   });
 
   test('Cat 40: the gbrain-hard arm on world M with the dev set\'s tasks; scripted on keyword-only slots on a fake night; the paid night joins the ledger run', () => {
@@ -135,6 +137,20 @@ describe('adapter commands', () => {
     expect(reuse.cells.join(' ')).toContain('--slot-ref ' + 'f'.repeat(40));
     expect(reuse.cells.join(' ')).not.toContain('--gbrain-ref ' + 'f'.repeat(40));
     expect(paid.cells).not.toContain('--slot-ref');
+  });
+
+  test('Cat 40 on a paid night: one cells run per reader in its own directory, each judged by the other family; a fake night runs one scripted command', () => {
+    const run = suiteRun('cat40-hard-m', ['H1-02'], { k: 3, readers: ['claude-opus-5-5', 'gpt-6.2-sol'] });
+    const dirs = { root: '/r', slots: '/s', cells: '/c' };
+    const groups = cat40CellGroups(run, ctx(), '/w', dirs);
+    expect(groups.map(g => g.cells)).toEqual(['/c/claude-opus-5-5', '/c/gpt-6.2-sol']);
+    expect(groups[0]!.cmd.join(' ')).toContain('--models claude-opus-5-5 --judge gpt-6.2-sol');
+    expect(groups[1]!.cmd.join(' ')).toContain('--models gpt-6.2-sol --judge claude-opus-5-5');
+    expect(groups.map(g => g.cmd.at(g.cmd.indexOf('--out') + 1))).toEqual(['/c/claude-opus-5-5', '/c/gpt-6.2-sol']);
+    const fake = cat40CellGroups(run, ctx({ fake: true, paid: null }), '/w', dirs);
+    expect(fake).toHaveLength(1);
+    expect(fake[0]!.cells).toBe('/c');
+    expect(fake[0]!.cmd).toContain('--scripted');
   });
 
   test('Cat 40: the suite carries the newest cells receipt\'s dev-set label and drifted files', () => {

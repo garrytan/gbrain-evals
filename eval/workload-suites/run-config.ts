@@ -33,12 +33,12 @@ export const MODEL_CONFIG = {
   fixed_reader: { id: 'anthropic:claude-opus-5-5', family: 'opus' } as ModelRef,
   frontier_sweep: [
     { id: 'anthropic:claude-opus-5-5', family: 'opus' },
-    { id: 'openai:gpt-6.1-sol', family: 'gpt' },
+    { id: 'openai:gpt-6.2-sol', family: 'gpt' },
     { id: 'particle:particle-1', family: 'particle' },
   ] as ModelRef[],
   /** Readers allowed only in a labeled smoke run (`bench.ts --smoke N --models ...`), never in a counted cell: Fable (CLAUDE.md). */
   smoke_only_readers: [...SMOKE_ONLY_READERS] as string[],
-  /** gpt-6-astra re-reads the same frontier subset when the budget allows. It is an alternate reader, never a counted frontier reader: the sweep's GPT is gpt-6.1-sol (CLAUDE.md). */
+  /** gpt-6-astra re-reads the same frontier subset when the budget allows. It is an alternate reader, never a counted frontier reader: the sweep's GPT is gpt-6.2-sol (CLAUDE.md). */
   alternate_readers: [{ id: 'openai:gpt-6-astra', family: 'gpt' }] as ModelRef[],
   /** Judges only answers the deterministic scorer marks `ambiguous` (both the gold and a stale or distractor value named). */
   judge: { id: 'openai:gpt-6.1-sol', family: 'gpt' } as ModelRef,
