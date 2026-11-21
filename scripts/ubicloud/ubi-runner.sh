@@ -314,7 +314,7 @@ cmd_usage() {
     END {
       if (bad) exit 1
       printf "%-14s %4s %6s\n", "OWNER", "VMS", "VCPUS"
-      for (o in cpu) printf "%-14s %4d %6d%s\n", o, vms[o], cpu[o], o == me ? "  (you)" : "" | "sort -k3,3nr"
+      for (o in cpu) { you = o == me ? "  (you)" : ""; printf "%-14s %4d %6d%s\n", o, vms[o], cpu[o], you | "sort -k3,3nr" }
       close("sort -k3,3nr")
       printf "%-14s %4d %6d\n", "total", count, total
     }'
@@ -377,18 +377,21 @@ valid_name() { [[ "$1" =~ ^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$ ]]; }
 # create_lock / create_unlock: creates from this machine take turns from the quota check to the create answer, so each
 # check sees the VMs made before it. The lock is a kernel flock on $STATE_ROOT/create.lock, which the kernel drops when
 # its holder exits however it dies, so the file's contents never matter and a file left behind never blocks a create.
-CREATE_LOCK_FD=""
+# perl takes it on descriptor 9 (fd9_flock), because macOS has neither util-linux flock nor bash 4's {var}> redirection;
+# the lock belongs to descriptor 9's open file, so it stays held after perl exits.
+CREATE_LOCKED=""
+fd9_flock() { perl -MFcntl=:flock -e 'open(my $f, ">>&=", 9) or exit 1; flock($f, $ARGV[0] eq "LOCK_UN" ? LOCK_UN : LOCK_EX) or exit 1' "$1"; }
 create_lock() {
-  command -v flock >/dev/null || die "up: flock (util-linux) is missing, so creates from this machine cannot take turns"
   mkdir -p "$STATE_ROOT"
-  exec {CREATE_LOCK_FD}>>"$STATE_ROOT/create.lock"
-  flock "$CREATE_LOCK_FD" || die "up: could not take the create lock $STATE_ROOT/create.lock"
+  exec 9>>"$STATE_ROOT/create.lock"
+  fd9_flock LOCK_EX || die "up: could not take the create lock $STATE_ROOT/create.lock"
+  CREATE_LOCKED=yes
 }
 create_unlock() {
-  [ -n "$CREATE_LOCK_FD" ] || return 0
-  flock -u "$CREATE_LOCK_FD" 2>/dev/null || true
-  exec {CREATE_LOCK_FD}>&-
-  CREATE_LOCK_FD=""
+  [ -n "$CREATE_LOCKED" ] || return 0
+  fd9_flock LOCK_UN 2>/dev/null || true
+  exec 9>&-
+  CREATE_LOCKED=""
 }
 
 # quota_preflight NAME SIZE: refuse, before any create request, a VM that would take the project past UBI_QUOTA_VCPUS
