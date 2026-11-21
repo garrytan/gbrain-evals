@@ -26,7 +26,7 @@ DRV="bun $REPO/eval/runner/batch/lme-redis.ts"
 PY="uv run -q --project $REPO/eval/redis-agent-memory-benchmark python $REPO/eval/runner/lme-redis/lme_redis.py"
 STAGE=${STAGE:-pilot}   # pilot, judge-check, counted-first-half or counted-second-half
 IDS=${IDS:-pilot}       # pilot, first-half, second-half or all
-BATCH_ARMS="gpt4o--off gpt4o--on gpt4o--agent-default gpt4o--full gpt4o--oracle opus--off opus--on opus--full opus--oracle sol--off sol--on sol--full sol--oracle"
+BATCH_ARMS=${ARMS:-"gpt4o--off gpt4o--on gpt4o--agent-default gpt4o--full gpt4o--oracle opus--off opus--on opus--full opus--oracle sol--off sol--on sol--full sol--oracle"}   # ARMS overrides: the second half runs without on, which stopped at the interim look
 
 only_env() {  # only_env "NAMES" CMD...: runs CMD with just the named variables, none of them on a command line
   local keep=" $1 " v; shift
