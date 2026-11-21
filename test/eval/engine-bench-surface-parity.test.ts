@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test';
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
@@ -11,9 +12,12 @@ import { resolveGbrainUnderTest, type GbrainUnderTest } from '../../eval/runner/
 /**
  * A fake gbrain root: a CLI that answers import, export, call, serve and CLI-native commands with outputs that carry
  * run-varying values (timestamps, random revisions, durations, its own home path), and optionally a Rust engine.
- * `reorder` names an engine whose list_pages answer comes back in another order.
+ * `reorder` names an engine whose list_pages answer comes back in another order. A write's receipt reports its effect
+ * queued for its first poll (five for the `slowSettle` engine, every poll for the `neverSettle` engine), counted per brain
+ * home and request_id so CLI polls in separate processes see it settle. As in gbrain, a CLI write's receipt also carries an
+ * embedding effect that stays queued, because only a later writing process drains it. Every CLI start is logged to calls.log.
  */
-function fakeGbrain(o: { rust: 'none' | 'unsupported' | 'opens'; reorder?: string; slowSettle?: string }): GbrainUnderTest {
+function fakeGbrain(o: { rust: 'none' | 'unsupported' | 'opens'; reorder?: string; slowSettle?: string; neverSettle?: string }): GbrainUnderTest {
   const root = mkdtempSync(join(tmpdir(), 'surface-parity-fake-'));
   mkdirSync(join(root, 'src/core'), { recursive: true });
   if (o.rust !== 'none') {
@@ -24,19 +28,28 @@ function fakeGbrain(o: { rust: 'none' | 'unsupported' | 'opens'; reorder?: strin
   }
   writeFileSync(join(root, 'reorder.txt'), o.reorder ?? '');
   writeFileSync(join(root, 'slow-settle.txt'), o.slowSettle ?? '');
+  writeFileSync(join(root, 'never-settle.txt'), o.neverSettle ?? '');
+  writeFileSync(join(root, 'calls.log'), '');
   writeFileSync(join(root, 'src/cli.ts'), `
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createInterface } from 'node:readline';
 const home = process.env.GBRAIN_HOME;
 const cfg = JSON.parse(readFileSync(join(home, '.gbrain/config.json'), 'utf8'));
 const reorder = readFileSync(join(import.meta.dir, '../reorder.txt'), 'utf8').trim() === cfg.engine;
-const queuedPolls = readFileSync(join(import.meta.dir, '../slow-settle.txt'), 'utf8').trim() === cfg.engine ? 4 : 1;
+const queuedPolls = readFileSync(join(import.meta.dir, '../never-settle.txt'), 'utf8').trim() === cfg.engine ? Infinity
+  : readFileSync(join(import.meta.dir, '../slow-settle.txt'), 'utf8').trim() === cfg.engine ? 4 : 1;
 const [cmd, ...rest] = process.argv.slice(2);
+appendFileSync(join(import.meta.dir, '../calls.log'), cfg.engine + '\\t' + process.argv.slice(2).join(' ') + '\\n');
 const out = v => process.stdout.write(JSON.stringify(v, null, 2) + '\\n');
-let polls = 0;
+const polled = id => {
+  const f = join(home, 'polls-' + encodeURIComponent(id));
+  const n = existsSync(f) ? Number(readFileSync(f, 'utf8')) : 0;
+  writeFileSync(f, String(n + 1));
+  return n;
+};
 const answer = (op, args) => op === 'get_write_request'
-  ? { state: 'committed', effects: [{ kind: 'links', state: polls++ < queuedPolls ? 'queued' : 'committed' }] }
+  ? { state: 'committed', effects: [{ kind: 'links', state: polled(args.request_id) < queuedPolls ? 'queued' : 'committed' }, ...(cmd === 'call' ? [{ kind: 'embedding', state: 'queued' }] : [])] }
   : op === 'list_pages'
   ? (reorder ? [{ slug: 'b' }, { slug: 'a' }] : [{ slug: 'a' }, { slug: 'b' }])
   : { op, args, revision: crypto.randomUUID(), updated_at: new Date().toISOString(), effective_date: '2025-01-01T00:00:00.000Z', home };
@@ -280,16 +293,66 @@ describe('MCP writes settle before the next read', () => {
   test('a write with a request_id waits for its queued effects, and the wait is in the receipt but not compared', async () => {
     const script: Step[] = [...tinyScript, { id: 'write/add_tag', op: 'add_tag', args: { slug: 'notes/a', tag: 't', request_id: 'rid-1' } }];
     const r = await runSurfaceParity({ gut: fakeGbrain({ rust: 'opens' }), engines: ['pglite', 'rust'], corpus: tinyCorpus, script });
-    for (const k of ['pglite', 'rust']) expect(r.engines[k].settles).toEqual([expect.objectContaining({ op: 'write/add_tag', settled: true, polls: 2, last: 'state committed; effects links=committed' })]);
+    for (const k of ['pglite', 'rust']) {
+      expect(r.engines[k].settles).toEqual([
+        expect.objectContaining({ surface: 'cli', op: 'write/add_tag', settled: true, polls: 2, last: 'state committed; effects links=committed, embedding=queued' }),
+        expect.objectContaining({ surface: 'mcp', op: 'write/add_tag', settled: true, polls: 2, last: 'state committed; effects links=committed' }),
+      ]);
+    }
     expect(r.surfaces.mcp.operations.map(o => o.op)).not.toContain('get_write_request');
     expect(r.summary.verdict).toBe('byte_exact');
   }, 60_000);
   test('an engine whose effects take longer to settle still matches byte for byte (polls never shift JSON-RPC ids)', async () => {
     const script: Step[] = [{ id: 'write/add_tag', op: 'add_tag', args: { slug: 'notes/a', tag: 't', request_id: 'rid-1' } }, ...tinyScript];
     const r = await runSurfaceParity({ gut: fakeGbrain({ rust: 'opens', slowSettle: 'rust' }), engines: ['pglite', 'rust'], corpus: tinyCorpus, script });
-    expect(r.engines.rust.settles[0].polls).toBe(5);
-    expect(r.engines.pglite.settles[0].polls).toBe(2);
+    expect(r.engines.rust.settles.map(s => s.polls)).toEqual([5, 5]);
+    expect(r.engines.pglite.settles.map(s => s.polls)).toEqual([2, 2]);
     expect(r.summary.verdict).toBe('byte_exact');
+  }, 60_000);
+});
+
+describe('CLI writes settle before the export after the writes', () => {
+  const writes: Step[] = [
+    { id: 'write/add_tag', op: 'add_tag', args: { slug: 'notes/a', tag: 't', request_id: 'rid-1' } },
+    { id: 'write/delete_page', op: 'delete_page', args: { slug: 'notes/b', request_id: 'rid-2' } },
+  ];
+  test('every CLI write is polled to a settled receipt before gbrain export runs, and each wait is in the receipt', async () => {
+    const gut = fakeGbrain({ rust: 'opens' });
+    const r = await runSurfaceParity({ gut, engines: ['pglite', 'rust'], corpus: tinyCorpus, script: [...tinyScript, ...writes] });
+    const calls = readFileSync(join(gut.root, 'calls.log'), 'utf8').split('\n');
+    for (const k of ['pglite', 'rust']) {
+      const mine = calls.filter(l => l.startsWith(`${k}\t`));
+      const exportAt = mine.findIndex(l => /\texport --dir \S+export-after-writes$/.test(l));
+      expect(exportAt).toBeGreaterThan(0);
+      for (const id of ['rid-1', 'rid-2']) {
+        const lastPoll = mine.findLastIndex(l => l.includes('call get_write_request') && l.includes(id));
+        expect(lastPoll).toBeGreaterThan(mine.findIndex(l => l.includes(`"request_id":"${id}"`)));
+        expect(lastPoll).toBeLessThan(exportAt);
+      }
+      expect(r.engines[k].settles.filter(s => s.surface === 'cli')).toEqual(writes.map(w => expect.objectContaining({ op: w.id, settled: true, polls: 2 })));
+    }
+    expect(r.summary.verdict).toBe('byte_exact');
+  }, 60_000);
+  test('a CLI write that never settles errors its (settle) operation instead of being skipped', async () => {
+    const r = await runSurfaceParity({ gut: fakeGbrain({ rust: 'opens', neverSettle: 'rust' }), engines: ['pglite', 'rust'], corpus: tinyCorpus, script: [...tinyScript, writes[1]], settleTimeoutMs: 1_000 });
+    const op = r.surfaces.cli.operations.find(o => o.op === 'write/delete_page (settle)')!;
+    expect(op.status).toBe('errored');
+    expect(op.reason).toContain('rust: write rid-2 did not settle in 1 s: state committed; effects links=queued, embedding=queued');
+    expect(r.engines.rust.settles.find(s => s.surface === 'cli')).toMatchObject({ settled: false });
+    expect(r.summary.verdict).not.toBe('byte_exact');
+  }, 60_000);
+  test('the receipt keeps the full normalized delete_page reply on every surface, not only its digest', async () => {
+    const r = await runSurfaceParity({ gut: fakeGbrain({ rust: 'opens' }), engines: ['pglite', 'rust'], corpus: tinyCorpus, script: [...tinyScript, writes[1]] });
+    for (const s of ['cli', 'mcp'] as const) {
+      const op = r.surfaces[s].operations.find(o => o.op === 'write/delete_page')!;
+      for (const k of ['pglite', 'rust'] as const) {
+        expect(op.outputs![k]!.text).toContain('delete_page');
+        expect(op.outputs![k]!.text).toContain('notes/b');
+        expect(op.outputs![k]!.text).toContain('<UUID-');
+        expect(op.outputs![k]!.sha256).toBe(createHash('sha256').update(op.outputs![k]!.text!).digest('hex'));
+      }
+    }
+    expect(r.surfaces.cli.operations.find(o => o.op === 'get_page/notes/a')!.outputs!.pglite!.text).toBeUndefined();
   }, 60_000);
 });
 

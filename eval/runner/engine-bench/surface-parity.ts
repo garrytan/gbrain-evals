@@ -290,8 +290,8 @@ export interface EngineCapture {
   ctx?: NormalizeContext;
   captures: Capture[];
   setup: Array<{ step: string; code: number; ms: number; tail?: string }>;
-  /** One entry per MCP write: how long its effects took to settle before the next read. */
-  settles: Array<{ op: string; settled: boolean; polls: number; ms: number; last: string }>;
+  /** One entry per write on each surface: how long it and its effects took to settle before the next read or export. */
+  settles: Array<{ surface: 'cli' | 'mcp'; op: string; settled: boolean; polls: number; ms: number; last: string }>;
   postgres_version?: string;
 }
 
@@ -302,7 +302,8 @@ export interface OpResult {
   engines_compared: EvalEngineKind[];
   reason?: string;
   /** Per engine output size and sha256 after normalization. */
-  outputs?: Partial<Record<EvalEngineKind, { bytes: number; sha256: string; exit_code?: number }>>;
+  /** `text` is the normalized reply, kept in full for write operations (ids starting `write/`). */
+  outputs?: Partial<Record<EvalEngineKind, { bytes: number; sha256: string; exit_code?: number; text?: string }>>;
   diffs?: Array<{ reference: EvalEngineKind; engine: EvalEngineKind; class: DiffClass; excerpt: string }>;
 }
 
@@ -452,7 +453,7 @@ export function compareCaptures(engines: EngineCapture[]): Comparison {
     }
     const outputs: NonNullable<OpResult['outputs']> = {};
     for (const [k, v] of entries) {
-      if (v?.text !== undefined) outputs[k] = { bytes: Buffer.byteLength(v.text), sha256: sha(v.text), ...(v.capture.exit_code !== undefined ? { exit_code: v.capture.exit_code } : {}) };
+      if (v?.text !== undefined) outputs[k] = { bytes: Buffer.byteLength(v.text), sha256: sha(v.text), ...(v.capture.exit_code !== undefined ? { exit_code: v.capture.exit_code } : {}), ...(op.startsWith('write/') ? { text: v.text } : {}) };
     }
     const [refKind, ref] = entries[0];
     const diffs: NonNullable<OpResult['diffs']> = [];
@@ -598,22 +599,24 @@ const SWEEP_MAX_PASSES = 5;
 const SETTLED_EFFECT = (state: unknown) => !['queued', 'pending', 'running', 'in_progress'].includes(String(state));
 
 /**
- * Wait until an MCP write and its post-commit effects are done, so the reads after it do not race them. Over stdio,
- * put_page and friends queue a `links` effect that `gbrain serve` applies when idle; whether a read lands before or
- * after it is scheduling, not engine behaviour (a first dry run saw Postgres miss the queued mention link once). The
- * polls are get_write_request calls whose answers are not compared; the receipt lists each wait.
+ * Wait until a write and its post-commit effects are done, so the reads or the export after it do not race them. Over
+ * stdio, put_page and friends queue a `links` effect that `gbrain serve` applies when idle; whether a read lands before
+ * or after it is scheduling, not engine behaviour (a first dry run saw Postgres miss the queued mention link once). A
+ * CLI write's receipt is read the same way, with `gbrain call get_write_request`, before the export after the writes, but
+ * without waiting on its `embedding` effect: a CLI write applies its links in process and exits with that effect queued, and
+ * only the next gbrain process that writes drains it (on a keyless brain, to `skipped`), so no read could see it settle, and
+ * it changes no exported byte. Its state still shows in `last`. `poll` returns one get_write_request answer as JSON text;
+ * the answers are not compared, and the receipt lists each wait.
  */
-async function settleWrite(mcp: RawMcpSession, requestId: string): Promise<{ settled: boolean; polls: number; ms: number; last: string }> {
+async function settleWrite(poll: () => Promise<string>, timeoutMs: number, unawaited: string[] = []): Promise<{ settled: boolean; polls: number; ms: number; last: string }> {
   const t0 = Date.now();
   let last = '';
   for (let polls = 1; ; polls++) {
-    const line = await mcp.request('tools/call', { name: 'get_write_request', arguments: { request_id: requestId } }, { poll: true }).catch(e => Buffer.from(String((e as Error).message)));
-    const msg = parseJson(line.toString('utf8')) as { result?: { content?: Array<{ text?: string }> } } | undefined;
-    const body = parseJson(msg?.result?.content?.[0]?.text ?? '') as { state?: string; error?: string; effects?: Array<{ kind?: string; state?: string }> } | undefined;
+    const body = parseJson(await poll().catch(e => String((e as Error).message))) as { state?: string; error?: string; effects?: Array<{ kind?: string; state?: string }> } | undefined;
     if (body?.error === 'not_found') return { settled: true, polls, ms: Date.now() - t0, last: 'no write receipt for this request_id (the operation keeps none), nothing to wait for' };
     last = body?.error ? `error ${body.error}` : `state ${body?.state ?? 'unknown'}; effects ${(body?.effects ?? []).map(x => `${x.kind}=${x.state}`).join(', ') || 'none'}`;
-    if (body?.state && !body.error && SETTLED_EFFECT(body.state) && (body.effects ?? []).every(x => SETTLED_EFFECT(x.state))) return { settled: true, polls, ms: Date.now() - t0, last };
-    if (Date.now() - t0 > SETTLE_TIMEOUT_MS) return { settled: false, polls, ms: Date.now() - t0, last };
+    if (body?.state && !body.error && SETTLED_EFFECT(body.state) && (body.effects ?? []).every(x => unawaited.includes(String(x.kind)) || SETTLED_EFFECT(x.state))) return { settled: true, polls, ms: Date.now() - t0, last };
+    if (Date.now() - t0 > timeoutMs) return { settled: false, polls, ms: Date.now() - t0, last };
     await Bun.sleep(250);
   }
 }
@@ -631,6 +634,7 @@ interface EngineRunInput {
   corpus: CorpusFile[];
   script: Step[];
   makeBrain: (label: 'a' | 'b') => Promise<Brain>;
+  settleTimeoutMs: number;
 }
 
 /** The child step for one engine: brain A for the CLI surface and the markdown export, brain B for MCP. */
@@ -693,6 +697,11 @@ async function captureEngine(o: EngineRunInput): Promise<EngineCapture> {
       const r = await runGbrain(o.gut, envA, s.cli ?? ['call', s.op!, JSON.stringify(s.args ?? {})]);
       if (r.timedOut || r.code === -1) result.captures.push({ surface: 'cli', op: s.id, error: `${r.timedOut ? 'timed out' : 'did not start'}: ${tail(r.stderr)}` });
       else result.captures.push({ surface: 'cli', op: s.id, raw_b64: r.stdout.toString('base64'), exit_code: r.code });
+      const requestId = s.args?.request_id;
+      if (typeof requestId !== 'string') continue;
+      const settled = await settleWrite(async () => (await runGbrain(o.gut, envA, ['call', 'get_write_request', JSON.stringify({ request_id: requestId })])).stdout.toString('utf8'), o.settleTimeoutMs, ['embedding']);
+      result.settles.push({ surface: 'cli', op: s.id, ...settled });
+      if (!settled.settled) result.captures.push({ surface: 'cli', op: `${s.id} (settle)`, error: `write ${requestId} did not settle in ${o.settleTimeoutMs / 1000} s: ${settled.last}` });
     }
     await exportMarkdown(envA, 'export-after-writes');
 
@@ -718,9 +727,12 @@ async function captureEngine(o: EngineRunInput): Promise<EngineCapture> {
         await call('mcp', s.id, s.op!, s.args ?? {});
         const requestId = s.args?.request_id;
         if (typeof requestId !== 'string') continue;
-        const settled = await settleWrite(mcp, requestId);
-        result.settles.push({ op: s.id, ...settled });
-        if (!settled.settled) result.captures.push({ surface: 'mcp', op: `${s.id} (settle)`, error: `write ${requestId} did not settle in ${SETTLE_TIMEOUT_MS / 1000} s: ${settled.last}` });
+        const settled = await settleWrite(async () => {
+          const line = await mcp.request('tools/call', { name: 'get_write_request', arguments: { request_id: requestId } }, { poll: true });
+          return (parseJson(line.toString('utf8')) as { result?: { content?: Array<{ text?: string }> } } | undefined)?.result?.content?.[0]?.text ?? '';
+        }, o.settleTimeoutMs);
+        result.settles.push({ surface: 'mcp', op: s.id, ...settled });
+        if (!settled.settled) result.captures.push({ surface: 'mcp', op: `${s.id} (settle)`, error: `write ${requestId} did not settle in ${o.settleTimeoutMs / 1000} s: ${settled.last}` });
       }
     } finally {
       await mcp.close();
@@ -795,6 +807,8 @@ export interface SurfaceParityOptions {
   capturesDir?: string;
   /** Extra receipt fields, for example the Postgres container's image digest. */
   environment?: Record<string, unknown>;
+  /** How long a write may take to settle before its `(settle)` operation errors. 30 s when omitted. */
+  settleTimeoutMs?: number;
 }
 
 export interface SurfaceParityReceipt {
@@ -863,7 +877,7 @@ export async function runSurfaceParity(o: SurfaceParityOptions): Promise<Surface
         const databasePath = join(engineDir, `brain-${label}.${kind}`);
         return { home, config: { ...cliEngineConfig(kind, { databasePath }), embedding_disabled: true }, databaseLocation: databasePath };
       };
-      const c = await captureEngine({ gut: o.gut, kind, workDir, engineDir, corpusDir, corpus, script, makeBrain });
+      const c = await captureEngine({ gut: o.gut, kind, workDir, engineDir, corpusDir, corpus, script, makeBrain, settleTimeoutMs: o.settleTimeoutMs ?? SETTLE_TIMEOUT_MS });
       if (postgresVersion) c.postgres_version = postgresVersion;
       captures.push(c);
     }
