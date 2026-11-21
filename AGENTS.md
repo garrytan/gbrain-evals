@@ -14,7 +14,10 @@ and a cheaper judge is fine where the protocol allows one, as long as no model j
 particle-1 never judges a counted cell, and it reads for development loops that it has passed an agreement test
 for. Fable runs only in smoke tests, never in counted cells. A run drops older generations unless one is the single link
 to the previous eval's results (`gpt-4.1-mini` only as that bridge to earlier BEAM runs), and it never runs
-gpt-5.4-mini.
+gpt-5.4-mini. gpt-4o and gpt-4o-mini are suspended (Garry, 2026-11-21): a campaign registered on or after that date
+uses neither in any role we choose, judges included, its registry entry lists every model with its role, and CI and
+the launch check refuse a suspended one. A compared system's shipped default is tested as shipped (role
+`system-internal`), and earlier campaigns and published rows keep their models.
 
 gbrain build, in short (full rules in [CLAUDE.md, "Choose the gbrain build"](CLAUDE.md#choose-the-gbrain-build)): every new run
 measures gbrain's newest release tag on master at launch (`bun eval/runner/gbrain-pin.ts bump` moves the pin), an
@@ -25,3 +28,10 @@ README.md, the hub pages in `docs/` and the guides in `eval/` open with what gbr
 pins, in present tense, and end with a `## Changelog` of how that document changed, newest first. Replace a superseded
 claim instead of appending an update beside it, and add the changelog entry in the same commit.
 README's current state is three parts: what gbrain does, current results, and how gbrain compares with other systems.
+
+## Changelog
+
+### 2026-11-21: gpt-4o and gpt-4o-mini suspended for new campaigns
+
+The model summary adds the suspension and the per-entry model list that CI and the launch check read. Earlier history
+of this file is in CHANGELOG.md.

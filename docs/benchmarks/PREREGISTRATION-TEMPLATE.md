@@ -77,6 +77,13 @@ Add the entry as `docs/benchmarks/preregistrations.d/<id>.json`. CI checks each 
         { "if": "<the other outcome>", "then": "<what we do differently>" }
       ],
       "arms": ["gbrain", "files"],
+      "models": [
+        { "model": "claude-opus-5-5", "role": "under-test" },
+        { "model": "particle:particle-1", "role": "under-test" },
+        { "model": "gpt-6.2-sol", "role": "under-test" },
+        { "model": "gpt-6.2-astra", "role": "judge" },
+        { "model": "gpt-4o-mini", "role": "system-internal", "system": "<compared system that ships it as its default>" }
+      ],
       "pilots": [
         { "arm": "gbrain", "max_budget_fraction": 0.1, "part_under_test_ran": "<how the pilot shows it>", "judge_passes": "<how>", "units_supplied_at_rate": "<how>" },
         { "arm": "files", "max_budget_fraction": 0.1, "part_under_test_ran": "<how>", "judge_passes": "<how>", "units_supplied_at_rate": "<how>" }
@@ -94,7 +101,9 @@ Add the entry as `docs/benchmarks/preregistrations.d/<id>.json`. CI checks each 
 }
 ```
 
-With no model judge, `judge_check` is `{ "model_judge": false, "reason": "<why>" }`. Under `under-500`, `interim_look` may be `{ "not_required": "<reason>" }`. A quick look carries only `id`, `preregistration` (its three-line file), `results`, `registered`, `paid_tier: "quick-look"` and `quick_look: { "question", "decision", "stop_rule" }`.
+`models` lists every model the campaign runs, with one role each: `under-test`, `judge`, `simulator`, `extractor`, `embedder`, `bridge`, `protocol-fixed` or `system-internal`. An entry registered on or after 2026-11-21 needs it, and CI and `attestPreregistration` refuse gpt-4o and gpt-4o-mini in every role but `system-internal`, which covers only a compared system's shipped default and names that system ([CLAUDE.md, "Choose models"](../../CLAUDE.md#choose-models)). A quick look carries `models` too.
+
+With no model judge, `judge_check` is `{ "model_judge": false, "reason": "<why>" }`. Under `under-500`, `interim_look` may be `{ "not_required": "<reason>" }`. A quick look carries only `id`, `preregistration` (its three-line file), `results`, `registered`, `paid_tier: "quick-look"`, `models` and `quick_look: { "question", "decision", "stop_rule" }`.
 
 ## Amendments
 

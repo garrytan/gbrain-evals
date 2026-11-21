@@ -89,4 +89,20 @@ describe('attestPreregistration', () => {
     expect(a.preregistration_commit).toBe(pre);
     expect(a.on_origin).toBe(true);
   });
+
+  test('refuses a run whose registry entry, registered on or after the gpt-4o suspension, names gpt-4o', () => {
+    const remote = mkdtempSync(join(tmpdir(), 'prereg-remote-'));
+    execFileSync('git', ['init', '-q', '--bare', remote]);
+    const dir = repo();
+    mkdirSync(join(dir, 'docs/benchmarks'), { recursive: true });
+    const registry = (models: unknown[]) => JSON.stringify({ schema_version: 1, experiments: [{ id: 'x', preregistration: 'docs/x-prereg.md', results: ['docs/x/**'], registered: '2026-11-21', models }] });
+    commit(dir, 'docs/benchmarks/preregistrations.json', registry([{ model: 'openai:gpt-4o-2024-08-06', role: 'judge' }]), 'registry');
+    commit(dir, 'docs/x-prereg.md', 'rule', 'prereg');
+    execFileSync('git', ['remote', 'add', 'origin', remote], { cwd: dir });
+    execFileSync('git', ['push', '-q', 'origin', 'main'], { cwd: dir });
+    execFileSync('git', ['fetch', '-q', 'origin'], { cwd: dir });
+    expect(() => attestPreregistration('docs/x-prereg.md', dir)).toThrow(/registry entry x refuses this run: models\[0\]: openai:gpt-4o-2024-08-06: gpt-4o and gpt-4o-mini are suspended for new campaigns from 2026-11-21/);
+    writeFileSync(join(dir, 'docs/benchmarks/preregistrations.json'), registry([{ model: 'gpt-6.2-sol', role: 'judge' }, { model: 'gpt-4o-mini', role: 'system-internal', system: 'memory-bank' }]));
+    expect(attestPreregistration('docs/x-prereg.md', dir).on_origin).toBe(true);
+  });
 });
