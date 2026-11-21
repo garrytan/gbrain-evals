@@ -1,1 +1,0 @@
-- Publish the [duplicate-finder head-to-head](docs/benchmarks/2026-11-18-entity-dedupe-h2h.md), including the wrong people links that led to review-only person matching, the memory-system and classic-matcher comparisons, and the data and keyless checks behind the results.
