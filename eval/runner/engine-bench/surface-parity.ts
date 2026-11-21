@@ -597,6 +597,7 @@ function listFiles(dir: string, base = dir): string[] {
 const SETTLE_TIMEOUT_MS = 30_000;
 const SWEEP_MAX_PASSES = 5;
 const SETTLED_EFFECT = (state: unknown) => !['queued', 'pending', 'running', 'in_progress'].includes(String(state));
+const FINAL_WRITE_STATES = ['committed', 'conflict', 'failed', 'cancelled'];
 
 /**
  * Wait until a write and its post-commit effects are done, so the reads or the export after it do not race them. Over
@@ -605,18 +606,20 @@ const SETTLED_EFFECT = (state: unknown) => !['queued', 'pending', 'running', 'in
  * CLI write's receipt is read the same way, with `gbrain call get_write_request`, before the export after the writes, but
  * without waiting on its `embedding` effect: a CLI write applies its links in process and exits with that effect queued, and
  * only the next gbrain process that writes drains it (on a keyless brain, to `skipped`), so no read could see it settle, and
- * it changes no exported byte. Its state still shows in `last`. `poll` returns one get_write_request answer as JSON text;
- * the answers are not compared, and the receipt lists each wait.
+ * it changes no exported byte. Its state still shows in `last`. The receipt itself must reach a final state, so a write still
+ * `recovering` keeps the wait going. `poll` returns one get_write_request answer as JSON text within the time it is given,
+ * which is what is left of the wait, and an answer after the wait has run out does not count; the answers are not compared,
+ * and the receipt lists each wait.
  */
-async function settleWrite(poll: () => Promise<string>, timeoutMs: number, unawaited: string[] = []): Promise<{ settled: boolean; polls: number; ms: number; last: string }> {
+async function settleWrite(poll: (timeoutMs: number) => Promise<string>, timeoutMs: number, unawaited: string[] = []): Promise<{ settled: boolean; polls: number; ms: number; last: string }> {
   const t0 = Date.now();
   let last = '';
   for (let polls = 1; ; polls++) {
-    const body = parseJson(await poll().catch(e => String((e as Error).message))) as { state?: string; error?: string; effects?: Array<{ kind?: string; state?: string }> } | undefined;
+    const body = parseJson(await poll(Math.max(timeoutMs - (Date.now() - t0), 1)).catch(e => String((e as Error).message))) as { state?: string; error?: string; effects?: Array<{ kind?: string; state?: string }> } | undefined;
     if (body?.error === 'not_found') return { settled: true, polls, ms: Date.now() - t0, last: 'no write receipt for this request_id (the operation keeps none), nothing to wait for' };
-    last = body?.error ? `error ${body.error}` : `state ${body?.state ?? 'unknown'}; effects ${(body?.effects ?? []).map(x => `${x.kind}=${x.state}`).join(', ') || 'none'}`;
-    if (body?.state && !body.error && SETTLED_EFFECT(body.state) && (body.effects ?? []).every(x => unawaited.includes(String(x.kind)) || SETTLED_EFFECT(x.state))) return { settled: true, polls, ms: Date.now() - t0, last };
+    if (body || !last) last = body?.error ? `error ${body.error}` : `state ${body?.state ?? 'unknown'}; effects ${(body?.effects ?? []).map(x => `${x.kind}=${x.state}`).join(', ') || 'none'}`;
     if (Date.now() - t0 > timeoutMs) return { settled: false, polls, ms: Date.now() - t0, last };
+    if (body?.state && !body.error && FINAL_WRITE_STATES.includes(body.state) && (body.effects ?? []).every(x => unawaited.includes(String(x.kind)) || SETTLED_EFFECT(x.state))) return { settled: true, polls, ms: Date.now() - t0, last };
     await Bun.sleep(250);
   }
 }
@@ -699,7 +702,7 @@ async function captureEngine(o: EngineRunInput): Promise<EngineCapture> {
       else result.captures.push({ surface: 'cli', op: s.id, raw_b64: r.stdout.toString('base64'), exit_code: r.code });
       const requestId = s.args?.request_id;
       if (typeof requestId !== 'string') continue;
-      const settled = await settleWrite(async () => (await runGbrain(o.gut, envA, ['call', 'get_write_request', JSON.stringify({ request_id: requestId })])).stdout.toString('utf8'), o.settleTimeoutMs, ['embedding']);
+      const settled = await settleWrite(async ms => (await runGbrain(o.gut, envA, ['call', 'get_write_request', JSON.stringify({ request_id: requestId })], ms)).stdout.toString('utf8'), o.settleTimeoutMs, ['embedding']);
       result.settles.push({ surface: 'cli', op: s.id, ...settled });
       if (!settled.settled) result.captures.push({ surface: 'cli', op: `${s.id} (settle)`, error: `write ${requestId} did not settle in ${o.settleTimeoutMs / 1000} s: ${settled.last}` });
     }
@@ -727,8 +730,8 @@ async function captureEngine(o: EngineRunInput): Promise<EngineCapture> {
         await call('mcp', s.id, s.op!, s.args ?? {});
         const requestId = s.args?.request_id;
         if (typeof requestId !== 'string') continue;
-        const settled = await settleWrite(async () => {
-          const line = await mcp.request('tools/call', { name: 'get_write_request', arguments: { request_id: requestId } }, { poll: true });
+        const settled = await settleWrite(async ms => {
+          const line = await mcp.request('tools/call', { name: 'get_write_request', arguments: { request_id: requestId } }, { poll: true, timeoutMs: ms });
           return (parseJson(line.toString('utf8')) as { result?: { content?: Array<{ text?: string }> } } | undefined)?.result?.content?.[0]?.text ?? '';
         }, o.settleTimeoutMs);
         result.settles.push({ surface: 'mcp', op: s.id, ...settled });

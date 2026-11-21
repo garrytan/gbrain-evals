@@ -15,9 +15,11 @@ import { resolveGbrainUnderTest, type GbrainUnderTest } from '../../eval/runner/
  * `reorder` names an engine whose list_pages answer comes back in another order. A write's receipt reports its effect
  * queued for its first poll (five for the `slowSettle` engine, every poll for the `neverSettle` engine), counted per brain
  * home and request_id so CLI polls in separate processes see it settle. As in gbrain, a CLI write's receipt also carries an
- * embedding effect that stays queued, because only a later writing process drains it. Every CLI start is logged to calls.log.
+ * embedding effect that stays queued, because only a later writing process drains it. The `recovering` engine's receipts stay
+ * `recovering` with no effects, and the `slowPoll` engine's CLI get_write_request answers after 2 s. Every CLI start is logged
+ * to calls.log.
  */
-function fakeGbrain(o: { rust: 'none' | 'unsupported' | 'opens'; reorder?: string; slowSettle?: string; neverSettle?: string }): GbrainUnderTest {
+function fakeGbrain(o: { rust: 'none' | 'unsupported' | 'opens'; reorder?: string; slowSettle?: string; neverSettle?: string; recovering?: string; slowPoll?: string }): GbrainUnderTest {
   const root = mkdtempSync(join(tmpdir(), 'surface-parity-fake-'));
   mkdirSync(join(root, 'src/core'), { recursive: true });
   if (o.rust !== 'none') {
@@ -29,6 +31,8 @@ function fakeGbrain(o: { rust: 'none' | 'unsupported' | 'opens'; reorder?: strin
   writeFileSync(join(root, 'reorder.txt'), o.reorder ?? '');
   writeFileSync(join(root, 'slow-settle.txt'), o.slowSettle ?? '');
   writeFileSync(join(root, 'never-settle.txt'), o.neverSettle ?? '');
+  writeFileSync(join(root, 'recovering.txt'), o.recovering ?? '');
+  writeFileSync(join(root, 'slow-poll.txt'), o.slowPoll ?? '');
   writeFileSync(join(root, 'calls.log'), '');
   writeFileSync(join(root, 'src/cli.ts'), `
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -39,6 +43,8 @@ const cfg = JSON.parse(readFileSync(join(home, '.gbrain/config.json'), 'utf8'));
 const reorder = readFileSync(join(import.meta.dir, '../reorder.txt'), 'utf8').trim() === cfg.engine;
 const queuedPolls = readFileSync(join(import.meta.dir, '../never-settle.txt'), 'utf8').trim() === cfg.engine ? Infinity
   : readFileSync(join(import.meta.dir, '../slow-settle.txt'), 'utf8').trim() === cfg.engine ? 4 : 1;
+const recovering = readFileSync(join(import.meta.dir, '../recovering.txt'), 'utf8').trim() === cfg.engine;
+const slowPoll = readFileSync(join(import.meta.dir, '../slow-poll.txt'), 'utf8').trim() === cfg.engine;
 const [cmd, ...rest] = process.argv.slice(2);
 appendFileSync(join(import.meta.dir, '../calls.log'), cfg.engine + '\\t' + process.argv.slice(2).join(' ') + '\\n');
 const out = v => process.stdout.write(JSON.stringify(v, null, 2) + '\\n');
@@ -48,7 +54,9 @@ const polled = id => {
   writeFileSync(f, String(n + 1));
   return n;
 };
-const answer = (op, args) => op === 'get_write_request'
+const answer = (op, args) => op === 'get_write_request' && recovering
+  ? { state: 'recovering', effects: [] }
+  : op === 'get_write_request'
   ? { state: 'committed', effects: [{ kind: 'links', state: polled(args.request_id) < queuedPolls ? 'queued' : 'committed' }, ...(cmd === 'call' ? [{ kind: 'embedding', state: 'queued' }] : [])] }
   : op === 'list_pages'
   ? (reorder ? [{ slug: 'b' }, { slug: 'a' }] : [{ slug: 'a' }, { slug: 'b' }])
@@ -58,7 +66,10 @@ else if (cmd === 'export') {
   const dir = rest[rest.indexOf('--dir') + 1];
   mkdirSync(join(dir, 'notes'), { recursive: true });
   writeFileSync(join(dir, 'notes/a.md'), '---\\ntitle: A\\n---\\n\\nA body\\n');
-} else if (cmd === 'call') out(answer(rest[0], JSON.parse(rest[1])));
+} else if (cmd === 'call') {
+  if (slowPoll && rest[0] === 'get_write_request') await Bun.sleep(2000);
+  out(answer(rest[0], JSON.parse(rest[1])));
+}
 else if (cmd === 'serve') {
   createInterface({ input: process.stdin }).on('line', line => {
     const m = JSON.parse(line);
@@ -340,6 +351,23 @@ describe('CLI writes settle before the export after the writes', () => {
     expect(op.reason).toContain('rust: write rid-2 did not settle in 1 s: state committed; effects links=queued, embedding=queued');
     expect(r.engines.rust.settles.find(s => s.surface === 'cli')).toMatchObject({ settled: false });
     expect(r.summary.verdict).not.toBe('byte_exact');
+  }, 60_000);
+  test('a write whose receipt is still recovering is not settled, on either surface', async () => {
+    const r = await runSurfaceParity({ gut: fakeGbrain({ rust: 'opens', recovering: 'rust' }), engines: ['pglite', 'rust'], corpus: tinyCorpus, script: [...tinyScript, writes[1]], settleTimeoutMs: 1_000 });
+    for (const s of ['cli', 'mcp'] as const) {
+      const op = r.surfaces[s].operations.find(o => o.op === 'write/delete_page (settle)')!;
+      expect(op.status).toBe('errored');
+      expect(op.reason).toContain('rust: write rid-2 did not settle in 1 s: state recovering; effects none');
+    }
+    expect(r.engines.pglite.settles.every(s => s.settled)).toBe(true);
+  }, 60_000);
+  test('a receipt that arrives after the settle wait has run out does not count as settled', async () => {
+    const r = await runSurfaceParity({ gut: fakeGbrain({ rust: 'opens', slowPoll: 'rust' }), engines: ['pglite', 'rust'], corpus: tinyCorpus, script: [...tinyScript, writes[1]], settleTimeoutMs: 1_000 });
+    const settle = r.engines.rust.settles.find(s => s.surface === 'cli')!;
+    expect(settle).toMatchObject({ settled: false, polls: 1 });
+    expect(settle.ms).toBeLessThan(2_000);
+    expect(r.surfaces.cli.operations.find(o => o.op === 'write/delete_page (settle)')!.status).toBe('errored');
+    expect(r.engines.pglite.settles.every(s => s.settled)).toBe(true);
   }, 60_000);
   test('the receipt keeps the full normalized delete_page reply on every surface, not only its digest', async () => {
     const r = await runSurfaceParity({ gut: fakeGbrain({ rust: 'opens' }), engines: ['pglite', 'rust'], corpus: tinyCorpus, script: [...tinyScript, writes[1]] });
