@@ -1,0 +1,16 @@
+{
+  "system": "splink",
+  "version": "5.0.0",
+  "config": "default",
+  "config_file": "configs/splink-default.json",
+  "doc": "https://moj-analytical-services.github.io/splink/getting_started.html",
+  "world": "<er-h2h>/worlds/s20261117",
+  "held_out": null,
+  "scored_seconds": 1.72,
+  "thresholds_match_probability": {
+    "auto": 0.95
+  },
+  "proposed_tier": "none: Splink documents no clerical-review band (its threshold guides say to pick a threshold from labelled data), so the default config has no proposed tier",
+  "pairs_predicted": 1079,
+  "probability_two_random_records_match": 0.0006786205985373625
+}

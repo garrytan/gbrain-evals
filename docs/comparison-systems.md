@@ -317,6 +317,19 @@ and temporal reasoning (−6.9). On the descriptive LongMemEval-S rows it scores
 only and 69.8% for gbrain with facts, and on LoCoMo10 83.3% against 85.0% and 93.3%. A later head (`d7d7686de`) was checked
 equivalent in retrieval on public dev conversations; the sealed set was not rerun.
 
+## Joining duplicate records: a matched stress test
+
+The [duplicate-finder head-to-head](benchmarks/2026-11-18-entity-dedupe-h2h.md) gives gbrain and four memory
+systems the same 2,106 synthetic pages. At `0a008fe5`, gbrain's proposed tier links 360 of 676
+different-entity pairs. That's fewer than the automatic tiers of `ext-extract-first` (422),
+`ext-memory-bank` (423) and patched default `ext-graph-pipeline` (438), within the recall margin across
+the two types combined. The company-only comparisons don't clear both tests. The temporal-graph system
+finds more duplicates, and the tuned pipeline makes fewer false merges with more unresolved pages. The
+report separates suggested links from applied links; the rates are for planted hard cases, not field rates.
+
+gbrain is Garry Tan's own project. Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a
+former president of Y Combinator. Garry Tan runs Y Combinator. ([Disclosures](disclosures.md))
+
 ## Adding a comparison that an engineer can use
 
 Record the question the benchmark asks, dataset revision and subset, result budget and unit, model and software versions, score definition and denominator, error handling, and whether results were selected after inspecting test failures. Link the primary source with an access date. Keep changed results as dated entries so readers can tell a new run from a corrected label.
@@ -351,6 +364,11 @@ before A6b use the former environment variable names. The hashes of every file A
 [rename-a6b.json](benchmarks/2026-10-06-oss-memory-shootout/rename-a6b.json).
 
 ## Changelog
+
+### 2026-11-20: Add the duplicate-record comparison
+
+The comparisons page adds the [counted duplicate-finder test](https://github.com/garrytan/gbrain-evals/commit/13ccd7f59ef9aa3f6e1a815464fe25560ec88fd8) to separate entity merging
+from retrieval and point readers to the exact versions, settings and observed errors.
 
 ### 2026-11-20: Redis's published LongMemEval row
 

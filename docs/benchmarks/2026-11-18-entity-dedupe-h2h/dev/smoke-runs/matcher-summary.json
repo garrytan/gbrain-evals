@@ -1,0 +1,340 @@
+{
+  "blocking": {
+    "smoke": {
+      "pages": 69,
+      "pairs": 363,
+      "pairs_per_page": 5.260869565217392,
+      "crowded": []
+    },
+    "per_family_5": {
+      "pages": 345,
+      "pairs": 4813,
+      "pairs_per_page": 13.950724637681159,
+      "crowded_keys": 1,
+      "without_given_name_tokens": {
+        "pairs": 3393,
+        "pairs_per_page": 9.834782608695653
+      }
+    },
+    "per_family_10": {
+      "pages": 690,
+      "pairs": 17138,
+      "pairs_per_page": 24.83768115942029,
+      "crowded_keys": 3,
+      "without_given_name_tokens": {
+        "pairs": 11374,
+        "pairs_per_page": 16.484057971014494
+      }
+    },
+    "per_family_20": {
+      "pages": 1380,
+      "pairs": 47765,
+      "pairs_per_page": 34.61231884057971,
+      "crowded_keys": 14,
+      "without_given_name_tokens": {
+        "pairs": 24547,
+        "pairs_per_page": 17.78768115942029
+      }
+    },
+    "max_block": 50
+  },
+  "prompt": "Do these two pages describe the same real-world person or company? Answer yes, no or unsure, then one line of reasons.",
+  "pairs_sent": 363,
+  "openai:gpt-6.2-sol": {
+    "slot": "matcher-gpt-6.2-sol",
+    "calls": 363,
+    "errors": [],
+    "verdicts": {
+      "yes": 21,
+      "no": 327,
+      "unsure": 15,
+      "unparsed": 0
+    },
+    "wall_s": 101.889844094,
+    "usage": {
+      "calls": 365,
+      "input": 55069,
+      "cached": 0,
+      "cache_write": 0,
+      "output": 9127,
+      "refused": 0,
+      "by_model": {
+        "openai:gpt-6.2-sol": {
+          "calls": 365,
+          "input": 55069,
+          "cached": 0,
+          "output": 9127
+        }
+      }
+    },
+    "sanity_score": {
+      "auto": {
+        "false_merge": {
+          "k": 9,
+          "n": 20,
+          "rate": 0.45,
+          "ci95": [
+            0.2581978582556243,
+            0.6579146575496577
+          ]
+        },
+        "precision": {
+          "k": 14,
+          "n": 23,
+          "rate": 0.6086956521739131,
+          "ci95": [
+            0.4078552239138171,
+            0.7784237720752205
+          ]
+        },
+        "recall": {
+          "k": 14,
+          "n": 14,
+          "rate": 1,
+          "ci95": [
+            0.7846891972623643,
+            1
+          ]
+        },
+        "b3": {
+          "precision": 0.8888888888888891,
+          "recall": 1,
+          "f1": 0.9411764705882354
+        }
+      },
+      "auto+proposed": {
+        "false_merge": {
+          "k": 17,
+          "n": 20,
+          "rate": 0.85,
+          "ci95": [
+            0.6395811352592431,
+            0.9476312541037835
+          ]
+        },
+        "precision": {
+          "k": 14,
+          "n": 46,
+          "rate": 0.30434782608695654,
+          "ci95": [
+            0.1907984080276724,
+            0.4480564644840765
+          ]
+        },
+        "recall": {
+          "k": 14,
+          "n": 14,
+          "rate": 1,
+          "ci95": [
+            0.7846891972623643,
+            1
+          ]
+        },
+        "b3": {
+          "precision": 0.7053140096618357,
+          "recall": 1,
+          "f1": 0.8271954674220962
+        }
+      }
+    },
+    "usd_per_pair": 0.00055
+  },
+  "anthropic:claude-opus-5-5": {
+    "slot": "matcher-claude-opus-5-5",
+    "calls": 363,
+    "errors": [],
+    "verdicts": {
+      "yes": 17,
+      "no": 338,
+      "unsure": 8,
+      "unparsed": 0
+    },
+    "wall_s": 174.40249073799998,
+    "usage": {
+      "calls": 365,
+      "input": 85754,
+      "cached": 0,
+      "cache_write": 0,
+      "output": 37513,
+      "refused": 0,
+      "by_model": {
+        "anthropic:claude-opus-5-5": {
+          "calls": 365,
+          "input": 85754,
+          "cached": 0,
+          "output": 37513
+        }
+      }
+    },
+    "sanity_score": {
+      "auto": {
+        "false_merge": {
+          "k": 4,
+          "n": 20,
+          "rate": 0.2,
+          "ci95": [
+            0.08065766257979806,
+            0.41601743225189364
+          ]
+        },
+        "precision": {
+          "k": 14,
+          "n": 18,
+          "rate": 0.7777777777777778,
+          "ci95": [
+            0.5478541568378739,
+            0.9099907189139831
+          ]
+        },
+        "recall": {
+          "k": 14,
+          "n": 14,
+          "rate": 1,
+          "ci95": [
+            0.7846891972623643,
+            1
+          ]
+        },
+        "b3": {
+          "precision": 0.9516908212560388,
+          "recall": 1,
+          "f1": 0.9752475247524752
+        }
+      },
+      "auto+proposed": {
+        "false_merge": {
+          "k": 10,
+          "n": 20,
+          "rate": 0.5,
+          "ci95": [
+            0.2992980081982123,
+            0.7007019918017877
+          ]
+        },
+        "precision": {
+          "k": 14,
+          "n": 27,
+          "rate": 0.5185185185185185,
+          "ci95": [
+            0.3398561575495229,
+            0.6925677302378153
+          ]
+        },
+        "recall": {
+          "k": 14,
+          "n": 14,
+          "rate": 1,
+          "ci95": [
+            0.7846891972623643,
+            1
+          ]
+        },
+        "b3": {
+          "precision": 0.8405797101449276,
+          "recall": 1,
+          "f1": 0.9133858267716535
+        }
+      }
+    },
+    "usd_per_pair": 0.003
+  },
+  "particle:particle-1": {
+    "slot": "matcher-particle-1",
+    "calls": 363,
+    "errors": [],
+    "verdicts": {
+      "yes": 21,
+      "no": 332,
+      "unsure": 10,
+      "unparsed": 0
+    },
+    "wall_s": 171.306783184,
+    "usage": {
+      "calls": 365,
+      "input": 84506,
+      "cached": 0,
+      "cache_write": 0,
+      "output": 53553,
+      "refused": 0,
+      "by_model": {
+        "particle:particle-1": {
+          "calls": 365,
+          "input": 84506,
+          "cached": 0,
+          "output": 53553
+        }
+      }
+    },
+    "sanity_score": {
+      "auto": {
+        "false_merge": {
+          "k": 9,
+          "n": 20,
+          "rate": 0.45,
+          "ci95": [
+            0.2581978582556243,
+            0.6579146575496577
+          ]
+        },
+        "precision": {
+          "k": 14,
+          "n": 23,
+          "rate": 0.6086956521739131,
+          "ci95": [
+            0.4078552239138171,
+            0.7784237720752205
+          ]
+        },
+        "recall": {
+          "k": 14,
+          "n": 14,
+          "rate": 1,
+          "ci95": [
+            0.7846891972623643,
+            1
+          ]
+        },
+        "b3": {
+          "precision": 0.8888888888888891,
+          "recall": 1,
+          "f1": 0.9411764705882354
+        }
+      },
+      "auto+proposed": {
+        "false_merge": {
+          "k": 15,
+          "n": 20,
+          "rate": 0.75,
+          "ci95": [
+            0.531299122381256,
+            0.8881382985923343
+          ]
+        },
+        "precision": {
+          "k": 14,
+          "n": 32,
+          "rate": 0.4375,
+          "ci95": [
+            0.2816533111504036,
+            0.6067440886314801
+          ]
+        },
+        "recall": {
+          "k": 14,
+          "n": 14,
+          "rate": 1,
+          "ci95": [
+            0.7846891972623643,
+            1
+          ]
+        },
+        "b3": {
+          "precision": 0.7681159420289856,
+          "recall": 1,
+          "f1": 0.8688524590163935
+        }
+      }
+    },
+    "usd_per_pair": 0.00021
+  }
+}

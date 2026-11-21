@@ -11,9 +11,15 @@
  *   bun scripts/test-timings.ts <dir> [<dir>...]
  */
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
+import { isPytestReport } from './ci-tested-tree.ts';
 
 export interface Timings { version: 1; files: Record<string, number> }
+
+/** The Bun JUnit reports under one run's download directory: every .xml file except the harness pytest report, which has no per-file times. */
+export function bunReports(dir: string): string[] {
+  return readdirSync(dir, { recursive: true, encoding: 'utf8' }).filter(f => f.endsWith('.xml') && !isPytestReport(basename(f))).sort();
+}
 
 /** Each test file's time in ms from one Bun JUnit report: the time of its top-level <testsuite>, not its describes. */
 export function fileTimes(xml: string): Record<string, number> {
@@ -52,7 +58,7 @@ if (import.meta.main) {
     process.exit(2);
   }
   const runs = dirs.map(dir => {
-    const reports = readdirSync(dir, { recursive: true, encoding: 'utf8' }).filter(f => f.endsWith('.xml')).sort();
+    const reports = bunReports(dir);
     if (!reports.length) throw new Error(`${dir} holds no JUnit reports`);
     return Object.assign({}, ...reports.map(f => fileTimes(readFileSync(join(dir, f), 'utf8')))) as Record<string, number>;
   });

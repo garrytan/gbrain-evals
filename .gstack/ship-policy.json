@@ -47,6 +47,13 @@
     "docs/benchmarks/2026-11-17-readme-baselines/**/*.csv",
     "docs/benchmarks/2026-11-17-readme-baselines/**/*.jsonl",
     "docs/benchmarks/*-engine-bench/correctness/work/*/receipt.json",
-    "docs/benchmarks/*-engine-bench/speed/*speed-*-10000.json"
+    "docs/benchmarks/*-engine-bench/speed/*speed-*-10000.json",
+    "docs/benchmarks/2026-11-19-cat40-hard-newest/n[12]/*/**",
+    "docs/benchmarks/2026-11-19-cat40-hard-old-build-control/n[12]/*/**",
+    "docs/benchmarks/2026-11-18-entity-dedupe-h2h/counted/**/*.json",
+    "docs/benchmarks/2026-11-18-entity-dedupe-h2h/counted/**/*.jsonl",
+    "docs/benchmarks/2026-11-18-entity-dedupe-h2h/dev/**/*.json",
+    "docs/benchmarks/2026-11-18-entity-dedupe-h2h/dev/**/*.jsonl",
+    "docs/comparison-systems/*/entity-h2h-smoke-run.json"
   ]
 }

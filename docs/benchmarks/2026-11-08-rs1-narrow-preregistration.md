@@ -23,8 +23,8 @@ stopped at stage 0 on 2026-11-04 because it did not fit the $2,000 planning line
 ## The question
 
 On million-token conversations that no system and no gbrain contributor has seen, written by BEAM's own generator: is
-gbrain at its stable release, reading 8,000 tokens of memory, at most 3.5 points behind each of the two leading memory
-servers, under both BEAM's judge and frontier judges?
+gbrain's newest release at launch, reading 8,000 tokens of memory, at most 3.5 points behind each of the two leading
+memory servers, under both BEAM's judge and frontier judges?
 
 That is a non-inferiority question. It asks whether gbrain is in the leading group, not whether it is first.
 
@@ -163,7 +163,7 @@ Systems are named by role. Product identities, images by digest, locks and capab
 
 | Row | Cell id | System and pin | Configuration | Role |
 |---|---|---|---|---|
-| gbrain | `rs1.gbrain-defaults.rs1-stable`, arm `p` | gbrain at the `stable` tag, `27f8b9d6287c2ba635532c7d3bc015c50e1d769b` (`stable-v0.60.593.0`), not `latest-stable` | `rs1-stable`: F6's brain build (`GBRAIN_F6=1`: gbrain's default fact extraction, the quiesce barrier and the fact index) with F6's arm P retrieval (`query` limit 50, token budget 5,500, facts block on), packed to 8,000 cl100k tokens | subject |
+| gbrain | `rs1.gbrain-defaults.rs1-stable`, arm `p` | gbrain's newest release at wave A's launch, the highest version tag on gbrain's master: v0.60.740.0 (`82fdd00001833d0cbcc03c3952c3b5635d79dd92`), read on 2026-11-18 (amendment of 2026-11-18) | `rs1-stable`: F6's brain build (`GBRAIN_F6=1`: gbrain's default fact extraction, the quiesce barrier and the fact index) with F6's arm P retrieval (`query` limit 50, token budget 5,500, facts block on), packed to 8,000 cl100k tokens; serve's idle upkeep off (`GBRAIN_IDLE_UPKEEP=off`, amendment of 2026-11-16); the build records gbrain's safety-filter stops and unparsed pages instead of failing the realization (`GBRAIN_F6_BUILD_PROBLEMS=record`, amendment of 2026-11-19) | subject |
 | memory-bank server | `rs1.ext-memory-bank.recipe`, `component-b8000` | bundle lock `f54d89df`, capabilities `23a033f4` | `recipe`, exactly as F6 and Q1 ran it, 8,000 tokens | comparator |
 | extract-first server | `rs1.ext-extract-first.common`, `component-b8000` | bundle lock `9777b7a8`, capabilities `0acaff3a` | `common`, Q1's BEAM headline configuration, exactly as F6 and Q1 ran it, 8,000 tokens | comparator |
 | no-memory floor | `rs1.baseline-none.baseline`, `component-b8000` | harness baseline | the question alone | floor, never part of a claim |
@@ -173,17 +173,22 @@ running inside the product under a per-conversation runaway cap (`GBRAIN_F6_EXTR
 under test, not a reader and not a model under test. The cell definitions refuse an F6-mode gbrain cell with no extract
 cap or a zero ingest rate.
 
-**Why the stable tag.** gbrain's `latest-stable` ref is its alpha channel; the `stable` tag is the soaked release. The
-new configuration id `rs1-stable` keeps F6's `f6-master` manifest byte-identical. Before stage 1, a free, keyless
-compatibility smoke ran the stable sha through the gbrain-defaults stack in F6 mode.
+**Why the newest release.** The claim is about the gbrain people install, so the arm measures gbrain's newest release
+when wave A launches: the highest version tag on gbrain's master, read with
+`git ls-remote --tags https://github.com/garrytan/gbrain.git`. That build is then frozen for wave A, wave B and every
+re-read, so every counted number comes from one commit, and the results record it. The configuration id `rs1-stable` is
+kept as a name, so cell ids and receipts don't change; it no longer means gbrain's `stable` tag.
 
-**Smoke result.** On 2026-11-08 the repository's keyless F6 Docker test (`test/eval/gbrain-defaults-f6-docker.test.ts`,
-run from a copy with its pin set to `27f8b9d6`, with every provider key unset) built gbrain at the stable sha on
-`oven/bun:1.4.4-slim`, which meets gbrain's `engines` floor of bun 1.4.4. Against the fake upstream it brought the
-gbrain-defaults stack up in F6 mode, ingested two sessions, ran extraction under the recorded cap with the safe-chunks
-repair and the fact index, and answered a query with arm P's settings (`query`, limit 50, token budget 5,500, facts block
-on) that returned a fact first. All 4 tests passed (33 checks, 143 seconds), with no incompatibility in the shim's F6 mode.
-The smoke measures neither ingest cost nor answer quality; stage 1 measures both.
+**Smoke result.** Before any paid call at a new pin, a free, keyless compatibility smoke runs that sha through the
+gbrain-defaults stack in F6 mode: the repository's keyless F6 Docker test (`test/eval/gbrain-defaults-f6-docker.test.ts`),
+run from a copy with its pin set to that sha and every provider key unset. On 2026-11-16 at v0.60.733.0 (`6ce7195b`) it
+built gbrain on `oven/bun:1.4.4-slim`, which still meets gbrain's `engines` floor of bun 1.4.4. Against the fake upstream it
+brought the gbrain-defaults stack up in F6 mode, ingested two sessions, ran extraction under the recorded cap with the
+safe-chunks repair and the fact index, and answered a query with arm P's settings (`query`, limit 50, token budget 5,500,
+facts block on) that returned a fact first. All 4 tests passed (33 checks, 134 seconds). At wave A's launch pin,
+v0.60.740.0 (`82fdd000`), it passed the same 4 tests (33 checks) with `GBRAIN_IDLE_UPKEEP=off` (amendment of 2026-11-18),
+and again from `0eb85687` with `GBRAIN_F6_BUILD_PROBLEMS=record` as well (amendment of 2026-11-19).
+The smoke measures neither ingest cost nor answer quality.
 
 **Why arm P.** On F6's S2b (24 sealed BEAM-1M conversations at gbrain `0ccf2bdd`), arm P scored highest of the MCP
 query arms ([F6 scoreboard](2026-10-29-f6-current-master/scoreboard.md)).
@@ -445,15 +450,19 @@ The yield gate (2 or more drops in the first 5) also pauses minting and goes to 
   the custodian confirms the custody host's key belongs to it.
 - **Custody host readiness.** mint.sh needs uv and Python 3.12 on the custody host, and the Gemini billing probe there
   has not run. Both are mint blockers.
-- **The stable tag moving.** If the `stable` tag moves before the freeze merges, the new sha is re-read and pinned in
-  this file before it freezes.
+- **A newer gbrain release before launch.** gbrain releases several times a day. Wave A's launch reads the tag again
+  and, if a newer release exists, re-pins to it by a dated amendment, with the keyless smoke at that sha, before any paid
+  call. After that the pin doesn't move.
+- **A build the arm's settings weren't chosen on.** Arm P's settings and F6's 0.938 fill rate come from gbrain
+  `0ccf2bdd`. The delivered-context gate applies at the new build as before: a mean fill rate under 0.90 makes gbrain's
+  comparisons descriptive.
 - **Minted versus BEAM's own conversations.** Minted chats may vary differently from BEAM's sealed ones. The pilot
   measures this too.
 
 ## What it can and can't claim
 
-**If it passes:** on newly minted 1M-token conversations written by BEAM's generator from new topics, gbrain at the
-stable tag (`27f8b9d6`), reading 8,000 tokens, is at most 3.5 points behind each of the two leading servers, the
+**If it passes:** on newly minted 1M-token conversations written by BEAM's generator from new topics, gbrain's
+newest release at wave A's launch (the version and commit the results record), reading 8,000 tokens, is at most 3.5 points behind each of the two leading servers, the
 memory-bank server and the extract-first server, under both BEAM's judge and frontier judges, read by Opus 5.5, GPT-6.1
 Sol and particle-1. That puts gbrain in the leading group.
 
@@ -472,7 +481,8 @@ the headline.
 
 - **Freeze commit:** PR 1's merge commit.
 - **verdict.ts SHA-256:** PR 2 cites it at the freeze commit.
-- **gbrain:** `27f8b9d6287c2ba635532c7d3bc015c50e1d769b` (`stable-v0.60.593.0`), re-read on freeze day.
+- **gbrain:** the newest release at wave A's launch, read then and frozen for every counted cell (see the 2026-11-16
+  amendment). At the freeze it was `27f8b9d6287c2ba635532c7d3bc015c50e1d769b` (`stable-v0.60.593.0`).
 - **Server bundles:** memory-bank lock `f54d89df`, capabilities `23a033f4`; extract-first lock `9777b7a8`, capabilities
   `0acaff3a`.
 - **RS1 manifest:** `eval/decisions/datasets/rs1-manifest.json`, filled by the custodian after validation, with the
@@ -482,8 +492,813 @@ Nothing above changes after the freeze except by a dated amendment below.
 
 ## Amendments
 
-None yet. The first expected one regenerates wave B's cells once N_final is known. The pricing rerun after stage 1 is
-recorded here too.
+Wave B's regeneration once N_final is known and the pricing rerun after stage 1 are recorded here too.
+
+### 2026-11-08: six harness fixes before any counted run
+
+These land on the results branch before any counted run. Each has a test that fails on the code at `325a1c04` (the
+sixth, on the code at `572109ba`) and passes at its commit. They change no bar, arm, reader, judge, margin or cap
+value.
+
+1. **Wave A's run identity survives wave B's regeneration** (`e1320de4`). The gbrain cell's extraction cap,
+   `GBRAIN_F6_EXTRACT_CAP_USD`, is part of the run identity verdict.ts compares, and it was derived from the RS1 set's
+   conversation count and token total. Regenerating the cells at a new N_final could move it from $4 to $3, $5 or $6,
+   and verdict.ts would then refuse wave A's receipts. It now sizes from a fixed figure, the length gate's centre of
+   1.07M tokens per conversation, not read from the filled set, so it stays $4. The test regenerates the cells at every
+   N_final from 20 to 33, with the set's token total unchanged and at 0.85, 1.00 and 1.15 times 1.07M per conversation,
+   and checks that every field verdict.ts compares for wave A's units (the run config without launch-control fields,
+   `dataset`, `scheduled_sha256` and `limit`) is byte-identical to the committed `rs1-cells.json`. It proves that
+   changing the set's size or token total cannot refuse wave A. It does not cover hand edits to other cell fields, which
+   a regeneration amendment must not make.
+2. **No false n/a cost** (`ab9cee75`). A reader whose only answers in a unit are failed retrievals (no context, zero
+   usage, no reader call) now adds $0 there instead of making its cost per question n/a. A reader with an answer that
+   read a context and no meter row is still unmetered, so its cost stays n/a.
+3. **particle-1 re-reads are tied to the filled manifest** (`b866f375`). A re-read receipt records the dataset it
+   loaded (the manifest's SHA-256 and each file's SHA-256), verdict.ts checks it against the filled manifest as it
+   checks unit receipts, and a beam-rs1 re-read is refused while the manifest is unfilled.
+4. **The check-in projection needs the spend to date** (`074901f9`). pricing.ts exits 2 when `--kept-done` or
+   `--stage1-done` is given without `--spent-usd`.
+5. **check-early-stop says when it tested nothing** (`baf8e082`). It exits 3 (untested) when it checked no
+   conversation or only early-stopped ones. It can only test mints that answered every batch: an early-stopped mint's
+   chat already ends at the stop, so its files match by construction.
+6. **The launch preflight prices particle-1** (`f076a992`). The preflight priced every model that was not Anthropic or
+   Voyage at OpenAI's address, so it refused every RS1 campaign, which names particle-1, with `MODEL_UNPRICED` before
+   any lease. Stage 1's first launch stopped there at $0. particle-1 is now priced at Particle's own address.
+
+### 2026-11-08: the code counted runs start from
+
+Counted runs start from `80518b253bd09c4802d23448e301ecab4dd77c97` on the results branch, the pushed commit that holds
+all six fixes above. At that commit, `eval/runner/q1/cells/rs1-cells.json` has SHA-256
+`d97c13018693b5fefaf537df7efb1e37df96e2afccacb5fcdadfb080b81bfd33`. Later docs-only commits don't change it. Each run
+records the commit it actually ran, and a run from any other code needs a further amendment.
+
+### 2026-11-08: pricing rerun after stage 1
+
+Stage 1 ran from `80518b25` and completed every row and re-read; the run log in the results file records it.
+`eval/runner/rs1/pricing.ts` was rerun with gbrain's measured `rs1-stable` ingest rates in place of F6's f6-master
+placeholders:
+
+- **VM time:** 1.771 VM hours per million tokens (from 12,591 s for 1,974,748 tokens), against 1.92.
+- **API rate:** taken from the gbrain row's metered ingest spend, and below the placeholder.
+
+The run used `--stage1-done` and `--spent-usd` set to the window's ledger total. The check-in projection at N = 28
+stays under its line, so pricing.ts exited 0 and there is no RS1_CHECKIN. The measured rates lower the expected all-in
+spend and the ceiling at N = 33. The memory-bank and extract-first servers each ingested the same 1,974,748 tokens at
+metered rates below their placeholders, but pricing.ts keeps those placeholders, so their share of the model stays
+conservative. Dollar amounts are kept out of this public file. No bar, arm, reader, judge, margin or cap changes.
+
+### 2026-11-08: R78, the gating judges and the judge check
+
+R78 (GBEV-3, 2026-11-08, from Garry: "Use Astra vs opus") replaces the frontier judges and adds a judge check before any
+counted run. GBEV-3 answered the plan's gate with its recommendations (reply "rec e1", gate_rev 1, rec_hash
+29f49b920e87), which adds d1a, d2a, d3a and e1 below. This amendment was decided and written before any RS1
+conversation was minted. Stage 1, on public data, was running at the code of `e07ddfc6` when R78 was decided, and
+nothing here uses a stage 1 result. Each change below has a test that fails on the code before its commit and passes at
+it, except the Q1 and F6 manifest pin in item 1, a guard that passes at both.
+
+1. **Gating judges** (`6fb905eb`). The frontier judge is now a gating judge, picked by the reader's family as before:
+
+   | Reader | Gating judge | Bridge judge (descriptive) |
+   |---|---|---|
+   | claude-opus-5-5 | gpt-6-astra | gpt-4.1-mini |
+   | gpt-6.1-sol | claude-opus-5-5 | gpt-4.1-mini |
+   | particle-1 | claude-opus-5-5 | gpt-4.1-mini |
+
+   No gating judge grades its own family's answers (GST-767), and particle-1 never judges. The map is RS1's alone
+   (`rs1JudgeOf` in `eval/runner/q1/cells/rs1.ts`, `3479f702`): every RS1 per-reader arm carries it as
+   `frontier.judge_by_reader`, and the cell definitions refuse an unmapped reader or a same-family mapping. The shared
+   `frontierJudgeOf` is unchanged from `e07ddfc6`, so the crew's BEAM judge rule (gpt-6.1-sol judges Claude and particle-1
+   rows) still holds for any other benchmark. Q1's and F6's cells are unchanged: no Q1 or F6 arm judges per reader, and a
+   test pins both manifests to the digests they had before R78 (`a922376b`).
+2. **The verdict rests on the gating view alone** (d1a; `81c4d24c`). The primary is now two tests, gbrain against the
+   memory-bank server and against the extract-first server, each under the gating view, and it passes only when both
+   lower bounds are above -3.5. The gpt-4.1-mini bridge view is reported beside it with its own bounds and never gates.
+   The common question set and the 5% drop cap are built from the gating view; the bridge view is scored on its own
+   subset with its own drop counts, so a missing bridge judgment can't drop a question from the verdict. The
+   secondaries, the worst-case sensitivity, the bootstrap agreement flag and the pilot's SDs and 2 x 2 correlation all
+   use the gating view. **The claim narrows**: "under both BEAM's judge and frontier judges" in "The question" and in
+   "What it can and can't claim" now reads "under the Astra/Opus judge view". The pre-pilot joint N under two tests is
+   24, 27 and 32 conversations (optimistic, central, pessimistic; `bun eval/runner/rs1/power.ts`, seed 20261108),
+   against 28 central under four tests. pricing.ts keeps N = 28 for its expected figure, and the pilot sets N_final as
+   before.
+3. **Judge settings** (e1; `ddf22396`, `e5bf6de5`). Both gating judges run at medium reasoning effort with an 8,000-token
+   output cap, in the judge check and in counted judging alike. A reply cut off at the cap is a `judge_error` at once and
+   counts against the drop cap. Truncated, refused and filtered replies never enter the judge cache. The metering proxy's
+   judge route admits 8,000 output tokens for these two judges only; every other judge keeps its 2,048-token cap, and Q1
+   and F6 campaigns keep the default caps.
+4. **What every judgment records** (`956dcae8`). Each judgment on a per-reader arm records its view (gating or
+   descriptive), the model versions the provider returned, and, for a gating judgment, the settings it was sent at, its
+   call count and its cache hits. verdict.ts refuses to count a gating judgment graded by the reader's family, by a judge
+   the map does not name, without a recorded view, without the pinned settings, or without a model version, and names
+   each such row.
+5. **Paired reporting** (d3a; `05b8a15a`). Every comparison (overall, per reader, per ability; each server; each view)
+   is reported as gbrain minus the server on the same questions: the mean paired difference over conversation means
+   with its two-sided 95% t interval on n - 1 degrees of freedom and, beside it, the labelled 90% interval, whose lower
+   end is the one-sided bound the verdict uses. Each row counts the questions where gbrain scored lower, higher and tied
+   (on the three-reader mean per question; on that reader's score for a reader row) and reads "no measurable difference"
+   when the 95% interval includes zero. Subgroup rows are descriptive, with no multiplicity correction, and a row with
+   fewer than 5 conversations reads "too few conversations".
+6. **The judge check** (R78 point 1, d2a; `d6e2a1f5`, `eval/runner/rs1/judge-check.ts`), on public data only, before
+   wave A:
+   - **Pool, about 160 answers, seeded.** (a) 80 of stage 1's real answers from all four rows and all three readers,
+     stratified by row, reader and stage 1's bridge outcome; (b) 40 BEAM-1M dev gold answers that pass the gold screen
+     (each rubric item's content appears in the gold; every exclusion is recorded); (c) 40 corruptions of screened gold,
+     each aimed at one rubric item. On the public BEAM-1M dev conversations the screen keeps 89 of 220 questions.
+     Event-ordering, instruction-following and preference-following questions stay out of (b) and (c), because their
+     score is not a rubric mean or their gold describes an answer instead of being one; their rubric calls stay in (a).
+   - **Corruptions are scripted, not written by a model, and weighted toward plausible wrong answers.** This differs
+     from the plan, which had gemini-3.8-flash write the wrong-entity and contradicted-fact edits; GBEV-49 asked for
+     scripted edits with no new model (`1e8b7422`). Each edit targets one named rubric item. The wrong-value
+     edits shift a number or date in the item (an hour stays an hour, a day stays a day), swap a name in it for a name
+     from another question's gold in the same conversation, replace the item's value with a value of the same kind from
+     another question's gold in the same conversation (the contradiction), or negate the item's statement. The rest drop
+     the item, replace the answer with an abstention or, on abstention questions, write an invented answer. Kinds take
+     turns, seven wrong-value turns, two drops and one abstention in ten, and a question that can't take its turn's kind
+     takes another wrong-value edit before a drop. The script checks that every edit removes its target item's content,
+     keeps every other item's and leaves at least 20 letters. At seed 20261108 on the public BEAM-1M dev conversations
+     the 40 come out as 18 wrong-value edits (10 number shifts, 4 contradictions, 3 name swaps, 1 date shift), 9 drops,
+     3 abstentions and 10 invented answers. No negation fits at this seed, and some name swaps cross entity types (a
+     product name for a person's).
+   - **Unit and split.** The rubric-item judgment, pass at a score of 1.0 and fail below it; weighted kappa on the 0,
+     0.5 and 1 scale is reported beside it. Construction labels: every item of a gold answer should pass; in a
+     corruption the targeted item should fail (every item, for an abstention or an invented answer) and the rest pass.
+   - **Grading.** gpt-6-astra and claude-opus-5-5 grade every answer with the production request at the pinned
+     settings; gpt-4.1-mini grades every answer with its protocol request, descriptively. Every call goes through the
+     judge cache and one ledger lease.
+   - **Labelled set.** The items Astra and Opus grade the same way. It should hold at least 40 items and 15 of each
+     class; a class below 15 reports n/a for its per-class numbers, and every shortfall goes to GBEV-3.
+   - **Gates.** (i) The Astra-Opus Cohen's kappa on every item both graded, at least 0.6; (ii) each gating judge's kappa
+     against the construction labels (classes b and c), at least 0.6; and each gating judge's truncation rate, at most
+     1%. Point estimates gate; their 95% intervals are reported.
+   - **Stop rule.** Any failed gate stops wave A (the check exits 3 with `JUDGE_CHECK_STOP`), and every number goes to
+     GBEV-3. Moving particle-1's rows to Astra is an option GBEV-3 may choose after the check, never applied
+     automatically, and it is not built yet.
+   - **Reported for every judge:** catch rate on bad items, false-fail rate on good items, and kappa against the
+     labelled set, overall and by class, with 95% intervals (Wilson for rates, the large-sample kappa SE), plus each
+     judge's errors, truncations, cache hits and model versions.
+   - **Licence.** BEAM's data is CC BY-SA 4.0. The published `judge-check.json` and `judge-check.md` hold ids, hashes,
+     labels and scores, never answer, gold or corruption text.
+7. **Money: two budget lines** (R78 point 9, GBEV-3 from Garry, 2026-11-08: "If we use Astra, then feel free to double
+   the eval cost. It's fine."; `97c45d18`). The **Astra line** is the whole judge check (every grader's calls) plus
+   gpt-6-astra's share of counted judging. It is priced on its own, reported beside the rest, and sits outside the
+   check-in. Everything else is the **other line**, Opus's and gpt-4.1-mini's counted judging included. The check-in
+   compares the other line's projected spend against its fixed line, as before, and goes to GBEV-3 when the projection
+   passes it. Each gating judge is priced at its own ledger rate, at 3 calls of 900 input and 582 output tokens per
+   answer, a figure back-solved from GST-1365's census and not yet measured for Astra. The judge check is priced from
+   its planned calls (826 per judge) at each grader's rate, and its paid-window cap is that estimate plus a 50% runaway
+   margin. The cells' estimate in `rs1-cells.json` and the caps derived from it are regenerated by their generator, and
+   stage 1 still fits its fixed cap. No provider prompt caching is added: the judge bodies stay as they are, and
+   pricing assumes no cache discount. After the judge check, pricing.ts reruns with the check's measured tokens and
+   `--spent-usd` and `--astra-spent-usd` from the ledger.
+8. **Order.** The judge check runs in its own paid window. Wave A waits on the check passing, the Voyage check, and
+   GBEV-3's go if the check-in projection passes its line.
+9. **The code counted runs start from changes.** These commits change `rs1-cells.json`, so the commit and digest
+   recorded in the amendment above no longer apply. A further amendment records the pushed commit and the new
+   `rs1-cells.json` SHA-256 before any counted run.
+
+### 2026-11-08: the code counted runs start from, after R78
+
+The R78 commits change `rs1-cells.json`, so the commit and digest in "the code counted runs start from" above no longer
+apply. Counted runs, and the judge check before them, start from `8f3d632bc9eb0e77eae9e7d0df4eadf510e3fa88` on the results
+branch. That pushed commit holds the R78 changes, the stage 1 log, and two judge-check fixes from the scoped review: a
+keyless rehearsal and a paid check never share an output directory, and a directory with judgments but no record of
+which kind wrote them is refused. At that commit, `eval/runner/q1/cells/rs1-cells.json` has SHA-256
+`6fc487d7909d5b8e26f1c0254b6cea656a6b654af104760ceec9bb03bcb891e7`. Later docs-only commits don't change it. Each run
+records the commit it actually ran, and a run from any other code needs a further amendment.
+
+### 2026-11-08: pre-wave fixes, and the code counted runs start from
+
+Seven fixes land on the results branch before wave A (approved: "GO RS1-JC, fix f1–f6. Answered by agent:GBEV-3"; the
+re-read guard and the test preload were added inside the same round). Each has a test that fails on the code at
+`2151bf7a` and passes at its commit. None changes a bar, arm, reader, judge, margin or verdict rule.
+
+1. **No run or test reaches a real provider outside a granted paid window** (`d112aba6`, `29e7c70e`). The judge check
+   and the re-read runner refuse a run without `--keyless-upstream` unless it names `--paid-window` and
+   `--window-cap-usd`, and refuse a `--ledger-cap-usd` above that window cap. A bun test preload blanks every provider
+   key, and children that tests spawn get the blanked environment, including children started where a `.env` holds a
+   key.
+2. **Counted leases are sized at the pinned judge cap.** A counted cell's peak reservation prices its pinned gating
+   judges' output at their 8,000-token cap, as the metering proxy reserves it, instead of the default 2,048. This raises
+   the three system rows' leases; the counted block's cap is unchanged. Stage 1 ran before the judges were pinned, so
+   its cells keep the sizing they ran with, and a stage 1 rerun would need its sizing revisited in a new window.
+3. **The judge check takes paid stage 1 inputs only.** A `--stage1` root must carry an `upstream.json` marking a paid
+   re-read, or a campaign `lease-summary.json` that does not record a keyless upstream.
+4. **A rehearsal never reads as a pass.** `judge-check.ts report` exits 0 only for a paid check whose gates pass; a
+   keyless rehearsal, or an output with no keyless/paid marker, exits 4.
+5. **Published judge-check files carry no dollar fields.**
+6. **Gate (i) on cross-family items, reported beside it.** The judge check reports the Astra-Opus kappa without the real
+   answers read by either gating judge's own family, and each gating view's count of labelled real items (40 wanted).
+   Neither is a new gate.
+7. **Mixed judge snapshots are flagged.** verdict.ts reports every model version each gating judge returned, and flags a
+   judge that returned more than one at the top of the report. It refuses nothing and changes no verdict.
+
+Counted runs start from `29e7c70ed18e2a3218b390d10b00081c988019fd` on the results branch. At that commit,
+`eval/runner/q1/cells/rs1-cells.json` has SHA-256 `d89528cedf676bdceefa9948a1b3c7a23c8ba3a1c1799aa33b17bb4d4e4a64ab`.
+The judge check itself runs from `8f3d632b`, as recorded above; none of these fixes changes how it grades. Later
+docs-only commits don't change either. Each run records the commit it actually ran, and a run from any other code needs
+a further amendment.
+
+### 2026-11-08: the judge check passed
+
+The judge check (R78 point 1) ran on public stage 1 answers in its own paid window, from `8f3d632b`, on one VM with one
+ledger. Its report was written at `deafd34c`, which adds the reported-only fields below and drops dollar fields from the
+published files; it grades nothing differently. The published files are
+`docs/benchmarks/2026-11-08-rs1-narrow/results/judge-check.json` and `judge-check.md` (ids, hashes, labels and scores,
+no answer, gold or corruption text).
+
+- **Every gate passed.** (i) Astra-Opus Cohen's kappa 0.948 (95% 0.919 to 0.976) over all 505 rubric items. (ii) Each
+  gating judge's kappa against the construction labels 0.972 (95% 0.934 to 1.011) over 238 items, the same for both,
+  because Astra and Opus graded every constructed item the same way; all 13 of their disagreements are on real
+  answers. Truncation 0 of 160 judgments for each gating judge, and no judge errors.
+- **Labelled set:** 492 items (254 real, 110 gold, 128 corrupted), every class above 15. Each gating view holds well
+  over 40 labelled real items from the rows it grades in counted runs: Astra 79 of its 83 claude-opus-5-5-reader items,
+  Opus 175 of its 184 gpt-6.1-sol and particle-1 items, so no view needed more items.
+- **Catch and false-fail rates**, both gating judges alike: catch 99.5% (97.4% to 99.9%) of 211 bad items, false fails
+  0.4% (0.1% to 2.0%) of 281 good ones; on gold answers 0 of 110 false fails. gpt-4.1-mini (descriptive) caught 75.8%
+  (69.6% to 81.1%) and false-failed 5.0% (3.0% to 8.2%), with kappa 0.724 against the labelled set.
+- **Reported beside gate (i), not a gate:** Astra-Opus kappa on cross-family items only (no real answer read by either
+  gating judge's own family) 0.960 (95% 0.928 to 0.992) over 335 items.
+- **Judge model versions:** gpt-6-astra and claude-opus-5-5, one each, as the providers returned them.
+- **Tokens, measured.** At medium effort Astra spent few reasoning tokens: 3.6 per call on average (median 0, 95th
+  percentile 23); Opus's thinking averaged 23.6 (median 0, 95th percentile 174). No reply came near the 8,000-token
+  cap: the longest Astra reply was 242 output tokens and the longest Opus reply 781. A real answer took about 10 judge
+  calls per gating judge, because event-ordering questions add BEAM's equivalence calls, one per response line and
+  reference item until a match, on top of one rubric call per item. That is also why stage 1 shows more judge calls
+  than rubric items: there are no retries, extra samples or key collisions.
+- **Projection.** pricing.ts, rerun outside the repo with these measured tokens per judgment in place of the assumed
+  three calls, keeps the check-in projection under its line. pricing.json is unchanged in this commit.
+
+Wave A still waits on the Voyage check. The particle-1 fallback is not needed.
+
+### 2026-11-08: custody decisions and pre-wave custody fixes, and the code counted runs start from
+
+GBEV-3 answered the custody decisions with "rec, answered by agent:GBEV-3", and GBRA-108 answered the provider checks,
+relayed by GBEV-3. None of this changes a bar, arm, reader, judge, margin or verdict rule.
+
+- **Sealed cells (D1).** Counted cells run on ephemeral Ubicloud VMs launched from the custody host. Each VM is to receive
+  only its unit's pinned files, and provider keys only through the runner's `--pass`. Only counts, hashes and aggregates
+  come back. Each VM is deleted after its unit, and the custodian confirms that with the runner's `list`. The code at
+  the commit below falls short of the first part: the custody push (`rs1CustodyPush`) sends every file the filled
+  manifest pins, so a unit's VM also receives the kept conversations of other units. That is an open gap for GBEV-3.
+- **Storage (D2).** At rest, RS1 is an `age`-encrypted archive with two recipients: the custodian's key on the custody
+  host, and a recovery identity generated on the machine that holds the second encrypted copy, where it stays. The
+  custody record holds only the recipients' public keys and the archive's SHA-256; no thread, drive or repository holds
+  either private key. This preregistration sets no retention period or deletion procedure for either copy. GBEV-3
+  decides both before the test ends.
+- **Voyage.** GBRA-108 confirmed on 2026-11-09 that the custody host's Voyage key belongs to garrytan's Organization,
+  which the dashboard shows as opted out. The Voyage check is done.
+- **Gemini.** The custody host's existing Gemini key can't be shown to sit on a paid-tier project, so it never mints or
+  validates RS1. GBRA-108 made a dedicated key on project `gen-lang-client-0920143313` (Wintermute Openclaw, Tier 2),
+  ending `ydmA`, which the custodian loads as `RS1_GEMINI_API_KEY`. GBRA-108's check stands in for the custody-host
+  billing probe, so no probe is built: the key alone can't show which project serves it or that project's tier. At
+  RS1's end GBRA-108 deletes this key. No RS1 cell sends text to Gemini.
+
+Six fixes land on the results branch, each with a test that fails before its commit and passes at it:
+
+1. **Manifest fill** (`07ae574b`). `eval/custody/rs1/fill-manifest.ts` writes the filled manifest from the custody set
+   root and the kept list. Only ids, paths and SHA-256 hashes go into it. A refill only appends kept ids and files, and
+   keeps `n_final` once set. It refuses files that are links or resolve outside the root, and anything the `beam-rs1`
+   loader would refuse.
+2. **Paid-window guard** (`5e45d673`, `14e3a89d`). mint.sh, rs1_mint.py's real steps, validate.ts `--paid` and
+   `cell.ts run --manifest rs1` need `--paid-window <unit>` and `--window-cap-usd <n>` unless they run keyless or fake.
+   Without them, they exit 2 before any provider client exists. They also refuse a ledger program cap, run budget or
+   campaign lease above the window cap. Every RS1 campaign unit carries its window. Q1 and F6 are unchanged.
+3. **One Gemini key** (`3b9b74da`). Paid minting and validation take Gemini's key only from `RS1_GEMINI_API_KEY` and
+   never fall back to `GEMINI_API_KEY`. They refuse with exit 2 when it is empty.
+4. **Key scan** (`4620afdb`). The receipt secret scan matches `AQ.`-prefixed Google keys beside `AIza` ones, and
+   fingerprints `RS1_GEMINI_API_KEY`.
+5. **macOS** (`a63174f2`). mint.sh and beam-checkout.sh fall back to `shasum -a 256` where `sha256sum` is missing.
+6. **Measured judge rates** (`631bd23e`). pricing.ts takes each gating judge's measured cost per graded answer from the
+   judge check (`--astra-judge-usd-per-answer`, `--opus-judge-usd-per-answer`). gpt-6-astra stays on its own line,
+   outside the check-in. pricing.json is unchanged.
+
+Counted runs start from `14e3a89d8db80d74f35d079ef9db45531bacf296` on the results branch. At that commit,
+`eval/runner/q1/cells/rs1-cells.json` has SHA-256 `d89528cedf676bdceefa9948a1b3c7a23c8ba3a1c1799aa33b17bb4d4e4a64ab`,
+unchanged from the previous amendment. Later docs-only commits don't change either. Each run records the commit it
+actually ran, and a run from any other code needs a further amendment.
+
+### 2026-11-09: per-unit custody push, custody rulings, and the code counted runs start from
+
+GBEV-3 ruled on the custody brief's open points; each ruling below was answered by agent:GBEV-3, 2026-11-09. None
+changes a bar, arm, reader, judge, margin or verdict rule.
+
+- **Custodian.** The custodian is GBEV-53 (issue GST-1993), not GBRA-240, which is archived. Dyson links no gbrain-evals
+  folder, so a device thread was refused. GBEV-53 is a small cloud thread that does all custody work in a device
+  subagent on Dyson, so Dyson stays the custody host.
+- **Retention.** Both encrypted copies are kept until 180 days after the RS1 results PR merges. Then both archives and
+  both private keys are deleted, and the deletion is recorded. Keeping them longer needs a written note from GBEV-3.
+  This replaces the open retention point in the amendment above.
+- **Second-copy commands.** The custodian's `age` identity at `~/.config/gbrain-evals/rs1-custodian.key` on the custody
+  host and the `age` archive steps in the custodian brief are accepted as proposed.
+- **Verdict aggregates mode.** An aggregates mode for `eval/runner/rs1/verdict.ts` is accepted as a fix to make before
+  wave B. It is pending and not built.
+- **Haiku.** claude-haiku-5-5 stays validate.ts's second item validator, as the frozen preregistration says. It is
+  disclosed as a validator and is never a reader.
+
+**Per-unit custody push** (`de943504`). This closes the gap the amendment above recorded under D1. Each RS1 campaign unit
+now records its launch unit (`kept_unit`), and the launcher pushes that unit's VM only the pinned files of its five kept
+conversations and the filled manifest, naming them to the VM as `GBRAIN_EVALS_RS1_UNIT`. On the VM, setup's custody check
+verifies exactly those files, refuses any other conversation under the custody root and fails closed on a missing file
+or a hash mismatch, and the loader opens only those conversations. A test shows a unit-0 push carries no file of units 1
+to 3. Q1, F6, D8 and BEAM-10M pushes are unchanged. A campaign manifest planned from earlier code has no `kept_unit`, and
+its launches refuse.
+
+Counted runs start from `de9435047201fbc2e6a980b17f473ba6a576494a` on the results branch. At that commit, `eval/runner/q1/cells/rs1-cells.json` has
+SHA-256 `d89528cedf676bdceefa9948a1b3c7a23c8ba3a1c1799aa33b17bb4d4e4a64ab`, unchanged from the amendment above. Minting
+does not depend on this fix; counted cells do. Later docs-only commits don't change either. Each run records the commit
+it actually ran, and a run from any other code needs a further amendment.
+
+### 2026-11-09: verdict aggregates mode, and the code the final verdict runs from
+
+GBEV-3 accepted an aggregates mode for `eval/runner/rs1/verdict.ts` as a fix to make before wave B (amendment above). It
+is built in `c3b3a85e`, with one review fix in `d927c88f`. It changes no bar, arm, reader, judge, margin or verdict rule,
+and no number the verdict computes.
+
+- **What it does.** `bun eval/runner/rs1/verdict.ts aggregates --receipts <every unit and re-read directory> --manifest
+  <filled manifest> --out <custody directory>` is the final custody run. It applies verdict mode's checks and analysis
+  unchanged, so it reads only the filled manifest with `n_final` set and exactly the first N_final kept conversations.
+  It writes `aggregates.json` and `aggregates.md`: verdict mode's analysis, the code commit, the SHA-256 of
+  `verdict.ts`, `iut.ts`, `rs1-cells.json` and the filled manifest, and one SHA-256 over every receipt file it read
+  (each file's path under its `--receipts` directory with its own SHA-256). These are what leave custody at the end.
+- **What it refuses.** Every key and string in the analysis must come from a closed vocabulary: rows, readers, gating
+  judges, views, BEAM's ten abilities, outcome codes, the report's own reason templates, and model versions of each
+  gating judge. Anything else refuses, and nothing is written. Any refusal or error prints one fixed line naming its
+  kind, and its reason stays in `aggregates-refusal.txt` in the custody directory. Stdout carries only the verdict,
+  counts and the SHA-256 of `aggregates.json`.
+- **Wave A is unchanged.** Wave A's counted cells still run from `de9435047201fbc2e6a980b17f473ba6a576494a`, with
+  `rs1-cells.json` SHA-256 `d89528cedf676bdceefa9948a1b3c7a23c8ba3a1c1799aa33b17bb4d4e4a64ab`, which `d927c88f` leaves
+  unchanged. Two tests show it: every wave A unit's run-config identity matches a fixture recorded at `de943504`
+  (`test/fixtures/rs1/wave-a-identity.json`), and nothing the cell runner executes sits under `eval/runner/rs1/` or
+  reaches it through its imports.
+- **The code the final verdict runs from.** The final verdict runs `verdict.ts aggregates` from
+  `d927c88f6e613fb3bab3f8724e7654591bb225a9` or a later commit on the results branch, and `aggregates.json` records the
+  commit it ran. At `d927c88f`, `verdict.ts` has SHA-256
+  `a080b72d433eac52424898a9d205efd36315bb529f10d8e98911e2c526f584a4`. The wave B amendment names the code wave B's cells
+  run from.
+
+### 2026-11-10: fix B for the mint, and a pilot gate
+
+No counted cell has run and no system has answered an RS1 question, so everything here comes before any result. It
+changes no arm, reader, judge, margin or verdict rule, and no gate in `validate.ts`, which stays byte-identical.
+
+**What the first mint showed.** The first five slots, minted from `14e3a89d`, kept none. Two chats answered all 10
+of BEAM's planned batches and still came in under the length gate's floor of 909,500 cl100k tokens. The other three
+passed every conversation gate, but 21 of their 60 first-selection items failed a support or absence check, and after
+one regeneration 10 still failed, so none reached 20 of 20. gpt-6.1-sol, given the same prompts as the validators, found
+28 of 30 items that failed the support check unsupported, so the validators are right: BEAM's generator writes reference
+answers that the turns they cite don't support. A separate check found the same flaw across public and sealed BEAM
+(the item-support findings, `docs/benchmarks/2026-11-10-beam-item-support.md`).
+
+**Change 1: up to 15 batches.** BEAM's 1M recipe plans 10 batches of user turns. The mint now plans and writes 15,
+through BEAM's own plan and question code with only the batch count changed, and the answer step still stops once
+BEAM's truncate would cut the chat at 1,040,000 tokens. So a chat answers between about 9 and 15 batches and ends at
+BEAM's 1M limit or after batch 15. The length gate is unchanged, and a chat still short after 15 batches is dropped as
+before. This is a named deviation from BEAM's recipe: a chat that stops early covers fewer of its planned batches than
+BEAM's own 1M chats do. Items are still generated from the truncated plan. The plan step refuses a plan with any other
+number of batches, and slots planned before this change keep their 10-batch plans.
+
+**Change 2: items only from validator-passed candidates.** After the probe step,
+`eval/custody/rs1/validate-candidates.ts` applies validate.ts's conversation gates for length and contamination, then
+its item gates other than the duplicate gate, with its two validators and the same prompts, to every usable candidate
+BEAM generated for each ability; validate.ts applies the duplicate gate to the selection, as before. Selection then
+takes candidates in the conversation seed's order, as before, but only those that passed. validate.ts still runs on the
+20 selected items and decides keep, regenerate or drop as preregistered. Its support checks send the same prompts, so
+its reply cache returns the answers candidate validation already got. Its absence scan asks about the two selected
+abstention items instead of all of them, so it asks again and can still fail one. For the other nine abilities,
+regeneration repeated without limit would reach the same first two passing candidates in seed order, so the change
+affects how many selection rounds it takes, not which items count as valid. A conversation with fewer than two passing
+candidates in an ability can't fill it and is dropped on the item floor, as before. A real mint now runs in three passes
+(the mint up to the probe step, candidate validation, then selection and rubrics) and refuses to select without a
+candidates report.
+
+**Slots already minted.** `rs1-001` and `rs1-003` stay dropped on length. `rs1-002`, `rs1-004` and `rs1-005` keep
+their chats and finish under change 2, in their third and last selection.
+
+**Pilot gate.** The next five slots, `rs1-006` to `rs1-010`, minted under both changes, are a pilot. Once they are
+minted and validated, the custodian divides their mint and validation spend by the number kept. If that cost per kept
+conversation passes the limit GBEV-3 set when granting the pilot (recorded on the tracking issue, not here), or if 2 or
+more of the 5 drop, minting pauses and the counts go to GBEV-3. Otherwise minting continues in slot order. The kept set,
+the waves and the internal pilot are unchanged.
+
+**The projection.** On 2026-11-10 Garry Tan approved this change, the pilot and the run after it, at a projection made
+from the first mint's measured costs and fix B's expected yield, frontier judge included. The figures are on the
+tracking issue. `pricing.ts`'s check-in for that projection is answered.
+
+**Code.** Minting and candidate validation run from `228ed99acc826360ac9800ee465ee2b8d211623a` or a later commit on
+the results branch, and the custodian records the commit each pass ran. At `228ed99a`, `rs1_mint.py` has SHA-256
+`261889adf003eb6239205db308904a29e85bf19b5b10119b247a63f72f4327ad`, `validate-candidates.ts`
+`31041118df911fe6839cdb4850b5e6814f347ed4e9033255cfe0c48b7aeb12fb` and `mint.sh`
+`a42bbc9c08993a2d4bd5f6548460f08283add1f145d3b4ef28e90ff40d01c5e1`, and `validate.ts` keeps
+`7805fa768dd94caae2166faf5bf17a202559c20150398ddac239295ce7ed576e`. Counted cells still run from
+`de9435047201fbc2e6a980b17f473ba6a576494a` with `rs1-cells.json` SHA-256
+`d89528cedf676bdceefa9948a1b3c7a23c8ba3a1c1799aa33b17bb4d4e4a64ab`, unchanged at `228ed99a`, and the final verdict
+from `d927c88f` or later; this change touches neither.
+
+### 2026-11-12: parallel minting, regrouped window checks, stop reasons, and a new stop line
+
+No counted cell has run and no system has answered an RS1 question, so everything here comes before any result. It
+changes no arm, reader, judge, margin or verdict rule, no gate in `validate.ts`, which stays byte-identical, and not
+the kept set.
+
+**What the pilot showed.** Of the pilot slots `rs1-006` to `rs1-010`, two are kept (`rs1-006` and `rs1-008`), so
+slots 1 to 10 hold five kept conversations. All four pilot chats that finished minting passed the length and
+contamination gates. `rs1-009` has only one passing contradiction_resolution candidate, so it can't fill that ability
+and is dropped on the item floor. `rs1-010` stopped in its answer step when the provider refused requests, and is being
+resumed. `rs1-007`'s candidate check could not finish: claude-haiku-5-5 refused one of its window prompts (stop reason
+`refusal`, no output) all four times it was asked, so none of its abstention candidates got an answer from that window.
+The pilot's cost per kept conversation passed the limit set for the pilot gate, and GBEV-3 chose to continue under the
+stop line below.
+
+**Change 1: parallel minting.** `eval/custody/rs1/mint-lanes.ts` runs mint.sh's first pass, up to the probe step, for
+several slots at once (four by default, at most eight), one unchanged `mint.sh` per slot.
+- Each slot's topic, topic check and plan still run one slot at a time, in slot order, so each topic check compares
+  against the same earlier topics as a one-at-a-time mint. The rest of a slot's first pass runs beside the next slots'.
+- The driver refuses to start more slots than are still needed: 20 (wave A's size and N_final's floor) until N_final is
+  known, and N_final after that, less the slots already kept and less any slots outside the range being minted that are
+  minted but not yet validated. So no slot is minted past N_final, as slot order requires. Only one driver runs on a custody directory at a time.
+- A provider refusal, the metering proxy's budget refusal included, starts no new slot, whether the step or one of its
+  parts met it. A step failure is retried in its lane a limited number of times. Finished steps are verified and skipped
+  on a rerun, as before.
+- Candidate validation, selection and `validate.ts` run as before, over the whole set.
+
+The kept set is still the first N_final slots that pass validation, in slot order: running slots side by side changes
+when a slot is minted, not which slots count. A keyless test shows that four lanes write the same files, byte for byte,
+as one mint.sh over the same slots and seed.
+
+**Change 2: regrouped window checks.** `validate-candidates.ts` asks each window about all of a conversation's
+abstention candidates in one prompt. When a validator answers that prompt in the wrong shape without an error (an empty
+reply or a refusal), the window is now asked again with one prompt per abstention candidate, for up to four new windows
+per run. A window regrouped once is asked one candidate at a time on every later run, reusing the single replies already
+cached, and doesn't count toward the four. Each candidate then passes or fails on its own reply:
+- it fails on absence if its own prompt answers it;
+- it fails on a new gate, refusal, if the validator refuses its own prompt;
+- any other reply in the wrong shape is a validator error, as before.
+
+A window past the four is a validator error for every abstention candidate, as before, and a request that errors is
+asked again on a rerun, not regrouped. The question asked of each window and the pass rule are unchanged: a candidate
+passes only if every window, from both validators, leaves it unanswered. A refusal fails its candidate instead of
+leaving the conversation incomplete, so one refused question doesn't hold back the others; a rerun asks a refused prompt
+again. `validate.ts`'s own absence scan of
+the two selected abstention items is unchanged and still decides keep or drop, so a conversation whose selected items
+`validate.ts` can't check stays incomplete there and is not kept.
+
+**Change 3: stop reasons.** For every unusable validator reply, `validate-candidates.ts` now keeps how it ended: the
+provider's stop reason (Anthropic's stop_reason or Gemini's finishReason), the output token count and the kinds of
+content block, or the HTTP status of a refused request. The candidate report holds these per conversation, never reply
+text. Its requests are `validate.ts`'s own, sent the same way, and a keyless test shows they return the same text and
+make the same budget-ledger entries as `validate.ts`'s clients.
+
+**Stop line.** It replaces the pilot gate for the slots minted after the pilot. Minting pauses and the counts go to
+GBEV-3 if any of these holds:
+- the ten slots after the pilot, `rs1-011` to `rs1-020`, cost more per kept conversation than the limit GBEV-3 set
+  when granting them, counting all of their mint and validation spend, retries and failed calls included;
+- `pricing.ts`'s check-in projection at the planned N passes the limit GBEV-3 set;
+- the internal pilot's N_final is 31 or more.
+
+Both limits are recorded on the tracking issue, not here. The kept set, the waves and the internal pilot are unchanged.
+
+**Code.** Minting, the driver and candidate validation run from `5d7e1145c06d8f24aa42efb35545bded699d255c` or a later
+commit on the results branch, and the custodian records the commit each pass ran. At `5d7e1145`:
+- `mint-lanes.ts` has SHA-256 `c2ae8331e00f9779482a6eb9aa4070f537ab9b33fc7b2458e33036ed32fcdde2`;
+- `mint.sh` has `dfc833ddd2ae89bf9117498f1cb14cb0204db22f11892d02b7419a2f3ec7d30a`, and its only change in behaviour
+  is `--no-usage`, which the driver passes;
+- `validate-candidates.ts` has `e3890ae78910c2c62373d8c96d2a0546426ca6d2d5eccdb01951c5f89e971dd5`;
+- `rs1_mint.py` keeps `261889adf003eb6239205db308904a29e85bf19b5b10119b247a63f72f4327ad`;
+- `validate.ts` keeps `7805fa768dd94caae2166faf5bf17a202559c20150398ddac239295ce7ed576e`.
+
+Counted cells still run from `de9435047201fbc2e6a980b17f473ba6a576494a` with `rs1-cells.json` SHA-256
+`d89528cedf676bdceefa9948a1b3c7a23c8ba3a1c1799aa33b17bb4d4e4a64ab`, and the final verdict from `d927c88f` or later.
+This change touches neither.
+
+### 2026-11-16: gbrain's newest release at launch, in place of the stable tag
+
+Garry ruled on 2026-11-16 that gbrain evals measure gbrain's newest release, not an older build. No counted RS1 cell has
+run, so RS1 moves to the newest release before wave A. Stage 1 (2026-11-08) and the judge check ran gbrain at
+`27f8b9d6`, and neither is a counted result.
+
+- **The pin.** Arm `p` runs gbrain's newest release at wave A's launch: the highest version tag on gbrain's master, read
+  with `git ls-remote --tags https://github.com/garrytan/gbrain.git` when wave A launches. On 2026-11-16 that is
+  v0.60.733.0 at `6ce7195b44a034f85aec811f11fbf862db376f50`, about 140 releases after `stable-v0.60.593.0`
+  (`27f8b9d6`). Commit `4ec4ab92` pins it.
+- **At launch.** If a newer release exists when wave A launches, a dated amendment commit pins it the same way:
+  `RS1_ASSUMPTIONS` in `eval/runner/q1/cells/definitions.ts`, `rs1-cells.json` regenerated with
+  `bun eval/runner/q1/cells/rs1.ts`, and the two test files that name the pin (`test/eval/rs1-cells.test.ts` and
+  `test/fixtures/rs1/wave-a-identity.json`). The keyless F6 Docker smoke then runs at that sha, and no paid call is made
+  until it passes. That amendment names its commit and the new `rs1-cells.json` SHA-256.
+- **Frozen once counted.** The pin read at wave A's launch holds for wave A, wave B's regenerated cells and every
+  particle-1 re-read. verdict.ts already refuses a receipt whose `GBRAIN_SHA` differs from the committed cells
+  (`test/eval/rs1-verdict.test.ts`), so a result from mixed builds can't be scored.
+- **What changed above.** The question, the gbrain row of the systems table, the paragraph on why the stable tag (now
+  "Why the newest release"), the smoke result, the stable-tag risk, the claim and the freeze line now name the newest
+  release at launch. At the freeze they named `27f8b9d6` (`stable-v0.60.593.0`), and that text stays at `325a1c04`. The
+  stage 1 section still describes stage 1 as it ran, at the stable tag.
+- **Cells.** Only the pin fields change: `gbrain_sha`, `gbrain_version`, and `GBRAIN_SHA` in the gbrain cells' launch
+  environment and their snapshot and restore commands. Stage 1's cells on set RS1-dev2 move too, so any later dev run
+  also measures the newest release. The configuration id `rs1-stable` stays as a name. In wave A's identity fixture
+  only the gbrain row's identity changes, and the other three rows keep theirs.
+- **Compatibility.** The keyless F6 Docker smoke at `6ce7195b` passed all 4 tests (33 checks) on the same
+  `oven/bun:1.4.4-slim` image, and gbrain's `engines` floor is still bun 1.4.4. Beside the same smoke at `27f8b9d6`, with
+  a byte count added to the fake upstream's request log, the new build sent the same two claude-haiku-5-5 extraction
+  requests byte for byte, and every one of its other requests matched one the old build sent. It sent one more: a repeat
+  of a 288-byte embedding request after extraction.
+- **Ingest rates.** Stage 1's measured gbrain ingest rates (API spend and VM hours per million tokens) feed only
+  `pricing.ts`'s cost projection, not N, power or the pilot. gbrain's conversation segmenting
+  (`src/core/facts/conversation-windows.ts`), its extraction model (claude-haiku-5-5 through the reasoning tier) and its
+  embedding default (voyage-4) are the same in both builds, so the projection keeps stage 1's rates. Wave A's ingest
+  receipts measure the rate at the new build, and later projections use them.
+- **Unchanged.** No bar, margin, N rule, reader, judge, cap or verdict rule changes. The judge check stands: it measured
+  how the judges grade answers, and the gbrain build changes only the context gbrain gives the readers. The
+  delivered-context gate applies at the new build as before.
+
+**Code.** Counted cells run from `4ec4ab92b98d18dc8bd70bc2a8afab392dc6a76b` on the results branch, or from the commit a
+launch re-pin names. At `4ec4ab92`, `eval/runner/q1/cells/rs1-cells.json` has SHA-256
+`76a33028a605155cb919e2e34f518e790705b86500e6e6efb1b6f8d606bc2cf6`. This replaces `de9435047201` and `d89528ce` from the
+amendments above, and `de943504` stays an ancestor. Between the two commits, the files counted cells execute (`EXECUTES`
+in `eval/runner/q1/cell.ts`) differ only in this pin (`definitions.ts`, `rs1.ts` and `rs1-cells.json`) and in
+`package.json`'s version field. Minting, the driver and validation keep the code the 2026-11-12 amendment names, and the
+final verdict still runs from `d927c88f` or later. Later commits that change neither the cells nor a file counted cells
+execute don't change this.
+
+### 2026-11-16: serve's idle upkeep is off in gbrain's cells
+
+gbrain v0.60.715.0 added idle upkeep to `gbrain serve`, so the v0.60.733.0 pin brings it into RS1, and
+`stable-v0.60.593.0` had none of it. A stdio serve runs it when a whole 10-minute tick passes with no new input (its
+first tick only arms the check): gbrain's free maintenance on the brain it serves, meaning link and timeline extraction,
+stale-page and repair lanes, bookkeeping cleanup and, with an embedding key, a capped embedding step. The conversation
+archive, on by default on a brain gbrain classes as personal, runs inside the same pass. No counted RS1 cell has run, so
+this is settled before any counted number.
+
+- **Not allowed.** RS1 measures the brain the quiesce barrier leaves, so no gbrain cell runs idle upkeep. The shim never
+  leaves serve that quiet on purpose. The F6 build runs with serve stopped, doctor rounds keep serve up for at most 10
+  seconds, and a drain round's 11 minutes end before a fresh serve's first idle check could run anything, at 20 minutes.
+  Upkeep could start only when a cell sends serve nothing for more than 10 minutes, for example while a provider call
+  stalls. It would then change the brain between `/finish` and the cell's later questions, set by timing rather than by
+  the plan.
+- **The switch.** `rs1-stable` sets `GBRAIN_IDLE_UPKEEP=off` in the gbrain cells' launch environment, stage 1's
+  cells included. Every install in the stack then runs gbrain's own off switch, `gbrain config set maintenance.auto
+  false`, which is the "off" answer to the upkeep question `gbrain init` asks. The shim reads the key back and fails
+  the install on any other value, and the install receipt and `/capabilities` record it. Every other first-run question
+  keeps its default answer, and other configurations keep gbrain's default.
+- **The conversation archive.** It reads the session folders of agent harnesses (Claude Code, Codex, OpenClaw, Hermes
+  and Grok) under HOME. The shim already sets HOME and GBRAIN_HOME to the active brain's own directory, a fresh install
+  for each namespace inside the cell's container, so there is nothing for it to read, and with upkeep off nothing runs
+  it. No per-cell HOME change is needed.
+- **The idle sweep stays.** The older idle sweep shares the trigger and is unchanged, as it was at `27f8b9d6` and in
+  every gbrain build F6 and Q1 measured. After the same kind of pause it reconciles facts fences, links and timeline
+  entries for at most 20 recently written pages in a 3-second budget. gbrain's only switch for it, `GBRAIN_SWEEP=0`,
+  also turns off the sweep that runs at every serve start, which would change what every cell measures, so it stays as
+  shipped.
+- **Evidence.** Two keyless runs of the gbrain-defaults stack at `6ce7195b` against the fake upstream, with gbrain's
+  idle tick shortened to 2 seconds for the test only (`GBRAIN_SWEEP_IDLE_INTERVAL_MS`), wrote two sessions, ran
+  `/finish` and then left serve idle for 30 seconds. At gbrain's default, serve logged 3 idle sweeps and 1 idle upkeep
+  run, which ran its pass. With `GBRAIN_IDLE_UPKEEP=off`, it logged the same 3 idle sweeps and no upkeep run, and the
+  install receipt recorded `maintenance.auto` read back as `false`. Both installs listed `upkeep` and
+  `conversation_archive` among init's first-run questions, each with `on` as the default. The keyless F6
+  Docker smoke at `6ce7195b` with `GBRAIN_IDLE_UPKEEP=off` passed all 4 tests (35 checks, two of them on the switch).
+- **Unchanged.** The pin stays v0.60.733.0, and no bar, margin, N rule, reader, judge, cap or verdict rule changes. A
+  launch re-pin keeps the switch, and its keyless smoke runs with `GBRAIN_IDLE_UPKEEP=off` and checks that the install
+  receipt records it.
+
+**Code.** Counted cells run from `c0edd29635222c41405b76b4ba03643abdce4c48` on the results branch, or from the commit
+a launch re-pin names. At `c0edd296`, `eval/runner/q1/cells/rs1-cells.json` has SHA-256
+`1f8d7459654427c93569cb809bb0557de329725769e27735a1f7c795fd42a39e`. This replaces `4ec4ab92` from the amendment above,
+and `4ec4ab92` stays an ancestor. Between the two commits, the files counted cells execute differ only in this switch:
+`definitions.ts`, the header of `rs1.ts` and `rs1-cells.json`, and the gbrain-defaults bundle's `shim.py`,
+`docker-compose.yml` and `capability.json`. In wave A's identity fixture only the gbrain row changes. The gbrain row
+of the systems table above now names the switch.
+
+### 2026-11-17: a fallback validator for claude-haiku-5-5's refusals
+
+No counted cell has run and no system has answered an RS1 question, so everything here comes before any result. It
+changes no arm, reader, judge, margin, N rule or verdict rule, and not the kept set's rule. It is the first change to
+`validate.ts` since the freeze, so the sentence above that it runs unchanged from main no longer holds from `7c53fa3f` on.
+
+**What the third mint showed.** Of the ten slots after the pilot, `rs1-011` to `rs1-020`, four are kept (`rs1-011`, `rs1-015`,
+`rs1-016` and `rs1-018`), so the set holds ten kept conversations. `rs1-017` is unminted: BEAM's question step
+stopped on its plan (an IndexError at `main.py:1540`), and it isn't minted again. None of the other five was dropped.
+Each is incomplete because claude-haiku-5-5 refused prompts about it:
+- `rs1-013`, `rs1-019` and `rs1-020` are incomplete at the candidate check. Haiku returned stop reason `refusal` on 27, 8
+  and 1 of their prompts (support prompts, batched windows and single-candidate windows), and one rerun with its
+  regrouping didn't clear them. A refused support prompt, and a refused window past that run's regroup limit,
+  leave a conversation incomplete.
+- `rs1-012` and `rs1-014` passed the candidate check and were selected, and 18 of each one's 20 items pass. `validate.ts`
+  asks each window about the two selected abstention items in one prompt, Haiku's reply to that prompt was unusable on
+  both runs, and so both abstention items of each hold `validator_error`. `validate.ts` doesn't record stop reasons,
+  so that these were refusals is an inference from the candidate check.
+
+Under the code before this change, a refusal held a chat back when it hit a support prompt or a window in
+`validate.ts`: a refusal doesn't change on a rerun, and `validate.ts` asks the same window again without regrouping it.
+A refused batched window in the candidate check held a chat back only until a run regrouped it, and a refused
+single-candidate prompt failed only its candidate, which is how `rs1-007` was kept after Haiku refused one of its
+windows. That held five of the nine chats the third mint finished. The stop line for
+those ten slots tripped, and GBEV-3 chose this change over narrowing the set.
+
+**Why Haiku refuses.** Anthropic documents `stop_reason: refusal` as a decline by a safety classifier, names its policy
+area in `stop_details.category` (cyber, bio, frontier_llm, reasoning_extraction or general_harms) and says benign work
+can trigger it. It says the same request sent to another Claude model can usually be answered, and that Claude Haiku 5.5
+has no server-side fallback, so the retry is the caller's
+([refusals and fallback](https://platform.claude.com/docs/en/build-with-claude/refusals-and-fallback)). Haiku refused
+support prompts as short as 576 cl100k tokens as well as 60,000-token windows, so the chats' content sets it off, not
+the prompts' length. The validator prompts ask for no reasoning.
+
+**The rule.** Whenever claude-haiku-5-5 refuses a prompt (stop reason `refusal`), in `validate-candidates.ts` or
+`validate.ts`, the same prompt goes to claude-sonnet-5-5, the fallback, with the same output allowance and no temperature,
+and its reply counts in Haiku's place, under Haiku's id. If the fallback refuses too:
+- a support prompt fails its candidate or item on the `refusal` gate;
+- in `validate-candidates.ts`, a batched window is regrouped as before, and a single-candidate window prompt fails its
+  candidate on `refusal`;
+- in `validate.ts`, a window fails both selected abstention items on `refusal`, so the conversation is regenerated as for
+  any failed item, and dropped at the floor after its third selection.
+
+A fallback reply that ends in a refusal counts as a refusal, and any partial text before it is discarded, as Anthropic's
+docs advise. So a refusal by claude-haiku-5-5 no longer leaves a conversation incomplete, except in two cases, as before: a
+batched window that both refuse past that run's regroup limit, until a later run regroups it, and a prompt whose
+fallback reply fails with an error or comes back in the wrong shape without a refusal, which is a `validator_error`. A refusal by gemini-3.8-flash is handled as before. A usable reply the
+fallback gives is cached with the fallback's id beside it, so a rerun reuses it and doesn't ask Haiku again. A prompt
+both refuse isn't cached, so a rerun asks both again and could decide differently; the custodian acts on the first
+report that decides a conversation. A conversation that fails on a double refusal at its third selection is dropped at
+the floor, so its items now count toward `validate.ts`'s stop share; before, it stayed incomplete and outside it.
+
+Both reports name the fallback and count its usable and unusable replies (`fallback_answers`, `fallback_unusable`). They
+also count those replies by the `stop_details.category` of the Haiku refusal that sent each prompt there
+(`fallback_category_<category>`, with `none` when the refusal had no stop details). Each count is per validator call,
+as for cached replies, so a prompt that several calls hold counts once for each of them. The published validation
+counts include them. The candidate report also keeps each unusable reply's stop reason and, for Anthropic, its category, never
+text; `validate.ts`'s report records only each item's gate (`refusal` or `validator_error`).
+
+**Why claude-sonnet-5-5.** The preregistration's rule is two validators from different families. The fallback answers
+in place of the Anthropic validator and is in the same family, so that rule holds unchanged, the Anthropic row of the
+provider data-use table already covers it, and it adds no overlap beyond the disclosed ones: Anthropic's models are
+already a reader (claude-opus-5-5), gbrain's extraction model and an item validator (claude-haiku-5-5). A validator never
+answers or grades a counted question. gpt-6.1-sol, the other cleared frontier model, would have made a reader's and a
+judge's family a validator's too, and a provider outside the four RS1 already uses would need its data use confirmed
+before any RS1 text reached it.
+
+**The probe.** Before the change, `eval/custody/rs1/probe-fallback.ts` (at `ffead1f5`) sent six of the prompts Haiku
+refused in the third mint's candidate check to claude-sonnet-5-5 once each, in a paid window: two support prompts, two
+batched windows and two single-candidate windows, from `rs1-013`, `rs1-019` and `rs1-020`. It rebuilt each prompt with
+`validate-candidates.ts`'s own plan, checked it against the candidate report, and kept only how each reply ended. All six
+ended with `end_turn`, no refusal category, and a reply in the shape the prompt asks for. No answer was kept, so the
+probe says nothing about whether any item passes.
+
+**What it removes.** Under the code before this change, a chat could be kept only if claude-haiku-5-5 would read its
+support prompts and every `validate.ts` window about its selected abstention items. claude-haiku-5-5 is also gbrain's extraction model, so the kept set was filtered toward chats that
+gbrain's own extraction model doesn't refuse: a survivorship filter that could favour gbrain. With the fallback those
+chats stay in the set, and how gbrain handles them is measured instead of filtered out. Whether gbrain's extraction
+refuses on them isn't measured here.
+
+**Slots already minted.** The five held slots are validated again from their committed artifacts. No slot is minted
+again: `rs1-012` and `rs1-014` keep their selections and the cached replies of their 18 passing items, and `rs1-013`,
+`rs1-019` and `rs1-020` go through the candidate check, their first selection and `validate.ts` as any slot does. If an
+abstention item of `rs1-012` or `rs1-014` now fails, `validate.ts` calls for a regeneration, as for any failed item, and
+that new selection waits for the next mint window. An incomplete slot has no decision yet, so deciding it replaces no
+result. The kept set is still the first N_final slots that pass validation, in slot order, so a held slot that passes
+counts ahead of later slots. `rs1-017` stays unminted.
+
+Kept slots keep their selections, which aren't redrawn, and their `validate.ts` replies, which are cached. The candidate
+check runs on the whole set, so it asks again any prompt about a kept slot that Haiku refused before (the refused
+single-candidate prompts of `rs1-007`'s regrouped window are some), and that slot's candidate entries can change, but not its selection. A kept slot's decision
+could still change in one way: `validate.ts`'s duplicate checks compare each chat and question with those of earlier
+slots, so a held slot that now completes is compared ahead of the kept slots after it. After revalidation the custodian
+checks that every kept slot is still kept with the same items, and if one isn't, nothing is counted until a dated
+amendment decides it.
+
+**Code.** `7c53fa3f` added the fallback. `f58f87ff` discards a fallback reply that ends in a refusal and counts the
+fallback's replies by Haiku's refusal category. `e33a78c4` asks a prompt that several calls hold once per validator, so
+no two asks of one prompt share the fallback's records at once. The revalidation of the five held slots runs from
+`b2746deb`, whose code is `f58f87ff`'s, one prompt at a time (`--concurrency 1`), which rules that sharing out there.
+Every later validation pass runs from `e33a78c463e2e012d31cdc2c46d8a75faeaef55c` or a later commit on the results
+branch. The custodian records the commit each pass ran.
+- `validate.ts` has SHA-256 `afb07bd67888afd254befcb79f6015d1a33af627044e884075171547429e242d` at `f58f87ff` and
+  `eb380b68b5730c9abb9b7982a9961a8ab352be149bc8e21ef2fca66c79bfa648` at `e33a78c4`;
+- `validate-candidates.ts` has `627f65d18355a2151673067fd05ffd38d6cef4e3645fb6013ee88f991c605af0` at both;
+- `probe-fallback.ts` keeps `28bde987270feb97925b3b521a944e1bb29cb434b741e5f29845ca492a522728`;
+- `mint-lanes.ts`, `mint.sh` and `rs1_mint.py` keep `c2ae8331…`, `dfc833dd…` and `261889ad…`.
+
+Counted cells still run from `c0edd29635222c41405b76b4ba03643abdce4c48` with `rs1-cells.json` SHA-256
+`1f8d7459654427c93569cb809bb0557de329725769e27735a1f7c795fd42a39e`, and the final verdict from `d927c88f` or later. This
+change touches neither. The next mint window's stop line is recorded on the tracking issue.
+
+### 2026-11-18: wave A's launch pin, gbrain v0.60.740.0
+
+Wave A's launch read gbrain's tags at 17:07 UTC on 2026-11-18: the highest version tag on gbrain's master is v0.60.740.0
+at `82fdd00001833d0cbcc03c3952c3b5635d79dd92`, seven releases after v0.60.733.0. As the first 2026-11-16 amendment says,
+arm `p` moves to it before any counted cell runs, and the pin then holds for wave A, wave B and every particle-1
+re-read. No counted cell has run and no system has answered an RS1 question.
+
+- **What changed.** `RS1_ASSUMPTIONS` in `eval/runner/q1/cells/definitions.ts` names the new pin, `rs1-cells.json` is
+  regenerated with `bun eval/runner/q1/cells/rs1.ts`, `test/eval/rs1-cells.test.ts` checks the new `GBRAIN_SHA`, and
+  `test/fixtures/rs1/wave-a-identity.json` records the gbrain row's new identity. The other three rows keep theirs.
+  Only the pin fields of `rs1-cells.json` change, and its estimate is unchanged. The gbrain row of the systems table
+  and the smoke result above now name the new pin.
+- **The smoke.** The keyless F6 Docker smoke ran at `82fdd000` on the same `oven/bun:1.4.4-slim` image with
+  `GBRAIN_IDLE_UPKEEP=off`, with only its pin and version strings changed, and passed all 4 tests (33 checks). Its
+  `/capabilities` record idle upkeep off, with `maintenance.auto` read back as `false`. gbrain's `engines` floor is
+  still bun 1.4.4. Beside the same smoke at `6ce7195b`, the new build sent the same two claude-haiku-5-5 extraction
+  requests byte for byte, and every one of its other requests matched one the old build sent. It sent one embedding
+  request once where the old build sent it twice.
+- **Ingest rates.** gbrain's conversation segmenting (`src/core/facts/conversation-windows.ts`), its extraction model
+  and its embedding default (voyage-4) are the same in both builds, so `pricing.ts`'s projection keeps stage 1's rates
+  until wave A's ingest receipts measure the new build.
+- **Unchanged.** No bar, margin, N rule, reader, judge, cap or verdict rule changes.
+
+**Code.** Counted cells run from `e65bf230bfc83fc61dcaf537ee634d3b15c8bc16` on the results branch, where
+`eval/runner/q1/cells/rs1-cells.json` has SHA-256 `2ae965815153098a06ea0f454d2a908e1d057503a1870ce390a4cdcc0f7dd559`.
+This replaces `c0edd296` from the amendments above, and `c0edd296` stays an ancestor. Between the two commits, the
+files counted cells execute differ only in this pin (`definitions.ts` and `rs1-cells.json`). Validation keeps the code
+the 2026-11-17 amendment names, and the final verdict still runs from `d927c88f` or later.
+
+### 2026-11-19: which harness each reader runs in
+
+Garry's rule of 2026-11-19 runs GPT-6.1 Sol in Codex CLI and Claude Opus in Claude Code. No RS1 arm runs in an agent
+harness, so nothing changes: every arm is packed, and claude-opus-5-5 and gpt-6.1-sol each answer a frozen packed context
+in one direct API chat call (`readPrompt` in `eval/runner/q1/cell.ts`), as particle-1 does in its re-reads and every
+judge does.
+
+### 2026-11-19: gbrain's build records safety-filter stops and unparsed pages, and wave A's gbrain units run again
+
+Wave A ran all 16 units and its pilot, but 17 of the gbrain row's 20 realizations reached their questions without the
+quiesce barrier. In each of them the F6 build failed the realization, so `/finish` stopped before the barrier (doctor,
+embedding coverage, the job drain) and before the fact index. The answers were read and judged, but not from the brain
+this preregistration measures. The gbrain row's four wave A units are therefore set aside and run again under the switch
+below. The two servers' and the floor's wave A units stand.
+
+- **The cause is gbrain's own extraction outcome.** The custodian read the 17 builds' records inside custody, under
+  GBEV-3's sealed-read decision, with no conversation text leaving it. Every failed page, 72 of 72, carried one error:
+  `segment <start>..<end> extraction failed (content_filter)`. gbrain raises it when the provider stops a transcript
+  window on its safety filter, which on claude-haiku-5-5 is Anthropic's refusal stop, and one failed window fails its
+  whole page. Retries cleared 12 of the first pass's 84 refused pages, and no later pass refused a page the first had
+  not. Apart from that, 13 of the 17 had pages gbrain's conversation parser skipped as unparsed, 53 in all; which turns
+  its parser could not read, and why, is not identified. By conversation, 4 had refusals only, 10 had both and 3 had
+  unparsed pages only.
+- **No harness cause.** No build reached its extraction cap, no extraction model was unpriced, every pass returned
+  JSON, no page was pending, blocked, ambiguous, too large or lock-skipped, and the safe-chunks repair reported no
+  problem. The metering proxy refused no request, each unit had at most one transport failure, and the runner logs hold
+  no rate-limit, overload or payment refusal. The three realizations that passed quiesced normally. gbrain itself treats
+  a run with some failed pages as a success (status `partial`, exit 0).
+- **The switch.** `rs1-stable` sets `GBRAIN_F6_BUILD_PROBLEMS=record` in the gbrain cells' launch environment, stage
+  1's cells included. The F6 build then records two outcomes instead of failing the realization: failed pages, when
+  gbrain lists every failed page and each one stopped on the provider's safety filter (reason `content_filter` or
+  `refusal`), and unparsed pages. The extraction passes, the safe-chunks repair, the quiesce barrier and the fact index
+  run as before. Every other problem still fails the realization: the cap, an unpriced model, a pass without JSON, any
+  other failure reason (a provider error included), a failed page gbrain does not list, a first pass on which every
+  page failed, pending, blocked, ambiguous, too-large or lock-skipped pages, and a safe-chunks problem. Each
+  realization's ingest record carries the build's outcome: whether extraction covered the brain, its problems, and the
+  last pass's status, failed pages by reason and unparsed pages. Unset, the shim behaves as F6 preregistered.
+- **Why this and not a retry.** A harness backoff would fit a transient error. These are not transient: retries
+  stopped on the same pages, and the safety filter's stop is the provider's answer to that text. Under R95 a provider's
+  safety-filter stop is a result, reported as its own outcome. An installed gbrain carries on past these pages too:
+  they keep their text and embeddings and stay searchable as pages, and only their saved facts are missing. Failing the
+  realization measured a brain the barrier never checked, which is not gbrain as people run it.
+- **Reported plainly.** The results say what share of pages gbrain's own extraction left without saved facts at this
+  scale on v0.60.740.0, split into the provider's safety-filter stops and unparsed pages, with each realization's
+  counts beside the gbrain row. The finding goes to gbrain's maintainers.
+- **The rerun.** Wave A's four gbrain units (c0 to c3, the same 20 conversations) run again as a new campaign from the
+  code below, with their particle-1 re-reads, and the internal pilot is computed again from the new gbrain rows and wave
+  A's server and floor rows. N_final follows from that pilot under the rules above; above 27 it goes to GBEV-3. Wave
+  B's gbrain unit runs under the same switch. The set-aside units' receipts stay in custody and enter no verdict:
+  verdict.ts already refuses them, because their run config differs from the committed definition at
+  `launch.env.GBRAIN_F6_BUILD_PROBLEMS`.
+- **Unchanged.** The pin stays v0.60.740.0, frozen since wave A's counted gbrain runs started. No bar, margin, N rule,
+  reader, judge or verdict rule changes.
+
+**Code.** gbrain's units run from `0eb85687f1170324183ace3be55206bb14f6e41b` on the results branch, where
+`eval/runner/q1/cells/rs1-cells.json` has SHA-256 `1d4cefd0add83d41c086be1b1cfda1594d3bfee2bd25a37bbfb9ab451b4b344e`.
+Wave A's server and floor units ran from `e65bf230`, which stays an ancestor, and wave B's units run from
+`0eb85687` or a later commit an amendment names. Between the two commits, the files counted cells execute differ only
+in this switch: `definitions.ts` and `rs1-cells.json`, `cell.ts` (the ingest record keeps the build outcome
+`/finish` returns), and the gbrain-defaults bundle's `shim.py`, `docker-compose.yml` and `capability.json`. Against
+`e65bf230`, the only identity field that moves is the gbrain row's `launch.env.GBRAIN_F6_BUILD_PROBLEMS`, and wave A's
+identity fixture records the gbrain rerun's identity beside the one it replaces. The keyless F6 Docker smoke at `82fdd000`, run from `0eb85687` with `GBRAIN_IDLE_UPKEEP=off` and `GBRAIN_F6_BUILD_PROBLEMS=record`, passed all 4 tests (33 checks), and its `/capabilities` record the switch. In a second run, the fake upstream answered one session's extraction request with Anthropic's refusal stop. gbrain reported that page failed with reason `content_filter`, as in wave A; the build recorded it (refused on both passes, status `failed` on the retry); and `/finish` went on to pass the barrier, build the fact index and serve the retrieval tests. All 4 tests passed (35 checks). The gbrain row of the
+systems table above now names the switch.
+
+### 2026-11-20: N_final is 20, so wave B is empty and the verdict reads wave A's 20 conversations
+
+The 2026-11-19 amendment set aside wave A's four gbrain units, ran them again under `GBRAIN_F6_BUILD_PROBLEMS=record`, and
+said the internal pilot would be computed again from the new gbrain rows and wave A's server and floor rows, with
+N_final following from it under the rules above. That amendment was committed before the rerun launched. The rerun's 20
+realizations all passed the quiesce barrier, none degraded, and the pilot was computed again.
+
+- **N_final.** verdict.ts in pilot mode gives N_required 19, so N_final = min(33, max(20, 19)) = 20. Wave A's first
+  pilot, which read the set-aside gbrain rows, had given 22. That figure was never written to the filled manifest,
+  whose `n_final` was still unset, and the 2026-11-19 amendment had already named the new pilot as its replacement.
+- **Not a stop on seen results.** The pilot reads the per-conversation differences only to emit their SDs and
+  correlations. It emits no means, and a test checks that its output has no mean keys. No mean, answer or score has left
+  custody. The rerun was decided on the gbrain builds' failures, before either pilot's means could be known, and the
+  sizing rule is the one frozen above. The Wittes and Brittain note above applies unchanged.
+- **Wave B is empty.** Wave B is the next N_final - 20 conversations, which is none. No cells are regenerated,
+  `rs1-cells.json` is unchanged, and no wave B unit or re-read runs.
+- **Slots minted toward the earlier 22.** Before the new pilot landed, the custodian had started minting rs1-027 and
+  rs1-028 toward wave A's first N_final, as the minting rules allowed. Minting was stopped when the new pilot gave 20.
+  Both slots lie past N_final, so under the kept-set rule they are not in RS1: they are not validated for it, never
+  enter the filled manifest's kept list, and no system sees them. The runner also refuses a kept list longer than
+  `n_final`.
+- **The fill and the verdict.** The custodian fills the manifest again with the same 20 kept conversations and
+  `n_final` 20, and wave A's fill becomes an earlier fill. `verdict.ts aggregates` then reads 16 launch units and their
+  16 particle-1 re-reads: wave A's 12 server and floor units, from `e65bf230`, and the rerun's four gbrain units, from
+  `0eb85687`. It runs from this commit, where `verdict.ts` and `iut.ts` are unchanged since `d927c88f`.
+- **A correction.** The 2026-11-19 amendment's mentions of wave B's gbrain unit no longer apply, because no wave B unit runs.
+- **Unchanged.** No bar, margin, reader, judge, missing-data rule, gate or verdict rule changes.
 
 ## Disclosures
 

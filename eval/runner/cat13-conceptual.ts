@@ -973,6 +973,8 @@ export interface AdapterScore {
   phase?: PhaseStats;
   /** Present only with --warm-passes N > 0. Quality numbers always come from the first (cold) pass. */
   warm?: WarmPassStats;
+  /** What the per-search `degraded` flags on this adapter's rows were read from (see searchDegradation). */
+  degraded_signal: DegradedSignal;
   /** Tuning / held-out rollups when a ConceptSplit was supplied. */
   splits?: {
     seed: number;
@@ -1000,8 +1002,14 @@ export interface AdapterScore {
     error?: string;
     /** Wall time of the adapter's query() call for this probe (ms, Date.now resolution); absent when it threw. */
     latency_ms?: number;
-    /** One entry per --warm-passes repeat of this probe (ms); absent without the flag. */
+    /** One entry per timed --warm-passes repeat of this probe (ms), degraded repeats included; absent without the flag. */
     warm_latency_ms?: number[];
+    /** True when this scored-pass search ran degraded (see searchDegradation); scored-pass latency rules ignore it. */
+    degraded: boolean;
+    /** Short reason codes, comma-joined; present only when degraded. */
+    degraded_reason?: string;
+    /** One entry per --warm-passes repeat, in pass order: its latency (absent when it threw) and degraded flag. */
+    warm_searches?: WarmSearch[];
     search_observation?: SearchObservation;
   }>;
 }
@@ -1058,9 +1066,20 @@ export interface ScoreAdapterOptions {
 /** Latency of the unscored repeat passes (--warm-passes): the same probes, in order, on the already-queried brain. */
 export interface WarmPassStats {
   passes: number;
+  /** Latency of the clean warm searches only: degraded ones (warm_excluded_degraded) are left out. */
   query_ms: PhaseStats['query_ms'];
+  /** Warm searches run: passes x probes. */
+  searches: number;
+  /** Timed, not degraded: the searches behind query_ms. searches = clean_searches + warm_excluded_degraded. */
+  clean_searches: number;
+  /** Warm searches left out of query_ms because they ran degraded, thrown ones included (those are also in failures). */
+  warm_excluded_degraded: number;
+  /** Count of each reason code across the excluded searches (one search can carry several). */
+  degraded_reasons: Record<string, number>;
+  degraded_signal: DegradedSignal;
   /** Repeat queries whose top-5 page ids differed from the scored first pass. */
   top5_changed: number;
+  /** Warm searches whose query() threw. */
   failures: number;
   /** Ledger spend of the warm passes alone (live runs only); the first pass's query cost leaves it out. */
   cost_usd: number | null;
@@ -1089,7 +1108,64 @@ export function phaseStats(latencies: number[], spent: { start: number | null; a
 /** Duck-typed optional adapter hooks (GbrainInlineAdapter / HybridNoGraphAdapter expose them). */
 interface EchoingAdapter {
   resolvedConfig?: (state: unknown) => Record<string, string>;
-  observedStats?: (state: unknown) => ObservedStats;
+  observedStats?: (state: unknown) => ObservedStats & { rerank_failures?: Array<{ query_id: string; reasons: string[] }> };
+}
+
+/**
+ * Where a per-search `degraded` flag comes from, strongest first:
+ *   - search_observation: the adapter records one SearchObservation per
+ *     gbrain search (GbrainInlineAdapter, vector-grep-rrf-fusion). Degraded
+ *     means that observation's `failures` list is non-empty: gbrain's own
+ *     meta said the vector arm did not run (`vector_not_enabled`), a fail-open
+ *     stage fired (`meta.degraded`, e.g. `reranker_skipped:no_key`), the meta
+ *     was missing, the reranker or expansion did not match the pin, the
+ *     relational arm errored, or the search threw. It is the same list that
+ *     already makes a scored pass `execution_incomplete`. A search that left
+ *     no observation is `search_observation_missing`.
+ *   - rerank_observation: the adapter reports reranker skips, failures and
+ *     pass-throughs per query (vector-rerank); each new entry is degraded.
+ *   - query_error_only: no per-search signal (grep-only, vector); only a
+ *     thrown query() is degraded.
+ */
+export type DegradedSignal = 'search_observation' | 'rerank_observation' | 'query_error_only';
+
+/** One warm repeat of one probe. */
+export interface WarmSearch {
+  pass: number;
+  latency_ms?: number;
+  degraded: boolean;
+  degraded_reason?: string;
+}
+
+interface DegradationCursor { observations: number; rerankFailures: number }
+
+function degradationCursor(hooks: EchoingAdapter, state: unknown): DegradationCursor {
+  const o = typeof hooks.observedStats === 'function' ? hooks.observedStats(state) : undefined;
+  return { observations: o?.search_observations?.length ?? 0, rerankFailures: o?.rerank_failures?.length ?? 0 };
+}
+
+const DEGRADED_REASON_MAX = 200;
+
+/** Read what this one search reported since `before` (reason codes only, never error text). */
+export function searchDegradation(hooks: EchoingAdapter, state: unknown, before: DegradationCursor, threw: boolean): { signal: DegradedSignal; reasons: string[] } {
+  const o = typeof hooks.observedStats === 'function' ? hooks.observedStats(state) : undefined;
+  const reasons: string[] = [];
+  let signal: DegradedSignal = 'query_error_only';
+  if (o?.search_observations) {
+    signal = 'search_observation';
+    const fresh = o.search_observations.slice(before.observations);
+    if (fresh.length === 0) reasons.push('search_observation_missing');
+    for (const observation of fresh) reasons.push(...observation.failures);
+  } else if (o?.rerank_failures) {
+    signal = 'rerank_observation';
+    for (const f of o.rerank_failures.slice(before.rerankFailures)) reasons.push(...f.reasons.map(r => `rerank:${r}`));
+  }
+  if (threw && !reasons.includes('search_threw')) reasons.push('query_error');
+  return { signal, reasons: [...new Set(reasons)] };
+}
+
+function degradedFields(reasons: string[]): { degraded: boolean; degraded_reason?: string } {
+  return reasons.length ? { degraded: true, degraded_reason: reasons.join(',').slice(0, DEGRADED_REASON_MAX) } : { degraded: false };
 }
 
 export async function scoreAdapter(
@@ -1122,6 +1198,9 @@ export async function scoreAdapter(
     gatewayAfterInit = undefined; // gateway unconfigured (pure unit tests) — nothing to echo
   }
 
+  const hooks = adapter as unknown as EchoingAdapter;
+  // Set from the first search; adapters report one signal kind for a whole run.
+  let degradedSignal: DegradedSignal | undefined;
   const overall = newAccum();
   const tuning = newAccum();
   const holdout = newAccum();
@@ -1138,8 +1217,10 @@ export async function scoreAdapter(
     let rankedPages: RankedDoc[] = [];
     let error: string | undefined;
     let latencyMs: number | undefined;
+    let threw = false;
     const publicQuery = sanitizeQuery(probe.q);
     assertPayload(CAT13_SUT_QUERY, publicQuery, cat13ForbiddenValues(gold, probe.q.id));
+    const cursor = degradationCursor(hooks, state);
     try {
       const tq = Date.now();
       const results: RankedDoc[] = await adapter.query(publicQuery, state);
@@ -1157,10 +1238,13 @@ export async function scoreAdapter(
       // denominator (probe-accounting sut policy).
       acc.error(probeId, 'sut', String(err));
       error = String(err);
+      threw = true;
       ndcg = 0;
       p5 = 0;
       p1 = 0;
     }
+    const degradation = searchDegradation(hooks, state, cursor, threw);
+    degradedSignal ??= degradation.signal;
     perQuery.push({
       index, id: probe.q.id, text: probe.q.text, template: probe.template,
       subset: opts.split ? probeSubset(probe, opts.split) : 'all',
@@ -1168,6 +1252,7 @@ export async function scoreAdapter(
       ndcg5: ndcg, p5_graded: p5, p1_strict: p1, cluster_id: [...probe.targetSlugs].sort()[0] ?? probe.q.id,
       ...(duplicates ? { duplicate_results: duplicates } : {}), ...(error ? { error } : {}),
       ...(latencyMs !== undefined ? { latency_ms: latencyMs } : {}),
+      ...degradedFields(degradation.reasons),
     });
     addToAccum(overall, probe.template, ndcg, p5, p1);
     if (opts.split) {
@@ -1181,7 +1266,6 @@ export async function scoreAdapter(
   }
 
   const phase = phaseStats(latencies, { start: spentStart, afterInit: spentAfterInit, end: opts.spentUsd?.() ?? null }, probes.length);
-  const hooks = adapter as unknown as EchoingAdapter;
   const resolvedConfig = typeof hooks.resolvedConfig === 'function' ? hooks.resolvedConfig(state) : undefined;
   const observedLive = typeof hooks.observedStats === 'function' ? hooks.observedStats(state) : undefined;
   // Snapshot before any warm pass, so repeat queries never add to the first pass's observations.
@@ -1195,17 +1279,23 @@ export async function scoreAdapter(
   let warm: WarmPassStats | undefined;
   if (opts.warmPasses) {
     const spentBeforeWarm = opts.spentUsd?.() ?? null;
-    const warmLatencies: number[] = [];
+    // Only clean warm searches are timed into query_ms: a degraded repeat ran a different search path.
+    const cleanLatencies: number[] = [];
     let changed = 0;
     let failures = 0;
+    let searches = 0;
+    let excluded = 0;
+    const degradedReasons: Record<string, number> = {};
     for (let pass = 0; pass < opts.warmPasses; pass++) {
       for (const [index, probe] of probes.entries()) {
         const row = perQuery[index]!;
+        const cursor = degradationCursor(hooks, state);
+        let ms: number | undefined;
+        let threw = false;
         try {
           const tq = Date.now();
           const results: RankedDoc[] = await adapter.query(sanitizeQuery(probe.q), state);
-          const ms = Date.now() - tq;
-          warmLatencies.push(ms);
+          ms = Date.now() - tq;
           (row.warm_latency_ms ??= []).push(ms);
           const ids = results.slice(0, TOP_K).map(r => r.page_id).join('\n');
           if (ids !== row.ranked_pages.map(r => r.page_id).join('\n')) changed += 1;
@@ -1213,12 +1303,27 @@ export async function scoreAdapter(
           // A budget-ledger refusal stops the run like any other paid request; it is not a failed repeat query.
           if (err instanceof BudgetExceededError) throw err;
           failures += 1;
+          threw = true;
+        }
+        searches += 1;
+        const degradation = searchDegradation(hooks, state, cursor, threw);
+        degradedSignal ??= degradation.signal;
+        const flag = degradedFields(degradation.reasons);
+        (row.warm_searches ??= []).push({ pass, ...(ms !== undefined ? { latency_ms: ms } : {}), ...flag });
+        if (flag.degraded) {
+          excluded += 1;
+          for (const reason of degradation.reasons) degradedReasons[reason] = (degradedReasons[reason] ?? 0) + 1;
+        } else if (ms !== undefined) {
+          cleanLatencies.push(ms);
         }
       }
     }
     const spentAfterWarm = opts.spentUsd?.() ?? null;
     warm = {
-      passes: opts.warmPasses, query_ms: phaseStats(warmLatencies, { start: null, afterInit: null, end: null }, 0).query_ms, top5_changed: changed, failures,
+      passes: opts.warmPasses, query_ms: phaseStats(cleanLatencies, { start: null, afterInit: null, end: null }, 0).query_ms,
+      searches, clean_searches: cleanLatencies.length, warm_excluded_degraded: excluded, degraded_reasons: degradedReasons,
+      degraded_signal: degradedSignal ?? 'query_error_only',
+      top5_changed: changed, failures,
       cost_usd: spentBeforeWarm !== null && spentAfterWarm !== null ? spentAfterWarm - spentBeforeWarm : null,
     };
   }
@@ -1234,6 +1339,7 @@ export async function scoreAdapter(
     wallMs: Date.now() - t0,
     phase,
     ...(warm ? { warm } : {}),
+    degraded_signal: degradedSignal ?? 'query_error_only',
     per_query: perQuery,
     ...(opts.split ? {
       splits: {
@@ -1736,6 +1842,10 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
         }
       }
       log(`  done (${(r.wallMs / 1000).toFixed(1)}s). nDCG@5=${(r.ndcg5 * 100).toFixed(1)}%, P@5(graded)=${(r.p5_graded * 100).toFixed(1)}%, P@1(strict)=${(r.p1_strict * 100).toFixed(1)}%`);
+      if (r.warm) {
+        const q = r.warm.query_ms;
+        log(`  warm: ${r.warm.passes} pass(es), ${r.warm.clean_searches}/${r.warm.searches} clean searches timed${q ? `, p50=${q.p50}ms p95=${q.p95}ms` : ''}; warm_excluded_degraded=${r.warm.warm_excluded_degraded} (signal: ${r.warm.degraded_signal})`);
+      }
       if (r.gatewayAfterInit && (r.gatewayAfterInit.model !== embedder.model || r.gatewayAfterInit.dims !== embedder.dims)) {
         // The adapter reconfigured the gateway away from the run's embedder:
         // its numbers are in a different embedding space than the other arms.
@@ -1931,6 +2041,7 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
       wall_ms: r.wallMs,
       ...(r.phase ? { phase: r.phase } : {}),
       ...(r.warm ? { warm: r.warm } : {}),
+      degraded_signal: r.degraded_signal,
       tuning: subsetRow(r.splits?.tuning),
       holdout: subsetRow(r.splits?.holdout),
     })),
