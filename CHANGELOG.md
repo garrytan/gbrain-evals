@@ -2,6 +2,181 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.262] - 2026-11-21
+
+- CI's harness Python tests run as three pytest processes at once instead of one. The two slowest files,
+  `test_comparator_server.py` and `test_gbrain_provider.py` (135 s and 118 s of the 286 s single-process run in main's
+  CI, mostly waiting on the comparator and gbrain processes they start), each run alone, and every other file runs
+  together. In this PR's CI run the pytest step took 164 s instead of main's 298 s, and the `harness (pytest)` job
+  4 min 14 s instead of 6 min 39 s. `bun run harness:test --junit-dir=<dir>` runs them (`eval/runner/harness-test.ts`),
+  prints each line with its group's number, writes one JUnit report per group as `pytest-<n>.xml` and fails if any group
+  fails or writes no report; without the flag it runs one pytest as before. `scripts/ci-tested-tree.ts` reads every
+  `pytest-<n>.xml`, and `test/eval/ci-tested-tree.test.ts` checks that the groups run every harness test file exactly
+  once.
+
+### CI's checks start without waiting for the git cache job
+
+- [.github/workflows/ci.yml](.github/workflows/ci.yml)'s check, test and harness jobs no longer wait for `git-cache`.
+  They restore the newest saved copy of the repository's git objects as before. In every pull-request run from
+  2026-11-16 to 2026-11-20 one was already there, so waiting only added a round of runner start-up. `tested-tree` now names `git-cache`
+  directly, so a run whose cache job failed still records no tested tree.
+
+- CI's six test jobs each run four `bun test --shard` processes at once on an 8-vCPU runner, as 24 shards balanced by
+  `test/timings.json`, instead of one process each on 4 vCPUs. A Bun test process keeps about one core busy, so most
+  of each runner sat idle. `scripts/test-shards.ts --job=k/n` runs job k's shards (k, k+n, k+2n and k+3n), prints
+  every line as it arrives with its shard's number, and writes each shard's JUnit report for the tested-tree record;
+  `test/eval/ci-workflow.test.ts` checks that the six jobs together run each of the 24 shards exactly once. The job
+  names, `tests (1)` to `tests (6)`, and gstack's CI carry profile are unchanged.
+
+- The credential check before a push no longer flags the four comparison labels (`memory-bank/frontier`,
+  `memory-bank/bridge`, `extract-first/frontier` and `extract-first/bridge`) in the key fields of the narrowed RS1
+  verdict's `docs/benchmarks/2026-11-08-rs1-narrow/results/aggregates.json`, which the RS1 results PR (#391) adds. The
+  rule covers only that file and only those four values, so anything else in it is still checked.
+
+### CI's tested-tree job starts faster
+
+- [.github/workflows/ci.yml](.github/workflows/ci.yml)'s `tested-tree` job, the last one every run waits for, no longer
+  restores the cached `.git` folder. It checks out only `scripts/` with no file contents beyond them, which is all
+  [scripts/ci-tested-tree.ts](scripts/ci-tested-tree.ts) reads: the tracked file list, the commit's tree id and the
+  JUnit reports.
+
+- The slowest test file, `test/eval/predictive-cli-arm.test.ts`, took about 5.3 minutes in CI and set the floor for
+  the test shard that ran it. Its G3 checks now run as five files of 32 to 62 s each in CI
+  (`test/eval/predictive-g3-recovering-a.test.ts` to `-d.test.ts`, two causes each, and
+  `test/eval/predictive-g3-careless.test.ts`), sharing `test/support/predictive-g3.ts`, so CI's shards can place them
+  apart. Every assertion is kept. Each episode is checked as before, each file checks the causes it met, and
+  `predictive-cli-arm.test.ts` still checks the total of 14 surface-cause pairs (13 when gbrain reads two ranges).
+  `test/timings.json` is refreshed from three main runs and this change's own run. The old file listed 402 of the
+  469 test files on main, and several files were a minute or more off, so one run's shards ranged from 336 to 632 s
+  of tests.
+
+- `scripts/ubicloud/ubi-runner.sh up` works on macOS again. The create lock added in #464 needed util-linux `flock`
+  and bash 4's `{var}>` redirection, and `usage` printed its table with an awk expression that macOS awk rejects, so
+  `up` refused on a Mac before it created any VM. perl now takes the same kernel lock on descriptor 9, which the kernel
+  still drops when the holder exits, and `usage` works out its `(you)` suffix before printing. Linux behaviour is
+  unchanged. `test/eval/ubi-runner-quota.test.ts` checks that `up` takes its lock without calling `flock`.
+
+- **Engine-bench stage 2 waits for CLI writes before exporting.** The surface-parity runner now polls each CLI write's receipt with `gbrain call get_write_request`, by the same settle rule its MCP writes use, before the next step and the markdown export after the writes, on every engine. On both surfaces a write's receipt must reach a final state, so a write still recovering keeps the wait going, and an answer that arrives after the 30 seconds does not count. A write that does not settle within 30 seconds fails as an errored `(settle)` operation instead of being skipped. The receipt names each wait's surface and keeps every write's full normalized reply, `delete_page` included, beside its digest. The preregistration records this in a dated amendment made before any counted run ([docs/benchmarks/2026-11-17-engine-bench-preregistration.md](docs/benchmarks/2026-11-17-engine-bench-preregistration.md)).
+
+- **Engine-bench passes Rust's recall only when it is equal or better.** Stage 3 (LongMemEval-S) now passes a Rust arm against each TypeScript engine only when the 95% lower bound of Rust's paired recall_all@5 difference is at least -0.018, the smallest difference the planned 470 questions can detect, and reports the point estimate beside it. A question where both engines return the same top 5 sessions counts as an exact tie. The old -0.02 non-inferiority result and a lower-bound-at-least-0 result stay in the receipt as secondary rows that are not the gate, and the receipt schema moves to `engine-bench.lme-recall/3`. A dated amendment to the [preregistration](docs/benchmarks/2026-11-17-engine-bench-preregistration.md) records the rule, the detectable differences and what a fail means, before any counted Rust arm.
+
+- Publish the [duplicate-finder head-to-head](docs/benchmarks/2026-11-18-entity-dedupe-h2h.md), including the wrong people links that led to review-only person matching, the memory-system and classic-matcher comparisons, and the data and keyless checks behind the results.
+
+### BEAM-10M results on gbrain v0.60.748.0
+
+- README's two BEAM-10M rows now show gbrain v0.60.748.0, measured on 2026-11-20 with Opus 5.5, GPT-6.2 Sol and
+  particle-1 reading. The 8,000-token row scores 55.8% and is level with v0.60.493.0 on Opus 5.5 (−0.1 points, 95%
+  interval −3.2 to +3.1). gbrain's whole system scores 50.6%, and with Opus 5.5 reading both it is 12.2 points behind
+  the file agent's stored row (95% interval 6.4 to 18.4).
+  [docs/benchmarks/2026-11-19-beam10m-newest/results/README.md](docs/benchmarks/2026-11-19-beam10m-newest/results/README.md)
+  has the full results, and its `report.json` has the aggregates.
+- The custody pairing tool keys Q1's re-judged file-agent answers by the ids the re-judge gave them.
+
+### Tests run against gbrain v0.60.743.0
+
+- `package.json` and `bun.lock` move the `gbrain` dependency from v0.60.733.0 (`6ce7195b4`) to v0.60.743.0
+  (`16124807c`), gbrain's newest release on 2026-11-19, 10 releases and 101 commits later.
+  [docs/gbrain-under-test.md](docs/gbrain-under-test.md#the-pin) names the new pin. No result was rerun.
+
+### Tests run against gbrain v0.60.747.0
+
+- `package.json` and `bun.lock` move the `gbrain` dependency from v0.60.743.0 (`16124807c`) to v0.60.747.0
+  (`7d45c5d17`), gbrain's newest release on 2026-11-19, 4 releases and 26 commits later.
+  [docs/gbrain-under-test.md](docs/gbrain-under-test.md#the-pin) names the new pin. No result was rerun.
+
+### Tests run against gbrain v0.60.748.0
+
+- `package.json` and `bun.lock` move the `gbrain` dependency from v0.60.747.0 (`7d45c5d17`) to v0.60.748.0
+  (`7f1623446`), gbrain's newest release on 2026-11-19, 1 releases and 14 commits later.
+  [docs/gbrain-under-test.md](docs/gbrain-under-test.md#the-pin) names the new pin. No result was rerun.
+
+### RS1's result: gbrain is within 3.5 points of both leading memory servers on new BEAM conversations (GST-1886)
+
+- **RS1's result.** On 20 newly minted million-token BEAM conversations, gbrain v0.60.740.0 reading 8,000 tokens is
+  at most 3.5 points behind both the memory-bank server and the extract-first server under frontier judges (one-sided
+  95% lower bounds -1.2 and +1.1), and BEAM's judge agrees. It is ahead of the extract-first server and not ahead of the
+  memory-bank server. `docs/benchmarks/2026-11-08-rs1-narrow-results.md` gives the verdict, cost per correct answer, the
+  sensitivity checks, the per-reader and per-ability rows, and gbrain's pages without facts by cause (0.72% of pages).
+  `aggregates.json` and `aggregates.md` beside it hold the verdict tool's output, and the preregistration gains its
+  amendments.
+
+### RS1's harness before counted runs: gating judges, the judge check, per-unit custody and the verdict (GST-1886)
+
+- **Gating judges.** RS1 grades claude-opus-5-5 readers with gpt-6-astra and gpt-6.1-sol and particle-1 readers with
+  claude-opus-5-5 (`rs1JudgeOf` in `eval/runner/q1/cells/rs1.ts`), at the pinned settings #394 shares, and keeps
+  gpt-4.1-mini as the descriptive bridge. The shared `frontierJudgeOf` is unchanged, and a test pins Q1's and F6's cell
+  manifests to their earlier digests. The verdict rests on the gating view alone, which compares gbrain with the memory-bank
+  server and with the extract-first server, and both one-sided lower bounds must sit above -3.5.
+- **Paired reporting.** Every comparison (overall, per reader, per ability, each server, each view) is gbrain minus the
+  server on the same questions, with its 95% and labelled 90% intervals and the questions where gbrain scored lower,
+  higher and tied. A row with fewer than 5 conversations reads "too few conversations".
+- **The judge check.** `eval/runner/rs1/judge-check.ts` grades about 160 public answers (stage 1 answers, screened
+  BEAM-1M gold and scripted corruptions) with both gating judges and the bridge judge, and a failed gate stops wave A.
+  It ran and every gate passed. `docs/benchmarks/2026-11-08-rs1-narrow/results/judge-check.json` and `judge-check.md`
+  hold ids, hashes, labels and scores, never answer, gold or corruption text. A keyless rehearsal never reports a pass.
+- **What verdict.ts refuses.** A gating judgment graded by the reader's family or by a judge the map does not name, or
+  missing its view, its pinned settings or a model version. A particle-1 re-read must match the filled manifest, and a
+  judge that returned more than one model version is flagged. Its new `aggregates` mode is the final custody run: it
+  writes `aggregates.json` and `aggregates.md` from a closed vocabulary, with the code commit and file hashes, and
+  keeps any refusal's reason in the custody directory.
+- **Custody.** `eval/custody/rs1/fill-manifest.ts` writes the filled manifest (ids, paths and SHA-256 hashes only).
+  Each RS1 campaign unit records its launch unit, the custody push sends that unit's VM only its own kept conversations
+  and the filled manifest, and on the VM setup and the loader refuse any other conversation. Paid minting and
+  validation take Gemini's key only from `RS1_GEMINI_API_KEY`, the receipt scan also matches `AQ.`-prefixed Google
+  keys, and mint.sh and beam-checkout.sh hash with `shasum -a 256` where `sha256sum` is missing.
+- **Paid windows.** mint.sh, rs1_mint.py's real steps, validate.ts `--paid`, the judge check and
+  `eval/runner/q1/cell.ts run --manifest rs1` call the guard #394 shares, so each needs `--paid-window` and
+  `--window-cap-usd` unless it runs keyless or fake. Counted leases price the pinned judges' output at their pinned cap.
+- **Pricing.** `eval/runner/rs1/pricing.ts` takes gbrain's measured ingest rates and each gating judge's measured rate
+  from the judge check, prices gpt-6-astra on its own line outside the check-in, and exits 2 when it counts finished
+  work without `--spent-usd`.
+- **Wave A's run identity.** The gbrain cell's extraction cap sizes from a fixed conversation length, so regenerating
+  wave B's cells cannot change wave A's run identity. A fixture recorded at `de943504` and an import guard show that
+  wave A's cells are unchanged; they run from `de943504`, with `rs1-cells.json` unchanged.
+- **Smaller fixes.** The launch preflight prices particle-1 at Particle's own address, `check-early-stop` exits 3
+  when it tested nothing, and a reader whose only answers are failed retrievals costs 0 instead of n/a.
+- **Longer plans and validated candidates in the mint.** The first paid mint kept no conversation: two of five chats
+  answered all 10 of BEAM's planned batches and still came out under the length gate, and selecting two items per
+  ability before validating them never filled every slot. rs1_mint.py now runs BEAM's plan and question code with 15
+  batches in place of 10 and refuses a plan that holds any other number; the early stop still ends each chat where
+  BEAM's truncate would cut it, and conversations planned with 10 keep 10. The new
+  `eval/custody/rs1/validate-candidates.ts` asks validate.ts's two validators about every candidate after the probe step,
+  sharing validate.ts's reply cache, and `mint.sh --candidates <report>` selects only candidates both passed. A real
+  mint without a report stops each conversation after its probe step, and validate.ts still decides what is kept.
+- **Parallel minting and regrouped window checks.** `eval/custody/rs1/mint-lanes.ts` runs mint.sh's first pass for up
+  to eight slots at once, one unchanged mint.sh per slot, with each slot's topic, topic check and plan still run one at a
+  time in slot order. It refuses to start more slots than are still needed, stops starting slots on a provider refusal,
+  holds a lock so only one driver runs on a custody directory, passes a hangup or interrupt to every mint.sh it runs,
+  and writes `usage.json` once at the end (`mint.sh --no-usage` skips mint.sh's own write). validate-candidates.ts now
+  asks a window again with one prompt per abstention candidate when a validator answers the batched prompt in the wrong
+  shape (and keeps asking that window one candidate at a time on later runs), fails a candidate whose own prompt the validator refuses on a new `refusal` gate, and records how each
+  unusable reply ended (stop reason, output tokens, content block kinds or HTTP status), never its text.
+- **gbrain's newest release.** RS1's gbrain arm runs gbrain's newest release when wave A launches, in place of the weekly
+  `stable` tag: v0.60.740.0 (`82fdd000`), read at wave A's launch on 2026-11-18 and then frozen for every counted cell.
+  Only the pin fields of `rs1-cells.json` change, and the keyless F6 Docker test passes at the new pin.
+- **No idle upkeep in gbrain's cells.** From v0.60.715.0 an idle `gbrain serve` runs gbrain's free maintenance on its
+  brain, which in RS1 could happen only when a cell's calls stall and would then change the brain between `/finish` and
+  later questions. RS1's gbrain cells set `GBRAIN_IDLE_UPKEEP=off`: every install writes gbrain's own off switch
+  (`maintenance.auto false`) and reads it back. The older idle sweep is unchanged.
+- **gbrain's build records safety-filter stops and unparsed pages.** In wave A, 17 of the gbrain row's 20 brain builds
+  failed because gbrain's own extraction left pages unfinished. The provider's safety filter stopped some transcript
+  windows, or gbrain's parser skipped a page as unparsed. The shim then stopped before the quiesce barrier and the fact
+  index. RS1's gbrain cells now set `GBRAIN_F6_BUILD_PROBLEMS=record`: the build records those two outcomes and carries
+  on, every other problem still fails the realization, and each realization's ingest record carries its refused and
+  unparsed pages. Wave A's four gbrain units run again under it, and the servers' and the floor's stand.
+- **N_final is 20.** With wave A's gbrain units run again, the internal pilot gives N_final 20 under the preregistered
+  sizing rule, so wave B is empty and the verdict reads wave A's 20 conversations. Minting toward the first pilot's
+  figure stopped, and the two slots it had started stay outside RS1.
+- **A fallback validator for Haiku's refusals.** claude-haiku-5-5 refused some validator prompts in the third mint, and a
+  refusal doesn't change on a rerun, so five of the nine new chats could never finish validation. validate.ts and
+  validate-candidates.ts now send a prompt Haiku refuses to claude-sonnet-5-5, whose reply counts in Haiku's place, and
+  when it refuses too the item fails on the `refusal` gate instead of leaving the conversation incomplete. A
+  fallback reply that ends in a refusal counts as a refusal. Usable fallback replies are cached with the fallback's id,
+  and both reports count the fallback's replies, also by the category of Haiku's refusal. A prompt that several calls
+  hold is asked once. This is validate.ts's first change since the
+  freeze. Beforehand, `eval/custody/rs1/probe-fallback.ts` sent six refused prompts to the fallback and kept only how each
+  reply ended: all six were answered.
+
 ## [0.10.261] - 2026-11-20
 
 ### Hard company questions: the old-build control names its unretried cell
