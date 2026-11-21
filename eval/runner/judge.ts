@@ -39,7 +39,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { randomBytes } from 'crypto';
 import { fitAnthropicRequest, temperatureSent, toolChoiceSent, withThinkingRoom } from './anthropic-request.ts';
 import { getDefaultLlmBudget, type LlmBudget } from './llm-budget.ts';
-import { isOpenAIModel } from './openai-judge-shim.ts';
+import { isOpenAIModel, judgeClientFor } from './openai-judge-shim.ts';
 
 // ─── Public types ────────────────────────────────────────────────────
 
@@ -127,7 +127,7 @@ export interface JudgeResult {
 export interface JudgeConfig {
   /** Haiku client. Default: lazy singleton reading ANTHROPIC_API_KEY. */
   client?: Anthropic;
-  /** Model ID. Default: DEFAULT_JUDGE_MODEL (claude-haiku-5-5). */
+  /** Model ID. Default: DEFAULT_JUDGE_MODEL (gpt-6.2-astra, so no Claude judge grades the default Claude answers). */
   model?: string;
   /** Max tokens for judge output. Default 800. */
   maxTokens?: number;
@@ -147,7 +147,7 @@ export interface JudgeConfig {
 
 // ─── Defaults ────────────────────────────────────────────────────────
 
-export const DEFAULT_JUDGE_MODEL = 'claude-haiku-5-5';
+export const DEFAULT_JUDGE_MODEL = 'gpt-6.2-astra';
 const DEFAULT_MAX_TOKENS = 800;
 // Judges run at temperature 0: verdicts must be reproducible (WS0 policy).
 // Claude 5-family judges reject it and sample at the provider default.
@@ -521,8 +521,8 @@ export async function scoreAnswer(
   evidence: JudgeEvidence,
   config: JudgeConfig = {},
 ): Promise<JudgeResult> {
-  const client = config.client ?? getDefaultClient();
   const model = config.model ?? DEFAULT_JUDGE_MODEL;
+  const client = config.client ?? judgeClientFor(model, getDefaultClient);
   const price = judgePrice(model);
   const sent = { temperature_sent: temperatureSent(model, JUDGE_TEMPERATURE), tool_choice_sent: toolChoiceSent(model) };
   const maxTokens = config.maxTokens ?? withThinkingRoom(model, DEFAULT_MAX_TOKENS);

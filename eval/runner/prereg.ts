@@ -18,7 +18,8 @@
  * (`fetch-depth: 0`).
  *
  * `attestPreregistration` also refuses a run whose registry entry, registered on or after the gpt-4o suspension,
- * names a suspended model (`checkModels` in `prereg-practices.ts`).
+ * names a suspended model (`checkModels` in `prereg-practices.ts`), and a run whose preregistration was first committed
+ * on or after that date with no registry entry at all.
  *
  * The same CI step runs `checkPractices` and `checkGrandfatheredFrozen`
  * (`prereg-practices.ts`), which refuse a new registry entry that lacks the
@@ -27,6 +28,7 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
+import { SUSPENDED_SINCE } from './model-defaults.ts';
 import { checkGrandfatheredFrozen, checkModels, checkPractices, loadGrandfathered, type PracticeEntry } from './prereg-practices.ts';
 
 export interface Attestation {
@@ -75,7 +77,15 @@ export function attestPreregistration(path: string, cwd = process.cwd(), now = n
   }
   if (existsSync(join(cwd, 'docs/benchmarks/preregistrations.json'))) {
     const repoPath = (p: string) => relative(cwd, resolve(cwd, p));
-    const entry = loadManifest(cwd).find(e => repoPath(e.preregistration) === repoPath(path)) as PracticeEntry | undefined;
+    const target = repoPath(path).replace(/-addenda\.md$/i, '.md');
+    const entry = loadManifest(cwd).find(e => repoPath(e.preregistration) === target) as PracticeEntry | undefined;
+    if (!entry) {
+      const added = firstAddCommit(cwd, path);
+      const date = added ? git(cwd, ['log', '-n', '1', '--format=%cs', added]) : null;
+      if (date && date >= SUSPENDED_SINCE) {
+        throw new Error(`preregistration ${path}, first committed ${date}, has no registry entry; a campaign dated on or after ${SUSPENDED_SINCE} lists its models in docs/benchmarks/preregistrations.d/ before it runs (CLAUDE.md "Choose models")`);
+      }
+    }
     const problems = entry ? checkModels(entry) : [];
     if (problems.length > 0) throw new Error(`registry entry ${entry!.id} refuses this run: ${problems.join('; ')}`);
   }

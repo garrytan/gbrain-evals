@@ -153,9 +153,8 @@ rule of 2026-11-01 that evals test gbrain and gstack on frontier models.
   lists particle-1 under `models_not_run` with the reason. First paired numbers:
   [particle replay](docs/benchmarks/2026-11-01-longmemeval-particle-replay/REPORT.md).
 - **Always run the newest frontier Opus and GPT.** Today's counted frontier readers are `claude-opus-5-5` and
-  `gpt-6.2-sol`. The runner's code still names `gpt-6.1-sol` (`FRONTIER_READERS` in `eval/runner/systems/baselines.ts`,
-  which the workload sweep's model check requires) and the ledger has no `gpt-6.2-sol` price yet, so the first run on
-  `gpt-6.2-sol` registers its price and moves `FRONTIER_READERS` in its own change. Before a run, check which models
+  `gpt-6.2-sol`, as `FRONTIER_READERS` in `eval/runner/systems/baselines.ts` names them, and the ledger prices both.
+  The workload sweep's model check requires them. Before a run, check which models
   are newest (`bun scripts/model-freshness.ts` reads the providers' model lists, Particle's included) and add any that
   the run doesn't already include. Register a price for a new model in `eval/runner/budget-ledger.ts` so the ledger can
   reserve it.
@@ -231,6 +230,11 @@ Maintain the dated source list in [comparison-systems.md](docs/comparison-system
 When a claim changes, keep the old result identifiable and explain the new evidence. Keep changelog dates, attribution, audit identifiers and unfinished work intact while making their descriptions easier to read.
 
 ## Changelog
+
+### 2026-11-21: The runner's frontier GPT reader is gpt-6.2-sol
+
+The ledger-price sentence under "Choose models" now names `gpt-6.2-sol`, the GPT in `FRONTIER_READERS`, in place of
+`gpt-6.1-sol`.
 
 ### 2026-11-21: gpt-4o and gpt-4o-mini suspended for new campaigns
 

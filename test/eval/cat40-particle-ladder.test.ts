@@ -84,7 +84,7 @@ describe('model ladder with particle-1 (fake Particle on loopback)', () => {
     expect(JSON.parse(raw[2])).toMatchObject({ question_id: 'particle-1|oracle|A01|0|s2', attempt: 1, status: 'ok' });
   }, 60_000);
 
-  test('particle-1 never judges, and a run with it names its judge (the v1 default is gpt-5.4-mini)', async () => {
+  test('particle-1 never judges, and a run with it names its judge (v1 has no default judge, and gpt-5.4-mini never judges)', async () => {
     for (const [extra, says] of [[['--judge', 'particle-1'], 'particle-1 never judges a cell'], [[], 'needs its claims judge passed explicitly'], [['--judge', 'gpt-5.4-mini'], 'needs its claims judge passed explicitly']] as const) {
       const { code, stderr, seen } = await ladder(`refuse-${extra.join('-') || 'default'}`, [{ status: 200, body: submit }], [...extra]);
       expect(code).toBe(2);

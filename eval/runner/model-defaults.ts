@@ -8,10 +8,10 @@
  * never pool its results with the old model's.
  */
 
-/** Current-generation ids, without provider prefix or dated snapshot suffix (checked 2026-11-02). */
+/** Current-generation ids, without provider prefix or dated snapshot suffix (checked 2026-11-21). */
 export const CURRENT_GENERATION: readonly string[] = [
   'claude-opus-5-5', 'claude-sonnet-5-5', 'claude-haiku-5-5',
-  'gpt-6.1-sol', 'gpt-6-astra', 'gpt-6.1-terra', 'gpt-6-luna',
+  'gpt-6.2-sol', 'gpt-6.2-astra', 'gpt-6.1-sol', 'gpt-6-astra', 'gpt-6.1-terra', 'gpt-6-luna',
   'particle-1',
 ];
 

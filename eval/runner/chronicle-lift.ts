@@ -21,7 +21,7 @@
  *        this run would rebuild, is refused before any paid step: answer each configuration in its own --out.
  *        A run holds <out>/run.lock while it runs, so a second run on the same --out is refused.)
  *        [--gbrain <checkout>@<ref>]   measure a copied overlay of another gbrain commit instead of the pin
- *   bun eval/runner/chronicle-lift.ts plain --out <dir> --budget-usd <n> [--arms plain-a,plain-b] [--model claude-sonnet-4-6]
+ *   bun eval/runner/chronicle-lift.ts plain --out <dir> --budget-usd <n> [--arms plain-a,plain-b] [--model claude-opus-5-5]
  *        no-gbrain baseline (docs/plans/2026-11-17-readme-baselines/PREREG.md): each meeting, calendar and conversation
  *        page goes to the model once per arm with a plain "list the events" prompt (plain-baseline.ts), and the
  *        listed lines are scored by score like an ON arm's events. No gbrain build, import or phase runs.
@@ -419,7 +419,7 @@ async function plain(argv: string[]) {
   const arms = (flag(argv, '--arms') ?? PLAIN_ARMS.join(',')).split(',');
   const bad = arms.filter(a => !(PLAIN_ARMS as readonly string[]).includes(a));
   if (bad.length) throw new Error(`plain arms are ${PLAIN_ARMS.join(', ')}; got ${bad.join(', ')}`);
-  const model = flag(argv, '--model') ?? 'claude-sonnet-4-6';
+  const model = flag(argv, '--model') ?? DEFAULT_AGENT_MODEL;
   const concurrency = Number(flag(argv, '--concurrency') ?? 4);
   mkdirSync(out, { recursive: true });
   const all = renderCorpus();

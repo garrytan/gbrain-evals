@@ -9664,7 +9664,7 @@
           "questions": null,
           "readers": [
             "anthropic:claude-opus-5-5",
-            "openai:gpt-6.1-sol"
+            "openai:gpt-6.2-sol"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -9834,7 +9834,7 @@
           "questions": null,
           "readers": [
             "anthropic:claude-opus-5-5",
-            "openai:gpt-6.1-sol"
+            "openai:gpt-6.2-sol"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -10027,7 +10027,7 @@
           "budget": null,
           "questions": null,
           "readers": [
-            "openai:gpt-6.1-sol"
+            "openai:gpt-6.2-sol"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -10043,7 +10043,7 @@
             }
           },
           "judge_repeats": null,
-          "label": "file agent, uncapped grep, 40 turns (openai:gpt-6.1-sol)"
+          "label": "file agent, uncapped grep, 40 turns (openai:gpt-6.2-sol)"
         }
       ],
       "estimate": {
@@ -10170,7 +10170,7 @@
           "budget": null,
           "questions": null,
           "readers": [
-            "openai:gpt-6.1-sol"
+            "openai:gpt-6.2-sol"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -10186,14 +10186,14 @@
             }
           },
           "judge_repeats": null,
-          "label": "whole history (openai:gpt-6.1-sol)"
+          "label": "whole history (openai:gpt-6.2-sol)"
         }
       ],
       "estimate": {
-        "usd": 57.42,
+        "usd": 64.66,
         "lines": {
           "frontier_judges": 0.2,
-          "full_context": 57.12,
+          "full_context": 64.37,
           "judges": 0.09
         }
       }

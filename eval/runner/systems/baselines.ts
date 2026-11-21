@@ -233,7 +233,7 @@ export class PlainHybridSystem implements MemorySystem {
  * 2026-10-07): it never reads a counted cell, practice round or held-out run, so it is not in this list. Its window
  * stays in READER_WINDOWS for labeled smoke cells.
  */
-export const FRONTIER_READERS = ['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol'] as const;
+export const FRONTIER_READERS = ['anthropic:claude-opus-5-5', 'openai:gpt-6.2-sol'] as const;
 /** Readers allowed only in a labeled smoke cell, never in a counted one. */
 export const SMOKE_ONLY_READERS = ['anthropic:claude-fable-5-1'] as const;
 
@@ -253,6 +253,7 @@ export const READER_WINDOWS: Readonly<Record<string, ReaderWindow>> = {
   'anthropic:claude-opus-5-5': { context_window: 1_000_000, max_input_tokens: 1_000_000, max_output_tokens: 128_000, source: 'platform.claude.com/docs/en/models/overview, 2026-10-06' },
   'anthropic:claude-sonnet-5-5': { context_window: 1_000_000, max_input_tokens: 1_000_000, max_output_tokens: 128_000, source: 'platform.claude.com/docs/en/models/overview, 2026-10-06' },
   'anthropic:claude-fable-5-1': { context_window: 1_000_000, max_input_tokens: 1_000_000, max_output_tokens: 128_000, source: 'platform.claude.com/docs/en/models/overview, 2026-10-06' },
+  'openai:gpt-6.2-sol': { context_window: 1_050_000, max_input_tokens: 922_000, max_output_tokens: 128_000, source: 'developers.openai.com/api/docs/models/gpt-6.2-sol, 2026-11-21' },
   'openai:gpt-6.1-sol': { context_window: 1_050_000, max_input_tokens: 922_000, max_output_tokens: 128_000, source: 'developers.openai.com/api/docs/models/gpt-6.1-sol, 2026-10-06' },
   'particle:particle-1': { context_window: PARTICLE_1.context_tokens, max_input_tokens: PARTICLE_1.context_tokens, max_output_tokens: PARTICLE_1.output_ceiling, source: COMPAT_PROVIDERS.particle.source },
 };

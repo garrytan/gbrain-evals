@@ -1024,7 +1024,7 @@ const perReader = (readers: string[]): NonNullable<ArmDefinition['frontier']> =>
  * per reader, so a stale leader row re-buys one reader only. Judged like the dev test.
  */
 export function generateSotaLeaderCells(): CellDefinition[] {
-  const short: Record<string, string> = { 'anthropic:claude-opus-5-5': 'opus', 'openai:gpt-6.1-sol': 'sol' };
+  const short: Record<string, string> = { 'anthropic:claude-opus-5-5': 'opus', 'openai:gpt-6.2-sol': 'sol' };
   const arms = (id: string, mode: ArmMode, label: string): ArmSpec[] => FRONTIER_READERS.map(r => ({ id: `${id}-${short[r]}`, mode, label: `${label} (${r})`, readers: [r], frontier: perReader([r]) }));
   const extra = { block: 'SOTA-leader' as const, probes: { sample: 0, seed: 'sota-probes-leader', conversations: 0 }, runner: 'in-process' as const };
   return [

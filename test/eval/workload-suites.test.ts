@@ -199,16 +199,16 @@ describe('schema, model rule and frontier subset', () => {
     const old = { ...MODEL_CONFIG, fixed_reader: { id: 'anthropic:claude-sonnet-4-6', family: 'sonnet' as const } };
     expect(modelRuleViolations(old).join(' ')).toContain('claude-sonnet-4-6');
     expect(modelRuleViolations(old)).toContain('the fixed reader must be the newest frontier Opus');
-    expect(MODEL_CONFIG.frontier_sweep.map(m => m.id)).toEqual(['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol', 'particle:particle-1']);
+    expect(MODEL_CONFIG.frontier_sweep.map(m => m.id)).toEqual(['anthropic:claude-opus-5-5', 'openai:gpt-6.2-sol', 'particle:particle-1']);
   });
 
-  test('the counted sweep reads with the newest frontier GPT, gpt-6.1-sol; gpt-6-astra is only an alternate reader, and a sweep without gpt-6.1-sol is flagged', () => {
+  test('the counted sweep reads with the newest frontier GPT, gpt-6.2-sol; gpt-6-astra is only an alternate reader, and a sweep without gpt-6.2-sol is flagged', () => {
     const ids = MODEL_CONFIG.frontier_sweep.map(m => m.id);
-    expect(ids).toContain('openai:gpt-6.1-sol');
+    expect(ids).toContain('openai:gpt-6.2-sol');
     expect(ids).not.toContain('openai:gpt-6-astra');
     expect(MODEL_CONFIG.alternate_readers.map(m => m.id)).toEqual(['openai:gpt-6-astra']);
-    const astraSweep = MODEL_CONFIG.frontier_sweep.map(m => m.id === 'openai:gpt-6.1-sol' ? { id: 'openai:gpt-6-astra', family: 'gpt' as const } : m);
-    expect(modelRuleViolations({ ...MODEL_CONFIG, frontier_sweep: astraSweep })).toEqual(['frontier sweep has no openai:gpt-6.1-sol, one of the newest frontier readers (FRONTIER_READERS)']);
+    const astraSweep = MODEL_CONFIG.frontier_sweep.map(m => m.id === 'openai:gpt-6.2-sol' ? { id: 'openai:gpt-6-astra', family: 'gpt' as const } : m);
+    expect(modelRuleViolations({ ...MODEL_CONFIG, frontier_sweep: astraSweep })).toEqual(['frontier sweep has no openai:gpt-6.2-sol, one of the newest frontier readers (FRONTIER_READERS)']);
   });
 
   test('Fable is smoke-only: out of the counted sweep, flagged in any counted role, and a sweep that names it needs --smoke', () => {
@@ -219,7 +219,7 @@ describe('schema, model rule and frontier subset', () => {
     expect(modelRuleViolations({ ...MODEL_CONFIG, frontier_sweep: [...MODEL_CONFIG.frontier_sweep, fable] })).toEqual([smokeOnly]);
     expect(modelRuleViolations({ ...MODEL_CONFIG, alternate_readers: [fable] })).toEqual([smokeOnly]);
     expect(modelRuleViolations({ ...MODEL_CONFIG, judge: fable })).toEqual([smokeOnly]);
-    const refused = Bun.spawnSync(['bun', 'eval/workload-suites/bench.ts', 'beliefs', '--phase', 'sweep', '--models', `openai:gpt-6.1-sol,${fable.id}`], { cwd: resolve(import.meta.dir, '../..') });
+    const refused = Bun.spawnSync(['bun', 'eval/workload-suites/bench.ts', 'beliefs', '--phase', 'sweep', '--models', `openai:gpt-6.2-sol,${fable.id}`], { cwd: resolve(import.meta.dir, '../..') });
     expect(refused.exitCode).toBe(2);
     expect(refused.stderr.toString()).toContain(`${fable.id} reads only in a labeled smoke run, never a counted one (CLAUDE.md); pass --smoke N`);
   });
