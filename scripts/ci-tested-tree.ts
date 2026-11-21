@@ -22,6 +22,9 @@
  * ran (skips excluded). The other Python files are the ones the checks job runs; the job needs it. The harness files
  * stay out of every lane's inventory, because no lane command runs them: gstack's pregate requires the ones a change
  * touches, and tree.json covers those.
+ *
+ * A Python test file that a Bun test runs as a child process (SPAWNED_PYTHON_TESTS, keyed by path, naming the Bun test
+ * that runs it) counts as run when that Bun test file ran, and `record` requires it when it is tracked.
  */
 import { spawnSync } from 'node:child_process';
 import { appendFileSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -30,6 +33,10 @@ import { dirname, join } from 'node:path';
 export const BUN_TEST_ROOTS = ['test/eval', 'eval'];
 export const PYTHON_TESTS = ['test/retrieval_refresh_orchestrator_test.py'];
 export const HARNESS_DIR = 'eval/harness-provider';
+/** Python test files a Bun test runs as a child process, each with the Bun test file that runs it and fails when it fails. */
+export const SPAWNED_PYTHON_TESTS: Readonly<Record<string, string>> = { 'eval/runner/lme-redis/test_lme_redis.py': 'test/eval/lme-redis.test.ts' };
+/** The spawned Python test files whose Bun test is among `ran`. */
+export const spawnedPythonTests = (ran: readonly string[]) => Object.entries(SPAWNED_PYTHON_TESTS).filter(([, by]) => ran.includes(by)).map(([py]) => py);
 /** A harness pytest report among the tested files: pytest.xml, or pytest-<n>.xml when the suite runs as several processes (eval/runner/harness-test.ts --junit-dir). */
 export const isPytestReport = (name: string) => /^pytest(?:-\d+)?\.xml$/.test(name);
 export const LANES = ['test', 'unit', 'py'] as const;
@@ -94,7 +101,7 @@ export function treeRecord(env: Record<string, string | undefined>, o: { reports
   if (!o.reports.length) throw new Error('no JUnit report was found');
   const bun = o.reports.flatMap(r => r.files);
   if (!bun.length) throw new Error('the JUnit reports list no test files');
-  const files = [...new Set([...bun, ...PYTHON_TESTS])].sort();
+  const files = [...new Set([...bun, ...spawnedPythonTests(bun), ...PYTHON_TESTS])].sort();
   const tests = o.reports.reduce((n, r) => n + r.tests, 0);
   return { run_id: int('GITHUB_RUN_ID'), run_attempt: int('GITHUB_RUN_ATTEMPT'), event, sha, head_sha: head, tree: o.tree, workflow, os: env.RUNNER_OS!, files, tests };
 }
@@ -123,7 +130,7 @@ function record(args: string[]): void {
   const rec = treeRecord(process.env, { reports, tree: git(['rev-parse', '--verify', `${process.env.GITHUB_SHA ?? ''}^{tree}`]).trim() });
   const ran = new Set(rec.files);
   const files = tracked();
-  const listed = [...inventory('test', files), ...harnessTests(files)];
+  const listed = [...inventory('test', files), ...harnessTests(files), ...Object.keys(SPAWNED_PYTHON_TESTS).filter(f => files.includes(f))];
   const missing = listed.filter(f => !ran.has(f));
   const extra = rec.files.filter(f => !listed.includes(f));
   const lines = [`TESTED_TREE: run ${rec.run_id}/${rec.run_attempt} ${rec.event} head ${rec.head_sha.slice(0, 12)} tree ${rec.tree.slice(0, 12)} files=${rec.files.length} tests=${rec.tests} os=${rec.os}`];

@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { harnessTests, inventory, isBunTestFile, isPytestReport, junitFiles, pytestFiles, PYTHON_TESTS, treeRecord } from '../../scripts/ci-tested-tree.ts';
+import { harnessTests, inventory, isBunTestFile, isPytestReport, junitFiles, pytestFiles, PYTHON_TESTS, SPAWNED_PYTHON_TESTS, spawnedPythonTests, treeRecord } from '../../scripts/ci-tested-tree.ts';
 
 const root = new URL('../../', import.meta.url);
 const read = (path: string) => readFileSync(new URL(path, root), 'utf8');
@@ -91,6 +91,25 @@ describe('ci-tested-tree record', () => {
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
+  });
+
+  test('a Python test file a Bun test spawns counts as run only when that Bun test file ran', () => {
+    const [[py, by]] = Object.entries(SPAWNED_PYTHON_TESTS) as [string, string][];
+    expect(spawnedPythonTests([by])).toEqual([py]);
+    expect(spawnedPythonTests(['test/eval/a.test.ts'])).toEqual([]);
+    const ran = treeRecord(ENV, { reports: [{ files: [by, 'test/eval/a.test.ts'], tests: 2 }], tree: TREE });
+    expect(ran.files).toEqual([...new Set([by, 'test/eval/a.test.ts', py, ...PYTHON_TESTS])].sort());
+    const other = treeRecord(ENV, { reports: [{ files: ['test/eval/a.test.ts'], tests: 1 }], tree: TREE });
+    expect(other.files).not.toContain(py);
+  });
+
+  test('the spawned-Python map holds only Python test files, each keyed by path to the Bun test file that runs it', () => {
+    for (const [py, by] of Object.entries(SPAWNED_PYTHON_TESTS)) {
+      expect(py).toMatch(/^(?:eval|test)\/(?:[^/]+\/)*test_[^/]+\.py$/);
+      expect(isBunTestFile(by)).toBe(true);
+      expect(by.startsWith('test/eval/') || by.startsWith('eval/')).toBe(true);
+    }
+    expect(Object.keys(SPAWNED_PYTHON_TESTS)).toEqual(['eval/runner/lme-redis/test_lme_redis.py']);
   });
 
   test('a push run records its own commit as the head; a pull_request run records the merge commit and the head', () => {
