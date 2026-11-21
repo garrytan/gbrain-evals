@@ -158,7 +158,9 @@ export function readerBodies(reader: Reader, frozen: ReturnType<typeof loadFroze
 }
 
 export const armId = (reader: AnyReader, memories: Memories) => `${reader}--${memories}`;
-export const judgeArmId = (arm: string, role: 'protocol' | 'cross') => `${arm}--${role}`;
+/** A judge's arm id. A judge request set freezes with the answers present at its first call, so the second half's
+ * judgments of an arm get an arm id of their own: same judge, prompt and settings, over the questions 251 to 500. */
+export const judgeArmId = (arm: string, role: 'protocol' | 'cross', part: '' | 'second-half' = '') => `${arm}--${role}${part ? `--${part}` : ''}`;
 
 export function parseArm(arm: string): { reader: AnyReader; memories: Memories } {
   const [reader, memories] = (arm ?? '').split('--') as [AnyReader, Memories];
@@ -429,15 +431,16 @@ async function main(argv: string[]) {
     } else if (cmd === 'judge') {
       const { reader } = parseArm(arm);
       if (role !== 'protocol' && role !== 'cross') throw new Error('judge role must be protocol or cross');
-      const id = judgeArmId(arm, role);
+      const part = stage === 'counted-second-half' ? 'second-half' : '';
+      const id = judgeArmId(arm, role, part);
       if (!existsSync(manifestPath(id))) {
-        const answers = reader === 'particle'
+        const answers = (reader === 'particle'
           ? readJsonl<ParticleRow>(join(STATE_DIR, 'particle', `${parseArm(arm).memories}.rows.jsonl`)).filter(a => a.answer !== null)
-          : answerRows(readManifest(manifestPath(arm)), l.results(arm)).filter(a => a.answer !== null);
-        const answersPath = join(STATE_DIR, 'answers', `${arm}.jsonl`);
+          : answerRows(readManifest(manifestPath(arm)), l.results(arm)).filter(a => a.answer !== null)).filter(a => !part || ids.includes(a.question_id));
+        const answersPath = join(STATE_DIR, 'answers', `${arm}${part ? `--${part}` : ''}.jsonl`);
         mkdirSync(join(STATE_DIR, 'answers'), { recursive: true });
         writeFileSync(answersPath, answers.map(a => JSON.stringify({ item_id: a.question_id, question_id: a.question_id, answer: a.answer })).join('\n') + '\n');
-        const messagesPath = join(STATE_DIR, 'judge-messages', `${arm}.jsonl`);
+        const messagesPath = join(STATE_DIR, 'judge-messages', `${arm}${part ? `--${part}` : ''}.jsonl`);
         const py = spawnSync('uv', ['run', '-q', '--project', join(ROOT, 'eval/redis-agent-memory-benchmark'), 'python', join(ROOT, 'eval/runner/lme-redis/lme_redis.py'), 'judge-messages',
           '--cache-dir', flag(argv, '--cache-dir') ?? join(homedir(), '.cache/memory-bench'), '--answers', answersPath, '--out', messagesPath], { stdio: 'inherit' });
         if (py.status !== 0) throw new Error('judge-messages failed');

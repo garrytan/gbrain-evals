@@ -508,6 +508,14 @@ v0.60.748.0 and stays development data.
   pilot's answers, judgments, labels and freeze move to an archive, and the batch state keeps only its confirmed batch
   discounts. A keyless test pins the refusal.
 
+### 2026-11-21, during the counted run: how the second half's judgments are recorded
+
+This changes no judge, prompt, setting, number or verdict rule. A judge's request set is frozen from the answers an arm
+holds at the first judge call, so after the first half each arm's judge set covered only questions 1 to 250. The
+second half's judgments of an arm are recorded under an arm id of their own (`<arm>--<role>--second-half`), built
+the same way over questions 251 to 500, and the results join the two halves. The interim look and the first half's
+judgments are unchanged. A keyless test pins the ids.
+
 ## Disclosures
 
 - gbrain is Garry Tan's own project.

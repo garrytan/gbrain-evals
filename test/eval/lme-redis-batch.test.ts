@@ -166,3 +166,10 @@ describe('LongMemEval on Redis harness: counted stages refuse pilot leftovers', 
     expect(L.heldPilotWork('counted-first-half', runs, ['run-pilot'], dir)).toContain('1 batch intents');
   });
 });
+
+describe('LongMemEval on Redis harness: second-half judgments get their own arm id', () => {
+  test('judgeArmId keeps the first-half id and adds a suffix for the second half', () => {
+    expect(L.judgeArmId('opus--off', 'cross')).toBe('opus--off--cross');
+    expect(L.judgeArmId('opus--off', 'protocol', 'second-half')).toBe('opus--off--protocol--second-half');
+  });
+});

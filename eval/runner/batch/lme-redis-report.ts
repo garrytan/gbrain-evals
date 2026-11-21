@@ -251,7 +251,7 @@ function load(frozenDir: string) {
     }
     return new Map([...lane.results(`${reader}--${m}`)].map(([q, r]) => [q, { answer: r.status === 'succeeded' ? r.text ?? '' : null, truncated: r.finish === 'max_tokens' || r.finish === 'length' }]));
   };
-  const rows = scoreRows({ order: frozen.order, types, lines: frozen.lines, reuse, answers, judged: arm => lane.results(arm) });
+  const rows = scoreRows({ order: frozen.order, types, lines: frozen.lines, reuse, answers, judged: id => new Map([...lane.results(id), ...lane.results(`${id}--second-half`)]) });
   const retrieval = readJsonl<{ question_id: string; degraded: boolean }>(join(frozenDir, 'retrieval.jsonl'));
   return { frozen, rows, lane, degraded: new Set(retrieval.filter(r => r.degraded).map(r => r.question_id)) };
 }
