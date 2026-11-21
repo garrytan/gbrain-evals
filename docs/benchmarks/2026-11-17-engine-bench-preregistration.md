@@ -170,3 +170,27 @@ Committed before any counted run. Items 1 to 4 record answers, items 5 to 7 chan
    - **N6 in process** also calls gbrain's dispatch as remote callers. This rule does not yet cover those calls. If the named build refuses them, the dry run on that build shows it, and that comes to GBEV-3 before the counted wave.
    - **Results page.** If this gap exists, the results page names it in its headline result ("the Rust build doesn't serve remote callers yet"), not in a footnote.
 8. **cat13-by-engine** (gbrain-evals#518) is not an arm here. Its gbrain arm embeds live through a provider, which a counted run here never calls. With stub embeddings its vector arm measures nothing, and no preregistered rule compares nDCG@5 across engines. The report cites #518 as context only.
+
+### 2026-11-20: stage 3 passes Rust only when it is equal or better, as gbrain's design plan requires
+
+Committed before any counted Rust arm. This changes stage 3's rule for Rust; the rest of the file stands.
+
+gbrain's design plan for the Rust engine (`docs/designs/RUST_ENGINE.md` at gbrain commit 0ffa58d, lines 73 and 473) lets ranked search return different results only when they are "equal or better on the gbrain-evals retrieval metrics", and says its retrieval gates are "equal or better", not "within N points". Stage 3 is the LongMemEval-S part of that plan's gate E1. The rule under Stage 3 let Rust pass while up to 2 points worse. GBEV-3 decided on 2026-11-20 that the gate for turning Rust on by default follows the design plan, with the exact rule below as ruled by the plan's owner (GBRA-108). The plan's gate E2 (BrainBench) is not an arm of this experiment.
+
+1. **The gate.** For each arm and each TypeScript engine, Rust passes when both hold: the paired point estimate of recall_all@5, Rust minus that engine, is at least 0; and the lower bound of its 95% paired bootstrap interval (10,000 draws, as before) is at least -δ, with δ = 0.018. A question where Rust's top 5 holds the same session ids as that engine's, in any order, is an exact tie with a difference of 0. An arm where every scored question is an exact tie passes. The error rule is unchanged: a Rust error on a non-abstention question that engine answered fails the arm.
+2. **δ, the smallest detectable difference at the planned N.** For a paired difference of 0-or-1 scores, a two-sided 0.05 test with 80% power detects about (1.960 + 0.842) × √(p / N), where N is the number of scored questions and p the share of them where Rust and the other engine score differently (the discordance). LongMemEval-S has 500 questions, 30 of them abstention, so N = 470. The planning discordance is 2% (about 9 questions): PGLite and Postgres scored differently on none of 96 questions in any arm in the development run, and the design plan requires the Rust keyword arm's compatibility ranker to reproduce PGLite's order exactly and its vector arm to reach recall@10 of at least 0.98 against an exact scan. That gives 2.802 × √(0.02 / 470) = 0.0183, rounded down to 0.018, which makes the gate stricter. δ is below 0.02, so N stays at 470 and nothing costs more. At other discordances δ would be:
+
+   | Discordance | δ at N = 470 | N that keeps δ at 0.02 or less |
+   |---|---|---|
+   | 1% | 0.013 | 197 |
+   | 2% (planned) | 0.018 | 393 |
+   | 5% | 0.029 | 982 |
+   | 10% | 0.041 | 1,963 |
+
+   LongMemEval-S holds only 470 scored questions, so a higher planning discordance could not be met by raising N inside this dataset.
+3. **What a fail means.** A truly equal engine whose top 5 differs on some questions passes about half the time, because its wins and losses are equally likely to come out ahead; a little more than half when only a few questions differ, because an exact tie of wins and losses passes. While the observed discordance stays at or below about 4%, where 1.96 standard errors equal δ, the interval clause never fails an arm that the point estimate passes; above that it can fail even an engine ahead on its point estimate. An engine whose top 5 matches on every question always passes. A truly worse engine fails at least 80% of the time when it is 0.0055 or more behind (0.84 standard errors at the planning discordance). So a fail shows the run could not show Rust equal or better; on its own it does not show Rust worse, and the report says so.
+4. **Two secondary rows, reported beside the gate and labelled as not the gate.** Both fail on a Rust error, and an arm where every question ties passes both. At the planning discordance:
+   - **Lower bound at least 0.** Passes a truly better engine 80% of the time when it is 0.018 or more ahead, and a truly equal engine that differs on some questions about 2.5% of the time.
+   - **Non-inferiority at -0.02** (the rule this amendment replaces). Fails a truly worse engine 80% of the time when it is 0.0127 or more behind, and passes a truly equal engine about 87% of the time.
+5. **Receipt.** Each Rust comparison records `rust_verdict` (the gate), `rust_secondary` (`lower_bound_at_least_0` and `non_inferiority_minus_0_02`) and `exact_ties`. The receipt schema is `engine-bench.lme-recall/3`.
+6. **If the design plan's reading changes** before the first counted Rust arm, this rule changes with it, in a new dated amendment.

@@ -3,7 +3,8 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
-  aggregateLmeRows, armAgreement, comparePair, countEmbedPlan, readLmeRows, EmbedCacheMiss, fillCache, hashVector, LME_RECALL_TOP_K, main, refuseNetwork, runLmeRecall, RUST_RECALL_MARGIN,
+  aggregateLmeRows, armAgreement, comparePair, countEmbedPlan, readLmeRows, EmbedCacheMiss, fillCache, hashVector, LME_RECALL_TOP_K, main, refuseNetwork, runLmeRecall, RUST_RECALL_DELTA,
+  RUST_RECALL_NONINFERIORITY_MARGIN,
   stubTransport, type QuestionRow,
 } from '../../eval/runner/engine-bench/lme-recall.ts';
 import { resolveGbrainUnderTest, type GbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
@@ -159,16 +160,67 @@ describe('the Rust verdict per arm', () => {
   });
 
   test('a Rust-only drop below the margin fails, and a TypeScript-only drop does not', () => {
-    const drop = (i: number) => (i < 10 ? 0 : 1);
-    const rustWorse = [...engineRows('pglite', 100, () => 1), ...engineRows('rust', 100, drop)];
-    const rustBetter = [...engineRows('pglite', 100, drop), ...engineRows('rust', 100, () => 1)];
+    const dropped = (engine: 'pglite' | 'rust') => ids(100).map((id, i) => (i < 10 ? row(engine, id, ['miss' + i], 0) : row(engine, id, ['s' + i], 1)));
+    const rustWorse = [...engineRows('pglite', 100, () => 1), ...dropped('rust')];
+    const rustBetter = [...dropped('pglite'), ...engineRows('rust', 100, () => 1)];
     for (const [a, b] of [['pglite', 'rust'], ['rust', 'pglite']] as const) {
       const worse = comparePair(rustWorse, 'keyword', a, b);
       expect(worse.rust_errors).toEqual([]);
       expect(worse.rust_verdict).toBe('fail');
       expect(comparePair(rustBetter, 'keyword', a, b).rust_verdict).toBe('pass');
     }
-    expect(RUST_RECALL_MARGIN).toBe(-0.02);
+    expect(RUST_RECALL_DELTA).toBe(0.018);
+    expect(RUST_RECALL_NONINFERIORITY_MARGIN).toBe(-0.02);
+  });
+
+  const planned = 470;
+  const both = (rust: (i: number) => QuestionRow | undefined) => ids(planned).flatMap((id, i) => {
+    const ts = row('pglite', id, ['s' + i], recallOf(i));
+    return [ts, rust(i) ?? { ...ts, engine: 'rust' as const }];
+  });
+  const flip = (id: string, i: number, recall: number) => row('rust', id, ['other' + i], recall);
+  const rustRows = (wins: number[], losses: number[]) => both(i => {
+    const id = ids(planned)[i];
+    if (wins.includes(i)) return flip(id, i, 1);
+    if (losses.includes(i)) return flip(id, i, 0);
+    return undefined;
+  });
+  const winners = (k: number) => ids(planned).map((_, i) => i).filter(i => recallOf(i) === 0).slice(0, k);
+  const losers = (k: number) => ids(planned).map((_, i) => i).filter(i => recallOf(i) === 1).slice(0, k);
+
+  test('Rust one question worse in 470 fails the gate, though its interval sits inside the old -0.02 margin', () => {
+    for (const [a, b] of [['pglite', 'rust'], ['rust', 'pglite']] as const) {
+      const c = comparePair(rustRows([], losers(1)), 'keyword', a, b);
+      const lower = b === 'rust' ? c.recall_all_delta!.ci95![0] : -c.recall_all_delta!.ci95![1];
+      expect(lower).toBeGreaterThanOrEqual(-0.02);
+      expect(c.exact_ties).toBe(planned - 1);
+      expect(c.rust_verdict).toBe('fail');
+      expect(c.rust_secondary).toEqual({ lower_bound_at_least_0: 'fail', non_inferiority_minus_0_02: 'pass' });
+    }
+  });
+
+  test('Rust ahead on the point estimate passes only while its lower bound stays within -0.018', () => {
+    for (const [a, b] of [['pglite', 'rust'], ['rust', 'pglite']] as const) {
+      const close = comparePair(rustRows(winners(10), losers(5)), 'keyword', a, b);
+      expect(close.rust_verdict).toBe('pass');
+      expect(close.rust_secondary).toEqual({ lower_bound_at_least_0: 'fail', non_inferiority_minus_0_02: 'pass' });
+      const noisy = comparePair(rustRows(winners(60), losers(55)), 'keyword', a, b);
+      expect(b === 'rust' ? noisy.recall_all_delta!.delta : -noisy.recall_all_delta!.delta).toBeGreaterThan(0);
+      expect(noisy.rust_verdict).toBe('fail');
+      const clear = comparePair(rustRows(winners(30), []), 'keyword', a, b);
+      expect(clear.rust_verdict).toBe('pass');
+      expect(clear.rust_secondary).toEqual({ lower_bound_at_least_0: 'pass', non_inferiority_minus_0_02: 'pass' });
+    }
+  });
+
+  test('the same top-5 session ids are an exact tie whatever the rows score, and an arm where every question ties passes', () => {
+    const sameIdsLowerScore = both(i => (recallOf(i) === 1 && i < 60 ? row('rust', ids(planned)[i], ['s' + i], 0) : undefined));
+    const c = comparePair(sameIdsLowerScore, 'keyword', 'pglite', 'rust');
+    expect(c.exact_ties).toBe(planned);
+    expect(c.recall_all_delta).toMatchObject({ delta: 0, ci95: [0, 0] });
+    expect(c.rust_verdict).toBe('pass');
+    const one = [row('pglite', 'q1', ['s1', 's2'], 1), row('rust', 'q1', ['s2', 's1'], 1)];
+    expect(comparePair(one, 'keyword', 'pglite', 'rust')).toMatchObject({ exact_ties: 1, rust_verdict: 'pass', rust_secondary: { lower_bound_at_least_0: 'pass', non_inferiority_minus_0_02: 'pass' } });
   });
 
   test('abstention-only questions leave the arm unmeasured; a TypeScript error is excluded, not charged to Rust', () => {
