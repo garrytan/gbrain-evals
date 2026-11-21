@@ -1,5 +1,7 @@
 # LongMemEval with opaque session ids: retrieval holds, the notes gain holds, and a frontier reader reaches 447/500
 
+*Note added 2026-11-21:* both judges on this page, LongMemEval's official judge and gbrain's data-boundary judge, are `gpt-4o-2024-08-06`, and the GPT-4o reader (arm b, 430/500) is the comparison for `gpt-5.4`'s 447/500. New runs no longer use gpt-4o or gpt-4o-mini in any role (suspended 2026-11-21), so these numbers stand as measured but aren't directly comparable with a run graded by a current frontier judge.
+
 Published 2026-10-04. Measured 2026-10-04 at gbrain `109b992172e1f49107f9de9841758c1d043a2668` (v0.60.37.0, this repository's `package.json` pin), Bun 1.4.2, following a [preregistration](2026-10-04-longmemeval-opaque-followups-preregistration.md) committed before any measured run.
 
 [gbrain](https://github.com/garrytan/gbrain) is a Markdown-first memory system for agents. [LongMemEval](https://arxiv.org/abs/2410.10813) asks questions about long histories of old conversations ("sessions"). A memory system first has to find the right sessions; then a language model (the "reader") answers from what was found, and a second model (the "judge") grades the answer against the dataset's reference.

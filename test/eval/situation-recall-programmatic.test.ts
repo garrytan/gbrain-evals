@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { configPath, loadConfig } from 'gbrain/config';
 import {
   parseProgrammaticArgs,
+  PROTOCOL_JUDGE_MODEL,
   runSituationRecallProgrammatic,
   validateProgrammaticCatalog,
   type ProgrammaticCatalog,
@@ -293,6 +294,18 @@ describe('native category routing and accounting, offline nonpublishable', () =>
     expect(report.per_scenario[0].scenario_id).toBe('scenario-1');
     expect(report.errors).toEqual([]);
     expect(report.publishable).toBe(false);
+  });
+
+  test('Cat5 and Cat9 judge calls carry the protocol judge model the Anthropic client serves', async () => {
+    const models: unknown[] = [];
+    await runSituationRecallProgrammatic({ ...inputs(catalog('cat5')), mode: 'offline' }, { judgeClient: client(request => { models.push(request.model); return response([{ type: 'tool_use', name: 'classify_claim', input: { label: 'supported', rationale: 'Test.' } }]); }) });
+    await runSituationRecallProgrammatic({ ...inputs(catalog('cat9')), mode: 'offline' }, dependencies({ judgeClient: client(request => {
+      models.push(request.model);
+      return response([{ type: 'tool_use', name: 'score_answer', input: { scores: [{ criterion_id: 'time', score: 5, rationale: 'Fixture.' }], verdict: 'pass', overall_rationale: 'Fixture.' } }]);
+    }) }));
+    expect(models.length).toBeGreaterThanOrEqual(2);
+    expect(new Set(models)).toEqual(new Set([PROTOCOL_JUDGE_MODEL]));
+    expect(PROTOCOL_JUDGE_MODEL).toBe('claude-haiku-5-5');
   });
 
   test('Cat9 judge failures retain the native error denominator', async () => {

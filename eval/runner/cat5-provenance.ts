@@ -56,6 +56,7 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import { fitAnthropicRequest, temperatureSent, toolChoiceSent, withThinkingRoom } from './anthropic-request.ts';
+import { judgeClientFor } from './openai-judge-shim.ts';
 import { judgePrice, priceOf } from './judge.ts';
 import { ProbeAccounting, type ProbeSummary } from './probe-accounting.ts';
 import {
@@ -135,7 +136,7 @@ export interface Cat5Report {
 export interface Cat5Config {
   /** Anthropic client. Defaults to lazy singleton reading ANTHROPIC_API_KEY. */
   client?: Anthropic;
-  /** Judge model id. Default: DEFAULT_JUDGE_MODEL (claude-haiku-5-5). */
+  /** Judge model id. Default: DEFAULT_JUDGE_MODEL (gpt-6.2-astra). */
   model?: string;
   /** Max tokens per judge call. Default 400. */
   maxTokens?: number;
@@ -147,7 +148,7 @@ export interface Cat5Config {
 
 // ─── Defaults ────────────────────────────────────────────────────────
 
-export const DEFAULT_JUDGE_MODEL = 'claude-haiku-5-5';
+export const DEFAULT_JUDGE_MODEL = 'gpt-6.2-astra';
 const DEFAULT_MAX_TOKENS = 400;
 const DEFAULT_THRESHOLD = 0.9;
 
@@ -258,8 +259,8 @@ export async function classifyClaim(
   sources: GroundTruthPage[],
   config: Cat5Config = {},
 ): Promise<ClaimScore> {
-  const client = config.client ?? getDefaultClient();
   const model = config.model ?? DEFAULT_JUDGE_MODEL;
+  const client = config.client ?? judgeClientFor(model, getDefaultClient);
   const price = judgePrice(model);
   const maxTokens = config.maxTokens ?? withThinkingRoom(model, DEFAULT_MAX_TOKENS);
   const userContent = renderClaimPrompt(claim, sources);

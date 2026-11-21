@@ -286,6 +286,29 @@ jobs:
           retention-days: 7
           overwrite: true
 
+  # The one check the main branch's ruleset requires. It runs after every job the
+  # merge waits on (.gstack/ship-policy.json required_checks, plus the jobs
+  # tested-tree needs) and fails unless each one succeeded. GitHub counts a
+  # skipped required check as passing, and tested-tree is skipped whenever a job
+  # it needs fails, so this job runs even then (always()) and treats a failed,
+  # cancelled or skipped job as a failure. No job in this workflow is
+  # path-filtered, so every pull request, docs-only ones included, reports it.
+  merge-gate:
+    if: always()
+    needs: [git-cache, checks, tests, harness, tested-tree, prereg-order, scoreboard, receipt-secrets]
+    runs-on: ubicloud-standard-2-ubuntu-2604
+    timeout-minutes: 5
+    steps:
+      - name: Each needed job's result
+        if: always()
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: echo "$RESULTS"
+
+      - name: Fail unless every needed job succeeded
+        if: always() && (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped'))
+        run: exit 1
+
   # The head-to-head scoreboard's $0 fixture (docs/scoreboard.md): the reference
   # fake system end to end through the shim, the metering proxy in lease mode,
   # the native packer, a keyless fake provider as reader and judge, the shared

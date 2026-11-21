@@ -43,11 +43,11 @@ What we will do differently for each way the result could come out. If nothing c
 
 ## Pilot per arm
 
-For each arm, a pilot on at most a tenth of that arm's budget, run before its counted run, showing on that arm's own outputs that the part under test actually ran (for example, the skill loaded or gbrain's search was called), that the judge passes its check there, and that the tasks can be supplied at the planned rate. An arm that fails is fixed, or left out and reported as left out. Where a tenth can't buy the judge check's 40 labelled outputs, the tenth covers the other two checks and the judge check runs in a stage before any counted unit, sized to what it needs; say so here.
+For each arm, a pilot on at most a tenth of that arm's budget, run before its counted run, showing on that arm's own outputs that the part under test actually ran (for example, the skill loaded or gbrain's search was called), that the judge passes its check there, and that the tasks can be supplied at the planned rate. An arm that fails is fixed, or left out and reported as left out. Where a tenth can't buy the judge check's 100 labelled outputs, the tenth covers the other two checks and the judge check runs in a stage before any counted unit, sized to what it needs; say so here.
 
 ## Judge check
 
-Each model judge, the models whose outputs it scores (never its own family, and never particle-1 as a judge of a counted cell), the labelled outputs it is checked on (at least 40), the agreement it must reach (kappa of at least 0.6) and how its errors are read per arm, not pooled. Or say there is no model judge and why.
+Each model judge, the models whose outputs it scores (never its own family, and never particle-1 as a judge of a counted cell), the labelled outputs it is checked on (at least 100; a plan frozen before 2026-11-22 keeps 40), the agreement it must reach (kappa of at least 0.6) and how its errors are read per arm, not pooled. Or say there is no model judge and why.
 
 ## Interim look
 
@@ -90,8 +90,8 @@ Add the entry as `docs/benchmarks/preregistrations.d/<id>.json`. CI checks each 
       ],
       "judge_check": {
         "judges": [
-          { "model": "gpt-6.2-astra", "grades": ["claude-opus-5-5", "particle-1"], "labelled_outputs": 40, "kappa_min": 0.6 },
-          { "model": "claude-opus-5-5", "grades": ["gpt-6.2-sol"], "labelled_outputs": 40, "kappa_min": 0.6 }
+          { "model": "gpt-6.2-astra", "grades": ["claude-opus-5-5", "particle-1"], "labelled_outputs": 100, "kappa_min": 0.6 },
+          { "model": "claude-opus-5-5", "grades": ["gpt-6.2-sol"], "labelled_outputs": 100, "kappa_min": 0.6 }
         ],
         "read_per_arm": true
       },

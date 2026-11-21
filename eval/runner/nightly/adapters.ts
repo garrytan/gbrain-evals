@@ -60,10 +60,13 @@ export type Adapter = (run: SuiteRun, ctx: NightContext) => Promise<AdapterResul
 export const callsModels = (s: Pick<Suite, 'kind'>) => s.kind === 'agent' || s.kind === 'qa';
 
 /**
- * The QA judge for a reader's rows: GPT-6 Astra judges every family's but OpenAI's, which Claude Opus 5.5 judges, so no
+ * The QA judge for a reader's rows: GPT-6.2 Astra judges every family's but OpenAI's, which Claude Opus 5.5 judges, so no
  * judge grades its own family, and claude-opus-5-5 and particle-1 share a judge, so their agreement compares readers.
  */
-export const judgeFor = (reader: string) => (qualifiedModel(reader).startsWith('openai:') ? 'anthropic:claude-opus-5-5' : 'openai:gpt-6-astra');
+export const judgeFor = (reader: string) => (qualifiedModel(reader).startsWith('openai:') ? 'anthropic:claude-opus-5-5' : 'openai:gpt-6.2-astra');
+
+/** The Cat 40 claims judge for a reader's cells: GPT-6.2 Sol for every family's but OpenAI's, which Claude Opus 5.5 judges. */
+export const cat40JudgeFor = (reader: string) => (qualifiedModel(reader).startsWith('openai:') ? 'claude-opus-5-5' : 'gpt-6.2-sol');
 
 const providerOf = (model: string) => model.slice(0, model.indexOf(':')) as Provider;
 const slug = (s: string) => s.replace(/[^A-Za-z0-9.-]+/g, '_');
@@ -144,7 +147,9 @@ export function toolErrorFromText(tool: string, text: string): ToolError | null 
 
 export const CAT40 = {
   runner: join(REPO, 'eval/runner/cat40-model-ladder.ts'), generator: join(REPO, 'eval/generators/model-ladder-gen.ts'),
-  knobs: join(REPO, 'docs/benchmarks/cat40-hard/knobs.frozen.json'), seed: 20261021, label: 'gbrain-hard', judge: 'gpt-6.1-sol', slots: 5, concurrency: 10,
+  knobs: join(REPO, 'docs/benchmarks/cat40-hard/knobs.frozen.json'), seed: 20261021, label: 'gbrain-hard', slots: 5, concurrency: 10,
+  /** The multi-evidence dev loop's claims judge for every reader; the nightly judges each reader's cells with cat40JudgeFor. */
+  judge: 'gpt-6.1-sol',
 };
 
 /** The Cat 40 runner's commands for one night: the world (free), one slot build per slot (run side by side), and the cells, scripted on a fake night. */
@@ -152,7 +157,7 @@ export const CAT40 = {
  * `slots.sha` builds the brains with that commit and serves the build under test on them (the runner's --slot-ref, for
  * read-path changes that share a schema); `slots.n` sets how many brains run cells at once (CAT40.slots).
  */
-export function cat40Commands(run: SuiteRun, ctx: NightContext, world: string, dirs: { root: string; slots: string; cells: string }, slots: { sha?: string; n?: number } = {}) {
+export function cat40Commands(run: SuiteRun, ctx: NightContext, world: string, dirs: { root: string; slots: string; cells: string }, slots: { sha?: string; n?: number } = {}, judge: string = CAT40.judge) {
   // World M is a dev set (gate decision A, 2026-11-09), so the night runs it on the current harness and records any drift from the Hard freeze.
   const n = slots.n ?? CAT40.slots;
   const flags = (ref: string) => ['--dev-set', '--world', world, '--gbrain-repo', ctx.clone, '--gbrain-ref', ref, '--gbrain-root', dirs.root, '--slots', String(n)];
@@ -168,8 +173,20 @@ export function cat40Commands(run: SuiteRun, ctx: NightContext, world: string, d
       ...(ctx.fake ? [] : ['--slot-build-allowance-usd', String(ctx.cat40SlotAllowanceUsd)]), ...paid, '--out', join(dirs.slots, `slot${i}`))),
     cells: bun(CAT40.runner, ...build, '--arms', 'gbrain', '--gbrain-label', CAT40.label, '--tasks', run.items.map(i => i.id).join(','), '--repeat', String(run.k),
       '--concurrency', String(CAT40.concurrency), '--transcripts', ...keyless,
-      ...(ctx.fake ? [] : ['--models', run.readers.filter((r): r is string => r !== null).join(','), '--judge', CAT40.judge]), ...paid, '--out', dirs.cells),
+      ...(ctx.fake ? [] : ['--models', run.readers.filter((r): r is string => r !== null).join(','), '--judge', judge]), ...paid, '--out', dirs.cells),
   };
+}
+
+/**
+ * The night's Cat 40 cells commands: a paid night runs each reader's cells on their own, in a directory named for the
+ * reader, so each reader's claims are judged by the other family (cat40JudgeFor); a fake night runs one scripted command.
+ */
+export function cat40CellGroups(run: SuiteRun, ctx: NightContext, world: string, dirs: { root: string; slots: string; cells: string }): Array<{ cells: string; cmd: string[] }> {
+  if (ctx.fake) return [{ cells: dirs.cells, cmd: cat40Commands(run, ctx, world, dirs).cells }];
+  return run.readers.filter((r): r is string => r !== null).map(r => {
+    const cells = join(dirs.cells, slug(r));
+    return { cells, cmd: cat40Commands({ ...run, readers: [r] }, ctx, world, { ...dirs, cells }, {}, cat40JudgeFor(r)).cells };
+  });
 }
 
 /** The dev-set label and drifted files from the newest Cat 40 cells receipt, which every row of the suite carries into the report. */
@@ -246,12 +263,19 @@ export const cat40Adapter: Adapter = async (run, ctx) => {
   const built = await Promise.all(cmds.slots.map((cmd, i) => step(`slots-${i}`, cmd, env)));
   const failed = built.filter((f): f is NonNullable<typeof f> => f !== null);
   if (failed.length) return { status: 'error', reason: failed.map(f => f.why).join('; '), capStop: failed.some(f => f.capStop), rows: [] };
-  const cells = await step('cells', cmds.cells, env);
-  const tasks = (JSON.parse(readFileSync(world, 'utf8')) as { tasks: HardTask[] }).tasks.filter(t => run.items.some(i => i.id === t.id));
-  const rows = cat40Rows(run, ctx, dirs.cells, new Map(tasks.map(t => [t.id, t])));
   const readers = ctx.fake ? ['fake'] : run.readers.filter((r): r is string => r !== null);
+  const groups = cat40CellGroups(run, ctx, world, dirs);
+  const failures: Array<{ capStop: boolean; why: string }> = [];
+  for (const [i, g] of groups.entries()) {
+    const f = await step(groups.length > 1 ? `cells-${i}` : 'cells', g.cmd, env);
+    if (f) failures.push(f);
+    if (f?.capStop) break;
+  }
+  const cells = failures.length ? { why: failures.map(f => f.why).join('; '), capStop: failures.some(f => f.capStop) } : null;
+  const tasks = (JSON.parse(readFileSync(world, 'utf8')) as { tasks: HardTask[] }).tasks.filter(t => run.items.some(i => i.id === t.id));
+  const rows = groups.flatMap(g => cat40Rows(run, ctx, g.cells, new Map(tasks.map(t => [t.id, t]))));
   const all = [...rows, ...readers.flatMap(r => missingRows(run, ctx, r, rows, cells?.why ?? 'no cell recorded'))];
-  const devSet = cat40DevSet(dirs.cells);
+  const devSet = cat40DevSet(groups[0]!.cells);
   return { status: cells ? 'partial' : 'ran', reason: cells?.why, capStop: cells?.capStop, rows: all, ...(devSet ? { dev_set: devSet } : {}) };
 };
 

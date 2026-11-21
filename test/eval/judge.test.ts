@@ -773,7 +773,7 @@ describe('untrusted answer fencing (audit C-13)', () => {
     await scoreAnswer(makeEvidence(), { client: obedientStubClient(captured) });
     await scoreAnswer(makeEvidence(), { client: obedientStubClient(captured), systemPrompt: 'Custom grader prompt.' });
     await scoreAnswer(makeEvidence(), { client: obedientStubClient(captured), model: 'claude-haiku-4-5-20251001' });
-    expect(captured.map(params => [params.model, params.temperature])).toEqual([['claude-haiku-5-5', undefined], ['claude-haiku-5-5', undefined], ['claude-haiku-4-5-20251001', 0]]);
+    expect(captured.map(params => [params.model, params.temperature])).toEqual([['gpt-6.2-astra', undefined], ['gpt-6.2-astra', undefined], ['claude-haiku-4-5-20251001', 0]]);
     for (const params of captured) {
       const system = (params.system as Array<{ text: string }>)[0].text;
       expect(system).toContain(UNTRUSTED_DATA_INSTRUCTION);

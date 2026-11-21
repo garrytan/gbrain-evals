@@ -2,6 +2,32 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.264] - 2026-11-21
+
+- **New runs default to current frontier models.** The runner's frontier readers are `claude-opus-5-5` and `gpt-6.2-sol` (`FRONTIER_READERS`), and the SOTA loop's cells, the workload frontier sweep and the nightly read with `gpt-6.2-sol`. The default judge of Claude answers in the judge, Cat 5, Cat 9, Cat 14 and Cat 15 runners is `gpt-6.2-astra` from another model family, in place of Haiku; the situation-recall programmatic Cat 5 and Cat 9 runs keep their protocol's judge, `claude-haiku-5-5`. The plain baseline and chronicle-lift's plain arm default to `claude-opus-5-5`, and a paid Cat 40 v1 ladder run must name its claims judge with `--judge`. Frozen campaigns keep the models they named.
+- **No Sol row in the nightly is judged by Sol.** The nightly's QA judge is `gpt-6.2-astra` for every family but OpenAI's, and Cat 40 world M runs one cells run per reader, so `gpt-6.2-sol`'s claims are judged by `claude-opus-5-5` ([docs/nightly.md](docs/nightly.md)). Nights before this change aren't comparable with nights after it.
+- **The launch check refuses an unregistered preregistration.** A preregistration first committed on or after 2026-11-21 with no registry entry now stops `attestPreregistration` instead of passing unchecked.
+
+- **Results graded or read by gpt-4o say so.** Ten results pages measured with gpt-4o or gpt-4o-mini as reader or judge carry a one-line note under the title, README's whole-history comparison row names its official GPT-4o judge, and a sentence below README's scoreboard block says its LoCoMo loss bullet is graded by gpt-4o. The numbers stand as measured; new runs no longer use gpt-4o, so they aren't directly comparable with runs graded by a current frontier judge.
+
+## [0.10.263] - 2026-11-21
+
+### A slow Cat 6 test no longer fails main's CI at random
+
+- [test/eval/cat6.test.ts](test/eval/cat6.test.ts)'s full-run receipt test takes about 5 s, Bun's default per-test
+  limit, and failed main's CI twice when CI started running four test processes per job. It now has a 30 s limit, as
+  other tests that run a whole category on a fixture do. Its assertions are unchanged.
+
+- **CI's tested-tree record counts a Python test that a Bun test runs.** `scripts/ci-tested-tree.ts` lists a Python test file as run when the Bun test file that spawns it ran, through a declared map that holds `eval/runner/lme-redis/test_lme_redis.py` (run by `test/eval/lme-redis.test.ts`), so a /ship receipt can count CI's green run for a change that adds such a file. `record` also requires a mapped file to have run whenever it is tracked.
+
+- **The tested-tree record test expects a spawned Python test file once its Bun test is in the tree.** `test/eval/ci-tested-tree.test.ts` now adds the mapped `eval/runner/lme-redis/test_lme_redis.py` to the files it expects whenever `test/eval/lme-redis.test.ts` is among the Bun tests, so the test keeps passing after the LongMemEval results land on main.
+
+- **gbrain on Redis's open LongMemEval harness: results.** On all 500 LongMemEval-S questions with gbrain v0.60.752.0, Redis's own gpt-4o reader scores 79.2% task-averaged on gbrain's conversations (95% interval 75.5% to 83.0%), behind Redis's published 86.14%; Opus 5.5 answers 469 of 500 (93.8%) under the harness's judge, level with README's 93.6%, and particle-1 462. Forcing `query`'s autocut on, which gbrain ships off, cost Opus 12.8 points (8.8 to 17.2; the test stopped at its interim look). Pasting the whole history was no measurably better for frontier readers after Holm's correction and cost gpt-4o 18.2 points. See the [results](docs/benchmarks/2026-11-20-longmemeval-redis-harness.md), with raw rows, the frozen retrieval and a keyless script for the descriptive rows (`eval/runner/batch/lme-redis-extras.ts`).
+
+- **The secrets check accepts the LongMemEval VM step's key read.** The credential check that runs before a push no longer flags the one line in `eval/runner/lme-redis/vm-stage.sh` that reads the Voyage key at run time from the metering proxy's ready file; it still flags any literal key or changed command on that line, and the rule covers that script only.
+
+- **New campaigns can no longer use gpt-4o or gpt-4o-mini.** From 2026-11-21 a preregistration's registry entry lists every model it runs with its role, and `bun eval/runner/prereg.ts` in CI and the launch check in `attestPreregistration` refuse any gpt-4o model the entry lists in a role we choose, judges included, with an error that names the rule in [CLAUDE.md](CLAUDE.md#choose-models). A compared system's shipped default, such as a comparator server's own extraction model, is declared as `system-internal` and tested as shipped. Earlier campaigns and published results keep their models.
+
 ## [0.10.262] - 2026-11-21
 
 - CI's harness Python tests run as three pytest processes at once instead of one. The two slowest files,
