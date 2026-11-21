@@ -122,6 +122,6 @@ describe('margins and arguments', () => {
   test('the rust arm refuses with exit code 3 until the gbrain build carries the engine', () => {
     const r = spawnSync(process.execPath, ['eval/runner/engine-bench/perf.ts', '--dev', '--engines', 'pglite,rust', '--scale', '20'], { cwd: REPO, encoding: 'utf-8', env: { PATH: process.env.PATH ?? '', HOME: process.env.HOME ?? '' }, timeout: 60_000 });
     expect(r.status).toBe(3);
-    expect(r.stderr).toMatch(/rust_engine_not_in_build/);
+    expect(r.stderr).toMatch(/rust_kind_unsupported/);
   }, 90_000);
 });

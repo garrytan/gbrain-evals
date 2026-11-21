@@ -508,8 +508,8 @@
         }
       },
       "lease": {
-        "usd": 26.51,
-        "basis": "F6: estimate per shard x 1.25 plus twice the peak reservation ($0.1916, reader anthropic:claude-opus-5-5)"
+        "usd": 26.54,
+        "basis": "F6: estimate per shard x 1.25 plus twice the peak reservation ($0.2083, judge anthropic:claude-opus-5-5)"
       }
     }
   ],
@@ -701,8 +701,8 @@
         }
       },
       "lease": {
-        "usd": 7.19,
-        "basis": "F6: estimate per shard x 1.25 plus twice the peak reservation ($0.1916, reader anthropic:claude-opus-5-5)"
+        "usd": 7.22,
+        "basis": "F6: estimate per shard x 1.25 plus twice the peak reservation ($0.2083, judge anthropic:claude-opus-5-5)"
       }
     }
   ],

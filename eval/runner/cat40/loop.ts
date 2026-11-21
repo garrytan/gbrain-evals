@@ -117,6 +117,8 @@ export interface AgentRun {
    * question again.
    */
   timed_out?: true;
+  /** Anthropic and OpenAI runs: each distinct model id the provider said served a turn (the response's `model`), in order. */
+  served_models?: string[];
 }
 
 export const SUBMIT_TOOL: ToolSpec = {
@@ -211,6 +213,10 @@ function cap(text: string, max: number | null): { text: string; truncated: boole
 
 export const RETRYABLE_STATUS = [429, 500, 502, 503, 504, 529];
 
+/** A provider 5xx or 429 is a harness error (the preregistrations' definition). Anthropic and OpenAI requests retry every one a resend can fix, so every 5xx but 501 and 505; Particle retries only the listed statuses its provider module proves safe to resend. */
+export const isProviderFailure = (status: number) => status === 429 || (status >= 500 && status <= 599);
+const resendable = (status: number) => isProviderFailure(status) && status !== 501 && status !== 505;
+
 /**
  * Up to 6 attempts with exponential backoff on retryable statuses. Every attempt is recorded, a network or body-read
  * failure included, before it propagates. `compat` names an OpenAI-compatible provider (Particle): its errors are
@@ -263,7 +269,7 @@ async function postJson(fetchImpl: typeof fetch, url: string, headers: Record<st
     const info = compat ? classifyCompatError(compat, res.status, text, res.headers) : null;
     onAttempt?.({ status: 'error', response: null, error: `${res.status}: ${text.slice(0, 500)}`, ms: Date.now() - t, ...(info ? { retry_after_ms: info.retryAfterMs } : {}) });
     if (info?.kind === 'credit_exhausted' || info?.kind === 'proxy_budget') throw compatError(info);
-    if (!RETRYABLE_STATUS.includes(res.status) || (compat && (attempt === 5 || res.status === 504))) break;
+    if (!(compat ? RETRYABLE_STATUS.includes(res.status) : resendable(res.status)) || (compat && (attempt === 5 || res.status === 504))) break;
     await new Promise(r => setTimeout(r, Math.max(info?.retryAfterMs ?? 0, Math.min(60_000, 2000 * 2 ** attempt) + Math.random() * 1000)));
   }
   throw last!;
@@ -320,7 +326,7 @@ export async function runAgent(cfg: LoopConfig): Promise<AgentRun> {
     if ((e as Error).name === 'BudgetExceededError') throw e;
     run.stop = !cfg.classifyStops ? 'error'
       : isContextOverflow(e) ? 'context_overflow'
-      : e instanceof HarnessError || (e instanceof ProviderError && RETRYABLE_STATUS.includes(e.status)) ? 'harness_error'
+      : e instanceof HarnessError || (e instanceof ProviderError && isProviderFailure(e.status)) ? 'harness_error'
       : 'error';
     run.error = (e as Error).message;
     if (cfg.classifyStops && e instanceof ProviderError && (run.stop === 'error' || isBillingRefusal(e))) run.provider_error = { status: e.status, billing: isBillingRefusal(e) };
@@ -330,6 +336,10 @@ export async function runAgent(cfg: LoopConfig): Promise<AgentRun> {
 }
 
 /** Add one response's usage to the run, and its cost as the budget ledger settles it: long prompts and cache writes at their own rates. */
+function addServed(run: AgentRun, model: unknown) {
+  if (typeof model === 'string' && !(run.served_models ??= []).includes(model)) run.served_models.push(model);
+}
+
 function addUsage(run: AgentRun, usage: unknown) {
   const p = provider(run.model);
   const u = normalizeUsage(p === 'anthropic' ? 'anthropic' : 'openai', usage as object | undefined);
@@ -391,6 +401,7 @@ async function anthropicLoop(cfg: LoopConfig, run: AgentRun, specs: () => ToolSp
     }, onAttempt);
     run.model_ms += Date.now() - s;
     addUsage(run, res.usage);
+    addServed(run, res.model);
     const content = (res.content ?? []) as Array<Record<string, unknown>>;
     messages.push({ role: 'assistant', content });
     const calls = content.filter(c => c.type === 'tool_use');
@@ -429,6 +440,7 @@ async function openaiLoop(cfg: LoopConfig, run: AgentRun, specs: () => ToolSpec[
     }, onAttempt);
     run.model_ms += Date.now() - s;
     addUsage(run, res.usage);
+    addServed(run, res.model);
     const output = (res.output ?? []) as Array<Record<string, unknown>>;
     const calls = output.filter(o => o.type === 'function_call');
     if (!calls.length) {

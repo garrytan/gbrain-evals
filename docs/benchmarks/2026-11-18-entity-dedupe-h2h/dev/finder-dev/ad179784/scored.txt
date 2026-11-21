@@ -1,0 +1,90 @@
+# BrainBench person-dedupe: are really different people kept apart?
+
+seed 20261117; 20 per family; ledger 14877e8e396c; 1380 pages; 680 designed pairs (400 different-people, 280 same-person)
+
+Headline (finder:auto-link at gbrain@ad179784): false-merge rate 0.0% (0/400; 95% CI 0.0 to 1.0%)
+
+| system | false-merge rate (designed different-people pairs) | precision (all pairs) | recall (all pairs) | B-cubed F1 | false merges anywhere |
+|---|---|---|---|---|---|
+| exact-name | 75.0% (300/400; 95% CI 70.5 to 79.0%) | 33.9% (155/457; 95% CI 29.7 to 38.4%) | 55.4% (155/280; 95% CI 49.5 to 61.1%) | 0.851 | 302 |
+| folded-name | 75.0% (300/400; 95% CI 70.5 to 79.0%) | 37.0% (177/479; 95% CI 32.7 to 41.4%) | 63.2% (177/280; 95% CI 57.4 to 68.6%) | 0.858 | 302 |
+| shared-email | 55.0% (220/400; 95% CI 50.1 to 59.8%) | 26.1% (240/920; 95% CI 23.4 to 29.0%) | 85.7% (240/280; 95% CI 81.1 to 89.3%) | 0.846 | 680 |
+| email+folded-name | 40.0% (160/400; 95% CI 35.3 to 44.9%) | 46.1% (137/297; 95% CI 40.5 to 51.8%) | 48.9% (137/280; 95% CI 43.1 to 54.8%) | 0.895 | 160 |
+| email+nickname-name | 40.0% (160/400; 95% CI 35.3 to 44.9%) | 49.5% (157/317; 95% CI 44.1 to 55.0%) | 56.1% (157/280; 95% CI 50.2 to 61.8%) | 0.902 | 160 |
+| contract-emulator[arm 1]:auto-link | 30.0% (120/400; 95% CI 25.7 to 34.7%) | 54.5% (144/264; 95% CI 48.5 to 60.4%) | 51.4% (144/280; 95% CI 45.6 to 57.2%) | 0.912 | 120 |
+| contract-emulator[arm 1]:proposed | 65.0% (260/400; 95% CI 60.2 to 69.5%) | 40.3% (177/439; 95% CI 35.8 to 45.0%) | 63.2% (177/280; 95% CI 57.4 to 68.6%) | 0.875 | 262 |
+| contract-emulator[arm 1]:class:clean | 30.0% (120/400; 95% CI 25.7 to 34.7%) | 54.5% (144/264; 95% CI 48.5 to 60.4%) | 51.4% (144/280; 95% CI 45.6 to 57.2%) | 0.912 | 120 |
+| contract-emulator[arm 1]:class:likely | 5.0% (20/400; 95% CI 3.3 to 7.6%) | 50.0% (20/40; 95% CI 35.2 to 64.8%) | 7.1% (20/280; 95% CI 4.7 to 10.8%) | 0.890 | 20 |
+| contract-emulator[arm 1]:class:weak | 45.0% (180/400; 95% CI 40.2 to 49.9%) | 22.6% (53/235; 95% CI 17.7 to 28.3%) | 18.9% (53/280; 95% CI 14.8 to 23.9%) | 0.861 | 182 |
+| contract-emulator[arm 1]:class:thin | 0.0% (0/400; 95% CI 0.0 to 1.0%) | n/a | 0.0% (0/280; 95% CI 0.0 to 1.4%) | 0.887 | 0 |
+| contract-emulator[arm 1]:confirm-list | 0.0% (0/400; 95% CI 0.0 to 1.0%) | n/a | 0.0% (0/280; 95% CI 0.0 to 1.4%) | 0.887 | 0 |
+| contract-emulator[arm 1]:auto-link+confirm-list | 30.0% (120/400; 95% CI 25.7 to 34.7%) | 54.5% (144/264; 95% CI 48.5 to 60.4%) | 51.4% (144/280; 95% CI 45.6 to 57.2%) | 0.912 | 120 |
+| contract-emulator[arm 2]:auto-link | 20.0% (80/400; 95% CI 16.4 to 24.2%) | 62.1% (131/211; 95% CI 55.4 to 68.4%) | 46.8% (131/280; 95% CI 41.0 to 52.6%) | 0.921 | 80 |
+| contract-emulator[arm 2]:proposed | 65.0% (260/400; 95% CI 60.2 to 69.5%) | 40.3% (177/439; 95% CI 35.8 to 45.0%) | 63.2% (177/280; 95% CI 57.4 to 68.6%) | 0.875 | 262 |
+| contract-emulator[arm 2]:confirm-list | 10.0% (40/400; 95% CI 7.4 to 13.3%) | 24.5% (13/53; 95% CI 14.9 to 37.6%) | 4.6% (13/280; 95% CI 2.7 to 7.8%) | 0.881 | 40 |
+| contract-emulator[arm 2]:auto-link+confirm-list | 30.0% (120/400; 95% CI 25.7 to 34.7%) | 54.5% (144/264; 95% CI 48.5 to 60.4%) | 51.4% (144/280; 95% CI 45.6 to 57.2%) | 0.912 | 120 |
+| contract-emulator[arm 3]:auto-link | 0.0% (0/400; 95% CI 0.0 to 1.0%) | 100.0% (41/41; 95% CI 91.4 to 100.0%) | 14.6% (41/280; 95% CI 11.0 to 19.3%) | 0.905 | 0 |
+| contract-emulator[arm 3]:proposed | 65.0% (260/400; 95% CI 60.2 to 69.5%) | 40.3% (177/439; 95% CI 35.8 to 45.0%) | 63.2% (177/280; 95% CI 57.4 to 68.6%) | 0.875 | 262 |
+| contract-emulator[arm 3]:confirm-list | 20.0% (80/400; 95% CI 16.4 to 24.2%) | 48.7% (76/156; 95% CI 41.0 to 56.5%) | 27.1% (76/280; 95% CI 22.3 to 32.6%) | 0.895 | 80 |
+| contract-emulator[arm 3]:auto-link+confirm-list | 20.0% (80/400; 95% CI 16.4 to 24.2%) | 59.4% (117/197; 95% CI 52.4 to 66.0%) | 41.8% (117/280; 95% CI 36.2 to 47.6%) | 0.911 | 80 |
+| contract-emulator[arm 4]:auto-link | 23.0% (92/400; 95% CI 19.1 to 27.4%) | 61.0% (144/236; 95% CI 54.7 to 67.0%) | 51.4% (144/280; 95% CI 45.6 to 57.2%) | 0.922 | 92 |
+| contract-emulator[arm 4]:proposed | 49.3% (197/400; 95% CI 44.4 to 54.1%) | 47.2% (177/375; 95% CI 42.2 to 52.3%) | 63.2% (177/280; 95% CI 57.4 to 68.6%) | 0.900 | 198 |
+| contract-emulator[arm 4]:confirm-list | 0.0% (0/400; 95% CI 0.0 to 1.0%) | n/a | 0.0% (0/280; 95% CI 0.0 to 1.4%) | 0.887 | 0 |
+| contract-emulator[arm 4]:auto-link+confirm-list | 23.0% (92/400; 95% CI 19.1 to 27.4%) | 61.0% (144/236; 95% CI 54.7 to 67.0%) | 51.4% (144/280; 95% CI 45.6 to 57.2%) | 0.922 | 92 |
+| contract-emulator[arm 5]:auto-link | 16.5% (66/400; 95% CI 13.2 to 20.5%) | 66.5% (131/197; 95% CI 59.6 to 72.7%) | 46.8% (131/280; 95% CI 41.0 to 52.6%) | 0.926 | 66 |
+| contract-emulator[arm 5]:proposed | 49.3% (197/400; 95% CI 44.4 to 54.1%) | 47.2% (177/375; 95% CI 42.2 to 52.3%) | 63.2% (177/280; 95% CI 57.4 to 68.6%) | 0.900 | 198 |
+| contract-emulator[arm 5]:confirm-list | 6.5% (26/400; 95% CI 4.5 to 9.4%) | 33.3% (13/39; 95% CI 20.6 to 49.0%) | 4.6% (13/280; 95% CI 2.7 to 7.8%) | 0.885 | 26 |
+| contract-emulator[arm 5]:auto-link+confirm-list | 23.0% (92/400; 95% CI 19.1 to 27.4%) | 61.0% (144/236; 95% CI 54.7 to 67.0%) | 51.4% (144/280; 95% CI 45.6 to 57.2%) | 0.922 | 92 |
+| contract-emulator[arm 6]:auto-link | 16.5% (66/400; 95% CI 13.2 to 20.5%) | 68.6% (144/210; 95% CI 62.0 to 74.5%) | 51.4% (144/280; 95% CI 45.6 to 57.2%) | 0.931 | 66 |
+| contract-emulator[arm 6]:proposed | 49.3% (197/400; 95% CI 44.4 to 54.1%) | 47.2% (177/375; 95% CI 42.2 to 52.3%) | 63.2% (177/280; 95% CI 57.4 to 68.6%) | 0.900 | 198 |
+| contract-emulator[arm 6]:confirm-list | 6.5% (26/400; 95% CI 4.5 to 9.4%) | 0.0% (0/26; 95% CI 0.0 to 12.9%) | 0.0% (0/280; 95% CI 0.0 to 1.4%) | 0.880 | 26 |
+| contract-emulator[arm 6]:auto-link+confirm-list | 23.0% (92/400; 95% CI 19.1 to 27.4%) | 61.0% (144/236; 95% CI 54.7 to 67.0%) | 51.4% (144/280; 95% CI 45.6 to 57.2%) | 0.922 | 92 |
+| contract-emulator[arm 7]:auto-link | 0.0% (0/400; 95% CI 0.0 to 1.0%) | 100.0% (48/48; 95% CI 92.6 to 100.0%) | 17.1% (48/280; 95% CI 13.2 to 22.0%) | 0.908 | 0 |
+| contract-emulator[arm 7]:proposed | 49.3% (197/400; 95% CI 44.4 to 54.1%) | 47.2% (177/375; 95% CI 42.2 to 52.3%) | 63.2% (177/280; 95% CI 57.4 to 68.6%) | 0.900 | 198 |
+| contract-emulator[arm 7]:confirm-list | 13.0% (52/400; 95% CI 10.1 to 16.7%) | 59.4% (76/128; 95% CI 50.7 to 67.5%) | 27.1% (76/280; 95% CI 22.3 to 32.6%) | 0.904 | 52 |
+| contract-emulator[arm 7]:auto-link+confirm-list | 13.0% (52/400; 95% CI 10.1 to 16.7%) | 70.5% (124/176; 95% CI 63.3 to 76.7%) | 44.3% (124/280; 95% CI 38.6 to 50.1%) | 0.923 | 52 |
+| contract-emulator[arm 1+union]:auto-link | 20.0% (80/400; 95% CI 16.4 to 24.2%) | 60.8% (124/204; 95% CI 53.9 to 67.2%) | 44.3% (124/280; 95% CI 38.6 to 50.1%) | 0.914 | 80 |
+| contract-emulator[arm 1+union]:proposed | 65.0% (260/400; 95% CI 60.2 to 69.5%) | 40.3% (177/439; 95% CI 35.8 to 45.0%) | 63.2% (177/280; 95% CI 57.4 to 68.6%) | 0.875 | 262 |
+| contract-emulator[arm 1+union]:confirm-list | 0.0% (0/400; 95% CI 0.0 to 1.0%) | n/a | 0.0% (0/280; 95% CI 0.0 to 1.4%) | 0.887 | 0 |
+| contract-emulator[arm 1+union]:auto-link+confirm-list | 20.0% (80/400; 95% CI 16.4 to 24.2%) | 60.8% (124/204; 95% CI 53.9 to 67.2%) | 44.3% (124/280; 95% CI 38.6 to 50.1%) | 0.914 | 80 |
+| contract-emulator[arm 2+union]:auto-link | 10.0% (40/400; 95% CI 7.4 to 13.3%) | 73.5% (111/151; 95% CI 66.0 to 79.9%) | 39.6% (111/280; 95% CI 34.1 to 45.5%) | 0.922 | 40 |
+| contract-emulator[arm 2+union]:proposed | 65.0% (260/400; 95% CI 60.2 to 69.5%) | 40.3% (177/439; 95% CI 35.8 to 45.0%) | 63.2% (177/280; 95% CI 57.4 to 68.6%) | 0.875 | 262 |
+| contract-emulator[arm 2+union]:confirm-list | 10.0% (40/400; 95% CI 7.4 to 13.3%) | 24.5% (13/53; 95% CI 14.9 to 37.6%) | 4.6% (13/280; 95% CI 2.7 to 7.8%) | 0.881 | 40 |
+| contract-emulator[arm 2+union]:auto-link+confirm-list | 20.0% (80/400; 95% CI 16.4 to 24.2%) | 60.8% (124/204; 95% CI 53.9 to 67.2%) | 44.3% (124/280; 95% CI 38.6 to 50.1%) | 0.914 | 80 |
+| contract-emulator[arm 3+union]:auto-link | 0.0% (0/400; 95% CI 0.0 to 1.0%) | 100.0% (41/41; 95% CI 91.4 to 100.0%) | 14.6% (41/280; 95% CI 11.0 to 19.3%) | 0.905 | 0 |
+| contract-emulator[arm 3+union]:proposed | 65.0% (260/400; 95% CI 60.2 to 69.5%) | 40.3% (177/439; 95% CI 35.8 to 45.0%) | 63.2% (177/280; 95% CI 57.4 to 68.6%) | 0.875 | 262 |
+| contract-emulator[arm 3+union]:confirm-list | 20.0% (80/400; 95% CI 16.4 to 24.2%) | 48.7% (76/156; 95% CI 41.0 to 56.5%) | 27.1% (76/280; 95% CI 22.3 to 32.6%) | 0.895 | 80 |
+| contract-emulator[arm 3+union]:auto-link+confirm-list | 20.0% (80/400; 95% CI 16.4 to 24.2%) | 59.4% (117/197; 95% CI 52.4 to 66.0%) | 41.8% (117/280; 95% CI 36.2 to 47.6%) | 0.911 | 80 |
+| contract-emulator[arm 4+union]:auto-link | 13.0% (52/400; 95% CI 10.1 to 16.7%) | 70.5% (124/176; 95% CI 63.3 to 76.7%) | 44.3% (124/280; 95% CI 38.6 to 50.1%) | 0.923 | 52 |
+| contract-emulator[arm 4+union]:proposed | 49.3% (197/400; 95% CI 44.4 to 54.1%) | 47.2% (177/375; 95% CI 42.2 to 52.3%) | 63.2% (177/280; 95% CI 57.4 to 68.6%) | 0.900 | 198 |
+| contract-emulator[arm 4+union]:confirm-list | 0.0% (0/400; 95% CI 0.0 to 1.0%) | n/a | 0.0% (0/280; 95% CI 0.0 to 1.4%) | 0.887 | 0 |
+| contract-emulator[arm 4+union]:auto-link+confirm-list | 13.0% (52/400; 95% CI 10.1 to 16.7%) | 70.5% (124/176; 95% CI 63.3 to 76.7%) | 44.3% (124/280; 95% CI 38.6 to 50.1%) | 0.923 | 52 |
+| contract-emulator[arm 5+union]:auto-link | 6.5% (26/400; 95% CI 4.5 to 9.4%) | 81.0% (111/137; 95% CI 73.6 to 86.7%) | 39.6% (111/280; 95% CI 34.1 to 45.5%) | 0.926 | 26 |
+| contract-emulator[arm 5+union]:proposed | 49.3% (197/400; 95% CI 44.4 to 54.1%) | 47.2% (177/375; 95% CI 42.2 to 52.3%) | 63.2% (177/280; 95% CI 57.4 to 68.6%) | 0.900 | 198 |
+| contract-emulator[arm 5+union]:confirm-list | 6.5% (26/400; 95% CI 4.5 to 9.4%) | 33.3% (13/39; 95% CI 20.6 to 49.0%) | 4.6% (13/280; 95% CI 2.7 to 7.8%) | 0.885 | 26 |
+| contract-emulator[arm 5+union]:auto-link+confirm-list | 13.0% (52/400; 95% CI 10.1 to 16.7%) | 70.5% (124/176; 95% CI 63.3 to 76.7%) | 44.3% (124/280; 95% CI 38.6 to 50.1%) | 0.923 | 52 |
+| contract-emulator[arm 6+union]:auto-link | 6.5% (26/400; 95% CI 4.5 to 9.4%) | 82.7% (124/150; 95% CI 75.8 to 87.9%) | 44.3% (124/280; 95% CI 38.6 to 50.1%) | 0.932 | 26 |
+| contract-emulator[arm 6+union]:proposed | 49.3% (197/400; 95% CI 44.4 to 54.1%) | 47.2% (177/375; 95% CI 42.2 to 52.3%) | 63.2% (177/280; 95% CI 57.4 to 68.6%) | 0.900 | 198 |
+| contract-emulator[arm 6+union]:confirm-list | 6.5% (26/400; 95% CI 4.5 to 9.4%) | 0.0% (0/26; 95% CI 0.0 to 12.9%) | 0.0% (0/280; 95% CI 0.0 to 1.4%) | 0.880 | 26 |
+| contract-emulator[arm 6+union]:auto-link+confirm-list | 13.0% (52/400; 95% CI 10.1 to 16.7%) | 70.5% (124/176; 95% CI 63.3 to 76.7%) | 44.3% (124/280; 95% CI 38.6 to 50.1%) | 0.923 | 52 |
+| contract-emulator[arm 2b]:auto-link | 13.3% (53/400; 95% CI 10.3 to 16.9%) | 56.2% (68/121; 95% CI 47.3 to 64.7%) | 24.3% (68/280; 95% CI 19.6 to 29.6%) | 0.905 | 53 |
+| contract-emulator[arm 2b]:proposed | 49.3% (197/400; 95% CI 44.4 to 54.1%) | 47.2% (177/375; 95% CI 42.2 to 52.3%) | 63.2% (177/280; 95% CI 57.4 to 68.6%) | 0.900 | 198 |
+| contract-emulator[arm 2b]:confirm-list | 9.8% (39/400; 95% CI 7.2 to 13.1%) | 66.1% (76/115; 95% CI 57.0 to 74.1%) | 27.1% (76/280; 95% CI 22.3 to 32.6%) | 0.908 | 39 |
+| contract-emulator[arm 2b]:auto-link+confirm-list | 23.0% (92/400; 95% CI 19.1 to 27.4%) | 61.0% (144/236; 95% CI 54.7 to 67.0%) | 51.4% (144/280; 95% CI 45.6 to 57.2%) | 0.922 | 92 |
+| contract-emulator[arm 2b+union]:auto-link | 3.3% (13/400; 95% CI 1.9 to 5.5%) | 78.7% (48/61; 95% CI 66.9 to 87.1%) | 17.1% (48/280; 95% CI 13.2 to 22.0%) | 0.904 | 13 |
+| contract-emulator[arm 2b+union]:proposed | 49.3% (197/400; 95% CI 44.4 to 54.1%) | 47.2% (177/375; 95% CI 42.2 to 52.3%) | 63.2% (177/280; 95% CI 57.4 to 68.6%) | 0.900 | 198 |
+| contract-emulator[arm 2b+union]:confirm-list | 9.8% (39/400; 95% CI 7.2 to 13.1%) | 66.1% (76/115; 95% CI 57.0 to 74.1%) | 27.1% (76/280; 95% CI 22.3 to 32.6%) | 0.908 | 39 |
+| contract-emulator[arm 2b+union]:auto-link+confirm-list | 13.0% (52/400; 95% CI 10.1 to 16.7%) | 70.5% (124/176; 95% CI 63.3 to 76.7%) | 44.3% (124/280; 95% CI 38.6 to 50.1%) | 0.923 | 52 |
+| finder:auto-link | 0.0% (0/400; 95% CI 0.0 to 1.0%) | 100.0% (49/49; 95% CI 92.7 to 100.0%) | 17.5% (49/280; 95% CI 13.5 to 22.4%) | 0.909 | 0 |
+| finder:proposed | 57.5% (230/400; 95% CI 52.6 to 62.3%) | 43.8% (180/411; 95% CI 39.1 to 48.6%) | 64.3% (180/280; 95% CI 58.5 to 69.7%) | 0.888 | 231 |
+| finder:class:clean | 0.0% (0/400; 95% CI 0.0 to 1.0%) | 100.0% (49/49; 95% CI 92.7 to 100.0%) | 17.5% (49/280; 95% CI 13.5 to 22.4%) | 0.909 | 0 |
+| finder:class:likely | 39.5% (158/400; 95% CI 34.8 to 44.4%) | 42.8% (118/276; 95% CI 37.1 to 48.7%) | 42.1% (118/280; 95% CI 36.5 to 48.0%) | 0.892 | 158 |
+| finder:class:weak | 26.3% (105/400; 95% CI 22.2 to 30.8%) | 23.7% (33/139; 95% CI 17.4 to 31.5%) | 11.8% (33/280; 95% CI 8.5 to 16.1%) | 0.873 | 106 |
+| finder:class:thin | 0.0% (0/400; 95% CI 0.0 to 1.0%) | n/a | 0.0% (0/280; 95% CI 0.0 to 1.4%) | 0.887 | 0 |
+| finder:confirm-list | 26.3% (105/400; 95% CI 22.2 to 30.8%) | 48.3% (98/203; 95% CI 41.5 to 55.1%) | 35.0% (98/280; 95% CI 29.7 to 40.8%) | 0.900 | 105 |
+| finder:auto-link+confirm-list | 26.3% (105/400; 95% CI 22.2 to 30.8%) | 58.3% (147/252; 95% CI 52.2 to 64.3%) | 52.5% (147/280; 95% CI 46.7 to 58.3%) | 0.918 | 105 |
+
+Verdict (finder:auto-link): fail
+  found 7 of 20 plain duplicates (same name, same email, two sources; target all)
+
+Receipt: receipt.json

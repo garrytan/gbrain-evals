@@ -176,6 +176,7 @@ The detailed source table below preserves earlier external snapshots. Rows sayin
 | Mem0 (independent, arXiv 2603.04814) | 49.00%; long-context GPT-5-mini 82.40% in the same paper | QA-acc (NOT R@k), GPT-5-mini judge, 3-vote majority, GPT-5-nano extraction | n/a | 500 | yes | [arXiv 2603.04814](https://arxiv.org/html/2603.04814) |
 | MemCog (WeChat/Tencent) | 95.80 overall; multi-session 92.48; knowledge-update 91.03; temporal 98.50; single-user 100.00; ablations 95.00 (no proactive) / 93.37 (no graph overlay) | QA-acc (NOT R@k), GPT-4o judge; split and answer backbone not stated, baselines copied from other papers; no LongMemEval retrieval metric at all | n/a | 500 (S split inferred) | yes | [arXiv 2605.28046v1](https://arxiv.org/html/2605.28046v1) |
 | Zep (research page, 2026) | 90.2% (451/500); multi-session 83.5%; retrieval latency 104/162 ms p50/p95 | QA-acc (NOT R@k), gpt-5.4 reader (medium reasoning) + gpt-5.4 judge, cross-encoder reranking; the 2025 paper's gpt-4o reader scored 71.2% (gpt-4o-mini 63.8%) | n/a | 500 incl. abstention | yes | [getzep.com/research](https://www.getzep.com/research/), accessed 2026-09-02; [arXiv 2501.13956](https://arxiv.org/abs/2501.13956) |
+| Redis Agent Memory, Remis + Instruct (published, 2026-06) | 86.14% task-averaged (unweighted mean of six category accuracies). Per type: single-session-user 97.14, single-session-preference 73.33, single-session-assistant 100.0, multi-session 75.94, temporal 81.95, knowledge-update 88.46; "Instruct" alone 71.24% | QA-acc (NOT R@k), gpt-4o answerer with the harness's one-shot prompt + gpt-4o judge with LongMemEval's official prompts; Remis top_k=5, context_window=1; Instruct search_limit=40 | n/a | 500 (cleaned Small; abstentions folded into their types) | yes (gpt-4o) | [redis/redis-ai-research-public](https://github.com/redis/redis-ai-research-public/blob/7dbb607e1d6a439b14b7d35a45624e82a54e0a8f/docs/longmemeval-agent-memory/data/results.json) `7dbb607e`, accessed 2026-11-19; harness [redis/agent-memory-server](https://github.com/redis/agent-memory-server/tree/843d2078830f7297882316efb1aae0fb7ae1481f/agent-memory-benchmark) `843d2078`, open source (Apache-2.0) and vendored in [eval/redis-agent-memory-benchmark](../eval/redis-agent-memory-benchmark/README.md); aggregates only, no per-question outputs |
 | Hindsight (Vectorize) | 91.4% (Gemini-3 answerer, own repo; per category 97.1 / 96.4 / 80.0 / 94.9 / 91.0 / 87.2); 89.0% (GPT-OSS-120B); 94.6% on the vendor page (backbone undisclosed) | QA-acc (NOT R@k), LLM judge (GPT-OSS-120B judge in the paper); vendor page markets it under non-official category names | n/a | 500 incl. abstention | yes | [vectorize-io/hindsight-benchmarks](https://github.com/vectorize-io/hindsight-benchmarks); [hindsight.vectorize.io](https://hindsight.vectorize.io/blog/2026/03/23/agent-memory-benchmark), accessed 2026-09-02 |
 | ByteRover, earlier runs | 92.8% (464/500) run 1; 92.2% (461/500) run 2 | QA-acc (NOT R@k), Gemini 3.1 Pro answerer, Gemini 3 Flash or 3.1 Pro judge; competitor rows on their page are copied from vendors with different judges | n/a | 500 incl. abstention | yes | [byterover.dev blog](https://www.byterover.dev/blog/benchmark_ai_agent_memory_real_production_byterover_top_market_accuracy_longmemeval), accessed 2026-09-02 |
 | **gbrain v0.59.13.0 (2026-09-29), opaque session ids** | **87.8% (439/500)** house reader; 86.0% (430/500) GPT-4o reader on the same retrieved sessions (paired +21/−30, exact McNemar p = 0.26); official `evaluate_qa.py` judge 443/500 and 432/500 | QA-acc (NOT R@k). House: claude-sonnet-4-6, notes mode, 1,024 output tokens, full sessions behind the top-5 chunks. GPT-4o arm: `gpt-4o-2024-08-06` with LongMemEval's official `run_generation.py` reading prompt (JSON history, step by step), temperature 0. Reranker off, autocut off; gpt-4o judges; retrieval on the same rows 435/470 recall_all@5 | n/a | 500 incl. abstention | yes, `docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md` | Leak-free replacement for the September 6 row, whose 86.6% (433/500) is invalid ([corrections](corrections.md)), in a different configuration (reranker off, notes reader), so it does not measure the leak. Retrieval, context size and judges still differ from vendor rows; no comparison claimed |
@@ -316,6 +317,19 @@ and temporal reasoning (−6.9). On the descriptive LongMemEval-S rows it scores
 only and 69.8% for gbrain with facts, and on LoCoMo10 83.3% against 85.0% and 93.3%. A later head (`d7d7686de`) was checked
 equivalent in retrieval on public dev conversations; the sealed set was not rerun.
 
+## Joining duplicate records: a matched stress test
+
+The [duplicate-finder head-to-head](benchmarks/2026-11-18-entity-dedupe-h2h.md) gives gbrain and four memory
+systems the same 2,106 synthetic pages. At `0a008fe5`, gbrain's proposed tier links 360 of 676
+different-entity pairs. That's fewer than the automatic tiers of `ext-extract-first` (422),
+`ext-memory-bank` (423) and patched default `ext-graph-pipeline` (438), within the recall margin across
+the two types combined. The company-only comparisons don't clear both tests. The temporal-graph system
+finds more duplicates, and the tuned pipeline makes fewer false merges with more unresolved pages. The
+report separates suggested links from applied links; the rates are for planted hard cases, not field rates.
+
+gbrain is Garry Tan's own project. Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a
+former president of Y Combinator. Garry Tan runs Y Combinator. ([Disclosures](disclosures.md))
+
 ## Adding a comparison that an engineer can use
 
 Record the question the benchmark asks, dataset revision and subset, result budget and unit, model and software versions, score definition and denominator, error handling, and whether results were selected after inspecting test failures. Link the primary source with an access date. Keep changed results as dated entries so readers can tell a new run from a corrected label.
@@ -350,6 +364,18 @@ before A6b use the former environment variable names. The hashes of every file A
 [rename-a6b.json](benchmarks/2026-10-06-oss-memory-shootout/rename-a6b.json).
 
 ## Changelog
+
+### 2026-11-20: Add the duplicate-record comparison
+
+The comparisons page adds the [counted duplicate-finder test](https://github.com/garrytan/gbrain-evals/commit/13ccd7f59ef9aa3f6e1a815464fe25560ec88fd8) to separate entity merging
+from retrieval and point readers to the exact versions, settings and observed errors.
+
+### 2026-11-20: Redis's published LongMemEval row
+
+Added Redis Agent Memory's published LongMemEval-S answer accuracy (86.14% task-averaged, gpt-4o reader and judge) to
+the LongMemEval source table, with the commit of its results file and of the open harness that produced it, because a
+[preregistered run](benchmarks/2026-11-20-longmemeval-redis-harness-preregistration.md) puts gbrain through that same
+harness. No comparison changed.
 
 ### 2026-11-16: The pin is linked, not named
 

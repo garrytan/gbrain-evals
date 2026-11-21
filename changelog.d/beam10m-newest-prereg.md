@@ -1,1 +1,0 @@
-- Preregistration for re-measuring the two BEAM-10M rows on gbrain's newest release: arms P, A0 and the whole system on the sealed BEAM-10M set, paired on claude-opus-5-5 with F6 and Q1, with a judge check before any number counts ([preregistration](docs/benchmarks/2026-11-19-beam10m-newest-preregistration.md)).

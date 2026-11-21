@@ -85,16 +85,19 @@ const noProbes = (set: SetId) => ({ sample: 0, seed: `f6-probes-${set.toLowerCas
  */
 export function extractionCapUsd(set: SetId): number {
   const s = ALL_SETS[set];
-  return Math.max(1, Math.ceil(F6_ASSUMPTIONS.extraction_cap_multiple * f6ExtractionLedgerUsd(s.corpus_tokens / s.conversations * largestRatio(set))));
+  const mean = RS1_ASSUMPTIONS.conversation_tokens[set] ?? s.corpus_tokens / s.conversations;
+  return Math.max(1, Math.ceil(F6_ASSUMPTIONS.extraction_cap_multiple * f6ExtractionLedgerUsd(mean * largestRatio(set))));
 }
 /**
  * The largest single reservation a unit's metering proxy holds at once, as the proxy prices it: input reserved at the
- * request's bytes + 64 tokens (metering-proxy.ts) and output at the route cap, through budget-ledger reservationUsd.
+ * request's bytes + 64 tokens (metering-proxy.ts) and output at the route cap, through budget-ledger reservationUsd. A pinned
+ * frontier judge's route cap is its arm's pinned max_tokens (pinnedJudgeRouteCaps), every other judge's the default;
+ * `pinnedJudgeCaps` false keeps the default for every judge (RS1 stage 1, which ran before the judges were pinned).
  * The harness answers and judges one call at a time, and probes are off, so the peak is the larger of one harness call
  * and the system's own concurrent calls while it ingests (gbrain extracts one segment at a time on PGLite; the
  * temporal graph's calls are assumed 8 at once, each reserving 16,384 output tokens of gpt-6-luna).
  */
-export function peakReservationUsd(c: CellDefinition): { usd: number; by: string } {
+export function peakReservationUsd(c: CellDefinition, pinnedJudgeCaps = true): { usd: number; by: string } {
   const L = F6_ASSUMPTIONS.lease;
   const one = (model: string, inputBytes: number, maxOut: number) => {
     const p = CHAT_PRICE_OVERRIDES[model] ?? priceOf(model);
@@ -106,8 +109,9 @@ export function peakReservationUsd(c: CellDefinition): { usd: number; by: string
     const turns = a.readers.map(r => F6_ASSUMPTIONS.agent_first_turn_usd[r] ?? F6_ASSUMPTIONS.agent_first_turn_usd.default);
     calls.push([`file agent: one first turn per reader at once (${a.readers.length})`, turns.reduce((s, x) => s + x, 0)]);
   }
-  const judges = [c.benchmark.startsWith('beam') ? ASSUMPTIONS.judge.beam.model : ASSUMPTIONS.judge.lme.model, ...c.arms.flatMap(a => a.frontier?.judges ?? [])];
-  for (const j of judges) calls.push([`judge ${j}`, one(j, L.judge_bytes, DEFAULT_ROUTE_CAPS.judge)]);
+  const judges: Array<[string, number]> = [[c.benchmark.startsWith('beam') ? ASSUMPTIONS.judge.beam.model : ASSUMPTIONS.judge.lme.model, DEFAULT_ROUTE_CAPS.judge],
+    ...c.arms.flatMap(a => (a.frontier?.judges ?? []).map((j): [string, number] => [j, (pinnedJudgeCaps && a.frontier!.settings?.max_tokens) || DEFAULT_ROUTE_CAPS.judge]))];
+  for (const [j, cap] of judges) calls.push([`judge ${j}`, one(j, L.judge_bytes, cap)]);
   if (runsF6(c)) calls.push([`extraction ${F6_ASSUMPTIONS.extraction.model}`, one(F6_ASSUMPTIONS.extraction.model, 64_000, DEFAULT_ROUTE_CAPS.extraction)]);
   if (c.configuration === 'shipped-0.31') calls.push(['temporal graph 8 x openai:gpt-6-luna', 8 * one('openai:gpt-6-luna', 40_000, 16_384)]);
   const [by, usd] = calls.sort((a, b) => b[1] - a[1])[0];
@@ -130,8 +134,8 @@ function largestRatio(set: SetId): number {
   return r;
 }
 /** A unit's lease: its estimate per shard with the lease margin, plus twice the peak reservation, so the last calls of a unit near its estimate still fit. */
-export function withLease(c: CellDefinition): CellDefinition {
-  const peak = peakReservationUsd(c);
+export function withLease(c: CellDefinition, pinnedJudgeCaps = true): CellDefinition {
+  const peak = peakReservationUsd(c, pinnedJudgeCaps);
   const lease = (shardUsd: number) => Math.ceil((shardUsd * F6_ASSUMPTIONS.lease.margin + 2 * peak.usd) * 100) / 100;
   const usd = lease(c.estimate.usd / c.shards);
   const largest = maxShardUsd(c);

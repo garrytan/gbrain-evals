@@ -54,6 +54,7 @@ import {
   splitConcepts,
   probeSubset,
   parseCat13Argv,
+  postgresServerKind,
   DEFAULT_EMBEDDING_MODEL,
   DEFAULT_EMBED_DIMS,
   CAT13_RERANK_MODEL_PIN,
@@ -62,6 +63,8 @@ import {
 } from '../../eval/runner/cat13-conceptual.ts';
 import { ProbeAccounting } from '../../eval/runner/probe-accounting.ts';
 import { loadReceipt } from '../../eval/runner/receipt.ts';
+import { BudgetExceededError } from '../../eval/runner/budget-ledger.ts';
+import { EvalEngineUnavailable, evalEngineRefusalMessage } from '../../eval/runner/eval-engine.ts';
 import type { Adapter, Query, RankedDoc } from '../../eval/runner/types.ts';
 
 const CORPUS_DIR = join(import.meta.dir, '..', '..', 'eval', 'data', 'world-v1');
@@ -784,5 +787,113 @@ describe('A-06 / A-14: deterministic probe set and gold-text flagging', () => {
     expect(all.conceptual).toEqual({ ndcg5: 0.25, p1_strict: 0.5, count: 2 });
     expect(all.lexical_control).toEqual({ ndcg5: 1, p1_strict: 1, count: 1 });
     expect(scoreByProbeClass(rows, 'holdout').conceptual).toEqual({ ndcg5: 0.5, p1_strict: 1, count: 1 });
+  });
+});
+
+describe('cat13 storage engine for the gbrain arm', () => {
+  test('GBRAIN_EVAL_ENGINE picks the engine; --pg-url and --embed-cache parse in both forms', () => {
+    const o = parseCat13Argv(['--pg-url', 'postgres://u@h:5/db', '--embed-cache=/var/tmp/x.sqlite'], { GBRAIN_EVAL_ENGINE: 'postgres' });
+    expect(o.engine).toBe('postgres');
+    expect(o.pgUrl).toBe('postgres://u@h:5/db');
+    expect(o.embedCache).toBe('/var/tmp/x.sqlite');
+  });
+
+  test('no GBRAIN_EVAL_ENGINE keeps the in-memory PGLite default; LIFECYCLE_PG_URL fills a missing --pg-url', () => {
+    expect(parseCat13Argv([], {}).engine).toBeUndefined();
+    expect(parseCat13Argv([], { GBRAIN_EVAL_ENGINE: 'postgres', LIFECYCLE_PG_URL: 'postgres://x' }).pgUrl).toBe('postgres://x');
+    expect(parseCat13Argv(['--pg-url', 'postgres://flag'], { LIFECYCLE_PG_URL: 'postgres://env' }).pgUrl).toBe('postgres://flag');
+  });
+
+  test('--embed-cache with --stub-embed is refused at parse time', () => {
+    expect(() => parseCat13Argv(['--stub-embed', '--embed-cache', '/var/tmp/x.sqlite'], {})).toThrow(/does not apply to --stub-embed/);
+  });
+
+  test('engine=postgres without a URL refuses before any request, with the engine-refused exit and a skipped receipt', async () => {
+    const reportsDir = mkdtempSync(join(tmpdir(), 'cat13-engine-'));
+    const { receipt, exitCode } = await runCat13({ stubEmbed: true, only: 'gbrain', engine: 'postgres', targetProbes: 30, reportsDir, quiet: true });
+    expect(exitCode).toBe(69);
+    expect(receipt.run_status).toBe('skipped');
+    expect(receipt.n_scored).toBe(0);
+    // The refusal is persisted like any skipped run, so no stale receipt survives at the canonical path.
+    const onDisk = loadReceipt(join(reportsDir, 'cat13-conceptual', 'receipt.json'));
+    expect(onDisk.run_status).toBe('skipped');
+    expect(String(onDisk.skip_reason)).toContain('postgres_url_missing');
+  });
+
+  test('engine=postgres with an unreachable server refuses with exit 69, not an adapter failure', async () => {
+    const reportsDir = mkdtempSync(join(tmpdir(), 'cat13-engine-'));
+    const { receipt, exitCode } = await runCat13({ stubEmbed: true, only: 'gbrain', engine: 'postgres', pgUrl: 'postgres://nobody@127.0.0.1:1/none', targetProbes: 30, reportsDir, quiet: true });
+    expect(exitCode).toBe(69);
+    expect(String(receipt.skip_reason)).toContain('postgres_unreachable');
+    // Receipts are public: the engine block says only whether the server was local, never its host or user.
+    const engine = (receipt.resolved_config as { engine: Record<string, unknown> }).engine;
+    expect(engine.postgres_server).toBe('loopback');
+    expect(JSON.stringify(engine)).not.toContain('nobody');
+    // The server's error text can name a role, so the receipt keeps only the reason code.
+    expect(receipt.skip_reason).toBe('engine_refused: postgres_unreachable');
+  });
+
+  test('postgresServerKind names no host: loopback, remote or unparsed', () => {
+    expect(postgresServerKind('postgres://u@127.0.0.1:5432/db')).toBe('loopback');
+    expect(postgresServerKind('postgres://u@localhost/db')).toBe('loopback');
+    expect(postgresServerKind('postgres://u@[::1]:5432/db')).toBe('loopback');
+    expect(postgresServerKind('postgres://u@db.example.com:5432/db')).toBe('remote');
+    expect(postgresServerKind('not a url')).toBe('unparsed');
+    for (const local of ['postgres://u@0.0.0.0/db', 'postgres://u@localhost./db', 'postgres://u@[::ffff:127.0.0.1]/db', 'postgres:///db?host=/var/run/postgresql', 'postgres://u@LOCALHOST/db']) {
+      expect(postgresServerKind(local)).toBe('loopback');
+    }
+    expect(postgresServerKind('postgres://u@[::ffff:10.0.0.1]/db')).toBe('remote');
+  });
+
+  test('the refusal line says when a skipped receipt was written, and keeps the parseable prefix', () => {
+    const e = new EvalEngineUnavailable('postgres', 'postgres_url_missing', 'no url.');
+    expect(evalEngineRefusalMessage(e, 'cat13')).toMatch(/No receipt or verdict was written \(exit 69\)/);
+    const withReceipt = evalEngineRefusalMessage(e, 'cat13', { skippedReceipt: 'r/receipt.json' });
+    expect(withReceipt).toMatch(/^REFUSED: cat13 .*EvalEngineUnavailable \(postgres_url_missing\)/);
+    expect(withReceipt).toMatch(/A skipped receipt was written to r\/receipt.json; no verdict was written \(exit 69\)/);
+  });
+
+  test('warm passes: a budget refusal stops the run, teardown still runs, and warm spend is recorded apart', async () => {
+    const { probes, gradesByQuery } = syntheticProbes();
+    let calls = 0;
+    let tornDown = 0;
+    const budgetStop: Adapter = {
+      name: 'budget-stop',
+      async init() { return {}; },
+      async query() { calls += 1; if (calls > probes.length) throw new BudgetExceededError('ledger cap reached'); return []; },
+      async teardown() { tornDown += 1; },
+    };
+    await expect(scoreAdapter(budgetStop, [], probes, gradesByQuery, new ProbeAccounting(probes.length), { warmPasses: 1 }))
+      .rejects.toBeInstanceOf(BudgetExceededError);
+    expect(tornDown).toBe(1);
+
+    let spent = 0;
+    const paying: Adapter = { name: 'paying', async init() { return {}; }, async query() { spent += 1; return []; } };
+    const r = await scoreAdapter(paying, [], probes, gradesByQuery, new ProbeAccounting(probes.length), { warmPasses: 2, spentUsd: () => spent });
+    expect(r.phase?.query_cost_usd).toBe(probes.length);
+    expect(r.warm?.cost_usd).toBe(2 * probes.length);
+  });
+
+  test('runCat13 itself refuses --embed-cache with stub mode (the paid guard is off under the stub)', async () => {
+    const reportsDir = mkdtempSync(join(tmpdir(), 'cat13-engine-'));
+    await expect(runCat13({ stubEmbed: true, only: 'gbrain', embedCache: join(reportsDir, 'c.sqlite'), targetProbes: 30, reportsDir, quiet: true }))
+      .rejects.toThrow(/does not apply to --stub-embed/);
+  });
+
+  test('--warm-passes re-times the same probes unscored; quality and first-pass latency stay as they were', async () => {
+    expect(parseCat13Argv(['--warm-passes', '2'], {}).warmPasses).toBe(2);
+    expect(() => parseCat13Argv(['--warm-passes', '11'], {})).toThrow(/0 to 10/);
+    const { probes, gradesByQuery } = syntheticProbes();
+    const ranking = { p1: ['concepts/a', 'concepts/n'], p2: ['concepts/b'] };
+    const cold = await scoreAdapter(new FixedAdapter(ranking), [], probes, gradesByQuery, new ProbeAccounting(probes.length));
+    const acc = new ProbeAccounting(probes.length);
+    const r = await scoreAdapter(new FixedAdapter(ranking), [], probes, gradesByQuery, acc, { warmPasses: 2 });
+    expect(cold.warm).toBeUndefined();
+    expect(cold.per_query[0]!.warm_latency_ms).toBeUndefined();
+    expect(r.ndcg5).toBe(cold.ndcg5);
+    expect(r.warm).toMatchObject({ passes: 2, top5_changed: 0, failures: 0 });
+    expect(r.per_query.every(q => q.warm_latency_ms?.length === 2)).toBe(true);
+    // Repeat queries are not scored: the accounting still counts each probe once.
+    expect(acc.summary().n_scored).toBe(2);
   });
 });

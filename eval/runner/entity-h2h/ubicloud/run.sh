@@ -29,7 +29,9 @@
 # and the runner refuses (STACK_CONFIG_MISMATCH) a stack that reports another.
 #
 # The world's seed travels only as ENTITY_H2H_SEED through ubi-runner's --pass (never on this machine's command line),
-# and the VM writes the world itself (vm-run.sh passes it to run.ts world as an argument there). OPENAI_API_KEY goes to the VM's metering proxy the same way, the only key a memory cell
+# and the VM writes the world itself (vm-run.sh passes it to run.ts world as an argument there). ENTITY_H2H_WORLD=smoke
+# on launch (default full) makes that the 2026-11-17 smoke's world, for re-smokes; restart and continue read it from
+# the cell. OPENAI_API_KEY goes to the VM's metering proxy the same way, the only key a memory cell
 # needs. One ledger writer: the VM's proxy is the only writer of an attempt's ledger, and this script refuses to launch
 # while any VM of its owner exists, while another launch holds the cell's state folder, or while any cell's final pull
 # has not landed. vCPU lines: ubi-runner refuses a create past UBI_QUOTA_VCPUS (464, project) or UBI_CREW_VCPUS (208,
@@ -115,11 +117,15 @@ if [ "$mode" = run ]; then
   [ "$config" = tuned ] || [ -z "$choice" ] || { echo "run.sh: a choice file goes with config tuned only" >&2; exit 2; }
   if [ -n "$choice" ]; then cp "$choice" "$STATE/choice.json"; else rm -f "$STATE/choice.json"; fi
   (cd "$REPO" && bun eval/runner/entity-h2h/run.ts stack-env --system "$system" --config "$config" ${choice:+--choice "$STATE/choice.json"} >/dev/null) || { echo "run.sh: $system cannot run config $config; no VM was started" >&2; exit 2; }
+  world=${ENTITY_H2H_WORLD:-full}
+  case $world in full|smoke) ;; *) echo "run.sh: ENTITY_H2H_WORLD is full or smoke" >&2; exit 2 ;; esac
+  if [ "$world" = smoke ]; then [ "$config" = default ] || { echo "run.sh: the smoke world runs config default only" >&2; exit 2; }; per_family=2; fi
 else
   [ -f "$STATE/cell/cell.json" ] || { echo "run.sh: $STATE/cell/cell.json is missing; launch the cell first" >&2; exit 2; }
   system=$(bun -e 'console.log(JSON.parse(await Bun.file(process.argv[1]).text()).system)' "$STATE/cell/cell.json")
   attempt=$(( $(bun -e 'console.log(JSON.parse(await Bun.file(process.argv[1]).text()).attempts.length)' "$STATE/cell/cell.json") + 1 ))
   per_family=$(bun -e 'console.log(JSON.parse(await Bun.file(process.argv[1]).text()).world.per_family)' "$STATE/cell/cell.json")
+  world=$(bun -e 'console.log(JSON.parse(await Bun.file(process.argv[1]).text()).world.smoke === true ? "smoke" : "full")' "$STATE/cell/cell.json")
   (cd "$REPO" && bun eval/runner/entity-h2h/run.ts reconcile --output "$STATE/cell") || { echo "run.sh: the reconcile failed; no $mode launches until it passes" >&2; exit 2; }
 fi
 if [ -e "$STATE/attempt-$attempt" ]; then
@@ -139,7 +145,7 @@ cmd_line="bash eval/runner/entity-h2h/ubicloud/vm-run.sh $(printf '%q ' "$cell" 
 vm=ubirun-$UBI_OWNER-$(date +%s)-erh-$(head -c3 /dev/urandom | od -An -tx1 | tr -d ' \n')-t$UBI_TTL_HOURS
 printf 'vm=%s\nlaunched_at=%s\n' "$vm" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >"$CELLS/$cell.in-flight"
 rc=0
-(cd "$REPO" && "$UBI" run -n "$vm" -s "$SIZE" --setup eval/runner/entity-h2h/ubicloud/setup.sh --env "ENTITY_H2H_SYSTEM=$system" --pass ENTITY_H2H_SEED --pass OPENAI_API_KEY \
+(cd "$REPO" && "$UBI" run -n "$vm" -s "$SIZE" --setup eval/runner/entity-h2h/ubicloud/setup.sh --env "ENTITY_H2H_SYSTEM=$system" --env "ENTITY_H2H_WORLD=$world" --pass ENTITY_H2H_SEED --pass OPENAI_API_KEY \
   --push "$STATE:work/$cell" --pull "work/$cell:$CELLS" -- "$cmd_line") 9<&- || rc=$?
 echo "run.sh: $cell attempt $attempt exited $rc; state in $STATE"
 if [ "$rc" != 253 ] && [ "$rc" != 255 ] && [ "$rc" -lt 128 ] && mine=$("$UBI" list --mine) && ! grep -q -- "$vm" <<<"$mine"; then

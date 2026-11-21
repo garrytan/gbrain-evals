@@ -9,7 +9,10 @@
     { "finding": "env.kv", "paths": ["docs/benchmarks/*/counted/*/n6pg*-receipt.json", "docs/benchmarks/*/correctness/work/n6-http-postgres/receipt.json"], "pattern": "\"?client_credentials token from a client w[^\"]*", "reason": "N6's description of its expired-token probe, not a token" },
     { "finding": "env.kv", "paths": ["docs/benchmarks/predictive-measures/*/correction-*.json"], "pattern": "\"?g[0-9]+:[a-z0-9.-]+:oov-[0-9]+-p[0-9]{3}:(?:local|remote):[0-9]+\"", "reason": "episode ids in correction records' key fields" },
     { "finding": "db.url_with_password", "paths": ["docs/comparison-systems/ext-memory-bank/**/docker-compose.yml"], "pattern": "postgresql:\\/\\/(\\x68indsight):\\1@db:5432\\/\\1(?=$|[\\s\"'])", "reason": "the memory-bank bundle's internal docker-network Postgres dummy password, already on main in the bundle's own compose file" },
-    { "finding": "env.kv", "paths": ["test/eval/entity-h2h-cells.test.ts"], "pattern": "must-not-reach-gbrain(?=$|[\\s\"'])", "reason": "a test's sentinel key value, proving a blanked key never reaches gbrain" }
+    { "finding": "env.kv", "paths": ["docs/benchmarks/*/analysis/*.json"], "pattern": "\"?ci_z[0-9]\\.[0-9]{2}\"", "reason": "the name of the interval field the Cat 40 Hard analysis used (z 1.98 or 2.80), written into its analysis JSON, not a credential" },
+    { "finding": "env.kv", "paths": ["test/eval/entity-h2h-cells.test.ts"], "pattern": "must-not-reach-gbrain(?=$|[\\s\"'])", "reason": "a test's sentinel key value, proving a blanked key never reaches gbrain" },
+    { "finding": "env.kv", "paths": ["docs/benchmarks/2026-11-18-entity-dedupe-h2h/counted/*/subjects.json", "docs/benchmarks/2026-11-18-entity-dedupe-h2h/counted/*/hand-check-sample.json"], "pattern": "\"?(?:home|work):(?:companies\\/)?[a-z0-9]+(?:-[a-z0-9]+)*\"", "reason": "the duplicate-finder head-to-head's generated page keys (source, then name slug) in the key fields of its unresolved-subject lists and hand-check samples, not credentials" },
+    { "finding": "env.kv", "paths": ["docs/benchmarks/2026-11-08-rs1-narrow/results/aggregates.json"], "pattern": "\"?(?:memory-bank|extract-first)/(?:frontier|bridge)\"", "reason": "the narrowed RS1 verdict aggregates name each comparison (the memory-bank or extract-first server, under the frontier or bridge judge view) in their key fields, not credentials" }
   ],
   "sealed": {
     "paths": ["**/rs1-custody*", "**/rs1-custody*/**", "**/*.rs1-seed", "**/bg1-custody*", "**/bg1-custody*/**", "**/*.bg1-seed", "**/*.bg1-phrasing.json"],
@@ -18,7 +21,7 @@
     "seed_patterns": ["rs1-seed-v1:[0-9a-f]{64}", "bg1-seed-v1:[0-9a-f]{64}"]
   },
   "run_profiles": {
-    "ci-carry/tests": { "workflow": "ci.yml", "events": ["pull_request", "push"], "jobs": ["checks", "tests (1)", "tests (2)", "tests (3)", "tests (4)", "tests (5)", "tests (6)", "tested-tree"], "artifact": "tested-tree", "os": "Linux" }
+    "ci-carry/tests": { "workflow": "ci.yml", "events": ["pull_request", "push"], "jobs": ["checks", "tests (1)", "tests (2)", "tests (3)", "tests (4)", "tests (5)", "tests (6)", "harness (pytest)", "tested-tree"], "artifact": "tested-tree", "os": "Linux" }
   },
   "remote_gate": "echo 'gbrain-evals runs its test suite in CI only: push, wait for CI to pass at this tree, then rerun gstack-pregate --allow-repo-commands' >&2; exit 1",
   "remote_gate_runs": { "profiles": ["ci-carry/tests"], "inventory": "bun --no-env-file --config=/dev/null scripts/ci-tested-tree.ts inventory --lane test" },

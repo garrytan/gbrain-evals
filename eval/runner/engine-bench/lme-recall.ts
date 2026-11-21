@@ -54,7 +54,7 @@ import { SQL } from 'bun';
 import { embedMany as aiSdkEmbedMany } from 'ai';
 import type { BrainEngine } from 'gbrain/engine';
 import type { SearchResult } from 'gbrain/types';
-import { EvalEngineUnavailable, EVAL_ENGINES, openEvalEngine, type EvalEngineKind } from '../eval-engine.ts';
+import { EvalEngineUnavailable, EVAL_ENGINES, openEvalEngine, rustAddonIdentity, type EvalEngineKind, type RustAddonIdentity } from '../eval-engine.ts';
 import { gbrainSpecFrom, importGbrain, overlaySummary, resolveGbrainUnderTest, type GbrainUnderTest } from '../gbrain-under-test.ts';
 import { PINNED_SEARCH_CONFIG, canonicalJson, isAbsQuestion, normalizeSessions, stratifiedSample, sutPages, type Question } from '../longmemeval.ts';
 import { EmbeddingCache, makeCachingTransport } from '../longmemeval-cache.ts';
@@ -70,7 +70,7 @@ import {
   type LmeSutQuestion,
 } from '../evaluator/longmemeval.ts';
 
-export const LME_RECALL_SCHEMA = 'engine-bench.lme-recall/2';
+export const LME_RECALL_SCHEMA = 'engine-bench.lme-recall/3';
 export const LME_RECALL_TOP_K = 5;
 export const LME_ARMS = ['keyword', 'vector', 'hybrid'] as const;
 export type LmeArm = (typeof LME_ARMS)[number];
@@ -78,8 +78,14 @@ export const LME_FULL_RUN_QUESTIONS = 500;
 /** SHA-256 of longmemeval_s_cleaned.json (Sept 2025 revision), the file the published LongMemEval-S runs used. */
 export const PUBLISHED_LME_S_SHA256 = 'd6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442';
 export const BOOTSTRAP = { seed: 20261117, draws: 10_000 } as const;
-/** Preregistered margin: Rust passes an arm when the 95% paired lower bound of Rust minus each TypeScript engine is at least this. */
-export const RUST_RECALL_MARGIN = -0.02;
+/**
+ * Preregistered gate (the 2026-11-20 amendment on stage 3's rule for Rust): Rust passes an arm against a TypeScript engine when the 95% paired lower
+ * bound of Rust minus that engine is at least -RUST_RECALL_DELTA, the smallest detectable difference at the planned 470 scored
+ * questions and a planning discordance of 2%.
+ */
+export const RUST_RECALL_DELTA = 0.018;
+/** The superseded non-inferiority margin, kept as a secondary row that is not the gate. */
+export const RUST_RECALL_NONINFERIORITY_MARGIN = -0.02;
 const REPO_ROOT = resolve(import.meta.dir, '../../..');
 
 export function defaultDatasetPath(): string {
@@ -398,8 +404,17 @@ export interface PairComparison {
    * for. They stay in the paired delta with Rust's recall_all scored 0, and any one of them fails the arm.
    */
   rust_errors?: string[];
-  /** Only when one side is rust: fail on any rust_errors or a lower bound of Rust minus the other below RUST_RECALL_MARGIN; unmeasured with no interval. */
+  /**
+   * Only when one side is rust, and the gate: fail on any rust_errors; pass when every scored question is an exact tie;
+   * otherwise pass when the lower bound of Rust minus the other is at least -RUST_RECALL_DELTA; unmeasured with no interval.
+   */
   rust_verdict?: 'pass' | 'fail' | 'unmeasured';
+  /** Only when one side is rust: the paired point estimate of recall_all@5, Rust minus the other, reported beside the gate; null with no scored pair. */
+  rust_point_estimate?: number | null;
+  /** Only when one side is rust: two secondary rows, reported beside the gate and not the gate, each failing on any rust_errors as the gate does. */
+  rust_secondary?: { lower_bound_at_least_0: 'pass' | 'fail' | 'unmeasured'; non_inferiority_minus_0_02: 'pass' | 'fail' | 'unmeasured' };
+  /** Scored questions whose top 5 holds the same session ids on both engines: exact ties, with a recall_all difference of 0. */
+  exact_ties: number;
   /** recall_all@5, B minus A, over non-abstention questions; null when there are none. */
   recall_all_delta: {
     n_pairs: number; mean_a: number; mean_b: number; delta: number; ci95: [number, number] | null; p_two_sided: number;
@@ -437,7 +452,7 @@ export function comparePair(rows: readonly QuestionRow[], arm: LmeArm, a: EvalEn
   const excluded = ids.filter(id => !usable(id) && !rustErrors.includes(id));
   const kept = ids.filter(usable);
   const differences: Top5Difference[] = [];
-  let ordered = 0, set = 0;
+  let ordered = 0, set = 0, exactTies = 0;
   const pairs: PairedItem[] = [];
   for (const id of kept) {
     const x = ra.get(id)!.arms[arm]!, y = rb.get(id)!.arms[arm]!;
@@ -446,7 +461,10 @@ export function comparePair(rows: readonly QuestionRow[], arm: LmeArm, a: EvalEn
     if (sameOrder(ta, tb)) ordered++;
     else differences.push({ question_id: id, only_a: onlyA, only_b: onlyB, order_only: onlyA.length === 0 && onlyB.length === 0 });
     if (sameSet(ta, tb)) set++;
-    if (x.recall_all !== null && y.recall_all !== null) pairs.push({ id, cluster: id, a: x.recall_all, b: y.recall_all });
+    if (x.recall_all === null || y.recall_all === null) continue;
+    const tie = sameSet(ta, tb);
+    if (tie) exactTies++;
+    pairs.push({ id, cluster: id, a: x.recall_all, b: tie ? x.recall_all : y.recall_all });
   }
   for (const id of rustErrors) {
     const other = ro.get(id)!.arms[arm]!.recall_all!;
@@ -458,14 +476,21 @@ export function comparePair(rows: readonly QuestionRow[], arm: LmeArm, a: EvalEn
     const mc = exactMcNemar(pairs);
     delta = { n_pairs: d.n_pairs, mean_a: d.mean_a, mean_b: d.mean_b, delta: d.delta, ci95: d.ci95, p_two_sided: d.p_two_sided, wins_b: mc.wins, losses_b: mc.losses, mcnemar_p: mc.p_two_sided };
   }
-  let rust: Pick<PairComparison, 'rust_errors' | 'rust_verdict'> = {};
+  let rust: Pick<PairComparison, 'rust_errors' | 'rust_verdict' | 'rust_point_estimate' | 'rust_secondary'> = {};
   if (rustSide !== null) {
+    const point = delta ? (rustSide === b ? delta.delta : 0 - delta.delta) : null;
     const lower = delta?.ci95 ? (rustSide === b ? delta.ci95[0] : -delta.ci95[1]) : null;
-    const verdict = rustErrors.length > 0 ? 'fail' : lower === null ? 'unmeasured' : lower < RUST_RECALL_MARGIN ? 'fail' : 'pass';
-    rust = { rust_errors: rustErrors, rust_verdict: verdict };
+    const allTied = pairs.length > 0 && rustErrors.length === 0 && exactTies === pairs.length;
+    const rule = (passes: (lo: number) => boolean) => rustErrors.length > 0 ? 'fail' : allTied ? 'pass' : lower === null ? 'unmeasured' : passes(lower) ? 'pass' : 'fail';
+    rust = {
+      rust_errors: rustErrors,
+      rust_verdict: rule(lo => lo >= -RUST_RECALL_DELTA),
+      rust_point_estimate: point,
+      rust_secondary: { lower_bound_at_least_0: rule(lo => lo >= 0), non_inferiority_minus_0_02: rule(lo => lo >= RUST_RECALL_NONINFERIORITY_MARGIN) },
+    };
   }
   return {
-    arm, a, b, n_questions: kept.length, excluded_errors: excluded, ...rust, recall_all_delta: delta,
+    arm, a, b, n_questions: kept.length, excluded_errors: excluded, ...rust, exact_ties: exactTies, recall_all_delta: delta,
     identical_top5_ordered: kept.length ? ordered / kept.length : 0,
     identical_top5_set: kept.length ? set / kept.length : 0,
     differences,
@@ -523,7 +548,7 @@ export interface LmeRecallReceipt extends RowsSummary {
   finished_at: string;
   counted: boolean;
   preregistration_attestation: Attestation | null;
-  gbrain: { version: string; overlay: Record<string, unknown> | null };
+  gbrain: { version: string; overlay: Record<string, unknown> | null; rust_addon: RustAddonIdentity | null };
   dataset: {
     file: string; sha256: string; matches_published_sha256: boolean; total_questions: number; selected: number; abstention_selected: number;
     stratify: number | null; limit: number | null; seed: number; question_ids: string[];
@@ -778,7 +803,7 @@ export async function runLmeRecall(o: RunLmeRecallOptions): Promise<LmeRecallRec
     schema: LME_RECALL_SCHEMA,
     started_at, finished_at: new Date().toISOString(),
     counted: attestation !== null, preregistration_attestation: attestation,
-    gbrain: { version: o.gut.version, overlay: overlaySummary(o.gut) },
+    gbrain: { version: o.gut.version, overlay: overlaySummary(o.gut), rust_addon: o.engines.includes('rust') ? rustAddonIdentity(o.gut) : null },
     dataset: {
       file: basename(ds.path), sha256: ds.sha256, matches_published_sha256: ds.sha256 === PUBLISHED_LME_S_SHA256, total_questions: ds.totalQuestions,
       selected: ds.questions.length, abstention_selected: ds.questions.filter(q => isAbsQuestion(q.question_id)).length,

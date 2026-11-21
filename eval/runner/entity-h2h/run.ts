@@ -4,6 +4,9 @@
  * { system, version, config, model, tiers: { auto, proposed } }, into a fresh --output folder with cell.json beside it.
  *
  *   world     --seed N [--per-family 20] --output DIR       write a world (people, companies, world.json)
+ *             [--smoke]                                      the 2026-11-17 smoke's world instead: generator version 1,
+ *                                                            people only, instance 0 of each family (2 per family by
+ *                                                            default), ingested in ledger order; for re-smokes only
  *   labels    --world DIR --out FILE                         held-out page-to-entity labels; refuses any seed but 20261118
  *   dry-run   --seed N [--per-family 20]                     pages, pairs, the projected cost and stop of every system and
  *                                                            each memory system's pinned release (its entity-h2h bundle)
@@ -56,7 +59,7 @@ import {
 import { parseOutput, scoreOutput, scoreTable, type NeutralOutput, type OutputScore } from './score.ts';
 import { HttpMemorySystem } from '../systems/http.ts';
 import { checkStack, checkWorldFor, chooseSetting, configLabel, resolveConfig, stackEnv, tuningOf } from './tuning.ts';
-import { DEV_SEED, HELD_OUT_SEED, buildWorld, heldOutLabels, ingestOrder, loadWorld, manifestOf, opaque, readUsage, writeH2hWorld, type H2hWorld } from './world.ts';
+import { DEV_SEED, HELD_OUT_SEED, SMOKE_PER_FAMILY, buildWorld, heldOutLabels, ingestOrder, loadWorld, manifestOf, opaque, readUsage, writeH2hWorld, type H2hWorld } from './world.ts';
 
 export const CLASSIC = ['splink', 'dedupe', 'zingg'] as const;
 export const SYSTEMS = ['gbrain', ...CLASSIC, ...MEMORY_KINDS, 'llm-matcher'] as const;
@@ -135,7 +138,7 @@ export function dryRun(seed: number, perFamily: number): DryRun {
 
 function cellRecord(system: string, config: string, model: string | null, w: H2hWorld, worldDir: string): CellState {
   const m = manifestOf(w);
-  return { cell: 'entity-h2h', system, config, model, world_dir: resolve(worldDir), world: { seed: w.seed, per_family: w.per_family, pages: w.pages.length, people_ledger_sha256: m.people_ledger_sha256, company_ledger_sha256: m.company_ledger_sha256 }, projected_usd: 0, stop_usd: 0, status: 'open', attempts: [] };
+  return { cell: 'entity-h2h', system, config, model, world_dir: resolve(worldDir), world: { seed: w.seed, per_family: w.per_family, pages: w.pages.length, people_ledger_sha256: m.people_ledger_sha256, company_ledger_sha256: m.company_ledger_sha256, ...(w.smoke ? { smoke: true as const } : {}) }, projected_usd: 0, stop_usd: 0, status: 'open', attempts: [] };
 }
 
 const keylessEnv = () => Object.fromEntries(Object.entries(process.env).filter(([k]) => !/_API_KEY$|_API_TOKEN$|^ANTHROPIC|^OPENAI|^PARTICLE|^VOYAGE|^GEMINI|^EXA/.test(k))) as Record<string, string>;
@@ -519,8 +522,9 @@ export async function cli(argv: string[], log: (s: string) => void = s => consol
   try {
     switch (cmd) {
       case 'world': {
-        const w = writeH2hWorld(resolve(a.need('--output')), Number(a.need('--seed')), Number(a.one('--per-family') ?? 20));
-        log(`world: seed ${w.seed}, ${w.per_family} per family, ${w.pages.length} pages -> ${a.need('--output')}`);
+        const smoke = a.has('--smoke');
+        const w = writeH2hWorld(resolve(a.need('--output')), Number(a.need('--seed')), Number(a.one('--per-family') ?? (smoke ? SMOKE_PER_FAMILY : 20)), smoke);
+        log(`world: seed ${w.seed}, ${w.per_family} per family${w.smoke ? ', the 2026-11-17 smoke world' : ''}, ${w.pages.length} pages -> ${a.need('--output')}`);
         return EXIT.ok;
       }
       case 'labels': {

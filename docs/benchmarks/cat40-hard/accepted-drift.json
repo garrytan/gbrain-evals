@@ -4,6 +4,11 @@
       "sha256": "c8bee1b1a2eb3debc71c08ecc41046cacbfe79fed4948d0d874b36ea38a13f59",
       "date": "2026-10-13",
       "note": "schema.ts: the confirmation seed 20261021 (c294280d) and the public confirmation seeds 20262041 and 20262051 (dc2bb79a) join HARD_SEEDS; no world output changes. Accepted in the next-wave confirmation's drift note (docs/plans/2026-10-11-cat40-next-wave/PREREG.md; eval/runner/cat40/next-confirm.ts driftNote)."
+    },
+    {
+      "sha256": "5d131b37696386cdf01e3030cc78ecbc71d922cc4de39f5ff32b6e61e53e4bb1",
+      "date": "2026-11-19",
+      "note": "schema.ts: the newest-build re-measure's two public-generator seeds, 20261141 and 20263151, join HARD_SEEDS as `newest` (docs/benchmarks/2026-11-19-cat40-hard-newest-preregistration.md); no world output changes."
     }
   ],
   "eval/runner/cat40/hard.ts": [
@@ -11,6 +16,11 @@
       "sha256": "da06dcf87ba033d0388453af7ab73752be3de66c72e31582b0fb79c62caf040e",
       "date": "2026-10-13",
       "note": "hard.ts: confirmation seed and program-step registration, the scripted gbrain agent and whole-result transcripts, and the gbrain write-tool list taken while the slot is live (3cb5aaaf); none changes a model cell. Accepted in the next-wave confirmation's drift note (docs/plans/2026-10-11-cat40-next-wave/PREREG.md; eval/runner/cat40/next-confirm.ts driftNote)."
+    },
+    {
+      "sha256": "3a5bd8b6ea1fb3a281e18ce4b3f4e70af864952b357159c72251aca580d5052a",
+      "date": "2026-11-19",
+      "note": "hard.ts: requiresFreeze also covers HARD_SEEDS.newest, so the newest-build re-measure's counted worlds run the freeze check (docs/benchmarks/2026-11-19-cat40-hard-newest-preregistration.md); no model cell changes."
     }
   ],
   "eval/runner/cat40/loop.ts": [
@@ -33,6 +43,21 @@
       "sha256": "de216fb8b330ee57f3fa119718501f4c1783280d5be9cd3e40dd8f7e32074316",
       "date": "2026-11-01",
       "note": "loop.ts with the particle 2xx fix of fix wave 2 (issue #280): a particle answer with status 2xx and no choices[0].message, or a body that is not JSON, is recorded with any usage it reported and thrown at once as a ProviderError with its 2xx status, so the run ends with timed_out instead of sending the turn up to five more times as a server error. On a Hard run that session ends as error, as a timed-out particle turn does; after six sends it used to end as harness_error, which a Hard run retries. Only the compat branch of postJson changed: the claude-opus-5-5 and gpt-6.1-sol request bodies and retry timing stay pinned by test/eval/cat40-particle-loop.test.ts, so no Anthropic or OpenAI cell changes."
+    },
+    {
+      "sha256": "df9039e79b33ba8003d35ee9693994f488da9c43fa8734bd14ce6b80156734df",
+      "date": "2026-11-19",
+      "note": "loop.ts at main ef3200db for the newest-build re-measure (docs/benchmarks/2026-11-19-cat40-hard-newest-preregistration.md): OpenAI agent requests are stateless (store false, encrypted reasoning items, the whole conversation resent, no previous_response_id; 1b7d5cfe), so a gpt-6.2-sol cell sees the same conversation through a different request shape; each response is priced as the budget ledger settles it, cache writes and long prompts included (ab2e1142); billing refusals are classified when classifyStops is set (494951d4, a0c8e228); and particle-1 report fixes (bd7d30b2, 2fa9e8ac). Anthropic request bodies are unchanged. No stored cell is paired with a new one: every arm reruns on new worlds."
+    },
+    {
+      "sha256": "8e18713303bbdee7dc802dfc3acd2819b8bd77f3104366e4308a35189f35537d",
+      "date": "2026-11-19",
+      "note": "loop.ts for the old-build control (docs/benchmarks/2026-11-19-cat40-hard-old-build-control-preregistration.md): Anthropic and OpenAI runs record each distinct model id the provider said served a turn (the response's model field) as served_models, which Hard attempts keep under each session's run. Request bodies, retries, pricing and the particle-1 path are unchanged (test/eval/cat40-particle-loop.test.ts pins the bodies; test/eval/cat40-hard-old-build-control.test.ts pins the recording). No model cell changes."
+    },
+    {
+      "sha256": "6140ec3bb5c2684f8ac2cb00f833c1bc3ef1dfab9346db66dcdd2308f472ec5b",
+      "date": "2026-11-20",
+      "note": "loop.ts at main a4c8bee28 (#538): Anthropic and OpenAI requests retry every provider 5xx a resend can fix (all but 501 and 505), such as Cloudflare's 520, where they used to retry only 429, 500, 502, 503, 504 and 529, and every 5xx or 429 that ends a run is classified harness_error, the preregistrations' definition. Request bodies, pricing and the particle-1 path are unchanged (test/eval/cat40-particle-loop.test.ts; test/eval/cat40-hard-fail-closed.test.ts pins the retries). A cell that used to end on such a status unretried now gets the retry its preregistration asks for; no stored cell changes."
     }
   ],
   "eval/runner/cat40/arms.ts": [

@@ -42,6 +42,8 @@ The RS1 set is written by that MIT-licensed generator from new private topics ra
 LongMemEval, the benchmark from *LongMemEval: Benchmarking Chat Assistants on Long-Term Interactive Memory* by Di Wu and coauthors ([arXiv 2410.10813](https://arxiv.org/abs/2410.10813); [xiaowu0162/LongMemEval](https://github.com/xiaowu0162/LongMemEval)), is MIT-licensed for its code ([LICENSE](https://github.com/xiaowu0162/LongMemEval/blob/main/LICENSE)) and its cleaned data ([dataset card](https://huggingface.co/datasets/xiaowu0162/longmemeval-cleaned), `license: mit`).
 The nightly `lme-s-hard` suite and the SOTA loop's LongMemEval rows use its cleaned S split; the Q1 LongMemEval-M selection in `eval/decisions/datasets/` records the M file's revision and hash.
 
+Redis's open LongMemEval harness, `agent-memory-benchmark` in [redis/agent-memory-server](https://github.com/redis/agent-memory-server) (Apache-2.0), supplies the judge prompts, answer prompt, task-averaged metric, dataset loader and runner that make a gbrain LongMemEval number comparable with Redis's published table. The parts we use are vendored at commit `843d2078` in [redis-agent-memory-benchmark/](redis-agent-memory-benchmark/README.md), with the upstream commit, each file's changes and Redis's published results table (MIT, from [redis/redis-ai-research-public](https://github.com/redis/redis-ai-research-public)).
+
 The [PrecisionMemBench attribution](precisionmembench/ATTRIBUTION.md) names the upstream author, license, pinned revision and local adaptations. Other external benchmark sources are identified in their individual reports.
 
 ## Influences
@@ -54,6 +56,12 @@ A **Codex** review challenged whether the early suite established anything beyon
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-11-20: Redis's LongMemEval harness credited
+
+Added Redis's `agent-memory-benchmark` under "Data and upstream work", because its judge prompts, answer prompt,
+metric, loader and runner are now vendored in `eval/redis-agent-memory-benchmark/` for the
+[LongMemEval run on Redis's harness](../docs/benchmarks/2026-11-20-longmemeval-redis-harness-preregistration.md).
 
 ### 2026-11-16: The opening links the pin
 

@@ -27,6 +27,7 @@
       "gbrain init --pglite --json (dummy VOYAGE_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY in the environment)",
       "gbrain apply-migrations --yes --non-interactive --no-autopilot-install (the setup step gbrain's postinstall runs; bun install -g blocks postinstall scripts)",
       "the scripted 'defaults' reply: every first_run_decisions default option's argv, as init printed it",
+      "with GBRAIN_IDLE_UPKEEP=off (RS1's cells): gbrain config set maintenance.auto false, read back, so serve runs no idle upkeep (gbrain 0.60.715.0 and later; the off answer to init's upkeep question)",
       "gbrain serve --surface starter over MCP stdio (the registration gbrain's harness_wiring option names)"
     ],
     "first_run_defaults": {
@@ -106,7 +107,7 @@
       "the Q1 install recipe at the cell's pin (launch env GBRAIN_SHA)",
       "gbrain config set facts.default_visibility world at install (the posture gbrain's bootstrap writes when unset), read back",
       "sessions written with put_page as in Q1",
-      "/finish, serve stopped: gbrain extract-conversation-facts --source-id default --max-cost-usd <cap left> --json --yes, resumed up to 3 passes while a pass ends partial; a pass that stops on its cap, or pages failed, pending, blocked, ambiguous, too large or unparsed after the last pass, or an unpriced model, fail the realization",
+      "/finish, serve stopped: gbrain extract-conversation-facts --source-id default --max-cost-usd <cap left> --json --yes, resumed up to 3 passes while a pass ends partial; a pass that stops on its cap, or pages failed, pending, blocked, ambiguous, too large or unparsed after the last pass, or an unpriced model, fail the realization; with GBRAIN_F6_BUILD_PROBLEMS=record (RS1's cells) the last pass's unparsed pages and its failed pages are recorded instead when gbrain lists every failed page and each stopped on the provider's safety filter (reason content_filter or refusal), with that pass's status, counts and failed pages by reason",
       "gbrain repair safe-chunks --source default --json, then --apply when the preview finds pages",
       "the Q1 quiesce barrier",
       "a fact index: one recall {session_id: cli:extract-conversation-facts:<slug>, limit 100, include_expired} per session page"
