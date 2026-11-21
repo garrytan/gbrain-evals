@@ -644,9 +644,9 @@ Written after the mint and the smoke and before any counted cell. It moves no bo
 
 - **gbrain's launch build.** Every BG1-C gbrain cell runs v0.60.753.0, commit
   `fbf608cf86ea7b2b912ce80151f856a1a47e9533`, instead of Amendment 6's v0.60.750.0. It was the newest release tag on
-  gbrain's master when the build was fixed for launch, at 01:15Z on 2026-11-21. On GBEV-3's ruling, this is the one
-  re-pin after Amendment 6: the paired development reading below and every counted gbrain cell use this build, and it
-  freezes when the first counted gbrain cell starts.
+  gbrain's master when the build was fixed for launch, at 01:15Z on 2026-11-21. v0.60.754.0 and v0.60.755.0 were tagged
+  later that day. On GBEV-3's ruling, v0.60.753.0 stays the one re-pin after Amendment 6: the paired development reading
+  below and every counted gbrain cell use this build, and it freezes when the first counted gbrain cell starts.
 - **What changed since v0.60.750.0.** Read from the release notes of v0.60.751.0, v0.60.752.0 and v0.60.753.0.
   - #9856: conversation fact extraction now retries a window the model declines as two halves instead of losing the
     whole page's facts, and it parses transcripts whose answers list `**Label:**` lines instead of skipping them as
@@ -660,8 +660,8 @@ Written after the mint and the smoke and before any counted cell. It moves no bo
     writes every page through MCP `put_page`, not a local importer, so no BG1-C page gets the marker, and nothing in
     gbrain reads it yet.
   - The rest change the Apple Contacts source, which the cell doesn't configure (#9854, #9867), OpenClaw setup's
-    timeouts (#9865), database-engine restructuring with no change in behavior (#9812, #9874), and the Rust engine,
-    which nothing selects (#9823).
+    timeouts (#9865), database-engine restructuring with no change in behavior (#9812), the Rust engine, which nothing
+    selects (#9823, #9874), and CI only (#9879, #9884).
 - **BG1-C's own launch.** On main, `rs1-stable`'s launch now follows RS1's build and adds
   `GBRAIN_F6_BUILD_PROBLEMS=record` and `GBRAIN_IDLE_UPKEEP=off`. BG1-C's gbrain cells no longer take that launch. Every
   one, counted and smoke, starts from `BG1C_GBRAIN_LAUNCH` in `eval/runner/q1/cells/bg1c.ts`: BG1's bun image, F6's
@@ -683,8 +683,8 @@ Written after the mint and the smoke and before any counted cell. It moves no bo
   +2.5) over each. This build's expectation is the v0.60.741.0 result above, within these intervals.
 - **World end.** `GBRAIN_EVALS_BG1_WORLD_END=2026-11-15`, the Sunday before the first counted cell, which starts after
   this amendment on 2026-11-21 or 2026-11-22. Questions are asked on 2026-11-16, and the runner refuses every BG1-C cell
-  from 2026-11-29 on. If the first counted cell can't start by 2026-11-22, a dated amendment moves the world end before
-  it does.
+  from 2026-11-30 (UTC) on. If the first counted cell can't start by 2026-11-22, a dated amendment moves the world end
+  before it does.
 - **The filled BG1-C manifest.** 40 kept worlds, `bg1-031` to `bg1-070` (slots 31 to 70: every slot minted was kept,
   none dropped), 80 files, SHA-256 `53927b30059a331fe546e9db3210931a5c827c8a7c58ca26cc13729c30fcfc96`. The custody
   validator passed all 40 (`checked=40 passed=40`), and the custody hash list over the sealed set (121 files) has
@@ -704,15 +704,15 @@ Written after the mint and the smoke and before any counted cell. It moves no bo
   under the 1.5 times the pilot allows. The mint's first five slots used 330.4 Gemini requests per kept world, under the
   line of 504.
 - **Hours per launch unit.** The smoke's VMs ran 51 minutes (gbrain), 43 minutes (memory-bank) and 1 hour 54 minutes
-  (extract-first) for one world of 187,021 tokens, setup included: 4.53, 3.85 and 10.18 hours per million tokens. Those
+  (extract-first) for one world of 187,021 tokens, setup included: 4.53, 3.85 and 10.17 hours per million tokens. Those
   are under the BG1 rates that size the counted launch units (4.69, 4.63 and 13.1), so each unit of five kept worlds
   keeps its expected hours (5, 5 and 14) and its timeout (10, 10 and 23 hours), and the cell set doesn't change.
 - **gpt-6.2-sol repricing.** The Budget's gpt-6.2-sol line used gpt-6.1-sol's token parameters. Measured, a read is
-  about 5,450 input and 95 output tokens and costs $0.0146: $28.03 for the judge check's 1,920 reads, and $2.80 for the
-  smoke's 192 (64 in each row). So the line is $2.80 a world for the three rows, not $3.34. Opus grading those answers
-  measured about $0.0022 a grade in both, so its line is $0.42 a world, not $0.46. The per-world total becomes $21.70
-  instead of $22.28, and the counted estimate at N = 40 about $868 instead of $891. The $1,200 ledger cap and the cell
-  set's leases don't change, so the cap still covers the measured rates.
+  about 5,450 input and 96 visible output tokens and costs $0.0146 as billed: $28.03 for the judge check's 1,920 reads,
+  and $2.80 for the smoke's 192 (64 in each row). So the line is $2.80 a world for the three rows, not $3.34. Opus
+  grading those answers measured about $0.0022 a grade in both, so its line is $0.42 a world, not $0.46. The per-world
+  total becomes $21.70 instead of $22.28, and the counted estimate at N = 40 about $868 instead of $891. The $1,200
+  ledger cap and the cell set's leases don't change, so the cap still covers the measured rates.
 
 ## Disclosures
 
