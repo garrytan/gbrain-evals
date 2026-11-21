@@ -1455,7 +1455,7 @@
       "checks": [
         {
           "id": "doctor-reports-missing",
-          "description": "doctor on a brain whose datastore was moved away exits non-zero and does not score 100.",
+          "description": "doctor on a brain whose datastore was moved away refuses with brain_missing and exit 1, instead of scoring the brain.",
           "run": [
             "doctor",
             "--json"
@@ -1464,11 +1464,19 @@
             "exit": "nonzero",
             "json": [
               {
+                "path": "code",
+                "op": "eq",
+                "value": "brain_missing"
+              },
+              {
                 "path": "health_score",
-                "op": "lt",
-                "value": 100
+                "op": "absent"
               }
             ]
+          },
+          "known_failure": {
+            "finding": "health-1",
+            "note": "found by this catalog at 0.60.753.0 and 0.60.756.0: doctor exits 0 and scores 95; gbrain pull request 9900 (open) refuses with brain_missing"
           }
         },
         {
@@ -1480,6 +1488,10 @@
           ],
           "expect": {
             "datastore_absent": "A"
+          },
+          "known_failure": {
+            "finding": "health-1",
+            "note": "found by this catalog at 0.60.753.0 and 0.60.756.0: doctor creates a new empty datastore; gbrain pull request 9900 (open) creates nothing"
           }
         }
       ],
