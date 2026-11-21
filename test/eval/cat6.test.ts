@@ -427,7 +427,7 @@ describe('main()', () => {
     expect(receipt.gbrain_pin).not.toBe('unknown');
     const cfg = receipt.resolved_config as Record<string, unknown>;
     expect(JSON.stringify(cfg.kinds_not_exercised)).toContain('prose_only_mention');
-  });
+  }, 30_000); // a full cat6 run on the fixture takes about 5 s, past the 5s default under four concurrent shards
 
   test('missing corpus dir → skipped receipt, exit 2 without --allow-skip, 0 with', async () => {
     const out = mkdtempSync(join(tmpdir(), 'cat6-skip-'));
