@@ -383,11 +383,11 @@ export const REGISTRY: readonly CategoryEntry[] = [
   {
     id: 'end-to-end-workflows', legacy_alias: '9', name: 'End-to-end workflows',
     family: 'agent', tier: 'none', script: 'eval/runner/cat9-workflows.ts',
-    run: { kind: 'listed', reason: 'not implemented: no reviewed scenario catalog in the repository' },
+    run: { kind: 'listed', reason: 'judged path not run: the draft scenario catalog (eval/data/cat9-workflows-v1) has no judge calibration yet; its free CLI checks run by hand with the command', command: 'bun eval/runner/cat9-workflows.ts --checks --gbrain <checkout>@<ref>' },
     cost_estimate: UNMEASURED, receipt_path: receipt('cat9-workflows'),
-    headline: { metric: 'none until a reviewed scenario catalog exists', denominator: 'none' },
+    headline: { metric: 'free checks: pass, fail and expected fail (an audit finding) per CLI check; judged pass rate none until calibration', denominator: 'checks that ran on keyword-only PGLite brains' },
     gate: 'report-only', evidence_maturity: 'regression-only',
-    contract: 'Intended to judge multi-step agent workflows over a brain. It cannot run without a reviewed scenario catalog.',
+    contract: 'Intended to judge multi-step agent workflows over a brain. Today only the free checks run: each scenario builds a fresh keyword-only PGLite brain and checks gbrain CLI output against a fixed expectation, with no model. A check that needs a key, a model, an MCP server or an injected fault is reported as not run, so the free checks say nothing about keyed or agent behavior.',
   },
   {
     id: 'adversarial-robustness', legacy_alias: '10', name: 'Robustness / adversarial input',

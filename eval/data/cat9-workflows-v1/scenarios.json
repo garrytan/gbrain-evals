@@ -1,0 +1,1928 @@
+{
+  "version": 1,
+  "status": "draft: judged rubric unreviewed; free checks run with `bun eval/runner/cat9-workflows.ts --checks`",
+  "about": "Cat 9 user-workflow scenarios from a black-box audit of gbrain master 7ef3d53a47 (v0.60.753.0) on PGLite and Postgres 16. Each scenario has the Cat 9 judged fields (id, workflow, text, ground_truth_slugs, rubric with weight 1 or 2) and optional free fields: setup (gbrain CLI steps that build the brain) and checks (CLI calls with a fixed expectation, no judge). audit_setup and audit_checks keep the audit's original wording. known_failure names the audit finding a check failed on at the audited build; it labels the result and never turns a fail into a pass. All names in the corpus are placeholders.",
+  "judge_prompt_version": "2026-04-19-v1",
+  "audited_build": {
+    "gbrain_commit": "7ef3d53a47a1aefa1fa7e528277c022600d2dc61",
+    "gbrain_version": "0.60.753.0",
+    "engines": [
+      "pglite",
+      "postgres16"
+    ]
+  },
+  "fixture": {
+    "corpus_dir": "corpus",
+    "sources": [
+      {
+        "id": "default",
+        "path": "corpus/default",
+        "import": "gbrain import corpus/default"
+      },
+      {
+        "id": "work",
+        "path": "corpus/work",
+        "add": "gbrain sources add work --path corpus/work",
+        "federated": false,
+        "note": "run `gbrain sources unfederate work` after add; add defaults to federated"
+      }
+    ],
+    "puts": "corpus/puts holds page bodies that scenarios save with `gbrain put`",
+    "free_run": "each scenario gets fresh keyword-only PGLite brains (gbrain init --pglite, no provider key) and its own copy of the corpus"
+  },
+  "scenarios": [
+    {
+      "id": "bb9-001-import-embeds",
+      "workflow": "sync",
+      "origin": "new N1",
+      "text": "I just imported my notes folder. Is everything searchable by meaning now?",
+      "ground_truth_slugs": [
+        "companies/acme-example"
+      ],
+      "rubric": [
+        {
+          "id": "states_embed_state",
+          "criterion": "States how many pages are embedded and how many are not, matching doctor embedding_state",
+          "weight": 2
+        },
+        {
+          "id": "no_false_ready",
+          "criterion": "Does not claim semantic search is ready when embedded chunks are 0",
+          "weight": 2
+        },
+        {
+          "id": "names_fix",
+          "criterion": "Names the command that embeds the pending pages (embed --stale --yes)",
+          "weight": 1
+        }
+      ],
+      "setup": [
+        {
+          "run": [
+            "import",
+            "{corpus}/default",
+            "--no-embed",
+            "--json"
+          ],
+          "note": "keyword-only import; the free run has no embedding key"
+        }
+      ],
+      "checks": [
+        {
+          "id": "keyless-import-refuses-silent-success",
+          "description": "On a keyword-only brain, an import that asks for embeddings does not report silent success; it names the --no-embed fix.",
+          "run": [
+            "import",
+            "{corpus}/default",
+            "--json"
+          ],
+          "expect": {
+            "exit": "nonzero",
+            "output_includes": [
+              "--no-embed"
+            ]
+          }
+        },
+        {
+          "id": "keyless-doctor-states-counts",
+          "description": "doctor embedding_state states how many chunks are embedded and how many are pending.",
+          "run": [
+            "doctor",
+            "--only",
+            "embedding_state",
+            "--json"
+          ],
+          "expect": {
+            "json": [
+              {
+                "path": "checks.0.name",
+                "op": "eq",
+                "value": "embedding_state"
+              }
+            ],
+            "stdout_includes": [
+              " embedded",
+              " pending"
+            ]
+          }
+        },
+        {
+          "id": "keyed-embedded-equals-total",
+          "description": "In a keyed brain, embedded == total chunks after import, OR import output reports pending > 0 with a warning.",
+          "run": [
+            "doctor",
+            "--only",
+            "embedding_state",
+            "--json"
+          ],
+          "requires": [
+            "embeddings"
+          ],
+          "expect": {
+            "stdout_excludes": [
+              " 0 embedded"
+            ]
+          },
+          "known_failure": {
+            "finding": "N1",
+            "note": "audit at 7ef3d53 (keyed): import reported success with 0 chunks embedded"
+          }
+        },
+        {
+          "id": "keyed-import-reports-pending",
+          "description": "JSON reports embedded/pending counts; never silent success with 0 embedded.",
+          "run": [
+            "import",
+            "{corpus}/default",
+            "--json"
+          ],
+          "requires": [
+            "embeddings"
+          ],
+          "expect": {
+            "json": [
+              {
+                "path": "pending",
+                "op": "exists"
+              }
+            ]
+          },
+          "known_failure": {
+            "finding": "N1",
+            "note": "audit at 7ef3d53 (keyed): import JSON carried no embedded or pending count"
+          }
+        }
+      ],
+      "audit_setup": [
+        "gbrain import corpus/default --json"
+      ],
+      "audit_checks": [
+        {
+          "cmd": "gbrain doctor --only embedding_state --json",
+          "expect": "in a keyed brain, embedded == total chunks after import, OR import output reports pending > 0 with a warning"
+        },
+        {
+          "cmd": "gbrain import corpus/default --json",
+          "expect": "JSON reports embedded/pending counts; never silent success with 0 embedded"
+        }
+      ]
+    },
+    {
+      "id": "bb9-002-put-queued-drains",
+      "workflow": "email_to_brain",
+      "origin": "new N1",
+      "text": "Save this: Pat Example previously ran finance at Widget Co. Then find people who used to work in finance.",
+      "ground_truth_slugs": [
+        "people/pat-example"
+      ],
+      "rubric": [
+        {
+          "id": "saved",
+          "criterion": "Confirms the page was saved under people/pat-example",
+          "weight": 1
+        },
+        {
+          "id": "finds_by_meaning",
+          "criterion": "Finds Pat via a meaning query that shares no exact keyword",
+          "weight": 2
+        },
+        {
+          "id": "honest_pending",
+          "criterion": "If the page is not yet embedded, says so instead of claiming it is fully searchable",
+          "weight": 2
+        }
+      ],
+      "checks": [
+        {
+          "id": "put-reports-embedding-state",
+          "description": "put --json says whether the page is embedded, so an agent can say it is not yet searchable by meaning.",
+          "run": [
+            "put",
+            "people/pat-example",
+            "--json"
+          ],
+          "stdin": "puts/pat.md",
+          "expect": {
+            "exit": "zero",
+            "json": [
+              {
+                "path": "slug",
+                "op": "eq",
+                "value": "people/pat-example"
+              },
+              {
+                "path": "embedding_state",
+                "op": "exists"
+              }
+            ]
+          }
+        },
+        {
+          "id": "saved-page-keyword-searchable",
+          "description": "The saved page is found by keyword search right after the put.",
+          "run": [
+            "search",
+            "Pat Example",
+            "--json"
+          ],
+          "expect": {
+            "json": [
+              {
+                "path": "[*].slug",
+                "op": "includes",
+                "value": "people/pat-example"
+              }
+            ]
+          }
+        },
+        {
+          "id": "keyed-queued-embedding-drains",
+          "description": "If embedding_state is queued, a job or worker exists that drains it (jobs list not empty) within 60 s.",
+          "requires": [
+            "embeddings"
+          ],
+          "known_failure": {
+            "finding": "N1",
+            "note": "audit at 7ef3d53 (keyed): put left embedding_state queued with no job to drain it"
+          },
+          "not_mechanized": "no exact CLI call yet; the description is the audit expectation"
+        }
+      ],
+      "audit_setup": [
+        "gbrain put people/pat-example < corpus/puts/pat.md --json"
+      ],
+      "audit_checks": [
+        {
+          "cmd": "gbrain put ... --json",
+          "expect": "if embedding_state is queued, a job or worker exists that drains it (jobs list not empty) within 60 s"
+        }
+      ]
+    },
+    {
+      "id": "bb9-003-import-builds-links",
+      "workflow": "sync",
+      "origin": "new N2",
+      "text": "Who links to Acme Example in my notes?",
+      "ground_truth_slugs": [
+        "companies/acme-example",
+        "people/alice-example",
+        "people/bob-example",
+        "meetings/2025-03-04-acme-board"
+      ],
+      "rubric": [
+        {
+          "id": "lists_backlinks",
+          "criterion": "Lists pages that wikilink to companies/acme-example (alice, bob, board meeting at least)",
+          "weight": 2
+        },
+        {
+          "id": "no_empty_claim",
+          "criterion": "Does not say 'no pages link to Acme' when the source files contain [[companies/acme-example]]",
+          "weight": 2
+        }
+      ],
+      "setup": [
+        {
+          "run": [
+            "import",
+            "{corpus}/default",
+            "--no-embed",
+            "--json"
+          ],
+          "note": "keyword-only import; the free run has no embedding key"
+        }
+      ],
+      "checks": [
+        {
+          "id": "backlinks-after-import",
+          "description": "backlinks for companies/acme-example are non-empty right after import, without a manual `extract all`.",
+          "run": [
+            "backlinks",
+            "companies/acme-example",
+            "--json"
+          ],
+          "expect": {
+            "json": [
+              {
+                "path": "",
+                "op": "nonempty"
+              }
+            ]
+          },
+          "known_failure": {
+            "finding": "N2",
+            "note": "import does not build wikilink edges; links appear only after `gbrain extract all`"
+          }
+        },
+        {
+          "id": "link-count-after-import",
+          "description": "stats link_count > 0 after import.",
+          "run": [
+            "stats",
+            "--json"
+          ],
+          "expect": {
+            "json": [
+              {
+                "path": "link_count",
+                "op": "gt",
+                "value": 0
+              }
+            ]
+          },
+          "known_failure": {
+            "finding": "N2",
+            "note": "link_count is 0 after import of 28 pages full of wikilinks"
+          }
+        }
+      ],
+      "audit_setup": [
+        "gbrain import corpus/default"
+      ],
+      "audit_checks": [
+        {
+          "cmd": "gbrain backlinks companies/acme-example --json",
+          "expect": "non-empty right after import, without a manual `extract all`"
+        },
+        {
+          "cmd": "gbrain stats --json",
+          "expect": "link_count > 0 after import"
+        }
+      ]
+    },
+    {
+      "id": "bb9-004-link-verb-sentence-scope",
+      "workflow": "briefing",
+      "origin": "new N3",
+      "text": "Who works at Acme Example right now?",
+      "ground_truth_slugs": [
+        "companies/acme-example",
+        "people/alice-example",
+        "people/bob-example",
+        "people/erin-example",
+        "people/olive-example",
+        "companies/kestrel-logistics-example"
+      ],
+      "rubric": [
+        {
+          "id": "current_staff",
+          "criterion": "Names Alice (CEO) and Bob (CTO) as current staff",
+          "weight": 2
+        },
+        {
+          "id": "excludes_former",
+          "criterion": "Does not list Erin as current (she left in 2024)",
+          "weight": 2
+        },
+        {
+          "id": "excludes_company",
+          "criterion": "Does not list Kestrel Logistics (a customer company) as an employee",
+          "weight": 2
+        },
+        {
+          "id": "no_hallucination",
+          "criterion": "No facts outside ground_truth_pages",
+          "weight": 2
+        }
+      ],
+      "setup": [
+        {
+          "run": [
+            "import",
+            "{corpus}/default",
+            "--no-embed",
+            "--json"
+          ],
+          "note": "keyword-only import; the free run has no embedding key"
+        },
+        {
+          "run": [
+            "extract",
+            "all",
+            "--json"
+          ]
+        },
+        {
+          "run": [
+            "put",
+            "people/olive-example",
+            "--json"
+          ],
+          "stdin": "puts/olive-v2.md"
+        }
+      ],
+      "checks": [
+        {
+          "id": "works-at-no-company",
+          "description": "No company is an employee: companies/kestrel-logistics-example (a customer) is not works_at Acme.",
+          "run": [
+            "graph-query",
+            "companies/acme-example",
+            "--type",
+            "works_at",
+            "--direction",
+            "in",
+            "--depth",
+            "1"
+          ],
+          "expect": {
+            "exit": "zero",
+            "stdout_excludes": [
+              "companies/kestrel-logistics-example",
+              "companies/fund-a"
+            ]
+          },
+          "known_failure": {
+            "finding": "N3",
+            "note": "the link verb is taken from the whole sentence, so a company named near 'works at' gets a works_at edge"
+          }
+        },
+        {
+          "id": "works-at-no-former",
+          "description": "Erin, who left Acme in 2024 (past tense), is not works_at Acme.",
+          "run": [
+            "graph-query",
+            "companies/acme-example",
+            "--type",
+            "works_at",
+            "--direction",
+            "in",
+            "--depth",
+            "1"
+          ],
+          "expect": {
+            "exit": "zero",
+            "stdout_excludes": [
+              "people/erin-example"
+            ]
+          },
+          "known_failure": {
+            "finding": "N3",
+            "note": "past tense ('was a product manager at') still gives works_at"
+          }
+        },
+        {
+          "id": "previously-not-works-at",
+          "description": "A person whose page says 'previously ran finance at Widget Co' is not works_at widget-co.",
+          "run": [
+            "graph-query",
+            "companies/widget-co",
+            "--type",
+            "works_at",
+            "--direction",
+            "in",
+            "--depth",
+            "1"
+          ],
+          "expect": {
+            "exit": "zero",
+            "stdout_excludes": [
+              "people/olive-example"
+            ]
+          },
+          "known_failure": {
+            "finding": "N3",
+            "note": "'previously ran finance at' is read as a current works_at"
+          }
+        },
+        {
+          "id": "founded-direction",
+          "description": "'founded in 2021 by [[alice]]' means alice -> founded -> acme, so acme has no outgoing founded edge.",
+          "run": [
+            "graph-query",
+            "companies/acme-example",
+            "--type",
+            "founded",
+            "--direction",
+            "out",
+            "--depth",
+            "1"
+          ],
+          "expect": {
+            "exit": "zero",
+            "stdout_excludes": [
+              "--founded->"
+            ]
+          },
+          "known_failure": {
+            "finding": "N3",
+            "note": "the founded edge points from the company to its founders"
+          }
+        },
+        {
+          "id": "partner-at-is-works-at",
+          "description": "Carol 'is a partner at [[fund-a]]': works_at companies/fund-a, not invested_in.",
+          "run": [
+            "graph-query",
+            "people/carol-example",
+            "--type",
+            "works_at",
+            "--depth",
+            "1"
+          ],
+          "expect": {
+            "exit": "zero",
+            "stdout_includes": [
+              "--works_at-> companies/fund-a"
+            ]
+          },
+          "known_failure": {
+            "finding": "N3",
+            "note": "'partner at' a fund is typed invested_in"
+          }
+        }
+      ],
+      "audit_setup": [
+        "gbrain import corpus/default",
+        "gbrain extract all",
+        "gbrain put people/olive-example < corpus/puts/olive-v2.md"
+      ],
+      "audit_checks": [
+        {
+          "cmd": "gbrain graph-query companies/acme-example --type works_at --direction in --json",
+          "expect": "no company slugs; no erin-example (past tense); no person whose page says 'previously ran finance at' as works_at widget-co"
+        },
+        {
+          "cmd": "gbrain graph-query companies/acme-example --type founded --direction out --json",
+          "expect": "empty: 'founded in 2021 by [[alice]]' means alice -> founded -> acme, not acme -> founded -> alice"
+        },
+        {
+          "cmd": "gbrain graph-query people/carol-example --type works_at --json",
+          "expect": "works_at companies/fund-a ('partner at'), not invested_in"
+        }
+      ]
+    },
+    {
+      "id": "bb9-005-search-nonsense-signal",
+      "workflow": "daily_task_prep",
+      "origin": "new N4 (extends RET-12 to keyed brains)",
+      "text": "Do I have any notes on zzqxvplomb?",
+      "ground_truth_slugs": [],
+      "rubric": [
+        {
+          "id": "says_none",
+          "criterion": "Says there are no notes on the term",
+          "weight": 2
+        },
+        {
+          "id": "no_fabricated_match",
+          "criterion": "Does not present unrelated pages as matches",
+          "weight": 2
+        }
+      ],
+      "setup": [
+        {
+          "run": [
+            "import",
+            "{corpus}/default",
+            "--no-embed",
+            "--json"
+          ],
+          "note": "keyword-only import; the free run has no embedding key"
+        }
+      ],
+      "checks": [
+        {
+          "id": "keyless-no-results",
+          "description": "On a keyword-only brain, a nonsense term prints no results and no unrelated page.",
+          "run": [
+            "search",
+            "zzqxvplomb"
+          ],
+          "expect": {
+            "exit": "zero",
+            "stdout_includes": [
+              "No results"
+            ]
+          }
+        },
+        {
+          "id": "keyed-weak-hits-marked-in-text",
+          "description": "Text output marks weak semantic-only hits (or prints no results); JSON evidence weak_semantic must also be visible in text.",
+          "run": [
+            "search",
+            "zzqxvplomb"
+          ],
+          "requires": [
+            "embeddings"
+          ],
+          "expect": {
+            "output_includes": [
+              "weak"
+            ]
+          },
+          "known_failure": {
+            "finding": "N4",
+            "note": "audit at 7ef3d53 (keyed): text output listed semantic-only hits with no weak marker"
+          }
+        }
+      ],
+      "audit_checks": [
+        {
+          "cmd": "gbrain search zzqxvplomb",
+          "expect": "text output marks weak semantic-only hits (or prints no results); JSON evidence weak_semantic must also be visible in text"
+        }
+      ]
+    },
+    {
+      "id": "bb9-006-source-isolation-think",
+      "workflow": "briefing",
+      "origin": "black-box pass (isolation works); guard",
+      "text": "What is the Kumquat Protocol and what is on the Bluebird roadmap?",
+      "ground_truth_slugs": [],
+      "rubric": [
+        {
+          "id": "no_leak",
+          "criterion": "Does not reveal any content from the unfederated work source",
+          "weight": 2
+        },
+        {
+          "id": "says_unknown",
+          "criterion": "Says the brain has no information on these",
+          "weight": 1
+        }
+      ],
+      "setup": [
+        {
+          "run": [
+            "import",
+            "{corpus}/default",
+            "--no-embed",
+            "--json"
+          ],
+          "note": "keyword-only import; the free run has no embedding key"
+        },
+        {
+          "run": [
+            "sources",
+            "add",
+            "work",
+            "--path",
+            "{corpus}/work",
+            "--json"
+          ]
+        },
+        {
+          "run": [
+            "sources",
+            "unfederate",
+            "work"
+          ]
+        }
+      ],
+      "checks": [
+        {
+          "id": "search-no-work-hits",
+          "description": "A default search for Kumquat returns no page from the unfederated work source.",
+          "run": [
+            "search",
+            "Kumquat Protocol",
+            "--json"
+          ],
+          "expect": {
+            "json": [
+              {
+                "path": "[*].source_id",
+                "op": "excludes",
+                "value": "work"
+              }
+            ]
+          }
+        },
+        {
+          "id": "think-no-work-citations",
+          "description": "think citations contain no source_id work.",
+          "run": [
+            "think",
+            "What is the Kumquat Protocol?",
+            "--json"
+          ],
+          "requires": [
+            "llm"
+          ],
+          "expect": {
+            "stdout_excludes": [
+              "\"source_id\": \"work\""
+            ]
+          }
+        },
+        {
+          "id": "get-hint-does-not-reveal",
+          "description": "get of a work page from default says page_not_found, and its Fix line does not name `--source work` (N7: that would reveal the page exists).",
+          "run": [
+            "get",
+            "projects/kumquat-protocol"
+          ],
+          "expect": {
+            "output_includes": [
+              "page_not_found"
+            ],
+            "lines": [
+              {
+                "prefix": "Fix:",
+                "excludes": [
+                  "--source work"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "mcp-get-no-hint",
+          "description": "MCP get_page with a token scoped to default gives no hint that the page exists in another source.",
+          "requires": [
+            "mcp_server"
+          ],
+          "not_mechanized": "no exact CLI call yet; the description is the audit expectation"
+        }
+      ],
+      "audit_setup": [
+        "gbrain sources add work --path corpus/work",
+        "gbrain sources unfederate work"
+      ],
+      "audit_checks": [
+        {
+          "cmd": "gbrain think \"What is the Kumquat Protocol?\" --json",
+          "expect": "citations contain no source_id work"
+        },
+        {
+          "cmd": "gbrain get projects/kumquat-protocol",
+          "expect": "page_not_found; DECIDE whether the Fix line may name `--source work` (N7: it reveals the page exists)"
+        },
+        {
+          "cmd": "MCP get_page projects/kumquat-protocol with a token scoped to default",
+          "expect": "no hint that the page exists in another source"
+        }
+      ]
+    },
+    {
+      "id": "bb9-007-federation-default-visible",
+      "workflow": "sync",
+      "origin": "helpfulness note",
+      "text": "I added my work folder as a source. Will my personal questions pull in work notes?",
+      "ground_truth_slugs": [],
+      "rubric": [
+        {
+          "id": "explains_federated",
+          "criterion": "Explains that a new source is federated by default and default queries include it",
+          "weight": 2
+        },
+        {
+          "id": "names_unfederate",
+          "criterion": "Names `gbrain sources unfederate work` as the way to keep it apart",
+          "weight": 1
+        }
+      ],
+      "setup": [
+        {
+          "run": [
+            "import",
+            "{corpus}/default",
+            "--no-embed",
+            "--json"
+          ],
+          "note": "keyword-only import; the free run has no embedding key"
+        }
+      ],
+      "checks": [
+        {
+          "id": "add-says-federated",
+          "description": "sources add says a new source joins default search and names `gbrain sources unfederate work`.",
+          "run": [
+            "sources",
+            "add",
+            "work",
+            "--path",
+            "{corpus}/work",
+            "--json"
+          ],
+          "expect": {
+            "exit": "zero",
+            "output_includes": [
+              "sources unfederate work"
+            ],
+            "json": [
+              {
+                "path": "config.federated",
+                "op": "eq",
+                "value": true
+              }
+            ]
+          }
+        }
+      ],
+      "check_note": "added by the free runner: the draft had no CLI check for this scenario",
+      "audit_setup": [
+        "gbrain sources add work --path corpus/work"
+      ]
+    },
+    {
+      "id": "bb9-008-routing-notice-noise",
+      "workflow": "daily_task_prep",
+      "origin": "new N5",
+      "text": "Search my notes for warehouse robotics.",
+      "ground_truth_slugs": [
+        "concepts/warehouse-robotics"
+      ],
+      "rubric": [
+        {
+          "id": "finds_page",
+          "criterion": "Finds concepts/warehouse-robotics",
+          "weight": 2
+        }
+      ],
+      "setup": [
+        {
+          "run": [
+            "import",
+            "{corpus}/default",
+            "--no-embed",
+            "--json"
+          ],
+          "note": "keyword-only import; the free run has no embedding key"
+        },
+        {
+          "run": [
+            "sources",
+            "add",
+            "work",
+            "--path",
+            "{corpus}/work",
+            "--json"
+          ]
+        },
+        {
+          "run": [
+            "sources",
+            "unfederate",
+            "work"
+          ]
+        },
+        {
+          "run": [
+            "stats",
+            "--json"
+          ],
+          "note": "first command after the source exists; it may print the routing notice once"
+        }
+      ],
+      "checks": [
+        {
+          "id": "finds-page",
+          "description": "Search finds concepts/warehouse-robotics.",
+          "run": [
+            "search",
+            "warehouse robotics"
+          ],
+          "expect": {
+            "exit": "zero",
+            "stdout_includes": [
+              "concepts/warehouse-robotics"
+            ]
+          }
+        },
+        {
+          "id": "notice-once",
+          "description": "The '#3070 emptiness guard' routing notice prints at most once per brain, not on every command.",
+          "run": [
+            "search",
+            "warehouse robotics"
+          ],
+          "expect": {
+            "stderr_excludes": [
+              "#3070"
+            ]
+          },
+          "known_failure": {
+            "finding": "N5",
+            "note": "the routing notice repeats on every command"
+          }
+        }
+      ],
+      "audit_setup": [
+        "gbrain sources add work --path corpus/work",
+        "gbrain sources unfederate work"
+      ],
+      "audit_checks": [
+        {
+          "cmd": "gbrain search \"warehouse robotics\" 2>&1",
+          "expect": "the '#3070 emptiness guard' routing notice prints at most once per brain, not on every command"
+        }
+      ]
+    },
+    {
+      "id": "bb9-009-two-brains-one-checkout",
+      "workflow": "sync",
+      "origin": "new N6",
+      "text": "Add my work folder to my second brain too.",
+      "ground_truth_slugs": [],
+      "rubric": [
+        {
+          "id": "explains_owner",
+          "criterion": "Explains that another brain already owns the checkout and names the next step",
+          "weight": 2
+        }
+      ],
+      "setup": [
+        {
+          "run": [
+            "sources",
+            "add",
+            "work",
+            "--path",
+            "{corpus}/work",
+            "--json"
+          ],
+          "brain": "A"
+        }
+      ],
+      "checks": [
+        {
+          "id": "second-brain-refused",
+          "description": "Brain B refuses to add a checkout that brain A owns.",
+          "run": [
+            "sources",
+            "add",
+            "work",
+            "--path",
+            "{corpus}/work",
+            "--json"
+          ],
+          "brain": "B",
+          "expect": {
+            "exit": "nonzero"
+          }
+        },
+        {
+          "id": "refusal-names-next-step",
+          "description": "The refusal names the owning brain and the transfer command (a runnable fix), not the generic recovery_required text.",
+          "run": [
+            "sources",
+            "add",
+            "work",
+            "--path",
+            "{corpus}/work",
+            "--json"
+          ],
+          "brain": "B",
+          "expect": {
+            "json": [
+              {
+                "path": "code",
+                "op": "ne",
+                "value": "recovery_required"
+              },
+              {
+                "path": "fix.argv",
+                "op": "exists"
+              }
+            ]
+          },
+          "known_failure": {
+            "finding": "N6",
+            "note": "brain B gets the generic recovery_required error with no owner and no command"
+          }
+        }
+      ],
+      "audit_setup": [
+        "brain A: gbrain sources add work --path corpus/work",
+        "brain B: gbrain sources add work --path corpus/work"
+      ],
+      "audit_checks": [
+        {
+          "cmd": "brain B: gbrain sources add work --path corpus/work --json",
+          "expect": "refusal names the owning brain and the transfer command; not the generic recovery_required 'an earlier write left state' text"
+        }
+      ]
+    },
+    {
+      "id": "bb9-010-save-update-noop",
+      "workflow": "email_to_brain",
+      "origin": "black-box pass; guard",
+      "text": "Update Olive Example's page: she is now CFO of Acme. Then save the same text again.",
+      "ground_truth_slugs": [
+        "people/olive-example"
+      ],
+      "rubric": [
+        {
+          "id": "updated",
+          "criterion": "Reports the update landed with a new revision",
+          "weight": 2
+        },
+        {
+          "id": "noop",
+          "criterion": "Reports that the second identical save changed nothing",
+          "weight": 1
+        }
+      ],
+      "setup": [
+        {
+          "run": [
+            "put",
+            "people/olive-example",
+            "--json"
+          ],
+          "stdin": "puts/olive-v1.md",
+          "capture": {
+            "rev1": "revision"
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "update-new-revision",
+          "description": "put with the current revision lands a new revision.",
+          "run": [
+            "put",
+            "people/olive-example",
+            "--expected-revision",
+            "{rev1}",
+            "--json"
+          ],
+          "stdin": "puts/olive-v2.md",
+          "capture": {
+            "rev2": "revision"
+          },
+          "expect": {
+            "exit": "zero",
+            "json": [
+              {
+                "path": "status",
+                "op": "eq",
+                "value": "created_or_updated"
+              },
+              {
+                "path": "revision",
+                "op": "ne",
+                "value": "{rev1}"
+              }
+            ]
+          }
+        },
+        {
+          "id": "same-put-noop",
+          "description": "The same put again is a no-op: noop true, status skipped.",
+          "run": [
+            "put",
+            "people/olive-example",
+            "--expected-revision",
+            "{rev2}",
+            "--json"
+          ],
+          "stdin": "puts/olive-v2.md",
+          "expect": {
+            "exit": "zero",
+            "json": [
+              {
+                "path": "noop",
+                "op": "eq",
+                "value": true
+              },
+              {
+                "path": "status",
+                "op": "eq",
+                "value": "skipped"
+              }
+            ]
+          }
+        },
+        {
+          "id": "old-revision-conflict",
+          "description": "put with the old revision is refused with revision_conflict.",
+          "run": [
+            "put",
+            "people/olive-example",
+            "--expected-revision",
+            "{rev1}",
+            "--json"
+          ],
+          "stdin": "puts/olive-v1.md",
+          "expect": {
+            "exit": "nonzero",
+            "json": [
+              {
+                "path": "code",
+                "op": "eq",
+                "value": "revision_conflict"
+              }
+            ]
+          }
+        }
+      ],
+      "audit_setup": [
+        "gbrain put people/olive-example < corpus/puts/olive-v1.md"
+      ],
+      "audit_checks": [
+        {
+          "cmd": "gbrain put people/olive-example --expected-revision <rev> < corpus/puts/olive-v2.md --json",
+          "expect": "new revision"
+        },
+        {
+          "cmd": "same put again",
+          "expect": "noop true, status skipped"
+        },
+        {
+          "cmd": "put with the old revision",
+          "expect": "revision_conflict"
+        }
+      ]
+    },
+    {
+      "id": "bb9-011-timeline-plain-bullets",
+      "workflow": "meeting_ingestion",
+      "origin": "confirmed black-box graph-05",
+      "text": "Show me Erin Example's timeline.",
+      "ground_truth_slugs": [
+        "people/erin-example"
+      ],
+      "rubric": [
+        {
+          "id": "two_events",
+          "criterion": "Lists 2022-03-01 joined Acme and 2025-01-06 joined Widget Co",
+          "weight": 2
+        },
+        {
+          "id": "order",
+          "criterion": "Orders events by date",
+          "weight": 1
+        }
+      ],
+      "setup": [
+        {
+          "run": [
+            "import",
+            "{corpus}/default",
+            "--no-embed",
+            "--json"
+          ],
+          "note": "keyword-only import; the free run has no embedding key"
+        }
+      ],
+      "checks": [
+        {
+          "id": "plain-bullets-parsed",
+          "description": "timeline has 2 entries from the plain '- YYYY-MM-DD text' bullets.",
+          "run": [
+            "timeline",
+            "people/erin-example",
+            "--json"
+          ],
+          "expect": {
+            "json": [
+              {
+                "path": "",
+                "op": "length",
+                "value": 2
+              }
+            ]
+          },
+          "known_failure": {
+            "finding": "graph-05",
+            "note": "plain '- YYYY-MM-DD text' bullets are not read as timeline entries (only the bold '**date** |' form is)"
+          }
+        },
+        {
+          "id": "text-dates-plain",
+          "description": "Text output prints the two dates as YYYY-MM-DD, not ISO timestamps.",
+          "run": [
+            "timeline",
+            "people/erin-example"
+          ],
+          "expect": {
+            "stdout_includes": [
+              "2022-03-01",
+              "2025-01-06"
+            ],
+            "stdout_excludes": [
+              "T00:00:00"
+            ]
+          },
+          "known_failure": {
+            "finding": "graph-05",
+            "note": "no entries, so no dates print"
+          }
+        }
+      ],
+      "audit_checks": [
+        {
+          "cmd": "gbrain timeline people/erin-example --json",
+          "expect": "2 entries (plain '- YYYY-MM-DD text' bullets), dates printed as YYYY-MM-DD not ISO timestamps"
+        }
+      ]
+    },
+    {
+      "id": "bb9-012-temporal-supersede-hq",
+      "workflow": "briefing",
+      "origin": "black-box pass; guard",
+      "text": "Where is Acme Example headquartered, and is that changing?",
+      "ground_truth_slugs": [
+        "companies/acme-example",
+        "conversations/2026-11-10-alice-chat"
+      ],
+      "rubric": [
+        {
+          "id": "current",
+          "criterion": "Says Denver now",
+          "weight": 2
+        },
+        {
+          "id": "change",
+          "criterion": "Says the move to Austin is planned for Q1 2027, citing the 2026-11-10 conversation",
+          "weight": 2
+        },
+        {
+          "id": "cites",
+          "criterion": "Cites both pages",
+          "weight": 1
+        }
+      ]
+    },
+    {
+      "id": "bb9-013-delete-then-ask",
+      "workflow": "daily_task_prep",
+      "origin": "black-box pass; guard (RET-05 delta)",
+      "text": "I deleted the Orbit Labs company page. What changed in my brain today, and what do you still know about Orbit Labs?",
+      "ground_truth_slugs": [
+        "meetings/2026-10-30-orbit-seed-close",
+        "meetings/2025-11-02-orbit-intro"
+      ],
+      "rubric": [
+        {
+          "id": "reports_delete",
+          "criterion": "Reports the deletion of companies/orbit-labs-example as a change",
+          "weight": 2
+        },
+        {
+          "id": "uses_meetings",
+          "criterion": "Still answers from the meeting pages ($2.5M seed from Fund A on 2026-10-30)",
+          "weight": 1
+        },
+        {
+          "id": "no_deleted_content",
+          "criterion": "Does not quote the deleted page body ('evaluation tools for large language models')",
+          "weight": 2
+        }
+      ],
+      "setup": [
+        {
+          "run": [
+            "import",
+            "{corpus}/default",
+            "--no-embed",
+            "--json"
+          ],
+          "note": "keyword-only import; the free run has no embedding key"
+        },
+        {
+          "run": [
+            "get",
+            "companies/orbit-labs-example",
+            "--json"
+          ],
+          "capture": {
+            "rev": "revision"
+          }
+        },
+        {
+          "capture_time": "before_delete"
+        },
+        {
+          "run": [
+            "delete",
+            "companies/orbit-labs-example",
+            "--expected-revision",
+            "{rev}",
+            "--json"
+          ],
+          "capture": {
+            "rev_deleted": "revision"
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "delta-lists-delete",
+          "description": "delta --since a time before the delete lists the deleted page.",
+          "run": [
+            "delta",
+            "--since",
+            "{before_delete}",
+            "--json"
+          ],
+          "expect": {
+            "json": [
+              {
+                "path": "pages",
+                "op": "nonempty"
+              }
+            ]
+          },
+          "known_failure": {
+            "finding": "RET-05",
+            "note": "delta does not report deletions (confirmed black-box)"
+          }
+        },
+        {
+          "id": "search-skips-deleted",
+          "description": "search for 'evaluation tools' gives no hit on the deleted page.",
+          "run": [
+            "search",
+            "evaluation tools",
+            "--json"
+          ],
+          "expect": {
+            "json": [
+              {
+                "path": "[*].slug",
+                "op": "excludes",
+                "value": "companies/orbit-labs-example"
+              }
+            ]
+          }
+        },
+        {
+          "id": "purge-leaves-no-row",
+          "description": "After delete --purge, no row in pages/content_chunks holds the page body.",
+          "run": [
+            "delete",
+            "companies/orbit-labs-example",
+            "--purge",
+            "--expected-revision",
+            "{rev_deleted}",
+            "--json"
+          ],
+          "requires": [
+            "sql_scan"
+          ],
+          "expect": {
+            "exit": "zero"
+          }
+        }
+      ],
+      "audit_setup": [
+        "gbrain delete companies/orbit-labs-example"
+      ],
+      "audit_checks": [
+        {
+          "cmd": "gbrain delta --since <ISO before delete> --json",
+          "expect": "lists the delete (today it does not: RET-05, confirmed black-box)"
+        },
+        {
+          "cmd": "gbrain search \"evaluation tools\" --json",
+          "expect": "no hit on the deleted page"
+        },
+        {
+          "cmd": "gbrain delete companies/orbit-labs-example --purge --expected-revision <rev>; SQL scan",
+          "expect": "no row in pages/content_chunks holds the page body"
+        }
+      ]
+    },
+    {
+      "id": "bb9-014-think-citations",
+      "workflow": "meeting_ingestion",
+      "origin": "black-box pass; guard",
+      "text": "Who attended the March 2025 Acme board meeting and what did they decide?",
+      "ground_truth_slugs": [
+        "meetings/2025-03-04-acme-board"
+      ],
+      "rubric": [
+        {
+          "id": "attendees",
+          "criterion": "Names Alice, Bob and Carol",
+          "weight": 2
+        },
+        {
+          "id": "decisions",
+          "criterion": "Hire a VP of Engineering by June; keep monthly burn under $350k",
+          "weight": 2
+        },
+        {
+          "id": "cites",
+          "criterion": "Cites meetings/2025-03-04-acme-board",
+          "weight": 1
+        }
+      ]
+    },
+    {
+      "id": "a1-guard-health-1",
+      "workflow": "sync",
+      "origin": "A1 regression guard (Ember health-1)",
+      "text": "Is my brain healthy?",
+      "ground_truth_slugs": [],
+      "rubric": [
+        {
+          "id": "reports_missing",
+          "criterion": "Says the brain datastore is missing; does not report healthy",
+          "weight": 2
+        }
+      ],
+      "setup": [
+        {
+          "remove_datastore": "A"
+        }
+      ],
+      "checks": [
+        {
+          "id": "doctor-reports-missing",
+          "description": "doctor on a brain whose datastore was moved away exits non-zero and does not score 100.",
+          "run": [
+            "doctor",
+            "--json"
+          ],
+          "expect": {
+            "exit": "nonzero",
+            "json": [
+              {
+                "path": "health_score",
+                "op": "lt",
+                "value": 100
+              }
+            ]
+          }
+        },
+        {
+          "id": "no-new-empty-datastore",
+          "description": "doctor does not create a new empty datastore in place of the missing one.",
+          "run": [
+            "doctor",
+            "--json"
+          ],
+          "expect": {
+            "datastore_absent": "A"
+          }
+        }
+      ],
+      "audit_setup": [
+        "configure a PGLite brain, then move its datastore directory away"
+      ],
+      "audit_checks": [
+        {
+          "cmd": "gbrain doctor --json",
+          "expect": "missing_brain / non-zero; no new empty datastore created; score not 100"
+        }
+      ]
+    },
+    {
+      "id": "a1-guard-contract-01",
+      "workflow": "briefing",
+      "origin": "A1 regression guard (Ember contract-01, B1)",
+      "text": "Tell me about Acme Example.",
+      "ground_truth_slugs": [
+        "companies/acme-example"
+      ],
+      "rubric": [
+        {
+          "id": "no_false_absent",
+          "criterion": "Does not say 'no entity found' when the lookup failed",
+          "weight": 2
+        }
+      ],
+      "setup": [
+        {
+          "manual": "inject a failing page lookup (fault hook or broken DB connection)",
+          "requires": [
+            "fault_injection"
+          ]
+        }
+      ],
+      "checks": [
+        {
+          "id": "entity-degraded-not-absent",
+          "description": "entity with a failing lookup gives a degraded marker and non-zero exit; never found:false with exit 0.",
+          "run": [
+            "entity",
+            "companies/acme-example",
+            "--json"
+          ],
+          "expect": {
+            "exit": "nonzero",
+            "stdout_excludes": [
+              "\"found\": false"
+            ]
+          }
+        }
+      ],
+      "audit_setup": [
+        "inject a failing page lookup (fault hook or broken DB connection)"
+      ],
+      "audit_checks": [
+        {
+          "cmd": "gbrain entity companies/acme-example --json (lookup failure injected)",
+          "expect": "degraded marker and non-zero exit; never found:false with exit 0"
+        }
+      ]
+    },
+    {
+      "id": "a1-guard-RET-01-02",
+      "workflow": "briefing",
+      "origin": "A1 regression guard (Ember RET-01, RET-02)",
+      "text": "What is Widget Co's current pricing?",
+      "ground_truth_slugs": [
+        "meetings/2025-09-20-widget-pricing-review",
+        "companies/widget-co"
+      ],
+      "rubric": [
+        {
+          "id": "current_price",
+          "criterion": "Answers 0.4% per transaction, usage-based",
+          "weight": 2
+        },
+        {
+          "id": "old_marked",
+          "criterion": "Does not present the flat $2,000 monthly plan as current",
+          "weight": 2
+        }
+      ],
+      "setup": [
+        {
+          "run": [
+            "import",
+            "{corpus}/default",
+            "--no-embed",
+            "--json"
+          ],
+          "note": "keyword-only import; the free run has no embedding key"
+        },
+        {
+          "manual": "add a supersedes link from the 2025-09 pricing review to the old flat-plan note; for RET-02 inject a failing supersession lookup",
+          "requires": [
+            "mcp_server",
+            "fault_injection"
+          ]
+        }
+      ],
+      "checks": [
+        {
+          "id": "ret01-flag-within-one-request",
+          "description": "MCP search via a long-running `gbrain serve`, right after the first supersedes link: old page flagged superseded within one request, not after 5 minutes.",
+          "requires": [
+            "mcp_server"
+          ],
+          "not_mechanized": "no exact CLI call yet; the description is the audit expectation"
+        },
+        {
+          "id": "ret02-degraded-marker",
+          "description": "Search with the supersession lookup failing: degraded marker; old page not ranked first unflagged.",
+          "requires": [
+            "fault_injection"
+          ],
+          "not_mechanized": "no exact CLI call yet; the description is the audit expectation"
+        }
+      ],
+      "audit_setup": [
+        "add a supersedes link from the 2025-09 pricing review to the old flat-plan note",
+        "for RET-02: inject a failing supersession lookup"
+      ],
+      "audit_checks": [
+        {
+          "cmd": "MCP search via a long-running `gbrain serve`, right after the first supersedes link",
+          "expect": "old page flagged superseded within one request, not after 5 minutes (RET-01)"
+        },
+        {
+          "cmd": "search with supersession lookup failing",
+          "expect": "degraded marker; old page not ranked first unflagged (RET-02)"
+        }
+      ]
+    },
+    {
+      "id": "a1-guard-pages-01",
+      "workflow": "daily_task_prep",
+      "origin": "A1 regression guard (Ember pages-01, C1) - confirmed black-box",
+      "text": "Open People/Alice-Example.",
+      "ground_truth_slugs": [
+        "people/alice-example"
+      ],
+      "rubric": [
+        {
+          "id": "opens",
+          "criterion": "Opens the Alice Example page",
+          "weight": 2
+        }
+      ],
+      "setup": [
+        {
+          "run": [
+            "import",
+            "{corpus}/default",
+            "--no-embed",
+            "--json"
+          ],
+          "note": "keyword-only import; the free run has no embedding key"
+        }
+      ],
+      "checks": [
+        {
+          "id": "mixed-case-slug-opens",
+          "description": "get People/Alice-Example returns people/alice-example.",
+          "run": [
+            "get",
+            "People/Alice-Example"
+          ],
+          "expect": {
+            "exit": "zero",
+            "stdout_includes": [
+              "Alice Example"
+            ]
+          },
+          "known_failure": {
+            "finding": "pages-01 (C1)",
+            "note": "audit at 7ef3d53: page_not_found on PGLite and Postgres"
+          }
+        }
+      ],
+      "audit_checks": [
+        {
+          "cmd": "gbrain get People/Alice-Example",
+          "expect": "returns people/alice-example (today: page_not_found on PGLite and Postgres)"
+        }
+      ]
+    },
+    {
+      "id": "a1-guard-pages-02",
+      "workflow": "email_to_brain",
+      "origin": "A1 regression guard (Ember pages-02)",
+      "text": "Save a note about Heidi Example's new role.",
+      "ground_truth_slugs": [
+        "people/heidi-example"
+      ],
+      "rubric": [
+        {
+          "id": "same_dest",
+          "criterion": "The note lands in the same source as the existing file-backed page",
+          "weight": 2
+        }
+      ],
+      "setup": [
+        {
+          "manual": "brain with a sole non-default source and an empty default; then put one page into default",
+          "requires": [
+            "fixture_build"
+          ]
+        }
+      ],
+      "checks": [
+        {
+          "id": "no-shadow-copy",
+          "description": "gbrain put people/heidi-example (unsourced), then --force update: no shadow copy; get returns the file-backed page.",
+          "requires": [
+            "fixture_build"
+          ],
+          "not_mechanized": "no exact CLI call yet; the description is the audit expectation"
+        }
+      ],
+      "audit_setup": [
+        "brain with a sole non-default source and an empty default; then put one page into default"
+      ],
+      "audit_checks": [
+        {
+          "cmd": "gbrain put people/heidi-example (unsourced), then --force update",
+          "expect": "no shadow copy; get returns the file-backed page"
+        }
+      ]
+    },
+    {
+      "id": "a1-guard-pages-03",
+      "workflow": "email_to_brain",
+      "origin": "A1 regression guard (Ember pages-03, D1)",
+      "text": "Add 'met at the conference' to Frank Example's page.",
+      "ground_truth_slugs": [
+        "people/frank-example"
+      ],
+      "rubric": [
+        {
+          "id": "edit_done",
+          "criterion": "Adds the line",
+          "weight": 1
+        }
+      ],
+      "setup": [
+        {
+          "manual": "frontmatter with date: 2026-03-01, tz: '2026-03-01T09:00:00-08:00', zip: '02139', version: 1.10 on Frank Example's git-backed file",
+          "requires": [
+            "fixture_build"
+          ]
+        }
+      ],
+      "checks": [
+        {
+          "id": "frontmatter-byte-identical",
+          "description": "Diff the git file before and after the edit: frontmatter values and key order byte-identical.",
+          "requires": [
+            "fixture_build"
+          ],
+          "not_mechanized": "no exact CLI call yet; the description is the audit expectation"
+        }
+      ],
+      "audit_setup": [
+        "frontmatter with date: 2026-03-01, tz: '2026-03-01T09:00:00-08:00', zip: '02139', version: 1.10"
+      ],
+      "audit_checks": [
+        {
+          "cmd": "diff the git file before and after the edit",
+          "expect": "frontmatter values and key order byte-identical"
+        }
+      ]
+    },
+    {
+      "id": "a1-guard-LC-1",
+      "workflow": "sync",
+      "origin": "A1 regression guard (Ember LC-1, E1)",
+      "text": "I restored the Grace Example file from git. Is it back in my brain?",
+      "ground_truth_slugs": [
+        "people/grace-example"
+      ],
+      "rubric": [
+        {
+          "id": "returns",
+          "criterion": "Says the page is back (after the ask-first step) or names the exact step to bring it back",
+          "weight": 2
+        }
+      ],
+      "setup": [
+        {
+          "manual": "gbrain delete people/grace-example; git checkout the file back; managed sync",
+          "requires": [
+            "fixture_build"
+          ]
+        }
+      ],
+      "checks": [
+        {
+          "id": "restored-page-returns",
+          "description": "gbrain get people/grace-example after sync: page present, or a held item with a working fix; doctor fix must change state.",
+          "run": [
+            "get",
+            "people/grace-example"
+          ],
+          "expect": {
+            "exit": "zero",
+            "stdout_includes": [
+              "Grace Example"
+            ]
+          }
+        }
+      ],
+      "audit_setup": [
+        "gbrain delete people/grace-example",
+        "git checkout the file back",
+        "managed sync"
+      ],
+      "audit_checks": [
+        {
+          "cmd": "gbrain get people/grace-example after sync",
+          "expect": "page present, or a held item with a working fix; doctor fix must change state"
+        }
+      ]
+    },
+    {
+      "id": "a1-guard-LC-2",
+      "workflow": "sync",
+      "origin": "A1 regression guard (Ember LC-2)",
+      "text": "Repair my frontmatter.",
+      "ground_truth_slugs": [],
+      "rubric": [
+        {
+          "id": "no_revive",
+          "criterion": "Does not revive deleted or purged pages without asking",
+          "weight": 2
+        }
+      ],
+      "setup": [
+        {
+          "manual": "soft-delete one page and purge another while their files still exist",
+          "requires": [
+            "fixture_build"
+          ]
+        }
+      ],
+      "checks": [
+        {
+          "id": "repair-does-not-revive",
+          "description": "repair frontmatter: file_drift holds of deleted/purged pages not labeled safe; --apply does not un-delete.",
+          "run": [
+            "repair",
+            "frontmatter",
+            "--source",
+            "default",
+            "--json"
+          ],
+          "expect": {
+            "stdout_excludes": [
+              "\"safe\": true"
+            ]
+          }
+        }
+      ],
+      "audit_setup": [
+        "soft-delete one page and purge another while their files still exist"
+      ],
+      "audit_checks": [
+        {
+          "cmd": "gbrain repair frontmatter --source default --json",
+          "expect": "file_drift holds of deleted/purged pages not labeled safe; --apply does not un-delete"
+        }
+      ]
+    },
+    {
+      "id": "a1-guard-memory-01",
+      "workflow": "briefing",
+      "origin": "A1 regression guard (Ember memory-01)",
+      "text": "How is Nimbus Example trending? Any red flags?",
+      "ground_truth_slugs": [
+        "companies/nimbus-example"
+      ],
+      "rubric": [
+        {
+          "id": "no_false_flag",
+          "criterion": "Does not call a churn or burn drop a regression or red flag",
+          "weight": 2
+        }
+      ],
+      "setup": [
+        {
+          "manual": "Facts fence rows: churn 8% -> 5% (lower is better), burn $400k -> $300k",
+          "requires": [
+            "fixture_build"
+          ]
+        }
+      ],
+      "checks": [
+        {
+          "id": "lower-is-better-not-flagged",
+          "description": "eval trajectory: drops in lower-is-better metrics not flagged.",
+          "run": [
+            "eval",
+            "trajectory",
+            "companies/nimbus-example",
+            "--json"
+          ],
+          "expect": {
+            "stdout_excludes": [
+              "regression"
+            ]
+          }
+        }
+      ],
+      "audit_setup": [
+        "Facts fence rows: churn 8% -> 5% (lower is better), burn $400k -> $300k"
+      ],
+      "audit_checks": [
+        {
+          "cmd": "gbrain eval trajectory companies/nimbus-example --json",
+          "expect": "drops in lower-is-better metrics not flagged"
+        }
+      ]
+    },
+    {
+      "id": "a1-guard-privacy-2",
+      "workflow": "email_to_brain",
+      "origin": "A1 regression guard (Ember privacy-2)",
+      "text": "Keep Dave Example's page to the finance group only.",
+      "ground_truth_slugs": [
+        "people/dave-example"
+      ],
+      "rubric": [
+        {
+          "id": "restricted",
+          "criterion": "Page is not readable by a non-member, or the write is refused with a clear message",
+          "weight": 2
+        }
+      ],
+      "setup": [
+        {
+          "manual": "frontmatter `Readable_By: [group:finance]` (misspelled key) on a shared source",
+          "requires": [
+            "fixture_build"
+          ]
+        }
+      ],
+      "checks": [
+        {
+          "id": "misspelled-acl-denied",
+          "description": "access check as a non-member: denied, or the misspelled key is refused at write time.",
+          "run": [
+            "access",
+            "check",
+            "--as",
+            "<non-member>",
+            "people/dave-example"
+          ],
+          "expect": {
+            "output_includes": [
+              "denied"
+            ]
+          }
+        }
+      ],
+      "audit_setup": [
+        "frontmatter `Readable_By: [group:finance]` (misspelled key) on a shared source"
+      ],
+      "audit_checks": [
+        {
+          "cmd": "gbrain access check --as <non-member> people/dave-example",
+          "expect": "denied, or the misspelled key is refused at write time"
+        }
+      ]
+    }
+  ]
+}
