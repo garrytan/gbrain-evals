@@ -19,6 +19,7 @@ import { SUSPENDED_SINCE, SUSPENSION_RULE, suspendedModelProblem } from './model
 import type { ManifestEntry, OrderProblem } from './prereg.ts';
 
 export const PRACTICES_CUTOFF = '2026-11-19';
+export const JUDGE_LABELS_RAISED_FROM = '2026-11-22';
 export const GRANDFATHERED_PATH = 'docs/benchmarks/preregistrations-grandfathered.json';
 export const TEMPLATE_PATH = 'docs/benchmarks/PREREGISTRATION-TEMPLATE.md';
 export const PAID_TIERS = ['quick-look', 'under-500', 'over-500'] as const;
@@ -102,10 +103,16 @@ function checkPilots(arms: unknown, pilots: unknown): string[] {
   return problems;
 }
 
-function checkJudge(judge: unknown): string[] {
+/** Labelled outputs a model judge is checked on before its numbers count: 100 for plans frozen on or after JUDGE_LABELS_RAISED_FROM, 40 before (R78). */
+export function judgeLabelMinimum(registered: unknown): number {
+  return isText(registered) && registered >= JUDGE_LABELS_RAISED_FROM ? 100 : 40;
+}
+
+function checkJudge(judge: unknown, registered: unknown): string[] {
   if (!isObject(judge)) return ['judge_check is required: { "model_judge": false, "reason": "..." } or { "judges": [...], "read_per_arm": true } (R78)'];
   if (judge.model_judge === false) return isText(judge.reason) ? [] : ['judge_check.reason must say why no model judge is used'];
   const problems: string[] = [];
+  const minLabels = judgeLabelMinimum(registered);
   if (!Array.isArray(judge.judges) || judge.judges.length === 0) problems.push('judge_check.judges must list each model judge');
   if (judge.read_per_arm !== true) problems.push('judge_check.read_per_arm must be true: the judge\'s errors are read per arm, not pooled (R78)');
   (Array.isArray(judge.judges) ? judge.judges : []).forEach((j: unknown, i: number) => {
@@ -117,7 +124,7 @@ function checkJudge(judge: unknown): string[] {
     if (!isText(j.model)) problems.push(`judge_check.judges[${i}].model is required`);
     else if (!family) problems.push(`judge_check.judges[${i}].model ${j.model} has no known family; add it to MODEL_FAMILIES in eval/runner/prereg-practices.ts`);
     else if (family === 'particle') problems.push(`judge_check.judges[${i}]: particle-1 never judges a counted cell`);
-    if (!Number.isInteger(j.labelled_outputs) || (j.labelled_outputs as number) < 40) problems.push(`judge_check.judges[${i}].labelled_outputs must be at least 40 (R78)`);
+    if (!Number.isInteger(j.labelled_outputs) || (j.labelled_outputs as number) < minLabels) problems.push(`judge_check.judges[${i}].labelled_outputs must be at least ${minLabels} (R78)`);
     if (typeof j.kappa_min !== 'number' || j.kappa_min < 0.6 || j.kappa_min > 1) problems.push(`judge_check.judges[${i}].kappa_min must be at least 0.6 (R78)`);
     if (!Array.isArray(j.grades) || j.grades.length === 0 || !j.grades.every(isText)) {
       problems.push(`judge_check.judges[${i}].grades must list the models whose outputs it scores`);
@@ -216,7 +223,7 @@ export function checkEntry(entry: PracticeEntry, cwd = process.cwd()): string[] 
     ...problems,
     ...checkDecision(entry.decision),
     ...checkPilots(entry.arms, entry.pilots),
-    ...checkJudge(entry.judge_check),
+    ...checkJudge(entry.judge_check, registered),
     ...checkModels(entry),
     ...checkInterim(tier as string, entry.interim_look),
     ...checkResultsPage(entry, true, cwd),

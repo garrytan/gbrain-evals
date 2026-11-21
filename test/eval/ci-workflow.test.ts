@@ -66,6 +66,30 @@ describe('CI workflow gates (audit C5 to C8)', () => {
   });
 });
 
+// Value: protects=the one check the main branch's ruleset requires; fails_when=a job the merge waits on can fail, be cancelled or be skipped while merge-gate passes or is skipped, which GitHub reads as passing; seam=ci.yml and .gstack/ship-policy.json as text, keyless; no_claim=how GitHub evaluates the expressions at run time
+describe('merge gate', () => {
+  const gate = workflow.slice(workflow.indexOf('\n  merge-gate:'), workflow.indexOf('\n  # The head-to-head scoreboard'));
+  const needs = (job: string) => /needs: \[([^\]]*)\]/.exec(workflow.slice(workflow.indexOf(`\n  ${job}:`)))![1]!.split(',').map(s => s.trim());
+
+  test('runs even when a needed job fails, and fails on any result but success', () => {
+    expect(gate).toMatch(/^\n  merge-gate:\n    if: always\(\)\n/);
+    expect(gate).toContain("if: always() && (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped'))");
+    expect(gate).toContain('run: exit 1');
+  });
+
+  test('needs every check the merge waits on and every job tested-tree needs', () => {
+    const policy = JSON.parse(readFileSync(new URL('../../.gstack/ship-policy.json', import.meta.url), 'utf8'));
+    const gateNeeds = needs('merge-gate');
+    for (const check of policy.changelog_fragments.required_checks as string[]) expect(gateNeeds).toContain(check.replace(/ \(\d+\)$/, ''));
+    for (const job of needs('tested-tree')) expect(gateNeeds).toContain(job);
+  });
+
+  test('no job is path-filtered, so every pull request reports the gate', () => {
+    expect(workflow).toMatch(/^on:\n  pull_request:\n  push:\n/m);
+    expect(workflow).not.toMatch(/paths(-ignore)?:/);
+  });
+});
+
 describe('link check (docs audit B12)', () => {
   test('a weekly job fetches external links as well as local ones', () => {
     const links = readFileSync(new URL('../../.github/workflows/links.yml', import.meta.url), 'utf8');

@@ -106,6 +106,17 @@ describe('checkEntry refuses', () => {
     expect(counted(e => { (e.judge_check as { judges: Array<Record<string, unknown>> }).judges[0]!.labelled_outputs = 39; })[0]).toContain('at least 40');
   });
 
+  test('a judge checked on fewer than 100 labelled outputs in a plan frozen on or after 2026-11-22', () => {
+    const labelled = (registered: string, n: number) => counted(e => {
+      e.registered = registered;
+      e.models = [{ model: 'claude-opus-5-5', role: 'under-test' }];
+      for (const j of (e.judge_check as { judges: Array<Record<string, unknown>> }).judges) j.labelled_outputs = n;
+    });
+    expect(labelled('2026-11-22', 99)).toEqual(['judge_check.judges[0].labelled_outputs must be at least 100 (R78)', 'judge_check.judges[1].labelled_outputs must be at least 100 (R78)']);
+    expect(labelled('2026-11-22', 100)).toEqual([]);
+    expect(labelled('2026-11-21', 40)).toEqual([]);
+  });
+
   test('a judge kappa threshold below 0.6', () => {
     expect(counted(e => { (e.judge_check as { judges: Array<Record<string, unknown>> }).judges[1]!.kappa_min = 0.5; })[0]).toContain('kappa_min must be at least 0.6');
   });
