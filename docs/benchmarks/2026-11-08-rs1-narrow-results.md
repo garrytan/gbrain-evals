@@ -20,11 +20,11 @@
 - **We learned that gbrain's own fact extraction leaves a small share of pages without facts, mostly because the model
   provider's safety filter stopped it, and that a harness that fails the build on those pages leaves the brain half
   built. You should record those pages as their own outcome, keep building, and report how many there are.** Across the
-  20 gbrain brains, 126 of 17,563 pages (0.72%) ended without facts: 73 (0.42%) because Anthropic's safety filter
-  stopped claude-haiku-5-5, gbrain's extraction model, and 53 (0.30%) because gbrain's parser skipped the page as
-  unparsed. In wave A's first run our harness stopped 17 of the 20 gbrain builds at those pages, before the fact index
-  was built. We changed it to record them, in a dated amendment written before the rerun, and ran gbrain's units again.
-  The servers' and the floor's runs stand.
+  20 gbrain brains, 126 of 17,563 pages (0.72%) were recorded without facts: 73 (0.42%) because Anthropic's safety
+  filter stopped claude-haiku-5-5, gbrain's extraction model, and 53 (0.30%) because gbrain's parser skipped the page
+  as unparsed. In wave A's first run our harness stopped 17 of the 20 gbrain builds at those pages, before the fact
+  index was built. We changed it to record them, in a dated amendment written before the rerun, and ran gbrain's units
+  again. The servers' and the floor's runs stand.
 
 This is the results file of the [narrowed RS1 preregistration](2026-11-08-rs1-narrow-preregistration.md), frozen by its
 merge commit `325a1c04` (#390) on 2026-11-08 and changed since only by its dated amendments. The preregistered verdict is
@@ -156,7 +156,7 @@ ingest record keeps the counts, and they were read in custody after each unit fi
 |---|---:|---:|
 | Stopped by the provider's safety filter (`content_filter`) | 73 | 0.42% |
 | Skipped by gbrain's parser as unparsed | 53 | 0.30% |
-| All pages without facts | 126 | 0.72% |
+| Both causes | 126 | 0.72% |
 
 - 3 of the 20 builds had no such page and 17 recorded at least one. Per conversation, safety-filter stops ranged from 0
   to 14 pages and unparsed pages from 0 to 10. No build was degraded and none stopped on its extraction cap.
@@ -166,6 +166,8 @@ ingest record keeps the counts, and they were read in custody after each unit fi
   retry isn't counted.
 - gbrain writes why it skipped a page as unparsed only to its error stream, which the harness didn't keep, so the cause
   of those 53 pages is unknown.
+- The harness reads only these two causes. gbrain's other skip counters, such as too few turns, a type mismatch or an
+  unrecognized speaker, weren't read, so 126 is a lower bound for pages without facts.
 
 ## What it can and can't claim
 
