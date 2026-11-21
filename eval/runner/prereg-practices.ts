@@ -15,12 +15,14 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { SUSPENDED_SINCE, SUSPENSION_RULE, suspendedModelProblem } from './model-defaults.ts';
 import type { ManifestEntry, OrderProblem } from './prereg.ts';
 
 export const PRACTICES_CUTOFF = '2026-11-19';
 export const GRANDFATHERED_PATH = 'docs/benchmarks/preregistrations-grandfathered.json';
 export const TEMPLATE_PATH = 'docs/benchmarks/PREREGISTRATION-TEMPLATE.md';
 export const PAID_TIERS = ['quick-look', 'under-500', 'over-500'] as const;
+export const MODEL_ROLES = ['under-test', 'judge', 'simulator', 'extractor', 'embedder', 'bridge', 'protocol-fixed', 'system-internal'] as const;
 export const SETTLED_CALL = /^\s*(?:[-*]\s+)?(?:\*\*)?Settled call:(?:\*\*)?[ \t]*(.*)$/m;
 
 const MODEL_FAMILIES: Array<[RegExp, string]> = [
@@ -130,6 +132,40 @@ function checkJudge(judge: unknown): string[] {
   return problems;
 }
 
+/**
+ * From SUSPENDED_SINCE every entry lists the models it runs, each with its role, and none may be a suspended model
+ * except a compared system's shipped default (`system-internal`, naming the system), which is tested as shipped.
+ */
+export function checkModels(entry: PracticeEntry): string[] {
+  if (!isText(entry.registered) || entry.registered < SUSPENDED_SINCE) return [];
+  const models = entry.models;
+  if (!Array.isArray(models) || models.length === 0) {
+    return [`models must list every model the campaign runs as [{ "model": "<id>", "role": "<${MODEL_ROLES.join('|')}>" }], so the ${SUSPENDED_SINCE} suspension can be checked`];
+  }
+  const problems: string[] = [];
+  models.forEach((m, i) => {
+    if (!isObject(m) || !isText(m.model)) {
+      problems.push(`models[${i}].model is required`);
+      return;
+    }
+    if (!MODEL_ROLES.includes(m.role as (typeof MODEL_ROLES)[number])) problems.push(`models[${i}].role must be one of ${MODEL_ROLES.join(', ')}`);
+    if (m.role === 'system-internal') {
+      if (!isText(m.system)) problems.push(`models[${i}].system must name the compared system that ships ${m.model} as its default`);
+      return;
+    }
+    const suspended = suspendedModelProblem(m.model);
+    if (suspended) problems.push(`models[${i}]: ${suspended}`);
+  });
+  const judges = isObject(entry.judge_check) && Array.isArray(entry.judge_check.judges) ? entry.judge_check.judges : [];
+  judges.forEach((j: unknown, i: number) => {
+    if (!isObject(j)) return;
+    for (const model of [j.model, ...(Array.isArray(j.grades) ? j.grades : [])]) {
+      if (isText(model) && suspendedModelProblem(model)) problems.push(`judge_check.judges[${i}]: ${model}: ${SUSPENSION_RULE}`);
+    }
+  });
+  return problems;
+}
+
 function checkInterim(tier: string, look: unknown): string[] {
   if (isObject(look) && 'not_required' in look) {
     if (tier === 'over-500') return ['interim_look is required above $500 paid: one look at half the units (R113)'];
@@ -174,13 +210,14 @@ export function checkEntry(entry: PracticeEntry, cwd = process.cwd()): string[] 
     const plan = entry.quick_look;
     if (!isObject(plan)) problems.push('quick_look must carry the three-line plan: { "question", "decision", "stop_rule" } (R112)');
     else for (const k of missingText(plan, ['question', 'decision', 'stop_rule'])) problems.push(`quick_look.${k} is required (R112)`);
-    return [...problems, ...checkResultsPage(entry, false, cwd)];
+    return [...problems, ...checkModels(entry), ...checkResultsPage(entry, false, cwd)];
   }
   return [
     ...problems,
     ...checkDecision(entry.decision),
     ...checkPilots(entry.arms, entry.pilots),
     ...checkJudge(entry.judge_check),
+    ...checkModels(entry),
     ...checkInterim(tier as string, entry.interim_look),
     ...checkResultsPage(entry, true, cwd),
   ];

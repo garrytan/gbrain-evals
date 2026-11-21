@@ -17,14 +17,17 @@
  * runtime attestation against `origin` is what does. CI needs full history
  * (`fetch-depth: 0`).
  *
+ * `attestPreregistration` also refuses a run whose registry entry, registered on or after the gpt-4o suspension,
+ * names a suspended model (`checkModels` in `prereg-practices.ts`).
+ *
  * The same CI step runs `checkPractices` and `checkGrandfatheredFrozen`
  * (`prereg-practices.ts`), which refuse a new registry entry that lacks the
  * eval-loop practice fields and a grandfather list that names a new plan.
  */
 import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { checkGrandfatheredFrozen, checkPractices, loadGrandfathered, type PracticeEntry } from './prereg-practices.ts';
+import { join, relative, resolve } from 'node:path';
+import { checkGrandfatheredFrozen, checkModels, checkPractices, loadGrandfathered, type PracticeEntry } from './prereg-practices.ts';
 
 export interface Attestation {
   preregistration: string;
@@ -69,6 +72,12 @@ export function attestPreregistration(path: string, cwd = process.cwd(), now = n
   const remotes = git(cwd, ['branch', '-r', '--contains', commit]);
   if (!remotes.split('\n').some(line => line.trim().startsWith('origin/'))) {
     throw new Error(`preregistration commit ${commit.slice(0, 12)} is not on origin; run \`git push\` before running`);
+  }
+  if (existsSync(join(cwd, 'docs/benchmarks/preregistrations.json'))) {
+    const repoPath = (p: string) => relative(cwd, resolve(cwd, p));
+    const entry = loadManifest(cwd).find(e => repoPath(e.preregistration) === repoPath(path)) as PracticeEntry | undefined;
+    const problems = entry ? checkModels(entry) : [];
+    if (problems.length > 0) throw new Error(`registry entry ${entry!.id} refuses this run: ${problems.join('; ')}`);
   }
   return {
     preregistration: path,

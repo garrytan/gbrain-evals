@@ -159,8 +159,8 @@ rule of 2026-11-01 that evals test gbrain and gstack on frontier models.
   are newest (`bun scripts/model-freshness.ts` reads the providers' model lists, Particle's included) and add any that
   the run doesn't already include. Register a price for a new model in `eval/runner/budget-ledger.ts` so the ledger can
   reserve it.
-- **particle-1 never judges a counted cell.** Counted judges stay protocol-matched (for example `gpt-4o-2024-08-06` for
-  LongMemEval and `gpt-6.1-sol` for Cat 40 Hard). particle-1 becomes the default reader and agent for a development loop
+- **particle-1 never judges a counted cell.** Counted judges stay protocol-matched (for example `gpt-6.1-sol` for Cat 40
+  Hard), within the gpt-4o suspension below. particle-1 becomes the default reader and agent for a development loop
   once it passes that loop's preregistered agreement test; development judges are the ones the dataset's harness fixes,
   else `gpt-6.2-sol`.
 - **Sonnet and Haiku are not models under test (Garry, 2026-11-01).** A comparison run no longer needs them. Never run
@@ -179,6 +179,18 @@ rule of 2026-11-01 that evals test gbrain and gstack on frontier models.
   results. If a model that appears in both runs already gives that link, add no older model. `gpt-4.1-mini` runs
   only under this exception, as the bridge to earlier BEAM runs.
 - **Do not run gpt-5.4-mini.** Never base a product change, gate or release decision on a gpt-5.4-mini-only finding.
+- **gpt-4o and gpt-4o-mini are suspended (Garry, 2026-11-21).** A campaign registered on or after 2026-11-21 uses no
+  gpt-4o model, of any snapshot and `gpt-4o-mini` included, in a role we choose: an arm, a reader or agent, a judge, a
+  simulator, an extractor or embedder we configure, a bridge to earlier results or a protocol-fixed comparison. Its
+  registry entry lists every model it runs with its role in `models`
+  ([PREREGISTRATION-TEMPLATE.md](docs/benchmarks/PREREGISTRATION-TEMPLATE.md#registry-entry) has the shape), and
+  `bun eval/runner/prereg.ts` in CI and `attestPreregistration` at launch refuse a suspended model in that list with an
+  error that names this rule. They read the list, not the runner's code, so the list must match the models the runner
+  calls. A compared system's shipped default, such as the extraction model a comparator's server runs out of
+  the box, is tested as shipped: list it with role `system-internal` and the system's name. Campaigns registered before
+  the date keep the models they preregistered, and published rows measured with gpt-4o stay as history. LongMemEval's
+  official judge is `gpt-4o-2024-08-06` and the suspension has no judge exception, so a new LongMemEval campaign that
+  needs the official judge gets a decision before it registers.
 - **Report the models people use first** after the primary models' first table. A reader-matched comparison with a
   published system keeps that system's reader. Note a ceiling (a model at 100% on every arm cannot show a difference)
   rather than counting it as a win or a tie.
@@ -217,3 +229,12 @@ A feature change should have evidence on the behavior it changes. A benchmark th
 Maintain the dated source list in [comparison-systems.md](docs/comparison-systems.md). Prefer published artifacts and primary sources. State when we recomputed another system's score rather than quoting its authors.
 
 When a claim changes, keep the old result identifiable and explain the new evidence. Keep changelog dates, attribution, audit identifiers and unfinished work intact while making their descriptions easier to read.
+
+## Changelog
+
+### 2026-11-21: gpt-4o and gpt-4o-mini suspended for new campaigns
+
+"Choose models" adds the suspension: a campaign registered on or after 2026-11-21 lists its models and roles in its
+registry entry, and CI and the launch check refuse gpt-4o and gpt-4o-mini listed there in any role we choose. A compared system's
+shipped default stays as shipped. The particle-1 judge bullet no longer gives `gpt-4o-2024-08-06` as an example of a
+judge that stays, because a new campaign can't use it. Earlier history of this guide is in CHANGELOG.md.

@@ -176,6 +176,63 @@ describe('checkEntry refuses', () => {
   });
 });
 
+// Value: protects=the gpt-4o suspension (Garry, 2026-11-21) on new campaigns; fails_when=a campaign registered on or after 2026-11-21 lists gpt-4o or gpt-4o-mini in a role we choose (reader, judge, extractor, bridge, protocol-fixed comparison) or omits its model list, or a compared system's shipped default is refused; seam=checkEntry over the counted and quick-look fixtures, keyless; no_claim=whether the model list matches the runner's configuration
+describe('gpt-4o suspension', () => {
+  const opus = { model: 'claude-opus-5-5', role: 'under-test' };
+  const suspended = (change: (e: PracticeEntry) => void) => counted(e => {
+    e.registered = '2026-11-21';
+    e.models = [opus];
+    change(e);
+  });
+
+  test('passes a campaign registered on the date with frontier models, and an earlier one with no model list', () => {
+    expect(suspended(() => {})).toEqual([]);
+    expect(problems(fixture('pass-counted.json'))).toEqual([]);
+  });
+
+  test('refuses a campaign registered on or after the date with no model list', () => {
+    expect(counted(e => { e.registered = '2026-11-21'; })).toEqual([expect.stringContaining('models must list every model the campaign runs')]);
+    const quick = { ...fixture('pass-quick-look.json'), registered: '2026-12-01' };
+    expect(problems(quick)).toEqual([expect.stringContaining('models must list every model the campaign runs')]);
+  });
+
+  test('refuses gpt-4o and gpt-4o-mini in every role we choose, with or without provider prefix or snapshot date', () => {
+    const roles = ['under-test', 'judge', 'simulator', 'extractor', 'embedder', 'bridge', 'protocol-fixed'];
+    for (const role of roles) {
+      for (const model of ['gpt-4o', 'openai:gpt-4o-2024-08-06', 'gpt-4o-mini', 'openai/gpt-4o-mini-2024-07-18', 'openrouter:openai/gpt-4o', 'gpt-4o:free', 'openai/gpt-4o:extended', 'ft:gpt-4o-mini-2024-07-18:org::abc', 'chatgpt-4o-latest']) {
+        expect([role, model, suspended(e => { e.models = [opus, { model, role }]; })]).toEqual([role, model, [
+          `models[1]: ${model}: gpt-4o and gpt-4o-mini are suspended for new campaigns from 2026-11-21 (CLAUDE.md "Choose models")`,
+        ]]);
+      }
+    }
+  });
+
+  test('refuses a suspended judge or graded model in judge_check even when the model list leaves it out', () => {
+    const p = suspended(e => {
+      (e.judge_check as { judges: Array<{ model: string }> }).judges[1]!.model = 'openai:gpt-4o-2024-08-06';
+    });
+    expect(p).toContain('judge_check.judges[1]: openai:gpt-4o-2024-08-06: gpt-4o and gpt-4o-mini are suspended for new campaigns from 2026-11-21 (CLAUDE.md "Choose models")');
+    const graded = suspended(e => {
+      (e.judge_check as { judges: Array<{ grades?: string[] }> }).judges[1]!.grades = ['gpt-4o-mini'];
+    });
+    expect(graded).toContain('judge_check.judges[1]: gpt-4o-mini: gpt-4o and gpt-4o-mini are suspended for new campaigns from 2026-11-21 (CLAUDE.md "Choose models")');
+  });
+
+  test('keeps a compared system\'s shipped default as tested, and asks which system ships it', () => {
+    expect(suspended(e => { e.models = [opus, { model: 'gpt-4o-mini', role: 'system-internal', system: 'memory-bank (its server default)' }]; })).toEqual([]);
+    expect(suspended(e => { e.models = [opus, { model: 'gpt-4o-mini', role: 'system-internal' }]; })).toEqual([
+      'models[1].system must name the compared system that ships gpt-4o-mini as its default',
+    ]);
+  });
+
+  test('refuses an unknown role and leaves gpt-4.1-mini and frontier GPT models alone', () => {
+    expect(suspended(e => { e.models = [{ model: 'gpt-6.2-sol', role: 'reader' }]; })).toEqual([
+      'models[0].role must be one of under-test, judge, simulator, extractor, embedder, bridge, protocol-fixed, system-internal',
+    ]);
+    expect(suspended(e => { e.models = [opus, { model: 'gpt-6.2-sol', role: 'under-test' }, { model: 'openai:gpt-4.1-mini', role: 'bridge' }]; })).toEqual([]);
+  });
+});
+
 describe('results page settled-call line', () => {
   const page = 'docs/benchmarks/2026-11-20-fixture.md';
   const withPage = (body: string) => problems(fixture('pass-counted.json'), repo({ [page]: body }));

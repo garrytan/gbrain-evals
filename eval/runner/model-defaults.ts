@@ -21,6 +21,25 @@ export const BANNED_DEFAULTS: Readonly<Record<string, string>> = {
   'claude-fable-5-1': 'Fable runs only in smoke tests, never in counted cells',
 };
 
+/**
+ * gpt-4o and gpt-4o-mini are suspended (Garry, 2026-11-21: "suspend tests with gpt-4o ... we should be using frontier
+ * models"). No campaign registered on or after SUSPENDED_SINCE may use a gpt-4o model in a role we choose: an arm, a
+ * reader or agent, a judge, a simulator, an extractor or embedder we configure, or a bridge. A competitor's or product's
+ * shipped default (its own extraction or embedding model) is tested as shipped, so a registry entry declares it with
+ * role `system-internal`. Campaigns registered before the date and published rows keep the models they ran.
+ */
+export const SUSPENDED_SINCE = '2026-11-21';
+export const SUSPENSION_RULE = 'gpt-4o and gpt-4o-mini are suspended for new campaigns from 2026-11-21 (CLAUDE.md "Choose models")';
+
+/**
+ * Why `model` is suspended for new campaigns, or null when it is not. Covers every gpt-4o variant and snapshot behind any
+ * provider prefix or suffix (`openrouter:openai/gpt-4o`, `gpt-4o:free`, `ft:gpt-4o-mini-2024-07-18:org::id`).
+ */
+export function suspendedModelProblem(model: string): string | null {
+  const segments = model.trim().toLowerCase().split(/[:/]/);
+  return segments.some(s => /^(?:chatgpt-4o|gpt-4o)(?:$|-)/.test(s)) ? `${model}: ${SUSPENSION_RULE}` : null;
+}
+
 /** `anthropic:claude-haiku-4-5-20251001` → `claude-haiku-4-5`. */
 export function bareModelId(model: string): string {
   return model.trim().toLowerCase().replace(/^[a-z0-9_-]+:/, '').replace(/-\d{8}$/, '');
