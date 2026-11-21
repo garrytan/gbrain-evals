@@ -16,7 +16,11 @@ Modes:
               deterministic stub in place of every model call (needs the venv).
   real        BEAM's pipeline with gemini-3.8-flash in every model slot and
               OpenAI text-embedding-3-large for the topic check, each reached
-              only through the metering proxy named in RS1_PROXY_READY.
+              only through the metering proxy named in RS1_PROXY_READY. A real
+              step also needs the granted paid window (--paid-window and
+              --window-cap-usd) and its ledger run (--budget-ledger and
+              --budget-run-id), whose program cap and budget may not exceed
+              the window cap; otherwise it exits 2 before anything runs.
 
 Nothing BEAM prints reaches stdout or stderr: file descriptors 1 and 2 point at
 /dev/null while a step runs, and an error prints only its class and the sha256
@@ -31,7 +35,7 @@ fails with counts only when they differ. The answer step also fails a batch
 during which any model call raised: BEAM retries nothing there, so a swallowed
 error can lose a follow-up or a summary and leave no gap in the output.
 'check-gaps --out <dir>' runs the output checks over an existing mint's finished
-steps. Every other model call BEAM makes
+steps, each conversation against the batches its plan step planned. Every other model call BEAM makes
 here (plan: profile_creation.py:116, main.py:543, 799 and 989; probe: main.py
 2160, 2330 and 2478) sits outside any try, so an error stops the step.
 
@@ -43,7 +47,28 @@ stops once that truncate cuts. The truncate step then runs unchanged on the
 shorter chat and writes the same files it writes for the full one. The manifest
 records the stop. 'check-early-stop --out <dir>' replays the stop on a mint's
 finished answer steps and compares the truncate output of the full chat and of
-the prefix the stop keeps.
+the prefix the stop keeps. It can only test mints that answered every batch: an
+early-stopped mint's chat already ends at the stop, so it matches by
+construction. It exits 1 when a file differs, and 3 (untested) when it checked
+no conversation or only early-stopped ones.
+
+Plan length: BEAM's 1M recipe plans 10 batches (src/beam/run_pipeline.py:99), and a chat that answers all 10 can still
+end under validate.ts's length floor; two of the first paid mint's five did. RS1 plans PLAN_BATCHES (15). The plan and
+question steps run BEAM's own run_plans_generation and run_question_generation, with the num_batches they pass to
+generate_plans and user_messages_generation_fast replaced for the call (beam_batches, which refuses a call that does not
+pass BEAM's 1M value). The plan step fails unless plan.pickle and plan_new.pickle each hold PLAN_BATCHES batch plans, and
+records planned_batches in its manifest entry. The answer step's early stop ends each chat once BEAM's truncate would cut
+it, so a chat answers only the batches it needs; one that answers all 15 and is still short is dropped by validate.ts's
+length gate. A conversation planned before then has no planned_batches and holds 10: the question step and check-gaps
+take each conversation's own count, and a done plan step is never planned again.
+
+Selection: BEAM's probe step writes many candidate items per ability, and many cite turns that do not support their
+reference answer. 'step --step select --candidates <report>' selects only from candidates that both validators passed,
+from the report eval/custody/rs1/validate-candidates.ts writes after the probe step (schema rs1-candidates/v1). The
+report must hold this conversation as checked (its passed candidates are the pool) or drop (it failed a conversation gate,
+so nothing is selected and validate.ts drops it on that gate), and must have read this conversation's chat; a real mint's
+report must name the two paid validators. A real select refuses without --candidates. Fake and stub-model mode select
+from every usable candidate when no report is given.
 """
 import argparse
 import contextlib
@@ -56,6 +81,7 @@ import os
 import pickle
 import re
 import shutil
+import sqlite3
 import sys
 import threading
 import traceback
@@ -81,9 +107,12 @@ EMBED_MODEL = "text-embedding-3-large"
 TOPIC_COSINE_MAX = 0.85
 TOPIC_JACCARD_MAX = 0.6
 TOPIC_ATTEMPTS = 5
-# BEAM src/beam/run_pipeline.py:205-224, run_question_generation at chat size 1M: 10 batches of 10 sub-batches, and a
-# BATCH_SIZE of 90 (general) or 60 (coding, math), so each sub-batch asks the model for 9 or 6 user messages.
-QUESTION_BATCHES = 10
+# BEAM src/beam/run_pipeline.py:98-99 and 205-224, run_plans_generation and run_question_generation at chat size 1M: 10
+# batches, each of 10 sub-batches with a BATCH_SIZE of 90 (general) or 60 (coding, math), so each sub-batch asks the
+# model for 9 or 6 user messages. RS1 plans PLAN_BATCHES instead (beam_batches); a conversation whose plan step recorded
+# no planned_batches was planned before that and holds BEAM_1M_BATCHES.
+BEAM_1M_BATCHES = 10
+PLAN_BATCHES = 15
 QUESTION_SUB_BATCHES = 10
 QUESTION_SUB_BATCH_SIZE = {"general": 9, "coding": 6, "math": 6}
 # The first selection plus two regenerations (draft prereg: a failed item is regenerated up to twice).
@@ -439,7 +468,9 @@ class UnmeteredSlot:
 class StubModel:
     """Deterministic stand-in for every model call (stub-model mode). It answers each BEAM prompt template in the
     format BEAM's parser expects, recognizing the template by its literal prefix, and RS1's own topic and rubric
-    prompts by theirs."""
+    prompts by theirs. A plan reply holds as many batch plans as the prompt asks for: the number BEAM substitutes into
+    the plan prompt's "Generate exactly <num_batches> plans", or the batches of the plan the special-bullets prompt
+    carries."""
 
     def __init__(self, key, usage):
         self.key, self.usage, self.model_id = key, usage, "stub"
@@ -503,8 +534,10 @@ class StubModel:
         elif kind == "labels":
             content = "**Personal Labels:**\n- " + self.words(label, 6) + "\n- " + ", ".join(self.words(f"{label}{i}", 2) for i in range(4))
         elif kind == "plan":
+            asked = re.search(r"Generate exactly (\d+) plans", prompt)
+            count = int(asked.group(1)) if asked else len(set(re.findall(r"BATCH (\d+) PLAN", prompt)))
             batches = []
-            for b in range(1, 11):
+            for b in range(1, count + 1):
                 bullets = [f"• **Time Anchor:** March {b}, 2024"] + [f"• **Point {k}:** {self.words(f'{label}b{b}k{k}', 8)}" for k in range(2, 28)]
                 bullets += [f"• **Information Update:** {self.words(f'{label}u{b}', 8)}",
                             f"• **User Instruction:** {self.words(f'{label}i{b}', 8)}",
@@ -595,6 +628,26 @@ def seed_rngs(key):
     random.seed(n)
     numpy.random.seed(n % (2 ** 32))
     Faker.seed(n)
+
+
+@contextlib.contextmanager
+def beam_batches(run_pipeline, name, batches):
+    """BEAM's run_pipeline.<name>, generate_plans or user_messages_generation_fast (src/beam/run_pipeline.py:8 imports
+    both by name, and lines 136 and 232 call them), replaced for the duration by a call that passes num_batches=batches
+    and every other argument unchanged. It refuses a call that does not pass num_batches=BEAM_1M_BATCHES by keyword, the
+    value BEAM's 1M recipe passes, so only that path is changed. The original is restored however the block ends."""
+    original = getattr(run_pipeline, name)
+
+    def with_batches(*args, **kwargs):
+        if args or kwargs.get("num_batches") != BEAM_1M_BATCHES:
+            raise StepFailure(f"BEAM called {name} without its 1M recipe's num_batches={BEAM_1M_BATCHES} keyword")
+        return original(**{**kwargs, "num_batches": batches})
+
+    setattr(run_pipeline, name, with_batches)
+    try:
+        yield
+    finally:
+        setattr(run_pipeline, name, original)
 
 
 def beam_chat_json(beam, chat_pickle, chat_json):
@@ -781,6 +834,12 @@ def domain_of(conv):
     return category if category in ("math", "coding") else "general"
 
 
+def planned_batches(steps):
+    """The batches a conversation's plan step planned, from its manifest entry. A plan recorded before RS1 planned
+    PLAN_BATCHES has no planned_batches and holds BEAM's BEAM_1M_BATCHES."""
+    return (steps.get("plan@1") or {}).get("planned_batches", BEAM_1M_BATCHES)
+
+
 def instruction_line(plan_text, batch_number):
     """The line BEAM's question step inserts for a batch's User Instruction bullet, between the two lines its last
     (special) sub-batch asks the model for: main.py:684 extract_plan_bullets, then main.py:1344, 1384 and 1539-1563."""
@@ -792,8 +851,9 @@ def instruction_line(plan_text, batch_number):
     return line.split("->->")[0].strip() + f" ->-> {batch_number},{line.split('->->')[1].strip()}"
 
 
-def question_gaps(questions, plans, domain):
-    """user_messages.pickle against what BEAM's question step asks for (main.py:1307). Each batch's normal sub-batches
+def question_gaps(questions, plans, domain, batches):
+    """user_messages.pickle against what BEAM's question step asks for (main.py:1307): one entry per planned batch
+    (batches, the conversation's planned_batches), none missing and none extra. Each batch's normal sub-batches
     ask for QUESTION_SUB_BATCH_SIZE lines each, and its special sub-batch for two lines around the inserted instruction,
     so a batch holds at most 10 * size + 3 lines. BEAM's dedup drops a few: its 35 published 1M chats hold 87 to 93 lines
     per general batch and 60 to 63 per coding or math batch. A batch under 85 (general) or 58 (coding, math) lines is
@@ -802,15 +862,15 @@ def question_gaps(questions, plans, domain):
     size = QUESTION_SUB_BATCH_SIZE[domain]
     floor = (QUESTION_SUB_BATCHES - 1) * size + 4
     short, special, gap_batches = 0, 0, []
-    for b, batch in enumerate(questions[:QUESTION_BATCHES], 1):
+    for b, batch in enumerate(questions[:batches], 1):
         lines = batch["messages"][0]
         expected = instruction_line(plans[b - 1], b) if b <= len(plans) else None
         short_here, special_here = len(lines) < floor, len(lines) < 2 or lines[-2] != expected
         short, special = short + short_here, special + special_here
         if short_here or special_here:
             gap_batches.append(b)
-    gap_batches += list(range(len(questions) + 1, QUESTION_BATCHES + 1)) + list(range(QUESTION_BATCHES + 1, len(questions) + 1))
-    return {"batches": f"{len(questions)}/{QUESTION_BATCHES}", "gap_batches": gap_batches, "short": short,
+    gap_batches += list(range(len(questions) + 1, batches + 1)) + list(range(batches + 1, len(questions) + 1))
+    return {"batches": f"{len(questions)}/{batches}", "gap_batches": gap_batches, "short": short,
             "special_missing": special, "min_messages": min((len(b["messages"][0]) for b in questions), default=0),
             "floor": floor}
 
@@ -854,8 +914,9 @@ def gap_text(gaps):
 
 def check_gaps(out):
     """The question and answer gap checks over every conversation's finished steps in an existing mint: one line of
-    counts, batch numbers and the checked file's sha256 per step, never text. An answer step that stopped early is checked
-    against the batches it answered, the number its manifest entry records. Returns the number of steps with gaps."""
+    counts, batch numbers and the checked file's sha256 per step, never text. A question step is checked against the
+    batches its conversation's plan step planned (planned_batches), and an answer step that stopped early against the
+    batches it answered, the number its manifest entry records. Returns the number of steps with gaps."""
     root = Path(out).resolve() / "set" / "conversations"
     convs = checked = with_gaps = skipped = 0
     for conv in sorted(root.iterdir()) if root.exists() else []:
@@ -873,7 +934,8 @@ def check_gaps(out):
             if entry.get("status") != "done":
                 continue
             if step == "question":
-                gaps = question_gaps(read_pickle(beam_chat / rel), read_pickle(beam_chat / "plan_new.pickle"), domain_of(conv))
+                gaps = question_gaps(read_pickle(beam_chat / rel), read_pickle(beam_chat / "plan_new.pickle"), domain_of(conv),
+                                     planned_batches(steps))
             else:
                 stop = (entry.get("early_stop") or {}).get("batches_answered")
                 gaps = {**answer_gaps(read_pickle(beam_chat / "user_messages.pickle")[:stop], read_pickle(beam_chat / rel)),
@@ -996,6 +1058,9 @@ def beam_outputs(ctx, names):
 
 
 def step_plan(ctx, attempt, usage):
+    """BEAM's run_plans_generation with PLAN_BATCHES in place of its 1M recipe's 10 (beam_batches). plan.pickle and
+    plan_new.pickle must each hold exactly PLAN_BATCHES batch plans, else the step fails, records nothing, and a rerun
+    plans again. The manifest entry records planned_batches."""
     if ctx.mode == "fake":
         ctx.beam_chat.mkdir(parents=True, exist_ok=True)
         (ctx.beam_chat / "plan_new.txt").write_text(fake_words(ctx.key, "plan", 400), encoding="utf-8")
@@ -1003,19 +1068,28 @@ def step_plan(ctx, attempt, usage):
         return [ctx.beam_chat / "plan_new.txt"], {}
     beam = ctx.beam(usage)
     seed_rngs(ctx.key)
-    beam.run_pipeline.run_plans_generation(str(ctx.beam_root), CHAT_SIZE, 0)
+    with beam_batches(beam.run_pipeline, "generate_plans", PLAN_BATCHES):
+        beam.run_pipeline.run_plans_generation(str(ctx.beam_root), CHAT_SIZE, 0)
+    for name in ("plan.pickle", "plan_new.pickle"):
+        held = len(read_pickle(ctx.beam_chat / name)) if (ctx.beam_chat / name).exists() else 0
+        if held != PLAN_BATCHES:
+            raise StepFailure(f"BEAM's {name} holds {held} batch plans, not the {PLAN_BATCHES} planned; a rerun plans again")
     return beam_outputs(ctx, ["topic.json", "labels.txt", "main_spec.txt", "relationships.txt", "plan.pickle", "plan.txt",
-                              "plan_new.pickle", "plan_new.txt"]), {}
+                              "plan_new.pickle", "plan_new.txt"]), {"planned_batches": PLAN_BATCHES}
 
 
 def step_question(ctx, attempt, usage):
+    """BEAM's run_question_generation asked for one batch of user messages per planned batch: the conversation's
+    planned_batches in place of BEAM's 10 (beam_batches), so a conversation planned with 10 asks for 10."""
     if ctx.mode == "fake":
         (ctx.beam_chat / "user_messages.txt").write_text(fake_words(ctx.key, "questions", 600), encoding="utf-8")
         usage.record("fake", 9000, 6000)
         return [ctx.beam_chat / "user_messages.txt"], {}
-    ctx.beam(usage).run_pipeline.run_question_generation(str(ctx.beam_root), CHAT_SIZE, 0)
+    beam, batches = ctx.beam(usage), planned_batches(ctx.manifest.data["steps"])
+    with beam_batches(beam.run_pipeline, "user_messages_generation_fast", batches):
+        beam.run_pipeline.run_question_generation(str(ctx.beam_root), CHAT_SIZE, 0)
     gaps = question_gaps(read_pickle(ctx.beam_chat / "user_messages.pickle"),
-                         read_pickle(ctx.beam_chat / "plan_new.pickle"), ctx.domain())
+                         read_pickle(ctx.beam_chat / "plan_new.pickle"), ctx.domain(), batches)
     if gaps["gap_batches"]:
         raise StepFailure(f"the question step lost output to a swallowed error: {gap_text(gaps)}")
     return beam_outputs(ctx, ["user_messages.pickle", "user_messages.txt"]), {}
@@ -1145,10 +1219,38 @@ def failed_slots(ctx, attempt):
     return {slot for slot, item in conv["items"].items() if not item["pass"]}
 
 
+def passed_candidates(ctx):
+    """The "<ability>/<key>" candidates the --candidates report passed for this conversation, or None when fake or
+    stub-model mode runs without a report (every usable candidate may be chosen). A real select refuses without a report.
+    The report must be validate-candidates.ts's, hold this conversation as checked or drop (a drop passes nothing), have
+    read this conversation's chat, and in a real mint name the two paid validators."""
+    if not ctx.args.candidates:
+        if ctx.mode == "real":
+            raise StepFailure("a real mint selects only from validated candidates; run validate-candidates.ts after the "
+                              "probe step and pass its report with --candidates")
+        return None
+    report = read_json(ctx.args.candidates)
+    if report.get("schema") != "rs1-candidates/v1":
+        raise StepFailure("--candidates names no validate-candidates.ts report (schema rs1-candidates/v1)")
+    conv = report.get("conversations", {}).get(ctx.cid) or {}
+    if conv.get("status") not in ("checked", "drop"):
+        raise StepFailure(f"the candidate report has {ctx.cid} as {conv.get('status', 'absent')}, not checked or drop; "
+                          "rerun validate-candidates.ts once its probe step is done")
+    if ctx.mode == "real" and report.get("validators") != PAID_VALIDATORS:
+        raise StepFailure("a real mint selects only from a candidate report the two paid validators wrote")
+    if conv.get("chat_sha256") != sha256_file(chat_file(ctx)):
+        raise StepFailure("the candidate report read another chat than this conversation's")
+    if conv["status"] == "drop":
+        return set()
+    return {key for key, result in conv.get("candidates", {}).items() if result.get("pass") is True}
+
+
 def step_select(ctx, attempt, usage):
-    """Two items per ability, in an order fixed by the conversation seed. A regeneration keeps every item that passed
-    validation and replaces each failed one with the next unused candidate; a failed candidate is never chosen again for
-    its ability. Every ability's candidate file uses the same index keys, so a rejection is an (ability, key) pair."""
+    """Two items per ability, in an order fixed by the conversation seed, from the candidates the --candidates report
+    passed (passed_candidates). A regeneration keeps every item that passed validation and replaces each failed one with
+    the next unused passed candidate; a failed candidate is never chosen again for its ability. Every ability's candidate
+    file uses the same index keys, so a rejection is an (ability, key) pair."""
+    passed = passed_candidates(ctx)
     previous = read_json(ctx.conv / "selection" / f"{attempt - 1}.json") if attempt > 1 else {"slots": {}, "failed": []}
     failed = failed_slots(ctx, attempt) or set() if attempt > 1 else set()
     if any("/" not in f for f in previous["failed"]):
@@ -1169,12 +1271,16 @@ def step_select(ctx, attempt, usage):
                 slots[s] = kept[s]
                 continue
             seen = {question.get(k) for k in taken}
-            slots[s] = next((k for k, _ in pool if k not in taken and (ability, k) not in rejected and question[k] not in seen), None)
+            slots[s] = next((k for k, _ in pool if k not in taken and (ability, k) not in rejected and question[k] not in seen
+                             and (passed is None or f"{ability}/{k}" in passed)), None)
             if slots[s] is not None:
                 taken.add(slots[s])
     path = ctx.conv / "selection" / f"{attempt}.json"
     write_json(path, {"attempt": attempt, "slots": slots, "failed": sorted(f"{a}/{k}" for a, k in rejected)})
-    return [path], {"empty_slots": sum(1 for v in slots.values() if v is None)}
+    extra = {"empty_slots": sum(1 for v in slots.values() if v is None)}
+    if passed is not None:
+        extra["candidates_sha256"] = sha256_file(ctx.args.candidates)
+    return [path], extra
 
 
 def rubric_for(ctx, ability, item, usage):
@@ -1433,15 +1539,20 @@ def check_early_stop(out, beam_dir=None, only=None):
     which truncation_cut first cuts the growing chat, as step_answer checks it, then BEAM's chat_json and truncate on the
     full chat and on that prefix. Prints where the stop falls and, for each file truncate writes, whether the two runs
     wrote the same bytes, as counts and sha256 only. Runs in the mint's venv, makes no model call and changes no recorded
-    output: the copies sit in a scratch directory inside the conversation, deleted afterwards. Returns the number of
-    files that differ."""
+    output: the copies sit in a scratch directory inside the conversation, deleted afterwards.
+
+    What it can test: on a mint that answered every batch, whether stopping where the replay stops would have left
+    truncate's output unchanged. What it can't test: a mint that really stopped early holds only the batches up to the
+    stop, so its full chat already is the prefix and every file matches by construction; such a conversation proves
+    nothing about where it stopped. Returns (files that differ, conversations checked, conversations checked that
+    stopped early); the CLI treats a run that checked no conversation, or only early-stopped ones, as untested."""
     os.umask(0o077)
     out = Path(out).resolve()
     os.environ.setdefault("TIKTOKEN_CACHE_DIR", str(out / "tooling" / "tiktoken"))
     with quiet():
         beam = load_beam(Path(beam_dir).resolve() if beam_dir else out / "tooling" / "beam", UnmeteredSlot())
     root = out / "set" / "conversations"
-    convs = differ = 0
+    convs = differ = early = 0
     for conv in sorted(root.iterdir()) if root.exists() else []:
         if (only and conv.name != only) or not (conv / "manifest.json").exists():
             continue
@@ -1450,6 +1561,7 @@ def check_early_stop(out, beam_dir=None, only=None):
         if manifest.get("mode") == "fake" or entry.get("status") != "done":
             continue
         convs += 1
+        early += bool(entry.get("early_stop"))
         beam_chat, scratch = conv / "beam" / "1", conv / "early-stop-replay"
         chat, plans = read_pickle(beam_chat / "chat.pickle"), beam_chat / "plan_new.pickle"
         shutil.rmtree(scratch, ignore_errors=True)
@@ -1485,10 +1597,37 @@ def check_early_stop(out, beam_dir=None, only=None):
         finally:
             shutil.rmtree(scratch, ignore_errors=True)
     emit({"summary": "check-early-stop", "conversations": convs, "files_differ": differ})
-    return differ
+    if not convs or early == convs:
+        emit({"check": "early-stop", "status": "untested", "conversations": convs, "early_stopped": early,
+              "reason": "no-finished-answer-step" if not convs else "all-early-stopped"})
+    return differ, convs, early
 
 
 # ---------------------------------------------------------------------------------------------------- CLI
+
+
+def window_refusal(args):
+    """Why a real step may not run, or None: it needs the granted paid window, and its ledger's program cap and its
+    run's budget must exist and sit at or under the window cap (eval/runner/rs1/paid-window.ts)."""
+    if not args.paid_window or not re.match(r"^[A-Za-z0-9][A-Za-z0-9._-]*$", args.paid_window) \
+            or not args.window_cap_usd or not math.isfinite(args.window_cap_usd) or args.window_cap_usd <= 0:
+        return "a real step spends real keys, so it needs --paid-window <unit> and --window-cap-usd <n> from the granted paid window"
+    if not args.budget_ledger or not args.budget_run_id or not os.path.isfile(args.budget_ledger):
+        return "a real step needs --budget-ledger and --budget-run-id naming its open ledger run"
+    try:
+        db = sqlite3.connect(f"file:{Path(args.budget_ledger).resolve()}?mode=ro", uri=True)
+        try:
+            cap = db.execute("SELECT program_cap_usd FROM caps ORDER BY seq DESC LIMIT 1").fetchone()
+            run = db.execute("SELECT budget_usd FROM runs WHERE run_id = ? AND finished_at IS NULL", (args.budget_run_id,)).fetchone()
+        finally:
+            db.close()
+    except sqlite3.Error as error:
+        return f"the ledger could not be read ({type(error).__name__})"
+    if cap is None or run is None:
+        return "the ledger has no program cap or no open run with that id"
+    if cap[0] > args.window_cap_usd + 1e-9 or run[0] > args.window_cap_usd + 1e-9:
+        return f"the ledger's program cap or the run's budget is above paid window {args.paid_window}'s cap; a run's cap never exceeds its window"
+    return None
 
 
 def main(argv):
@@ -1503,6 +1642,11 @@ def main(argv):
     s.add_argument("--beam-dir", required=True)
     s.add_argument("--topic-source", choices=["seeded", "public"], default="seeded")
     s.add_argument("--regenerate")
+    s.add_argument("--candidates")
+    s.add_argument("--paid-window")
+    s.add_argument("--window-cap-usd", type=float)
+    s.add_argument("--budget-ledger")
+    s.add_argument("--budget-run-id")
     c = sub.add_parser("check-seed")
     c.add_argument("--seed-file", required=True)
     u = sub.add_parser("usage")
@@ -1534,13 +1678,20 @@ def main(argv):
         return 1 if check_gaps(args.out) else 0
     if args.command == "check-early-stop":
         try:
-            return 1 if check_early_stop(args.out, args.beam_dir, args.conv) else 0
+            differ, convs, early = check_early_stop(args.out, args.beam_dir, args.conv)
+            return 1 if differ else 3 if not convs or early == convs else 0
         except BaseException as error:
             path = Path(args.out).resolve() / "errors" / "check-early-stop.traceback"
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(traceback.format_exc(), encoding="utf-8")
             emit({"summary": "check-early-stop", "status": "error", "error_class": type(error).__name__,
                   "error_sha256": sha256_bytes(str(error).encode("utf-8"))[:16]})
+            return 2
+
+    if args.mode == "real":
+        refusal = window_refusal(args)
+        if refusal:
+            os.write(SAVED_ERR, f"rs1-mint refused: {refusal}\n".encode("utf-8"))
             return 2
 
     cid = f"c{args.conv_index:03d}"

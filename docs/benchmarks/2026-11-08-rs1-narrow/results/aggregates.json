@@ -1,0 +1,2044 @@
+{
+  "schema": "gbrain-evals/rs1-aggregates/v1",
+  "provenance": {
+    "code_commit": "a90e6c2a5a5de3b689820659a94ae554e8de04cb",
+    "tracked_tree_clean": true,
+    "verdict_sha256": "a080b72d433eac52424898a9d205efd36315bb529f10d8e98911e2c526f584a4",
+    "iut_sha256": "dbd7a8a3d947409d5bc12eddbffcf8fc9eb1ef75272342e08e417d56f48d7957",
+    "cells_sha256": "1d4cefd0add83d41c086be1b1cfda1594d3bfee2bd25a37bbfb9ab451b4b344e",
+    "manifest_sha256": "d61e2689df73c0e94915dcdf151c886bcc1047e04b1da5ce7281fdc61664ae36",
+    "receipt_files": 144,
+    "receipt_files_sha256": "12ccdf42964eea5bc021b3330156e15411c1a25778cd07fc215bf0ac4b3c5227"
+  },
+  "analysis": {
+    "schema": "gbrain-evals/rs1-verdict/v1",
+    "set": "RS1",
+    "margin": 3.5,
+    "readers": [
+      "anthropic:claude-opus-5-5",
+      "openai:gpt-6.1-sol",
+      "particle:particle-1"
+    ],
+    "conversations": 20,
+    "planned_questions": 400,
+    "common_questions": 397,
+    "drop_share": 0.0075,
+    "gating": [
+      "memory-bank/frontier",
+      "extract-first/frontier"
+    ],
+    "bridge": {
+      "conversations": 20,
+      "common_questions": 397,
+      "drop_share": 0.0075,
+      "drops": {}
+    },
+    "verdict": "pass",
+    "tests": [
+      {
+        "key": "memory-bank/frontier",
+        "gating": true,
+        "n": 20,
+        "estimate": 1.0042,
+        "sd": 5.7192,
+        "lower": -1.2071,
+        "pass": true,
+        "valid": true,
+        "invalid_reasons": []
+      },
+      {
+        "key": "memory-bank/bridge",
+        "gating": false,
+        "n": 20,
+        "estimate": 1.1304,
+        "sd": 5.3326,
+        "lower": -0.9315,
+        "pass": true,
+        "valid": true,
+        "invalid_reasons": []
+      },
+      {
+        "key": "extract-first/frontier",
+        "gating": true,
+        "n": 20,
+        "estimate": 2.8307,
+        "sd": 4.5429,
+        "lower": 1.0742,
+        "pass": true,
+        "valid": true,
+        "invalid_reasons": []
+      },
+      {
+        "key": "extract-first/bridge",
+        "gating": false,
+        "n": 20,
+        "estimate": 2.4753,
+        "sd": 3.9712,
+        "lower": 0.9399,
+        "pass": true,
+        "valid": true,
+        "invalid_reasons": []
+      }
+    ],
+    "secondaries": [
+      {
+        "id": "superiority/extract-first",
+        "status": "pass"
+      },
+      {
+        "id": "superiority/memory-bank",
+        "status": "fail"
+      }
+    ],
+    "worst_case": {
+      "verdict": "pass",
+      "tests": [
+        {
+          "key": "memory-bank/frontier",
+          "gating": true,
+          "n": 20,
+          "estimate": 0.5238,
+          "sd": 5.7442,
+          "lower": -1.6972,
+          "pass": true,
+          "valid": true,
+          "invalid_reasons": []
+        },
+        {
+          "key": "memory-bank/bridge",
+          "gating": false,
+          "n": 20,
+          "estimate": 0.6251,
+          "sd": 5.2563,
+          "lower": -1.4072,
+          "pass": true,
+          "valid": true,
+          "invalid_reasons": []
+        },
+        {
+          "key": "extract-first/frontier",
+          "gating": true,
+          "n": 20,
+          "estimate": 2.5073,
+          "sd": 4.8425,
+          "lower": 0.6349,
+          "pass": true,
+          "valid": true,
+          "invalid_reasons": []
+        },
+        {
+          "key": "extract-first/bridge",
+          "gating": false,
+          "n": 20,
+          "estimate": 2.1367,
+          "sd": 4.3381,
+          "lower": 0.4594,
+          "pass": true,
+          "valid": true,
+          "invalid_reasons": []
+        }
+      ],
+      "disagrees": false
+    },
+    "bootstrap": {
+      "method": "restricted wild cluster bootstrap-t, Webb weights, 9999 draws, seed 20261108, one-sided 95% lower bound",
+      "tests": [
+        {
+          "key": "memory-bank/frontier",
+          "estimate": 0.9928,
+          "lower": -1.2242,
+          "agrees": true
+        },
+        {
+          "key": "memory-bank/bridge",
+          "estimate": 1.113,
+          "lower": -0.9593,
+          "agrees": true
+        },
+        {
+          "key": "extract-first/frontier",
+          "estimate": 2.8529,
+          "lower": 1.0963,
+          "agrees": true
+        },
+        {
+          "key": "extract-first/bridge",
+          "estimate": 2.4985,
+          "lower": 0.9707,
+          "agrees": true
+        }
+      ]
+    },
+    "paired": [
+      {
+        "server": "memory-bank",
+        "view": "frontier",
+        "subset": "overall",
+        "conversations": 20,
+        "questions": 397,
+        "lower": 97,
+        "higher": 123,
+        "tied": 177,
+        "mean": 1.0042,
+        "ci95": [
+          -1.6724,
+          3.6809
+        ],
+        "ci90": [
+          -1.2071,
+          3.2155
+        ],
+        "reading": "no measurable difference"
+      },
+      {
+        "server": "memory-bank",
+        "view": "frontier",
+        "subset": "reader anthropic:claude-opus-5-5",
+        "conversations": 20,
+        "questions": 397,
+        "lower": 65,
+        "higher": 97,
+        "tied": 235,
+        "mean": 2.6757,
+        "ci95": [
+          -0.0407,
+          5.392
+        ],
+        "ci90": [
+          0.4316,
+          4.9197
+        ],
+        "reading": "no measurable difference"
+      },
+      {
+        "server": "memory-bank",
+        "view": "frontier",
+        "subset": "reader openai:gpt-6.1-sol",
+        "conversations": 20,
+        "questions": 397,
+        "lower": 91,
+        "higher": 76,
+        "tied": 230,
+        "mean": -0.2946,
+        "ci95": [
+          -3.2978,
+          2.7086
+        ],
+        "ci90": [
+          -2.7757,
+          2.1864
+        ],
+        "reading": "no measurable difference"
+      },
+      {
+        "server": "memory-bank",
+        "view": "frontier",
+        "subset": "reader particle:particle-1",
+        "conversations": 20,
+        "questions": 397,
+        "lower": 89,
+        "higher": 99,
+        "tied": 209,
+        "mean": 0.6316,
+        "ci95": [
+          -2.2656,
+          3.5289
+        ],
+        "ci90": [
+          -1.7619,
+          3.0252
+        ],
+        "reading": "no measurable difference"
+      },
+      {
+        "server": "memory-bank",
+        "view": "frontier",
+        "subset": "ability abstention",
+        "conversations": 20,
+        "questions": 40,
+        "lower": 1,
+        "higher": 2,
+        "tied": 37,
+        "mean": 1.0417,
+        "ci95": [
+          -0.9465,
+          3.0298
+        ],
+        "ci90": [
+          -0.6008,
+          2.6842
+        ],
+        "reading": "no measurable difference"
+      },
+      {
+        "server": "memory-bank",
+        "view": "frontier",
+        "subset": "ability contradiction_resolution",
+        "conversations": 20,
+        "questions": 40,
+        "lower": 17,
+        "higher": 16,
+        "tied": 7,
+        "mean": 0.625,
+        "ci95": [
+          -5.599,
+          6.849
+        ],
+        "ci90": [
+          -4.5169,
+          5.7669
+        ],
+        "reading": "no measurable difference"
+      },
+      {
+        "server": "memory-bank",
+        "view": "frontier",
+        "subset": "ability event_ordering",
+        "conversations": 20,
+        "questions": 37,
+        "lower": 22,
+        "higher": 15,
+        "tied": 0,
+        "mean": -3.1609,
+        "ci95": [
+          -6.9327,
+          0.6109
+        ],
+        "ci90": [
+          -6.277,
+          -0.0449
+        ],
+        "reading": "no measurable difference"
+      },
+      {
+        "server": "memory-bank",
+        "view": "frontier",
+        "subset": "ability information_extraction",
+        "conversations": 20,
+        "questions": 40,
+        "lower": 3,
+        "higher": 12,
+        "tied": 25,
+        "mean": 7.6736,
+        "ci95": [
+          -0.7734,
+          16.1206
+        ],
+        "ci90": [
+          0.6952,
+          14.652
+        ],
+        "reading": "no measurable difference"
+      },
+      {
+        "server": "memory-bank",
+        "view": "frontier",
+        "subset": "ability instruction_following",
+        "conversations": 20,
+        "questions": 40,
+        "lower": 5,
+        "higher": 26,
+        "tied": 9,
+        "mean": 13.75,
+        "ci95": [
+          5.0089,
+          22.4911
+        ],
+        "ci90": [
+          6.5287,
+          20.9713
+        ],
+        "reading": "gbrain higher"
+      },
+      {
+        "server": "memory-bank",
+        "view": "frontier",
+        "subset": "ability knowledge_update",
+        "conversations": 20,
+        "questions": 40,
+        "lower": 1,
+        "higher": 2,
+        "tied": 37,
+        "mean": 0,
+        "ci95": [
+          -2.1917,
+          2.1917
+        ],
+        "ci90": [
+          -1.8106,
+          1.8106
+        ],
+        "reading": "no measurable difference"
+      },
+      {
+        "server": "memory-bank",
+        "view": "frontier",
+        "subset": "ability multi_session_reasoning",
+        "conversations": 20,
+        "questions": 40,
+        "lower": 13,
+        "higher": 2,
+        "tied": 25,
+        "mean": -10.4792,
+        "ci95": [
+          -16.4333,
+          -4.525
+        ],
+        "ci90": [
+          -15.3981,
+          -5.5602
+        ],
+        "reading": "gbrain lower"
+      },
+      {
+        "server": "memory-bank",
+        "view": "frontier",
+        "subset": "ability preference_following",
+        "conversations": 20,
+        "questions": 40,
+        "lower": 12,
+        "higher": 16,
+        "tied": 12,
+        "mean": 1.6528,
+        "ci95": [
+          -5.5197,
+          8.8252
+        ],
+        "ci90": [
+          -4.2727,
+          7.5782
+        ],
+        "reading": "no measurable difference"
+      },
+      {
+        "server": "memory-bank",
+        "view": "frontier",
+        "subset": "ability summarization",
+        "conversations": 20,
+        "questions": 40,
+        "lower": 11,
+        "higher": 27,
+        "tied": 2,
+        "mean": 8.3472,
+        "ci95": [
+          1.168,
+          15.5265
+        ],
+        "ci90": [
+          2.4161,
+          14.2783
+        ],
+        "reading": "gbrain higher"
+      },
+      {
+        "server": "memory-bank",
+        "view": "frontier",
+        "subset": "ability temporal_reasoning",
+        "conversations": 20,
+        "questions": 40,
+        "lower": 12,
+        "higher": 5,
+        "tied": 23,
+        "mean": -10.6944,
+        "ci95": [
+          -21.8042,
+          0.4153
+        ],
+        "ci90": [
+          -19.8727,
+          -1.5162
+        ],
+        "reading": "no measurable difference"
+      },
+      {
+        "server": "memory-bank",
+        "view": "bridge",
+        "subset": "overall",
+        "conversations": 20,
+        "questions": 397,
+        "lower": 105,
+        "higher": 131,
+        "tied": 161,
+        "mean": 1.1304,
+        "ci95": [
+          -1.3654,
+          3.6261
+        ],
+        "ci90": [
+          -0.9315,
+          3.1922
+        ],
+        "reading": "no measurable difference"
+      },
+      {
+        "server": "memory-bank",
+        "view": "bridge",
+        "subset": "reader anthropic:claude-opus-5-5",
+        "conversations": 20,
+        "questions": 397,
+        "lower": 81,
+        "higher": 103,
+        "tied": 213,
+        "mean": 2.8262,
+        "ci95": [
+          -0.2871,
+          5.9396
+        ],
+        "ci90": [
+          0.2542,
+          5.3983
+        ],
+        "reading": "no measurable difference"
+      },
+      {
+        "server": "memory-bank",
+        "view": "bridge",
+        "subset": "reader openai:gpt-6.1-sol",
+        "conversations": 20,
+        "questions": 397,
+        "lower": 71,
+        "higher": 73,
+        "tied": 253,
+        "mean": 0.8575,
+        "ci95": [
+          -1.5377,
+          3.2528
+        ],
+        "ci90": [
+          -1.1213,
+          2.8363
+        ],
+        "reading": "no measurable difference"
+      },
+      {
+        "server": "memory-bank",
+        "view": "bridge",
+        "subset": "reader particle:particle-1",
+        "conversations": 20,
+        "questions": 397,
+        "lower": 86,
+        "higher": 81,
+        "tied": 230,
+        "mean": -0.2926,
+        "ci95": [
+          -3.8352,
+          3.25
+        ],
+        "ci90": [
+          -3.2193,
+          2.6341
+        ],
+        "reading": "no measurable difference"
+      },
+      {
+        "server": "memory-bank",
+        "view": "bridge",
+        "subset": "ability abstention",
+        "conversations": 20,
+        "questions": 40,
+        "lower": 0,
+        "higher": 1,
+        "tied": 39,
+        "mean": 0.4167,
+        "ci95": [
+          -0.4554,
+          1.2888
+        ],
+        "ci90": [
+          -0.3038,
+          1.1371
+        ],
+        "reading": "no measurable difference"
+      },
+      {
+        "server": "memory-bank",
+        "view": "bridge",
+        "subset": "ability contradiction_resolution",
+        "conversations": 20,
+        "questions": 40,
+        "lower": 17,
+        "higher": 21,
+        "tied": 2,
+        "mean": 0.4167,
+        "ci95": [
+          -7.1,
+          7.9334
+        ],
+        "ci90": [
+          -5.7932,
+          6.6265
+        ],
+        "reading": "no measurable difference"
+      },
+      {
+        "server": "memory-bank",
+        "view": "bridge",
+        "subset": "ability event_ordering",
+        "conversations": 20,
+        "questions": 37,
+        "lower": 23,
+        "higher": 14,
+        "tied": 0,
+        "mean": -3.6223,
+        "ci95": [
+          -7.1356,
+          -0.109
+        ],
+        "ci90": [
+          -6.5248,
+          -0.7198
+        ],
+        "reading": "gbrain lower"
+      },
+      {
+        "server": "memory-bank",
+        "view": "bridge",
+        "subset": "ability information_extraction",
+        "conversations": 20,
+        "questions": 40,
+        "lower": 2,
+        "higher": 13,
+        "tied": 25,
+        "mean": 10.4236,
+        "ci95": [
+          0.9887,
+          19.8586
+        ],
+        "ci90": [
+          2.629,
+          18.2182
+        ],
+        "reading": "gbrain higher"
+      },
+      {
+        "server": "memory-bank",
+        "view": "bridge",
+        "subset": "ability instruction_following",
+        "conversations": 20,
+        "questions": 40,
+        "lower": 13,
+        "higher": 17,
+        "tied": 10,
+        "mean": 5.3819,
+        "ci95": [
+          -2.1469,
+          12.9108
+        ],
+        "ci90": [
+          -0.838,
+          11.6018
+        ],
+        "reading": "no measurable difference"
+      },
+      {
+        "server": "memory-bank",
+        "view": "bridge",
+        "subset": "ability knowledge_update",
+        "conversations": 20,
+        "questions": 40,
+        "lower": 2,
+        "higher": 3,
+        "tied": 35,
+        "mean": 0,
+        "ci95": [
+          -3.3478,
+          3.3478
+        ],
+        "ci90": [
+          -2.7658,
+          2.7658
+        ],
+        "reading": "no measurable difference"
+      },
+      {
+        "server": "memory-bank",
+        "view": "bridge",
+        "subset": "ability multi_session_reasoning",
+        "conversations": 20,
+        "questions": 40,
+        "lower": 14,
+        "higher": 11,
+        "tied": 15,
+        "mean": -4.9097,
+        "ci95": [
+          -11.1072,
+          1.2878
+        ],
+        "ci90": [
+          -10.0297,
+          0.2103
+        ],
+        "reading": "no measurable difference"
+      },
+      {
+        "server": "memory-bank",
+        "view": "bridge",
+        "subset": "ability preference_following",
+        "conversations": 20,
+        "questions": 40,
+        "lower": 9,
+        "higher": 17,
+        "tied": 14,
+        "mean": 2.8611,
+        "ci95": [
+          -4.4374,
+          10.1597
+        ],
+        "ci90": [
+          -3.1685,
+          8.8907
+        ],
+        "reading": "no measurable difference"
+      },
+      {
+        "server": "memory-bank",
+        "view": "bridge",
+        "subset": "ability summarization",
+        "conversations": 20,
+        "questions": 40,
+        "lower": 9,
+        "higher": 27,
+        "tied": 4,
+        "mean": 8.5278,
+        "ci95": [
+          2.13,
+          14.9255
+        ],
+        "ci90": [
+          3.2424,
+          13.8132
+        ],
+        "reading": "gbrain higher"
+      },
+      {
+        "server": "memory-bank",
+        "view": "bridge",
+        "subset": "ability temporal_reasoning",
+        "conversations": 20,
+        "questions": 40,
+        "lower": 16,
+        "higher": 7,
+        "tied": 17,
+        "mean": -9.1667,
+        "ci95": [
+          -20.6491,
+          2.3158
+        ],
+        "ci90": [
+          -18.6528,
+          0.3194
+        ],
+        "reading": "no measurable difference"
+      },
+      {
+        "server": "extract-first",
+        "view": "frontier",
+        "subset": "overall",
+        "conversations": 20,
+        "questions": 397,
+        "lower": 108,
+        "higher": 126,
+        "tied": 163,
+        "mean": 2.8307,
+        "ci95": [
+          0.7045,
+          4.9569
+        ],
+        "ci90": [
+          1.0742,
+          4.5872
+        ],
+        "reading": "gbrain higher"
+      },
+      {
+        "server": "extract-first",
+        "view": "frontier",
+        "subset": "reader anthropic:claude-opus-5-5",
+        "conversations": 20,
+        "questions": 397,
+        "lower": 70,
+        "higher": 102,
+        "tied": 225,
+        "mean": 3.0828,
+        "ci95": [
+          0.9276,
+          5.238
+        ],
+        "ci90": [
+          1.3023,
+          4.8633
+        ],
+        "reading": "gbrain higher"
+      },
+      {
+        "server": "extract-first",
+        "view": "frontier",
+        "subset": "reader openai:gpt-6.1-sol",
+        "conversations": 20,
+        "questions": 397,
+        "lower": 90,
+        "higher": 96,
+        "tied": 211,
+        "mean": 2.5528,
+        "ci95": [
+          -0.0785,
+          5.1841
+        ],
+        "ci90": [
+          0.3789,
+          4.7266
+        ],
+        "reading": "no measurable difference"
+      },
+      {
+        "server": "extract-first",
+        "view": "frontier",
+        "subset": "reader particle:particle-1",
+        "conversations": 20,
+        "questions": 397,
+        "lower": 99,
+        "higher": 94,
+        "tied": 204,
+        "mean": 2.8565,
+        "ci95": [
+          0.1291,
+          5.5839
+        ],
+        "ci90": [
+          0.6033,
+          5.1097
+        ],
+        "reading": "gbrain higher"
+      },
+      {
+        "server": "extract-first",
+        "view": "frontier",
+        "subset": "ability abstention",
+        "conversations": 20,
+        "questions": 40,
+        "lower": 1,
+        "higher": 1,
+        "tied": 38,
+        "mean": 0.4167,
+        "ci95": [
+          -0.9838,
+          1.8172
+        ],
+        "ci90": [
+          -0.7403,
+          1.5737
+        ],
+        "reading": "no measurable difference"
+      },
+      {
+        "server": "extract-first",
+        "view": "frontier",
+        "subset": "ability contradiction_resolution",
+        "conversations": 20,
+        "questions": 40,
+        "lower": 11,
+        "higher": 26,
+        "tied": 3,
+        "mean": 7.5,
+        "ci95": [
+          -0.3984,
+          15.3984
+        ],
+        "ci90": [
+          0.9748,
+          14.0252
+        ],
+        "reading": "no measurable difference"
+      },
+      {
+        "server": "extract-first",
+        "view": "frontier",
+        "subset": "ability event_ordering",
+        "conversations": 20,
+        "questions": 37,
+        "lower": 21,
+        "higher": 16,
+        "tied": 0,
+        "mean": -0.977,
+        "ci95": [
+          -3.993,
+          2.0389
+        ],
+        "ci90": [
+          -3.4686,
+          1.5146
+        ],
+        "reading": "no measurable difference"
+      },
+      {
+        "server": "extract-first",
+        "view": "frontier",
+        "subset": "ability information_extraction",
+        "conversations": 20,
+        "questions": 40,
+        "lower": 9,
+        "higher": 10,
+        "tied": 21,
+        "mean": 4.6181,
+        "ci95": [
+          -3.9742,
+          13.2104
+        ],
+        "ci90": [
+          -2.4804,
+          11.7165
+        ],
+        "reading": "no measurable difference"
+      },
+      {
+        "server": "extract-first",
+        "view": "frontier",
+        "subset": "ability instruction_following",
+        "conversations": 20,
+        "questions": 40,
+        "lower": 8,
+        "higher": 20,
+        "tied": 12,
+        "mean": 7.6736,
+        "ci95": [
+          1.6989,
+          13.6484
+        ],
+        "ci90": [
+          2.7376,
+          12.6096
+        ],
+        "reading": "gbrain higher"
+      },
+      {
+        "server": "extract-first",
+        "view": "frontier",
+        "subset": "ability knowledge_update",
+        "conversations": 20,
+        "questions": 40,
+        "lower": 0,
+        "higher": 12,
+        "tied": 28,
+        "mean": 16.25,
+        "ci95": [
+          6.8254,
+          25.6746
+        ],
+        "ci90": [
+          8.4639,
+          24.0361
+        ],
+        "reading": "gbrain higher"
+      },
+      {
+        "server": "extract-first",
+        "view": "frontier",
+        "subset": "ability multi_session_reasoning",
+        "conversations": 20,
+        "questions": 40,
+        "lower": 13,
+        "higher": 6,
+        "tied": 21,
+        "mean": -4.3194,
+        "ci95": [
+          -11.9217,
+          3.2828
+        ],
+        "ci90": [
+          -10.6,
+          1.9611
+        ],
+        "reading": "no measurable difference"
+      },
+      {
+        "server": "extract-first",
+        "view": "frontier",
+        "subset": "ability preference_following",
+        "conversations": 20,
+        "questions": 40,
+        "lower": 15,
+        "higher": 13,
+        "tied": 12,
+        "mean": -0.4306,
+        "ci95": [
+          -8.4559,
+          7.5948
+        ],
+        "ci90": [
+          -7.0606,
+          6.1995
+        ],
+        "reading": "no measurable difference"
+      },
+      {
+        "server": "extract-first",
+        "view": "frontier",
+        "subset": "ability summarization",
+        "conversations": 20,
+        "questions": 40,
+        "lower": 21,
+        "higher": 13,
+        "tied": 6,
+        "mean": -3.0347,
+        "ci95": [
+          -8.0368,
+          1.9674
+        ],
+        "ci90": [
+          -7.1672,
+          1.0977
+        ],
+        "reading": "no measurable difference"
+      },
+      {
+        "server": "extract-first",
+        "view": "frontier",
+        "subset": "ability temporal_reasoning",
+        "conversations": 20,
+        "questions": 40,
+        "lower": 9,
+        "higher": 9,
+        "tied": 22,
+        "mean": -0.2778,
+        "ci95": [
+          -10.6665,
+          10.111
+        ],
+        "ci90": [
+          -8.8604,
+          8.3048
+        ],
+        "reading": "no measurable difference"
+      },
+      {
+        "server": "extract-first",
+        "view": "bridge",
+        "subset": "overall",
+        "conversations": 20,
+        "questions": 397,
+        "lower": 109,
+        "higher": 124,
+        "tied": 164,
+        "mean": 2.4753,
+        "ci95": [
+          0.6168,
+          4.3339
+        ],
+        "ci90": [
+          0.9399,
+          4.0108
+        ],
+        "reading": "gbrain higher"
+      },
+      {
+        "server": "extract-first",
+        "view": "bridge",
+        "subset": "reader anthropic:claude-opus-5-5",
+        "conversations": 20,
+        "questions": 397,
+        "lower": 78,
+        "higher": 104,
+        "tied": 215,
+        "mean": 2.9876,
+        "ci95": [
+          0.3963,
+          5.5789
+        ],
+        "ci90": [
+          0.8468,
+          5.1284
+        ],
+        "reading": "gbrain higher"
+      },
+      {
+        "server": "extract-first",
+        "view": "bridge",
+        "subset": "reader openai:gpt-6.1-sol",
+        "conversations": 20,
+        "questions": 397,
+        "lower": 73,
+        "higher": 91,
+        "tied": 233,
+        "mean": 3.6714,
+        "ci95": [
+          1.5523,
+          5.7904
+        ],
+        "ci90": [
+          1.9208,
+          5.422
+        ],
+        "reading": "gbrain higher"
+      },
+      {
+        "server": "extract-first",
+        "view": "bridge",
+        "subset": "reader particle:particle-1",
+        "conversations": 20,
+        "questions": 397,
+        "lower": 86,
+        "higher": 73,
+        "tied": 238,
+        "mean": 0.7671,
+        "ci95": [
+          -2.3436,
+          3.8778
+        ],
+        "ci90": [
+          -1.8028,
+          3.337
+        ],
+        "reading": "no measurable difference"
+      },
+      {
+        "server": "extract-first",
+        "view": "bridge",
+        "subset": "ability abstention",
+        "conversations": 20,
+        "questions": 40,
+        "lower": 1,
+        "higher": 0,
+        "tied": 39,
+        "mean": -0.4167,
+        "ci95": [
+          -1.2888,
+          0.4554
+        ],
+        "ci90": [
+          -1.1371,
+          0.3038
+        ],
+        "reading": "no measurable difference"
+      },
+      {
+        "server": "extract-first",
+        "view": "bridge",
+        "subset": "ability contradiction_resolution",
+        "conversations": 20,
+        "questions": 40,
+        "lower": 12,
+        "higher": 21,
+        "tied": 7,
+        "mean": 6.875,
+        "ci95": [
+          -0.8679,
+          14.6179
+        ],
+        "ci90": [
+          0.4782,
+          13.2718
+        ],
+        "reading": "no measurable difference"
+      },
+      {
+        "server": "extract-first",
+        "view": "bridge",
+        "subset": "ability event_ordering",
+        "conversations": 20,
+        "questions": 37,
+        "lower": 22,
+        "higher": 15,
+        "tied": 0,
+        "mean": -1.7798,
+        "ci95": [
+          -4.3839,
+          0.8243
+        ],
+        "ci90": [
+          -3.9312,
+          0.3716
+        ],
+        "reading": "no measurable difference"
+      },
+      {
+        "server": "extract-first",
+        "view": "bridge",
+        "subset": "ability information_extraction",
+        "conversations": 20,
+        "questions": 40,
+        "lower": 7,
+        "higher": 10,
+        "tied": 23,
+        "mean": 5.7847,
+        "ci95": [
+          -2.6928,
+          14.2622
+        ],
+        "ci90": [
+          -1.2189,
+          12.7883
+        ],
+        "reading": "no measurable difference"
+      },
+      {
+        "server": "extract-first",
+        "view": "bridge",
+        "subset": "ability instruction_following",
+        "conversations": 20,
+        "questions": 40,
+        "lower": 13,
+        "higher": 15,
+        "tied": 12,
+        "mean": 2.7431,
+        "ci95": [
+          -3.7198,
+          9.2059
+        ],
+        "ci90": [
+          -2.5962,
+          8.0823
+        ],
+        "reading": "no measurable difference"
+      },
+      {
+        "server": "extract-first",
+        "view": "bridge",
+        "subset": "ability knowledge_update",
+        "conversations": 20,
+        "questions": 40,
+        "lower": 1,
+        "higher": 12,
+        "tied": 27,
+        "mean": 11.25,
+        "ci95": [
+          4.6416,
+          17.8584
+        ],
+        "ci90": [
+          5.7905,
+          16.7095
+        ],
+        "reading": "gbrain higher"
+      },
+      {
+        "server": "extract-first",
+        "view": "bridge",
+        "subset": "ability multi_session_reasoning",
+        "conversations": 20,
+        "questions": 40,
+        "lower": 10,
+        "higher": 9,
+        "tied": 21,
+        "mean": -1.6597,
+        "ci95": [
+          -9.7048,
+          6.3854
+        ],
+        "ci90": [
+          -8.3061,
+          4.9866
+        ],
+        "reading": "no measurable difference"
+      },
+      {
+        "server": "extract-first",
+        "view": "bridge",
+        "subset": "ability preference_following",
+        "conversations": 20,
+        "questions": 40,
+        "lower": 13,
+        "higher": 13,
+        "tied": 14,
+        "mean": -0.125,
+        "ci95": [
+          -6.8424,
+          6.5924
+        ],
+        "ci90": [
+          -5.6745,
+          5.4245
+        ],
+        "reading": "no measurable difference"
+      },
+      {
+        "server": "extract-first",
+        "view": "bridge",
+        "subset": "ability summarization",
+        "conversations": 20,
+        "questions": 40,
+        "lower": 18,
+        "higher": 17,
+        "tied": 5,
+        "mean": -0.3681,
+        "ci95": [
+          -5.9769,
+          5.2408
+        ],
+        "ci90": [
+          -5.0018,
+          4.2657
+        ],
+        "reading": "no measurable difference"
+      },
+      {
+        "server": "extract-first",
+        "view": "bridge",
+        "subset": "ability temporal_reasoning",
+        "conversations": 20,
+        "questions": 40,
+        "lower": 12,
+        "higher": 12,
+        "tied": 16,
+        "mean": 1.8056,
+        "ci95": [
+          -7.5266,
+          11.1377
+        ],
+        "ci90": [
+          -5.9041,
+          9.5152
+        ],
+        "reading": "no measurable difference"
+      }
+    ],
+    "gate": [
+      {
+        "row": "gbrain",
+        "fill_rate": 0.9806,
+        "pass": true
+      },
+      {
+        "row": "memory-bank",
+        "fill_rate": 0.9843,
+        "pass": true
+      },
+      {
+        "row": "extract-first",
+        "fill_rate": 0.9903,
+        "pass": true
+      }
+    ],
+    "drops": {
+      "server|judgment_missing:frontier": 5
+    },
+    "per_reader": [
+      {
+        "reader": "anthropic:claude-opus-5-5",
+        "row": "gbrain",
+        "view": "frontier",
+        "questions": 397,
+        "mean": 79.0928
+      },
+      {
+        "reader": "anthropic:claude-opus-5-5",
+        "row": "gbrain",
+        "view": "bridge",
+        "questions": 397,
+        "mean": 74.376
+      },
+      {
+        "reader": "anthropic:claude-opus-5-5",
+        "row": "memory-bank",
+        "view": "frontier",
+        "questions": 397,
+        "mean": 76.4308
+      },
+      {
+        "reader": "anthropic:claude-opus-5-5",
+        "row": "memory-bank",
+        "view": "bridge",
+        "questions": 397,
+        "mean": 71.5939
+      },
+      {
+        "reader": "anthropic:claude-opus-5-5",
+        "row": "extract-first",
+        "view": "frontier",
+        "questions": 397,
+        "mean": 75.9945
+      },
+      {
+        "reader": "anthropic:claude-opus-5-5",
+        "row": "extract-first",
+        "view": "bridge",
+        "questions": 397,
+        "mean": 71.3736
+      },
+      {
+        "reader": "openai:gpt-6.1-sol",
+        "row": "gbrain",
+        "view": "frontier",
+        "questions": 397,
+        "mean": 73.0813
+      },
+      {
+        "reader": "openai:gpt-6.1-sol",
+        "row": "gbrain",
+        "view": "bridge",
+        "questions": 397,
+        "mean": 78.6452
+      },
+      {
+        "reader": "openai:gpt-6.1-sol",
+        "row": "memory-bank",
+        "view": "frontier",
+        "questions": 397,
+        "mean": 73.3957
+      },
+      {
+        "reader": "openai:gpt-6.1-sol",
+        "row": "memory-bank",
+        "view": "bridge",
+        "questions": 397,
+        "mean": 77.8127
+      },
+      {
+        "reader": "openai:gpt-6.1-sol",
+        "row": "extract-first",
+        "view": "frontier",
+        "questions": 397,
+        "mean": 70.5071
+      },
+      {
+        "reader": "openai:gpt-6.1-sol",
+        "row": "extract-first",
+        "view": "bridge",
+        "questions": 397,
+        "mean": 74.977
+      },
+      {
+        "reader": "particle:particle-1",
+        "row": "gbrain",
+        "view": "frontier",
+        "questions": 397,
+        "mean": 74.0273
+      },
+      {
+        "reader": "particle:particle-1",
+        "row": "gbrain",
+        "view": "bridge",
+        "questions": 397,
+        "mean": 78.4369
+      },
+      {
+        "reader": "particle:particle-1",
+        "row": "memory-bank",
+        "view": "frontier",
+        "questions": 397,
+        "mean": 73.3966
+      },
+      {
+        "reader": "particle:particle-1",
+        "row": "memory-bank",
+        "view": "bridge",
+        "questions": 397,
+        "mean": 78.7125
+      },
+      {
+        "reader": "particle:particle-1",
+        "row": "extract-first",
+        "view": "frontier",
+        "questions": 397,
+        "mean": 71.141
+      },
+      {
+        "reader": "particle:particle-1",
+        "row": "extract-first",
+        "view": "bridge",
+        "questions": 397,
+        "mean": 77.6121
+      }
+    ],
+    "per_ability": [
+      {
+        "ability": "abstention",
+        "row": "gbrain",
+        "view": "frontier",
+        "questions": 40,
+        "mean": 97.2917
+      },
+      {
+        "ability": "abstention",
+        "row": "gbrain",
+        "view": "bridge",
+        "questions": 40,
+        "mean": 99.5833
+      },
+      {
+        "ability": "abstention",
+        "row": "memory-bank",
+        "view": "frontier",
+        "questions": 40,
+        "mean": 96.25
+      },
+      {
+        "ability": "abstention",
+        "row": "memory-bank",
+        "view": "bridge",
+        "questions": 40,
+        "mean": 99.1667
+      },
+      {
+        "ability": "abstention",
+        "row": "extract-first",
+        "view": "frontier",
+        "questions": 40,
+        "mean": 96.875
+      },
+      {
+        "ability": "abstention",
+        "row": "extract-first",
+        "view": "bridge",
+        "questions": 40,
+        "mean": 100
+      },
+      {
+        "ability": "contradiction_resolution",
+        "row": "gbrain",
+        "view": "frontier",
+        "questions": 40,
+        "mean": 73.125
+      },
+      {
+        "ability": "contradiction_resolution",
+        "row": "gbrain",
+        "view": "bridge",
+        "questions": 40,
+        "mean": 82.6042
+      },
+      {
+        "ability": "contradiction_resolution",
+        "row": "memory-bank",
+        "view": "frontier",
+        "questions": 40,
+        "mean": 72.5
+      },
+      {
+        "ability": "contradiction_resolution",
+        "row": "memory-bank",
+        "view": "bridge",
+        "questions": 40,
+        "mean": 82.1875
+      },
+      {
+        "ability": "contradiction_resolution",
+        "row": "extract-first",
+        "view": "frontier",
+        "questions": 40,
+        "mean": 65.625
+      },
+      {
+        "ability": "contradiction_resolution",
+        "row": "extract-first",
+        "view": "bridge",
+        "questions": 40,
+        "mean": 75.7292
+      },
+      {
+        "ability": "event_ordering",
+        "row": "gbrain",
+        "view": "frontier",
+        "questions": 37,
+        "mean": 42.6752
+      },
+      {
+        "ability": "event_ordering",
+        "row": "gbrain",
+        "view": "bridge",
+        "questions": 37,
+        "mean": 39.3818
+      },
+      {
+        "ability": "event_ordering",
+        "row": "memory-bank",
+        "view": "frontier",
+        "questions": 37,
+        "mean": 44.9059
+      },
+      {
+        "ability": "event_ordering",
+        "row": "memory-bank",
+        "view": "bridge",
+        "questions": 37,
+        "mean": 42.522
+      },
+      {
+        "ability": "event_ordering",
+        "row": "extract-first",
+        "view": "frontier",
+        "questions": 37,
+        "mean": 42.7623
+      },
+      {
+        "ability": "event_ordering",
+        "row": "extract-first",
+        "view": "bridge",
+        "questions": 37,
+        "mean": 40.5619
+      },
+      {
+        "ability": "information_extraction",
+        "row": "gbrain",
+        "view": "frontier",
+        "questions": 40,
+        "mean": 83.8472
+      },
+      {
+        "ability": "information_extraction",
+        "row": "gbrain",
+        "view": "bridge",
+        "questions": 40,
+        "mean": 85.0486
+      },
+      {
+        "ability": "information_extraction",
+        "row": "memory-bank",
+        "view": "frontier",
+        "questions": 40,
+        "mean": 76.1736
+      },
+      {
+        "ability": "information_extraction",
+        "row": "memory-bank",
+        "view": "bridge",
+        "questions": 40,
+        "mean": 74.625
+      },
+      {
+        "ability": "information_extraction",
+        "row": "extract-first",
+        "view": "frontier",
+        "questions": 40,
+        "mean": 79.2292
+      },
+      {
+        "ability": "information_extraction",
+        "row": "extract-first",
+        "view": "bridge",
+        "questions": 40,
+        "mean": 79.2639
+      },
+      {
+        "ability": "instruction_following",
+        "row": "gbrain",
+        "view": "frontier",
+        "questions": 40,
+        "mean": 73.8194
+      },
+      {
+        "ability": "instruction_following",
+        "row": "gbrain",
+        "view": "bridge",
+        "questions": 40,
+        "mean": 75.1389
+      },
+      {
+        "ability": "instruction_following",
+        "row": "memory-bank",
+        "view": "frontier",
+        "questions": 40,
+        "mean": 60.0694
+      },
+      {
+        "ability": "instruction_following",
+        "row": "memory-bank",
+        "view": "bridge",
+        "questions": 40,
+        "mean": 69.7569
+      },
+      {
+        "ability": "instruction_following",
+        "row": "extract-first",
+        "view": "frontier",
+        "questions": 40,
+        "mean": 66.1458
+      },
+      {
+        "ability": "instruction_following",
+        "row": "extract-first",
+        "view": "bridge",
+        "questions": 40,
+        "mean": 72.3958
+      },
+      {
+        "ability": "knowledge_update",
+        "row": "gbrain",
+        "view": "frontier",
+        "questions": 40,
+        "mean": 93.75
+      },
+      {
+        "ability": "knowledge_update",
+        "row": "gbrain",
+        "view": "bridge",
+        "questions": 40,
+        "mean": 95
+      },
+      {
+        "ability": "knowledge_update",
+        "row": "memory-bank",
+        "view": "frontier",
+        "questions": 40,
+        "mean": 93.75
+      },
+      {
+        "ability": "knowledge_update",
+        "row": "memory-bank",
+        "view": "bridge",
+        "questions": 40,
+        "mean": 95
+      },
+      {
+        "ability": "knowledge_update",
+        "row": "extract-first",
+        "view": "frontier",
+        "questions": 40,
+        "mean": 77.5
+      },
+      {
+        "ability": "knowledge_update",
+        "row": "extract-first",
+        "view": "bridge",
+        "questions": 40,
+        "mean": 83.75
+      },
+      {
+        "ability": "multi_session_reasoning",
+        "row": "gbrain",
+        "view": "frontier",
+        "questions": 40,
+        "mean": 70.8264
+      },
+      {
+        "ability": "multi_session_reasoning",
+        "row": "gbrain",
+        "view": "bridge",
+        "questions": 40,
+        "mean": 70.0556
+      },
+      {
+        "ability": "multi_session_reasoning",
+        "row": "memory-bank",
+        "view": "frontier",
+        "questions": 40,
+        "mean": 81.3056
+      },
+      {
+        "ability": "multi_session_reasoning",
+        "row": "memory-bank",
+        "view": "bridge",
+        "questions": 40,
+        "mean": 74.9653
+      },
+      {
+        "ability": "multi_session_reasoning",
+        "row": "extract-first",
+        "view": "frontier",
+        "questions": 40,
+        "mean": 75.1458
+      },
+      {
+        "ability": "multi_session_reasoning",
+        "row": "extract-first",
+        "view": "bridge",
+        "questions": 40,
+        "mean": 71.7153
+      },
+      {
+        "ability": "preference_following",
+        "row": "gbrain",
+        "view": "frontier",
+        "questions": 40,
+        "mean": 79.4653
+      },
+      {
+        "ability": "preference_following",
+        "row": "gbrain",
+        "view": "bridge",
+        "questions": 40,
+        "mean": 81.125
+      },
+      {
+        "ability": "preference_following",
+        "row": "memory-bank",
+        "view": "frontier",
+        "questions": 40,
+        "mean": 77.8125
+      },
+      {
+        "ability": "preference_following",
+        "row": "memory-bank",
+        "view": "bridge",
+        "questions": 40,
+        "mean": 78.2639
+      },
+      {
+        "ability": "preference_following",
+        "row": "extract-first",
+        "view": "frontier",
+        "questions": 40,
+        "mean": 79.8958
+      },
+      {
+        "ability": "preference_following",
+        "row": "extract-first",
+        "view": "bridge",
+        "questions": 40,
+        "mean": 81.25
+      },
+      {
+        "ability": "summarization",
+        "row": "gbrain",
+        "view": "frontier",
+        "questions": 40,
+        "mean": 57.6528
+      },
+      {
+        "ability": "summarization",
+        "row": "gbrain",
+        "view": "bridge",
+        "questions": 40,
+        "mean": 66.2431
+      },
+      {
+        "ability": "summarization",
+        "row": "memory-bank",
+        "view": "frontier",
+        "questions": 40,
+        "mean": 49.3056
+      },
+      {
+        "ability": "summarization",
+        "row": "memory-bank",
+        "view": "bridge",
+        "questions": 40,
+        "mean": 57.7153
+      },
+      {
+        "ability": "summarization",
+        "row": "extract-first",
+        "view": "frontier",
+        "questions": 40,
+        "mean": 60.6875
+      },
+      {
+        "ability": "summarization",
+        "row": "extract-first",
+        "view": "bridge",
+        "questions": 40,
+        "mean": 66.6111
+      },
+      {
+        "ability": "temporal_reasoning",
+        "row": "gbrain",
+        "view": "frontier",
+        "questions": 40,
+        "mean": 79.0972
+      },
+      {
+        "ability": "temporal_reasoning",
+        "row": "gbrain",
+        "view": "bridge",
+        "questions": 40,
+        "mean": 74.5139
+      },
+      {
+        "ability": "temporal_reasoning",
+        "row": "memory-bank",
+        "view": "frontier",
+        "questions": 40,
+        "mean": 89.7917
+      },
+      {
+        "ability": "temporal_reasoning",
+        "row": "memory-bank",
+        "view": "bridge",
+        "questions": 40,
+        "mean": 83.6806
+      },
+      {
+        "ability": "temporal_reasoning",
+        "row": "extract-first",
+        "view": "frontier",
+        "questions": 40,
+        "mean": 79.375
+      },
+      {
+        "ability": "temporal_reasoning",
+        "row": "extract-first",
+        "view": "bridge",
+        "questions": 40,
+        "mean": 72.7083
+      }
+    ],
+    "floor": {
+      "questions": 400,
+      "mean_bridge": 22.6577,
+      "below_every_system_row": true
+    },
+    "table": [
+      {
+        "reader": "anthropic:claude-opus-5-5",
+        "row": "gbrain",
+        "usd_per_question": 0.1205,
+        "frontier": {
+          "accuracy": 78.7508,
+          "usd_per_correct": 0.153
+        },
+        "bridge": {
+          "accuracy": 74.0597,
+          "usd_per_correct": 0.1627
+        }
+      },
+      {
+        "reader": "anthropic:claude-opus-5-5",
+        "row": "memory-bank",
+        "usd_per_question": 0.1338,
+        "frontier": {
+          "accuracy": 76.1234,
+          "usd_per_correct": 0.1758
+        },
+        "bridge": {
+          "accuracy": 71.3251,
+          "usd_per_correct": 0.1876
+        }
+      },
+      {
+        "reader": "anthropic:claude-opus-5-5",
+        "row": "extract-first",
+        "usd_per_question": 0.2076,
+        "frontier": {
+          "accuracy": 75.6732,
+          "usd_per_correct": 0.2743
+        },
+        "bridge": {
+          "accuracy": 71.1234,
+          "usd_per_correct": 0.2919
+        }
+      },
+      {
+        "reader": "anthropic:claude-opus-5-5",
+        "row": "floor",
+        "usd_per_question": 0.0091,
+        "frontier": {
+          "accuracy": null,
+          "usd_per_correct": null
+        },
+        "bridge": {
+          "accuracy": 26.2246,
+          "usd_per_correct": 0.0347
+        }
+      },
+      {
+        "reader": "particle:particle-1",
+        "row": "gbrain",
+        "usd_per_question": 0.0673,
+        "frontier": {
+          "accuracy": 73.7458,
+          "usd_per_correct": 0.0912
+        },
+        "bridge": {
+          "accuracy": 78.1059,
+          "usd_per_correct": 0.0861
+        }
+      },
+      {
+        "reader": "particle:particle-1",
+        "row": "memory-bank",
+        "usd_per_question": 0.0847,
+        "frontier": {
+          "accuracy": 73.16,
+          "usd_per_correct": 0.1157
+        },
+        "bridge": {
+          "accuracy": 78.4081,
+          "usd_per_correct": 0.108
+        }
+      },
+      {
+        "reader": "particle:particle-1",
+        "row": "extract-first",
+        "usd_per_question": 0.154,
+        "frontier": {
+          "accuracy": 71.0299,
+          "usd_per_correct": 0.2167
+        },
+        "bridge": {
+          "accuracy": 77.4745,
+          "usd_per_correct": 0.1987
+        }
+      },
+      {
+        "reader": "particle:particle-1",
+        "row": "floor",
+        "usd_per_question": 0.0003,
+        "frontier": {
+          "accuracy": null,
+          "usd_per_correct": null
+        },
+        "bridge": {
+          "accuracy": 21.6247,
+          "usd_per_correct": 0.0015
+        }
+      },
+      {
+        "reader": "openai:gpt-6.1-sol",
+        "row": "gbrain",
+        "usd_per_question": 0.0817,
+        "frontier": {
+          "accuracy": 72.8736,
+          "usd_per_correct": 0.1121
+        },
+        "bridge": {
+          "accuracy": 78.368,
+          "usd_per_correct": 0.1042
+        }
+      },
+      {
+        "reader": "openai:gpt-6.1-sol",
+        "row": "memory-bank",
+        "usd_per_question": 0.0993,
+        "frontier": {
+          "accuracy": 73.3957,
+          "usd_per_correct": 0.1353
+        },
+        "bridge": {
+          "accuracy": 77.8127,
+          "usd_per_correct": 0.1276
+        }
+      },
+      {
+        "reader": "openai:gpt-6.1-sol",
+        "row": "extract-first",
+        "usd_per_question": 0.1688,
+        "frontier": {
+          "accuracy": 70.3347,
+          "usd_per_correct": 0.2399
+        },
+        "bridge": {
+          "accuracy": 74.7769,
+          "usd_per_correct": 0.2257
+        }
+      },
+      {
+        "reader": "openai:gpt-6.1-sol",
+        "row": "floor",
+        "usd_per_question": 0.0015,
+        "frontier": {
+          "accuracy": null,
+          "usd_per_correct": null
+        },
+        "bridge": {
+          "accuracy": 20.1239,
+          "usd_per_correct": 0.0075
+        }
+      }
+    ],
+    "judge_snapshots": [
+      {
+        "judge": "anthropic:claude-opus-5-5",
+        "versions": [
+          "claude-opus-5-5"
+        ],
+        "mixed": false
+      },
+      {
+        "judge": "openai:gpt-6-astra",
+        "versions": [
+          "gpt-6-astra"
+        ],
+        "mixed": false
+      }
+    ]
+  }
+}

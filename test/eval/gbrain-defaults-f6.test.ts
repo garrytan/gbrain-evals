@@ -256,3 +256,105 @@ result = {"a": a["items"][0], "recall": f.mcp_calls[1], "indexed": f.st["fact_in
     expect(f6('result = shim.fact_entry({"context": "from conversations/x/src-9 segment 2026-01-01T00:00:00Z..2026-01-01T00:00:00Z"})').ok.slug).toBe('conversations/x/src-9');
   });
 });
+
+// Value: protects=RS1's gbrain realizations record gbrain's own safety-filter stops and unparsed pages instead of failing, while every other F6 build problem still fails them; fails_when=record mode fails on a content_filter or refusal page or an unparsed page, lets through a cap stop, an unpriced model, a pass without JSON, a provider_error page, an unlisted failed page, a first-pass 'failed' status or pending pages, or the default mode stops failing on safety-filter or unparsed pages; why_new=wave A's gbrain builds failed on Anthropic content_filter stops and unparsed pages (amendment of 2026-11-19); seam=the fake adapter's scripted extraction passes; no_claim=that gbrain's JSON envelope keeps this shape at the pin (the Docker smoke checks the switch reaches the container)
+describe('F6 build problems switch (GBRAIN_F6_BUILD_PROBLEMS=record, RS1 cells)', () => {
+  const REC = { GBRAIN_F6: '1', GBRAIN_F6_EXTRACT_CAP_USD: '2', GBRAIN_F6_BUILD_PROBLEMS: 'record' };
+  const ok = { status: 'ok', pages_processed: 2, segments_processed: 4, facts_extracted: 9, facts_inserted: 9, pages_failed: 0, spent_usd: 0.01, budget_exhausted: false, failed_pages: [] };
+  const stopped = (reasons: string[]) => reasons.map((r, i) => ({ slug: `conversations/2026-04-10/src-${i}`, error: `segment 2026-04-10T09:00:00.000Z..2026-04-10T10:00:00.000Z extraction failed (${r})` }));
+  const first = { ...ok, status: 'partial', pages_failed: 2, failed_pages: stopped(['content_filter', 'refusal']), pages_skipped_unparsed: 1, spent_usd: 0.5 };
+  const retry = { ...ok, status: 'failed', pages_processed: 0, pages_failed: 2, failed_pages: stopped(['content_filter', 'refusal']), pages_skipped_unparsed: 1, spent_usd: 0.01 };
+  const build = (passes: unknown[], env: Record<string, string> = REC) => f6(`f = Fake(extract=[${passes.map(p => typeof p === 'string' ? JSON.stringify(p) : J(p)).join(', ')}]); a = f.f6_build(["p1", "p2"])
+result = {"build": {k: v for k, v in a.items() if k in ("ok", "recorded", "problems", "last_pass")}, "passes": len(a["passes"]), "stored": f.st["f6_build"].get("recorded")}`, env);
+
+  test('record keeps a build whose last pass has only safety-filter stops and unparsed pages, with that pass\'s status, counts and reasons', () => {
+    const r = build([first, retry]).ok;
+    expect(r.passes).toBe(2);
+    expect(r.stored).toBe(true);
+    expect(r.build).toEqual({ ok: false, recorded: true, problems: ["extraction status 'failed' (exit 0)", 'pages_failed=2', 'pages_skipped_unparsed=1',
+      ...stopped(['content_filter', 'refusal']).map(p => `failed ${p.slug}: ${p.error}`)],
+      last_pass: { status: 'failed', pages_failed: 2, pages_skipped_unparsed: 1, failed_reasons: { content_filter: 1, refusal: 1 } } });
+    expect(build([{ ...ok, pages_skipped_unparsed: 3 }]).ok.build).toEqual({ ok: false, recorded: true, problems: ['pages_skipped_unparsed=3'],
+      last_pass: { status: 'ok', pages_failed: 0, pages_skipped_unparsed: 3, failed_reasons: {} } });
+    expect(build([ok]).ok.build).toEqual({ ok: true, recorded: false, problems: [], last_pass: { status: 'ok', pages_failed: 0, pages_skipped_unparsed: 0, failed_reasons: {} } });
+  });
+
+  test('record keeps the lines naming each safety-filter page and unparsed page, and still fails on a declined window', () => {
+    const unparsed = [{ slug: 'conversations/2026-04-11/src-9', cause: 'no line matched any conversation format' }];
+    const named = build([first, { ...retry, unparsed_pages: unparsed }]).ok.build;
+    expect(named.recorded).toBe(true);
+    expect(named.problems).toContain('unparsed conversations/2026-04-11/src-9: no line matched any conversation format');
+    expect(named.problems).toContain(`failed conversations/2026-04-10/src-0: ${stopped(['content_filter'])[0].error}`);
+    const declined = build([first, { ...retry, declined_windows: [{ slug: 'conversations/2026-04-10/src-0', start: 'a', end: 'b', reason: 'refusal' }] }]);
+    expect(declined.error).toMatchObject({ kind: 'product_error' });
+    expect(declined.error.message).toContain('declined conversations/2026-04-10/src-0 a..b (refusal)');
+    const r = f6(`result = [p for p in shim.extraction_problems(${J({ ...retry, unparsed_pages: unparsed })}) if p not in shim.recordable_problems(${J({ ...retry, unparsed_pages: unparsed })}, True)]`).ok;
+    expect(r).toEqual([]);
+  });
+
+  test('record still fails the realization on the cap, an unpriced model, a pass without JSON, other failure reasons, unlisted failures, a first-pass failed status and pending pages', () => {
+    const fails = (passes: unknown[], says: string) => {
+      const r = build(passes);
+      expect(r.error).toMatchObject({ kind: 'product_error' });
+      expect(r.error.message).toContain('the F6 build did not finish');
+      expect(r.error.message).toContain(says);
+    };
+    fails([{ ...first, budget_exhausted: true, spent_usd: 2 }], 'stopped on its cap');
+    fails([{ ...ok, pages_skipped_unparsed: 1, no_pricing_models: ['m'] }], 'unpriced extraction models');
+    fails(['no json here'], "extraction status 'no_json'");
+    fails(Array(3).fill({ ...retry, status: 'partial', failed_pages: stopped(['content_filter', 'provider_error']) }), 'pages_failed=2');
+    fails(Array(3).fill({ ...retry, status: 'partial', failed_pages: [{ slug: 'conversations/x/src-1', error: 'database is locked' }, ...stopped(['content_filter'])] }), 'pages_failed=2');
+    fails([{ ...first, pages_failed: 3 }, { ...retry, pages_failed: 3 }], 'pages_failed=3');
+    fails([{ ...first, status: 'failed', pages_processed: 0 }], "extraction status 'failed'");
+    fails([{ ...ok, pages_skipped_unparsed: 1, pages_pending: 1 }], 'pages_pending=1');
+  });
+
+  test('unset, the same safety-filter and unparsed build fails the realization and records nothing new, as F6 preregistered', () => {
+    const r = build([first, retry], { GBRAIN_F6: '1', GBRAIN_F6_EXTRACT_CAP_USD: '2' });
+    expect(r.error).toMatchObject({ kind: 'product_error' });
+    expect(r.error.message).toContain("pages_failed=2; pages_skipped_unparsed=1");
+    const keys = f6(`f = Fake(extract=[${J(ok)}]); a = f.f6_build(["p1"]); result = sorted(a)`, { GBRAIN_F6: '1', GBRAIN_F6_EXTRACT_CAP_USD: '2' }).ok;
+    expect(keys).not.toContain('recorded');
+    expect(keys).not.toContain('last_pass');
+  });
+
+  test('a recorded build is reused on a /finish retry under record, and built again when the stack runs without the switch', () => {
+    const body = `f = Fake(extract=[${J({ ...ok, pages_skipped_unparsed: 1 })}, ${J({ ...ok, pages_skipped_unparsed: 1 })}]); f.f6_build(["p1"]); shim.F6_BUILD_PROBLEMS = MODE
+try:
+    b = f.f6_build(["p1"]).get("reused")
+except shim.ShimError as e:
+    b = e.kind
+result = [b, len([c for c in f.cli_calls if c[0] == "extract-conversation-facts"])]`;
+    expect(f6(body.replace('MODE', '"record"'), REC).ok).toEqual([true, 1]);
+    expect(f6(body.replace('MODE', '""'), REC).ok).toEqual(['product_error', 2]);
+  });
+
+  test('capabilities report the switch; any value but record is refused before the install touches anything', () => {
+    const cap = (env: Record<string, string>) => f6('f = Fake(); f.reference = None; result = f.capabilities()["f6_build_problems"]', env).ok;
+    expect(cap({ GBRAIN_F6_BUILD_PROBLEMS: 'record' })).toEqual({ configured_by: 'GBRAIN_F6_BUILD_PROBLEMS', record: true, recorded: { failed_page_reasons: ['content_filter', 'refusal'], pages_skipped_unparsed: true } });
+    expect(cap({})).toEqual({ configured_by: 'GBRAIN_F6_BUILD_PROBLEMS', record: false, recorded: null });
+    const r = f6('result = Fake().install_brain()', { GBRAIN_F6_BUILD_PROBLEMS: 'skip' });
+    expect(r.error).toMatchObject({ kind: 'invalid_request' });
+    expect(r.error.message).toContain('GBRAIN_F6_BUILD_PROBLEMS');
+  });
+});
+
+// Value: protects=RS1's counted brains cannot change between /finish and their last question through serve's idle upkeep (gbrain 0.60.715.0+); fails_when=the shim stops writing or reading back maintenance.auto false under GBRAIN_IDLE_UPKEEP=off, or accepts a value it does not act on; why_new=RS1 moved to v0.60.733.0, which runs idle upkeep in serve (2026-11-16); seam=the fake adapter's config set/get; no_claim=that gbrain honours the key (the Docker smoke at the RS1 pin checks that)
+describe('idle upkeep switch (GBRAIN_IDLE_UPKEEP=off, RS1 cells)', () => {
+  test('off writes gbrain\'s own switch, maintenance.auto false, reads it back, and capabilities say so', () => {
+    const r = f6('f = Fake(); f.reference = None; result = [f.apply_posture(shim.IDLE_UPKEEP_POSTURE), f.cli_calls, f.capabilities()["idle_upkeep"]]', { GBRAIN_IDLE_UPKEEP: 'off' });
+    expect(r.ok).toEqual([{ 'maintenance.auto': 'false' }, [['config', 'set', 'maintenance.auto', 'false'], ['config', 'get', 'maintenance.auto']],
+      { configured_by: 'GBRAIN_IDLE_UPKEEP', off: true, posture: { 'maintenance.auto': 'false' } }]);
+  });
+  test('a switch that reads back any other value fails the install', () => {
+    const r = f6('result = Fake(readback={"maintenance.auto": "true"}).apply_posture(shim.IDLE_UPKEEP_POSTURE)', { GBRAIN_IDLE_UPKEEP: 'off' });
+    expect(r.error).toMatchObject({ kind: 'product_error' });
+    expect(r.error.message).toContain('maintenance.auto');
+  });
+  test('unset keeps gbrain\'s default; any value but off is refused before the install touches anything', () => {
+    expect(f6('f = Fake(); f.reference = None; result = f.capabilities()["idle_upkeep"]', {}).ok).toEqual({ configured_by: 'GBRAIN_IDLE_UPKEEP', off: false, posture: null });
+    const r = f6('result = Fake().install_brain()', { GBRAIN_IDLE_UPKEEP: 'on' });
+    expect(r.error).toMatchObject({ kind: 'invalid_request' });
+    expect(r.error.message).toContain('GBRAIN_IDLE_UPKEEP');
+  });
+});

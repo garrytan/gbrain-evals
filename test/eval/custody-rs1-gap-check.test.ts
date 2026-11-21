@@ -142,20 +142,39 @@ def answer_generation(input_address, output_address, plans_address, topic, theme
         pickle.dump(all_messages, f)
 
 
-def step(out, name, inner=None, question_batches=None):
-    def run_question_generation(chats_directory, chat_size, index):
-        m.write_pickle(Path(chats_directory) / "1" / "user_messages.pickle", question_batches)
+def window_args(out):
+    import sqlite3
+    path = str(out) + "-window.sqlite"
+    db = sqlite3.connect(path)
+    db.execute("CREATE TABLE IF NOT EXISTS caps (seq INTEGER PRIMARY KEY AUTOINCREMENT, program_cap_usd REAL NOT NULL)")
+    db.execute("CREATE TABLE IF NOT EXISTS runs (run_id TEXT PRIMARY KEY, budget_usd REAL NOT NULL, finished_at TEXT)")
+    db.execute("INSERT OR IGNORE INTO runs VALUES ('rs1-test', 1, NULL)")
+    if not db.execute("SELECT COUNT(*) FROM caps").fetchone()[0]:
+        db.execute("INSERT INTO caps (program_cap_usd) VALUES (1)")
+    db.commit()
+    db.close()
+    return ["--paid-window", "RS1-TEST", "--window-cap-usd", "1", "--budget-ledger", path, "--budget-run-id", "rs1-test"]
 
+
+def step(out, name, inner=None, question_batches=None):
+    def user_messages_generation_fast(num_batches, save_address, **kwargs):
+        m.write_pickle(save_address, question_batches)
+
+    def run_question_generation(chats_directory, chat_size, index):
+        run_pipeline.user_messages_generation_fast(num_batches=10, save_address=str(Path(chats_directory) / "1" / "user_messages.pickle"))
+
+    run_pipeline = types.SimpleNamespace(run_question_generation=run_question_generation,
+                                         user_messages_generation_fast=user_messages_generation_fast)
     # BEAM's chat_json and truncate code for the answer step's early-stop check: a chat this short never passes the limit.
     m.load_beam = lambda beam_dir, slot: types.SimpleNamespace(
         main=types.SimpleNamespace(answer_generation=answer_generation),
-        run_pipeline=types.SimpleNamespace(run_question_generation=run_question_generation),
+        run_pipeline=run_pipeline,
         utils=types.SimpleNamespace(convert_chats_pickle_to_json=lambda src, dst: m.write_json(dst, []),
                                     add_ids_to_chats=lambda src, dst: m.write_json(dst, [])),
         adjust=types.SimpleNamespace(count_chats_tokens=lambda chat_directory, model_name, token_limit: None))
     m.gemini_model = lambda temperature, usage: m.RecordingModel(inner, "gemini:test", usage)
     return m.main(["step", "--out", str(out), "--conv-index", "1", "--step", name, "--seed-file", seed_file,
-                   "--mode", "real", "--beam-dir", str(out)])
+                   "--mode", "real", "--beam-dir", str(out)] + window_args(out))
 
 
 def batches_prompted(inner):
