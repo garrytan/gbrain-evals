@@ -62,6 +62,7 @@ import {
   extractorOutcome,
 } from '../../node_modules/gbrain/src/core/cycle/propose-takes.ts';
 import { fitAnthropicRequest, temperatureSent, toolChoiceSent, withThinkingRoom } from './anthropic-request.ts';
+import { judgeClientFor } from './openai-judge-shim.ts';
 import { budgetOptionsFrom, receiptCost, startPaidRun } from './budget-ledger.ts';
 import { PaidArmRefusal, paidRequested, requirePaidArm } from './paid-arm.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
@@ -212,7 +213,7 @@ export function buildExtractionPrompt(pageBody: string): string {
 // ─── Anthropic clients ─────────────────────────────────────────────
 
 export const DEFAULT_EXTRACT_MODEL = 'claude-opus-5-5';
-export const DEFAULT_JUDGE_MODEL = 'claude-haiku-5-5';
+export const DEFAULT_JUDGE_MODEL = 'gpt-6.2-astra';
 const EXTRACT_MODEL = process.env.CAT15_MODEL ?? DEFAULT_EXTRACT_MODEL;
 const JUDGE_MODEL = process.env.CAT15_JUDGE_MODEL ?? DEFAULT_JUDGE_MODEL;
 const JUDGE_TEMPERATURE = 0;
@@ -461,7 +462,7 @@ ${extracted.map((c, i) => `  [${i}] ${c.claim_text} (kind=${c.kind ?? '?'}, doma
 
 Call match_claims with the complete matching.`;
 
-  const judgeClient = client ?? getAnthropic();
+  const judgeClient = client ?? judgeClientFor(JUDGE_MODEL, getAnthropic);
   let lastDefect = 'unknown judge failure';
   for (let attempt = 1; attempt <= 2; attempt++) {
     try {

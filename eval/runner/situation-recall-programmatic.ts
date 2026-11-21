@@ -13,6 +13,8 @@ import { BENCHMARK_VERSION, loadReceipt, receiptPath, writeReceipt, type Receipt
 import { gbrainPin, gbrainVersion } from './gbrain-version.ts';
 import { resolveRegressionProduct, type ResolvedRegressionProduct } from './situation-recall-provenance.ts';
 
+export const PROTOCOL_JUDGE_MODEL = 'claude-haiku-5-5';
+
 export type ProgrammaticCategory = 'cat5' | 'cat8' | 'cat9';
 export type ProgrammaticMode = 'validate' | 'offline' | 'live';
 
@@ -328,11 +330,11 @@ export async function runSituationRecallProgrammatic(
       const shared = { reportsRoot: nativeRoot, concurrency: 1, enableThreshold: catalog.enable_thresholds };
       const liveClient = mode === 'live' ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY }) : undefined;
       if (catalog.category === 'cat5') {
-        result.report = await runCat5({ ...shared, claims: catalog.claims, pagesBySlug, client: dependencies?.judgeClient ?? liveClient });
+        result.report = await runCat5({ ...shared, claims: catalog.claims, pagesBySlug, model: PROTOCOL_JUDGE_MODEL, client: dependencies?.judgeClient ?? liveClient });
       } else if (catalog.category === 'cat8') {
         result.report = await runCat8({ ...shared, probes: catalog.probes, state: state!, client: dependencies?.agentClient ?? liveClient, corpusSha: hashes.corpus });
       } else {
-        result.report = await runCat9({ ...shared, scenarios: catalog.scenarios, state: state!, pagesBySlug, agentClient: dependencies?.agentClient ?? liveClient, judgeClient: dependencies?.judgeClient ?? liveClient, corpusSha: hashes.corpus });
+        result.report = await runCat9({ ...shared, scenarios: catalog.scenarios, state: state!, pagesBySlug, agentClient: dependencies?.agentClient ?? liveClient, judge: { model: PROTOCOL_JUDGE_MODEL }, judgeClient: dependencies?.judgeClient ?? liveClient, corpusSha: hashes.corpus });
       }
       receipt = loadReceipt(nativeReceiptPath);
       if (mode === 'offline') {

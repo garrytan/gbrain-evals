@@ -10,7 +10,7 @@
  *   N2 contradiction pairs   n2-judge-replay.ts judge --prompt plain
  *   chronicle events         chronicle-lift.ts plain
  *   Cat 35 memory pages      bun eval/runner/plain-baseline.ts cat35-write --out <dir> --receipt <file>
- *                              --model anthropic:claude-sonnet-4-6 --budget-usd <n> [--budget-ledger <path>]
+ *                              --model anthropic:claude-opus-5-5 --budget-usd <n> [--budget-ledger <path>]
  *                            then cat35-transcript-distill.ts --lanes none --external-lane plain
  *                              --external-dir <dir> --external-writer-receipt <file>
  */
@@ -113,13 +113,15 @@ const TRANSCRIPTS_TXT = join(REPO, 'eval/data/transcript-distill-v1/transcripts-
 const sha256 = (s: string | Buffer) => createHash('sha256').update(s).digest('hex');
 
 /** <date>-<transcript_id>.txt to transcript id; the writer reads only these renderings, never gold files. */
+/** The model a plain-baseline run calls when --model is left out: the newest frontier Opus, never Sonnet or Haiku (CLAUDE.md "Choose models"). */
+export const DEFAULT_PLAIN_MODEL = 'anthropic:claude-opus-5-5';
 export const transcriptIdOf = (file: string) => file.replace(/\.txt$/, '').replace(/^\d{4}-\d{2}-\d{2}-/, '');
 
 export const cat35PlainPrompt = (transcript: string) => CAT35_PLAIN_INSTRUCTION + '\n\n<transcript>\n' + transcript + '\n</transcript>';
 
 async function cat35Write(argv: string[]) {
   const flag = (name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
-  const out = flag('--out'), receiptPath = flag('--receipt'), model = flag('--model') ?? 'anthropic:claude-sonnet-4-6';
+  const out = flag('--out'), receiptPath = flag('--receipt'), model = flag('--model') ?? DEFAULT_PLAIN_MODEL;
   if (!out || !receiptPath) throw new Error('cat35-write needs --out <dir> --receipt <file> (the receipt goes outside --out)');
   if (resolve(dirname(receiptPath)) === resolve(out)) throw new Error('--receipt must be outside --out: the external lane reads every file in --out');
   const maxTokens = Number(flag('--max-tokens') ?? 8192);
@@ -159,7 +161,7 @@ async function cat35Write(argv: string[]) {
 
 if (import.meta.main) {
   const [cmd, ...argv] = process.argv.slice(2);
-  if (cmd !== 'cat35-write') { console.error('usage: plain-baseline.ts cat35-write --out <dir> --receipt <file> [--model anthropic:claude-sonnet-4-6] --budget-usd <n>'); process.exit(2); }
+  if (cmd !== 'cat35-write') { console.error('usage: plain-baseline.ts cat35-write --out <dir> --receipt <file> [--model anthropic:claude-opus-5-5] --budget-usd <n>'); process.exit(2); }
   const r = await cat35Write(argv);
   console.log(JSON.stringify({ written: r.written, errors: r.errors, cost: r.cost }, null, 1));
 }

@@ -243,12 +243,10 @@ describe('matchClaims validation + retry', () => {
   });
 
   // Value: protects=the matcher request forces the match_claims tool at temperature 0 with the 2000-token limit for the default judge; fails_when=the matcher request drops its tool choice, temperature or limit; why_new=existing matcher tests check the returned result but not the request sent; seam=none; no_claim=stub client, Claude 5 matcher request not covered (judge model is an env constant read at import)
-  test('the matcher request asks the default Haiku 5.5 judge for match_claims with no temperature and room to think', async () => {
+  test('the matcher request asks the default GPT-6.2 Astra judge for match_claims, forced', async () => {
     const calls: Array<Record<string, any>> = [];
     await matchClaims('page', EXTRACTED, GT, fakeClient([VALID_TOOL_USE], calls as any));
-    expect(calls[0]).toMatchObject({ model: 'claude-haiku-5-5', max_tokens: 4096, tool_choice: { type: 'auto' } });
-    expect('temperature' in calls[0]).toBe(false);
-    expect(calls[0].messages.at(-1).content).toBe('Respond by calling the match_claims tool.');
+    expect(calls[0]).toMatchObject({ model: 'gpt-6.2-astra', max_tokens: 2000, tool_choice: { type: 'tool', name: 'match_claims' } });
   });
 
   // Value: protects=an older matcher judge (CAT15_JUDGE_MODEL) still gets the forced match_claims request at temperature 0 with the 2000-token limit; fails_when=the matcher request drops its tool choice, temperature or limit for a model that takes them; why_new=R4 moved the default judge to Haiku 5.5, which takes neither; seam=none; no_claim=stub client in a subprocess
@@ -266,7 +264,7 @@ describe('matchClaims validation + retry', () => {
     const out = await matchClaims('page', EXTRACTED, GT, fakeClient([MALFORMED_TOOL_USE, VALID_TOOL_USE], calls));
     expect(out.result).not.toBeNull();
     expect(calls).toHaveLength(2);
-    expect(calls[1].messages).toHaveLength(3);
+    expect(calls[1].messages).toHaveLength(2);
     expect(String(calls[1].messages[1].content)).toMatch(/malformed/);
     expect(String(calls[1].messages[1].content)).toMatch(/cover every ground-truth claim/);
   });
@@ -639,7 +637,7 @@ describe('cat15 live runs join the budget ledger', () => {
     const receipt = JSON.parse(readFileSync(RECEIPT, 'utf-8'));
     expect(receipt.run_status).toBe('skipped');
     expect(receipt.skip_reason).toContain('Cat 15 live run spends money');
-    expect(receipt.resolved_config.max_tokens_sent).toEqual({ extract: 4096, extract_retry: 4096, judge: 4096 });
+    expect(receipt.resolved_config.max_tokens_sent).toEqual({ extract: 4096, extract_retry: 4096, judge: 2000 });
   }, 30000);
 
   const scratchRun = (budgetUsd: number, close = false) => {

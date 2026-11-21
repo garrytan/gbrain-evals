@@ -192,7 +192,7 @@ describe('SOTA dev cells', () => {
       expect(definitionProblems(c, kinds)).toEqual([]);
       expect(c).toMatchObject({ runner: 'in-process', set: 'SOTA-dev', block: 'SOTA-dev', benchmark: 'beam-1m', split: 'dev', only_conversations: SOTA_DEV_CONVERSATIONS, selection: { kind: 'ids', ids: SOTA_DEV_IDS } });
       expect(c.arms.map(a => [a.id, a.mode, a.readers, a.frontier?.judges])).toEqual([
-        ['whole-agent', 'agent', ['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol'], ['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol']],
+        ['whole-agent', 'agent', ['anthropic:claude-opus-5-5', 'openai:gpt-6.2-sol'], ['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol']],
         ['whole-agent-particle', 'agent', ['particle:particle-1'], ['anthropic:claude-opus-5-5']],
       ]);
       expect(frontierJudgesFor(c.arms[1]!, 'particle:particle-1')).toEqual(['anthropic:claude-opus-5-5']);

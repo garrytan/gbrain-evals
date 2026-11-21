@@ -28,7 +28,9 @@ const network: string[] = [];
 beforeAll(() => { globalThis.fetch = (async (input: string | URL | Request) => { network.push(String(input instanceof Request ? input.url : input)); throw new Error('no network in keyless tests'); }) as unknown as typeof fetch; });
 afterAll(() => { globalThis.fetch = realFetch; rmSync(tmp, { recursive: true, force: true }); });
 
-const OPUS = 'anthropic:claude-opus-5-5', SOL = 'openai:gpt-6.1-sol', PARTICLE = 'particle:particle-1';
+const OPUS = 'anthropic:claude-opus-5-5', SOL = 'openai:gpt-6.2-sol', PARTICLE = 'particle:particle-1';
+/** The BEAM judges rule's judge of Claude rows (q1 frontierJudgeOf), which the reader move leaves unchanged. */
+const CLAUDE_ROW_JUDGE = 'openai:gpt-6.1-sol';
 const BEAM_CELL = 'sota-leader-beam.baseline-file-agent.baseline', LME_CELL = 'sota-leader-lme.baseline-full-context.baseline';
 const DEV_GREP = 'sota-dev.baseline-file-agent.baseline', DEV_GBRAIN = 'sota-dev.gbrain-defaults.agent-tools';
 const kinds = new Set((JSON.parse(readFileSync(join(ROOT, 'eval/systems/kinds.json'), 'utf8')) as { kinds: Array<{ id: string }> }).kinds.map(k => k.id));
@@ -83,9 +85,9 @@ describe('leader cells in the q1 manifest', () => {
     expect(lme).toMatchObject({ set: 'SOTA-leader-lme', benchmark: 'lme-s', system: 'baseline-full-context', selection: { kind: 'ids', ids: SOTA_LEADER_LME_IDS } });
     expect(lme.only_conversations).toBeUndefined();
     expect(beam.arms.map(a => [a.id, a.mode, a.readers, a.frontier?.judges, a.frontier?.per_reader])).toEqual([
-      ['whole-agent-opus', 'agent', [OPUS], [SOL], true], ['whole-agent-sol', 'agent', [SOL], [OPUS], true]]);
+      ['whole-agent-opus', 'agent', [OPUS], [CLAUDE_ROW_JUDGE], true], ['whole-agent-sol', 'agent', [SOL], [OPUS], true]]);
     expect(lme.arms.map(a => [a.id, a.mode, a.readers, a.frontier?.judges])).toEqual([
-      ['whole-full-context-opus', 'full-context', [OPUS], [SOL]], ['whole-full-context-sol', 'full-context', [SOL], [OPUS]]]);
+      ['whole-full-context-opus', 'full-context', [OPUS], [CLAUDE_ROW_JUDGE]], ['whole-full-context-sol', 'full-context', [SOL], [OPUS]]]);
     const pool = poolItems('beam-1m');
     expect(SOTA_LEADER_BEAM_IDS).toHaveLength(60);
     expect(SOTA_LEADER_BEAM_IDS).toEqual(pool.filter(id => !SOTA_DEV_IDS.includes(id)).sort());
@@ -215,16 +217,16 @@ describe('the command line', () => {
     expect(await main(['plan', '--cache', cacheDir], s => lines.push(s))).toBe(0);
     expect(lines).toHaveLength(4);
     expect(lines[0]).toMatch(/^beam-1m grep-agent anthropic:claude-opus-5-5: 126 items, 0 fresh, 126 unknown, 0 stale; to buy: /);
-    expect(readFileSync(join(cacheDir, 'plan', 'leader-lme-s-openai_gpt-6.1-sol.txt'), 'utf8').trim().split('\n')).toEqual([...poolItems('lme-s')].sort());
+    expect(readFileSync(join(cacheDir, 'plan', 'leader-lme-s-openai_gpt-6.2-sol.txt'), 'utf8').trim().split('\n')).toEqual([...poolItems('lme-s')].sort());
 
     const out = fresh('cli-out');
     publish(out, cellOf(LME_CELL), 'whole-full-context-sol', [{ item: SOTA_LEADER_LME_IDS[0]!, reader: SOL, score: 1 }, { item: SOTA_LEADER_LME_IDS[1]!, reader: SOL, outcome: 'reader_error', text: '' }]);
     lines.length = 0;
     expect(await main(['import', '--from', out, '--cell', LME_CELL, '--cache', cacheDir], s => lines.push(s))).toBe(0);
-    expect(lines).toEqual([`import: 1 rows written, 1 read; 1 left unknown: ${SOTA_LEADER_LME_IDS[1]} openai:gpt-6.1-sol (reader_error)`]);
+    expect(lines).toEqual([`import: 1 rows written, 1 read; 1 left unknown: ${SOTA_LEADER_LME_IDS[1]} openai:gpt-6.2-sol (reader_error)`]);
     lines.length = 0;
     await main(['plan', '--cache', cacheDir], s => lines.push(s));
-    expect(lines[3]).toMatch(/^lme-s whole-history openai:gpt-6.1-sol: 50 items, 1 fresh, 49 unknown, 0 stale/);
+    expect(lines[3]).toMatch(/^lme-s whole-history openai:gpt-6.2-sol: 50 items, 1 fresh, 49 unknown, 0 stale/);
 
     const items = join(cacheDir, 'items.txt');
     writeFileSync(items, `${SOTA_LEADER_LME_IDS[0]}\n`);

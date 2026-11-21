@@ -71,6 +71,7 @@ import {
   type GroundTruthPage,
 } from './judge.ts';
 import { temperatureSent, toolChoiceSent } from './anthropic-request.ts';
+import { isOpenAIModel } from './openai-judge-shim.ts';
 import { ProbeAccounting, type ProbeSummary } from './probe-accounting.ts';
 import {
   writeReceipt,
@@ -168,7 +169,7 @@ export interface RunCat9Options extends Cat9Config {
 }
 
 export const CAT9_CATEGORY = 'cat9-workflows';
-export const DEFAULT_JUDGE_MODEL = 'claude-haiku-5-5';
+export const DEFAULT_JUDGE_MODEL = 'gpt-6.2-astra';
 
 // ─── Runner ──────────────────────────────────────────────────────────
 
@@ -490,7 +491,7 @@ function writeCat9Artifacts(
         brainbench_version: BENCHMARK_VERSION,
         adapter: { name: 'claude-sonnet-with-tools', stack_id: 'gbrain', gbrain_commit: gbrainVersion() },
         driver_model: { model_id: agentModel, provider: 'anthropic' },
-        judge_model: { model_id: judgeModel, provider: 'anthropic' },
+        judge_model: { model_id: judgeModel, provider: isOpenAIModel(judgeModel) ? 'openai' : 'anthropic' },
         corpus_sha: opts.corpusSha ?? 'unknown',
         seed: 0,
       },
