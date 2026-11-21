@@ -1,5 +1,7 @@
 # What gbrain's `query` hands a reader at 8,000 tokens: E1 of the budgeted delivery plan (2026-10-08)
 
+*Note added 2026-11-21:* to keep the link to the open-source comparison, E1 reads with that comparison's frozen readers, `gpt-4o-2024-08-06` on the LongMemEval slice and `gpt-4o-mini` on LoCoMo, and judges as it did, with `gpt-4o` on those two benchmarks. New runs no longer use gpt-4o or gpt-4o-mini in any role (suspended 2026-11-21), so these numbers stand as measured but aren't directly comparable with a run graded by a current frontier judge.
+
 ## The finding
 
 gbrain is a memory system for agents: it stores conversations and notes as pages and finds evidence for a question

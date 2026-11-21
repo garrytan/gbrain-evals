@@ -98,7 +98,7 @@ behaviour, such as `forget` leaving nothing behind or a sync catching up, where 
 <td valign="top"><h3>100 → 0 leaking runs</h3><b>0 of 100</b> runs leak finance-only text into the agent's context or its answer</td>
 </tr>
 <tr>
-<td valign="top">Right answers on 150 LongMemEval questions, against pasting each whole history (about 50 conversations) into the prompt<br><sub>gbrain <code>c5fb0201</code> · <a href="docs/benchmarks/2026-10-07-longmemeval-w10c-full-context.md">Whole-history comparison</a></sub></td>
+<td valign="top">Right answers on 150 LongMemEval questions, against pasting each whole history (about 50 conversations) into the prompt (official GPT-4o judge)<br><sub>gbrain <code>c5fb0201</code> · <a href="docs/benchmarks/2026-10-07-longmemeval-w10c-full-context.md">Whole-history comparison</a></sub></td>
 <td valign="top">whole history: 144 (Sonnet 5.5 reader) and 141 (GPT-6.1 Sol) of 150</td>
 <td valign="top"><h3>Within the margin, at about a seventh of the cost</h3><b>139</b> and <b>137</b> of 150, within the preregistered 7-point margin, at about a seventh of the reader cost per question, with one question per history⁵</td>
 </tr>
@@ -387,6 +387,8 @@ Descriptive, not tested: correct-abstention rate (abstention-question answers th
 - Full tables, cohorts and exclusions: [scoreboard report](docs/benchmarks/2026-10-06-scoreboard/scoreboard.md).
 <!-- scoreboard:headline:end -->
 
+The block's LoCoMo loss bullet (84.2% against 80.0%) is graded by `gpt-4o-2024-08-06`, the campaign's canonical LoCoMo judge. New runs no longer use gpt-4o in any role (suspended 2026-11-21), so that number stands as measured but isn't directly comparable with a run graded by a current frontier judge.
+
 **gbrain's two BEAM-10M rows at v0.60.748.0.** On 2026-11-20 gbrain v0.60.748.0 answered the same questions again, with
 Opus 5.5, GPT-6.2 Sol and particle-1 reading ([results](docs/benchmarks/2026-11-19-beam10m-newest/results/README.md)). The block above stays the October 2026 render
 at `f05943e6`, because it is checked against the hash its campaign published. At v0.60.748.0, gbrain's 8,000-token row
@@ -664,6 +666,12 @@ Garry Tan runs Y Combinator.
 [Disclosures](docs/disclosures.md) lists every relationship and where each line goes.
 
 ## Changelog
+
+### 2026-11-21: Results graded by gpt-4o say so
+
+The whole-history comparison row names its official GPT-4o judge, as the W10a and W10b rows do, and a sentence below the
+scoreboard block says its LoCoMo loss bullet is graded by `gpt-4o-2024-08-06`. New runs no longer use gpt-4o, so those
+numbers aren't directly comparable with runs graded by a current frontier judge.
 
 ### 2026-11-21: LongMemEval on a memory server's own open harness
 
