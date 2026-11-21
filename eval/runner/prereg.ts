@@ -80,7 +80,7 @@ export function attestPreregistration(path: string, cwd = process.cwd(), now = n
     const target = repoPath(path).replace(/-addenda\.md$/i, '.md');
     const entry = loadManifest(cwd).find(e => repoPath(e.preregistration) === target) as PracticeEntry | undefined;
     if (!entry) {
-      const added = firstAddCommit(cwd, path);
+      const added = firstAddCommit(cwd, existsSync(join(cwd, target)) ? target : path);
       const date = added ? git(cwd, ['log', '-n', '1', '--format=%cs', added]) : null;
       if (date && date >= SUSPENDED_SINCE) {
         throw new Error(`preregistration ${path}, first committed ${date}, has no registry entry; a campaign dated on or after ${SUSPENDED_SINCE} lists its models in docs/benchmarks/preregistrations.d/ before it runs (CLAUDE.md "Choose models")`);

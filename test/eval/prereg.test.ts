@@ -121,10 +121,14 @@ describe('attestPreregistration', () => {
     writeFileSync(join(dir, 'docs/new-prereg.md'), 'rule');
     execFileSync('git', ['add', 'docs/new-prereg.md'], { cwd: dir });
     execFileSync('git', ['commit', '-q', '-m', 'new prereg'], { cwd: dir, env: late });
+    writeFileSync(join(dir, 'docs/old-prereg-addenda.md'), 'amendment');
+    execFileSync('git', ['add', 'docs/old-prereg-addenda.md'], { cwd: dir });
+    execFileSync('git', ['commit', '-q', '-m', 'old prereg addenda'], { cwd: dir, env: late });
     execFileSync('git', ['remote', 'add', 'origin', remote], { cwd: dir });
     execFileSync('git', ['push', '-q', 'origin', 'main'], { cwd: dir });
     execFileSync('git', ['fetch', '-q', 'origin'], { cwd: dir });
     expect(() => attestPreregistration('docs/new-prereg.md', dir)).toThrow(/preregistration docs\/new-prereg.md, first committed 2026-11-21, has no registry entry/);
     expect(attestPreregistration('docs/old-prereg.md', dir).on_origin).toBe(true);
+    expect(attestPreregistration('docs/old-prereg-addenda.md', dir).on_origin).toBe(true);
   });
 });
