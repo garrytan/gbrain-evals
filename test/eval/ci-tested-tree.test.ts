@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { harnessTests, inventory, isBunTestFile, junitFiles, pytestFiles, PYTHON_TESTS, treeRecord } from '../../scripts/ci-tested-tree.ts';
+import { harnessTests, inventory, isBunTestFile, isPytestReport, junitFiles, pytestFiles, PYTHON_TESTS, treeRecord } from '../../scripts/ci-tested-tree.ts';
 
 const root = new URL('../../', import.meta.url);
 const read = (path: string) => readFileSync(new URL(path, root), 'utf8');
@@ -125,7 +125,9 @@ describe('ci-tested-tree record', () => {
     const record = (files: string[], out: string, py = harness) => {
       mkdirSync(join(dir, out), { recursive: true });
       writeFileSync(join(dir, out, 'tests-1.xml'), junit(files));
-      writeFileSync(join(dir, out, 'pytest.xml'), pytest(py));
+      const half = Math.ceil(py.length / 2);
+      writeFileSync(join(dir, out, 'pytest-1.xml'), pytest(py.slice(0, half)));
+      writeFileSync(join(dir, out, 'pytest-2.xml'), pytest(py.slice(half)));
       return spawnSync(process.execPath, ['--no-env-file', '--config=/dev/null', 'scripts/ci-tested-tree.ts', 'record', '--junit', join(dir, out), '--out', join(dir, out, 'tree.json')], { cwd: root, encoding: 'utf8', env });
     };
     try {
@@ -164,11 +166,14 @@ describe('CI carry wiring (.gstack/pregate.json and ci.yml)', () => {
 
   test('every shard uploads the JUnit report of the files it ran, and tested-tree records them after the checks job and every shard pass', () => {
     const tests = job('tests');
-    expect(tests).toContain('bun test --shard=${{ matrix.shard }}/${{ strategy.job-total }} --timings=test/timings.json test/eval/ eval/ --reporter=junit --reporter-outfile="$RUNNER_TEMP/tests-${{ matrix.shard }}.xml"');
+    expect(tests).toContain('bun scripts/test-shards.ts --job=${{ matrix.shard }}/${{ strategy.job-total }} --junit-dir="$RUNNER_TEMP/tested-files" test/eval/ eval/');
+    const runner = readFileSync(new URL('../../scripts/test-shards.ts', import.meta.url), 'utf8');
+    expect(runner).toContain("'--reporter=junit', `--reporter-outfile=${join(junitDir, `tests-${shard}.xml`)}`");
     expect(tests).toContain('name: tested-files-${{ matrix.shard }}');
-    expect(tests).toContain('path: ${{ runner.temp }}/tests-${{ matrix.shard }}.xml');
+    expect(tests).toContain('path: ${{ runner.temp }}/tested-files/tests-*.xml');
+    expect(tests).toContain('if-no-files-found: error');
     const record = job('tested-tree');
-    expect(record).toContain('needs: [checks, tests, harness]');
+    expect(record).toContain('needs: [git-cache, checks, tests, harness]');
     expect(record).not.toMatch(/^\s+if:/m);
     expect(record).toContain('pattern: tested-files-*');
     expect(record).toContain('PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}');
@@ -177,13 +182,27 @@ describe('CI carry wiring (.gstack/pregate.json and ci.yml)', () => {
     expect(record).toContain('path: ${{ runner.temp }}/tested-tree/tree.json');
   });
 
-  test('the harness pytest run uploads its xunit1 JUnit report as pytest.xml among the tested files', () => {
+  test("the harness pytest run uploads each group's xunit1 JUnit report as pytest-<n>.xml among the tested files", () => {
     const harness = job('harness');
-    expect(harness).toContain('run: bun run harness:test --junitxml="$RUNNER_TEMP/pytest.xml" -o junit_family=xunit1');
+    expect(harness).toContain('run: bun run harness:test --junit-dir="$RUNNER_TEMP/pytest"');
     expect(harness).toContain('name: tested-files-pytest');
-    expect(harness).toContain('path: ${{ runner.temp }}/pytest.xml');
+    expect(harness).toContain('path: ${{ runner.temp }}/pytest/pytest-*.xml');
+    expect(harness).toContain('if-no-files-found: error');
     expect(harness.match(/if: matrix\.suite == 'pytest'/g)).toHaveLength(2);
-    expect(read('eval/runner/harness-test.ts')).toContain("[install.python, '-m', 'pytest', ...process.argv.slice(2)]");
+    const runner = read('eval/runner/harness-test.ts');
+    expect(runner).toContain("[install.python, '-m', 'pytest', ...args]");
+    expect(runner).toContain("`--junitxml=${report}`, '-o', 'junit_family=xunit1'");
+    expect([isPytestReport('pytest.xml'), isPytestReport('pytest-3.xml'), isPytestReport('tests-3.xml'), isPytestReport('pytest-x.xml')]).toEqual([true, true, false, false]);
+  });
+
+  test('the pytest groups run every harness test file exactly once', async () => {
+    const { GROUPS, SLOW_FILES } = await import('../../eval/runner/harness-test.ts');
+    const files = harnessTests(spawnSync('git', ['ls-files', '--', 'eval/harness-provider/tests'], { cwd: root, encoding: 'utf8' }).stdout.trim().split('\n')).map(f => f.slice('eval/harness-provider/'.length));
+    for (const f of SLOW_FILES) expect(files).toContain(f);
+    const rest = GROUPS.at(-1)!;
+    expect(rest[0]).toBe('tests');
+    expect(rest.slice(1).sort()).toEqual(SLOW_FILES.map(f => `--ignore=${f}`).sort());
+    expect(GROUPS.slice(0, -1).flat().sort()).toEqual([...SLOW_FILES].sort());
   });
 
   test('ship_lanes_from maps the package.json test commands to their inventories', () => {

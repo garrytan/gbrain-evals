@@ -1,0 +1,168 @@
+{
+  "system": "dedupe",
+  "version": "3.0.3",
+  "config": "tuned",
+  "config_file": "configs/dedupe-tuned.json",
+  "doc": "https://docs.dedupe.io/en/latest/Variable-definition.html",
+  "world": "<er-h2h>/worlds/s20261117",
+  "held_out": "<er-h2h>/worlds/s20261118",
+  "seed": 1,
+  "labels": {
+    "asked": 200,
+    "match": 100,
+    "distinct": 100
+  },
+  "train_seconds": 12.36,
+  "predicates": [
+    "(TfidfSetCanopyPredicate: (0.8, emails), TfidfNGramCanopyPredicate: (0.6, city))",
+    "(SimplePredicate: (wholeFieldPredicate, name), SimplePredicate: (suffixArray, city))"
+  ],
+  "held_out_tuning": {
+    "goal": "max_pair_f1",
+    "chosen": {
+      "threshold": 0.35,
+      "precision": 0.9169435215946844,
+      "recall": 0.9857142857142858,
+      "f1": 0.9500860585197934,
+      "merged_pairs": 301
+    },
+    "curve": [
+      {
+        "threshold": 0.05,
+        "precision": 0.7931034482758621,
+        "recall": 0.9857142857142858,
+        "f1": 0.8789808917197452,
+        "merged_pairs": 348
+      },
+      {
+        "threshold": 0.1,
+        "precision": 0.8093841642228738,
+        "recall": 0.9857142857142858,
+        "f1": 0.888888888888889,
+        "merged_pairs": 341
+      },
+      {
+        "threshold": 0.15,
+        "precision": 0.8679245283018868,
+        "recall": 0.9857142857142858,
+        "f1": 0.9230769230769231,
+        "merged_pairs": 318
+      },
+      {
+        "threshold": 0.2,
+        "precision": 0.8761904761904762,
+        "recall": 0.9857142857142858,
+        "f1": 0.9277310924369748,
+        "merged_pairs": 315
+      },
+      {
+        "threshold": 0.25,
+        "precision": 0.8789808917197452,
+        "recall": 0.9857142857142858,
+        "f1": 0.9292929292929294,
+        "merged_pairs": 314
+      },
+      {
+        "threshold": 0.3,
+        "precision": 0.9169435215946844,
+        "recall": 0.9857142857142858,
+        "f1": 0.9500860585197934,
+        "merged_pairs": 301
+      },
+      {
+        "threshold": 0.35,
+        "precision": 0.9169435215946844,
+        "recall": 0.9857142857142858,
+        "f1": 0.9500860585197934,
+        "merged_pairs": 301
+      },
+      {
+        "threshold": 0.4,
+        "precision": 0.9230769230769231,
+        "recall": 0.9428571428571428,
+        "f1": 0.9328621908127208,
+        "merged_pairs": 286
+      },
+      {
+        "threshold": 0.45,
+        "precision": 0.9230769230769231,
+        "recall": 0.9428571428571428,
+        "f1": 0.9328621908127208,
+        "merged_pairs": 286
+      },
+      {
+        "threshold": 0.5,
+        "precision": 0.9225352112676056,
+        "recall": 0.9357142857142857,
+        "f1": 0.9290780141843971,
+        "merged_pairs": 284
+      },
+      {
+        "threshold": 0.55,
+        "precision": 0.9219858156028369,
+        "recall": 0.9285714285714286,
+        "f1": 0.9252669039145908,
+        "merged_pairs": 282
+      },
+      {
+        "threshold": 0.6,
+        "precision": 0.995850622406639,
+        "recall": 0.8571428571428571,
+        "f1": 0.9213051823416506,
+        "merged_pairs": 241
+      },
+      {
+        "threshold": 0.65,
+        "precision": 0.9951456310679612,
+        "recall": 0.7321428571428571,
+        "f1": 0.8436213991769548,
+        "merged_pairs": 206
+      },
+      {
+        "threshold": 0.7,
+        "precision": 0.9936708860759493,
+        "recall": 0.5607142857142857,
+        "f1": 0.7168949771689497,
+        "merged_pairs": 158
+      },
+      {
+        "threshold": 0.75,
+        "precision": 1.0,
+        "recall": 0.39285714285714285,
+        "f1": 0.5641025641025641,
+        "merged_pairs": 110
+      },
+      {
+        "threshold": 0.8,
+        "precision": 1.0,
+        "recall": 0.3678571428571429,
+        "f1": 0.5378590078328982,
+        "merged_pairs": 103
+      },
+      {
+        "threshold": 0.85,
+        "precision": 1.0,
+        "recall": 0.32857142857142857,
+        "f1": 0.4946236559139785,
+        "merged_pairs": 92
+      },
+      {
+        "threshold": 0.9,
+        "precision": 1.0,
+        "recall": 0.30357142857142855,
+        "f1": 0.4657534246575342,
+        "merged_pairs": 85
+      },
+      {
+        "threshold": 0.95,
+        "precision": 1.0,
+        "recall": 0.05357142857142857,
+        "f1": 0.10169491525423728,
+        "merged_pairs": 15
+      }
+    ]
+  },
+  "threshold": 0.35,
+  "scored_seconds": 0.11,
+  "proposed_tier": "none: dedupe's partition() has one threshold and no review band"
+}

@@ -39,6 +39,8 @@ export interface WorldPage { key: string; source: string; type: 'person' | 'comp
 export interface H2hWorld {
   seed: number;
   per_family: number;
+  /** The 2026-11-17 smoke's world: generator version 1, people only, instance 0 of each family, ingested in ledger order. */
+  smoke: boolean;
   people: Ledger;
   companies: CompanyLedger;
   /** Every page, people first then companies, in ledger order. */
@@ -57,10 +59,33 @@ export interface WorldManifest {
   person_generator_version: number; company_generator_version: number;
   people_ledger_sha256: string; company_ledger_sha256: string;
   pages: number; people_pages: number; company_pages: number;
+  smoke?: true;
+}
+
+/** The smoke world's generator version and default size (2026-11-17 smoke: 69 pages at seed 20261117). */
+export const SMOKE_GENERATOR_VERSION = 1;
+export const SMOKE_PER_FAMILY = 2;
+
+/** The 2026-11-17 smoke's world: the version-1 people ledger, instance 0 of each family, and the designed pairs among those pages. */
+function buildSmokeWorld(seed: number, perFamily: number): H2hWorld {
+  const generated = generateLedger(seed, perFamily, SMOKE_GENERATOR_VERSION);
+  const kept = generated.pages.filter(p => p.instance === 0);
+  const keys = new Set(kept.map(pageKey));
+  const people = { ...generated, pages: kept, pairs: generated.pairs.filter(p => keys.has(p.a) && keys.has(p.b)) };
+  const allCompanies = generateCompanyLedger(seed, perFamily, SMOKE_GENERATOR_VERSION);
+  const companies = { ...allCompanies, pages: [], pairs: [] };
+  const peopleGold = deriveGold(people), pw = writtenPages(people);
+  return {
+    seed, per_family: perFamily, smoke: true, people, companies,
+    pages: people.pages.map((p, i) => ({ key: pageKey(p), source: p.source, type: 'person' as const, title: p.title, file: join(p.source, 'people', `${p.slug}.md`), text: renderPage(p), written: pw[i] })),
+    pairs: people.pairs, gold: new Map(peopleGold), people_gold: peopleGold, company_gold: new Map(),
+    fingerprints: { people: ledgerFingerprint(generated), companies: ledgerFingerprint(companies) },
+  };
 }
 
 /** The world at a seed, built in memory (nothing written). */
-export function buildWorld(seed: number, perFamily: number): H2hWorld {
+export function buildWorld(seed: number, perFamily: number, smoke = false): H2hWorld {
+  if (smoke) return buildSmokeWorld(seed, perFamily);
   const generated = generateLedger(seed, perFamily);
   const companies = generateCompanyLedger(seed, perFamily);
   const people = companies.founders?.length ? { ...generated, pages: [...generated.pages, ...companies.founders] } : generated;
@@ -71,7 +96,7 @@ export function buildWorld(seed: number, perFamily: number): H2hWorld {
     ...companies.pages.map((p, i) => ({ key: companyPageKey(p), source: p.source, type: 'company' as const, title: p.title, file: join(p.source, 'companies', `${p.slug}.md`), text: renderCompanyPage(p), written: cw[i] })),
   ];
   return {
-    seed, per_family: perFamily, people, companies, pages, pairs: [...people.pairs, ...companies.pairs],
+    seed, per_family: perFamily, smoke: false, people, companies, pages, pairs: [...people.pairs, ...companies.pairs],
     gold: new Map([...peopleGold, ...companyGold]), people_gold: peopleGold, company_gold: companyGold,
     fingerprints: { people: ledgerFingerprint(generated), companies: ledgerFingerprint(companies) },
   };
@@ -79,17 +104,19 @@ export function buildWorld(seed: number, perFamily: number): H2hWorld {
 
 export function manifestOf(w: H2hWorld): WorldManifest {
   return {
-    seed: w.seed, per_family: w.per_family, person_generator_version: PERSON_DEDUPE_GENERATOR_VERSION, company_generator_version: COMPANY_DEDUPE_GENERATOR_VERSION,
+    seed: w.seed, per_family: w.per_family,
+    person_generator_version: w.smoke ? SMOKE_GENERATOR_VERSION : PERSON_DEDUPE_GENERATOR_VERSION, company_generator_version: w.smoke ? SMOKE_GENERATOR_VERSION : COMPANY_DEDUPE_GENERATOR_VERSION,
     people_ledger_sha256: w.fingerprints.people, company_ledger_sha256: w.fingerprints.companies,
     pages: w.pages.length, people_pages: w.people.pages.length, company_pages: w.companies.pages.length,
+    ...(w.smoke ? { smoke: true as const } : {}),
   };
 }
 
 /** Writes the world's pages and world.json into a new folder. Refuses (WORLD_DIR_USED) a folder that already has files. */
-export function writeH2hWorld(dir: string, seed: number, perFamily: number): H2hWorld {
+export function writeH2hWorld(dir: string, seed: number, perFamily: number, smoke = false): H2hWorld {
   const used = existsSync(dir) ? readdirSync(dir).length : 0;
   if (used > 0) throw new RunnerRefusal('WORLD_DIR_USED', `entity-h2h: world folder ${dir} is not empty`, { entries_in_folder: used }, 'pass a fresh --output folder for the world');
-  const w = buildWorld(seed, perFamily);
+  const w = buildWorld(seed, perFamily, smoke);
   writeWorld(w.people, dir);
   writeCompanyWorld(w.companies, dir);
   writeFileSync(join(dir, WORLD_MANIFEST), JSON.stringify(manifestOf(w), null, 2) + '\n');
@@ -105,9 +132,9 @@ export function loadWorld(dir: string): H2hWorld {
   const path = join(dir, WORLD_MANIFEST);
   if (!existsSync(path)) throw new Error(`entity-h2h: ${dir} has no ${WORLD_MANIFEST}; write worlds with: bun eval/runner/entity-h2h/run.ts world --seed N --output DIR`);
   const m = JSON.parse(readFileSync(path, 'utf8')) as WorldManifest;
-  const w = buildWorld(m.seed, m.per_family);
+  const w = buildWorld(m.seed, m.per_family, m.smoke === true);
   const want = manifestOf(w);
-  for (const k of Object.keys(want) as Array<keyof WorldManifest>) if (want[k] !== m[k]) throw new Error(`entity-h2h: ${path} says ${k} ${m[k]}, and seed ${m.seed} at ${m.per_family} per family gives ${want[k]}; rewrite the world`);
+  for (const k of new Set([...Object.keys(want), ...Object.keys(m)]) as Set<keyof WorldManifest>) if (want[k] !== m[k]) throw new Error(`entity-h2h: ${path} says ${k} ${m[k]}, and seed ${m.seed} at ${m.per_family} per family gives ${want[k]}; rewrite the world`);
   const expected = new Set(w.pages.map(p => p.file));
   const extra = markdownFiles(dir).filter(f => !expected.has(f));
   if (extra.length) throw new Error(`entity-h2h: ${dir} holds ${extra.length} pages the seed does not render (first: ${extra[0]}); rewrite the world into a fresh folder`);
@@ -121,6 +148,7 @@ export function loadWorld(dir: string): H2hWorld {
  * (Fisher-Yates over pages sorted by key), so the order is fixed by the seed and the same for every system.
  */
 export function ingestOrder(w: H2hWorld): WorldPage[] {
+  if (w.smoke) return [...w.pages];
   const out = [...w.pages].sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
   const rand = mulberry32((w.seed ^ 0x5eed0de) >>> 0);
   for (let i = out.length - 1; i > 0; i--) {

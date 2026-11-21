@@ -1,0 +1,111 @@
+{
+  "choice": "entity-h2h-tuning-choice",
+  "system": "ext-graph-pipeline",
+  "setting": "similarity-0.70",
+  "settings": {
+    "similarity_threshold": 0.7
+  },
+  "rule": "preregistration Amendment 2 (2026-11-18): lowest automatic false-merge rate on the held-out slice, people and companies combined, among default and the grid settings whose combined must-link recall is at most 5 points below default's; ties go to the setting nearest default in the knob's value, then to higher recall, then to grid order",
+  "eligibility": "integer cross-multiplication: 20 * k_s * n_d >= 20 * k_d * n_s - n_s * n_d",
+  "grid_sha256": "4b0e33515b80c84fab64ddfc035083bbd1812174f8bc7a38b099552b798e22ec",
+  "held_out": {
+    "seed": 20261118,
+    "per_family": 5,
+    "pages": 527,
+    "people_ledger_sha256": "54db22a883c847db091a385b1446b33bdf439b768a19cfb74bf762e07341e047",
+    "company_ledger_sha256": "51675aa07bdd8a2469b5e3bb730c5989e580d65edc27da6145ea4b9059ea02ac"
+  },
+  "candidates": [
+    {
+      "setting": "default",
+      "settings": {
+        "similarity_threshold": 0.85
+      },
+      "distance": 0,
+      "eligible": true,
+      "false_merge": {
+        "k": 107,
+        "n": 170
+      },
+      "recall": {
+        "k": 74,
+        "n": 109
+      },
+      "cell_sha256": "e7e0b077469257993b14f1fa8952116f3e5c8f7067caaab4087f7dbc0f8b3cde",
+      "output_sha256": "730222bfca9c4b64510d6ed4349c16c411b05606d5ae78863568589ebef8a166"
+    },
+    {
+      "setting": "similarity-0.70",
+      "settings": {
+        "similarity_threshold": 0.7
+      },
+      "distance": 0.15,
+      "eligible": true,
+      "false_merge": {
+        "k": 104,
+        "n": 170
+      },
+      "recall": {
+        "k": 72,
+        "n": 109
+      },
+      "cell_sha256": "0a783b52488a92694e5f15511c82eb66d2d6a1d4f06a4a74011f2bc405fd8499",
+      "output_sha256": "ffe8f26903fffa6e7bb4d6b8d260618b2505fafefc0e426dff7c68a4c2afc98b"
+    },
+    {
+      "setting": "similarity-0.90",
+      "settings": {
+        "similarity_threshold": 0.9
+      },
+      "distance": 0.05,
+      "eligible": true,
+      "false_merge": {
+        "k": 105,
+        "n": 170
+      },
+      "recall": {
+        "k": 73,
+        "n": 109
+      },
+      "cell_sha256": "bc3b3826aa12cb2d1883ab181c5436b6f3903ca94e3bf82db96ed8a5b93b9df5",
+      "output_sha256": "7c38a5c4ff72a7ec4a0d58476710a23206d44957f8428faec9eb6541daad4a62"
+    },
+    {
+      "setting": "similarity-0.95",
+      "settings": {
+        "similarity_threshold": 0.95
+      },
+      "distance": 0.1,
+      "eligible": false,
+      "false_merge": {
+        "k": 103,
+        "n": 170
+      },
+      "recall": {
+        "k": 68,
+        "n": 109
+      },
+      "cell_sha256": "b7aa8b5c6ae9523077e8692b696d39875feec05d4fac1207281871c57bf8f674",
+      "output_sha256": "fc04f0a06e301931dec9d576796ee487e9a9e93aca7addb89fb34f40add73150"
+    },
+    {
+      "setting": "similarity-1.00",
+      "settings": {
+        "similarity_threshold": 1
+      },
+      "distance": 0.15,
+      "eligible": false,
+      "false_merge": {
+        "k": 103,
+        "n": 170
+      },
+      "recall": {
+        "k": 67,
+        "n": 109
+      },
+      "cell_sha256": "6faed529c0701d7f26b4034d0588ca99ca12783805e310a06bf6b74f40630d2e",
+      "output_sha256": "418445544bd57a440b75f9dfadae7c89c803a1a684570baf0423854504190c0e"
+    }
+  ],
+  "at": "2026-11-20T06:28:44.705Z"
+}

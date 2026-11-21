@@ -1,0 +1,18 @@
+{
+  "people": {
+    "version": "3.0.3",
+    "entity": "people",
+    "seed": 2,
+    "threshold": 0.5,
+    "scored_seconds": 0.15,
+    "train_seconds": 8.39
+  },
+  "companies": {
+    "version": "3.0.3",
+    "entity": "companies",
+    "seed": 2,
+    "threshold": 0.5,
+    "scored_seconds": 0.42,
+    "train_seconds": 2.99
+  }
+}

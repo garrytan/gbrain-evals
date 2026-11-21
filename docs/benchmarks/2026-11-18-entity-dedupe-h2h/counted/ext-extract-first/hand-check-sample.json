@@ -1,0 +1,405 @@
+{
+  "note": "50 page-to-entity mappings drawn at random (seeded from the world seed) for a check by hand against each page",
+  "sample": [
+    {
+      "key": "home:omar-halloran",
+      "source_id": "src-a9b13a1e5191dd3c",
+      "title": "Omar Halloran",
+      "node": "4928ff04-4087-4dd4-93e4-46fd138ec4a5",
+      "node_name": "Omar Halloran",
+      "match": 3
+    },
+    {
+      "key": "work:nadia-ibsen",
+      "source_id": "src-a960622ff4543b8b",
+      "title": "Nadia Ibsen",
+      "node": "1c684dbd-0cbc-4c70-94bf-05bc6ed07ad6",
+      "node_name": "Nadia Ibsen",
+      "match": 3
+    },
+    {
+      "key": "home:s-vance",
+      "source_id": "src-b77004fd5ff39f8c",
+      "title": "S. Vance",
+      "node": "3a2d256f-c912-46a8-a55a-830e20f87877",
+      "node_name": "S. Vance",
+      "match": 3
+    },
+    {
+      "key": "work:maya-halloran",
+      "source_id": "src-ff132ddfcda6e617",
+      "title": "Maya Halloran",
+      "node": "e1991edb-f928-4ac1-ace1-3f5be3f41e21",
+      "node_name": "Maya Halloran",
+      "match": 3
+    },
+    {
+      "key": "work:mateo-halloran",
+      "source_id": "src-7935a40a3bea3b8e",
+      "title": "Mateo Halloran",
+      "node": "a6bfd0f2-7581-4f49-a89f-4220f953cad8",
+      "node_name": "Mateo Halloran",
+      "match": 3
+    },
+    {
+      "key": "work:greta-halloran",
+      "source_id": "src-a1f8d2fa65e95990",
+      "title": "Greta Halloran",
+      "node": "f8a68894-78b7-4a4a-a325-085ac890641a",
+      "node_name": "Greta Halloran",
+      "match": 3
+    },
+    {
+      "key": "home:companies/abbstone-water",
+      "source_id": "src-f32b65f86598c126",
+      "title": "Abbstone Water",
+      "node": "50d51b51-f261-4474-bcee-48104bf0b30c",
+      "node_name": "Abbstone Water",
+      "match": 3
+    },
+    {
+      "key": "work:hugo-vance",
+      "source_id": "src-07a7c6950d4c04c1",
+      "title": "Hugo Vance",
+      "node": "d2f30048-b19e-4f58-a36f-b7a680280cbe",
+      "node_name": "Hugo Vance",
+      "match": 3
+    },
+    {
+      "key": "home:daniel-zeller",
+      "source_id": "src-8e98fe8ac8807643",
+      "title": "Daniel Zeller",
+      "node": "7f32b6a6-91ee-44a3-ba07-d0209bf844ff",
+      "node_name": "Daniel Zeller",
+      "match": 3
+    },
+    {
+      "key": "home:maya-zeller",
+      "source_id": "src-371981e3816e8366",
+      "title": "Maya Zeller",
+      "node": "8b0db40e-4d8e-4436-9101-473e2a83d0b1",
+      "node_name": "Maya Zeller",
+      "match": 3
+    },
+    {
+      "key": "work:pavel-ahn-2",
+      "source_id": "src-b1a00b613b5bcaec",
+      "title": "Pavel Ahn",
+      "node": "61eeebfa-df59-4c0e-bf83-454706ee5afb",
+      "node_name": "Pavel Ahn",
+      "match": 3
+    },
+    {
+      "key": "home:n-moreau",
+      "source_id": "src-75ff64e23479d74e",
+      "title": "N. Moreau",
+      "node": "6ce7674e-47a8-4407-8607-92024767f0ad",
+      "node_name": "N. Moreau",
+      "match": 3
+    },
+    {
+      "key": "work:priya-tamsin",
+      "source_id": "src-feea8215708a66df",
+      "title": "Priya Tamsin",
+      "node": "f4ac4797-53aa-4baa-8ea9-80762513d190",
+      "node_name": "Priya Tamsin",
+      "match": 3
+    },
+    {
+      "key": "home:iris-kowal",
+      "source_id": "src-dce5d0424b38072c",
+      "title": "Iris Kowal",
+      "node": "6da28908-7dbd-471d-a374-7e7691f05465",
+      "node_name": "Iris Kowal",
+      "match": 3
+    },
+    {
+      "key": "home:omar-orsini",
+      "source_id": "src-22c0345079c2f402",
+      "title": "Omar Orsini",
+      "node": "149c5463-bb55-4fc5-af7d-46e784d92612",
+      "node_name": "Omar Orsini",
+      "match": 3
+    },
+    {
+      "key": "home:lena-quinlan",
+      "source_id": "src-0f7f21e448ea2cc4",
+      "title": "Lena Quinlan.",
+      "node": "d780ee8d-c4e3-4ab9-be2e-074b1926fc3e",
+      "node_name": "Lena Quinlan",
+      "match": 3
+    },
+    {
+      "key": "work:amara-dvorak",
+      "source_id": "src-87fba5c162a135f3",
+      "title": "Amara Dvořák",
+      "node": "1e33a069-4acd-46af-b1d7-1ae2770fcfc5",
+      "node_name": "Amara Dvořák",
+      "match": 3
+    },
+    {
+      "key": "home:companies/orvwood-energy",
+      "source_id": "src-b6961de79354616e",
+      "title": "Orvwood Energy",
+      "node": "52f8a0d4-59a1-462f-be6e-c19321b84f1c",
+      "node_name": "Orvwood Energy",
+      "match": 3
+    },
+    {
+      "key": "work:ines-rhee",
+      "source_id": "src-82c6675375b98000",
+      "title": "Ines Rhee",
+      "node": "1b8ba7fb-9ea2-4edf-9188-86176545062d",
+      "node_name": "Ines Rhee",
+      "match": 3
+    },
+    {
+      "key": "work:omar-castell",
+      "source_id": "src-605e35c948ba75a9",
+      "title": "Omar Castell",
+      "node": "1425277f-34ca-4845-ab19-aef2446c63f9",
+      "node_name": "Omar Castell",
+      "match": 3
+    },
+    {
+      "key": "home:mateo-galloway",
+      "source_id": "src-4f49ee32365def9f",
+      "title": "Mateo Galloway",
+      "node": "968b1cb2-dbc1-4be2-85b8-f6922d3a6d65",
+      "node_name": "Mateo Galloway",
+      "match": 3
+    },
+    {
+      "key": "home:companies/sgs",
+      "source_id": "src-a612ca05867ef68c",
+      "title": "SGS",
+      "node": "656f13bd-bae5-479a-a7fb-eff3d9c9188f",
+      "node_name": "SGS",
+      "match": 3
+    },
+    {
+      "key": "home:companies/salthaven-group",
+      "source_id": "src-636845dd31ce912f",
+      "title": "Salthaven Group",
+      "node": "f95d6762-3bcd-4b88-abc8-b524e927593e",
+      "node_name": "Salthaven Group",
+      "match": 3
+    },
+    {
+      "key": "work:lena-dvorak",
+      "source_id": "src-83c1543290d09930",
+      "title": "Lena Dvořák",
+      "node": "d8252508-874e-4cd2-b525-f5706da29a39",
+      "node_name": "Lena Dvořák",
+      "match": 3
+    },
+    {
+      "key": "work:leila-sato-2",
+      "source_id": "src-6308b96724584149",
+      "title": "Leila Sato",
+      "node": null,
+      "node_name": null,
+      "match": null
+    },
+    {
+      "key": "work:anton-bly",
+      "source_id": "src-ad38c6ae9925c04e",
+      "title": "Anton Bly",
+      "node": "c7508495-dc97-4c42-a3e6-de0e7cc5211f",
+      "node_name": "Anton Bly",
+      "match": 3
+    },
+    {
+      "key": "work:priya-dahl",
+      "source_id": "src-819c76254aa5711d",
+      "title": "Priya Dahl",
+      "node": "45e4f02b-1268-4691-80f6-5139fa4f2520",
+      "node_name": "Priya Dahl",
+      "match": 3
+    },
+    {
+      "key": "work:theo-vance",
+      "source_id": "src-6cd13a34bbafc1ea",
+      "title": "Theo Vance",
+      "node": "81297801-16f8-41b1-b88e-5407f2f2856a",
+      "node_name": "Theo Vance",
+      "match": 3
+    },
+    {
+      "key": "work:mohammed-vance",
+      "source_id": "src-4f15903357da111c",
+      "title": "Mohammed Vance",
+      "node": "38f847e3-64d2-4fa3-8c66-2ffadb861547",
+      "node_name": "Mohammed Vance",
+      "match": 3
+    },
+    {
+      "key": "work:pavel-nakata",
+      "source_id": "src-fc6244fa3155230c",
+      "title": "Pavel Nakata",
+      "node": "78386fc7-de50-48e6-8566-79e7db7391d6",
+      "node_name": "Pavel Nakata",
+      "match": 3
+    },
+    {
+      "key": "home:lena-whitlow",
+      "source_id": "src-d89a658e786fb61b",
+      "title": "Lena Whitlow",
+      "node": "4b929ec5-9c9a-4c86-8170-1795f1be915b",
+      "node_name": "Lena Whitlow",
+      "match": 3
+    },
+    {
+      "key": "home:theo-halloran",
+      "source_id": "src-7261e46d6c4e8b95",
+      "title": "Theo Halloran",
+      "node": "089ed5c8-3766-4a42-9114-10ad9688c188",
+      "node_name": "Theo Halloran",
+      "match": 3
+    },
+    {
+      "key": "work:maya-nakata",
+      "source_id": "src-8ed51043ad43455f",
+      "title": "Maya Nakata",
+      "node": "75f3f867-c9d2-4bbc-8748-c3013be27d19",
+      "node_name": "Maya Nakata",
+      "match": 3
+    },
+    {
+      "key": "home:rosa-hartigan",
+      "source_id": "src-83ac09854240d420",
+      "title": "Rosa Hartigan",
+      "node": "043b93c8-8b68-4444-9299-33b8e537ad33",
+      "node_name": "Rosa Hartigan",
+      "match": 3
+    },
+    {
+      "key": "work:leila-ahn-2",
+      "source_id": "src-d468dceb68cf74c3",
+      "title": "Leila Ahn",
+      "node": "aa92f164-aa49-47df-b845-744c626f993e",
+      "node_name": "Leila Ahn",
+      "match": 3
+    },
+    {
+      "key": "home:companies/lathaven-bakery",
+      "source_id": "src-bb68dc7a26fbe312",
+      "title": "Lathaven Bakery",
+      "node": "43a9ea05-a88b-46d9-9fcb-0cbbcf8350c1",
+      "node_name": "Lathaven Bakery",
+      "match": 3
+    },
+    {
+      "key": "work:ravi-whitlow",
+      "source_id": "src-4443ef42b28b051c",
+      "title": "Ravi Whitlow",
+      "node": "92124845-5012-475f-bbbf-5800df124913",
+      "node_name": "Ravi Whitlow",
+      "match": 3
+    },
+    {
+      "key": "work:felix-lorne",
+      "source_id": "src-1d67790a2379eb77",
+      "title": "Felix Lorne",
+      "node": "ef9aa146-ed9c-4048-89fc-ed48d2a7666c",
+      "node_name": "Felix Lorne",
+      "match": 3
+    },
+    {
+      "key": "home:companies/bramwick-analytics",
+      "source_id": "src-5b285d0b2278d033",
+      "title": "Bramwick Analytics",
+      "node": "df0ef725-07a0-437a-be6f-06a43cdd75d8",
+      "node_name": "Bramwick Analytics",
+      "match": 3
+    },
+    {
+      "key": "home:yara-quinlan",
+      "source_id": "src-ed6e10e5d01e5ceb",
+      "title": "Yara Quinlan",
+      "node": "89f0adf1-0eb9-4265-8301-31217f21caa0",
+      "node_name": "Yara Quinlan",
+      "match": 3
+    },
+    {
+      "key": "work:hugo-nakata",
+      "source_id": "src-dc0d899a96eca8ab",
+      "title": "Hugo Nakata",
+      "node": "60cda3cc-6540-4e90-8fd3-9627d54c42b1",
+      "node_name": "Hugo Nakata",
+      "match": 3
+    },
+    {
+      "key": "work:pavel-corrigan",
+      "source_id": "src-b17dee5fefdb64ba",
+      "title": "Pavel Corrigan",
+      "node": "36f2ba53-c38c-46f5-8087-9e1ff867b85e",
+      "node_name": "Pavel Corrigan",
+      "match": 3
+    },
+    {
+      "key": "home:h-feld",
+      "source_id": "src-734a6210b27c6bc0",
+      "title": "H. Feld",
+      "node": "e8db71ed-151a-4dcc-bbbb-de5b225cc36f",
+      "node_name": "H. Feld",
+      "match": 3
+    },
+    {
+      "key": "work:elias-wexford",
+      "source_id": "src-29c6d170a540f20e",
+      "title": "Elias Wexford",
+      "node": "721a6f7c-9048-4ead-997c-d757dd7860f8",
+      "node_name": "Elias Wexford",
+      "match": 3
+    },
+    {
+      "key": "home:omar-feld",
+      "source_id": "src-4065bf95e76b8f78",
+      "title": "Omar Feld",
+      "node": "80509f8c-8d4a-4134-8ec0-abf5e94e14a2",
+      "node_name": "Omar Feld",
+      "match": 3
+    },
+    {
+      "key": "home:mateo-feld",
+      "source_id": "src-a19bb10e67e1b151",
+      "title": "Mateo Feld",
+      "node": "9447a8bb-97e3-4929-8b31-112d4b3ba2b8",
+      "node_name": "Mateo Feld",
+      "match": 3
+    },
+    {
+      "key": "home:lena-bly",
+      "source_id": "src-ffb15481cf9cf59f",
+      "title": "Lena Bly",
+      "node": "5169d46c-78f8-4b4b-a3a0-abc2b5b29bb5",
+      "node_name": "Lena Bly",
+      "match": 3
+    },
+    {
+      "key": "home:clara-esposito",
+      "source_id": "src-bea2eca67c16c714",
+      "title": "Clara Esposito",
+      "node": "f640dea8-5a66-4711-86c5-557b51fc6666",
+      "node_name": "Clara Esposito",
+      "match": 3
+    },
+    {
+      "key": "home:omar-yilmaz",
+      "source_id": "src-daf741e09460a706",
+      "title": "Omar Yilmaz",
+      "node": "7e5ca3dd-670a-481d-8877-e12a5321f2e2",
+      "node_name": "Omar Yilmaz",
+      "match": 3
+    },
+    {
+      "key": "work:companies/lathaven-bakery",
+      "source_id": "src-1499f96173d09544",
+      "title": "Lathaven Bakery",
+      "node": "43a9ea05-a88b-46d9-9fcb-0cbbcf8350c1",
+      "node_name": "Lathaven Bakery",
+      "match": 3
+    }
+  ]
+}

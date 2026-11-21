@@ -32,7 +32,8 @@ describe('CI workflow gates (audit C5 to C8)', () => {
   });
 
   test('colocated eval/ unit tests, Python tests and validators all run', () => {
-    expect(workflow).toContain('bun test --shard=${{ matrix.shard }}/${{ strategy.job-total }} --timings=test/timings.json test/eval/ eval/');
+    expect(workflow).toContain('bun scripts/test-shards.ts --job=${{ matrix.shard }}/${{ strategy.job-total }} --junit-dir="$RUNNER_TEMP/tested-files" test/eval/ eval/');
+    expect(readFileSync(new URL('../../scripts/test-shards.ts', import.meta.url), 'utf8')).toContain("'--timings=test/timings.json'");
     for (const line of runLines()) expect(line).not.toContain('--parallel');
     expect(workflow).toContain('python3 test/retrieval_refresh_orchestrator_test.py');
     expect(runLines()).toContain('bun run validate');
@@ -71,6 +72,24 @@ describe('link check (docs audit B12)', () => {
     expect(links).toMatch(/schedule:/);
     expect(links).toContain('run: python3 scripts/check-links.py --external');
     expect(links).toMatch(/timeout-minutes: \d+/);
+  });
+});
+
+describe('test-shards jobs', () => {
+  test('six jobs of four processes run each of the 24 shards exactly once', async () => {
+    const { jobShards } = await import('../../scripts/test-shards.ts');
+    const all = [1, 2, 3, 4, 5, 6].flatMap(k => { const { shards, of } = jobShards(k, 6, 4); expect(of).toBe(24); return shards; });
+    expect(all.sort((a, b) => a - b)).toEqual(Array.from({ length: 24 }, (_, i) => i + 1));
+    expect(jobShards(1, 1, 4)).toEqual({ shards: [1, 2, 3, 4], of: 4 });
+    expect(() => jobShards(7, 6, 4)).toThrow();
+    expect(() => jobShards(1, 6, 0)).toThrow();
+  });
+
+  test('CI runs four processes per test job on an 8-vCPU runner, in six jobs', () => {
+    const job = workflow.slice(workflow.indexOf('\n  tests:'), workflow.indexOf('\n  tested-tree:'));
+    expect(job).toContain("TEST_SHARDS: '4'");
+    expect(job).toContain('runs-on: ubicloud-standard-8-');
+    expect(job).toContain('shard: [1, 2, 3, 4, 5, 6]');
   });
 });
 
