@@ -510,5 +510,6 @@ describe('Cat 9 judged path with catalog scenarios', () => {
     expect(existsSync(receiptPath('cat9-workflows', reportsRoot))).toBe(true);
     expect(loadReceipt(receiptPath('cat9-workflows', reportsRoot)).n_scored).toBe(2);
     expect(CAT9_CHECKS_CATEGORY).toBe('cat9-workflows-checks');
-  });
+    // A cold first import of the judged runner took 12 s on one local run; the default 5 s limit is too tight.
+  }, 30_000);
 });
