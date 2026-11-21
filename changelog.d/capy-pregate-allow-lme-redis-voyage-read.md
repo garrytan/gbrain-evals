@@ -1,0 +1,1 @@
+- **The secrets check accepts the LongMemEval VM step's key read.** The credential check that runs before a push no longer flags the one line in `eval/runner/lme-redis/vm-stage.sh` that reads the Voyage key at run time from the metering proxy's ready file; it still flags any literal key or changed command on that line, and the rule covers that script only.
