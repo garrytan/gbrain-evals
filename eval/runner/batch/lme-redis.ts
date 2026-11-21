@@ -180,7 +180,7 @@ export function heldPilotWork(stage: string, runs: Record<string, string>, inten
   const early = new Set([runs.pilot, runs['judge-check']].filter(Boolean));
   const intents = intentRunIds.filter(id => early.has(id)).length;
   const particle = join(stateDir, 'particle');
-  const rows = !existsSync(join(stateDir, 'pilot-archive')) && existsSync(particle) && readdirSync(particle).some(f => f.endsWith('.rows.jsonl'));
+  const rows = !existsSync(join(stateDir, 'pilot-archive')) && existsSync(particle) && readdirSync(particle).filter(f => f.endsWith('.rows.jsonl')).length > 0;
   if (!intents && !rows) return '';
   return `${stage}: the state still holds pilot work (${intents} batch intents${rows ? ', particle rows' : ''}); no pilot answer counts, so archive it first (vm-stage.sh archive-pilot)`;
 }
