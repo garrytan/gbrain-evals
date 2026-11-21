@@ -1670,17 +1670,20 @@ export function paidGuard(argv: string[], def: CellDefinition, limit: number | n
 
 /**
  * RS1's paid-window guard for `run --manifest rs1` (eval/runner/paid-arm.ts): a run needs the granted window
- * (--paid-window <unit> --window-cap-usd <n>) unless its lease proxy serves a keyless upstream
- * (SHOOTOUT_KEYLESS_UPSTREAM). Under a lease proxy the cap checked is the lease (SHOOTOUT_LEASE_USD, set by the
- * campaign's remote runner); without one it is the ledger's program cap and the run's budget. Refuses with exit 2
- * before any provider client exists.
+ * (--paid-window <unit> --window-cap-usd <n>) unless its lease proxy itself reports a keyless upstream
+ * (GET /__proxy/status; an inherited SHOOTOUT_KEYLESS_UPSTREAM is never trusted). Under a lease proxy the cap checked is
+ * the lease that status reports in lease mode, and a SHOOTOUT_LEASE_USD that differs from it (or is not a number) refuses;
+ * without one it is the ledger's program cap and the run's budget. Refuses with exit 2 before any provider client exists.
  */
-export function rs1CellWindow(argv: string[], def: CellDefinition, proxy: string | null): void {
+export async function rs1CellWindow(argv: string[], def: CellDefinition, proxy: string | null, env: Record<string, string | undefined> = process.env): Promise<void> {
   const one = (n: string) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : undefined; };
-  const lease = Number(process.env.SHOOTOUT_LEASE_USD);
+  const status = proxy ? await fetch(`${proxy}/__proxy/status`, { signal: AbortSignal.timeout(5000) }).then(r => r.json() as Promise<{ keyless?: unknown; mode?: unknown; lease_usd?: unknown } | null>).catch(() => null) : null;
+  const held = status?.mode === 'lease' && typeof status.lease_usd === 'number' && status.lease_usd > 0 ? status.lease_usd : null;
+  const named = env.SHOOTOUT_LEASE_USD;
+  const differs = !!named && held !== null && !(Math.abs(Number(named) - held) <= 1e-9);
   try {
-    requireRs1Window(argv, { what: `RS1 cell ${def.id}`, keyless: !!proxy && !!process.env.SHOOTOUT_KEYLESS_UPSTREAM,
-      caps: () => proxy ? [{ label: 'the campaign lease (SHOOTOUT_LEASE_USD)', usd: lease > 0 ? lease : null }] : ledgerCaps(budgetOptionsFrom(argv).ledgerPath, one('--budget-run-id')) });
+    requireRs1Window(argv, { what: `RS1 cell ${def.id}`, keyless: status?.keyless === true,
+      caps: () => proxy ? [{ label: differs ? `the lease proxy's lease (its status reports ${held}, SHOOTOUT_LEASE_USD names ${named})` : "the lease proxy's lease (GET /__proxy/status in lease mode)", usd: differs ? null : held }] : ledgerCaps(budgetOptionsFrom(argv).ledgerPath, one('--budget-run-id')) });
   } catch (e) {
     if (!(e instanceof WindowRefusal)) throw e;
     throw refuse({ code: 'PAID_FLAGS_MISSING', message: e.message, why: 'every RS1 cell that can spend real keys runs inside a granted paid window, and no cap it spends under exceeds the window cap',
@@ -1743,7 +1746,7 @@ export async function main(argv: string[]): Promise<number> {
     }
     const limit = one('--limit') ? Number(one('--limit')) : null;
     const proxy = (one('--provider-proxy') ?? process.env.SHOOTOUT_PROXY ?? '').replace(/\/$/, '') || null;
-    if (one('--manifest') === 'rs1') rs1CellWindow(argv, def, proxy);
+    if (one('--manifest') === 'rs1') await rs1CellWindow(argv, def, proxy);
     if (!proxy) {
       const estimate = paidGuard(argv, def, limit, one('--arms')?.split(',') ?? null);
       startPaidRun(`q1-cell:${def.id}`, { ...budgetOptionsFrom(argv), estimateUsd: estimate });

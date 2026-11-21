@@ -11,6 +11,7 @@ import { existsSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { BudgetRun, closeLedgers, initLedger } from '../../eval/runner/budget-ledger.ts';
+import { keylessUpstream, MeteringProxy } from '../../eval/runner/metering-proxy.ts';
 import { campaignManifest, findCell, loadCellManifest, rs1CellWindow, type UnitSelection } from '../../eval/runner/q1/cell.ts';
 import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { paidWindowArgs, requireRs1Window, WindowRefusal } from '../../eval/runner/rs1/paid-window.ts';
@@ -167,33 +168,53 @@ describe('validate-candidates.ts --paid', () => {
 describe('cell.ts run --manifest rs1', () => {
   const def = findCell('rs1.baseline-none.baseline', undefined, 'rs1');
   const window = ['--paid-window', 'RS1-WA-CELLS', '--window-cap-usd', '50'];
-  const refusal = (fn: () => unknown) => { try { fn(); } catch (e) { if (e instanceof ScoreboardError) return e.op; throw e; } return null; };
-  const withEnv = <T>(env: Record<string, string | undefined>, fn: () => T): T => {
-    const saved = Object.fromEntries(Object.keys(env).map(k => [k, process.env[k]]));
-    for (const [k, v] of Object.entries(env)) if (v === undefined) delete process.env[k]; else process.env[k] = v;
-    try { return fn(); } finally { for (const [k, v] of Object.entries(saved)) if (v === undefined) delete process.env[k]; else process.env[k] = v; }
+  const refused = async (p: Promise<unknown>) => { try { await p; } catch (e) { if (e instanceof ScoreboardError) return e.op; throw e; } return null; };
+  const dead = (async () => { throw new Error('no provider is reachable from this test'); }) as unknown as typeof fetch;
+  let leases = 0;
+  const leaseProxy = (usd: number) => {
+    const dir = scratch();
+    const lease = BudgetRun.openLease({ runId: `rs1-window-lease-${++leases}`, leaseUsd: usd, ledgerPath: join(dir, 'ledger.sqlite') });
+    const proxy = new MeteringProxy({ fetchImpl: dead, policy: { lease, usageLog: join(dir, 'usage.ndjson'), env: {} } });
+    proxy.start();
+    return proxy;
   };
+  const at = (p: MeteringProxy) => `http://127.0.0.1:${p.port}`;
 
-  test('refuses a run without the window, before any provider client, and a keyless lease proxy needs none', () => {
-    withEnv({ SHOOTOUT_KEYLESS_UPSTREAM: undefined, SHOOTOUT_LEASE_USD: undefined }, () => {
-      expect(refusal(() => rs1CellWindow([], def, null))).toMatchObject({ code: 'PAID_FLAGS_MISSING', message: expect.stringContaining('needs --paid-window <unit> and --window-cap-usd <n>'), fix: { next: 'run' } });
-      expect(refusal(() => rs1CellWindow([], def, 'http://127.0.0.1:9'))?.code).toBe('PAID_FLAGS_MISSING');
-    });
-    withEnv({ SHOOTOUT_KEYLESS_UPSTREAM: 'http://127.0.0.1:9', SHOOTOUT_LEASE_USD: undefined }, () => {
-      expect(refusal(() => rs1CellWindow([], def, 'http://127.0.0.1:9'))).toBeNull();
-      expect(refusal(() => rs1CellWindow([], def, null))?.code).toBe('PAID_FLAGS_MISSING');
-    });
+  test('refuses a run without the window, before any provider client, and a lease proxy that cannot be asked is not keyless', async () => {
+    const none = { SHOOTOUT_KEYLESS_UPSTREAM: undefined, SHOOTOUT_LEASE_USD: undefined };
+    expect(await refused(rs1CellWindow([], def, null, none))).toMatchObject({ code: 'PAID_FLAGS_MISSING', message: expect.stringContaining('needs --paid-window <unit> and --window-cap-usd <n>'), fix: { next: 'run' } });
+    expect((await refused(rs1CellWindow([], def, 'http://127.0.0.1:9', none)))?.code).toBe('PAID_FLAGS_MISSING');
+    expect((await refused(rs1CellWindow([], def, null, { ...none, SHOOTOUT_KEYLESS_UPSTREAM: 'http://127.0.0.1:9' })))?.code).toBe('PAID_FLAGS_MISSING');
   });
 
-  test('under a lease proxy the lease, and without one the ledger cap and run budget, may not exceed the window cap', () => {
-    withEnv({ SHOOTOUT_KEYLESS_UPSTREAM: undefined, SHOOTOUT_LEASE_USD: '50' }, () => expect(refusal(() => rs1CellWindow(window, def, 'http://127.0.0.1:9'))).toBeNull());
-    withEnv({ SHOOTOUT_KEYLESS_UPSTREAM: undefined, SHOOTOUT_LEASE_USD: '50.5' }, () => expect(refusal(() => rs1CellWindow(window, def, 'http://127.0.0.1:9'))?.message).toContain('the campaign lease (SHOOTOUT_LEASE_USD) is above paid window RS1-WA-CELLS\'s cap'));
-    withEnv({ SHOOTOUT_KEYLESS_UPSTREAM: undefined, SHOOTOUT_LEASE_USD: undefined }, () => {
-      expect(refusal(() => rs1CellWindow(window, def, 'http://127.0.0.1:9'))?.message).toContain('the campaign lease (SHOOTOUT_LEASE_USD) is unknown');
-      const ok = ledger(50, 40), over = ledger(60, 40);
-      expect(refusal(() => rs1CellWindow([...window, '--budget-ledger', ok.path, '--budget-run-id', ok.id], def, null))).toBeNull();
-      expect(refusal(() => rs1CellWindow([...window, '--budget-ledger', over.path, '--budget-run-id', over.id], def, null))?.message).toContain('the ledger\'s program cap');
-    });
+  // Value: protects=RS1's keyless exemption rests on what the lease proxy itself reports; fails_when=rs1CellWindow trusts an inherited SHOOTOUT_KEYLESS_UPSTREAM beside a proxy with real upstreams, or ignores a keyless proxy's report; why_new=specialist review of #391 (a stale variable skipped RS1's window, as it did BG1's in #398); seam=none; no_claim=which upstreams make a proxy keyless (bg1-window.test.ts)
+  test('a stale SHOOTOUT_KEYLESS_UPSTREAM beside a proxy with real upstreams refuses; only a proxy reporting keyless upstreams needs no window', async () => {
+    const real = new MeteringProxy({ fetchImpl: dead }), keyless = new MeteringProxy({ fetchImpl: dead, upstream: keylessUpstream('http://127.0.0.1:9') });
+    real.start(); keyless.start();
+    try {
+      const stale = { SHOOTOUT_KEYLESS_UPSTREAM: 'http://127.0.0.1:9', SHOOTOUT_LEASE_USD: undefined };
+      expect((await refused(rs1CellWindow([], def, at(real), stale)))?.code).toBe('PAID_FLAGS_MISSING');
+      expect((await refused(rs1CellWindow([], def, 'http://127.0.0.1:9', stale)))?.code).toBe('PAID_FLAGS_MISSING');
+      expect(await refused(rs1CellWindow([], def, at(keyless), { ...stale, SHOOTOUT_KEYLESS_UPSTREAM: undefined }))).toBeNull();
+    } finally { real.stop(); keyless.stop(); }
+  });
+
+  // Value: protects=under a lease proxy RS1's window caps the lease the proxy itself holds; fails_when=rs1CellWindow takes the lease from SHOOTOUT_LEASE_USD, accepts a proxy that reports no lease, or lets a differing SHOOTOUT_LEASE_USD stand; why_new=specialist review of #391; seam=none; no_claim=the ledger path's caps (tested below)
+  test('under a lease proxy the lease its status reports, and without one the ledger cap and run budget, may not exceed the window cap', async () => {
+    const p50 = leaseProxy(50), p200 = leaseProxy(200), inProcess = new MeteringProxy({ fetchImpl: dead });
+    inProcess.start();
+    try {
+      expect(await refused(rs1CellWindow(window, def, at(p50), {}))).toBeNull();
+      expect(await refused(rs1CellWindow(window, def, at(p50), { SHOOTOUT_LEASE_USD: '50' }))).toBeNull();
+      expect((await refused(rs1CellWindow(window, def, at(p50), { SHOOTOUT_LEASE_USD: '49' })))?.message).toContain('its status reports 50, SHOOTOUT_LEASE_USD names 49) is unknown');
+      expect((await refused(rs1CellWindow(window, def, at(p200), {})))?.message).toContain("the lease proxy's lease (GET /__proxy/status in lease mode) is above paid window RS1-WA-CELLS's cap");
+      expect((await refused(rs1CellWindow(window, def, at(p200), { SHOOTOUT_LEASE_USD: '40' })))?.code).toBe('PAID_FLAGS_MISSING');
+      expect((await refused(rs1CellWindow(window, def, at(inProcess), { SHOOTOUT_LEASE_USD: '40' })))?.message).toContain('is unknown');
+      expect((await refused(rs1CellWindow(window, def, 'http://127.0.0.1:9', { SHOOTOUT_LEASE_USD: '40' })))?.message).toContain('is unknown');
+    } finally { p50.stop(); p200.stop(); inProcess.stop(); }
+    const ok = ledger(50, 40), over = ledger(60, 40);
+    expect(await refused(rs1CellWindow([...window, '--budget-ledger', ok.path, '--budget-run-id', ok.id], def, null, {}))).toBeNull();
+    expect((await refused(rs1CellWindow([...window, '--budget-ledger', over.path, '--budget-run-id', over.id], def, null, {})))?.message).toContain('the ledger\'s program cap');
   });
 
   test('the CLI exits 2 with the refusal, for RS1 cells only', () => {
