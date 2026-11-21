@@ -1307,7 +1307,8 @@ export async function runRemote(payload: RemotePayload, opts: { port?: number; p
     if (payload.gemini_key_env) for (const k of [payload.gemini_key_env, KEY_ENV.gemini]) delete env[k];
     env.SHOOTOUT_LEASE_USD = String(payload.lease_usd);
     for (const k of ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'VOYAGE_API_KEY', 'PARTICLE_API_KEY']) if (env[k]) env[k] = 'dummy-key-the-proxy-replaces';
-    // The cell sees SHOOTOUT_KEYLESS_UPSTREAM only when this proxy really serves a keyless upstream (RS1's window guard reads it).
+    // The cell sees SHOOTOUT_KEYLESS_UPSTREAM only when this proxy really serves a keyless upstream. RS1's and BG1's window
+    // guards don't trust it: they ask the proxy's GET /__proxy/status.
     if (opts.upstream) env.SHOOTOUT_KEYLESS_UPSTREAM = opts.upstream.openai; else delete env.SHOOTOUT_KEYLESS_UPSTREAM;
     if (payload.restore) {
       const dir = resolve(REPO_ROOT, expandHome(payload.restore.dir));

@@ -17,14 +17,14 @@
   multi-session reasoning under frontier judges (-16.4 to -4.5) and 4.9 behind under BEAM's judge (-11.1 to +1.3). It
   also leaned behind on temporal reasoning (-10.7, -21.8 to +0.4) and event ordering (-3.2, -6.9 to +0.6), and it was
   ahead on instruction following (+13.8, +5.0 to +22.5) and summarization (+8.4, +1.2 to +15.5).
-- **We learned that gbrain's own fact extraction leaves a small share of pages without facts, mostly because the model
-  provider's safety filter stopped it, and that a harness that fails the build on those pages leaves the brain half
-  built. You should record those pages as their own outcome, keep building, and report how many there are.** Across the
-  20 gbrain brains, 126 of 17,563 pages (0.72%) were recorded without facts: 73 (0.42%) because Anthropic's safety
-  filter stopped claude-haiku-5-5, gbrain's extraction model, and 53 (0.30%) because gbrain's parser skipped the page
-  as unparsed. In wave A's first run our harness stopped 17 of the 20 gbrain builds at those pages, before the fact
-  index was built. We changed it to record them, in a dated amendment written before the rerun, and ran gbrain's units
-  again. The servers' and the floor's runs stand.
+- **We learned that gbrain's own fact extraction leaves some pages without facts, most of the ones our harness recorded
+  because the model provider's safety filter stopped it, and that a harness that fails the build on those pages leaves
+  the brain half built. You should record those pages as their own outcome, keep building, and report how many there
+  are.** Across the 20 gbrain brains, 126 of 17,563 pages (0.72%) were recorded without facts, a lower bound: 73
+  (0.42%) because Anthropic's safety filter stopped claude-haiku-5-5, gbrain's extraction model, and 53 (0.30%) because
+  gbrain's parser skipped the page as unparsed. In wave A's first run our harness stopped 17 of the 20 gbrain builds at
+  those pages, before the fact index was built. We changed it to record them, in a dated amendment written before the
+  rerun, and ran gbrain's units again. The servers' and the floor's runs stand.
 
 This is the results file of the [narrowed RS1 preregistration](2026-11-08-rs1-narrow-preregistration.md), frozen by its
 merge commit `325a1c04` (#390) on 2026-11-08 and changed since only by its dated amendments. The preregistered verdict is
