@@ -13,8 +13,8 @@
 - **Gating judges.** RS1 grades claude-opus-5-5 readers with gpt-6-astra and gpt-6.1-sol and particle-1 readers with
   claude-opus-5-5 (`rs1JudgeOf` in `eval/runner/q1/cells/rs1.ts`), at the pinned settings #394 shares, and keeps
   gpt-4.1-mini as the descriptive bridge. The shared `frontierJudgeOf` is unchanged, and a test pins Q1's and F6's cell
-  manifests to their earlier digests. The verdict rests on the gating view alone: gbrain against the memory-bank server
-  and against the extract-first server, and both one-sided lower bounds must sit above -3.5.
+  manifests to their earlier digests. The verdict rests on the gating view alone, which compares gbrain with the memory-bank
+  server and with the extract-first server, and both one-sided lower bounds must sit above -3.5.
 - **Paired reporting.** Every comparison (overall, per reader, per ability, each server, each view) is gbrain minus the
   server on the same questions, with its 95% and labelled 90% intervals and the questions where gbrain scored lower,
   higher and tied. A row with fewer than 5 conversations reads "too few conversations".
@@ -67,7 +67,7 @@
   later questions. RS1's gbrain cells set `GBRAIN_IDLE_UPKEEP=off`: every install writes gbrain's own off switch
   (`maintenance.auto false`) and reads it back. The older idle sweep is unchanged.
 - **gbrain's build records safety-filter stops and unparsed pages.** In wave A, 17 of the gbrain row's 20 brain builds
-  failed because gbrain's own extraction left pages unfinished: the provider's safety filter stopped some transcript
+  failed because gbrain's own extraction left pages unfinished. The provider's safety filter stopped some transcript
   windows, or gbrain's parser skipped a page as unparsed. The shim then stopped before the quiesce barrier and the fact
   index. RS1's gbrain cells now set `GBRAIN_F6_BUILD_PROBLEMS=record`: the build records those two outcomes and carries
   on, every other problem still fails the realization, and each realization's ingest record carries its refused and
