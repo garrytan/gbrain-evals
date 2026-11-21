@@ -1,5 +1,7 @@
 # Whole-conversation evidence on held-out data: the sealed v2 release check passes
 
+*Note added 2026-11-21:* this page's judge is `gpt-4o-2024-08-06` and its reader `claude-sonnet-4-6`, an older generation than the frontier readers new runs use. New runs no longer use gpt-4o or gpt-4o-mini in any role (suspended 2026-11-21), so these numbers stand as measured but aren't directly comparable with a run graded by a current frontier judge.
+
 **Finding, 2026-10-02.** On the sealed confirmation set v2, gbrain's shipped evidence default, `auto`, answered **192 of 200** questions. The old `chunk` default answered **132 of 200**, at the same gbrain commit, from the same five retrieved hits and with the same reader and judge. `auto` won 60 questions and lost none. The gain is +30.0 percentage points, with a 95% persona-cluster interval of +24.0 to +36.0. **Under the preregistered rule, the release check is `pass` (non-inferior) and superiority is confirmed:** exact McNemar p = 1.7e-18, and the persona-clustered sign-flip p is below 0.0001. This is the first held-out confirmation that whole-conversation delivery helps. The first sealed set could not show it, because chunks already scored 98% there.
 
 The cost is reader input. `auto` sent a mean of 12,982 input tokens per question, about four times the 3,280 that `chunk` sent.
