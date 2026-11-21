@@ -1,5 +1,7 @@
 # Reading notes before answering: matched gains, with grading and output-limit caveats
 
+*Note added 2026-11-21:* the answers on this page are graded by `gpt-4o-2024-08-06`, as LongMemEval's official grader and as gbrain's data-boundary judge. New runs no longer use gpt-4o or gpt-4o-mini in any role (suspended 2026-11-21), so these numbers stand as measured but aren't directly comparable with a run graded by a current frontier judge.
+
 Published 2026-09-25. The study was frozen and run on 2026-09-24.
 GBrain is a Markdown-first agent memory system. This experiment concerns how
 an answer model reads already retrieved conversations, not how GBrain finds

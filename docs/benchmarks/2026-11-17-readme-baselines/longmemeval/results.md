@@ -1,5 +1,7 @@
 # LongMemEval without gbrain: plain hybrid search, the whole history and no memory
 
+*Note added 2026-11-21:* every right-answer count on this page is graded by LongMemEval's official judge prompt on `gpt-4o-2024-08-06`. New runs no longer use gpt-4o or gpt-4o-mini in any role (suspended 2026-11-21), so these numbers stand as measured but aren't directly comparable with a run graded by a current frontier judge.
+
 Measured 2026-11-17 against [the preregistration](../../../plans/2026-11-17-readme-baselines/PREREG.md). No gbrain arm was run again: every baseline below pairs, question by question, with gbrain's committed records at the commit README names.
 
 ## Takeaways

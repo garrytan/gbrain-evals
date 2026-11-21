@@ -1,5 +1,7 @@
 # LongMemEval answers without the answer key: 439/500, and the evidence budget matters more than the prompt
 
+*Note added 2026-11-21:* arm b's reader (430/500) and LongMemEval's official judge on this page are `gpt-4o-2024-08-06`, and gbrain's data-boundary judge is `openai:gpt-4o`. New runs no longer use gpt-4o or gpt-4o-mini in any role (suspended 2026-11-21), so these numbers stand as measured but aren't directly comparable with a run graded by a current frontier judge.
+
 Published 2026-09-29, extended 2026-09-30 with two reranker-on arms. Measured 2026-09-29 and 2026-09-30 on gbrain [PR 5676](https://github.com/garrytan/gbrain/pull/5676) at `a7cb37b7884ca4a6dba8bb82a4cd430e6a6e806f` (v0.59.13.0), since squash-merged to gbrain master as `b80cad6`.
 
 [gbrain](https://github.com/garrytan/gbrain) is a Markdown-first memory system for agents. [LongMemEval](https://arxiv.org/abs/2410.10813) asks questions about long histories of old conversations. A memory system first has to find the right conversations. Then a language model (the "reader") has to answer from what was found, and a second model (the "judge") grades the answer against the dataset's reference.
