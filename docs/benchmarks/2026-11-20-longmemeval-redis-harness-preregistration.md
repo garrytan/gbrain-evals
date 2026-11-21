@@ -415,7 +415,106 @@ plan and decision, not part of this one.
 
 ## Amendments
 
-None yet.
+### 2026-11-20, before any paid call
+
+- **Build and models, read again.** gbrain's newest release is still v0.60.748.0
+  (`7f162344652afc725793dd476945716e09d26104`, from `git ls-remote --tags` on 2026-11-20).
+  `bun scripts/model-freshness.ts` lists no newer Opus, GPT or Particle model than the ones this plan calls, and it
+  finds a price for every one of them. It warns about claude-sonnet-5-5, which is not a model under test here.
+- **The interim look stops only for efficacy.** Conditional power at half the units is computed under the planned
+  alternative (a true difference equal to the smallest detectable one) in the observed direction. On that basis it never
+  falls below about 21%, its value at z = 0, so the 10% futility stop can't fire. The rule stays as written (GBEV-3,
+  2026-11-20). The one look at 250 questions stops only when |z| ≥ 2.80, and otherwise the run goes to all 500.
+  A keyless test pins this.
+- **What pins the dataset.** The vendored loader downloads from revision `98d7416c`, but it reads a cached file without
+  downloading it. So the pin that holds is the sha256 check, which this run's loader runs before every load, whatever
+  the cache holds.
+- **Parity with Redis's runner.** gbrain's ranking can differ between two brains built from the same history when
+  scores tie. So for the gbrain arms, the check compares the runner's messages with our rendering of the retrieval the
+  runner's own store received, byte for byte. It reports separately how often that retrieval matched the frozen one.
+  For **full** and **oracle** the runner's messages are compared with the frozen ones directly. The reader side is the
+  keyless fake. The gbrain store embeds and reranks with Voyage, so the parity check runs inside the pilot's paid
+  window.
+- **How particle-1 and the labeller are metered.** Their requests go through the shared chat client in the driver's
+  own process, under the ledger's paid-request guard. The guard reserves each request's worst case in this experiment's
+  ledger before it is sent. This replaces the separate metering-proxy process, and the caps work the same way.
+  A particle-1 request is resent only after a failure proven to happen before sending.
+- **Labels per judge.** gemini-4-argon labels 48 answers per cross-family judge, so that at least 40 still parse.
+- **`FRONTIER_READERS` stays unchanged.** This run's driver names its readers itself and doesn't read that list.
+- **How the adapter knows the reranker ran.** gbrain v0.60.748.0's retrieval metadata has no field naming the reranker.
+  It sets `crag.top_rerank_score` whenever the reranker ran. So a query counts as reranked only when that field is set
+  and gbrain's own call accounting shows a rerank call that succeeded; the adapter records the model that call served.
+  A keyless run through the metering proxy, against a fake Voyage, found this before any paid call: the old field read
+  came back empty on every query, so every question would have been marked degraded.
+
+### 2026-11-20, before any pilot read: the on arm turns autocut on
+
+The freeze showed that **on** as written measured nothing. gbrain v0.60.748.0 turns autocut off in every search mode
+(`src/core/search/mode.ts`: "OFF in every bundle"), and `query` with the parameter left out falls back to that. So
+`query {limit: 10}` kept 8 to 10 conversations on all 500 questions, the same as **off**. The 32 questions where the
+two contexts differed differ only through reranker scores that vary slightly between calls. A 24-question probe with
+`{limit: 10, autocut: true}` on real Voyage scores cut 18 questions to 1 or 2 conversations. No reader had run.
+
+- **on** is now `query {limit: 10, autocut: true}`, autocut forced on. **off** is unchanged. The pair still differs only
+  in autocut.
+- **The autocut question becomes "would turning autocut back on cost answers?"** The primary test, its bound, the
+  detectable difference and the model are unchanged. The decision table reads: if **off** wins clearly, or there is
+  no measurable difference, gbrain keeps autocut off and GBRA-108 hears the paired numbers and the turn-level delivery
+  counts; if **on** wins clearly, GBRA-108 hears the case for turning it back on, with the same numbers.
+- **agent-default, corrected.** `query {}` runs with autocut off at this build, and gbrain's cap of 3 pages per answer
+  is what trims it: it delivered 3 conversations on 496 of 500 questions. The arm and its parameters are unchanged;
+  only its description was wrong.
+- The pilot bar "**on** cuts below 5 conversations on at least one question" stays, and the retrieval is frozen again
+  for all 500 questions with the new parameters before any reader runs. The first freeze is kept, unscored, as the
+  record of the default's behaviour.
+
+### 2026-11-20, after the judge check, before any counted unit: the strict parse reads a last-line verdict
+
+Under the strict parse as written, claude-opus-5-5 failed the judge check's unparsable gate: 3 of its 200 control
+replies (1.5%) opened with a sentence and gave the verdict alone on the last line ("…so it doesn't contain the correct
+answer.\n\nno"), and one of its pilot replies did the same. Each verdict was unambiguous. gpt-6.2-astra and the
+protocol judge had none.
+
+- **The strict parse now has one fallback.** The first word, lowercased and stripped of punctuation and markdown, must
+  be yes or no. When it isn't, the last non-empty line, stripped the same way, must be exactly yes or no. Anything else
+  stays unparsable. Redis's own parse is unchanged and still recorded beside it.
+- Every reply already recorded is rescored under the new parse with no new request, and the judge check is read again.
+- The results say that the Opus judge's unparsable rate on the controls was 1.5% under the original parse, which is
+  above the 1% gate, and give its rate under this one.
+
+### 2026-11-20, after the pilot, before any counted unit: the counted run measures gbrain v0.60.752.0
+
+The counted run has not started, so it moves to gbrain's newest release at launch (R100): **v0.60.752.0**,
+`1f8d079d13c10d511c919cf69dd1e4c0137fbfcd` (tagged 2026-11-20, read from `git ls-remote --tags` that day; 749 was
+never published). The tags are read again just before the first counted unit, and a newer release moves the pin by
+another dated amendment. Once the first counted unit runs, the build is frozen for this experiment. The pilot ran on
+v0.60.748.0 and stays development data.
+
+- **What changed since v0.60.748.0** (`git log v0.60.748.0..v0.60.752.0`, 30 commits): page writes keep text that
+  holds U+0000, with that character removed; fact reads end an employer, city or role once a newer one is saved, and
+  rank far-future facts by when they were written; a conversation fact the speaker asked to keep quiet is saved
+  private; conversation fact extraction keeps a page's other facts when the model declines one window; a chat refusal
+  is reported as a refusal; and changes to Apple Contacts, iMessage, OpenClaw setup, identity and admin tools.
+- **Could they move this run's retrieval?** Not in any way we can see. `query`'s own path (`src/core/ops/search.ts`,
+  `src/core/search/hybrid.ts`, `autocut.ts`, `mode.ts`), page import (`src/core/import-file.ts`) and gbrain's
+  LongMemEval adapter (`src/eval/longmemeval`) are byte-identical between the two tags, and autocut is still off in
+  every mode. `query` does read saved facts, and those readers changed. But the benchmark brains hold no facts: the
+  adapter configures no chat model, and every pilot query made only embedding and rerank calls. LongMemEval Small holds
+  no U+0000. So we expect the same retrieval up to the reranker's call-to-call noise. The retrieval is frozen again on
+  the new build for all 500 questions, and the results report how often each arm's context matches the pilot freeze.
+- **No pilot answer counts, now enforced.** The batch state answers a question once per arm, so the pilot's 25
+  questions, which the counted run asks again, would have reused their pilot answers. A counted stage now refuses to
+  start while the batch state holds a pilot or judge-check batch or any particle-1 row. Before the counted wave, the
+  pilot's answers, judgments, labels and freeze move to an archive, and the batch state keeps only its confirmed batch
+  discounts. A keyless test pins the refusal.
+
+### 2026-11-21, during the counted run: how the second half's judgments are recorded
+
+This changes no judge, prompt, setting, number or verdict rule. A judge's request set is frozen from the answers an arm
+holds at the first judge call, so after the first half each arm's judge set covered only questions 1 to 250. The
+second half's judgments of an arm are recorded under an arm id of their own (`<arm>--<role>--second-half`), built
+the same way over questions 251 to 500, and the results join the two halves. The interim look and the first half's
+judgments are unchanged. A keyless test pins the ids.
 
 ## Disclosures
 

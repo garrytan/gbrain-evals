@@ -1,0 +1,86 @@
+{
+ "protocol": {
+  "controls": {
+   "n": 200,
+   "kappa": 0.8600000000000001,
+   "agreement": 0.93,
+   "matrix": {
+    "yy": 98,
+    "yn": 12,
+    "ny": 2,
+    "nn": 88
+   },
+   "items": 200,
+   "unparsable_share": 0
+  },
+  "real": {
+   "n": 96,
+   "kappa": 0.9700374531835207,
+   "agreement": 0.9895833333333334,
+   "matrix": {
+    "yy": 74,
+    "yn": 1,
+    "ny": 0,
+    "nn": 21
+   },
+   "labels_unparsable": 0
+  },
+  "passes": true
+ },
+ "opus": {
+  "controls": {
+   "n": 197,
+   "kappa": 0.8479860075106744,
+   "agreement": 0.9238578680203046,
+   "matrix": {
+    "yy": 96,
+    "yn": 14,
+    "ny": 1,
+    "nn": 86
+   },
+   "items": 200,
+   "unparsable_share": 0.015
+  },
+  "real": {
+   "n": 47,
+   "kappa": 1,
+   "agreement": 1,
+   "matrix": {
+    "yy": 31,
+    "yn": 0,
+    "ny": 0,
+    "nn": 16
+   },
+   "labels_unparsable": 0
+  },
+  "passes": false
+ },
+ "astra": {
+  "controls": {
+   "n": 200,
+   "kappa": 0.9193548387096774,
+   "agreement": 0.96,
+   "matrix": {
+    "yy": 105,
+    "yn": 5,
+    "ny": 3,
+    "nn": 87
+   },
+   "items": 200,
+   "unparsable_share": 0
+  },
+  "real": {
+   "n": 48,
+   "kappa": 1,
+   "agreement": 1,
+   "matrix": {
+    "yy": 44,
+    "yn": 0,
+    "ny": 0,
+    "nn": 4
+   },
+   "labels_unparsable": 0
+  },
+  "passes": true
+ }
+}

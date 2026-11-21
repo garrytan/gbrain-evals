@@ -1,0 +1,50 @@
+{
+  "parity": "ok",
+  "arms": {
+    "off": {
+      "compared": 3,
+      "mismatched": [],
+      "same_as_frozen_retrieval": 3,
+      "runner_request": {
+        "model": "gpt-4o",
+        "temperature": 0
+      }
+    },
+    "on": {
+      "compared": 3,
+      "mismatched": [],
+      "same_as_frozen_retrieval": 3,
+      "runner_request": {
+        "model": "gpt-4o",
+        "temperature": 0
+      }
+    },
+    "agent-default": {
+      "compared": 3,
+      "mismatched": [],
+      "same_as_frozen_retrieval": 0,
+      "runner_request": {
+        "model": "gpt-4o",
+        "temperature": 0
+      }
+    },
+    "full": {
+      "compared": 3,
+      "mismatched": [],
+      "same_as_frozen_retrieval": null,
+      "runner_request": {
+        "model": "gpt-4o",
+        "temperature": 0
+      }
+    },
+    "oracle": {
+      "compared": 500,
+      "mismatched": [],
+      "same_as_frozen_retrieval": null,
+      "runner_request": {
+        "model": "gpt-4o",
+        "temperature": 0
+      }
+    }
+  }
+}

@@ -460,6 +460,18 @@ follow-ups](docs/benchmarks/2026-10-04-longmemeval-opaque-followups.md)); a temp
 differ, so this is context, not a ranking. Published results across systems range from 81.6% to 96.1%
 ([sources](docs/comparison-systems.md#longmemeval-the-evidence-we-have)).
 
+**On a memory server's own open LongMemEval harness: behind with its reader, level with README's figure with a
+frontier reader.** Run through that server's open harness unchanged (its dataset loader, one-shot answer prompt, judge
+prompts and metric), the five conversations gbrain v0.60.752.0 picks give the harness's gpt-4o reader 79.2%
+task-averaged (95% interval 75.5% to 83.0%), behind the server's published 86.14% with the same reader and judge;
+gpt-4o reaches only 88.0% even with exactly the right conversations
+([results](docs/benchmarks/2026-11-20-longmemeval-redis-harness.md)). Opus 5.5 reading the same conversations answers
+469 of 500 (93.8%, interval 91.3% to 95.6%) under the harness's gpt-4o judge, level with the 93.6% above. Pasting the
+whole history instead gave Opus, GPT-6.2 Sol and particle-1 2.2 to 2.8 more points, which is no measurable difference
+after the plan's correction for 11 tests, at about 7.7 times the reader input (167,280 against 21,691 tokens per
+question for Opus), and it cost gpt-4o 18.2 points. Forcing autocut on, which gbrain ships off, cost Opus 12.8 points
+(8.8 to 17.2, from a test stopped at its interim look).
+
 **A memory-bank server on sealed BEAM: gbrain ahead by 2.6 points, cheaper only at low read volume.** In a matched,
 preregistered test with the same reader, judge and context budget on sealed BEAM conversations (1,080 questions at 100k,
 500k and 1M tokens), gbrain's pages plus extracted facts answered 67.0% against 64.4% for a memory-bank server with
@@ -652,6 +664,13 @@ Garry Tan runs Y Combinator.
 [Disclosures](docs/disclosures.md) lists every relationship and where each line goes.
 
 ## Changelog
+
+### 2026-11-21: LongMemEval on a memory server's own open harness
+
+How gbrain compares adds gbrain's result on a memory server's open LongMemEval harness: behind the server's published
+number with its gpt-4o reader (79.2% against 86.14% task-averaged), 93.8% with an Opus 5.5 reader beside the 93.6%
+README already shows, the whole history no measurably better for frontier readers, and autocut forced on costing
+answers.
 
 ### 2026-11-20: The BEAM-10M rows move to gbrain v0.60.748.0
 
