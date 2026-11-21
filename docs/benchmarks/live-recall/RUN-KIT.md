@@ -102,6 +102,11 @@ All commands run from the repository root.
    - Batch 2: `dd69701c55534429fb758ca8335af175a3dfcc3c9aca6c9c2d2fc81bf3f11099`
    - Batch 3: `c023694ef59e03e64fd1b0553b6516f7bccad424b85f0f74bdf95d2a08b6014e`
 
+   For batch 5 ([batch 5 amendment](PREREGISTRATION.md#batch-5-amendment)), freeze the same way with `--protocol batch5`
+   and four `--prior` files: batches 1 to 3 above and batch 4
+   (`69f923673764fc11aa501a4d3b0efae53ff7d2ec8ce806a32176472662b3ca04`). `freeze.json` also records the fill primary's
+   threshold (`fill_primary`).
+
 5. **Run**, after we confirm the freeze is committed:
 
    ```bash
@@ -121,6 +126,45 @@ All commands run from the repository root.
    amendment is needed. Send the GBRA-398 relabel windows applied at the freeze and at the run, and the brain's embedding
    coverage at the freeze as aggregates, with the scorecard. There is one counted batch 4 run.
 
+   For batch 5's session, use the gbrain-evals commit the request names, on a clean tree, and run batch 5 once at gbrain
+   v0.60.737.0 ([2026-11-18 build entry](PREREGISTRATION.md#2026-11-18-batch-5-runs-at-v0607370)). The reference
+   run at 0.60.682.0 and the reruns of batches 3 and 4 wait for a monthly refresh. `--reference-build`, which such a refresh
+   would use, lets only a build a preregistration names as a reference (0.60.682.0 at `42faabf2`) read a brain whose
+   schema is newer than it expects; any other build stops with [`LR_REFERENCE_BUILD`](#lr_reference_build), and the
+   newest build never takes the flag.
+
+   ```bash
+   bun eval/runner/live-recall/run.ts run --questions <batch 5 questions.jsonl> --freeze <batch 5 freeze.json> \
+     --gbrain <gbrain checkout>@291b7996a4e2881acc921b1085d818bb9640f5d0 --out <b5-newest>
+   ```
+
+   Around batch 5's run, read the brain's audience with the box's own gbrain, as the
+   [2026-11-18 build entry](PREREGISTRATION.md#2026-11-18-batch-5-runs-at-v0607370) sets out: once before the command
+   above, whose probe query is the first search, and once after it ends. These three commands only read:
+
+   ```bash
+   gbrain doctor --only memory_writeback --json   # details.audience of the memory_writeback check
+   gbrain transcripts archive status --json       # rescope (absent when none is pending) and source_id
+   gbrain config get transcripts.archive.audience.<source_id>
+   ```
+
+   Keep their output on the box and record only two things each time: `personal` when `details.audience` is
+   `personal` and the last command doesn't print `shared`, otherwise `shared`; and whether `rescope` is present (a
+   re-scope is pending). If the first reading is `shared` or a re-scope is pending, don't start the run, and send the
+   two values to GBEV-3. Send the second reading with the scorecard and say whether either value changed; nothing is
+   published until GBEV-3 has it.
+
+   Every `--fixture` and real-brain run from this runner also starts the `search_op_keyless` arm, before the other
+   arms open the brain: `run.ts keyless-arm`, a second process with every provider key blank, no HTTP allowed, the same
+   gbrain, brain, barrier and questions, and gbrain's own `search` operation called with the question alone. It stops
+   with [`LR_KEYLESS_PROVIDER`](#lr_keyless_provider) if gbrain still reports an embedding or reranking provider, and the
+   run stops with its code if it fails. It writes `keyless.local.jsonl` and `keyless.local.log` into the run directory.
+
+   On a real brain, each process gives gbrain a home of its own inside the run directory (`gbrain-home` and
+   `keyless-gbrain-home`) once gbrain has read your config: a copy of your `~/.gbrain/config.json` without the database
+   location or any key, with `GBRAIN_HOME` and `HOME` pointed there. Nothing gbrain writes to its home during the run
+   reaches your install. The runner starts no `gbrain serve`, so no upkeep or conversation archive runs from it.
+
    Before the first question, the runner sends one public probe query through every arm and stops with
    [`LR_ARM_PREFLIGHT`](#lr_arm_preflight) if any arm errors, is refused a model call, fails its reranker open or
    reports a failure stage, so a missing grant ends the run
@@ -131,8 +175,8 @@ All commands run from the repository root.
    (`eval/reports/live-recall/<timestamp>/` unless you pass `--out`), and gbrain's own audit files land there too.
 
 6. **Send** `scorecard.json` and `scorecard.md` from the run directory. Keep everything else in it on the box:
-   `detail.local.jsonl` holds per-query pointers (a later `compare` reads it), and `gbrain.local.log` and the audit
-   files hold gbrain's own output.
+   `detail.local.jsonl` and `keyless.local.jsonl` hold per-query pointers (a later `compare` reads them), and
+   `gbrain.local.log`, `keyless.local.log` and the audit files hold gbrain's own output.
 
 7. **Tear down the copy.**
 
@@ -413,7 +457,26 @@ Unset it and rerun.
 ### LR_SCHEMA_MISMATCH
 
 The brain's schema version differs from the gbrain the runner loaded. Pass `--gbrain <checkout>@<commit>` at the
-version that wrote the brain. The runner never migrates.
+version that wrote the brain. The runner never migrates. A reference build the preregistration names may read a newer
+schema with `--reference-build`, never an older one.
+
+### LR_REFERENCE_BUILD
+
+`--reference-build` was passed with a gbrain that isn't a reference build a preregistration names, at its exact commit
+(`REFERENCE_BUILDS` in `eval/runner/live-recall/brain.ts`: 0.60.682.0 at `42faabf2` and 0.60.613.0 at `98dda48f`).
+Drop the flag, or load that build at that commit. Nothing was opened.
+
+### LR_KEYLESS_PROVIDER
+
+The `search_op_keyless` process blanked every provider key, yet gbrain still reported an embedding or reranking
+provider, for example a local model in the brain's config that needs no key. The arm stopped before its next search,
+and no other arm had searched. Send the line to GBEV-3.
+
+### LR_KEYLESS_ARM
+
+The `search_op_keyless` process stopped without an abort code of its own, or ran past an hour. Its output is in
+`keyless.local.log` in the run directory, which stays on the box. No other arm had searched. Send the exit line to
+GBEV-3.
 
 ### LR_EMBEDDING_UNVERIFIED
 
@@ -455,7 +518,7 @@ The question file's hash differs from `freeze.json`, or a counted run was starte
 `--freeze`. Under batch 3 and batch 4 it also means the freeze records no `visibility_epoch`, or its epoch differs from the run's
 (GBRA-398), or both epochs read `unknown` and the gbrain versions differ: freeze again with the gbrain you run. Under
 batch 4 it also means the freeze records no clean check against the three earlier question files
-(`prior_question_files`, `prior_overlap`): freeze again with the three `--prior` files. Freeze this exact file and send the new numbers before the counted run. From `compare`, it means the two
+(`prior_question_files`, `prior_overlap`), and under batch 5 against the four: freeze again with the `--prior` files. Freeze this exact file and send the new numbers before the counted run. From `compare`, it means the two
 run directories were made on different question files. In phase 2 it means the task file's hash differs from
 `freeze.json`, or the kept line count does not match it: run with the frozen file, or freeze again. On a phase 2
 `--resume` it means the resume differs from the session that started the run directory in its harness digest, loaded
@@ -466,8 +529,8 @@ a new run directory.
 
 ### LR_FREEZE_OVERLAP
 
-A batch 4 freeze found a problem with the held-out check, and wrote nothing. Either the three `--prior` files aren't
-batches 1 to 3 (one is missing, repeated or has another sha256; the detail names the first 12 characters of each missing
+A batch 4 or batch 5 freeze found a problem with the held-out check, and wrote nothing. Either the `--prior` files
+aren't batches 1 to 3 (batches 1 to 4 for batch 5) (one is missing, repeated or has another sha256; the detail names the first 12 characters of each missing
 hash and how many files were given), or the new question file shares question ids, forms or gold pages with them (the
 detail gives the three counts). Pass the right files, or replace the shared questions, and freeze again. A gold page
 counts as shared when it was a gold, stale or decoy page in batches 1 to 3.

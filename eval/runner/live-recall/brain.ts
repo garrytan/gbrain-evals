@@ -16,6 +16,8 @@
  * Code that writes through a tagged template outside these seams is not
  * intercepted; the server barrier is what stops it.
  */
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { importGbrain, type GbrainUnderTest } from '../gbrain-under-test.ts';
 
 export const COPY_MARKER_TABLE = 'gbrain_evals_live_recall_copy';
@@ -25,7 +27,10 @@ export const ABORT_CODES = {
   LR_NO_BARRIER: 'Make a copy with eval/runner/live-recall/snapshot.sh and connect to it on 127.0.0.1, or use a hot standby or a role without write privileges.',
   LR_READONLY_UNVERIFIED: 'The session did not report read-only, or the direct pool is active; rerun against the copy and report the detail.',
   LR_DIRECT_URL_OVERRIDE: 'Unset GBRAIN_DIRECT_DATABASE_URL in the shell that runs the runner.',
-  LR_SCHEMA_MISMATCH: 'Run with --gbrain <checkout>@<commit> at the gbrain version that wrote the brain.',
+  LR_SCHEMA_MISMATCH: 'Run with --gbrain <checkout>@<commit> at the gbrain version that wrote the brain. Only a reference build a preregistration names may read a newer schema, with --reference-build.',
+  LR_KEYLESS_PROVIDER: 'The search_op_keyless process saw an embedding or reranking provider after every provider key was removed (for example a keyless local model in the brain\'s config), so it stopped before its next search and no other arm searched. Send the line to GBEV-3.',
+  LR_KEYLESS_ARM: 'The search_op_keyless process stopped; its log, keyless.local.log in the run directory, stays on this box. Send the exit line to GBEV-3.',
+  LR_REFERENCE_BUILD: '--reference-build loads only a build a live-recall preregistration names as its reference (REFERENCE_BUILDS in brain.ts), at that exact commit; drop the flag or load that build.',
   LR_QUESTIONS_INVALID: 'Fix the question file at the reported line and field, then rerun freeze.',
   LR_FREEZE_MISMATCH: 'Rerun freeze on this exact question file and send the new freeze numbers before the counted run. On a phase 2 --resume, resume with the first session\'s harness, gbrain, barrier kind, source, retrieval settings, models, arms, forms and tasks, or start a new run directory.',
   LR_FREEZE_OVERLAP: 'A batch 4 freeze checks the new questions against the three earlier question files on this box, passed with one --prior each (their sha256 values are in RUN-KIT.md). The detail names a missing or wrong file, or how many question ids, forms and gold pages are shared; replace the shared questions and freeze again. Only counts are printed.',
@@ -312,10 +317,31 @@ export interface OpenedBrain {
 }
 
 /** Refuse a brain whose schema differs from the gbrain code loaded; the runner never migrates. */
-export async function checkSchema(engine: any, gut: GbrainUnderTest): Promise<{ schema_version: number; code_schema_version: number }> {
+/**
+ * The older builds a live-recall preregistration names as its same-day reference: live recall batch 5's 0.60.682.0 and
+ * phase 2's 0.60.613.0. Only these, at these exact commits, may read a brain whose schema is newer than they expect.
+ */
+export const REFERENCE_BUILDS: Readonly<Record<string, string>> = Object.freeze({
+  '0.60.682.0': '42faabf28882a9197fcf504c5f8b3c7f6e9d9672',
+  '0.60.613.0': '98dda48fb9fd339609d6d4eef009811280ff648d',
+});
+
+/** Refuse --reference-build unless the loaded gbrain is a named reference build, loaded from its exact commit. */
+export function assertReferenceBuild(gut: GbrainUnderTest): void {
+  const commit = gut.overlay?.build.commit ?? '';
+  if (REFERENCE_BUILDS[gut.version] === undefined || commit !== REFERENCE_BUILDS[gut.version]) {
+    throw new LiveRecallAbort('LR_REFERENCE_BUILD', 'loaded gbrain ' + (/^\d+\.\d+\.\d+(\.\d+)?$/.test(gut.version) ? gut.version : 'unparsed') + ' is not a named reference build at its commit');
+  }
+}
+
+/**
+ * The loaded gbrain must expect exactly the brain's schema version, since the runner never migrates. A named reference
+ * build (referenceBuild, after assertReferenceBuild) may also read a newer schema, never an older one.
+ */
+export async function checkSchema(engine: any, gut: GbrainUnderTest, referenceBuild = false): Promise<{ schema_version: number; code_schema_version: number }> {
   const { LATEST_VERSION } = await importGbrain<{ LATEST_VERSION: number }>(gut, 'src/core/migrate.ts');
   const schema_version = Number(await engine.getConfig('version'));
-  if (schema_version !== LATEST_VERSION) throw new LiveRecallAbort('LR_SCHEMA_MISMATCH', 'brain schema ' + schema_version + ', loaded gbrain expects ' + LATEST_VERSION);
+  if (schema_version !== LATEST_VERSION && !(referenceBuild && schema_version > LATEST_VERSION)) throw new LiveRecallAbort('LR_SCHEMA_MISMATCH', 'brain schema ' + schema_version + ', loaded gbrain expects ' + LATEST_VERSION);
   return { schema_version, code_schema_version: LATEST_VERSION };
 }
 
@@ -326,11 +352,45 @@ export async function checkSchema(engine: any, gut: GbrainUnderTest): Promise<{ 
  */
 const BLANKED_ENV = ['GBRAIN_DATABASE_URL', 'DATABASE_URL', 'GBRAIN_DIRECT_DATABASE_URL', 'TYPESAFE_API_KEY', 'JEV_TYPESAFE_API_KEY', 'GBRAIN_DECIDE_SLOTS'];
 
+/** A config key that names where the brain lives or holds a credential; never copied into a run's own gbrain home. */
+const UNCOPIED_CONFIG_KEY = /^database_(url|path)$|(^|_)(api_key|key|token|secret|password)$/i;
+
+function withoutCredentials(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(withoutCredentials);
+  if (value === null || typeof value !== 'object') return value;
+  return Object.fromEntries(Object.entries(value).filter(([k]) => !UNCOPIED_CONFIG_KEY.test(k)).map(([k, v]) => [k, withoutCredentials(v)]));
+}
+
+/**
+ * Give the loaded gbrain a home of its own (GBRAIN_HOME and HOME) inside the run directory, so nothing it writes to
+ * its home reaches the operator's install or another run, and no upkeep or conversation archive state is shared
+ * (from 0.60.733.0 an idle `gbrain serve` runs both under whatever home it shares; the runner starts no serve).
+ * Called after gbrain read the operator's config and ~/.gbrain/.env: the home gets a copy of that config file without
+ * the database location or any credential, so later reads see the same settings. Returns the restore.
+ */
+export async function isolateGbrainHome(gut: GbrainUnderTest, home: string): Promise<() => void> {
+  const { loadConfigFileOnly } = await importGbrain<any>(gut, 'src/core/config.ts');
+  const fileConfig = loadConfigFileOnly() ?? {};
+  mkdirSync(join(home, '.gbrain'), { recursive: true, mode: 0o700 });
+  writeFileSync(join(home, '.gbrain', 'config.json'), JSON.stringify(withoutCredentials(fileConfig), null, 2) + '\n', { mode: 0o600 });
+  const saved = { GBRAIN_HOME: process.env.GBRAIN_HOME, HOME: process.env.HOME };
+  process.env.GBRAIN_HOME = home;
+  process.env.HOME = home;
+  return () => {
+    for (const [k, v] of Object.entries(saved)) {
+      if (v === undefined) delete process.env[k];
+      else process.env[k] = v;
+    }
+  };
+}
+
 /**
  * Open a Postgres brain: env hygiene, barrier proof, guards, verification and
  * the schema check, in that order. Nothing is searched before all of them pass.
+ * With home, gbrain runs in that home of its own once its config is read (isolateGbrainHome).
  */
-export async function openPostgresBrain(gut: GbrainUnderTest, databaseUrlEnv: string, counters: GuardCounters): Promise<OpenedBrain> {
+export async function openPostgresBrain(gut: GbrainUnderTest, databaseUrlEnv: string, counters: GuardCounters, referenceBuild = false, home?: string): Promise<OpenedBrain> {
+  if (referenceBuild) assertReferenceBuild(gut);
   const source = process.env[databaseUrlEnv];
   if (!source) throw new LiveRecallAbort('LR_NO_DATABASE_URL', 'env ' + (/^[A-Z0-9_]+$/.test(databaseUrlEnv) ? databaseUrlEnv : 'var') + ' is empty');
   if (process.env.GBRAIN_DIRECT_DATABASE_URL) throw new LiveRecallAbort('LR_DIRECT_URL_OVERRIDE', 'GBRAIN_DIRECT_DATABASE_URL is set');
@@ -346,20 +406,28 @@ export async function openPostgresBrain(gut: GbrainUnderTest, databaseUrlEnv: st
   const { url, connection, loopback } = readOnlyUrl(source);
   const config = { ...(loadConfig() ?? {}), engine: 'postgres', database_url: url };
   if (BLANKED_ENV.some(key => process.env[key] !== '')) throw new LiveRecallAbort('LR_DIRECT_URL_OVERRIDE', 'a blanked database variable was set again while loading gbrain config');
+  const restoreHome = home ? await isolateGbrainHome(gut, home) : () => {};
   configureGateway(buildGatewayConfig(config));
   const engineConfig = { ...toEngineConfig(config), pool_max: 2 };
-  const engine = await createEngine(engineConfig);
-  await engine.connect(engineConfig);
+  let engine: any;
+  try {
+    engine = await createEngine(engineConfig);
+    await engine.connect(engineConfig);
+  } catch (error) {
+    restoreHome();
+    throw error;
+  }
   try {
     const raw: Raw = sql => engine.executeRaw(sql);
     const barrier = await proveBarrier(raw, loopback);
     installGuards(engine, counters);
     await verifyReadOnly(engine);
-    const schema = await checkSchema(engine, gut);
+    const schema = await checkSchema(engine, gut, referenceBuild);
     configureGateway(buildGatewayConfig(await loadConfigWithEngine(engine, config)));
-    return { engine, barrier, connection, ...schema, close: () => engine.disconnect() };
+    return { engine, barrier, connection, ...schema, close: async () => { try { await engine.disconnect(); } finally { restoreHome(); } } };
   } catch (error) {
     await engine.disconnect().catch(() => {});
+    restoreHome();
     throw error;
   }
 }

@@ -27,13 +27,21 @@ The Markdown is rendered from the validated JSON alone. The per-query detail beh
 
 ## scorecard.json
 
-Top level: `schema` (`"live-recall-scorecard/v1"`), `protocol` (`batch1`, `batch2`, `batch3` or `batch4`: from
-`freeze.json` on a counted run, from `--protocol` on the fixture, and `batch1` when neither names one), `run`,
-`custody`, `questions`, `eligibility`, `arms`, `comparisons`, and under `batch4` only, `family`.
+Top level: `schema` (`"live-recall-scorecard/v1"`), `protocol` (`batch1` to `batch5`: from `freeze.json` on a
+counted run, from `--protocol` on the fixture, and `batch1` when neither names one), `run`, `custody`, `questions`,
+`eligibility`, `arms`, `comparisons`, under `batch4` only `family`, under `batch5` only `gap_failures`, and on every
+fixture or real-brain run `keyless_op`.
 
 **`run`**: what ran. `started_at`, `finished_at`; `runner_commit` and `runner_dirty` (gbrain-evals); the declared
 pin (`gbrain_pin_version`, `gbrain_pin_commit`) and what was loaded (`gbrain_loaded_version`,
-`gbrain_loaded_commit`, `gbrain_overlay`); `schema_version` of the brain; `engine` (`postgres`, or `pglite` for
+`gbrain_loaded_commit`, `gbrain_overlay`); `schema_version` of the brain, `code_schema_version` (the schema version the
+loaded gbrain expects) and `reference_build` (true when `--reference-build` let a named older build read a newer
+schema, so `code_schema_version` is below `schema_version`); `brain_pages_at_start`, `brain_pages_at_end` and
+`brain_pages_updated_since_start` (pages in the brain when the arms opened it and after the last search, and pages
+written or changed since the run started, the keyless process's time included); `archive_layout_pages` and `gold_pages_in_archive_layout`
+(live pages in gbrain's conversation-archive layout when the arms opened the brain, the pages gbrain #9433 ranks lower,
+and how many of the run's distinct gold pages are among them; [2026-11-16 build
+entry](PREREGISTRATION.md#2026-11-16-batch-5-runs-at-v0607330-only)); `engine` (`postgres`, or `pglite` for
 the fixture); `barrier` (`copy`, `standby` or `no_write_privilege`) and `connection` (`direct_or_local`,
 `session_pooler`, `transaction_pooler_rewritten`, or `in_process`); the brain's `search_mode`, `reranker_enabled`,
 `reranker_model`, `embedding_model`, `embedding_column` (the column `hybridSearch` and the `vector` arm search;
@@ -43,7 +51,7 @@ runs with expansion off); `control` (true for the hash-embedding fixture, whose 
 `source_pgvector`, `source_server_version_num`, `copy_server_version_num` and `restore_errors`, read from the row
 `snapshot.sh` writes into the marker table (the copy runs the container image's pgvector, which can differ from the
 source's). Versions are `null` unless they are plain version numbers; `pgvector_version` is `null` when unknown, and the
-four copy fields are `null` when unknown or not a copy. Under `batch3` and `batch4` only, `run` also carries `visibility_epoch`
+four copy fields are `null` when unknown or not a copy. Under `batch3`, `batch4` and `batch5` only, `run` also carries `visibility_epoch`
 (`pre_gbra_398`, `post_gbra_398` or `unknown`, from the loaded gbrain version), `freeze_gbrain_version` and
 `freeze_visibility_epoch` (from the freeze; `null` on the fixture). A `run --synthetic <dir>` control (a conditions-recall
 brain from `eval/generators/conditions-recall-gen.ts`, or a batch-3 brain from `eval/generators/batch3-synthetic-gen.ts`
@@ -63,8 +71,9 @@ and `guard_refusals` by verb (for example `telemetry_write`, gbrain's per-query 
 **`questions`**: `loaded`, `gold_missing` (dropped because a gold page was absent), `by_type` counts, `gold_found_by`
 counts, `paraphrase_shares_identifier_token` (the share of paraphrases that still contain an identifier-like token from
 their exact form) and `freeze_sha_prefix` (the first 12 hex characters of the question file's sha256, to match against
-the freeze). Under `batch4` it also has `prior_overlap`, which the runner writes after checking the freeze's held-out
-record: `files` (the first 12 hex characters of each earlier question file's sha256) and the `question_ids`,
+the freeze). Under `batch4` and `batch5` it also has `prior_overlap`, which the runner writes after checking the freeze's
+held-out record: `files` (the first 12 hex characters of each earlier question file's sha256: three under `batch4`,
+four under `batch5`) and the `question_ids`,
 `forms` and `gold_pages` the new questions share with them, all zero for a freeze the runner accepted.
 
 **`eligibility`**: `eligible_question_forms`, `exclusions` (`<arm>_<status>` counts for the first failing arm of
@@ -107,7 +116,8 @@ secondaries. The predictive-measures preregistration names which batch 3 contras
 against. Under both, the keyword contrasts
 (`hybrid_lexical_vs_keyword`, `hybrid_vs_keyword`, `configured_vs_keyword_paraphrase` and the rest) are descriptive.
 A comparison whose arm is invalid or absent is `{"id": ..., "skipped": "arm_invalid_or_absent"}`; a skipped primary
-still counts in the Holm family of two, as p = 1. `batch4` has batch 2's comparisons, primaries and secondaries.
+still counts in the Holm family of two, as p = 1. `batch4` and `batch5` have batch 2's comparisons, primaries and
+secondaries.
 
 **`family`** (`batch4` only): a simultaneous 95% band over every success@5 comparison that has pairs, for the
 predictive-measures test of G2. One bootstrap resamples whole questions within each question type, recomputes every
@@ -120,6 +130,29 @@ estimate plus or minus the critical value times its own standard error, not clip
 none of that comparison's questions, and a comparison that never varies gets a zero-width band at its estimate. A
 row's own `ci95` is unchanged.
 
+**`gap_failures`** (`batch5` only): for `configured` on each question type, `exact_only` counts the questions whose
+exact form it found in its first five pages and whose reworded form it didn't, and four counts split them by where the
+reworded form's gold page landed: `ranked_6_to_20`; outside its first 20 while `hybrid` or `vector` had it in their
+first five (`not_in_20_hybrid_or_vector_top5`); outside its first 20 while only `keyword` or `hybrid_lexical` had it
+there (`not_in_20_other_arm_top5`); and in no arm's first five (`not_in_20_no_arm_top5`). Counts only, over question
+forms eligible in every common arm; absent when `configured` is invalid.
+
+**`keyless_op`**: the seventh arm, `search_op_keyless` ([batch 5 amendment](PREREGISTRATION.md#batch-5-amendment)).
+gbrain's `search` operation, called through gbrain's own dispatcher as a trusted local caller with the question as its
+only parameter, in a process the runner starts for this arm alone with every provider key blank and no HTTP allowed. It
+is not one of the common arms, so it changes no other arm's eligibility. The block holds `arm`, `statuses` (counts of
+every status the arm's forms got) and, when any form is `ok`, `fill_on` and `fill_off` (cells as under `arms`, split
+into `all`, `exact` and `paraphrase`: the response's pages as returned, and the same response without the rows gbrain
+marked `keyword_fill`), `exposure` (`n`, `fired`: forms with at least one fill row, `fill_in_top5`: forms where a page
+only a fill row brought is in the first five, `prefix_broken`: forms where a fill row came before a row without the
+flag, each split the same way), `task_fit` (`n` reworded forms `ok` in the `keyword` arm and `keyword_rows_1_to_19`, how
+many of them gbrain's all-words keyword search answered with 1 to 19 rows, the only case in which the fill can fire)
+and `primary`: `fill_on_vs_fill_off_paraphrase`, success@5 with fill off as A and fill on as B over reworded forms,
+with the comparison fields above plus `method` (`exact_one_sided_sign`), `wins`, `losses`, `p_one_sided`, `alpha`
+(0.05), `min_wins` (5) and `holds` (no losses and `p_one_sided` below `alpha`). It is a family of one, outside the Holm
+family of two. With no `ok` form the block is `{"invalid": "no_eligible_queries", "statuses": ...}`. A synthetic run has
+no `keyless_op`.
+
 Rates, deltas and intervals are fractions rounded to four decimals; the Markdown shows them as percentages.
 
 ## scorecard.md
@@ -130,7 +163,10 @@ pgvector differs from the copy's or the restore reported errors); a line naming 
 form; every paired comparison with its interval, p, Holm p and MDE; and a custody paragraph (read-only checks, guard
 refusals, exclusions). Under `batch3` and `batch4` the header also names the visibility epoch of the run and the freeze.
 Under `batch4` it names the held-out check (the three earlier files and the zero overlap), and a family band table
-lists each success@5 comparison's delta, family band and whether the band excludes zero.
+lists each success@5 comparison's delta, family band and whether the band excludes zero. A reference build's run says
+which schema the brain is at and which one the build expects. Under `batch5` a table gives the gap failure classes by
+question type. Every run with `keyless_op` gets a keyless section: success@5 with the fill on and off, and the exposure
+counts, by form; the fill primary's pairs, wins, losses, one-sided p and whether it holds; and the task-fit count.
 
 ## compare.json (live-recall-compare/v1)
 
@@ -141,7 +177,9 @@ fixture control. `run_a` and `run_b` carry each run's `gbrain_loaded_version`, `
 `paraphrase`) on question forms that are `ok` in both. An arm invalid in either run's scorecard (a configured arm past
 its fail-open cap, say) is not paired: each of its rows is `{"id": ..., "skipped": "arm_invalid_or_absent"}`. Each row has the comparison fields above
 with `a: "run_a"`, `b: "run_b"`, `id` `run_b_vs_run_a_<arm>_<form>`, and `top5_changed` (how many forms' first
-five pages differ). It passes the same structural check.
+five pages differ). The keyless arm is paired the same way on its pages as returned, fill rows included
+(`run_b_vs_run_a_search_op_keyless_<form>`); `compare` reads its records from `keyless.local.jsonl`, and the arm is
+skipped when either run's scorecard has no `keyless_op` or an invalid one. It passes the same structural check.
 
 ## pool.json (live-recall-pool/v1)
 

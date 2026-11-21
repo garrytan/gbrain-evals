@@ -13,7 +13,7 @@
  * the overlap reranker stand in for the providers.
  */
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import postgres from 'postgres';
@@ -223,6 +223,28 @@ describe.skipIf(!ADMIN_URL)('live-recall on a real Postgres (opt-in)', () => {
     }
   }, 120_000);
 
+  test('gbrain runs in a home of its own inside the run directory, with the config less its database location and keys', async () => {
+    const operator = readFileSync(join(dir, '.gbrain', 'config.json'), 'utf8');
+    writeFileSync(join(dir, '.gbrain', 'config.json'), JSON.stringify({ ...JSON.parse(operator), database_url: dbUrl(src), voyage_api_key: 'fixture', search: { keyword_statement_timeout_ms: 9000, token: 'fixture' } }));
+    const home = join(dir, 'own-home'), saved = [process.env.GBRAIN_HOME, process.env.HOME];
+    try {
+      process.env.LIVE_RECALL_DATABASE_URL = dbUrl(copy);
+      const brain = await openPostgresBrain(gut, 'LIVE_RECALL_DATABASE_URL', { refusals: {} }, false, home);
+      try {
+        const { configDir } = await importGbrain<any>(gut, 'src/core/config.ts');
+        expect([process.env.GBRAIN_HOME, process.env.HOME, configDir()]).toEqual([home, home, join(home, '.gbrain')]);
+        const copied = JSON.parse(readFileSync(join(home, '.gbrain', 'config.json'), 'utf8'));
+        expect(copied).toMatchObject({ ...JSON.parse(operator), search: { keyword_statement_timeout_ms: 9000 } });
+        expect([copied.database_url, copied.voyage_api_key, copied.search.token]).toEqual([undefined, undefined, undefined]);
+      } finally {
+        await brain.close();
+      }
+      expect([process.env.GBRAIN_HOME, process.env.HOME]).toEqual(saved);
+    } finally {
+      writeFileSync(join(dir, '.gbrain', 'config.json'), operator);
+    }
+  }, 120_000);
+
   test('runs every arm as a SELECT-only role and changes no table', async () => {
     const before = await fingerprint(src);
     const paths = await run(dbUrl(src, reader, 'reader-pw'), 'reader');
@@ -233,6 +255,10 @@ describe.skipIf(!ADMIN_URL)('live-recall on a real Postgres (opt-in)', () => {
     expect([card.run.source_pgvector, card.run.source_server_version_num, card.run.copy_server_version_num, card.run.restore_errors]).toEqual([null, null, null, null]);
     expect(card.eligibility.exclusions).toEqual({});
     expect(card.custody.readonly_verified_end).toBe(true);
+    expect(card.keyless_op.statuses).toEqual({ ok: 40 });
+    expect(card.run).toMatchObject({ reference_build: false, code_schema_version: card.run.schema_version, brain_pages_at_end: card.run.brain_pages_at_start, brain_pages_updated_since_start: 0, archive_layout_pages: 0, gold_pages_in_archive_layout: 0 });
+    expect(card.run.brain_pages_at_start).toBeGreaterThan(0);
+    for (const home of ['gbrain-home', 'keyless-gbrain-home']) expect(existsSync(join(dir, 'reader', home, '.gbrain', 'config.json'))).toBe(true);
     expect(await fingerprint(src)).toEqual(before);
   }, 300_000);
 
@@ -246,6 +272,7 @@ describe.skipIf(!ADMIN_URL)('live-recall on a real Postgres (opt-in)', () => {
     expect([card.run.source_pgvector, card.run.source_server_version_num, card.run.copy_server_version_num, card.run.restore_errors]).toEqual(['0.7.4', 160004, 170002, 2]);
     expect(readFileSync(paths.markdown, 'utf8')).toContain('vector search on this copy may differ from the live brain');
     expect(card.eligibility.eligible_question_forms).toBe(40);
+    expect(card.keyless_op.statuses).toEqual({ ok: 40 });
     expect(card.custody.guard_refusals.telemetry_write).toBeGreaterThan(0);
     expect(await fingerprint(copy)).toEqual(before);
   }, 300_000);
