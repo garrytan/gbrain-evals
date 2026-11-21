@@ -1,0 +1,3547 @@
+{
+  "schema": "gbrain-evals/bn10-pairing/v1",
+  "build": "7f162344652afc725793dd476945716e09d26104",
+  "version": "v0.60.748.0",
+  "configuration": "bn10-newest",
+  "measured": "2026-11-20",
+  "bridge_status": "passed",
+  "seed": "beam10m-newest",
+  "resamples": 10000,
+  "preregistered_exclusions": 1,
+  "sdd_points": {
+    "primary": {
+      "frontier": 7.909492284105718,
+      "bridge": 7.026932469009983
+    },
+    "whole_vs_file": {
+      "frontier": 9.291761340628495,
+      "bridge": 12.185932117553953
+    }
+  },
+  "first_table": [
+    {
+      "arm": "p",
+      "reader": "anthropic:claude-opus-5-5",
+      "both_views_scored": 199,
+      "complete_both_views": true,
+      "scores": {
+        "frontier": {
+          "mean_points": 59.067037014636774,
+          "ci95_points": [
+            53.895128303715026,
+            64.56449566752222
+          ],
+          "se_cluster_points": 2.8655663948230123,
+          "scheduled": 199,
+          "scored": 199,
+          "dropped": 0,
+          "drops": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 1,
+          "conversations_scheduled": 10,
+          "conversations_retained": 10,
+          "complete_for_claim": true,
+          "worst_case_points": 59.06703701463678,
+          "best_case_points": 59.06703701463678
+        },
+        "bridge": {
+          "mean_points": 60.70802659838729,
+          "ci95_points": [
+            55.907394851423284,
+            66.11552478476419
+          ],
+          "se_cluster_points": 2.764894255188542,
+          "scheduled": 199,
+          "scored": 199,
+          "dropped": 0,
+          "drops": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 1,
+          "conversations_scheduled": 10,
+          "conversations_retained": 10,
+          "complete_for_claim": true,
+          "worst_case_points": 60.708026598387285,
+          "best_case_points": 60.708026598387285
+        }
+      }
+    },
+    {
+      "arm": "p",
+      "reader": "particle:particle-1",
+      "both_views_scored": 199,
+      "complete_both_views": true,
+      "scores": {
+        "frontier": {
+          "mean_points": 53.55520298983633,
+          "ci95_points": [
+            50.21744450981436,
+            57.01820726714382
+          ],
+          "se_cluster_points": 1.8598662800225887,
+          "scheduled": 199,
+          "scored": 199,
+          "dropped": 0,
+          "drops": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 1,
+          "conversations_scheduled": 10,
+          "conversations_retained": 10,
+          "complete_for_claim": true,
+          "worst_case_points": 53.55520298983634,
+          "best_case_points": 53.55520298983634
+        },
+        "bridge": {
+          "mean_points": 55.820348793733395,
+          "ci95_points": [
+            52.928921415808816,
+            58.894816437233004
+          ],
+          "se_cluster_points": 1.618873358082458,
+          "scheduled": 199,
+          "scored": 199,
+          "dropped": 0,
+          "drops": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 1,
+          "conversations_scheduled": 10,
+          "conversations_retained": 10,
+          "complete_for_claim": true,
+          "worst_case_points": 55.820348793733395,
+          "best_case_points": 55.820348793733395
+        }
+      }
+    },
+    {
+      "arm": "a0",
+      "reader": "anthropic:claude-opus-5-5",
+      "both_views_scored": 197,
+      "complete_both_views": false,
+      "scores": {
+        "frontier": {
+          "mean_points": 55.11036426438095,
+          "ci95_points": [
+            49.50415548547143,
+            61.4560182965189
+          ],
+          "se_cluster_points": 3.258684328370517,
+          "scheduled": 199,
+          "scored": 197,
+          "dropped": 2,
+          "drops": {
+            "lhs": {
+              "harness_invalid": 2
+            },
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 0.9899497487437185,
+          "conversations_scheduled": 10,
+          "conversations_retained": 10,
+          "complete_for_claim": true,
+          "worst_case_points": 54.556491256698735,
+          "best_case_points": 55.56151638232688
+        },
+        "bridge": {
+          "mean_points": 56.81237917333105,
+          "ci95_points": [
+            51.999595470458125,
+            62.03228637677091
+          ],
+          "se_cluster_points": 2.701081376652128,
+          "scheduled": 199,
+          "scored": 197,
+          "dropped": 2,
+          "drops": {
+            "lhs": {
+              "harness_invalid": 2
+            },
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 0.9899497487437185,
+          "conversations_scheduled": 10,
+          "conversations_retained": 10,
+          "complete_for_claim": true,
+          "worst_case_points": 56.24140048817195,
+          "best_case_points": 57.24642561380009
+        }
+      }
+    },
+    {
+      "arm": "a0",
+      "reader": "particle:particle-1",
+      "both_views_scored": 197,
+      "complete_both_views": false,
+      "scores": {
+        "frontier": {
+          "mean_points": 50.386505998996675,
+          "ci95_points": [
+            45.21923683711694,
+            55.67955922834376
+          ],
+          "se_cluster_points": 2.841493136561254,
+          "scheduled": 199,
+          "scored": 197,
+          "dropped": 2,
+          "drops": {
+            "lhs": {
+              "harness_invalid": 2
+            },
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 0.9899497487437185,
+          "conversations_scheduled": 10,
+          "conversations_retained": 10,
+          "complete_for_claim": true,
+          "worst_case_points": 49.880108953780606,
+          "best_case_points": 50.88513407940875
+        },
+        "bridge": {
+          "mean_points": 53.24853827788014,
+          "ci95_points": [
+            46.7489739636635,
+            59.770741916096135
+          ],
+          "se_cluster_points": 3.5023437297643367,
+          "scheduled": 199,
+          "scored": 197,
+          "dropped": 2,
+          "drops": {
+            "lhs": {
+              "harness_invalid": 2
+            },
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 0.9899497487437185,
+          "conversations_scheduled": 10,
+          "conversations_retained": 10,
+          "complete_for_claim": true,
+          "worst_case_points": 52.71337708915772,
+          "best_case_points": 53.71840221478586
+        }
+      }
+    },
+    {
+      "arm": "whole",
+      "reader": "anthropic:claude-opus-5-5",
+      "both_views_scored": 199,
+      "complete_both_views": true,
+      "scores": {
+        "frontier": {
+          "mean_points": 55.22869583102424,
+          "ci95_points": [
+            50.134005009397555,
+            60.42429345750927
+          ],
+          "se_cluster_points": 2.7866346538593594,
+          "scheduled": 199,
+          "scored": 199,
+          "dropped": 0,
+          "drops": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 1,
+          "conversations_scheduled": 10,
+          "conversations_retained": 10,
+          "complete_for_claim": true,
+          "worst_case_points": 55.22869583102423,
+          "best_case_points": 55.22869583102423
+        },
+        "bridge": {
+          "mean_points": 57.448488068967116,
+          "ci95_points": [
+            52.543854251557896,
+            62.5438027982369
+          ],
+          "se_cluster_points": 2.6878850300515755,
+          "scheduled": 199,
+          "scored": 199,
+          "dropped": 0,
+          "drops": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 1,
+          "conversations_scheduled": 10,
+          "conversations_retained": 10,
+          "complete_for_claim": true,
+          "worst_case_points": 57.44848806896711,
+          "best_case_points": 57.44848806896711
+        }
+      }
+    },
+    {
+      "arm": "whole",
+      "reader": "particle:particle-1",
+      "both_views_scored": 199,
+      "complete_both_views": true,
+      "scores": {
+        "frontier": {
+          "mean_points": 49.89112250847294,
+          "ci95_points": [
+            44.428320276189325,
+            55.16618912674068
+          ],
+          "se_cluster_points": 2.85615056798691,
+          "scheduled": 199,
+          "scored": 199,
+          "dropped": 0,
+          "drops": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 1,
+          "conversations_scheduled": 10,
+          "conversations_retained": 10,
+          "complete_for_claim": true,
+          "worst_case_points": 49.89112250847293,
+          "best_case_points": 49.89112250847293
+        },
+        "bridge": {
+          "mean_points": 55.627179390224526,
+          "ci95_points": [
+            51.33799888616913,
+            59.96863457409252
+          ],
+          "se_cluster_points": 2.2980659307540057,
+          "scheduled": 199,
+          "scored": 199,
+          "dropped": 0,
+          "drops": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 1,
+          "conversations_scheduled": 10,
+          "conversations_retained": 10,
+          "complete_for_claim": true,
+          "worst_case_points": 55.62717939022453,
+          "best_case_points": 55.62717939022453
+        }
+      }
+    }
+  ],
+  "sol": [
+    {
+      "arm": "p",
+      "reader": "openai:gpt-6.2-sol",
+      "both_views_scored": 199,
+      "complete_both_views": true,
+      "scores": {
+        "frontier": {
+          "mean_points": 54.787555878369034,
+          "ci95_points": [
+            51.00367034149196,
+            58.949448373222296
+          ],
+          "se_cluster_points": 2.1429524688461803,
+          "scheduled": 199,
+          "scored": 199,
+          "dropped": 0,
+          "drops": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 1,
+          "conversations_scheduled": 10,
+          "conversations_retained": 10,
+          "complete_for_claim": true,
+          "worst_case_points": 54.78755587836902,
+          "best_case_points": 54.78755587836902
+        },
+        "bridge": {
+          "mean_points": 58.833089860464725,
+          "ci95_points": [
+            54.577073101169184,
+            63.47628120381389
+          ],
+          "se_cluster_points": 2.432469254812405,
+          "scheduled": 199,
+          "scored": 199,
+          "dropped": 0,
+          "drops": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 1,
+          "conversations_scheduled": 10,
+          "conversations_retained": 10,
+          "complete_for_claim": true,
+          "worst_case_points": 58.833089860464725,
+          "best_case_points": 58.833089860464725
+        }
+      }
+    },
+    {
+      "arm": "a0",
+      "reader": "openai:gpt-6.2-sol",
+      "both_views_scored": 197,
+      "complete_both_views": false,
+      "scores": {
+        "frontier": {
+          "mean_points": 47.410746154842585,
+          "ci95_points": [
+            41.93732451519171,
+            53.575260104956655
+          ],
+          "se_cluster_points": 3.1263674405509785,
+          "scheduled": 199,
+          "scored": 197,
+          "dropped": 2,
+          "drops": {
+            "lhs": {
+              "harness_invalid": 2
+            },
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 0.9899497487437185,
+          "conversations_scheduled": 10,
+          "conversations_retained": 10,
+          "complete_for_claim": true,
+          "worst_case_points": 46.93425624373864,
+          "best_case_points": 47.93928136936678
+        },
+        "bridge": {
+          "mean_points": 55.54561353019272,
+          "ci95_points": [
+            50.001760750956045,
+            60.97522481491651
+          ],
+          "se_cluster_points": 2.977711007345693,
+          "scheduled": 199,
+          "scored": 197,
+          "dropped": 2,
+          "drops": {
+            "lhs": {
+              "harness_invalid": 2
+            },
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 0.9899497487437185,
+          "conversations_scheduled": 10,
+          "conversations_retained": 10,
+          "complete_for_claim": true,
+          "worst_case_points": 54.987366158029985,
+          "best_case_points": 55.99239128365812
+        }
+      }
+    },
+    {
+      "arm": "whole",
+      "reader": "openai:gpt-6.2-sol",
+      "both_views_scored": 199,
+      "complete_both_views": true,
+      "scores": {
+        "frontier": {
+          "mean_points": 46.685385797829944,
+          "ci95_points": [
+            42.31640420933592,
+            51.08684834342094
+          ],
+          "se_cluster_points": 2.3923098585789107,
+          "scheduled": 199,
+          "scored": 199,
+          "dropped": 0,
+          "drops": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 1,
+          "conversations_scheduled": 10,
+          "conversations_retained": 10,
+          "complete_for_claim": true,
+          "worst_case_points": 46.68538579782996,
+          "best_case_points": 46.68538579782996
+        },
+        "bridge": {
+          "mean_points": 56.167571804575516,
+          "ci95_points": [
+            52.70591317154571,
+            59.398497811902594
+          ],
+          "se_cluster_points": 1.7763687900079652,
+          "scheduled": 199,
+          "scored": 199,
+          "dropped": 0,
+          "drops": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 1,
+          "conversations_scheduled": 10,
+          "conversations_retained": 10,
+          "complete_for_claim": true,
+          "worst_case_points": 56.167571804575516,
+          "best_case_points": 56.167571804575516
+        }
+      }
+    }
+  ],
+  "reader_means": {
+    "p": {
+      "opus_plus_sol": {
+        "frontier": {
+          "mean_points": 56.9272964465029,
+          "ci95_points": [
+            52.92186957160155,
+            61.44105459916772
+          ],
+          "se_cluster_points": 2.3219349112453447,
+          "scheduled": 199,
+          "scored": 199,
+          "dropped": 0,
+          "drops": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 1,
+          "conversations_scheduled": 10,
+          "conversations_retained": 10,
+          "complete_for_claim": true,
+          "worst_case_points": 56.9272964465029,
+          "best_case_points": 56.9272964465029
+        },
+        "bridge": {
+          "mean_points": 59.770558229426,
+          "ci95_points": [
+            55.65540392990869,
+            64.56402975291459
+          ],
+          "se_cluster_points": 2.4352511834422654,
+          "scheduled": 199,
+          "scored": 199,
+          "dropped": 0,
+          "drops": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 1,
+          "conversations_scheduled": 10,
+          "conversations_retained": 10,
+          "complete_for_claim": true,
+          "worst_case_points": 59.77055822942601,
+          "best_case_points": 59.77055822942601
+        }
+      },
+      "all_three": {
+        "frontier": {
+          "mean_points": 55.8032652942807,
+          "ci95_points": [
+            52.22580314298267,
+            59.809664934802605
+          ],
+          "se_cluster_points": 2.0704928912218423,
+          "scheduled": 199,
+          "scored": 199,
+          "dropped": 0,
+          "drops": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 1,
+          "conversations_scheduled": 10,
+          "conversations_retained": 10,
+          "complete_for_claim": true,
+          "worst_case_points": 55.80326529428069,
+          "best_case_points": 55.80326529428069
+        },
+        "bridge": {
+          "mean_points": 58.453821750861806,
+          "ci95_points": [
+            54.926087806858014,
+            62.53936943873327
+          ],
+          "se_cluster_points": 2.0836152680488342,
+          "scheduled": 199,
+          "scored": 199,
+          "dropped": 0,
+          "drops": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 1,
+          "conversations_scheduled": 10,
+          "conversations_retained": 10,
+          "complete_for_claim": true,
+          "worst_case_points": 58.453821750861806,
+          "best_case_points": 58.453821750861806
+        }
+      }
+    },
+    "a0": {
+      "opus_plus_sol": {
+        "frontier": {
+          "mean_points": 51.260555209611766,
+          "ci95_points": [
+            46.25172931483036,
+            57.20797018409584
+          ],
+          "se_cluster_points": 2.9971497990178935,
+          "scheduled": 199,
+          "scored": 197,
+          "dropped": 2,
+          "drops": {
+            "lhs": {
+              "harness_invalid": 2
+            },
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 0.9899497487437185,
+          "conversations_scheduled": 10,
+          "conversations_retained": 10,
+          "complete_for_claim": true,
+          "worst_case_points": 50.74537375021868,
+          "best_case_points": 51.75039887584682
+        },
+        "bridge": {
+          "mean_points": 56.1789963517619,
+          "ci95_points": [
+            51.56413486613479,
+            61.05253451337474
+          ],
+          "se_cluster_points": 2.550043796379521,
+          "scheduled": 199,
+          "scored": 197,
+          "dropped": 2,
+          "drops": {
+            "lhs": {
+              "harness_invalid": 2
+            },
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 0.9899497487437185,
+          "conversations_scheduled": 10,
+          "conversations_retained": 10,
+          "complete_for_claim": true,
+          "worst_case_points": 55.61438332310098,
+          "best_case_points": 56.61940844872912
+        }
+      },
+      "all_three": {
+        "frontier": {
+          "mean_points": 50.96920547274006,
+          "ci95_points": [
+            46.13194982072337,
+            56.62524686708489
+          ],
+          "se_cluster_points": 2.860498852525275,
+          "scheduled": 199,
+          "scored": 197,
+          "dropped": 2,
+          "drops": {
+            "lhs": {
+              "harness_invalid": 2
+            },
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 0.9899497487437185,
+          "conversations_scheduled": 10,
+          "conversations_retained": 10,
+          "complete_for_claim": true,
+          "worst_case_points": 50.456952151405986,
+          "best_case_points": 51.46197727703413
+        },
+        "bridge": {
+          "mean_points": 55.2021769938013,
+          "ci95_points": [
+            50.63369186516527,
+            60.16530603371887
+          ],
+          "se_cluster_points": 2.580565836498617,
+          "scheduled": 199,
+          "scored": 197,
+          "dropped": 2,
+          "drops": {
+            "lhs": {
+              "harness_invalid": 2
+            },
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 0.9899497487437185,
+          "conversations_scheduled": 10,
+          "conversations_retained": 10,
+          "complete_for_claim": true,
+          "worst_case_points": 54.6473812451199,
+          "best_case_points": 55.65240637074804
+        }
+      }
+    },
+    "whole": {
+      "opus_plus_sol": {
+        "frontier": {
+          "mean_points": 50.957040814427096,
+          "ci95_points": [
+            46.53979335656628,
+            55.608665903454
+          ],
+          "se_cluster_points": 2.465558182607699,
+          "scheduled": 199,
+          "scored": 199,
+          "dropped": 0,
+          "drops": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 1,
+          "conversations_scheduled": 10,
+          "conversations_retained": 10,
+          "complete_for_claim": true,
+          "worst_case_points": 50.95704081442709,
+          "best_case_points": 50.95704081442709
+        },
+        "bridge": {
+          "mean_points": 56.80802993677133,
+          "ci95_points": [
+            52.84357450986146,
+            60.76420237214085
+          ],
+          "se_cluster_points": 2.1257132265170733,
+          "scheduled": 199,
+          "scored": 199,
+          "dropped": 0,
+          "drops": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 1,
+          "conversations_scheduled": 10,
+          "conversations_retained": 10,
+          "complete_for_claim": true,
+          "worst_case_points": 56.80802993677131,
+          "best_case_points": 56.80802993677131
+        }
+      },
+      "all_three": {
+        "frontier": {
+          "mean_points": 50.60173471244238,
+          "ci95_points": [
+            45.97660404320596,
+            55.35044179972874
+          ],
+          "se_cluster_points": 2.5364530281841695,
+          "scheduled": 199,
+          "scored": 199,
+          "dropped": 0,
+          "drops": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 1,
+          "conversations_scheduled": 10,
+          "conversations_retained": 10,
+          "complete_for_claim": true,
+          "worst_case_points": 50.60173471244238,
+          "best_case_points": 50.60173471244238
+        },
+        "bridge": {
+          "mean_points": 56.41441308792239,
+          "ci95_points": [
+            52.41721393984516,
+            60.22986891625432
+          ],
+          "se_cluster_points": 2.0773240212658193,
+          "scheduled": 199,
+          "scored": 199,
+          "dropped": 0,
+          "drops": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 1,
+          "conversations_scheduled": 10,
+          "conversations_retained": 10,
+          "complete_for_claim": true,
+          "worst_case_points": 56.41441308792239,
+          "best_case_points": 56.41441308792239
+        }
+      }
+    }
+  },
+  "primary": {
+    "frontier": {
+      "mean_points": -0.05205510201229279,
+      "ci95_points": [
+        -3.2000897858529633,
+        3.10072172132724
+      ],
+      "se_cluster_points": 1.7027363387742924,
+      "question_ci95_points": [
+        -3.369504859431202,
+        3.3883255554238154
+      ],
+      "lhs_mean_points": 59.06703701463678,
+      "rhs_mean_points": 59.11909211664907,
+      "scheduled": 199,
+      "scored": 199,
+      "dropped": 0,
+      "drops": {
+        "lhs": {},
+        "rhs": {}
+      },
+      "product_failures": {
+        "lhs": {},
+        "rhs": {}
+      },
+      "coverage": 1,
+      "conversations_scheduled": 10,
+      "conversations_retained": 10,
+      "complete_for_claim": true,
+      "worst_case_points": -0.0520551020122925,
+      "best_case_points": -0.0520551020122925
+    },
+    "bridge": {
+      "mean_points": 0.01825721008130795,
+      "ci95_points": [
+        -5.004572965955023,
+        4.322891746389161
+      ],
+      "se_cluster_points": 2.5467889045002265,
+      "question_ci95_points": [
+        -5.065356183717229,
+        5.063522873388312
+      ],
+      "lhs_mean_points": 60.708026598387285,
+      "rhs_mean_points": 60.689769388305976,
+      "scheduled": 199,
+      "scored": 199,
+      "dropped": 0,
+      "drops": {
+        "lhs": {},
+        "rhs": {}
+      },
+      "product_failures": {
+        "lhs": {},
+        "rhs": {}
+      },
+      "coverage": 1,
+      "conversations_scheduled": 10,
+      "conversations_retained": 10,
+      "complete_for_claim": true,
+      "worst_case_points": 0.018257210081307877,
+      "best_case_points": 0.018257210081307877
+    }
+  },
+  "secondary": {
+    "whole_vs_file": {
+      "frontier": {
+        "mean_points": -12.156744847258299,
+        "ci95_points": [
+          -18.42954091670083,
+          -6.42300280061213
+        ],
+        "se_cluster_points": 3.183050159367155,
+        "lhs_mean_points": 55.22869583102423,
+        "rhs_mean_points": 67.38544067828255,
+        "scheduled": 199,
+        "scored": 199,
+        "dropped": 0,
+        "drops": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "product_failures": {
+          "lhs": {},
+          "rhs": {
+            "context_overflow": 6
+          }
+        },
+        "coverage": 1,
+        "conversations_scheduled": 10,
+        "conversations_retained": 10,
+        "complete_for_claim": true,
+        "worst_case_points": -12.156744847258297,
+        "best_case_points": -12.156744847258297
+      },
+      "bridge": {
+        "mean_points": -13.862900611991494,
+        "ci95_points": [
+          -18.545183317799797,
+          -9.219198052954916
+        ],
+        "se_cluster_points": 2.492101078032267,
+        "lhs_mean_points": 57.44848806896711,
+        "rhs_mean_points": 71.31138868095861,
+        "scheduled": 199,
+        "scored": 199,
+        "dropped": 0,
+        "drops": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "product_failures": {
+          "lhs": {},
+          "rhs": {
+            "context_overflow": 6
+          }
+        },
+        "coverage": 1,
+        "conversations_scheduled": 10,
+        "conversations_retained": 10,
+        "complete_for_claim": true,
+        "worst_case_points": -13.862900611991488,
+        "best_case_points": -13.862900611991488
+      }
+    },
+    "whole_vs_f6_file_rerun": {
+      "mean_points": -14.799720230710628,
+      "ci95_points": [
+        -20.523553707891743,
+        -9.817762604812533
+      ],
+      "se_cluster_points": 2.890963552947583,
+      "lhs_mean_points": 57.44848806896711,
+      "rhs_mean_points": 72.24820829967771,
+      "scheduled": 199,
+      "scored": 199,
+      "dropped": 0,
+      "drops": {
+        "lhs": {},
+        "rhs": {}
+      },
+      "product_failures": {
+        "lhs": {},
+        "rhs": {
+          "context_overflow": 5
+        }
+      },
+      "coverage": 1,
+      "conversations_scheduled": 10,
+      "conversations_retained": 10,
+      "complete_for_claim": true,
+      "worst_case_points": -14.799720230710625,
+      "best_case_points": -14.799720230710625
+    },
+    "whole_vs_q1_whole": {
+      "frontier": {
+        "mean_points": -3.9469385757050195,
+        "ci95_points": [
+          -8.339342701117099,
+          0.3924141577137837
+        ],
+        "se_cluster_points": 2.372888152056279,
+        "lhs_mean_points": 55.381366011988995,
+        "rhs_mean_points": 59.32830458769403,
+        "scheduled": 199,
+        "scored": 198,
+        "dropped": 1,
+        "drops": {
+          "lhs": {},
+          "rhs": {
+            "harness_invalid": 1
+          }
+        },
+        "product_failures": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "coverage": 0.9949748743718593,
+        "conversations_scheduled": 10,
+        "conversations_retained": 10,
+        "complete_for_claim": true,
+        "worst_case_points": -4.429617276329618,
+        "best_case_points": -3.4245921507014776
+      },
+      "bridge": {
+        "mean_points": 1.770160345696157,
+        "ci95_points": [
+          -3.68788500758579,
+          7.404692531602532
+        ],
+        "se_cluster_points": 2.9952845452786354,
+        "lhs_mean_points": 57.738631948103304,
+        "rhs_mean_points": 55.96847160240715,
+        "scheduled": 199,
+        "scored": 198,
+        "dropped": 1,
+        "drops": {
+          "lhs": {},
+          "rhs": {
+            "harness_invalid": 1
+          }
+        },
+        "product_failures": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "coverage": 0.9949748743718593,
+        "conversations_scheduled": 10,
+        "conversations_retained": 10,
+        "complete_for_claim": true,
+        "worst_case_points": 1.2587525047630106,
+        "best_case_points": 2.263777630391151
+      }
+    },
+    "a0_vs_q1_8000": {
+      "mean_points": 1.3522496459745375,
+      "ci95_points": [
+        -2.8948666512258234,
+        5.792673293919314
+      ],
+      "se_cluster_points": 2.353097607438943,
+      "lhs_mean_points": 57.24869700057499,
+      "rhs_mean_points": 55.896447354600475,
+      "scheduled": 199,
+      "scored": 195,
+      "dropped": 4,
+      "drops": {
+        "lhs": {
+          "harness_invalid": 2
+        },
+        "rhs": {
+          "harness_invalid": 2
+        }
+      },
+      "product_failures": {
+        "lhs": {},
+        "rhs": {}
+      },
+      "coverage": 0.9798994974874372,
+      "conversations_scheduled": 10,
+      "conversations_retained": 10,
+      "complete_for_claim": true,
+      "worst_case_points": -0.684981502688268,
+      "best_case_points": 3.335118999824295
+    },
+    "a0_vs_f6_a0": {
+      "mean_points": 8.260571446353671,
+      "ci95_points": [
+        3.021542610413506,
+        13.23488289062216
+      ],
+      "se_cluster_points": 2.7662517103689583,
+      "lhs_mean_points": 56.81237917333105,
+      "rhs_mean_points": 48.55180772697741,
+      "scheduled": 199,
+      "scored": 197,
+      "dropped": 2,
+      "drops": {
+        "lhs": {
+          "harness_invalid": 2
+        },
+        "rhs": {
+          "harness_invalid": 2
+        }
+      },
+      "product_failures": {
+        "lhs": {},
+        "rhs": {}
+      },
+      "coverage": 0.9899497487437185,
+      "conversations_scheduled": 10,
+      "conversations_retained": 10,
+      "complete_for_claim": true,
+      "worst_case_points": 7.172525502169213,
+      "best_case_points": 9.182575753425494
+    },
+    "particle_p_vs_f6_particle_p": {
+      "mean_points": -0.5701145180644615,
+      "ci95_points": [
+        -5.399011816151292,
+        3.7346628040066685
+      ],
+      "se_cluster_points": 2.4661378349755023,
+      "lhs_mean_points": 55.820348793733395,
+      "rhs_mean_points": 56.39046331179786,
+      "scheduled": 199,
+      "scored": 199,
+      "dropped": 0,
+      "drops": {
+        "lhs": {},
+        "rhs": {}
+      },
+      "product_failures": {
+        "lhs": {},
+        "rhs": {}
+      },
+      "coverage": 1,
+      "conversations_scheduled": 10,
+      "conversations_retained": 10,
+      "complete_for_claim": true,
+      "worst_case_points": -0.5701145180644612,
+      "best_case_points": -0.5701145180644612
+    }
+  },
+  "ability": {
+    "abstention": {
+      "frontier": {
+        "mean_points": 5.2631578947368425,
+        "ci95_points": [
+          0,
+          15.789473684210526
+        ],
+        "se_cluster_points": 5.239616236052117,
+        "lhs_mean_points": 52.63157894736842,
+        "rhs_mean_points": 47.36842105263158,
+        "scheduled": 19,
+        "scored": 19,
+        "dropped": 0,
+        "drops": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "product_failures": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "coverage": 1,
+        "conversations_scheduled": 10,
+        "conversations_retained": 10,
+        "complete_for_claim": true,
+        "worst_case_points": 5.2631578947368425,
+        "best_case_points": 5.2631578947368425
+      },
+      "bridge": {
+        "mean_points": -5.2631578947368425,
+        "ci95_points": [
+          -15.789473684210526,
+          0
+        ],
+        "se_cluster_points": 5.239616236052117,
+        "lhs_mean_points": 84.21052631578948,
+        "rhs_mean_points": 89.47368421052632,
+        "scheduled": 19,
+        "scored": 19,
+        "dropped": 0,
+        "drops": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "product_failures": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "coverage": 1,
+        "conversations_scheduled": 10,
+        "conversations_retained": 10,
+        "complete_for_claim": true,
+        "worst_case_points": -5.2631578947368425,
+        "best_case_points": -5.2631578947368425
+      }
+    },
+    "contradiction_resolution": {
+      "frontier": {
+        "mean_points": 2.5,
+        "ci95_points": [
+          -4.375,
+          10
+        ],
+        "se_cluster_points": 3.864007706456543,
+        "lhs_mean_points": 71.25,
+        "rhs_mean_points": 68.75,
+        "scheduled": 20,
+        "scored": 20,
+        "dropped": 0,
+        "drops": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "product_failures": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "coverage": 1,
+        "conversations_scheduled": 10,
+        "conversations_retained": 10,
+        "complete_for_claim": true,
+        "worst_case_points": 2.5,
+        "best_case_points": 2.5
+      },
+      "bridge": {
+        "mean_points": -1.25,
+        "ci95_points": [
+          -13.75,
+          11.25
+        ],
+        "se_cluster_points": 6.833841444523635,
+        "lhs_mean_points": 73.75,
+        "rhs_mean_points": 75,
+        "scheduled": 20,
+        "scored": 20,
+        "dropped": 0,
+        "drops": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "product_failures": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "coverage": 1,
+        "conversations_scheduled": 10,
+        "conversations_retained": 10,
+        "complete_for_claim": true,
+        "worst_case_points": -1.25,
+        "best_case_points": -1.25
+      }
+    },
+    "event_ordering": {
+      "frontier": {
+        "mean_points": -0.8373927094667557,
+        "ci95_points": [
+          -5.250890199257457,
+          2.920962045105946
+        ],
+        "se_cluster_points": 2.2353295539253017,
+        "lhs_mean_points": 30.536462740080356,
+        "rhs_mean_points": 31.373855449547108,
+        "scheduled": 20,
+        "scored": 20,
+        "dropped": 0,
+        "drops": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "product_failures": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "coverage": 1,
+        "conversations_scheduled": 10,
+        "conversations_retained": 10,
+        "complete_for_claim": true,
+        "worst_case_points": -0.8373927094667557,
+        "best_case_points": -0.8373927094667557
+      },
+      "bridge": {
+        "mean_points": -0.3183407596909829,
+        "ci95_points": [
+          -3.832596689776982,
+          2.6188881515354923
+        ],
+        "se_cluster_points": 1.7414034521828927,
+        "lhs_mean_points": 26.21153132062023,
+        "rhs_mean_points": 26.529872080311215,
+        "scheduled": 20,
+        "scored": 20,
+        "dropped": 0,
+        "drops": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "product_failures": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "coverage": 1,
+        "conversations_scheduled": 10,
+        "conversations_retained": 10,
+        "complete_for_claim": true,
+        "worst_case_points": -0.3183407596909829,
+        "best_case_points": -0.3183407596909829
+      }
+    },
+    "information_extraction": {
+      "frontier": {
+        "mean_points": 0,
+        "ci95_points": [
+          -10,
+          12.5
+        ],
+        "se_cluster_points": 6.454972243679029,
+        "lhs_mean_points": 75,
+        "rhs_mean_points": 75,
+        "scheduled": 20,
+        "scored": 20,
+        "dropped": 0,
+        "drops": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "product_failures": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "coverage": 1,
+        "conversations_scheduled": 10,
+        "conversations_retained": 10,
+        "complete_for_claim": true,
+        "worst_case_points": 0,
+        "best_case_points": 0
+      },
+      "bridge": {
+        "mean_points": 5,
+        "ci95_points": [
+          -10,
+          20
+        ],
+        "se_cluster_points": 8.975274678557508,
+        "lhs_mean_points": 75,
+        "rhs_mean_points": 70,
+        "scheduled": 20,
+        "scored": 20,
+        "dropped": 0,
+        "drops": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "product_failures": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "coverage": 1,
+        "conversations_scheduled": 10,
+        "conversations_retained": 10,
+        "complete_for_claim": true,
+        "worst_case_points": 5,
+        "best_case_points": 5
+      }
+    },
+    "instruction_following": {
+      "frontier": {
+        "mean_points": -11.25,
+        "ci95_points": [
+          -25,
+          0
+        ],
+        "se_cluster_points": 7.083333333333333,
+        "lhs_mean_points": 81.25,
+        "rhs_mean_points": 92.5,
+        "scheduled": 20,
+        "scored": 20,
+        "dropped": 0,
+        "drops": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "product_failures": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "coverage": 1,
+        "conversations_scheduled": 10,
+        "conversations_retained": 10,
+        "complete_for_claim": true,
+        "worst_case_points": -11.25,
+        "best_case_points": -11.25
+      },
+      "bridge": {
+        "mean_points": 6.25,
+        "ci95_points": [
+          -11.25,
+          27.5
+        ],
+        "se_cluster_points": 10.416666666666668,
+        "lhs_mean_points": 80,
+        "rhs_mean_points": 73.75,
+        "scheduled": 20,
+        "scored": 20,
+        "dropped": 0,
+        "drops": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "product_failures": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "coverage": 1,
+        "conversations_scheduled": 10,
+        "conversations_retained": 10,
+        "complete_for_claim": true,
+        "worst_case_points": 6.25,
+        "best_case_points": 6.25
+      }
+    },
+    "knowledge_update": {
+      "frontier": {
+        "mean_points": -1.25,
+        "ci95_points": [
+          -15,
+          11.25
+        ],
+        "se_cluster_points": 6.574889099191459,
+        "lhs_mean_points": 77.5,
+        "rhs_mean_points": 78.75,
+        "scheduled": 20,
+        "scored": 20,
+        "dropped": 0,
+        "drops": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "product_failures": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "coverage": 1,
+        "conversations_scheduled": 10,
+        "conversations_retained": 10,
+        "complete_for_claim": true,
+        "worst_case_points": -1.25,
+        "best_case_points": -1.25
+      },
+      "bridge": {
+        "mean_points": -7.5,
+        "ci95_points": [
+          -25,
+          10
+        ],
+        "se_cluster_points": 9.166666666666668,
+        "lhs_mean_points": 80,
+        "rhs_mean_points": 87.5,
+        "scheduled": 20,
+        "scored": 20,
+        "dropped": 0,
+        "drops": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "product_failures": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "coverage": 1,
+        "conversations_scheduled": 10,
+        "conversations_retained": 10,
+        "complete_for_claim": true,
+        "worst_case_points": -7.5,
+        "best_case_points": -7.5
+      }
+    },
+    "multi_session_reasoning": {
+      "frontier": {
+        "mean_points": 0.9166666666666667,
+        "ci95_points": [
+          -14.083333333333332,
+          15.416666666666668
+        ],
+        "se_cluster_points": 7.856201843601488,
+        "lhs_mean_points": 31.75,
+        "rhs_mean_points": 30.833333333333332,
+        "scheduled": 20,
+        "scored": 20,
+        "dropped": 0,
+        "drops": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "product_failures": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "coverage": 1,
+        "conversations_scheduled": 10,
+        "conversations_retained": 10,
+        "complete_for_claim": true,
+        "worst_case_points": 0.9166666666666667,
+        "best_case_points": 0.9166666666666667
+      },
+      "bridge": {
+        "mean_points": -7.25,
+        "ci95_points": [
+          -35.33333333333333,
+          18
+        ],
+        "se_cluster_points": 14.638678050347593,
+        "lhs_mean_points": 25.25,
+        "rhs_mean_points": 32.5,
+        "scheduled": 20,
+        "scored": 20,
+        "dropped": 0,
+        "drops": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "product_failures": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "coverage": 1,
+        "conversations_scheduled": 10,
+        "conversations_retained": 10,
+        "complete_for_claim": true,
+        "worst_case_points": -7.25,
+        "best_case_points": -7.25
+      }
+    },
+    "preference_following": {
+      "frontier": {
+        "mean_points": -3.75,
+        "ci95_points": [
+          -10,
+          0
+        ],
+        "se_cluster_points": 2.667968432263687,
+        "lhs_mean_points": 77.5,
+        "rhs_mean_points": 81.25,
+        "scheduled": 20,
+        "scored": 20,
+        "dropped": 0,
+        "drops": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "product_failures": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "coverage": 1,
+        "conversations_scheduled": 10,
+        "conversations_retained": 10,
+        "complete_for_claim": true,
+        "worst_case_points": -3.75,
+        "best_case_points": -3.75
+      },
+      "bridge": {
+        "mean_points": 0,
+        "ci95_points": [
+          -17.5,
+          20
+        ],
+        "se_cluster_points": 10.540925533894598,
+        "lhs_mean_points": 77.5,
+        "rhs_mean_points": 77.5,
+        "scheduled": 20,
+        "scored": 20,
+        "dropped": 0,
+        "drops": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "product_failures": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "coverage": 1,
+        "conversations_scheduled": 10,
+        "conversations_retained": 10,
+        "complete_for_claim": true,
+        "worst_case_points": 0,
+        "best_case_points": 0
+      }
+    },
+    "summarization": {
+      "frontier": {
+        "mean_points": 1.9027777777777772,
+        "ci95_points": [
+          -2.0000000000000013,
+          5.652777777777777
+        ],
+        "se_cluster_points": 2.0359898402569767,
+        "lhs_mean_points": 49.18055555555556,
+        "rhs_mean_points": 47.27777777777778,
+        "scheduled": 20,
+        "scored": 20,
+        "dropped": 0,
+        "drops": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "product_failures": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "coverage": 1,
+        "conversations_scheduled": 10,
+        "conversations_retained": 10,
+        "complete_for_claim": true,
+        "worst_case_points": 1.9027777777777772,
+        "best_case_points": 1.9027777777777772
+      },
+      "bridge": {
+        "mean_points": 3.9999999999999987,
+        "ci95_points": [
+          -9,
+          16.666666666666664
+        ],
+        "se_cluster_points": 7.0058947842795245,
+        "lhs_mean_points": 56.33333333333333,
+        "rhs_mean_points": 52.333333333333336,
+        "scheduled": 20,
+        "scored": 20,
+        "dropped": 0,
+        "drops": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "product_failures": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "coverage": 1,
+        "conversations_scheduled": 10,
+        "conversations_retained": 10,
+        "complete_for_claim": true,
+        "worst_case_points": 3.9999999999999987,
+        "best_case_points": 3.9999999999999987
+      }
+    },
+    "temporal_reasoning": {
+      "frontier": {
+        "mean_points": 6.25,
+        "ci95_points": [
+          -3.75,
+          17.5
+        ],
+        "se_cluster_points": 5.965758776365147,
+        "lhs_mean_points": 43.75,
+        "rhs_mean_points": 37.5,
+        "scheduled": 20,
+        "scored": 20,
+        "dropped": 0,
+        "drops": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "product_failures": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "coverage": 1,
+        "conversations_scheduled": 10,
+        "conversations_retained": 10,
+        "complete_for_claim": true,
+        "worst_case_points": 6.25,
+        "best_case_points": 6.25
+      },
+      "bridge": {
+        "mean_points": 6.25,
+        "ci95_points": [
+          -7.5,
+          20
+        ],
+        "se_cluster_points": 7.276770498572075,
+        "lhs_mean_points": 30,
+        "rhs_mean_points": 23.75,
+        "scheduled": 20,
+        "scored": 20,
+        "dropped": 0,
+        "drops": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "product_failures": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "coverage": 1,
+        "conversations_scheduled": 10,
+        "conversations_retained": 10,
+        "complete_for_claim": true,
+        "worst_case_points": 6.25,
+        "best_case_points": 6.25
+      }
+    }
+  },
+  "fences": {
+    "p": {
+      "delivered_contexts": 200,
+      "measured_contexts": 200,
+      "missing_measurements": 0,
+      "overlay_mismatches": 0,
+      "unmatched_quoted_rows": 0,
+      "mean_delivered_rows": 28.48,
+      "mean_fenced_rows": 28.48,
+      "mean_fence_tokens": 1416.115,
+      "reference_budget_tokens": 5500,
+      "share_of_reference_budget": 0.25747545454545456
+    },
+    "a0": {
+      "delivered_contexts": 198,
+      "measured_contexts": 198,
+      "missing_measurements": 0,
+      "overlay_mismatches": 0,
+      "unmatched_quoted_rows": 0,
+      "mean_delivered_rows": 49.7979797979798,
+      "mean_fenced_rows": 49.7979797979798,
+      "mean_fence_tokens": 3575.0252525252527,
+      "reference_budget_tokens": 5500,
+      "share_of_reference_budget": 0.6500045913682277
+    },
+    "whole": {
+      "delivered_contexts": 200,
+      "measured_contexts": 200,
+      "missing_measurements": 0,
+      "overlay_mismatches": 0,
+      "unmatched_quoted_rows": 0,
+      "mean_delivered_rows": 7.45,
+      "mean_fenced_rows": 7.45,
+      "mean_fence_tokens": 480.875,
+      "reference_budget_tokens": 5500,
+      "share_of_reference_budget": 0.08743181818181818
+    }
+  },
+  "sensitivity_without_degraded_ingest": {
+    "descriptive": true,
+    "omitted_conversations": 3,
+    "first_table": [
+      {
+        "arm": "p",
+        "reader": "anthropic:claude-opus-5-5",
+        "both_views_scored": 139,
+        "complete_both_views": true,
+        "scores": {
+          "frontier": {
+            "mean_points": 59.942600080510644,
+            "ci95_points": [
+              53.21457152823814,
+              67.01108555102081
+            ],
+            "se_cluster_points": 3.822663950258259,
+            "scheduled": 139,
+            "scored": 139,
+            "dropped": 0,
+            "drops": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "product_failures": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "coverage": 1,
+            "conversations_scheduled": 7,
+            "conversations_retained": 7,
+            "complete_for_claim": false,
+            "worst_case_points": 59.94260008051065,
+            "best_case_points": 59.94260008051065
+          },
+          "bridge": {
+            "mean_points": 61.27936701039261,
+            "ci95_points": [
+              55.100721915912835,
+              68.33986149447524
+            ],
+            "se_cluster_points": 3.7041453910254294,
+            "scheduled": 139,
+            "scored": 139,
+            "dropped": 0,
+            "drops": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "product_failures": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "coverage": 1,
+            "conversations_scheduled": 7,
+            "conversations_retained": 7,
+            "complete_for_claim": false,
+            "worst_case_points": 61.27936701039261,
+            "best_case_points": 61.27936701039261
+          }
+        }
+      },
+      {
+        "arm": "p",
+        "reader": "particle:particle-1",
+        "both_views_scored": 139,
+        "complete_both_views": true,
+        "scores": {
+          "frontier": {
+            "mean_points": 54.37101449393838,
+            "ci95_points": [
+              50.2258312306942,
+              58.8152799433951
+            ],
+            "se_cluster_points": 2.424599802471284,
+            "scheduled": 139,
+            "scored": 139,
+            "dropped": 0,
+            "drops": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "product_failures": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "coverage": 1,
+            "conversations_scheduled": 7,
+            "conversations_retained": 7,
+            "complete_for_claim": false,
+            "worst_case_points": 54.37101449393838,
+            "best_case_points": 54.37101449393838
+          },
+          "bridge": {
+            "mean_points": 55.68822932324846,
+            "ci95_points": [
+              51.92625336019846,
+              59.79991712171693
+            ],
+            "se_cluster_points": 2.1966064082947283,
+            "scheduled": 139,
+            "scored": 139,
+            "dropped": 0,
+            "drops": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "product_failures": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "coverage": 1,
+            "conversations_scheduled": 7,
+            "conversations_retained": 7,
+            "complete_for_claim": false,
+            "worst_case_points": 55.68822932324846,
+            "best_case_points": 55.68822932324846
+          }
+        }
+      },
+      {
+        "arm": "a0",
+        "reader": "anthropic:claude-opus-5-5",
+        "both_views_scored": 137,
+        "complete_both_views": false,
+        "scores": {
+          "frontier": {
+            "mean_points": 55.6353201127177,
+            "ci95_points": [
+              47.4651117697279,
+              64.57147413176982
+            ],
+            "se_cluster_points": 4.760544781365883,
+            "scheduled": 139,
+            "scored": 137,
+            "dropped": 2,
+            "drops": {
+              "lhs": {
+                "harness_invalid": 2
+              },
+              "rhs": {}
+            },
+            "product_failures": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "coverage": 0.9856115107913669,
+            "conversations_scheduled": 7,
+            "conversations_retained": 7,
+            "complete_for_claim": false,
+            "worst_case_points": 54.83481190965701,
+            "best_case_points": 56.27366083052033
+          },
+          "bridge": {
+            "mean_points": 58.4663787838482,
+            "ci95_points": [
+              51.8155683003746,
+              65.25752974244129
+            ],
+            "se_cluster_points": 3.6958511826325506,
+            "scheduled": 139,
+            "scored": 137,
+            "dropped": 2,
+            "drops": {
+              "lhs": {
+                "harness_invalid": 2
+              },
+              "rhs": {}
+            },
+            "product_failures": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "coverage": 0.9856115107913669,
+            "conversations_scheduled": 7,
+            "conversations_retained": 7,
+            "complete_for_claim": false,
+            "worst_case_points": 57.62513592364894,
+            "best_case_points": 59.063984844512255
+          }
+        }
+      },
+      {
+        "arm": "a0",
+        "reader": "particle:particle-1",
+        "both_views_scored": 137,
+        "complete_both_views": false,
+        "scores": {
+          "frontier": {
+            "mean_points": 51.39792470449516,
+            "ci95_points": [
+              44.46438838538368,
+              58.478211337152416
+            ],
+            "se_cluster_points": 3.8623360873281514,
+            "scheduled": 139,
+            "scored": 137,
+            "dropped": 2,
+            "drops": {
+              "lhs": {
+                "harness_invalid": 2
+              },
+              "rhs": {}
+            },
+            "product_failures": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "coverage": 0.9856115107913669,
+            "conversations_scheduled": 7,
+            "conversations_retained": 7,
+            "complete_for_claim": false,
+            "worst_case_points": 50.65838621953838,
+            "best_case_points": 52.097235140401686
+          },
+          "bridge": {
+            "mean_points": 52.54642246990215,
+            "ci95_points": [
+              44.294764101118496,
+              60.79963536173402
+            ],
+            "se_cluster_points": 4.570174316735916,
+            "scheduled": 139,
+            "scored": 137,
+            "dropped": 2,
+            "drops": {
+              "lhs": {
+                "harness_invalid": 2
+              },
+              "rhs": {}
+            },
+            "product_failures": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "coverage": 0.9856115107913669,
+            "conversations_scheduled": 7,
+            "conversations_retained": 7,
+            "complete_for_claim": false,
+            "worst_case_points": 51.79035883724168,
+            "best_case_points": 53.22920775810499
+          }
+        }
+      },
+      {
+        "arm": "whole",
+        "reader": "anthropic:claude-opus-5-5",
+        "both_views_scored": 139,
+        "complete_both_views": true,
+        "scores": {
+          "frontier": {
+            "mean_points": 57.7089840666427,
+            "ci95_points": [
+              51.1957227481593,
+              63.944841835788814
+            ],
+            "se_cluster_points": 3.5909524479779193,
+            "scheduled": 139,
+            "scored": 139,
+            "dropped": 0,
+            "drops": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "product_failures": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "coverage": 1,
+            "conversations_scheduled": 7,
+            "conversations_retained": 7,
+            "complete_for_claim": false,
+            "worst_case_points": 57.7089840666427,
+            "best_case_points": 57.7089840666427
+          },
+          "bridge": {
+            "mean_points": 59.352917631633645,
+            "ci95_points": [
+              53.17558156161735,
+              65.78673457238384
+            ],
+            "se_cluster_points": 3.5431645191349856,
+            "scheduled": 139,
+            "scored": 139,
+            "dropped": 0,
+            "drops": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "product_failures": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "coverage": 1,
+            "conversations_scheduled": 7,
+            "conversations_retained": 7,
+            "complete_for_claim": false,
+            "worst_case_points": 59.35291763163363,
+            "best_case_points": 59.35291763163363
+          }
+        }
+      },
+      {
+        "arm": "whole",
+        "reader": "particle:particle-1",
+        "both_views_scored": 139,
+        "complete_both_views": true,
+        "scores": {
+          "frontier": {
+            "mean_points": 52.85614487054704,
+            "ci95_points": [
+              46.73770984548907,
+              58.42052657169734
+            ],
+            "se_cluster_points": 3.313677004975085,
+            "scheduled": 139,
+            "scored": 139,
+            "dropped": 0,
+            "drops": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "product_failures": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "coverage": 1,
+            "conversations_scheduled": 7,
+            "conversations_retained": 7,
+            "complete_for_claim": false,
+            "worst_case_points": 52.856144870547034,
+            "best_case_points": 52.856144870547034
+          },
+          "bridge": {
+            "mean_points": 57.07248624661214,
+            "ci95_points": [
+              51.89568776800574,
+              62.09249085371969
+            ],
+            "se_cluster_points": 2.8945106216319867,
+            "scheduled": 139,
+            "scored": 139,
+            "dropped": 0,
+            "drops": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "product_failures": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "coverage": 1,
+            "conversations_scheduled": 7,
+            "conversations_retained": 7,
+            "complete_for_claim": false,
+            "worst_case_points": 57.072486246612144,
+            "best_case_points": 57.072486246612144
+          }
+        }
+      }
+    ],
+    "sol": [
+      {
+        "arm": "p",
+        "reader": "openai:gpt-6.2-sol",
+        "both_views_scored": 139,
+        "complete_both_views": true,
+        "scores": {
+          "frontier": {
+            "mean_points": 55.751622895975686,
+            "ci95_points": [
+              50.641974350686034,
+              61.34700082601488
+            ],
+            "se_cluster_points": 2.9445941164047897,
+            "scheduled": 139,
+            "scored": 139,
+            "dropped": 0,
+            "drops": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "product_failures": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "coverage": 1,
+            "conversations_scheduled": 7,
+            "conversations_retained": 7,
+            "complete_for_claim": false,
+            "worst_case_points": 55.751622895975686,
+            "best_case_points": 55.751622895975686
+          },
+          "bridge": {
+            "mean_points": 60.77114905571634,
+            "ci95_points": [
+              54.95455374604725,
+              66.63787934121831
+            ],
+            "se_cluster_points": 3.199504560021766,
+            "scheduled": 139,
+            "scored": 139,
+            "dropped": 0,
+            "drops": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "product_failures": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "coverage": 1,
+            "conversations_scheduled": 7,
+            "conversations_retained": 7,
+            "complete_for_claim": false,
+            "worst_case_points": 60.77114905571637,
+            "best_case_points": 60.77114905571637
+          }
+        }
+      },
+      {
+        "arm": "a0",
+        "reader": "openai:gpt-6.2-sol",
+        "both_views_scored": 137,
+        "complete_both_views": false,
+        "scores": {
+          "frontier": {
+            "mean_points": 48.672966517979,
+            "ci95_points": [
+              40.92711004443788,
+              56.51600896377709
+            ],
+            "se_cluster_points": 4.371061873766763,
+            "scheduled": 139,
+            "scored": 137,
+            "dropped": 2,
+            "drops": {
+              "lhs": {
+                "harness_invalid": 2
+              },
+              "rhs": {}
+            },
+            "product_failures": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "coverage": 0.9856115107913669,
+            "conversations_scheduled": 7,
+            "conversations_retained": 7,
+            "complete_for_claim": false,
+            "worst_case_points": 47.97263606448289,
+            "best_case_points": 49.4114849853462
+          },
+          "bridge": {
+            "mean_points": 57.873288416583804,
+            "ci95_points": [
+              50.62469117648059,
+              64.26354487495898
+            ],
+            "se_cluster_points": 3.769351863789188,
+            "scheduled": 139,
+            "scored": 137,
+            "dropped": 2,
+            "drops": {
+              "lhs": {
+                "harness_invalid": 2
+              },
+              "rhs": {}
+            },
+            "product_failures": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "coverage": 0.9856115107913669,
+            "conversations_scheduled": 7,
+            "conversations_retained": 7,
+            "complete_for_claim": false,
+            "worst_case_points": 57.04057923073367,
+            "best_case_points": 58.479428151596984
+          }
+        }
+      },
+      {
+        "arm": "whole",
+        "reader": "openai:gpt-6.2-sol",
+        "both_views_scored": 139,
+        "complete_both_views": true,
+        "scores": {
+          "frontier": {
+            "mean_points": 49.757742540267415,
+            "ci95_points": [
+              45.47585192223011,
+              53.95957855665358
+            ],
+            "se_cluster_points": 2.4383660826187974,
+            "scheduled": 139,
+            "scored": 139,
+            "dropped": 0,
+            "drops": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "product_failures": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "coverage": 1,
+            "conversations_scheduled": 7,
+            "conversations_retained": 7,
+            "complete_for_claim": false,
+            "worst_case_points": 49.75774254026741,
+            "best_case_points": 49.75774254026741
+          },
+          "bridge": {
+            "mean_points": 58.142932049465195,
+            "ci95_points": [
+              54.33441917676735,
+              61.298873905617214
+            ],
+            "se_cluster_points": 1.9422398835635815,
+            "scheduled": 139,
+            "scored": 139,
+            "dropped": 0,
+            "drops": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "product_failures": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "coverage": 1,
+            "conversations_scheduled": 7,
+            "conversations_retained": 7,
+            "complete_for_claim": false,
+            "worst_case_points": 58.142932049465195,
+            "best_case_points": 58.142932049465195
+          }
+        }
+      }
+    ],
+    "reader_means": {
+      "p": {
+        "opus_plus_sol": {
+          "frontier": {
+            "mean_points": 57.84711148824316,
+            "ci95_points": [
+              52.28029295116366,
+              63.91287968025408
+            ],
+            "se_cluster_points": 3.228871514874216,
+            "scheduled": 139,
+            "scored": 139,
+            "dropped": 0,
+            "drops": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "product_failures": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "coverage": 1,
+            "conversations_scheduled": 7,
+            "conversations_retained": 7,
+            "complete_for_claim": false,
+            "worst_case_points": 57.84711148824317,
+            "best_case_points": 57.84711148824317
+          },
+          "bridge": {
+            "mean_points": 61.02525803305447,
+            "ci95_points": [
+              55.5259417103291,
+              67.3582855710821
+            ],
+            "se_cluster_points": 3.2670566023242684,
+            "scheduled": 139,
+            "scored": 139,
+            "dropped": 0,
+            "drops": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "product_failures": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "coverage": 1,
+            "conversations_scheduled": 7,
+            "conversations_retained": 7,
+            "complete_for_claim": false,
+            "worst_case_points": 61.025258033054484,
+            "best_case_points": 61.025258033054484
+          }
+        },
+        "all_three": {
+          "frontier": {
+            "mean_points": 56.688412490141566,
+            "ci95_points": [
+              51.648725394039786,
+              62.11951407394526
+            ],
+            "se_cluster_points": 2.901391268456659,
+            "scheduled": 139,
+            "scored": 139,
+            "dropped": 0,
+            "drops": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "product_failures": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "coverage": 1,
+            "conversations_scheduled": 7,
+            "conversations_retained": 7,
+            "complete_for_claim": false,
+            "worst_case_points": 56.68841249014157,
+            "best_case_points": 56.68841249014157
+          },
+          "bridge": {
+            "mean_points": 59.246248463119144,
+            "ci95_points": [
+              54.415787549127316,
+              64.6775512999892
+            ],
+            "se_cluster_points": 2.854303419736023,
+            "scheduled": 139,
+            "scored": 139,
+            "dropped": 0,
+            "drops": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "product_failures": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "coverage": 1,
+            "conversations_scheduled": 7,
+            "conversations_retained": 7,
+            "complete_for_claim": false,
+            "worst_case_points": 59.24624846311913,
+            "best_case_points": 59.24624846311913
+          }
+        }
+      },
+      "a0": {
+        "opus_plus_sol": {
+          "frontier": {
+            "mean_points": 52.15414331534835,
+            "ci95_points": [
+              44.912210699392155,
+              60.426638646357475
+            ],
+            "se_cluster_points": 4.302372915912564,
+            "scheduled": 139,
+            "scored": 137,
+            "dropped": 2,
+            "drops": {
+              "lhs": {
+                "harness_invalid": 2
+              },
+              "rhs": {}
+            },
+            "product_failures": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "coverage": 0.9856115107913669,
+            "conversations_scheduled": 7,
+            "conversations_retained": 7,
+            "complete_for_claim": false,
+            "worst_case_points": 51.40372398706995,
+            "best_case_points": 52.84257290793327
+          },
+          "bridge": {
+            "mean_points": 58.169833600215995,
+            "ci95_points": [
+              52.31398801536299,
+              63.885316160741084
+            ],
+            "se_cluster_points": 3.2703591950022153,
+            "scheduled": 139,
+            "scored": 137,
+            "dropped": 2,
+            "drops": {
+              "lhs": {
+                "harness_invalid": 2
+              },
+              "rhs": {}
+            },
+            "product_failures": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "coverage": 0.9856115107913669,
+            "conversations_scheduled": 7,
+            "conversations_retained": 7,
+            "complete_for_claim": false,
+            "worst_case_points": 57.332857577191305,
+            "best_case_points": 58.77170649805461
+          }
+        },
+        "all_three": {
+          "frontier": {
+            "mean_points": 51.90207044506394,
+            "ci95_points": [
+              44.97219315702715,
+              59.624455028599755
+            ],
+            "se_cluster_points": 4.093911643582614,
+            "scheduled": 139,
+            "scored": 137,
+            "dropped": 2,
+            "drops": {
+              "lhs": {
+                "harness_invalid": 2
+              },
+              "rhs": {}
+            },
+            "product_failures": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "coverage": 0.9856115107913669,
+            "conversations_scheduled": 7,
+            "conversations_retained": 7,
+            "complete_for_claim": false,
+            "worst_case_points": 51.15527806455943,
+            "best_case_points": 52.59412698542274
+          },
+          "bridge": {
+            "mean_points": 56.29536322344471,
+            "ci95_points": [
+              50.06171440300078,
+              62.75114403707287
+            ],
+            "se_cluster_points": 3.4460149649765155,
+            "scheduled": 139,
+            "scored": 137,
+            "dropped": 2,
+            "drops": {
+              "lhs": {
+                "harness_invalid": 2
+              },
+              "rhs": {}
+            },
+            "product_failures": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "coverage": 0.9856115107913669,
+            "conversations_scheduled": 7,
+            "conversations_retained": 7,
+            "complete_for_claim": false,
+            "worst_case_points": 55.485357997208105,
+            "best_case_points": 56.92420691807141
+          }
+        }
+      },
+      "whole": {
+        "opus_plus_sol": {
+          "frontier": {
+            "mean_points": 53.733363303455064,
+            "ci95_points": [
+              48.4006434194184,
+              58.90501127990488
+            ],
+            "se_cluster_points": 2.960131640991481,
+            "scheduled": 139,
+            "scored": 139,
+            "dropped": 0,
+            "drops": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "product_failures": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "coverage": 1,
+            "conversations_scheduled": 7,
+            "conversations_retained": 7,
+            "complete_for_claim": false,
+            "worst_case_points": 53.73336330345506,
+            "best_case_points": 53.73336330345506
+          },
+          "bridge": {
+            "mean_points": 58.747924840549416,
+            "ci95_points": [
+              53.93434581757644,
+              63.1900827741928
+            ],
+            "se_cluster_points": 2.646326797454212,
+            "scheduled": 139,
+            "scored": 139,
+            "dropped": 0,
+            "drops": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "product_failures": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "coverage": 1,
+            "conversations_scheduled": 7,
+            "conversations_retained": 7,
+            "complete_for_claim": false,
+            "worst_case_points": 58.747924840549416,
+            "best_case_points": 58.747924840549416
+          }
+        },
+        "all_three": {
+          "frontier": {
+            "mean_points": 53.44095715915239,
+            "ci95_points": [
+              47.85118142063548,
+              58.61642571798466
+            ],
+            "se_cluster_points": 3.0349898990468387,
+            "scheduled": 139,
+            "scored": 139,
+            "dropped": 0,
+            "drops": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "product_failures": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "coverage": 1,
+            "conversations_scheduled": 7,
+            "conversations_retained": 7,
+            "complete_for_claim": false,
+            "worst_case_points": 53.440957159152376,
+            "best_case_points": 53.440957159152376
+          },
+          "bridge": {
+            "mean_points": 58.18944530923699,
+            "ci95_points": [
+              53.30938459718611,
+              62.47151770765353
+            ],
+            "se_cluster_points": 2.569456457384216,
+            "scheduled": 139,
+            "scored": 139,
+            "dropped": 0,
+            "drops": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "product_failures": {
+              "lhs": {},
+              "rhs": {}
+            },
+            "coverage": 1,
+            "conversations_scheduled": 7,
+            "conversations_retained": 7,
+            "complete_for_claim": false,
+            "worst_case_points": 58.18944530923697,
+            "best_case_points": 58.18944530923697
+          }
+        }
+      }
+    },
+    "primary": {
+      "frontier": {
+        "mean_points": -0.3771118497734362,
+        "ci95_points": [
+          -4.318731837531463,
+          3.6068200492337215
+        ],
+        "se_cluster_points": 2.2426825002571396,
+        "question_ci95_points": [
+          -4.395490353125991,
+          3.6075460250197207
+        ],
+        "lhs_mean_points": 59.94260008051065,
+        "rhs_mean_points": 60.31971193028407,
+        "scheduled": 139,
+        "scored": 139,
+        "dropped": 0,
+        "drops": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "product_failures": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "coverage": 1,
+        "conversations_scheduled": 7,
+        "conversations_retained": 7,
+        "complete_for_claim": false,
+        "worst_case_points": -0.3771118497734357,
+        "best_case_points": -0.3771118497734357
+      },
+      "bridge": {
+        "mean_points": -1.1982397731281853,
+        "ci95_points": [
+          -7.552203553617942,
+          4.452727594994585
+        ],
+        "se_cluster_points": 3.432908503791863,
+        "question_ci95_points": [
+          -7.276273292287076,
+          4.745694324511277
+        ],
+        "lhs_mean_points": 61.27936701039261,
+        "rhs_mean_points": 62.477606783520784,
+        "scheduled": 139,
+        "scored": 139,
+        "dropped": 0,
+        "drops": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "product_failures": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "coverage": 1,
+        "conversations_scheduled": 7,
+        "conversations_retained": 7,
+        "complete_for_claim": false,
+        "worst_case_points": -1.1982397731281862,
+        "best_case_points": -1.1982397731281862
+      }
+    },
+    "secondary": {
+      "whole_vs_file": {
+        "frontier": {
+          "mean_points": -8.32612335646444,
+          "ci95_points": [
+            -12.96732390770011,
+            -3.396921940044821
+          ],
+          "se_cluster_points": 2.6855920607565693,
+          "lhs_mean_points": 57.7089840666427,
+          "rhs_mean_points": 66.03510742310715,
+          "scheduled": 139,
+          "scored": 139,
+          "dropped": 0,
+          "drops": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {
+              "context_overflow": 5
+            }
+          },
+          "coverage": 1,
+          "conversations_scheduled": 7,
+          "conversations_retained": 7,
+          "complete_for_claim": false,
+          "worst_case_points": -8.32612335646444,
+          "best_case_points": -8.32612335646444
+        },
+        "bridge": {
+          "mean_points": -13.142246919664816,
+          "ci95_points": [
+            -17.84995442935786,
+            -8.81946851147603
+          ],
+          "se_cluster_points": 2.5203146958224476,
+          "lhs_mean_points": 59.35291763163363,
+          "rhs_mean_points": 72.49516455129846,
+          "scheduled": 139,
+          "scored": 139,
+          "dropped": 0,
+          "drops": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {
+              "context_overflow": 5
+            }
+          },
+          "coverage": 1,
+          "conversations_scheduled": 7,
+          "conversations_retained": 7,
+          "complete_for_claim": false,
+          "worst_case_points": -13.142246919664814,
+          "best_case_points": -13.142246919664814
+        }
+      },
+      "whole_vs_f6_file_rerun": {
+        "mean_points": -15.030775466785059,
+        "ci95_points": [
+          -21.653614468848566,
+          -10.038258425882887
+        ],
+        "se_cluster_points": 3.3176554054389045,
+        "lhs_mean_points": 59.35291763163363,
+        "rhs_mean_points": 74.38369309841869,
+        "scheduled": 139,
+        "scored": 139,
+        "dropped": 0,
+        "drops": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "product_failures": {
+          "lhs": {},
+          "rhs": {
+            "context_overflow": 5
+          }
+        },
+        "coverage": 1,
+        "conversations_scheduled": 7,
+        "conversations_retained": 7,
+        "complete_for_claim": false,
+        "worst_case_points": -15.030775466785059,
+        "best_case_points": -15.030775466785059
+      },
+      "whole_vs_q1_whole": {
+        "frontier": {
+          "mean_points": -0.9441672690402206,
+          "ci95_points": [
+            -5.312615692243183,
+            3.3829103941444596
+          ],
+          "se_cluster_points": 2.425636994417723,
+          "lhs_mean_points": 57.946005690314024,
+          "rhs_mean_points": 58.89017295935426,
+          "scheduled": 139,
+          "scored": 138,
+          "dropped": 1,
+          "drops": {
+            "lhs": {},
+            "rhs": {
+              "harness_invalid": 1
+            }
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 0.9928057553956835,
+          "conversations_scheduled": 7,
+          "conversations_retained": 7,
+          "complete_for_claim": false,
+          "worst_case_points": -1.6567991591910103,
+          "best_case_points": -0.21795023832770102
+        },
+        "bridge": {
+          "mean_points": 5.178337146462451,
+          "ci95_points": [
+            -1.8232968721598488,
+            11.122924976588546
+          ],
+          "se_cluster_points": 3.592267586525273,
+          "lhs_mean_points": 59.78301123765996,
+          "rhs_mean_points": 54.60467409119751,
+          "scheduled": 139,
+          "scored": 138,
+          "dropped": 1,
+          "drops": {
+            "lhs": {},
+            "rhs": {
+              "harness_invalid": 1
+            }
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 0.9928057553956835,
+          "conversations_scheduled": 7,
+          "conversations_retained": 7,
+          "complete_for_claim": false,
+          "worst_case_points": 4.421658461955528,
+          "best_case_points": 5.860507382818837
+        }
+      },
+      "a0_vs_q1_8000": {
+        "mean_points": 3.2990668493208806,
+        "ci95_points": [
+          -2.403054418508958,
+          8.649719264791042
+        ],
+        "se_cluster_points": 2.9878471313222787,
+        "lhs_mean_points": 58.89627862784708,
+        "rhs_mean_points": 55.5972117785262,
+        "scheduled": 139,
+        "scored": 136,
+        "dropped": 3,
+        "drops": {
+          "lhs": {
+            "harness_invalid": 2
+          },
+          "rhs": {
+            "harness_invalid": 1
+          }
+        },
+        "product_failures": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "coverage": 0.9784172661870504,
+        "conversations_scheduled": 7,
+        "conversations_retained": 7,
+        "complete_for_claim": false,
+        "worst_case_points": 1.0695905863858974,
+        "best_case_points": 5.386137348975826
+      },
+      "a0_vs_f6_a0": {
+        "mean_points": 9.710297154894201,
+        "ci95_points": [
+          3.1064333821702386,
+          15.508453349637318
+        ],
+        "se_cluster_points": 3.474628402384613,
+        "lhs_mean_points": 58.4663787838482,
+        "rhs_mean_points": 48.75608162895399,
+        "scheduled": 139,
+        "scored": 137,
+        "dropped": 2,
+        "drops": {
+          "lhs": {
+            "harness_invalid": 2
+          },
+          "rhs": {
+            "harness_invalid": 2
+          }
+        },
+        "product_failures": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "coverage": 0.9856115107913669,
+        "conversations_scheduled": 7,
+        "conversations_retained": 7,
+        "complete_for_claim": false,
+        "worst_case_points": 8.131731728205077,
+        "best_case_points": 11.009429569931696
+      },
+      "particle_p_vs_f6_particle_p": {
+        "mean_points": -1.9036937840933046,
+        "ci95_points": [
+          -7.721509380260021,
+          3.256132389315303
+        ],
+        "se_cluster_points": 3.0422731951353597,
+        "lhs_mean_points": 55.68822932324846,
+        "rhs_mean_points": 57.59192310734178,
+        "scheduled": 139,
+        "scored": 139,
+        "dropped": 0,
+        "drops": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "product_failures": {
+          "lhs": {},
+          "rhs": {}
+        },
+        "coverage": 1,
+        "conversations_scheduled": 7,
+        "conversations_retained": 7,
+        "complete_for_claim": false,
+        "worst_case_points": -1.9036937840933035,
+        "best_case_points": -1.9036937840933035
+      }
+    },
+    "ability": {
+      "abstention": {
+        "frontier": {
+          "mean_points": 7.6923076923076925,
+          "ci95_points": [
+            0,
+            23.076923076923077
+          ],
+          "se_cluster_points": 7.6160688663936185,
+          "lhs_mean_points": 53.84615384615385,
+          "rhs_mean_points": 46.15384615384615,
+          "scheduled": 13,
+          "scored": 13,
+          "dropped": 0,
+          "drops": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 1,
+          "conversations_scheduled": 7,
+          "conversations_retained": 7,
+          "complete_for_claim": false,
+          "worst_case_points": 7.6923076923076925,
+          "best_case_points": 7.6923076923076925
+        },
+        "bridge": {
+          "mean_points": -7.6923076923076925,
+          "ci95_points": [
+            -23.076923076923077,
+            0
+          ],
+          "se_cluster_points": 7.6160688663936185,
+          "lhs_mean_points": 84.61538461538461,
+          "rhs_mean_points": 92.3076923076923,
+          "scheduled": 13,
+          "scored": 13,
+          "dropped": 0,
+          "drops": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 1,
+          "conversations_scheduled": 7,
+          "conversations_retained": 7,
+          "complete_for_claim": false,
+          "worst_case_points": -7.6923076923076925,
+          "best_case_points": -7.6923076923076925
+        }
+      },
+      "contradiction_resolution": {
+        "frontier": {
+          "mean_points": -2.6785714285714284,
+          "ci95_points": [
+            -8.928571428571429,
+            1.7857142857142858
+          ],
+          "se_cluster_points": 3.00580504117919,
+          "lhs_mean_points": 69.64285714285714,
+          "rhs_mean_points": 72.32142857142857,
+          "scheduled": 14,
+          "scored": 14,
+          "dropped": 0,
+          "drops": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 1,
+          "conversations_scheduled": 7,
+          "conversations_retained": 7,
+          "complete_for_claim": false,
+          "worst_case_points": -2.6785714285714284,
+          "best_case_points": -2.6785714285714284
+        },
+        "bridge": {
+          "mean_points": 1.7857142857142858,
+          "ci95_points": [
+            -14.285714285714286,
+            17.857142857142858
+          ],
+          "se_cluster_points": 8.8087193969933,
+          "lhs_mean_points": 73.21428571428571,
+          "rhs_mean_points": 71.42857142857143,
+          "scheduled": 14,
+          "scored": 14,
+          "dropped": 0,
+          "drops": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 1,
+          "conversations_scheduled": 7,
+          "conversations_retained": 7,
+          "complete_for_claim": false,
+          "worst_case_points": 1.7857142857142858,
+          "best_case_points": 1.7857142857142858
+        }
+      },
+      "event_ordering": {
+        "frontier": {
+          "mean_points": -0.03386447671879646,
+          "ci95_points": [
+            -3.8942270938622796,
+            3.4894669371940275
+          ],
+          "se_cluster_points": 2.028201981021843,
+          "lhs_mean_points": 30.60073571999056,
+          "rhs_mean_points": 30.634600196709354,
+          "scheduled": 14,
+          "scored": 14,
+          "dropped": 0,
+          "drops": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 1,
+          "conversations_scheduled": 7,
+          "conversations_retained": 7,
+          "complete_for_claim": false,
+          "worst_case_points": -0.03386447671879646,
+          "best_case_points": -0.03386447671879646
+        },
+        "bridge": {
+          "mean_points": -0.17061869986793685,
+          "ci95_points": [
+            -1.6133703568345898,
+            0.9981729007296296
+          ],
+          "se_cluster_points": 0.7315492302114903,
+          "lhs_mean_points": 25.44038198413617,
+          "rhs_mean_points": 25.611000684004107,
+          "scheduled": 14,
+          "scored": 14,
+          "dropped": 0,
+          "drops": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 1,
+          "conversations_scheduled": 7,
+          "conversations_retained": 7,
+          "complete_for_claim": false,
+          "worst_case_points": -0.17061869986793685,
+          "best_case_points": -0.17061869986793685
+        }
+      },
+      "information_extraction": {
+        "frontier": {
+          "mean_points": -7.142857142857143,
+          "ci95_points": [
+            -14.285714285714286,
+            0
+          ],
+          "se_cluster_points": 4.610694459770735,
+          "lhs_mean_points": 71.42857142857143,
+          "rhs_mean_points": 78.57142857142857,
+          "scheduled": 14,
+          "scored": 14,
+          "dropped": 0,
+          "drops": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 1,
+          "conversations_scheduled": 7,
+          "conversations_retained": 7,
+          "complete_for_claim": false,
+          "worst_case_points": -7.142857142857143,
+          "best_case_points": -7.142857142857143
+        },
+        "bridge": {
+          "mean_points": 0,
+          "ci95_points": [
+            -21.428571428571427,
+            21.428571428571427
+          ],
+          "se_cluster_points": 10.91089451179962,
+          "lhs_mean_points": 71.42857142857143,
+          "rhs_mean_points": 71.42857142857143,
+          "scheduled": 14,
+          "scored": 14,
+          "dropped": 0,
+          "drops": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 1,
+          "conversations_scheduled": 7,
+          "conversations_retained": 7,
+          "complete_for_claim": false,
+          "worst_case_points": 0,
+          "best_case_points": 0
+        }
+      },
+      "instruction_following": {
+        "frontier": {
+          "mean_points": -5.357142857142857,
+          "ci95_points": [
+            -21.428571428571427,
+            5.357142857142857
+          ],
+          "se_cluster_points": 7.645971773014958,
+          "lhs_mean_points": 85.71428571428571,
+          "rhs_mean_points": 91.07142857142857,
+          "scheduled": 14,
+          "scored": 14,
+          "dropped": 0,
+          "drops": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 1,
+          "conversations_scheduled": 7,
+          "conversations_retained": 7,
+          "complete_for_claim": false,
+          "worst_case_points": -5.357142857142857,
+          "best_case_points": -5.357142857142857
+        },
+        "bridge": {
+          "mean_points": 1.7857142857142858,
+          "ci95_points": [
+            -14.285714285714286,
+            21.428571428571427
+          ],
+          "se_cluster_points": 9.616365727025899,
+          "lhs_mean_points": 85.71428571428571,
+          "rhs_mean_points": 83.92857142857143,
+          "scheduled": 14,
+          "scored": 14,
+          "dropped": 0,
+          "drops": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 1,
+          "conversations_scheduled": 7,
+          "conversations_retained": 7,
+          "complete_for_claim": false,
+          "worst_case_points": 1.7857142857142858,
+          "best_case_points": 1.7857142857142858
+        }
+      },
+      "knowledge_update": {
+        "frontier": {
+          "mean_points": -1.7857142857142858,
+          "ci95_points": [
+            -21.428571428571427,
+            16.071428571428573
+          ],
+          "se_cluster_points": 9.616365727025899,
+          "lhs_mean_points": 75,
+          "rhs_mean_points": 76.78571428571429,
+          "scheduled": 14,
+          "scored": 14,
+          "dropped": 0,
+          "drops": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 1,
+          "conversations_scheduled": 7,
+          "conversations_retained": 7,
+          "complete_for_claim": false,
+          "worst_case_points": -1.7857142857142858,
+          "best_case_points": -1.7857142857142858
+        },
+        "bridge": {
+          "mean_points": -17.857142857142858,
+          "ci95_points": [
+            -35.714285714285715,
+            -3.5714285714285716
+          ],
+          "se_cluster_points": 8.987898137227083,
+          "lhs_mean_points": 71.42857142857143,
+          "rhs_mean_points": 89.28571428571429,
+          "scheduled": 14,
+          "scored": 14,
+          "dropped": 0,
+          "drops": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 1,
+          "conversations_scheduled": 7,
+          "conversations_retained": 7,
+          "complete_for_claim": false,
+          "worst_case_points": -17.857142857142858,
+          "best_case_points": -17.857142857142858
+        }
+      },
+      "multi_session_reasoning": {
+        "frontier": {
+          "mean_points": 4.285714285714286,
+          "ci95_points": [
+            -17.857142857142858,
+            23.928571428571427
+          ],
+          "se_cluster_points": 11.13652139779462,
+          "lhs_mean_points": 36.42857142857143,
+          "rhs_mean_points": 32.142857142857146,
+          "scheduled": 14,
+          "scored": 14,
+          "dropped": 0,
+          "drops": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 1,
+          "conversations_scheduled": 7,
+          "conversations_retained": 7,
+          "complete_for_claim": false,
+          "worst_case_points": 4.285714285714286,
+          "best_case_points": 4.285714285714286
+        },
+        "bridge": {
+          "mean_points": -4.404761904761904,
+          "ci95_points": [
+            -45.83333333333333,
+            30.23809523809524
+          ],
+          "se_cluster_points": 21.141932090445444,
+          "lhs_mean_points": 28.928571428571427,
+          "rhs_mean_points": 33.33333333333333,
+          "scheduled": 14,
+          "scored": 14,
+          "dropped": 0,
+          "drops": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 1,
+          "conversations_scheduled": 7,
+          "conversations_retained": 7,
+          "complete_for_claim": false,
+          "worst_case_points": -4.404761904761904,
+          "best_case_points": -4.404761904761904
+        }
+      },
+      "preference_following": {
+        "frontier": {
+          "mean_points": -1.7857142857142858,
+          "ci95_points": [
+            -5.357142857142857,
+            0
+          ],
+          "se_cluster_points": 1.785714285714286,
+          "lhs_mean_points": 87.5,
+          "rhs_mean_points": 89.28571428571429,
+          "scheduled": 14,
+          "scored": 14,
+          "dropped": 0,
+          "drops": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 1,
+          "conversations_scheduled": 7,
+          "conversations_retained": 7,
+          "complete_for_claim": false,
+          "worst_case_points": -1.7857142857142858,
+          "best_case_points": -1.7857142857142858
+        },
+        "bridge": {
+          "mean_points": 7.142857142857143,
+          "ci95_points": [
+            -10.714285714285714,
+            32.142857142857146
+          ],
+          "se_cluster_points": 11.845088536983573,
+          "lhs_mean_points": 92.85714285714286,
+          "rhs_mean_points": 85.71428571428571,
+          "scheduled": 14,
+          "scored": 14,
+          "dropped": 0,
+          "drops": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 1,
+          "conversations_scheduled": 7,
+          "conversations_retained": 7,
+          "complete_for_claim": false,
+          "worst_case_points": 7.142857142857143,
+          "best_case_points": 7.142857142857143
+        }
+      },
+      "summarization": {
+        "frontier": {
+          "mean_points": 1.8253968253968256,
+          "ci95_points": [
+            -3.5317460317460316,
+            6.865079365079366
+          ],
+          "se_cluster_points": 2.87390366007935,
+          "lhs_mean_points": 47.757936507936506,
+          "rhs_mean_points": 45.932539682539684,
+          "scheduled": 14,
+          "scored": 14,
+          "dropped": 0,
+          "drops": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 1,
+          "conversations_scheduled": 7,
+          "conversations_retained": 7,
+          "complete_for_claim": false,
+          "worst_case_points": 1.8253968253968256,
+          "best_case_points": 1.8253968253968256
+        },
+        "bridge": {
+          "mean_points": 3.3928571428571423,
+          "ci95_points": [
+            -12.857142857142858,
+            20.535714285714285
+          ],
+          "se_cluster_points": 9.356983822712499,
+          "lhs_mean_points": 55.83333333333333,
+          "rhs_mean_points": 52.4404761904762,
+          "scheduled": 14,
+          "scored": 14,
+          "dropped": 0,
+          "drops": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 1,
+          "conversations_scheduled": 7,
+          "conversations_retained": 7,
+          "complete_for_claim": false,
+          "worst_case_points": 3.3928571428571423,
+          "best_case_points": 3.3928571428571423
+        }
+      },
+      "temporal_reasoning": {
+        "frontier": {
+          "mean_points": 1.7857142857142858,
+          "ci95_points": [
+            -8.928571428571429,
+            16.071428571428573
+          ],
+          "se_cluster_points": 6.916041689656103,
+          "lhs_mean_points": 41.07142857142857,
+          "rhs_mean_points": 39.285714285714285,
+          "scheduled": 14,
+          "scored": 14,
+          "dropped": 0,
+          "drops": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 1,
+          "conversations_scheduled": 7,
+          "conversations_retained": 7,
+          "complete_for_claim": false,
+          "worst_case_points": 1.7857142857142858,
+          "best_case_points": 1.7857142857142858
+        },
+        "bridge": {
+          "mean_points": 3.5714285714285716,
+          "ci95_points": [
+            -14.285714285714286,
+            21.428571428571427
+          ],
+          "se_cluster_points": 10.101525445522109,
+          "lhs_mean_points": 25,
+          "rhs_mean_points": 21.428571428571427,
+          "scheduled": 14,
+          "scored": 14,
+          "dropped": 0,
+          "drops": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "product_failures": {
+            "lhs": {},
+            "rhs": {}
+          },
+          "coverage": 1,
+          "conversations_scheduled": 7,
+          "conversations_retained": 7,
+          "complete_for_claim": false,
+          "worst_case_points": 3.5714285714285716,
+          "best_case_points": 3.5714285714285716
+        }
+      }
+    }
+  },
+  "decision": {
+    "primary": {
+      "frontier": {
+        "code": "no_regression_claim",
+        "text": "No regression is claimed; report what the 95% interval allows."
+      },
+      "bridge": {
+        "code": "no_regression_claim",
+        "text": "No regression is claimed; report what the 95% interval allows."
+      }
+    },
+    "views_disagree": false,
+    "lead_note": null,
+    "whole_vs_file": "Keep the file-agent comparison under “where gbrain loses” with the new paired interval.",
+    "readme": {
+      "p": "Publish the frontier three-reader arm P mean and the Opus-paired change against F6 P with its interval.",
+      "whole": "Publish the frontier three-reader whole-arm mean beside the stored file agent (67.6%), with the Opus-paired difference and interval."
+    },
+    "pilot_left_out": {}
+  }
+}
