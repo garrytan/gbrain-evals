@@ -161,5 +161,8 @@ describe('LongMemEval on Redis harness: counted stages refuse pilot leftovers', 
     expect(L.heldPilotWork('counted-first-half', runs, [], dir)).toBe('');
     writeFileSync(join(dir, 'particle', 'off.rows.jsonl'), '{}\n');
     expect(L.heldPilotWork('counted-first-half', runs, [], dir)).toContain('particle rows');
+    mkdirSync(join(dir, 'pilot-archive'));
+    expect(L.heldPilotWork('counted-first-half', runs, [], dir)).toBe('');
+    expect(L.heldPilotWork('counted-first-half', runs, ['run-pilot'], dir)).toContain('1 batch intents');
   });
 });

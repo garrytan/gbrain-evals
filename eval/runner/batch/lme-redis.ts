@@ -170,14 +170,15 @@ export function parseArm(arm: string): { reader: AnyReader; memories: Memories }
 /** Question ids of a stage: the pilot is the last 25 in seed-42 order; the counted halves split all 500 at 250 (R113). */
 /**
  * Why a counted stage may not start: no pilot answer counts, yet the pilot's 25 questions are counted questions too, so
- * a batch state or particle rows left from the pilot or the judge check would answer them. Empty when the state is clean.
+ * a batch state or particle rows left from the pilot or the judge check would answer them. Particle rows count as pilot
+ * work until `vm-stage.sh archive-pilot` has moved the pilot's aside. Empty when the state is clean.
  */
 export function heldPilotWork(stage: string, runs: Record<string, string>, intentRunIds: string[], stateDir: string): string {
   if (!stage.startsWith('counted')) return '';
   const early = new Set([runs.pilot, runs['judge-check']].filter(Boolean));
   const intents = intentRunIds.filter(id => early.has(id)).length;
   const particle = join(stateDir, 'particle');
-  const rows = existsSync(particle) && readdirSync(particle).some(f => f.endsWith('.rows.jsonl'));
+  const rows = !existsSync(join(stateDir, 'pilot-archive')) && existsSync(particle) && readdirSync(particle).some(f => f.endsWith('.rows.jsonl'));
   if (!intents && !rows) return '';
   return `${stage}: the state still holds pilot work (${intents} batch intents${rows ? ', particle rows' : ''}); no pilot answer counts, so archive it first (vm-stage.sh archive-pilot)`;
 }
