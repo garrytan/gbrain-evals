@@ -1,0 +1,27 @@
+{
+  "reference": "pglite-6ad5-r1",
+  "probes": 548,
+  "comparisons": {
+    "pglite-dbc-ctl": {
+      "ordered_top5_differs": 0,
+      "top5_set_differs": 0,
+      "quality_changed": 0,
+      "ndcg5_delta_sum": 0,
+      "probes": []
+    },
+    "postgres-dbc-ctl": {
+      "ordered_top5_differs": 0,
+      "top5_set_differs": 0,
+      "quality_changed": 0,
+      "ndcg5_delta_sum": 0,
+      "probes": []
+    },
+    "postgres-6ad5-r1": {
+      "ordered_top5_differs": 0,
+      "top5_set_differs": 0,
+      "quality_changed": 0,
+      "ndcg5_delta_sum": 0,
+      "probes": []
+    }
+  }
+}
