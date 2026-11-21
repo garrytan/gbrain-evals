@@ -1,0 +1,6 @@
+{
+ "judge-check": "lme-redis-harness-judge-check-2026-11-20T02-34-47-637Z-fec2b02e",
+ "pilot": "lme-redis-harness-pilot-2026-11-20T02-34-47-735Z-c1226029",
+ "counted-first-half": "lme-redis-harness-counted-first-half-2026-11-20T19-51-13-977Z-6e8733bc",
+ "counted-second-half": "lme-redis-harness-counted-second-half-2026-11-21T03-21-18-797Z-a350ae26"
+}

@@ -1,0 +1,859 @@
+{
+ "degraded_questions": 0,
+ "primary": {
+  "reader": "opus",
+  "first": "off",
+  "second": "on",
+  "scored": 250,
+  "of": 250,
+  "enough": true,
+  "n": 250,
+  "b": 32,
+  "c": 0,
+  "z": 5.65685424949238,
+  "exact_p": 4.656612873077396e-10,
+  "diff_points": 12.8,
+  "ci95": [
+   8.799999999999999,
+   17.2
+  ],
+  "discordance": 0.128,
+  "stopped_at_interim_look": true,
+  "estimate_possibly_overstated": true
+ },
+ "secondaries": [
+  {
+   "reader": "sol",
+   "first": "off",
+   "second": "on",
+   "scored": 250,
+   "of": 250,
+   "enough": true,
+   "n": 250,
+   "b": 30,
+   "c": 1,
+   "z": 5.208553758776472,
+   "exact_p": 2.980232238769526e-8,
+   "diff_points": 11.600000000000001,
+   "ci95": [
+    7.6,
+    16
+   ],
+   "discordance": 0.124,
+   "holm_p": 2.980232238769526e-7,
+   "passes_holm": true
+  },
+  {
+   "reader": "gpt4o",
+   "first": "off",
+   "second": "on",
+   "scored": 250,
+   "of": 250,
+   "enough": true,
+   "n": 250,
+   "b": 29,
+   "c": 10,
+   "z": 3.0424349222966556,
+   "exact_p": 0.0033778479119064347,
+   "diff_points": 7.6,
+   "ci95": [
+    2.8000000000000003,
+    12.4
+   ],
+   "discordance": 0.156,
+   "holm_p": 0.013511391647625739,
+   "passes_holm": true
+  },
+  {
+   "reader": "particle",
+   "first": "off",
+   "second": "on",
+   "scored": 250,
+   "of": 250,
+   "enough": true,
+   "n": 250,
+   "b": 32,
+   "c": 4,
+   "z": 4.666666666666667,
+   "exact_p": 0.000001941574737429621,
+   "diff_points": 11.200000000000001,
+   "ci95": [
+    6.800000000000001,
+    15.6
+   ],
+   "discordance": 0.144,
+   "holm_p": 0.00001747417263686659,
+   "passes_holm": true
+  },
+  {
+   "reader": "opus",
+   "first": "off",
+   "second": "full",
+   "scored": 500,
+   "of": 500,
+   "enough": true,
+   "n": 500,
+   "b": 4,
+   "c": 15,
+   "z": -2.523573072576179,
+   "exact_p": 0.01921081542968748,
+   "diff_points": -2.1999999999999997,
+   "ci95": [
+    -4,
+    -0.6
+   ],
+   "discordance": 0.038,
+   "holm_p": 0.05763244628906244,
+   "passes_holm": false
+  },
+  {
+   "reader": "sol",
+   "first": "off",
+   "second": "full",
+   "scored": 500,
+   "of": 500,
+   "enough": true,
+   "n": 500,
+   "b": 9,
+   "c": 23,
+   "z": -2.4748737341529163,
+   "exact_p": 0.020061607006937297,
+   "diff_points": -2.8000000000000003,
+   "ci95": [
+    -5,
+    -0.6
+   ],
+   "discordance": 0.064,
+   "holm_p": 0.05763244628906244,
+   "passes_holm": false
+  },
+  {
+   "reader": "gpt4o",
+   "first": "off",
+   "second": "full",
+   "scored": 500,
+   "of": 500,
+   "enough": true,
+   "n": 500,
+   "b": 109,
+   "c": 18,
+   "z": 8.074944235686637,
+   "exact_p": 4.569610902658278e-17,
+   "diff_points": 18.2,
+   "ci95": [
+    14.000000000000002,
+    22.2
+   ],
+   "discordance": 0.254,
+   "holm_p": 5.026571992924106e-16,
+   "passes_holm": true
+  },
+  {
+   "reader": "particle",
+   "first": "off",
+   "second": "full",
+   "scored": 500,
+   "of": 500,
+   "enough": true,
+   "n": 500,
+   "b": 11,
+   "c": 24,
+   "z": -2.197401062294143,
+   "exact_p": 0.04095959151163721,
+   "diff_points": -2.6,
+   "ci95": [
+    -5,
+    -0.4
+   ],
+   "discordance": 0.07,
+   "holm_p": 0.05763244628906244,
+   "passes_holm": false
+  },
+  {
+   "reader": "opus",
+   "first": "oracle",
+   "second": "off",
+   "scored": 500,
+   "of": 500,
+   "enough": true,
+   "n": 500,
+   "b": 20,
+   "c": 1,
+   "z": 4.1461399144838555,
+   "exact_p": 0.00002098083496093749,
+   "diff_points": 3.8,
+   "ci95": [
+    2,
+    5.6000000000000005
+   ],
+   "discordance": 0.042,
+   "holm_p": 0.00016784667968749992,
+   "passes_holm": true
+  },
+  {
+   "reader": "sol",
+   "first": "oracle",
+   "second": "off",
+   "scored": 500,
+   "of": 500,
+   "enough": true,
+   "n": 500,
+   "b": 23,
+   "c": 5,
+   "z": 3.401680257083045,
+   "exact_p": 0.0009122341871261615,
+   "diff_points": 3.5999999999999996,
+   "ci95": [
+    1.6,
+    5.800000000000001
+   ],
+   "discordance": 0.056,
+   "holm_p": 0.005473405122756969,
+   "passes_holm": true
+  },
+  {
+   "reader": "gpt4o",
+   "first": "oracle",
+   "second": "off",
+   "scored": 499,
+   "of": 500,
+   "enough": true,
+   "n": 499,
+   "b": 51,
+   "c": 16,
+   "z": 4.275930552470682,
+   "exact_p": 0.000021689238760717216,
+   "diff_points": 7.014028056112225,
+   "ci95": [
+    3.807615230460922,
+    10.220440881763528
+   ],
+   "discordance": 0.1342685370741483,
+   "holm_p": 0.00016784667968749992,
+   "passes_holm": true
+  },
+  {
+   "reader": "particle",
+   "first": "oracle",
+   "second": "off",
+   "scored": 500,
+   "of": 500,
+   "enough": true,
+   "n": 500,
+   "b": 27,
+   "c": 8,
+   "z": 3.211586167968363,
+   "exact_p": 0.0018782254774123504,
+   "diff_points": 3.8,
+   "ci95": [
+    1.6,
+    6.2
+   ],
+   "discordance": 0.07,
+   "holm_p": 0.009391127387061752,
+   "passes_holm": true
+  }
+ ],
+ "redis_link": {
+  "reader": "gpt4o",
+  "memories": "off",
+  "task_averaged": 0.7924522845575478,
+  "ci95": [
+   0.7551988946725788,
+   0.8300526958421696
+  ],
+  "published": 0.8614
+ },
+ "readme_link": [
+  {
+   "reader": "opus",
+   "memories": "off",
+   "judge": "protocol",
+   "correct": 469,
+   "of": 500,
+   "unjudged": 0,
+   "accuracy": 0.938,
+   "wilson95": [
+    0.9133402866750973,
+    0.9559807909760214
+   ],
+   "verdict": "closes the gap"
+  },
+  {
+   "reader": "opus",
+   "memories": "oracle",
+   "judge": "protocol",
+   "correct": 481,
+   "of": 500,
+   "unjudged": 0,
+   "accuracy": 0.962,
+   "wilson95": [
+    0.941415227274959,
+    0.9755398820282757
+   ],
+   "verdict": "closes the gap"
+  },
+  {
+   "reader": "sol",
+   "memories": "off",
+   "judge": "protocol",
+   "correct": 459,
+   "of": 500,
+   "unjudged": 0,
+   "accuracy": 0.918,
+   "wilson95": [
+    0.8906451406002484,
+    0.938980910674107
+   ],
+   "verdict": "not distinguishable at this sample size"
+  },
+  {
+   "reader": "sol",
+   "memories": "oracle",
+   "judge": "protocol",
+   "correct": 473,
+   "of": 500,
+   "unjudged": 0,
+   "accuracy": 0.946,
+   "wilson95": [
+    0.9225734382748384,
+    0.9626256499269855
+   ],
+   "verdict": "closes the gap"
+  },
+  {
+   "reader": "particle",
+   "memories": "off",
+   "judge": "protocol",
+   "correct": 462,
+   "of": 500,
+   "unjudged": 0,
+   "accuracy": 0.924,
+   "wilson95": [
+    0.8974035860890358,
+    0.9441309730983486
+   ],
+   "verdict": "not distinguishable at this sample size"
+  },
+  {
+   "reader": "particle",
+   "memories": "oracle",
+   "judge": "protocol",
+   "correct": 481,
+   "of": 500,
+   "unjudged": 0,
+   "accuracy": 0.962,
+   "wilson95": [
+    0.941415227274959,
+    0.9755398820282757
+   ],
+   "verdict": "closes the gap"
+  },
+  {
+   "reader": "gpt4o",
+   "memories": "off",
+   "judge": "protocol",
+   "correct": 405,
+   "of": 500,
+   "unjudged": 0,
+   "accuracy": 0.81,
+   "wilson95": [
+    0.7733002874365166,
+    0.8419726214033164
+   ],
+   "verdict": "falls short"
+  },
+  {
+   "reader": "gpt4o",
+   "memories": "oracle",
+   "judge": "protocol",
+   "correct": 439,
+   "of": 500,
+   "unjudged": 0,
+   "accuracy": 0.878,
+   "wilson95": [
+    0.8463952766539438,
+    0.9038407218668847
+   ],
+   "verdict": "falls short"
+  }
+ ],
+ "accuracy": [
+  [
+   {
+    "reader": "gpt4o",
+    "memories": "off",
+    "judge": "cross",
+    "correct": 399,
+    "of": 500,
+    "unjudged": 0,
+    "accuracy": 0.798,
+    "wilson95": [
+     0.7605971134487787,
+     0.8308587795649963
+    ]
+   },
+   {
+    "reader": "gpt4o",
+    "memories": "off",
+    "judge": "protocol",
+    "correct": 405,
+    "of": 500,
+    "unjudged": 0,
+    "accuracy": 0.81,
+    "wilson95": [
+     0.7733002874365166,
+     0.8419726214033164
+    ]
+   }
+  ],
+  [
+   {
+    "reader": "gpt4o",
+    "memories": "on",
+    "judge": "cross",
+    "correct": 183,
+    "of": 250,
+    "unjudged": 0,
+    "accuracy": 0.732,
+    "wilson95": [
+     0.6738894700127108,
+     0.7830886789123043
+    ]
+   },
+   {
+    "reader": "gpt4o",
+    "memories": "on",
+    "judge": "protocol",
+    "correct": 183,
+    "of": 250,
+    "unjudged": 0,
+    "accuracy": 0.732,
+    "wilson95": [
+     0.6738894700127108,
+     0.7830886789123043
+    ]
+   }
+  ],
+  [
+   {
+    "reader": "gpt4o",
+    "memories": "agent-default",
+    "judge": "cross",
+    "correct": 403,
+    "of": 500,
+    "unjudged": 0,
+    "accuracy": 0.806,
+    "wilson95": [
+     0.7690603699721197,
+     0.8382735335923606
+    ]
+   },
+   {
+    "reader": "gpt4o",
+    "memories": "agent-default",
+    "judge": "protocol",
+    "correct": 405,
+    "of": 500,
+    "unjudged": 0,
+    "accuracy": 0.81,
+    "wilson95": [
+     0.7733002874365166,
+     0.8419726214033164
+    ]
+   }
+  ],
+  [
+   {
+    "reader": "gpt4o",
+    "memories": "full",
+    "judge": "cross",
+    "correct": 308,
+    "of": 500,
+    "unjudged": 0,
+    "accuracy": 0.616,
+    "wilson95": [
+     0.5726388272842253,
+     0.6575923257010023
+    ]
+   },
+   {
+    "reader": "gpt4o",
+    "memories": "full",
+    "judge": "protocol",
+    "correct": 317,
+    "of": 500,
+    "unjudged": 0,
+    "accuracy": 0.634,
+    "wilson95": [
+     0.5909042812929842,
+     0.6750523954313307
+    ]
+   }
+  ],
+  [
+   {
+    "reader": "gpt4o",
+    "memories": "oracle",
+    "judge": "cross",
+    "correct": 434,
+    "of": 500,
+    "unjudged": 1,
+    "accuracy": 0.868,
+    "wilson95": [
+     0.8355052089902186,
+     0.8948832763422281
+    ]
+   },
+   {
+    "reader": "gpt4o",
+    "memories": "oracle",
+    "judge": "protocol",
+    "correct": 439,
+    "of": 500,
+    "unjudged": 0,
+    "accuracy": 0.878,
+    "wilson95": [
+     0.8463952766539438,
+     0.9038407218668847
+    ]
+   }
+  ],
+  [
+   {
+    "reader": "opus",
+    "memories": "off",
+    "judge": "cross",
+    "correct": 471,
+    "of": 500,
+    "unjudged": 0,
+    "accuracy": 0.942,
+    "wilson95": [
+     0.917943811924763,
+     0.9593162710017081
+    ]
+   },
+   {
+    "reader": "opus",
+    "memories": "off",
+    "judge": "protocol",
+    "correct": 469,
+    "of": 500,
+    "unjudged": 0,
+    "accuracy": 0.938,
+    "wilson95": [
+     0.9133402866750973,
+     0.9559807909760214
+    ]
+   }
+  ],
+  [
+   {
+    "reader": "opus",
+    "memories": "on",
+    "judge": "cross",
+    "correct": 204,
+    "of": 250,
+    "unjudged": 0,
+    "accuracy": 0.816,
+    "wilson95": [
+     0.763311271765579,
+     0.8591244828047002
+    ]
+   },
+   {
+    "reader": "opus",
+    "memories": "on",
+    "judge": "protocol",
+    "correct": 203,
+    "of": 250,
+    "unjudged": 0,
+    "accuracy": 0.812,
+    "wilson95": [
+     0.7589826300138489,
+     0.8555741909542751
+    ]
+   }
+  ],
+  [
+   {
+    "reader": "opus",
+    "memories": "full",
+    "judge": "cross",
+    "correct": 482,
+    "of": 500,
+    "unjudged": 0,
+    "accuracy": 0.964,
+    "wilson95": [
+     0.9438156728403976,
+     0.9771089391005136
+    ]
+   },
+   {
+    "reader": "opus",
+    "memories": "full",
+    "judge": "protocol",
+    "correct": 481,
+    "of": 500,
+    "unjudged": 0,
+    "accuracy": 0.962,
+    "wilson95": [
+     0.941415227274959,
+     0.9755398820282757
+    ]
+   }
+  ],
+  [
+   {
+    "reader": "opus",
+    "memories": "oracle",
+    "judge": "cross",
+    "correct": 490,
+    "of": 500,
+    "unjudged": 0,
+    "accuracy": 0.98,
+    "wilson95": [
+     0.963579816587725,
+     0.9891008164545969
+    ]
+   },
+   {
+    "reader": "opus",
+    "memories": "oracle",
+    "judge": "protocol",
+    "correct": 481,
+    "of": 500,
+    "unjudged": 0,
+    "accuracy": 0.962,
+    "wilson95": [
+     0.941415227274959,
+     0.9755398820282757
+    ]
+   }
+  ],
+  [
+   {
+    "reader": "sol",
+    "memories": "off",
+    "judge": "cross",
+    "correct": 460,
+    "of": 500,
+    "unjudged": 0,
+    "accuracy": 0.92,
+    "wilson95": [
+     0.8928936831815437,
+     0.9407018707304879
+    ]
+   },
+   {
+    "reader": "sol",
+    "memories": "off",
+    "judge": "protocol",
+    "correct": 459,
+    "of": 500,
+    "unjudged": 0,
+    "accuracy": 0.918,
+    "wilson95": [
+     0.8906451406002484,
+     0.938980910674107
+    ]
+   }
+  ],
+  [
+   {
+    "reader": "sol",
+    "memories": "on",
+    "judge": "cross",
+    "correct": 204,
+    "of": 250,
+    "unjudged": 0,
+    "accuracy": 0.816,
+    "wilson95": [
+     0.763311271765579,
+     0.8591244828047002
+    ]
+   },
+   {
+    "reader": "sol",
+    "memories": "on",
+    "judge": "protocol",
+    "correct": 205,
+    "of": 250,
+    "unjudged": 0,
+    "accuracy": 0.82,
+    "wilson95": [
+     0.7676481201762065,
+     0.8626665679962281
+    ]
+   }
+  ],
+  [
+   {
+    "reader": "sol",
+    "memories": "full",
+    "judge": "cross",
+    "correct": 474,
+    "of": 500,
+    "unjudged": 0,
+    "accuracy": 0.948,
+    "wilson95": [
+     0.9248988558499484,
+     0.964269734989552
+    ]
+   },
+   {
+    "reader": "sol",
+    "memories": "full",
+    "judge": "protocol",
+    "correct": 471,
+    "of": 500,
+    "unjudged": 0,
+    "accuracy": 0.942,
+    "wilson95": [
+     0.917943811924763,
+     0.9593162710017081
+    ]
+   }
+  ],
+  [
+   {
+    "reader": "sol",
+    "memories": "oracle",
+    "judge": "cross",
+    "correct": 478,
+    "of": 500,
+    "unjudged": 0,
+    "accuracy": 0.956,
+    "wilson95": [
+     0.9342805569252562,
+     0.9707660444649494
+    ]
+   },
+   {
+    "reader": "sol",
+    "memories": "oracle",
+    "judge": "protocol",
+    "correct": 473,
+    "of": 500,
+    "unjudged": 0,
+    "accuracy": 0.946,
+    "wilson95": [
+     0.9225734382748384,
+     0.9626256499269855
+    ]
+   }
+  ],
+  [
+   {
+    "reader": "particle",
+    "memories": "off",
+    "judge": "cross",
+    "correct": 462,
+    "of": 500,
+    "unjudged": 0,
+    "accuracy": 0.924,
+    "wilson95": [
+     0.8974035860890358,
+     0.9441309730983486
+    ]
+   },
+   {
+    "reader": "particle",
+    "memories": "off",
+    "judge": "protocol",
+    "correct": 462,
+    "of": 500,
+    "unjudged": 0,
+    "accuracy": 0.924,
+    "wilson95": [
+     0.8974035860890358,
+     0.9441309730983486
+    ]
+   }
+  ],
+  [
+   {
+    "reader": "particle",
+    "memories": "on",
+    "judge": "cross",
+    "correct": 204,
+    "of": 250,
+    "unjudged": 0,
+    "accuracy": 0.816,
+    "wilson95": [
+     0.763311271765579,
+     0.8591244828047002
+    ]
+   },
+   {
+    "reader": "particle",
+    "memories": "on",
+    "judge": "protocol",
+    "correct": 203,
+    "of": 250,
+    "unjudged": 0,
+    "accuracy": 0.812,
+    "wilson95": [
+     0.7589826300138489,
+     0.8555741909542751
+    ]
+   }
+  ],
+  [
+   {
+    "reader": "particle",
+    "memories": "full",
+    "judge": "cross",
+    "correct": 475,
+    "of": 500,
+    "unjudged": 0,
+    "accuracy": 0.95,
+    "wilson95": [
+     0.9272318386186077,
+     0.965906254858569
+    ]
+   },
+   {
+    "reader": "particle",
+    "memories": "full",
+    "judge": "protocol",
+    "correct": 474,
+    "of": 500,
+    "unjudged": 0,
+    "accuracy": 0.948,
+    "wilson95": [
+     0.9248988558499484,
+     0.964269734989552
+    ]
+   }
+  ],
+  [
+   {
+    "reader": "particle",
+    "memories": "oracle",
+    "judge": "cross",
+    "correct": 481,
+    "of": 500,
+    "unjudged": 0,
+    "accuracy": 0.962,
+    "wilson95": [
+     0.941415227274959,
+     0.9755398820282757
+    ]
+   },
+   {
+    "reader": "particle",
+    "memories": "oracle",
+    "judge": "protocol",
+    "correct": 481,
+    "of": 500,
+    "unjudged": 0,
+    "accuracy": 0.962,
+    "wilson95": [
+     0.941415227274959,
+     0.9755398820282757
+    ]
+   }
+  ]
+ ]
+}
