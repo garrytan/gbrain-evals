@@ -16,7 +16,7 @@ for. Fable runs only in smoke tests, never in counted cells. A run drops older g
 to the previous eval's results (`gpt-4.1-mini` only as that bridge to earlier BEAM runs), and it never runs
 gpt-5.4-mini. gpt-4o and gpt-4o-mini are suspended (Garry, 2026-11-21): a campaign registered on or after that date
 uses neither in any role we choose, judges included, its registry entry lists every model with its role, and CI and
-the launch check refuse a suspended one. A compared system's shipped default is tested as shipped (role
+the launch check refuse a suspended one in that list. A compared system's shipped default is tested as shipped (role
 `system-internal`), and earlier campaigns and published rows keep their models.
 
 gbrain build, in short (full rules in [CLAUDE.md, "Choose the gbrain build"](CLAUDE.md#choose-the-gbrain-build)): every new run

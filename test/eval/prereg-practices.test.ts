@@ -199,7 +199,7 @@ describe('gpt-4o suspension', () => {
   test('refuses gpt-4o and gpt-4o-mini in every role we choose, with or without provider prefix or snapshot date', () => {
     const roles = ['under-test', 'judge', 'simulator', 'extractor', 'embedder', 'bridge', 'protocol-fixed'];
     for (const role of roles) {
-      for (const model of ['gpt-4o', 'openai:gpt-4o-2024-08-06', 'gpt-4o-mini', 'openai/gpt-4o-mini-2024-07-18']) {
+      for (const model of ['gpt-4o', 'openai:gpt-4o-2024-08-06', 'gpt-4o-mini', 'openai/gpt-4o-mini-2024-07-18', 'openrouter:openai/gpt-4o', 'gpt-4o:free', 'openai/gpt-4o:extended', 'ft:gpt-4o-mini-2024-07-18:org::abc', 'chatgpt-4o-latest']) {
         expect([role, model, suspended(e => { e.models = [opus, { model, role }]; })]).toEqual([role, model, [
           `models[1]: ${model}: gpt-4o and gpt-4o-mini are suspended for new campaigns from 2026-11-21 (CLAUDE.md "Choose models")`,
         ]]);
@@ -212,10 +212,14 @@ describe('gpt-4o suspension', () => {
       (e.judge_check as { judges: Array<{ model: string }> }).judges[1]!.model = 'openai:gpt-4o-2024-08-06';
     });
     expect(p).toContain('judge_check.judges[1]: openai:gpt-4o-2024-08-06: gpt-4o and gpt-4o-mini are suspended for new campaigns from 2026-11-21 (CLAUDE.md "Choose models")');
+    const graded = suspended(e => {
+      (e.judge_check as { judges: Array<{ grades?: string[] }> }).judges[1]!.grades = ['gpt-4o-mini'];
+    });
+    expect(graded).toContain('judge_check.judges[1]: gpt-4o-mini: gpt-4o and gpt-4o-mini are suspended for new campaigns from 2026-11-21 (CLAUDE.md "Choose models")');
   });
 
   test('keeps a compared system\'s shipped default as tested, and asks which system ships it', () => {
-    expect(suspended(e => { e.models = [opus, { model: 'gpt-4o-mini', role: 'system-internal', system: 'memory-bank (Hindsight server default)' }]; })).toEqual([]);
+    expect(suspended(e => { e.models = [opus, { model: 'gpt-4o-mini', role: 'system-internal', system: 'memory-bank (its server default)' }]; })).toEqual([]);
     expect(suspended(e => { e.models = [opus, { model: 'gpt-4o-mini', role: 'system-internal' }]; })).toEqual([
       'models[1].system must name the compared system that ships gpt-4o-mini as its default',
     ]);

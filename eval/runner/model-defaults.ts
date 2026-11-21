@@ -31,10 +31,13 @@ export const BANNED_DEFAULTS: Readonly<Record<string, string>> = {
 export const SUSPENDED_SINCE = '2026-11-21';
 export const SUSPENSION_RULE = 'gpt-4o and gpt-4o-mini are suspended for new campaigns from 2026-11-21 (CLAUDE.md "Choose models")';
 
-/** Why `model` is suspended for new campaigns, or null when it is not. Covers every gpt-4o variant and snapshot. */
+/**
+ * Why `model` is suspended for new campaigns, or null when it is not. Covers every gpt-4o variant and snapshot behind any
+ * provider prefix or suffix (`openrouter:openai/gpt-4o`, `gpt-4o:free`, `ft:gpt-4o-mini-2024-07-18:org::id`).
+ */
 export function suspendedModelProblem(model: string): string | null {
-  const id = model.trim().toLowerCase().replace(/^[a-z0-9_-]+[:/]/, '');
-  return /^(?:chatgpt-4o|gpt-4o)(?:$|-)/.test(id) ? `${model}: ${SUSPENSION_RULE}` : null;
+  const segments = model.trim().toLowerCase().split(/[:/]/);
+  return segments.some(s => /^(?:chatgpt-4o|gpt-4o)(?:$|-)/.test(s)) ? `${model}: ${SUSPENSION_RULE}` : null;
 }
 
 /** `anthropic:claude-haiku-4-5-20251001` → `claude-haiku-4-5`. */

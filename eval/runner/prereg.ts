@@ -26,7 +26,7 @@
  */
 import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, relative, resolve } from 'node:path';
 import { checkGrandfatheredFrozen, checkModels, checkPractices, loadGrandfathered, type PracticeEntry } from './prereg-practices.ts';
 
 export interface Attestation {
@@ -74,7 +74,8 @@ export function attestPreregistration(path: string, cwd = process.cwd(), now = n
     throw new Error(`preregistration commit ${commit.slice(0, 12)} is not on origin; run \`git push\` before running`);
   }
   if (existsSync(join(cwd, 'docs/benchmarks/preregistrations.json'))) {
-    const entry = loadManifest(cwd).find(e => e.preregistration === path) as PracticeEntry | undefined;
+    const repoPath = (p: string) => relative(cwd, resolve(cwd, p));
+    const entry = loadManifest(cwd).find(e => repoPath(e.preregistration) === repoPath(path)) as PracticeEntry | undefined;
     const problems = entry ? checkModels(entry) : [];
     if (problems.length > 0) throw new Error(`registry entry ${entry!.id} refuses this run: ${problems.join('; ')}`);
   }

@@ -184,8 +184,9 @@ rule of 2026-11-01 that evals test gbrain and gstack on frontier models.
   simulator, an extractor or embedder we configure, a bridge to earlier results or a protocol-fixed comparison. Its
   registry entry lists every model it runs with its role in `models`
   ([PREREGISTRATION-TEMPLATE.md](docs/benchmarks/PREREGISTRATION-TEMPLATE.md#registry-entry) has the shape), and
-  `bun eval/runner/prereg.ts` in CI and `attestPreregistration` at launch refuse a suspended model with an error that
-  names this rule. A compared system's shipped default, such as the extraction model a comparator's server runs out of
+  `bun eval/runner/prereg.ts` in CI and `attestPreregistration` at launch refuse a suspended model in that list with an
+  error that names this rule. They read the list, not the runner's code, so the list must match the models the runner
+  calls. A compared system's shipped default, such as the extraction model a comparator's server runs out of
   the box, is tested as shipped: list it with role `system-internal` and the system's name. Campaigns registered before
   the date keep the models they preregistered, and published rows measured with gpt-4o stay as history. LongMemEval's
   official judge is `gpt-4o-2024-08-06` and the suspension has no judge exception, so a new LongMemEval campaign that
@@ -234,6 +235,6 @@ When a claim changes, keep the old result identifiable and explain the new evide
 ### 2026-11-21: gpt-4o and gpt-4o-mini suspended for new campaigns
 
 "Choose models" adds the suspension: a campaign registered on or after 2026-11-21 lists its models and roles in its
-registry entry, and CI and the launch check refuse gpt-4o and gpt-4o-mini in any role we choose. A compared system's
+registry entry, and CI and the launch check refuse gpt-4o and gpt-4o-mini listed there in any role we choose. A compared system's
 shipped default stays as shipped. The particle-1 judge bullet no longer gives `gpt-4o-2024-08-06` as an example of a
 judge that stays, because a new campaign can't use it. Earlier history of this guide is in CHANGELOG.md.
