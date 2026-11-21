@@ -202,17 +202,22 @@ export function compare(rows: ScoredRow[], reader: AnyReader, first: Memories, s
   return { reader, first, second, scored: both.length, of: total, enough: both.length >= 0.98 * total, ...mcnemar(x, y), ...pairedDiff(x, y), discordance: both.length ? (mcnemar(x, y).b + mcnemar(x, y).c) / both.length : null };
 }
 
-export function accuracy(rows: ScoredRow[], reader: AnyReader, m: Memories, judge: 'cross' | 'protocol') {
-  const c = cell(rows, reader, m);
+export function accuracy(rows: ScoredRow[], reader: AnyReader, m: Memories, judge: 'cross' | 'protocol', ids?: Set<string>) {
+  const c = cell(rows, reader, m, ids);
   const k = c.filter(r => r[judge] === 1).length;
   return { reader, memories: m, judge, correct: k, of: c.length, unjudged: c.filter(r => r[judge] === null || r[judge] === -1).length, accuracy: c.length ? k / c.length : null, wilson95: wilson(k, c.length) };
 }
 
-/** The primary, the 11 Holm-adjusted secondaries, the two fixed references and the descriptive rows. */
-export function analyse(rows: ScoredRow[], ids?: Set<string>, degraded = new Set<string>()) {
-  const primary = compare(rows, 'opus', 'off', 'on', ids, degraded);
+/**
+ * The primary, the 11 Holm-adjusted secondaries, the two fixed references and the descriptive rows. `onIds` is the
+ * question set of the on arm: when the primary stopped at the interim look, the on arm stopped too, so every on
+ * comparison and the on rows count the first half only (a second-half on row would be off's reused answer).
+ */
+export function analyse(rows: ScoredRow[], ids?: Set<string>, degraded = new Set<string>(), onIds = ids) {
+  const stopped = onIds !== ids;
+  const primary = compare(rows, 'opus', 'off', 'on', onIds, degraded);
   const secondaries = [
-    ...(['sol', 'gpt4o', 'particle'] as AnyReader[]).map(r => compare(rows, r, 'off', 'on', ids, degraded)),
+    ...(['sol', 'gpt4o', 'particle'] as AnyReader[]).map(r => compare(rows, r, 'off', 'on', onIds, degraded)),
     ...(['opus', 'sol', 'gpt4o', 'particle'] as AnyReader[]).map(r => compare(rows, r, 'off', 'full', ids)),
     ...(['opus', 'sol', 'gpt4o', 'particle'] as AnyReader[]).map(r => compare(rows, r, 'oracle', 'off', ids)),
   ];
@@ -220,7 +225,7 @@ export function analyse(rows: ScoredRow[], ids?: Set<string>, degraded = new Set
   const off4o = cell(rows, 'gpt4o', 'off', ids).map(r => ({ question_type: r.question_type, verdict: r.protocol }));
   const ta = taskAveraged(off4o);
   return {
-    primary: { ...primary, passes_final_bound: Math.abs(primary.z) >= FINAL_BOUND },
+    primary: stopped ? { ...primary, stopped_at_interim_look: true, estimate_possibly_overstated: true } : { ...primary, passes_final_bound: Math.abs(primary.z) >= FINAL_BOUND },
     secondaries: secondaries.map((s, i) => ({ ...s, holm_p: adjusted[i], passes_holm: adjusted[i] < 0.05 })),
     redis_link: { reader: 'gpt4o', memories: 'off', task_averaged: ta, ci95: stratifiedBootstrap(off4o), published: 0.8614 },
     readme_link: (['opus', 'sol', 'particle', 'gpt4o'] as AnyReader[]).flatMap(r => (['off', 'oracle'] as Memories[]).map(m => {
@@ -228,7 +233,7 @@ export function analyse(rows: ScoredRow[], ids?: Set<string>, degraded = new Set
       const closes = a.accuracy !== null && a.accuracy >= 0.926 && a.wilson95[1] >= 0.936;
       return { ...a, verdict: closes ? 'closes the gap' : a.wilson95[1] < 0.936 ? 'falls short' : 'not distinguishable at this sample size' };
     })),
-    accuracy: rows.length ? [...new Set(rows.map(r => `${r.reader}--${r.memories}`))].map(k => { const [r, m] = k.split('--') as [AnyReader, Memories]; return [accuracy(rows, r, m, 'cross'), accuracy(rows, r, m, 'protocol')]; }) : [],
+    accuracy: rows.length ? [...new Set(rows.map(r => `${r.reader}--${r.memories}`))].map(k => { const [r, m] = k.split('--') as [AnyReader, Memories]; const only = m === 'on' ? onIds : undefined; return [accuracy(rows, r, m, 'cross', only), accuracy(rows, r, m, 'protocol', only)]; }) : [],
   };
 }
 
@@ -299,7 +304,9 @@ async function main(argv: string[]) {
     write(out, 'interim.json', look);
     console.log(JSON.stringify(look, null, 1));
   } else if (cmd === 'final') {
-    const summary = { degraded_questions: degraded.size, ...analyse(rows, undefined, degraded) };
+    const interim = existsSync(join(out, 'interim.json')) ? JSON.parse(readFileSync(join(out, 'interim.json'), 'utf8')) as { decision: string } : null;
+    const onIds = interim?.decision === 'stop-difference' ? new Set(frozen.order.slice(0, HALF)) : undefined;
+    const summary = { degraded_questions: degraded.size, ...analyse(rows, undefined, degraded, onIds) };
     write(out, 'summary.json', summary);
     console.log(JSON.stringify(summary.primary, null, 1));
   } else throw new Error(`unknown command ${cmd}`);

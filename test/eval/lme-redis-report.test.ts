@@ -84,6 +84,23 @@ describe('LongMemEval on Redis harness: scoring rows', () => {
     expect(R.compare(rows, 'opus', 'off', 'on', undefined, new Set(['q2'])).scored).toBe(2);
   });
 
+  test('after a stop at the interim look, every on comparison and the on rows count only the on arm\'s questions', () => {
+    const rows = R.scoreRows({
+      order, types: new Map(order.map(q => [q, 'multi-session'])), lines,
+      reuse: { opus: { on: { q3: 'off' } } },
+      answers: (reader, m) => new Map(order.map(q => [q, { answer: `${reader} ${m} ${q}`, truncated: false }])),
+      judged: () => new Map(order.map(q => [q, ok('yes')])),
+    });
+    const all = R.analyse(rows);
+    const stopped = R.analyse(rows, undefined, new Set(), new Set(['q1', 'q2']));
+    expect([all.primary.scored, 'passes_final_bound' in all.primary]).toEqual([3, true]);
+    expect([stopped.primary.scored, (stopped.primary as any).stopped_at_interim_look, 'passes_final_bound' in stopped.primary]).toEqual([2, true, false]);
+    expect(stopped.secondaries.slice(0, 3).map(s => s.scored)).toEqual([2, 2, 2]);
+    expect(stopped.secondaries[3].scored).toBe(3);
+    const onRow = stopped.accuracy.find(([c]) => c.reader === 'opus' && c.memories === 'on')!;
+    expect(onRow[0].of).toBe(2);
+  });
+
   test('an unparsable cross-family reply leaves the question unscored in the pair, and the 98% rule notices', () => {
     const rows = R.scoreRows({
       order, types: new Map(), lines, reuse: {},
