@@ -11,9 +11,9 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   ALL_SETS, ASSUMPTIONS, BG1_JUDGE_BY_READER, BG1_MEASURED, BG1C_JUDGE_BY_READER, BG1C_SETS, bg1ReadUsd, bg1Rates, definitionProblems, frontierJudgesFor, isBg1Benchmark, PER_READER_JUDGE_SETTINGS,
-  READER_TOKENS_EXTRA, readerTokens, type CellDefinition, type ReaderTokenTable,
+  makeCell, READER_TOKENS_EXTRA, readerTokens, type CellDefinition, type ReaderTokenTable,
 } from '../../eval/runner/q1/cells/definitions.ts';
-import { BG1C_GBRAIN_BUILD, BG1C_MANIFEST_PATH, BG1C_RATES, BG1C_SOL, bg1cManifestText, buildBG1CManifest } from '../../eval/runner/q1/cells/bg1c.ts';
+import { BG1C_GBRAIN_BUILD, BG1C_GBRAIN_LAUNCH, BG1C_MANIFEST_PATH, BG1C_RATES, BG1C_SOL, bg1cManifestText, buildBG1CManifest } from '../../eval/runner/q1/cells/bg1c.ts';
 import { OPUS, PARTICLE, SOL, stage1SmokeLeaseUsd } from '../../eval/runner/q1/cells/bg1.ts';
 import { F6_ARMS } from '../../eval/runner/q1/cells/f6.ts';
 import { bg1cPerWorld } from '../../eval/runner/bg1/pricing.ts';
@@ -66,6 +66,14 @@ describe('bg1c-cells.json', () => {
     }
     expect(BG1C_SOL).toBe('openai:gpt-6.2-sol');
     expect(m.gbrain_build).toEqual({ release: 'v0.60.753.0', commit: 'fbf608cf86ea7b2b912ce80151f856a1a47e9533' });
+  });
+
+  test('every gbrain cell starts from BG1-C\'s own launch, never rs1-stable\'s', () => {
+    const gbrain = [...m.cells, ...m.smoke_cells].filter(c => c.system === 'gbrain-defaults');
+    expect(gbrain).toHaveLength(2);
+    for (const c of gbrain) expect(c.launch).toEqual({ env: { ...BG1C_GBRAIN_LAUNCH.env, GBRAIN_F6_EXTRACT_CAP_USD: '1' }, config: 'recipe' });
+    const other = { env: { GBRAIN_SHA: 'other', GBRAIN_IDLE_UPKEEP: 'off' }, config: 'recipe' as const };
+    expect(makeCell('BG1C', 'gbrain-defaults', 'rs1-stable', [], { launch: other }).launch).toEqual(other);
   });
 });
 

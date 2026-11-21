@@ -857,9 +857,9 @@ export function hoursPerMtok(system: string, configuration: string, benchmark: s
   return ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}:${family}`] ?? ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] ?? F6_ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] ?? RS1_ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] ?? SOTA_ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] ?? ASSUMPTIONS.hours_per_mtok[runner];
 }
 
-/** One cell. `extra`: F6 cells name their own block, probes and launch environment, and the SOTA loop's gbrain agent its runner (Q1 cells pass none of these). */
+/** One cell. `extra`: F6 cells name their own block, probes and launch environment, BG1's gbrain cell its frozen launch, and the SOTA loop's gbrain agent its runner (Q1 cells pass none of these). */
 export function makeCell(set: SetId, system: string, configuration: string, armSpecs: ArmSpec[],
-  extra: { ingest_replicate?: number; block?: BlockId; probes?: CellDefinition['probes']; launchEnv?: Record<string, string>; keptUnits?: number; runner?: CellDefinition['runner'] } = {}): CellDefinition {
+  extra: { ingest_replicate?: number; block?: BlockId; probes?: CellDefinition['probes']; launch?: NonNullable<CellDefinition['launch']>; launchEnv?: Record<string, string>; keptUnits?: number; runner?: CellDefinition['runner'] } = {}): CellDefinition {
   const s = ALL_SETS[set];
   const id = `${set.toLowerCase()}.${system}.${configuration}${extra.ingest_replicate && extra.ingest_replicate > 1 ? `.r${extra.ingest_replicate}` : ''}`;
   const runner = extra.runner ?? (SHIMS.has(system) ? 'shim' as const : 'in-process' as const);
@@ -875,7 +875,7 @@ export function makeCell(set: SetId, system: string, configuration: string, armS
       frontier: a.frontier ?? null, judge_repeats: a.judge_repeats ?? null, label: a.label ?? a.id, ...(a.anchor ? { anchor: true } : {}),
     };
   });
-  const shim = runner === 'shim' ? shimLaunch(system, configuration) : null;
+  const shim = runner === 'shim' ? extra.launch ?? shimLaunch(system, configuration) : null;
   const launch = shim && extra.launchEnv ? { ...shim, env: { ...shim.env, ...extra.launchEnv } } : shim;
   const perMtok = hoursPerMtok(system, configuration, s.benchmark, runner);
   const single = perMtok * s.corpus_tokens / 1e6;

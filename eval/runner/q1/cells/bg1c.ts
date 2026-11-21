@@ -47,6 +47,11 @@ export const BG1C_PREREGISTRATION = 'docs/benchmarks/2026-11-19-changing-facts-c
  * here when a newer release lands before the first counted gbrain cell, and it is frozen once counted gbrain cells start.
  */
 export const BG1C_GBRAIN_BUILD = { release: 'v0.60.753.0', commit: 'fbf608cf86ea7b2b912ce80151f856a1a47e9533' } as const;
+/** How every BG1-C gbrain cell starts: BG1's bun image and F6 build path at BG1C_GBRAIN_BUILD, frozen here so no cell takes rs1-stable's launch, which RS1 owns. */
+export const BG1C_GBRAIN_LAUNCH: NonNullable<CellDefinition['launch']> = {
+  env: { GBRAIN_BUN_IMAGE: 'oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4', GBRAIN_F6: '1', GBRAIN_SHA: BG1C_GBRAIN_BUILD.commit },
+  config: 'recipe',
+};
 export const BG1C_SOL = 'openai:gpt-6.2-sol';
 /** Live readers; particle-1 re-reads the frozen contexts (reread-cell.ts), so it is the third reader of every row. */
 export const BG1C_READERS = [OPUS, BG1C_SOL];
@@ -126,7 +131,7 @@ const cell = (set: BG1CSetId, system: string, configuration: string, arm: ArmSpe
   const counted = set === 'BG1C';
   const made = makeCell(set, system, configuration, [arm], {
     probes: noProbes(set), ...(counted ? { keptUnits: BG1C_KEPT_UNITS } : {}),
-    ...(system === 'gbrain-defaults' ? { launchEnv: { GBRAIN_SHA: BG1C_GBRAIN_BUILD.commit, GBRAIN_F6_EXTRACT_CAP_USD: String(extractionCapUsd(set)) } } : {}),
+    ...(system === 'gbrain-defaults' ? { launch: BG1C_GBRAIN_LAUNCH, launchEnv: { GBRAIN_F6_EXTRACT_CAP_USD: String(extractionCapUsd(set)) } } : {}),
   });
   const def: CellDefinition = { ...made, ...(counted ? { canonical_instrument: 'bg1' } : {}), descriptive_view: false };
   return bg1cLease(withBg1cHours({ ...def, estimate: bg1cEstimate(def) }));
