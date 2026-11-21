@@ -25,6 +25,7 @@ describe('secrets allowlist: the LongMemEval VM step reads the Voyage key at run
     for (const value of realShaped) {
       expect(covers(value)).toBe(false);
       expect(covers(`${READ}${value}`)).toBe(false);
+      expect(covers(`${READ}"${value}"`)).toBe(false);
     }
     expect(covers(READ.replace('proxy-ready.json', 'other.json'))).toBe(false);
     expect(covers(READ.replace("['gbrain']", "['other']"))).toBe(false);
