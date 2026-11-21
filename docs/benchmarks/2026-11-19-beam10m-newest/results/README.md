@@ -159,6 +159,10 @@ intervals that include 0. Instruction following fell most, and its interval reac
   10m-4 is new at v0.60.748.0. Each of the three skipped its readiness probe, and the receipts don't record why, which
   we didn't investigate further. Those 60 answers are scored and kept, as the preregistration says. Without those 3 conversations, which is descriptive only, arm P's change against v0.60.493.0 is −0.4 points (−4.3
   to +3.6) and the whole system's gap to the file agent is −8.3 points (−13.0 to −3.4) on the frontier view.
+- **gbrain's idle upkeep was left on.** Since v0.60.715.0, a gbrain server idle for 10 minutes runs its own free
+  maintenance on the brain it serves. These cells ran gbrain as it ships and didn't turn that off, unlike the RS1 cells
+  that ran later. We didn't record whether it ran, so a brain may have changed between the end of its build and its
+  last question. F6's build at v0.60.493.0 had no idle upkeep.
 - **Two arm A0 questions had no context,** because their stored retrieval failed. These are harness failures, so they
   drop from A0's pairs (197 of 199 scored) and are counted by reason in the report. Every pair still meets the
   completeness rule (at least 9 of 10 conversations and 95% of questions).
