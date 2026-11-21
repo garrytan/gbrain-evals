@@ -1,5 +1,7 @@
 # How gbrain should pack an explicit token budget: E2 of the budgeted delivery plan (2026-10-09)
 
+*Note added 2026-11-21:* E2's judge is `gpt-4o-2024-08-06` on LongMemEval-S and LoCoMo, and its `gpt-4o` reader arm is the link to E1. New runs no longer use gpt-4o or gpt-4o-mini in any role (suspended 2026-11-21), so these numbers stand as measured but aren't directly comparable with a run graded by a current frontier judge.
+
 ## The finding
 
 gbrain is a memory system for agents: it stores conversations and notes as pages and hands an agent evidence for a

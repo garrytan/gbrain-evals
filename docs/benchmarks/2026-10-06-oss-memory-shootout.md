@@ -1,5 +1,7 @@
 # Open-source memory systems against gbrain, through one harness (2026-10-06 to 2026-10-08)
 
+*Note added 2026-11-21:* the preregistered comparison is read and judged by `gpt-4o-2024-08-06` on LongMemEval-S, and LoCoMo is read by `gpt-4o-mini` and judged by `gpt-4o`; the frontier reader table further down keeps the `gpt-4o` judge. New runs no longer use gpt-4o or gpt-4o-mini in any role (suspended 2026-11-21), so these numbers stand as measured but aren't directly comparable with a run graded by a current frontier judge.
+
 ## The finding
 
 We ran gbrain and five open-source memory systems through the same harness. Every system got the same conversations
@@ -295,4 +297,5 @@ more with every counted reader, and `extract-first` by 16 to 26 points.
 
 ## Changelog
 
+- 2026-11-21: A note under the title says the comparison is read and judged by gpt-4o and gpt-4o-mini, which new runs no longer use.
 - 2026-10-08: First publication, with the D2 frontier-reader rows.

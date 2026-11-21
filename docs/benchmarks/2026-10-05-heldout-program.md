@@ -1,5 +1,7 @@
 # Nine-plan held-out program: starting line, preregistrations, verdicts and scorecard
 
+*Note added 2026-11-21:* the starting line's LongMemEval-S row is read and judged by `gpt-4o-2024-08-06`, and its LoCoMo rows are read by `gpt-4o-mini` and judged by `gpt-4o-2024-08-06`. New runs no longer use gpt-4o or gpt-4o-mini in any role (suspended 2026-11-21), so these numbers stand as measured but aren't directly comparable with a run graded by a current frontier judge.
+
 This report collects one feature program for [gbrain](https://github.com/garrytan/gbrain), a memory system for agents. Eight feature plans (P1 to P8) each change gbrain in one pull request. P0 is the evaluation plan: it measures the starting line on gbrain master and runs the held-out harness every other plan uses. Each feature idea has a preregistered decision rule, a development verdict on data the implementer may see, and a held-out verdict on sealed data that only the custodian opens. The held-out verdict sets the idea's default.
 
 This report covers the plans whose gbrain pull requests have merged: P1 (#6018), P3 (#6014), P7 (#6019), P8 (#6027), P4 (#6015), P6 (#6112), P5 (#6017), P2 (#6020) and Q2 (#6343). Across P1, P3 and P7's eight held-out decisions, three ideas pass and ship on: dated relationships, the certified nightly contradiction check and the multi-relation planner. Four ideas lose or miss their gate, and each one ships off, ships in a safer mode or leaves its pull request. P8's write guard, semantic withdrawal and quote grounding pass and ship on, and its narrower advertised surface fails. P4's pre-compaction save notice passes and ships on, and its always-loaded core memory tier fails and ships off. P6's `think` date frame passes and ships on, and its fact keys and time scope were killed in development. P5's wanted pages pass and ship on, and its typed relation lines and similar-page hint fail and ship off. P2's date-grounded extraction and speaker attribution pass and ship on, and its hub dampening fails and was removed before merge. Q2, P5's follow-up, merged, v0.60.120.0 (`61624308b`): typed relation lines stay off because the grammar still reads template-, glossary- and changelog-shaped list items as fact lines, and two link-typing units pass and ship.
@@ -151,6 +153,7 @@ Head-to-head comparisons against external memory systems, a full-context baselin
 
 ## Changelog
 
+- 2026-11-21: A note under the title says the starting line is read and judged by gpt-4o and gpt-4o-mini, which new runs no longer use.
 - 2026-10-17: P1 gains the E2 rerun on gbrain W5 (v0.60.273.0): C1 and C2 pass, so the three counted models keep `apply` on the W5 build and every late closure is disclosed as an upper bound; the verdict file joins the index.
 - 2026-10-08: Q2 merged (gbrain#6343 as `61624308b`, v0.60.120.0); the scorecard row and the opening paragraph say so.
 - 2026-10-08: The Q2 scorecard row names its gbrain pull request, #6343 (open).
