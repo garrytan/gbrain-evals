@@ -45,7 +45,7 @@ export function extras(input: { rows: ScoredRow[]; order: string[]; retrieval: R
     const qs = [...x.keys()].filter(q => verdict(x.get(q)!) && verdict(y.get(q) ?? null));
     const xs = qs.map(q => x.get(q) as 0 | 1);
     const ys = qs.map(q => y.get(q) as 0 | 1);
-    return { first: a, second: b, judge, n: qs.length, ...mcnemar(xs, ys), ...pairedDiff(xs, ys) };
+    return { first: a, second: b, judge, ...mcnemar(xs, ys), ...pairedDiff(xs, ys) };
   };
 
   const cells = READER_ARMS.flatMap(([reader, arms]) => arms.map(m => {
