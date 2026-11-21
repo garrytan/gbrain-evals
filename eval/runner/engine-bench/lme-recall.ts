@@ -79,9 +79,9 @@ export const LME_FULL_RUN_QUESTIONS = 500;
 export const PUBLISHED_LME_S_SHA256 = 'd6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442';
 export const BOOTSTRAP = { seed: 20261117, draws: 10_000 } as const;
 /**
- * Preregistered gate (second 2026-11-20 amendment): Rust passes an arm against a TypeScript engine when the paired point estimate
- * of Rust minus that engine is at least 0 and its 95% lower bound is at least -RUST_RECALL_DELTA, the smallest detectable
- * difference at the planned 470 scored questions and a planning discordance of 2%.
+ * Preregistered gate (second 2026-11-20 amendment): Rust passes an arm against a TypeScript engine when the 95% paired lower
+ * bound of Rust minus that engine is at least -RUST_RECALL_DELTA, the smallest detectable difference at the planned 470 scored
+ * questions and a planning discordance of 2%.
  */
 export const RUST_RECALL_DELTA = 0.018;
 /** The superseded non-inferiority margin, kept as a secondary row that is not the gate. */
@@ -406,9 +406,11 @@ export interface PairComparison {
   rust_errors?: string[];
   /**
    * Only when one side is rust, and the gate: fail on any rust_errors; pass when every scored question is an exact tie;
-   * otherwise pass when Rust minus the other is at least 0 and its lower bound at least -RUST_RECALL_DELTA; unmeasured with no interval.
+   * otherwise pass when the lower bound of Rust minus the other is at least -RUST_RECALL_DELTA; unmeasured with no interval.
    */
   rust_verdict?: 'pass' | 'fail' | 'unmeasured';
+  /** Only when one side is rust: the paired point estimate of recall_all@5, Rust minus the other, reported beside the gate; null with no scored pair. */
+  rust_point_estimate?: number | null;
   /** Only when one side is rust: two secondary rows, reported beside the gate and not the gate, each failing on any rust_errors as the gate does. */
   rust_secondary?: { lower_bound_at_least_0: 'pass' | 'fail' | 'unmeasured'; non_inferiority_minus_0_02: 'pass' | 'fail' | 'unmeasured' };
   /** Scored questions whose top 5 holds the same session ids on both engines: exact ties, with a recall_all difference of 0. */
@@ -474,15 +476,16 @@ export function comparePair(rows: readonly QuestionRow[], arm: LmeArm, a: EvalEn
     const mc = exactMcNemar(pairs);
     delta = { n_pairs: d.n_pairs, mean_a: d.mean_a, mean_b: d.mean_b, delta: d.delta, ci95: d.ci95, p_two_sided: d.p_two_sided, wins_b: mc.wins, losses_b: mc.losses, mcnemar_p: mc.p_two_sided };
   }
-  let rust: Pick<PairComparison, 'rust_errors' | 'rust_verdict' | 'rust_secondary'> = {};
+  let rust: Pick<PairComparison, 'rust_errors' | 'rust_verdict' | 'rust_point_estimate' | 'rust_secondary'> = {};
   if (rustSide !== null) {
-    const point = delta ? (rustSide === b ? delta.delta : -delta.delta) : null;
+    const point = delta ? (rustSide === b ? delta.delta : 0 - delta.delta) : null;
     const lower = delta?.ci95 ? (rustSide === b ? delta.ci95[0] : -delta.ci95[1]) : null;
     const allTied = pairs.length > 0 && rustErrors.length === 0 && exactTies === pairs.length;
     const rule = (passes: (lo: number) => boolean) => rustErrors.length > 0 ? 'fail' : allTied ? 'pass' : lower === null ? 'unmeasured' : passes(lower) ? 'pass' : 'fail';
     rust = {
       rust_errors: rustErrors,
-      rust_verdict: rule(lo => point! >= 0 && lo >= -RUST_RECALL_DELTA),
+      rust_verdict: rule(lo => lo >= -RUST_RECALL_DELTA),
+      rust_point_estimate: point,
       rust_secondary: { lower_bound_at_least_0: rule(lo => lo >= 0), non_inferiority_minus_0_02: rule(lo => lo >= RUST_RECALL_NONINFERIORITY_MARGIN) },
     };
   }

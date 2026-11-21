@@ -188,24 +188,29 @@ describe('the Rust verdict per arm', () => {
   const winners = (k: number) => ids(planned).map((_, i) => i).filter(i => recallOf(i) === 0).slice(0, k);
   const losers = (k: number) => ids(planned).map((_, i) => i).filter(i => recallOf(i) === 1).slice(0, k);
 
-  test('Rust one question worse in 470 fails the gate, though its interval sits inside the old -0.02 margin', () => {
+  test('Rust level on points with a lower bound of -0.019 fails the gate, though it sits inside the old -0.02 margin', () => {
     for (const [a, b] of [['pglite', 'rust'], ['rust', 'pglite']] as const) {
-      const c = comparePair(rustRows([], losers(1)), 'keyword', a, b);
+      const c = comparePair(rustRows(winners(10), losers(10)), 'keyword', a, b);
       const lower = b === 'rust' ? c.recall_all_delta!.ci95![0] : -c.recall_all_delta!.ci95![1];
       expect(lower).toBeGreaterThanOrEqual(-0.02);
-      expect(c.exact_ties).toBe(planned - 1);
+      expect(lower).toBeLessThan(-RUST_RECALL_DELTA);
+      expect(c.rust_point_estimate).toBe(0);
+      expect(c.exact_ties).toBe(planned - 20);
       expect(c.rust_verdict).toBe('fail');
       expect(c.rust_secondary).toEqual({ lower_bound_at_least_0: 'fail', non_inferiority_minus_0_02: 'pass' });
     }
   });
 
-  test('Rust ahead on the point estimate passes only while its lower bound stays within -0.018', () => {
+  test('the gate reads only the lower bound, and the point estimate is reported beside it', () => {
     for (const [a, b] of [['pglite', 'rust'], ['rust', 'pglite']] as const) {
+      const behind = comparePair(rustRows([], losers(1)), 'keyword', a, b);
+      expect(behind.rust_point_estimate).toBeCloseTo(-1 / planned, 10);
+      expect(behind.rust_verdict).toBe('pass');
+      expect(behind.rust_secondary).toEqual({ lower_bound_at_least_0: 'fail', non_inferiority_minus_0_02: 'pass' });
       const close = comparePair(rustRows(winners(10), losers(5)), 'keyword', a, b);
       expect(close.rust_verdict).toBe('pass');
-      expect(close.rust_secondary).toEqual({ lower_bound_at_least_0: 'fail', non_inferiority_minus_0_02: 'pass' });
       const noisy = comparePair(rustRows(winners(60), losers(55)), 'keyword', a, b);
-      expect(b === 'rust' ? noisy.recall_all_delta!.delta : -noisy.recall_all_delta!.delta).toBeGreaterThan(0);
+      expect(noisy.rust_point_estimate).toBeGreaterThan(0);
       expect(noisy.rust_verdict).toBe('fail');
       const clear = comparePair(rustRows(winners(30), []), 'keyword', a, b);
       expect(clear.rust_verdict).toBe('pass');
