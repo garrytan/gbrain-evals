@@ -37,7 +37,7 @@ const realFetch = globalThis.fetch;
 beforeAll(() => { globalThis.fetch = (() => { throw new Error('the BG1-C verdict tests are offline'); }) as unknown as typeof fetch; });
 afterAll(() => { globalThis.fetch = realFetch; rmSync(tmp, { recursive: true, force: true }); });
 
-const RELEASE = 'v0.60.750.0';
+const RELEASE = 'v0.60.753.0';
 const sha = (s: string | Uint8Array) => createHash('sha256').update(s).digest('hex');
 const ASTRA = 'openai:gpt-6-astra';
 const READERS = [...CONFIRM_READERS];
@@ -127,7 +127,7 @@ describe('the outcome table', () => {
     expect(o.headline).toBe('gbrain is behind the memory-bank server on questions about the past');
     expect(o.publish[0]).toBe('gbrain is behind the memory-bank server on questions about the past (+1.5 points, 95% interval -0.2 to +3.2).');
     expect(o.publish[1]).toBe('gbrain is ahead of the memory-bank server on what is true now (+2.6 points, 95% interval +0.9 to +4.3).');
-    expect(o.readme).toEqual({ line: o.publish[0], label: 'gbrain v0.60.750.0, BG1-C', bg1_rows: 'BG1\'s rows stay published below it, labelled "gbrain v0.60.593.0, BG1"', replaces: [] });
+    expect(o.readme).toEqual({ line: o.publish[0], label: 'gbrain v0.60.753.0, BG1-C', bg1_rows: 'BG1\'s rows stay published below it, labelled "gbrain v0.60.593.0, BG1"', replaces: [] });
     expect(o.next).toEqual({ text: 'The losing class\'s kinds go to GBRA-108 as issues, each with exposure placing the loss in retrieval or in reading.', comparisons: ['past|memory-bank', 'past|extract-first'], kinds: ['s6_as_of', 's7_as_known', 's8_history'] });
   });
 
@@ -145,7 +145,7 @@ describe('the outcome table', () => {
     expect([level.row, level.headline, level.readme.replaces.length]).toEqual([6, 'gbrain is level with the two leading memory servers on changing facts', 2]);
     const six = confirmOutcome(readings(['level within 3 points', 'no measurable difference', 'not behind by 3 points or more', 'no measurable difference']), { release: RELEASE });
     expect([six.row, six.headline, six.publish.length]).toEqual([6, null, 4]);
-    expect(six.readme.replaces).toEqual(['On questions about the past against the memory-bank server, "not behind by 3 points or more" replaces BG1\'s "behind" for gbrain v0.60.750.0.']);
+    expect(six.readme.replaces).toEqual(['On questions about the past against the memory-bank server, "not behind by 3 points or more" replaces BG1\'s "behind" for gbrain v0.60.753.0.']);
     expect(six.next).toEqual({ text: 'GBRA-108 gets the per-kind rows and exposure of every comparison.', comparisons: KEYS, kinds: [...BG1_STRATA] });
   });
 
@@ -721,7 +721,7 @@ describe('BG1-C receipts', () => {
     expect(RELEASE).toBe(BG1C_GBRAIN_BUILD.release);
     expect(run(['confirm', '--out', join(tmp, 'out')]).err).toContain('verdict.ts confirm [--look] --receipts');
     expect(run(['confirm', '--receipts', root, '--cells', bare, '--release', RELEASE, '--out', join(tmp, 'out')])).toEqual({ code: 2, err: `bg1 verdict refused: the BG1-C cell set ${bare} names no gbrain release in gbrain_build.release, so confirm cannot say which release it measures\n`, out: '' });
-    expect(run([...base, '--release', 'v0.60.593.0'])).toEqual({ code: 2, err: `bg1 verdict refused: --release v0.60.593.0 is not the gbrain release the BG1-C cell set pins, v0.60.750.0 (${cells}); confirm measures the cell set's release\n`, out: '' });
+    expect(run([...base, '--release', 'v0.60.593.0'])).toEqual({ code: 2, err: `bg1 verdict refused: --release v0.60.593.0 is not the gbrain release the BG1-C cell set pins, v0.60.753.0 (${cells}); confirm measures the cell set's release\n`, out: '' });
     expect(run([...base, '--release', 'latest']).code).toBe(2);
     expect(run([...base, '--release', RELEASE, '--set', 'BG1'])).toEqual({ code: 2, err: 'confirm reads set BG1-C only, not BG1\n', out: '' });
     for (const given of [[], ['--release', RELEASE]]) {

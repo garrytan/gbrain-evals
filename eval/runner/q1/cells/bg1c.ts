@@ -46,7 +46,7 @@ export const BG1C_PREREGISTRATION = 'docs/benchmarks/2026-11-19-changing-facts-c
  * gbrain's build on every BG1-C gbrain cell: the newest release tag on gbrain's master. Launch amendment A re-pins it
  * here when a newer release lands before the first counted gbrain cell, and it is frozen once counted gbrain cells start.
  */
-export const BG1C_GBRAIN_BUILD = { release: 'v0.60.750.0', commit: '104403ce1cde20f444eed2dc80b0024a552015b0' } as const;
+export const BG1C_GBRAIN_BUILD = { release: 'v0.60.753.0', commit: 'fbf608cf86ea7b2b912ce80151f856a1a47e9533' } as const;
 export const BG1C_SOL = 'openai:gpt-6.2-sol';
 /** Live readers; particle-1 re-reads the frozen contexts (reread-cell.ts), so it is the third reader of every row. */
 export const BG1C_READERS = [OPUS, BG1C_SOL];

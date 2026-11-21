@@ -26,7 +26,7 @@ const ASTRA = 'openai:gpt-6-astra';
 const ROWS = ['gbrain-defaults.rs1-stable', 'ext-memory-bank.recipe', 'ext-extract-first.common'];
 const rowKey = (c: CellDefinition) => `${c.system}:${c.configuration}`;
 /** The cell set's hash as launch amendment A records it; it changes only with a dated amendment (a gbrain re-pin moves it). */
-const CELL_SET_SHA256 = '2e4ccb54d26441f29c3d30983f5f5d8cbf496d6aeb665444687ae7cc1ba00242';
+const CELL_SET_SHA256 = '282a5353d3a1d9345dc9877c5535a54a1d461644556a81f40248f7af9c033af9';
 
 describe('bg1c-cells.json', () => {
   test('the committed manifest is what bg1c.ts generates', () => {
@@ -65,7 +65,7 @@ describe('bg1c-cells.json', () => {
       expect(c.launch!.env).toMatchObject({ GBRAIN_F6: '1', GBRAIN_SHA: BG1C_GBRAIN_BUILD.commit, GBRAIN_F6_EXTRACT_CAP_USD: '1' });
     }
     expect(BG1C_SOL).toBe('openai:gpt-6.2-sol');
-    expect(m.gbrain_build).toEqual({ release: 'v0.60.750.0', commit: '104403ce1cde20f444eed2dc80b0024a552015b0' });
+    expect(m.gbrain_build).toEqual({ release: 'v0.60.753.0', commit: 'fbf608cf86ea7b2b912ce80151f856a1a47e9533' });
   });
 });
 
