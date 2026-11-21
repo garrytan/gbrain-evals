@@ -70,9 +70,17 @@ export interface Cat9RunStep {
 export interface Cat9TimeStep { capture_time: string }
 export interface Cat9RemoveDatastoreStep { remove_datastore: string }
 export interface Cat9ManualStep { manual: string; requires: Cat9Requirement[] }
-export type Cat9SetupStep = Cat9RunStep | Cat9TimeStep | Cat9RemoveDatastoreStep | Cat9ManualStep;
+/** Read a JSON file the brain wrote (for example a source's ownership marker) and capture values from it. */
+export interface Cat9ReadJsonStep { read_json: string; capture: Record<string, string> }
+export type Cat9SetupStep = Cat9RunStep | Cat9TimeStep | Cat9RemoveDatastoreStep | Cat9ManualStep | Cat9ReadJsonStep;
 
-export type Cat9JsonOp = 'eq' | 'ne' | 'gt' | 'gte' | 'lt' | 'exists' | 'absent' | 'empty' | 'nonempty' | 'includes' | 'excludes' | 'all_match' | 'length';
+export const SETUP_KINDS = ['run', 'capture_time', 'remove_datastore', 'manual', 'read_json'] as const;
+
+export const JSON_OPS = ['eq', 'ne', 'gt', 'gte', 'lt', 'exists', 'absent', 'empty', 'nonempty', 'includes', 'excludes', 'all_match', 'some_match', 'length'] as const;
+export type Cat9JsonOp = typeof JSON_OPS[number];
+/** Ops that compare against `value`; the rest take none. */
+const OPS_WITH_VALUE = new Set<string>(['eq', 'ne', 'gt', 'gte', 'lt', 'includes', 'excludes', 'all_match', 'some_match', 'length']);
+export const EXPECT_KEYS = ['exit', 'json', 'stdout_includes', 'stdout_excludes', 'stderr_excludes', 'output_includes', 'output_excludes', 'lines', 'datastore_absent'] as const;
 export interface Cat9JsonAssertion { path: string; op: Cat9JsonOp; value?: unknown }
 
 export interface Cat9Expect {
@@ -176,6 +184,11 @@ export function checkJsonAssertion(doc: unknown, a: Cat9JsonAssertion): string |
     case 'nonempty': return Array.isArray(got) && got.length > 0 ? null : fail('not a non-empty array');
     case 'includes': return Array.isArray(got) && got.some(x => same(x, a.value)) ? null : fail('value not in array');
     case 'excludes': return Array.isArray(got) && !got.some(x => same(x, a.value)) ? null : fail(Array.isArray(got) ? 'value in array' : 'not an array');
+    case 'some_match': {
+      if (!Array.isArray(got)) return fail('not an array');
+      const re = new RegExp(String(a.value));
+      return got.some(x => typeof x === 'string' && re.test(x)) ? null : fail('no value matches');
+    }
     case 'all_match': {
       // Never vacuous: an empty or missing array fails.
       if (!Array.isArray(got) || got.length === 0) return fail('no values to match');
@@ -183,17 +196,63 @@ export function checkJsonAssertion(doc: unknown, a: Cat9JsonAssertion): string |
       const bad = got.filter(x => typeof x !== 'string' || !re.test(x));
       return bad.length === 0 ? null : fail(`${bad.length} value(s) do not match`);
     }
+    default:
+      // Fail closed: an op the engine does not know is never a pass.
+      return fail(`unknown op ${JSON.stringify((a as { op: unknown }).op)}`);
   }
 }
 
-/** Parse stdout as JSON; tolerate leading notice lines before the first `{` or `[` line. */
+/** Problems with one expectation: unknown keys or ops, missing operands, or nothing to check. */
+export function validateExpect(e: unknown, where: string): string[] {
+  const out: string[] = [];
+  if (!e || typeof e !== 'object' || Array.isArray(e)) return [`${where}: expect must be an object`];
+  const x = e as Record<string, unknown>;
+  const keys = Object.keys(x);
+  if (keys.length === 0) out.push(`${where}: expect is empty`);
+  for (const k of keys) if (!(EXPECT_KEYS as readonly string[]).includes(k)) out.push(`${where}: unknown expect key ${JSON.stringify(k)}`);
+  if (x.exit !== undefined && x.exit !== 'zero' && x.exit !== 'nonzero') out.push(`${where}: exit must be zero or nonzero`);
+  for (const k of ['stdout_includes', 'stdout_excludes', 'stderr_excludes', 'output_includes', 'output_excludes']) {
+    if (x[k] === undefined) continue;
+    if (!Array.isArray(x[k]) || (x[k] as unknown[]).length === 0 || (x[k] as unknown[]).some(v => typeof v !== 'string' || v === '')) out.push(`${where}: ${k} must be a non-empty list of non-empty strings`);
+  }
+  if (x.json !== undefined) {
+    if (!Array.isArray(x.json) || x.json.length === 0) out.push(`${where}: json must be a non-empty list`);
+    else for (const a of x.json as Record<string, unknown>[]) {
+      if (typeof a?.path !== 'string') out.push(`${where}: json assertion needs a path`);
+      if (!(JSON_OPS as readonly string[]).includes(String(a?.op))) out.push(`${where}: unknown json op ${JSON.stringify(a?.op)}`);
+      else if (OPS_WITH_VALUE.has(String(a.op)) !== ('value' in a)) out.push(`${where}: json op ${a.op} ${OPS_WITH_VALUE.has(String(a.op)) ? 'needs' : 'takes no'} value`);
+    }
+  }
+  if (x.lines !== undefined) {
+    if (!Array.isArray(x.lines) || x.lines.length === 0) out.push(`${where}: lines must be a non-empty list`);
+    else for (const l of x.lines as Record<string, unknown>[]) {
+      if (typeof l?.prefix !== 'string' || l.prefix === '') out.push(`${where}: a lines rule needs a prefix`);
+      for (const k of Object.keys(l ?? {})) if (!['prefix', 'includes', 'excludes'].includes(k)) out.push(`${where}: unknown lines key ${JSON.stringify(k)}`);
+    }
+  }
+  if (x.datastore_absent !== undefined && typeof x.datastore_absent !== 'string') out.push(`${where}: datastore_absent names a brain`);
+  return out;
+}
+
+/** A line that opens a JSON document, as opposed to a `[gbrain] ...` style notice. */
+const JSON_START = /^(\{|\[\s*$|\[\s*[\[{"\d\-\]]|\[\s*(true|false|null)\b)/;
+
+/**
+ * Parse stdout as JSON. Leading notice lines are skipped up to the first line
+ * that opens a JSON document; that document is then parsed from there to the
+ * end, or to its last closing line when notices follow it. A document that
+ * fails to parse is a failure: the parser never looks for JSON inside it.
+ */
 export function parseJsonOutput(stdout: string): { ok: true; value: unknown } | { ok: false } {
   const trimmed = stdout.trim();
   try { return { ok: true, value: JSON.parse(trimmed) }; } catch { /* fall through */ }
   const lines = trimmed.split('\n');
-  for (let i = 1; i < lines.length; i++) {
-    if (!lines[i].startsWith('{') && !lines[i].startsWith('[')) continue;
-    try { return { ok: true, value: JSON.parse(lines.slice(i).join('\n')) }; } catch { /* try the next line */ }
+  const start = lines.findIndex(l => JSON_START.test(l));
+  if (start < 0) return { ok: false };
+  let end = lines.length;
+  while (end > start + 1 && !/^[}\]]/.test(lines[end - 1])) end--;
+  for (const stop of new Set([lines.length, end])) {
+    try { return { ok: true, value: JSON.parse(lines.slice(start, stop).join('\n')) }; } catch { /* next stop */ }
   }
   return { ok: false };
 }
@@ -243,7 +302,8 @@ export function substituteDeep<T>(value: T, vars: Record<string, string>): T {
 
 /** Replace `{name}` placeholders; an unknown name is an error, never left in place. */
 export function substitute(text: string, vars: Record<string, string>): string {
-  return text.replace(/\{([A-Za-z0-9_:]+)\}/g, (_, name: string) => {
+  // A name starts with a letter or underscore, so regex quantifiers such as \d{4} pass through.
+  return text.replace(/\{([A-Za-z_][A-Za-z0-9_:]*)\}/g, (_, name: string) => {
     if (!(name in vars)) throw new Error(`unknown placeholder {${name}}`);
     return vars[name];
   });
@@ -261,8 +321,9 @@ export function validateChecks(s: Cat9CheckedScenario): string[] {
   };
   reqs('scenario', s.requires);
   (s.setup ?? []).forEach((step, i) => {
-    const kinds = ['run', 'capture_time', 'remove_datastore', 'manual'].filter(k => k in (step as object));
-    if (kinds.length !== 1) out.push(`${s.id} setup[${i}]: needs exactly one of run, capture_time, remove_datastore, manual`);
+    const kinds = SETUP_KINDS.filter(k => k in (step as object));
+    if (kinds.length !== 1) out.push(`${s.id} setup[${i}]: needs exactly one of ${SETUP_KINDS.join(', ')}`);
+    if ('read_json' in step && (!step.capture || Object.keys(step.capture).length === 0)) out.push(`${s.id} setup[${i}]: read_json needs a capture`);
     if (isRun(step)) {
       if (step.run.length === 0 || step.run.some(a => typeof a !== 'string')) out.push(`${s.id} setup[${i}]: run must be a non-empty string array`);
       if (step.run[0] === 'gbrain') out.push(`${s.id} setup[${i}]: run omits the leading gbrain`);
@@ -285,7 +346,7 @@ export function validateChecks(s: Cat9CheckedScenario): string[] {
     } else {
       if (!Array.isArray(c.run) || c.run.length === 0 || c.run.some(a => typeof a !== 'string')) out.push(`${s.id}/${c.id}: run must be a non-empty string array`);
       else if (c.run[0] === 'gbrain') out.push(`${s.id}/${c.id}: run omits the leading gbrain`);
-      if (!c.expect || Object.keys(c.expect).length === 0) out.push(`${s.id}/${c.id}: expect is empty`);
+      out.push(...validateExpect(c.expect, `${s.id}/${c.id}`));
     }
     if (c.known_failure && (!c.known_failure.finding || !c.known_failure.note)) out.push(`${s.id}/${c.id}: known_failure needs finding and note`);
     if ('allow_fail' in c) out.push(`${s.id}/${c.id}: allow_fail is for setup steps only`);
@@ -342,8 +403,11 @@ export function runScenarioChecks(s: Cat9CheckedScenario, o: ScenarioCheckOption
   if (checks.length === 0) return [];
   const available = o.available ?? new Set<Cat9Requirement>();
   const missing = (r?: Cat9Requirement[]) => (r ?? []).filter(x => !available.has(x));
+  let root = '';
+  // Every recorded string is masked: reasons quote observed values, which can hold temp paths.
+  const mask = (t: string) => (root ? redactUrlPasswords(t.split(root).join('<tmp>')) : redactUrlPasswords(t));
   const row = (c: Cat9Check, status: Cat9CheckStatus, reasons: string[], extra: Partial<Cat9CheckRow> = {}): Cat9CheckRow => ({
-    scenario_id: s.id, check_id: c.id, status, finding: c.known_failure?.finding ?? null, reasons, exit_code: null, argv: null, ...extra,
+    scenario_id: s.id, check_id: c.id, status, finding: c.known_failure?.finding ?? null, reasons: reasons.map(mask), exit_code: null, argv: null, ...extra,
   });
 
   // A scenario-level or setup-level requirement the run lacks: nothing runs.
@@ -353,7 +417,7 @@ export function runScenarioChecks(s: Cat9CheckedScenario, o: ScenarioCheckOption
     return checks.map(c => row(c, 'not_run', why));
   }
 
-  const root = mkdtempSync(join(o.tmpRoot ?? tmpdir(), `cat9-${s.id.replace(/[^A-Za-z0-9_-]/g, '_')}-`));
+  root = mkdtempSync(join(o.tmpRoot ?? tmpdir(), `cat9-${s.id.replace(/[^A-Za-z0-9_-]/g, '_')}-`));
   const corpus = join(root, 'corpus');
   cpSync(o.corpusDir, corpus, { recursive: true });
   const vars: Record<string, string> = { corpus };
@@ -399,6 +463,12 @@ export function runScenarioChecks(s: Cat9CheckedScenario, o: ScenarioCheckOption
         const ds = datastoreOf(step.remove_datastore);
         if (!existsSync(ds)) throw new Error(`setup[${i}]: brain ${step.remove_datastore} has no datastore to remove`);
         renameSync(ds, join(root, `moved-${step.remove_datastore}.pglite`));
+        continue;
+      }
+      if ('read_json' in step) {
+        const file = substitute(step.read_json, vars);
+        const errs = capture(step, existsSync(file) ? readFileSync(file, 'utf8') : '');
+        if (errs.length > 0) throw new Error(`setup[${i}] read_json: ${errs.join('; ')}`);
         continue;
       }
       if (!isRun(step)) continue; // a manual step whose requirements are met is done by whoever provides them

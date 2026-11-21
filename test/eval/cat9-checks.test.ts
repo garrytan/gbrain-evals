@@ -82,9 +82,25 @@ describe('Cat 9 checks: jsonPath and assertions', () => {
     expect(checkJsonAssertion({ d: ['2025-01-06T00:00:00Z'] }, { path: 'd', op: 'all_match', value: '^\\d{4}-\\d{2}-\\d{2}$' })).toContain('do not match');
   });
 
-  test('parseJsonOutput skips notice lines before the JSON', () => {
+  test('parseJsonOutput skips notice lines before and after the JSON', () => {
     expect(parseJsonOutput('[gbrain] notice\n{"a":1}')).toEqual({ ok: true, value: { a: 1 } });
+    expect(parseJsonOutput('[gbrain] notice\n[\n  {"a": 1}\n]\n[gbrain degraded: x] note')).toEqual({ ok: true, value: [{ a: 1 }] });
     expect(parseJsonOutput('plain text')).toEqual({ ok: false });
+  });
+
+  test('parseJsonOutput never recovers a nested document from malformed JSON', () => {
+    const truncated = '{\n  "outer": 1,\n  "inner":\n{"pages": ["x"]}';
+    expect(parseJsonOutput(truncated)).toEqual({ ok: false });
+    expect(evaluateExpect({ json: [{ path: 'pages', op: 'nonempty' }] }, ok(truncated))).toEqual(['stdout is not JSON']);
+  });
+
+  test('an unknown op fails closed', () => {
+    expect(checkJsonAssertion(doc, { path: 'a.b', op: 'equals' as any, value: 2 })).toContain('unknown op');
+  });
+
+  test('some_match passes when one string matches', () => {
+    expect(checkJsonAssertion({ argv: ['gbrain', 'sources', 'transfer'] }, { path: 'argv', op: 'some_match', value: 'transfer' })).toBeNull();
+    expect(checkJsonAssertion({ argv: ['gbrain', '--help'] }, { path: 'argv', op: 'some_match', value: 'transfer' })).toContain('no value matches');
   });
 });
 
@@ -132,6 +148,10 @@ describe('Cat 9 checks: evaluateExpect and classify', () => {
 });
 
 describe('Cat 9 checks: placeholders and validation', () => {
+  test('substitute leaves regex quantifiers alone', () => {
+    expect(substitute('^\\d{4}-\\d{2}$', {})).toBe('^\\d{4}-\\d{2}$');
+  });
+
   test('substitute replaces known names and refuses unknown ones', () => {
     expect(substitute('{corpus}/default', { corpus: '/c' })).toBe('/c/default');
     expect(() => substitute('{rev}', {})).toThrow('unknown placeholder {rev}');
@@ -159,6 +179,29 @@ describe('Cat 9 checks: placeholders and validation', () => {
     expect(problems).toContain('requires must list only');
     expect(problems).toContain('not_mechanized');
     expect(problems).toContain('known_failure needs finding and note');
+  });
+
+  test('validateCatalog refuses vacuous or misspelled expectations through loadCat9Catalog', () => {
+    const base = JSON.parse(readFileSync(DEFAULT_CAT9_CATALOG, 'utf8')) as Cat9Catalog;
+    const s0 = base.scenarios[0];
+    const bad: Cat9Catalog = { ...base, scenarios: [{ ...s0, checks: [
+      { id: 'e1', description: 'd', run: ['stats'], expect: { json: [] } },
+      { id: 'e2', description: 'd', run: ['stats'], expect: { stdout_include: ['x'] } as any },
+      { id: 'e3', description: 'd', run: ['stats'], expect: { json: [{ path: 'a', op: 'equals' as any, value: 1 }] } },
+      { id: 'e4', description: 'd', run: ['stats'], expect: { json: [{ path: 'a', op: 'gt' }] } },
+      { id: 'e5', description: 'd', run: ['stats'], expect: { stdout_excludes: [] } },
+      { id: 'e6', description: 'd', run: ['stats'], expect: { exit: 'ok' as any } },
+    ] }] };
+    const problems = validateCatalog(bad).join('\n');
+    expect(problems).toContain('e1: json must be a non-empty list');
+    expect(problems).toContain('e2: unknown expect key "stdout_include"');
+    expect(problems).toContain('e3: unknown json op "equals"');
+    expect(problems).toContain('e4: json op gt needs value');
+    expect(problems).toContain('e5: stdout_excludes must be a non-empty list');
+    expect(problems).toContain('e6: exit must be zero or nonzero');
+    const dir = mkdtempSync(join(tmpdir(), 'cat9-badcat-'));
+    writeFileSync(join(dir, 'scenarios.json'), JSON.stringify(bad));
+    expect(() => loadCat9Catalog(join(dir, 'scenarios.json'))).toThrow('unknown json op');
   });
 
   test('hermeticChildEnv strips provider keys and GBRAIN_ settings', () => {
@@ -275,6 +318,40 @@ describe('Cat 9 checks: runScenarioChecks with a stub CLI', () => {
       checks: [{ id: 'c', description: 'd', run: ['doctor', '--json'], expect: { datastore_absent: 'A', json: [{ path: 'health_score', op: 'lt', value: 100 }] } }],
     }, { exec, corpusDir: tinyCorpus() });
     expect(rows[0].status).toBe('pass');
+  });
+
+  test('an all_match regex runs through the scenario path without being read as a placeholder', () => {
+    const { exec } = stubExec(() => ok(JSON.stringify([{ date: '2025-01-06' }])));
+    const rows = runScenarioChecks({
+      id: 's8',
+      checks: [{ id: 'c', description: 'd', run: ['timeline', 'x', '--json'], expect: { json: [{ path: '[*].date', op: 'all_match', value: '^\\d{4}-\\d{2}-\\d{2}$' }] } }],
+    }, { exec, corpusDir: tinyCorpus() });
+    expect(rows[0].status).toBe('pass');
+  });
+
+  test('read_json captures a value from a file the brain wrote', () => {
+    const corpus = tinyCorpus();
+    writeFileSync(join(corpus, 'default/.marker'), JSON.stringify({ brain_id: 'b-123' }));
+    const { exec } = stubExec(() => ok('owned by b-123'));
+    const rows = runScenarioChecks({
+      id: 's9',
+      setup: [{ read_json: '{corpus}/default/.marker', capture: { owner: 'brain_id' } }],
+      checks: [{ id: 'c', description: 'd', run: ['sources', 'add'], expect: { output_includes: ['{owner}'] } }],
+    }, { exec, corpusDir: corpus });
+    expect(rows[0].status).toBe('pass');
+  });
+
+  test('reasons that quote an observed temp path are masked', () => {
+    let seen = '';
+    const { exec } = stubExec((argv) => { seen = argv[1]; return ok(JSON.stringify({ path: argv[1] })); });
+    const rows = runScenarioChecks({
+      id: 's10',
+      checks: [{ id: 'c', description: 'd', run: ['x', '{corpus}'], expect: { json: [{ path: 'path', op: 'eq', value: 'other' }] } }],
+    }, { exec, corpusDir: tinyCorpus() });
+    expect(rows[0].status).toBe('fail');
+    expect(seen.length).toBeGreaterThan(0);
+    expect(rows[0].reasons.join(' ')).not.toContain(seen);
+    expect(rows[0].reasons.join(' ')).toContain('<tmp>/corpus');
   });
 
   test('a known failure that fails is expected_fail and keeps its finding', () => {

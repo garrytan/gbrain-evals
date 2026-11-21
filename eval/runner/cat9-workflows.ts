@@ -106,6 +106,7 @@ import {
   type Cat9SetupStep,
   type GbrainExec,
 } from './cat9-checks.ts';
+import { createHash } from 'node:crypto';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 
@@ -720,6 +721,14 @@ function argValue(argv: readonly string[], flag: string): string | undefined {
   return inline ? inline.slice(flag.length + 1) : undefined;
 }
 
+/** A portable name for the catalog: its path inside this repository, else its file name and content hash. */
+export function catalogIdentity(catalogPath: string): string {
+  const repo = resolve(import.meta.dir, '../..');
+  const rel = relative(repo, catalogPath);
+  if (!rel.startsWith('..') && !rel.startsWith('/')) return rel;
+  return `${catalogPath.split('/').pop()} sha256:${createHash('sha256').update(readFileSync(catalogPath)).digest('hex')}`;
+}
+
 async function mainChecks(argv: string[]): Promise<number> {
   const catalogPath = resolve(argValue(argv, '--scenarios') ?? DEFAULT_CAT9_CATALOG);
   const catalog = loadCat9Catalog(catalogPath);
@@ -759,7 +768,7 @@ async function mainChecks(argv: string[]): Promise<number> {
     resolved_config: {
       engine: 'pglite (gbrain init --pglite, one fresh brain per scenario and brain name)',
       embeddings: 'none: keyword-only brain, provider keys stripped from the child environment',
-      catalog: catalogPath.replace(resolve(import.meta.dir, '../..') + '/', ''),
+      catalog: catalogIdentity(catalogPath),
       only: only ?? null,
       gbrain_overlay: overlaySummary(gut),
       verdict_rule: 'pass = every check that ran passed; partial = every failure is a labelled known failure; fail = an unlabelled failure or a known failure that now passes',

@@ -119,6 +119,7 @@
             "embeddings"
           ],
           "expect": {
+            "exit": "zero",
             "stdout_excludes": [
               " 0 embedded"
             ]
@@ -680,11 +681,17 @@
             "--json"
           ],
           "expect": {
+            "exit": "zero",
             "json": [
               {
                 "path": "[*].source_id",
                 "op": "excludes",
                 "value": "work"
+              },
+              {
+                "path": "[*].slug",
+                "op": "excludes",
+                "value": "projects/kumquat-protocol"
               }
             ]
           }
@@ -701,6 +708,7 @@
             "llm"
           ],
           "expect": {
+            "exit": "zero",
             "stdout_excludes": [
               "\"source_id\": \"work\""
             ]
@@ -889,6 +897,10 @@
             "warehouse robotics"
           ],
           "expect": {
+            "exit": "zero",
+            "stdout_includes": [
+              "concepts/warehouse-robotics"
+            ],
             "stderr_excludes": [
               "#3070"
             ]
@@ -934,12 +946,18 @@
             "--json"
           ],
           "brain": "A"
+        },
+        {
+          "read_json": "{corpus}/work/.gbrain-managed",
+          "capture": {
+            "owner_brain": "brain_id"
+          }
         }
       ],
       "checks": [
         {
           "id": "second-brain-refused",
-          "description": "Brain B refuses to add a checkout that brain A owns.",
+          "description": "Brain B refuses to add a checkout that brain A owns, with a structured error (not a crash).",
           "run": [
             "sources",
             "add",
@@ -950,12 +968,22 @@
           ],
           "brain": "B",
           "expect": {
-            "exit": "nonzero"
+            "exit": "nonzero",
+            "json": [
+              {
+                "path": "code",
+                "op": "exists"
+              },
+              {
+                "path": "message",
+                "op": "exists"
+              }
+            ]
           }
         },
         {
           "id": "refusal-names-next-step",
-          "description": "The refusal names the owning brain and the transfer command (a runnable fix), not the generic recovery_required text.",
+          "description": "The refusal names the owning brain (brain A's id from the checkout's marker) and a fix command that transfers the checkout, not the generic recovery_required text.",
           "run": [
             "sources",
             "add",
@@ -966,15 +994,15 @@
           ],
           "brain": "B",
           "expect": {
+            "exit": "nonzero",
+            "output_includes": [
+              "{owner_brain}"
+            ],
             "json": [
               {
-                "path": "code",
-                "op": "ne",
-                "value": "recovery_required"
-              },
-              {
                 "path": "fix.argv",
-                "op": "exists"
+                "op": "some_match",
+                "value": "transfer"
               }
             ]
           },
@@ -1302,7 +1330,7 @@
       "checks": [
         {
           "id": "delta-lists-delete",
-          "description": "delta --since a time before the delete lists the deleted page.",
+          "description": "delta --since a time before the delete lists companies/orbit-labs-example.",
           "run": [
             "delta",
             "--since",
@@ -1310,10 +1338,12 @@
             "--json"
           ],
           "expect": {
+            "exit": "zero",
             "json": [
               {
-                "path": "pages",
-                "op": "nonempty"
+                "path": "pages[*].slug",
+                "op": "includes",
+                "value": "companies/orbit-labs-example"
               }
             ]
           },
@@ -1331,6 +1361,7 @@
             "--json"
           ],
           "expect": {
+            "exit": "zero",
             "json": [
               {
                 "path": "[*].slug",
@@ -1807,6 +1838,7 @@
             "--json"
           ],
           "expect": {
+            "exit": "zero",
             "stdout_excludes": [
               "\"safe\": true"
             ]
@@ -1857,6 +1889,7 @@
             "--json"
           ],
           "expect": {
+            "exit": "zero",
             "stdout_excludes": [
               "regression"
             ]
