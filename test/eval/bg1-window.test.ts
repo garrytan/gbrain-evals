@@ -15,7 +15,7 @@ import { DecideError } from '../../eval/runner/decisions/errors.ts';
 import type { Bg1Manifest, Corpus } from '../../eval/runner/memory-qa/corpus.ts';
 import { freePort } from '../../eval/runner/lifecycle/slice.ts';
 import { keylessKeys, keylessUpstream, MeteringProxy } from '../../eval/runner/metering-proxy.ts';
-import { bg1CampaignManifest, bg1CellWindow, bg1GeminiKey, bg1KeptUnit, campaignManifest, findCell, loadCellManifest, runCell } from '../../eval/runner/q1/cell.ts';
+import { bg1CampaignManifest, bg1CellWindow, bg1GeminiKey, bg1KeptUnit, campaignCells, campaignManifest, findCell, loadCellManifest, runCell } from '../../eval/runner/q1/cell.ts';
 import { prepareReread, rereadArm } from '../../eval/runner/q1/reread-cell.ts';
 import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { runRemote } from '../../eval/runner/shootout-cell.ts';
@@ -240,7 +240,10 @@ describe('a BG1 campaign', () => {
       expect(cell.gemini_key_env).toBe('BG1_GEMINI_API_KEY');
     }
     const KEYS: Record<string, string> = { openai: 'OPENAI_API_KEY', anthropic: 'ANTHROPIC_API_KEY', voyage: 'VOYAGE_API_KEY', particle: 'PARTICLE_API_KEY' };
-    for (const id of ['q1', 'f6', 'rs1']) for (const cell of campaignManifest(loadCellManifest(id), { smoke: true }).cells) {
+    const rs1Units = campaignCells(loadCellManifest('rs1'), { smoke: true, cellManifest: 'rs1', paidWindow: { unit: 'RS1-TEST', cap_usd: 1 } }).map(c => c.id);
+    expect(rs1Units.length).toBeGreaterThan(16);
+    const rs1Window = { campaign_id: 'q1-scoreboard-rs1-keys', cap_usd: 1, units: rs1Units, cell_manifest: 'rs1' as const, paid_window: 'RS1-TEST' };
+    for (const id of ['q1', 'f6', 'rs1']) for (const cell of campaignManifest(loadCellManifest(id), { smoke: true, ...(id === 'rs1' ? { units: rs1Window } : {}) }).cells) {
       expect(cell.providers!.every(p => p in KEYS)).toBe(true);
       expect(cell.pass).toEqual(cell.providers!.map(p => KEYS[p]));
       expect(cell.gemini_key_env).toBeUndefined();

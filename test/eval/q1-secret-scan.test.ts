@@ -18,8 +18,8 @@ function token(seed: number, n: number): string {
 }
 
 describe('fingerprints', () => {
-  test('cover the six provider variables and skip unset or short values', () => {
-    expect(SECRET_ENV).toEqual(['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'VOYAGE_API_KEY', 'GEMINI_API_KEY', 'UBICLOUD_API_TOKEN', 'JEV_TYPESAFE_API_KEY']);
+  test('cover the seven provider variables, RS1\'s dedicated Gemini key included, and skip unset or short values', () => {
+    expect(SECRET_ENV).toEqual(['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'VOYAGE_API_KEY', 'GEMINI_API_KEY', 'RS1_GEMINI_API_KEY', 'UBICLOUD_API_TOKEN', 'JEV_TYPESAFE_API_KEY']);
     const env = { OPENAI_API_KEY: token(1, 40), ANTHROPIC_API_KEY: 'short', GEMINI_API_KEY: '' };
     const f = fingerprints(env);
     expect(f.map(x => x.name)).toEqual(['OPENAI_API_KEY']);
@@ -44,6 +44,14 @@ describe('scanBytes', () => {
     expect(found.map(f => f.name)).toEqual(['anthropic-key', 'google-api-key']);
     expect(isPlaceholder(`sk-${'x'.repeat(40)}`)).toBe(true);
     expect(isPlaceholder(`sk-${token(5, 40)}`)).toBe(false);
+  });
+
+  test('finds Google\'s AQ.-prefixed keys beside AIza ones, and the RS1 Gemini key\'s value', () => {
+    const aq = `AQ.${token(7, 8)}.${token(8, 40)}`;
+    expect(scanBytes(Buffer.from(`k=${aq}\n`), []).map(f => [f.name, f.offset])).toEqual([['google-aq-key', 2]]);
+    expect(scanBytes(Buffer.from(`AQ.short x AQ.${'x'.repeat(30)} xAQ.${token(9, 30)}`), [])).toEqual([]);
+    const v = `AQ.${token(10, 45)}`;
+    expect(scanBytes(Buffer.from(`"${v}"`), fingerprints({ RS1_GEMINI_API_KEY: v })).map(f => [f.kind, f.name])).toEqual([['env-value', 'RS1_GEMINI_API_KEY'], ['pattern', 'google-aq-key']]);
   });
 });
 

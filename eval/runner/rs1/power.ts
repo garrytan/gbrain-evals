@@ -4,18 +4,20 @@
  *
  *   - Per-test n: the smallest n whose shifted-t power (one-sided alpha 0.05) reaches the target at margin M and true
  *     gap delta. Analytic, so it matches GBEV-48's power.json exactly.
- *   - Joint n: the four tests' per-conversation differences are drawn from a multivariate normal (sds and the 4 x 4
- *     correlation in iut.ts's COMPARISONS order), and the joint power is the share of simulations iut.ts passes. A
+ *   - Joint n: the gating tests' per-conversation differences (iut.ts GATING, the Astra/Opus view since the R78
+ *     amendment) are drawn from a multivariate normal (their sds and correlation in a scenario's `keys` order), and the
+ *     joint power is the share of simulations iut.ts passes. A scenario with keys COMPARISONS and gating COMPARISONS is
+ *     GBEV-48's original four-test model, which the tests still reproduce against power.json. A
  *     seeded generator (stats/paired.ts seededRandom, SEED) and SIMS simulations per point give a Monte Carlo standard
  *     error of about 0.003 at power 0.8; MC_TOLERANCE (0.015) is the agreement power.ts claims with GBEV-48's numpy
  *     stream, which it cannot replay. Joint N is the smallest n with power at least the target at n and n + 1, as
  *     GBEV-48 searched it, so it can differ from power.json by one conversation.
- *   - Pilot: from wave A's four SDs and their correlation, N_required at true gaps of 0 and M = 3.5 and
+ *   - Pilot: from wave A's two gating SDs and their correlation, N_required at true gaps of 0 and M = 3.5 and
  *     N_final = min(33, max(20, N_required)); above 33, the margin reachable at 33 (bisection over M with common
  *     random numbers, so power is monotone in M) and the price of N_required (pricing.ts).
  */
 import { seededRandom } from '../stats/paired.ts';
-import { COMPARISONS, passes, RS1_ALPHA, RS1_MARGIN, tCdf, tQuantile, type ComparisonKey } from './iut.ts';
+import { COMPARISONS, GATING, passes, RS1_ALPHA, RS1_MARGIN, tCdf, tQuantile, type ComparisonKey } from './iut.ts';
 
 export const SEED = 20261108;
 export const SIMS = 20_000;
@@ -28,7 +30,8 @@ export const N_CAP = 33;
  * GBEV-48's inputs: F6's S2b two-sided 95% conversation-cluster bootstrap intervals (GST-1365 summary.json; 24
  * conversations x 10 questions, three-reader mean, as fractions) for each server under the frontier judges, BEAM's judge
  * and their difference. The SE is the half-width over z(0.975); the SD at 10 items is SE x sqrt(24) x sqrt(24 / 23), and
- * the judge correlation per server comes from the three SEs.
+ * the judge correlation per server comes from the three SEs. F6's frontier view was gpt-6.1-sol on Claude rows and
+ * claude-opus-5-5 on Sol rows; it stands in for the Astra/Opus gating view until the pilot measures that view's SDs.
  */
 const F6_CI = {
   'memory-bank': { frontier: [-0.013901, 0.053505], bridge: [-0.009748, 0.036661], delta: [-0.015806, 0.031693] },
@@ -50,7 +53,11 @@ export const TAUS = { optimistic: 0, central: 3.2, pessimistic: 4.8 } as const;
 
 /** The SD at q items from the SD at 10: SD_q^2 = tau^2 + (SD_10^2 - tau^2) x 10 / q. */
 export const sdAtItems = (sd10: number, q: number, tau: number) => { const t = Math.min(tau, sd10); return Math.sqrt(t * t + (sd10 * sd10 - t * t) * 10 / q); };
-export const sdsAt = (q: number, tau: number) => COMPARISONS.map(k => sdAtItems(SD10[k], q, tau));
+/** The SDs at q items for `keys` (default the gating tests). */
+export const sdsAt = (q: number, tau: number, keys: readonly ComparisonKey[] = GATING) => keys.map(k => sdAtItems(SD10[k], q, tau));
+
+/** The gating tests' 2 x 2 correlation (GATING order): the assumed cross-server correlation. */
+export const corr2 = (rx = RHO_CROSS): number[][] => [[1, rx], [rx, 1]];
 
 /** GBEV-48's 4 x 4 correlation in COMPARISONS order (memory-bank frontier, memory-bank bridge, extract-first frontier, extract-first bridge). */
 export function corr4(rx = RHO_CROSS, a = RHO_JUDGE['memory-bank'], b = RHO_JUDGE['extract-first']): number[][] {
@@ -80,16 +87,22 @@ function cholesky(a: number[][]): number[][] {
   return l;
 }
 
-/** One simulated trial's decision: iut.ts's rule on the four tests' per-conversation differences. */
-export const simulatedPass = (diffs: Record<ComparisonKey, readonly number[]>, margin = RS1_MARGIN, quantile?: number) => passes(diffs, margin, quantile);
+/** One simulated trial's decision: iut.ts's rule on the simulated tests' per-conversation differences. */
+export const simulatedPass = (diffs: Partial<Record<ComparisonKey, readonly number[]>>, margin = RS1_MARGIN, quantile?: number, gating: readonly ComparisonKey[] = GATING) => passes(diffs, margin, quantile, gating);
 
-export interface Scenario { sds: readonly number[]; corr: readonly (readonly number[])[]; deltas?: readonly number[] }
+/**
+ * A simulated design: the tests drawn (`keys`, default GATING), their sds, correlation and true gaps in that order, and
+ * the tests that decide (`gating`, default GATING).
+ */
+export interface Scenario { sds: readonly number[]; corr: readonly (readonly number[])[]; deltas?: readonly number[]; keys?: readonly ComparisonKey[]; gating?: readonly ComparisonKey[] }
 
 /** Simulated intersection-union power at n: the share of SIMS draws that iut.ts's rule passes at margin. */
 export function jointPower(n: number, s: Scenario, margin = RS1_MARGIN, o: { sims?: number; seed?: number } = {}): number {
-  const k = COMPARISONS.length;
+  const keys = s.keys ?? GATING;
+  const k = keys.length;
+  if (s.sds.length !== k || s.corr.length !== k) throw new Error(`a scenario over ${k} tests needs ${k} sds and a ${k} x ${k} correlation`);
   const l = cholesky(s.corr.map((row, i) => row.map((c, j) => c * s.sds[i] * s.sds[j])));
-  const deltas = s.deltas ?? COMPARISONS.map(() => 0);
+  const deltas = s.deltas ?? keys.map(() => 0);
   const rand = seededRandom(o.seed ?? SEED);
   let spare: number | null = null;
   const normal = () => {
@@ -103,12 +116,12 @@ export function jointPower(n: number, s: Scenario, margin = RS1_MARGIN, o: { sim
   const z = new Array<number>(k);
   let pass = 0;
   for (let sim = 0; sim < sims; sim++) {
-    const diffs = Object.fromEntries(COMPARISONS.map(key => [key, new Array<number>(n)])) as Record<ComparisonKey, number[]>;
+    const diffs = Object.fromEntries(keys.map(key => [key, new Array<number>(n)])) as Record<ComparisonKey, number[]>;
     for (let c = 0; c < n; c++) {
       for (let i = 0; i < k; i++) z[i] = normal();
-      for (let i = 0; i < k; i++) { let x = deltas[i]; for (let j = 0; j <= i; j++) x += l[i][j] * z[j]; diffs[COMPARISONS[i]][c] = x; }
+      for (let i = 0; i < k; i++) { let x = deltas[i]; for (let j = 0; j <= i; j++) x += l[i][j] * z[j]; diffs[keys[i]][c] = x; }
     }
-    if (simulatedPass(diffs, margin, quantile)) pass++;
+    if (simulatedPass(diffs, margin, quantile, s.gating ?? GATING)) pass++;
   }
   return pass / sims;
 }
@@ -140,7 +153,7 @@ export function marginAt(n: number, s: Scenario, power = TARGET_POWER): number {
 
 export interface PilotSize { n_required: number | null; n_final: number | null; power_at_required: number; over_cap: boolean; margin_at_cap: number | null }
 
-/** The pilot's sizing from wave A's SDs and 4 x 4 correlation (COMPARISONS order), at true gaps of 0 and M = 3.5. */
+/** The pilot's sizing from wave A's gating SDs and 2 x 2 correlation (GATING order), at true gaps of 0 and M = 3.5. */
 export function pilotSize(sds: readonly number[], corr: readonly (readonly number[])[]): PilotSize {
   const s = { sds, corr };
   const { n, power } = jointN(s);
@@ -151,7 +164,7 @@ export function pilotSize(sds: readonly number[], corr: readonly (readonly numbe
 if (import.meta.main) {
   for (const [name, tau] of Object.entries(TAUS)) {
     const sds = sdsAt(20, tau);
-    const { n, power } = jointN({ sds, corr: corr4() });
-    process.stdout.write(`${name}: SDs at 20 items ${sds.map(x => x.toFixed(2)).join(', ')}; joint N at M = ${RS1_MARGIN} is ${n} (simulated power ${power.toFixed(3)}, ${SIMS} simulations, seed ${SEED})\n`);
+    const { n, power } = jointN({ sds, corr: corr2() });
+    process.stdout.write(`${name}: gating SDs at 20 items ${sds.map(x => x.toFixed(2)).join(', ')}; two-test joint N at M = ${RS1_MARGIN} is ${n} (simulated power ${power.toFixed(3)}, ${SIMS} simulations, seed ${SEED})\n`);
   }
 }

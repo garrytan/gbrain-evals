@@ -504,12 +504,13 @@ the same reranker 128 ([matched comparison](docs/benchmarks/2026-10-02-concept-v
   under frontier judges, and 1.3 points (-0.9 to +3.7) and 4.8 points (+2.6 to +7.1) above them under BEAM's judge,
   gpt-4.1-mini ([judge-robustness results](docs/benchmarks/2026-11-05-gst-1365-judge-robustness.md)). The rerun
   preregistered these comparisons as descriptive, and gbrain's settings were chosen on this same set, so they describe
-  the systems at `0ccf2bdd` and support no claim that gbrain is no worse than either server; no such claim exists until
-  the narrowed ranking test below reports. A new sealed set built to rank them stopped at its first stage on November 4,
-  2026, because the full design cost more than we allot to one eval, and a version that fit would detect only about 6.5
-  to 7.7 points ([stage 0 finding](docs/benchmarks/2026-11-04-rs1-stage0.md)). A narrowed version now tests that claim
-  ([preregistration](docs/benchmarks/2026-11-08-rs1-narrow-preregistration.md)): about 28 new conversations, at most 33,
-  ask whether gbrain's stable release is at most 3.5 points behind each of those two servers under both judges.
+  the systems at `0ccf2bdd` and support no claim that gbrain is no worse than either server. A new sealed set built to
+  rank them stopped at its first stage on November 4, 2026, because the full design cost more than we allot to one eval,
+  and a version that fit would detect only about 6.5 to 7.7 points
+  ([stage 0 finding](docs/benchmarks/2026-11-04-rs1-stage0.md)). Its narrowed version has since tested the weaker claim
+  on 20 new conversations ([results](docs/benchmarks/2026-11-08-rs1-narrow-results.md)): gbrain v0.60.740.0 is at most
+  3.5 points behind each of those two servers, ahead of the extract-first server and not ahead of the memory-bank server.
+  Its 3.5-point margin is wider than the spread among the top external servers, so it does not rank gbrain among them.
 - Between about a quarter and a half of the BEAM questions behind our results have a reference answer that the turns
   they cite don't support, and the share rises with length. For 27.5% of the cited questions behind our BEAM results at
   100,000 tokens, 31.3% at 500,000, 33.5% at 1 million and 52.2% at 10 million (1,521 in all), at least one of two
@@ -637,6 +638,13 @@ Garry Tan runs Y Combinator.
 [Disclosures](docs/disclosures.md) lists every relationship and where each line goes.
 
 ## Changelog
+
+### 2026-11-20: The BEAM-1M known limit reports the narrowed RS1 result
+
+The known limit on ranking gbrain among the memory servers now links the
+[narrowed RS1 results](docs/benchmarks/2026-11-08-rs1-narrow-results.md): on 20 new conversations gbrain v0.60.740.0 is at
+most 3.5 points behind the memory-bank and extract-first servers, ahead of the extract-first server and not ahead of the
+memory-bank server. It replaces "no such claim exists until the narrowed ranking test below reports" and the plan's size.
 
 ### 2026-11-20: Add the duplicate-finder head-to-head
 

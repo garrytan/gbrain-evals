@@ -39,7 +39,7 @@ import { BG1_KEPT_UNITS, BG1_WAVE_A } from '../../memory-qa/bg1-names.ts';
 import { DEFAULT_ROUTE_CAPS } from '../../metering-proxy.ts';
 import type { ScoreboardMessage } from '../scoreboard-errors.ts';
 import {
-  ALL_SETS, ASSUMPTIONS, BG1_ASSUMPTIONS, BG1_JUDGE_BY_READER, BG1_MEASURED, BG1_SETS, bg1JudgeOf, bg1Rates, estimateCell, F6_ASSUMPTIONS, makeCell, MANIFEST_SCHEMA, PER_READER_JUDGE_SETTINGS,
+  ALL_SETS, ASSUMPTIONS, BG1_ASSUMPTIONS, BG1_JUDGE_BY_READER, BG1_MEASURED, BG1_SETS, bg1JudgeOf, bg1Rates, estimateCell, F6_ASSUMPTIONS, makeCell, MANIFEST_SCHEMA, PER_READER_JUDGE_SETTINGS, RS1_ASSUMPTIONS,
   type ArmDefinition, type ArmSpec, type BG1BlockId, type BG1SetId, type BlockId, type CellDefinition, type CellEstimate, type Manifest, type SetId,
 } from './definitions.ts';
 import { extractionCapUsd, F6_ARMS, maxShardUsd, peakReservationUsd, withHours } from './f6.ts';
@@ -125,10 +125,16 @@ export function bg1Lease(c: CellDefinition): CellDefinition {
 /** No write-to-queryable probes on any BG1 cell. */
 const noProbes = (set: SetId) => ({ sample: 0, seed: `bg1-probes-${set.toLowerCase()}`, conversations: 0 });
 const KEPT: Partial<Record<BG1SetId, number>> = { BG1: BG1_KEPT_UNITS, 'BG1-fc10': BG1_FC_UNITS };
+/**
+ * BG1's gbrain launch as its counted cells ran it: rs1-stable's launch at RS1's freeze, gbrain's `stable` tag
+ * v0.60.593.0. RS1 later moved rs1-stable to gbrain's newest release and added its two switches (GST-1886's amendments
+ * of 2026-11-16 to 2026-11-19); BG1 keeps its own.
+ */
+const BG1_GBRAIN_LAUNCH: NonNullable<CellDefinition['launch']> = { env: { GBRAIN_BUN_IMAGE: RS1_ASSUMPTIONS.bun_image, GBRAIN_F6: '1', GBRAIN_SHA: '27f8b9d6287c2ba635532c7d3bc015c50e1d769b' }, config: 'recipe' };
 const cell = (set: BG1SetId, block: BG1BlockId, system: string, configuration: string, arms: ArmSpec[]) => {
   const made = makeCell(set, system, configuration, arms, {
     block, probes: noProbes(set), ...(KEPT[set] ? { keptUnits: KEPT[set] } : {}),
-    ...(system === 'gbrain-defaults' ? { launchEnv: { GBRAIN_F6_EXTRACT_CAP_USD: String(extractionCapUsd(set)) } } : {}),
+    ...(system === 'gbrain-defaults' ? { launch: BG1_GBRAIN_LAUNCH, launchEnv: { GBRAIN_F6_EXTRACT_CAP_USD: String(extractionCapUsd(set)) } } : {}),
   });
   return withHours(bg1Lease({ ...made, estimate: bg1Estimate(made) }));
 };
