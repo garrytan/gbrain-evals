@@ -218,10 +218,6 @@ jobs:
       - name: Install ripgrep
         run: sudo apt-get update -q && sudo apt-get install -y ripgrep
 
-      - name: Temporary red shard to test merge-gate (reverted before review)
-        if: matrix.shard == 1
-        run: exit 1
-
       # test/eval/ plus the unit tests colocated under eval/. Each job runs
       # four ordinary bun test --shard processes at once on its 8 vCPUs, as
       # shards k, k+6, k+12 and k+18 of 24 (scripts/test-shards.ts --job), so
