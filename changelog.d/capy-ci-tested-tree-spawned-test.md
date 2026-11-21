@@ -1,0 +1,1 @@
+- **The tested-tree record test expects a spawned Python test file once its Bun test is in the tree.** `test/eval/ci-tested-tree.test.ts` now adds the mapped `eval/runner/lme-redis/test_lme_redis.py` to the files it expects whenever `test/eval/lme-redis.test.ts` is among the Bun tests, so the test keeps passing after the LongMemEval results land on main.

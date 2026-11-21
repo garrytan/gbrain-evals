@@ -154,7 +154,8 @@ describe('ci-tested-tree record', () => {
       expect(ok.status).toBe(0);
       const tree = JSON.parse(readFileSync(join(dir, 'all', 'tree.json'), 'utf8'));
       expect(harness.length).toBeGreaterThan(10);
-      expect([tree.tree, tree.head_sha, tree.files, tree.tests]).toEqual([git('rev-parse', 'HEAD^{tree}'), env.GITHUB_SHA, [...unit, ...harness, ...PYTHON_TESTS].sort(), unit.length + harness.length]);
+      const spawned = Object.entries(SPAWNED_PYTHON_TESTS).filter(([, by]) => unit.includes(by)).map(([py]) => py);
+      expect([tree.tree, tree.head_sha, tree.files, tree.tests]).toEqual([git('rev-parse', 'HEAD^{tree}'), env.GITHUB_SHA, [...unit, ...harness, ...PYTHON_TESTS, ...spawned].sort(), unit.length + harness.length]);
       expect(readFileSync(env.GITHUB_STEP_SUMMARY, 'utf8')).toStartWith(`TESTED_TREE: run 41/2 push head ${env.GITHUB_SHA.slice(0, 12)}`);
       const short = record(unit.slice(1), 'short');
       expect(short.status).toBe(1);
