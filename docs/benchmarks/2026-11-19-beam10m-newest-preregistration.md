@@ -341,7 +341,131 @@ budgets, benchmarks or builds, or a ranking against the file agent or any other 
 
 ## Amendments
 
-None yet.
+### A1 (2026-11-19): pin, harness and reader route, before any paid call
+
+Written on the results branch before any dry run, judge check or counted cell. It changes no arm, reader, judge, set,
+decision rule or verdict.
+
+- **Pin.** gbrain's newest release is now v0.60.743.0, `16124807cb7846ffba8aa093c7a6b588a76a5e13`, and the results
+  branch pins it (`bun eval/runner/gbrain-pin.ts bump`). Its changes since v0.60.742.0 are OpenClaw's skill resolver,
+  the Mac helper's Touch ID approvals and an encrypted secret-store backup, none of which is on this benchmark's path.
+  The tags are read again before the first counted cell, and the freeze amendment records the final pin.
+- **How gpt-6.2-sol runs.** gpt-6.2-sol reads and judges as a plain API model, through Q1's reader and judge requests and
+  the metering proxy. No arm runs it inside an agent harness (Claude Code or Codex), so the rule that Sol runs in Codex
+  CLI changes nothing here.
+- **`FRONTIER_READERS` stays as it is.** The runner's shared list also builds another experiment's frozen cells and
+  its leader cache, so moving it would change their manifests. This experiment names its readers (claude-opus-5-5 and
+  gpt-6.2-sol) in its own cell file instead. This replaces the sentence under "Readers" and the line under "Harness"
+  that said the keyless prep moves `FRONTIER_READERS`.
+
+### A2 (2026-11-19): a pilot for every arm, and no interim look, before any paid call
+
+Written on the results branch before any dry run, judge check or counted cell, under two factory rules that took
+effect on 2026-11-19 (R111 and R113). It changes no arm, reader, judge, set or decision rule. It adds a gate before each
+arm's counted cells, and it says what happens to an arm that fails that gate.
+
+- **No interim look (R113).** The rule asks for one preregistered interim look only when a counted run's planned paid
+  spend is above a fixed threshold. This experiment's planned paid spend, every provider call and VM hour for the dry
+  run, judge check, stored re-judging and counted cells taken together, is below that threshold at its estimate and at
+  its runaway caps. So the counted cells take no interim look. Every scheduled unit runs, and the primary comparison
+  (arm P against F6's arm P on claude-opus-5-5) is computed once, after the last counted cell, with the 95% interval and
+  smallest detectable difference preregistered above. No earlier look at it counts.
+- **A pilot for each arm (R111).** Each of arms P, A0 and whole passes its own pilot before its counted cells start.
+  The pilot is the dry run above (public BEAM-1M `1m-16`, 10 questions, the counted launch path), read arm by arm. Its
+  spend on each arm, from the dry run's ledger with the shared brain build split evenly across the three arms, is at
+  most a tenth of that arm's planned spend. An arm passes only if all four checks below pass on that arm's own dry-run
+  outputs:
+  1. **The part under test ran.** For P: the shim's readback shows P's six overlay keys with the values set, every
+     retrieval call carries P's arguments, and the delivered contexts are packed to 8,000 tokens and carry dated fact
+     rows (v0.60.734.0's change). For A0: the readback shows A0's overlay, and every call has Q1's call shape. For
+     whole: every call is a native-default `query` that passes no `limit`, the readback shows the shipped defaults,
+     and the context is gbrain's own default amount. For all three: every delivered row's fence share is recorded.
+  2. **Its judges pass the agreement check (R78).** Every judge that grades the arm's counted rows (gpt-6.1-sol for the
+     claude-opus-5-5 and particle-1 rows, claude-opus-5-5 for the gpt-6.2-sol rows) has passed the judge agreement check
+     above and has graded every one of the arm's dry-run answers with no `judge_error` and no output-limit stop.
+  3. **The tasks can be supplied.** Every one of the 10 dry-run questions produced a context, an answer from each reader
+     and a verdict, with no harness failure. Before the arm's first counted cell, a keyless count in custody confirms
+     that the hash-checked S1 copy holds the 10 conversations and 199 questions the manifest names.
+  4. **At the planned rate.** The dry run's measured ingest and extraction hours per million tokens, and its seconds per
+     answered question, project S1's cells to finish inside the VM timeout this plan set, and no provider rate limit
+     held a call back for longer than the retry policy allows.
+
+  The pilot is not a counted result: no accuracy figure from it is published. Its receipt under
+  `docs/benchmarks/2026-11-19-beam10m-newest/dry-run/` shows each check's pass or fail per arm, the rates and the fence
+  share, and the freeze amendment records each arm's pilot spend as a share of its planned spend.
+- **An arm that fails its pilot** is either fixed, by a dated amendment and a second pilot inside the same tenth, or left
+  out. A left-out arm runs no counted cell and is reported as left out, with the failed check, in the results. If arm P
+  or arm whole is left out, its README row keeps the stored measurement, labelled with its build and date, and says
+  that the newest-release run of that arm was left out and why. This replaces, for that case only, item 3 of "What the
+  result decides".
+- **The file agent** runs no new cell (its stored answers are only judged again), so it has no pilot. Its re-judged set
+  counts only under a judge that passed the agreement check.
+
+### A3 (2026-11-19): the freeze, before the first counted cell
+
+Written on the results branch after the judge check, the dry run with its particle-1 re-read, and the stored re-judge,
+and before any counted cell. It records what "Freeze" asks for. It changes no arm, reader, judge, set or decision rule.
+
+- **Pin: gbrain v0.60.748.0,** `7f162344652afc725793dd476945716e09d26104`, gbrain's newest release on master when the
+  counted cells launch. It replaces A1's v0.60.743.0. Nothing released after 743 is on this benchmark's path:
+  - 744 to 747: remote-write and owner-read reporting for private fact rows, purge and secret-store fixes, managed
+    refresh, the Mac helper, member handover, archived-source visibility for API tokens, a transcript title cap, and
+    Rust engine stores that can't be selected yet.
+  - 748: the Gemini alias's default model (#9825), which this benchmark never calls, because it sends no request to
+    Gemini. It also has Rust engine stores that are off by default (#9807, #9819), sharing and handover checks, refresh
+    backlog drains, concept rebuilds, test sharding and CI fixes.
+
+  The keyless Docker smoke passes at 748: the brain builds, and P, A0 and whole each run under their own keys. The dry
+  run and its pilot ran at 743. Because nothing in between touches ingest, extraction, retrieval, packing or the
+  readers, the pilot below stands for 748.
+- **Campaign.** `docs/benchmarks/2026-11-19-beam10m-newest/campaign/bn10-campaign.json`, campaign
+  `q1-scoreboard-bn10-newest`. It has 10 S1 shards, one conversation each, on standard-4 Ubicloud VMs, with a 41-hour
+  timeout. Its hash is `d10688e786203c014c4ed1522fdc1decc9836b948e161eb11148cfab28d6c6cb`, computed at commit
+  `3e1ab94c6` off the custody host. A fresh clone on the custody host gave the same hash at `3e1ab94c6` and at
+  `0c21ea028`, which changes only the custody pairing tool, outside the hashed tree. `eval:scoreboard doctor --for
+  sealed` passes there, including all 20 S1 files against the committed manifest. A keyless count of the S1 copy in
+  custody finds 10 conversations and 200 scheduled questions. One question (`10m-1:abstention:0`) is excluded under
+  "Set", which leaves the 199 the confirmatory cohort names.
+- **Judge check (R78): pass.** 200 public BEAM-1M items were checked: 106 pass, 94 fail, no output-limit stops. Kappa
+  against the known verdicts:
+  - claude-opus-5-5: 0.78 (95% interval 0.69 to 0.87).
+  - gpt-6.1-sol: 0.86 (0.79 to 0.93).
+  - gpt-4.1-mini: 0.78 (0.69 to 0.87), so the bridge view counts as planned.
+- **Dry run and pilots (A2): every arm passes with every reader.** The receipt is in
+  `docs/benchmarks/2026-11-19-beam10m-newest/dry-run/`.
+  - Ingest ran at 2.04 hours per million tokens (F6: 1.92). That projects about 22 hours of ingest for an S1 shard,
+    inside the 41-hour timeout.
+  - Fence share of the 5,500-token reference budget: P 0.245, A0 0.650, whole 0.049.
+  - All 10 of arm P's contexts carry dated fact rows. A0's and whole's carry none, as their call shapes predict.
+  - Each arm's pilot spend, including its particle-1 re-read and an even share of the brain build, came to 2.9% (P),
+    2.9% (A0) and 2.7% (whole) of that arm's planned spend. That's under the tenth R111 allows.
+- **Stored answers judged again.** gpt-6.1-sol, at the pinned settings, judged the replicate-0 claude-opus-5-5
+  answers of the four stored sets in custody:
+  - F6 P and F6 A: 199 each.
+  - Q1 whole: 198 (one answer was never judged in Q1).
+  - Q1's file agent: 193. Its 6 product failures carry no answer to judge.
+
+  That's 789 judgments, each made once, with no request error. A dropped connection to the custody host stopped the
+  first lease at 320 judgments. A second lease finished the rest and skipped every answer already judged.
+- **A fix to the custody pairing tool** (`0c21ea028`). F6 reran Q1's file agent under the same cell id. So the re-judge
+  gives a Q1 answer whose id F6 also uses for another text a root-qualified id. The pairing tool now looks Q1's answers
+  up under the same ids. A keyless test fails without the fix. No counted cell uses this tool.
+- **Smallest detectable differences,** computed in custody from the stored scores (2.80 times the conversation-clustered
+  standard error, 10,000 resamples, seed `beam10m-newest`). They replace the planning estimate of about 6 points:
+
+  | comparison | frontier view (decides) | bridge view |
+  |---|---:|---:|
+  | Primary: arm P against F6's arm P | 7.9 points | 7.0 points |
+  | Whole against the file agent | 9.3 points | 12.2 points |
+
+- **Provider data use, one row added.** gbrain's shipped defaults embed and rerank with Voyage (voyage-4 and
+  rerank-3-lite), so Voyage receives S1 text too. The table under "Provider data use" left it out. Voyage's terms let
+  it train on customer content unless the account has opted out, and this account's opt-out status is unknown. F6 and
+  Q1 sent the same S1 conversations to Voyage the same way, so this run exposes no text they didn't.
+
+  | Provider | Receives S1 text for | Data use |
+  |---|---|---|
+  | Voyage | gbrain's embeddings and reranking | may train on customer content unless the account opted out; opt-out status unknown |
 
 ## Disclosures
 

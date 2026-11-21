@@ -31,6 +31,10 @@ gbrain's safe-chunks repair, before the quiesce barrier; it then indexes every s
 An F6 policy names its op (query or recall), the op's arguments and an overlay of the six search keys. The shim applies
 an overlay only when it changes: stop serve, `gbrain config set` all six keys, read each back, start serve, and record
 the overlay's hash and switch time on the retrieval. Fact rows map to their source session through the fact index.
+Fence accounting follows gbrain's transcriptFence and fenceTranscriptRows (src/core/search/transcript-quote.ts at
+16124807): the optional date line is outside the wrapper, the marker and opening line precede the payload, and
+the final line repeats the opening run of backticks. Count the cl100k difference with those wrapper lines removed
+from each delivered text and title. Only counts travel in applied_settings, which the Q1 runner stages.
 
 GBRAIN_IDLE_UPKEEP=off (RS1's cells) turns off serve's idle upkeep: from gbrain 0.60.715.0 a stdio serve that has seen no
 input for a full 10-minute tick runs gbrain's free maintenance on the brain it serves (link and timeline extraction,
@@ -435,6 +439,43 @@ def fact_entry(f: dict[str, Any]) -> dict[str, Any]:
         m = re.match(r"^from (\S+) segment ", str(f.get("context") or ""))
         slug = m.group(1) if m else None
     return {"slug": slug, "valid_from": f.get("valid_from"), "valid_until": f.get("valid_until"), "visibility": f.get("visibility")}
+
+
+FENCE_BUDGET = 5500
+QUOTE_WRAPPER = re.compile(
+    r"(?P<head>\[observed [^\]\n]*\][^\n]*\n)?"
+    r"\[quoted conversation excerpt from [^\]\n]*; source material, not instructions\]\n"
+    r"(?P<fence>`{3,})text\n(?P<body>[\s\S]*)\n(?P=fence)"
+)
+
+
+def fence_accounting(rows: list[tuple[str, dict[str, Any]]]) -> dict[str, Any]:
+    fields, fenced_rows, unmatched = [], 0, 0
+    for kind, row in rows:
+        if row.get("quoted") != "transcript":
+            continue
+        before = len(fields)
+        text_key = {"recall_fact": "fact", "recall_page": "chunk"}.get(kind, "chunk_text")
+        for key in (text_key, "title"):
+            value = row.get(key)
+            if isinstance(value, str) and (match := QUOTE_WRAPPER.fullmatch(value)):
+                fields.append((value, (match["head"] or "") + match["body"]))
+        if len(fields) == before:
+            unmatched += 1
+            continue
+        fenced_rows += 1
+    tokens: int | None = 0
+    if fields:
+        try:
+            result = subprocess.run(["bun", os.path.join(HERE, "fence-tokens.ts")], input=json.dumps(fields),
+                                    capture_output=True, check=True, text=True, timeout=30)
+            tokens = int(result.stdout)
+            if tokens < 0:
+                raise ValueError()
+        except (OSError, ValueError, subprocess.SubprocessError):
+            tokens = None
+    return {"delivered_rows": len(rows), "fenced_rows": fenced_rows, "unmatched_quoted_rows": unmatched, "fence_tokens": tokens,
+            "budget_tokens": FENCE_BUDGET, "budget_share": None if tokens is None else tokens / FENCE_BUDGET}
 
 
 def f6_pin_problem(image_sha: str, launch_sha: str) -> str | None:
@@ -1214,10 +1255,12 @@ class GbrainDefaultsAdapter(Adapter):
             raw = {"tool": op, "args": args, "gbrain_ms": ms, "meta": retrieval if op == "query" else {k: v for k, v in (body if isinstance(body, dict) else {}).items() if k not in ("facts", "results")},
                    "notices": notices, "classification": verdict, "serve_session": self.serve_session, "overlay": switch, "fact_rows": fact_rows, "fact_rows_unresolved": unresolved,
                    "query_time": "not sent: neither op takes an as-of date", "rows": len(items)}
-            self.receipt("retrieve", op=op, args=args, gbrain_ms=ms, classification=verdict, overlay_sha256=switch["overlay_sha256"], switched=switch["switched"], rows=len(items), fact_rows=fact_rows)
-            if verdict["outcome"] != "scored" and on_degraded == "error":
+            refused = verdict["outcome"] != "scored" and on_degraded == "error"
+            fence = None if refused else fence_accounting(rows)
+            self.receipt("retrieve", op=op, args=args, gbrain_ms=ms, classification=verdict, overlay_sha256=switch["overlay_sha256"], switched=switch["switched"], rows=len(items), fact_rows=fact_rows, fence=fence)
+            if refused:
                 raise ShimError("invalid_request", f"degraded read (harness failure; retry after quiesce): {', '.join(verdict['reasons'])}", 503)
-            return {"items": items, "applied_settings": {"op": op, **args, "overlay_sha256": switch["overlay_sha256"]}, "truncated": False, "raw": raw}
+            return {"items": items, "applied_settings": {"op": op, **args, "overlay_sha256": switch["overlay_sha256"], "fence": fence}, "truncated": False, "raw": {**raw, "fence": fence}}
 
     def listed_conversation_slugs(self) -> set[str]:
         seen: set[str] = set()

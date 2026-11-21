@@ -220,8 +220,8 @@ async function openaiChat(model: string, prompt: string, opts: ChatOptions): Pro
     method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
     // GPT-5 and later reasoning models take max_completion_tokens and only their default temperature.
     body: JSON.stringify(!sendsTemperature(`openai:${model}`)
-      ? { model, messages, n: 1, max_completion_tokens: Math.max(opts.maxTokens, 2000), ...effort }
-      : { model, messages, n: 1, ...(opts.temperature === null ? {} : { temperature: opts.temperature ?? 0 }), max_tokens: opts.maxTokens, ...effort }),
+      ? { model, messages, max_completion_tokens: Math.max(opts.maxTokens, 2000), ...effort }
+      : { model, messages, ...(opts.temperature === null ? {} : { temperature: opts.temperature ?? 0 }), max_tokens: opts.maxTokens, ...effort }),
     signal: AbortSignal.timeout(300_000),
   });
   const json = await res.json() as any;

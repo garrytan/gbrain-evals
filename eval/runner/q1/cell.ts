@@ -105,6 +105,7 @@ import { answerModes, passiveUnsupported, policyKnobs, type CapabilityRecord, ty
 import { ALL_SETS, definitionProblems, estimateCell, F6_ASSUMPTIONS, frontierJudgesFor, launchPrefix, loadManifest, MANIFEST_PATH, pinnedJudgeRouteCaps, policyKey, shimLaunch, type ArmDefinition, type CellDefinition, type JudgeSettings, type Manifest, type RetrievalIdentity, type Selection } from './cells/definitions.ts';
 import { F6_MANIFEST_PATH, loadF6Manifest } from './cells/f6.ts';
 import { loadRS1Manifest, stage1OverCap, type RS1Manifest } from './cells/rs1.ts';
+import { loadBN10Manifest } from './cells/bn10.ts';
 import { bg1Stage1OverCap, loadBG1Manifest, type BG1Manifest } from './cells/bg1.ts';
 import { isBg1Benchmark } from './cells/definitions.ts';
 import { ledgerCaps as bg1LedgerCaps, requireRs1Window as requireBg1Window, WindowRefusal as Bg1WindowRefusal } from '../paid-arm.ts';
@@ -685,7 +686,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
   const identities = new Map<string, RetrievalIdentity>(arms.filter(a => a.retrieval).map(a => [policyKey(a)!, a.retrieval!]));
   const policyFor = (key: string): RetrievalPolicy => {
     const id = identities.get(key);
-    if (id) return { name: `${capabilities.system}:${key}`, mode: 'fixed-evidence', settings: { op: id.op, args: id.args, overlay: id.overlay } };
+    if (id) return { name: `${capabilities.system}:${key}`, mode: key.split('@')[0] as RetrievalPolicy['mode'], settings: { op: id.op, args: id.args, overlay: id.overlay } };
     const mode = key as RetrievalPolicy['mode'];
     return { name: `${capabilities.system}:${mode}`, mode, settings: policyKnobs(capabilities.retrieval_policies?.[mode]).settings };
   };
@@ -1432,8 +1433,8 @@ const T2_WAVES: Record<string, number> = { 'T2-S2b': 1, 'T2-S3': 2, 'T2-S2a': 3,
 const IN_PROCESS_STACKS = new Set(['ext-agent-runtime']);
 
 /** One launch unit per cell, or per conversation shard for an S1 shim cell, in the shootout campaign's cell format; `addons` adds the manifest's addon_cells (a unit selection's campaign). */
-export type CellManifestId = 'q1' | 'f6' | 'rs1' | 'bg1';
-const CELL_MANIFESTS: readonly CellManifestId[] = ['q1', 'f6', 'rs1', 'bg1'];
+export type CellManifestId = 'q1' | 'f6' | 'rs1' | 'bg1' | 'bn10';
+const CELL_MANIFESTS: readonly CellManifestId[] = ['q1', 'f6', 'rs1', 'bg1', 'bn10'];
 
 export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight?: number; cellManifest?: CellManifestId; addons?: boolean; paidWindow?: { unit: string; cap_usd: number } } = {}): CellSpec[] {
   const perWave = Math.floor((opts.vcpuCapNight ?? 200) / VM_VCPU);
@@ -1483,8 +1484,8 @@ export function campaignManifest(m: Manifest, opts: { smoke?: boolean; sealed?: 
   const f6 = (m as { campaign_id?: string }).campaign_id;
   // F6 adds the temporal graph's 0.31.2 defaults (gpt-6-luna, text-embedding-3-small) to the models its campaign admits.
   const base = [...m.readers, ...Object.keys(m.prices), 'openai:gpt-4.1-mini', 'openai:text-embedding-3-large', 'anthropic:claude-opus-4-7', 'anthropic:claude-haiku-4-5', 'anthropic:claude-haiku-5-5', ...(f6 ? ['openai:gpt-6-luna', 'openai:text-embedding-3-small'] : [])];
-  // RS1's cells live only in rs1-cells.json, so every unit's run names that manifest, and the paid window it runs in.
-  const cellManifest = opts.units?.cell_manifest ?? ('rs1_assumptions' in m ? 'rs1' : undefined);
+  // RS1's and the BEAM-10M re-measure's cells live only in their own manifests, so every unit's run names that manifest, and RS1's the paid window it runs in.
+  const cellManifest = opts.units?.cell_manifest ?? ('rs1_assumptions' in m ? 'rs1' : 'bn10_assumptions' in m ? 'bn10' : undefined);
   const u = opts.units;
   let paidWindow: { unit: string; cap_usd: number } | undefined;
   if (cellManifest === 'rs1') {
@@ -1596,10 +1597,10 @@ export function renderPlan(m: Manifest): string {
 
 // ─── CLI ─────────────────────────────────────────────────────────────
 
-/** The cell manifest `--manifest` names: q1 (default), f6, rs1 or bg1. */
+/** The cell manifest `--manifest` names: q1 (default), f6, rs1, bg1 or bn10. */
 export function loadCellManifest(which?: string): Manifest {
-  if (which !== undefined && !(CELL_MANIFESTS as readonly string[]).includes(which)) throw refuse(usage(`--manifest takes q1 or f6 (or rs1 for RS1's cells, bg1 for BG1's), not ${which}`));
-  return which === 'f6' ? loadF6Manifest() : which === 'rs1' ? loadRS1Manifest() : which === 'bg1' ? loadBG1Manifest() : loadManifest();
+  if (which !== undefined && !(CELL_MANIFESTS as readonly string[]).includes(which)) throw refuse(usage(`--manifest takes q1 or f6 (or rs1 for RS1's cells, bg1 for BG1's, bn10 for the BEAM-10M re-measure's), not ${which}`));
+  return which === 'f6' ? loadF6Manifest() : which === 'rs1' ? loadRS1Manifest() : which === 'bg1' ? loadBG1Manifest() : which === 'bn10' ? loadBN10Manifest() : loadManifest();
 }
 
 export function findCell(id: string, given?: Manifest, manifest?: string): CellDefinition {

@@ -1,0 +1,65 @@
+{
+  "schema": "gbrain-evals/bn10-judge-agreement/v1",
+  "preregistration": "docs/benchmarks/2026-11-19-beam10m-newest-preregistration.md",
+  "view": "descriptive",
+  "roots": 1,
+  "cell_files": 3,
+  "answers": 60,
+  "unpinned_frontier_judgments": 0,
+  "pairs": [
+    {
+      "judges": [
+        "anthropic:claude-opus-5-5",
+        "openai:gpt-6.1-sol"
+      ],
+      "agreement": {
+        "k": 0,
+        "n": 0,
+        "rate": null,
+        "ci95": null
+      },
+      "kappa": null,
+      "kappa_ci95": null
+    },
+    {
+      "judges": [
+        "anthropic:claude-opus-5-5",
+        "openai:gpt-4.1-mini"
+      ],
+      "agreement": {
+        "k": 26,
+        "n": 30,
+        "rate": 0.8667,
+        "ci95": [
+          0.7032,
+          0.9469
+        ]
+      },
+      "kappa": 0.7183,
+      "kappa_ci95": [
+        0.4613,
+        0.9753
+      ]
+    },
+    {
+      "judges": [
+        "openai:gpt-6.1-sol",
+        "openai:gpt-4.1-mini"
+      ],
+      "agreement": {
+        "k": 28,
+        "n": 30,
+        "rate": 0.9333,
+        "ci95": [
+          0.7868,
+          0.9815
+        ]
+      },
+      "kappa": 0.8305,
+      "kappa_ci95": [
+        0.6036,
+        1.0574
+      ]
+    }
+  ]
+}
