@@ -79,7 +79,7 @@ export const LME_FULL_RUN_QUESTIONS = 500;
 export const PUBLISHED_LME_S_SHA256 = 'd6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442';
 export const BOOTSTRAP = { seed: 20261117, draws: 10_000 } as const;
 /**
- * Preregistered gate (second 2026-11-20 amendment): Rust passes an arm against a TypeScript engine when the 95% paired lower
+ * Preregistered gate (the 2026-11-20 amendment on stage 3's rule for Rust): Rust passes an arm against a TypeScript engine when the 95% paired lower
  * bound of Rust minus that engine is at least -RUST_RECALL_DELTA, the smallest detectable difference at the planned 470 scored
  * questions and a planning discordance of 2%.
  */
