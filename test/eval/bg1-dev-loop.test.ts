@@ -14,6 +14,10 @@ import {
   main, neededValues, newestRelease, resolveGbrainRef, runDevCell, savedRow, scoreRecords, scoreRun, ubiRoom, vmCommand, WHY_CLASSES, whyRows, type Baselines, type QuestionRecord,
 } from '../../eval/runner/bg1/dev-loop.ts';
 import { BRAIN_SNAPSHOT, crewOf, DEV_VM_HOURS, devVm, devVmName, keptDevVms, reapDevVms, type UbiRunner, checkOverlayHead, overlaySlug, parseOverlays, renderScore, RUN_SCHEMA, upkeepRuns, vmPayload } from '../../eval/runner/bg1/dev-loop.ts';
+import { extractionSlug, gbrainRun, parseExtraction } from '../../eval/runner/bg1/dev-loop.ts';
+import { BudgetRun, closeLedgers } from '../../eval/runner/budget-ledger.ts';
+import { MeteringProxy } from '../../eval/runner/metering-proxy.ts';
+import { loadBG1Manifest } from '../../eval/runner/q1/cells/bg1.ts';
 import { bg1RunClock, loadCorpus } from '../../eval/runner/memory-qa/corpus.ts';
 import type { ChatLike, ChatResult } from '../../eval/runner/memory-qa/qa-v2.ts';
 import { FakeMemorySystem } from '../../eval/runner/systems/fake.ts';
@@ -370,6 +374,145 @@ describe('overlays', () => {
     const plain = JSON.parse(readFileSync(join(PINNED_RUN, 'cells', 'bg1-dev3.gbrain-defaults.rs1-stable.p', 'receipt.json'), 'utf8')).config_sha256;
     expect(JSON.parse(readFileSync(join(dir, 'receipt.json'), 'utf8')).config_sha256).not.toBe(plain);
   }, 120_000);
+});
+
+describe('extraction model (--extraction-model, --extract-cap-usd)', () => {
+  beforeAll(ensurePinnedRun, 120_000);
+  const OPUS_X = 'anthropic:claude-opus-5-5';
+  const x = { model: OPUS_X, capUsd: 20 };
+  /** Runs fn with no provider key, Ubicloud key or owner tag in process.env, so a run past its refusal could reach neither a provider nor a VM. */
+  async function keyless<T>(fn: () => Promise<T>): Promise<T> {
+    const names = ['ANTHROPIC_API_KEY', 'OPENAI_API_KEY', 'VOYAGE_API_KEY', 'GEMINI_API_KEY', 'PARTICLE_API_KEY', 'UBICLOUD_API_KEY', 'UBI_OWNER'];
+    const saved = new Map(names.map(n => [n, process.env[n]]));
+    for (const n of names) delete process.env[n];
+    try { return await fn(); } finally { for (const [n, v] of saved) if (v !== undefined) process.env[n] = v; }
+  }
+  const runWith = (name: string, info: Record<string, unknown>) => {
+    const dir = join(tmp, name);
+    cpSync(PINNED_RUN, dir, { recursive: true });
+    writeFileSync(join(dir, 'run.json'), JSON.stringify({ schema: RUN_SCHEMA, gbrain_ref: 'v0.60.753.0', gbrain_sha: SHA, worlds: ['bg1-dev-01'], world_end: DEV_WORLD_END, as_of: DEV_AS_OF, reader: DEV_READER, judge: DEV_JUDGE, ...info }));
+    return dir;
+  };
+
+  test('parses a priced provider:model and a positive cap, and refuses anything else', () => {
+    expect(parseExtraction(['run'])).toEqual({});
+    expect(parseExtraction(['run', '--extraction-model', OPUS_X, '--extract-cap-usd', '20'])).toEqual(x);
+    expect(parseExtraction(['--extract-cap-usd', '7.5'])).toEqual({ capUsd: 7.5 });
+    expect(() => parseExtraction(['--extraction-model', 'anthropic:claude-opus-9-9'])).toThrow(/no chat price in eval\/runner\/budget-ledger.ts/);
+    for (const bad of ['claude-opus-5-5', 'anthropic/claude-opus-5-5', 'anthropic:', ':claude-opus-5-5', 'anthropic:claude opus', '']) expect(() => parseExtraction(['--extraction-model', bad])).toThrow(/takes <provider>:<model>/);
+    expect(() => parseExtraction(['--extraction-model', 'google:gemini-3.8-flash'])).toThrow(/has no route/);
+    for (const cap of ['0', '-1', 'ten', '', '1e3']) expect(() => parseExtraction(['--extract-cap-usd', cap])).toThrow(/positive number of dollars/);
+    expect(() => parseExtraction(['--extraction-model', OPUS_X, '--extraction-model', OPUS_X])).toThrow(/given twice/);
+    expect(extractionSlug(x)).toBe('extractor=claude-opus-5-5+extract-cap=20');
+    expect(extractionSlug({})).toBe('');
+  });
+
+  test('gpt-4o and gpt-4o-mini refuse in any form, priced or not, and run refuses a bad setting before any VM', async () => {
+    for (const m of ['openai:gpt-4o', 'openai:gpt-4o-mini', 'openai:gpt-4o-2024-08-06', 'openai:GPT-4o-mini', 'openai:chatgpt-4o-latest', 'gpt-4o', 'openai:gpt4o'])
+      expect(() => parseExtraction(['--extraction-model', m])).toThrow(/suspended/);
+    await keyless(async () => {
+      await expect(main(['run', '--extraction-model', 'openai:gpt-4o-mini', '--paid-window', 'w', '--window-cap-usd', '3'])).rejects.toThrow(/suspended/);
+      await expect(main(['run', '--extraction-model', 'anthropic:claude-opus-9-9', '--paid-window', 'w', '--window-cap-usd', '3'])).rejects.toThrow(/no chat price/);
+      await expect(main(['run', '--extract-cap-usd', '0', '--paid-window', 'w', '--window-cap-usd', '3'])).rejects.toThrow(/positive number of dollars/);
+      await expect(main(['run', '--system', 'ext-memory-bank', '--extraction-model', OPUS_X])).rejects.toThrow(/runs no gbrain/);
+    });
+  });
+
+  test('unset leaves the cell, VM command and payload as stage 1 ran them; set, both reach the launch env and the cell command', () => {
+    const stage1 = loadBG1Manifest().smoke_cells.find(c => c.id === 'bg1-dev3.gbrain-defaults.rs1-stable')!.launch!.env;
+    expect(devCell(SHA, {}, 'bg1-dev-01', {})).toEqual(devCell(SHA, {}, 'bg1-dev-01'));
+    expect(devCell(SHA).launch!.env).toEqual({ ...stage1, GBRAIN_SHA: SHA });
+    expect(vmCommand(SHA, 'bg1-dev-01', {}, {})).toBe(vmCommand(SHA, 'bg1-dev-01'));
+    expect(vmCommand(SHA, 'bg1-dev-01')).not.toMatch(/EXTRACTION_MODEL|extraction-model|extract-cap-usd/);
+    expect(vmPayload(SHA, 'bg1-dev-01', 'l', 12, {}, {})).toEqual(vmPayload(SHA, 'bg1-dev-01', 'l', 12));
+    expect(devCell(SHA, {}, 'bg1-dev-01', x).launch!.env).toEqual({ ...stage1, GBRAIN_SHA: SHA, GBRAIN_F6_EXTRACT_CAP_USD: '20', GBRAIN_F6_EXTRACTION_MODEL: OPUS_X });
+    expect(devCell(SHA, {}, 'bg1-dev-07', { model: OPUS_X }).launch!.env.GBRAIN_F6_EXTRACT_CAP_USD).toBe(stage1.GBRAIN_F6_EXTRACT_CAP_USD);
+    const cmd = vmCommand(SHA, 'bg1-dev-01', {}, x);
+    const up = cmd.split('; ').find(s => s.includes('bootstrap.sh up'))!;
+    expect(up).toContain(`GBRAIN_F6_EXTRACTION_MODEL=${OPUS_X} `);
+    expect(up).toContain('GBRAIN_F6_EXTRACT_CAP_USD=20 ');
+    expect(up.indexOf('GBRAIN_F6_EXTRACTION_MODEL=')).toBeLessThan(up.indexOf('bootstrap.sh up'));
+    expect(cmd).toContain(`cell --sha ${SHA} --world bg1-dev-01 --extraction-model ${OPUS_X} --extract-cap-usd 20 --system-url`);
+    expect(parseExtraction(cmd.split(/\s+/))).toEqual(x);
+    const p = vmPayload(SHA, 'bg1-dev-01', 'l', 12, {}, x);
+    expect(p.command).toBe(cmd);
+    expect(p.route_caps).toEqual(vmPayload(SHA, 'bg1-dev-01', 'l', 12).route_caps);
+  });
+
+  test('run.json, the out directory and every lease id carry the setting; without it they are as before', () => {
+    const base = { ref: 'v0.60.753.0', sha: SHA, overlay: {}, worlds: ['bg1-dev-01'], window: { unit: 'w', cap_usd: 20 }, leaseUsd: 20, stamp: '20261121T160000', startedAt: '2026-11-21T16:00:00.000Z' };
+    const plain = gbrainRun({ ...base, extraction: {} });
+    expect(plain.dirName).toBe(`${SHA.slice(0, 12)}-20261121T160000`);
+    expect(plain.leaseId('bg1-dev-01')).toBe(`devloop-${SHA.slice(0, 12)}-bg1-dev-01-20261121T160000`);
+    expect(Object.keys(plain.run)).toEqual(['schema', 'gbrain_ref', 'gbrain_sha', 'worlds', 'paid_window', 'window_cap_usd', 'lease_usd_per_world', 'reader', 'judge', 'world_end', 'as_of', 'started_at']);
+    const set = gbrainRun({ ...base, extraction: x });
+    expect(set.dirName).toBe(`${SHA.slice(0, 12)}-extractor=claude-opus-5-5+extract-cap=20-20261121T160000`);
+    expect(set.leaseId('bg1-dev-01')).toMatch(new RegExp(`^devloop-${SHA.slice(0, 12)}-bg1-dev-01-20261121T160000-x[0-9a-f]{8}$`));
+    expect(set.run).toMatchObject({ extraction_model: OPUS_X, extract_cap_usd: 20 });
+    const both = gbrainRun({ ...base, overlay: { 'search.evidence_date_header': true }, extraction: { model: OPUS_X } });
+    expect(both.dirName).toBe(`${SHA.slice(0, 12)}-evidence_date_header=true-extractor=claude-opus-5-5-20261121T160000`);
+    expect(both.leaseId('bg1-dev-01')).toMatch(/-o[0-9a-f]{8}-x[0-9a-f]{8}$/);
+    expect('extract_cap_usd' in both.run).toBe(false);
+  });
+
+  test('score opens with both extraction models and --save writes the model; a row without it ran the default', async () => {
+    const baselines = loadBaselines();
+    const opus = runWith('x-opus', { extraction_model: OPUS_X, extract_cap_usd: 20 }), plain = runWith('x-plain', {});
+    const s = scoreRun(opus, { baselines, against: plain });
+    expect([s.extraction_model, s.against_extraction_model]).toEqual([OPUS_X, null]);
+    const lines = renderScore(s).split('\n');
+    expect(lines.slice(0, 2)).toEqual(['Extraction model: anthropic:claude-opus-5-5 (this run) against unset, gbrain default (--against).', '']);
+    expect(lines[2].startsWith('BG1 dev loop: gbrain')).toBe(true);
+    expect(renderScore(scoreRun(plain, { baselines, against: opus })).split('\n')[0]).toBe('Extraction model: unset, gbrain default (this run) against anthropic:claude-opus-5-5 (--against).');
+    expect(renderScore(scoreRun(opus, { baselines })).split('\n')[0]).toBe('Extraction model: anthropic:claude-opus-5-5 (this run).');
+    const saved = join(tmp, 'x-opus.json'), old = join(tmp, 'x-plain.json');
+    expect(await main(['score', '--run', opus, '--save', saved])).toBe(0);
+    expect(JSON.parse(readFileSync(saved, 'utf8')).extraction_model).toBe(OPUS_X);
+    writeFileSync(old, JSON.stringify(savedRow(plain)));
+    expect('extraction_model' in JSON.parse(readFileSync(old, 'utf8'))).toBe(false);
+    expect(scoreRun(plain, { baselines, against: saved }).against_extraction_model).toBe(OPUS_X);
+    expect(renderScore(scoreRun(opus, { baselines, against: old })).split('\n')[0]).toBe('Extraction model: anthropic:claude-opus-5-5 (this run) against unset, gbrain default (--against).');
+    const none = scoreRun(plain, { baselines, against: old });
+    expect('extraction_model' in none || 'against_extraction_model' in none).toBe(false);
+    expect(renderScore(none)).not.toContain('Extraction model');
+    const both = runWith('x-both', { overlay: { 'search.evidence_date_header': true }, extraction_model: OPUS_X });
+    expect(renderScore(scoreRun(both, { baselines, against: plain })).split('\n').slice(0, 4)).toEqual([
+      'Overlay: evidence_date_header=true; --against: none (the stage 1 arm as it is).',
+      'Overlay difference: search.evidence_date_header true (this run) against arm default (--against).',
+      'Extraction model: anthropic:claude-opus-5-5 (this run) against unset, gbrain default (--against).', '']);
+  });
+
+  test("the setting reaches the cell's run-config, and unset leaves the run-config without it", async () => {
+    const s = scripted();
+    const out = join(tmp, 'extraction-cell');
+    await runDevCell({ sha: SHA, world: 'bg1-dev-01', out, systemUrl: null, env: { ...process.env, ...dead }, extraction: x },
+      { system: new FakeMemorySystem(), reader: s.reader, judge: s.judge, clockMs: () => Date.parse(DEV_AS_OF) });
+    const cell = 'bg1-dev3.gbrain-defaults.rs1-stable.p';
+    expect(JSON.parse(readFileSync(join(out, 'cells', cell, 'run-config.json'), 'utf8')).cell.launch.env).toMatchObject({ GBRAIN_F6_EXTRACTION_MODEL: OPUS_X, GBRAIN_F6_EXTRACT_CAP_USD: '20' });
+    expect('GBRAIN_F6_EXTRACTION_MODEL' in JSON.parse(readFileSync(join(PINNED_RUN, 'cells', cell, 'run-config.json'), 'utf8')).cell.launch.env).toBe(false);
+  }, 120_000);
+
+  test("the dev loop's lease proxy forwards and prices gbrain's Opus extraction call as sent, with no caps widened", async () => {
+    const seen: Array<Record<string, unknown>> = [];
+    const fetchImpl = (async (_u: unknown, init?: RequestInit) => {
+      seen.push(JSON.parse(String(init?.body)));
+      return Response.json({ type: 'message', stop_reason: 'end_turn', content: [{ type: 'text', text: '{"facts": []}' }], usage: { input_tokens: 10_000, output_tokens: 2_000 } });
+    }) as unknown as typeof fetch;
+    const dir = join(tmp, 'x-proxy');
+    mkdirSync(dir, { recursive: true });
+    const lease = BudgetRun.openLease({ runId: 'x-proxy', leaseUsd: 12, ledgerPath: join(dir, 'lease.sqlite') });
+    const proxy = new MeteringProxy({ fetchImpl, policy: { lease, env: { ANTHROPIC_API_KEY: 'placeholder-anthropic' }, usageLog: join(dir, 'usage.ndjson'), routeCaps: vmPayload(SHA, 'bg1-dev-01', 'l', 12, {}, x).route_caps! } });
+    proxy.start();
+    try {
+      const res = await fetch(`http://127.0.0.1:${proxy.port}/gbrain-defaults/anthropic/v1/messages`, { method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ model: 'claude-opus-5-5', max_tokens: 8000, system: 'extract facts', messages: [{ role: 'user', content: '<turn>hello</turn>' }] }) });
+      expect(res.status).toBe(200);
+    } finally { proxy.stop(); closeLedgers(); }
+    expect(seen.map(b => [b.model, b.max_tokens])).toEqual([['claude-opus-5-5', 8000]]);
+    const line = readFileSync(join(dir, 'usage.ndjson'), 'utf8').trim().split('\n').map(l => JSON.parse(l)).find(l => l.outcome === 'forwarded');
+    expect(line).toMatchObject({ provider: 'anthropic', model: 'claude-opus-5-5', slot: 'gbrain-defaults', route_class: 'extraction', charged_reservation: false });
+    expect(line.actual_usd).toBeCloseTo(10_000 * 4 / 1e6 + 2_000 * 20 / 1e6, 9);
+  });
 });
 
 describe('the brain and its upkeep', () => {

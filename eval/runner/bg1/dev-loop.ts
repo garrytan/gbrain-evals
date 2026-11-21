@@ -8,6 +8,7 @@
  *
  *   bun eval/runner/bg1/dev-loop.ts run [--gbrain <tag|branch|sha>] --paid-window <unit> --window-cap-usd <n> [--out <dir>]
  *       [--worlds bg1-dev-01,...|extra|dev20] [--vm-size standard-4] [--location eu-central-h1] [--overlay <gbrain key>=<value>]...
+ *       [--extraction-model <provider:model>] [--extract-cap-usd <n>]
  *     Resolves the ref to a gbrain commit (without --gbrain, gbrain's newest release tag, so the baseline is always the
  *     newest build) and runs BG1's gbrain cell at it (configuration rs1-stable, arm P: query with
  *     the facts block, packed to 8,000 tokens) on one Ubicloud VM per dev world, each under its own metering proxy
@@ -31,6 +32,15 @@
  *     the out and lease names, each VM's cell command and so its run-config, the score header and the why rows. With
  *     no --overlay nothing changes. An overlay value the stage 1 arm already has refuses, and so does an --out that
  *     already holds a run.
+ *     --extraction-model sets gbrain's facts.extraction_model (GBRAIN_F6_EXTRACTION_MODEL) in each world's brain at
+ *     install, before any page is written, so every fact extraction gbrain runs (ingest's background facts-absorb,
+ *     /finish's extract-conversation-facts, idle upkeep) uses it; the shim reads it back and fails the realization when
+ *     it differs. --extract-cap-usd replaces the cell's GBRAIN_F6_EXTRACT_CAP_USD, the cap on /finish's extraction.
+ *     A model that is not provider:model, whose provider gbrain does not send through the metering proxy (anthropic,
+ *     openai), that budget-ledger.ts cannot price, or that is gpt-4o or gpt-4o-mini (suspended 2026-11-21) refuses before
+ *     any VM starts. Both go into run.json, the out and lease names, each VM's launch environment and cell command and
+ *     so its run-config, and the score header; the shim records the model in its capabilities' f6 block and the F6
+ *     build. Without them nothing changes, and gbrain resolves its own extraction model.
  *   bun eval/runner/bg1/dev-loop.ts score --run <dir> [--against <earlier run dir or saved row>] [--allow-run-diff] [--save <row.json>] [--json]
  *     Per class S1 to S8, pooled (what is true now: S1 to S5; time-indexed: S6 to S8) and overall: gbrain's accuracy,
  *     its exposure rate (the context held every value the answer needs) and its gap to each comparator with a paired
@@ -38,8 +48,10 @@
  *     gbrain graded, and a directory whose cells mix gbrain builds or answer a question twice refuses. --against adds this run minus an
  *     earlier gbrain run; --save writes this run's per-question scores and exposure (no answers or contexts), which a
  *     later --against reads in place of the run directory. Two runs compared under --against must match in everything
- *     but their gbrain ref and overlay (worlds, the worlds each graded, world end, question day, reader, judge, questions) unless
- *     --allow-run-diff; when either has an overlay, the score opens with both and the keys where they differ. Keyless.
+ *     but their gbrain ref, overlay and extraction setting (worlds, the worlds each graded, world end, question day, reader, judge, questions) unless
+ *     --allow-run-diff; when either has an overlay, the score opens with both and the keys where they differ, and when
+ *     either names an extraction model, with both models. --save writes the run's extraction model; a row without one
+ *     ran gbrain's default. Keyless.
  *   bun eval/runner/bg1/dev-loop.ts run --system ext-memory-bank|ext-extract-first --paid-window <unit> --window-cap-usd <n>
  *       [--worlds extra|bg1-dev-04,...] [--out <dir>] [--vm-size standard-4] [--location eu-central-h1]
  *     A comparator run: the comparator's stage 1 cell, read and judged as above, on extra worlds (never the three, whose
@@ -83,6 +95,7 @@ import { execFileSync } from 'node:child_process';
 import { createHash, randomBytes } from 'node:crypto';
 import { closeSync, existsSync, mkdirSync, openSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
+import { chatPrice } from '../budget-ledger.ts';
 import { bg1RunClock, loadCorpus, type MemoryQuestion } from '../memory-qa/corpus.ts';
 import { DEFAULT_MAX_OUTPUT_TOKENS, DEFAULT_ROUTE_CAPS } from '../metering-proxy.ts';
 import { requireRs1Window, WindowRefusal } from '../paid-arm.ts';
@@ -179,6 +192,48 @@ export async function checkOverlayHead(sha: string, overlay: Overlay, read: (url
   if (missing.length) throw new DevLoopRefusal(`gbrain ${sha} does not list ${missing.join(', ')} in src/core/config.ts, so the overlay would change nothing`);
 }
 
+// ─── Extraction model ────────────────────────────────────────────────
+
+/**
+ * gbrain's fact extraction on a run's gbrain cell. `model` is gbrain's facts.extraction_model, which the shim sets in
+ * every brain before any page is written (unset: gbrain resolves its own default); `capUsd` replaces the stage 1
+ * cell's GBRAIN_F6_EXTRACT_CAP_USD.
+ */
+export interface Extraction { model?: string; capUsd?: number }
+
+/** The providers whose calls gbrain sends through the metering proxy (the shim's provider_base_urls); the sandbox has no other route out. */
+export const EXTRACTION_PROVIDERS: readonly string[] = ['anthropic', 'openai'];
+
+/**
+ * `--extraction-model <provider:model>` and `--extract-cap-usd <n>` in argv. A model that is not provider:model, whose
+ * provider gbrain does not send through the proxy, that budget-ledger.ts has no chat price for, or that names gpt-4o
+ * or gpt-4o-mini in any form refuses, and so does a cap that is not a positive number or a flag given twice.
+ */
+export function parseExtraction(argv: readonly string[]): Extraction {
+  const twice = ['--extraction-model', '--extract-cap-usd'].filter(f => argv.filter(a => a === f).length > 1);
+  if (twice.length) throw new DevLoopRefusal(`${twice.join(' and ')} given twice`);
+  const one = (f: string) => (argv.includes(f) ? argv[argv.indexOf(f) + 1] ?? '' : undefined);
+  const model = one('--extraction-model'), cap = one('--extract-cap-usd');
+  const out: Extraction = {};
+  if (model !== undefined) {
+    if (/gpt-?4o/i.test(model)) throw new DevLoopRefusal(`--extraction-model ${model}: gpt-4o and gpt-4o-mini are suspended for new runs in any role (Garry, 2026-11-21)`);
+    const provider = /^([a-z][a-z0-9-]*):[A-Za-z0-9][A-Za-z0-9._-]*$/.exec(model)?.[1];
+    if (!provider) throw new DevLoopRefusal(`--extraction-model takes <provider>:<model>, as gbrain's facts.extraction_model does (e.g. anthropic:claude-opus-5-5), not ${JSON.stringify(model)}`);
+    if (!EXTRACTION_PROVIDERS.includes(provider)) throw new DevLoopRefusal(`--extraction-model ${model}: gbrain sends only ${EXTRACTION_PROVIDERS.join(' and ')} calls through the metering proxy, so a ${provider} extractor has no route`);
+    if (!chatPrice(model)) throw new DevLoopRefusal(`--extraction-model ${model} has no chat price in eval/runner/budget-ledger.ts, so the metering proxy cannot price gbrain's extraction calls`);
+    out.model = model;
+  }
+  if (cap !== undefined) {
+    if (!/^\d+(\.\d+)?$/.test(cap) || !(Number(cap) > 0)) throw new DevLoopRefusal(`--extract-cap-usd takes a positive number of dollars, not ${JSON.stringify(cap)}`);
+    out.capUsd = Number(cap);
+  }
+  return out;
+}
+
+/** An extraction setting as it appears in directory and file names: extractor=claude-opus-5-5+extract-cap=10. */
+export const extractionSlug = (x: Extraction) =>
+  [...(x.model ? [`extractor=${x.model.slice(x.model.indexOf(':') + 1)}`] : []), ...(x.capUsd !== undefined ? [`extract-cap=${x.capUsd}`] : [])].join('+');
+
 // ─── The cell ────────────────────────────────────────────────────────
 
 /**
@@ -196,14 +251,15 @@ function fromStage1(id: string, world?: string): Omit<CellDefinition, 'estimate'
     arms: src.arms.map(a => ({ ...a, cell_id: named(a.cell_id), readers: [DEV_READER], frontier: a.frontier ? { ...a.frontier, judges: [DEV_JUDGE] } : null })) };
 }
 
-/** Stage 1's gbrain cell at another gbrain commit, with any overlay on its arm, for `world`'s list. */
-export function devCell(sha: string, overlay: Overlay = {}, world?: string): CellDefinition {
+/** Stage 1's gbrain cell at another gbrain commit, with any overlay on its arm and extraction setting in its launch environment, for `world`'s list. */
+export function devCell(sha: string, overlay: Overlay = {}, world?: string, extraction: Extraction = {}): CellDefinition {
   if (!/^[0-9a-f]{40}$/.test(sha)) throw new DevLoopRefusal(`a dev cell needs a full 40-character gbrain commit, not ${JSON.stringify(sha)}`);
   const src = fromStage1(STAGE1_GBRAIN_CELL, world);
   const same = Object.keys(overlay).filter(k => src.arms.some(a => a.retrieval?.overlay?.[k] === overlay[k]));
   if (same.length) throw new DevLoopRefusal(`the stage 1 arm already sets ${same.map(k => `${k}=${overlay[k]}`).join(', ')}, so the overlay would change nothing`);
   const def: Omit<CellDefinition, 'estimate'> = {
-    ...src, launch: { ...src.launch!, env: { ...src.launch!.env, GBRAIN_SHA: sha } },
+    ...src, launch: { ...src.launch!, env: { ...src.launch!.env, GBRAIN_SHA: sha, ...(extraction.capUsd !== undefined ? { GBRAIN_F6_EXTRACT_CAP_USD: String(extraction.capUsd) } : {}),
+      ...(extraction.model ? { GBRAIN_F6_EXTRACTION_MODEL: extraction.model } : {}) } },
     arms: src.arms.map(a => (Object.keys(overlay).length && a.retrieval ? { ...a, retrieval: { ...a.retrieval, overlay: { ...a.retrieval.overlay, ...overlay } } } : a)),
   };
   return { ...def, estimate: bg1Estimate(def) };
@@ -239,7 +295,7 @@ function containerClockMs(): number {
   return Number(out.trim().split('\n').pop());
 }
 
-export interface DevCellOptions { sha?: string; system?: Comparator; world: string; out: string; systemUrl: string | null; env?: Record<string, string | undefined>; overlay?: Overlay }
+export interface DevCellOptions { sha?: string; system?: Comparator; world: string; out: string; systemUrl: string | null; env?: Record<string, string | undefined>; overlay?: Overlay; extraction?: Extraction }
 
 /**
  * One dev world through the cell under a lease proxy (SHOOTOUT_PROXY, which runRemote starts). gbrain's cell (`sha`)
@@ -253,7 +309,7 @@ export async function runDevCell(o: DevCellOptions, deps: CellDeps & { clockMs?:
   const env = o.env ?? process.env;
   if (!ALL_WORLDS.includes(o.world)) throw new DevLoopRefusal(`--world must be one of ${DEV_WORLDS.join(', ')} or an extra world (bg1-dev-04 to bg1-dev-20), not ${o.world}`);
   if (!o.system === !o.sha) throw new DevLoopRefusal('cell runs gbrain at --sha or a comparator with --system, one of them');
-  const def = o.system ? comparatorCell(o.system, o.world) : devCell(o.sha!, o.overlay, o.world);
+  const def = o.system ? comparatorCell(o.system, o.world) : devCell(o.sha!, o.overlay, o.world, o.extraction);
   const { worldEnd, asOf } = devClock(def);
   const list = listOf(o.world);
   const proxy = env.SHOOTOUT_PROXY ?? null;
@@ -296,11 +352,11 @@ export function resolveGbrainRef(ref: string, lsRemote: (ref: string) => string 
  * receipts) and every idle upkeep run gbrain logged listed in $SHOOTOUT_OUT/upkeep.ndjson; then the stack down. A
  * failed snapshot or upkeep list is logged and leaves the cell's exit code as it was.
  */
-export function vmCommand(sha: string, world: string, overlay: Overlay = {}): string {
-  const def = devCell(sha, overlay, world);
+export function vmCommand(sha: string, world: string, overlay: Overlay = {}, extraction: Extraction = {}): string {
+  const def = devCell(sha, overlay, world, extraction);
   const pre = launchPrefix({ ...def.launch!, env: { ...def.launch!.env, GBRAIN_FAKETIME_LIB: '1' } });
   return [`export GBRAIN_EVALS_BG1_WORLD_END=${DEV_WORLD_END}`, 'export GBRAIN_FAKETIME="$(bun eval/runner/bg1/dev-loop.ts clock)"',
-    `${pre}bash eval/systems/bootstrap.sh up --system gbrain-defaults --config ${def.launch!.config} && bun eval/runner/bg1/dev-loop.ts cell --sha ${sha} --world ${world}${Object.entries(overlay).map(([k, v]) => ` --overlay ${k}=${v}`).join('')} --system-url http://127.0.0.1:8700 --out "$SHOOTOUT_OUT"; rc=$?; { ${pre}bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out "$SHOOTOUT_OUT/${BRAIN_SNAPSHOT}" && bun eval/runner/bg1/dev-loop.ts upkeep --snapshot "$SHOOTOUT_OUT/${BRAIN_SNAPSHOT}" --out "$SHOOTOUT_OUT/upkeep.ndjson"; } || echo "dev loop: the brain snapshot or the upkeep list failed" >&2; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc`].join('; ');
+    `${pre}bash eval/systems/bootstrap.sh up --system gbrain-defaults --config ${def.launch!.config} && bun eval/runner/bg1/dev-loop.ts cell --sha ${sha} --world ${world}${Object.entries(overlay).map(([k, v]) => ` --overlay ${k}=${v}`).join('')}${extraction.model ? ` --extraction-model ${extraction.model}` : ''}${extraction.capUsd !== undefined ? ` --extract-cap-usd ${extraction.capUsd}` : ''} --system-url http://127.0.0.1:8700 --out "$SHOOTOUT_OUT"; rc=$?; { ${pre}bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out "$SHOOTOUT_OUT/${BRAIN_SNAPSHOT}" && bun eval/runner/bg1/dev-loop.ts upkeep --snapshot "$SHOOTOUT_OUT/${BRAIN_SNAPSHOT}" --out "$SHOOTOUT_OUT/upkeep.ndjson"; } || echo "dev loop: the brain snapshot or the upkeep list failed" >&2; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc`].join('; ');
 }
 
 /** Where each world's brain snapshot sits in its outputs. */
@@ -330,8 +386,8 @@ const snapshotServeLog = (tar: string) =>
   execFileSync('bash', ['-c', 'set -o pipefail; tar -xOf "$1" ./gbrain-data.tar | tar -xOf - ./logs/serve.log', 'serve-log', tar], { encoding: 'utf8', maxBuffer: 1 << 30 });
 
 /** The payload shootout-cell.ts remote runs on one world's VM: its own lease proxy, with Gemini on GEMINI_API_KEY. */
-export function vmPayload(sha: string, world: string, leaseId: string, leaseUsd: number, overlay: Overlay = {}): RemotePayload {
-  return payload(devCell(sha, overlay, world), vmCommand(sha, world, overlay), leaseId, leaseUsd);
+export function vmPayload(sha: string, world: string, leaseId: string, leaseUsd: number, overlay: Overlay = {}, extraction: Extraction = {}): RemotePayload {
+  return payload(devCell(sha, overlay, world, extraction), vmCommand(sha, world, overlay, extraction), leaseId, leaseUsd);
 }
 
 /** What a comparator's VM runs on one extra world: its stack as stage 1 started it, the cell, then the stack down. */
@@ -434,8 +490,9 @@ async function launch(argv: string[]): Promise<number> {
   const comparator = systemArg === 'gbrain-defaults' ? null : systemArg as Comparator;
   const worlds = parseWorlds(one('--worlds'), comparator ? EXTRA_WORLDS : DEV_WORLDS);
   if (comparator && worlds.some(w => !EXTRA_WORLDS.includes(w))) throw new DevLoopRefusal(`${comparator}'s rows on ${DEV_WORLDS.join(', ')} are stage 1's (the comparator cache), so a comparator run takes extra worlds only`);
-  if (comparator && (one('--gbrain') || argv.includes('--overlay'))) throw new DevLoopRefusal(`--gbrain and --overlay set gbrain's arm, and --system ${comparator} runs no gbrain`);
+  if (comparator && (one('--gbrain') || ['--overlay', '--extraction-model', '--extract-cap-usd'].some(f => argv.includes(f)))) throw new DevLoopRefusal(`--gbrain, --overlay, --extraction-model and --extract-cap-usd set gbrain's cell, and --system ${comparator} runs no gbrain`);
   const overlay = parseOverlays(argv), slug = overlaySlug(overlay);
+  const extraction = parseExtraction(argv), xslug = extractionSlug(extraction);
   const outArg = one('--out');
   if (outArg && existsSync(join(resolve(outArg), 'run.json'))) throw new DevLoopRefusal(`${outArg} already holds a run (run.json); pass a new --out so two runs never mix in one score`);
   const size = one('--vm-size') ?? 'standard-4';
@@ -450,19 +507,35 @@ async function launch(argv: string[]): Promise<number> {
   const ref = named ?? newest!.tag;
   const sha = named ? resolveGbrainRef(named) : newest!.sha;
   await checkOverlayHead(sha, overlay);
-  console.error(`dev loop: gbrain ${ref} at ${sha}${slug ? ` with overlay ${slug}` : ''}`);
+  console.error(`dev loop: gbrain ${ref} at ${sha}${slug ? ` with overlay ${slug}` : ''}${xslug ? ` with ${xslug}` : ''}`);
   const stamp = new Date().toISOString().replace(/[-:]/g, '').slice(0, 15);
-  const out = resolve(outArg ?? join(REPO_ROOT, 'eval/reports/bg1-dev-loop', `${sha.slice(0, 12)}${slug ? `-${slug}` : ''}-${stamp}`));
   const leaseUsd = Math.floor(window.cap_usd / worlds.length * 100) / 100;
-  const def = devCell(sha, overlay, worlds[0]);
+  const plan = gbrainRun({ ref, sha, overlay, extraction, worlds, window, leaseUsd, stamp, startedAt: new Date().toISOString() });
+  const out = resolve(outArg ?? join(REPO_ROOT, 'eval/reports/bg1-dev-loop', plan.dirName));
+  const def = devCell(sha, overlay, worlds[0], extraction);
   const ok = await runVms({ argv, out, worlds, size, vcpus,
     setup: `${launchPrefix({ ...def.launch!, env: { GBRAIN_BUN_IMAGE: def.launch!.env.GBRAIN_BUN_IMAGE, GBRAIN_SHA: sha, GBRAIN_FAKETIME_LIB: '1' } })}bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets bg1-dev --conversations ${worlds.join(',')}`,
-    run: { schema: RUN_SCHEMA, gbrain_ref: ref, gbrain_sha: sha, ...(slug ? { overlay } : {}), worlds, paid_window: window.unit, window_cap_usd: window.cap_usd, lease_usd_per_world: leaseUsd,
-      reader: DEV_READER, judge: DEV_JUDGE, world_end: DEV_WORLD_END, as_of: DEV_AS_OF, started_at: new Date().toISOString() },
-    payloadFor: world => vmPayload(sha, world, `devloop-${sha.slice(0, 12)}-${world}-${stamp}${slug ? `-o${createHash('sha256').update(slug).digest('hex').slice(0, 8)}` : ''}`, leaseUsd, overlay) });
+    run: plan.run, payloadFor: world => vmPayload(sha, world, plan.leaseId(world), leaseUsd, overlay, extraction) });
   if (!ok) return 4;
   console.log(renderScore(scoreRun(out)));
   return 0;
+}
+
+/**
+ * A gbrain run's out directory name, run.json and each world's lease id. The names carry its overlay and extraction
+ * setting (as slugs in the directory, as short hashes in lease ids), and run.json records both; without them every
+ * name and field is as it was.
+ */
+export function gbrainRun(o: { ref: string; sha: string; overlay: Overlay; extraction: Extraction; worlds: string[]; window: { unit: string; cap_usd: number }; leaseUsd: number; stamp: string; startedAt: string }) {
+  const slug = overlaySlug(o.overlay), xslug = extractionSlug(o.extraction);
+  const hash = (s: string) => createHash('sha256').update(s).digest('hex').slice(0, 8);
+  return {
+    dirName: `${o.sha.slice(0, 12)}${slug ? `-${slug}` : ''}${xslug ? `-${xslug}` : ''}-${o.stamp}`,
+    leaseId: (world: string) => `devloop-${o.sha.slice(0, 12)}-${world}-${o.stamp}${slug ? `-o${hash(slug)}` : ''}${xslug ? `-x${hash(xslug)}` : ''}`,
+    run: { schema: RUN_SCHEMA, gbrain_ref: o.ref, gbrain_sha: o.sha, ...(slug ? { overlay: o.overlay } : {}), ...(o.extraction.model ? { extraction_model: o.extraction.model } : {}),
+      ...(o.extraction.capUsd !== undefined ? { extract_cap_usd: o.extraction.capUsd } : {}), worlds: o.worlds, paid_window: o.window.unit, window_cap_usd: o.window.cap_usd,
+      lease_usd_per_world: o.leaseUsd, reader: DEV_READER, judge: DEV_JUDGE, world_end: DEV_WORLD_END, as_of: DEV_AS_OF, started_at: o.startedAt },
+  };
 }
 
 /**
@@ -687,7 +760,12 @@ export function loadAllBaselines(stage1Path = BASELINES_PATH, extraPath = EXTRA_
 /** A paired difference in points over the questions both rows graded, its percentile interval and the smallest change it can show. */
 export interface Gap { delta: number; ci95: [number, number] | null; n: number; mde: number | null }
 export interface ClassScore { label: string; n: number; graded: number; accuracy: number | null; exposure: number | null; comparators: Record<string, { accuracy: number | null; exposure: number | null; gap: Gap | null }>; against?: Gap | null }
-export interface Score { run: string; gbrain_ref?: string | null; overlay?: Overlay; against_overlay?: Overlay; gbrain_sha: string | null; questions: number; ungraded: number; classes: ClassScore[] }
+export interface Score {
+  run: string; gbrain_ref?: string | null; overlay?: Overlay; against_overlay?: Overlay;
+  /** Present when this run or the --against run names an extraction model: each run's, null when it ran gbrain's default. */
+  extraction_model?: string | null; against_extraction_model?: string | null;
+  gbrain_sha: string | null; questions: number; ungraded: number; classes: ClassScore[];
+}
 
 export const GROUPS: Array<{ label: string; strata: readonly Bg1Stratum[] }> = [
   ...BG1_STRATA.map(s => ({ label: s, strata: [s] })),
@@ -726,17 +804,17 @@ export function scoreRecords(run: string, gbrainSha: string | null, mine: Readon
 /** The gbrain row of a dev run directory: its pulled world outputs, or the directory itself. */
 const gbrainRow = (dir: string) => readRow([existsSync(join(dir, 'worlds')) ? join(dir, 'worlds') : dir], 'gbrain-defaults', rowWorlds(runInfo(dir)?.worlds));
 
-interface RunInfo { gbrain_ref?: string; overlay?: Overlay; worlds?: string[]; world_end?: string; as_of?: string; reader?: string; judge?: string }
+interface RunInfo { gbrain_ref?: string; overlay?: Overlay; extraction_model?: string; worlds?: string[]; world_end?: string; as_of?: string; reader?: string; judge?: string }
 const runInfo = (dir: string): RunInfo | null => { const f = join(dir, 'run.json'); return existsSync(f) ? JSON.parse(readFileSync(f, 'utf8')) as RunInfo : null; };
 const refOf = (dir: string) => runInfo(dir)?.gbrain_ref ?? null;
-/** What two runs compared under --against must share: everything in run.json but the gbrain ref, the overlay and the spend window. */
+/** What two runs compared under --against must share: everything in run.json but the gbrain ref, the overlay, the extraction setting and the spend window. */
 const SAME_RUN_FIELDS = ['worlds', 'world_end', 'as_of', 'reader', 'judge'] as const;
 
-/** A dev run's per-question scores and exposure, in the comparator cache's row shape. */
-export function savedRow(dir: string): BaselineRow & { gbrain_ref: string | null; overlay?: Overlay } {
+/** A dev run's per-question scores and exposure, in the comparator cache's row shape; a row without extraction_model ran gbrain's default. */
+export function savedRow(dir: string): BaselineRow & { gbrain_ref: string | null; overlay?: Overlay; extraction_model?: string } {
   const row = gbrainRow(dir);
-  const overlay = runInfo(dir)?.overlay;
-  return { source: `BG1 dev loop, ${basename(dir)}`, gbrain_ref: refOf(dir), ...(overlay ? { overlay } : {}), settings: row.settings, ...(row.gbrainSha ? { gbrain_sha: row.gbrainSha } : {}),
+  const { overlay, extraction_model: model } = runInfo(dir) ?? {};
+  return { source: `BG1 dev loop, ${basename(dir)}`, gbrain_ref: refOf(dir), ...(overlay ? { overlay } : {}), ...(model ? { extraction_model: model } : {}), settings: row.settings, ...(row.gbrainSha ? { gbrain_sha: row.gbrainSha } : {}),
     questions: Object.fromEntries([...row.records.values()].sort((a, b) => (a.id < b.id ? -1 : 1)).map(q => [q.id, { score: q.score, gold: q.gold, stale: q.stale }])) };
 }
 
@@ -749,21 +827,24 @@ export function scoreRun(dir: string, opts: { baselines?: Baselines; against?: s
   check(dir, row.settings);
   let against: Map<string, QuestionRecord> | undefined;
   const overlay = runInfo(dir)?.overlay ?? {};
-  let againstOverlay: Overlay = {};
+  const model = runInfo(dir)?.extraction_model ?? null;
+  let againstOverlay: Overlay = {}, againstModel: string | null = null;
   if (opts.against) {
-    const other = opts.against.endsWith('.json') ? (JSON.parse(readFileSync(opts.against, 'utf8')) as BaselineRow & { overlay?: Overlay }) : savedRow(opts.against);
+    const other = opts.against.endsWith('.json') ? (JSON.parse(readFileSync(opts.against, 'utf8')) as BaselineRow & { overlay?: Overlay; extraction_model?: string }) : savedRow(opts.against);
     check(opts.against, other.settings);
     againstOverlay = other.overlay ?? {};
+    againstModel = other.extraction_model ?? null;
     const mine = runInfo(dir), theirs = opts.against.endsWith('.json') ? null : runInfo(opts.against);
     const gradedWorlds = (qs: Array<[string, { score: number | null }]>) => [...new Set(qs.filter(([, q]) => typeof q.score === 'number').map(([id]) => row.records.get(id)?.world ?? id))].sort().join();
     const differs = [...(mine && theirs ? SAME_RUN_FIELDS.filter(k => JSON.stringify(mine[k]) !== JSON.stringify(theirs[k])) : []),
       ...(Object.keys(other.questions).sort().join() !== [...row.records.keys()].sort().join() ? ['questions'] : []),
       ...(gradedWorlds([...row.records]) !== gradedWorlds(Object.entries(other.questions)) ? ['graded worlds'] : [])];
-    if (differs.length && !opts.allowRunDiff) throw new DevLoopRefusal(`${dir} and ${opts.against} differ in ${differs.join(', ')}, not only in their overlay and gbrain ref; pass --allow-run-diff to compare them anyway`);
+    if (differs.length && !opts.allowRunDiff) throw new DevLoopRefusal(`${dir} and ${opts.against} differ in ${differs.join(', ')}, not only in their overlay, extraction setting and gbrain ref; pass --allow-run-diff to compare them anyway`);
     against = new Map(Object.entries(other.questions).map(([id, q]) => [id, { ...row.records.get(id)!, ...q, answer: null, context: null }]));
   }
   const overlays = Object.keys(overlay).length || Object.keys(againstOverlay).length ? { overlay, ...(opts.against ? { against_overlay: againstOverlay } : {}) } : {};
-  return { ...scoreRecords(dir, row.gbrainSha, row.records, b, against), gbrain_ref: refOf(dir), ...overlays };
+  const models = model || againstModel ? { extraction_model: model, ...(opts.against ? { against_extraction_model: againstModel } : {}) } : {};
+  return { ...scoreRecords(dir, row.gbrainSha, row.records, b, against), gbrain_ref: refOf(dir), ...overlays, ...models };
 }
 
 const pct = (x: number | null) => (x === null ? 'n/a' : `${(x * 100).toFixed(1)}%`);
@@ -778,9 +859,14 @@ export function renderScore(s: Score): string {
     head.push(`Overlay: ${overlaySlug(mine) || 'none (the stage 1 arm as it is)'}${theirs ? `; --against: ${overlaySlug(theirs) || 'none (the stage 1 arm as it is)'}` : ''}.`);
     if (theirs) {
       const keys = [...new Set([...Object.keys(mine), ...Object.keys(theirs)])].sort().filter(k => mine[k] !== theirs[k]);
-      head.push(keys.length ? `Overlay difference: ${keys.map(k => `${k} ${mine[k] ?? 'arm default'} (this run) against ${theirs[k] ?? 'arm default'} (--against)`).join('; ')}.` : 'Overlay difference: none.', '');
-    } else head.push('');
+      head.push(keys.length ? `Overlay difference: ${keys.map(k => `${k} ${mine[k] ?? 'arm default'} (this run) against ${theirs[k] ?? 'arm default'} (--against)`).join('; ')}.` : 'Overlay difference: none.');
+    }
   }
+  if (s.extraction_model !== undefined) {
+    const named = (m: string | null) => m ?? 'unset, gbrain default';
+    head.push(`Extraction model: ${named(s.extraction_model)} (this run)${s.against_extraction_model !== undefined ? ` against ${named(s.against_extraction_model)} (--against)` : ''}.`);
+  }
+  if (head.length) head.push('');
   const lines = [...head, `BG1 dev loop: gbrain ${s.gbrain_ref ? `${s.gbrain_ref} (${s.gbrain_sha})` : s.gbrain_sha ?? '(unknown commit)'} on ${s.questions} dev questions (${s.ungraded} without a gating grade), read by ${DEV_READER} and graded by ${DEV_JUDGE}.`,
     'Accuracy, and exposure: the share of contexts that held every value the answer needs. Gaps are gbrain minus each server in points, with a paired 95% interval over questions.', '',
     `| Class | n | gbrain | exposure | memory-bank | exposure | gap | extract-first | exposure | gap | smallest visible change |${vs ? ' minus --against |' : ''}`,
@@ -855,7 +941,7 @@ export async function main(argv: string[]): Promise<number> {
     const sha = one('--sha'), system = one('--system'), world = one('--world'), out = one('--out'), systemUrl = one('--system-url');
     if (!(sha || system) || !world || !out || !systemUrl) throw new DevLoopRefusal('cell needs --sha (or --system with a comparator), --world, --out and --system-url');
     if (system && !(COMPARATORS as readonly string[]).includes(system)) throw new DevLoopRefusal(`cell --system takes ${COMPARATORS.join(' or ')}, not ${system}`);
-    const r = await runDevCell({ sha, system: system as Comparator | undefined, world, out, systemUrl, overlay: parseOverlays(argv) });
+    const r = await runDevCell({ sha, system: system as Comparator | undefined, world, out, systemUrl, overlay: parseOverlays(argv), extraction: parseExtraction(argv) });
     console.log(`${r.cell} ${world}: ${r.status}${r.stopped ? ` (stopped: ${r.stopped})` : ''}; ${r.arms.map(a => `${a.answers} answers, ${a.judgments} judgments`).join('; ')}`);
     return (r.share ? r.share.complete : r.status === 'complete') ? 0 : 4;
   }

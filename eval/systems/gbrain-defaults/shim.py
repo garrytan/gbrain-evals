@@ -31,6 +31,12 @@ gbrain's safe-chunks repair, before the quiesce barrier; it then indexes every s
 An F6 policy names its op (query or recall), the op's arguments and an overlay of the six search keys. The shim applies
 an overlay only when it changes: stop serve, `gbrain config set` all six keys, read each back, start serve, and record
 the overlay's hash and switch time on the retrieval. Fact rows map to their source session through the fact index.
+
+GBRAIN_F6_EXTRACTION_MODEL (BG1's dev loop, --extraction-model) sets gbrain's facts.extraction_model in every brain at
+install, before any page is written, so every fact extraction gbrain runs (put_page's background facts-absorb, /finish's
+extract-conversation-facts, idle upkeep) uses it. The install reads it back with `config get`, and the install and every
+serve start require `gbrain models --json` to resolve it; either mismatch fails the realization. Unset, gbrain resolves
+its own default and nothing here changes.
 """
 from __future__ import annotations
 
@@ -64,6 +70,8 @@ PROXY_BASE = os.environ.get("GBRAIN_PROXY_BASE", "").rstrip("/")
 FULL_SURFACE = os.environ.get("GBRAIN_FULL_SURFACE", "0") == "1"
 F6 = os.environ.get("GBRAIN_F6", "0") == "1"
 F6_EXTRACT_CAP_USD = os.environ.get("GBRAIN_F6_EXTRACT_CAP_USD", "")
+EXTRACTION_MODEL = os.environ.get("GBRAIN_F6_EXTRACTION_MODEL", "")
+EXTRACTION_MODEL_KEY = "facts.extraction_model"
 # The gbrain commit baked into the image (Dockerfile ENV) and the one the launch asked for (compose, from GBRAIN_SHA).
 IMAGE_SHA = os.environ.get("GBRAIN_SHA", "")
 LAUNCH_SHA = os.environ.get("GBRAIN_LAUNCH_SHA", "")
@@ -574,7 +582,9 @@ class GbrainDefaultsAdapter(Adapter):
         migrations = self.cli("apply-migrations", "--yes", "--non-interactive", "--no-autopilot-install", timeout_s=900, check=False)
         answered = self.answer_first_run_defaults(init)
         posture = self.apply_f6_posture() if F6 else None
+        extraction = self.apply_extraction_model() if EXTRACTION_MODEL else None
         resolved = self.resolve_config()
+        self.check_extraction_model(resolved)
         tools = self.capture_tools(["--surface", "starter"])
         missing = [op for op in STARTER_CALLS if op not in tools]
         if missing:
@@ -595,13 +605,15 @@ class GbrainDefaultsAdapter(Adapter):
             "starter_tools_sha256": sha256_text(canonical(sorted(tools))),
             "doctor": doctor_gate(doctor, 0),
             **({"f6_posture": posture} if F6 else {}),
+            **({"extraction_model": extraction} if extraction else {}),
         }
         os.makedirs(os.path.join(HOME, "shim"), exist_ok=True)
         with open(os.path.join(HOME, "shim", "install.json"), "w") as f:
             json.dump(meta, f, indent=2)
         with open(os.path.join(HOME, "shim", "state.json"), "w") as f:
             json.dump({"sessions": {}}, f)
-        self.receipt("install", resolved_sha256=meta["resolved_sha256"], config_sha256=meta["config_sha256"], install_ms=meta["install_ms"], **({"f6_posture": posture} if F6 else {}))
+        self.receipt("install", resolved_sha256=meta["resolved_sha256"], config_sha256=meta["config_sha256"], install_ms=meta["install_ms"], **({"f6_posture": posture} if F6 else {}),
+                     **({"extraction_model": extraction} if extraction else {}))
         return meta
 
     def answer_first_run_defaults(self, init: dict[str, Any]) -> list[dict[str, Any]]:
@@ -627,6 +639,21 @@ class GbrainDefaultsAdapter(Adapter):
             if out[key] != value:
                 raise ShimError("product_error", f"{key} reads back {out[key]!r} after config set {value!r}")
         return out
+
+    def apply_extraction_model(self) -> dict[str, str]:
+        """Set gbrain's facts.extraction_model to GBRAIN_F6_EXTRACTION_MODEL and read it back (a mismatch invalidates the cell)."""
+        self.cli("config", "set", EXTRACTION_MODEL_KEY, EXTRACTION_MODEL)
+        got = self.cli("config", "get", EXTRACTION_MODEL_KEY).stdout.strip()
+        if got != EXTRACTION_MODEL:
+            raise ShimError("product_error", f"{EXTRACTION_MODEL_KEY} reads back {got!r} after config set {EXTRACTION_MODEL!r}; the cell is invalid")
+        return {"key": EXTRACTION_MODEL_KEY, "set": EXTRACTION_MODEL, "read_back": got}
+
+    @staticmethod
+    def check_extraction_model(resolved: dict[str, Any]) -> None:
+        """With GBRAIN_F6_EXTRACTION_MODEL set, the model `gbrain models --json` resolves for fact extraction must be it."""
+        got = (resolved.get("model_tasks") or {}).get(EXTRACTION_MODEL_KEY)
+        if EXTRACTION_MODEL and got != EXTRACTION_MODEL:
+            raise ShimError("product_error", f"gbrain resolves {EXTRACTION_MODEL_KEY} to {got!r}, not GBRAIN_F6_EXTRACTION_MODEL {EXTRACTION_MODEL!r}; the cell is invalid")
 
     def config_sha256(self) -> str:
         """config.json without its install timestamp: two clean installs at the same GBRAIN_HOME hash equal."""
@@ -710,8 +737,10 @@ class GbrainDefaultsAdapter(Adapter):
         """Serve the active brain. The resolved configuration is read again first (the models gbrain resolves at
         connect are fixed for the serve's lifetime), and a change from the reference invalidates the cell."""
         ref = self.require_reference()
-        if sha256_text(canonical(self.resolve_config())) != ref["resolved_sha256"]:
+        resolved = self.resolve_config()
+        if sha256_text(canonical(resolved)) != ref["resolved_sha256"]:
             raise ShimError("product_error", "gbrain's resolved configuration changed from the reference install; the cell is invalid (install or model-default drift)")
+        self.check_extraction_model(resolved)
         surface = ["--surface", "full" if FULL_SURFACE or F6 else "starter"]
         t0 = time.perf_counter()
         mcp = self.start_mcp(surface)
@@ -791,7 +820,8 @@ class GbrainDefaultsAdapter(Adapter):
             bun = subprocess.run(["bun", "--version"], capture_output=True, text=True).stdout.strip()
             out["versions"] = {**out["versions"], "package": f"gbrain (github:garrytan/gbrain#{IMAGE_SHA}{version}), installed with bun install -g",
                                "runtime": f"Bun {bun} ({BUN_IMAGE})"}
-        out["f6"] = {**out.get("f6", {}), "enabled": F6, "gbrain_sha": IMAGE_SHA if F6 else None, "extract_cap_usd": float(F6_EXTRACT_CAP_USD) if F6 and F6_EXTRACT_CAP_USD else None, "overlay_keys": list(SEARCH_OVERLAY_KEYS)}
+        out["f6"] = {**out.get("f6", {}), "enabled": F6, "gbrain_sha": IMAGE_SHA if F6 else None, "extract_cap_usd": float(F6_EXTRACT_CAP_USD) if F6 and F6_EXTRACT_CAP_USD else None,
+                     **({"extraction_model": EXTRACTION_MODEL} if EXTRACTION_MODEL else {}), "overlay_keys": list(SEARCH_OVERLAY_KEYS)}
         out["shipped_behavior"] = {"delivery_fallbacks": sorted(SHIPPED_BEHAVIOR), "preregistered": list(PREREGISTERED_SHIPPED_BEHAVIOR),
                                    "configured_by": "GBRAIN_SHIPPED_FALLBACKS", "matches_preregistration": sorted(SHIPPED_BEHAVIOR) == sorted(PREREGISTERED_SHIPPED_BEHAVIOR)}
         if self.reference is not None:
@@ -992,7 +1022,7 @@ class GbrainDefaultsAdapter(Adapter):
                 problems.append(f"safe-chunks stopped: {canonical(x['stopped'])[:200]}")
         if applied is not None and (done.get("failed") or done.get("complete") is False):
             problems.append(f"safe-chunks apply incomplete: {len(done.get('failed') or [])} failed")
-        record = {"ok": not problems, "problems": problems, "pages_sha256": pages_sha, "pages": len(slugs), "cap_usd": cap, "spent_usd": round(spent, 6),
+        record = {"ok": not problems, "problems": problems, "pages_sha256": pages_sha, "pages": len(slugs), "cap_usd": cap, **({"extraction_model": EXTRACTION_MODEL} if EXTRACTION_MODEL else {}), "spent_usd": round(spent, 6),
                   "passes": passes, "totals": totals, "extract_ms": extract_ms, "posture": dict(F6_POSTURE),
                   "safe_chunks": {"previewed": found.get("affected"), "applied": done.get("applied", 0), "failed": len(done.get("failed") or []), "complete": done.get("complete", True),
                                   "ms": round((time.perf_counter() - r0) * 1000)}}

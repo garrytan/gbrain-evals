@@ -35,6 +35,9 @@ services:
       GBRAIN_FULL_SURFACE: ${GBRAIN_FULL_SURFACE:-0}
       GBRAIN_F6: ${GBRAIN_F6:-0}
       GBRAIN_F6_EXTRACT_CAP_USD: ${GBRAIN_F6_EXTRACT_CAP_USD:-}
+      # BG1's dev loop only (--extraction-model): gbrain's facts.extraction_model, set in every brain at install. Unset,
+      # gbrain resolves its own default.
+      GBRAIN_F6_EXTRACTION_MODEL: ${GBRAIN_F6_EXTRACTION_MODEL:-}
       GBRAIN_LAUNCH_SHA: ${GBRAIN_SHA:-}
       GBRAIN_SHIPPED_FALLBACKS: ${GBRAIN_SHIPPED_FALLBACKS:-no_text_chunks,redaction_unmapped}
       # BG1's dev loop only: GBRAIN_FAKETIME is a libfaketime offset in seconds that moves the container's wall clock
