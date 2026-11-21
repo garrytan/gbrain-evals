@@ -179,7 +179,7 @@ export function validateCatalog(cat: Cat9Catalog): string[] {
 }
 
 function walkMarkdown(dir: string, out: string[] = []): string[] {
-  for (const e of readdirSync(dir, { withFileTypes: true })) {
+  for (const e of readdirSync(dir, { withFileTypes: true }).sort((x, y) => x.name.localeCompare(y.name))) {
     const full = join(dir, e.name);
     if (e.isDirectory()) walkMarkdown(full, out);
     else if (e.name.endsWith('.md')) out.push(full);

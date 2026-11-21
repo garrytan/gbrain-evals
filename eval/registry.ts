@@ -1431,6 +1431,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'cat31-skillopt-ablation.ts': { role: 'Cat31 runner, driven by run-skillopt-cats.sh', part_of: 'skillopt' },
   'cat32-skillopt-reward-hacking.ts': { role: 'Cat32 runner, driven by run-skillopt-cats.sh', part_of: 'skillopt' },
   'cat33-skillopt-transfer.ts': { role: 'Cat33 runner, driven by run-skillopt-cats.sh', part_of: 'skillopt' },
+  'cat9-checks.ts': { role: 'free Cat 9 CLI checks (setup and checks fields, no judge)', part_of: 'end-to-end-workflows' },
   'cat35-checks.ts': { role: 'mechanical Cat35 checks', part_of: 'transcript-distillation' },
   'cat35-judges.ts': { role: 'Cat35 judge prompts and calls', part_of: 'transcript-distillation' },
   'cat35-transcript-distill-chart.ts': { role: 'Cat35 chart renderer', part_of: 'transcript-distillation' },
