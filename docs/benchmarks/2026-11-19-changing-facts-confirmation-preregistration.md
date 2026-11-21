@@ -638,6 +638,82 @@ line.
   on their per-world spend lease, so every question is graded once. This build's expectation is therefore the
   v0.60.741.0 result above, within these intervals.
 
+### Amendment 7 (2026-11-21): launch amendment B: the launch build, the world end, the manifest and the repricing
+
+Written after the mint and the smoke and before any counted cell. It moves no bound, row, arm, cap or verdict rule.
+
+- **gbrain's launch build.** Every BG1-C gbrain cell runs v0.60.753.0, commit
+  `fbf608cf86ea7b2b912ce80151f856a1a47e9533`, instead of Amendment 6's v0.60.750.0. It was the newest release tag on
+  gbrain's master when the build was fixed for launch, at 01:15Z on 2026-11-21. On GBEV-3's ruling, this is the one
+  re-pin after Amendment 6: the paired development reading below and every counted gbrain cell use this build, and it
+  freezes when the first counted gbrain cell starts.
+- **What changed since v0.60.750.0.** Read from the release notes of v0.60.751.0, v0.60.752.0 and v0.60.753.0.
+  - #9856: conversation fact extraction now retries a window the model declines as two halves instead of losing the
+    whole page's facts, and it parses transcripts whose answers list `**Label:**` lines instead of skipping them as
+    unparsed. The shim runs that extraction over pages in the `**Speaker** (date): text` shape and counts an unparsed
+    page as a failed run, so this could move BG1-C's gbrain row. On the 20 dev worlds neither path fired: at both
+    v0.60.750.0 and v0.60.753.0 every one of the 3,060 conversation pages finished extraction, with no declined window
+    and no unparsed page.
+  - #9881: API keys granted private-facts access no longer read held private fact text. It applies to remote API keys;
+    the shim reads over MCP stdio with none.
+  - #9857: conversation pages record which speaker is the brain's owner when a local importer can prove it. The shim
+    writes every page through MCP `put_page`, not a local importer, so no BG1-C page gets the marker, and nothing in
+    gbrain reads it yet.
+  - The rest change the Apple Contacts source, which the cell doesn't configure (#9854, #9867), OpenClaw setup's
+    timeouts (#9865), database-engine restructuring with no change in behavior (#9812, #9874), and the Rust engine,
+    which nothing selects (#9823).
+- **BG1-C's own launch.** On main, `rs1-stable`'s launch now follows RS1's build and adds
+  `GBRAIN_F6_BUILD_PROBLEMS=record` and `GBRAIN_IDLE_UPKEEP=off`. BG1-C's gbrain cells no longer take that launch. Every
+  one, counted and smoke, starts from `BG1C_GBRAIN_LAUNCH` in `eval/runner/q1/cells/bg1c.ts`: BG1's bun image, F6's
+  build path and v0.60.753.0, with BG1-C's extraction cap. The cell set didn't change when this went in.
+- **Harness commits.** On this experiment's results branch, each with a keyless test that fails without it:
+  `57b319756a898b84c769d66a1b13069648003044` (the re-pin), `2b77dbbe7ab285592682cf4bed28c82839737356` (the launch) and
+  `acdb0ececfc1999d1b7aff5609bd5393aa9849a9`, which lets `scripts/ubicloud/ubi-runner.sh up` create VMs from the macOS
+  custody host again: its create lock needed util-linux `flock`, which macOS lacks, so the first smoke launch refused
+  before any VM existed and spent nothing. It changes no cell, reader, judge or score. The same fix goes to main
+  separately.
+- **Cell set.** `eval/runner/q1/cells/bg1c-cells.json`, SHA-256
+  `282a5353d3a1d9345dc9877c5535a54a1d461644556a81f40248f7af9c033af9`.
+- **The paired development reading at the launch build.** Same 20 public dev worlds, harness commit (`be9caa1e`), reader
+  and judge as Amendment 6's. v0.60.753.0 answered 97.6% of all 1,280 questions. Against v0.60.750.0 the paired
+  difference is +0.4 (-0.5 to +1.3); no class's interval sits below zero, and S5 (withdrawn) moved +3.8 (+0.6 to +7.5).
+  Against v0.60.741.0 it is +0.2 overall, +0.8 on current values, -0.8 on questions about the past and -2.5 on S8;
+  without bg1-dev-20's three s123 questions, -0.1, -1.0 and -3.1. Its gaps to the other servers: on current values +3.4
+  (+1.6 to +5.1) over memory-bank and +1.9 (+0.1 to +3.6) over extract-first; on questions about the past +0.6 (-1.3 to
+  +2.5) over each. This build's expectation is the v0.60.741.0 result above, within these intervals.
+- **World end.** `GBRAIN_EVALS_BG1_WORLD_END=2026-11-15`, the Sunday before the first counted cell, which starts after
+  this amendment on 2026-11-21 or 2026-11-22. Questions are asked on 2026-11-16, and the runner refuses every BG1-C cell
+  from 2026-11-29 on. If the first counted cell can't start by 2026-11-22, a dated amendment moves the world end before
+  it does.
+- **The filled BG1-C manifest.** 40 kept worlds, `bg1-031` to `bg1-070` (slots 31 to 70: every slot minted was kept,
+  none dropped), 80 files, SHA-256 `53927b30059a331fe546e9db3210931a5c827c8a7c58ca26cc13729c30fcfc96`. The custody
+  validator passed all 40 (`checked=40 passed=40`), and the custody hash list over the sealed set (121 files) has
+  SHA-256 `f8b788081fb3a565f3d2a744fdfeccc6166631798cfb157cb6363caa48b8a285`. The manifest stays in custody until the
+  results; the counted campaign reads it there.
+- **The pilot (Amendment 1, R111).** The smoke on `bg1-dev-01` ran from harness commit `acdb0ecec` on v0.60.753.0, all
+  three rows in one campaign, and particle-1 then re-read each row's 64 frozen contexts in its own Particle window, for
+  $0.84 in all. `verdict.ts pilot` read every condition from those outputs and passed all three rows and the mint (its
+  `pilot.json`, kept in custody, has SHA-256 `4d42e9d0cdf8810eb0a0419277f428c7e1fb60c6a2534a3c12fd81f37a046c6d`).
+  gbrain's kept brain held 1,889 facts, 299 of them tagged with a person or company, and 42 slotted facts in 20 slots, 8
+  of which hold more than one value. The memory-bank and extract-first servers returned 904 and 1,329 distinct stored
+  memories across the 64 retrievals, a lower bound on what each stored. Every row delivered a frozen context for all 64
+  questions, with mean fill rates of 0.988 (gbrain), 0.983 (memory-bank) and 0.995 (extract-first), and claude-opus-5-5,
+  gpt-6.2-sol and particle-1 each answered all 64, every answer graded by its reader's judge. Both judge checks, BG1's
+  and this experiment's, are paid runs that passed. Each row's spend per world, from the metering proxies and including
+  the re-read, was under its Budget rate: $4.82 against $5.01, $4.55 against $4.72 and $8.04 against $8.21, each well
+  under the 1.5 times the pilot allows. The mint's first five slots used 330.4 Gemini requests per kept world, under the
+  line of 504.
+- **Hours per launch unit.** The smoke's VMs ran 51 minutes (gbrain), 43 minutes (memory-bank) and 1 hour 54 minutes
+  (extract-first) for one world of 187,021 tokens, setup included: 4.53, 3.85 and 10.18 hours per million tokens. Those
+  are under the BG1 rates that size the counted launch units (4.69, 4.63 and 13.1), so each unit of five kept worlds
+  keeps its expected hours (5, 5 and 14) and its timeout (10, 10 and 23 hours), and the cell set doesn't change.
+- **gpt-6.2-sol repricing.** The Budget's gpt-6.2-sol line used gpt-6.1-sol's token parameters. Measured, a read is
+  about 5,450 input and 95 output tokens and costs $0.0146: $28.03 for the judge check's 1,920 reads, and $2.80 for the
+  smoke's 192 (64 in each row). So the line is $2.80 a world for the three rows, not $3.34. Opus grading those answers
+  measured about $0.0022 a grade in both, so its line is $0.42 a world, not $0.46. The per-world total becomes $21.70
+  instead of $22.28, and the counted estimate at N = 40 about $868 instead of $891. The $1,200 ledger cap and the cell
+  set's leases don't change, so the cap still covers the measured rates.
+
 ## Disclosures
 
 - gbrain is Garry Tan's own project.
