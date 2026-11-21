@@ -208,6 +208,17 @@ describe('ubi-runner.sh vCPU lines', () => {
     expect(runs.map(r => r.exit).sort()).toEqual([0, 1]);
     expect(creates()).toHaveLength(1);
   }, 30_000);
+
+  test('up takes its create lock without util-linux flock, which macOS lacks: a flock that always fails is never called', async () => {
+    project([['gbev95', 12]]);
+    const noFlock = join(tmp, 'no-flock-bin');
+    mkdirSync(noFlock, { recursive: true });
+    writeFileSync(join(noFlock, 'flock'), '#!/usr/bin/env bash\nexit 1\n');
+    chmodSync(join(noFlock, 'flock'), 0o755);
+    const run = await runner(['up'], { PATH: `${noFlock}:${bin}:${process.env.PATH ?? ''}` });
+    expect(run.exit).toBe(0);
+    expect(creates()).toHaveLength(1);
+  }, 30_000);
 });
 
 describe('ubi-runner.sh TTL and reaper', () => {
