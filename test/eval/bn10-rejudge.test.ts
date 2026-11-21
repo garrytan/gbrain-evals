@@ -170,4 +170,13 @@ describe('the command line', () => {
     const p = cli(['rejudge-plan', ...roots.flatMap(x => ['--root', x]), '--out', planOut]);
     expect([p.code !== 0, p.text.includes('RECEIPT_INVALID'), existsSync(join(planOut, 'judgments.ndjson')), existsSync(join(planOut, 'aggregates.json'))]).toEqual([true, true, false, false]);
   });
+
+  // Value: protects=custody: a JSON parse error on a sealed file, which quotes its text, prints a fixed message, never the file's contents
+  test('a parse error prints a fixed message, not the text that failed to parse', () => {
+    const out = join(tmp, 'cli-parse');
+    mkdirSync(out, { recursive: true });
+    writeFileSync(join(out, 'items.json'), 'SEALEDFRAGMENT {');
+    const r = cli(['check-report', '--out', out]);
+    expect([r.code, r.text.includes('SEALEDFRAGMENT'), r.text.includes('no custody data or embedded parser error is printed')]).toEqual([2, false, true]);
+  });
 });

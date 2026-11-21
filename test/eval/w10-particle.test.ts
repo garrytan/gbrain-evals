@@ -120,7 +120,8 @@ describe('read and judge', () => {
     expect(sent).toMatchObject({ model: 'particle-1', reasoning_effort: 'high', max_completion_tokens: 16_000 });
     expect(sent.temperature).toBeUndefined();
     expect(sent.messages).toEqual([{ role: 'system', content: inputsFor([IDS[0]]).get(IDS[0])!.system }, { role: 'user', content: inputsFor([IDS[0]]).get(IDS[0])!.user }]);
-    expect(s.openai()[0].body).toEqual(judgeBody('official', r1().get(IDS[0])!, 'The answer is 3:1.'));
+    const { n, ...official } = judgeBody('official', r1().get(IDS[0])!, 'The answer is 3:1.');
+    expect([n, s.openai()[0].body]).toEqual([1, official]);
     const row = out.rows[0];
     expect(row).toMatchObject({ finish: 'stop', truncated: false, error: null, response_model: 'particle-ai/particle-1', reader_attempts: 1, from_cache: false });
     expect(row.list_usd).toBeCloseTo((12_000 * 0.25 + 2_000 * 0.03 + 420 * 1.0) / 1e6, 9);

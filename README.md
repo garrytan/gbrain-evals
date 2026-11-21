@@ -512,8 +512,8 @@ the same reranker 128 ([matched comparison](docs/benchmarks/2026-10-02-concept-v
 - The head-to-head scoreboard measured gbrain `f05943e6` (v0.60.138.0). Its two BEAM-10M gbrain rows, the 8,000-token
   row and the whole system, were measured again at v0.60.748.0 on 2026-11-20 and are in the first table; its other
   gbrain rows and every other system's rows are still at their October 2026 builds.
-- No sealed set here is big enough to rank gbrain among the memory servers. BEAM-10M detects only differences of about
-  13.6 points. On BEAM-1M sealed at 8,000 tokens, the newer rerun's 24 conversations put gbrain `0ccf2bdd` 2.0 points
+- No sealed set here is big enough to rank gbrain among the memory servers. The October 2026 scoreboard's preregistered
+  power check on BEAM-10M detects only differences of about 13.6 points between systems. On BEAM-1M sealed at 8,000 tokens, the newer rerun's 24 conversations put gbrain `0ccf2bdd` 2.0 points
   above the memory-bank server (95% interval -1.4 to +5.4) and 3.5 points above the extract-first server (+0.4 to +6.5)
   under frontier judges, and 1.3 points (-0.9 to +3.7) and 4.8 points (+2.6 to +7.1) above them under BEAM's judge,
   gpt-4.1-mini ([judge-robustness results](docs/benchmarks/2026-11-05-gst-1365-judge-robustness.md)). The rerun

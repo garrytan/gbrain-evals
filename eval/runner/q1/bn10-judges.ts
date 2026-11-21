@@ -444,6 +444,11 @@ if (import.meta.main) {
       process.exit(e.op.code === 'BUDGET_CAP' ? 5 : e.op.code === 'KEY_MISSING' ? 2 : exitCodeOf(e.op));
     }
     if (e instanceof WindowRefusal) { console.error(e.message); process.exit(2); }
+    if (e instanceof SyntaxError) {
+      console.error(renderMessage({ code: 'PREFLIGHT_FAILED', message: `bn10-judges.ts ${sub ?? ''} could not parse one of its input files`, why: 'no custody data or embedded parser error is printed',
+        fix: { next: 'report', user_message: 'Check the JSON and NDJSON files under --out and each --root on the custody host.' } }));
+      process.exit(2);
+    }
     console.error((e as Error).message);
     process.exit(2);
   }
