@@ -40,6 +40,9 @@
  * `sha256` covers the prompt templates, parser and aggregation versions and
  * call settings; the judge model is recorded beside it, so the frontier-judge
  * column shares an instrument hash with the canonical judge.
+ *
+ * The LongMemEval, LoCoMo and BEAM instruments are `historical` (JUDGE_RETIREMENT): OpenAI retires their canonical
+ * judges on 2027-01-14, so no runner falls back to them and a re-score of a frozen run names its judge.
  */
 import { createHash } from 'node:crypto';
 import type { MemoryQuestion } from './corpus.ts';
@@ -64,11 +67,45 @@ export interface Instrument {
   version: string;
   /** The benchmark's canonical judge model (`provider:model`). */
   canonical_judge: string;
+  /**
+   * Set when the canonical judge is retiring: the instrument only re-scores frozen and published runs, and a new run
+   * names its judge. Outside `sha256`, so published hashes and scores don't move.
+   */
+  historical?: string;
   temperature: number;
   source: { repository: string; commit: string; files: string[] };
   templates: Record<string, string>;
   sha256: string;
   score(q: MemoryQuestion, response: string, ask: Ask): Promise<InstrumentScore>;
+}
+
+// ─── Retiring judges ─────────────────────────────────────────────────
+
+/**
+ * OpenAI retires gpt-4o-2024-08-06 and gpt-4.1-mini (the gpt-4.1-mini-2025-04-14 snapshot) on 2027-01-14, and Azure
+ * OpenAI serves both until 2027-04-14 (https://developers.openai.com/api/docs/deprecations; reported in
+ * garrytan/gbrain-evals#352). LongMemEval, LoCoMo and BEAM pin them as canonical judges, so those instruments are
+ * historical.
+ */
+export const JUDGE_RETIREMENT = { openai: '2027-01-14', azure: '2027-04-14', models: ['openai:gpt-4o-2024-08-06', 'openai:gpt-4.1-mini'] } as const;
+
+const historicalNote = (judge: string) => `canonical judge ${judge} retires on OpenAI on ${JUDGE_RETIREMENT.openai} (Azure OpenAI: ${JUDGE_RETIREMENT.azure}); kept to re-score frozen and published runs, and a new run names its judge`;
+
+const retired = (now: number) => now >= Date.parse(`${JUDGE_RETIREMENT.openai}T00:00:00Z`);
+
+/**
+ * Why a judge choice is refused, or null. No judge on a historical instrument is always refused: a runner never falls
+ * back to a retiring canonical judge. A retiring judge named outright is refused from the OpenAI retirement date when
+ * `now` is given (a run that calls the provider); before it, re-scoring a frozen run with its own judge still works.
+ */
+export function retiringJudgeProblem(instrument: Pick<Instrument, 'id' | 'canonical_judge' | 'historical'>, judge: string | undefined, now?: number): string | null {
+  const azure = `Azure OpenAI serves it until ${JUDGE_RETIREMENT.azure}, but this runner calls OpenAI`;
+  if (judge === undefined) {
+    if (!instrument.historical) return null;
+    return `${instrument.id} has no default judge: its canonical judge ${instrument.canonical_judge} retires on OpenAI on ${JUDGE_RETIREMENT.openai}${now !== undefined && retired(now) ? ` (${azure})` : ''}. Name the judge with --judge <provider:model>; to re-score a frozen or published run with its own judge, pass --judge ${instrument.canonical_judge}`;
+  }
+  if (now === undefined || !retired(now) || !(JUDGE_RETIREMENT.models as readonly string[]).includes(judge)) return null;
+  return `${judge} was retired on OpenAI on ${JUDGE_RETIREMENT.openai}. ${azure}. Name a current judge with --judge <provider:model>`;
 }
 
 // ─── LongMemEval and LoCoMo ──────────────────────────────────────────
@@ -123,7 +160,7 @@ function yesNoInstrument(id: string, family: 'lme' | 'locomo'): Instrument {
     templates: LME_TEMPLATES,
   };
   return {
-    ...base, sha256: instrumentHash({ ...base, family, ...settings }),
+    ...base, historical: historicalNote(base.canonical_judge), sha256: instrumentHash({ ...base, family, ...settings }),
     async score(q, response, ask) {
       const key = lmeTemplateKey(family, q);
       const { value } = await ask({ kind: 'verdict', prompt: pyFormat(LME_TEMPLATES[key], q.question, q.answer ?? '', response), max_tokens: settings.max_tokens, parse: parseYesNo });
@@ -220,7 +257,7 @@ function beamInstrument(id: string): Instrument {
     templates: { rubric: BEAM_UNIFIED_JUDGE_PROMPT, equivalence_system: BEAM_EQUIVALENCE_SYSTEM, equivalence_user: BEAM_EQUIVALENCE_USER },
   };
   return {
-    ...base, sha256: instrumentHash({ ...base, ...settings }),
+    ...base, historical: historicalNote(base.canonical_judge), sha256: instrumentHash({ ...base, ...settings }),
     async score(q, response, ask) {
       const rubric = q.rubric?.length ? q.rubric : [q.answer ?? ''];
       const items: number[] = [];

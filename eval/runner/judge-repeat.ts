@@ -6,11 +6,15 @@
  * byte for byte, and only judge prompts are sent.
  *
  *   bun eval/runner/judge-repeat.ts run --answers <answers.ndjson> --judgments <judgments.ndjson> \
- *     --benchmark <id> --replicates 11 [--first-replicate 0] [--judge <provider:model>] \
+ *     --benchmark <id> --replicates 11 [--first-replicate 0] --judge <provider:model> \
  *     [--corpus-file <custody file>] [--concurrency 8] [--max-attempts 3] [--summary <summary.json>] \
  *     [--frontier <cell judgments.ndjson> [--redo-errors]] --paid --budget-run-id <id> [--json]
  *   bun eval/runner/judge-repeat.ts summary --answers <answers.ndjson> --judgments <judgments.ndjson> \
- *     --benchmark <id> [--judge <provider:model>] [--summary <summary.json>] [--json]      ($0, no calls)
+ *     --benchmark <id> --judge <provider:model> [--summary <summary.json>] [--json]      ($0, no calls)
+ *
+ * Judge: every Q1 instrument is historical, because OpenAI retires its canonical judge (gpt-4o-2024-08-06 for
+ * LongMemEval and LoCoMo, gpt-4.1-mini for BEAM) on 2027-01-14, so `--judge` is required and never defaults. Pass
+ * the canonical judge by name to re-score a frozen or published run; `run` refuses a retired judge from that date.
  *
  * Replicates: judge replicate 0 is the canonical judgment, so `--replicates
  * 11` is the canonical run plus ten repeats. The replicate index enters the
@@ -44,7 +48,7 @@ import { budgetOptionsFrom, startPaidRun } from './budget-ledger.ts';
 import { decideError, exitCodeFor, renderOperatorMessage, DecideError, type OperatorMessage } from './decisions/errors.ts';
 import { loadSplit } from './decisions/splits.ts';
 import { loadCorpus, type MemoryQuestion } from './memory-qa/corpus.ts';
-import { instrumentFor, INSTRUMENTS, type Instrument } from './memory-qa/instruments.ts';
+import { instrumentFor, INSTRUMENTS, JUDGE_RETIREMENT, retiringJudgeProblem, type Instrument } from './memory-qa/instruments.ts';
 import { ChatClient, judgeAnswer, type ChatLike } from './memory-qa/qa-v2.ts';
 import { judgmentKey, readRecords, RecordLog, type AnswerRecord, type JudgmentRecord } from './memory-qa/records.ts';
 import { requirePaidArm } from './paid-arm.ts';
@@ -148,7 +152,7 @@ function usage(message: string): DecideError {
       verify: ['bun', 'eval/runner/judge-repeat.ts', 'summary', '--answers', '<answers.ndjson>', '--judgments', '<judgments.ndjson>', '--benchmark', '<id>'] } });
 }
 
-export async function main(argv: string[]): Promise<number> {
+export async function main(argv: string[], now = Date.now()): Promise<number> {
   const one = (n: string) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : undefined; };
   const json = argv.includes('--json');
   const emit = (op: OperatorMessage, code: number) => { (code ? process.stderr : process.stdout).write((json ? JSON.stringify(op) : renderOperatorMessage(op)) + '\n'); return code; };
@@ -161,6 +165,9 @@ export async function main(argv: string[]): Promise<number> {
     if (!existsSync(answersPath)) throw decideError({ code: 'ROWS_MISSING', message: `${answersPath} does not exist`, why: 'judge-repeat judges fixed answers only; it never produces answers',
       fix: { next: 'report', user_message: 'run the reader cell that writes answers.ndjson first' } });
     const instrument = instrumentFor(benchmark);
+    const refused = retiringJudgeProblem(instrument, one('--judge'), cmd === 'run' ? now : undefined);
+    if (refused) throw decideError({ code: 'SPEC_INVALID', message: refused, why: `OpenAI retires ${JUDGE_RETIREMENT.models.join(' and ')} on ${JUDGE_RETIREMENT.openai}, so judge-repeat never picks one for you`,
+      fix: { next: 'run', argv: ['bun', 'eval/runner/judge-repeat.ts', ...argv.filter((a, i) => a !== '--judge' && argv[i - 1] !== '--judge'), '--judge', '<provider:model>'] } });
     const judge = one('--judge') ?? instrument.canonical_judge;
     const frontier = one('--frontier'), redo = argv.includes('--redo-errors');
     if (redo && (!frontier || resolve(frontier) === resolve(judgmentsPath))) throw usage('--redo-errors needs --frontier <cell log> and a different --judgments file');
