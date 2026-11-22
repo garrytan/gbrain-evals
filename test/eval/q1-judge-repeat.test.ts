@@ -197,6 +197,28 @@ describe('judge-repeat', () => {
     expect(retired.fix.argv.filter((a: string) => a === JUDGE)).toEqual([]);
     expect(await main(['summary', ...runArgs.slice(1), '--judge', JUDGE], after)).toBe(0);
   });
+
+  test('#352: a dated or bare id of a retiring judge is refused after the date, and --judge needs a value', async () => {
+    const after = Date.parse('2027-01-14T00:00:00Z'), before = Date.parse('2026-12-01T00:00:00Z');
+    for (const judge of ['openai:gpt-4.1-mini-2025-04-14', 'gpt-4.1-mini', 'gpt-4o-2024-08-06']) {
+      expect(retiringJudgeProblem(INSTRUMENTS['beam-1m'], judge, after)).toContain('was retired on OpenAI on 2027-01-14');
+      expect(retiringJudgeProblem(INSTRUMENTS['beam-1m'], judge, before)).toBeNull();
+    }
+    expect(retiringJudgeProblem(INSTRUMENTS['beam-1m'], 'anthropic:claude-opus-5-5', after)).toBeNull();
+
+    const d = tmp();
+    const ap = join(d, 'answers.ndjson'), jp = join(d, 'j.ndjson'), sp = join(d, 'summary.json');
+    writeFileSync(ap, answers.map(a => JSON.stringify(a)).join('\n') + '\n');
+    await runJudgeRepeat({ answers, questions, instrument: lme, judge: JUDGE, replicates: [0], log: new RecordLog(jp, 'judgment'), client: new ScriptedJudge() });
+    expect(await main(['summary', '--answers', ap, '--judgments', jp, '--benchmark', 'lme-s', '--judge', JUDGE, '--summary', sp, '--json'], before)).toBe(0);
+    const kept = readFileSync(sp, 'utf8');
+    const err: string[] = [];
+    const write = process.stderr.write.bind(process.stderr);
+    (process.stderr as { write: unknown }).write = (s: string) => { err.push(s); return true; };
+    try { expect(await main(['summary', '--answers', ap, '--judgments', jp, '--benchmark', 'lme-s', '--summary', sp, '--judge', '--json'], before)).not.toBe(0); } finally { (process.stderr as { write: unknown }).write = write; }
+    expect(JSON.parse(err.join(''))).toMatchObject({ code: 'SPEC_INVALID', message: '--judge needs a value: <provider:model>' });
+    expect(readFileSync(sp, 'utf8')).toBe(kept);
+  });
 });
 
 describe('answer and judgment records', () => {

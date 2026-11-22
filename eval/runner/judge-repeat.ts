@@ -165,6 +165,7 @@ export async function main(argv: string[], now = Date.now()): Promise<number> {
     if (!existsSync(answersPath)) throw decideError({ code: 'ROWS_MISSING', message: `${answersPath} does not exist`, why: 'judge-repeat judges fixed answers only; it never produces answers',
       fix: { next: 'report', user_message: 'run the reader cell that writes answers.ndjson first' } });
     const instrument = instrumentFor(benchmark);
+    if (argv.includes('--judge') && (!one('--judge') || one('--judge')!.startsWith('--'))) throw usage('--judge needs a value: <provider:model>');
     const refused = retiringJudgeProblem(instrument, one('--judge'), cmd === 'run' ? now : undefined);
     if (refused) throw decideError({ code: 'SPEC_INVALID', message: refused, why: `OpenAI retires ${JUDGE_RETIREMENT.models.join(' and ')} on ${JUDGE_RETIREMENT.openai}, so judge-repeat never picks one for you`,
       fix: { next: 'run', argv: ['bun', 'eval/runner/judge-repeat.ts', ...argv.filter((a, i) => a !== '--judge' && argv[i - 1] !== '--judge'), '--judge', '<provider:model>'] } });

@@ -93,6 +93,13 @@ const historicalNote = (judge: string) => `canonical judge ${judge} retires on O
 
 const retired = (now: number) => now >= Date.parse(`${JUDGE_RETIREMENT.openai}T00:00:00Z`);
 
+const RETIRING_OPENAI_MODELS = ['gpt-4o-2024-08-06', 'gpt-4.1-mini', 'gpt-4.1-mini-2025-04-14'];
+
+const retiringModel = (judge: string) => {
+  const [provider, model] = judge.includes(':') ? [judge.slice(0, judge.indexOf(':')), judge.slice(judge.indexOf(':') + 1)] : ['openai', judge];
+  return provider === 'openai' && RETIRING_OPENAI_MODELS.includes(model);
+};
+
 /**
  * Why a judge choice is refused, or null. No judge on a historical instrument is always refused: a runner never falls
  * back to a retiring canonical judge. A retiring judge named outright is refused from the OpenAI retirement date when
@@ -104,7 +111,7 @@ export function retiringJudgeProblem(instrument: Pick<Instrument, 'id' | 'canoni
     if (!instrument.historical) return null;
     return `${instrument.id} has no default judge: its canonical judge ${instrument.canonical_judge} retires on OpenAI on ${JUDGE_RETIREMENT.openai}${now !== undefined && retired(now) ? ` (${azure})` : ''}. Name the judge with --judge <provider:model>; to re-score a frozen or published run with its own judge, pass --judge ${instrument.canonical_judge}`;
   }
-  if (now === undefined || !retired(now) || !(JUDGE_RETIREMENT.models as readonly string[]).includes(judge)) return null;
+  if (now === undefined || !retired(now) || !retiringModel(judge)) return null;
   return `${judge} was retired on OpenAI on ${JUDGE_RETIREMENT.openai}. ${azure}. Name a current judge with --judge <provider:model>`;
 }
 
