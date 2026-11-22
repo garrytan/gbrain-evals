@@ -8,7 +8,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { frontierAnswers, main, runJudgeRepeat, summarizeRepeats } from '../../eval/runner/judge-repeat.ts';
 import type { MemoryQuestion } from '../../eval/runner/memory-qa/corpus.ts';
-import { INSTRUMENTS } from '../../eval/runner/memory-qa/instruments.ts';
+import { INSTRUMENTS, JUDGE_RETIREMENT, RESERVE_INSTRUMENTS, retiringJudgeProblem } from '../../eval/runner/memory-qa/instruments.ts';
 import { READER_TEMPLATE, chatCacheKey, judgeAnswer, type ChatLike, type ChatOptions } from '../../eval/runner/memory-qa/qa-v2.ts';
 import { answerId, answerProblems, judgmentProblems, rawSha256, readRecords, RecordLog, type AnswerRecord } from '../../eval/runner/memory-qa/records.ts';
 import { NATIVE_READER_TEMPLATE } from '../../eval/runner/systems/render-v2.ts';
@@ -98,12 +98,12 @@ describe('judge-repeat', () => {
 
   test('a malformed judgment is retried as a fresh call, then recorded as a judge failure with no score', async () => {
     const empty = new ScriptedJudge(Infinity, () => '');
-    const j = await judgeAnswer(empty, lme, questions.get('q1')!, 'It was level 3.', { judgeReplicate: 4, maxAttempts: 3 });
+    const j = await judgeAnswer(empty, lme, questions.get('q1')!, 'It was level 3.', { judge: JUDGE, judgeReplicate: 4, maxAttempts: 3 });
     expect(j).toMatchObject({ outcome: 'judge_error', score: null, parse_ok: false, judge_replicate: 4 });
     expect(empty.calls.map(c => c.opts.attempt ?? 0)).toEqual([0, 1, 2]);
     expect(new Set(empty.calls.map(c => chatCacheKey(c.model, c.prompt, c.opts))).size).toBe(3);
     const recovering = new ScriptedJudge(Infinity, (_p, o) => o.attempt ? 'Yes.' : 'The model response correctly identifies the');
-    expect(await judgeAnswer(recovering, lme, questions.get('q1')!, 'x', { judgeReplicate: 0 })).toMatchObject({ outcome: 'scored', score: 1, raw: ['Yes.'] });
+    expect(await judgeAnswer(recovering, lme, questions.get('q1')!, 'x', { judge: JUDGE, judgeReplicate: 0 })).toMatchObject({ outcome: 'scored', score: 1, raw: ['Yes.'] });
   });
 
   test('a judge that takes only its default temperature is sent none and recorded as null', async () => {
@@ -143,7 +143,7 @@ describe('judge-repeat', () => {
     writeFileSync(ap, answers.map(a => JSON.stringify(a)).join('\n') + '\n');
     await runJudgeRepeat({ answers, questions, instrument: lme, judge: JUDGE, replicates: [0, 1], log: new RecordLog(jp, 'judgment'), client: new ScriptedJudge() });
     const sp = join(d, 'summary.json');
-    expect(await main(['summary', '--answers', ap, '--judgments', jp, '--benchmark', 'lme-s', '--summary', sp, '--json'])).toBe(0);
+    expect(await main(['summary', '--answers', ap, '--judgments', jp, '--benchmark', 'lme-s', '--judge', JUDGE, '--summary', sp, '--json'])).toBe(0);
     expect(JSON.parse(readFileSync(sp, 'utf8'))).toMatchObject({ kind: 'q1-judge-repeat-summary', replicates: [0, 1], answers: 3 });
     const err: string[] = [];
     const write = process.stderr.write.bind(process.stderr);
@@ -154,6 +154,70 @@ describe('judge-repeat', () => {
     expect(op.code).toBe('SPEC_INVALID');
     expect(op.fix.next).toBe('run');
     expect(op.fix.argv.slice(0, 3)).toEqual(['bun', 'eval/runner/judge-repeat.ts', 'run']);
+  });
+
+  test('#352: no fallback to a retiring canonical judge; a frozen run is re-scored by naming it, until OpenAI retires it', async () => {
+    const all = { ...INSTRUMENTS, ...RESERVE_INSTRUMENTS };
+    for (const i of Object.values(all)) expect(Boolean(i.historical)).toBe((JUDGE_RETIREMENT.models as readonly string[]).includes(i.canonical_judge));
+    expect(Object.values(all).filter(i => i.historical).map(i => i.id).sort()).toEqual(['beam-100k', 'beam-10m', 'beam-1m', 'beam-500k', 'beam-d8', 'beam-rs1', 'lme-m', 'lme-s', 'locomo']);
+    expect(retiringJudgeProblem(RESERVE_INSTRUMENTS.bg1, undefined, Date.parse('2027-02-01'))).toBeNull();
+
+    const silent = new ScriptedJudge();
+    await expect(judgeAnswer(silent, lme, questions.get('q1')!, 'x', { judgeReplicate: 0 })).rejects.toThrow(/no default judge.*retires on OpenAI on 2027-01-14.*--judge openai:gpt-4o-2024-08-06/);
+    await expect(judgeAnswer(silent, INSTRUMENTS['beam-1m'], questions.get('q1')!, 'x', { judgeReplicate: 0 })).rejects.toThrow(/openai:gpt-4\.1-mini retires on OpenAI on 2027-01-14/);
+    expect(silent.calls.length).toBe(0);
+
+    const d = tmp();
+    const ap = join(d, 'answers.ndjson'), jp = join(d, 'j.ndjson');
+    writeFileSync(ap, answers.map(a => JSON.stringify(a)).join('\n') + '\n');
+    await runJudgeRepeat({ answers, questions, instrument: lme, judge: JUDGE, replicates: [0], log: new RecordLog(jp, 'judgment'), client: new ScriptedJudge() });
+    const before = Date.parse('2026-12-01T00:00:00Z'), after = Date.parse('2027-01-14T00:00:00Z');
+    const runArgs = ['run', '--answers', ap, '--judgments', jp, '--benchmark', 'lme-s', '--replicates', '1', '--json'];
+    const refusal = async (argv: string[], now: number) => {
+      const err: string[] = [];
+      const write = process.stderr.write.bind(process.stderr);
+      (process.stderr as { write: unknown }).write = (s: string) => { err.push(s); return true; };
+      try { await main(argv, now); } finally { (process.stderr as { write: unknown }).write = write; }
+      return JSON.parse(err.join(''));
+    };
+    const noJudge = await refusal(runArgs, before);
+    expect(noJudge.code).toBe('SPEC_INVALID');
+    expect(noJudge.message).toContain('2027-01-14');
+    expect(noJudge.message).not.toContain('Azure');
+    expect(noJudge.fix.argv.slice(-2)).toEqual(['--judge', '<provider:model>']);
+    expect((await refusal(runArgs, after)).message).toContain('Azure OpenAI serves it until 2027-04-14');
+    expect((await refusal(['summary', ...runArgs.slice(1)], before)).message).toContain('has no default judge');
+
+    const named = await refusal([...runArgs, '--judge', JUDGE], before);
+    expect(named.code).not.toBe('SPEC_INVALID');
+    expect(named.message).not.toContain('2027-01-14');
+    const retired = await refusal([...runArgs, '--judge', JUDGE], after);
+    expect(retired.code).toBe('SPEC_INVALID');
+    expect(retired.message).toBe('openai:gpt-4o-2024-08-06 was retired on OpenAI on 2027-01-14. Azure OpenAI serves it until 2027-04-14, but this runner calls OpenAI. Name a current judge with --judge <provider:model>');
+    expect(retired.fix.argv.filter((a: string) => a === JUDGE)).toEqual([]);
+    expect(await main(['summary', ...runArgs.slice(1), '--judge', JUDGE], after)).toBe(0);
+  });
+
+  test('#352: a dated or bare id of a retiring judge is refused after the date, and --judge needs a value', async () => {
+    const after = Date.parse('2027-01-14T00:00:00Z'), before = Date.parse('2026-12-01T00:00:00Z');
+    for (const judge of ['openai:gpt-4.1-mini-2025-04-14', 'gpt-4.1-mini', 'gpt-4o-2024-08-06']) {
+      expect(retiringJudgeProblem(INSTRUMENTS['beam-1m'], judge, after)).toContain('was retired on OpenAI on 2027-01-14');
+      expect(retiringJudgeProblem(INSTRUMENTS['beam-1m'], judge, before)).toBeNull();
+    }
+    expect(retiringJudgeProblem(INSTRUMENTS['beam-1m'], 'anthropic:claude-opus-5-5', after)).toBeNull();
+
+    const d = tmp();
+    const ap = join(d, 'answers.ndjson'), jp = join(d, 'j.ndjson'), sp = join(d, 'summary.json');
+    writeFileSync(ap, answers.map(a => JSON.stringify(a)).join('\n') + '\n');
+    await runJudgeRepeat({ answers, questions, instrument: lme, judge: JUDGE, replicates: [0], log: new RecordLog(jp, 'judgment'), client: new ScriptedJudge() });
+    expect(await main(['summary', '--answers', ap, '--judgments', jp, '--benchmark', 'lme-s', '--judge', JUDGE, '--summary', sp, '--json'], before)).toBe(0);
+    const kept = readFileSync(sp, 'utf8');
+    const err: string[] = [];
+    const write = process.stderr.write.bind(process.stderr);
+    (process.stderr as { write: unknown }).write = (s: string) => { err.push(s); return true; };
+    try { expect(await main(['summary', '--answers', ap, '--judgments', jp, '--benchmark', 'lme-s', '--summary', sp, '--judge', '--json'], before)).not.toBe(0); } finally { (process.stderr as { write: unknown }).write = write; }
+    expect(JSON.parse(err.join(''))).toMatchObject({ code: 'SPEC_INVALID', message: '--judge needs a value: <provider:model>' });
+    expect(readFileSync(sp, 'utf8')).toBe(kept);
   });
 });
 

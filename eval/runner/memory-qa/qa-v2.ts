@@ -65,7 +65,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { MemoryQuestion } from './corpus.ts';
-import type { Instrument, JudgeCall } from './instruments.ts';
+import { retiringJudgeProblem, type Instrument, type JudgeCall } from './instruments.ts';
 import { rawSha256, type JudgmentRecord } from './records.ts';
 import { normalizeUsage, responseMeta, usageSourceOf, type ReceiptRequest, type ResponseMeta, type UsageReceipt } from '../usage-receipt.ts';
 import { COMPAT_PROVIDERS, compatMayHaveBilled, compatProviderRow, compatRequest, compatSend, type CompatRequest } from '../providers/openai-compatible.ts';
@@ -356,7 +356,8 @@ export function tailVerdicts(paths: readonly VerdictPath[]): { qa_tail_verdicts?
 export const judgeTemperature = (judge: string, instrument: Pick<Instrument, 'temperature'>): number | null => sendsTemperature(judge) ? instrument.temperature : null;
 
 /**
- * Judge one fixed answer with a registered instrument. Each judge call is
+ * Judge one fixed answer with a registered instrument, by `opts.judge` or the instrument's canonical judge; a
+ * historical instrument has no default judge, so a call without `opts.judge` throws. Each judge call is
  * retried as a fresh call (`attempt` in the cache key) while its output is
  * malformed; after `maxAttempts` the judgment is a `judge_error` with a null
  * score. Provider errors propagate, so the caller records nothing and a
@@ -372,6 +373,8 @@ export const judgeTemperature = (judge: string, instrument: Pick<Instrument, 'te
  */
 export async function judgeAnswer(client: ChatLike, instrument: Instrument, q: MemoryQuestion, response: string,
   opts: { judge?: string; judgeReplicate: number; maxAttempts?: number; settings?: PinnedJudgeSettings; view?: 'gating' | 'descriptive' }): Promise<Omit<JudgmentRecord, 'answer_id'>> {
+  const refused = retiringJudgeProblem(instrument, opts.judge);
+  if (refused) throw new Error(refused);
   const judge = opts.judge ?? instrument.canonical_judge;
   const temperature = judgeTemperature(judge, instrument);
   const maxAttempts = opts.maxAttempts ?? 3;

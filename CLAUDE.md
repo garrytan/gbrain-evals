@@ -176,7 +176,13 @@ rule of 2026-11-01 that evals test gbrain and gstack on frontier models.
 - **Do not run older generations** (for example Sonnet 4.6 next to Sonnet 5.5, GPT-5.x next to GPT-6.x, Haiku 4.5,
   older Opus). The one exception is a single older model that is the only shared link to the previous eval's
   results. If a model that appears in both runs already gives that link, add no older model. `gpt-4.1-mini` runs
-  only under this exception, as the bridge to earlier BEAM runs.
+  only under this exception, as the bridge to earlier BEAM runs. That bridge retires on OpenAI on 2027-01-14, the same
+  day as LongMemEval's and LoCoMo's official judge `gpt-4o-2024-08-06` (Azure OpenAI serves both until 2027-04-14), so
+  their instruments in `eval/runner/memory-qa/instruments.ts` are marked `historical`: published scores keep the judge
+  that produced them, `judge-repeat` and `judgeAnswer` never fall back to either, and re-scoring a frozen run names its
+  judge with `--judge`. The Q1 cell runners and `run-systems` still pick these judges by name, so after 2027-01-14 they
+  fail at the judge step until they move to a successor. A successor canonical judge needs an agreement check against the old one (100 labelled outputs, kappa at
+  least 0.6) before its numbers count.
 - **Do not run gpt-5.4-mini.** Never base a product change, gate or release decision on a gpt-5.4-mini-only finding.
 - **gpt-4o and gpt-4o-mini are suspended (Garry, 2026-11-21).** A campaign registered on or after 2026-11-21 uses no
   gpt-4o model, of any snapshot and `gpt-4o-mini` included, in a role we choose: an arm, a reader or agent, a judge, a
@@ -230,6 +236,12 @@ Maintain the dated source list in [comparison-systems.md](docs/comparison-system
 When a claim changes, keep the old result identifiable and explain the new evidence. Keep changelog dates, attribution, audit identifiers and unfinished work intact while making their descriptions easier to read.
 
 ## Changelog
+
+### 2026-11-22: The BEAM bridge and LongMemEval's judge retire on OpenAI on 2027-01-14
+
+"Choose models" says that `gpt-4.1-mini`, the BEAM bridge, and `gpt-4o-2024-08-06`, LongMemEval's and LoCoMo's
+official judge, retire on OpenAI on 2027-01-14, that their instruments are historical, that `judge-repeat` and
+`judgeAnswer` no longer fall back to them while the Q1 cell runners and `run-systems` still name them, and that a successor canonical judge needs an agreement check first (#352, reported by nabuhadba).
 
 ### 2026-11-21: Judge checks need 100 labels, and main requires CI's merge gate
 
