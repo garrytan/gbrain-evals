@@ -76,7 +76,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { PassThrough } from 'node:stream';
 import { GoldStore } from './evaluator/gold-store.ts';
-import { behaviorEngineReceiptFields, evalEngineKind, requestedEvalEngine } from './eval-engine.ts';
+import { behaviorEngineReceiptFields, evalEngineKind, evalPgAdminUrl, requestedEvalEngine, verdictWithUnsupported } from './eval-engine.ts';
 import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from './gbrain-under-test.ts';
 import { gbrainPin } from './gbrain-version.ts';
 import { DECIDE_OFF, withHermeticEnv } from './hermetic-env.ts';
@@ -87,7 +87,7 @@ import { budgetOptionsFrom, receiptCost, startPaidRun, type RunSummary } from '.
 import { paidRequested, requirePaidArm } from './paid-arm.ts';
 import { attestPreregistration, type Attestation } from './prereg.ts';
 import {
-  MODE_DEFAULT, MODE_OFF, missingCapabilities, notSupportedFromText, notSupportedStepsIn, openTrustSut, type TrustCapabilities, type TrustMode, type TrustSut,
+  MODE_DEFAULT, MODE_OFF, asNotSupported, missingCapabilities, notSupportedFromText, notSupportedStepsIn, openTrustSut, type TrustCapabilities, type TrustMode, type TrustSut,
 } from './memory-trust/sut.ts';
 import { brainArm, promptHash, runSession, scriptedModel } from './memory-trust/agent.ts';
 import { COUNTED_MODELS, MEMORY_TRUST_CAP_USD, MODEL_FRESHNESS_CHECK, STUB_MODEL, estimateUsd, modelsFrom, providerOf } from './memory-trust/models.ts';
@@ -387,11 +387,11 @@ async function openOwnerRepo(sut: TrustSut): Promise<OwnerRepo> {
   await sut.sql('UPDATE persistence_brain SET enabled=false WHERE singleton=1');
   try {
     await sut.sql(`UPDATE sources SET local_path=$1 WHERE id=$2`, [root, sut.sourceId]);
-    await claimWorktree(sut.engine, sut.sourceId, root);
+    await claimWorktree(sut.engine, sut.sourceId, root).catch((e: unknown) => { throw asNotSupported(sut.unsupported, 'claim owner worktree', e); });
   } finally {
     await sut.sql('UPDATE persistence_brain SET enabled=true WHERE singleton=1');
   }
-  return { root, git, sync: () => performManagedSync(sut.engine, { sourceId: sut.sourceId, noPull: true, noEmbed: true, noExtract: true }) };
+  return { root, git, sync: () => performManagedSync(sut.engine, { sourceId: sut.sourceId, noPull: true, noEmbed: true, noExtract: true }).catch((e: unknown) => { throw asNotSupported(sut.unsupported, 'owner managed sync', e); }) };
 }
 
 interface ConfirmSeam {
@@ -490,10 +490,11 @@ export async function writeWorld(sut: TrustSut, ledger: Cat38Ledger, log: (s: st
           try {
             const preview = await seam.owner.previewOwnerAction(sut.engine, { action: 'confirm', ref });
             const confirmation = preview.raises ? await seam.confirm.requireOwnerConfirmation({ remote: false }, { ref: preview.ref, token: preview.token, summary: preview.summary, command: preview.command }) : null;
-            const applied = await seam.owner.applyOwnerAction(sut.engine, { action: 'confirm', ref }, { binding: preview.binding, confirmation, config: { engine: 'pglite', embedding_disabled: true } });
+            const applied = await seam.owner.applyOwnerAction(sut.engine, { action: 'confirm', ref }, { binding: preview.binding, confirmation, config: { engine: sut.kind, embedding_disabled: true } });
             outcomes[s.id]!.push({ step: round, op: 'accept', ok: applied?.status === 'accepted', fact_id: null, status: String(applied?.status ?? '') });
           } catch (e) {
-            outcomes[s.id]!.push({ step: round, op: 'accept', ok: false, fact_id: null, code: 'error', message: quietErr(e) });
+            // An engine refusal keeps its engine_not_supported_by_runner text, so main lists it and the run is never a pass.
+            outcomes[s.id]!.push({ step: round, op: 'accept', ok: false, fact_id: null, code: 'error', message: quietErr(asNotSupported(sut.unsupported, 'owner confirm action', e)) });
           }
           continue;
         }
@@ -854,6 +855,9 @@ const pct = (x: number) => (Number.isFinite(x) ? `${(x * 100).toFixed(1)}%` : 'n
 async function main(): Promise<void> {
   const argv = process.argv.slice(2);
   if (argValue(argv, '--worker')) return worker(argv);
+  // The arm workers inherit the environment, not --pg-url, so the parent hands the Postgres admin URL on through it.
+  const pgAdminUrl = evalPgAdminUrl(argv);
+  if (pgAdminUrl) process.env.LIFECYCLE_PG_URL = pgAdminUrl;
   const json = argv.includes('--json');
   const log = json ? () => {} : (s: string) => console.log(s);
   const seed = intArg(argv, '--seed', CAT38_DEFAULT_SEED);
@@ -913,8 +917,8 @@ async function main(): Promise<void> {
   const scoreOff = off && !harnessError && !refusedRun ? scoreArm(world, off.observations, off.violations) : null;
   if (score) for (const r of score.rows) { if (r.error) acc.error(r.probe_id, 'sut', r.error); else acc.score(r.probe_id, r.correct ? 1 : 0); }
   if (harnessError) acc.error('presence', 'harness', harnessError);
-  // A run with any refused step is graded partial: a missing outcome could move a metric either way.
-  const verdict = score ? (unsupported.length ? 'partial' : cat38Verdict(score.metrics)) : null;
+  // A fail on what ran stays a fail; a pass with any refused step becomes partial.
+  const verdict = score ? verdictWithUnsupported(cat38Verdict(score.metrics), unsupported) : null;
   const capabilities = def?.capabilities ?? off?.capabilities ?? null;
   const repro = `bun eval/runner/${CATEGORY}.ts${gut.overlay ? ` --gbrain ${gut.overlay.requested}` : ''} --seed ${seed}`;
   const findings = score && capabilities ? findingsFrom(score, def!.violations, capabilities, repro) : [];

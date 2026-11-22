@@ -286,10 +286,6 @@ export async function runCat22(options: Cat22Options = {}): Promise<Cat22RunResu
   const engine: any = brain.engine;
   const product = { gbrain_version: gut.version, gbrain_pin: gbrainPin(), ...(gut.overlay ? { execution: { source_tree: sourceTreeIdentity(), product: productIdentityFor(gut) } } : {}) };
 
-  // WS5: pin search mode + reranker BEFORE ingest. Never rely on defaults.
-  for (const [key, value] of Object.entries(PINNED_CONFIG)) {
-    await engine.setConfig(key, value);
-  }
 
   const scope = 'alpha';
   const probes: SurfaceProbe[] = [];
@@ -303,6 +299,10 @@ export async function runCat22(options: Cat22Options = {}): Promise<Cat22RunResu
   console.error = () => {};
   let seeded: SeededCorpus;
   try {
+    // WS5: pin search mode + reranker BEFORE ingest. Never rely on defaults.
+    for (const [key, value] of Object.entries(PINNED_CONFIG)) {
+      await engine.setConfig(key, value);
+    }
     seeded = await seedCorpus(engine, importFromContent, kind);
     for (const s of options.skipSeedSources ?? []) {
       // Test hook: simulate the empty-result regression by deleting a

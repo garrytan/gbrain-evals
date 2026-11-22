@@ -392,10 +392,11 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
       try {
         const pageState = async () => {
           if (!rawSql) {
-            // Typed reads of the same row and chunk ids on an engine without raw SQL.
+            // Typed reads of the same row and chunk ids on an engine without raw SQL (unsealed chunks included, as the
+            // SQL read sees every stored chunk row of the page).
             const page = await engine.getPage(contentSlug, { sourceId: 'default' });
             const rows = page ? [{ id: Number(page.id), updated_at: page.updated_at }] : [];
-            const chunks = page ? await engine.getChunks(contentSlug, { sourceId: 'default' }) as Array<{ id: number }> : [];
+            const chunks = page ? await engine.getChunks(contentSlug, { sourceId: 'default', includeUnsealed: true }) as Array<{ id: number }> : [];
             return { rows, updated: rows.map(r => String(r.updated_at instanceof Date ? r.updated_at.toISOString() : r.updated_at)), chunkIds: chunks.map(c => Number(c.id)).sort((a, b) => a - b) };
           }
           const rows = await engine.executeRaw(

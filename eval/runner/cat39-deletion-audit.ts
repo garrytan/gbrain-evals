@@ -62,8 +62,8 @@ import { ProbeAccounting } from './probe-accounting.ts';
 import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, noModelSpend, receiptPath, sourceTreeIdentity, writeReceipt, type Receipt } from './receipt.ts';
 import { answerText, brainArm, runSession, scriptedModel } from './memory-trust/agent.ts';
 import { estimateUsd, modelsFrom, providerOf, MEMORY_TRUST_CAP_USD, STUB_MODEL } from './memory-trust/models.ts';
-import { missingCapabilities, notSupportedFromText, notSupportedStepsIn, openTrustSut, type TrustCapabilities, type TrustSut } from './memory-trust/sut.ts';
-import { behaviorEngineReceiptFields, evalEngineKind, requestedEvalEngine } from './eval-engine.ts';
+import { asNotSupported, isNotSupported, missingCapabilities, notSupportedFromText, notSupportedStepsIn, openTrustSut, type TrustCapabilities, type TrustSut } from './memory-trust/sut.ts';
+import { behaviorEngineReceiptFields, evalEngineKind, evalPgAdminUrl, requestedEvalEngine, verdictWithUnsupported } from './eval-engine.ts';
 import {
   CAT39_DEFAULT_SEED, CAT39_GENERATOR_VERSION, VALUE_TOKEN_RE, generateCat39World,
   type Cat39Gold, type Cat39Ledger, type Cat39Neighbor, type Cat39Target, type GeneratedCat39,
@@ -620,7 +620,9 @@ async function runHermetic(opts: Cat39RunOptions): Promise<Cat39RunResult> {
           outcomes.set(t.id, { target_id: t.id, ok, receipt: normalizeFactReceipt(r), ...(ok ? {} : { error: `purge_fact returned state ${r?.state}` }) });
         }
       } catch (e) {
-        outcomes.set(t.id, { target_id: t.id, ok: false, error: `${t.purge} purge threw: ${errText(e)}`, receipt: null });
+        // A purge the engine refused is not a gbrain purge failure: it is left out of scoring and listed as not supported.
+        if (isNotSupported(e)) outcomes.set(t.id, { target_id: t.id, ok: false, unsupported: errText(e), receipt: null });
+        else outcomes.set(t.id, { target_id: t.id, ok: false, error: `${t.purge} purge threw: ${errText(e)}`, receipt: null });
       }
       const o = outcomes.get(t.id)!;
       if (!o.ok && !o.unsupported) result.acc.error(t.id, 'sut', o.error ?? 'purge failed');
@@ -675,6 +677,11 @@ async function runHermetic(opts: Cat39RunOptions): Promise<Cat39RunResult> {
     // 9. Resurrection: stale re-import, agent put_page, re-put, re-extraction, remember.
     const r0 = Date.now();
     const step = (target_id: string, slug: string, name: string, outcome: string) => result.resurrection_steps.push({ target_id, slug, step: name, outcome });
+    // An engine refusal keeps its whole engine_not_supported_by_runner text (main lists it); a gbrain refusal is shortened.
+    const refusedText = (prefix: string, e: unknown) => isNotSupported(e) ? errText(e) : `${prefix}:${errText(e).slice(0, 120)}`;
+    const extractFacts = async (slug: string) => {
+      try { await runExtractFacts(sut.engine, { slugs: [slug] }); } catch (e) { throw asNotSupported(sut.unsupported, 'runExtractFacts', e); }
+    };
     const outcomeOf = (r: { ok: boolean; value?: any; code?: string }) => r.ok ? `ok:${r.value?.status ?? r.value?.state ?? 'done'}` : `refused:${r.code}`;
     for (const t of ledger.targets) {
       if (outcomes.get(t.id)!.unsupported) continue;
@@ -682,14 +689,14 @@ async function runHermetic(opts: Cat39RunOptions): Promise<Cat39RunResult> {
         const body = stale.get(slug);
         if (!body) { step(t.id, slug, 'stale_file', 'missing: get_page failed before purge'); continue; }
         try { const r = await sut.ownerImport(slug, body); step(t.id, slug, 'owner_import_stale', r.error ? `refused:${r.error}` : `ok:${r.status}${r.quarantined ? ':quarantined' : ''}`); }
-        catch (e) { step(t.id, slug, 'owner_import_stale', `refused:${errText(e).slice(0, 120)}`); }
-        try { await runExtractFacts(sut.engine, { slugs: [slug] }); step(t.id, slug, 'extract_facts', 'ok'); } catch (e) { step(t.id, slug, 'extract_facts', `error:${errText(e).slice(0, 120)}`); }
+        catch (e) { step(t.id, slug, 'owner_import_stale', refusedText('refused', e)); }
+        try { await extractFacts(slug); step(t.id, slug, 'extract_facts', 'ok'); } catch (e) { step(t.id, slug, 'extract_facts', refusedText('error', e)); }
         for (const name of ['remote_put_page_stale', 'remote_put_page_again']) {
           const cur = await sut.tryOp('remote', 'get_page', { slug });
           const r = await sut.tryOp('remote', 'put_page', { slug, content: body, ...(cur.ok && cur.value?.revision ? { expected_revision: cur.value.revision } : {}) });
           step(t.id, slug, name, outcomeOf(r));
         }
-        try { await runExtractFacts(sut.engine, { slugs: [slug] }); step(t.id, slug, 'extract_facts_again', 'ok'); } catch (e) { step(t.id, slug, 'extract_facts_again', `error:${errText(e).slice(0, 120)}`); }
+        try { await extractFacts(slug); step(t.id, slug, 'extract_facts_again', 'ok'); } catch (e) { step(t.id, slug, 'extract_facts_again', refusedText('error', e)); }
         if (t.purge !== 'page') step(t.id, slug, 'remote_remember', outcomeOf(await sut.tryOp('remote', 'remember', { fact: t.claim, entity: slug, provenance: 'chat' })));
       }
     }
@@ -712,7 +719,8 @@ async function runHermetic(opts: Cat39RunOptions): Promise<Cat39RunResult> {
         const v1 = ledger.pages.find(p => p.slug === slug)?.v1;
         if (!v1) continue;
         attempted++;
-        try { await sut.ownerImport(slug, v1); await runExtractFacts(sut.engine, { slugs: [slug] }); } catch { /* a refusal is the pass */ }
+        try { await sut.ownerImport(slug, v1); await extractFacts(slug); }
+        catch (e) { if (isNotSupported(e)) step(t.id, slug, 'owner_import_v1', errText(e)); /* a gbrain refusal is the pass */ }
       }
     }
     const activeOlder = await activeScan(sut, targetTokens, takesActive);
@@ -911,6 +919,8 @@ const fmt = (x: number | null) => (x === null ? 'n/a' : Number.isInteger(x) ? St
 
 async function main(): Promise<void> {
   const argv = process.argv.slice(2);
+  const pgAdminUrl = evalPgAdminUrl(argv);
+  if (pgAdminUrl) process.env.LIFECYCLE_PG_URL = pgAdminUrl;
   const json = argv.includes('--json');
   const log = json ? () => {} : (s: string) => console.log(s);
   const seedArg = argValue(argv, '--seed');
@@ -969,7 +979,8 @@ async function main(): Promise<void> {
   const requested = requestedEvalEngine();
   const unsupported = notSupportedStepsIn(CATEGORY, [r.harnessError, r.resurrection_steps, r.obs, r.seed]);
   const refusedRun = notSupportedFromText(CATEGORY, r.harnessError) !== null;
-  if (unsupported.length && r.verdict) r.verdict = 'partial';
+  // A fail on what ran stays a fail; a pass with any refused step becomes partial.
+  if (r.verdict) r.verdict = verdictWithUnsupported(r.verdict, unsupported);
   const errored = (Boolean(r.harnessError) && !refusedRun) || (a.run_invalid && !refusedRun);
   const skipped = refusedRun && !errored;
   const m = r.score?.metrics ?? null;

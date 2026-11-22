@@ -47,7 +47,7 @@ import type { PageType } from 'gbrain/types';
 import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, receiptPath, writeReceipt, type Receipt, type ReceiptVerdict, noModelSpend } from './receipt.ts';
 import { gbrainPin, gbrainVersion } from './gbrain-version.ts';
 import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from './gbrain-under-test.ts';
-import { EngineStepLedger, EVAL_ENGINE_REFUSED_EXIT, behaviorEngineReceiptFields, evalEngineRefusalMessage, isEngineUnavailable, openBehaviorEngine, requestedEvalEngine, verdictWithUnsupported, type EvalEngineKind } from './eval-engine.ts';
+import { ENGINE_NOT_SUPPORTED_BY_RUNNER, ENGINE_REFUSAL_TEXT_RE, EvalEngineUnavailable, EngineStepLedger, EVAL_ENGINE_REFUSED_EXIT, behaviorEngineReceiptFields, evalEngineRefusalMessage, isEngineUnavailable, openBehaviorEngine, requestedEvalEngine, verdictWithUnsupported, type EvalEngineKind } from './eval-engine.ts';
 import { sourceTreeIdentity } from './receipt.ts';
 import { declaredPin } from './pins.ts';
 import { UNTYPED_FALLBACK, buildGoldEdges, loadCorpus, score, type GoldEdge, type RichPage } from './world-v1-gold.ts';
@@ -117,6 +117,34 @@ export async function inferAllEdges(
  */
 export const CAT2_GATES = { min_type_accuracy: 0.70, min_strict_f1: 0.15 } as const;
 
+/** process.exit inside gbrain's `extract` command entry point, caught so the runner keeps control of cleanup. */
+class ExtractExited extends Error {}
+
+/**
+ * Run gbrain's `extract` CLI entry point in process. It reports a failure by printing it and calling process.exit, so
+ * process.exit is replaced for the call and console.error captured: an exit whose output is the engine's typed refusal
+ * becomes engine_not_supported_by_runner, any other exit a thrown error with the captured text.
+ */
+export async function runCliExtract(kind: EvalEngineKind, run: () => Promise<unknown>): Promise<void> {
+  const exit = process.exit;
+  const err = console.error;
+  const captured: string[] = [];
+  console.error = (...a: unknown[]) => { captured.push(a.map(String).join(' ')); };
+  process.exit = ((code?: number) => { throw new ExtractExited(`gbrain extract exited ${code ?? 0}`); }) as typeof process.exit;
+  try {
+    await run();
+  } catch (e) {
+    const text = `${e instanceof Error ? e.message : String(e)}\n${captured.join('\n')}`;
+    if (ENGINE_REFUSAL_TEXT_RE.test(text) || (e as { code?: string })?.code === 'engine_capability_missing') {
+      throw new EvalEngineUnavailable(kind, ENGINE_NOT_SUPPORTED_BY_RUNNER, `extract links --source db stopped on the engine's typed refusal: ${text.replace(/\s+/g, ' ').slice(0, 400)}`);
+    }
+    throw new Error(`${e instanceof Error ? e.message : String(e)}: ${captured.slice(-3).join(' | ').slice(0, 400)}`);
+  } finally {
+    process.exit = exit;
+    console.error = err;
+  }
+}
+
 /** The markdown the BrainBench gbrain adapter imports for a world-v1 page (adapters/gbrain-inline.ts). */
 export function pageMarkdown(p: RichPage): string {
   const lines = ['---', `type: ${p.type}`, `title: ${JSON.stringify(p.title)}`, '---', '', `# ${p.title}`, '', p.compiled_truth];
@@ -147,7 +175,7 @@ export async function storedEdgesOnEngine(gut: GbrainUnderTest, kind: EvalEngine
       for (const p of pages) await importFromContent(engine, p.slug, pageMarkdown(p), { noEmbed: true });
     });
     if (!imported.ok) return { engine: kind, edges: null, unsupported: ledger.steps };
-    const extracted = await ledger.run('extract links --source db', () => runExtract(engine, ['links', '--source', 'db']));
+    const extracted = await ledger.run('extract links --source db', () => runCliExtract(kind, () => runExtract(engine, ['links', '--source', 'db'])));
     if (!extracted.ok) return { engine: kind, edges: null, unsupported: ledger.steps };
     const read = await ledger.run('read stored links (getLinks)', async () => {
       const edges: GoldEdge[] = [];

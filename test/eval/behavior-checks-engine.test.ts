@@ -15,7 +15,8 @@ import {
 import { asNotSupported, isNotSupported, notSupportedFromText, notSupportedStepsIn, notSupportedText } from '../../eval/runner/memory-trust/sut.ts';
 import { ENGINE_REFUSAL_RE, cat9EngineEnv, engineRequirements, runScenarioChecks, summarizeChecks, scenarioStatus, type GbrainExec } from '../../eval/runner/cat9-checks.ts';
 import { seedCorpus, SOURCES, PAGES_PER_SOURCE } from '../../eval/runner/cat22-source-isolation.ts';
-import { pageMarkdown } from '../../eval/runner/type-accuracy.ts';
+import { pageMarkdown, runCliExtract } from '../../eval/runner/type-accuracy.ts';
+import { closeOnError, redactConnection } from '../../eval/runner/eval-engine.ts';
 
 /** gbrain's typed refusal, as the Rust engine throws it for raw SQL. */
 const capabilityMissing = (what = 'executeRaw') => Object.assign(new Error(`This brain's engine does not support ${what} yet (it needs the raw_sql capability), so nothing ran.`), { code: 'engine_capability_missing' });
@@ -154,7 +155,15 @@ describe('Cat 9 free checks on other engines', () => {
       { id: 'read-passes', description: 'd', run: ['ok'], expect: { exit: 'zero' } },
     ] }, { exec: stub([]), corpusDir: corpusDir(), engine: { kind: 'rust' } });
     expect(rows.map(r => r.status)).toEqual([ENGINE_NOT_SUPPORTED_BY_RUNNER, ENGINE_NOT_SUPPORTED_BY_RUNNER, 'pass']);
-    expect(rows[1]!.reasons[0]).toContain('earlier check of this scenario (write)');
+    expect(rows[1]!.reasons[0]).toContain('earlier check on brain A (write)');
+  });
+
+  test('a refusal is never credited to a check that expects a nonzero exit; checks on another brain keep their result', () => {
+    const rows = runScenarioChecks({ id: 's6', checks: [
+      { id: 'expects-refusal', description: 'd', run: ['refuse'], expect: { exit: 'nonzero' } },
+      { id: 'other-brain-fails', description: 'd', run: ['ok'], brain: 'B', expect: { exit: 'nonzero' } },
+    ] }, { exec: stub([]), corpusDir: corpusDir(), engine: { kind: 'rust' } });
+    expect(rows.map(r => r.status)).toEqual([ENGINE_NOT_SUPPORTED_BY_RUNNER, 'fail']);
   });
 
   test('a setup step that stops on the typed refusal makes every check of the scenario not supported', () => {
@@ -215,5 +224,33 @@ describe('Cat 2 stored links', () => {
     const md = pageMarkdown({ slug: 'people/a', type: 'person', title: 'Ada "A"', compiled_truth: 'Works at [Acme](companies/acme).', timeline: '- 2020: joined' } as never);
     expect(md).toBe('---\ntype: person\ntitle: "Ada \\"A\\""\n---\n\n# Ada "A"\n\nWorks at [Acme](companies/acme).\n\n## Timeline\n\n- 2020: joined');
     expect(pageMarkdown({ slug: 'x', type: 'company', title: 'X', compiled_truth: 'Body', timeline: ' ' } as never)).not.toContain('## Timeline');
+  });
+});
+
+describe('cleanup and output safety', () => {
+  test('gbrain extract exiting on a typed refusal is engine_not_supported_by_runner; another exit is an error; process.exit is restored', async () => {
+    const exit = process.exit;
+    const refused = await runCliExtract('rust', async () => { console.error("This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran."); process.exit(1); }).catch(e => e);
+    expect(refused).toBeInstanceOf(EvalEngineUnavailable);
+    expect(refused.reason).toBe(ENGINE_NOT_SUPPORTED_BY_RUNNER);
+    const other = await runCliExtract('rust', async () => { console.error('No brain directory configured.'); process.exit(1); }).catch(e => e);
+    expect(other).not.toBeInstanceOf(EvalEngineUnavailable);
+    expect(String(other.message)).toContain('No brain directory configured');
+    expect(process.exit).toBe(exit);
+    await runCliExtract('rust', async () => {});
+  });
+
+  test('closeOnError closes the brain and rethrows; a success leaves it open', async () => {
+    let closed = 0;
+    const brain = { close: async () => { closed++; } };
+    await expect(closeOnError(brain, async () => { throw new Error('config write failed'); })).rejects.toThrow('config write failed');
+    expect(await closeOnError(brain, async () => 3)).toBe(3);
+    expect(closed).toBe(1);
+  });
+
+  test('redactConnection removes the database host and password from recorded text', () => {
+    const url = 'postgres://u:s3cret@db.internal.example:5432/postgres';
+    expect(redactConnection('connect to db.internal.example failed (s3cret)', url)).toBe('connect to <pg-host> failed (***)');
+    expect(redactConnection('nothing to hide', undefined)).toBe('nothing to hide');
   });
 });

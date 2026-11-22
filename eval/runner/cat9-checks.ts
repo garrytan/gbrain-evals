@@ -48,7 +48,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { HERMETIC_KEY_PATTERN, HERMETIC_STRIPPED_KEYS, redactUrlPasswords } from './hermetic-env.ts';
-import { ENGINE_NOT_SUPPORTED_BY_RUNNER, EvalEngineUnavailable, cliEngineConfig, rustAddonEnv, type EvalEngineKind } from './eval-engine.ts';
+import { ENGINE_NOT_SUPPORTED_BY_RUNNER, ENGINE_REFUSAL_TEXT_RE, EvalEngineUnavailable, cliEngineConfig, redactConnection, rustAddonEnv, type EvalEngineKind } from './eval-engine.ts';
 
 // ─── Types ────────────────────────────────────────────────────────────
 
@@ -404,7 +404,7 @@ export interface Cat9Engine {
 }
 
 /** The gbrain CLI's typed refusal of something the engine cannot do (engine_capability_missing). */
-export const ENGINE_REFUSAL_RE = /engine_capability_missing|does not support \S+ yet \(it needs the [a-z_]+ capability\)/;
+export const ENGINE_REFUSAL_RE = ENGINE_REFUSAL_TEXT_RE;
 
 /** The extra child environment a run on `kind` needs: the Rust addon path, which the hermetic strip removes. */
 export function cat9EngineEnv(kind: EvalEngineKind | undefined): Record<string, string> {
@@ -431,8 +431,8 @@ export interface ScenarioCheckOptions {
   now?: () => Date;
 }
 
-function head(text: string, root: string): string {
-  return redactUrlPasswords(text.split(root).join('<tmp>')).slice(0, 600);
+function head(text: string, root: string, pgAdminUrl?: string): string {
+  return redactConnection(redactUrlPasswords(text.split(root).join('<tmp>')), pgAdminUrl).slice(0, 600);
 }
 
 /** Run one scenario's setup and checks on fresh brains. Scenarios without checks give no rows. */
@@ -444,7 +444,7 @@ export function runScenarioChecks(s: Cat9CheckedScenario, o: ScenarioCheckOption
   const missing = (r?: Cat9Requirement[]) => (r ?? []).filter(x => !available.has(x));
   let root = '';
   // Every recorded string is masked: reasons quote observed values, which can hold temp paths.
-  const mask = (t: string) => (root ? redactUrlPasswords(t.split(root).join('<tmp>')) : redactUrlPasswords(t));
+  const mask = (t: string) => redactConnection(root ? redactUrlPasswords(t.split(root).join('<tmp>')) : redactUrlPasswords(t), o.engine?.pgAdminUrl);
   const row = (c: Cat9Check, status: Cat9CheckStatus, reasons: string[], extra: Partial<Cat9CheckRow> = {}): Cat9CheckRow => ({
     scenario_id: s.id, check_id: c.id, status, finding: c.known_failure?.finding ?? null, reasons: reasons.map(mask), exit_code: null, argv: null, ...extra,
   });
@@ -491,7 +491,7 @@ export function runScenarioChecks(s: Cat9CheckedScenario, o: ScenarioCheckOption
     const argv = initArgv(name, home);
     const r = o.exec(argv, { home, cwd: root });
     if (r.exit !== 0) {
-      const out = head(r.stderr || r.stdout, root);
+      const out = head(r.stderr || r.stdout, root, o.engine?.pgAdminUrl);
       if (ENGINE_REFUSAL_RE.test(`${r.stderr}\n${r.stdout}`)) throw new EvalEngineUnavailable(kind, ENGINE_NOT_SUPPORTED_BY_RUNNER, `gbrain ${argv[0]} for brain ${name} stopped on the engine's typed refusal: ${out}`);
       throw new Error(`gbrain ${argv.slice(0, 2).join(' ')} for brain ${name} exited ${r.exit}: ${out}`);
     }
@@ -543,9 +543,9 @@ export function runScenarioChecks(s: Cat9CheckedScenario, o: ScenarioCheckOption
       if (!isRun(step)) continue; // a manual step whose requirements are met is done by whoever provides them
       const { argv, r } = call(step);
       if (r.exit !== 0 && !step.allow_fail && ENGINE_REFUSAL_RE.test(`${r.stderr}\n${r.stdout}`)) {
-        throw new EvalEngineUnavailable(kind, ENGINE_NOT_SUPPORTED_BY_RUNNER, `setup[${i}] \`gbrain ${argv.join(' ').split(root).join('<tmp>')}\` stopped on the engine's typed refusal: ${head(r.stderr || r.stdout, root)}`);
+        throw new EvalEngineUnavailable(kind, ENGINE_NOT_SUPPORTED_BY_RUNNER, `setup[${i}] \`gbrain ${argv.join(' ').split(root).join('<tmp>')}\` stopped on the engine's typed refusal: ${head(r.stderr || r.stdout, root, o.engine?.pgAdminUrl)}`);
       }
-      if (r.exit !== 0 && !step.allow_fail) throw new Error(`setup[${i}] \`gbrain ${argv.join(' ').split(root).join('<tmp>')}\` exited ${r.exit}: ${head(r.stderr || r.stdout, root)}`);
+      if (r.exit !== 0 && !step.allow_fail) throw new Error(`setup[${i}] \`gbrain ${argv.join(' ').split(root).join('<tmp>')}\` exited ${r.exit}: ${head(r.stderr || r.stdout, root, o.engine?.pgAdminUrl)}`);
       const errs = capture(step, r.stdout);
       if (errs.length > 0) throw new Error(`setup[${i}]: ${errs.join('; ')}`);
     }
@@ -557,7 +557,7 @@ export function runScenarioChecks(s: Cat9CheckedScenario, o: ScenarioCheckOption
     return checks.map(c => row(c, 'error', [`harness: ${msg.split(root).join('<tmp>')}`]));
   }
 
-  let refusedEarlier: string | null = null;
+  const refusedOn = new Map<string, string>();
   for (const c of checks) {
     const lack = missing(c.requires);
     if (lack.length > 0) { rows.push(row(c, 'not_run', lack.map(r => REQUIREMENT_REASONS[r]))); continue; }
@@ -571,17 +571,20 @@ export function runScenarioChecks(s: Cat9CheckedScenario, o: ScenarioCheckOption
       const reasons = evaluateExpect(substituteDeep(c.expect, vars), r, { datastoreExists: name => existsSync(datastoreOf(name)!) });
       const errs = capture(c, r.stdout);
       let status = classify([...reasons, ...errs], c.known_failure);
-      // A check that failed because the CLI stopped on the engine's typed refusal did not test the behavior, and
-      // neither did a later failing check of the same scenario, whose brain lacks the refused write.
+      // A CLI call that exited on the engine's typed refusal did not test the behavior, whatever the expectation said
+      // (a check that expects a refusal must not be credited with an engine limitation). A later failing check on the
+      // same brain did not test it either: that brain lacks the refused write. Checks on other brains keep their result.
+      const brainName = c.brain ?? 'A';
+      const refusal = r.exit !== 0 && ENGINE_REFUSAL_RE.test(`${r.stderr}\n${r.stdout}`);
       const failed = status !== 'pass' && status !== 'unexpected_pass';
-      const refusal = failed && ENGINE_REFUSAL_RE.test(`${r.stderr}\n${r.stdout}`);
+      const earlier = refusedOn.get(brainName);
       const why = refusal ? `${ENGINE_NOT_SUPPORTED_BY_RUNNER} (${kind}): the CLI call stopped on the engine's typed refusal`
-        : failed && refusedEarlier ? `${ENGINE_NOT_SUPPORTED_BY_RUNNER} (${kind}): an earlier check of this scenario (${refusedEarlier}) stopped on the engine's typed refusal, so the brain lacks its write`
+        : failed && earlier ? `${ENGINE_NOT_SUPPORTED_BY_RUNNER} (${kind}): an earlier check on brain ${brainName} (${earlier}) stopped on the engine's typed refusal, so that brain lacks its write`
         : null;
-      if (refusal) refusedEarlier = c.id;
+      if (refusal && !earlier) refusedOn.set(brainName, c.id);
       if (why) status = ENGINE_NOT_SUPPORTED_BY_RUNNER;
       rows.push(row(c, status, why ? [why, ...reasons, ...errs] : [...reasons, ...errs], {
-        exit_code: r.exit, argv: argv.map(a => a.split(root).join('<tmp>')), stdout_head: head(r.stdout, root), stderr_head: head(r.stderr, root),
+        exit_code: r.exit, argv: argv.map(a => a.split(root).join('<tmp>')), stdout_head: head(r.stdout, root, o.engine?.pgAdminUrl), stderr_head: head(r.stderr, root, o.engine?.pgAdminUrl),
       }));
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);

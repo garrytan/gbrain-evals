@@ -133,6 +133,12 @@ export interface OpenEvalEngineOptions {
   databaseUrl?: string;
   /** Postgres pool size; ignored by the embedded engines. */
   poolMax?: number;
+  /**
+   * Give this Postgres engine its own connection pool of this size (gbrain's `poolSize` connect option). Without it,
+   * gbrain's Postgres engine shares one module-wide connection, so two brains open in one process would read and
+   * write the same database. Ignored by the embedded engines.
+   */
+  poolSize?: number;
   /** Bring the schema up: initSchema after connect on PGLite and Postgres, `gbrain init` before connect on Rust. Defaults to true. */
   initSchema?: boolean;
 }
@@ -146,7 +152,7 @@ export interface EvalEngine {
 function engineConfigFor(o: OpenEvalEngineOptions, kind: EvalEngineKind): EngineConfig {
   if (kind === 'postgres') {
     if (!o.databaseUrl) throw new EvalEngineUnavailable(kind, 'postgres_url_missing', 'The postgres engine needs a database URL (a local pgvector container or --pg-url).');
-    return { engine: 'postgres', database_url: o.databaseUrl, ...(o.poolMax ? { pool_max: o.poolMax } : {}) };
+    return { engine: 'postgres', database_url: o.databaseUrl, ...(o.poolMax ? { pool_max: o.poolMax } : {}), ...(o.poolSize ? { poolSize: o.poolSize } : {}) } as EngineConfig;
   }
   if (kind === 'rust') {
     if (!o.databasePath) throw new EvalEngineUnavailable(kind, 'store_path_missing', 'The rust engine needs a store path (database_path).');
@@ -303,7 +309,7 @@ export interface ScratchEvalEngine extends EvalEngine {
  * Open `kind` on a throwaway store: PGLite in memory, Postgres in a fresh database created through `pgAdminUrl` and
  * dropped on close, Rust in a fresh temp directory removed on close.
  */
-export async function openScratchEvalEngine(o: { gut: GbrainUnderTest; kind: EvalEngineKind; label: string; pgAdminUrl?: string; initSchema?: boolean }): Promise<ScratchEvalEngine> {
+export async function openScratchEvalEngine(o: { gut: GbrainUnderTest; kind: EvalEngineKind; label: string; pgAdminUrl?: string; initSchema?: boolean; poolSize?: number }): Promise<ScratchEvalEngine> {
   const disconnect = async (e: EvalEngine) => { await e.engine.disconnect?.().catch(() => {}); };
   if (o.kind === 'pglite') {
     const e = await openEvalEngine({ gut: o.gut, kind: 'pglite', initSchema: o.initSchema });
@@ -335,7 +341,7 @@ export async function openScratchEvalEngine(o: { gut: GbrainUnderTest; kind: Eva
   const url = new URL(o.pgAdminUrl);
   url.pathname = `/${db}`;
   try {
-    const e = await openEvalEngine({ gut: o.gut, kind: 'postgres', databaseUrl: url.toString(), initSchema: o.initSchema });
+    const e = await openEvalEngine({ gut: o.gut, kind: 'postgres', databaseUrl: url.toString(), initSchema: o.initSchema, poolSize: o.poolSize });
     return { ...e, close: async () => { await disconnect(e); await drop(); } };
   } catch (err) {
     await drop();
@@ -451,14 +457,41 @@ export function evalPgAdminUrl(argv: readonly string[] = process.argv, env: Reco
   return flag?.trim() || env.LIFECYCLE_PG_URL?.trim() || undefined;
 }
 
+/** The pool each behavior-check Postgres brain owns, so two brains in one process never share a database connection. */
+export const BEHAVIOR_PG_POOL_SIZE = 4;
+
 /**
  * Open the brain a behavior check runs on: the engine GBRAIN_EVAL_ENGINE names (PGLite in memory when unset, which is
  * what every behavior check opened before), on a throwaway store that close() removes. Postgres needs an admin URL
- * (`--pg-url` or LIFECYCLE_PG_URL); a missing one refuses with EvalEngineUnavailable before any work.
+ * (`--pg-url` or LIFECYCLE_PG_URL); a missing one refuses with EvalEngineUnavailable before any work. Each Postgres
+ * brain gets its own connection pool.
  */
 export async function openBehaviorEngine(o: { gut: GbrainUnderTest; label: string; kind?: EvalEngineKind; pgAdminUrl?: string }): Promise<ScratchEvalEngine> {
   const kind = o.kind ?? evalEngineKind();
-  return await openScratchEvalEngine({ gut: o.gut, kind, label: o.label, pgAdminUrl: o.pgAdminUrl ?? evalPgAdminUrl() });
+  return await openScratchEvalEngine({ gut: o.gut, kind, label: o.label, pgAdminUrl: o.pgAdminUrl ?? evalPgAdminUrl(), poolSize: BEHAVIOR_PG_POOL_SIZE });
+}
+
+/**
+ * Run `fn` on a freshly opened brain; when it throws, close the brain before rethrowing, so a setup failure never
+ * leaves a scratch database or Rust store behind.
+ */
+export async function closeOnError<T>(brain: Pick<ScratchEvalEngine, 'close'>, fn: () => Promise<T>): Promise<T> {
+  try { return await fn(); } catch (e) { await brain.close().catch(() => {}); throw e; }
+}
+
+/** The text of gbrain's typed refusal in CLI output: engine_capability_missing, or its plain-words form. */
+export const ENGINE_REFUSAL_TEXT_RE = /engine_capability_missing|does not support \S+ yet \(it needs the [a-z_]+ capability\)/;
+
+/** Replace the host (and any password) of `url` wherever it appears in `text`, so receipts never name a database host. */
+export function redactConnection(text: string, url: string | undefined): string {
+  if (!url) return text;
+  let out = text;
+  try {
+    const u = new URL(url);
+    if (u.password) out = out.split(u.password).join('***');
+    if (u.hostname) out = out.split(u.hostname).join('<pg-host>');
+  } catch { /* not a URL: nothing to redact */ }
+  return out;
 }
 
 /** Whether the error is the requested engine being unavailable (no Rust build, no addon, no Postgres), not a failure. */

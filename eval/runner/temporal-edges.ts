@@ -83,7 +83,7 @@ import { custodyTemplatesInput } from './sealed-confirmation-lib.ts';
 import { campaignGuard } from './q2/campaign.ts';
 import { TRANSITION_TYPES, closureCorrect, goldTransitions, transitionMetrics, type Transition } from './q2/transitions.ts';
 import { applyEvalConfig, evalConfigRecord, parseEvalConfig } from './eval-config.ts';
-import { EngineStepLedger, EVAL_ENGINE_REFUSED_EXIT, behaviorEngineReceiptFields, evalEngineRefusalMessage, isEngineUnavailable, openBehaviorEngine, requestedEvalEngine, type EngineStepNotSupported, type EvalEngineKind } from './eval-engine.ts';
+import { EngineStepLedger, EVAL_ENGINE_REFUSED_EXIT, closeOnError, behaviorEngineReceiptFields, evalEngineRefusalMessage, isEngineUnavailable, openBehaviorEngine, requestedEvalEngine, type EngineStepNotSupported, type EvalEngineKind } from './eval-engine.ts';
 
 export const CATEGORY = 'temporal-edges';
 
@@ -96,8 +96,8 @@ async function openSut(gut: GbrainUnderTest, evalConfig: Record<string, string>,
   const { operations } = await importGbrain<{ operations: Array<{ name: string; handler: (ctx: OperationContext, p: Record<string, unknown>) => Promise<unknown> }> }>(gut, 'src/core/operations.ts');
   const brain = await openBehaviorEngine({ gut, label: 'temporal_edges', kind });
   const engine = brain.engine as unknown as { readPageSnapshot(slug: string, o: { sourceId: string }): Promise<{ revision: unknown } | null> };
-  const { KNOWN_CONFIG_KEYS } = await importGbrain<{ KNOWN_CONFIG_KEYS?: readonly string[] }>(gut, 'src/core/config.ts');
-  const configRecord = evalConfigRecord(await applyEvalConfig(engine as unknown as SutEngine, evalConfig), KNOWN_CONFIG_KEYS ?? null);
+  const { KNOWN_CONFIG_KEYS } = await closeOnError(brain, () => importGbrain<{ KNOWN_CONFIG_KEYS?: readonly string[] }>(gut, 'src/core/config.ts'));
+  const configRecord = evalConfigRecord(await closeOnError(brain, () => applyEvalConfig(engine as unknown as SutEngine, evalConfig)), KNOWN_CONFIG_KEYS ?? null);
   const logger = { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} };
   const ctx = { engine, config: kind === 'pglite' ? { engine: 'pglite', database_path: ':memory:' } : brain.config, logger, dryRun: false, remote: false, sourceId: 'default' } as unknown as OperationContext;
   const byName = new Map(operations.map(o => [o.name, o]));
