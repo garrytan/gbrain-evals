@@ -55,7 +55,10 @@
  * path above ignores both fields. The committed catalog is
  * eval/data/cat9-workflows-v1/scenarios.json.
  *
- * Usage: bun eval/runner/cat9-workflows.ts --checks [--gbrain <checkout>[@ref]] [--scenarios <file>] [--only id,id] [--output <dir>] [--keep] [--json]
+ * GBRAIN_EVAL_ENGINE=pglite|postgres|rust creates those brains on another
+ * engine (cat9-checks.ts, "Engines"); unset keeps PGLite.
+ *
+ * Usage: bun eval/runner/cat9-workflows.ts --checks [--gbrain <checkout>[@ref]] [--scenarios <file>] [--only id,id] [--output <dir>] [--pg-url <admin url>] [--keep] [--json]
  */
 
 import type { Anthropic } from '@anthropic-ai/sdk';
@@ -95,7 +98,9 @@ import {
 import { gbrainVersion, gbrainPin } from './gbrain-version.ts';
 import { gbrainSpecFrom, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from './gbrain-under-test.ts';
 import { emitBundle, type Transcript, type Scorecard, type JudgeNote } from './recorder.ts';
+import { ENGINE_NOT_SUPPORTED_BY_RUNNER, EVAL_ENGINE_REFUSED_EXIT, behaviorEngineReceiptFields, evalEngineRefusalMessage, evalPgAdminUrl, isEngineUnavailable, requestedEvalEngine, stepNotSupported, verdictWithUnsupported, type EvalEngineKind } from './eval-engine.ts';
 import {
+  cat9EngineEnv,
   cliExec,
   runScenarioChecks,
   scenarioStatus,
@@ -104,6 +109,7 @@ import {
   type Cat9Check,
   type Cat9CheckRow,
   type Cat9Requirement,
+  type Cat9Engine,
   type Cat9SetupStep,
   type GbrainExec,
 } from './cat9-checks.ts';
@@ -658,7 +664,7 @@ export interface Cat9ChecksReport {
   gbrain_version: string;
   /** The commit actually run: the overlay's commit, or the declared pin. */
   gbrain_commit: string;
-  engine: 'pglite';
+  engine: EvalEngineKind;
   summary: ReturnType<typeof summarizeChecks>;
   scenarios: Cat9ChecksScenarioRow[];
 }
@@ -672,6 +678,8 @@ export interface RunCat9ChecksOptions {
   tmpRoot?: string;
   keep?: boolean;
   log?: (line: string) => void;
+  /** The engine every brain is created on (default PGLite). */
+  engine?: Cat9Engine;
 }
 
 /** Run every scenario's free checks in catalog order, one scenario at a time. */
@@ -685,7 +693,7 @@ export function runCat9Checks(o: RunCat9ChecksOptions): Cat9ChecksReport {
   }
   const scenarios: Cat9ChecksScenarioRow[] = [];
   for (const s of picked) {
-    const rows = runScenarioChecks(s, { exec: o.exec, corpusDir, tmpRoot: o.tmpRoot, keep: o.keep });
+    const rows = runScenarioChecks(s, { exec: o.exec, corpusDir, tmpRoot: o.tmpRoot, keep: o.keep, engine: o.engine });
     const status = scenarioStatus(rows);
     o.log?.(`[cat9 checks] ${s.id}: ${status}${rows.length ? ` (${rows.map(r => `${r.check_id}=${r.status}`).join(', ')})` : ''}`);
     scenarios.push({ scenario_id: s.id, workflow: s.workflow, status, checks: rows });
@@ -694,7 +702,7 @@ export function runCat9Checks(o: RunCat9ChecksOptions): Cat9ChecksReport {
     ran_at: new Date().toISOString(),
     gbrain_version: o.gbrain.version,
     gbrain_commit: o.gbrain.commit,
-    engine: 'pglite',
+    engine: o.engine?.kind ?? 'pglite',
     summary: summarizeChecks(scenarios.flatMap(s => s.checks)),
     scenarios,
   };
@@ -703,7 +711,7 @@ export function runCat9Checks(o: RunCat9ChecksOptions): Cat9ChecksReport {
 /** Markdown table of a checks report: one row per check. */
 export function renderChecksTable(r: Cat9ChecksReport): string {
   const lines = [
-    `gbrain ${r.gbrain_version} (${r.gbrain_commit.slice(0, 10)}), PGLite, keyword-only, no judge`,
+    `gbrain ${r.gbrain_version} (${r.gbrain_commit.slice(0, 10)}), ${r.engine === 'pglite' ? 'PGLite' : r.engine === 'postgres' ? 'Postgres' : 'Rust'}, keyword-only, no judge`,
     '',
     '| Scenario | Check | Result | Finding |',
     '|---|---|---|---|',
@@ -736,14 +744,18 @@ async function mainChecks(argv: string[]): Promise<number> {
   const gut: GbrainUnderTest = resolveGbrainUnderTest(gbrainSpecFrom(argv));
   const commit = gut.overlay?.build.commit ?? gbrainPin();
   const log = (l: string) => console.error(l);
-  log(`# Cat 9 free checks: gbrain ${gut.version} (${gut.overlay ? `overlay ${commit.slice(0, 10)}` : 'pinned'}), PGLite, no judge`);
+  const requested = requestedEvalEngine();
+  const kind = requested ?? 'pglite';
+  log(`# Cat 9 free checks: gbrain ${gut.version} (${gut.overlay ? `overlay ${commit.slice(0, 10)}` : 'pinned'}), ${kind}, no judge`);
   const startedAt = new Date().toISOString();
   const only = argValue(argv, '--only')?.split(',').filter(Boolean);
   const report = runCat9Checks({
-    catalog, catalogPath, exec: cliExec(gut.root), gbrain: { version: gut.version, commit }, only, keep: argv.includes('--keep'), log,
+    catalog, catalogPath, exec: cliExec(gut.root, undefined, cat9EngineEnv(kind)), gbrain: { version: gut.version, commit }, only, keep: argv.includes('--keep'), log,
+    ...(requested ? { engine: { kind, pgAdminUrl: evalPgAdminUrl(argv) } } : {}),
   });
   const errorRows = report.scenarios.flatMap(s => s.checks.filter(c => c.status === 'error'));
-  const ran = report.scenarios.flatMap(s => s.checks).filter(c => c.status !== 'not_run');
+  const unsupportedRows = report.scenarios.flatMap(s => s.checks.filter(c => c.status === ENGINE_NOT_SUPPORTED_BY_RUNNER));
+  const ran = report.scenarios.flatMap(s => s.checks).filter(c => c.status !== 'not_run' && c.status !== ENGINE_NOT_SUPPORTED_BY_RUNNER);
   const errors: ProbeError[] = errorRows.map(c => ({ probe_id: `${c.scenario_id}/${c.check_id}`, origin: 'harness', message: c.reasons.join('; ') }));
   const anyFail = ran.some(c => c.status === 'fail' || c.status === 'unexpected_pass');
   const output = argValue(argv, '--output');
@@ -757,7 +769,7 @@ async function mainChecks(argv: string[]): Promise<number> {
     // Report-only: a known failure is a fail with a label, so the run is partial
     // until every check passes; an unlabelled fail or a known failure that now
     // passes makes it a fail so a reader looks.
-    verdict: anyFail ? 'fail' : ran.every(c => c.status === 'pass') && ran.length > 0 ? 'pass' : 'partial',
+    verdict: verdictWithUnsupported(anyFail ? 'fail' : ran.every(c => c.status === 'pass') && ran.length > 0 ? 'pass' : 'partial', unsupportedRows.map(c => stepNotSupported(kind, CAT9_CHECKS_CATEGORY, `${c.scenario_id}/${c.check_id}`, c.reasons[0] ?? ''))),
     n_total: ran.length,
     n_scored: ran.length - errorRows.length,
     completion_rate: ran.length === 0 ? 0 : (ran.length - errorRows.length) / ran.length,
@@ -766,13 +778,16 @@ async function mainChecks(argv: string[]): Promise<number> {
     gbrain_version: gut.version,
     gbrain_pin: gbrainPin(),
     execution: { source_tree: sourceTreeIdentity(), product: productIdentityFor(gut) },
+    ...behaviorEngineReceiptFields(requested, unsupportedRows.map(c => stepNotSupported(kind, CAT9_CHECKS_CATEGORY, `${c.scenario_id}/${c.check_id}`, c.reasons[0] ?? ''))),
     resolved_config: {
-      engine: 'pglite (gbrain init --pglite, one fresh brain per scenario and brain name)',
+      engine: kind === 'pglite' ? 'pglite (gbrain init --pglite, one fresh brain per scenario and brain name)'
+        : kind === 'postgres' ? 'postgres (gbrain init --url on a scratch database per scenario and brain name, dropped afterwards)'
+        : 'rust (a rust CLI config plus gbrain init --migrate-only, one fresh store per scenario and brain name)',
       embeddings: 'none: keyword-only brain, provider keys stripped from the child environment',
       catalog: catalogIdentity(catalogPath),
       only: only ?? null,
       gbrain_overlay: overlaySummary(gut),
-      verdict_rule: 'pass = every check that ran passed; partial = every failure is a labelled known failure; fail = an unlabelled failure or a known failure that now passes',
+      verdict_rule: 'pass = every check that ran passed; partial = every failure is a labelled known failure, or a check was engine_not_supported_by_runner; fail = an unlabelled failure or a known failure that now passes',
     },
     started_at: startedAt,
     finished_at: new Date().toISOString(),
@@ -790,5 +805,8 @@ if (import.meta.main) {
     console.error('Cat 9: only the free checks run from the command line: bun eval/runner/cat9-workflows.ts --checks [--gbrain <checkout>[@ref]]. The judged path is called through runCat9().');
     process.exit(2);
   }
-  mainChecks(argv).then(code => process.exit(code), err => { console.error(err instanceof Error ? err.message : String(err)); process.exit(1); });
+  mainChecks(argv).then(code => process.exit(code), err => {
+    if (isEngineUnavailable(err)) { console.error(evalEngineRefusalMessage(err, 'Cat 9 free checks')); process.exit(EVAL_ENGINE_REFUSED_EXIT); }
+    console.error(err instanceof Error ? err.message : String(err)); process.exit(1);
+  });
 }

@@ -2,8 +2,10 @@
  * Which storage engine a keyless gate runner or the engine-bench runner opens.
  *
  * GBRAIN_EVAL_ENGINE=pglite|postgres|rust picks the engine; unset means the runner's own default, so a runner that
- * adopts this helper behaves exactly as before when the variable is absent. Only the engine-bench runner and the
- * keyless eval-gate runners (N1, N5, N6, N12, N14) read it. Frozen or counted runners never do.
+ * adopts this helper behaves exactly as before when the variable is absent. The engine-bench runner, the keyless
+ * eval-gate runners (N1, N5, N6, N12, N14) and the free behavior checks (Cat 2 type accuracy, temporal edges, the Cat 9
+ * free checks, Cat 22, Cat 24 and Cats 37 to 39; see "Behavior checks on any engine" below) read it. Frozen or counted
+ * runners never do.
  *
  * The Rust engine is gbrain's planned third BrainEngine (gbrain docs/designs/RUST_ENGINE.md): an in-process napi-rs
  * addon selected with engine "rust", loaded from GBRAIN_RUST_ENGINE_ADDON or the release's installed addon. Until the
@@ -131,6 +133,12 @@ export interface OpenEvalEngineOptions {
   databaseUrl?: string;
   /** Postgres pool size; ignored by the embedded engines. */
   poolMax?: number;
+  /**
+   * Give this Postgres engine its own connection pool of this size (gbrain's `poolSize` connect option). Without it,
+   * gbrain's Postgres engine shares one module-wide connection, so two brains open in one process would read and
+   * write the same database. Ignored by the embedded engines.
+   */
+  poolSize?: number;
   /** Bring the schema up: initSchema after connect on PGLite and Postgres, `gbrain init` before connect on Rust. Defaults to true. */
   initSchema?: boolean;
 }
@@ -144,7 +152,7 @@ export interface EvalEngine {
 function engineConfigFor(o: OpenEvalEngineOptions, kind: EvalEngineKind): EngineConfig {
   if (kind === 'postgres') {
     if (!o.databaseUrl) throw new EvalEngineUnavailable(kind, 'postgres_url_missing', 'The postgres engine needs a database URL (a local pgvector container or --pg-url).');
-    return { engine: 'postgres', database_url: o.databaseUrl, ...(o.poolMax ? { pool_max: o.poolMax } : {}) };
+    return { engine: 'postgres', database_url: o.databaseUrl, ...(o.poolMax ? { pool_max: o.poolMax } : {}), ...(o.poolSize ? { poolSize: o.poolSize } : {}) } as EngineConfig;
   }
   if (kind === 'rust') {
     if (!o.databasePath) throw new EvalEngineUnavailable(kind, 'store_path_missing', 'The rust engine needs a store path (database_path).');
@@ -301,7 +309,7 @@ export interface ScratchEvalEngine extends EvalEngine {
  * Open `kind` on a throwaway store: PGLite in memory, Postgres in a fresh database created through `pgAdminUrl` and
  * dropped on close, Rust in a fresh temp directory removed on close.
  */
-export async function openScratchEvalEngine(o: { gut: GbrainUnderTest; kind: EvalEngineKind; label: string; pgAdminUrl?: string; initSchema?: boolean }): Promise<ScratchEvalEngine> {
+export async function openScratchEvalEngine(o: { gut: GbrainUnderTest; kind: EvalEngineKind; label: string; pgAdminUrl?: string; initSchema?: boolean; poolSize?: number }): Promise<ScratchEvalEngine> {
   const disconnect = async (e: EvalEngine) => { await e.engine.disconnect?.().catch(() => {}); };
   if (o.kind === 'pglite') {
     const e = await openEvalEngine({ gut: o.gut, kind: 'pglite', initSchema: o.initSchema });
@@ -333,7 +341,7 @@ export async function openScratchEvalEngine(o: { gut: GbrainUnderTest; kind: Eva
   const url = new URL(o.pgAdminUrl);
   url.pathname = `/${db}`;
   try {
-    const e = await openEvalEngine({ gut: o.gut, kind: 'postgres', databaseUrl: url.toString(), initSchema: o.initSchema });
+    const e = await openEvalEngine({ gut: o.gut, kind: 'postgres', databaseUrl: url.toString(), initSchema: o.initSchema, poolSize: o.poolSize });
     return { ...e, close: async () => { await disconnect(e); await drop(); } };
   } catch (err) {
     await drop();
@@ -350,4 +358,143 @@ export async function preflightEvalEngine(gut: GbrainUnderTest, kind: EvalEngine
   if (kind !== 'rust') return;
   const e = await openScratchEvalEngine({ gut, kind, label: 'preflight' });
   await e.close();
+}
+
+// ─── Behavior checks on any engine ──────────────────────────────────────────────────────────────────────────────────
+
+/**
+ * The status of a behavior-check step the engine under test cannot run. The free behavior checks (Cat 2 link types,
+ * temporal edges, Cat 9 free checks, Cat 22, Cat 24 and Cats 37 to 39) open their brain through this file, so any
+ * engine GBRAIN_EVAL_ENGINE names can run them. A step that stops on the engine's typed refusal (gbrain's
+ * engine_capability_missing, the Rust engine's raw SQL refusal included) or that the runner knows needs one engine is
+ * reported with this status and its reason. It counts as neither a pass nor a fail, so a check never passes on an
+ * engine that skipped part of it.
+ */
+export const ENGINE_NOT_SUPPORTED_BY_RUNNER = 'engine_not_supported_by_runner' as const;
+
+export interface EngineStepNotSupported {
+  status: typeof ENGINE_NOT_SUPPORTED_BY_RUNNER;
+  engine: EvalEngineKind;
+  check: string;
+  step: string;
+  reason: string;
+  /** How many probes of this step the engine refused, when more than one (EngineStepLedger counts repeats). */
+  occurrences?: number;
+}
+
+export function stepNotSupported(kind: EvalEngineKind, check: string, step: string, reason: string): EngineStepNotSupported {
+  return { status: ENGINE_NOT_SUPPORTED_BY_RUNNER, engine: kind, check, step, reason: reason.slice(0, 600) };
+}
+
+/**
+ * The record for an error that is the engine refusing the step, else null, because any other error is a real failure
+ * of the check or the harness. A refusal is gbrain's typed engine_capability_missing or an EvalEngineUnavailable with
+ * reason engine_not_supported_by_runner.
+ */
+export function notSupportedFromError(kind: EvalEngineKind, check: string, step: string, e: unknown): EngineStepNotSupported | null {
+  const message = (e instanceof Error ? e.message : String(e)).replace(/\s+/g, ' ').trim();
+  if (e instanceof EvalEngineUnavailable && e.reason === ENGINE_NOT_SUPPORTED_BY_RUNNER) return stepNotSupported(kind, check, step, message);
+  if (isCapabilityMissing(e)) return stepNotSupported(kind, check, step, `The ${kind} engine refused this step with engine_capability_missing: ${message}`);
+  return null;
+}
+
+/** The steps one behavior-check run could not run on its engine, in the order they were met. */
+export class EngineStepLedger {
+  readonly steps: EngineStepNotSupported[] = [];
+  constructor(readonly kind: EvalEngineKind, readonly check: string) {}
+
+  /** Record the step when `e` is the engine's refusal and return true; return false for any other error. */
+  refused(step: string, e: unknown): boolean {
+    const r = notSupportedFromError(this.kind, this.check, step, e);
+    if (r) this.add(r);
+    return r !== null;
+  }
+
+  /** One record per step name: a repeat of the same step counts in `occurrences` instead of adding a row. */
+  private add(r: EngineStepNotSupported): void {
+    const seen = this.steps.find(s => s.step === r.step);
+    if (seen) seen.occurrences = (seen.occurrences ?? 1) + 1;
+    else this.steps.push(r);
+  }
+
+  /** Record a step the runner knows this engine cannot run, without trying it. */
+  skip(step: string, reason: string): void {
+    this.add(stepNotSupported(this.kind, this.check, step, reason));
+  }
+
+  /** Run `fn`; a refusal is recorded and gives `{ ok: false }`, any other error is thrown. */
+  async run<T>(step: string, fn: () => Promise<T>): Promise<{ ok: true; value: T } | { ok: false; record: EngineStepNotSupported }> {
+    try {
+      return { ok: true, value: await fn() };
+    } catch (e) {
+      if (this.refused(step, e)) return { ok: false, record: this.steps.find(s => s.step === step)! };
+      throw e;
+    }
+  }
+}
+
+/**
+ * A runner's verdict once its unsupported steps are counted: a fail stays a fail, and a pass with any step not run
+ * becomes partial, so a check that skipped part of its work is never reported as passing.
+ */
+export function verdictWithUnsupported<V extends 'pass' | 'partial' | 'fail'>(verdict: V, unsupported: readonly EngineStepNotSupported[]): V | 'partial' {
+  if (unsupported.length === 0 || verdict === 'fail') return verdict;
+  return 'partial';
+}
+
+/**
+ * The receipt fields a behavior check adds when GBRAIN_EVAL_ENGINE is set: the engine kind and every step it could not
+ * run there (empty when none). Nothing when the variable is unset, so a default receipt keeps its shape.
+ */
+export function behaviorEngineReceiptFields(kind: EvalEngineKind | null, unsupported: readonly EngineStepNotSupported[] = []): { engine?: EvalEngineKind; engine_not_supported_by_runner?: EngineStepNotSupported[] } {
+  return kind ? { engine: kind, engine_not_supported_by_runner: [...unsupported] } : {};
+}
+
+/** The Postgres admin URL a behavior check creates its scratch databases through: `--pg-url`, else LIFECYCLE_PG_URL. */
+export function evalPgAdminUrl(argv: readonly string[] = process.argv, env: Record<string, string | undefined> = process.env): string | undefined {
+  const at = argv.indexOf('--pg-url');
+  const flag = at >= 0 ? argv[at + 1] : argv.find(a => a.startsWith('--pg-url='))?.slice('--pg-url='.length);
+  return flag?.trim() || env.LIFECYCLE_PG_URL?.trim() || undefined;
+}
+
+/** The pool each behavior-check Postgres brain owns, so two brains in one process never share a database connection. */
+export const BEHAVIOR_PG_POOL_SIZE = 4;
+
+/**
+ * Open the brain a behavior check runs on: the engine GBRAIN_EVAL_ENGINE names (PGLite in memory when unset, which is
+ * what every behavior check opened before), on a throwaway store that close() removes. Postgres needs an admin URL
+ * (`--pg-url` or LIFECYCLE_PG_URL); a missing one refuses with EvalEngineUnavailable before any work. Each Postgres
+ * brain gets its own connection pool.
+ */
+export async function openBehaviorEngine(o: { gut: GbrainUnderTest; label: string; kind?: EvalEngineKind; pgAdminUrl?: string }): Promise<ScratchEvalEngine> {
+  const kind = o.kind ?? evalEngineKind();
+  return await openScratchEvalEngine({ gut: o.gut, kind, label: o.label, pgAdminUrl: o.pgAdminUrl ?? evalPgAdminUrl(), poolSize: BEHAVIOR_PG_POOL_SIZE });
+}
+
+/**
+ * Run `fn` on a freshly opened brain; when it throws, close the brain before rethrowing, so a setup failure never
+ * leaves a scratch database or Rust store behind.
+ */
+export async function closeOnError<T>(brain: Pick<ScratchEvalEngine, 'close'>, fn: () => Promise<T>): Promise<T> {
+  try { return await fn(); } catch (e) { await brain.close().catch(() => {}); throw e; }
+}
+
+/** The text of gbrain's typed refusal in CLI output: engine_capability_missing, or its plain-words form. */
+export const ENGINE_REFUSAL_TEXT_RE = /engine_capability_missing|does not support \S+ yet \(it needs the [a-z_]+ capability\)/;
+
+/** Replace the host (and any password) of `url` wherever it appears in `text`, so receipts never name a database host. */
+export function redactConnection(text: string, url: string | undefined): string {
+  if (!url) return text;
+  let out = text;
+  try {
+    const u = new URL(url);
+    if (u.password) out = out.split(u.password).join('***');
+    if (u.hostname) out = out.split(u.hostname).join('<pg-host>');
+  } catch { /* not a URL: nothing to redact */ }
+  return out;
+}
+
+/** Whether the error is the requested engine being unavailable (no Rust build, no addon, no Postgres), not a failure. */
+export function isEngineUnavailable(e: unknown): e is EvalEngineUnavailable {
+  return e instanceof EvalEngineUnavailable && e.reason !== ENGINE_NOT_SUPPORTED_BY_RUNNER;
 }

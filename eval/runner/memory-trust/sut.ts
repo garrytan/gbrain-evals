@@ -28,6 +28,15 @@
  * Capabilities are detected, not assumed: on a gbrain without trust tiers
  * (the pinned dependency before #5575 merges) the categories still run and
  * report what that build does, with every missing feature listed as a gap.
+ *
+ * Engines: GBRAIN_EVAL_ENGINE=pglite|postgres|rust picks the brain through
+ * eval/runner/eval-engine.ts. Unset means in-memory PGLite from the snapshot
+ * template, exactly as before. Postgres gets a scratch database through
+ * `--pg-url` or LIFECYCLE_PG_URL. The setup and the categories read and write
+ * persistence switches, sources and audit tables with raw SQL, so on an engine
+ * without raw SQL (Rust) a refused step throws EvalEngineUnavailable with
+ * reason engine_not_supported_by_runner and is recorded in `unsupported`; the
+ * categories report it as such, never as a pass or a gbrain refusal.
  */
 import * as crypto from 'node:crypto';
 import { randomUUID } from 'node:crypto';
@@ -36,6 +45,10 @@ import { existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { importGbrain, type GbrainUnderTest } from '../gbrain-under-test.ts';
+import {
+  ENGINE_NOT_SUPPORTED_BY_RUNNER, EngineStepLedger, EvalEngineUnavailable, evalEngineKind, openBehaviorEngine, stepNotSupported,
+  type EngineStepNotSupported, type EvalEngineKind, type ScratchEvalEngine,
+} from '../eval-engine.ts';
 
 /** The protections one arm runs with. Keys are gbrain's local config keys (#5575 DX-13). */
 export interface TrustMode {
@@ -94,6 +107,10 @@ export interface TurnContextOut { text: string; withheld: number; facts: number;
 
 export interface TrustSut {
   gut: GbrainUnderTest;
+  /** The engine the brain runs on (GBRAIN_EVAL_ENGINE, default pglite). */
+  kind: EvalEngineKind;
+  /** Steps the engine refused (engine_not_supported_by_runner), in the order they were met. */
+  unsupported: EngineStepLedger;
   engine: any;
   sourceId: string;
   capabilities: TrustCapabilities;
@@ -196,8 +213,63 @@ async function brainTemplate(gut: GbrainUnderTest, mod: any): Promise<string | n
   return pending;
 }
 
-export async function openTrustSut(gut: GbrainUnderTest, opts: { sourceId?: string } = {}): Promise<TrustSut> {
+/**
+ * The error a trust-brain step throws when the engine refused it: an EvalEngineUnavailable with reason
+ * engine_not_supported_by_runner, recorded in the ledger. Any other error is returned unchanged.
+ */
+export function asNotSupported(ledger: EngineStepLedger, step: string, e: unknown): unknown {
+  if (e instanceof EvalEngineUnavailable && e.reason === ENGINE_NOT_SUPPORTED_BY_RUNNER) return e;
+  if (!ledger.refused(step, e)) return e;
+  return new EvalEngineUnavailable(ledger.kind, ENGINE_NOT_SUPPORTED_BY_RUNNER, notSupportedText(ledger.steps.find(s => s.step === step)!));
+}
+
+/**
+ * A refused step as one line of text, so it survives the categories' error strings and their worker processes:
+ * `engine_not_supported_by_runner (<engine>) [<step>] :: <reason>`. notSupportedFromText reads it back.
+ */
+export function notSupportedText(r: Pick<EngineStepNotSupported, 'engine' | 'step' | 'reason'>): string {
+  return `${ENGINE_NOT_SUPPORTED_BY_RUNNER} (${r.engine}) [${r.step}] :: ${r.reason}`;
+}
+
+const NOT_SUPPORTED_TEXT_RE = /engine_not_supported_by_runner \((pglite|postgres|rust)\) \[(.*?)\] :: (.*)$/s;
+
+/** The refused step a category's error text carries, or null when the text is some other error. */
+export function notSupportedFromText(check: string, text: string | null | undefined): EngineStepNotSupported | null {
+  const m = text ? NOT_SUPPORTED_TEXT_RE.exec(text) : null;
+  return m ? stepNotSupported(m[1] as EvalEngineKind, check, m[2]!, m[3]!) : null;
+}
+
+/** Every refused step whose text appears in any string inside `value` (an arm result, its outcomes and errors). */
+export function notSupportedStepsIn(check: string, value: unknown): EngineStepNotSupported[] {
+  const texts: string[] = [];
+  const walk = (v: unknown): void => {
+    if (typeof v === 'string') { if (v.includes(ENGINE_NOT_SUPPORTED_BY_RUNNER)) texts.push(v); }
+    else if (Array.isArray(v)) v.forEach(walk);
+    else if (v && typeof v === 'object') Object.values(v).forEach(walk);
+  };
+  walk(value);
+  return notSupportedSteps(check, texts);
+}
+
+/** The distinct refused steps among a category's error texts, in first-seen order. */
+export function notSupportedSteps(check: string, texts: ReadonlyArray<string | null | undefined>): EngineStepNotSupported[] {
+  const seen = new Map<string, EngineStepNotSupported>();
+  for (const t of texts) {
+    const r = notSupportedFromText(check, t);
+    if (r && !seen.has(r.step)) seen.set(r.step, r);
+  }
+  return [...seen.values()];
+}
+
+/** True when the error is a step the engine refused (see asNotSupported). */
+export function isNotSupported(e: unknown): e is EvalEngineUnavailable {
+  return e instanceof EvalEngineUnavailable && e.reason === ENGINE_NOT_SUPPORTED_BY_RUNNER;
+}
+
+export async function openTrustSut(gut: GbrainUnderTest, opts: { sourceId?: string; kind?: EvalEngineKind; pgAdminUrl?: string } = {}): Promise<TrustSut> {
   const sourceId = opts.sourceId ?? 'default';
+  const kind = opts.kind ?? evalEngineKind();
+  const ledger = new EngineStepLedger(kind, 'memory-trust');
   const engineModule = await importGbrain<any>(gut, 'src/core/pglite-engine.ts');
   const { PGLiteEngine } = engineModule;
   const { operationsByName } = await importGbrain<any>(gut, 'src/core/operations.ts');
@@ -211,26 +283,42 @@ export async function openTrustSut(gut: GbrainUnderTest, opts: { sourceId?: stri
 
   // Keyword search only: no embedding provider is configured and none is reachable.
   configureGateway({ ...EMBEDDING, env: {} });
-  const template = await brainTemplate(gut, engineModule);
-  const engine = new PGLiteEngine();
-  const savedSnapshot = process.env.GBRAIN_PGLITE_SNAPSHOT;
-  if (template) process.env.GBRAIN_PGLITE_SNAPSHOT = template;
-  try {
-    await engine.connect({});
-  } finally {
-    if (savedSnapshot === undefined) delete process.env.GBRAIN_PGLITE_SNAPSHOT; else process.env.GBRAIN_PGLITE_SNAPSHOT = savedSnapshot;
+  let engine: any;
+  let scratch: ScratchEvalEngine | null = null;
+  if (kind === 'pglite') {
+    // The original path, unchanged: in-memory PGLite restored from the per-process snapshot template.
+    const template = await brainTemplate(gut, engineModule);
+    engine = new PGLiteEngine();
+    const savedSnapshot = process.env.GBRAIN_PGLITE_SNAPSHOT;
+    if (template) process.env.GBRAIN_PGLITE_SNAPSHOT = template;
+    try {
+      await engine.connect({});
+    } finally {
+      if (savedSnapshot === undefined) delete process.env.GBRAIN_PGLITE_SNAPSHOT; else process.env.GBRAIN_PGLITE_SNAPSHOT = savedSnapshot;
+    }
+    await engine.initSchema();
+  } else {
+    scratch = await openBehaviorEngine({ gut, label: 'memory_trust', kind, pgAdminUrl: opts.pgAdminUrl });
+    engine = scratch.engine;
   }
-  await engine.initSchema();
-  await disposePersistenceConsumer(engine);
-  await engine.executeRaw('UPDATE persistence_brain SET enabled=false WHERE singleton=1');
-  if (sourceId !== 'default') await engine.executeRaw('INSERT INTO sources(id,name) VALUES($1,$1) ON CONFLICT DO NOTHING', [sourceId]);
-  await registerLocalWriter(engine, 'cli');
-  const minted = await mintLegacyToken(engine, { name: `agent-${randomUUID().slice(0, 8)}`, scopes: ['read', 'write'], sourceGrant: [sourceId], takesHolders: ['world'] });
-  await engine.executeRaw('UPDATE persistence_brain SET enabled=true WHERE singleton=1');
-  await readLocalWriter(engine, 'cli');
-  await engine.setConfig('search.mcp_keyword_only', 'true');
+  const closeEngine = async () => {
+    await disposePersistenceConsumer(engine).catch(() => {});
+    if (scratch) await scratch.close(); else await engine.disconnect().catch(() => {});
+  };
+  /** Run one setup step; a refusal closes the brain and throws engine_not_supported_by_runner for that step. */
+  const setupStep = async (step: string, fn: () => Promise<any>): Promise<any> => {
+    try { return await fn(); } catch (e) { await closeEngine(); resetGateway?.(); throw asNotSupported(ledger, `setup: ${step}`, e); }
+  };
+  await setupStep('dispose persistence consumer', () => disposePersistenceConsumer(engine));
+  await setupStep('pause managed persistence (UPDATE persistence_brain)', () => engine.executeRaw('UPDATE persistence_brain SET enabled=false WHERE singleton=1'));
+  if (sourceId !== 'default') await setupStep('insert source row', () => engine.executeRaw('INSERT INTO sources(id,name) VALUES($1,$1) ON CONFLICT DO NOTHING', [sourceId]));
+  await setupStep('register local writer', () => registerLocalWriter(engine, 'cli'));
+  const minted = await setupStep('mint agent token', () => mintLegacyToken(engine, { name: `agent-${randomUUID().slice(0, 8)}`, scopes: ['read', 'write'], sourceGrant: [sourceId], takesHolders: ['world'] }));
+  await setupStep('resume managed persistence (UPDATE persistence_brain)', () => engine.executeRaw('UPDATE persistence_brain SET enabled=true WHERE singleton=1'));
+  await setupStep('read local writer', () => readLocalWriter(engine, 'cli'));
+  await setupStep('set search.mcp_keyword_only', () => engine.setConfig('search.mcp_keyword_only', 'true'));
 
-  const base = { engine, config: { engine: 'pglite', embedding_disabled: true }, sourceId, dryRun: false, logger: quiet };
+  const base = { engine, config: { engine: kind, embedding_disabled: true }, sourceId, dryRun: false, logger: quiet };
   const contexts = {
     remote: {
       ...base, remote: true, transport: 'http', takesHoldersAllowList: ['world'],
@@ -238,34 +326,39 @@ export async function openTrustSut(gut: GbrainUnderTest, opts: { sourceId?: stri
     },
     local: { ...base, remote: false },
   } as const;
-  const capabilities = await detectCapabilities(gut, engine, operationsByName);
+  const capabilities = await setupStep('detect trust capabilities (information_schema)', () => detectCapabilities(gut, engine, operationsByName));
 
+  /** Rethrow an engine refusal as engine_not_supported_by_runner (recorded), any other error unchanged. */
+  const guard = async (step: string, fn: () => Promise<any>): Promise<any> => {
+    try { return await fn(); } catch (e) { throw asNotSupported(ledger, step, e); }
+  };
   const op = async (caller: 'remote' | 'local', name: string, params: Record<string, unknown>) => {
     const o = operationsByName[name];
     if (!o) throw new HarnessError(`gbrain has no operation ${name}`);
-    return await o.handler(contexts[caller], { request_id: randomUUID(), ...params });
+    return await guard(`op ${name}`, () => o.handler(contexts[caller], { request_id: randomUUID(), ...params }));
   };
   const pausedImport = async (slug: string, content: string, writeGate: unknown): Promise<ImportOutcome> => {
-    await engine.executeRaw('UPDATE persistence_brain SET enabled=false WHERE singleton=1');
+    await guard('pause managed persistence (UPDATE persistence_brain)', () => engine.executeRaw('UPDATE persistence_brain SET enabled=false WHERE singleton=1'));
     try {
-      const r = await importFromContent(engine, slug, content, { sourceId, noEmbed: true, preserveGateMarkers: true, ...(writeGate ? { writeGate } : {}) });
+      const r = await guard('importFromContent', () => importFromContent(engine, slug, content, { sourceId, noEmbed: true, preserveGateMarkers: true, ...(writeGate ? { writeGate } : {}) }));
       return { slug, status: r?.status, quarantined: Boolean(r?.quarantined), error: r?.error, chunks: r?.chunks };
     } finally {
-      await engine.executeRaw('UPDATE persistence_brain SET enabled=true WHERE singleton=1');
+      await guard('resume managed persistence (UPDATE persistence_brain)', () => engine.executeRaw('UPDATE persistence_brain SET enabled=true WHERE singleton=1'));
     }
   };
 
   return {
-    gut, engine, sourceId, capabilities,
+    gut, kind, unsupported: ledger, engine, sourceId, capabilities,
     op,
     tryOp: async (caller, name, params) => {
       try { return { ok: true, value: await op(caller, name, params) }; }
       catch (e) {
-        if (e instanceof HarnessError) throw e;
+        // A harness error or an engine refusal is not gbrain refusing the write: never captured as a refusal outcome.
+        if (e instanceof HarnessError || isNotSupported(e)) throw e;
         return { ok: false, code: refusalCode(e), message: e instanceof Error ? e.message : String(e) };
       }
     },
-    sql: async (q, params) => await engine.executeRaw(q, params),
+    sql: async (q, params) => await guard(`raw SQL: ${q.replace(/\s+/g, ' ').trim().slice(0, 80)}`, () => engine.executeRaw(q, params)),
     ownerImport: async (slug, content) => {
       const gate = channel?.ownerSourceGateInput ? await channel.ownerSourceGateInput(engine, sourceId, {}) : null;
       return pausedImport(slug, content, gate);
@@ -276,7 +369,7 @@ export async function openTrustSut(gut: GbrainUnderTest, opts: { sourceId?: stri
       for (const [k, v] of Object.entries(mode)) await engine.setConfig(k, v);
     },
     turnContext: async userText => {
-      const r = await assembleTurnContext(engine, { sourceId, window: [{ role: 'user', text: userText }], sessionId: randomUUID() });
+      const r = await guard('assembleTurnContext', () => assembleTurnContext(engine, { sourceId, window: [{ role: 'user', text: userText }], sessionId: randomUUID() }));
       return { text: r.text ?? '', withheld: r.suppressed?.withheld ?? 0, facts: r.factsCount ?? 0, pointers: r.pointers?.length ?? 0, volunteered: r.volunteered?.length ?? 0 };
     },
     contextPack: async entities => {
@@ -284,8 +377,7 @@ export async function openTrustSut(gut: GbrainUnderTest, opts: { sourceId?: stri
       return { text: String(r?.text ?? ''), withheld: Number(r?.suppressed?.withheld ?? 0) };
     },
     close: async () => {
-      await disposePersistenceConsumer(engine).catch(() => {});
-      await engine.disconnect().catch(() => {});
+      await closeEngine();
       resetGateway?.();
     },
   };

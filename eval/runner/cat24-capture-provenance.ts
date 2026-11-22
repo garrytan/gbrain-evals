@@ -53,20 +53,32 @@
  * Hermetic: no API keys. Gateway env sanitized; ctx.deferEmbeds + noEmbed —
  * the embedding pipeline is out of scope.
  *
+ * Engines: GBRAIN_EVAL_ENGINE=pglite|postgres|rust picks the brain through
+ * eval/runner/eval-engine.ts (unset means in-memory PGLite, as before).
+ * Postgres creates a scratch database through `--pg-url` or
+ * LIFECYCLE_PG_URL. Every write goes through the same gbrain paths on every
+ * engine. The runner reads the stored provenance back with raw SQL where the
+ * engine accepts it; on an engine without raw SQL it reads the same columns
+ * through the engine's getPage and getChunks, and the schema probe, which can
+ * only be asked in SQL, is reported as engine_not_supported_by_runner. Any
+ * step the engine refuses is reported that way too, never as a pass.
+ *
  * Run:
- *   bun eval/runner/cat24-capture-provenance.ts
+ *   bun eval/runner/cat24-capture-provenance.ts [--gbrain <checkout>[@ref]] [--pg-url <admin url>] [--output <dir>]
  */
 
 import { writeFileSync, mkdirSync, realpathSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
-import { PGLiteEngine } from 'gbrain/pglite-engine';
-import { importFromContent, importFromFile } from 'gbrain/import-file';
-import { configureGateway } from 'gbrain/ai/gateway';
-import { operationsByName, type OperationContext } from 'gbrain/operations';
+import type { OperationContext } from 'gbrain/operations';
 import { ProbeAccounting } from './probe-accounting.ts';
-import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt, type ProbeError, noModelSpend } from './receipt.ts';
-import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
+import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt, type ProbeError, noModelSpend, sourceTreeIdentity } from './receipt.ts';
+import { gbrainPin } from './gbrain-version.ts';
+import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from './gbrain-under-test.ts';
+import {
+  EngineStepLedger, EVAL_ENGINE_REFUSED_EXIT, behaviorEngineReceiptFields, evalEngineRefusalMessage, isEngineUnavailable, openBehaviorEngine,
+  requestedEvalEngine, supportsRawSql, verdictWithUnsupported, type EvalEngineKind,
+} from './eval-engine.ts';
 
 export const CAT24_CATEGORY = 'cat24-capture-provenance';
 
@@ -122,7 +134,13 @@ export interface PreservationProbeEvidence extends ProvenanceProbeEvidence {
   at_after: string | null;
 }
 
-async function readProvenance(engine: any, slug: string): Promise<ProvenanceRow | null> {
+async function readProvenance(engine: any, slug: string, kind: EvalEngineKind = 'pglite'): Promise<ProvenanceRow | null> {
+  if (!supportsRawSql(kind)) {
+    // The same stored columns, read through the engine's typed page read (Page carries the provenance fields).
+    const page = await engine.getPage(slug, { sourceId: 'default' });
+    if (!page) return null;
+    return { source_kind: page.source_kind ?? null, source_uri: page.source_uri ?? null, ingested_via: page.ingested_via ?? null, ingested_at: page.ingested_at ?? null, source_path: page.source_path ?? null };
+  }
   const rows = await engine.executeRaw(
     `SELECT source_kind, source_uri, ingested_via, ingested_at, source_path
      FROM pages WHERE slug = $1 AND source_id = 'default' AND deleted_at IS NULL`,
@@ -146,10 +164,10 @@ export function checkProvenance(
   return null;
 }
 
-function makeCtx(engine: any, remote: boolean): OperationContext {
+function makeCtx(engine: any, remote: boolean, kind: EvalEngineKind = 'pglite'): OperationContext {
   return {
     engine,
-    config: { engine: 'pglite' } as OperationContext['config'],
+    config: { engine: kind } as OperationContext['config'],
     logger: {
       info: () => {},
       warn: () => {},
@@ -175,11 +193,21 @@ export interface Cat24Options {
   simulateBrokenTrustGate?: boolean;
   /** Test hook: re-import with forceRechunk, bypassing the hash short-circuit. The dedup probe must then FAIL. */
   bypassDedupShortCircuit?: boolean;
+  /** Write the receipt to <output>/receipt.json instead of eval/reports/<category>/receipt.json. */
+  output?: string;
+  /** The gbrain build under test; default the pinned dependency. */
+  gut?: GbrainUnderTest;
+  /** The engine GBRAIN_EVAL_ENGINE requested, or null for the default (in-memory PGLite, receipt unchanged). */
+  engine?: EvalEngineKind | null;
+  /** Postgres admin URL for the scratch database (default `--pg-url`, else LIFECYCLE_PG_URL). */
+  pgAdminUrl?: string;
 }
 
 export interface Cat24RunResult {
   receipt: Receipt;
   probes: PathProbe[];
+  /** Steps the engine could not run (engine_not_supported_by_runner). */
+  unsupported: EngineStepLedger['steps'];
   exitCode: number;
   receiptFile: string;
 }
@@ -187,7 +215,7 @@ export interface Cat24RunResult {
 export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResult> {
   const startedAt = new Date().toISOString();
   const reportsDir = options.reportsDir ?? join(process.cwd(), 'eval/reports');
-  const receiptFile = receiptPath(CAT24_CATEGORY, reportsDir);
+  const receiptFile = options.output ? join(options.output, 'receipt.json') : receiptPath(CAT24_CATEGORY, reportsDir);
   const log = options.quiet ? (_: string) => {} : (s: string) => process.stderr.write(s);
 
   // Isolate GBRAIN_HOME (config reads: active pack, sync.repo_path — with a
@@ -197,6 +225,13 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
   mkdirSync(home, { recursive: true });
   process.env.GBRAIN_HOME = home;
 
+  const gut = options.gut ?? resolveGbrainUnderTest(null);
+  const requested = options.engine === undefined ? requestedEvalEngine() : options.engine;
+  const kind: EvalEngineKind = requested ?? 'pglite';
+  const ledger = new EngineStepLedger(kind, CAT24_CATEGORY);
+  const { configureGateway } = await importGbrain<any>(gut, 'src/core/ai/gateway.ts');
+  const { importFromContent, importFromFile } = await importGbrain<any>(gut, 'src/core/import-file.ts');
+  const { operationsByName } = await importGbrain<any>(gut, 'src/core/operations.ts');
   const sanitizedEnv: Record<string, string | undefined> = { ...process.env } as Record<string, string | undefined>;
   for (const k of PROVIDER_KEYS) delete sanitizedEnv[k];
   configureGateway({
@@ -205,9 +240,9 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
     env: sanitizedEnv,
   });
 
-  const engine: any = new PGLiteEngine();
-  await engine.connect({});
-  await engine.initSchema();
+  const brain = await openBehaviorEngine({ gut, label: 'cat24', kind, pgAdminUrl: options.pgAdminUrl });
+  const engine: any = brain.engine;
+  const rawSql = supportsRawSql(kind);
 
   const PROBE_IDS = CAT24_PROBE_IDS;
   const acc = new ProbeAccounting(PROBE_IDS.length);
@@ -234,7 +269,10 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
   try {
     // ── Probe 0: schema precondition — provenance columns exist ──
     let columnsPresent = true;
-    try {
+    if (!rawSql) {
+      // A column-existence question has no typed member; the path probes below read the columns through getPage.
+      ledger.skip('provenance-columns-present', `The schema probe selects the provenance columns with raw SQL, and the ${kind} engine has no SQL dialect (it refuses executeRaw with engine_capability_missing, reason raw_sql). The path probes read the same columns through getPage.`);
+    } else try {
       await engine.executeRaw(`SELECT source_kind, source_uri, ingested_via, ingested_at FROM pages LIMIT 0`, []);
       schema.select_succeeded = true;
       scoreProbe('provenance-columns-present');
@@ -257,9 +295,10 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
         let actual: ProvenanceRow | null = null;
         try {
           await drive();
-          actual = await readProvenance(engine, slug);
+          actual = await readProvenance(engine, slug, kind);
           failReason = checkProvenance(actual, expected);
         } catch (e: any) {
+          if (ledger.refused(probeId, e)) return;
           failReason = `ingestion path threw: ${String(e?.message ?? e).slice(0, 300)}`;
         }
         probes.push({ probe_id: probeId, path, slug, expected, actual, pass: failReason === null, fail_reason: failReason });
@@ -305,7 +344,7 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
         },
       );
       // source_path is the file path's actual provenance carrier — verify.
-      const fileRow = await readProvenance(engine, 'inbox/2026-05-23-file-import');
+      const fileRow = await readProvenance(engine, 'inbox/2026-05-23-file-import', kind).catch(() => null);
       const fileProbe = probes.find(p => p.probe_id === 'file-import-no-channel-provenance');
       if (fileProbe && fileProbe.pass && fileRow?.source_path !== relPath) {
         fileProbe.pass = false;
@@ -322,7 +361,7 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
         'op-put-page-local-trusted', 'put_page op, ctx.remote=false (gbrain capture local install)', localSlug,
         { source_kind: 'capture-cli', source_uri: 'stdin', ingested_via: 'capture-cli', ingested_at_null: false },
         async () => {
-          await putPage.handler(makeCtx(engine, false), {
+          await putPage.handler(makeCtx(engine, false, kind), {
             slug: localSlug,
             content: '# Local op probe\n\nWritten through the put_page operation by a trusted local caller.\n',
             source_kind: 'capture-cli',
@@ -338,7 +377,7 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
         'op-put-page-remote-spoof-override', 'put_page op, ctx.remote=true (MCP posture, CV6 trust gate)', remoteSlug,
         { source_kind: 'mcp:put_page', source_uri: null, ingested_via: 'mcp:put_page', ingested_at_null: false },
         async () => {
-          await putPage.handler(makeCtx(engine, options.simulateBrokenTrustGate ? false : true), {
+          await putPage.handler(makeCtx(engine, options.simulateBrokenTrustGate ? false : true, kind), {
             slug: remoteSlug,
             content: '# Remote op probe\n\nWritten through the put_page operation by an untrusted remote caller.\n',
             // Deliberately spoofed — the trust gate must ignore all three.
@@ -352,6 +391,14 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
       // ── Probe 5: dedup — identical re-import creates no second row ──
       try {
         const pageState = async () => {
+          if (!rawSql) {
+            // Typed reads of the same row and chunk ids on an engine without raw SQL (unsealed chunks included, as the
+            // SQL read sees every stored chunk row of the page).
+            const page = await engine.getPage(contentSlug, { sourceId: 'default' });
+            const rows = page ? [{ id: Number(page.id), updated_at: page.updated_at }] : [];
+            const chunks = page ? await engine.getChunks(contentSlug, { sourceId: 'default', includeUnsealed: true }) as Array<{ id: number }> : [];
+            return { rows, updated: rows.map(r => String(r.updated_at instanceof Date ? r.updated_at.toISOString() : r.updated_at)), chunkIds: chunks.map(c => Number(c.id)).sort((a, b) => a - b) };
+          }
           const rows = await engine.executeRaw(
             `SELECT id, updated_at FROM pages WHERE slug = $1 AND source_id = 'default' AND deleted_at IS NULL`,
             [contentSlug],
@@ -392,12 +439,12 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
           else failProbe('dedup-hash-short-circuit', `identical re-import was not short-circuited: ${problems.join('; ')}`);
         }
       } catch (e: any) {
-        failProbe('dedup-hash-short-circuit', `dedup probe threw: ${e?.message ?? e}`);
+        if (!ledger.refused('dedup-hash-short-circuit', e)) failProbe('dedup-hash-short-circuit', `dedup probe threw: ${e?.message ?? e}`);
       }
 
       // ── Probe 6: CV12 — NULL-provenance rewrite preserves first-write stamps ──
       try {
-        const beforeRow = await readProvenance(engine, contentSlug);
+        const beforeRow = await readProvenance(engine, contentSlug, kind);
         preservation.before = beforeRow;
         preservation.at_before = beforeRow?.ingested_at instanceof Date ? beforeRow.ingested_at.toISOString() : beforeRow ? String(beforeRow.ingested_at) : null;
         if (!beforeRow || beforeRow.source_kind !== 'capture-cli') {
@@ -405,7 +452,7 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
         } else {
           // Different body, NO provenance opts: COALESCE must preserve.
           await importFromContent(engine, contentSlug, contentBody + '\nEdited later by a plain writer.\n', { noEmbed: true });
-          const afterRow = await readProvenance(engine, contentSlug);
+          const afterRow = await readProvenance(engine, contentSlug, kind);
           preservation.after = afterRow;
           const drift = checkProvenance(afterRow, {
             source_kind: 'capture-cli', source_uri: 'file:///tmp/probe.md', ingested_via: 'capture-cli', ingested_at_null: false,
@@ -421,19 +468,20 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
           }
         }
       } catch (e: any) {
-        failProbe('provenance-preserved-on-reimport', `preservation probe threw: ${e?.message ?? e}`);
+        if (!ledger.refused('provenance-preserved-on-reimport', e)) failProbe('provenance-preserved-on-reimport', `preservation probe threw: ${e?.message ?? e}`);
       }
     }
   } finally {
     console.log = origLog;
     console.error = origErr;
-    await engine.disconnect();
+    await brain.close();
   }
 
   const summary = acc.summary();
   const scoredValues = acc.scoredValues();
-  const verdict: 'pass' | 'fail' =
-    summary.n_scored === PROBE_IDS.length && scoredValues.every(v => v === 1) ? 'pass' : 'fail';
+  // A probe the engine refused is listed, never scored: the rest must all pass, and the verdict is then partial.
+  const verdict = verdictWithUnsupported<'pass' | 'fail'>(
+    summary.n_scored + ledger.steps.length === PROBE_IDS.length && scoredValues.every(v => v === 1) ? 'pass' : 'fail', ledger.steps);
   const runInvalid = summary.run_invalid;
 
   const receipt: Receipt = {
@@ -448,9 +496,13 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
     completion_rate: summary.completion_rate,
     errors: summary.errors,
     publishable: summary.publishable && verdict === 'pass' && !options.simulateBrokenTrustGate && !options.bypassDedupShortCircuit,
-    gbrain_version: gbrainVersionResolved(),
+    gbrain_version: gut.version,
     gbrain_pin: gbrainPin(),
+    ...(gut.overlay ? { execution: { source_tree: sourceTreeIdentity(), product: productIdentityFor(gut) } } : {}),
+    ...behaviorEngineReceiptFields(requested, ledger.steps),
     resolved_config: {
+      ...(requested ? { engine: kind, provenance_read: rawSql ? 'raw SQL on pages and content_chunks' : 'typed engine reads (getPage, getChunks)' } : {}),
+      ...(gut.overlay ? { gbrain_overlay: overlaySummary(gut) } : {}),
       embed_transport: 'none (provider keys stripped; noEmbed + ctx.deferEmbeds)',
       distinct_ingestion_paths: [
         'importFromContent (content import, provenance opts)',
@@ -484,18 +536,23 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
     log(`[cat24]   ${p.pass ? '✓' : '✗'} ${p.probe_id.padEnd(36)} kind=${p.actual?.source_kind ?? 'NULL'}${p.fail_reason ? ` — ${p.fail_reason}` : ''}\n`);
   }
   log(`[cat24]   dedup: before=${dedup.before_rows} after=${dedup.after_rows} distinct_ids=${dedup.distinct_page_ids} (1 = clean) status=${dedup.reimport_status || 'n/a'}\n`);
-  log(`[cat24]   run_status=${receipt.run_status} verdict=${receipt.verdict ?? 'n/a'}\n`);
+  for (const u of ledger.steps) log(`[cat24]   - ${u.step.padEnd(36)} engine_not_supported_by_runner (${kind}): ${u.reason}\n`);
+  log(`[cat24]   run_status=${receipt.run_status} verdict=${receipt.verdict ?? 'n/a'}${requested ? ` engine=${kind}` : ''}\n`);
   log(`[cat24]   receipt: ${receiptFile}\n`);
 
-  const exitCode = runInvalid ? 1 : (verdict === 'pass' ? 0 : 1);
-  return { receipt, probes, exitCode, receiptFile };
+  const exitCode = runInvalid ? 1 : (verdict === 'fail' ? 1 : 0);
+  return { receipt, probes, unsupported: ledger.steps, exitCode, receiptFile };
 }
 
 if (import.meta.main) {
   try {
-    const result = await runCat24();
+    const result = await runCat24({ gut: resolveGbrainUnderTest(gbrainSpecFrom(process.argv.slice(2))), output: process.argv.includes('--output') ? process.argv[process.argv.indexOf('--output') + 1] : undefined });
     process.exit(result.exitCode);
   } catch (e: any) {
+    if (isEngineUnavailable(e)) {
+      console.error(evalEngineRefusalMessage(e, 'Cat 24 capture provenance'));
+      process.exit(EVAL_ENGINE_REFUSED_EXIT);
+    }
     try {
       writeReceipt(receiptPath(CAT24_CATEGORY), {
         schema_version: RECEIPT_SCHEMA_VERSION,
@@ -507,7 +564,7 @@ if (import.meta.main) {
         completion_rate: 0,
         errors: [{ probe_id: 'preflight', origin: 'harness', message: String(e?.message ?? e).slice(0, 500) }],
         publishable: false,
-        gbrain_version: gbrainVersionResolved(),
+        gbrain_version: resolveGbrainUnderTest(null).version,
         gbrain_pin: gbrainPin(),
         started_at: new Date().toISOString(),
         finished_at: new Date().toISOString(),

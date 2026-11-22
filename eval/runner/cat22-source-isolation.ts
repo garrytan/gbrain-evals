@@ -28,20 +28,30 @@
  * isolation OFF (no source opts) and REQUIRES cross-source rows to appear —
  * proving the probes can detect leakage when it exists.
  *
+ * Engines: GBRAIN_EVAL_ENGINE=pglite|postgres|rust picks the brain through
+ * eval/runner/eval-engine.ts (unset means in-memory PGLite, as before).
+ * Postgres creates a scratch database through `--pg-url` or
+ * LIFECYCLE_PG_URL. The seeding writes the sources rows and the two graph
+ * edges with raw SQL where the engine accepts it; on an engine without raw
+ * SQL it uses the engine's own typed members (insertSource, addLink with
+ * source ids) when the build has them. A probe or seeding step the engine
+ * refuses is reported as engine_not_supported_by_runner, never as a pass.
+ *
  * Run:
- *   bun eval/runner/cat22-source-isolation.ts
+ *   bun eval/runner/cat22-source-isolation.ts [--gbrain <checkout>[@ref]] [--pg-url <admin url>] [--output <dir>]
  */
 
 import { writeFileSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
-import { PGLiteEngine } from 'gbrain/pglite-engine';
-import { importFromContent } from 'gbrain/import-file';
-import { configureGateway } from 'gbrain/ai/gateway';
-import { hybridSearch } from 'gbrain/search/hybrid';
 import { ProbeAccounting } from './probe-accounting.ts';
-import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt, noModelSpend } from './receipt.ts';
-import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
+import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt, noModelSpend, sourceTreeIdentity } from './receipt.ts';
+import { gbrainPin } from './gbrain-version.ts';
+import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from './gbrain-under-test.ts';
+import {
+  EngineStepLedger, EvalEngineUnavailable, behaviorEngineReceiptFields, evalEngineRefusalMessage, EVAL_ENGINE_REFUSED_EXIT, isEngineUnavailable,
+  openBehaviorEngine, requestedEvalEngine, supportsRawSql, verdictWithUnsupported, type EvalEngineKind,
+} from './eval-engine.ts';
 
 export const CAT22_CATEGORY = 'cat22-source-isolation';
 
@@ -85,13 +95,28 @@ export interface ControlProbe {
   detected_leak: boolean;
 }
 
+type ImportFromContent = (engine: any, slug: string, content: string, opts: Record<string, unknown>) => Promise<unknown>;
+
 interface SeededCorpus {
   /** source id → slugs successfully imported into that source. */
   bySource: Map<string, Set<string>>;
 }
 
-async function ensureSource(engine: any, source_id: string): Promise<void> {
+/**
+ * The seeding steps that write rows directly. Raw SQL on an engine that accepts it (the original path, unchanged);
+ * otherwise the engine's typed member when the build has one; otherwise a refusal the runner reports as
+ * engine_not_supported_by_runner.
+ */
+async function ensureSource(engine: any, source_id: string, kind: EvalEngineKind = 'pglite'): Promise<void> {
   if (source_id === 'default') return;
+  if (!supportsRawSql(kind)) {
+    if (typeof engine.insertSource !== 'function') {
+      throw new EvalEngineUnavailable(kind, 'engine_not_supported_by_runner', `Cat 22 seeds its sources rows with raw SQL, and this ${kind} build has neither raw SQL nor a typed insertSource member.`);
+    }
+    if (typeof engine.getSource === 'function' && await engine.getSource(source_id)) return;
+    await engine.insertSource({ id: source_id, name: source_id, local_path: null, config: { federated: true } });
+    return;
+  }
   await engine.executeRaw(
     `INSERT INTO sources (id, name, config) VALUES ($1, $1, '{"federated": true}'::jsonb) ON CONFLICT (id) DO NOTHING`,
     [source_id],
@@ -114,10 +139,10 @@ async function pageId(engine: any, sourceId: string, slug: string): Promise<numb
  * alpha graph/hub-alpha → beta graph/leak-beta (the cross-source edge a
  * scoped walk must never follow).
  */
-export async function seedCorpus(engine: any): Promise<SeededCorpus> {
+export async function seedCorpus(engine: any, importFromContent: ImportFromContent, kind: EvalEngineKind = 'pglite'): Promise<SeededCorpus> {
   const bySource = new Map<string, Set<string>>();
   for (const s of SOURCES) {
-    await ensureSource(engine, s);
+    await ensureSource(engine, s, kind);
     bySource.set(s, new Set());
   }
 
@@ -141,11 +166,16 @@ export async function seedCorpus(engine: any): Promise<SeededCorpus> {
   bySource.get('alpha')!.add('graph/spoke-alpha');
   bySource.get('beta')!.add('graph/leak-beta');
 
+  // Direct link seeding: the extraction pipeline is not under test, the
+  // scoped WALK over these edges is.
+  if (!supportsRawSql(kind)) {
+    await engine.addLink('graph/hub-alpha', 'graph/spoke-alpha', '', 'mentions', undefined, undefined, undefined, { fromSourceId: 'alpha', toSourceId: 'alpha' });
+    await engine.addLink('graph/hub-alpha', 'graph/leak-beta', '', 'mentions', undefined, undefined, undefined, { fromSourceId: 'alpha', toSourceId: 'beta' });
+    return { bySource };
+  }
   const hub = await pageId(engine, 'alpha', 'graph/hub-alpha');
   const spoke = await pageId(engine, 'alpha', 'graph/spoke-alpha');
   const leak = await pageId(engine, 'beta', 'graph/leak-beta');
-  // Direct link seeding: the extraction pipeline is not under test, the
-  // scoped WALK over these edges is.
   await engine.executeRaw(
     `INSERT INTO links (from_page_id, to_page_id, link_type) VALUES ($1, $2, 'mentions'), ($1, $3, 'mentions')`,
     [hub, spoke, leak],
@@ -204,12 +234,22 @@ export interface Cat22Options {
    * to pass vacuously and prove the gate now fails on it.
    */
   skipSeedSources?: string[];
+  /** Write the receipt to <output>/receipt.json instead of eval/reports/<category>/receipt.json. */
+  output?: string;
+  /** The gbrain build under test; default the pinned dependency. */
+  gut?: GbrainUnderTest;
+  /** The engine GBRAIN_EVAL_ENGINE requested, or null for the default (in-memory PGLite, receipt unchanged). */
+  engine?: EvalEngineKind | null;
+  /** Postgres admin URL for the scratch database (default `--pg-url`, else LIFECYCLE_PG_URL). */
+  pgAdminUrl?: string;
 }
 
 export interface Cat22RunResult {
   receipt: Receipt;
   probes: SurfaceProbe[];
   controls: ControlProbe[];
+  /** Steps the engine could not run (engine_not_supported_by_runner); empty on PGLite and Postgres. */
+  unsupported: EngineStepLedger['steps'];
   exitCode: number;
   receiptFile: string;
 }
@@ -217,7 +257,7 @@ export interface Cat22RunResult {
 export async function runCat22(options: Cat22Options = {}): Promise<Cat22RunResult> {
   const startedAt = new Date().toISOString();
   const reportsDir = options.reportsDir ?? join(process.cwd(), 'eval/reports');
-  const receiptFile = receiptPath(CAT22_CATEGORY, reportsDir);
+  const receiptFile = options.output ? join(options.output, 'receipt.json') : receiptPath(CAT22_CATEGORY, reportsDir);
   const log = options.quiet ? (_: string) => {} : (s: string) => process.stderr.write(s);
 
   // Isolate GBRAIN_HOME so user config (embedding column pins, search mode
@@ -229,20 +269,23 @@ export async function runCat22(options: Cat22Options = {}): Promise<Cat22RunResu
   // Hermetic: strip every provider key from the gateway env so hybridSearch's
   // keyword-only path falls out of the documented no-provider short-circuit
   // (hybrid.ts: `!isAvailable('embedding', ...)`), not out of an invalid opt.
+  const gut = options.gut ?? resolveGbrainUnderTest(null);
+  const requested = options.engine === undefined ? requestedEvalEngine() : options.engine;
+  const kind: EvalEngineKind = requested ?? 'pglite';
+  const ledger = new EngineStepLedger(kind, CAT22_CATEGORY);
+  const { configureGateway } = await importGbrain<any>(gut, 'src/core/ai/gateway.ts');
+  const { importFromContent } = await importGbrain<any>(gut, 'src/core/import-file.ts');
+  const { hybridSearch } = await importGbrain<any>(gut, 'src/core/search/hybrid.ts');
   configureGateway({
     embedding_model: 'openai:text-embedding-3-large',
     embedding_dimensions: 1536,
     env: {},
   });
 
-  const engine: any = new PGLiteEngine();
-  await engine.connect({});
-  await engine.initSchema();
+  const brain = await openBehaviorEngine({ gut, label: 'cat22', kind, pgAdminUrl: options.pgAdminUrl });
+  const engine: any = brain.engine;
+  const product = { gbrain_version: gut.version, gbrain_pin: gbrainPin(), ...(gut.overlay ? { execution: { source_tree: sourceTreeIdentity(), product: productIdentityFor(gut) } } : {}) };
 
-  // WS5: pin search mode + reranker BEFORE ingest. Never rely on defaults.
-  for (const [key, value] of Object.entries(PINNED_CONFIG)) {
-    await engine.setConfig(key, value);
-  }
 
   const scope = 'alpha';
   const probes: SurfaceProbe[] = [];
@@ -256,7 +299,11 @@ export async function runCat22(options: Cat22Options = {}): Promise<Cat22RunResu
   console.error = () => {};
   let seeded: SeededCorpus;
   try {
-    seeded = await seedCorpus(engine);
+    // WS5: pin search mode + reranker BEFORE ingest. Never rely on defaults.
+    for (const [key, value] of Object.entries(PINNED_CONFIG)) {
+      await engine.setConfig(key, value);
+    }
+    seeded = await seedCorpus(engine, importFromContent, kind);
     for (const s of options.skipSeedSources ?? []) {
       // Test hook: simulate the empty-result regression by deleting a
       // source's rows after seeding (keeps import plumbing identical).
@@ -266,25 +313,29 @@ export async function runCat22(options: Cat22Options = {}): Promise<Cat22RunResu
   } catch (e: any) {
     console.log = origLog;
     console.error = origErr;
-    await engine.disconnect();
+    await brain.close();
+    // The engine refused a seeding step: nothing can be measured, and nothing passed or failed.
+    const refused = ledger.refused('seed', e);
     const receipt: Receipt = {
       schema_version: RECEIPT_SCHEMA_VERSION,
       benchmark_version: BENCHMARK_VERSION,
       category: CAT22_CATEGORY,
-      run_status: 'error',
+      run_status: refused ? 'skipped' : 'error',
+      ...(refused ? { skip_reason: `engine_not_supported_by_runner: ${ledger.steps[0]!.reason}` } : {}),
       n_total: 8,
       n_scored: 0,
       completion_rate: 0,
-      errors: [{ probe_id: 'seed', origin: 'harness', message: String(e?.message ?? e).slice(0, 500) }],
+      errors: refused ? [] : [{ probe_id: 'seed', origin: 'harness', message: String(e?.message ?? e).slice(0, 500) }],
       publishable: false,
-      gbrain_version: gbrainVersionResolved(),
-      gbrain_pin: gbrainPin(),
+      ...product,
+      ...behaviorEngineReceiptFields(requested, ledger.steps),
+      ...(gut.overlay ? { resolved_config: { gbrain_overlay: overlaySummary(gut) } } : {}),
       started_at: startedAt,
       finished_at: new Date().toISOString(),
-    };
+    } as Receipt;
     writeReceipt(receiptFile, receipt);
-    log(`[cat22] seed failed: ${e?.message ?? e}\n`);
-    return { receipt, probes: [], controls: [], exitCode: 1, receiptFile };
+    log(`[cat22] seed ${refused ? `not supported on ${kind}` : 'failed'}: ${e?.message ?? e}\n`);
+    return { receipt, probes: [], controls: [], unsupported: ledger.steps, exitCode: refused ? 0 : 1, receiptFile };
   }
 
   const alphaCount = seeded.bySource.get('alpha')!.size;
@@ -299,6 +350,8 @@ export async function runCat22(options: Cat22Options = {}): Promise<Cat22RunResu
       if (p.pass) acc.score(id, 1);
       else acc.error(id, 'sut', `${p.surface}: ${p.fail_reason}`);
     } catch (e: any) {
+      // The engine's typed refusal of the surface: not run, neither a pass nor a fail.
+      if (ledger.refused(id, e)) return;
       // A thrown read on a scoped surface is the SUT failing the probe.
       acc.error(id, 'sut', `${id} threw: ${e?.message ?? e}`);
       probes.push({
@@ -415,6 +468,7 @@ export async function runCat22(options: Cat22Options = {}): Promise<Cat22RunResu
       if (c.detected_leak) acc.score(id, 1);
       else acc.error(id, 'harness', `${c.surface} control saw no cross-source rows — scoped probes are not proven able to detect leaks`);
     } catch (e: any) {
+      if (ledger.refused(id, e)) return;
       acc.error(id, 'harness', `${id} control threw: ${e?.message ?? e}`);
       controls.push({ surface: id, total_results: 0, cross_source_rows: 0, detected_leak: false });
     }
@@ -451,12 +505,14 @@ export async function runCat22(options: Cat22Options = {}): Promise<Cat22RunResu
 
   console.log = origLog;
   console.error = origErr;
-  await engine.disconnect();
+  await brain.close();
 
   const summary = acc.summary();
-  const isolationClean = probes.length === 5 && probes.every(p => p.pass);
-  const controlsDetect = controls.length === 3 && controls.every(c => c.detected_leak);
-  const verdict: 'pass' | 'fail' = isolationClean && controlsDetect ? 'pass' : 'fail';
+  // Every probe and control either ran or was refused by the engine; a refused one is listed, never counted as clean.
+  const refusedIds = new Set(ledger.steps.map(s => s.step));
+  const isolationClean = probes.length + [...refusedIds].filter(id => !id.startsWith('control-')).length === 5 && probes.every(p => p.pass);
+  const controlsDetect = controls.length + [...refusedIds].filter(id => id.startsWith('control-')).length === 3 && controls.every(c => c.detected_leak);
+  const verdict = verdictWithUnsupported<'pass' | 'fail'>(isolationClean && controlsDetect ? 'pass' : 'fail', ledger.steps);
   const runInvalid = summary.run_invalid;
 
   const receipt: Receipt = {
@@ -471,9 +527,11 @@ export async function runCat22(options: Cat22Options = {}): Promise<Cat22RunResu
     completion_rate: summary.completion_rate,
     errors: summary.errors,
     publishable: summary.publishable && verdict === 'pass' && !options.skipSeedSources?.length,
-    gbrain_version: gbrainVersionResolved(),
-    gbrain_pin: gbrainPin(),
+    ...product,
+    ...behaviorEngineReceiptFields(requested, ledger.steps),
     resolved_config: {
+      ...(requested ? { engine: kind, seeding: supportsRawSql(kind) ? 'raw SQL (sources rows, graph edges)' : 'typed engine members (insertSource, addLink with source ids)' } : {}),
+      ...(gut.overlay ? { gbrain_overlay: overlaySummary(gut) } : {}),
       search_mode: PINNED_CONFIG['search.mode'],
       reranker_enabled: false,
       pinned_config: PINNED_CONFIG,
@@ -509,18 +567,23 @@ export async function runCat22(options: Cat22Options = {}): Promise<Cat22RunResu
   for (const c of controls) {
     log(`[cat22]   ${c.detected_leak ? '✓' : '✗'} ${c.surface.padEnd(22)} [control] rows=${c.total_results} cross-source=${c.cross_source_rows}\n`);
   }
-  log(`[cat22]   run_status=${receipt.run_status} verdict=${receipt.verdict ?? 'n/a'}\n`);
+  for (const u of ledger.steps) log(`[cat22]   - ${u.step.padEnd(22)} engine_not_supported_by_runner (${kind}): ${u.reason}\n`);
+  log(`[cat22]   run_status=${receipt.run_status} verdict=${receipt.verdict ?? 'n/a'}${requested ? ` engine=${kind}` : ''}\n`);
   log(`[cat22]   receipt:           ${receiptFile}\n`);
 
-  const exitCode = runInvalid ? 1 : (verdict === 'pass' ? 0 : 1);
-  return { receipt, probes, controls, exitCode, receiptFile };
+  const exitCode = runInvalid ? 1 : (verdict === 'fail' ? 1 : 0);
+  return { receipt, probes, controls, unsupported: ledger.steps, exitCode, receiptFile };
 }
 
 if (import.meta.main) {
   try {
-    const result = await runCat22();
+    const result = await runCat22({ gut: resolveGbrainUnderTest(gbrainSpecFrom(process.argv.slice(2))), output: process.argv.includes('--output') ? process.argv[process.argv.indexOf('--output') + 1] : undefined });
     process.exit(result.exitCode);
   } catch (e: any) {
+    if (isEngineUnavailable(e)) {
+      console.error(evalEngineRefusalMessage(e, 'Cat 22 source isolation'));
+      process.exit(EVAL_ENGINE_REFUSED_EXIT);
+    }
     try {
       writeReceipt(receiptPath(CAT22_CATEGORY), {
         schema_version: RECEIPT_SCHEMA_VERSION,
@@ -532,7 +595,7 @@ if (import.meta.main) {
         completion_rate: 0,
         errors: [{ probe_id: 'preflight', origin: 'harness', message: String(e?.message ?? e).slice(0, 500) }],
         publishable: false,
-        gbrain_version: gbrainVersionResolved(),
+        gbrain_version: resolveGbrainUnderTest(null).version,
         gbrain_pin: gbrainPin(),
         started_at: new Date().toISOString(),
         finished_at: new Date().toISOString(),

@@ -22,11 +22,22 @@
  * the identity — (src, tgt, type) triple must match. Catches both the
  * extraction-recall problem and the type-accuracy problem in one number.
  *
- * Usage: bun eval/runner/type-accuracy.ts [--json] [--package=gbrain-cues]
+ * Usage: bun eval/runner/type-accuracy.ts [--json] [--package=gbrain-cues] [--gbrain <checkout>[@ref]] [--output <dir>] [--pg-url <admin url>]
  *
  * --package runs the same scorer against another installed gbrain alias.
  * gbrain-cues is 939232f, the pin before 2026-09-29, so the two runs form a
  * matched old-pin / new-pin comparison on one scorer.
+ *
+ * Engines: with GBRAIN_EVAL_ENGINE=pglite|postgres|rust the runner also scores
+ * the links an engine STORES, not only what the extractor infers. It opens that
+ * engine through eval/runner/eval-engine.ts, imports every page the way the
+ * BrainBench gbrain adapter does (importFromContent, keyword only), runs
+ * `extract links --source db`, reads each page's links back with getLinks and
+ * scores them with the same scorer and floors. The verdict then needs both the
+ * extraction score and the stored-links score over the floors. A step the
+ * engine refuses is reported as engine_not_supported_by_runner and the verdict
+ * is partial at best. Unset, the runner is extraction only, as before.
+ * `--gbrain <checkout>[@ref]` measures a copied build (extraction and engine).
  */
 
 import { readFileSync } from 'fs';
@@ -35,6 +46,9 @@ import { extractPageLinks } from 'gbrain/link-extraction';
 import type { PageType } from 'gbrain/types';
 import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, receiptPath, writeReceipt, type Receipt, type ReceiptVerdict, noModelSpend } from './receipt.ts';
 import { gbrainPin, gbrainVersion } from './gbrain-version.ts';
+import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from './gbrain-under-test.ts';
+import { ENGINE_NOT_SUPPORTED_BY_RUNNER, ENGINE_REFUSAL_TEXT_RE, EvalEngineUnavailable, EngineStepLedger, EVAL_ENGINE_REFUSED_EXIT, behaviorEngineReceiptFields, evalEngineRefusalMessage, isEngineUnavailable, openBehaviorEngine, requestedEvalEngine, verdictWithUnsupported, type EvalEngineKind } from './eval-engine.ts';
+import { sourceTreeIdentity } from './receipt.ts';
 import { declaredPin } from './pins.ts';
 import { UNTYPED_FALLBACK, buildGoldEdges, loadCorpus, score, type GoldEdge, type RichPage } from './world-v1-gold.ts';
 
@@ -103,6 +117,79 @@ export async function inferAllEdges(
  */
 export const CAT2_GATES = { min_type_accuracy: 0.70, min_strict_f1: 0.15 } as const;
 
+/** process.exit inside gbrain's `extract` command entry point, caught so the runner keeps control of cleanup. */
+class ExtractExited extends Error {}
+
+/**
+ * Run gbrain's `extract` CLI entry point in process. It reports a failure by printing it and calling process.exit, so
+ * process.exit is replaced for the call and console.error captured: an exit whose output is the engine's typed refusal
+ * becomes engine_not_supported_by_runner, any other exit a thrown error with the captured text.
+ */
+export async function runCliExtract(kind: EvalEngineKind, run: () => Promise<unknown>): Promise<void> {
+  const exit = process.exit;
+  const err = console.error;
+  const captured: string[] = [];
+  console.error = (...a: unknown[]) => { captured.push(a.map(String).join(' ')); };
+  process.exit = ((code?: number) => { throw new ExtractExited(`gbrain extract exited ${code ?? 0}`); }) as typeof process.exit;
+  try {
+    await run();
+  } catch (e) {
+    const text = `${e instanceof Error ? e.message : String(e)}\n${captured.join('\n')}`;
+    if (ENGINE_REFUSAL_TEXT_RE.test(text) || (e as { code?: string })?.code === 'engine_capability_missing') {
+      throw new EvalEngineUnavailable(kind, ENGINE_NOT_SUPPORTED_BY_RUNNER, `extract links --source db stopped on the engine's typed refusal: ${text.replace(/\s+/g, ' ').slice(0, 400)}`);
+    }
+    throw new Error(`${e instanceof Error ? e.message : String(e)}: ${captured.slice(-3).join(' | ').slice(0, 400)}`);
+  } finally {
+    process.exit = exit;
+    console.error = err;
+  }
+}
+
+/** The markdown the BrainBench gbrain adapter imports for a world-v1 page (adapters/gbrain-inline.ts). */
+export function pageMarkdown(p: RichPage): string {
+  const lines = ['---', `type: ${p.type}`, `title: ${JSON.stringify(p.title)}`, '---', '', `# ${p.title}`, '', p.compiled_truth];
+  if (p.timeline && p.timeline.trim().length > 0) lines.push('', '## Timeline', '', p.timeline);
+  return lines.join('\n');
+}
+
+export interface StoredLinksRun { engine: EvalEngineKind; edges: GoldEdge[] | null; unsupported: EngineStepLedger['steps'] }
+
+/**
+ * The links one engine stores for the corpus: import every page (keyword only), run `extract links --source db`, then
+ * read each page's outgoing links with getLinks. A step the engine refuses is recorded and `edges` is null.
+ */
+export async function storedEdgesOnEngine(gut: GbrainUnderTest, kind: EvalEngineKind, pages: RichPage[]): Promise<StoredLinksRun> {
+  const ledger = new EngineStepLedger(kind, 'type-accuracy');
+  const { configureGateway } = await importGbrain<any>(gut, 'src/core/ai/gateway.ts');
+  const { importFromContent } = await importGbrain<any>(gut, 'src/core/import-file.ts');
+  const { runExtract } = await importGbrain<any>(gut, 'src/commands/extract.ts');
+  configureGateway({ embedding_model: 'openai:text-embedding-3-large', embedding_dimensions: 1536, env: {} });
+  const brain = await openBehaviorEngine({ gut, label: 'cat2', kind });
+  const origLog = console.log;
+  const origErr = console.error;
+  console.log = () => {};
+  console.error = () => {};
+  try {
+    const engine: any = brain.engine;
+    const imported = await ledger.run('import pages (importFromContent)', async () => {
+      for (const p of pages) await importFromContent(engine, p.slug, pageMarkdown(p), { noEmbed: true });
+    });
+    if (!imported.ok) return { engine: kind, edges: null, unsupported: ledger.steps };
+    const extracted = await ledger.run('extract links --source db', () => runCliExtract(kind, () => runExtract(engine, ['links', '--source', 'db'])));
+    if (!extracted.ok) return { engine: kind, edges: null, unsupported: ledger.steps };
+    const read = await ledger.run('read stored links (getLinks)', async () => {
+      const edges: GoldEdge[] = [];
+      for (const p of pages) for (const l of await engine.getLinks(p.slug)) edges.push({ from: l.from_slug ?? p.slug, to: l.to_slug, type: l.link_type });
+      return edges;
+    });
+    return { engine: kind, edges: read.ok ? read.value : null, unsupported: ledger.steps };
+  } finally {
+    console.log = origLog;
+    console.error = origErr;
+    await brain.close();
+  }
+}
+
 export function cat2Verdict(scored: { overallTypeAccuracy: number; overallStrictF1: number }): ReceiptVerdict {
   return scored.overallTypeAccuracy >= CAT2_GATES.min_type_accuracy && scored.overallStrictF1 >= CAT2_GATES.min_strict_f1
     ? 'pass' : 'fail';
@@ -114,11 +201,16 @@ function pct(n: number, digits = 1): string {
 
 async function main() {
   const json = process.argv.includes('--json');
+  const requested = requestedEvalEngine();
+  const gut = resolveGbrainUnderTest(gbrainSpecFrom(process.argv.slice(2)));
+  const outputAt = process.argv.indexOf('--output');
+  const receiptFile = outputAt >= 0 ? join(process.argv[outputAt + 1]!, 'receipt.json') : receiptPath('type-accuracy');
   const dir = process.argv.find(a => a.startsWith('--dir='))?.slice('--dir='.length) ??
     'eval/data/world-v1';
   const productPackage = process.argv.find(a => a.startsWith('--package='))?.slice('--package='.length) ?? 'gbrain';
   if (productPackage !== 'gbrain' && productPackage !== 'gbrain-cues') throw new Error('--package must be gbrain or gbrain-cues');
-  const extractor = productPackage === 'gbrain' ? extractPageLinks
+  if (gut.overlay && productPackage !== 'gbrain') throw new Error('--gbrain and --package cannot be combined; --gbrain already names the build');
+  const extractor = productPackage === 'gbrain' ? (gut.overlay ? (await importGbrain<typeof import('gbrain/link-extraction')>(gut, 'src/core/link-extraction.ts')).extractPageLinks : extractPageLinks)
     : (await (import(`${productPackage}/link-extraction`) as Promise<typeof import('gbrain/link-extraction')>)).extractPageLinks;
   const log = json ? () => {} : console.log;
 
@@ -134,10 +226,11 @@ async function main() {
     schema_version: RECEIPT_SCHEMA_VERSION,
     benchmark_version: BENCHMARK_VERSION,
     category: 'type-accuracy',
-    gbrain_version: productPackage === 'gbrain' ? gbrainVersion()
+    gbrain_version: productPackage === 'gbrain' ? (gut.overlay ? gut.version : gbrainVersion())
       : JSON.parse(readFileSync(join('node_modules', productPackage, 'package.json'), 'utf8')).version as string,
     gbrain_pin: productPackage === 'gbrain' ? gbrainPin() : declaredPin(productPackage),
     product_package: productPackage,
+    ...(gut.overlay ? { execution: { source_tree: sourceTreeIdentity(), product: productIdentityFor(gut) } } : {}),
     started_at: new Date().toISOString(),
   } as const;
   const attempts: TypeAccuracyAttempt[] = [];
@@ -148,7 +241,7 @@ async function main() {
     scored = score(gold, inferred);
   } catch (error) {
     const errors = [{ probe_id: attempts.at(-1)?.status === 'error' ? attempts.at(-1)!.probe_id : 'score', origin: 'sut' as const, message: String(error) }];
-    writeReceipt(receiptPath('type-accuracy'), {
+    writeReceipt(receiptFile, {
       ...receiptBase,
       run_status: 'error',
       n_total: pages.length,
@@ -174,7 +267,19 @@ async function main() {
   log(`Inferred edges (extractPageLinks): ${inferred.length}\n`);
 
   const { perType, confusion, overallTypeAccuracy, overallAnyTypeAccuracy, overallStrictF1, rows } = scored;
-  const verdict = cat2Verdict(scored);
+  // With GBRAIN_EVAL_ENGINE set, the links the engine stores must clear the same floors; a refused step makes it partial.
+  const stored = requested && productPackage === 'gbrain' ? await storedEdgesOnEngine(gut, requested, pages) : null;
+  const storedScored = stored?.edges ? score(gold, stored.edges) : null;
+  const extractionVerdict = cat2Verdict(scored);
+  const storedVerdict = storedScored ? cat2Verdict(storedScored) : null;
+  const verdict = stored
+    ? verdictWithUnsupported(extractionVerdict === 'fail' || storedVerdict === 'fail' ? 'fail' : storedVerdict === 'pass' ? 'pass' : 'partial', stored.unsupported)
+    : extractionVerdict;
+  if (stored) {
+    log(`## Stored links on ${stored.engine} (import, extract links --source db, getLinks)\n`);
+    if (storedScored) log(`- Stored edges: ${stored.edges!.length}; type accuracy **${pct(storedScored.overallTypeAccuracy)}**, strict F1 **${pct(storedScored.overallStrictF1)}** (extraction: ${pct(overallTypeAccuracy)}, ${pct(overallStrictF1)})\n`);
+    for (const u of stored.unsupported) log(`- ${u.step}: engine_not_supported_by_runner (${u.engine}): ${u.reason}`);
+  }
 
   log('## Per-link-type results\n');
   log('| Link type    | Gold | Correct | Mistyped | Missed | Spurious | Type acc | Recall | Prec   | F1 (strict) |');
@@ -229,7 +334,7 @@ async function main() {
     attempts,
     rows,
   };
-  writeReceipt(receiptPath('type-accuracy'), {
+  writeReceipt(receiptFile, {
     ...noModelSpend('hermetic: no model and no paid request'),
     ...receiptBase,
     run_status: 'completed',
@@ -239,17 +344,30 @@ async function main() {
     completion_rate: 1,
     errors: [],
     publishable: true,
-    resolved_config: { corpus: dir, gates: CAT2_GATES, untyped_fallback: UNTYPED_FALLBACK },
+    ...behaviorEngineReceiptFields(requested, stored?.unsupported ?? []),
+    resolved_config: {
+      corpus: dir, gates: CAT2_GATES, untyped_fallback: UNTYPED_FALLBACK,
+      ...(stored ? { engine: stored.engine, stored_links: 'importFromContent (keyword only, the BrainBench gbrain adapter markdown), extract links --source db, getLinks per page; scored with the same scorer and floors', verdict_rule: 'pass = extraction and stored links both clear the floors; partial = a step the engine refused' } : {}),
+      ...(gut.overlay ? { gbrain_overlay: overlaySummary(gut) } : {}),
+    },
     finished_at: new Date().toISOString(),
-    data: artifact,
+    data: stored ? {
+      ...artifact,
+      extraction_verdict: extractionVerdict,
+      stored_links: storedScored ? {
+        engine: stored.engine, verdict: storedVerdict, overallTypeAccuracy: storedScored.overallTypeAccuracy, overallAnyTypeAccuracy: storedScored.overallAnyTypeAccuracy,
+        overallStrictF1: storedScored.overallStrictF1, perType: storedScored.perType, confusion: storedScored.confusion, storedTotal: stored.edges!.length, storedEdges: stored.edges,
+      } : { engine: stored.engine, verdict: null, not_run: stored.unsupported.map(u => u.step) },
+    } : artifact,
   } satisfies Receipt);
 
   if (json) console.log(JSON.stringify(artifact, null, 2));
-  if (verdict !== 'pass') process.exitCode = 1;
+  if (verdict === 'fail' || (verdict === 'partial' && !stored?.unsupported.length)) process.exitCode = 1;
 }
 
 if (import.meta.main) {
   main().catch(e => {
+    if (isEngineUnavailable(e)) { console.error(evalEngineRefusalMessage(e, 'Cat 2 type accuracy')); process.exit(EVAL_ENGINE_REFUSED_EXIT); }
     console.error(e);
     process.exit(1);
   });

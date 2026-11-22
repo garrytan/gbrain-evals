@@ -62,7 +62,8 @@ import { ProbeAccounting } from './probe-accounting.ts';
 import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, noModelSpend, receiptPath, sourceTreeIdentity, writeReceipt, type Receipt } from './receipt.ts';
 import { answerText, brainArm, runSession, scriptedModel } from './memory-trust/agent.ts';
 import { estimateUsd, modelsFrom, providerOf, MEMORY_TRUST_CAP_USD, STUB_MODEL } from './memory-trust/models.ts';
-import { missingCapabilities, openTrustSut, type TrustCapabilities, type TrustSut } from './memory-trust/sut.ts';
+import { asNotSupported, isNotSupported, missingCapabilities, notSupportedFromText, notSupportedStepsIn, openTrustSut, type TrustCapabilities, type TrustSut } from './memory-trust/sut.ts';
+import { behaviorEngineReceiptFields, evalEngineKind, evalPgAdminUrl, requestedEvalEngine, verdictWithUnsupported } from './eval-engine.ts';
 import {
   CAT39_DEFAULT_SEED, CAT39_GENERATOR_VERSION, VALUE_TOKEN_RE, generateCat39World,
   type Cat39Gold, type Cat39Ledger, type Cat39Neighbor, type Cat39Target, type GeneratedCat39,
@@ -465,7 +466,7 @@ export interface Cat39RunResult {
   presence: Presence[];
   obs: Observations | null;
   score: Cat39Score | null;
-  verdict: 'pass' | 'fail' | null;
+  verdict: 'pass' | 'partial' | 'fail' | null;
   acc: ProbeAccounting;
   harnessError: string | null;
   resurrection_steps: Array<{ target_id: string; slug: string; step: string; outcome: string }>;
@@ -502,7 +503,10 @@ async function runHermetic(opts: Cat39RunOptions): Promise<Cat39RunResult> {
     embedding_probe: { status: 'skipped', reason: 'hermetic arm: keyword-only brain with no embedding model or provider key, so no same-model neighbours exist to probe (ENG-12: skipped with a stated reason). The paid arm embeds the claim and every live chunk and fact with OpenAI text-embedding-3-large.' },
     model_arm: null, timings_ms: timings,
   };
-  const sut = await openTrustSut(opts.gut);
+  let sut: TrustSut;
+  // A setup step the engine refuses (engine_not_supported_by_runner) is reported by main, never scored.
+  try { sut = await openTrustSut(opts.gut); }
+  catch (e) { result.harnessError = `harness: ${errText(e)}`; timings.total = Date.now() - t0; return result; }
   try {
     const caps = sut.capabilities;
     result.capabilities = caps;
@@ -616,7 +620,9 @@ async function runHermetic(opts: Cat39RunOptions): Promise<Cat39RunResult> {
           outcomes.set(t.id, { target_id: t.id, ok, receipt: normalizeFactReceipt(r), ...(ok ? {} : { error: `purge_fact returned state ${r?.state}` }) });
         }
       } catch (e) {
-        outcomes.set(t.id, { target_id: t.id, ok: false, error: `${t.purge} purge threw: ${errText(e)}`, receipt: null });
+        // A purge the engine refused is not a gbrain purge failure: it is left out of scoring and listed as not supported.
+        if (isNotSupported(e)) outcomes.set(t.id, { target_id: t.id, ok: false, unsupported: errText(e), receipt: null });
+        else outcomes.set(t.id, { target_id: t.id, ok: false, error: `${t.purge} purge threw: ${errText(e)}`, receipt: null });
       }
       const o = outcomes.get(t.id)!;
       if (!o.ok && !o.unsupported) result.acc.error(t.id, 'sut', o.error ?? 'purge failed');
@@ -671,6 +677,11 @@ async function runHermetic(opts: Cat39RunOptions): Promise<Cat39RunResult> {
     // 9. Resurrection: stale re-import, agent put_page, re-put, re-extraction, remember.
     const r0 = Date.now();
     const step = (target_id: string, slug: string, name: string, outcome: string) => result.resurrection_steps.push({ target_id, slug, step: name, outcome });
+    // An engine refusal keeps its whole engine_not_supported_by_runner text (main lists it); a gbrain refusal is shortened.
+    const refusedText = (prefix: string, e: unknown) => isNotSupported(e) ? errText(e) : `${prefix}:${errText(e).slice(0, 120)}`;
+    const extractFacts = async (slug: string) => {
+      try { await runExtractFacts(sut.engine, { slugs: [slug] }); } catch (e) { throw asNotSupported(sut.unsupported, 'runExtractFacts', e); }
+    };
     const outcomeOf = (r: { ok: boolean; value?: any; code?: string }) => r.ok ? `ok:${r.value?.status ?? r.value?.state ?? 'done'}` : `refused:${r.code}`;
     for (const t of ledger.targets) {
       if (outcomes.get(t.id)!.unsupported) continue;
@@ -678,14 +689,14 @@ async function runHermetic(opts: Cat39RunOptions): Promise<Cat39RunResult> {
         const body = stale.get(slug);
         if (!body) { step(t.id, slug, 'stale_file', 'missing: get_page failed before purge'); continue; }
         try { const r = await sut.ownerImport(slug, body); step(t.id, slug, 'owner_import_stale', r.error ? `refused:${r.error}` : `ok:${r.status}${r.quarantined ? ':quarantined' : ''}`); }
-        catch (e) { step(t.id, slug, 'owner_import_stale', `refused:${errText(e).slice(0, 120)}`); }
-        try { await runExtractFacts(sut.engine, { slugs: [slug] }); step(t.id, slug, 'extract_facts', 'ok'); } catch (e) { step(t.id, slug, 'extract_facts', `error:${errText(e).slice(0, 120)}`); }
+        catch (e) { step(t.id, slug, 'owner_import_stale', refusedText('refused', e)); }
+        try { await extractFacts(slug); step(t.id, slug, 'extract_facts', 'ok'); } catch (e) { step(t.id, slug, 'extract_facts', refusedText('error', e)); }
         for (const name of ['remote_put_page_stale', 'remote_put_page_again']) {
           const cur = await sut.tryOp('remote', 'get_page', { slug });
           const r = await sut.tryOp('remote', 'put_page', { slug, content: body, ...(cur.ok && cur.value?.revision ? { expected_revision: cur.value.revision } : {}) });
           step(t.id, slug, name, outcomeOf(r));
         }
-        try { await runExtractFacts(sut.engine, { slugs: [slug] }); step(t.id, slug, 'extract_facts_again', 'ok'); } catch (e) { step(t.id, slug, 'extract_facts_again', `error:${errText(e).slice(0, 120)}`); }
+        try { await extractFacts(slug); step(t.id, slug, 'extract_facts_again', 'ok'); } catch (e) { step(t.id, slug, 'extract_facts_again', refusedText('error', e)); }
         if (t.purge !== 'page') step(t.id, slug, 'remote_remember', outcomeOf(await sut.tryOp('remote', 'remember', { fact: t.claim, entity: slug, provenance: 'chat' })));
       }
     }
@@ -708,7 +719,8 @@ async function runHermetic(opts: Cat39RunOptions): Promise<Cat39RunResult> {
         const v1 = ledger.pages.find(p => p.slug === slug)?.v1;
         if (!v1) continue;
         attempted++;
-        try { await sut.ownerImport(slug, v1); await runExtractFacts(sut.engine, { slugs: [slug] }); } catch { /* a refusal is the pass */ }
+        try { await sut.ownerImport(slug, v1); await extractFacts(slug); }
+        catch (e) { if (isNotSupported(e)) step(t.id, slug, 'owner_import_v1', errText(e)); /* a gbrain refusal is the pass */ }
       }
     }
     const activeOlder = await activeScan(sut, targetTokens, takesActive);
@@ -907,6 +919,8 @@ const fmt = (x: number | null) => (x === null ? 'n/a' : Number.isInteger(x) ? St
 
 async function main(): Promise<void> {
   const argv = process.argv.slice(2);
+  const pgAdminUrl = evalPgAdminUrl(argv);
+  if (pgAdminUrl) process.env.LIFECYCLE_PG_URL = pgAdminUrl;
   const json = argv.includes('--json');
   const log = json ? () => {} : (s: string) => console.log(s);
   const seedArg = argValue(argv, '--seed');
@@ -960,25 +974,35 @@ async function main(): Promise<void> {
     ...GAPS_DOCUMENTED,
     ...(r.score?.rows.filter(x => x.status === 'gap').length ? [{ feature: 'targets not measured', reason: `${r.score.rows.filter(x => x.status === 'gap').length} fact-purge targets need purge_fact, which this build lacks` }] : []),
   ];
-  const errored = Boolean(r.harnessError) || a.run_invalid;
+  // Steps the engine refused (GBRAIN_EVAL_ENGINE=rust, raw SQL): listed, never scored as a pass or a fail. A run that
+  // stopped on one is not run on this engine; a refusal inside a step outcome makes the run partial.
+  const requested = requestedEvalEngine();
+  const unsupported = notSupportedStepsIn(CATEGORY, [r.harnessError, r.resurrection_steps, r.obs, r.seed]);
+  const refusedRun = notSupportedFromText(CATEGORY, r.harnessError) !== null;
+  // A fail on what ran stays a fail; a pass with any refused step becomes partial.
+  if (r.verdict) r.verdict = verdictWithUnsupported(r.verdict, unsupported);
+  const errored = (Boolean(r.harnessError) && !refusedRun) || (a.run_invalid && !refusedRun);
+  const skipped = refusedRun && !errored;
   const m = r.score?.metrics ?? null;
   const receipt: Receipt = {
     ...(paid ? {} : noModelSpend(armArg === 'dry' ? 'hermetic + dry model arm: provider keys stripped, scripted stub model, keyword search only; no paid request' : 'hermetic: provider keys stripped, keyword search only; no model and no paid request')),
     schema_version: RECEIPT_SCHEMA_VERSION,
     benchmark_version: BENCHMARK_VERSION,
     category: CATEGORY,
-    run_status: errored ? 'error' : 'completed',
-    ...(errored ? {} : { verdict: r.verdict ?? 'fail' }),
+    run_status: errored ? 'error' : skipped ? 'skipped' : 'completed',
+    ...(errored || skipped ? {} : { verdict: r.verdict ?? 'fail' }),
+    ...(skipped ? { skip_reason: `engine_not_supported_by_runner: ${unsupported[0]?.step ?? 'setup'} on ${requested ?? evalEngineKind()}` } : {}),
+    ...behaviorEngineReceiptFields(requested, unsupported),
     n_total: a.n_total - (r.score?.rows.filter(x => x.status === 'gap').length ?? 0),
     n_scored: a.n_scored,
     completion_rate: a.n_total ? a.n_scored / Math.max(1, a.n_total - (r.score?.rows.filter(x => x.status === 'gap').length ?? 0)) : 0,
-    errors: a.errors,
+    errors: skipped ? [] : a.errors,
     publishable: a.publishable && !r.harnessError,
     gbrain_version: gut.version,
     gbrain_pin: gbrainPin(),
     execution: { source_tree: sourceTreeIdentity(), product: productIdentityFor(gut) },
     resolved_config: {
-      engine: 'pglite-in-memory',
+      engine: requested ? `${requested} (GBRAIN_EVAL_ENGINE through eval-engine.ts)` : 'pglite-in-memory',
       decide: DECIDE_OFF,
       modes: 'gbrain defaults of the build under test (no trust mode override); managed persistence on',
       callers: 'remote MCP agent (read+write legacy token, HTTP) for reads, remember and put_page; local CLI for purge_fact, delete_page purge, takes_add, add_timeline_entry; owner import (operator_curated) for pages',
@@ -1028,7 +1052,8 @@ async function main(): Promise<void> {
   if (attestation) receipt.preregistration_attestation = attestation;
   writeReceipt(outPath, receipt);
 
-  log(`\nverdict: ${receipt.run_status === 'error' ? `error (${r.harnessError ?? 'run invalid'})` : receipt.verdict}`);
+  for (const u of unsupported) log(`engine_not_supported_by_runner (${u.engine}): ${u.step}: ${u.reason}`);
+  log(`\nverdict: ${receipt.run_status === 'error' ? `error (${r.harnessError ?? 'run invalid'})` : skipped ? `not run on ${requested} (engine_not_supported_by_runner)` : receipt.verdict}`);
   if (m) {
     log('\nsafety contracts (each must be 0):');
     log(`  live_residual_after_purge  ${m.live_residual_after_purge} token hits in swept stores outside the expected-remain copies (${m.targets} targets)`);
@@ -1047,7 +1072,7 @@ async function main(): Promise<void> {
   for (const x of findings) log(`  [${x.classification}] ${x.id}: ${x.actual}\n      expected ${x.expected} (${x.contract}); repro: ${x.repro}`);
   log(`\nreceipt: ${outPath}`);
   if (json) process.stdout.write(JSON.stringify({ run_status: receipt.run_status, verdict: receipt.verdict, metrics: m, findings: findings.map(x => x.id), wall_ms: r.timings_ms.total }, null, 2) + '\n');
-  process.exit(receipt.run_status === 'error' ? 3 : r.verdict === 'pass' ? 0 : 1);
+  process.exit(receipt.run_status === 'error' ? 3 : skipped || r.verdict === 'pass' || (r.verdict === 'partial' && unsupported.length > 0) ? 0 : 1);
 }
 
 if (import.meta.main) {

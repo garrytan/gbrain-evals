@@ -30,12 +30,25 @@
  * example a setup step failed). A known failure is a label for the reader: it
  * never turns a fail into a pass.
  *
- * Usage: bun eval/runner/cat9-workflows.ts --checks [--gbrain <checkout>[@ref]] [--scenarios <file>] [--only id,id] [--output <dir>] [--json]
+ * Engines: GBRAIN_EVAL_ENGINE=pglite|postgres|rust picks the engine each fresh
+ * brain is created on (eval/runner/eval-engine.ts; unset means PGLite, as
+ * before). PGLite brains come from `gbrain init --pglite`, Postgres brains from
+ * `gbrain init --url` on a scratch database created through `--pg-url` or
+ * LIFECYCLE_PG_URL and dropped afterwards, and Rust brains from a rust CLI
+ * config plus `gbrain init --migrate-only` (gbrain init has no Rust flag). On
+ * Postgres the `postgres` requirement is met. A step the engine cannot run (a
+ * PGLite-only datastore step, or a CLI call that stops on the engine's typed
+ * refusal) makes the affected checks engine_not_supported_by_runner, never a
+ * pass or a fail.
+ *
+ * Usage: bun eval/runner/cat9-workflows.ts --checks [--gbrain <checkout>[@ref]] [--scenarios <file>] [--only id,id] [--output <dir>] [--pg-url <admin url>] [--json]
  */
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
+import { randomUUID } from 'node:crypto';
 import { HERMETIC_KEY_PATTERN, HERMETIC_STRIPPED_KEYS, redactUrlPasswords } from './hermetic-env.ts';
+import { ENGINE_NOT_SUPPORTED_BY_RUNNER, ENGINE_REFUSAL_TEXT_RE, EvalEngineUnavailable, cliEngineConfig, redactConnection, rustAddonEnv, type EvalEngineKind } from './eval-engine.ts';
 
 // ─── Types ────────────────────────────────────────────────────────────
 
@@ -115,7 +128,7 @@ export interface Cat9Check extends Omit<Cat9RunStep, 'allow_fail' | 'run'> {
   known_failure?: { finding: string; note: string };
 }
 
-export type Cat9CheckStatus = 'pass' | 'fail' | 'expected_fail' | 'unexpected_pass' | 'not_run' | 'error';
+export type Cat9CheckStatus = 'pass' | 'fail' | 'expected_fail' | 'unexpected_pass' | 'not_run' | 'error' | typeof ENGINE_NOT_SUPPORTED_BY_RUNNER;
 
 export interface Cat9CheckRow {
   scenario_id: string;
@@ -369,18 +382,43 @@ export function hermeticChildEnv(home: string, env: Record<string, string | unde
   return out;
 }
 
-/** Run `bun <gbrainRoot>/src/cli.ts <argv>` in a hermetic child process. */
-export function cliExec(gbrainRoot: string, timeoutMs = 120_000): GbrainExec {
+/**
+ * Run `bun <gbrainRoot>/src/cli.ts <argv>` in a hermetic child process. `extraEnv` adds variables after the hermetic
+ * strip (the Rust addon path, which the strip of GBRAIN_* would otherwise remove).
+ */
+export function cliExec(gbrainRoot: string, timeoutMs = 120_000, extraEnv: Record<string, string> = {}): GbrainExec {
   const cli = join(gbrainRoot, 'src/cli.ts');
   return (argv, { home, cwd, stdin }) => {
     const p = Bun.spawnSync([process.execPath, cli, ...argv], {
-      cwd, env: hermeticChildEnv(home), stdin: stdin === undefined ? 'ignore' : Buffer.from(stdin), stdout: 'pipe', stderr: 'pipe', timeout: timeoutMs,
+      cwd, env: { ...hermeticChildEnv(home), ...extraEnv }, stdin: stdin === undefined ? 'ignore' : Buffer.from(stdin), stdout: 'pipe', stderr: 'pipe', timeout: timeoutMs,
     });
     return { exit: p.exitCode ?? -1, stdout: p.stdout.toString(), stderr: p.stderr.toString() };
   };
 }
 
+/** The engine a checks run creates its brains on; omitted means PGLite. */
+export interface Cat9Engine {
+  kind: EvalEngineKind;
+  /** Postgres admin URL; each brain gets its own scratch database, dropped after the scenario. */
+  pgAdminUrl?: string;
+}
+
+/** The gbrain CLI's typed refusal of something the engine cannot do (engine_capability_missing). */
+export const ENGINE_REFUSAL_RE = ENGINE_REFUSAL_TEXT_RE;
+
+/** The extra child environment a run on `kind` needs: the Rust addon path, which the hermetic strip removes. */
+export function cat9EngineEnv(kind: EvalEngineKind | undefined): Record<string, string> {
+  return kind === 'rust' ? { ...rustAddonEnv() } as Record<string, string> : {};
+}
+
+/** Requirements an engine meets by itself: a Postgres run meets `postgres`. */
+export function engineRequirements(kind: EvalEngineKind | undefined): Cat9Requirement[] {
+  return kind === 'postgres' ? ['postgres'] : [];
+}
+
 export interface ScenarioCheckOptions {
+  /** The engine every brain is created on (default PGLite through `gbrain init --pglite`). */
+  engine?: Cat9Engine;
   exec: GbrainExec;
   /** The committed corpus directory; copied per scenario. */
   corpusDir: string;
@@ -393,19 +431,20 @@ export interface ScenarioCheckOptions {
   now?: () => Date;
 }
 
-function head(text: string, root: string): string {
-  return redactUrlPasswords(text.split(root).join('<tmp>')).slice(0, 600);
+function head(text: string, root: string, pgAdminUrl?: string): string {
+  return redactConnection(redactUrlPasswords(text.split(root).join('<tmp>')), pgAdminUrl).slice(0, 600);
 }
 
 /** Run one scenario's setup and checks on fresh brains. Scenarios without checks give no rows. */
 export function runScenarioChecks(s: Cat9CheckedScenario, o: ScenarioCheckOptions): Cat9CheckRow[] {
   const checks = s.checks ?? [];
   if (checks.length === 0) return [];
-  const available = o.available ?? new Set<Cat9Requirement>();
+  const kind: EvalEngineKind = o.engine?.kind ?? 'pglite';
+  const available = new Set<Cat9Requirement>([...(o.available ?? []), ...engineRequirements(o.engine?.kind)]);
   const missing = (r?: Cat9Requirement[]) => (r ?? []).filter(x => !available.has(x));
   let root = '';
   // Every recorded string is masked: reasons quote observed values, which can hold temp paths.
-  const mask = (t: string) => (root ? redactUrlPasswords(t.split(root).join('<tmp>')) : redactUrlPasswords(t));
+  const mask = (t: string) => redactConnection(root ? redactUrlPasswords(t.split(root).join('<tmp>')) : redactUrlPasswords(t), o.engine?.pgAdminUrl);
   const row = (c: Cat9Check, status: Cat9CheckStatus, reasons: string[], extra: Partial<Cat9CheckRow> = {}): Cat9CheckRow => ({
     scenario_id: s.id, check_id: c.id, status, finding: c.known_failure?.finding ?? null, reasons: reasons.map(mask), exit_code: null, argv: null, ...extra,
   });
@@ -422,15 +461,40 @@ export function runScenarioChecks(s: Cat9CheckedScenario, o: ScenarioCheckOption
   cpSync(o.corpusDir, corpus, { recursive: true });
   const vars: Record<string, string> = { corpus };
   const brains = new Map<string, string>();
+  const scratchDbs: string[] = [];
   const homeOf = (name: string) => join(root, `home-${name}`);
-  const datastoreOf = (name: string) => join(homeOf(name), '.gbrain', 'brain.pglite');
+  // The on-disk store of a brain: PGLite's data directory or the Rust store; a Postgres brain has none.
+  const datastoreOf = (name: string): string | null => kind === 'postgres' ? null : join(homeOf(name), '.gbrain', kind === 'rust' ? 'brain.rust' : 'brain.pglite');
+  const unsupported = (what: string) => new EvalEngineUnavailable(kind, ENGINE_NOT_SUPPORTED_BY_RUNNER, `${what} needs an on-disk datastore, and a ${kind} brain keeps its data in a database server`);
+  const initArgv = (name: string, home: string): string[] => {
+    if (kind === 'pglite') return ['init', '--pglite'];
+    if (kind === 'postgres') {
+      if (!o.engine?.pgAdminUrl) throw new EvalEngineUnavailable('postgres', 'postgres_url_missing', 'Cat 9 checks on postgres need an admin URL (--pg-url or LIFECYCLE_PG_URL).');
+      const db = `cat9_${process.pid}_${randomUUID().slice(0, 8)}`;
+      createScratchDb(o.engine.pgAdminUrl, db);
+      scratchDbs.push(db);
+      const url = new URL(o.engine.pgAdminUrl);
+      url.pathname = `/${db}`;
+      return ['init', '--url', url.toString(), '--non-interactive'];
+    }
+    // Rust: gbrain init has no Rust flag, so write the rust config first, as eval-engine.ts initRustBrain does.
+    mkdirSync(join(home, '.gbrain'), { recursive: true });
+    const config = { ...cliEngineConfig('rust', { databasePath: datastoreOf(name)! }), embedding_disabled: true, schema_pack: 'gbrain-base-v2' };
+    writeFileSync(join(home, '.gbrain', 'config.json'), `${JSON.stringify(config, null, 2)}\n`);
+    return ['init', '--migrate-only', '--non-interactive'];
+  };
   const brain = (name = 'A'): string => {
     let home = brains.get(name);
     if (home) return home;
     home = homeOf(name);
     mkdirSync(home, { recursive: true });
-    const r = o.exec(['init', '--pglite'], { home, cwd: root });
-    if (r.exit !== 0) throw new Error(`gbrain init --pglite for brain ${name} exited ${r.exit}: ${head(r.stderr || r.stdout, root)}`);
+    const argv = initArgv(name, home);
+    const r = o.exec(argv, { home, cwd: root });
+    if (r.exit !== 0) {
+      const out = head(r.stderr || r.stdout, root, o.engine?.pgAdminUrl);
+      if (ENGINE_REFUSAL_RE.test(`${r.stderr}\n${r.stdout}`)) throw new EvalEngineUnavailable(kind, ENGINE_NOT_SUPPORTED_BY_RUNNER, `gbrain ${argv[0]} for brain ${name} stopped on the engine's typed refusal: ${out}`);
+      throw new Error(`gbrain ${argv.slice(0, 2).join(' ')} for brain ${name} exited ${r.exit}: ${out}`);
+    }
     brains.set(name, home);
     vars[`home:${name}`] = home;
     return home;
@@ -454,6 +518,10 @@ export function runScenarioChecks(s: Cat9CheckedScenario, o: ScenarioCheckOption
     return errs;
   };
 
+  const cleanup = () => {
+    if (!o.keep) rmSync(root, { recursive: true, force: true });
+    if (o.engine?.pgAdminUrl) for (const db of scratchDbs.splice(0)) dropScratchDb(o.engine.pgAdminUrl, db);
+  };
   const rows: Cat9CheckRow[] = [];
   try {
     for (const [i, step] of (s.setup ?? []).entries()) {
@@ -461,6 +529,7 @@ export function runScenarioChecks(s: Cat9CheckedScenario, o: ScenarioCheckOption
       if ('remove_datastore' in step) {
         brain(step.remove_datastore);
         const ds = datastoreOf(step.remove_datastore);
+        if (ds === null) throw unsupported(`setup[${i}] remove_datastore`);
         if (!existsSync(ds)) throw new Error(`setup[${i}]: brain ${step.remove_datastore} has no datastore to remove`);
         renameSync(ds, join(root, `moved-${step.remove_datastore}.pglite`));
         continue;
@@ -473,33 +542,58 @@ export function runScenarioChecks(s: Cat9CheckedScenario, o: ScenarioCheckOption
       }
       if (!isRun(step)) continue; // a manual step whose requirements are met is done by whoever provides them
       const { argv, r } = call(step);
-      if (r.exit !== 0 && !step.allow_fail) throw new Error(`setup[${i}] \`gbrain ${argv.join(' ').split(root).join('<tmp>')}\` exited ${r.exit}: ${head(r.stderr || r.stdout, root)}`);
+      if (r.exit !== 0 && !step.allow_fail && ENGINE_REFUSAL_RE.test(`${r.stderr}\n${r.stdout}`)) {
+        throw new EvalEngineUnavailable(kind, ENGINE_NOT_SUPPORTED_BY_RUNNER, `setup[${i}] \`gbrain ${argv.join(' ').split(root).join('<tmp>')}\` stopped on the engine's typed refusal: ${head(r.stderr || r.stdout, root, o.engine?.pgAdminUrl)}`);
+      }
+      if (r.exit !== 0 && !step.allow_fail) throw new Error(`setup[${i}] \`gbrain ${argv.join(' ').split(root).join('<tmp>')}\` exited ${r.exit}: ${head(r.stderr || r.stdout, root, o.engine?.pgAdminUrl)}`);
       const errs = capture(step, r.stdout);
       if (errs.length > 0) throw new Error(`setup[${i}]: ${errs.join('; ')}`);
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    if (!o.keep) rmSync(root, { recursive: true, force: true });
+    cleanup();
+    if (err instanceof EvalEngineUnavailable && err.reason !== ENGINE_NOT_SUPPORTED_BY_RUNNER) throw err;
+    if (err instanceof EvalEngineUnavailable) return checks.map(c => row(c, ENGINE_NOT_SUPPORTED_BY_RUNNER, [`${ENGINE_NOT_SUPPORTED_BY_RUNNER} (${kind}): ${msg.split(root).join('<tmp>')}`]));
     return checks.map(c => row(c, 'error', [`harness: ${msg.split(root).join('<tmp>')}`]));
   }
 
+  const refusedOn = new Map<string, string>();
   for (const c of checks) {
     const lack = missing(c.requires);
     if (lack.length > 0) { rows.push(row(c, 'not_run', lack.map(r => REQUIREMENT_REASONS[r]))); continue; }
     if (!c.run || !c.expect) { rows.push(row(c, 'not_run', [`not mechanized: ${c.not_mechanized ?? 'no run'}`])); continue; }
+    if (c.expect.datastore_absent !== undefined && datastoreOf(c.expect.datastore_absent) === null) {
+      rows.push(row(c, ENGINE_NOT_SUPPORTED_BY_RUNNER, [`${ENGINE_NOT_SUPPORTED_BY_RUNNER} (${kind}): ${unsupported('the datastore_absent expectation').message}`]));
+      continue;
+    }
     try {
       const { argv, r } = call({ run: c.run, stdin: c.stdin, brain: c.brain });
-      const reasons = evaluateExpect(substituteDeep(c.expect, vars), r, { datastoreExists: name => existsSync(datastoreOf(name)) });
+      const reasons = evaluateExpect(substituteDeep(c.expect, vars), r, { datastoreExists: name => existsSync(datastoreOf(name)!) });
       const errs = capture(c, r.stdout);
-      rows.push(row(c, classify([...reasons, ...errs], c.known_failure), [...reasons, ...errs], {
-        exit_code: r.exit, argv: argv.map(a => a.split(root).join('<tmp>')), stdout_head: head(r.stdout, root), stderr_head: head(r.stderr, root),
+      let status = classify([...reasons, ...errs], c.known_failure);
+      // A CLI call that exited on the engine's typed refusal did not test the behavior, whatever the expectation said
+      // (a check that expects a refusal must not be credited with an engine limitation). A later failing check on the
+      // same brain did not test it either: that brain lacks the refused write. Checks on other brains keep their result.
+      const brainName = c.brain ?? 'A';
+      const refusal = r.exit !== 0 && ENGINE_REFUSAL_RE.test(`${r.stderr}\n${r.stdout}`);
+      const failed = status !== 'pass' && status !== 'unexpected_pass';
+      const earlier = refusedOn.get(brainName);
+      const why = refusal ? `${ENGINE_NOT_SUPPORTED_BY_RUNNER} (${kind}): the CLI call stopped on the engine's typed refusal`
+        : failed && earlier ? `${ENGINE_NOT_SUPPORTED_BY_RUNNER} (${kind}): an earlier check on brain ${brainName} (${earlier}) stopped on the engine's typed refusal, so that brain lacks its write`
+        : null;
+      if (refusal && !earlier) refusedOn.set(brainName, c.id);
+      if (why) status = ENGINE_NOT_SUPPORTED_BY_RUNNER;
+      rows.push(row(c, status, why ? [why, ...reasons, ...errs] : [...reasons, ...errs], {
+        exit_code: r.exit, argv: argv.map(a => a.split(root).join('<tmp>')), stdout_head: head(r.stdout, root, o.engine?.pgAdminUrl), stderr_head: head(r.stderr, root, o.engine?.pgAdminUrl),
       }));
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      rows.push(row(c, 'error', [`harness: ${msg.split(root).join('<tmp>')}`]));
+      if (err instanceof EvalEngineUnavailable && err.reason !== ENGINE_NOT_SUPPORTED_BY_RUNNER) { cleanup(); throw err; }
+      if (err instanceof EvalEngineUnavailable) rows.push(row(c, ENGINE_NOT_SUPPORTED_BY_RUNNER, [`${ENGINE_NOT_SUPPORTED_BY_RUNNER} (${kind}): ${msg.split(root).join('<tmp>')}`]));
+      else rows.push(row(c, 'error', [`harness: ${msg.split(root).join('<tmp>')}`]));
     }
   }
-  if (!o.keep) rmSync(root, { recursive: true, force: true });
+  cleanup();
   return rows;
 }
 
@@ -510,7 +604,7 @@ export interface Cat9ChecksSummary {
 }
 
 export function summarizeChecks(rows: Cat9CheckRow[]): Cat9ChecksSummary {
-  const by_status: Record<Cat9CheckStatus, number> = { pass: 0, fail: 0, expected_fail: 0, unexpected_pass: 0, not_run: 0, error: 0 };
+  const by_status: Record<Cat9CheckStatus, number> = { pass: 0, fail: 0, expected_fail: 0, unexpected_pass: 0, not_run: 0, error: 0, [ENGINE_NOT_SUPPORTED_BY_RUNNER]: 0 };
   for (const r of rows) by_status[r.status]++;
   return { checks: rows.length, by_status, scenarios_with_checks: new Set(rows.map(r => r.scenario_id)).size };
 }
@@ -518,7 +612,7 @@ export function summarizeChecks(rows: Cat9CheckRow[]): Cat9ChecksSummary {
 /** The scenario-level verdict: the worst check status, in this order. */
 export function scenarioStatus(rows: Cat9CheckRow[]): Cat9CheckStatus | 'no_checks' {
   if (rows.length === 0) return 'no_checks';
-  const order: Cat9CheckStatus[] = ['error', 'fail', 'unexpected_pass', 'expected_fail', 'pass', 'not_run'];
+  const order: Cat9CheckStatus[] = ['error', 'fail', 'unexpected_pass', 'expected_fail', ENGINE_NOT_SUPPORTED_BY_RUNNER, 'pass', 'not_run'];
   for (const s of order) if (rows.some(r => r.status === s)) return s;
   return 'not_run';
 }
@@ -526,4 +620,23 @@ export function scenarioStatus(rows: Cat9CheckRow[]): Cat9CheckStatus | 'no_chec
 /** Resolve a path relative to a catalog file. */
 export function catalogRelative(catalogPath: string, p: string): string {
   return resolve(dirname(catalogPath), p);
+}
+
+/**
+ * Create and drop a Cat 9 scratch Postgres database in a child Bun process, so runScenarioChecks stays synchronous.
+ * The admin URL reaches the child through its environment, never its argv.
+ */
+function scratchDbSql(adminUrl: string, sql: string): void {
+  const p = Bun.spawnSync([process.execPath, '-e', 'const { SQL } = await import("bun"); const s = new SQL(process.env.CAT9_PG_ADMIN_URL); try { await s.unsafe(process.env.CAT9_PG_SQL); } finally { await s.close(); }'], {
+    env: { PATH: process.env.PATH ?? '', CAT9_PG_ADMIN_URL: adminUrl, CAT9_PG_SQL: sql }, stdout: 'pipe', stderr: 'pipe', timeout: 60_000,
+  });
+  if (p.exitCode !== 0) throw new EvalEngineUnavailable('postgres', 'postgres_unreachable', `Cat 9 scratch database (${sql.split(' ').slice(0, 2).join(' ')}) failed: ${redactUrlPasswords(p.stderr.toString()).trim().split('\n').at(-1)?.slice(0, 300) ?? ''}`);
+}
+
+function createScratchDb(adminUrl: string, db: string): void {
+  scratchDbSql(adminUrl, `CREATE DATABASE ${db}`);
+}
+
+function dropScratchDb(adminUrl: string, db: string): void {
+  try { scratchDbSql(adminUrl, `DROP DATABASE IF EXISTS ${db} WITH (FORCE)`); } catch { /* best effort; the name is unique per run */ }
 }
