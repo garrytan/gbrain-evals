@@ -54,7 +54,7 @@ import { SQL } from 'bun';
 import { embedMany as aiSdkEmbedMany } from 'ai';
 import type { BrainEngine } from 'gbrain/engine';
 import type { SearchResult } from 'gbrain/types';
-import { EvalEngineUnavailable, EVAL_ENGINES, openEvalEngine, rustAddonIdentity, type EvalEngineKind, type RustAddonIdentity } from '../eval-engine.ts';
+import { EvalEngineUnavailable, EVAL_ENGINES, openEvalEngine, rustAddonIdentity, type EvalEmbedding, type EvalEngineKind, type RustAddonIdentity } from '../eval-engine.ts';
 import { gbrainSpecFrom, importGbrain, overlaySummary, resolveGbrainUnderTest, type GbrainUnderTest } from '../gbrain-under-test.ts';
 import { PINNED_SEARCH_CONFIG, canonicalJson, isAbsQuestion, normalizeSessions, stratifiedSample, sutPages, type Question } from '../longmemeval.ts';
 import { EmbeddingCache, makeCachingTransport } from '../longmemeval-cache.ts';
@@ -201,7 +201,7 @@ function databaseUrlFor(serverUrl: string, database: string): string {
  * Initialize one store per engine, then hand out copies of it. Throws EvalEngineUnavailable when the engine cannot
  * open (the Rust arm today), which the runner reports as a refusal.
  */
-async function storeFactory(gut: GbrainUnderTest, kind: EvalEngineKind, workDir: string, postgresUrl: string | undefined): Promise<StoreFactory> {
+async function storeFactory(gut: GbrainUnderTest, kind: EvalEngineKind, workDir: string, postgresUrl: string | undefined, embedding: EvalEmbedding): Promise<StoreFactory> {
   if (kind === 'postgres') {
     if (!postgresUrl) throw new EvalEngineUnavailable(kind, 'postgres_url_missing', 'The postgres engine needs a server URL (--pg-url), for example a local pgvector/pgvector:pg16 container.');
     const admin = new SQL(postgresUrl, { max: 1 });
@@ -211,7 +211,7 @@ async function storeFactory(gut: GbrainUnderTest, kind: EvalEngineKind, workDir:
     const drop = (db: string) => admin.unsafe('DROP DATABASE IF EXISTS "' + db + '" WITH (FORCE)');
     try {
       await admin.unsafe('CREATE DATABASE "' + template + '"');
-      const t = await openEvalEngine({ gut, kind, databaseUrl: databaseUrlFor(postgresUrl, template), poolMax: 2 });
+      const t = await openEvalEngine({ gut, kind, databaseUrl: databaseUrlFor(postgresUrl, template), poolMax: 2, embedding });
       await t.engine.disconnect();
     } catch (e) {
       await drop(template).catch(() => {});
@@ -225,7 +225,7 @@ async function storeFactory(gut: GbrainUnderTest, kind: EvalEngineKind, workDir:
         const db = prefix + '_q' + (n++);
         created.push(db);
         await admin.unsafe('CREATE DATABASE "' + db + '" TEMPLATE "' + template + '"');
-        const { engine } = await openEvalEngine({ gut, kind, databaseUrl: databaseUrlFor(postgresUrl, db), poolMax: 2 });
+        const { engine } = await openEvalEngine({ gut, kind, databaseUrl: databaseUrlFor(postgresUrl, db), poolMax: 2, embedding });
         return {
           engine,
           async close() {
@@ -242,7 +242,7 @@ async function storeFactory(gut: GbrainUnderTest, kind: EvalEngineKind, workDir:
   const root = mkdtempSync(join(workDir, kind + '-'));
   const template = join(root, 'template');
   try {
-    const t = await openEvalEngine({ gut, kind, databasePath: template });
+    const t = await openEvalEngine({ gut, kind, databasePath: template, embedding });
     await t.engine.disconnect();
   } catch (e) {
     rmSync(root, { recursive: true, force: true });
@@ -254,7 +254,7 @@ async function storeFactory(gut: GbrainUnderTest, kind: EvalEngineKind, workDir:
     async open() {
       const path = join(root, 'q' + (n++));
       cpSync(template, path, { recursive: true });
-      const { engine } = await openEvalEngine({ gut, kind, databasePath: path });
+      const { engine } = await openEvalEngine({ gut, kind, databasePath: path, embedding });
       return {
         engine,
         async close() {
@@ -752,7 +752,7 @@ export async function runLmeRecall(o: RunLmeRecallOptions): Promise<LmeRecallRec
   try {
     for (const kind of o.engines) {
       try {
-        factories.push(await storeFactory(o.gut, kind, workDir, o.postgresUrl));
+        factories.push(await storeFactory(o.gut, kind, workDir, o.postgresUrl, embedding));
         log('[lme-recall] ' + kind + ': store template ready');
       } catch (e) {
         const refused = e instanceof EvalEngineUnavailable;
@@ -883,8 +883,8 @@ export interface EmbedPlan {
  * Drive the exact import and query-embedding path of the vector and hybrid arms on a scratch PGLite store, so the
  * gateway's embed transport sees every text those arms embed.
  */
-async function walkEmbeddings(o: { gut: GbrainUnderTest; mods: GbrainModules; ds: LoadedDataset; workDir: string; log: (l: string) => void }): Promise<void> {
-  const f = await storeFactory(o.gut, 'pglite', o.workDir, undefined);
+async function walkEmbeddings(o: { gut: GbrainUnderTest; mods: GbrainModules; ds: LoadedDataset; workDir: string; embedding: EvalEmbedding; log: (l: string) => void }): Promise<void> {
+  const f = await storeFactory(o.gut, 'pglite', o.workDir, undefined, o.embedding);
   try {
     for (let i = 0; i < o.ds.questions.length; i++) {
       const q = o.ds.questions[i];
@@ -951,7 +951,7 @@ async function walkTexts(o: CountOptions, keepTexts: boolean): Promise<Walked> {
     return stub(params);
   });
   try {
-    await walkEmbeddings({ gut: o.gut, mods, ds, workDir, log });
+    await walkEmbeddings({ gut: o.gut, mods, ds, workDir, embedding, log });
   } finally {
     mods.setEmbedTransport(null);
     restoreNetwork();

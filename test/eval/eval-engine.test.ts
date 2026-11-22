@@ -3,9 +3,11 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { spawnSync } from 'node:child_process';
 import {
-  EvalEngineUnavailable, cliEngineConfig, evalEngineKind, evalEngineRequested, isCapabilityMissing, openEvalEngine,
-  rawSqlNotApplicable, rustAddonEnv, rustAddonIdentity, rustAddonRefusal, supportsRawSql,
+  EvalEngineEmbeddingMismatch, EvalEngineUnavailable, assertStoredEmbeddingWidth, cliEngineConfig, evalEngineKind, evalEngineRequested,
+  inProcessInitOptions, isCapabilityMissing, openEvalEngine, rawSqlNotApplicable, rustAddonEnv, rustAddonIdentity, rustAddonRefusal,
+  rustInitConfig, supportsRawSql,
 } from '../../eval/runner/eval-engine.ts';
 import { resolveGbrainUnderTest, type GbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
 
@@ -164,4 +166,111 @@ describe('openEvalEngine', () => {
       await engine.disconnect();
     }
   }, 60_000);
+});
+
+const CAT13_EMBEDDING = { model: 'openai:text-embedding-3-large', dimensions: 1536 };
+
+/**
+ * A factory whose engines record the initSchema options they get and report a stored width: the width initSchema was
+ * given (a brain created at the run's width), or `storedWidth` when set (a brain created at some other width).
+ */
+function widthRecordingGbrain(storedWidth?: number): GbrainUnderTest {
+  return fakeGbrain(`export async function constructEngine(c) {
+    return {
+      kind: c.engine, initOpts: undefined,
+      async connect() {}, async disconnect() {},
+      async initSchema(opts) { this.initOpts = opts; },
+      width() { return ${storedWidth ?? 'null'} ?? this.initOpts?.embedding?.dimensions ?? (c.engine === 'rust' ? 1536 : null); },
+      async getConfig(k) { const w = this.width(); return k === 'embedding_dimensions' && w !== null ? String(w) : null; },
+      async executeRaw() { const w = this.width(); return w === null ? [] : [{ formatted: 'vector(' + w + ')' }]; },
+    };
+  }`);
+}
+
+describe('the run embedding every arm is created with', () => {
+  test('the Rust init config names the run model and width and drops embedding_disabled', () => {
+    expect(rustInitConfig('/s.rust', CAT13_EMBEDDING)).toEqual({
+      engine: 'rust', database_path: '/s.rust', embedding_model: 'openai:text-embedding-3-large', embedding_dimensions: 1536, schema_pack: 'gbrain-base-v2',
+    });
+    expect(rustInitConfig('/s.rust', CAT13_EMBEDDING)).not.toHaveProperty('embedding_disabled');
+  });
+  test('without a run embedding the Rust init config stays the keyless one', () => {
+    expect(rustInitConfig('/s.rust')).toEqual({ engine: 'rust', database_path: '/s.rust', embedding_disabled: true, schema_pack: 'gbrain-base-v2' });
+  });
+  test('the in-process arms get the same model and width as initSchema options', () => {
+    expect(inProcessInitOptions(CAT13_EMBEDDING)).toEqual({ embedding: CAT13_EMBEDDING });
+    expect(inProcessInitOptions(undefined)).toEqual({});
+  });
+  test('all three arms are created with the same model and width, and none depends on the gateway', async () => {
+    const gut = widthRecordingGbrain();
+    const seen: Record<string, unknown> = {};
+    for (const kind of ['pglite', 'postgres'] as const) {
+      const { engine } = await openEvalEngine({ gut, kind, databaseUrl: 'postgres://fake/x', embedding: CAT13_EMBEDDING });
+      seen[kind] = (engine as unknown as { initOpts: { embedding: unknown } }).initOpts.embedding;
+    }
+    const { engine: rust } = await openEvalEngine({ gut, kind: 'rust', databasePath: '/s.rust', embedding: CAT13_EMBEDDING });
+    expect((rust as unknown as { initOpts?: unknown }).initOpts).toBeUndefined();
+    const [call] = readFileSync(join(gut.root, 'src/cli-calls.jsonl'), 'utf8').trim().split('\n').map(l => JSON.parse(l));
+    expect(call.config).not.toHaveProperty('embedding_disabled');
+    seen.rust = { model: call.config.embedding_model, dimensions: call.config.embedding_dimensions };
+    expect(seen).toEqual({ pglite: CAT13_EMBEDDING, postgres: CAT13_EMBEDDING, rust: CAT13_EMBEDDING });
+    expect(call.keys).toEqual([]);
+  });
+  test('a Rust brain created at another width stops the open with a clear message', async () => {
+    const gut = widthRecordingGbrain(1024);
+    const err = await openEvalEngine({ gut, kind: 'rust', databasePath: '/s.rust', embedding: CAT13_EMBEDDING }).catch(e => e);
+    expect(err).toBeInstanceOf(EvalEngineEmbeddingMismatch);
+    expect(err.kind).toBe('rust');
+    expect(err.stored).toEqual({ column: null, config: 1024 });
+    expect(err.message).toContain('openai:text-embedding-3-large at 1536 dimensions');
+    expect(err.message).toContain('embedding_dimensions 1024');
+  });
+  test('an in-process brain created at another width stops the open, reading the column type and the config row', async () => {
+    const err = await openEvalEngine({ gut: widthRecordingGbrain(1024), kind: 'pglite', embedding: CAT13_EMBEDDING }).catch(e => e);
+    expect(err).toBeInstanceOf(EvalEngineEmbeddingMismatch);
+    expect(err.stored).toEqual({ column: 1024, config: 1024 });
+    expect(err.message).toContain('a 1024-dimension content_chunks.embedding column');
+  });
+  test('the width check fails on either source and on an unreadable width', async () => {
+    const engine = (column: string | null, config: string | null) => ({
+      getConfig: async () => config, executeRaw: async () => (column === null ? [] : [{ formatted: column }]),
+    }) as never;
+    await assertStoredEmbeddingWidth('pglite', engine('vector(1536)', '1536'), CAT13_EMBEDDING);
+    await assertStoredEmbeddingWidth('postgres', engine('halfvec(1536)', null), CAT13_EMBEDDING);
+    for (const column of [null, 'text']) {
+      const err = await assertStoredEmbeddingWidth('pglite', engine(column, '1536'), CAT13_EMBEDDING).catch(e => e);
+      expect(err, `column ${column}`).toBeInstanceOf(EvalEngineEmbeddingMismatch);
+    }
+    await assertStoredEmbeddingWidth('rust', engine(null, '1536'), CAT13_EMBEDDING);
+    await expect(assertStoredEmbeddingWidth('postgres', engine('vector(1536)', '1024'), CAT13_EMBEDDING)).rejects.toBeInstanceOf(EvalEngineEmbeddingMismatch);
+    await expect(assertStoredEmbeddingWidth('pglite', engine('vector(1024)', '1536'), CAT13_EMBEDDING)).rejects.toBeInstanceOf(EvalEngineEmbeddingMismatch);
+    const unreadable = await assertStoredEmbeddingWidth('rust', engine(null, null), CAT13_EMBEDDING).catch(e => e);
+    expect(unreadable).toBeInstanceOf(EvalEngineEmbeddingMismatch);
+    expect(unreadable.message).toContain('Without a readable width');
+  });
+  test('a real PGLite brain is held to the run width: the check fails when the gateway width differs and passes when it matches', () => {
+    // A child process, because the gateway is process-global and other test files in this process configure it.
+    const evalEngine = join(import.meta.dir, '../../eval/runner/eval-engine.ts');
+    const gutModule = join(import.meta.dir, '../../eval/runner/gbrain-under-test.ts');
+    const script = `
+      const { openEvalEngine } = await import(${JSON.stringify(evalEngine)});
+      const { importGbrain, resolveGbrainUnderTest } = await import(${JSON.stringify(gutModule)});
+      const gut = resolveGbrainUnderTest(null);
+      const gw = await importGbrain(gut, 'src/core/ai/gateway.ts');
+      const other = gw.DEFAULT_EMBEDDING_DIMENSIONS === 1536 ? 1024 : 1536;
+      const want = { model: 'openai:text-embedding-3-large', dimensions: other };
+      const out = {};
+      const unconfigured = await openEvalEngine({ gut, kind: 'pglite', embedding: want }).then(() => 'opened', e => e.name);
+      out.unconfigured = unconfigured;
+      gw.configureGateway({ embedding_model: want.model, embedding_dimensions: want.dimensions, env: { OPENAI_API_KEY: 'placeholder-never-sent' } });
+      const opened = await openEvalEngine({ gut, kind: 'pglite', embedding: want });
+      out.configured = await opened.engine.getConfig('embedding_dimensions');
+      out.want = String(want.dimensions);
+      await opened.engine.disconnect();
+      console.log(JSON.stringify(out));`;
+    const home = mkdtempSync(join(tmpdir(), 'eval-engine-width-'));
+    const r = spawnSync(process.execPath, ['-e', script], { env: { PATH: process.env.PATH, HOME: home, GBRAIN_HOME: home }, cwd: join(import.meta.dir, '../..'), encoding: 'utf8', timeout: 170_000 });
+    const out = JSON.parse((r.stdout ?? '').trim().split('\n').at(-1) || '{}');
+    expect(out, r.stderr).toEqual({ unconfigured: 'EvalEngineEmbeddingMismatch', configured: out.want, want: out.want });
+  }, 180_000);
 });

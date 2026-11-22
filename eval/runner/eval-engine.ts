@@ -11,6 +11,11 @@
  * no Rust number can exist before a Rust build does. The Rust engine refuses raw SQL (executeRaw and friends throw
  * engine_capability_missing, reason raw_sql; plan decision D18), so a check that reads or writes the database with
  * raw SQL reports not_applicable on it (rawSqlNotApplicable) and counts as neither a pass nor a fail.
+ *
+ * gbrain fixes a brain's vector width when the brain is created: the stored identity, else the configured model, else
+ * the install default. A runner that writes vectors passes its embedding model and width as `embedding`, and every arm
+ * creates its brain with that same pair (the Rust CLI config, the Postgres initSchema options, and a check of the
+ * PGLite result). After init each arm reads back its stored width and the run stops when it differs from the run's.
  */
 import { createHash, randomUUID } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
@@ -45,11 +50,37 @@ export type RustUnavailableReason =
 
 export type EvalEngineUnavailableReason = RustUnavailableReason | 'postgres_url_missing' | 'postgres_unreachable' | 'engine_not_supported_by_runner';
 
+/** The embedding model (`provider:model`) and vector width a run embeds with, and so every arm's brain is created with. */
+export interface EvalEmbedding {
+  model: string;
+  dimensions: number;
+}
+
 export class EvalEngineUnavailable extends Error {
   constructor(readonly kind: EvalEngineKind, readonly reason: EvalEngineUnavailableReason, message: string) {
     super(message);
     this.name = 'EvalEngineUnavailable';
   }
+}
+
+/**
+ * A brain whose stored vector width is not the run's width, or whose width could not be read. It is a harness
+ * failure, not a refusal: every save of a run-width vector would fail on that brain, so the run stops before any.
+ */
+export class EvalEngineEmbeddingMismatch extends Error {
+  constructor(readonly kind: EvalEngineKind, readonly want: EvalEmbedding, readonly stored: { column: number | null; config: number | null }, detail?: string) {
+    super(`The ${kind} arm's brain does not store the run's embedding width. The run embeds with ${want.model} at ${want.dimensions} dimensions, `
+      + `but the brain records ${describeStoredWidth(stored)}. ${detail ?? 'Every arm must create its brain with the run\'s embedding model and width (OpenEvalEngineOptions.embedding), so the run stopped before writing any vector.'}`);
+    this.name = 'EvalEngineEmbeddingMismatch';
+  }
+}
+
+function describeStoredWidth(s: { column: number | null; config: number | null }): string {
+  const parts = [
+    s.column === null ? null : `a ${s.column}-dimension content_chunks.embedding column`,
+    `embedding_dimensions ${s.config === null ? 'unset' : s.config} in its config`,
+  ].filter(Boolean);
+  return parts.join(' and ');
 }
 
 /** Where the Rust engine's TypeScript side lives in a gbrain build that carries it (RUST_ENGINE.md, "Binding"). */
@@ -133,6 +164,14 @@ export interface OpenEvalEngineOptions {
   poolMax?: number;
   /** Bring the schema up: initSchema after connect on PGLite and Postgres, `gbrain init` before connect on Rust. Defaults to true. */
   initSchema?: boolean;
+  /**
+   * The run's embedding model and width. Every arm creates its brain with it: Rust through the `gbrain init` config,
+   * Postgres through initSchema's options, and PGLite (whose initSchema takes no options at the pinned build) through
+   * the gateway the runner configured, checked afterwards. Each arm then reads its stored width back and the open
+   * throws EvalEngineEmbeddingMismatch when it differs. Omit it only for a keyless brain that never stores a vector:
+   * the Rust arm then writes `embedding_disabled`, and the other arms keep gbrain's own choice.
+   */
+  embedding?: EvalEmbedding;
 }
 
 export interface EvalEngine {
@@ -172,15 +211,66 @@ export async function openEvalEngine(o: OpenEvalEngineOptions): Promise<EvalEngi
     if (kind === 'rust') throw rustAddonRefusal(e) ?? new EvalEngineUnavailable(kind, 'rust_kind_unsupported', `gbrain ${o.gut.version} does not construct a rust engine: ${(e as Error).message}`);
     throw e;
   }
-  if (kind === 'rust' && o.initSchema !== false) initRustBrain(o.gut, o.databasePath!);
+  if (kind === 'rust' && o.initSchema !== false) initRustBrain(o.gut, o.databasePath!, o.embedding);
   try {
     await engine.connect(config);
   } catch (e) {
     if (kind === 'rust') throw rustAddonRefusal(e) ?? e;
     throw e;
   }
-  if (kind !== 'rust' && o.initSchema !== false) await engine.initSchema();
+  if (kind !== 'rust' && o.initSchema !== false) await (engine.initSchema as (opts?: InProcessInitOptions) => Promise<void>).call(engine, inProcessInitOptions(o.embedding));
+  if (o.embedding) {
+    try {
+      await assertStoredEmbeddingWidth(kind, engine, o.embedding);
+    } catch (e) {
+      await engine.disconnect?.().catch(() => {});
+      throw e;
+    }
+  }
   return { kind, engine, config };
+}
+
+export interface InProcessInitOptions {
+  embedding?: EvalEmbedding;
+}
+
+/**
+ * The options openEvalEngine hands initSchema on the in-process arms. Postgres seeds a new brain from them; PGLite
+ * ignores them at the pinned build, so its width comes from the gateway the runner configured and the stored-width
+ * check after init is what holds it to the run's width.
+ */
+export function inProcessInitOptions(embedding: EvalEmbedding | undefined): InProcessInitOptions {
+  return embedding ? { embedding: { model: embedding.model, dimensions: embedding.dimensions } } : {};
+}
+
+/**
+ * Read the width a brain stores: the `embedding_dimensions` config row on every arm, and on the arms that accept raw
+ * SQL also the content_chunks.embedding column type. Throws EvalEngineEmbeddingMismatch when either differs from the
+ * run's width, when a raw-SQL arm's column type cannot be read, or when the Rust arm has no config row.
+ */
+export async function assertStoredEmbeddingWidth(kind: EvalEngineKind, engine: Pick<BrainEngine, 'getConfig' | 'executeRaw'>, want: EvalEmbedding): Promise<void> {
+  const stored = { column: null as number | null, config: null as number | null };
+  const raw = await engine.getConfig('embedding_dimensions');
+  if (raw !== null && raw !== undefined && String(raw).trim() !== '') {
+    const n = Number(String(raw).trim());
+    stored.config = Number.isInteger(n) && n > 0 ? n : null;
+  }
+  if (supportsRawSql(kind)) {
+    const rows = await engine.executeRaw<{ formatted: string | null }>(
+      `SELECT format_type(a.atttypid, a.atttypmod) AS formatted FROM pg_attribute a JOIN pg_class c ON c.oid = a.attrelid `
+      + `JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'public' AND c.relname = 'content_chunks' `
+      + `AND a.attname = 'embedding' AND NOT a.attisdropped`,
+    );
+    const m = rows[0]?.formatted?.match(/^(?:halfvec|vector)\((\d+)\)$/);
+    stored.column = m ? Number(m[1]) : null;
+  }
+  // The column type is the width a save must match, so a raw-SQL arm needs it; the Rust arm has only the config row.
+  if (supportsRawSql(kind) ? stored.column === null : stored.config === null) {
+    throw new EvalEngineEmbeddingMismatch(kind, want, stored, 'Without a readable width the run cannot show the brain accepts its vectors, so it stopped before writing any.');
+  }
+  if ((stored.column !== null && stored.column !== want.dimensions) || (stored.config !== null && stored.config !== want.dimensions)) {
+    throw new EvalEngineEmbeddingMismatch(kind, want, stored);
+  }
 }
 
 const RUST_ADDON_CODES = ['rust_engine_addon_missing', 'rust_engine_addon_mismatch'] as const;
@@ -203,16 +293,26 @@ export function rustAddonRefusal(e: unknown): EvalEngineUnavailable | null {
 }
 
 /**
+ * The CLI config `gbrain init` reads for a new Rust brain. With the run's embedding it names that model and width, so
+ * the brain is created at the run's width; gbrain's config writes either a model or `embedding_disabled`, never both.
+ * Without one it is the keyless config (`embedding_disabled`), and the brain takes gbrain's default width.
+ */
+export function rustInitConfig(databasePath: string, embedding?: EvalEmbedding): Record<string, string | number | boolean> {
+  const width: Record<string, string | number | boolean> = embedding ? { embedding_model: embedding.model, embedding_dimensions: embedding.dimensions } : { embedding_disabled: true };
+  return { ...cliEngineConfig('rust', { databasePath }), ...width, schema_pack: 'gbrain-base-v2' };
+}
+
+/**
  * Create a Rust brain the way a user does: write a rust CLI config and run `gbrain init --migrate-only` through the
  * gbrain under test. The Rust engine refuses initSchema() (capability `schema`), and `gbrain init` has no rust flag,
  * so the config is written first, as lifecycle/slice.ts does. It runs before this process opens the store, because a
  * second process on an open Rust store gets store_locked. The child environment carries no provider key.
  */
-export function initRustBrain(gut: Pick<GbrainUnderTest, 'root' | 'version'>, databasePath: string): void {
+export function initRustBrain(gut: Pick<GbrainUnderTest, 'root' | 'version'>, databasePath: string, embedding?: EvalEmbedding): void {
   const home = mkdtempSync(join(tmpdir(), 'eval-engine-rust-init-'));
   try {
     mkdirSync(join(home, '.gbrain'), { recursive: true });
-    const config = { ...cliEngineConfig('rust', { databasePath }), embedding_disabled: true, schema_pack: 'gbrain-base-v2' };
+    const config = rustInitConfig(databasePath, embedding);
     writeFileSync(join(home, '.gbrain', 'config.json'), `${JSON.stringify(config, null, 2)}\n`);
     const env = { PATH: process.env.PATH, HOME: home, GBRAIN_HOME: home, GBRAIN_SKIP_STARTUP_HOOKS: '1', TZ: 'UTC', NO_COLOR: '1', ...rustAddonEnv() };
     const r = spawnSync(process.execPath, [join(gut.root, 'src/cli.ts'), 'init', '--migrate-only', '--non-interactive'], { env, cwd: home, encoding: 'utf8', timeout: 300_000 });
@@ -301,16 +401,16 @@ export interface ScratchEvalEngine extends EvalEngine {
  * Open `kind` on a throwaway store: PGLite in memory, Postgres in a fresh database created through `pgAdminUrl` and
  * dropped on close, Rust in a fresh temp directory removed on close.
  */
-export async function openScratchEvalEngine(o: { gut: GbrainUnderTest; kind: EvalEngineKind; label: string; pgAdminUrl?: string; initSchema?: boolean }): Promise<ScratchEvalEngine> {
+export async function openScratchEvalEngine(o: { gut: GbrainUnderTest; kind: EvalEngineKind; label: string; pgAdminUrl?: string; initSchema?: boolean; embedding?: EvalEmbedding }): Promise<ScratchEvalEngine> {
   const disconnect = async (e: EvalEngine) => { await e.engine.disconnect?.().catch(() => {}); };
   if (o.kind === 'pglite') {
-    const e = await openEvalEngine({ gut: o.gut, kind: 'pglite', initSchema: o.initSchema });
+    const e = await openEvalEngine({ gut: o.gut, kind: 'pglite', initSchema: o.initSchema, embedding: o.embedding });
     return { ...e, close: () => disconnect(e) };
   }
   if (o.kind === 'rust') {
     const dir = mkdtempSync(join(tmpdir(), `${o.label}-rust-`));
     try {
-      const e = await openEvalEngine({ gut: o.gut, kind: 'rust', databasePath: join(dir, 'brain.rust'), initSchema: o.initSchema });
+      const e = await openEvalEngine({ gut: o.gut, kind: 'rust', databasePath: join(dir, 'brain.rust'), initSchema: o.initSchema, embedding: o.embedding });
       return { ...e, close: async () => { await disconnect(e); rmSync(dir, { recursive: true, force: true }); } };
     } catch (err) {
       rmSync(dir, { recursive: true, force: true });
@@ -333,7 +433,7 @@ export async function openScratchEvalEngine(o: { gut: GbrainUnderTest; kind: Eva
   const url = new URL(o.pgAdminUrl);
   url.pathname = `/${db}`;
   try {
-    const e = await openEvalEngine({ gut: o.gut, kind: 'postgres', databaseUrl: url.toString(), initSchema: o.initSchema });
+    const e = await openEvalEngine({ gut: o.gut, kind: 'postgres', databaseUrl: url.toString(), initSchema: o.initSchema, embedding: o.embedding });
     return { ...e, close: async () => { await disconnect(e); await drop(); } };
   } catch (err) {
     await drop();

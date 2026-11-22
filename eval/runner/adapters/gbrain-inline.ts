@@ -186,9 +186,11 @@ export class GbrainInlineAdapter implements Adapter {
     // v0.40+ requires the gateway configured before any embed call —
     // Imports embed inline; assertEmbedded turns a deferred embedding into a throw.
     const product = await loadProduct(this.opts.productPackage ?? 'gbrain', this.opts.productRoot);
+    // One model and width for the gateway and for the brain, so an engine arm never takes its width from elsewhere.
+    const embedding = { model: this.opts.embeddingModel ?? 'openai:text-embedding-3-large', dimensions: this.opts.embeddingDimensions ?? 1536 };
     product.configureGateway({
-      embedding_model: this.opts.embeddingModel ?? 'openai:text-embedding-3-large',
-      embedding_dimensions: this.opts.embeddingDimensions ?? 1536,
+      embedding_model: embedding.model,
+      embedding_dimensions: embedding.dimensions,
       env: process.env as Record<string, string | undefined>,
       ...(process.env.OLLAMA_BASE_URL ? { base_urls: { ollama: process.env.OLLAMA_BASE_URL } } : {}),
     });
@@ -199,7 +201,7 @@ export class GbrainInlineAdapter implements Adapter {
     if (this.opts.engine) {
       if (this.opts.productPackage === 'gbrain-cues') throw new Error('[gbrain-inline] engine selection supports the gbrain package or a productRoot overlay, not gbrain-cues');
       const gut = this.opts.productRoot !== undefined ? { ...resolveGbrainUnderTest(null), root: this.opts.productRoot } : resolveGbrainUnderTest(null);
-      scratch = await openScratchEvalEngine({ gut, kind: this.opts.engine.kind, label: 'gbinline', pgAdminUrl: this.opts.engine.pgAdminUrl });
+      scratch = await openScratchEvalEngine({ gut, kind: this.opts.engine.kind, label: 'gbinline', pgAdminUrl: this.opts.engine.pgAdminUrl, embedding });
       // Typed as PGLiteEngine for the existing call sites; every call below is on the shared BrainEngine interface.
       engine = scratch.engine as unknown as enginePackage.PGLiteEngine;
     } else {
