@@ -76,6 +76,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { PassThrough } from 'node:stream';
 import { GoldStore } from './evaluator/gold-store.ts';
+import { behaviorEngineReceiptFields, evalEngineKind, requestedEvalEngine } from './eval-engine.ts';
 import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from './gbrain-under-test.ts';
 import { gbrainPin } from './gbrain-version.ts';
 import { DECIDE_OFF, withHermeticEnv } from './hermetic-env.ts';
@@ -86,7 +87,7 @@ import { budgetOptionsFrom, receiptCost, startPaidRun, type RunSummary } from '.
 import { paidRequested, requirePaidArm } from './paid-arm.ts';
 import { attestPreregistration, type Attestation } from './prereg.ts';
 import {
-  MODE_DEFAULT, MODE_OFF, missingCapabilities, openTrustSut, type TrustCapabilities, type TrustMode, type TrustSut,
+  MODE_DEFAULT, MODE_OFF, missingCapabilities, notSupportedFromText, notSupportedStepsIn, openTrustSut, type TrustCapabilities, type TrustMode, type TrustSut,
 } from './memory-trust/sut.ts';
 import { brainArm, promptHash, runSession, scriptedModel } from './memory-trust/agent.ts';
 import { COUNTED_MODELS, MEMORY_TRUST_CAP_USD, MODEL_FRESHNESS_CHECK, STUB_MODEL, estimateUsd, modelsFrom, providerOf } from './memory-trust/models.ts';
@@ -611,7 +612,10 @@ const MODES: Record<ArmMode, TrustMode> = { default: MODE_DEFAULT, off: MODE_OFF
 /** One hermetic arm: open, set the mode, write the world, read every probe. Call inside withHermeticEnv. */
 export async function runArm(gut: GbrainUnderTest, world: GeneratedCat38, mode: ArmMode, log: (s: string) => void = () => {}): Promise<ArmRun> {
   const t0 = Date.now();
-  const sut = await openTrustSut(gut);
+  let sut: TrustSut;
+  // A setup step the engine refuses (engine_not_supported_by_runner) is reported by main, never scored.
+  try { sut = await openTrustSut(gut); }
+  catch (e) { return { mode, capabilities: null as unknown as TrustCapabilities, observations: [], violations: [], presence: [], owner_pages: 0, syncs: 0, harness_error: `harness (${mode}): ${quietErr(e)}`, timing_ms: { total: Date.now() - t0 } }; }
   const result: ArmRun = { mode, capabilities: sut.capabilities, observations: [], violations: [], presence: [], owner_pages: 0, syncs: 0, harness_error: null, timing_ms: {} };
   try {
     await sut.setMode(MODES[mode]);
@@ -897,13 +901,20 @@ async function main(): Promise<void> {
   const def = arms.find(a => a.mode === 'default');
   const off = arms.find(a => a.mode === 'off');
   harnessError ??= def?.harness_error ?? off?.harness_error ?? null;
+  // Steps the engine refused (GBRAIN_EVAL_ENGINE=rust, raw SQL): listed, never scored as a pass or a fail. An arm that
+  // stopped on one is not run on this engine; a refusal inside an outcome makes the run partial.
+  const requested = requestedEvalEngine();
+  const unsupported = notSupportedStepsIn(CATEGORY, [harnessError, ...arms]);
+  const refusedRun = notSupportedFromText(CATEGORY, harnessError) !== null;
+  if (refusedRun) harnessError = null;
   const gold = new GoldStore<Cat38Gold>('cat38-state-resolution', world.gold.entries());
   const acc = new ProbeAccounting(world.probes.length);
-  const score = def && !harnessError ? scoreArm(world, def.observations, def.violations) : null;
-  const scoreOff = off && !harnessError ? scoreArm(world, off.observations, off.violations) : null;
+  const score = def && !harnessError && !refusedRun ? scoreArm(world, def.observations, def.violations) : null;
+  const scoreOff = off && !harnessError && !refusedRun ? scoreArm(world, off.observations, off.violations) : null;
   if (score) for (const r of score.rows) { if (r.error) acc.error(r.probe_id, 'sut', r.error); else acc.score(r.probe_id, r.correct ? 1 : 0); }
   if (harnessError) acc.error('presence', 'harness', harnessError);
-  const verdict = score ? cat38Verdict(score.metrics) : null;
+  // A run with any refused step is graded partial: a missing outcome could move a metric either way.
+  const verdict = score ? (unsupported.length ? 'partial' : cat38Verdict(score.metrics)) : null;
   const capabilities = def?.capabilities ?? off?.capabilities ?? null;
   const repro = `bun eval/runner/${CATEGORY}.ts${gut.overlay ? ` --gbrain ${gut.overlay.requested}` : ''} --seed ${seed}`;
   const findings = score && capabilities ? findingsFrom(score, def!.violations, capabilities, repro) : [];
@@ -912,7 +923,7 @@ async function main(): Promise<void> {
   let modelError: string | null = null;
   let cost: RunSummary | null = null;
   let modelMs = 0;
-  if (modelArm && !harnessError) {
+  if (modelArm && !harnessError && !refusedRun) {
     const t1 = Date.now();
     try {
       if (modelArm === 'dry') {
@@ -937,7 +948,7 @@ async function main(): Promise<void> {
   }
   const cells = aggregateModelRows(modelRows);
   const a = acc.summary();
-  const status = harnessError || a.run_invalid ? 'error' : 'completed';
+  const status = harnessError || a.run_invalid ? 'error' : refusedRun ? 'skipped' : 'completed';
   const gaps = [...(capabilities ? missingCapabilities(capabilities) : []).map(g => ({ kind: 'missing_capability', ...g })), ...NON_GUARANTEES.map(g => ({ kind: 'non_guarantee', ...g }))];
   const fullEstimate = Object.fromEntries(COUNTED_MODELS.map(m => [m, Number(estimateUsd(m, PAID_TOKENS.input, PAID_TOKENS.output, world.probes.length * MODEL_ARMS.length).toFixed(2))]));
 
@@ -949,6 +960,8 @@ async function main(): Promise<void> {
     category: CATEGORY,
     run_status: status,
     ...(status === 'completed' ? { verdict: verdict ?? 'fail' } : {}),
+    ...(status === 'skipped' ? { skip_reason: `engine_not_supported_by_runner: ${unsupported[0]?.step ?? 'setup'} on ${requested ?? evalEngineKind()}` } : {}),
+    ...behaviorEngineReceiptFields(requested, unsupported),
     n_total: a.n_total,
     n_scored: a.n_scored,
     completion_rate: a.completion_rate,
@@ -960,7 +973,7 @@ async function main(): Promise<void> {
     ...(attestation ? { preregistration_attestation: attestation } : {}),
     resolved_config: {
       legacy_alias: LEGACY_ALIAS,
-      engine: 'pglite-in-memory',
+      engine: requested ? `${requested} (GBRAIN_EVAL_ENGINE through eval-engine.ts)` : 'pglite-in-memory',
       decide: DECIDE_OFF,
       modes: { default: MODE_DEFAULT, off: MODE_OFF },
       callers: 'remote MCP agent (legacy read+write token) for agent and external writes and every read; trusted local CLI for owner_confirmed writes, confirm_memory and accepts; managed owner-source sync for owner_curated rows',
@@ -1037,7 +1050,10 @@ async function main(): Promise<void> {
   writeReceipt(outPath, receipt);
 
   log('');
-  if (!score) {
+  for (const u of unsupported) log(`engine_not_supported_by_runner (${u.engine}): ${u.step}: ${u.reason}`);
+  if (status === 'skipped') {
+    log(`verdict: not run on ${requested} (engine_not_supported_by_runner)`);
+  } else if (!score) {
     log(`verdict: run error: ${harnessError}`);
   } else {
     const m = score.metrics;
@@ -1070,7 +1086,7 @@ async function main(): Promise<void> {
   log(`\nhermetic wall time: ${(hermeticMs / 1000).toFixed(1)} s${modelMs ? `; model arm ${(modelMs / 1000).toFixed(1)} s` : ''}`);
   log(`receipt: ${outPath}`);
   if (json) process.stdout.write(JSON.stringify({ run_status: receipt.run_status, verdict: receipt.verdict, metrics: score?.metrics ?? null, metrics_off: scoreOff?.metrics ?? null, model_arm: cells, errors: a.errors }, null, 2) + '\n');
-  process.exit(receipt.run_status === 'error' ? 3 : verdict === 'pass' ? 0 : 1);
+  process.exit(receipt.run_status === 'error' ? 3 : status === 'skipped' || verdict === 'pass' || (verdict === 'partial' && unsupported.length > 0) ? 0 : 1);
 }
 
 if (import.meta.main) {

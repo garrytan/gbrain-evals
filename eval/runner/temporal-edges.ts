@@ -26,6 +26,14 @@
  *
  * Hermetic: provider keys stripped, PGLite in memory, zero LLM.
  *
+ * Engines: GBRAIN_EVAL_ENGINE=pglite|postgres|rust opens both brains through
+ * eval/runner/eval-engine.ts (unset means in-memory PGLite, as before). Postgres
+ * creates scratch databases through `--pg-url` or LIFECYCLE_PG_URL. The
+ * transition-identity rows, the H7 transition signatures and the single-value
+ * pass read link tables with raw SQL; on an engine that refuses a step (Rust has
+ * no raw SQL) that step is reported as engine_not_supported_by_runner, with no
+ * row, never as a pass or a zero.
+ *
  * Usage: bun eval/runner/temporal-edges.ts [--seeds 3,5] [--phrasing A|A2|A3 | --dev-phrasing-file <path>] [--output <dir>] [--gbrain <checkout>[@ref]] [--json]
  *   [--pack <pack.yaml>] [--single-value-pass]   (P3 E5: bind a test schema pack before any page; run one declared-only
  *   edge_contradictions pass before the probes and add sv_wrong_closures / sv_conflicts_closed rows)
@@ -75,6 +83,7 @@ import { custodyTemplatesInput } from './sealed-confirmation-lib.ts';
 import { campaignGuard } from './q2/campaign.ts';
 import { TRANSITION_TYPES, closureCorrect, goldTransitions, transitionMetrics, type Transition } from './q2/transitions.ts';
 import { applyEvalConfig, evalConfigRecord, parseEvalConfig } from './eval-config.ts';
+import { EngineStepLedger, EVAL_ENGINE_REFUSED_EXIT, behaviorEngineReceiptFields, evalEngineRefusalMessage, isEngineUnavailable, openBehaviorEngine, requestedEvalEngine, type EngineStepNotSupported, type EvalEngineKind } from './eval-engine.ts';
 
 export const CATEGORY = 'temporal-edges';
 
@@ -83,16 +92,14 @@ interface Sut { op: Op; put(slug: string, content: string): Promise<void>; close
 interface SutEngine { setConfig(k: string, v: string): Promise<void>; getConfig(k: string): Promise<string | null>; executeRaw<T>(sql: string, params?: unknown[]): Promise<T[]> }
 export interface TeRow { probe_id: string; kind: string; cluster: string; seed: number; [metric: string]: unknown }
 
-async function openSut(gut: GbrainUnderTest, evalConfig: Record<string, string>): Promise<Sut> {
-  const { PGLiteEngine } = await importGbrain<{ PGLiteEngine: new () => { connect(c: object): Promise<void>; initSchema(): Promise<void>; disconnect(): Promise<void>; readPageSnapshot(slug: string, o: { sourceId: string }): Promise<{ revision: unknown } | null> } }>(gut, 'src/core/pglite-engine.ts');
+async function openSut(gut: GbrainUnderTest, evalConfig: Record<string, string>, kind: EvalEngineKind = 'pglite'): Promise<Sut> {
   const { operations } = await importGbrain<{ operations: Array<{ name: string; handler: (ctx: OperationContext, p: Record<string, unknown>) => Promise<unknown> }> }>(gut, 'src/core/operations.ts');
-  const engine = new PGLiteEngine();
-  await engine.connect({});
-  await engine.initSchema();
+  const brain = await openBehaviorEngine({ gut, label: 'temporal_edges', kind });
+  const engine = brain.engine as unknown as { readPageSnapshot(slug: string, o: { sourceId: string }): Promise<{ revision: unknown } | null> };
   const { KNOWN_CONFIG_KEYS } = await importGbrain<{ KNOWN_CONFIG_KEYS?: readonly string[] }>(gut, 'src/core/config.ts');
   const configRecord = evalConfigRecord(await applyEvalConfig(engine as unknown as SutEngine, evalConfig), KNOWN_CONFIG_KEYS ?? null);
   const logger = { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} };
-  const ctx = { engine, config: { engine: 'pglite', database_path: ':memory:' }, logger, dryRun: false, remote: false, sourceId: 'default' } as unknown as OperationContext;
+  const ctx = { engine, config: kind === 'pglite' ? { engine: 'pglite', database_path: ':memory:' } : brain.config, logger, dryRun: false, remote: false, sourceId: 'default' } as unknown as OperationContext;
   const byName = new Map(operations.map(o => [o.name, o]));
   return {
     op: async (name, params) => {
@@ -104,7 +111,7 @@ async function openSut(gut: GbrainUnderTest, evalConfig: Record<string, string>)
       const snapshot = await engine.readPageSnapshot(slug, { sourceId: 'default' });
       await byName.get('put_page')!.handler(ctx, { slug, content, ...(snapshot ? { expected_revision: snapshot.revision } : {}) });
     },
-    close: () => engine.disconnect(),
+    close: () => brain.close(),
     engine: engine as unknown as SutEngine,
     configRecord,
   };
@@ -133,7 +140,7 @@ async function transitionsSig(sut: Sut, slug: string): Promise<{ sig: string; n:
   return { sig: createHash('sha256').update(lines.join('\n')).digest('hex'), n: lines.length };
 }
 
-async function probeWorld(world: TemporalEdgesWorld, sut: Sut, mirror: Sut, acc: ProbeAccounting, rows: TeRow[]): Promise<void> {
+async function probeWorld(world: TemporalEdgesWorld, sut: Sut, mirror: Sut, acc: ProbeAccounting, rows: TeRow[], ledger?: EngineStepLedger): Promise<void> {
   const seed = world.seed;
   const ranged = world.range_people ? new Set(world.range_people) : null;
   const tagsFor = (person: string): Record<string, unknown> => ranged
@@ -145,6 +152,8 @@ async function probeWorld(world: TemporalEdgesWorld, sut: Sut, mirror: Sut, acc:
       rows.push({ probe_id, kind, cluster: `s${seed}:${cluster}`, seed, ...metrics, ...tags });
       acc.score(probe_id, Object.values(metrics)[0]);
     } catch (e) {
+      // The engine's typed refusal: no row, listed once per probe family, never a zero.
+      if (ledger?.refused(`${kind} probes (gbrain operations)`, e)) return;
       const message = e instanceof Error ? e.message : String(e);
       acc.error(probe_id, 'sut', message);
       rows.push({ probe_id, kind, cluster: `s${seed}:${cluster}`, seed, error: message, error_origin: 'sut', ...tags });
@@ -185,6 +194,7 @@ async function probeWorld(world: TemporalEdgesWorld, sut: Sut, mirror: Sut, acc:
         rows.push({ probe_id, kind: 'transitions', cluster: `s${seed}:${p.slug}`, seed, transitions_sig: t.sig, transitions_n: t.n, ...tags });
         acc.score(probe_id, 1);
       } catch (e) {
+        if (ledger?.refused('transitions signature (link_transitions read, raw SQL)', e)) continue;
         const message = e instanceof Error ? e.message : String(e);
         acc.error(probe_id, 'sut', message);
         rows.push({ probe_id, kind: 'transitions', cluster: `s${seed}:${p.slug}`, seed, error: message, error_origin: 'sut', ...tags });
@@ -306,9 +316,9 @@ export function transitionRows(seed: number, p: TePerson | (TePerson & { e5: unk
   return rows;
 }
 
-export interface TeRunResult { worlds: TemporalEdgesWorld[]; rows: TeRow[]; acc: ProbeAccounting; harnessError: string | null; singleValue: Array<Record<string, unknown>> | null; evalConfig: Record<string, unknown> | null }
+export interface TeRunResult { worlds: TemporalEdgesWorld[]; rows: TeRow[]; acc: ProbeAccounting; harnessError: string | null; singleValue: Array<Record<string, unknown>> | null; evalConfig: Record<string, unknown> | null; unsupported: EngineStepNotSupported[] }
 
-export async function runTemporalEdges(opts: { gut: GbrainUnderTest; seeds?: readonly number[]; log?: (s: string) => void; phrasing?: string; sealedPhrasing?: { id: string; templates: PhrasingTemplates }; pack?: TePack; singleValuePass?: boolean; render?: RenderMode; e5Probe?: boolean; q2Ledger?: boolean; evalConfig?: Record<string, string> }): Promise<TeRunResult> {
+export async function runTemporalEdges(opts: { gut: GbrainUnderTest; engine?: EvalEngineKind; seeds?: readonly number[]; log?: (s: string) => void; phrasing?: string; sealedPhrasing?: { id: string; templates: PhrasingTemplates }; pack?: TePack; singleValuePass?: boolean; render?: RenderMode; e5Probe?: boolean; q2Ledger?: boolean; evalConfig?: Record<string, string> }): Promise<TeRunResult> {
   return withHermeticEnv('temporal-edges', async () => {
     const log = opts.log ?? (() => {});
     const worlds = (opts.seeds ?? DEV_SEEDS).map(seed => generateTemporalEdgesWorld({ seed, phrasing: opts.sealedPhrasing ? undefined : opts.phrasing, sealedPhrasing: opts.sealedPhrasing, render: opts.render, e5Probe: opts.e5Probe, q2Ledger: opts.q2Ledger }));
@@ -317,12 +327,14 @@ export async function runTemporalEdges(opts: { gut: GbrainUnderTest; seeds?: rea
     const rows: TeRow[] = [];
     const svTotals: Array<Record<string, unknown>> = [];
     let harnessError: string | null = null;
+    const kind = opts.engine ?? 'pglite';
+    const ledger = new EngineStepLedger(kind, CATEGORY);
     for (const world of worlds) {
       let sut: Sut | null = null;
       let mirror: Sut | null = null;
       try {
-        sut = await openSut(opts.gut, opts.evalConfig ?? {});
-        mirror = await openSut(opts.gut, opts.evalConfig ?? {});
+        sut = await openSut(opts.gut, opts.evalConfig ?? {}, kind);
+        mirror = await openSut(opts.gut, opts.evalConfig ?? {}, kind);
         evalConfig ??= { scored: sut.configRecord, mirror: mirror.configRecord };
         if (opts.pack) { await installPack(opts.gut, sut, opts.pack); await installPack(opts.gut, mirror, opts.pack); }
         log(`seed ${world.seed}: ${world.people.length} people, ${world.companies.length} companies, ${world.pages.length} pages${world.range_people ? `, ${world.range_people.length} rendered as relation lines` : ''}${world.e5_probes ? `, ${world.e5_probes.length} E5 probe people` : ''}`);
@@ -333,10 +345,14 @@ export async function runTemporalEdges(opts: { gut: GbrainUnderTest; seeds?: rea
         await writePages(mirror, people.map(p => ({ slug: p.slug, content: p.content.replace(/## Timeline[\s\S]*$/, '') })));
         await writePages(mirror, [...people].reverse());
         let closures: SvClosure[] = [];
-        if (opts.singleValuePass) {
-          const sv = await singleValuePass(opts.gut, sut);
+        const svRun = opts.singleValuePass ? await ledger.run('single-value pass (link tables read, raw SQL)', async () => {
+          const s = await singleValuePass(opts.gut, sut!);
+          await singleValuePass(opts.gut, mirror!);
+          return s;
+        }) : null;
+        if (svRun?.ok) {
+          const sv = svRun.value;
           closures = sv.closures;
-          await singleValuePass(opts.gut, mirror);
           log(`seed ${world.seed}: single-value pass ${sv.detail}`);
           const key = (p: string, t: string) => `${p}\u0000${t}`;
           const appliedFor = (slug: string) => sv.closures.filter(c => c.person === slug && c.status === 'applied' && c.ending && c.close_date);
@@ -357,17 +373,20 @@ export async function runTemporalEdges(opts: { gut: GbrainUnderTest; seeds?: rea
             undated_live: sv.undated.size, same_date_live: sv.sameDate.size });
         }
         const subjects = [...world.people, ...(world.e5_probes ?? [])];
-        const observed = await observedTransitions(sut, subjects.map(p => p.slug), closures);
+        const observedRun = await ledger.run('transition identity (link_transitions read, raw SQL)', () => observedTransitions(sut!, subjects.map(p => p.slug), closures));
+        const observed = observedRun.ok ? observedRun.value : null;
         const ranged = world.range_people ? new Set(world.range_people) : null;
-        for (const p of subjects) {
+        for (const p of observed ? subjects : []) {
           const tags = 'e5' in p ? { e5_form: (p as { e5: { form: string } }).e5.form, e5_target: (p as { e5: { target: string } }).e5.target } : ranged ? { render: ranged.has(p.slug) ? 'relation_lines' : 'prose', range_page: Number(ranged.has(p.slug)) } : {};
-          for (const row of transitionRows(world.seed, p, observed.get(p.slug) ?? [], tags)) {
+          for (const row of transitionRows(world.seed, p, observed!.get(p.slug) ?? [], tags)) {
             rows.push(row);
             acc.score(row.probe_id, Object.entries(row).find(([k, v]) => typeof v === 'number' && !['seed', 'range_page'].includes(k))![1] as number);
           }
         }
-        await probeWorld(world, sut, mirror, acc, rows);
+        await probeWorld(world, sut, mirror, acc, rows, ledger);
       } catch (e) {
+        if (isEngineUnavailable(e)) throw e;
+        if (ledger.refused(`seed ${world.seed}: write the world (put_page)`, e)) continue;
         harnessError = `seed ${world.seed}: ${e instanceof Error ? e.message : String(e)}`;
         acc.error(`s${world.seed}:seed`, 'harness', harnessError);
       } finally {
@@ -377,7 +396,7 @@ export async function runTemporalEdges(opts: { gut: GbrainUnderTest; seeds?: rea
     }
     const planned = new ProbeAccounting(rows.length);
     planned.absorb(acc.toJSON());
-    return { worlds, rows, acc: planned, harnessError, singleValue: opts.singleValuePass ? svTotals : null, evalConfig };
+    return { worlds, rows, acc: planned, harnessError, singleValue: opts.singleValuePass ? svTotals : null, evalConfig, unsupported: ledger.steps };
   });
 }
 
@@ -446,7 +465,8 @@ async function main(): Promise<void> {
   const e5Probe = cGate || argv.includes('--e5-probe');
   const q2Ledger = cGate || argv.includes('--q2-ledger');
   const evalConfig = parseEvalConfig();
-  const r = await runTemporalEdges({ gut, seeds, log, phrasing: devPhrasing, sealedPhrasing, pack, singleValuePass: singleValuePassFlag, render, e5Probe, q2Ledger, evalConfig });
+  const requested = requestedEvalEngine();
+  const r = await runTemporalEdges({ gut, engine: requested ?? 'pglite', seeds, log, phrasing: devPhrasing, sealedPhrasing, pack, singleValuePass: singleValuePassFlag, render, e5Probe, q2Ledger, evalConfig });
   const a = r.acc.summary();
   const summary = summarize(r.rows);
   const byRender = r.worlds.some(w => w.range_people) ? {
@@ -461,15 +481,16 @@ async function main(): Promise<void> {
     schema_version: RECEIPT_SCHEMA_VERSION,
     benchmark_version: BENCHMARK_VERSION,
     category: CATEGORY,
-    run_status: r.harnessError ? 'error' : 'completed',
-    ...(r.harnessError ? {} : { verdict: 'pass' as const }),
+    run_status: r.harnessError ? 'error' : r.rows.length === 0 && r.unsupported.length ? 'skipped' : 'completed',
+    ...(r.harnessError ? {} : r.rows.length === 0 && r.unsupported.length ? { skip_reason: `engine_not_supported_by_runner: ${r.unsupported[0]!.step} on ${requested}` } : { verdict: r.unsupported.length ? 'partial' as const : 'pass' as const }),
+    ...behaviorEngineReceiptFields(requested, r.unsupported),
     n_total: a.n_total, n_scored: a.n_scored, completion_rate: a.completion_rate, errors: a.errors,
     publishable: a.publishable && !r.harnessError,
     gbrain_version: gut.version,
     gbrain_pin: gbrainPin(),
     execution: { source_tree: sourceTreeIdentity(), product: productIdentityFor(gut) },
     resolved_config: {
-      engine: 'pglite-in-memory',
+      engine: requested ? `${requested} (GBRAIN_EVAL_ENGINE through eval-engine.ts)` : 'pglite-in-memory',
       caller: 'operation handlers with OperationContext { remote: false, sourceId: default }',
       seeds, phrasing: devFile ? `development file ${devFile.id} (sha256 ${devFile.sha256})` : sealedPhrasing ? `held-out set ${sealedPhrasing.id} (custody file sha256 ${phrasingSha})` : `${devPhrasing} (development)`, generator_version: TEMPORAL_EDGES_GENERATOR_VERSION,
       ...(devFile ? { dev_phrasing_file: { id: devFile.id, sha256: devFile.sha256, access_log: 'none (development material, not custody)' } } : {}),
@@ -496,11 +517,15 @@ async function main(): Promise<void> {
   for (const [k, v] of Object.entries(summary)) log(`| ${k} | ${v.n} | ${v.mean.toFixed(3)} |`);
   if (byRender) for (const [label, part] of [['relation lines', byRender.relation_lines], ['prose', byRender.prose]] as const) log(`${label}: ${Object.entries(part).map(([k, v]) => `${k} ${v.mean.toFixed(3)} (n ${v.n})`).join(', ')}`);
   if (e5ByCell) for (const [cell, part] of Object.entries(e5ByCell)) log(`e5 ${cell}: ${Object.entries(part).map(([k, v]) => `${k} ${(v.mean * v.n).toFixed(0)}/${v.n}`).join(', ')}`);
+  for (const u of r.unsupported) log(`engine_not_supported_by_runner (${u.engine}): ${u.step}${u.occurrences ? ` (${u.occurrences} probes)` : ''}: ${u.reason}`);
   log(`receipt: ${outPath}`);
   if (json) process.stdout.write(JSON.stringify({ run_status: receipt.run_status, summary }, null, 2) + '\n');
   process.exit(receipt.run_status === 'error' ? 3 : 0);
 }
 
 if (import.meta.main) {
-  main().catch(e => { console.error(e); process.exit(3); });
+  main().catch(e => {
+    if (isEngineUnavailable(e)) { console.error(evalEngineRefusalMessage(e, 'temporal-edges')); process.exit(EVAL_ENGINE_REFUSED_EXIT); }
+    console.error(e); process.exit(3);
+  });
 }

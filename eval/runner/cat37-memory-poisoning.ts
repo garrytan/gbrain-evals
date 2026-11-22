@@ -63,9 +63,10 @@ import { PLAIN_PG_PROACTIVE_K, hashEmbedder, openPlainPg, openPlainPgStore, plai
 import { PG_EMBED_DIMS, PG_EMBED_MODEL, cachedOpenAIEmbedder, type Embedder, type PgStore } from './cat40/pg-arm.ts';
 import { COUNTED_MODELS, JUDGE_MODEL, MEMORY_TRUST_CAP_USD, MODEL_FRESHNESS_CHECK, STUB_MODEL, estimateUsd, modelsFrom } from './memory-trust/models.ts';
 import {
-  BELOW_OWNER_LABELS, BELOW_OWNER_TIERS, NAMED_MODES, labelOnLine, missingCapabilities, openTrustSut, stripTrustLabels,
+  BELOW_OWNER_LABELS, BELOW_OWNER_TIERS, NAMED_MODES, labelOnLine, missingCapabilities, notSupportedFromText, notSupportedSteps, openTrustSut, stripTrustLabels,
   type ModeName, type TrustCapabilities, type TrustSut,
 } from './memory-trust/sut.ts';
+import { behaviorEngineReceiptFields, evalEngineKind, requestedEvalEngine } from './eval-engine.ts';
 import {
   ARTIFACTS, CAT37_DEFAULT_SEED, CAT37_GENERATOR_VERSION, PATHS, artifactPage, generateCat37World, ownerNote,
   type Cat37World, type Scenario,
@@ -328,7 +329,10 @@ export interface HermeticModeRun { mode: ModeName; observations: Observation[]; 
 
 export async function runHermeticMode(gut: GbrainUnderTest, world: Cat37World, mode: ModeName, scenarios: readonly Scenario[]): Promise<HermeticModeRun & { capabilities: TrustCapabilities }> {
   const t0 = Date.now();
-  const sut = await openTrustSut(gut);
+  let sut: TrustSut;
+  // A setup step the engine refuses (engine_not_supported_by_runner) is reported by main, never scored.
+  try { sut = await openTrustSut(gut); }
+  catch (e) { return { mode, observations: [], ms: Date.now() - t0, harness_error: errMsg(e), capabilities: null as unknown as TrustCapabilities }; }
   const observations: Observation[] = [];
   try {
     await sut.setMode(NAMED_MODES[mode]);
@@ -864,10 +868,15 @@ async function main(): Promise<void> {
   const capabilities = runs[0]?.capabilities ?? null;
   const byModeObs = new Map(runs.map(r => [r.mode, new Map(r.observations.map(o => [o.scenario_id, o]))]));
   const offObs = byModeObs.get('off')!;
-  let harnessError = runs.find(r => r.harness_error)?.harness_error ?? null;
-  const missing = harnessError || plainOnly ? [] : presenceFailures(world.scenarios, offObs);
+  // Steps the engine refused (GBRAIN_EVAL_ENGINE=rust, raw SQL): listed, never scored as a pass or a fail.
+  const requested = plainOnly ? null : requestedEvalEngine();
+  const unsupported = notSupportedSteps(CATEGORY, [...runs.map(r => r.harness_error), ...runs.flatMap(r => r.observations.map(o => o.error))]);
+  const refusedRun = runs.some(r => notSupportedFromText(CATEGORY, r.harness_error));
+  let harnessError = runs.find(r => r.harness_error && !notSupportedFromText(CATEGORY, r.harness_error))?.harness_error ?? null;
+  const missing = harnessError || plainOnly || refusedRun ? [] : presenceFailures(world.scenarios, offObs);
   if (missing.length) harnessError = `presence assertions failed with protections off: ${missing.length} payloads unreadable (${missing.slice(0, 5).join(', ')})`;
   for (const r of runs) for (const o of r.observations) {
+    if (notSupportedFromText(CATEGORY, o.error)) continue;
     if (o.error) acc.error(`${r.mode}:${o.scenario_id}`, 'sut', o.error);
     else acc.score(`${r.mode}:${o.scenario_id}`, 1);
   }
@@ -875,12 +884,13 @@ async function main(): Promise<void> {
   const byMode: Partial<Record<ModeName, ModeMetrics>> = {};
   for (const [mode, obs] of byModeObs) byMode[mode] = scoreMode(world.scenarios, obs, mode === 'off' ? undefined : offObs);
   const metrics = byMode.default ?? null;
-  const verdict = metrics ? cat37Verdict(metrics) : 'fail';
+  // A run with any refused step is graded partial: a missing observation could move a metric either way.
+  const verdict = unsupported.length ? 'partial' : metrics ? cat37Verdict(metrics) : 'fail';
 
   let modelRows: ModelRow[] = [];
   let cost: RunSummary | null = null;
   let modelMs = 0;
-  if (modelArm && !harnessError) {
+  if (modelArm && !harnessError && !refusedRun) {
     const t1 = Date.now();
     if (modelArm === 'dry') {
       modelRows = await withHermeticEnv('cat37-dry', () => runModelArm(gut, { mode: 'dry', models, modes: modelModes, repeats, scenarios: modelScenarios, concurrency, log }));
@@ -908,7 +918,7 @@ async function main(): Promise<void> {
   const cells = aggregateModelRows(modelRows);
   const decision = decideDefaults(byMode, modelArm === 'paid' ? modelRows : [], modelArm === 'paid' ? models.filter(m => (COUNTED_MODELS as readonly string[]).includes(m)) : []);
   const a = acc.summary();
-  const status = harnessError || a.run_invalid ? 'error' : 'completed';
+  const status = harnessError || a.run_invalid ? 'error' : refusedRun ? 'skipped' : 'completed';
 
   const receipt: Receipt = {
     ...(cost ? { cost: receiptCost(cost), delivered_tokens: { tokens: cost.input_tokens, basis: 'provider-reported input tokens across every paid request' } }
@@ -918,6 +928,8 @@ async function main(): Promise<void> {
     category: CATEGORY,
     run_status: status,
     ...(status === 'completed' ? { verdict: plainOnly ? (modelRows.some(r => r.error) ? 'partial' : 'pass') : verdict } : {}),
+    ...(status === 'skipped' ? { skip_reason: `engine_not_supported_by_runner: ${unsupported[0]?.step ?? 'setup'} on ${requested ?? evalEngineKind()}` } : {}),
+    ...behaviorEngineReceiptFields(requested, unsupported),
     n_total: a.n_total,
     n_scored: a.n_scored,
     completion_rate: a.completion_rate,
@@ -928,7 +940,7 @@ async function main(): Promise<void> {
     execution: { source_tree: sourceTreeIdentity(), product: productIdentityFor(gut) },
     ...(attestation ? { preregistration_attestation: attestation } : {}),
     resolved_config: {
-      engine: plainOnly ? 'plain-pg only: no gbrain loaded, hermetic gbrain arm skipped; verdict is pass when every scenario run scored, partial otherwise (no gbrain contract applies)' : 'pglite-in-memory, managed persistence on, keyword search only',
+      engine: plainOnly ? 'plain-pg only: no gbrain loaded, hermetic gbrain arm skipped; verdict is pass when every scenario run scored, partial otherwise (no gbrain contract applies)' : requested ? `${requested} (GBRAIN_EVAL_ENGINE through eval-engine.ts), managed persistence on, keyword search only` : 'pglite-in-memory, managed persistence on, keyword search only',
       decide: DECIDE_OFF,
       callers: 'remote agent: MCP operation handlers with remote=true, HTTP transport, read+write legacy token; owner notes: owner-source import (operator_curated); connector artifacts: importFromContent with external_untrusted and a connector channel',
       modes: Object.fromEntries(modes.map(m => [m, NAMED_MODES[m]])),
@@ -975,7 +987,8 @@ async function main(): Promise<void> {
   };
   writeReceipt(outPath, receipt);
 
-  if (!plainOnly) log(`\nverdict: ${status === 'completed' ? verdict : `run error (${harnessError})`}${gut.overlay ? '' : ' (pinned gbrain: promotion rules are held until the pin carries #5575)'}`);
+  for (const u of unsupported) log(`engine_not_supported_by_runner (${u.engine}): ${u.step}: ${u.reason}`);
+  if (!plainOnly) log(`\nverdict: ${status === 'completed' ? verdict : status === 'skipped' ? `not run on ${requested} (engine_not_supported_by_runner)` : `run error (${harnessError})`}${gut.overlay ? '' : ' (pinned gbrain: promotion rules are held until the pin carries #5575)'}`);
   if (metrics) {
     log('\nsafety contracts (default mode):');
     for (const r of SAFETY_CONTRACTS) log(`  ${checkRule(metrics, r) ? 'PASS' : 'FAIL'} ${r.id}: ${r.metric} = ${fmt((metrics as never)[r.metric])} over ${metrics.denominators[r.metric]?.n ?? 0} (target ${r.op} ${r.value}; off mode ${fmt((byMode.off as never)?.[r.metric])})`);
@@ -994,7 +1007,7 @@ async function main(): Promise<void> {
   log('gbrain findings: see docs/benchmarks/2026-10-07-memory-trust-bugs.json (bun eval/runner/bug-ledger.ts render docs/benchmarks/2026-10-07-memory-trust-bugs.json)');
   log(`receipt: ${outPath}`);
   if (json) process.stdout.write(JSON.stringify({ run_status: status, verdict, metrics, cells: cells.filter(c => c.artifact === 'all'), decision }, null, 2) + '\n');
-  process.exit(status === 'error' ? 3 : plainOnly || verdict === 'pass' ? 0 : 1);
+  process.exit(status === 'error' ? 3 : plainOnly || status === 'skipped' || verdict !== 'fail' && (verdict === 'pass' || unsupported.length > 0) ? 0 : 1);
 }
 
 if (import.meta.main) {

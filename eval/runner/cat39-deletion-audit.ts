@@ -62,7 +62,8 @@ import { ProbeAccounting } from './probe-accounting.ts';
 import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, noModelSpend, receiptPath, sourceTreeIdentity, writeReceipt, type Receipt } from './receipt.ts';
 import { answerText, brainArm, runSession, scriptedModel } from './memory-trust/agent.ts';
 import { estimateUsd, modelsFrom, providerOf, MEMORY_TRUST_CAP_USD, STUB_MODEL } from './memory-trust/models.ts';
-import { missingCapabilities, openTrustSut, type TrustCapabilities, type TrustSut } from './memory-trust/sut.ts';
+import { missingCapabilities, notSupportedFromText, notSupportedStepsIn, openTrustSut, type TrustCapabilities, type TrustSut } from './memory-trust/sut.ts';
+import { behaviorEngineReceiptFields, evalEngineKind, requestedEvalEngine } from './eval-engine.ts';
 import {
   CAT39_DEFAULT_SEED, CAT39_GENERATOR_VERSION, VALUE_TOKEN_RE, generateCat39World,
   type Cat39Gold, type Cat39Ledger, type Cat39Neighbor, type Cat39Target, type GeneratedCat39,
@@ -465,7 +466,7 @@ export interface Cat39RunResult {
   presence: Presence[];
   obs: Observations | null;
   score: Cat39Score | null;
-  verdict: 'pass' | 'fail' | null;
+  verdict: 'pass' | 'partial' | 'fail' | null;
   acc: ProbeAccounting;
   harnessError: string | null;
   resurrection_steps: Array<{ target_id: string; slug: string; step: string; outcome: string }>;
@@ -502,7 +503,10 @@ async function runHermetic(opts: Cat39RunOptions): Promise<Cat39RunResult> {
     embedding_probe: { status: 'skipped', reason: 'hermetic arm: keyword-only brain with no embedding model or provider key, so no same-model neighbours exist to probe (ENG-12: skipped with a stated reason). The paid arm embeds the claim and every live chunk and fact with OpenAI text-embedding-3-large.' },
     model_arm: null, timings_ms: timings,
   };
-  const sut = await openTrustSut(opts.gut);
+  let sut: TrustSut;
+  // A setup step the engine refuses (engine_not_supported_by_runner) is reported by main, never scored.
+  try { sut = await openTrustSut(opts.gut); }
+  catch (e) { result.harnessError = `harness: ${errText(e)}`; timings.total = Date.now() - t0; return result; }
   try {
     const caps = sut.capabilities;
     result.capabilities = caps;
@@ -960,25 +964,34 @@ async function main(): Promise<void> {
     ...GAPS_DOCUMENTED,
     ...(r.score?.rows.filter(x => x.status === 'gap').length ? [{ feature: 'targets not measured', reason: `${r.score.rows.filter(x => x.status === 'gap').length} fact-purge targets need purge_fact, which this build lacks` }] : []),
   ];
-  const errored = Boolean(r.harnessError) || a.run_invalid;
+  // Steps the engine refused (GBRAIN_EVAL_ENGINE=rust, raw SQL): listed, never scored as a pass or a fail. A run that
+  // stopped on one is not run on this engine; a refusal inside a step outcome makes the run partial.
+  const requested = requestedEvalEngine();
+  const unsupported = notSupportedStepsIn(CATEGORY, [r.harnessError, r.resurrection_steps, r.obs, r.seed]);
+  const refusedRun = notSupportedFromText(CATEGORY, r.harnessError) !== null;
+  if (unsupported.length && r.verdict) r.verdict = 'partial';
+  const errored = (Boolean(r.harnessError) && !refusedRun) || (a.run_invalid && !refusedRun);
+  const skipped = refusedRun && !errored;
   const m = r.score?.metrics ?? null;
   const receipt: Receipt = {
     ...(paid ? {} : noModelSpend(armArg === 'dry' ? 'hermetic + dry model arm: provider keys stripped, scripted stub model, keyword search only; no paid request' : 'hermetic: provider keys stripped, keyword search only; no model and no paid request')),
     schema_version: RECEIPT_SCHEMA_VERSION,
     benchmark_version: BENCHMARK_VERSION,
     category: CATEGORY,
-    run_status: errored ? 'error' : 'completed',
-    ...(errored ? {} : { verdict: r.verdict ?? 'fail' }),
+    run_status: errored ? 'error' : skipped ? 'skipped' : 'completed',
+    ...(errored || skipped ? {} : { verdict: r.verdict ?? 'fail' }),
+    ...(skipped ? { skip_reason: `engine_not_supported_by_runner: ${unsupported[0]?.step ?? 'setup'} on ${requested ?? evalEngineKind()}` } : {}),
+    ...behaviorEngineReceiptFields(requested, unsupported),
     n_total: a.n_total - (r.score?.rows.filter(x => x.status === 'gap').length ?? 0),
     n_scored: a.n_scored,
     completion_rate: a.n_total ? a.n_scored / Math.max(1, a.n_total - (r.score?.rows.filter(x => x.status === 'gap').length ?? 0)) : 0,
-    errors: a.errors,
+    errors: skipped ? [] : a.errors,
     publishable: a.publishable && !r.harnessError,
     gbrain_version: gut.version,
     gbrain_pin: gbrainPin(),
     execution: { source_tree: sourceTreeIdentity(), product: productIdentityFor(gut) },
     resolved_config: {
-      engine: 'pglite-in-memory',
+      engine: requested ? `${requested} (GBRAIN_EVAL_ENGINE through eval-engine.ts)` : 'pglite-in-memory',
       decide: DECIDE_OFF,
       modes: 'gbrain defaults of the build under test (no trust mode override); managed persistence on',
       callers: 'remote MCP agent (read+write legacy token, HTTP) for reads, remember and put_page; local CLI for purge_fact, delete_page purge, takes_add, add_timeline_entry; owner import (operator_curated) for pages',
@@ -1028,7 +1041,8 @@ async function main(): Promise<void> {
   if (attestation) receipt.preregistration_attestation = attestation;
   writeReceipt(outPath, receipt);
 
-  log(`\nverdict: ${receipt.run_status === 'error' ? `error (${r.harnessError ?? 'run invalid'})` : receipt.verdict}`);
+  for (const u of unsupported) log(`engine_not_supported_by_runner (${u.engine}): ${u.step}: ${u.reason}`);
+  log(`\nverdict: ${receipt.run_status === 'error' ? `error (${r.harnessError ?? 'run invalid'})` : skipped ? `not run on ${requested} (engine_not_supported_by_runner)` : receipt.verdict}`);
   if (m) {
     log('\nsafety contracts (each must be 0):');
     log(`  live_residual_after_purge  ${m.live_residual_after_purge} token hits in swept stores outside the expected-remain copies (${m.targets} targets)`);
@@ -1047,7 +1061,7 @@ async function main(): Promise<void> {
   for (const x of findings) log(`  [${x.classification}] ${x.id}: ${x.actual}\n      expected ${x.expected} (${x.contract}); repro: ${x.repro}`);
   log(`\nreceipt: ${outPath}`);
   if (json) process.stdout.write(JSON.stringify({ run_status: receipt.run_status, verdict: receipt.verdict, metrics: m, findings: findings.map(x => x.id), wall_ms: r.timings_ms.total }, null, 2) + '\n');
-  process.exit(receipt.run_status === 'error' ? 3 : r.verdict === 'pass' ? 0 : 1);
+  process.exit(receipt.run_status === 'error' ? 3 : skipped || r.verdict === 'pass' || (r.verdict === 'partial' && unsupported.length > 0) ? 0 : 1);
 }
 
 if (import.meta.main) {
