@@ -1,0 +1,29 @@
+{
+ "questions": 250,
+ "primary": {
+  "reader": "opus",
+  "first": "off",
+  "second": "on",
+  "scored": 250,
+  "of": 250,
+  "enough": true,
+  "n": 250,
+  "b": 32,
+  "c": 0,
+  "z": 5.65685424949238,
+  "exact_p": 4.656612873077396e-10,
+  "diff_points": 12.8,
+  "ci95": [
+   8.799999999999999,
+   17.2
+  ],
+  "discordance": 0.128
+ },
+ "decision": "stop-difference",
+ "conditional_power": 0.9999993841928974,
+ "bounds": {
+  "interim": 2.8,
+  "final": 1.98,
+  "futility_conditional_power": 0.1
+ }
+}

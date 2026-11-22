@@ -245,7 +245,7 @@ describe('gpt-6.2-sol and the BG1-C pin', () => {
     expect(readerTokenizer(SOL)).toEqual({ encoding: 'o200k_base', calibration: readerTokenizer('openai:gpt-6.1-sol').calibration, calibrated: false });
     const { source: _a, ...window } = READER_WINDOWS[SOL], { source: _b, ...sol61 } = READER_WINDOWS['openai:gpt-6.1-sol'];
     expect(window).toEqual(sol61);
-    expect(READER_WINDOWS[SOL].source).toContain('launch amendment B');
+    expect(READER_WINDOWS[SOL].source).toContain('developers.openai.com/api/docs/models/gpt-6.2-sol');
     expect(DATASET_PINS['eval/decisions/datasets/bg1c-manifest.json']).toEqual(['bg1c']);
   });
 });

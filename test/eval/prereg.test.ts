@@ -89,4 +89,46 @@ describe('attestPreregistration', () => {
     expect(a.preregistration_commit).toBe(pre);
     expect(a.on_origin).toBe(true);
   });
+
+  test('refuses a run whose registry entry, registered on or after the gpt-4o suspension, names gpt-4o', () => {
+    const remote = mkdtempSync(join(tmpdir(), 'prereg-remote-'));
+    execFileSync('git', ['init', '-q', '--bare', remote]);
+    const dir = repo();
+    mkdirSync(join(dir, 'docs/benchmarks'), { recursive: true });
+    const registry = (models: unknown[]) => JSON.stringify({ schema_version: 1, experiments: [{ id: 'x', preregistration: 'docs/x-prereg.md', results: ['docs/x/**'], registered: '2026-11-21', models }] });
+    commit(dir, 'docs/benchmarks/preregistrations.json', registry([{ model: 'openai:gpt-4o-2024-08-06', role: 'judge' }]), 'registry');
+    commit(dir, 'docs/x-prereg.md', 'rule', 'prereg');
+    execFileSync('git', ['remote', 'add', 'origin', remote], { cwd: dir });
+    execFileSync('git', ['push', '-q', 'origin', 'main'], { cwd: dir });
+    execFileSync('git', ['fetch', '-q', 'origin'], { cwd: dir });
+    expect(() => attestPreregistration('docs/x-prereg.md', dir)).toThrow(/registry entry x refuses this run: models\[0\]: openai:gpt-4o-2024-08-06: gpt-4o and gpt-4o-mini are suspended for new campaigns from 2026-11-21/);
+    expect(() => attestPreregistration('./docs/x-prereg.md', dir)).toThrow(/registry entry x refuses this run/);
+    writeFileSync(join(dir, 'docs/benchmarks/preregistrations.json'), registry([{ model: 'gpt-6.2-sol', role: 'judge' }, { model: 'gpt-4o-mini', role: 'system-internal', system: 'memory-bank' }]));
+    expect(attestPreregistration('docs/x-prereg.md', dir).on_origin).toBe(true);
+  });
+
+  test('refuses a preregistration first committed on or after the suspension with no registry entry, and passes an older one', () => {
+    const remote = mkdtempSync(join(tmpdir(), 'prereg-remote-'));
+    execFileSync('git', ['init', '-q', '--bare', remote]);
+    const dir = repo();
+    mkdirSync(join(dir, 'docs/benchmarks'), { recursive: true });
+    commit(dir, 'docs/benchmarks/preregistrations.json', JSON.stringify({ schema_version: 1, experiments: [] }), 'registry');
+    const old = { ...process.env, GIT_COMMITTER_DATE: '2026-11-01T12:00:00Z', GIT_AUTHOR_DATE: '2026-11-01T12:00:00Z' };
+    writeFileSync(join(dir, 'docs/old-prereg.md'), 'rule');
+    execFileSync('git', ['add', 'docs/old-prereg.md'], { cwd: dir });
+    execFileSync('git', ['commit', '-q', '-m', 'old prereg'], { cwd: dir, env: old });
+    const late = { ...process.env, GIT_COMMITTER_DATE: '2026-11-21T12:00:00Z', GIT_AUTHOR_DATE: '2026-11-21T12:00:00Z' };
+    writeFileSync(join(dir, 'docs/new-prereg.md'), 'rule');
+    execFileSync('git', ['add', 'docs/new-prereg.md'], { cwd: dir });
+    execFileSync('git', ['commit', '-q', '-m', 'new prereg'], { cwd: dir, env: late });
+    writeFileSync(join(dir, 'docs/old-prereg-addenda.md'), 'amendment');
+    execFileSync('git', ['add', 'docs/old-prereg-addenda.md'], { cwd: dir });
+    execFileSync('git', ['commit', '-q', '-m', 'old prereg addenda'], { cwd: dir, env: late });
+    execFileSync('git', ['remote', 'add', 'origin', remote], { cwd: dir });
+    execFileSync('git', ['push', '-q', 'origin', 'main'], { cwd: dir });
+    execFileSync('git', ['fetch', '-q', 'origin'], { cwd: dir });
+    expect(() => attestPreregistration('docs/new-prereg.md', dir)).toThrow(/preregistration docs\/new-prereg.md, first committed 2026-11-21, has no registry entry/);
+    expect(attestPreregistration('docs/old-prereg.md', dir).on_origin).toBe(true);
+    expect(attestPreregistration('docs/old-prereg-addenda.md', dir).on_origin).toBe(true);
+  });
 });

@@ -47,6 +47,15 @@
  *
  * v1 verdict is baseline_only. Thresholds flip on after the 10-probe
  * Haiku-vs-hand-score calibration (κ > 0.7) lands alongside Day 3b corpus.
+ *
+ * Free checks (no agent, no judge): a scenario may also carry `setup` and
+ * `checks` (eval/runner/cat9-checks.ts). `--checks` builds fresh keyword-only
+ * PGLite brains from each scenario's setup, runs its checks with the gbrain
+ * CLI and writes eval/reports/cat9-workflows-checks/receipt.json. The judged
+ * path above ignores both fields. The committed catalog is
+ * eval/data/cat9-workflows-v1/scenarios.json.
+ *
+ * Usage: bun eval/runner/cat9-workflows.ts --checks [--gbrain <checkout>[@ref]] [--scenarios <file>] [--only id,id] [--output <dir>] [--keep] [--json]
  */
 
 import type { Anthropic } from '@anthropic-ai/sdk';
@@ -71,17 +80,36 @@ import {
   type GroundTruthPage,
 } from './judge.ts';
 import { temperatureSent, toolChoiceSent } from './anthropic-request.ts';
+import { isOpenAIModel } from './openai-judge-shim.ts';
 import { ProbeAccounting, type ProbeSummary } from './probe-accounting.ts';
 import {
   writeReceipt,
   receiptPath,
   BENCHMARK_VERSION,
   RECEIPT_SCHEMA_VERSION,
+  noModelSpend,
+  sourceTreeIdentity,
   type ProbeError,
   type ReceiptVerdict,
 } from './receipt.ts';
 import { gbrainVersion, gbrainPin } from './gbrain-version.ts';
+import { gbrainSpecFrom, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from './gbrain-under-test.ts';
 import { emitBundle, type Transcript, type Scorecard, type JudgeNote } from './recorder.ts';
+import {
+  cliExec,
+  runScenarioChecks,
+  scenarioStatus,
+  summarizeChecks,
+  validateChecks,
+  type Cat9Check,
+  type Cat9CheckRow,
+  type Cat9Requirement,
+  type Cat9SetupStep,
+  type GbrainExec,
+} from './cat9-checks.ts';
+import { createHash } from 'node:crypto';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { dirname, join, relative, resolve } from 'node:path';
 
 // ─── Types ────────────────────────────────────────────────────────────
 
@@ -107,6 +135,99 @@ export interface WorkflowScenario {
   /** Slugs that resolve to GroundTruthPage objects for the judge. */
   ground_truth_slugs: string[];
   rubric: RubricCriterion[];
+  /** Where the scenario came from (an audit finding or guard). Informational. */
+  origin?: string;
+  /** Free path only: CLI steps that build the brain (cat9-checks.ts). The judged path ignores it. */
+  setup?: Cat9SetupStep[];
+  /** Free path only: CLI checks with fixed expectations, no judge. The judged path ignores it. */
+  checks?: Cat9Check[];
+  /** Free path only: what the whole scenario needs that a free run lacks. */
+  requires?: Cat9Requirement[];
+}
+
+export interface Cat9Catalog {
+  version: 1;
+  status: string;
+  judge_prompt_version?: string;
+  fixture: { corpus_dir: string; [k: string]: unknown };
+  scenarios: WorkflowScenario[];
+  [k: string]: unknown;
+}
+
+export const DEFAULT_CAT9_CATALOG = resolve(import.meta.dir, '../data/cat9-workflows-v1/scenarios.json');
+
+/** Problems with a catalog's shape; empty when valid. Covers the judged fields and the free-check fields. */
+export function validateCatalog(cat: Cat9Catalog): string[] {
+  const out: string[] = [];
+  if (cat.version !== 1) out.push('catalog version must be 1');
+  if (!cat.fixture || typeof cat.fixture.corpus_dir !== 'string') out.push('fixture.corpus_dir missing');
+  if (!Array.isArray(cat.scenarios) || cat.scenarios.length === 0) return [...out, 'scenarios missing or empty'];
+  const ids = new Set<string>();
+  for (const s of cat.scenarios) {
+    if (!s.id || ids.has(s.id)) out.push(`scenario id ${JSON.stringify(s.id)} missing or repeated`);
+    ids.add(s.id);
+    if (!ALL_WORKFLOWS.includes(s.workflow)) out.push(`${s.id}: workflow ${JSON.stringify(s.workflow)} is not one of ${ALL_WORKFLOWS.join(', ')}`);
+    if (typeof s.text !== 'string' || s.text === '') out.push(`${s.id}: text missing`);
+    if (!Array.isArray(s.ground_truth_slugs)) out.push(`${s.id}: ground_truth_slugs must be an array`);
+    if (!Array.isArray(s.rubric) || s.rubric.length === 0) out.push(`${s.id}: rubric missing`);
+    else for (const r of s.rubric) {
+      if (!r.id || !r.criterion) out.push(`${s.id}: rubric entry needs id and criterion`);
+      if (r.weight !== 1 && r.weight !== 2) out.push(`${s.id}/${r.id}: rubric weight must be 1 or 2`);
+    }
+    out.push(...validateChecks(s));
+  }
+  return out;
+}
+
+function walkMarkdown(dir: string, out: string[] = []): string[] {
+  for (const e of readdirSync(dir, { withFileTypes: true }).sort((x, y) => x.name.localeCompare(y.name))) {
+    const full = join(dir, e.name);
+    if (e.isDirectory()) walkMarkdown(full, out);
+    else if (e.name.endsWith('.md')) out.push(full);
+  }
+  return out;
+}
+
+function pageFromMarkdown(slug: string, text: string): GroundTruthPage {
+  const title = /^title:\s*(.+)$/m.exec(text)?.[1]?.trim() ?? slug;
+  return { slug, title, content: text.replace(/^---\n[\s\S]*?\n---\n/, '').trim() };
+}
+
+/**
+ * Gold pages for the judged path: every page under corpus/default and
+ * corpus/work (slug = path without .md), plus each page a scenario saves with
+ * `put <slug>` from a corpus/puts file. A slug saved from two different files
+ * keeps the last one in catalog order (the newest version a scenario writes);
+ * a check that expects its put to be refused (exit nonzero) writes nothing.
+ */
+export function corpusPagesForCatalog(cat: Cat9Catalog, catalogPath: string): Map<string, GroundTruthPage> {
+  const corpus = resolve(dirname(catalogPath), cat.fixture.corpus_dir);
+  const pages = new Map<string, GroundTruthPage>();
+  for (const src of ['default', 'work']) {
+    const root = join(corpus, src);
+    if (!existsSync(root)) continue;
+    for (const f of walkMarkdown(root)) {
+      const slug = relative(root, f).replace(/\.md$/, '');
+      pages.set(slug, pageFromMarkdown(slug, readFileSync(f, 'utf8')));
+    }
+  }
+  for (const s of cat.scenarios) {
+    for (const step of [...(s.setup ?? []), ...(s.checks ?? [])]) {
+      const run = (step as { run?: string[] }).run;
+      const stdin = (step as { stdin?: string }).stdin;
+      if ((step as Cat9Check).expect?.exit === 'nonzero') continue;
+      if (run && run[0] === 'put' && run[1] && stdin) pages.set(run[1], pageFromMarkdown(run[1], readFileSync(join(corpus, stdin), 'utf8')));
+    }
+  }
+  return pages;
+}
+
+/** Read and validate a catalog; throws with every problem listed. */
+export function loadCat9Catalog(path = DEFAULT_CAT9_CATALOG): Cat9Catalog {
+  const cat = JSON.parse(readFileSync(path, 'utf8')) as Cat9Catalog;
+  const problems = validateCatalog(cat);
+  if (problems.length > 0) throw new Error(`Cat 9 catalog ${path} is invalid:\n  ${problems.join('\n  ')}`);
+  return cat;
 }
 
 export interface Cat9PerScenario {
@@ -168,7 +289,7 @@ export interface RunCat9Options extends Cat9Config {
 }
 
 export const CAT9_CATEGORY = 'cat9-workflows';
-export const DEFAULT_JUDGE_MODEL = 'claude-haiku-5-5';
+export const DEFAULT_JUDGE_MODEL = 'gpt-6.2-astra';
 
 // ─── Runner ──────────────────────────────────────────────────────────
 
@@ -490,7 +611,7 @@ function writeCat9Artifacts(
         brainbench_version: BENCHMARK_VERSION,
         adapter: { name: 'claude-sonnet-with-tools', stack_id: 'gbrain', gbrain_commit: gbrainVersion() },
         driver_model: { model_id: agentModel, provider: 'anthropic' },
-        judge_model: { model_id: judgeModel, provider: 'anthropic' },
+        judge_model: { model_id: judgeModel, provider: isOpenAIModel(judgeModel) ? 'openai' : 'anthropic' },
         corpus_sha: opts.corpusSha ?? 'unknown',
         seed: 0,
       },
@@ -518,4 +639,156 @@ function writeCat9Artifacts(
       reportsRoot ? { reportsRoot } : {},
     );
   }
+}
+
+
+// ─── Free checks (no agent, no judge) ─────────────────────────────────
+
+export const CAT9_CHECKS_CATEGORY = 'cat9-workflows-checks';
+
+export interface Cat9ChecksScenarioRow {
+  scenario_id: string;
+  workflow: WorkflowId;
+  status: ReturnType<typeof scenarioStatus>;
+  checks: Cat9CheckRow[];
+}
+
+export interface Cat9ChecksReport {
+  ran_at: string;
+  gbrain_version: string;
+  /** The commit actually run: the overlay's commit, or the declared pin. */
+  gbrain_commit: string;
+  engine: 'pglite';
+  summary: ReturnType<typeof summarizeChecks>;
+  scenarios: Cat9ChecksScenarioRow[];
+}
+
+export interface RunCat9ChecksOptions {
+  catalog: Cat9Catalog;
+  catalogPath: string;
+  exec: GbrainExec;
+  gbrain: { version: string; commit: string };
+  only?: string[];
+  tmpRoot?: string;
+  keep?: boolean;
+  log?: (line: string) => void;
+}
+
+/** Run every scenario's free checks in catalog order, one scenario at a time. */
+export function runCat9Checks(o: RunCat9ChecksOptions): Cat9ChecksReport {
+  const corpusDir = resolve(dirname(o.catalogPath), o.catalog.fixture.corpus_dir);
+  if (!existsSync(corpusDir)) throw new Error(`Cat 9 corpus ${corpusDir} not found`);
+  const picked = o.only && o.only.length > 0 ? o.catalog.scenarios.filter(s => o.only!.includes(s.id)) : o.catalog.scenarios;
+  if (o.only && picked.length !== o.only.length) {
+    const known = new Set(o.catalog.scenarios.map(s => s.id));
+    throw new Error(`unknown scenario id(s): ${o.only.filter(id => !known.has(id)).join(', ')}`);
+  }
+  const scenarios: Cat9ChecksScenarioRow[] = [];
+  for (const s of picked) {
+    const rows = runScenarioChecks(s, { exec: o.exec, corpusDir, tmpRoot: o.tmpRoot, keep: o.keep });
+    const status = scenarioStatus(rows);
+    o.log?.(`[cat9 checks] ${s.id}: ${status}${rows.length ? ` (${rows.map(r => `${r.check_id}=${r.status}`).join(', ')})` : ''}`);
+    scenarios.push({ scenario_id: s.id, workflow: s.workflow, status, checks: rows });
+  }
+  return {
+    ran_at: new Date().toISOString(),
+    gbrain_version: o.gbrain.version,
+    gbrain_commit: o.gbrain.commit,
+    engine: 'pglite',
+    summary: summarizeChecks(scenarios.flatMap(s => s.checks)),
+    scenarios,
+  };
+}
+
+/** Markdown table of a checks report: one row per check. */
+export function renderChecksTable(r: Cat9ChecksReport): string {
+  const lines = [
+    `gbrain ${r.gbrain_version} (${r.gbrain_commit.slice(0, 10)}), PGLite, keyword-only, no judge`,
+    '',
+    '| Scenario | Check | Result | Finding |',
+    '|---|---|---|---|',
+  ];
+  for (const s of r.scenarios) {
+    if (s.checks.length === 0) { lines.push(`| ${s.scenario_id} | (judged only) | no free checks | |`); continue; }
+    for (const c of s.checks) lines.push(`| ${s.scenario_id} | ${c.check_id} | ${c.status} | ${c.finding ?? ''} |`);
+  }
+  return lines.join('\n');
+}
+
+function argValue(argv: readonly string[], flag: string): string | undefined {
+  const at = argv.indexOf(flag);
+  if (at >= 0) return argv[at + 1];
+  const inline = argv.find(a => a.startsWith(`${flag}=`));
+  return inline ? inline.slice(flag.length + 1) : undefined;
+}
+
+/** A portable name for the catalog: its path inside this repository, else its file name and content hash. */
+export function catalogIdentity(catalogPath: string): string {
+  const repo = resolve(import.meta.dir, '../..');
+  const rel = relative(repo, catalogPath);
+  if (!rel.startsWith('..') && !rel.startsWith('/')) return rel;
+  return `${catalogPath.split('/').pop()} sha256:${createHash('sha256').update(readFileSync(catalogPath)).digest('hex')}`;
+}
+
+async function mainChecks(argv: string[]): Promise<number> {
+  const catalogPath = resolve(argValue(argv, '--scenarios') ?? DEFAULT_CAT9_CATALOG);
+  const catalog = loadCat9Catalog(catalogPath);
+  const gut: GbrainUnderTest = resolveGbrainUnderTest(gbrainSpecFrom(argv));
+  const commit = gut.overlay?.build.commit ?? gbrainPin();
+  const log = (l: string) => console.error(l);
+  log(`# Cat 9 free checks: gbrain ${gut.version} (${gut.overlay ? `overlay ${commit.slice(0, 10)}` : 'pinned'}), PGLite, no judge`);
+  const startedAt = new Date().toISOString();
+  const only = argValue(argv, '--only')?.split(',').filter(Boolean);
+  const report = runCat9Checks({
+    catalog, catalogPath, exec: cliExec(gut.root), gbrain: { version: gut.version, commit }, only, keep: argv.includes('--keep'), log,
+  });
+  const errorRows = report.scenarios.flatMap(s => s.checks.filter(c => c.status === 'error'));
+  const ran = report.scenarios.flatMap(s => s.checks).filter(c => c.status !== 'not_run');
+  const errors: ProbeError[] = errorRows.map(c => ({ probe_id: `${c.scenario_id}/${c.check_id}`, origin: 'harness', message: c.reasons.join('; ') }));
+  const anyFail = ran.some(c => c.status === 'fail' || c.status === 'unexpected_pass');
+  const output = argValue(argv, '--output');
+  const path = output ? join(output, 'receipt.json') : receiptPath(CAT9_CHECKS_CATEGORY);
+  writeReceipt(path, {
+    ...noModelSpend('hermetic: provider keys stripped, keyword-only PGLite brains, gbrain CLI only; no model and no judge'),
+    schema_version: RECEIPT_SCHEMA_VERSION,
+    benchmark_version: BENCHMARK_VERSION,
+    category: CAT9_CHECKS_CATEGORY,
+    run_status: 'completed',
+    // Report-only: a known failure is a fail with a label, so the run is partial
+    // until every check passes; an unlabelled fail or a known failure that now
+    // passes makes it a fail so a reader looks.
+    verdict: anyFail ? 'fail' : ran.every(c => c.status === 'pass') && ran.length > 0 ? 'pass' : 'partial',
+    n_total: ran.length,
+    n_scored: ran.length - errorRows.length,
+    completion_rate: ran.length === 0 ? 0 : (ran.length - errorRows.length) / ran.length,
+    errors,
+    publishable: false,
+    gbrain_version: gut.version,
+    gbrain_pin: gbrainPin(),
+    execution: { source_tree: sourceTreeIdentity(), product: productIdentityFor(gut) },
+    resolved_config: {
+      engine: 'pglite (gbrain init --pglite, one fresh brain per scenario and brain name)',
+      embeddings: 'none: keyword-only brain, provider keys stripped from the child environment',
+      catalog: catalogIdentity(catalogPath),
+      only: only ?? null,
+      gbrain_overlay: overlaySummary(gut),
+      verdict_rule: 'pass = every check that ran passed; partial = every failure is a labelled known failure; fail = an unlabelled failure or a known failure that now passes',
+    },
+    started_at: startedAt,
+    finished_at: new Date().toISOString(),
+    data: { report },
+  });
+  if (argv.includes('--json')) console.log(JSON.stringify(report, null, 2));
+  else console.log(renderChecksTable(report));
+  log(`[cat9 checks] receipt: ${path}`);
+  return errorRows.length > 0 ? 1 : 0;
+}
+
+if (import.meta.main) {
+  const argv = process.argv.slice(2);
+  if (!argv.includes('--checks')) {
+    console.error('Cat 9: only the free checks run from the command line: bun eval/runner/cat9-workflows.ts --checks [--gbrain <checkout>[@ref]]. The judged path is called through runCat9().');
+    process.exit(2);
+  }
+  mainChecks(argv).then(code => process.exit(code), err => { console.error(err instanceof Error ? err.message : String(err)); process.exit(1); });
 }

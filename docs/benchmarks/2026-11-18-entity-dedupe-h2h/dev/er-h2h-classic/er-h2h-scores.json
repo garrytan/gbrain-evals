@@ -1,0 +1,3254 @@
+{
+  "seed": 20261117,
+  "per_family": 20,
+  "generator_version": 1,
+  "ledger_sha256": "14877e8e396cdeb3637a14ae1297641d5b769fb7d48e459e4aff01c959f97376",
+  "pages": 1380,
+  "designed_pairs": {
+    "different": 400,
+    "same": 280
+  },
+  "inputs": [
+    {
+      "file": "<er-h2h>/out/splink-default.json",
+      "sha256": "7e8cf46980bb657248b1d756d856a4d3ba7b0014dc2ec10afb933d5c0b23042e",
+      "system": "splink",
+      "version": "5.0.0",
+      "config": "default",
+      "tiers": [
+        "auto"
+      ]
+    },
+    {
+      "file": "<er-h2h>/out/splink-tuned.json",
+      "sha256": "a96daafb767d14a39c1cfe96fd63383e048ecfab688dd8dd6498128ae67daf46",
+      "system": "splink",
+      "version": "5.0.0",
+      "config": "tuned",
+      "tiers": [
+        "auto",
+        "proposed"
+      ]
+    },
+    {
+      "file": "<er-h2h>/out/dedupe-default.json",
+      "sha256": "75b79a2d73c071b87d1cc020468bb879a5266e57c0342c8f90ef666d3a81aaa3",
+      "system": "dedupe",
+      "version": "3.0.3",
+      "config": "default",
+      "tiers": [
+        "auto"
+      ]
+    },
+    {
+      "file": "<er-h2h>/out/dedupe-tuned.json",
+      "sha256": "c60bb4c545f826ce2016a5be7872cb055851ee7c181fa12ac743979a28311ec1",
+      "system": "dedupe",
+      "version": "3.0.3",
+      "config": "tuned",
+      "tiers": [
+        "auto"
+      ]
+    },
+    {
+      "file": "<er-h2h>/out/zingg-default.json",
+      "sha256": "8975c13511211b9509ca4b207ddee2ff9462f03ae912e0b7ef234af1fb31bdcd",
+      "system": "zingg",
+      "version": "0.7.0",
+      "config": "default",
+      "tiers": [
+        "auto"
+      ]
+    },
+    {
+      "file": "<er-h2h>/out/zingg-tuned.json",
+      "sha256": "100154afcdd4d4838336237a81750d89ffb77acb62339b1c28c8a67ec3eefd07",
+      "system": "zingg",
+      "version": "0.7.0",
+      "config": "tuned",
+      "tiers": [
+        "auto"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "system": "splink",
+      "version": "5.0.0",
+      "config": "default",
+      "tier": "auto",
+      "clusters": 336,
+      "false_merge": {
+        "k": 216,
+        "n": 400,
+        "rate": 0.54,
+        "ci95": [
+          0.49100882332475854,
+          0.5882301931284978
+        ]
+      },
+      "designed_recall": {
+        "k": 158,
+        "n": 280,
+        "rate": 0.5642857142857143,
+        "ci95": [
+          0.505724426970536,
+          0.6211069392068117
+        ]
+      },
+      "precision": {
+        "k": 158,
+        "n": 403,
+        "rate": 0.3920595533498759,
+        "ci95": [
+          0.3456280862172461,
+          0.44052940065199825
+        ]
+      },
+      "recall": {
+        "k": 158,
+        "n": 280,
+        "rate": 0.5642857142857143,
+        "ci95": [
+          0.505724426970536,
+          0.6211069392068117
+        ]
+      },
+      "pair_f1": 0.46266471449487556,
+      "b3_f1": 0.8759145586560757,
+      "false_merges_anywhere": 245,
+      "by_family": {
+        "same-exact": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "same-case-space": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 5,
+            "n": 20,
+            "rate": 0.25,
+            "ci95": [
+              0.11186170140766569,
+              0.468700877618744
+            ]
+          }
+        },
+        "same-diacritics": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          }
+        },
+        "same-transliteration": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "same-name-order": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          }
+        },
+        "same-nickname": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 13,
+            "n": 20,
+            "rate": 0.65,
+            "ci95": [
+              0.43285427668523624,
+              0.818808175898918
+            ]
+          }
+        },
+        "same-initial": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          }
+        },
+        "same-married-name": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          }
+        },
+        "same-email-bridge": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "same-disjoint-emails": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "same-role-address": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "same-within-source": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "diff-namesake": {
+          "label": "different",
+          "false_merge": {
+            "k": 9,
+            "n": 20,
+            "rate": 0.45,
+            "ci95": [
+              0.2581978582556243,
+              0.6579146575496577
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-same-company": {
+          "label": "different",
+          "false_merge": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-same-city": {
+          "label": "different",
+          "false_merge": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-cross-source-slug": {
+          "label": "different",
+          "false_merge": {
+            "k": 10,
+            "n": 20,
+            "rate": 0.5,
+            "ci95": [
+              0.2992980081982123,
+              0.7007019918017877
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-team-alias": {
+          "label": "different",
+          "false_merge": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-family-email": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-assistant-email": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-shared-mailbox": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-nickname-lookalike": {
+          "label": "different",
+          "false_merge": {
+            "k": 17,
+            "n": 20,
+            "rate": 0.85,
+            "ci95": [
+              0.6395811352592431,
+              0.9476312541037835
+            ]
+          },
+          "found": null
+        },
+        "diff-initial-lookalike": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-alias-on-5": {
+          "label": "different",
+          "false_merge": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-alias-on-6": {
+          "label": "different",
+          "false_merge": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          },
+          "found": null
+        },
+        "diff-jr-suffix": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-placeholder-email": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-household-plain": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-offlist-alias": {
+          "label": "different",
+          "false_merge": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          },
+          "found": null
+        },
+        "diff-bridge-page": {
+          "label": "different",
+          "false_merge": {
+            "k": 20,
+            "n": 40,
+            "rate": 0.5,
+            "ci95": [
+              0.35199526933465386,
+              0.6480047306653461
+            ]
+          },
+          "found": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          }
+        },
+        "diff-transitive-chain": {
+          "label": "different",
+          "false_merge": {
+            "k": 40,
+            "n": 40,
+            "rate": 1,
+            "ci95": [
+              0.9123783988027135,
+              1
+            ]
+          },
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        }
+      }
+    },
+    {
+      "system": "splink",
+      "version": "5.0.0",
+      "config": "tuned",
+      "tier": "auto",
+      "clusters": 240,
+      "false_merge": {
+        "k": 41,
+        "n": 400,
+        "rate": 0.1025,
+        "ci95": [
+          0.07645885298219338,
+          0.1361034210135723
+        ]
+      },
+      "designed_recall": {
+        "k": 199,
+        "n": 280,
+        "rate": 0.7107142857142857,
+        "ci95": [
+          0.6550356411553697,
+          0.7606893924259366
+        ]
+      },
+      "precision": {
+        "k": 199,
+        "n": 240,
+        "rate": 0.8291666666666667,
+        "ci95": [
+          0.7764581337597003,
+          0.8715038689454402
+        ]
+      },
+      "recall": {
+        "k": 199,
+        "n": 280,
+        "rate": 0.7107142857142857,
+        "ci95": [
+          0.6550356411553697,
+          0.7606893924259366
+        ]
+      },
+      "pair_f1": 0.7653846153846154,
+      "b3_f1": 0.9555773477931239,
+      "false_merges_anywhere": 41,
+      "by_family": {
+        "same-exact": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "same-case-space": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "same-diacritics": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 17,
+            "n": 20,
+            "rate": 0.85,
+            "ci95": [
+              0.6395811352592431,
+              0.9476312541037835
+            ]
+          }
+        },
+        "same-transliteration": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 2,
+            "n": 20,
+            "rate": 0.1,
+            "ci95": [
+              0.027866481213768224,
+              0.3010336452284873
+            ]
+          }
+        },
+        "same-name-order": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "same-nickname": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 7,
+            "n": 20,
+            "rate": 0.35,
+            "ci95": [
+              0.18119182410108206,
+              0.5671457233147638
+            ]
+          }
+        },
+        "same-initial": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 7,
+            "n": 20,
+            "rate": 0.35,
+            "ci95": [
+              0.18119182410108206,
+              0.5671457233147638
+            ]
+          }
+        },
+        "same-married-name": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 7,
+            "n": 20,
+            "rate": 0.35,
+            "ci95": [
+              0.18119182410108206,
+              0.5671457233147638
+            ]
+          }
+        },
+        "same-email-bridge": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "same-disjoint-emails": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 7,
+            "n": 20,
+            "rate": 0.35,
+            "ci95": [
+              0.18119182410108206,
+              0.5671457233147638
+            ]
+          }
+        },
+        "same-role-address": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "same-within-source": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "diff-namesake": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-same-company": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-same-city": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-cross-source-slug": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-team-alias": {
+          "label": "different",
+          "false_merge": {
+            "k": 6,
+            "n": 20,
+            "rate": 0.3,
+            "ci95": [
+              0.1454772448676043,
+              0.5189728183535235
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-family-email": {
+          "label": "different",
+          "false_merge": {
+            "k": 13,
+            "n": 20,
+            "rate": 0.65,
+            "ci95": [
+              0.43285427668523624,
+              0.818808175898918
+            ]
+          },
+          "found": null
+        },
+        "diff-assistant-email": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-shared-mailbox": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-nickname-lookalike": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-initial-lookalike": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-alias-on-5": {
+          "label": "different",
+          "false_merge": {
+            "k": 1,
+            "n": 20,
+            "rate": 0.05,
+            "ci95": [
+              0.008881448800795402,
+              0.23613119344674205
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-alias-on-6": {
+          "label": "different",
+          "false_merge": {
+            "k": 4,
+            "n": 20,
+            "rate": 0.2,
+            "ci95": [
+              0.08065766257979806,
+              0.41601743225189364
+            ]
+          },
+          "found": null
+        },
+        "diff-jr-suffix": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-placeholder-email": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-household-plain": {
+          "label": "different",
+          "false_merge": {
+            "k": 13,
+            "n": 20,
+            "rate": 0.65,
+            "ci95": [
+              0.43285427668523624,
+              0.818808175898918
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-offlist-alias": {
+          "label": "different",
+          "false_merge": {
+            "k": 4,
+            "n": 20,
+            "rate": 0.2,
+            "ci95": [
+              0.08065766257979806,
+              0.41601743225189364
+            ]
+          },
+          "found": null
+        },
+        "diff-bridge-page": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 40,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.08762160119728664
+            ]
+          },
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "diff-transitive-chain": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 40,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.08762160119728664
+            ]
+          },
+          "found": {
+            "k": 12,
+            "n": 20,
+            "rate": 0.6,
+            "ci95": [
+              0.3865815007622531,
+              0.781193467627183
+            ]
+          }
+        }
+      }
+    },
+    {
+      "system": "splink",
+      "version": "5.0.0",
+      "config": "tuned",
+      "tier": "proposed",
+      "clusters": 334,
+      "false_merge": {
+        "k": 161,
+        "n": 400,
+        "rate": 0.4025,
+        "ci95": [
+          0.3555891011441365,
+          0.4512657962510514
+        ]
+      },
+      "designed_recall": {
+        "k": 207,
+        "n": 280,
+        "rate": 0.7392857142857143,
+        "ci95": [
+          0.6848708296390443,
+          0.7872237000210832
+        ]
+      },
+      "precision": {
+        "k": 207,
+        "n": 392,
+        "rate": 0.5280612244897959,
+        "ci95": [
+          0.4786099727266264,
+          0.5769678337657587
+        ]
+      },
+      "recall": {
+        "k": 207,
+        "n": 280,
+        "rate": 0.7392857142857143,
+        "ci95": [
+          0.6848708296390443,
+          0.7872237000210832
+        ]
+      },
+      "pair_f1": 0.6160714285714286,
+      "b3_f1": 0.9138478873023879,
+      "false_merges_anywhere": 185,
+      "by_family": {
+        "same-exact": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "same-case-space": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "same-diacritics": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 17,
+            "n": 20,
+            "rate": 0.85,
+            "ci95": [
+              0.6395811352592431,
+              0.9476312541037835
+            ]
+          }
+        },
+        "same-transliteration": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 2,
+            "n": 20,
+            "rate": 0.1,
+            "ci95": [
+              0.027866481213768224,
+              0.3010336452284873
+            ]
+          }
+        },
+        "same-name-order": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "same-nickname": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 7,
+            "n": 20,
+            "rate": 0.35,
+            "ci95": [
+              0.18119182410108206,
+              0.5671457233147638
+            ]
+          }
+        },
+        "same-initial": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 7,
+            "n": 20,
+            "rate": 0.35,
+            "ci95": [
+              0.18119182410108206,
+              0.5671457233147638
+            ]
+          }
+        },
+        "same-married-name": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 7,
+            "n": 20,
+            "rate": 0.35,
+            "ci95": [
+              0.18119182410108206,
+              0.5671457233147638
+            ]
+          }
+        },
+        "same-email-bridge": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "same-disjoint-emails": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 7,
+            "n": 20,
+            "rate": 0.35,
+            "ci95": [
+              0.18119182410108206,
+              0.5671457233147638
+            ]
+          }
+        },
+        "same-role-address": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "same-within-source": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "diff-namesake": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-same-company": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-same-city": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-cross-source-slug": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-team-alias": {
+          "label": "different",
+          "false_merge": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-family-email": {
+          "label": "different",
+          "false_merge": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          },
+          "found": null
+        },
+        "diff-assistant-email": {
+          "label": "different",
+          "false_merge": {
+            "k": 1,
+            "n": 20,
+            "rate": 0.05,
+            "ci95": [
+              0.008881448800795402,
+              0.23613119344674205
+            ]
+          },
+          "found": null
+        },
+        "diff-shared-mailbox": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-nickname-lookalike": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-initial-lookalike": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-alias-on-5": {
+          "label": "different",
+          "false_merge": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-alias-on-6": {
+          "label": "different",
+          "false_merge": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          },
+          "found": null
+        },
+        "diff-jr-suffix": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-placeholder-email": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-household-plain": {
+          "label": "different",
+          "false_merge": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-offlist-alias": {
+          "label": "different",
+          "false_merge": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          },
+          "found": null
+        },
+        "diff-bridge-page": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 40,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.08762160119728664
+            ]
+          },
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "diff-transitive-chain": {
+          "label": "different",
+          "false_merge": {
+            "k": 40,
+            "n": 40,
+            "rate": 1,
+            "ci95": [
+              0.9123783988027135,
+              1
+            ]
+          },
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        }
+      }
+    },
+    {
+      "system": "dedupe",
+      "version": "3.0.3",
+      "config": "default",
+      "tier": "auto",
+      "clusters": 50,
+      "false_merge": {
+        "k": 0,
+        "n": 400,
+        "rate": 0,
+        "ci95": [
+          8.673617379884035e-19,
+          0.009512294334296508
+        ]
+      },
+      "designed_recall": {
+        "k": 50,
+        "n": 280,
+        "rate": 0.17857142857142858,
+        "ci95": [
+          0.13815425172969206,
+          0.22768891738356975
+        ]
+      },
+      "precision": {
+        "k": 50,
+        "n": 50,
+        "rate": 1,
+        "ci95": [
+          0.9286524008666414,
+          1
+        ]
+      },
+      "recall": {
+        "k": 50,
+        "n": 280,
+        "rate": 0.17857142857142858,
+        "ci95": [
+          0.13815425172969206,
+          0.22768891738356975
+        ]
+      },
+      "pair_f1": 0.30303030303030304,
+      "b3_f1": 0.9090909090909091,
+      "false_merges_anywhere": 0,
+      "by_family": {
+        "same-exact": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          }
+        },
+        "same-case-space": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 5,
+            "n": 20,
+            "rate": 0.25,
+            "ci95": [
+              0.11186170140766569,
+              0.468700877618744
+            ]
+          }
+        },
+        "same-diacritics": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 15,
+            "n": 20,
+            "rate": 0.75,
+            "ci95": [
+              0.531299122381256,
+              0.8881382985923343
+            ]
+          }
+        },
+        "same-transliteration": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 10,
+            "n": 20,
+            "rate": 0.5,
+            "ci95": [
+              0.2992980081982123,
+              0.7007019918017877
+            ]
+          }
+        },
+        "same-name-order": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          }
+        },
+        "same-nickname": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          }
+        },
+        "same-initial": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          }
+        },
+        "same-married-name": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          }
+        },
+        "same-email-bridge": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          }
+        },
+        "same-disjoint-emails": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          }
+        },
+        "same-role-address": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          }
+        },
+        "same-within-source": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "diff-namesake": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-same-company": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-same-city": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-cross-source-slug": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-team-alias": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-family-email": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-assistant-email": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-shared-mailbox": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-nickname-lookalike": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-initial-lookalike": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-alias-on-5": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-alias-on-6": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-jr-suffix": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-placeholder-email": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-household-plain": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-offlist-alias": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-bridge-page": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 40,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.08762160119728664
+            ]
+          },
+          "found": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          }
+        },
+        "diff-transitive-chain": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 40,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.08762160119728664
+            ]
+          },
+          "found": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          }
+        }
+      }
+    },
+    {
+      "system": "dedupe",
+      "version": "3.0.3",
+      "config": "tuned",
+      "tier": "auto",
+      "clusters": 293,
+      "false_merge": {
+        "k": 24,
+        "n": 400,
+        "rate": 0.06,
+        "ci95": [
+          0.040647970113724695,
+          0.0877228489004562
+        ]
+      },
+      "designed_recall": {
+        "k": 269,
+        "n": 280,
+        "rate": 0.9607142857142857,
+        "ci95": [
+          0.9310338901194122,
+          0.9779242341515795
+        ]
+      },
+      "precision": {
+        "k": 269,
+        "n": 293,
+        "rate": 0.9180887372013652,
+        "ci95": [
+          0.8810164135151691,
+          0.9443399938187244
+        ]
+      },
+      "recall": {
+        "k": 269,
+        "n": 280,
+        "rate": 0.9607142857142857,
+        "ci95": [
+          0.9310338901194122,
+          0.9779242341515795
+        ]
+      },
+      "pair_f1": 0.9389179755671901,
+      "b3_f1": 0.987296370163542,
+      "false_merges_anywhere": 24,
+      "by_family": {
+        "same-exact": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "same-case-space": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "same-diacritics": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "same-transliteration": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "same-name-order": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "same-nickname": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "same-initial": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "same-married-name": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "same-email-bridge": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 16,
+            "n": 20,
+            "rate": 0.8,
+            "ci95": [
+              0.5839825677481064,
+              0.919342337420202
+            ]
+          }
+        },
+        "same-disjoint-emails": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 18,
+            "n": 20,
+            "rate": 0.9,
+            "ci95": [
+              0.6989663547715128,
+              0.9721335187862319
+            ]
+          }
+        },
+        "same-role-address": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "same-within-source": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "diff-namesake": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-same-company": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-same-city": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-cross-source-slug": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-team-alias": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-family-email": {
+          "label": "different",
+          "false_merge": {
+            "k": 10,
+            "n": 20,
+            "rate": 0.5,
+            "ci95": [
+              0.2992980081982123,
+              0.7007019918017877
+            ]
+          },
+          "found": null
+        },
+        "diff-assistant-email": {
+          "label": "different",
+          "false_merge": {
+            "k": 2,
+            "n": 20,
+            "rate": 0.1,
+            "ci95": [
+              0.027866481213768224,
+              0.3010336452284873
+            ]
+          },
+          "found": null
+        },
+        "diff-shared-mailbox": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-nickname-lookalike": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-initial-lookalike": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-alias-on-5": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-alias-on-6": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-jr-suffix": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-placeholder-email": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-household-plain": {
+          "label": "different",
+          "false_merge": {
+            "k": 12,
+            "n": 20,
+            "rate": 0.6,
+            "ci95": [
+              0.3865815007622531,
+              0.781193467627183
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-offlist-alias": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-bridge-page": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 40,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.08762160119728664
+            ]
+          },
+          "found": {
+            "k": 17,
+            "n": 20,
+            "rate": 0.85,
+            "ci95": [
+              0.6395811352592431,
+              0.9476312541037835
+            ]
+          }
+        },
+        "diff-transitive-chain": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 40,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.08762160119728664
+            ]
+          },
+          "found": {
+            "k": 18,
+            "n": 20,
+            "rate": 0.9,
+            "ci95": [
+              0.6989663547715128,
+              0.9721335187862319
+            ]
+          }
+        }
+      }
+    },
+    {
+      "system": "zingg",
+      "version": "0.7.0",
+      "config": "default",
+      "tier": "auto",
+      "clusters": 210,
+      "false_merge": {
+        "k": 5,
+        "n": 400,
+        "rate": 0.0125,
+        "ci95": [
+          0.005350750779971611,
+          0.028923736195967484
+        ]
+      },
+      "designed_recall": {
+        "k": 205,
+        "n": 280,
+        "rate": 0.7321428571428571,
+        "ci95": [
+          0.6773872831137747,
+          0.7806148725266472
+        ]
+      },
+      "precision": {
+        "k": 205,
+        "n": 212,
+        "rate": 0.9669811320754716,
+        "ci95": [
+          0.933424640152416,
+          0.9839153420818796
+        ]
+      },
+      "recall": {
+        "k": 205,
+        "n": 280,
+        "rate": 0.7321428571428571,
+        "ci95": [
+          0.6773872831137747,
+          0.7806148725266472
+        ]
+      },
+      "pair_f1": 0.8333333333333333,
+      "b3_f1": 0.9698936308351548,
+      "false_merges_anywhere": 7,
+      "by_family": {
+        "same-exact": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "same-case-space": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "same-diacritics": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 17,
+            "n": 20,
+            "rate": 0.85,
+            "ci95": [
+              0.6395811352592431,
+              0.9476312541037835
+            ]
+          }
+        },
+        "same-transliteration": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 14,
+            "n": 20,
+            "rate": 0.7,
+            "ci95": [
+              0.4810271816464765,
+              0.8545227551323956
+            ]
+          }
+        },
+        "same-name-order": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          }
+        },
+        "same-nickname": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 13,
+            "n": 20,
+            "rate": 0.65,
+            "ci95": [
+              0.43285427668523624,
+              0.818808175898918
+            ]
+          }
+        },
+        "same-initial": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 5,
+            "n": 20,
+            "rate": 0.25,
+            "ci95": [
+              0.11186170140766569,
+              0.468700877618744
+            ]
+          }
+        },
+        "same-married-name": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          }
+        },
+        "same-email-bridge": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "same-disjoint-emails": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "same-role-address": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "same-within-source": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "diff-namesake": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-same-company": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-same-city": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-cross-source-slug": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-team-alias": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-family-email": {
+          "label": "different",
+          "false_merge": {
+            "k": 4,
+            "n": 20,
+            "rate": 0.2,
+            "ci95": [
+              0.08065766257979806,
+              0.41601743225189364
+            ]
+          },
+          "found": null
+        },
+        "diff-assistant-email": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-shared-mailbox": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-nickname-lookalike": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-initial-lookalike": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-alias-on-5": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-alias-on-6": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-jr-suffix": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-placeholder-email": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-household-plain": {
+          "label": "different",
+          "false_merge": {
+            "k": 1,
+            "n": 20,
+            "rate": 0.05,
+            "ci95": [
+              0.008881448800795402,
+              0.23613119344674205
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-offlist-alias": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-bridge-page": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 40,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.08762160119728664
+            ]
+          },
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "diff-transitive-chain": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 40,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.08762160119728664
+            ]
+          },
+          "found": {
+            "k": 16,
+            "n": 20,
+            "rate": 0.8,
+            "ci95": [
+              0.5839825677481064,
+              0.919342337420202
+            ]
+          }
+        }
+      }
+    },
+    {
+      "system": "zingg",
+      "version": "0.7.0",
+      "config": "tuned",
+      "tier": "auto",
+      "clusters": 201,
+      "false_merge": {
+        "k": 0,
+        "n": 400,
+        "rate": 0,
+        "ci95": [
+          8.673617379884035e-19,
+          0.009512294334296508
+        ]
+      },
+      "designed_recall": {
+        "k": 201,
+        "n": 280,
+        "rate": 0.7178571428571429,
+        "ci95": [
+          0.6624700783488343,
+          0.7673473292521772
+        ]
+      },
+      "precision": {
+        "k": 201,
+        "n": 201,
+        "rate": 1,
+        "ci95": [
+          0.9812466731939421,
+          0.9999999999999999
+        ]
+      },
+      "recall": {
+        "k": 201,
+        "n": 280,
+        "rate": 0.7178571428571429,
+        "ci95": [
+          0.6624700783488343,
+          0.7673473292521772
+        ]
+      },
+      "pair_f1": 0.8357588357588357,
+      "b3_f1": 0.9705333830660201,
+      "false_merges_anywhere": 0,
+      "by_family": {
+        "same-exact": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "same-case-space": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "same-diacritics": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 19,
+            "n": 20,
+            "rate": 0.95,
+            "ci95": [
+              0.763868806553258,
+              0.9911185511992047
+            ]
+          }
+        },
+        "same-transliteration": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 14,
+            "n": 20,
+            "rate": 0.7,
+            "ci95": [
+              0.4810271816464765,
+              0.8545227551323956
+            ]
+          }
+        },
+        "same-name-order": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          }
+        },
+        "same-nickname": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 13,
+            "n": 20,
+            "rate": 0.65,
+            "ci95": [
+              0.43285427668523624,
+              0.818808175898918
+            ]
+          }
+        },
+        "same-initial": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 7,
+            "n": 20,
+            "rate": 0.35,
+            "ci95": [
+              0.18119182410108206,
+              0.5671457233147638
+            ]
+          }
+        },
+        "same-married-name": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 1,
+            "n": 20,
+            "rate": 0.05,
+            "ci95": [
+              0.008881448800795402,
+              0.23613119344674205
+            ]
+          }
+        },
+        "same-email-bridge": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "same-disjoint-emails": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "same-role-address": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "same-within-source": {
+          "label": "same",
+          "false_merge": null,
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "diff-namesake": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-same-company": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-same-city": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-cross-source-slug": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-team-alias": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-family-email": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-assistant-email": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-shared-mailbox": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-nickname-lookalike": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-initial-lookalike": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-alias-on-5": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-alias-on-6": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-jr-suffix": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-placeholder-email": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-household-plain": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-namesake-offlist-alias": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 20,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.16112515805281938
+            ]
+          },
+          "found": null
+        },
+        "diff-bridge-page": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 40,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.08762160119728664
+            ]
+          },
+          "found": {
+            "k": 20,
+            "n": 20,
+            "rate": 1,
+            "ci95": [
+              0.8388748419471806,
+              1
+            ]
+          }
+        },
+        "diff-transitive-chain": {
+          "label": "different",
+          "false_merge": {
+            "k": 0,
+            "n": 40,
+            "rate": 0,
+            "ci95": [
+              0,
+              0.08762160119728664
+            ]
+          },
+          "found": {
+            "k": 7,
+            "n": 20,
+            "rate": 0.35,
+            "ci95": [
+              0.18119182410108206,
+              0.5671457233147638
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

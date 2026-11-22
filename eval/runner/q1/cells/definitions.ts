@@ -64,7 +64,8 @@ export type BG1BlockId = 'BG1-S1' | 'BG1';
 export type BG1CBlockId = 'BG1C-smoke' | 'BG1C';
 /** The SOTA loop's spend blocks: the dev test and the leader cache, each its own paid window and ledger run. */
 export type SotaBlockId = 'SOTA-dev' | 'SOTA-leader';
-export type BlockId = Q1BlockId | F6BlockId | RS1BlockId | BG1BlockId | BG1CBlockId | SotaBlockId;
+export type BN10BlockId = 'BN10-dry' | 'BN10';
+export type BlockId = Q1BlockId | F6BlockId | RS1BlockId | BG1BlockId | BG1CBlockId | SotaBlockId | BN10BlockId;
 export type Split = 'dev' | 'sealed' | 'all';
 
 export type Selection =
@@ -481,14 +482,30 @@ export const F6_ASSUMPTIONS = {
 };
 
 /**
+ * The BEAM-10M re-measure's build and rates (eval/runner/q1/cells/bn10.ts, docs/benchmarks/2026-11-19-beam10m-newest-preregistration.md):
+ * gbrain's newest release at launch on F6's build path. The rates are F6's measured f6-master ones until the dry run on
+ * 1m-16 measures them at this pin; they live apart so the other manifests stay byte-identical.
+ */
+export const BN10_ASSUMPTIONS = {
+  gbrain_sha: '7f162344652afc725793dd476945716e09d26104',
+  gbrain_version: 'v0.60.748.0',
+  bun_image: F6_ASSUMPTIONS.bun_image,
+  ingest_usd_per_mtok: { 'gbrain-defaults:bn10-newest': 0.08 } as Record<string, number>,
+  hours_per_mtok: { 'gbrain-defaults:bn10-newest': 1.92 } as Record<string, number>,
+};
+
+/**
  * RS1's rates (eval/runner/q1/cells/rs1.ts), each a named assumption stage 1 replaces with a measurement. They live apart
  * from ASSUMPTIONS and F6_ASSUMPTIONS so Q1's and F6's manifests stay byte-identical.
  */
 export const RS1_ASSUMPTIONS = {
-  /** gbrain's soaked stable release: the `stable` tag, stable-v0.60.593.0 (not `latest-stable`, the alpha channel). */
-  gbrain_sha: '27f8b9d6287c2ba635532c7d3bc015c50e1d769b',
-  gbrain_version: 'v0.60.593.0',
-  /** The stable tag's engines floor is Bun >= 1.4.4, the same image F6 built on. */
+  /**
+   * gbrain's newest release at wave A's launch: the highest version tag on gbrain's master, v0.60.740.0, read on
+   * 2026-11-18. The pin holds for every RS1 counted cell, wave B's regenerated cells and every particle-1 re-read.
+   */
+  gbrain_sha: '82fdd00001833d0cbcc03c3952c3b5635d79dd92',
+  gbrain_version: 'v0.60.740.0',
+  /** v0.60.740.0's engines floor is still Bun >= 1.4.4, the same image F6 built on. */
   bun_image: F6_ASSUMPTIONS.bun_image,
   /** F6's measured f6-master rates until stage 1 measures rs1-stable on its two public conversations. */
   ingest_usd_per_mtok: { 'gbrain-defaults:rs1-stable': 0.08 } as Record<string, number>,
@@ -499,12 +516,28 @@ export const RS1_ASSUMPTIONS = {
    */
   max_conversation_ratio: { RS1: 1.36, 'RS1-dev2': 1.01 } as Record<string, number>,
   /**
-   * Judging dollars per answer on RS1's sets, measured on F6's BEAM-1M answers: a per-row frontier judgment $113.31 over
-   * 3,301 answers (GST-1365 census B), about 3.2 times what Q1's token assumption gives, and the canonical gpt-4.1-mini
-   * judgment $0.0028 (F6 dry run). They size RS1's estimates and leases; Q1's and F6's keep their token assumptions.
+   * The mean conversation size the extraction cap is sized from: RS1's is validate.ts's length gate centre (1.07M cl100k
+   * tokens), fixed by the preregistration rather than read from the set's facts. The amendment that regenerates wave B's
+   * cells at N_final changes RS1's conversation count, and a cap derived from the set's facts would then move
+   * GBRAIN_F6_EXTRACT_CAP_USD, an identity field of wave A's units, so verdict.ts would refuse wave A's receipts.
    */
-  judge_usd_per_answer: { frontier: 113.31 / 3301, canonical: 0.0028 },
+  conversation_tokens: { RS1: 1_070_000 } as Record<string, number>,
+  /**
+   * The canonical gpt-4.1-mini judgment per answer on RS1's sets, $0.0028 (F6 dry run). It sizes RS1's estimates and
+   * leases; Q1's and F6's keep their token assumptions.
+   */
+  judge_usd_per_answer: { canonical: 0.0028 },
+  /**
+   * A gating judgment's tokens on RS1's sets: BEAM's three rubric calls of 900 input tokens, and 582 output tokens per call
+   * (reasoning included), back-solved so that an even gpt-6.1-sol and claude-opus-5-5 mix gives GST-1365 census B's
+   * measured $113.31 over 3,301 answers. Priced at each judge's own rate (rs1GatingJudgeUsd), so gpt-6-astra costs about
+   * $0.114 an answer and claude-opus-5-5 about $0.046, until the judge check measures each judge's tokens.
+   */
+  gating_judge: { calls: 3, input: 900, output: 582 },
 };
+
+/** One RS1 gating judgment's dollars per answer at the judge's own price (RS1_ASSUMPTIONS.gating_judge). */
+export const rs1GatingJudgeUsd = (judge: string) => { const g = RS1_ASSUMPTIONS.gating_judge; const p = priceOf(judge); return g.calls * (g.input * p.input + g.output * p.output) / 1e6; };
 
 /**
  * The SOTA loop dev test's rates (generateSotaDevCells), each a named assumption the dev test replaces with a
@@ -648,14 +681,19 @@ export const readerTokens = (table: ReaderTokenTable, reader: string): number =>
 
 const call = (model: string, input: number, output: number) => { const p = priceOf(model); return (input * p.input + output * p.output) / 1e6; };
 const byReader = (table: Record<string, number>, reader: string) => table[reader] ?? table.default;
-const outTokens = (reader: string) => readerTokens('reader_output_tokens', reader);
-const overhead = (reader: string) => readerTokens('reader_input_overhead_tokens', reader);
-const perCl100k = (reader: string) => readerTokens('reader_tokens_per_cl100k', reader);
+/**
+ * The reader token model for a cell's estimate: READER_TOKENS_EXTRA counts only in BG1-C's blocks, so every other cell
+ * set that reads one of its readers keeps the table's default, as its committed manifest was priced.
+ */
+const cellTokens = (table: ReaderTokenTable, reader: string, block?: string) => block !== undefined && (BG1C_BLOCK_IDS as readonly string[]).includes(block) ? readerTokens(table, reader) : byReader(ASSUMPTIONS[table], reader);
+const outTokens = (reader: string, block?: string) => cellTokens('reader_output_tokens', reader, block);
+const overhead = (reader: string, block?: string) => cellTokens('reader_input_overhead_tokens', reader, block);
+const perCl100k = (reader: string, block?: string) => cellTokens('reader_tokens_per_cl100k', reader, block);
 /**
  * One answer's reader dollars in BG1's money model (eval/runner/bg1/pricing.ts): `cl100k` evidence tokens at the
  * reader's tokens per cl100k token, plus its prompt overhead, and its mean output, at list price.
  */
-export const bg1ReadUsd = (reader: string, cl100k: number) => call(reader, cl100k * perCl100k(reader) + overhead(reader), outTokens(reader));
+export const bg1ReadUsd = (reader: string, cl100k: number) => call(reader, cl100k * readerTokens('reader_tokens_per_cl100k', reader) + readerTokens('reader_input_overhead_tokens', reader), readerTokens('reader_output_tokens', reader));
 const agentTokens = (v: number | Record<string, number> | undefined, reader: string) => typeof v === 'number' ? v : v ? byReader(v, reader) ?? 0 : 0;
 
 // ─── Estimates ───────────────────────────────────────────────────────
@@ -692,7 +730,7 @@ export function ingestRate(def: Pick<CellDefinition, 'system' | 'configuration' 
   const family = def.benchmark.startsWith('beam') ? 'beam' : def.benchmark;
   const key = `${def.system}:${def.configuration}`;
   if (isBg1Benchmark(def.benchmark)) return bg1Rates(def.benchmark).ingest_usd_per_mtok[key] ?? 0;
-  return ASSUMPTIONS.ingest_usd_per_mtok[`${key}:${family}`] ?? ASSUMPTIONS.ingest_usd_per_mtok[key] ?? F6_ASSUMPTIONS.ingest_usd_per_mtok[key] ?? RS1_ASSUMPTIONS.ingest_usd_per_mtok[key] ?? SOTA_ASSUMPTIONS.ingest_usd_per_mtok[key] ?? 0;
+  return ASSUMPTIONS.ingest_usd_per_mtok[`${key}:${family}`] ?? ASSUMPTIONS.ingest_usd_per_mtok[key] ?? F6_ASSUMPTIONS.ingest_usd_per_mtok[key] ?? RS1_ASSUMPTIONS.ingest_usd_per_mtok[key] ?? BN10_ASSUMPTIONS.ingest_usd_per_mtok[key] ?? SOTA_ASSUMPTIONS.ingest_usd_per_mtok[key] ?? 0;
 }
 
 /**
@@ -749,8 +787,8 @@ export function estimateCell(def: Omit<CellDefinition, 'estimate'>): CellEstimat
     const n = armQuestions(def, arm);
     const answers = (reader: string) => n * (arm.reader_replicates[reader] ?? 1);
     for (const r of arm.readers) {
-      if (arm.mode === 'packed') add('readers', answers(r) * call(r, arm.budget! * readerTokens('reader_tokens_per_budget_token', r) + overhead(r), outTokens(r)));
-      else if (arm.mode === 'native-default') add('readers', answers(r) * call(r, byReader(ASSUMPTIONS.vendor_default_tokens, def.system) * perCl100k(r) + overhead(r), outTokens(r)));
+      if (arm.mode === 'packed') add('readers', answers(r) * call(r, arm.budget! * cellTokens('reader_tokens_per_budget_token', r, def.block) + overhead(r, def.block), outTokens(r, def.block)));
+      else if (arm.mode === 'native-default') add('readers', answers(r) * call(r, byReader(ASSUMPTIONS.vendor_default_tokens, def.system) * perCl100k(r, def.block) + overhead(r, def.block), outTokens(r, def.block)));
       else if (arm.mode === 'full-context') add('full_context', fullContextCost(set, r, n));
       else if (arm.mode === 'agent') {
         const a = (def.set in SOTA_SETS ? SOTA_ASSUMPTIONS.agent : ASSUMPTIONS.agent)[def.system];
@@ -763,7 +801,7 @@ export function estimateCell(def: Omit<CellDefinition, 'estimate'>): CellEstimat
     if (arm.mode === 'retrieval-only') continue;
     const judged = arm.readers.reduce((s, r) => s + answers(r), 0);
     add('judges', judged * (measured?.canonical ?? judgeCost(def.benchmark)));
-    if (arm.frontier?.per_reader) for (const r of arm.frontier.readers ?? arm.readers) add('frontier_judges', (arm.frontier.sample !== null ? Math.min(n, arm.frontier.sample) : n) * (measured?.frontier ?? judgeCost(def.benchmark, frontierJudgeOf(r))));
+    if (arm.frontier?.per_reader) for (const r of arm.frontier.readers ?? arm.readers) add('frontier_judges', (arm.frontier.sample !== null ? Math.min(n, arm.frontier.sample) : n) * (measured ? rs1GatingJudgeUsd(frontierJudgesFor(arm, r)[0]) : judgeCost(def.benchmark, frontierJudgeOf(r))));
     else if (arm.frontier) {
       const fr = arm.frontier.readers ?? arm.readers;
       const items = arm.frontier.sample !== null ? Math.min(n, arm.frontier.sample) * fr.length : n * fr.length;
@@ -854,7 +892,7 @@ export function hoursPerMtok(system: string, configuration: string, benchmark: s
   const family = benchmark.startsWith('beam') ? 'beam' : benchmark;
   const bg1 = isBg1Benchmark(benchmark) ? bg1Rates(benchmark).hours_per_mtok[`${system}:${configuration}`] : undefined;
   if (bg1 !== undefined) return bg1;
-  return ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}:${family}`] ?? ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] ?? F6_ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] ?? RS1_ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] ?? SOTA_ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] ?? ASSUMPTIONS.hours_per_mtok[runner];
+  return ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}:${family}`] ?? ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] ?? F6_ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] ?? RS1_ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] ?? BN10_ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] ?? SOTA_ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] ?? ASSUMPTIONS.hours_per_mtok[runner];
 }
 
 /** One cell. `extra`: F6 cells name their own block, probes and launch environment, BG1's gbrain cell its frozen launch, and the SOTA loop's gbrain agent its runner (Q1 cells pass none of these). */
@@ -890,7 +928,8 @@ export function makeCell(set: SetId, system: string, configuration: string, armS
 /** How a shim cell's stack starts: bootstrap.sh --config and any environment the configuration needs. */
 export function shimLaunch(system: string, configuration: string): NonNullable<CellDefinition['launch']> {
   if (configuration === 'f6-master') return { env: { GBRAIN_BUN_IMAGE: F6_ASSUMPTIONS.bun_image, GBRAIN_F6: '1', GBRAIN_SHA: F6_ASSUMPTIONS.gbrain_sha }, config: 'recipe' };
-  if (configuration === 'rs1-stable') return { env: { GBRAIN_BUN_IMAGE: RS1_ASSUMPTIONS.bun_image, GBRAIN_F6: '1', GBRAIN_SHA: RS1_ASSUMPTIONS.gbrain_sha }, config: 'recipe' };
+  if (configuration === 'rs1-stable') return { env: { GBRAIN_BUN_IMAGE: RS1_ASSUMPTIONS.bun_image, GBRAIN_F6: '1', GBRAIN_F6_BUILD_PROBLEMS: 'record', GBRAIN_IDLE_UPKEEP: 'off', GBRAIN_SHA: RS1_ASSUMPTIONS.gbrain_sha }, config: 'recipe' };
+  if (configuration === 'bn10-newest') return { env: { GBRAIN_BUN_IMAGE: BN10_ASSUMPTIONS.bun_image, GBRAIN_F6: '1', GBRAIN_SHA: BN10_ASSUMPTIONS.gbrain_sha }, config: 'recipe' };
   if (configuration === 'shipped-0.31') return { env: {}, config: 'shipped-0.31' };
   return { env: configuration === 'full-surface' ? { GBRAIN_FULL_SURFACE: '1' } : {}, config: configuration === 'common' || configuration === 'common-embedder' ? 'common' : 'recipe' };
 }
@@ -1034,7 +1073,7 @@ const perReader = (readers: string[]): NonNullable<ArmDefinition['frontier']> =>
  * per reader, so a stale leader row re-buys one reader only. Judged like the dev test.
  */
 export function generateSotaLeaderCells(): CellDefinition[] {
-  const short: Record<string, string> = { 'anthropic:claude-opus-5-5': 'opus', 'openai:gpt-6.1-sol': 'sol' };
+  const short: Record<string, string> = { 'anthropic:claude-opus-5-5': 'opus', 'openai:gpt-6.2-sol': 'sol' };
   const arms = (id: string, mode: ArmMode, label: string): ArmSpec[] => FRONTIER_READERS.map(r => ({ id: `${id}-${short[r]}`, mode, label: `${label} (${r})`, readers: [r], frontier: perReader([r]) }));
   const extra = { block: 'SOTA-leader' as const, probes: { sample: 0, seed: 'sota-probes-leader', conversations: 0 }, runner: 'in-process' as const };
   return [
@@ -1098,14 +1137,15 @@ export const F6_BLOCK_IDS: readonly F6BlockId[] = ['F6-S1', 'F6-T2', 'F6-D8', 'F
 export const RS1_BLOCK_IDS: readonly RS1BlockId[] = ['RS1-S1', 'RS1'];
 export const BG1_BLOCK_IDS: readonly BG1BlockId[] = ['BG1-S1', 'BG1'];
 export const BG1C_BLOCK_IDS: readonly BG1CBlockId[] = ['BG1C-smoke', 'BG1C'];
+export const BN10_BLOCK_IDS: readonly BN10BlockId[] = ['BN10-dry', 'BN10'];
 export const SOTA_BLOCK_IDS: readonly SotaBlockId[] = ['SOTA-dev', 'SOTA-leader'];
 
-/** An arm's retrieval identity: only on gbrain cells whose stack runs F6 (GBRAIN_F6=1), on a packed or retrieval-only arm, naming a known op, its own arguments and all six overlay keys. */
+/** An arm's retrieval identity: only on gbrain cells whose stack runs F6 (GBRAIN_F6=1), on a packed, retrieval-only or native-default arm, naming a known op, its own arguments and all six overlay keys. */
 function retrievalProblems(d: CellDefinition, a: ArmDefinition, w: string): string[] {
   const p: string[] = [];
   const r = a.retrieval!;
   if (d.system !== 'gbrain-defaults' || d.launch?.env.GBRAIN_F6 !== '1') p.push(`${w}: a retrieval identity runs only on a gbrain-defaults stack started with GBRAIN_F6=1`);
-  if (a.mode !== 'packed' && a.mode !== 'retrieval-only') p.push(`${w}: only packed and retrieval-only arms carry a retrieval identity`);
+  if (a.mode !== 'packed' && a.mode !== 'retrieval-only' && a.mode !== 'native-default') p.push(`${w}: only packed, retrieval-only and native-default arms carry a retrieval identity`);
   if (!r || typeof r !== 'object' || !RETRIEVAL_ARGS[r.op]) return [...p, `${w}: retrieval.op must be query or recall`];
   const extra = Object.keys(r.args ?? {}).filter(k => !RETRIEVAL_ARGS[r.op].includes(k));
   if (extra.length) p.push(`${w}: ${r.op} takes no ${extra.join(', ')} (allowed: ${RETRIEVAL_ARGS[r.op].join(', ')})`);
@@ -1143,7 +1183,7 @@ export function definitionProblems(d: CellDefinition, kinds: ReadonlySet<string>
   if (d.schema !== CELL_SCHEMA) p.push(`schema must be ${CELL_SCHEMA}`);
   if (!ID.test(d.id ?? '')) p.push(`id ${JSON.stringify(d.id)} must be 1-80 characters of [a-z0-9.-]`);
   if (!ALL_SETS[d.set]) p.push(`set ${d.set} is unknown`);
-  if (!(PLAN_BLOCKS as Record<string, unknown>)[d.block] && !([...F6_BLOCK_IDS, ...RS1_BLOCK_IDS, ...BG1_BLOCK_IDS, ...BG1C_BLOCK_IDS, ...SOTA_BLOCK_IDS] as readonly string[]).includes(d.block)) p.push(`block ${d.block} is unknown`);
+  if (!(PLAN_BLOCKS as Record<string, unknown>)[d.block] && !([...F6_BLOCK_IDS, ...RS1_BLOCK_IDS, ...BG1_BLOCK_IDS, ...BG1C_BLOCK_IDS, ...SOTA_BLOCK_IDS, ...BN10_BLOCK_IDS] as readonly string[]).includes(d.block)) p.push(`block ${d.block} is unknown`);
   if (!['dev', 'sealed', 'all'].includes(d.split)) p.push('split must be dev, sealed or all');
   p.push(...selectionProblems(d.selection, 'selection'));
   if (d.selection?.kind === 'ids' && d.split !== 'dev') p.push('an ids selection names dev questions only, since sealed ids never live in a manifest');

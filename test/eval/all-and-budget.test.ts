@@ -49,8 +49,9 @@ describe('CATEGORIES catalog', () => {
     const helpers = new Set([
       'cat13-gap-localize.ts', 'cat13-kacf-calibrate.ts', 'cat35-checks.ts', 'cat35-judges.ts', 'cat35-transcript-distill-chart.ts',
       'cat36-corpus.ts', 'cat36-scorer.ts', 'cat36-production.ts', 'cat36-snapshot.ts', 'cat36-grounded-answers.ts', 'cat36-operation-conformance.ts',
-      // Listed without a command: not implemented (5, 8, 9) or run by run-skillopt-cats.sh (30-33).
-      'cat5-provenance.ts', 'cat8-skill-compliance.ts', 'cat9-workflows.ts',
+      // Listed without a command: not implemented (5, 8) or run by run-skillopt-cats.sh (30-33). cat9-checks.ts is
+      // the free-check engine behind cat9-workflows.ts --checks.
+      'cat5-provenance.ts', 'cat8-skill-compliance.ts', 'cat9-checks.ts',
       // Keyless re-score helpers for the 2026-10-06 follow-up round, run by hand from their reports.
       'cat20-judges.ts', 'cat21-paired.ts',
       'cat30-skillopt-improvement.ts', 'cat31-skillopt-ablation.ts', 'cat32-skillopt-reward-hacking.ts', 'cat33-skillopt-transfer.ts',

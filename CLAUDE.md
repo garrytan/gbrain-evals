@@ -65,6 +65,7 @@ Use tables and charts when they improve understanding. Keep original charts with
 - **Keep provenance.** Copy worthwhile receipts out of `eval/reports/` before a later run overwrites them. Include per-question results when available.
 - **Disclose missing evidence.** A historical table without raw results stays historical. New measurements belong beside it, with their own date and code identity.
 - **Protect private data.** Public examples use the fictional corpora or generic placeholders. Do not publish real personal notes, names or secrets.
+- **Plan the eval loop before spending.** Every preregistration registered on or after 2026-11-19 follows the team's eval-loop practices page (`software-factory/evals/eval-loop-practices.md` in the team drive), and `bun eval/runner/prereg.ts` refuses its registry entry in CI unless it carries them as fields ([PREREGISTRATION-TEMPLATE.md](docs/benchmarks/PREREGISTRATION-TEMPLATE.md#registry-entry) has the shape): the `decision` each outcome changes, a pilot per arm in `pilots` on at most a tenth of that arm's budget showing the part under test ran, the judge passes and the units can be supplied, a `judge_check` (at least 100 labelled outputs for a plan frozen on or after 2026-11-22 and 40 for one frozen earlier, kappa of at least 0.6, a judge from another model family, errors read per arm) or the reason there is no model judge, and an `interim_look` at half the units with O'Brien-Fleming bounds at the plan's own alpha and a futility stop when `paid_tier` is `over-500`. A quick look (`paid_tier: "quick-look"`) carries only its question, decision and stop rule, and publishes no number. The results page the entry names carries one `Settled call:` line, the ship-or-kill call the result settled or `none`, and never its cost, which goes to the private ledger. Any Markdown file under `docs/` whose name contains `prereg` or ends in `-protocol.md` counts as a preregistration and needs a registry entry. Entries and preregistration files older than the check are listed in [preregistrations-grandfathered.json](docs/benchmarks/preregistrations-grandfathered.json) and keep their rules; CI refuses any name on that list that wasn't in the repository when the list was first committed.
 
 The artifact manifest checks selected hashes and values; it does not verify every sentence in the docs. Review prose claims and links separately.
 
@@ -87,15 +88,15 @@ For a new report:
 
 CI is the one full test run. `.gstack/pregate.json` maps these exact /ship lane commands in `ship_lanes_from`: `bun run test`, `TEST_SHARDS=1 bun run test`, `TEST_SHARDS=2 bun run test`, `bun run test:unit` and `bun run test:py`. Once CI has passed at the branch's exact, clean tree, /ship takes that run as the lane's result (`LANE: <label> carried run=<id>/<attempt>`) instead of running the suite again, and the pregate's tests stage does the same for the test files it selects (`CI_CARRY: accepted`). Both read the record that CI's `tested-tree` job writes with `scripts/ci-tested-tree.ts`, which names the tree the run tested and every test file it ran. On a machine with fewer than 8 cores, such as a Capy cloud machine, the pregate runs no tests locally: `.gstack/pregate.json` declares a `remote_gate` and the CI runs that clear it (`remote_gate_runs`), so the tests stage waits for CI's verified run at the exact tree and clears from it (`CI_CARRY: cleared pregate.json/remote_gate`). The `remote_gate` command itself only says so and fails, because this repository has no other remote test machine.
 
-Pass the full suite to /ship as `--lane test='bun run test'` and push early, so CI runs beside the review. A pull-request run tests GitHub's merge of the branch into main, so it carries only while the branch contains main's tip. Any other lane command, the typecheck included, runs on your machine. The `tested-tree` job fails when a test file under `test/eval/` or `eval/` registers no tests, because Bun's report leaves the file out and no lane could carry; give it at least one test (a skipped one counts).
+Pass the full suite to /ship as `--lane test='bun run test'` and push early, so CI runs beside the review. A pull-request run tests GitHub's merge of the branch into main, so it carries only while the branch contains main's tip. Any other lane command, the typecheck included, runs on your machine. The `tested-tree` job fails when a test file under `test/eval/` or `eval/` registers no tests, because Bun's report leaves the file out and no lane could carry; give it at least one test (a skipped one counts). The record also lists the harness Python tests under `eval/harness-provider/tests/` from the JUnit reports of CI's `harness (pytest)` job (one per pytest group that `bun run harness:test --junit-dir` runs), so a pull request that adds or changes one can carry, and it fails when a tracked `test_*.py` or `*_test.py` file there collects no tests. No lane command runs those files, so no lane's inventory lists them; the pregate requires the ones a change touches.
 
-CI splits the Bun suite into six shard jobs, each with a 15-minute limit, by the per-file times in `test/timings.json`. Bun shards whole files, so one slow file can't be split, and a file the timings don't list counts as a median file. When you add a test file that takes more than a minute, or a shard job nears 10 minutes, refresh the timings from a CI run's `tested-files-*` reports with `bun scripts/test-timings.ts` (its header has the commands).
+CI splits the Bun suite into 24 shards by the per-file times in `test/timings.json` and runs them as six jobs of four concurrent `bun test --shard` processes (`scripts/test-shards.ts --job`), each job with a 15-minute limit. Bun shards whole files, so one slow file can't be split, and a file the timings don't list counts as a median file. When you add a test file that takes more than a minute, or a shard job nears 10 minutes, refresh the timings from a CI run's `tested-files-*` reports with `bun scripts/test-timings.ts` (its header has the commands).
 
 ### Versions and the changelog
 
 A pull request never edits `VERSION`, the `version` in `package.json` or a released section of CHANGELOG.md. It adds its changelog entry as `changelog.d/<branch-slug>.md`: the entry text only, with no `## [x]` heading, opened with `bump: minor` or `bump: major` front matter only when the change warrants more than a patch. [changelog.d/README.md](changelog.d/README.md) has the format, and /ship writes the file in its changelog step. Write a fragment's links from the repository root, as in CHANGELOG.md, because the release copies its text into CHANGELOG.md unchanged and `scripts/check-links.py` checks fragment links from the root. `.gstack/ship-policy.json` sets `merge: direct`, `changelog_fragments`, `bump: patch` and `land.merged_checks`.
 
-Each pull request merges at its own green head. After /ship writes its receipt, run `gstack-ship-queue ready --pr <n> --no-screen` at that head; the merge is then `gstack-ship-queue land --pr <n> --pin <sha> --allow-repo-commands`, which merges that exact commit or nothing. When main has moved past the pull request's merge base, land builds the pin merged onto main's tip in a throwaway worktree and runs the policy's `land.merged_checks` there: `bun run validate` and `bun eval/runner/prereg.ts`, which took 3.4 minutes together in one timed run, and land stops either one at 15 minutes. Run land as a background command or with a timeout of at least 40 minutes, because a land that is killed partway leaves the land lock held, and every other land refuses with `QUEUE_LAND_LOCKED` until the same land command runs again. Land compares the merged tree's `bun.lock` and `package.json` dependencies with those of the checkout it runs from, so run it from a checkout at main's `bun.lock` with `bun install` done. It merges only when both checks pass, so a branch that is behind main doesn't have to merge main and rerun CI before it lands, unless it changes dependencies. It refuses with `QUEUE_LAND_MERGED_CHECKS` when a check fails, `QUEUE_LAND_NOT_CLEAN` on a conflict, or `QUEUE_NOT_READY` when the dependencies differ; then merge main into the branch, fix what the refusal names, and ship and report the new head. The checks are repo commands, so land runs them only with `--allow-repo-commands` and never under `--dry-run`. They don't run the unit suite or the typecheck, so CI, which runs on every push to main, stays the full check of what landed. A results pull request whose counted runs ran from commits on its own branch still merges by hand as a merge commit, so those commits stay in main's history, and it carries a fragment like any other.
+Each pull request merges at its own green head. A GitHub ruleset on main requires one check, CI's `merge-gate` job, which runs after every job the merge waits on and fails unless each one succeeded, so a failed, cancelled or skipped job blocks the merge; it doesn't require the branch to be up to date with main. After /ship writes its receipt, run `gstack-ship-queue ready --pr <n> --no-screen` at that head; the merge is then `gstack-ship-queue land --pr <n> --pin <sha> --allow-repo-commands`, which merges that exact commit or nothing. When main has moved past the pull request's merge base, land builds the pin merged onto main's tip in a throwaway worktree and runs the policy's `land.merged_checks` there: `bun run validate` and `bun eval/runner/prereg.ts`, which took 3.4 minutes together in one timed run, and land stops either one at 15 minutes. Run land as a background command or with a timeout of at least 40 minutes, because a land that is killed partway leaves the land lock held, and every other land refuses with `QUEUE_LAND_LOCKED` until the same land command runs again. Land compares the merged tree's `bun.lock` and `package.json` dependencies with those of the checkout it runs from, so run it from a checkout at main's `bun.lock` with `bun install` done. It merges only when both checks pass, so a branch that is behind main doesn't have to merge main and rerun CI before it lands, unless it changes dependencies. It refuses with `QUEUE_LAND_MERGED_CHECKS` when a check fails, `QUEUE_LAND_NOT_CLEAN` on a conflict, or `QUEUE_NOT_READY` when the dependencies differ; then merge main into the branch, fix what the refusal names, and ship and report the new head. The checks are repo commands, so land runs them only with `--allow-repo-commands` and never under `--dry-run`. They don't run the unit suite or the typecheck, so CI, which runs on every push to main, stays the full check of what landed. A results pull request whose counted runs ran from commits on its own branch still merges by hand as a merge commit, so those commits stay in main's history, and it carries a fragment like any other.
 
 A release follows each merge, and the agent whose pull request just merged cuts it. A release pull request needs no /ship receipt and no `ready` record, because land checks that its head is exactly the release stamp of its merge base.
 
@@ -152,14 +153,13 @@ rule of 2026-11-01 that evals test gbrain and gstack on frontier models.
   lists particle-1 under `models_not_run` with the reason. First paired numbers:
   [particle replay](docs/benchmarks/2026-11-01-longmemeval-particle-replay/REPORT.md).
 - **Always run the newest frontier Opus and GPT.** Today's counted frontier readers are `claude-opus-5-5` and
-  `gpt-6.2-sol`. The runner's code still names `gpt-6.1-sol` (`FRONTIER_READERS` in `eval/runner/systems/baselines.ts`,
-  which the workload sweep's model check requires) and the ledger has no `gpt-6.2-sol` price yet, so the first run on
-  `gpt-6.2-sol` registers its price and moves `FRONTIER_READERS` in its own change. Before a run, check which models
+  `gpt-6.2-sol`, as `FRONTIER_READERS` in `eval/runner/systems/baselines.ts` names them, and the ledger prices both.
+  The workload sweep's model check requires them. Before a run, check which models
   are newest (`bun scripts/model-freshness.ts` reads the providers' model lists, Particle's included) and add any that
   the run doesn't already include. Register a price for a new model in `eval/runner/budget-ledger.ts` so the ledger can
   reserve it.
-- **particle-1 never judges a counted cell.** Counted judges stay protocol-matched (for example `gpt-4o-2024-08-06` for
-  LongMemEval and `gpt-6.1-sol` for Cat 40 Hard). particle-1 becomes the default reader and agent for a development loop
+- **particle-1 never judges a counted cell.** Counted judges stay protocol-matched (for example `gpt-6.1-sol` for Cat 40
+  Hard), within the gpt-4o suspension below. particle-1 becomes the default reader and agent for a development loop
   once it passes that loop's preregistered agreement test; development judges are the ones the dataset's harness fixes,
   else `gpt-6.2-sol`.
 - **Sonnet and Haiku are not models under test (Garry, 2026-11-01).** A comparison run no longer needs them. Never run
@@ -176,8 +176,26 @@ rule of 2026-11-01 that evals test gbrain and gstack on frontier models.
 - **Do not run older generations** (for example Sonnet 4.6 next to Sonnet 5.5, GPT-5.x next to GPT-6.x, Haiku 4.5,
   older Opus). The one exception is a single older model that is the only shared link to the previous eval's
   results. If a model that appears in both runs already gives that link, add no older model. `gpt-4.1-mini` runs
-  only under this exception, as the bridge to earlier BEAM runs.
+  only under this exception, as the bridge to earlier BEAM runs. That bridge retires on OpenAI on 2027-01-14, the same
+  day as LongMemEval's and LoCoMo's official judge `gpt-4o-2024-08-06` (Azure OpenAI serves both until 2027-04-14), so
+  their instruments in `eval/runner/memory-qa/instruments.ts` are marked `historical`: published scores keep the judge
+  that produced them, `judge-repeat` and `judgeAnswer` never fall back to either, and re-scoring a frozen run names its
+  judge with `--judge`. The Q1 cell runners and `run-systems` still pick these judges by name, so after 2027-01-14 they
+  fail at the judge step until they move to a successor. A successor canonical judge needs an agreement check against the old one (100 labelled outputs, kappa at
+  least 0.6) before its numbers count.
 - **Do not run gpt-5.4-mini.** Never base a product change, gate or release decision on a gpt-5.4-mini-only finding.
+- **gpt-4o and gpt-4o-mini are suspended (Garry, 2026-11-21).** A campaign registered on or after 2026-11-21 uses no
+  gpt-4o model, of any snapshot and `gpt-4o-mini` included, in a role we choose: an arm, a reader or agent, a judge, a
+  simulator, an extractor or embedder we configure, a bridge to earlier results or a protocol-fixed comparison. Its
+  registry entry lists every model it runs with its role in `models`
+  ([PREREGISTRATION-TEMPLATE.md](docs/benchmarks/PREREGISTRATION-TEMPLATE.md#registry-entry) has the shape), and
+  `bun eval/runner/prereg.ts` in CI and `attestPreregistration` at launch refuse a suspended model in that list with an
+  error that names this rule. They read the list, not the runner's code, so the list must match the models the runner
+  calls. A compared system's shipped default, such as the extraction model a comparator's server runs out of
+  the box, is tested as shipped: list it with role `system-internal` and the system's name. Campaigns registered before
+  the date keep the models they preregistered, and published rows measured with gpt-4o stay as history. LongMemEval's
+  official judge is `gpt-4o-2024-08-06` and the suspension has no judge exception, so a new LongMemEval campaign that
+  needs the official judge gets a decision before it registers.
 - **Report the models people use first** after the primary models' first table. A reader-matched comparison with a
   published system keeps that system's reader. Note a ceiling (a model at 100% on every arm cannot show a difference)
   rather than counting it as a win or a tie.
@@ -216,3 +234,29 @@ A feature change should have evidence on the behavior it changes. A benchmark th
 Maintain the dated source list in [comparison-systems.md](docs/comparison-systems.md). Prefer published artifacts and primary sources. State when we recomputed another system's score rather than quoting its authors.
 
 When a claim changes, keep the old result identifiable and explain the new evidence. Keep changelog dates, attribution, audit identifiers and unfinished work intact while making their descriptions easier to read.
+
+## Changelog
+
+### 2026-11-22: The BEAM bridge and LongMemEval's judge retire on OpenAI on 2027-01-14
+
+"Choose models" says that `gpt-4.1-mini`, the BEAM bridge, and `gpt-4o-2024-08-06`, LongMemEval's and LoCoMo's
+official judge, retire on OpenAI on 2027-01-14, that their instruments are historical, that `judge-repeat` and
+`judgeAnswer` no longer fall back to them while the Q1 cell runners and `run-systems` still name them, and that a successor canonical judge needs an agreement check first (#352, reported by nabuhadba).
+
+### 2026-11-21: Judge checks need 100 labels, and main requires CI's merge gate
+
+"Plan the eval loop before spending" now asks a plan frozen on or after 2026-11-22 to check each model judge on at
+least 100 labelled outputs; plans frozen earlier keep 40, and kappa stays at 0.6. "Running and publishing work" adds
+the ruleset on main that requires CI's `merge-gate` job.
+
+### 2026-11-21: The runner's frontier GPT reader is gpt-6.2-sol
+
+The ledger-price sentence under "Choose models" now names `gpt-6.2-sol`, the GPT in `FRONTIER_READERS`, in place of
+`gpt-6.1-sol`.
+
+### 2026-11-21: gpt-4o and gpt-4o-mini suspended for new campaigns
+
+"Choose models" adds the suspension: a campaign registered on or after 2026-11-21 lists its models and roles in its
+registry entry, and CI and the launch check refuse gpt-4o and gpt-4o-mini listed there in any role we choose. A compared system's
+shipped default stays as shipped. The particle-1 judge bullet no longer gives `gpt-4o-2024-08-06` as an example of a
+judge that stays, because a new campaign can't use it. Earlier history of this guide is in CHANGELOG.md.

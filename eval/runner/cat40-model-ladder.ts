@@ -11,17 +11,17 @@
  *
  * Models: Anthropic (claude-*), OpenAI (gpt-*, o*) and Particle (particle-1, through
  * eval/runner/providers/openai-compatible.ts with PARTICLE_API_KEY). particle-1
- * runs on v1 worlds only and never judges, and a run with it needs --judge passed
- * explicitly, because the v1 default claims judge is gpt-5.4-mini, which the model
- * rules never run.
+ * runs on v1 worlds only and never judges. A paid v1 run passes its claims judge
+ * explicitly (--judge <model> or --judge none): v1 has no default judge, because
+ * no one judge can grade both Claude and GPT rows without grading its own family.
  *
  * Protocol: docs/benchmarks/2026-10-02-model-ladder-protocol.md.
  *
  * Usage:
- *   bun eval/runner/cat40-model-ladder.ts --models claude-sonnet-4-6,gpt-5.4 \
+ *   bun eval/runner/cat40-model-ladder.ts --models claude-opus-5-5 --judge gpt-6.2-sol \
  *     --arms oracle,fs,pg,memory,gbrain --budget-usd 100 [--families A,B] [--tasks A01,B02] \
  *     [--repeat 1] [--concurrency 6] [--slots 3] [--gbrain-repo ../gbrain --gbrain-ref <sha>] \
- *     [--judge gpt-5.4-mini|none] [--world eval/data/model-ladder-v1-large/world.json] [--out eval/reports/cat40/<name>] \
+ *     [--world eval/data/model-ladder-v1-large/world.json] [--out eval/reports/cat40/<name>] \
  *     [--max-tool-chars <n>|none] [--order task|model] [--slot-ref <sha>] [--no-pglite-analyze] [--surface starter] [--advertised verbs|starter|full] [--gbrain-config key=value,...]
  *     [--gbrain-instructions-file <file>] [--gbrain-tool-descriptions-file <json>] [--gbrain-drop-tools a,b]
  *       (evaluator-side A/B of the instruction and tool-description text the model sees; gbrain code unchanged)
@@ -74,7 +74,7 @@ import { PgArm, PgStore, cachedOpenAIEmbedder } from './cat40/pg-arm.ts';
 import { GbrainArm, instructionsOverride, cellLabel, assertNoGbrainFsCollision, GBRAIN_FS_READ_TOOLS, type CellArm, GbrainPool, GbrainSlot, MeteringProxy, rerankProbe, restoreProbe, parseConfigPairs, BUILD_TIME_CONFIG_KEYS, type RestoreProbeRecord, SERVE_BOOT_TIMEOUT_SECONDS, STAGED_SOURCE_ADD_DOCS, STAGED_SYNC_BATCH, coverageProblem, type Meter, type SlotBuild, type SlotCoverage } from './cat40/gbrain-arm.ts';
 import { scoreTask, judgePrompt, parseClaims, JUDGE_PROMPT_VERSION, type TaskScore, type ClaimVerdicts } from './cat40/score.ts';
 import { budgetOptionsFrom, startPaidRun, receiptCost, type BudgetRun, type PaidRequestGuard } from './budget-ledger.ts';
-import { HARD_FAMILIES, isHardWorld, type HardWorld, type HardTask } from '../generators/hard/schema.ts';
+import { HARD_FAMILIES, HARD_SEEDS, isHardWorld, type HardWorld, type HardTask } from '../generators/hard/schema.ts';
 import { hardWorldDigest } from '../generators/model-ladder-hard.ts';
 import {
   HardStop, hardRefusals, checkHardWorld, identityOf, identityRefusal, requiresFreeze, oracleOversize, runHardCell, runWithRetries, hardTranscripts, codeHashes, settingsDigest,
@@ -558,13 +558,14 @@ export async function main(argv = process.argv.slice(2)) {
   const arms = (buildSlots ? 'gbrain' : flag(argv, '--arms') ?? (scripted ? 'oracle,fs,memory' : 'oracle,fs,pg,memory,gbrain')).split(',') as CellArm[];
   if (!hard && arms.includes('gbrain-fs')) throw new UsageError('gbrain-fs is an exploratory Hard arm: it runs only on the Hard calibration-seed (development) world');
   if (hard && !buildSlots) hardRefusals({ models: scripted ? [] : models, judge: flag(argv, '--judge'), arms, scripted, seed: raw.seed, step: flag(argv, '--step') });
-  // particle-1 never judges, and a run with it never takes model-ladder v1's default claims judge, gpt-5.4-mini, which the model rules never run.
+  // particle-1 never judges, and a paid v1 run names its claims judge: v1 has no default.
   const isParticle = (m: string) => { try { return provider(m) === 'particle'; } catch { return false; } };
   if (!scripted && !buildSlots) {
     const judgeFlag = flag(argv, '--judge');
-    if (judgeFlag && isParticle(judgeFlag)) throw new UsageError(`--judge ${judgeFlag}: particle-1 never judges a cell; pass --judge gpt-6.1-sol`);
-    if (hard && models.some(isParticle)) throw new UsageError('particle-1 does not run on Hard worlds: the Hard campaign keeps its model list (amendment A6), and its freeze does not cover the particle transport (eval/runner/providers); the next Cat 40 preregistration that lists particle-1 adds both');
-    if (!hard && models.some(isParticle) && (judgeFlag ?? 'gpt-5.4-mini') === 'gpt-5.4-mini') throw new UsageError('a run with particle-1 needs its claims judge passed explicitly (--judge gpt-6.1-sol, or --judge none): the v1 default, gpt-5.4-mini, is a model the model rules never run');
+    if (judgeFlag && isParticle(judgeFlag)) throw new UsageError(`--judge ${judgeFlag}: particle-1 never judges a cell; pass --judge gpt-6.2-sol`);
+    if (hard && models.some(isParticle) && !(HARD_SEEDS.newest as readonly number[]).includes(raw.seed)) throw new UsageError('particle-1 does not run on Hard worlds: the Hard campaign keeps its model list (amendment A6), and its freeze does not cover the particle transport (eval/runner/providers); only the newest-build re-measure lists it (docs/benchmarks/2026-11-19-cat40-hard-newest-preregistration.md), on its two worlds (HARD_SEEDS.newest)');
+    if (!hard && judgeFlag && /(^|[:/])gpt-5\.4-mini$/.test(judgeFlag)) throw new UsageError(`--judge ${judgeFlag}: gpt-5.4-mini is never run, so a paid v1 run needs its claims judge passed explicitly as another model (--judge <model>, or --judge none)`);
+    if (!hard && !judgeFlag) throw new UsageError('a paid v1 run needs its claims judge passed explicitly (--judge <model>, from another family than every --models entry, or --judge none): v1 has no default judge');
   }
   const exploratory = arms.includes('gbrain-fs');
   const families = (flag(argv, '--families') ?? (hard ? HARD_FAMILIES : WIDE_FAMILIES).join(',')).split(',') as Family[];
@@ -614,7 +615,7 @@ export async function main(argv = process.argv.slice(2)) {
     }
   }
   mkdirSync(out, { recursive: true });
-  const judge = hard ? (scripted || flag(argv, '--judge') === 'none' ? null : flag(argv, '--judge')!) : scripted || flag(argv, '--judge') === 'none' ? null : (flag(argv, '--judge') ?? 'gpt-5.4-mini');
+  const judge = hard ? (scripted || flag(argv, '--judge') === 'none' ? null : flag(argv, '--judge')!) : scripted || flag(argv, '--judge') === 'none' ? null : flag(argv, '--judge')!;
   const files = (keep: (d: LadderWorld['docs'][number]) => boolean) => new Map(world.docs.filter(keep).map(d => [`${d.id}.md`, renderDoc(d)]));
   const instructionsFile = flag(argv, '--gbrain-instructions-file');
   if (instructionsFile) instructionsOverride.text = readFileSync(resolve(instructionsFile), 'utf8').replace(/\n+$/, '');

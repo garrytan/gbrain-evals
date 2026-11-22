@@ -1,0 +1,315 @@
+{
+ "ext-temporal-graph": {
+  "pages": 69,
+  "window_start": "2026-11-17T23:57:09.759Z",
+  "rows_before_start": 12,
+  "gap_to_prev_row_s": 5.309,
+  "per_page": {
+   "calls": 16.26086956521739,
+   "input": 11768.478260869566,
+   "cached": 57.2463768115942,
+   "cache_write": 9153.985507246376,
+   "output": 616.8985507246376,
+   "seconds_mean": 12.478293780942026,
+   "seconds_wall": 12.49570034736232
+  },
+  "ingest_total": {
+   "calls": 1122,
+   "input": 812025,
+   "cached": 3950,
+   "cache_write": 631625,
+   "output": 42566,
+   "refused": 0,
+   "failed": 0,
+   "by_model": {
+    "gpt-6.2-sol": {
+     "calls": 405,
+     "input": 794423,
+     "cached": 3950,
+     "output": 42566
+    },
+    "text-embedding-3-small": {
+     "calls": 717,
+     "input": 17602,
+     "cached": 0,
+     "output": 0
+    }
+   }
+  },
+  "finish_plus_entities": {
+   "calls": 0,
+   "input": 0,
+   "cached": 0,
+   "cache_write": 0,
+   "output": 0,
+   "refused": 0,
+   "failed": 0,
+   "by_model": {}
+  },
+  "unattributed": {
+   "calls": 0,
+   "input": 0,
+   "cached": 0,
+   "cache_write": 0,
+   "output": 0,
+   "refused": 0,
+   "failed": 0,
+   "by_model": {}
+  },
+  "finish_s": 0.0024919369999552147,
+  "entities_s": 1.1950536229999271,
+  "projection_2800": {
+   "hours_serial": 9.705339607399354
+  },
+  "subjects_unresolved": 2,
+  "sanity": {
+   "auto": {
+    "false_merge": "15/20",
+    "recall": "12/14",
+    "b3_f1": 0.8784109307743949
+   },
+   "auto+proposed": {
+    "false_merge": "15/20",
+    "recall": "12/14",
+    "b3_f1": 0.8784109307743949
+   }
+  },
+  "run_record": "docs/comparison-systems/ext-temporal-graph/entity-h2h-smoke-run.json",
+  "usd_per_page_last_third": 0.038
+ },
+ "ext-extract-first": {
+  "pages": 69,
+  "window_start": "2026-11-18T00:00:27.760Z",
+  "rows_before_start": 6,
+  "gap_to_prev_row_s": 5.243,
+  "per_page": {
+   "calls": 3.9420289855072466,
+   "input": 8712.130434782608,
+   "cached": 7610.898550724638,
+   "cache_write": 959.0144927536232,
+   "output": 89.27536231884058,
+   "seconds_mean": 2.889258358999999,
+   "seconds_wall": 2.889537658768116
+  },
+  "ingest_total": {
+   "calls": 272,
+   "input": 601137,
+   "cached": 525152,
+   "cache_write": 66172,
+   "output": 6160,
+   "refused": 0,
+   "failed": 0,
+   "by_model": {
+    "text-embedding-3-small": {
+     "calls": 203,
+     "input": 9606,
+     "cached": 0,
+     "output": 0
+    },
+    "gpt-6.2-sol": {
+     "calls": 69,
+     "input": 591531,
+     "cached": 525152,
+     "output": 6160
+    }
+   }
+  },
+  "finish_plus_entities": {
+   "calls": 0,
+   "input": 0,
+   "cached": 0,
+   "cache_write": 0,
+   "output": 0,
+   "refused": 0,
+   "failed": 0,
+   "by_model": {}
+  },
+  "unattributed": {
+   "calls": 0,
+   "input": 0,
+   "cached": 0,
+   "cache_write": 0,
+   "output": 0,
+   "refused": 0,
+   "failed": 0,
+   "by_model": {}
+  },
+  "finish_s": 0.0023999970000004394,
+  "entities_s": 0.013719818999990821,
+  "projection_2800": {
+   "hours_serial": 2.247200945888888
+  },
+  "subjects_unresolved": 2,
+  "sanity": {
+   "auto": {
+    "false_merge": "15/20",
+    "recall": "5/14",
+    "b3_f1": 0.8343804976124655
+   },
+   "auto+proposed": {
+    "false_merge": "15/20",
+    "recall": "5/14",
+    "b3_f1": 0.8343804976124655
+   }
+  },
+  "run_record": "docs/comparison-systems/ext-extract-first/entity-h2h-smoke-run.json",
+  "usd_per_page_last_third": 0.0045
+ },
+ "ext-graph-pipeline": {
+  "pages": 69,
+  "window_start": "2026-11-18T00:01:20.636Z",
+  "rows_before_start": 19,
+  "gap_to_prev_row_s": 4.373,
+  "per_page": {
+   "calls": 8.0,
+   "input": 2067.1739130434785,
+   "cached": 31.89855072463768,
+   "cache_write": 1076.159420289855,
+   "output": 488.69565217391306,
+   "seconds_mean": 7.456130953797099,
+   "seconds_wall": 7.501989863289856
+  },
+  "ingest_total": {
+   "calls": 552,
+   "input": 142635,
+   "cached": 2201,
+   "cache_write": 74255,
+   "output": 33720,
+   "refused": 0,
+   "failed": 0,
+   "by_model": {
+    "gpt-6.2-sol": {
+     "calls": 138,
+     "input": 109442,
+     "cached": 2201,
+     "output": 33720
+    },
+    "text-embedding-3-large": {
+     "calls": 414,
+     "input": 33193,
+     "cached": 0,
+     "output": 0
+    }
+   }
+  },
+  "finish_plus_entities": {
+   "calls": 1,
+   "input": 861,
+   "cached": 0,
+   "cache_write": 0,
+   "output": 0,
+   "refused": 0,
+   "failed": 0,
+   "by_model": {
+    "text-embedding-3-large": {
+     "calls": 1,
+     "input": 861,
+     "cached": 0,
+     "output": 0
+    }
+   }
+  },
+  "unattributed": {
+   "calls": 0,
+   "input": 0,
+   "cached": 0,
+   "cache_write": 0,
+   "output": 0,
+   "refused": 0,
+   "failed": 0,
+   "by_model": {}
+  },
+  "finish_s": 3.0395872760000056,
+  "entities_s": 0.121437248000002,
+  "projection_2800": {
+   "hours_serial": 5.7992129640644094
+  },
+  "subjects_unresolved": 0,
+  "sanity": {
+   "auto": {
+    "false_merge": "16/20",
+    "recall": "10/14",
+    "b3_f1": 0.8578252773054814
+   },
+   "auto+proposed": {
+    "false_merge": "16/20",
+    "recall": "10/14",
+    "b3_f1": 0.8578252773054814
+   }
+  },
+  "run_record": "docs/comparison-systems/ext-graph-pipeline/entity-h2h-smoke-run.json",
+  "usd_per_page_last_third": 0.009
+ },
+ "ext-memory-bank": {
+  "pages": 69,
+  "window_start": "2026-11-18T00:04:58.994Z",
+  "rows_before_start": 2,
+  "gap_to_prev_row_s": 10.2,
+  "per_page": {
+   "calls": 1.0,
+   "input": 2979.086956521739,
+   "cached": 2830.1159420289855,
+   "cache_write": 145.97101449275362,
+   "output": 146.65217391304347,
+   "seconds_mean": 3.1468982332753606,
+   "seconds_wall": 3.1579597174782608
+  },
+  "ingest_total": {
+   "calls": 69,
+   "input": 205557,
+   "cached": 195278,
+   "cache_write": 10072,
+   "output": 10119,
+   "refused": 0,
+   "failed": 0,
+   "by_model": {
+    "gpt-6.2-sol": {
+     "calls": 69,
+     "input": 205557,
+     "cached": 195278,
+     "output": 10119
+    }
+   }
+  },
+  "finish_plus_entities": {
+   "calls": 0,
+   "input": 0,
+   "cached": 0,
+   "cache_write": 0,
+   "output": 0,
+   "refused": 0,
+   "failed": 0,
+   "by_model": {}
+  },
+  "unattributed": {
+   "calls": 0,
+   "input": 0,
+   "cached": 0,
+   "cache_write": 0,
+   "output": 0,
+   "refused": 0,
+   "failed": 0,
+   "by_model": {}
+  },
+  "finish_s": 0.022117941999982578,
+  "entities_s": 0.7368775090000127,
+  "projection_2800": {
+   "hours_serial": 2.4475875147697246
+  },
+  "subjects_unresolved": 0,
+  "sanity": {
+   "auto": {
+    "false_merge": "17/20",
+    "recall": "12/14",
+    "b3_f1": 0.8607330683688627
+   },
+   "auto+proposed": {
+    "false_merge": "17/20",
+    "recall": "12/14",
+    "b3_f1": 0.8607330683688627
+   }
+  },
+  "run_record": "docs/comparison-systems/ext-memory-bank/entity-h2h-smoke-run.json",
+  "usd_per_page_last_third": 0.0022
+ }
+}

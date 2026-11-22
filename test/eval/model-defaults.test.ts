@@ -56,10 +56,15 @@ import { FRONTIER_READERS } from '../../eval/runner/systems/baselines.ts';
 import { MODEL_CONFIG as WORKLOAD } from '../../eval/workload-suites/run-config.ts';
 import { MODELS as PREDICTIVE_MODELS } from '../../eval/runner/predictive/run.ts';
 import { MODEL as CONDITIONS_PARAPHRASER } from '../../eval/runner/live-recall/paraphrase-opus.ts';
+import { DEFAULT_PLAIN_MODEL } from '../../eval/runner/plain-baseline.ts';
+import { TIERS as NIGHTLY_TIERS } from '../../eval/runner/nightly/run.ts';
+import { cat40JudgeFor, judgeFor as nightlyQaJudgeFor } from '../../eval/runner/nightly/adapters.ts';
 
 /** `test` holds the models under test: agents, readers, answer, think and extraction models, optimizers and optimization targets. */
 interface Registered { test?: readonly string[]; judge?: readonly string[] }
 const { judge: SKILLOPT_JUDGE, ...SKILLOPT_UNDER_TEST } = SKILLOPT_MODELS;
+
+const NIGHTLY_READERS = [...new Set(Object.values(NIGHTLY_TIERS).flatMap(t => t.readers ?? []))];
 
 const DEFAULTS: Record<string, Registered> = {
   'shared judge (judge.ts)': { judge: [SHARED_JUDGE] },
@@ -108,6 +113,8 @@ const DEFAULTS: Record<string, Registered> = {
   'facts-absorb gate candidate arms': { test: parseArms(FACTS_ABSORB_ARMS).filter(a => a.kind === 'model').map(a => a.model!) },
   'predictive measures G1, G3 and G4 agents': { test: [...PREDICTIVE_MODELS] },
   'conditions-recall paraphrase writer (G2)': { test: [CONDITIONS_PARAPHRASER] },
+  'chronicle-lift and plain-baseline plain model': { test: [DEFAULT_PLAIN_MODEL] },
+  'nightly readers, QA judges and Cat 40 judges': { test: NIGHTLY_READERS, judge: NIGHTLY_READERS.flatMap(r => [nightlyQaJudgeFor(r), cat40JudgeFor(r)]) },
 };
 const models = (r: Registered): string[] => [...(r.test ?? []), ...(r.judge ?? [])];
 

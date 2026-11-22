@@ -86,15 +86,15 @@ describe('Anthropic and OpenAI calls are unchanged', () => {
     const out = await c.chat('openai:gpt-4.1-mini', 'JUDGE', { maxTokens: 1024, replicate: 0, temperature: 0, system: 'SYS', attempt: 1 });
     // Captured from main d8a01dfd (qa-v2 and qa.ts send the first five identically).
     expect(sent).toEqual([
-      'https://api.openai.com/v1/chat/completions {"model":"gpt-4o-2024-08-06","messages":[{"role":"user","content":"READ"}],"n":1,"temperature":0,"max_tokens":1024}',
-      'https://api.openai.com/v1/chat/completions {"model":"gpt-4o-mini","messages":[{"role":"user","content":"JUDGE"}],"n":1,"temperature":0,"max_tokens":10}',
-      'https://api.openai.com/v1/chat/completions {"model":"gpt-6.1-sol","messages":[{"role":"user","content":"READ"}],"n":1,"max_completion_tokens":2000}',
+      'https://api.openai.com/v1/chat/completions {"model":"gpt-4o-2024-08-06","messages":[{"role":"user","content":"READ"}],"temperature":0,"max_tokens":1024}',
+      'https://api.openai.com/v1/chat/completions {"model":"gpt-4o-mini","messages":[{"role":"user","content":"JUDGE"}],"temperature":0,"max_tokens":10}',
+      'https://api.openai.com/v1/chat/completions {"model":"gpt-6.1-sol","messages":[{"role":"user","content":"READ"}],"max_completion_tokens":2000}',
       'https://api.anthropic.com/v1/messages {"model":"claude-sonnet-5-5","max_tokens":1024,"messages":[{"role":"user","content":"READ"}]}',
       'https://api.anthropic.com/v1/messages {"model":"claude-sonnet-4-6","max_tokens":10,"temperature":0,"messages":[{"role":"user","content":"JUDGE"}]}',
-      'https://api.openai.com/v1/chat/completions {"model":"gpt-6.1-sol","messages":[{"role":"system","content":"SYS"},{"role":"user","content":"READ"}],"n":1,"max_completion_tokens":2048,"reasoning_effort":"medium"}',
+      'https://api.openai.com/v1/chat/completions {"model":"gpt-6.1-sol","messages":[{"role":"system","content":"SYS"},{"role":"user","content":"READ"}],"max_completion_tokens":2048,"reasoning_effort":"medium"}',
       'https://api.anthropic.com/v1/messages {"model":"claude-opus-5-5","max_tokens":2000,"messages":[{"role":"user","content":"JUDGE"}]}',
       'https://api.anthropic.com/v1/messages {"model":"claude-opus-5-5","max_tokens":2048,"output_config":{"effort":"low"},"messages":[{"role":"user","content":"READ"}]}',
-      'https://api.openai.com/v1/chat/completions {"model":"gpt-4.1-mini","messages":[{"role":"system","content":"SYS"},{"role":"user","content":"JUDGE"}],"n":1,"temperature":0,"max_tokens":1024}',
+      'https://api.openai.com/v1/chat/completions {"model":"gpt-4.1-mini","messages":[{"role":"system","content":"SYS"},{"role":"user","content":"JUDGE"}],"temperature":0,"max_tokens":1024}',
     ]);
     expect(['sent', 'response_meta', 'compat_attempts'].filter(k => k in out)).toEqual([]);
   });

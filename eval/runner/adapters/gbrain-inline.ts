@@ -33,6 +33,8 @@ import type { HybridSearchMeta, SearchResult } from 'gbrain/types';
 import type { Adapter, AdapterConfig, BrainState, Page, PublicQuery, RankedDoc } from '../types.ts';
 import { pagesInResultOrder } from './page-results.ts';
 import { recordSearchObservation, searchObservation, type SearchObservedStats } from '../retrieval-pins.ts';
+import { openScratchEvalEngine, type EvalEngineKind, type ScratchEvalEngine } from '../eval-engine.ts';
+import { resolveGbrainUnderTest } from '../gbrain-under-test.ts';
 
 export interface GbrainInlineOptions {
   /** Top-K page results returned per query. */
@@ -70,6 +72,15 @@ export interface GbrainInlineOptions {
    * every page to embed.
    */
   embed?: boolean;
+  /**
+   * Storage engine for the brain. Omitted: the in-memory PGLite brain this
+   * adapter always built (unchanged default). Set: the brain opens through
+   * eval-engine.ts's openScratchEvalEngine, the same factory path gbrain uses
+   * (postgres: a fresh scratch database under pgAdminUrl, dropped at
+   * teardown; rust: a temp-dir store created by `gbrain init`). Every other
+   * step (import, extract, hybridSearch) is identical across engines.
+   */
+  engine?: { kind: EvalEngineKind; pgAdminUrl?: string };
 }
 
 interface ProductModules {
@@ -155,6 +166,8 @@ const GC_EVERY_QUERIES = 25;
 
 interface InlineState {
   engine: enginePackage.PGLiteEngine;
+  /** Set when the brain came from openScratchEvalEngine; close() also drops the scratch store. */
+  scratch?: ScratchEvalEngine;
   product: ProductModules;
   resolvedConfig: Record<string, string>;
   observed: InlineObservedStats;
@@ -181,57 +194,74 @@ export class GbrainInlineAdapter implements Adapter {
     });
     if (this.opts.expectStubTransport) assertStubEmbedTransport('init', product.diagnoseEmbedding);
 
-    const engine = new product.PGLiteEngine();
-    await engine.connect({});
-    await engine.initSchema();
-
-    const resolvedConfig: Record<string, string> = {};
-    for (const [key, value] of Object.entries(this.opts.searchConfig ?? {})) {
-      await engine.setConfig(key, value);
-      resolvedConfig[key] = value;
+    let scratch: ScratchEvalEngine | undefined;
+    let engine: enginePackage.PGLiteEngine;
+    if (this.opts.engine) {
+      if (this.opts.productPackage === 'gbrain-cues') throw new Error('[gbrain-inline] engine selection supports the gbrain package or a productRoot overlay, not gbrain-cues');
+      const gut = this.opts.productRoot !== undefined ? { ...resolveGbrainUnderTest(null), root: this.opts.productRoot } : resolveGbrainUnderTest(null);
+      scratch = await openScratchEvalEngine({ gut, kind: this.opts.engine.kind, label: 'gbinline', pgAdminUrl: this.opts.engine.pgAdminUrl });
+      // Typed as PGLiteEngine for the existing call sites; every call below is on the shared BrainEngine interface.
+      engine = scratch.engine as unknown as enginePackage.PGLiteEngine;
+    } else {
+      engine = new product.PGLiteEngine();
+      await engine.connect({});
+      await engine.initSchema();
     }
 
-    const origLog = console.log;
-    const origErr = console.error;
-    console.log = () => {};
-    console.error = () => {};
     try {
-      let imported = 0;
-      for (const p of rawPages) {
-        const fm: string[] = [
-          `---`,
-          `type: ${p.type}`,
-          `title: ${JSON.stringify(p.title)}`,
-          `---`,
-          '',
-          `# ${p.title}`,
-          '',
-          p.compiled_truth,
-        ];
-        if (p.timeline && p.timeline.trim().length > 0) {
-          fm.push('', '## Timeline', '', p.timeline);
+      const resolvedConfig: Record<string, string> = {};
+      for (const [key, value] of Object.entries(this.opts.searchConfig ?? {})) {
+        await engine.setConfig(key, value);
+        resolvedConfig[key] = value;
+      }
+
+      const origLog = console.log;
+      const origErr = console.error;
+      console.log = () => {};
+      console.error = () => {};
+      try {
+        let imported = 0;
+        for (const p of rawPages) {
+          const fm: string[] = [
+            `---`,
+            `type: ${p.type}`,
+            `title: ${JSON.stringify(p.title)}`,
+            `---`,
+            '',
+            `# ${p.title}`,
+            '',
+            p.compiled_truth,
+          ];
+          if (p.timeline && p.timeline.trim().length > 0) {
+            fm.push('', '## Timeline', '', p.timeline);
+          }
+          if (this.opts.embed === false) await product.importFromContent(engine, p.slug, fm.join('\n'), { noEmbed: true });
+          else assertEmbedded(await product.importFromContent(engine, p.slug, fm.join('\n')), p.slug);
+          imported += 1;
+          if (imported % GC_EVERY_PAGES === 0) gcNow();
         }
-        if (this.opts.embed === false) await product.importFromContent(engine, p.slug, fm.join('\n'), { noEmbed: true });
-        else assertEmbedded(await product.importFromContent(engine, p.slug, fm.join('\n')), p.slug);
-        imported += 1;
-        if (imported % GC_EVERY_PAGES === 0) gcNow();
-      }
-      gcNow();
-      if (this.opts.extract !== false) {
-        await product.runExtract(engine, ['links', '--source', 'db']);
-        await product.runExtract(engine, ['timeline', '--source', 'db']);
         gcNow();
+        if (this.opts.extract !== false) {
+          await product.runExtract(engine, ['links', '--source', 'db']);
+          await product.runExtract(engine, ['timeline', '--source', 'db']);
+          gcNow();
+        }
+      } finally {
+        console.log = origLog;
+        console.error = origErr;
       }
-    } finally {
-      console.log = origLog;
-      console.error = origErr;
+      return {
+        engine,
+        ...(scratch ? { scratch } : {}),
+        product,
+        resolvedConfig,
+        observed: { queries: 0, rerank_scored_queries: 0, keyword_arm_confidence_stamped: 0, keyword_arm_confidence_downweighted: 0 },
+      } satisfies InlineState;
+    } catch (err) {
+      // A failed import or extract must not leave a scratch database or store behind.
+      await scratch?.close();
+      throw err;
     }
-    return {
-      engine,
-      product,
-      resolvedConfig,
-      observed: { queries: 0, rerank_scored_queries: 0, keyword_arm_confidence_stamped: 0, keyword_arm_confidence_downweighted: 0 },
-    } satisfies InlineState;
   }
 
   async query(q: PublicQuery, state: BrainState): Promise<RankedDoc[]> {
@@ -276,7 +306,9 @@ export class GbrainInlineAdapter implements Adapter {
   }
 
   async teardown(state: BrainState): Promise<void> {
-    await (state as InlineState).engine.disconnect();
+    const { engine, scratch } = state as InlineState;
+    if (scratch) await scratch.close();
+    else await engine.disconnect();
     // PGlite finalizes its close one microtask after disconnect() resolves;
     // only then is the ~1 GB WebAssembly.Memory unreachable. Yield one
     // event-loop turn, then collect, so the memory is returned BEFORE the

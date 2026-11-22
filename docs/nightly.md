@@ -43,8 +43,8 @@ why.
 Each invocation runs one gbrain ref (`--ref master`, `--ref stable` or a commit) at one tier:
 
 - **nightly** runs the suites that are cheap to repeat every night: `tool-contract-replay`, `concurrent-writers`,
-  `system-smokes`, `refresh-barrier-agents` and `refused-write-agents`. The two agent suites run on `gpt-6.1-sol`.
-- **matrix** runs every suite with both frontier readers, `claude-opus-5-5` and `gpt-6.1-sol`. On matrix nights the
+  `system-smokes`, `refresh-barrier-agents` and `refused-write-agents`. The two agent suites run on `gpt-6.2-sol`.
+- **matrix** runs every suite with both frontier readers, `claude-opus-5-5` and `gpt-6.2-sol`. On matrix nights the
   report also compares master with stable.
 - **smoke** runs every item once, with both readers, on master only. It checks that every path works end to end.
 - **bisect** reruns one suite's firing items on one commit. [`bisect.ts`](../eval/runner/nightly/bisect.ts) drives it
@@ -64,16 +64,19 @@ the commit the night started on, even if the tag has moved since.
 
 ## Readers and k
 
-A reader is the model that answers or acts in a suite. The dev set's readers are `claude-opus-5-5` and `gpt-6.1-sol`;
-the nightly tier uses `gpt-6.1-sol` alone, and keyless suites have no reader.
+A reader is the model that answers or acts in a suite. The matrix and smoke tiers read with `claude-opus-5-5` and
+`gpt-6.2-sol`, the nightly tier uses `gpt-6.2-sol` alone, and keyless suites have no reader. The dev set file still
+names `claude-opus-5-5` and `gpt-6.1-sol`, the readers its items were selected from, and a run with no tier readers
+(a bisect without `--reader`) falls back to them.
 
 k is the number of trials per item. Agent suites run each item 3 times; QA suites, the replay, the trials and the
 smokes run once, and the smoke tier runs everything once. One exception: Cat 40 world M's stable leg runs each item
 once (`stable_trials` in its suite config) while master keeps 3, so master and stable are compared at pass^1 over all
 trials and no strong flip is filed between them. The QA suites are judged across model families, so no judge
-grades its own family: GPT-6 Astra judges every family's answers except OpenAI's, which Claude Opus 5.5 judges. So
+grades its own family: GPT-6.2 Astra judges every family's answers except OpenAI's, which Claude Opus 5.5 judges. So
 claude-opus-5-5 and particle-1 share a judge, and their agreement compares the two readers, not two reader-and-judge
-pairs. QA judgments and provider calls are cached by content, so a resumed night repeats none of them.
+pairs. Cat 40 world M follows the same rule with one cells run per reader: `gpt-6.2-sol` grades the claims of Claude's
+and particle-1's rows, and Claude Opus 5.5 grades `gpt-6.2-sol`'s, so no Sol row is judged by Sol. QA judgments and provider calls are cached by content, so a resumed night repeats none of them.
 
 The QA reader may write up to 8,192 output tokens per answer. The limit is `qa_max_tokens` in each QA suite's config,
 so it is part of the suite digest, and memory-qa's receipt records the limit it sent. 8,192 is what the BEAM rows of
@@ -375,6 +378,12 @@ Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, whic
 [disclosures](disclosures.md).
 
 ## Changelog
+
+### 2026-11-21: The nightly reads with GPT-6.2 Sol, and no Sol row is judged by Sol
+
+The nightly, matrix and smoke tiers read with `gpt-6.2-sol` in place of `gpt-6.1-sol`. GPT-6.2 Astra replaces GPT-6
+Astra as the QA judge of every family but OpenAI's. Cat 40 world M runs one cells run per reader so its Sol rows get
+a Claude Opus 5.5 claims judge instead of Sol. Nights before this change aren't comparable with nights after it.
 
 ### 2026-11-17: `--ref stable` reads gbrain's stable tag when a night starts
 

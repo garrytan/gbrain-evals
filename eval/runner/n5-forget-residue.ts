@@ -61,7 +61,7 @@ import {
   fenceRowTokens, pairKey, scoreN5, sumN5,
   type AuthorityAttempt, type CheckpointObs, type N5Metrics, type N5Score, type RememberOutcome,
 } from './lifecycle/n5-score.ts';
-import { ENGINES, IFACES, SliceCell, asRows, postgresReachable, runMatrix, type Engine, type Iface } from './lifecycle/slice.ts';
+import { ENGINES, IFACES, SliceCell, asRows, postgresReachable, remoteAccessGap, runMatrix, type Engine, type Iface } from './lifecycle/slice.ts';
 import { registryEntry } from '../registry.ts';
 import { evaluatePromotion } from './promotion.ts';
 import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, latencySummary, noModelSpend, receiptPath, scrubMachinePaths, sourceTreeIdentity, writeReceipt, type Receipt } from './receipt.ts';
@@ -158,6 +158,10 @@ export interface N5CellOutcome {
   duration_ms: number;
   fatal?: string;
   void_reason?: string;
+  /** The first remote call the engine refused with access_control (SliceCell.firstAccessRefusal). */
+  remote_access_refused?: string | null;
+  /** Calls the cell made as a remote (non-trusted) caller (SliceCell.remoteCalls). */
+  remote_calls?: number;
   server_version: string;
   decide: SliceCell['decideOff'];
   writes: Array<{ step: string; canary?: string; target?: string; ok: boolean; status?: string; error?: string }>;
@@ -383,6 +387,8 @@ async function runCell(world: N5World, gut: GbrainUnderTest, engine: Engine, ifa
     if (!out.fatal && !out.void_reason) {
       out.score = scoreN5({ ledger, observable: () => true, checkpoints, corrected, repeats, concurrent: out.concurrent_writes, authority: out.authority, private_canary_leaks: out.private_canary_leaks });
     }
+    out.remote_access_refused = cell.firstAccessRefusal();
+    out.remote_calls = cell.remoteCalls();
     out.duration_ms = Date.now() - t0;
   }
   return out;
@@ -484,7 +490,9 @@ async function main(): Promise<void> {
   });
 
   const gateLabel = evalKind ?? 'PGLite';
-  const pglite = result.cells.filter(c => c.engine === (evalKind ?? 'pglite'));
+  const accessGaps = result.cells.flatMap(c => { const reason = remoteAccessGap(c); return reason ? [{ id: c.id, check: `N5 ${c.interface} cell`, reason }] : []; });
+  const gapIds = new Set(accessGaps.map(g => g.id));
+  const pglite = result.cells.filter(c => c.engine === (evalKind ?? 'pglite') && !gapIds.has(c.id));
   const pgliteCells = result.cells.filter(c => c.engine === 'pglite');
   const postgres = result.cells.filter(c => c.engine === 'postgres');
   const metrics = aggregateN5(pglite);
@@ -504,7 +512,7 @@ async function main(): Promise<void> {
     reinstatement_rate: { value: metrics.reinstatement_rate, threshold: 1, pass: metrics.reinstatement_rate === 1 },
   };
   const verdict = Object.values(safety).every(Boolean) ? 'pass' : 'fail';
-  const harnessErrors = result.cells.filter(c => c.fatal || c.void_reason).map(c => ({ probe_id: c.id, origin: 'harness' as const, message: (c.void_reason ?? c.fatal ?? '').slice(0, 500) }));
+  const harnessErrors = result.cells.filter(c => (c.fatal || c.void_reason) && !gapIds.has(c.id)).map(c => ({ probe_id: c.id, origin: 'harness' as const, message: (c.void_reason ?? c.fatal ?? '').slice(0, 500) }));
   const nPairs = pglite.reduce((n, c) => n + Object.values(c.checkpoints).reduce((m, cp) => m + Object.keys(cp ?? {}).length, 0), 0);
   const sumBy = (cells: readonly N5CellOutcome[], key: 'by_tier' | 'by_checkpoint') => {
     const outAgg: Record<string, Record<string, number>> = {};
@@ -585,7 +593,7 @@ async function main(): Promise<void> {
       leak_evidence: result.cells.flatMap(c => c.leak_evidence.map(e => ({ cell: c.id, ...e }))).slice(0, 20),
       cells: result.cells.map(c => ({ ...c, calls: { primary: c.calls.primary, trusted: c.calls.trusted, extra: c.calls.extra } })),
     },
-    ...evalEngineReceiptFields(evalKind),
+    ...evalEngineReceiptFields(evalKind, accessGaps.map(g => ({ status: 'not_applicable' as const, engine: 'rust' as const, check: g.check, reason: g.reason }))),
   };
   writeReceipt(outPath, scrubMachinePaths(receipt));
   const outcome = evaluatePromotion(entry.promotion!, receipt);

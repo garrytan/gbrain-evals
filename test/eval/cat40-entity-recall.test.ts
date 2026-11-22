@@ -114,7 +114,7 @@ describe('slot coverage preflight (E-T7)', () => {
     writeFileSync(join(dir, 'slot0.coverage.json'), JSON.stringify({ supported: true, state: 'complete', pending: 0, last_pass_at: null }));
     writeFileSync(join(dir, 'slot1.coverage.json'), JSON.stringify({ supported: true, state: 'pending', pending: 40, last_pass_at: null }));
     expect(incompleteSlotCoverage(dir, 2)).toEqual({ problems: ['slot1: mention coverage pending with 40 pending pages'], unchecked: 0 });
-    const argv = ['--models', 'gpt-5.4', '--arms', 'gbrain', '--tasks', 'A01', '--gbrain-repo', repo, '--gbrain-root', root, '--out', out, '--slots', '2', '--budget-usd', '1', '--budget-ledger', ledger];
+    const argv = ['--models', 'gpt-5.4', '--judge', 'claude-opus-5-5', '--arms', 'gbrain', '--tasks', 'A01', '--gbrain-repo', repo, '--gbrain-root', root, '--out', out, '--slots', '2', '--budget-usd', '1', '--budget-ledger', ledger];
     await expect(main(argv)).rejects.toThrow(/unfinished mention pass \(slot1: mention coverage pending with 40 pending pages\).*--build-slots --rebuild/);
     expect(readLedger(ledger).runs).toHaveLength(0);
     expect(existsSync(join(out, 'experiment.json'))).toBe(false);

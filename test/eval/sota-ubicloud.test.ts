@@ -194,7 +194,7 @@ describe('vm-run.sh, on this machine with no keys and no dataset', () => {
     const home = join(dir, 'vm-rehearse');
     const r = vmRun(home, 'rehearse');
     expect(r.status).toBe(0);
-    expect(r.stdout).toContain('lme-s whole-history openai:gpt-6.1-sol: 50 items, 0 fresh, 50 unknown, 0 stale');
+    expect(r.stdout).toContain('lme-s whole-history openai:gpt-6.2-sol: 50 items, 0 fresh, 50 unknown, 0 stale');
     expect(r.stdout).toContain('sota-leader-lme.baseline-full-context.baseline: baseline-full-context (baseline) on SOTA-leader-lme');
     expect(existsSync(join(home, 'work/rehearse/ledger.sqlite'))).toBe(false);
   }, 60_000);

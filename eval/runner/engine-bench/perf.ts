@@ -1144,8 +1144,8 @@ export async function orchestrate(opts: Options, argv: string[]) {
     if (load > 2) throw new Error(`load average ${load.toFixed(2)} is above 2 at launch; a counted run needs the machine to itself`);
   }
   if (opts.engines.includes('rust')) {
-    const { rustEngineInBuild } = await import('../eval-engine.ts');
-    if (!rustEngineInBuild(gut)) throw new EvalEngineUnavailable('rust', 'rust_engine_not_in_build', `gbrain ${gut.version} has no Rust engine, so the rust arm cannot run. Drop rust from --engines for a TypeScript-only dry run, or point --gbrain at a build that carries it.`);
+    const { preflightEvalEngine } = await import('../eval-engine.ts');
+    await preflightEvalEngine(gut, 'rust');
   }
   mkdirSync(REPORT_DIR, { recursive: true });
   const workDir = mkdtempSync(join(REPORT_DIR, '.work-'));

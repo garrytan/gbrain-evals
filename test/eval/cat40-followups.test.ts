@@ -134,7 +134,7 @@ describe('slot builds and preflight (E-4)', () => {
     execFileSync('git', ['-C', repo, '-c', 'user.name=t', '-c', 'user.email=t@example.invalid', 'commit', '-q', '--allow-empty', '-m', 'x']);
     const root = tmp(), out = tmp(), ledger = join(tmp(), 'l.sqlite');
     initLedger({ ledgerPath: ledger, programCapUsd: 237 });
-    const argv = ['--models', 'gpt-5.4', '--arms', 'gbrain', '--tasks', 'A01', '--gbrain-repo', repo, '--gbrain-root', root, '--out', out, '--slots', '2', '--budget-usd', '1', '--budget-ledger', ledger];
+    const argv = ['--models', 'gpt-5.4', '--judge', 'claude-opus-5-5', '--arms', 'gbrain', '--tasks', 'A01', '--gbrain-repo', repo, '--gbrain-root', root, '--out', out, '--slots', '2', '--budget-usd', '1', '--budget-ledger', ledger];
     await expect(main(argv)).rejects.toThrow(/slot snapshots are missing .*2 of 2.*--build-slots --gbrain-repo .* --slots 2 .*--slot-build-allowance-usd 2/);
     expect(readLedger(ledger).runs).toHaveLength(0);
     expect(existsSync(join(out, 'experiment.json'))).toBe(false);
@@ -154,7 +154,7 @@ describe('slot builds and preflight (E-4)', () => {
     expect(f5).toMatch(/-bc[0-9a-f]{8}$/);
     expect(slotRoot(root, commit, world, true, { buildConfig: [] })).toBe(plain);
     expect(slotRoot(root, commit, world, true, { buildConfig: [['mentions.owner_phrases', 'true']], keyless: true })).toBe(`${f5}-keyless`);
-    const base = ['--arms', 'gbrain', '--tasks', 'A01', '--out', tmp(), '--gbrain-repo', tmp()];
+    const base = ['--judge', 'claude-opus-5-5', '--arms', 'gbrain', '--tasks', 'A01', '--out', tmp(), '--gbrain-repo', tmp()];
     await expect(main(['--models', 'gpt-5.4', ...base, '--gbrain-config', 'mentions.owner_phrases=true', '--budget-usd', '1'])).rejects.toThrow('pass it in --gbrain-build-config');
     await expect(main(['--models', 'gpt-5.4', ...base, '--keyless-slots', '--budget-usd', '1'])).rejects.toThrow('--keyless-slots builds keyword-only slots');
   });

@@ -233,7 +233,7 @@ export class PlainHybridSystem implements MemorySystem {
  * 2026-10-07): it never reads a counted cell, practice round or held-out run, so it is not in this list. Its window
  * stays in READER_WINDOWS for labeled smoke cells.
  */
-export const FRONTIER_READERS = ['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol'] as const;
+export const FRONTIER_READERS = ['anthropic:claude-opus-5-5', 'openai:gpt-6.2-sol'] as const;
 /** Readers allowed only in a labeled smoke cell, never in a counted one. */
 export const SMOKE_ONLY_READERS = ['anthropic:claude-fable-5-1'] as const;
 
@@ -248,17 +248,13 @@ export interface ReaderWindow {
 
 const PARTICLE_1 = COMPAT_PROVIDERS.particle.models['particle-1'];
 
-/**
- * Every reader's context window, in one place. Checked 2026-10-06 on the providers' model pages; particle-1 from its row
- * in COMPAT_PROVIDERS. gpt-6.2-sol, BG1-C's live GPT reader, uses gpt-6.1-sol's figures until BG1-C's launch amendment B
- * reprices it and checks its own model page; no BG1-C arm reads a whole history, so no fit check depends on them yet.
- */
+/** Every reader's context window, in one place. Checked 2026-10-06 on the providers' model pages; particle-1 from its row in COMPAT_PROVIDERS. */
 export const READER_WINDOWS: Readonly<Record<string, ReaderWindow>> = {
   'anthropic:claude-opus-5-5': { context_window: 1_000_000, max_input_tokens: 1_000_000, max_output_tokens: 128_000, source: 'platform.claude.com/docs/en/models/overview, 2026-10-06' },
   'anthropic:claude-sonnet-5-5': { context_window: 1_000_000, max_input_tokens: 1_000_000, max_output_tokens: 128_000, source: 'platform.claude.com/docs/en/models/overview, 2026-10-06' },
   'anthropic:claude-fable-5-1': { context_window: 1_000_000, max_input_tokens: 1_000_000, max_output_tokens: 128_000, source: 'platform.claude.com/docs/en/models/overview, 2026-10-06' },
+  'openai:gpt-6.2-sol': { context_window: 1_050_000, max_input_tokens: 922_000, max_output_tokens: 128_000, source: 'developers.openai.com/api/docs/models/gpt-6.2-sol, 2026-11-21' },
   'openai:gpt-6.1-sol': { context_window: 1_050_000, max_input_tokens: 922_000, max_output_tokens: 128_000, source: 'developers.openai.com/api/docs/models/gpt-6.1-sol, 2026-10-06' },
-  'openai:gpt-6.2-sol': { context_window: 1_050_000, max_input_tokens: 922_000, max_output_tokens: 128_000, source: 'gpt-6.1-sol\'s figures (developers.openai.com/api/docs/models/gpt-6.1-sol, 2026-10-06) until BG1-C\'s launch amendment B' },
   'particle:particle-1': { context_window: PARTICLE_1.context_tokens, max_input_tokens: PARTICLE_1.context_tokens, max_output_tokens: PARTICLE_1.output_ceiling, source: COMPAT_PROVIDERS.particle.source },
 };
 

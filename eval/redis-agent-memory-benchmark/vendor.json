@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "upstream": {
+    "repo": "https://github.com/redis/agent-memory-server",
+    "commit": "843d2078830f7297882316efb1aae0fb7ae1481f",
+    "path": "agent-memory-benchmark",
+    "license": "Apache-2.0"
+  },
+  "reference": {
+    "repo": "https://github.com/redis/redis-ai-research-public",
+    "commit": "7dbb607e1d6a439b14b7d35a45624e82a54e0a8f",
+    "license": "MIT",
+    "files": [
+      {
+        "path": "../../docs/comparison-systems/redis-longmemeval-results.json",
+        "upstream_path": "docs/longmemeval-agent-memory/data/results.json",
+        "upstream_blob": "3ed62ab6f9b2f18e72a347ba0026ea82d23cf664",
+        "changed": false,
+        "header": false
+      },
+      {
+        "path": "../../docs/comparison-systems/LICENSE-redis-ai-research-public",
+        "upstream_path": "LICENSE",
+        "upstream_blob": "89d3cc899c4665b38fc79cc809ed4be4978a3a30",
+        "changed": false,
+        "header": false
+      }
+    ]
+  },
+  "not_vendored": [
+    {
+      "upstream_path": "agent-memory-benchmark/tests",
+      "reason": "CI runs no Python tests outside test/, so a copy here would go untested. Run them from upstream at 843d2078830f7297882316efb1aae0fb7ae1481f. On 2026-11-19, before they were dropped from this copy, all 37 tests in the four keyless test files we had copied (with the one test that imports the removed provider adapters taken out) passed with no keys against these sources."
+    }
+  ],
+  "files": [
+    {
+      "path": "LICENSE",
+      "upstream_path": "agent-memory-benchmark/LICENSE",
+      "upstream_blob": "36716a6f20ae7b041809bb70a2365c99f80c3b99",
+      "changed": false,
+      "header": false
+    },
+    {
+      "path": "pyproject.toml",
+      "upstream_path": "agent-memory-benchmark/pyproject.toml",
+      "upstream_blob": "3c063303f03bcb8a01e73987490d363fc0ed2437",
+      "changed": true,
+      "local_sha256": "4a05c9f927bb0795a22e5b48563f3238bca811a57b9351cfb347ddc9d4a0da75"
+    },
+    {
+      "path": "src/agent_memory_benchmark/__init__.py",
+      "upstream_path": "agent-memory-benchmark/src/agent_memory_benchmark/__init__.py",
+      "upstream_blob": "2c8fdc372a6c1b3a71127e73db95c65eaf7ecfef",
+      "changed": false
+    },
+    {
+      "path": "src/agent_memory_benchmark/__main__.py",
+      "upstream_path": "agent-memory-benchmark/src/agent_memory_benchmark/__main__.py",
+      "upstream_blob": "d4e82d568e7a7238d1dadf20337e9f03e31fb103",
+      "changed": false
+    },
+    {
+      "path": "src/agent_memory_benchmark/cli.py",
+      "upstream_path": "agent-memory-benchmark/src/agent_memory_benchmark/cli.py",
+      "upstream_blob": "ba2470fc0255c00952fa3b41d39265b8efa3b1eb",
+      "changed": true,
+      "local_sha256": "c55aeeeaaff36eea5b16cd9dff6cd2991eab995c42da55b2accb01938b225b5f"
+    },
+    {
+      "path": "src/agent_memory_benchmark/benchmark/__init__.py",
+      "upstream_path": "agent-memory-benchmark/src/agent_memory_benchmark/benchmark/__init__.py",
+      "upstream_blob": "426799c314a28887c29e90e50be23be67e8ff4eb",
+      "changed": false
+    },
+    {
+      "path": "src/agent_memory_benchmark/benchmark/judge.py",
+      "upstream_path": "agent-memory-benchmark/src/agent_memory_benchmark/benchmark/judge.py",
+      "upstream_blob": "8ce7e8b77cf1bcaa6cab8687f0ef1a640581aeb9",
+      "changed": false
+    },
+    {
+      "path": "src/agent_memory_benchmark/benchmark/models.py",
+      "upstream_path": "agent-memory-benchmark/src/agent_memory_benchmark/benchmark/models.py",
+      "upstream_blob": "18c7d2d8ac4f6d8aa91130394f8a23ffc84ad82d",
+      "changed": false
+    },
+    {
+      "path": "src/agent_memory_benchmark/benchmark/runner.py",
+      "upstream_path": "agent-memory-benchmark/src/agent_memory_benchmark/benchmark/runner.py",
+      "upstream_blob": "c4589ef6e2a414d5c00e4e67598e3bb48dde71ce",
+      "changed": true,
+      "local_sha256": "a27ece001dbf96538d2d2041069a0d39a809b979fa2f8cf7ec53e5f5d1a02f0a"
+    },
+    {
+      "path": "src/agent_memory_benchmark/datasets/__init__.py",
+      "upstream_path": "agent-memory-benchmark/src/agent_memory_benchmark/datasets/__init__.py",
+      "upstream_blob": "6a81d6b2773a3e00ea0ed54d03375fbda1d42e17",
+      "changed": false
+    },
+    {
+      "path": "src/agent_memory_benchmark/datasets/base.py",
+      "upstream_path": "agent-memory-benchmark/src/agent_memory_benchmark/datasets/base.py",
+      "upstream_blob": "647237028576c3e49032208ef16aed117b58c3cd",
+      "changed": false
+    },
+    {
+      "path": "src/agent_memory_benchmark/datasets/longmemeval.py",
+      "upstream_path": "agent-memory-benchmark/src/agent_memory_benchmark/datasets/longmemeval.py",
+      "upstream_blob": "3edefe03829d210a8acaca6b15e971bd2568f283",
+      "changed": true,
+      "local_sha256": "1848713cfc0ea5b1094a4bce2d8d57d90ceb430e522530f8b710d10da0719694"
+    },
+    {
+      "path": "src/agent_memory_benchmark/datasets/models.py",
+      "upstream_path": "agent-memory-benchmark/src/agent_memory_benchmark/datasets/models.py",
+      "upstream_blob": "e28b6d15b48773286c09a93f9b52d7cde0a4831d",
+      "changed": false
+    },
+    {
+      "path": "src/agent_memory_benchmark/memory/__init__.py",
+      "upstream_path": "agent-memory-benchmark/src/agent_memory_benchmark/memory/__init__.py",
+      "upstream_blob": "965952625b6f68e3a275df4ef5a89573d931ce15",
+      "changed": true,
+      "local_sha256": "7c3e98a41794a17be8d632a61f08c5b11e92ea8731c18d01601dad863e4bd0d0"
+    },
+    {
+      "path": "src/agent_memory_benchmark/memory/base.py",
+      "upstream_path": "agent-memory-benchmark/src/agent_memory_benchmark/memory/base.py",
+      "upstream_blob": "bc487167b9ec09901b817a46717565df08529880",
+      "changed": false
+    },
+    {
+      "path": "src/agent_memory_benchmark/memory/common.py",
+      "upstream_path": "agent-memory-benchmark/src/agent_memory_benchmark/memory/common.py",
+      "upstream_blob": "501baed5b3b9b189e33f503be58210edb4114930",
+      "changed": false
+    },
+    {
+      "path": "src/agent_memory_benchmark/memory/llm.py",
+      "upstream_path": "agent-memory-benchmark/src/agent_memory_benchmark/memory/llm.py",
+      "upstream_blob": "4d8bba2298cfc75a0909a4a7858bb90bac5d39f5",
+      "changed": false
+    },
+    {
+      "path": "src/agent_memory_benchmark/prompts/__init__.py",
+      "upstream_path": "agent-memory-benchmark/src/agent_memory_benchmark/prompts/__init__.py",
+      "upstream_blob": "90b246764a7b6f99b462b2f75e3099bc5a5d8d1e",
+      "changed": false
+    },
+    {
+      "path": "src/agent_memory_benchmark/prompts/judge.py",
+      "upstream_path": "agent-memory-benchmark/src/agent_memory_benchmark/prompts/judge.py",
+      "upstream_blob": "8a898ebb38065ae899d4b36622d2796772e5d7e2",
+      "changed": false
+    }
+  ]
+}

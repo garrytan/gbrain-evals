@@ -1,5 +1,7 @@
 # gbrain against pasting the whole history: within 7 points on LongMemEval, at about one seventh of the reader cost with one question per history
 
+*Note added 2026-11-21:* the headline counts on this page use the official judge, `gpt-4o-2024-08-06`; the `gpt-6.1-sol` judge column is report-only. New runs no longer use gpt-4o or gpt-4o-mini in any role (suspended 2026-11-21), so these numbers stand as measured but aren't directly comparable with a run graded by a current frontier judge.
+
 *Note added 2026-11-04, after publication:* gbrain is Garry Tan's own project. Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator. See [disclosures](../disclosures.md).
 
 *Note added 2026-11-10:* Each of these 150 questions comes with its own history, and each history was read once, so every whole-history cost on this page is the cost of one full read of a history. No read could reuse a prompt cache: all 150 `gpt-6.1-sol` whole-history reads were cache writes with no cache reads. "About one seventh of the reader cost" holds when each history is asked one question. A history that answers several questions can stay in a prompt cache, and later questions then pay the cached-input rate for it. This experiment did not measure that, so with several questions per history the whole history would cost less per question than shown here, and gbrain's cost advantage would be smaller. Accuracy figures and verdicts are unchanged. See [corrections](../corrections.md#full-context-reads-and-openais-prompt-cache).
@@ -108,6 +110,11 @@ done
 ```
 
 ## Changelog
+
+### 2026-11-21: The headline judge is named under the title
+
+A note under the title says the headline counts use the official `gpt-4o-2024-08-06` judge, which new runs no longer
+use.
 
 ### 2026-11-10: The cost comparison is for one question per history
 

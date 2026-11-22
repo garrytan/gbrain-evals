@@ -41,7 +41,12 @@
  * and the false-merge rate per family, with each false merge attributed to
  * the groups that joined it.
  *
- * Usage: bun eval/runner/person-dedupe.ts [--seed N] [--per-family N] [--generator-version N] [--output DIR]
+ * Opt-in, dev seed only: --company-autolink adds the company auto-link table from eval/runner/company-autolink.ts,
+ * which scores key-based company auto-link rules (the contract emulator's company tier, people unchanged) on this
+ * company world plus the development V families in eval/generators/company-dedupe-v-gen.ts (renames, moves, rejected
+ * pairs, a shared LinkedIn page, a subsidiary on its parent's root domain). Without the flag nothing below changes.
+ *
+ * Usage: bun eval/runner/person-dedupe.ts [--seed N] [--per-family N] [--generator-version N] [--output DIR] [--company-autolink]
  *          [--write-world DIR] [--finder-json FILE --finder-build LABEL --finder-imports FILE] [--json]
  */
 import { createHash } from 'node:crypto';
@@ -638,6 +643,12 @@ async function main(): Promise<void> {
   if (finderFile && !finderBuild) throw new Error('person-dedupe: --finder-json needs --finder-build <tag or sha>');
   const importsFile = argValue(argv, '--finder-imports');
   if (finderFile && !importsFile) throw new Error('person-dedupe: --finder-json needs --finder-imports <file of gbrain import --json summaries, one per line>');
+  const companyAutolink = argv.includes('--company-autolink');
+  if (companyAutolink && (seed !== PERSON_DEDUPE_DEFAULT_SEED || generatorVersion !== PERSON_DEDUPE_GENERATOR_VERSION)) {
+    throw new Error(`person-dedupe: --company-autolink runs only on the dev seed ${PERSON_DEDUPE_DEFAULT_SEED} at generator version ${PERSON_DEDUPE_GENERATOR_VERSION}, not seed ${seed} at version ${generatorVersion}`);
+  }
+  const vGen = companyAutolink ? await import('../generators/company-dedupe-v-gen.ts') : null;
+  const vWorld = vGen?.generateCompanyVWorld(seed, perFamily) ?? null;
   const startedAt = new Date().toISOString();
 
   const ledger = generateLedger(seed, perFamily, generatorVersion);
@@ -673,6 +684,16 @@ async function main(): Promise<void> {
     for (const a of arms) { const s = of(a).score; log(`| ${a.id} | ${pct(s.false_merge)} | ${pct(s.designed_recall)} | ${pct(s.precision)} | ${pct(s.recall)} | ${s.b3.f1.toFixed(3)} | ${s.false_merges_anywhere} |`); }
   }
   log(`\nVerdict (${headline.id}): ${headline.verdict.pass ? 'pass' : 'fail'}${headline.verdict.shortfalls.map(s => `\n  ${s}`).join('')}`);
+  let autolink: Record<string, unknown> | null = null;
+  if (vGen && vWorld) {
+    const { COMPANY_V_FAMILIES, COMPANY_V_GENERATOR_VERSION } = vGen;
+    const { COMPANY_AUTOLINK_ARMS, formatCompanyAutoLink, runCompanyAutoLink } = await import('./company-autolink.ts');
+    const results = runCompanyAutoLink(vWorld);
+    log('\n## Company auto-link rules (dev seed, company pages only; a stand-in for the finder, not gbrain)\n');
+    log(`${vWorld.pages.length} company pages and ${vWorld.pairs.length} designed company pairs, with the V families; ${vWorld.rejections.length} rejected pairs. Base counts cover the families above; per-family counts use rejection memory keyed on the stable page id.\n`);
+    for (const line of formatCompanyAutoLink(results)) log(line);
+    autolink = { generator_version: COMPANY_V_GENERATOR_VERSION, families: COMPANY_V_FAMILIES, arms: COMPANY_AUTOLINK_ARMS, pages: vWorld.pages.length, pairs: vWorld.pairs.length, rejections: vWorld.rejections.length, results };
+  }
 
   writeReceipt(receiptFile, {
     ...noModelSpend('hermetic: generated Markdown and deterministic matchers, no model call'),
@@ -694,6 +715,7 @@ async function main(): Promise<void> {
       seed, per_family: perFamily, generator_version: ledger.generator_version, ledger_sha256: fingerprint,
       company_generator_version: companies.generator_version, company_stream_seed: companies.stream_seed, company_ledger_sha256: companyFingerprint,
       sources: ledger.sources, finder_build: finderBuild ?? null, finder_contract_schema: 1, identity_keys: { person: [DECLARED_PERSON_ID_FIELD] }, targets: TARGETS, closure: 'transitive', selections: Object.keys(SELECTIONS), scopes: ['person', 'company', 'all'],
+      ...(autolink ? { company_autolink: { generator_version: autolink.generator_version } } : {}),
     },
     hashes: { ledger: fingerprint, company_ledger: companyFingerprint },
     finished_at: new Date().toISOString(),
@@ -707,6 +729,7 @@ async function main(): Promise<void> {
       company_families: COMPANY_FAMILIES,
       ledger: { seed, per_family: perFamily, generator_version: ledger.generator_version, sha256: fingerprint, pages: ledger.pages.length, pairs: ledger.pairs.length, regenerate: 'generateLedger(seed, per_family, generator_version) in eval/generators/person-dedupe-gen.ts; --write-world writes the pages' },
       company_ledger: { seed, stream_seed: companies.stream_seed, per_family: perFamily, generator_version: companies.generator_version, sha256: companyFingerprint, pages: companies.pages.length, founder_pages: founders.length, pairs: companies.pairs.length, regenerate: 'generateCompanyLedger(seed, per_family, generator_version) in eval/generators/company-dedupe-gen.ts; --write-world writes the pages' },
+      ...(autolink ? { company_autolink: autolink } : {}),
     },
   } satisfies Receipt);
   log(`\nReceipt: ${receiptFile}`);

@@ -104,7 +104,8 @@ usage blocks) for keyless tests, the mode smoke and the quickstart fixture.
 | `run <spec\|id>` | yes | Refuses when stage receipts exist; opens a ledger run for the cell's remaining budget, starts the proxy, runs `python -m mpw.cell run` |
 | `resume <id>` | yes | Recomputes the id and refuses on any change (names the fields); continues missing receipts only |
 | `tune <id> --grid <json>` | retrieval only | `python -m mpw.tune` on the ingested store: delivered tokens per knob setting, no answer or judge call |
-| `rejudge <id> <id>` | judge only | `python -m mpw.rejudge` through the proxy with the dataset's own judge |
+| `rejudge <id> <id>` | judge only | `python -m mpw.rejudge` through the proxy with the dataset's own judge. Calls a provider only with `--paid --budget-run-id <id>`, joining that open ledger run, whose remaining budget is the cap; otherwise it needs `--stub-upstream` |
+| `reanswer <id>` | answer only | `python -m mpw.reanswer`: another answer sample from the recorded (or `--retrievals` replayed) retrievals. `--append-line <text> --line-ids <file>` adds one line to the listed questions' context and checks each prompt against the recorded one before it is sent. Same spend rule as `rejudge` |
 | `cli -- <args>` | no | The harness's own CLI with the providers registered (keyless) |
 
 `--stub-upstream` routes every provider to `eval/runner/stub-upstream.ts` against a throwaway ledger inside the cell.

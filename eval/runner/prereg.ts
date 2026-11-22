@@ -16,10 +16,20 @@
  * Commit order alone can't prove a preregistration was written first; the
  * runtime attestation against `origin` is what does. CI needs full history
  * (`fetch-depth: 0`).
+ *
+ * `attestPreregistration` also refuses a run whose registry entry, registered on or after the gpt-4o suspension,
+ * names a suspended model (`checkModels` in `prereg-practices.ts`), and a run whose preregistration was first committed
+ * on or after that date with no registry entry at all.
+ *
+ * The same CI step runs `checkPractices` and `checkGrandfatheredFrozen`
+ * (`prereg-practices.ts`), which refuse a new registry entry that lacks the
+ * eval-loop practice fields and a grandfather list that names a new plan.
  */
 import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, relative, resolve } from 'node:path';
+import { SUSPENDED_SINCE } from './model-defaults.ts';
+import { checkGrandfatheredFrozen, checkModels, checkPractices, loadGrandfathered, type PracticeEntry } from './prereg-practices.ts';
 
 export interface Attestation {
   preregistration: string;
@@ -64,6 +74,20 @@ export function attestPreregistration(path: string, cwd = process.cwd(), now = n
   const remotes = git(cwd, ['branch', '-r', '--contains', commit]);
   if (!remotes.split('\n').some(line => line.trim().startsWith('origin/'))) {
     throw new Error(`preregistration commit ${commit.slice(0, 12)} is not on origin; run \`git push\` before running`);
+  }
+  if (existsSync(join(cwd, 'docs/benchmarks/preregistrations.json'))) {
+    const repoPath = (p: string) => relative(cwd, resolve(cwd, p));
+    const target = repoPath(path).replace(/-addenda\.md$/i, '.md');
+    const entry = loadManifest(cwd).find(e => repoPath(e.preregistration) === target) as PracticeEntry | undefined;
+    if (!entry) {
+      const added = firstAddCommit(cwd, existsSync(join(cwd, target)) ? target : path);
+      const date = added ? git(cwd, ['log', '-n', '1', '--format=%cs', added]) : null;
+      if (date && date >= SUSPENDED_SINCE) {
+        throw new Error(`preregistration ${path}, first committed ${date}, has no registry entry; a campaign dated on or after ${SUSPENDED_SINCE} lists its models in docs/benchmarks/preregistrations.d/ before it runs (CLAUDE.md "Choose models")`);
+      }
+    }
+    const problems = entry ? checkModels(entry) : [];
+    if (problems.length > 0) throw new Error(`registry entry ${entry!.id} refuses this run: ${problems.join('; ')}`);
   }
   return {
     preregistration: path,
@@ -157,5 +181,9 @@ if (import.meta.main) {
   const problems = checkOrder(entries);
   for (const p of problems) console.error(`prereg-order: ${p.id}: ${p.file}: ${p.problem}`);
   console.log(`prereg-order: ${entries.length} experiments checked, ${problems.length} problems`);
-  process.exit(problems.length === 0 ? 0 : 1);
+  const grandfathered = loadGrandfathered();
+  const practices = [...checkPractices(entries as PracticeEntry[], grandfathered), ...checkGrandfatheredFrozen(grandfathered)];
+  for (const p of practices) console.error(`prereg-practices: ${p.id}: ${p.file}: ${p.problem}`);
+  console.log(`prereg-practices: ${practices.length} problems (eval-loop practices: docs/benchmarks/PREREGISTRATION-TEMPLATE.md)`);
+  process.exit(problems.length === 0 && practices.length === 0 ? 0 : 1);
 }

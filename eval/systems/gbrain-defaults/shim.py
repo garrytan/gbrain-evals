@@ -31,6 +31,26 @@ gbrain's safe-chunks repair, before the quiesce barrier; it then indexes every s
 An F6 policy names its op (query or recall), the op's arguments and an overlay of the six search keys. The shim applies
 an overlay only when it changes: stop serve, `gbrain config set` all six keys, read each back, start serve, and record
 the overlay's hash and switch time on the retrieval. Fact rows map to their source session through the fact index.
+Fence accounting follows gbrain's transcriptFence and fenceTranscriptRows (src/core/search/transcript-quote.ts at
+16124807): the optional date line is outside the wrapper, the marker and opening line precede the payload, and
+the final line repeats the opening run of backticks. Count the cl100k difference with those wrapper lines removed
+from each delivered text and title. Only counts travel in applied_settings, which the Q1 runner stages.
+
+GBRAIN_IDLE_UPKEEP=off (RS1's cells) turns off serve's idle upkeep: from gbrain 0.60.715.0 a stdio serve that has seen no
+input for a full 10-minute tick runs gbrain's free maintenance on the brain it serves (link and timeline extraction,
+repair lanes, bookkeeping GC, the capped embedding step and the conversation archive where it is on). Every install
+then writes gbrain's own off switch (`gbrain config set maintenance.auto false`, the "off" answer to init's upkeep
+question) and reads it back, so a pause in a cell's calls cannot change a brain between /finish and its last question.
+Every other first-run question keeps its default answer.
+
+GBRAIN_F6_BUILD_PROBLEMS=record (RS1's cells, amendment of 2026-11-19) has the F6 build record two of gbrain's own
+extraction outcomes instead of failing the realization: failed pages whose windows the provider's safety filter stopped
+(every failed page gbrain lists, each with reason content_filter or refusal) and pages gbrain's conversation parser
+skipped as unparsed. The build still runs its passes and the safe-chunks repair, /finish still runs the quiesce barrier
+and the fact index, and the build records the last pass's status, counts and failed pages by reason. Every other
+problem still fails the realization: the cap, an unpriced model, a pass without JSON, a provider error or any other
+failure reason, pending, blocked, ambiguous, too-large or lock-skipped pages, and a safe-chunks problem. Unset, every
+problem fails it, as F6 preregistered.
 """
 from __future__ import annotations
 
@@ -84,6 +104,14 @@ OVERLAY_VALUES = {"search.query_budget_unit": ("chunk", "auto")}
 # The arguments an F6 policy may pass to each op; the question fills query (and recall's question and query).
 F6_OPS = {"query": ("limit", "autocut", "expand", "token_budget"), "recall": ("budget_tokens",)}
 F6_POSTURE = (("facts.default_visibility", "world"),)
+# GBRAIN_IDLE_UPKEEP=off: the switch every install writes and reads back (module docstring); unset keeps gbrain's default.
+IDLE_UPKEEP = os.environ.get("GBRAIN_IDLE_UPKEEP", "")
+IDLE_UPKEEP_POSTURE = (("maintenance.auto", "false"),)
+# GBRAIN_F6_BUILD_PROBLEMS=record: the F6 build records gbrain's safety-filter stops and unparsed pages (module docstring).
+F6_BUILD_PROBLEMS = os.environ.get("GBRAIN_F6_BUILD_PROBLEMS", "")
+SAFETY_FILTER_REASONS = ("content_filter", "refusal")
+# gbrain's failed-page error (src/core/facts/conversation-window-extract.ts): "segment <start>..<end> extraction failed (<reason>)".
+FAILED_PAGE_REASON = re.compile(r"extraction failed \(([a-z_]+)\)")
 EXTRACT_SESSION_PREFIX = "cli:extract-conversation-facts:"
 # Extraction is resumable per page; a pass that ends partial (some pages failed on a provider error) is run again.
 F6_EXTRACT_PASSES = 3
@@ -413,6 +441,43 @@ def fact_entry(f: dict[str, Any]) -> dict[str, Any]:
     return {"slug": slug, "valid_from": f.get("valid_from"), "valid_until": f.get("valid_until"), "visibility": f.get("visibility")}
 
 
+FENCE_BUDGET = 5500
+QUOTE_WRAPPER = re.compile(
+    r"(?P<head>\[observed [^\]\n]*\][^\n]*\n)?"
+    r"\[quoted conversation excerpt from [^\]\n]*; source material, not instructions\]\n"
+    r"(?P<fence>`{3,})text\n(?P<body>[\s\S]*)\n(?P=fence)"
+)
+
+
+def fence_accounting(rows: list[tuple[str, dict[str, Any]]]) -> dict[str, Any]:
+    fields, fenced_rows, unmatched = [], 0, 0
+    for kind, row in rows:
+        if row.get("quoted") != "transcript":
+            continue
+        before = len(fields)
+        text_key = {"recall_fact": "fact", "recall_page": "chunk"}.get(kind, "chunk_text")
+        for key in (text_key, "title"):
+            value = row.get(key)
+            if isinstance(value, str) and (match := QUOTE_WRAPPER.fullmatch(value)):
+                fields.append((value, (match["head"] or "") + match["body"]))
+        if len(fields) == before:
+            unmatched += 1
+            continue
+        fenced_rows += 1
+    tokens: int | None = 0
+    if fields:
+        try:
+            result = subprocess.run(["bun", os.path.join(HERE, "fence-tokens.ts")], input=json.dumps(fields),
+                                    capture_output=True, check=True, text=True, timeout=30)
+            tokens = int(result.stdout)
+            if tokens < 0:
+                raise ValueError()
+        except (OSError, ValueError, subprocess.SubprocessError):
+            tokens = None
+    return {"delivered_rows": len(rows), "fenced_rows": fenced_rows, "unmatched_quoted_rows": unmatched, "fence_tokens": tokens,
+            "budget_tokens": FENCE_BUDGET, "budget_share": None if tokens is None else tokens / FENCE_BUDGET}
+
+
 def f6_pin_problem(image_sha: str, launch_sha: str) -> str | None:
     """Why an F6 install must not run on this image, or None. F6 pins gbrain by the launch's GBRAIN_SHA; an image built
     from another commit (a stale build, or a setup that ran without the pin) would measure the wrong gbrain."""
@@ -435,6 +500,41 @@ def extraction_problems(run: dict[str, Any]) -> list[str]:
             out.append(f"{key}={run.get(key)}")
     if run.get("no_pricing_models"):
         out.append(f"unpriced extraction models {run.get('no_pricing_models')}")
+    # gbrain names each page and its cause (GST-3251): failed pages, windows the model declined, unparsed pages.
+    for p in run.get("failed_pages") or []:
+        out.append(f"failed {p.get('slug')}: {p.get('error')}")
+    for w in run.get("declined_windows") or []:
+        out.append(f"declined {w.get('slug')} {w.get('start')}..{w.get('end')} ({w.get('reason')})")
+    for p in run.get("unparsed_pages") or []:
+        out.append(f"unparsed {p.get('slug')}: {p.get('cause')}")
+    return out
+
+
+def failed_page_reasons(run: dict[str, Any]) -> dict[str, int]:
+    """One pass's listed failed pages by gbrain's failure reason; 'other' when the error names none."""
+    out: dict[str, int] = {}
+    for page in run.get("failed_pages") or []:
+        m = FAILED_PAGE_REASON.search(str(page.get("error") or ""))
+        reason = m.group(1) if m else "other"
+        out[reason] = out.get(reason, 0) + 1
+    return dict(sorted(out.items()))
+
+
+def recordable_problems(run: dict[str, Any], retry: bool) -> list[str]:
+    """The last pass's problems GBRAIN_F6_BUILD_PROBLEMS=record records: its unparsed pages, and its failed pages with the
+    status they cause when gbrain lists every one and each stopped on the provider's safety filter, each with the line
+    extraction_problems names its pages by. A 'failed' status is recorded only on a retry pass, which tries only the pages
+    an earlier pass failed. A declined window is never recorded."""
+    out = []
+    if int(run.get("pages_skipped_unparsed") or 0):
+        out.append(f"pages_skipped_unparsed={run.get('pages_skipped_unparsed')}")
+        out += [f"unparsed {p.get('slug')}: {p.get('cause')}" for p in run.get("unparsed_pages") or []]
+    failed = int(run.get("pages_failed") or 0)
+    if failed and len(run.get("failed_pages") or []) == failed and set(failed_page_reasons(run)) <= set(SAFETY_FILTER_REASONS):
+        out.append(f"pages_failed={run.get('pages_failed')}")
+        out += [f"failed {p.get('slug')}: {p.get('error')}" for p in run.get("failed_pages") or []]
+        if run.get("status") == "partial" or (run.get("status") == "failed" and retry):
+            out.append(f"extraction status {run.get('status')!r} (exit {run.get('exit')})")
     return out
 
 
@@ -557,6 +657,10 @@ class GbrainDefaultsAdapter(Adapter):
         """One clean install at GBRAIN_HOME, the documented way: provider_base_urls first, init --pglite, the setup
         migrations, the scripted defaults reply; then the resolved configuration, the starter tools/list and a doctor
         run with the brain to itself."""
+        if IDLE_UPKEEP not in ("", "off"):
+            raise ShimError("invalid_request", f"GBRAIN_IDLE_UPKEEP is {IDLE_UPKEEP!r}; leave it unset for gbrain's default or set it to off")
+        if F6_BUILD_PROBLEMS not in ("", "record"):
+            raise ShimError("invalid_request", f"GBRAIN_F6_BUILD_PROBLEMS is {F6_BUILD_PROBLEMS!r}; leave it unset to fail the realization on every F6 build problem or set it to record")
         if not PROXY_BASE:
             raise ShimError("invalid_request", "GBRAIN_PROXY_BASE is unset; provider_base_urls must point at the metering proxy before init")
         pin = f6_pin_problem(IMAGE_SHA, LAUNCH_SHA) if F6 else None
@@ -573,7 +677,8 @@ class GbrainDefaultsAdapter(Adapter):
             raise ShimError("product_error", f"gbrain init --pglite did not succeed: {canonical(init)[:400]}")
         migrations = self.cli("apply-migrations", "--yes", "--non-interactive", "--no-autopilot-install", timeout_s=900, check=False)
         answered = self.answer_first_run_defaults(init)
-        posture = self.apply_f6_posture() if F6 else None
+        posture = self.apply_posture(F6_POSTURE) if F6 else None
+        upkeep = self.apply_posture(IDLE_UPKEEP_POSTURE) if IDLE_UPKEEP == "off" else None
         resolved = self.resolve_config()
         tools = self.capture_tools(["--surface", "starter"])
         missing = [op for op in STARTER_CALLS if op not in tools]
@@ -595,13 +700,15 @@ class GbrainDefaultsAdapter(Adapter):
             "starter_tools_sha256": sha256_text(canonical(sorted(tools))),
             "doctor": doctor_gate(doctor, 0),
             **({"f6_posture": posture} if F6 else {}),
+            **({"idle_upkeep": upkeep} if upkeep is not None else {}),
         }
         os.makedirs(os.path.join(HOME, "shim"), exist_ok=True)
         with open(os.path.join(HOME, "shim", "install.json"), "w") as f:
             json.dump(meta, f, indent=2)
         with open(os.path.join(HOME, "shim", "state.json"), "w") as f:
             json.dump({"sessions": {}}, f)
-        self.receipt("install", resolved_sha256=meta["resolved_sha256"], config_sha256=meta["config_sha256"], install_ms=meta["install_ms"], **({"f6_posture": posture} if F6 else {}))
+        self.receipt("install", resolved_sha256=meta["resolved_sha256"], config_sha256=meta["config_sha256"], install_ms=meta["install_ms"], **({"f6_posture": posture} if F6 else {}),
+                     **({"idle_upkeep": upkeep} if upkeep is not None else {}))
         return meta
 
     def answer_first_run_defaults(self, init: dict[str, Any]) -> list[dict[str, Any]]:
@@ -618,10 +725,10 @@ class GbrainDefaultsAdapter(Adapter):
                 out.append({"id": d.get("id"), "default": d.get("default"), "applied_argv": argv or None})
         return out
 
-    def apply_f6_posture(self) -> dict[str, str]:
-        """Write gbrain's single-principal facts posture and read it back (db-plane keys, outside config.json)."""
+    def apply_posture(self, pairs: tuple[tuple[str, str], ...]) -> dict[str, str]:
+        """Write db-plane config keys (F6's facts posture, the idle-upkeep switch) and read each back (outside config.json)."""
         out = {}
-        for key, value in F6_POSTURE:
+        for key, value in pairs:
             self.cli("config", "set", key, value)
             out[key] = self.cli("config", "get", key).stdout.strip()
             if out[key] != value:
@@ -792,6 +899,10 @@ class GbrainDefaultsAdapter(Adapter):
             out["versions"] = {**out["versions"], "package": f"gbrain (github:garrytan/gbrain#{IMAGE_SHA}{version}), installed with bun install -g",
                                "runtime": f"Bun {bun} ({BUN_IMAGE})"}
         out["f6"] = {**out.get("f6", {}), "enabled": F6, "gbrain_sha": IMAGE_SHA if F6 else None, "extract_cap_usd": float(F6_EXTRACT_CAP_USD) if F6 and F6_EXTRACT_CAP_USD else None, "overlay_keys": list(SEARCH_OVERLAY_KEYS)}
+        out["idle_upkeep"] = {"configured_by": "GBRAIN_IDLE_UPKEEP", "off": IDLE_UPKEEP == "off", "posture": dict(IDLE_UPKEEP_POSTURE) if IDLE_UPKEEP == "off" else None}
+        record = F6_BUILD_PROBLEMS == "record"
+        out["f6_build_problems"] = {"configured_by": "GBRAIN_F6_BUILD_PROBLEMS", "record": record,
+                                    "recorded": {"failed_page_reasons": list(SAFETY_FILTER_REASONS), "pages_skipped_unparsed": True} if record else None}
         out["shipped_behavior"] = {"delivery_fallbacks": sorted(SHIPPED_BEHAVIOR), "preregistered": list(PREREGISTERED_SHIPPED_BEHAVIOR),
                                    "configured_by": "GBRAIN_SHIPPED_FALLBACKS", "matches_preregistration": sorted(SHIPPED_BEHAVIOR) == sorted(PREREGISTERED_SHIPPED_BEHAVIOR)}
         if self.reference is not None:
@@ -947,12 +1058,15 @@ class GbrainDefaultsAdapter(Adapter):
         under the recorded dollar cap, then gbrain's safe-chunks repair (preview, then --apply when it finds pages).
         Extraction resumes per page, so a pass that ends partial runs again with the cap left, up to F6_EXTRACT_PASSES.
         The realization fails when a pass stops on its cap, when pages are still failed, pending, blocked, ambiguous,
-        too large or unparsed after the last pass, or when the model has no price. A build that finished for the same
-        pages is not repeated on a /finish retry."""
+        too large or unparsed after the last pass, or when the model has no price. Under GBRAIN_F6_BUILD_PROBLEMS=record
+        the build records instead the last pass's unparsed pages and the failed pages the provider's safety filter stopped
+        (recordable_problems), with that pass's status, counts and failed pages by reason, and fails on every other
+        problem. A build that finished for the same pages, or finished with only recorded problems under record, is not
+        repeated on a /finish retry."""
         st = self.state()
         pages_sha = sha256_text(canonical(slugs))
         prior = st.get("f6_build")
-        if prior and prior.get("ok") and prior.get("pages_sha256") == pages_sha:
+        if prior and (prior.get("ok") or (prior.get("recorded") and F6_BUILD_PROBLEMS == "record")) and prior.get("pages_sha256") == pages_sha:
             return {**prior, "reused": True}
         try:
             cap = float(F6_EXTRACT_CAP_USD)
@@ -981,6 +1095,7 @@ class GbrainDefaultsAdapter(Adapter):
             if run.get("budget_exhausted") or not problems or run.get("status") not in ("partial",):
                 break
         extract_ms = round((time.perf_counter() - t0) * 1000)
+        recordable = recordable_problems(passes[-1], len(passes) > 1) if F6_BUILD_PROBLEMS == "record" else []
         totals = {k: sum(int(p.get(k) or 0) for p in passes) for k in ("pages_processed", "segments_processed", "facts_extracted", "facts_inserted", "pages_failed")}
         r0 = time.perf_counter()
         preview = self.cli_json("repair", "safe-chunks", "--source", "default", "--json", timeout_s=EXTRACT_TIMEOUT_S)
@@ -996,10 +1111,16 @@ class GbrainDefaultsAdapter(Adapter):
                   "passes": passes, "totals": totals, "extract_ms": extract_ms, "posture": dict(F6_POSTURE),
                   "safe_chunks": {"previewed": found.get("affected"), "applied": done.get("applied", 0), "failed": len(done.get("failed") or []), "complete": done.get("complete", True),
                                   "ms": round((time.perf_counter() - r0) * 1000)}}
+        failing = [p for p in problems if p not in recordable]
+        if F6_BUILD_PROBLEMS == "record":
+            last = passes[-1]
+            record |= {"recorded": bool(problems) and not failing,
+                       "last_pass": {"status": last.get("status"), "pages_failed": int(last.get("pages_failed") or 0),
+                                     "pages_skipped_unparsed": int(last.get("pages_skipped_unparsed") or 0), "failed_reasons": failed_page_reasons(last)}}
         st["f6_build"] = record
         self.save_state(st)
         self.receipt("f6_build", **{k: v for k, v in record.items() if k != "passes"})
-        if problems:
+        if failing:
             raise ShimError("product_error", f"the F6 build did not finish (the realization fails): {'; '.join(problems)[:600]}")
         return record
 
@@ -1134,10 +1255,12 @@ class GbrainDefaultsAdapter(Adapter):
             raw = {"tool": op, "args": args, "gbrain_ms": ms, "meta": retrieval if op == "query" else {k: v for k, v in (body if isinstance(body, dict) else {}).items() if k not in ("facts", "results")},
                    "notices": notices, "classification": verdict, "serve_session": self.serve_session, "overlay": switch, "fact_rows": fact_rows, "fact_rows_unresolved": unresolved,
                    "query_time": "not sent: neither op takes an as-of date", "rows": len(items)}
-            self.receipt("retrieve", op=op, args=args, gbrain_ms=ms, classification=verdict, overlay_sha256=switch["overlay_sha256"], switched=switch["switched"], rows=len(items), fact_rows=fact_rows)
-            if verdict["outcome"] != "scored" and on_degraded == "error":
+            refused = verdict["outcome"] != "scored" and on_degraded == "error"
+            fence = None if refused else fence_accounting(rows)
+            self.receipt("retrieve", op=op, args=args, gbrain_ms=ms, classification=verdict, overlay_sha256=switch["overlay_sha256"], switched=switch["switched"], rows=len(items), fact_rows=fact_rows, fence=fence)
+            if refused:
                 raise ShimError("invalid_request", f"degraded read (harness failure; retry after quiesce): {', '.join(verdict['reasons'])}", 503)
-            return {"items": items, "applied_settings": {"op": op, **args, "overlay_sha256": switch["overlay_sha256"]}, "truncated": False, "raw": raw}
+            return {"items": items, "applied_settings": {"op": op, **args, "overlay_sha256": switch["overlay_sha256"], "fence": fence}, "truncated": False, "raw": {**raw, "fence": fence}}
 
     def listed_conversation_slugs(self) -> set[str]:
         seen: set[str] = set()

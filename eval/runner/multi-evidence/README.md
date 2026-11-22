@@ -25,6 +25,27 @@ bun eval/runner/multi-evidence/dev-loop.ts --out eval/reports/multi-evidence --g
 bun eval/runner/multi-evidence/dev-loop.ts --report eval/reports/multi-evidence/<ref>
 ```
 
+To compare a build that changes only how pages are read with the newest release, run both on the same brains and score
+the pair. `--slots-from` builds the Cat 40 brains with the release and serves the other build on them, so only the
+server code differs between the two runs:
+
+```sh
+bun eval/runner/multi-evidence/dev-loop.ts --out <dir> --suites cat40-hard-m --gbrain v<release> --cat40-slots 3 ...
+bun eval/runner/multi-evidence/dev-loop.ts --out <dir> --suites cat40-hard-m --gbrain <sha> --slots-from v<release> --cat40-slots 3 ...
+bun eval/runner/multi-evidence/ship-bar.ts --base <dir>/v<release> --candidate <dir>/<sha> --privacy <ad-sharing-cells.json>
+```
+
+`ship-bar.ts` checks the bar set for `get_page` with `slugs` (gbrain#9798): how many cells that need two or more pages
+use `slugs`, whether page-read text (every `get_page` result, single or batch) per cell falls by 15% while total
+tool-result text doesn't grow, whether correct answers drop by more than 15 points, and whether
+`test/eval/sharing-contract.test.ts` passes with its `slugs` reads. Run that test with `AD_REPORT_DIR` and
+node_modules/gbrain linked to a clean git checkout of the build: the file it writes names that commit and every
+scenario, and `ship-bar.ts` refuses a file from another commit, a dirty tree, a link that changed during the run or a
+partial run. It also refuses the
+comparison when a pair's gold pages, turn cap or setup differ (each cells dir's world, brains, Hard identity, evaluator
+code, served instructions, tool names and cell flags), so rerun `--report` on a run dir made before rows recorded their
+setup. Each number is paired by item and agent, with a 95% bootstrap interval over items.
+
 Without --gbrain it measures gbrain's newest release: the highest vX.Y.Z tag on gbrain's master. It needs the
 LongMemEval-S and BEAM-1M datasets (`bun run eval:decide fetch --benchmark lme-s`, then `beam-1m`) and, for a
 paid run, ANTHROPIC_API_KEY, OPENAI_API_KEY and VOYAGE_API_KEY. Run paid work on a large machine; the Cat 40 brains

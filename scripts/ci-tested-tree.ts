@@ -10,13 +10,21 @@
  * clean tree as the lane's result, but only when tree.json lists every file the inventory prints.
  *
  *   bun scripts/ci-tested-tree.ts inventory [--lane test|unit|py]       the test files the lane runs, one per line
- *   bun scripts/ci-tested-tree.ts record --junit <dir> --out <tree.json>  in CI, after the checks job and every shard passed
+ *   bun scripts/ci-tested-tree.ts record --junit <dir> --out <tree.json>  in CI, after the checks, test and harness jobs passed
  *
- * `record` fails, and writes nothing, when an inventory file did not run. Bun's report leaves out a test file that
- * registers no tests, and a run missing one file carries no lane, so the job goes red instead of carry stopping quietly.
+ * `record` fails, and writes nothing, when an inventory file or a tracked harness test file did not run. Bun's report
+ * leaves out a test file that registers no tests, and a run missing one file carries no lane, so the job goes red
+ * instead of carry stopping quietly.
  *
- * The Bun files come from each shard's JUnit report, so tree.json lists only files Bun ran, and `tests` counts
- * the Bun tests that ran (skips excluded). The Python files are the ones the checks job runs; the job needs it.
+ * The Bun files come from each shard's JUnit report, so tree.json lists only files Bun ran. The harness Python tests
+ * under eval/harness-provider/tests/ come from the JUnit reports of the harness job's pytest runs (`pytest-<n>.xml` in the
+ * --junit directory), so tree.json lists only files pytest ran. `tests` counts the Bun and harness pytest tests that
+ * ran (skips excluded). The other Python files are the ones the checks job runs; the job needs it. The harness files
+ * stay out of every lane's inventory, because no lane command runs them: gstack's pregate requires the ones a change
+ * touches, and tree.json covers those.
+ *
+ * A Python test file that a Bun test runs as a child process (SPAWNED_PYTHON_TESTS, keyed by path, naming the Bun test
+ * that runs it) counts as run when that Bun test file ran, and `record` requires it when it is tracked.
  */
 import { spawnSync } from 'node:child_process';
 import { appendFileSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -24,6 +32,13 @@ import { dirname, join } from 'node:path';
 
 export const BUN_TEST_ROOTS = ['test/eval', 'eval'];
 export const PYTHON_TESTS = ['test/retrieval_refresh_orchestrator_test.py'];
+export const HARNESS_DIR = 'eval/harness-provider';
+/** Python test files a Bun test runs as a child process, each with the Bun test file that runs it and fails when it fails. */
+export const SPAWNED_PYTHON_TESTS: Readonly<Record<string, string>> = { 'eval/runner/lme-redis/test_lme_redis.py': 'test/eval/lme-redis.test.ts' };
+/** The spawned Python test files whose Bun test is among `ran`. */
+export const spawnedPythonTests = (ran: readonly string[]) => Object.entries(SPAWNED_PYTHON_TESTS).filter(([, by]) => ran.includes(by)).map(([py]) => py);
+/** A harness pytest report among the tested files: pytest.xml, or pytest-<n>.xml when the suite runs as several processes (eval/runner/harness-test.ts --junit-dir). */
+export const isPytestReport = (name: string) => /^pytest(?:-\d+)?\.xml$/.test(name);
 export const LANES = ['test', 'unit', 'py'] as const;
 export type Lane = (typeof LANES)[number];
 
@@ -42,6 +57,11 @@ export function inventory(lane: Lane, tracked: string[]): string[] {
   return [...bun, ...PYTHON_TESTS];
 }
 
+/** The harness Python test files pytest collects: its default `test_*.py` and `*_test.py` under the harness's `testpaths`. */
+export function harnessTests(tracked: string[]): string[] {
+  return tracked.filter(f => f.startsWith(`${HARNESS_DIR}/tests/`) && /(?:^|\/)(?:test_[^/]*|[^/]*_test)\.py$/.test(f)).sort();
+}
+
 const ENTITIES: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" };
 const unescape = (s: string) => s.replace(/&(amp|lt|gt|quot|apos);/g, (_, e: string) => ENTITIES[e]!);
 const attr = (tag: string, name: string) => { const m = new RegExp(`\\s${name}="([^"]*)"`).exec(tag); return m ? unescape(m[1]!) : undefined; };
@@ -55,6 +75,15 @@ export function junitFiles(xml: string): { files: string[]; tests: number } {
   if (!Number.isSafeInteger(total) || !Number.isSafeInteger(skipped) || skipped > total) throw new Error('the JUnit report has no valid tests and skipped counts');
   const files = [...xml.matchAll(/<testsuite\b[^>]*>/g)].map(m => attr(m[0], 'file')).filter((f): f is string => !!f);
   return { files: [...new Set(files)].sort(), tests: total - skipped };
+}
+
+/** The files a pytest JUnit report (`-o junit_family=xunit1`, which names each case's file from the harness root) ran and how many of its tests ran (skips excluded). */
+export function pytestFiles(xml: string): { files: string[]; tests: number } {
+  if (!/<testsuites?\b/.test(xml)) throw new Error('the pytest report has no <testsuite> element');
+  const cases = [...xml.matchAll(/<testcase\b[^>]*?(\/>|>[\s\S]*?<\/testcase>)/g)].map(m => m[0]);
+  const files = cases.map(c => attr(/<testcase\b[^>]*>/.exec(c)![0], 'file'));
+  if (files.some(f => !f)) throw new Error('a pytest test case names no file; run pytest with -o junit_family=xunit1');
+  return { files: [...new Set(files.map(f => `${HARNESS_DIR}/${f}`))].sort(), tests: cases.filter(c => !/<skipped\b/.test(c)).length };
 }
 
 /** tree.json for the run in `env`; throws on any missing or malformed input, so a broken record fails the job instead of uploading. */
@@ -72,7 +101,7 @@ export function treeRecord(env: Record<string, string | undefined>, o: { reports
   if (!o.reports.length) throw new Error('no JUnit report was found');
   const bun = o.reports.flatMap(r => r.files);
   if (!bun.length) throw new Error('the JUnit reports list no test files');
-  const files = [...new Set([...bun, ...PYTHON_TESTS])].sort();
+  const files = [...new Set([...bun, ...spawnedPythonTests(bun), ...PYTHON_TESTS])].sort();
   const tests = o.reports.reduce((n, r) => n + r.tests, 0);
   return { run_id: int('GITHUB_RUN_ID'), run_attempt: int('GITHUB_RUN_ATTEMPT'), event, sha, head_sha: head, tree: o.tree, workflow, os: env.RUNNER_OS!, files, tests };
 }
@@ -97,14 +126,15 @@ function record(args: string[]): void {
   const dir = flag(args, '--junit');
   const out = flag(args, '--out');
   if (!dir || !out) throw new Error('record needs --junit <dir> and --out <tree.json>');
-  const reports = readdirSync(dir).filter(f => f.endsWith('.xml')).sort().map(f => junitFiles(readFileSync(join(dir, f), 'utf8')));
+  const reports = readdirSync(dir).filter(f => f.endsWith('.xml')).sort().map(f => (isPytestReport(f) ? pytestFiles : junitFiles)(readFileSync(join(dir, f), 'utf8')));
   const rec = treeRecord(process.env, { reports, tree: git(['rev-parse', '--verify', `${process.env.GITHUB_SHA ?? ''}^{tree}`]).trim() });
   const ran = new Set(rec.files);
-  const listed = inventory('test', tracked());
+  const files = tracked();
+  const listed = [...inventory('test', files), ...harnessTests(files), ...Object.keys(SPAWNED_PYTHON_TESTS).filter(f => files.includes(f))];
   const missing = listed.filter(f => !ran.has(f));
   const extra = rec.files.filter(f => !listed.includes(f));
   const lines = [`TESTED_TREE: run ${rec.run_id}/${rec.run_attempt} ${rec.event} head ${rec.head_sha.slice(0, 12)} tree ${rec.tree.slice(0, 12)} files=${rec.files.length} tests=${rec.tests} os=${rec.os}`];
-  if (missing.length) lines.push(`::error::${missing.length} inventory file(s) did not run, so no /ship lane could carry from this run (a test file must register at least one test; a skipped one counts): ${missing.slice(0, 10).join(', ')}`);
+  if (missing.length) lines.push(`::error::${missing.length} inventory file(s) did not run, so no /ship lane could carry from this run (a test file must register at least one test; a skipped one counts; a harness Python file counts only for tests defined in it, because pytest's report names the file that defines each test, so a test it inherits or imports counts for that other file): ${missing.slice(0, 10).join(', ')}`);
   if (extra.length) lines.push(`::warning::${extra.length} file(s) ran that the inventory does not list: ${extra.slice(0, 10).join(', ')}`);
   for (const line of lines) console.log(line);
   if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${lines.map(l => l.replace(/^::error::/, 'Error: ').replace(/^::warning::/, 'Warning: ')).join('\n')}\n`);

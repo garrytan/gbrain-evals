@@ -17,8 +17,8 @@
  *
  * Tiers:
  *   nightly  tool-contract-replay, concurrent-writers, system-smokes, refresh-barrier-agents and refused-write-agents;
- *            agent suites on gpt-6.1-sol at k = 3
- *   matrix   every suite; claude-opus-5-5 and gpt-6.1-sol; k = 3 on agent suites, 1 on QA, except that a suite whose config
+ *            agent suites on gpt-6.2-sol at k = 3
+ *   matrix   every suite; claude-opus-5-5 and gpt-6.2-sol; k = 3 on agent suites, 1 on QA, except that a suite whose config
  *            names stable_trials runs that many on --ref stable (Cat 40 world M runs one trial on stable and three on
  *            master; report.ts then compares the two at pass^1 and files no strong flip between unequal trial counts)
  *   smoke    every item once on master with both readers
@@ -68,10 +68,10 @@ const REPO = resolve(import.meta.dir, '../../..');
 export const EXIT = { NIGHTLY_CAP_STOP: 3, NIGHTLY_VM_LOST: 4, NIGHTLY_HARNESS: 5 } as const;
 /** Retries of one night (resumes after the first invocation). */
 export const MAX_RETRIES = 2;
-const FRONTIER = ['claude-opus-5-5', 'gpt-6.1-sol'];
+const FRONTIER = ['claude-opus-5-5', 'gpt-6.2-sol'];
 
 export const TIERS: Record<Tier, { suites: string[] | null; readers: string[] | null; k: number | null }> = {
-  nightly: { suites: ['tool-contract-replay', 'concurrent-writers', 'system-smokes', 'refresh-barrier-agents', 'refused-write-agents'], readers: ['gpt-6.1-sol'], k: null },
+  nightly: { suites: ['tool-contract-replay', 'concurrent-writers', 'system-smokes', 'refresh-barrier-agents', 'refused-write-agents'], readers: ['gpt-6.2-sol'], k: null },
   matrix: { suites: null, readers: FRONTIER, k: null },
   smoke: { suites: null, readers: FRONTIER, k: 1 },
   bisect: { suites: null, readers: null, k: null },

@@ -60,7 +60,7 @@ import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, write
 import { basename, dirname, join, resolve } from 'node:path';
 import { BudgetRun, ledgerPaths, ledgerStatus } from '../budget-ledger.ts';
 import type { FrozenContext } from '../memory-qa/arms.ts';
-import { loadCorpus, type Corpus, type MemoryQuestion } from '../memory-qa/corpus.ts';
+import { loadCorpus, readRs1Manifest, type Corpus, type MemoryQuestion } from '../memory-qa/corpus.ts';
 import { instrumentFor, type Instrument } from '../memory-qa/instruments.ts';
 import { DEFAULT_MAX_ATTEMPTS, type Outcome } from '../memory-qa/outcomes.ts';
 import { ChatClient, hasChatRoute, judgeAnswer, type ChatLike } from '../memory-qa/qa-v2.ts';
@@ -245,7 +245,7 @@ export interface RereadOptions { sources: string[]; reader: string; out: string;
 /** `bg1Manifest`: a BG1-C half's filled manifest, whose kept list names each launch unit's worlds (default: corpus.ts readBg1Manifest for BG1-C). */
 export interface RereadDeps { corpus?: Corpus; reader?: ChatLike; judge?: ChatLike; instrument?: Instrument; bg1Manifest?: Bg1Manifest }
 /** `cell_id`: the re-read cell the answers and receipt go under; `half`: the BG1-C re-read plan it runs, else null. */
-export interface PreparedReread { def: CellDefinition; arm: ArmDefinition; reader: string; out: string; manifest: CellManifestId | null; keyless: boolean; instrument: Instrument; verify: RereadVerify; plan: PlannedRead[]; gating: string | null;
+export interface PreparedReread { def: CellDefinition; arm: ArmDefinition; reader: string; out: string; manifest: CellManifestId | null; keyless: boolean; instrument: Instrument; dataset: Corpus['source']; verify: RereadVerify; plan: PlannedRead[]; gating: string | null;
   cell_id: string; half: { id: string; half: 1 | 2; units: number[] } | null }
 
 /** Everything before the first request: the judge refusal, custody, a BG1-C half's plan and units, one re-read per --out, the --out claim, the corpus and the byte-for-byte check (verify.json). */
@@ -259,6 +259,8 @@ export function prepareReread(def: CellDefinition, arm: ArmDefinition, opts: Rer
   if (opts.gating && opts.gating.split(':')[0] === opts.reader.split(':')[0]) throw refuse({ code: 'USAGE', message: `${opts.gating} would grade ${opts.reader}, a reader of its own family`,
     why: 'no judge grades its own family\'s answers (R78; GST-767)', fix: { next: 'report', user_message: 'name the reader\'s preregistered gating judge (definitions.ts bg1JudgeOf)' } });
   refuseCompatJudges(arm.cell_id, opts.gating ? [opts.gating] : [instrument.canonical_judge, ...frontier]);
+  if (def.benchmark === 'beam-rs1' && (deps.corpus ? deps.corpus.source.revision === 'unfilled' : readRs1Manifest().manifest.status !== 'filled')) throw refuse({ code: 'PREFLIGHT_FAILED', message: `beam-rs1: the RS1 manifest is unfilled, so ${arm.cell_id} cannot be re-read`,
+    why: 'a re-read is scored only against the filled manifest\'s pinned bytes, and verdict.ts checks the re-read receipt\'s dataset against it', fix: { next: 'ask_user', user_message: 'the custodian fills the RS1 manifest before any RS1 re-read' } });
   if (!hasChatRoute(opts.reader)) throw refuse({ code: 'USAGE', message: `reader ${opts.reader} has no chat route`, why: 'a re-read sends each frozen prompt to one provider:model reader', fix: { next: 'run', argv: [...FRONT, '--reader', 'particle:particle-1'] } });
   const sealed = def.benchmark === 'bg1' || def.benchmark === 'bg1c' ? bg1SealedSet(def.benchmark) : null;
   if (sealed && (deps.corpus ? deps.corpus.source.revision === 'unfilled' : readBg1Manifest(undefined, sealed).manifest.status !== 'filled')) throw refuse({ code: 'PREFLIGHT_FAILED', message: `${sealed.benchmark}: the ${sealed.label} manifest is unfilled, so ${arm.cell_id} cannot be re-read`,
@@ -301,7 +303,7 @@ export function prepareReread(def: CellDefinition, arm: ArmDefinition, opts: Rer
     why: 'a resume keeps the answers already in --out, so it must read the sources they were read from', fix: { next: 'run', argv: [...FRONT, '--out', '<a fresh directory>'] } });
   writeFileSync(join(out, 'verify.json'), JSON.stringify(verify, null, 2) + '\n');
   if (!resuming) writeFileSync(frozen, identity);
-  return { def, arm, reader: opts.reader, out, manifest: opts.manifest ?? null, keyless: !!opts.keyless, instrument, verify, plan, gating: opts.gating ?? null, cell_id: cellId, half };
+  return { def, arm, reader: opts.reader, out, manifest: opts.manifest ?? null, keyless: !!opts.keyless, instrument, dataset: corpus.source, verify, plan, gating: opts.gating ?? null, cell_id: cellId, half };
 }
 
 export interface RereadResult { cell_id: string; dir: string; status: 'complete' | 'partial'; stopped: string | null; receipt: Record<string, unknown> }
@@ -379,7 +381,7 @@ export async function runReread(p: PreparedReread, opts: { providerProxy?: strin
     schema: REREAD_RECEIPT_SCHEMA, cell_id: cellId, run_status: status, stopped, keyless: p.keyless,
     source: { cell: def.id, manifest: p.manifest, arm: arm.id, arm_cell_id: arm.cell_id, config_sha256: p.verify.source_config_sha256, config_sha256s: [...new Set(p.verify.sources.map(s => s.config_sha256))].sort(), contexts: p.verify.sources.map(s => ({ sha256: s.contexts_sha256, records: s.contexts_records, arm_records: s.arm_records })) },
     ...(p.half ? { half: { plan: p.half.id, half: p.half.half, units: p.half.units } } : {}),
-    set: arm.set, benchmark: def.benchmark, split: def.split, block: def.block,
+    set: arm.set, benchmark: def.benchmark, split: def.split, block: def.block, dataset: p.dataset,
     system: { kind: def.system, configuration: def.configuration },
     arm: { id: arm.id, arm: arm.arm, mode: arm.mode, policy: arm.policy, budget: arm.budget, label: arm.label },
     readers: [reader], reader_replicates: {}, effort: def.effort, max_tokens: readerMaxTokens(reader),

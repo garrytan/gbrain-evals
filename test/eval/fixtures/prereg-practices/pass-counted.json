@@ -1,0 +1,69 @@
+{
+  "id": "fixture-counted",
+  "preregistration": "docs/benchmarks/2026-11-20-fixture-preregistration.md",
+  "results": [
+    "docs/benchmarks/2026-11-20-fixture/**",
+    "docs/benchmarks/2026-11-20-fixture.md"
+  ],
+  "registered": "2026-11-20",
+  "paid_tier": "over-500",
+  "decision": [
+    {
+      "if": "gbrain answers at least 5 points more questions than plain files",
+      "then": "recommend gbrain for this workload in the README"
+    },
+    {
+      "if": "no measurable difference or gbrain behind",
+      "then": "keep files as the recommendation and open a why-null pass"
+    }
+  ],
+  "arms": [
+    "gbrain",
+    "files"
+  ],
+  "pilots": [
+    {
+      "arm": "gbrain",
+      "max_budget_fraction": 0.1,
+      "part_under_test_ran": "receipts show gbrain search calls on every pilot task",
+      "judge_passes": "judge agrees with labels on the pilot outputs",
+      "units_supplied_at_rate": "20 tasks served in the pilot hour"
+    },
+    {
+      "arm": "files",
+      "max_budget_fraction": 0.05,
+      "part_under_test_ran": "receipts show file reads and no gbrain calls",
+      "judge_passes": "judge agrees with labels on the pilot outputs",
+      "units_supplied_at_rate": "20 tasks served in the pilot hour"
+    }
+  ],
+  "judge_check": {
+    "judges": [
+      {
+        "model": "gpt-6.2-astra",
+        "grades": [
+          "claude-opus-5-5",
+          "particle:particle-1"
+        ],
+        "labelled_outputs": 40,
+        "kappa_min": 0.6
+      },
+      {
+        "model": "claude-opus-5-5",
+        "grades": [
+          "gpt-6.2-sol"
+        ],
+        "labelled_outputs": 48,
+        "kappa_min": 0.7
+      }
+    ],
+    "read_per_arm": true
+  },
+  "interim_look": {
+    "at_units_fraction": 0.5,
+    "bounds": "obrien-fleming",
+    "alpha": 0.025,
+    "futility_stop": "stop when conditional power under the planned effect is below 10%"
+  },
+  "results_page": "docs/benchmarks/2026-11-20-fixture.md"
+}

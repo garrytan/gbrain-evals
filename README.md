@@ -31,10 +31,13 @@ capability and what changed between those commits and the pin.
   answers call them.** Opus 5.5 goes from 13.3% with no retrieval to 86.7%, and particle-1 from 9.3% to 68.0%. A
   summarising helper between gbrain and the model added no right answers and cut answers that are right and cite only
   supporting pages by 14.3 points for Opus and 14.4 for particle-1.
-- **We learned that agents answer hard questions about a large company's documents better with gbrain than with the same
-  files and `grep`. You should put a large, changing document set behind gbrain rather than leave agents to grep it.**
-  gbrain was 7.7 points ahead on a fresh world and 13.0 on a sealed one, never used in development, though it still
-  trails files where sources disagree.
+- **We learned that on hard questions about a large company's documents, gbrain is near level with an agent that
+  greps the same files on two new worlds, at its newest release and at an October build alike, and behind it where
+  sources disagree. You should measure a memory tool on more than one world, with today's readers, before quoting its
+  lead.** On two new worlds gbrain v0.60.742.0 got 81.25% right against 78.75% (+2.50 points, interval -1.50 to +6.50),
+  and trailed by 16.25 points where sources disagree. The October build `09d21554d`, which led by 8.50 on other worlds,
+  got 82.75% on the same tasks (+4.00, 0.00 to +8.25; the newest build scored 1.50 points below it, -4.50 to +1.50), so
+  the smaller lead is not a gbrain regression.
 - **We learned that gbrain beats the plain Postgres search a developer would build first: full-text plus pgvector,
   fused by rank. You should use gbrain rather than hand-roll that search for an agent's memory.** On LongMemEval it
   found every conversation a question needs in its top five for 451 of 470 questions against 414, and its results gave
@@ -45,8 +48,8 @@ capability and what changed between those commits and the pin.
   whole history into the prompt answered 471 of 500 questions from LongMemEval, a public benchmark of questions about
   old chats, against 468 for gbrain's retrieval (Sonnet 5.5 reader), at about 7.4 times gbrain's reader cost per
   question with one question per history. On BEAM-10M, whose chat histories run to about 10 to 11 million tokens each,
-  an agent with `grep` over the same files scored 67.6% against gbrain's 58.9%, a gap that test can't separate, and a
-  plain keyword ranker matched gbrain on reworded relationship questions. A history asked several questions can be read
+  an agent with `grep` over the same files scored 67.4% against 55.2% for gbrain's whole system, with Opus 5.5
+  reading both, 12.2 points ahead (95% interval 6.4 to 18.4), and a plain keyword ranker matched gbrain on reworded relationship questions. A history asked several questions can be read
   from a prompt cache after the first, which we haven't measured.
 
 Each row of the first table names the alternative a developer would use instead of gbrain, measured on the same tasks
@@ -75,14 +78,19 @@ behaviour, such as `forget` leaving nothing behind or a sync catching up, where 
 <td valign="top"><h3>+58.8 points</h3><b>68.0%</b> with gbrain's tools; the gain's 95% interval is 48.5 to 68.8¹ ²</td>
 </tr>
 <tr>
-<td valign="top">Hard questions about a large, messy company, answered correctly by agents (two worlds of about 55,000 documents; Opus 5.5, Sonnet 5.5, GPT-6.1 Sol)<br><sub>gbrain <code>3e4ff61ce</code> (shipped as v0.60.174.0) · <a href="docs/benchmarks/2026-10-10-model-ladder-hard-confirmation.md">Hard company questions</a></sub></td>
-<td valign="top">the same files with <code>grep</code>: 71.0% on a fresh world, 53.0% on a sealed one</td>
-<td valign="top"><h3>+7.7 and +13.0 points</h3><b>78.7%</b> and <b>66.0%</b>; the gains' 95% intervals are +2.7 to +12.7 and +7.7 to +18.3³</td>
+<td valign="top">Hard questions about a large, messy company, answered correctly by agents (two new worlds of about 55,000 documents; Opus 5.5 and GPT-6.2 Sol)<br><sub>gbrain <code>ae8201041</code> (v0.60.742.0) · <a href="docs/benchmarks/2026-11-19-cat40-hard-newest.md">Hard company questions, newest build</a></sub></td>
+<td valign="top">the same files with <code>grep</code>: 315 of 400 (78.75%)</td>
+<td valign="top"><h3>Level: +2.50 points</h3><b>325 of 400 (81.25%)</b>; the gain's interval is -1.50 to +6.50, so the two are at parity; an October build scores within noise of the newest on these worlds, so the smaller lead than October's is not a gbrain regression³</td>
 </tr>
 <tr>
-<td valign="top">The same kind of questions on two newer sealed worlds, with the configuration that ships (same three models)<br><sub>gbrain <code>4e10136b4</code> · <a href="docs/benchmarks/2026-10-15-cat40-next-confirm/README.md">Hard questions, next build</a></sub></td>
-<td valign="top">the same files with <code>grep</code>: 318 of 600 (53.0%)</td>
-<td valign="top"><h3>+10.67 points</h3><b>382 of 600 (63.7%)</b>; the gain's 95% interval is +7.00 to +14.50⁴</td>
+<td valign="top">The same hard company questions, particle-1 (a low-cost reader)<br><sub>gbrain <code>ae8201041</code> (v0.60.742.0) · <a href="docs/benchmarks/2026-11-19-cat40-hard-newest.md">Hard company questions, newest build</a></sub></td>
+<td valign="top">the same files with <code>grep</code>: 6 of 200 (3.0%)</td>
+<td valign="top"><h3>+30.5 points</h3><b>67 of 200 (33.5%)</b> with gbrain's tools; the gain's 95% interval is 24.5 to 37.0. Opus 5.5 with gbrain got 158 of 200</td>
+</tr>
+<tr>
+<td valign="top">The same questions where two sources disagree and one governs<br><sub>gbrain <code>ae8201041</code> (v0.60.742.0) · <a href="docs/benchmarks/2026-11-19-cat40-hard-newest.md">Hard company questions, newest build</a></sub></td>
+<td valign="top">the same files with <code>grep</code>: 79 of 80 (98.75%)</td>
+<td valign="top"><h3>Behind: -16.25 points</h3><b>66 of 80 (82.50%)</b>; the gap's 95% interval is -23.75 to -10.00⁴</td>
 </tr>
 <tr>
 <td valign="top">Leaks (fewer is better): finance-only text reaching the agent's context in 100 permission runs, where the agent works for an account manager outside finance who isn't allowed to see it; first, easier company world (five frontier models)<br><sub>gbrain <code>51f865d78</code> · <a href="docs/benchmarks/2026-10-02-model-ladder.md">Permission runs</a></sub></td>
@@ -90,19 +98,19 @@ behaviour, such as `forget` leaving nothing behind or a sync catching up, where 
 <td valign="top"><h3>100 → 0 leaking runs</h3><b>0 of 100</b> runs leak finance-only text into the agent's context or its answer</td>
 </tr>
 <tr>
-<td valign="top">Right answers on 150 LongMemEval questions, against pasting each whole history (about 50 conversations) into the prompt<br><sub>gbrain <code>c5fb0201</code> · <a href="docs/benchmarks/2026-10-07-longmemeval-w10c-full-context.md">Whole-history comparison</a></sub></td>
+<td valign="top">Right answers on 150 LongMemEval questions, against pasting each whole history (about 50 conversations) into the prompt (official GPT-4o judge)<br><sub>gbrain <code>c5fb0201</code> · <a href="docs/benchmarks/2026-10-07-longmemeval-w10c-full-context.md">Whole-history comparison</a></sub></td>
 <td valign="top">whole history: 144 (Sonnet 5.5 reader) and 141 (GPT-6.1 Sol) of 150</td>
 <td valign="top"><h3>Within the margin, at about a seventh of the cost</h3><b>139</b> and <b>137</b> of 150, within the preregistered 7-point margin, at about a seventh of the reader cost per question, with one question per history⁵</td>
 </tr>
 <tr>
-<td valign="top">Right answers about very long chat histories (BEAM-10M, never used to tune gbrain; three answer models, 8,000 tokens of memory)<br><sub>gbrain <code>f05943e6</code> (v0.60.138.0) · <a href="docs/benchmarks/2026-10-06-scoreboard/scoreboard.md">Head-to-head scoreboard</a></sub></td>
-<td valign="top">the question alone: 25.8%</td>
-<td valign="top"><h3>+30.4 points</h3><b>56.3%</b> (197 of 199 questions scored; the gain is paired on those 197)⁶</td>
+<td valign="top">Right answers about very long chat histories (BEAM-10M, never used to tune gbrain; answer models Opus 5.5, GPT-6.2 Sol and particle-1; 8,000 tokens of memory)<br><sub>gbrain <code>7f162344</code> (v0.60.748.0), measured 2026-11-20 · <a href="docs/benchmarks/2026-11-19-beam10m-newest/results/README.md">BEAM-10M on the newest release</a></sub></td>
+<td valign="top">the same setup at gbrain v0.60.493.0 (measured 2026-11-03), with Opus 5.5 reading: 59.1%</td>
+<td valign="top"><h3>Level: −0.1 points</h3><b>55.8%</b>, the mean of the three answer models (199 of 199 questions); with Opus 5.5 reading both builds, 59.1% now, a change of −0.1 points (95% interval −3.2 to +3.1)⁶</td>
 </tr>
 <tr>
-<td valign="top">The same questions, against an agent with list, <code>grep</code> and read tools over the same files (each at its own default amount of evidence)<br><sub>gbrain <code>f05943e6</code> (v0.60.138.0) · <a href="docs/benchmarks/2026-10-06-scoreboard/scoreboard.md">Head-to-head scoreboard</a></sub></td>
-<td valign="top">the file agent: 67.6%</td>
-<td valign="top"><h3>Behind, not separable</h3><b>58.9%</b> on the 198 questions scored for both, 8.7 points behind, a gap this test can't separate⁶</td>
+<td valign="top">The same questions, against an agent with list, <code>grep</code> and read tools over the same files (each at its own default amount of evidence; answer models Opus 5.5, GPT-6.2 Sol and particle-1)<br><sub>gbrain <code>7f162344</code> (v0.60.748.0), measured 2026-11-20; file agent stored from October 2026, not re-run · <a href="docs/benchmarks/2026-11-19-beam10m-newest/results/README.md">BEAM-10M on the newest release</a> · <a href="docs/benchmarks/2026-10-06-scoreboard/scoreboard.md">Head-to-head scoreboard</a></sub></td>
+<td valign="top">the file agent: 67.6% (Opus 5.5, GPT-6.1 Sol and Sonnet 5.5 reading, gpt-4.1-mini judge); 67.4% with Opus 5.5 reading under gbrain's judge</td>
+<td valign="top"><h3>12.2 points behind</h3><b>50.6%</b>, the mean of the three answer models (199 of 199 questions); with Opus 5.5 reading both, 55.2% against 67.4%, 12.2 points behind (95% interval 6.4 to 18.4)⁶</td>
 </tr>
 <tr><th valign="top" align="left" colspan="3">Finding the right evidence</th></tr>
 <tr>
@@ -151,6 +159,11 @@ behaviour, such as `forget` leaving nothing behind or a sync catching up, where 
 <td valign="top"><h3>Level</h3><b>0.586 precision</b>, 0.825 recall</td>
 </tr>
 <tr><th valign="top" align="left" colspan="3">Keeping memory correct, private and safe</th></tr>
+<tr>
+<td valign="top">Joining different people or companies in a synthetic stress test (fewer false merges is better, with recall within 10 points)<br><sub>gbrain <code>0a008fe5</code> (v0.60.738.0) · <a href="docs/benchmarks/2026-11-18-entity-dedupe-h2h.md">Duplicate-finder head-to-head</a></sub></td>
+<td valign="top">Automatic merges on the same 676 different-entity pairs: 422 for <code>ext-extract-first</code>, 423 for <code>ext-memory-bank</code>, and 438 for patched default <code>ext-graph-pipeline</code>. The temporal-graph system found more real duplicates, and the tuned graph-pipeline setting made fewer false merges but left more pages unresolved.</td>
+<td valign="top"><h3>360 of 676 proposed, 9.17 to 11.54 points fewer</h3>The proposed tier found 290 of 436 real pairs, within the recall margin against those three settings, people and companies combined. On companies alone, no comparison clears both tests: gbrain's company recall is higher than all three, but none of the company false-merge differences was detected at this sample size (gbrain 64 of 188, against 62, 68 and 53). In the measured automatic tier, 36 of 488 different-person pairs joined and 0 of 188 different-company pairs joined. The shipping design doesn't auto-link people.</td>
+</tr>
 <tr>
 <td valign="top">An attacker's false claim from an email or a relayed tool result, adopted in a later session (fewer is better; Opus 5.5, Sonnet 5.5, GPT-6.1 Sol)<br><sub>gbrain <code>c2f10ee8</code> to <code>5b9c814b</code> (shipped as <code>d4dc2d4d8</code>); keyless at <code>6ce7195b4</code> · <a href="docs/benchmarks/2026-10-08-memory-trust-results-paid.md">Memory trust</a> · <a href="docs/benchmarks/2026-11-17-readme-baselines/memory-trust/results.md">Baseline</a></sub></td>
 <td valign="top">an agent with a plain Postgres memory and no trust labels: 6.6% (Opus 5.5), 12.1% (Sonnet 5.5) and 12.1% (GPT-6.1 Sol) of sessions, with gbrain ahead on all three (p = 0.02, 2e-6 and 0.0005); 1 of 355 instruction-worded injections followed</td>
@@ -212,14 +225,20 @@ behaviour, such as `forget` leaving nothing behind or a sync catching up, where 
    by one agent from pages a remote agent may open.
 2. particle-1 with gbrain's tools answers 68.0% (95% interval 58.5 to 77.5) against Opus's 86.7% (78.8 to 93.8), 18.7
    points lower, at $0.0515 of answer cost per correct answer against Opus's $0.1284.
-3. gbrain trails files on the fresh world's questions where sources disagree (47 against 56 of 60) and is more often
-   confidently wrong; on the sealed world, files also ran out of turns or context more often at the 16-turn cap, which
-   accounts for part of the sealed lead; a larger cap would probably narrow it.
-4. The numbers are for the newer build with owner-phrase links turned off, the configuration that ships, not the shipped
-   head itself. The build before this round of changes (`09d21554d`) was also ahead of files (+8.50 on two public
-   worlds, +11.83 on the sealed ones; descriptive, not preregistered), and the same configuration is level with it on
-   sealed (−1.17, −4.33 to +2.00). A public build with owner-phrase links measured +12.50 against files, but that step
-   failed the condition it had to meet to ship, so it doesn't ship.
+3. Paired over 200 tasks and two readers; the interval uses z 1.98, the final bound after the one planned look at half
+   the cells. gbrain led on questions over many records (+16.25 points) and over several recording sessions (+12.50),
+   tied on two other kinds, and trailed where sources disagree (footnote 4). Earlier builds led on other worlds:
+   `3e4ff61ce` by 7.7 points on a fresh world and 13.0 on a sealed one
+   ([October 10](docs/benchmarks/2026-10-10-model-ladder-hard-confirmation.md); Opus 5.5, Sonnet 5.5 and GPT-6.1 Sol),
+   and `4e10136b4` by 10.67 on two sealed worlds and by 12.50 on two public ones with owner-phrase links on, a setting
+   that doesn't ship ([October 15](docs/benchmarks/2026-10-15-cat40-next-confirm/README.md)). Different worlds can't be
+   paired by task, so those comparisons are unpaired. `09d21554d` led by 8.50 on public worlds P1 and P2 in October; on
+   the new worlds' tasks it led files by +4.00 (0.00 to +8.25), and the newest build scored 1.50 points below it (-4.50
+   to +1.50), so the control found no regression from the build, though its interval allows up to 4.50 points
+   ([old-build control](docs/benchmarks/2026-11-19-cat40-hard-old-build-control.md)). The rest of the drop comes from the worlds,
+   the readers or the files agent, and that run can't say which.
+4. gbrain trailed by a similar amount on world M in October (-15.0 at `3e4ff61ce`). Most of the gap is in questions
+   whose deciding document is long (-18.18 points, 54 against 66 of 66 cells).
 5. The gap sits in questions that need several conversations, and LongMemEval-S was used to tune gbrain. The whole
    history averaged 171,596 tokens as Sonnet 5.5 counts them and 106,683 as GPT-6.1 Sol does; it used no gbrain
    retrieval, though gbrain's page renderer formatted it. gbrain also pays a one-time cost to index each history.
@@ -229,9 +248,14 @@ behaviour, such as `forget` leaving nothing behind or a sync catching up, where 
    read once, so every whole-history read paid for the whole history. When one history answers several questions, a
    prompt cache bills it at the cached-input rate after the first read; that wasn't measured
    ([corrections](docs/corrections.md#full-context-reads-and-openais-prompt-cache)).
-6. Measured at gbrain 0.60.138.0, not the pin. The set detects only differences of about 13.6 points, and the file-agent
-   comparison misses gaps under about 12.4, so no row is ranked; [comparisons](#how-gbrain-compares) shows the full
-   table.
+6. Measured on 2026-11-20 at gbrain v0.60.748.0, on 10 conversations and 199 questions
+   ([results](docs/benchmarks/2026-11-19-beam10m-newest/results/README.md)). gpt-6.1-sol grades the Opus 5.5 and particle-1 answers, and Opus 5.5 grades
+   GPT-6.2 Sol's. The file agent wasn't re-run, because it reads only the raw files and no gbrain change can move its
+   score. Its 67.6% is the October 2026 scoreboard's mean of three other answer models under a gpt-4.1-mini judge, so
+   it isn't compared directly with gbrain's 50.6%; the comparison is the Opus 5.5 pair under one judge. The set detects
+   a drop of about 7.9 points against v0.60.493.0 and a file-agent gap of about 9.3 points, and 10 conversations can't
+   rank systems. Ingest was marked degraded on 3 of the 10 conversations; without them the file agent leads by 8.3
+   points (3.4 to 13.0). [Comparisons](#how-gbrain-compares) shows the October 2026 table with every system.
 7. The preregistered test compares each newer reader with Sonnet 4.6 only, so it doesn't rank the newer readers against
    each other.
 8. A topic-coherent 10% source scope still reaches only 0.78.
@@ -308,8 +332,8 @@ last rendered on 2026-11-03, when the file agent's 7 `context_overflow` stops (6
 began to count as product failures, scored 0 and kept in the denominator, as the preregistered outcome rule says;
 before, they left their questions out of its rows as harness failures
 ([corrections](docs/corrections.md#q1-head-to-head-scoreboard)). The first loss bullet compares gbrain's whole-system
-row with the file agent on the questions both scored, while the first table's 56.3% is gbrain's 8,000-token component
-row. The bullet's 12.4-point detectable difference belongs to that whole-system comparison; the 13.6 points in the
+row with the file agent on the questions both scored, while the block's 56.3% is gbrain's 8,000-token component row at
+`f05943e6`. The bullet's 12.4-point detectable difference belongs to that whole-system comparison; the 13.6 points in the
 opening sentence is the preregistered power check for the component rows.
 
 <!-- scoreboard:headline:begin -->
@@ -362,6 +386,16 @@ Descriptive, not tested: correct-abstention rate (abstention-question answers th
 - Measured 2026-10-09 to 2026-10-27 with gbrain 0.60.138.0 (`f05943e`); pinned systems: `ext-extract-first` bundle lock 9777b7a8, capabilities 0acaff3a; `ext-memory-bank` bundle lock f54d89df, capabilities 23a033f4; `ext-graph-pipeline` bundle lock 59af44d5, capabilities e00e4600; `ext-temporal-graph` bundle lock 4ce9b216, capabilities 0ae56345; `ext-markdown-kb` bundle lock e1a14a19, capabilities 4e95f8ef; `ext-agent-runtime` bundle capabilities d55c28c9; `ext-verbatim-session` bundle lock e2e066bf, capabilities ffd48dae.
 - Full tables, cohorts and exclusions: [scoreboard report](docs/benchmarks/2026-10-06-scoreboard/scoreboard.md).
 <!-- scoreboard:headline:end -->
+
+The block's LoCoMo loss bullet (84.2% against 80.0%) is graded by `gpt-4o-2024-08-06`, the campaign's canonical LoCoMo judge. New runs no longer use gpt-4o in any role (suspended 2026-11-21), so that number stands as measured but isn't directly comparable with a run graded by a current frontier judge.
+
+**gbrain's two BEAM-10M rows at v0.60.748.0.** On 2026-11-20 gbrain v0.60.748.0 answered the same questions again, with
+Opus 5.5, GPT-6.2 Sol and particle-1 reading ([results](docs/benchmarks/2026-11-19-beam10m-newest/results/README.md)). The block above stays the October 2026 render
+at `f05943e6`, because it is checked against the hash its campaign published. At v0.60.748.0, gbrain's 8,000-token row
+scored 55.8% (mean of the three answer models), level with v0.60.493.0 on Opus 5.5 (−0.1 points, 95% interval −3.2 to
++3.1). Its whole system scored 55.2% against the file agent's 67.4% with Opus 5.5 reading both, 12.2 points behind
+(95% interval 6.4 to 18.4). That replaces the first loss bullet above, which couldn't tell the two apart: the gap is
+now clear.
 
 The S2b full-context spend in the notes above was measured with a harness that never let a later question hit OpenAI's
 prompt cache: each GPT-6.1 Sol question wrote its conversation's whole history to the cache again, and no later question
@@ -428,6 +462,18 @@ follow-ups](docs/benchmarks/2026-10-04-longmemeval-opaque-followups.md)); a temp
 differ, so this is context, not a ranking. Published results across systems range from 81.6% to 96.1%
 ([sources](docs/comparison-systems.md#longmemeval-the-evidence-we-have)).
 
+**On a memory server's own open LongMemEval harness: behind with its reader, level with README's figure with a
+frontier reader.** Run through that server's open harness unchanged (its dataset loader, one-shot answer prompt, judge
+prompts and metric), the five conversations gbrain v0.60.752.0 picks give the harness's gpt-4o reader 79.2%
+task-averaged (95% interval 75.5% to 83.0%), behind the server's published 86.14% with the same reader and judge;
+gpt-4o reaches only 88.0% even with exactly the right conversations
+([results](docs/benchmarks/2026-11-20-longmemeval-redis-harness.md)). Opus 5.5 reading the same conversations answers
+469 of 500 (93.8%, interval 91.3% to 95.6%) under the harness's gpt-4o judge, level with the 93.6% above. Pasting the
+whole history instead gave Opus, GPT-6.2 Sol and particle-1 2.2 to 2.8 more points, which is no measurable difference
+after the plan's correction for 11 tests, at about 7.7 times the reader input (167,280 against 21,691 tokens per
+question for Opus), and it cost gpt-4o 18.2 points. Forcing autocut on, which gbrain ships off, cost Opus 12.8 points
+(8.8 to 17.2, from a test stopped at its interim look).
+
 **A memory-bank server on sealed BEAM: gbrain ahead by 2.6 points, cheaper only at low read volume.** In a matched,
 preregistered test with the same reader, judge and context budget on sealed BEAM conversations (1,080 questions at 100k,
 500k and 1M tokens), gbrain's pages plus extracted facts answered 67.0% against 64.4% for a memory-bank server with
@@ -459,8 +505,10 @@ the same reranker 128 ([matched comparison](docs/benchmarks/2026-10-02-concept-v
 
 ## Known limits
 
-- gbrain trails plain files on hard company questions whose sources disagree, and gives more confidently wrong answers
-  there ([hard company questions](docs/benchmarks/2026-10-10-model-ladder-hard-confirmation.md)).
+- gbrain trails plain files on hard company questions whose sources disagree: 66 against 79 of 80 right at v0.60.742.0
+  (-16.25 points), as at earlier builds, `09d21554d` included (-11.25 on the same tasks)
+  ([hard company questions, newest build](docs/benchmarks/2026-11-19-cat40-hard-newest.md);
+  [old-build control](docs/benchmarks/2026-11-19-cat40-hard-old-build-control.md)).
 - A timeline read on a 1,000-page brain took about 0.075 ms at `77cf8e111` against 0.045 ms before gbrain's Foundations
   1 release (0.075 and 0.078 ms on the two hosts measured). It has not been measured at the pin. This and the next three
   items are open entries in the [bug ledger](docs/benchmarks/2026-10-01-wave-bugs.md).
@@ -475,20 +523,22 @@ the same reranker 128 ([matched comparison](docs/benchmarks/2026-10-02-concept-v
   probes at `3a284ae`.
 - Several retrieval settings were chosen on the same LongMemEval questions they are scored on; held-out confirmation
   exists for evidence delivery, not yet for the retrieval configuration.
-- The head-to-head scoreboard measured gbrain `f05943e6` (v0.60.138.0); none of its gbrain rows has been rerun at the
-  pin.
-- No sealed set here is big enough to rank gbrain among the memory servers. BEAM-10M detects only differences of about
-  13.6 points. On BEAM-1M sealed at 8,000 tokens, the newer rerun's 24 conversations put gbrain `0ccf2bdd` 2.0 points
+- The head-to-head scoreboard measured gbrain `f05943e6` (v0.60.138.0). Its two BEAM-10M gbrain rows, the 8,000-token
+  row and the whole system, were measured again at v0.60.748.0 on 2026-11-20 and are in the first table; its other
+  gbrain rows and every other system's rows are still at their October 2026 builds.
+- No sealed set here is big enough to rank gbrain among the memory servers. The October 2026 scoreboard's preregistered
+  power check on BEAM-10M detects only differences of about 13.6 points between systems. On BEAM-1M sealed at 8,000 tokens, the newer rerun's 24 conversations put gbrain `0ccf2bdd` 2.0 points
   above the memory-bank server (95% interval -1.4 to +5.4) and 3.5 points above the extract-first server (+0.4 to +6.5)
   under frontier judges, and 1.3 points (-0.9 to +3.7) and 4.8 points (+2.6 to +7.1) above them under BEAM's judge,
   gpt-4.1-mini ([judge-robustness results](docs/benchmarks/2026-11-05-gst-1365-judge-robustness.md)). The rerun
   preregistered these comparisons as descriptive, and gbrain's settings were chosen on this same set, so they describe
-  the systems at `0ccf2bdd` and support no claim that gbrain is no worse than either server; no such claim exists until
-  the narrowed ranking test below reports. A new sealed set built to rank them stopped at its first stage on November 4,
-  2026, because the full design cost more than we allot to one eval, and a version that fit would detect only about 6.5
-  to 7.7 points ([stage 0 finding](docs/benchmarks/2026-11-04-rs1-stage0.md)). A narrowed version now tests that claim
-  ([preregistration](docs/benchmarks/2026-11-08-rs1-narrow-preregistration.md)): about 28 new conversations, at most 33,
-  ask whether gbrain's stable release is at most 3.5 points behind each of those two servers under both judges.
+  the systems at `0ccf2bdd` and support no claim that gbrain is no worse than either server. A new sealed set built to
+  rank them stopped at its first stage on November 4, 2026, because the full design cost more than we allot to one eval,
+  and a version that fit would detect only about 6.5 to 7.7 points
+  ([stage 0 finding](docs/benchmarks/2026-11-04-rs1-stage0.md)). Its narrowed version has since tested the weaker claim
+  on 20 new conversations ([results](docs/benchmarks/2026-11-08-rs1-narrow-results.md)): gbrain v0.60.740.0 is at most
+  3.5 points behind each of those two servers, ahead of the extract-first server and not ahead of the memory-bank server.
+  Its 3.5-point margin is wider than the spread among the top external servers, so it does not rank gbrain among them.
 - Between about a quarter and a half of the BEAM questions behind our results have a reference answer that the turns
   they cite don't support, and the share rises with length. For 27.5% of the cited questions behind our BEAM results at
   100,000 tokens, 31.3% at 500,000, 33.5% at 1 million and 52.2% at 10 million (1,521 in all), at least one of two
@@ -616,6 +666,63 @@ Garry Tan runs Y Combinator.
 [Disclosures](docs/disclosures.md) lists every relationship and where each line goes.
 
 ## Changelog
+
+### 2026-11-21: Results graded by gpt-4o say so
+
+The whole-history comparison row names its official GPT-4o judge, as the W10a and W10b rows do, and a sentence below the
+scoreboard block says its LoCoMo loss bullet is graded by `gpt-4o-2024-08-06`. New runs no longer use gpt-4o, so those
+numbers aren't directly comparable with runs graded by a current frontier judge.
+
+### 2026-11-21: LongMemEval on a memory server's own open harness
+
+How gbrain compares adds gbrain's result on a memory server's open LongMemEval harness: behind the server's published
+number with its gpt-4o reader (79.2% against 86.14% task-averaged), 93.8% with an Opus 5.5 reader beside the 93.6%
+README already shows, the whole history no measurably better for frontier readers, and autocut forced on costing
+answers.
+
+### 2026-11-20: The BEAM-10M rows move to gbrain v0.60.748.0
+
+Both BEAM-10M rows in the first table now show gbrain v0.60.748.0, measured on 2026-11-20 with Opus 5.5, GPT-6.2 Sol and
+particle-1 reading ([results](docs/benchmarks/2026-11-19-beam10m-newest/results/README.md)). They replace the October 2026 rows at v0.60.138.0. The 8,000-token
+row reads 55.8% and is level with v0.60.493.0 on Opus 5.5 (−0.1 points, −3.2 to +3.1). It replaces 56.3% and the
++30.4-point gain over the question alone, which wasn't measured again. The file-agent row reads 50.6% for gbrain's
+whole system beside the file agent's stored 67.6%, and with Opus 5.5 reading both, gbrain is 12.2 points behind
+(6.4 to 18.4). That replaces "Behind, not separable" (58.9%, 8.7 points behind). The lead bullet, footnote 6 and the
+known-limits line on the scoreboard's build say the same. A dated paragraph below the scoreboard block gives the newer
+numbers, because the block is a hash-checked render of the October campaign and its first loss bullet is superseded.
+
+### 2026-11-20: The BEAM-1M known limit reports the narrowed RS1 result
+
+The known limit on ranking gbrain among the memory servers now links the
+[narrowed RS1 results](docs/benchmarks/2026-11-08-rs1-narrow-results.md): on 20 new conversations gbrain v0.60.740.0 is at
+most 3.5 points behind the memory-bank and extract-first servers, ahead of the extract-first server and not ahead of the
+memory-bank server. It replaces "no such claim exists until the narrowed ranking test below reports" and the plan's size.
+
+### 2026-11-20: Add the duplicate-finder head-to-head
+
+The current results table adds the [counted pair counts](https://github.com/garrytan/gbrain-evals/commit/13ccd7f59ef9aa3f6e1a815464fe25560ec88fd8) for gbrain `0a008fe5`.
+It now separates the proposed-tier comparison against three memory-system settings from the automatic person-linking
+errors that led the team to keep person linking in review.
+
+### 2026-11-20: The hard company questions' smaller lead is not a gbrain regression
+
+The old-build control reported: gbrain's October build `09d21554d` scores within noise of v0.60.742.0 on the two new worlds
+(+4.00 over files, newest minus October -1.50, -4.50 to +1.50). The "We learned" line, the hard-company row and
+footnote 3 now say the smaller lead is not a gbrain regression, replacing "not yet known", and the known-limits line
+adds the October build's -11.25 where sources disagree.
+
+### 2026-11-20: Hard company questions, particle-1 row
+
+A row for particle-1 on the hard company questions at v0.60.742.0 joins the results table: 67 of 200 right with gbrain
+against 6 of 200 with plain files (+30.5 points, 24.5 to 37.0), still well behind Opus 5.5 with gbrain (158 of 200).
+
+### 2026-11-19: Hard company questions re-measured on gbrain's newest release
+
+The two hard-company rows (gbrain `3e4ff61ce`, +7.7 and +13.0 points, and `4e10136b4`, +10.67) are replaced by one
+row measured at v0.60.742.0 on two new worlds, where gbrain is level with files (+2.50, -1.50 to +6.50), and a row for
+questions where sources disagree, where it is behind (-16.25). The "We learned" line now says gbrain is level, not
+ahead, and that the cause is not yet known. Footnotes 3 and 4 now carry the earlier builds' numbers and the
+disagreeing-sources detail, and the known-limits line cites the new result.
 
 ### 2026-11-17: Every result row says which direction is better
 

@@ -1501,6 +1501,18 @@ describe('paid dev smokes', () => {
     expect(asked).toEqual([16_200]);
   });
 
+  // Value: protects=each gbrain realization's receipt names its F6 build outcome (recorded safety-filter stops and unparsed pages) for the results; fails_when=cell.ts drops the f6_build report /finish returned; why_new=the 2026-11-19 amendment records gbrain's build problems instead of failing the realization; seam=a fake system's finishIngest raw; no_claim=the shim's own record (gbrain-defaults-f6.test.ts)
+  test('the F6 build report a system\'s /finish returns is kept on the realization\'s ingest record', async () => {
+    const fake = new FakeMemorySystem();
+    const build = { ok: false, recorded: true, problems: ['pages_skipped_unparsed=1'], last_pass: { status: 'ok', pages_failed: 0, pages_skipped_unparsed: 1, failed_reasons: {} }, passes: 1 };
+    const finish = fake.finishIngest.bind(fake);
+    fake.finishIngest = async () => ({ ...(await finish()), raw: { f6_build: build } });
+    const def = cellDef('ext-extract-first', 'shim', [{ id: 'retrieval-only', mode: 'retrieval-only', policy: 'fixed-evidence', readers: [] }], { only_conversations: [corpus.conversations[0].id] });
+    await runCell(def, { out: join(tmp, 'finish-f6-build'), ...quiet }, { corpus, system: fake });
+    const ingested = ndjson(join(tmp, 'finish-f6-build', 'runs', def.id, 'realizations.ndjson')).find(e => e.event === 'ingested');
+    expect(ingested.ingest.finish.f6_build).toEqual(build);
+  });
+
   test('a probe that still misses once /finish reports ready is missed at once, not polled to its deadline', async () => {
     const fake = new FakeMemorySystem();
     fake.retrieve = async () => ({ items: [], applied_settings: {}, truncated: false });

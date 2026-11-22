@@ -383,11 +383,11 @@ export const REGISTRY: readonly CategoryEntry[] = [
   {
     id: 'end-to-end-workflows', legacy_alias: '9', name: 'End-to-end workflows',
     family: 'agent', tier: 'none', script: 'eval/runner/cat9-workflows.ts',
-    run: { kind: 'listed', reason: 'not implemented: no reviewed scenario catalog in the repository' },
+    run: { kind: 'listed', reason: 'judged path not run: the draft scenario catalog (eval/data/cat9-workflows-v1) has no judge calibration yet; its free CLI checks run by hand with the command', command: 'bun eval/runner/cat9-workflows.ts --checks --gbrain <checkout>@<ref>' },
     cost_estimate: UNMEASURED, receipt_path: receipt('cat9-workflows'),
-    headline: { metric: 'none until a reviewed scenario catalog exists', denominator: 'none' },
+    headline: { metric: 'free checks: pass, fail and expected fail (an audit finding) per CLI check; judged pass rate none until calibration', denominator: 'checks that ran on keyword-only PGLite brains' },
     gate: 'report-only', evidence_maturity: 'regression-only',
-    contract: 'Intended to judge multi-step agent workflows over a brain. It cannot run without a reviewed scenario catalog.',
+    contract: 'Intended to judge multi-step agent workflows over a brain. Today only the free checks run: each scenario builds a fresh keyword-only PGLite brain and checks gbrain CLI output against a fixed expectation, with no model. A check that needs a key, a model, an MCP server or an injected fault is reported as not run, so the free checks say nothing about keyed or agent behavior.',
   },
   {
     id: 'adversarial-robustness', legacy_alias: '10', name: 'Robustness / adversarial input',
@@ -1402,6 +1402,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'adversarial-injections.ts': { role: 'injection generator and scorer used by Cat6', part_of: 'prose-autolink-precision' },
   'all.ts': { role: 'umbrella runner that dispatches registry entries' },
   'brainbench-shard-weights.json': { role: 'measured seconds per offline category, which all.ts --shard balances CI shards by' },
+  'company-autolink.ts': { role: 'company auto-link rules (arms baseline to d3) on the company world plus the development V families, read by person-dedupe.ts --company-autolink on the dev seed only', part_of: 'person-dedupe' },
   'a4-s4-rescore.ts': { role: 'keyless re-score of the A4 S4-on arm (G8, 2026-10-06)', part_of: 'abstention' },
   'cat20-judges.ts': { role: 'keyless four-judge Cat 20 decision and the W8 Cat 20 control statistic (2026-10-06)', part_of: 'brainstorm-grounding' },
   'cat21-paired.ts': { role: 'keyless Cat 21 per-split metrics and file-clustered paired comparisons (2026-10-06)', part_of: 'code-retrieval' },
@@ -1416,6 +1417,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'w6-embedding-matrix.ts': { role: 'keyless summary of the 2026-10-06 embedding matrix (Cat 13 held-out and Cat 18b receipts)' },
   'w8-negative-controls.ts': { role: 'keyless summary of the 2026-10-06 live negative controls (ratio rule, signal floors, injection checks)' },
   'chronicle-lift.ts': { role: 'auto_chronicle off-versus-on experiment (docs/benchmarks/2026-10-04-auto-chronicle-lift-preregistration.md); paid, not dispatched' },
+  'beam-no-evidence.ts': { role: 'BEAM-500K "no evidence found" run: the answer-type label from a cross-family judge and the judge check against construction items (docs/benchmarks/2026-11-19-beam500k-no-evidence-line-preregistration.md)' },
   'belief-weekly-probes.ts': { role: 'keyless W11 sealed confirmation of gbrain W4: the W4 weekly-change probe on a --gbrain build, with custodian phrasing and seeds (docs/benchmarks/2026-10-17-w11-w4-sealed-confirmation-preregistration.md)' },
   'budget-ledger.ts': { role: 'shared paid-run reservation ledger' },
   'bug-ledger.ts': { role: 'shared gbrain bug ledger: validated entries and the Markdown view' },
@@ -1429,6 +1431,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'cat31-skillopt-ablation.ts': { role: 'Cat31 runner, driven by run-skillopt-cats.sh', part_of: 'skillopt' },
   'cat32-skillopt-reward-hacking.ts': { role: 'Cat32 runner, driven by run-skillopt-cats.sh', part_of: 'skillopt' },
   'cat33-skillopt-transfer.ts': { role: 'Cat33 runner, driven by run-skillopt-cats.sh', part_of: 'skillopt' },
+  'cat9-checks.ts': { role: 'free Cat 9 CLI checks (setup and checks fields, no judge)', part_of: 'end-to-end-workflows' },
   'cat35-checks.ts': { role: 'mechanical Cat35 checks', part_of: 'transcript-distillation' },
   'cat35-judges.ts': { role: 'Cat35 judge prompts and calls', part_of: 'transcript-distillation' },
   'cat35-transcript-distill-chart.ts': { role: 'Cat35 chart renderer', part_of: 'transcript-distillation' },
@@ -1493,6 +1496,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'probe-accounting.ts': { role: 'shared probe accounting' },
   'promotion.ts': { role: 'evaluates preregistered promotion rules against a receipt' },
   'prereg.ts': { role: 'preregistration attestation and the CI order check' },
+  'prereg-practices.ts': { role: 'eval-loop practice fields a new preregistration registry entry must carry, checked in CI beside the order check' },
   'quoted-reads.ts': { role: 'reads a quote-fenced fact or value from a remote gbrain read through the build\'s own unquoteFactText (gbrain v0.60.536.0 on), used by N1 and Cat 38' },
   'reading-notes-recount.ts': { role: 'keyless recount of the reading-notes artifacts', part_of: 'reading-notes' },
   'reading-headroom.ts': { role: 'keyless $0 recount of the W10a/W10b receipts: gold-session share of delivered text, notes length and committed-wrong answers (docs/benchmarks/2026-10-08-reading-headroom.md)', part_of: 'longmemeval-answers' },
@@ -1548,4 +1552,4 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
 };
 
 /** Subdirectories of eval/runner/ holding helper modules only. */
-export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'batch', 'bg1', 'budgeted-delivery', 'cat40', 'cat41', 'decisions', 'engine-bench', 'entity-h2h', 'evaluator', 'evidence-delivery', 'external-ideas-wave-a', 'facts-absorb', 'failure-causes', 'graph-backend', 'lifecycle', 'lifecycle-lite', 'live-recall', 'memory-proof-wave', 'memory-qa', 'memory-trust', 'messy-company', 'miss-mining', 'multi-evidence', 'nightly', 'outcomes', 'p4-stream', 'pilot', 'power', 'predictive', 'providers', 'q1', 'q2', 'queries', 'refresh-barrier', 'rs1', 'skillopt-method', 'sota', 'stats', 'strict-pageless', 'system-one', 'systems', 't0', 'takes-bootstrap'];
+export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'batch', 'bg1', 'bn10', 'budgeted-delivery', 'cat40', 'cat41', 'decisions', 'engine-bench', 'entity-h2h', 'evaluator', 'evidence-delivery', 'external-ideas-wave-a', 'facts-absorb', 'failure-causes', 'graph-backend', 'lifecycle', 'lifecycle-lite', 'live-recall', 'lme-redis', 'memory-proof-wave', 'memory-qa', 'memory-trust', 'messy-company', 'miss-mining', 'multi-evidence', 'nightly', 'outcomes', 'p4-stream', 'pilot', 'power', 'predictive', 'providers', 'q1', 'q2', 'queries', 'refresh-barrier', 'rs1', 'skillopt-method', 'sota', 'stats', 'strict-pageless', 'system-one', 'systems', 't0', 'takes-bootstrap'];
