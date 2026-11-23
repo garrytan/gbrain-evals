@@ -249,7 +249,7 @@ describe('gate-suite files', () => {
     expect(one(suite('cat10', 'E1', 'PASS', { gbrain: null }))).toThrow(/must name the gbrain build it ran/);
     expect(one({ ...suite('cat10', 'E1'), verdict: 'FAILED' })).toThrow(/verdict FAILED is not PASS, FAIL or NOT_RUN/);
     const split = suite('cat10', 'E1', 'PASS');
-    split.rows[0].verdict = 'FAIL';
+    (split.rows[0] as { verdict: string }).verdict = 'FAIL';
     expect(one(split)).toThrow(/the suite's verdict PASS and its own row's FAIL disagree/);
     expect(one(suite('cat13/ndcg5', 'E1', 'PASS', { extra: [{ id: 'cat13b/top1', benchmark: 'x', verdict: 'PASS', measured: {}, reason: null }] }))).toThrow(/row cat13b\/top1 beside cat13\/ndcg5 is another suite's id/);
     expect(read([input('suite', suite('cat10', 'E1', 'NOT_RUN', { gbrain: null }))]).get('cat10')!.verdict).toBe('NOT_RUN');
