@@ -976,13 +976,15 @@ const bgwAsk = { next: 'ask_user' as const, user_message: `set ${BGW_ENV.batch} 
 
 /**
  * Why a Set W batch may not mint or load yet: it needs its manifest template, unfilled and carrying its own dataset, and
- * every slot it may use listed as sealed in the split file, both in the checkout's HEAD commit and unchanged in its
- * working tree, so a draft on disk or an uncommitted edit never stands in for a committed batch. Empty when both hold.
- * `repo` is the checkout to read them from; one that git cannot read has nothing committed.
+ * every slot it may use listed as sealed in the split file. Empty when both hold. `repo` is the checkout to read them
+ * from. With `head` (bgw-checks.ts batch, before a mint) both must be in the checkout's HEAD commit and unchanged in its
+ * working tree, so a draft on disk or an uncommitted edit never stands in for a committed batch, and a checkout git
+ * cannot read has nothing committed. A load reads the files on disk, so a cell VM's packed tree without .git loads.
  */
-export function bgwCommittedProblems(first: number, repo = REPO_ROOT): string[] {
+export function bgwCommittedProblems(first: number, repo = REPO_ROOT, opts: { head?: boolean } = {}): string[] {
   const problems: string[] = [];
   const committed = (path: string): string | null => {
+    if (!opts.head) { try { return readFileSync(join(repo, path), 'utf8'); } catch { problems.push(`${path} is not committed`); return null; } }
     const head = spawnSync('git', ['-C', repo, 'show', `HEAD:${path}`], { encoding: 'utf8', maxBuffer: 1 << 26 });
     if (head.status !== 0) { problems.push(`${path} is not committed`); return null; }
     let disk: string | null = null;
@@ -1254,7 +1256,9 @@ type Bg1LoadOpts = { only?: ReadonlySet<string>; root?: string; manifestPath?: s
  * worlds. With a filled manifest every file must be listed and match; with an unfilled one the files' hashes are
  * recorded in the corpus source and a notice says they were not pinned. BG1-C's worlds (bg1-031 onward) are not BG1's.
  * Unless the load is declared keyless, a manifest a --fake drill filled and a world render.ts --fake wrote refuse, so a
- * drill's template text never loads as minted worlds.
+ * drill's output never loads as minted worlds. The generator's committed fixtures (renderer "template") still load under
+ * an unfilled manifest, as the loader tests use them; validate.ts and fill-manifest.ts refuse both template renderers,
+ * so neither reaches a filled manifest.
  */
 export function loadBg1(custody: Bg1Custody, opts: Bg1LoadOpts = {}): Corpus {
   return loadBg1Set(BG1_SET, custody, opts);

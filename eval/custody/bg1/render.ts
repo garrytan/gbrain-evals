@@ -60,7 +60,9 @@
  * refuses. Replies are cached under --cache by request hash, so a rerun after a crash buys nothing twice. A world
  * already written is skipped when its plan is unchanged; a changed plan refuses. A sealed render (a mint slot, called by
  * mint.sh or directly) refuses before planning when --set or the resolved --cache sits inside a git checkout, so no
- * sealed plan, world or cached reply is written where a commit could pick it up.
+ * sealed plan, world or cached reply is written where a commit could pick it up. A real render of a BG1-C slot (31 to 96)
+ * or a Set W slot first runs commitment.ts's check, as mint.sh does, so a direct call renders only from the seed and
+ * phrasing whose hashes launch amendment A published.
  *
  * --dev renders one of stage 1's three public dev worlds instead of a mint slot (mint.sh --dev runs all three). It
  * plans the world from its public seed and the public phrasing, as changing-facts-gen.ts devFiles() does, and reads no
@@ -82,8 +84,9 @@ import {
   bgwWorldSeed, sealedWorldSeed, termRegex, type Phrasing, type RenderBrief, type Turn, type World, type WorldPlan,
 } from '../../generators/changing-facts-gen.ts';
 import { readLedger } from '../../runner/budget-ledger.ts';
-import { BG1_DEV_CONVERSATIONS, BG1_DEV_EXTRA_CONVERSATIONS, BG1C_LAST_SLOT, BGW_SEED_SETS, bg1WorldId, bgwSeedSetOf, bgwWorldId } from '../../runner/bg1/types.ts';
+import { BG1_DEV_CONVERSATIONS, BG1_DEV_EXTRA_CONVERSATIONS, BG1C_FIRST_SLOT, BG1C_LAST_SLOT, BGW_SEED_SETS, bg1WorldId, bgwSeedSetOf, bgwWorldId } from '../../runner/bg1/types.ts';
 import { ledgerCaps, requireRs1Window, WindowRefusal } from '../../runner/paid-arm.ts';
+import { checkCommitment } from './commitment.ts';
 import { PROXY_REFUSAL_MARKERS } from '../../runner/providers/openai-compatible.ts';
 import { encodingCount } from '../../runner/systems/render-v2.ts';
 
@@ -562,6 +565,8 @@ export async function main(argv: string[], env: Record<string, string | undefine
   if (!(Number.isInteger(targetTokens) && targetTokens >= 1000)) throw new RenderRefusal('--target-tokens must be a whole number of at least 1000');
   let make = models;
   if (!make && !fake) {
+    const gated = dev === null && (kind === 'bgw' || Number(slotText) >= BG1C_FIRST_SLOT);
+    if (gated) checkCommitment(kind === 'bgw' ? 'bgw' : 'bg1c', seedFile!, phrasingFile!);
     const ledger = flag('--budget-ledger'), run = flag('--budget-run-id');
     requireRs1Window(argv, { what: 'bg1 render', keyless: false, caps: () => (ledger && run ? ledgerCaps(ledger, run) : [{ label: 'the budget ledger run (--budget-ledger and --budget-run-id)', usd: null }]) });
     const held = PROVIDER_KEYS.filter(k => env[k]);

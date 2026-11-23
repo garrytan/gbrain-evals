@@ -13,6 +13,7 @@ import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, st
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { BG1_CUSTODY_MARKER, PUBLIC_PHRASING } from '../../eval/generators/changing-facts-gen.ts';
+import { batchCheck } from '../../eval/custody/bg1/bgw-checks.ts';
 import { checkCommitment, commitmentFile, commitmentOf, recordCommitment } from '../../eval/custody/bg1/commitment.ts';
 import { BGW_SPLIT, bgwBatchManifest, bgwFilledManifest } from '../../eval/runner/memory-qa/bg1-names.ts';
 import { bgwCommittedProblems, bgwSet, bgwWeekWorlds, loadBgw, verifyBg1Custody, type Bg1Manifest } from '../../eval/runner/memory-qa/corpus.ts';
@@ -138,8 +139,8 @@ describe('finding 3: an unresolved slot stops the mint', () => {
 });
 
 describe('finding 4: the committed-batch check reads HEAD', () => {
-  // Value: protects=a batch mints only from a template and split committed at HEAD, byte for byte; fails_when=bgwCommittedProblems accepts an untracked template or a committed one edited in the working tree; why_new=second-model review finding 4 on #607; seam=bgwCommittedProblems; no_claim=the batch check's other refusals
-  test('an untracked template and a committed template edited in the working tree refuse', () => {
+  // Value: protects=a batch mints only from a template and split committed at HEAD, byte for byte, while a cell VM's packed tree without .git still loads; fails_when=the batch check accepts an untracked template, a committed one edited in the working tree or a tree git cannot read, or a load needs git; why_new=second-model review finding 4 on #607 and the specialist note on #609; seam=bgw-checks.ts batchCheck and bgwCommittedProblems; no_claim=the batch check's other refusals
+  test('the mint\'s batch check refuses an untracked or edited template and a tree without git, and a load reads the files on disk', () => {
     const repo = scratch('repo');
     const git = (...args: string[]) => spawnSync('git', ['-C', repo, '-c', 'user.name=t', '-c', 'user.email=t@example.invalid', ...args], { encoding: 'utf8' });
     mkdirSync(join(repo, 'eval/decisions/datasets'), { recursive: true });
@@ -149,11 +150,16 @@ describe('finding 4: the committed-batch check reads HEAD', () => {
     writeFileSync(join(repo, BGW_SPLIT), readFileSync(join(REPO, BGW_SPLIT)));
     git('init', '-q'); git('add', BGW_SPLIT); git('commit', '-q', '-m', 'split');
     writeFileSync(template, text);
-    expect(bgwCommittedProblems(1001, repo)).toEqual([`${bgwBatchManifest(1001)} is not committed`]);
+    const batch = () => batchCheck(['--batch', '1001'], repo);
+    expect(batch).toThrow(`batch bgw-1001 is not committed: ${bgwBatchManifest(1001)} is not committed`);
     git('add', '.'); git('commit', '-q', '-m', 'template');
-    expect(bgwCommittedProblems(1001, repo)).toEqual([]);
+    expect(batch().pass).toBe(true);
     writeFileSync(template, text.replace('"unfilled"', '"unfilled" '));
-    expect(bgwCommittedProblems(1001, repo)).toEqual([`${bgwBatchManifest(1001)} differs from its committed bytes at HEAD`]);
+    expect(batch).toThrow(`${bgwBatchManifest(1001)} differs from its committed bytes at HEAD`);
+    rmSync(join(repo, '.git'), { recursive: true, force: true });
+    writeFileSync(template, text);
+    expect(batch).toThrow(`${bgwBatchManifest(1001)} is not committed`);
+    expect(bgwCommittedProblems(1001, repo)).toEqual([]);
   });
 });
 
@@ -165,6 +171,8 @@ describe('finding 5: a real mint checks the seed commitment', () => {
     const out = join(j.dir, 'bgw-custody-commit');
     const realMint = () => mint(out, j, [...BATCH, '--count', '1']);
     refusal(realMint(), 'there is no commitment file beside the seed (.bgw-commitment.json)');
+    const direct = () => run('bun', [RENDER, '--bgw', '--set', join(j.dir, 'direct', 'set'), '--seed-file', j.seed, '--phrasing', j.phrasing, '--slot', '1001']);
+    refusal(direct(), 'there is no commitment file beside the seed (.bgw-commitment.json)');
     const seed = run('bun', [CHECKS, 'seed', '--seed-file', j.seed, '--phrasing', j.phrasing, '--bg1-seed-file', bg1.seed, '--bg1-phrasing', bg1.phrasing]);
     expect(seed.code).toBe(0);
     const file = commitmentFile(j.seed, 'bgw');
@@ -178,6 +186,7 @@ describe('finding 5: a real mint checks the seed commitment', () => {
     const passed = realMint();
     expect(passed.code).toBe(2);
     expect(passed.err).toContain('real mode spends real keys, so it needs --paid-window');
+    expect(direct().err).not.toContain('commitment');
 
     const phrasing = readFileSync(j.phrasing), seedText = readFileSync(j.seed);
     writeFileSync(j.phrasing, JSON.stringify({ ...custodyPhrasing, note: 'changed' }));

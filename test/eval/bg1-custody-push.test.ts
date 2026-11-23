@@ -52,6 +52,9 @@ describe('a sealed BG1 unit\'s custody', () => {
     expect(caught(() => bg1CustodyPush(s.env, 'c', { index: 0, size: 2 })).op.message).toMatch(/worlds\/bg1-001\/world\.json .*not the pinned bytes/);
     rmSync(join(s.root, 'worlds/bg1-004/questions.json'));
     expect(caught(() => bg1CustodyPush(s.env, 'c', { index: 1, size: 2 })).op.message).toMatch(/worlds\/bg1-004\/questions\.json .*missing/);
+    const drill = custodySet();
+    writeFileSync(drill.env.GBRAIN_EVALS_BG1_MANIFEST, JSON.stringify({ ...JSON.parse(readFileSync(drill.env.GBRAIN_EVALS_BG1_MANIFEST, 'utf8')), drill: true }));
+    expect(caught(() => bg1CustodyPush(drill.env, 'c')).op).toMatchObject({ code: 'CUSTODY_REQUIRED', message: 'the BG1 manifest was filled by a --fake drill' });
   });
 
   // Value: protects=the campaign tells the custodian which unit a sealed BG1 VM runs, so its push holds that unit's worlds; fails_when=a sealed unit has no bg1_unit, a dev unit gets one, or launchArgv pushes nothing; why_new=core review of #398; seam=bg1CampaignManifest and Campaign.launchArgv; no_claim=the VM side's verifyBg1Custody

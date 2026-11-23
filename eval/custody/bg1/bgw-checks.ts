@@ -147,7 +147,7 @@ export function batchCheck(argv: string[], repo?: string): { pass: boolean; line
   const flag = flagOf(argv);
   const batch = batchArg(flag('--batch')), previous = flag('--previous');
   const slots = bgwBatchSlots(batch), set = bgwSeedSetOf(batch)!;
-  const problems = bgwCommittedProblems(batch, repo);
+  const problems = bgwCommittedProblems(batch, repo, { head: true });
   if (problems.length) throw new RenderRefusal(`batch bgw-${batch} is not committed: ${problems.join('; ')}; its batch pull request commits both before it mints`);
   const head = `bgw-batch batch=bgw-${batch} set=${set.id} slots=${slots[0]}-${slots.at(-1)}`;
   if (batch === set.first) {
