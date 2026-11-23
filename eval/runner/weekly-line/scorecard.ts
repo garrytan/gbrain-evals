@@ -73,7 +73,7 @@ export function blockSentence(cls: WlClass, other: WlOther, c: BlockComp, a: Pic
     case 'ceiling': return `${against}: ceiling (gbrain ${score(c.means.gbrain)}, ${other} ${score(c.means.other)}, both at least 97).`;
     case 'changed within the block': return `${against}: changed within the block. Early, at the 16th counted world (${rel(c.early!.releases)}): ${pts(c.early!.pooled.mean)} points (${ci(c.early!.pooled.ci95)}). Full block (${rel(a.releases)}): ${pts(c.pooled.mean)} points (${ci(c.pooled.ci95)}).`;
     case 'ahead': case 'behind':
-      if (c.early) return `${said(c.word, c.early.pooled, c.early.releases)}, early, at the 16th counted world. The full block (${rel(a.releases)}) reads ${pts(c.pooled.mean)} points (${ci(c.pooled.ci95)}).`;
+      if (c.early) return `${said(c.word, c.early.pooled, c.early.releases)}, early, at the 16th counted world. The ${a.ended ? 'full block' : 'block so far'} (${rel(a.releases)}) reads ${pts(c.pooled.mean)} points (${ci(c.pooled.ci95)}).`;
       return `${said(c.word, c.pooled, a.releases)}.`;
     case 'level within 3 points': {
       const base = `gbrain (${rel(a.releases)}) is level with ${who} within 3 points on ${name} (${pts(c.pooled.mean)} points, ${ci(c.pooled.ci95)}).`;
@@ -107,7 +107,7 @@ export function renderBlock(a: BlockAggregates): string {
   lines.push("### The grep agent's stops", '', '| Week | Reader | Answers | Out of turns | Out of context |', '|---|---|---|---|---|',
     ...[...a.grep_agent.weeks.map(w => ({ label: w.week, readers: w.readers })), { label: 'block', readers: a.grep_agent.block }].flatMap(w => WL_READER_KEYS.map(r => { const s = w.readers[r]; return `| ${w.label} | ${r} | ${s.answers} | ${s.turn_cap} (${rate(s.turn_cap_rate)}) | ${s.context_overflow} (${rate(s.context_overflow_rate)}) |`; })), '');
   if (a.cost_per_correct) lines.push('### Cost per correct answer', '', ...costTable(a.cost_per_correct), '');
-  lines.push('### Per kind (both readers, unadjusted)', '', `| Kind | ${['grep-agent', 'extract-first', 'memory-bank'].join(' | ')} |`, '|---|---|---|---|',
+  if (a.per_kind) lines.push('### Per kind (both readers, unadjusted)', '', `| Kind | ${['grep-agent', 'extract-first', 'memory-bank'].join(' | ')} |`, '|---|---|---|---|',
     ...Object.entries(a.per_kind).map(([k, rows]) => `| ${k} | ${['grep-agent', 'extract-first', 'memory-bank'].map(o => cell(rows[o])).join(' | ')} |`), '');
   return lines.join('\n');
 }

@@ -465,6 +465,20 @@ describe('the end of a block', () => {
     expect(page).toContain('The block has not ended (3 of 4 weeks), so only early words stand.');
   });
 
+  test('before the end, a block file holds no per-kind rows or exposure and labels its estimate so far', () => {
+    const exposure = blockAggregates(1, metas, questions, { draws: 99, exposure: {} }).exposure;
+    expect([open.per_kind, exposure]).toEqual([null, null]);
+    expect(done.per_kind).not.toBeNull();
+    const page = renderBlock(open);
+    expect(page).not.toContain('### Per kind');
+    expect(page).toContain('early, at the 16th counted world. The block so far (');
+    expect(renderBlock(done)).toContain('early, at the 16th counted world. The full block (');
+  });
+
+  test('a week refuses a previous block that has not ended', () => {
+    expect(() => weekAggregates(metas[0], questions, { previousBlock: open })).toThrow(/previous block has not ended/);
+  });
+
   test('before the end, no comparison carries a word the look did not give', () => {
     const r = analyzeBlock(questions, counted(worlds), { ended: false, draws: 99 });
     for (const c of r.comparisons) expect(c.word).toBe(c.early?.word ?? 'no verdict');
@@ -475,6 +489,7 @@ describe('the end of a block', () => {
     expect(() => blockAggregates(1, [metas[0], metas[2]], questions, { draws: 99 })).toThrow(/consecutive, 7 days apart/);
     expect(() => blockAggregates(1, [metas[0], { ...metas[1], week: '2026-12-09' }], questions, { draws: 99 })).toThrow(/consecutive/);
     expect(() => blockAggregates(1, [metas[0], { ...metas[1], week: '2026-13-01' }], questions, { draws: 99 })).toThrow(/is not a date/);
+    expect(() => blockAggregates(1, [{ ...metas[0], week: '2027-02-23' }, { ...metas[1], week: '2027-02-30' }], questions, { draws: 99 })).toThrow(/2027-02-30 is not a date/);
   });
 });
 

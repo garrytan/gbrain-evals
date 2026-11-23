@@ -138,7 +138,7 @@ export const BLOCK_SCHEMA: Schema = obj({
     per_world: arr(obj({ world: ID.world, questions: int, d: num, readers: readers(num) }), MAX_WORLDS),
   })),
   leading_competitor: map(WL_CLASS_KEYS, n(en(WL_SERVERS))),
-  per_kind: map(BG1_STRATA, map(WL_OTHERS, est)),
+  per_kind: n(map(BG1_STRATA, map(WL_OTHERS, est))),
   all64: map(WL_ROWS, triple),
   exposure: n(map(WL_ROWS, map(BG1_STRATA, exposureSummary))),
   grep_agent: obj({ weeks: arr(obj({ week: ID.date, readers: readers(stops) }), WL_WEEKS_PER_BLOCK), block: readers(stops) }),
@@ -237,7 +237,7 @@ export interface WeekLike {
   worlds: ReadonlyArray<{ world: string; classes: Record<string, { differences: Record<string, { pooled: number | null; readers: Record<WlReaderKey, number | null> }> }> }>;
 }
 /** What a week reads back from the previous block's file: each comparison's 95% interval and per-world differences. */
-export interface BlockLike { comparisons: Record<string, Record<string, { pooled: { ci95: [number, number] | null }; per_world: ReadonlyArray<{ d: number }> }>> }
+export interface BlockLike { ended: boolean; comparisons: Record<string, Record<string, { pooled: { ci95: [number, number] | null }; per_world: ReadonlyArray<{ d: number }> }>> }
 
 /** The week's per-world differences, as a later week's rolling display reads them back. */
 export function pointWeekOf(a: WeekLike): PointWeek | null {
@@ -288,6 +288,7 @@ export function weekAggregates(meta: WeekMeta, questions: readonly WlQuestion[],
   const points = [...history.map(pointWeekOf).filter((p): p is PointWeek => p !== null && p.week < meta.week), pointWeekOf(partial)!];
   const roll = rolling(points);
   const prev = o.previousBlock ?? null;
+  if (prev && !prev.ended) refuse('the previous block has not ended, so its interval cannot anchor the regression flag');
   if (Object.keys(o.falseAlarmPool ?? {}).some(k => k.endsWith('|grep-agent'))) refuse('BG1-C never ran the grep agent, so the false-alarm pool holds no grep-agent comparison');
   const regression = prev ? byClassOther(c => {
     const pc = prev.comparisons[c.cls][c.other], sdd = weeklySdd(c.family), point = compared.get(c.key)!.pooled.mean;
@@ -304,15 +305,16 @@ export function weekAggregates(meta: WeekMeta, questions: readonly WlQuestion[],
   };
 }
 
-/** A block's per-block file: whether it has ended (all four week entries, weeks with no point included), the words with the look, the release set, both readers' rows, per-kind rows, exposure, the grep agent's stops per week and cost per correct answer. */
+/** A block's per-block file: whether it has ended (all four week entries, weeks with no point included), the words with the look, the release set, both readers' rows, per-kind rows and exposure (null until the block ends, so they leave once per block), the grep agent's stops per week and cost per correct answer. */
 export function blockAggregates(block: number, metas: readonly WeekMeta[], questions: readonly WlQuestion[], o: { exposure?: unknown; draws?: number } = {}) {
   if (!Number.isInteger(block) || block < 1) refuse('the block number must be a whole number from 1');
   if (metas.length > WL_WEEKS_PER_BLOCK) refuse(`a block holds at most ${WL_WEEKS_PER_BLOCK} weeks, not ${metas.length}`);
   metas.forEach(checkMeta);
   const weeks = [...metas].sort((a, b) => (a.week < b.week ? -1 : 1));
   const day = (d: string) => Date.parse(`${d}T00:00:00Z`) / 86_400_000;
+  const isDate = (d: string) => Number.isInteger(day(d)) && new Date(day(d) * 86_400_000).toISOString().slice(0, 10) === d;
   weeks.forEach((w, i) => {
-    if (!Number.isInteger(day(w.week))) refuse(`week ${w.week} is not a date`);
+    if (!isDate(w.week)) refuse(`week ${w.week} is not a date`);
     if (i && w.week === weeks[i - 1].week) refuse(`the block lists week ${w.week} twice`);
     if (i && day(w.week) - day(weeks[i - 1].week) !== 7) refuse(`the block's weeks must be consecutive, 7 days apart, not ${weeks[i - 1].week} then ${w.week}`);
   });
@@ -345,9 +347,9 @@ export function blockAggregates(block: number, metas: readonly WeekMeta[], quest
       };
     }),
     leading_competitor: r.leading,
-    per_kind: Object.fromEntries(BG1_STRATA.map(s => [s, Object.fromEntries(WL_OTHERS.map(other => [other, outEst(r.per_kind[s][other] ?? { worlds: 0, mean: null, sd: null, se: null, df: null, t: null, ci95: null })]))])) as Record<Bg1Stratum, Record<string, ReturnType<typeof outEst>>>,
+    per_kind: !ended ? null : Object.fromEntries(BG1_STRATA.map(s => [s, Object.fromEntries(WL_OTHERS.map(other => [other, outEst(r.per_kind[s][other] ?? { worlds: 0, mean: null, sd: null, se: null, df: null, t: null, ci95: null })]))])) as Record<Bg1Stratum, Record<string, ReturnType<typeof outEst>>>,
     all64: Object.fromEntries(WL_ROWS.map(row => [row, { pooled: r4(r.all64[row].pooled), readers: outReaders(r.all64[row].readers, r4) }])),
-    exposure: (o.exposure ?? null) as Record<string, Record<string, Record<string, number | null>>> | null,
+    exposure: (ended ? o.exposure ?? null : null) as Record<string, Record<string, Record<string, number | null>>> | null,
     grep_agent: {
       weeks: weeks.filter(w => !w.no_point).map(w => ({ week: w.week, readers: grepStops(questions, w.worlds.map(x => x.world)) })),
       block: grepStops(questions, ids),
