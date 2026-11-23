@@ -470,6 +470,7 @@ export async function runCat19(options: Cat19Options = {}): Promise<Cat19RunResu
       links_inserted: baseline && achieved ? achieved.link_count - baseline.link_count : null,
       doctor_plan_ids: planIds,
       steps,
+      gates: Object.fromEntries(acc.toJSON().scores),
       wall_clock_ms: Date.now() - t0,
     },
   };
