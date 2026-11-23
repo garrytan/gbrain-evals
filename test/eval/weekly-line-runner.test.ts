@@ -57,6 +57,8 @@ const cellSet: WeeklyCellSet = ({ worlds }) => ({
 });
 const deps = (now: string, tags = TAGS, cells: WeeklyCellSet | null = cellSet): RunnerDeps => ({ now: at(now), lsRemote: () => tags, cellSet: cells });
 const batch = (manifest: Bg1Manifest | null = FULL, first = 1001) => ({ first, week1: '2026-12-08', manifest });
+/** Metered spend for every row, reader and world of a week. */
+const costsFor = (worlds: readonly string[]) => WL_ROWS.flatMap(row => (['claude-opus-5-5', 'particle-1'] as const).flatMap(reader => worlds.map(world => ({ row, reader, world, usd: 0.25 }))));
 
 // ─── Week and clock ──────────────────────────────────────────────────
 
@@ -75,7 +77,7 @@ describe('the week and its clock', () => {
 // ─── Worlds ──────────────────────────────────────────────────────────
 
 describe("the week's Set W worlds", () => {
-  // Value: protects=a week reads its 8 Set W worlds in slot order from its month's batch, a mint still running refuses, and the previous batch's two spares fill the first week a final batch cannot reach; fails_when=a week reads another week's or a spare's worlds, runs before its batch is final, or the spares fill more than one week; why_new=weekly-line preregistration "Minting" and "When custody is down"; seam=runner.ts weekWorlds over corpus.ts bgwWeekWorlds and bg1Kept; no_claim=the mint's own drop rules
+  // Value: protects=a week reads its 8 Set W worlds in slot order from its month's batch, a mint still running refuses, and the previous batch's two spares fill the first week a final batch cannot reach; fails_when=a week reads another week's or a spare's worlds, runs before its batch is final, or the spares fill more than one week or come from a batch other than the one just before; why_new=weekly-line preregistration "Minting" and "When custody is down"; seam=runner.ts weekWorlds over corpus.ts bgwWeekWorlds and bg1Kept; no_claim=the mint's own drop rules
   test('week k of a batch reads kept worlds 8(k-1)+1 to 8k with their seed and phrasing ids', () => {
     const all = ids(34);
     for (const k of [1, 2, 3, 4]) {
@@ -102,7 +104,8 @@ describe("the week's Set W worlds", () => {
     expect(weekWorlds('2027-01-12', failed, spares).worlds).toEqual([]);
     expect(weekWorlds('2027-01-05', failed).worlds).toEqual([]);
     expect(message(() => weekWorlds('2027-01-05', failed, { first: 1001, manifest: manifestOf(ids(32), 32) }))).toMatch(/has no final spares/);
-    expect(message(() => weekWorlds('2026-12-08', batch(null), { first: 1001, manifest: FULL }))).toMatch(/is not earlier than bgw-1001/);
+    expect(message(() => weekWorlds('2026-12-08', batch(null), { first: 1001, manifest: FULL }))).toMatch(/spares come from the batch just before bgw-1001, which starts at slot 945, not from bgw-1001/);
+    expect(message(() => weekWorlds('2027-02-02', { first: 1113, week1: '2027-02-02', manifest: null }, spares))).toMatch(/^WEEKLY_WORLDS: spares come from the batch just before bgw-1113, which starts at slot 1057, not from bgw-1001/);
   });
 });
 
@@ -196,7 +199,7 @@ describe('launch, progress and the settled marker', () => {
     expect(message(() => launchWeek(none, 'w', deps('2026-12-29')))).toMatch(/^WEEKLY_NO_POINT: /);
   });
 
-  // Value: protects=the settled marker is written only when every cell, re-read and judgment of the week is done or a harness failure, in order, and agrees with the week's meta; fails_when=settle writes a marker with a step pending, a step is marked before what it waits on, a done step is re-marked, or anything changes after settling; why_new=harness PR (d)'s brief item 5, which #611 blocker 1's fix reads; seam=runner.ts markStep and settleWeek over settled.ts; no_claim=the cells' own completion records
+  // Value: protects=the settled marker is written only when every cell, re-read and judgment of the week is done or a harness failure, in order, and agrees with the week's meta; fails_when=settle writes a marker with a step pending or a point week's spend incomplete, a step is marked before what it waits on, a done step is re-marked, or anything changes after settling; why_new=harness PR (d)'s brief item 5, which #611 blocker 1's fix reads; seam=runner.ts markStep and settleWeek over settled.ts; no_claim=the cells' own completion records
   test('settle waits for every cell, re-read and judgment, in order, and its marker settles the meta', () => {
     const dir = join(tmp, 'settle');
     const { steps } = planWeek({ dir, launch: '2026-12-08', batch: batch() }, deps('2026-12-08'));
@@ -213,11 +216,15 @@ describe('launch, progress and the settled marker', () => {
     expect(message(() => settleWeek(dir))).toMatch(/1 of week 2026-12-08's 16 .*first judge:mb-p1/);
     markStep(dir, work.at(-1)!.id, 'done');
     expect(progressOf(dir).get('judge:fs-p1')).toBe('harness_failure');
-    const marker = settleWeek(dir, { costs: [{ row: 'gbrain', reader: 'claude-opus-5-5', world: 'bgw-1001', usd: 0.5 }] });
+    expect(message(() => settleWeek(dir))).toMatch(/^WEEKLY_COSTS: week 2026-12-08 has a point, so settling it needs its metered spend/);
+    expect(message(() => settleWeek(dir, { costs: costsFor(ids(8)).slice(1) }))).toMatch(/^WEEKLY_COSTS: .*lacks 1 row, reader and world cell .*first gbrain\|claude-opus-5-5\|bgw-1001/);
+    expect(message(() => settleWeek(dir, { costs: costsFor(ids(8)).map((c, i) => (i ? c : { ...c, usd: -1 })) }))).toMatch(/^WEEKLY_COSTS: /);
+    expect(existsSync(join(dir, 'settled.json'))).toBe(false);
+    const marker = settleWeek(dir, { costs: costsFor(ids(8)) });
     expect(marker.steps).toEqual({ cells: 5, rereads: 3, judgments: 8, harness_failures: 1 });
     const meta = JSON.parse(readFileSync(join(dir, 'meta.json'), 'utf8'));
     expect(settledProblems(marker, meta)).toEqual([]);
-    expect(meta.costs).toHaveLength(1);
+    expect(meta.costs).toHaveLength(64);
     expect(message(() => settleWeek(dir))).toMatch(/^WEEKLY_SETTLED: /);
     expect(message(() => markStep(dir, 'judge:mb-p1', 'done'))).toMatch(/^WEEKLY_SETTLED: /);
   });
@@ -282,7 +289,11 @@ function writeRecords(dir: string, worlds: readonly string[]): void {
   }
 }
 
-const settleAll = (dir: string) => { for (const s of JSON.parse(readFileSync(join(dir, 'plan.json'), 'utf8')).steps) if (s.stage !== 'aggregates') markStep(dir, s.id, 'done'); return settleWeek(dir); };
+const settleAll = (dir: string) => {
+  for (const s of JSON.parse(readFileSync(join(dir, 'plan.json'), 'utf8')).steps) if (s.stage !== 'aggregates') markStep(dir, s.id, 'done');
+  const run = JSON.parse(readFileSync(join(dir, RUN_FILE), 'utf8'));
+  return settleWeek(dir, run.no_point ? {} : { costs: costsFor(run.worlds.map((w: { world: string }) => w.world)) });
+};
 
 describe('a run end to end', () => {
   const short = manifestOf(ids(8), 8);
@@ -310,10 +321,12 @@ describe('a run end to end', () => {
     expect(() => aggregatesMain(['week', '--meta', join(dirs[0], 'meta.json'), '--records', other, '--out', out])).toThrow(/not the run of any week passed with --meta/);
   });
 
-  // Value: protects=a counted block file is written only through a block writer that passes #611 fixes 2 and 3, the block ends only when all four weeks are settled, and an ended file is never replaced by an open re-run; fails_when=the runner writes a block file with a writer that publishes an open block's simultaneous interval or wild bootstrap, or that overwrites an ended block with an open one; why_new=GBEV-3 ruling on #611, 2026-11-23 (the runner must refuse to write any counted block file until fixes 2 and 3 are in); seam=runner.ts blockWriterProblems and writeBlock; no_claim=the statistics inside the block
+  // Value: protects=a counted block file is written only through a block writer that passes #611 fixes 2 and 3, the block ends only when all four weeks are settled, and an ended file is never replaced by an open re-run; fails_when=the runner writes a block file with a writer that publishes an open block's simultaneous interval or wild bootstrap, or that overwrites an ended block with an open one, or reads a week still running into the look; why_new=GBEV-3 ruling on #611, 2026-11-23 (the runner must refuse to write any counted block file until fixes 2 and 3 are in); seam=runner.ts blockWriterProblems and writeBlock; no_claim=the statistics inside the block
   test('the block ends only when all four weeks settle, and an open re-run never replaces it', () => {
-    for (const d of dirs.slice(1)) settleAll(d);
     const out = join(root, 'blocks');
+    expect(message(() => writeBlock(1, dirs.slice(0, 2), out))).toMatch(/^WEEKLY_NOT_SETTLED: a block reads settled weeks only, and .*2026-12-15 is not settled/);
+    expect(existsSync(join(out, 'block-1.json'))).toBe(false);
+    for (const d of dirs.slice(1)) settleAll(d);
     const open = writeBlock(1, dirs.slice(0, 3), out);
     expect(JSON.parse(readFileSync(open, 'utf8')).ended).toBe(false);
     const path = writeBlock(1, dirs, out);

@@ -21,7 +21,8 @@
  * Worlds. A Set W batch is minted monthly and serves the four weeks from its first Tuesday (--batch-week1): week k of
  * the batch reads its kept worlds 8(k-1)+1 to 8k in slot order (bgwWeekWorlds). A mint still running refuses. Once a
  * batch is final, a week its own kept worlds do not reach has no worlds, except the first such week, which the previous
- * batch's two spares (its kept worlds 33 and 34) fill when --spares names that batch. Any other week without worlds
+ * batch's two spares (its kept worlds 33 and 34) fill when --spares names that batch, the one just before it (one
+ * batch of slots earlier), so each batch's spares fill at most one week. Any other week without worlds
  * records "no point: no worlds". --mint-failed stands for a batch whose mint kept no world.
  *
  * gbrain. The release is the highest version tag on gbrain's repository when the week is first planned (git ls-remote
@@ -36,9 +37,10 @@
  *
  * Settled. mark records each step as done or as a harness failure, in order (a re-read after its cell, a judgment after
  * the answers it judges). settle writes the week's meta (meta.json) and its settled marker (settled.ts, settled.json)
- * only once every cell, re-read and judgment is recorded, or for a week with no point.
+ * only once every cell, re-read and judgment is recorded, or for a week with no point; a week with a point also needs
+ * its metered spend for every row, reader and world (--costs), since a settled week is never settled again.
  *
- * Blocks. block writes a counted block file only after it proves, on synthetic values, that the block writer nulls an
+ * Blocks. block reads settled weeks only, so no week still running reaches the look, and writes a counted block file only after it proves, on synthetic values, that the block writer nulls an
  * open block's simultaneous interval and wild bootstrap and refuses to put an open block over an ended one (#611
  * read-only review blockers 2 and 3, which GBEV-3 ruled R113 integrity on 2026-11-23); otherwise it refuses
  * (WEEKLY_BLOCK_GUARDS).
@@ -51,11 +53,11 @@ import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSyn
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { GBRAIN_REPO, newestRelease } from '../gbrain-pin.ts';
-import { BGW_WEEKS_PER_BATCH, BGW_WORLDS_PER_WEEK, bgwBatchName, bgwSeedSetOf, bgwSlotOf } from '../memory-qa/bg1-names.ts';
+import { BGW_BATCH_SLOTS, BGW_WEEKS_PER_BATCH, BGW_WORLDS_PER_WEEK, bgwBatchName, bgwSeedSetOf, bgwSlotOf } from '../memory-qa/bg1-names.ts';
 import { bg1Kept, bg1RunClock, bgwSet, bgwWeekWorldEnd, bgwWeekWorlds, readBg1Manifest, type Bg1Manifest } from '../memory-qa/corpus.ts';
 import { bg1JudgeOf } from '../q1/cells/definitions.ts';
 import { blockAggregates, boundRecords, writeBlockFiles, type WeekMeta } from './aggregates.ts';
-import { WL_READERS, WL_ROWS, WL_SERVERS, WL_WEEKS_PER_BLOCK, type WlNoPoint, type WlRow, type WlServer } from './design.ts';
+import { WL_READER_KEYS, WL_READERS, WL_ROWS, WL_SERVERS, WL_WEEKS_PER_BLOCK, type WlNoPoint, type WlRow, type WlServer } from './design.ts';
 import { RUN_FILE, runIdentity, type GbrainBuild, type RunIdentity, type RunWorld } from './identity.ts';
 import { plannedFor, questionsFromRecords, type WlQuestion } from './records.ts';
 import { SETTLED_SCHEMA, type SettledMarker } from './settled.ts';
@@ -120,7 +122,7 @@ export function weekWorlds(launch: string, batch: BatchInput, spares?: { first: 
   if (!final) return refuse('WEEKLY_MINT_UNFINISHED', `batch ${name} keeps ${kept.length} worlds and is not final, so week ${k} of the batch cannot run yet`);
   const firstEmpty = Math.ceil(kept.length / BGW_WORLDS_PER_WEEK) + 1;
   if (k !== firstEmpty || !spares) return { batch: name, week_of_batch: k, spares_from: null, worlds: [] };
-  if (spares.first >= batch.first) refuse('WEEKLY_WORLDS', `spares come from an earlier batch, and ${bgwBatchName(spares.first)} is not earlier than ${name}`);
+  if (spares.first !== batch.first - BGW_BATCH_SLOTS) refuse('WEEKLY_WORLDS', `spares come from the batch just before ${name}, which starts at slot ${batch.first - BGW_BATCH_SLOTS}, not from ${bgwBatchName(spares.first)}`);
   const s = keptOf(spares);
   const tail = s.kept.slice(BGW_WEEKS_PER_BATCH * BGW_WORLDS_PER_WEEK);
   if (!s.final || !tail.length) refuse('WEEKLY_WORLDS', `batch ${bgwBatchName(spares.first)} has no final spares to fill week ${launch}`);
@@ -305,6 +307,13 @@ export function settleWeek(dir: string, o: { costs?: CostCell[]; gbrainFailed?: 
   if (o.gbrainFailed && (run.no_point || !run.gbrain)) refuse('WEEKLY_NO_POINT', `week ${run.week} has no gbrain row to fail`);
   const pending = work.filter(s => !progress.has(s.id));
   if (pending.length && !o.gbrainFailed) refuse('WEEKLY_NOT_SETTLED', `${pending.length} of week ${run.week}'s ${work.length} cells, re-reads and judgments are not done or recorded as harness failures (first ${pending[0].id})`);
+  if (!run.no_point && !o.gbrainFailed) {
+    const costs = o.costs ?? refuse('WEEKLY_COSTS', `week ${run.week} has a point, so settling it needs its metered spend for every row, reader and world (--costs)`);
+    const key = (row: string, reader: string, world: string) => `${row}|${reader}|${world}`;
+    const given = new Set(costs.filter(c => typeof c.usd === 'number' && Number.isFinite(c.usd) && c.usd >= 0).map(c => key(c.row, c.reader, c.world)));
+    const missing = WL_ROWS.flatMap(row => WL_READER_KEYS.flatMap(reader => run.worlds.filter(w => !given.has(key(row, reader, w.world))).map(w => key(row, reader, w.world))));
+    if (missing.length) refuse('WEEKLY_COSTS', `week ${run.week}'s spend lacks ${missing.length} row, reader and world cell${missing.length === 1 ? '' : 's'} or holds one that is not a finite number of at least 0 (first ${missing[0]})`);
+  }
   const no_point: WlNoPoint | null = o.gbrainFailed ? 'gbrain release failed to run' : run.no_point;
   const worlds = no_point ? [] : run.worlds;
   const meta: WeekMeta = { week: run.week, run_id: run.run_id, gbrain: run.gbrain, comparators: run.comparators, worlds, costs: no_point ? [] : o.costs ?? [], no_point };
@@ -364,15 +373,14 @@ export function blockWriterProblems(w: BlockWriter): string[] {
   return p;
 }
 
-/** A week still running reads as its planned meta (no spend yet), and carries no settled marker, so its block stays open. */
-const plannedMeta = (run: RunIdentity): WeekMeta => ({ week: run.week, run_id: run.run_id, gbrain: run.gbrain, comparators: run.comparators, worlds: run.worlds, costs: [], no_point: run.no_point });
-
-/** Write a counted block file from the runs of its weeks, only once the block writer passes its guard probe. */
+/** Write a counted block file from the settled runs of its weeks, only once the block writer passes its guard probe; a week still running refuses, so its records never reach the look. */
 export function writeBlock(block: number, runs: readonly string[], out: string, w: BlockWriter = BLOCK_WRITER): string {
   const p = blockWriterProblems(w);
   if (p.length) refuse('WEEKLY_BLOCK_GUARDS', `no counted block file is written until the block writer passes its R113 guards: ${p.join('; ')}`);
-  const metas = runs.map(d => (existsSync(join(d, META_FILE)) ? readJson(join(d, META_FILE)) as WeekMeta : plannedMeta(loadRun(d).run)));
-  const settled = runs.filter(d => existsSync(join(d, SETTLED_FILE))).map(d => readJson(join(d, SETTLED_FILE)));
+  const open = runs.filter(d => !existsSync(join(d, SETTLED_FILE)));
+  if (open.length) refuse('WEEKLY_NOT_SETTLED', `a block reads settled weeks only, and ${open[0]} is not settled${open.length > 1 ? ` (and ${open.length - 1} more)` : ''}`);
+  const metas = runs.map(d => readJson(join(d, META_FILE)) as WeekMeta);
+  const settled = runs.map(d => readJson(join(d, SETTLED_FILE)));
   const pointRuns = runs.filter((_, i) => !metas[i].no_point);
   const records = boundRecords(pointRuns, metas);
   const questions = questionsFromRecords(metas.filter(m => !m.no_point).flatMap(m => m.worlds.map(x => x.world)), records.answers, records.judgments);
