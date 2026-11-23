@@ -96,16 +96,17 @@ describe("the week's Set W worlds", () => {
     const short = batch(manifestOf(ids(20), 20));
     expect(weekWorlds('2026-12-22', short).worlds.map(x => x.world)).toEqual(ids(4, 1017));
     expect(weekWorlds('2026-12-29', short).worlds).toEqual([]);
-    const failed = { first: 1057, week1: '2027-01-05', manifest: null };
+    const failed = { first: 1035, week1: '2027-01-05', manifest: null };
     const spares = { first: 1001, manifest: FULL };
     const w1 = weekWorlds('2027-01-05', failed, spares);
-    expect(w1).toMatchObject({ batch: 'bgw-1057', week_of_batch: 1, spares_from: 'bgw-1001' });
+    expect(w1).toMatchObject({ batch: 'bgw-1035', week_of_batch: 1, spares_from: 'bgw-1001' });
     expect(w1.worlds.map(x => x.world)).toEqual(['bgw-1033', 'bgw-1034']);
     expect(weekWorlds('2027-01-12', failed, spares).worlds).toEqual([]);
     expect(weekWorlds('2027-01-05', failed).worlds).toEqual([]);
-    expect(message(() => weekWorlds('2027-01-05', failed, { first: 1001, manifest: manifestOf(ids(32), 32) }))).toMatch(/has no final spares/);
-    expect(message(() => weekWorlds('2026-12-08', batch(null), { first: 1001, manifest: FULL }))).toMatch(/spares come from the batch just before bgw-1001, which starts at slot 945, not from bgw-1001/);
-    expect(message(() => weekWorlds('2027-02-02', { first: 1113, week1: '2027-02-02', manifest: null }, spares))).toMatch(/^WEEKLY_WORLDS: spares come from the batch just before bgw-1113, which starts at slot 1057, not from bgw-1001/);
+    expect(message(() => weekWorlds('2027-01-05', { ...failed, first: 1057 }, { first: 1001, manifest: manifestOf(ids(32), 32) }))).toMatch(/has no final spares/);
+    expect(message(() => weekWorlds('2026-12-08', batch(null), { first: 1001, manifest: FULL }))).toMatch(/spares come from the batch just before bgw-1001, and bgw-1001 ended at slot 1034, so the batch after it is bgw-1035/);
+    expect(message(() => weekWorlds('2027-01-05', { first: 1057, week1: '2027-01-05', manifest: null }, spares))).toMatch(/^WEEKLY_WORLDS: spares come from the batch just before bgw-1057, and bgw-1001 ended at slot 1034, so the batch after it is bgw-1035/);
+    expect(message(() => weekWorlds('2027-01-05', failed, { first: 1001, manifest: manifestOf([...ids(33), 'bgw-1040'], 34) }))).toMatch(/^WEEKLY_WORLDS: .* ended at slot 1040, so the batch after it is bgw-1041/);
   });
 });
 

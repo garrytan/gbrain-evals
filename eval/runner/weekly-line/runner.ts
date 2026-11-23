@@ -21,8 +21,9 @@
  * Worlds. A Set W batch is minted monthly and serves the four weeks from its first Tuesday (--batch-week1): week k of
  * the batch reads its kept worlds 8(k-1)+1 to 8k in slot order (bgwWeekWorlds). A mint still running refuses. Once a
  * batch is final, a week its own kept worlds do not reach has no worlds, except the first such week, which the previous
- * batch's two spares (its kept worlds 33 and 34) fill when --spares names that batch, the one just before it (one
- * batch of slots earlier), so each batch's spares fill at most one week. Any other week without worlds
+ * batch's two spares (its kept worlds 33 and 34) fill when --spares names that batch, the one just before it (this
+ * batch starts one slot after it ended, at its 34th kept world, as custody's bgw-checks.ts batch check requires), so
+ * each batch's spares fill at most one week. Any other week without worlds
  * records "no point: no worlds". --mint-failed stands for a batch whose mint kept no world.
  *
  * gbrain. The release is the highest version tag on gbrain's repository when the week is first planned (git ls-remote
@@ -53,7 +54,7 @@ import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSyn
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { GBRAIN_REPO, newestRelease } from '../gbrain-pin.ts';
-import { BGW_BATCH_SLOTS, BGW_WEEKS_PER_BATCH, BGW_WORLDS_PER_WEEK, bgwBatchName, bgwSeedSetOf, bgwSlotOf } from '../memory-qa/bg1-names.ts';
+import { BGW_BATCH_KEPT, BGW_BATCH_SLOTS, BGW_WEEKS_PER_BATCH, BGW_WORLDS_PER_WEEK, bgwBatchName, bgwSeedSetOf, bgwSlotOf } from '../memory-qa/bg1-names.ts';
 import { bg1Kept, bg1RunClock, bgwSet, bgwWeekWorldEnd, bgwWeekWorlds, readBg1Manifest, type Bg1Manifest } from '../memory-qa/corpus.ts';
 import { bg1JudgeOf } from '../q1/cells/definitions.ts';
 import { blockAggregates, boundRecords, writeBlockFiles, type WeekMeta } from './aggregates.ts';
@@ -122,8 +123,9 @@ export function weekWorlds(launch: string, batch: BatchInput, spares?: { first: 
   if (!final) return refuse('WEEKLY_MINT_UNFINISHED', `batch ${name} keeps ${kept.length} worlds and is not final, so week ${k} of the batch cannot run yet`);
   const firstEmpty = Math.ceil(kept.length / BGW_WORLDS_PER_WEEK) + 1;
   if (k !== firstEmpty || !spares) return { batch: name, week_of_batch: k, spares_from: null, worlds: [] };
-  if (spares.first !== batch.first - BGW_BATCH_SLOTS) refuse('WEEKLY_WORLDS', `spares come from the batch just before ${name}, which starts at slot ${batch.first - BGW_BATCH_SLOTS}, not from ${bgwBatchName(spares.first)}`);
   const s = keptOf(spares);
+  const end = s.kept.length >= BGW_BATCH_KEPT ? bgwSlotOf(s.kept[BGW_BATCH_KEPT - 1])! : spares.first + BGW_BATCH_SLOTS - 1;
+  if (batch.first !== end + 1 || bgwSeedSetOf(spares.first) !== bgwSeedSetOf(batch.first)) refuse('WEEKLY_WORLDS', `spares come from the batch just before ${name}, and ${bgwBatchName(spares.first)} ended at slot ${end}, so the batch after it is bgw-${end + 1}`);
   const tail = s.kept.slice(BGW_WEEKS_PER_BATCH * BGW_WORLDS_PER_WEEK);
   if (!s.final || !tail.length) refuse('WEEKLY_WORLDS', `batch ${bgwBatchName(spares.first)} has no final spares to fill week ${launch}`);
   return { batch: name, week_of_batch: k, spares_from: bgwBatchName(spares.first), worlds: tail.map(runWorld) };
