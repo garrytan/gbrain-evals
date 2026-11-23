@@ -18,9 +18,9 @@
  * exactly; the commit phase (fact migration, disk fence, soft delete) is out
  * of scope, as is the cycle's lock/limit plumbing.
  * LEGITIMATELY SEEDED: canonical + phantom pages via importFromContent with
- * noEmbed (no gateway, no keys). Deep import of the resolver via the
- * node_modules relative path — gbrain does not export `entities/resolve` as
- * a subpath yet (upstream TODO stands).
+ * noEmbed (no gateway, no keys). The resolver is loaded from the build under
+ * test by its source path — gbrain does not export `entities/resolve` as a
+ * subpath yet (upstream TODO stands).
  *
  * ── Fixture design (audit cats22-25-05) ──────────────────────────────
  * Phantoms are BARE NAMES ('alice', not 'alice-okafor'): prefix expansion
@@ -39,24 +39,27 @@
  *     else fails.
  *
  * Run:
- *   bun eval/runner/cat23-phantom-redirect.ts
+ *   bun eval/runner/cat23-phantom-redirect.ts [--gbrain <checkout>[@ref]] [--pg-url <admin url>]
+ *
+ * Engine (gbrain RUST_ENGINE.md gate E3, scored against PGLite's pg_trgm behavior): GBRAIN_EVAL_ENGINE=
+ * pglite|postgres|rust opens the brain through eval-engine.ts's openGateEngine, and the resolver and importer come
+ * from the build --gbrain names. The expectations are PGLite's decisions, unchanged per engine. Unset, it is the
+ * pinned gbrain's in-memory PGLite, as before.
  */
 
 import { writeFileSync, mkdirSync } from 'fs';
-import { join } from 'path';
+import { dirname, join } from 'path';
 import { tmpdir } from 'os';
-import { PGLiteEngine } from 'gbrain/pglite-engine';
-import { importFromContent } from 'gbrain/import-file';
-import { ProbeAccounting } from './probe-accounting.ts';
-import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt, noModelSpend } from './receipt.ts';
-import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
-
-// Deep import via the relative path inside node_modules (gbrain doesn't
-// export `entities/resolve` as a subpath yet — upstream TODO stands).
+import type * as ImportFile from 'gbrain/import-file';
+import type * as Resolve from '../../node_modules/gbrain/src/core/entities/resolve.ts';
+import { importGbrain } from './gbrain-under-test.ts';
 import {
-  resolvePhantomCanonical,
-  findPrefixCandidates,
-} from '../../node_modules/gbrain/src/core/entities/resolve.ts';
+  EvalEngineUnavailable, gateReceiptPath, gateRunnerContext, gateRunnerReceiptFields, openGateEngine, preflightGateEngine, refuseEvalEngine,
+  type GateRunnerContext,
+} from './eval-engine.ts';
+import { ProbeAccounting } from './probe-accounting.ts';
+import { writeReceipt, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt, noModelSpend } from './receipt.ts';
+import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
 
 export const CAT23_CATEGORY = 'cat23-phantom-redirect';
 
@@ -140,10 +143,12 @@ export const PHANTOMS: PhantomExpectation[] = [
  * phase and body-residue gate are out of scope (we call with known stubs).
  */
 export async function decidePhantom(
+  resolver: Pick<typeof Resolve, 'resolvePhantomCanonical' | 'findPrefixCandidates'>,
   engine: unknown,
   sourceId: string,
   phantomSlug: string,
 ): Promise<{ decision: PhantomDecision; canonical: string | null; candidates: number }> {
+  const { resolvePhantomCanonical, findPrefixCandidates } = resolver;
   const canonical = await resolvePhantomCanonical(engine as any, sourceId, phantomSlug);
   if (!canonical) return { decision: 'no_canonical', canonical: null, candidates: 0 };
   const candidates = await findPrefixCandidates(engine as any, sourceId, phantomSlug);
@@ -170,6 +175,8 @@ export function scorePhantomCase(
 }
 
 export interface Cat23Options {
+  /** gbrain build and engine (gateRunnerContext). Defaults to the pinned gbrain's in-memory PGLite. */
+  ctx?: GateRunnerContext;
   reportsDir?: string;
   quiet?: boolean;
   /** Test hooks: substitute fixture sets to prove the gate can fail. */
@@ -186,8 +193,10 @@ export interface Cat23RunResult {
 
 export async function runCat23(options: Cat23Options = {}): Promise<Cat23RunResult> {
   const startedAt = new Date().toISOString();
+  const ctx = options.ctx ?? gateRunnerContext([], {});
   const reportsDir = options.reportsDir ?? join(process.cwd(), 'eval/reports');
-  const receiptFile = receiptPath(CAT23_CATEGORY, reportsDir);
+  const receiptFile = gateReceiptPath(ctx, CAT23_CATEGORY, reportsDir);
+  const gbrainVersion = ctx.gut.overlay ? ctx.gut.version : gbrainVersionResolved();
   const log = options.quiet ? (_: string) => {} : (s: string) => process.stderr.write(s);
   const canonicals = options.canonicals ?? CANONICALS;
   const phantoms = options.phantoms ?? PHANTOMS;
@@ -198,9 +207,12 @@ export async function runCat23(options: Cat23Options = {}): Promise<Cat23RunResu
   mkdirSync(home, { recursive: true });
   process.env.GBRAIN_HOME = home;
 
-  const engine: any = new PGLiteEngine();
-  await engine.connect({});
-  await engine.initSchema();
+  const [{ importFromContent }, resolver] = await Promise.all([
+    importGbrain<typeof ImportFile>(ctx.gut, 'src/core/import-file.ts'),
+    importGbrain<typeof Resolve>(ctx.gut, 'src/core/entities/resolve.ts'),
+  ]);
+  const scratch = await openGateEngine(ctx, 'cat23');
+  const engine: any = scratch.engine;
 
   const acc = new ProbeAccounting(phantoms.length);
   const cases: PhantomCase[] = [];
@@ -222,7 +234,7 @@ export async function runCat23(options: Cat23Options = {}): Promise<Cat23RunResu
     } catch (e: any) {
       console.log = origLog;
       console.error = origErr;
-      await engine.disconnect();
+      await scratch.close();
       const receipt: Receipt = {
         schema_version: RECEIPT_SCHEMA_VERSION,
         benchmark_version: BENCHMARK_VERSION,
@@ -233,8 +245,9 @@ export async function runCat23(options: Cat23Options = {}): Promise<Cat23RunResu
         completion_rate: 0,
         errors: [{ probe_id: 'seed', origin: 'harness', message: String(e?.message ?? e).slice(0, 500) }],
         publishable: false,
-        gbrain_version: gbrainVersionResolved(),
+        gbrain_version: gbrainVersion,
         gbrain_pin: gbrainPin(),
+        ...gateRunnerReceiptFields(ctx),
         started_at: startedAt,
         finished_at: new Date().toISOString(),
       };
@@ -249,7 +262,7 @@ export async function runCat23(options: Cat23Options = {}): Promise<Cat23RunResu
       let candidates = 0;
       let error: string | null = null;
       try {
-        const d = await decidePhantom(engine, 'default', exp.phantom_slug);
+        const d = await decidePhantom(resolver, engine, 'default', exp.phantom_slug);
         decision = d.decision;
         canonical = d.canonical;
         candidates = d.candidates;
@@ -284,7 +297,7 @@ export async function runCat23(options: Cat23Options = {}): Promise<Cat23RunResu
   } finally {
     console.log = origLog;
     console.error = origErr;
-    await engine.disconnect();
+    await scratch.close();
   }
 
   const summary = acc.summary();
@@ -306,8 +319,9 @@ export async function runCat23(options: Cat23Options = {}): Promise<Cat23RunResu
     completion_rate: summary.completion_rate,
     errors: summary.errors,
     publishable: summary.publishable && verdict === 'pass' && !options.phantoms && !options.canonicals,
-    gbrain_version: gbrainVersionResolved(),
+    gbrain_version: gbrainVersion,
     gbrain_pin: gbrainPin(),
+    ...gateRunnerReceiptFields(ctx),
     resolved_config: {
       source_id: 'default',
       resolver: 'resolvePhantomCanonical + findPrefixCandidates (deep import; mirrors tryRedirectPhantom decision core)',
@@ -326,7 +340,7 @@ export async function runCat23(options: Cat23Options = {}): Promise<Cat23RunResu
   };
   writeReceipt(receiptFile, receipt);
 
-  const outDir = join(reportsDir, CAT23_CATEGORY);
+  const outDir = dirname(receiptFile);
   mkdirSync(outDir, { recursive: true });
   const outFile = join(outDir, `${new Date().toISOString().slice(0, 10)}-cat23.json`);
   writeFileSync(outFile, JSON.stringify(receipt, null, 2) + '\n', 'utf8');
@@ -348,12 +362,18 @@ export async function runCat23(options: Cat23Options = {}): Promise<Cat23RunResu
 }
 
 if (import.meta.main) {
+  let ctx: GateRunnerContext | undefined;
   try {
-    const result = await runCat23();
+    ctx = gateRunnerContext(process.argv);
+    try { await preflightGateEngine(ctx); } catch (e) {
+      if (e instanceof EvalEngineUnavailable) refuseEvalEngine(e, 'Cat 23 phantom redirect');
+      throw e;
+    }
+    const result = await runCat23({ ctx });
     process.exit(result.exitCode);
   } catch (e: any) {
     try {
-      writeReceipt(receiptPath(CAT23_CATEGORY), {
+      writeReceipt(gateReceiptPath(ctx ?? { requested: null }, CAT23_CATEGORY), {
         schema_version: RECEIPT_SCHEMA_VERSION,
         benchmark_version: BENCHMARK_VERSION,
         category: CAT23_CATEGORY,
@@ -363,8 +383,9 @@ if (import.meta.main) {
         completion_rate: 0,
         errors: [{ probe_id: 'preflight', origin: 'harness', message: String(e?.message ?? e).slice(0, 500) }],
         publishable: false,
-        gbrain_version: gbrainVersionResolved(),
+        gbrain_version: ctx?.gut.overlay ? ctx.gut.version : gbrainVersionResolved(),
         gbrain_pin: gbrainPin(),
+        ...(ctx ? gateRunnerReceiptFields(ctx) : {}),
         started_at: new Date().toISOString(),
         finished_at: new Date().toISOString(),
       });

@@ -272,12 +272,10 @@ describe('Cat24 records all seven observed probe outcomes', () => {
   }, RUN_TIMEOUT);
 
   test('a failed schema SELECT records all seven failures without inferring downstream success', async () => {
-    const executeRaw = PGLiteEngine.prototype.executeRaw;
-    const schemaFailure = spyOn(PGLiteEngine.prototype, 'executeRaw').mockImplementation(async function<T>(this: PGLiteEngine, sql: string, params?: unknown[], opts?: { signal?: AbortSignal }): Promise<T[]> {
-      if (sql.includes('SELECT source_kind, source_uri, ingested_via, ingested_at FROM pages LIMIT 0')) {
-        throw new Error('forced missing provenance column');
-      }
-      return executeRaw.call(this, sql, params, opts) as Promise<T[]>;
+    const getPage = PGLiteEngine.prototype.getPage;
+    const schemaFailure = spyOn(PGLiteEngine.prototype, 'getPage').mockImplementation(async function(this: PGLiteEngine, ...args: Parameters<PGLiteEngine['getPage']>) {
+      if (args[0] === 'inbox/2026-05-23-schema-probe') throw new Error('forced missing provenance column');
+      return getPage.apply(this, args);
     });
     try {
       const result = await runCat24({ reportsDir, quiet: true });
@@ -298,18 +296,15 @@ describe('Cat24 records all seven observed probe outcomes', () => {
   }, RUN_TIMEOUT);
 
   test('rewrite timestamp drift retains both observed stamps and its scored failure', async () => {
-    const executeRaw = PGLiteEngine.prototype.executeRaw;
+    const getPage = PGLiteEngine.prototype.getPage;
     let contentReads = 0;
-    const timestampDrift = spyOn(PGLiteEngine.prototype, 'executeRaw').mockImplementation(async function<T>(this: PGLiteEngine, sql: string, params?: unknown[], opts?: { signal?: AbortSignal }): Promise<T[]> {
-      const rows = await executeRaw.call(this, sql, params, opts);
-      if (sql.includes('SELECT source_kind, source_uri, ingested_via, ingested_at, source_path') && params?.[0] === 'inbox/2026-05-23-content-import') {
+    const timestampDrift = spyOn(PGLiteEngine.prototype, 'getPage').mockImplementation(async function(this: PGLiteEngine, ...args: Parameters<PGLiteEngine['getPage']>) {
+      const page = await getPage.apply(this, args);
+      if (args[0] === 'inbox/2026-05-23-content-import' && page && new Error().stack?.includes('readProvenance')) {
         contentReads++;
-        if (contentReads === 3) {
-          const row = rows[0] as { ingested_at: string | Date };
-          rows[0] = { ...row, ingested_at: new Date(new Date(row.ingested_at).getTime() + 1000) };
-        }
+        if (contentReads === 3) return { ...page, ingested_at: new Date(new Date(page.ingested_at as string | Date).getTime() + 1000) } as typeof page;
       }
-      return rows as T[];
+      return page;
     });
     try {
       const result = await runCat24({ reportsDir, quiet: true });

@@ -32,6 +32,18 @@
  *                           eval/data/gold/brainbench-<name>-subset.json
  *   --json                  machine-readable JSON on stdout
  *   --receipt-path <path>   override the receipt location (tests)
+ *   --gbrain <checkout>[@ref]  the gbrain build under test (or GBRAIN_UNDER_TEST)
+ *   --pg-url <admin url>    Postgres admin URL for GBRAIN_EVAL_ENGINE=postgres (or LIFECYCLE_PG_URL)
+ *   --stub-embed            hermetic: gbrain's embed transport returns token-hash
+ *                           vectors, so the gbrain row runs keyless (not publishable)
+ *
+ * Engine (gbrain RUST_ENGINE.md gate E2, "BrainBench Cats 1+2 (graph on)"):
+ * GBRAIN_EVAL_ENGINE=pglite|postgres|rust opens the gbrain and graph-oracle-parse
+ * brains through eval-engine.ts's openGateEngine, and every gbrain module comes
+ * from the build --gbrain names. With an engine, a --gbrain build or --stub-embed,
+ * only those two rows run (ENGINE_ADAPTERS); the others never open a gbrain engine
+ * of their choosing. Unset, every row runs on the pinned gbrain's in-memory PGLite,
+ * as before.
  *
  * Env:
  *   BRAINBENCH_N            runs per adapter (default 5). Non-numeric / < 1
@@ -46,8 +58,14 @@
  */
 
 import { readFileSync } from 'fs';
-import { PGLiteEngine } from 'gbrain/pglite-engine';
-import { runExtract } from 'gbrain/extract';
+import type { BrainEngine } from 'gbrain/engine';
+import type * as Extract from 'gbrain/extract';
+import type * as Gateway from 'gbrain/ai/gateway';
+import { importGbrain } from './gbrain-under-test.ts';
+import {
+  EvalEngineUnavailable, gateReceiptPath, gateRunnerContext, gateRunnerReceiptFields, openGateEngine, preflightGateEngine, refuseEvalEngine,
+  type EvalEngineKind, type GateRunnerContext, type ScratchEvalEngine,
+} from './eval-engine.ts';
 import { RipgrepBm25Adapter } from './adapters/grep-only.ts';
 import { VectorOnlyAdapter } from './adapters/vector.ts';
 import { HybridNoGraphAdapter } from './adapters/vector-grep-rrf-fusion.ts';
@@ -57,7 +75,7 @@ import { precisionAtK, recallAtK, sanitizePage, sanitizeQuery } from './types.ts
 import { buildRelationalQueries, loadWorldCorpus, type RichPage } from './queries/relational.ts';
 import { getTier5FuzzyQueries, getTier5_5SyntheticQueries } from './queries/index.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
-import { writeReceipt, receiptPath, RECEIPT_SCHEMA_VERSION, BENCHMARK_VERSION } from './receipt.ts';
+import { writeReceipt, RECEIPT_SCHEMA_VERSION, BENCHMARK_VERSION } from './receipt.ts';
 import { gbrainVersion, gbrainPin } from './gbrain-version.ts';
 import { retrievalPins, RETRIEVAL_EMBEDDER, RETRIEVAL_DIMENSIONS, observedSearchFailures } from './retrieval-pins.ts';
 import { createHash } from 'crypto';
@@ -77,14 +95,47 @@ export const GBRAIN_PRODUCT_SEARCH_CONFIG: Readonly<Record<string, string>> = {
 /** Adapters that record one search observation per query and must account for every one. */
 const OBSERVED_ADAPTERS = new Set(['gbrain', 'vector-grep-rrf-fusion']);
 
-export function createGbrainProductAdapter(): GbrainInlineAdapter {
+export function createGbrainProductAdapter(o: { engine?: { kind: EvalEngineKind; pgAdminUrl?: string }; productRoot?: string; expectStubTransport?: boolean } = {}): GbrainInlineAdapter {
   return new GbrainInlineAdapter({
     topK: TOP_K,
     extract: true,
     searchConfig: { ...GBRAIN_PRODUCT_SEARCH_CONFIG },
     embeddingModel: RETRIEVAL_EMBEDDER,
     embeddingDimensions: RETRIEVAL_DIMENSIONS,
+    ...o,
   }, 'gbrain');
+}
+
+/** The rows that open their brain on the gate engine from the build under test. */
+export const ENGINE_ADAPTERS: ReadonlySet<string> = new Set(['gbrain', 'graph-oracle-parse']);
+
+/** Texts and characters the stub transport embedded: what a live run would send to the provider. */
+export interface StubEmbedCount { transport: 'token-hash'; texts: number; chars: number }
+
+/**
+ * Install a token-hash embed transport in the build's gateway (process-global), so
+ * the gbrain row embeds keyless. Each token adds to one dimension, so pages that
+ * share words get similar vectors. A dummy OPENAI_API_KEY is set only when none is,
+ * because the gateway refuses a provider with no key before reaching the transport.
+ */
+export async function installStubEmbed(ctx: GateRunnerContext): Promise<StubEmbedCount> {
+  const gw = await importGbrain<typeof Gateway>(ctx.gut, 'src/core/ai/gateway.ts');
+  if (!process.env.OPENAI_API_KEY) process.env.OPENAI_API_KEY = 'dummy-embed-transport-stubbed';
+  const count: StubEmbedCount = { transport: 'token-hash', texts: 0, chars: 0 };
+  const embed = (text: string, dims: number): number[] => {
+    const vec = new Array<number>(dims).fill(0);
+    for (const tok of new Set(text.toLowerCase().split(/[^a-z0-9]+/).filter(t => t.length > 2))) {
+      vec[createHash('sha256').update(tok).digest().readUInt32BE(0) % dims] += 1;
+    }
+    const norm = Math.sqrt(vec.reduce((a, b) => a + b * b, 0)) || 1;
+    return vec.map(x => x / norm);
+  };
+  gw.__setEmbedTransportForTests((async (params: { values: string[] }) => {
+    count.texts += params.values.length;
+    count.chars += params.values.reduce((s, v) => s + v.length, 0);
+    return { embeddings: params.values.map(v => embed(v, gw.getEmbeddingDimensions())), values: params.values, warnings: [], usage: { tokens: 0 } };
+  }) as unknown as Parameters<typeof gw.__setEmbedTransportForTests>[0]);
+  return count;
 }
 
 const TOP_K = 5;
@@ -159,10 +210,12 @@ export function familiesForAdapter(adapterName: string, families: QueryFamily[])
 class GraphOracleParseAdapter implements Adapter {
   readonly name = 'graph-oracle-parse';
 
+  constructor(private readonly ctx: GateRunnerContext) {}
+
   async init(rawPages: Page[]): Promise<unknown> {
-    const engine = new PGLiteEngine();
-    await engine.connect({});
-    await engine.initSchema();
+    const { runExtract } = await importGbrain<typeof Extract>(this.ctx.gut, 'src/commands/extract.ts');
+    const scratch = await openGateEngine(this.ctx, 'graph_oracle');
+    const engine = scratch.engine;
     for (const p of rawPages) {
       await engine.putPage(p.slug, {
         type: p.type,
@@ -185,12 +238,12 @@ class GraphOracleParseAdapter implements Adapter {
     for (const p of rawPages) {
       contentBySlug.set(p.slug, `${p.title}\n${p.compiled_truth}\n${p.timeline}`);
     }
-    return { engine, contentBySlug };
+    return { scratch, engine, contentBySlug };
   }
 
   async query(q: Query, state: unknown): Promise<RankedDoc[]> {
     const { engine, contentBySlug } = state as {
-      engine: PGLiteEngine;
+      engine: BrainEngine;
       contentBySlug: Map<string, string>;
     };
 
@@ -237,8 +290,7 @@ class GraphOracleParseAdapter implements Adapter {
   }
 
   async teardown(state: unknown): Promise<void> {
-    const { engine } = state as { engine: PGLiteEngine };
-    await engine.disconnect();
+    await (state as { scratch: ScratchEvalEngine }).scratch.close();
   }
 }
 
@@ -584,6 +636,7 @@ export interface CliArgs {
   subset?: string;
   queries: QuerySource;
   receiptPathOverride?: string;
+  stubEmbed?: boolean;
 }
 
 const QUERY_SOURCES: readonly QuerySource[] = ['relational', 'tier5', 'tier5.5', 'all'];
@@ -611,6 +664,9 @@ export function parseCliArgs(argv: string[]): CliArgs {
     else if (a === '--include-subset') out.subset = takeValue('--include-subset', ++i);
     else if (a.startsWith('--include-subset=')) out.subset = a.slice('--include-subset='.length);
     else if (a === '--receipt-path') out.receiptPathOverride = takeValue('--receipt-path', ++i);
+    else if (a === '--stub-embed') out.stubEmbed = true;
+    else if (a === '--gbrain' || a === '--pg-url') takeValue(a, ++i);
+    else if (a.startsWith('--gbrain=') || a.startsWith('--pg-url=')) continue;
     else throw new Error(`unknown arg: ${a}`);
   }
   if (!QUERY_SOURCES.includes(out.queries)) {
@@ -638,6 +694,16 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
   const startedAt = new Date().toISOString();
   const runsPerAdapter = resolveRunsPerAdapter(process.env.BRAINBENCH_N);
   const log = cli.json ? () => {} : console.log;
+  const ctx = gateRunnerContext(argv);
+  const gated = ctx.requested !== null || ctx.gut.overlay !== null || cli.stubEmbed === true;
+  if (gated && cli.adapter !== undefined && cli.adapter !== 'all' && !ENGINE_ADAPTERS.has(cli.adapter)) {
+    refuseEvalEngine(new EvalEngineUnavailable(ctx.kind, 'engine_not_supported_by_runner', `the ${cli.adapter} row never opens the gate engine or the --gbrain build; only ${[...ENGINE_ADAPTERS].join(' and ')} do.`), 'multi-adapter');
+  }
+  try { await preflightGateEngine(ctx); } catch (e) {
+    if (e instanceof EvalEngineUnavailable) refuseEvalEngine(e, 'multi-adapter (Cats 1+2)');
+    throw e;
+  }
+  const stubEmbed = cli.stubEmbed ? await installStubEmbed(ctx) : null;
 
   log('# BrainBench — multi-adapter side-by-side\n');
   log(`Generated: ${new Date().toISOString().slice(0, 19)}`);
@@ -663,13 +729,20 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
   log('');
 
   const allAdapters: Adapter[] = [
-    createGbrainProductAdapter(),
-    new GraphOracleParseAdapter(),
+    createGbrainProductAdapter({
+      ...(ctx.requested ? { engine: { kind: ctx.kind, pgAdminUrl: ctx.pgAdminUrl } } : {}),
+      ...(ctx.gut.overlay ? { productRoot: ctx.gut.root } : {}),
+      ...(stubEmbed ? { expectStubTransport: true } : {}),
+    }),
+    new GraphOracleParseAdapter(ctx),
     new HybridNoGraphAdapter(),
     new RipgrepBm25Adapter(),
     new VectorOnlyAdapter(),
   ];
-  const adapters = selectAdapters(allAdapters, cli.adapter);
+  const adapters = selectAdapters(gated ? allAdapters.filter(a => ENGINE_ADAPTERS.has(a.name)) : allAdapters, cli.adapter);
+  if (gated) {
+    log(`Engine: ${ctx.kind}${ctx.requested ? '' : ' (default)'}, gbrain ${ctx.gut.version}${stubEmbed ? ', stub embeddings (token-hash, keyless)' : ''}; rows not run on it: ${allAdapters.filter(a => !ENGINE_ADAPTERS.has(a.name)).map(a => a.name).join(', ')}\n`);
+  }
 
   // Probe universe: adapter x applicable gold-bearing query.
   let expectedProbes = 0;
@@ -770,7 +843,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
   const verdict: 'pass' | 'partial' | 'fail' = failedAdapters.length === 0
     ? 'pass'
     : (scorecards.length > 0 ? 'partial' : 'fail');
-  const receiptFile = cli.receiptPathOverride ?? receiptPath('multi-adapter');
+  const receiptFile = cli.receiptPathOverride ?? gateReceiptPath(ctx, 'multi-adapter');
   writeReceipt(receiptFile, {
     schema_version: RECEIPT_SCHEMA_VERSION,
     benchmark_version: BENCHMARK_VERSION,
@@ -781,9 +854,10 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
     n_scored: summary.n_scored,
     completion_rate: summary.completion_rate,
     errors: summary.errors,
-    publishable: summary.publishable && failedAdapters.length === 0,
-    gbrain_version: gbrainVersion(),
+    publishable: summary.publishable && failedAdapters.length === 0 && !stubEmbed,
+    gbrain_version: ctx.gut.overlay ? ctx.gut.version : gbrainVersion(),
     gbrain_pin: gbrainPin(),
+    ...gateRunnerReceiptFields(ctx),
     resolved_config: {
       adapters: adapters.map(a => a.name),
       failed_adapters: failedAdapters,
@@ -802,6 +876,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         excluded_no_gold: f.excluded_no_gold,
       })),
       relational_builder: 'eval/runner/queries/relational.ts buildRelationalQueries (shared with shootout-driver.ts)',
+      ...(stubEmbed ? { stub_embed: stubEmbed } : {}),
     },
     started_at: startedAt,
     finished_at: new Date().toISOString(),
