@@ -293,7 +293,8 @@ export function weekAggregates(meta: WeekMeta, questions: readonly WlQuestion[],
     const pc = prev.comparisons[c.cls][c.other], sdd = weeklySdd(c.family), point = compared.get(c.key)!.pooled.mean;
     const flag = regressionFlag(point, pc.pooled.ci95, sdd);
     if (c.other === 'grep-agent') return { point: r4(point), previous_ci95: pc.pooled.ci95, sdd: r4(sdd)!, flagged: flag.flagged, direction: flag.direction, false_alarm_rate: null, false_alarm_source: 'unavailable' as const };
-    const pool = o.falseAlarmPool?.[c.key] ?? refuse(`the regression flag's false-alarm rate needs BG1-C's per-world differences for ${c.key}; pass them with --false-alarm-pool`);
+    const pool = o.falseAlarmPool?.[c.key];
+    if (!pool || pool.length < 2 || !pool.every(Number.isFinite)) refuse(`the regression flag's false-alarm rate needs at least two of BG1-C's per-world differences for ${c.key}, each a finite number; pass them with --false-alarm-pool`);
     return { point: r4(point), previous_ci95: pc.pooled.ci95, sdd: r4(sdd)!, flagged: flag.flagged, direction: flag.direction, false_alarm_rate: r4(falseAlarmRate(pool, sdd)), false_alarm_source: 'BG1-C pool' as const };
   }) : null;
   return {

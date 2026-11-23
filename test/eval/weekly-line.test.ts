@@ -358,6 +358,8 @@ describe('the aggregates that leave custody', () => {
     expect([g.false_alarm_rate, g.false_alarm_source]).toEqual([null, 'unavailable']);
     expect(renderWeek(at({ falseAlarmPool: pool }))).toContain('unavailable (no registered calibration)');
     expect(() => at({})).toThrow(/BG1-C's per-world differences/);
+    expect(() => at({ falseAlarmPool: { ...pool, 'now|extract-first': [1] } })).toThrow(/at least two of BG1-C's per-world differences/);
+    expect(() => at({ falseAlarmPool: { ...pool, 'now|extract-first': [1, Number.NaN] } })).toThrow(/each a finite number/);
     expect(() => at({ falseAlarmPool: { ...pool, 'now|grep-agent': [1, -1] } })).toThrow(/never ran the grep agent/);
   });
 
@@ -472,6 +474,7 @@ describe('the end of a block', () => {
     expect(() => blockAggregates(1, [metas[0], { ...metas[1], week: week(0) }], questions, { draws: 99 })).toThrow(/lists week 2026-12-01 twice/);
     expect(() => blockAggregates(1, [metas[0], metas[2]], questions, { draws: 99 })).toThrow(/consecutive, 7 days apart/);
     expect(() => blockAggregates(1, [metas[0], { ...metas[1], week: '2026-12-09' }], questions, { draws: 99 })).toThrow(/consecutive/);
+    expect(() => blockAggregates(1, [metas[0], { ...metas[1], week: '2026-13-01' }], questions, { draws: 99 })).toThrow(/is not a date/);
   });
 });
 
