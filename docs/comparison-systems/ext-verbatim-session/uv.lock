@@ -7,8 +7,6 @@ exclude-newer = "2026-10-06T00:00:00Z"
 
 [options.exclude-newer-package]
 certifi = "2026-10-22T00:00:00Z"
-urllib3 = "2026-09-16T00:00:00Z"
-anyio = "2026-07-13T00:00:00Z"
 
 [manifest]
 constraints = [

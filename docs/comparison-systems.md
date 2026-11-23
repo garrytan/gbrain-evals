@@ -108,7 +108,7 @@ hashes below. The [changelog](#2026-11-23-security-fixes-in-six-bundle-locks) li
     "package": "mempalace==3.10.0 (MemPalace/mempalace@22fd87f09c19d5ffb2d6966486483353937931c0)",
     "image": "built from the bundle Dockerfile on python:3.12-slim-bookworm; the run receipt records the image id",
     "lock_file": "docs/comparison-systems/ext-verbatim-session/uv.lock",
-    "lock_sha256": "3dd03a0bf4fd5b3558599c0e5e51de9fc4bf29b732971c04eb83d20ec799550e",
+    "lock_sha256": "b377f8765698db332fc07b0510511615ca4962f21e97746e96f3d850172fd06f",
     "capability_sha256": "ffd48dae0fcd93b2bc72a1bddd5ae773411052c4b200010b6ca6da0f9d288203",
     "vendor_benchmark_code": "MemPalace/mempalace@22fd87f benchmarks/locomo_bench.py"
   }
@@ -379,8 +379,9 @@ before A6b use the former environment variable names. The hashes of every file A
 locks with patched releases of the packages [gbrain-evals#433](https://github.com/garrytan/gbrain-evals/pull/433) raised
 in the `eval/systems` shims, each relocked with the uv version its own Dockerfile pins. Five of the six are now
 byte-identical to their `eval/systems` shim's lock. The comparator lock in `eval/harness-provider/comparator.lock.json`
-raises `aiohttp` and `certifi` the same way. Earlier campaigns ran on the old hashes, and their published rows and the
-Q1 build labels keep them.
+raises `aiohttp` and `certifi` the same way; its hash is part of each comparator cell's identity, so comparator cells
+launched after this change get new cell ids, while published comparator receipts keep `49a0e4f3`. Earlier campaigns ran
+on the old hashes, and their published rows and the Q1 build labels keep them.
 
 | Kind id | Lock (old to new) | Capabilities (old to new) |
 |---|---|---|
@@ -389,7 +390,8 @@ Q1 build labels keep them.
 | `ext-graph-pipeline` | `59af44d5` to `bdfac8b6` | `e00e4600` to `86e4ca8e` |
 | `ext-temporal-graph` | `4ce9b216` to `6894bade` | `0ae56345` to `f1c8d049` |
 | `ext-markdown-kb` | `e1a14a19` to `90b883f1` | `4e95f8ef`, unchanged |
-| `ext-verbatim-session` | `e2e066bf` to `3dd03a0b` | `ffd48dae`, unchanged |
+| `ext-verbatim-session` | `e2e066bf` to `b377f876` | `ffd48dae`, unchanged |
+| comparator (`eval/harness-provider/comparator.lock.json`) | `49a0e4f3` to `ab29df62` | none |
 
 ### 2026-11-21: gbrain on Redis's open LongMemEval harness
 

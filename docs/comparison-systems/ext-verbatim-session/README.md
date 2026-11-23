@@ -108,11 +108,11 @@ check, not a measurement of retrieval quality.
 
 ### 2026-11-23: security fixes in the lock
 `anyio` 4.13.0 to 4.14.2, `certifi` 2026.2.25 to 2026.10.19 and `urllib3` 2.6.3 to 2.8.0, the versions
-[gbrain-evals#433](https://github.com/garrytan/gbrain-evals/pull/433) chose for the same advisories. They are raised in
-`constraint-dependencies` and let past the 2026-10-06 cutoff with `exclude-newer-package`, so every other package keeps
-its resolution, and the lock is relocked with the Dockerfile's uv 0.12.3. `uv.lock` moves from `e2e066bf` to `3dd03a0b`.
-Earlier campaigns ran on the old lock, and their published rows keep the hash they recorded; runs started after this
-change record the new one.
+[gbrain-evals#433](https://github.com/garrytan/gbrain-evals/pull/433) chose for the same advisories, raised in
+`constraint-dependencies` and relocked with the Dockerfile's uv 0.12.3. `certifi` alone is let past the 2026-10-06
+cutoff with `exclude-newer-package`; the other two releases predate it, and every other package keeps its resolution.
+`uv.lock` moves from `e2e066bf` to `b377f876`. Earlier campaigns ran on the old lock, and their published rows keep the
+hash they recorded; runs started after this change record the new one.
 
 ### 2026-10-06: first version
 Pins MemPalace 3.10.0 (commit `22fd87f`) with the vendor's lock, runs the raw and hybrid recipes with the LLM
