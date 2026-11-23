@@ -570,7 +570,7 @@ async function loadGbrainCode(gut: GbrainUnderTest): Promise<GbrainCode> {
 }
 
 async function openArm(gut: GbrainUnderTest, rt: ArmRuntime): Promise<BrainEngine> {
-  const { engine } = await openEvalEngine({ gut, kind: rt.kind, databasePath: rt.databasePath, databaseUrl: rt.databaseUrl, poolMax: rt.kind === 'postgres' ? POSTGRES_POOL_MAX : undefined });
+  const { engine } = await openEvalEngine({ gut, kind: rt.kind, databasePath: rt.databasePath, databaseUrl: rt.databaseUrl, poolMax: rt.kind === 'postgres' ? POSTGRES_POOL_MAX : undefined, embedding: { model: EMBED_MODEL_PIN, dimensions: EMBED_DIMS } });
   return engine;
 }
 
