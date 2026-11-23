@@ -22,7 +22,7 @@ import {
   BG1_MANIFEST, BG1_SET, BG1C_MANIFEST, BG1C_SET, bg1Kept, bg1ManifestFiles, bg1RunClock, bg1SealedSet, bg1Source, bg1UnitScope, bg1WorldEnd, bg1WorldFiles, bgwCommittedProblems,
   bgwSet, bgwWeekWorldEnd, bgwWeekWorlds, fetchDataset, filesFor, loadBg1, loadBg1c, loadBgw, loadCorpus, readBg1Manifest, verifyBg1Custody, type Bg1Manifest,
 } from '../../eval/runner/memory-qa/corpus.ts';
-import { DATASET_PINS } from '../../eval/runner/q1/reuse-check.ts';
+import { pinReaders } from '../../eval/runner/q1/reuse-check.ts';
 
 const REPO = resolve(import.meta.dir, '../..');
 const ENV = ['GBRAIN_EVALS_BGW_SOURCE', 'GBRAIN_EVALS_BGW_MANIFEST', 'GBRAIN_EVALS_BGW_UNIT', 'GBRAIN_EVALS_BGW_BATCH', 'GBRAIN_EVALS_BG1C_SOURCE', 'GBRAIN_EVALS_BG1C_MANIFEST',
@@ -99,7 +99,7 @@ describe('Set W\'s slots, ids and batches', () => {
     expect(message(() => bgwSet(1036))).toContain('does not list 35 of the batch\'s slots as sealed (first bgw-1057)');
     expect(code(() => bgwSet(1000))).toBe('SPEC_INVALID');
     expect(code(() => bgwSet(1950))).toBe('SPEC_INVALID');
-    expect(DATASET_PINS[bgwBatchManifest(1001)]).toEqual(['bgw']);
+    expect(pinReaders(bgwBatchManifest(1001))).toEqual(['bgw']);
   });
 
   test('GBRAIN_EVALS_BGW_BATCH names the batch by its first world id, and nothing else picks one', () => {
