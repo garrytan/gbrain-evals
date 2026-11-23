@@ -48,7 +48,7 @@ jobs:
   # so that checkout still fits. On a pull request git-cache treats a timed-out
   # lookup as a hung service, not a miss, and builds nothing, and its save stops
   # after 5 minutes without failing the job, so a hung .git cache can't fail
-  # merge-gate. The harness job's own pack cache has no such bound.
+  # merge-gate. The harness job's pack cache has the same 2- and 5-minute bounds.
   # A run that finds no cache skips the five pinned-commit cases while git-cache
   # builds one, and tested-tree still records that run as tested. A save that
   # fails or times out leaves the run green, and the next push to main saves a
@@ -478,8 +478,9 @@ jobs:
 
       # The pack cache uses the same cache service as the .git cache, so it gets the
       # same bounds: a restore that hangs stops after 2 minutes and drops what it had
-      # restored, harness:setup then builds the pack from the lock, and the save is
-      # skipped after a hung restore and otherwise stops after 5 minutes without
+      # restored, harness:setup then fetches the pinned commit and builds the pack, as
+      # on a cache miss, and that fetch still has to fit the job's 30 minutes. The save
+      # is skipped after a hung restore and otherwise stops after 5 minutes without
       # failing the job.
       - id: harness-pack
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0

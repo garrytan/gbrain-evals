@@ -23,6 +23,7 @@ describe('CI workflow gates (audit C5 to C8)', () => {
     expect([...workflow.matchAll(exempt)]).toHaveLength(8);
     expect([...workflow.matchAll(pack)]).toHaveLength(1);
     expect([...workflow.matchAll(save)]).toHaveLength(2);
+    expect(workflow).toContain("      - if: steps.harness-pack.outcome == 'success' && steps.harness-pack.outputs.cache-hit != 'true'\n        uses: actions/cache/save@");
     expect(workflow.replace(exempt, '\n').replace(pack, '\n').replace(save, '\n')).not.toContain('continue-on-error');
     for (const line of runLines()) {
       expect(line).not.toMatch(/\|\|\s*(true|:)/);
