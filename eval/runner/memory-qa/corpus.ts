@@ -21,7 +21,9 @@ import { decideError } from '../decisions/errors.ts';
 import { appendAccessLog } from '../sealed-confirmation-lib.ts';
 import { beam10mManifestPath, beam10mRoot, loadBeam10mCorpus } from './beam10m-corpus.ts';
 import { loadBeam10mQuestions } from './beam10m-questions.ts';
-import { BG1_CONVERSATIONS, BG1_DEV_CONVERSATIONS, BG1_DEV_EXTRA_CONVERSATIONS, BG1_N_CAP, BG1_N_FLOOR, BG1_STRATA, BG1C_CAMPAIGN, BG1C_CONVERSATIONS, BG1C_DATASET, BG1C_N_FINAL, type Bg1QuestionFields } from './bg1-names.ts';
+import { BG1_CONVERSATIONS, BG1_DEV_CONVERSATIONS, BG1_DEV_EXTRA_CONVERSATIONS, BG1_N_CAP, BG1_N_FLOOR, BG1_STRATA, BG1C_CAMPAIGN, BG1C_CONVERSATIONS, BG1C_DATASET, BG1C_N_FINAL,
+  BGW_BATCH_KEPT, BGW_CAMPAIGN, BGW_DATASET_PREFIX, BGW_SPLIT, BGW_WEEKS_PER_BATCH, BGW_WORLDS_PER_WEEK, bgwBatchDataset, bgwBatchIds, bgwBatchManifest, bgwBatchName, bgwSlotOf,
+  type Bg1QuestionFields } from './bg1-names.ts';
 
 /** Every public dev world: stage 1's three, then the dev loop's 17 extra. A load without `only` reads the three. */
 const BG1_DEV_ALL: readonly string[] = [...BG1_DEV_CONVERSATIONS, ...BG1_DEV_EXTRA_CONVERSATIONS];
@@ -156,7 +158,7 @@ export function filesFor(benchmark: string, only?: ReadonlySet<string>): Dataset
       why: 'every D8 conversation is in the sealed split and lives only in owner custody (GBRAIN_EVALS_D8_SOURCE on the custodian host)', fix: d8Ask });
     case 'beam-rs1': throw decideError({ code: 'CUSTODY_MISSING', message: 'beam-rs1 is sealed: its files are never downloaded',
       why: 'every RS1 conversation is in the sealed split and lives only in owner custody (GBRAIN_EVALS_RS1_SOURCE on the custodian host)', fix: rs1Ask });
-    case 'bg1': case 'bg1c': {
+    case 'bg1': case 'bg1c': case 'bgw': {
       const set = bg1SealedSet(benchmark);
       throw decideError({ code: 'CUSTODY_MISSING', message: `${set.benchmark} is sealed: its files are never downloaded`,
         why: `every ${set.label} world is in the sealed split and lives only in owner custody (${set.env.source} on the custodian host)`, fix: bg1Ask(set) });
@@ -218,7 +220,7 @@ export async function fetchDataset(benchmark: string, opts: { force?: boolean; v
   if (benchmark === 'beam-10m') return { fetched: 0, verified: verifyBeam10mCustody(log) };
   if (benchmark === 'beam-d8') return { fetched: 0, verified: verifyD8Custody(log) };
   if (benchmark === 'beam-rs1') return { fetched: 0, verified: verifyRs1Custody(log) };
-  if (benchmark === 'bg1' || benchmark === 'bg1c') return { fetched: 0, verified: verifyBg1Custody(log, bg1SealedSet(benchmark)) };
+  if (benchmark === 'bg1' || benchmark === 'bg1c' || benchmark === 'bgw') return { fetched: 0, verified: verifyBg1Custody(log, bg1SealedSet(benchmark)) };
   const { mkdirSync, renameSync, rmSync, createWriteStream } = await import('node:fs');
   const { dirname } = await import('node:path');
   for (const f of filesFor(benchmark, opts.only)) {
@@ -899,6 +901,18 @@ export function loadLmeM(opts: { path?: string; sha256?: string; size?: number; 
  * custody root of its own. It reads GBRAIN_EVALS_BG1C_SOURCE, its own manifest (eval/decisions/datasets/bg1c-manifest.json,
  * GBRAIN_EVALS_BG1C_MANIFEST to override) and unit scope GBRAIN_EVALS_BG1C_UNIT, and its kept list is exactly 40 worlds.
  * Each set is a Bg1SealedSet; neither set's loader opens the other's worlds or reads the other's manifest.
+ *
+ * bgw is Set W, the weekly outcome line's own worlds (docs/benchmarks/2026-11-23-weekly-outcome-line-preregistration.md):
+ * the same world format, world end and rules on slots 1001 and up (bgw-1001 onward, four digits), minted by mint.sh --bgw
+ * in monthly batches, each into a custody root of its own (bg1-names.ts has the batch rules). A Set W set is one batch,
+ * named by its first world: GBRAIN_EVALS_BGW_BATCH (bgw-1001 for the first) picks it, and the batch must have its
+ * committed manifest template (eval/decisions/datasets/bgw-<first>-manifest.json) and every slot in the committed split
+ * file. It reads GBRAIN_EVALS_BGW_SOURCE (the batch's <out>/set), the batch's filled manifest from GBRAIN_EVALS_BGW_MANIFEST
+ * (the custodian's <root>/bgw-<first>-manifest.json; the committed template otherwise), whose dataset names that batch, and
+ * the unit scope GBRAIN_EVALS_BGW_UNIT. A launch unit is one week: bgwWeekWorlds gives week k's kept worlds 8(k-1)+1 to 8k,
+ * and bgwWeekWorldEnd the week's world end, the Sunday before its Tuesday launch, which the runner sets as
+ * GBRAIN_EVALS_BG1_WORLD_END; bg1RunClock refuses once the clock passes it by 14 days. BG1's and BG1-C's loaders refuse a
+ * Set W manifest, and Set W's loader refuses theirs and another batch's.
  */
 export const BG1_MANIFEST = 'eval/decisions/datasets/bg1-manifest.json';
 export const BG1_DEV_ROOT = join(REPO_ROOT, 'eval/data/changing-facts-v1/dev');
@@ -923,7 +937,7 @@ export interface Bg1Manifest {
 
 /** One sealed changing-facts set: its world ids, manifest, custody variables, kept-list size and campaign. */
 export interface Bg1SealedSet {
-  benchmark: 'bg1' | 'bg1c';
+  benchmark: 'bg1' | 'bg1c' | 'bgw';
   label: string;
   /** The corpus source name, and for BG1-C the `dataset` its manifest must carry. */
   dataset: string;
@@ -942,14 +956,87 @@ export const BG1_SET: Bg1SealedSet = { benchmark: 'bg1', label: 'BG1', dataset: 
 export const BG1C_SET: Bg1SealedSet = { benchmark: 'bg1c', label: 'BG1-C', dataset: BG1C_DATASET, ids: BG1C_CONVERSATIONS, manifest: BG1C_MANIFEST,
   env: { source: 'GBRAIN_EVALS_BG1C_SOURCE', manifest: 'GBRAIN_EVALS_BG1C_MANIFEST', unit: 'GBRAIN_EVALS_BG1C_UNIT' }, nFloor: BG1C_N_FINAL, nCap: BG1C_N_FINAL,
   campaign: BG1C_CAMPAIGN, split: 'eval/decisions/splits/bg1c.json' };
-export const bg1SealedSet = (benchmark: string): Bg1SealedSet => {
+export const bg1SealedSet = (benchmark: string, env: Record<string, string | undefined> = process.env): Bg1SealedSet => {
   if (benchmark === 'bg1') return BG1_SET;
   if (benchmark === 'bg1c') return BG1C_SET;
+  if (benchmark === 'bgw') return bgwSet(bgwBatchOf(env));
   throw new Error(`${benchmark} is not a sealed changing-facts set`);
 };
 export const bg1cManifestPath = () => fromHome(process.env.GBRAIN_EVALS_BG1C_MANIFEST) ?? join(REPO_ROOT, BG1C_MANIFEST);
 const bg1Fill = (set: Bg1SealedSet = BG1_SET) => ({ next: 'ask_user' as const, user_message: `the custodian fills (or refills) the ${set.label} manifest from the set root on the custody host: every file bg1ManifestFiles lists, with its SHA-256` });
-const bg1Ask = (set: Bg1SealedSet = BG1_SET) => ({ next: 'ask_user' as const, user_message: `run ${set.benchmark} on the custody host with ${set.env.source} set to the ${set.label} set root (mint.sh's <out>/set; it holds worlds/bg1-<NNN> for the minted slots)` });
+const bg1Ask = (set: Bg1SealedSet = BG1_SET) => ({ next: 'ask_user' as const, user_message: `run ${set.benchmark} on the custody host with ${set.env.source} set to the ${set.label} set root (mint.sh's <out>/set; it holds worlds/${set.benchmark === 'bgw' ? 'bgw-<NNNN> for the batch\'s' : 'bg1-<NNN> for the'} minted slots)` });
+
+const BGW_ENV = { source: 'GBRAIN_EVALS_BGW_SOURCE', manifest: 'GBRAIN_EVALS_BGW_MANIFEST', unit: 'GBRAIN_EVALS_BGW_UNIT', batch: 'GBRAIN_EVALS_BGW_BATCH' } as const;
+const bgwAsk = { next: 'ask_user' as const, user_message: `set ${BGW_ENV.batch} to the batch's name, its first world id (bgw-1001 for the first), on the custody host and the cell VM` };
+
+/**
+ * Why a Set W batch may not mint or load yet: it needs its committed manifest template, unfilled and carrying its own
+ * dataset, and every slot it may use listed as sealed in the committed split file, both committed before the batch mints.
+ * Empty when both hold. `repo` is the checkout to read them from.
+ */
+export function bgwCommittedProblems(first: number, repo = REPO_ROOT): string[] {
+  const problems: string[] = [];
+  const template = join(repo, bgwBatchManifest(first));
+  if (!existsSync(template)) problems.push(`${bgwBatchManifest(first)} is not committed`);
+  else {
+    let m: Partial<Bg1Manifest> = {};
+    try { m = JSON.parse(readFileSync(template, 'utf8')) as Bg1Manifest; } catch { problems.push(`${bgwBatchManifest(first)} is not readable JSON`); }
+    if (m.dataset !== bgwBatchDataset(first) || m.status !== 'unfilled') problems.push(`${bgwBatchManifest(first)} is not batch ${bgwBatchName(first)}'s unfilled template`);
+  }
+  let sealed: unknown[] = [];
+  try { const s = JSON.parse(readFileSync(join(repo, BGW_SPLIT), 'utf8')) as { benchmark?: string; sealed?: unknown[] }; sealed = s.benchmark === 'bgw' && Array.isArray(s.sealed) ? s.sealed : []; } catch { /* missing or unreadable: no slot is listed */ }
+  const unlisted = bgwBatchIds(first).filter(id => !sealed.includes(id));
+  if (unlisted.length) problems.push(`${BGW_SPLIT} does not list ${unlisted.length} of the batch's slots as sealed (first ${unlisted[0]})`);
+  return problems;
+}
+
+const bgwSets = new Map<number, Bg1SealedSet>();
+/** One Set W batch as a sealed set; refuses a first slot that does not start a batch inside a seed set, or a batch whose template and split entries are not committed. */
+export function bgwSet(first: number): Bg1SealedSet {
+  const known = bgwSets.get(first);
+  if (known) return known;
+  let ids: string[];
+  try { ids = bgwBatchIds(first); } catch (e) { throw decideError({ code: 'SPEC_INVALID', message: `bgw: ${(e as Error).message}`, why: 'a Set W batch starts on a slot of a seed set and fits inside it', fix: bgwAsk }); }
+  const problems = bgwCommittedProblems(first);
+  if (problems.length) throw decideError({ code: 'DATASET_MISSING', message: `bgw: batch ${bgwBatchName(first)} is not committed: ${problems.join('; ')}`,
+    why: 'each Set W batch commits its manifest template and its slots in the split file before any of its worlds is minted', fix: bgwAsk });
+  const set: Bg1SealedSet = { benchmark: 'bgw', label: `Set W batch ${bgwBatchName(first)}`, dataset: bgwBatchDataset(first), ids, manifest: bgwBatchManifest(first),
+    env: { source: BGW_ENV.source, manifest: BGW_ENV.manifest, unit: BGW_ENV.unit }, nFloor: 1, nCap: BGW_BATCH_KEPT, campaign: BGW_CAMPAIGN, split: BGW_SPLIT };
+  bgwSets.set(first, set);
+  return set;
+}
+
+/** The batch GBRAIN_EVALS_BGW_BATCH names (its first world id, bgw-1001 for the first), as its first slot. */
+export function bgwBatchOf(env: Record<string, string | undefined> = process.env): number {
+  const raw = env[BGW_ENV.batch];
+  if (!raw) throw decideError({ code: 'SPEC_MISSING', message: `bgw: ${BGW_ENV.batch} is not set`, why: 'Set W is minted in monthly batches, each with its own worlds and manifest, so a load names its batch', fix: bgwAsk });
+  const slot = bgwSlotOf(raw);
+  if (slot === null) throw decideError({ code: 'SPEC_INVALID', message: `bgw: ${BGW_ENV.batch} ${JSON.stringify(raw)} is not a Set W world id (bgw- and four digits)`, why: 'a batch is named by its first world', fix: bgwAsk });
+  return slot;
+}
+
+/**
+ * Week k's worlds (k = 1 to 4) of a Set W batch: its kept worlds 8(k-1)+1 to 8k in slot order, one launch unit. The two
+ * spares are never a week of their own. A week runs whole, or partial once the batch's final kept list (n_final) is
+ * short; a week with no kept world refuses (the runner records it as no point).
+ */
+export function bgwWeekWorlds(manifest: Bg1Manifest, week: number, set: Bg1SealedSet): string[] {
+  if (set.benchmark !== 'bgw') throw new Error(`${set.benchmark} has no weeks; only a Set W batch does`);
+  if (!Number.isInteger(week) || week < 1 || week > BGW_WEEKS_PER_BATCH) throw new Error(`bgw: week ${week} is not one of a batch's weeks, 1 to ${BGW_WEEKS_PER_BATCH}`);
+  return bg1UnitConversations(manifest, week - 1, BGW_WORLDS_PER_WEEK, set);
+}
+
+/**
+ * A Set W week's world end: the Sunday before its Tuesday launch (YYYY-MM-DD). Refuses a launch that is not a Tuesday.
+ * The runner sets it as GBRAIN_EVALS_BG1_WORLD_END for that week's cells, and bg1RunClock holds them to it.
+ */
+export function bgwWeekWorldEnd(launch: string): string {
+  const d = /^\d{4}-\d{2}-\d{2}$/.test(launch) ? new Date(`${launch}T00:00:00Z`) : null;
+  const why = 'each Set W week ends its worlds on the Sunday before its Tuesday launch';
+  if (!d || Number.isNaN(d.getTime()) || isoDay(d) !== launch) throw decideError({ code: 'SPEC_INVALID', message: `bgw: launch ${JSON.stringify(launch)} is not a YYYY-MM-DD date`, why, fix: bg1WorldEndAsk });
+  if (d.getUTCDay() !== 2) throw decideError({ code: 'SPEC_INVALID', message: `bgw: launch ${launch} is a ${BG1_WEEKDAYS[d.getUTCDay()]}, not a Tuesday`, why, fix: bg1WorldEndAsk });
+  return plusDays(launch, -2);
+}
 const bg1WorldEndAsk = { next: 'ask_user' as const, user_message: 'set GBRAIN_EVALS_BG1_WORLD_END to the world end the campaign\'s dated amendment records (a Sunday, the day before the counted run)' };
 
 /**
@@ -980,14 +1067,16 @@ export function bg1Source(env: Record<string, string | undefined> = process.env,
 }
 
 /**
- * The set's manifest and its sha256. BG1-C's must carry BG1-C's dataset, and BG1's must not, so neither set's cells or
- * custody checks run on the other set's kept list or hashes.
+ * The set's manifest and its sha256 (by default from the set's manifest variable, else its committed template). BG1-C's
+ * must carry BG1-C's dataset and a Set W batch's its own batch's, and BG1's may carry neither, so no set's cells or custody
+ * checks run on another set's or another batch's kept list or hashes.
  */
 export function readBg1Manifest(path?: string, set: Bg1SealedSet = BG1_SET): { manifest: Bg1Manifest; sha256: string } {
-  const file = path ?? (set === BG1C_SET ? bg1cManifestPath() : bg1ManifestPath());
+  const file = path ?? fromHome(process.env[set.env.manifest]) ?? join(REPO_ROOT, set.manifest);
   const bytes = readFileSync(file);
   const manifest = JSON.parse(bytes.toString('utf8')) as Bg1Manifest;
-  if (set === BG1C_SET ? manifest.dataset !== BG1C_DATASET : manifest.dataset === BG1C_DATASET) throw decideError({ code: 'DATASET_MISSING',
+  const otherSet = typeof manifest.dataset === 'string' && (manifest.dataset === BG1C_DATASET || manifest.dataset.startsWith(BGW_DATASET_PREFIX));
+  if (set.benchmark === 'bg1' ? otherSet : manifest.dataset !== set.dataset) throw decideError({ code: 'DATASET_MISSING',
     message: `${set.benchmark}: ${file} is the manifest of ${JSON.stringify(manifest.dataset)}, not of the ${set.label} set`,
     why: `${set.label} loads only its own manifest (${set.manifest}), so a cell never runs the other sealed set's worlds`, fix: bg1Fill(set) });
   return { manifest, sha256: sha256(bytes) };
@@ -1073,14 +1162,16 @@ export function bg1Conversation(id: string, worldText: string, questionsText: st
   return { conversation: { id, sessions }, questions };
 }
 
-/** The files one BG1 world is read from, as paths relative to the root; refuses an id outside the benchmark and a missing file. */
-export function bg1WorldFiles(root: string, id: string, benchmark: 'bg1' | 'bg1c' | 'bg1-dev' = 'bg1'): { world: string; questions: string } {
-  const known = benchmark === 'bg1-dev' ? BG1_DEV_ALL : bg1SealedSet(benchmark).ids;
+/** The files one BG1 world is read from, as paths relative to the root; refuses an id outside the benchmark (or the given sealed set) and a missing file. */
+export function bg1WorldFiles(root: string, id: string, which: 'bg1' | 'bg1c' | 'bg1-dev' | Bg1SealedSet = 'bg1'): { world: string; questions: string } {
+  const sealed = which === 'bg1-dev' ? null : typeof which === 'string' ? bg1SealedSet(which) : which;
+  const benchmark = sealed?.benchmark ?? 'bg1-dev';
+  const known = sealed ? sealed.ids : BG1_DEV_ALL;
   if (!known.includes(id)) throw new Error(`${benchmark} has no world ${id}`);
   const files = { world: `worlds/${id}/world.json`, questions: `worlds/${id}/questions.json` };
   for (const path of Object.values(files)) if (!existsSync(join(root, path))) {
-    if (benchmark !== 'bg1-dev') {
-      const set = bg1SealedSet(benchmark);
+    if (sealed) {
+      const set = sealed;
       throw decideError({ code: 'DATASET_MISSING', message: `${set.benchmark}: ${path} is not under ${set.env.source}`, why: `each ${set.label} world is a directory holding world.json and questions.json`, fix: bg1Ask(set) });
     }
     throw decideError({ code: 'DATASET_MISSING', message: `bg1-dev: ${path} is not under ${root}`,
@@ -1092,7 +1183,7 @@ export function bg1WorldFiles(root: string, id: string, benchmark: 'bg1' | 'bg1c
 
 /** Every file the given worlds (default: every slot of the set) are read from with its SHA-256, the entries a filled manifest holds (bytes are hashed, never parsed). */
 export function bg1ManifestFiles(root: string, ids?: readonly string[], set: Bg1SealedSet = BG1_SET): Array<{ path: string; sha256: string }> {
-  return (ids ?? set.ids).flatMap(id => { const f = bg1WorldFiles(root, id, set.benchmark); return [f.world, f.questions]; }).map(path => ({ path, sha256: fileSha256(join(root, path)) }));
+  return (ids ?? set.ids).flatMap(id => { const f = bg1WorldFiles(root, id, set); return [f.world, f.questions]; }).map(path => ({ path, sha256: fileSha256(join(root, path)) }));
 }
 
 /**
@@ -1161,6 +1252,15 @@ export function loadBg1c(custody: Bg1Custody, opts: Bg1LoadOpts = {}): Corpus {
   return loadBg1Set(BG1C_SET, custody, opts);
 }
 
+/**
+ * Load bgw (one Set W batch, sealed) by BG1's rules: only that batch's worlds, only from GBRAIN_EVALS_BGW_SOURCE, and only
+ * against that batch's own manifest, logging each opening first. `batch` is the batch's first slot (default: the batch
+ * GBRAIN_EVALS_BGW_BATCH names); a launch unit passes one week's worlds (bgwWeekWorlds) as `only`.
+ */
+export function loadBgw(custody: Bg1Custody, opts: Bg1LoadOpts & { batch?: number } = {}): Corpus {
+  return loadBg1Set(opts.batch === undefined ? bg1SealedSet('bgw') : bgwSet(opts.batch), custody, opts);
+}
+
 function loadBg1Set(set: Bg1SealedSet, custody: Bg1Custody, opts: Bg1LoadOpts): Corpus {
   const b = set.benchmark;
   const root = opts.root ?? bg1Source(process.env, set);
@@ -1188,7 +1288,7 @@ function loadBg1Set(set: Bg1SealedSet, custody: Bg1Custody, opts: Bg1LoadOpts): 
   const conversations: Conversation[] = [];
   const questions: MemoryQuestion[] = [];
   for (const id of set.ids.filter(c => !opts.only || opts.only.has(c))) {
-    const f = bg1WorldFiles(root, id, b);
+    const f = bg1WorldFiles(root, id, set);
     if (pinned) {
       const reading = new Set([f.world, f.questions]);
       const absent = [...pinned.keys()].filter(p => p.startsWith(`worlds/${id}/`) && !reading.has(p));
@@ -1296,7 +1396,7 @@ export function loadCustodyCorpus(path: string): Corpus {
     source: { name: `custodian sealed corpus ${raw.id}`, files: [{ path: 'custody', sha256: sha256(bytes) }], revision: raw.id, license: 'custodian-authored' } };
 }
 
-/** `only` restricts LoCoMo, BEAM, D8, RS1, BG1 and BG1-C to those conversations (a split), so a BEAM, D8, RS1, BG1 or BG1-C conversation outside it is never read. `keyless` declares a bg1-dev load keyless (loadBg1Dev). */
+/** `only` restricts LoCoMo, BEAM, D8, RS1, BG1, BG1-C and Set W to those conversations (a split), so a BEAM, D8, RS1, BG1, BG1-C or Set W conversation outside it is never read. `keyless` declares a bg1-dev load keyless (loadBg1Dev). */
 export function loadCorpus(benchmark: string, corpusFile?: string, only?: ReadonlySet<string>, opts: { keyless?: boolean } = {}): Corpus {
   if (benchmark === 'custody') {
     if (!corpusFile) throw new Error('benchmark custody needs --corpus-file <custody path>');
@@ -1332,7 +1432,7 @@ export function loadCorpus(benchmark: string, corpusFile?: string, only?: Readon
       return loadRs1({ log, decisionId: process.env.GBRAIN_EVALS_DECISION_ID ?? 'q1-scoreboard', purpose: 'memory-qa loadCorpus beam-rs1' }, { only });
     }
     case 'bg1-dev': return loadBg1Dev({ only, keyless: opts.keyless });
-    case 'bg1': case 'bg1c': {
+    case 'bg1': case 'bg1c': case 'bgw': {
       const set = bg1SealedSet(benchmark);
       bg1Source(process.env, set);
       const log = process.env.GBRAIN_EVALS_CUSTODY_LOG;

@@ -40,7 +40,9 @@
  * Phrasing. PUBLIC_PHRASING builds the dev worlds. Sealed worlds use a custody phrasing set (a *.bg1-phrasing.json file
  * outside the checkout carrying the custody marker; loadPhrasing checks its keys and placeholders against the public
  * set). Seeds: the dev worlds use the public BG1_DEV_SEEDS; a sealed world's seed is HMAC-SHA256 of the custody seed
- * line and "bg1/world/<slot>" (sealedWorldSeed), and a sealed plan never records it.
+ * line and "bg1/world/<slot>" (sealedWorldSeed), and a sealed plan never records it. Set W, the weekly outcome line's
+ * worlds, has a seed line and phrasing set of its own (*.bgw-seed, *.bgw-phrasing.json) and seeds its worlds from
+ * "bgw/world/<slot>" (bgwWorldSeed).
  *
  * Gold-audit fixes (stage 1, Amendment 4), on sealed worlds and the extra dev worlds, never on stage 1's three dev
  * worlds, so those still match a fresh generation: an audited retraction uses only retract templates that say the plan
@@ -467,6 +469,11 @@ export function phrasingTexts(p: Phrasing): string[] {
 const seedNumber = (s: string) => parseInt(createHash('sha256').update(s).digest('hex').slice(0, 8), 16);
 /** A sealed world's seed: HMAC-SHA256 of the custody seed line and the world's mint slot. */
 export const sealedWorldSeed = (seedLine: string, slot: number) => createHmac('sha256', seedLine.trim()).update(`bg1/world/${slot}`).digest('hex');
+/**
+ * A Set W world's seed (the weekly outcome line): HMAC-SHA256 of Set W's own seed line ("bgw-seed-v1:" and 64 hex digits)
+ * and "bgw/world/<slot>". Both the key and the message differ from BG1's, so no slot's seed is the one BG1's seed gives it.
+ */
+export const bgwWorldSeed = (seedLine: string, slot: number) => createHmac('sha256', seedLine.trim()).update(`bgw/world/${slot}`).digest('hex');
 export const weekdayOf = (day: number) => WEEKDAYS[(((WEEKDAYS.indexOf(BG1_WORLD_END_WEEKDAY) + day) % 7) + 7) % 7];
 const pad2 = (n: number) => String(n).padStart(2, '0');
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);

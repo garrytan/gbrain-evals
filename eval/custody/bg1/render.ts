@@ -12,6 +12,10 @@
  *       (--fake [--fake-break <dev number>:<session index>:<attempts>,...] | --paid-window ... as above)
  *   bun eval/custody/bg1/render.ts --dev-report <bg1-dev-NN> --set <out>/set [--budget-ledger <file> --budget-run-id <id>]
  *
+ * --bgw renders a Set W slot instead (the weekly outcome line, mint.sh --bgw): the seed file is a *.bgw-seed holding one
+ * "bgw-seed-v1:" line, the phrasing file a *.bgw-phrasing.json, the slot one of Set W's (W1: 1001 to 1999), its world id
+ * bgw- and four digits (slot 1001 is bgw-1001), and its seed bgwWorldSeed. Everything else below is the same.
+ *
  * Checks on every attempt at a session:
  *   1. deterministic (checkSession): the turns alternate, starting with the user; every planned line appears exactly
  *      once, verbatim, in a user turn, and a line planned for the middle sits in the middle half of the turns; no
@@ -73,10 +77,10 @@ import { existsSync, mkdirSync, readFileSync, renameSync, statSync, writeFileSyn
 import { dirname, join, resolve } from 'node:path';
 import {
   BG1_DATA_DIR, BG1_TARGET_TOKENS, BG1_WORLD_SCHEMA, buildQuestions, devWorldPlan, loadPhrasing, PlanError, planWorld, PUBLIC_PHRASING, renderBriefs, renderTemplateSession,
-  sealedWorldSeed, termRegex, type Phrasing, type RenderBrief, type Turn, type World, type WorldPlan,
+  bgwWorldSeed, sealedWorldSeed, termRegex, type Phrasing, type RenderBrief, type Turn, type World, type WorldPlan,
 } from '../../generators/changing-facts-gen.ts';
 import { readLedger } from '../../runner/budget-ledger.ts';
-import { BG1_DEV_CONVERSATIONS, BG1_DEV_EXTRA_CONVERSATIONS, BG1C_LAST_SLOT, bg1WorldId } from '../../runner/bg1/types.ts';
+import { BG1_DEV_CONVERSATIONS, BG1_DEV_EXTRA_CONVERSATIONS, BG1C_LAST_SLOT, BGW_SEED_SETS, bg1WorldId, bgwSeedSetOf, bgwWorldId } from '../../runner/bg1/types.ts';
 import { ledgerCaps, requireRs1Window, WindowRefusal } from '../../runner/paid-arm.ts';
 import { PROXY_REFUSAL_MARKERS } from '../../runner/providers/openai-compatible.ts';
 import { encodingCount } from '../../runner/systems/render-v2.ts';
@@ -117,7 +121,9 @@ export function renderSchema(brief: RenderBrief): object {
 }
 /** The JSON Schema of a check reply, sent to Gemini as generationConfig.responseJsonSchema. */
 export const CHECK_SCHEMA = { type: 'object', properties: { extra_claims: { type: 'boolean' } }, required: ['extra_claims'], additionalProperties: false } as const;
-const SEED_LINE = /^bg1-seed-v1:[0-9a-f]{64}$/;
+/** The two sealed seed lines: BG1's (BG1 and BG1-C) and Set W's (the weekly outcome line), each in a file of its own kind. */
+export type SealedKind = 'bg1' | 'bgw';
+const SEED_LINE: Record<SealedKind, RegExp> = { bg1: /^bg1-seed-v1:[0-9a-f]{64}$/, bgw: /^bgw-seed-v1:[0-9a-f]{64}$/ };
 /** Provider keys this process must not hold in real mode: it reaches providers only through the proxies. */
 const PROVIDER_KEYS = ['GEMINI_API_KEY', 'GOOGLE_API_KEY', 'GOOGLE_GENERATIVE_AI_API_KEY', 'BG1_GEMINI_API_KEY', 'ANTHROPIC_API_KEY', 'OPENAI_API_KEY'];
 
@@ -437,19 +443,22 @@ export async function renderWorld(plan: WorldPlan, models: Models, opts: { targe
 
 export const ownerOnly = (path: string) => (statSync(path).mode & 0o077) === 0;
 
-/** The custody seed line: a *.bg1-seed file, owner-only, holding "bg1-seed-v1:" and 64 hex digits. */
-export function readSeedLine(path: string): string {
-  if (!path.endsWith('.bg1-seed')) throw new RenderRefusal('the seed file must be named *.bg1-seed');
+/**
+ * The custody seed line: a *.bg1-seed file, owner-only, holding "bg1-seed-v1:" and 64 hex digits; for Set W (kind bgw) a
+ * *.bgw-seed file holding "bgw-seed-v1:" and 64 hex digits.
+ */
+export function readSeedLine(path: string, kind: SealedKind = 'bg1'): string {
+  if (!path.endsWith(`.${kind}-seed`)) throw new RenderRefusal(`the seed file must be named *.${kind}-seed`);
   if (!existsSync(path)) throw new RenderRefusal('the seed file does not exist');
   if (!ownerOnly(path)) throw new RenderRefusal('the seed file must be mode 600 or 400');
   const line = readFileSync(path, 'utf8').trim();
-  if (!SEED_LINE.test(line)) throw new RenderRefusal('the seed file does not hold one bg1-seed-v1 line');
+  if (!SEED_LINE[kind].test(line)) throw new RenderRefusal(`the seed file does not hold one ${kind}-seed-v1 line`);
   return line;
 }
 
-/** The custody phrasing set: a *.bg1-phrasing.json file, owner-only, with the custody marker (loadPhrasing checks the rest). */
-export function readPhrasing(path: string): Phrasing {
-  if (!path.endsWith('.bg1-phrasing.json')) throw new RenderRefusal('the phrasing file must be named *.bg1-phrasing.json');
+/** The custody phrasing set: a *.bg1-phrasing.json file (Set W: *.bgw-phrasing.json), owner-only, with the custody marker (loadPhrasing checks the rest). */
+export function readPhrasing(path: string, kind: SealedKind = 'bg1'): Phrasing {
+  if (!path.endsWith(`.${kind}-phrasing.json`)) throw new RenderRefusal(`the phrasing file must be named *.${kind}-phrasing.json`);
   if (!existsSync(path)) throw new RenderRefusal('the phrasing file does not exist');
   if (!ownerOnly(path)) throw new RenderRefusal('the phrasing file must be mode 600 or 400');
   try { return loadPhrasing(path); } catch (e) { throw new RenderRefusal(e instanceof PlanError ? e.message : 'the phrasing file is not readable JSON'); }
@@ -461,8 +470,20 @@ export const worldIdOf = (slot: number) => {
   return bg1WorldId(slot);
 };
 
-/** The sealed plan of one mint slot: deterministic from the custody seed line, the slot and the phrasing set. */
-export const sealedPlan = (seedLine: string, slot: number, phrasing: Phrasing) => planWorld(worldIdOf(slot), sealedWorldSeed(seedLine, slot), { phrasing, custody: true });
+/** A Set W slot's world id: a slot in one of its seed sets (W1: 1001 to 1999), whose id has four digits. */
+export const bgwWorldIdOf = (slot: number) => {
+  if (!bgwSeedSetOf(slot)) throw new RenderRefusal(`--slot must be a Set W slot (${BGW_SEED_SETS.map(s => `${s.id}: ${s.first} to ${s.last}`).join('; ')})`);
+  return bgwWorldId(slot);
+};
+
+/**
+ * The sealed plan of one mint slot: deterministic from the custody seed line, the slot and the phrasing set. A Set W plan
+ * takes Set W's seed line and bgwWorldSeed, and refuses BG1's seed line, so a Set W world is never planned from BG1's seed.
+ */
+export const sealedPlan = (seedLine: string, slot: number, phrasing: Phrasing, kind: SealedKind = 'bg1') => {
+  if (!SEED_LINE[kind].test(seedLine.trim())) throw new RenderRefusal(`a ${kind === 'bgw' ? 'Set W' : 'BG1'} plan needs a ${kind}-seed-v1 line`);
+  return planWorld(kind === 'bgw' ? bgwWorldIdOf(slot) : worldIdOf(slot), (kind === 'bgw' ? bgwWorldSeed : sealedWorldSeed)(seedLine, slot), { phrasing, custody: true });
+};
 
 /** The committed public dev worlds' plans and questions, as changing-facts-gen.ts devFiles() writes them. */
 export const BG1_DEV_WORLDS = join(BG1_DATA_DIR, 'dev', 'worlds');
@@ -525,11 +546,13 @@ export async function main(argv: string[], env: Record<string, string | undefine
   const flag = (name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
   const set = flag('--set'), seedFile = flag('--seed-file'), phrasingFile = flag('--phrasing'), slotText = flag('--slot');
   const dev = argv.includes('--dev') ? flag('--dev') ?? '' : null;
+  const kind: SealedKind = argv.includes('--bgw') ? 'bgw' : 'bg1';
   if (dev !== null) {
     if (seedFile || phrasingFile || slotText) throw new RenderRefusal('--dev plans a public dev world from its public seed and phrasing, so it takes no --seed-file, --phrasing or --slot');
+    if (kind === 'bgw') throw new RenderRefusal('--dev plans a public dev world, so it takes no --bgw');
     if (!set || !DEV_IDS.includes(dev)) throw new RenderRefusal(`usage: --dev <bg1-dev-01 to bg1-dev-20> --set <dir> (--fake | --paid-window <unit> --window-cap-usd <n> --budget-ledger <file> --budget-run-id <id>)`);
     if (insideCheckout(set)) throw new RenderRefusal('--set must sit outside any git checkout');
-  } else if (!set || !seedFile || !phrasingFile || !slotText) throw new RenderRefusal('usage: --set <dir> --seed-file <path>.bg1-seed --phrasing <path>.bg1-phrasing.json --slot <n> (--fake | --paid-window <unit> --window-cap-usd <n> --budget-ledger <file> --budget-run-id <id>)');
+  } else if (!set || !seedFile || !phrasingFile || !slotText) throw new RenderRefusal(`usage: [--bgw] --set <dir> --seed-file <path>.${kind}-seed --phrasing <path>.${kind}-phrasing.json --slot <n> (--fake | --paid-window <unit> --window-cap-usd <n> --budget-ledger <file> --budget-run-id <id>)`);
   const cache = resolve(flag('--cache') ?? join(dirname(resolve(set)), 'render-cache'));
   if (dev !== null && insideCheckout(cache)) throw new RenderRefusal('--cache must sit outside any git checkout');
   const fake = argv.includes('--fake');
@@ -545,9 +568,9 @@ export async function main(argv: string[], env: Record<string, string | undefine
     make = () => clientModels(gemini, haiku);
   }
   const slot = dev === null ? Number(slotText) : DEV_IDS.indexOf(dev) + 1;
-  const id = dev ?? worldIdOf(slot);
-  const phrasing = dev === null ? readPhrasing(resolve(phrasingFile!)) : PUBLIC_PHRASING;
-  const plan = dev === null ? sealedPlan(readSeedLine(resolve(seedFile!)), slot, phrasing) : devPlan(dev, devWorlds);
+  const id = dev ?? (kind === 'bgw' ? bgwWorldIdOf(slot) : worldIdOf(slot));
+  const phrasing = dev === null ? readPhrasing(resolve(phrasingFile!), kind) : PUBLIC_PHRASING;
+  const plan = dev === null ? sealedPlan(readSeedLine(resolve(seedFile!), kind), slot, phrasing, kind) : devPlan(dev, devWorlds);
   const label = dev === null ? `slot=${slot} world=${id}` : `world=${id}`;
   let renderTokens = targetTokens;
   if (!make) {
