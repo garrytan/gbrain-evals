@@ -1,7 +1,8 @@
 /**
  * The monthly SOTA scorecard (SOTA plan item 9, decision D1a). One row per benchmark and leader: gbrain minus the leader
  * on questions gbrain was never tuned on, in the answerable classes, as the mean over the three readers under test
- * (claude-opus-5-5, gpt-6.2-sol, particle-1; RS1's frozen plan keeps gpt-6.1-sol, so its rows count with that reader)
+ * (claude-opus-5-5, gpt-6.2-sol, particle-1; beam-rs1 rows count only with RS1's frozen readers, gpt-6.1-sol in place of
+ * gpt-6.2-sol, unless RS1's plan gets a dated amendment registering another)
  * with a conversation-clustered 95% interval, in points.
  *
  *   bun eval/runner/sota/scorecard.ts --rows <rows.json> [--previous <last month's scorecard.json>] [--quarter-call <2027-Q1>]
@@ -50,7 +51,7 @@ export function status(d: Interval | null, margin = MARGIN): Status {
 }
 
 const sameSet = (a: readonly string[], b: readonly string[]) => a.length === b.length && a.every(x => b.includes(x)) && b.every(x => a.includes(x)) && new Set(a).size === a.length && new Set(b).size === b.length;
-const sameReaders = (row: ScoreRow) => sameSet(row.readers, READERS) || (row.benchmark === 'beam-rs1' && sameSet(row.readers, RS1_FROZEN_READERS));
+const rosterFor = (row: ScoreRow) => (row.benchmark === 'beam-rs1' ? { readers: RS1_FROZEN_READERS, name: "RS1's frozen readers" } : { readers: READERS, name: 'the three under test' });
 
 /** A row's status, whether this month calls it, and its change since last month's row for the same benchmark and leader. */
 export function scoreRow(row: ScoreRow, o: { quarterCall: string | null; previous: readonly ScoreRow[] }): ScoredRow {
@@ -58,7 +59,8 @@ export function scoreRow(row: ScoreRow, o: { quarterCall: string | null; previou
   const trend_points = prev?.delta && row.delta ? Math.round((row.delta.estimate - prev.delta.estimate) * 100) / 100 : null;
   const out = (s: ScoredRow['status'], reason: string | null, called: string | null = null): ScoredRow => ({ ...row, status: s, reason, called, trend_points });
   if (row.sealed_pending) return out('sealed_pending', 'sealed, pending RS1 verdict');
-  if (!sameReaders(row)) return out('descriptive', `readers ${row.readers.join(', ')}, not the three under test`);
+  const roster = rosterFor(row);
+  if (!sameSet(row.readers, roster.readers)) return out('descriptive', `readers ${row.readers.join(', ')}, not ${roster.name}`);
   if (row.split !== 'held_out') return out('descriptive', 'dev questions: gbrain was tuned on them');
   return out(status(row.delta), null, o.quarterCall);
 }
