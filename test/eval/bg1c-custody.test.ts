@@ -206,7 +206,7 @@ describe('a BG1-C set end to end: mint, validate --bg1c, fill --bg1c and load', 
     const m = mint(out, j, ['--fake', '--bg1c', '--fake-break', '33:2:4'], '30000');
     expect(m.code).toBe(0);
     expect(m.out).toContain('bg1-mint summary=kept mode=fake kept=40 written=40 skipped=0 dropped=1 dropped_earlier=0 last_slot=71\n');
-    expect(readdirSync(join(set, 'worlds'))).toEqual(range(31, 71).filter(s => s !== 33).map(id));
+    expect(readdirSync(join(set, 'worlds')).sort()).toEqual(range(31, 71).filter(s => s !== 33).map(id));
 
     const report = join(j.dir, 'report.json');
     refusal(run('bun', [VALIDATE, '--bg1c', '--set', set, '--seed-file', j.seed, '--phrasing', j.phrasing, '--report', report, ...LENGTH, '--n-final', '41']), '--n-final must be a whole number from 1 to 40');

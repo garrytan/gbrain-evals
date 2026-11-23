@@ -271,7 +271,7 @@ const rereadDir = (out: string, row: Bg1cRow) => join(out, 'rereads', row);
 function rereadCells(out: string): Array<{ row: Bg1cRow; dir: string }> {
   return BG1C_ROWS.map(row => {
     const cells = join(rereadDir(out, row), 'cells');
-    const dirs = existsSync(cells) ? readdirSync(cells).filter(d => d.endsWith(rereadCellId('', BG1C_READER))) : [];
+    const dirs = existsSync(cells) ? readdirSync(cells).sort().filter(d => d.endsWith(rereadCellId('', BG1C_READER))) : [];
     if (dirs.length !== 1) throw new Bg1cRefusal(`${cells} holds ${dirs.length} ${BG1C_READER} re-reads, not one`);
     return { row, dir: join(cells, dirs[0]) };
   });
