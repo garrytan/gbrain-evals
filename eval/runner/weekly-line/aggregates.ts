@@ -243,7 +243,11 @@ export function weekAggregates(meta: WeekMeta, questions: readonly WlQuestion[],
   const base = { schema: 'gbrain-evals/weekly-line-week/v1' as const, week: meta.week, no_point: meta.no_point ?? null, gbrain: meta.gbrain, comparators: meta.comparators };
   if (meta.no_point) return { ...base, worlds: [] as never[], classes: null, cost_per_correct: null, rolling: null, regression: null };
   const ids = meta.worlds.map(w => w.world);
-  const earlier = new Set((o.history ?? []).flatMap(h => h.worlds.map(w => w.world)));
+  const history = o.history ?? [];
+  const earlierWorlds = history.flatMap(h => h.worlds.map(w => w.world));
+  if (new Set(history.map(h => h.week)).size !== history.length || new Set(earlierWorlds).size !== earlierWorlds.length) refuse('the history repeats a week or a world; pass each earlier week once');
+  if (history.some(h => h.week === meta.week)) refuse(`the history already holds week ${meta.week}`);
+  const earlier = new Set(earlierWorlds);
   if (ids.some(w => earlier.has(w))) refuse(`week ${meta.week} counts a world an earlier week already counted; each world is counted in exactly one week`);
   const compared = new Map(WL_COMPARISONS.map(c => [c.key, compare(questions, c, ids)]));
   const worlds = meta.worlds.map(w => ({
@@ -261,7 +265,7 @@ export function weekAggregates(meta: WeekMeta, questions: readonly WlQuestion[],
     differences: Object.fromEntries(WL_COMPARISONS.filter(c => c.cls === cls).map(c => { const x = compared.get(c.key)!; return [c.other, { questions: x.mask.kept, planned: x.mask.planned, lost: x.mask.lost, pooled: outEst(x.pooled), readers: outReaders(x.readers, outEst) }]; })),
   }]));
   const partial = { ...base, worlds, classes, cost_per_correct: outCost(costPerCorrect(questions, ids, meta.costs ?? [])), rolling: null, regression: null };
-  const points = [...(o.history ?? []).map(pointWeekOf).filter((p): p is PointWeek => p !== null && p.week < meta.week), pointWeekOf(partial)!];
+  const points = [...history.map(pointWeekOf).filter((p): p is PointWeek => p !== null && p.week < meta.week), pointWeekOf(partial)!];
   const roll = rolling(points);
   const prev = o.previousBlock ?? null;
   const regression = prev ? byClassOther(c => {

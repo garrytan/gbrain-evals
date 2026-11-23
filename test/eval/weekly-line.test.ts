@@ -347,6 +347,8 @@ describe('the aggregates that leave custody', () => {
     const supplied = weekAggregates(meta('2027-01-05', next.worlds.slice(32), B), next.questions, { history: weeks, previousBlock: block, falseAlarmPool: { 'now|grep-agent': [1, -1, 2, -2] } });
     expect(supplied.regression!.now['grep-agent'].false_alarm_source).toBe('supplied pool');
     expect(() => weekAggregates(meta('2027-01-05', worlds.slice(0, 8), B), questions, { history: weeks })).toThrow(/exactly one week/);
+    expect(() => weekAggregates(meta('2027-01-05', next.worlds.slice(32), B), next.questions, { history: [...weeks, weeks[0]] })).toThrow(/repeats a week or a world/);
+    expect(() => weekAggregates(meta('2026-12-22', next.worlds.slice(32), B), next.questions, { history: weeks })).toThrow(/already holds week/);
   });
 
   test('the writer refuses a field that could carry text, naming neither the value nor the key', () => {
@@ -482,6 +484,16 @@ describe('records', () => {
     expect(main(['week', '--meta', m1, '--records', dirs[0], '--out', out])).toBe(0);
     expect(main(['week', '--meta', m2, '--records', dirs[1], '--history', join(out, 'week-2026-12-01.json'), '--out', out])).toBe(0);
     expect(main(['block', '--block', '1', '--meta', m1, '--meta', m2, '--records', dirs[0], '--records', dirs[1], '--out', out])).toBe(0);
+    expect(() => main(['week', '--meta', m1, '--meta', m2, '--records', dirs[0], '--out', out])).toThrow(/exactly one --meta/);
+    expect(() => main(['month', '--meta', m1, '--records', dirs[0], '--out', out])).toThrow(/week or block/);
+    expect(() => main(['week', '--meta', m1, '--records', dirs[0]])).toThrow(/--out/);
+    expect(() => main(['week', '--meta', m2, '--records', join(tmp, 'w1.json'), '--out', out])).toThrow(/no cells\/ directory/);
+    const badPool = join(tmp, 'pool.json');
+    writeFileSync(badPool, JSON.stringify({ 'now|grep-agent': ['Lisbon'] }));
+    expect(() => main(['week', '--meta', m2, '--records', dirs[1], '--false-alarm-pool', badPool, '--out', out])).toThrow(/comparison keys to lists/);
+    const badBlock = join(tmp, 'bad-block.json');
+    writeFileSync(badBlock, JSON.stringify({ schema: 'gbrain-evals/weekly-line-block/v1', note: 'Lisbon' }));
+    expect(() => main(['week', '--meta', m2, '--records', dirs[1], '--previous-block', badBlock, '--out', out])).toThrow(WeeklyAggregateError);
     const w2 = JSON.parse(readFileSync(join(out, 'week-2026-12-08.json'), 'utf8'));
     expect(w2.rolling.builds).toEqual([A, B]);
     const b = JSON.parse(readFileSync(join(out, 'block-1.json'), 'utf8'));
