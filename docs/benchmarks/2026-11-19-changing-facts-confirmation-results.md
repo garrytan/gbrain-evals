@@ -13,8 +13,7 @@
   at a date and how a fact changed, gbrain was behind the memory-bank server by 4.5 points (-6.5 to -2.6) and the
   extract-first server by 3.0 (-5.2 to -0.8). On "how did it change" questions alone it was behind by 11.2 and 5.9
   points, and the values the answer needs reached the reader in 85% of gbrain's contexts against 97% and 98% for the two
-  servers, so most of that loss is in what gbrain retrieves. None of the 76,601 facts in gbrain's 40 kept brains carried
-  an end date.
+  servers, so most of that loss is in what gbrain retrieves.
 - **We learned that the lead gbrain showed on development worlds did not carry over to worlds nobody had seen. You
   should confirm a memory change on held-out data before you claim it.** On 20 public development worlds, the same build
   read by claude-opus-5-5 was ahead of both servers on current values (+3.4 and +1.9 points) and level on the past (+0.6
@@ -27,6 +26,14 @@ is true now, and **level within 3 points** with the extract-first server on what
 planned questions are in every comparison, from all three readers. Every number here is on synthetic histories, at one
 gbrain build and an 8,000-token reading budget. The design compares one gbrain release with two servers, so it does not
 test which gbrain change caused any difference.
+
+Accuracy on all 2,560 questions, and US dollars per correct answer, for each reader:
+
+| Row | claude-opus-5-5 accuracy | claude-opus-5-5 per correct | particle-1 accuracy | particle-1 per correct | gpt-6.2-sol accuracy | gpt-6.2-sol per correct |
+|---|---:|---:|---:|---:|---:|---:|
+| gbrain | 92.9% | 0.0538 | 90.2% | 0.0076 | 93.4% | 0.0207 |
+| memory-bank server | 94.8% | 0.0480 | 88.8% | 0.0081 | 95.7% | 0.0206 |
+| extract-first server | 96.0% | 0.1040 | 89.9% | 0.0653 | 92.8% | 0.0769 |
 
 ## The test
 
@@ -72,6 +79,10 @@ Sol's and particle-1's. Two checks back the judges, and no person labelled any i
 - **BG1-C's judge check (model-labelled)** covers the new reader, gpt-6.2-sol. claude-opus-5-5 graded its 1,920 answers
   on 10 public development worlds, and gemini-3.8-flash then graded a pool of 148 of them (the 74 Opus graded wrong and
   74 it graded right). The two agreed on all 148 (kappa 1.0).
+
+The deterministic matcher the plan reports beside the judges sets no verdict. It agreed with the gating judges on 73.4%
+of the 4,128 answers it could decide (kappa 0.405), and the judges graded 515 of the 890 answers it read as naming a
+stale value correct.
 
 A question's score is the share of the three readers who got it right. Each of the four comparisons (each server, on
 each class) compares gbrain with the server world by world, as the mean over the class's questions, with a paired test
@@ -151,28 +162,14 @@ The lead over the memory-bank server on current values rests on particle-1's rea
 with the memory-bank server and behind the extract-first server on current values, and every reader puts it behind or
 level on the past.
 
-Accuracy on all 64 questions per world (2,560 questions), per reader:
-
-| Row | claude-opus-5-5 | gpt-6.2-sol | particle-1 |
-|---|---:|---:|---:|
-| gbrain | 92.9% | 93.4% | 90.2% |
-| memory-bank server | 94.8% | 95.7% | 88.8% |
-| extract-first server | 96.0% | 92.8% | 89.9% |
-
-All 64 questions pooled, gbrain minus each server: -1.0 points (-2.0 to +0.1) against the memory-bank server and -0.7
+Each reader's accuracy on all 2,560 questions is in the first table. All 64 questions pooled, gbrain minus each server: -1.0 points (-2.0 to +0.1) against the memory-bank server and -0.7
 (-2.1 to +0.6) against the extract-first server.
 
 ### Cost per correct answer
 
 For each reader, a row's cost is its ingest, retrieval and background spend per question plus the reader's own spend
-per answer, divided by that reader's accuracy. Judge spend is left out. US dollars per correct answer, from the metering
-proxies' usage fields:
-
-| Reader | gbrain | memory-bank | extract-first |
-|---|---:|---:|---:|
-| claude-opus-5-5 | 0.0538 | 0.0480 | 0.1040 |
-| particle-1 | 0.0076 | 0.0081 | 0.0653 |
-| gpt-6.2-sol | 0.0207 | 0.0206 | 0.0769 |
+per answer, divided by that reader's accuracy. Judge spend is left out. Spend comes from the metering proxies' usage
+fields, and each reader's cost per correct answer is in the first table. Over all three readers:
 
 | gbrain's cost over | Ratio | 95% interval | Verdict |
 |---|---:|---|---|
@@ -186,13 +183,12 @@ The intervals come from a cluster bootstrap over worlds. Below 1 means gbrain is
 One comparison is a tie (current values against the extract-first server), and the two on the past, futile at the look,
 ended as losses. The preregistration's "Why null?" questions were answered in custody before this file was written:
 
-- **Did gbrain use its design?** Yes for name tags and slots, and no for end dates. Across gbrain's 40 kept brains,
-  12,690 of 76,601 facts were tagged with the person or company they are about, 1,376 tagged facts had a slot, and 316 of
-  their 891 slots held more than one value. Beyond the three counts the plan asked for, a count of end markers
-  found that every fact had a start date and none had an end date, an expiry, a successor or a merge. So a changed fact's
-  old and new values sat side by side as open facts, and a question about the past depended on retrieval finding every
-  version. The smoke brain on a public world showed the same (0 of its 42 slotted facts closed). We have not established
-  why; it goes to gbrain's maintainers with the losses below.
+- **Did gbrain use its design?** Yes for name tags and slots. Across gbrain's 40 kept brains, 12,690 facts were tagged
+  with the person or company they are about, 1,376 tagged facts had a slot (a location, employer or role), and 316 slots
+  held more than one value. gbrain does not close an old slot value in storage: by design, its query facts block works
+  out when each slot value ended at read time, from the slot's history, and prints that end beside the fact. We did not
+  count how often those read-time ends reached the reader, so this run does not say whether the readers saw old values
+  as ended. The losses go to gbrain's maintainers with the exposure figures above.
 - **Do the tasks fit?** The worlds were built around the claimed advantage, and each carries 24 questions about the past
   on facts with scheduled changes.
 - **Enough samples?** Against the extract-first server on current values, the interval (-0.8 to +2.0) sits inside the
