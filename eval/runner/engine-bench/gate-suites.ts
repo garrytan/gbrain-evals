@@ -12,7 +12,9 @@
  * for rust, so the runner refuses any other addon file). The child environment drops every provider key, except that
  * `--paid` keeps them for the two suites that embed live (Cat 13 and Cat 13b), which then run under the budget ledger
  * with one embedding cache per suite: PGLite fills it (so it must come first in --engines) and the others read it only
- * (a miss on Postgres or Rust makes the suite NOT_RUN). Without `--paid` those two run on hash embeddings.
+ * (a miss on Postgres or Rust makes the suite NOT_RUN). Without `--paid` those two run on hash embeddings. When the
+ * engines' receipts pair, `emit --counted` refuses either suite unless every engine embedded live with OpenAI
+ * text-embedding-3-large at 1536 dimensions, and then writes no file; receipts that embedded differently read NOT_RUN.
  * Receipts land at eval/reports/<category>/engine-<kind>/receipt.json, logs and refusals beside them.
  *
  * `emit` reads those receipts and writes <out>/<suite>.json. Rules, as RUST_ENGINE.md (gbrain 09b9ac5c) states them,
@@ -35,10 +37,11 @@
  * (file:line) of every engine call the Rust run refused.
  */
 import { spawn } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { copyFileSync, createWriteStream, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
-import { EVAL_ENGINE_REFUSED_EXIT, EVAL_ENGINES, RUST_ADDON_SHA256_ENV, RUST_REFUSALS_FILE_ENV, type EvalEngineKind, type RustRefusalSite } from '../eval-engine.ts';
-import { gbrainSpecFrom } from '../gbrain-under-test.ts';
+import { basename, dirname, join, resolve } from 'node:path';
+import { EVAL_ENGINE_REFUSED_EXIT, EVAL_ENGINES, RUST_ADDON_SHA256_ENV, RUST_REFUSALS_FILE_ENV, rustAddonIdentity, type EvalEngineKind, type RustRefusalSite } from '../eval-engine.ts';
+import { gbrainSpecFrom, resolveGbrainUnderTest } from '../gbrain-under-test.ts';
 import { writeScrubbedJson } from '../receipt.ts';
 import { clusteredPairedDelta } from '../stats/paired.ts';
 import { runnerEnv } from './correctness.ts';
@@ -68,6 +71,8 @@ export interface GateSuite {
   /** The runner writes its receipt at the category's own path, so `run` copies it into the engine directory. */
   canonicalReceipt?: boolean;
   embedsLive?: boolean;
+  /** The receipts' embedding_transport a counted file needs: the preregistered model at its width. */
+  countedEmbedding?: string;
   measure: (r: Receipt) => Measured;
   rule: Rule;
   reading?: string;
@@ -93,7 +98,7 @@ function listed(label: string, xs: string[]): string[] { return xs.length ? [`${
 export const GATE_SUITES: readonly GateSuite[] = [
   {
     id: 'cat13/ndcg5', gate: 'E1', benchmark: 'Cat 13 conceptual search, gbrain arm, nDCG@5', category: 'cat13-conceptual', script: 'eval/runner/cat13-conceptual.ts',
-    canonicalReceipt: true, embedsLive: true,
+    canonicalReceipt: true, embedsLive: true, countedEmbedding: 'live openai:text-embedding-3-large @ 1536d',
     args: o => ['--adapter', 'gbrain', ...stub(o.paid), ...(o.paid ? ['--embed-cache', o.cacheFile!, ...(o.fillsCache ? [] : ['--embed-cache-only']), ...o.budget] : [])],
     measure: r => ({ ndcg5: scorecard(r, 'gbrain').ndcg5 }),
     rule: { kind: 'paired-bound', key: 'ndcg5', floor: -RUST_RECALL_DELTA },
@@ -103,7 +108,7 @@ export const GATE_SUITES: readonly GateSuite[] = [
   },
   {
     id: 'cat13b/top1', gate: 'E1', benchmark: 'Cat 13b source swamp, gbrain arm, top-1', category: 'cat13b-source-swamp', script: 'eval/runner/cat13b-source-swamp.ts',
-    embedsLive: true,
+    embedsLive: true, countedEmbedding: 'live openai:text-embedding-3-large',
     args: o => [...stub(o.paid), ...(o.paid ? ['--embed-cache', o.cacheFile!, ...(o.fillsCache ? o.budget : ['--embed-cache-only', ...o.budget])] : [])],
     measure: r => ({ top1: scorecard(r, 'gbrain').top1_hit_rate }),
     rule: { kind: 'at-least-both', keys: ['top1'] },
@@ -218,7 +223,7 @@ export const GATE_SUITES: readonly GateSuite[] = [
     id: 'cat27', gate: 'E3', benchmark: 'Cat 27 graph signals on', category: 'cat27-graph-signals', script: 'eval/runner/cat27-graph-signals.ts', args: () => [],
     measure: r => {
       const a = r.data?.aggregate ?? {};
-      return { ndcg10_points: a.mean_ndcg10_with_signals * 100, top1_hits: Math.round(a.top1_hit_rate_with_signals * a.n_probes), probes_scored: a.n_probes, errors: (r.errors ?? []).length };
+      return { ndcg10_points: a.mean_ndcg10_with_signals * 100, top1_hits: Math.round(a.top1_hit_rate_with_signals * a.n_probes), probes_scored: a.n_probes || NaN, errors: (r.errors ?? []).filter((e: any) => e.origin === 'sut').length };
     },
     rule: { kind: 'within-or-equal', points: ['ndcg10_points'], counts: ['top1_hits', 'probes_scored', 'errors'] },
   },
@@ -233,10 +238,10 @@ export function engineDir(category: string, kind: EvalEngineKind, reports = join
   return join(reports, category, `engine-${kind}`);
 }
 
-interface RunExit { code: number | null; signal: string | null; gbrain: string }
+interface RunExit { code: number | null; signal: string | null; gbrain: string; rust_addon?: { sha256: string; target: string | null } | null }
 interface EngineRun { kind: EvalEngineKind; receipt: Receipt | null; refused: string | null; refusalSites?: RustRefusalSite[]; logTail?: string; hasLog?: boolean; exit?: RunExit | null }
 
-function loadRun(category: string, kind: EvalEngineKind, reports?: string): EngineRun {
+export function loadRun(category: string, kind: EvalEngineKind, reports?: string): EngineRun {
   const dir = engineDir(category, kind, reports);
   const refusedFile = join(dir, 'refused.txt');
   const receiptFile = join(dir, 'receipt.json');
@@ -250,12 +255,24 @@ function loadRun(category: string, kind: EvalEngineKind, reports?: string): Engi
     refusalSites: existsSync(sitesFile) ? JSON.parse(readFileSync(sitesFile, 'utf8')) : [],
     logTail: existsSync(logFile) ? readFileSync(logFile, 'utf8').trim().slice(-500) : '',
     hasLog: existsSync(logFile),
-    exit: existsSync(exitFile) ? JSON.parse(readFileSync(exitFile, 'utf8')) : null,
+    exit: readExit(exitFile),
   };
+}
+
+/** The runner's exit record, or null when it is missing, unreadable or not the shape run writes. */
+function readExit(file: string): RunExit | null {
+  try {
+    const x = JSON.parse(readFileSync(file, 'utf8'));
+    const addon = x?.rust_addon;
+    const addonOk = addon == null || (typeof addon.sha256 === 'string' && (addon.target === null || typeof addon.target === 'string'));
+    return typeof x?.gbrain === 'string' && (x.code === null || typeof x.code === 'number') && (x.signal === null || typeof x.signal === 'string') && addonOk ? x : null;
+  } catch { return null; }
 }
 
 const REFUSAL_SITES = 'rust-refusal-sites.json';
 const RUN_EXIT = 'exit.json';
+/** Signals from a crash inside the engine under test; SIGKILL and SIGTERM (a harness timeout or OOM kill) stay NOT_RUN. */
+const ENGINE_CRASH_SIGNALS = ['SIGSEGV', 'SIGABRT', 'SIGBUS'];
 const completed = (r: Receipt | null) => r !== null && r.run_status === 'completed';
 
 /** The build a receipt names: overlay commit, ref and dirty flag, plus the Rust addon digest and target. */
@@ -342,6 +359,10 @@ export function judgeSuite(s: GateSuite, runs: Record<EvalEngineKind, EngineRun>
   const ran = EVAL_ENGINES.filter(k => completed(runs[k].receipt));
   const modes = ran.map(k => embeddingOf(runs[k].receipt!));
   if (new Set(modes).size > 1) return notRun(`the engines embedded differently (${ran.map((k, i) => `${k} ${modes[i]}`).join('; ')})`);
+  if (o.counted && s.countedEmbedding) {
+    const other = ran.filter(k => runs[k].receipt!.resolved_config?.embedding_transport !== s.countedEmbedding);
+    if (other.length) throw new Error(`${s.id}: a counted file needs every engine to embed ${s.countedEmbedding}, but ${other.map(k => `${k} embedded with ${runs[k].receipt!.resolved_config?.embedding_transport ?? 'no recorded transport'}`).join('; ')}; rerun it under --paid with the preregistered model`);
+  }
   const sitesLoss = (): Loss[] => {
     const refused = runs.rust.refusalSites ?? [];
     return refused.length ? [{ id: `${s.id}:refusal-sites`, reason: `The Rust run refused ${refused.reduce((n, x) => n + x.count, 0)} engine calls at: ${refused.map(siteText).join('; ')}` }] : [];
@@ -351,13 +372,14 @@ export function judgeSuite(s: GateSuite, runs: Record<EvalEngineKind, EngineRun>
     if (new Set(tsBuilds).size !== 1 || tsBuilds[0] === null) return notRun(`the TypeScript engines ran different or unnamed gbrain builds (${tsBuilds.join(', ')})`);
     const exit = runs.rust.exit;
     const exitText = exit ? `exit ${exit.code ?? 'none'}${exit.signal ? ` by ${exit.signal}` : ''}` : 'no exit record';
-    if (!runs.rust.hasLog || typeof exit?.code !== 'number' || exit.code === 0) return notRun(`Rust wrote no receipt and has no failed run on record (${exitText}${runs.rust.hasLog ? '' : ', no run.log'})`);
+    const failed = typeof exit?.code === 'number' ? exit.code !== 0 : ENGINE_CRASH_SIGNALS.includes(exit?.signal ?? '');
+    if (!runs.rust.hasLog || !exit || !failed) return notRun(`Rust wrote no receipt and has no failed run on record (${exitText}${runs.rust.hasLog ? '' : ', no run.log'})`);
     const ref = exit.gbrain.split('@').at(-1) ?? '';
     if (!/^[0-9a-f]{7,40}$/.test(ref) || !tsBuilds[0].startsWith(ref)) return notRun(`Rust's run named gbrain ${exit.gbrain}, not the TypeScript engines' build ${tsBuilds[0]}`);
     const losses = [{ id: s.id, reason: `Rust wrote no receipt: its runner failed (${exitText}) without one, where both TypeScript engines completed.${runs.rust.logTail ? ` Log tail: ${runs.rust.logTail}` : ''}` }, ...sitesLoss()];
     const reason = withNote(losses.map(l => l.reason).join(' | ').slice(0, 1600))!;
     return {
-      ...base, gbrain: { ...buildOf(runs.pglite.receipt!), rust_addon: null }, verdict: 'FAIL', reason,
+      ...base, gbrain: { ...buildOf(runs.pglite.receipt!), rust_addon: exit.rust_addon ?? null }, verdict: 'FAIL', reason,
       rows: [{ id: s.id, benchmark: s.benchmark, verdict: 'FAIL', measured, reason }, ...extraRowIds(s).map(id => ({ id, benchmark: id === STRICT(s) ? `${s.benchmark}, strict point comparison (secondary)` : s.beside!.benchmark, verdict: 'NOT_RUN' as const, measured: {}, reason }))],
       losses,
     };
@@ -399,10 +421,11 @@ export function judgeSuite(s: GateSuite, runs: Record<EvalEngineKind, EngineRun>
     } else if (rule.kind === 'paired-bound') {
       const sets = EVAL_ENGINES.map(k => {
         const r = runs[k].receipt!;
-        const ids: string[] = (r.data?.per_query?.gbrain ?? []).map((q: any) => q.id).sort();
-        return { k, ids, n: r.n_total, full: ids.length === r.n_total && (r.resolved_config?.probes_generated ?? ids.length) === ids.length };
+        const ids: string[] = (r.data?.per_query?.gbrain ?? []).map((q: any) => `${q.id}\t${q.text}`).sort();
+        return { k, ids, n: r.n_total, gold: r.resolved_config?.evaluator?.gold_store?.fingerprint ?? null, full: ids.length === r.n_total && (r.resolved_config?.probes_generated ?? ids.length) === ids.length };
       });
-      if (sets.some(x => !x.full) || new Set(sets.map(x => x.ids.join(','))).size !== 1) {
+      if (o.counted && sets.some(x => !x.gold)) return notRun(`a counted ${rule.key} file needs a gold-store fingerprint on every engine (missing on ${sets.filter(x => !x.gold).map(x => x.k).join(', ')})`);
+      if (sets.some(x => !x.full) || new Set(sets.map(x => `${x.gold}\n${x.ids.join('\n')}`)).size !== 1) {
         return notRun(`the engines scored different or partial ${rule.key} query sets (${sets.map(x => `${x.k} ${x.ids.length} of ${x.n}`).join(', ')})`);
       }
       const bounds = Object.fromEntries(TS_ENGINES.map(k => [k, cat13PairedBound(rust, runs[k].receipt!)])) as Record<(typeof TS_ENGINES)[number], ReturnType<typeof cat13PairedBound>>;
@@ -420,9 +443,10 @@ export function judgeSuite(s: GateSuite, runs: Record<EvalEngineKind, EngineRun>
         secondary: { tie_order_flips: Object.fromEntries(TS_ENGINES.map(k => [k, bounds[k].tie_order_flips])) },
       });
     } else if (rule.kind === 'within-or-equal') {
-      for (const k of EVAL_ENGINES) for (const key of [...rule.points, ...rule.counts]) {
+      for (const k of TS_ENGINES) for (const key of [...rule.points, ...rule.counts]) {
         if (!Number.isFinite(measured[k]![key])) return notRun(`the ${k} receipt has no ${key}`);
       }
+      for (const key of [...rule.points, ...rule.counts]) if (!Number.isFinite(m[key])) gating.push({ id: `${s.id}:${key}`, reason: `the Rust receipt has no ${key} (verdict ${rust.verdict ?? 'none'})` });
       for (const k of TS_ENGINES) {
         for (const key of rule.points) if (!(Math.abs(m[key] - measured[k]![key]) <= 0.5)) gating.push({ id: `${s.id}:${key}:vs-${k}`, reason: `Rust ${m[key]} vs ${k} ${measured[k]![key]}: more than 0.5 points apart` });
         for (const key of rule.counts) if (m[key] !== measured[k]![key]) gating.push({ id: `${s.id}:${key}:vs-${k}`, reason: `Rust ${m[key]} vs ${k} ${measured[k]![key]}: counts differ` });
@@ -495,6 +519,11 @@ function runChild(args: string[], env: Record<string, string>, logPath: string):
   });
 }
 
+/** The addon's target: what its loader reports, else the target its file name carries (gbrain_engine.<target>.node), since a crashing addon may not load. */
+export function addonTarget(path: string, loaded: string | null | undefined): string | null {
+  return loaded ?? /^gbrain_engine\.([a-z0-9]+-[a-z0-9_]+(?:-[a-z0-9]+)?)\.node$/.exec(basename(path))?.[1] ?? null;
+}
+
 async function run(argv: readonly string[]): Promise<void> {
   const spec = gbrainSpecFrom(argv);
   if (!spec || !/^[0-9a-f]{7,40}$/.test(spec.split('@').at(-1) ?? '')) throw new Error('run needs --gbrain <checkout>@<sha> with a 7 to 40 character commit sha (not a tag or branch), the one build every engine and suite measures');
@@ -511,6 +540,12 @@ async function run(argv: readonly string[]): Promise<void> {
   const pg = process.env.LIFECYCLE_PG_URL;
   if (engines.includes('postgres') && !pg) throw new Error('the postgres engine needs LIFECYCLE_PG_URL (a Postgres admin URL with pgvector)');
   if (paid) mkdirSync(cacheDir, { recursive: true });
+  const required = process.env[RUST_ADDON_SHA256_ENV]?.trim().toLowerCase();
+  if (engines.includes('rust')) {
+    const got = createHash('sha256').update(readFileSync(process.env.GBRAIN_RUST_ENGINE_ADDON!)).digest('hex');
+    if (got !== required) throw new Error(`the Rust addon file's SHA-256 is ${got}, not the ${required} that ${RUST_ADDON_SHA256_ENV} names; run loads nothing until they match`);
+  }
+  const rustAddon = engines.includes('rust') ? { sha256: required!, target: addonTarget(process.env.GBRAIN_RUST_ENGINE_ADDON!, rustAddonIdentity(resolveGbrainUnderTest(spec))?.target) } : null;
   for (const s of selectSuites(argv)) {
     const jobs = [
       { label: s.id, category: s.category, script: s.script, live: paid && s.embedsLive === true, args: s.args, canonical: s.canonicalReceipt === true },
@@ -527,7 +562,7 @@ async function run(argv: readonly string[]): Promise<void> {
       if (job.canonical) rmSync(canonical, { force: true });
       const t0 = Date.now();
       const { code, signal, tail } = await runChild(args, env, join(dir, 'run.log'));
-      writeFileSync(join(dir, RUN_EXIT), `${JSON.stringify({ code, signal, gbrain: spec } satisfies RunExit)}\n`);
+      writeFileSync(join(dir, RUN_EXIT), `${JSON.stringify({ code, signal, gbrain: spec, ...(kind === 'rust' ? { rust_addon: rustAddon } : {}) } satisfies RunExit)}\n`);
       if (code === EVAL_ENGINE_REFUSED_EXIT) writeFileSync(join(dir, 'refused.txt'), `${tail.split('\n').filter(l => l.startsWith('REFUSED')).at(-1) ?? tail.slice(-500)}\n`);
       if (job.canonical) {
         if (existsSync(canonical)) copyFileSync(canonical, join(dir, 'receipt.json'));
@@ -540,10 +575,10 @@ async function run(argv: readonly string[]): Promise<void> {
 function emit(argv: readonly string[]): void {
   const out = flag(argv, '--out');
   if (!out) throw new Error('emit needs --out <dir>');
+  const load = (category: string) => Object.fromEntries(EVAL_ENGINES.map(k => [k, loadRun(category, k)])) as Record<EvalEngineKind, EngineRun>;
+  const judged = selectSuites(argv).map(s => ({ s, file: judgeSuite(s, load(s.category), { counted: argv.includes('--counted') }, s.beside ? load(s.beside.category) : undefined) }));
   mkdirSync(out, { recursive: true });
-  for (const s of selectSuites(argv)) {
-    const load = (category: string) => Object.fromEntries(EVAL_ENGINES.map(k => [k, loadRun(category, k)])) as Record<EvalEngineKind, EngineRun>;
-    const file = judgeSuite(s, load(s.category), { counted: argv.includes('--counted') }, s.beside ? load(s.beside.category) : undefined);
+  for (const { s, file } of judged) {
     const path = join(out, `${s.id.replace(/\//g, '__')}.json`);
     mkdirSync(dirname(path), { recursive: true });
     writeScrubbedJson(path, file);
