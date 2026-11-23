@@ -41,9 +41,16 @@ export interface Bg1QuestionFields {
   deciding_line?: string;
 }
 
-/** The 48 mint slots of the sealed set, minted in slot order; the kept list is the first N_final that pass validation. */
-export const BG1_SLOTS = 48;
-export const BG1_CONVERSATIONS: readonly string[] = Array.from({ length: BG1_SLOTS }, (_, i) => `bg1-${String(i + 1).padStart(3, '0')}`);
+/** A mint slot's world id: slot 7 is bg1-007. BG1 and BG1-C share the ids, so the seed derivation of a slot stays as it is. */
+export const bg1WorldId = (slot: number): string => `bg1-${String(slot).padStart(3, '0')}`;
+/**
+ * The sealed set's mint slots, minted in slot order; the kept list is the first N_final that pass validation. BG1
+ * planned 48 and minted 1 to 30, its kept list. On 2026-11-19 BG1's set was redefined as those 30, and slots 31 to 48,
+ * never minted, went to BG1-C with the slots after them (BG1C_CONVERSATIONS; the confirmation's preregistration,
+ * docs/benchmarks/2026-11-19-changing-facts-confirmation-preregistration.md).
+ */
+export const BG1_SLOTS = 30;
+export const BG1_CONVERSATIONS: readonly string[] = Array.from({ length: BG1_SLOTS }, (_, i) => bg1WorldId(i + 1));
 /** The three public dev worlds (stage 1). */
 export const BG1_DEV_CONVERSATIONS: readonly string[] = ['bg1-dev-01', 'bg1-dev-02', 'bg1-dev-03'];
 /** The 17 extra public dev worlds of BG1's dev loop (GST-2854), a list of their own beside the stage 1 three. */
@@ -55,3 +62,26 @@ export const BG1_N_FLOOR = 30;
 export const BG1_N_CAP = 40;
 /** N_final, set by the internal pilot (the preregistration's Amendment 7): the counted cells run on the first 30 kept worlds. */
 export const BG1_N_FINAL = 30;
+
+/**
+ * BG1-C, the changing-facts confirmation (docs/benchmarks/2026-11-19-changing-facts-confirmation-preregistration.md):
+ * BG1's generator, seed and phrasing on slots BG1 never minted. The custodian mints from slot 31 in order (mint.sh
+ * --bg1c), slots are capped at 96, and the kept list is the first 40 worlds that pass BG1's validation. World ids are
+ * BG1's (bg1-031 onward), so a slot's world is the one BG1's seed always planned for it.
+ */
+export const BG1C_BENCHMARK = 'bg1c';
+export const BG1C_FIRST_SLOT = 31;
+export const BG1C_LAST_SLOT = 96;
+export const BG1C_CONVERSATIONS: readonly string[] = Array.from({ length: BG1C_LAST_SLOT - BG1C_FIRST_SLOT + 1 }, (_, i) => bg1WorldId(BG1C_FIRST_SLOT + i));
+/** N_final, fixed by the preregistration: the counted cells run on exactly the first 40 kept worlds. */
+export const BG1C_N_FINAL = 40;
+/**
+ * Kept worlds per launch unit, as GBEV-3 set them on 2026-11-19 for R113's one look at half the units: eight units at
+ * N_final. The first BG1C_FIRST_HALF_UNITS units, kept worlds 1 to 20, are the first half, where that look happens.
+ */
+export const BG1C_KEPT_UNITS = 5;
+export const BG1C_FIRST_HALF_UNITS = 4;
+/** The campaign and custody decision id that every BG1-C opening is logged under. */
+export const BG1C_CAMPAIGN = 'q1-scoreboard-bg1c-changing-facts-confirmation';
+/** The `dataset` of BG1-C's manifest (eval/decisions/datasets/bg1c-manifest.json); the bg1c loader refuses any other. */
+export const BG1C_DATASET = 'BG1-C changing-facts confirmation set';

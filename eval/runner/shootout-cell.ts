@@ -79,7 +79,7 @@ import { appendFileSync, copyFileSync, cpSync, existsSync, mkdirSync, readdirSyn
 import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import { execFileSync } from 'node:child_process';
-import { bg1UnitConversations, type Bg1Manifest } from './memory-qa/corpus.ts';
+import { BG1_SET, BG1C_SET, bg1SealedSet, bg1UnitConversations, type Bg1Manifest, type Bg1SealedSet } from './memory-qa/corpus.ts';
 import { BudgetExceededError, BudgetRun, initLedger, ledgerStatus, readLedger, setProgramCap, setRunBudget, withFileLock } from './budget-ledger.ts';
 import { DEFAULT_MAX_OUTPUT_TOKENS, DEFAULT_ROUTE_CAPS, KEY_ENV, keylessUpstream, type ProviderLimits, type ProviderName } from './metering-proxy.ts';
 import { refuse, ScoreboardError } from './q1/scoreboard-errors.ts';
@@ -206,6 +206,8 @@ export interface CampaignManifest {
    * out of the git tree, and Campaign.custodyPush refuses a sealed unit whose manifest is not this one.
    */
   bg1_manifest_sha256?: string;
+  /** BG1-C: the same for the custodian's filled bg1c-manifest.json (GBRAIN_EVALS_BG1C_MANIFEST), which Campaign.custodyPush holds a sealed BG1-C unit to. */
+  bg1c_manifest_sha256?: string;
   /** Q1: the hedge classifier version the derived columns use at render (`none` when no version met its bar, amendment A6). */
   hedge_classifier?: string;
   /** Q1: spend blocks (T1, T2-S2a, ...) with their estimate and hard cap. */
@@ -429,27 +431,31 @@ export interface CustodyPush { source: string; dest: string; list: string[]; env
  * against their pinned SHA-256 here before any VM exists; ubi-runner pushes only those to ~/custody/bg1, with
  * GBRAIN_EVALS_BG1_UNIT naming the unit's worlds, where setup's fetch (verifyBg1Custody) checks them again, the loader
  * logs each opening to the VM's custody access log, and the remote command wipes ~/custody/bg1 at teardown.
+ * BG1-C (`set` BG1C_SET) pushes the same way from its own variables (GBRAIN_EVALS_BG1C_SOURCE, _MANIFEST and _UNIT)
+ * to ~/custody/bg1c, its unit's worlds from BG1-C's kept list, and refuses a manifest that is not BG1-C's.
  */
-export function bg1CustodyPush(env: Record<string, string | undefined> = process.env, campaign = '<campaign>', unit?: { index: number; size: number }): CustodyPush {
-  const source = env.GBRAIN_EVALS_BG1_SOURCE;
-  const fix = { next: 'tell_user_to_run' as const, argv: ['bun', 'run', 'eval:scoreboard', 'doctor', '--for', 'sealed', '--campaign', campaign], user_message: 'on the custodian host, export GBRAIN_EVALS_BG1_SOURCE=<the BG1 set root, outside the checkout> and GBRAIN_EVALS_BG1_MANIFEST=<the filled bg1-manifest.json inside it>' };
-  if (!source) throw refuse({ code: 'CUSTODY_REQUIRED', message: 'a sealed BG1 cell needs the custodian\'s files and GBRAIN_EVALS_BG1_SOURCE is not set', why: 'BG1 is never downloaded on a VM; the custodian host pushes its verified copy', fix });
-  if (insideRepository(source)) throw refuse({ code: 'CUSTODY_REQUIRED', message: `GBRAIN_EVALS_BG1_SOURCE ${source} is inside the repository`, why: 'sealed files never live where Git could pick them up', fix });
-  const manifest = env.GBRAIN_EVALS_BG1_MANIFEST;
-  if (!manifest) throw refuse({ code: 'CUSTODY_REQUIRED', message: 'a sealed BG1 cell needs the filled BG1 manifest and GBRAIN_EVALS_BG1_MANIFEST is not set', why: 'the committed BG1 manifest stays unfilled; only pinned bytes are pushed', fix });
+export function bg1CustodyPush(env: Record<string, string | undefined> = process.env, campaign = '<campaign>', unit?: { index: number; size: number }, set: Bg1SealedSet = BG1_SET): CustodyPush {
+  const v = set.env, label = set.label, dir = `custody/${set.benchmark}`;
+  const source = env[v.source];
+  const fix = { next: 'tell_user_to_run' as const, argv: ['bun', 'run', 'eval:scoreboard', 'doctor', '--for', 'sealed', '--campaign', campaign], user_message: `on the custodian host, export ${v.source}=<the ${label} set root, outside the checkout> and ${v.manifest}=<the filled ${basename(set.manifest)} inside it>` };
+  if (!source) throw refuse({ code: 'CUSTODY_REQUIRED', message: `a sealed ${label} cell needs the custodian's files and ${v.source} is not set`, why: `${label} is never downloaded on a VM; the custodian host pushes its verified copy`, fix });
+  if (insideRepository(source)) throw refuse({ code: 'CUSTODY_REQUIRED', message: `${v.source} ${source} is inside the repository`, why: 'sealed files never live where Git could pick them up', fix });
+  const manifest = env[v.manifest];
+  if (!manifest) throw refuse({ code: 'CUSTODY_REQUIRED', message: `a sealed ${label} cell needs the filled ${label} manifest and ${v.manifest} is not set`, why: `the committed ${label} manifest stays unfilled; only pinned bytes are pushed`, fix });
   const rel = relative(resolve(source), resolve(manifest));
-  if (rel.startsWith('..') || isAbsolute(rel)) throw refuse({ code: 'USAGE', message: 'the BG1 manifest must sit inside GBRAIN_EVALS_BG1_SOURCE', why: 'it travels with the files it describes', fix });
+  if (rel.startsWith('..') || isAbsolute(rel)) throw refuse({ code: 'USAGE', message: `the ${label} manifest must sit inside ${v.source}`, why: 'it travels with the files it describes', fix });
   const m = JSON.parse(readFileSync(manifest, 'utf8')) as Bg1Manifest;
-  if (m.status !== 'filled' || !m.files?.length) throw refuse({ code: 'CUSTODY_REQUIRED', message: 'the BG1 manifest has no hashes', why: 'only pinned bytes are pushed', fix });
-  const worlds = unit ? bg1UnitConversations(m, unit.index, unit.size) : null;
+  if (m.status !== 'filled' || !m.files?.length) throw refuse({ code: 'CUSTODY_REQUIRED', message: `the ${label} manifest has no hashes`, why: 'only pinned bytes are pushed', fix });
+  if (set === BG1C_SET && m.dataset !== set.dataset) throw refuse({ code: 'CUSTODY_REQUIRED', message: `${v.manifest} is the manifest of ${JSON.stringify(m.dataset ?? null)}, not of the ${label} set`, why: `a ${label} unit pushes only worlds its own manifest pins`, fix });
+  const worlds = unit ? bg1UnitConversations(m, unit.index, unit.size, set) : null;
   const list: string[] = [];
   for (const f of m.files.filter(x => !worlds || worlds.includes(x.path.split('/')[1]))) {
     const abs = join(source, f.path);
-    if (!existsSync(abs) || sha256File(abs) !== f.sha256) throw refuse({ code: 'CUSTODY_REQUIRED', message: `${f.path} under GBRAIN_EVALS_BG1_SOURCE is ${existsSync(abs) ? 'not the pinned bytes' : 'missing'}`, why: 'the push refuses before any VM exists when a file does not match the manifest', fix });
+    if (!existsSync(abs) || sha256File(abs) !== f.sha256) throw refuse({ code: 'CUSTODY_REQUIRED', message: `${f.path} under ${v.source} is ${existsSync(abs) ? 'not the pinned bytes' : 'missing'}`, why: 'the push refuses before any VM exists when a file does not match the manifest', fix });
     list.push(f.path);
   }
-  return { source: resolve(source), dest: 'custody/bg1', list: [...list, rel],
-    env: ['GBRAIN_EVALS_BG1_SOURCE=~/custody/bg1', `GBRAIN_EVALS_BG1_MANIFEST=~/custody/bg1/${rel}`, ...(worlds ? [`GBRAIN_EVALS_BG1_UNIT=${worlds.join(',')}`] : [])] };
+  return { source: resolve(source), dest: dir, list: [...list, rel],
+    env: [`${v.source}=~/${dir}`, `${v.manifest}=~/${dir}/${rel}`, ...(worlds ? [`${v.unit}=${worlds.join(',')}`] : [])] };
 }
 
 /**
@@ -566,7 +572,7 @@ export class Campaign {
   private get eventsPath() { return join(this.stateDir, 'leases.ndjson'); }
   /** BG1 (#398 open note 6): leases.ndjson's SHA-256 as this campaign last wrote it. */
   private get eventsShaPath() { return join(this.stateDir, 'leases.sha256'); }
-  get bg1() { return this.q1 && this.manifest.cells.some(c => c.benchmark === 'bg1' || c.benchmark === 'bg1-dev'); }
+  get bg1() { return this.q1 && this.manifest.cells.some(c => c.benchmark === 'bg1' || c.benchmark === 'bg1c' || c.benchmark === 'bg1-dev'); }
   /** BG1: held while a process reads or writes the lease log, so units run in parallel on one --state never see each other's half-written append. */
   private get eventsLockPath() { return join(this.stateDir, 'leases.lock'); }
   private lockDepth = 0;
@@ -838,16 +844,17 @@ export class Campaign {
   /** The cell's output on the VM, relative to the VM user's home: what ubi-runner and reattach pull. */
   remotePath(l: LeaseState) { return this.sealedQ1(l.cell) ? `custody/out/${l.cell}/${l.lease_id}` : `work/${basename(REPO_ROOT)}/${this.remoteOut(l)}`; }
 
-  /** A17: what a sealed BEAM-10M, D8 or RS1 cell's launch pushes to the VM before setup (null for every other cell). */
+  /** A17: what a sealed BEAM-10M, D8, RS1, BG1 or BG1-C cell's launch pushes to the VM before setup (null for every other cell). */
   custodyPush(cellId: string, env: Record<string, string | undefined> = process.env): CustodyPush | null {
     if (!this.sealedQ1(cellId)) return null;
     const benchmark = this.cell(cellId).benchmark;
-    if (benchmark === 'bg1') {
-      const push = bg1CustodyPush(env, this.manifestPath, this.cell(cellId).bg1_unit);
-      const recorded = this.manifest.bg1_manifest_sha256, held = sha256File(env.GBRAIN_EVALS_BG1_MANIFEST!);
-      if (recorded !== held) throw refuse({ code: 'CUSTODY_REQUIRED', message: recorded ? `the filled BG1 manifest is not the one campaign ${this.manifest.campaign_id} recorded (it holds ${held.slice(0, 12)}, the campaign ${recorded.slice(0, 12)})` : `campaign ${this.manifest.campaign_id} records no filled BG1 manifest SHA-256`,
-        why: 'a sealed BG1 campaign\'s hash covers its worlds through the filled manifest it records (the stage 2 freeze), so a unit pushes only worlds that manifest pins',
-        fix: { next: 'ask_user', user_message: 'stop: plan the campaign on the custody host with GBRAIN_EVALS_BG1_MANIFEST naming the filled manifest, and ask before launching if the manifest changed since the campaign was planned' } });
+    if (benchmark === 'bg1' || benchmark === 'bg1c') {
+      const set = bg1SealedSet(benchmark);
+      const push = bg1CustodyPush(env, this.manifestPath, this.cell(cellId).bg1_unit, set);
+      const recorded = set === BG1C_SET ? this.manifest.bg1c_manifest_sha256 : this.manifest.bg1_manifest_sha256, held = sha256File(env[set.env.manifest]!);
+      if (recorded !== held) throw refuse({ code: 'CUSTODY_REQUIRED', message: recorded ? `the filled ${set.label} manifest is not the one campaign ${this.manifest.campaign_id} recorded (it holds ${held.slice(0, 12)}, the campaign ${recorded.slice(0, 12)})` : `campaign ${this.manifest.campaign_id} records no filled ${set.label} manifest SHA-256`,
+        why: `a sealed ${set.label} campaign's hash covers its worlds through the filled manifest it records (the stage 2 freeze), so a unit pushes only worlds that manifest pins`,
+        fix: { next: 'ask_user', user_message: `stop: plan the campaign on the custody host with ${set.env.manifest} naming the filled manifest, and ask before launching if the manifest changed since the campaign was planned` } });
       return push;
     }
     return benchmark === 'beam-10m' ? beam10mCustodyPush(env, this.manifestPath) : benchmark === 'beam-d8' ? d8CustodyPush(env, this.manifestPath)
@@ -1358,7 +1365,7 @@ export async function runRemote(payload: RemotePayload, opts: { port?: number; p
     process.off('SIGTERM', onTerm);
     proxy.kill('SIGTERM');
     await proxy.exited;
-    if (custody && payload.cell) for (const d of ['datasets', 'restore', 'd8', 'rs1', 'bg1']) rmSync(join(dirname(custody), d), { recursive: true, force: true });
+    if (custody && payload.cell) for (const d of ['datasets', 'restore', 'd8', 'rs1', 'bg1', 'bg1c']) rmSync(join(dirname(custody), d), { recursive: true, force: true });
     const s = ledgerStatus({ ledgerPath: ledger, runId: payload.lease_id });
     writeFileSync(join(out, 'lease-summary.json'), JSON.stringify({ run_id: payload.lease_id, lease_usd: payload.lease_usd, committed_usd: s.run?.committed_usd ?? payload.lease_usd,
       requests: s.run ? BudgetRun.runRequests(ledger, payload.lease_id) : null, max_output_tokens: s.run ? BudgetRun.leaseMaxOutputTokens(ledger, payload.lease_id) ?? DEFAULT_MAX_OUTPUT_TOKENS : null, cell_exit_code: code,

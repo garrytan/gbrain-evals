@@ -5,7 +5,7 @@
  * arm with a per-reader frontier plan (RS1), the new reader's frontier judge. Nothing is retrieved or packed again.
  *
  *   bun eval/runner/q1/reread-cell.ts --cell <source cell id> --arm <arm id> --source <out>/runs/<cell id>... --reader particle:particle-1
- *     --out <dir> --budget-ledger <file> --run-id <id> --lease-usd <n> --ledger-cap-usd <n> [--manifest q1|f6|rs1]
+ *     --out <dir> --budget-ledger <file> --run-id <id> --lease-usd <n> --ledger-cap-usd <n> [--manifest q1|f6|rs1|bg1|bg1c] [--half 1|2]
  *     (--keyless-upstream <url> | --paid-window <unit> --window-cap-usd <n>)
  *
  * A re-read that would spend real keys needs the granted paid window's unit and cap, and its --ledger-cap-usd never
@@ -40,6 +40,20 @@
  * receipt.json. A BG1 re-read's receipt (and verify.json) also carries `dataset`, the corpus record its schedule was
  * checked against, as BG1's cells write it into run-config.json, so BG1's verdict.ts checks it against the filled
  * manifest. The proxy, cell token, placeholder keys and keyless/paid marker are calibration-cell.ts's.
+ *
+ * BG1-C's judge check (eval/runner/bg1/bg1c-judge-check.ts) re-reads BG1's dev arms with gpt-6.2-sol, which their judge
+ * map does not name, and grades each answer as a counted BG1-C row of that reader is graded: `gating` names the reader's
+ * gating judge, which then grades alone, in the gating view at PER_READER_JUDGE_SETTINGS, with no canonical judge. A
+ * gating judge from the reader's own family is refused, and the judge is part of the --out's identity, so a re-read
+ * never resumes under another judging plan. Without `gating` nothing changes.
+ *
+ * BG1-C (`--manifest bg1c`): no BG1-C answer gets the canonical Gemini view (descriptive_view false), so each answer is
+ * graded by the new reader's gating judge alone, the receipt names no canonical judge, and the run reads no Gemini key.
+ * A counted BG1-C cell's re-read names its half (`half`, `--half 1|2`), one of the cell set's re-read plans
+ * (bg1c-cells.json reread_plans): its sources must stage only the kept worlds of that half's launch units, and its
+ * answers and receipt go under the plan's id (the re-read cell id with .h1 or .h2), the receipt naming the plan, half
+ * and units. One invocation re-reads one launch unit's sources, as a BG1 re-read does, so the first half is re-read
+ * before units 5 to 8 exist. The smoke's re-read keeps the plain re-read cell id, and --half refuses on any other cell.
  */
 import { randomUUID } from 'node:crypto';
 import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -55,12 +69,12 @@ import { DEFAULT_ROUTE_CAPS, keylessKeys, keylessUpstream, MeteringProxy, usageS
 import { DEFAULT_ROUTE_CLASSES } from '../shootout-cell.ts';
 import type { PackedContext } from '../systems/render-v2.ts';
 import { claimOut, keylessUpstreamArg } from './calibration-cell.ts';
-import { answerAppender, bg1GeminiKey, custodyGate, devOnly, findCell, gatherStaging, JUDGED, latestBy, metering, needsCustody, onSlot, readerMaxTokens, readPrompt, refuseCompatJudges, requiredJudges, scheduledQuestions,
-  selectCellQuestions, type CellManifestId, type MeterLine, type StagedRetrieval } from './cell.ts';
-import { frontierJudgesFor, isBg1Benchmark, pinnedJudgeRouteCaps, policyKey, type ArmDefinition, type CellDefinition } from './cells/definitions.ts';
+import { answerAppender, bg1GeminiKey, custodyGate, devOnly, findCell, frontierInstrumentId, gatherStaging, JUDGED, latestBy, loadBG1CManifest, metering, needsCustody, onSlot, readerMaxTokens, readPrompt, refuseCompatJudges, requiredJudges, scheduledQuestions,
+  selectCellQuestions, type CellManifestId, type MeterLine, type RequiredJudge, type StagedRetrieval } from './cell.ts';
+import { frontierJudgesFor, isBg1Benchmark, PER_READER_JUDGE_SETTINGS, pinnedJudgeRouteCaps, policyKey, type ArmDefinition, type CellDefinition } from './cells/definitions.ts';
 import { loadRS1Manifest } from './cells/rs1.ts';
 import { exitCodeOf, refuse, renderMessage, ScoreboardError } from './scoreboard-errors.ts';
-import { readBg1Manifest } from '../memory-qa/corpus.ts';
+import { BG1C_SET, bg1SealedSet, bg1UnitConversations, readBg1Manifest, type Bg1Manifest } from '../memory-qa/corpus.ts';
 
 export const REREAD_VERIFY_SCHEMA = 'gbrain-evals/q1-reread-verify/v1';
 export const REREAD_RECEIPT_SCHEMA = 'gbrain-evals/q1-reread-receipt/v1';
@@ -226,32 +240,54 @@ export function verifySources(def: CellDefinition, arm: ArmDefinition, sources: 
   return { verify, plan: problems.length ? null : plan };
 }
 
-export interface RereadOptions { sources: string[]; reader: string; out: string; manifest?: CellManifestId; env?: Record<string, string | undefined>; keyless?: boolean }
-export interface RereadDeps { corpus?: Corpus; reader?: ChatLike; judge?: ChatLike; instrument?: Instrument }
-export interface PreparedReread { def: CellDefinition; arm: ArmDefinition; reader: string; out: string; manifest: CellManifestId | null; keyless: boolean; instrument: Instrument; dataset: Corpus['source']; verify: RereadVerify; plan: PlannedRead[] }
+/** `gating`: the reader's gating judge, which then grades alone (BG1-C's judge check; see the header). `half`: a counted BG1-C cell's re-read plan by half. */
+export interface RereadOptions { sources: string[]; reader: string; out: string; manifest?: CellManifestId; env?: Record<string, string | undefined>; keyless?: boolean; gating?: string; half?: 1 | 2 }
+/** `bg1Manifest`: a BG1-C half's filled manifest, whose kept list names each launch unit's worlds (default: corpus.ts readBg1Manifest for BG1-C). */
+export interface RereadDeps { corpus?: Corpus; reader?: ChatLike; judge?: ChatLike; instrument?: Instrument; bg1Manifest?: Bg1Manifest }
+/** `cell_id`: the re-read cell the answers and receipt go under; `half`: the BG1-C re-read plan it runs, else null. */
+export interface PreparedReread { def: CellDefinition; arm: ArmDefinition; reader: string; out: string; manifest: CellManifestId | null; keyless: boolean; instrument: Instrument; dataset: Corpus['source']; verify: RereadVerify; plan: PlannedRead[]; gating: string | null;
+  cell_id: string; half: { id: string; half: 1 | 2; units: number[] } | null }
 
-/** Everything before the first request: the judge refusal, custody, one re-read per --out, the --out claim, the corpus and the byte-for-byte check (verify.json). */
-export function prepareReread(def: CellDefinition, arm: ArmDefinition, opts: RereadOptions, deps: Pick<RereadDeps, 'corpus' | 'instrument'> = {}): PreparedReread {
+/** Everything before the first request: the judge refusal, custody, a BG1-C half's plan and units, one re-read per --out, the --out claim, the corpus and the byte-for-byte check (verify.json). */
+export function prepareReread(def: CellDefinition, arm: ArmDefinition, opts: RereadOptions, deps: Pick<RereadDeps, 'corpus' | 'instrument' | 'bg1Manifest'> = {}): PreparedReread {
   const env = opts.env ?? process.env;
   const out = resolve(opts.out);
   const instrument = deps.instrument ?? instrumentFor(def.canonical_instrument);
   let frontier: string[];
-  try { frontier = arm.frontier?.per_reader ? frontierJudgesFor(arm, opts.reader) : []; }
+  try { frontier = !opts.gating && arm.frontier?.per_reader ? frontierJudgesFor(arm, opts.reader) : []; }
   catch (e) { throw refuse({ code: 'USAGE', message: `${arm.cell_id} judges each reader with its family's frontier judge: ${(e as Error).message}`, why: 'a re-read answer on a per-reader frontier arm is scored by both judge views, so a reader without a preregistered judge would be read and never fully scored', fix: { next: 'report', user_message: 're-read with particle:particle-1, whose frontier judge is openai:gpt-6.1-sol' } }); }
-  refuseCompatJudges(arm.cell_id, [instrument.canonical_judge, ...frontier]);
+  if (opts.gating && opts.gating.split(':')[0] === opts.reader.split(':')[0]) throw refuse({ code: 'USAGE', message: `${opts.gating} would grade ${opts.reader}, a reader of its own family`,
+    why: 'no judge grades its own family\'s answers (R78; GST-767)', fix: { next: 'report', user_message: 'name the reader\'s preregistered gating judge (definitions.ts bg1JudgeOf)' } });
+  refuseCompatJudges(arm.cell_id, opts.gating ? [opts.gating] : [instrument.canonical_judge, ...frontier]);
   if (def.benchmark === 'beam-rs1' && (deps.corpus ? deps.corpus.source.revision === 'unfilled' : readRs1Manifest().manifest.status !== 'filled')) throw refuse({ code: 'PREFLIGHT_FAILED', message: `beam-rs1: the RS1 manifest is unfilled, so ${arm.cell_id} cannot be re-read`,
     why: 'a re-read is scored only against the filled manifest\'s pinned bytes, and verdict.ts checks the re-read receipt\'s dataset against it', fix: { next: 'ask_user', user_message: 'the custodian fills the RS1 manifest before any RS1 re-read' } });
   if (!hasChatRoute(opts.reader)) throw refuse({ code: 'USAGE', message: `reader ${opts.reader} has no chat route`, why: 'a re-read sends each frozen prompt to one provider:model reader', fix: { next: 'run', argv: [...FRONT, '--reader', 'particle:particle-1'] } });
-  if (def.benchmark === 'bg1' && (deps.corpus ? deps.corpus.source.revision === 'unfilled' : readBg1Manifest().manifest.status !== 'filled')) throw refuse({ code: 'PREFLIGHT_FAILED', message: `bg1: the BG1 manifest is unfilled, so ${arm.cell_id} cannot be re-read`,
-    why: 'a re-read is scored only against the filled manifest\'s pinned bytes, and BG1\'s verdict.ts checks every receipt\'s dataset against it', fix: { next: 'ask_user', user_message: 'the custodian fills the BG1 manifest before any BG1 re-read' } });
+  const sealed = def.benchmark === 'bg1' || def.benchmark === 'bg1c' ? bg1SealedSet(def.benchmark) : null;
+  if (sealed && (deps.corpus ? deps.corpus.source.revision === 'unfilled' : readBg1Manifest(undefined, sealed).manifest.status !== 'filled')) throw refuse({ code: 'PREFLIGHT_FAILED', message: `${sealed.benchmark}: the ${sealed.label} manifest is unfilled, so ${arm.cell_id} cannot be re-read`,
+    why: 'a re-read is scored only against the filled manifest\'s pinned bytes, and BG1\'s verdict.ts checks every receipt\'s dataset against it', fix: { next: 'ask_user', user_message: `the custodian fills the ${sealed.label} manifest before any ${sealed.label} re-read` } });
+  const halves = def.block === 'BG1C';
+  if (halves !== (opts.half !== undefined)) throw refuse({ code: 'USAGE', message: halves ? `${def.id} is a counted BG1-C cell, so its re-read names its half (--half 1 or 2)` : `--half is for a counted BG1-C cell's re-read, and ${def.id} is not one`,
+    why: 'BG1-C re-reads each half of its kept worlds apart (bg1c-cells.json reread_plans), so the first half is read at the look before units 5 to 8 run', fix: { next: 'run', argv: [...FRONT, '--cell', def.id, '--manifest', 'bg1c', ...(halves ? ['--half', '1'] : [])] } });
+  const planned = opts.half === undefined ? null : loadBG1CManifest().reread_plans.find(r => r.arm_cell_id === arm.cell_id && r.reader === opts.reader && r.half === opts.half) ?? null;
+  if (opts.half !== undefined && !planned) throw refuse({ code: 'USAGE', message: `bg1c-cells.json plans no re-read of ${arm.cell_id} by ${opts.reader} for half ${opts.half}`,
+    why: 'a BG1-C re-read runs only as its cell set plans it', fix: { next: 'run', argv: ['bun', 'eval/runner/q1/cell.ts', 'plan', '--manifest', 'bg1c', '--json'] } });
+  const half = planned ? { id: planned.id, half: planned.half as 1 | 2, units: [...planned.units] } : null;
+  const cellId = half?.id ?? rereadCellId(arm.cell_id, opts.reader);
   if (!deps.corpus && needsCustody(def)) custodyGate(def, out, env, `q1 reread ${arm.cell_id} with ${opts.reader}`);
-  const others = existsSync(join(out, 'cells')) ? readdirSync(join(out, 'cells')).sort().filter(d => d !== rereadCellId(arm.cell_id, opts.reader)) : [];
+  // RS1 kept cells load only the conversations the sources staged (one launch unit's); later slots may never have been minted.
+  const staged = def.kept_units ? new Set(opts.sources.flatMap(s => [...gatherStaging(def.id, [dirname(dirname(resolve(s)))]).keys()])) : null;
+  if (half) {
+    const kept = deps.bg1Manifest ?? readBg1Manifest(undefined, BG1C_SET).manifest;
+    const worlds = new Set(half.units.flatMap(i => bg1UnitConversations(kept, i, def.kept_units!, BG1C_SET)));
+    const outside = [...staged!].filter(w => !worlds.has(w)).length;
+    if (outside || !staged!.size) throw refuse({ code: 'USAGE', message: `${staged!.size ? `${outside} of the ${staged!.size} worlds` : 'no world'} the sources stage ${staged!.size ? 'are' : 'is'} outside half ${half.half}'s launch units (${half.units.join(', ')}) of ${def.id}`,
+      why: `re-read plan ${half.id} reads only its half's kept worlds, so each half's answers are read and scored apart`, fix: { next: 'run', argv: [...FRONT, '--cell', def.id, '--manifest', 'bg1c', '--half', String(half.half), '--source', '<out>/runs/<cell id> of one of those units>'] } });
+  }
+  const others = existsSync(join(out, 'cells')) ? readdirSync(join(out, 'cells')).sort().filter(d => d !== cellId) : [];
   if (others.length) throw refuse({ code: 'USAGE', message: `${out} already holds ${others.join(', ')}; give each arm and reader its own --out`,
     why: 'verify.json, the lease usage log and the keyless/paid marker sit at the --out root, and each re-read receipt points at them', fix: { next: 'run', argv: [...FRONT, '--out', '<a fresh directory>'] } });
   mkdirSync(out, { recursive: true });
   claimOut(out, !!opts.keyless, 'reread');
-  // RS1 kept cells load only the conversations the sources staged (one launch unit's); later slots may never have been minted.
-  const staged = def.kept_units ? new Set(opts.sources.flatMap(s => [...gatherStaging(def.id, [dirname(dirname(resolve(s)))]).keys()])) : null;
   const corpus = deps.corpus ?? loadCorpus(def.benchmark, undefined, staged ?? devOnly(def) ?? undefined, { keyless: !!opts.keyless });
   const { verify, plan } = verifySources(def, arm, opts.sources, corpus, opts.reader);
   const frozen = join(out, 'reread-source.json');
@@ -262,12 +298,12 @@ export function prepareReread(def: CellDefinition, arm: ArmDefinition, opts: Rer
       why: 'a re-read sends exactly the bytes the source readers read, so every frozen context, answer and schedule must check out first',
       fix: { next: 'report', user_message: resuming ? `the sources no longer verify; ${join(out, 'verify.json')} still holds the check the answers in ${out} were read under` : `the counts are in ${join(out, 'verify.json')}` } });
   }
-  const identity = JSON.stringify({ arm_cell_id: arm.cell_id, reader: opts.reader, effort: def.effort, config_sha256: verify.source_config_sha256, contexts_sha256: verify.sources.map(s => s.contexts_sha256).sort() }) + '\n';
+  const identity = JSON.stringify({ arm_cell_id: arm.cell_id, reader: opts.reader, effort: def.effort, config_sha256: verify.source_config_sha256, contexts_sha256: verify.sources.map(s => s.contexts_sha256).sort(), ...(opts.gating ? { gating: opts.gating } : {}), ...(half ? { half: half.id } : {}) }) + '\n';
   if (resuming && readFileSync(frozen, 'utf8') !== identity) throw refuse({ code: 'USAGE', message: `${out} holds a re-read of other sources, another run configuration or another effort; give this run a fresh --out`,
     why: 'a resume keeps the answers already in --out, so it must read the sources they were read from', fix: { next: 'run', argv: [...FRONT, '--out', '<a fresh directory>'] } });
   writeFileSync(join(out, 'verify.json'), JSON.stringify(verify, null, 2) + '\n');
   if (!resuming) writeFileSync(frozen, identity);
-  return { def, arm, reader: opts.reader, out, manifest: opts.manifest ?? null, keyless: !!opts.keyless, instrument, dataset: corpus.source, verify, plan };
+  return { def, arm, reader: opts.reader, out, manifest: opts.manifest ?? null, keyless: !!opts.keyless, instrument, dataset: corpus.source, verify, plan, gating: opts.gating ?? null, cell_id: cellId, half };
 }
 
 export interface RereadResult { cell_id: string; dir: string; status: 'complete' | 'partial'; stopped: string | null; receipt: Record<string, unknown> }
@@ -278,7 +314,7 @@ export async function runReread(p: PreparedReread, opts: { providerProxy?: strin
   const { def, arm, reader, instrument, plan } = p;
   const env = opts.env ?? process.env;
   const maxAttempts = opts.maxAttempts ?? DEFAULT_MAX_ATTEMPTS;
-  const cellId = rereadCellId(arm.cell_id, reader);
+  const cellId = p.cell_id;
   const dir = join(p.out, 'cells', cellId);
   mkdirSync(dir, { recursive: true });
   const answers = new RecordLog(join(dir, 'answers.ndjson'), 'answer');
@@ -289,7 +325,7 @@ export async function runReread(p: PreparedReread, opts: { providerProxy?: strin
   const chat = new ChatClient(join(p.out, 'cache', 'qa'));
   const readerChat = onSlot(deps.reader ?? chat, meter, 'harness');
   const judgeChat = onSlot(deps.judge ?? chat, meter, 'judge');
-  const planned = requiredJudges(arm, { reader, replicate: 0 }, instrument);
+  const planned: RequiredJudge[] = p.gating ? [{ judge: p.gating, instrument_id: frontierInstrumentId(instrument.id, p.gating), view: 'gating', settings: { ...PER_READER_JUDGE_SETTINGS } }] : requiredJudges(arm, { reader, replicate: 0 }, instrument, def);
   const judgedBy = (id: string, judge: string) => judgments.has(judgmentKey({ answer_id: id, instrument_sha256: instrument.sha256, judge, judge_replicate: 0 }));
   const judged = (id: string) => planned.every(j => judgedBy(id, j.judge));
   const idOf = (x: PlannedRead) => answerId(cellId, x.question.id, reader, 0);
@@ -331,7 +367,7 @@ export async function runReread(p: PreparedReread, opts: { providerProxy?: strin
   const all = answers.all().sort((a, b) => (order.get(a.answer_id) ?? 0) - (order.get(b.answer_id) ?? 0));
   const canonical = new Map(judgments.all().filter(j => j.instrument_id === instrument.id && j.judge_replicate === 0).map(j => [j.answer_id, j]));
   const scores = all.map(a => canonical.get(a.answer_id)?.score).filter((s): s is number => typeof s === 'number');
-  const view = planned[1];
+  const view = planned.find(j => j.view === 'gating');
   const viewScores = view ? all.map(a => judgments.all().find(j => j.answer_id === a.answer_id && j.instrument_id === view.instrument_id && j.judge_replicate === 0)?.score).filter((s): s is number => typeof s === 'number') : [];
   const mean = (xs: number[]) => xs.length ? Math.round(xs.reduce((s, x) => s + x, 0) / xs.length * 1e6) / 1e6 : null;
   const outcomes: Record<string, number> = {};
@@ -344,11 +380,12 @@ export async function runReread(p: PreparedReread, opts: { providerProxy?: strin
   const receipt = {
     schema: REREAD_RECEIPT_SCHEMA, cell_id: cellId, run_status: status, stopped, keyless: p.keyless,
     source: { cell: def.id, manifest: p.manifest, arm: arm.id, arm_cell_id: arm.cell_id, config_sha256: p.verify.source_config_sha256, config_sha256s: [...new Set(p.verify.sources.map(s => s.config_sha256))].sort(), contexts: p.verify.sources.map(s => ({ sha256: s.contexts_sha256, records: s.contexts_records, arm_records: s.arm_records })) },
+    ...(p.half ? { half: { plan: p.half.id, half: p.half.half, units: p.half.units } } : {}),
     set: arm.set, benchmark: def.benchmark, split: def.split, block: def.block, dataset: p.dataset,
     system: { kind: def.system, configuration: def.configuration },
     arm: { id: arm.id, arm: arm.arm, mode: arm.mode, policy: arm.policy, budget: arm.budget, label: arm.label },
     readers: [reader], reader_replicates: {}, effort: def.effort, max_tokens: readerMaxTokens(reader),
-    instrument: { id: instrument.id, sha256: instrument.sha256, judge: instrument.canonical_judge },
+    instrument: { id: instrument.id, sha256: instrument.sha256, judge: p.gating || def.descriptive_view === false ? null : instrument.canonical_judge },
     frontier: view ? { per_reader: true, judge_by_reader: { [reader]: view.judge }, instrument_ids: [view.instrument_id] } : null,
     verify: p.verify.counts,
     ...(p.verify.dataset ? { dataset: p.verify.dataset } : {}),
@@ -384,7 +421,7 @@ if (import.meta.main) {
   const sources = argv.flatMap((a, i) => (a === '--source' && argv[i + 1] ? [argv[i + 1]] : []));
   const [cellArg, armArg, reader, outArg, ledger, runId, leaseUsd, ledgerCap] = [one('--cell'), one('--arm'), one('--reader'), one('--out'), one('--budget-ledger'), one('--run-id'), Number(one('--lease-usd')), Number(one('--ledger-cap-usd'))];
   if (!cellArg || !armArg || !sources.length || !reader || !outArg || !ledger || !runId || !(leaseUsd > 0) || !(ledgerCap > 0)) {
-    console.error(`usage: ${FRONT.join(' ')} --cell <source cell id> --arm <arm id> --source <out>/runs/<cell id>... --reader <provider:model> --out <dir> --budget-ledger <file> --run-id <id> --lease-usd <n> --ledger-cap-usd <n> [--manifest q1|f6|rs1] (--keyless-upstream <url> | --paid-window <unit> --window-cap-usd <n>)`);
+    console.error(`usage: ${FRONT.join(' ')} --cell <source cell id> --arm <arm id> --source <out>/runs/<cell id>... --reader <provider:model> --out <dir> --budget-ledger <file> --run-id <id> --lease-usd <n> --ledger-cap-usd <n> [--manifest q1|f6|rs1|bg1|bg1c] [--half 1|2] (--keyless-upstream <url> | --paid-window <unit> --window-cap-usd <n>)`);
     process.exit(2);
   }
   let keyless: string | null;
@@ -395,6 +432,8 @@ if (import.meta.main) {
   if (!keyless && ledgerCap > windowCap) { console.error(`--ledger-cap-usd ${ledgerCap} is above the paid window's cap of ${windowCap}; the ledger cap never exceeds the window`); process.exit(2); }
   if (keyless) for (const k of ['ANTHROPIC_API_KEY', 'OPENAI_API_KEY', 'GEMINI_API_KEY', 'PARTICLE_API_KEY', 'VOYAGE_API_KEY']) delete process.env[k];
   const manifest = one('--manifest') as CellManifestId | undefined;
+  const halfArg = one('--half');
+  if (halfArg !== undefined && halfArg !== '1' && halfArg !== '2') { console.error(`--half takes 1 or 2, not ${halfArg}`); process.exit(2); }
   try {
     const def = findCell(cellArg, undefined, manifest);
     const stage1 = manifest === 'rs1' && def.block === 'RS1-S1' ? loadRS1Manifest().stage1_reread_cap_usd : null;
@@ -402,8 +441,8 @@ if (import.meta.main) {
       why: 'stage 1\'s $60 cap covers the dry-run campaign and its particle-1 re-reads together: the campaign is capped at $60 less the re-reads\' estimate, and the re-reads share one ledger capped at that estimate', fix: { next: 'run', user_message: `rerun with --ledger-cap-usd ${stage1.toFixed(2)} or less, on the one ledger every stage 1 re-read shares` } });
     const arm = rereadArm(def, armArg);
     const out = resolve(outArg);
-    const keys = keyless ? keylessKeys() : { ...process.env, ...(isBg1Benchmark(def.benchmark) ? { GEMINI_API_KEY: bg1GeminiKey() } : {}) };
-    const prepared = prepareReread(def, arm, { sources, reader, out, manifest, keyless: !!keyless });
+    const keys = keyless ? keylessKeys() : { ...process.env, ...(isBg1Benchmark(def.benchmark) ? { GEMINI_API_KEY: def.descriptive_view === false ? undefined : bg1GeminiKey() } : {}) };
+    const prepared = prepareReread(def, arm, { sources, reader, out, manifest, keyless: !!keyless, ...(halfArg ? { half: Number(halfArg) as 1 | 2 } : {}) });
     const [cellToken, controlToken] = [randomUUID(), randomUUID()];
     Object.assign(process.env, { SHOOTOUT_CELL_TOKEN: cellToken, SHOOTOUT_PROXY_CONTROL_TOKEN: controlToken });
     const lease = openRereadLease({ runId, leaseUsd, ledgerPath: resolve(ledger), capUsd: ledgerCap });

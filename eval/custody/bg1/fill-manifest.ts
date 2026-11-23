@@ -5,8 +5,13 @@
  * the custody host and each cell VM point GBRAIN_EVALS_BG1_MANIFEST. The committed manifest
  * (eval/decisions/datasets/bg1-manifest.json) is only its template and stays unfilled. It prints counts and hashes only.
  *
- *   bun eval/custody/bg1/fill-manifest.ts --root <out>/set --report <validation report> [--target-tokens 200000]
+ *   bun eval/custody/bg1/fill-manifest.ts [--bg1c] --root <out>/set --report <validation report> [--target-tokens 200000]
  *       [--tolerance 0.15]
+ *
+ * --bg1c fills BG1-C's manifest instead (docs/benchmarks/2026-11-19-changing-facts-confirmation-preregistration.md):
+ * the template is eval/decisions/datasets/bg1c-manifest.json, the filled manifest is <root>/bg1c-manifest.json, where
+ * GBRAIN_EVALS_BG1C_MANIFEST points, the kept worlds must be BG1-C's slots (31 to 96), and the report must set n_final
+ * to 40 and keep exactly 40 worlds, the preregistered N. Every other rule below is the same.
  *
  * It refuses, before it writes anything:
  *   - a report that is not a bg1-validation/v1 report, or that validate.ts ran with another target or tolerance than
@@ -28,24 +33,26 @@ import { createHash } from 'node:crypto';
 import { existsSync, lstatSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve } from 'node:path';
 import { BG1_TARGET_TOKENS } from '../../generators/changing-facts-gen.ts';
-import { BG1_CONVERSATIONS, BG1_N_CAP, BG1_N_FLOOR, BG1_WAVE_A } from '../../runner/bg1/types.ts';
+import { BG1_N_CAP, BG1_N_FLOOR, BG1_WAVE_A, BG1C_N_FINAL } from '../../runner/bg1/types.ts';
 import { DecideError } from '../../runner/decisions/errors.ts';
-import { BG1_MANIFEST, bg1Kept, bg1ManifestFiles, bg1Source, readBg1Manifest, type Bg1Manifest } from '../../runner/memory-qa/corpus.ts';
+import { BG1_SET, BG1C_SET, bg1Kept, bg1ManifestFiles, bg1Source, readBg1Manifest, type Bg1Manifest } from '../../runner/memory-qa/corpus.ts';
 import { VALIDATION_SCHEMA, WORLD_FILES, type ValidationReport } from './validate.ts';
 
 export class FillError extends Error {}
 
 export const FILLED_MANIFEST = 'bg1-manifest.json';
+export const FILLED_MANIFEST_BG1C = 'bg1c-manifest.json';
 const REPO_ROOT = resolve(import.meta.dir, '../../..');
 const sha256 = (data: string | Uint8Array) => createHash('sha256').update(data).digest('hex');
 const inside = (child: string, parent: string) => { const rel = relative(parent, child); return rel !== '' && rel !== '..' && !rel.startsWith('../') && !isAbsolute(rel); };
 
 export interface FillResult { manifest_sha256: string; files: number; kept: number; first: string; last: string; n_final: number | null; earlier_fills: number }
 
-export function fillManifest(opts: { root: string; report: string; targetTokens?: number; tolerance?: number; now?: Date }): FillResult {
-  const root = bg1Source({ GBRAIN_EVALS_BG1_SOURCE: opts.root });
+export function fillManifest(opts: { root: string; report: string; targetTokens?: number; tolerance?: number; now?: Date; bg1c?: boolean }): FillResult {
+  const set = opts.bg1c ? BG1C_SET : BG1_SET, name = opts.bg1c ? FILLED_MANIFEST_BG1C : FILLED_MANIFEST;
+  const root = bg1Source({ [set.env.source]: opts.root }, set);
   const realRoot = realpathSync(root);
-  const out = join(root, FILLED_MANIFEST);
+  const out = join(root, name);
   let report: ValidationReport;
   try { report = JSON.parse(readFileSync(resolve(opts.report), 'utf8')) as ValidationReport; } catch { throw new FillError('--report is not a readable JSON file'); }
   if (report?.schema !== VALIDATION_SCHEMA || !Array.isArray(report.worlds) || !Array.isArray(report.kept)) throw new FillError(`--report is not a ${VALIDATION_SCHEMA} report`);
@@ -55,11 +62,14 @@ export function fillManifest(opts: { root: string; report: string; targetTokens?
   const kept = report.kept, nFinal = report.n_final ?? null;
   const passing = report.worlds.filter(w => w.status === 'pass').map(w => w.id);
   if (JSON.stringify(kept) !== JSON.stringify(nFinal === null ? passing : passing.slice(0, nFinal))) throw new FillError('the kept list is not the report\'s first passing worlds in slot order');
+  if (opts.bg1c && nFinal !== BG1C_N_FINAL) throw new FillError(`a BG1-C fill needs the report's n_final to be ${BG1C_N_FINAL}, the preregistered N, and it is ${nFinal ?? 'absent'}`);
   if (nFinal !== null && !(Number.isInteger(nFinal) && nFinal >= BG1_N_FLOOR && nFinal <= BG1_N_CAP)) throw new FillError(`the report's n_final ${nFinal} is not a whole number from ${BG1_N_FLOOR} to ${BG1_N_CAP}`);
   if (kept.length < (nFinal ?? BG1_WAVE_A)) throw new FillError(`the kept list is too short: the report keeps ${kept.length} world(s), and ${nFinal === null ? `a fill without n_final needs wave A's ${BG1_WAVE_A}` : `its n_final needs ${nFinal}`}`);
   if (kept.length > BG1_N_CAP) throw new FillError(`the report keeps ${kept.length} worlds, more than the ${BG1_N_CAP} a kept set holds`);
   const listed = new Set(report.worlds.map(w => w.id));
-  const skipped = BG1_CONVERSATIONS.slice(0, BG1_CONVERSATIONS.indexOf(kept.at(-1)!) + 1).filter(id => !listed.has(id));
+  const outside = kept.filter(id => !set.ids.includes(id));
+  if (outside.length) throw new FillError(`the report keeps ${outside.join(', ')}, which ${outside.length > 1 ? 'are' : 'is'} not among ${set.label}'s ${set.ids.length} mint slots`);
+  const skipped = set.ids.slice(0, set.ids.indexOf(kept.at(-1)!) + 1).filter(id => !listed.has(id));
   if (skipped.length) throw new FillError(`the report does not account for ${skipped.join(', ')}, below the last kept world, so the kept list may not be the first passing slots`);
 
   const byId = new Map(report.worlds.map(w => [w.id, w]));
@@ -70,12 +80,12 @@ export function fillManifest(opts: { root: string; report: string; targetTokens?
     if (lstatSync(abs).isSymbolicLink() || !inside(realpathSync(abs), realRoot)) throw new FillError(`${path} is a link or resolves outside --root; a filled manifest pins only files inside the custody root`);
   }
   if (mismatched.length) throw new FillError(`${mismatched.length} file(s) of kept worlds are missing or differ from the report's SHA-256 (first ${mismatched[0]}); validate the set again`);
-  const files = bg1ManifestFiles(root, kept);
+  const files = bg1ManifestFiles(root, kept, set);
 
   let earlier: { manifest: Bg1Manifest; sha256: string } | null = null;
   if (existsSync(out)) {
-    if (lstatSync(out).isSymbolicLink()) throw new FillError(`<root>/${FILLED_MANIFEST} is a link`);
-    const read = readBg1Manifest(out);
+    if (lstatSync(out).isSymbolicLink()) throw new FillError(`<root>/${name} is a link`);
+    const read = readBg1Manifest(out, set);
     if (read.manifest.status === 'filled') earlier = read;
   }
   if (earlier) {
@@ -86,11 +96,11 @@ export function fillManifest(opts: { root: string; report: string; targetTokens?
     if (changed.length) throw new FillError(`a refill only adds files: ${changed.length} file(s) the earlier fill pins are missing or changed (first ${changed[0].path})`);
     if (earlier.manifest.n_final !== undefined && earlier.manifest.n_final !== nFinal) throw new FillError(`n_final is ${earlier.manifest.n_final} in the earlier fill and never changes`);
   }
-  const template = JSON.parse(readFileSync(join(REPO_ROOT, BG1_MANIFEST), 'utf8')) as Bg1Manifest;
-  if (template.status !== 'unfilled') throw new FillError(`${BG1_MANIFEST} is the template and must stay unfilled`);
+  const template = JSON.parse(readFileSync(join(REPO_ROOT, set.manifest), 'utf8')) as Bg1Manifest;
+  if (template.status !== 'unfilled') throw new FillError(`${set.manifest} is the template and must stay unfilled`);
   const manifest: Bg1Manifest = { ...template, status: 'filled', files, filled_at: (opts.now ?? new Date()).toISOString(), kept: [...kept],
     ...(nFinal !== null ? { n_final: nFinal } : {}), ...(earlier ? { earlier_fills: [...(earlier.manifest.earlier_fills ?? []), earlier.sha256] } : {}) };
-  bg1Kept(manifest);
+  bg1Kept(manifest, set);
   const text = JSON.stringify(manifest, null, 1) + '\n';
   const candidate = `${out}.candidate`;
   rmSync(candidate, { force: true });
@@ -102,8 +112,8 @@ export function fillManifest(opts: { root: string; report: string; targetTokens?
 export function main(argv: string[]): string {
   const flag = (name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
   const root = flag('--root'), report = flag('--report'), target = flag('--target-tokens'), tolerance = flag('--tolerance');
-  if (!root || !report) throw new FillError('usage: --root <out>/set --report <validation report> [--target-tokens <n>] [--tolerance <x>]');
-  const r = fillManifest({ root, report, targetTokens: target === undefined ? undefined : Number(target), tolerance: tolerance === undefined ? undefined : Number(tolerance) });
+  if (!root || !report) throw new FillError('usage: [--bg1c] --root <out>/set --report <validation report> [--target-tokens <n>] [--tolerance <x>]');
+  const r = fillManifest({ root, report, targetTokens: target === undefined ? undefined : Number(target), tolerance: tolerance === undefined ? undefined : Number(tolerance), bg1c: argv.includes('--bg1c') });
   return `bg1-fill status=filled files=${r.files} kept=${r.kept} first=${r.first} last=${r.last} n_final=${r.n_final ?? 'absent'} earlier_fills=${r.earlier_fills} manifest_sha256=${r.manifest_sha256}`;
 }
 

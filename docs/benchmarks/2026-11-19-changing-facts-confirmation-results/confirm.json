@@ -1,0 +1,1391 @@
+{
+  "schema": "gbrain-evals/bg1c-verdict/v1",
+  "set": "BG1-C",
+  "release": "v0.60.753.0",
+  "stage": "final",
+  "worlds": 40,
+  "planned": 2560,
+  "common": 2560,
+  "outcome": {
+    "row": 2,
+    "result": "Any comparison behind",
+    "headline": "gbrain is behind the memory-bank server on questions about the past; gbrain is behind the extract-first server on questions about the past",
+    "publish": [
+      "gbrain is behind the memory-bank server on questions about the past (-4.5 points, 95% interval -6.5 to -2.6).",
+      "gbrain is behind the extract-first server on questions about the past (-3.0 points, 95% interval -5.2 to -0.8).",
+      "gbrain is ahead of the memory-bank server on what is true now (+1.2 points, 95% interval +0.2 to +2.2).",
+      "gbrain is level with the extract-first server on what is true now, within 3 points (+0.6 points, 95% interval -0.8 to +2.0)."
+    ],
+    "readme": {
+      "line": "gbrain is behind the memory-bank server on questions about the past (-4.5 points, 95% interval -6.5 to -2.6). gbrain is behind the extract-first server on questions about the past (-3.0 points, 95% interval -5.2 to -0.8).",
+      "label": "gbrain v0.60.753.0, BG1-C",
+      "bg1_rows": "BG1's rows stay published below it, labelled \"gbrain v0.60.593.0, BG1\"",
+      "replaces": []
+    },
+    "next": {
+      "text": "The losing class's kinds go to GBRA-108 as issues, each with exposure placing the loss in retrieval or in reading.",
+      "comparisons": [
+        "past|memory-bank",
+        "past|extract-first"
+      ],
+      "kinds": [
+        "s6_as_of",
+        "s7_as_known",
+        "s8_history"
+      ]
+    },
+    "lesson": "We learned that the lead gbrain showed on development worlds did not carry over to worlds nobody had seen. You should confirm a memory change on held-out data before you claim it.",
+    "caveat": "The design compares one gbrain release with two servers. It does not test which gbrain change caused any difference."
+  },
+  "left_out": [],
+  "holm_over": [
+    "now|memory-bank",
+    "now|extract-first",
+    "past|memory-bank",
+    "past|extract-first"
+  ],
+  "bounds": {
+    "stage": "final",
+    "holm_alphas": [
+      0.0125,
+      0.016666666666666666,
+      0.025,
+      0.05
+    ],
+    "z": [
+      2.2505,
+      2.14,
+      1.9774,
+      1.678
+    ],
+    "three_point_alpha": 0.0125
+  },
+  "comparisons": [
+    {
+      "key": "now|memory-bank",
+      "class": "now",
+      "server": "memory-bank",
+      "worlds": 40,
+      "questions": 1600,
+      "word": "ahead",
+      "descriptive": null,
+      "z": 2.2948,
+      "three_point": {
+        "alpha": 0.0125,
+        "lower": 0.03,
+        "upper": 2.3867
+      },
+      "test": {
+        "n": 40,
+        "mean": 1.2083333333333328,
+        "sd": 3.1967197396733256,
+        "se": 0.5054457709294117,
+        "df": 39,
+        "t": 2.390629030511927,
+        "p_ahead": 0.010872410137830246,
+        "p_behind": 0.9891275898621698,
+        "ci95": [
+          0.18597276190339995,
+          2.2306939047632657
+        ]
+      },
+      "worse": 96,
+      "better": 148,
+      "same": 1356,
+      "wild": {
+        "estimate": 1.2083,
+        "p": 0.0183,
+        "ci95": [
+          0.2005,
+          2.2191
+        ],
+        "method": "restricted wild cluster bootstrap-t over worlds, question-weighted, Webb weights, 9999 draws, seed 20261109, two-sided"
+      }
+    },
+    {
+      "key": "now|extract-first",
+      "class": "now",
+      "server": "extract-first",
+      "worlds": 40,
+      "questions": 1600,
+      "word": "level within 3 points",
+      "descriptive": null,
+      "z": 0.8821,
+      "three_point": {
+        "alpha": 0.0125,
+        "lower": -0.9744,
+        "upper": 2.1827
+      },
+      "test": {
+        "n": 40,
+        "mean": 0.6041666666666666,
+        "sd": 4.282523868440277,
+        "se": 0.6771264779153278,
+        "df": 39,
+        "t": 0.8922508369879689,
+        "p_ahead": 0.18886545611877703,
+        "p_behind": 0.811134543881223,
+        "ci95": [
+          -0.7654509119291809,
+          1.973784245262514
+        ]
+      },
+      "worse": 121,
+      "better": 148,
+      "same": 1331,
+      "wild": {
+        "estimate": 0.6042,
+        "p": 0.3832,
+        "ci95": [
+          -0.7591,
+          1.949
+        ],
+        "method": "restricted wild cluster bootstrap-t over worlds, question-weighted, Webb weights, 9999 draws, seed 20261109, two-sided"
+      }
+    },
+    {
+      "key": "past|memory-bank",
+      "class": "past",
+      "server": "memory-bank",
+      "worlds": 40,
+      "questions": 960,
+      "word": "behind",
+      "descriptive": null,
+      "z": -4.1835,
+      "three_point": {
+        "alpha": 0.0125,
+        "lower": -6.7876,
+        "upper": -2.3096
+      },
+      "test": {
+        "n": 40,
+        "mean": -4.54861111111111,
+        "sd": 6.074315376782213,
+        "se": 0.9604335908407832,
+        "df": 39,
+        "t": -4.735997527043137,
+        "p_ahead": 0.9999856482752741,
+        "p_behind": 0.000014351724725904909,
+        "ci95": [
+          -6.491271414603123,
+          -2.605950807619097
+        ]
+      },
+      "worse": 100,
+      "better": 63,
+      "same": 797,
+      "wild": {
+        "estimate": -4.5486,
+        "p": 0.0001,
+        "ci95": [
+          -6.4806,
+          -2.6133
+        ],
+        "method": "restricted wild cluster bootstrap-t over worlds, question-weighted, Webb weights, 9999 draws, seed 20261109, two-sided"
+      }
+    },
+    {
+      "key": "past|extract-first",
+      "class": "past",
+      "server": "extract-first",
+      "worlds": 40,
+      "questions": 960,
+      "word": "behind",
+      "descriptive": null,
+      "z": -2.6006,
+      "three_point": {
+        "alpha": 0.0125,
+        "lower": -5.5302,
+        "upper": -0.442
+      },
+      "test": {
+        "n": 40,
+        "mean": -2.98611111111111,
+        "sd": 6.901935421841335,
+        "se": 1.0912918098206836,
+        "df": 39,
+        "t": -2.7363085512405476,
+        "p_ahead": 0.9953471582493219,
+        "p_behind": 0.004652841750678147,
+        "ci95": [
+          -5.193457145945958,
+          -0.7787650762762621
+        ]
+      },
+      "worse": 98,
+      "better": 85,
+      "same": 777,
+      "wild": {
+        "estimate": -2.9861,
+        "p": 0.01,
+        "ci95": [
+          -5.1653,
+          -0.7673
+        ],
+        "method": "restricted wild cluster bootstrap-t over worlds, question-weighted, Webb weights, 9999 draws, seed 20261109, two-sided"
+      }
+    }
+  ],
+  "not_run": [],
+  "worst_case": {
+    "words": [
+      "ahead",
+      "level within 3 points",
+      "behind",
+      "behind"
+    ],
+    "row": 2,
+    "disagrees": false
+  },
+  "drops": {
+    "all": {
+      "planned": 2560,
+      "dropped": 0,
+      "share": 0,
+      "by": {}
+    },
+    "by_class": {
+      "now": {
+        "planned": 1600,
+        "dropped": 0,
+        "share": 0,
+        "by": {}
+      },
+      "past": {
+        "planned": 960,
+        "dropped": 0,
+        "share": 0,
+        "by": {}
+      }
+    }
+  },
+  "fill": {
+    "gbrain": {
+      "mean_fill": 0.9838,
+      "pass": true
+    },
+    "memory-bank": {
+      "mean_fill": 0.9832,
+      "pass": true
+    },
+    "extract-first": {
+      "mean_fill": 0.9949,
+      "pass": true
+    }
+  },
+  "per_kind": [
+    {
+      "stratum": "s1_updated",
+      "rows": {
+        "memory-bank": {
+          "worlds": 40,
+          "mean": 0.4167,
+          "ci95": [
+            -1.0242,
+            1.8576
+          ],
+          "note": "unadjusted"
+        },
+        "extract-first": {
+          "worlds": 40,
+          "mean": 8.75,
+          "ci95": [
+            4.8997,
+            12.6003
+          ],
+          "note": "unadjusted"
+        }
+      }
+    },
+    {
+      "stratum": "s2_corrected",
+      "rows": {
+        "memory-bank": {
+          "worlds": 40,
+          "mean": 0.4167,
+          "ci95": [
+            -2.1403,
+            2.9737
+          ],
+          "note": "unadjusted"
+        },
+        "extract-first": {
+          "worlds": 40,
+          "mean": -2.0833,
+          "ci95": [
+            -4.0621,
+            -0.1045
+          ],
+          "note": "unadjusted"
+        }
+      }
+    },
+    {
+      "stratum": "s3_repeated_stale",
+      "rows": {
+        "memory-bank": {
+          "worlds": 40,
+          "mean": -0.2083,
+          "ci95": [
+            -2.6026,
+            2.1859
+          ],
+          "note": "unadjusted"
+        },
+        "extract-first": {
+          "worlds": 40,
+          "mean": 5.5208,
+          "ci95": [
+            2.0883,
+            8.9534
+          ],
+          "note": "unadjusted"
+        }
+      }
+    },
+    {
+      "stratum": "s4_conflicting",
+      "rows": {
+        "memory-bank": {
+          "worlds": 40,
+          "mean": 8.8542,
+          "ci95": [
+            5.2685,
+            12.4398
+          ],
+          "note": "unadjusted"
+        },
+        "extract-first": {
+          "worlds": 40,
+          "mean": -3.9583,
+          "ci95": [
+            -5.8894,
+            -2.0273
+          ],
+          "note": "unadjusted"
+        }
+      }
+    },
+    {
+      "stratum": "s5_withdrawn",
+      "rows": {
+        "memory-bank": {
+          "worlds": 40,
+          "mean": -3.4375,
+          "ci95": [
+            -7.4396,
+            0.5646
+          ],
+          "note": "unadjusted"
+        },
+        "extract-first": {
+          "worlds": 40,
+          "mean": -5.2083,
+          "ci95": [
+            -8.9011,
+            -1.5155
+          ],
+          "note": "unadjusted"
+        }
+      }
+    },
+    {
+      "stratum": "s6_as_of",
+      "rows": {
+        "memory-bank": {
+          "worlds": 40,
+          "mean": -2.8125,
+          "ci95": [
+            -5.038,
+            -0.587
+          ],
+          "note": "unadjusted"
+        },
+        "extract-first": {
+          "worlds": 40,
+          "mean": -1.3542,
+          "ci95": [
+            -3.8314,
+            1.123
+          ],
+          "note": "unadjusted"
+        }
+      }
+    },
+    {
+      "stratum": "s7_as_known",
+      "rows": {
+        "memory-bank": {
+          "worlds": 40,
+          "mean": 0.4167,
+          "ci95": [
+            -2.7454,
+            3.5787
+          ],
+          "note": "unadjusted"
+        },
+        "extract-first": {
+          "worlds": 40,
+          "mean": -1.6667,
+          "ci95": [
+            -4.9696,
+            1.6363
+          ],
+          "note": "unadjusted"
+        }
+      }
+    },
+    {
+      "stratum": "s8_history",
+      "rows": {
+        "memory-bank": {
+          "worlds": 40,
+          "mean": -11.25,
+          "ci95": [
+            -15.8185,
+            -6.6815
+          ],
+          "note": "unadjusted"
+        },
+        "extract-first": {
+          "worlds": 40,
+          "mean": -5.9375,
+          "ci95": [
+            -10.3714,
+            -1.5036
+          ],
+          "note": "unadjusted"
+        }
+      }
+    }
+  ],
+  "per_reader": [
+    {
+      "reader": "anthropic:claude-opus-5-5",
+      "classes": {
+        "now": {
+          "memory-bank": {
+            "worlds": 40,
+            "mean": 0.5625,
+            "ci95": [
+              -0.6315,
+              1.7565
+            ],
+            "note": "unadjusted"
+          },
+          "extract-first": {
+            "worlds": 40,
+            "mean": -1.875,
+            "ci95": [
+              -3.113,
+              -0.637
+            ],
+            "note": "unadjusted"
+          }
+        },
+        "past": {
+          "memory-bank": {
+            "worlds": 40,
+            "mean": -6.0417,
+            "ci95": [
+              -7.925,
+              -4.1583
+            ],
+            "note": "unadjusted"
+          },
+          "extract-first": {
+            "worlds": 40,
+            "mean": -5.1042,
+            "ci95": [
+              -7.2055,
+              -3.0029
+            ],
+            "note": "unadjusted"
+          }
+        }
+      }
+    },
+    {
+      "reader": "openai:gpt-6.2-sol",
+      "classes": {
+        "now": {
+          "memory-bank": {
+            "worlds": 40,
+            "mean": -0.5,
+            "ci95": [
+              -1.5589,
+              0.5589
+            ],
+            "note": "unadjusted"
+          },
+          "extract-first": {
+            "worlds": 40,
+            "mean": 2.5,
+            "ci95": [
+              0.7633,
+              4.2367
+            ],
+            "note": "unadjusted"
+          }
+        },
+        "past": {
+          "memory-bank": {
+            "worlds": 40,
+            "mean": -5.3125,
+            "ci95": [
+              -7.5502,
+              -3.0748
+            ],
+            "note": "unadjusted"
+          },
+          "extract-first": {
+            "worlds": 40,
+            "mean": -2.6042,
+            "ci95": [
+              -5.2468,
+              0.0384
+            ],
+            "note": "unadjusted"
+          }
+        }
+      }
+    },
+    {
+      "reader": "particle:particle-1",
+      "classes": {
+        "now": {
+          "memory-bank": {
+            "worlds": 40,
+            "mean": 3.5625,
+            "ci95": [
+              1.9341,
+              5.1909
+            ],
+            "note": "unadjusted"
+          },
+          "extract-first": {
+            "worlds": 40,
+            "mean": 1.1875,
+            "ci95": [
+              -0.623,
+              2.998
+            ],
+            "note": "unadjusted"
+          }
+        },
+        "past": {
+          "memory-bank": {
+            "worlds": 40,
+            "mean": -2.2917,
+            "ci95": [
+              -4.3594,
+              -0.224
+            ],
+            "note": "unadjusted"
+          },
+          "extract-first": {
+            "worlds": 40,
+            "mean": -1.25,
+            "ci95": [
+              -3.7237,
+              1.2237
+            ],
+            "note": "unadjusted"
+          }
+        }
+      }
+    }
+  ],
+  "pooled": {
+    "strata": [
+      "s1_updated",
+      "s2_corrected",
+      "s3_repeated_stale",
+      "s4_conflicting",
+      "s5_withdrawn",
+      "s6_as_of",
+      "s7_as_known",
+      "s8_history"
+    ],
+    "rows": {
+      "memory-bank": {
+        "worlds": 40,
+        "mean": -0.9505,
+        "ci95": [
+          -2.0365,
+          0.1355
+        ],
+        "note": "unadjusted"
+      },
+      "extract-first": {
+        "worlds": 40,
+        "mean": -0.7422,
+        "ci95": [
+          -2.1173,
+          0.6329
+        ],
+        "note": "unadjusted"
+      }
+    }
+  },
+  "row_means": {
+    "gbrain": {
+      "anthropic:claude-opus-5-5": 92.9297,
+      "openai:gpt-6.2-sol": 93.3984,
+      "particle:particle-1": 90.1953
+    },
+    "memory-bank": {
+      "anthropic:claude-opus-5-5": 94.8438,
+      "openai:gpt-6.2-sol": 95.7031,
+      "particle:particle-1": 88.8281
+    },
+    "extract-first": {
+      "anthropic:claude-opus-5-5": 96.0156,
+      "openai:gpt-6.2-sol": 92.8125,
+      "particle:particle-1": 89.9219
+    }
+  },
+  "matcher": {
+    "view": "gating",
+    "answers": 23040,
+    "decisive": 4128,
+    "agreement": 0.734,
+    "kappa": 0.405,
+    "table": {
+      "correct": {
+        "judged_correct": 2337,
+        "judged_wrong": 75
+      },
+      "stale": {
+        "judged_correct": 515,
+        "judged_wrong": 375
+      },
+      "decoy": {
+        "judged_correct": 489,
+        "judged_wrong": 139
+      },
+      "other": {
+        "judged_correct": 19,
+        "judged_wrong": 179
+      },
+      "unclear": {
+        "judged_correct": 18007,
+        "judged_wrong": 905
+      }
+    }
+  },
+  "exposure": {
+    "extract-first": {
+      "all": {
+        "contexts": 2560,
+        "gold_rate": 0.9617,
+        "stale_rate": 0.8723,
+        "gold_only_rate": 0.1246,
+        "deciding_line_rate": null,
+        "deciding_line_checked": 0
+      },
+      "by_stratum": {
+        "s1_updated": {
+          "contexts": 320,
+          "gold_rate": 0.9906,
+          "stale_rate": 1,
+          "gold_only_rate": 0,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s2_corrected": {
+          "contexts": 320,
+          "gold_rate": 1,
+          "stale_rate": 1,
+          "gold_only_rate": 0,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s3_repeated_stale": {
+          "contexts": 320,
+          "gold_rate": 0.9719,
+          "stale_rate": 1,
+          "gold_only_rate": 0,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s4_conflicting": {
+          "contexts": 320,
+          "gold_rate": 0.9781,
+          "stale_rate": 0.9969,
+          "gold_only_rate": 0,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s5_withdrawn": {
+          "contexts": 320,
+          "gold_rate": 0.7781,
+          "stale_rate": 1,
+          "gold_only_rate": 0,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s6_as_of": {
+          "contexts": 320,
+          "gold_rate": 1,
+          "stale_rate": 0.9813,
+          "gold_only_rate": 0.0188,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s7_as_known": {
+          "contexts": 320,
+          "gold_rate": 0.9969,
+          "stale_rate": 1,
+          "gold_only_rate": 0,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s8_history": {
+          "contexts": 320,
+          "gold_rate": 0.9781,
+          "stale_rate": 0,
+          "gold_only_rate": 0.9781,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        }
+      }
+    },
+    "gbrain": {
+      "all": {
+        "contexts": 2560,
+        "gold_rate": 0.9188,
+        "stale_rate": 0.8691,
+        "gold_only_rate": 0.1105,
+        "deciding_line_rate": 0.9281,
+        "deciding_line_checked": 320
+      },
+      "by_stratum": {
+        "s1_updated": {
+          "contexts": 320,
+          "gold_rate": 0.9938,
+          "stale_rate": 0.9938,
+          "gold_only_rate": 0.0063,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s2_corrected": {
+          "contexts": 320,
+          "gold_rate": 0.9844,
+          "stale_rate": 1,
+          "gold_only_rate": 0,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s3_repeated_stale": {
+          "contexts": 320,
+          "gold_rate": 0.9875,
+          "stale_rate": 1,
+          "gold_only_rate": 0,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s4_conflicting": {
+          "contexts": 320,
+          "gold_rate": 0.9719,
+          "stale_rate": 1,
+          "gold_only_rate": 0,
+          "deciding_line_rate": 0.9281,
+          "deciding_line_checked": 320
+        },
+        "s5_withdrawn": {
+          "contexts": 320,
+          "gold_rate": 0.6625,
+          "stale_rate": 1,
+          "gold_only_rate": 0,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s6_as_of": {
+          "contexts": 320,
+          "gold_rate": 0.9688,
+          "stale_rate": 0.9844,
+          "gold_only_rate": 0.0125,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s7_as_known": {
+          "contexts": 320,
+          "gold_rate": 0.9344,
+          "stale_rate": 0.975,
+          "gold_only_rate": 0.0188,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s8_history": {
+          "contexts": 320,
+          "gold_rate": 0.8469,
+          "stale_rate": 0,
+          "gold_only_rate": 0.8469,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        }
+      }
+    },
+    "memory-bank": {
+      "all": {
+        "contexts": 2560,
+        "gold_rate": 0.9281,
+        "stale_rate": 0.8707,
+        "gold_only_rate": 0.125,
+        "deciding_line_rate": null,
+        "deciding_line_checked": 0
+      },
+      "by_stratum": {
+        "s1_updated": {
+          "contexts": 320,
+          "gold_rate": 0.9906,
+          "stale_rate": 0.9969,
+          "gold_only_rate": 0,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s2_corrected": {
+          "contexts": 320,
+          "gold_rate": 0.9719,
+          "stale_rate": 0.9969,
+          "gold_only_rate": 0.0031,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s3_repeated_stale": {
+          "contexts": 320,
+          "gold_rate": 0.9844,
+          "stale_rate": 1,
+          "gold_only_rate": 0,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s4_conflicting": {
+          "contexts": 320,
+          "gold_rate": 0.9531,
+          "stale_rate": 0.9969,
+          "gold_only_rate": 0.0031,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s5_withdrawn": {
+          "contexts": 320,
+          "gold_rate": 0.5688,
+          "stale_rate": 1,
+          "gold_only_rate": 0,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s6_as_of": {
+          "contexts": 320,
+          "gold_rate": 0.9969,
+          "stale_rate": 0.9875,
+          "gold_only_rate": 0.0125,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s7_as_known": {
+          "contexts": 320,
+          "gold_rate": 0.9906,
+          "stale_rate": 0.9875,
+          "gold_only_rate": 0.0125,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s8_history": {
+          "contexts": 320,
+          "gold_rate": 0.9688,
+          "stale_rate": 0,
+          "gold_only_rate": 0.9688,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        }
+      }
+    }
+  },
+  "scoped_exposure": {
+    "extract-first": {
+      "all": {
+        "contexts": 2560,
+        "gold_rate": 0.9457,
+        "stale_rate": 0.8723,
+        "gold_only_rate": 0.1246,
+        "deciding_line_rate": null,
+        "deciding_line_checked": 0
+      },
+      "by_stratum": {
+        "s1_updated": {
+          "contexts": 320,
+          "gold_rate": 0.9906,
+          "stale_rate": 1,
+          "gold_only_rate": 0,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s2_corrected": {
+          "contexts": 320,
+          "gold_rate": 1,
+          "stale_rate": 1,
+          "gold_only_rate": 0,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s3_repeated_stale": {
+          "contexts": 320,
+          "gold_rate": 0.9719,
+          "stale_rate": 1,
+          "gold_only_rate": 0,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s4_conflicting": {
+          "contexts": 320,
+          "gold_rate": 0.9781,
+          "stale_rate": 0.9969,
+          "gold_only_rate": 0,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s5_withdrawn": {
+          "contexts": 320,
+          "gold_rate": 0.65,
+          "stale_rate": 1,
+          "gold_only_rate": 0,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s6_as_of": {
+          "contexts": 320,
+          "gold_rate": 1,
+          "stale_rate": 0.9813,
+          "gold_only_rate": 0.0188,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s7_as_known": {
+          "contexts": 320,
+          "gold_rate": 0.9969,
+          "stale_rate": 1,
+          "gold_only_rate": 0,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s8_history": {
+          "contexts": 320,
+          "gold_rate": 0.9781,
+          "stale_rate": 0,
+          "gold_only_rate": 0.9781,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        }
+      }
+    },
+    "gbrain": {
+      "all": {
+        "contexts": 2560,
+        "gold_rate": 0.9164,
+        "stale_rate": 0.8691,
+        "gold_only_rate": 0.1105,
+        "deciding_line_rate": 0.9281,
+        "deciding_line_checked": 320
+      },
+      "by_stratum": {
+        "s1_updated": {
+          "contexts": 320,
+          "gold_rate": 0.9938,
+          "stale_rate": 0.9938,
+          "gold_only_rate": 0.0063,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s2_corrected": {
+          "contexts": 320,
+          "gold_rate": 0.9844,
+          "stale_rate": 1,
+          "gold_only_rate": 0,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s3_repeated_stale": {
+          "contexts": 320,
+          "gold_rate": 0.9875,
+          "stale_rate": 1,
+          "gold_only_rate": 0,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s4_conflicting": {
+          "contexts": 320,
+          "gold_rate": 0.9719,
+          "stale_rate": 1,
+          "gold_only_rate": 0,
+          "deciding_line_rate": 0.9281,
+          "deciding_line_checked": 320
+        },
+        "s5_withdrawn": {
+          "contexts": 320,
+          "gold_rate": 0.6438,
+          "stale_rate": 1,
+          "gold_only_rate": 0,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s6_as_of": {
+          "contexts": 320,
+          "gold_rate": 0.9688,
+          "stale_rate": 0.9844,
+          "gold_only_rate": 0.0125,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s7_as_known": {
+          "contexts": 320,
+          "gold_rate": 0.9344,
+          "stale_rate": 0.975,
+          "gold_only_rate": 0.0188,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s8_history": {
+          "contexts": 320,
+          "gold_rate": 0.8469,
+          "stale_rate": 0,
+          "gold_only_rate": 0.8469,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        }
+      }
+    },
+    "memory-bank": {
+      "all": {
+        "contexts": 2560,
+        "gold_rate": 0.9066,
+        "stale_rate": 0.8707,
+        "gold_only_rate": 0.125,
+        "deciding_line_rate": null,
+        "deciding_line_checked": 0
+      },
+      "by_stratum": {
+        "s1_updated": {
+          "contexts": 320,
+          "gold_rate": 0.9906,
+          "stale_rate": 0.9969,
+          "gold_only_rate": 0,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s2_corrected": {
+          "contexts": 320,
+          "gold_rate": 0.9688,
+          "stale_rate": 0.9969,
+          "gold_only_rate": 0.0031,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s3_repeated_stale": {
+          "contexts": 320,
+          "gold_rate": 0.9844,
+          "stale_rate": 1,
+          "gold_only_rate": 0,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s4_conflicting": {
+          "contexts": 320,
+          "gold_rate": 0.9531,
+          "stale_rate": 0.9969,
+          "gold_only_rate": 0.0031,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s5_withdrawn": {
+          "contexts": 320,
+          "gold_rate": 0.4,
+          "stale_rate": 1,
+          "gold_only_rate": 0,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s6_as_of": {
+          "contexts": 320,
+          "gold_rate": 0.9969,
+          "stale_rate": 0.9875,
+          "gold_only_rate": 0.0125,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s7_as_known": {
+          "contexts": 320,
+          "gold_rate": 0.9906,
+          "stale_rate": 0.9875,
+          "gold_only_rate": 0.0125,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        },
+        "s8_history": {
+          "contexts": 320,
+          "gold_rate": 0.9688,
+          "stale_rate": 0,
+          "gold_only_rate": 0.9688,
+          "deciding_line_rate": null,
+          "deciding_line_checked": 0
+        }
+      }
+    }
+  },
+  "brain_counts": {
+    "tagged_facts": 12690,
+    "slotted_facts": 1376,
+    "changing_slots": 316
+  },
+  "cost_per_correct": {
+    "table": [
+      {
+        "reader": "anthropic:claude-opus-5-5",
+        "usd_per_correct": {
+          "gbrain": 0.0538,
+          "memory-bank": 0.048,
+          "extract-first": 0.104
+        }
+      },
+      {
+        "reader": "particle:particle-1",
+        "usd_per_correct": {
+          "gbrain": 0.0076,
+          "memory-bank": 0.0081,
+          "extract-first": 0.0653
+        }
+      },
+      {
+        "reader": "openai:gpt-6.2-sol",
+        "usd_per_correct": {
+          "gbrain": 0.0207,
+          "memory-bank": 0.0206,
+          "extract-first": 0.0769
+        }
+      }
+    ],
+    "method": "world cluster bootstrap of the ratio, 9999 draws, seed 20261109; ahead means gbrain's cost per correct answer is below the comparator's",
+    "comparisons": [
+      {
+        "row": "memory-bank",
+        "ratio": 1.0635,
+        "ci95": [
+          1.0513,
+          1.0757
+        ],
+        "p_ahead": 1,
+        "p_behind": 0.0001,
+        "note": null,
+        "p_ahead_holm": 1,
+        "p_behind_holm": 0.0002,
+        "verdict": "behind"
+      },
+      {
+        "row": "extract-first",
+        "ratio": 0.3341,
+        "ci95": [
+          0.3293,
+          0.3387
+        ],
+        "p_ahead": 0.0001,
+        "p_behind": 1,
+        "note": null,
+        "p_ahead_holm": 0.0002,
+        "p_behind_holm": 1,
+        "verdict": "ahead"
+      }
+    ]
+  },
+  "judges": {
+    "versions": {
+      "anthropic:claude-opus-5-5": [
+        "claude-opus-5-5"
+      ],
+      "openai:gpt-6-astra": [
+        "gpt-6-astra"
+      ]
+    },
+    "mixed_snapshot": []
+  },
+  "judge_check": {
+    "schema": "gbrain-evals/bg1c-judge-check/v1",
+    "reader": "openai:gpt-6.2-sol",
+    "gating_judge": "anthropic:claude-opus-5-5",
+    "second_judge": "gemini:gemini-3.8-flash",
+    "worlds": [
+      "bg1-dev-04",
+      "bg1-dev-05",
+      "bg1-dev-06",
+      "bg1-dev-07",
+      "bg1-dev-08",
+      "bg1-dev-09",
+      "bg1-dev-10",
+      "bg1-dev-11",
+      "bg1-dev-12",
+      "bg1-dev-13"
+    ],
+    "answers": {
+      "total": 1920,
+      "opus_graded": 1920,
+      "opus_ungraded": 0
+    },
+    "pool": {
+      "items": 148,
+      "wrong": 74,
+      "right": 74
+    },
+    "gemini": {
+      "graded": 148,
+      "ungraded": 0
+    },
+    "inter_judge": {
+      "kappa": 1,
+      "ci95": [
+        1,
+        1
+      ],
+      "n": 148,
+      "agreement": {
+        "k": 148,
+        "n": 148,
+        "rate": 1,
+        "ci95": [
+          0.9747,
+          1
+        ]
+      },
+      "table": {
+        "both_right": 74,
+        "both_wrong": 74,
+        "gemini_right_opus_wrong": 0,
+        "gemini_wrong_opus_right": 0
+      }
+    },
+    "agreed": {
+      "items": 148,
+      "right": 74,
+      "wrong": 74
+    },
+    "rows": {
+      "gbrain-defaults": {
+        "answers": 640,
+        "outcomes": {
+          "scored": 640
+        },
+        "opus_graded": 640,
+        "opus_truncated": 0,
+        "opus_right": {
+          "k": 630,
+          "n": 640,
+          "rate": 0.9844,
+          "ci95": [
+            0.9715,
+            0.9915
+          ]
+        },
+        "pool": {
+          "wrong": 10,
+          "right": 10
+        },
+        "gemini_graded": 20,
+        "agreement": {
+          "k": 20,
+          "n": 20,
+          "rate": 1,
+          "ci95": [
+            0.8389,
+            1
+          ]
+        },
+        "kappa": 1
+      },
+      "ext-memory-bank": {
+        "answers": 640,
+        "outcomes": {
+          "scored": 640
+        },
+        "opus_graded": 640,
+        "opus_truncated": 0,
+        "opus_right": {
+          "k": 624,
+          "n": 640,
+          "rate": 0.975,
+          "ci95": [
+            0.9598,
+            0.9846
+          ]
+        },
+        "pool": {
+          "wrong": 16,
+          "right": 16
+        },
+        "gemini_graded": 32,
+        "agreement": {
+          "k": 32,
+          "n": 32,
+          "rate": 1,
+          "ci95": [
+            0.8928,
+            1
+          ]
+        },
+        "kappa": 1
+      },
+      "ext-extract-first": {
+        "answers": 640,
+        "outcomes": {
+          "scored": 640
+        },
+        "opus_graded": 640,
+        "opus_truncated": 0,
+        "opus_right": {
+          "k": 592,
+          "n": 640,
+          "rate": 0.925,
+          "ci95": [
+            0.902,
+            0.943
+          ]
+        },
+        "pool": {
+          "wrong": 48,
+          "right": 48
+        },
+        "gemini_graded": 96,
+        "agreement": {
+          "k": 96,
+          "n": 96,
+          "rate": 1,
+          "ci95": [
+            0.9615,
+            1
+          ]
+        },
+        "kappa": 1
+      }
+    },
+    "gates": [
+      {
+        "gate": "gemini_opus_kappa",
+        "value": 1,
+        "line": 0.6,
+        "pass": true
+      },
+      {
+        "gate": "agreed_items",
+        "value": 148,
+        "line": 40,
+        "pass": true
+      },
+      {
+        "gate": "agreed_per_class",
+        "value": 74,
+        "line": 15,
+        "pass": true
+      }
+    ],
+    "stop": false
+  }
+}

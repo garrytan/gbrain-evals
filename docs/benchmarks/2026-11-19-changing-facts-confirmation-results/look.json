@@ -1,0 +1,38 @@
+{
+  "schema": "gbrain-evals/bg1c-look/v1",
+  "release": "v0.60.753.0",
+  "worlds": 20,
+  "left_out": [],
+  "comparisons": [
+    {
+      "key": "now|memory-bank",
+      "z": 1.0405,
+      "cp": 0.9791,
+      "status": "open",
+      "reason": null
+    },
+    {
+      "key": "now|extract-first",
+      "z": 0.8729,
+      "cp": 0.342,
+      "status": "open",
+      "reason": null
+    },
+    {
+      "key": "past|memory-bank",
+      "z": -2.7476,
+      "cp": 0,
+      "status": "futile",
+      "reason": null
+    },
+    {
+      "key": "past|extract-first",
+      "z": -1.5623,
+      "cp": 0.0008,
+      "status": "futile",
+      "reason": null
+    }
+  ],
+  "decision": "continue",
+  "verdict": null
+}
