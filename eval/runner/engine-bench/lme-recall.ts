@@ -848,7 +848,7 @@ export function aggregateLmeRows(paths: readonly string[]): RowsSummary & {
   for (const path of paths) {
     const stream = readLmeStream(path);
     if (stream.attestations.length === 0) unattested.push(path);
-    for (const b of stream.builds) builds.set(JSON.stringify(b.gbrain && b.dataset ? { commit: b.gbrain.overlay?.commit ?? null, addon: b.gbrain.rust_addon?.sha256 ?? null, dataset: b.dataset.sha256 } : null), b);
+    for (const b of stream.builds) builds.set(JSON.stringify(b.gbrain && b.dataset ? { commit: b.gbrain.overlay?.commit ?? null, dirty: b.gbrain.overlay?.checkout_dirty ?? null, addon: b.gbrain.rust_addon?.sha256 ?? null, target: b.gbrain.rust_addon?.target ?? null, dataset: b.dataset.sha256 } : null), b);
     attestations.push(...stream.attestations.map(a => ({ ndjson: path, ...a })));
     for (const r of stream.rows) {
       const prev = byKey.get(rowKey(r));
