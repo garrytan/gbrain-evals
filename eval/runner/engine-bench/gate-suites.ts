@@ -12,8 +12,9 @@
  * for rust, so the runner refuses any other addon file). The child environment drops every provider key, except that
  * `--paid` keeps them for the two suites that embed live (Cat 13 and Cat 13b), which then run under the budget ledger
  * with one embedding cache per suite: PGLite fills it (so it must come first in --engines) and the others read it only
- * (a miss on Postgres or Rust makes the suite NOT_RUN). Without `--paid` those two run on hash embeddings, which
- * `emit --counted` refuses (it writes no file when any engine's receipt for either suite did not embed live).
+ * (a miss on Postgres or Rust makes the suite NOT_RUN). Without `--paid` those two run on hash embeddings. When the
+ * engines' receipts pair, `emit --counted` refuses either suite unless every engine embedded live with OpenAI
+ * text-embedding-3-large at 1536 dimensions, and then writes no file; receipts that embedded differently read NOT_RUN.
  * Receipts land at eval/reports/<category>/engine-<kind>/receipt.json, logs and refusals beside them.
  *
  * `emit` reads those receipts and writes <out>/<suite>.json. Rules, as RUST_ENGINE.md (gbrain 09b9ac5c) states them,
@@ -36,6 +37,7 @@
  * (file:line) of every engine call the Rust run refused.
  */
 import { spawn } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { copyFileSync, createWriteStream, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { EVAL_ENGINE_REFUSED_EXIT, EVAL_ENGINES, RUST_ADDON_SHA256_ENV, RUST_REFUSALS_FILE_ENV, rustAddonIdentity, type EvalEngineKind, type RustRefusalSite } from '../eval-engine.ts';
@@ -69,6 +71,8 @@ export interface GateSuite {
   /** The runner writes its receipt at the category's own path, so `run` copies it into the engine directory. */
   canonicalReceipt?: boolean;
   embedsLive?: boolean;
+  /** The receipts' embedding_transport a counted file needs: the preregistered model at its width. */
+  countedEmbedding?: string;
   measure: (r: Receipt) => Measured;
   rule: Rule;
   reading?: string;
@@ -94,7 +98,7 @@ function listed(label: string, xs: string[]): string[] { return xs.length ? [`${
 export const GATE_SUITES: readonly GateSuite[] = [
   {
     id: 'cat13/ndcg5', gate: 'E1', benchmark: 'Cat 13 conceptual search, gbrain arm, nDCG@5', category: 'cat13-conceptual', script: 'eval/runner/cat13-conceptual.ts',
-    canonicalReceipt: true, embedsLive: true,
+    canonicalReceipt: true, embedsLive: true, countedEmbedding: 'live openai:text-embedding-3-large @ 1536d',
     args: o => ['--adapter', 'gbrain', ...stub(o.paid), ...(o.paid ? ['--embed-cache', o.cacheFile!, ...(o.fillsCache ? [] : ['--embed-cache-only']), ...o.budget] : [])],
     measure: r => ({ ndcg5: scorecard(r, 'gbrain').ndcg5 }),
     rule: { kind: 'paired-bound', key: 'ndcg5', floor: -RUST_RECALL_DELTA },
@@ -104,7 +108,7 @@ export const GATE_SUITES: readonly GateSuite[] = [
   },
   {
     id: 'cat13b/top1', gate: 'E1', benchmark: 'Cat 13b source swamp, gbrain arm, top-1', category: 'cat13b-source-swamp', script: 'eval/runner/cat13b-source-swamp.ts',
-    embedsLive: true,
+    embedsLive: true, countedEmbedding: 'live openai:text-embedding-3-large',
     args: o => [...stub(o.paid), ...(o.paid ? ['--embed-cache', o.cacheFile!, ...(o.fillsCache ? o.budget : ['--embed-cache-only', ...o.budget])] : [])],
     measure: r => ({ top1: scorecard(r, 'gbrain').top1_hit_rate }),
     rule: { kind: 'at-least-both', keys: ['top1'] },
@@ -355,9 +359,9 @@ export function judgeSuite(s: GateSuite, runs: Record<EvalEngineKind, EngineRun>
   const ran = EVAL_ENGINES.filter(k => completed(runs[k].receipt));
   const modes = ran.map(k => embeddingOf(runs[k].receipt!));
   if (new Set(modes).size > 1) return notRun(`the engines embedded differently (${ran.map((k, i) => `${k} ${modes[i]}`).join('; ')})`);
-  if (o.counted && s.embedsLive) {
-    const hashed = ran.filter(k => !String(runs[k].receipt!.resolved_config?.embedding_transport ?? '').startsWith('live '));
-    if (hashed.length) throw new Error(`${s.id}: a counted file needs live embeddings, but ${hashed.map(k => `${k} embedded with ${runs[k].receipt!.resolved_config?.embedding_transport ?? 'no recorded transport'}`).join('; ')}; rerun it under --paid`);
+  if (o.counted && s.countedEmbedding) {
+    const other = ran.filter(k => runs[k].receipt!.resolved_config?.embedding_transport !== s.countedEmbedding);
+    if (other.length) throw new Error(`${s.id}: a counted file needs every engine to embed ${s.countedEmbedding}, but ${other.map(k => `${k} embedded with ${runs[k].receipt!.resolved_config?.embedding_transport ?? 'no recorded transport'}`).join('; ')}; rerun it under --paid with the preregistered model`);
   }
   const sitesLoss = (): Loss[] => {
     const refused = runs.rust.refusalSites ?? [];
@@ -420,6 +424,7 @@ export function judgeSuite(s: GateSuite, runs: Record<EvalEngineKind, EngineRun>
         const ids: string[] = (r.data?.per_query?.gbrain ?? []).map((q: any) => `${q.id}\t${q.text}`).sort();
         return { k, ids, n: r.n_total, gold: r.resolved_config?.evaluator?.gold_store?.fingerprint ?? null, full: ids.length === r.n_total && (r.resolved_config?.probes_generated ?? ids.length) === ids.length };
       });
+      if (o.counted && sets.some(x => !x.gold)) return notRun(`a counted ${rule.key} file needs a gold-store fingerprint on every engine (missing on ${sets.filter(x => !x.gold).map(x => x.k).join(', ')})`);
       if (sets.some(x => !x.full) || new Set(sets.map(x => `${x.gold}\n${x.ids.join('\n')}`)).size !== 1) {
         return notRun(`the engines scored different or partial ${rule.key} query sets (${sets.map(x => `${x.k} ${x.ids.length} of ${x.n}`).join(', ')})`);
       }
@@ -535,7 +540,12 @@ async function run(argv: readonly string[]): Promise<void> {
   const pg = process.env.LIFECYCLE_PG_URL;
   if (engines.includes('postgres') && !pg) throw new Error('the postgres engine needs LIFECYCLE_PG_URL (a Postgres admin URL with pgvector)');
   if (paid) mkdirSync(cacheDir, { recursive: true });
-  const rustAddon = engines.includes('rust') ? { sha256: process.env[RUST_ADDON_SHA256_ENV]!.trim().toLowerCase(), target: addonTarget(process.env.GBRAIN_RUST_ENGINE_ADDON!, rustAddonIdentity(resolveGbrainUnderTest(spec))?.target) } : null;
+  const required = process.env[RUST_ADDON_SHA256_ENV]?.trim().toLowerCase();
+  if (engines.includes('rust')) {
+    const got = createHash('sha256').update(readFileSync(process.env.GBRAIN_RUST_ENGINE_ADDON!)).digest('hex');
+    if (got !== required) throw new Error(`the Rust addon file's SHA-256 is ${got}, not the ${required} that ${RUST_ADDON_SHA256_ENV} names; run loads nothing until they match`);
+  }
+  const rustAddon = engines.includes('rust') ? { sha256: required!, target: addonTarget(process.env.GBRAIN_RUST_ENGINE_ADDON!, rustAddonIdentity(resolveGbrainUnderTest(spec))?.target) } : null;
   for (const s of selectSuites(argv)) {
     const jobs = [
       { label: s.id, category: s.category, script: s.script, live: paid && s.embedsLive === true, args: s.args, canonical: s.canonicalReceipt === true },

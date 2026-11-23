@@ -255,12 +255,38 @@ describe('gate-suite runs', () => {
   test('emit --counted refuses Cat 13 and Cat 13b receipts that ran on hash embeddings', () => {
     const top1 = (transport?: string) => ({ data: { scorecard: [{ name: 'gbrain', top1_hit_rate: 0.9 }] }, ...(transport ? { resolved_config: { embedding_transport: transport } } : {}) });
     const hash = 'stubbed deterministic hash-embed (__setEmbedTransportForTests)';
-    expect(() => judgeSuite(suite('cat13b/top1'), runs(k => receipt(k, top1(hash))), { counted: true })).toThrow(/cat13b\/top1: a counted file needs live embeddings, but pglite embedded with stubbed/);
+    expect(() => judgeSuite(suite('cat13b/top1'), runs(k => receipt(k, top1(hash))), { counted: true })).toThrow(/cat13b\/top1: a counted file needs every engine to embed live openai:text-embedding-3-large, but pglite embedded with stubbed/);
     expect(() => judgeSuite(suite('cat13b/top1'), runs(k => receipt(k, top1())), { counted: true })).toThrow(/pglite embedded with no recorded transport/);
     const c13 = { n_total: 1, data: { per_query: { gbrain: [{ id: 'q1', text: 'a', ndcg_at_5: 1, ranked_pages: [] }] } }, resolved_config: { probes_generated: 1, embedding_transport: `${hash}, 1024d` } };
-    expect(() => judgeSuite(suite('cat13/ndcg5'), runs(k => receipt(k, c13)), { counted: true })).toThrow(/cat13\/ndcg5: a counted file needs live embeddings/);
+    expect(() => judgeSuite(suite('cat13/ndcg5'), runs(k => receipt(k, c13)), { counted: true })).toThrow(/cat13\/ndcg5: a counted file needs every engine to embed live openai:text-embedding-3-large @ 1536d/);
     expect(judgeSuite(suite('cat13b/top1'), runs(k => receipt(k, top1(hash))), { counted: false }).verdict).toBe('PASS');
+    expect(() => judgeSuite(suite('cat13b/top1'), runs(k => receipt(k, top1('live voyage:voyage-4'))), { counted: true })).toThrow(/pglite embedded with live voyage:voyage-4/);
+    expect(judgeSuite(suite('cat13b/top1'), runs(k => receipt(k, top1('live openai:text-embedding-3-large'))), { counted: true }).verdict).toBe('PASS');
+    const per = Array.from({ length: 40 }, (_, i) => ({ id: `c${i}`, text: `t${i}`, ndcg5: 0.6, ranked_pages: ['a', 'b', 'c', 'd', 'e'].map((page_id, r) => ({ page_id, rank: r + 1 })) }));
+    const live13 = (transport: string) => ({ n_total: 40, resolved_config: { probes_generated: 40, embedding_transport: transport, evaluator: { gold_store: { fingerprint: 'g1' } } }, data: { scorecard: [{ name: 'gbrain', ndcg5: 0.6 }], per_query: { gbrain: per } } });
+    expect(() => judgeSuite(suite('cat13/ndcg5'), runs(k => receipt(k, live13('live openai:text-embedding-3-large @ 1024d'))), { counted: true })).toThrow(/pglite embedded with live openai:text-embedding-3-large @ 1024d/);
+    expect(judgeSuite(suite('cat13/ndcg5'), runs(k => receipt(k, live13('live openai:text-embedding-3-large @ 1536d'))), { counted: true }).verdict).toBe('PASS');
     expect(judgeSuite(suite('cat10'), runs(k => receipt(k, { data: { results: [{ ops_succeeded: 1, ops_attempted: 1 }] }, resolved_config: { embedding_transport: hash } })), { counted: true }).verdict).toBe('PASS');
+  });
+
+  test('a counted Cat 13 file needs a gold-store fingerprint on every engine', () => {
+    const per = Array.from({ length: 40 }, (_, i) => ({ id: `c${i}`, text: `t${i}`, ndcg5: 0.6, ranked_pages: ['a', 'b', 'c', 'd', 'e'].map((page_id, r) => ({ page_id, rank: r + 1 })) }));
+    const c13 = (gold: string | null) => ({ n_total: 40, resolved_config: { probes_generated: 40, embedding_transport: 'live openai:text-embedding-3-large @ 1536d', ...(gold ? { evaluator: { gold_store: { fingerprint: gold } } } : {}) }, data: { scorecard: [{ name: 'gbrain', ndcg5: 0.6 }], per_query: { gbrain: per } } });
+    expect(judgeSuite(suite('cat13/ndcg5'), runs(k => receipt(k, c13(null))), { counted: true })).toMatchObject({ verdict: 'NOT_RUN', reason: 'Reported, not gating, for Dec 1 (plan D24). a counted ndcg5 file needs a gold-store fingerprint on every engine (missing on pglite, postgres, rust)' });
+    expect(judgeSuite(suite('cat13/ndcg5'), runs(k => receipt(k, c13(null))), { counted: false }).verdict).toBe('PASS');
+    expect(judgeSuite(suite('cat13/ndcg5'), runs(k => receipt(k, c13('g1'))), { counted: true }).verdict).toBe('PASS');
+  });
+
+  test('run refuses a Rust addon file whose digest is not the one GBRAIN_RUST_ENGINE_ADDON_SHA256 names, before loading it', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'gate-addon-'));
+    try {
+      const addon = join(dir, 'gbrain_engine.linux-x64-glibc.node');
+      writeFileSync(addon, 'not the addon');
+      const p = Bun.spawnSync([process.execPath, 'eval/runner/engine-bench/gate-suites.ts', 'run', '--gbrain', '/nowhere@b66e4077', '--engines', 'rust', '--suites', 'cat10'],
+        { env: { PATH: process.env.PATH ?? '', GBRAIN_RUST_ENGINE_ADDON: addon, GBRAIN_RUST_ENGINE_ADDON_SHA256: 'ab'.repeat(32) } });
+      expect(p.exitCode).toBe(1);
+      expect(p.stderr.toString()).toContain(`not the ${'ab'.repeat(32)} that GBRAIN_RUST_ENGINE_ADDON_SHA256 names; run loads nothing until they match`);
+    } finally { rmSync(dir, { recursive: true, force: true }); }
   });
 
   test('a Rust run that fails without a receipt keeps the addon digest run required, so a FINAL eval-gates file counts the FAIL', () => {
