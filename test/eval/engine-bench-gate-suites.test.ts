@@ -228,6 +228,14 @@ describe('gate-suite runs', () => {
     expect(partial.verdict).toBe('NOT_RUN');
   });
 
+  test('run refuses a gbrain build named by a tag, a branch or no ref, so a failed Rust cell can be matched to its build', () => {
+    for (const spec of ['/nowhere', '/nowhere@v0.61.0', '/nowhere@master']) {
+      const p = Bun.spawnSync([process.execPath, 'eval/runner/engine-bench/gate-suites.ts', 'run', '--gbrain', spec, '--engines', 'pglite', '--suites', 'cat10'], { env: { PATH: process.env.PATH ?? '' } });
+      expect(p.exitCode).toBe(1);
+      expect(p.stderr.toString()).toContain('run needs --gbrain <checkout>@<sha> with a 7 to 40 character commit sha');
+    }
+  });
+
   test('a paid run refuses an engine order where PGLite does not fill the embedding cache first', () => {
     const p = Bun.spawnSync([process.execPath, 'eval/runner/engine-bench/gate-suites.ts', 'run', '--gbrain', '/nowhere@b66e4077', '--paid', '--budget-run-id', 'r1', '--budget-usd', '1',
       '--embed-cache-dir', join(tmpdir(), 'gate-suites-order'), '--engines', 'postgres,pglite', '--suites', 'cat13b/top1'], { env: { PATH: process.env.PATH ?? '' } });

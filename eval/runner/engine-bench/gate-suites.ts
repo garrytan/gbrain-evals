@@ -497,7 +497,7 @@ function runChild(args: string[], env: Record<string, string>, logPath: string):
 
 async function run(argv: readonly string[]): Promise<void> {
   const spec = gbrainSpecFrom(argv);
-  if (!spec) throw new Error('run needs --gbrain <checkout>@<sha>, the one build every engine and suite measures');
+  if (!spec || !/^[0-9a-f]{7,40}$/.test(spec.split('@').at(-1) ?? '')) throw new Error('run needs --gbrain <checkout>@<sha> with a 7 to 40 character commit sha (not a tag or branch), the one build every engine and suite measures');
   const engines = (flag(argv, '--engines')?.split(',') ?? [...EVAL_ENGINES]) as EvalEngineKind[];
   const paid = argv.includes('--paid');
   const budget = paid ? ['--budget-run-id', flag(argv, '--budget-run-id') ?? '', '--budget-usd', flag(argv, '--budget-usd') ?? ''] : [];

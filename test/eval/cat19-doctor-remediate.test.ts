@@ -46,6 +46,7 @@ describe('cat19 doctor-remediate', () => {
     const data = result.receipt.data as { doctor_plan_ids: string[]; brain_score_delta: number };
     expect(data.doctor_plan_ids).toContain('embed.stale');
     expect(data.brain_score_delta).toBeGreaterThanOrEqual(15);
+    expect((result.receipt.data as { gates: Record<string, number> }).gates).toEqual({ seed_gaps_present: 1, plan_recommends_embed_stale: 1, embeddings_converge: 1, links_extracted: 1, brain_score_climbs: 1 });
 
     // Receipt on disk validates.
     const persisted = loadReceipt(result.receiptFile);
@@ -64,6 +65,7 @@ describe('cat19 doctor-remediate', () => {
     // Nothing converged: the gates saw it.
     expect(result.achieved?.missing_embeddings).toBeGreaterThan(0);
     expect(result.achieved?.link_count).toBe(0);
+    expect((result.receipt.data as { gates: Record<string, number> }).gates).toMatchObject({ embeddings_converge: 0, links_extracted: 0 });
     const persisted = loadReceipt(result.receiptFile);
     expect(persisted.verdict).toBe('fail');
   }, 180_000);
