@@ -153,12 +153,13 @@ export function leaderRunCell(benchmark: string, reader: string, items: readonly
 /**
  * The paid-window cap for re-buying a reader's leader rows on these items: q1's estimate for the narrowed cell as its
  * paid guard reckons it (q1/cell.ts paidGuard: the arm's estimate scaled to the items, plus ingest), plus a quarter for
- * retries and longer answers.
+ * retries and longer answers. Unlike the guard, it keeps scaling past the leader set's size, because leader rows also
+ * cover the dev pool questions the dev test answered (126 on BEAM-1M against the leader cell's 60).
  */
 export function leaderRebuyUsd(spec: Spec, items: readonly string[]): number {
   const def = leaderRunCell(spec.benchmark, spec.reader, items);
-  const guard = def.estimate.usd * Math.min(1, new Set(items).size / ALL_SETS[def.set].questions) + (def.estimate.lines.ingest ?? 0);
-  return Math.ceil(guard * 1.25 * 100) / 100;
+  const usd = def.estimate.usd * new Set(items).size / ALL_SETS[def.set].questions + (def.estimate.lines.ingest ?? 0);
+  return Math.ceil(usd * 1.25 * 100) / 100;
 }
 
 export interface RunOptions { benchmark: string; system: string; reader: string; items: string[]; cache: string; work: string; argv: string[] }

@@ -79,6 +79,24 @@ describe('the oracle reader', () => {
   }, 60_000);
 });
 
+describe('the oracle work directory', () => {
+  test('a re-buy on changed inputs runs in its own directory under the same --work, so memory-qa never refuses the earlier run\'s output', async () => {
+    const fx = loadFixture();
+    const items = fx.questions.map(q => q.id);
+    const dir = scratch(), ledger = join(dir, 'ledger.sqlite');
+    initLedger({ ledgerPath: ledger });
+    const budgetRunId = BudgetRun.open({ runner: 'test', budgetUsd: 1, estimateUsd: 0.1, ledgerPath: ledger }).runId;
+    const opts = { benchmark: 'fixture', reader: 'openai:gpt-4o-mini', items, cache: join(dir, 'cache'), work: join(dir, 'work'), budgetLedger: ledger, budgetRunId };
+    const stub = stubFetch('no question is cut off');
+    try {
+      expect(await runOracle(opts)).toEqual({ bought: items.length, fresh: 0, errored: [] });
+      expect(await runOracle({ ...opts, maxTokens: 2048 })).toEqual({ bought: items.length, fresh: 0, errored: [] });
+    } finally {
+      stub.restore();
+    }
+  }, 60_000);
+});
+
 describe('oracle specs', () => {
   test('judges with the nightly\'s QA judge for the reader\'s family: GPT-6.2 Astra grades Claude and particle-1 answers, Opus grades GPT answers', () => {
     const readers = ['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol', 'particle:particle-1'];

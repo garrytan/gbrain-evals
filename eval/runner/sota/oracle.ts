@@ -169,7 +169,7 @@ export async function runOracle(o: RunOptions): Promise<{ bought: number; fresh:
   const todo = o.items.filter(id => !f.hits.has(id));
   if (!todo.length) return { bought: 0, fresh: f.hits.size, errored: [] };
   const tag = `${o.benchmark}-${o.reader.replace(/[^a-z0-9.-]+/gi, '_')}`;
-  const out = join(o.work, tag), ids = join(o.work, `${tag}.ids.txt`);
+  const out = join(o.work, `${tag}-${sha256(JSON.stringify(spec) + todo.join('\n')).slice(0, 12)}`), ids = `${out}.ids.txt`;
   mkdirSync(o.work, { recursive: true });
   writeFileSync(ids, todo.join('\n') + '\n');
   const corpus = loadCorpus(o.benchmark, undefined, devConversations(o.benchmark) ?? undefined);

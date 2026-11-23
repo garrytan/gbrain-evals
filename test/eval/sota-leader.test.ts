@@ -190,6 +190,15 @@ describe('leaderRebuyUsd', () => {
       expect(staleMessage(f, 'items.txt', 'cache')).toContain(`PAID WINDOW REQUEST ${unit} <cap> (${n} rows; leader rows record no cached input or judge tokens`);
     }
   });
+
+  test('keeps scaling past the leader cell\'s 60 questions, since BEAM-1M leader rows cover the whole 126-question pool', () => {
+    const pool = poolItems('beam-1m');
+    expect([pool.length, ALL_SETS['SOTA-leader-beam'].questions]).toEqual([126, 60]);
+    const def = leaderRunCell('beam-1m', OPUS, pool);
+    const all = leaderRebuyUsd(leaderSpec('beam-1m', OPUS)!, pool), sixty = leaderRebuyUsd(leaderSpec('beam-1m', OPUS)!, pool.slice(0, 60));
+    expect(all).toBeCloseTo(def.estimate.usd * 126 / 60 * 1.25, 1);
+    expect(all).toBeGreaterThan(sixty * 2);
+  });
 });
 
 describe('leaderRows and importLeader', () => {
