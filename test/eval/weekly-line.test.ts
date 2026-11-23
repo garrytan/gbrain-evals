@@ -22,6 +22,7 @@ import { aggregateProblems, assertAggregate, blockAggregates, main, WEEK_SCHEMA,
 import { plannedQuestions, WL_CLASSES, WL_COMPARISONS, WL_OBF_BOUNDS, WL_READER_KEYS, WL_READERS, WL_ROWS, WL_SYSTEMS, type WlClass, type WlReaderKey, type WlRow } from '../../eval/runner/weekly-line/design.ts';
 import { plannedFor, questionsFromRecords, WeeklyRecordsError, type WlQuestion } from '../../eval/runner/weekly-line/records.ts';
 import { renderBlock, renderWeek } from '../../eval/runner/weekly-line/scorecard.ts';
+import { SETTLED_SCHEMA } from '../../eval/runner/weekly-line/settled.ts';
 import { analyzeBlock, analyzeLook, compare, costPerCorrect, estimate, falseAlarmRate, grepStops, holmStepDown, regressionFlag, rolling, weeklySdd, type BlockWorld } from '../../eval/runner/weekly-line/stats.ts';
 
 const tmp = mkdtempSync(join(tmpdir(), 'weekly-line-'));
@@ -307,6 +308,12 @@ describe('beside the verdict', () => {
 
 // ─── The aggregates and their allow-list ─────────────────────────────
 
+/** The runner's settled marker for each week, agreeing with its meta. */
+const settledOf = (metas: readonly WeekMeta[]) => metas.map(m => ({
+  schema: SETTLED_SCHEMA, week: m.week, no_point: m.no_point ?? null, gbrain: m.gbrain, worlds: m.no_point ? [] : m.worlds.map(w => w.world),
+  steps: m.no_point ? { cells: 0, rereads: 0, judgments: 0, harness_failures: 0 } : { cells: 5, rereads: 3, judgments: 8, harness_failures: 0 },
+}));
+
 function meta(week: string, worlds: readonly string[], release: string): WeekMeta {
   return {
     week, gbrain: { release, commit: COMMIT }, comparators: { 'extract-first': { version: '1.4.2', fixed: '2026-11-19' }, 'memory-bank': { version: '0.9.0', fixed: '2026-11-19' } },
@@ -320,7 +327,7 @@ describe('the aggregates that leave custody', () => {
   const metas = [0, 1, 2, 3].map(k => meta(`2026-12-${String(1 + 7 * k).padStart(2, '0')}`, worlds.slice(8 * k, 8 * k + 8), k < 2 ? A : B));
   const weeks: ReturnType<typeof weekAggregates>[] = [];
   for (const m of metas) weeks.push(weekAggregates(m, questions, { history: [...weeks] }));
-  const block = blockAggregates(1, metas, questions, { draws: 199 });
+  const block = blockAggregates(1, metas, questions, { draws: 199, settled: settledOf(metas) });
 
   test('weekly and block aggregates pass their allow-lists, and a week carries no verdict word', () => {
     for (const w of weeks) assertAggregate(w, 'week');
@@ -366,7 +373,7 @@ describe('the aggregates that leave custody', () => {
   test('a constant nonzero gap writes a null z beside its crossing', () => {
     const flat = synth(32, { 'now|grep-agent': () => 4 });
     const m4 = [0, 1, 2, 3].map(k => meta(`2026-12-${String(1 + 7 * k).padStart(2, '0')}`, flat.worlds.slice(8 * k, 8 * k + 8), A));
-    const c = blockAggregates(1, m4, flat.questions, { draws: 99 }).comparisons.now['grep-agent'];
+    const c = blockAggregates(1, m4, flat.questions, { draws: 99, settled: settledOf(m4) }).comparisons.now['grep-agent'];
     expect([c.look!.z, c.look!.crossed, c.final!.z, c.final!.crossed]).toEqual([null, true, null, true]);
   });
 
@@ -434,12 +441,13 @@ describe('the aggregates that leave custody', () => {
   test('the block section words each outcome', () => {
     const ahead = synth(32, { 'now|grep-agent': alt(4, 5), 'past|memory-bank': alt(6, -6), 'now|memory-bank': (i, r) => (r === 'claude-opus-5-5' ? 6 + (i % 2) : -2 + (i % 2)) }, { base: { past: 12 } });
     const m4 = [0, 1, 2, 3].map(k => meta(`2026-12-${String(1 + 7 * k).padStart(2, '0')}`, ahead.worlds.slice(8 * k, 8 * k + 8), A));
-    const page = renderBlock(blockAggregates(2, m4, ahead.questions, { draws: 99 }));
+    const page = renderBlock(blockAggregates(2, m4, ahead.questions, { draws: 99, settled: settledOf(m4) }));
     expect(page).toContain(`gbrain (release ${A}) beats a grep agent on held-out questions about what is true now by`);
     expect(page).toContain('gbrain against the memory-bank server on questions about the past: no measurable difference at this sample size (claude-opus-5-5');
     expect(page).toContain('gbrain against the memory-bank server on what is true now: split by reader (claude-opus-5-5');
     const ceil = synth(32, {}, { base: { now: 40 } });
-    expect(renderBlock(blockAggregates(3, m4.map((m, k) => ({ ...m, worlds: ceil.worlds.slice(8 * k, 8 * k + 8).map(world => ({ world, seed_id: 'W1', phrasing_id: 'W1' })) })), ceil.questions, { draws: 99 }))).toContain('gbrain against a grep agent on what is true now: ceiling');
+    const mc = m4.map((m, k) => ({ ...m, worlds: ceil.worlds.slice(8 * k, 8 * k + 8).map(world => ({ world, seed_id: 'W1', phrasing_id: 'W1' })) }));
+    expect(renderBlock(blockAggregates(3, mc, ceil.questions, { draws: 99, settled: settledOf(mc) }))).toContain('gbrain against a grep agent on what is true now: ceiling');
   });
 });
 
@@ -450,7 +458,8 @@ describe('the end of a block', () => {
   const { worlds, questions } = synth(24, { 'now|grep-agent': halves(alt(2, -1), alt(5, 4)), 'past|grep-agent': alt(4, 5) });
   const metas = [0, 1, 2].map(k => meta(week(k), worlds.slice(8 * k, 8 * k + 8), A));
   const open = blockAggregates(1, metas, questions, { draws: 99 });
-  const done = blockAggregates(1, [...metas, { ...meta(week(3), [], A), no_point: 'custody host offline' as const }], questions, { draws: 99 });
+  const four = [...metas, { ...meta(week(3), [], A), no_point: 'custody host offline' as const }];
+  const done = blockAggregates(1, four, questions, { draws: 99, settled: settledOf(four) });
 
   test('a block written after the look but before its fourth week entry gives only early words', () => {
     expect([open.ended, done.ended]).toEqual([false, true]);
@@ -473,6 +482,26 @@ describe('the end of a block', () => {
     expect(page).not.toContain('### Per kind');
     expect(page).toContain('early, at the 16th counted world. The block so far (');
     expect(renderBlock(done)).toContain('early, at the 16th counted world. The full block (');
+  });
+
+  // Value: protects=a block ends only when all four weeks carry the runner's settled marker, so a fourth week still running (one world with one record) never ends it; fails_when=ended reads only the number of week entries (#611 read-only review blocker 1, aggregates.ts:322), or a marker from another week, build or world list settles a week; why_new=GBEV-3 ruling on #611, 2026-11-23; seam=aggregates.ts blockAggregates over settled.ts settledProblems; no_claim=the runner writes the marker only when every step is done (weekly-line-runner.test.ts)
+  test('a fourth week that is still running does not end the block, and a marker must agree with its week', () => {
+    const { worlds: w4, questions: q4 } = synth(32, { 'now|grep-agent': alt(4, 5) });
+    const m4 = [0, 1, 2, 3].map(k => meta(week(k), w4.slice(8 * k, 8 * k + 8), A));
+    const partial = [...m4.slice(0, 3), meta(week(3), w4.slice(24, 25), A)];
+    const oneRecord = q4.filter(q => q.world !== w4[24] || q.id === `${w4[24]}:s1_updated:0`);
+    const running = blockAggregates(1, partial, oneRecord, { draws: 99, settled: settledOf(partial.slice(0, 3)) });
+    expect(running.ended).toBe(false);
+    expect(Object.values(running.comparisons).flatMap(c => Object.values(c)).every(c => c.final === null)).toBe(true);
+    expect(blockAggregates(1, m4, q4, { draws: 99 }).ended).toBe(false);
+    expect(blockAggregates(1, m4, q4, { draws: 99, settled: settledOf(m4) }).ended).toBe(true);
+    const marks = settledOf(m4);
+    expect(() => blockAggregates(1, m4, q4, { draws: 99, settled: [...marks.slice(0, 3), { ...marks[3], worlds: marks[3].worlds.slice(1) }] })).toThrow(/names other worlds than its meta/);
+    expect(() => blockAggregates(1, m4, q4, { draws: 99, settled: [...marks.slice(0, 3), { ...marks[3], gbrain: { release: B, commit: COMMIT } }] })).toThrow(/another gbrain build/);
+    expect(() => blockAggregates(1, m4, q4, { draws: 99, settled: [...marks, marks[3]] })).toThrow(/more than one settled marker/);
+    expect(() => blockAggregates(1, m4.slice(0, 3), q4, { draws: 99, settled: marks })).toThrow(/a week outside the block/);
+    expect(() => blockAggregates(1, m4, q4, { draws: 99, settled: [...marks.slice(0, 3), { ...marks[3], schema: 'other' }] })).toThrow(/is not a gbrain-evals\/weekly-line-settled\/v1 marker/);
+    expect(() => blockAggregates(1, m4, q4, { draws: 99, settled: [...marks.slice(0, 3), { ...marks[3], steps: { cells: 0, rereads: 0, judgments: 0, harness_failures: 0 } }] })).toThrow(/no cells or judgments/);
   });
 
   test('a week refuses a previous block that has not ended', () => {

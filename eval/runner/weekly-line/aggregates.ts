@@ -9,13 +9,16 @@
  *
  *   bun eval/runner/weekly-line/aggregates.ts week  --meta <week.json> --records <out dir>... [--history <week aggregates>]...
  *                                                   [--previous-block <block aggregates>] [--false-alarm-pool <pool.json>] --out <dir>
- *   bun eval/runner/weekly-line/aggregates.ts block --block <n> --meta <week.json>... --records <out dir>... [--exposure <exposure.json>] --out <dir>
+ *   bun eval/runner/weekly-line/aggregates.ts block --block <n> --meta <week.json>... --records <out dir>... [--settled <settled.json>]...
+ *                                                   [--exposure <exposure.json>] --out <dir>
  *
  * A week's meta file (written in custody by the weekly runner) names the week (its Tuesday launch date), the gbrain
  * release and commit, each server's version and the date it was fixed, the week's worlds in slot order with their seed and
  * phrasing ids, each row's metered spend per reader and world (costs), and no_point when the week recorded none. The
  * records are the cells' answers and judgments (records.ts). The week writes week-<date>.json and its scorecard
- * week-<date>.md; the block writes block-<n>.json and its page section block-<n>.md.
+ * week-<date>.md; the block writes block-<n>.json and its page section block-<n>.md. A block ends only when it lists all
+ * four weeks and each carries the runner's settled marker (settled.ts) agreeing with its meta, so a fourth week that is
+ * still running never ends a block.
  *
  * The writer refuses any field that could carry question text, a value, a name or plan content, by an allow-list: every
  * key is fixed (or one of a fixed set, such as the rows, readers, classes and kinds), every number finite, and every
@@ -47,6 +50,7 @@ import {
   type WlNoPoint, type WlReaderKey, type WlServer,
 } from './design.ts';
 import { renderBlock, renderWeek } from './scorecard.ts';
+import { settledProblems } from './settled.ts';
 
 export class WeeklyAggregateError extends Error {}
 const refuse = (m: string): never => { throw new WeeklyAggregateError(m); };
@@ -305,8 +309,8 @@ export function weekAggregates(meta: WeekMeta, questions: readonly WlQuestion[],
   };
 }
 
-/** A block's per-block file: whether it has ended (all four week entries, weeks with no point included), the words with the look, the release set, both readers' rows, per-kind rows and exposure (null until the block ends, so they leave once per block), the grep agent's stops per week and cost per correct answer. */
-export function blockAggregates(block: number, metas: readonly WeekMeta[], questions: readonly WlQuestion[], o: { exposure?: unknown; draws?: number } = {}) {
+/** A block's per-block file: whether it has ended (all four week entries, weeks with no point included, each settled by a marker in `settled`), the words with the look, the release set, both readers' rows, per-kind rows and exposure (null until the block ends, so they leave once per block), the grep agent's stops per week and cost per correct answer. */
+export function blockAggregates(block: number, metas: readonly WeekMeta[], questions: readonly WlQuestion[], o: { exposure?: unknown; draws?: number; settled?: readonly unknown[] } = {}) {
   if (!Number.isInteger(block) || block < 1) refuse('the block number must be a whole number from 1');
   if (metas.length > WL_WEEKS_PER_BLOCK) refuse(`a block holds at most ${WL_WEEKS_PER_BLOCK} weeks, not ${metas.length}`);
   metas.forEach(checkMeta);
@@ -319,7 +323,18 @@ export function blockAggregates(block: number, metas: readonly WeekMeta[], quest
     if (i && day(w.week) - day(weeks[i - 1].week) !== 7) refuse(`the block's weeks must be consecutive, 7 days apart, not ${weeks[i - 1].week} then ${w.week}`);
   });
   weeks.filter(w => !w.no_point).forEach(w => checkRecords(w, questions));
-  const ended = weeks.length === WL_WEEKS_PER_BLOCK;
+  const markers = o.settled ?? [];
+  const weekOf = (m: unknown) => (typeof m === 'object' && m !== null ? (m as { week?: unknown }).week : undefined);
+  const strays = markers.filter(m => !weeks.some(w => w.week === weekOf(m)));
+  if (strays.length) refuse(`${strays.length} settled marker${strays.length === 1 ? ' names' : 's name'} a week outside the block`);
+  const settled = weeks.filter(w => {
+    const mine = markers.filter(m => weekOf(m) === w.week);
+    if (mine.length > 1) refuse(`week ${w.week} has more than one settled marker`);
+    const p = mine.length ? settledProblems(mine[0], w) : [];
+    if (p.length) refuse(p.join('; '));
+    return mine.length === 1;
+  });
+  const ended = weeks.length === WL_WEEKS_PER_BLOCK && settled.length === WL_WEEKS_PER_BLOCK;
   const counted = weeks.filter(w => !w.no_point).flatMap(w => w.worlds.map(x => ({ world: x.world, week: w.week, release: w.gbrain!.release, commit: w.gbrain!.commit, seed_id: x.seed_id, phrasing_id: x.phrasing_id })));
   if (new Set(counted.map(w => w.world)).size !== counted.length) refuse('a world is counted in two weeks of the block');
   const ids = counted.map(w => w.world);
@@ -391,7 +406,7 @@ export function main(argv: readonly string[]): number {
   if (mode === 'block') {
     const block = Number(flag(rest, '--block') ?? refuse('pass --block <n>'));
     const expPath = flag(rest, '--exposure');
-    const a = blockAggregates(block, metas, questions, { exposure: expPath ? readJson(expPath) : undefined });
+    const a = blockAggregates(block, metas, questions, { exposure: expPath ? readJson(expPath) : undefined, settled: flags(rest, '--settled').map(readJson) });
     const json = join(out, `block-${block}.json`);
     writeAggregate(json, a, 'block');
     writeFileSync(join(out, `block-${block}.md`), renderBlock(a));
