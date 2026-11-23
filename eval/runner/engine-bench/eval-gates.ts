@@ -189,6 +189,8 @@ export function buildEvalGates(inputs: EvalGatesInput[], o: { provisional: boole
     if (!addon) throw new Error('no stage receipt records the Rust addon digest; a counted eval-gates file needs one');
     const dev = ids.filter(x => x.counted !== true && inputs.find(i => i.path === x.path)!.role !== 'receipt');
     if (dev.length) throw new Error(`not counted: ${dev.map(x => x.path).join(', ')}; pass --provisional for development receipts`);
+    const blank = ids.filter(x => (!x.commit || !x.addon) && inputs.find(i => i.path === x.path)!.role !== 'receipt');
+    if (blank.length) throw new Error(`every counted stage receipt must name its own gbrain commit and Rust addon digest; missing in ${blank.map(x => x.path).join(', ')}`);
   }
   const targets = [...new Set(ids.map(x => x.target).filter(Boolean))];
   if (targets.some(t => t !== TARGET)) throw new Error(`the Rust addon target is ${targets.join(', ')}; eval-gates covers ${TARGET} only`);

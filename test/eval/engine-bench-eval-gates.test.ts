@@ -133,6 +133,14 @@ describe('the file', () => {
     expect(() => buildEvalGates([input('answers', { ...answers(), ...identity({ addon: null }) })], opts)).toThrow(/Rust addon digest/);
     expect(() => buildEvalGates([input('answers', { ...answers(), schema: 'engine-bench.lme-recall/2', ...identity() })], opts)).toThrow(/reads engine-bench\.lme-recall\/3/);
   });
+  test('FINAL refuses a counted receipt that names no build of its own, such as an aggregate without one or a failed addon read', () => {
+    const a = input('answers', { ...answers(), ...identity() });
+    const bareAggregate = input('answers', { ...answers(), counted: true });
+    expect(() => buildEvalGates([bareAggregate, input('speed', identity())], opts)).toThrow(/must name its own gbrain commit and Rust addon digest; missing in answers\.json/);
+    const unread = input('speed', { counted: true, gbrain: { overlay: { commit: 'c0ffee', ref: 'v0.61.0.0' }, rust_addon: { sha256: null, read_error: 'ENOENT' } } });
+    expect(() => buildEvalGates([a, unread], opts)).toThrow(/missing in speed\.json/);
+    expect(buildEvalGates([bareAggregate, input('speed', identity())], { ...opts, provisional: true }).status).toBe('PROVISIONAL');
+  });
   test('the command writes a provisional file with each receipt\'s digest', () => {
     const dir = mkdtempSync(join(tmpdir(), 'eval-gates-'));
     const src = join(dir, 'answers.json');

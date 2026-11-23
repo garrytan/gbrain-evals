@@ -443,9 +443,10 @@ describe('sharding and NDJSON resume', () => {
   test('aggregate carries each shard attestation and refuses counted shards mixed with dev shards', () => {
     const base = { engine: 'pglite', question_type: 't', is_abs: false, num_sessions: 1, arms: {}, timing_ms: { open: 0, import: 0, search: 0, total: 0 }, run_config_hash: 'c' };
     const attestation = { preregistration: 'docs/p.md', preregistration_commit: 'abc', runner_commit: 'def', worktree_clean_for_preregistration: true, on_origin: true, attested_at: '2026-11-17T00:00:00.000Z' };
+    const gbrain = { version: '0.61.0.0', overlay: { commit: 'c0ffee', ref: 'v0.61.0.0' }, rust_addon: { sha256: 'addon-sha', target: 'linux-x64-glibc' } };
     const [a, b, dev] = [nd('counted-0.ndjson'), nd('counted-1.ndjson'), nd('dev.ndjson')];
-    writeFileSync(a, JSON.stringify({ preregistration_attestation: attestation, shard: { worker_id: 0, total_workers: 2 } }) + '\n' + JSON.stringify({ ...base, question_id: 'a' }) + '\n');
-    writeFileSync(b, JSON.stringify({ preregistration_attestation: attestation, shard: { worker_id: 1, total_workers: 2 } }) + '\n' + JSON.stringify({ ...base, question_id: 'b' }) + '\n');
+    writeFileSync(a, JSON.stringify({ preregistration_attestation: attestation, gbrain, shard: { worker_id: 0, total_workers: 2 } }) + '\n' + JSON.stringify({ ...base, question_id: 'a' }) + '\n');
+    writeFileSync(b, JSON.stringify({ preregistration_attestation: attestation, gbrain, shard: { worker_id: 1, total_workers: 2 } }) + '\n' + JSON.stringify({ ...base, question_id: 'b' }) + '\n');
     writeFileSync(dev, JSON.stringify({ ...base, question_id: 'c' }) + '\n');
     const counted = aggregateLmeRows([a, b]);
     expect(counted.counted).toBe(true);
@@ -453,6 +454,21 @@ describe('sharding and NDJSON resume', () => {
     expect(counted.preregistration_attestation?.map(x => x.ndjson)).toEqual([a, b]);
     expect(aggregateLmeRows([dev]).preregistration_attestation).toBeNull();
     expect(() => aggregateLmeRows([a, dev])).toThrow(/counted and dev shards are mixed/);
+  });
+
+  test('a counted aggregate carries the one gbrain build its shards recorded, and refuses shards from two builds or with none', () => {
+    const base = { engine: 'rust', question_type: 't', is_abs: false, num_sessions: 1, arms: {}, timing_ms: { open: 0, import: 0, search: 0, total: 0 }, run_config_hash: 'c' };
+    const attestation = { preregistration: 'docs/p.md', preregistration_commit: 'abc', runner_commit: 'def', worktree_clean_for_preregistration: true, on_origin: true, attested_at: '2026-11-17T00:00:00.000Z' };
+    const gbrain = (addon: string) => ({ version: '0.61.0.0', overlay: { commit: 'c0ffee', ref: 'v0.61.0.0' }, rust_addon: { sha256: addon, target: 'linux-x64-glibc' } });
+    const shard = (name: string, id: string, g: unknown) => {
+      const p = nd(name);
+      writeFileSync(p, JSON.stringify({ preregistration_attestation: attestation, ...(g ? { gbrain: g } : {}), shard: { worker_id: 0, total_workers: 1 } }) + '\n' + JSON.stringify({ ...base, question_id: id }) + '\n');
+      return p;
+    };
+    const [x, y, other, bare] = [shard('b-0.ndjson', 'a', gbrain('addon-sha')), shard('b-1.ndjson', 'b', gbrain('addon-sha')), shard('b-2.ndjson', 'c', gbrain('other')), shard('b-3.ndjson', 'd', null)];
+    expect(aggregateLmeRows([x, y]).gbrain).toEqual(gbrain('addon-sha'));
+    expect(() => aggregateLmeRows([x, other])).toThrow(/one gbrain build and Rust addon/);
+    expect(() => aggregateLmeRows([x, bare])).toThrow(/one gbrain build and Rust addon/);
   });
 });
 
