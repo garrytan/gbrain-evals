@@ -5,6 +5,8 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { gbrainFrames, recordRustRefusals, refusalSiteOf, rustRefusalSites, type EvalEngineKind } from '../../eval/runner/eval-engine.ts';
+import { buildEvalGates } from '../../eval/runner/engine-bench/eval-gates.ts';
+import { PAIRED_OPS } from '../../eval/runner/engine-bench/perf.ts';
 
 const ROW_IDS = ['cat13/ndcg5', 'cat13b/top1', 'cat10', 'cat12', 'cat7', 'brainbench/cats-1-2', 'brainbench/cat3', 'brainbench/cat4',
   'brainbench/type-accuracy', 'brainbench/cat24', 'memory-verb-conformance', 'cat22', 'cat19', 'cat27', 'cat23'];
@@ -38,7 +40,7 @@ describe('gate suites', () => {
 
   test('a ranked gate needs Rust at least both TypeScript values', () => {
     const top1 = (v: number) => ({ data: { scorecard: [{ name: 'gbrain', top1_hit_rate: v }] } });
-    const ok = judgeSuite(suite('cat13b/top1'), runs(k => receipt(k, top1(k === 'postgres' ? 0.9 : 0.93))), { counted: true });
+    const ok = judgeSuite(suite('cat13b/top1'), runs(k => receipt(k, { ...top1(k === 'postgres' ? 0.9 : 0.93), resolved_config: { embedding_transport: 'live openai:text-embedding-3-large' } })), { counted: true });
     expect(ok.verdict).toBe('PASS');
     expect(ok.counted).toBe(true);
     const lose = judgeSuite(suite('cat13b/top1'), runs(k => receipt(k, top1(k === 'rust' ? 0.9 : 0.93))), { counted: false });
@@ -248,6 +250,40 @@ describe('gate-suite runs', () => {
     const rustNone = judgeSuite(suite('cat27'), runs(k => receipt(k, k === 'rust' ? allErr : { n_total: 4, data: { aggregate: agg } })), { counted: false });
     expect(rustNone.verdict).toBe('FAIL');
     expect(rustNone.losses[0]).toMatchObject({ id: 'cat27:probes_scored' });
+  });
+
+  test('emit --counted refuses Cat 13 and Cat 13b receipts that ran on hash embeddings', () => {
+    const top1 = (transport?: string) => ({ data: { scorecard: [{ name: 'gbrain', top1_hit_rate: 0.9 }] }, ...(transport ? { resolved_config: { embedding_transport: transport } } : {}) });
+    const hash = 'stubbed deterministic hash-embed (__setEmbedTransportForTests)';
+    expect(() => judgeSuite(suite('cat13b/top1'), runs(k => receipt(k, top1(hash))), { counted: true })).toThrow(/cat13b\/top1: a counted file needs live embeddings, but pglite embedded with stubbed/);
+    expect(() => judgeSuite(suite('cat13b/top1'), runs(k => receipt(k, top1())), { counted: true })).toThrow(/pglite embedded with no recorded transport/);
+    const c13 = { n_total: 1, data: { per_query: { gbrain: [{ id: 'q1', text: 'a', ndcg_at_5: 1, ranked_pages: [] }] } }, resolved_config: { probes_generated: 1, embedding_transport: `${hash}, 1024d` } };
+    expect(() => judgeSuite(suite('cat13/ndcg5'), runs(k => receipt(k, c13)), { counted: true })).toThrow(/cat13\/ndcg5: a counted file needs live embeddings/);
+    expect(judgeSuite(suite('cat13b/top1'), runs(k => receipt(k, top1(hash))), { counted: false }).verdict).toBe('PASS');
+    expect(judgeSuite(suite('cat10'), runs(k => receipt(k, { data: { results: [{ ops_succeeded: 1, ops_attempted: 1 }] }, resolved_config: { embedding_transport: hash } })), { counted: true }).verdict).toBe('PASS');
+  });
+
+  test('a Rust run that fails without a receipt keeps the addon digest run required, so a FINAL eval-gates file counts the FAIL', () => {
+    const addon = { sha256: 'cd'.repeat(32), target: 'linux-x64-glibc' };
+    const tagged = { ...build('c0ffee12', null), overlay: { commit: 'c0ffee12', ref: 'v0.61.0.0', checkout_dirty: false } };
+    const r = runs(k => (k === 'rust' ? null : receipt(k, { data: { results: [{ ops_succeeded: 3, ops_attempted: 3 }] }, gbrain_under_test: tagged })));
+    Object.assign(r.rust, { hasLog: true, exit: { code: 1, signal: null, gbrain: '/w/gbrain@c0ffee12', rust_addon: addon } });
+    const file = judgeSuite(suite('cat10'), r, { counted: true });
+    expect(file.verdict).toBe('FAIL');
+    expect(file.gbrain?.rust_addon).toEqual(addon);
+    const opts = { provisional: false, evalsCommit: 'e1', engineFormatVersion: '3', generatedAt: '2026-11-28T00:00:00.000Z', ops: PAIRED_OPS, peelTag: () => 'c0ffee12' };
+    const gates = buildEvalGates([{ role: 'suite', path: 'cat10.json', json: file, sha256: 'x' }], opts);
+    expect(gates.status).toBe('FINAL');
+    expect(gates.rust_addon_sha256).toBe(addon.sha256);
+    expect(gates.gates.E1.verdict).toBe('FAIL');
+    expect(gates.gates.E1.rows.find(x => x.id === 'cat10')).toMatchObject({ verdict: 'FAIL' });
+    const reports = mkdtempSync(join(tmpdir(), 'gate-exit-addon-'));
+    try {
+      const dir = engineDir('adversarial', 'rust', reports);
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(join(dir, 'exit.json'), JSON.stringify({ code: 1, signal: null, gbrain: '/w/gbrain@c0ffee12', rust_addon: addon }));
+      expect(loadRun('adversarial', 'rust', reports).exit?.rust_addon).toEqual(addon);
+    } finally { rmSync(reports, { recursive: true, force: true }); }
   });
 
   test('a Rust receipt missing a measured value is FAIL, not NOT_RUN', () => {

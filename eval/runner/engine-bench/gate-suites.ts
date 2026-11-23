@@ -12,7 +12,8 @@
  * for rust, so the runner refuses any other addon file). The child environment drops every provider key, except that
  * `--paid` keeps them for the two suites that embed live (Cat 13 and Cat 13b), which then run under the budget ledger
  * with one embedding cache per suite: PGLite fills it (so it must come first in --engines) and the others read it only
- * (a miss on Postgres or Rust makes the suite NOT_RUN). Without `--paid` those two run on hash embeddings.
+ * (a miss on Postgres or Rust makes the suite NOT_RUN). Without `--paid` those two run on hash embeddings, which
+ * `emit --counted` refuses (it writes no file when any engine's receipt for either suite did not embed live).
  * Receipts land at eval/reports/<category>/engine-<kind>/receipt.json, logs and refusals beside them.
  *
  * `emit` reads those receipts and writes <out>/<suite>.json. Rules, as RUST_ENGINE.md (gbrain 09b9ac5c) states them,
@@ -37,8 +38,8 @@
 import { spawn } from 'node:child_process';
 import { copyFileSync, createWriteStream, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-import { EVAL_ENGINE_REFUSED_EXIT, EVAL_ENGINES, RUST_ADDON_SHA256_ENV, RUST_REFUSALS_FILE_ENV, type EvalEngineKind, type RustRefusalSite } from '../eval-engine.ts';
-import { gbrainSpecFrom } from '../gbrain-under-test.ts';
+import { EVAL_ENGINE_REFUSED_EXIT, EVAL_ENGINES, RUST_ADDON_SHA256_ENV, RUST_REFUSALS_FILE_ENV, rustAddonIdentity, type EvalEngineKind, type RustRefusalSite } from '../eval-engine.ts';
+import { gbrainSpecFrom, resolveGbrainUnderTest } from '../gbrain-under-test.ts';
 import { writeScrubbedJson } from '../receipt.ts';
 import { clusteredPairedDelta } from '../stats/paired.ts';
 import { runnerEnv } from './correctness.ts';
@@ -233,7 +234,7 @@ export function engineDir(category: string, kind: EvalEngineKind, reports = join
   return join(reports, category, `engine-${kind}`);
 }
 
-interface RunExit { code: number | null; signal: string | null; gbrain: string }
+interface RunExit { code: number | null; signal: string | null; gbrain: string; rust_addon?: { sha256: string; target: string | null } | null }
 interface EngineRun { kind: EvalEngineKind; receipt: Receipt | null; refused: string | null; refusalSites?: RustRefusalSite[]; logTail?: string; hasLog?: boolean; exit?: RunExit | null }
 
 export function loadRun(category: string, kind: EvalEngineKind, reports?: string): EngineRun {
@@ -258,7 +259,9 @@ export function loadRun(category: string, kind: EvalEngineKind, reports?: string
 function readExit(file: string): RunExit | null {
   try {
     const x = JSON.parse(readFileSync(file, 'utf8'));
-    return typeof x?.gbrain === 'string' && (x.code === null || typeof x.code === 'number') && (x.signal === null || typeof x.signal === 'string') ? x : null;
+    const addon = x?.rust_addon;
+    const addonOk = addon == null || (typeof addon.sha256 === 'string' && (addon.target === null || typeof addon.target === 'string'));
+    return typeof x?.gbrain === 'string' && (x.code === null || typeof x.code === 'number') && (x.signal === null || typeof x.signal === 'string') && addonOk ? x : null;
   } catch { return null; }
 }
 
@@ -352,6 +355,10 @@ export function judgeSuite(s: GateSuite, runs: Record<EvalEngineKind, EngineRun>
   const ran = EVAL_ENGINES.filter(k => completed(runs[k].receipt));
   const modes = ran.map(k => embeddingOf(runs[k].receipt!));
   if (new Set(modes).size > 1) return notRun(`the engines embedded differently (${ran.map((k, i) => `${k} ${modes[i]}`).join('; ')})`);
+  if (o.counted && s.embedsLive) {
+    const hashed = ran.filter(k => !String(runs[k].receipt!.resolved_config?.embedding_transport ?? '').startsWith('live '));
+    if (hashed.length) throw new Error(`${s.id}: a counted file needs live embeddings, but ${hashed.map(k => `${k} embedded with ${runs[k].receipt!.resolved_config?.embedding_transport ?? 'no recorded transport'}`).join('; ')}; rerun it under --paid`);
+  }
   const sitesLoss = (): Loss[] => {
     const refused = runs.rust.refusalSites ?? [];
     return refused.length ? [{ id: `${s.id}:refusal-sites`, reason: `The Rust run refused ${refused.reduce((n, x) => n + x.count, 0)} engine calls at: ${refused.map(siteText).join('; ')}` }] : [];
@@ -368,7 +375,7 @@ export function judgeSuite(s: GateSuite, runs: Record<EvalEngineKind, EngineRun>
     const losses = [{ id: s.id, reason: `Rust wrote no receipt: its runner failed (${exitText}) without one, where both TypeScript engines completed.${runs.rust.logTail ? ` Log tail: ${runs.rust.logTail}` : ''}` }, ...sitesLoss()];
     const reason = withNote(losses.map(l => l.reason).join(' | ').slice(0, 1600))!;
     return {
-      ...base, gbrain: { ...buildOf(runs.pglite.receipt!), rust_addon: null }, verdict: 'FAIL', reason,
+      ...base, gbrain: { ...buildOf(runs.pglite.receipt!), rust_addon: exit.rust_addon ?? null }, verdict: 'FAIL', reason,
       rows: [{ id: s.id, benchmark: s.benchmark, verdict: 'FAIL', measured, reason }, ...extraRowIds(s).map(id => ({ id, benchmark: id === STRICT(s) ? `${s.benchmark}, strict point comparison (secondary)` : s.beside!.benchmark, verdict: 'NOT_RUN' as const, measured: {}, reason }))],
       losses,
     };
@@ -523,6 +530,7 @@ async function run(argv: readonly string[]): Promise<void> {
   const pg = process.env.LIFECYCLE_PG_URL;
   if (engines.includes('postgres') && !pg) throw new Error('the postgres engine needs LIFECYCLE_PG_URL (a Postgres admin URL with pgvector)');
   if (paid) mkdirSync(cacheDir, { recursive: true });
+  const rustAddon = engines.includes('rust') ? { sha256: process.env[RUST_ADDON_SHA256_ENV]!.trim().toLowerCase(), target: rustAddonIdentity(resolveGbrainUnderTest(spec))?.target ?? null } : null;
   for (const s of selectSuites(argv)) {
     const jobs = [
       { label: s.id, category: s.category, script: s.script, live: paid && s.embedsLive === true, args: s.args, canonical: s.canonicalReceipt === true },
@@ -539,7 +547,7 @@ async function run(argv: readonly string[]): Promise<void> {
       if (job.canonical) rmSync(canonical, { force: true });
       const t0 = Date.now();
       const { code, signal, tail } = await runChild(args, env, join(dir, 'run.log'));
-      writeFileSync(join(dir, RUN_EXIT), `${JSON.stringify({ code, signal, gbrain: spec } satisfies RunExit)}\n`);
+      writeFileSync(join(dir, RUN_EXIT), `${JSON.stringify({ code, signal, gbrain: spec, ...(kind === 'rust' ? { rust_addon: rustAddon } : {}) } satisfies RunExit)}\n`);
       if (code === EVAL_ENGINE_REFUSED_EXIT) writeFileSync(join(dir, 'refused.txt'), `${tail.split('\n').filter(l => l.startsWith('REFUSED')).at(-1) ?? tail.slice(-500)}\n`);
       if (job.canonical) {
         if (existsSync(canonical)) copyFileSync(canonical, join(dir, 'receipt.json'));
@@ -552,10 +560,10 @@ async function run(argv: readonly string[]): Promise<void> {
 function emit(argv: readonly string[]): void {
   const out = flag(argv, '--out');
   if (!out) throw new Error('emit needs --out <dir>');
+  const load = (category: string) => Object.fromEntries(EVAL_ENGINES.map(k => [k, loadRun(category, k)])) as Record<EvalEngineKind, EngineRun>;
+  const judged = selectSuites(argv).map(s => ({ s, file: judgeSuite(s, load(s.category), { counted: argv.includes('--counted') }, s.beside ? load(s.beside.category) : undefined) }));
   mkdirSync(out, { recursive: true });
-  for (const s of selectSuites(argv)) {
-    const load = (category: string) => Object.fromEntries(EVAL_ENGINES.map(k => [k, loadRun(category, k)])) as Record<EvalEngineKind, EngineRun>;
-    const file = judgeSuite(s, load(s.category), { counted: argv.includes('--counted') }, s.beside ? load(s.beside.category) : undefined);
+  for (const { s, file } of judged) {
     const path = join(out, `${s.id.replace(/\//g, '__')}.json`);
     mkdirSync(dirname(path), { recursive: true });
     writeScrubbedJson(path, file);
