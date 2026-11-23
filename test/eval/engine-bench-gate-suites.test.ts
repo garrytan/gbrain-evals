@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { GATE_SUITE_SCHEMA, GATE_SUITES, amendmentLine, engineDir, judgeSuite, loadRun, type GateSuite } from '../../eval/runner/engine-bench/gate-suites.ts';
+import { GATE_SUITE_SCHEMA, GATE_SUITES, addonTarget, amendmentLine, engineDir, judgeSuite, loadRun, type GateSuite } from '../../eval/runner/engine-bench/gate-suites.ts';
 import { parseCat13Argv } from '../../eval/runner/cat13-conceptual.ts';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -284,6 +284,14 @@ describe('gate-suite runs', () => {
       writeFileSync(join(dir, 'exit.json'), JSON.stringify({ code: 1, signal: null, gbrain: '/w/gbrain@c0ffee12', rust_addon: addon }));
       expect(loadRun('adversarial', 'rust', reports).exit?.rust_addon).toEqual(addon);
     } finally { rmSync(reports, { recursive: true, force: true }); }
+  });
+
+  test('a Rust addon that fails to load still records the target its file name carries', () => {
+    const path = '/w/rc/addon/gbrain_engine.linux-x64-glibc.node';
+    expect(addonTarget(path, undefined)).toBe('linux-x64-glibc');
+    expect(addonTarget(path, null)).toBe('linux-x64-glibc');
+    expect(addonTarget(path, 'darwin-arm64')).toBe('darwin-arm64');
+    expect(addonTarget('/w/rc/addon/engine.node', undefined)).toBeNull();
   });
 
   test('a Rust receipt missing a measured value is FAIL, not NOT_RUN', () => {

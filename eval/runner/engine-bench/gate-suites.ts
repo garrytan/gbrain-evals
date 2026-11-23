@@ -37,7 +37,7 @@
  */
 import { spawn } from 'node:child_process';
 import { copyFileSync, createWriteStream, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 import { EVAL_ENGINE_REFUSED_EXIT, EVAL_ENGINES, RUST_ADDON_SHA256_ENV, RUST_REFUSALS_FILE_ENV, rustAddonIdentity, type EvalEngineKind, type RustRefusalSite } from '../eval-engine.ts';
 import { gbrainSpecFrom, resolveGbrainUnderTest } from '../gbrain-under-test.ts';
 import { writeScrubbedJson } from '../receipt.ts';
@@ -514,6 +514,11 @@ function runChild(args: string[], env: Record<string, string>, logPath: string):
   });
 }
 
+/** The addon's target: what its loader reports, else the target its file name carries (gbrain_engine.<target>.node), since a crashing addon may not load. */
+export function addonTarget(path: string, loaded: string | null | undefined): string | null {
+  return loaded ?? /^gbrain_engine\.([a-z0-9]+-[a-z0-9_]+(?:-[a-z0-9]+)?)\.node$/.exec(basename(path))?.[1] ?? null;
+}
+
 async function run(argv: readonly string[]): Promise<void> {
   const spec = gbrainSpecFrom(argv);
   if (!spec || !/^[0-9a-f]{7,40}$/.test(spec.split('@').at(-1) ?? '')) throw new Error('run needs --gbrain <checkout>@<sha> with a 7 to 40 character commit sha (not a tag or branch), the one build every engine and suite measures');
@@ -530,7 +535,7 @@ async function run(argv: readonly string[]): Promise<void> {
   const pg = process.env.LIFECYCLE_PG_URL;
   if (engines.includes('postgres') && !pg) throw new Error('the postgres engine needs LIFECYCLE_PG_URL (a Postgres admin URL with pgvector)');
   if (paid) mkdirSync(cacheDir, { recursive: true });
-  const rustAddon = engines.includes('rust') ? { sha256: process.env[RUST_ADDON_SHA256_ENV]!.trim().toLowerCase(), target: rustAddonIdentity(resolveGbrainUnderTest(spec))?.target ?? null } : null;
+  const rustAddon = engines.includes('rust') ? { sha256: process.env[RUST_ADDON_SHA256_ENV]!.trim().toLowerCase(), target: addonTarget(process.env.GBRAIN_RUST_ENGINE_ADDON!, rustAddonIdentity(resolveGbrainUnderTest(spec))?.target) } : null;
   for (const s of selectSuites(argv)) {
     const jobs = [
       { label: s.id, category: s.category, script: s.script, live: paid && s.embedsLive === true, args: s.args, canonical: s.canonicalReceipt === true },

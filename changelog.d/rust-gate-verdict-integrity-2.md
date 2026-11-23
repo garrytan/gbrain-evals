@@ -8,4 +8,4 @@
 - A Rust cell killed by SIGSEGV, SIGABRT or SIGBUS, with a run log at the TypeScript engines' build, is FAIL, because those are crashes of the engine under test. SIGKILL and SIGTERM (a harness timeout or out-of-memory kill) still read NOT_RUN.
 - An unreadable or old-format `exit.json` counts as no exit record for that cell instead of stopping `emit` for every suite.
 - `gate-suites.ts emit --counted` refuses Cat 13 and Cat 13b receipts that ran on hash embeddings, and writes no file, so a counted E1 never reads a hash-embedding run.
-- A Rust run that fails without a receipt now records the addon digest `run` required, where its suite file had `rust_addon: null`, so a FINAL `eval-gates.json` counts that FAIL under E1 to E3 instead of refusing the file.
+- A Rust run that fails without a receipt now records the addon digest `run` required and the addon's target (from its loader, or from its file name when it doesn't load), where its suite file had `rust_addon: null`, so a FINAL `eval-gates.json` counts that FAIL under E1 to E3 instead of refusing the file.
