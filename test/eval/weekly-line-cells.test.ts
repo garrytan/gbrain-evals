@@ -1,20 +1,20 @@
 /**
  * The weekly outcome line's cell set (eval/runner/q1/cells/weekly-line.ts; docs/benchmarks/2026-11-23-weekly-outcome-line-
- * preregistration.md, harness item 3) and its launch check (eval/runner/bg1/launch.ts weeklyLineLaunchProblems): the four
- * rows on one week's Set W worlds with both readers and their judges, particle-1's re-reads, the system-internal models,
- * the models list against the registry entry, and one refusal per launch guard. Keyless and offline: nothing here builds a
- * provider client, and ripgrep is a stub.
+ * preregistration.md, harness item 3) and its launch check (eval/runner/weekly-line/launch.ts weeklyLineLaunchProblems):
+ * the four rows on one week's Set W worlds with both readers and their judges, particle-1's re-reads, the system-internal
+ * models, the models list against the registry entry, and one refusal per launch guard. Keyless and offline: nothing here
+ * builds a provider client, and ripgrep is a stub.
  */
 import { describe, expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { requireWeeklyLineLaunch, weeklyLineLaunchProblems, weeklyLineRegistryModels } from '../../eval/runner/bg1/launch.ts';
+import { requireWeeklyLineLaunch, weeklyLineLaunchProblems, weeklyLineModelProblems, weeklyLineRegistryModels } from '../../eval/runner/weekly-line/launch.ts';
 import { OPUS, PARTICLE } from '../../eval/runner/q1/cells/bg1.ts';
 import { BG1C_GBRAIN_LAUNCH, BG1C_RATES } from '../../eval/runner/q1/cells/bg1c.ts';
 import { ALL_SETS, definitionProblems, PER_READER_JUDGE_SETTINGS, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
 import { F6_ARMS } from '../../eval/runner/q1/cells/f6.ts';
 import {
-  generateWeeklyLineCells, WEEKLY_LINE_MODELS, WEEKLY_LINE_PARTICLE_MAX_TOKENS, WEEKLY_LINE_ROWS, weeklyLineModelProblems, weeklyLineRereadPlans,
+  generateWeeklyLineCells, WEEKLY_LINE_MODELS, WEEKLY_LINE_PARTICLE_MAX_TOKENS, WEEKLY_LINE_ROWS, weeklyLineRereadPlans,
   type RegistryModel, type WeeklyLineInput,
 } from '../../eval/runner/q1/cells/weekly-line.ts';
 import { WL_SYSTEMS } from '../../eval/runner/weekly-line/design.ts';

@@ -30,7 +30,6 @@
  */
 import { bgwBatchIds, bgwSlotOf, BGW_WORLDS_PER_WEEK } from '../../memory-qa/bg1-names.ts';
 import { bgwWeekWorldEnd } from '../../memory-qa/corpus.ts';
-import { bareModelId, suspendedModelProblem } from '../../model-defaults.ts';
 import { COMPAT_PROVIDERS } from '../../providers/openai-compatible.ts';
 import { FILE_AGENT_MAX_TURNS } from '../../systems/file-agent.ts';
 import {
@@ -59,6 +58,9 @@ export const WEEKLY_LINE_ROWS = {
   'extract-first': { system: 'ext-extract-first', configuration: 'common' },
   'memory-bank': { system: 'ext-memory-bank', configuration: 'recipe' },
 } as const;
+
+/** One model of a registry entry's `models` list. */
+export interface RegistryModel { model: string; role: string; system?: string }
 
 /**
  * Every model the weekly cells call, with its role, as the registry entry lists them (WEEKLY_LINE_REGISTRY `models`, less
@@ -200,22 +202,4 @@ export function weeklyLineRereadPlans(cells: readonly CellDefinition[]): WeeklyL
       judges: [WEEKLY_LINE_JUDGE_BY_READER[PARTICLE]], worlds: [...(c.week?.worlds ?? [])], effort: WEEKLY_LINE_EFFORT, max_tokens: WEEKLY_LINE_PARTICLE_MAX_TOKENS,
       estimate: estimateOf({ readers: answers * BG1C_RATES.particle_read_usd_per_answer, frontier_judges: answers * BG1C_RATES.particle_judge_usd_per_answer }) };
   }));
-}
-
-/** One model of a registry entry's `models` list. */
-export interface RegistryModel { model: string; role: string; system?: string }
-
-/**
- * Why the cell set's models and the registry entry's disagree, compared by bare model id and role, with the registry's
- * simulators (the mint's) left out, and any suspended model in a role other than system-internal on either side. Empty
- * when they agree.
- */
-export function weeklyLineModelProblems(registry: readonly RegistryModel[], models: readonly RegistryModel[] = WEEKLY_LINE_MODELS): string[] {
-  const key = (m: RegistryModel) => `${bareModelId(m.model)} as ${m.role}`;
-  const ours = new Set(models.map(key)), theirs = new Set(registry.filter(m => m.role !== 'simulator').map(key));
-  return [
-    ...[...ours].filter(k => !theirs.has(k)).map(k => `the cell set calls ${k}, which the registry entry (${WEEKLY_LINE_REGISTRY}) doesn't list`),
-    ...[...theirs].filter(k => !ours.has(k)).map(k => `the registry entry lists ${k}, which the cell set doesn't call`),
-    ...[...models, ...registry].filter(m => m.role !== 'system-internal').flatMap(m => suspendedModelProblem(m.model) ?? []),
-  ];
 }
