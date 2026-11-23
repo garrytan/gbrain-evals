@@ -648,7 +648,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
   const maxAttempts = opts.maxAttempts ?? DEFAULT_MAX_ATTEMPTS;
   const arms = def.arms.filter(a => !opts.arms || opts.arms.includes(a.id));
   if (!arms.length) throw refuse({ code: 'USAGE', message: `--arms ${opts.arms?.join(',')} names no arm of ${def.id}`, why: 'a run needs at least one arm', fix: { next: 'run', argv: [...FRONT, 'show', '--cell', def.id] } });
-  if (opts.frontier === false && def.descriptive_view === false) throw refuse({ code: 'USAGE', message: `--no-frontier on ${def.id} would leave every answer ungraded: the cell has no canonical judge (descriptive_view false), so its per-reader judge is the only grade`, why: 'a paid run must not buy answers it cannot grade', fix: { next: 'run', argv: [...FRONT, 'run', '--cell', def.id, '--out', opts.out] } });
+  if (opts.frontier === false && def.descriptive_view === false) throw refuse({ code: 'USAGE', message: `--no-frontier on ${def.id} would leave every answer ungraded: the cell has no canonical judge (descriptive_view false), so its per-reader judge is the only grade`, why: 'a paid run must not buy answers it cannot grade', fix: { next: 'ask_user', user_message: 'rerun your original command without --no-frontier, keeping every other flag' } });
   const instrument = instrumentFor(def.canonical_instrument);
   refuseCompatJudges(def.id, [...(def.descriptive_view === false ? [] : [instrument.canonical_judge]), ...(opts.frontier === false ? [] : arms.flatMap(a => a.frontier?.judges ?? []))]);
 

@@ -342,7 +342,11 @@ describe('no canonical instrument judge in the SOTA loop', () => {
   test('a run without the per-reader judge, or a replicated reader, is refused, since nothing else would grade those answers', async () => {
     const lme = cellOf(LME_CELL);
     const out = mkdtempSync(join(tmpdir(), 'sota-no-frontier-'));
-    try { await expect(runCell(lme, { out, frontier: false })).rejects.toThrow(/--no-frontier .* would leave every answer ungraded/); }
+    try {
+      const e = await runCell(lme, { out, frontier: false }).then(() => null, (x: ScoreboardError) => x);
+      expect(e?.message).toMatch(/--no-frontier .* would leave every answer ungraded/);
+      expect(e?.op.fix).toEqual({ next: 'ask_user', user_message: 'rerun your original command without --no-frontier, keeping every other flag' });
+    }
     finally { rmSync(out, { recursive: true, force: true }); }
     const replicated = { ...lme, arms: lme.arms.map((a, i) => i === 0 ? { ...a, reader_replicates: { [a.readers[0]!]: 2 } } : a) };
     expect(definitionProblems(replicated, kinds).join(' ')).toContain('one replicate each');
