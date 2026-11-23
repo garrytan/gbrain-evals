@@ -221,9 +221,10 @@ of answers bought once, in a paid run of its own, and never calls a model.
   the answerability files, which A4's BEAM answers and the LongMemEval export froze on it. Oracle and leader answers are
   judged by the nightly's own QA judge for that reader (GPT-6.2 Astra for Claude and particle-1, Claude Opus 5.5 for
   GPT), so a cache row and the nightly row it explains share a judge. `leader.ts import` reuses the dev test's own
-  grep-agent answers where that judge graded them. The 2026-11-12 dev test's were graded by other judges, so import
-  leaves each of them unknown, naming the judge it had, and the leader run buys the whole BEAM-1M pool. `plan` on
-  either tool lists the rows still missing.
+  grep-agent answers where that judge graded them. The 2026-11-12 dev test's scored Claude answers were graded by
+  GPT-6.1 Sol, so import leaves each unknown and names that judge; its GPT reader was GPT-6.1 Sol, which the nightly no
+  longer uses, so those answers are skipped. Only its answers that ran out of turns or context import, as failures, and
+  the leader run buys the rest of the BEAM-1M pool. `plan` on either tool lists the rows still missing.
 - **Attribution.** `bun eval/runner/failure-causes/cli.ts attribute --labels <week's labels> --cache <cache> --out
   attribution.json` puts each failed row of a QA suite into one bucket, the first that applies: *harness* (a provider
   or harness error, or an answer cut off at its output limit), *unsupported*, *reader limited* (the oracle fails it
@@ -388,9 +389,9 @@ Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, whic
 
 The oracle's `plan` listed GPT-6.1 Sol, a reader the nightly no longer uses, so it never asked for the GPT-6.2 Sol
 oracle rows the nightly's GPT rows are compared with. It now lists the nightly's readers, and keeps GPT-6.1 Sol only for
-the frozen answerability files. The leader cache no longer counts on the 2026-11-12 dev test's grep-agent answers:
-their judges differ from the leader judge, so `leader.ts import` names the judge each one had and the leader run buys
-the whole BEAM-1M pool.
+the frozen answerability files, and the oracle and leader paid windows on the VM buy GPT-6.2 Sol rows. The leader cache no
+longer counts on the 2026-11-12 dev test's grep-agent answers: their judge differs from the leader judge, so
+`leader.ts import` names the judge each scored one had and the leader run buys the rest of the BEAM-1M pool.
 
 ### 2026-11-23: SOTA cache answers share the nightly's QA judge, and leader re-buys are priced from the cell estimate
 

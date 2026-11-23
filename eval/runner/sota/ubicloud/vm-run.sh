@@ -13,7 +13,7 @@ window=${1:?window}; cap=${2:?cap in dollars}
 S=$HOME/work/$window
 L=$S/ledger.sqlite C=$S/cache O=$S/out
 mkdir -p "$C" "$O"
-OPUS=anthropic:claude-opus-5-5 SOL=openai:gpt-6.1-sol PARTICLE=particle:particle-1
+OPUS=anthropic:claude-opus-5-5 SOL=openai:gpt-6.2-sol PARTICLE=particle:particle-1
 GREP=sota-dev.baseline-file-agent.baseline GBRAIN=sota-dev.gbrain-defaults.agent-tools
 rc=0
 step() { echo "vm-run: $*"; "$@" || { echo "vm-run: FAILED ($?): $*"; rc=1; }; }
@@ -41,7 +41,7 @@ case $window in
   oracle-dev)
     step bun eval/runner/sota/oracle.ts import-a4 --cache "$C"
     step bun eval/runner/sota/oracle.ts plan --cache "$C"
-    for pair in "beam-1m $OPUS" "lme-s $OPUS" "lme-s $SOL"; do
+    for pair in "beam-1m $OPUS" "beam-1m $SOL" "lme-s $OPUS" "lme-s $SOL"; do
       set -- $pair; f=$(plan_file oracle "$1" "$2")
       [ -s "$f" ] && step bun eval/runner/sota/oracle.ts run --benchmark "$1" --reader "$2" --items "$f" --cache "$C" --work "$O/oracle" "${P[@]}"
     done ;;

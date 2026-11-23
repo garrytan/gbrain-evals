@@ -199,6 +199,16 @@ describe('vm-run.sh, on this machine with no keys and no dataset', () => {
     expect(existsSync(join(home, 'work/rehearse/ledger.sqlite'))).toBe(false);
   }, 60_000);
 
+  test('the oracle and leader windows buy the nightly\'s GPT-6.2 Sol rows on both benchmarks beside Opus, from the plan files plan writes', () => {
+    const oracle = vmRun(join(dir, 'vm-oracle'), 'oracle-dev').stdout;
+    for (const [b, r] of [['beam-1m', 'anthropic:claude-opus-5-5'], ['beam-1m', 'openai:gpt-6.2-sol'], ['lme-s', 'anthropic:claude-opus-5-5'], ['lme-s', 'openai:gpt-6.2-sol']])
+      expect(oracle).toContain(`vm-run: bun eval/runner/sota/oracle.ts run --benchmark ${b} --reader ${r} --items `);
+    expect(oracle).not.toContain('--reader openai:gpt-6.1-sol');
+    const leader = vmRun(join(dir, 'vm-leader'), 'leader-cache').stdout;
+    for (const [b, s] of [['lme-s', 'whole-history'], ['beam-1m', 'grep-agent']]) for (const r of ['anthropic:claude-opus-5-5', 'openai:gpt-6.2-sol'])
+      expect(leader).toContain(`vm-run: bun eval/runner/sota/leader.ts run --benchmark ${b} --system ${s} --reader ${r} --items `);
+  }, 300_000);
+
   test('a paid window opens one budget run under the window cap, reports each failed step and goes on, and a relaunch reuses the open run', () => {
     const home = join(dir, 'vm-particle');
     const first = vmRun(home, 'particle');

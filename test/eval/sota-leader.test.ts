@@ -140,13 +140,14 @@ describe('leaderSpec', () => {
     expect(leaderRows(none, LME_CELL).unknown).toEqual([{ item: L[0], reader: OPUS, outcome: 'no frontier judgment' }]);
   });
 
-  test('the 2026-11-12 dev test\'s grep-agent rows import none: its Claude answers name q1\'s judge, and its gpt-6.1-sol reader is not a nightly reader', () => {
+  test('the 2026-11-12 dev test\'s grep-agent rows: scored Claude answers name q1\'s judge, its gpt-6.1-sol reader is skipped, and only an agent out of turns imports', () => {
     const out = fresh('dev-old');
-    const [a, b] = SOTA_DEV_IDS as [string, string];
-    publish(out, cellOf(DEV_GREP), 'whole-agent', [{ item: a, reader: OPUS, judge: CLAUDE_ROW_JUDGE }, { item: b, reader: OPUS, judge: CLAUDE_ROW_JUDGE }, { item: a, reader: 'openai:gpt-6.1-sol', judge: OPUS }]);
+    const [a, b, c, d] = SOTA_DEV_IDS as [string, string, string, string];
+    publish(out, cellOf(DEV_GREP), 'whole-agent', [{ item: a, reader: OPUS, judge: CLAUDE_ROW_JUDGE }, { item: b, reader: OPUS, judge: CLAUDE_ROW_JUDGE },
+      { item: c, reader: OPUS, outcome: 'turn_cap', text: '', judge: CLAUDE_ROW_JUDGE }, { item: d, reader: OPUS, judge: CLAUDE_ROW_JUDGE, score: null }, { item: a, reader: 'openai:gpt-6.1-sol', judge: OPUS }]);
     const { rows, unknown, skipped } = leaderRows(out, DEV_GREP);
-    expect([rows, skipped]).toEqual([[], 1]);
-    expect(unknown).toEqual([a, b].map(item => ({ item, reader: OPUS, outcome: `judged by ${CLAUDE_ROW_JUDGE}, not the leader judge ${NIGHTLY_CLAUDE_JUDGE}` })));
+    expect([rows.map(r => [r.item, r.reader, r.score, r.finish_reason]), skipped]).toEqual([[[c, OPUS, 0, 'turn_cap']], 1]);
+    expect(unknown).toEqual([...[a, b].map(item => ({ item, reader: OPUS, outcome: `judged by ${CLAUDE_ROW_JUDGE}, not the leader judge ${NIGHTLY_CLAUDE_JUDGE}` })), { item: d, reader: OPUS, outcome: 'no frontier judgment' }]);
   });
 });
 
