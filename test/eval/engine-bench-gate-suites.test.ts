@@ -47,9 +47,29 @@ describe('gate suites', () => {
   });
 
   test('E3 counts must be equal and points within 0.5', () => {
-    const c19 = (score: number, errors: unknown[] = []) => ({ n_total: 5, n_scored: 5, errors, data: { achieved: { brain_score: score } } });
+    const c19 = (score: number, errors: unknown[] = [], g3 = 1) => ({ n_total: 5, n_scored: 5, errors, data: { achieved: { brain_score: score }, gates: { g1: 1, g2: 1, g3, g4: 1, g5: 1 } } });
     expect(judgeSuite(suite('cat19'), runs(k => receipt(k, c19(k === 'rust' ? 85.4 : 85))), { counted: false }).verdict).toBe('PASS');
-    expect(judgeSuite(suite('cat19'), runs(k => receipt(k, k === 'rust' ? c19(50, [{ probe_id: 'embed' }]) : c19(85))), { counted: false }).verdict).toBe('FAIL');
+    expect(judgeSuite(suite('cat19'), runs(k => receipt(k, k === 'rust' ? c19(50, [{ probe_id: 'embed' }], 0) : c19(85))), { counted: false }).verdict).toBe('FAIL');
+  });
+
+  test('Cat 19 counts a gate scored 0 without an error as failed, and a receipt without gate scores is NOT_RUN', () => {
+    const c19 = (g3: number) => ({ n_total: 5, n_scored: 5, data: { achieved: { brain_score: 85 }, gates: { g1: 1, g2: 1, g3, g4: 1, g5: 1 } } });
+    const r = judgeSuite(suite('cat19'), runs(k => receipt(k, c19(k === 'rust' ? 0 : 1))), { counted: false });
+    expect(r.verdict).toBe('FAIL');
+    expect(r.losses[0]).toMatchObject({ id: 'cat19:gates_passed:vs-pglite', reason: 'Rust 4 vs pglite 5: counts differ' });
+    const old = judgeSuite(suite('cat19'), runs(k => receipt(k, { n_total: 5, n_scored: 5, data: { achieved: { brain_score: 85 } } })), { counted: false });
+    expect(old).toMatchObject({ verdict: 'NOT_RUN', reason: 'the pglite receipt has no gates_passed' });
+  });
+
+  test('Cat 27 fails when Rust errors on a probe the TypeScript engines scored', () => {
+    const agg = { mean_ndcg10_with_signals: 0.5, top1_hit_rate_with_signals: 0.25, n_probes: 4 };
+    const ok = judgeSuite(suite('cat27'), runs(k => receipt(k, { n_total: 4, data: { aggregate: agg } })), { counted: false });
+    expect(ok.verdict).toBe('PASS');
+    const r = judgeSuite(suite('cat27'), runs(k => receipt(k, k === 'rust'
+      ? { n_total: 4, errors: [{ probe_id: 'p4', origin: 'sut', message: 'engine_capability_missing' }], data: { aggregate: { ...agg, n_probes: 3, top1_hit_rate_with_signals: 1 / 3 } } }
+      : { n_total: 4, data: { aggregate: agg } })), { counted: false });
+    expect(r.verdict).toBe('FAIL');
+    expect(r.losses.map(l => l.id)).toEqual(['cat27:probes_scored:vs-pglite', 'cat27:errors:vs-pglite', 'cat27:probes_scored:vs-postgres', 'cat27:errors:vs-postgres']);
   });
 
   test('Cat 7 is reported: it passes when it ran, and lists every metric Rust loses', () => {
@@ -75,7 +95,7 @@ describe('gate suites', () => {
     const q = (id: string, ndcg5: number, pages: string[]) => ({ id, ndcg5, ranked_pages: pages.map((page_id, i) => ({ page_id, rank: i + 1 })) });
     const ts = Array.from({ length: 40 }, (_, i) => q(`c${i}`, 0.6, ['a', 'b', 'c', 'd', 'e']));
     const flipped = ts.map((x, i) => (i < 5 ? q(x.id, 0.55, ['b', 'a', 'c', 'd', 'e']) : x));
-    const c13 = (per: any[]) => ({ data: { scorecard: [{ name: 'gbrain', ndcg5: per.reduce((s, x) => s + x.ndcg5, 0) / per.length }], per_query: { gbrain: per } } });
+    const c13 = (per: any[]) => ({ n_total: per.length, data: { scorecard: [{ name: 'gbrain', ndcg5: per.reduce((s, x) => s + x.ndcg5, 0) / per.length }], per_query: { gbrain: per } } });
     const tied = judgeSuite(suite('cat13/ndcg5'), runs(k => receipt(k, c13(k === 'rust' ? flipped : ts))), { counted: false });
     expect(tied.verdict).toBe('PASS');
     expect(tied.reason).toBe('Reported, not gating, for Dec 1 (plan D24).');
@@ -165,11 +185,54 @@ describe('gate-suite runs', () => {
   test('a Rust runner that exits without a receipt where both TypeScript engines completed is FAIL with its refused call sites', () => {
     const conf = { data: { summary: { cases_passed: 24, cases_total: 24 } } };
     const sites = [{ member: 'executeRaw', capability: 'raw_sql', site: 'core/x.ts:1', caller: null, count: 1 }];
-    const r = judgeSuite(suite('cat13/ndcg5'), runs(k => (k === 'rust' ? null : receipt(k, conf)), {}, sites), { counted: false });
+    const failed = runs(k => (k === 'rust' ? null : receipt(k, conf)), {}, sites);
+    Object.assign(failed.rust, { hasLog: true, exit: { code: 1, signal: null, gbrain: '/w/gbrain@b66e4077' } });
+    const r = judgeSuite(suite('cat13/ndcg5'), failed, { counted: false });
     expect(r.verdict).toBe('FAIL');
+    expect(r.losses[0].reason).toContain('its runner failed (exit 1)');
     expect(r.rows.map(x => [x.id, x.verdict])).toEqual([['cat13/ndcg5', 'FAIL'], ['cat13/ndcg5:strict', 'NOT_RUN']]);
     expect(r.losses.map(l => l.id)).toEqual(['cat13/ndcg5', 'cat13/ndcg5:refusal-sites']);
     expect(r.reason?.startsWith('Reported, not gating, for Dec 1 (plan D24). Rust wrote no receipt')).toBe(true);
+  });
+
+  test('a Rust cell with no receipt is NOT_RUN unless it failed with a numeric exit code, a run.log and the TypeScript engines\' build', () => {
+    const conf = { data: { summary: { cases_passed: 24, cases_total: 24 } } };
+    const s = suite('memory-verb-conformance');
+    const judge = (rust: Record<string, unknown>, commit = (k: EvalEngineKind) => 'b66e4077') => {
+      const r = runs(k => (k === 'rust' ? null : receipt(k, conf, commit(k))));
+      Object.assign(r.rust, rust);
+      return judgeSuite(s, r, { counted: false });
+    };
+    const exit = (code: number | null, signal: string | null = null, gbrain = '/w/gbrain@b66e4077') => ({ code, signal, gbrain });
+    expect(judge({ hasLog: true, exit: exit(1) }).verdict).toBe('FAIL');
+    expect(judge({ hasLog: false, exit: null })).toMatchObject({ verdict: 'NOT_RUN', reason: 'Rust wrote no receipt and has no failed run on record (no exit record, no run.log)' });
+    expect(judge({ hasLog: true, exit: exit(null, 'SIGKILL') })).toMatchObject({ verdict: 'NOT_RUN', reason: 'Rust wrote no receipt and has no failed run on record (exit none by SIGKILL)' });
+    expect(judge({ hasLog: true, exit: exit(0) }).verdict).toBe('NOT_RUN');
+    expect(judge({ hasLog: false, exit: exit(1) }).verdict).toBe('NOT_RUN');
+    expect(judge({ hasLog: true, exit: exit(1, null, '/w/gbrain@c0ffee12') }).reason).toBe("Rust's run named gbrain /w/gbrain@c0ffee12, not the TypeScript engines' build b66e4077");
+    expect(judge({ hasLog: true, exit: exit(1) }, k => (k === 'postgres' ? 'other' : 'b66e4077')).reason).toBe('the TypeScript engines ran different or unnamed gbrain builds (b66e4077, other)');
+  });
+
+  test('receipts that embedded differently, or Cat 13 runs on different or partial query sets, are NOT_RUN', () => {
+    const top1 = (transport: string) => ({ resolved_config: { embedding_transport: transport }, data: { scorecard: [{ name: 'gbrain', top1_hit_rate: 0.93 }] } });
+    const mixed = judgeSuite(suite('cat13b/top1'), runs(k => receipt(k, top1(k === 'rust' ? 'live openai:text-embedding-3-large' : 'stubbed deterministic hash-embed'))), { counted: true });
+    expect(mixed.verdict).toBe('NOT_RUN');
+    expect(mixed.reason).toStartWith('the engines embedded differently (pglite ');
+    const q = (id: string) => ({ id, ndcg5: 0.6, ranked_pages: ['a', 'b', 'c', 'd', 'e'].map((page_id, i) => ({ page_id, rank: i + 1 })) });
+    const c13 = (ids: string[], n = ids.length) => ({ n_total: n, resolved_config: { probes_generated: 40 }, data: { scorecard: [{ name: 'gbrain', ndcg5: 0.6 }], per_query: { gbrain: ids.map(q) } } });
+    const all = Array.from({ length: 40 }, (_, i) => `c${i}`);
+    expect(judgeSuite(suite('cat13/ndcg5'), runs(k => receipt(k, c13(all))), { counted: false }).verdict).toBe('PASS');
+    const other = judgeSuite(suite('cat13/ndcg5'), runs(k => receipt(k, c13(k === 'rust' ? [...all.slice(1), 'c99'] : all))), { counted: false });
+    expect(other).toMatchObject({ verdict: 'NOT_RUN', reason: 'Reported, not gating, for Dec 1 (plan D24). the engines scored different or partial ndcg5 query sets (pglite 40 of 40, postgres 40 of 40, rust 40 of 40)' });
+    const partial = judgeSuite(suite('cat13/ndcg5'), runs(k => receipt(k, c13(all.slice(0, 30)))), { counted: false });
+    expect(partial.verdict).toBe('NOT_RUN');
+  });
+
+  test('a paid run refuses an engine order where PGLite does not fill the embedding cache first', () => {
+    const p = Bun.spawnSync([process.execPath, 'eval/runner/engine-bench/gate-suites.ts', 'run', '--gbrain', '/nowhere@b66e4077', '--paid', '--budget-run-id', 'r1', '--budget-usd', '1',
+      '--embed-cache-dir', join(tmpdir(), 'gate-suites-order'), '--engines', 'postgres,pglite', '--suites', 'cat13b/top1'], { env: { PATH: process.env.PATH ?? '' } });
+    expect(p.exitCode).toBe(1);
+    expect(p.stderr.toString()).toContain('--paid needs pglite first in --engines');
   });
 });
 
