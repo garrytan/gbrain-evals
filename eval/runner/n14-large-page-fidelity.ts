@@ -55,8 +55,8 @@
  * --engine (which may repeat it but not contradict it). The receipt then adds `engine` and `not_applicable`. On rust,
  * which refuses raw SQL, each child opens the engine through openEvalEngine and every check in N14_SQL_CHECKS is
  * not_applicable (neither pass nor fail): the verdict is the safety contracts alone, and the quality and floor rules drop
- * out (the append-cost rule reads stored chunks with SQL). Keyword recall maps hits to stored chunks through the engine's
- * getChunkPage, so it is measured and reported on every engine. An unavailable engine exits 69 with no receipt. Unset, nothing changes.
+ * out (the append-cost rule reads stored chunks with SQL). Keyword recall maps hits to stored chunks by id through the engine's
+ * chunk reads, so it is measured and reported on every engine. An unavailable engine exits 69 with no receipt. Unset, nothing changes.
  */
 import { SQL } from 'bun';
 import { spawn } from 'node:child_process';
@@ -120,7 +120,7 @@ export function frameBytes(result: unknown): number {
 export interface SearchHit {
   slug: string;
   chunk_id: number | null;
-  /** The stored passage the hit points at (gbrain: the engine's getChunkPage row at the hit's chunk_index, matched by chunk_id). */
+  /** The stored passage the hit points at, by chunk_id through the engine (getChunkPage at the hit's chunk_index, else the page's getChunks). */
   passage: string;
   /** The text the agent actually receives in the result row. */
   delivered: string;
@@ -933,10 +933,18 @@ export class GbrainAdapter implements N14Adapter {
 
   async search(query: string): Promise<SearchHit[]> {
     const rows = (await this.call('search', { query, limit: TOP_K }) as Array<{ slug: string; chunk_id?: number | null; chunk_index?: number | null; chunk_text?: string }>).slice(0, TOP_K);
+    const pages = new Map<string, Promise<Map<number, string>>>();
+    const pageChunks = (slug: string) => {
+      if (!pages.has(slug)) pages.set(slug, this.#engine.getChunks(slug, { includeUnsealed: true }).then(cs => new Map(cs.map(c => [Number(c.id), c.chunk_text]))));
+      return pages.get(slug)!;
+    };
     const passages = await Promise.all(rows.map(async r => {
-      if (typeof r.chunk_id !== 'number' || typeof r.chunk_index !== 'number') return '';
-      const { chunks } = await this.#engine.getChunkPage(r.slug, { fromIndex: r.chunk_index, limit: 1 });
-      return chunks.find(c => Number(c.id) === r.chunk_id)?.chunk_text ?? '';
+      if (typeof r.chunk_id !== 'number') return '';
+      if (typeof r.chunk_index === 'number') {
+        const hit = (await this.#engine.getChunkPage(r.slug, { fromIndex: r.chunk_index, limit: 1 })).chunks.find(c => Number(c.id) === r.chunk_id);
+        if (hit) return hit.chunk_text;
+      }
+      return (await pageChunks(r.slug)).get(r.chunk_id) ?? '';
     }));
     return rows.map((r, i) => ({ slug: r.slug, chunk_id: typeof r.chunk_id === 'number' ? r.chunk_id : null, passage: passages[i], delivered: r.chunk_text ?? '' }));
   }
