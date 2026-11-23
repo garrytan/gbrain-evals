@@ -144,6 +144,29 @@ describe('N14 adapter on rust', () => {
     await a.close();
     expect(readFileSync(join(root, 'src/cli-calls.jsonl'), 'utf8').trim().split('\n').map(l => JSON.parse(l))).toEqual([['init', '--migrate-only', '--non-interactive']]);
   }, 120_000);
+
+  const page = Array.from({ length: 30 }, (_, i) => `## Day ${i + 1}\n\n${i === 17 ? 'The courier left the zephyrquartz key under the blue mat.' : `Ordinary notes for day ${i + 1} about the garden, the weather and lunch.`}\n`).join('\n');
+
+  test('keyword recall maps each hit to its stored passage through the engine API, not the harness\'s raw SQL, and gets the passage raw SQL reads', async () => {
+    const a = await GbrainAdapter.open(resolveGbrainUnderTest(null).root, 'single-page', { kind: 'none' });
+    const sql = a.sql.bind(a);
+    try {
+      await a.call('put_page', { slug: 'notes/log', content: page });
+      for (const q of ['zephyrquartz', 'garden weather lunch']) {
+        a.sql = async () => { throw Object.assign(new Error('raw SQL refused'), { code: 'engine_capability_missing', reason: 'raw_sql' }); };
+        const hits = await a.search(q);
+        a.sql = sql;
+        const ids = hits.map(h => h.chunk_id).filter((x): x is number => x !== null);
+        expect(ids.length).toBeGreaterThan(0);
+        const stored = new Map((await sql<{ id: number; chunk_text: string }>('SELECT id, chunk_text FROM content_chunks WHERE id = ANY($1::int[])', [ids])).map(r => [Number(r.id), r.chunk_text]));
+        expect(hits.map(h => h.passage)).toEqual(hits.map(h => h.chunk_id === null ? '' : stored.get(h.chunk_id) ?? ''));
+        if (q === 'zephyrquartz') expect(hits[0].passage).toContain('zephyrquartz');
+      }
+    } finally {
+      a.sql = sql;
+      await a.close();
+    }
+  }, 120_000);
 });
 
 describe('N14 engine selection', () => {

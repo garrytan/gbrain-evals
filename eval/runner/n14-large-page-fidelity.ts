@@ -54,8 +54,9 @@
  * GBRAIN_EVAL_ENGINE=pglite|postgres|rust (engine-bench, eval/runner/eval-engine.ts) picks the engine instead of
  * --engine (which may repeat it but not contradict it). The receipt then adds `engine` and `not_applicable`. On rust,
  * which refuses raw SQL, each child opens the engine through openEvalEngine and every check in N14_SQL_CHECKS is
- * not_applicable (neither pass nor fail): the verdict is the safety contracts alone, and the quality and floor rules,
- * which read stored chunks with SQL, drop out. An unavailable engine exits 69 with no receipt. Unset, nothing changes.
+ * not_applicable (neither pass nor fail): the verdict is the safety contracts alone, and the quality and floor rules drop
+ * out (the append-cost rule reads stored chunks with SQL). Keyword recall maps hits to stored chunks through the engine's
+ * getChunkPage, so it is measured and reported on every engine. An unavailable engine exits 69 with no receipt. Unset, nothing changes.
  */
 import { SQL } from 'bun';
 import { spawn } from 'node:child_process';
@@ -119,7 +120,7 @@ export function frameBytes(result: unknown): number {
 export interface SearchHit {
   slug: string;
   chunk_id: number | null;
-  /** The stored passage the hit points at (gbrain: content_chunks.chunk_text by chunk_id). */
+  /** The stored passage the hit points at (gbrain: the engine's getChunkPage row at the hit's chunk_index, matched by chunk_id). */
   passage: string;
   /** The text the agent actually receives in the result row. */
   delivered: string;
@@ -505,7 +506,8 @@ export function summarize(arms: readonly ArmSummary[], presenceFailures: number,
 export function n14Verdict(s: N14Summary, engine: { rawSql: boolean } = { rawSql: true }): { verdict: 'pass' | 'fail'; failed: string[] } {
   const failed: string[] = [];
   for (const [k, v] of Object.entries(s.safety)) if (v !== 0) failed.push(`safety.${k}=${v}`);
-  // Without raw SQL the quality and floor rules have no measurement (N14_SQL_CHECKS): not_applicable, so neither pass nor fail.
+  // Without raw SQL the append-cost quality rule has no measurement (N14_SQL_CHECKS), and the engine-bench preregistration
+  // (2026-11-20 amendment, item 6) leaves the quality and floor rules out of the Rust verdict: neither pass nor fail.
   // The stored-page counts are not_applicable too, so an arm that ran but never stored its page measured nothing and
   // fails, instead of passing on safety counts of zero.
   if (!engine.rawSql) {
@@ -930,10 +932,13 @@ export class GbrainAdapter implements N14Adapter {
   }
 
   async search(query: string): Promise<SearchHit[]> {
-    const rows = await this.call('search', { query, limit: TOP_K }) as Array<{ slug: string; chunk_id?: number | null; chunk_text?: string }>;
-    const ids = this.#rawSql ? rows.map(r => r.chunk_id).filter((x): x is number => typeof x === 'number') : [];
-    const stored = new Map((ids.length ? await this.sql<{ id: number; chunk_text: string }>(`SELECT id, chunk_text FROM content_chunks WHERE id = ANY($1::int[])`, [ids]) : []).map(r => [Number(r.id), r.chunk_text]));
-    return rows.slice(0, TOP_K).map(r => ({ slug: r.slug, chunk_id: typeof r.chunk_id === 'number' ? r.chunk_id : null, passage: typeof r.chunk_id === 'number' ? stored.get(r.chunk_id) ?? '' : '', delivered: r.chunk_text ?? '' }));
+    const rows = (await this.call('search', { query, limit: TOP_K }) as Array<{ slug: string; chunk_id?: number | null; chunk_index?: number | null; chunk_text?: string }>).slice(0, TOP_K);
+    const passages = await Promise.all(rows.map(async r => {
+      if (typeof r.chunk_id !== 'number' || typeof r.chunk_index !== 'number') return '';
+      const { chunks } = await this.#engine.getChunkPage(r.slug, { fromIndex: r.chunk_index, limit: 1 });
+      return chunks.find(c => Number(c.id) === r.chunk_id)?.chunk_text ?? '';
+    }));
+    return rows.map((r, i) => ({ slug: r.slug, chunk_id: typeof r.chunk_id === 'number' ? r.chunk_id : null, passage: passages[i], delivered: r.chunk_text ?? '' }));
   }
 
   async read(hit: SearchHit): Promise<string> {
@@ -1618,8 +1623,6 @@ export function parseNativeIngest(argv: readonly string[]): NativeIngest {
 export const N14_SQL_CHECKS = [
   { check: 'N14 ingest outcome: stored page and chunk counts', why: 'count the stored pages and their content_chunks rows (on rust the ingest status comes from write errors alone)' },
   { check: 'N14 stored needles (storedContains)', why: 'search compiled_truth and the segment texts for each needle answer' },
-  { check: 'N14 solvability control: control page needles found by keyword search', why: 'map each search hit to its stored chunk text' },
-  { check: 'N14 keyword recall@10 by decile, delivered and distractor ranks, reads of hits, and the quality rule native_recall_gap_points_max and the floor native_keyword_recall_2mb', why: 'map each search hit to its stored chunk text (content_chunks by id)' },
   { check: 'N14 append cost: chunks rewritten and deleted, and the quality rule native_append_embed_ratio_max', why: 'snapshot the content_chunks hashes before and after the append' },
   { check: 'N14 segmented storage: body storage, projection settle, segment round trip and segment writes', why: 'read pages, page_body_manifest and page_segment_texts' },
   { check: 'N14 lifecycle residue (--lifecycle, exploratory)', why: 'find the fence fact row and count residue rows after the purge' },
