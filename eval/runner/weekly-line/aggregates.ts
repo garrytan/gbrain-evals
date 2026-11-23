@@ -114,7 +114,7 @@ const holm = obj({ z: n(num), holm_step: int, bound: num, crossed: bool });
 
 export const BLOCK_SCHEMA: Schema = obj({
   schema: en(['gbrain-evals/weekly-line-block/v1']),
-  block: int,
+  block: int, ended: bool,
   weeks: arr(obj({ week: ID.date, no_point: n(en(WL_NO_POINT)), gbrain: n(gbrain), comparators: n(comparators), worlds: int }), WL_WEEKS_PER_BLOCK),
   counted_worlds: int,
   releases: arr(ID.release, MAX_WORLDS),
@@ -124,7 +124,7 @@ export const BLOCK_SCHEMA: Schema = obj({
     word: en(WL_WORDS), family: int,
     early: n(obj({ word: en(['ahead', 'behind']), releases: arr(ID.release, MAX_WORLDS), pooled: est })),
     look: n(obj({ ...((holm as { keys: Record<string, Schema> }).keys), withheld: n(en(['descriptive', 'ceiling', 'split by reader'])), pooled: est })),
-    final: holm,
+    final: n(holm),
     pooled: est, readers: readers(est),
     simultaneous: obj({ level: num, ci: n(pair) }),
     wild: n(obj({ estimate: num, p: num, ci95: pair })),
@@ -283,19 +283,26 @@ export function weekAggregates(meta: WeekMeta, questions: readonly WlQuestion[],
   };
 }
 
-/** A block's per-block file: the words with the look, the release set, both readers' rows, per-kind rows, exposure, the grep agent's stops per week and cost per correct answer. */
+/** A block's per-block file: whether it has ended (all four week entries, weeks with no point included), the words with the look, the release set, both readers' rows, per-kind rows, exposure, the grep agent's stops per week and cost per correct answer. */
 export function blockAggregates(block: number, metas: readonly WeekMeta[], questions: readonly WlQuestion[], o: { exposure?: unknown; draws?: number } = {}) {
   if (!Number.isInteger(block) || block < 1) refuse('the block number must be a whole number from 1');
   if (metas.length > WL_WEEKS_PER_BLOCK) refuse(`a block holds at most ${WL_WEEKS_PER_BLOCK} weeks, not ${metas.length}`);
   metas.forEach(checkMeta);
   const weeks = [...metas].sort((a, b) => (a.week < b.week ? -1 : 1));
+  const day = (d: string) => Date.parse(`${d}T00:00:00Z`) / 86_400_000;
+  weeks.forEach((w, i) => {
+    if (!Number.isInteger(day(w.week))) refuse(`week ${w.week} is not a date`);
+    if (i && w.week === weeks[i - 1].week) refuse(`the block lists week ${w.week} twice`);
+    if (i && day(w.week) - day(weeks[i - 1].week) !== 7) refuse(`the block's weeks must be consecutive, 7 days apart, not ${weeks[i - 1].week} then ${w.week}`);
+  });
+  const ended = weeks.length === WL_WEEKS_PER_BLOCK;
   const counted = weeks.filter(w => !w.no_point).flatMap(w => w.worlds.map(x => ({ world: x.world, week: w.week, release: w.gbrain!.release, commit: w.gbrain!.commit, seed_id: x.seed_id, phrasing_id: x.phrasing_id })));
   if (new Set(counted.map(w => w.world)).size !== counted.length) refuse('a world is counted in two weeks of the block');
   const ids = counted.map(w => w.world);
-  const r = analyzeBlock(questions, counted, { draws: o.draws });
+  const r = analyzeBlock(questions, counted, { ended, draws: o.draws });
   const costs = weeks.flatMap(w => w.costs ?? []);
   return {
-    schema: 'gbrain-evals/weekly-line-block/v1' as const, block,
+    schema: 'gbrain-evals/weekly-line-block/v1' as const, block, ended,
     weeks: weeks.map(w => ({ week: w.week, no_point: w.no_point ?? null, gbrain: w.gbrain, comparators: w.comparators, worlds: w.no_point ? 0 : w.worlds.length })),
     counted_worlds: counted.length, releases: r.releases,
     worlds: counted.map(w => ({ world: w.world, week: w.week, release: w.release, seed_id: w.seed_id, phrasing_id: w.phrasing_id })),
@@ -306,7 +313,7 @@ export function blockAggregates(block: number, metas: readonly WeekMeta[], quest
         word: x.word, family: x.family,
         early: x.early ? { word: x.early.word, releases: x.early.releases, pooled: outEst(x.early.pooled) } : null,
         look: l ? { z: r4(l.z), holm_step: l.holm_step, bound: l.bound, crossed: l.crossed, withheld: l.withheld, pooled: outEst(l.pooled) } : null,
-        final: { z: r4(x.z), holm_step: x.holm_step, bound: x.bound, crossed: x.crossed },
+        final: ended ? { z: r4(x.z), holm_step: x.holm_step, bound: x.bound, crossed: x.crossed } : null,
         pooled: outEst(x.pooled), readers: outReaders(x.readers, outEst),
         simultaneous: { level: x.simultaneous.level, ci: r4p(x.simultaneous.ci) },
         wild: x.wild ? { estimate: r4(x.wild.estimate)!, p: r4(x.wild.p)!, ci95: r4p(x.wild.ci95)! } : null,
