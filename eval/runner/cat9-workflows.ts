@@ -110,6 +110,7 @@ import {
   type Cat9CheckRow,
   type Cat9Requirement,
   type Cat9Engine,
+  type Cat9Guard,
   type Cat9SetupStep,
   type GbrainExec,
 } from './cat9-checks.ts';
@@ -149,6 +150,11 @@ export interface WorkflowScenario {
   checks?: Cat9Check[];
   /** Free path only: what the whole scenario needs that a free run lacks. */
   requires?: Cat9Requirement[];
+  /** Free path only: the engines the scenario's behavior is defined on, and why (cat9-checks.ts). */
+  engines?: EvalEngineKind[];
+  engines_reason?: string;
+  /** Free path only: the gbrain pull request the scenario guards and its expected status (cat9-checks.ts Cat9Guard). */
+  guards?: Cat9Guard;
 }
 
 export interface Cat9Catalog {
@@ -657,6 +663,8 @@ export interface Cat9ChecksScenarioRow {
   workflow: WorkflowId;
   status: ReturnType<typeof scenarioStatus>;
   checks: Cat9CheckRow[];
+  /** The pull request this scenario guards and the status expected on gbrain's newest release, when it guards one. */
+  guards?: { pr: string; newest_release: string; expected: Cat9Guard['expected'] };
 }
 
 export interface Cat9ChecksReport {
@@ -680,6 +688,8 @@ export interface RunCat9ChecksOptions {
   log?: (line: string) => void;
   /** The engine every brain is created on (default PGLite). */
   engine?: Cat9Engine;
+  /** The gbrain checkout under test, for stub_server steps. */
+  gbrainRoot?: string;
 }
 
 /** Run every scenario's free checks in catalog order, one scenario at a time. */
@@ -693,10 +703,11 @@ export function runCat9Checks(o: RunCat9ChecksOptions): Cat9ChecksReport {
   }
   const scenarios: Cat9ChecksScenarioRow[] = [];
   for (const s of picked) {
-    const rows = runScenarioChecks(s, { exec: o.exec, corpusDir, tmpRoot: o.tmpRoot, keep: o.keep, engine: o.engine });
+    const rows = runScenarioChecks(s, { exec: o.exec, corpusDir, tmpRoot: o.tmpRoot, keep: o.keep, engine: o.engine, gbrainRoot: o.gbrainRoot });
     const status = scenarioStatus(rows);
     o.log?.(`[cat9 checks] ${s.id}: ${status}${rows.length ? ` (${rows.map(r => `${r.check_id}=${r.status}`).join(', ')})` : ''}`);
-    scenarios.push({ scenario_id: s.id, workflow: s.workflow, status, checks: rows });
+    scenarios.push({ scenario_id: s.id, workflow: s.workflow, status, checks: rows,
+      ...(s.guards ? { guards: { pr: s.guards.pr, newest_release: s.guards.newest_release, expected: s.guards.expected } } : {}) });
   }
   return {
     ran_at: new Date().toISOString(),
@@ -750,7 +761,7 @@ async function mainChecks(argv: string[]): Promise<number> {
   const startedAt = new Date().toISOString();
   const only = argValue(argv, '--only')?.split(',').filter(Boolean);
   const report = runCat9Checks({
-    catalog, catalogPath, exec: cliExec(gut.root, undefined, cat9EngineEnv(kind)), gbrain: { version: gut.version, commit }, only, keep: argv.includes('--keep'), log,
+    catalog, catalogPath, exec: cliExec(gut.root, undefined, cat9EngineEnv(kind)), gbrain: { version: gut.version, commit }, only, keep: argv.includes('--keep'), log, gbrainRoot: gut.root,
     ...(requested ? { engine: { kind, pgAdminUrl: evalPgAdminUrl(argv) } } : {}),
   });
   const errorRows = report.scenarios.flatMap(s => s.checks.filter(c => c.status === 'error'));

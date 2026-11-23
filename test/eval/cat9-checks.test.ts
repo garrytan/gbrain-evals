@@ -379,14 +379,14 @@ function markdownFiles(dir: string, out: string[] = []): string[] {
 }
 
 describe('Cat 9 catalog (eval/data/cat9-workflows-v1)', () => {
-  test('validates, with 24 scenarios across the five workflows', () => {
+  test('validates, with 27 scenarios across the five workflows', () => {
     expect(validateCatalog(catalog)).toEqual([]);
-    expect(catalog.scenarios).toHaveLength(24);
+    expect(catalog.scenarios).toHaveLength(27);
     for (const w of new Set(catalog.scenarios.map(s => s.workflow))) expect(ALL_WORKFLOWS).toContain(w);
   });
 
-  test('the corpus holds the 37 fixture files', () => {
-    expect(markdownFiles(corpusDir)).toHaveLength(37);
+  test('the corpus holds the 42 fixture files', () => {
+    expect(markdownFiles(corpusDir)).toHaveLength(42);
   });
 
   test('every ground_truth_slug resolves to a corpus page or a page a scenario saves (judged path stays usable)', () => {
@@ -459,7 +459,7 @@ function placeholderProblems(rel: string, text: string): string[] {
 }
 
 // First names the fixture uses for people; a real-looking surname next to one would be a leak.
-const FIRST_NAMES = new Set(['Alice', 'Bob', 'Carol', 'Dave', 'Erin', 'Frank', 'Grace', 'Heidi', 'Ivan', 'Judy', 'Olive', 'Pat', 'Quinn', 'Rita', 'Zoe']);
+const FIRST_NAMES = new Set(['Alice', 'Bob', 'Carol', 'Dave', 'Erin', 'Frank', 'Grace', 'Heidi', 'Ivan', 'Judy', 'Olive', 'Pat', 'Quinn', 'Rita', 'Sam', 'Tess', 'Uma', 'Vic', 'Zoe']);
 
 describe('Cat 9 runCat9Checks over the catalog with a stub CLI', () => {
   test('runs only the picked scenarios, writes a table, and refuses unknown ids', () => {

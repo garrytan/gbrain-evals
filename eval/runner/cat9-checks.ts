@@ -9,11 +9,27 @@
  *   setup   steps that build the brain state the scenario needs, in order:
  *           { run: [argv...], stdin?, brain?, capture?, allow_fail? } runs
  *           `gbrain <argv>`; { capture_time: name } records the current time;
- *           { remove_datastore: brain } moves a brain's PGLite directory away.
+ *           { remove_datastore: brain } moves a brain's PGLite directory away;
+ *           { write_file: path, content, mode? } writes a file (a 0600 token
+ *           file, for example); { wait_ms: n } waits up to 30 s so something
+ *           queued earlier is older than a threshold; { stub_server: kind,
+ *           contacts, capture } starts the gbrain build's own fake of an outside
+ *           service (today GBrain Helper's Contacts route) in a child process.
+ *           A run step or check may set `env`, GBRAIN_* variables added after
+ *           the hermetic strip, for a threshold the behavior reads.
  *   checks  { id, description, run, expect, requires?, known_failure? }: one
  *           CLI call and the result it must give. `expect` is mechanical
- *           (exit code, JSON paths, text that must or must not appear), so the
- *           same output always gives the same verdict.
+ *           (exit code, JSON paths, text that must or must not appear, text in
+ *           a file the call wrote), so the same output always gives the same
+ *           verdict.
+ *   engines  optional, with engines_reason: the engines the scenario's
+ *           behavior is defined on. On any other engine every check is
+ *           engine_not_supported_by_runner with that reason.
+ *   guards   optional: the gbrain pull request whose user-visible behavior the
+ *           scenario guards, the release that first shipped it, and the
+ *           status its checks are expected to have on gbrain's newest release
+ *           (pass when the fix shipped, expected_fail with a known_failure
+ *           naming the pull request when it did not).
  *
  * Each scenario gets fresh brains (one PGLite brain per name used, `A` by
  * default) under a throwaway GBRAIN_HOME and its own copy of the fixture
@@ -43,12 +59,12 @@
  *
  * Usage: bun eval/runner/cat9-workflows.ts --checks [--gbrain <checkout>[@ref]] [--scenarios <file>] [--only id,id] [--output <dir>] [--pg-url <admin url>] [--json]
  */
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { HERMETIC_KEY_PATTERN, HERMETIC_STRIPPED_KEYS, redactUrlPasswords } from './hermetic-env.ts';
-import { ENGINE_NOT_SUPPORTED_BY_RUNNER, ENGINE_REFUSAL_TEXT_RE, EvalEngineUnavailable, cliEngineConfig, redactConnection, rustAddonEnv, type EvalEngineKind } from './eval-engine.ts';
+import { ENGINE_NOT_SUPPORTED_BY_RUNNER, ENGINE_REFUSAL_TEXT_RE, EVAL_ENGINES, EvalEngineUnavailable, cliEngineConfig, redactConnection, rustAddonEnv, type EvalEngineKind } from './eval-engine.ts';
 
 // ─── Types ────────────────────────────────────────────────────────────
 
@@ -77,6 +93,11 @@ export interface Cat9RunStep {
   capture?: Record<string, string>;
   /** A setup step that may exit non-zero (setup only). */
   allow_fail?: boolean;
+  /**
+   * GBRAIN_* variables for this call only, added after the hermetic strip (a threshold the behavior reads, for
+   * example). A name that looks like a provider key is refused by validateChecks.
+   */
+  env?: Record<string, string>;
   requires?: Cat9Requirement[];
   note?: string;
 }
@@ -85,15 +106,41 @@ export interface Cat9RemoveDatastoreStep { remove_datastore: string }
 export interface Cat9ManualStep { manual: string; requires: Cat9Requirement[] }
 /** Read a JSON file the brain wrote (for example a source's ownership marker) and capture values from it. */
 export interface Cat9ReadJsonStep { read_json: string; capture: Record<string, string> }
-export type Cat9SetupStep = Cat9RunStep | Cat9TimeStep | Cat9RemoveDatastoreStep | Cat9ManualStep | Cat9ReadJsonStep;
+/** Write a file under the scenario's temp tree. `write_file` and `content` are substituted; `mode` is octal, e.g. "600". */
+export interface Cat9WriteFileStep { write_file: string; content: string; mode?: string }
+/** Wait this many milliseconds (1 to 30000), so a job queued earlier is older than a threshold the check sets. */
+export interface Cat9WaitStep { wait_ms: number }
+/** The outside services a scenario can fake, each with the gbrain build's own test stub. */
+export const STUB_KINDS = ['apple-contacts'] as const;
+export type Cat9StubKind = typeof STUB_KINDS[number];
+/**
+ * Start the gbrain build's own fake of an outside service in a child process for the rest of the scenario, loaded
+ * with `contacts` (card id -> card), and capture its `port` and bearer `token`. apple-contacts serves GBrain Helper's
+ * Contacts read route on 127.0.0.1 from test/helpers/apple-contacts-stub.ts in the gbrain checkout under test. A build
+ * without that file cannot be set up, so its checks are not_run with that reason.
+ */
+export interface Cat9StubServerStep { stub_server: Cat9StubKind; contacts: Record<string, unknown>; capture: Record<string, StubField> }
+/**
+ * What a stub_server step can capture: its port, its bearer token, and the path of the file where it logs one
+ * `<METHOD> <path>` line per request it receives (a check reads it with a file expectation).
+ */
+export const STUB_FIELDS = ['port', 'token', 'requests_log'] as const;
+export type StubField = typeof STUB_FIELDS[number];
+export type Cat9SetupStep = Cat9RunStep | Cat9TimeStep | Cat9RemoveDatastoreStep | Cat9ManualStep | Cat9ReadJsonStep | Cat9WriteFileStep | Cat9WaitStep | Cat9StubServerStep;
 
-export const SETUP_KINDS = ['run', 'capture_time', 'remove_datastore', 'manual', 'read_json'] as const;
+export const SETUP_KINDS = ['run', 'capture_time', 'remove_datastore', 'manual', 'read_json', 'write_file', 'wait_ms', 'stub_server'] as const;
 
-export const JSON_OPS = ['eq', 'ne', 'gt', 'gte', 'lt', 'exists', 'absent', 'empty', 'nonempty', 'includes', 'excludes', 'all_match', 'some_match', 'length'] as const;
+/** Where a stub kind lives in a gbrain checkout. */
+export const STUB_MODULES: Record<Cat9StubKind, string> = { 'apple-contacts': 'test/helpers/apple-contacts-stub.ts' };
+export const MAX_WAIT_MS = 30_000;
+/** A variable a step may set: a GBRAIN_* name that does not look like a provider key or token. */
+export const STEP_ENV_NAME = /^GBRAIN_[A-Z0-9_]+$/;
+
+export const JSON_OPS = ['eq', 'ne', 'gt', 'gte', 'lt', 'exists', 'absent', 'empty', 'nonempty', 'includes', 'excludes', 'all_match', 'some_match', 'length', 'rows_eq'] as const;
 export type Cat9JsonOp = typeof JSON_OPS[number];
 /** Ops that compare against `value`; the rest take none. */
-const OPS_WITH_VALUE = new Set<string>(['eq', 'ne', 'gt', 'gte', 'lt', 'includes', 'excludes', 'all_match', 'some_match', 'length']);
-export const EXPECT_KEYS = ['exit', 'json', 'stdout_includes', 'stdout_excludes', 'stderr_excludes', 'output_includes', 'output_excludes', 'lines', 'datastore_absent'] as const;
+const OPS_WITH_VALUE = new Set<string>(['eq', 'ne', 'gt', 'gte', 'lt', 'includes', 'excludes', 'all_match', 'some_match', 'length', 'rows_eq']);
+export const EXPECT_KEYS = ['exit', 'json', 'stdout_includes', 'stdout_excludes', 'stderr_excludes', 'output_includes', 'output_excludes', 'lines', 'datastore_absent', 'file'] as const;
 export interface Cat9JsonAssertion { path: string; op: Cat9JsonOp; value?: unknown }
 
 export interface Cat9Expect {
@@ -113,6 +160,11 @@ export interface Cat9Expect {
   lines?: Array<{ prefix: string; includes?: string[]; excludes?: string[] }>;
   /** The brain's PGLite directory must not exist after the call (no silent re-create). */
   datastore_absent?: string;
+  /**
+   * A file the call wrote (for example `gbrain publish --out`): text it must and must not contain, or `absent: true`
+   * when the call must write nothing there. The path is substituted.
+   */
+  file?: { path: string; includes?: string[]; excludes?: string[]; absent?: true };
 }
 
 export interface Cat9Check extends Omit<Cat9RunStep, 'allow_fail' | 'run'> {
@@ -145,7 +197,25 @@ export interface Cat9CheckRow {
 }
 
 export interface ExecResult { exit: number; stdout: string; stderr: string }
-export type GbrainExec = (argv: string[], opts: { home: string; cwd: string; stdin?: string }) => ExecResult;
+export type GbrainExec = (argv: string[], opts: { home: string; cwd: string; stdin?: string; env?: Record<string, string> }) => ExecResult;
+
+/**
+ * The gbrain pull request a scenario guards. `expected` is the status every check should have on gbrain's newest
+ * release, `newest_release`: pass when the fix shipped there, expected_fail when it did not (each check then carries a
+ * known_failure naming the pull request). A label for the reader, checked by validateChecks; it never changes a
+ * verdict.
+ */
+export interface Cat9Guard {
+  pr: string;
+  /** What the pull request guarantees a user, in plain words. */
+  behavior: string;
+  /** The merge commit on gbrain master, or null when it has not merged. */
+  fix_commit: string | null;
+  /** The first gbrain release that carries the fix, or null when none does yet. */
+  first_release: string | null;
+  newest_release: string;
+  expected: 'pass' | 'expected_fail';
+}
 
 /** The checks-related part of a scenario; WorkflowScenario carries these as optional fields. */
 export interface Cat9CheckedScenario {
@@ -153,6 +223,11 @@ export interface Cat9CheckedScenario {
   setup?: Cat9SetupStep[];
   checks?: Cat9Check[];
   requires?: Cat9Requirement[];
+  /** The engines the scenario's behavior is defined on; omitted means every engine. */
+  engines?: EvalEngineKind[];
+  /** Why the scenario does not run on the other engines (required with `engines`). */
+  engines_reason?: string;
+  guards?: Cat9Guard;
 }
 
 // ─── Pure helpers ─────────────────────────────────────────────────────
@@ -209,6 +284,17 @@ export function checkJsonAssertion(doc: unknown, a: Cat9JsonAssertion): string |
       const bad = got.filter(x => typeof x !== 'string' || !re.test(x));
       return bad.length === 0 ? null : fail(`${bad.length} value(s) do not match`);
     }
+    case 'rows_eq': {
+      // The array of objects at `path`, each cut down to the keys the expected rows use, must equal the expected rows
+      // as a multiset: every expected row present, nothing else, order free. So a value on the wrong card or field fails.
+      if (!Array.isArray(a.value) || a.value.length === 0 || a.value.some(r => !r || typeof r !== 'object' || Array.isArray(r))) return fail('rows_eq needs a non-empty list of objects');
+      if (!Array.isArray(got)) return fail('not an array');
+      const keys = [...new Set((a.value as Record<string, unknown>[]).flatMap(r => Object.keys(r)))].sort();
+      const cut = (r: unknown) => JSON.stringify(keys.map(k => (r && typeof r === 'object' ? (r as Record<string, unknown>)[k] : undefined) ?? null));
+      const want = (a.value as unknown[]).map(cut).sort();
+      const have = got.map(cut).sort();
+      return same(want, have) ? null : fail(`rows differ on ${keys.join(', ')}`);
+    }
     default:
       // Fail closed: an op the engine does not know is never a pass.
       return fail(`unknown op ${JSON.stringify((a as { op: unknown }).op)}`);
@@ -244,6 +330,20 @@ export function validateExpect(e: unknown, where: string): string[] {
     }
   }
   if (x.datastore_absent !== undefined && typeof x.datastore_absent !== 'string') out.push(`${where}: datastore_absent names a brain`);
+  if (x.file !== undefined) {
+    const f = x.file as Record<string, unknown> | null;
+    if (!f || typeof f !== 'object' || Array.isArray(f) || typeof f.path !== 'string' || f.path === '') out.push(`${where}: file needs a path`);
+    else {
+      for (const k of Object.keys(f)) if (!['path', 'includes', 'excludes', 'absent'].includes(k)) out.push(`${where}: unknown file key ${JSON.stringify(k)}`);
+      for (const k of ['includes', 'excludes']) {
+        if (f[k] === undefined) continue;
+        if (!Array.isArray(f[k]) || (f[k] as unknown[]).length === 0 || (f[k] as unknown[]).some(v => typeof v !== 'string' || v === '')) out.push(`${where}: file ${k} must be a non-empty list of non-empty strings`);
+      }
+      if (f.absent !== undefined && f.absent !== true) out.push(`${where}: file absent must be true`);
+      if (f.absent === true && (f.includes !== undefined || f.excludes !== undefined)) out.push(`${where}: file absent takes no includes or excludes`);
+      if (f.absent === undefined && f.includes === undefined && f.excludes === undefined) out.push(`${where}: file needs includes, excludes or absent`);
+    }
+  }
   return out;
 }
 
@@ -271,7 +371,7 @@ export function parseJsonOutput(stdout: string): { ok: true; value: unknown } | 
 }
 
 /** Compare one CLI result to an expectation. Returns every failed condition. */
-export function evaluateExpect(expect: Cat9Expect, r: ExecResult, ctx: { datastoreExists?: (brain: string) => boolean } = {}): string[] {
+export function evaluateExpect(expect: Cat9Expect, r: ExecResult, ctx: { datastoreExists?: (brain: string) => boolean; readFile?: (path: string) => string | null } = {}): string[] {
   const reasons: string[] = [];
   if (expect.exit === 'zero' && r.exit !== 0) reasons.push(`exit ${r.exit}, expected 0`);
   if (expect.exit === 'nonzero' && r.exit === 0) reasons.push('exit 0, expected non-zero');
@@ -296,7 +396,22 @@ export function evaluateExpect(expect: Cat9Expect, r: ExecResult, ctx: { datasto
     if (!ctx.datastoreExists) reasons.push('datastore check needs a brain context');
     else if (ctx.datastoreExists(expect.datastore_absent)) reasons.push(`brain ${expect.datastore_absent} datastore exists again after the call`);
   }
+  if (expect.file) {
+    const f = expect.file;
+    const text = (ctx.readFile ?? readTextFile)(f.path);
+    if (f.absent) { if (text !== null) reasons.push('file exists, expected nothing written'); }
+    else if (text === null) reasons.push('file was not written');
+    else {
+      for (const s of f.includes ?? []) if (!text.includes(s)) reasons.push(`file lacks ${JSON.stringify(s)}`);
+      for (const s of f.excludes ?? []) if (text.includes(s)) reasons.push(`file has ${JSON.stringify(s)}`);
+    }
+  }
   return reasons;
+}
+
+/** A file's text, or null when there is no file. */
+function readTextFile(path: string): string | null {
+  return existsSync(path) ? readFileSync(path, 'utf8') : null;
 }
 
 /** The verdict for a check that ran. */
@@ -337,10 +452,22 @@ export function validateChecks(s: Cat9CheckedScenario): string[] {
     const kinds = SETUP_KINDS.filter(k => k in (step as object));
     if (kinds.length !== 1) out.push(`${s.id} setup[${i}]: needs exactly one of ${SETUP_KINDS.join(', ')}`);
     if ('read_json' in step && (!step.capture || Object.keys(step.capture).length === 0)) out.push(`${s.id} setup[${i}]: read_json needs a capture`);
+    if ('write_file' in step) {
+      if (typeof step.write_file !== 'string' || step.write_file === '' || typeof step.content !== 'string') out.push(`${s.id} setup[${i}]: write_file needs a path and a content string`);
+      if (step.mode !== undefined && !/^[0-7]{3}$/.test(String(step.mode))) out.push(`${s.id} setup[${i}]: write_file mode must be three octal digits, e.g. "600"`);
+    }
+    if ('wait_ms' in step && (!Number.isInteger(step.wait_ms) || step.wait_ms < 1 || step.wait_ms > MAX_WAIT_MS)) out.push(`${s.id} setup[${i}]: wait_ms must be a whole number from 1 to ${MAX_WAIT_MS}`);
+    if ('stub_server' in step) {
+      if (!(STUB_KINDS as readonly string[]).includes(String(step.stub_server))) out.push(`${s.id} setup[${i}]: stub_server must be one of ${STUB_KINDS.join(', ')}`);
+      if (!step.contacts || typeof step.contacts !== 'object' || Array.isArray(step.contacts)) out.push(`${s.id} setup[${i}]: stub_server needs a contacts object`);
+      const cap = step.capture as Record<string, unknown> | undefined;
+      if (!cap || Object.keys(cap).length === 0 || Object.values(cap).some(v => !(STUB_FIELDS as readonly string[]).includes(String(v)))) out.push(`${s.id} setup[${i}]: stub_server capture maps names to ${STUB_FIELDS.join(', ')}`);
+    }
     if (isRun(step)) {
       if (step.run.length === 0 || step.run.some(a => typeof a !== 'string')) out.push(`${s.id} setup[${i}]: run must be a non-empty string array`);
       if (step.run[0] === 'gbrain') out.push(`${s.id} setup[${i}]: run omits the leading gbrain`);
       reqs(`setup[${i}]`, step.requires);
+      out.push(...validateStepEnv(step.env, `${s.id} setup[${i}]`));
     }
     if ('manual' in step) {
       if (!Array.isArray(step.requires) || step.requires.length === 0) out.push(`${s.id} setup[${i}]: a manual step must say what it requires`);
@@ -364,6 +491,52 @@ export function validateChecks(s: Cat9CheckedScenario): string[] {
     if (c.known_failure && (!c.known_failure.finding || !c.known_failure.note)) out.push(`${s.id}/${c.id}: known_failure needs finding and note`);
     if ('allow_fail' in c) out.push(`${s.id}/${c.id}: allow_fail is for setup steps only`);
     reqs(c.id, c.requires);
+    out.push(...validateStepEnv(c.env, `${s.id}/${c.id}`));
+  }
+  if (s.engines !== undefined) {
+    if (!Array.isArray(s.engines) || s.engines.length === 0 || s.engines.some(e => !(EVAL_ENGINES as readonly string[]).includes(e))) out.push(`${s.id}: engines must list only ${EVAL_ENGINES.join(', ')}`);
+    if (typeof s.engines_reason !== 'string' || s.engines_reason === '') out.push(`${s.id}: engines needs an engines_reason`);
+  } else if (s.engines_reason !== undefined) out.push(`${s.id}: engines_reason without engines`);
+  if (s.guards !== undefined) out.push(...validateGuard(s));
+  return out;
+}
+
+/** Problems with a step's `env`: only GBRAIN_* names that do not look like a key or token, with string values. */
+export function validateStepEnv(env: unknown, where: string): string[] {
+  if (env === undefined) return [];
+  if (!env || typeof env !== 'object' || Array.isArray(env)) return [`${where}: env must be an object`];
+  const out: string[] = [];
+  for (const [k, v] of Object.entries(env)) {
+    if (!STEP_ENV_NAME.test(k) || HERMETIC_KEY_PATTERN.test(k) || /TOKEN|SECRET|PASSWORD|_KEY$/.test(k)) out.push(`${where}: env ${JSON.stringify(k)} must be a GBRAIN_* setting, never a key or token`);
+    if (typeof v !== 'string') out.push(`${where}: env ${JSON.stringify(k)} must be a string`);
+  }
+  return out;
+}
+
+/**
+ * Problems with a scenario's guard label. A guard whose fix shipped in the newest release expects pass and labels no
+ * check a known failure; one whose fix has not shipped expects expected_fail, and every check names the pull request
+ * in its known_failure, so a check can never be labelled as passing on a build that lacks the fix.
+ */
+export function validateGuard(s: Cat9CheckedScenario): string[] {
+  const g = s.guards as Partial<Cat9Guard> & Record<string, unknown>;
+  const out: string[] = [];
+  const where = `${s.id} guards`;
+  if (!g || typeof g !== 'object') return [`${where}: must be an object`];
+  if (typeof g.pr !== 'string' || !/^https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/pull\/\d+$/.test(g.pr)) out.push(`${where}: pr must be a GitHub pull request URL`);
+  if (typeof g.behavior !== 'string' || g.behavior === '') out.push(`${where}: behavior missing`);
+  if (g.fix_commit !== null && (typeof g.fix_commit !== 'string' || !/^[0-9a-f]{40}$/.test(g.fix_commit))) out.push(`${where}: fix_commit must be a full commit SHA or null`);
+  if (g.first_release !== null && (typeof g.first_release !== 'string' || !/^v\d+\.\d+\.\d+\.\d+$/.test(g.first_release))) out.push(`${where}: first_release must be a vMAJOR.MINOR.PATCH.MICRO tag or null`);
+  if (typeof g.newest_release !== 'string' || !/^v\d+\.\d+\.\d+\.\d+$/.test(g.newest_release)) out.push(`${where}: newest_release must be a vMAJOR.MINOR.PATCH.MICRO tag`);
+  if (g.expected !== 'pass' && g.expected !== 'expected_fail') out.push(`${where}: expected must be pass or expected_fail`);
+  const checks = (s.checks ?? []).filter(c => c.run !== undefined);
+  if (checks.length === 0) out.push(`${where}: a guard needs at least one mechanized check`);
+  if (g.expected === 'pass') {
+    if (!g.first_release || !g.fix_commit) out.push(`${where}: expected pass needs the fix_commit and first_release that shipped it`);
+    for (const c of checks) if (c.known_failure) out.push(`${where}: expected pass, but ${c.id} is labelled a known failure`);
+  }
+  if (g.expected === 'expected_fail') {
+    for (const c of checks) if (!c.known_failure || typeof g.pr !== 'string' || !c.known_failure.note.includes(g.pr)) out.push(`${where}: expected_fail, so ${c.id} needs a known_failure whose note names ${g.pr}`);
   }
   return out;
 }
@@ -388,9 +561,9 @@ export function hermeticChildEnv(home: string, env: Record<string, string | unde
  */
 export function cliExec(gbrainRoot: string, timeoutMs = 120_000, extraEnv: Record<string, string> = {}): GbrainExec {
   const cli = join(gbrainRoot, 'src/cli.ts');
-  return (argv, { home, cwd, stdin }) => {
+  return (argv, { home, cwd, stdin, env }) => {
     const p = Bun.spawnSync([process.execPath, cli, ...argv], {
-      cwd, env: { ...hermeticChildEnv(home), ...extraEnv }, stdin: stdin === undefined ? 'ignore' : Buffer.from(stdin), stdout: 'pipe', stderr: 'pipe', timeout: timeoutMs,
+      cwd, env: { ...hermeticChildEnv(home), ...extraEnv, ...(env ?? {}) }, stdin: stdin === undefined ? 'ignore' : Buffer.from(stdin), stdout: 'pipe', stderr: 'pipe', timeout: timeoutMs,
     });
     return { exit: p.exitCode ?? -1, stdout: p.stdout.toString(), stderr: p.stderr.toString() };
   };
@@ -429,6 +602,8 @@ export interface ScenarioCheckOptions {
   /** Keep the temp dirs (debugging). */
   keep?: boolean;
   now?: () => Date;
+  /** The gbrain checkout under test, where a stub_server step finds the build's own stub. */
+  gbrainRoot?: string;
 }
 
 function head(text: string, root: string, pgAdminUrl?: string): string {
@@ -454,6 +629,10 @@ export function runScenarioChecks(s: Cat9CheckedScenario, o: ScenarioCheckOption
   if (setupMissing.length > 0) {
     const why = [...new Set(setupMissing)].map(r => `setup not run: ${REQUIREMENT_REASONS[r]}`);
     return checks.map(c => row(c, 'not_run', why));
+  }
+  // A scenario whose behavior is defined on other engines only: nothing runs, and nothing passes or fails.
+  if (s.engines && !s.engines.includes(kind)) {
+    return checks.map(c => row(c, ENGINE_NOT_SUPPORTED_BY_RUNNER, [`${ENGINE_NOT_SUPPORTED_BY_RUNNER} (${kind}): the scenario runs on ${s.engines!.join(', ')} only. ${s.engines_reason ?? ''}`.trim()]));
   }
 
   root = mkdtempSync(join(o.tmpRoot ?? tmpdir(), `cat9-${s.id.replace(/[^A-Za-z0-9_-]/g, '_')}-`));
@@ -499,11 +678,11 @@ export function runScenarioChecks(s: Cat9CheckedScenario, o: ScenarioCheckOption
     vars[`home:${name}`] = home;
     return home;
   };
-  const call = (step: Pick<Cat9RunStep, 'run' | 'stdin' | 'brain'>) => {
+  const call = (step: Pick<Cat9RunStep, 'run' | 'stdin' | 'brain' | 'env'>) => {
     const home = brain(step.brain);
     const argv = step.run.map(a => substitute(a, vars));
     const stdin = step.stdin === undefined ? undefined : readFileSync(join(corpus, substitute(step.stdin, vars)), 'utf8');
-    const r = o.exec(argv, { home, cwd: root, stdin });
+    const r = o.exec(argv, { home, cwd: root, stdin, ...(step.env ? { env: substituteDeep(step.env, vars) } : {}) });
     return { argv, r };
   };
   const capture = (step: Pick<Cat9RunStep, 'capture'>, stdout: string): string[] => {
@@ -518,7 +697,9 @@ export function runScenarioChecks(s: Cat9CheckedScenario, o: ScenarioCheckOption
     return errs;
   };
 
+  const stubs: StubProcess[] = [];
   const cleanup = () => {
+    for (const stub of stubs.splice(0)) stub.stop();
     if (!o.keep) rmSync(root, { recursive: true, force: true });
     if (o.engine?.pgAdminUrl) for (const db of scratchDbs.splice(0)) dropScratchDb(o.engine.pgAdminUrl, db);
   };
@@ -532,6 +713,27 @@ export function runScenarioChecks(s: Cat9CheckedScenario, o: ScenarioCheckOption
         if (ds === null) throw unsupported(`setup[${i}] remove_datastore`);
         if (!existsSync(ds)) throw new Error(`setup[${i}]: brain ${step.remove_datastore} has no datastore to remove`);
         renameSync(ds, join(root, `moved-${step.remove_datastore}.pglite`));
+        continue;
+      }
+      if ('wait_ms' in step) { Bun.sleepSync(Math.min(Math.max(1, step.wait_ms), MAX_WAIT_MS)); continue; }
+      if ('write_file' in step) {
+        const file = substitute(step.write_file, vars);
+        mkdirSync(dirname(file), { recursive: true });
+        const mode = step.mode === undefined ? 0o644 : parseInt(step.mode, 8);
+        writeFileSync(file, substitute(step.content, vars), { mode });
+        chmodSync(file, mode);
+        continue;
+      }
+      if ('stub_server' in step) {
+        if (!o.gbrainRoot) throw new Error(`setup[${i}] stub_server needs the gbrain checkout under test`);
+        const module = join(o.gbrainRoot, STUB_MODULES[step.stub_server]);
+        if (!existsSync(module)) {
+          cleanup();
+          return checks.map(c => row(c, 'not_run', [`setup not run: stub_server ${step.stub_server} needs ${STUB_MODULES[step.stub_server]}, and this gbrain build has no such file (it predates the fake of that service)`]));
+        }
+        const stub = startStub(step, o.gbrainRoot, join(root, `stub-${i}`));
+        stubs.push(stub);
+        for (const [name, field] of Object.entries(step.capture)) vars[name] = String(stub.info[field]);
         continue;
       }
       if ('read_json' in step) {
@@ -567,7 +769,7 @@ export function runScenarioChecks(s: Cat9CheckedScenario, o: ScenarioCheckOption
       continue;
     }
     try {
-      const { argv, r } = call({ run: c.run, stdin: c.stdin, brain: c.brain });
+      const { argv, r } = call({ run: c.run, stdin: c.stdin, brain: c.brain, env: c.env });
       const reasons = evaluateExpect(substituteDeep(c.expect, vars), r, { datastoreExists: name => existsSync(datastoreOf(name)!) });
       const errs = capture(c, r.stdout);
       let status = classify([...reasons, ...errs], c.known_failure);
@@ -620,6 +822,63 @@ export function scenarioStatus(rows: Cat9CheckRow[]): Cat9CheckStatus | 'no_chec
 /** Resolve a path relative to a catalog file. */
 export function catalogRelative(catalogPath: string, p: string): string {
   return resolve(dirname(catalogPath), p);
+}
+
+// ─── Stub servers ─────────────────────────────────────────────────────
+
+export interface StubProcess {
+  info: { port: number; token: string; requests_log: string };
+  stop(): void;
+}
+
+/**
+ * The child that serves a stub: it imports the gbrain build's own stub module, loads the contacts, starts it on
+ * 127.0.0.1, writes `{port, token}` to STUB_OUT and stays up until it is killed or its parent exits.
+ */
+const STUB_CHILD = [
+  'const { appendFileSync } = await import("node:fs");',
+  'const m = await import(process.env.STUB_MODULE);',
+  'const stub = new m.ContactsStub();',
+  'const answer = stub.answer.bind(stub);',
+  'stub.answer = (req) => { const u = new URL(req.url); appendFileSync(process.env.STUB_LOG, `${req.method} ${u.pathname}\\n`); return answer(req); };',
+  'for (const [id, c] of Object.entries(JSON.parse(process.env.STUB_CONTACTS))) stub.upsert(id, c);',
+  'stub.start();',
+  'await Bun.write(process.env.STUB_OUT, JSON.stringify({ port: stub.port, token: m.STUB_TOKEN, requests_log: process.env.STUB_LOG }));',
+  'const parent = Number(process.env.STUB_PARENT);',
+  'setInterval(() => { try { process.kill(parent, 0); } catch { process.exit(0); } }, 1000);',
+].join('\n');
+
+/**
+ * Start a stub_server step's stub in a child process and wait (up to 30 s) for its port. Synchronous, because the
+ * checks run synchronously; the child answers while this process waits on a gbrain call. Throws when the build has no
+ * such stub or the child does not come up.
+ */
+export function startStub(step: Cat9StubServerStep, gbrainRoot: string, dir: string, timeoutMs = 30_000): StubProcess {
+  const module = join(gbrainRoot, STUB_MODULES[step.stub_server]);
+  if (!existsSync(module)) throw new Error(`stub_server ${step.stub_server}: this gbrain build has no ${STUB_MODULES[step.stub_server]}`);
+  mkdirSync(dir, { recursive: true });
+  const out = join(dir, 'stub.json');
+  const log = join(dir, 'requests.log');
+  writeFileSync(log, '');
+  const proc = Bun.spawn([process.execPath, '-e', STUB_CHILD], {
+    cwd: dir, stdin: 'ignore', stdout: 'ignore', stderr: Bun.file(join(dir, 'stub.err')),
+    env: { PATH: process.env.PATH ?? '', STUB_MODULE: module, STUB_OUT: out, STUB_CONTACTS: JSON.stringify(step.contacts), STUB_PARENT: String(process.pid), STUB_LOG: log },
+  });
+  const stop = () => { try { proc.kill(); } catch { /* already gone */ } };
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (existsSync(out)) {
+      try {
+        const info = JSON.parse(readFileSync(out, 'utf8')) as StubProcess['info'];
+        if (Number.isInteger(info.port) && typeof info.token === 'string') return { info, stop };
+      } catch { /* partly written: read again */ }
+    }
+    if (proc.exitCode !== null) break;
+    Bun.sleepSync(50);
+  }
+  stop();
+  const err = existsSync(join(dir, 'stub.err')) ? readFileSync(join(dir, 'stub.err'), 'utf8').trim().split('\n').at(-1) ?? '' : '';
+  throw new Error(`stub_server ${step.stub_server} did not start${err ? `: ${err.slice(0, 300)}` : ''}`);
 }
 
 /**

@@ -1,7 +1,7 @@
 {
   "version": 1,
   "status": "draft: judged rubric unreviewed; free checks run with `bun eval/runner/cat9-workflows.ts --checks`",
-  "about": "Cat 9 user-workflow scenarios from a black-box audit of gbrain master 7ef3d53a47 (v0.60.753.0) on PGLite and Postgres 16. Each scenario has the Cat 9 judged fields (id, workflow, text, ground_truth_slugs, rubric with weight 1 or 2) and optional free fields: setup (gbrain CLI steps that build the brain) and checks (CLI calls with a fixed expectation, no judge). audit_setup and audit_checks keep the audit's original wording. known_failure names the audit finding a check failed on at the audited build; it labels the result and never turns a fail into a pass. All names in the corpus are placeholders.",
+  "about": "Cat 9 user-workflow scenarios from a black-box audit of gbrain master 7ef3d53a47 (v0.60.753.0) on PGLite and Postgres 16. Each scenario has the Cat 9 judged fields (id, workflow, text, ground_truth_slugs, rubric with weight 1 or 2) and optional free fields: setup (gbrain CLI steps that build the brain) and checks (CLI calls with a fixed expectation, no judge). audit_setup and audit_checks keep the audit's original wording. known_failure names the audit finding a check failed on at the audited build; it labels the result and never turns a fail into a pass. All names in the corpus are placeholders. Scenarios whose id starts with pr-guard- guard one gbrain pull request's user-visible behavior; their guards field names the pull request, the release that first shipped it and the status expected on gbrain's newest release.",
   "judge_prompt_version": "2026-04-19-v1",
   "audited_build": {
     "gbrain_commit": "7ef3d53a47a1aefa1fa7e528277c022600d2dc61",
@@ -1966,6 +1966,578 @@
         {
           "cmd": "gbrain access check --as <non-member> people/dave-example",
           "expect": "denied, or the misspelled key is refused at write time"
+        }
+      ]
+    },
+    {
+      "id": "pr-guard-10035-publish-private",
+      "workflow": "briefing",
+      "origin": "guard for https://github.com/garrytan/gbrain/pull/10035 (nightly commit screen 2026-11-22)",
+      "text": "Share Sam Example's page with a vendor as a web page, without my private notes.",
+      "ground_truth_slugs": [
+        "people/sam-example"
+      ],
+      "rubric": [
+        {
+          "id": "no_private",
+          "criterion": "The shared page leaves out the Timeline, the fact rows and the hidden comments",
+          "weight": 2
+        },
+        {
+          "id": "public_kept",
+          "criterion": "The shared page keeps the public description of Sam",
+          "weight": 1
+        }
+      ],
+      "guards": {
+        "pr": "https://github.com/garrytan/gbrain/pull/10035",
+        "behavior": "gbrain publish leaves a page's Timeline, its gbrain fact rows and its hidden HTML comments out of the shared file, for a page written by hand and for a page exported from the brain, and refuses a page whose frontmatter never closes instead of publishing it.",
+        "fix_commit": "e276deebfdd9b3f58ca6266174281c296984fecd",
+        "first_release": "v0.60.763.0",
+        "newest_release": "v0.60.765.0",
+        "expected": "pass"
+      },
+      "setup": [
+        {
+          "run": [
+            "put",
+            "people/sam-example"
+          ],
+          "stdin": "puts/sam-private.md"
+        },
+        {
+          "run": [
+            "export",
+            "--dir",
+            "{corpus}/export",
+            "--slug-prefix",
+            "people/sam-example"
+          ],
+          "note": "the brain writes the page back out with its Timeline below a timeline marker"
+        }
+      ],
+      "checks": [
+        {
+          "id": "publish-hand-written-page-strips-private",
+          "description": "Publishing a hand-written page keeps its public text and leaves out the Timeline entries, the gbrain fact rows and the hidden comment.",
+          "run": [
+            "publish",
+            "{corpus}/puts/sam-private.md",
+            "--out",
+            "{corpus}/shared/hand-written.html"
+          ],
+          "expect": {
+            "exit": "zero",
+            "file": {
+              "path": "{corpus}/shared/hand-written.html",
+              "includes": [
+                "PUBLIC-SAM-BIO",
+                "PUBLIC-SAM-STYLE"
+              ],
+              "excludes": [
+                "PRIVATE-TIMELINE-ENTRY",
+                "PRIVATE-FACT-ROW",
+                "PRIVATE-HIDDEN-COMMENT"
+              ]
+            }
+          }
+        },
+        {
+          "id": "publish-exported-page-strips-private",
+          "description": "Publishing the page as the brain exports it (Timeline below a timeline marker) leaves out the same private parts.",
+          "run": [
+            "publish",
+            "{corpus}/export/people/sam-example.md",
+            "--out",
+            "{corpus}/shared/exported.html"
+          ],
+          "expect": {
+            "exit": "zero",
+            "file": {
+              "path": "{corpus}/shared/exported.html",
+              "includes": [
+                "PUBLIC-SAM-BIO",
+                "PUBLIC-SAM-STYLE"
+              ],
+              "excludes": [
+                "PRIVATE-TIMELINE-ENTRY",
+                "PRIVATE-FACT-ROW",
+                "PRIVATE-HIDDEN-COMMENT"
+              ]
+            }
+          }
+        },
+        {
+          "id": "publish-unclosed-frontmatter-refused",
+          "description": "A page whose frontmatter never closes is refused with invalid_frontmatter and no shared file is written.",
+          "run": [
+            "publish",
+            "{corpus}/puts/sam-unclosed.md",
+            "--out",
+            "{corpus}/shared/unclosed.html"
+          ],
+          "expect": {
+            "exit": "nonzero",
+            "output_includes": [
+              "invalid_frontmatter"
+            ],
+            "file": {
+              "path": "{corpus}/shared/unclosed.html",
+              "absent": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "pr-guard-9973-dream-no-worker",
+      "workflow": "sync",
+      "origin": "guard for https://github.com/garrytan/gbrain/pull/9973 (nightly commit screen 2026-11-22)",
+      "text": "Run tonight's maintenance and tell me if anything is stuck.",
+      "ground_truth_slugs": [
+        "people/vic-example"
+      ],
+      "rubric": [
+        {
+          "id": "names_stuck_jobs",
+          "criterion": "Says facts are not being extracted because no job worker is running, and names gbrain jobs supervisor start",
+          "weight": 2
+        }
+      ],
+      "engines": [
+        "postgres",
+        "rust"
+      ],
+      "engines_reason": "On PGLite, gbrain dream extracts queued facts itself in its facts_drain phase and needs no job worker, so there is no missing worker to warn about. The warning applies to brains whose facts-absorb jobs wait for a job worker.",
+      "guards": {
+        "pr": "https://github.com/garrytan/gbrain/pull/9973",
+        "behavior": "gbrain dream warns in its facts_drain line when facts-absorb jobs have waited past GBRAIN_QUEUE_NO_WORKER_WARN_HOURS with no job worker taking them, and names the fix, gbrain jobs supervisor start. A job queued just now is not called stuck, and the cycle still exits 0.",
+        "fix_commit": "279d00fcd46e568f10ec50b7f12bf4802327f449",
+        "first_release": "v0.60.763.0",
+        "newest_release": "v0.60.765.0",
+        "expected": "pass"
+      },
+      "setup": [
+        {
+          "run": [
+            "put",
+            "people/vic-example"
+          ],
+          "stdin": "puts/vic.md"
+        },
+        {
+          "run": [
+            "jobs",
+            "submit",
+            "facts-absorb",
+            "--params",
+            "{\"slug\":\"people/vic-example\"}"
+          ],
+          "note": "queues one facts-absorb job; no worker runs in a free run"
+        },
+        {
+          "wait_ms": 3000
+        }
+      ],
+      "checks": [
+        {
+          "id": "fresh-job-not-called-stuck",
+          "description": "With the default one-hour threshold, a job that has waited three seconds is not reported as missing a worker.",
+          "run": [
+            "dream",
+            "--phase",
+            "facts_drain",
+            "--json"
+          ],
+          "expect": {
+            "exit": "zero",
+            "json": [
+              {
+                "path": "phases.[*].phase",
+                "op": "includes",
+                "value": "facts_drain"
+              },
+              {
+                "path": "phases.[*].details.reason",
+                "op": "excludes",
+                "value": "no_worker"
+              }
+            ]
+          }
+        },
+        {
+          "id": "waiting-job-warns-no-worker",
+          "description": "With the threshold at 0.0005 hours (1.8 s), the same waiting job makes facts_drain warn that no worker runs facts-absorb jobs and name gbrain jobs supervisor start, and dream still exits 0.",
+          "run": [
+            "dream",
+            "--phase",
+            "facts_drain",
+            "--json"
+          ],
+          "env": {
+            "GBRAIN_QUEUE_NO_WORKER_WARN_HOURS": "0.0005"
+          },
+          "expect": {
+            "exit": "zero",
+            "output_includes": [
+              "gbrain jobs supervisor start"
+            ],
+            "json": [
+              {
+                "path": "phases.[*].status",
+                "op": "includes",
+                "value": "warn"
+              },
+              {
+                "path": "phases.[*].details.reason",
+                "op": "includes",
+                "value": "no_worker"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pr-guard-9950-contacts-enrich-adds-only",
+      "workflow": "sync",
+      "origin": "guard for https://github.com/garrytan/gbrain/pull/9950 (nightly commit screen 2026-11-22)",
+      "text": "Fill in my Apple Contacts from what my brain knows, but do not change anything already on a card.",
+      "ground_truth_slugs": [
+        "people/tess-example",
+        "people/uma-example"
+      ],
+      "rubric": [
+        {
+          "id": "adds_only",
+          "criterion": "Fills only empty company and job title fields and never replaces a value already on a card",
+          "weight": 2
+        },
+        {
+          "id": "confirmed_only",
+          "criterion": "Adds only emails and phones the owner stated, never one an extractor guessed",
+          "weight": 2
+        }
+      ],
+      "guards": {
+        "pr": "https://github.com/garrytan/gbrain/pull/9950",
+        "behavior": "Apple Contacts enrichment only adds. It fills an empty company or job title from the one linked person page, adds an email or phone only from a fact the owner stated or confirmed (never a guessed one), never replaces a value already on a card, and in dry_run mode records the batch without sending it and without keeping any email or phone.",
+        "fix_commit": "19cebd241916195fcbc0c1ee4a69a37feeb6a8c7",
+        "first_release": "v0.60.763.0",
+        "newest_release": "v0.60.765.0",
+        "expected": "pass"
+      },
+      "setup": [
+        {
+          "stub_server": "apple-contacts",
+          "contacts": {
+            "c-tess": {
+              "given_name": "Tess",
+              "family_name": "Example",
+              "emails": [
+                {
+                  "label": null,
+                  "value": "tess@mail.example"
+                }
+              ]
+            },
+            "c-uma": {
+              "given_name": "Uma",
+              "family_name": "Example",
+              "organization": "Kept Co",
+              "emails": [
+                {
+                  "label": null,
+                  "value": "uma@mail.example"
+                }
+              ]
+            }
+          },
+          "capture": {
+            "ac_port": "port",
+            "ac_token": "token",
+            "ac_log": "requests_log"
+          }
+        },
+        {
+          "write_file": "{corpus}/secrets/ac-token.json",
+          "content": "{\"accessToken\":\"{ac_token}\"}",
+          "mode": "600"
+        },
+        {
+          "run": [
+            "put",
+            "people/tess-example"
+          ],
+          "stdin": "puts/tess.md"
+        },
+        {
+          "run": [
+            "put",
+            "people/uma-example"
+          ],
+          "stdin": "puts/uma.md"
+        },
+        {
+          "run": [
+            "remember",
+            "Phone: (555) 555-0142",
+            "--entity",
+            "people/tess-example",
+            "--content-origin",
+            "user_said",
+            "--provenance",
+            "owner-note",
+            "--infer-entity",
+            "false"
+          ]
+        },
+        {
+          "run": [
+            "remember",
+            "Email: tess.home@mail.example",
+            "--entity",
+            "people/tess-example",
+            "--content-origin",
+            "user_said",
+            "--provenance",
+            "owner-note",
+            "--infer-entity",
+            "false"
+          ]
+        },
+        {
+          "run": [
+            "remember",
+            "Email: tess.guess@mail.example",
+            "--entity",
+            "people/tess-example",
+            "--content-origin",
+            "inferred",
+            "--provenance",
+            "mail-extract",
+            "--infer-entity",
+            "false"
+          ]
+        },
+        {
+          "run": [
+            "config",
+            "set",
+            "apple_contacts.enrich",
+            "dry_run"
+          ],
+          "allow_fail": true,
+          "note": "a build without enrichment refuses the unknown key; the checks then fail on the missing enrich command instead of the run stopping in setup, and pull-records-dry-run-without-sending still fails if the key was not set"
+        },
+        {
+          "write_file": "{corpus}/secrets/ac-write-token.json",
+          "content": "{\"accessToken\":\"write-token-placeholder\"}",
+          "mode": "600"
+        },
+        {
+          "run": [
+            "config",
+            "set",
+            "apple_contacts.write",
+            "on"
+          ],
+          "note": "writes on, so only the dry_run mode can keep the batch from being sent"
+        },
+        {
+          "run": [
+            "config",
+            "set",
+            "apple_contacts.write_token_file",
+            "{corpus}/secrets/ac-write-token.json"
+          ],
+          "allow_fail": true,
+          "note": "a build without enrichment refuses the unknown key"
+        },
+        {
+          "run": [
+            "sources",
+            "add",
+            "ac",
+            "--kind",
+            "apple-contacts",
+            "--helper-host",
+            "127.0.0.1",
+            "--helper-port",
+            "{ac_port}",
+            "--token-file",
+            "{corpus}/secrets/ac-token.json",
+            "--record",
+            "database"
+          ]
+        },
+        {
+          "run": [
+            "sync",
+            "--source",
+            "ac"
+          ],
+          "note": "pulls both cards from the stub; enrichment runs after the clean pull in dry_run mode"
+        }
+      ],
+      "checks": [
+        {
+          "id": "dry-run-adds-only-confirmed-values",
+          "description": "The proposed batch is exactly these additions: Tess's empty company and job title, Uma's empty job title, and the email and phone the owner stated for Tess. The guessed email is left out and Uma's company is never replaced.",
+          "run": [
+            "apple-contacts",
+            "enrich",
+            "dry-run",
+            "--source",
+            "ac",
+            "--json"
+          ],
+          "expect": {
+            "exit": "zero",
+            "json": [
+              {
+                "path": "changes.[*].change",
+                "op": "rows_eq",
+                "value": [
+                  {
+                    "id": "c-tess",
+                    "op": "fill",
+                    "field": "organization",
+                    "value": "Acme Example"
+                  },
+                  {
+                    "id": "c-tess",
+                    "op": "fill",
+                    "field": "job_title",
+                    "value": "Engineer"
+                  },
+                  {
+                    "id": "c-uma",
+                    "op": "fill",
+                    "field": "job_title",
+                    "value": "Designer"
+                  },
+                  {
+                    "id": "c-tess",
+                    "op": "add_value",
+                    "field": "emails",
+                    "value": "tess.home@mail.example"
+                  },
+                  {
+                    "id": "c-tess",
+                    "op": "add_value",
+                    "field": "phones",
+                    "value": "(555) 555-0142"
+                  }
+                ]
+              },
+              {
+                "path": "changes.[*].change.value",
+                "op": "excludes",
+                "value": "tess.guess@mail.example"
+              },
+              {
+                "path": "changes.[*].change.value",
+                "op": "excludes",
+                "value": "Other Co"
+              }
+            ]
+          }
+        },
+        {
+          "id": "pull-records-dry-run-without-sending",
+          "description": "After the pull, enrich status shows a dry_run record that sent nothing and keeps no email or phone.",
+          "run": [
+            "apple-contacts",
+            "enrich",
+            "status",
+            "--source",
+            "ac",
+            "--json"
+          ],
+          "expect": {
+            "exit": "zero",
+            "stdout_excludes": [
+              "555-0142",
+              "tess.home@mail.example",
+              "tess.guess@mail.example"
+            ],
+            "json": [
+              {
+                "path": "enrich",
+                "op": "eq",
+                "value": "dry_run"
+              },
+              {
+                "path": "last_run.mode",
+                "op": "eq",
+                "value": "dry_run"
+              },
+              {
+                "path": "last_run.sent",
+                "op": "eq",
+                "value": false
+              },
+              {
+                "path": "last_run.changes",
+                "op": "nonempty"
+              }
+            ]
+          }
+        },
+        {
+          "id": "dry-run-sends-no-batch-with-writes-on",
+          "description": "With writes switched on and a write token in place, the dry_run pull read the cards from the fake helper and sent it no write batch.",
+          "run": [
+            "config",
+            "get",
+            "apple_contacts.write"
+          ],
+          "expect": {
+            "exit": "zero",
+            "stdout_includes": [
+              "on"
+            ],
+            "file": {
+              "path": "{ac_log}",
+              "includes": [
+                "GET /v1/contacts/changes"
+              ],
+              "excludes": [
+                "POST"
+              ]
+            }
+          }
+        },
+        {
+          "id": "control-switch-enrich-on",
+          "description": "Positive control, step 1. Switch enrichment from dry_run to on.",
+          "run": [
+            "config",
+            "set",
+            "apple_contacts.enrich",
+            "on"
+          ],
+          "expect": {
+            "exit": "zero"
+          }
+        },
+        {
+          "id": "control-on-sends-a-batch",
+          "description": "Positive control, step 2. The next pull in on mode sends its batch to the fake helper's write route, so the request log can see a send and the dry_run check above is not passing on a path that never reaches the helper.",
+          "run": [
+            "sync",
+            "--source",
+            "ac"
+          ],
+          "expect": {
+            "file": {
+              "path": "{ac_log}",
+              "includes": [
+                "POST /v1/contacts/batch"
+              ]
+            }
+          }
         }
       ]
     }
