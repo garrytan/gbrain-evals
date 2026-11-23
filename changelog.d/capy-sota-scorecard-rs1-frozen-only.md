@@ -1,1 +1,0 @@
-The monthly SOTA scorecard counts RS1 rows only when they were read with RS1's frozen readers (GPT-6.1 Sol in place of GPT-6.2 Sol). An RS1 re-read with other readers is shown as descriptive unless RS1's plan gets a dated amendment registering it. See [docs/sota/scorecard-rules.md](docs/sota/scorecard-rules.md).
