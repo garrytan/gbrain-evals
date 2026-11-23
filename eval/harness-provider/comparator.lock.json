@@ -72,12 +72,13 @@
   },
   {
    "name": "aiohttp",
-   "version": "3.14.3",
+   "version": "3.14.4",
    "hashes": [
-    "39aded8c7f3b935b54aab1d8d73c70ec0ee2d3ec3b943e0e86611bc150ba47f5",
-    "543906c127fb1d929b95076db19b83fa2d46751006ff1e23b093aa5ac4d8db42",
-    "617105e2c3018ee38d0c8ce5ee3c84f621a6d8b9f723202aacaff28449ca91ee",
-    "f631fe87a6f30df5fbe6d79640b25e4cffb38c31c7fb6f10871517b84b0f8c1a"
+    "322e3d741b3133bcbb981a41d4f9b8ac3545c18de49c662c2b1f4e1c770b98ad",
+    "55b0b335982b0db7117dff7f6a8e3aad43c4105f9e392ca04f9fc8d958a95cce",
+    "5c6758ba62aea282c537179cfc8474a90f2b5f7b089cc5ff66d8920d86a9bfdd",
+    "bf734016932d68e1324cfb638cac7a0866a83933a33badf15e836a7e24efb8c0",
+    "c5e93ab6e6330dce40f5b43996f1fc5f2543296d263a5e4b59ff09e73870b7d8"
    ],
    "marker": "python_full_version >= '3.12'"
   },
@@ -216,9 +217,9 @@
   },
   {
    "name": "certifi",
-   "version": "2026.7.22",
+   "version": "2026.10.19",
    "hashes": [
-    "62f22742b58a1a33014a2b6b706588a8d7e2a88ae7bd1a6ebe8c992928483775"
+    "42d35340cc5b9ba78e818ddbff0c5b1c2b779de448a340fd1b989f5fa8670e1b"
    ],
    "marker": "python_full_version >= '3.12'"
   },

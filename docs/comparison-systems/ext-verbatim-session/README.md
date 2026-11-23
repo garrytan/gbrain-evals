@@ -12,7 +12,7 @@ that step.
 
 | Piece | Value |
 |---|---|
-| Package | `mempalace==3.10.0`, all 77 transitive dependencies held to the vendor's own `uv.lock` at tag `v3.10.0` through `constraint-dependencies` in `pyproject.toml`, resolved with `exclude-newer = 2026-10-06T00:00:00Z` (`chromadb==1.5.7`, `onnxruntime==1.24.4`) |
+| Package | `mempalace==3.10.0`, all 77 transitive dependencies held to the vendor's own `uv.lock` at tag `v3.10.0` through `constraint-dependencies` in `pyproject.toml`, resolved with `exclude-newer = 2026-10-06T00:00:00Z`, except `anyio` 4.14.2, `certifi` 2026.10.19 and `urllib3` 2.8.0, raised above the vendor's lock for security fixes on 2026-11-23 (`chromadb==1.5.7`, `onnxruntime==1.24.4`) |
 | Base image | `python:3.12-slim-bookworm@sha256:54c85f3c…`, uv `0.12.3` by digest |
 | Embedder | ChromaDB's default `all-MiniLM-L6-v2` ONNX model (384 dimensions), baked into the image at build time. The build checks it gives the same vector as MemPalace's own default `minilm` embedder (cosine 1.0) |
 | LLM | none. No model is called on ingest or retrieval, and the LLM reranker (`--llm-rerank`) is off |
@@ -105,6 +105,14 @@ check, not a measurement of retrieval quality.
 - The common-models arm is not available from this bundle.
 
 ## Changelog
+
+### 2026-11-23: security fixes in the lock
+`anyio` 4.13.0 to 4.14.2, `certifi` 2026.2.25 to 2026.10.19 and `urllib3` 2.6.3 to 2.8.0, the versions
+[gbrain-evals#433](https://github.com/garrytan/gbrain-evals/pull/433) chose for the same advisories. They are raised in
+`constraint-dependencies` and let past the 2026-10-06 cutoff with `exclude-newer-package`, so every other package keeps
+its resolution, and the lock is relocked with the Dockerfile's uv 0.12.3. `uv.lock` moves from `e2e066bf` to `3dd03a0b`.
+Earlier campaigns ran on the old lock, and their published rows keep the hash they recorded; runs started after this
+change record the new one.
 
 ### 2026-10-06: first version
 Pins MemPalace 3.10.0 (commit `22fd87f`) with the vendor's lock, runs the raw and hybrid recipes with the LLM

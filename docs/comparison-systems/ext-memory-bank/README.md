@@ -109,6 +109,15 @@ outcomes and the Phase 4 cost extrapolation. Its scores are setup evidence, not 
 
 ## Changelog
 
+### 2026-11-23: security fixes in the lock
+
+`aiohttp` 3.14.3 to 3.14.4, `urllib3` 2.7.0 to 2.8.0 and `yarl` 1.22.0 to 1.25.1 (the new `aiohttp` needs it), raised in
+`constraint-dependencies` and relocked with the Dockerfile's uv 0.9.5. It is the same change
+[gbrain-evals#433](https://github.com/garrytan/gbrain-evals/pull/433) made to the shim in `eval/systems/memory-bank`,
+and the new lock is byte-identical to that shim's. `uv.lock` moves from `f54d89df` to `29b875e0`, and `capability.json`
+records the new hash. Earlier campaigns ran on the old lock, and their published rows keep the hash they recorded; runs
+started after this change record the new one.
+
 ### 2026-10-17: database volume
 
 The `db` service keeps its data in the named volume `db-data` (`/var/lib/postgresql`, where the pg18 image keeps

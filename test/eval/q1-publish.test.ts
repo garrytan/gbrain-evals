@@ -53,7 +53,7 @@ describe('bundlePins', () => {
       expect(pins[p.kind]).toMatch(/^bundle (lock [0-9a-f]{8}, )?capabilities [0-9a-f]{8}$/);
       expect(pins[p.kind]).not.toContain(p.product.split(' ')[0]);
     }
-    expect(pins['ext-markdown-kb']).toBe('bundle lock e1a14a19, capabilities 4e95f8ef');
+    expect(pins['ext-markdown-kb']).toBe('bundle lock 90b883f1, capabilities 4e95f8ef');
   });
 });
 
