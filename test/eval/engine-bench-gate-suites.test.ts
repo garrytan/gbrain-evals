@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { GATE_SUITE_SCHEMA, GATE_SUITES, amendmentLine, judgeSuite, type GateSuite } from '../../eval/runner/engine-bench/gate-suites.ts';
+import { parseCat13Argv } from '../../eval/runner/cat13-conceptual.ts';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -141,6 +142,34 @@ describe('gate suites', () => {
     const r = judgeSuite(suite('memory-verb-conformance'), runs(k => (k === 'rust' ? receipt(k, { ...conf(18), verdict: 'fail' }) : receipt(k, conf(24))), {}, refusal_sites), { counted: false });
     expect(r.losses.at(-1)).toEqual({ id: 'memory-verb-conformance:refusal-sites', reason: 'The Rust run refused 2 engine calls at: core/eligibility/stamp.ts:195 (executeRaw, raw_sql, from core/ops/facts.ts:555) x2' });
     expect(r.reason).toContain('core/eligibility/stamp.ts:195');
+  });
+});
+
+describe('gate-suite runs', () => {
+  test('paid Cat 13 arguments parse, and only the engine that fills the cache may call the provider', () => {
+    const budget = ['--budget-run-id', 'r1', '--budget-usd', '5'];
+    const fill = parseCat13Argv(suite('cat13/ndcg5').args({ paid: true, cacheFile: '/tmp/c13.sqlite', fillsCache: true, budget }), {});
+    expect(fill).toMatchObject({ embedCache: '/tmp/c13.sqlite' });
+    expect(fill.embedCacheOnly).toBeUndefined();
+    expect(fill.budget?.runId).toBe('r1');
+    expect(parseCat13Argv(suite('cat13/ndcg5').args({ paid: true, cacheFile: '/tmp/c13.sqlite', fillsCache: false, budget }), {}).embedCacheOnly).toBe(true);
+    expect(() => parseCat13Argv(['--embed-cache-only'], {})).toThrow('--embed-cache-only needs --embed-cache');
+  });
+
+  test('a receipt naming another engine than its directory is NOT_RUN', () => {
+    const conf = { data: { summary: { cases_passed: 24, cases_total: 24 } } };
+    const r = judgeSuite(suite('memory-verb-conformance'), runs(k => receipt(k === 'postgres' ? 'pglite' : k, conf)), { counted: false });
+    expect(r).toMatchObject({ verdict: 'NOT_RUN', reason: "the receipt in postgres's directory names engine pglite" });
+  });
+
+  test('a Rust runner that exits without a receipt where both TypeScript engines completed is FAIL with its refused call sites', () => {
+    const conf = { data: { summary: { cases_passed: 24, cases_total: 24 } } };
+    const sites = [{ member: 'executeRaw', capability: 'raw_sql', site: 'core/x.ts:1', caller: null, count: 1 }];
+    const r = judgeSuite(suite('cat13/ndcg5'), runs(k => (k === 'rust' ? null : receipt(k, conf)), {}, sites), { counted: false });
+    expect(r.verdict).toBe('FAIL');
+    expect(r.rows.map(x => [x.id, x.verdict])).toEqual([['cat13/ndcg5', 'FAIL'], ['cat13/ndcg5:strict', 'NOT_RUN']]);
+    expect(r.losses.map(l => l.id)).toEqual(['cat13/ndcg5', 'cat13/ndcg5:refusal-sites']);
+    expect(r.reason?.startsWith('Reported, not gating, for Dec 1 (plan D24). Rust wrote no receipt')).toBe(true);
   });
 });
 

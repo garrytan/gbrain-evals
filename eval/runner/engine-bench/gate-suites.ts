@@ -94,7 +94,7 @@ export const GATE_SUITES: readonly GateSuite[] = [
   {
     id: 'cat13/ndcg5', gate: 'E1', benchmark: 'Cat 13 conceptual search, gbrain arm, nDCG@5', category: 'cat13-conceptual', script: 'eval/runner/cat13-conceptual.ts',
     canonicalReceipt: true, embedsLive: true,
-    args: o => ['--adapter', 'gbrain', ...stub(o.paid), ...(o.paid ? ['--embed-cache', o.cacheFile!, ...o.budget] : [])],
+    args: o => ['--adapter', 'gbrain', ...stub(o.paid), ...(o.paid ? ['--embed-cache', o.cacheFile!, ...(o.fillsCache ? [] : ['--embed-cache-only']), ...o.budget] : [])],
     measure: r => ({ ndcg5: scorecard(r, 'gbrain').ndcg5 }),
     rule: { kind: 'paired-bound', key: 'ndcg5', floor: -RUST_RECALL_DELTA },
     note: 'Reported, not gating, for Dec 1 (plan D24).',
@@ -233,18 +233,20 @@ export function engineDir(category: string, kind: EvalEngineKind, reports = join
   return join(reports, category, `engine-${kind}`);
 }
 
-interface EngineRun { kind: EvalEngineKind; receipt: Receipt | null; refused: string | null; refusalSites?: RustRefusalSite[] }
+interface EngineRun { kind: EvalEngineKind; receipt: Receipt | null; refused: string | null; refusalSites?: RustRefusalSite[]; logTail?: string }
 
 function loadRun(category: string, kind: EvalEngineKind, reports?: string): EngineRun {
   const dir = engineDir(category, kind, reports);
   const refusedFile = join(dir, 'refused.txt');
   const receiptFile = join(dir, 'receipt.json');
   const sitesFile = join(dir, REFUSAL_SITES);
+  const logFile = join(dir, 'run.log');
   return {
     kind,
     receipt: existsSync(receiptFile) ? JSON.parse(readFileSync(receiptFile, 'utf8')) : null,
     refused: existsSync(refusedFile) ? readFileSync(refusedFile, 'utf8').trim() : null,
     refusalSites: existsSync(sitesFile) ? JSON.parse(readFileSync(sitesFile, 'utf8')) : [],
+    logTail: existsSync(logFile) ? readFileSync(logFile, 'utf8').trim().slice(-500) : '',
   };
 }
 
@@ -325,7 +327,20 @@ export function judgeSuite(s: GateSuite, runs: Record<EvalEngineKind, EngineRun>
 
   for (const k of EVAL_ENGINES) if (runs[k].refused) return notRun(`${k} refused: ${runs[k].refused}`);
   for (const k of TS_ENGINES) if (!completed(runs[k].receipt)) return notRun(`${k} has no completed receipt (${runs[k].receipt?.run_status ?? 'missing'})`);
-  if (!runs.rust.receipt) return notRun('rust has no receipt');
+  for (const k of EVAL_ENGINES) if (runs[k].receipt && runs[k].receipt!.engine !== k) return notRun(`the receipt in ${k}'s directory names engine ${runs[k].receipt!.engine ?? 'none'}`);
+  const sitesLoss = (): Loss[] => {
+    const refused = runs.rust.refusalSites ?? [];
+    return refused.length ? [{ id: `${s.id}:refusal-sites`, reason: `The Rust run refused ${refused.reduce((n, x) => n + x.count, 0)} engine calls at: ${refused.map(siteText).join('; ')}` }] : [];
+  };
+  if (!runs.rust.receipt) {
+    const losses = [{ id: s.id, reason: `Rust wrote no receipt: its runner exited without one, where both TypeScript engines completed.${runs.rust.logTail ? ` Log tail: ${runs.rust.logTail}` : ''}` }, ...sitesLoss()];
+    const reason = withNote(losses.map(l => l.reason).join(' | ').slice(0, 1600))!;
+    return {
+      ...base, gbrain: { ...buildOf(runs.pglite.receipt!), rust_addon: null }, verdict: 'FAIL', reason,
+      rows: [{ id: s.id, benchmark: s.benchmark, verdict: 'FAIL', measured, reason }, ...extraRowIds(s).map(id => ({ id, benchmark: id === STRICT(s) ? `${s.benchmark}, strict point comparison (secondary)` : s.beside!.benchmark, verdict: 'NOT_RUN' as const, measured: {}, reason }))],
+      losses,
+    };
+  }
   const builds = EVAL_ENGINES.map(k => buildOf(runs[k].receipt!).overlay.commit);
   if (new Set(builds).size !== 1 || builds[0] === null) return notRun(`the engines ran different or unnamed gbrain builds (${builds.join(', ')})`);
   const gbrain = buildOf(runs.rust.receipt);
@@ -402,8 +417,7 @@ export function judgeSuite(s: GateSuite, runs: Record<EvalEngineKind, EngineRun>
     });
   }
   const failed = gating.length > 0;
-  const refused = runs.rust.refusalSites ?? [];
-  if (failed && refused.length) gating.push({ id: `${s.id}:refusal-sites`, reason: `The Rust run refused ${refused.reduce((n, x) => n + x.count, 0)} engine calls at: ${refused.map(siteText).join('; ')}` });
+  if (failed) gating.push(...sitesLoss());
   const verdict = failed ? 'FAIL' : 'PASS';
   const reason = withNote(failed ? gating.map(l => l.reason).join(' | ').slice(0, 1600) : null);
   return {
@@ -476,11 +490,12 @@ async function run(argv: readonly string[]): Promise<void> {
       const env0 = job.live ? { ...Object.fromEntries(Object.entries(process.env).filter((e): e is [string, string] => e[1] !== undefined)), GBRAIN_EVAL_ENGINE: kind, ...(pg ? { LIFECYCLE_PG_URL: pg } : {}) } : runnerEnv(kind, pg);
       const env = { ...env0, [RUST_REFUSALS_FILE_ENV]: join(dir, REFUSAL_SITES) };
       const args = [job.script, '--gbrain', spec, ...job.args({ paid: job.live, cacheFile: job.live ? join(cacheDir, `${job.category}.sqlite`) : undefined, fillsCache: i === 0, budget })];
+      const canonical = join(REPO, 'eval/reports', job.category, 'receipt.json');
+      if (job.canonical) rmSync(canonical, { force: true });
       const t0 = Date.now();
       const { code, tail } = await runChild(args, env, join(dir, 'run.log'));
       if (code === EVAL_ENGINE_REFUSED_EXIT) writeFileSync(join(dir, 'refused.txt'), `${tail.split('\n').filter(l => l.startsWith('REFUSED')).at(-1) ?? tail.slice(-500)}\n`);
       if (job.canonical) {
-        const canonical = join(REPO, 'eval/reports', job.category, 'receipt.json');
         if (existsSync(canonical)) copyFileSync(canonical, join(dir, 'receipt.json'));
       }
       console.log(`${job.label} ${kind}: exit ${code} in ${Math.round((Date.now() - t0) / 1000)}s`);

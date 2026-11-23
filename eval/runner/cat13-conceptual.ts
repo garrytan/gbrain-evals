@@ -1484,6 +1484,8 @@ export interface Cat13Options {
    * and different engines see byte-identical vectors; misses are paid through the budget ledger as before.
    */
   embedCache?: string;
+  /** --embed-cache-only: a cache miss fails that embedding instead of calling the provider, so it spends nothing. */
+  embedCacheOnly?: boolean;
   /** Unscored repeat passes timed after the scored pass, for warm-cache latency (--warm-passes N, 0-10). */
   warmPasses?: number;
   /** `<checkout>[@ref]` of the gbrain build the gbrain arm measures (--gbrain, else GBRAIN_UNDER_TEST); unset, the pinned gbrain. */
@@ -1557,6 +1559,7 @@ export function parseCat13Argv(
       case '--preregistration': opts.preregistration = value(); break;
       case '--pg-url': opts.pgUrl = value(); break;
       case '--embed-cache': opts.embedCache = value(); break;
+      case '--embed-cache-only': opts.embedCacheOnly = true; break;
       case '--gbrain': opts.gbrain = value(); break;
       case '--warm-passes': {
         const n = parseNonNegativeInt(value(), '--warm-passes');
@@ -1571,7 +1574,7 @@ export function parseCat13Argv(
         opts.estimateUsd = n;
         break;
       }
-      case '--budget-usd': case '--budget-ledger': case '--program-cap-usd': {
+      case '--budget-usd': case '--budget-ledger': case '--budget-run-id': case '--program-cap-usd': {
         const flagValue = value();
         opts.budget = budgetOptionsFrom([...budgetArgv, flag, flagValue], env);
         budgetArgv.push(flag, flagValue);
@@ -1583,8 +1586,8 @@ export function parseCat13Argv(
           + `--embedding-model <provider:model> --embedding-dims <N> --reranker on|off --autocut on|off `
           + `--expansion-variant-budget <b> --keyword-arm-confidence-floor <f|off> `
           + `--search-pin <search.key>=<value> (repeatable; generic pass-through — gbrain ignores unknown search.* keys silently) `
-          + `--tuning-concepts <N> --holdout-concepts <M> --seed <N> --budget-usd <dollars> --budget-ledger <path> --program-cap-usd <dollars> `
-          + `--pg-url <admin url> --embed-cache <sqlite path> --warm-passes <N> --gbrain <checkout>[@ref] (engine: GBRAIN_EVAL_ENGINE=pglite|postgres|rust)`,
+          + `--tuning-concepts <N> --holdout-concepts <M> --seed <N> --budget-usd <dollars> --budget-ledger <path> --budget-run-id <id> --program-cap-usd <dollars> `
+          + `--pg-url <admin url> --embed-cache <sqlite path> --embed-cache-only --warm-passes <N> --gbrain <checkout>[@ref] (engine: GBRAIN_EVAL_ENGINE=pglite|postgres|rust)`,
         );
     }
   }
@@ -1594,6 +1597,7 @@ export function parseCat13Argv(
   if (opts.pgUrl === undefined && env.LIFECYCLE_PG_URL) opts.pgUrl = env.LIFECYCLE_PG_URL;
   if (opts.gbrain === undefined && env.GBRAIN_UNDER_TEST) opts.gbrain = env.GBRAIN_UNDER_TEST;
   if (opts.embedCache !== undefined && opts.stubEmbed) throw new Error('--embed-cache caches live provider vectors; it does not apply to --stub-embed');
+  if (opts.embedCacheOnly && opts.embedCache === undefined) throw new Error('--embed-cache-only needs --embed-cache <sqlite path>');
   return opts;
 }
 
@@ -1817,7 +1821,8 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
     embedCache = new EmbeddingCache(opts.embedCache, `${embedder.model}@${embedder.dims}`);
     for (const [gateway, root] of new Map<GatewayModule, string>([[pinnedGateway, resolveGbrainUnderTest(null).root], [gutGateway, ctx.gut.root]])) {
       const { embedMany } = await import(createRequire(join(root, 'package.json')).resolve('ai')) as { embedMany: (p: unknown) => Promise<{ embeddings: number[][]; usage?: unknown }> };
-      gateway.__setEmbedTransportForTests(makeCachingTransport(p => embedMany(p), embedCache!) as unknown as Parameters<GatewayModule['__setEmbedTransportForTests']>[0]);
+      const transport = opts.embedCacheOnly ? async () => { throw new Error('--embed-cache-only: an embedding was not in the cache'); } : (p: unknown) => embedMany(p);
+      gateway.__setEmbedTransportForTests(makeCachingTransport(transport, embedCache!) as unknown as Parameters<GatewayModule['__setEmbedTransportForTests']>[0]);
     }
   }
 
