@@ -144,7 +144,7 @@ export function layoutSessions(ns: string, sessions: readonly StoredSession[]): 
 export interface GrepLimits { wall_ms: number; max_output_bytes: number }
 export const DEFAULT_GREP_LIMITS: GrepLimits = { wall_ms: 60_000, max_output_bytes: 512 * 1024 * 1024 };
 
-export interface GrepLimitEvent { kind: 'wall_time' | 'memory'; pattern: string; path: string; ms: number; bytes: number }
+export interface GrepLimitEvent { kind: 'wall_time' | 'memory' | 'spawn_error'; pattern: string; path: string; ms: number; bytes: number }
 
 /** Refuses when ripgrep is missing: the file agent's grep needs it. */
 export function requireRipgrep(): void {
@@ -189,6 +189,11 @@ export function ripgrep(root: string, limits: GrepLimits = DEFAULT_GREP_LIMITS, 
       }
     });
     child.stderr.on('data', (chunk: Buffer) => { stderr += chunk.toString('utf8'); });
+    child.on('error', e => {
+      clearTimeout(timer);
+      onLimit({ kind: 'spawn_error', pattern: req.pattern, path: req.path, ms: performance.now() - t0, bytes: 0 });
+      resolve(`grep error: ripgrep could not run (${(e as NodeJS.ErrnoException).code ?? e.message})`);
+    });
     child.on('close', code => {
       clearTimeout(timer);
       const ms = performance.now() - t0;
@@ -441,8 +446,9 @@ export class FileAgentSystem implements AnsweringSystem {
   async answer(ns: string, q: PublicQuestion, opts: AnswerOptions): Promise<AgentAnswer> {
     const { root, files } = this.tree(ns);
     const store = new FileStore(new Map([...files].map(([p, f]) => [p, f.content])));
-    const arm = new FsArm('file-agent', store, { grep: ripgrep(root, this.opts.grepLimits ?? DEFAULT_GREP_LIMITS, e => this.limitEvents.push(e)), write: false });
-    return answerWithArm(ns, q, opts, {
+    let spawnErrors = 0;
+    const arm = new FsArm('file-agent', store, { grep: ripgrep(root, this.opts.grepLimits ?? DEFAULT_GREP_LIMITS, e => { this.limitEvents.push(e); if (e.kind === 'spawn_error') spawnErrors++; }), write: false });
+    const answer = await answerWithArm(ns, q, opts, {
       arm, system: FILE_AGENT_SYSTEM, maxTurns: this.opts.maxTurns ?? FILE_AGENT_MAX_TURNS, effort: this.opts.effort ?? FILE_AGENT_EFFORT,
       fetchImpl: this.opts.fetchImpl ?? proxiedFetch(), scripted: this.opts.scripted?.(q), receipts: this.receipts,
       opened: run => {
@@ -456,6 +462,9 @@ export class FileAgentSystem implements AnsweringSystem {
         return opened;
       },
     });
+    return spawnErrors && answer.outcome !== 'budget_not_run'
+      ? { ...answer, outcome: 'harness_invalid', error: `ripgrep could not run on ${spawnErrors} grep call(s), so the agent's search was broken` }
+      : answer;
   }
 
   async close() {
