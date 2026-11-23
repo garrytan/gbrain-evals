@@ -247,7 +247,7 @@ describe('two-item keyless smoke through the q1 cell runner', () => {
   });
   const ndjson = (path: string) => readFileSync(path, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l));
 
-  test('both SOTA dev cells, on two fixture questions in their place: every reader answers from the session it opened, judged by the canonical and per-reader frontier judges, nothing reaches a provider', async () => {
+  test('both SOTA dev cells, on two fixture questions in their place: every reader answers from the session it opened, judged by the per-reader frontier judge alone, nothing reaches a provider', async () => {
     const ids = ['conv-a:q003', 'conv-b:q003'];
     for (const cell of sotaCells()) {
       const def: CellDefinition = { ...cell, benchmark: 'locomo', canonical_instrument: 'locomo', selection: { kind: 'ids', ids }, only_conversations: ['conv-a', 'conv-b'] };
@@ -264,10 +264,11 @@ describe('two-item keyless smoke through the q1 cell runner', () => {
         expect(answers.every(a => a.outcome === 'scored' && a.stop_reason === 'submitted')).toBe(true);
         expect(Object.fromEntries(answers.filter(a => a.reader === arm.readers[0]).map(a => [a.question_id, a.opened_source_ids]))).toEqual({ 'conv-a:q003': ['session_2'], 'conv-b:q003': ['session_3'] });
         const judgments = ndjson(join(dir, 'judgments.ndjson'));
-        expect(judgments).toHaveLength(answers.length * 2);
-        expect(judgments.every(j => j.outcome === 'scored' && j.score === 1)).toBe(true);
-        expect([...new Set(judgments.filter(j => j.settings).map(j => j.judge))].sort()).toEqual(arm.frontier!.judges);
+        expect(judgments).toHaveLength(answers.length);
+        expect(judgments.every(j => j.outcome === 'scored' && j.score === 1 && j.settings)).toBe(true);
+        expect([...new Set(judgments.map(j => j.judge))].sort()).toEqual(arm.frontier!.judges);
         const config = JSON.parse(readFileSync(join(dir, 'run-config.json'), 'utf8'));
+        expect(config.instrument.judge).toBeNull();
         expect(config.reader.prompt_sha256).toBe(createHash('sha256').update(def.system === 'gbrain-defaults' ? GBRAIN_AGENT_SYSTEM : FILE_AGENT_SYSTEM).digest('hex'));
       }
     }

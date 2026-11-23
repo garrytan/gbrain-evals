@@ -157,8 +157,9 @@ export interface CellDefinition {
   effort: 'medium';
   canonical_instrument: string;
   /**
-   * BG1-C: false when no answer gets the canonical instrument's judge (BG1's descriptive gemini-3.8-flash view), so each
-   * answer's one grade is its per-reader gating judge. Absent on every other cell, whose answers all get the canonical judge.
+   * False when no answer gets the canonical instrument's judge, so each answer's one grade is its per-reader gating judge:
+   * BG1-C (BG1's descriptive gemini-3.8-flash view) and the SOTA loop's dev and leader cells (LongMemEval-S's gpt-4o and
+   * BEAM-1M's gpt-4.1-mini). Absent on every other cell, whose answers all get the canonical judge.
    */
   descriptive_view?: false;
   /** Write-start-to-queryable probes: the last session plus `sample` sessions per conversation, seeded. */
@@ -800,7 +801,7 @@ export function estimateCell(def: Omit<CellDefinition, 'estimate'>): CellEstimat
     if (arm.mode === 'own-answer' && arm.variant === 'synthesize') { const s = ASSUMPTIONS.synthesize; add('own_answer', n * (s.input * s.price.input + s.output * s.price.output) / 1e6); }
     if (arm.mode === 'retrieval-only') continue;
     const judged = arm.readers.reduce((s, r) => s + answers(r), 0);
-    add('judges', judged * (measured?.canonical ?? judgeCost(def.benchmark)));
+    if (def.descriptive_view !== false) add('judges', judged * (measured?.canonical ?? judgeCost(def.benchmark)));
     if (arm.frontier?.per_reader) for (const r of arm.frontier.readers ?? arm.readers) add('frontier_judges', (arm.frontier.sample !== null ? Math.min(n, arm.frontier.sample) : n) * (measured ? rs1GatingJudgeUsd(frontierJudgesFor(arm, r)[0]) : judgeCost(def.benchmark, frontierJudgesFor(arm, r)[0])));
     else if (arm.frontier) {
       const fr = arm.frontier.readers ?? arm.readers;
@@ -897,7 +898,7 @@ export function hoursPerMtok(system: string, configuration: string, benchmark: s
 
 /** One cell. `extra`: F6 cells name their own block, probes and launch environment, BG1's gbrain cell its frozen launch, and the SOTA loop's gbrain agent its runner (Q1 cells pass none of these). */
 export function makeCell(set: SetId, system: string, configuration: string, armSpecs: ArmSpec[],
-  extra: { ingest_replicate?: number; block?: BlockId; probes?: CellDefinition['probes']; launch?: NonNullable<CellDefinition['launch']>; launchEnv?: Record<string, string>; keptUnits?: number; runner?: CellDefinition['runner'] } = {}): CellDefinition {
+  extra: { ingest_replicate?: number; block?: BlockId; probes?: CellDefinition['probes']; launch?: NonNullable<CellDefinition['launch']>; launchEnv?: Record<string, string>; keptUnits?: number; runner?: CellDefinition['runner']; descriptiveView?: false } = {}): CellDefinition {
   const s = ALL_SETS[set];
   const id = `${set.toLowerCase()}.${system}.${configuration}${extra.ingest_replicate && extra.ingest_replicate > 1 ? `.r${extra.ingest_replicate}` : ''}`;
   const runner = extra.runner ?? (SHIMS.has(system) ? 'shim' as const : 'in-process' as const);
@@ -920,7 +921,7 @@ export function makeCell(set: SetId, system: string, configuration: string, armS
   const shards = extra.keptUnits ? Math.ceil(s.conversations / extra.keptUnits) : runner === 'shim' && (set === 'S1' || set === 'D8') ? s.conversations : runner === 'shim' && single > UNIT_LIMIT_HOURS ? Math.min(s.conversations, Math.ceil(single / 48)) : 1;
   const hours = Math.max(1, Math.ceil(single / shards));
   const base = { schema: CELL_SCHEMA as typeof CELL_SCHEMA, id, set, block: extra.block ?? s.block, benchmark: s.benchmark, split: s.split, selection: s.selection, exclusions: s.exclusions, system, configuration, runner,
-    ingest_replicate: extra.ingest_replicate ?? 1, effort: 'medium' as const, canonical_instrument: s.benchmark, probes: extra.probes ?? { sample: 20, seed: `q1-probes-${set.toLowerCase()}`, conversations: set === 'S4' || set === 'S4-slice' || set === 'S5' ? 50 : null },
+    ingest_replicate: extra.ingest_replicate ?? 1, effort: 'medium' as const, canonical_instrument: s.benchmark, ...(extra.descriptiveView === false ? { descriptive_view: false as const } : {}), probes: extra.probes ?? { sample: 20, seed: `q1-probes-${set.toLowerCase()}`, conversations: set === 'S4' || set === 'S4-slice' || set === 'S5' ? 50 : null },
     ...(s.only_conversations ? { only_conversations: s.only_conversations } : {}), ...(extra.keptUnits ? { kept_units: extra.keptUnits } : {}), shards, expected_hours: HOURS_OVERRIDES[id]?.hours ?? Math.min(48, hours), ...(launch ? shimCommands(system, launch) : {}), arms };
   return { ...base, estimate: estimateCell(base), ...(LEASE_OVERRIDES[id] ? { lease: LEASE_OVERRIDES[id] } : {}), ...(REANSWER_OVERRIDES[id] ? { reanswer_invalid_before: REANSWER_OVERRIDES[id] } : {}), ...(FRESH_OVERRIDES[id] ? { fresh_before: FRESH_OVERRIDES[id] } : {}) };
 }
@@ -1046,9 +1047,8 @@ export function generateSmokeCells(): CellDefinition[] {
  * The SOTA loop's dev test (decision D2a): the grep agent (baseline-file-agent) and the gbrain agent (gbrain-defaults in
  * process, systems/gbrain-agent.ts) on SOTA-dev's answerable public BEAM-1M questions. Each cell holds the frontier
  * readers in one arm and particle-1 in another, so the particle-1 rows run in their own paid window (`--arms
- * whole-agent-particle`). Judged per the BEAM judges rule: BEAM's canonical judge (gpt-4.1-mini, the bridge to earlier
- * runs) on every answer, and one frontier judge per answer, the SOTA leader cache's judge for its reader
- * (SOTA_LEADER_JUDGES), so sota/leader.ts import keeps every scored answer; particle-1's answers by claude-opus-5-5, the
+ * whole-agent-particle`). Each answer gets one grade, its frontier judge (descriptive_view false: no canonical
+ * instrument judge, so no gpt-4.1-mini or gpt-4o call), the SOTA leader cache's judge for its reader (SOTA_LEADER_JUDGES), so sota/leader.ts import keeps every scored answer; particle-1's answers by claude-opus-5-5, the
  * crew's judge for particle-1 (GBEV-3, 2026-11-12). No write-to-queryable probes. Outside the counted list, the block totals and the publication (addon_cells).
  */
 /** The SOTA leader cache's judge for each frontier reader, as nightly/adapters.ts judgeFor: claude-opus-5-5 for OpenAI readers, gpt-6.2-astra otherwise. */
@@ -1059,7 +1059,7 @@ export function generateSotaDevCells(): CellDefinition[] {
     { id: 'whole-agent-particle', mode: 'agent', label: `${label} (particle-1)`, readers: ['particle:particle-1'],
       frontier: { ...perReader(['particle:particle-1']), judges: ['anthropic:claude-opus-5-5'], judge_by_reader: { 'particle:particle-1': 'anthropic:claude-opus-5-5' } } },
   ];
-  const extra = { block: 'SOTA-dev' as const, probes: { sample: 0, seed: 'sota-probes-dev', conversations: 0 }, runner: 'in-process' as const };
+  const extra = { block: 'SOTA-dev' as const, probes: { sample: 0, seed: 'sota-probes-dev', conversations: 0 }, runner: 'in-process' as const, descriptiveView: false as const };
   return [
     makeCell('SOTA-dev', 'baseline-file-agent', 'baseline', arms('file agent, uncapped grep, 40 turns'), extra),
     makeCell('SOTA-dev', 'gbrain-defaults', 'agent-tools', arms('gbrain agent: query, search and get_page, 40 turns'), extra),
@@ -1078,7 +1078,7 @@ const perReader = (readers: string[]): NonNullable<ArmDefinition['frontier']> =>
 export function generateSotaLeaderCells(): CellDefinition[] {
   const short: Record<string, string> = { 'anthropic:claude-opus-5-5': 'opus', 'openai:gpt-6.2-sol': 'sol' };
   const arms = (id: string, mode: ArmMode, label: string): ArmSpec[] => FRONTIER_READERS.map(r => ({ id: `${id}-${short[r]}`, mode, label: `${label} (${r})`, readers: [r], frontier: perReader([r]) }));
-  const extra = { block: 'SOTA-leader' as const, probes: { sample: 0, seed: 'sota-probes-leader', conversations: 0 }, runner: 'in-process' as const };
+  const extra = { block: 'SOTA-leader' as const, probes: { sample: 0, seed: 'sota-probes-leader', conversations: 0 }, runner: 'in-process' as const, descriptiveView: false as const };
   return [
     makeCell('SOTA-leader-beam', 'baseline-file-agent', 'baseline', arms('whole-agent', 'agent', 'file agent, uncapped grep, 40 turns'), extra),
     makeCell('SOTA-leader-lme', 'baseline-full-context', 'baseline', arms('whole-full-context', 'full-context', 'whole history'), extra),
