@@ -156,7 +156,7 @@ describe('assemble with several manifests and states (F6 shape)', () => {
     expect(receipt.selection.questions).toBe(corpus.questions.length);
     expect(receipt.counts.rows).toBe(shard0);
     expect(receipt.run_status).toBe('partial');
-    expect(campaign.cells.find(c => c.cell_id === arm)).toMatchObject({ status: 'complete', pin: 'bundle lock 4ce9b216, capabilities 0ae56345' });
+    expect(campaign.cells.find(c => c.cell_id === arm)).toMatchObject({ status: 'complete', pin: 'bundle lock 6894bade, capabilities f1c8d049' });
   });
 
   test("the first manifest lists every cell; a later one only its covered or not_run cells, and a shared id keeps the first's definition", () => {

@@ -33,6 +33,13 @@ were first written for the open-source comparison plan (gbrain-evals#73, branch 
 The machine-readable pin table below is what `bun run eval:scoreboard check` validates against the bundles (lockfile
 and capability-record hashes).
 
+Since 2026-11-23 six bundles lock patched releases of Python packages with published security advisories (aiohttp,
+anyio, certifi, cryptography, httpcore2, httpx2, pyjwt, urllib3 and yarl), so their lock hashes, and the capability
+hashes of the three bundles whose capability record names the lock, differ from the ones earlier campaigns recorded.
+Every campaign that built these bundles before that date, the Q1 scoreboard, F6, RS1, BG1 and BG1-C among them, ran on
+the earlier locks, and its published rows keep the hashes it recorded. Runs started after that date build from the
+hashes below. The [changelog](#2026-11-23-security-fixes-in-six-bundle-locks) lists both.
+
 ```json
 [
   {
@@ -41,7 +48,7 @@ and capability-record hashes).
     "package": "mem0ai[nlp]==2.2.1 + fastembed + en_core_web_sm 3.8.0",
     "image": null,
     "lock_file": "docs/comparison-systems/ext-extract-first/uv.lock",
-    "lock_sha256": "9777b7a8d09274ccfd52e887c2f4caae288c505d6164b0c6b4be491b0af25680",
+    "lock_sha256": "9c32b495ffd262519959b9d00c5d7b7a3db453765c5a6c9324008bc3e5fbaeae",
     "capability_sha256": "0acaff3ad67dc0f43af54a45d13f1ca331acf695c6054c02be8d2659b3aa992f",
     "vendor_benchmark_code": "mem0ai/memory-benchmarks@4b61c5d"
   },
@@ -51,8 +58,8 @@ and capability-record hashes).
     "package": "hindsight server 0.10.2 (vectorize-io/hindsight@5fc4ce20917b916240cef27c212c387a177f115b, tag v0.10.2) + hindsight-client==0.10.2",
     "image": "ghcr.io/vectorize-io/hindsight:0.10.2@sha256:d1840062a5b79940ab7a9f4809ceb90fc776d4ad737cd9329e9b5836cc64ab70",
     "lock_file": "docs/comparison-systems/ext-memory-bank/uv.lock",
-    "lock_sha256": "f54d89dfad22a2ca6d3ca122f4ae363ed9e06be3a057e5fe02a230d39c16d6d8",
-    "capability_sha256": "23a033f4b22a8630e7b613172d2b70663613fb65a511c749d720c7ac7938c6fe",
+    "lock_sha256": "29b875e0c591f5314b095923a248b5c8c02e85686d8699c517270ad508327ddf",
+    "capability_sha256": "555bd44417bb773fd1671d76c857570e0811687147748fd1a8f8d2aa9a044d39",
     "vendor_benchmark_code": "vectorize-io/agent-memory-benchmark@f618ed7"
   },
   {
@@ -61,8 +68,8 @@ and capability-record hashes).
     "package": "cognee==1.6.2",
     "image": "built from docs/comparison-systems/ext-graph-pipeline/Dockerfile on python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d with uv 0.12.3; the run receipt records the built image id",
     "lock_file": "docs/comparison-systems/ext-graph-pipeline/uv.lock",
-    "lock_sha256": "59af44d5a70bfa016e888d650259443ba8d0d2f2fd27f4416f9b8e184ef5a0d7",
-    "capability_sha256": "e00e460095fdbc1ce7532b430496d4e8d223c41c5c3e691a457af04edf402a89",
+    "lock_sha256": "bdfac8b636e4b5ea9d811fb49824a59669d4580865409abc07228759780bcaa6",
+    "capability_sha256": "86e4ca8e2607db49f7befc21c5c95cf2a7b8a17b55ba7978b9b40ffffef10119",
     "vendor_benchmark_code": "topoteretes/cognee@ba3631f, cognee/eval_framework/beam/"
   },
   {
@@ -71,8 +78,8 @@ and capability-record hashes).
     "package": "graphiti-core==0.30.2 (getzep/graphiti@eaa4128681bc53487138a4bbc22d58336ebe70d2, tag v0.30.2)",
     "image": "shim built from graphiti/Dockerfile on python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d",
     "lock_file": "docs/comparison-systems/ext-temporal-graph/uv.lock",
-    "lock_sha256": "4ce9b2163c7c7596e0d617586ddf238befdf0fe17bccbfc6db856c1bcddd1d13",
-    "capability_sha256": "0ae56345aad00d45e5eae6fa6838d9a19c0dc1be4d647910938a29cd013ec3bb",
+    "lock_sha256": "6894bade472d3c319bc23ca49fa3f21bcec7fa28a8e9f5c991adc1aa0329f3ea",
+    "capability_sha256": "f1c8d049178523ac09546a52fb492dee0651cdb3da4de27987754428baa01dc3",
     "vendor_benchmark_code": "getzep/zep-papers@4b7f26c, LoCoMo scripts"
   },
   {
@@ -81,7 +88,7 @@ and capability-record hashes).
     "package": "basic-memory==0.23.2",
     "image": null,
     "lock_file": "docs/comparison-systems/ext-markdown-kb/uv.lock",
-    "lock_sha256": "e1a14a1931815cba5ed2acdfab355e1c01b87c157678eac626a184138ab16807",
+    "lock_sha256": "90b883f1f3dbd094efb7c46fe647f8558ee2a94097ba513eba4ccfdcf97004ae",
     "capability_sha256": "4e95f8ef9a892dc78778257ecf1664573414db807844e75378978735adaa5c37",
     "vendor_benchmark_code": "basicmachines-co/basic-memory@c0bd87c, benchmarks/"
   },
@@ -101,7 +108,7 @@ and capability-record hashes).
     "package": "mempalace==3.10.0 (MemPalace/mempalace@22fd87f09c19d5ffb2d6966486483353937931c0)",
     "image": "built from the bundle Dockerfile on python:3.12-slim-bookworm; the run receipt records the image id",
     "lock_file": "docs/comparison-systems/ext-verbatim-session/uv.lock",
-    "lock_sha256": "e2e066bf182dff9570e6f3c0e1b5509f2325a6c7f42d67d93752c760f7ce9b1d",
+    "lock_sha256": "b377f8765698db332fc07b0510511615ca4962f21e97746e96f3d850172fd06f",
     "capability_sha256": "ffd48dae0fcd93b2bc72a1bddd5ae773411052c4b200010b6ca6da0f9d288203",
     "vendor_benchmark_code": "MemPalace/mempalace@22fd87f benchmarks/locomo_bench.py"
   }
@@ -112,9 +119,9 @@ and capability-record hashes).
 
 The scoreboard report's Build column labels each row with the build it measured, and never with a product name. An
 external row reads `bundle lock <hash>, capabilities <hash>`: the first eight characters of the `lock_sha256` and
-`capability_sha256` values in the table above, which name the kind's product and package. The labels are read from
-this table at the tree each campaign launched from (`eval/runner/q1/publish.ts`); the table is the same at every Q1
-launch tree. gbrain rows name the commit and version the campaign pinned.
+`capability_sha256` values in the pin table at the tree each Q1 campaign launched from (`eval/runner/q1/publish.ts`),
+which name the kind's product and package. The table is the same at every Q1 launch tree, and it is the table above as
+it stood before the 2026-11-23 security fixes. gbrain rows name the commit and version the campaign pinned.
 
 | Kind id | Build label in the Q1 report |
 |---|---|
@@ -365,6 +372,26 @@ before A6b use the former environment variable names. The hashes of every file A
 [rename-a6b.json](benchmarks/2026-10-06-oss-memory-shootout/rename-a6b.json).
 
 ## Changelog
+
+### 2026-11-23: Security fixes in six bundle locks
+
+[gbrain-evals#594](https://github.com/garrytan/gbrain-evals/pull/594) moves the pin table's six external bundles to
+locks with patched releases of the packages [gbrain-evals#433](https://github.com/garrytan/gbrain-evals/pull/433) raised
+in the `eval/systems` shims, each relocked with the uv version its own Dockerfile pins. Five of the six are now
+byte-identical to their `eval/systems` shim's lock. The comparator lock in `eval/harness-provider/comparator.lock.json`
+raises `aiohttp` and `certifi` the same way; its hash is part of each comparator cell's identity, so comparator cells
+launched after this change get new cell ids, while published comparator receipts keep `49a0e4f3`. Earlier campaigns ran
+on the old hashes, and their published rows and the Q1 build labels keep them.
+
+| Kind id | Lock (old to new) | Capabilities (old to new) |
+|---|---|---|
+| `ext-extract-first` | `9777b7a8` to `9c32b495` | `0acaff3a`, unchanged |
+| `ext-memory-bank` | `f54d89df` to `29b875e0` | `23a033f4` to `555bd444` |
+| `ext-graph-pipeline` | `59af44d5` to `bdfac8b6` | `e00e4600` to `86e4ca8e` |
+| `ext-temporal-graph` | `4ce9b216` to `6894bade` | `0ae56345` to `f1c8d049` |
+| `ext-markdown-kb` | `e1a14a19` to `90b883f1` | `4e95f8ef`, unchanged |
+| `ext-verbatim-session` | `e2e066bf` to `b377f876` | `ffd48dae`, unchanged |
+| comparator (`eval/harness-provider/comparator.lock.json`) | `49a0e4f3` to `ab29df62` | none |
 
 ### 2026-11-21: gbrain on Redis's open LongMemEval harness
 

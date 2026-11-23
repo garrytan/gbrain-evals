@@ -7,13 +7,17 @@ dependencies = ["mempalace==3.10.0"]
 [tool.uv]
 package = false
 exclude-newer = "2026-10-06T00:00:00Z"
+# certifi is the one exception to the cutoff, raised to 2026.10.19 for a security fix (2026-11-23). The raised anyio
+# and urllib3 releases predate the cutoff, so their constraints below are enough.
+exclude-newer-package = { certifi = "2026-10-22T00:00:00Z" }
 # Every transitive dependency is held to the version in mempalace's own uv.lock at tag v3.10.0
 # (commit 22fd87f09c19d5ffb2d6966486483353937931c0), resolved for CPython 3.12 on Linux, so the image runs the set
 # the vendor tested. Pins for optional extras (gpu, milvus, pgvector, dev) apply only if something installs them.
+# Raised above that lock for security fixes (2026-11-23): anyio, certifi and urllib3.
 constraint-dependencies = [
     "annotated-doc==0.0.4",
     "annotated-types==0.7.0",
-    "anyio==4.13.0",
+    "anyio==4.14.2",
     "ast-serialize==0.5.0",
     "attrs==26.1.0",
     "autocorrect==2.6.1",
@@ -21,7 +25,7 @@ constraint-dependencies = [
     "beautifulsoup4==4.14.3",
     "build==1.4.2",
     "cachetools==7.1.4",
-    "certifi==2026.2.25",
+    "certifi==2026.10.19",
     "cffi==2.0.0",
     "cfgv==3.5.0",
     "charset-normalizer==3.4.7",
@@ -142,7 +146,7 @@ constraint-dependencies = [
     "typing-extensions==4.15.0",
     "typing-inspection==0.4.2",
     "tzdata==2026.2",
-    "urllib3==2.6.3",
+    "urllib3==2.8.0",
     "uvicorn==0.44.0",
     "uvloop==0.22.1",
     "virtualenv==21.3.3",
