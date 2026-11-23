@@ -1,1 +1,0 @@
-- When ripgrep can't start, the grep agent's search tool now returns a grep error instead of crashing the cell, and the answer counts as a harness failure rather than a scored miss ([eval/runner/systems/file-agent.ts](eval/runner/systems/file-agent.ts)).

@@ -1,1 +1,0 @@
-CI's harness job no longer waits out a hung cache for the harness pack. Its restore stops after 2 minutes and drops what it had restored, and the job fetches and builds the pack as it does on a cache miss. Saving the pack is skipped after a hung restore and otherwise stops after 5 minutes without failing the run.
