@@ -129,7 +129,11 @@ export function importLeader(cache: OutcomeCache, rows: readonly Row[]): number 
   return fresh.length;
 }
 
-/** The leader cell narrowed to the items and to the reader's arm, judged by the leader judge, with that arm's own estimate, for a run that buys exactly those rows. */
+/**
+ * The leader cell narrowed to the items and to the reader's arm, judged by the leader judge, with that arm's own
+ * estimate, for a run that buys exactly those rows. q1's estimate prices a per-reader judge as frontierJudgeOf's, so it
+ * is priced as the same arm with the leader judge listed for its one reader.
+ */
 export function leaderRunCell(benchmark: string, reader: string, items: readonly string[], manifest = loadManifest()): CellDefinition {
   const l = LEADERS[benchmark];
   if (!l) throw new Error(`${benchmark} has no leader (leaders: ${Object.keys(LEADERS).join(', ')})`);
@@ -143,7 +147,7 @@ export function leaderRunCell(benchmark: string, reader: string, items: readonly
   const judge = leaderJudge(reader);
   const judged = { ...arm, frontier: { ...arm.frontier!, judges: [judge], judge_by_reader: { [reader]: judge } } };
   const { estimate: _whole, ...narrowed } = { ...base, ...conversations, selection: { kind: 'ids' as const, ids }, arms: [judged] };
-  return { ...narrowed, estimate: estimateCell(narrowed) };
+  return { ...narrowed, estimate: estimateCell({ ...narrowed, arms: [{ ...judged, frontier: { judges: [judge], readers: null, sample: null } }] }) };
 }
 
 /**

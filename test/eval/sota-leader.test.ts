@@ -153,8 +153,12 @@ describe('leaderRunCell', () => {
     expect([lme.arms.map(a => a.id), lme.only_conversations, lme.selection]).toEqual([['whole-full-context-opus'], undefined, { kind: 'ids', ids: [SOTA_LEADER_LME_IDS[3]] }]);
     expect(definitionProblems(lme, kinds)).toEqual([]);
     const { estimate, ...rest } = lme;
-    expect(estimate).toEqual(estimateCell(rest));
-    expect(estimate.usd + leaderRunCell('lme-s', SOL, [SOTA_LEADER_LME_IDS[3]!]).estimate.usd).toBeCloseTo(cellOf(LME_CELL).estimate.usd, 1);
+    const atQ1Judge = estimateCell(rest);
+    expect({ ...estimate.lines, frontier_judges: 0 }).toEqual({ ...atQ1Judge.lines, frontier_judges: 0 });
+    expect(estimate.lines.frontier_judges).toBeCloseTo(4 * atQ1Judge.lines.frontier_judges!, 1);
+    const { estimate: solEstimate, ...solRest } = leaderRunCell('lme-s', SOL, [SOTA_LEADER_LME_IDS[3]!]);
+    expect(solEstimate).toEqual(estimateCell(solRest));
+    expect(atQ1Judge.usd + solEstimate.usd).toBeCloseTo(cellOf(LME_CELL).estimate.usd, 1);
     expect(() => leaderRunCell('lme-s', PARTICLE, [SOTA_LEADER_LME_IDS[0]!])).toThrow(/no arm for particle/);
     expect(() => leaderRunCell('cat40-hard-m', OPUS, ['x'])).toThrow(/has no leader/);
     expect(() => leaderRunCell('lme-s', OPUS, [])).toThrow(/no items/);
