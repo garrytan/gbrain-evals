@@ -49,7 +49,7 @@ export function renderWeek(a: WeekAggregates): string {
     const flagged = WL_COMPARISONS.filter(x => a.regression![x.cls][x.other].flagged);
     lines.push(flagged.length ? `Flagged (an advisory to gbrain's maintainers; it holds no release): ${flagged.map(x => { const f = a.regression![x.cls][x.other]; return `${WL_CLASSES[x.cls].name} against ${x.other}, ${pts(f.point)} points, ${f.direction} the previous block's ${ci(f.previous_ci95)} by more than ${f.sdd.toFixed(1)}`; }).join('; ')}.` : "No weekly point fell outside the previous block's 95% interval by more than the weekly smallest detectable difference.", '',
       '| Comparison | Point | Previous block | Smallest detectable | Flag | Simulated false-alarm rate |', '|---|---|---|---|---|---|',
-      ...WL_COMPARISONS.map(x => { const f = a.regression![x.cls][x.other]; return `| ${WL_CLASSES[x.cls].name}, ${x.other} | ${pts(f.point)} | ${f.previous_ci95 ? `${pts(f.previous_ci95[0])} to ${pts(f.previous_ci95[1])}` : 'n/a'} | ${f.sdd.toFixed(1)} | ${f.flagged ? f.direction : 'none'} | ${f.false_alarm_rate === null ? 'n/a' : `${(f.false_alarm_rate * 100).toFixed(1)}% (${f.false_alarm_source})`} |`; }), '');
+      ...WL_COMPARISONS.map(x => { const f = a.regression![x.cls][x.other]; return `| ${WL_CLASSES[x.cls].name}, ${x.other} | ${pts(f.point)} | ${f.previous_ci95 ? `${pts(f.previous_ci95[0])} to ${pts(f.previous_ci95[1])}` : 'n/a'} | ${f.sdd.toFixed(1)} | ${f.flagged ? f.direction : 'none'} | ${f.false_alarm_source === 'unavailable' ? 'unavailable (no registered calibration)' : f.false_alarm_rate === null ? 'n/a' : `${(f.false_alarm_rate * 100).toFixed(1)}% (${f.false_alarm_source})`} |`; }), '');
   }
   lines.push('## Cost per correct answer', '', ...costTable(a.cost_per_correct!), '');
   return lines.join('\n');
@@ -58,7 +58,7 @@ export function renderWeek(a: WeekAggregates): string {
 type BlockComp = BlockAggregates['comparisons'][string][string];
 
 /** One comparison's block sentence, in the outcome table's wording, naming the releases the claim covers. */
-export function blockSentence(cls: WlClass, other: WlOther, c: BlockComp, a: Pick<BlockAggregates, 'releases' | 'cost_per_correct'>): string {
+export function blockSentence(cls: WlClass, other: WlOther, c: BlockComp, a: Pick<BlockAggregates, 'ended' | 'releases' | 'cost_per_correct'>): string {
   const name = WL_CLASSES[cls].name, who = WL_ROW_NAMES[other], grep = other === 'grep-agent';
   const against = `gbrain against ${who} on ${name}`;
   const byReader = `claude-opus-5-5 ${cell(c.readers['claude-opus-5-5'])}, particle-1 ${cell(c.readers['particle-1'])}`;
@@ -68,12 +68,12 @@ export function blockSentence(cls: WlClass, other: WlOther, c: BlockComp, a: Pic
     return `gbrain (${rel(rs)}) is behind ${who} on ${name} by ${abs(x)} points (${ci(e.ci95)})`;
   };
   switch (c.word) {
-    case 'no verdict': return `${against}: no verdict, because the block has fewer than 16 counted worlds.`;
+    case 'no verdict': return `${against}: no verdict, because ${a.ended ? 'the block has fewer than 16 counted worlds' : 'the block has not ended'}.`;
     case 'descriptive': return `${against}: descriptive, because its common question set lost ${c.mask.lost} of ${c.mask.planned} questions (${(c.mask.share * 100).toFixed(1)}%, above 5%).`;
     case 'ceiling': return `${against}: ceiling (gbrain ${score(c.means.gbrain)}, ${other} ${score(c.means.other)}, both at least 97).`;
     case 'changed within the block': return `${against}: changed within the block. Early, at the 16th counted world (${rel(c.early!.releases)}): ${pts(c.early!.pooled.mean)} points (${ci(c.early!.pooled.ci95)}). Full block (${rel(a.releases)}): ${pts(c.pooled.mean)} points (${ci(c.pooled.ci95)}).`;
     case 'ahead': case 'behind':
-      if (c.early) return `${said(c.word, c.early.pooled, c.early.releases)}, early, at the 16th counted world. The full block (${rel(a.releases)}) reads ${pts(c.pooled.mean)} points (${ci(c.pooled.ci95)}).`;
+      if (c.early) return `${said(c.word, c.early.pooled, c.early.releases)}, early, at the 16th counted world. The ${a.ended ? 'full block' : 'block so far'} (${rel(a.releases)}) reads ${pts(c.pooled.mean)} points (${ci(c.pooled.ci95)}).`;
       return `${said(c.word, c.pooled, a.releases)}.`;
     case 'level within 3 points': {
       const base = `gbrain (${rel(a.releases)}) is level with ${who} within 3 points on ${name} (${pts(c.pooled.mean)} points, ${ci(c.pooled.ci95)}).`;
@@ -92,7 +92,7 @@ export function renderBlock(a: BlockAggregates): string {
   assertAggregate(a, 'block');
   const weeks = a.weeks.map(w => w.week);
   const lines = [`## Block ${a.block}${weeks.length ? ` (weeks ${weeks[0]} to ${weeks.at(-1)})` : ''}`, '',
-    `${a.counted_worlds} counted world${a.counted_worlds === 1 ? '' : 's'} on gbrain ${a.releases.length ? rel(a.releases) : 'no release'}. ${a.look ? `The look came at the 16th counted world (${rel(a.look.releases)}).` : 'The block reached no look, so it has no verdict.'}`, ''];
+    `${a.counted_worlds} counted world${a.counted_worlds === 1 ? '' : 's'} on gbrain ${a.releases.length ? rel(a.releases) : 'no release'}. ${a.look ? `The look came at the 16th counted world (${rel(a.look.releases)}).` : 'The block reached no look, so it has no verdict.'}${a.ended ? '' : ` The block has not ended (${a.weeks.length} of 4 weeks), so only early words stand.`}`, ''];
   const skipped = a.weeks.filter(w => w.no_point);
   if (skipped.length) lines.push(`No point: ${skipped.map(w => `${w.week} (${w.no_point})`).join('; ')}.`, '');
   lines.push('### Verdicts', '', ...WL_COMPARISONS.map(x => `- ${blockSentence(x.cls, x.other, a.comparisons[x.cls][x.other], a)}`), '',
@@ -107,7 +107,7 @@ export function renderBlock(a: BlockAggregates): string {
   lines.push("### The grep agent's stops", '', '| Week | Reader | Answers | Out of turns | Out of context |', '|---|---|---|---|---|',
     ...[...a.grep_agent.weeks.map(w => ({ label: w.week, readers: w.readers })), { label: 'block', readers: a.grep_agent.block }].flatMap(w => WL_READER_KEYS.map(r => { const s = w.readers[r]; return `| ${w.label} | ${r} | ${s.answers} | ${s.turn_cap} (${rate(s.turn_cap_rate)}) | ${s.context_overflow} (${rate(s.context_overflow_rate)}) |`; })), '');
   if (a.cost_per_correct) lines.push('### Cost per correct answer', '', ...costTable(a.cost_per_correct), '');
-  lines.push('### Per kind (both readers, unadjusted)', '', `| Kind | ${['grep-agent', 'extract-first', 'memory-bank'].join(' | ')} |`, '|---|---|---|---|',
+  if (a.per_kind) lines.push('### Per kind (both readers, unadjusted)', '', `| Kind | ${['grep-agent', 'extract-first', 'memory-bank'].join(' | ')} |`, '|---|---|---|---|',
     ...Object.entries(a.per_kind).map(([k, rows]) => `| ${k} | ${['grep-agent', 'extract-first', 'memory-bank'].map(o => cell(rows[o])).join(' | ')} |`), '');
   return lines.join('\n');
 }

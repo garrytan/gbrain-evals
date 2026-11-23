@@ -60,7 +60,7 @@ const counted = (worlds: readonly string[], releases: (i: number) => string = ()
   worlds.map((world, i) => ({ world, week: `2026-12-${String(1 + 7 * Math.floor(i / 8)).padStart(2, '0')}`, release: releases(i), commit: COMMIT }));
 const alt = (a: number, b: number): Delta => i => (i % 2 ? b : a);
 const halves = (first: Delta, second: Delta): Delta => (i, r) => (i < 16 ? first(i, r) : second(i, r));
-const wordOf = (questions: WlQuestion[], worlds: string[], key: string, releases?: (i: number) => string) => analyzeBlock(questions, counted(worlds, releases), { draws: 99 }).comparisons.find(c => c.key === key)!;
+const wordOf = (questions: WlQuestion[], worlds: string[], key: string, releases?: (i: number) => string) => analyzeBlock(questions, counted(worlds, releases), { ended: true, draws: 99 }).comparisons.find(c => c.key === key)!;
 
 // ─── Hand-computed statistics ────────────────────────────────────────
 
@@ -197,7 +197,7 @@ describe('every block word', () => {
 
   test('no verdict below 16 counted worlds, and no look', () => {
     const { worlds, questions } = synth(15, { 'now|grep-agent': alt(4, 5) });
-    const r = analyzeBlock(questions, counted(worlds), { draws: 99 });
+    const r = analyzeBlock(questions, counted(worlds), { ended: true, draws: 99 });
     expect(r.look).toBeNull();
     expect(r.comparisons.every(c => c.word === 'no verdict')).toBe(true);
   });
@@ -208,7 +208,7 @@ describe('every block word', () => {
 describe('the look (R113)', () => {
   test('a block that ends short keeps both bounds as fixed', () => {
     const { worlds, questions } = synth(20, { 'now|grep-agent': halves(alt(2, -1), alt(5, 4)) });
-    const r = analyzeBlock(questions, counted(worlds), { draws: 99 });
+    const r = analyzeBlock(questions, counted(worlds), { ended: true, draws: 99 });
     const c = r.comparisons.find(x => x.key === 'now|grep-agent')!;
     expect(c.pooled.df).toBe(19);
     expect(c.bound).toBe(2.25);
@@ -337,18 +337,50 @@ describe('the aggregates that leave custody', () => {
 
   test('a week after a block reads the regression flag against that block', () => {
     const next = synth(40, { 'now|grep-agent': i => (i < 32 ? -3 - (i % 2) : 4) });
-    const later = weekAggregates(meta('2027-01-05', next.worlds.slice(32), B), next.questions, { history: weeks, previousBlock: block });
+    const pool = { 'now|extract-first': [1, -1, 2, -2], 'now|memory-bank': [1, -1, 2, -2], 'past|extract-first': [1, -1, 2, -2], 'past|memory-bank': [1, -1, 2, -2] };
+    const later = weekAggregates(meta('2027-01-05', next.worlds.slice(32), B), next.questions, { history: weeks, previousBlock: block, falseAlarmPool: pool });
     assertAggregate(later, 'week');
     const f = later.regression!.now['grep-agent'];
     expect(f.flagged).toBe(true);
     expect(f.direction).toBe('above');
-    expect(f.false_alarm_source).toBe('previous block');
     expect(later.regression!.past['grep-agent'].flagged).toBe(false);
-    const supplied = weekAggregates(meta('2027-01-05', next.worlds.slice(32), B), next.questions, { history: weeks, previousBlock: block, falseAlarmPool: { 'now|grep-agent': [1, -1, 2, -2] } });
-    expect(supplied.regression!.now['grep-agent'].false_alarm_source).toBe('supplied pool');
+    expect(later.regression!.now['extract-first'].false_alarm_source).toBe('BG1-C pool');
     expect(() => weekAggregates(meta('2027-01-05', worlds.slice(0, 8), B), questions, { history: weeks })).toThrow(/exactly one week/);
     expect(() => weekAggregates(meta('2027-01-05', next.worlds.slice(32), B), next.questions, { history: [...weeks, weeks[0]] })).toThrow(/repeats a week or a world/);
     expect(() => weekAggregates(meta('2026-12-22', next.worlds.slice(32), B), next.questions, { history: weeks })).toThrow(/already holds week/);
+  });
+
+  test('the false-alarm rate comes only from BG1-C\'s pool, and the grep agent\'s is unavailable', () => {
+    const next = synth(40, { 'now|grep-agent': i => (i < 32 ? -3 - (i % 2) : 4) });
+    const pool = { 'now|extract-first': [1, -1, 2, -2], 'now|memory-bank': [1, -1, 2, -2], 'past|extract-first': [1, -1, 2, -2], 'past|memory-bank': [1, -1, 2, -2] };
+    const at = (o: Parameters<typeof weekAggregates>[2]) => weekAggregates(meta('2027-01-05', next.worlds.slice(32), B), next.questions, { history: weeks, previousBlock: block, ...o });
+    const ok = at({ falseAlarmPool: pool }), g = ok.regression!.now['grep-agent'];
+    expect([g.false_alarm_rate, g.false_alarm_source]).toEqual([null, 'unavailable']);
+    expect(renderWeek(ok)).toContain('unavailable (no registered calibration)');
+    expect(() => at({})).toThrow(/BG1-C's per-world differences/);
+    expect(() => at({ falseAlarmPool: { ...pool, 'now|extract-first': [1] } })).toThrow(/at least two of BG1-C's per-world differences/);
+    expect(() => at({ falseAlarmPool: { ...pool, 'now|extract-first': [1, Number.NaN] } })).toThrow(/each a finite number/);
+    expect(() => at({ falseAlarmPool: { ...pool, 'now|grep-agent': [1, -1] } })).toThrow(/never ran the grep agent/);
+  }, 60_000);
+
+  test('a constant nonzero gap writes a null z beside its crossing', () => {
+    const flat = synth(32, { 'now|grep-agent': () => 4 });
+    const m4 = [0, 1, 2, 3].map(k => meta(`2026-12-${String(1 + 7 * k).padStart(2, '0')}`, flat.worlds.slice(8 * k, 8 * k + 8), A));
+    const c = blockAggregates(1, m4, flat.questions, { draws: 99 }).comparisons.now['grep-agent'];
+    expect([c.look!.z, c.look!.crossed, c.final!.z, c.final!.crossed]).toEqual([null, true, null, true]);
+  });
+
+  test('a point week refuses a world with no answer records', () => {
+    const bare = questions.map(q => (q.world === worlds[3] ? { ...q, rows: {} } : q));
+    expect(() => weekAggregates(metas[0], bare)).toThrow(/a world with no answer records/);
+    expect(() => blockAggregates(1, metas, bare, { draws: 99 })).toThrow(/a world with no answer records/);
+  });
+
+  test('a week refuses a repeated, stray or negative spend', () => {
+    const m = metas[0], c0 = m.costs![0];
+    expect(() => weekAggregates({ ...m, costs: [...m.costs!, c0] }, questions)).toThrow(/spend for one reader and world twice/);
+    expect(() => weekAggregates({ ...m, costs: [...m.costs!.slice(1), { ...c0, usd: -1 }] }, questions)).toThrow(/finite number of at least 0/);
+    expect(() => weekAggregates({ ...m, costs: [...m.costs!, { ...c0, world: worlds[8] }] }, questions)).toThrow(/a world outside the week/);
   });
 
   test('the writer refuses a field that could carry text, naming neither the value nor the key', () => {
@@ -411,6 +443,56 @@ describe('the aggregates that leave custody', () => {
   });
 });
 
+// ─── The end of a block ──────────────────────────────────────────────
+
+describe('the end of a block', () => {
+  const week = (k: number) => `2026-12-${String(1 + 7 * k).padStart(2, '0')}`;
+  const { worlds, questions } = synth(24, { 'now|grep-agent': halves(alt(2, -1), alt(5, 4)), 'past|grep-agent': alt(4, 5) });
+  const metas = [0, 1, 2].map(k => meta(week(k), worlds.slice(8 * k, 8 * k + 8), A));
+  const open = blockAggregates(1, metas, questions, { draws: 99 });
+  const done = blockAggregates(1, [...metas, { ...meta(week(3), [], A), no_point: 'custody host offline' as const }], questions, { draws: 99 });
+
+  test('a block written after the look but before its fourth week entry gives only early words', () => {
+    expect([open.ended, done.ended]).toEqual([false, true]);
+    assertAggregate(open, 'block');
+    const late = open.comparisons.now['grep-agent'], early = open.comparisons.past['grep-agent'];
+    expect([late.look!.crossed, late.word, late.final]).toEqual([false, 'no verdict', null]);
+    expect([early.early!.word, early.word]).toEqual(['ahead', 'ahead']);
+    expect(done.comparisons.now['grep-agent'].final!.crossed).toBe(true);
+    expect(done.comparisons.now['grep-agent'].word).toBe('ahead');
+    const page = renderBlock(open);
+    expect(page).toContain('gbrain against a grep agent on what is true now: no verdict, because the block has not ended.');
+    expect(page).toContain('The block has not ended (3 of 4 weeks), so only early words stand.');
+  });
+
+  test('before the end, a block file holds no per-kind rows or exposure and labels its estimate so far', () => {
+    const exposure = blockAggregates(1, metas, questions, { draws: 99, exposure: {} }).exposure;
+    expect([open.per_kind, exposure]).toEqual([null, null]);
+    expect(done.per_kind).not.toBeNull();
+    const page = renderBlock(open);
+    expect(page).not.toContain('### Per kind');
+    expect(page).toContain('early, at the 16th counted world. The block so far (');
+    expect(renderBlock(done)).toContain('early, at the 16th counted world. The full block (');
+  });
+
+  test('a week refuses a previous block that has not ended', () => {
+    expect(() => weekAggregates(metas[0], questions, { previousBlock: open })).toThrow(/previous block has not ended/);
+  });
+
+  test('before the end, no comparison carries a word the look did not give', () => {
+    const r = analyzeBlock(questions, counted(worlds), { ended: false, draws: 99 });
+    for (const c of r.comparisons) expect(c.word).toBe(c.early?.word ?? 'no verdict');
+  });
+
+  test('a block refuses a repeated or non-consecutive week', () => {
+    expect(() => blockAggregates(1, [metas[0], { ...metas[1], week: week(0) }], questions, { draws: 99 })).toThrow(/lists week 2026-12-01 twice/);
+    expect(() => blockAggregates(1, [metas[0], metas[2]], questions, { draws: 99 })).toThrow(/consecutive, 7 days apart/);
+    expect(() => blockAggregates(1, [metas[0], { ...metas[1], week: '2026-12-09' }], questions, { draws: 99 })).toThrow(/consecutive/);
+    expect(() => blockAggregates(1, [metas[0], { ...metas[1], week: '2026-13-01' }], questions, { draws: 99 })).toThrow(/is not a date/);
+    expect(() => blockAggregates(1, [{ ...metas[0], week: '2027-02-23' }, { ...metas[1], week: '2027-02-30' }], questions, { draws: 99 })).toThrow(/2027-02-30 is not a date/);
+  });
+});
+
 // ─── Records and the command line ────────────────────────────────────
 
 const INSTRUMENT = instrumentFor('bg1');
@@ -460,6 +542,11 @@ describe('records', () => {
     const own = recs.judgments.find(j => j.answer_id === recs.answers.find(a => a.reader === READER_OF['particle-1'] && a.outcome === 'scored')!.answer_id)!;
     expect(() => questionsFromRecords(worlds, recs.answers, [{ ...own, judge: 'particle:particle-1', instrument_id: frontierInstrumentId(INSTRUMENT.id, 'particle:particle-1') }])).toThrow(/gating judgment problem/);
     expect(() => questionsFromRecords(worlds, recs.answers, recs.judgments.map((j, i) => (i ? j : { ...j, score: 0.5 })))).toThrow(/pass \(1\) or fail \(0\)/);
+    expect(() => questionsFromRecords(worlds, recs.answers, [...recs.judgments, recs.judgments[0]])).toThrow(/two gating judgments for one answer/);
+    const reread = recs.answers.findIndex(a => a.system === SYSTEM_OF['memory-bank'] && a.reader === READER_OF['particle-1']);
+    expect(() => questionsFromRecords(worlds, recs.answers.map((a, i) => (i === reread ? { ...a, context_sha256: '0'.repeat(64) } : a)), recs.judgments)).toThrow(/re-read in row memory-bank read a different context/);
+    const grep = recs.answers.findIndex(a => a.system === SYSTEM_OF['grep-agent'] && a.reader === READER_OF['particle-1']);
+    expect(() => questionsFromRecords(worlds, recs.answers.map((a, i) => (i === grep ? { ...a, context_sha256: '0'.repeat(64) } : a)), recs.judgments)).not.toThrow();
   });
 
   test('the command line writes a week, a second week with its rolling display, and the block from record files', () => {

@@ -21,13 +21,16 @@
  *                simultaneous interval (97.5% or 98.75%, t on N - 1) lies strictly inside -3 to +3. Otherwise no
  *                measurable difference. Ahead, behind and level stand only when each reader's own estimate agrees
  *                (both above 0, both below 0, or both strictly inside -3 to +3); otherwise "split by reader".
- *   Order        no verdict (fewer than 16 counted worlds) first, then descriptive, then ceiling (both rows' class means
+ *   Order        no verdict (fewer than 16 counted worlds, or the block has not ended and gave no early word) first, then descriptive, then ceiling (both rows' class means
  *                at least 97 on the comparison's common set), then the early word and "changed within the block", then
  *                the words above.
  *   Look         at the 16th counted world, on the first 16 counted worlds: a comparison that Holm passes at the look
  *                bounds gets its early word, naming only the releases in those worlds. The full block is read the same
  *                way at the end bounds, over every comparison of the family, and published beside it; a full-block
  *                estimate of the opposite sign makes the word "changed within the block". No futility stop.
+ *   End          a block ends only with all four of its week entries, weeks with no point included. Before that, the
+ *                end bounds are never applied: a comparison carries its early word if it has one and "no verdict"
+ *                otherwise, so a file written between the look and the end cannot give a final-stage word.
  *
  * Readings this file had to choose where the preregistration is silent (each the conservative one): the early word is
  * withheld when the first 16 worlds are descriptive, at the ceiling or split by reader, and that comparison is then read
@@ -210,7 +213,7 @@ export interface BlockComparison extends StageReading {
   wild: Wild | null;
 }
 export interface BlockResult {
-  counted: BlockWorld[]; releases: string[]; look: LookResult | null; comparisons: BlockComparison[];
+  ended: boolean; counted: BlockWorld[]; releases: string[]; look: LookResult | null; comparisons: BlockComparison[];
   /** Whichever server led gbrain in each class: the one with the smaller (more negative) gbrain-minus-server estimate. */
   leading: Record<WlClass, WlServer | null>;
   per_kind: Record<Bg1Stratum, Record<string, Estimate>>;
@@ -224,8 +227,8 @@ export function wildOf(diffs: readonly WorldDiff[], draws = WL_DRAWS): Wild | nu
   return { estimate: w.theta, p: w.p, ci95: w.ci95 };
 }
 
-/** A block's words, the look, and what is reported beside them. `draws` sets the wild bootstrap's draws (9999 unless a test asks for fewer). */
-export function analyzeBlock(questions: readonly WlQuestion[], counted: readonly BlockWorld[], o: { draws?: number } = {}): BlockResult {
+/** A block's words, the look, and what is reported beside them. `ended` says the block holds all four week entries; until then only early words stand. `draws` sets the wild bootstrap's draws (9999 unless a test asks for fewer). */
+export function analyzeBlock(questions: readonly WlQuestion[], counted: readonly BlockWorld[], o: { ended: boolean; draws?: number }): BlockResult {
   const worlds = counted.map(w => w.world);
   if (new Set(worlds).size !== worlds.length) throw new Error('a counted world appears twice in the block');
   const look = analyzeLook(questions, counted);
@@ -234,6 +237,7 @@ export function analyzeBlock(questions: readonly WlQuestion[], counted: readonly
     const l = look?.comparisons[i];
     const early = l?.early ? { word: l.early, releases: look!.releases, pooled: l.pooled } : null;
     const word: WlWord = counted.length < WL_LOOK_WORLDS ? 'no verdict'
+      : !o.ended ? (early?.word ?? 'no verdict')
       : s.descriptive ? 'descriptive'
         : s.ceiling ? 'ceiling'
           : early ? ((early.word === 'ahead' ? s.pooled.mean! < 0 : s.pooled.mean! > 0) ? 'changed within the block' : early.word)
@@ -247,7 +251,7 @@ export function analyzeBlock(questions: readonly WlQuestion[], counted: readonly
   })) as Record<WlClass, WlServer | null>;
   const per_kind = Object.fromEntries(BG1_STRATA.map(s => [s, Object.fromEntries(WL_COMPARISONS.filter(c => (WL_CLASSES[c.cls].strata as readonly string[]).includes(s)).map(c => [c.other, compare(questions, c, worlds, [s]).pooled]))])) as Record<Bg1Stratum, Record<string, Estimate>>;
   const all64 = Object.fromEntries(WL_ROWS.map(r => [r, rowMean(questions, r, worlds)])) as Record<WlRow, ReturnType<typeof rowMean>>;
-  return { counted: [...counted], releases: releasesOf(counted), look, comparisons, leading, per_kind, all64 };
+  return { ended: o.ended, counted: [...counted], releases: releasesOf(counted), look, comparisons, leading, per_kind, all64 };
 }
 
 // ─── Weekly points, the rolling display and the regression flag ──────
