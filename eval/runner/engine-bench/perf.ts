@@ -45,7 +45,7 @@ import { redactUrlPasswords } from '../hermetic-env.ts';
 import { writeScrubbedJson } from '../receipt.ts';
 import { attestPreregistration, type Attestation } from '../prereg.ts';
 import { clusteredPairedDelta, seededRandom, type PairedItem } from '../stats/paired.ts';
-import { EvalEngineUnavailable, isCapabilityMissing, openEvalEngine, supportsRawSql, type EvalEngineKind } from '../eval-engine.ts';
+import { EvalEngineUnavailable, isCapabilityMissing, openEvalEngine, rustAddonIdentity, supportsRawSql, type EvalEngineKind } from '../eval-engine.ts';
 import { freshPostgresDatabase } from './surface-parity.ts';
 import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from '../gbrain-under-test.ts';
 
@@ -1250,7 +1250,7 @@ export async function orchestrate(opts: Options, argv: string[]) {
     run_seconds: (Date.now() - started) / 1000,
     command: recordedCommand(argv),
     options: childOpts,
-    gbrain: { product: productIdentityFor(gut), overlay: overlaySummary(gut), version: gut.version },
+    gbrain: { product: productIdentityFor(gut), overlay: overlaySummary(gut), version: gut.version, rust_addon: opts.engines.includes('rust') ? rustAddonIdentity(gut) : null },
     evals_commit: spawnSync('git', ['rev-parse', 'HEAD'], { cwd: REPO_ROOT, encoding: 'utf-8' }).stdout.trim(),
     machine: machine(),
     embedder: { model: EMBED_MODEL, dims: EMBED_DIMS, installed_as: EMBED_MODEL_PIN, note: 'seeded feature hashing at gbrain embed-transport seam; no provider calls' },
