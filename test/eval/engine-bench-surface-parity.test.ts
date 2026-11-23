@@ -15,7 +15,8 @@ import { resolveGbrainUnderTest, type GbrainUnderTest } from '../../eval/runner/
  * `reorder` names an engine whose list_pages answer comes back in another order. A write's receipt reports its effect
  * queued for its first poll (five for the `slowSettle` engine, every poll for the `neverSettle` engine), counted per brain
  * home and request_id so CLI polls in separate processes see it settle. As in gbrain, a CLI write's receipt also carries an
- * embedding effect that stays queued, because only a later writing process drains it. The `recovering` engine's receipts stay
+ * embedding effect that stays queued, because only a later writing process drains it, and a put_page's receipt carries a
+ * facts-backstop effect, queued on the CLI for the same reason and dispatched at once by serve. The `recovering` engine's receipts stay
  * `recovering` with no effects, and the `slowPoll` engine's CLI get_write_request answers after 2 s. Every CLI start is logged
  * to calls.log.
  */
@@ -54,10 +55,16 @@ const polled = id => {
   writeFileSync(f, String(n + 1));
   return n;
 };
-const answer = (op, args) => op === 'get_write_request' && recovering
+const facts = id => join(home, 'facts-' + encodeURIComponent(id));
+const answer = (op, args) => {
+  if (op === 'put_page' && args.request_id) writeFileSync(facts(args.request_id), '');
+  return reply(op, args);
+};
+const reply = (op, args) => op === 'get_write_request' && recovering
   ? { state: 'recovering', effects: [] }
   : op === 'get_write_request'
-  ? { state: 'committed', effects: [{ kind: 'links', state: polled(args.request_id) < queuedPolls ? 'queued' : 'committed' }, ...(cmd === 'call' ? [{ kind: 'embedding', state: 'queued' }] : [])] }
+  ? { state: 'committed', effects: [{ kind: 'links', state: polled(args.request_id) < queuedPolls ? 'queued' : 'committed' }, ...(cmd === 'call' ? [{ kind: 'embedding', state: 'queued' }] : []),
+    ...(existsSync(facts(args.request_id)) ? [{ kind: 'facts-backstop', state: cmd === 'call' ? 'queued' : 'dispatched' }] : [])] }
   : op === 'list_pages'
   ? (reorder ? [{ slug: 'b' }, { slug: 'a' }] : [{ slug: 'a' }, { slug: 'b' }])
   : { op, args, revision: crypto.randomUUID(), updated_at: new Date().toISOString(), effective_date: '2025-01-01T00:00:00.000Z', home };
@@ -342,6 +349,18 @@ describe('CLI writes settle before the export after the writes', () => {
       }
       expect(r.engines[k].settles.filter(s => s.surface === 'cli')).toEqual(writes.map(w => expect.objectContaining({ op: w.id, settled: true, polls: 2 })));
     }
+    expect(r.summary.verdict).toBe('byte_exact');
+  }, 60_000);
+  test('a CLI put_page settles with its facts-backstop effect still queued, as serve dispatches it at once', async () => {
+    const put: Step = { id: 'write/put_page', op: 'put_page', args: { slug: 'notes/c', content: '---\ntitle: C\ntype: note\n---\n\nGamma.\n', request_id: 'rid-3' } };
+    const r = await runSurfaceParity({ gut: fakeGbrain({ rust: 'opens' }), engines: ['pglite', 'rust'], corpus: tinyCorpus, script: [...tinyScript, put], settleTimeoutMs: 5_000 });
+    for (const k of ['pglite', 'rust']) {
+      expect(r.engines[k].settles).toEqual([
+        expect.objectContaining({ surface: 'cli', op: 'write/put_page', settled: true, polls: 2, last: 'state committed; effects links=committed, embedding=queued, facts-backstop=queued' }),
+        expect.objectContaining({ surface: 'mcp', op: 'write/put_page', settled: true, polls: 2, last: 'state committed; effects links=committed, facts-backstop=dispatched' }),
+      ]);
+    }
+    expect(r.surfaces.cli.operations.map(o => o.op)).not.toContain('write/put_page (settle)');
     expect(r.summary.verdict).toBe('byte_exact');
   }, 60_000);
   test('a CLI write that never settles errors its (settle) operation instead of being skipped', async () => {
