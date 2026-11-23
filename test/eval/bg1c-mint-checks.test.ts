@@ -246,6 +246,9 @@ describe('bg1c-checks.ts: the phrasing check and the seed check with its commitm
     expect(first.out).not.toContain(nonce);
     expect(first.out).not.toContain(j.seedLine.slice(SEED_PREFIX.length));
     expect(check(j).out).toContain(`status=pass nonce=reused commitment_sha256=${commitment} `);
+    const commitmentFile = join(j.dir, 'test.bg1c-commitment.json');
+    expect(statSync(commitmentFile).mode & 0o777).toBe(0o600);
+    expect(JSON.parse(readFileSync(commitmentFile, 'utf8'))).toEqual({ schema: 'gbrain-evals/seed-commitment/v1', set: 'bg1c', commitment_sha256: commitment, phrasing_sha256: sha(readFileSync(j.phrasing)) });
 
     const other = inputs('seed-other');
     writeFileSync(other.phrasing, readFileSync(j.phrasing));
