@@ -16,8 +16,11 @@
  * plan (keyless) lists, per benchmark and nightly reader, the dev-pool items whose leader row is fresh, unknown or
  * stale, and writes the ids to buy. import (keyless) turns a q1 cell's published answers and frontier judgments into
  * leader rows: the leader cells' own, and the SOTA dev test's grep-agent rows, which are BEAM-1M leader rows for the
- * dev conversations, so the leader cache buys only the pool questions the dev test leaves out. It refuses a run whose
- * reader prompt or judging instrument differs from today's. run buys the rows the cache lacks for the listed items: the
+ * dev conversations. A scored answer counts only with the leader judge's judgment. The 2026-11-12 dev test's Claude
+ * answers were judged by q1's gpt-6.1-sol, so each is left unknown naming that judge, and its GPT reader was gpt-6.1-sol,
+ * which is not a nightly reader, so those answers are skipped; only its Claude answers that ran out of turns or context
+ * import, as failures, and the leader run buys the rest of the BEAM-1M pool. It refuses a run whose reader prompt or
+ * judging instrument differs from today's. run buys the rows the cache lacks for the listed items: the
  * leader cell narrowed to those items and the reader's own arm, through q1's paid guard and ledger, then imported.
  *
  * A row's verdict is the frontier judgment's score against ORACLE_PASS. An agent that ran out of turns or context, or a
@@ -109,9 +112,10 @@ export function leaderRows(out: string, cell: string, at = new Date().toISOStrin
       if (!pool.has(a.question_id)) throw new Error(`${arm}: ${a.question_id} is not in the ${benchmark} dev pool`);
       const spec = leaderSpec(benchmark, a.reader)!;
       const j = judgments.find(x => x.answer_id === a.answer_id && x.instrument_id === frontierInstrumentId(instrument.id, spec.judge));
+      const other = j ? undefined : judgments.find(x => x.answer_id === a.answer_id && x.outcome === 'scored' && x.instrument_id.startsWith(`${instrument.id}@`));
       const failed = LEADER_FAILED.has(a.outcome);
       const why = failed ? null : a.outcome !== 'scored' ? a.outcome : a.truncated || CUT_OFF.has(a.finish ?? '') ? 'cut off at its output limit' : !a.text.trim() ? 'empty answer'
-        : j?.outcome !== 'scored' || typeof j.score !== 'number' ? 'no frontier judgment' : null;
+        : other ? `judged by ${other.judge}, not the leader judge ${spec.judge}` : j?.outcome !== 'scored' || typeof j.score !== 'number' ? 'no frontier judgment' : null;
       if (why) { unknown.push({ item: a.question_id, reader: a.reader, outcome: why }); continue; }
       const score = failed ? 0 : j!.score!;
       rows.push({ ...spec, schema: CACHE_SCHEMA, item: a.question_id, context_digest: a.context_sha256, score, pass: score >= spec.pass_threshold,
@@ -153,8 +157,8 @@ export function leaderRunCell(benchmark: string, reader: string, items: readonly
 /**
  * The paid-window cap for re-buying a reader's leader rows on these items: q1's estimate for the narrowed cell as its
  * paid guard reckons it (q1/cell.ts paidGuard: the arm's estimate scaled to the items, plus ingest), plus a quarter for
- * retries and longer answers. Unlike the guard, it keeps scaling past the leader set's size, because leader rows also
- * cover the dev pool questions the dev test answered (126 on BEAM-1M against the leader cell's 60).
+ * retries and longer answers. Unlike the guard, it keeps scaling past the leader set's size, because a BEAM-1M re-buy also
+ * covers the dev test's questions (126 on BEAM-1M against the leader cell's 60).
  */
 export function leaderRebuyUsd(spec: Spec, items: readonly string[]): number {
   const def = leaderRunCell(spec.benchmark, spec.reader, items);

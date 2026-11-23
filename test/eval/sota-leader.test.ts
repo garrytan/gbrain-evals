@@ -134,7 +134,20 @@ describe('leaderSpec', () => {
     const out = fresh('old-judge');
     publish(out, cellOf(LME_CELL), 'whole-full-context-opus', [{ item: L[0]!, reader: OPUS, judge: CLAUDE_ROW_JUDGE }]);
     const read = leaderRows(out, LME_CELL);
-    expect([read.rows, read.unknown]).toEqual([[], [{ item: L[0], reader: OPUS, outcome: 'no frontier judgment' }]]);
+    expect([read.rows, read.unknown]).toEqual([[], [{ item: L[0], reader: OPUS, outcome: `judged by ${CLAUDE_ROW_JUDGE}, not the leader judge ${NIGHTLY_CLAUDE_JUDGE}` }]]);
+    const none = fresh('no-judge');
+    publish(none, cellOf(LME_CELL), 'whole-full-context-opus', [{ item: L[0]!, reader: OPUS, judge: null }]);
+    expect(leaderRows(none, LME_CELL).unknown).toEqual([{ item: L[0], reader: OPUS, outcome: 'no frontier judgment' }]);
+  });
+
+  test('the 2026-11-12 dev test\'s grep-agent rows: scored Claude answers name q1\'s judge, its gpt-6.1-sol reader is skipped, and only an agent out of turns imports', () => {
+    const out = fresh('dev-old');
+    const [a, b, c, d] = SOTA_DEV_IDS as [string, string, string, string];
+    publish(out, cellOf(DEV_GREP), 'whole-agent', [{ item: a, reader: OPUS, judge: CLAUDE_ROW_JUDGE }, { item: b, reader: OPUS, judge: CLAUDE_ROW_JUDGE },
+      { item: c, reader: OPUS, outcome: 'turn_cap', text: '', judge: CLAUDE_ROW_JUDGE }, { item: d, reader: OPUS, judge: CLAUDE_ROW_JUDGE, score: null }, { item: a, reader: 'openai:gpt-6.1-sol', judge: OPUS }]);
+    const { rows, unknown, skipped } = leaderRows(out, DEV_GREP);
+    expect([rows.map(r => [r.item, r.reader, r.score, r.finish_reason]), skipped]).toEqual([[[c, OPUS, 0, 'turn_cap']], 1]);
+    expect(unknown).toEqual([...[a, b].map(item => ({ item, reader: OPUS, outcome: `judged by ${CLAUDE_ROW_JUDGE}, not the leader judge ${NIGHTLY_CLAUDE_JUDGE}` })), { item: d, reader: OPUS, outcome: 'no frontier judgment' }]);
   });
 });
 
@@ -230,7 +243,7 @@ describe('leaderRows and importLeader', () => {
     }
     expect(unknown).toEqual([
       { item: L[4], reader: OPUS, outcome: 'cut off at its output limit' }, { item: L[5], reader: OPUS, outcome: 'empty answer' }, { item: L[6], reader: OPUS, outcome: 'harness_invalid' },
-      { item: L[7], reader: OPUS, outcome: 'no frontier judgment' }, { item: L[8], reader: OPUS, outcome: 'no frontier judgment' }, { item: L[9], reader: OPUS, outcome: 'no frontier judgment' },
+      { item: L[7], reader: OPUS, outcome: 'no frontier judgment' }, { item: L[8], reader: OPUS, outcome: 'no frontier judgment' }, { item: L[9], reader: OPUS, outcome: `judged by ${OPUS}, not the leader judge ${NIGHTLY_CLAUDE_JUDGE}` },
       { item: L[1], reader: SOL, outcome: 'cut off at its output limit' }]);
     expect(skipped).toBe(1);
 

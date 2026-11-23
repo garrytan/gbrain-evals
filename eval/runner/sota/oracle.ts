@@ -1,6 +1,6 @@
 /**
  * The SOTA loop's oracle (plan item 4): each dev-pool question answered by each nightly reader (claude-opus-5-5,
- * gpt-6.1-sol and particle-1) given only its gold evidence (BEAM: every turn group holding a cited turn; LongMemEval: the
+ * gpt-6.2-sol and particle-1) given only its gold evidence (BEAM: every turn group holding a cited turn; LongMemEval: the
  * answer sessions), through memory-qa's reading arm (--qa reader --qa-context oracle, the reader prompt and judging code
  * the nightly and A4 use) at the suite's output limit, raised to particle-1's 16,000-token floor, judged by the nightly's
  * QA judge for the reader (nightly/adapters.ts judgeFor: gpt-6.2-astra grades Claude and particle-1 answers,
@@ -13,10 +13,11 @@
  *       --work <dir> --paid --budget-ledger <path> --budget-run-id <id>
  *   bun eval/runner/sota/oracle.ts export --benchmark lme-s --cache <dir>
  *
- * plan (keyless) lists, per benchmark and reader, the dev-pool items whose oracle row is fresh, unknown or stale, and
- * writes the ids to buy. import-a4 (keyless) writes A4's gpt-6.1-sol answers on BEAM-1M with their claude-opus-5-5
- * re-judge (eval/data/answerability/oracle/beam-1m.json) as Sol's BEAM-1M rows: that spec is pinned to A4, so A4's
- * answers are reused wherever the item matches and never re-bought. run buys the rest in a paid window; the chat cache
+ * plan (keyless) lists, per benchmark and reader (the nightly readers, and gpt-6.1-sol for the answerability files), the
+ * dev-pool items whose oracle row is fresh, unknown or stale, and writes the ids to buy. import-a4 (keyless) writes
+ * A4's gpt-6.1-sol answers on BEAM-1M with their claude-opus-5-5 re-judge (eval/data/answerability/oracle/beam-1m.json)
+ * as gpt-6.1-sol's BEAM-1M rows: that spec is pinned to A4, so A4's answers are reused wherever the item matches and
+ * never re-bought. run buys the rest in a paid window; the chat cache
  * under --work makes a rerun repeat no call. export writes the LongMemEval oracle file the answerability rule reads
  * (gpt-6.1-sol answers, claude-opus-5-5 judge, as on BEAM-1M).
  */
@@ -32,6 +33,7 @@ import { loadDevSet } from '../nightly/devset.ts';
 import { judgeFor } from '../nightly/adapters.ts';
 import { qaPromptVersion } from '../nightly/judge-cache.ts';
 import { COMPAT_PROVIDERS } from '../providers/openai-compatible.ts';
+import { FRONTIER_READERS } from '../systems/baselines.ts';
 import { ANSWERABILITY_DIR, ORACLE_PASS, ORACLE_SCHEMA, SOURCES } from './answerability.ts';
 import { CACHE_SCHEMA, freshness, OutcomeCache, type Row, type Spec, type Usage } from './cache.ts';
 import { assertNoSealedIds } from './sealed-guard.ts';
@@ -40,8 +42,11 @@ const ROOT = resolve(import.meta.dir, '../../..');
 const sha16 = (...parts: Array<string | Uint8Array>) => { const h = createHash('sha256'); for (const p of parts) h.update(p); return h.digest('hex').slice(0, 16); };
 const sha256 = (s: string) => createHash('sha256').update(s).digest('hex');
 
-/** The readers the oracle buys, and the nightly suite whose items and output limit each benchmark takes. */
-export const ORACLE_READERS = ['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol', 'particle:particle-1'] as const;
+/** The readers the oracle buys: the nightly's frontier readers and particle-1, so a nightly row has an oracle row on its own reader. */
+export const ORACLE_READERS = [...FRONTIER_READERS, 'particle:particle-1'] as const;
+/** The answerability oracle files' reader: A4's on BEAM-1M, and on LongMemEval the export built to match it. Frozen with those files. */
+export const EXPORT_READER = 'openai:gpt-6.1-sol';
+/** The nightly suite whose items and output limit each benchmark takes. */
 export const SUITE: Record<string, string> = { 'beam-1m': 'beam-1m-hard', 'lme-s': 'lme-s-hard' };
 const TRUNCATED = new Set(['length', 'max_tokens']);
 
@@ -82,7 +87,7 @@ const a4MaxTokens = 2000;
 export function a4Spec(): Spec {
   const f = oracleFile();
   return {
-    kind: 'oracle', benchmark: 'beam-1m', system: 'oracle', reader: 'openai:gpt-6.1-sol',
+    kind: 'oracle', benchmark: 'beam-1m', system: 'oracle', reader: EXPORT_READER,
     system_version: 'a4-oracle-gpt61sol', effort: null, max_tokens: a4MaxTokens, judge: f.judge, judge_prompt: f.judge_prompt.qa_ts_sha256.slice(0, 16),
     pass_threshold: ORACLE_PASS, dataset: datasetPin('beam-1m'), validator_version: validatorVersion('beam-1m'), harness_digest: `a4-rejudge ${f.source_sha256.slice(0, 16)}`,
   };
@@ -96,7 +101,7 @@ const sentMaxTokens = (reader: string, maxTokens: number) => {
 
 /** The current inputs for one benchmark and reader's oracle rows. */
 export function oracleSpec(benchmark: string, reader: string, maxTokens = suiteMaxTokens(benchmark)): Spec {
-  if (benchmark === 'beam-1m' && reader === 'openai:gpt-6.1-sol') return a4Spec();
+  if (benchmark === 'beam-1m' && reader === EXPORT_READER) return a4Spec();
   return {
     kind: 'oracle', benchmark, system: 'oracle', reader, system_version: readerVersion(), effort: null, max_tokens: sentMaxTokens(reader, maxTokens),
     judge: oracleJudge(reader), judge_prompt: qaPromptVersion(), pass_threshold: ORACLE_PASS, dataset: datasetPin(benchmark),
@@ -193,7 +198,7 @@ export async function runOracle(o: RunOptions): Promise<{ bought: number; fresh:
 
 /** The answerability oracle file for a benchmark from its gpt-6.1-sol oracle rows (claude-opus-5-5 judge, as on BEAM-1M). */
 export function exportOracle(cache: OutcomeCache, benchmark: string): string {
-  const spec = oracleSpec(benchmark, 'openai:gpt-6.1-sol');
+  const spec = oracleSpec(benchmark, EXPORT_READER);
   const f = freshness(cache, spec, poolItems(benchmark));
   if (f.stale.length || f.unknown.length) throw new Error(`${benchmark}: ${f.unknown.length} unknown and ${f.stale.length} stale gpt-6.1-sol oracle rows; buy them before exporting`);
   const rows = Object.fromEntries([...f.hits].sort(([a], [b]) => a.localeCompare(b)).map(([id, r]) => [id, { score: r.score, pass: r.pass }]));
@@ -215,7 +220,7 @@ export async function main(argv: string[], log: (s: string) => void = console.lo
   const cache = new OutcomeCache(resolve(need(argv, '--cache')));
   switch (argv[0]) {
     case 'plan': {
-      for (const benchmark of ['beam-1m', 'lme-s']) for (const reader of ORACLE_READERS) {
+      for (const benchmark of ['beam-1m', 'lme-s']) for (const reader of [...ORACLE_READERS, EXPORT_READER]) {
         const spec = oracleSpec(benchmark, reader), items = poolItems(benchmark), f = freshness(cache, spec, items);
         const buy = [...f.unknown, ...f.stale.map(s => s.item)].sort();
         const file = join(cache.dir, 'plan', `oracle-${benchmark}-${reader.replace(/[^a-z0-9.-]+/gi, '_')}.txt`);

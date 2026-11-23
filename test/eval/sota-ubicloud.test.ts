@@ -8,6 +8,7 @@ import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { PROVIDER_KEYS } from '../support/no-provider-keys.ts';
 
 const REPO = join(import.meta.dir, '../..');
 const dir = mkdtempSync(join(tmpdir(), 'sota-ubicloud-'));
@@ -188,7 +189,15 @@ describe('run.sh, with a fake runner', () => {
 });
 
 describe('vm-run.sh, on this machine with no keys and no dataset', () => {
-  const vmRun = (home: string, window: string) => spawnSync('bash', ['eval/runner/sota/ubicloud/vm-run.sh', window, '3'], { cwd: REPO, env: { PATH: process.env.PATH!, HOME: home }, encoding: 'utf8' });
+  const vmEnv = (home: string) => ({ PATH: process.env.PATH!, HOME: home, ...Object.fromEntries(PROVIDER_KEYS.map(k => [k, ''])) });
+  const vmRun = (home: string, window: string) => spawnSync('bash', ['eval/runner/sota/ubicloud/vm-run.sh', window, '3'], { cwd: REPO, env: vmEnv(home), encoding: 'utf8' });
+
+  test('its child processes see every provider key blank, so a .env in their cwd cannot fill one', () => {
+    const cwd = mkdtempSync(join(dir, 'dotenv-'));
+    writeFileSync(join(cwd, '.env'), PROVIDER_KEYS.map(k => `${k}=from-dotenv`).join('\n') + '\n');
+    const r = spawnSync('bun', ['-e', `console.log(JSON.stringify(${JSON.stringify(PROVIDER_KEYS)}.map(k => process.env[k] ?? null)))`], { cwd, env: vmEnv(join(dir, 'vm-dotenv')), encoding: 'utf8' });
+    expect(JSON.parse(r.stdout)).toEqual(PROVIDER_KEYS.map(() => ''));
+  });
 
   test('rehearse runs every plan step and opens no ledger', () => {
     const home = join(dir, 'vm-rehearse');
@@ -198,6 +207,16 @@ describe('vm-run.sh, on this machine with no keys and no dataset', () => {
     expect(r.stdout).toContain('sota-leader-lme.baseline-full-context.baseline: baseline-full-context (baseline) on SOTA-leader-lme');
     expect(existsSync(join(home, 'work/rehearse/ledger.sqlite'))).toBe(false);
   }, 60_000);
+
+  test('the oracle and leader windows buy the nightly\'s GPT-6.2 Sol rows on both benchmarks beside Opus, from the plan files plan writes', () => {
+    const oracle = vmRun(join(dir, 'vm-oracle'), 'oracle-dev').stdout;
+    for (const [b, r] of [['beam-1m', 'anthropic:claude-opus-5-5'], ['beam-1m', 'openai:gpt-6.2-sol'], ['lme-s', 'anthropic:claude-opus-5-5'], ['lme-s', 'openai:gpt-6.2-sol']])
+      expect(oracle).toContain(`vm-run: bun eval/runner/sota/oracle.ts run --benchmark ${b} --reader ${r} --items `);
+    expect(oracle).not.toContain('--reader openai:gpt-6.1-sol');
+    const leader = vmRun(join(dir, 'vm-leader'), 'leader-cache').stdout;
+    for (const [b, s] of [['lme-s', 'whole-history'], ['beam-1m', 'grep-agent']]) for (const r of ['anthropic:claude-opus-5-5', 'openai:gpt-6.2-sol'])
+      expect(leader).toContain(`vm-run: bun eval/runner/sota/leader.ts run --benchmark ${b} --system ${s} --reader ${r} --items `);
+  }, 300_000);
 
   test('a paid window opens one budget run under the window cap, reports each failed step and goes on, and a relaunch reuses the open run', () => {
     const home = join(dir, 'vm-particle');
