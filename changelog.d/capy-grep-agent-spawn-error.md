@@ -1,0 +1,1 @@
+- The grep agent's ripgrep call now returns a grep error to the agent when ripgrep can't start, instead of crashing the cell with an unhandled process error ([eval/runner/systems/file-agent.ts](eval/runner/systems/file-agent.ts)).

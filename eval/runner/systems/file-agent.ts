@@ -189,6 +189,10 @@ export function ripgrep(root: string, limits: GrepLimits = DEFAULT_GREP_LIMITS, 
       }
     });
     child.stderr.on('data', (chunk: Buffer) => { stderr += chunk.toString('utf8'); });
+    child.on('error', e => {
+      clearTimeout(timer);
+      resolve(`grep error: ripgrep could not run (${(e as NodeJS.ErrnoException).code ?? e.message})`);
+    });
     child.on('close', code => {
       clearTimeout(timer);
       const ms = performance.now() - t0;
