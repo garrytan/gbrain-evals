@@ -19,9 +19,12 @@ describe('CI workflow gates (audit C5 to C8)', () => {
   test('every step fails on its own exit code', () => {
     const exempt = /\n {6}- id: ([\w-]+)\n {8}uses: actions\/cache\/restore@\S+ # v4\.3\.0\n {8}continue-on-error: true\n {8}timeout-minutes: 2\n {8}with:\n {10}path: \.git\n(?: {10}.*\n)+\n {6}- if: steps\.\1\.outcome == 'failure'\n {8}name: Drop a partly restored git cache\n {8}run: rm -rf \.git\n/g;
     const save = /\n {8}uses: actions\/cache\/save@\S+ # v4\.3\.0\n {8}continue-on-error: true\n {8}timeout-minutes: 5\n/g;
+    const pack = /\n {6}- id: harness-pack\n {8}uses: actions\/cache\/restore@\S+ # v4\.3\.0\n {8}continue-on-error: true\n {8}timeout-minutes: 2\n {8}with:\n {10}path: \.harness\/packs\n(?: {10}.*\n)+\n {6}- if: steps\.harness-pack\.outcome == 'failure'\n {8}name: Drop a partly restored harness pack\n {8}run: rm -rf \.harness\/packs\n/g;
     expect([...workflow.matchAll(exempt)]).toHaveLength(8);
-    expect([...workflow.matchAll(save)]).toHaveLength(1);
-    expect(workflow.replace(exempt, '\n').replace(save, '\n')).not.toContain('continue-on-error');
+    expect([...workflow.matchAll(pack)]).toHaveLength(1);
+    expect([...workflow.matchAll(save)]).toHaveLength(2);
+    expect(workflow).toContain("      - if: steps.harness-pack.outcome == 'success' && steps.harness-pack.outputs.cache-hit != 'true'\n        uses: actions/cache/save@");
+    expect(workflow.replace(exempt, '\n').replace(pack, '\n').replace(save, '\n')).not.toContain('continue-on-error');
     for (const line of runLines()) {
       expect(line).not.toMatch(/\|\|\s*(true|:)/);
       expect(line).not.toMatch(/\|(?!\|)/);
