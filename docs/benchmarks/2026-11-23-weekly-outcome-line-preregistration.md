@@ -33,13 +33,16 @@ Each block gives each comparison one word from the verdict rules below: **ahead*
 
 | Block result | What gbrain's maintainers do | What the line's page says |
 |---|---|---|
-| gbrain **behind the grep agent** on either class | Matching the grep agent on that class becomes the first item on gbrain's improvement list, ahead of new features, with the block's per-kind rows and exposure (did the values the answer needs reach the reader) naming retrieval or reading as the cause. No gbrain release note claims better recall than search on that class until a later block reads level or ahead. A second behind block in a row on the same class starts one "Why null?" cycle on gbrain's retrieval, ending in keep, fix the method or a cut candidate, and a cut candidate goes to the project owner in plain words. One fix to test first is giving gbrain's own tool surface grep and read tools over the Markdown it already stores | "gbrain <release> is behind a grep agent on <class> by <x> points (<interval>)" |
+| gbrain **behind the grep agent** on either class | Matching the grep agent on that class becomes the first item on gbrain's improvement list, ahead of new features, with the block's per-kind rows and exposure (did the values the answer needs reach the reader) naming retrieval or reading as the cause. No gbrain release note claims better recall than search on that class until a later block reads level or ahead. A second behind block in a row on the same class starts one "Why null?" cycle on gbrain's retrieval, ending in keep, fix the method or a cut candidate, and a cut candidate goes to the project owner in plain words. One fix to test first is giving gbrain's own tool surface grep and read tools over the Markdown it already stores | "gbrain (releases <builds>) is behind a grep agent on <class> by <x> points (<interval>)" |
 | gbrain **level with the grep agent** on a class | Direction stays. The page shows cost per correct answer beside accuracy, because a tie leaves cost and structure as gbrain's case. Kinds where the grep agent leads become issues for gbrain's maintainers | "level with a grep agent within 3 points on <class>", with cost per correct answer |
-| gbrain **ahead of the grep agent** on a class | Direction stays | "gbrain <release> beats a grep agent on held-out <class> questions by <x> points (<interval>)" |
+| gbrain **ahead of the grep agent** on a class | Direction stays | "gbrain (releases <builds>) beats a grep agent on held-out <class> questions by <x> points (<interval>)" |
 | gbrain **behind a server** on a class | That class's per-kind rows and exposure go to gbrain's maintainers as issues, as BG1-C's did | "behind <server> on <class> by <x> points" |
 | gbrain **ahead of or level with a server** | The block's row is published | as measured. "The leading competitor" in any summary is whichever server led gbrain in that block, never one picked in advance |
 | **split by reader** or **no measurable difference** | Nothing changes on that comparison; the block's per-reader rows are published | the per-reader rows and "no measurable difference at this sample size" |
 | A weekly point outside the previous block's 95% interval by more than the weekly smallest detectable difference | An advisory issue to gbrain's maintainers with the release range since the last point and the flag's simulated false-alarm rate. It holds no release | a flag line on the line's page |
+
+A block's word belongs to the set of gbrain releases its counted worlds ran on, and every claim names that set. A claim
+names one release only when every counted world in the block ran on it.
 
 Per-kind rows and exposure go to gbrain's maintainers once per block, never weekly, so they cannot steer by the live set
 week to week.
@@ -58,8 +61,10 @@ the class and size of the gap.
 - On BG1-C's 40 sealed worlds, gbrain v0.60.753.0 was ahead of the memory-bank server on what is true now (+1.2, +0.2 to
   +2.2), level with the extract-first server (+0.6), and behind both on questions about the past (-4.5 and -3.0)
   ([results](2026-11-19-changing-facts-confirmation-results.md)). No grep agent ran on BG1 worlds.
-- On BG1's public development worlds, gbrain's lead on current values (+3.4 and +1.9 points) shrank on sealed worlds
-  (+1.2 and +0.6). A development number can't stand in for a held-out one, so the line is held out every week.
+- Read by claude-opus-5-5 on BG1's public development worlds, gbrain led the memory-bank and extract-first servers on
+  current values by +3.4 and +1.9 points. On BG1-C's sealed worlds, Opus's own rows read +0.6 and -1.9: one lead shrank
+  and the other reversed. The sealed run also differed in its worlds (a new seed and phrasing set) and its gbrain build.
+  A development number can't stand in for a held-out one, so the line is held out every week.
 - A BG1 world is about 200,000 tokens, which fits in a frontier model's window. A grep agent may answer nearly every
   question; the ceiling rules below say what happens then.
 
@@ -126,7 +131,10 @@ amendment; every row names its server's version and the date that version was fi
 The grep agent runs in this repository's own agent loop, as the BEAM rows ran it, not in a coding-agent product (GBEV-3
 ruling, 2026-11-23). Public text calls it "a grep agent" or "a 40-turn grep agent over the chats as files", never by a
 product name. The pilot carries a quick look (below) at Opus in Claude Code doing the same job, and if Claude Code does
-better by more than the weekly smallest detectable difference, launch amendment A makes it the grep row before week 1.
+better by more than the weekly smallest detectable difference, launch amendment A makes it the grep row before week 1,
+but only if both readers pass their pilots and judge checks on Claude Code. Otherwise the grep row stays in our loop for
+both readers and the quick look is reported as a note. Public text names the grep row's harness whenever it is not the
+40-turn loop.
 
 No row has gstack installed or loaded: every row is our own API loop or a server, so the no-kit condition (R44) holds for
 all of them. gbrain's own agent tools (`query`, `search`, `get_page`) in the grep agent's loop are not a row yet. They
@@ -164,19 +172,23 @@ can join later as a secondary comparison by dated amendment, and never replace t
 - **Reader agreement.** Ahead, behind or level is published only when claude-opus-5-5's own estimate and particle-1's own
   estimate on that comparison have the same sign (level: both inside -3 to +3). Otherwise the word is "split by reader",
   with both readers' rows.
-- **The look (R113).** Each block is one counted run. It takes one look after its first 16 worlds (end of week 2) and
-  stops a comparison only for efficacy, at O'Brien-Fleming bounds for two looks at information 0.5 and 1 at that Holm
-  step's alpha: at two-sided 0.05, |z| 2.797 at the look and 1.977 at the end; at 0.025, 3.183 and 2.250; at 0.0167,
-  3.394 and 2.400; at 0.0125, 3.539 and 2.502. There is no futility stop, because the line runs either way. A comparison
-  that crosses at the look gets its word then, labelled early; the block's remaining weeks still run, and their points
-  are reported.
+- **The look (R113).** Each block is one counted run. It takes one look when its 16th counted world is scored (normally
+  the end of week 2; later if a week records no point) and stops a comparison only for efficacy, at O'Brien-Fleming
+  bounds for two looks at information 0.5 and 1 of the planned 32 worlds, at that Holm step's alpha: at two-sided 0.05, |z| 2.797 at the look and 1.977 at the end; at 0.025, 3.183 and 2.250; at 0.0167,
+  3.394 and 2.400; at 0.0125, 3.539 and 2.502. There is no futility stop, because the line runs either way. If the block ends with fewer than 32 counted worlds, both
+  bounds stay as fixed here; the two tests are then more correlated, so the overall error stays at or below alpha. A
+  comparison that crosses at the look gets its word then, labelled early, and the early word covers only the releases
+  measured in those 16 worlds, named with it. The block's remaining weeks still run, and the full-block estimate and
+  interval are published beside the early word. If the full-block estimate has the opposite sign, the comparison's
+  block word is "changed within the block", with both rows and their releases, and no claim names either direction.
 - **Weekly points.** Each week reports the same differences over its own 8 worlds, with intervals, and never a verdict
   word. The rolling display pools the last four weekly points (up to 32 worlds, each measured once on its own week's
   build) and names the builds it covers. A block's builds are listed with its verdict, because a block mixes up to four
   releases.
-- **Missing data.** BG1-C's rules: a harness failure leaves the question out for that row and is counted; a product
-  failure (turn cap, context overflow, retrieval error) scores 0. A row that drops more than 5% of a block's questions
-  makes its comparisons descriptive for that block.
+- **Missing data.** BG1-C's rules, on one common question set per comparison: a harness failure on either row, for
+  either reader, leaves that question out of the comparison for both rows and both readers, and is counted, so every
+  paired difference is taken over the same questions. A product failure (turn cap, context overflow, retrieval error)
+  scores 0. A comparison whose common set loses more than 5% of a block's questions is descriptive for that block.
 - **Ceiling.** Inside a block, a class where both rows of a comparison average at least 97% reports "ceiling" for that
   comparison instead of a word.
 
@@ -207,8 +219,10 @@ suggests for two readers (its three-reader values were 3.2 and 4.3 on what is tr
 
 A week shows only large gaps, such as BEAM-10M's. A block resolves about 3 points on what is true now and about 4.5 on the
 past, the size of BG1-C's losses. Before the first counted week, the harness recomputes the two-reader standard
-deviations from BG1-C's receipts in custody and the pilot measures the grep agent's. If either is larger than this table
-assumes, launch amendment A resizes the week before any counted unit.
+deviations for family 2 from BG1-C's receipts in custody; if they are larger than this table assumes, launch amendment
+A resizes the week before any counted unit. The grep agent's between-world standard deviation can't come from a
+one-world pilot, so family 1 is stated at the table's largest column (SD 9) until the first block measures it, and that
+block's measured value sets the detectable difference later blocks claim, by dated amendment.
 
 ## Ceiling
 

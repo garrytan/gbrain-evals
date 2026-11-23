@@ -144,7 +144,7 @@
         "at_units_fraction": 0.5,
         "bounds": "obrien-fleming",
         "alpha": 0.05,
-        "futility_stop": "none: efficacy only, because the line runs either way; a comparison that crosses its bound at half a block gets its word early, labelled early, and the block's remaining weeks still run"
+        "futility_stop": "none: efficacy only, because the line runs either way; the look comes when the block's 16th counted world is scored; a comparison that crosses its bound gets its word early, labelled early and naming only the releases in those 16 worlds; the block's remaining weeks still run, the full-block estimate is published beside it, and an opposite-sign full-block estimate makes the word 'changed within the block'"
       }
     }
   ]
