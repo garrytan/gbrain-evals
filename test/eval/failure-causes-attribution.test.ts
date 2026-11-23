@@ -176,6 +176,16 @@ describe('attribution', () => {
     expect(String(failure)).toMatch(/expect\(/);
   });
 
+  test('stale leader rows ask for the window the leader re-buy prices, never one from their recorded tokens', () => {
+    const dir = scratch();
+    new OutcomeCache(dir).put(LEADER.map(([i, p]) => cacheRow({ ...spec('leader'), judge: 'openai:gpt-6.1-sol' }, i, p)));
+    const leaderOnly = { ...specs, oracle: () => null, leaderRebuyUsd: (_: Spec, items: readonly string[]) => 12.34 + items.length };
+    const s = real.attribute(labels(), { cacheDir: dir, specs: leaderOnly, devset: DEVSET, classes }).stale;
+    expect(s).toHaveLength(1);
+    expect(s[0]!.message).toContain('changed judge: openai:gpt-6.1-sol -> openai:gpt-6-astra (3 rows)');
+    expect(s[0]!.message).toContain("PAID WINDOW REQUEST SOTA-REBUY-LEADER-BENCH-X 15.34 (3 rows; q1's estimate for the leader cell on these items, plus 25%)");
+  });
+
   test('the attribution file and the report section', () => {
     const a = real.attribute(labels(), { cacheDir: cache(), specs, devset: DEVSET, classes });
     const dir = scratch();

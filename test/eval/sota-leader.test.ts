@@ -13,11 +13,13 @@ import type { Corpus } from '../../eval/runner/memory-qa/corpus.ts';
 import { instrumentFor } from '../../eval/runner/memory-qa/instruments.ts';
 import type { Outcome } from '../../eval/runner/memory-qa/outcomes.ts';
 import { answerRecord, rawSha256, type AnswerRecord, type JudgmentRecord } from '../../eval/runner/memory-qa/records.ts';
+import { judgeFor } from '../../eval/runner/nightly/adapters.ts';
 import { qaPromptVersion } from '../../eval/runner/nightly/judge-cache.ts';
-import { frontierInstrumentId, readerMaxTokens, runConfigText } from '../../eval/runner/q1/cell.ts';
-import { ALL_SETS, buildManifest, definitionProblems, estimateCell, frontierJudgeOf, loadManifest, SOTA_DEV_IDS, SOTA_LEADER_BEAM_CONVERSATIONS, SOTA_LEADER_BEAM_IDS, SOTA_LEADER_LME_IDS, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
-import { freshness, OutcomeCache } from '../../eval/runner/sota/cache.ts';
-import { importLeader, LEADERS, leaderRows, leaderRunCell, leaderSpec, main, runLeader } from '../../eval/runner/sota/leader.ts';
+import { frontierInstrumentId, paidGuard, readerMaxTokens, runConfigText } from '../../eval/runner/q1/cell.ts';
+import { ALL_SETS, buildManifest, definitionProblems, estimateCell, frontierJudgeOf, frontierJudgesFor, loadManifest, SOTA_DEV_IDS, SOTA_LEADER_BEAM_CONVERSATIONS, SOTA_LEADER_BEAM_IDS, SOTA_LEADER_LME_IDS, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
+import type { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
+import { CACHE_SCHEMA, freshness, OutcomeCache, staleMessage, type Row } from '../../eval/runner/sota/cache.ts';
+import { importLeader, LEADERS, leaderJudge, leaderRebuyUsd, leaderRows, leaderRunCell, leaderSpec, main, runLeader } from '../../eval/runner/sota/leader.ts';
 import { poolItems } from '../../eval/runner/sota/oracle.ts';
 import { AGENT_ARM_PARITY } from '../../eval/runner/systems/gbrain-agent.ts';
 
@@ -29,8 +31,10 @@ beforeAll(() => { globalThis.fetch = (async (input: string | URL | Request) => {
 afterAll(() => { globalThis.fetch = realFetch; rmSync(tmp, { recursive: true, force: true }); });
 
 const OPUS = 'anthropic:claude-opus-5-5', SOL = 'openai:gpt-6.2-sol', PARTICLE = 'particle:particle-1';
-/** The BEAM judges rule's judge of Claude rows (q1 frontierJudgeOf), which the reader move leaves unchanged. */
+/** The BEAM judges rule's judge of Claude rows (q1 frontierJudgeOf), which the q1 leader cells keep (R116). */
 const CLAUDE_ROW_JUDGE = 'openai:gpt-6.1-sol';
+/** The nightly's QA judge of Claude rows (nightly/adapters.ts judgeFor), which leader rows are judged by. */
+const NIGHTLY_CLAUDE_JUDGE = 'openai:gpt-6.2-astra';
 const BEAM_CELL = 'sota-leader-beam.baseline-file-agent.baseline', LME_CELL = 'sota-leader-lme.baseline-full-context.baseline';
 const DEV_GREP = 'sota-dev.baseline-file-agent.baseline', DEV_GBRAIN = 'sota-dev.gbrain-defaults.agent-tools';
 const kinds = new Set((JSON.parse(readFileSync(join(ROOT, 'eval/systems/kinds.json'), 'utf8')) as { kinds: Array<{ id: string }> }).kinds.map(k => k.id));
@@ -61,7 +65,7 @@ function publish(out: string, def: CellDefinition, armId: string, answers: Answe
     as.push(a);
     js.push({ answer_id: a.answer_id, instrument_id: instrument.id, instrument_sha256: instrument.sha256, judge: instrument.canonical_judge, judge_replicate: 0, temperature: 0, score: 1, parse_ok: true, raw_sha256: rawSha256(raw), outcome: 'scored' });
     if (x.judge === null) continue;
-    const judge = x.judge ?? frontierJudgeOf(x.reader);
+    const judge = x.judge ?? leaderJudge(x.reader);
     const score = x.score === undefined ? 1 : x.score;
     js.push({ answer_id: a.answer_id, instrument_id: frontierInstrumentId(instrument.id, judge), instrument_sha256: instrument.sha256, judge, judge_replicate: 0, temperature: null, score, parse_ok: score !== null, raw_sha256: rawSha256(raw), outcome: score === null ? 'judge_error' : 'scored' });
   }
@@ -99,10 +103,10 @@ describe('leader cells in the q1 manifest', () => {
 });
 
 describe('leaderSpec', () => {
-  test('pins the leader code, the reader output limit each leader sends, the per-row frontier judge and the instrument and judge prompt versions, for the nightly frontier readers only', () => {
+  test('pins the leader code, the reader output limit each leader sends, the nightly\'s QA judge and the instrument and judge prompt versions, for the nightly frontier readers only', () => {
     for (const b of ['beam-1m', 'lme-s']) for (const r of [OPUS, SOL]) {
       const s = leaderSpec(b, r)!;
-      expect(s).toMatchObject({ kind: 'leader', benchmark: b, reader: r, judge: frontierJudgeOf(r), pass_threshold: 0.5, effort: 'medium',
+      expect(s).toMatchObject({ kind: 'leader', benchmark: b, reader: r, judge: judgeFor(r), pass_threshold: 0.5, effort: 'medium',
         judge_prompt: `${instrumentFor(b).sha256.slice(0, 16)}:${qaPromptVersion()}` });
       expect(s.judge.split(':')[0]).not.toBe(r.split(':')[0]);
     }
@@ -110,6 +114,27 @@ describe('leaderSpec', () => {
     expect([leaderSpec('lme-s', OPUS)!.max_tokens, leaderSpec('lme-s', SOL)!.max_tokens]).toEqual([readerMaxTokens(OPUS), readerMaxTokens(SOL)]);
     expect([leaderSpec('beam-1m', OPUS)!.system, leaderSpec('lme-s', OPUS)!.system]).toEqual(['grep-agent', 'whole-history']);
     expect([leaderSpec('cat40-hard-m', OPUS), leaderSpec('beam-1m', PARTICLE), leaderSpec('lme-s', 'fake')]).toEqual([null, null, null]);
+  });
+
+  test('the leader judge is the nightly\'s QA judge for the reader\'s family, and q1\'s frontier judge stays as the frozen cells name it', () => {
+    expect([leaderJudge(OPUS), leaderJudge(SOL)]).toEqual([NIGHTLY_CLAUDE_JUDGE, OPUS]);
+    for (const r of [OPUS, SOL]) expect(leaderJudge(r)).toBe(judgeFor(r));
+    expect(leaderSpec('lme-s', OPUS)!.judge).toBe(NIGHTLY_CLAUDE_JUDGE);
+    expect(frontierJudgeOf(OPUS)).toBe(CLAUDE_ROW_JUDGE);
+  });
+
+  test('the judge is part of the spec: a row judged by q1\'s gpt-6.1-sol is stale under the leader judge, never mixed in, and an answer with only that judgment writes no row', () => {
+    const L = SOTA_LEADER_LME_IDS;
+    const spec = leaderSpec('lme-s', OPUS)!;
+    const cache = new OutcomeCache(fresh('judge-cache'));
+    cache.put([{ ...spec, judge: CLAUDE_ROW_JUDGE, schema: CACHE_SCHEMA, item: L[0]!, context_digest: 'c', score: 1, pass: true, finish_reason: null, usage: null, at: '2026-11-16T00:00:00.000Z', source: 'old' }]);
+    const f = freshness(cache, spec, [L[0]!]);
+    expect([f.hits.size, f.stale.map(s => s.changed)]).toEqual([0, [['judge']]]);
+    expect(staleMessage(f, 'items.txt', 'cache')).toContain(`changed judge: ${CLAUDE_ROW_JUDGE} -> ${NIGHTLY_CLAUDE_JUDGE} (1 rows)`);
+    const out = fresh('old-judge');
+    publish(out, cellOf(LME_CELL), 'whole-full-context-opus', [{ item: L[0]!, reader: OPUS, judge: CLAUDE_ROW_JUDGE }]);
+    const read = leaderRows(out, LME_CELL);
+    expect([read.rows, read.unknown]).toEqual([[], [{ item: L[0], reader: OPUS, outcome: 'no frontier judgment' }]]);
   });
 });
 
@@ -121,15 +146,58 @@ describe('leaderRunCell', () => {
     expect(beam.only_conversations).toEqual([...new Set(items.map(id => id.split(':')[0]))].sort());
     expect(beam.arms.map(a => a.id)).toEqual(['whole-agent-sol']);
     expect(definitionProblems(beam, kinds)).toEqual([]);
+    const opus = leaderRunCell('beam-1m', OPUS, items);
+    expect([frontierJudgesFor(opus.arms[0]!, OPUS), opus.arms[0]!.frontier!.judges, frontierJudgesFor(beam.arms[0]!, SOL)]).toEqual([[NIGHTLY_CLAUDE_JUDGE], [NIGHTLY_CLAUDE_JUDGE], [OPUS]]);
+    expect(definitionProblems(opus, kinds)).toEqual([]);
     const lme = leaderRunCell('lme-s', OPUS, [SOTA_LEADER_LME_IDS[3]!]);
     expect([lme.arms.map(a => a.id), lme.only_conversations, lme.selection]).toEqual([['whole-full-context-opus'], undefined, { kind: 'ids', ids: [SOTA_LEADER_LME_IDS[3]] }]);
     expect(definitionProblems(lme, kinds)).toEqual([]);
     const { estimate, ...rest } = lme;
-    expect(estimate).toEqual(estimateCell(rest));
-    expect(estimate.usd + leaderRunCell('lme-s', SOL, [SOTA_LEADER_LME_IDS[3]!]).estimate.usd).toBeCloseTo(cellOf(LME_CELL).estimate.usd, 1);
+    const atQ1Judge = estimateCell(rest);
+    expect({ ...estimate.lines, frontier_judges: 0 }).toEqual({ ...atQ1Judge.lines, frontier_judges: 0 });
+    expect(estimate.lines.frontier_judges).toBeCloseTo(4 * atQ1Judge.lines.frontier_judges!, 1);
+    const { estimate: solEstimate, ...solRest } = leaderRunCell('lme-s', SOL, [SOTA_LEADER_LME_IDS[3]!]);
+    expect(solEstimate).toEqual(estimateCell(solRest));
+    expect(atQ1Judge.usd + solEstimate.usd).toBeCloseTo(cellOf(LME_CELL).estimate.usd, 1);
     expect(() => leaderRunCell('lme-s', PARTICLE, [SOTA_LEADER_LME_IDS[0]!])).toThrow(/no arm for particle/);
     expect(() => leaderRunCell('cat40-hard-m', OPUS, ['x'])).toThrow(/has no leader/);
     expect(() => leaderRunCell('lme-s', OPUS, [])).toThrow(/no items/);
+  });
+});
+
+describe('leaderRebuyUsd', () => {
+  /** The estimate q1's paid guard asks the ledger to cover for these items, read keylessly from its refusal without --paid. */
+  const guardUsd = (def: CellDefinition, n: number) => {
+    try { paidGuard([], def, n); } catch (e) { return (e as ScoreboardError).op.state!.estimate_usd as number; }
+    throw new Error('the paid guard admitted a run without --paid');
+  };
+  const staleRows = (benchmark: string, reader: string, items: string[]): Row[] => items.map(item => ({ ...leaderSpec(benchmark, reader)!, harness_digest: 'older', schema: CACHE_SCHEMA, item,
+    context_digest: 'c', score: 1, pass: true, finish_reason: null, usage: { reader_input: 16, reader_output: 300, judge_input: 0, judge_output: 0 }, at: '2026-11-16T00:00:00.000Z', source: 'old' }));
+
+  test('a stale re-buy\'s window request is q1\'s cell estimate for those items plus 25%, never the rows\' uncached input', () => {
+    for (const [benchmark, n] of [['beam-1m', 37], ['lme-s', 19]] as const) for (const reader of [OPUS, SOL]) {
+      const items = poolItems(benchmark).slice(0, n);
+      const guard = guardUsd(leaderRunCell(benchmark, reader, items), items.length);
+      const cap = leaderRebuyUsd(leaderSpec(benchmark, reader)!, items);
+      expect(cap).toBeGreaterThanOrEqual(guard * 1.25 - 0.01);
+      expect(cap).toBeLessThanOrEqual(guard * 1.25 + 0.01);
+      const cache = new OutcomeCache(fresh('rebuy'));
+      cache.put(staleRows(benchmark, reader, items));
+      const f = freshness(cache, leaderSpec(benchmark, reader)!, items);
+      expect(f.stale).toHaveLength(n);
+      const unit = `SOTA-REBUY-LEADER-${benchmark.toUpperCase()}`;
+      expect(staleMessage(f, 'items.txt', 'cache', leaderRebuyUsd)).toContain(`PAID WINDOW REQUEST ${unit} ${cap.toFixed(2)} (${n} rows; q1's estimate for the leader cell on these items, plus 25%)`);
+      expect(staleMessage(f, 'items.txt', 'cache')).toContain(`PAID WINDOW REQUEST ${unit} <cap> (${n} rows; leader rows record no cached input or judge tokens`);
+    }
+  });
+
+  test('keeps scaling past the leader cell\'s 60 questions, since BEAM-1M leader rows cover the whole 126-question pool', () => {
+    const pool = poolItems('beam-1m');
+    expect([pool.length, ALL_SETS['SOTA-leader-beam'].questions]).toEqual([126, 60]);
+    const def = leaderRunCell('beam-1m', OPUS, pool);
+    const all = leaderRebuyUsd(leaderSpec('beam-1m', OPUS)!, pool), sixty = leaderRebuyUsd(leaderSpec('beam-1m', OPUS)!, pool.slice(0, 60));
+    expect(all).toBeCloseTo(def.estimate.usd * 126 / 60 * 1.25, 1);
+    expect(all).toBeGreaterThan(sixty * 2);
   });
 });
 

@@ -217,8 +217,10 @@ of answers bought once, in a paid run of its own, and never calls a model.
   and the command that buys fresh rows. Rows are bought in paid runs of their own: `bun eval/runner/sota/oracle.ts run`
   for the oracle, and `bun eval/runner/sota/leader.ts run` for the leader, which runs two cells of the Q1 scoreboard's
   runner (the whole history on every `lme-s-hard` question, the grep agent on the `beam-1m-hard` questions the SOTA
-  dev test leaves out) judged by the reader's frontier judge from the other model family. `leader.ts import` reuses the
-  dev test's own grep-agent answers, and `plan` on either tool lists the rows still missing.
+  dev test leaves out). Oracle and leader answers are judged by the nightly's own QA judge for that reader (GPT-6.2 Astra
+  for Claude and particle-1, Claude Opus 5.5 for GPT), so a cache row and the nightly row it explains share a judge.
+  `leader.ts import` reuses the dev test's own grep-agent answers where that judge graded them, and `plan` on either
+  tool lists the rows still missing.
 - **Attribution.** `bun eval/runner/failure-causes/cli.ts attribute --labels <week's labels> --cache <cache> --out
   attribution.json` puts each failed row of a QA suite into one bucket, the first that applies: *harness* (a provider
   or harness error, or an answer cut off at its output limit), *unsupported*, *reader limited* (the oracle fails it
@@ -318,7 +320,7 @@ The SOTA loop's commands have two stops of their own:
 
 | Exit | Name | Meaning |
 |---|---|---|
-| 6 | `SOTA_CACHE_STALE` | `attribute` or `cache.ts check` found oracle or leader rows measured on other inputs. The message names the changed inputs, the re-buy command and its paid-window request. `attribute` still writes its file, marked stale, and the fix list files nothing that week. |
+| 6 | `SOTA_CACHE_STALE` | `attribute` or `cache.ts check` found oracle or leader rows measured on other inputs. The message names the changed inputs, the re-buy command and its paid-window request, priced for oracle rows from their recorded tokens and for leader rows from the Q1 runner's estimate for the leader cell on those questions (leader rows record no cached input or judge tokens), plus a quarter. `attribute` still writes its file, marked stale, and the fix list files nothing that week. |
 | 7 | `CUSTODY_PROVIDER_CHANGED` | `custody.ts check-providers` found an embedding or rerank provider the held-out set didn't vet, or `CUSTODY_PROVIDER_UNKNOWN` when it couldn't read them. The custody run doesn't start. |
 
 ```bash
@@ -378,6 +380,15 @@ Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, whic
 [disclosures](disclosures.md).
 
 ## Changelog
+
+### 2026-11-23: SOTA cache answers share the nightly's QA judge, and leader re-buys are priced from the cell estimate
+
+Oracle and leader answers in the SOTA outcome cache were judged by GPT-6 Astra (oracle, Claude answers), GPT-6.1 Sol
+(leader, Claude answers) and Claude Opus 5.5 (oracle, particle-1 answers). Both now take the nightly's QA judge for the
+reader, so Claude and particle-1 answers are graded by GPT-6.2 Astra and GPT answers by Claude Opus 5.5; the judge is
+part of each row's inputs, so older rows read as stale until re-bought. A stale leader row's paid-window request now
+comes from the Q1 runner's estimate for the leader cell on those questions, because leader rows record only uncached
+reader input.
 
 ### 2026-11-21: The nightly reads with GPT-6.2 Sol, and no Sol row is judged by Sol
 

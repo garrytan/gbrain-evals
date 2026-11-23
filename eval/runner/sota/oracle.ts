@@ -2,10 +2,10 @@
  * The SOTA loop's oracle (plan item 4): each dev-pool question answered by each nightly reader (claude-opus-5-5,
  * gpt-6.1-sol and particle-1) given only its gold evidence (BEAM: every turn group holding a cited turn; LongMemEval: the
  * answer sessions), through memory-qa's reading arm (--qa reader --qa-context oracle, the reader prompt and judging code
- * the nightly and A4 use) at the suite's output limit, raised to particle-1's 16,000-token floor, judged by the reader's
- * cross-family judge (RS1's per-row judges: gpt-6-astra grades Claude answers,
- * claude-opus-5-5 grades GPT and particle-1 answers), and written to the outcome cache with its finish_reason. Cat 40 is
- * out of v1: its scorer and agent loop don't fit a QA reader.
+ * the nightly and A4 use) at the suite's output limit, raised to particle-1's 16,000-token floor, judged by the nightly's
+ * QA judge for the reader (nightly/adapters.ts judgeFor: gpt-6.2-astra grades Claude and particle-1 answers,
+ * claude-opus-5-5 grades GPT answers), and written to the outcome cache with its finish_reason. Cat 40 is out of v1: its
+ * scorer and agent loop don't fit a QA reader.
  *
  *   bun eval/runner/sota/oracle.ts plan --cache <dir>
  *   bun eval/runner/sota/oracle.ts import-a4 --cache <dir>
@@ -29,6 +29,7 @@ import { loadCorpus, filesFor, type MemoryQuestion, type Session } from '../memo
 import { latestDate, readerPrompt } from '../memory-qa/qa.ts';
 import { parseRunArgs, runArm } from '../memory-qa/run.ts';
 import { loadDevSet } from '../nightly/devset.ts';
+import { judgeFor } from '../nightly/adapters.ts';
 import { qaPromptVersion } from '../nightly/judge-cache.ts';
 import { COMPAT_PROVIDERS } from '../providers/openai-compatible.ts';
 import { ANSWERABILITY_DIR, ORACLE_PASS, ORACLE_SCHEMA, SOURCES } from './answerability.ts';
@@ -44,8 +45,8 @@ export const ORACLE_READERS = ['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol'
 export const SUITE: Record<string, string> = { 'beam-1m': 'beam-1m-hard', 'lme-s': 'lme-s-hard' };
 const TRUNCATED = new Set(['length', 'max_tokens']);
 
-/** RS1's per-row judges: GPT-6 Astra grades Claude answers; Opus grades GPT and particle-1 answers. */
-export const oracleJudge = (reader: string) => (reader.startsWith('anthropic:') ? 'openai:gpt-6-astra' : 'anthropic:claude-opus-5-5');
+/** The oracle's judge for a reader: the nightly's QA judge (nightly/adapters.ts judgeFor), so the two can't drift apart. */
+export const oracleJudge = judgeFor;
 
 /** The dataset pin: the pinned files' paths and hashes (BEAM's manifest, LongMemEval's file), known without the data. */
 export const datasetPin = (benchmark: string) => (benchmark === 'fixture' ? 'fixture' : sha16(filesFor(benchmark).map(f => `${f.path} ${f.sha256}\n`).join('')));
@@ -168,7 +169,7 @@ export async function runOracle(o: RunOptions): Promise<{ bought: number; fresh:
   const todo = o.items.filter(id => !f.hits.has(id));
   if (!todo.length) return { bought: 0, fresh: f.hits.size, errored: [] };
   const tag = `${o.benchmark}-${o.reader.replace(/[^a-z0-9.-]+/gi, '_')}`;
-  const out = join(o.work, tag), ids = join(o.work, `${tag}.ids.txt`);
+  const out = join(o.work, `${tag}-${sha256(JSON.stringify(spec) + todo.join('\n')).slice(0, 12)}`), ids = `${out}.ids.txt`;
   mkdirSync(o.work, { recursive: true });
   writeFileSync(ids, todo.join('\n') + '\n');
   const corpus = loadCorpus(o.benchmark, undefined, devConversations(o.benchmark) ?? undefined);

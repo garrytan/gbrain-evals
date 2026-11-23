@@ -190,8 +190,8 @@ async function run(argv: string[]): Promise<number> {
   }
   if (command === 'attribute') {
     const out = need(rest, '--out');
-    const [{ oracleSpec }, { leaderSpec }] = await Promise.all([import('../sota/oracle.ts'), import('../sota/leader.ts')]);
-    const a = attribute(readNdjson<CauseLabel>(need(rest, '--labels')), { cacheDir: need(rest, '--cache'), specs: { oracle: oracleSpec, leader: leaderSpec } });
+    const [{ oracleSpec }, { leaderSpec, leaderRebuyUsd }] = await Promise.all([import('../sota/oracle.ts'), import('../sota/leader.ts')]);
+    const a = attribute(readNdjson<CauseLabel>(need(rest, '--labels')), { cacheDir: need(rest, '--cache'), specs: { oracle: oracleSpec, leader: leaderSpec, leaderRebuyUsd } });
     writeFileSync(out, attributionText(a, out));
     if (a.status === 'stale') { for (const s of a.stale) console.error(s.message); return STALE_EXIT; }
     console.log(JSON.stringify({ status: a.status, rows: a.rows.length, outside: a.outside, cells: a.cells.map(c => ({ suite: c.suite, reader: c.reader, rows: c.rows, points: c.points })) }, null, 1));
