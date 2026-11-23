@@ -85,7 +85,7 @@ describe('mint.sh keeps BG1\'s and BG1-C\'s slots apart', () => {
     expect(mint(bg1, j, ['--fake', '--start', '3', '--count', '1']).code).toBe(0);
     refusal(mint(bg1, j, ['--fake', '--bg1c', '--count', '1']), 'this --out holds bg1-003, which is not one of BG1-C\'s slots (31 to 96)');
     mkdirSync(join(bg1c, 'render'), { recursive: true });
-    for (const slot of range(31, 35)) writeFileSync(join(bg1c, 'render', `${id(slot)}.validation.json`), JSON.stringify({ world: id(slot), status: 'pass' }));
+    for (const slot of range(31, 39)) writeFileSync(join(bg1c, 'render', `${id(slot)}.validation.json`), JSON.stringify({ world: id(slot), status: 'pass' }));
     expect(mint(bg1c, j, ['--fake', '--bg1c', '--start', '40', '--count', '1']).code).toBe(0);
     refusal(mint(bg1c, j, ['--fake', '--count', '1']), 'this --out holds bg1-040, which is not one of BG1\'s slots (1 to 30)');
     mkdirSync(join(bg1c, 'render'), { recursive: true });
@@ -210,7 +210,7 @@ describe('a BG1-C set end to end: mint, validate --bg1c, fill --bg1c and load', 
 
     const report = join(j.dir, 'report.json');
     refusal(run('bun', [VALIDATE, '--bg1c', '--set', set, '--seed-file', j.seed, '--phrasing', j.phrasing, '--report', report, ...LENGTH, '--n-final', '41']), '--n-final must be a whole number from 1 to 40');
-    const v = run('bun', [VALIDATE, '--bg1c', '--set', set, '--seed-file', j.seed, '--phrasing', j.phrasing, '--report', report, ...LENGTH, '--n-final', '40']);
+    const v = run('bun', [VALIDATE, '--bg1c', '--set', set, '--seed-file', j.seed, '--phrasing', j.phrasing, '--report', report, ...LENGTH, '--n-final', '40', '--fake']);
     expect(v.err).toBe('');
     expect(v.out).toMatch(/^bg1-validate checked=40 passed=40 failed=1 render_dropped=1 kept=40 gates=render:1 controls_dropped=0 report_sha256=[0-9a-f]{16}\n$/);
     const kept = (JSON.parse(readFileSync(report, 'utf8')) as { kept: string[] }).kept;
@@ -221,13 +221,13 @@ describe('a BG1-C set end to end: mint, validate --bg1c, fill --bg1c and load', 
     const noN = join(j.dir, 'report-no-n.json');
     writeFileSync(noN, JSON.stringify({ ...JSON.parse(readFileSync(report, 'utf8')), n_final: null, kept }));
     refusal(run('bun', [FILL, '--bg1c', '--root', set, '--report', noN, ...LENGTH]), 'a BG1-C fill needs the report\'s n_final to be 40, the preregistered N, and it is absent');
-    const f = run('bun', [FILL, '--bg1c', '--root', set, '--report', report, ...LENGTH]);
+    const f = run('bun', [FILL, '--bg1c', '--root', set, '--report', report, ...LENGTH, '--fake']);
     expect(f.err).toBe('');
     expect(f.out).toMatch(/^bg1-fill status=filled files=80 kept=40 first=bg1-031 last=bg1-071 n_final=40 earlier_fills=0 manifest_sha256=[0-9a-f]{64}\n$/);
     expect(existsSync(join(set, 'bg1-manifest.json'))).toBe(false);
     const filled = JSON.parse(readFileSync(join(set, 'bg1c-manifest.json'), 'utf8')) as Bg1Manifest;
     const template = JSON.parse(readFileSync(join(REPO, BG1C_MANIFEST), 'utf8')) as Bg1Manifest;
-    expect({ ...filled, filled_at: null }).toEqual({ ...template, status: 'filled', files: bg1ManifestFiles(set, kept, BG1C_SET), filled_at: null, kept, n_final: BG1C_N_FINAL });
+    expect({ ...filled, filled_at: null }).toEqual({ ...template, status: 'filled', files: bg1ManifestFiles(set, kept, BG1C_SET), filled_at: null, kept, n_final: BG1C_N_FINAL, drill: true });
     expect(filled.dataset).toBe(BG1C_DATASET);
     expect(bg1Kept(filled, BG1C_SET)).toEqual({ kept, n_final: 40 });
 
@@ -235,9 +235,9 @@ describe('a BG1-C set end to end: mint, validate --bg1c, fill --bg1c and load', 
     try {
       process.env.GBRAIN_EVALS_BG1C_SOURCE = set;
       process.env.GBRAIN_EVALS_BG1C_MANIFEST = join(set, 'bg1c-manifest.json');
-      expect(verifyBg1Custody(() => {}, BG1C_SET)).toBe(80);
+      expect(verifyBg1Custody(() => {}, BG1C_SET, { keyless: true })).toBe(80);
       const log = join(j.dir, 'access.jsonl');
-      const c = loadBg1c({ log, decisionId: 'test', purpose: 'e2e' }, { worldEnd: '2026-11-15', only: new Set(['bg1-031', 'bg1-071']) });
+      const c = loadBg1c({ log, decisionId: 'test', purpose: 'e2e' }, { worldEnd: '2026-11-15', only: new Set(['bg1-031', 'bg1-071']), keyless: true });
       expect(c.benchmark).toBe('bg1c');
       expect(c.conversations.map(x => x.id)).toEqual(['bg1-031', 'bg1-071']);
       expect(c.questions).toHaveLength(128);

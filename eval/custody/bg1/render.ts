@@ -58,7 +58,9 @@
  * starts: BG1_GEMINI_READY and BG1_ANTHROPIC_READY name their ready files, each proxy holds only its own provider's
  * key and prices and reserves every request in the ledger, and a provider key in this process's own environment
  * refuses. Replies are cached under --cache by request hash, so a rerun after a crash buys nothing twice. A world
- * already written is skipped when its plan is unchanged; a changed plan refuses.
+ * already written is skipped when its plan is unchanged; a changed plan refuses. A sealed render (a mint slot, called by
+ * mint.sh or directly) refuses before planning when --set or the resolved --cache sits inside a git checkout, so no
+ * sealed plan, world or cached reply is written where a commit could pick it up.
  *
  * --dev renders one of stage 1's three public dev worlds instead of a mint slot (mint.sh --dev runs all three). It
  * plans the world from its public seed and the public phrasing, as changing-facts-gen.ts devFiles() does, and reads no
@@ -551,10 +553,10 @@ export async function main(argv: string[], env: Record<string, string | undefine
     if (seedFile || phrasingFile || slotText) throw new RenderRefusal('--dev plans a public dev world from its public seed and phrasing, so it takes no --seed-file, --phrasing or --slot');
     if (kind === 'bgw') throw new RenderRefusal('--dev plans a public dev world, so it takes no --bgw');
     if (!set || !DEV_IDS.includes(dev)) throw new RenderRefusal(`usage: --dev <bg1-dev-01 to bg1-dev-20> --set <dir> (--fake | --paid-window <unit> --window-cap-usd <n> --budget-ledger <file> --budget-run-id <id>)`);
-    if (insideCheckout(set)) throw new RenderRefusal('--set must sit outside any git checkout');
   } else if (!set || !seedFile || !phrasingFile || !slotText) throw new RenderRefusal(`usage: [--bgw] --set <dir> --seed-file <path>.${kind}-seed --phrasing <path>.${kind}-phrasing.json --slot <n> (--fake | --paid-window <unit> --window-cap-usd <n> --budget-ledger <file> --budget-run-id <id>)`);
+  if (insideCheckout(set)) throw new RenderRefusal('--set must sit outside any git checkout');
   const cache = resolve(flag('--cache') ?? join(dirname(resolve(set)), 'render-cache'));
-  if (dev !== null && insideCheckout(cache)) throw new RenderRefusal('--cache must sit outside any git checkout');
+  if (insideCheckout(cache)) throw new RenderRefusal('--cache must sit outside any git checkout');
   const fake = argv.includes('--fake');
   const targetTokens = Number(flag('--target-tokens') ?? BG1_TARGET_TOKENS);
   if (!(Number.isInteger(targetTokens) && targetTokens >= 1000)) throw new RenderRefusal('--target-tokens must be a whole number of at least 1000');

@@ -274,7 +274,7 @@ describe('mint.sh --fake, validate.ts and hashlist.ts end to end', () => {
 
   test('validate.ts passes the minted set and keeps it in slot order; tampering fails the matching gate', () => {
     const report = join(i.dir, 'validation', 'report.json');
-    const v = run('bun', [VALIDATE, '--set', join(out, 'set'), '--seed-file', i.seed, '--phrasing', i.phrasing, '--report', report, '--target-tokens', '30000', '--tolerance', '0.25', '--n-final', '2']);
+    const v = run('bun', [VALIDATE, '--set', join(out, 'set'), '--seed-file', i.seed, '--phrasing', i.phrasing, '--report', report, '--target-tokens', '30000', '--tolerance', '0.25', '--n-final', '2', '--fake']);
     expect(v.code).toBe(0);
     expect(v.out).toMatch(/^bg1-validate checked=3 passed=3 failed=0 render_dropped=0 kept=2 gates=none controls_dropped=0 report_sha256=[0-9a-f]{16}\n$/);
     expect(JSON.parse(readFileSync(report, 'utf8')).kept).toEqual(['bg1-001', 'bg1-002']);
@@ -291,7 +291,7 @@ describe('mint.sh --fake, validate.ts and hashlist.ts end to end', () => {
     writeFileSync(w('bg1-003', 'plan.json'), readFileSync(w('bg1-003', 'plan.json'), 'utf8').replace('"long": false', '"long": true'));
     const rec = join(copy, 'render', 'bg1-001.json');
     writeFileSync(rec, JSON.stringify({ ...JSON.parse(readFileSync(rec, 'utf8')), controls_dropped: 3 }));
-    const t = run('bun', [VALIDATE, '--set', join(copy, 'set'), '--seed-file', i.seed, '--phrasing', i.phrasing, '--report', join(i.dir, 'validation', 'tampered.json'), '--target-tokens', '30000', '--tolerance', '0.25']);
+    const t = run('bun', [VALIDATE, '--set', join(copy, 'set'), '--seed-file', i.seed, '--phrasing', i.phrasing, '--report', join(i.dir, 'validation', 'tampered.json'), '--target-tokens', '30000', '--tolerance', '0.25', '--fake']);
     expect(t.code).toBe(0);
     expect(t.out).toContain('checked=3 passed=0 failed=3');
     expect(t.out).toContain(' controls_dropped=3 ');

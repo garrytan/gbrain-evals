@@ -20,7 +20,9 @@
  * for launch amendment A, the SHA-256 of the seed commitment, "gbrain-evals weekly-line seed commitment v1|<seed
  * line>|nonce=<nonce>", and of the phrasing file. The nonce is 32 random bytes in hex, kept beside the seed as
  * <name>.bgw-nonce (one line, mode 600): the first pass writes it and every later pass reuses it, so the commitment never
- * changes. It is never printed, and a failed check writes none.
+ * changes. It is never printed, and a failed check writes none. The first pass also records both SHA-256 values in
+ * <name>.bgw-commitment.json (commitment.ts), which a real mint.sh --bgw checks before it spends, and a pass that would
+ * record other values refuses.
  *
  * batch: whether a batch may mint (mint.sh --bgw runs it first). The batch must start on a slot of a seed set and fit
  * inside it; its manifest template and its slots in the split file must be committed (bgwCommittedProblems); and it must
@@ -40,9 +42,10 @@ import { dirname, join, resolve } from 'node:path';
 import { buildQuestions, bgwWorldSeed, PlanError, sealedWorldSeed, type Phrasing } from '../../generators/changing-facts-gen.ts';
 import { BGW_BATCH_KEPT, BGW_FIRST_SLOT, bgwBatchIds, bgwBatchSlots, bgwSeedSetOf, bgwSlotOf } from '../../runner/memory-qa/bg1-names.ts';
 import { bgwCommittedProblems } from '../../runner/memory-qa/corpus.ts';
+import { COMMITMENT_PREFIXES, recordCommitment } from './commitment.ts';
 import { insideCheckout, ownerOnly, readPhrasing, readSeedLine, RenderRefusal, sealedPlan } from './render.ts';
 
-export const COMMITMENT_PREFIX = 'gbrain-evals weekly-line seed commitment v1';
+export const COMMITMENT_PREFIX = COMMITMENT_PREFIXES.bgw;
 const sha256 = (data: string | Uint8Array) => createHash('sha256').update(data).digest('hex');
 const flagOf = (argv: string[]) => (name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
 
@@ -113,8 +116,9 @@ export function seedCheck(argv: string[]): { pass: boolean; line: string } {
   const counts = `bgw-seed set=${set.id} slots=${set.last - set.first + 1} seed_distinct=${hexDistinct ? 'pass' : 'fail'} slot_seed_collisions=${collisions} shared_templates=${shared}`;
   if (!pass) return { pass, line: `${counts} status=fail` };
   const { nonce, written } = custodyNonce(seedFile);
-  const commitment = sha256(`${COMMITMENT_PREFIX}|${seedLine}|nonce=${nonce}`);
-  return { pass, line: `${counts} status=pass nonce=${written ? 'written' : 'reused'} commitment_sha256=${commitment} phrasing_sha256=${sha256(readFileSync(phrasingFile))}` };
+  const commitment = sha256(`${COMMITMENT_PREFIX}|${seedLine}|nonce=${nonce}`), phrasingSha = sha256(readFileSync(phrasingFile));
+  recordCommitment(seedFile, 'bgw', commitment, phrasingSha);
+  return { pass, line: `${counts} status=pass nonce=${written ? 'written' : 'reused'} commitment_sha256=${commitment} phrasing_sha256=${phrasingSha}` };
 }
 
 /** A render record's status, or undefined when the file is missing or not JSON. */

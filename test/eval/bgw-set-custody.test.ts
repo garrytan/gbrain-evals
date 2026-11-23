@@ -205,7 +205,7 @@ describe('a Set W batch end to end: mint, validate --bgw, fill --bgw and load a 
     expect(readdirSync(join(set, 'worlds')).sort()).toEqual(kept);
 
     const report = join(j.dir, 'report.json');
-    const validate = (extra: string[], path = report) => run('bun', [VALIDATE, '--set', set, '--seed-file', j.seed, '--phrasing', j.phrasing, '--report', path, ...LENGTH, ...extra]);
+    const validate = (extra: string[], path = report) => run('bun', [VALIDATE, '--set', set, '--seed-file', j.seed, '--phrasing', j.phrasing, '--report', path, ...LENGTH, ...extra, '--fake']);
     refusal(validate([...BATCH, '--n-final', '34']), '--bgw takes no --n-final: a Set W batch keeps its first 34 passing worlds');
     refusal(validate(['--bgw']), '--bgw needs --batch <first slot>');
     refusal(validate(['--bgw', '--batch', '1950']), 'batch bgw-1950 would run to slot 2005, past seed set W1\'s last slot 1999');
@@ -233,17 +233,17 @@ describe('a Set W batch end to end: mint, validate --bgw, fill --bgw and load a 
 
     const partial = join(j.dir, 'report-partial.json');
     writeFileSync(partial, JSON.stringify({ ...full, kept: kept.slice(0, 10), n_final: null, worlds: full.worlds.slice(0, 11) }));
-    const p = run('bun', [FILL, ...BATCH, '--root', set, '--report', partial, ...LENGTH]);
+    const p = run('bun', [FILL, ...BATCH, '--root', set, '--report', partial, ...LENGTH, '--fake']);
     expect(p.err).toBe('');
     expect(p.out).toMatch(/^bg1-fill status=filled files=20 kept=10 first=bgw-1001 last=bgw-1011 n_final=absent earlier_fills=0 manifest_sha256=[0-9a-f]{64}\n$/);
-    const f = run('bun', [FILL, ...BATCH, '--root', set, '--report', report, ...LENGTH]);
+    const f = run('bun', [FILL, ...BATCH, '--root', set, '--report', report, ...LENGTH, '--fake']);
     expect(f.err).toBe('');
     expect(f.out).toMatch(/^bg1-fill status=filled files=68 kept=34 first=bgw-1001 last=bgw-1035 n_final=34 earlier_fills=1 manifest_sha256=[0-9a-f]{64}\n$/);
     expect(['bg1-manifest.json', 'bg1c-manifest.json'].map(n => existsSync(join(set, n)))).toEqual([false, false]);
     const filledPath = join(set, 'bgw-1001-manifest.json');
     const filled = JSON.parse(readFileSync(filledPath, 'utf8')) as Bg1Manifest;
     const template = JSON.parse(readFileSync(join(REPO, bgwBatchManifest(1001)), 'utf8')) as Bg1Manifest;
-    expect({ ...filled, filled_at: null, earlier_fills: [] }).toEqual({ ...template, status: 'filled', files: bg1ManifestFiles(set, kept, bgwSet(1001)), filled_at: null, kept, n_final: 34, earlier_fills: [] });
+    expect({ ...filled, filled_at: null, earlier_fills: [] }).toEqual({ ...template, status: 'filled', files: bg1ManifestFiles(set, kept, bgwSet(1001)), filled_at: null, kept, n_final: 34, earlier_fills: [], drill: true });
     expect(filled.dataset).toBe(bgwBatchDataset(1001));
     expect(bg1Kept(filled, bgwSet(1001))).toEqual({ kept, n_final: 34 });
     expect(bgwWeekWorlds(filled, 1, bgwSet(1001))).toEqual(['bgw-1001', 'bgw-1002', ...range(1004, 1009).map(id)]);
@@ -254,11 +254,11 @@ describe('a Set W batch end to end: mint, validate --bgw, fill --bgw and load a 
       process.env.GBRAIN_EVALS_BGW_BATCH = 'bgw-1001';
       process.env.GBRAIN_EVALS_BGW_SOURCE = set;
       process.env.GBRAIN_EVALS_BGW_MANIFEST = filledPath;
-      expect(verifyBg1Custody(() => {}, bgwSet(1001))).toBe(68);
+      expect(verifyBg1Custody(() => {}, bgwSet(1001), { keyless: true })).toBe(68);
       const week = bgwWeekWorlds(filled, 4, bgwSet(1001));
       process.env.GBRAIN_EVALS_BGW_UNIT = week.join(',');
       const log = join(j.dir, 'access.jsonl');
-      const c = loadBgw({ log, decisionId: 'test', purpose: 'e2e' }, { worldEnd: '2026-11-22', only: new Set(week) });
+      const c = loadBgw({ log, decisionId: 'test', purpose: 'e2e' }, { worldEnd: '2026-11-22', only: new Set(week), keyless: true });
       expect(c.benchmark).toBe('bgw');
       expect(c.conversations.map(x => x.id)).toEqual(week);
       expect(c.questions).toHaveLength(8 * 64);

@@ -6,7 +6,7 @@
  * (eval/decisions/datasets/bg1-manifest.json) is only its template and stays unfilled. It prints counts and hashes only.
  *
  *   bun eval/custody/bg1/fill-manifest.ts [--bg1c] --root <out>/set --report <validation report> [--target-tokens 200000]
- *       [--tolerance 0.15]
+ *       [--tolerance 0.15] [--fake]
  *
  * --bg1c fills BG1-C's manifest instead (docs/benchmarks/2026-11-19-changing-facts-confirmation-preregistration.md):
  * the template is eval/decisions/datasets/bg1c-manifest.json, the filled manifest is <root>/bg1c-manifest.json, where
@@ -23,7 +23,10 @@
  *   - any file of a kept world (plan.json, questions.json and world.json) whose SHA-256 differs from the one the report
  *     records, so the manifest pins exactly the bytes validate.ts passed;
  *   - a root inside the checkout, a manifest path or pinned file that is a link, and a pinned file that resolves outside
- *     the root.
+ *     the root;
+ *   - a kept world whose world.json a template renderer wrote (render.ts --fake or the generator's fixtures), unless
+ *     --fake declares the fill a drill. A drill's manifest carries "drill": true, which every sealed load that is not
+ *     keyless and verifyBg1Custody refuse, and a drill fill and a real fill never refill each other.
  * --bgw --batch <first slot> fills one Set W batch's manifest instead (the weekly outcome line;
  * docs/benchmarks/2026-11-23-weekly-outcome-line-preregistration.md): the template is the batch's committed
  * eval/decisions/datasets/bgw-<first>-manifest.json, the filled manifest is <root>/bgw-<first>-manifest.json, where
@@ -43,7 +46,7 @@ import { isAbsolute, join, relative, resolve } from 'node:path';
 import { BG1_TARGET_TOKENS } from '../../generators/changing-facts-gen.ts';
 import { BG1_WAVE_A, BG1C_N_FINAL, BGW_BATCH_KEPT, BGW_WORLDS_PER_WEEK, bgwFilledManifest } from '../../runner/bg1/types.ts';
 import { DecideError } from '../../runner/decisions/errors.ts';
-import { BG1_SET, BG1C_SET, bg1Kept, bg1ManifestFiles, bg1Source, bgwSet, readBg1Manifest, type Bg1Manifest } from '../../runner/memory-qa/corpus.ts';
+import { BG1_SET, BG1_TEMPLATE_RENDERERS, BG1C_SET, bg1Kept, bg1ManifestFiles, bg1Source, bgwSet, readBg1Manifest, type Bg1Manifest } from '../../runner/memory-qa/corpus.ts';
 import { VALIDATION_SCHEMA, WORLD_FILES, type ValidationReport } from './validate.ts';
 
 export class FillError extends Error {}
@@ -56,7 +59,7 @@ const inside = (child: string, parent: string) => { const rel = relative(parent,
 
 export interface FillResult { manifest_sha256: string; files: number; kept: number; first: string; last: string; n_final: number | null; earlier_fills: number }
 
-export function fillManifest(opts: { root: string; report: string; targetTokens?: number; tolerance?: number; now?: Date; bg1c?: boolean; bgwBatch?: number }): FillResult {
+export function fillManifest(opts: { root: string; report: string; targetTokens?: number; tolerance?: number; now?: Date; bg1c?: boolean; bgwBatch?: number; drill?: boolean }): FillResult {
   const bgw = opts.bgwBatch !== undefined;
   if (bgw && opts.bg1c) throw new FillError('--bgw and --bg1c name two different sealed sets; give one');
   const set = bgw ? bgwSet(opts.bgwBatch!) : opts.bg1c ? BG1C_SET : BG1_SET, name = bgw ? bgwFilledManifest(opts.bgwBatch!) : opts.bg1c ? FILLED_MANIFEST_BG1C : FILLED_MANIFEST;
@@ -92,6 +95,9 @@ export function fillManifest(opts: { root: string; report: string; targetTokens?
     if (lstatSync(abs).isSymbolicLink() || !inside(realpathSync(abs), realRoot)) throw new FillError(`${path} is a link or resolves outside --root; a filled manifest pins only files inside the custody root`);
   }
   if (mismatched.length) throw new FillError(`${mismatched.length} file(s) of kept worlds are missing or differ from the report's SHA-256 (first ${mismatched[0]}); validate the set again`);
+  const drill = !!opts.drill;
+  const templated = kept.filter(id => { try { return BG1_TEMPLATE_RENDERERS.includes((JSON.parse(readFileSync(join(root, 'worlds', id, 'world.json'), 'utf8')) as { renderer?: string }).renderer ?? ''); } catch { return false; } });
+  if (templated.length && !drill) throw new FillError(`${templated.length} kept world(s) were written by a template renderer (first ${templated[0]}); only a --fake drill fills template worlds`);
   const files = bg1ManifestFiles(root, kept, set);
 
   let earlier: { manifest: Bg1Manifest; sha256: string } | null = null;
@@ -107,11 +113,12 @@ export function fillManifest(opts: { root: string; report: string; targetTokens?
     const changed = earlier.manifest.files.filter(f => now.get(f.path) !== f.sha256);
     if (changed.length) throw new FillError(`a refill only adds files: ${changed.length} file(s) the earlier fill pins are missing or changed (first ${changed[0].path})`);
     if (earlier.manifest.n_final !== undefined && earlier.manifest.n_final !== nFinal) throw new FillError(`n_final is ${earlier.manifest.n_final} in the earlier fill and never changes`);
+    if (!!earlier.manifest.drill !== drill) throw new FillError(`the earlier fill was ${earlier.manifest.drill ? 'a --fake drill' : 'a real fill'}, and a drill fill and a real fill never refill each other`);
   }
   const template = JSON.parse(readFileSync(join(REPO_ROOT, set.manifest), 'utf8')) as Bg1Manifest;
   if (template.status !== 'unfilled') throw new FillError(`${set.manifest} is the template and must stay unfilled`);
   const manifest: Bg1Manifest = { ...template, status: 'filled', files, filled_at: (opts.now ?? new Date()).toISOString(), kept: [...kept],
-    ...(nFinal !== null ? { n_final: nFinal } : {}), ...(earlier ? { earlier_fills: [...(earlier.manifest.earlier_fills ?? []), earlier.sha256] } : {}) };
+    ...(nFinal !== null ? { n_final: nFinal } : {}), ...(earlier ? { earlier_fills: [...(earlier.manifest.earlier_fills ?? []), earlier.sha256] } : {}), ...(drill ? { drill: true } : {}) };
   bg1Kept(manifest, set);
   const text = JSON.stringify(manifest, null, 1) + '\n';
   const candidate = `${out}.candidate`;
@@ -124,10 +131,10 @@ export function fillManifest(opts: { root: string; report: string; targetTokens?
 export function main(argv: string[]): string {
   const flag = (name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
   const root = flag('--root'), report = flag('--report'), target = flag('--target-tokens'), tolerance = flag('--tolerance');
-  if (!root || !report) throw new FillError('usage: [--bg1c | --bgw --batch <first slot>] --root <out>/set --report <validation report> [--target-tokens <n>] [--tolerance <x>]');
+  if (!root || !report) throw new FillError('usage: [--bg1c | --bgw --batch <first slot>] --root <out>/set --report <validation report> [--target-tokens <n>] [--tolerance <x>] [--fake]');
   const batch = flag('--batch');
   if (argv.includes('--bgw') !== (batch !== undefined) || (batch !== undefined && !/^\d{4}$/.test(batch))) throw new FillError('--bgw needs --batch <first slot>, the four-digit first slot of the batch, and --batch needs --bgw');
-  const r = fillManifest({ root, report, targetTokens: target === undefined ? undefined : Number(target), tolerance: tolerance === undefined ? undefined : Number(tolerance), bg1c: argv.includes('--bg1c'),
+  const r = fillManifest({ root, report, targetTokens: target === undefined ? undefined : Number(target), tolerance: tolerance === undefined ? undefined : Number(tolerance), bg1c: argv.includes('--bg1c'), drill: argv.includes('--fake'),
     ...(batch === undefined ? {} : { bgwBatch: Number(batch) }) });
   return `bg1-fill status=filled files=${r.files} kept=${r.kept} first=${r.first} last=${r.last} n_final=${r.n_final ?? 'absent'} earlier_fills=${r.earlier_fills} manifest_sha256=${r.manifest_sha256}`;
 }

@@ -19,7 +19,9 @@
  * file the manifest lists against its bytes under BG1's set root. On a pass it prints, for launch amendment A, the
  * SHA-256 of the seed commitment, "gbrain-evals bg1-c seed commitment v1|<seed line>|nonce=<nonce>", and of the phrasing
  * file. The nonce is 32 random bytes in hex, kept beside the seed as <name>.bg1c-nonce (one line, mode 600): the first
- * pass writes it and every later pass reuses it, so the commitment never changes. It is never printed.
+ * pass writes it and every later pass reuses it, so the commitment never changes. It is never printed. The first pass
+ * also records both SHA-256 values in <name>.bg1c-commitment.json (commitment.ts), which a real mint.sh --bg1c checks
+ * before it spends, and a pass that would record other values refuses.
  *
  * controls: a descriptive count for launch amendment A, which has render.ts drop control characters other than newline
  * and tab before a world is written. Over the world.json files BG1's filled manifest lists, each read only when it
@@ -36,9 +38,10 @@ import { dirname, join, resolve } from 'node:path';
 import { buildQuestions, PlanError, type QuestionRecord, type World } from '../../generators/changing-facts-gen.ts';
 import { BG1_CONVERSATIONS, BG1C_FIRST_SLOT, BG1C_LAST_SLOT } from '../../runner/memory-qa/bg1-names.ts';
 import { BG1_SET, type Bg1Manifest } from '../../runner/memory-qa/corpus.ts';
+import { COMMITMENT_PREFIXES, recordCommitment } from './commitment.ts';
 import { insideCheckout, ownerOnly, readPhrasing, readSeedLine, RenderRefusal, sealedPlan } from './render.ts';
 
-export const COMMITMENT_PREFIX = 'gbrain-evals bg1-c seed commitment v1';
+export const COMMITMENT_PREFIX = COMMITMENT_PREFIXES.bg1c;
 const sha256 = (data: string | Uint8Array) => createHash('sha256').update(data).digest('hex');
 const json = (v: unknown) => JSON.stringify(v, null, 1) + '\n';
 
@@ -111,8 +114,9 @@ export function seedCheck(argv: string[], env: Record<string, string | undefined
   const counts = `bg1c-seed slots=${BG1_CONVERSATIONS.length} questions_listed=${q.listed} questions_match=${q.match} questions_mismatch=${q.mismatch} files=${f.listed} files_match=${f.match} files_missing=${f.missing} files_mismatch=${f.mismatch}`;
   if (!pass) return { pass, line: `${counts} status=fail` };
   const { nonce, written } = custodyNonce(seedFile);
-  const commitment = sha256(`${COMMITMENT_PREFIX}|${seedLine}|nonce=${nonce}`);
-  return { pass, line: `${counts} status=pass nonce=${written ? 'written' : 'reused'} commitment_sha256=${commitment} phrasing_sha256=${sha256(readFileSync(phrasingFile))}` };
+  const commitment = sha256(`${COMMITMENT_PREFIX}|${seedLine}|nonce=${nonce}`), phrasingSha = sha256(readFileSync(phrasingFile));
+  recordCommitment(seedFile, 'bg1c', commitment, phrasingSha);
+  return { pass, line: `${counts} status=pass nonce=${written ? 'written' : 'reused'} commitment_sha256=${commitment} phrasing_sha256=${phrasingSha}` };
 }
 
 const CONTROL_CHARS = /[^\P{Cc}\t\n]/gu;

@@ -174,13 +174,15 @@ describe('bgw-checks.ts: phrasing, seed and batch', () => {
     refusal(check(j, ['--bg1-seed-file', j.seed, '--bg1-phrasing', bg1.phrasing]), 'the seed file must be named *.bg1-seed');
   }, 120_000);
 
-  /** A throwaway checkout holding committed templates and split entries for the given batches. */
+  /** A throwaway git checkout whose HEAD commits templates and split entries for the given batches. */
   function repoWith(batches: number[]) {
     const repo = scratch('repo');
     mkdirSync(join(repo, 'eval/decisions/datasets'), { recursive: true });
     mkdirSync(join(repo, 'eval/decisions/splits'), { recursive: true });
     for (const b of batches) writeFileSync(join(repo, bgwBatchManifest(b)), JSON.stringify({ dataset: bgwBatchDataset(b), status: 'unfilled', files: [] }));
     writeFileSync(join(repo, 'eval/decisions/splits/bgw.json'), JSON.stringify({ benchmark: 'bgw', sealed: [...new Set(batches.flatMap(bgwBatchIds))] }));
+    const git = (...args: string[]) => spawnSync('git', ['-C', repo, '-c', 'user.name=t', '-c', 'user.email=t@example.invalid', ...args], { encoding: 'utf8' });
+    git('init', '-q'); git('add', '.'); git('commit', '-q', '-m', 'batches');
     return repo;
   }
   /** A previous batch's custody --out: its batch.json and the given records. */
