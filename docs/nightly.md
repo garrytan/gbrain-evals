@@ -392,7 +392,8 @@ Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, whic
 The SOTA dev test's whole-agent cells judged Claude answers with GPT-6.1 Sol, so `leader.ts import` could never reuse
 them. They now use each reader's leader judge (GPT-6.2 Astra for Claude, Claude Opus 5.5 for GPT). The oracle's `plan`
 no longer writes a LongMemEval buy file for GPT-6.1 Sol, whose rows are never bought, and the monthly scorecard's GPT
-reader is GPT-6.2 Sol.
+reader is GPT-6.2 Sol (RS1's frozen rows still count with GPT-6.1 Sol). A cell's cost estimate now prices each reader's
+own judge, so the dev test's estimate covers GPT-6.2 Astra.
 
 ### 2026-11-23: The SOTA oracle buys GPT-6.2 Sol rows, and the dev test's answers are re-bought
 

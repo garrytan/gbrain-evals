@@ -1,7 +1,8 @@
 /**
  * The monthly SOTA scorecard (SOTA plan item 9, decision D1a). One row per benchmark and leader: gbrain minus the leader
  * on questions gbrain was never tuned on, in the answerable classes, as the mean over the three readers under test
- * (claude-opus-5-5, gpt-6.2-sol, particle-1) with a conversation-clustered 95% interval, in points.
+ * (claude-opus-5-5, gpt-6.2-sol, particle-1; RS1's frozen plan keeps gpt-6.1-sol, so its rows count with that reader)
+ * with a conversation-clustered 95% interval, in points.
  *
  *   bun eval/runner/sota/scorecard.ts --rows <rows.json> [--previous <last month's scorecard.json>] [--quarter-call <2027-Q1>]
  *       --takeaways <three-line file> --out <scorecard.md outside the repo>
@@ -23,6 +24,7 @@ import { assertNoSealedIds } from './sealed-guard.ts';
 export const SCORECARD_SCHEMA = 'sota-scorecard/1';
 export const MARGIN = 3.5;
 export const READERS = ['claude-opus-5-5', 'gpt-6.2-sol', 'particle-1'] as const;
+export const RS1_FROZEN_READERS = ['claude-opus-5-5', 'gpt-6.1-sol', 'particle-1'] as const;
 const REPO = resolve(import.meta.dir, '../../..');
 
 export type Status = 'ahead' | 'behind' | 'at_parity' | 'not_enough_data';
@@ -47,11 +49,12 @@ export function status(d: Interval | null, margin = MARGIN): Status {
   return 'not_enough_data';
 }
 
-const sameReaders = (r: readonly string[]) => r.length === READERS.length && READERS.every(x => r.includes(x));
+const sameSet = (a: readonly string[], b: readonly string[]) => a.length === b.length && b.every(x => a.includes(x));
+const sameReaders = (r: readonly string[]) => sameSet(r, READERS) || sameSet(r, RS1_FROZEN_READERS);
 
 /** A row's status, whether this month calls it, and its change since last month's row for the same benchmark and leader. */
 export function scoreRow(row: ScoreRow, o: { quarterCall: string | null; previous: readonly ScoreRow[] }): ScoredRow {
-  const prev = o.previous.find(p => p.benchmark === row.benchmark && p.leader === row.leader);
+  const prev = o.previous.find(p => p.benchmark === row.benchmark && p.leader === row.leader && sameSet(p.readers, row.readers));
   const trend_points = prev?.delta && row.delta ? Math.round((row.delta.estimate - prev.delta.estimate) * 100) / 100 : null;
   const out = (s: ScoredRow['status'], reason: string | null, called: string | null = null): ScoredRow => ({ ...row, status: s, reason, called, trend_points });
   if (row.sealed_pending) return out('sealed_pending', 'sealed, pending RS1 verdict');

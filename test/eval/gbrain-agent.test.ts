@@ -16,7 +16,7 @@ import type { Corpus, MemoryQuestion } from '../../eval/runner/memory-qa/corpus.
 import type { ChatLike, ChatResult } from '../../eval/runner/memory-qa/qa-v2.ts';
 import { judgeFor } from '../../eval/runner/nightly/adapters.ts';
 import { runCell, systemFor } from '../../eval/runner/q1/cell.ts';
-import { ALL_SETS, buildManifest, definitionProblems, frontierJudgesFor, SOTA_DEV_CONVERSATIONS, SOTA_DEV_IDS, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
+import { ALL_SETS, buildManifest, definitionProblems, estimateCell, frontierJudgesFor, SOTA_DEV_CONVERSATIONS, SOTA_DEV_IDS, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
 import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { ANSWERABLE, loadClasses } from '../../eval/runner/sota/answerability.ts';
 import { FILE_AGENT_EFFORT, FILE_AGENT_MAX_TURNS, FILE_AGENT_SYSTEM, FileAgentSystem, PROSE_ANSWER_TOOL } from '../../eval/runner/systems/file-agent.ts';
@@ -198,6 +198,8 @@ describe('SOTA dev cells', () => {
       ]);
       expect(frontierJudgesFor(c.arms[1]!, 'particle:particle-1')).toEqual(['anthropic:claude-opus-5-5']);
       for (const reader of c.arms[0]!.readers) expect(frontierJudgesFor(c.arms[0]!, reader)).toEqual([judgeFor(reader)]);
+      const agent = c.arms[0]!, cheaper = { ...agent, frontier: { ...agent.frontier!, judge_by_reader: { ...agent.frontier!.judge_by_reader, 'anthropic:claude-opus-5-5': 'openai:gpt-6.1-sol' } } };
+      expect(estimateCell({ ...c, arms: [agent] }).lines.frontier_judges).toBeGreaterThan(estimateCell({ ...c, arms: [cheaper] }).lines.frontier_judges!);
       expect(m.cells.some(x => x.id === c.id)).toBe(false);
     }
     const classes = loadClasses('beam-1m')!;

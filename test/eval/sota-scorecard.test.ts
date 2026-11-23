@@ -52,6 +52,7 @@ describe('rows', () => {
     expect(scoreRow({ ...ROW, readers: ['claude-opus-5-5', 'gpt-6.2-sol'] }, { quarterCall: null, previous: [] }).status).toBe('descriptive');
     expect(scoreRow({ ...ROW, split: 'dev' }, { quarterCall: '2027-Q1', previous: [] })).toMatchObject({ status: 'descriptive', reason: 'dev questions: gbrain was tuned on them' });
     expect(scoreRow({ ...ROW, sealed_pending: true }, { quarterCall: '2027-Q1', previous: [] })).toMatchObject({ status: 'sealed_pending', reason: 'sealed, pending RS1 verdict' });
+    expect(scoreRow({ ...ROW, readers: ['particle-1', 'gpt-6.1-sol', 'claude-opus-5-5'] }, { quarterCall: '2027-Q1', previous: [] })).toMatchObject({ status: 'not_enough_data', called: '2027-Q1' });
   });
 
   test('a monthly row shows the status as trend, a quarter call calls it, and the change since last month sits beside it', () => {
@@ -66,6 +67,8 @@ describe('rows', () => {
     const called = scorecard([{ ...ROW, delta: iv(-9, -1) }], { month: '2027-03', quarterCall: '2027-Q1', takeaways: TAKEAWAYS });
     expect(called.rows[0]).toMatchObject({ status: 'behind', called: '2027-Q1', trend_points: null });
     expect(renderScorecard(called)).toContain('behind (called 2027-Q1)');
+    const prevOther = scoreRow({ ...ROW, readers: ['claude-opus-5-5', 'gpt-6.1-sol', 'particle-1'], delta: iv(-6, -1) }, { quarterCall: null, previous: [] });
+    expect(scoreRow(ROW, { quarterCall: null, previous: [prevOther] }).trend_points).toBeNull();
   });
 
   test('three takeaways, no more and no fewer', () => {

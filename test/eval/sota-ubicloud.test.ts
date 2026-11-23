@@ -8,7 +8,7 @@ import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { BASE_URL_VARS, DEAD_UPSTREAM } from '../../eval/runner/nightly/smokes/harness.ts';
+import { BASE_URL_VARS, DEAD_UPSTREAM } from '../../eval/runner/nightly/keyless.ts';
 import { PROVIDER_KEYS } from '../support/no-provider-keys.ts';
 
 const REPO = join(import.meta.dir, '../..');

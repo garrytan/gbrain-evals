@@ -801,7 +801,7 @@ export function estimateCell(def: Omit<CellDefinition, 'estimate'>): CellEstimat
     if (arm.mode === 'retrieval-only') continue;
     const judged = arm.readers.reduce((s, r) => s + answers(r), 0);
     add('judges', judged * (measured?.canonical ?? judgeCost(def.benchmark)));
-    if (arm.frontier?.per_reader) for (const r of arm.frontier.readers ?? arm.readers) add('frontier_judges', (arm.frontier.sample !== null ? Math.min(n, arm.frontier.sample) : n) * (measured ? rs1GatingJudgeUsd(frontierJudgesFor(arm, r)[0]) : judgeCost(def.benchmark, frontierJudgeOf(r))));
+    if (arm.frontier?.per_reader) for (const r of arm.frontier.readers ?? arm.readers) add('frontier_judges', (arm.frontier.sample !== null ? Math.min(n, arm.frontier.sample) : n) * (measured ? rs1GatingJudgeUsd(frontierJudgesFor(arm, r)[0]) : judgeCost(def.benchmark, frontierJudgesFor(arm, r)[0])));
     else if (arm.frontier) {
       const fr = arm.frontier.readers ?? arm.readers;
       const items = arm.frontier.sample !== null ? Math.min(n, arm.frontier.sample) * fr.length : n * fr.length;

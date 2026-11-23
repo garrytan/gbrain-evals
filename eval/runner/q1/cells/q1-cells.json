@@ -9720,10 +9720,10 @@
         }
       ],
       "estimate": {
-        "usd": 36.38,
+        "usd": 38.28,
         "lines": {
           "agent": 34.2,
-          "frontier_judges": 1.9,
+          "frontier_judges": 3.8,
           "judges": 0.27
         }
       }
@@ -9894,10 +9894,10 @@
         }
       ],
       "estimate": {
-        "usd": 40.33,
+        "usd": 42.23,
         "lines": {
           "agent": 34.2,
-          "frontier_judges": 1.9,
+          "frontier_judges": 3.8,
           "ingest": 0.47,
           "judges": 0.27,
           "system_queries": 3.48
