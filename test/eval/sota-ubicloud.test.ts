@@ -8,6 +8,7 @@ import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { PROVIDER_KEYS } from '../support/no-provider-keys.ts';
 
 const REPO = join(import.meta.dir, '../..');
 const dir = mkdtempSync(join(tmpdir(), 'sota-ubicloud-'));
@@ -188,7 +189,15 @@ describe('run.sh, with a fake runner', () => {
 });
 
 describe('vm-run.sh, on this machine with no keys and no dataset', () => {
-  const vmRun = (home: string, window: string) => spawnSync('bash', ['eval/runner/sota/ubicloud/vm-run.sh', window, '3'], { cwd: REPO, env: { PATH: process.env.PATH!, HOME: home }, encoding: 'utf8' });
+  const vmEnv = (home: string) => ({ PATH: process.env.PATH!, HOME: home, ...Object.fromEntries(PROVIDER_KEYS.map(k => [k, ''])) });
+  const vmRun = (home: string, window: string) => spawnSync('bash', ['eval/runner/sota/ubicloud/vm-run.sh', window, '3'], { cwd: REPO, env: vmEnv(home), encoding: 'utf8' });
+
+  test('its child processes see every provider key blank, so a .env in their cwd cannot fill one', () => {
+    const cwd = mkdtempSync(join(dir, 'dotenv-'));
+    writeFileSync(join(cwd, '.env'), PROVIDER_KEYS.map(k => `${k}=from-dotenv`).join('\n') + '\n');
+    const r = spawnSync('bun', ['-e', `console.log(JSON.stringify(${JSON.stringify(PROVIDER_KEYS)}.map(k => process.env[k] ?? null)))`], { cwd, env: vmEnv(join(dir, 'vm-dotenv')), encoding: 'utf8' });
+    expect(JSON.parse(r.stdout)).toEqual(PROVIDER_KEYS.map(() => ''));
+  });
 
   test('rehearse runs every plan step and opens no ledger', () => {
     const home = join(dir, 'vm-rehearse');
