@@ -13,12 +13,19 @@
  *
  * Same data. Same queries. Honest A/B numbers.
  *
- * Usage: bun eval/runner/before-after.ts [--json]
+ * Usage: bun eval/runner/before-after.ts [--json] [--gbrain <checkout>[@ref]] [--pg-url <admin url>]
+ *
+ * Engine (gbrain RUST_ENGINE.md gate E2): GBRAIN_EVAL_ENGINE=pglite|postgres|rust opens the AFTER brain through
+ * eval-engine.ts's openGateEngine, and every gbrain module comes from the build --gbrain names. Unset, it is the pinned
+ * gbrain's in-memory PGLite, as before.
  */
 
-import { PGLiteEngine } from 'gbrain/pglite-engine';
-import { runExtract } from 'gbrain/extract';
-import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, noModelSpend } from './receipt.ts';
+import type * as Extract from 'gbrain/extract';
+import { importGbrain } from './gbrain-under-test.ts';
+import {
+  EvalEngineUnavailable, gateReceiptPath, gateRunnerContext, gateRunnerReceiptFields, openGateEngine, preflightGateEngine, refuseEvalEngine,
+} from './eval-engine.ts';
+import { writeReceipt, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, noModelSpend } from './receipt.ts';
 import { gbrainVersion, gbrainPin } from './gbrain-version.ts';
 import { readdirSync, readFileSync } from 'fs';
 import { join } from 'path';
@@ -214,6 +221,13 @@ async function main() {
   log('# BrainBench v1 — before/after PR #188\n');
   log(`Generated: ${new Date().toISOString().slice(0, 19)}`);
 
+  const ctx = gateRunnerContext(process.argv);
+  try { await preflightGateEngine(ctx); } catch (e) {
+    if (e instanceof EvalEngineUnavailable) refuseEvalEngine(e, 'Cat 1 before-after');
+    throw e;
+  }
+  const { runExtract } = await importGbrain<typeof Extract>(ctx.gut, 'src/commands/extract.ts');
+
   const dir = 'eval/data/world-v1';
   const pages = loadCorpus(dir);
   log(`Corpus: ${pages.length} rich-prose pages from ${dir}/`);
@@ -228,9 +242,8 @@ async function main() {
   }
 
   // ── AFTER: full graph layer ──
-  const engine = new PGLiteEngine();
-  await engine.connect({});
-  await engine.initSchema();
+  const scratch = await openGateEngine(ctx, 'before_after');
+  const engine = scratch.engine;
 
   log('\n## Seeding corpus + running extract (v0.10.4 stack)');
   for (const p of pages) {
@@ -326,7 +339,7 @@ async function main() {
     });
   }
 
-  await engine.disconnect();
+  await scratch.close();
 
   // ── Aggregate ──
   const totalExpected = results.reduce((s, r) => s + r.expected, 0);
@@ -480,7 +493,7 @@ async function main() {
   }
 
   const finishedAt = new Date().toISOString();
-  writeReceipt(receiptPath('before-after'), {
+  writeReceipt(gateReceiptPath(ctx, 'before-after'), {
     ...noModelSpend('hermetic: no model and no paid request'),
     schema_version: RECEIPT_SCHEMA_VERSION,
     benchmark_version: BENCHMARK_VERSION,
@@ -492,8 +505,9 @@ async function main() {
     completion_rate: 1,
     errors: [],
     publishable: true,
-    gbrain_version: gbrainVersion(),
+    gbrain_version: ctx.gut.overlay ? ctx.gut.version : gbrainVersion(),
     gbrain_pin: gbrainPin(),
+    ...gateRunnerReceiptFields(ctx),
     started_at: startedAt,
     finished_at: finishedAt,
     data: {

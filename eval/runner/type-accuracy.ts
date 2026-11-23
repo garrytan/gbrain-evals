@@ -22,18 +22,32 @@
  * the identity — (src, tgt, type) triple must match. Catches both the
  * extraction-recall problem and the type-accuracy problem in one number.
  *
- * Usage: bun eval/runner/type-accuracy.ts [--json] [--package=gbrain-cues]
+ * Usage: bun eval/runner/type-accuracy.ts [--json] [--package=gbrain-cues] [--gbrain <checkout>[@ref]] [--pg-url <admin url>]
  *
  * --package runs the same scorer against another installed gbrain alias.
  * gbrain-cues is 939232f, the pin before 2026-09-29, so the two runs form a
  * matched old-pin / new-pin comparison on one scorer.
+ *
+ * Engine (gbrain RUST_ENGINE.md gate E2): extractPageLinks touches no engine, so
+ * the headline is the same on every engine. With GBRAIN_EVAL_ENGINE=pglite|postgres|rust
+ * the runner also scores the graph the engine stores: putPage every page into a
+ * brain from eval-engine.ts's openGateEngine, run `extract links --source db`,
+ * and read each page's links back with getLinks (data.engine_links). Every gbrain
+ * module comes from the build --gbrain names. Unset, the run is as before.
  */
 
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { extractPageLinks } from 'gbrain/link-extraction';
+import type { BrainEngine } from 'gbrain/engine';
+import type * as Extract from 'gbrain/extract';
+import type * as LinkExtraction from 'gbrain/link-extraction';
 import type { PageType } from 'gbrain/types';
-import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, receiptPath, writeReceipt, type Receipt, type ReceiptVerdict, noModelSpend } from './receipt.ts';
+import { importGbrain } from './gbrain-under-test.ts';
+import {
+  EvalEngineUnavailable, gateReceiptPath, gateRunnerContext, gateRunnerReceiptFields, openGateEngine, preflightGateEngine, refuseEvalEngine,
+  type GateRunnerContext,
+} from './eval-engine.ts';
+import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, writeReceipt, type Receipt, type ReceiptVerdict, noModelSpend } from './receipt.ts';
 import { gbrainPin, gbrainVersion } from './gbrain-version.ts';
 import { declaredPin } from './pins.ts';
 import { UNTYPED_FALLBACK, buildGoldEdges, loadCorpus, score, type GoldEdge, type RichPage } from './world-v1-gold.ts';
@@ -54,8 +68,8 @@ export interface TypeAccuracyAttempt {
 /** Run extractPageLinks on every page; return flat list of inferred edges. */
 export async function inferAllEdges(
   pages: RichPage[],
-  attempts: TypeAccuracyAttempt[] = [],
-  extractor: typeof extractPageLinks = extractPageLinks,
+  attempts: TypeAccuracyAttempt[],
+  extractor: typeof LinkExtraction.extractPageLinks,
 ): Promise<GoldEdge[]> {
   // v0.13+ contract: async (slug, content, frontmatter, pageType, resolver).
   // The pre-audit 3-arg sync call put content in the slug slot and iterated
@@ -91,6 +105,45 @@ export async function inferAllEdges(
 }
 
 /**
+ * The edges an engine stores for the corpus: putPage every page, run
+ * `extract links --source db` the way a user's brain gets its links, then read
+ * each page's outgoing links with getLinks. Every engine runs this same code.
+ */
+export async function storedEdges(engine: BrainEngine, pages: RichPage[], runExtract: typeof Extract.runExtract): Promise<GoldEdge[]> {
+  for (const p of pages) {
+    await engine.putPage(p.slug, { type: p.type as PageType, title: p.title, compiled_truth: p.compiled_truth, timeline: p.timeline });
+  }
+  const origErr = console.error;
+  const origLog = console.log;
+  console.error = () => {};
+  console.log = () => {};
+  try {
+    await runExtract(engine, ['links', '--source', 'db']);
+  } finally {
+    console.error = origErr;
+    console.log = origLog;
+  }
+  const edges: GoldEdge[] = [];
+  for (const p of pages) {
+    for (const l of await engine.getLinks(p.slug)) edges.push({ from: l.from_slug, to: l.to_slug, type: l.link_type });
+  }
+  return edges;
+}
+
+/** Score the engine's stored graph (see storedEdges) on a throwaway brain. */
+async function scoreEngineLinks(ctx: GateRunnerContext, pages: RichPage[], gold: GoldEdge[]) {
+  const { runExtract } = await importGbrain<typeof Extract>(ctx.gut, 'src/commands/extract.ts');
+  const scratch = await openGateEngine(ctx, 'type_accuracy');
+  try {
+    const stored = await storedEdges(scratch.engine, pages, runExtract);
+    const { perType, confusion, overallTypeAccuracy, overallAnyTypeAccuracy, overallStrictF1 } = score(gold, stored);
+    return { engine: ctx.kind, overallTypeAccuracy, overallAnyTypeAccuracy, overallStrictF1, perType, confusion, storedTotal: stored.length, storedEdges: stored };
+  } finally {
+    await scratch.close();
+  }
+}
+
+/**
  * Regression floors. They catch an extraction regression; they are not a
  * quality claim. History:
  *   2026-09-28: 0.80 / 0.35, below 86.6% / 41.3% measured with gold
@@ -118,8 +171,15 @@ async function main() {
     'eval/data/world-v1';
   const productPackage = process.argv.find(a => a.startsWith('--package='))?.slice('--package='.length) ?? 'gbrain';
   if (productPackage !== 'gbrain' && productPackage !== 'gbrain-cues') throw new Error('--package must be gbrain or gbrain-cues');
-  const extractor = productPackage === 'gbrain' ? extractPageLinks
-    : (await (import(`${productPackage}/link-extraction`) as Promise<typeof import('gbrain/link-extraction')>)).extractPageLinks;
+  const ctx = gateRunnerContext(process.argv);
+  if (productPackage !== 'gbrain' && (ctx.requested || ctx.gut.overlay)) throw new Error('--package=gbrain-cues does not combine with GBRAIN_EVAL_ENGINE or --gbrain');
+  try { await preflightGateEngine(ctx); } catch (e) {
+    if (e instanceof EvalEngineUnavailable) refuseEvalEngine(e, 'Cat 2 type-accuracy');
+    throw e;
+  }
+  const extractor = productPackage === 'gbrain'
+    ? (await importGbrain<typeof LinkExtraction>(ctx.gut, 'src/core/link-extraction.ts')).extractPageLinks
+    : (await (import(`${productPackage}/link-extraction`) as Promise<typeof LinkExtraction>)).extractPageLinks;
   const log = json ? () => {} : console.log;
 
   log('# BrainBench — type accuracy on rich-prose corpus\n');
@@ -134,21 +194,24 @@ async function main() {
     schema_version: RECEIPT_SCHEMA_VERSION,
     benchmark_version: BENCHMARK_VERSION,
     category: 'type-accuracy',
-    gbrain_version: productPackage === 'gbrain' ? gbrainVersion()
+    gbrain_version: productPackage === 'gbrain' ? (ctx.gut.overlay ? ctx.gut.version : gbrainVersion())
       : JSON.parse(readFileSync(join('node_modules', productPackage, 'package.json'), 'utf8')).version as string,
     gbrain_pin: productPackage === 'gbrain' ? gbrainPin() : declaredPin(productPackage),
     product_package: productPackage,
+    ...gateRunnerReceiptFields(ctx),
     started_at: new Date().toISOString(),
   } as const;
   const attempts: TypeAccuracyAttempt[] = [];
   let inferred: GoldEdge[];
   let scored: ReturnType<typeof score>;
+  let engineLinks: Awaited<ReturnType<typeof scoreEngineLinks>> | undefined;
   try {
     inferred = await inferAllEdges(pages, attempts, extractor);
     scored = score(gold, inferred);
+    if (ctx.requested) engineLinks = await scoreEngineLinks(ctx, pages, gold);
   } catch (error) {
     const errors = [{ probe_id: attempts.at(-1)?.status === 'error' ? attempts.at(-1)!.probe_id : 'score', origin: 'sut' as const, message: String(error) }];
-    writeReceipt(receiptPath('type-accuracy'), {
+    writeReceipt(gateReceiptPath(ctx, 'type-accuracy'), {
       ...receiptBase,
       run_status: 'error',
       n_total: pages.length,
@@ -196,6 +259,13 @@ async function main() {
   log(`- Overall strict F1 (triple match): **${pct(overallStrictF1)}**`);
   log(`- Diagnostic, any-type leniency (gold type among the inferred types): ${pct(overallAnyTypeAccuracy)}`);
   log(`- Verdict: ${verdict} (floors: type accuracy >= ${pct(CAT2_GATES.min_type_accuracy)}, strict F1 >= ${pct(CAT2_GATES.min_strict_f1)})\n`);
+  if (engineLinks) {
+    log(`## Stored graph on ${engineLinks.engine} (putPage + extract links --source db + getLinks)\n`);
+    log(`- Stored edges: ${engineLinks.storedTotal}`);
+    log(`- Type accuracy: **${pct(engineLinks.overallTypeAccuracy)}**, strict F1: **${pct(engineLinks.overallStrictF1)}**, any-type: ${pct(engineLinks.overallAnyTypeAccuracy)}`);
+    for (const r of engineLinks.perType) log(`  - ${r.linkType}: gold ${r.gold}, correct ${r.correctly_typed}, mistyped ${r.mistyped}, missed ${r.missed}, spurious ${r.spurious}, F1 ${pct(r.f1_strict)}`);
+    log('');
+  }
 
   log('## Confusion matrix (rows = gold type, cols = inferred type)\n');
   const inferredCols = Array.from(
@@ -228,8 +298,9 @@ async function main() {
     inferredEdges: inferred,
     attempts,
     rows,
+    ...(engineLinks ? { engine_links: engineLinks } : {}),
   };
-  writeReceipt(receiptPath('type-accuracy'), {
+  writeReceipt(gateReceiptPath(ctx, 'type-accuracy'), {
     ...noModelSpend('hermetic: no model and no paid request'),
     ...receiptBase,
     run_status: 'completed',

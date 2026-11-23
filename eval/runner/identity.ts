@@ -24,12 +24,19 @@
  * recall (an exact-token contract) and a documented MRR floor; undocumented
  * recall is reported as a capability-gap measurement, not gated.
  *
- * Usage: bun run eval/runner/identity.ts [--json]
+ * Usage: bun run eval/runner/identity.ts [--json] [--gbrain <checkout>[@ref]] [--pg-url <admin url>]
+ *
+ * Engine (gbrain RUST_ENGINE.md gate E2): GBRAIN_EVAL_ENGINE=pglite|postgres|rust opens the brain through
+ * eval-engine.ts's openGateEngine, and the page-state projection module comes from the build --gbrain names. Unset, it
+ * is the pinned gbrain's in-memory PGLite, as before.
  */
 
-import { PGLiteEngine } from 'gbrain/pglite-engine';
-import { installPageProjection, readProjectionSnapshot } from '../../node_modules/gbrain/src/core/page-state/projections.ts';
-import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, receiptPath, writeReceipt, type Receipt, type ReceiptVerdict, noModelSpend } from './receipt.ts';
+import type * as Projections from '../../node_modules/gbrain/src/core/page-state/projections.ts';
+import { importGbrain } from './gbrain-under-test.ts';
+import {
+  EvalEngineUnavailable, gateReceiptPath, gateRunnerContext, gateRunnerReceiptFields, openGateEngine, preflightGateEngine, refuseEvalEngine,
+} from './eval-engine.ts';
+import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, writeReceipt, type Receipt, type ReceiptVerdict, noModelSpend } from './receipt.ts';
 import { gbrainPin, gbrainVersion } from './gbrain-version.ts';
 
 export interface Entity {
@@ -110,9 +117,14 @@ export async function main() {
   log(`Entities: ${entities.length}`);
   log(`Aliases per entity: ${entities[0].documentedAliases.length} documented + ${entities[0].undocumentedAliases.length} undocumented = ${entities[0].documentedAliases.length + entities[0].undocumentedAliases.length} total`);
 
-  const engine = new PGLiteEngine();
-  await engine.connect({});
-  await engine.initSchema();
+  const ctx = gateRunnerContext(process.argv);
+  try { await preflightGateEngine(ctx); } catch (e) {
+    if (e instanceof EvalEngineUnavailable) refuseEvalEngine(e, 'Cat 3 identity');
+    throw e;
+  }
+  const { installPageProjection, readProjectionSnapshot } = await importGbrain<typeof Projections>(ctx.gut, 'src/core/page-state/projections.ts');
+  const scratch = await openGateEngine(ctx, 'identity');
+  const engine = scratch.engine;
 
   // Seed canonical pages. Each page mentions the entity by full name + handle + email.
   for (const e of entities) {
@@ -158,7 +170,7 @@ export async function main() {
     }
   }
 
-  await engine.disconnect();
+  await scratch.close();
 
   // ── Metrics ──
   const documented = results.filter(r => r.category === 'documented');
@@ -209,7 +221,7 @@ export async function main() {
   const summary = { docRecall, undocRecall, docMrr, undocMrr, docByType, undocByType };
   const verdict = cat3Verdict(summary);
   log(`\nVerdict: ${verdict} (documented recall >= ${CAT3_GATES.min_documented_recall * 100}%, documented MRR >= ${CAT3_GATES.min_documented_mrr})`);
-  writeReceipt(receiptPath('identity'), {
+  writeReceipt(gateReceiptPath(ctx, 'identity'), {
     ...noModelSpend('hermetic: no model and no paid request'),
     schema_version: RECEIPT_SCHEMA_VERSION,
     benchmark_version: BENCHMARK_VERSION,
@@ -221,9 +233,10 @@ export async function main() {
     completion_rate: 1,
     errors: [],
     publishable: true,
-    gbrain_version: gbrainVersion(),
+    gbrain_version: ctx.gut.overlay ? ctx.gut.version : gbrainVersion(),
     gbrain_pin: gbrainPin(),
-    resolved_config: { entities: entities.length, search: 'searchKeyword limit 10', gates: CAT3_GATES },
+    resolved_config: { ...(ctx.requested ? { engine: ctx.requested } : {}), entities: entities.length, search: 'searchKeyword limit 10', gates: CAT3_GATES },
+    ...gateRunnerReceiptFields(ctx),
     started_at: startedAt,
     finished_at: new Date().toISOString(),
     data: { summary, results },

@@ -71,6 +71,7 @@ import { join } from 'path';
 import { tmpdir } from 'os';
 import { PGLiteEngine } from 'gbrain/pglite-engine';
 import { importFromContentEmbedded } from './import-embedded.ts';
+import * as pinnedGateway from 'gbrain/ai/gateway';
 import { configureGateway, __setEmbedTransportForTests } from 'gbrain/ai/gateway';
 import { hybridSearch } from 'gbrain/search/hybrid';
 import { runThink, type ThinkLLMClient, type ThinkResponse } from 'gbrain/think';
@@ -746,7 +747,7 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
     : null;
 
   if (hashEmbeds) {
-    installStubEmbed(); // hash-embed transport (import AND query sides); keeps a real OPENAI key when present
+    installStubEmbed(pinnedGateway); // hash-embed transport (import AND query sides); keeps a real OPENAI key when present
   } else {
     configureGateway({
       embedding_model: 'openai:text-embedding-3-large',

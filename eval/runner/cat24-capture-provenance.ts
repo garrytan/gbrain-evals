@@ -53,19 +53,35 @@
  * Hermetic: no API keys. Gateway env sanitized; ctx.deferEmbeds + noEmbed —
  * the embedding pipeline is out of scope.
  *
+ * Every read is a typed engine member (getPage, getChunks), never raw SQL, so
+ * the same probes run on every engine: getPage projects the provenance
+ * columns, the page id, updated_at and source_path, and getChunks the chunk
+ * ids. Probe 0 checks that getPage projects all four provenance fields.
+ *
+ * Engine (gbrain RUST_ENGINE.md gate E2): GBRAIN_EVAL_ENGINE=pglite|postgres|rust
+ * opens the brain through eval-engine.ts's openGateEngine, and every gbrain
+ * module comes from the build --gbrain names. Unset, it is the pinned gbrain's
+ * in-memory PGLite, as before.
+ *
  * Run:
- *   bun eval/runner/cat24-capture-provenance.ts
+ *   bun eval/runner/cat24-capture-provenance.ts [--gbrain <checkout>[@ref]] [--pg-url <admin url>]
  */
 
 import { writeFileSync, mkdirSync, realpathSync } from 'fs';
-import { join } from 'path';
+import { dirname, join } from 'path';
 import { tmpdir } from 'os';
-import { PGLiteEngine } from 'gbrain/pglite-engine';
-import { importFromContent, importFromFile } from 'gbrain/import-file';
-import { configureGateway } from 'gbrain/ai/gateway';
-import { operationsByName, type OperationContext } from 'gbrain/operations';
+import type { BrainEngine } from 'gbrain/engine';
+import type * as ImportFile from 'gbrain/import-file';
+import type * as Gateway from 'gbrain/ai/gateway';
+import type * as Operations from 'gbrain/operations';
+import type { OperationContext } from 'gbrain/operations';
+import { importGbrain } from './gbrain-under-test.ts';
+import {
+  EvalEngineUnavailable, gateReceiptPath, gateRunnerContext, gateRunnerReceiptFields, openGateEngine, preflightGateEngine, refuseEvalEngine,
+  type GateRunnerContext,
+} from './eval-engine.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
-import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt, type ProbeError, noModelSpend } from './receipt.ts';
+import { writeReceipt, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt, type ProbeError, noModelSpend } from './receipt.ts';
 import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
 
 export const CAT24_CATEGORY = 'cat24-capture-provenance';
@@ -122,14 +138,16 @@ export interface PreservationProbeEvidence extends ProvenanceProbeEvidence {
   at_after: string | null;
 }
 
-async function readProvenance(engine: any, slug: string): Promise<ProvenanceRow | null> {
-  const rows = await engine.executeRaw(
-    `SELECT source_kind, source_uri, ingested_via, ingested_at, source_path
-     FROM pages WHERE slug = $1 AND source_id = 'default' AND deleted_at IS NULL`,
-    [slug],
-  ) as ProvenanceRow[];
-  if (rows.length !== 1) return null;
-  return rows[0];
+async function readProvenance(engine: BrainEngine, slug: string): Promise<ProvenanceRow | null> {
+  const page = await engine.getPage(slug, { sourceId: 'default' });
+  if (!page) return null;
+  return {
+    source_kind: page.source_kind ?? null,
+    source_uri: page.source_uri ?? null,
+    ingested_via: page.ingested_via ?? null,
+    ingested_at: page.ingested_at ?? null,
+    source_path: page.source_path ?? null,
+  };
 }
 
 /** Compare a provenance row against expectations; null = must be NULL. */
@@ -146,10 +164,10 @@ export function checkProvenance(
   return null;
 }
 
-function makeCtx(engine: any, remote: boolean): OperationContext {
+function makeCtx(engine: BrainEngine, kind: GateRunnerContext['kind'], remote: boolean): OperationContext {
   return {
     engine,
-    config: { engine: 'pglite' } as OperationContext['config'],
+    config: { engine: kind } as OperationContext['config'],
     logger: {
       info: () => {},
       warn: () => {},
@@ -175,6 +193,8 @@ export interface Cat24Options {
   simulateBrokenTrustGate?: boolean;
   /** Test hook: re-import with forceRechunk, bypassing the hash short-circuit. The dedup probe must then FAIL. */
   bypassDedupShortCircuit?: boolean;
+  /** The gbrain build and engine (eval-engine.ts gateRunnerContext); defaults to the one process.argv and the environment name. */
+  ctx?: GateRunnerContext;
 }
 
 export interface Cat24RunResult {
@@ -187,7 +207,11 @@ export interface Cat24RunResult {
 export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResult> {
   const startedAt = new Date().toISOString();
   const reportsDir = options.reportsDir ?? join(process.cwd(), 'eval/reports');
-  const receiptFile = receiptPath(CAT24_CATEGORY, reportsDir);
+  const ctx = options.ctx ?? gateRunnerContext(process.argv);
+  const receiptFile = gateReceiptPath(ctx, CAT24_CATEGORY, reportsDir);
+  const { importFromContent, importFromFile } = await importGbrain<typeof ImportFile>(ctx.gut, 'src/core/import-file.ts');
+  const { configureGateway } = await importGbrain<typeof Gateway>(ctx.gut, 'src/core/ai/gateway.ts');
+  const { operationsByName } = await importGbrain<typeof Operations>(ctx.gut, 'src/core/operations.ts');
   const log = options.quiet ? (_: string) => {} : (s: string) => process.stderr.write(s);
 
   // Isolate GBRAIN_HOME (config reads: active pack, sync.repo_path — with a
@@ -205,9 +229,8 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
     env: sanitizedEnv,
   });
 
-  const engine: any = new PGLiteEngine();
-  await engine.connect({});
-  await engine.initSchema();
+  const scratch = await openGateEngine(ctx, 'cat24');
+  const engine = scratch.engine;
 
   const PROBE_IDS = CAT24_PROBE_IDS;
   const acc = new ProbeAccounting(PROBE_IDS.length);
@@ -232,10 +255,13 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
   console.log = () => {};
   console.error = () => {};
   try {
-    // ── Probe 0: schema precondition — provenance columns exist ──
+    // ── Probe 0: schema precondition — getPage projects the provenance fields ──
     let columnsPresent = true;
     try {
-      await engine.executeRaw(`SELECT source_kind, source_uri, ingested_via, ingested_at FROM pages LIMIT 0`, []);
+      await engine.putPage('inbox/2026-05-23-schema-probe', { type: 'note', title: 'Schema probe', compiled_truth: 'Provenance projection probe.', timeline: '' });
+      const page = await engine.getPage('inbox/2026-05-23-schema-probe', { sourceId: 'default' }) as Record<string, unknown> | null;
+      const missing = schema.selected_columns.filter(c => page?.[c] === undefined);
+      if (!page || missing.length > 0) throw new Error(`getPage does not project ${page ? missing.join(', ') : 'the probe page'}`);
       schema.select_succeeded = true;
       scoreProbe('provenance-columns-present');
     } catch (e: any) {
@@ -322,7 +348,7 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
         'op-put-page-local-trusted', 'put_page op, ctx.remote=false (gbrain capture local install)', localSlug,
         { source_kind: 'capture-cli', source_uri: 'stdin', ingested_via: 'capture-cli', ingested_at_null: false },
         async () => {
-          await putPage.handler(makeCtx(engine, false), {
+          await putPage.handler(makeCtx(engine, ctx.kind, false), {
             slug: localSlug,
             content: '# Local op probe\n\nWritten through the put_page operation by a trusted local caller.\n',
             source_kind: 'capture-cli',
@@ -338,7 +364,7 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
         'op-put-page-remote-spoof-override', 'put_page op, ctx.remote=true (MCP posture, CV6 trust gate)', remoteSlug,
         { source_kind: 'mcp:put_page', source_uri: null, ingested_via: 'mcp:put_page', ingested_at_null: false },
         async () => {
-          await putPage.handler(makeCtx(engine, options.simulateBrokenTrustGate ? false : true), {
+          await putPage.handler(makeCtx(engine, ctx.kind, options.simulateBrokenTrustGate ? false : true), {
             slug: remoteSlug,
             content: '# Remote op probe\n\nWritten through the put_page operation by an untrusted remote caller.\n',
             // Deliberately spoofed — the trust gate must ignore all three.
@@ -352,15 +378,10 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
       // ── Probe 5: dedup — identical re-import creates no second row ──
       try {
         const pageState = async () => {
-          const rows = await engine.executeRaw(
-            `SELECT id, updated_at FROM pages WHERE slug = $1 AND source_id = 'default' AND deleted_at IS NULL`,
-            [contentSlug],
-          ) as Array<{ id: number; updated_at: unknown }>;
-          const chunks = rows.length === 1 ? await engine.executeRaw(
-            `SELECT id FROM content_chunks WHERE page_id = $1 ORDER BY id`,
-            [rows[0].id],
-          ) as Array<{ id: number }> : [];
-          return { rows, updated: rows.map(r => String(r.updated_at instanceof Date ? r.updated_at.toISOString() : r.updated_at)), chunkIds: chunks.map(c => Number(c.id)) };
+          const page = await engine.getPage(contentSlug, { sourceId: 'default' });
+          const rows: Array<{ id: number; updated_at: unknown }> = page ? [{ id: page.id, updated_at: page.updated_at }] : [];
+          const chunks = rows.length === 1 ? await engine.getChunks(contentSlug, { sourceId: 'default' }) : [];
+          return { rows, updated: rows.map(r => String(r.updated_at instanceof Date ? r.updated_at.toISOString() : r.updated_at)), chunkIds: chunks.map(c => Number(c.id)).sort((a, b) => a - b) };
         };
         const before = await pageState();
         dedup.before_rows = before.rows.length;
@@ -427,7 +448,7 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
   } finally {
     console.log = origLog;
     console.error = origErr;
-    await engine.disconnect();
+    await scratch.close();
   }
 
   const summary = acc.summary();
@@ -448,9 +469,10 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
     completion_rate: summary.completion_rate,
     errors: summary.errors,
     publishable: summary.publishable && verdict === 'pass' && !options.simulateBrokenTrustGate && !options.bypassDedupShortCircuit,
-    gbrain_version: gbrainVersionResolved(),
+    gbrain_version: ctx.gut.overlay ? ctx.gut.version : gbrainVersionResolved(),
     gbrain_pin: gbrainPin(),
     resolved_config: {
+      ...(ctx.requested ? { engine: ctx.requested } : {}),
       embed_transport: 'none (provider keys stripped; noEmbed + ctx.deferEmbeds)',
       distinct_ingestion_paths: [
         'importFromContent (content import, provenance opts)',
@@ -461,6 +483,7 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
       out_of_scope: 'ingestion daemon sources (webhook/inbox/fs-watcher — not exported), thin-client transport',
       simulate_broken_trust_gate: options.simulateBrokenTrustGate === true,
     },
+    ...gateRunnerReceiptFields(ctx),
     started_at: startedAt,
     finished_at: new Date().toISOString(),
     data: {
@@ -473,7 +496,7 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
   };
   writeReceipt(receiptFile, receipt);
 
-  const outDir = join(reportsDir, CAT24_CATEGORY);
+  const outDir = dirname(receiptFile);
   mkdirSync(outDir, { recursive: true });
   const outFile = join(outDir, `${new Date().toISOString().slice(0, 10)}-cat24.json`);
   writeFileSync(outFile, JSON.stringify(receipt, null, 2) + '\n', 'utf8');
@@ -492,12 +515,17 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
 }
 
 if (import.meta.main) {
+  const ctx = gateRunnerContext(process.argv);
+  try { await preflightGateEngine(ctx); } catch (e) {
+    if (e instanceof EvalEngineUnavailable) refuseEvalEngine(e, 'Cat 24 capture provenance');
+    throw e;
+  }
   try {
-    const result = await runCat24();
+    const result = await runCat24({ ctx });
     process.exit(result.exitCode);
   } catch (e: any) {
     try {
-      writeReceipt(receiptPath(CAT24_CATEGORY), {
+      writeReceipt(gateReceiptPath(ctx, CAT24_CATEGORY), {
         schema_version: RECEIPT_SCHEMA_VERSION,
         benchmark_version: BENCHMARK_VERSION,
         category: CAT24_CATEGORY,
@@ -507,8 +535,9 @@ if (import.meta.main) {
         completion_rate: 0,
         errors: [{ probe_id: 'preflight', origin: 'harness', message: String(e?.message ?? e).slice(0, 500) }],
         publishable: false,
-        gbrain_version: gbrainVersionResolved(),
+        gbrain_version: ctx.gut.overlay ? ctx.gut.version : gbrainVersionResolved(),
         gbrain_pin: gbrainPin(),
+        ...gateRunnerReceiptFields(ctx),
         started_at: new Date().toISOString(),
         finished_at: new Date().toISOString(),
       });
