@@ -20,6 +20,7 @@
  * four weeks and each carries the runner's settled marker (settled.ts) agreeing with its meta, so a fourth week that is
  * still running never ends a block. Until a block ends its file carries no simultaneous interval and no wild bootstrap,
  * because both are end-of-block readings and an open block's would be an interim p-value outside the one look (R113).
+ * The block writer never replaces an ended block-<n>.json with an open one (writeBlockFiles).
  *
  * The writer refuses any field that could carry question text, a value, a name or plan content, by an allow-list: every
  * key is fixed (or one of a fixed set, such as the rows, readers, classes and kinds), every number finite, and every
@@ -374,6 +375,23 @@ export function blockAggregates(block: number, metas: readonly WeekMeta[], quest
   };
 }
 
+/**
+ * Write a block's file and page section. Refuses (WEEKLY_BLOCK_ENDED) to replace a block file that has ended with one
+ * that has not, so re-running a block on three of its weeks after the four-week write never puts an open block over the
+ * ended one; an existing file it cannot read refuses too. Returns the file's path.
+ */
+export function writeBlockFiles(out: string, a: BlockAggregates): string {
+  const json = join(out, `block-${a.block}.json`);
+  if (existsSync(json) && !a.ended) {
+    let earlier: unknown;
+    try { earlier = JSON.parse(readFileSync(json, 'utf8')); } catch { refuse(`WEEKLY_BLOCK_ENDED: ${json} exists and is not readable JSON, so it may hold the ended block; move it aside by hand before writing block ${a.block} again`); }
+    if (!isPlain(earlier) || earlier.ended !== false) refuse(`WEEKLY_BLOCK_ENDED: ${json} holds block ${a.block} after its end, and this write has not ended; an ended block file is never replaced by an open one`);
+  }
+  writeAggregate(json, a, 'block');
+  writeFileSync(join(out, `block-${a.block}.md`), renderBlock(a));
+  return json;
+}
+
 // ─── The command line ────────────────────────────────────────────────
 
 const readJson = (path: string): any => (existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : refuse(`${path} does not exist`));
@@ -408,10 +426,7 @@ export function main(argv: readonly string[]): number {
     const block = Number(flag(rest, '--block') ?? refuse('pass --block <n>'));
     const expPath = flag(rest, '--exposure');
     const a = blockAggregates(block, metas, questions, { exposure: expPath ? readJson(expPath) : undefined, settled: flags(rest, '--settled').map(readJson) });
-    const json = join(out, `block-${block}.json`);
-    writeAggregate(json, a, 'block');
-    writeFileSync(join(out, `block-${block}.md`), renderBlock(a));
-    console.log(`wrote ${json} and its page section`);
+    console.log(`wrote ${writeBlockFiles(out, a)} and its page section`);
     return 0;
   }
   return refuse('the mode is week or block');

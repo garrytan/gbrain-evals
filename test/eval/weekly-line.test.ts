@@ -18,7 +18,7 @@ import { instrumentFor } from '../../eval/runner/memory-qa/instruments.ts';
 import { answerId, type AnswerRecord, type JudgmentRecord } from '../../eval/runner/memory-qa/records.ts';
 import { frontierInstrumentId } from '../../eval/runner/q1/cell.ts';
 import { bg1JudgeOf, PER_READER_JUDGE_SETTINGS } from '../../eval/runner/q1/cells/definitions.ts';
-import { aggregateProblems, assertAggregate, blockAggregates, main, WEEK_SCHEMA, weekAggregates, WeeklyAggregateError, writeAggregate, type WeekMeta } from '../../eval/runner/weekly-line/aggregates.ts';
+import { aggregateProblems, assertAggregate, blockAggregates, main, WEEK_SCHEMA, weekAggregates, WeeklyAggregateError, writeAggregate, writeBlockFiles, type WeekMeta } from '../../eval/runner/weekly-line/aggregates.ts';
 import { plannedQuestions, WL_CLASSES, WL_COMPARISONS, WL_OBF_BOUNDS, WL_READER_KEYS, WL_READERS, WL_ROWS, WL_SYSTEMS, type WlClass, type WlReaderKey, type WlRow } from '../../eval/runner/weekly-line/design.ts';
 import { plannedFor, questionsFromRecords, WeeklyRecordsError, type WlQuestion } from '../../eval/runner/weekly-line/records.ts';
 import { renderBlock, renderWeek } from '../../eval/runner/weekly-line/scorecard.ts';
@@ -512,6 +512,22 @@ describe('the end of a block', () => {
     expect(all(done).some(c => c.wild !== null)).toBe(true);
     assertAggregate(open, 'block');
     assertAggregate(done, 'block');
+  });
+
+  // Value: protects=an ended block-<n>.json is never replaced by an open one, so re-running a block on three of its weeks after the four-week write cannot erase its verdict; fails_when=the writer overwrites an ended file with an open block, or an unreadable existing file (#611 read-only review blocker 3); why_new=GBEV-3 ruling on #611, 2026-11-23 (R113 integrity); seam=aggregates.ts writeBlockFiles and main's block mode; no_claim=replacing one ended file with another ended file, which a corrected recount may need
+  test('an ended block file is never replaced by an open one', () => {
+    const out = mkdtempSync(join(tmp, 'ended-'));
+    const path = writeBlockFiles(out, done);
+    const before = readFileSync(path, 'utf8');
+    expect(() => writeBlockFiles(out, open)).toThrow(/WEEKLY_BLOCK_ENDED/);
+    expect(readFileSync(path, 'utf8')).toBe(before);
+    expect(writeBlockFiles(out, done)).toBe(path);
+    const fresh = mkdtempSync(join(tmp, 'open-'));
+    writeBlockFiles(fresh, open);
+    expect(writeBlockFiles(fresh, done)).toBe(join(fresh, 'block-1.json'));
+    const broken = mkdtempSync(join(tmp, 'broken-'));
+    writeFileSync(join(broken, 'block-1.json'), '{');
+    expect(() => writeBlockFiles(broken, open)).toThrow(/not readable JSON/);
   });
 
   test('a week refuses a previous block that has not ended', () => {
