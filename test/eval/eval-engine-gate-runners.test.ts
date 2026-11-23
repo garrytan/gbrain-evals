@@ -144,6 +144,48 @@ describe('N14 adapter on rust', () => {
     await a.close();
     expect(readFileSync(join(root, 'src/cli-calls.jsonl'), 'utf8').trim().split('\n').map(l => JSON.parse(l))).toEqual([['init', '--migrate-only', '--non-interactive']]);
   }, 120_000);
+
+  const page = Array.from({ length: 30 }, (_, i) => `## Day ${i + 1}\n\n${i === 17 ? 'The courier left the zephyrquartz key under the blue mat.' : `Ordinary notes for day ${i + 1} about the garden, the weather and lunch.`}\n`).join('\n');
+
+  test('keyword recall maps each hit to its stored passage through the engine API, not the harness\'s raw SQL, and gets the passage raw SQL reads', async () => {
+    const a = await GbrainAdapter.open(resolveGbrainUnderTest(null).root, 'single-page', { kind: 'none' });
+    const sql = a.sql.bind(a);
+    try {
+      await a.call('put_page', { slug: 'notes/log', content: page });
+      for (const q of ['zephyrquartz', 'garden weather lunch']) {
+        a.sql = async () => { throw Object.assign(new Error('raw SQL refused'), { code: 'engine_capability_missing', reason: 'raw_sql' }); };
+        const hits = await a.search(q);
+        a.sql = sql;
+        const ids = hits.map(h => h.chunk_id).filter((x): x is number => x !== null);
+        expect(ids.length).toBeGreaterThan(0);
+        const stored = new Map((await sql<{ id: number; chunk_text: string }>('SELECT id, chunk_text FROM content_chunks WHERE id = ANY($1::int[])', [ids])).map(r => [Number(r.id), r.chunk_text]));
+        expect(hits.map(h => h.passage)).toEqual(hits.map(h => h.chunk_id === null ? '' : stored.get(h.chunk_id) ?? ''));
+        if (q === 'zephyrquartz') expect(hits[0].passage).toContain('zephyrquartz');
+      }
+    } finally {
+      a.sql = sql;
+      await a.close();
+    }
+  }, 120_000);
+
+  test('on a segmented page after an append, each hit still maps to the passage raw SQL reads', async () => {
+    const a = await GbrainAdapter.open(resolveGbrainUnderTest(null).root, 'native', { kind: 'none' });
+    const sql = a.sql.bind(a);
+    const big = Array.from({ length: 16000 }, (_, i) => `## Entry ${i + 1}\n\n${i === 7200 ? 'The courier left the zephyrquartz key under the blue mat.' : `Routine log line ${i + 1}: the garden was watered and the gate was locked before dinner.`}\n`).join('\n');
+    try {
+      const put = await a.call('put_page', { slug: 'notes/big', content: big }) as { revision?: string };
+      await a.call('append_page', { slug: 'notes/big', text: '\nThe obsidianwren note was filed under the stairs.\n', separator: 'none', request_id: crypto.randomUUID(), ...(put?.revision ? { expected_revision: put.revision } : {}) });
+      expect(Number((await sql<{ n: number }>('SELECT count(*)::int AS n FROM page_body_manifest m JOIN pages p ON p.id = m.page_id WHERE p.slug = $1 AND m.gen_to IS NULL', ['notes/big']))[0]?.n ?? 0)).toBeGreaterThan(0);
+      for (const q of ['obsidianwren', 'zephyrquartz']) {
+        const hits = await a.search(q);
+        const ids = hits.map(h => h.chunk_id).filter((x): x is number => x !== null);
+        expect(ids.length).toBeGreaterThan(0);
+        const stored = new Map((await sql<{ id: number; chunk_text: string }>('SELECT id, chunk_text FROM content_chunks WHERE id = ANY($1::int[])', [ids])).map(r => [Number(r.id), r.chunk_text]));
+        expect(hits.map(h => h.passage)).toEqual(hits.map(h => h.chunk_id === null ? '' : stored.get(h.chunk_id) ?? ''));
+        expect(hits[0].passage).toContain(q);
+      }
+    } finally { await a.close(); }
+  }, 300_000);
 });
 
 describe('N14 engine selection', () => {
