@@ -375,11 +375,12 @@ before A6b use the former environment variable names. The hashes of every file A
 
 ### 2026-11-23: Security fixes in six bundle locks
 
-The pin table moves six external bundles to locks with patched releases of the packages
-[gbrain-evals#433](https://github.com/garrytan/gbrain-evals/pull/433) raised in the `eval/systems` shims, each relocked
-with the uv version its own Dockerfile pins. Five of the six are now byte-identical to their `eval/systems` shim's
-lock. The comparator lock in `eval/harness-provider/comparator.lock.json` raises `aiohttp` and `certifi` the same way.
-Earlier campaigns ran on the old hashes, and their published rows and the Q1 build labels keep them.
+[gbrain-evals#594](https://github.com/garrytan/gbrain-evals/pull/594) moves the pin table's six external bundles to
+locks with patched releases of the packages [gbrain-evals#433](https://github.com/garrytan/gbrain-evals/pull/433) raised
+in the `eval/systems` shims, each relocked with the uv version its own Dockerfile pins. Five of the six are now
+byte-identical to their `eval/systems` shim's lock. The comparator lock in `eval/harness-provider/comparator.lock.json`
+raises `aiohttp` and `certifi` the same way. Earlier campaigns ran on the old hashes, and their published rows and the
+Q1 build labels keep them.
 
 | Kind id | Lock (old to new) | Capabilities (old to new) |
 |---|---|---|
