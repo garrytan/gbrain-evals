@@ -157,7 +157,8 @@ export const contextKey = (realization: string, questionId: string, armId: strin
  * The judgments an answer needs before it counts as judged: the canonical judge's, and on a per-reader frontier arm
  * (RS1) its reader's frontier judge's as well, sent at the arm's pinned settings, so completeness, resume and the
  * receipt count a missing frontier judgment as unjudged there. Q1 and F6 arms need the canonical judgment alone. A
- * cell with descriptive_view false (BG1-C) has no canonical view, so its answers need their gating judge's alone.
+ * cell with descriptive_view false (BG1-C, the SOTA dev and leader cells) has no canonical view, so its answers need
+ * their gating judge's alone.
  */
 export function requiredJudges(arm: Pick<ArmDefinition, 'frontier'>, a: { reader: string; replicate: number }, instrument: Pick<Instrument, 'id' | 'canonical_judge'>, def: Pick<CellDefinition, 'descriptive_view'> = {}): RequiredJudge[] {
   const perReader = arm.frontier?.per_reader === true;
@@ -647,8 +648,9 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
   const maxAttempts = opts.maxAttempts ?? DEFAULT_MAX_ATTEMPTS;
   const arms = def.arms.filter(a => !opts.arms || opts.arms.includes(a.id));
   if (!arms.length) throw refuse({ code: 'USAGE', message: `--arms ${opts.arms?.join(',')} names no arm of ${def.id}`, why: 'a run needs at least one arm', fix: { next: 'run', argv: [...FRONT, 'show', '--cell', def.id] } });
+  if (opts.frontier === false && def.descriptive_view === false) throw refuse({ code: 'USAGE', message: `--no-frontier on ${def.id} would leave every answer ungraded: the cell has no canonical judge (descriptive_view false), so its per-reader judge is the only grade`, why: 'a paid run must not buy answers it cannot grade', fix: { next: 'ask_user', user_message: 'rerun your original command without --no-frontier, keeping every other flag' } });
   const instrument = instrumentFor(def.canonical_instrument);
-  refuseCompatJudges(def.id, [instrument.canonical_judge, ...(opts.frontier === false ? [] : arms.flatMap(a => a.frontier?.judges ?? []))]);
+  refuseCompatJudges(def.id, [...(def.descriptive_view === false ? [] : [instrument.canonical_judge]), ...(opts.frontier === false ? [] : arms.flatMap(a => a.frontier?.judges ?? []))]);
 
   // Custody before anything reads the corpus.
   const custody = !deps.corpus && needsCustody(def);

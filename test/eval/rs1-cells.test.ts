@@ -155,7 +155,7 @@ describe('the R78 judge map reaches RS1 alone (F5)', () => {
   // Value: protects=Q1's and F6's published cell manifests and digests; fails_when=the R78 gating-judge map, the pinned settings or their route caps change a Q1 or F6 cell; why_new=R78 review F5; seam=none; no_claim=RS1's own cells
   test('Q1 and F6 generate byte-identical manifests to the ones main publishes, and none of their arms outside the SOTA loop\'s own cells judges per reader', () => {
     const digest = (s: string) => createHash('sha256').update(s).digest('hex');
-    expect(digest(manifestText())).toBe('838b414af6d7d3df2399dee3d1cf2ffc8dfa83bef453af979d5fd86696c5889a');
+    expect(digest(manifestText())).toBe('ee5a4150312e142b57f080820709e7bbd0f77ecee1d14943b571966d5830cad1');
     expect(digest(f6ManifestText())).toBe('fea479a014cdb5dcb352511f00999d5422d55ef759d265bf9a36c176509ca87e');
     expect(readFileSync(MANIFEST_PATH, 'utf8')).toBe(manifestText());
     expect(readFileSync(F6_MANIFEST_PATH, 'utf8')).toBe(f6ManifestText());

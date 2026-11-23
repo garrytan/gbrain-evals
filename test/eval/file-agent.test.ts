@@ -123,6 +123,18 @@ describe('uncapped grep (ripgrep)', () => {
     expect(events[0].pattern).toBe('(?:\\p{L}{1,40}\\s?){20}\\d');
   });
 
+  test('ripgrep that cannot start returns a grep error instead of crashing the cell', async () => {
+    const path = process.env.PATH;
+    process.env.PATH = mkdtempSync(join(tmpdir(), 'no-rg-'));
+    const events: GrepLimitEvent[] = [];
+    try {
+      expect(await ripgrep(root, undefined, e => events.push(e))(req('needle'))).toBe('grep error: ripgrep could not run (ENOENT)');
+      expect(events.map(e => e.kind)).toEqual(['spawn_error']);
+    } finally {
+      process.env.PATH = path;
+    }
+  });
+
   test('output past the memory limit is cancelled and classified, never cut', async () => {
     const events: GrepLimitEvent[] = [];
     const out = await ripgrep(root, { wall_ms: 60_000, max_output_bytes: 64 * 1024 }, e => events.push(e))(req('needle'));
@@ -210,6 +222,27 @@ describe('file agent end to end (scripted, fixture)', () => {
       for (const s of r.a.opened_source_ids) expect(san.sessionOf(san.ns(r.q.conversation), s)).toBeDefined();
     }
     expect(sys.limitEvents).toEqual([]);
+    await sys.close();
+  });
+
+  test('a grep call ripgrep could not start makes the answer a harness failure, not a scored miss', async () => {
+    const sys = new FileAgentSystem({ workDir: join(tmp, 'agent-no-rg'), scripted: searcher });
+    const q = corpus.questions[0];
+    const c = corpus.conversations.find(x => x.id === q.conversation)!;
+    const ns = san.ns(c.id);
+    await sys.reset(ns);
+    for (const step of san.ingestPlan(c)) await sys.ingestSession(ns, step.input, step.event_time);
+    await sys.finishIngest();
+    const path = process.env.PATH;
+    process.env.PATH = mkdtempSync(join(tmpdir(), 'no-rg-'));
+    try {
+      const a = await sys.answer(ns, san.question(q), { reader: 'scripted', replicate: 0 });
+      expect(a.outcome).toBe('harness_invalid');
+      expect(a.error).toMatch(/ripgrep could not run on 1 grep call/);
+    } finally {
+      process.env.PATH = path;
+    }
+    expect(sys.limitEvents.map(e => e.kind)).toEqual(['spawn_error']);
     await sys.close();
   });
 
