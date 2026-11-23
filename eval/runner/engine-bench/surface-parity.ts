@@ -604,9 +604,11 @@ const FINAL_WRITE_STATES = ['committed', 'conflict', 'failed', 'cancelled'];
  * stdio, put_page and friends queue a `links` effect that `gbrain serve` applies when idle; whether a read lands before
  * or after it is scheduling, not engine behaviour (a first dry run saw Postgres miss the queued mention link once). A
  * CLI write's receipt is read the same way, with `gbrain call get_write_request`, before the export after the writes, but
- * without waiting on its `embedding` effect: a CLI write applies its links in process and exits with that effect queued, and
- * only the next gbrain process that writes drains it (on a keyless brain, to `skipped`), so no read could see it settle, and
- * it changes no exported byte. Its state still shows in `last`. The receipt itself must reach a final state, so a write still
+ * without waiting on its `embedding` or `facts-backstop` effects: a CLI write applies its links in process and exits with
+ * those effects queued, because a one-shot gbrain command stops its effect drain at exit and leaves them to a resident
+ * owner. Only the next gbrain process that writes drains them (on a keyless brain, embedding to `skipped` and
+ * facts-backstop to `dispatched`, a waiting facts-absorb job), so no read could see them settle, and they change no
+ * exported byte. Their states still show in `last`. The receipt itself must reach a final state, so a write still
  * `recovering` keeps the wait going. `poll` returns one get_write_request answer as JSON text within the time it is given,
  * which is what is left of the wait, and an answer after the wait has run out does not count; the answers are not compared,
  * and the receipt lists each wait.
@@ -702,7 +704,7 @@ async function captureEngine(o: EngineRunInput): Promise<EngineCapture> {
       else result.captures.push({ surface: 'cli', op: s.id, raw_b64: r.stdout.toString('base64'), exit_code: r.code });
       const requestId = s.args?.request_id;
       if (typeof requestId !== 'string') continue;
-      const settled = await settleWrite(async ms => (await runGbrain(o.gut, envA, ['call', 'get_write_request', JSON.stringify({ request_id: requestId })], ms)).stdout.toString('utf8'), o.settleTimeoutMs, ['embedding']);
+      const settled = await settleWrite(async ms => (await runGbrain(o.gut, envA, ['call', 'get_write_request', JSON.stringify({ request_id: requestId })], ms)).stdout.toString('utf8'), o.settleTimeoutMs, ['embedding', 'facts-backstop']);
       result.settles.push({ surface: 'cli', op: s.id, ...settled });
       if (!settled.settled) result.captures.push({ surface: 'cli', op: `${s.id} (settle)`, error: `write ${requestId} did not settle in ${o.settleTimeoutMs / 1000} s: ${settled.last}` });
     }
