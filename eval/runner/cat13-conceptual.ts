@@ -91,25 +91,28 @@
  *     bun eval/runner/cat13-conceptual.ts --reranker off --autocut off --keyword-arm-confidence-floor 0.65
  *   CAT13_EMBEDDING_MODEL=voyage:voyage-4 CAT13_EMBED_DIMS=1024 \
  *     bun eval/runner/cat13-conceptual.ts --reranker off --autocut off --search-pin search.metadata_boost_gate=lexical
+ *   GBRAIN_EVAL_ENGINE=rust bun eval/runner/cat13-conceptual.ts --stub-embed --adapter gbrain --gbrain <checkout>[@ref]
+ *
+ * Engine (gbrain RUST_ENGINE.md gate E1): GBRAIN_EVAL_ENGINE=pglite|postgres|rust opens the gbrain arm's brain through
+ * eval-engine.ts, and --gbrain (or GBRAIN_UNDER_TEST) names the build the gbrain arm, the gateway and the search-mode
+ * bundle come from. The other arms keep the pinned gbrain. With neither, the pinned gbrain's in-memory PGLite, as before.
  */
 
 import { readdirSync, readFileSync, mkdirSync, writeFileSync } from 'fs';
 import { createHash } from 'crypto';
 import { basename, join, dirname } from 'path';
-import {
-  configureGateway, __setEmbedTransportForTests, getEmbeddingModel, getEmbeddingDimensions,
-} from 'gbrain/ai/gateway';
-import { loadOverridesFromConfig, resolveSearchMode, KNOBS_HASH_VERSION } from '../../node_modules/gbrain/src/core/search/mode.ts';
+import * as pinnedGateway from 'gbrain/ai/gateway';
+import type * as SearchMode from '../../node_modules/gbrain/src/core/search/mode.ts';
 import { RipgrepBm25Adapter } from './adapters/grep-only.ts';
 import { VectorOnlyAdapter } from './adapters/vector.ts';
 import { HybridNoGraphAdapter } from './adapters/vector-grep-rrf-fusion.ts';
 import { observedSearchFailures, type SearchObservedStats, type SearchObservation } from './retrieval-pins.ts';
 import { GbrainInlineAdapter } from './adapters/gbrain-inline.ts';
 import {
-  EvalEngineUnavailable, EVAL_ENGINE_REFUSED_EXIT, evalEngineRefusalMessage, openScratchEvalEngine, preflightEvalEngine, requestedEvalEngine,
-  type EvalEngineKind,
+  EvalEngineUnavailable, EVAL_ENGINE_REFUSED_EXIT, evalEngineRefusalMessage, gateRunnerReceiptFields, openScratchEvalEngine, preflightGateEngine,
+  requestedEvalEngine, type EvalEngineKind, type GateRunnerContext,
 } from './eval-engine.ts';
-import { resolveGbrainUnderTest } from './gbrain-under-test.ts';
+import { importGbrain, resolveGbrainUnderTest } from './gbrain-under-test.ts';
 import { EmbeddingCache, makeCachingTransport } from './longmemeval-cache.ts';
 import { createRequire } from 'node:module';
 import { VectorRerankAdapter } from './adapters/vector-rerank.ts';
@@ -697,6 +700,9 @@ export function providerKeyEnv(model: string): string {
   return PROVIDER_KEY_ENV[provider] ?? `${provider.toUpperCase().replace(/[^A-Z0-9]/g, '_')}_API_KEY`;
 }
 
+/** The gateway members this runner calls: the pinned gbrain's, or the --gbrain build's for the gbrain arm. */
+export type GatewayModule = Pick<typeof pinnedGateway, 'configureGateway' | '__setEmbedTransportForTests' | 'getEmbeddingModel' | 'getEmbeddingDimensions'>;
+
 // ─── Stub embed transport (hermetic runs; mirrors cat26's pattern) ──
 
 export function hashEmbed(text: string, dims: number = DEFAULT_EMBED_DIMS): number[] {
@@ -732,21 +738,21 @@ function makeHashEmbedTransport(dims: number) {
  * real key in the environment, a 401 in CI. Both calls below are cheap and
  * idempotent, so every run re-asserts its own transport.
  */
-export function ensureGateway(stubEmbed: boolean, embedder: EmbedderConfig = resolveEmbedder()): void {
+export function ensureGateway(stubEmbed: boolean, embedder: EmbedderConfig = resolveEmbedder(), gateway: GatewayModule = pinnedGateway): void {
   if (stubEmbed) {
     const keyEnv = providerKeyEnv(embedder.model);
     if (!process.env[keyEnv]) process.env[keyEnv] = 'dummy-embed-transport-stubbed';
   }
-  configureGateway({
+  gateway.configureGateway({
     embedding_model: embedder.model,
     embedding_dimensions: embedder.dims,
     env: process.env as Record<string, string | undefined>,
     // gbrain reads OLLAMA_BASE_URL only through buildGatewayConfig; a direct configureGateway needs base_urls.
     ...(process.env.OLLAMA_BASE_URL ? { base_urls: { ollama: process.env.OLLAMA_BASE_URL } } : {}),
   });
-  __setEmbedTransportForTests(
+  gateway.__setEmbedTransportForTests(
     stubEmbed
-      ? (makeHashEmbedTransport(embedder.dims) as unknown as Parameters<typeof __setEmbedTransportForTests>[0])
+      ? (makeHashEmbedTransport(embedder.dims) as unknown as Parameters<GatewayModule['__setEmbedTransportForTests']>[0])
       : null,
   );
 }
@@ -1061,6 +1067,8 @@ export interface ScoreAdapterOptions {
   spentUsd?: () => number;
   /** Extra unscored passes over the same probes on the same brain, timed only (--warm-passes). */
   warmPasses?: number;
+  /** The gateway the adapter embeds through, read back after init; defaults to the pinned gbrain's. */
+  gateway?: GatewayModule;
 }
 
 /** Latency of the unscored repeat passes (--warm-passes): the same probes, in order, on the already-queried brain. */
@@ -1193,7 +1201,8 @@ export async function scoreAdapter(
   // receipt should show it rather than assume it.
   let gatewayAfterInit: AdapterScore['gatewayAfterInit'];
   try {
-    gatewayAfterInit = { model: getEmbeddingModel(), dims: getEmbeddingDimensions() };
+    const gateway = opts.gateway ?? pinnedGateway;
+    gatewayAfterInit = { model: gateway.getEmbeddingModel(), dims: gateway.getEmbeddingDimensions() };
   } catch {
     gatewayAfterInit = undefined; // gateway unconfigured (pure unit tests) — nothing to echo
   }
@@ -1374,7 +1383,7 @@ export interface AdapterPlan {
  * default mid-run — the exact confound behind the unreproducible voyage-space
  * receipt). Both gbrain-backed arms get the same search pins.
  */
-export function buildAdapters(run: { embedder: EmbedderConfig; searchConfig: Record<string, string>; stubEmbed?: boolean; engine?: { kind: EvalEngineKind; pgAdminUrl?: string } }): AdapterPlan[] {
+export function buildAdapters(run: { embedder: EmbedderConfig; searchConfig: Record<string, string>; stubEmbed?: boolean; engine?: { kind: EvalEngineKind; pgAdminUrl?: string }; productRoot?: string }): AdapterPlan[] {
   const shootout: EvalAdapterConfig = {
     embedder: run.embedder.model,
     dim: run.embedder.dims,
@@ -1389,6 +1398,7 @@ export function buildAdapters(run: { embedder: EmbedderConfig; searchConfig: Rec
         embeddingDimensions: run.embedder.dims,
         expectStubTransport: run.stubEmbed === true,
         ...(run.engine ? { engine: run.engine } : {}),
+        ...(run.productRoot ? { productRoot: run.productRoot } : {}),
       }),
       initConfig: {},
     },
@@ -1474,8 +1484,12 @@ export interface Cat13Options {
    * and different engines see byte-identical vectors; misses are paid through the budget ledger as before.
    */
   embedCache?: string;
+  /** --embed-cache-only: a cache miss fails that embedding instead of calling the provider, so it spends nothing. */
+  embedCacheOnly?: boolean;
   /** Unscored repeat passes timed after the scored pass, for warm-cache latency (--warm-passes N, 0-10). */
   warmPasses?: number;
+  /** `<checkout>[@ref]` of the gbrain build the gbrain arm measures (--gbrain, else GBRAIN_UNDER_TEST); unset, the pinned gbrain. */
+  gbrain?: string;
 }
 
 export const DEFAULT_TUNING_CONCEPTS = 20;
@@ -1545,6 +1559,8 @@ export function parseCat13Argv(
       case '--preregistration': opts.preregistration = value(); break;
       case '--pg-url': opts.pgUrl = value(); break;
       case '--embed-cache': opts.embedCache = value(); break;
+      case '--embed-cache-only': opts.embedCacheOnly = true; break;
+      case '--gbrain': opts.gbrain = value(); break;
       case '--warm-passes': {
         const n = parseNonNegativeInt(value(), '--warm-passes');
         if (n > 10) throw new Error(`--warm-passes must be 0 to 10, got ${n}`);
@@ -1558,7 +1574,7 @@ export function parseCat13Argv(
         opts.estimateUsd = n;
         break;
       }
-      case '--budget-usd': case '--budget-ledger': case '--program-cap-usd': {
+      case '--budget-usd': case '--budget-ledger': case '--budget-run-id': case '--program-cap-usd': {
         const flagValue = value();
         opts.budget = budgetOptionsFrom([...budgetArgv, flag, flagValue], env);
         budgetArgv.push(flag, flagValue);
@@ -1570,8 +1586,8 @@ export function parseCat13Argv(
           + `--embedding-model <provider:model> --embedding-dims <N> --reranker on|off --autocut on|off `
           + `--expansion-variant-budget <b> --keyword-arm-confidence-floor <f|off> `
           + `--search-pin <search.key>=<value> (repeatable; generic pass-through — gbrain ignores unknown search.* keys silently) `
-          + `--tuning-concepts <N> --holdout-concepts <M> --seed <N> --budget-usd <dollars> --budget-ledger <path> --program-cap-usd <dollars> `
-          + `--pg-url <admin url> --embed-cache <sqlite path> --warm-passes <N> (engine: GBRAIN_EVAL_ENGINE=pglite|postgres|rust)`,
+          + `--tuning-concepts <N> --holdout-concepts <M> --seed <N> --budget-usd <dollars> --budget-ledger <path> --budget-run-id <id> --program-cap-usd <dollars> `
+          + `--pg-url <admin url> --embed-cache <sqlite path> --embed-cache-only --warm-passes <N> --gbrain <checkout>[@ref] (engine: GBRAIN_EVAL_ENGINE=pglite|postgres|rust)`,
         );
     }
   }
@@ -1579,7 +1595,9 @@ export function parseCat13Argv(
   const engine = requestedEvalEngine(env);
   if (engine) opts.engine = engine;
   if (opts.pgUrl === undefined && env.LIFECYCLE_PG_URL) opts.pgUrl = env.LIFECYCLE_PG_URL;
+  if (opts.gbrain === undefined && env.GBRAIN_UNDER_TEST) opts.gbrain = env.GBRAIN_UNDER_TEST;
   if (opts.embedCache !== undefined && opts.stubEmbed) throw new Error('--embed-cache caches live provider vectors; it does not apply to --stub-embed');
+  if (opts.embedCacheOnly && opts.embedCache === undefined) throw new Error('--embed-cache-only needs --embed-cache <sqlite path>');
   return opts;
 }
 
@@ -1595,13 +1613,21 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
   const reportsDir = opts.reportsDir ?? join(process.cwd(), 'eval/reports');
   const receiptFile = receiptPath(CATEGORY, reportsDir);
   const log = opts.quiet ? (_: string) => {} : (s: string) => console.log(s);
+  const ctx: GateRunnerContext = {
+    gut: resolveGbrainUnderTest(opts.gbrain ?? null), kind: opts.engine ?? 'pglite', requested: opts.engine ?? null, ...(opts.pgUrl ? { pgAdminUrl: opts.pgUrl } : {}),
+  };
+  const gutGateway = await importGbrain<GatewayModule>(ctx.gut, 'src/core/ai/gateway.ts');
+  // The comparison arms embed through the pinned gateway and the gbrain arm through the build's; one module when they are the same.
+  const gateways = [...new Set<GatewayModule>([pinnedGateway, gutGateway])];
+  const { loadOverridesFromConfig, resolveSearchMode, KNOBS_HASH_VERSION } = await importGbrain<typeof SearchMode>(ctx.gut, 'src/core/search/mode.ts');
 
   const baseReceipt = (): Pick<Receipt, 'schema_version' | 'benchmark_version' | 'category' | 'gbrain_version' | 'gbrain_pin' | 'started_at' | 'finished_at'> => ({
     schema_version: RECEIPT_SCHEMA_VERSION,
     benchmark_version: BENCHMARK_VERSION,
     category: CATEGORY,
-    gbrain_version: gbrainVersion(),
+    gbrain_version: ctx.gut.overlay ? ctx.gut.version : gbrainVersion(),
     gbrain_pin: gbrainPin(),
+    ...gateRunnerReceiptFields(ctx),
     started_at: startedAt,
     finished_at: new Date().toISOString(),
   });
@@ -1749,14 +1775,14 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
         if (!opts.pgUrl) throw new EvalEngineUnavailable('postgres', 'postgres_url_missing', 'engine=postgres needs --pg-url or LIFECYCLE_PG_URL');
         try {
           // Bring the schema up in the preflight too, so a server without pgvector refuses here, before the other arms pay.
-          const probe = await openScratchEvalEngine({ gut: resolveGbrainUnderTest(null), kind: 'postgres', label: 'cat13_preflight', pgAdminUrl: opts.pgUrl, initSchema: true });
+          const probe = await openScratchEvalEngine({ gut: ctx.gut, kind: 'postgres', label: 'cat13_preflight', pgAdminUrl: opts.pgUrl, initSchema: true });
           await probe.close();
         } catch (e) {
           if (e instanceof EvalEngineUnavailable) throw e;
           throw new EvalEngineUnavailable('postgres', 'postgres_unreachable', `Could not open a scratch Postgres brain with gbrain's schema (the server needs pgvector): ${(e as Error).message}`);
         }
       } else {
-        await preflightEvalEngine(resolveGbrainUnderTest(null), opts.engine);
+        await preflightGateEngine(ctx);
       }
     } catch (e) {
       if (!(e instanceof EvalEngineUnavailable)) throw e;
@@ -1788,14 +1814,16 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
   };
 
   try {
-  ensureGateway(stubEmbed, embedder);
+  for (const gateway of gateways) ensureGateway(stubEmbed, embedder, gateway);
   if (opts.embedCache) {
-    // The real transport is the AI SDK embedMany that the linked gbrain itself resolves (its provider model objects
-    // must match its own `ai` version), wrapped so cached vectors return without a request.
-    const gbrainRoot = resolveGbrainUnderTest(null).root;
-    const { embedMany } = await import(createRequire(join(gbrainRoot, 'package.json')).resolve('ai')) as { embedMany: (p: unknown) => Promise<{ embeddings: number[][]; usage?: unknown }> };
+    // The real transport is the AI SDK embedMany that each gbrain itself resolves (its provider model objects must
+    // match its own `ai` version), wrapped so cached vectors return without a request. Both share one cache.
     embedCache = new EmbeddingCache(opts.embedCache, `${embedder.model}@${embedder.dims}`);
-    __setEmbedTransportForTests(makeCachingTransport(p => embedMany(p), embedCache) as unknown as Parameters<typeof __setEmbedTransportForTests>[0]);
+    for (const [gateway, root] of new Map<GatewayModule, string>([[pinnedGateway, resolveGbrainUnderTest(null).root], [gutGateway, ctx.gut.root]])) {
+      const { embedMany } = await import(createRequire(join(root, 'package.json')).resolve('ai')) as { embedMany: (p: unknown) => Promise<{ embeddings: number[][]; usage?: unknown }> };
+      const transport = opts.embedCacheOnly ? async () => { throw new Error('--embed-cache-only: an embedding was not in the cache'); } : (p: unknown) => embedMany(p);
+      gateway.__setEmbedTransportForTests(makeCachingTransport(transport, embedCache!) as unknown as Parameters<GatewayModule['__setEmbedTransportForTests']>[0]);
+    }
   }
 
   log(`# BrainBench Cat 13 — Conceptual Recall\n`);
@@ -1814,7 +1842,9 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
   }
   log('');
 
-  const standardPlans = buildAdapters({ embedder, searchConfig, stubEmbed, ...(opts.engine ? { engine: { kind: opts.engine, pgAdminUrl: opts.pgUrl } } : {}) });
+  const standardPlans = buildAdapters({
+    embedder, searchConfig, stubEmbed, ...(opts.engine ? { engine: { kind: opts.engine, pgAdminUrl: opts.pgUrl } } : {}), ...(ctx.gut.overlay ? { productRoot: ctx.gut.root } : {}),
+  });
   const allPlans = [...standardPlans, ...buildOptInAdapters({ embedder })];
   const plans = opts.only ? allPlans.filter(p => p.adapter.name === opts.only) : standardPlans;
   if (plans.length === 0) {
@@ -1830,7 +1860,10 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
     log(`- ${a.name} ...`);
     try {
       const run = paid?.run;
-      const r = await scoreAdapter(a, pages, probes, gradesByQuery, acc, { initConfig, split, gold, ...(opts.warmPasses ? { warmPasses: opts.warmPasses } : {}), ...(run ? { spentUsd: () => run.summary().actual_usd } : {}) });
+      const r = await scoreAdapter(a, pages, probes, gradesByQuery, acc, {
+        initConfig, split, gold, ...(opts.warmPasses ? { warmPasses: opts.warmPasses } : {}), ...(run ? { spentUsd: () => run.summary().actual_usd } : {}),
+        ...(a.name === 'gbrain' ? { gateway: gutGateway } : {}),
+      });
       if (GBRAIN_BACKED_ADAPTERS.has(a.name)) {
         const failures = observedSearchFailures(r.observed, probes.length);
         if (failures.length) {
@@ -1972,7 +2005,7 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
     log(`- Arm-confidence floor (Phase E2): search.keyword_arm_confidence_floor=${floorPin} on the gbrain-backed adapters — keyword + title lists fuse at half weight when the keyword arm's margin_ratio is below the floor (non-relational queries with a voting text vector arm). Per-adapter stamped / down-weighted query counts are in the receipt's observed_by_adapter.`);
   }
   if (Object.keys(extraPins).length > 0) {
-    log(`- Generic pins (--search-pin): ${Object.entries(extraPins).map(([k, v]) => `${k}=${v}`).join(', ')} on the gbrain-backed adapters — pass-through engine.setConfig entries. gbrain ignores unknown search.* keys silently, so confirm each key exists in the linked gbrain (${gbrainVersion()}) before reading this arm.`);
+    log(`- Generic pins (--search-pin): ${Object.entries(extraPins).map(([k, v]) => `${k}=${v}`).join(', ')} on the gbrain-backed adapters — pass-through engine.setConfig entries. gbrain ignores unknown search.* keys silently, so confirm each key exists in the linked gbrain (${ctx.gut.version}) before reading this arm.`);
   }
   log(`- No gold data passed to adapters; PublicPage/PublicQuery sealed at the boundary.`);
 
@@ -1987,7 +2020,7 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
     probes: subsetCounts,
   };
 
-  const reportFile = join(reportsDir, CATEGORY, 'report.json');
+  const reportFile = join(dirname(receiptFile), 'report.json');
   mkdirSync(dirname(reportFile), { recursive: true });
   writeFileSync(reportFile, JSON.stringify({
     ran_at: startedAt,
@@ -2007,7 +2040,7 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
 
   // Leave the process-global gateway the way the other runners do: a stub
   // installed by ensureGateway must not leak into a later file's live run.
-  if (stubEmbed || embedCache) __setEmbedTransportForTests(null);
+  if (stubEmbed || embedCache) for (const gateway of gateways) gateway.__setEmbedTransportForTests(null);
 
   const resolvedConfig: Record<string, unknown> = {
     top_k: TOP_K,
@@ -2103,7 +2136,7 @@ export async function runCat13(opts: Cat13Options = {}): Promise<Cat13RunResult>
     paid?.run.close();
     // The caching transport wraps a live provider: never leave it installed after an early throw.
     if (embedCache) {
-      __setEmbedTransportForTests(null);
+      for (const gateway of gateways) gateway.__setEmbedTransportForTests(null);
       embedCache.close();
     }
   }

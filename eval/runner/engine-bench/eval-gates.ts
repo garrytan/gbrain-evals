@@ -3,19 +3,21 @@
  * (docs/designs/RUST_ENGINE.md, "Eval gates" E1 to E3 and "Swap readiness" criterion 8) from one wave's stage receipts.
  *
  * Each gate carries the plan's threshold as it is written, a verdict (PASS, FAIL or NOT_RUN), what was measured, one
- * row per benchmark the gate names, and the rows that lost. engine-bench runs only part of the gates: E1's LongMemEval-S
- * rows come from stage 3 (lme-recall.ts), scored by the D24 rule that stage applies (the 95% paired lower bound of
- * Rust minus each TypeScript engine at least -0.018 at N = 470, identical top-5 ids counted as ties). Every other row
- * names a benchmark engine-bench does not run, so it is NOT_RUN with that reason. A gate passes only when every gating
- * row passes, fails when any gating row fails, and is NOT_RUN otherwise.
+ * row per benchmark the gate names, and the rows that lost. E1's LongMemEval-S rows come from stage 3 (lme-recall.ts),
+ * scored by the D24 rule that stage applies (the 95% paired lower bound of Rust minus each TypeScript engine at least
+ * -0.018 at N = 470, identical top-5 ids counted as ties). Every other row comes from that suite's
+ * engine-bench.gate-suite/1 file (gate-suites.ts emit), passed with --suite: the suite's verdict, its own rows (a strict
+ * or reported-beside row next to the gate row) and its losses, read as that file states them. A suite with no file is
+ * NOT_RUN. Cat 7 is reported, and Cat 13 is reported, not gating, for Dec 1 (plan D24), so neither decides its gate. A
+ * gate passes only when every gating row passes, fails when any gating row fails, and is NOT_RUN otherwise.
  *
  * Criterion 8 (paired speed, reported and never a gate) comes from the speed stage (perf.ts): for each operation class,
  * quantile and TypeScript engine, Rust is worse when the 95% paired interval of its latency ratio lies above 1, better
  * when it lies below 1, and not shown either way otherwise; a class with fewer than 100 pairs, or one Rust refused, is
  * never counted as no worse.
  *
- * `status` is FINAL only for a counted wave on a gbrain release tag (no -rc), with every input counted and on one gbrain
- * commit and one Rust addon digest; a FINAL file is written once, at eval/results/engine-bench/eval-gates/<tag>/
+ * `status` is FINAL only for a counted wave on a gbrain release tag (no -rc) that garrytan/gbrain publishes and that
+ * peels to the receipts' commit, with every input counted and on one gbrain commit and one Rust addon digest; a FINAL file is written once, at eval/results/engine-bench/eval-gates/<tag>/
  * <evals commit>.json, and never rewritten (a correction is a new file). Every release-candidate or branch build is
  * PROVISIONAL (--provisional): development receipts are allowed, `gbrain_tag` is left out, and the file is refused
  * anywhere under eval/results, because provisional files never go on main. `rust_addon_sha256` is the digest the
@@ -23,7 +25,7 @@
  *
  *   bun eval/runner/engine-bench/eval-gates.ts [--out <eval-gates.json>] [--provisional]
  *     [--answers <lme-recall receipt or aggregate>] [--speed <speed receipt>] [--correctness <receipt>]
- *     [--surface-parity <receipt>] [--receipt <other receipt>]... [--engine-format-version <n>]
+ *     [--surface-parity <receipt>] [--suite <gate-suite file>]... [--receipt <other receipt>]... [--engine-format-version <n>]
  */
 
 import { createHash } from 'node:crypto';
@@ -41,17 +43,93 @@ export const PLANNED_N = 470;
 export const TARGET = 'linux-x64-glibc';
 export const FINAL_DIR = 'eval/results/engine-bench/eval-gates';
 const RELEASE_TAG = /^v\d+(\.\d+)+$/;
+export const GBRAIN_REMOTE = 'https://github.com/garrytan/gbrain.git';
+const GATE_SUITE_SCHEMA = 'engine-bench.gate-suite/1';
 const REPO_ROOT = resolve(import.meta.dir, '../../..');
 const ANSWERS_SCHEMA = 'engine-bench.lme-recall/3';
 const ARMS = ['keyword', 'vector', 'hybrid'] as const;
 const TS_ENGINES = ['pglite', 'postgres'] as const;
 
 export type GateVerdict = 'PASS' | 'FAIL' | 'NOT_RUN';
-export interface GateRow { id: string; benchmark: string; gating: boolean; verdict: GateVerdict; reason?: string; measured?: Record<string, unknown> }
-export interface Gate { verdict: GateVerdict; threshold: string; measured: unknown; rows: GateRow[]; losses: Array<{ id: string; reason: string }> }
+type Loss = { id: string; reason: string };
+export interface GateRow { id: string; benchmark: string; gating: boolean; verdict: GateVerdict; reason?: string; measured?: Record<string, unknown>; reading?: string; losses?: Loss[] }
+export interface Gate { verdict: GateVerdict; threshold: string; measured: unknown; rows: GateRow[]; losses: Array<Loss & { gating: boolean }> }
 
-const NOT_IN_ENGINE_BENCH = 'engine-bench does not run this benchmark';
-const notRun = (id: string, benchmark: string, gating = true, reason = NOT_IN_ENGINE_BENCH): GateRow => ({ id, benchmark, gating, verdict: 'NOT_RUN', reason });
+const NO_SUITE_FILE = 'no gate-suite file was given for this suite';
+const notRun = (id: string, benchmark: string, gating = true, reason = NO_SUITE_FILE): GateRow => ({ id, benchmark, gating, verdict: 'NOT_RUN', reason });
+
+/** The suites each gate names, beside E1's LongMemEval-S rows, in the plan's order; `gating: false` rows are reported. */
+export const SUITES: Record<'E1' | 'E2' | 'E3', Array<{ id: string; benchmark: string; gating: boolean }>> = {
+  E1: [
+    { id: 'cat13/ndcg5', benchmark: 'gbrain-evals Cat 13 nDCG@5 at least both values; reported, not gating, for Dec 1 (plan D24)', gating: false },
+    { id: 'cat13b/top1', benchmark: 'gbrain-evals Cat 13b top-1 at least both values', gating: true },
+    { id: 'cat10', benchmark: 'gbrain-evals Cat 10 133/133', gating: true },
+    { id: 'cat12', benchmark: 'gbrain-evals Cat 12 50/50', gating: true },
+    { id: 'cat7', benchmark: 'gbrain-evals Cat 7, reported', gating: false },
+  ],
+  E2: [
+    { id: 'brainbench/cats-1-2', benchmark: 'BrainBench Cats 1+2 (graph on), P@5 and R@5 at least both values', gating: true },
+    { id: 'brainbench/cat3', benchmark: 'BrainBench Cat 3, P@5 and R@5 at least both values', gating: true },
+    { id: 'brainbench/cat4', benchmark: 'BrainBench Cat 4 100%', gating: true },
+    { id: 'brainbench/type-accuracy', benchmark: 'type-accuracy, at least both values', gating: true },
+    { id: 'brainbench/cat24', benchmark: 'Cat 24 5/5', gating: true },
+    { id: 'memory-verb-conformance', benchmark: 'memory-verb conformance 24/24', gating: true },
+  ],
+  E3: [
+    { id: 'cat22', benchmark: 'Cat 22 zero leaks', gating: true },
+    { id: 'cat19', benchmark: 'Cat 19 within 0.5 points or equal counts', gating: true },
+    { id: 'cat27', benchmark: 'Cat 27 within 0.5 points or equal counts', gating: true },
+    { id: 'cat23', benchmark: 'Cat 23 within 0.5 points or equal counts (scored against PGLite pg_trgm behavior)', gating: true },
+  ],
+};
+
+interface SuiteFile {
+  schema: string; suite: string; gate: string; counted: boolean; verdict: GateVerdict; reason?: string | null; amendment_text?: string;
+  gbrain: unknown; losses: Loss[];
+  rows: Array<{ id: string; benchmark: string; verdict: GateVerdict; reason?: string | null; measured?: Record<string, unknown>; secondary?: unknown; divergences?: unknown }>;
+}
+
+/**
+ * One suite's rows: its gate row, decided by the suite's verdict, then the rows it reports beside it, which never gate.
+ * Each loss belongs to the row whose id it is or starts with (`<row>:...`, the longest such row), so it carries that
+ * row's gating; a FAIL row with no loss of its own lists one from its reason.
+ */
+function suiteRows(def: { id: string; benchmark: string; gating: boolean }, file: SuiteFile | undefined): GateRow[] {
+  if (!file) return [notRun(def.id, def.benchmark, def.gating)];
+  const owner = (id: string) => file.rows.map(r => r.id).filter(x => id === x || id.startsWith(x + ':')).sort((a, b) => b.length - a.length)[0] ?? def.id;
+  return file.rows.map((r): GateRow => {
+    const main = r.id === def.id;
+    const measured = { ...(r.measured ?? {}), ...(r.secondary ? { secondary: r.secondary } : {}), ...(r.divergences ? { divergences: r.divergences } : {}) };
+    const verdict = main ? file.verdict : r.verdict;
+    const own = file.losses.filter(l => owner(l.id) === r.id);
+    const losses = own.length || verdict !== 'FAIL' ? own : [{ id: r.id, reason: r.reason ?? (main ? file.reason : null) ?? 'failed' }];
+    return { id: r.id, benchmark: main ? def.benchmark : r.benchmark, gating: main && def.gating, verdict, ...(r.reason ? { reason: r.reason } : {}), measured, ...(main && file.amendment_text ? { reading: file.amendment_text } : {}), losses };
+  });
+}
+
+/** Reads each --suite file against SUITES: one file per suite, at the gate the plan puts it under, with its gate row. */
+export function readSuites(files: Array<{ path: string; json: any }>): Map<string, SuiteFile> {
+  const out = new Map<string, SuiteFile>();
+  for (const { path, json } of files) {
+    if (json?.schema !== GATE_SUITE_SCHEMA) throw new Error(`${path} is ${json?.schema ?? 'not a gate-suite file'}; --suite reads ${GATE_SUITE_SCHEMA}`);
+    const gate = (Object.keys(SUITES) as Array<keyof typeof SUITES>).find(g => SUITES[g].some(d => d.id === json.suite));
+    if (!gate) throw new Error(`${path}: suite ${json.suite} is not one the design plan's gates name`);
+    if (json.gate !== gate) throw new Error(`${path}: suite ${json.suite} says gate ${json.gate}; the plan puts it under ${gate}`);
+    if (out.has(json.suite)) throw new Error(`more than one --suite file for ${json.suite}`);
+    if (!Array.isArray(json.rows) || !json.rows.some((r: any) => r.id === json.suite)) throw new Error(`${path}: no row for its own suite ${json.suite}`);
+    if (!Array.isArray(json.losses)) throw new Error(`${path}: no losses list`);
+    const verdicts = ['PASS', 'FAIL', 'NOT_RUN'];
+    const bad = [json.verdict, ...json.rows.map((r: any) => r.verdict)].filter(v => !verdicts.includes(v));
+    if (bad.length) throw new Error(`${path}: verdict ${bad[0]} is not PASS, FAIL or NOT_RUN`);
+    const own = json.rows.find((r: any) => r.id === json.suite);
+    if (own.verdict !== json.verdict) throw new Error(`${path}: the suite's verdict ${json.verdict} and its own row's ${own.verdict} disagree`);
+    const taken = json.rows.find((r: any) => r.id !== json.suite && Object.values(SUITES).flat().some(d => d.id === r.id));
+    if (taken) throw new Error(`${path}: row ${taken.id} beside ${json.suite} is another suite's id`);
+    if (!json.gbrain && json.verdict !== 'NOT_RUN') throw new Error(`${path}: a ${json.verdict} suite must name the gbrain build it ran`);
+    out.set(json.suite, json);
+  }
+  return out;
+}
 
 export const THRESHOLDS = {
   E1: 'R@5 per adapter at least both the PGLite and the Postgres value, per-question top-5 differences listed; Cat 13 nDCG@5 and Cat 13b top-1 at least both values; Cat 10 133/133; Cat 12 50/50; Cat 7 reported. For ranked-search recall, "at least both" is D24: the 95% paired lower bound against each TypeScript engine is at least -0.018 (N = 470); identical top-k ids count as exact ties; the point estimate is reported and does not gate.',
@@ -83,7 +161,7 @@ export function answersRows(answers: { comparisons?: Comparison[] } | null): Gat
     const lower = d?.ci95 ? (rustIsB ? d.ci95[0] : 0 - d.ci95[1]) : null;
     const measured = {
       point_estimate: c.rust_point_estimate ?? null, lower_bound_95: lower, n: d?.n_pairs ?? 0, exact_ties: c.exact_ties ?? null,
-      rust_errors: c.rust_errors?.length ?? 0, top5_differences: c.differences?.length ?? null, secondary: c.rust_secondary ?? null,
+      rust_errors: c.rust_errors?.length ?? 0, top5_differences: c.differences?.length ?? null, top5_difference_list: c.differences ?? null, secondary: c.rust_secondary ?? null,
     };
     const errored = (c.rust_errors?.length ?? 0) > 0;
     const short = !errored && (d?.n_pairs ?? 0) < PLANNED_N;
@@ -98,37 +176,17 @@ export function answersRows(answers: { comparisons?: Comparison[] } | null): Gat
 function gate(threshold: string, rows: GateRow[], measured: unknown): Gate {
   const gating = rows.filter(r => r.gating);
   const verdict: GateVerdict = gating.some(r => r.verdict === 'FAIL') ? 'FAIL' : gating.length > 0 && gating.every(r => r.verdict === 'PASS') ? 'PASS' : 'NOT_RUN';
-  return { verdict, threshold, measured, rows, losses: rows.filter(r => r.verdict === 'FAIL').map(r => ({ id: r.id, reason: r.reason ?? 'failed' })) };
+  const losses = rows.flatMap(r => (r.losses ?? (r.verdict === 'FAIL' ? [{ id: r.id, reason: r.reason ?? 'failed' }] : [])).map(l => ({ ...l, gating: r.gating })));
+  return { verdict, threshold, measured, rows, losses };
 }
 
-export function evalGates(answers: { comparisons?: Comparison[] } | null): Record<'E1' | 'E2' | 'E3', Gate> {
+export function evalGates(answers: { comparisons?: Comparison[] } | null, suites: Map<string, SuiteFile> = new Map()): Record<'E1' | 'E2' | 'E3', Gate> {
   const lme = answersRows(answers);
-  const e1 = [
-    ...lme,
-    notRun('cat13/ndcg5', 'gbrain-evals Cat 13 nDCG@5 at least both values'),
-    notRun('cat13b/top1', 'gbrain-evals Cat 13b top-1 at least both values'),
-    notRun('cat10', 'gbrain-evals Cat 10 133/133'),
-    notRun('cat12', 'gbrain-evals Cat 12 50/50'),
-    notRun('cat7', 'gbrain-evals Cat 7, reported', false),
-  ];
-  const e2 = [
-    notRun('brainbench/cats-1-2', 'BrainBench Cats 1+2 (graph on), P@5 and R@5 at least both values'),
-    notRun('brainbench/cat3', 'BrainBench Cat 3, P@5 and R@5 at least both values'),
-    notRun('brainbench/cat4', 'BrainBench Cat 4 100%'),
-    notRun('brainbench/type-accuracy', 'type-accuracy, at least both values'),
-    notRun('brainbench/cat24', 'Cat 24 5/5'),
-    notRun('memory-verb-conformance', 'memory-verb conformance 24/24'),
-  ];
-  const e3 = [
-    notRun('cat22', 'Cat 22 zero leaks'),
-    notRun('cat19', 'Cat 19 within 0.5 points or equal counts'),
-    notRun('cat27', 'Cat 27 within 0.5 points or equal counts'),
-    notRun('cat23', 'Cat 23 within 0.5 points or equal counts (scored against PGLite pg_trgm behavior)'),
-  ];
+  const rows = (g: keyof typeof SUITES) => SUITES[g].flatMap(d => suiteRows(d, suites.get(d.id)));
   return {
-    E1: gate(THRESHOLDS.E1, e1, lme.filter(r => r.measured).map(r => ({ id: r.id, ...r.measured }))),
-    E2: gate(THRESHOLDS.E2, e2, null),
-    E3: gate(THRESHOLDS.E3, e3, null),
+    E1: gate(THRESHOLDS.E1, [...lme, ...rows('E1')], lme.filter(r => r.measured).map(r => ({ id: r.id, ...r.measured }))),
+    E2: gate(THRESHOLDS.E2, rows('E2'), null),
+    E3: gate(THRESHOLDS.E3, rows('E3'), null),
   };
 }
 
@@ -172,11 +230,21 @@ function identityOf(r: any): Identity {
   };
 }
 
-export interface EvalGatesInput { path: string; role: 'answers' | 'speed' | 'correctness' | 'surface-parity' | 'receipt'; json: any; sha256: string }
+export interface EvalGatesInput { path: string; role: 'answers' | 'speed' | 'correctness' | 'surface-parity' | 'suite' | 'receipt'; json: any; sha256: string }
 
-export function buildEvalGates(inputs: EvalGatesInput[], o: { provisional: boolean; evalsCommit: string; engineFormatVersion: string | null; generatedAt: string; ops: readonly string[] }) {
-  const stages = inputs.filter(i => i.role !== 'receipt');
-  if (stages.length === 0) throw new Error('eval-gates needs at least one stage receipt; --receipt files are links only');
+/** The commit a tag on garrytan/gbrain peels to (an annotated tag's target, else the tag itself), or null when the remote has no such tag. */
+export function peelReleaseTag(tag: string): string | null {
+  const r = spawnSync('git', ['ls-remote', GBRAIN_REMOTE, `refs/tags/${tag}`, `refs/tags/${tag}^{}`], { encoding: 'utf8', timeout: 60_000, env: { ...process.env, GIT_TERMINAL_PROMPT: '0' } });
+  if (r.status !== 0) throw new Error(`could not read gbrain's tags from ${GBRAIN_REMOTE}: ${(r.stderr || r.error?.message || '').trim()}`);
+  const lines = r.stdout.trim().split('\n').filter(Boolean).map(l => l.split('\t'));
+  return (lines.find(([, ref]) => ref === `refs/tags/${tag}^{}`) ?? lines.find(([, ref]) => ref === `refs/tags/${tag}`))?.[0] ?? null;
+}
+
+export function buildEvalGates(inputs: EvalGatesInput[], o: { provisional: boolean; evalsCommit: string; engineFormatVersion: string | null; generatedAt: string; ops: readonly string[]; peelTag?: (tag: string) => string | null }) {
+  const suites = readSuites(inputs.filter(i => i.role === 'suite'));
+  const unbuilt = inputs.filter(i => i.role === 'suite' && !i.json.gbrain);
+  const stages = inputs.filter(i => i.role !== 'receipt' && !unbuilt.includes(i));
+  if (stages.length === 0 && unbuilt.length === 0) throw new Error('eval-gates needs at least one stage receipt or gate-suite file; --receipt files are links only');
   for (const role of ['answers', 'speed'] as const) if (stages.filter(i => i.role === role).length > 1) throw new Error(`more than one --${role} receipt; pass the one ${role === 'answers' ? 'aggregate' : 'receipt'} the stage produced`);
   const answers = inputs.find(i => i.role === 'answers')?.json ?? null;
   if (answers && answers.schema !== ANSWERS_SCHEMA) throw new Error(`the answers receipt is ${answers.schema}; eval-gates reads ${ANSWERS_SCHEMA}, the schema that applies the D24 rule`);
@@ -193,7 +261,7 @@ export function buildEvalGates(inputs: EvalGatesInput[], o: { provisional: boole
   if (!o.provisional) {
     if (!commit) throw new Error('no stage receipt names its gbrain commit; a counted eval-gates file needs one');
     if (!addon) throw new Error('no stage receipt records the Rust addon digest; a counted eval-gates file needs one');
-    const dev = ids.filter(x => x.counted !== true);
+    const dev = [...ids, ...unbuilt.map(i => ({ path: i.path, counted: i.json.counted }))].filter(x => x.counted !== true);
     if (dev.length) throw new Error(`not counted: ${dev.map(x => x.path).join(', ')}; pass --provisional for development receipts`);
     const blank = ids.filter(x => !x.commit || !x.addon || x.target !== TARGET);
     if (blank.length) throw new Error(`every counted stage receipt must name its own gbrain commit and Rust addon digest for ${TARGET}; missing in ${blank.map(x => x.path).join(', ')}`);
@@ -201,8 +269,16 @@ export function buildEvalGates(inputs: EvalGatesInput[], o: { provisional: boole
     if (dirty.length) throw new Error(`ran from a gbrain checkout with uncommitted changes: ${dirty.map(x => x.path).join(', ')}`);
     if (answers && answers.dataset?.matches_published_sha256 !== true) throw new Error('the answers receipt does not record the published LongMemEval-S dataset digest; a counted E1 row needs it');
   }
-  const tag = ids.map(x => x.ref).find(r => r && RELEASE_TAG.test(r)) ?? null;
+  const tags = [...new Set(ids.map(x => x.ref).filter((r): r is string => !!r && RELEASE_TAG.test(r)))];
+  if (tags.length > 1) throw new Error(`stage receipts name more than one gbrain release tag: ${tags.join(', ')}`);
+  const tag = tags[0] ?? null;
   if (!o.provisional && !tag) throw new Error(`no stage receipt ran a gbrain release tag (vX.Y.Z, no -rc; saw ${[...new Set(ids.map(x => x.ref))].join(', ')}); a release candidate or branch build is --provisional`);
+  if (!o.provisional) {
+    if (!o.peelTag) throw new Error('a FINAL file checks its release tag against garrytan/gbrain; no tag check was given');
+    const peeled = o.peelTag(tag!);
+    if (!peeled) throw new Error(`${tag} is not a tag on garrytan/gbrain; a FINAL file needs a published release tag`);
+    if (peeled !== commit) throw new Error(`${tag} on garrytan/gbrain is commit ${peeled}, but the receipts ran ${commit}`);
+  }
   return {
     schema_version: EVAL_GATES_SCHEMA_VERSION,
     status: o.provisional ? 'PROVISIONAL' as const : 'FINAL' as const,
@@ -216,7 +292,7 @@ export function buildEvalGates(inputs: EvalGatesInput[], o: { provisional: boole
     evals_commit: o.evalsCommit,
     generated_at: o.generatedAt,
     design_source: DESIGN_SOURCE,
-    gates: evalGates(answers),
+    gates: evalGates(answers, suites),
     swap_readiness_criterion_8: criterion8(inputs.find(i => i.role === 'speed')?.json ?? null, o.ops),
     receipt_links: inputs.map(i => ({ role: i.role, path: i.path, sha256: i.sha256 })),
   };
@@ -238,11 +314,23 @@ export function outputPath(file: { status: 'PROVISIONAL' | 'FINAL'; gbrain_tag?:
   return abs;
 }
 
+/** Writes a FINAL file in one step that never replaces an existing file, and leaves no temporary file behind. */
+export function writeFinal(path: string, file: unknown): void {
+  mkdirSync(dirname(path), { recursive: true });
+  const tmp = `${path}.${process.pid}.tmp`;
+  try {
+    writeScrubbedJson(tmp, file);
+    linkSync(tmp, path);
+  } finally {
+    if (existsSync(tmp)) unlinkSync(tmp);
+  }
+}
+
 export function main(argv: string[] = process.argv.slice(2)): number {
   const values = (name: string) => argv.flatMap((a, i) => (a === name && argv[i + 1] ? [argv[i + 1]] : []));
   const out = values('--out')[0];
-  if (argv.length === 0) { process.stderr.write('usage: bun eval/runner/engine-bench/eval-gates.ts [--out <file>] [--provisional] [--answers f] [--speed f] [--correctness f] [--surface-parity f] [--receipt f]... [--engine-format-version n]\n'); return 2; }
-  const roles = ['answers', 'speed', 'correctness', 'surface-parity', 'receipt'] as const;
+  if (argv.length === 0) { process.stderr.write('usage: bun eval/runner/engine-bench/eval-gates.ts [--out <file>] [--provisional] [--answers f] [--speed f] [--correctness f] [--surface-parity f] [--suite f]... [--receipt f]... [--engine-format-version n]\n'); return 2; }
+  const roles = ['answers', 'speed', 'correctness', 'surface-parity', 'suite', 'receipt'] as const;
   const inputs: EvalGatesInput[] = roles.flatMap(role => values(`--${role}`).map(p => {
     const bytes = readFileSync(p);
     const abs = resolve(p);
@@ -250,14 +338,10 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     return { role, path: rel.startsWith('..') ? abs : rel, json: JSON.parse(bytes.toString('utf8')), sha256: createHash('sha256').update(bytes).digest('hex') };
   }));
   const evalsCommit = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: REPO_ROOT, encoding: 'utf8' }).stdout.trim();
-  const file = buildEvalGates(inputs, { provisional: argv.includes('--provisional'), evalsCommit, engineFormatVersion: values('--engine-format-version')[0] ?? null, generatedAt: new Date().toISOString(), ops: PAIRED_OPS });
+  const file = buildEvalGates(inputs, { provisional: argv.includes('--provisional'), evalsCommit, engineFormatVersion: values('--engine-format-version')[0] ?? null, generatedAt: new Date().toISOString(), ops: PAIRED_OPS, peelTag: peelReleaseTag });
   const path = outputPath(file, out);
-  if (file.status === 'FINAL') {
-    mkdirSync(dirname(path), { recursive: true });
-    const tmp = `${path}.${process.pid}.tmp`;
-    writeScrubbedJson(tmp, file);
-    try { linkSync(tmp, path); } finally { unlinkSync(tmp); }
-  } else writeScrubbedJson(path, file);
+  if (file.status === 'FINAL') writeFinal(path, file);
+  else writeScrubbedJson(path, file);
   process.stdout.write(`E1 ${file.gates.E1.verdict}, E2 ${file.gates.E2.verdict}, E3 ${file.gates.E3.verdict}; criterion 8 ${file.swap_readiness_criterion_8.verdict}\n`);
   return 0;
 }

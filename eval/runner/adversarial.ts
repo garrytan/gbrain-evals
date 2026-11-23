@@ -9,14 +9,24 @@
  * crash or silent corruption is a scored SUT miss, and the verdict is pass
  * only when every case is clean and extraction produced link candidates.
  *
- * Usage: bun run eval/runner/adversarial.ts [--json]
+ * Usage: bun run eval/runner/adversarial.ts [--json] [--gbrain <checkout>[@ref]] [--pg-url <admin url>]
+ *
+ * Engine (gbrain RUST_ENGINE.md gate E1): GBRAIN_EVAL_ENGINE=pglite|postgres|rust opens the brain through
+ * eval-engine.ts's openGateEngine, and every gbrain module comes from the build --gbrain names. Unset, it is the pinned
+ * gbrain's in-memory PGLite, as before.
  */
 
-import { PGLiteEngine } from 'gbrain/pglite-engine';
-import { extractPageLinks, parseTimelineEntries, type SlugResolver } from 'gbrain/link-extraction';
+import type { BrainEngine } from 'gbrain/engine';
+import type { SlugResolver } from 'gbrain/link-extraction';
+import type * as LinkExtraction from 'gbrain/link-extraction';
 import type { PageInput } from 'gbrain/types';
+import { importGbrain } from './gbrain-under-test.ts';
+import {
+  EvalEngineUnavailable, gateReceiptPath, gateRunnerContext, gateRunnerReceiptFields, openGateEngine, preflightGateEngine, refuseEvalEngine,
+  type GateRunnerContext,
+} from './eval-engine.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
-import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, receiptPath, writeReceipt, type Receipt, noModelSpend } from './receipt.ts';
+import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, writeReceipt, type Receipt, noModelSpend } from './receipt.ts';
 import { gbrainPin, gbrainVersion } from './gbrain-version.ts';
 
 // Resolver that accepts every explicit slug-shaped target verbatim — Cat
@@ -39,8 +49,8 @@ interface AdversarialCase {
   name: string;
   slug: string;
   page: PageInput;
-  /** Optional invariants to check after putPage. */
-  expect?: (engine: PGLiteEngine) => Promise<{ pass: boolean; note?: string }>;
+  /** Optional invariants to check after putPage, given the build's extractPageLinks. */
+  expect?: (extractPageLinks: typeof LinkExtraction.extractPageLinks) => Promise<{ pass: boolean; note?: string }>;
 }
 
 const ADVERSARIAL_CASES: AdversarialCase[] = [
@@ -122,7 +132,7 @@ const ADVERSARIAL_CASES: AdversarialCase[] = [
     type: 'concept', title: 'Repeat',
     compiled_truth: Array.from({ length: 50 }, () => '[Same](people/same-target)').join(' '),
     timeline: '',
-  }, expect: async () => {
+  }, expect: async (extractPageLinks) => {
     const res = await extractPageLinks(
       'concepts/repeat-1',
       Array.from({ length: 50 }, () => '[Same](people/same-target)').join(' '),
@@ -166,7 +176,7 @@ export async function tryOp<T>(
   }
 }
 
-export function buildAdversarialReceipt(results: CaseResult[], totalLinkCandidates: number, startedAt: string): Receipt {
+export function buildAdversarialReceipt(results: CaseResult[], totalLinkCandidates: number, startedAt: string, ctx?: GateRunnerContext): Receipt {
   const acc = new ProbeAccounting(results.length);
   for (const r of results) {
     const problems = [...r.crashes.map(c => `crash: ${c}`), ...r.silent_corruption.map(c => `silent: ${c}`)];
@@ -188,9 +198,10 @@ export function buildAdversarialReceipt(results: CaseResult[], totalLinkCandidat
     completion_rate: a.completion_rate,
     errors: a.errors,
     publishable: a.publishable && totalLinkCandidates > 0,
-    gbrain_version: gbrainVersion(),
+    gbrain_version: ctx?.gut.overlay ? ctx.gut.version : gbrainVersion(),
     gbrain_pin: gbrainPin(),
-    resolved_config: { engine: 'pglite-in-memory', cases: results.length },
+    resolved_config: { engine: ctx?.requested ?? 'pglite-in-memory', cases: results.length },
+    ...(ctx ? gateRunnerReceiptFields(ctx) : {}),
     started_at: startedAt,
     finished_at: new Date().toISOString(),
     data: { results, total_link_candidates: totalLinkCandidates },
@@ -205,9 +216,14 @@ async function main() {
   log('# BrainBench Category 10: Robustness / Adversarial\n');
   log(`Generated: ${new Date().toISOString().slice(0, 19)}`);
 
-  const engine = new PGLiteEngine();
-  await engine.connect({});
-  await engine.initSchema();
+  const ctx = gateRunnerContext(process.argv);
+  try { await preflightGateEngine(ctx); } catch (e) {
+    if (e instanceof EvalEngineUnavailable) refuseEvalEngine(e, 'Cat 10 adversarial');
+    throw e;
+  }
+  const { extractPageLinks, parseTimelineEntries } = await importGbrain<typeof LinkExtraction>(ctx.gut, 'src/core/link-extraction.ts');
+  const scratch = await openGateEngine(ctx, 'adversarial');
+  const engine: BrainEngine = scratch.engine;
 
   const targetPages = [
     { slug: 'people/real-target', page: { type: 'person' as const, title: 'Real', compiled_truth: 'A real person.', timeline: '' } },
@@ -285,7 +301,7 @@ async function main() {
     // 7. Custom expect
     if (c.expect) {
       result.ops_attempted++;
-      const expectResult = await tryOp('expect', () => c.expect!(engine));
+      const expectResult = await tryOp('expect', () => c.expect!(extractPageLinks));
       if (expectResult.ok) {
         result.ops_succeeded++;
         if (!expectResult.result.pass) {
@@ -303,7 +319,7 @@ async function main() {
     results.push(result);
   }
 
-  await engine.disconnect();
+  await scratch.close();
 
   const totalOps = results.reduce((s, r) => s + r.ops_attempted, 0);
   const totalSucc = results.reduce((s, r) => s + r.ops_succeeded, 0);
@@ -318,7 +334,7 @@ async function main() {
   log(`Silent corruption: ${totalSilent}`);
   log(`Link candidates extracted: ${totalLinkCandidates}`);
 
-  writeReceipt(receiptPath('adversarial'), buildAdversarialReceipt(results, totalLinkCandidates, startedAt));
+  writeReceipt(gateReceiptPath(ctx, 'adversarial'), buildAdversarialReceipt(results, totalLinkCandidates, startedAt, ctx));
 
   if (json) {
     process.stdout.write(JSON.stringify({ results, summary: { totalOps, totalSucc, totalCrashes, totalSilent, totalLinkCandidates } }, null, 2) + '\n');

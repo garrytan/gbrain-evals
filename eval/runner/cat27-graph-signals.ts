@@ -54,25 +54,31 @@
  *   4. Emit shared receipt + per-family scorecard.
  *
  * Run (no API keys needed):
- *   bun eval/runner/cat27-graph-signals.ts
+ *   bun eval/runner/cat27-graph-signals.ts [--gbrain <checkout>[@ref]] [--pg-url <admin url>]
  *   CAT27_PROBES=adjacency-hub-acme-ai bun eval/runner/cat27-graph-signals.ts
+ *
+ * Engine (gbrain RUST_ENGINE.md gate E3): GBRAIN_EVAL_ENGINE=pglite|postgres|rust opens each probe brain through
+ * eval-engine.ts's openGateEngine, and every gbrain module comes from the build --gbrain names. Sources and link rows
+ * go through gbrain's typed addSource and addLink on every engine. Unset, it is the pinned gbrain's in-memory PGLite,
+ * as before.
  */
 
 import { writeFileSync, mkdirSync } from 'fs';
-import { join } from 'path';
+import { dirname, join } from 'path';
 import { tmpdir } from 'os';
-import { PGLiteEngine } from 'gbrain/pglite-engine';
-import { importFromContentEmbedded } from './import-embedded.ts';
-import { extractEntityRefs } from 'gbrain/link-extraction';
-import { hybridSearch } from 'gbrain/search/hybrid';
+import type * as ImportFile from 'gbrain/import-file';
+import type * as LinkExtraction from 'gbrain/link-extraction';
+import type * as Hybrid from 'gbrain/search/hybrid';
+import type * as Gateway from 'gbrain/ai/gateway';
+import { assertEmbedded } from './import-embedded.ts';
+import { importGbrain } from './gbrain-under-test.ts';
 import {
-  configureGateway,
-  getEmbeddingDimensions,
-  __setEmbedTransportForTests,
-} from 'gbrain/ai/gateway';
+  EvalEngineUnavailable, gateReceiptPath, gateRunnerContext, gateRunnerReceiptFields, openGateEngine, preflightGateEngine, refuseEvalEngine,
+  type GateRunnerContext,
+} from './eval-engine.ts';
 import { uniqueInOrder, ndcgAtK } from './metrics.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
-import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt, noModelSpend } from './receipt.ts';
+import { writeReceipt, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt, noModelSpend } from './receipt.ts';
 import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
 
 export const CAT27_CATEGORY = 'cat27-graph-signals';
@@ -123,13 +129,34 @@ export function hashEmbedVector(text: string, dim: number): number[] {
   return v.map(x => x / norm);
 }
 
+/** The gbrain modules Cat 27 runs, loaded from the build under test. */
+export interface Cat27Gbrain {
+  importFromContent: typeof ImportFile.importFromContent;
+  extractEntityRefs: typeof LinkExtraction.extractEntityRefs;
+  hybridSearch: typeof Hybrid.hybridSearch;
+  gateway: typeof Gateway;
+  addSource: (engine: any, opts: { id: string; name?: string; federated?: boolean | null }) => Promise<unknown>;
+}
+
+export async function loadCat27Gbrain(ctx: GateRunnerContext): Promise<Cat27Gbrain> {
+  const [{ importFromContent }, { extractEntityRefs }, { hybridSearch }, gateway, { addSource }] = await Promise.all([
+    importGbrain<typeof ImportFile>(ctx.gut, 'src/core/import-file.ts'),
+    importGbrain<typeof LinkExtraction>(ctx.gut, 'src/core/link-extraction.ts'),
+    importGbrain<typeof Hybrid>(ctx.gut, 'src/core/search/hybrid.ts'),
+    importGbrain<typeof Gateway>(ctx.gut, 'src/core/ai/gateway.ts'),
+    importGbrain<Pick<Cat27Gbrain, 'addSource'>>(ctx.gut, 'src/core/sources-ops.ts'),
+  ]);
+  return { importFromContent, extractEntityRefs, hybridSearch, gateway, addSource };
+}
+
 /**
- * Install the deterministic hash-embed transport + dummy provider key.
- * Model construction requires a non-empty OPENAI_API_KEY even when the
- * transport is stubbed, so we set a dummy when the env has none — no real
- * key is ever required or used.
+ * Install the deterministic hash-embed transport + dummy provider key on the
+ * build's gateway. Model construction requires a non-empty OPENAI_API_KEY
+ * even when the transport is stubbed, so we set a dummy when the env has
+ * none — no real key is ever required or used.
  */
-export function installStubEmbed(failOn?: (text: string) => boolean): void {
+export function installStubEmbed(gateway: typeof Gateway, failOn?: (text: string) => boolean): void {
+  const { configureGateway, getEmbeddingDimensions, __setEmbedTransportForTests } = gateway;
   if (!process.env.OPENAI_API_KEY) process.env.OPENAI_API_KEY = 'dummy-stub-embed';
   configureGateway({
     embedding_model: 'openai:text-embedding-3-large',
@@ -297,18 +324,15 @@ export interface ProbeResult {
   signals_changed_ranking?: boolean;
 }
 
-async function ensureSource(engine: any, source_id: string): Promise<void> {
+async function ensureSource(gb: Cat27Gbrain, engine: any, source_id: string): Promise<void> {
   if (source_id === 'default') return;
-  // Sources schema: id TEXT PK, name TEXT, config JSONB. The 'default' row
-  // is seeded by initSchema; everything else we register here so per-source
-  // page writes don't FK-fail on `pages.source_id`.
-  await engine.executeRaw(
-    `INSERT INTO sources (id, name, config) VALUES ($1, $1, '{"federated": true}'::jsonb) ON CONFLICT (id) DO NOTHING`,
-    [source_id],
-  );
+  // The 'default' source is seeded with the schema; everything else we
+  // register here, federated, so per-source page writes don't FK-fail on
+  // `pages.source_id` and unscoped search spans every source.
+  await gb.addSource(engine, { id: source_id, name: source_id, federated: true });
 }
 
-async function seedBrain(engine: any, probe: Probe, log: (s: string) => void): Promise<void> {
+async function seedBrain(gb: Cat27Gbrain, engine: any, probe: Probe, log: (s: string) => void): Promise<void> {
   await engine.setConfig('auto_link', 'true');
   // WS5: pin search mode + reranker + confounding knobs BEFORE ingest.
   for (const [key, value] of Object.entries(PINNED_CONFIG)) {
@@ -317,55 +341,40 @@ async function seedBrain(engine: any, probe: Probe, log: (s: string) => void): P
 
   // Pre-register every non-default source so per-source page writes don't FK-fail.
   const sources = new Set(probe.pages.map(p => p.source_id));
-  for (const s of sources) await ensureSource(engine, s);
+  for (const s of sources) await ensureSource(gb, engine, s);
 
   // Seed pages. importFromContent populates chunks + embeddings (through the
   // stubbed transport). Session-demote uses `sessionPrefix(slug)` to detect
   // chat sessions from slug shape (`chat/2026-04-15-alpha/...`).
   for (const p of probe.pages) {
-    await importFromContentEmbedded(engine, p.slug, `${p.body}\n`, { sourceId: p.source_id });
+    assertEmbedded(await gb.importFromContent(engine, p.slug, `${p.body}\n`, { sourceId: p.source_id }), p.slug);
   }
 
   // Populate the links graph directly from `[[wiki/...]]` refs.
   // importFromContent does NOT fire auto-link (only the put_page op handler
-  // does); we insert the rows applyGraphSignals' SQL reads.
+  // does); we write the rows applyGraphSignals reads through addLink. A ref
+  // resolves to the probe page with that slug, in whichever source holds it.
   for (const p of probe.pages) {
-    const refs = extractEntityRefs(p.body);
-    if (refs.length === 0) continue;
-    const fromRows = await engine.executeRaw(
-      `SELECT id FROM pages WHERE slug = $1 AND source_id = $2 LIMIT 1`,
-      [p.slug, p.source_id],
-    ) as any[];
-    if (!fromRows[0]) continue;
-    const fromId = fromRows[0].id;
-    for (const ref of refs) {
-      const toRows = await engine.executeRaw(
-        `SELECT id FROM pages WHERE slug = $1 LIMIT 1`,
-        [ref.slug],
-      ) as any[];
-      if (!toRows[0]) continue;
-      const toId = toRows[0].id;
-      if (toId === fromId) continue;
-      await engine.executeRaw(
-        `INSERT INTO links (from_page_id, to_page_id, link_type, link_source) VALUES ($1, $2, 'mentions', 'markdown') ON CONFLICT DO NOTHING`,
-        [fromId, toId],
-      );
+    for (const ref of gb.extractEntityRefs(p.body)) {
+      const to = probe.pages.find(q => q.slug === ref.slug);
+      if (!to || (to.slug === p.slug && to.source_id === p.source_id)) continue;
+      await engine.addLink(p.slug, to.slug, '', 'mentions', 'markdown', undefined, undefined, { fromSourceId: p.source_id, toSourceId: to.source_id });
     }
   }
 
-  const linkCount = await engine.executeRaw(`SELECT COUNT(*)::int AS n FROM links`, []) as any[];
-  const pageCount = await engine.executeRaw(`SELECT COUNT(*)::int AS n FROM pages`, []) as any[];
-  log(`[cat27]   seeded ${pageCount[0]?.n ?? 0} pages, ${linkCount[0]?.n ?? 0} links\n`);
+  const stats = await engine.getStats();
+  log(`[cat27]   seeded ${stats.page_count} pages, ${stats.link_count} links\n`);
 }
 
-async function runProbe(probe: Probe, log: (s: string) => void): Promise<ProbeResult> {
+async function runProbe(ctx: GateRunnerContext, gb: Cat27Gbrain, probe: Probe, log: (s: string) => void): Promise<ProbeResult> {
+  const { hybridSearch } = gb;
   const origLog = console.log;
   console.log = () => {}; // initSchema/import are chatty
-  const engine: any = new PGLiteEngine();
+  let scratch: Awaited<ReturnType<typeof openGateEngine>> | undefined;
   try {
-    await engine.connect({});
-    await engine.initSchema();
-    await seedBrain(engine, probe, log);
+    scratch = await openGateEngine(ctx, 'cat27');
+    const engine: any = scratch.engine;
+    await seedBrain(gb, engine, probe, log);
 
     // BASELINE: graph_signals off
     await engine.setConfig('search.graph_signals', 'false');
@@ -403,7 +412,7 @@ async function runProbe(probe: Probe, log: (s: string) => void): Promise<ProbeRe
     console.log = origLog;
     // Disconnect even when seed/search throws — a leaked in-process PGLite
     // holds its whole in-memory database for the rest of the run (cats26-29-06).
-    try { await engine.disconnect(); } catch { /* already dead */ }
+    try { await scratch?.close(); } catch { /* already dead */ }
   }
 }
 
@@ -496,6 +505,8 @@ export function computeVerdict(agg: Cat27Aggregate, sutErrors: number, nExpected
 // ─── Entry point ───────────────────────────────────────────────────────
 
 export interface Cat27Options {
+  /** gbrain build and engine (gateRunnerContext). Defaults to the pinned gbrain's in-memory PGLite. */
+  ctx?: GateRunnerContext;
   probes?: Probe[];
   reportsDir?: string;
   quiet?: boolean;
@@ -513,8 +524,9 @@ export interface Cat27RunResult {
 export async function runCat27(options: Cat27Options = {}): Promise<Cat27RunResult> {
   const startedAt = new Date().toISOString();
   const log = options.quiet ? (_: string) => {} : (s: string) => process.stderr.write(s);
+  const ctx = options.ctx ?? gateRunnerContext([], {});
   const reportsDir = options.reportsDir ?? join(process.cwd(), 'eval/reports');
-  const receiptFile = receiptPath(CAT27_CATEGORY, reportsDir);
+  const receiptFile = gateReceiptPath(ctx, CAT27_CATEGORY, reportsDir);
 
   // Isolate GBRAIN_HOME so a user's file-plane config can't override the
   // gateway embedding setup.
@@ -522,7 +534,8 @@ export async function runCat27(options: Cat27Options = {}): Promise<Cat27RunResu
   mkdirSync(home, { recursive: true });
   process.env.GBRAIN_HOME = home;
 
-  installStubEmbed(options.stubFailOn);
+  const gb = await loadCat27Gbrain(ctx);
+  installStubEmbed(gb.gateway, options.stubFailOn);
 
   const onlyId = process.env.CAT27_PROBES;
   const subset = options.probes ?? (onlyId ? PROBES.filter(p => p.id === onlyId) : PROBES);
@@ -536,7 +549,7 @@ export async function runCat27(options: Cat27Options = {}): Promise<Cat27RunResu
     for (const probe of subset) {
       log(`[cat27] running ${probe.id} (${probe.family})...\n`);
       try {
-        const r = await runProbe(probe, log);
+        const r = await runProbe(ctx, gb, probe, log);
         results.push(r);
         acc.score(probe.id, r.ndcg10_with_signals);
         const arrow = r.ndcg_delta > 0 ? '↑' : r.ndcg_delta < 0 ? '↓' : '·';
@@ -552,7 +565,7 @@ export async function runCat27(options: Cat27Options = {}): Promise<Cat27RunResu
       }
     }
   } finally {
-    __setEmbedTransportForTests(null);
+    gb.gateway.__setEmbedTransportForTests(null);
   }
 
   const agg = aggregate(results);
@@ -573,8 +586,9 @@ export async function runCat27(options: Cat27Options = {}): Promise<Cat27RunResu
     errors: summary.errors,
     // Always a hash-embedding run: a regression gate, never a publishable result.
     publishable: false,
-    gbrain_version: gbrainVersionResolved(),
+    gbrain_version: ctx.gut.overlay ? ctx.gut.version : gbrainVersionResolved(),
     gbrain_pin: gbrainPin(),
+    ...gateRunnerReceiptFields(ctx),
     resolved_config: {
       ...PINNED_CONFIG,
       embed_transport: 'stubbed-hash',
@@ -591,7 +605,7 @@ export async function runCat27(options: Cat27Options = {}): Promise<Cat27RunResu
   writeReceipt(receiptFile, receipt);
 
   // Dated human-readable scorecard (legacy location, same payload).
-  const outDir = join(reportsDir, CAT27_CATEGORY);
+  const outDir = dirname(receiptFile);
   mkdirSync(outDir, { recursive: true });
   const outFile = join(outDir, `${new Date().toISOString().slice(0, 10)}-cat27.json`);
   writeFileSync(outFile, JSON.stringify(receipt, null, 2) + '\n', 'utf8');
@@ -613,14 +627,20 @@ export async function runCat27(options: Cat27Options = {}): Promise<Cat27RunResu
 }
 
 if (import.meta.main) {
+  let ctx: GateRunnerContext | undefined;
   try {
-    const result = await runCat27();
+    ctx = gateRunnerContext(process.argv);
+    try { await preflightGateEngine(ctx); } catch (e) {
+      if (e instanceof EvalEngineUnavailable) refuseEvalEngine(e, 'Cat 27 graph signals');
+      throw e;
+    }
+    const result = await runCat27({ ctx });
     process.exit(result.exitCode);
   } catch (e: any) {
     // Crash backstop: write an error receipt so the aggregator never
     // mistakes a dead run for a missing one.
     try {
-      writeReceipt(receiptPath(CAT27_CATEGORY), {
+      writeReceipt(gateReceiptPath(ctx ?? { requested: null }, CAT27_CATEGORY), {
         schema_version: RECEIPT_SCHEMA_VERSION,
         benchmark_version: BENCHMARK_VERSION,
         category: CAT27_CATEGORY,
@@ -630,8 +650,9 @@ if (import.meta.main) {
         completion_rate: 0,
         errors: [{ probe_id: 'preflight', origin: 'harness', message: String(e?.message ?? e).slice(0, 500) }],
         publishable: false,
-        gbrain_version: gbrainVersionResolved(),
+        gbrain_version: ctx?.gut.overlay ? ctx.gut.version : gbrainVersionResolved(),
         gbrain_pin: gbrainPin(),
+        ...(ctx ? gateRunnerReceiptFields(ctx) : {}),
         started_at: new Date().toISOString(),
         finished_at: new Date().toISOString(),
       });
