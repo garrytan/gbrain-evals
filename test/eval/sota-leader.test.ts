@@ -15,7 +15,7 @@ import type { Outcome } from '../../eval/runner/memory-qa/outcomes.ts';
 import { answerRecord, rawSha256, type AnswerRecord, type JudgmentRecord } from '../../eval/runner/memory-qa/records.ts';
 import { judgeFor } from '../../eval/runner/nightly/adapters.ts';
 import { qaPromptVersion } from '../../eval/runner/nightly/judge-cache.ts';
-import { frontierInstrumentId, paidGuard, readerMaxTokens, requiredJudges, runConfigText } from '../../eval/runner/q1/cell.ts';
+import { frontierInstrumentId, paidGuard, readerMaxTokens, requiredJudges, runCell, runConfigText } from '../../eval/runner/q1/cell.ts';
 import { ALL_SETS, buildManifest, definitionProblems, estimateCell, frontierJudgeOf, frontierJudgesFor, loadManifest, SOTA_DEV_IDS, SOTA_LEADER_BEAM_CONVERSATIONS, SOTA_LEADER_BEAM_IDS, SOTA_LEADER_LME_IDS, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
 import type { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { CACHE_SCHEMA, freshness, OutcomeCache, staleMessage, type Row } from '../../eval/runner/sota/cache.ts';
@@ -337,5 +337,14 @@ describe('no canonical instrument judge in the SOTA loop', () => {
       expect(JSON.stringify(c)).not.toMatch(banned);
       expect(definitionProblems(c, kinds)).toEqual([]);
     }
+  });
+
+  test('a run without the per-reader judge, or a replicated reader, is refused, since nothing else would grade those answers', async () => {
+    const lme = cellOf(LME_CELL);
+    const out = mkdtempSync(join(tmpdir(), 'sota-no-frontier-'));
+    try { await expect(runCell(lme, { out, frontier: false })).rejects.toThrow(/--no-frontier .* would leave every answer ungraded/); }
+    finally { rmSync(out, { recursive: true, force: true }); }
+    const replicated = { ...lme, arms: lme.arms.map((a, i) => i === 0 ? { ...a, reader_replicates: { [a.readers[0]!]: 2 } } : a) };
+    expect(definitionProblems(replicated, kinds).join(' ')).toContain('one replicate each');
   });
 });

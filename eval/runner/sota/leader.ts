@@ -183,7 +183,7 @@ export async function runLeader(o: RunOptions): Promise<{ bought: number; fresh:
   const def = leaderRunCell(o.benchmark, o.reader, todo);
   const estimateUsd = paidGuard(o.argv, def, todo.length);
   startPaidRun(`sota-leader:${def.id}`, { ...budgetOptionsFrom(o.argv), estimateUsd });
-  const out = join(o.work, `${def.arms[0]!.cell_id}-${sha256(JSON.stringify(spec) + todo.join('\n')).slice(0, 12)}`);
+  const out = join(o.work, `${def.arms[0]!.cell_id}-${sha256(JSON.stringify(spec) + JSON.stringify(def) + todo.join('\n')).slice(0, 12)}`);
   mkdirSync(o.work, { recursive: true });
   await runCell(def, { out, arms: [def.arms[0]!.id], frontier: true });
   const { rows, unknown } = leaderRows(out, def.id);

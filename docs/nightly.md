@@ -220,9 +220,9 @@ of answers bought once, in a paid run of its own, and never calls a model.
   rows for the nightly's readers (Claude Opus 5.5, GPT-6.2 Sol and particle-1); GPT-6.1 Sol's oracle rows stay only for
   the answerability files, which A4's BEAM answers and the LongMemEval export froze on it. Oracle and leader answers are
   judged by the nightly's own QA judge for that reader (GPT-6.2 Astra for Claude and particle-1, Claude Opus 5.5 for
-  GPT), so a cache row and the nightly row it explains share a judge. That judge is each answer's only grade: the leader
-  and dev-test cells skip the benchmark's canonical judge (GPT-4o on LongMemEval, GPT-4.1 mini on BEAM-1M), so no
-  suspended or older model grades them. `leader.ts import` reuses the dev test's own
+  GPT), so a cache row and the nightly row it explains share a judge. The leader and dev-test cells give each answer
+  only its per-reader judge and skip the benchmark's canonical judge (GPT-4o on LongMemEval, GPT-4.1 mini on BEAM-1M),
+  so no suspended or older model grades them. `leader.ts import` reuses the dev test's own
   grep-agent answers where that judge graded them. The 2026-11-12 dev test's scored Claude answers were graded by
   GPT-6.1 Sol, so import leaves each unknown and names that judge; its GPT reader was GPT-6.1 Sol, which the nightly no
   longer uses, so those answers are skipped. Only its answers that ran out of turns or context import, as failures, and
