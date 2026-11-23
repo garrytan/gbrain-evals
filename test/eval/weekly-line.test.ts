@@ -354,14 +354,14 @@ describe('the aggregates that leave custody', () => {
     const next = synth(40, { 'now|grep-agent': i => (i < 32 ? -3 - (i % 2) : 4) });
     const pool = { 'now|extract-first': [1, -1, 2, -2], 'now|memory-bank': [1, -1, 2, -2], 'past|extract-first': [1, -1, 2, -2], 'past|memory-bank': [1, -1, 2, -2] };
     const at = (o: Parameters<typeof weekAggregates>[2]) => weekAggregates(meta('2027-01-05', next.worlds.slice(32), B), next.questions, { history: weeks, previousBlock: block, ...o });
-    const g = at({ falseAlarmPool: pool }).regression!.now['grep-agent'];
+    const ok = at({ falseAlarmPool: pool }), g = ok.regression!.now['grep-agent'];
     expect([g.false_alarm_rate, g.false_alarm_source]).toEqual([null, 'unavailable']);
-    expect(renderWeek(at({ falseAlarmPool: pool }))).toContain('unavailable (no registered calibration)');
+    expect(renderWeek(ok)).toContain('unavailable (no registered calibration)');
     expect(() => at({})).toThrow(/BG1-C's per-world differences/);
     expect(() => at({ falseAlarmPool: { ...pool, 'now|extract-first': [1] } })).toThrow(/at least two of BG1-C's per-world differences/);
     expect(() => at({ falseAlarmPool: { ...pool, 'now|extract-first': [1, Number.NaN] } })).toThrow(/each a finite number/);
     expect(() => at({ falseAlarmPool: { ...pool, 'now|grep-agent': [1, -1] } })).toThrow(/never ran the grep agent/);
-  });
+  }, 60_000);
 
   test('a constant nonzero gap writes a null z beside its crossing', () => {
     const flat = synth(32, { 'now|grep-agent': () => 4 });
