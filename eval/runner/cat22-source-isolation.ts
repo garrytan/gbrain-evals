@@ -29,18 +29,27 @@
  * proving the probes can detect leakage when it exists.
  *
  * Run:
- *   bun eval/runner/cat22-source-isolation.ts
+ *   bun eval/runner/cat22-source-isolation.ts [--gbrain <checkout>[@ref]] [--pg-url <admin url>]
+ *
+ * Engine (gbrain RUST_ENGINE.md gate E3): GBRAIN_EVAL_ENGINE=pglite|postgres|rust opens the brain through
+ * eval-engine.ts's openGateEngine, and every gbrain module comes from the build --gbrain names. Sources, links and the
+ * test hook's deletions go through gbrain's typed members (addSource, addLink, listPages, deletePage) on every engine.
+ * Unset, it is the pinned gbrain's in-memory PGLite, as before.
  */
 
 import { writeFileSync, mkdirSync } from 'fs';
-import { join } from 'path';
+import { dirname, join } from 'path';
 import { tmpdir } from 'os';
-import { PGLiteEngine } from 'gbrain/pglite-engine';
-import { importFromContent } from 'gbrain/import-file';
-import { configureGateway } from 'gbrain/ai/gateway';
-import { hybridSearch } from 'gbrain/search/hybrid';
+import type * as ImportFile from 'gbrain/import-file';
+import type * as Gateway from 'gbrain/ai/gateway';
+import type * as Hybrid from 'gbrain/search/hybrid';
+import { importGbrain } from './gbrain-under-test.ts';
+import {
+  EvalEngineUnavailable, gateReceiptPath, gateRunnerContext, gateRunnerReceiptFields, openGateEngine, preflightGateEngine, refuseEvalEngine,
+  type GateRunnerContext,
+} from './eval-engine.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
-import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt, noModelSpend } from './receipt.ts';
+import { writeReceipt, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt, noModelSpend } from './receipt.ts';
 import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
 
 export const CAT22_CATEGORY = 'cat22-source-isolation';
@@ -90,21 +99,26 @@ interface SeededCorpus {
   bySource: Map<string, Set<string>>;
 }
 
-async function ensureSource(engine: any, source_id: string): Promise<void> {
-  if (source_id === 'default') return;
-  await engine.executeRaw(
-    `INSERT INTO sources (id, name, config) VALUES ($1, $1, '{"federated": true}'::jsonb) ON CONFLICT (id) DO NOTHING`,
-    [source_id],
-  );
+/** The gbrain modules Cat 22 runs, loaded from the build under test. */
+export interface Cat22Gbrain {
+  importFromContent: typeof ImportFile.importFromContent;
+  hybridSearch: typeof Hybrid.hybridSearch;
+  addSource: (engine: any, opts: { id: string; name?: string; federated?: boolean | null }) => Promise<unknown>;
 }
 
-async function pageId(engine: any, sourceId: string, slug: string): Promise<number> {
-  const rows = await engine.executeRaw(
-    `SELECT id FROM pages WHERE source_id = $1 AND slug = $2 AND deleted_at IS NULL`,
-    [sourceId, slug],
-  ) as Array<{ id: number }>;
-  if (rows.length !== 1) throw new Error(`seed lookup failed: ${sourceId}/${slug} → ${rows.length} rows`);
-  return Number(rows[0].id);
+export async function loadCat22Gbrain(ctx: GateRunnerContext): Promise<Cat22Gbrain & { configureGateway: typeof Gateway.configureGateway }> {
+  const [{ importFromContent }, { hybridSearch }, { configureGateway }, { addSource }] = await Promise.all([
+    importGbrain<typeof ImportFile>(ctx.gut, 'src/core/import-file.ts'),
+    importGbrain<typeof Hybrid>(ctx.gut, 'src/core/search/hybrid.ts'),
+    importGbrain<typeof Gateway>(ctx.gut, 'src/core/ai/gateway.ts'),
+    importGbrain<Pick<Cat22Gbrain, 'addSource'>>(ctx.gut, 'src/core/sources-ops.ts'),
+  ]);
+  return { importFromContent, hybridSearch, configureGateway, addSource };
+}
+
+async function ensureSource(gb: Cat22Gbrain, engine: any, source_id: string): Promise<void> {
+  if (source_id === 'default') return;
+  await gb.addSource(engine, { id: source_id, name: source_id, federated: true });
 }
 
 /**
@@ -114,10 +128,11 @@ async function pageId(engine: any, sourceId: string, slug: string): Promise<numb
  * alpha graph/hub-alpha → beta graph/leak-beta (the cross-source edge a
  * scoped walk must never follow).
  */
-export async function seedCorpus(engine: any): Promise<SeededCorpus> {
+export async function seedCorpus(gb: Cat22Gbrain, engine: any): Promise<SeededCorpus> {
+  const { importFromContent } = gb;
   const bySource = new Map<string, Set<string>>();
   for (const s of SOURCES) {
-    await ensureSource(engine, s);
+    await ensureSource(gb, engine, s);
     bySource.set(s, new Set());
   }
 
@@ -141,15 +156,10 @@ export async function seedCorpus(engine: any): Promise<SeededCorpus> {
   bySource.get('alpha')!.add('graph/spoke-alpha');
   bySource.get('beta')!.add('graph/leak-beta');
 
-  const hub = await pageId(engine, 'alpha', 'graph/hub-alpha');
-  const spoke = await pageId(engine, 'alpha', 'graph/spoke-alpha');
-  const leak = await pageId(engine, 'beta', 'graph/leak-beta');
   // Direct link seeding: the extraction pipeline is not under test, the
   // scoped WALK over these edges is.
-  await engine.executeRaw(
-    `INSERT INTO links (from_page_id, to_page_id, link_type) VALUES ($1, $2, 'mentions'), ($1, $3, 'mentions')`,
-    [hub, spoke, leak],
-  );
+  await engine.addLink('graph/hub-alpha', 'graph/spoke-alpha', '', 'mentions', undefined, undefined, undefined, { fromSourceId: 'alpha', toSourceId: 'alpha' });
+  await engine.addLink('graph/hub-alpha', 'graph/leak-beta', '', 'mentions', undefined, undefined, undefined, { fromSourceId: 'alpha', toSourceId: 'beta' });
 
   return { bySource };
 }
@@ -196,6 +206,8 @@ export function probeResult(
 }
 
 export interface Cat22Options {
+  /** gbrain build and engine (gateRunnerContext). Defaults to the pinned gbrain's in-memory PGLite. */
+  ctx?: GateRunnerContext;
   reportsDir?: string;
   quiet?: boolean;
   /**
@@ -216,8 +228,10 @@ export interface Cat22RunResult {
 
 export async function runCat22(options: Cat22Options = {}): Promise<Cat22RunResult> {
   const startedAt = new Date().toISOString();
+  const ctx = options.ctx ?? gateRunnerContext([], {});
   const reportsDir = options.reportsDir ?? join(process.cwd(), 'eval/reports');
-  const receiptFile = receiptPath(CAT22_CATEGORY, reportsDir);
+  const receiptFile = gateReceiptPath(ctx, CAT22_CATEGORY, reportsDir);
+  const gbrainVersion = ctx.gut.overlay ? ctx.gut.version : gbrainVersionResolved();
   const log = options.quiet ? (_: string) => {} : (s: string) => process.stderr.write(s);
 
   // Isolate GBRAIN_HOME so user config (embedding column pins, search mode
@@ -229,15 +243,16 @@ export async function runCat22(options: Cat22Options = {}): Promise<Cat22RunResu
   // Hermetic: strip every provider key from the gateway env so hybridSearch's
   // keyword-only path falls out of the documented no-provider short-circuit
   // (hybrid.ts: `!isAvailable('embedding', ...)`), not out of an invalid opt.
-  configureGateway({
+  const gb = await loadCat22Gbrain(ctx);
+  gb.configureGateway({
     embedding_model: 'openai:text-embedding-3-large',
     embedding_dimensions: 1536,
     env: {},
   });
+  const { hybridSearch } = gb;
 
-  const engine: any = new PGLiteEngine();
-  await engine.connect({});
-  await engine.initSchema();
+  const scratch = await openGateEngine(ctx, 'cat22');
+  const engine: any = scratch.engine;
 
   // WS5: pin search mode + reranker BEFORE ingest. Never rely on defaults.
   for (const [key, value] of Object.entries(PINNED_CONFIG)) {
@@ -256,17 +271,17 @@ export async function runCat22(options: Cat22Options = {}): Promise<Cat22RunResu
   console.error = () => {};
   let seeded: SeededCorpus;
   try {
-    seeded = await seedCorpus(engine);
+    seeded = await seedCorpus(gb, engine);
     for (const s of options.skipSeedSources ?? []) {
       // Test hook: simulate the empty-result regression by deleting a
       // source's rows after seeding (keeps import plumbing identical).
-      await engine.executeRaw(`DELETE FROM pages WHERE source_id = $1`, [s]);
+      for (const pg of await engine.listPages({ sourceId: s, limit: 500 })) await engine.deletePage(pg.slug, { sourceId: s });
       seeded.bySource.set(s, new Set());
     }
   } catch (e: any) {
     console.log = origLog;
     console.error = origErr;
-    await engine.disconnect();
+    await scratch.close();
     const receipt: Receipt = {
       schema_version: RECEIPT_SCHEMA_VERSION,
       benchmark_version: BENCHMARK_VERSION,
@@ -277,8 +292,9 @@ export async function runCat22(options: Cat22Options = {}): Promise<Cat22RunResu
       completion_rate: 0,
       errors: [{ probe_id: 'seed', origin: 'harness', message: String(e?.message ?? e).slice(0, 500) }],
       publishable: false,
-      gbrain_version: gbrainVersionResolved(),
+      gbrain_version: gbrainVersion,
       gbrain_pin: gbrainPin(),
+      ...gateRunnerReceiptFields(ctx),
       started_at: startedAt,
       finished_at: new Date().toISOString(),
     };
@@ -451,7 +467,7 @@ export async function runCat22(options: Cat22Options = {}): Promise<Cat22RunResu
 
   console.log = origLog;
   console.error = origErr;
-  await engine.disconnect();
+  await scratch.close();
 
   const summary = acc.summary();
   const isolationClean = probes.length === 5 && probes.every(p => p.pass);
@@ -471,8 +487,9 @@ export async function runCat22(options: Cat22Options = {}): Promise<Cat22RunResu
     completion_rate: summary.completion_rate,
     errors: summary.errors,
     publishable: summary.publishable && verdict === 'pass' && !options.skipSeedSources?.length,
-    gbrain_version: gbrainVersionResolved(),
+    gbrain_version: gbrainVersion,
     gbrain_pin: gbrainPin(),
+    ...gateRunnerReceiptFields(ctx),
     resolved_config: {
       search_mode: PINNED_CONFIG['search.mode'],
       reranker_enabled: false,
@@ -493,7 +510,7 @@ export async function runCat22(options: Cat22Options = {}): Promise<Cat22RunResu
   writeReceipt(receiptFile, receipt);
 
   // Dated human-readable detail file (legacy location, same payload).
-  const outDir = join(reportsDir, CAT22_CATEGORY);
+  const outDir = dirname(receiptFile);
   mkdirSync(outDir, { recursive: true });
   const outFile = join(outDir, `${new Date().toISOString().slice(0, 10)}-cat22.json`);
   writeFileSync(outFile, JSON.stringify(receipt, null, 2) + '\n', 'utf8');
@@ -517,12 +534,18 @@ export async function runCat22(options: Cat22Options = {}): Promise<Cat22RunResu
 }
 
 if (import.meta.main) {
+  let ctx: GateRunnerContext | undefined;
   try {
-    const result = await runCat22();
+    ctx = gateRunnerContext(process.argv);
+    try { await preflightGateEngine(ctx); } catch (e) {
+      if (e instanceof EvalEngineUnavailable) refuseEvalEngine(e, 'Cat 22 source isolation');
+      throw e;
+    }
+    const result = await runCat22({ ctx });
     process.exit(result.exitCode);
   } catch (e: any) {
     try {
-      writeReceipt(receiptPath(CAT22_CATEGORY), {
+      writeReceipt(gateReceiptPath(ctx ?? { requested: null }, CAT22_CATEGORY), {
         schema_version: RECEIPT_SCHEMA_VERSION,
         benchmark_version: BENCHMARK_VERSION,
         category: CAT22_CATEGORY,
@@ -532,8 +555,9 @@ if (import.meta.main) {
         completion_rate: 0,
         errors: [{ probe_id: 'preflight', origin: 'harness', message: String(e?.message ?? e).slice(0, 500) }],
         publishable: false,
-        gbrain_version: gbrainVersionResolved(),
+        gbrain_version: ctx?.gut.overlay ? ctx.gut.version : gbrainVersionResolved(),
         gbrain_pin: gbrainPin(),
+        ...(ctx ? gateRunnerReceiptFields(ctx) : {}),
         started_at: new Date().toISOString(),
         finished_at: new Date().toISOString(),
       });

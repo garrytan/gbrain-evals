@@ -49,22 +49,33 @@
  * verdict 'partial' (hermetic plumbing check, not the published claim).
  *
  * Run:
- *   bun eval/runner/cat13b-source-swamp.ts                 # live embeds (OPENAI_API_KEY)
+ *   bun eval/runner/cat13b-source-swamp.ts --budget-usd 1  # live embeds (OPENAI_API_KEY); every request reserved in the budget ledger
+ *   bun eval/runner/cat13b-source-swamp.ts --budget-usd 1 --embed-cache <sqlite> [--embed-cache-only]
  *   bun eval/runner/cat13b-source-swamp.ts --stub-embed    # hermetic, no keys
  *   bun eval/runner/cat13b-source-swamp.ts --adapter gbrain
+ *   bun eval/runner/cat13b-source-swamp.ts --stub-embed --gbrain <checkout>[@ref] [--pg-url <admin url>]
+ *
+ * Engine (gbrain RUST_ENGINE.md gate E1): GBRAIN_EVAL_ENGINE=pglite|postgres|rust opens both gbrain arms' brains
+ * through eval-engine.ts's openGateEngine path, and the gbrain arms, the gateway and the boost map come from the build
+ * --gbrain names. The other arms keep the pinned gbrain. Unset, it is the pinned gbrain's in-memory PGLite, as before.
+ *
+ * Live embeds go through the budget ledger (--budget-usd, --budget-ledger, --program-cap-usd, --budget-run-id or the
+ * BRAINBENCH_* env vars), which refuses to start without an authorized cap, before any request. --embed-cache is Cat
+ * 13's content-addressed cache (longmemeval-cache.ts), so every engine of a gate run embeds byte-identical vectors;
+ * --embed-cache-only makes any miss fail the run instead of calling the provider.
  */
 
 import { readdirSync, readFileSync, mkdirSync, writeFileSync } from 'fs';
 import { createHash } from 'crypto';
-import { join, dirname } from 'path';
-import { configureGateway, __setEmbedTransportForTests } from 'gbrain/ai/gateway';
+import { basename, join, dirname } from 'path';
+import type * as Gateway from 'gbrain/ai/gateway';
 import { resolveBoostMap } from '../../node_modules/gbrain/src/core/search/source-boost.ts';
 import type { Adapter, AdapterConfig, BrainState, Page, PublicQuery, Query, RankedDoc } from './types.ts';
 import { sanitizePage, sanitizeQuery } from './types.ts';
 import { rankOfFirstHit } from './metrics.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
 import {
-  writeReceipt, receiptPath, RECEIPT_SCHEMA_VERSION, BENCHMARK_VERSION,
+  writeReceipt, RECEIPT_SCHEMA_VERSION, BENCHMARK_VERSION,
   type Receipt, type ReceiptVerdict, latencySummary, noModelSpend,
 } from './receipt.ts';
 import { gbrainVersion, gbrainPin } from './gbrain-version.ts';
@@ -72,7 +83,16 @@ import { RipgrepBm25Adapter } from './adapters/grep-only.ts';
 import { VectorOnlyAdapter } from './adapters/vector.ts';
 import { HybridNoGraphAdapter } from './adapters/vector-grep-rrf-fusion.ts';
 import { observedSearchFailures, type SearchObservedStats, type SearchObservation } from './retrieval-pins.ts';
-import { GbrainInlineAdapter } from './adapters/gbrain-inline.ts';
+import { GbrainInlineAdapter, type GbrainInlineOptions } from './adapters/gbrain-inline.ts';
+import { BudgetExceededError, budgetOptionsFrom, receiptCost, startPaidRun, type BudgetOptions, type BudgetRun, type PaidRequestGuard } from './budget-ledger.ts';
+import { EmbeddingCache, makeCachingTransport } from './longmemeval-cache.ts';
+import { registryEntry } from '../registry.ts';
+import { createRequire } from 'node:module';
+import { importGbrain, resolveGbrainUnderTest } from './gbrain-under-test.ts';
+import {
+  EvalEngineUnavailable, gateReceiptPath, gateRunnerContext, gateRunnerReceiptFields, preflightGateEngine, refuseEvalEngine,
+  type GateRunnerContext,
+} from './eval-engine.ts';
 
 export const TOP_K = 5;
 export const PASS_TOP1 = 0.80;
@@ -285,6 +305,8 @@ export function hashEmbed(text: string): number[] {
   return vec.map(x => x / norm);
 }
 
+type GatewayModule = Pick<typeof Gateway, 'configureGateway' | '__setEmbedTransportForTests'>;
+
 async function hashEmbedTransport(
   params: { values: string[] } & Record<string, unknown>,
 ): Promise<{ embeddings: number[][]; values: string[]; warnings: unknown[]; usage: { tokens: number } }> {
@@ -300,22 +322,23 @@ async function hashEmbedTransport(
  * Configure the gateway for this run. No memo (audit A-17): another runner in
  * the same process can reset the embed transport, and a remembered "stub"
  * would then embed against the live provider. Cat13 dropped its memo for the
- * same reason.
+ * same reason. `gateway` is the gateway module of the gbrain whose arms embed
+ * (the pinned one, or the build --gbrain names).
  */
-export function ensureGateway(stubEmbed: boolean): void {
+export function ensureGateway(stubEmbed: boolean, gateway: GatewayModule): void {
   if (stubEmbed && !process.env.OPENAI_API_KEY) {
     // ai-sdk model construction needs a non-empty key even when the transport
     // is stubbed; the dummy never reaches the network.
     process.env.OPENAI_API_KEY = 'dummy-embed-transport-stubbed';
   }
-  configureGateway({
+  gateway.configureGateway({
     embedding_model: 'openai:text-embedding-3-large',
     embedding_dimensions: EMBED_DIMS,
     env: process.env as Record<string, string | undefined>,
   });
-  __setEmbedTransportForTests(
+  gateway.__setEmbedTransportForTests(
     stubEmbed
-      ? (hashEmbedTransport as unknown as Parameters<typeof __setEmbedTransportForTests>[0])
+      ? (hashEmbedTransport as unknown as Parameters<GatewayModule['__setEmbedTransportForTests']>[0])
       : null,
   );
 }
@@ -349,8 +372,8 @@ export class GbrainNoSourceBoostAdapter implements Adapter {
   readonly name = 'gbrain-no-source-boost';
   private inner: GbrainInlineAdapter;
 
-  constructor(topK: number) {
-    this.inner = new GbrainInlineAdapter({ topK, searchConfig: GBRAIN_SEARCH_CONFIG }, this.name);
+  constructor(topK: number, inline: Partial<GbrainInlineOptions> = {}, private neutralBoost = neutralBoostEnv()) {
+    this.inner = new GbrainInlineAdapter({ ...inline, topK, searchConfig: GBRAIN_SEARCH_CONFIG }, this.name);
   }
 
   init(rawPages: Page[], config: AdapterConfig): Promise<BrainState> {
@@ -359,7 +382,7 @@ export class GbrainNoSourceBoostAdapter implements Adapter {
 
   async query(q: PublicQuery, state: BrainState): Promise<RankedDoc[]> {
     const prev = process.env.GBRAIN_SOURCE_BOOST;
-    process.env.GBRAIN_SOURCE_BOOST = neutralBoostEnv();
+    process.env.GBRAIN_SOURCE_BOOST = this.neutralBoost;
     try {
       return await this.inner.query(q, state);
     } finally {
@@ -376,10 +399,14 @@ export class GbrainNoSourceBoostAdapter implements Adapter {
   observedStats(state: BrainState) { return this.inner.observedStats(state); }
 }
 
-export function buildAdapters(): Adapter[] {
+/**
+ * `inline` reaches both gbrain arms (the build to load, the engine, the stub-transport guard); `neutralBoost` is the
+ * ablation's GBRAIN_SOURCE_BOOST, built from that build's boost map.
+ */
+export function buildAdapters(run: { inline?: Partial<GbrainInlineOptions>; neutralBoost?: string } = {}): Adapter[] {
   return [
-    new GbrainInlineAdapter({ topK: TOP_K, searchConfig: GBRAIN_SEARCH_CONFIG }),
-    new GbrainNoSourceBoostAdapter(TOP_K),
+    new GbrainInlineAdapter({ ...run.inline, topK: TOP_K, searchConfig: GBRAIN_SEARCH_CONFIG }),
+    new GbrainNoSourceBoostAdapter(TOP_K, run.inline, run.neutralBoost),
     new HybridNoGraphAdapter(),
     new RipgrepBm25Adapter(),
     new VectorOnlyAdapter(),
@@ -528,6 +555,16 @@ export interface Cat13bOptions {
   allowSkip?: boolean;
   reportsDir?: string;
   quiet?: boolean;
+  /** The gbrain build and engine for both gbrain arms (gateRunnerContext); omitted, the pinned in-memory PGLite. */
+  gate?: GateRunnerContext;
+  /** Paid-run budget (--budget-usd, --budget-ledger, --program-cap-usd, --budget-run-id); defaults to the BRAINBENCH_* env vars. */
+  budget?: BudgetOptions;
+  /** Content-addressed embedding cache (--embed-cache <sqlite path>), shared by every engine of a gate run. */
+  embedCache?: string;
+  /** --embed-cache-only: a cache miss fails the run instead of calling the provider. */
+  embedCacheOnly?: boolean;
+  /** The provider call behind the cache; defaults to the AI SDK embedMany each gbrain resolves. Tests pass a stub. */
+  embedMany?: (params: { values: string[] } & Record<string, unknown>) => Promise<{ embeddings: number[][]; usage?: unknown }>;
 }
 
 export interface Cat13bRunResult {
@@ -538,13 +575,19 @@ export interface Cat13bRunResult {
 
 export async function runCat13b(opts: Cat13bOptions = {}): Promise<Cat13bRunResult> {
   // An ambient GBRAIN_SOURCE_BOOST is cleared for the run and restored after
-  // it, including when the run throws (audit A-17).
+  // it, including when the run throws (audit A-17). Model discovery is off for
+  // the run: gbrain otherwise lists models at api.openai.com before its first
+  // OpenAI-routed embedding, a request outside the ledger in a stub run.
   const ambientBoost = process.env.GBRAIN_SOURCE_BOOST;
+  const discovery = process.env.GBRAIN_MODEL_DISCOVERY;
+  process.env.GBRAIN_MODEL_DISCOVERY = 'off';
   try {
     return await runCat13bWithClearedBoost(opts, ambientBoost);
   } finally {
     if (ambientBoost === undefined) delete process.env.GBRAIN_SOURCE_BOOST;
     else process.env.GBRAIN_SOURCE_BOOST = ambientBoost;
+    if (discovery === undefined) delete process.env.GBRAIN_MODEL_DISCOVERY;
+    else process.env.GBRAIN_MODEL_DISCOVERY = discovery;
   }
 }
 
@@ -552,21 +595,22 @@ async function runCat13bWithClearedBoost(opts: Cat13bOptions, ambientBoost: stri
   const startedAt = new Date().toISOString();
   const stubEmbed = opts.stubEmbed ?? false;
   const reportsDir = opts.reportsDir ?? join(process.cwd(), 'eval/reports');
-  const receiptFile = receiptPath(CATEGORY, reportsDir);
+  const ctx: GateRunnerContext = opts.gate ?? { gut: resolveGbrainUnderTest(null), kind: 'pglite', requested: null };
+  const receiptFile = gateReceiptPath(ctx, CATEGORY, reportsDir);
   const log = opts.quiet ? (_: string) => {} : (s: string) => console.log(s);
 
   const baseReceipt = (): Pick<Receipt, 'schema_version' | 'benchmark_version' | 'category' | 'gbrain_version' | 'gbrain_pin' | 'started_at' | 'finished_at'> => ({
     schema_version: RECEIPT_SCHEMA_VERSION,
     benchmark_version: BENCHMARK_VERSION,
     category: CATEGORY,
-    gbrain_version: gbrainVersion(),
+    gbrain_version: ctx.gut.overlay ? ctx.gut.version : gbrainVersion(),
     gbrain_pin: gbrainPin(),
+    ...gateRunnerReceiptFields(ctx),
     started_at: startedAt,
     finished_at: new Date().toISOString(),
   });
 
-  if (!stubEmbed && !process.env.OPENAI_API_KEY) {
-    const reason = 'OPENAI_API_KEY required for live embeds (run with --stub-embed for the hermetic plumbing run)';
+  const skipped = (reason: string): Cat13bRunResult => {
     const receipt: Receipt = {
       ...baseReceipt(),
       run_status: 'skipped',
@@ -580,6 +624,12 @@ async function runCat13bWithClearedBoost(opts: Cat13bOptions, ambientBoost: stri
     writeReceipt(receiptFile, receipt);
     console.error(`[cat13b] SKIPPED — ${reason}`);
     return { receipt, results: [], exitCode: opts.allowSkip ? 0 : 2 };
+  };
+
+  if (opts.embedCacheOnly && opts.embedCache === undefined) throw new Error('--embed-cache-only needs --embed-cache <sqlite path>');
+  if (opts.embedCache !== undefined && stubEmbed) throw new Error('--embed-cache caches live provider vectors; it does not apply to --stub-embed');
+  if (!stubEmbed && !process.env.OPENAI_API_KEY) {
+    return skipped('OPENAI_API_KEY required for live embeds (run with --stub-embed for the hermetic plumbing run)');
   }
 
   // Determinism: an ambient GBRAIN_SOURCE_BOOST would skew the boost-ON arm
@@ -588,22 +638,67 @@ async function runCat13bWithClearedBoost(opts: Cat13bOptions, ambientBoost: stri
 
   // Premises fail LOUDLY (audit retrieval-cats-07): a boost-map rename or a
   // stale corpus prefix is a broken eval, not a quiet 1.0-factor run.
-  const factors = assertBoostPremise();
+  const gutBoost = await importGbrain<{ resolveBoostMap: typeof resolveBoostMap }>(ctx.gut, 'src/core/search/source-boost.ts');
+  const boostMap = gutBoost.resolveBoostMap();
+  const factors = assertBoostPremise(boostMap);
   const corpusDir = join(import.meta.dir, '..', 'data', 'source-swamp-v1');
   const pages = loadCorpus(corpusDir);
   assertCorpusPremise(pages, QUERIES);
 
-  ensureGateway(stubEmbed);
+  // The comparison arms embed through the pinned gateway and the gbrain arms through the build's; one module when they are the same.
+  const [pinnedGateway, gutGateway] = await Promise.all([resolveGbrainUnderTest(null), ctx.gut].map(g => importGbrain<GatewayModule>(g, 'src/core/ai/gateway.ts')));
+  const gateways = new Set([pinnedGateway, gutGateway]);
+  for (const gateway of gateways) ensureGateway(stubEmbed, gateway);
+
+  // Live embeds go through the budget ledger, which refuses to start without --budget-usd; the stub makes no request.
+  let paid: { run: BudgetRun; guard: PaidRequestGuard } | null = null;
+  if (!stubEmbed) {
+    try {
+      paid = startPaidRun(CATEGORY, { ...(opts.budget ?? budgetOptionsFrom([])), estimateUsd: registryEntry('source-swamp')!.cost_estimate.usd });
+    } catch (error) {
+      if (error instanceof BudgetExceededError) return skipped(`budget: ${error.message}`);
+      throw error;
+    }
+  }
+  const settlePaid = (receipt: Receipt) => {
+    if (!paid) return;
+    paid.guard.uninstall();
+    const spend = paid.run.close();
+    paid = null;
+    receipt.cost = receiptCost(spend);
+    receipt.delivered_tokens = { tokens: spend.input_tokens, basis: 'provider-reported input tokens of every paid embedding request, from the budget ledger' };
+  };
+
+  let embedCache: EmbeddingCache | null = null;
+  try {
+  if (opts.embedCache !== undefined) {
+    // The real transport is the AI SDK embedMany that each gbrain itself resolves (its provider model objects must
+    // match its own `ai` version), wrapped so cached vectors return without a request. Every gateway shares one cache.
+    embedCache = new EmbeddingCache(opts.embedCache, `openai:text-embedding-3-large@${EMBED_DIMS}`);
+    for (const [gateway, root] of new Map<GatewayModule, string>([[pinnedGateway, resolveGbrainUnderTest(null).root], [gutGateway, ctx.gut.root]])) {
+      const embedMany = opts.embedCacheOnly
+        ? async () => { throw new Error('--embed-cache-only: an embedding was not in the cache'); }
+        : opts.embedMany ?? (await import(createRequire(join(root, 'package.json')).resolve('ai')) as { embedMany: NonNullable<Cat13bOptions['embedMany']> }).embedMany;
+      gateway.__setEmbedTransportForTests(makeCachingTransport(embedMany, embedCache) as unknown as Parameters<GatewayModule['__setEmbedTransportForTests']>[0]);
+    }
+  }
 
   log(`# BrainBench Cat 13b — Source Swamp Resistance\n`);
   log(`Generated: ${new Date().toISOString().replace(/\..*$/, '')}`);
   log(`Corpus: ${pages.length} pages (${pages.filter(p => p.slug.startsWith(CURATED_PREFIX)).length} ${CURATED_PREFIX}, ${pages.filter(p => p.slug.startsWith(SWAMP_PREFIX)).length} ${SWAMP_PREFIX})`);
   log(`Boost premise: ${CURATED_PREFIX} ×${factors.curated_factor}, ${SWAMP_PREFIX} ×${factors.swamp_factor}`);
   log(`Queries: ${QUERIES.length} hand-curated source-swamp queries`);
-  log(`Embeds: ${stubEmbed ? 'stubbed deterministic hash (hermetic)' : 'live OpenAI'}`);
+  log(`Embeds: ${stubEmbed ? 'stubbed deterministic hash (hermetic)' : `live OpenAI${embedCache ? ` through the embed cache${opts.embedCacheOnly ? ' (cache only)' : ''}` : ''}`}`);
   log(`Top-K: ${TOP_K}\n`);
 
-  const allAdapters = buildAdapters();
+  const allAdapters = buildAdapters({
+    inline: {
+      ...(ctx.gut.overlay ? { productRoot: ctx.gut.root } : {}),
+      ...(ctx.requested ? { engine: { kind: ctx.kind, pgAdminUrl: ctx.pgAdminUrl } } : {}),
+      expectStubTransport: stubEmbed,
+    },
+    neutralBoost: neutralBoostEnv(boostMap),
+  });
   const adapters = opts.only ? allAdapters.filter(a => a.name === opts.only) : allAdapters;
   if (adapters.length === 0) {
     throw new Error(`--adapter ${opts.only} matches none of: ${allAdapters.map(a => a.name).join(', ')}`);
@@ -694,10 +789,11 @@ async function runCat13bWithClearedBoost(opts: Cat13bOptions, ambientBoost: stri
   log(`- The grep-only and vector adapters do not use source preferences; their measured results appear in the scorecard.`);
 
   const summary = acc.summary();
+  const cacheMissed = opts.embedCacheOnly === true && (embedCache?.stats.misses ?? 0) > 0;
 
   // Persist the full per-query results (audit retrieval-cats-09: the runner
   // previously produced no machine-readable artifact at all).
-  const reportFile = join(reportsDir, CATEGORY, 'report.json');
+  const reportFile = join(dirname(receiptFile), 'report.json');
   mkdirSync(dirname(reportFile), { recursive: true });
   writeFileSync(reportFile, JSON.stringify({
     ran_at: startedAt,
@@ -717,7 +813,9 @@ async function runCat13bWithClearedBoost(opts: Cat13bOptions, ambientBoost: stri
     gbrain_search_config: GBRAIN_SEARCH_CONFIG,
     ablation_env: 'GBRAIN_SOURCE_BOOST=<every resolved prefix>:1.0 (query-time only)',
     embedding_transport: stubEmbed ? 'stubbed deterministic hash-embed (__setEmbedTransportForTests)' : 'live openai:text-embedding-3-large',
+    ...(embedCache ? { embed_cache: { file: basename(opts.embedCache!), cache_only: opts.embedCacheOnly === true, stats: embedCache.stats } } : {}),
     ambient_source_boost_cleared: ambientBoost !== undefined,
+    ...(ctx.requested ? { engine_applies_to: ['gbrain', 'gbrain-no-source-boost'] } : {}),
     adapters_run: results.map(r => r.name),
     execution_incomplete: executionIncomplete,
     observed_by_adapter: Object.fromEntries(results.map(r => [r.name, r.observed ?? null])),
@@ -734,7 +832,7 @@ async function runCat13bWithClearedBoost(opts: Cat13bOptions, ambientBoost: stri
     report_file: reportFile,
   };
 
-  if (summary.run_invalid || ablationDead || executionIncomplete) {
+  if (summary.run_invalid || ablationDead || executionIncomplete || cacheMissed) {
     const receipt: Receipt = {
       ...baseReceipt(),
       run_status: 'error',
@@ -746,8 +844,9 @@ async function runCat13bWithClearedBoost(opts: Cat13bOptions, ambientBoost: stri
       resolved_config: resolvedConfig,
       data,
     };
+    settlePaid(receipt);
     writeReceipt(receiptFile, receipt);
-    console.error(`[cat13b] RUN INVALID — ${ablationDead ? 'ablation control failed (arms identical)' : executionIncomplete ? 'search execution incomplete' : `infra error rate ${(summary.infra_error_rate * 100).toFixed(1)}% over cap`}`);
+    console.error(`[cat13b] RUN INVALID — ${cacheMissed ? `--embed-cache-only: ${embedCache!.stats.misses} embeddings were not in the cache` : ablationDead ? 'ablation control failed (arms identical)' : executionIncomplete ? 'search execution incomplete' : `infra error rate ${(summary.infra_error_rate * 100).toFixed(1)}% over cap`}`);
     return { receipt, results, exitCode: 3 };
   }
 
@@ -768,6 +867,7 @@ async function runCat13bWithClearedBoost(opts: Cat13bOptions, ambientBoost: stri
     resolved_config: resolvedConfig,
     data: { ...data, gate_pass: gatePass },
   };
+  settlePaid(receipt);
   writeReceipt(receiptFile, receipt);
 
   if (gbrainRes) {
@@ -781,6 +881,15 @@ async function runCat13bWithClearedBoost(opts: Cat13bOptions, ambientBoost: stri
   }
 
   return { receipt, results, exitCode: verdict === 'fail' ? 1 : 0 };
+  } finally {
+    paid?.guard.uninstall();
+    paid?.run.close();
+    // The caching transport wraps a live provider: never leave it installed after the run or an early throw.
+    if (embedCache) {
+      for (const gateway of gateways) gateway.__setEmbedTransportForTests(null);
+      embedCache.close();
+    }
+  }
 }
 
 // ─── CLI ────────────────────────────────────────────────────────────
@@ -788,10 +897,22 @@ async function runCat13bWithClearedBoost(opts: Cat13bOptions, ambientBoost: stri
 async function main(): Promise<number> {
   const argv = process.argv.slice(2);
   const onlyIdx = argv.indexOf('--adapter');
+  const gate = gateRunnerContext(process.argv);
+  const cacheIdx = argv.findIndex(a => a === '--embed-cache' || a.startsWith('--embed-cache='));
+  const embedCache = cacheIdx < 0 ? undefined : argv[cacheIdx].includes('=') ? argv[cacheIdx].slice('--embed-cache='.length) : argv[cacheIdx + 1];
+  if (cacheIdx >= 0 && (!embedCache || embedCache.startsWith('--'))) throw new Error('--embed-cache needs a sqlite path');
+  try { await preflightGateEngine(gate); } catch (e) {
+    if (e instanceof EvalEngineUnavailable) refuseEvalEngine(e, 'Cat 13b source swamp');
+    throw e;
+  }
   const { exitCode } = await runCat13b({
     stubEmbed: argv.includes('--stub-embed') || process.env.CAT13B_STUB_EMBED === '1',
     only: onlyIdx >= 0 ? argv[onlyIdx + 1] : undefined,
     allowSkip: argv.includes('--allow-skip'),
+    gate,
+    budget: budgetOptionsFrom(argv),
+    embedCache,
+    embedCacheOnly: argv.includes('--embed-cache-only'),
   });
   return exitCode;
 }

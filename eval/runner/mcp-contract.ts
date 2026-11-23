@@ -34,17 +34,26 @@
  * eval/reports/mcp-contract/receipt.json; behavioral assertion failures are
  * 'sut' probe errors (gbrain misbehaved → scored miss), verdict fail.
  *
- * Usage: bun run eval/runner/mcp-contract.ts [--json]
+ * Usage: bun run eval/runner/mcp-contract.ts [--json] [--gbrain <checkout>[@ref]] [--pg-url <admin url>]
+ *
+ * Engine (gbrain RUST_ENGINE.md gate E1): GBRAIN_EVAL_ENGINE=pglite|postgres|rust opens the brain through
+ * eval-engine.ts's openGateEngine, the operation registry comes from the build --gbrain names, and every
+ * OperationContext names the engine that ran. Unset, it is the pinned gbrain's in-memory PGLite, as before.
  */
 
-import { PGLiteEngine } from 'gbrain/pglite-engine';
-import { operations as OPERATIONS } from 'gbrain/operations';
+import { join } from 'node:path';
+import type { BrainEngine } from 'gbrain/engine';
+import type * as Operations from 'gbrain/operations';
 import type { OperationContext } from 'gbrain/operations';
 import type { GBrainConfig } from 'gbrain/config';
+import { importGbrain, resolveGbrainUnderTest } from './gbrain-under-test.ts';
+import {
+  EvalEngineUnavailable, gateReceiptPath, gateRunnerContext, gateRunnerReceiptFields, openGateEngine, preflightGateEngine, refuseEvalEngine,
+  type GateRunnerContext,
+} from './eval-engine.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
 import {
   writeReceipt,
-  receiptPath,
   RECEIPT_SCHEMA_VERSION,
   BENCHMARK_VERSION,
   type Receipt,
@@ -97,10 +106,25 @@ export interface TestResult {
   detail: string;
 }
 
-export async function setupEngine(): Promise<{ engine: PGLiteEngine; cleanup: () => Promise<void> }> {
-  const engine = new PGLiteEngine();
-  await engine.connect({});
-  await engine.initSchema();
+export type OperationRegistry = typeof Operations.operations;
+
+/** The engine's GBrainConfig and the operation registry of the build under test, as an MCP server hands them to handlers. */
+export interface ContractSurface {
+  config: GBrainConfig;
+  operations: OperationRegistry;
+}
+
+/** The pinned gbrain's registry with an in-memory PGLite config: the surface the runner used before it took an engine. */
+export function pinnedContractSurface(): ContractSurface {
+  const { operations } = require(join(resolveGbrainUnderTest(null).root, 'src/core/operations.ts')) as typeof Operations;
+  return { config: { engine: 'pglite', database_path: ':memory:' }, operations };
+}
+
+export async function setupEngine(gate: GateRunnerContext = gateRunnerContext([], {})): Promise<{ engine: BrainEngine; surface: ContractSurface; cleanup: () => Promise<void> }> {
+  const { operations } = await importGbrain<typeof Operations>(gate.gut, 'src/core/operations.ts');
+  const scratch = await openGateEngine(gate, 'mcp_contract');
+  const engine = scratch.engine;
+  const config = { ...(scratch.kind === 'pglite' && !scratch.config.database_path ? { database_path: ':memory:' } : {}), ...scratch.config, engine: scratch.kind } as GBrainConfig;
   // Hermetic search path: keyword-only, no embedding gateway, no keys. The
   // per-call `mode` param is resolved BEFORE this branch in the handler, so
   // the trust-matrix mode test still exercises resolvePerCallMode.
@@ -139,12 +163,12 @@ export async function setupEngine(): Promise<{ engine: PGLiteEngine; cleanup: ()
   }
   return {
     engine,
-    cleanup: async () => { await engine.disconnect(); },
+    surface: { config, operations },
+    cleanup: () => scratch.close(),
   };
 }
 
-function ctx(remote: boolean, engine: PGLiteEngine): OperationContext {
-  const config: GBrainConfig = { engine: 'pglite', database_path: ':memory:' };
+function ctx(remote: boolean, engine: BrainEngine, config: GBrainConfig): OperationContext {
   const logger = { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} };
   // v0.34 D4: sourceId is REQUIRED write-authority scope; 'default' matches
   // buildOperationContext's auto-fill on single-source brains.
@@ -153,8 +177,8 @@ function ctx(remote: boolean, engine: PGLiteEngine): OperationContext {
 
 export type OpOutcome = { ok: true; result: unknown } | { ok: false; error: string };
 
-async function runOp(opName: string, params: Record<string, unknown>, c: OperationContext): Promise<OpOutcome> {
-  const op = OPERATIONS.find(o => o.name === opName);
+async function runOp(operations: OperationRegistry, opName: string, params: Record<string, unknown>, c: OperationContext): Promise<OpOutcome> {
+  const op = operations.find(o => o.name === opName);
   if (!op) return { ok: false, error: `unknown operation: ${opName}` };
   try {
     const result = await op.handler(c, params);
@@ -290,9 +314,11 @@ export function checkModeDifferential(
 // ─── The behavioral contract checks ───────────────────────────────────
 
 export async function runContractChecks(
-  engine: PGLiteEngine,
+  engine: BrainEngine,
   log: (line: string) => void = () => {},
+  surface: ContractSurface = pinnedContractSurface(),
 ): Promise<TestResult[]> {
+  const { config, operations } = surface;
   const results: TestResult[] = [];
   const push = (r: TestResult) => {
     results.push(r);
@@ -306,7 +332,7 @@ export async function runContractChecks(
   log('\n## Limit cap: traverse_graph depth');
   const capName = `traverse_graph depth=1000 over a ${CHAIN_LENGTH}-node chain stops at the ${TRAVERSE_DEPTH_CAP}-hop cap`;
   {
-    const r = await runOp('traverse_graph', { slug: chainSlug(0), depth: 1000 }, ctx(true, engine));
+    const r = await runOp(operations, 'traverse_graph', { slug: chainSlug(0), depth: 1000 }, ctx(true, engine, config));
     if (r.ok) {
       push({ name: capName, ...checkDepthCap(r.result as unknown[], CHAIN_SLUGS, TRAVERSE_DEPTH_CAP) });
     } else {
@@ -316,7 +342,7 @@ export async function runContractChecks(
     }
   }
   {
-    const r = await runOp('traverse_graph', { slug: chainSlug(0), depth: 5 }, ctx(true, engine));
+    const r = await runOp(operations, 'traverse_graph', { slug: chainSlug(0), depth: 5 }, ctx(true, engine, config));
     push({
       name: 'traverse_graph depth=5 (under cap) is honored exactly: GraphPath frontier at 5 hops',
       ...(r.ok
@@ -326,7 +352,7 @@ export async function runContractChecks(
   }
   {
     // The natural no-filter invocation (#4666): direction AND depth defaulted.
-    const r = await runOp('traverse_graph', { slug: chainSlug(0) }, ctx(true, engine));
+    const r = await runOp(operations, 'traverse_graph', { slug: chainSlug(0) }, ctx(true, engine, config));
     const rows = r.ok ? (r.result as unknown[]) : [];
     const errored = { pass: false, detail: `unexpected error: ${r.ok ? '' : r.error.slice(0, 100)}` };
     push({
@@ -348,7 +374,7 @@ export async function runContractChecks(
   // ── Limit cap: list_pages remote clamp (seed larger than the cap) ──
   log('\n## Limit cap: list_pages remote clamp');
   {
-    const r = await runOp('list_pages', { limit: 1_000_000 }, ctx(true, engine));
+    const r = await runOp(operations, 'list_pages', { limit: 1_000_000 }, ctx(true, engine, config));
     if (r.ok) {
       const list = r.result as Array<unknown>;
       push({
@@ -363,8 +389,8 @@ export async function runContractChecks(
   // ── Trust matrix: the SAME op under remote=false vs remote=true ──
   log('\n## Trust matrix: trusted local vs untrusted remote');
   {
-    const local = await runOp('list_pages', { limit: MATRIX_LIST_LIMIT }, ctx(false, engine));
-    const remote = await runOp('list_pages', { limit: MATRIX_LIST_LIMIT }, ctx(true, engine));
+    const local = await runOp(operations, 'list_pages', { limit: MATRIX_LIST_LIMIT }, ctx(false, engine, config));
+    const remote = await runOp(operations, 'list_pages', { limit: MATRIX_LIST_LIMIT }, ctx(true, engine, config));
     if (local.ok && remote.ok) {
       const localRows = (local.result as Array<unknown>).length;
       const remoteRows = (remote.result as Array<unknown>).length;
@@ -381,8 +407,8 @@ export async function runContractChecks(
     }
   }
   {
-    const local = await runOp('search', { query: 'chain node', mode: 'not-a-real-mode', limit: 5 }, ctx(false, engine));
-    const remote = await runOp('search', { query: 'chain node', mode: 'not-a-real-mode', limit: 5 }, ctx(true, engine));
+    const local = await runOp(operations, 'search', { query: 'chain node', mode: 'not-a-real-mode', limit: 5 }, ctx(false, engine, config));
+    const remote = await runOp(operations, 'search', { query: 'chain node', mode: 'not-a-real-mode', limit: 5 }, ctx(true, engine, config));
     push({
       name: 'search per-call mode: unknown mode loudly rejected locally, ignored remotely',
       ...checkModeDifferential(local, remote),
@@ -401,7 +427,7 @@ export async function runContractChecks(
       { slug: 'people/' + 'x'.repeat(10_000), label: 'huge slug (10K chars)' },
     ];
     for (const { slug, label } of badSlugs) {
-      const r = await runOp('get_page', { slug }, ctx(true, engine));
+      const r = await runOp(operations, 'get_page', { slug }, ctx(true, engine, config));
       // Either rejects with error OR returns null (page not found, no crash, no traversal)
       // The DANGER would be: returns content from outside the brain, or crashes the server.
       const pass = !r.ok || r.result === null || r.result === undefined;
@@ -418,7 +444,7 @@ export async function runContractChecks(
   {
     const badDates = ['not-a-date', '2026-13-45', '99999-01-01', '', '../../../etc/passwd'];
     for (const date of badDates) {
-      const r = await runOp('add_timeline_entry', { slug: 'people/p0', date, summary: 'test' }, ctx(true, engine));
+      const r = await runOp(operations, 'add_timeline_entry', { slug: 'people/p0', date, summary: 'test' }, ctx(true, engine, config));
       // Should reject invalid dates with error.
       const pass = !r.ok;
       push({
@@ -440,7 +466,7 @@ export async function runContractChecks(
       `\u0000injection`,
     ];
     for (const payload of sqlPayloads) {
-      const r = await runOp('search', { query: payload, limit: 5 }, ctx(true, engine));
+      const r = await runOp(operations, 'search', { query: payload, limit: 5 }, ctx(true, engine, config));
       // Should NOT throw a SQL parse error (which would mean the input reached SQL).
       // Should return empty results or a clean error.
       const pass = r.ok || !r.error.toLowerCase().includes('syntax');
@@ -457,7 +483,7 @@ export async function runContractChecks(
   {
     const huge = 'x'.repeat(10_000_000); // 10MB string
     const start = Date.now();
-    const r = await runOp('search', { query: huge, limit: 5 }, ctx(true, engine));
+    const r = await runOp(operations, 'search', { query: huge, limit: 5 }, ctx(true, engine, config));
     const elapsed = Date.now() - start;
     const pass = elapsed < 5000; // under 5s
     push({
@@ -482,9 +508,9 @@ export async function runContractChecks(
 // a registry entry without a handler is a packaging bug — but it is a
 // single sanity gate now, never part of the behavioral pass-rate.
 
-export function handlerSanityWalk(): { total: number; missing: string[] } {
-  const missing = OPERATIONS.filter(op => typeof op.handler !== 'function').map(op => op.name);
-  return { total: OPERATIONS.length, missing };
+export function handlerSanityWalk(operations: OperationRegistry = pinnedContractSurface().operations): { total: number; missing: string[] } {
+  const missing = operations.filter(op => typeof op.handler !== 'function').map(op => op.name);
+  return { total: operations.length, missing };
 }
 
 // ─── Runner entry ─────────────────────────────────────────────────────
@@ -493,18 +519,25 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
   const json = argv.includes('--json');
   const log = json ? () => {} : (line: string) => console.log(line);
   const startedAt = new Date().toISOString();
-  const receiptFile = receiptPath('mcp-contract');
+  const gate = gateRunnerContext(argv);
+  const receiptFile = gateReceiptPath(gate, 'mcp-contract');
+  const gbrainVersionRan = gate.gut.overlay ? gate.gut.version : gbrainVersion();
+  try { await preflightGateEngine(gate); } catch (e) {
+    if (e instanceof EvalEngineUnavailable) refuseEvalEngine(e, 'Cat 12 mcp-contract');
+    throw e;
+  }
 
   log('# BrainBench Category 12: MCP Operation Contract\n');
   log(`Generated: ${new Date().toISOString().slice(0, 19)}`);
-  log(`Operations available: ${OPERATIONS.length}`);
 
   let results: TestResult[];
   let handlerWalk: { total: number; missing: string[] };
-  const { engine, cleanup } = await setupEngine();
+  const { engine, surface, cleanup } = await setupEngine(gate);
+  log(`Engine: ${surface.config.engine}`);
+  log(`Operations available: ${surface.operations.length}`);
   try {
-    results = await runContractChecks(engine, log);
-    handlerWalk = handlerSanityWalk();
+    results = await runContractChecks(engine, log, surface);
+    handlerWalk = handlerSanityWalk(surface.operations);
   } catch (err) {
     // Harness/dependency crash — write an error receipt so all.ts never
     // mistakes a dead run for anything else, then exit non-zero.
@@ -519,8 +552,9 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
       completion_rate: 0,
       errors: [{ probe_id: 'harness:setup-or-run', origin: 'harness', message: String(err).slice(0, 500) }],
       publishable: false,
-      gbrain_version: gbrainVersion(),
+      gbrain_version: gbrainVersionRan,
       gbrain_pin: gbrainPin(),
+      ...gateRunnerReceiptFields(gate),
       started_at: startedAt,
       finished_at: new Date().toISOString(),
     });
@@ -580,8 +614,9 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
     completion_rate: summary.completion_rate,
     errors: summary.errors,
     publishable: summary.publishable,
-    gbrain_version: gbrainVersion(),
+    gbrain_version: gbrainVersionRan,
     gbrain_pin: gbrainPin(),
+    ...gateRunnerReceiptFields(gate),
     resolved_config: {
       search_mode: 'keyword-only (search.mcp_keyword_only=true — hermetic, no embedding gateway, no keys)',
       seeded_pages: TOTAL_SEEDED_PAGES,

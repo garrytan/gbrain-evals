@@ -520,6 +520,15 @@ export const REGISTRY: readonly CategoryEntry[] = [
     contract: 'Imports through each capture path and checks source kind, URI and ingestion method are stored and preserved. The dedup probe is weak.',
   },
   {
+    id: 'memory-verb-conformance', legacy_alias: 'MV-conformance', name: 'Memory-verb conformance (MEMORY_VERBS v1) on any storage engine',
+    family: 'agent', tier: 'H', script: 'eval/runner/memory-verb-conformance.ts',
+    run: { kind: 'listed', reason: 'an engine gate suite (gbrain RUST_ENGINE.md E2), run once per engine with GBRAIN_EVAL_ENGINE on the gbrain build under test; on the pinned gbrain and PGLite it repeats a run gbrain\'s own CI already makes', command: 'GBRAIN_EVAL_ENGINE=pglite|postgres|rust bun eval/runner/memory-verb-conformance.ts [--gbrain <checkout>@<ref>] [--pg-url <url>]' },
+    cost_estimate: FREE, receipt_path: receipt('memory-verb-conformance'),
+    headline: { metric: 'conformance cases passed, with the tools/list checks beside them', denominator: 'gbrain CONFORMANCE_CASES at the build under test (24 at b66e4077) per engine' },
+    gate: 'report-only', evidence_maturity: 'regression-only',
+    contract: 'Runs gbrain\'s own MEMORY_VERBS v1 certifier (runConformance over CONFORMANCE_CASES) through dispatchToolCall as a remote world-scoped caller against a throwaway brain on PGLite, Postgres or Rust, keyless: provider keys are removed and the chat and embed transports throw, so synthesize passes only through its unavailable arm and recall\'s query arm degrades to keyword search. Gold is gbrain\'s fixture expectations, so it detects a verb contract that differs between engines, not whether the contract is right. A skipped case is not a pass.',
+  },
+  {
     id: 'trajectory-routing', legacy_alias: '25', name: 'Trajectory routing in think (live model)',
     family: 'reasoning', tier: 'P', script: 'eval/runner/cat25-trajectory-routing.ts', run: { kind: 'dispatched', timeoutMs: HOUR, paidFlags: true },
     cost_estimate: UNMEASURED, receipt_path: receipt('cat25-trajectory-routing'),

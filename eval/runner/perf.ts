@@ -23,15 +23,22 @@
  *     evaluated in the receipt so nobody mistakes them for a gated pass.
  *   - Receipt at eval/reports/perf/receipt.json (WS0 contract).
  *
- * Usage: bun run eval/runner/perf.ts [--scale N | --scale=N] [--seed N] [--json]
+ * Usage: bun run eval/runner/perf.ts [--scale N | --scale=N] [--seed N] [--json] [--gbrain <checkout>[@ref]] [--pg-url <admin url>]
+ *
+ * Engine (gbrain RUST_ENGINE.md gate E1, "Cat 7 reported"): GBRAIN_EVAL_ENGINE=pglite|postgres|rust opens each
+ * scale's brain through eval-engine.ts's openGateEngine on the build --gbrain names, and the receipt goes to
+ * eval/reports/perf/engine-<kind>/. Unset, it is the pinned gbrain's in-memory PGLite, as before.
  */
 
-import { PGLiteEngine } from 'gbrain/pglite-engine';
+import type { BrainEngine } from 'gbrain/engine';
 import type { PageInput } from 'gbrain/types';
 import { percentile } from './metrics.ts';
 import {
+  EvalEngineUnavailable, gateReceiptPath, gateRunnerContext, gateRunnerReceiptFields, openGateEngine, preflightGateEngine, refuseEvalEngine,
+  type GateRunnerContext,
+} from './eval-engine.ts';
+import {
   writeReceipt,
-  receiptPath,
   RECEIPT_SCHEMA_VERSION,
   BENCHMARK_VERSION,
   type ProbeError,
@@ -105,7 +112,9 @@ export function parsePerfArgs(argv: string[]): PerfArgs {
     else if (a.startsWith('--scale=')) args.scales = [parsePositiveInt('--scale', a.slice('--scale='.length))];
     else if (a === '--seed') args.seed = parsePositiveInt('--seed', argv[++i]);
     else if (a.startsWith('--seed=')) args.seed = parsePositiveInt('--seed', a.slice('--seed='.length));
-    else throw new Error(`unknown arg: ${a} (usage: perf.ts [--scale N | --scale=N] [--seed N] [--json])`);
+    else if (a === '--gbrain' || a === '--pg-url') i++;
+    else if (a.startsWith('--gbrain=') || a.startsWith('--pg-url=')) continue;
+    else throw new Error(`unknown arg: ${a} (usage: perf.ts [--scale N | --scale=N] [--seed N] [--json] [--gbrain <checkout>[@ref]] [--pg-url <admin url>])`);
   }
   return args;
 }
@@ -290,86 +299,86 @@ export function perfOutcome(latency: readonly LatencySample[]): PerfOutcome {
 
 // ─── One scale run ────────────────────────────────────────────────────
 
-async function runScale(scale: number, seed: number, log: (msg: string) => void): Promise<{ latency: LatencySample[]; throughput: ThroughputSample[] }> {
+async function runScale(scale: number, seed: number, log: (msg: string) => void, ctx: GateRunnerContext): Promise<{ latency: LatencySample[]; throughput: ThroughputSample[] }> {
   log(`\n## Scale: ${scale} pages (seed ${seed})\n`);
-
-  const engine = new PGLiteEngine();
-  await engine.connect({});
-  await engine.initSchema();
 
   const { pages, links } = generateSeedData(scale);
   if (pages.length === 0) {
-    await engine.disconnect();
     throw new Error(`scale ${scale} generated zero pages — scale too small for the 60/20/10/10 split`);
   }
+  const scratch = await openGateEngine(ctx, `perf_${scale}`);
+  const engine: BrainEngine = scratch.engine;
+  try {
 
-  // ── Throughput: bulk import via putPage ──
-  const importStart = performance.now();
-  for (const { slug, page } of pages) {
-    await engine.putPage(slug, page);
+    // ── Throughput: bulk import via putPage ──
+    const importStart = performance.now();
+    for (const { slug, page } of pages) {
+      await engine.putPage(slug, page);
+    }
+    const importSecs = (performance.now() - importStart) / 1000;
+    const importTput: ThroughputSample = {
+      op: 'putPage_bulk',
+      scale,
+      total_seconds: importSecs,
+      ops_per_sec: pages.length / importSecs,
+    };
+    log(`Bulk putPage: ${pages.length} pages in ${importSecs.toFixed(1)}s = ${importTput.ops_per_sec.toFixed(1)} pages/sec`);
+
+    // ── Throughput: bulk addLink ──
+    // Only successful writes count toward throughput (audit C-11: failed
+    // addLinks used to be swallowed and still counted as completed ops).
+    const linkStart = performance.now();
+    let linksWritten = 0;
+    for (const l of links) {
+      try { await engine.addLink(l.from, l.to, '', l.type); linksWritten++; } catch { /* a missing endpoint page is not a completed write */ }
+    }
+    const linkSecs = (performance.now() - linkStart) / 1000;
+    const linkTput: ThroughputSample = {
+      op: 'addLink_bulk',
+      scale,
+      total_seconds: linkSecs,
+      ops_per_sec: linksWritten / linkSecs,
+    };
+    log(`Bulk addLink: ${linksWritten}/${links.length} links written in ${linkSecs.toFixed(1)}s = ${linkTput.ops_per_sec.toFixed(1)} links/sec`);
+
+    // ── Latency samples — precomputed seeded slug plans, one per op so each
+    // op's sequence is independent of how many other ops ran before it. ──
+    const allSlugs = pages.map(p => p.slug);
+    const hubSlug = `people/person-0`; // known to have many inbound links
+    const plan = (opIndex: number, runs: number) =>
+      buildSlugPlan(allSlugs, seed * 1000 + opIndex, runs);
+
+    const latency: LatencySample[] = [];
+
+    const getPagePlan = plan(1, 50);
+    latency.push(await timeMany('get_page', scale, i => engine.getPage(getPagePlan[i]), 50));
+    const getLinksPlan = plan(2, 50);
+    latency.push(await timeMany('get_links', scale, i => engine.getLinks(getLinksPlan[i]), 50));
+    const getBacklinksPlan = plan(3, 50);
+    latency.push(await timeMany('get_backlinks', scale, i => engine.getBacklinks(getBacklinksPlan[i]), 50));
+    latency.push(await timeMany('get_backlinks_hub', scale, () => engine.getBacklinks(hubSlug), 20));
+    const getTimelinePlan = plan(4, 50);
+    latency.push(await timeMany('get_timeline', scale, i => engine.getTimeline(getTimelinePlan[i]), 50));
+    latency.push(await timeMany('get_stats', scale, () => engine.getStats(), 10));
+    latency.push(await timeMany('list_pages_50', scale, () => engine.listPages({ limit: 50 }), 20));
+    latency.push(await timeMany('search_keyword', scale, () => engine.searchKeyword('person', { limit: 20 }), 30));
+    latency.push(await timeMany('traverse_paths_d1', scale, () => engine.traversePaths(hubSlug, { depth: 1, direction: 'in' }), 10));
+    latency.push(await timeMany('traverse_paths_d2', scale, () => engine.traversePaths(hubSlug, { depth: 2, direction: 'both' }), 10));
+
+    // Single-page write latency (separate from bulk).
+    let counter = 0;
+    latency.push(await timeMany('putPage_single', scale, () => engine.putPage(`probes/p-${counter++}`, {
+      type: 'concept', title: `P${counter}`, compiled_truth: 'A probe page.', timeline: '',
+    }), 30));
+
+    for (const s of latency) {
+      log(`  ${s.op.padEnd(22)} P50=${s.p50_ms.toFixed(2)}ms  P95=${s.p95_ms.toFixed(2)}ms  P99=${s.p99_ms.toFixed(2)}ms  (n=${s.count}, warmup=${WARMUP_RUNS} discarded)`);
+    }
+
+    return { latency, throughput: [importTput, linkTput] };
+  } finally {
+    await scratch.close();
   }
-  const importSecs = (performance.now() - importStart) / 1000;
-  const importTput: ThroughputSample = {
-    op: 'putPage_bulk',
-    scale,
-    total_seconds: importSecs,
-    ops_per_sec: pages.length / importSecs,
-  };
-  log(`Bulk putPage: ${pages.length} pages in ${importSecs.toFixed(1)}s = ${importTput.ops_per_sec.toFixed(1)} pages/sec`);
-
-  // ── Throughput: bulk addLink ──
-  // Only successful writes count toward throughput (audit C-11: failed
-  // addLinks used to be swallowed and still counted as completed ops).
-  const linkStart = performance.now();
-  let linksWritten = 0;
-  for (const l of links) {
-    try { await engine.addLink(l.from, l.to, '', l.type); linksWritten++; } catch { /* a missing endpoint page is not a completed write */ }
-  }
-  const linkSecs = (performance.now() - linkStart) / 1000;
-  const linkTput: ThroughputSample = {
-    op: 'addLink_bulk',
-    scale,
-    total_seconds: linkSecs,
-    ops_per_sec: linksWritten / linkSecs,
-  };
-  log(`Bulk addLink: ${linksWritten}/${links.length} links written in ${linkSecs.toFixed(1)}s = ${linkTput.ops_per_sec.toFixed(1)} links/sec`);
-
-  // ── Latency samples — precomputed seeded slug plans, one per op so each
-  // op's sequence is independent of how many other ops ran before it. ──
-  const allSlugs = pages.map(p => p.slug);
-  const hubSlug = `people/person-0`; // known to have many inbound links
-  const plan = (opIndex: number, runs: number) =>
-    buildSlugPlan(allSlugs, seed * 1000 + opIndex, runs);
-
-  const latency: LatencySample[] = [];
-
-  const getPagePlan = plan(1, 50);
-  latency.push(await timeMany('get_page', scale, i => engine.getPage(getPagePlan[i]), 50));
-  const getLinksPlan = plan(2, 50);
-  latency.push(await timeMany('get_links', scale, i => engine.getLinks(getLinksPlan[i]), 50));
-  const getBacklinksPlan = plan(3, 50);
-  latency.push(await timeMany('get_backlinks', scale, i => engine.getBacklinks(getBacklinksPlan[i]), 50));
-  latency.push(await timeMany('get_backlinks_hub', scale, () => engine.getBacklinks(hubSlug), 20));
-  const getTimelinePlan = plan(4, 50);
-  latency.push(await timeMany('get_timeline', scale, i => engine.getTimeline(getTimelinePlan[i]), 50));
-  latency.push(await timeMany('get_stats', scale, () => engine.getStats(), 10));
-  latency.push(await timeMany('list_pages_50', scale, () => engine.listPages({ limit: 50 }), 20));
-  latency.push(await timeMany('search_keyword', scale, () => engine.searchKeyword('person', { limit: 20 }), 30));
-  latency.push(await timeMany('traverse_paths_d1', scale, () => engine.traversePaths(hubSlug, { depth: 1, direction: 'in' }), 10));
-  latency.push(await timeMany('traverse_paths_d2', scale, () => engine.traversePaths(hubSlug, { depth: 2, direction: 'both' }), 10));
-
-  // Single-page write latency (separate from bulk).
-  let counter = 0;
-  latency.push(await timeMany('putPage_single', scale, () => engine.putPage(`probes/p-${counter++}`, {
-    type: 'concept', title: `P${counter}`, compiled_truth: 'A probe page.', timeline: '',
-  }), 30));
-
-  for (const s of latency) {
-    log(`  ${s.op.padEnd(22)} P50=${s.p50_ms.toFixed(2)}ms  P95=${s.p95_ms.toFixed(2)}ms  P99=${s.p99_ms.toFixed(2)}ms  (n=${s.count}, warmup=${WARMUP_RUNS} discarded)`);
-  }
-
-  await engine.disconnect();
-  return { latency, throughput: [importTput, linkTput] };
 }
 
 // ─── Entry ────────────────────────────────────────────────────────────
@@ -384,10 +393,15 @@ async function main() {
   }
   const log = args.json ? () => {} : console.log;
   const startedAt = new Date().toISOString();
+  const ctx = gateRunnerContext(process.argv);
+  try { await preflightGateEngine(ctx); } catch (e) {
+    if (e instanceof EvalEngineUnavailable) refuseEvalEngine(e, 'Cat 7 perf');
+    throw e;
+  }
 
   log('# BrainBench Category 7: Performance / Latency\n');
   log(`Generated: ${new Date().toISOString().slice(0, 19)}`);
-  log(`Engine: PGLite (in-memory)`);
+  log(`Engine: ${ctx.requested ?? 'PGLite (in-memory)'}`);
   log(`Seed: ${args.seed} (mulberry32; identical workload every run)`);
   log(`Percentile method: linear interpolation (eval/runner/metrics.ts)`);
 
@@ -395,8 +409,9 @@ async function main() {
     schema_version: RECEIPT_SCHEMA_VERSION,
     benchmark_version: BENCHMARK_VERSION,
     category: 'perf',
-    gbrain_version: gbrainVersion(),
+    gbrain_version: ctx.gut.overlay ? ctx.gut.version : gbrainVersion(),
     gbrain_pin: gbrainPin(),
+    ...gateRunnerReceiptFields(ctx),
     started_at: startedAt,
   } as const;
 
@@ -410,7 +425,7 @@ async function main() {
 
   try {
     for (const scale of args.scales) {
-      const { latency, throughput } = await runScale(scale, args.seed, log);
+      const { latency, throughput } = await runScale(scale, args.seed, log, ctx);
       allLatency.push(...latency);
       allThroughput.push(...throughput);
     }
@@ -421,7 +436,7 @@ async function main() {
     const origin = msg.includes('generated zero pages') ? 'harness' as const : 'sut' as const;
     errors.push({ probe_id: `scale:${args.scales.join(',')}`, origin, message: msg.slice(0, 500) });
     const nScored = allLatency.length + allThroughput.length;
-    writeReceipt(receiptPath('perf'), {
+    writeReceipt(gateReceiptPath(ctx, 'perf'), {
       ...receiptBase,
       run_status: 'error',
       n_total: nTotal,
@@ -438,7 +453,7 @@ async function main() {
   const { thresholds, breaches, verdict, exitCode } = perfOutcome(allLatency);
   const nScored = allLatency.length + allThroughput.length;
 
-  writeReceipt(receiptPath('perf'), {
+  writeReceipt(gateReceiptPath(ctx, 'perf'), {
     ...noModelSpend('hermetic: no model and no paid request'),
     ...receiptBase,
     run_status: 'completed',
@@ -450,7 +465,7 @@ async function main() {
     // A run below the 10K scale evaluates no threshold and proves nothing publishable (audit C-11).
     publishable: thresholds.length > 0,
     resolved_config: {
-      engine: 'pglite-in-memory',
+      engine: ctx.requested ?? 'pglite-in-memory',
       scales: args.scales,
       seed: args.seed,
       warmup_runs: WARMUP_RUNS,

@@ -11,7 +11,7 @@
  *     missing_embeddings, per-component scores). The previous version read
  *     `h.chunk_count` / `h.link_count`, which do not exist on BrainHealth,
  *     so the receipt reported 0 links before AND after remediation (audit
- *     cats18-21-08). Link/chunk counts now come from direct SQL.
+ *     cats18-21-08). Link/chunk counts now come from `engine.getStats()`.
  *   - `computeRecommendations()` — the doctor planner (exported at
  *     gbrain src/core/brain-score-recommendations.ts; imported via direct
  *     source path since it has no subpath export).
@@ -46,23 +46,31 @@
  * Run:
  *   bun eval/runner/cat19-doctor-remediate.ts                    # hermetic (stub embed)
  *   CAT19_LIVE_EMBED=1 bun eval/runner/cat19-doctor-remediate.ts # live OpenAI embeds
+ *   [--gbrain <checkout>[@ref]] [--pg-url <admin url>]
+ *
+ * Engine (gbrain RUST_ENGINE.md gate E3): GBRAIN_EVAL_ENGINE=pglite|postgres|rust opens the brain through
+ * eval-engine.ts's openGateEngine, and every gbrain module (the planner and runEmbedCore included) comes from the build
+ * --gbrain names. Unset, it is the pinned gbrain's in-memory PGLite, as before.
  */
 
 import { writeFileSync, mkdirSync } from 'fs';
-import { join } from 'path';
+import { dirname, join } from 'path';
 import { tmpdir } from 'os';
-import { PGLiteEngine } from 'gbrain/pglite-engine';
-import { importFromContent } from 'gbrain/import-file';
-import { runExtract } from 'gbrain/extract';
-import { configureGateway, __setEmbedTransportForTests } from 'gbrain/ai/gateway';
+import type { BrainEngine } from 'gbrain/engine';
+import type * as ImportFile from 'gbrain/import-file';
+import type * as Extract from 'gbrain/extract';
+import type * as Gateway from 'gbrain/ai/gateway';
 import type { BrainHealth } from 'gbrain/types';
-// No subpath exports for these; direct source imports (same pattern cat20
-// uses for the brainstorm orchestrator).
-import { computeRecommendations } from '../../node_modules/gbrain/src/core/brain-score-recommendations.ts';
-import { runEmbedCore } from '../../node_modules/gbrain/src/commands/embed.ts';
-import { makeHashEmbedTransport } from './cat18-embedding-providers.ts';
+import type * as Recommendations from '../../node_modules/gbrain/src/core/brain-score-recommendations.ts';
+import type * as Embed from '../../node_modules/gbrain/src/commands/embed.ts';
+import { hashEmbedVector } from './cat18-embedding-providers.ts';
+import { importGbrain } from './gbrain-under-test.ts';
+import {
+  EvalEngineUnavailable, gateReceiptPath, gateRunnerContext, gateRunnerReceiptFields, openGateEngine, preflightGateEngine, refuseEvalEngine,
+  type GateRunnerContext,
+} from './eval-engine.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
-import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt, noModelSpend } from './receipt.ts';
+import { writeReceipt, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt, noModelSpend } from './receipt.ts';
 import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
 
 export const CAT19_CATEGORY = 'cat19-doctor-remediate';
@@ -115,9 +123,9 @@ export function defaultSeedPages(): SeedPage[] {
   return pages;
 }
 
-/** Real BrainHealth fields + direct SQL counts. No invented fields: BrainHealth
- *  has no chunk_count/link_count (audit cats18-21-08), so those come from the
- *  links / content_chunks tables directly. */
+/** Real BrainHealth fields + BrainStats counts. No invented fields: BrainHealth
+ *  has no chunk_count/link_count (audit cats18-21-08), so those come from
+ *  engine.getStats(), the typed count every engine serves. */
 export interface HealthSnapshot {
   brain_score: number;
   page_count: number;
@@ -129,22 +137,17 @@ export interface HealthSnapshot {
   embed_coverage_score: number;
   link_density_score: number;
   no_orphans_score: number;
-  /** SQL: SELECT COUNT(*) FROM links (not a BrainHealth field). */
+  /** BrainStats.link_count, unscoped: every row in links (not a BrainHealth field). */
   link_count: number;
-  /** SQL: SELECT COUNT(*) FROM content_chunks (not a BrainHealth field). */
+  /** BrainStats.chunk_count, unscoped: every content chunk (not a BrainHealth field). */
   chunk_count: number;
 }
 
-export async function captureHealth(engine: PGLiteEngine): Promise<{ snapshot: HealthSnapshot; health: BrainHealth }> {
+export async function captureHealth(engine: BrainEngine): Promise<{ snapshot: HealthSnapshot; health: BrainHealth }> {
   // getHealth failure propagates — a typed harness error upstream, never a
   // silently-null score that reads as "delta 0".
   const health = await engine.getHealth();
-  const rows = await engine.executeRaw(
-    `SELECT
-       (SELECT COUNT(*)::int FROM links) AS link_count,
-       (SELECT COUNT(*)::int FROM content_chunks) AS chunk_count`,
-    [],
-  ) as Array<{ link_count: number; chunk_count: number }>;
+  const stats = await engine.getStats();
   return {
     snapshot: {
       brain_score: health.brain_score,
@@ -157,8 +160,8 @@ export async function captureHealth(engine: PGLiteEngine): Promise<{ snapshot: H
       embed_coverage_score: health.embed_coverage_score,
       link_density_score: health.link_density_score,
       no_orphans_score: health.no_orphans_score,
-      link_count: rows[0]?.link_count ?? 0,
-      chunk_count: rows[0]?.chunk_count ?? 0,
+      link_count: Number(stats.link_count),
+      chunk_count: Number(stats.chunk_count),
     },
     health,
   };
@@ -173,6 +176,8 @@ export interface StepRecord {
 }
 
 export interface Cat19Options {
+  /** gbrain build and engine (gateRunnerContext). Defaults to the pinned gbrain's in-memory PGLite. */
+  ctx?: GateRunnerContext;
   seedPages?: SeedPage[];
   /** Hermetic embed transport (default true unless CAT19_LIVE_EMBED=1). */
   stubEmbed?: boolean;
@@ -218,8 +223,9 @@ export async function runCat19(options: Cat19Options = {}): Promise<Cat19RunResu
   const minLinks = options.minLinksInserted ?? DEFAULT_MIN_LINKS_INSERTED;
   const minDelta = options.minScoreDelta ?? DEFAULT_MIN_SCORE_DELTA;
   const seedPages = options.seedPages ?? defaultSeedPages();
+  const ctx = options.ctx ?? gateRunnerContext([], {});
   const reportsDir = options.reportsDir ?? join(process.cwd(), 'eval/reports');
-  const receiptFile = receiptPath(CAT19_CATEGORY, reportsDir);
+  const receiptFile = gateReceiptPath(ctx, CAT19_CATEGORY, reportsDir);
   const log = options.quiet ? (_: string) => {} : (s: string) => process.stderr.write(s);
 
   // Isolated GBRAIN_HOME: the embedding-column registry reads file-plane
@@ -232,8 +238,9 @@ export async function runCat19(options: Cat19Options = {}): Promise<Cat19RunResu
     schema_version: RECEIPT_SCHEMA_VERSION,
     benchmark_version: BENCHMARK_VERSION,
     category: CAT19_CATEGORY,
-    gbrain_version: gbrainVersionResolved(),
+    gbrain_version: ctx.gut.overlay ? ctx.gut.version : gbrainVersionResolved(),
     gbrain_pin: gbrainPin(),
+    ...gateRunnerReceiptFields(ctx),
     started_at: startedAt,
   } as const;
 
@@ -256,11 +263,23 @@ export async function runCat19(options: Cat19Options = {}): Promise<Cat19RunResu
     return { receipt, exitCode: options.allowSkip ? 0 : 1, receiptFile, baseline: null, achieved: null, steps: [] };
   }
 
+  const [{ importFromContent }, { runExtract }, { configureGateway, getEmbeddingDimensions, __setEmbedTransportForTests }, { computeRecommendations }, { runEmbedCore }] = await Promise.all([
+    importGbrain<typeof ImportFile>(ctx.gut, 'src/core/import-file.ts'),
+    importGbrain<typeof Extract>(ctx.gut, 'src/commands/extract.ts'),
+    importGbrain<typeof Gateway>(ctx.gut, 'src/core/ai/gateway.ts'),
+    importGbrain<typeof Recommendations>(ctx.gut, 'src/core/brain-score-recommendations.ts'),
+    importGbrain<typeof Embed>(ctx.gut, 'src/commands/embed.ts'),
+  ]);
+
   if (stubEmbed) {
     // Model construction needs a non-empty key even with the transport
     // stubbed; the stub never lets a request leave the process.
     if (!process.env.OPENAI_API_KEY) process.env.OPENAI_API_KEY = 'dummy-stub-embed';
-    __setEmbedTransportForTests(makeHashEmbedTransport());
+    __setEmbedTransportForTests((async (params: { values: string[] }) => ({
+      embeddings: params.values.map(t => hashEmbedVector(t, getEmbeddingDimensions())),
+      values: params.values,
+      warnings: [],
+    })) as unknown as Parameters<typeof __setEmbedTransportForTests>[0]);
   }
 
   const acc = new ProbeAccounting(GATES.length);
@@ -279,9 +298,8 @@ export async function runCat19(options: Cat19Options = {}): Promise<Cat19RunResu
     env: process.env as Record<string, string | undefined>,
   });
 
-  const engine = new PGLiteEngine();
-  await engine.connect({});
-  await engine.initSchema();
+  const scratch = await openGateEngine(ctx, 'cat19');
+  const engine = scratch.engine;
 
   try {
     // ── Seed with intentional gaps ─────────────────────────────────
@@ -404,7 +422,7 @@ export async function runCat19(options: Cat19Options = {}): Promise<Cat19RunResu
     }
   } finally {
     if (stubEmbed) __setEmbedTransportForTests(null);
-    await engine.disconnect().catch(() => {});
+    await scratch.close().catch(() => {});
   }
 
   const summary = acc.summary();
@@ -458,7 +476,7 @@ export async function runCat19(options: Cat19Options = {}): Promise<Cat19RunResu
   writeReceipt(receiptFile, receipt);
 
   // Dated human-readable detail file (legacy location, same payload).
-  const outDir = join(reportsDir, CAT19_CATEGORY);
+  const outDir = dirname(receiptFile);
   mkdirSync(outDir, { recursive: true });
   const outFile = join(outDir, `${new Date().toISOString().slice(0, 10)}-cat19.json`);
   writeFileSync(outFile, JSON.stringify(receipt, null, 2) + '\n', 'utf8');
@@ -477,12 +495,18 @@ export async function runCat19(options: Cat19Options = {}): Promise<Cat19RunResu
 }
 
 if (import.meta.main) {
+  let ctx: GateRunnerContext | undefined;
   try {
-    const result = await runCat19(optionsFromEnv());
+    ctx = gateRunnerContext(process.argv);
+    try { await preflightGateEngine(ctx); } catch (e) {
+      if (e instanceof EvalEngineUnavailable) refuseEvalEngine(e, 'Cat 19 doctor remediate');
+      throw e;
+    }
+    const result = await runCat19({ ...optionsFromEnv(), ctx });
     process.exit(result.exitCode);
   } catch (e: any) {
     try {
-      writeReceipt(receiptPath(CAT19_CATEGORY), {
+      writeReceipt(gateReceiptPath(ctx ?? { requested: null }, CAT19_CATEGORY), {
         schema_version: RECEIPT_SCHEMA_VERSION,
         benchmark_version: BENCHMARK_VERSION,
         category: CAT19_CATEGORY,
@@ -492,8 +516,9 @@ if (import.meta.main) {
         completion_rate: 0,
         errors: [{ probe_id: 'preflight', origin: 'harness', message: String(e?.message ?? e).slice(0, 500) }],
         publishable: false,
-        gbrain_version: gbrainVersionResolved(),
+        gbrain_version: ctx?.gut.overlay ? ctx.gut.version : gbrainVersionResolved(),
         gbrain_pin: gbrainPin(),
+        ...(ctx ? gateRunnerReceiptFields(ctx) : {}),
         started_at: new Date().toISOString(),
         finished_at: new Date().toISOString(),
       });

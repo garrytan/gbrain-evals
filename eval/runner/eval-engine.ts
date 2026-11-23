@@ -2,8 +2,9 @@
  * Which storage engine a keyless gate runner or the engine-bench runner opens.
  *
  * GBRAIN_EVAL_ENGINE=pglite|postgres|rust picks the engine; unset means the runner's own default, so a runner that
- * adopts this helper behaves exactly as before when the variable is absent. Only the engine-bench runner and the
- * keyless eval-gate runners (N1, N5, N6, N12, N14) read it. Frozen or counted runners never do.
+ * adopts this helper behaves exactly as before when the variable is absent. Only the engine-bench runner, the keyless
+ * eval-gate runners (N1, N5, N6, N12, N14) and the gate suites gbrain's RUST_ENGINE.md names in "Eval gates" E1 to E3
+ * (through gateRunnerContext below) read it. Frozen or counted runners never do.
  *
  * The Rust engine is gbrain's planned third BrainEngine (gbrain docs/designs/RUST_ENGINE.md): an in-process napi-rs
  * addon selected with engine "rust", loaded from GBRAIN_RUST_ENGINE_ADDON or the release's installed addon. Until the
@@ -20,7 +21,7 @@ import { join, resolve } from 'node:path';
 import { SQL } from 'bun';
 import type { BrainEngine } from 'gbrain/engine';
 import type { EngineConfig } from 'gbrain/types';
-import { importGbrain, type GbrainUnderTest } from './gbrain-under-test.ts';
+import { gbrainSpecFrom, importGbrain, overlaySummary, resolveGbrainUnderTest, type GbrainUnderTest } from './gbrain-under-test.ts';
 
 export const EVAL_ENGINE_ENV = 'GBRAIN_EVAL_ENGINE';
 export const EVAL_ENGINES = ['pglite', 'postgres', 'rust'] as const;
@@ -172,7 +173,7 @@ export async function openEvalEngine(o: OpenEvalEngineOptions): Promise<EvalEngi
     if (kind === 'rust') throw rustAddonRefusal(e) ?? new EvalEngineUnavailable(kind, 'rust_kind_unsupported', `gbrain ${o.gut.version} does not construct a rust engine: ${(e as Error).message}`);
     throw e;
   }
-  if (kind === 'rust' && o.initSchema !== false) initRustBrain(o.gut, o.databasePath!);
+  if (kind === 'rust' && o.initSchema !== false) initRustBrain(o.gut, o.databasePath!, await buildEmbeddingIdentity(o.gut));
   try {
     await engine.connect(config);
   } catch (e) {
@@ -206,13 +207,16 @@ export function rustAddonRefusal(e: unknown): EvalEngineUnavailable | null {
  * Create a Rust brain the way a user does: write a rust CLI config and run `gbrain init --migrate-only` through the
  * gbrain under test. The Rust engine refuses initSchema() (capability `schema`), and `gbrain init` has no rust flag,
  * so the config is written first, as lifecycle/slice.ts does. It runs before this process opens the store, because a
- * second process on an open Rust store gets store_locked. The child environment carries no provider key.
+ * second process on an open Rust store gets store_locked. The child environment carries no provider key. With
+ * `embedding`, the store's vector width is this process's embedder (what PGLite and Postgres size their column from);
+ * without it, embeddings are disabled and the store takes gbrain's default width.
  */
-export function initRustBrain(gut: Pick<GbrainUnderTest, 'root' | 'version'>, databasePath: string): void {
+export function initRustBrain(gut: Pick<GbrainUnderTest, 'root' | 'version'>, databasePath: string, embedding?: { model: string; dimensions: number }): void {
   const home = mkdtempSync(join(tmpdir(), 'eval-engine-rust-init-'));
   try {
     mkdirSync(join(home, '.gbrain'), { recursive: true });
-    const config = { ...cliEngineConfig('rust', { databasePath }), embedding_disabled: true, schema_pack: 'gbrain-base-v2' };
+    const embed = embedding ? { embedding_model: embedding.model, embedding_dimensions: embedding.dimensions } : { embedding_disabled: true };
+    const config = { ...cliEngineConfig('rust', { databasePath }), ...embed, schema_pack: 'gbrain-base-v2' };
     writeFileSync(join(home, '.gbrain', 'config.json'), `${JSON.stringify(config, null, 2)}\n`);
     const env = { PATH: process.env.PATH, HOME: home, GBRAIN_HOME: home, GBRAIN_SKIP_STARTUP_HOOKS: '1', TZ: 'UTC', NO_COLOR: '1', ...rustAddonEnv() };
     const r = spawnSync(process.execPath, [join(gut.root, 'src/cli.ts'), 'init', '--migrate-only', '--non-interactive'], { env, cwd: home, encoding: 'utf8', timeout: 300_000 });
@@ -224,6 +228,16 @@ export function initRustBrain(gut: Pick<GbrainUnderTest, 'root' | 'version'>, da
     throw new EvalEngineUnavailable('rust', 'rust_init_failed', `gbrain ${gut.version} init --migrate-only on a rust config exited ${r.status ?? r.signal}: ${tail}`);
   } finally {
     rmSync(home, { recursive: true, force: true });
+  }
+}
+
+/** The embedder this process configured on the build's gateway, or undefined when the build cannot say. */
+async function buildEmbeddingIdentity(gut: Pick<GbrainUnderTest, 'root'>): Promise<{ model: string; dimensions: number } | undefined> {
+  try {
+    const gw = await importGbrain<{ getEmbeddingModel(): string; getEmbeddingDimensions(): number }>(gut as GbrainUnderTest, 'src/core/ai/gateway.ts');
+    return { model: gw.getEmbeddingModel(), dimensions: gw.getEmbeddingDimensions() };
+  } catch {
+    return undefined;
   }
 }
 
@@ -350,4 +364,75 @@ export async function preflightEvalEngine(gut: GbrainUnderTest, kind: EvalEngine
   if (kind !== 'rust') return;
   const e = await openScratchEvalEngine({ gut, kind, label: 'preflight' });
   await e.close();
+}
+
+/** Env var naming the SHA-256 the Rust addon file must have; a gate runner refuses a different file before it opens anything. */
+export const RUST_ADDON_SHA256_ENV = 'GBRAIN_RUST_ENGINE_ADDON_SHA256';
+
+/**
+ * A gate suite's gbrain and engine (gbrain docs/designs/RUST_ENGINE.md, "Eval gates" E1 to E3). `--gbrain
+ * <checkout>[@ref]` (or GBRAIN_UNDER_TEST) picks the build, GBRAIN_EVAL_ENGINE the engine and `--pg-url` (or
+ * LIFECYCLE_PG_URL) the Postgres admin URL. With none of them set, the runner opens the pinned gbrain's in-memory
+ * PGLite as it always did, and its receipt keeps its bytes.
+ */
+export interface GateRunnerContext {
+  gut: GbrainUnderTest;
+  kind: EvalEngineKind;
+  /** GBRAIN_EVAL_ENGINE, or null when unset. */
+  requested: EvalEngineKind | null;
+  pgAdminUrl?: string;
+}
+
+export function gateRunnerContext(argv: readonly string[], env: Record<string, string | undefined> = process.env): GateRunnerContext {
+  const at = argv.indexOf('--pg-url');
+  const flagged = at >= 0 ? argv[at + 1] : argv.find(a => a.startsWith('--pg-url='))?.slice('--pg-url='.length);
+  if (at >= 0 && (!flagged || flagged.startsWith('--'))) throw new Error('--pg-url needs a Postgres admin URL');
+  const pgAdminUrl = flagged || env.LIFECYCLE_PG_URL?.trim() || undefined;
+  const requested = requestedEvalEngine(env);
+  return { gut: resolveGbrainUnderTest(gbrainSpecFrom(argv, env)), kind: requested ?? 'pglite', requested, ...(pgAdminUrl ? { pgAdminUrl } : {}) };
+}
+
+/**
+ * Refuse before any work when the context's engine cannot run: a Rust addon whose digest is not the one
+ * GBRAIN_RUST_ENGINE_ADDON_SHA256 names (rust_engine_addon_mismatch), then preflightEvalEngine.
+ */
+export async function preflightGateEngine(ctx: GateRunnerContext, env: Record<string, string | undefined> = process.env): Promise<void> {
+  if (ctx.kind === 'rust') {
+    const want = env[RUST_ADDON_SHA256_ENV]?.trim().toLowerCase();
+    const path = rustAddonEnv(env).GBRAIN_RUST_ENGINE_ADDON;
+    if (want) {
+      if (!path) throw new EvalEngineUnavailable('rust', 'rust_engine_addon_missing', `${RUST_ADDON_SHA256_ENV} is set but GBRAIN_RUST_ENGINE_ADDON names no addon file.`);
+      let got: string;
+      try { got = createHash('sha256').update(readFileSync(path)).digest('hex'); } catch (e) {
+        throw new EvalEngineUnavailable('rust', 'rust_engine_addon_missing', `The Rust addon at GBRAIN_RUST_ENGINE_ADDON could not be read: ${(e as Error).message}`);
+      }
+      if (got !== want) throw new EvalEngineUnavailable('rust', 'rust_engine_addon_mismatch', `The Rust addon file's SHA-256 is ${got}, not the ${want} that ${RUST_ADDON_SHA256_ENV} names.`);
+    }
+  }
+  if (ctx.kind === 'postgres' && !ctx.pgAdminUrl) throw new EvalEngineUnavailable('postgres', 'postgres_url_missing', 'The postgres engine needs an admin URL to create scratch databases (--pg-url or LIFECYCLE_PG_URL).');
+  await preflightEvalEngine(ctx.gut, ctx.kind);
+}
+
+/** A throwaway brain on the context's engine, created the way gbrain creates one (see openScratchEvalEngine). */
+export function openGateEngine(ctx: GateRunnerContext, label: string, o: { initSchema?: boolean } = {}): Promise<ScratchEvalEngine> {
+  return openScratchEvalEngine({ gut: ctx.gut, kind: ctx.kind, label, pgAdminUrl: ctx.pgAdminUrl, initSchema: o.initSchema });
+}
+
+/** The receipt location: the runner's usual path, or a per-engine directory under it when GBRAIN_EVAL_ENGINE is set. */
+export function gateReceiptPath(ctx: Pick<GateRunnerContext, 'requested'>, category: string, reportsDir = join(process.cwd(), 'eval/reports')): string {
+  return ctx.requested ? join(reportsDir, category, `engine-${ctx.requested}`, 'receipt.json') : join(reportsDir, category, 'receipt.json');
+}
+
+/**
+ * Receipt fields naming what ran: the engine, the checks it could not run, and the gbrain build with its Rust addon.
+ * Nothing when neither GBRAIN_EVAL_ENGINE nor --gbrain was given, so a default receipt keeps its bytes.
+ */
+export function gateRunnerReceiptFields(ctx: GateRunnerContext, notApplicable: readonly NotApplicable[] = []): {
+  engine?: EvalEngineKind; not_applicable?: NotApplicable[]; gbrain_under_test?: { version: string; overlay: Record<string, unknown> | null; rust_addon: RustAddonIdentity | null };
+} {
+  if (!ctx.requested && !ctx.gut.overlay) return {};
+  return {
+    ...evalEngineReceiptFields(ctx.kind, notApplicable),
+    gbrain_under_test: { version: ctx.gut.version, overlay: overlaySummary(ctx.gut), rust_addon: ctx.kind === 'rust' ? rustAddonIdentity(ctx.gut) : null },
+  };
 }
