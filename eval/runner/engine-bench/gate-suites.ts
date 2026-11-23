@@ -11,8 +11,8 @@
  * set, LIFECYCLE_PG_URL for Postgres, and GBRAIN_RUST_ENGINE_ADDON plus GBRAIN_RUST_ENGINE_ADDON_SHA256 (both required
  * for rust, so the runner refuses any other addon file). The child environment drops every provider key, except that
  * `--paid` keeps them for the two suites that embed live (Cat 13 and Cat 13b), which then run under the budget ledger
- * with one embedding cache per suite: the first engine fills it and the others read it only (a miss on Postgres or Rust
- * makes the suite NOT_RUN). Without `--paid` those two run on hash embeddings.
+ * with one embedding cache per suite: PGLite fills it (so it must come first in --engines) and the others read it only
+ * (a miss on Postgres or Rust makes the suite NOT_RUN). Without `--paid` those two run on hash embeddings.
  * Receipts land at eval/reports/<category>/engine-<kind>/receipt.json, logs and refusals beside them.
  *
  * `emit` reads those receipts and writes <out>/<suite>.json. Rules, as RUST_ENGINE.md (gbrain 09b9ac5c) states them,
@@ -211,16 +211,16 @@ export const GATE_SUITES: readonly GateSuite[] = [
   },
   {
     id: 'cat19', gate: 'E3', benchmark: 'Cat 19 sick-brain remediation (hash embeddings)', category: 'cat19-doctor-remediate', script: 'eval/runner/cat19-doctor-remediate.ts', args: () => [],
-    measure: r => ({ brain_score: r.data?.achieved?.brain_score, gates_passed: passedOf(r).passed }),
+    measure: r => ({ brain_score: r.data?.achieved?.brain_score, gates_passed: r.data?.gates ? Object.values(r.data.gates).filter(v => v === 1).length : NaN }),
     rule: { kind: 'within-or-equal', points: ['brain_score'], counts: ['gates_passed'] },
   },
   {
     id: 'cat27', gate: 'E3', benchmark: 'Cat 27 graph signals on', category: 'cat27-graph-signals', script: 'eval/runner/cat27-graph-signals.ts', args: () => [],
     measure: r => {
       const a = r.data?.aggregate ?? {};
-      return { ndcg10_points: a.mean_ndcg10_with_signals * 100, top1_hits: Math.round(a.top1_hit_rate_with_signals * a.n_probes) };
+      return { ndcg10_points: a.mean_ndcg10_with_signals * 100, top1_hits: Math.round(a.top1_hit_rate_with_signals * a.n_probes), probes_scored: a.n_probes, errors: (r.errors ?? []).length };
     },
-    rule: { kind: 'within-or-equal', points: ['ndcg10_points'], counts: ['top1_hits'] },
+    rule: { kind: 'within-or-equal', points: ['ndcg10_points'], counts: ['top1_hits', 'probes_scored', 'errors'] },
   },
   {
     id: 'cat23', gate: 'E3', benchmark: 'Cat 23 phantom to canonical redirect (scored against PGLite\'s pg_trgm decisions)', category: 'cat23-phantom-redirect', script: 'eval/runner/cat23-phantom-redirect.ts', args: () => [],
@@ -233,7 +233,8 @@ export function engineDir(category: string, kind: EvalEngineKind, reports = join
   return join(reports, category, `engine-${kind}`);
 }
 
-interface EngineRun { kind: EvalEngineKind; receipt: Receipt | null; refused: string | null; refusalSites?: RustRefusalSite[]; logTail?: string }
+interface RunExit { code: number | null; signal: string | null; gbrain: string }
+interface EngineRun { kind: EvalEngineKind; receipt: Receipt | null; refused: string | null; refusalSites?: RustRefusalSite[]; logTail?: string; hasLog?: boolean; exit?: RunExit | null }
 
 function loadRun(category: string, kind: EvalEngineKind, reports?: string): EngineRun {
   const dir = engineDir(category, kind, reports);
@@ -241,16 +242,20 @@ function loadRun(category: string, kind: EvalEngineKind, reports?: string): Engi
   const receiptFile = join(dir, 'receipt.json');
   const sitesFile = join(dir, REFUSAL_SITES);
   const logFile = join(dir, 'run.log');
+  const exitFile = join(dir, RUN_EXIT);
   return {
     kind,
     receipt: existsSync(receiptFile) ? JSON.parse(readFileSync(receiptFile, 'utf8')) : null,
     refused: existsSync(refusedFile) ? readFileSync(refusedFile, 'utf8').trim() : null,
     refusalSites: existsSync(sitesFile) ? JSON.parse(readFileSync(sitesFile, 'utf8')) : [],
     logTail: existsSync(logFile) ? readFileSync(logFile, 'utf8').trim().slice(-500) : '',
+    hasLog: existsSync(logFile),
+    exit: existsSync(exitFile) ? JSON.parse(readFileSync(exitFile, 'utf8')) : null,
   };
 }
 
 const REFUSAL_SITES = 'rust-refusal-sites.json';
+const RUN_EXIT = 'exit.json';
 const completed = (r: Receipt | null) => r !== null && r.run_status === 'completed';
 
 /** The build a receipt names: overlay commit, ref and dirty flag, plus the Rust addon digest and target. */
@@ -262,6 +267,12 @@ function buildOf(r: Receipt): { overlay: { commit: string | null; ref: string | 
     rust_addon: g.rust_addon ? { sha256: g.rust_addon.sha256 ?? null, target: g.rust_addon.target ?? null } : null,
   };
 }
+
+/** How a receipt embedded (stub, live or none, with model and width), so receipts from different modes never compare. */
+const embeddingOf = (r: Receipt): string => {
+  const c = r.resolved_config ?? {};
+  return JSON.stringify([c.embed_transport, c.embedding_transport, c.embedder, c.embedding_model, c.embedding_dimensions].map(x => x ?? null));
+};
 
 const top5 = (q: any): string[] => (q?.ranked_pages ?? []).slice(0, 5).map((p: any) => p.page_id);
 const sameSet = (a: string[], b: string[]) => a.length === b.length && a.every(x => b.includes(x));
@@ -328,12 +339,22 @@ export function judgeSuite(s: GateSuite, runs: Record<EvalEngineKind, EngineRun>
   for (const k of EVAL_ENGINES) if (runs[k].refused) return notRun(`${k} refused: ${runs[k].refused}`);
   for (const k of TS_ENGINES) if (!completed(runs[k].receipt)) return notRun(`${k} has no completed receipt (${runs[k].receipt?.run_status ?? 'missing'})`);
   for (const k of EVAL_ENGINES) if (runs[k].receipt && runs[k].receipt!.engine !== k) return notRun(`the receipt in ${k}'s directory names engine ${runs[k].receipt!.engine ?? 'none'}`);
+  const ran = EVAL_ENGINES.filter(k => completed(runs[k].receipt));
+  const modes = ran.map(k => embeddingOf(runs[k].receipt!));
+  if (new Set(modes).size > 1) return notRun(`the engines embedded differently (${ran.map((k, i) => `${k} ${modes[i]}`).join('; ')})`);
   const sitesLoss = (): Loss[] => {
     const refused = runs.rust.refusalSites ?? [];
     return refused.length ? [{ id: `${s.id}:refusal-sites`, reason: `The Rust run refused ${refused.reduce((n, x) => n + x.count, 0)} engine calls at: ${refused.map(siteText).join('; ')}` }] : [];
   };
   if (!runs.rust.receipt) {
-    const losses = [{ id: s.id, reason: `Rust wrote no receipt: its runner exited without one, where both TypeScript engines completed.${runs.rust.logTail ? ` Log tail: ${runs.rust.logTail}` : ''}` }, ...sitesLoss()];
+    const tsBuilds = TS_ENGINES.map(k => buildOf(runs[k].receipt!).overlay.commit);
+    if (new Set(tsBuilds).size !== 1 || tsBuilds[0] === null) return notRun(`the TypeScript engines ran different or unnamed gbrain builds (${tsBuilds.join(', ')})`);
+    const exit = runs.rust.exit;
+    const exitText = exit ? `exit ${exit.code ?? 'none'}${exit.signal ? ` by ${exit.signal}` : ''}` : 'no exit record';
+    if (!runs.rust.hasLog || typeof exit?.code !== 'number' || exit.code === 0) return notRun(`Rust wrote no receipt and has no failed run on record (${exitText}${runs.rust.hasLog ? '' : ', no run.log'})`);
+    const ref = exit.gbrain.split('@').at(-1) ?? '';
+    if (!/^[0-9a-f]{7,40}$/.test(ref) || !tsBuilds[0].startsWith(ref)) return notRun(`Rust's run named gbrain ${exit.gbrain}, not the TypeScript engines' build ${tsBuilds[0]}`);
+    const losses = [{ id: s.id, reason: `Rust wrote no receipt: its runner failed (${exitText}) without one, where both TypeScript engines completed.${runs.rust.logTail ? ` Log tail: ${runs.rust.logTail}` : ''}` }, ...sitesLoss()];
     const reason = withNote(losses.map(l => l.reason).join(' | ').slice(0, 1600))!;
     return {
       ...base, gbrain: { ...buildOf(runs.pglite.receipt!), rust_addon: null }, verdict: 'FAIL', reason,
@@ -376,6 +397,14 @@ export function judgeSuite(s: GateSuite, runs: Record<EvalEngineKind, EngineRun>
         if (differs.length) divergences.push([`vs ${k}: ${differs.map(key => `${key} Rust ${m[key]} vs ${measured[k]![key]}`).join(', ')}`, ...s.diverge(rust, runs[k].receipt!)].join('; '));
       }
     } else if (rule.kind === 'paired-bound') {
+      const sets = EVAL_ENGINES.map(k => {
+        const r = runs[k].receipt!;
+        const ids: string[] = (r.data?.per_query?.gbrain ?? []).map((q: any) => q.id).sort();
+        return { k, ids, n: r.n_total, full: ids.length === r.n_total && (r.resolved_config?.probes_generated ?? ids.length) === ids.length };
+      });
+      if (sets.some(x => !x.full) || new Set(sets.map(x => x.ids.join(','))).size !== 1) {
+        return notRun(`the engines scored different or partial ${rule.key} query sets (${sets.map(x => `${x.k} ${x.ids.length} of ${x.n}`).join(', ')})`);
+      }
       const bounds = Object.fromEntries(TS_ENGINES.map(k => [k, cat13PairedBound(rust, runs[k].receipt!)])) as Record<(typeof TS_ENGINES)[number], ReturnType<typeof cat13PairedBound>>;
       for (const k of TS_ENGINES) {
         const x = bounds[k];
@@ -391,6 +420,9 @@ export function judgeSuite(s: GateSuite, runs: Record<EvalEngineKind, EngineRun>
         secondary: { tie_order_flips: Object.fromEntries(TS_ENGINES.map(k => [k, bounds[k].tie_order_flips])) },
       });
     } else if (rule.kind === 'within-or-equal') {
+      for (const k of EVAL_ENGINES) for (const key of [...rule.points, ...rule.counts]) {
+        if (!Number.isFinite(measured[k]![key])) return notRun(`the ${k} receipt has no ${key}`);
+      }
       for (const k of TS_ENGINES) {
         for (const key of rule.points) if (!(Math.abs(m[key] - measured[k]![key]) <= 0.5)) gating.push({ id: `${s.id}:${key}:vs-${k}`, reason: `Rust ${m[key]} vs ${k} ${measured[k]![key]}: more than 0.5 points apart` });
         for (const key of rule.counts) if (m[key] !== measured[k]![key]) gating.push({ id: `${s.id}:${key}:vs-${k}`, reason: `Rust ${m[key]} vs ${k} ${measured[k]![key]}: counts differ` });
@@ -450,7 +482,7 @@ function selectSuites(argv: readonly string[]): GateSuite[] {
   return GATE_SUITES.filter(s => want.includes(s.id));
 }
 
-function runChild(args: string[], env: Record<string, string>, logPath: string): Promise<{ code: number | null; tail: string }> {
+function runChild(args: string[], env: Record<string, string>, logPath: string): Promise<{ code: number | null; signal: string | null; tail: string }> {
   return new Promise(res => {
     const log = createWriteStream(logPath);
     let tail = '';
@@ -459,19 +491,20 @@ function runChild(args: string[], env: Record<string, string>, logPath: string):
     child.stdout.on('data', keep);
     child.stderr.on('data', keep);
     child.on('error', e => { tail += `\nspawn error: ${e.message}`; });
-    child.on('close', code => { log.end(() => res({ code, tail })); });
+    child.on('close', (code, signal) => { log.end(() => res({ code, signal, tail })); });
   });
 }
 
 async function run(argv: readonly string[]): Promise<void> {
   const spec = gbrainSpecFrom(argv);
-  if (!spec) throw new Error('run needs --gbrain <checkout>@<sha>, the one build every engine and suite measures');
+  if (!spec || !/^[0-9a-f]{7,40}$/.test(spec.split('@').at(-1) ?? '')) throw new Error('run needs --gbrain <checkout>@<sha> with a 7 to 40 character commit sha (not a tag or branch), the one build every engine and suite measures');
   const engines = (flag(argv, '--engines')?.split(',') ?? [...EVAL_ENGINES]) as EvalEngineKind[];
   const paid = argv.includes('--paid');
   const budget = paid ? ['--budget-run-id', flag(argv, '--budget-run-id') ?? '', '--budget-usd', flag(argv, '--budget-usd') ?? ''] : [];
   if (paid && budget.includes('')) throw new Error('--paid needs --budget-run-id and --budget-usd');
   const cacheDir = paid ? resolve(flag(argv, '--embed-cache-dir') ?? '') : '';
   if (paid && !flag(argv, '--embed-cache-dir')) throw new Error('--paid needs --embed-cache-dir, so every engine reads the same vectors');
+  if (paid && engines.includes('pglite') && engines[0] !== 'pglite') throw new Error('--paid needs pglite first in --engines: PGLite fills the embedding cache the other engines only read');
   if (engines.includes('rust') && (!process.env.GBRAIN_RUST_ENGINE_ADDON || !process.env[RUST_ADDON_SHA256_ENV])) {
     throw new Error(`the rust engine needs GBRAIN_RUST_ENGINE_ADDON and ${RUST_ADDON_SHA256_ENV}, so the runners load exactly the named addon`);
   }
@@ -483,22 +516,23 @@ async function run(argv: readonly string[]): Promise<void> {
       { label: s.id, category: s.category, script: s.script, live: paid && s.embedsLive === true, args: s.args, canonical: s.canonicalReceipt === true },
       ...(s.beside ? [{ label: s.beside.id, category: s.beside.category, script: s.beside.script, live: false, args: () => s.beside!.args, canonical: false }] : []),
     ];
-    for (const job of jobs) for (const [i, kind] of engines.entries()) {
+    for (const job of jobs) for (const kind of engines) {
       const dir = engineDir(job.category, kind);
       rmSync(dir, { recursive: true, force: true });
       mkdirSync(dir, { recursive: true });
       const env0 = job.live ? { ...Object.fromEntries(Object.entries(process.env).filter((e): e is [string, string] => e[1] !== undefined)), GBRAIN_EVAL_ENGINE: kind, ...(pg ? { LIFECYCLE_PG_URL: pg } : {}) } : runnerEnv(kind, pg);
       const env = { ...env0, [RUST_REFUSALS_FILE_ENV]: join(dir, REFUSAL_SITES) };
-      const args = [job.script, '--gbrain', spec, ...job.args({ paid: job.live, cacheFile: job.live ? join(cacheDir, `${job.category}.sqlite`) : undefined, fillsCache: i === 0, budget })];
+      const args = [job.script, '--gbrain', spec, ...job.args({ paid: job.live, cacheFile: job.live ? join(cacheDir, `${job.category}.sqlite`) : undefined, fillsCache: kind === 'pglite', budget })];
       const canonical = join(REPO, 'eval/reports', job.category, 'receipt.json');
       if (job.canonical) rmSync(canonical, { force: true });
       const t0 = Date.now();
-      const { code, tail } = await runChild(args, env, join(dir, 'run.log'));
+      const { code, signal, tail } = await runChild(args, env, join(dir, 'run.log'));
+      writeFileSync(join(dir, RUN_EXIT), `${JSON.stringify({ code, signal, gbrain: spec } satisfies RunExit)}\n`);
       if (code === EVAL_ENGINE_REFUSED_EXIT) writeFileSync(join(dir, 'refused.txt'), `${tail.split('\n').filter(l => l.startsWith('REFUSED')).at(-1) ?? tail.slice(-500)}\n`);
       if (job.canonical) {
         if (existsSync(canonical)) copyFileSync(canonical, join(dir, 'receipt.json'));
       }
-      console.log(`${job.label} ${kind}: exit ${code} in ${Math.round((Date.now() - t0) / 1000)}s`);
+      console.log(`${job.label} ${kind}: exit ${code ?? signal} in ${Math.round((Date.now() - t0) / 1000)}s`);
     }
   }
 }
