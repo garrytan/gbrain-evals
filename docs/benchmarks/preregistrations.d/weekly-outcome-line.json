@@ -57,6 +57,10 @@
           "role": "judge"
         },
         {
+          "model": "claude-opus-5-5",
+          "role": "judge"
+        },
+        {
           "model": "gemini-3.8-flash",
           "role": "simulator"
         },
