@@ -18,7 +18,8 @@
  * records are the cells' answers and judgments (records.ts). The week writes week-<date>.json and its scorecard
  * week-<date>.md; the block writes block-<n>.json and its page section block-<n>.md. A block ends only when it lists all
  * four weeks and each carries the runner's settled marker (settled.ts) agreeing with its meta, so a fourth week that is
- * still running never ends a block.
+ * still running never ends a block. Until a block ends its file carries no simultaneous interval and no wild bootstrap,
+ * because both are end-of-block readings and an open block's would be an interim p-value outside the one look (R113).
  *
  * The writer refuses any field that could carry question text, a value, a name or plan content, by an allow-list: every
  * key is fixed (or one of a fixed set, such as the rows, readers, classes and kinds), every number finite, and every
@@ -134,7 +135,7 @@ export const BLOCK_SCHEMA: Schema = obj({
     look: n(obj({ ...((holm as { keys: Record<string, Schema> }).keys), withheld: n(en(['descriptive', 'ceiling', 'split by reader'])), pooled: est })),
     final: n(holm),
     pooled: est, readers: readers(est),
-    simultaneous: obj({ level: num, ci: n(pair) }),
+    simultaneous: n(obj({ level: num, ci: n(pair) })),
     wild: n(obj({ estimate: num, p: num, ci95: pair })),
     mask: obj({ planned: int, kept: int, lost: int, share: num }),
     descriptive: bool, ceiling: bool,
@@ -354,8 +355,8 @@ export function blockAggregates(block: number, metas: readonly WeekMeta[], quest
         look: l ? { z: zOut(l.z), holm_step: l.holm_step, bound: l.bound, crossed: l.crossed, withheld: l.withheld, pooled: outEst(l.pooled) } : null,
         final: ended ? { z: zOut(x.z), holm_step: x.holm_step, bound: x.bound, crossed: x.crossed } : null,
         pooled: outEst(x.pooled), readers: outReaders(x.readers, outEst),
-        simultaneous: { level: x.simultaneous.level, ci: r4p(x.simultaneous.ci) },
-        wild: x.wild ? { estimate: r4(x.wild.estimate)!, p: r4(x.wild.p)!, ci95: r4p(x.wild.ci95)! } : null,
+        simultaneous: ended ? { level: x.simultaneous.level, ci: r4p(x.simultaneous.ci) } : null,
+        wild: ended && x.wild ? { estimate: r4(x.wild.estimate)!, p: r4(x.wild.p)!, ci95: r4p(x.wild.ci95)! } : null,
         mask: { ...x.mask, share: r4(x.mask.share)! }, descriptive: x.descriptive, ceiling: x.ceiling,
         means: { gbrain: r4(x.means.gbrain), other: r4(x.means.other) },
         per_world: x.diffs.map(d => ({ world: d.world, questions: d.n, d: r4(d.d)!, readers: outReaders(d.readers, v => r4(v)!) })),

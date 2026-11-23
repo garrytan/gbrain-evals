@@ -504,6 +504,16 @@ describe('the end of a block', () => {
     expect(() => blockAggregates(1, m4, q4, { draws: 99, settled: [...marks.slice(0, 3), { ...marks[3], steps: { cells: 0, rereads: 0, judgments: 0, harness_failures: 0 } }] })).toThrow(/no cells or judgments/);
   });
 
+  // Value: protects=an open block publishes no simultaneous interval and no wild bootstrap p-value, which are end-of-block readings and would otherwise be an interim test outside the one look; fails_when=an open block file carries either (#611 read-only review blocker 2, aggregates.ts:342-343); why_new=GBEV-3 ruling on #611, 2026-11-23 (R113 integrity); seam=aggregates.ts blockAggregates; no_claim=the look's own z, which the look publishes by design
+  test('before the end, a block file holds no simultaneous interval and no wild bootstrap', () => {
+    const all = (b: typeof open) => Object.values(b.comparisons).flatMap(c => Object.values(c));
+    expect(all(open).every(c => c.simultaneous === null && c.wild === null)).toBe(true);
+    expect(all(done).every(c => c.simultaneous !== null)).toBe(true);
+    expect(all(done).some(c => c.wild !== null)).toBe(true);
+    assertAggregate(open, 'block');
+    assertAggregate(done, 'block');
+  });
+
   test('a week refuses a previous block that has not ended', () => {
     expect(() => weekAggregates(metas[0], questions, { previousBlock: open })).toThrow(/previous block has not ended/);
   });
