@@ -9,7 +9,7 @@
 import { afterAll, describe, expect, test } from 'bun:test';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { BG1_CUSTODY_MARKER, PUBLIC_PHRASING } from '../../eval/generators/changing-facts-gen.ts';
@@ -266,4 +266,50 @@ describe('the follow-up: published hashes, a committed fill and pinned template 
     expect(fill).not.toThrow('is not committed');
     expect(fill).toThrow();
   });
+});
+
+describe('#612 read-only review findings 1 to 4: drill records, symlinked destinations and partial records', () => {
+  // Value: protects=a real mint never counts a drill's records or worlds, render.ts never writes a sealed world through a symlink into a checkout, and a resume never treats a partial validation record as a resolved slot; fails_when=mint.sh starts a real mint on an --out holding a drill validation record or a template-rendered world, render.ts writes into a symlinked world or render directory inside a checkout, or unresolved_check accepts a truncated validation record; why_new=#612 read-only review findings 1 to 4 (supply.ts:44, mint.sh:441, render.ts:592, mint.sh:489); seam=mint.sh's drill check and complete_record, validate.ts's mode field and rename, render.ts insideCheckout on the write destinations; no_claim=a real render
+  test('a real mint refuses to start on an --out holding a drill validation record or a template-rendered world', () => {
+    const j = inputs('drill-out');
+    const out = join(j.dir, 'bgw-custody-drill-out');
+    expect(mint(out, j, ['--fake', ...BATCH, '--count', '6']).code).toBe(0);
+    const render = join(out, 'render');
+    const records = readdirSync(render).filter(f => f.endsWith('.validation.json'));
+    expect(records.length).toBe(6);
+    expect(readdirSync(render).some(f => f.endsWith('.tmp'))).toBe(false);
+    for (const f of records) expect((JSON.parse(readFileSync(join(render, f), 'utf8')) as { mode: string }).mode).toBe('drill');
+    refusal(mint(out, j, [...BATCH, '--start', '1007', '--count', '1']), 'holds a --fake drill\'s validation record (bgw-1001.validation.json), and a real mint never starts on a drill\'s --out');
+    for (const f of records) unlinkSync(join(render, f));
+    refusal(mint(out, j, [...BATCH, '--count', '1']), 'holds a template-rendered world (bgw-1001), and a real mint never starts on a drill\'s --out');
+  }, 240_000);
+
+  test('render.ts refuses a world or render directory linked into a checkout', () => {
+    const i = inputs('linked');
+    const checkout = scratch('linked-checkout');
+    spawnSync('git', ['-C', checkout, 'init', '-q']);
+    mkdirSync(join(checkout, 'worlds')); mkdirSync(join(checkout, 'render'));
+    const render = (out: string) => run('bun', [RENDER, '--bgw', '--seed-file', i.seed, '--phrasing', i.phrasing, '--fake', '--slot', '1001', '--set', join(out, 'set')]);
+    const a = join(i.dir, 'a');
+    mkdirSync(join(a, 'set'), { recursive: true });
+    symlinkSync(join(checkout, 'worlds'), join(a, 'set', 'worlds'));
+    refusal(render(a), 'bgw-1001\'s world directory resolves inside a git checkout through a symlink');
+    const b = join(i.dir, 'b');
+    mkdirSync(join(b, 'set'), { recursive: true });
+    symlinkSync(join(checkout, 'render'), join(b, 'render'));
+    refusal(render(b), 'bgw-1001\'s render record directory resolves inside a git checkout through a symlink');
+    expect(readdirSync(join(checkout, 'worlds'))).toEqual([]);
+    expect(readdirSync(join(checkout, 'render'))).toEqual([]);
+  }, 60_000);
+
+  test('a resume refuses a slot whose validation record is partial', () => {
+    const j = inputs('partial');
+    const out = join(j.dir, 'bgw-custody-partial');
+    for (let s = 1001; s <= 1007; s++) record(out, `bgw-${s}`);
+    writeFileSync(join(out, 'render', 'bgw-1006.validation.json'), '{"world":"bgw-1006","status":"pass"');
+    stopped(mint(out, j, ['--fake', ...BATCH, '--start', '1008', '--count', '1']), 'slot 1006 (bgw-1006) has an incomplete validation record, so delete it and resume the mint with --start 1006');
+    writeFileSync(join(out, 'render', 'bgw-1006.validation.json'), '{"world":"bgw-1006"}');
+    stopped(mint(out, j, ['--fake', ...BATCH, '--start', '1008', '--count', '1']), 'slot 1006 (bgw-1006) has an incomplete validation record');
+    expect(existsSync(join(out, 'set', 'worlds', 'bgw-1008'))).toBe(false);
+  }, 120_000);
 });

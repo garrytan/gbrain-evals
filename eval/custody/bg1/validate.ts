@@ -46,7 +46,7 @@
  * exits 0 on a pass and 12 on a fail.
  */
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { BG1_CUSTODY_MARKER, BG1_TARGET_TOKENS, buildQuestions, goldFields, PlanError, renderBriefs, worldTokens, type QuestionRecord, type World } from '../../generators/changing-facts-gen.ts';
 import { BG1_CONVERSATIONS, BG1_N_CAP, BG1C_CONVERSATIONS, BG1C_N_FINAL, BGW_BATCH_KEPT, bgwBatchIds, bgwSlotOf } from '../../runner/bg1/types.ts';
@@ -162,7 +162,8 @@ export function validateSlot(argv: string[]): { pass: boolean; line: string } {
   const controls = controlsDropped(join(dirname(resolve(set)), 'render', `${id}.json`));
   const record = join(dirname(resolve(set)), 'render', `${id}.validation.json`);
   mkdirSync(dirname(record), { recursive: true });
-  writeFileSync(record, json({ schema: VALIDATION_SCHEMA, world: id, slot, status, failed: r.failed, sessions: r.sessions, tokens: r.tokens, target_tokens: targetTokens, tolerance, world_sha256: hash, controls_dropped: controls }), { mode: 0o600 });
+  writeFileSync(`${record}.tmp`, json({ schema: VALIDATION_SCHEMA, world: id, slot, mode: argv.includes('--fake') ? 'drill' : 'real', status, failed: r.failed, sessions: r.sessions, tokens: r.tokens, target_tokens: targetTokens, tolerance, world_sha256: hash, controls_dropped: controls }), { mode: 0o600 });
+  renameSync(`${record}.tmp`, record);
   return { pass: status === 'pass', line: `bg1-validate slot=${slot} world=${id} status=${status} gates=${r.failed.join(',') || 'none'} tokens=${r.tokens ?? 'none'} controls_dropped=${controls ?? 'none'}` };
 }
 

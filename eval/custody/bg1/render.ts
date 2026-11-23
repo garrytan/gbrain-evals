@@ -77,7 +77,7 @@
  */
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync, renameSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, realpathSync, renameSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import {
   BG1_DATA_DIR, BG1_TARGET_TOKENS, BG1_WORLD_SCHEMA, buildQuestions, devWorldPlan, loadPhrasing, PlanError, planWorld, PUBLIC_PHRASING, renderBriefs, renderTemplateSession,
@@ -508,10 +508,11 @@ export function devPlan(id: string, worlds = BG1_DEV_WORLDS): WorldPlan {
   return plan;
 }
 
-/** True when path, or its nearest existing parent, sits inside a git work tree; refuses when git cannot say. */
+/** True when path, or its nearest existing parent with symlinks resolved, sits inside a git work tree; refuses when git cannot say. */
 export function insideCheckout(path: string): boolean {
   let dir = resolve(path);
   while (!existsSync(dir)) dir = dirname(dir);
+  dir = realpathSync(dir);
   const git = spawnSync('git', ['-C', dir, 'rev-parse', '--is-inside-work-tree'], { stdio: 'ignore' });
   if (git.error) throw new RenderRefusal('git is not on PATH, so --set cannot be checked for a checkout');
   return git.status === 0;
@@ -590,6 +591,8 @@ export async function main(argv: string[], env: Record<string, string | undefine
     make = p => fakeModels(p, breaks);
   }
   const dir = join(resolve(set), 'worlds', id);
+  const record = join(dev === null ? dirname(resolve(set)) : resolve(set), 'render', `${id}.json`);
+  for (const target of [dir, dirname(record)]) if (insideCheckout(target)) throw new RenderRefusal(`${id}'s ${target === dir ? 'world directory' : 'render record directory'} resolves inside a git checkout through a symlink`);
   const planText = json(plan);
   if (existsSync(join(dir, 'world.json'))) {
     if (!existsSync(join(dir, 'plan.json')) || readFileSync(join(dir, 'plan.json'), 'utf8') !== planText) throw new RenderRefusal(`${id} is already written from a different plan`);
@@ -598,7 +601,6 @@ export async function main(argv: string[], env: Record<string, string | undefine
   const { world, stats } = await renderWorld(plan, make(plan), { targetTokens: renderTokens });
   const failures = Object.entries(stats.failures).sort(([a], [b]) => (a < b ? -1 : 1)).map(([k, v]) => `${k}:${v}`).join(',') || 'none';
   const counts = `sessions=${stats.sessions} attempts=${stats.attempts} regenerated=${stats.regenerated} checks=${stats.checks} failures=${failures}`;
-  const record = join(dev === null ? dirname(resolve(set)) : resolve(set), 'render', `${id}.json`);
   if (!world) {
     writeAtomic(record, json({ world: id, status: 'dropped', ...stats }));
     return { status: 'dropped', line: `bg1-render ${label} status=dropped dropped_session=${stats.dropped_session} ${counts}` };
