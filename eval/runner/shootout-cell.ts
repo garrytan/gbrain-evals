@@ -446,6 +446,7 @@ export function bg1CustodyPush(env: Record<string, string | undefined> = process
   if (rel.startsWith('..') || isAbsolute(rel)) throw refuse({ code: 'USAGE', message: `the ${label} manifest must sit inside ${v.source}`, why: 'it travels with the files it describes', fix });
   const m = JSON.parse(readFileSync(manifest, 'utf8')) as Bg1Manifest;
   if (m.status !== 'filled' || !m.files?.length) throw refuse({ code: 'CUSTODY_REQUIRED', message: `the ${label} manifest has no hashes`, why: 'only pinned bytes are pushed', fix });
+  if (m.drill) throw refuse({ code: 'CUSTODY_REQUIRED', message: `the ${label} manifest was filled by a --fake drill`, why: 'a drill pins template text, never minted worlds, and the push refuses before any VM exists', fix });
   if (set === BG1C_SET && m.dataset !== set.dataset) throw refuse({ code: 'CUSTODY_REQUIRED', message: `${v.manifest} is the manifest of ${JSON.stringify(m.dataset ?? null)}, not of the ${label} set`, why: `a ${label} unit pushes only worlds its own manifest pins`, fix });
   const worlds = unit ? bg1UnitConversations(m, unit.index, unit.size, set) : null;
   const list: string[] = [];

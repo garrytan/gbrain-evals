@@ -57,11 +57,11 @@ function addSlots(name: string, slots: number[]): string {
 }
 function validate(root: string, extra: string[] = []): string {
   const report = join(dir, 'reports', `r${++reports}.json`);
-  const v = run('bun', [VALIDATE, '--set', root, '--seed-file', seed, '--phrasing', phrasing, '--report', report, ...LENGTH, ...extra]);
+  const v = run('bun', [VALIDATE, '--set', root, '--seed-file', seed, '--phrasing', phrasing, '--report', report, ...LENGTH, ...extra, '--fake']);
   expect(v.code).toBe(0);
   return report;
 }
-const fill = (root: string, report: string, extra = LENGTH) => run('bun', [FILL, '--root', root, '--report', report, ...extra]);
+const fill = (root: string, report: string, extra = LENGTH) => run('bun', [FILL, '--root', root, '--report', report, ...extra, '--fake']);
 function refused(r: ReturnType<typeof run>, text: string) {
   expect(r.code).toBe(2);
   expect(r.out).toBe('');
@@ -85,7 +85,7 @@ describe('fill-manifest.ts', () => {
     expect(statSync(out).mode & 0o777).toBe(0o600);
     const template = JSON.parse(committed.toString('utf8')) as Bg1Manifest;
     expect(template.status).toBe('unfilled');
-    expect({ ...m1, filled_at: null }).toEqual({ ...template, status: 'filled', files: bg1ManifestFiles(root, BG1_CONVERSATIONS.slice(0, 12)), filled_at: null, kept: BG1_CONVERSATIONS.slice(0, 12) });
+    expect({ ...m1, filled_at: null }).toEqual({ ...template, status: 'filled', files: bg1ManifestFiles(root, BG1_CONVERSATIONS.slice(0, 12)), filled_at: null, kept: BG1_CONVERSATIONS.slice(0, 12), drill: true });
     expect(bg1Kept(m1)).toEqual({ kept: BG1_CONVERSATIONS.slice(0, 12), n_final: null });
     const m1sha = sha(readFileSync(out));
 
@@ -115,7 +115,7 @@ describe('fill-manifest.ts', () => {
     try {
       process.env.GBRAIN_EVALS_BG1_SOURCE = root;
       process.env.GBRAIN_EVALS_BG1_MANIFEST = out;
-      expect(verifyBg1Custody(() => {})).toBe(60);
+      expect(verifyBg1Custody(() => {}, undefined, { keyless: true })).toBe(60);
     } finally {
       for (const [k, v] of [['GBRAIN_EVALS_BG1_SOURCE', saved.source], ['GBRAIN_EVALS_BG1_MANIFEST', saved.manifest]] as const) if (v === undefined) delete process.env[k]; else process.env[k] = v;
     }

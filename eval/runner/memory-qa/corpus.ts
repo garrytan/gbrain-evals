@@ -13,6 +13,7 @@
  * recur across LongMemEval haystacks share embedding-cache entries while
  * remaining distinct occurrences for scoring.
  */
+import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { closeSync, existsSync, openSync, readdirSync, readFileSync, readSync, realpathSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve } from 'node:path';
@@ -918,7 +919,9 @@ export const BG1_MANIFEST = 'eval/decisions/datasets/bg1-manifest.json';
 export const BG1_DEV_ROOT = join(REPO_ROOT, 'eval/data/changing-facts-v1/dev');
 export const BG1_FIXTURES_ROOT = join(REPO_ROOT, 'eval/data/changing-facts-v1/fixtures');
 /** Renderers that write template text, not a model's: the committed fixtures (changing-facts-gen.ts at BG1_FIXTURE_TOKENS) and render.ts --fake. */
-const BG1_TEMPLATE_RENDERERS = ['template', 'fake-template'];
+export const BG1_TEMPLATE_RENDERERS = ['template', 'fake-template'];
+/** A world.json text's renderer, or null when the text is not JSON or names none. */
+const worldRenderer = (text: string): string | null => { try { const r = (JSON.parse(text) as { renderer?: unknown }).renderer; return typeof r === 'string' ? r : null; } catch { return null; } };
 export const BG1_WORLD_FORMAT = 'gbrain-evals/bg1-world/v1';
 /** The runner (bg1RunClock) refuses once the wall clock passes the world end by more than this (the plan's F9). */
 export const BG1_WORLD_END_SLIP_DAYS = 14;
@@ -933,6 +936,8 @@ export interface Bg1Manifest {
   n_final?: number;
   /** The sha256 of each earlier fill of this manifest, oldest first (a refill only adds files). */
   earlier_fills?: string[];
+  /** Set by a fill-manifest.ts --fake drill over template-rendered worlds; only a keyless load reads such a manifest. */
+  drill?: boolean;
 }
 
 /** One sealed changing-facts set: its world ids, manifest, custody variables, kept-list size and campaign. */
@@ -970,21 +975,32 @@ const BGW_ENV = { source: 'GBRAIN_EVALS_BGW_SOURCE', manifest: 'GBRAIN_EVALS_BGW
 const bgwAsk = { next: 'ask_user' as const, user_message: `set ${BGW_ENV.batch} to the batch's name, its first world id (bgw-1001 for the first), on the custody host and the cell VM` };
 
 /**
- * Why a Set W batch may not mint or load yet: it needs its committed manifest template, unfilled and carrying its own
- * dataset, and every slot it may use listed as sealed in the committed split file, both committed before the batch mints.
- * Empty when both hold. `repo` is the checkout to read them from.
+ * Why a Set W batch may not mint or load yet: it needs its manifest template, unfilled and carrying its own dataset, and
+ * every slot it may use listed as sealed in the split file. Empty when both hold. `repo` is the checkout to read them
+ * from. With `head` (bgw-checks.ts batch, before a mint) both must be in the checkout's HEAD commit and unchanged in its
+ * working tree, so a draft on disk or an uncommitted edit never stands in for a committed batch, and a checkout git
+ * cannot read has nothing committed. A load reads the files on disk, so a cell VM's packed tree without .git loads.
  */
-export function bgwCommittedProblems(first: number, repo = REPO_ROOT): string[] {
+export function bgwCommittedProblems(first: number, repo = REPO_ROOT, opts: { head?: boolean } = {}): string[] {
   const problems: string[] = [];
-  const template = join(repo, bgwBatchManifest(first));
-  if (!existsSync(template)) problems.push(`${bgwBatchManifest(first)} is not committed`);
-  else {
+  const committed = (path: string): string | null => {
+    if (!opts.head) { try { return readFileSync(join(repo, path), 'utf8'); } catch { problems.push(`${path} is not committed`); return null; } }
+    const head = spawnSync('git', ['-C', repo, 'show', `HEAD:${path}`], { encoding: 'utf8', maxBuffer: 1 << 26 });
+    if (head.status !== 0) { problems.push(`${path} is not committed`); return null; }
+    let disk: string | null = null;
+    try { disk = readFileSync(join(repo, path), 'utf8'); } catch { /* absent from the working tree */ }
+    if (disk !== head.stdout) { problems.push(`${path} differs from its committed bytes at HEAD`); return null; }
+    return head.stdout;
+  };
+  const template = committed(bgwBatchManifest(first));
+  if (template !== null) {
     let m: Partial<Bg1Manifest> = {};
-    try { m = JSON.parse(readFileSync(template, 'utf8')) as Bg1Manifest; } catch { problems.push(`${bgwBatchManifest(first)} is not readable JSON`); }
+    try { m = JSON.parse(template) as Bg1Manifest; } catch { problems.push(`${bgwBatchManifest(first)} is not readable JSON`); }
     if (m.dataset !== bgwBatchDataset(first) || m.status !== 'unfilled') problems.push(`${bgwBatchManifest(first)} is not batch ${bgwBatchName(first)}'s unfilled template`);
   }
   let sealed: unknown[] = [];
-  try { const s = JSON.parse(readFileSync(join(repo, BGW_SPLIT), 'utf8')) as { benchmark?: string; sealed?: unknown[] }; sealed = s.benchmark === 'bgw' && Array.isArray(s.sealed) ? s.sealed : []; } catch { /* missing or unreadable: no slot is listed */ }
+  const split = committed(BGW_SPLIT);
+  try { const s = JSON.parse(split ?? '') as { benchmark?: string; sealed?: unknown[] }; sealed = s.benchmark === 'bgw' && Array.isArray(s.sealed) ? s.sealed : []; } catch { /* missing or unreadable: no slot is listed */ }
   const unlisted = bgwBatchIds(first).filter(id => !sealed.includes(id));
   if (unlisted.length) problems.push(`${BGW_SPLIT} does not list ${unlisted.length} of the batch's slots as sealed (first ${unlisted[0]})`);
   return problems;
@@ -1233,12 +1249,16 @@ export function loadBg1Dev(opts: { root?: string; only?: ReadonlySet<string>; wo
 }
 
 type Bg1Custody = { log: string; decisionId: string; purpose: string };
-type Bg1LoadOpts = { only?: ReadonlySet<string>; root?: string; manifestPath?: string; worldEnd?: string };
+type Bg1LoadOpts = { only?: ReadonlySet<string>; root?: string; manifestPath?: string; worldEnd?: string; keyless?: boolean };
 
 /**
  * Load bg1 (sealed): appends one custody access-log line per world before its files are read. `only` keeps those
  * worlds. With a filled manifest every file must be listed and match; with an unfilled one the files' hashes are
  * recorded in the corpus source and a notice says they were not pinned. BG1-C's worlds (bg1-031 onward) are not BG1's.
+ * Unless the load is declared keyless, a manifest a --fake drill filled and a world render.ts --fake wrote refuse, so a
+ * drill's output never loads as minted worlds. The generator's committed fixtures (renderer "template") still load under
+ * an unfilled manifest, as the loader tests use them; validate.ts and fill-manifest.ts refuse both template renderers,
+ * so neither reaches a filled manifest.
  */
 export function loadBg1(custody: Bg1Custody, opts: Bg1LoadOpts = {}): Corpus {
   return loadBg1Set(BG1_SET, custody, opts);
@@ -1274,6 +1294,9 @@ function loadBg1Set(set: Bg1SealedSet, custody: Bg1Custody, opts: Bg1LoadOpts): 
     why: 'a sealed cell VM receives and opens only its own unit\'s worlds', fix: bg1Ask(set) });
   const worldEnd = bg1WorldEnd(opts);
   const { manifest, sha256: manifestSha } = readBg1Manifest(opts.manifestPath, set);
+  const drill = (what: string) => decideError({ code: 'DATASET_MISSING', message: `${b}: ${what}, and this load is not keyless`,
+    why: 'a --fake drill writes template text, which only keyless tests read', fix: bg1Ask(set) });
+  if (manifest.drill && !opts.keyless) throw drill('the manifest was filled by a --fake drill');
   const pinned = manifest.status === 'filled' ? new Map(manifest.files.map(f => [f.path, f.sha256])) : null;
   const files: DatasetIdentity['files'] = [];
   const read = (path: string) => {
@@ -1295,7 +1318,9 @@ function loadBg1Set(set: Bg1SealedSet, custody: Bg1Custody, opts: Bg1LoadOpts): 
       if (absent.length) throw decideError({ code: 'DATASET_MISSING', message: `${b}: ${absent.length} file(s) the manifest pins for ${id} are not under ${set.env.source}`, why: 'a pinned world loads whole or not at all', fix: bg1Ask(set) });
     }
     appendAccessLog(custody.log, { action: 'open', purpose: `${b} ${id}: ${custody.purpose}`, decision_id: custody.decisionId, labels_sha256: manifestSha, run_sha256: null });
-    const c = bg1Conversation(id, read(f.world), read(f.questions), worldEnd);
+    const worldText = read(f.world);
+    if (!opts.keyless && worldRenderer(worldText) === 'fake-template') throw drill(`${id} was written by render.ts --fake`);
+    const c = bg1Conversation(id, worldText, read(f.questions), worldEnd);
     conversations.push(c.conversation);
     questions.push(...c.questions);
   }
@@ -1341,12 +1366,13 @@ export function bg1UnitConversations(manifest: Bg1Manifest, unit: number, perUni
   return slice;
 }
 
-/** `decide fetch` for bg1 and bg1c: nothing is downloaded; every file the set's filled manifest pins (the unit's, on a cell VM) must be under its custody root with its hash. */
-export function verifyBg1Custody(log: (s: string) => void = s => process.stderr.write(s + '\n'), set: Bg1SealedSet = BG1_SET): number {
+/** `decide fetch` for bg1 and bg1c: nothing is downloaded; every file the set's filled manifest pins (the unit's, on a cell VM) must be under its custody root with its hash. A manifest a --fake drill filled refuses unless the caller declares the check keyless. */
+export function verifyBg1Custody(log: (s: string) => void = s => process.stderr.write(s + '\n'), set: Bg1SealedSet = BG1_SET, opts: { keyless?: boolean } = {}): number {
   const b = set.benchmark;
   const root = bg1Source(process.env, set);
   const { manifest } = readBg1Manifest(undefined, set);
   if (manifest.status !== 'filled') throw decideError({ code: 'CUSTODY_MISSING', message: `${b}: the manifest has no hashes yet`, why: 'only pinned bytes are verified', fix: bg1Fill(set) });
+  if (manifest.drill && !opts.keyless) throw decideError({ code: 'DATASET_MISSING', message: `${b}: the manifest was filled by a --fake drill, and this check is not keyless`, why: 'a drill pins template text, never minted worlds', fix: bg1Fill(set) });
   const scope = bg1UnitScope(process.env, set);
   let files = manifest.files;
   if (scope) {
@@ -1396,7 +1422,7 @@ export function loadCustodyCorpus(path: string): Corpus {
     source: { name: `custodian sealed corpus ${raw.id}`, files: [{ path: 'custody', sha256: sha256(bytes) }], revision: raw.id, license: 'custodian-authored' } };
 }
 
-/** `only` restricts LoCoMo, BEAM, D8, RS1, BG1, BG1-C and Set W to those conversations (a split), so a BEAM, D8, RS1, BG1, BG1-C or Set W conversation outside it is never read. `keyless` declares a bg1-dev load keyless (loadBg1Dev). */
+/** `only` restricts LoCoMo, BEAM, D8, RS1, BG1, BG1-C and Set W to those conversations (a split), so a BEAM, D8, RS1, BG1, BG1-C or Set W conversation outside it is never read. `keyless` declares a bg1-dev or sealed changing-facts load keyless (loadBg1Dev, loadBg1Set). */
 export function loadCorpus(benchmark: string, corpusFile?: string, only?: ReadonlySet<string>, opts: { keyless?: boolean } = {}): Corpus {
   if (benchmark === 'custody') {
     if (!corpusFile) throw new Error('benchmark custody needs --corpus-file <custody path>');
@@ -1438,7 +1464,7 @@ export function loadCorpus(benchmark: string, corpusFile?: string, only?: Readon
       const log = process.env.GBRAIN_EVALS_CUSTODY_LOG;
       if (!log) throw decideError({ code: 'CUSTODY_MISSING', message: `${set.benchmark} questions open only on the custodian host`,
         why: `every ${set.label} world is sealed (${set.split}); every opening is logged`, fix: { next: 'ask_user', user_message: `request the ${set.benchmark} cells from the custodian (campaign ${set.campaign})` } });
-      return loadBg1Set(set, { log, decisionId: process.env.GBRAIN_EVALS_DECISION_ID ?? set.campaign, purpose: `memory-qa loadCorpus ${set.benchmark}` }, { only });
+      return loadBg1Set(set, { log, decisionId: process.env.GBRAIN_EVALS_DECISION_ID ?? set.campaign, purpose: `memory-qa loadCorpus ${set.benchmark}` }, { only, keyless: opts.keyless });
     }
     case 'fixture': return loadFixture();
     default: throw new Error(`unknown benchmark ${benchmark}`);

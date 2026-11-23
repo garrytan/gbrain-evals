@@ -63,7 +63,10 @@
 #     both stops and is never rendered again (BG1's Amendment 6 stop counts validation failures too); the summary lines
 #     then end in invalid=<n>, this invocation's count. Once slot 96 is done with fewer than 40 kept, the mint pauses
 #     with exit 3 and a summary=paused reason=slots_exhausted line, for GBEV-3. --fake-break <slot>:length (render.ts)
-#     writes that slot's world over-long, the top-up drill.
+#     writes that slot's world over-long, the top-up drill. A --fake mint runs validate.ts --fake, which lets its template
+#     worlds pass; a real one fails any template-rendered world. Before it renders, and before it reports kept, the mint
+#     refuses (exit 2) when a slot from the set's first up to there is unresolved (no validation record and no dropped
+#     render record), naming the slot to resume from, so an in-range --start never skips one.
 #   - BG1-C's supply check (--bg1c; --bgw per batch, below; R111, the preregistration's pilot condition 3). Once slot 35 resolves (written
 #     and validated, or dropped), and before a run that starts past slot 35 renders anything, mint.sh runs
 #     eval/custody/bg1/supply.ts on slots 31 to 35 and prints its counts-only line; a run past slot 35 with any of them
@@ -101,6 +104,10 @@
 # holding a bg1-NNN entry refuses a Set W mint, and one holding a bgw-NNNN entry refuses a BG1 or BG1-C mint.
 #
 # --fake renders with the template renderer and fake checks: no network, and no key or key file is read.
+#
+# A real --bg1c or --bgw mint first runs commitment.ts: the seed, its nonce and the phrasing must re-derive the commitment
+# and phrasing SHA-256 that the set's seed check recorded beside the seed for launch amendment A, or the mint refuses
+# (exit 2) before the window check or any proxy.
 #
 # --dev renders public dev worlds through render.ts --dev: stage 1's three, bg1-dev-01, -02 and -03 in that order, or
 # the ones --worlds lists, in its order, from those three and the dev loop's 17 extra (bg1-dev-04 to bg1-dev-20),
@@ -241,6 +248,10 @@ if [ "$BGW" = 1 ]; then
   fi
 fi
 BG1_KEY=""
+# BG1-C and Set W: a real mint renders only from the seed and phrasing its seed commitment file records (commitment.ts).
+if [ "$MODE" = real ] && [ "$GATED" = 1 ]; then
+  env -i PATH=/usr/bin:/bin HOME="$HOME" LANG=C.UTF-8 TZ=UTC "$BUN" "$HERE/commitment.ts" "${SET_ARGS[0]}" --seed-file "$SEED_FILE" --phrasing "$PHRASING" || exit 2
+fi
 if [ "$MODE" = real ]; then
   [ -n "$WINDOW" ] && [ -n "$WINDOW_CAP" ] || die "real mode spends real keys, so it needs --paid-window <unit> and --window-cap-usd <n> from the granted paid window (--fake spends nothing)"
   [ -n "$LEDGER" ] && [ -n "$RUN_ID" ] || die "real mode needs --budget-ledger and --budget-run-id (an open BG1 ledger run)"
@@ -435,7 +446,7 @@ kept_worlds() {
 validate_slot() {
   local line rc=0
   line="$(cd "$OUT" && env -i PATH=/usr/bin:/bin HOME="$HOME" LANG=C.UTF-8 TZ=UTC "$BUN" "$HERE/validate.ts" ${SET_ARGS[@]+"${SET_ARGS[@]}"} --slot "$1" --set "$OUT/set" \
-    --seed-file "$SEED_FILE" --phrasing "$PHRASING" --target-tokens "$TARGET" --tolerance "$TOLERANCE")" || rc=$?
+    --seed-file "$SEED_FILE" --phrasing "$PHRASING" --target-tokens "$TARGET" --tolerance "$TOLERANCE" $([ "$MODE" != fake ] || printf -- --fake))" || rc=$?
   [ -z "$line" ] || printf '%s\n' "$line"
   case "$rc" in 0) ;; 12) INVALID=$((INVALID + 1)) ;; *) exit "$rc" ;; esac
 }
@@ -468,12 +479,23 @@ supply_check() {
   say "summary=paused reason=supply mode=$MODE written=$WRITTEN skipped=$SKIPPED dropped=$DROPPED dropped_earlier=$DROPPED_EARLIER last_slot=$1$(invalid_tail)"
   exit 3
 }
-# BG1-C: stops the mint with exit 0 once KEPT_TARGET worlds are kept. $1 is the last slot.
+# BG1-C and Set W: refuses (exit 2) when a slot from the set's first through $1 is unresolved, with neither a validation
+# record nor a dropped render record, so a mint never reports kept or renders past a slot an in-range --start skipped.
+unresolved_check() {
+  [ "$GATED" = 1 ] || return 0
+  local s id
+  for ((s = FIRST; s <= $1; s++)); do
+    id="$(world_id "$s")"
+    [ -e "$OUT/render/$id.validation.json" ] || dropped_record "$id" || die "slot $s ($id) is unresolved: it has neither a validation record nor a dropped render record, so resume the mint with --start $s"
+  done
+}
+# BG1-C: stops the mint with exit 0 once KEPT_TARGET worlds are kept, after unresolved_check. $1 is the last slot.
 kept_stop() {
   [ -n "$KEPT_TARGET" ] || return 0
   local k
   k="$(kept_worlds)"
   [ "$k" -ge "$KEPT_TARGET" ] || return 0
+  unresolved_check "$1"
   say "summary=kept mode=$MODE kept=$k written=$WRITTEN skipped=$SKIPPED dropped=$DROPPED dropped_earlier=$DROPPED_EARLIER last_slot=$1$(invalid_tail)"
   exit 0
 }
@@ -517,6 +539,7 @@ fi
 yield_gate $((START - 1))
 kept_stop $((START - 1))
 [ "$START" -le $((FIRST + 4)) ] || supply_check $((START - 1))
+unresolved_check $((START - 1))
 for ((slot = START; slot < START + COUNT; slot++)); do
   id="$(world_id "$slot")"
   if dropped_record "$id"; then
