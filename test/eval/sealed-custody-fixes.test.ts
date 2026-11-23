@@ -15,6 +15,7 @@ import { join, resolve } from 'node:path';
 import { BG1_CUSTODY_MARKER, PUBLIC_PHRASING } from '../../eval/generators/changing-facts-gen.ts';
 import { batchCheck } from '../../eval/custody/bg1/bgw-checks.ts';
 import { checkCommitment, commitmentFile, commitmentOf, recordCommitment } from '../../eval/custody/bg1/commitment.ts';
+import { fillManifest } from '../../eval/custody/bg1/fill-manifest.ts';
 import { BGW_SPLIT, bgwBatchManifest, bgwFilledManifest } from '../../eval/runner/memory-qa/bg1-names.ts';
 import { bgwCommittedProblems, bgwSet, bgwWeekWorlds, loadBgw, verifyBg1Custody, type Bg1Manifest } from '../../eval/runner/memory-qa/corpus.ts';
 
@@ -56,6 +57,16 @@ const refusal = (r: ReturnType<typeof run>, text: string) => { expect(r.code).to
 /** A mint refusal after the batch or supply line it prints on its way. */
 const stopped = (r: ReturnType<typeof run>, text: string) => { expect(r.code).toBe(2); expect(r.err).toContain(text); };
 const record = (out: string, world: string) => { mkdirSync(join(out, 'render'), { recursive: true }); writeFileSync(join(out, 'render', `${world}.validation.json`), JSON.stringify({ world, status: 'pass' })); };
+/** A throwaway git checkout whose HEAD commits the set's preregistration holding the given hashes. */
+const PREREG = { bgw: 'docs/benchmarks/2026-11-23-weekly-outcome-line-preregistration.md', bg1c: 'docs/benchmarks/2026-11-19-changing-facts-confirmation-preregistration.md' } as const;
+function published(set: keyof typeof PREREG, ...hashes: string[]) {
+  const repo = scratch(`published-${set}`);
+  mkdirSync(join(repo, 'docs/benchmarks'), { recursive: true });
+  writeFileSync(join(repo, PREREG[set]), ['# Launch amendment A', ...hashes.map(h => `- \`${h}\``)].join('\n') + '\n');
+  const git = (...args: string[]) => spawnSync('git', ['-C', repo, '-c', 'user.name=t', '-c', 'user.email=t@example.invalid', ...args], { encoding: 'utf8' });
+  git('init', '-q'); git('add', '.'); git('commit', '-q', '-m', 'amendment');
+  return repo;
+}
 const withEnv = <T>(vars: Record<string, string>, fn: () => T): T => {
   const saved = Object.fromEntries(Object.keys(vars).map(k => [k, process.env[k]]));
   try { Object.assign(process.env, vars); return fn(); }
@@ -182,11 +193,11 @@ describe('finding 5: a real mint checks the seed commitment', () => {
     expect(seed.out).toContain(`commitment_sha256=${commitment} `);
     expect(JSON.parse(readFileSync(file, 'utf8'))).toEqual({ schema: 'gbrain-evals/seed-commitment/v1', set: 'bgw', commitment_sha256: commitment, phrasing_sha256: sha(readFileSync(j.phrasing)) });
     const check = () => run('bun', [COMMITMENT, '--bgw', '--seed-file', j.seed, '--phrasing', j.phrasing]);
-    expect(check()).toMatchObject({ code: 0, err: '', out: `bg1-commitment set=bgw status=pass commitment_sha256=${commitment} phrasing_sha256=${sha(readFileSync(j.phrasing))}\n` });
-    const passed = realMint();
-    expect(passed.code).toBe(2);
-    expect(passed.err).toContain('real mode spends real keys, so it needs --paid-window');
-    expect(direct().err).not.toContain('commitment');
+    refusal(check(), 'are not both published in docs/benchmarks/2026-11-23-weekly-outcome-line-preregistration.md at HEAD');
+    refusal(realMint(), 'are not both published in docs/benchmarks/2026-11-23-weekly-outcome-line-preregistration.md at HEAD');
+    refusal(direct(), 'are not both published in docs/benchmarks/2026-11-23-weekly-outcome-line-preregistration.md at HEAD');
+    const repo = published('bgw', commitment, sha(readFileSync(j.phrasing)));
+    expect(checkCommitment('bgw', j.seed, j.phrasing, repo)).toBe(`bg1-commitment set=bgw status=pass commitment_sha256=${commitment} phrasing_sha256=${sha(readFileSync(j.phrasing))}`);
 
     const phrasing = readFileSync(j.phrasing), seedText = readFileSync(j.seed);
     writeFileSync(j.phrasing, JSON.stringify({ ...custodyPhrasing, note: 'changed' }));
@@ -198,7 +209,7 @@ describe('finding 5: a real mint checks the seed commitment', () => {
     writeFileSync(j.seed, ['bgw', 'seed', 'v1'].join('-') + ':' + sha('another') + '\n');
     refusal(check(), 'the seed and its nonce do not re-derive the recorded commitment');
     writeFileSync(j.seed, seedText);
-    expect(check().code).toBe(0);
+    expect(checkCommitment('bgw', j.seed, j.phrasing, repo)).toContain('status=pass');
     unlinkSync(file);
     refusal(check(), 'there is no commitment file beside the seed');
   }, 120_000);
@@ -212,10 +223,47 @@ describe('finding 5: a real mint checks the seed commitment', () => {
     recordCommitment(j.seed, 'bg1c', commitment, phrasingSha);
     recordCommitment(j.seed, 'bg1c', commitment, phrasingSha);
     expect(statSync(commitmentFile(j.seed, 'bg1c')).mode & 0o777).toBe(0o600);
-    expect(checkCommitment('bg1c', j.seed, j.phrasing)).toBe(`bg1-commitment set=bg1c status=pass commitment_sha256=${commitment} phrasing_sha256=${phrasingSha}`);
+    expect(checkCommitment('bg1c', j.seed, j.phrasing, published('bg1c', commitment, phrasingSha))).toBe(`bg1-commitment set=bg1c status=pass commitment_sha256=${commitment} phrasing_sha256=${phrasingSha}`);
     expect(() => recordCommitment(j.seed, 'bg1c', commitment, sha('other'))).toThrow('records another commitment or phrasing SHA-256');
     expect(() => checkCommitment('bgw', j.seed, j.phrasing)).toThrow();
     writeFileSync(join(j.dir, 'test.bg1c-nonce'), sha('other nonce') + '\n');
     expect(() => checkCommitment('bg1c', j.seed, j.phrasing)).toThrow('the seed and its nonce do not re-derive the recorded commitment');
+  });
+});
+
+describe('the follow-up: published hashes, a committed fill and pinned template worlds', () => {
+  // Value: protects=a real mint renders only from hashes launch amendment A committed, a Set W fill pins only a committed template, and the custodian push refuses a pinned template world; fails_when=checkCommitment passes a recorded commitment the preregistration at HEAD does not hold, fillManifest pins an uncommitted or edited template, or bg1CustodyPush pushes a template-rendered world; why_new=#609's second-model findings 1, 3 and 4; seam=commitment.ts checkCommitment, fill-manifest.ts fillManifest and shootout-cell.ts bg1CustodyPush; no_claim=a paid render
+  test('checkCommitment needs both hashes in the preregistration committed at HEAD', () => {
+    const j = inputs('published', 'bg1');
+    const nonce = sha('nonce');
+    writeFileSync(join(j.dir, 'test.bg1c-nonce'), nonce + '\n', { mode: 0o600 });
+    const commitment = commitmentOf('bg1c', j.seedLine, nonce), phrasingSha = sha(readFileSync(j.phrasing));
+    recordCommitment(j.seed, 'bg1c', commitment, phrasingSha);
+    const PUBC = 'are not both published in docs/benchmarks/2026-11-19-changing-facts-confirmation-preregistration.md at HEAD';
+    expect(() => checkCommitment('bg1c', j.seed, j.phrasing, published('bg1c', commitment))).toThrow(PUBC);
+    expect(() => checkCommitment('bg1c', j.seed, j.phrasing, published('bg1c', phrasingSha))).toThrow(PUBC);
+    const draft = published('bg1c');
+    writeFileSync(join(draft, PREREG.bg1c), `\`${commitment}\` \`${phrasingSha}\`\n`);
+    expect(() => checkCommitment('bg1c', j.seed, j.phrasing, draft)).toThrow(PUBC);
+    expect(() => checkCommitment('bg1c', j.seed, j.phrasing, scratch('no-git'))).toThrow('cannot be read from the checkout\'s HEAD commit');
+    expect(checkCommitment('bg1c', j.seed, j.phrasing, published('bg1c', commitment, phrasingSha))).toContain('status=pass');
+  });
+
+  test('a Set W fill refuses a template that is uncommitted or edited in the working tree', () => {
+    const repo = scratch('fill-repo');
+    const git = (...args: string[]) => spawnSync('git', ['-C', repo, '-c', 'user.name=t', '-c', 'user.email=t@example.invalid', ...args], { encoding: 'utf8' });
+    mkdirSync(join(repo, 'eval/decisions/datasets'), { recursive: true });
+    mkdirSync(join(repo, 'eval/decisions/splits'), { recursive: true });
+    const template = join(repo, bgwBatchManifest(1001)), text = readFileSync(join(REPO, bgwBatchManifest(1001)), 'utf8');
+    writeFileSync(join(repo, BGW_SPLIT), readFileSync(join(REPO, BGW_SPLIT)));
+    writeFileSync(template, text);
+    const fill = () => fillManifest({ root: join(repo, 'no-root'), report: join(repo, 'no-report.json'), bgwBatch: 1001, repo });
+    expect(fill).toThrow(`batch bgw-1001 is not committed: ${bgwBatchManifest(1001)} is not committed`);
+    git('init', '-q'); git('add', '.'); git('commit', '-q', '-m', 'batch');
+    writeFileSync(template, text.replace('"unfilled"', '"unfilled" '));
+    expect(fill).toThrow(`${bgwBatchManifest(1001)} differs from its committed bytes at HEAD`);
+    writeFileSync(template, text);
+    expect(fill).not.toThrow('is not committed');
+    expect(fill).toThrow();
   });
 });

@@ -33,7 +33,9 @@
  * GBRAIN_EVALS_BGW_MANIFEST points, the kept worlds must be the batch's slots, and the report is validate.ts --bgw's for
  * that batch. Its n_final is 34 (four weeks of eight and two spares), or fewer only when the report accounts for every
  * slot of the batch (a short batch); a fill without n_final needs at least one week's eight worlds, so the first weeks can
- * launch while the batch is still minting, and a refill adds the rest. Every other rule is the same.
+ * launch while the batch is still minting, and a refill adds the rest. The batch's template and split entries must be in
+ * the checkout's HEAD commit and unchanged in its working tree, as the mint's batch check requires, so an uncommitted
+ * edit is never pinned. Every other rule is the same.
  *
  * When <root>/bg1-manifest.json already holds a filled manifest the fill is a refill: the earlier kept list must start
  * the new one in the same order, every file the earlier fill pins keeps its hash, an n_final once set never changes, and
@@ -46,7 +48,7 @@ import { isAbsolute, join, relative, resolve } from 'node:path';
 import { BG1_TARGET_TOKENS } from '../../generators/changing-facts-gen.ts';
 import { BG1_WAVE_A, BG1C_N_FINAL, BGW_BATCH_KEPT, BGW_WORLDS_PER_WEEK, bgwFilledManifest } from '../../runner/bg1/types.ts';
 import { DecideError } from '../../runner/decisions/errors.ts';
-import { BG1_SET, BG1_TEMPLATE_RENDERERS, BG1C_SET, bg1Kept, bg1ManifestFiles, bg1Source, bgwSet, readBg1Manifest, type Bg1Manifest } from '../../runner/memory-qa/corpus.ts';
+import { BG1_SET, BG1_TEMPLATE_RENDERERS, BG1C_SET, bg1Kept, bg1ManifestFiles, bg1Source, bgwCommittedProblems, bgwSet, readBg1Manifest, type Bg1Manifest } from '../../runner/memory-qa/corpus.ts';
 import { VALIDATION_SCHEMA, WORLD_FILES, type ValidationReport } from './validate.ts';
 
 export class FillError extends Error {}
@@ -59,9 +61,11 @@ const inside = (child: string, parent: string) => { const rel = relative(parent,
 
 export interface FillResult { manifest_sha256: string; files: number; kept: number; first: string; last: string; n_final: number | null; earlier_fills: number }
 
-export function fillManifest(opts: { root: string; report: string; targetTokens?: number; tolerance?: number; now?: Date; bg1c?: boolean; bgwBatch?: number; drill?: boolean }): FillResult {
-  const bgw = opts.bgwBatch !== undefined;
+export function fillManifest(opts: { root: string; report: string; targetTokens?: number; tolerance?: number; now?: Date; bg1c?: boolean; bgwBatch?: number; drill?: boolean; repo?: string }): FillResult {
+  const bgw = opts.bgwBatch !== undefined, repo = opts.repo ?? REPO_ROOT;
   if (bgw && opts.bg1c) throw new FillError('--bgw and --bg1c name two different sealed sets; give one');
+  const uncommitted = bgw ? bgwCommittedProblems(opts.bgwBatch!, repo, { head: true }) : [];
+  if (uncommitted.length) throw new FillError(`batch bgw-${opts.bgwBatch} is not committed: ${uncommitted.join('; ')}; a fill pins only the batch's committed template`);
   const set = bgw ? bgwSet(opts.bgwBatch!) : opts.bg1c ? BG1C_SET : BG1_SET, name = bgw ? bgwFilledManifest(opts.bgwBatch!) : opts.bg1c ? FILLED_MANIFEST_BG1C : FILLED_MANIFEST;
   const root = bg1Source({ [set.env.source]: opts.root }, set);
   const realRoot = realpathSync(root);
@@ -115,7 +119,7 @@ export function fillManifest(opts: { root: string; report: string; targetTokens?
     if (earlier.manifest.n_final !== undefined && earlier.manifest.n_final !== nFinal) throw new FillError(`n_final is ${earlier.manifest.n_final} in the earlier fill and never changes`);
     if (!!earlier.manifest.drill !== drill) throw new FillError(`the earlier fill was ${earlier.manifest.drill ? 'a --fake drill' : 'a real fill'}, and a drill fill and a real fill never refill each other`);
   }
-  const template = JSON.parse(readFileSync(join(REPO_ROOT, set.manifest), 'utf8')) as Bg1Manifest;
+  const template = JSON.parse(readFileSync(join(repo, set.manifest), 'utf8')) as Bg1Manifest;
   if (template.status !== 'unfilled') throw new FillError(`${set.manifest} is the template and must stay unfilled`);
   const manifest: Bg1Manifest = { ...template, status: 'filled', files, filled_at: (opts.now ?? new Date()).toISOString(), kept: [...kept],
     ...(nFinal !== null ? { n_final: nFinal } : {}), ...(earlier ? { earlier_fills: [...(earlier.manifest.earlier_fills ?? []), earlier.sha256] } : {}), ...(drill ? { drill: true } : {}) };
