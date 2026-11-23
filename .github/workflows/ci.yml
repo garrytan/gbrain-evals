@@ -476,17 +476,30 @@ jobs:
       - name: Install (frozen lockfile)
         run: bun install --frozen-lockfile
 
+      # The pack cache uses the same cache service as the .git cache, so it gets the
+      # same bounds: a restore that hangs stops after 2 minutes and drops what it had
+      # restored, harness:setup then builds the pack from the lock, and the save is
+      # skipped after a hung restore and otherwise stops after 5 minutes without
+      # failing the job.
       - id: harness-pack
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        continue-on-error: true
+        timeout-minutes: 2
         with:
           path: .harness/packs
           key: ${{ format('harness-pack-v1-{0}', hashFiles('eval/harness-provider/harness.lock.json')) }}
 
+      - if: steps.harness-pack.outcome == 'failure'
+        name: Drop a partly restored harness pack
+        run: rm -rf .harness/packs
+
       - name: Install the pinned harness (CPU wheels)
         run: bun run harness:setup
 
-      - if: steps.harness-pack.outputs.cache-hit != 'true'
+      - if: steps.harness-pack.outcome == 'success' && steps.harness-pack.outputs.cache-hit != 'true'
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        continue-on-error: true
+        timeout-minutes: 5
         with:
           path: .harness/packs
           key: ${{ steps.harness-pack.outputs.cache-primary-key }}
