@@ -162,8 +162,9 @@ export function validateSlot(argv: string[]): { pass: boolean; line: string } {
   const controls = controlsDropped(join(dirname(resolve(set)), 'render', `${id}.json`));
   const record = join(dirname(resolve(set)), 'render', `${id}.validation.json`);
   mkdirSync(dirname(record), { recursive: true });
-  writeFileSync(`${record}.tmp`, json({ schema: VALIDATION_SCHEMA, world: id, slot, mode: argv.includes('--fake') ? 'drill' : 'real', status, failed: r.failed, sessions: r.sessions, tokens: r.tokens, target_tokens: targetTokens, tolerance, world_sha256: hash, controls_dropped: controls }), { mode: 0o600 });
-  renameSync(`${record}.tmp`, record);
+  const tmp = `${record}.${process.pid}.tmp`;
+  writeFileSync(tmp, json({ schema: VALIDATION_SCHEMA, world: id, slot, mode: argv.includes('--fake') ? 'drill' : 'real', status, failed: r.failed, sessions: r.sessions, tokens: r.tokens, target_tokens: targetTokens, tolerance, world_sha256: hash, controls_dropped: controls }), { mode: 0o600, flag: 'wx' });
+  renameSync(tmp, record);
   return { pass: status === 'pass', line: `bg1-validate slot=${slot} world=${id} status=${status} gates=${r.failed.join(',') || 'none'} tokens=${r.tokens ?? 'none'} controls_dropped=${controls ?? 'none'}` };
 }
 

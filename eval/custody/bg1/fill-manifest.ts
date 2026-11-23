@@ -64,7 +64,8 @@ export interface FillResult { manifest_sha256: string; files: number; kept: numb
 export function fillManifest(opts: { root: string; report: string; targetTokens?: number; tolerance?: number; now?: Date; bg1c?: boolean; bgwBatch?: number; drill?: boolean; repo?: string }): FillResult {
   const bgw = opts.bgwBatch !== undefined, repo = opts.repo ?? REPO_ROOT;
   if (bgw && opts.bg1c) throw new FillError('--bgw and --bg1c name two different sealed sets; give one');
-  const uncommitted = bgw ? bgwCommittedProblems(opts.bgwBatch!, repo, { head: true }) : [];
+  const checked = new Map<string, string>();
+  const uncommitted = bgw ? bgwCommittedProblems(opts.bgwBatch!, repo, { head: true, checked }) : [];
   if (uncommitted.length) throw new FillError(`batch bgw-${opts.bgwBatch} is not committed: ${uncommitted.join('; ')}; a fill pins only the batch's committed template`);
   const set = bgw ? bgwSet(opts.bgwBatch!) : opts.bg1c ? BG1C_SET : BG1_SET, name = bgw ? bgwFilledManifest(opts.bgwBatch!) : opts.bg1c ? FILLED_MANIFEST_BG1C : FILLED_MANIFEST;
   const root = bg1Source({ [set.env.source]: opts.root }, set);
@@ -119,7 +120,7 @@ export function fillManifest(opts: { root: string; report: string; targetTokens?
     if (earlier.manifest.n_final !== undefined && earlier.manifest.n_final !== nFinal) throw new FillError(`n_final is ${earlier.manifest.n_final} in the earlier fill and never changes`);
     if (!!earlier.manifest.drill !== drill) throw new FillError(`the earlier fill was ${earlier.manifest.drill ? 'a --fake drill' : 'a real fill'}, and a drill fill and a real fill never refill each other`);
   }
-  const template = JSON.parse(readFileSync(join(repo, set.manifest), 'utf8')) as Bg1Manifest;
+  const template = JSON.parse(checked.get(set.manifest) ?? readFileSync(join(repo, set.manifest), 'utf8')) as Bg1Manifest;
   if (template.status !== 'unfilled') throw new FillError(`${set.manifest} is the template and must stay unfilled`);
   const manifest: Bg1Manifest = { ...template, status: 'filled', files, filled_at: (opts.now ?? new Date()).toISOString(), kept: [...kept],
     ...(nFinal !== null ? { n_final: nFinal } : {}), ...(earlier ? { earlier_fills: [...(earlier.manifest.earlier_fills ?? []), earlier.sha256] } : {}), ...(drill ? { drill: true } : {}) };

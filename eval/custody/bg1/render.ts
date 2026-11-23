@@ -602,14 +602,14 @@ export async function main(argv: string[], env: Record<string, string | undefine
   const failures = Object.entries(stats.failures).sort(([a], [b]) => (a < b ? -1 : 1)).map(([k, v]) => `${k}:${v}`).join(',') || 'none';
   const counts = `sessions=${stats.sessions} attempts=${stats.attempts} regenerated=${stats.regenerated} checks=${stats.checks} failures=${failures}`;
   if (!world) {
-    writeAtomic(record, json({ world: id, status: 'dropped', ...stats }));
+    writeAtomic(record, json({ world: id, status: 'dropped', mode: fake ? 'drill' : 'real', ...stats }));
     return { status: 'dropped', line: `bg1-render ${label} status=dropped dropped_session=${stats.dropped_session} ${counts}` };
   }
   const worldText = json(world);
   writeAtomic(join(dir, 'plan.json'), planText);
   writeAtomic(join(dir, 'questions.json'), json(buildQuestions(plan, phrasing)));
   writeAtomic(join(dir, 'world.json'), worldText);
-  writeAtomic(record, json({ world: id, status: 'written', world_sha256: sha256(worldText), ...stats }));
+  writeAtomic(record, json({ world: id, status: 'written', mode: fake ? 'drill' : 'real', world_sha256: sha256(worldText), ...stats }));
   return { status: 'written', line: `bg1-render ${label} status=written ${counts} tokens=${stats.tokens} controls_dropped=${stats.controls_dropped} world_sha256=${sha256(worldText).slice(0, 16)}` };
 }
 

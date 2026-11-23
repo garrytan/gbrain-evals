@@ -981,7 +981,7 @@ const bgwAsk = { next: 'ask_user' as const, user_message: `set ${BGW_ENV.batch} 
  * working tree, so a draft on disk or an uncommitted edit never stands in for a committed batch, and a checkout git
  * cannot read has nothing committed. A load reads the files on disk, so a cell VM's packed tree without .git loads.
  */
-export function bgwCommittedProblems(first: number, repo = REPO_ROOT, opts: { head?: boolean } = {}): string[] {
+export function bgwCommittedProblems(first: number, repo = REPO_ROOT, opts: { head?: boolean; checked?: Map<string, string> } = {}): string[] {
   const problems: string[] = [];
   const committed = (path: string): string | null => {
     if (!opts.head) { try { return readFileSync(join(repo, path), 'utf8'); } catch { problems.push(`${path} is not committed`); return null; } }
@@ -990,6 +990,7 @@ export function bgwCommittedProblems(first: number, repo = REPO_ROOT, opts: { he
     let disk: string | null = null;
     try { disk = readFileSync(join(repo, path), 'utf8'); } catch { /* absent from the working tree */ }
     if (disk !== head.stdout) { problems.push(`${path} differs from its committed bytes at HEAD`); return null; }
+    opts.checked?.set(path, head.stdout);
     return head.stdout;
   };
   const template = committed(bgwBatchManifest(first));

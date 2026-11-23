@@ -279,8 +279,10 @@ describe('#612 read-only review findings 1 to 4: drill records, symlinked destin
     expect(records.length).toBe(6);
     expect(readdirSync(render).some(f => f.endsWith('.tmp'))).toBe(false);
     for (const f of records) expect((JSON.parse(readFileSync(join(render, f), 'utf8')) as { mode: string }).mode).toBe('drill');
-    refusal(mint(out, j, [...BATCH, '--start', '1007', '--count', '1']), 'holds a --fake drill\'s validation record (bgw-1001.validation.json), and a real mint never starts on a drill\'s --out');
-    for (const f of records) unlinkSync(join(render, f));
+    refusal(mint(out, j, [...BATCH, '--start', '1007', '--count', '1']), 'holds a --fake drill\'s record (bgw-1001.json), and a real mint never starts on a drill\'s --out');
+    for (const f of readdirSync(render).filter(f => f.endsWith('.json') && !f.endsWith('.validation.json'))) unlinkSync(join(render, f));
+    refusal(mint(out, j, [...BATCH, '--start', '1007', '--count', '1']), 'holds a --fake drill\'s record (bgw-1001.validation.json), and a real mint never starts on a drill\'s --out');
+    for (const f of readdirSync(render).filter(f => f.endsWith('.json'))) unlinkSync(join(render, f));
     refusal(mint(out, j, [...BATCH, '--count', '1']), 'holds a template-rendered world (bgw-1001), and a real mint never starts on a drill\'s --out');
   }, 240_000);
 
@@ -311,5 +313,42 @@ describe('#612 read-only review findings 1 to 4: drill records, symlinked destin
     writeFileSync(join(out, 'render', 'bgw-1006.validation.json'), '{"world":"bgw-1006"}');
     stopped(mint(out, j, ['--fake', ...BATCH, '--start', '1008', '--count', '1']), 'slot 1006 (bgw-1006) has an incomplete validation record');
     expect(existsSync(join(out, 'set', 'worlds', 'bgw-1008'))).toBe(false);
+  }, 120_000);
+});
+
+describe('#614 review fixes: drill drops, partial fail records, private temporary files and the checked template', () => {
+  // Value: protects=a real mint refuses an --out holding a drill's dropped render record, a resume never treats a partial fail record as a drop, a validation write never collides with another writer's temporary file, and a Set W fill pins the template bytes its HEAD check read; fails_when=render.ts writes a dropped record without its mode or mint.sh skips render records, dropped_record trusts a truncated record, validate.ts writes through a shared .tmp path, or fillManifest re-reads the template from disk; why_new=#614 review findings (mint.sh:252, mint.sh:560, validate.ts:165, fill-manifest.ts:122); seam=render.ts record mode, mint.sh drill loop and dropped_record, validate.ts temporary file, fillManifest template source; no_claim=a real render
+  test('a real mint refuses an --out where a drill slot dropped', () => {
+    const j = inputs('drill-drop');
+    const out = join(j.dir, 'bgw-custody-drill-drop');
+    expect(mint(out, j, ['--fake', ...BATCH, '--count', '1', '--fake-break', '1001:1:4']).code).toBe(0);
+    const dropped = JSON.parse(readFileSync(join(out, 'render', 'bgw-1001.json'), 'utf8')) as { status: string; mode: string };
+    expect(dropped).toMatchObject({ status: 'dropped', mode: 'drill' });
+    expect(existsSync(join(out, 'render', 'bgw-1001.validation.json'))).toBe(false);
+    refusal(mint(out, j, [...BATCH, '--start', '1002', '--count', '1']), 'holds a --fake drill\'s record (bgw-1001.json), and a real mint never starts on a drill\'s --out');
+  }, 120_000);
+
+  test('a resume at a slot whose fail record is partial re-validates it instead of counting a drop', () => {
+    const j = inputs('partial-fail');
+    const out = join(j.dir, 'bgw-custody-partial-fail');
+    for (let s = 1001; s <= 1005; s++) record(out, `bgw-${s}`);
+    writeFileSync(join(out, 'render', 'bgw-1006.validation.json'), '{"world":"bgw-1006","status":"fail"');
+    const r = mint(out, j, ['--fake', ...BATCH, '--start', '1006', '--count', '1']);
+    expect(r.out).not.toContain('status=dropped_earlier');
+    expect((JSON.parse(readFileSync(join(out, 'render', 'bgw-1006.validation.json'), 'utf8')) as { world: string; mode: string }).world).toBe('bgw-1006');
+  }, 120_000);
+
+  test('a slot validation writes through its own temporary file', () => {
+    const j = inputs('own-tmp');
+    const out = join(j.dir, 'bgw-custody-own-tmp');
+    expect(mint(out, j, ['--fake', ...BATCH, '--count', '1']).code).toBe(0);
+    const recordPath = join(out, 'render', 'bgw-1001.validation.json');
+    unlinkSync(recordPath);
+    mkdirSync(`${recordPath}.tmp`);
+    const r = run('bun', [VALIDATE, ...BATCH, '--slot', '1001', '--set', join(out, 'set'), '--seed-file', j.seed, '--phrasing', j.phrasing, ...LENGTH, '--fake']);
+    expect(r.err).toBe('');
+    expect(r.out).toContain('status=pass');
+    expect((JSON.parse(readFileSync(recordPath, 'utf8')) as { mode: string }).mode).toBe('drill');
+    expect(readdirSync(join(out, 'render')).filter(f => /\.\d+\.tmp$/.test(f))).toEqual([]);
   }, 120_000);
 });
