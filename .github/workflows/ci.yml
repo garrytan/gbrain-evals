@@ -42,6 +42,8 @@ jobs:
   # found one every time from 2026-11-16 to 2026-11-20), so the cache no longer
   # adds a wave of runner start-up to every run. Without one they check out from
   # GitHub as before, so a broken cache never turns a check into a skipped one.
+  # Each restore step stops after 2 minutes and drops whatever it had restored, so
+  # a hung cache service leaves a job to check out from GitHub instead of failing it.
   # A run that finds no cache skips the five pinned-commit cases while git-cache
   # builds one, and tested-tree still records that run as tested.
   # The run still fails on git-cache until a rerun rebuilds the cache, and
@@ -53,11 +55,17 @@ jobs:
     steps:
       - id: cache
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        continue-on-error: true
+        timeout-minutes: 2
         with:
           path: .git
           key: ${{ format('git-objects-v1-{0}', github.sha) }}
           restore-keys: git-objects-v1-
           lookup-only: ${{ github.event_name != 'push' }}
+
+      - if: steps.cache.outcome == 'failure'
+        name: Drop a partly restored git cache
+        run: rm -rf .git
 
       - if: steps.cache.outputs.cache-hit != 'true' && (github.event_name == 'push' || steps.cache.outputs.cache-matched-key == '')
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -79,11 +87,18 @@ jobs:
     runs-on: ubicloud-standard-4-ubuntu-2604
     timeout-minutes: 20
     steps:
-      - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      - id: git-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        continue-on-error: true
+        timeout-minutes: 2
         with:
           path: .git
           key: ${{ format('git-objects-v1-{0}', github.sha) }}
           restore-keys: git-objects-v1-
+
+      - if: steps.git-cache.outcome == 'failure'
+        name: Drop a partly restored git cache
+        run: rm -rf .git
 
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
@@ -141,11 +156,18 @@ jobs:
       matrix:
         shard: [1, 2, 3]
     steps:
-      - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      - id: git-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        continue-on-error: true
+        timeout-minutes: 2
         with:
           path: .git
           key: ${{ format('git-objects-v1-{0}', github.sha) }}
           restore-keys: git-objects-v1-
+
+      - if: steps.git-cache.outcome == 'failure'
+        name: Drop a partly restored git cache
+        run: rm -rf .git
 
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
@@ -172,11 +194,18 @@ jobs:
     runs-on: ubicloud-standard-2-ubuntu-2604
     timeout-minutes: 5
     steps:
-      - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      - id: git-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        continue-on-error: true
+        timeout-minutes: 2
         with:
           path: .git
           key: ${{ format('git-objects-v1-{0}', github.sha) }}
           restore-keys: git-objects-v1-
+
+      - if: steps.git-cache.outcome == 'failure'
+        name: Drop a partly restored git cache
+        run: rm -rf .git
 
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -199,11 +228,18 @@ jobs:
       matrix:
         shard: [1, 2, 3, 4, 5, 6]
     steps:
-      - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      - id: git-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        continue-on-error: true
+        timeout-minutes: 2
         with:
           path: .git
           key: ${{ format('git-objects-v1-{0}', github.sha) }}
           restore-keys: git-objects-v1-
+
+      - if: steps.git-cache.outcome == 'failure'
+        name: Drop a partly restored git cache
+        run: rm -rf .git
 
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
@@ -320,11 +356,18 @@ jobs:
     runs-on: ubicloud-standard-2-ubuntu-2604
     timeout-minutes: 10
     steps:
-      - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      - id: git-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        continue-on-error: true
+        timeout-minutes: 2
         with:
           path: .git
           key: ${{ format('git-objects-v1-{0}', github.sha) }}
           restore-keys: git-objects-v1-
+
+      - if: steps.git-cache.outcome == 'failure'
+        name: Drop a partly restored git cache
+        run: rm -rf .git
 
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
@@ -350,11 +393,18 @@ jobs:
     runs-on: ubicloud-standard-2-ubuntu-2604
     timeout-minutes: 5
     steps:
-      - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      - id: git-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        continue-on-error: true
+        timeout-minutes: 2
         with:
           path: .git
           key: ${{ format('git-objects-v1-{0}', github.sha) }}
           restore-keys: git-objects-v1-
+
+      - if: steps.git-cache.outcome == 'failure'
+        name: Drop a partly restored git cache
+        run: rm -rf .git
 
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
@@ -393,11 +443,18 @@ jobs:
     env:
       MPW_REQUIRE_HARNESS: '1'
     steps:
-      - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      - id: git-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        continue-on-error: true
+        timeout-minutes: 2
         with:
           path: .git
           key: ${{ format('git-objects-v1-{0}', github.sha) }}
           restore-keys: git-objects-v1-
+
+      - if: steps.git-cache.outcome == 'failure'
+        name: Drop a partly restored git cache
+        run: rm -rf .git
 
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 

@@ -1,0 +1,1 @@
+CI no longer fails a check when restoring the cached git history hangs. Each restore step stops after 2 minutes, drops what it had restored and lets the job check out from GitHub instead. A hung cache had turned main and pull requests red on 2026-11-23 without any test failing.
