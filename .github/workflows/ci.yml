@@ -42,8 +42,12 @@ jobs:
   # found one every time from 2026-11-16 to 2026-11-20), so the cache no longer
   # adds a wave of runner start-up to every run. Without one they check out from
   # GitHub as before, so a broken cache never turns a check into a skipped one.
-  # Each restore step stops after 2 minutes and drops whatever it had restored, so
-  # a hung cache service leaves a job to check out from GitHub instead of failing it.
+  # Each restore step stops after 2 minutes, and one that times out drops whatever
+  # it had restored, so a hung cache service leaves the job to check out from
+  # GitHub instead of failing it; prereg-order and receipt-secrets get 10 minutes
+  # so that checkout still fits. On a pull request git-cache treats a timed-out
+  # lookup as a hung service, not a miss, and builds nothing, and its save stops
+  # after 5 minutes without failing the job, so a hung cache can't fail merge-gate.
   # A run that finds no cache skips the five pinned-commit cases while git-cache
   # builds one, and tested-tree still records that run as tested.
   # The run still fails on git-cache until a rerun rebuilds the cache, and
@@ -67,18 +71,20 @@ jobs:
         name: Drop a partly restored git cache
         run: rm -rf .git
 
-      - if: steps.cache.outputs.cache-hit != 'true' && (github.event_name == 'push' || steps.cache.outputs.cache-matched-key == '')
+      - if: steps.cache.outputs.cache-hit != 'true' && (github.event_name == 'push' || (steps.cache.outcome == 'success' && steps.cache.outputs.cache-matched-key == ''))
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
           persist-credentials: false
 
-      - if: steps.cache.outputs.cache-hit != 'true' && (github.event_name == 'push' || steps.cache.outputs.cache-matched-key == '')
+      - if: steps.cache.outputs.cache-hit != 'true' && (github.event_name == 'push' || (steps.cache.outcome == 'success' && steps.cache.outputs.cache-matched-key == ''))
         name: Refuse to cache a stored credential
         run: test -z "$(git config --local --get-regexp 'extraheader')$(git config --local --get-regexp '^includeif\.')"
 
-      - if: steps.cache.outputs.cache-hit != 'true' && (github.event_name == 'push' || steps.cache.outputs.cache-matched-key == '')
+      - if: steps.cache.outputs.cache-hit != 'true' && (github.event_name == 'push' || (steps.cache.outcome == 'success' && steps.cache.outputs.cache-matched-key == ''))
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        continue-on-error: true
+        timeout-minutes: 5
         with:
           path: .git
           key: ${{ format('git-objects-v1-{0}', github.sha) }}
@@ -192,7 +198,7 @@ jobs:
 
   prereg-order:
     runs-on: ubicloud-standard-2-ubuntu-2604
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - id: git-cache
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
@@ -391,7 +397,7 @@ jobs:
   # redacted in the log.
   receipt-secrets:
     runs-on: ubicloud-standard-2-ubuntu-2604
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - id: git-cache
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
