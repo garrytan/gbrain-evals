@@ -225,6 +225,17 @@ describe('gate-suite files', () => {
     const g = evalGates(answers(), read(allSuites('E1', { cat10 })));
     expect(g.E1.verdict).toBe('FAIL');
     expect(g.E1.losses.map(l => [l.id, l.gating])).toEqual([['cat10', true], ['cat10:refusal-sites', true]]);
+    const bare = evalGates(answers(), read(allSuites('E1', { cat10: suite('cat10', 'E1', 'FAIL', { reason: '131/133 on Rust' }) })));
+    expect(bare.E1.losses).toEqual([{ id: 'cat10', reason: '131/133 on Rust', gating: true }]);
+    const beside = suite('brainbench/cats-1-2', 'E2', 'FAIL', {
+      reason: 'p5 below', losses: [{ id: 'brainbench/cats-1-2:p5:vs-pglite', reason: 'p5 below' }, { id: 'brainbench/cats-1-2:beside2:r5:vs-pglite', reason: 'r5 below' }],
+      extra: [{ id: 'brainbench/cats-1-2:beside', benchmark: 'reported', verdict: 'FAIL', measured: {}, reason: 'beside lower' }, { id: 'brainbench/cats-1-2:beside2', benchmark: 'reported', verdict: 'PASS', measured: {}, reason: null }],
+    });
+    expect(evalGates(null, read(allSuites('E2', { 'brainbench/cats-1-2': beside }))).E2.losses).toEqual([
+      { id: 'brainbench/cats-1-2:p5:vs-pglite', reason: 'p5 below', gating: true },
+      { id: 'brainbench/cats-1-2:beside', reason: 'beside lower', gating: false },
+      { id: 'brainbench/cats-1-2:beside2:r5:vs-pglite', reason: 'r5 below', gating: false },
+    ]);
     expect(evalGates(null, read(allSuites('E2'))).E2.verdict).toBe('PASS');
     expect(evalGates(null, read(allSuites('E2').slice(1))).E2).toMatchObject({ verdict: 'NOT_RUN' });
     expect(evalGates(null, read(allSuites('E2').slice(1))).E2.rows[0]).toMatchObject({ id: 'brainbench/cats-1-2', verdict: 'NOT_RUN', reason: 'no gate-suite file was given for this suite' });
@@ -236,6 +247,11 @@ describe('gate-suite files', () => {
     expect(one(suite('cat10', 'E2'))).toThrow(/the plan puts it under E1/);
     expect(one({ ...suite('cat10', 'E1'), rows: [] })).toThrow(/no row for its own suite cat10/);
     expect(one(suite('cat10', 'E1', 'PASS', { gbrain: null }))).toThrow(/must name the gbrain build it ran/);
+    expect(one({ ...suite('cat10', 'E1'), verdict: 'FAILED' })).toThrow(/verdict FAILED is not PASS, FAIL or NOT_RUN/);
+    const split = suite('cat10', 'E1', 'PASS');
+    split.rows[0].verdict = 'FAIL';
+    expect(one(split)).toThrow(/the suite's verdict PASS and its own row's FAIL disagree/);
+    expect(one(suite('cat13/ndcg5', 'E1', 'PASS', { extra: [{ id: 'cat13b/top1', benchmark: 'x', verdict: 'PASS', measured: {}, reason: null }] }))).toThrow(/row cat13b\/top1 beside cat13\/ndcg5 is another suite's id/);
     expect(read([input('suite', suite('cat10', 'E1', 'NOT_RUN', { gbrain: null }))]).get('cat10')!.verdict).toBe('NOT_RUN');
     expect(() => read([input('suite', suite('cat10', 'E1')), input('suite', suite('cat10', 'E1'), 'again.json')])).toThrow(/more than one --suite file for cat10/);
   });

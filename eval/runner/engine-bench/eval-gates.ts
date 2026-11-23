@@ -89,14 +89,20 @@ interface SuiteFile {
   rows: Array<{ id: string; benchmark: string; verdict: GateVerdict; reason?: string | null; measured?: Record<string, unknown>; secondary?: unknown; divergences?: unknown }>;
 }
 
-/** One suite's rows: its gate row, decided by the suite's verdict and carrying its losses, then the rows it reports beside it, which never gate. */
+/**
+ * One suite's rows: its gate row, decided by the suite's verdict, then the rows it reports beside it, which never gate.
+ * Each loss belongs to the row whose id it is or starts with (`<row>:...`, the longest such row), so it carries that
+ * row's gating; a FAIL row with no loss of its own lists one from its reason.
+ */
 function suiteRows(def: { id: string; benchmark: string; gating: boolean }, file: SuiteFile | undefined): GateRow[] {
   if (!file) return [notRun(def.id, def.benchmark, def.gating)];
+  const owner = (id: string) => file.rows.map(r => r.id).filter(x => id === x || id.startsWith(x + ':')).sort((a, b) => b.length - a.length)[0] ?? def.id;
   return file.rows.map((r): GateRow => {
     const main = r.id === def.id;
     const measured = { ...(r.measured ?? {}), ...(r.secondary ? { secondary: r.secondary } : {}), ...(r.divergences ? { divergences: r.divergences } : {}) };
     const verdict = main ? file.verdict : r.verdict;
-    const losses = main ? file.losses : verdict === 'FAIL' && !file.losses.some(l => l.id.startsWith(r.id)) ? [{ id: r.id, reason: r.reason ?? 'failed' }] : [];
+    const own = file.losses.filter(l => owner(l.id) === r.id);
+    const losses = own.length || verdict !== 'FAIL' ? own : [{ id: r.id, reason: r.reason ?? (main ? file.reason : null) ?? 'failed' }];
     return { id: r.id, benchmark: main ? def.benchmark : r.benchmark, gating: main && def.gating, verdict, ...(r.reason ? { reason: r.reason } : {}), measured, ...(main && file.amendment_text ? { reading: file.amendment_text } : {}), losses };
   });
 }
@@ -112,6 +118,13 @@ export function readSuites(files: Array<{ path: string; json: any }>): Map<strin
     if (out.has(json.suite)) throw new Error(`more than one --suite file for ${json.suite}`);
     if (!Array.isArray(json.rows) || !json.rows.some((r: any) => r.id === json.suite)) throw new Error(`${path}: no row for its own suite ${json.suite}`);
     if (!Array.isArray(json.losses)) throw new Error(`${path}: no losses list`);
+    const verdicts = ['PASS', 'FAIL', 'NOT_RUN'];
+    const bad = [json.verdict, ...json.rows.map((r: any) => r.verdict)].filter(v => !verdicts.includes(v));
+    if (bad.length) throw new Error(`${path}: verdict ${bad[0]} is not PASS, FAIL or NOT_RUN`);
+    const own = json.rows.find((r: any) => r.id === json.suite);
+    if (own.verdict !== json.verdict) throw new Error(`${path}: the suite's verdict ${json.verdict} and its own row's ${own.verdict} disagree`);
+    const taken = json.rows.find((r: any) => r.id !== json.suite && Object.values(SUITES).flat().some(d => d.id === r.id));
+    if (taken) throw new Error(`${path}: row ${taken.id} beside ${json.suite} is another suite's id`);
     if (!json.gbrain && json.verdict !== 'NOT_RUN') throw new Error(`${path}: a ${json.verdict} suite must name the gbrain build it ran`);
     out.set(json.suite, json);
   }
@@ -221,7 +234,7 @@ export interface EvalGatesInput { path: string; role: 'answers' | 'speed' | 'cor
 
 /** The commit a tag on garrytan/gbrain peels to (an annotated tag's target, else the tag itself), or null when the remote has no such tag. */
 export function peelReleaseTag(tag: string): string | null {
-  const r = spawnSync('git', ['ls-remote', GBRAIN_REMOTE, `refs/tags/${tag}`, `refs/tags/${tag}^{}`], { encoding: 'utf8', timeout: 60_000 });
+  const r = spawnSync('git', ['ls-remote', GBRAIN_REMOTE, `refs/tags/${tag}`, `refs/tags/${tag}^{}`], { encoding: 'utf8', timeout: 60_000, env: { ...process.env, GIT_TERMINAL_PROMPT: '0' } });
   if (r.status !== 0) throw new Error(`could not read gbrain's tags from ${GBRAIN_REMOTE}: ${(r.stderr || r.error?.message || '').trim()}`);
   const lines = r.stdout.trim().split('\n').filter(Boolean).map(l => l.split('\t'));
   return (lines.find(([, ref]) => ref === `refs/tags/${tag}^{}`) ?? lines.find(([, ref]) => ref === `refs/tags/${tag}`))?.[0] ?? null;
