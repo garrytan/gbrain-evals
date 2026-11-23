@@ -11,8 +11,8 @@
 #
 # Windows, whose steps vm-run.sh runs in order:
 #   rehearse      keyless: the VM setup and every plan step, with no key on the VM and no ledger run
-#   oracle-dev    oracle rows: A4's Sol rows on BEAM-1M, then the BEAM-1M Opus and LongMemEval Opus and Sol rows the
-#                 cache lacks (sota/oracle.ts)
+#   oracle-dev    oracle rows: A4's gpt-6.1-sol rows on BEAM-1M (imported, never bought), then the Opus and gpt-6.2-sol
+#                 rows the cache lacks on BEAM-1M and LongMemEval (sota/oracle.ts)
 #   dev-agent     the SOTA dev test's Opus and Sol rows on both agents (q1 cells sota-dev.*, arm whole-agent), then the
 #                 grep agent's rows into the leader cache (sota/leader.ts import)
 #   particle      particle-1's oracle rows on the dev pool, then the SOTA dev test's particle-1 rows on both agents (arm
