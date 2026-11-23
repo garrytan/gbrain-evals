@@ -34,7 +34,7 @@ import { CHAT_PRICE_OVERRIDES, type ChatPrice } from '../../budget-ledger.ts';
 import { lookupEmbeddingPrice } from '../../../../node_modules/gbrain/src/core/embedding-pricing.ts';
 import { FRONTIER_READERS, READER_WINDOWS } from '../../systems/baselines.ts';
 import type { Outcome } from '../../memory-qa/outcomes.ts';
-import { BG1_N_FINAL, BG1C_N_FINAL } from '../../memory-qa/bg1-names.ts';
+import { BG1_N_FINAL, BG1C_N_FINAL, BGW_WORLDS_PER_WEEK, bgwSlotOf } from '../../memory-qa/bg1-names.ts';
 
 export const CELL_SCHEMA = 'gbrain-evals/q1-cell/v1';
 export const MANIFEST_SCHEMA = 'gbrain-evals/q1-cell-manifest/v1';
@@ -44,13 +44,15 @@ export const PREREGISTRATION = 'docs/benchmarks/2026-10-06-scoreboard-preregistr
 
 export type Q1SetId = 'S1' | 'S1-sweep' | 'S2a' | 'S2b' | 'S3' | 'S4' | 'S4-slice' | 'S5' | 'S3-smoke' | 'S3-smoke-default' | 'S2b-ingest';
 /** F6's own set (eval/runner/q1/cells/f6.ts): the D8 long-history reserve. */
-export type SetId = Q1SetId | 'D8' | RS1SetId | BG1SetId | BG1CSetId | SotaSetId;
+export type SetId = Q1SetId | 'D8' | RS1SetId | BG1SetId | BG1CSetId | SotaSetId | WeeklyLineSetId;
 /** RS1's sets (eval/runner/q1/cells/rs1.ts): the sealed set and stage 1's two public dev conversations. */
 export type RS1SetId = 'RS1' | 'RS1-dev2';
 /** BG1's sets (eval/runner/q1/cells/bg1.ts): the sealed changing-facts set, its full-context worlds and stage 1's three public dev worlds. */
 export type BG1SetId = 'BG1' | 'BG1-fc10' | 'BG1-dev3';
 /** BG1-C's sets (eval/runner/q1/cells/bg1c.ts): the sealed confirmation set and its one-world smoke on public dev world bg1-dev-01. */
 export type BG1CSetId = 'BG1C' | 'BG1C-dev1';
+/** The weekly outcome line's set: one week's Set W worlds (weekly-line.ts). */
+export type WeeklyLineSetId = 'BGW';
 /** The SOTA loop's sets (generateSotaDevCells, generateSotaLeaderCells). */
 export type SotaSetId = 'SOTA-dev' | 'SOTA-leader-beam' | 'SOTA-leader-lme';
 export type Q1BlockId = 'T1' | 'T2-S2a' | 'T2-S2b' | 'T2-S3' | 'T2-S4-S5';
@@ -65,7 +67,8 @@ export type BG1CBlockId = 'BG1C-smoke' | 'BG1C';
 /** The SOTA loop's spend blocks: the dev test and the leader cache, each its own paid window and ledger run. */
 export type SotaBlockId = 'SOTA-dev' | 'SOTA-leader';
 export type BN10BlockId = 'BN10-dry' | 'BN10';
-export type BlockId = Q1BlockId | F6BlockId | RS1BlockId | BG1BlockId | BG1CBlockId | SotaBlockId | BN10BlockId;
+export type WeeklyLineBlockId = 'BGW';
+export type BlockId = Q1BlockId | F6BlockId | RS1BlockId | BG1BlockId | BG1CBlockId | SotaBlockId | BN10BlockId | WeeklyLineBlockId;
 export type Split = 'dev' | 'sealed' | 'all';
 
 export type Selection =
@@ -188,6 +191,14 @@ export interface CellDefinition {
   lease?: { usd: number; basis: string };
   /** A23: the cell's runs answer again every answer with one of `outcomes` (default harness_invalid) recorded before this instant (REANSWER_OVERRIDES), and why. */
   reanswer_invalid_before?: { at: string; basis: string; outcomes?: Outcome[] };
+  /**
+   * Set W cells (the weekly outcome line, weekly-line.ts): the week the cell runs, its Tuesday launch, its world end (the
+   * Sunday before), the Set W batch its worlds come from and the worlds themselves in slot order. Required on a bgw cell
+   * and absent on every other.
+   */
+  week?: { launch: string; world_end: string; batch: string; worlds: string[] };
+  /** The weekly line's gbrain cell: the gbrain release and commit it runs, the newest release on gbrain's master at launch. */
+  gbrain_build?: { release: string; commit: string };
   /** A23: these shards rerun their conversations fresh, never using or carrying from a realization ingested before this instant (FRESH_OVERRIDES), and why. */
   fresh_before?: { at: string; shards: number[]; basis: string };
 }
@@ -283,6 +294,13 @@ export const BG1C_SETS: Record<BG1CSetId, SetFacts> = {
   'BG1C-dev1': { id: 'BG1C-dev1', benchmark: 'bg1-dev', split: 'dev', questions: 64, conversations: 1, corpus_tokens: 200_000, messages: 2_000, block: 'BG1C-smoke', selection: { kind: 'all' }, exclusions: [], role: 'smoke', exposure: 'E2', label: 'BG1-C smoke, public dev world bg1-dev-01 at the counted settings', only_conversations: ['bg1-dev-01'], sessions: 150 },
 };
 /**
+ * The weekly outcome line's set (docs/benchmarks/2026-11-23-weekly-outcome-line-preregistration.md): one week's worlds of
+ * Set W (loader bgw), sized as BG1's worlds are. The worlds themselves are the cell's `week`, not the set's.
+ */
+export const WEEKLY_LINE_SETS: Record<WeeklyLineSetId, SetFacts> = {
+  BGW: { id: 'BGW', benchmark: 'bgw', split: 'sealed', questions: BGW_WORLDS_PER_WEEK * 64, conversations: BGW_WORLDS_PER_WEEK, corpus_tokens: BGW_WORLDS_PER_WEEK * 200_000, messages: BGW_WORLDS_PER_WEEK * 2_000, block: 'BGW', selection: { kind: 'all' }, exclusions: [], role: 'headline', exposure: 'E0', label: 'weekly outcome line, one week of Set W worlds', sessions: 150 },
+};
+/**
  * The SOTA loop dev test's conversations (decision D2a): the four public BEAM-1M dev conversations with the most
  * answerable questions (eval/data/answerability/beam-1m.json, supported or partial), ties broken by id. All four are in
  * the nightly dev pool (eval/data/nightly/devset-v2.json, beam-1m-hard), whose other conversations the leader cache covers.
@@ -355,7 +373,7 @@ export const SOTA_SETS: Record<SotaSetId, SetFacts> = {
     label: 'SOTA loop leader cache: the whole history on the nightly LongMemEval-S pool questions' },
 };
 /** Every set a cell may name: Q1's, F6's, RS1's, BG1's, BG1-C's and the SOTA loop's. */
-export const ALL_SETS: Record<SetId, SetFacts> = { ...SETS, ...F6_SETS, ...RS1_SETS, ...BG1_SETS, ...BG1C_SETS, ...SOTA_SETS };
+export const ALL_SETS: Record<SetId, SetFacts> = { ...SETS, ...F6_SETS, ...RS1_SETS, ...BG1_SETS, ...BG1C_SETS, ...SOTA_SETS, ...WEEKLY_LINE_SETS };
 
 /** PLAN §7 block lines (the approved estimate the re-priced manifest is compared with). */
 export const PLAN_BLOCKS: Record<Q1BlockId, { label: string; plan_usd: number }> = {
@@ -1142,6 +1160,7 @@ export const BG1_BLOCK_IDS: readonly BG1BlockId[] = ['BG1-S1', 'BG1'];
 export const BG1C_BLOCK_IDS: readonly BG1CBlockId[] = ['BG1C-smoke', 'BG1C'];
 export const BN10_BLOCK_IDS: readonly BN10BlockId[] = ['BN10-dry', 'BN10'];
 export const SOTA_BLOCK_IDS: readonly SotaBlockId[] = ['SOTA-dev', 'SOTA-leader'];
+export const WEEKLY_LINE_BLOCK_IDS: readonly WeeklyLineBlockId[] = ['BGW'];
 
 /** An arm's retrieval identity: only on gbrain cells whose stack runs F6 (GBRAIN_F6=1), on a packed, retrieval-only or native-default arm, naming a known op, its own arguments and all six overlay keys. */
 function retrievalProblems(d: CellDefinition, a: ArmDefinition, w: string): string[] {
@@ -1186,7 +1205,7 @@ export function definitionProblems(d: CellDefinition, kinds: ReadonlySet<string>
   if (d.schema !== CELL_SCHEMA) p.push(`schema must be ${CELL_SCHEMA}`);
   if (!ID.test(d.id ?? '')) p.push(`id ${JSON.stringify(d.id)} must be 1-80 characters of [a-z0-9.-]`);
   if (!ALL_SETS[d.set]) p.push(`set ${d.set} is unknown`);
-  if (!(PLAN_BLOCKS as Record<string, unknown>)[d.block] && !([...F6_BLOCK_IDS, ...RS1_BLOCK_IDS, ...BG1_BLOCK_IDS, ...BG1C_BLOCK_IDS, ...SOTA_BLOCK_IDS, ...BN10_BLOCK_IDS] as readonly string[]).includes(d.block)) p.push(`block ${d.block} is unknown`);
+  if (!(PLAN_BLOCKS as Record<string, unknown>)[d.block] && !([...F6_BLOCK_IDS, ...RS1_BLOCK_IDS, ...BG1_BLOCK_IDS, ...BG1C_BLOCK_IDS, ...SOTA_BLOCK_IDS, ...BN10_BLOCK_IDS, ...WEEKLY_LINE_BLOCK_IDS] as readonly string[]).includes(d.block)) p.push(`block ${d.block} is unknown`);
   if (!['dev', 'sealed', 'all'].includes(d.split)) p.push('split must be dev, sealed or all');
   p.push(...selectionProblems(d.selection, 'selection'));
   if (d.selection?.kind === 'ids' && d.split !== 'dev') p.push('an ids selection names dev questions only, since sealed ids never live in a manifest');
@@ -1199,6 +1218,12 @@ export function definitionProblems(d: CellDefinition, kinds: ReadonlySet<string>
   if (!Array.isArray(d.arms) || !d.arms.length) p.push('arms must list at least one arm');
   if (d.kept_units !== undefined && !(Number.isInteger(d.kept_units) && d.kept_units > 0 && (d.benchmark === 'beam-rs1' || d.benchmark === 'bg1' || d.benchmark === 'bg1c') && d.shards === Math.ceil(ALL_SETS[d.set].conversations / d.kept_units))) p.push('kept_units runs a beam-rs1, bg1 or bg1c cell over the custodian\'s kept list, in units of a positive number of conversations, one shard per unit');
   if (d.descriptive_view !== undefined && !(d.descriptive_view === false && (d.arms ?? []).every(a => a.mode === 'retrieval-only' || (a.frontier?.per_reader === true && a.frontier.readers === null && a.frontier.sample === null && Object.values(a.reader_replicates ?? {}).every(n => n <= 1))))) p.push('descriptive_view is false or absent, and false only when every judged arm gives every answer its per-reader gating judge (frontier.per_reader over all readers, one replicate each, unsampled), so no answer goes ungraded without the canonical judge');
+  if ((d.benchmark === 'bgw') !== (d.week !== undefined)) p.push('a Set W (bgw) cell names its week (launch, world_end, batch, worlds), and only a Set W cell does');
+  if (d.week !== undefined) {
+    const w = d.week.worlds;
+    if (!(Array.isArray(w) && w.length >= 1 && w.length <= BGW_WORLDS_PER_WEEK && new Set(w).size === w.length && w.every(id => bgwSlotOf(id) !== null))) p.push(`week.worlds must list 1 to ${BGW_WORLDS_PER_WEEK} distinct Set W world ids (bgw- and four digits)`);
+  }
+  if (d.gbrain_build !== undefined && !(d.system === 'gbrain-defaults' && d.launch?.env.GBRAIN_SHA === d.gbrain_build.commit)) p.push('gbrain_build names the build of a gbrain cell, whose launch GBRAIN_SHA is its commit');
   if (d.system === 'gbrain-defaults' && runsF6(d)) {
     if (!(Number(d.launch?.env.GBRAIN_F6_EXTRACT_CAP_USD) > 0)) p.push('a gbrain cell on the F6 build (GBRAIN_F6=1) needs a positive GBRAIN_F6_EXTRACT_CAP_USD in its launch environment, the runaway cap on gbrain\'s own extraction');
     if (!(ingestRate(d) > 0)) p.push(`a gbrain cell on the F6 build needs a positive ingest rate for ${d.system}:${d.configuration} (F6_ASSUMPTIONS or RS1_ASSUMPTIONS ingest_usd_per_mtok), or its estimate and lease leave ingest out`);

@@ -146,10 +146,15 @@ export const DEFAULT_GREP_LIMITS: GrepLimits = { wall_ms: 60_000, max_output_byt
 
 export interface GrepLimitEvent { kind: 'wall_time' | 'memory' | 'spawn_error'; pattern: string; path: string; ms: number; bytes: number }
 
+/** ripgrep's version line (`rg --version`'s first line), or null when ripgrep cannot run on this host. */
+export function ripgrepVersion(): string | null {
+  const r = spawnSync('rg', ['--version'], { encoding: 'utf8' });
+  return r.status === 0 ? r.stdout.split('\n')[0] || null : null;
+}
+
 /** Refuses when ripgrep is missing: the file agent's grep needs it. */
 export function requireRipgrep(): void {
-  const r = spawnSync('rg', ['--version'], { encoding: 'utf8' });
-  if (r.status === 0) return;
+  if (ripgrepVersion() !== null) return;
   throw decideError({
     code: 'NOT_YET_AVAILABLE', message: 'ripgrep (`rg`) is not installed on this host, and the file agent\'s grep runs it',
     why: 'the file agent\'s grep needs a linear-time regex engine in a process the harness can cancel; ripgrep is that engine',
@@ -389,7 +394,7 @@ export class FileAgentSystem implements AnsweringSystem {
 
   async capabilities(): Promise<CapabilityRecord> {
     return {
-      system: this.name, protocol: 1, versions: { package: 'in-repo', lock_sha256: null, image: null, vendor_benchmark_code: null, ripgrep: spawnSync('rg', ['--version'], { encoding: 'utf8' }).stdout.split('\n')[0] || null },
+      system: this.name, protocol: 1, versions: { package: 'in-repo', lock_sha256: null, image: null, vendor_benchmark_code: null, ripgrep: ripgrepVersion() },
       configs: { common: { model_roles: { agent: 'the reader of the cell' }, notes: 'Cat 40 loop over FsArm without write_file; uncapped ripgrep grep; turn cap 40' } },
       time: 'in-text', provenance: { status: 'exact', mechanism: 'one file per ingested session; files the agent read map back to their sessions evaluator-side' },
       delete: 'native', readiness: 'synchronous: a session is a file once ingested', namespace: 'directory tree per namespace', parallel_namespaces: true,
