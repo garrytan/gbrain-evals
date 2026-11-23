@@ -173,6 +173,7 @@ export async function openEvalEngine(o: OpenEvalEngineOptions): Promise<EvalEngi
     if (kind === 'rust') throw rustAddonRefusal(e) ?? new EvalEngineUnavailable(kind, 'rust_kind_unsupported', `gbrain ${o.gut.version} does not construct a rust engine: ${(e as Error).message}`);
     throw e;
   }
+  if (kind === 'rust') await recordRustRefusals(o.gut, engine);
   if (kind === 'rust' && o.initSchema !== false) initRustBrain(o.gut, o.databasePath!, await buildEmbeddingIdentity(o.gut));
   try {
     await engine.connect(config);
@@ -182,6 +183,86 @@ export async function openEvalEngine(o: OpenEvalEngineOptions): Promise<EvalEngi
   }
   if (kind !== 'rust' && o.initSchema !== false) await engine.initSchema();
   return { kind, engine, config };
+}
+
+/** An engine call the Rust engine refused, by the gbrain call site (path:line under src/) that made it. */
+export interface RustRefusalSite { member: string; capability: string; site: string | null; caller: string | null; count: number }
+const RUST_REFUSALS = new Map<string, RustRefusalSite>();
+/** Where a runner process writes its refused Rust calls on exit; gate-suites.ts sets it per engine directory. */
+export const RUST_REFUSALS_FILE_ENV = 'GBRAIN_EVAL_RUST_REFUSALS_FILE';
+let refusalsOnExit = false;
+
+/** Every refused Rust engine call this process has seen, grouped by member and call site. */
+export function rustRefusalSites(): RustRefusalSite[] {
+  return [...RUST_REFUSALS.values()];
+}
+
+/** The gbrain src/ frames of a stack, innermost first, as path:line relative to src/, skipping the Rust engine's own files. */
+export function gbrainFrames(stack: string, root: string): string[] {
+  const src = `${join(root, 'src')}/`;
+  const out: string[] = [];
+  for (const line of stack.split('\n')) {
+    const m = line.match(/(\/[^\s():]+):(\d+):\d+\)?\s*$/);
+    if (!m || !m[1].startsWith(src)) continue;
+    const rel = m[1].slice(src.length);
+    if (!rel.startsWith('core/rust-engine/') && rel !== 'core/rust-engine.ts') out.push(`${rel}:${m[2]}`);
+  }
+  return out;
+}
+
+/**
+ * For an engine_capability_missing error, " (at <site>, from <caller>)" from its own stack, past gbrain's error factory
+ * (core/ops/contract.ts); empty for any other error.
+ */
+export function refusalSiteOf(e: unknown, root: string): string {
+  if (errorCode(e) !== 'engine_capability_missing') return '';
+  const [site, caller] = gbrainFrames(String((e as Error)?.stack ?? ''), root).filter(f => !f.startsWith('core/ops/contract.ts:'));
+  return site ? ` (at ${site}${caller ? `, from ${caller}` : ''})` : '';
+}
+
+/**
+ * Wrap each member the Rust engine does not implement (gbrain's RUST_ENGINE_MEMBERS) so a call it refuses with
+ * engine_capability_missing records the gbrain call site and its caller. The call itself is unchanged: same arguments,
+ * same result, same error. Implemented members are untouched. A build without that table records nothing.
+ */
+export async function recordRustRefusals(gut: GbrainUnderTest, engine: BrainEngine): Promise<void> {
+  let members: Record<string, string>;
+  try {
+    members = (await importGbrain<{ RUST_ENGINE_MEMBERS: Record<string, string> }>(gut, 'src/core/rust-engine/members.ts')).RUST_ENGINE_MEMBERS;
+  } catch {
+    return;
+  }
+  const out = process.env[RUST_REFUSALS_FILE_ENV];
+  if (out && !refusalsOnExit) {
+    refusalsOnExit = true;
+    process.on('exit', () => writeFileSync(out, `${JSON.stringify(rustRefusalSites(), null, 2)}\n`));
+  }
+  const target = engine as unknown as Record<string, unknown>;
+  for (const [member, capability] of Object.entries(members ?? {})) {
+    const fn = target[member];
+    if (capability === 'implemented' || typeof fn !== 'function') continue;
+    const note = (stack: string, e: unknown) => {
+      if (errorCode(e) !== 'engine_capability_missing') return;
+      const [site = null, caller = null] = gbrainFrames(stack, gut.root);
+      const key = `${member}\n${site}\n${caller}`;
+      const hit = RUST_REFUSALS.get(key);
+      if (hit) hit.count += 1;
+      else RUST_REFUSALS.set(key, { member, capability, site, caller, count: 1 });
+    };
+    target[member] = function (this: unknown, ...args: unknown[]) {
+      const limit = Error.stackTraceLimit;
+      Error.stackTraceLimit = 40;
+      const stack = new Error().stack ?? '';
+      Error.stackTraceLimit = limit;
+      try {
+        const out = (fn as (...a: unknown[]) => unknown).apply(this, args);
+        return out instanceof Promise ? out.catch((e: unknown) => { note(stack, e); throw e; }) : out;
+      } catch (e) {
+        note(stack, e);
+        throw e;
+      }
+    };
+  }
 }
 
 const RUST_ADDON_CODES = ['rust_engine_addon_missing', 'rust_engine_addon_mismatch'] as const;

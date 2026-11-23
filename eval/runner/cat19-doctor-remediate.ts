@@ -66,7 +66,7 @@ import type * as Embed from '../../node_modules/gbrain/src/commands/embed.ts';
 import { hashEmbedVector } from './cat18-embedding-providers.ts';
 import { importGbrain } from './gbrain-under-test.ts';
 import {
-  EvalEngineUnavailable, gateReceiptPath, gateRunnerContext, gateRunnerReceiptFields, openGateEngine, preflightGateEngine, refuseEvalEngine,
+  EvalEngineUnavailable, gateReceiptPath, gateRunnerContext, gateRunnerReceiptFields, openGateEngine, preflightGateEngine, refuseEvalEngine, refusalSiteOf,
   type GateRunnerContext,
 } from './eval-engine.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
@@ -357,7 +357,7 @@ export async function runCat19(options: Cat19Options = {}): Promise<Cat19RunResu
           await runExtract(engine, ['links', '--source', 'db']);
           outcome = 'extract links --source db completed';
         } catch (e: any) {
-          error = String(e?.message ?? e).slice(0, 300);
+          error = `${String(e?.message ?? e).slice(0, 300)}${refusalSiteOf(e, ctx.gut.root)}`;
           outcome = 'threw';
         } finally {
           console.log = orig;
@@ -377,7 +377,7 @@ export async function runCat19(options: Cat19Options = {}): Promise<Cat19RunResu
           outcome = `embedded ${res.embedded}, skipped ${res.skipped}, failures ${res.failures}`;
           if (res.failures > 0) error = `embed failures: ${res.failures} (${JSON.stringify(res).slice(0, 200)})`;
         } catch (e: any) {
-          error = String(e?.message ?? e).slice(0, 300);
+          error = `${String(e?.message ?? e).slice(0, 300)}${refusalSiteOf(e, ctx.gut.root)}`;
           outcome = 'threw';
         } finally {
           console.log = orig;
