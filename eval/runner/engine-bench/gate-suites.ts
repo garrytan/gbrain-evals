@@ -218,7 +218,7 @@ export const GATE_SUITES: readonly GateSuite[] = [
     id: 'cat27', gate: 'E3', benchmark: 'Cat 27 graph signals on', category: 'cat27-graph-signals', script: 'eval/runner/cat27-graph-signals.ts', args: () => [],
     measure: r => {
       const a = r.data?.aggregate ?? {};
-      return { ndcg10_points: a.mean_ndcg10_with_signals * 100, top1_hits: Math.round(a.top1_hit_rate_with_signals * a.n_probes), probes_scored: a.n_probes, errors: (r.errors ?? []).length };
+      return { ndcg10_points: a.mean_ndcg10_with_signals * 100, top1_hits: Math.round(a.top1_hit_rate_with_signals * a.n_probes), probes_scored: a.n_probes || NaN, errors: (r.errors ?? []).filter((e: any) => e.origin === 'sut').length };
     },
     rule: { kind: 'within-or-equal', points: ['ndcg10_points'], counts: ['top1_hits', 'probes_scored', 'errors'] },
   },
@@ -236,7 +236,7 @@ export function engineDir(category: string, kind: EvalEngineKind, reports = join
 interface RunExit { code: number | null; signal: string | null; gbrain: string }
 interface EngineRun { kind: EvalEngineKind; receipt: Receipt | null; refused: string | null; refusalSites?: RustRefusalSite[]; logTail?: string; hasLog?: boolean; exit?: RunExit | null }
 
-function loadRun(category: string, kind: EvalEngineKind, reports?: string): EngineRun {
+export function loadRun(category: string, kind: EvalEngineKind, reports?: string): EngineRun {
   const dir = engineDir(category, kind, reports);
   const refusedFile = join(dir, 'refused.txt');
   const receiptFile = join(dir, 'receipt.json');
@@ -250,12 +250,22 @@ function loadRun(category: string, kind: EvalEngineKind, reports?: string): Engi
     refusalSites: existsSync(sitesFile) ? JSON.parse(readFileSync(sitesFile, 'utf8')) : [],
     logTail: existsSync(logFile) ? readFileSync(logFile, 'utf8').trim().slice(-500) : '',
     hasLog: existsSync(logFile),
-    exit: existsSync(exitFile) ? JSON.parse(readFileSync(exitFile, 'utf8')) : null,
+    exit: readExit(exitFile),
   };
+}
+
+/** The runner's exit record, or null when it is missing, unreadable or not the shape run writes. */
+function readExit(file: string): RunExit | null {
+  try {
+    const x = JSON.parse(readFileSync(file, 'utf8'));
+    return typeof x?.gbrain === 'string' && (x.code === null || typeof x.code === 'number') && (x.signal === null || typeof x.signal === 'string') ? x : null;
+  } catch { return null; }
 }
 
 const REFUSAL_SITES = 'rust-refusal-sites.json';
 const RUN_EXIT = 'exit.json';
+/** Signals from a crash inside the engine under test; SIGKILL and SIGTERM (a harness timeout or OOM kill) stay NOT_RUN. */
+const ENGINE_CRASH_SIGNALS = ['SIGSEGV', 'SIGABRT', 'SIGBUS'];
 const completed = (r: Receipt | null) => r !== null && r.run_status === 'completed';
 
 /** The build a receipt names: overlay commit, ref and dirty flag, plus the Rust addon digest and target. */
@@ -351,7 +361,8 @@ export function judgeSuite(s: GateSuite, runs: Record<EvalEngineKind, EngineRun>
     if (new Set(tsBuilds).size !== 1 || tsBuilds[0] === null) return notRun(`the TypeScript engines ran different or unnamed gbrain builds (${tsBuilds.join(', ')})`);
     const exit = runs.rust.exit;
     const exitText = exit ? `exit ${exit.code ?? 'none'}${exit.signal ? ` by ${exit.signal}` : ''}` : 'no exit record';
-    if (!runs.rust.hasLog || typeof exit?.code !== 'number' || exit.code === 0) return notRun(`Rust wrote no receipt and has no failed run on record (${exitText}${runs.rust.hasLog ? '' : ', no run.log'})`);
+    const failed = typeof exit?.code === 'number' ? exit.code !== 0 : ENGINE_CRASH_SIGNALS.includes(exit?.signal ?? '');
+    if (!runs.rust.hasLog || !exit || !failed) return notRun(`Rust wrote no receipt and has no failed run on record (${exitText}${runs.rust.hasLog ? '' : ', no run.log'})`);
     const ref = exit.gbrain.split('@').at(-1) ?? '';
     if (!/^[0-9a-f]{7,40}$/.test(ref) || !tsBuilds[0].startsWith(ref)) return notRun(`Rust's run named gbrain ${exit.gbrain}, not the TypeScript engines' build ${tsBuilds[0]}`);
     const losses = [{ id: s.id, reason: `Rust wrote no receipt: its runner failed (${exitText}) without one, where both TypeScript engines completed.${runs.rust.logTail ? ` Log tail: ${runs.rust.logTail}` : ''}` }, ...sitesLoss()];
@@ -399,10 +410,10 @@ export function judgeSuite(s: GateSuite, runs: Record<EvalEngineKind, EngineRun>
     } else if (rule.kind === 'paired-bound') {
       const sets = EVAL_ENGINES.map(k => {
         const r = runs[k].receipt!;
-        const ids: string[] = (r.data?.per_query?.gbrain ?? []).map((q: any) => q.id).sort();
-        return { k, ids, n: r.n_total, full: ids.length === r.n_total && (r.resolved_config?.probes_generated ?? ids.length) === ids.length };
+        const ids: string[] = (r.data?.per_query?.gbrain ?? []).map((q: any) => `${q.id}\t${q.text}`).sort();
+        return { k, ids, n: r.n_total, gold: r.resolved_config?.evaluator?.gold_store?.fingerprint ?? null, full: ids.length === r.n_total && (r.resolved_config?.probes_generated ?? ids.length) === ids.length };
       });
-      if (sets.some(x => !x.full) || new Set(sets.map(x => x.ids.join(','))).size !== 1) {
+      if (sets.some(x => !x.full) || new Set(sets.map(x => `${x.gold}\n${x.ids.join('\n')}`)).size !== 1) {
         return notRun(`the engines scored different or partial ${rule.key} query sets (${sets.map(x => `${x.k} ${x.ids.length} of ${x.n}`).join(', ')})`);
       }
       const bounds = Object.fromEntries(TS_ENGINES.map(k => [k, cat13PairedBound(rust, runs[k].receipt!)])) as Record<(typeof TS_ENGINES)[number], ReturnType<typeof cat13PairedBound>>;
@@ -420,9 +431,10 @@ export function judgeSuite(s: GateSuite, runs: Record<EvalEngineKind, EngineRun>
         secondary: { tie_order_flips: Object.fromEntries(TS_ENGINES.map(k => [k, bounds[k].tie_order_flips])) },
       });
     } else if (rule.kind === 'within-or-equal') {
-      for (const k of EVAL_ENGINES) for (const key of [...rule.points, ...rule.counts]) {
+      for (const k of TS_ENGINES) for (const key of [...rule.points, ...rule.counts]) {
         if (!Number.isFinite(measured[k]![key])) return notRun(`the ${k} receipt has no ${key}`);
       }
+      for (const key of [...rule.points, ...rule.counts]) if (!Number.isFinite(m[key])) gating.push({ id: `${s.id}:${key}`, reason: `the Rust receipt has no ${key} (verdict ${rust.verdict ?? 'none'})` });
       for (const k of TS_ENGINES) {
         for (const key of rule.points) if (!(Math.abs(m[key] - measured[k]![key]) <= 0.5)) gating.push({ id: `${s.id}:${key}:vs-${k}`, reason: `Rust ${m[key]} vs ${k} ${measured[k]![key]}: more than 0.5 points apart` });
         for (const key of rule.counts) if (m[key] !== measured[k]![key]) gating.push({ id: `${s.id}:${key}:vs-${k}`, reason: `Rust ${m[key]} vs ${k} ${measured[k]![key]}: counts differ` });

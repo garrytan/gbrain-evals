@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { GATE_SUITE_SCHEMA, GATE_SUITES, amendmentLine, judgeSuite, type GateSuite } from '../../eval/runner/engine-bench/gate-suites.ts';
+import { GATE_SUITE_SCHEMA, GATE_SUITES, amendmentLine, engineDir, judgeSuite, loadRun, type GateSuite } from '../../eval/runner/engine-bench/gate-suites.ts';
 import { parseCat13Argv } from '../../eval/runner/cat13-conceptual.ts';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -211,6 +211,59 @@ describe('gate-suite runs', () => {
     expect(judge({ hasLog: false, exit: exit(1) }).verdict).toBe('NOT_RUN');
     expect(judge({ hasLog: true, exit: exit(1, null, '/w/gbrain@c0ffee12') }).reason).toBe("Rust's run named gbrain /w/gbrain@c0ffee12, not the TypeScript engines' build b66e4077");
     expect(judge({ hasLog: true, exit: exit(1) }, k => (k === 'postgres' ? 'other' : 'b66e4077')).reason).toBe('the TypeScript engines ran different or unnamed gbrain builds (b66e4077, other)');
+  });
+
+  test('a Rust cell killed by an engine crash signal is FAIL; a harness kill stays NOT_RUN', () => {
+    const conf = { data: { summary: { cases_passed: 24, cases_total: 24 } } };
+    const judge = (signal: string) => {
+      const r = runs(k => (k === 'rust' ? null : receipt(k, conf)));
+      Object.assign(r.rust, { hasLog: true, exit: { code: null, signal, gbrain: '/w/gbrain@b66e4077' } });
+      return judgeSuite(suite('memory-verb-conformance'), r, { counted: false });
+    };
+    for (const sig of ['SIGSEGV', 'SIGABRT', 'SIGBUS']) expect(judge(sig).losses[0].reason).toContain(`its runner failed (exit none by ${sig})`);
+    for (const sig of ['SIGKILL', 'SIGTERM']) expect(judge(sig).verdict).toBe('NOT_RUN');
+  });
+
+  test('an unreadable or old-format exit.json reads as no exit record instead of stopping emit', () => {
+    const reports = mkdtempSync(join(tmpdir(), 'gate-exit-'));
+    try {
+      const dir = engineDir('cat10', 'rust', reports);
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(join(dir, 'exit.json'), '{"code": 1, "sig');
+      expect(loadRun('cat10', 'rust', reports).exit).toBeNull();
+      writeFileSync(join(dir, 'exit.json'), '{"code": 1, "signal": null}');
+      expect(loadRun('cat10', 'rust', reports).exit).toBeNull();
+      writeFileSync(join(dir, 'exit.json'), '{"code": 1, "signal": null, "gbrain": "/w/gbrain@b66e4077"}');
+      expect(loadRun('cat10', 'rust', reports).exit).toEqual({ code: 1, signal: null, gbrain: '/w/gbrain@b66e4077' });
+    } finally { rmSync(reports, { recursive: true, force: true }); }
+  });
+
+  test('Cat 27 is NOT_RUN when the TypeScript engines scored no probe, and counts only system-under-test errors', () => {
+    const empty = { mean_ndcg10_with_signals: 0, top1_hit_rate_with_signals: 0, n_probes: 0 };
+    const allErr = { n_total: 4, verdict: 'fail', errors: [1, 2, 3, 4].map(i => ({ probe_id: `p${i}`, origin: 'sut', message: 'boom' })), data: { aggregate: empty } };
+    expect(judgeSuite(suite('cat27'), runs(k => receipt(k, allErr)), { counted: false })).toMatchObject({ verdict: 'NOT_RUN', reason: 'the pglite receipt has no probes_scored' });
+    const agg = { mean_ndcg10_with_signals: 0.5, top1_hit_rate_with_signals: 0.25, n_probes: 4 };
+    const harness = judgeSuite(suite('cat27'), runs(k => receipt(k, { n_total: 4, errors: k === 'pglite' ? [{ probe_id: 'teardown', origin: 'harness', message: 'scratch close' }] : [], data: { aggregate: agg } })), { counted: false });
+    expect(harness.verdict).toBe('PASS');
+    const rustNone = judgeSuite(suite('cat27'), runs(k => receipt(k, k === 'rust' ? allErr : { n_total: 4, data: { aggregate: agg } })), { counted: false });
+    expect(rustNone.verdict).toBe('FAIL');
+    expect(rustNone.losses[0]).toMatchObject({ id: 'cat27:probes_scored' });
+  });
+
+  test('a Rust receipt missing a measured value is FAIL, not NOT_RUN', () => {
+    const c19 = (achieved: unknown) => ({ n_total: 5, n_scored: 5, data: { achieved, gates: { g1: 1, g2: 1, g3: 1, g4: 1, g5: 1 } } });
+    const r = judgeSuite(suite('cat19'), runs(k => receipt(k, k === 'rust' ? { ...c19(null), verdict: 'fail' } : c19({ brain_score: 85 }))), { counted: false });
+    expect(r.verdict).toBe('FAIL');
+    expect(r.losses[0]).toEqual({ id: 'cat19:brain_score', reason: 'the Rust receipt has no brain_score (verdict fail)' });
+  });
+
+  test('Cat 13 runs on the same ids with other query text or another gold store are NOT_RUN', () => {
+    const q = (id: string, text: string) => ({ id, text, ndcg5: 0.6, ranked_pages: ['a', 'b', 'c', 'd', 'e'].map((page_id, i) => ({ page_id, rank: i + 1 })) });
+    const all = Array.from({ length: 40 }, (_, i) => `c${i}`);
+    const c13 = (text: (id: string) => string, gold = 'g1') => ({ n_total: 40, resolved_config: { probes_generated: 40, evaluator: { gold_store: { fingerprint: gold } } }, data: { scorecard: [{ name: 'gbrain', ndcg5: 0.6 }], per_query: { gbrain: all.map(id => q(id, text(id))) } } });
+    expect(judgeSuite(suite('cat13/ndcg5'), runs(k => receipt(k, c13(id => `query ${id}`))), { counted: false }).verdict).toBe('PASS');
+    expect(judgeSuite(suite('cat13/ndcg5'), runs(k => receipt(k, c13(id => (k === 'rust' ? `other ${id}` : `query ${id}`)))), { counted: false }).verdict).toBe('NOT_RUN');
+    expect(judgeSuite(suite('cat13/ndcg5'), runs(k => receipt(k, c13(id => `query ${id}`, k === 'rust' ? 'g2' : 'g1'))), { counted: false }).verdict).toBe('NOT_RUN');
   });
 
   test('receipts that embedded differently, or Cat 13 runs on different or partial query sets, are NOT_RUN', () => {
