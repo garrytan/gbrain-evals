@@ -14,6 +14,7 @@ import type { ScriptedModel } from '../../eval/runner/cat40/loop.ts';
 import { importGbrain, resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
 import type { Corpus, MemoryQuestion } from '../../eval/runner/memory-qa/corpus.ts';
 import type { ChatLike, ChatResult } from '../../eval/runner/memory-qa/qa-v2.ts';
+import { judgeFor } from '../../eval/runner/nightly/adapters.ts';
 import { runCell, systemFor } from '../../eval/runner/q1/cell.ts';
 import { ALL_SETS, buildManifest, definitionProblems, frontierJudgesFor, SOTA_DEV_CONVERSATIONS, SOTA_DEV_IDS, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
 import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
@@ -192,10 +193,11 @@ describe('SOTA dev cells', () => {
       expect(definitionProblems(c, kinds)).toEqual([]);
       expect(c).toMatchObject({ runner: 'in-process', set: 'SOTA-dev', block: 'SOTA-dev', benchmark: 'beam-1m', split: 'dev', only_conversations: SOTA_DEV_CONVERSATIONS, selection: { kind: 'ids', ids: SOTA_DEV_IDS } });
       expect(c.arms.map(a => [a.id, a.mode, a.readers, a.frontier?.judges])).toEqual([
-        ['whole-agent', 'agent', ['anthropic:claude-opus-5-5', 'openai:gpt-6.2-sol'], ['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol']],
+        ['whole-agent', 'agent', ['anthropic:claude-opus-5-5', 'openai:gpt-6.2-sol'], ['anthropic:claude-opus-5-5', 'openai:gpt-6.2-astra']],
         ['whole-agent-particle', 'agent', ['particle:particle-1'], ['anthropic:claude-opus-5-5']],
       ]);
       expect(frontierJudgesFor(c.arms[1]!, 'particle:particle-1')).toEqual(['anthropic:claude-opus-5-5']);
+      for (const reader of c.arms[0]!.readers) expect(frontierJudgesFor(c.arms[0]!, reader)).toEqual([judgeFor(reader)]);
       expect(m.cells.some(x => x.id === c.id)).toBe(false);
     }
     const classes = loadClasses('beam-1m')!;

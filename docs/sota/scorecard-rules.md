@@ -11,7 +11,7 @@ records what each run cost; findings it surfaces are published through the usual
 ## What a row measures
 
 A row is gbrain's score minus the leader's on the same questions, in points, as the mean over the three readers under
-test (Claude Opus 5.5, GPT-6.1 Sol and particle-1), with a 95% interval from a bootstrap that resamples whole
+test (Claude Opus 5.5, GPT-6.2 Sol and particle-1), with a 95% interval from a bootstrap that resamples whole
 conversations, so questions from one conversation don't count as independent evidence. Only answerable questions
 count: those whose cited turns support the answer, or whose answer a reader given only the gold evidence gets right
 ([answerability](../nightly.md#the-sota-loop-answerability-attribution-and-the-fix-list)). Cost per correct answer and
@@ -63,6 +63,11 @@ gain in the targeted buckets is below the detectable difference of that sum whil
 it, the fix-list step gets one "Why null?" review and then a keep, fix-the-method or cut-candidate verdict.
 
 ## Changelog
+
+### 2026-11-23: The GPT reader is GPT-6.2 Sol
+
+A row's three readers are now Claude Opus 5.5, GPT-6.2 Sol and particle-1, the nightly's readers, in place of GPT-6.1
+Sol, which the nightly no longer uses.
 
 ### 2026-11-12: First version
 

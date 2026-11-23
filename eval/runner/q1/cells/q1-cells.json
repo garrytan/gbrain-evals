@@ -9670,7 +9670,7 @@
           "frontier": {
             "judges": [
               "anthropic:claude-opus-5-5",
-              "openai:gpt-6.1-sol"
+              "openai:gpt-6.2-astra"
             ],
             "readers": null,
             "sample": null,
@@ -9678,6 +9678,10 @@
             "settings": {
               "effort": "medium",
               "max_tokens": 8000
+            },
+            "judge_by_reader": {
+              "anthropic:claude-opus-5-5": "openai:gpt-6.2-astra",
+              "openai:gpt-6.2-sol": "anthropic:claude-opus-5-5"
             }
           },
           "judge_repeats": null,
@@ -9840,7 +9844,7 @@
           "frontier": {
             "judges": [
               "anthropic:claude-opus-5-5",
-              "openai:gpt-6.1-sol"
+              "openai:gpt-6.2-astra"
             ],
             "readers": null,
             "sample": null,
@@ -9848,6 +9852,10 @@
             "settings": {
               "effort": "medium",
               "max_tokens": 8000
+            },
+            "judge_by_reader": {
+              "anthropic:claude-opus-5-5": "openai:gpt-6.2-astra",
+              "openai:gpt-6.2-sol": "anthropic:claude-opus-5-5"
             }
           },
           "judge_repeats": null,

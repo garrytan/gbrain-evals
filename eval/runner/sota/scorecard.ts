@@ -1,7 +1,7 @@
 /**
  * The monthly SOTA scorecard (SOTA plan item 9, decision D1a). One row per benchmark and leader: gbrain minus the leader
  * on questions gbrain was never tuned on, in the answerable classes, as the mean over the three readers under test
- * (claude-opus-5-5, gpt-6.1-sol, particle-1) with a conversation-clustered 95% interval, in points.
+ * (claude-opus-5-5, gpt-6.2-sol, particle-1) with a conversation-clustered 95% interval, in points.
  *
  *   bun eval/runner/sota/scorecard.ts --rows <rows.json> [--previous <last month's scorecard.json>] [--quarter-call <2027-Q1>]
  *       --takeaways <three-line file> --out <scorecard.md outside the repo>
@@ -22,7 +22,7 @@ import { assertNoSealedIds } from './sealed-guard.ts';
 
 export const SCORECARD_SCHEMA = 'sota-scorecard/1';
 export const MARGIN = 3.5;
-export const READERS = ['claude-opus-5-5', 'gpt-6.1-sol', 'particle-1'] as const;
+export const READERS = ['claude-opus-5-5', 'gpt-6.2-sol', 'particle-1'] as const;
 const REPO = resolve(import.meta.dir, '../../..');
 
 export type Status = 'ahead' | 'behind' | 'at_parity' | 'not_enough_data';

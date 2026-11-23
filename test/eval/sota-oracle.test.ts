@@ -7,7 +7,7 @@
 import { afterAll, describe, expect, test } from 'bun:test';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { BudgetRun, closeLedgers, initLedger } from '../../eval/runner/budget-ledger.ts';
@@ -138,13 +138,14 @@ describe('oracle specs', () => {
     expect(loadSplit('beam-1m').dev).toContain(`1m-${missing}`);
   });
 
-  test('plan lists the nightly\'s gpt-6.2-sol beside Opus and particle-1 on both benchmarks, and keeps gpt-6.1-sol for the answerability files', async () => {
+  test('plan lists the nightly\'s gpt-6.2-sol beside Opus and particle-1 on both benchmarks, and lists gpt-6.1-sol for the answerability files without a buy file no window reads', async () => {
     const cache = scratch(), lines: string[] = [];
     expect(await main(['plan', '--cache', cache], s => lines.push(s))).toBe(0);
     expect(lines.map(l => l.split(':').slice(0, 2).join(':'))).toEqual(['beam-1m', 'lme-s'].flatMap(b => [...ORACLE_READERS, EXPORT_READER].map(r => `${b} ${r}`)));
     expect(lines).toContain(`beam-1m openai:gpt-6.2-sol: 126 items, 0 fresh, 126 unknown, 0 stale; to buy: ${join(cache, 'plan', 'oracle-beam-1m-openai_gpt-6.2-sol.txt')}`);
     expect(lines).toContain(`lme-s openai:gpt-6.2-sol: 50 items, 0 fresh, 50 unknown, 0 stale; to buy: ${join(cache, 'plan', 'oracle-lme-s-openai_gpt-6.2-sol.txt')}`);
-    expect(lines).toContain(`lme-s openai:gpt-6.1-sol: 50 items, 0 fresh, 50 unknown, 0 stale; to buy: ${join(cache, 'plan', 'oracle-lme-s-openai_gpt-6.1-sol.txt')}`);
+    expect(lines).toContain('lme-s openai:gpt-6.1-sol: 50 items, 0 fresh, 50 unknown, 0 stale');
+    expect(existsSync(join(cache, 'plan', 'oracle-lme-s-openai_gpt-6.1-sol.txt'))).toBe(false);
     expect(lines).toContain('beam-1m openai:gpt-6.1-sol: 126 items, 0 fresh, 126 unknown, 0 stale');
   });
 

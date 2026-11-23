@@ -8,6 +8,7 @@ import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { BASE_URL_VARS, DEAD_UPSTREAM } from '../../eval/runner/nightly/smokes/harness.ts';
 import { PROVIDER_KEYS } from '../support/no-provider-keys.ts';
 
 const REPO = join(import.meta.dir, '../..');
@@ -189,14 +190,16 @@ describe('run.sh, with a fake runner', () => {
 });
 
 describe('vm-run.sh, on this machine with no keys and no dataset', () => {
-  const vmEnv = (home: string) => ({ PATH: process.env.PATH!, HOME: home, ...Object.fromEntries(PROVIDER_KEYS.map(k => [k, ''])) });
+  const noData = mkdtempSync(join(dir, 'no-datasets-'));
+  const vmEnv = (home: string) => ({ PATH: process.env.PATH!, HOME: home, GBRAIN_EVALS_DATASETS: noData, ...Object.fromEntries(PROVIDER_KEYS.map(k => [k, ''])), ...Object.fromEntries(BASE_URL_VARS.map(v => [v, DEAD_UPSTREAM])) });
   const vmRun = (home: string, window: string) => spawnSync('bash', ['eval/runner/sota/ubicloud/vm-run.sh', window, '3'], { cwd: REPO, env: vmEnv(home), encoding: 'utf8' });
 
-  test('its child processes see every provider key blank, so a .env in their cwd cannot fill one', () => {
+  test('its child processes see every provider key blank, every provider base URL dead and an empty dataset root, so a .env in their cwd cannot fill one', () => {
     const cwd = mkdtempSync(join(dir, 'dotenv-'));
-    writeFileSync(join(cwd, '.env'), PROVIDER_KEYS.map(k => `${k}=from-dotenv`).join('\n') + '\n');
-    const r = spawnSync('bun', ['-e', `console.log(JSON.stringify(${JSON.stringify(PROVIDER_KEYS)}.map(k => process.env[k] ?? null)))`], { cwd, env: vmEnv(join(dir, 'vm-dotenv')), encoding: 'utf8' });
-    expect(JSON.parse(r.stdout)).toEqual(PROVIDER_KEYS.map(() => ''));
+    const names = [...PROVIDER_KEYS, ...BASE_URL_VARS, 'GBRAIN_EVALS_DATASETS'];
+    writeFileSync(join(cwd, '.env'), names.map(k => `${k}=from-dotenv`).join('\n') + '\n');
+    const r = spawnSync('bun', ['-e', `console.log(JSON.stringify(${JSON.stringify(names)}.map(k => process.env[k] ?? null)))`], { cwd, env: vmEnv(join(dir, 'vm-dotenv')), encoding: 'utf8' });
+    expect(JSON.parse(r.stdout)).toEqual([...PROVIDER_KEYS.map(() => ''), ...BASE_URL_VARS.map(() => DEAD_UPSTREAM), noData]);
   });
 
   test('rehearse runs every plan step and opens no ledger', () => {
