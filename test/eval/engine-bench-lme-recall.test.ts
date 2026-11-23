@@ -466,7 +466,7 @@ describe('sharding and NDJSON resume', () => {
       return p;
     };
     const [x, y, other, bare] = [shard('b-0.ndjson', 'a', gbrain('addon-sha')), shard('b-1.ndjson', 'b', gbrain('addon-sha')), shard('b-2.ndjson', 'c', gbrain('other')), shard('b-3.ndjson', 'd', null)];
-    expect(aggregateLmeRows([x, y]).gbrain).toEqual(gbrain('addon-sha'));
+    expect(aggregateLmeRows([x, y]).gbrain as unknown).toEqual(gbrain('addon-sha'));
     expect(() => aggregateLmeRows([x, other])).toThrow(/one gbrain build and Rust addon/);
     expect(() => aggregateLmeRows([x, bare])).toThrow(/one gbrain build and Rust addon/);
   });
