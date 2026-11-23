@@ -31,7 +31,7 @@ import { ATTRIBUTION_BUCKETS, TAXONOMY_VERSION } from './taxonomy.ts';
 import type { CauseLabel } from './types.ts';
 import { loadDevSet, type DevSet } from '../nightly/devset.ts';
 import { ANSWERABLE, loadClasses, type AnswerClass } from '../sota/answerability.ts';
-import { OutcomeCache, freshness, staleMessage, writeRebuyItems, type Freshness, type Spec } from '../sota/cache.ts';
+import { OutcomeCache, freshness, staleMessage, writeRebuyItems, type Freshness, type LeaderRebuyUsd, type Spec } from '../sota/cache.ts';
 import { assertNoSealedIds } from '../sota/sealed-guard.ts';
 
 export const ATTRIBUTION_SCHEMA = 'sota-attribution/1';
@@ -58,8 +58,11 @@ export interface Attribution {
   outside: number; cells: Cell[]; rows: AttributedRow[];
 }
 
-/** The current inputs of a benchmark's oracle and leader rows for one reader (sota/oracle.ts oracleSpec, sota/leader.ts leaderSpec). */
-export interface Specs { oracle(benchmark: string, reader: string): Spec | null; leader(benchmark: string, reader: string): Spec | null }
+/**
+ * The current inputs of a benchmark's oracle and leader rows for one reader (sota/oracle.ts oracleSpec, sota/leader.ts
+ * leaderSpec), and the price of re-buying stale leader rows (sota/leader.ts leaderRebuyUsd).
+ */
+export interface Specs { oracle(benchmark: string, reader: string): Spec | null; leader(benchmark: string, reader: string): Spec | null; leaderRebuyUsd?: LeaderRebuyUsd }
 
 const failedLabel = (l: CauseLabel) => !l.rule_id.startsWith('not_run.') && l.rule_id !== 'passed';
 
@@ -103,7 +106,7 @@ export function attribute(labels: readonly CauseLabel[], o: AttributeOptions): A
   const lookups = new Map<string, Freshness>([...wanted].map(([k, w]) => [k, freshness(cache, w.spec, [...w.items].sort())]));
   const look = (spec: Spec | null) => (spec ? lookups.get(JSON.stringify(spec)) ?? null : null);
   const stale = [...lookups.values()].filter(f => f.stale.length).map(f => ({ spec: f.spec, rows: f.stale.length,
-    message: staleMessage(f, writeRebuyItems(o.cacheDir, f.spec, f.stale.map(s => s.item)), o.cacheDir) }));
+    message: staleMessage(f, writeRebuyItems(o.cacheDir, f.spec, f.stale.map(s => s.item)), o.cacheDir, specs.leaderRebuyUsd) }));
   if (stale.length) return { schema: ATTRIBUTION_SCHEMA, taxonomy_version: TAXONOMY_VERSION, status: 'stale', devset: devset.digest, stale, outside, cells: [], rows: [] };
 
   const rows: AttributedRow[] = [];

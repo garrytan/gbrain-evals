@@ -13,7 +13,8 @@ import { join } from 'node:path';
 import { BudgetRun, closeLedgers, initLedger } from '../../eval/runner/budget-ledger.ts';
 import { loadSplit } from '../../eval/runner/decisions/splits.ts';
 import { loadFixture } from '../../eval/runner/memory-qa/corpus.ts';
-import { OutcomeCache } from '../../eval/runner/sota/cache.ts';
+import { judgeFor } from '../../eval/runner/nightly/adapters.ts';
+import { CACHE_SCHEMA, freshness, OutcomeCache, staleMessage } from '../../eval/runner/sota/cache.ts';
 import { a4Rows, a4Spec, ORACLE_READERS, oracleJudge, oraclePrompt, oracleSpec, poolItems, runOracle } from '../../eval/runner/sota/oracle.ts';
 
 const roots: string[] = [];
@@ -79,14 +80,27 @@ describe('the oracle reader', () => {
 });
 
 describe('oracle specs', () => {
-  test('judges cross family: GPT-6 Astra grades Claude answers, Opus grades GPT and particle-1 answers', () => {
-    expect(['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol', 'particle:particle-1'].map(oracleJudge)).toEqual(['openai:gpt-6-astra', 'anthropic:claude-opus-5-5', 'anthropic:claude-opus-5-5']);
+  test('judges with the nightly\'s QA judge for the reader\'s family: GPT-6.2 Astra grades Claude and particle-1 answers, Opus grades GPT answers', () => {
+    const readers = ['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol', 'particle:particle-1'];
+    expect(readers.map(oracleJudge)).toEqual(['openai:gpt-6.2-astra', 'anthropic:claude-opus-5-5', 'openai:gpt-6.2-astra']);
+    expect(readers.map(oracleJudge)).toEqual(readers.map(judgeFor));
+  });
+
+  test('the judge is part of the spec: a row graded by GPT-6 Astra is stale under GPT-6.2 Astra and names the change', () => {
+    const spec = oracleSpec('lme-s', 'anthropic:claude-opus-5-5');
+    const item = poolItems('lme-s')[0]!;
+    const cache = new OutcomeCache(scratch());
+    cache.put([{ ...spec, judge: 'openai:gpt-6-astra', schema: CACHE_SCHEMA, item, context_digest: 'c', score: 1, pass: true, finish_reason: 'stop',
+      usage: { reader_input: 5317, reader_output: 40, judge_input: 600, judge_output: 5 }, at: '2026-11-23T00:00:00.000Z', source: 'GBEV-119 refresh' }]);
+    const f = freshness(cache, spec, [item]);
+    expect([f.hits.size, f.stale.map(s => s.changed)]).toEqual([0, [['judge']]]);
+    expect(staleMessage(f, 'items.txt', 'cache')).toContain('changed judge: openai:gpt-6-astra -> openai:gpt-6.2-astra (1 rows)');
   });
 
   test('the three nightly readers take their suite\'s 8,192-token output limit, particle-1 its 16,000-token floor, and the pool is the nightly suites\' items', () => {
-    expect(oracleSpec('beam-1m', 'anthropic:claude-opus-5-5')).toMatchObject({ max_tokens: 8192, judge: 'openai:gpt-6-astra', system: 'oracle' });
+    expect(oracleSpec('beam-1m', 'anthropic:claude-opus-5-5')).toMatchObject({ max_tokens: 8192, judge: 'openai:gpt-6.2-astra', system: 'oracle' });
     expect(oracleSpec('lme-s', 'openai:gpt-6.1-sol')).toMatchObject({ max_tokens: 8192, judge: 'anthropic:claude-opus-5-5' });
-    expect(oracleSpec('beam-1m', 'particle:particle-1')).toMatchObject({ max_tokens: 16_000, judge: 'anthropic:claude-opus-5-5' });
+    expect(oracleSpec('beam-1m', 'particle:particle-1')).toMatchObject({ max_tokens: 16_000, judge: 'openai:gpt-6.2-astra' });
     expect(ORACLE_READERS).toEqual(['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol', 'particle:particle-1']);
     expect([poolItems('beam-1m').length, poolItems('lme-s').length]).toEqual([126, 50]);
   });

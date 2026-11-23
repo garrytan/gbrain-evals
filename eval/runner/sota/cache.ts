@@ -13,7 +13,9 @@
  * Spec) finds a row measured on exactly those inputs (hit), finds none in the slot (unknown: left out of recoverable
  * points and counted in the report), or finds only rows measured on other inputs (stale). A stale lookup never falls
  * back to the old row: check exits 6 with SOTA_CACHE_STALE, the inputs that changed, the command that re-buys the rows
- * and the paid-window request it needs, projected from the stale rows' recorded tokens at today's list prices.
+ * and the paid-window request it needs: for oracle rows, projected from the stale rows' recorded tokens at today's list
+ * prices; for leader rows, which record no cached input and no judge tokens, q1's estimate for the leader cell on those
+ * items (leader.ts leaderRebuyUsd).
  *
  * Rows live in <dir>/<kind>/<benchmark>.ndjson, appended and never rewritten in place, so a row measured on older
  * inputs stays as history and a return to those inputs finds it again. Only public and synthetic items are written
@@ -156,8 +158,15 @@ export function projectUsd(spec: Spec, stale: Freshness['stale']): number | null
   return Math.ceil((costs as number[]).reduce((a, b) => a + b, 0) * 1.25 * 100) / 100;
 }
 
-/** The SOTA_CACHE_STALE message: what changed (cached value and current value, with the row count), the re-buy command and the window request, or for A4's imported oracle rows the keyless re-import. */
-export function staleMessage(f: Freshness, itemsFile: string, cacheDir: string): string {
+/** Prices a re-buy of a spec's leader rows on these items (leader.ts leaderRebuyUsd), passed in so this module needn't load q1. */
+export type LeaderRebuyUsd = (spec: Spec, items: readonly string[]) => number;
+
+/**
+ * The SOTA_CACHE_STALE message: what changed (cached value and current value, with the row count), the re-buy command and
+ * the window request, or for A4's imported oracle rows the keyless re-import. Leader rows are priced only by
+ * leaderRebuyUsd, never from their recorded usage.
+ */
+export function staleMessage(f: Freshness, itemsFile: string, cacheDir: string, leaderRebuyUsd?: LeaderRebuyUsd): string {
   const { spec } = f;
   const fields = new Map<string, { from: Set<string>; count: number }>();
   for (const s of f.stale) for (const k of s.changed) {
@@ -167,7 +176,8 @@ export function staleMessage(f: Freshness, itemsFile: string, cacheDir: string):
     fields.set(k, e);
   }
   const now = (k: string) => (k === 'context_digest' ? '(the evidence now built)' : String(spec[k as KeyField]));
-  const cap = projectUsd(spec, f.stale);
+  const leader = spec.kind === 'leader';
+  const cap = leader ? leaderRebuyUsd?.(spec, f.stale.map(s => s.item)) ?? null : projectUsd(spec, f.stale);
   const what = [
     `SOTA_CACHE_STALE: ${f.stale.length} ${spec.kind} row${f.stale.length === 1 ? '' : 's'} for ${spec.benchmark}, system ${spec.system}, reader ${spec.reader} were measured on other inputs`,
     ...[...fields].map(([k, e]) => `  changed ${k}: ${[...e.from].sort().join(', ')} -> ${now(k)} (${e.count} rows)`),
@@ -177,8 +187,8 @@ export function staleMessage(f: Freshness, itemsFile: string, cacheDir: string):
     ...what,
     `  re-buy: ${rebuyCommand(spec, itemsFile, cacheDir)}`,
     cap === null
-      ? `  paid window: PAID WINDOW REQUEST ${rebuyUnit(spec)} <cap> (${f.stale.length} rows; no recorded usage or list price to project from, so size the cap with a one-item smoke)`
-      : `  paid window: PAID WINDOW REQUEST ${rebuyUnit(spec)} ${cap.toFixed(2)} (${f.stale.length} rows; their recorded tokens at today's list prices, plus 25%)`,
+      ? `  paid window: PAID WINDOW REQUEST ${rebuyUnit(spec)} <cap> (${f.stale.length} rows; ${leader ? 'leader rows record no cached input or judge tokens, so size the cap from q1\'s estimate for the leader cell' : 'no recorded usage or list price to project from, so size the cap with a one-item smoke'})`
+      : `  paid window: PAID WINDOW REQUEST ${rebuyUnit(spec)} ${cap.toFixed(2)} (${f.stale.length} rows; ${leader ? 'q1\'s estimate for the leader cell on these items' : 'their recorded tokens at today\'s list prices'}, plus 25%)`,
   ].join('\n');
 }
 
@@ -196,7 +206,7 @@ const flag = (argv: string[], name: string) => { const i = argv.indexOf(name); r
 const need = (argv: string[], name: string) => { const v = flag(argv, name); if (!v) throw new Error(`pass ${name}`); return v; };
 
 /** The command line; returns the exit code (6 when any spec has stale rows). */
-export function main(argv: string[], log: (s: string) => void = console.log, err: (s: string) => void = console.error): number {
+export function main(argv: string[], log: (s: string) => void = console.log, err: (s: string) => void = console.error, leaderRebuyUsd?: LeaderRebuyUsd): number {
   const cacheDir = resolve(need(argv, '--cache'));
   const cache = new OutcomeCache(cacheDir);
   if (argv[0] === 'status') {
@@ -215,11 +225,12 @@ export function main(argv: string[], log: (s: string) => void = console.log, err
     log(`${spec.kind} ${spec.benchmark} ${spec.system} ${spec.reader}: ${f.hits.size} fresh, ${f.unknown.length} unknown, ${f.stale.length} stale`);
     if (!f.stale.length) continue;
     stale++;
-    err(staleMessage(f, writeRebuyItems(cacheDir, spec, f.stale.map(s => s.item)), cacheDir));
+    err(staleMessage(f, writeRebuyItems(cacheDir, spec, f.stale.map(s => s.item)), cacheDir, leaderRebuyUsd));
   }
   return stale ? STALE_EXIT : 0;
 }
 
 if (import.meta.main) {
-  try { process.exit(main(process.argv.slice(2))); } catch (e) { console.error(e instanceof Error ? e.message : String(e)); process.exit(1); }
+  const { leaderRebuyUsd } = await import('./leader.ts');
+  try { process.exit(main(process.argv.slice(2), console.log, console.error, leaderRebuyUsd)); } catch (e) { console.error(e instanceof Error ? e.message : String(e)); process.exit(1); }
 }

@@ -3,8 +3,10 @@
  * gbrain miss the leader solved is a miss someone has already shown how to avoid. On LongMemEval the leader is the
  * whole-history reader (every session in the prompt); on BEAM-1M it is the grep agent (the file agent: 40 turns,
  * list_dir, grep and read_file over the sessions as files). Both run as q1 cells (definitions.ts
- * generateSotaLeaderCells), judged by the reader's per-row frontier judge (q1's frontierJudgeOf: gpt-6.1-sol grades
- * Claude rows, claude-opus-5-5 grades GPT rows), and are written to the outcome cache, which attribution reads.
+ * generateSotaLeaderCells), judged by the nightly's QA judge for the reader (nightly/adapters.ts judgeFor: gpt-6.2-astra
+ * grades Claude rows, claude-opus-5-5 grades GPT rows, so a leader row and the nightly row it explains share a judge),
+ * and are written to the outcome cache, which attribution reads. The q1 leader cells keep q1's frontierJudgeOf; a run
+ * swaps in the leader judge (leaderRunCell).
  *
  *   bun eval/runner/sota/leader.ts plan --cache <dir>
  *   bun eval/runner/sota/leader.ts import --from <q1 out dir> --cell <cell id> --cache <dir>
@@ -22,8 +24,9 @@
  * history that does not fit the reader, is the leader failing (score 0). Answers with a harness failure, a degraded
  * ingest, an empty text, a cut-off at the output limit (the nightly's rule since #420; the whole-history reader gets
  * q1's 2,048 tokens, and Claude's adaptive thinking counts against them) or no frontier judgment write no row, so their
- * items stay unknown. q1's judgments record no tokens, so a row's usage holds the reader's tokens and zero judge
- * tokens, and a stale re-buy's projected cap counts readers only.
+ * items stay unknown. q1's judgments record no tokens, so a row's usage holds the reader's uncached input and output
+ * and zero judge tokens; a stale re-buy's cap therefore comes from q1's estimate for the cell (leaderRebuyUsd), never
+ * from the rows' usage.
  */
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -32,9 +35,10 @@ import { budgetOptionsFrom, startPaidRun } from '../budget-ledger.ts';
 import { instrumentFor } from '../memory-qa/instruments.ts';
 import { READER_TEMPLATE } from '../memory-qa/qa-v2.ts';
 import { readRecords, type AnswerRecord } from '../memory-qa/records.ts';
+import { judgeFor } from '../nightly/adapters.ts';
 import { qaPromptVersion } from '../nightly/judge-cache.ts';
 import { frontierInstrumentId, paidGuard, readerMaxTokens, runCell } from '../q1/cell.ts';
-import { estimateCell, frontierJudgeOf, loadManifest, type CellDefinition } from '../q1/cells/definitions.ts';
+import { ALL_SETS, estimateCell, loadManifest, type CellDefinition } from '../q1/cells/definitions.ts';
 import { FRONTIER_READERS, FULL_CONTEXT_EFFORT } from '../systems/baselines.ts';
 import { FILE_AGENT_EFFORT, FILE_AGENT_SYSTEM } from '../systems/file-agent.ts';
 import { AGENT_ARM_PARITY } from '../systems/gbrain-agent.ts';
@@ -59,8 +63,8 @@ export const LEADERS: Record<string, { system: string; cell: string; arm: string
     code: ['eval/runner/systems/baselines.ts', 'eval/runner/memory-qa/qa-v2.ts'], prompt: READER_TEMPLATE, effort: FULL_CONTEXT_EFFORT, maxTokens: readerMaxTokens },
 };
 
-/** The leader's judge for a reader: the q1 cells' frontier judge, the BEAM judges rule (gpt-6.1-sol grades Claude and particle-1 rows, claude-opus-5-5 grades GPT rows). */
-export const leaderJudge = frontierJudgeOf;
+/** The leader's judge for a reader: the nightly's QA judge (nightly/adapters.ts judgeFor), so the two can't drift apart. */
+export const leaderJudge = judgeFor;
 
 /** The current inputs for a benchmark's leader rows with one reader, or null when the benchmark has no leader or the leader cells don't run the reader (only the nightly's frontier readers). */
 export function leaderSpec(benchmark: string, reader: string): Spec | null {
@@ -125,7 +129,7 @@ export function importLeader(cache: OutcomeCache, rows: readonly Row[]): number 
   return fresh.length;
 }
 
-/** The leader cell narrowed to the items and to the reader's arm, with that arm's own estimate, for a run that buys exactly those rows. */
+/** The leader cell narrowed to the items and to the reader's arm, judged by the leader judge, with that arm's own estimate, for a run that buys exactly those rows. */
 export function leaderRunCell(benchmark: string, reader: string, items: readonly string[], manifest = loadManifest()): CellDefinition {
   const l = LEADERS[benchmark];
   if (!l) throw new Error(`${benchmark} has no leader (leaders: ${Object.keys(LEADERS).join(', ')})`);
@@ -136,8 +140,21 @@ export function leaderRunCell(benchmark: string, reader: string, items: readonly
   const ids = [...new Set(items)].sort();
   if (!ids.length) throw new Error('no items to run');
   const conversations = benchmark.startsWith('beam-') ? { only_conversations: [...new Set(ids.map(id => id.slice(0, id.indexOf(':'))))].sort() } : {};
-  const { estimate: _whole, ...narrowed } = { ...base, ...conversations, selection: { kind: 'ids' as const, ids }, arms: [arm] };
+  const judge = leaderJudge(reader);
+  const judged = { ...arm, frontier: { ...arm.frontier!, judges: [judge], judge_by_reader: { [reader]: judge } } };
+  const { estimate: _whole, ...narrowed } = { ...base, ...conversations, selection: { kind: 'ids' as const, ids }, arms: [judged] };
   return { ...narrowed, estimate: estimateCell(narrowed) };
+}
+
+/**
+ * The paid-window cap for re-buying a reader's leader rows on these items: q1's estimate for the narrowed cell as its
+ * paid guard reckons it (q1/cell.ts paidGuard: the arm's estimate scaled to the items, plus ingest), plus a quarter for
+ * retries and longer answers.
+ */
+export function leaderRebuyUsd(spec: Spec, items: readonly string[]): number {
+  const def = leaderRunCell(spec.benchmark, spec.reader, items);
+  const guard = def.estimate.usd * Math.min(1, new Set(items).size / ALL_SETS[def.set].questions) + (def.estimate.lines.ingest ?? 0);
+  return Math.ceil(guard * 1.25 * 100) / 100;
 }
 
 export interface RunOptions { benchmark: string; system: string; reader: string; items: string[]; cache: string; work: string; argv: string[] }
