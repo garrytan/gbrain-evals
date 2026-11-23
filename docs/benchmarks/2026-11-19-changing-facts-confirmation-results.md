@@ -81,8 +81,8 @@ Sol's and particle-1's. Two checks back the judges, and no person labelled any i
   74 it graded right). The two agreed on all 148 (kappa 1.0).
 
 The deterministic matcher the plan reports beside the judges sets no verdict. It agreed with the gating judges on 73.4%
-of the 4,128 answers it could decide (kappa 0.405), and the judges graded 515 of the 890 answers it read as naming a
-stale value correct.
+of the 4,128 answers it could decide, out of 23,040 (kappa 0.405), and the judges graded 515 of the 890 answers it read
+as naming a stale value correct.
 
 A question's score is the share of the three readers who got it right. Each of the four comparisons (each server, on
 each class) compares gbrain with the server world by world, as the mean over the class's questions, with a paired test
@@ -162,8 +162,9 @@ The lead over the memory-bank server on current values rests on particle-1's rea
 with the memory-bank server and behind the extract-first server on current values, and every reader puts it behind or
 level on the past.
 
-Each reader's accuracy on all 2,560 questions is in the first table. All 64 questions pooled, gbrain minus each server: -1.0 points (-2.0 to +0.1) against the memory-bank server and -0.7
-(-2.1 to +0.6) against the extract-first server.
+Each reader's accuracy on all 2,560 questions is in the first table. All 64 questions pooled, gbrain minus each
+server: -1.0 points (-2.0 to +0.1) against the memory-bank server and -0.7 (-2.1 to +0.6) against the extract-first
+server.
 
 ### Cost per correct answer
 
@@ -184,11 +185,13 @@ One comparison is a tie (current values against the extract-first server), and t
 ended as losses. The preregistration's "Why null?" questions were answered in custody before this file was written:
 
 - **Did gbrain use its design?** Yes for name tags and slots. Across gbrain's 40 kept brains, 12,690 facts were tagged
-  with the person or company they are about, 1,376 tagged facts had a slot (a location, employer or role), and 316 slots
-  held more than one value. gbrain does not close an old slot value in storage: by design, its query facts block works
-  out when each slot value ended at read time, from the slot's history, and prints that end beside the fact. We did not
-  count how often those read-time ends reached the reader, so this run does not say whether the readers saw old values
-  as ended. The losses go to gbrain's maintainers with the exposure figures above.
+  with the person or company they are about, 1,376 tagged facts had a slot, and 316 slots held more than one value.
+  gbrain writes no end into a slot value's stored row. When its query facts block shows an older slot value, it works
+  out an end at read time only if the next value came from the same conversation page or its fact states the change in
+  plain words (moved, joined, left, was promoted and similar); otherwise both values stay open and unlabelled. This run
+  did not count how often gbrain's other paths (supersession and expiry) closed a fact in storage, or how often a
+  read-time end reached the reader, so it does not say whether the readers saw old values as ended. The losses go to
+  gbrain's maintainers with the exposure figures above.
 - **Do the tasks fit?** The worlds were built around the claimed advantage, and each carries 24 questions about the past
   on facts with scheduled changes.
 - **Enough samples?** Against the extract-first server on current values, the interval (-0.8 to +2.0) sits inside the
