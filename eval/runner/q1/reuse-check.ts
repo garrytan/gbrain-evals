@@ -48,13 +48,16 @@ export const BASELINE_FILES: Readonly<Record<string, readonly string[]>> = {
 };
 const SPLITS = 'eval/decisions/splits/';
 const DATASETS = 'eval/decisions/datasets/';
-/** Dataset pins read by named benchmarks' loaders only (D8, RS1, BG1 and BG1-C: eval/runner/memory-qa/corpus.ts D8_MANIFEST, RS1_MANIFEST, BG1_MANIFEST and BG1C_MANIFEST). Such a pin is compared only for a system whose cells run one of them; every other pin is compared for every system. */
+/** Dataset pins read by named benchmarks' loaders only (D8, RS1, BG1 and BG1-C: eval/runner/memory-qa/corpus.ts D8_MANIFEST, RS1_MANIFEST, BG1_MANIFEST and BG1C_MANIFEST; each Set W batch's bg1-names.ts bgwBatchManifest is matched by pinReaders). Such a pin is compared only for a system whose cells run one of them; every other pin is compared for every system. */
 export const DATASET_PINS: Readonly<Record<string, readonly string[]>> = {
   'eval/decisions/datasets/d8-manifest.json': ['beam-d8'],
   'eval/decisions/datasets/rs1-manifest.json': ['beam-rs1'],
   'eval/decisions/datasets/bg1-manifest.json': ['bg1'],
   'eval/decisions/datasets/bg1c-manifest.json': ['bg1c'],
 };
+
+/** The benchmarks that read a dataset pin: a DATASET_PINS entry, ['bgw'] for any Set W batch's manifest, else undefined (every system reads it). */
+export const pinReaders = (path: string) => DATASET_PINS[path] ?? (/^eval\/decisions\/datasets\/bgw-[1-9]\d{3}-manifest\.json$/.test(path) ? ['bgw'] : undefined);
 
 /** Whether a repository path is one of the system's own files; null when the system has no competitor-path rule. */
 export function ownsPath(system: string, path: string): boolean | null {
@@ -172,7 +175,7 @@ export function systemVerdict(system: string, prior: Side, planned: Side, isDecl
   }
   const runs = prior.probe instanceof Error || planned.probe instanceof Error ? null
     : new Set([...(prior.probe.identity.systems[system]?.benchmarks ?? []), ...(planned.probe.identity.systems[system]?.benchmarks ?? [])]);
-  const read = (p: string) => !runs || !DATASET_PINS[p] || DATASET_PINS[p].some(b => runs.has(b));
+  const read = (p: string) => !runs || !pinReaders(p) || pinReaders(p)!.some(b => runs.has(b));
   const datasets = [...new Set([...prior.tree.keys(), ...planned.tree.keys()])].filter(p => p.startsWith(DATASETS) && read(p)).sort();
   for (const p of datasets) if (prior.tree.get(p) !== planned.tree.get(p)) reasons.push(`dataset pin ${p} differs`);
   const tp = tokenizerPin(prior.lock), tn = tokenizerPin(planned.lock);

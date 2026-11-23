@@ -15,7 +15,7 @@ afterAll(() => { for (const d of roots) rmSync(d, { recursive: true, force: true
 
 const iv = (lo: number, hi: number) => ({ estimate: (lo + hi) / 2, lo, hi });
 const ROW: ScoreRow = {
-  benchmark: 'beam-rs1', leader: 'grep-agent', source: 'custody rs1 2027-02', gbrain_pin: '0.60.700.0', date: '2027-02-01', readers: ['claude-opus-5-5', 'gpt-6.2-sol', 'particle-1'],
+  benchmark: 'beam-rs1', leader: 'grep-agent', source: 'custody rs1 2027-02', gbrain_pin: '0.60.700.0', date: '2027-02-01', readers: ['claude-opus-5-5', 'gpt-6.1-sol', 'particle-1'],
   split: 'held_out', sealed_pending: false, gbrain_points: 61.2, leader_points: 63.0, delta: iv(-4, 0.4),
   gbrain_cost_per_correct: 0.021, leader_cost_per_correct: 0.913, gbrain_p50_s: 4.2, leader_p50_s: 38.5,
 };
@@ -54,6 +54,8 @@ describe('rows', () => {
     expect(scoreRow({ ...ROW, sealed_pending: true }, { quarterCall: '2027-Q1', previous: [] })).toMatchObject({ status: 'sealed_pending', reason: 'sealed, pending RS1 verdict' });
     expect(scoreRow({ ...ROW, readers: ['particle-1', 'gpt-6.1-sol', 'claude-opus-5-5'] }, { quarterCall: '2027-Q1', previous: [] })).toMatchObject({ status: 'not_enough_data', called: '2027-Q1' });
     expect(scoreRow({ ...ROW, benchmark: 'lme-s', readers: ['particle-1', 'gpt-6.1-sol', 'claude-opus-5-5'] }, { quarterCall: '2027-Q1', previous: [] })).toMatchObject({ status: 'descriptive', called: null });
+    expect(scoreRow({ ...ROW, readers: ['claude-opus-5-5', 'gpt-6.2-sol', 'particle-1'] }, { quarterCall: '2027-Q1', previous: [] })).toMatchObject({ status: 'descriptive', called: null, reason: 'readers claude-opus-5-5, gpt-6.2-sol, particle-1, not RS1\'s frozen readers' });
+    expect(scoreRow({ ...ROW, benchmark: 'lme-s', readers: ['claude-opus-5-5', 'gpt-6.2-sol', 'particle-1'] }, { quarterCall: '2027-Q1', previous: [] })).toMatchObject({ status: 'not_enough_data', called: '2027-Q1' });
     const md = renderScorecard(scorecard([{ ...ROW, readers: ['claude-opus-5-5', 'gpt-6.1-sol', 'particle-1'] }], { month: '2027-02', takeaways: TAKEAWAYS }));
     expect(md).toContain('the mean over the readers in its Readers column (claude-opus-5-5, gpt-6.1-sol, particle-1), with');
   });
@@ -70,7 +72,7 @@ describe('rows', () => {
     const called = scorecard([{ ...ROW, delta: iv(-9, -1) }], { month: '2027-03', quarterCall: '2027-Q1', takeaways: TAKEAWAYS });
     expect(called.rows[0]).toMatchObject({ status: 'behind', called: '2027-Q1', trend_points: null });
     expect(renderScorecard(called)).toContain('behind (called 2027-Q1)');
-    const prevOther = scoreRow({ ...ROW, readers: ['claude-opus-5-5', 'gpt-6.1-sol', 'particle-1'], delta: iv(-6, -1) }, { quarterCall: null, previous: [] });
+    const prevOther = scoreRow({ ...ROW, readers: ['claude-opus-5-5', 'gpt-6.2-sol', 'particle-1'], delta: iv(-6, -1) }, { quarterCall: null, previous: [] });
     expect(scoreRow(ROW, { quarterCall: null, previous: [prevOther] }).trend_points).toBeNull();
     const prevFull = scoreRow({ ...ROW, delta: iv(-6, -1) }, { quarterCall: null, previous: [] });
     expect(scoreRow({ ...ROW, readers: ['claude-opus-5-5', 'claude-opus-5-5', 'particle-1'] }, { quarterCall: null, previous: [prevFull] }).trend_points).toBeNull();

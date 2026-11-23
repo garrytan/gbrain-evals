@@ -12,7 +12,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { goldenDigest, type TreeIdentity } from '../../eval/runner/q1/golden-fixture.ts';
 import { reuseRefusal, type PublicationSource } from '../../eval/runner/q1/publish.ts';
-import { declared, lsTree, ownsPath, pathHash, probeCommit, resolveCommit, reuseCheck, tokenizerPin, type TreeProbe } from '../../eval/runner/q1/reuse-check.ts';
+import { declared, lsTree, ownsPath, pathHash, pinReaders, probeCommit, resolveCommit, reuseCheck, tokenizerPin, type TreeProbe } from '../../eval/runner/q1/reuse-check.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
 const A24 = '008b83fe';
@@ -92,6 +92,7 @@ describe('reuseCheck over a throwaway repository', () => {
   const c5 = commit({ 'eval/decisions/splits/beam-10m.json': '{"s":1}\n', 'eval/decisions/datasets/beam-x.json': '{"d":2}\n' }, 'dataset');
   const c6 = commit({ 'eval/decisions/datasets/beam-x.json': '{"d":1}\n', 'bun.lock': LOCK('1.0.23') }, 'tokenizer');
   const c7 = commit({ 'eval/decisions/datasets/d8-manifest.json': '{"files":[]}\n' }, 'a D8 pin');
+  const c8 = commit({ 'eval/decisions/datasets/bgw-1036-manifest.json': '{"files":[]}\n' }, 'a later Set W batch');
   const PRE = 'Reuse from A24 source a24-src for ext-a, baseline-none, baseline-hybrid.\n';
   const probe = (probes: Record<string, TreeProbe>) => (c: string) => probes[c] ?? { digest: GOLDEN, identity: identity() };
   const run = (prior: string, planned: string, o: { probes?: Record<string, TreeProbe | Error>; pre?: string; systems?: string[] } = {}) => reuseCheck({
@@ -138,6 +139,16 @@ describe('reuseCheck over a throwaway repository', () => {
     const d8 = { [c7]: { digest: GOLDEN, identity: identity({ benchmarks: ['beam-10m', 'beam-d8'] }) } };
     expect(by(run(c6, c7, { systems: ['baseline-none'], probes: d8 }), 'baseline-none').reasons).toEqual(['dataset pin eval/decisions/datasets/d8-manifest.json differs']);
     expect(by(run(c6, c7, { systems: ['baseline-none'], probes: { [c7]: new Error('boom') } }), 'baseline-none').reasons).toContain('dataset pin eval/decisions/datasets/d8-manifest.json differs');
+  });
+
+  // Value: protects=committing a later Set W batch's manifest template leaves every system that runs no Set W cell reusable; fails_when=only bgw-1001's pin is scoped to bgw, so the next monthly template refuses reuse for every system; why_new=weekly-line preregistration "The worlds" (a batch a month, each with its own committed template); seam=reuseCheck's dataset-pin filter; no_claim=Set W's own cells
+  test('every Set W batch\'s manifest is read only by systems that run bgw', () => {
+    expect(by(run(c7, c8, { systems: ['baseline-none'] }), 'baseline-none')).toMatchObject({ reusable: true, reasons: [] });
+    const bgw = { [c8]: { digest: GOLDEN, identity: identity({ benchmarks: ['beam-10m', 'bgw'] }) } };
+    expect(by(run(c7, c8, { systems: ['baseline-none'], probes: bgw }), 'baseline-none').reasons).toEqual(['dataset pin eval/decisions/datasets/bgw-1036-manifest.json differs']);
+    expect(pinReaders('eval/decisions/datasets/bgw-1001-manifest.json')).toEqual(['bgw']);
+    expect(pinReaders('eval/decisions/datasets/bgw-101-manifest.json')).toBeUndefined();
+    expect(pinReaders('eval/decisions/datasets/bg1c-manifest.json')).toEqual(['bg1c']);
   });
 
   test('a different golden digest, renderer, reader set, exclusion or judge instrument refuses', () => {

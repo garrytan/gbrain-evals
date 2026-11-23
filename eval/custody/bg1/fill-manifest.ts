@@ -24,6 +24,14 @@
  *     records, so the manifest pins exactly the bytes validate.ts passed;
  *   - a root inside the checkout, a manifest path or pinned file that is a link, and a pinned file that resolves outside
  *     the root.
+ * --bgw --batch <first slot> fills one Set W batch's manifest instead (the weekly outcome line;
+ * docs/benchmarks/2026-11-23-weekly-outcome-line-preregistration.md): the template is the batch's committed
+ * eval/decisions/datasets/bgw-<first>-manifest.json, the filled manifest is <root>/bgw-<first>-manifest.json, where
+ * GBRAIN_EVALS_BGW_MANIFEST points, the kept worlds must be the batch's slots, and the report is validate.ts --bgw's for
+ * that batch. Its n_final is 34 (four weeks of eight and two spares), or fewer only when the report accounts for every
+ * slot of the batch (a short batch); a fill without n_final needs at least one week's eight worlds, so the first weeks can
+ * launch while the batch is still minting, and a refill adds the rest. Every other rule is the same.
+ *
  * When <root>/bg1-manifest.json already holds a filled manifest the fill is a refill: the earlier kept list must start
  * the new one in the same order, every file the earlier fill pins keeps its hash, an n_final once set never changes, and
  * the earlier fill's SHA-256 is appended to `earlier_fills`. The new manifest is written beside the old one and renamed
@@ -33,9 +41,9 @@ import { createHash } from 'node:crypto';
 import { existsSync, lstatSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve } from 'node:path';
 import { BG1_TARGET_TOKENS } from '../../generators/changing-facts-gen.ts';
-import { BG1_N_CAP, BG1_N_FLOOR, BG1_WAVE_A, BG1C_N_FINAL } from '../../runner/bg1/types.ts';
+import { BG1_WAVE_A, BG1C_N_FINAL, BGW_BATCH_KEPT, BGW_WORLDS_PER_WEEK, bgwFilledManifest } from '../../runner/bg1/types.ts';
 import { DecideError } from '../../runner/decisions/errors.ts';
-import { BG1_SET, BG1C_SET, bg1Kept, bg1ManifestFiles, bg1Source, readBg1Manifest, type Bg1Manifest } from '../../runner/memory-qa/corpus.ts';
+import { BG1_SET, BG1C_SET, bg1Kept, bg1ManifestFiles, bg1Source, bgwSet, readBg1Manifest, type Bg1Manifest } from '../../runner/memory-qa/corpus.ts';
 import { VALIDATION_SCHEMA, WORLD_FILES, type ValidationReport } from './validate.ts';
 
 export class FillError extends Error {}
@@ -48,8 +56,10 @@ const inside = (child: string, parent: string) => { const rel = relative(parent,
 
 export interface FillResult { manifest_sha256: string; files: number; kept: number; first: string; last: string; n_final: number | null; earlier_fills: number }
 
-export function fillManifest(opts: { root: string; report: string; targetTokens?: number; tolerance?: number; now?: Date; bg1c?: boolean }): FillResult {
-  const set = opts.bg1c ? BG1C_SET : BG1_SET, name = opts.bg1c ? FILLED_MANIFEST_BG1C : FILLED_MANIFEST;
+export function fillManifest(opts: { root: string; report: string; targetTokens?: number; tolerance?: number; now?: Date; bg1c?: boolean; bgwBatch?: number }): FillResult {
+  const bgw = opts.bgwBatch !== undefined;
+  if (bgw && opts.bg1c) throw new FillError('--bgw and --bg1c name two different sealed sets; give one');
+  const set = bgw ? bgwSet(opts.bgwBatch!) : opts.bg1c ? BG1C_SET : BG1_SET, name = bgw ? bgwFilledManifest(opts.bgwBatch!) : opts.bg1c ? FILLED_MANIFEST_BG1C : FILLED_MANIFEST;
   const root = bg1Source({ [set.env.source]: opts.root }, set);
   const realRoot = realpathSync(root);
   const out = join(root, name);
@@ -62,11 +72,13 @@ export function fillManifest(opts: { root: string; report: string; targetTokens?
   const kept = report.kept, nFinal = report.n_final ?? null;
   const passing = report.worlds.filter(w => w.status === 'pass').map(w => w.id);
   if (JSON.stringify(kept) !== JSON.stringify(nFinal === null ? passing : passing.slice(0, nFinal))) throw new FillError('the kept list is not the report\'s first passing worlds in slot order');
-  if (opts.bg1c && nFinal !== BG1C_N_FINAL) throw new FillError(`a BG1-C fill needs the report's n_final to be ${BG1C_N_FINAL}, the preregistered N, and it is ${nFinal ?? 'absent'}`);
-  if (nFinal !== null && !(Number.isInteger(nFinal) && nFinal >= BG1_N_FLOOR && nFinal <= BG1_N_CAP)) throw new FillError(`the report's n_final ${nFinal} is not a whole number from ${BG1_N_FLOOR} to ${BG1_N_CAP}`);
-  if (kept.length < (nFinal ?? BG1_WAVE_A)) throw new FillError(`the kept list is too short: the report keeps ${kept.length} world(s), and ${nFinal === null ? `a fill without n_final needs wave A's ${BG1_WAVE_A}` : `its n_final needs ${nFinal}`}`);
-  if (kept.length > BG1_N_CAP) throw new FillError(`the report keeps ${kept.length} worlds, more than the ${BG1_N_CAP} a kept set holds`);
   const listed = new Set(report.worlds.map(w => w.id));
+  if (opts.bg1c && nFinal !== BG1C_N_FINAL) throw new FillError(`a BG1-C fill needs the report's n_final to be ${BG1C_N_FINAL}, the preregistered N, and it is ${nFinal ?? 'absent'}`);
+  if (bgw && nFinal !== null && nFinal !== BGW_BATCH_KEPT && !set.ids.every(id => listed.has(id))) throw new FillError(`a Set W fill with n_final ${nFinal}, under ${BGW_BATCH_KEPT}, is a short batch, and the report does not account for every one of the batch's ${set.ids.length} slots`);
+  if (nFinal !== null && !(Number.isInteger(nFinal) && nFinal >= set.nFloor && nFinal <= set.nCap)) throw new FillError(`the report's n_final ${nFinal} is not a whole number from ${set.nFloor} to ${set.nCap}`);
+  const floor = nFinal ?? (bgw ? BGW_WORLDS_PER_WEEK : BG1_WAVE_A);
+  if (kept.length < floor) throw new FillError(`the kept list is too short: the report keeps ${kept.length} world(s), and ${nFinal === null ? (bgw ? `a Set W fill without n_final needs one week's ${floor}` : `a fill without n_final needs wave A's ${BG1_WAVE_A}`) : `its n_final needs ${nFinal}`}`);
+  if (kept.length > set.nCap) throw new FillError(`the report keeps ${kept.length} worlds, more than the ${set.nCap} a kept set holds`);
   const outside = kept.filter(id => !set.ids.includes(id));
   if (outside.length) throw new FillError(`the report keeps ${outside.join(', ')}, which ${outside.length > 1 ? 'are' : 'is'} not among ${set.label}'s ${set.ids.length} mint slots`);
   const skipped = set.ids.slice(0, set.ids.indexOf(kept.at(-1)!) + 1).filter(id => !listed.has(id));
@@ -112,8 +124,11 @@ export function fillManifest(opts: { root: string; report: string; targetTokens?
 export function main(argv: string[]): string {
   const flag = (name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
   const root = flag('--root'), report = flag('--report'), target = flag('--target-tokens'), tolerance = flag('--tolerance');
-  if (!root || !report) throw new FillError('usage: [--bg1c] --root <out>/set --report <validation report> [--target-tokens <n>] [--tolerance <x>]');
-  const r = fillManifest({ root, report, targetTokens: target === undefined ? undefined : Number(target), tolerance: tolerance === undefined ? undefined : Number(tolerance), bg1c: argv.includes('--bg1c') });
+  if (!root || !report) throw new FillError('usage: [--bg1c | --bgw --batch <first slot>] --root <out>/set --report <validation report> [--target-tokens <n>] [--tolerance <x>]');
+  const batch = flag('--batch');
+  if (argv.includes('--bgw') !== (batch !== undefined) || (batch !== undefined && !/^\d{4}$/.test(batch))) throw new FillError('--bgw needs --batch <first slot>, the four-digit first slot of the batch, and --batch needs --bgw');
+  const r = fillManifest({ root, report, targetTokens: target === undefined ? undefined : Number(target), tolerance: tolerance === undefined ? undefined : Number(tolerance), bg1c: argv.includes('--bg1c'),
+    ...(batch === undefined ? {} : { bgwBatch: Number(batch) }) });
   return `bg1-fill status=filled files=${r.files} kept=${r.kept} first=${r.first} last=${r.last} n_final=${r.n_final ?? 'absent'} earlier_fills=${r.earlier_fills} manifest_sha256=${r.manifest_sha256}`;
 }
 
