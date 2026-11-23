@@ -465,7 +465,7 @@ describe('sharding and NDJSON resume', () => {
   test('a counted aggregate carries the one gbrain build its shards recorded, and refuses shards from two builds or with none', () => {
     const base = { engine: 'rust', question_type: 't', is_abs: false, num_sessions: 1, arms: {}, timing_ms: { open: 0, import: 0, search: 0, total: 0 }, run_config_hash: 'c' };
     const attestation = { preregistration: 'docs/p.md', preregistration_commit: 'abc', runner_commit: 'def', worktree_clean_for_preregistration: true, on_origin: true, attested_at: '2026-11-17T00:00:00.000Z' };
-    const gbrain = (addon: string) => ({ version: '0.61.0.0', overlay: { commit: 'c0ffee', ref: 'v0.61.0.0' }, rust_addon: { sha256: addon, target: 'linux-x64-glibc' } });
+    const gbrain = (addon: string, o: { dirty?: boolean; target?: string } = {}) => ({ version: '0.61.0.0', overlay: { commit: 'c0ffee', ref: 'v0.61.0.0', ...(o.dirty === undefined ? {} : { checkout_dirty: o.dirty }) }, rust_addon: { sha256: addon, target: o.target ?? 'linux-x64-glibc' } });
     const shard = (name: string, id: string, g: unknown) => {
       const p = nd(name);
       writeFileSync(p, JSON.stringify({ preregistration_attestation: attestation, ...(g ? { gbrain: g, dataset: { sha256: 'lme-s', matches_published_sha256: true } } : {}), shard: { worker_id: 0, total_workers: 1 } }) + '\n' + JSON.stringify({ ...base, question_id: id }) + '\n');
@@ -476,6 +476,9 @@ describe('sharding and NDJSON resume', () => {
     expect(aggregateLmeRows([x, y]).dataset).toEqual({ sha256: 'lme-s', matches_published_sha256: true });
     expect(() => aggregateLmeRows([x, other])).toThrow(/one gbrain build, Rust addon and dataset/);
     expect(() => aggregateLmeRows([x, bare])).toThrow(/one gbrain build, Rust addon and dataset/);
+    const [dirty, arm64] = [shard('b-4.ndjson', 'e', gbrain('addon-sha', { dirty: true })), shard('b-5.ndjson', 'f', gbrain('addon-sha', { target: 'linux-arm64-gnu' }))];
+    expect(() => aggregateLmeRows([x, dirty])).toThrow(/one gbrain build, Rust addon and dataset/);
+    expect(() => aggregateLmeRows([x, arm64])).toThrow(/one gbrain build, Rust addon and dataset/);
   });
 });
 

@@ -1,9 +1,9 @@
 import { describe, expect, test } from 'bun:test';
 import { createHash } from 'node:crypto';
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { buildEvalGates, criterion8, EVAL_GATES_SCHEMA_VERSION, evalGates, main, MIN_PAIRS, outputPath, type EvalGatesInput } from '../../eval/runner/engine-bench/eval-gates.ts';
+import { buildEvalGates, criterion8, EVAL_GATES_SCHEMA_VERSION, evalGates, main, MIN_PAIRS, outputPath, readSuites, SUITES, writeFinal, type EvalGatesInput } from '../../eval/runner/engine-bench/eval-gates.ts';
 import { comparePair, LME_RECALL_SCHEMA, type QuestionRow } from '../../eval/runner/engine-bench/lme-recall.ts';
 import { PAIRED_OPS } from '../../eval/runner/engine-bench/perf.ts';
 
@@ -34,17 +34,27 @@ const identity = (o: { commit?: string; addon?: string | null; counted?: boolean
   gbrain: { overlay: { commit: o.commit ?? 'c0ffee', ref: o.ref ?? 'v0.61.0.0' }, rust_addon: o.addon === null ? null : { sha256: o.addon ?? 'addon-sha', target: o.target ?? 'linux-x64-glibc' } },
 });
 const input = (role: EvalGatesInput['role'], json: unknown, path = role + '.json'): EvalGatesInput => ({ role, path, json, sha256: 'x' });
-const opts = { provisional: false, evalsCommit: 'e1', engineFormatVersion: '3', generatedAt: '2026-11-28T00:00:00.000Z', ops: PAIRED_OPS };
+const opts = { provisional: false, evalsCommit: 'e1', engineFormatVersion: '3', generatedAt: '2026-11-28T00:00:00.000Z', ops: PAIRED_OPS, peelTag: (_: string) => 'c0ffee' };
+
+/** One engine-bench.gate-suite/1 file as gate-suites.ts emits it. */
+const suite = (id: string, gate: string, verdict = 'PASS', o: { commit?: string; counted?: boolean; gbrain?: null; reason?: string; losses?: Array<{ id: string; reason: string }>; extra?: unknown[] } = {}) => ({
+  schema: 'engine-bench.gate-suite/1', suite: id, gate, counted: o.counted ?? true,
+  gbrain: o.gbrain === null ? null : { overlay: { commit: o.commit ?? 'c0ffee', ref: 'v0.61.0.0', checkout_dirty: false }, rust_addon: { sha256: 'addon-sha', target: 'linux-x64-glibc' } },
+  verdict, ...(o.reason ? { reason: o.reason } : {}),
+  rows: [{ id, benchmark: id + ' as the suite names it', verdict, measured: { rust: { x: 1 }, pglite: { x: 1 }, postgres: { x: 1 } }, reason: o.reason ?? null }, ...(o.extra ?? [])],
+  losses: o.losses ?? [], amendment_text: 'reading for ' + id,
+});
+const allSuites = (gate: 'E1' | 'E2' | 'E3', over: Record<string, ReturnType<typeof suite>> = {}) => SUITES[gate].map(d => input('suite', over[d.id] ?? suite(d.id, gate), d.id + '.json'));
 
 describe('E1 from the answers stage', () => {
-  test('every LongMemEval-S row passes on identical answers, yet E1 is NOT_RUN because engine-bench runs no Cat 13, 13b, 10 or 12', () => {
+  test('every LongMemEval-S row passes on identical answers, yet E1 is NOT_RUN while no gate-suite file was given', () => {
     const g = evalGates(answers());
     const lme = g.E1.rows.filter(r => r.id.startsWith('lme-s/'));
     expect(lme.map(r => r.id)).toEqual(['keyword', 'vector', 'hybrid'].flatMap(a => [`lme-s/${a}/vs-pglite`, `lme-s/${a}/vs-postgres`]));
     expect(lme.every(r => r.verdict === 'PASS')).toBe(true);
     expect(lme[0].measured).toMatchObject({ point_estimate: 0, lower_bound_95: 0, n: N, exact_ties: N, rust_errors: 0 });
     expect(g.E1.verdict).toBe('NOT_RUN');
-    expect(g.E1.rows.find(r => r.id === 'cat10')).toMatchObject({ verdict: 'NOT_RUN', reason: 'engine-bench does not run this benchmark' });
+    expect(g.E1.rows.find(r => r.id === 'cat10')).toMatchObject({ verdict: 'NOT_RUN', reason: 'no gate-suite file was given for this suite' });
     expect(g.E1.rows.find(r => r.id === 'cat7')!.gating).toBe(false);
     expect(g.E2.verdict).toBe('NOT_RUN');
     expect(g.E3.verdict).toBe('NOT_RUN');
@@ -188,5 +198,80 @@ describe('the file', () => {
     expect(() => outputPath(provisional, join(root, 'eval/results/x.json'), root)).toThrow(/never go on main/);
     expect(() => outputPath(provisional, undefined, root)).toThrow(/needs --out/);
     expect(outputPath(provisional, join(root, 'out.json'), root)).toBe(join(root, 'out.json'));
+  });
+});
+
+describe('gate-suite files', () => {
+  const read = (files: EvalGatesInput[]) => readSuites(files.map(f => ({ path: f.path, json: f.json })));
+  test('E1 passes on passing suites and LongMemEval-S rows while Cat 13, reported and not gating per D24, fails beside its strict row', () => {
+    const cat13 = suite('cat13/ndcg5', 'E1', 'FAIL', {
+      reason: 'Reported, not gating, for Dec 1 (plan D24). Rust minus pglite per-query ndcg5 95% lower bound -0.0300 < -0.018',
+      losses: [{ id: 'cat13/ndcg5:paired-lower-bound:vs-pglite', reason: 'lower bound -0.0300 < -0.018' }],
+      extra: [{ id: 'cat13/ndcg5:strict', benchmark: 'Cat 13, strict point comparison (secondary)', verdict: 'FAIL', measured: {}, reason: 'tie order flips: q1' }],
+    });
+    const g = evalGates(answers(), read(allSuites('E1', { 'cat13/ndcg5': cat13 })));
+    expect(g.E1.verdict).toBe('PASS');
+    const rows = g.E1.rows.filter(r => r.id.startsWith('cat13/'));
+    expect(rows.map(r => [r.id, r.gating, r.verdict])).toEqual([['cat13/ndcg5', false, 'FAIL'], ['cat13/ndcg5:strict', false, 'FAIL']]);
+    expect(rows[0].reason).toContain('Reported, not gating, for Dec 1 (plan D24).');
+    expect(rows[0].reading).toBe('reading for cat13/ndcg5');
+    expect(g.E1.losses).toEqual([
+      { id: 'cat13/ndcg5:paired-lower-bound:vs-pglite', reason: 'lower bound -0.0300 < -0.018', gating: false },
+      { id: 'cat13/ndcg5:strict', reason: 'tie order flips: q1', gating: false },
+    ]);
+  });
+  test('a failing gating suite fails its gate and carries the suite\'s own losses; a missing suite leaves the gate NOT_RUN', () => {
+    const cat10 = suite('cat10', 'E1', 'FAIL', { reason: '131/133 on Rust', losses: [{ id: 'cat10', reason: '131/133 on Rust' }, { id: 'cat10:refusal-sites', reason: 'src/core/x.ts:12' }] });
+    const g = evalGates(answers(), read(allSuites('E1', { cat10 })));
+    expect(g.E1.verdict).toBe('FAIL');
+    expect(g.E1.losses.map(l => [l.id, l.gating])).toEqual([['cat10', true], ['cat10:refusal-sites', true]]);
+    expect(evalGates(null, read(allSuites('E2'))).E2.verdict).toBe('PASS');
+    expect(evalGates(null, read(allSuites('E2').slice(1))).E2).toMatchObject({ verdict: 'NOT_RUN' });
+    expect(evalGates(null, read(allSuites('E2').slice(1))).E2.rows[0]).toMatchObject({ id: 'brainbench/cats-1-2', verdict: 'NOT_RUN', reason: 'no gate-suite file was given for this suite' });
+  });
+  test('refuses a file of another schema, a suite the plan does not name or names under another gate, two files for one suite, and a verdict with no build', () => {
+    const one = (json: unknown) => () => read([input('suite', json)]);
+    expect(one({ ...suite('cat10', 'E1'), schema: 'engine-bench.gate-suite/0' })).toThrow(/--suite reads engine-bench\.gate-suite\/1/);
+    expect(one(suite('cat99', 'E1'))).toThrow(/not one the design plan's gates name/);
+    expect(one(suite('cat10', 'E2'))).toThrow(/the plan puts it under E1/);
+    expect(one({ ...suite('cat10', 'E1'), rows: [] })).toThrow(/no row for its own suite cat10/);
+    expect(one(suite('cat10', 'E1', 'PASS', { gbrain: null }))).toThrow(/must name the gbrain build it ran/);
+    expect(read([input('suite', suite('cat10', 'E1', 'NOT_RUN', { gbrain: null }))]).get('cat10')!.verdict).toBe('NOT_RUN');
+    expect(() => read([input('suite', suite('cat10', 'E1')), input('suite', suite('cat10', 'E1'), 'again.json')])).toThrow(/more than one --suite file for cat10/);
+  });
+  test('FINAL holds suite files to the same build and counted rules as the stage receipts', () => {
+    const a = input('answers', { ...answers(), ...identity() });
+    expect(buildEvalGates([a, ...allSuites('E1'), ...allSuites('E2'), ...allSuites('E3')], opts).gates).toMatchObject({ E1: { verdict: 'PASS' }, E2: { verdict: 'PASS' }, E3: { verdict: 'PASS' } });
+    expect(() => buildEvalGates([a, input('suite', suite('cat10', 'E1', 'PASS', { commit: 'other' }))], opts)).toThrow(/disagree on the gbrain commit/);
+    expect(() => buildEvalGates([a, input('suite', suite('cat10', 'E1', 'PASS', { counted: false }))], opts)).toThrow(/not counted: suite\.json/);
+    expect(() => buildEvalGates([a, input('suite', suite('cat10', 'E1', 'NOT_RUN', { gbrain: null, counted: false }))], opts)).toThrow(/not counted: suite\.json/);
+    expect(buildEvalGates([a, input('suite', suite('cat10', 'E1', 'NOT_RUN', { gbrain: null }))], opts).status).toBe('FINAL');
+  });
+});
+
+describe('the release tag', () => {
+  const a = input('answers', { ...answers(), ...identity() });
+  test('FINAL needs the tag on garrytan/gbrain to peel to the receipts\' commit', () => {
+    const seen: string[] = [];
+    expect(buildEvalGates([a], { ...opts, peelTag: tag => { seen.push(tag); return 'c0ffee'; } }).gbrain_tag).toBe('v0.61.0.0');
+    expect(seen).toEqual(['v0.61.0.0']);
+    expect(() => buildEvalGates([a], { ...opts, peelTag: () => 'beef' })).toThrow(/v0\.61\.0\.0 on garrytan\/gbrain is commit beef, but the receipts ran c0ffee/);
+    expect(() => buildEvalGates([a], { ...opts, peelTag: () => null })).toThrow(/not a tag on garrytan\/gbrain/);
+    expect(() => buildEvalGates([a], { ...opts, peelTag: undefined })).toThrow(/no tag check was given/);
+    expect(() => buildEvalGates([a, input('speed', identity({ ref: 'v0.61.1.0' }))], opts)).toThrow(/more than one gbrain release tag/);
+  });
+  test('a provisional file needs no tag check', () => {
+    expect(buildEvalGates([input('answers', { ...answers(), ...identity({ ref: 'b66e4077' }) })], { ...opts, provisional: true, peelTag: undefined }).status).toBe('PROVISIONAL');
+  });
+});
+
+describe('the FINAL write', () => {
+  test('never replaces an existing file and leaves no temporary file, written or refused', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'eval-gates-final-'));
+    const path = join(dir, 'v0.61.0.0', 'abc.json');
+    writeFinal(path, { first: true });
+    expect(() => writeFinal(path, { first: false })).toThrow(/EEXIST/);
+    expect(JSON.parse(readFileSync(path, 'utf8'))).toEqual({ first: true });
+    expect(readdirSync(join(dir, 'v0.61.0.0'))).toEqual(['abc.json']);
   });
 });
