@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
-  aggregateLmeRows, armAgreement, comparePair, countEmbedPlan, readLmeRows, EmbedCacheMiss, fillCache, hashVector, LME_RECALL_TOP_K, main, refuseNetwork, runLmeRecall, RUST_RECALL_DELTA,
+  aggregateLmeRows, armAgreement, comparePair, countEmbedPlan, lmeRunConfigHash, readLmeRows, EmbedCacheMiss, fillCache, hashVector, LME_RECALL_TOP_K, main, refuseNetwork, runLmeRecall, RUST_RECALL_DELTA,
   RUST_RECALL_NONINFERIORITY_MARGIN,
   stubTransport, type QuestionRow,
 } from '../../eval/runner/engine-bench/lme-recall.ts';
@@ -433,6 +433,11 @@ describe('sharding and NDJSON resume', () => {
     await expect(runLmeRecall({ gut: pinned, engines: ['pglite'], datasetPath: dataset, arms: ['keyword'], workerId: 2, totalWorkers: 2, log: quiet })).rejects.toThrow(/worker-id/);
   });
 
+  test('a Rust row hash names the addon digest, so rows from another addon on one gbrain commit never resume', () => {
+    const base = { gbrain: { version: '0.61.0.0', commit: 'c0ffee' }, datasetSha256: 'd', arms: ['keyword'] as const, embedder: { mode: 'none' as const, model: null, dimensions: null }, engine: 'rust' as const };
+    expect(lmeRunConfigHash({ ...base, gbrain: { ...base.gbrain, rust_addon: 'a' } })).not.toBe(lmeRunConfigHash({ ...base, gbrain: { ...base.gbrain, rust_addon: 'b' } }));
+  });
+
   test('aggregate refuses rows from two configurations of one engine', () => {
     const path = nd('mixed.ndjson');
     const base = { engine: 'pglite', question_type: 't', is_abs: false, num_sessions: 1, arms: {}, timing_ms: { open: 0, import: 0, search: 0, total: 0 } };
@@ -444,9 +449,10 @@ describe('sharding and NDJSON resume', () => {
     const base = { engine: 'pglite', question_type: 't', is_abs: false, num_sessions: 1, arms: {}, timing_ms: { open: 0, import: 0, search: 0, total: 0 }, run_config_hash: 'c' };
     const attestation = { preregistration: 'docs/p.md', preregistration_commit: 'abc', runner_commit: 'def', worktree_clean_for_preregistration: true, on_origin: true, attested_at: '2026-11-17T00:00:00.000Z' };
     const gbrain = { version: '0.61.0.0', overlay: { commit: 'c0ffee', ref: 'v0.61.0.0' }, rust_addon: { sha256: 'addon-sha', target: 'linux-x64-glibc' } };
+    const dataset = { sha256: 'lme-s', matches_published_sha256: true };
     const [a, b, dev] = [nd('counted-0.ndjson'), nd('counted-1.ndjson'), nd('dev.ndjson')];
-    writeFileSync(a, JSON.stringify({ preregistration_attestation: attestation, gbrain, shard: { worker_id: 0, total_workers: 2 } }) + '\n' + JSON.stringify({ ...base, question_id: 'a' }) + '\n');
-    writeFileSync(b, JSON.stringify({ preregistration_attestation: attestation, gbrain, shard: { worker_id: 1, total_workers: 2 } }) + '\n' + JSON.stringify({ ...base, question_id: 'b' }) + '\n');
+    writeFileSync(a, JSON.stringify({ preregistration_attestation: attestation, gbrain, dataset, shard: { worker_id: 0, total_workers: 2 } }) + '\n' + JSON.stringify({ ...base, question_id: 'a' }) + '\n');
+    writeFileSync(b, JSON.stringify({ preregistration_attestation: attestation, gbrain, dataset, shard: { worker_id: 1, total_workers: 2 } }) + '\n' + JSON.stringify({ ...base, question_id: 'b' }) + '\n');
     writeFileSync(dev, JSON.stringify({ ...base, question_id: 'c' }) + '\n');
     const counted = aggregateLmeRows([a, b]);
     expect(counted.counted).toBe(true);
@@ -462,13 +468,14 @@ describe('sharding and NDJSON resume', () => {
     const gbrain = (addon: string) => ({ version: '0.61.0.0', overlay: { commit: 'c0ffee', ref: 'v0.61.0.0' }, rust_addon: { sha256: addon, target: 'linux-x64-glibc' } });
     const shard = (name: string, id: string, g: unknown) => {
       const p = nd(name);
-      writeFileSync(p, JSON.stringify({ preregistration_attestation: attestation, ...(g ? { gbrain: g } : {}), shard: { worker_id: 0, total_workers: 1 } }) + '\n' + JSON.stringify({ ...base, question_id: id }) + '\n');
+      writeFileSync(p, JSON.stringify({ preregistration_attestation: attestation, ...(g ? { gbrain: g, dataset: { sha256: 'lme-s', matches_published_sha256: true } } : {}), shard: { worker_id: 0, total_workers: 1 } }) + '\n' + JSON.stringify({ ...base, question_id: id }) + '\n');
       return p;
     };
     const [x, y, other, bare] = [shard('b-0.ndjson', 'a', gbrain('addon-sha')), shard('b-1.ndjson', 'b', gbrain('addon-sha')), shard('b-2.ndjson', 'c', gbrain('other')), shard('b-3.ndjson', 'd', null)];
     expect(aggregateLmeRows([x, y]).gbrain as unknown).toEqual(gbrain('addon-sha'));
-    expect(() => aggregateLmeRows([x, other])).toThrow(/one gbrain build and Rust addon/);
-    expect(() => aggregateLmeRows([x, bare])).toThrow(/one gbrain build and Rust addon/);
+    expect(aggregateLmeRows([x, y]).dataset).toEqual({ sha256: 'lme-s', matches_published_sha256: true });
+    expect(() => aggregateLmeRows([x, other])).toThrow(/one gbrain build, Rust addon and dataset/);
+    expect(() => aggregateLmeRows([x, bare])).toThrow(/one gbrain build, Rust addon and dataset/);
   });
 });
 

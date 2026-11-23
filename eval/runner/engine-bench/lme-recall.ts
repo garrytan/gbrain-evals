@@ -626,7 +626,7 @@ function configureEmbedding(mods: GbrainModules, embedding: { model: string; dim
 
 /** Two rows with the same hash came from the same pipeline: gbrain build, dataset bytes, arms, search pins, embedder and engine. */
 export function lmeRunConfigHash(o: {
-  gbrain: { version: string; commit: string | null }; datasetSha256: string; arms: readonly LmeArm[];
+  gbrain: { version: string; commit: string | null; rust_addon?: string | null }; datasetSha256: string; arms: readonly LmeArm[];
   embedder: { mode: EmbedderMode; model: string | null; dimensions: number | null }; engine: EvalEngineKind;
   preregistration?: { path: string; commit: string };
 }): string {
@@ -636,8 +636,8 @@ export function lmeRunConfigHash(o: {
 }
 
 /** Rows and counted-run attestations from an NDJSON stream. A line cut short by a kill is skipped, so that question runs again. */
-export function readLmeStream(path: string): { rows: QuestionRow[]; attestations: Attestation[]; builds: Array<LmeRecallReceipt['gbrain'] | null> } {
-  const out = { rows: [] as QuestionRow[], attestations: [] as Attestation[], builds: [] as Array<LmeRecallReceipt['gbrain'] | null> };
+export function readLmeStream(path: string): { rows: QuestionRow[]; attestations: Attestation[]; builds: Array<{ gbrain: LmeRecallReceipt['gbrain'] | null; dataset: { sha256: string; matches_published_sha256: boolean } | null }> } {
+  const out = { rows: [] as QuestionRow[], attestations: [] as Attestation[], builds: [] as Array<{ gbrain: LmeRecallReceipt['gbrain'] | null; dataset: { sha256: string; matches_published_sha256: boolean } | null }> };
   if (!existsSync(path)) return out;
   for (const line of readFileSync(path, 'utf8').split('\n')) {
     if (!line.trim()) continue;
@@ -646,7 +646,7 @@ export function readLmeStream(path: string): { rows: QuestionRow[]; attestations
       if (value?.engine && value?.question_id) out.rows.push(value as QuestionRow);
       else if (value?.preregistration_attestation) {
         out.attestations.push(value.preregistration_attestation as Attestation);
-        out.builds.push(value.gbrain ?? null);
+        out.builds.push({ gbrain: value.gbrain ?? null, dataset: value.dataset ?? null });
       }
     } catch { /* truncated line: re-run */ }
   }
@@ -718,7 +718,7 @@ export async function runLmeRecall(o: RunLmeRecallOptions): Promise<LmeRecallRec
   const mode: EmbedderMode = needsVectors ? o.embedder ?? 'cache' : 'none';
   const embedderId = { mode, model: needsVectors ? embedding.model : null, dimensions: needsVectors ? embedding.dimensions : null };
   const hashes: Partial<Record<EvalEngineKind, string>> = Object.fromEntries(o.engines.map(engine => [engine, lmeRunConfigHash({
-    gbrain: { version: o.gut.version, commit: o.gut.overlay?.build.commit ?? null }, datasetSha256: ds.sha256, arms, embedder: embedderId, engine,
+    gbrain: { version: o.gut.version, commit: o.gut.overlay?.build.commit ?? null, ...(engine === 'rust' ? { rust_addon: build.rust_addon?.sha256 ?? null } : {}) }, datasetSha256: ds.sha256, arms, embedder: embedderId, engine,
     preregistration: attestation ? { path: attestation.preregistration, commit: attestation.preregistration_commit } : undefined,
   })]));
   const prior = o.ndjsonPath ? readLmeRows(o.ndjsonPath) : [];
@@ -736,7 +736,7 @@ export async function runLmeRecall(o: RunLmeRecallOptions): Promise<LmeRecallRec
     mkdirSync(dirname(o.ndjsonPath), { recursive: true });
     const existing = existsSync(o.ndjsonPath) ? readFileSync(o.ndjsonPath, 'utf8') : '';
     if (existing && !existing.endsWith('\n')) appendFileSync(o.ndjsonPath, '\n');
-    if (attestation) appendFileSync(o.ndjsonPath, JSON.stringify({ preregistration_attestation: attestation, gbrain: build, shard: { worker_id: workerId, total_workers: totalWorkers } }) + '\n');
+    if (attestation) appendFileSync(o.ndjsonPath, JSON.stringify({ preregistration_attestation: attestation, gbrain: build, dataset: { sha256: ds.sha256, matches_published_sha256: ds.sha256 === PUBLISHED_LME_S_SHA256 }, shard: { worker_id: workerId, total_workers: totalWorkers } }) + '\n');
   }
   const cachePath = mode === 'cache' ? o.cachePath ?? defaultCachePath(embedding.model, embedding.dimensions) : null;
   if (cachePath !== null && !existsSync(cachePath)) {
@@ -837,17 +837,18 @@ export async function runLmeRecall(o: RunLmeRecallOptions): Promise<LmeRecallRec
  * shard and lists each one (one per process start) under preregistration_attestation.
  */
 export function aggregateLmeRows(paths: readonly string[]): RowsSummary & {
-  ndjson: string[]; counted: boolean; preregistration_attestation: Array<Attestation & { ndjson: string }> | null; gbrain?: LmeRecallReceipt['gbrain'];
+  ndjson: string[]; counted: boolean; preregistration_attestation: Array<Attestation & { ndjson: string }> | null;
+  gbrain?: LmeRecallReceipt['gbrain']; dataset?: { sha256: string; matches_published_sha256: boolean };
   run_config_hashes: Partial<Record<EvalEngineKind, string>>; arms: LmeArm[]; rows: QuestionRow[];
 } {
   const byKey = new Map<string, QuestionRow>();
   const attestations: Array<Attestation & { ndjson: string }> = [];
   const unattested: string[] = [];
-  const builds = new Map<string, LmeRecallReceipt['gbrain'] | null>();
+  const builds = new Map<string, ReturnType<typeof readLmeStream>['builds'][number]>();
   for (const path of paths) {
     const stream = readLmeStream(path);
     if (stream.attestations.length === 0) unattested.push(path);
-    for (const b of stream.builds) builds.set(JSON.stringify(b ? { commit: b.overlay?.commit ?? null, addon: b.rust_addon?.sha256 ?? null } : null), b);
+    for (const b of stream.builds) builds.set(JSON.stringify(b.gbrain && b.dataset ? { commit: b.gbrain.overlay?.commit ?? null, addon: b.gbrain.rust_addon?.sha256 ?? null, dataset: b.dataset.sha256 } : null), b);
     attestations.push(...stream.attestations.map(a => ({ ndjson: path, ...a })));
     for (const r of stream.rows) {
       const prev = byKey.get(rowKey(r));
@@ -865,9 +866,9 @@ export function aggregateLmeRows(paths: readonly string[]): RowsSummary & {
   const ran = EVAL_ENGINES.filter(k => k in hashes);
   const arms = LME_ARMS.filter(a => rows.some(r => r.arms[a]));
   const counted = attestations.length > 0;
-  if (counted && (builds.size !== 1 || builds.has('null'))) throw new Error('counted shards must all record one gbrain build and Rust addon; saw ' + [...builds.keys()].join(', '));
-  const gbrain = counted ? [...builds.values()][0]! : undefined;
-  return { ndjson: [...paths], counted, preregistration_attestation: counted ? attestations : null, ...(gbrain ? { gbrain } : {}), run_config_hashes: hashes, arms, ...summarizeRows(rows, ran, arms), rows };
+  if (counted && (builds.size !== 1 || builds.has('null'))) throw new Error('counted shards must all record one gbrain build, Rust addon and dataset (a shard started before builds were recorded needs a fresh --ndjson); saw ' + [...builds.keys()].join(', '));
+  const build = counted ? [...builds.values()][0]! : undefined;
+  return { ndjson: [...paths], counted, preregistration_attestation: counted ? attestations : null, ...(build ? { gbrain: build.gbrain!, dataset: build.dataset! } : {}), run_config_hashes: hashes, arms, ...summarizeRows(rows, ran, arms), rows };
 }
 
 // ─── count and fill-cache ──────────────────────────────────────────

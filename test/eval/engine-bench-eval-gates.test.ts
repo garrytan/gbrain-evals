@@ -26,7 +26,7 @@ function answers(rustLosses = 0) {
     });
     return [comparePair(rows, arm, 'pglite', 'rust'), comparePair(rows, arm, 'rust', 'postgres')];
   });
-  return { schema: LME_RECALL_SCHEMA, comparisons };
+  return { schema: LME_RECALL_SCHEMA, dataset: { sha256: 'lme-s', matches_published_sha256: true }, comparisons };
 }
 
 const identity = (o: { commit?: string; addon?: string | null; counted?: boolean; ref?: string; target?: string } = {}) => ({
@@ -109,6 +109,10 @@ describe('criterion 8 from the speed stage', () => {
     expect(criterion8(null, PAIRED_OPS).verdict).toBe('not_run');
     expect(criterion8({ pairs: { x: speed.pairs['pglite-vs-postgres'] } }, PAIRED_OPS)).toMatchObject({ verdict: 'not_run', reason: 'the speed stage has no Rust pair' });
   });
+  test('a missing Rust pair against one engine leaves every class against it unmeasured, never no worse', () => {
+    const c = criterion8({ pairs: { 'rust-vs-pglite': { reference: 'pglite', other: 'rust', latency: { get_page: lat([0.8, 0.9], [0.8, 0.9]) } } } }, ['get_page']);
+    expect(c).toMatchObject({ verdict: 'incomplete', losing_classes: [], unmeasured_classes: ['get_page p50 vs postgres', 'get_page p99 vs postgres'] });
+  });
 });
 
 describe('the file', () => {
@@ -133,10 +137,25 @@ describe('the file', () => {
     expect(() => buildEvalGates([input('answers', { ...answers(), ...identity({ addon: null }) })], opts)).toThrow(/Rust addon digest/);
     expect(() => buildEvalGates([input('answers', { ...answers(), schema: 'engine-bench.lme-recall/2', ...identity() })], opts)).toThrow(/reads engine-bench\.lme-recall\/3/);
   });
+  test('FINAL takes its build only from counted stage receipts, from one answers and one speed receipt, a clean checkout and the published dataset', () => {
+    const a = input('answers', { ...answers(), ...identity() });
+    const s = input('speed', identity());
+    expect(() => buildEvalGates([input('receipt', identity({ counted: false }))], opts)).toThrow(/at least one stage receipt/);
+    expect(() => buildEvalGates([a, input('receipt', identity({ commit: 'other' }))], opts)).not.toThrow();
+    expect(() => buildEvalGates([a, input('answers', { ...answers(), ...identity() }, 'answers-2.json')], opts)).toThrow(/more than one --answers/);
+    expect(() => buildEvalGates([a, s, input('speed', identity(), 'speed-2.json')], opts)).toThrow(/more than one --speed/);
+    const dirty = identity();
+    (dirty.gbrain.overlay as Record<string, unknown>).checkout_dirty = true;
+    expect(() => buildEvalGates([a, input('speed', dirty)], opts)).toThrow(/uncommitted changes: speed\.json/);
+    expect(() => buildEvalGates([input('answers', { ...answers(), dataset: { sha256: 'other', matches_published_sha256: false }, ...identity() })], opts)).toThrow(/published LongMemEval-S dataset digest/);
+    const noTarget = identity();
+    (noTarget.gbrain.rust_addon as Record<string, unknown>).target = undefined;
+    expect(() => buildEvalGates([a, input('speed', noTarget)], opts)).toThrow(/missing in speed\.json/);
+  });
   test('FINAL refuses a counted receipt that names no build of its own, such as an aggregate without one or a failed addon read', () => {
     const a = input('answers', { ...answers(), ...identity() });
     const bareAggregate = input('answers', { ...answers(), counted: true });
-    expect(() => buildEvalGates([bareAggregate, input('speed', identity())], opts)).toThrow(/must name its own gbrain commit and Rust addon digest; missing in answers\.json/);
+    expect(() => buildEvalGates([bareAggregate, input('speed', identity())], opts)).toThrow(/must name its own gbrain commit and Rust addon digest for linux-x64-glibc; missing in answers\.json/);
     const unread = input('speed', { counted: true, gbrain: { overlay: { commit: 'c0ffee', ref: 'v0.61.0.0' }, rust_addon: { sha256: null, read_error: 'ENOENT' } } });
     expect(() => buildEvalGates([a, unread], opts)).toThrow(/missing in speed\.json/);
     expect(buildEvalGates([bareAggregate, input('speed', identity())], { ...opts, provisional: true }).status).toBe('PROVISIONAL');
@@ -156,10 +175,12 @@ describe('the file', () => {
   });
   test('a FINAL file goes only to its tag and evals-commit path and is never rewritten; a PROVISIONAL one never under eval/results', () => {
     const root = mkdtempSync(join(tmpdir(), 'eval-gates-root-'));
-    const final = { status: 'FINAL' as const, gbrain_tag: 'v0.61.0.0', evals_commit: 'abc123' };
-    const path = join(root, 'eval/results/engine-bench/eval-gates/v0.61.0.0/abc123.json');
+    const sha = 'abc123'.padEnd(40, '0');
+    const final = { status: 'FINAL' as const, gbrain_tag: 'v0.61.0.0', evals_commit: sha };
+    const path = join(root, `eval/results/engine-bench/eval-gates/v0.61.0.0/${sha}.json`);
     expect(outputPath(final, undefined, root)).toBe(path);
-    expect(() => outputPath(final, join(root, 'elsewhere.json'), root)).toThrow(/a FINAL file goes to eval\/results\/engine-bench\/eval-gates\/v0\.61\.0\.0\/abc123\.json/);
+    expect(() => outputPath({ ...final, evals_commit: '' }, undefined, root)).toThrow(/not a full git commit/);
+    expect(() => outputPath(final, join(root, 'elsewhere.json'), root)).toThrow(/a FINAL file goes to eval\/results\/engine-bench\/eval-gates\/v0\.61\.0\.0\/abc1230+\.json/);
     mkdirSync(join(root, 'eval/results/engine-bench/eval-gates/v0.61.0.0'), { recursive: true });
     writeFileSync(path, '{}');
     expect(() => outputPath(final, undefined, root)).toThrow(/never rewritten/);

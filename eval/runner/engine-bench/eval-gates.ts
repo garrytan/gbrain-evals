@@ -27,8 +27,8 @@
  */
 
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync } from 'node:fs';
-import { relative, resolve, sep } from 'node:path';
+import { existsSync, linkSync, mkdirSync, readFileSync, unlinkSync } from 'node:fs';
+import { dirname, relative, resolve, sep } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { writeScrubbedJson } from '../receipt.ts';
 import { PAIRED_OPS } from './perf.ts';
@@ -138,8 +138,9 @@ export type ClassStatus = 'better' | 'worse' | 'not_shown' | 'too_few_pairs' | '
 
 /** Criterion 8 from the speed stage: every operation class and quantile, Rust against each TypeScript engine. */
 export function criterion8(speed: { pairs?: Record<string, SpeedPair>; core_ops?: string[]; speed?: { verdict?: string } } | null, ops: readonly string[]) {
-  const pairs = Object.values(speed?.pairs ?? {}).filter(p => p.other === 'rust' && (TS_ENGINES as readonly string[]).includes(p.reference));
-  if (!speed || pairs.length === 0) return { gating: false, threshold: THRESHOLDS.criterion_8, verdict: 'not_run' as const, reason: speed ? 'the speed stage has no Rust pair' : 'no speed-stage receipt was given', rows: [], losing_classes: [], unmeasured_classes: [] };
+  const found = Object.values(speed?.pairs ?? {}).filter(p => p.other === 'rust' && (TS_ENGINES as readonly string[]).includes(p.reference));
+  const pairs = TS_ENGINES.map((reference): SpeedPair => found.find(p => p.reference === reference) ?? { reference, other: 'rust' });
+  if (!speed || found.length === 0) return { gating: false, threshold: THRESHOLDS.criterion_8, verdict: 'not_run' as const, reason: speed ? 'the speed stage has no Rust pair' : 'no speed-stage receipt was given', rows: [], losing_classes: [], unmeasured_classes: [] };
   const rows = pairs.flatMap(p => ops.flatMap(op => (['p50', 'p99'] as const).map(quantile => {
     const l = p.latency?.[op];
     const r = l?.[`${quantile}_ratio`];
@@ -158,10 +159,11 @@ export function criterion8(speed: { pairs?: Record<string, SpeedPair>; core_ops?
   };
 }
 
-interface Identity { commit: string | null; ref: string | null; addon: string | null; target: string | null; counted: boolean | null }
+interface Identity { commit: string | null; ref: string | null; addon: string | null; target: string | null; counted: boolean | null; dirty: boolean }
 function identityOf(r: any): Identity {
   const overlay = r?.gbrain?.overlay;
   return {
+    dirty: overlay?.checkout_dirty === true,
     commit: overlay?.commit ?? r?.gbrain?.product?.loaded_git_head ?? null,
     ref: overlay?.ref ?? null,
     addon: r?.gbrain?.rust_addon?.sha256 ?? null,
@@ -173,10 +175,12 @@ function identityOf(r: any): Identity {
 export interface EvalGatesInput { path: string; role: 'answers' | 'speed' | 'correctness' | 'surface-parity' | 'receipt'; json: any; sha256: string }
 
 export function buildEvalGates(inputs: EvalGatesInput[], o: { provisional: boolean; evalsCommit: string; engineFormatVersion: string | null; generatedAt: string; ops: readonly string[] }) {
-  if (inputs.length === 0) throw new Error('eval-gates needs at least one stage receipt');
+  const stages = inputs.filter(i => i.role !== 'receipt');
+  if (stages.length === 0) throw new Error('eval-gates needs at least one stage receipt; --receipt files are links only');
+  for (const role of ['answers', 'speed'] as const) if (stages.filter(i => i.role === role).length > 1) throw new Error(`more than one --${role} receipt; pass the one ${role === 'answers' ? 'aggregate' : 'receipt'} the stage produced`);
   const answers = inputs.find(i => i.role === 'answers')?.json ?? null;
   if (answers && answers.schema !== ANSWERS_SCHEMA) throw new Error(`the answers receipt is ${answers.schema}; eval-gates reads ${ANSWERS_SCHEMA}, the schema that applies the D24 rule`);
-  const ids = inputs.map(i => ({ path: i.path, ...identityOf(i.json) }));
+  const ids = stages.map(i => ({ path: i.path, ...identityOf(i.json) }));
   const one = (k: 'commit' | 'addon') => {
     const seen = [...new Set(ids.map(x => x[k]).filter((v): v is string => !!v))];
     if (seen.length > 1) throw new Error(`stage receipts disagree on the gbrain ${k === 'commit' ? 'commit' : 'Rust addon digest'}: ${ids.filter(x => x[k]).map(x => `${x.path}=${x[k]}`).join(', ')}`);
@@ -184,16 +188,19 @@ export function buildEvalGates(inputs: EvalGatesInput[], o: { provisional: boole
   };
   const commit = one('commit');
   const addon = one('addon');
+  const targets = [...new Set(ids.map(x => x.target).filter(Boolean))];
+  if (targets.some(t => t !== TARGET)) throw new Error(`the Rust addon target is ${targets.join(', ')}; eval-gates covers ${TARGET} only`);
   if (!o.provisional) {
     if (!commit) throw new Error('no stage receipt names its gbrain commit; a counted eval-gates file needs one');
     if (!addon) throw new Error('no stage receipt records the Rust addon digest; a counted eval-gates file needs one');
-    const dev = ids.filter(x => x.counted !== true && inputs.find(i => i.path === x.path)!.role !== 'receipt');
+    const dev = ids.filter(x => x.counted !== true);
     if (dev.length) throw new Error(`not counted: ${dev.map(x => x.path).join(', ')}; pass --provisional for development receipts`);
-    const blank = ids.filter(x => (!x.commit || !x.addon) && inputs.find(i => i.path === x.path)!.role !== 'receipt');
-    if (blank.length) throw new Error(`every counted stage receipt must name its own gbrain commit and Rust addon digest; missing in ${blank.map(x => x.path).join(', ')}`);
+    const blank = ids.filter(x => !x.commit || !x.addon || x.target !== TARGET);
+    if (blank.length) throw new Error(`every counted stage receipt must name its own gbrain commit and Rust addon digest for ${TARGET}; missing in ${blank.map(x => x.path).join(', ')}`);
+    const dirty = ids.filter(x => x.dirty);
+    if (dirty.length) throw new Error(`ran from a gbrain checkout with uncommitted changes: ${dirty.map(x => x.path).join(', ')}`);
+    if (answers && answers.dataset?.matches_published_sha256 !== true) throw new Error('the answers receipt does not record the published LongMemEval-S dataset digest; a counted E1 row needs it');
   }
-  const targets = [...new Set(ids.map(x => x.target).filter(Boolean))];
-  if (targets.some(t => t !== TARGET)) throw new Error(`the Rust addon target is ${targets.join(', ')}; eval-gates covers ${TARGET} only`);
   const tag = ids.map(x => x.ref).find(r => r && RELEASE_TAG.test(r)) ?? null;
   if (!o.provisional && !tag) throw new Error(`no stage receipt ran a gbrain release tag (vX.Y.Z, no -rc; saw ${[...new Set(ids.map(x => x.ref))].join(', ')}); a release candidate or branch build is --provisional`);
   return {
@@ -222,6 +229,7 @@ export function outputPath(file: { status: 'PROVISIONAL' | 'FINAL'; gbrain_tag?:
     const path = resolve(repoRoot, FINAL_DIR, file.gbrain_tag!, `${file.evals_commit}.json`);
     if (out && resolve(out) !== path) throw new Error(`a FINAL file goes to ${relative(repoRoot, path)}, not ${out}`);
     if (existsSync(path)) throw new Error(`${relative(repoRoot, path)} exists and is never rewritten; a correction is a new file from a new evals commit`);
+    if (!/^[0-9a-f]{40}$/.test(file.evals_commit)) throw new Error(`evals_commit "${file.evals_commit}" is not a full git commit`);
     return path;
   }
   if (!out) throw new Error('a PROVISIONAL file needs --out, outside eval/results');
@@ -243,7 +251,13 @@ export function main(argv: string[] = process.argv.slice(2)): number {
   }));
   const evalsCommit = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: REPO_ROOT, encoding: 'utf8' }).stdout.trim();
   const file = buildEvalGates(inputs, { provisional: argv.includes('--provisional'), evalsCommit, engineFormatVersion: values('--engine-format-version')[0] ?? null, generatedAt: new Date().toISOString(), ops: PAIRED_OPS });
-  writeScrubbedJson(outputPath(file, out), file);
+  const path = outputPath(file, out);
+  if (file.status === 'FINAL') {
+    mkdirSync(dirname(path), { recursive: true });
+    const tmp = `${path}.${process.pid}.tmp`;
+    writeScrubbedJson(tmp, file);
+    try { linkSync(tmp, path); } finally { unlinkSync(tmp); }
+  } else writeScrubbedJson(path, file);
   process.stdout.write(`E1 ${file.gates.E1.verdict}, E2 ${file.gates.E2.verdict}, E3 ${file.gates.E3.verdict}; criterion 8 ${file.swap_readiness_criterion_8.verdict}\n`);
   return 0;
 }
