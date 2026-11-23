@@ -134,13 +134,18 @@ const PARTICLE_CALIBRATION = 'docs/benchmarks/2026-11-01-particle-1-calibration/
  * 4.7% on prompts of about 130 tokens, where the chat format's six tokens
  * show). particle-1 bills about 1.05 prompt tokens per o200k_base token, within
  * 0.5% on 20 packed prompts of about 8,500 tokens at effort medium; no other
- * prompt size has been measured.
+ * prompt size has been measured. gpt-6.2-sol, BG1-C's live GPT reader, uses
+ * gpt-6.1-sol's encoding and factor, kept `calibrated: false` because no
+ * gpt-6.2-sol pack has been measured. BG1-C's receipts carry this entry's
+ * identity, so it stays as long as they are checked; an arm that read with
+ * gpt-6.2-sol before this entry existed recorded the fallback (factor 1.0).
  */
 export const READER_TOKENIZERS: Record<string, ReaderTokenizer> = {
   'anthropic:claude-opus-5-5': { encoding: 'cl100k_base', calibration: 1.4708, calibrated: true, measured: { on: '2026-10-07', samples: 199, max_error: 0.101, source: SMOKES } },
   'anthropic:claude-sonnet-5-5': { encoding: 'cl100k_base', calibration: 1.4524, calibrated: true, measured: { on: '2026-10-07', samples: 317, max_error: 0.0983, source: SMOKES } },
   'anthropic:claude-fable-5-1': { encoding: 'cl100k_base', calibration: 1.0, calibrated: false },
   'openai:gpt-6.1-sol': { encoding: 'o200k_base', calibration: 1.0009, calibrated: true, measured: { on: '2026-10-07', samples: 199, max_error: 0.0468, source: SMOKES } },
+  'openai:gpt-6.2-sol': { encoding: 'o200k_base', calibration: 1.0009, calibrated: false },
   'particle:particle-1': { encoding: 'o200k_base', calibration: 1.0488, calibrated: true, measured: { on: '2026-11-01', samples: 20, max_error: 0.005, source: PARTICLE_CALIBRATION } },
 };
 

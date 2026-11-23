@@ -4,8 +4,14 @@
  * picks the kept list. It prints counts and hashes only, and writes a report of world ids, gate names and numbers
  * (never text) for the custody record and the manifest fill.
  *
- *   bun eval/custody/bg1/validate.ts --set <out>/set --seed-file <path>.bg1-seed --phrasing <path>.bg1-phrasing.json
+ *   bun eval/custody/bg1/validate.ts [--bg1c] --set <out>/set --seed-file <path>.bg1-seed --phrasing <path>.bg1-phrasing.json
  *       --report <path outside the set> [--target-tokens 200000] [--tolerance 0.15] [--n-final <n>]
+ *   bun eval/custody/bg1/validate.ts --bg1c --slot <31 to 96> --set <out>/set --seed-file <path>.bg1-seed
+ *       --phrasing <path>.bg1-phrasing.json [--target-tokens 200000] [--tolerance 0.15]
+ *
+ * Without --bg1c it validates BG1's set (slots 1 to 30); with it, BG1-C's (slots 31 to 96, mint.sh --bg1c;
+ * docs/benchmarks/2026-11-19-changing-facts-confirmation-preregistration.md), whose --n-final is at most 40. Either way a
+ * world directory outside the set's slots refuses the whole set, and each world is planned from its own slot number.
  *
  * Gates per world, in slot order; a failure drops the world:
  *   - files: plan.json, questions.json and world.json are present and each carries the custody marker;
@@ -19,13 +25,21 @@
  *   - duplicate: no earlier world in the set has the same world bytes.
  * A slot that render.ts dropped (its <out>/render/<id>.json record) is listed with the gate "render". Kept: the first
  * --n-final passing worlds in slot order, or every passing world without it. Each world's entry records the SHA-256 of
- * its files as validated, so eval/custody/bg1/fill-manifest.ts can refuse files that changed since.
+ * its files as validated, so eval/custody/bg1/fill-manifest.ts can refuse files that changed since, and controls_dropped,
+ * the control characters render.ts removed from that world (its render/<id>.json record; null when the record holds no
+ * count), which counts.controls_dropped sums and the printed line repeats.
+ *
+ * --slot (BG1-C only) is the same gates for one written world, the duplicate gate against every earlier slot's world in
+ * the set, run by mint.sh --bg1c after each slot so its kept count is the validated count and the mint tops up past a
+ * world that fails (the kept set is the first 40 slots that pass validation). It writes a counts-only record,
+ * <out>/render/<id>.validation.json (status pass or fail, the failed gates, sessions, tokens and controls_dropped), prints one line and
+ * exits 0 on a pass and 12 on a fail.
  */
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { BG1_CUSTODY_MARKER, BG1_TARGET_TOKENS, buildQuestions, goldFields, PlanError, renderBriefs, worldTokens, type QuestionRecord, type World } from '../../generators/changing-facts-gen.ts';
-import { BG1_CONVERSATIONS, BG1_N_CAP } from '../../runner/bg1/types.ts';
+import { BG1_CONVERSATIONS, BG1_N_CAP, BG1C_CONVERSATIONS, BG1C_N_FINAL } from '../../runner/bg1/types.ts';
 import { checkSession, readPhrasing, readSeedLine, RenderRefusal, sealedPlan } from './render.ts';
 
 export const VALIDATION_SCHEMA = 'gbrain-evals/bg1-validation/v1';
@@ -33,10 +47,17 @@ export const WORLD_FILES = ['plan.json', 'questions.json', 'world.json'] as cons
 const sha256 = (data: string | Uint8Array) => createHash('sha256').update(data).digest('hex');
 const json = (v: unknown) => JSON.stringify(v, null, 1) + '\n';
 
-export interface WorldResult { id: string; status: 'pass' | 'fail'; failed: string[]; sessions: number; tokens: number | null; world_sha256: string | null; files_sha256: Record<string, string> }
+/** The control characters render.ts dropped from a world, from its render record; null without a record or a count. */
+function controlsDropped(record: string): number | null {
+  if (!existsSync(record)) return null;
+  const n = (JSON.parse(readFileSync(record, 'utf8')) as { controls_dropped?: unknown }).controls_dropped;
+  return typeof n === 'number' ? n : null;
+}
+
+export interface WorldResult { id: string; status: 'pass' | 'fail'; failed: string[]; sessions: number; tokens: number | null; world_sha256: string | null; files_sha256: Record<string, string>; controls_dropped: number | null }
 export interface ValidationReport {
   schema: string; target_tokens: number; tolerance: number; worlds: WorldResult[]; kept: string[]; n_final: number | null;
-  counts: { checked: number; passed: number; failed: number; render_dropped: number };
+  counts: { checked: number; passed: number; failed: number; render_dropped: number; controls_dropped: number };
 }
 
 /** The gates one world fails, given its directory and its plan inputs; empty when it passes. */
@@ -69,35 +90,60 @@ export function validateWorld(dir: string, slot: number, seedLine: string, phras
   return { failed: [...failed].sort(), sessions: world?.sessions?.length ?? 0, tokens, worldText };
 }
 
-export function validateSet(setDir: string, seedLine: string, phrasing: ReturnType<typeof readPhrasing>, opts: { targetTokens: number; tolerance: number; nFinal: number | null }): ValidationReport {
+export function validateSet(setDir: string, seedLine: string, phrasing: ReturnType<typeof readPhrasing>, opts: { targetTokens: number; tolerance: number; nFinal: number | null; bg1c?: boolean }): ValidationReport {
+  const ids = opts.bg1c ? BG1C_CONVERSATIONS : BG1_CONVERSATIONS;
   const worldsDir = join(setDir, 'worlds');
   const present = existsSync(worldsDir) ? readdirSync(worldsDir).sort() : [];
-  const stray = present.filter(d => !BG1_CONVERSATIONS.includes(d));
-  if (stray.length) throw new RenderRefusal(`the set holds ${stray.length} director(ies) under worlds/ that are not BG1 mint slots`);
+  const stray = present.filter(d => !ids.includes(d));
+  if (stray.length) throw new RenderRefusal(`the set holds ${stray.length} director(ies) under worlds/ that are not ${opts.bg1c ? 'BG1-C' : 'BG1'} mint slots`);
   const recordDir = join(dirname(setDir), 'render');
   const results: WorldResult[] = [];
   const seen = new Set<string>();
   let renderDropped = 0;
-  BG1_CONVERSATIONS.forEach((id, i) => {
+  ids.forEach(id => {
     const record = join(recordDir, `${id}.json`);
     if (!present.includes(id)) {
       if (existsSync(record) && (JSON.parse(readFileSync(record, 'utf8')) as { status?: string }).status === 'dropped') {
         renderDropped++;
-        results.push({ id, status: 'fail', failed: ['render'], sessions: 0, tokens: null, world_sha256: null, files_sha256: {} });
+        results.push({ id, status: 'fail', failed: ['render'], sessions: 0, tokens: null, world_sha256: null, files_sha256: {}, controls_dropped: null });
       }
       return;
     }
-    const r = validateWorld(join(worldsDir, id), i + 1, seedLine, phrasing, opts);
+    const r = validateWorld(join(worldsDir, id), Number(id.slice('bg1-'.length)), seedLine, phrasing, opts);
     const hash = r.worldText === null ? null : sha256(r.worldText);
     if (hash !== null && seen.has(hash)) r.failed.push('duplicate');
     if (hash !== null) seen.add(hash);
     const files_sha256 = Object.fromEntries(WORLD_FILES.filter(f => existsSync(join(worldsDir, id, f))).map(f => [f, sha256(readFileSync(join(worldsDir, id, f)))]));
-    results.push({ id, status: r.failed.length ? 'fail' : 'pass', failed: r.failed, sessions: r.sessions, tokens: r.tokens, world_sha256: hash, files_sha256 });
+    results.push({ id, status: r.failed.length ? 'fail' : 'pass', failed: r.failed, sessions: r.sessions, tokens: r.tokens, world_sha256: hash, files_sha256, controls_dropped: controlsDropped(record) });
   });
   const passing = results.filter(r => r.status === 'pass').map(r => r.id);
   const kept = opts.nFinal === null ? passing : passing.slice(0, opts.nFinal);
   return { schema: VALIDATION_SCHEMA, target_tokens: opts.targetTokens, tolerance: opts.tolerance, worlds: results, kept, n_final: opts.nFinal,
-    counts: { checked: results.length - renderDropped, passed: passing.length, failed: results.length - passing.length, render_dropped: renderDropped } };
+    counts: { checked: results.length - renderDropped, passed: passing.length, failed: results.length - passing.length, render_dropped: renderDropped, controls_dropped: results.reduce((n, w) => n + (w.controls_dropped ?? 0), 0) } };
+}
+
+/** One BG1-C slot's gates (--slot): validateWorld, then the duplicate gate against every earlier slot's world in the set. */
+export function validateSlot(argv: string[]): { pass: boolean; line: string } {
+  const flag = (name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
+  const set = flag('--set'), seedFile = flag('--seed-file'), phrasingFile = flag('--phrasing'), slot = Number(flag('--slot'));
+  if (!argv.includes('--bg1c')) throw new RenderRefusal('--slot is BG1-C\'s check of one minted world (mint.sh --bg1c), so it needs --bg1c');
+  if (!set || !seedFile || !phrasingFile) throw new RenderRefusal('usage: --bg1c --slot <n> --set <dir> --seed-file <path>.bg1-seed --phrasing <path>.bg1-phrasing.json [--target-tokens <n>] [--tolerance <x>]');
+  const id = BG1C_CONVERSATIONS.find(c => Number(c.slice('bg1-'.length)) === slot);
+  if (!id) throw new RenderRefusal('--slot must be one of BG1-C\'s slots, 31 to 96');
+  const targetTokens = Number(flag('--target-tokens') ?? BG1_TARGET_TOKENS), tolerance = Number(flag('--tolerance') ?? 0.15);
+  if (!(targetTokens >= 1000) || !(tolerance > 0 && tolerance < 1)) throw new RenderRefusal('--target-tokens must be at least 1000 and --tolerance between 0 and 1');
+  const worldsDir = join(resolve(set), 'worlds');
+  if (!existsSync(join(worldsDir, id, 'world.json'))) throw new RenderRefusal(`${id} has no written world to validate`);
+  const r = validateWorld(join(worldsDir, id), slot, readSeedLine(resolve(seedFile)), readPhrasing(resolve(phrasingFile)), { targetTokens, tolerance });
+  const hash = r.worldText === null ? null : sha256(r.worldText);
+  const earlier = BG1C_CONVERSATIONS.slice(0, BG1C_CONVERSATIONS.indexOf(id)).filter(e => WORLD_FILES.every(f => existsSync(join(worldsDir, e, f))));
+  if (hash !== null && earlier.some(e => sha256(readFileSync(join(worldsDir, e, 'world.json'))) === hash)) r.failed.push('duplicate');
+  const status = r.failed.length ? 'fail' : 'pass';
+  const controls = controlsDropped(join(dirname(resolve(set)), 'render', `${id}.json`));
+  const record = join(dirname(resolve(set)), 'render', `${id}.validation.json`);
+  mkdirSync(dirname(record), { recursive: true });
+  writeFileSync(record, json({ schema: VALIDATION_SCHEMA, world: id, slot, status, failed: r.failed, sessions: r.sessions, tokens: r.tokens, target_tokens: targetTokens, tolerance, world_sha256: hash, controls_dropped: controls }), { mode: 0o600 });
+  return { pass: status === 'pass', line: `bg1-validate slot=${slot} world=${id} status=${status} gates=${r.failed.join(',') || 'none'} tokens=${r.tokens ?? 'none'} controls_dropped=${controls ?? 'none'}` };
 }
 
 function inside(child: string, parent: string): boolean {
@@ -113,17 +159,23 @@ export function main(argv: string[]): { report: ValidationReport; line: string }
   const targetTokens = Number(flag('--target-tokens') ?? BG1_TARGET_TOKENS), tolerance = Number(flag('--tolerance') ?? 0.15);
   const nFinal = flag('--n-final') === undefined ? null : Number(flag('--n-final'));
   if (!(targetTokens >= 1000) || !(tolerance > 0 && tolerance < 1)) throw new RenderRefusal('--target-tokens must be at least 1000 and --tolerance between 0 and 1');
-  if (nFinal !== null && !(Number.isInteger(nFinal) && nFinal >= 1 && nFinal <= BG1_N_CAP)) throw new RenderRefusal(`--n-final must be a whole number from 1 to ${BG1_N_CAP}`);
-  const report = validateSet(resolve(set), readSeedLine(resolve(seedFile)), readPhrasing(resolve(phrasingFile)), { targetTokens, tolerance, nFinal });
+  const bg1c = argv.includes('--bg1c'), cap = bg1c ? BG1C_N_FINAL : BG1_N_CAP;
+  if (nFinal !== null && !(Number.isInteger(nFinal) && nFinal >= 1 && nFinal <= cap)) throw new RenderRefusal(`--n-final must be a whole number from 1 to ${cap}`);
+  const report = validateSet(resolve(set), readSeedLine(resolve(seedFile)), readPhrasing(resolve(phrasingFile)), { targetTokens, tolerance, nFinal, bg1c });
   mkdirSync(dirname(resolve(reportPath)), { recursive: true });
   const text = json(report);
   writeFileSync(resolve(reportPath), text, { mode: 0o600 });
   const gates = Object.entries(report.worlds.flatMap(w => w.failed).reduce<Record<string, number>>((m, g) => ({ ...m, [g]: (m[g] ?? 0) + 1 }), {})).sort(([a], [b]) => (a < b ? -1 : 1)).map(([g, n]) => `${g}:${n}`).join(',') || 'none';
-  return { report, line: `bg1-validate checked=${report.counts.checked} passed=${report.counts.passed} failed=${report.counts.failed} render_dropped=${report.counts.render_dropped} kept=${report.kept.length} gates=${gates} report_sha256=${sha256(text).slice(0, 16)}` };
+  return { report, line: `bg1-validate checked=${report.counts.checked} passed=${report.counts.passed} failed=${report.counts.failed} render_dropped=${report.counts.render_dropped} kept=${report.kept.length} gates=${gates} controls_dropped=${report.counts.controls_dropped} report_sha256=${sha256(text).slice(0, 16)}` };
 }
 
 if (import.meta.main) {
-  try { console.log(main(process.argv.slice(2)).line); process.exit(0); } catch (error) {
+  try {
+    const argv = process.argv.slice(2);
+    if (argv.includes('--slot')) { const r = validateSlot(argv); console.log(r.line); process.exit(r.pass ? 0 : 12); }
+    console.log(main(argv).line);
+    process.exit(0);
+  } catch (error) {
     const e = error as Error;
     process.stderr.write(e instanceof RenderRefusal ? `bg1-validate refused: ${e.message}\n` : `bg1-validate error class=${e.name} sha256=${sha256(String(e.message)).slice(0, 16)}\n`);
     process.exit(e instanceof RenderRefusal ? 2 : 1);

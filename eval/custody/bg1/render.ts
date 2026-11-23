@@ -6,7 +6,7 @@
  *
  *   bun eval/custody/bg1/render.ts --set <out>/set --seed-file <path>.bg1-seed --phrasing <path>.bg1-phrasing.json --slot <n>
  *       [--cache <dir>, default <set>/../render-cache] [--target-tokens 200000]
- *       (--fake [--fake-break <slot>:<session index>:<attempts>,...]
+ *       (--fake [--fake-break <slot>:<session index>:<attempts>,... or <slot>:length]
  *        | --paid-window <unit> --window-cap-usd <n> --budget-ledger <file> --budget-run-id <id>)
  *   bun eval/custody/bg1/render.ts --dev <bg1-dev-01 to bg1-dev-20> --set <out>/set [--cache <dir>] [--target-tokens 200000]
  *       (--fake [--fake-break <dev number>:<session index>:<attempts>,...] | --paid-window ... as above)
@@ -27,6 +27,12 @@
  * nothing of it is written under --set. The world-level gates (session count, values, the oracle cross-check) run in
  * the planner before any call.
  *
+ * Before the checks, each reply's turns lose every control character except newline and tab (dropControls; BG1-C's
+ * launch amendment A). gemini-3.8-flash once wrote U+0000 inside a word in public dev world bg1-dev-20, and gbrain
+ * can't store a page that holds it, so that session never reached gbrain while the other servers ingested it. The
+ * checks read the text the world keeps, every server ingests that same text, and the render record and line count what
+ * each world lost (controls_dropped).
+ *
  * Gemini's render and check requests carry a JSON Schema for the reply (generationConfig.responseJsonSchema, beside
  * responseMimeType). The render prompt gives the length as words and tokens and a range of turns, which the render
  * schema also holds the reply to (sessionLength), and a regeneration after a length failure names the last attempt's
@@ -40,7 +46,9 @@
  *
  * Model calls sit behind one interface (Models), so tests inject fakes. --fake writes each session with the template
  * renderer and answers both checks "no extra claims", spending nothing; --fake-break makes the stand-in reply with no
- * turns for one session's first attempts (a regeneration and drop drill). Real mode needs the granted paid
+ * turns for one session's first attempts (a regeneration and drop drill), and <slot>:length writes that slot's world
+ * at FAKE_LENGTH_BREAK times the target, so every session passes here and the world fails validate.ts's length gate
+ * (BG1-C's top-up drill, mint.sh --bg1c). Real mode needs the granted paid
  * window, and refuses (exit 2) before any client exists without it or when a cap it would spend under is unknown or
  * above the window cap (eval/runner/paid-arm.ts). It reaches providers only through the metering proxies mint.sh
  * starts: BG1_GEMINI_READY and BG1_ANTHROPIC_READY name their ready files, each proxy holds only its own provider's
@@ -68,7 +76,7 @@ import {
   sealedWorldSeed, termRegex, type Phrasing, type RenderBrief, type Turn, type World, type WorldPlan,
 } from '../../generators/changing-facts-gen.ts';
 import { readLedger } from '../../runner/budget-ledger.ts';
-import { BG1_CONVERSATIONS, BG1_DEV_CONVERSATIONS, BG1_DEV_EXTRA_CONVERSATIONS } from '../../runner/bg1/types.ts';
+import { BG1_DEV_CONVERSATIONS, BG1_DEV_EXTRA_CONVERSATIONS, BG1C_LAST_SLOT, bg1WorldId } from '../../runner/bg1/types.ts';
 import { ledgerCaps, requireRs1Window, WindowRefusal } from '../../runner/paid-arm.ts';
 import { PROXY_REFUSAL_MARKERS } from '../../runner/providers/openai-compatible.ts';
 import { encodingCount } from '../../runner/systems/render-v2.ts';
@@ -78,6 +86,8 @@ export const CHECK_MODELS = ['gemini:gemini-3.8-flash', 'anthropic:claude-haiku-
 export type CheckModel = typeof CHECK_MODELS[number];
 export const REGENERATIONS = 3;
 export const LENGTH_GATE = { min: 0.6, max: 1.5, from_target: 400 } as const;
+/** --fake-break <slot>:length: the target that slot's fake world is written to, as a multiple of --target-tokens. */
+export const FAKE_LENGTH_BREAK = 1.3;
 export const CONCURRENCY = 6;
 const CACHE_VERSION = 'bg1-render-cache/v3';
 /** A session whose target is at least this many tokens renders at high thinking from its first attempt; every re-render does too. */
@@ -248,6 +258,17 @@ function jsonObject(text: string): Record<string, unknown> | null {
   try { const v = JSON.parse(text.slice(start, end + 1)); return v && typeof v === 'object' && !Array.isArray(v) ? v : null; } catch { return null; }
 }
 export const parseTurns = (reply: string): unknown => jsonObject(reply)?.turns ?? null;
+
+/** Control characters (Unicode Cc) other than newline and tab: no world keeps one. */
+const CONTROL_CHARS = /[^\P{Cc}\t\n]/gu;
+
+/** Parsed turns with every control character but newline and tab removed, and how many went; any other shape passes through for checkSession to fail. */
+export function dropControls(turns: unknown): { turns: unknown; dropped: number } {
+  if (!Array.isArray(turns)) return { turns, dropped: 0 };
+  let dropped = 0;
+  const clean = turns.map(t => (t && typeof (t as Turn).content === 'string' ? { ...(t as Turn), content: (t as Turn).content.replace(CONTROL_CHARS, () => { dropped++; return ''; }) } : t));
+  return { turns: clean, dropped };
+}
 export const parseVerdict = (reply: string): boolean | null => { const v = jsonObject(reply)?.extra_claims; return typeof v === 'boolean' ? v : null; };
 
 // ─── models ──────────────────────────────────────────────────────────
@@ -369,7 +390,7 @@ export function haikuProxyClient(readyPath: string | undefined): ModelClient {
 
 // ─── rendering a world ───────────────────────────────────────────────
 
-export interface RenderStats { sessions: number; attempts: number; regenerated: number; checks: number; failures: Record<string, number>; dropped_session: number | null; tokens: number }
+export interface RenderStats { sessions: number; attempts: number; regenerated: number; checks: number; failures: Record<string, number>; dropped_session: number | null; tokens: number; controls_dropped: number }
 
 /**
  * Every session of a plan through the renderer and the three checks, up to 1 + REGENERATIONS attempts each. Returns
@@ -377,7 +398,7 @@ export interface RenderStats { sessions: number; attempts: number; regenerated: 
  */
 export async function renderWorld(plan: WorldPlan, models: Models, opts: { targetTokens?: number; concurrency?: number } = {}): Promise<{ world: World | null; stats: RenderStats }> {
   const briefs = renderBriefs(plan, opts.targetTokens ?? BG1_TARGET_TOKENS);
-  const stats: RenderStats = { sessions: briefs.length, attempts: 0, regenerated: 0, checks: 0, failures: {}, dropped_session: null, tokens: 0 };
+  const stats: RenderStats = { sessions: briefs.length, attempts: 0, regenerated: 0, checks: 0, failures: {}, dropped_session: null, tokens: 0, controls_dropped: 0 };
   const done: Array<Turn[] | null> = briefs.map(() => null);
   const one = async (i: number) => {
     const brief = briefs[i];
@@ -386,7 +407,7 @@ export async function renderWorld(plan: WorldPlan, models: Models, opts: { targe
     for (let attempt = 0; attempt <= REGENERATIONS; attempt++) {
       stats.attempts++;
       if (attempt > 0) stats.regenerated++;
-      const turns = parseTurns(await models.render(brief, attempt, failures, lastTokens));
+      const { turns, dropped } = dropControls(parseTurns(await models.render(brief, attempt, failures, lastTokens)));
       failures = checkSession(brief, turns);
       lastTokens = failures.includes('length') ? sessionTokens(turns as Turn[]) : undefined;
       for (const model of failures.length ? [] : CHECK_MODELS.filter(m => m === CHECK_MODELS[0] || brief.tracked)) {
@@ -399,7 +420,7 @@ export async function renderWorld(plan: WorldPlan, models: Models, opts: { targe
         if (verdict !== false) { failures = [verdict === null ? `check_unreadable:${model}` : `extra_claims:${model}`]; break; }
       }
       for (const f of failures) stats.failures[f] = (stats.failures[f] ?? 0) + 1;
-      if (!failures.length) { done[i] = turns as Turn[]; return; }
+      if (!failures.length) { done[i] = turns as Turn[]; stats.controls_dropped += dropped; return; }
     }
     if (stats.dropped_session === null || i < stats.dropped_session) stats.dropped_session = i;
   };
@@ -414,7 +435,7 @@ export async function renderWorld(plan: WorldPlan, models: Models, opts: { targe
 
 // ─── custody inputs ──────────────────────────────────────────────────
 
-const ownerOnly = (path: string) => (statSync(path).mode & 0o077) === 0;
+export const ownerOnly = (path: string) => (statSync(path).mode & 0o077) === 0;
 
 /** The custody seed line: a *.bg1-seed file, owner-only, holding "bg1-seed-v1:" and 64 hex digits. */
 export function readSeedLine(path: string): string {
@@ -434,10 +455,10 @@ export function readPhrasing(path: string): Phrasing {
   try { return loadPhrasing(path); } catch (e) { throw new RenderRefusal(e instanceof PlanError ? e.message : 'the phrasing file is not readable JSON'); }
 }
 
+/** A mint slot's world id: BG1's slots 1 to 30 and BG1-C's 31 to 96 (mint.sh keeps each mint to one set's slots). */
 export const worldIdOf = (slot: number) => {
-  const id = BG1_CONVERSATIONS[slot - 1];
-  if (!Number.isInteger(slot) || !id) throw new RenderRefusal(`--slot must be a whole number from 1 to ${BG1_CONVERSATIONS.length}`);
-  return id;
+  if (!Number.isInteger(slot) || slot < 1 || slot > BG1C_LAST_SLOT) throw new RenderRefusal(`--slot must be a whole number from 1 to ${BG1C_LAST_SLOT}`);
+  return bg1WorldId(slot);
 };
 
 /** The sealed plan of one mint slot: deterministic from the custody seed line, the slot and the phrasing set. */
@@ -462,7 +483,7 @@ export function devPlan(id: string, worlds = BG1_DEV_WORLDS): WorldPlan {
 }
 
 /** True when path, or its nearest existing parent, sits inside a git work tree; refuses when git cannot say. */
-function insideCheckout(path: string): boolean {
+export function insideCheckout(path: string): boolean {
   let dir = resolve(path);
   while (!existsSync(dir)) dir = dirname(dir);
   const git = spawnSync('git', ['-C', dir, 'rev-parse', '--is-inside-work-tree'], { stdio: 'ignore' });
@@ -528,9 +549,11 @@ export async function main(argv: string[], env: Record<string, string | undefine
   const phrasing = dev === null ? readPhrasing(resolve(phrasingFile!)) : PUBLIC_PHRASING;
   const plan = dev === null ? sealedPlan(readSeedLine(resolve(seedFile!)), slot, phrasing) : devPlan(dev, devWorlds);
   const label = dev === null ? `slot=${slot} world=${id}` : `world=${id}`;
+  let renderTokens = targetTokens;
   if (!make) {
     const breaks = new Map<number, number>();
     for (const entry of (flag('--fake-break') ?? '').split(',').filter(Boolean)) {
+      if (entry === `${slot}:length`) { renderTokens = Math.round(targetTokens * FAKE_LENGTH_BREAK); continue; }
       const [s, i, n] = entry.split(':').map(Number);
       if (s === slot) breaks.set(i, n);
     }
@@ -542,7 +565,7 @@ export async function main(argv: string[], env: Record<string, string | undefine
     if (!existsSync(join(dir, 'plan.json')) || readFileSync(join(dir, 'plan.json'), 'utf8') !== planText) throw new RenderRefusal(`${id} is already written from a different plan`);
     return { status: 'skipped', line: `bg1-render ${label} status=skipped world_sha256=${sha256(readFileSync(join(dir, 'world.json'))).slice(0, 16)}` };
   }
-  const { world, stats } = await renderWorld(plan, make(plan), { targetTokens });
+  const { world, stats } = await renderWorld(plan, make(plan), { targetTokens: renderTokens });
   const failures = Object.entries(stats.failures).sort(([a], [b]) => (a < b ? -1 : 1)).map(([k, v]) => `${k}:${v}`).join(',') || 'none';
   const counts = `sessions=${stats.sessions} attempts=${stats.attempts} regenerated=${stats.regenerated} checks=${stats.checks} failures=${failures}`;
   const record = join(dev === null ? dirname(resolve(set)) : resolve(set), 'render', `${id}.json`);
@@ -555,7 +578,7 @@ export async function main(argv: string[], env: Record<string, string | undefine
   writeAtomic(join(dir, 'questions.json'), json(buildQuestions(plan, phrasing)));
   writeAtomic(join(dir, 'world.json'), worldText);
   writeAtomic(record, json({ world: id, status: 'written', world_sha256: sha256(worldText), ...stats }));
-  return { status: 'written', line: `bg1-render ${label} status=written ${counts} tokens=${stats.tokens} world_sha256=${sha256(worldText).slice(0, 16)}` };
+  return { status: 'written', line: `bg1-render ${label} status=written ${counts} tokens=${stats.tokens} controls_dropped=${stats.controls_dropped} world_sha256=${sha256(worldText).slice(0, 16)}` };
 }
 
 if (import.meta.main) {

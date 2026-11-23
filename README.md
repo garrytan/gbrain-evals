@@ -311,8 +311,9 @@ a model call without a measured gain.
 
 Where we can put other systems on the same footing, gbrain finds all the evidence a question needs more often than any
 system we can score strictly, and in a matched, preregistered test on sealed BEAM conversations it answers more
-questions than a memory-bank server at the same budget. On sealed histories where facts change, it is level with the
-memory-bank and extract-first servers on what is true now and behind them on questions about the past. On the largest sealed
+questions than a memory-bank server at the same budget. On sealed histories where facts change, its newest release is
+behind the memory-bank and extract-first servers on questions about the past, ahead of the memory-bank server on what is
+true now and level with the extract-first server there. On the largest sealed
 head-to-head, below, the set is too small
 to rank any system, and an agent with grep and read tools over plain files has the highest score. Other systems publish
 different metrics on different protocols, so this section uses only published numbers we can put on the same footing,
@@ -418,22 +419,38 @@ disagree, a gemini-4-argon referee sided with the frontier judge on 73.2% of 2,2
 gpt-4.1-mini was no more accurate than either frontier judge ([judge-robustness
 results](docs/benchmarks/2026-11-05-gst-1365-judge-robustness.md)).
 
-**Facts that change: measured, preregistered.** The [changing-facts battleground](docs/benchmarks/2026-11-15-changing-facts-battleground-results.md) gives gbrain
-`27f8b9d6` (its `stable` tag, v0.60.593.0), three other memory systems and plain hybrid search the same 30 sealed,
-made-up chat histories of about 200,000 tokens, in which facts are updated, corrected, repeated after they went stale,
-contradicted or withdrawn. Each system hands three readers (claude-opus-5-5, gpt-6.1-sol, particle-1) 8,000 tokens per
-question, and a judge from another model family grades every answer.
+**Facts that change: measured, preregistered.** The [changing-facts confirmation](docs/benchmarks/2026-11-19-changing-facts-confirmation-results.md)
+(BG1-C) gives gbrain v0.60.753.0, its newest release at launch, and two memory servers the same 40 newly minted,
+sealed, made-up chat histories of about 200,000 tokens, in which facts are updated, corrected, repeated after they went
+stale, contradicted or withdrawn. Each system hands three readers (claude-opus-5-5, gpt-6.2-sol, particle-1) 8,000
+tokens per question, and a judge from another model family grades every answer. gbrain is behind the memory-bank server
+on questions about the past (-4.5 points, 95% interval -6.5 to -2.6). gbrain is behind the extract-first server on
+questions about the past (-3.0 points, 95% interval -5.2 to -0.8).
 
-| gbrain minus | What is true now (1,200 questions) | What was true or known at a date, and how it changed (720) |
+| gbrain v0.60.753.0, BG1-C, minus | What is true now (1,600 questions) | What was true or known at a date, and how it changed (960) |
+|---|---|---|
+| memory-bank server | **+1.2 points (95% interval +0.2 to +2.2): ahead** | **-4.5 (-6.5 to -2.6): behind** |
+| extract-first server | +0.6 (-0.8 to +2.0): level within 3 points | **-3.0 (-5.2 to -0.8): behind** |
+
+Most of the loss on the past is in "how did it change" questions, where the values the answer needs reached the reader
+in 85% of gbrain's contexts against 97% and 98% for the two servers; these go to gbrain's maintainers as named failures.
+The lead gbrain showed on development worlds did not carry over to these sealed worlds.
+
+The earlier [changing-facts battleground](docs/benchmarks/2026-11-15-changing-facts-battleground-results.md) (BG1) gave
+gbrain `27f8b9d6` (its `stable` tag, v0.60.593.0), three other memory systems and plain hybrid search the same 30 sealed,
+made-up chat histories of about 200,000 tokens, in which facts are updated, corrected, repeated after they went stale,
+contradicted or withdrawn, read by claude-opus-5-5, gpt-6.1-sol and particle-1. Its rows stay published with the build
+they measured; they come from different worlds, so they are not a paired comparison with BG1-C's.
+
+| gbrain v0.60.593.0, BG1, minus | What is true now (1,200 questions) | What was true or known at a date, and how it changed (720) |
 |---|---|---|
 | memory-bank server | -0.4 points (95% interval -2.4 to +1.5): no measurable difference | **-10.3 (-13.0 to -7.7): behind** |
 | extract-first server | -1.8 (-3.9 to +0.3): no measurable difference | **-8.1 (-10.8 to -5.3): behind** |
 | temporal-graph library | **+20.9 (+17.7 to +24.1): ahead** | +5.4 (+2.4 to +8.4): ahead |
 | hybrid search, no fact layer | **+73.7 (+70.0 to +77.4): ahead** | not part of the design control |
 
-gbrain's fact layer is what beats plain search, and it holds level with the memory-bank and extract-first servers on
-current values. It loses questions about the past and withdrawn facts, which go to gbrain's maintainers as named
-failures. gbrain is Garry Tan's own project. Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1.
+At v0.60.593.0, gbrain's fact layer was what beat plain search, and it held level with the memory-bank and
+extract-first servers on current values. It lost questions about the past and withdrawn facts. gbrain is Garry Tan's own project. Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1.
 Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator.
 Garry Tan runs Y Combinator.
 
@@ -666,6 +683,14 @@ Garry Tan runs Y Combinator.
 [Disclosures](docs/disclosures.md) lists every relationship and where each line goes.
 
 ## Changelog
+
+### 2026-11-23: How gbrain compares adds the changing-facts confirmation
+
+The "Facts that change" paragraph now leads with the
+[changing-facts confirmation results](docs/benchmarks/2026-11-19-changing-facts-confirmation-results.md) (BG1-C) for
+gbrain v0.60.753.0: behind the memory-bank and extract-first servers on questions about the past, ahead of the
+memory-bank server and level with the extract-first server on what is true now. BG1's rows stay below it, labelled with
+the build they measured, and the section's opening paragraph says where gbrain's newest release stands.
 
 ### 2026-11-21: Results graded by gpt-4o say so
 

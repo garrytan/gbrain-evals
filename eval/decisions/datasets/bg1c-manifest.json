@@ -1,0 +1,9 @@
+{
+ "dataset": "BG1-C changing-facts confirmation set",
+ "status": "unfilled",
+ "generator": "eval/generators/changing-facts-gen.ts (changing-facts-gen@1, BG1's sealed fixes) from BG1's custody seed and phrasing, rendered by gemini-3.8-flash and validated in custody by eval/custody/bg1/mint.sh --bg1c",
+ "layout": "worlds/<id>/world.json and worlds/<id>/questions.json under GBRAIN_EVALS_BG1C_SOURCE (mint.sh --bg1c's <out>/set), id = bg1-031 to bg1-096 (BG1-C's 66 mint slots, minted in slot order from 31 until 40 are kept); worlds/<id>/plan.json sits beside them in custody and is never loaded or pinned here",
+ "note": "Hashes only; no BG1-C text is committed. Until the custodian fills it on the custody host, `files` is empty and bg1c loads with a notice that its bytes are unpinned. Once filled, every file the loader reads must be listed here with a matching SHA-256, and every listed file of a loaded world must be present. A filled manifest also lists `kept`, the kept worlds in slot order (the first 40 slots that passed validation), and `n_final`, which is 40; BG1-C cells run on that list alone. BG1's manifest (bg1-manifest.json) is a separate file and pins none of these worlds (docs/benchmarks/2026-11-19-changing-facts-confirmation-preregistration.md).",
+ "files": [],
+ "filled_at": null
+}

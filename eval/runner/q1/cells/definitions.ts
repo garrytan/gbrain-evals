@@ -34,7 +34,7 @@ import { CHAT_PRICE_OVERRIDES, type ChatPrice } from '../../budget-ledger.ts';
 import { lookupEmbeddingPrice } from '../../../../node_modules/gbrain/src/core/embedding-pricing.ts';
 import { FRONTIER_READERS, READER_WINDOWS } from '../../systems/baselines.ts';
 import type { Outcome } from '../../memory-qa/outcomes.ts';
-import { BG1_N_FINAL } from '../../memory-qa/bg1-names.ts';
+import { BG1_N_FINAL, BG1C_N_FINAL } from '../../memory-qa/bg1-names.ts';
 
 export const CELL_SCHEMA = 'gbrain-evals/q1-cell/v1';
 export const MANIFEST_SCHEMA = 'gbrain-evals/q1-cell-manifest/v1';
@@ -44,11 +44,13 @@ export const PREREGISTRATION = 'docs/benchmarks/2026-10-06-scoreboard-preregistr
 
 export type Q1SetId = 'S1' | 'S1-sweep' | 'S2a' | 'S2b' | 'S3' | 'S4' | 'S4-slice' | 'S5' | 'S3-smoke' | 'S3-smoke-default' | 'S2b-ingest';
 /** F6's own set (eval/runner/q1/cells/f6.ts): the D8 long-history reserve. */
-export type SetId = Q1SetId | 'D8' | RS1SetId | BG1SetId | SotaSetId;
+export type SetId = Q1SetId | 'D8' | RS1SetId | BG1SetId | BG1CSetId | SotaSetId;
 /** RS1's sets (eval/runner/q1/cells/rs1.ts): the sealed set and stage 1's two public dev conversations. */
 export type RS1SetId = 'RS1' | 'RS1-dev2';
 /** BG1's sets (eval/runner/q1/cells/bg1.ts): the sealed changing-facts set, its full-context worlds and stage 1's three public dev worlds. */
 export type BG1SetId = 'BG1' | 'BG1-fc10' | 'BG1-dev3';
+/** BG1-C's sets (eval/runner/q1/cells/bg1c.ts): the sealed confirmation set and its one-world smoke on public dev world bg1-dev-01. */
+export type BG1CSetId = 'BG1C' | 'BG1C-dev1';
 /** The SOTA loop's sets (generateSotaDevCells, generateSotaLeaderCells). */
 export type SotaSetId = 'SOTA-dev' | 'SOTA-leader-beam' | 'SOTA-leader-lme';
 export type Q1BlockId = 'T1' | 'T2-S2a' | 'T2-S2b' | 'T2-S3' | 'T2-S4-S5';
@@ -58,10 +60,12 @@ export type F6BlockId = 'F6-S1' | 'F6-T2' | 'F6-D8' | 'F6-S4' | 'F6-dry' | 'F6-P
 export type RS1BlockId = 'RS1-S1' | 'RS1';
 /** BG1's spend blocks (eval/runner/q1/cells/bg1.ts): stage 1 and the counted cells. */
 export type BG1BlockId = 'BG1-S1' | 'BG1';
+/** BG1-C's spend blocks (eval/runner/q1/cells/bg1c.ts): the smoke and the counted cells. */
+export type BG1CBlockId = 'BG1C-smoke' | 'BG1C';
 /** The SOTA loop's spend blocks: the dev test and the leader cache, each its own paid window and ledger run. */
 export type SotaBlockId = 'SOTA-dev' | 'SOTA-leader';
 export type BN10BlockId = 'BN10-dry' | 'BN10';
-export type BlockId = Q1BlockId | F6BlockId | RS1BlockId | BG1BlockId | SotaBlockId | BN10BlockId;
+export type BlockId = Q1BlockId | F6BlockId | RS1BlockId | BG1BlockId | BG1CBlockId | SotaBlockId | BN10BlockId;
 export type Split = 'dev' | 'sealed' | 'all';
 
 export type Selection =
@@ -152,6 +156,11 @@ export interface CellDefinition {
   ingest_replicate: number;
   effort: 'medium';
   canonical_instrument: string;
+  /**
+   * BG1-C: false when no answer gets the canonical instrument's judge (BG1's descriptive gemini-3.8-flash view), so each
+   * answer's one grade is its per-reader gating judge. Absent on every other cell, whose answers all get the canonical judge.
+   */
+  descriptive_view?: false;
   /** Write-start-to-queryable probes: the last session plus `sample` sessions per conversation, seeded. */
   probes: { sample: number; seed: string; /** Probe only this many seeded conversations (null: all). */ conversations?: number | null };
   /** Dev smoke cells: only these conversations of the split run (the set's `only_conversations`). */
@@ -164,7 +173,7 @@ export interface CellDefinition {
   /** Shim cells: the stack's bootstrap environment and config (`GBRAIN_FULL_SURFACE=1` for gbrain's full-surface cell). */
   launch?: { env: Record<string, string>; config: 'recipe' | 'common' | 'shipped-0.31' };
   /**
-   * RS1 and BG1: the cell's conversations are the custodian's kept list (eval/runner/memory-qa/corpus.ts rs1Kept, bg1Kept),
+   * RS1, BG1 and BG1-C: the cell's conversations are the custodian's kept list (eval/runner/memory-qa/corpus.ts rs1Kept, bg1Kept),
    * in slot order, and launch unit (shard) i runs kept conversations i x kept_units to (i + 1) x kept_units - 1.
    */
   kept_units?: number;
@@ -263,6 +272,16 @@ export const BG1_SETS: Record<BG1SetId, SetFacts> = {
   'BG1-dev3': { id: 'BG1-dev3', benchmark: 'bg1-dev', split: 'dev', questions: 192, conversations: 3, corpus_tokens: 600_000, messages: 6_000, block: 'BG1-S1', selection: { kind: 'all' }, exclusions: [], role: 'smoke', exposure: 'E2', label: 'BG1 stage 1, three public dev worlds', only_conversations: ['bg1-dev-01', 'bg1-dev-02', 'bg1-dev-03'], sessions: 150 },
 };
 /**
+ * BG1-C's sets (docs/benchmarks/2026-11-19-changing-facts-confirmation-preregistration.md). BG1C is the sealed
+ * confirmation set in owner custody (loader bg1c) at its preregistered N, the first 40 kept worlds (BG1C_N_FINAL), sized
+ * as BG1's worlds are (64 questions, about 200,000 cl100k tokens and about 150 sessions a world, and BG1's placeholder
+ * message count). BG1C-dev1 is the smoke: public dev world bg1-dev-01 (loader bg1-dev) at the counted settings.
+ */
+export const BG1C_SETS: Record<BG1CSetId, SetFacts> = {
+  BG1C: { id: 'BG1C', benchmark: 'bg1c', split: 'sealed', questions: BG1C_N_FINAL * 64, conversations: BG1C_N_FINAL, corpus_tokens: BG1C_N_FINAL * 200_000, messages: BG1C_N_FINAL * 2_000, block: 'BG1C', selection: { kind: 'all' }, exclusions: [], role: 'headline', exposure: 'E0', label: 'BG1-C changing-facts confirmation set (the first 40 kept worlds)', sessions: 150 },
+  'BG1C-dev1': { id: 'BG1C-dev1', benchmark: 'bg1-dev', split: 'dev', questions: 64, conversations: 1, corpus_tokens: 200_000, messages: 2_000, block: 'BG1C-smoke', selection: { kind: 'all' }, exclusions: [], role: 'smoke', exposure: 'E2', label: 'BG1-C smoke, public dev world bg1-dev-01 at the counted settings', only_conversations: ['bg1-dev-01'], sessions: 150 },
+};
+/**
  * The SOTA loop dev test's conversations (decision D2a): the four public BEAM-1M dev conversations with the most
  * answerable questions (eval/data/answerability/beam-1m.json, supported or partial), ties broken by id. All four are in
  * the nightly dev pool (eval/data/nightly/devset-v2.json, beam-1m-hard), whose other conversations the leader cache covers.
@@ -334,8 +353,8 @@ export const SOTA_SETS: Record<SotaSetId, SetFacts> = {
     block: 'SOTA-leader', selection: { kind: 'ids', ids: SOTA_LEADER_LME_IDS }, exclusions: [], role: 'smoke', exposure: 'E3',
     label: 'SOTA loop leader cache: the whole history on the nightly LongMemEval-S pool questions' },
 };
-/** Every set a cell may name: Q1's, F6's, RS1's, BG1's and the SOTA loop's. */
-export const ALL_SETS: Record<SetId, SetFacts> = { ...SETS, ...F6_SETS, ...RS1_SETS, ...BG1_SETS, ...SOTA_SETS };
+/** Every set a cell may name: Q1's, F6's, RS1's, BG1's, BG1-C's and the SOTA loop's. */
+export const ALL_SETS: Record<SetId, SetFacts> = { ...SETS, ...F6_SETS, ...RS1_SETS, ...BG1_SETS, ...BG1C_SETS, ...SOTA_SETS };
 
 /** PLAN §7 block lines (the approved estimate the re-priced manifest is compared with). */
 export const PLAN_BLOCKS: Record<Q1BlockId, { label: string; plan_usd: number }> = {
@@ -559,8 +578,8 @@ export function f6ExtractionUsd(tokens: number): number {
 
 // ─── BG1 ─────────────────────────────────────────────────────────────
 
-/** BG1's benchmarks: the sealed set (bg1) and the public dev worlds (bg1-dev). */
-export const isBg1Benchmark = (benchmark: string) => benchmark === 'bg1' || benchmark === 'bg1-dev';
+/** BG1's benchmarks: the sealed set (bg1), BG1-C's sealed confirmation set (bg1c) and the public dev worlds (bg1-dev). */
+export const isBg1Benchmark = (benchmark: string) => benchmark === 'bg1' || benchmark === 'bg1c' || benchmark === 'bg1-dev';
 
 /**
  * BG1's rates (eval/runner/q1/cells/bg1.ts and eval/runner/bg1/pricing.ts), each a named assumption stage 1 replaces
@@ -605,8 +624,8 @@ export const BG1_MEASURED = {
   canonical_judge_usd_per_call: 0.000401,
   full_context_read_usd_per_world: { 'anthropic:claude-opus-5-5': 8.27044, 'openai:gpt-6.1-sol': 2.297107 } as Record<string, number>,
 };
-/** BG1's rates for a benchmark: the measured ones for the sealed set's counted cells, the assumed ones for stage 1's dev worlds. */
-export const bg1Rates = (benchmark: string) => (benchmark === 'bg1' ? BG1_MEASURED : BG1_ASSUMPTIONS);
+/** BG1's rates for a benchmark: the measured ones for the sealed sets' counted cells (BG1's and BG1-C's), the assumed ones for stage 1's dev worlds. */
+export const bg1Rates = (benchmark: string) => (benchmark === 'bg1' || benchmark === 'bg1c' ? BG1_MEASURED : BG1_ASSUMPTIONS);
 
 /**
  * BG1's gating judge for a reader (R78; GST-767): never the reader's own family and never particle-1. Anthropic readers
@@ -621,6 +640,11 @@ export function bg1JudgeOf(reader: string): string {
 }
 /** Every BG1 reader's gating judge: the live readers and particle-1's re-read. */
 export const BG1_JUDGE_BY_READER: Record<string, string> = Object.fromEntries(['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol', 'particle:particle-1'].map(r => [r, bg1JudgeOf(r)]));
+/**
+ * Every BG1-C reader's gating judge, by the same rule (bg1JudgeOf): gpt-6.2-sol replaces gpt-6.1-sol as the live GPT
+ * reader. It is a map of its own, so BG1's map and the manifests that record it keep their bytes.
+ */
+export const BG1C_JUDGE_BY_READER: Record<string, string> = Object.fromEntries(['anthropic:claude-opus-5-5', 'openai:gpt-6.2-sol', 'particle:particle-1'].map(r => [r, bg1JudgeOf(r)]));
 
 // ─── Prices ──────────────────────────────────────────────────────────
 
@@ -640,11 +664,36 @@ export function priceOf(model: string): { input: number; output: number; cache_r
   return { ...rates, long: longRates };
 }
 
+/** The reader token model's per-reader tables (ASSUMPTIONS). */
+export type ReaderTokenTable = 'reader_input_overhead_tokens' | 'reader_tokens_per_budget_token' | 'reader_tokens_per_cl100k' | 'reader_output_tokens';
+const asSol61 = (table: ReaderTokenTable) => ({ 'openai:gpt-6.2-sol': ASSUMPTIONS[table]['openai:gpt-6.1-sol'] });
+/**
+ * Readers added to the reader token model after ASSUMPTIONS went into the committed manifests, kept apart so those
+ * manifests keep their bytes: gpt-6.2-sol at gpt-6.1-sol's parameters (BG1-C's preregistration, "Budget"), until BG1-C's
+ * launch amendment B reprices it from measured usage.
+ */
+export const READER_TOKENS_EXTRA: Record<ReaderTokenTable, Record<string, number>> = {
+  reader_input_overhead_tokens: asSol61('reader_input_overhead_tokens'), reader_tokens_per_budget_token: asSol61('reader_tokens_per_budget_token'),
+  reader_tokens_per_cl100k: asSol61('reader_tokens_per_cl100k'), reader_output_tokens: asSol61('reader_output_tokens'),
+};
+/** A reader's value in one table of the reader token model: its ASSUMPTIONS key, else its READER_TOKENS_EXTRA key, else the table's default. */
+export const readerTokens = (table: ReaderTokenTable, reader: string): number => ASSUMPTIONS[table][reader] ?? READER_TOKENS_EXTRA[table][reader] ?? ASSUMPTIONS[table].default;
+
 const call = (model: string, input: number, output: number) => { const p = priceOf(model); return (input * p.input + output * p.output) / 1e6; };
 const byReader = (table: Record<string, number>, reader: string) => table[reader] ?? table.default;
-const outTokens = (reader: string) => byReader(ASSUMPTIONS.reader_output_tokens, reader);
-const overhead = (reader: string) => byReader(ASSUMPTIONS.reader_input_overhead_tokens, reader);
-const perCl100k = (reader: string) => byReader(ASSUMPTIONS.reader_tokens_per_cl100k, reader);
+/**
+ * The reader token model for a cell's estimate: READER_TOKENS_EXTRA counts only in BG1-C's blocks, so every other cell
+ * set that reads one of its readers keeps the table's default, as its committed manifest was priced.
+ */
+const cellTokens = (table: ReaderTokenTable, reader: string, block?: string) => block !== undefined && (BG1C_BLOCK_IDS as readonly string[]).includes(block) ? readerTokens(table, reader) : byReader(ASSUMPTIONS[table], reader);
+const outTokens = (reader: string, block?: string) => cellTokens('reader_output_tokens', reader, block);
+const overhead = (reader: string, block?: string) => cellTokens('reader_input_overhead_tokens', reader, block);
+const perCl100k = (reader: string, block?: string) => cellTokens('reader_tokens_per_cl100k', reader, block);
+/**
+ * One answer's reader dollars in BG1's money model (eval/runner/bg1/pricing.ts): `cl100k` evidence tokens at the
+ * reader's tokens per cl100k token, plus its prompt overhead, and its mean output, at list price.
+ */
+export const bg1ReadUsd = (reader: string, cl100k: number) => call(reader, cl100k * readerTokens('reader_tokens_per_cl100k', reader) + readerTokens('reader_input_overhead_tokens', reader), readerTokens('reader_output_tokens', reader));
 const agentTokens = (v: number | Record<string, number> | undefined, reader: string) => typeof v === 'number' ? v : v ? byReader(v, reader) ?? 0 : 0;
 
 // ─── Estimates ───────────────────────────────────────────────────────
@@ -738,8 +787,8 @@ export function estimateCell(def: Omit<CellDefinition, 'estimate'>): CellEstimat
     const n = armQuestions(def, arm);
     const answers = (reader: string) => n * (arm.reader_replicates[reader] ?? 1);
     for (const r of arm.readers) {
-      if (arm.mode === 'packed') add('readers', answers(r) * call(r, arm.budget! * byReader(ASSUMPTIONS.reader_tokens_per_budget_token, r) + overhead(r), outTokens(r)));
-      else if (arm.mode === 'native-default') add('readers', answers(r) * call(r, byReader(ASSUMPTIONS.vendor_default_tokens, def.system) * perCl100k(r) + overhead(r), outTokens(r)));
+      if (arm.mode === 'packed') add('readers', answers(r) * call(r, arm.budget! * cellTokens('reader_tokens_per_budget_token', r, def.block) + overhead(r, def.block), outTokens(r, def.block)));
+      else if (arm.mode === 'native-default') add('readers', answers(r) * call(r, byReader(ASSUMPTIONS.vendor_default_tokens, def.system) * perCl100k(r, def.block) + overhead(r, def.block), outTokens(r, def.block)));
       else if (arm.mode === 'full-context') add('full_context', fullContextCost(set, r, n));
       else if (arm.mode === 'agent') {
         const a = (def.set in SOTA_SETS ? SOTA_ASSUMPTIONS.agent : ASSUMPTIONS.agent)[def.system];
@@ -1087,6 +1136,7 @@ function selectionProblems(s: Selection, where: string): string[] {
 export const F6_BLOCK_IDS: readonly F6BlockId[] = ['F6-S1', 'F6-T2', 'F6-D8', 'F6-S4', 'F6-dry', 'F6-P1'];
 export const RS1_BLOCK_IDS: readonly RS1BlockId[] = ['RS1-S1', 'RS1'];
 export const BG1_BLOCK_IDS: readonly BG1BlockId[] = ['BG1-S1', 'BG1'];
+export const BG1C_BLOCK_IDS: readonly BG1CBlockId[] = ['BG1C-smoke', 'BG1C'];
 export const BN10_BLOCK_IDS: readonly BN10BlockId[] = ['BN10-dry', 'BN10'];
 export const SOTA_BLOCK_IDS: readonly SotaBlockId[] = ['SOTA-dev', 'SOTA-leader'];
 
@@ -1133,7 +1183,7 @@ export function definitionProblems(d: CellDefinition, kinds: ReadonlySet<string>
   if (d.schema !== CELL_SCHEMA) p.push(`schema must be ${CELL_SCHEMA}`);
   if (!ID.test(d.id ?? '')) p.push(`id ${JSON.stringify(d.id)} must be 1-80 characters of [a-z0-9.-]`);
   if (!ALL_SETS[d.set]) p.push(`set ${d.set} is unknown`);
-  if (!(PLAN_BLOCKS as Record<string, unknown>)[d.block] && !([...F6_BLOCK_IDS, ...RS1_BLOCK_IDS, ...BG1_BLOCK_IDS, ...SOTA_BLOCK_IDS, ...BN10_BLOCK_IDS] as readonly string[]).includes(d.block)) p.push(`block ${d.block} is unknown`);
+  if (!(PLAN_BLOCKS as Record<string, unknown>)[d.block] && !([...F6_BLOCK_IDS, ...RS1_BLOCK_IDS, ...BG1_BLOCK_IDS, ...BG1C_BLOCK_IDS, ...SOTA_BLOCK_IDS, ...BN10_BLOCK_IDS] as readonly string[]).includes(d.block)) p.push(`block ${d.block} is unknown`);
   if (!['dev', 'sealed', 'all'].includes(d.split)) p.push('split must be dev, sealed or all');
   p.push(...selectionProblems(d.selection, 'selection'));
   if (d.selection?.kind === 'ids' && d.split !== 'dev') p.push('an ids selection names dev questions only, since sealed ids never live in a manifest');
@@ -1144,7 +1194,8 @@ export function definitionProblems(d: CellDefinition, kinds: ReadonlySet<string>
   if (d.ingest_sessions !== undefined && !(Number.isInteger(d.ingest_sessions) && d.ingest_sessions > 0)) p.push('ingest_sessions must be a positive whole number of sessions');
   if (d.only_conversations !== undefined && !(Array.isArray(d.only_conversations) && d.only_conversations.length && d.only_conversations.every(c => typeof c === 'string' && c) && d.split === 'dev')) p.push('only_conversations must list dev conversation ids on a dev-split cell');
   if (!Array.isArray(d.arms) || !d.arms.length) p.push('arms must list at least one arm');
-  if (d.kept_units !== undefined && !(Number.isInteger(d.kept_units) && d.kept_units > 0 && (d.benchmark === 'beam-rs1' || d.benchmark === 'bg1') && d.shards === Math.ceil(ALL_SETS[d.set].conversations / d.kept_units))) p.push('kept_units runs a beam-rs1 or bg1 cell over the custodian\'s kept list, in units of a positive number of conversations, one shard per unit');
+  if (d.kept_units !== undefined && !(Number.isInteger(d.kept_units) && d.kept_units > 0 && (d.benchmark === 'beam-rs1' || d.benchmark === 'bg1' || d.benchmark === 'bg1c') && d.shards === Math.ceil(ALL_SETS[d.set].conversations / d.kept_units))) p.push('kept_units runs a beam-rs1, bg1 or bg1c cell over the custodian\'s kept list, in units of a positive number of conversations, one shard per unit');
+  if (d.descriptive_view !== undefined && !(d.descriptive_view === false && (d.arms ?? []).every(a => a.mode === 'retrieval-only' || (a.frontier?.per_reader === true && a.frontier.readers === null && a.frontier.sample === null)))) p.push('descriptive_view is false or absent, and false only when every judged arm gives every answer its per-reader gating judge (frontier.per_reader over all readers, unsampled), so no answer goes ungraded without the canonical judge');
   if (d.system === 'gbrain-defaults' && runsF6(d)) {
     if (!(Number(d.launch?.env.GBRAIN_F6_EXTRACT_CAP_USD) > 0)) p.push('a gbrain cell on the F6 build (GBRAIN_F6=1) needs a positive GBRAIN_F6_EXTRACT_CAP_USD in its launch environment, the runaway cap on gbrain\'s own extraction');
     if (!(ingestRate(d) > 0)) p.push(`a gbrain cell on the F6 build needs a positive ingest rate for ${d.system}:${d.configuration} (F6_ASSUMPTIONS or RS1_ASSUMPTIONS ingest_usd_per_mtok), or its estimate and lease leave ingest out`);

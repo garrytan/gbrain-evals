@@ -21,7 +21,7 @@ import { decideError } from '../decisions/errors.ts';
 import { appendAccessLog } from '../sealed-confirmation-lib.ts';
 import { beam10mManifestPath, beam10mRoot, loadBeam10mCorpus } from './beam10m-corpus.ts';
 import { loadBeam10mQuestions } from './beam10m-questions.ts';
-import { BG1_CONVERSATIONS, BG1_DEV_CONVERSATIONS, BG1_DEV_EXTRA_CONVERSATIONS, BG1_N_CAP, BG1_N_FLOOR, BG1_STRATA, type Bg1QuestionFields } from './bg1-names.ts';
+import { BG1_CONVERSATIONS, BG1_DEV_CONVERSATIONS, BG1_DEV_EXTRA_CONVERSATIONS, BG1_N_CAP, BG1_N_FLOOR, BG1_STRATA, BG1C_CAMPAIGN, BG1C_CONVERSATIONS, BG1C_DATASET, BG1C_N_FINAL, type Bg1QuestionFields } from './bg1-names.ts';
 
 /** Every public dev world: stage 1's three, then the dev loop's 17 extra. A load without `only` reads the three. */
 const BG1_DEV_ALL: readonly string[] = [...BG1_DEV_CONVERSATIONS, ...BG1_DEV_EXTRA_CONVERSATIONS];
@@ -156,8 +156,11 @@ export function filesFor(benchmark: string, only?: ReadonlySet<string>): Dataset
       why: 'every D8 conversation is in the sealed split and lives only in owner custody (GBRAIN_EVALS_D8_SOURCE on the custodian host)', fix: d8Ask });
     case 'beam-rs1': throw decideError({ code: 'CUSTODY_MISSING', message: 'beam-rs1 is sealed: its files are never downloaded',
       why: 'every RS1 conversation is in the sealed split and lives only in owner custody (GBRAIN_EVALS_RS1_SOURCE on the custodian host)', fix: rs1Ask });
-    case 'bg1': throw decideError({ code: 'CUSTODY_MISSING', message: 'bg1 is sealed: its files are never downloaded',
-      why: 'every BG1 world is in the sealed split and lives only in owner custody (GBRAIN_EVALS_BG1_SOURCE on the custodian host)', fix: bg1Ask });
+    case 'bg1': case 'bg1c': {
+      const set = bg1SealedSet(benchmark);
+      throw decideError({ code: 'CUSTODY_MISSING', message: `${set.benchmark} is sealed: its files are never downloaded`,
+        why: `every ${set.label} world is in the sealed split and lives only in owner custody (${set.env.source} on the custodian host)`, fix: bg1Ask(set) });
+    }
     case 'bg1-dev': return [];
     case 'fixture': return [];
     default: throw new Error(`unknown benchmark ${benchmark}`);
@@ -215,7 +218,7 @@ export async function fetchDataset(benchmark: string, opts: { force?: boolean; v
   if (benchmark === 'beam-10m') return { fetched: 0, verified: verifyBeam10mCustody(log) };
   if (benchmark === 'beam-d8') return { fetched: 0, verified: verifyD8Custody(log) };
   if (benchmark === 'beam-rs1') return { fetched: 0, verified: verifyRs1Custody(log) };
-  if (benchmark === 'bg1') return { fetched: 0, verified: verifyBg1Custody(log) };
+  if (benchmark === 'bg1' || benchmark === 'bg1c') return { fetched: 0, verified: verifyBg1Custody(log, bg1SealedSet(benchmark)) };
   const { mkdirSync, renameSync, rmSync, createWriteStream } = await import('node:fs');
   const { dirname } = await import('node:path');
   for (const f of filesFor(benchmark, opts.only)) {
@@ -882,13 +885,20 @@ export function loadLmeM(opts: { path?: string; sha256?: string; size?: number; 
  * template fixtures in eval/data/changing-facts-v1/fixtures, for keyless runs only). The Gemini-rendered dev worlds land
  * in stage 1, so until then bg1-dev refuses without that override. A load not declared keyless (a cell run on a paid
  * lease, judge-check --stage1, verdict BG1-dev3) refuses a root that is the fixtures or holds template-rendered worlds
- * (bg1DevFixtureProblem), so the fixtures never stand in for the rendered dev worlds in a paid run. bg1 is sealed (eval/decisions/splits/bg1.json): 48 mint
- * slots, bg1-001 to bg1-048, minted in slot order by eval/custody/bg1/mint.sh into owner custody. It reads only
+ * (bg1DevFixtureProblem), so the fixtures never stand in for the rendered dev worlds in a paid run. bg1 is sealed (eval/decisions/splits/bg1.json): 30 mint
+ * slots, bg1-001 to bg1-030, minted in slot order by eval/custody/bg1/mint.sh into owner custody (BG1 planned 48 and
+ * released 31 to 48, never minted, to BG1-C on 2026-11-19). It reads only
  * GBRAIN_EVALS_BG1_SOURCE (mint.sh's <out>/set), refusing a root inside the checkout, logs every opening first, checks
  * the manifest (eval/decisions/datasets/bg1-manifest.json, GBRAIN_EVALS_BG1_MANIFEST to override) and honours the unit
  * scope GBRAIN_EVALS_BG1_UNIT, all as RS1 does. A filled manifest pins world.json and questions.json of every kept
  * world, lists `kept` in slot order and, once the pilot sets it, `n_final` (30 to 40); a refill only adds files and
  * records the earlier fill's sha256 under `earlier_fills`.
+ *
+ * bg1c is BG1-C, the changing-facts confirmation (docs/benchmarks/2026-11-19-changing-facts-confirmation-preregistration.md):
+ * the same world format, world end and rules on slots 31 to 96 (bg1-031 to bg1-096), minted by mint.sh --bg1c into a
+ * custody root of its own. It reads GBRAIN_EVALS_BG1C_SOURCE, its own manifest (eval/decisions/datasets/bg1c-manifest.json,
+ * GBRAIN_EVALS_BG1C_MANIFEST to override) and unit scope GBRAIN_EVALS_BG1C_UNIT, and its kept list is exactly 40 worlds.
+ * Each set is a Bg1SealedSet; neither set's loader opens the other's worlds or reads the other's manifest.
  */
 export const BG1_MANIFEST = 'eval/decisions/datasets/bg1-manifest.json';
 export const BG1_DEV_ROOT = join(REPO_ROOT, 'eval/data/changing-facts-v1/dev');
@@ -910,40 +920,77 @@ export interface Bg1Manifest {
   /** The sha256 of each earlier fill of this manifest, oldest first (a refill only adds files). */
   earlier_fills?: string[];
 }
-const bg1Fill = { next: 'ask_user' as const, user_message: 'the custodian fills (or refills) the BG1 manifest from the set root on the custody host: every file bg1ManifestFiles lists, with its SHA-256' };
-const bg1Ask = { next: 'ask_user' as const, user_message: 'run bg1 on the custody host with GBRAIN_EVALS_BG1_SOURCE set to the BG1 set root (mint.sh\'s <out>/set; it holds worlds/bg1-<NNN> for the minted slots)' };
+
+/** One sealed changing-facts set: its world ids, manifest, custody variables, kept-list size and campaign. */
+export interface Bg1SealedSet {
+  benchmark: 'bg1' | 'bg1c';
+  label: string;
+  /** The corpus source name, and for BG1-C the `dataset` its manifest must carry. */
+  dataset: string;
+  ids: readonly string[];
+  manifest: string;
+  env: { source: string; manifest: string; unit: string };
+  nFloor: number;
+  nCap: number;
+  campaign: string;
+  split: string;
+}
+export const BG1C_MANIFEST = 'eval/decisions/datasets/bg1c-manifest.json';
+export const BG1_SET: Bg1SealedSet = { benchmark: 'bg1', label: 'BG1', dataset: 'BG1 changing-facts set', ids: BG1_CONVERSATIONS, manifest: BG1_MANIFEST,
+  env: { source: 'GBRAIN_EVALS_BG1_SOURCE', manifest: 'GBRAIN_EVALS_BG1_MANIFEST', unit: 'GBRAIN_EVALS_BG1_UNIT' }, nFloor: BG1_N_FLOOR, nCap: BG1_N_CAP,
+  campaign: 'q1-scoreboard-bg1-changing-facts', split: 'eval/decisions/splits/bg1.json' };
+export const BG1C_SET: Bg1SealedSet = { benchmark: 'bg1c', label: 'BG1-C', dataset: BG1C_DATASET, ids: BG1C_CONVERSATIONS, manifest: BG1C_MANIFEST,
+  env: { source: 'GBRAIN_EVALS_BG1C_SOURCE', manifest: 'GBRAIN_EVALS_BG1C_MANIFEST', unit: 'GBRAIN_EVALS_BG1C_UNIT' }, nFloor: BG1C_N_FINAL, nCap: BG1C_N_FINAL,
+  campaign: BG1C_CAMPAIGN, split: 'eval/decisions/splits/bg1c.json' };
+export const bg1SealedSet = (benchmark: string): Bg1SealedSet => {
+  if (benchmark === 'bg1') return BG1_SET;
+  if (benchmark === 'bg1c') return BG1C_SET;
+  throw new Error(`${benchmark} is not a sealed changing-facts set`);
+};
+export const bg1cManifestPath = () => fromHome(process.env.GBRAIN_EVALS_BG1C_MANIFEST) ?? join(REPO_ROOT, BG1C_MANIFEST);
+const bg1Fill = (set: Bg1SealedSet = BG1_SET) => ({ next: 'ask_user' as const, user_message: `the custodian fills (or refills) the ${set.label} manifest from the set root on the custody host: every file bg1ManifestFiles lists, with its SHA-256` });
+const bg1Ask = (set: Bg1SealedSet = BG1_SET) => ({ next: 'ask_user' as const, user_message: `run ${set.benchmark} on the custody host with ${set.env.source} set to the ${set.label} set root (mint.sh's <out>/set; it holds worlds/bg1-<NNN> for the minted slots)` });
 const bg1WorldEndAsk = { next: 'ask_user' as const, user_message: 'set GBRAIN_EVALS_BG1_WORLD_END to the world end the campaign\'s dated amendment records (a Sunday, the day before the counted run)' };
 
 /**
- * GBRAIN_EVALS_BG1_UNIT: on a sealed cell's VM, the one launch unit's kept worlds (comma-separated ids) whose files the
- * custodian host pushed. Unset on the custody host. Set, verifyBg1Custody checks exactly those worlds' pinned files and
- * refuses any other world under the root, and loadBg1 opens only those worlds.
+ * GBRAIN_EVALS_BG1_UNIT (GBRAIN_EVALS_BG1C_UNIT for BG1-C): on a sealed cell's VM, the one launch unit's kept worlds
+ * (comma-separated ids) whose files the custodian host pushed. Unset on the custody host. Set, verifyBg1Custody checks
+ * exactly those worlds' pinned files and refuses any other world under the root, and the loader opens only those worlds.
  */
-export function bg1UnitScope(env: Record<string, string | undefined> = process.env): string[] | null {
-  const raw = env.GBRAIN_EVALS_BG1_UNIT;
+export function bg1UnitScope(env: Record<string, string | undefined> = process.env, set: Bg1SealedSet = BG1_SET): string[] | null {
+  const raw = env[set.env.unit];
   if (raw === undefined) return null;
   const ids = raw.split(',').map(s => s.trim()).filter(Boolean);
-  const bad = ids.filter(id => !BG1_CONVERSATIONS.includes(id));
-  if (!ids.length || bad.length || new Set(ids).size !== ids.length) throw decideError({ code: 'CUSTODY_MISSING', message: `bg1: GBRAIN_EVALS_BG1_UNIT ${JSON.stringify(raw)} is not a list of distinct BG1 world ids`,
-    why: 'a sealed cell VM holds exactly one launch unit\'s worlds', fix: bg1Ask });
+  const bad = ids.filter(id => !set.ids.includes(id));
+  if (!ids.length || bad.length || new Set(ids).size !== ids.length) throw decideError({ code: 'CUSTODY_MISSING', message: `${set.benchmark}: ${set.env.unit} ${JSON.stringify(raw)} is not a list of distinct ${set.label} world ids`,
+    why: 'a sealed cell VM holds exactly one launch unit\'s worlds', fix: bg1Ask(set) });
   return ids;
 }
 
-/** The BG1 custody root, refusing when GBRAIN_EVALS_BG1_SOURCE is unset or inside the repository. */
-export function bg1Source(env: Record<string, string | undefined> = process.env): string {
-  const source = fromHome(env.GBRAIN_EVALS_BG1_SOURCE);
-  if (!source) throw decideError({ code: 'CUSTODY_MISSING', message: 'bg1: GBRAIN_EVALS_BG1_SOURCE is not set',
-    why: 'every BG1 world is sealed (eval/decisions/splits/bg1.json) and lives only in owner custody; nothing is downloaded', fix: bg1Ask });
+/** The set's custody root, refusing when its source variable (GBRAIN_EVALS_BG1_SOURCE for BG1) is unset or inside the repository. */
+export function bg1Source(env: Record<string, string | undefined> = process.env, set: Bg1SealedSet = BG1_SET): string {
+  const source = fromHome(env[set.env.source]);
+  if (!source) throw decideError({ code: 'CUSTODY_MISSING', message: `${set.benchmark}: ${set.env.source} is not set`,
+    why: `every ${set.label} world is sealed (${set.split}) and lives only in owner custody; nothing is downloaded`, fix: bg1Ask(set) });
   const abs = resolve(source);
   const rel = relative(REPO_ROOT, abs);
-  if (rel === '' || (!rel.startsWith('..') && !isAbsolute(rel))) throw decideError({ code: 'CUSTODY_MISSING', message: `bg1: GBRAIN_EVALS_BG1_SOURCE ${abs} is inside the repository`,
-    why: 'sealed files never live where Git could pick them up', fix: bg1Ask });
+  if (rel === '' || (!rel.startsWith('..') && !isAbsolute(rel))) throw decideError({ code: 'CUSTODY_MISSING', message: `${set.benchmark}: ${set.env.source} ${abs} is inside the repository`,
+    why: 'sealed files never live where Git could pick them up', fix: bg1Ask(set) });
   return abs;
 }
 
-export function readBg1Manifest(path = bg1ManifestPath()): { manifest: Bg1Manifest; sha256: string } {
-  const bytes = readFileSync(path);
-  return { manifest: JSON.parse(bytes.toString('utf8')) as Bg1Manifest, sha256: sha256(bytes) };
+/**
+ * The set's manifest and its sha256. BG1-C's must carry BG1-C's dataset, and BG1's must not, so neither set's cells or
+ * custody checks run on the other set's kept list or hashes.
+ */
+export function readBg1Manifest(path?: string, set: Bg1SealedSet = BG1_SET): { manifest: Bg1Manifest; sha256: string } {
+  const file = path ?? (set === BG1C_SET ? bg1cManifestPath() : bg1ManifestPath());
+  const bytes = readFileSync(file);
+  const manifest = JSON.parse(bytes.toString('utf8')) as Bg1Manifest;
+  if (set === BG1C_SET ? manifest.dataset !== BG1C_DATASET : manifest.dataset === BG1C_DATASET) throw decideError({ code: 'DATASET_MISSING',
+    message: `${set.benchmark}: ${file} is the manifest of ${JSON.stringify(manifest.dataset)}, not of the ${set.label} set`,
+    why: `${set.label} loads only its own manifest (${set.manifest}), so a cell never runs the other sealed set's worlds`, fix: bg1Fill(set) });
+  return { manifest, sha256: sha256(bytes) };
 }
 
 const isoDay = (d: Date) => d.toISOString().slice(0, 10);
@@ -1026,13 +1073,16 @@ export function bg1Conversation(id: string, worldText: string, questionsText: st
   return { conversation: { id, sessions }, questions };
 }
 
-/** The files one BG1 world is read from, as paths relative to the root; refuses when either is missing. */
-export function bg1WorldFiles(root: string, id: string, benchmark: 'bg1' | 'bg1-dev' = 'bg1'): { world: string; questions: string } {
-  const known = benchmark === 'bg1' ? BG1_CONVERSATIONS : BG1_DEV_ALL;
+/** The files one BG1 world is read from, as paths relative to the root; refuses an id outside the benchmark and a missing file. */
+export function bg1WorldFiles(root: string, id: string, benchmark: 'bg1' | 'bg1c' | 'bg1-dev' = 'bg1'): { world: string; questions: string } {
+  const known = benchmark === 'bg1-dev' ? BG1_DEV_ALL : bg1SealedSet(benchmark).ids;
   if (!known.includes(id)) throw new Error(`${benchmark} has no world ${id}`);
   const files = { world: `worlds/${id}/world.json`, questions: `worlds/${id}/questions.json` };
   for (const path of Object.values(files)) if (!existsSync(join(root, path))) {
-    if (benchmark === 'bg1') throw decideError({ code: 'DATASET_MISSING', message: `bg1: ${path} is not under GBRAIN_EVALS_BG1_SOURCE`, why: 'each BG1 world is a directory holding world.json and questions.json', fix: bg1Ask });
+    if (benchmark !== 'bg1-dev') {
+      const set = bg1SealedSet(benchmark);
+      throw decideError({ code: 'DATASET_MISSING', message: `${set.benchmark}: ${path} is not under ${set.env.source}`, why: `each ${set.label} world is a directory holding world.json and questions.json`, fix: bg1Ask(set) });
+    }
     throw decideError({ code: 'DATASET_MISSING', message: `bg1-dev: ${path} is not under ${root}`,
       why: 'the Gemini-rendered dev worlds are rendered in stage 1 step 1 and committed by a dated amendment; until then only the template fixtures exist, and a paid load refuses them',
       fix: { next: 'ask_user', user_message: 'a paid run waits for the rendered dev worlds (stage 1 step 1); only a keyless run may set GBRAIN_EVALS_BG1_DEV_ROOT to the template fixtures (eval/data/changing-facts-v1/fixtures)' } });
@@ -1040,9 +1090,9 @@ export function bg1WorldFiles(root: string, id: string, benchmark: 'bg1' | 'bg1-
   return files;
 }
 
-/** Every file the given worlds (default: every slot) are read from with its SHA-256, the entries a filled manifest holds (bytes are hashed, never parsed). */
-export function bg1ManifestFiles(root: string, ids: readonly string[] = BG1_CONVERSATIONS): Array<{ path: string; sha256: string }> {
-  return ids.flatMap(id => { const f = bg1WorldFiles(root, id); return [f.world, f.questions]; }).map(path => ({ path, sha256: fileSha256(join(root, path)) }));
+/** Every file the given worlds (default: every slot of the set) are read from with its SHA-256, the entries a filled manifest holds (bytes are hashed, never parsed). */
+export function bg1ManifestFiles(root: string, ids?: readonly string[], set: Bg1SealedSet = BG1_SET): Array<{ path: string; sha256: string }> {
+  return (ids ?? set.ids).flatMap(id => { const f = bg1WorldFiles(root, id, set.benchmark); return [f.world, f.questions]; }).map(path => ({ path, sha256: fileSha256(join(root, path)) }));
 }
 
 /**
@@ -1091,112 +1141,131 @@ export function loadBg1Dev(opts: { root?: string; only?: ReadonlySet<string>; wo
   return { benchmark: 'bg1-dev', conversations, questions, source: { name: `BG1 changing-facts dev worlds (world end ${worldEnd})`, files, revision: 'repo', license: 'MIT' } };
 }
 
+type Bg1Custody = { log: string; decisionId: string; purpose: string };
+type Bg1LoadOpts = { only?: ReadonlySet<string>; root?: string; manifestPath?: string; worldEnd?: string };
+
 /**
  * Load bg1 (sealed): appends one custody access-log line per world before its files are read. `only` keeps those
  * worlds. With a filled manifest every file must be listed and match; with an unfilled one the files' hashes are
- * recorded in the corpus source and a notice says they were not pinned.
+ * recorded in the corpus source and a notice says they were not pinned. BG1-C's worlds (bg1-031 onward) are not BG1's.
  */
-export function loadBg1(custody: { log: string; decisionId: string; purpose: string }, opts: { only?: ReadonlySet<string>; root?: string; manifestPath?: string; worldEnd?: string } = {}): Corpus {
-  const root = opts.root ?? bg1Source();
-  if (!custody.log) throw decideError({ code: 'CUSTODY_MISSING', message: 'bg1 opens only on the custodian host', why: 'every opening of a sealed set is logged first',
-    fix: { next: 'ask_user', user_message: 'request the bg1 cells from the custodian (campaign q1-scoreboard-bg1-changing-facts)' } });
-  const unknown = opts.only ? [...opts.only].filter(id => !BG1_CONVERSATIONS.includes(id)) : [];
-  if (unknown.length) throw new Error(`bg1 has no world ${unknown.join(', ')}`);
-  const scope = bg1UnitScope();
+export function loadBg1(custody: Bg1Custody, opts: Bg1LoadOpts = {}): Corpus {
+  return loadBg1Set(BG1_SET, custody, opts);
+}
+
+/**
+ * Load bg1c (BG1-C, sealed) by BG1's rules: only bg1-031 to bg1-096, only from GBRAIN_EVALS_BG1C_SOURCE, and only
+ * against BG1-C's own manifest, so BG1's worlds bg1-001 to bg1-030 and BG1's manifest are refused.
+ */
+export function loadBg1c(custody: Bg1Custody, opts: Bg1LoadOpts = {}): Corpus {
+  return loadBg1Set(BG1C_SET, custody, opts);
+}
+
+function loadBg1Set(set: Bg1SealedSet, custody: Bg1Custody, opts: Bg1LoadOpts): Corpus {
+  const b = set.benchmark;
+  const root = opts.root ?? bg1Source(process.env, set);
+  if (!custody.log) throw decideError({ code: 'CUSTODY_MISSING', message: `${b} opens only on the custodian host`, why: 'every opening of a sealed set is logged first',
+    fix: { next: 'ask_user', user_message: `request the ${b} cells from the custodian (campaign ${set.campaign})` } });
+  const unknown = opts.only ? [...opts.only].filter(id => !set.ids.includes(id)) : [];
+  if (unknown.length) throw new Error(`${b} has no world ${unknown.join(', ')}`);
+  const scope = bg1UnitScope(process.env, set);
   if (scope && (!opts.only || [...opts.only].some(id => !scope.includes(id)))) throw decideError({ code: 'CUSTODY_MISSING',
-    message: `bg1: this VM holds launch unit ${scope.join(', ')} only, and the load asks for ${opts.only ? [...opts.only].filter(id => !scope.includes(id)).join(', ') : 'every world'}`,
-    why: 'a sealed cell VM receives and opens only its own unit\'s worlds', fix: bg1Ask });
+    message: `${b}: this VM holds launch unit ${scope.join(', ')} only, and the load asks for ${opts.only ? [...opts.only].filter(id => !scope.includes(id)).join(', ') : 'every world'}`,
+    why: 'a sealed cell VM receives and opens only its own unit\'s worlds', fix: bg1Ask(set) });
   const worldEnd = bg1WorldEnd(opts);
-  const { manifest, sha256: manifestSha } = readBg1Manifest(opts.manifestPath);
+  const { manifest, sha256: manifestSha } = readBg1Manifest(opts.manifestPath, set);
   const pinned = manifest.status === 'filled' ? new Map(manifest.files.map(f => [f.path, f.sha256])) : null;
   const files: DatasetIdentity['files'] = [];
   const read = (path: string) => {
     const bytes = readFileSync(join(root, path));
     const got = sha256(bytes);
     const want = pinned?.get(path);
-    if (pinned && got !== want) throw decideError({ code: 'DATASET_HASH_MISMATCH', message: want ? `bg1: ${path} has SHA-256 ${got.slice(0, 12)}, expected ${want.slice(0, 12)}` : `bg1: ${path} is not in the filled manifest`,
-      why: 'only the pinned bytes are scored', fix: bg1Fill });
+    if (pinned && got !== want) throw decideError({ code: 'DATASET_HASH_MISMATCH', message: want ? `${b}: ${path} has SHA-256 ${got.slice(0, 12)}, expected ${want.slice(0, 12)}` : `${b}: ${path} is not in the filled manifest`,
+      why: 'only the pinned bytes are scored', fix: bg1Fill(set) });
     files.push({ path, sha256: got });
     return bytes.toString('utf8');
   };
   const conversations: Conversation[] = [];
   const questions: MemoryQuestion[] = [];
-  for (const id of BG1_CONVERSATIONS.filter(c => !opts.only || opts.only.has(c))) {
-    const f = bg1WorldFiles(root, id);
+  for (const id of set.ids.filter(c => !opts.only || opts.only.has(c))) {
+    const f = bg1WorldFiles(root, id, b);
     if (pinned) {
       const reading = new Set([f.world, f.questions]);
       const absent = [...pinned.keys()].filter(p => p.startsWith(`worlds/${id}/`) && !reading.has(p));
-      if (absent.length) throw decideError({ code: 'DATASET_MISSING', message: `bg1: ${absent.length} file(s) the manifest pins for ${id} are not under GBRAIN_EVALS_BG1_SOURCE`, why: 'a pinned world loads whole or not at all', fix: bg1Ask });
+      if (absent.length) throw decideError({ code: 'DATASET_MISSING', message: `${b}: ${absent.length} file(s) the manifest pins for ${id} are not under ${set.env.source}`, why: 'a pinned world loads whole or not at all', fix: bg1Ask(set) });
     }
-    appendAccessLog(custody.log, { action: 'open', purpose: `bg1 ${id}: ${custody.purpose}`, decision_id: custody.decisionId, labels_sha256: manifestSha, run_sha256: null });
+    appendAccessLog(custody.log, { action: 'open', purpose: `${b} ${id}: ${custody.purpose}`, decision_id: custody.decisionId, labels_sha256: manifestSha, run_sha256: null });
     const c = bg1Conversation(id, read(f.world), read(f.questions), worldEnd);
     conversations.push(c.conversation);
     questions.push(...c.questions);
   }
-  if (!pinned) process.stderr.write(`[custody] bg1: the manifest is unfilled, so ${files.length} file(s) loaded without pinned hashes (the custodian fills it with bg1ManifestFiles before a counted run)\n`);
-  return { benchmark: 'bg1', conversations, questions,
-    source: { name: `BG1 changing-facts set (minted in custody, world end ${worldEnd})`, files: [{ path: BG1_MANIFEST, sha256: manifestSha }, ...files], revision: pinned ? manifestSha.slice(0, 7) : 'unfilled', license: 'custodian-held' } };
+  if (!pinned) process.stderr.write(`[custody] ${b}: the manifest is unfilled, so ${files.length} file(s) loaded without pinned hashes (the custodian fills it with bg1ManifestFiles before a counted run)\n`);
+  return { benchmark: b, conversations, questions,
+    source: { name: `${set.dataset} (minted in custody, world end ${worldEnd})`, files: [{ path: set.manifest, sha256: manifestSha }, ...files], revision: pinned ? manifestSha.slice(0, 7) : 'unfilled', license: 'custodian-held' } };
 }
 
 /**
  * The custodian's kept list from a filled manifest: slot ids in strictly increasing slot order, each with both of its
- * files pinned, at most n_final of them. Refuses an unfilled manifest, a kept id outside the 48 slots and a kept id the
- * manifest does not pin, so a cell never runs a world the custodian did not keep and hash.
+ * files pinned, at most n_final of them. Refuses an unfilled manifest, a kept id outside the set's slots (BG1's 30,
+ * BG1-C's 31 to 96) and a kept id the manifest does not pin, so a cell never runs a world the custodian did not keep
+ * and hash. BG1's n_final is 30 to 40; BG1-C's is exactly 40.
  */
-export function bg1Kept(manifest: Bg1Manifest): { kept: string[]; n_final: number | null } {
-  const bad = (message: string) => decideError({ code: 'DATASET_MISSING', message: `bg1: ${message}`, why: 'BG1 cells run only on the custodian\'s kept list, checked against the filled manifest', fix: bg1Fill });
+export function bg1Kept(manifest: Bg1Manifest, set: Bg1SealedSet = BG1_SET): { kept: string[]; n_final: number | null } {
+  const bad = (message: string) => decideError({ code: 'DATASET_MISSING', message: `${set.benchmark}: ${message}`, why: `${set.label} cells run only on the custodian's kept list, checked against the filled manifest`, fix: bg1Fill(set) });
   if (manifest.status !== 'filled') throw bad('the manifest is unfilled, so it has no kept list');
   const kept = manifest.kept;
   if (!Array.isArray(kept) || !kept.length) throw bad('the filled manifest has no kept list');
-  const outside = kept.filter(id => !BG1_CONVERSATIONS.includes(id));
-  if (outside.length) throw bad(`kept ${outside.join(', ')} is not one of the ${BG1_CONVERSATIONS.length} mint slots`);
+  const outside = kept.filter(id => !set.ids.includes(id));
+  if (outside.length) throw bad(`kept ${outside.join(', ')} is not one of the ${set.ids.length} mint slots`);
   if (kept.some((id, i) => i > 0 && !(kept[i - 1] < id))) throw bad('the kept list is not in strictly increasing slot order');
   const unpinned = kept.filter(id => ['world.json', 'questions.json'].some(f => !manifest.files.some(x => x.path === `worlds/${id}/${f}`)));
   if (unpinned.length) throw bad(`kept ${unpinned.join(', ')} has no pinned world or questions file in the filled manifest`);
   const n = manifest.n_final ?? null;
-  if (n !== null && !(Number.isInteger(n) && n >= BG1_N_FLOOR && n <= BG1_N_CAP && kept.length <= n)) throw bad(`n_final ${n} must be a whole number from ${BG1_N_FLOOR} to ${BG1_N_CAP}, at least the kept list's ${kept.length}`);
+  const range = set.nFloor === set.nCap ? `exactly ${set.nCap}` : `a whole number from ${set.nFloor} to ${set.nCap}`;
+  if (n !== null && !(Number.isInteger(n) && n >= set.nFloor && n <= set.nCap && kept.length <= n)) throw bad(`n_final ${n} must be ${range}, at least the kept list's ${kept.length}`);
   return { kept: [...kept], n_final: n };
 }
 
 /**
- * The worlds of one BG1 launch unit: kept worlds unit x perUnit to (unit + 1) x perUnit - 1. A unit runs only once all
+ * The worlds of one launch unit: kept worlds unit x perUnit to (unit + 1) x perUnit - 1. A unit runs only once all
  * of its worlds are kept; the last unit may be partial once n_final says the list is complete.
  */
-export function bg1UnitConversations(manifest: Bg1Manifest, unit: number, perUnit: number): string[] {
-  if (!Number.isInteger(unit) || unit < 0 || !Number.isInteger(perUnit) || perUnit < 1) throw new Error(`bg1: launch unit ${unit} of ${perUnit} world(s) is not a whole unit`);
-  const { kept, n_final } = bg1Kept(manifest);
+export function bg1UnitConversations(manifest: Bg1Manifest, unit: number, perUnit: number, set: Bg1SealedSet = BG1_SET): string[] {
+  if (!Number.isInteger(unit) || unit < 0 || !Number.isInteger(perUnit) || perUnit < 1) throw new Error(`${set.benchmark}: launch unit ${unit} of ${perUnit} world(s) is not a whole unit`);
+  const { kept, n_final } = bg1Kept(manifest, set);
   const slice = kept.slice(unit * perUnit, (unit + 1) * perUnit);
   const complete = n_final !== null && kept.length === n_final;
   if (!slice.length || (slice.length < perUnit && !complete)) throw decideError({ code: 'DATASET_MISSING',
-    message: `bg1: launch unit ${unit} needs kept worlds ${unit * perUnit + 1} to ${(unit + 1) * perUnit}, and the kept list holds ${kept.length}${complete ? ' (final)' : ''}`,
-    why: 'a launch unit runs whole: its kept worlds in slot order, the last unit partial only once n_final completes the list', fix: bg1Fill });
+    message: `${set.benchmark}: launch unit ${unit} needs kept worlds ${unit * perUnit + 1} to ${(unit + 1) * perUnit}, and the kept list holds ${kept.length}${complete ? ' (final)' : ''}`,
+    why: 'a launch unit runs whole: its kept worlds in slot order, the last unit partial only once n_final completes the list', fix: bg1Fill(set) });
   return slice;
 }
 
-/** `decide fetch` for bg1: nothing is downloaded; every file the filled manifest pins (the unit's, on a cell VM) must be under the custody root with its hash. */
-export function verifyBg1Custody(log: (s: string) => void = s => process.stderr.write(s + '\n')): number {
-  const root = bg1Source();
-  const { manifest } = readBg1Manifest();
-  if (manifest.status !== 'filled') throw decideError({ code: 'CUSTODY_MISSING', message: 'bg1: the manifest has no hashes yet', why: 'only pinned bytes are verified', fix: bg1Fill });
-  const scope = bg1UnitScope();
+/** `decide fetch` for bg1 and bg1c: nothing is downloaded; every file the set's filled manifest pins (the unit's, on a cell VM) must be under its custody root with its hash. */
+export function verifyBg1Custody(log: (s: string) => void = s => process.stderr.write(s + '\n'), set: Bg1SealedSet = BG1_SET): number {
+  const b = set.benchmark;
+  const root = bg1Source(process.env, set);
+  const { manifest } = readBg1Manifest(undefined, set);
+  if (manifest.status !== 'filled') throw decideError({ code: 'CUSTODY_MISSING', message: `${b}: the manifest has no hashes yet`, why: 'only pinned bytes are verified', fix: bg1Fill(set) });
+  const scope = bg1UnitScope(process.env, set);
   let files = manifest.files;
   if (scope) {
-    const { kept } = bg1Kept(manifest);
+    const { kept } = bg1Kept(manifest, set);
     const notKept = scope.filter(id => !kept.includes(id));
-    if (notKept.length) throw decideError({ code: 'DATASET_MISSING', message: `bg1: GBRAIN_EVALS_BG1_UNIT names ${notKept.join(', ')}, which the filled manifest does not keep`, why: 'a unit runs only kept worlds', fix: bg1Fill });
+    if (notKept.length) throw decideError({ code: 'DATASET_MISSING', message: `${b}: ${set.env.unit} names ${notKept.join(', ')}, which the filled manifest does not keep`, why: 'a unit runs only kept worlds', fix: bg1Fill(set) });
     const present = existsSync(join(root, 'worlds')) ? readdirSync(join(root, 'worlds')).sort() : [];
     const extra = present.filter(d => !scope.includes(d));
-    if (extra.length) throw decideError({ code: 'CUSTODY_MISSING', message: `bg1: the custody root holds ${extra.length} world(s) outside launch unit ${scope.join(', ')}`,
-      why: 'a sealed cell VM receives only its own unit\'s pinned files', fix: bg1Ask });
+    if (extra.length) throw decideError({ code: 'CUSTODY_MISSING', message: `${b}: the custody root holds ${extra.length} world(s) outside launch unit ${scope.join(', ')}`,
+      why: 'a sealed cell VM receives only its own unit\'s pinned files', fix: bg1Ask(set) });
     files = manifest.files.filter(f => scope.includes(f.path.split('/')[1]));
   }
   for (const f of files) {
     const abs = join(root, f.path);
-    if (!existsSync(abs)) throw decideError({ code: 'DATASET_MISSING', message: `bg1: ${f.path} is not under GBRAIN_EVALS_BG1_SOURCE`, why: 'every pinned file must be present', fix: bg1Ask });
+    if (!existsSync(abs)) throw decideError({ code: 'DATASET_MISSING', message: `${b}: ${f.path} is not under ${set.env.source}`, why: 'every pinned file must be present', fix: bg1Ask(set) });
     const got = fileSha256(abs);
-    if (got !== f.sha256) throw decideError({ code: 'DATASET_HASH_MISMATCH', message: `bg1: ${f.path} has SHA-256 ${got.slice(0, 12)}, expected ${f.sha256.slice(0, 12)}`, why: 'only the pinned bytes are scored', fix: bg1Fill });
+    if (got !== f.sha256) throw decideError({ code: 'DATASET_HASH_MISMATCH', message: `${b}: ${f.path} has SHA-256 ${got.slice(0, 12)}, expected ${f.sha256.slice(0, 12)}`, why: 'only the pinned bytes are scored', fix: bg1Fill(set) });
   }
-  log(`[custody] bg1: ${files.length} file(s) match their pinned sha256 under GBRAIN_EVALS_BG1_SOURCE${scope ? ` (launch unit ${scope.join(', ')})` : ''}`);
+  log(`[custody] ${b}: ${files.length} file(s) match their pinned sha256 under ${set.env.source}${scope ? ` (launch unit ${scope.join(', ')})` : ''}`);
   return files.length;
 }
 
@@ -1227,7 +1296,7 @@ export function loadCustodyCorpus(path: string): Corpus {
     source: { name: `custodian sealed corpus ${raw.id}`, files: [{ path: 'custody', sha256: sha256(bytes) }], revision: raw.id, license: 'custodian-authored' } };
 }
 
-/** `only` restricts LoCoMo, BEAM, D8, RS1 and BG1 to those conversations (a split), so a BEAM, D8, RS1 or BG1 conversation outside it is never read. `keyless` declares a bg1-dev load keyless (loadBg1Dev). */
+/** `only` restricts LoCoMo, BEAM, D8, RS1, BG1 and BG1-C to those conversations (a split), so a BEAM, D8, RS1, BG1 or BG1-C conversation outside it is never read. `keyless` declares a bg1-dev load keyless (loadBg1Dev). */
 export function loadCorpus(benchmark: string, corpusFile?: string, only?: ReadonlySet<string>, opts: { keyless?: boolean } = {}): Corpus {
   if (benchmark === 'custody') {
     if (!corpusFile) throw new Error('benchmark custody needs --corpus-file <custody path>');
@@ -1263,12 +1332,13 @@ export function loadCorpus(benchmark: string, corpusFile?: string, only?: Readon
       return loadRs1({ log, decisionId: process.env.GBRAIN_EVALS_DECISION_ID ?? 'q1-scoreboard', purpose: 'memory-qa loadCorpus beam-rs1' }, { only });
     }
     case 'bg1-dev': return loadBg1Dev({ only, keyless: opts.keyless });
-    case 'bg1': {
-      bg1Source();
+    case 'bg1': case 'bg1c': {
+      const set = bg1SealedSet(benchmark);
+      bg1Source(process.env, set);
       const log = process.env.GBRAIN_EVALS_CUSTODY_LOG;
-      if (!log) throw decideError({ code: 'CUSTODY_MISSING', message: 'bg1 questions open only on the custodian host',
-        why: 'every BG1 world is sealed (eval/decisions/splits/bg1.json); every opening is logged', fix: { next: 'ask_user', user_message: 'request the bg1 cells from the custodian (campaign q1-scoreboard-bg1-changing-facts)' } });
-      return loadBg1({ log, decisionId: process.env.GBRAIN_EVALS_DECISION_ID ?? 'q1-scoreboard-bg1-changing-facts', purpose: 'memory-qa loadCorpus bg1' }, { only });
+      if (!log) throw decideError({ code: 'CUSTODY_MISSING', message: `${set.benchmark} questions open only on the custodian host`,
+        why: `every ${set.label} world is sealed (${set.split}); every opening is logged`, fix: { next: 'ask_user', user_message: `request the ${set.benchmark} cells from the custodian (campaign ${set.campaign})` } });
+      return loadBg1Set(set, { log, decisionId: process.env.GBRAIN_EVALS_DECISION_ID ?? set.campaign, purpose: `memory-qa loadCorpus ${set.benchmark}` }, { only });
     }
     case 'fixture': return loadFixture();
     default: throw new Error(`unknown benchmark ${benchmark}`);

@@ -20,11 +20,16 @@
  *
  * Crew credits are outside this model. It writes only to the path the caller names, so no program total is committed
  * (R79); --out is required and it exits 2 without it.
+ *
+ * BG1-C (docs/benchmarks/2026-11-19-changing-facts-confirmation-preregistration.md, "Budget") is priced per kept world
+ * by bg1cPerWorld, at its cell set's rates (eval/runner/q1/cells/bg1c.ts BG1C_RATES), with gpt-6.2-sol as its live GPT
+ * reader in the reader token model (definitions.ts readerTokens).
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { ASSUMPTIONS, BG1_ASSUMPTIONS, f6ExtractionUsd } from '../q1/cells/definitions.ts';
+import { BG1_ASSUMPTIONS, bg1ReadUsd, f6ExtractionUsd, readerTokens } from '../q1/cells/definitions.ts';
 import { generateBG1Stage1Cells, JUDGE_CHECK_PLAN, listPrice, stage1CapUsd, stage1SmokeLeaseUsd } from '../q1/cells/bg1.ts';
+import { BG1C_RATES } from '../q1/cells/bg1c.ts';
 import { BG1_DEV_CONVERSATIONS, BG1_N_CAP, BG1_N_FLOOR, BG1_QUESTIONS_PER_WORLD } from './types.ts';
 
 export const OPUS = 'anthropic:claude-opus-5-5';
@@ -57,10 +62,9 @@ export interface Rates {
 }
 
 const per = listPrice;
-const out = (r: string) => ASSUMPTIONS.reader_output_tokens[r] ?? ASSUMPTIONS.reader_output_tokens.default;
-const tok = (r: string) => ASSUMPTIONS.reader_tokens_per_cl100k[r] ?? ASSUMPTIONS.reader_tokens_per_cl100k.default;
-const over = (r: string) => ASSUMPTIONS.reader_input_overhead_tokens[r] ?? ASSUMPTIONS.reader_input_overhead_tokens.default;
-const read = (r: string, cl100k: number) => ((cl100k * tok(r) + over(r)) * per(r).input + out(r) * per(r).output) / 1e6;
+const out = (r: string) => readerTokens('reader_output_tokens', r);
+const tok = (r: string) => readerTokens('reader_tokens_per_cl100k', r);
+const read = bg1ReadUsd;
 /** particle-1's measured re-read per question (RS1 stage 0). */
 const PARTICLE_READ_USD = 0.0695 / 20;
 const canonicalUsd = () => { const t = BG1_ASSUMPTIONS.canonical_judge_tokens, p = per(CANONICAL); return (t.input * p.input + t.output * p.output) / 1e6; };
@@ -148,6 +152,24 @@ export function pricing(planned = N_PLAN, r: Rates = assumedRates(), p: Progress
     stage1: stage1(r), expected: paidAt(N_PLAN, r), cap: { ...paidAt(BG1_N_CAP, r), reserve: r.reserve },
     checkin: checkin(planned, r, p), crew: 'outside this model',
   };
+}
+
+/**
+ * BG1-C's paid dollars per kept world, by line: the mint, the three rows' dev-run rates, gpt-6.2-sol's reads and
+ * claude-opus-5-5's grading of them on the three rows, and particle-1's re-reads with their Opus grading. `rows` is each
+ * row's planned spend per world: its dev-run rate and its share of the read and grading lines.
+ */
+export function bg1cPerWorld() {
+  const r = BG1C_RATES, q = BG1_QUESTIONS_PER_WORLD, rows = Object.keys(r.row_usd_per_world);
+  const lines = {
+    mint: r.mint_usd_per_world,
+    rows: rows.reduce((s, k) => s + r.row_usd_per_world[k], 0),
+    sol_reads: rows.length * q * r.sol_read_usd_per_answer,
+    sol_grading: rows.length * q * r.sol_judge_usd_per_answer,
+    particle_rereads: rows.length * q * (r.particle_read_usd_per_answer + r.particle_judge_usd_per_answer),
+  };
+  const shared = (lines.sol_reads + lines.sol_grading + lines.particle_rereads) / rows.length;
+  return { lines, total: Object.values(lines).reduce((a, b) => a + b, 0), rows: Object.fromEntries(rows.map(k => [k, r.row_usd_per_world[k] + shared])) };
 }
 
 /** Measured rates over the assumed ones: a JSON object with any of Rates' keys; systems merge per system. */
