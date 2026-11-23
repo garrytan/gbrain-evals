@@ -4,7 +4,7 @@
  * four of its weeks carry one, so a partial fourth week never ends a block (#611 read-only review, blocker 1; GBEV-3
  * ruling, 2026-11-23).
  *
- * A marker names its week, the week's no-point reason (or null), its gbrain build, its worlds in slot order and the
+ * A marker names its run (identity.ts) and week, the week's no-point reason (or null), its gbrain build, its worlds in slot order and the
  * count of steps it settled. The block writer checks each marker against the week's meta, so a marker from another week
  * or another build never settles a week.
  */
@@ -14,6 +14,7 @@ export const SETTLED_SCHEMA = 'gbrain-evals/weekly-line-settled/v1';
 
 export interface SettledMarker {
   schema: typeof SETTLED_SCHEMA;
+  run_id: string;
   week: string;
   no_point: WlNoPoint | null;
   gbrain: { release: string; commit: string } | null;
@@ -23,6 +24,7 @@ export interface SettledMarker {
 
 /** The part of a week's meta a marker must agree with. */
 export interface SettledWeek {
+  run_id: string;
   week: string;
   no_point?: WlNoPoint | null;
   gbrain: { release: string; commit: string } | null;
@@ -37,6 +39,7 @@ export function settledProblems(marker: unknown, week: SettledWeek): string[] {
   if (typeof m !== 'object' || m === null || m.schema !== SETTLED_SCHEMA) return [`a settled marker for week ${week.week} is not a ${SETTLED_SCHEMA} marker`];
   const p: string[] = [];
   if (m.week !== week.week) p.push(`the settled marker names week ${String(m.week)}, not ${week.week}`);
+  if (m.run_id !== week.run_id) p.push(`the settled marker for week ${week.week} settles run ${String(m.run_id)}, not the week's run ${week.run_id}`);
   if ((m.no_point ?? null) !== (week.no_point ?? null)) p.push(`the settled marker for week ${week.week} disagrees with its meta on whether the week has a point`);
   const g = m.gbrain ?? null, wg = week.gbrain ?? null;
   if ((g === null) !== (wg === null) || (g && wg && (g.release !== wg.release || g.commit !== wg.commit))) p.push(`the settled marker for week ${week.week} names another gbrain build than its meta`);

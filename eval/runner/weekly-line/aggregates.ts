@@ -19,7 +19,12 @@
  * records are the cells' answers and judgments (records.ts). The week writes week-<date>.json and its scorecard
  * week-<date>.md; the block writes block-<n>.json and its page section block-<n>.md. A block ends only when it lists all
  * four weeks and each carries the runner's settled marker (settled.ts) agreeing with its meta, so a fourth week that is
- * still running never ends a block. Until a block ends its file carries no simultaneous interval and no wild bootstrap,
+ * still running never ends a block.
+ *
+ * Each meta names its weekly run (identity.ts), and the command line scores exactly that run: every --records directory
+ * holds its run's run.json, which must be the run of one of the metas and agree with it on the week, the frozen gbrain
+ * build and the Set W world ids, and every record in it must come from one of that run's cells or re-reads on one of its
+ * worlds (boundRecords). Records of another run or week refuse (WEEKLY_RUN_IDENTITY). Until a block ends its file carries no simultaneous interval and no wild bootstrap,
  * because both are end-of-block readings and an open block's would be an interim p-value outside the one look (R113).
  * The block writer never replaces an ended block-<n>.json with an open one (writeBlockFiles).
  *
@@ -57,6 +62,7 @@ import {
 } from './design.ts';
 import { renderBlock, renderWeek } from './scorecard.ts';
 import { settledProblems } from './settled.ts';
+import { recordBindingProblems, RUN_FILE, RUN_ID, runBindingProblems, type RunIdentity } from './identity.ts';
 
 export class WeeklyAggregateError extends Error {}
 const refuse = (m: string): never => { throw new WeeklyAggregateError(m); };
@@ -77,6 +83,7 @@ export const ID = {
   release: { t: 'id', re: /^v\d{1,4}(\.\d{1,6}){1,3}$/, what: 'a release tag' },
   commit: { t: 'id', re: /^[0-9a-f]{40}$/, what: 'a 40-hex commit' },
   world: { t: 'id', re: /^bgw-\d{4,5}$/, what: 'a set W world id' },
+  run: { t: 'id', re: RUN_ID, what: 'a weekly run id' },
   set: { t: 'id', re: /^(W[1-9]\d{0,2}|[0-9a-f]{64})$/, what: 'a set label or SHA-256' },
   version: { t: 'id', re: /^v?\d{1,4}(\.\d{1,6}){0,3}([-+.](rc|alpha|beta|post|dev)\.?\d{0,6})?$/, what: 'a version number' },
 } as const satisfies Record<string, Schema>;
@@ -100,6 +107,7 @@ const MAX_WORLDS = WL_WEEK_WORLDS * WL_WEEKS_PER_BLOCK;
 export const WEEK_SCHEMA: Schema = obj({
   schema: en(['gbrain-evals/weekly-line-week/v1']),
   week: ID.date,
+  run_id: ID.run,
   no_point: n(en(WL_NO_POINT)),
   gbrain: n(gbrain),
   comparators: n(comparators),
@@ -129,7 +137,7 @@ const holm = obj({ z: n(num), holm_step: int, bound: num, crossed: bool });
 export const BLOCK_SCHEMA: Schema = obj({
   schema: en(['gbrain-evals/weekly-line-block/v1']),
   block: int, ended: bool,
-  weeks: arr(obj({ week: ID.date, no_point: n(en(WL_NO_POINT)), gbrain: n(gbrain), comparators: n(comparators), worlds: int }), WL_WEEKS_PER_BLOCK),
+  weeks: arr(obj({ week: ID.date, run_id: ID.run, no_point: n(en(WL_NO_POINT)), gbrain: n(gbrain), comparators: n(comparators), worlds: int }), WL_WEEKS_PER_BLOCK),
   counted_worlds: int,
   releases: arr(ID.release, MAX_WORLDS),
   worlds: arr(obj({ world: ID.world, week: ID.date, release: ID.release, seed_id: ID.set, phrasing_id: ID.set }), MAX_WORLDS),
@@ -203,6 +211,8 @@ export function writeAggregate(path: string, x: unknown, kind: AggregateKind): v
 /** A week as the weekly runner describes it in custody. */
 export interface WeekMeta {
   week: string;
+  /** The weekly run this meta describes (identity.ts); its records must carry the same run identity. */
+  run_id: string;
   gbrain: { release: string; commit: string } | null;
   comparators: Record<WlServer, { version: string; fixed: string }> | null;
   worlds: Array<{ world: string; seed_id: string; phrasing_id: string }>;
@@ -218,6 +228,7 @@ const outCost = (c: ReturnType<typeof costPerCorrect>) => outReaders(c, rows => 
 const byClassOther = <T,>(f: (c: typeof WL_COMPARISONS[number]) => T) => Object.fromEntries(WL_CLASS_KEYS.map(cls => [cls, Object.fromEntries(WL_COMPARISONS.filter(c => c.cls === cls).map(c => [c.other, f(c)]))]));
 
 function checkMeta(m: WeekMeta): void {
+  if (typeof m.run_id !== 'string' || !RUN_ID.test(m.run_id) || !m.run_id.startsWith(`wl-${m.week}-`)) refuse(`week ${m.week}'s meta names no run of that week (run_id wl-${m.week}-<12 hex>)`);
   if (!m.no_point) {
     if (!m.worlds.length) refuse(`week ${m.week} has no worlds; record no_point "no worlds"`);
     if (m.worlds.length > WL_WEEK_WORLDS) refuse(`week ${m.week} lists ${m.worlds.length} worlds; a week holds at most ${WL_WEEK_WORLDS}`);
@@ -291,7 +302,7 @@ export type BlockAggregates = ReturnType<typeof blockAggregates>;
  */
 export function weekAggregates(meta: WeekMeta, questions: readonly WlQuestion[], o: { history?: readonly WeekLike[]; previousBlock?: BlockLike | null; falseAlarmPool?: Pool; falseAlarmReceipt?: unknown } = {}) {
   checkMeta(meta);
-  const base = { schema: 'gbrain-evals/weekly-line-week/v1' as const, week: meta.week, no_point: meta.no_point ?? null, gbrain: meta.gbrain, comparators: meta.comparators };
+  const base = { schema: 'gbrain-evals/weekly-line-week/v1' as const, week: meta.week, run_id: meta.run_id, no_point: meta.no_point ?? null, gbrain: meta.gbrain, comparators: meta.comparators };
   if (meta.no_point) return { ...base, worlds: [] as never[], classes: null, cost_per_correct: null, rolling: null, regression: null };
   checkRecords(meta, questions);
   const ids = meta.worlds.map(w => w.world);
@@ -376,7 +387,7 @@ export function blockAggregates(block: number, metas: readonly WeekMeta[], quest
   const costs = weeks.flatMap(w => w.costs ?? []);
   return {
     schema: 'gbrain-evals/weekly-line-block/v1' as const, block, ended,
-    weeks: weeks.map(w => ({ week: w.week, no_point: w.no_point ?? null, gbrain: w.gbrain, comparators: w.comparators, worlds: w.no_point ? 0 : w.worlds.length })),
+    weeks: weeks.map(w => ({ week: w.week, run_id: w.run_id, no_point: w.no_point ?? null, gbrain: w.gbrain, comparators: w.comparators, worlds: w.no_point ? 0 : w.worlds.length })),
     counted_worlds: counted.length, releases: r.releases,
     worlds: counted.map(w => ({ world: w.world, week: w.week, release: w.release, seed_id: w.seed_id, phrasing_id: w.phrasing_id })),
     look: r.look ? { worlds: r.look.worlds.length, releases: r.look.releases } : null,
@@ -430,17 +441,41 @@ const readJson = (path: string): any => (existsSync(path) ? JSON.parse(readFileS
 const flags = (argv: readonly string[], name: string) => argv.flatMap((a, i) => (a === name ? [argv[i + 1] ?? refuse(`${name} needs a value`)] : []));
 const flag = (argv: readonly string[], name: string) => flags(argv, name).at(-1);
 
+/**
+ * The records of exactly the weeks' runs: each record directory holds its run's run.json, which must be the run one of
+ * the metas names and agree with it on the week, the gbrain build and the worlds, and every answer in it must come from
+ * one of that run's cells or re-reads on one of its worlds. Each week with a point needs its run's records, once.
+ */
+export function boundRecords(dirs: readonly string[], metas: readonly WeekMeta[]): ReturnType<typeof readRecordDirs> {
+  const seen = new Set<string>();
+  const parts = dirs.map(d => {
+    const path = join(d, RUN_FILE);
+    if (!existsSync(path)) refuse(`${d} has no ${RUN_FILE}, so its records cannot be bound to a week's run`);
+    const run = readJson(path) as RunIdentity;
+    const m = metas.find(x => x.run_id === run.run_id) ?? refuse(`${d} holds the records of run ${String(run.run_id)}, which is not the run of any week passed with --meta`);
+    if (seen.has(m.run_id)) refuse(`run ${m.run_id}'s records were passed twice`);
+    seen.add(m.run_id);
+    const recs = readRecordDirs([d]);
+    const p = [...runBindingProblems(run, m), ...recordBindingProblems(run, recs.answers)];
+    if (p.length) refuse(`WEEKLY_RUN_IDENTITY: ${d}: ${p.slice(0, 3).join('; ')}`);
+    return recs;
+  });
+  const missing = metas.filter(m => !m.no_point && !seen.has(m.run_id));
+  if (missing.length) refuse(`week ${missing[0].week}'s run ${missing[0].run_id} has no records passed with --records`);
+  return { answers: parts.flatMap(p => p.answers), judgments: parts.flatMap(p => p.judgments) };
+}
+
 export function main(argv: readonly string[]): number {
   const [mode, ...rest] = argv;
   const out = flag(rest, '--out') ?? refuse('pass --out <dir>');
   mkdirSync(out, { recursive: true });
   const metas = flags(rest, '--meta').map(p => readJson(p) as WeekMeta);
   if (!metas.length) refuse('pass --meta <week.json>');
-  const records = readRecordDirs(flags(rest, '--records'));
+  if (mode === 'week' && metas.length !== 1) refuse('week reads exactly one --meta');
+  const records = boundRecords(flags(rest, '--records'), metas);
   const worlds = metas.filter(m => !m.no_point).flatMap(m => m.worlds.map(w => w.world));
   const questions = questionsFromRecords(worlds, records.answers, records.judgments);
   if (mode === 'week') {
-    if (metas.length !== 1) refuse('week reads exactly one --meta');
     const history = flags(rest, '--history').map(p => { const h = readJson(p); assertAggregate(h, 'week', p); return h as WeekLike; });
     const prevPath = flag(rest, '--previous-block');
     const previousBlock = prevPath ? (() => { const b = readJson(prevPath); assertAggregate(b, 'block', prevPath); return b as BlockLike; })() : null;

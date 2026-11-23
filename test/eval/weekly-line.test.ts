@@ -18,12 +18,13 @@ import { instrumentFor } from '../../eval/runner/memory-qa/instruments.ts';
 import { answerId, type AnswerRecord, type JudgmentRecord } from '../../eval/runner/memory-qa/records.ts';
 import { frontierInstrumentId } from '../../eval/runner/q1/cell.ts';
 import { bg1JudgeOf, PER_READER_JUDGE_SETTINGS } from '../../eval/runner/q1/cells/definitions.ts';
-import { aggregateProblems, assertAggregate, blockAggregates, FALSE_ALARM_RECEIPT_SCHEMA, falseAlarmPoolSha256, main, WEEK_SCHEMA, weekAggregates, WeeklyAggregateError, writeAggregate, writeBlockFiles, type WeekMeta } from '../../eval/runner/weekly-line/aggregates.ts';
+import { aggregateProblems, assertAggregate, blockAggregates, FALSE_ALARM_RECEIPT_SCHEMA, falseAlarmPoolSha256, main, WEEK_SCHEMA, weekAggregates, WeeklyAggregateError, writeAggregate, writeBlockFiles, boundRecords, type WeekMeta } from '../../eval/runner/weekly-line/aggregates.ts';
 import { BG1C_CAMPAIGN, BG1C_DATASET } from '../../eval/runner/memory-qa/bg1-names.ts';
 import { plannedQuestions, WL_CLASSES, WL_COMPARISONS, WL_OBF_BOUNDS, WL_READER_KEYS, WL_READERS, WL_ROWS, WL_SYSTEMS, type WlClass, type WlReaderKey, type WlRow } from '../../eval/runner/weekly-line/design.ts';
 import { plannedFor, questionsFromRecords, WeeklyRecordsError, type WlQuestion } from '../../eval/runner/weekly-line/records.ts';
 import { renderBlock, renderWeek } from '../../eval/runner/weekly-line/scorecard.ts';
 import { SETTLED_SCHEMA } from '../../eval/runner/weekly-line/settled.ts';
+import { RUN_FILE, runIdentity } from '../../eval/runner/weekly-line/identity.ts';
 import { analyzeBlock, analyzeLook, compare, costPerCorrect, estimate, falseAlarmRate, grepStops, holmStepDown, regressionFlag, rolling, weeklySdd, type BlockWorld } from '../../eval/runner/weekly-line/stats.ts';
 
 const tmp = mkdtempSync(join(tmpdir(), 'weekly-line-'));
@@ -314,13 +315,13 @@ const receiptOf = (pool: Record<string, number[]>) => ({ schema: FALSE_ALARM_REC
 
 /** The runner's settled marker for each week, agreeing with its meta. */
 const settledOf = (metas: readonly WeekMeta[]) => metas.map(m => ({
-  schema: SETTLED_SCHEMA, week: m.week, no_point: m.no_point ?? null, gbrain: m.gbrain, worlds: m.no_point ? [] : m.worlds.map(w => w.world),
+  schema: SETTLED_SCHEMA, run_id: m.run_id, week: m.week, no_point: m.no_point ?? null, gbrain: m.gbrain, worlds: m.no_point ? [] : m.worlds.map(w => w.world),
   steps: m.no_point ? { cells: 0, rereads: 0, judgments: 0, harness_failures: 0 } : { cells: 5, rereads: 3, judgments: 8, harness_failures: 0 },
 }));
 
 function meta(week: string, worlds: readonly string[], release: string): WeekMeta {
   return {
-    week, gbrain: { release, commit: COMMIT }, comparators: { 'extract-first': { version: '1.4.2', fixed: '2026-11-19' }, 'memory-bank': { version: '0.9.0', fixed: '2026-11-19' } },
+    week, run_id: `wl-${week}-${'a'.repeat(12)}`, gbrain: { release, commit: COMMIT }, comparators: { 'extract-first': { version: '1.4.2', fixed: '2026-11-19' }, 'memory-bank': { version: '0.9.0', fixed: '2026-11-19' } },
     worlds: worlds.map(world => ({ world, seed_id: 'W1', phrasing_id: 'W1' })),
     costs: worlds.flatMap(world => WL_ROWS.flatMap(row => WL_READER_KEYS.map(reader => ({ row, reader, world, usd: 0.25 })))),
   };
@@ -563,11 +564,12 @@ describe('the end of a block', () => {
   });
 
   test('a block refuses a repeated or non-consecutive week', () => {
-    expect(() => blockAggregates(1, [metas[0], { ...metas[1], week: week(0) }], questions, { draws: 99 })).toThrow(/lists week 2026-12-01 twice/);
+    const at = (m: WeekMeta, w: string): WeekMeta => ({ ...m, week: w, run_id: `wl-${w}-${'a'.repeat(12)}` });
+    expect(() => blockAggregates(1, [metas[0], at(metas[1], week(0))], questions, { draws: 99 })).toThrow(/lists week 2026-12-01 twice/);
     expect(() => blockAggregates(1, [metas[0], metas[2]], questions, { draws: 99 })).toThrow(/consecutive, 7 days apart/);
-    expect(() => blockAggregates(1, [metas[0], { ...metas[1], week: '2026-12-09' }], questions, { draws: 99 })).toThrow(/consecutive/);
-    expect(() => blockAggregates(1, [metas[0], { ...metas[1], week: '2026-13-01' }], questions, { draws: 99 })).toThrow(/is not a date/);
-    expect(() => blockAggregates(1, [{ ...metas[0], week: '2027-02-23' }, { ...metas[1], week: '2027-02-30' }], questions, { draws: 99 })).toThrow(/2027-02-30 is not a date/);
+    expect(() => blockAggregates(1, [metas[0], at(metas[1], '2026-12-09')], questions, { draws: 99 })).toThrow(/consecutive/);
+    expect(() => blockAggregates(1, [metas[0], at(metas[1], '2026-13-01')], questions, { draws: 99 })).toThrow(/is not a date/);
+    expect(() => blockAggregates(1, [at(metas[0], '2027-02-23'), at(metas[1], '2027-02-30')], questions, { draws: 99 })).toThrow(/2027-02-30 is not a date/);
   });
 });
 
@@ -642,17 +644,23 @@ describe('records', () => {
       }
       return root;
     });
+    const runOf = (week: string, ws: readonly string[], release: string, k: number) => {
+      const m = meta(week, ws, release);
+      return runIdentity({ week, world_end: '2026-11-29', batch: 'bgw-1001', week_of_batch: k, spares_from: null, gbrain: m.gbrain, comparators: m.comparators, worlds: m.worlds, cells: WL_ROWS.map(row => `wl-${row}`), rereads: [], no_point: null });
+    };
+    const runs = [runOf('2026-12-01', big.worlds.slice(0, 8), A, 1), runOf('2026-12-08', big.worlds.slice(8), B, 2)];
+    runs.forEach((run, k) => writeFileSync(join(dirs[k], RUN_FILE), JSON.stringify(run)));
     const m1 = join(tmp, 'w1.json'), m2 = join(tmp, 'w2.json');
-    writeFileSync(m1, JSON.stringify(meta('2026-12-01', big.worlds.slice(0, 8), A)));
-    writeFileSync(m2, JSON.stringify(meta('2026-12-08', big.worlds.slice(8), B)));
-    expect(() => main(['week', '--meta', m1, '--records', dirs[0], '--records', dirs[1], '--out', out])).toThrow(/outside the given worlds/);
+    writeFileSync(m1, JSON.stringify({ ...meta('2026-12-01', big.worlds.slice(0, 8), A), run_id: runs[0].run_id }));
+    writeFileSync(m2, JSON.stringify({ ...meta('2026-12-08', big.worlds.slice(8), B), run_id: runs[1].run_id }));
+    expect(() => main(['week', '--meta', m1, '--records', dirs[0], '--records', dirs[1], '--out', out])).toThrow(/not the run of any week passed with --meta/);
     expect(main(['week', '--meta', m1, '--records', dirs[0], '--out', out])).toBe(0);
     expect(main(['week', '--meta', m2, '--records', dirs[1], '--history', join(out, 'week-2026-12-01.json'), '--out', out])).toBe(0);
     expect(main(['block', '--block', '1', '--meta', m1, '--meta', m2, '--records', dirs[0], '--records', dirs[1], '--out', out])).toBe(0);
     expect(() => main(['week', '--meta', m1, '--meta', m2, '--records', dirs[0], '--out', out])).toThrow(/exactly one --meta/);
     expect(() => main(['month', '--meta', m1, '--records', dirs[0], '--out', out])).toThrow(/week or block/);
     expect(() => main(['week', '--meta', m1, '--records', dirs[0]])).toThrow(/--out/);
-    expect(() => main(['week', '--meta', m2, '--records', join(tmp, 'w1.json'), '--out', out])).toThrow(/no cells\/ directory/);
+    expect(() => main(['week', '--meta', m2, '--records', join(tmp, 'w1.json'), '--out', out])).toThrow(/has no run\.json/);
     const badPool = join(tmp, 'pool.json');
     writeFileSync(badPool, JSON.stringify({ 'now|grep-agent': ['Lisbon'] }));
     expect(() => main(['week', '--meta', m2, '--records', dirs[1], '--false-alarm-pool', badPool, '--out', out])).toThrow(/comparison keys to lists/);
@@ -666,5 +674,53 @@ describe('records', () => {
     expect(b.comparisons.now['grep-agent'].early.releases).toEqual([A, B]);
     expect(readFileSync(join(out, 'block-1.md'), 'utf8')).toContain('## Block 1 (weeks 2026-12-01 to 2026-12-08)');
     expect(readFileSync(join(out, 'week-2026-12-08.md'), 'utf8')).toContain(`gbrain ${B} (commit ${COMMIT.slice(0, 12)})`);
+  });
+
+  // Value: protects=the aggregates score exactly one week's run: its run id, week, frozen gbrain build and Set W world ids, and refuse records of any other run or week; fails_when=a record directory of another run or week, a record from a cell outside the run, an edited run identity, a meta naming another build or worlds, or a week whose run passed no records is scored; why_new=weekly-line preregistration "Harness" item 4 and harness PR (d)'s brief; seam=aggregates.ts boundRecords over identity.ts runBindingProblems and recordBindingProblems; no_claim=forged identities with recomputed ids, outside the crew's threat model
+  test("the aggregates score exactly the week's run and refuse records of another run or week", () => {
+    const small = synth(4, {});
+    const recs = recordsOf(small.questions);
+    const cells = WL_ROWS.map(row => `wl-${row}`);
+    const runFor = (week: string, ws: readonly string[], release = A) => {
+      const m = meta(week, ws, release);
+      return { m, run: runIdentity({ week, world_end: '2026-11-29', batch: 'bgw-1001', week_of_batch: 1, spares_from: null, gbrain: m.gbrain, comparators: m.comparators, worlds: m.worlds, cells, rereads: [], no_point: null }) };
+    };
+    const dirFor = (name: string, run: object, ws: readonly string[], answers = recs.answers) => {
+      const root = join(tmp, name);
+      for (const cell of new Set(answers.map(a => a.cell_id))) {
+        const dir = join(root, 'cells', cell);
+        mkdirSync(dir, { recursive: true });
+        const ans = answers.filter(a => a.cell_id === cell && ws.includes(a.conversation)), ids = new Set(ans.map(a => a.answer_id));
+        writeFileSync(join(dir, 'answers.ndjson'), ans.map(a => JSON.stringify(a)).join('\n') + '\n');
+        writeFileSync(join(dir, 'judgments.ndjson'), recs.judgments.filter(j => ids.has(j.answer_id)).map(j => JSON.stringify(j)).join('\n') + '\n');
+      }
+      writeFileSync(join(root, RUN_FILE), JSON.stringify(run));
+      return root;
+    };
+    const ws1 = small.worlds.slice(0, 2), ws2 = small.worlds.slice(2);
+    const w1 = runFor('2026-12-01', ws1), w2 = runFor('2026-12-08', ws2);
+    const d1 = dirFor('bind-w1', w1.run, ws1), d2 = dirFor('bind-w2', w2.run, ws2);
+    const m1 = { ...w1.m, run_id: w1.run.run_id }, m2 = { ...w2.m, run_id: w2.run.run_id };
+    expect(boundRecords([d1], [m1]).answers.length).toBeGreaterThan(0);
+    expect(() => boundRecords([d2], [m1])).toThrow(/not the run of any week passed with --meta/);
+    expect(() => boundRecords([d1, d1], [m1])).toThrow(/passed twice/);
+    expect(() => boundRecords([], [m1])).toThrow(/has no records passed with --records/);
+    expect(() => boundRecords([d1], [{ ...m1, gbrain: { release: B, commit: COMMIT } }])).toThrow(/WEEKLY_RUN_IDENTITY: .*another gbrain build/);
+    expect(() => boundRecords([d1], [{ ...m1, worlds: m1.worlds.slice(1) }])).toThrow(/not week 2026-12-01's Set W worlds/);
+    const edited = dirFor('bind-edited', { ...w1.run, gbrain: { release: B, commit: COMMIT } }, ws1);
+    expect(() => boundRecords([edited], [{ ...m1, gbrain: { release: B, commit: COMMIT } }])).toThrow(/does not match its own contents/);
+    const stray = dirFor('bind-stray', w1.run, ws1, recs.answers.map(a => (a.cell_id === 'wl-gbrain' ? { ...a, cell_id: 'wl-gbrain-other-run', answer_id: answerId('wl-gbrain-other-run', a.question_id, a.reader, 0) } : a)));
+    expect(() => boundRecords([stray], [m1])).toThrow(/1 cell in run .* is not among its cells and re-reads/);
+    const wide = dirFor('bind-wide', w1.run, small.worlds);
+    expect(() => boundRecords([wide], [m1])).toThrow(/on a world outside its week/);
+    const both = boundRecords([d1, d2], [m1, m2]);
+    expect(new Set(both.answers.map(a => a.conversation))).toEqual(new Set(small.worlds));
+    expect(() => weekAggregates({ ...m1, run_id: 'wl-2026-12-08-aaaaaaaaaaaa' }, small.questions)).toThrow(/names no run of that week/);
+    const wk = weekAggregates(m1, small.questions);
+    expect(wk.run_id).toBe(w1.run.run_id);
+    assertAggregate(wk, 'week');
+    expect(blockAggregates(1, [m1, m2], small.questions, { draws: 19 }).weeks.map(w => w.run_id)).toEqual([w1.run.run_id, w2.run.run_id]);
+    const marks = settledOf([m1, m2]);
+    expect(() => blockAggregates(1, [m1, m2], small.questions, { draws: 19, settled: [marks[0], { ...marks[1], run_id: w1.run.run_id }] })).toThrow(/settles run .*, not the week's run/);
   });
 });
