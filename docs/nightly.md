@@ -224,7 +224,9 @@ of answers bought once, in a paid run of its own, and never calls a model.
   grep-agent answers where that judge graded them. The 2026-11-12 dev test's scored Claude answers were graded by
   GPT-6.1 Sol, so import leaves each unknown and names that judge; its GPT reader was GPT-6.1 Sol, which the nightly no
   longer uses, so those answers are skipped. Only its answers that ran out of turns or context import, as failures, and
-  the leader run buys the rest of the BEAM-1M pool. `plan` on either tool lists the rows still missing.
+  the leader run buys the rest of the BEAM-1M pool. The SOTA dev test's cells now judge each frontier reader's answers
+  with that reader's leader judge, so a later dev test's scored answers import. `plan` on either tool lists the rows
+  still missing; the oracle's `plan` writes a buy file only for the readers the oracle buys, never for GPT-6.1 Sol.
 - **Attribution.** `bun eval/runner/failure-causes/cli.ts attribute --labels <week's labels> --cache <cache> --out
   attribution.json` puts each failed row of a QA suite into one bucket, the first that applies: *harness* (a provider
   or harness error, or an answer cut off at its output limit), *unsupported*, *reader limited* (the oracle fails it
@@ -384,6 +386,14 @@ Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, whic
 [disclosures](disclosures.md).
 
 ## Changelog
+
+### 2026-11-23: The SOTA dev test shares the leader judges, and the oracle plan drops GPT-6.1 Sol's buy file
+
+The SOTA dev test's whole-agent cells judged Claude answers with GPT-6.1 Sol, so `leader.ts import` could never reuse
+them. They now use each reader's leader judge (GPT-6.2 Astra for Claude, Claude Opus 5.5 for GPT). The oracle's `plan`
+no longer writes a LongMemEval buy file for GPT-6.1 Sol, whose rows are never bought, and the monthly scorecard's GPT
+reader is GPT-6.2 Sol (RS1's frozen rows still count with GPT-6.1 Sol). A cell's cost estimate now prices each reader's
+own judge, so the dev test's estimate covers GPT-6.2 Astra.
 
 ### 2026-11-23: The SOTA oracle buys GPT-6.2 Sol rows, and the dev test's answers are re-bought
 

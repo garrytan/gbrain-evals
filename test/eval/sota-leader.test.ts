@@ -167,11 +167,13 @@ describe('leaderRunCell', () => {
     expect(definitionProblems(lme, kinds)).toEqual([]);
     const { estimate, ...rest } = lme;
     const atQ1Judge = estimateCell(rest);
-    expect({ ...estimate.lines, frontier_judges: 0 }).toEqual({ ...atQ1Judge.lines, frontier_judges: 0 });
-    expect(estimate.lines.frontier_judges).toBeCloseTo(4 * atQ1Judge.lines.frontier_judges!, 1);
+    expect(estimate).toEqual(atQ1Judge);
+    const { judge_by_reader: _leaderJudge, ...q1Frontier } = rest.arms[0]!.frontier!;
+    const q1Priced = estimateCell({ ...rest, arms: [{ ...rest.arms[0]!, frontier: q1Frontier }] });
+    expect(estimate.lines.frontier_judges).toBeCloseTo(4 * q1Priced.lines.frontier_judges!, 1);
     const { estimate: solEstimate, ...solRest } = leaderRunCell('lme-s', SOL, [SOTA_LEADER_LME_IDS[3]!]);
     expect(solEstimate).toEqual(estimateCell(solRest));
-    expect(atQ1Judge.usd + solEstimate.usd).toBeCloseTo(cellOf(LME_CELL).estimate.usd, 1);
+    expect(q1Priced.usd + solEstimate.usd).toBeCloseTo(cellOf(LME_CELL).estimate.usd, 1);
     expect(() => leaderRunCell('lme-s', PARTICLE, [SOTA_LEADER_LME_IDS[0]!])).toThrow(/no arm for particle/);
     expect(() => leaderRunCell('cat40-hard-m', OPUS, ['x'])).toThrow(/has no leader/);
     expect(() => leaderRunCell('lme-s', OPUS, [])).toThrow(/no items/);

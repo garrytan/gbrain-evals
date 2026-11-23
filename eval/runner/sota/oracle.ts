@@ -14,7 +14,8 @@
  *   bun eval/runner/sota/oracle.ts export --benchmark lme-s --cache <dir>
  *
  * plan (keyless) lists, per benchmark and reader (the nightly readers, and gpt-6.1-sol for the answerability files), the
- * dev-pool items whose oracle row is fresh, unknown or stale, and writes the ids to buy. import-a4 (keyless) writes
+ * dev-pool items whose oracle row is fresh, unknown or stale, and writes the ids to buy for the oracle's readers only
+ * (gpt-6.1-sol's rows are never bought, so it gets no buy file). import-a4 (keyless) writes
  * A4's gpt-6.1-sol answers on BEAM-1M with their claude-opus-5-5 re-judge (eval/data/answerability/oracle/beam-1m.json)
  * as gpt-6.1-sol's BEAM-1M rows: that spec is pinned to A4, so A4's answers are reused wherever the item matches and
  * never re-bought. run buys the rest in a paid window; the chat cache
@@ -224,8 +225,9 @@ export async function main(argv: string[], log: (s: string) => void = console.lo
         const spec = oracleSpec(benchmark, reader), items = poolItems(benchmark), f = freshness(cache, spec, items);
         const buy = [...f.unknown, ...f.stale.map(s => s.item)].sort();
         const file = join(cache.dir, 'plan', `oracle-${benchmark}-${reader.replace(/[^a-z0-9.-]+/gi, '_')}.txt`);
-        if (buy.length && spec.system_version !== 'a4-oracle-gpt61sol') { mkdirSync(join(cache.dir, 'plan'), { recursive: true }); writeFileSync(file, buy.join('\n') + '\n'); }
-        log(`${benchmark} ${reader}: ${items.length} items, ${f.hits.size} fresh, ${f.unknown.length} unknown, ${f.stale.length} stale${buy.length && spec.system_version !== 'a4-oracle-gpt61sol' ? `; to buy: ${file}` : ''}`);
+        const bought = buy.length > 0 && (ORACLE_READERS as readonly string[]).includes(reader);
+        if (bought) { mkdirSync(join(cache.dir, 'plan'), { recursive: true }); writeFileSync(file, buy.join('\n') + '\n'); }
+        log(`${benchmark} ${reader}: ${items.length} items, ${f.hits.size} fresh, ${f.unknown.length} unknown, ${f.stale.length} stale${bought ? `; to buy: ${file}` : ''}`);
       }
       return 0;
     }
