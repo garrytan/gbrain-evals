@@ -43,8 +43,8 @@ import { F6_ARMS, peakReservationUsd } from './f6.ts';
 export const BG1C_MANIFEST_PATH = resolve(import.meta.dir, 'bg1c-cells.json');
 export const BG1C_PREREGISTRATION = 'docs/benchmarks/2026-11-19-changing-facts-confirmation-preregistration.md';
 /**
- * gbrain's build on every BG1-C gbrain cell: the newest release tag on gbrain's master. Launch amendment A re-pins it
- * here when a newer release lands before the first counted gbrain cell, and it is frozen once counted gbrain cells start.
+ * gbrain's build on every BG1-C gbrain cell: the newest release tag on gbrain's master when the build was fixed for
+ * launch (launch amendment B, the preregistration's Amendment 7). It froze when the first counted gbrain cell started.
  */
 export const BG1C_GBRAIN_BUILD = { release: 'v0.60.753.0', commit: 'fbf608cf86ea7b2b912ce80151f856a1a47e9533' } as const;
 /** How every BG1-C gbrain cell starts: BG1's bun image and F6 build path at BG1C_GBRAIN_BUILD, frozen here so no cell takes rs1-stable's launch, which RS1 owns. */
