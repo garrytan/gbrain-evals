@@ -85,3 +85,64 @@ export const BG1C_FIRST_HALF_UNITS = 4;
 export const BG1C_CAMPAIGN = 'q1-scoreboard-bg1c-changing-facts-confirmation';
 /** The `dataset` of BG1-C's manifest (eval/decisions/datasets/bg1c-manifest.json); the bg1c loader refuses any other. */
 export const BG1C_DATASET = 'BG1-C changing-facts confirmation set';
+
+/**
+ * Set W, the weekly held-out outcome line's own sealed worlds (docs/benchmarks/2026-11-23-weekly-outcome-line-
+ * preregistration.md, "The worlds" and "Custody and exposure"): BG1's generator and validation on slots 1001 and up,
+ * apart from BG1 (1 to 30) and BG1-C (31 to 96), from a seed line and private phrasing set of its own. Each quarter has
+ * its own seed set on its own slot range; the first quarter's is W1, on slots 1001 to 1999, and a rotation amendment adds
+ * the next set on a range of its own below 10000, so every world id has four digits: slot 1001 is bgw-1001.
+ *
+ * Worlds are minted monthly in batches (eval/custody/bg1/mint.sh --bgw). A batch is named by its first world, bgw-1001
+ * for the first, and starts one slot past the last slot of the batch before it in the same seed set. It mints in slot
+ * order until BGW_BATCH_KEPT worlds pass validation: four weeks of eight plus two spares. Week k uses its kept worlds
+ * 8(k-1)+1 to 8k in slot order, so a batch that keeps 32 or 33 worlds loses spares, never a week. A batch may use at
+ * most BGW_BATCH_SLOTS slots, BG1-C's 66 slots for 40 kept worlds scaled to 34 and rounded down; its yield gate is
+ * BG1-C's (two drops among its first five slots), and its drop cap is BG1-C's three drops per 40 kept worlds scaled to
+ * 34 and rounded down. Each batch has a committed manifest template (bgwBatchManifest) and its slots in the committed
+ * split file (BGW_SPLIT) before it mints, and the custodian fills the template beside the batch's set root.
+ */
+export const BGW_BENCHMARK = 'bgw';
+/** Set W's seed sets, one per quarter, each on a slot range of its own; a rotation amendment adds the next. */
+export const BGW_SEED_SETS: ReadonlyArray<{ id: string; first: number; last: number }> = [{ id: 'W1', first: 1001, last: 1999 }];
+export const BGW_FIRST_SLOT = 1001;
+export const BGW_WORLDS_PER_WEEK = 8;
+export const BGW_WEEKS_PER_BATCH = 4;
+export const BGW_SPARES = 2;
+export const BGW_BATCH_KEPT = BGW_WORLDS_PER_WEEK * BGW_WEEKS_PER_BATCH + BGW_SPARES;
+export const BGW_BATCH_SLOTS = 56;
+export const BGW_DROP_CAP = 2;
+/** The campaign and custody decision id that every Set W opening is logged under (the registry entry's id). */
+export const BGW_CAMPAIGN = 'weekly-outcome-line';
+/** Every Set W batch manifest's `dataset` starts with this; BG1's and BG1-C's loaders refuse such a manifest. */
+export const BGW_DATASET_PREFIX = 'Set W weekly outcome line';
+export const BGW_SPLIT = 'eval/decisions/splits/bgw.json';
+
+/** A Set W slot's world id: slot 1001 is bgw-1001. Only four-digit slots inside a seed set's range have one. */
+export const bgwWorldId = (slot: number): string => {
+  if (!bgwSeedSetOf(slot)) throw new Error(`slot ${slot} is not in any Set W seed set (${BGW_SEED_SETS.map(s => `${s.id}: ${s.first} to ${s.last}`).join('; ')})`);
+  return `bgw-${slot}`;
+};
+/** The slot of a Set W world id (bgw- and four digits), or null for any other id. */
+export const bgwSlotOf = (id: string): number | null => {
+  const m = /^bgw-([1-9]\d{3})$/.exec(id);
+  return m && bgwSeedSetOf(Number(m[1])) ? Number(m[1]) : null;
+};
+/** The seed set a slot belongs to, or null. */
+export const bgwSeedSetOf = (slot: number) => (Number.isInteger(slot) ? BGW_SEED_SETS.find(s => slot >= s.first && slot <= s.last) ?? null : null);
+/** A batch's name: its first world's id. */
+export const bgwBatchName = (first: number): string => bgwWorldId(first);
+/** The slots a batch may use, first to first + BGW_BATCH_SLOTS - 1, all inside one seed set; refuses a batch that would cross its set's end. */
+export function bgwBatchSlots(first: number): number[] {
+  const set = bgwSeedSetOf(first);
+  if (!set) throw new Error(`batch ${first} does not start in any Set W seed set`);
+  const last = first + BGW_BATCH_SLOTS - 1;
+  if (last > set.last) throw new Error(`batch bgw-${first} would run to slot ${last}, past seed set ${set.id}'s last slot ${set.last}; the next quarter's set starts a new batch`);
+  return Array.from({ length: BGW_BATCH_SLOTS }, (_, i) => first + i);
+}
+export const bgwBatchIds = (first: number): string[] => bgwBatchSlots(first).map(bgwWorldId);
+/** A batch's `dataset`, which its manifest must carry. */
+export const bgwBatchDataset = (first: number): string => `${BGW_DATASET_PREFIX}, batch ${bgwBatchName(first)}`;
+/** A batch's committed manifest template; the filled manifest is bgwFilledManifest(first) beside the batch's set root files. */
+export const bgwBatchManifest = (first: number): string => `eval/decisions/datasets/${bgwBatchName(first)}-manifest.json`;
+export const bgwFilledManifest = (first: number): string => `${bgwBatchName(first)}-manifest.json`;
