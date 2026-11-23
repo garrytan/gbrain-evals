@@ -8,7 +8,8 @@
  * per-block file.
  *
  *   bun eval/runner/weekly-line/aggregates.ts week  --meta <week.json> --records <out dir>... [--history <week aggregates>]...
- *                                                   [--previous-block <block aggregates>] [--false-alarm-pool <pool.json>] --out <dir>
+ *                                                   [--previous-block <block aggregates>] [--false-alarm-pool <pool.json> --false-alarm-receipt <receipt.json>]
+ *                                                   --out <dir>
  *   bun eval/runner/weekly-line/aggregates.ts block --block <n> --meta <week.json>... --records <out dir>... [--settled <settled.json>]...
  *                                                   [--exposure <exposure.json>] --out <dir>
  *
@@ -32,16 +33,19 @@
  * the weekly list, so they leave once per block, per week; the seed and phrasing ids are the set label (W1, ...) or the
  * SHA-256 a rotation amendment publishes; a weekly row mean is over the questions where that row holds both readers'
  * values; the regression flag fires on either side and says which; its false-alarm rate is simulated from BG1-C's
- * per-world differences (recomputed in custody), which a week with a previous block must supply for each server
- * comparison; BG1-C never ran the grep agent, so its comparisons' rate is unavailable until an amendment defines one; a
+ * per-world differences (recomputed in custody), and a server comparison publishes that rate only beside BG1-C's custody
+ * receipt for the pool, whose SHA-256 of the pool must match (falseAlarmPoolProblems); without the receipt, the rate is
+ * unavailable (#611 read-only review blocker 4, GBEV-3 ruling 2026-11-23); BG1-C never ran the grep agent, so its
+ * comparisons' rate is unavailable until an amendment defines one; a
  * z with no finite value (every world the same nonzero difference) is written null beside its crossing.
  *
  * Refused besides the allow-list: a point week's world with no answer records, a cost cell repeated for a row, reader
  * and world, one outside the week's worlds, and a spend that is not a finite number of at least 0.
  */
+import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { BG1_STRATA, type Bg1Stratum } from '../memory-qa/bg1-names.ts';
+import { BG1_STRATA, BG1C_CAMPAIGN, BG1C_DATASET, type Bg1Stratum } from '../memory-qa/bg1-names.ts';
 import { questionsFromRecords, readRecordDirs, type WlQuestion } from './records.ts';
 import {
   analyzeBlock, compare, costPerCorrect, falseAlarmRate, grepStops, regressionFlag, rolling, rowMean, rowWorldMean, weeklySdd,
@@ -235,6 +239,28 @@ function checkRecords(m: WeekMeta, questions: readonly WlQuestion[]): void {
   if (m.worlds.some(w => !answered.has(w.world))) refuse(`week ${m.week} counts a world with no answer records`);
 }
 
+/** The custody receipt that vouches for the false-alarm pool: BG1-C's campaign and dataset, the pool's comparisons and the SHA-256 of the pool. */
+export const FALSE_ALARM_RECEIPT_SCHEMA = 'gbrain-evals/weekly-line-false-alarm-pool-receipt/v1';
+export interface FalseAlarmPoolReceipt { schema: typeof FALSE_ALARM_RECEIPT_SCHEMA; campaign: string; dataset: string; comparisons: string[]; pool_sha256: string }
+type Pool = Readonly<Record<string, readonly number[]>>;
+
+/** The pool's SHA-256 over its comparisons in sorted order, as the custody receipt records it. */
+export function falseAlarmPoolSha256(pool: Pool): string {
+  return createHash('sha256').update(JSON.stringify(Object.keys(pool).sort().map(k => [k, pool[k]]))).digest('hex');
+}
+
+/** Why a receipt does not vouch for the pool; empty when it does. */
+export function falseAlarmPoolProblems(pool: Pool, receipt: unknown): string[] {
+  const r = receipt as Partial<FalseAlarmPoolReceipt> | null;
+  if (!isPlain(r) || r.schema !== FALSE_ALARM_RECEIPT_SCHEMA) return [`the false-alarm receipt is not a ${FALSE_ALARM_RECEIPT_SCHEMA} receipt`];
+  const p: string[] = [];
+  if (r.campaign !== BG1C_CAMPAIGN || r.dataset !== BG1C_DATASET) p.push("the false-alarm receipt does not name BG1-C's campaign and dataset");
+  const keys = Object.keys(pool).sort();
+  if (!Array.isArray(r.comparisons) || [...r.comparisons].sort().join(',') !== keys.join(',')) p.push("the false-alarm receipt lists other comparisons than the pool");
+  if (r.pool_sha256 !== falseAlarmPoolSha256(pool)) p.push("the false-alarm pool's SHA-256 does not match its custody receipt");
+  return p;
+}
+
 const zOut = (z: number | null) => (z === null || !Number.isFinite(z) ? null : r4(z));
 
 /** What a later week reads back from a weekly aggregates file: its build and its per-world differences. */
@@ -263,7 +289,7 @@ export type BlockAggregates = ReturnType<typeof blockAggregates>;
  * point with intervals and no word; cost per correct answer; the rolling display over this week and the earlier weekly
  * aggregates in `history`; and the regression flag against `previousBlock`'s 95% intervals.
  */
-export function weekAggregates(meta: WeekMeta, questions: readonly WlQuestion[], o: { history?: readonly WeekLike[]; previousBlock?: BlockLike | null; falseAlarmPool?: Readonly<Record<string, readonly number[]>> } = {}) {
+export function weekAggregates(meta: WeekMeta, questions: readonly WlQuestion[], o: { history?: readonly WeekLike[]; previousBlock?: BlockLike | null; falseAlarmPool?: Pool; falseAlarmReceipt?: unknown } = {}) {
   checkMeta(meta);
   const base = { schema: 'gbrain-evals/weekly-line-week/v1' as const, week: meta.week, no_point: meta.no_point ?? null, gbrain: meta.gbrain, comparators: meta.comparators };
   if (meta.no_point) return { ...base, worlds: [] as never[], classes: null, cost_per_correct: null, rolling: null, regression: null };
@@ -296,11 +322,17 @@ export function weekAggregates(meta: WeekMeta, questions: readonly WlQuestion[],
   const prev = o.previousBlock ?? null;
   if (prev && !prev.ended) refuse('the previous block has not ended, so its interval cannot anchor the regression flag');
   if (Object.keys(o.falseAlarmPool ?? {}).some(k => k.endsWith('|grep-agent'))) refuse('BG1-C never ran the grep agent, so the false-alarm pool holds no grep-agent comparison');
+  if (o.falseAlarmReceipt !== undefined) {
+    if (!o.falseAlarmPool) refuse('a false-alarm receipt was given without its pool');
+    const p = falseAlarmPoolProblems(o.falseAlarmPool!, o.falseAlarmReceipt);
+    if (p.length) refuse(`WEEKLY_FALSE_ALARM_RECEIPT: ${p.join('; ')}`);
+  }
+  const vouched = o.falseAlarmReceipt !== undefined ? o.falseAlarmPool : undefined;
   const regression = prev ? byClassOther(c => {
     const pc = prev.comparisons[c.cls][c.other], sdd = weeklySdd(c.family), point = compared.get(c.key)!.pooled.mean;
     const flag = regressionFlag(point, pc.pooled.ci95, sdd);
-    if (c.other === 'grep-agent') return { point: r4(point), previous_ci95: pc.pooled.ci95, sdd: r4(sdd)!, flagged: flag.flagged, direction: flag.direction, false_alarm_rate: null, false_alarm_source: 'unavailable' as const };
-    const pool = o.falseAlarmPool?.[c.key];
+    if (c.other === 'grep-agent' || !vouched) return { point: r4(point), previous_ci95: pc.pooled.ci95, sdd: r4(sdd)!, flagged: flag.flagged, direction: flag.direction, false_alarm_rate: null, false_alarm_source: 'unavailable' as const };
+    const pool = vouched[c.key];
     if (!pool || pool.length < 2 || !pool.every(Number.isFinite)) return refuse(`the regression flag's false-alarm rate needs at least two of BG1-C's per-world differences for ${c.key}, each a finite number; pass them with --false-alarm-pool`);
     return { point: r4(point), previous_ci95: pc.pooled.ci95, sdd: r4(sdd)!, flagged: flag.flagged, direction: flag.direction, false_alarm_rate: r4(falseAlarmRate(pool, sdd)), false_alarm_source: 'BG1-C pool' as const };
   }) : null;
@@ -415,7 +447,8 @@ export function main(argv: readonly string[]): number {
     const poolPath = flag(rest, '--false-alarm-pool');
     const pool = poolPath ? readJson(poolPath) : undefined;
     if (pool !== undefined && (!isPlain(pool) || Object.entries(pool).some(([k, v]) => !WL_COMPARISONS.some(c => c.key === k) || !Array.isArray(v) || !v.every(x => typeof x === 'number' && Number.isFinite(x))))) refuse(`${poolPath} must map comparison keys to lists of per-world differences`);
-    const a = weekAggregates(metas[0], questions, { history, previousBlock, falseAlarmPool: pool });
+    const receiptPath = flag(rest, '--false-alarm-receipt');
+    const a = weekAggregates(metas[0], questions, { history, previousBlock, falseAlarmPool: pool, falseAlarmReceipt: receiptPath ? readJson(receiptPath) : undefined });
     const json = join(out, `week-${a.week}.json`);
     writeAggregate(json, a, 'week');
     writeFileSync(join(out, `week-${a.week}.md`), renderWeek(a));

@@ -18,7 +18,8 @@ import { instrumentFor } from '../../eval/runner/memory-qa/instruments.ts';
 import { answerId, type AnswerRecord, type JudgmentRecord } from '../../eval/runner/memory-qa/records.ts';
 import { frontierInstrumentId } from '../../eval/runner/q1/cell.ts';
 import { bg1JudgeOf, PER_READER_JUDGE_SETTINGS } from '../../eval/runner/q1/cells/definitions.ts';
-import { aggregateProblems, assertAggregate, blockAggregates, main, WEEK_SCHEMA, weekAggregates, WeeklyAggregateError, writeAggregate, writeBlockFiles, type WeekMeta } from '../../eval/runner/weekly-line/aggregates.ts';
+import { aggregateProblems, assertAggregate, blockAggregates, FALSE_ALARM_RECEIPT_SCHEMA, falseAlarmPoolSha256, main, WEEK_SCHEMA, weekAggregates, WeeklyAggregateError, writeAggregate, writeBlockFiles, type WeekMeta } from '../../eval/runner/weekly-line/aggregates.ts';
+import { BG1C_CAMPAIGN, BG1C_DATASET } from '../../eval/runner/memory-qa/bg1-names.ts';
 import { plannedQuestions, WL_CLASSES, WL_COMPARISONS, WL_OBF_BOUNDS, WL_READER_KEYS, WL_READERS, WL_ROWS, WL_SYSTEMS, type WlClass, type WlReaderKey, type WlRow } from '../../eval/runner/weekly-line/design.ts';
 import { plannedFor, questionsFromRecords, WeeklyRecordsError, type WlQuestion } from '../../eval/runner/weekly-line/records.ts';
 import { renderBlock, renderWeek } from '../../eval/runner/weekly-line/scorecard.ts';
@@ -308,6 +309,9 @@ describe('beside the verdict', () => {
 
 // ─── The aggregates and their allow-list ─────────────────────────────
 
+/** BG1-C's custody receipt for a false-alarm pool. */
+const receiptOf = (pool: Record<string, number[]>) => ({ schema: FALSE_ALARM_RECEIPT_SCHEMA, campaign: BG1C_CAMPAIGN, dataset: BG1C_DATASET, comparisons: Object.keys(pool), pool_sha256: falseAlarmPoolSha256(pool) });
+
 /** The runner's settled marker for each week, agreeing with its meta. */
 const settledOf = (metas: readonly WeekMeta[]) => metas.map(m => ({
   schema: SETTLED_SCHEMA, week: m.week, no_point: m.no_point ?? null, gbrain: m.gbrain, worlds: m.no_point ? [] : m.worlds.map(w => w.world),
@@ -345,7 +349,7 @@ describe('the aggregates that leave custody', () => {
   test('a week after a block reads the regression flag against that block', () => {
     const next = synth(40, { 'now|grep-agent': i => (i < 32 ? -3 - (i % 2) : 4) });
     const pool = { 'now|extract-first': [1, -1, 2, -2], 'now|memory-bank': [1, -1, 2, -2], 'past|extract-first': [1, -1, 2, -2], 'past|memory-bank': [1, -1, 2, -2] };
-    const later = weekAggregates(meta('2027-01-05', next.worlds.slice(32), B), next.questions, { history: weeks, previousBlock: block, falseAlarmPool: pool });
+    const later = weekAggregates(meta('2027-01-05', next.worlds.slice(32), B), next.questions, { history: weeks, previousBlock: block, falseAlarmPool: pool, falseAlarmReceipt: receiptOf(pool) });
     assertAggregate(later, 'week');
     const f = later.regression!.now['grep-agent'];
     expect(f.flagged).toBe(true);
@@ -361,13 +365,32 @@ describe('the aggregates that leave custody', () => {
     const next = synth(40, { 'now|grep-agent': i => (i < 32 ? -3 - (i % 2) : 4) });
     const pool = { 'now|extract-first': [1, -1, 2, -2], 'now|memory-bank': [1, -1, 2, -2], 'past|extract-first': [1, -1, 2, -2], 'past|memory-bank': [1, -1, 2, -2] };
     const at = (o: Parameters<typeof weekAggregates>[2]) => weekAggregates(meta('2027-01-05', next.worlds.slice(32), B), next.questions, { history: weeks, previousBlock: block, ...o });
-    const ok = at({ falseAlarmPool: pool }), g = ok.regression!.now['grep-agent'];
+    const ok = at({ falseAlarmPool: pool, falseAlarmReceipt: receiptOf(pool) }), g = ok.regression!.now['grep-agent'];
     expect([g.false_alarm_rate, g.false_alarm_source]).toEqual([null, 'unavailable']);
+    expect(ok.regression!.now['extract-first'].false_alarm_source).toBe('BG1-C pool');
     expect(renderWeek(ok)).toContain('unavailable (no registered calibration)');
-    expect(() => at({})).toThrow(/BG1-C's per-world differences/);
-    expect(() => at({ falseAlarmPool: { ...pool, 'now|extract-first': [1] } })).toThrow(/at least two of BG1-C's per-world differences/);
-    expect(() => at({ falseAlarmPool: { ...pool, 'now|extract-first': [1, Number.NaN] } })).toThrow(/each a finite number/);
+    const short = { ...pool, 'now|extract-first': [1] }, nan = { ...pool, 'now|extract-first': [1, Number.NaN] };
+    expect(() => at({ falseAlarmPool: short, falseAlarmReceipt: receiptOf(short) })).toThrow(/at least two of BG1-C's per-world differences/);
+    expect(() => at({ falseAlarmPool: nan, falseAlarmReceipt: receiptOf(nan) })).toThrow(/each a finite number/);
     expect(() => at({ falseAlarmPool: { ...pool, 'now|grep-agent': [1, -1] } })).toThrow(/never ran the grep agent/);
+  }, 60_000);
+
+  // Value: protects=no flag line publishes a false-alarm rate labelled BG1-C unless BG1-C's custody receipt vouches for the pool by its SHA-256; fails_when=a pool with no receipt, or with a receipt for other numbers, another campaign or other comparisons, publishes a rate (#611 read-only review blocker 4); why_new=GBEV-3 ruling on #611, 2026-11-23; seam=aggregates.ts weekAggregates over falseAlarmPoolProblems; no_claim=forged receipts with recomputed hashes, outside the crew's threat model
+  test('without BG1-C\'s custody receipt for the pool, every false-alarm rate is unavailable', () => {
+    const next = synth(40, { 'now|grep-agent': i => (i < 32 ? -3 - (i % 2) : 4) });
+    const pool = { 'now|extract-first': [1, -1, 2, -2], 'now|memory-bank': [1, -1, 2, -2], 'past|extract-first': [1, -1, 2, -2], 'past|memory-bank': [1, -1, 2, -2] };
+    const at = (o: Parameters<typeof weekAggregates>[2]) => weekAggregates(meta('2027-01-05', next.worlds.slice(32), B), next.questions, { history: weeks, previousBlock: block, ...o });
+    const rates = (w: ReturnType<typeof at>) => WL_COMPARISONS.map(c => [w.regression![c.cls][c.other].false_alarm_rate, w.regression![c.cls][c.other].false_alarm_source]);
+    const none = Array(6).fill([null, 'unavailable']);
+    expect(rates(at({}))).toEqual(none);
+    expect(rates(at({ falseAlarmPool: pool }))).toEqual(none);
+    expect(rates(at({ falseAlarmPool: pool, falseAlarmReceipt: receiptOf(pool) })).filter(([, s]) => s === 'BG1-C pool')).toHaveLength(4);
+    const other = { ...pool, 'now|extract-first': [9, -9, 9, -9] };
+    expect(() => at({ falseAlarmPool: other, falseAlarmReceipt: receiptOf(pool) })).toThrow(/SHA-256 does not match its custody receipt/);
+    expect(() => at({ falseAlarmPool: pool, falseAlarmReceipt: { ...receiptOf(pool), campaign: 'q1-scoreboard-bg1-changing-facts' } })).toThrow(/does not name BG1-C's campaign/);
+    expect(() => at({ falseAlarmPool: pool, falseAlarmReceipt: { ...receiptOf(pool), comparisons: ['now|extract-first'] } })).toThrow(/other comparisons than the pool/);
+    expect(() => at({ falseAlarmPool: pool, falseAlarmReceipt: { pool_sha256: falseAlarmPoolSha256(pool) } })).toThrow(/is not a gbrain-evals\/weekly-line-false-alarm-pool-receipt\/v1 receipt/);
+    expect(() => at({ falseAlarmReceipt: receiptOf(pool) })).toThrow(/without its pool/);
   }, 60_000);
 
   test('a constant nonzero gap writes a null z beside its crossing', () => {
