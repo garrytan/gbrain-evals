@@ -26,9 +26,13 @@
  * Readings chosen where the preregistration is silent: the grep agent's turn-cap and context-overflow rates are not on
  * the weekly list, so they leave once per block, per week; the seed and phrasing ids are the set label (W1, ...) or the
  * SHA-256 a rotation amendment publishes; a weekly row mean is over the questions where that row holds both readers'
- * values; the regression flag fires on either side and says which; its false-alarm rate is simulated from a supplied pool
- * of per-world differences (BG1-C's, recomputed in custody) when one is given for a comparison, and otherwise from the
- * previous block's own per-world differences.
+ * values; the regression flag fires on either side and says which; its false-alarm rate is simulated from BG1-C's
+ * per-world differences (recomputed in custody), which a week with a previous block must supply for each server
+ * comparison; BG1-C never ran the grep agent, so its comparisons' rate is unavailable until an amendment defines one; a
+ * z with no finite value (every world the same nonzero difference) is written null beside its crossing.
+ *
+ * Refused besides the allow-list: a point week's world with no answer records, a cost cell repeated for a row, reader
+ * and world, one outside the week's worlds, and a spend that is not a finite number of at least 0.
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -104,7 +108,7 @@ export const WEEK_SCHEMA: Schema = obj({
   rolling: n(obj({ weeks: arr(ID.date, 4), builds: arr(ID.release, 4), differences: perClassOther(obj({ pooled: est, readers: readers(est) })) })),
   regression: n(perClassOther(obj({
     point: n(num), previous_ci95: n(pair), sdd: num, flagged: bool, direction: n(en(['below', 'above'])),
-    false_alarm_rate: n(num), false_alarm_source: n(en(['supplied pool', 'previous block'])),
+    false_alarm_rate: n(num), false_alarm_source: en(['BG1-C pool', 'unavailable']),
   }))),
 });
 
@@ -210,7 +214,22 @@ function checkMeta(m: WeekMeta): void {
     if (!m.gbrain || !m.comparators) refuse(`week ${m.week} has a point, so it needs the gbrain release and the comparators' versions`);
   }
   if (new Set(m.worlds.map(w => w.world)).size !== m.worlds.length) refuse(`week ${m.week} lists a world twice`);
+  const worlds = new Set(m.worlds.map(w => w.world)), seen = new Set<string>();
+  for (const c of m.costs ?? []) {
+    const key = `${c.row}|${c.reader}|${c.world}`;
+    if (seen.has(key)) refuse(`week ${m.week} lists one row's spend for one reader and world twice`);
+    seen.add(key);
+    if (!worlds.has(c.world)) refuse(`week ${m.week} lists a spend for a world outside the week`);
+    if (typeof c.usd !== 'number' || !Number.isFinite(c.usd) || c.usd < 0) refuse(`week ${m.week} lists a spend that is not a finite number of at least 0`);
+  }
 }
+
+function checkRecords(m: WeekMeta, questions: readonly WlQuestion[]): void {
+  const answered = new Set(questions.filter(q => Object.values(q.rows).some(cells => cells && Object.keys(cells).length)).map(q => q.world));
+  if (m.worlds.some(w => !answered.has(w.world))) refuse(`week ${m.week} counts a world with no answer records`);
+}
+
+const zOut = (z: number | null) => (z === null || !Number.isFinite(z) ? null : r4(z));
 
 /** What a later week reads back from a weekly aggregates file: its build and its per-world differences. */
 export interface WeekLike {
@@ -242,6 +261,7 @@ export function weekAggregates(meta: WeekMeta, questions: readonly WlQuestion[],
   checkMeta(meta);
   const base = { schema: 'gbrain-evals/weekly-line-week/v1' as const, week: meta.week, no_point: meta.no_point ?? null, gbrain: meta.gbrain, comparators: meta.comparators };
   if (meta.no_point) return { ...base, worlds: [] as never[], classes: null, cost_per_correct: null, rolling: null, regression: null };
+  checkRecords(meta, questions);
   const ids = meta.worlds.map(w => w.world);
   const history = o.history ?? [];
   const earlierWorlds = history.flatMap(h => h.worlds.map(w => w.world));
@@ -268,13 +288,13 @@ export function weekAggregates(meta: WeekMeta, questions: readonly WlQuestion[],
   const points = [...history.map(pointWeekOf).filter((p): p is PointWeek => p !== null && p.week < meta.week), pointWeekOf(partial)!];
   const roll = rolling(points);
   const prev = o.previousBlock ?? null;
+  if (Object.keys(o.falseAlarmPool ?? {}).some(k => k.endsWith('|grep-agent'))) refuse('BG1-C never ran the grep agent, so the false-alarm pool holds no grep-agent comparison');
   const regression = prev ? byClassOther(c => {
     const pc = prev.comparisons[c.cls][c.other], sdd = weeklySdd(c.family), point = compared.get(c.key)!.pooled.mean;
-    const supplied = o.falseAlarmPool?.[c.key];
-    const pool = supplied ?? pc.per_world.map(w => w.d);
     const flag = regressionFlag(point, pc.pooled.ci95, sdd);
-    const rate = falseAlarmRate(pool, sdd);
-    return { point: r4(point), previous_ci95: pc.pooled.ci95, sdd: r4(sdd)!, flagged: flag.flagged, direction: flag.direction, false_alarm_rate: r4(rate), false_alarm_source: rate === null ? null : supplied ? 'supplied pool' : 'previous block' };
+    if (c.other === 'grep-agent') return { point: r4(point), previous_ci95: pc.pooled.ci95, sdd: r4(sdd)!, flagged: flag.flagged, direction: flag.direction, false_alarm_rate: null, false_alarm_source: 'unavailable' as const };
+    const pool = o.falseAlarmPool?.[c.key] ?? refuse(`the regression flag's false-alarm rate needs BG1-C's per-world differences for ${c.key}; pass them with --false-alarm-pool`);
+    return { point: r4(point), previous_ci95: pc.pooled.ci95, sdd: r4(sdd)!, flagged: flag.flagged, direction: flag.direction, false_alarm_rate: r4(falseAlarmRate(pool, sdd)), false_alarm_source: 'BG1-C pool' as const };
   }) : null;
   return {
     ...partial,
@@ -295,6 +315,7 @@ export function blockAggregates(block: number, metas: readonly WeekMeta[], quest
     if (i && w.week === weeks[i - 1].week) refuse(`the block lists week ${w.week} twice`);
     if (i && day(w.week) - day(weeks[i - 1].week) !== 7) refuse(`the block's weeks must be consecutive, 7 days apart, not ${weeks[i - 1].week} then ${w.week}`);
   });
+  weeks.filter(w => !w.no_point).forEach(w => checkRecords(w, questions));
   const ended = weeks.length === WL_WEEKS_PER_BLOCK;
   const counted = weeks.filter(w => !w.no_point).flatMap(w => w.worlds.map(x => ({ world: x.world, week: w.week, release: w.gbrain!.release, commit: w.gbrain!.commit, seed_id: x.seed_id, phrasing_id: x.phrasing_id })));
   if (new Set(counted.map(w => w.world)).size !== counted.length) refuse('a world is counted in two weeks of the block');
@@ -312,8 +333,8 @@ export function blockAggregates(block: number, metas: readonly WeekMeta[], quest
       return {
         word: x.word, family: x.family,
         early: x.early ? { word: x.early.word, releases: x.early.releases, pooled: outEst(x.early.pooled) } : null,
-        look: l ? { z: r4(l.z), holm_step: l.holm_step, bound: l.bound, crossed: l.crossed, withheld: l.withheld, pooled: outEst(l.pooled) } : null,
-        final: ended ? { z: r4(x.z), holm_step: x.holm_step, bound: x.bound, crossed: x.crossed } : null,
+        look: l ? { z: zOut(l.z), holm_step: l.holm_step, bound: l.bound, crossed: l.crossed, withheld: l.withheld, pooled: outEst(l.pooled) } : null,
+        final: ended ? { z: zOut(x.z), holm_step: x.holm_step, bound: x.bound, crossed: x.crossed } : null,
         pooled: outEst(x.pooled), readers: outReaders(x.readers, outEst),
         simultaneous: { level: x.simultaneous.level, ci: r4p(x.simultaneous.ci) },
         wild: x.wild ? { estimate: r4(x.wild.estimate)!, p: r4(x.wild.p)!, ci95: r4p(x.wild.ci95)! } : null,

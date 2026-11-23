@@ -9,7 +9,10 @@
  * or 1 refuses, because a question scores the share of readers whose answer the judge passes.
  *
  * Refused: an answer from a system that is not one of the four rows, a reader that is not one of the two, a world outside
- * the given worlds, a question that is not planned (<world>:<stratum>:<k>), and two answers for one question, row and reader.
+ * the given worlds, a question that is not planned (<world>:<stratum>:<k>), two answers for one question, row and reader,
+ * two gating judgments for one answer and instrument, and, on gbrain and both servers, a particle-1 re-read whose
+ * context_sha256 differs from claude-opus-5-5's live read (the protocol's byte-for-byte re-read). Binding the records to
+ * the week's full run identity (its arm and cells) waits for the weekly runner, which writes that identity.
  */
 import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
@@ -65,7 +68,10 @@ export function questionsFromRecords(worlds: readonly string[], answers: readonl
   const js = judgments.filter(j => j.judge_replicate === 0 && readerOf.has(j.answer_id));
   const problems = js.flatMap(j => gatingProblems(j, readerOf.get(j.answer_id), instrument));
   if (problems.length) refuse(`${problems.length} gating judgment problem${problems.length === 1 ? '' : 's'}: ${problems.slice(0, 3).join('; ')}`);
-  const score = new Map(js.filter(j => j.view === 'gating').map(j => [`${j.answer_id}|${j.instrument_id}`, j.score]));
+  const gating = js.filter(j => j.view === 'gating').map(j => [`${j.answer_id}|${j.instrument_id}`, j.score] as const);
+  const score = new Map(gating);
+  if (score.size !== gating.length) refuse('two gating judgments for one answer by one instrument');
+  const contexts = new Map<string, string>();
   for (const a of scoped) {
     const row = WL_SYSTEMS[a.system] ?? refuse(`an answer comes from system ${a.system}, which is not one of the weekly line's rows`);
     if (!(WL_READERS as readonly string[]).includes(a.reader)) refuse(`an answer is read by ${a.reader}, which is not one of the weekly line's readers`);
@@ -75,6 +81,11 @@ export function questionsFromRecords(worlds: readonly string[], answers: readonl
     const r = readerKey(a.reader);
     const cells = (q.rows[row] ??= {});
     if (cells[r]) refuse(`two answers for one question in row ${row} by ${r}`);
+    if (row !== 'grep-agent') {
+      const key = `${q.id}|${row}`, other = contexts.get(key);
+      if (other !== undefined && other !== a.context_sha256) refuse(`a re-read in row ${row} read a different context than the live read; particle-1 re-reads claude-opus-5-5's frozen context byte for byte`);
+      contexts.set(key, a.context_sha256);
+    }
     cells[r] = cellOf(a, score, instrument);
   }
   return questions;
