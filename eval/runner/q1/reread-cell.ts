@@ -47,6 +47,11 @@
  * gating judge from the reader's own family is refused, and the judge is part of the --out's identity, so a re-read
  * never resumes under another judging plan. Without `gating` nothing changes.
  *
+ * The weekly line (`--manifest weekly`, #619 OV4): a weekly arm's re-read is graded by its reader's preregistered gating
+ * judge (definitions.ts bg1JudgeOf: claude-opus-5-5 for particle-1) alone, as if named by `gating`, which the arm's own
+ * judge map, naming only its live readers, would leave out; a `gating` naming another judge is refused. It opens only
+ * the week's worlds (cell.ts weekScope).
+ *
  * BG1-C (`--manifest bg1c`): no BG1-C answer gets the canonical Gemini view (descriptive_view false), so each answer is
  * graded by the new reader's gating judge alone, the receipt names no canonical judge, and the run reads no Gemini key.
  * A counted BG1-C cell's re-read names its half (`half`, `--half 1|2`), one of the cell set's re-read plans
@@ -71,7 +76,7 @@ import type { PackedContext } from '../systems/render-v2.ts';
 import { claimOut, keylessUpstreamArg } from './calibration-cell.ts';
 import { answerAppender, bg1GeminiKey, custodyGate, devOnly, findCell, frontierInstrumentId, gatherStaging, JUDGED, latestBy, loadBG1CManifest, metering, needsCustody, onSlot, readerMaxTokens, readPrompt, refuseCompatJudges, requiredJudges, scheduledQuestions,
   selectCellQuestions, weekCorpusProblems, weeklyRunStamp, weekScope, type CellManifestId, type MeterLine, type RequiredJudge, type StagedRetrieval } from './cell.ts';
-import { frontierJudgesFor, isWindowedBenchmark, PER_READER_JUDGE_SETTINGS, pinnedJudgeRouteCaps, policyKey, type ArmDefinition, type CellDefinition } from './cells/definitions.ts';
+import { bg1JudgeOf, frontierJudgesFor, isWindowedBenchmark, PER_READER_JUDGE_SETTINGS, pinnedJudgeRouteCaps, policyKey, type ArmDefinition, type CellDefinition } from './cells/definitions.ts';
 import { loadRS1Manifest } from './cells/rs1.ts';
 import { exitCodeOf, refuse, renderMessage, ScoreboardError } from './scoreboard-errors.ts';
 import { BG1C_SET, bg1SealedSet, bg1UnitConversations, readBg1Manifest, type Bg1Manifest } from '../memory-qa/corpus.ts';
@@ -263,12 +268,20 @@ export function prepareReread(def: CellDefinition, arm: ArmDefinition, opts: Rer
   const env = opts.env ?? process.env;
   const out = resolve(opts.out);
   const instrument = deps.instrument ?? instrumentFor(def.canonical_instrument);
+  let preregistered: string | null = null;
+  if (def.week) {
+    try { preregistered = bg1JudgeOf(opts.reader); }
+    catch (e) { throw refuse({ code: 'USAGE', message: `${arm.cell_id} is a weekly-line arm, and ${(e as Error).message}`, why: "a weekly re-read is graded by its reader's preregistered gating judge alone", fix: { next: 'report', user_message: 're-read with particle:particle-1, whose gating judge is anthropic:claude-opus-5-5' } }); }
+    if (opts.gating && opts.gating !== preregistered) throw refuse({ code: 'USAGE', message: `${arm.cell_id} is a weekly-line arm, so ${opts.reader}'s re-read is graded by its preregistered gating judge ${preregistered}, not ${opts.gating}`,
+      why: "a weekly re-read is graded by its reader's preregistered gating judge alone (definitions.ts bg1JudgeOf)", fix: { next: 'run', argv: [...FRONT, '--cell', def.id, '--manifest', 'weekly', '--reader', opts.reader] } });
+  }
+  const gating = opts.gating ?? preregistered ?? undefined;
   let frontier: string[];
-  try { frontier = !opts.gating && arm.frontier?.per_reader ? frontierJudgesFor(arm, opts.reader) : []; }
+  try { frontier = !gating && arm.frontier?.per_reader ? frontierJudgesFor(arm, opts.reader) : []; }
   catch (e) { throw refuse({ code: 'USAGE', message: `${arm.cell_id} judges each reader with its family's frontier judge: ${(e as Error).message}`, why: 'a re-read answer on a per-reader frontier arm is scored by both judge views, so a reader without a preregistered judge would be read and never fully scored', fix: { next: 'report', user_message: 're-read with particle:particle-1, whose frontier judge is openai:gpt-6.1-sol' } }); }
-  if (opts.gating && opts.gating.split(':')[0] === opts.reader.split(':')[0]) throw refuse({ code: 'USAGE', message: `${opts.gating} would grade ${opts.reader}, a reader of its own family`,
+  if (gating && gating.split(':')[0] === opts.reader.split(':')[0]) throw refuse({ code: 'USAGE', message: `${gating} would grade ${opts.reader}, a reader of its own family`,
     why: 'no judge grades its own family\'s answers (R78; GST-767)', fix: { next: 'report', user_message: 'name the reader\'s preregistered gating judge (definitions.ts bg1JudgeOf)' } });
-  refuseCompatJudges(arm.cell_id, opts.gating ? [opts.gating] : [instrument.canonical_judge, ...frontier]);
+  refuseCompatJudges(arm.cell_id, gating ? [gating] : [instrument.canonical_judge, ...frontier]);
   if (def.benchmark === 'beam-rs1' && (deps.corpus ? deps.corpus.source.revision === 'unfilled' : readRs1Manifest().manifest.status !== 'filled')) throw refuse({ code: 'PREFLIGHT_FAILED', message: `beam-rs1: the RS1 manifest is unfilled, so ${arm.cell_id} cannot be re-read`,
     why: 'a re-read is scored only against the filled manifest\'s pinned bytes, and verdict.ts checks the re-read receipt\'s dataset against it', fix: { next: 'ask_user', user_message: 'the custodian fills the RS1 manifest before any RS1 re-read' } });
   if (!hasChatRoute(opts.reader)) throw refuse({ code: 'USAGE', message: `reader ${opts.reader} has no chat route`, why: 'a re-read sends each frozen prompt to one provider:model reader', fix: { next: 'run', argv: [...FRONT, '--reader', 'particle:particle-1'] } });
@@ -314,12 +327,12 @@ export function prepareReread(def: CellDefinition, arm: ArmDefinition, opts: Rer
       why: 'a re-read sends exactly the bytes the source readers read, so every frozen context, answer and schedule must check out first',
       fix: { next: 'report', user_message: resuming ? `the sources no longer verify; ${join(out, 'verify.json')} still holds the check the answers in ${out} were read under` : `the counts are in ${join(out, 'verify.json')}` } });
   }
-  const identity = JSON.stringify({ arm_cell_id: arm.cell_id, reader: opts.reader, effort: def.effort, config_sha256: verify.source_config_sha256, contexts_sha256: verify.sources.map(s => s.contexts_sha256).sort(), ...(opts.gating ? { gating: opts.gating } : {}), ...(half ? { half: half.id } : {}) }) + '\n';
+  const identity = JSON.stringify({ arm_cell_id: arm.cell_id, reader: opts.reader, effort: def.effort, config_sha256: verify.source_config_sha256, contexts_sha256: verify.sources.map(s => s.contexts_sha256).sort(), ...(gating ? { gating } : {}), ...(half ? { half: half.id } : {}) }) + '\n';
   if (resuming && readFileSync(frozen, 'utf8') !== identity) throw refuse({ code: 'USAGE', message: `${out} holds a re-read of other sources, another run configuration or another effort; give this run a fresh --out`,
     why: 'a resume keeps the answers already in --out, so it must read the sources they were read from', fix: { next: 'run', argv: [...FRONT, '--out', '<a fresh directory>'] } });
   writeFileSync(join(out, 'verify.json'), JSON.stringify(verify, null, 2) + '\n');
   if (!resuming) writeFileSync(frozen, identity);
-  return { def, arm, reader: opts.reader, out, manifest: opts.manifest ?? null, keyless: !!opts.keyless, instrument, dataset: corpus.source, verify, plan, gating: opts.gating ?? null, cell_id: cellId, half };
+  return { def, arm, reader: opts.reader, out, manifest: opts.manifest ?? null, keyless: !!opts.keyless, instrument, dataset: corpus.source, verify, plan, gating: gating ?? null, cell_id: cellId, half };
 }
 
 export interface RereadResult { cell_id: string; dir: string; status: 'complete' | 'partial'; stopped: string | null; receipt: Record<string, unknown> }

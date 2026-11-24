@@ -10,6 +10,7 @@
  *        the week's worlds and the cells.json to their VMs.
  *   OV3  a weekly cell, its re-read and its merge open exactly the week's worlds, never the rest of the batch, and
  *        refuse another batch, unit scope, world end or week's sources.
+ *   OV4  a weekly re-read is graded by its reader's preregistered gating judge alone (claude-opus-5-5 for particle-1).
  */
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from 'bun:test';
 import { spawnSync } from 'node:child_process';
@@ -24,7 +25,7 @@ import type { ChatLike, ChatResult } from '../../eval/runner/memory-qa/qa-v2.ts'
 import { sha256, WEEKLY_CELLS_ENV, WEEKLY_CELLS_SHA256_ENV, WEEKLY_RUN_ENV } from '../../eval/runner/memory-qa/records.ts';
 import { findCell, runCell, windowedRunGuard } from '../../eval/runner/q1/cell.ts';
 import { generateWeeklyLineCells, WEEKLY_LINE_MODELS } from '../../eval/runner/q1/cells/weekly-line.ts';
-import { prepareReread, rereadKeys } from '../../eval/runner/q1/reread-cell.ts';
+import { prepareReread, rereadKeys, runReread } from '../../eval/runner/q1/reread-cell.ts';
 import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { Campaign, runRemote, weeklyCustodyPush, type CampaignManifest } from '../../eval/runner/shootout-cell.ts';
 import { FakeMemorySystem } from '../../eval/runner/systems/fake.ts';
@@ -314,6 +315,31 @@ describe("OV3: a weekly cell reads only its week's worlds", () => {
     const r = spawnSync('bun', ['eval/runner/q1/cell.ts', 'merge', '--cell', memoryBank.id, '--manifest', 'weekly', '--from', mine, '--out', merged], { cwd: REPO, encoding: 'utf8', timeout: 60_000, env });
     expect([r.status, r.stderr.split('\n').filter(l => l.startsWith('['))]).toEqual([0, []]);
     expect([...new Set(host.opened().slice(before2))].sort()).toEqual(WORLDS);
+  }, 120_000);
+});
+
+
+// ─── OV4 ─────────────────────────────────────────────────────────────
+
+describe("OV4: a weekly re-read is graded by its reader's gating judge", () => {
+  // Value: protects=particle-1's re-read of a weekly arm is graded by claude-opus-5-5 (bg1JudgeOf), its preregistered gating judge, alone, with no flag naming it, and a run naming another judge refuses; fails_when=prepareReread takes the arm's judge map, which names only claude-opus-5-5's judge, so the re-read refuses for want of a particle-1 judge or is graded by another judge; why_new=#619 OV4 and its deferred finding at reread-cell.ts:446 (the gating judge is not passed); seam=prepareReread and runReread over the real Set W loader, in-process reader and judge; no_claim=the grades themselves
+  test("particle-1's re-read of a weekly arm is graded by claude-opus-5-5 alone, and another judge is refused", async () => {
+    custodyHost();
+    const mine = join(scratch('cell'), 'out');
+    const live = scripted();
+    await runCell(memoryBank, { out: mine, ...quiet }, { system: new FakeMemorySystem(), reader: live.reader, judge: live.judge });
+    const arm = memoryBank.arms[0];
+    const opts = (name: string, extra: { gating?: string; reader?: string } = {}) => ({ sources: [join(mine, 'runs', memoryBank.id)], reader: extra.reader ?? PARTICLE, out: join(scratch(name), 'out'), manifest: 'weekly' as const, ...(extra.gating ? { gating: extra.gating } : {}) });
+    expect(refusal(() => prepareReread(memoryBank, arm, opts('astra', { gating: ASTRA })))?.message).toBe(`${arm.cell_id} is a weekly-line arm, so ${PARTICLE}'s re-read is graded by its preregistered gating judge ${OPUS}, not ${ASTRA}`);
+    expect(refusal(() => prepareReread(memoryBank, arm, opts('gemini', { reader: 'gemini:gemini-3-pro' })))?.message).toMatch(/is a weekly-line arm, and no BG1 gating judge is preregistered for gemini:gemini-3-pro/);
+    const p = prepareReread(memoryBank, arm, opts('particle'));
+    expect([p.gating, p.cell_id]).toEqual([OPUS, `${arm.cell_id}.reread-particle-particle-1`]);
+    const s = scripted();
+    const res = await runReread(p, {}, { reader: s.reader, judge: s.judge });
+    expect(res.status).toBe('complete');
+    expect(res.receipt).toMatchObject({ instrument: { judge: null }, counts: { unjudged: 0 } });
+    expect([...new Set(s.judged)]).toEqual([OPUS]);
+    expect(s.judged.length).toBe((res.receipt as { counts: { answers: number } }).counts.answers);
   }, 120_000);
 });
 
