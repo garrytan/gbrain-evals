@@ -212,6 +212,8 @@ export function wideningVariants(op: Pick<Operation, 'params'>, base: Record<str
 }
 
 /** The base argument set plus one variant per value of each enum parameter the base set does not fix. */
+/** Enum variants per operation beyond the base arguments. The counted profile cuts them to fit the cell time limits (launch amendment); the pilot kept up to 3. */
+export const ENUM_VARIANTS: Record<'full' | 'pilot', number> = { full: 0, pilot: 3 };
 export function variantsFor(op: Pick<Operation, 'params'>, base: Record<string, unknown>, cap: number): Array<{ id: string; args: Record<string, unknown> }> {
   const out = [{ id: 'base', args: base }];
   for (const [name, def] of Object.entries(op.params ?? {}) as Array<[string, { enum?: unknown[] }]>) {
@@ -691,7 +693,7 @@ export function planProbes(f: Fixture, ops: Operation[], transport: Transport, p
         const base = argsFor(op, tk.protected, sid);
         const extra: Array<{ id: string; args: Record<string, unknown> }> = [];
         if ('source_id' in (op.params ?? {})) for (const s of [p.dm_source, '__all__']) if (base.source_id !== s) extra.push({ id: 'source_id=' + s, args: { ...base, source_id: s } });
-        const variants = profile === 'ci' ? [{ id: 'base', args: base }] : [...variantsFor(op, base, 4), ...wideningVariants(op, base), ...extra];
+        const variants = profile === 'ci' ? [{ id: 'base', args: base }] : [...variantsFor(op, base, 1 + ENUM_VARIANTS[profile]), ...wideningVariants(op, base), ...extra];
         const ghostBase = tk.ghost ? argsFor(op, tk.ghost, sid) : null;
         const twinBase = argsFor(op, tk.twin, sid);
         for (const v of variants) {
@@ -1005,6 +1007,13 @@ async function runCell(gut: GbrainUnderTest, world: PIWorld, cell: CellId, o: Ce
     const specs = planProbes(f, ops, transport, o.profile);
     result.probes_planned = specs.length;
     o.log('[pi] ' + cell + ' seed ' + world.seed + ': ' + ops.length + ' operations, ' + specs.length + ' probes planned');
+    if (process.env.PI_PLAN_ONLY) {
+      const full = planProbes(f, ops, transport, 'full');
+      const by: Record<string, number> = {};
+      for (const p of full) { const k = p.variant === 'base' ? 'base' : p.variant.startsWith('source_id=') ? 'source' : p.variant.split('=')[0]!; by[k] = (by[k] ?? 0) + 1; }
+      writeFileSync(join(o.outDir, 'plan-' + cell + '.json'), JSON.stringify({ full: full.length, pilot: specs.length, by_variant_param: by, ops: ops.length }, null, 2));
+      throw new StopError('PI_HARNESS', 'plan only');
+    }
     const remote = specs.filter(p => p.caller.client !== 'host');
     for (const p of remote) { if (late()) break; await runProbe(s, probe.call, p, 'warm', ctx); }
     const hostAs = specs.filter(p => p.caller.client === 'host');
