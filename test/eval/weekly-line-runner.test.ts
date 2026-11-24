@@ -268,6 +268,23 @@ describe('launch, progress and the settled marker', () => {
     expect(message(() => markStep(dir, 'judge:mb-p1', 'done'))).toMatch(/^WEEKLY_SETTLED: /);
   });
 
+  // Value: protects=settle validates the whole spend list before it writes anything: no row, reader and world twice, none outside the week, every value a finite number of at least 0; fails_when=settle writes a meta whose cost list holds a duplicate, an out-of-week cell or a non-finite or negative value beside a complete set of valid entries; why_new=GBEV-3 ruling on #616, finding 4 (runner.ts:315); seam=runner.ts settleWeek; no_claim=the metered spend's own correctness
+  test('settle refuses a spend list with a duplicate, an out-of-week cell or a bad value, and writes nothing', () => {
+    const dir = join(tmp, 'settle-costs');
+    const { steps } = planWeek({ dir, launch: '2026-12-08', batch: batch() }, deps('2026-12-08'));
+    for (const s of steps) if (s.stage !== 'aggregates') markStep(dir, s.id, 'done');
+    const full = costsFor(ids(8));
+    const refused = (costs: unknown[]) => { const m = message(() => settleWeek(dir, { costs: costs as typeof full })); expect(existsSync(join(dir, 'settled.json'))).toBe(false); expect(existsSync(join(dir, 'meta.json'))).toBe(false); return m; };
+    expect(refused([...full, full[0]])).toMatch(/^WEEKLY_COSTS: .*bad entry.*gbrain\|claude-opus-5-5\|bgw-1001 is listed twice/);
+    expect(refused([...full, { ...full[0], world: 'bgw-1999' }])).toMatch(/^WEEKLY_COSTS: .*gbrain\|claude-opus-5-5\|bgw-1999 is not a row, reader and world of the week/);
+    expect(refused([...full, { ...full[0], row: 'hybrid' }])).toMatch(/^WEEKLY_COSTS: .*hybrid\|claude-opus-5-5\|bgw-1001 is not a row/);
+    expect(refused([...full, { ...full[0], usd: Number.NaN }])).toMatch(/^WEEKLY_COSTS: .*bad entries/);
+    expect(refused(full.map((c, i) => (i === 3 ? { ...c, usd: Number.POSITIVE_INFINITY } : c)))).toMatch(/^WEEKLY_COSTS: .*is not a finite number of at least 0/);
+    expect(refused(full.map((c, i) => (i === 3 ? { ...c, usd: -0.5 } : c)))).toMatch(/^WEEKLY_COSTS: .*is not a finite number of at least 0/);
+    settleWeek(dir, { costs: full });
+    expect(JSON.parse(readFileSync(join(dir, 'meta.json'), 'utf8')).costs).toEqual(full);
+  });
+
   test('a week with no point settles at once, and a gbrain row that failed settles as no point with its build', () => {
     const none = join(tmp, 'settle-none');
     planWeek({ dir: none, launch: '2026-12-29', batch: batch(manifestOf(ids(20), 20)) }, deps('2026-12-29'));

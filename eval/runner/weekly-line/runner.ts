@@ -368,9 +368,19 @@ export function settleWeek(dir: string, o: { costs?: CostCell[]; gbrainFailed?: 
   if (!run.no_point && !o.gbrainFailed) {
     const costs = o.costs ?? refuse('WEEKLY_COSTS', `week ${run.week} has a point, so settling it needs its metered spend for every row, reader and world (--costs)`);
     const key = (row: string, reader: string, world: string) => `${row}|${reader}|${world}`;
-    const given = new Set(costs.filter(c => typeof c.usd === 'number' && Number.isFinite(c.usd) && c.usd >= 0).map(c => key(c.row, c.reader, c.world)));
-    const missing = WL_ROWS.flatMap(row => WL_READER_KEYS.flatMap(reader => run.worlds.filter(w => !given.has(key(row, reader, w.world))).map(w => key(row, reader, w.world))));
-    if (missing.length) refuse('WEEKLY_COSTS', `week ${run.week}'s spend lacks ${missing.length} row, reader and world cell${missing.length === 1 ? '' : 's'} or holds one that is not a finite number of at least 0 (first ${missing[0]})`);
+    if (!Array.isArray(costs)) refuse('WEEKLY_COSTS', `week ${run.week}'s spend must be a list of row, reader, world and usd entries`);
+    const want = new Set(WL_ROWS.flatMap(row => WL_READER_KEYS.flatMap(reader => run.worlds.map(w => key(row, reader, w.world)))));
+    const given = new Set<string>(), bad: string[] = [];
+    for (const c of costs) {
+      const k = key(String(c?.row), String(c?.reader), String(c?.world));
+      if (!want.has(k)) bad.push(`${k} is not a row, reader and world of the week`);
+      else if (given.has(k)) bad.push(`${k} is listed twice`);
+      if (typeof c?.usd !== 'number' || !Number.isFinite(c.usd) || c.usd < 0) bad.push(`${k} is not a finite number of at least 0`);
+      given.add(k);
+    }
+    if (bad.length) refuse('WEEKLY_COSTS', `week ${run.week}'s spend list has ${bad.length} bad entr${bad.length === 1 ? 'y' : 'ies'}, so nothing is settled (first: ${bad[0]})`);
+    const missing = [...want].filter(k => !given.has(k));
+    if (missing.length) refuse('WEEKLY_COSTS', `week ${run.week}'s spend lacks ${missing.length} row, reader and world cell${missing.length === 1 ? '' : 's'} (first ${missing[0]})`);
   }
   const no_point: WlNoPoint | null = o.gbrainFailed ? 'gbrain release failed to run' : run.no_point;
   const worlds = no_point ? [] : run.worlds;
