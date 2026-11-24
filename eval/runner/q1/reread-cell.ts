@@ -475,7 +475,7 @@ if (import.meta.main) {
       why: 'stage 1\'s $60 cap covers the dry-run campaign and its particle-1 re-reads together: the campaign is capped at $60 less the re-reads\' estimate, and the re-reads share one ledger capped at that estimate', fix: { next: 'run', user_message: `rerun with --ledger-cap-usd ${stage1.toFixed(2)} or less, on the one ledger every stage 1 re-read shares` } });
     const arm = rereadArm(def, armArg);
     const out = resolve(outArg);
-    const keys = rereadKeys(def, keyless);
+    const keys = rereadKeys(def, !!keyless);
     const prepared = prepareReread(def, arm, { sources, reader, out, manifest, keyless: !!keyless, ...(halfArg ? { half: Number(halfArg) as 1 | 2 } : {}) });
     const [cellToken, controlToken] = [randomUUID(), randomUUID()];
     Object.assign(process.env, { SHOOTOUT_CELL_TOKEN: cellToken, SHOOTOUT_PROXY_CONTROL_TOKEN: controlToken });

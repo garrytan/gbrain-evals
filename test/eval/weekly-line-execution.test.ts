@@ -365,7 +365,7 @@ describe("OV5: settle covers every re-read by its own records", () => {
     expect(run.rereads[0]).toMatch(/^bgw\.[a-z-]+\.[a-z0-9-]+\.[a-z0-9-]+\.reread-particle-particle-1$/);
     for (const s of steps) if (s.stage !== 'aggregates') markStep(dir, s.id, 'done');
     const touch = (ids: readonly string[]) => { for (const id of ids) { mkdirSync(join(dir, 'cells', id), { recursive: true }); for (const f of ['answers.ndjson', 'judgments.ndjson']) writeFileSync(join(dir, 'cells', id, f), ''); } };
-    const costs = WL_ROWS.flatMap(row => ['claude-opus-5-5', 'particle-1'].flatMap(reader => WORLDS.map(world => ({ row, reader, world, usd: 0.25 }))));
+    const costs = WL_ROWS.flatMap(row => (['claude-opus-5-5', 'particle-1'] as const).flatMap(reader => WORLDS.map(world => ({ row, reader, world, usd: 0.25 }))));
     touch(run.cells);
     const rereadSteps = steps.filter(s => s.target.includes('.reread-')).length, first = steps.find(s => s.stage === 'reread')!.target;
     expect(message(() => settleWeek(dir, { costs }))).toBe(`WEEKLY_RECORDS: ${rereadSteps} done steps have no record file in the run directory, so nothing is settled (first cells/${first}/answers.ndjson)`);
@@ -456,7 +456,7 @@ describe('the fixture week, end to end and keyless', () => {
     } finally { globalThis.fetch = offline; up.stop(); }
 
     for (const s of steps) if (s.stage !== 'aggregates') markStep(dir, s.id, 'done');
-    const costs = WL_ROWS.flatMap(row => ['claude-opus-5-5', 'particle-1'].flatMap(reader => WORLDS.map(world => ({ row, reader, world, usd: 0.25 }))));
+    const costs = WL_ROWS.flatMap(row => (['claude-opus-5-5', 'particle-1'] as const).flatMap(reader => WORLDS.map(world => ({ row, reader, world, usd: 0.25 }))));
     const marker = settleWeek(dir, { costs });
     expect(marker.steps).toEqual({ cells: run.cells.length + 1, rereads: run.rereads.length, judgments: run.cells.length + 1 + run.rereads.length, harness_failures: 0 });
     const aggregates = scratch('aggregates');
