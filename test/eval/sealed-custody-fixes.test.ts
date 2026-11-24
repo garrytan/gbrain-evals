@@ -9,12 +9,13 @@
 import { afterAll, describe, expect, test } from 'bun:test';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { BG1_CUSTODY_MARKER, PUBLIC_PHRASING } from '../../eval/generators/changing-facts-gen.ts';
 import { batchCheck } from '../../eval/custody/bg1/bgw-checks.ts';
 import { checkCommitment, commitmentFile, commitmentOf, recordCommitment } from '../../eval/custody/bg1/commitment.ts';
+import { fillManifest } from '../../eval/custody/bg1/fill-manifest.ts';
 import { BGW_SPLIT, bgwBatchManifest, bgwFilledManifest } from '../../eval/runner/memory-qa/bg1-names.ts';
 import { bgwCommittedProblems, bgwSet, bgwWeekWorlds, loadBgw, verifyBg1Custody, type Bg1Manifest } from '../../eval/runner/memory-qa/corpus.ts';
 
@@ -56,6 +57,16 @@ const refusal = (r: ReturnType<typeof run>, text: string) => { expect(r.code).to
 /** A mint refusal after the batch or supply line it prints on its way. */
 const stopped = (r: ReturnType<typeof run>, text: string) => { expect(r.code).toBe(2); expect(r.err).toContain(text); };
 const record = (out: string, world: string) => { mkdirSync(join(out, 'render'), { recursive: true }); writeFileSync(join(out, 'render', `${world}.validation.json`), JSON.stringify({ world, status: 'pass' })); };
+/** A throwaway git checkout whose HEAD commits the set's preregistration holding the given hashes. */
+const PREREG = { bgw: 'docs/benchmarks/2026-11-23-weekly-outcome-line-preregistration.md', bg1c: 'docs/benchmarks/2026-11-19-changing-facts-confirmation-preregistration.md' } as const;
+function published(set: keyof typeof PREREG, ...hashes: string[]) {
+  const repo = scratch(`published-${set}`);
+  mkdirSync(join(repo, 'docs/benchmarks'), { recursive: true });
+  writeFileSync(join(repo, PREREG[set]), ['# Launch amendment A', ...hashes.map(h => `- \`${h}\``)].join('\n') + '\n');
+  const git = (...args: string[]) => spawnSync('git', ['-C', repo, '-c', 'user.name=t', '-c', 'user.email=t@example.invalid', ...args], { encoding: 'utf8' });
+  git('init', '-q'); git('add', '.'); git('commit', '-q', '-m', 'amendment');
+  return repo;
+}
 const withEnv = <T>(vars: Record<string, string>, fn: () => T): T => {
   const saved = Object.fromEntries(Object.keys(vars).map(k => [k, process.env[k]]));
   try { Object.assign(process.env, vars); return fn(); }
@@ -182,11 +193,11 @@ describe('finding 5: a real mint checks the seed commitment', () => {
     expect(seed.out).toContain(`commitment_sha256=${commitment} `);
     expect(JSON.parse(readFileSync(file, 'utf8'))).toEqual({ schema: 'gbrain-evals/seed-commitment/v1', set: 'bgw', commitment_sha256: commitment, phrasing_sha256: sha(readFileSync(j.phrasing)) });
     const check = () => run('bun', [COMMITMENT, '--bgw', '--seed-file', j.seed, '--phrasing', j.phrasing]);
-    expect(check()).toMatchObject({ code: 0, err: '', out: `bg1-commitment set=bgw status=pass commitment_sha256=${commitment} phrasing_sha256=${sha(readFileSync(j.phrasing))}\n` });
-    const passed = realMint();
-    expect(passed.code).toBe(2);
-    expect(passed.err).toContain('real mode spends real keys, so it needs --paid-window');
-    expect(direct().err).not.toContain('commitment');
+    refusal(check(), 'are not both published in docs/benchmarks/2026-11-23-weekly-outcome-line-preregistration.md at HEAD');
+    refusal(realMint(), 'are not both published in docs/benchmarks/2026-11-23-weekly-outcome-line-preregistration.md at HEAD');
+    refusal(direct(), 'are not both published in docs/benchmarks/2026-11-23-weekly-outcome-line-preregistration.md at HEAD');
+    const repo = published('bgw', commitment, sha(readFileSync(j.phrasing)));
+    expect(checkCommitment('bgw', j.seed, j.phrasing, repo)).toBe(`bg1-commitment set=bgw status=pass commitment_sha256=${commitment} phrasing_sha256=${sha(readFileSync(j.phrasing))}`);
 
     const phrasing = readFileSync(j.phrasing), seedText = readFileSync(j.seed);
     writeFileSync(j.phrasing, JSON.stringify({ ...custodyPhrasing, note: 'changed' }));
@@ -198,7 +209,7 @@ describe('finding 5: a real mint checks the seed commitment', () => {
     writeFileSync(j.seed, ['bgw', 'seed', 'v1'].join('-') + ':' + sha('another') + '\n');
     refusal(check(), 'the seed and its nonce do not re-derive the recorded commitment');
     writeFileSync(j.seed, seedText);
-    expect(check().code).toBe(0);
+    expect(checkCommitment('bgw', j.seed, j.phrasing, repo)).toContain('status=pass');
     unlinkSync(file);
     refusal(check(), 'there is no commitment file beside the seed');
   }, 120_000);
@@ -212,10 +223,132 @@ describe('finding 5: a real mint checks the seed commitment', () => {
     recordCommitment(j.seed, 'bg1c', commitment, phrasingSha);
     recordCommitment(j.seed, 'bg1c', commitment, phrasingSha);
     expect(statSync(commitmentFile(j.seed, 'bg1c')).mode & 0o777).toBe(0o600);
-    expect(checkCommitment('bg1c', j.seed, j.phrasing)).toBe(`bg1-commitment set=bg1c status=pass commitment_sha256=${commitment} phrasing_sha256=${phrasingSha}`);
+    expect(checkCommitment('bg1c', j.seed, j.phrasing, published('bg1c', commitment, phrasingSha))).toBe(`bg1-commitment set=bg1c status=pass commitment_sha256=${commitment} phrasing_sha256=${phrasingSha}`);
     expect(() => recordCommitment(j.seed, 'bg1c', commitment, sha('other'))).toThrow('records another commitment or phrasing SHA-256');
     expect(() => checkCommitment('bgw', j.seed, j.phrasing)).toThrow();
     writeFileSync(join(j.dir, 'test.bg1c-nonce'), sha('other nonce') + '\n');
     expect(() => checkCommitment('bg1c', j.seed, j.phrasing)).toThrow('the seed and its nonce do not re-derive the recorded commitment');
   });
+});
+
+describe('the follow-up: published hashes, a committed fill and pinned template worlds', () => {
+  // Value: protects=a real mint renders only from hashes launch amendment A committed, a Set W fill pins only a committed template, and the custodian push refuses a pinned template world; fails_when=checkCommitment passes a recorded commitment the preregistration at HEAD does not hold, fillManifest pins an uncommitted or edited template, or bg1CustodyPush pushes a template-rendered world; why_new=#609's second-model findings 1, 3 and 4; seam=commitment.ts checkCommitment, fill-manifest.ts fillManifest and shootout-cell.ts bg1CustodyPush; no_claim=a paid render
+  test('checkCommitment needs both hashes in the preregistration committed at HEAD', () => {
+    const j = inputs('published', 'bg1');
+    const nonce = sha('nonce');
+    writeFileSync(join(j.dir, 'test.bg1c-nonce'), nonce + '\n', { mode: 0o600 });
+    const commitment = commitmentOf('bg1c', j.seedLine, nonce), phrasingSha = sha(readFileSync(j.phrasing));
+    recordCommitment(j.seed, 'bg1c', commitment, phrasingSha);
+    const PUBC = 'are not both published in docs/benchmarks/2026-11-19-changing-facts-confirmation-preregistration.md at HEAD';
+    expect(() => checkCommitment('bg1c', j.seed, j.phrasing, published('bg1c', commitment))).toThrow(PUBC);
+    expect(() => checkCommitment('bg1c', j.seed, j.phrasing, published('bg1c', phrasingSha))).toThrow(PUBC);
+    const draft = published('bg1c');
+    writeFileSync(join(draft, PREREG.bg1c), `\`${commitment}\` \`${phrasingSha}\`\n`);
+    expect(() => checkCommitment('bg1c', j.seed, j.phrasing, draft)).toThrow(PUBC);
+    expect(() => checkCommitment('bg1c', j.seed, j.phrasing, scratch('no-git'))).toThrow('cannot be read from the checkout\'s HEAD commit');
+    expect(checkCommitment('bg1c', j.seed, j.phrasing, published('bg1c', commitment, phrasingSha))).toContain('status=pass');
+  });
+
+  test('a Set W fill refuses a template that is uncommitted or edited in the working tree', () => {
+    const repo = scratch('fill-repo');
+    const git = (...args: string[]) => spawnSync('git', ['-C', repo, '-c', 'user.name=t', '-c', 'user.email=t@example.invalid', ...args], { encoding: 'utf8' });
+    mkdirSync(join(repo, 'eval/decisions/datasets'), { recursive: true });
+    mkdirSync(join(repo, 'eval/decisions/splits'), { recursive: true });
+    const template = join(repo, bgwBatchManifest(1001)), text = readFileSync(join(REPO, bgwBatchManifest(1001)), 'utf8');
+    writeFileSync(join(repo, BGW_SPLIT), readFileSync(join(REPO, BGW_SPLIT)));
+    writeFileSync(template, text);
+    const fill = () => fillManifest({ root: join(repo, 'no-root'), report: join(repo, 'no-report.json'), bgwBatch: 1001, repo });
+    expect(fill).toThrow(`batch bgw-1001 is not committed: ${bgwBatchManifest(1001)} is not committed`);
+    git('init', '-q'); git('add', '.'); git('commit', '-q', '-m', 'batch');
+    writeFileSync(template, text.replace('"unfilled"', '"unfilled" '));
+    expect(fill).toThrow(`${bgwBatchManifest(1001)} differs from its committed bytes at HEAD`);
+    writeFileSync(template, text);
+    expect(fill).not.toThrow('is not committed');
+    expect(fill).toThrow();
+  });
+});
+
+describe('#612 read-only review findings 1 to 4: drill records, symlinked destinations and partial records', () => {
+  // Value: protects=a real mint never counts a drill's records or worlds, render.ts never writes a sealed world through a symlink into a checkout, and a resume never treats a partial validation record as a resolved slot; fails_when=mint.sh starts a real mint on an --out holding a drill validation record or a template-rendered world, render.ts writes into a symlinked world or render directory inside a checkout, or unresolved_check accepts a truncated validation record; why_new=#612 read-only review findings 1 to 4 (supply.ts:44, mint.sh:441, render.ts:592, mint.sh:489); seam=mint.sh's drill check and complete_record, validate.ts's mode field and rename, render.ts insideCheckout on the write destinations; no_claim=a real render
+  test('a real mint refuses to start on an --out holding a drill validation record or a template-rendered world', () => {
+    const j = inputs('drill-out');
+    const out = join(j.dir, 'bgw-custody-drill-out');
+    expect(mint(out, j, ['--fake', ...BATCH, '--count', '6']).code).toBe(0);
+    const render = join(out, 'render');
+    const records = readdirSync(render).filter(f => f.endsWith('.validation.json'));
+    expect(records.length).toBe(6);
+    expect(readdirSync(render).some(f => f.endsWith('.tmp'))).toBe(false);
+    for (const f of records) expect((JSON.parse(readFileSync(join(render, f), 'utf8')) as { mode: string }).mode).toBe('drill');
+    refusal(mint(out, j, [...BATCH, '--start', '1007', '--count', '1']), 'holds a --fake drill\'s record (bgw-1001.json), and a real mint never starts on a drill\'s --out');
+    for (const f of readdirSync(render).filter(f => f.endsWith('.json') && !f.endsWith('.validation.json'))) unlinkSync(join(render, f));
+    refusal(mint(out, j, [...BATCH, '--start', '1007', '--count', '1']), 'holds a --fake drill\'s record (bgw-1001.validation.json), and a real mint never starts on a drill\'s --out');
+    for (const f of readdirSync(render).filter(f => f.endsWith('.json'))) unlinkSync(join(render, f));
+    refusal(mint(out, j, [...BATCH, '--count', '1']), 'holds a template-rendered world (bgw-1001), and a real mint never starts on a drill\'s --out');
+  }, 240_000);
+
+  test('render.ts refuses a world or render directory linked into a checkout', () => {
+    const i = inputs('linked');
+    const checkout = scratch('linked-checkout');
+    spawnSync('git', ['-C', checkout, 'init', '-q']);
+    mkdirSync(join(checkout, 'worlds')); mkdirSync(join(checkout, 'render'));
+    const render = (out: string) => run('bun', [RENDER, '--bgw', '--seed-file', i.seed, '--phrasing', i.phrasing, '--fake', '--slot', '1001', '--set', join(out, 'set')]);
+    const a = join(i.dir, 'a');
+    mkdirSync(join(a, 'set'), { recursive: true });
+    symlinkSync(join(checkout, 'worlds'), join(a, 'set', 'worlds'));
+    refusal(render(a), 'bgw-1001\'s world directory resolves inside a git checkout through a symlink');
+    const b = join(i.dir, 'b');
+    mkdirSync(join(b, 'set'), { recursive: true });
+    symlinkSync(join(checkout, 'render'), join(b, 'render'));
+    refusal(render(b), 'bgw-1001\'s render record directory resolves inside a git checkout through a symlink');
+    expect(readdirSync(join(checkout, 'worlds'))).toEqual([]);
+    expect(readdirSync(join(checkout, 'render'))).toEqual([]);
+  }, 60_000);
+
+  test('a resume refuses a slot whose validation record is partial', () => {
+    const j = inputs('partial');
+    const out = join(j.dir, 'bgw-custody-partial');
+    for (let s = 1001; s <= 1007; s++) record(out, `bgw-${s}`);
+    writeFileSync(join(out, 'render', 'bgw-1006.validation.json'), '{"world":"bgw-1006","status":"pass"');
+    stopped(mint(out, j, ['--fake', ...BATCH, '--start', '1008', '--count', '1']), 'slot 1006 (bgw-1006) has an incomplete validation record, so delete it and resume the mint with --start 1006');
+    writeFileSync(join(out, 'render', 'bgw-1006.validation.json'), '{"world":"bgw-1006"}');
+    stopped(mint(out, j, ['--fake', ...BATCH, '--start', '1008', '--count', '1']), 'slot 1006 (bgw-1006) has an incomplete validation record');
+    expect(existsSync(join(out, 'set', 'worlds', 'bgw-1008'))).toBe(false);
+  }, 120_000);
+});
+
+describe('#614 review fixes: drill drops, partial fail records, private temporary files and the checked template', () => {
+  // Value: protects=a real mint refuses an --out holding a drill's dropped render record, a resume never treats a partial fail record as a drop, a validation write never collides with another writer's temporary file, and a Set W fill pins the template bytes its HEAD check read; fails_when=render.ts writes a dropped record without its mode or mint.sh skips render records, dropped_record trusts a truncated record, validate.ts writes through a shared .tmp path, or fillManifest re-reads the template from disk; why_new=#614 review findings (mint.sh:252, mint.sh:560, validate.ts:165, fill-manifest.ts:122); seam=render.ts record mode, mint.sh drill loop and dropped_record, validate.ts temporary file, fillManifest template source; no_claim=a real render
+  test('a real mint refuses an --out where a drill slot dropped', () => {
+    const j = inputs('drill-drop');
+    const out = join(j.dir, 'bgw-custody-drill-drop');
+    expect(mint(out, j, ['--fake', ...BATCH, '--count', '1', '--fake-break', '1001:1:4']).code).toBe(0);
+    const dropped = JSON.parse(readFileSync(join(out, 'render', 'bgw-1001.json'), 'utf8')) as { status: string; mode: string };
+    expect(dropped).toMatchObject({ status: 'dropped', mode: 'drill' });
+    expect(existsSync(join(out, 'render', 'bgw-1001.validation.json'))).toBe(false);
+    refusal(mint(out, j, [...BATCH, '--start', '1002', '--count', '1']), 'holds a --fake drill\'s record (bgw-1001.json), and a real mint never starts on a drill\'s --out');
+  }, 120_000);
+
+  test('a resume at a slot whose fail record is partial re-validates it instead of counting a drop', () => {
+    const j = inputs('partial-fail');
+    const out = join(j.dir, 'bgw-custody-partial-fail');
+    for (let s = 1001; s <= 1005; s++) record(out, `bgw-${s}`);
+    writeFileSync(join(out, 'render', 'bgw-1006.validation.json'), '{"world":"bgw-1006","status":"fail"');
+    const r = mint(out, j, ['--fake', ...BATCH, '--start', '1006', '--count', '1']);
+    expect(r.out).not.toContain('status=dropped_earlier');
+    expect((JSON.parse(readFileSync(join(out, 'render', 'bgw-1006.validation.json'), 'utf8')) as { world: string; mode: string }).world).toBe('bgw-1006');
+  }, 120_000);
+
+  test('a slot validation writes through its own temporary file', () => {
+    const j = inputs('own-tmp');
+    const out = join(j.dir, 'bgw-custody-own-tmp');
+    expect(mint(out, j, ['--fake', ...BATCH, '--count', '1']).code).toBe(0);
+    const recordPath = join(out, 'render', 'bgw-1001.validation.json');
+    unlinkSync(recordPath);
+    mkdirSync(`${recordPath}.tmp`);
+    const r = run('bun', [VALIDATE, ...BATCH, '--slot', '1001', '--set', join(out, 'set'), '--seed-file', j.seed, '--phrasing', j.phrasing, ...LENGTH, '--fake']);
+    expect(r.err).toBe('');
+    expect(r.out).toContain('status=pass');
+    expect((JSON.parse(readFileSync(recordPath, 'utf8')) as { mode: string }).mode).toBe('drill');
+    expect(readdirSync(join(out, 'render')).filter(f => /\.\d+\.tmp$/.test(f))).toEqual([]);
+  }, 120_000);
 });

@@ -247,6 +247,17 @@ if [ "$BGW" = 1 ]; then
     [ "$(cat "$OUT/batch.json")" = "$BATCH_RECORD" ] || die "this --out is another batch's (its batch.json does not name bgw-$BATCH); each Set W batch mints into a custody --out of its own"
   fi
 fi
+# BG1-C and Set W: a real mint never starts on an --out (or a --previous batch) a --fake drill wrote into (a drill
+# render or validation record, or a template-rendered world), so drill passes and drops never count toward the supply
+# check, the drop cap, the kept stop or the next batch's start.
+if [ "$MODE" = real ] && [ "$GATED" = 1 ]; then
+  for f in "$OUT"/render/*.json ${PREVIOUS:+"$PREVIOUS"/render/*.json}; do
+    [ ! -e "$f" ] || ! grep -Eq '"mode": ?"drill"' "$f" || die "this --out or --previous holds a --fake drill's record ($(basename "$f")), and a real mint never starts on a drill's --out"
+  done
+  for f in "$OUT"/set/worlds/*/world.json ${PREVIOUS:+"$PREVIOUS"/set/worlds/*/world.json}; do
+    [ ! -e "$f" ] || ! grep -Eq '"renderer": ?"(fake-)?template"' "$f" || die "this --out holds a template-rendered world ($(basename "$(dirname "$f")")), and a real mint never starts on a drill's --out"
+  done
+fi
 BG1_KEY=""
 # BG1-C and Set W: a real mint renders only from the seed and phrasing its seed commitment file records (commitment.ts).
 if [ "$MODE" = real ] && [ "$GATED" = 1 ]; then
@@ -376,7 +387,11 @@ world_id() { if [ "$BGW" = 1 ]; then printf 'bgw-%d' "$1"; else printf 'bg1-%03d
 # True when world $1's render record under --out says dropped, whichever invocation dropped it, or (BG1-C and Set W)
 # its validation record says fail.
 dropped_record() {
-  grep -Eq '"status": ?"dropped"' "$OUT/render/$1.json" 2>/dev/null || { [ "$GATED" = 1 ] && grep -Eq '"status": ?"fail"' "$OUT/render/$1.validation.json" 2>/dev/null; }
+  grep -Eq '"status": ?"dropped"' "$OUT/render/$1.json" 2>/dev/null || { [ "$GATED" = 1 ] && [ -e "$OUT/render/$1.validation.json" ] && complete_record "$OUT/render/$1.validation.json" "$1" && grep -Eq '"status": ?"fail"' "$OUT/render/$1.validation.json"; }
+}
+# BG1-C and Set W: whether validation record $1 is whole JSON for world $2 with a terminal status (pass or fail).
+complete_record() {
+  [ "$(tr -d '[:space:]' < "$1" | tail -c 1)" = "}" ] && grep -Eq "\"world\": ?\"$2\"" "$1" && grep -Eq '"status": ?"(pass|fail)"' "$1"
 }
 # BG1-C: " invalid=<n>" for summary lines once this invocation has a world that failed validation.
 invalid_tail() { [ "$INVALID" = 0 ] || printf ' invalid=%s' "$INVALID"; }
@@ -487,6 +502,7 @@ unresolved_check() {
   for ((s = FIRST; s <= $1; s++)); do
     id="$(world_id "$s")"
     [ -e "$OUT/render/$id.validation.json" ] || dropped_record "$id" || die "slot $s ($id) is unresolved: it has neither a validation record nor a dropped render record, so resume the mint with --start $s"
+    [ ! -e "$OUT/render/$id.validation.json" ] || complete_record "$OUT/render/$id.validation.json" "$id" || die "slot $s ($id) has an incomplete validation record, so delete it and resume the mint with --start $s"
   done
 }
 # BG1-C: stops the mint with exit 0 once KEPT_TARGET worlds are kept, after unresolved_check. $1 is the last slot.

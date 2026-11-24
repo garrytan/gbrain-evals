@@ -79,7 +79,7 @@ import { appendFileSync, copyFileSync, cpSync, existsSync, mkdirSync, readdirSyn
 import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import { execFileSync } from 'node:child_process';
-import { BG1_SET, BG1C_SET, bg1SealedSet, bg1UnitConversations, type Bg1Manifest, type Bg1SealedSet } from './memory-qa/corpus.ts';
+import { BG1_SET, BG1_TEMPLATE_RENDERERS, BG1C_SET, bg1SealedSet, bg1UnitConversations, type Bg1Manifest, type Bg1SealedSet } from './memory-qa/corpus.ts';
 import { BudgetExceededError, BudgetRun, initLedger, ledgerStatus, readLedger, setProgramCap, setRunBudget, withFileLock } from './budget-ledger.ts';
 import { DEFAULT_MAX_OUTPUT_TOKENS, DEFAULT_ROUTE_CAPS, KEY_ENV, keylessUpstream, type ProviderLimits, type ProviderName } from './metering-proxy.ts';
 import { refuse, ScoreboardError } from './q1/scoreboard-errors.ts';
@@ -428,7 +428,8 @@ export interface CustodyPush { source: string; dest: string; list: string[]; env
  * BG1: the custodian's files for one sealed BG1 launch unit, mirroring rs1CustodyPush. GBRAIN_EVALS_BG1_SOURCE names
  * the BG1 set root (mint.sh's output, outside the checkout) and GBRAIN_EVALS_BG1_MANIFEST the filled manifest inside
  * it. The unit's kept worlds (corpus.ts bg1UnitConversations; every world without a unit) and the manifest are checked
- * against their pinned SHA-256 here before any VM exists; ubi-runner pushes only those to ~/custody/bg1, with
+ * against their pinned SHA-256 here before any VM exists, and a manifest a --fake drill filled or a pinned world a
+ * template renderer wrote refuses; ubi-runner pushes only those to ~/custody/bg1, with
  * GBRAIN_EVALS_BG1_UNIT naming the unit's worlds, where setup's fetch (verifyBg1Custody) checks them again, the loader
  * logs each opening to the VM's custody access log, and the remote command wipes ~/custody/bg1 at teardown.
  * BG1-C (`set` BG1C_SET) pushes the same way from its own variables (GBRAIN_EVALS_BG1C_SOURCE, _MANIFEST and _UNIT)
@@ -453,6 +454,11 @@ export function bg1CustodyPush(env: Record<string, string | undefined> = process
   for (const f of m.files.filter(x => !worlds || worlds.includes(x.path.split('/')[1]))) {
     const abs = join(source, f.path);
     if (!existsSync(abs) || sha256File(abs) !== f.sha256) throw refuse({ code: 'CUSTODY_REQUIRED', message: `${f.path} under ${v.source} is ${existsSync(abs) ? 'not the pinned bytes' : 'missing'}`, why: 'the push refuses before any VM exists when a file does not match the manifest', fix });
+    if (f.path.endsWith('/world.json')) {
+      let renderer: unknown = null;
+      try { renderer = (JSON.parse(readFileSync(abs, 'utf8')) as { renderer?: unknown }).renderer; } catch { /* not a world object: the VM's loader decides */ }
+      if (typeof renderer === 'string' && BG1_TEMPLATE_RENDERERS.includes(renderer)) throw refuse({ code: 'CUSTODY_REQUIRED', message: `${f.path} under ${v.source} was written by a template renderer`, why: 'a manifest filled before the drill flag existed can still pin template text, and the push refuses it before any VM exists', fix });
+    }
     list.push(f.path);
   }
   return { source: resolve(source), dest: dir, list: [...list, rel],

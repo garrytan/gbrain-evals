@@ -55,6 +55,13 @@ describe('a sealed BG1 unit\'s custody', () => {
     const drill = custodySet();
     writeFileSync(drill.env.GBRAIN_EVALS_BG1_MANIFEST, JSON.stringify({ ...JSON.parse(readFileSync(drill.env.GBRAIN_EVALS_BG1_MANIFEST, 'utf8')), drill: true }));
     expect(caught(() => bg1CustodyPush(drill.env, 'c')).op).toMatchObject({ code: 'CUSTODY_REQUIRED', message: 'the BG1 manifest was filled by a --fake drill' });
+    const old = custodySet(), oldManifest = old.env.GBRAIN_EVALS_BG1_MANIFEST;
+    const worldText = JSON.stringify({ renderer: 'fake-template' });
+    writeFileSync(join(old.root, 'worlds/bg1-002/world.json'), worldText);
+    const m = JSON.parse(readFileSync(oldManifest, 'utf8')) as { files: { path: string; sha256: string }[] };
+    writeFileSync(oldManifest, JSON.stringify({ ...m, files: m.files.map(f => (f.path === 'worlds/bg1-002/world.json' ? { ...f, sha256: sha(worldText) } : f)) }));
+    expect(bg1CustodyPush(old.env, 'c', { index: 1, size: 2 }).list).toHaveLength(5);
+    expect(caught(() => bg1CustodyPush(old.env, 'c')).op).toMatchObject({ code: 'CUSTODY_REQUIRED', message: expect.stringMatching(/worlds\/bg1-002\/world\.json .*was written by a template renderer/) });
   });
 
   // Value: protects=the campaign tells the custodian which unit a sealed BG1 VM runs, so its push holds that unit's worlds; fails_when=a sealed unit has no bg1_unit, a dev unit gets one, or launchArgv pushes nothing; why_new=core review of #398; seam=bg1CampaignManifest and Campaign.launchArgv; no_claim=the VM side's verifyBg1Custody

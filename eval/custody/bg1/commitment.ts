@@ -7,20 +7,24 @@
  *   bun eval/custody/bg1/commitment.ts (--bg1c | --bgw) --seed-file <path> --phrasing <path>
  *
  * mint.sh --bg1c and --bgw run this check in real mode before anything else that spends: the seed line and the nonce
- * beside it must re-derive the recorded commitment, and the phrasing file must hash to the recorded phrasing SHA-256.
+ * beside it must re-derive the recorded commitment, the phrasing file must hash to the recorded phrasing SHA-256, and
+ * both values must appear in the set's preregistration as committed at HEAD, so a seed that was checked but never
+ * published refuses.
  * It prints one counts-and-hashes line and exits 0; a missing, unreadable or mismatched file refuses (exit 2), so a mint
  * never renders from a seed or phrasing other than the ones the amendment published. It prints no seed or nonce text.
  */
+import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { ownerOnly, readPhrasing, readSeedLine, RenderRefusal, type SealedKind } from './render.ts';
 
 export type CommittedSet = 'bg1c' | 'bgw';
-const SPEC: Record<CommittedSet, { prefix: string; kind: SealedKind; seed: string; nonce: string; file: string }> = {
-  bg1c: { prefix: 'gbrain-evals bg1-c seed commitment v1', kind: 'bg1', seed: '.bg1-seed', nonce: '.bg1c-nonce', file: '.bg1c-commitment.json' },
-  bgw: { prefix: 'gbrain-evals weekly-line seed commitment v1', kind: 'bgw', seed: '.bgw-seed', nonce: '.bgw-nonce', file: '.bgw-commitment.json' },
+const SPEC: Record<CommittedSet, { prefix: string; kind: SealedKind; seed: string; nonce: string; file: string; prereg: string }> = {
+  bg1c: { prefix: 'gbrain-evals bg1-c seed commitment v1', kind: 'bg1', seed: '.bg1-seed', nonce: '.bg1c-nonce', file: '.bg1c-commitment.json', prereg: 'docs/benchmarks/2026-11-19-changing-facts-confirmation-preregistration.md' },
+  bgw: { prefix: 'gbrain-evals weekly-line seed commitment v1', kind: 'bgw', seed: '.bgw-seed', nonce: '.bgw-nonce', file: '.bgw-commitment.json', prereg: 'docs/benchmarks/2026-11-23-weekly-outcome-line-preregistration.md' },
 };
+const REPO_ROOT = resolve(import.meta.dir, '../../..');
 export const COMMITMENT_PREFIXES = { bg1c: SPEC.bg1c.prefix, bgw: SPEC.bgw.prefix } as const;
 export const COMMITMENT_SCHEMA = 'gbrain-evals/seed-commitment/v1';
 const sha256 = (data: string | Uint8Array) => createHash('sha256').update(data).digest('hex');
@@ -40,8 +44,11 @@ export function recordCommitment(seedFile: string, set: CommittedSet, commitment
   if (readFileSync(path, 'utf8') !== text) throw new RenderRefusal('the commitment file beside the seed records another commitment or phrasing SHA-256, and a published commitment never changes');
 }
 
-/** The mint's check: the seed, its nonce and the phrasing file re-derive the recorded commitment and phrasing SHA-256. */
-export function checkCommitment(set: CommittedSet, seedFile: string, phrasingFile: string): string {
+/**
+ * The mint's check: the seed, its nonce and the phrasing file re-derive the recorded commitment and phrasing SHA-256, and
+ * both values appear in the set's preregistration as committed at `repo`'s HEAD, where launch amendment A publishes them.
+ */
+export function checkCommitment(set: CommittedSet, seedFile: string, phrasingFile: string, repo = REPO_ROOT): string {
   const seedLine = readSeedLine(resolve(seedFile), SPEC[set].kind);
   readPhrasing(resolve(phrasingFile), SPEC[set].kind);
   const path = commitmentFile(seedFile, set), noncePath = sibling(resolve(seedFile), set, SPEC[set].nonce);
@@ -55,6 +62,9 @@ export function checkCommitment(set: CommittedSet, seedFile: string, phrasingFil
   if (commitmentOf(set, seedLine, nonce) !== rec.commitment_sha256) throw new RenderRefusal('the seed and its nonce do not re-derive the recorded commitment, so this is not the published seed');
   const phrasingSha = sha256(readFileSync(resolve(phrasingFile)));
   if (phrasingSha !== rec.phrasing_sha256) throw new RenderRefusal('the phrasing file does not hash to the recorded phrasing SHA-256, so this is not the published phrasing');
+  const prereg = spawnSync('git', ['-C', repo, 'show', `HEAD:${SPEC[set].prereg}`], { encoding: 'utf8', maxBuffer: 1 << 26 });
+  if (prereg.status !== 0) throw new RenderRefusal(`${SPEC[set].prereg} cannot be read from the checkout's HEAD commit, so the published commitment cannot be checked`);
+  if (!prereg.stdout.includes(rec.commitment_sha256) || !prereg.stdout.includes(phrasingSha)) throw new RenderRefusal(`the recorded commitment and phrasing SHA-256 are not both published in ${SPEC[set].prereg} at HEAD; launch amendment A publishes them before a real mint`);
   return `bg1-commitment set=${set} status=pass commitment_sha256=${rec.commitment_sha256} phrasing_sha256=${phrasingSha}`;
 }
 
