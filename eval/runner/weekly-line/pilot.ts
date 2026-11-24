@@ -321,7 +321,10 @@ export function main(argv: readonly string[], deps: PilotDeps = DEFAULT_DEPS, lo
     const cells = flags(rest, '--cell'), rereads = flags(rest, '--reread');
     if (!cells.length) refuse('USAGE', 'pass --cell <cell out dir> for each pilot or judge-check unit');
     const m = loadWeeklyPilotManifest(withLength(rest, deps.env));
-    const report = pilotReport(cells.flatMap(d => readRow(resolve(d))), rereads.flatMap(d => readReread(resolve(d))), m);
+    const rows = cells.flatMap(d => readRow(resolve(d))), units = new Set(m.cells.map(c => c.id));
+    const stray = rows.filter(r => !units.has(r.cell)).map(r => r.cell);
+    if (stray.length) refuse('PILOT_REPORT', `${stray.join(', ')} ${stray.length === 1 ? 'is not a unit' : 'are not units'} of the ${m.length} pilot, whose caps this report would judge ${stray.length === 1 ? 'it' : 'them'} by; pass the --length its campaigns were written with`);
+    const report = pilotReport(rows, rereads.flatMap(d => readReread(resolve(d))), m);
     log(rest.includes('--json') ? JSON.stringify(report, null, 2) : [
       ...Object.entries(report.rows).map(([row, x]) => `${row}: ${x.reading ? `${x.pass ? 'pass' : 'FAIL'} (${Object.entries(x.checks!).map(([k, v]) => `${k} ${v ? 'yes' : 'NO'}`).join(', ')}); spend ${x.spend_usd === null ? 'unknown' : usd(x.spend_usd)} of cap ${usd(x.cap_usd)}` : 'no pilot output'}`),
       `ceiling: the grep agent with claude-opus-5-5 at ${report.ceiling.grep_agent_opus_accuracy ?? 'n/a'}${report.ceiling.triggers_longer_worlds ? `, at or above ${CEILING}: launch amendment A moves to longer worlds` : ''}`,

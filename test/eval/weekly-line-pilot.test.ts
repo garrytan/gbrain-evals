@@ -329,6 +329,14 @@ describe('the judge check', () => {
     expect(rep.items.every((i: { label_source: string }) => ['gold-settled', MODEL_LABEL_SOURCE].includes(i.label_source))).toBe(true);
   });
 
+  // Value: protects=pilot.ts report judges only cells of the --length it was given, so a long cell is never held to set BGW's caps or a standard one to BGW-long's; fails_when=report reads a cell whose run_cell is not in that length's manifest; why_new=/ship review p1/specialist-batched#1 (#627); seam=pilot.ts main report over a written cell; no_claim=readRow's reading of the cell
+  test('report refuses a cell from the other pilot length', () => {
+    const out = writeCell(scratch('length'), 'BGW-pilot');
+    const lines: string[] = [];
+    expect(message(() => pilotMain(['report', '--length', 'long', '--cell', out], { lsRemote: () => '', env: GBRAIN_ENV }, s => lines.push(s)))).toContain('PILOT_REPORT: bgw-pilot.baseline-file-agent.baseline is not a unit of the long pilot');
+    expect(message(() => pilotMain(['report', '--cell', out], { lsRemote: () => '', env: GBRAIN_ENV }, s => lines.push(s)))).toBeNull();
+  });
+
   // Value: protects=the pilot report reads a grep-agent cell's own output: ripgrep's version, every answer's tool calls, every verdict and the no-tool-call share; fails_when=readRow reads the wrong judge's verdict, counts a turn-cap answer as needing one, or calls the agent's part run without its tool calls; why_new=R111's per-arm proof on real cell files; seam=pilot.ts readRow over cell output; no_claim=the server and gbrain rows' retrieval files
   test("the report reads a grep-agent cell's tool calls, verdicts and rates", () => {
     const out = writeCell(scratch('row'), 'BGW-pilot');
