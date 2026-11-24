@@ -112,6 +112,8 @@ export interface AnswerRecord {
   turns?: number;
   /** Answering agents: the ingested source ids whose files the agent opened (evaluator side). */
   opened_source_ids?: string[];
+  /** Answering agents: each tool called, with its calls and failures (the weekly pilot's proof that the grep agent searched). */
+  tool_calls?: Record<string, { calls: number; failed: number }>;
   /** Dollars the answer cost, when the caller priced it. */
   usd?: number;
   /**
@@ -139,7 +141,7 @@ export interface AnswerRecord {
  * eval/runner/systems/file-agent.ts is assignable to it); the cell adds the
  * identity fields to make an `AnswerRecord`.
  */
-export type AnswerPayload = Pick<AnswerRecord, 'text' | 'outcome' | 'usage' | 'latency_ms'> & { provider_input_tokens: number | null; stop_reason?: string; turns?: number; opened_source_ids?: string[]; usd?: number; delivered_tokens?: Record<string, number> }
+export type AnswerPayload = Pick<AnswerRecord, 'text' | 'outcome' | 'usage' | 'latency_ms'> & { provider_input_tokens: number | null; stop_reason?: string; turns?: number; opened_source_ids?: string[]; tool_calls?: AnswerRecord['tool_calls']; usd?: number; delivered_tokens?: Record<string, number> }
   & Pick<AnswerRecord, 'finish' | 'truncated' | 'attempts'>;
 
 /** An answer record from a system's answer and the cell's identity fields; the id is derived, never passed. */
@@ -227,6 +229,7 @@ export function answerProblems(rec: unknown): string[] {
     usage: v => !!v && typeof v === 'object' && ['input', 'output', 'cache_read', 'cache_write'].every(k => int((v as Record<string, unknown>)[k])),
     stop_reason: v => v === undefined || str(v), turns: v => v === undefined || int(v), usd: v => v === undefined || num(v),
     opened_source_ids: v => v === undefined || (Array.isArray(v) && v.every(x => typeof x === 'string')),
+    tool_calls: v => v === undefined || (!!v && typeof v === 'object' && !Array.isArray(v) && Object.values(v as object).every(c => !!c && typeof c === 'object' && int((c as Record<string, unknown>).calls) && int((c as Record<string, unknown>).failed))),
     hedge: v => v === undefined || (!!v && typeof v === 'object' && HEDGE_VERDICTS.includes((v as Record<string, unknown>).verdict as HedgeVerdict) && str((v as Record<string, unknown>).classifier_version)),
     delivered_tokens: v => v === undefined || (!!v && typeof v === 'object' && !Array.isArray(v) && Object.values(v as object).every(int)),
     finish: v => v === undefined || v === null || str(v), truncated: v => v === undefined || typeof v === 'boolean',

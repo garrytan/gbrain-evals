@@ -22,22 +22,34 @@
  * running week's cells.json (cell.ts loadWeeklyCells, so it refuses where that file can't be read), holds no unit of another
  * set, and gives no unit Gemini.
  *
- * A campaign with no BG1, BG1-C or Set W unit passes untouched.
+ * A weekly-line pilot campaign (its units are the pilot's or the judge check's, blocks BGW-pilot and BGW-judge; cell.ts
+ * weeklyPilotCampaignManifest) takes the same checks against the pilot manifest at the gbrain build its commands export
+ * (cell.ts loadWeeklyPilotManifest, so it refuses where the units name none or disagree), holds no unit of another set, and gives no
+ * unit Gemini.
+ *
+ * A campaign with no BG1, BG1-C or weekly-line unit passes untouched.
  */
 import { BG1_GEMINI_KEY_ENV, campaignCells, loadCellManifest } from '../q1/cell.ts';
-import { isWindowedBenchmark } from '../q1/cells/definitions.ts';
+import { isWindowedBenchmark, WEEKLY_PILOT_BLOCK_IDS } from '../q1/cells/definitions.ts';
+import { WEEKLY_PILOT_GBRAIN_ENV } from '../q1/cells/weekly-line.ts';
 import { refuse } from '../q1/scoreboard-errors.ts';
 import type { CampaignManifest } from '../shootout-cell.ts';
 
 const near = (a: number, b: number) => Math.abs(a - b) <= 1e-9;
-const SETS = { bg1: { label: 'BG1', file: 'bg1-cells.json' }, bg1c: { label: 'BG1-C', file: 'bg1c-cells.json' }, weekly: { label: 'Set W', file: "the week's cells.json" } } as const;
+const SETS = { bg1: { label: 'BG1', file: 'bg1-cells.json' }, bg1c: { label: 'BG1-C', file: 'bg1c-cells.json' }, weekly: { label: 'Set W', file: "the week's cells.json" }, 'weekly-pilot': { label: 'weekly pilot', file: 'the weekly pilot manifest' } } as const;
 type SetId = keyof typeof SETS;
 /** Each set's unit leases as campaignCells prices them; the weekly line's from the running week's cells.json (cell.ts loadWeeklyCells), so a weekly campaign refuses where that file cannot be read. */
-const priced = (which: SetId) => new Map(campaignCells(loadCellManifest(which), { smoke: true, addons: true }).map(c => [c.id, c.lease_usd]));
+const priced = (which: SetId, env: Record<string, string | undefined> = process.env) => new Map(campaignCells(loadCellManifest(which, env), { smoke: true, addons: true }).map(c => [c.id, c.lease_usd]));
+/** The gbrain build every pilot unit's command exports (WEEKLY_PILOT_GBRAIN_ENV); empty, so the pilot manifest refuses, when the units name none or disagree. */
+function pilotBuildEnv(m: Pick<CampaignManifest, 'cells'>): Record<string, string> {
+  const builds = new Set(m.cells.filter(inPilot).map(c => new RegExp(`export ${WEEKLY_PILOT_GBRAIN_ENV}=(\\S+?);`).exec(c.command)?.[1] ?? ''));
+  return { [WEEKLY_PILOT_GBRAIN_ENV]: builds.size === 1 ? [...builds][0] : '' };
+}
 
-/** The set a campaign's units come from: Set W when any unit runs bgw, BG1-C when any unit is one of bg1c-cells.json's, else BG1. */
+const inPilot = (c: Pick<CampaignManifest['cells'][number], 'block'>) => (WEEKLY_PILOT_BLOCK_IDS as readonly string[]).includes(c.block ?? '');
+/** The set a campaign's units come from: Set W when any unit runs bgw, the weekly pilot when any unit is in its blocks, BG1-C when any unit is one of bg1c-cells.json's, else BG1. */
 function setOf(m: Pick<CampaignManifest, 'cells'>, prices: Pick<Record<SetId, Map<string, number>>, 'bg1c'>): SetId {
-  return m.cells.some(c => c.benchmark === 'bgw') ? 'weekly' : m.cells.some(c => prices.bg1c.has(c.id)) ? 'bg1c' : 'bg1';
+  return m.cells.some(c => c.benchmark === 'bgw') ? 'weekly' : m.cells.some(inPilot) ? 'weekly-pilot' : m.cells.some(c => prices.bg1c.has(c.id)) ? 'bg1c' : 'bg1';
 }
 
 /** Why a BG1 or BG1-C campaign may not boot a unit; empty when it may, or when the campaign has no BG1 unit. */
@@ -45,8 +57,8 @@ export function bg1LaunchProblems(m: Pick<CampaignManifest, 'cap_usd' | 'cells' 
   if (!m.cells.some(c => isWindowedBenchmark(c.benchmark))) return [];
   const prices = { bg1: priced('bg1'), bg1c: priced('bg1c') };
   const which = setOf(m, prices), { file } = SETS[which];
-  const own = which === 'weekly' ? priced('weekly') : prices[which];
-  const others = which === 'bg1c' ? m.cells.filter(c => prices.bg1.has(c.id)) : which === 'weekly' ? m.cells.filter(c => c.benchmark !== 'bgw') : [];
+  const own = which === 'weekly' ? priced(which) : which === 'weekly-pilot' ? priced(which, pilotBuildEnv(m)) : prices[which];
+  const others = which === 'bg1c' ? m.cells.filter(c => prices.bg1.has(c.id)) : which === 'weekly' ? m.cells.filter(c => c.benchmark !== 'bgw') : which === 'weekly-pilot' ? m.cells.filter(c => !inPilot(c)) : [];
   const problems = others.length ? [`the campaign holds ${SETS[which].label} units and ${others.length} ${which === 'bg1c' ? 'BG1 unit(s)' : 'unit(s) of another set'} (${others.map(c => c.id).slice(0, 3).join(', ')}); each set runs in its own campaign`] : [];
   problems.push(...m.cells.flatMap(c => {
     const lease = own.get(c.id), cap = /--window-cap-usd (\S+)/.exec(c.command)?.[1];

@@ -51,8 +51,11 @@ export type RS1SetId = 'RS1' | 'RS1-dev2';
 export type BG1SetId = 'BG1' | 'BG1-fc10' | 'BG1-dev3';
 /** BG1-C's sets (eval/runner/q1/cells/bg1c.ts): the sealed confirmation set and its one-world smoke on public dev world bg1-dev-01. */
 export type BG1CSetId = 'BG1C' | 'BG1C-dev1';
-/** The weekly outcome line's set: one week's Set W worlds (weekly-line.ts). */
-export type WeeklyLineSetId = 'BGW';
+/**
+ * The weekly outcome line's sets (weekly-line.ts): one week's Set W worlds, the pilot on public dev world bg1-dev-01
+ * (R111) and the grep agent's judge check on public dev worlds bg1-dev-02 and bg1-dev-03 (R78).
+ */
+export type WeeklyLineSetId = 'BGW' | 'BGW-pilot' | 'BGW-judge';
 /** The SOTA loop's sets (generateSotaDevCells, generateSotaLeaderCells). */
 export type SotaSetId = 'SOTA-dev' | 'SOTA-leader-beam' | 'SOTA-leader-lme';
 export type Q1BlockId = 'T1' | 'T2-S2a' | 'T2-S2b' | 'T2-S3' | 'T2-S4-S5';
@@ -67,7 +70,7 @@ export type BG1CBlockId = 'BG1C-smoke' | 'BG1C';
 /** The SOTA loop's spend blocks: the dev test and the leader cache, each its own paid window and ledger run. */
 export type SotaBlockId = 'SOTA-dev' | 'SOTA-leader';
 export type BN10BlockId = 'BN10-dry' | 'BN10';
-export type WeeklyLineBlockId = 'BGW';
+export type WeeklyLineBlockId = 'BGW' | 'BGW-pilot' | 'BGW-judge';
 export type BlockId = Q1BlockId | F6BlockId | RS1BlockId | BG1BlockId | BG1CBlockId | SotaBlockId | BN10BlockId | WeeklyLineBlockId;
 export type Split = 'dev' | 'sealed' | 'all';
 
@@ -299,7 +302,13 @@ export const BG1C_SETS: Record<BG1CSetId, SetFacts> = {
  */
 export const WEEKLY_LINE_SETS: Record<WeeklyLineSetId, SetFacts> = {
   BGW: { id: 'BGW', benchmark: 'bgw', split: 'sealed', questions: BGW_WORLDS_PER_WEEK * 64, conversations: BGW_WORLDS_PER_WEEK, corpus_tokens: BGW_WORLDS_PER_WEEK * 200_000, messages: BGW_WORLDS_PER_WEEK * 2_000, block: 'BGW', selection: { kind: 'all' }, exclusions: [], role: 'headline', exposure: 'E0', label: 'weekly outcome line, one week of Set W worlds', sessions: 150 },
+  'BGW-pilot': { id: 'BGW-pilot', benchmark: 'bg1-dev', split: 'dev', questions: 64, conversations: 1, corpus_tokens: 200_000, messages: 2_000, block: 'BGW-pilot', selection: { kind: 'all' }, exclusions: [], role: 'smoke', exposure: 'E2', label: 'weekly outcome line pilot, public dev world bg1-dev-01 at the counted settings', only_conversations: ['bg1-dev-01'], sessions: 150 },
+  'BGW-judge': { id: 'BGW-judge', benchmark: 'bg1-dev', split: 'dev', questions: 128, conversations: 2, corpus_tokens: 400_000, messages: 4_000, block: 'BGW-judge', selection: { kind: 'all' }, exclusions: [], role: 'smoke', exposure: 'E2', label: "weekly outcome line, the grep agent's judge check on public dev worlds bg1-dev-02 and bg1-dev-03", only_conversations: ['bg1-dev-02', 'bg1-dev-03'], sessions: 150 },
 };
+/** The weekly line's blocks on public dev worlds: the pilot and the grep agent's judge check (weekly-line.ts generateWeeklyLinePilotCells). */
+export const WEEKLY_PILOT_BLOCK_IDS: readonly WeeklyLineBlockId[] = ['BGW-pilot', 'BGW-judge'];
+/** A cell of the weekly line, counted (block BGW) or on its public dev worlds (the pilot and the judge check). */
+export const isWeeklyLineCell = (def: Pick<CellDefinition, 'block'>) => def.block === 'BGW' || (WEEKLY_PILOT_BLOCK_IDS as readonly string[]).includes(def.block);
 /**
  * The SOTA loop dev test's conversations (decision D2a): the four public BEAM-1M dev conversations with the most
  * answerable questions (eval/data/answerability/beam-1m.json, supported or partial), ties broken by id. All four are in
@@ -1167,7 +1176,7 @@ export const BG1_BLOCK_IDS: readonly BG1BlockId[] = ['BG1-S1', 'BG1'];
 export const BG1C_BLOCK_IDS: readonly BG1CBlockId[] = ['BG1C-smoke', 'BG1C'];
 export const BN10_BLOCK_IDS: readonly BN10BlockId[] = ['BN10-dry', 'BN10'];
 export const SOTA_BLOCK_IDS: readonly SotaBlockId[] = ['SOTA-dev', 'SOTA-leader'];
-export const WEEKLY_LINE_BLOCK_IDS: readonly WeeklyLineBlockId[] = ['BGW'];
+export const WEEKLY_LINE_BLOCK_IDS: readonly WeeklyLineBlockId[] = ['BGW', 'BGW-pilot', 'BGW-judge'];
 
 /** An arm's retrieval identity: only on gbrain cells whose stack runs F6 (GBRAIN_F6=1), on a packed, retrieval-only or native-default arm, naming a known op, its own arguments and all six overlay keys. */
 function retrievalProblems(d: CellDefinition, a: ArmDefinition, w: string): string[] {

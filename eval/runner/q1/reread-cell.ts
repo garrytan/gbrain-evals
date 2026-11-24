@@ -50,7 +50,8 @@
  * The weekly line (`--manifest weekly`, #619 OV4): a weekly arm's re-read is graded by its reader's preregistered gating
  * judge (definitions.ts bg1JudgeOf: claude-opus-5-5 for particle-1) alone, as if named by `gating`, which the arm's own
  * judge map, naming only its live readers, would leave out; a `gating` naming another judge is refused. It opens only
- * the week's worlds (cell.ts weekScope).
+ * the week's worlds (cell.ts weekScope). The line's pilot (`--manifest weekly-pilot`) re-reads the same way, on its dev
+ * world.
  *
  * BG1-C (`--manifest bg1c`): no BG1-C answer gets the canonical Gemini view (descriptive_view false), so each answer is
  * graded by the new reader's gating judge alone, the receipt names no canonical judge, and the run reads no Gemini key.
@@ -74,9 +75,9 @@ import { DEFAULT_ROUTE_CAPS, keylessKeys, keylessUpstream, MeteringProxy, usageS
 import { DEFAULT_ROUTE_CLASSES } from '../shootout-cell.ts';
 import type { PackedContext } from '../systems/render-v2.ts';
 import { claimOut, keylessUpstreamArg } from './calibration-cell.ts';
-import { answerAppender, bg1GeminiKey, custodyGate, devOnly, findCell, frontierInstrumentId, gatherStaging, JUDGED, latestBy, loadBG1CManifest, metering, needsCustody, onSlot, readerMaxTokens, readPrompt, refuseCompatJudges, requiredJudges, scheduledQuestions,
+import { answerAppender, bg1CellManifest, bg1GeminiKey, custodyGate, devOnly, findCell, frontierInstrumentId, gatherStaging, JUDGED, latestBy, loadBG1CManifest, metering, needsCustody, onSlot, readerMaxTokens, readPrompt, refuseCompatJudges, requiredJudges, scheduledQuestions,
   selectCellQuestions, weekCorpusProblems, weeklyRunStamp, weekScope, type CellManifestId, type MeterLine, type RequiredJudge, type StagedRetrieval } from './cell.ts';
-import { bg1JudgeOf, frontierJudgesFor, isWindowedBenchmark, PER_READER_JUDGE_SETTINGS, pinnedJudgeRouteCaps, policyKey, type ArmDefinition, type CellDefinition } from './cells/definitions.ts';
+import { bg1JudgeOf, frontierJudgesFor, isWeeklyLineCell, isWindowedBenchmark, PER_READER_JUDGE_SETTINGS, pinnedJudgeRouteCaps, policyKey, type ArmDefinition, type CellDefinition } from './cells/definitions.ts';
 import { loadRS1Manifest } from './cells/rs1.ts';
 import { exitCodeOf, refuse, renderMessage, ScoreboardError } from './scoreboard-errors.ts';
 import { BG1C_SET, bg1SealedSet, bg1UnitConversations, readBg1Manifest, type Bg1Manifest } from '../memory-qa/corpus.ts';
@@ -269,11 +270,11 @@ export function prepareReread(def: CellDefinition, arm: ArmDefinition, opts: Rer
   const out = resolve(opts.out);
   const instrument = deps.instrument ?? instrumentFor(def.canonical_instrument);
   let preregistered: string | null = null;
-  if (def.week) {
+  if (def.week || isWeeklyLineCell(def)) {
     try { preregistered = bg1JudgeOf(opts.reader); }
     catch (e) { throw refuse({ code: 'USAGE', message: `${arm.cell_id} is a weekly-line arm, and ${(e as Error).message}`, why: "a weekly re-read is graded by its reader's preregistered gating judge alone", fix: { next: 'report', user_message: 're-read with particle:particle-1, whose gating judge is anthropic:claude-opus-5-5' } }); }
     if (opts.gating && opts.gating !== preregistered) throw refuse({ code: 'USAGE', message: `${arm.cell_id} is a weekly-line arm, so ${opts.reader}'s re-read is graded by its preregistered gating judge ${preregistered}, not ${opts.gating}`,
-      why: "a weekly re-read is graded by its reader's preregistered gating judge alone (definitions.ts bg1JudgeOf)", fix: { next: 'run', argv: [...FRONT, '--cell', def.id, '--manifest', 'weekly', '--reader', opts.reader] } });
+      why: "a weekly re-read is graded by its reader's preregistered gating judge alone (definitions.ts bg1JudgeOf)", fix: { next: 'run', argv: [...FRONT, '--cell', def.id, '--manifest', bg1CellManifest(def), '--reader', opts.reader] } });
   }
   const gating = opts.gating ?? preregistered ?? undefined;
   let frontier: string[];
