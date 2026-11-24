@@ -1210,9 +1210,6 @@ export function devFiles(): Map<string, string> {
     files.set(`fixtures/worlds/${id}/world.json`, json(renderTemplateWorld(plan)));
     files.set(`fixtures/worlds/${id}/questions.json`, questions);
   }
-  const long = longFixturePlan();
-  files.set(`long-fixture/${BG1_LONG_FIXTURE}/plan.json`, json(long));
-  files.set(`long-fixture/${BG1_LONG_FIXTURE}/questions.json`, json(buildQuestions(long)));
   files.set('long-fixture/spread.json', json(longFixtureSpread()));
   return files;
 }

@@ -8,7 +8,7 @@
 import { afterAll, describe, expect, test } from 'bun:test';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { chmodSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import {
@@ -145,8 +145,8 @@ describe('the long profile, changing-facts-gen@2', () => {
       expect(firstHalf / total).toBeLessThan(0.7);
       for (const st of BG1_STRATA) expect(w.deciles[st].reduce((a, b) => a + b, 0)).toBeGreaterThan(0);
     }
-    expect(existsSync(join(BG1_DATA_DIR, 'long-fixture', BG1_LONG_FIXTURE, 'world.json'))).toBe(false);
-    expect(JSON.parse(readFileSync(join(BG1_DATA_DIR, 'long-fixture', BG1_LONG_FIXTURE, 'plan.json'), 'utf8')).custody).toBeUndefined();
+    expect(readdirSync(join(BG1_DATA_DIR, 'long-fixture'))).toEqual(['spread.json']);
+    expect(longFixturePlan().custody).toBeUndefined();
   });
 });
 
