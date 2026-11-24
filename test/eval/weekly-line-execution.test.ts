@@ -168,7 +168,8 @@ describe('OV1: the weekly units resolve and run under their week', () => {
       expect([c.pass, c.providers, c.gemini_key_env]).toEqual([expect.not.arrayContaining(['GEMINI_API_KEY', 'BG1_GEMINI_API_KEY']), expect.not.arrayContaining(['gemini']), undefined]);
     }
     expect(w.order.rereads!.map(r => r.id)).toEqual(w.run.rereads);
-    for (const r of w.order.rereads!) expect(r.argv).toEqual(expect.arrayContaining(['eval/runner/q1/reread-cell.ts', '--manifest', 'weekly', '--reader', 'particle:particle-1', '--paid-window', 'WL-T', '--window-cap-usd', String(rereadsCap)]));
+    for (const r of w.order.rereads!) expect(r.argv).toEqual(expect.arrayContaining(['eval/runner/q1/reread-cell.ts', '--manifest', 'weekly', '--reader', 'particle:particle-1', '--paid-window', 'WL-T', '--window-cap-usd']));
+    expect(w.order.rereads!.reduce((n, r) => n + Number(r.argv[r.argv.indexOf('--window-cap-usd') + 1]), 0)).toBeCloseTo(rereadsCap, 6);
     Object.assign(process.env, { [WEEKLY_CELLS_ENV]: w.cellsPath, [WEEKLY_CELLS_SHA256_ENV]: sha, [WEEKLY_RUN_ENV]: w.run.run_id });
     expect(bg1LaunchProblems(w.campaign)).toEqual([]);
     const edited = { ...w.campaign, cells: w.campaign.cells.map((c, i) => (i ? c : { ...c, lease_usd: c.lease_usd + 1 })) };
@@ -176,14 +177,16 @@ describe('OV1: the weekly units resolve and run under their week', () => {
     expect(message(() => launchWeek(w.dir, 'WL-T', runnerDeps()))).toMatch(/WEEKLY_NO_WINDOW: .*--window-cap-usd/);
   });
 
-  // Value: protects=one granted window's cap is split once between the week's cells and its re-reads, so following the printed order can't approve more than the window; fails_when=launchWeek hands the full cap to both the campaign and every re-read command, so cell leases plus a re-read ledger cap set to the window cap approve up to about twice it (/ship review finding p1/red-team#2), or a cap too small for the re-reads leaves the cells a zero or negative campaign; why_new=PR #621's review; seam=runner.ts launchWeek; no_claim=the estimates themselves
-  test("the window's cap is split once: the re-reads take their estimates and the cells' campaign the rest", () => {
+  // Value: protects=one granted window's cap is split once between the week's cells and its re-reads, so following the printed order can't approve more than the window; fails_when=launchWeek hands the full cap to both the campaign and every re-read command, so cell leases plus a re-read ledger cap set to the window cap approve up to about twice it (/ship review finding p1/red-team#2), or hands every re-read the whole re-read share, so N re-read ledgers approve N times it (p2/security finding), or a cap too small for the re-reads leaves the cells a zero or negative campaign; why_new=PR #621's review; seam=runner.ts launchWeek; no_claim=the estimates themselves
+  test("the window's cap is split once: each re-read takes its own estimate and the cells' campaign the rest", () => {
     const w = launchedWeek();
-    const plans = JSON.parse(readFileSync(w.cellsPath, 'utf8')).rereads as Array<{ estimate: { usd: number } }>;
-    const rereadsCap = Math.ceil(plans.reduce((n, r) => n + r.estimate.usd, 0) * 100) / 100;
+    const plans = JSON.parse(readFileSync(w.cellsPath, 'utf8')).rereads as Array<{ id: string; estimate: { usd: number } }>;
+    const caps = plans.map(r => Math.ceil(r.estimate.usd * 100) / 100);
+    const rereadsCap = Math.round(caps.reduce((n, c) => n + c, 0) * 100) / 100;
+    expect(plans.length).toBeGreaterThan(1);
     expect([w.order.rereads_cap_usd, w.order.cells_cap_usd]).toEqual([rereadsCap, Math.floor((500 - rereadsCap) * 100) / 100]);
     expect(w.order.cells_cap_usd! + w.order.rereads_cap_usd!).toBeLessThanOrEqual(500);
-    for (const r of w.order.rereads!) expect(r.argv[r.argv.indexOf('--window-cap-usd') + 1]).toBe(String(rereadsCap));
+    expect(w.order.rereads!.map(r => [r.id, r.argv[r.argv.indexOf('--window-cap-usd') + 1]])).toEqual(plans.map((p, i) => [p.id, String(caps[i])]));
     for (const c of w.campaign.cells) expect(/--window-cap-usd (\S+)/.exec(c.command)![1]).toBe(String(w.campaign.cap_usd));
     expect(message(() => launchWeek(w.dir, 'WL-T', runnerDeps(), rereadsCap))).toMatch(/^WEEKLY_NO_WINDOW: .*leaves the cells nothing of the window's cap/);
   });
