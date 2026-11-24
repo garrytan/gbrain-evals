@@ -13,37 +13,33 @@
       "paid_tier": "over-500",
       "decision": [
         {
-          "if": "gbrain-fix beats gbrain-before on H4 for claude-opus-5-5 (primary interval above 0) and the other four families show no harm (pooled lower bound above -5 points)",
-          "then": "GBRA-108 keeps the fix on by default; README's H4 limit line is replaced with this result and the remaining gap to files; H4 work moves to manager-phrase resolution"
+          "if": "gbrain-section beats gbrain-default on H4 for claude-opus-5-5 (primary interval above 0) and the other four families show no harm (pooled lower bound above -5 points)",
+          "then": "the default flip of search.long_page_unit to section goes to Garry, through GBRA-108, with these numbers"
         },
         {
-          "if": "the fix helps on H4 but harm on the other families is not ruled out",
-          "then": "GBRA-108 is asked to scope the default to the cases that helped, with the per-family split; README's H4 line waits for the scoped change"
+          "if": "section delivery helps on H4 but harm on the other families is not ruled out",
+          "then": "the flip does not go to Garry as it stands; GBRA-108 gets the per-family split as evidence for a scoped version"
         },
         {
           "if": "the primary difference is not distinguishable from 0",
-          "then": "one Why-null cycle from the transcript statistics, then a KEEP, FIX-METHOD or CUT-CANDIDATE verdict on the default (cut candidates reported to Garry); H4 work moves to manager-phrase resolution"
+          "then": "the flip is closed; one Why-null cycle records why, with a KEEP (as an opt-in setting), FIX-METHOD or CUT-CANDIDATE verdict"
         },
         {
-          "if": "the fix hurts on H4 (primary interval below 0)",
-          "then": "GBRA-108 reverts the default, with the paired numbers"
+          "if": "section delivery hurts on H4 (primary interval below 0)",
+          "then": "the flip is closed, and GBRA-108 gets the paired numbers"
         },
         {
-          "if": "gbrain-fix is level with files on H4",
-          "then": "README says gbrain is level with plain files on these questions, with the interval"
+          "if": "gbrain-section is level with files on H4",
+          "then": "README says gbrain with section delivery is level with plain files on these questions, with the interval"
         },
         {
-          "if": "gbrain-fix is still behind files on H4",
-          "then": "README says so with the number, and the manager-phrase share of the gap goes to GBRA-108"
-        },
-        {
-          "if": "the gap between gbrain-fix and files on H4 is not distinguishable",
-          "then": "README gives the gap with its interval and says the run cannot tell level from behind"
+          "if": "gbrain-section is still behind files on H4, or the gap is not distinguishable",
+          "then": "README gives the gap with its interval, and the manager-phrase share of the misses goes to GBRA-108"
         }
       ],
       "arms": [
-        "gbrain-fix",
-        "gbrain-before",
+        "gbrain-section",
+        "gbrain-default",
         "fs",
         "oracle"
       ],
@@ -80,16 +76,16 @@
       ],
       "pilots": [
         {
-          "arm": "gbrain-fix",
+          "arm": "gbrain-section",
           "max_budget_fraction": 0.1,
-          "part_under_test_ran": "every pilot cell calls gbrain tools with no param_not_on_surface, and at least one search delivers a long hit as its section (or the field GBRA-108's release names); five more H4 cells run if none does",
+          "part_under_test_ran": "every pilot cell calls gbrain tools with no param_not_on_surface, the config reads back search.long_page_unit=section, and at least one search row carries delivered {unit: section}; five more H4 cells run if none does",
           "judge_passes": "both judges pass the 100-item construction-labelled judge check before any counted cell",
           "units_supplied_at_rate": "five cells per frontier reader on S3 at the planned concurrency end submitted or at the turn cap with no rate-limit stop"
         },
         {
-          "arm": "gbrain-before",
+          "arm": "gbrain-default",
           "max_budget_fraction": 0.1,
-          "part_under_test_ran": "every pilot cell calls gbrain tools with no param_not_on_surface",
+          "part_under_test_ran": "every pilot cell calls gbrain tools with no param_not_on_surface, the config reads back {}, and no search row carries delivered {unit: section}",
           "judge_passes": "both judges pass the 100-item construction-labelled judge check before any counted cell",
           "units_supplied_at_rate": "five cells per frontier reader on S3 at the planned concurrency end submitted or at the turn cap with no rate-limit stop"
         },
@@ -134,7 +130,7 @@
         "at_units_fraction": 0.5,
         "bounds": "obrien-fleming",
         "alpha": 0.05,
-        "futility_stop": "stop when conditional power to end with z of at least 1.98 under the planned +12.2-point effect on the primary endpoint falls below 10% at half the H4 tasks"
+        "futility_stop": "stop when conditional power to end with z of at least 1.98 under the planned +12.2-point effect on the primary endpoint (gbrain-section minus gbrain-default, Opus 5.5, H4) falls below 10% at half the H4 tasks"
       }
     }
   ]
