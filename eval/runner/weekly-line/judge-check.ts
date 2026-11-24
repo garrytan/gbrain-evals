@@ -26,8 +26,8 @@
  * instrument's own request (BG1_CANONICAL_JUDGE, descriptive view), and the report calls those labels "model-labelled".
  *
  * Money. label --dry-run prints the sample and the labelling estimate and sends nothing: no lease, no proxy, no file. A
- * real label run spends only inside a granted paid window (paid-arm.ts requireRs1Window), its lease never passes the
- * labelling cap (weekly-line.ts WEEKLY_LINE_LABEL_CAP_USD), and every call goes through the metering proxy under that
+ * real label run spends only inside a granted paid window (paid-arm.ts requireRs1Window), neither its lease nor its
+ * ledger's cap passes the labelling cap (weekly-line.ts WEEKLY_LINE_LABEL_CAP_USD), and every call goes through the metering proxy under that
  * lease. A keyless run (--keyless-upstream) blanks every provider key first.
  *
  * report gives each judge's kappa against the labels with its 95% interval, the gates (kappa 0.6 or more on at least
@@ -183,11 +183,18 @@ export type WeeklyJudgeCheckReport = ReturnType<typeof analyze>;
 /** The labelling instrument: the judge-check cells' own, so gemini-3.8-flash sees the request the gating judges saw. */
 export const labelInstrument = (): Instrument => instrumentFor(generateWeeklyLineJudgeCheckCells()[0].canonical_instrument);
 
-/** gemini-3.8-flash labels every item without a gold-settled label that has no parsed label yet, so a resume retries an unparsed one; a failed call stops the pass. */
+/** judgeAnswer's attempts at one grade (its default); a resumed item asks this many more, past the attempts its cache already holds. */
+const JUDGE_ATTEMPTS = 3;
+
+/**
+ * gemini-3.8-flash labels every item without a gold-settled label that has no parsed label yet. A resume retries an
+ * unparsed one with attempt numbers past those already cached, so the provider is asked again; a failed call stops the pass.
+ */
 export async function labelWithGemini(sample: readonly SampleItem[], answers: ReadonlyMap<string, PoolAnswer>, questions: ReadonlyMap<string, MemoryQuestion>, client: Parameters<typeof judgeAnswer>[0], meter: ReturnType<typeof metering>, instrument: Instrument, file: string): Promise<string | null> {
-  const done = new Set(readLabels(file).filter(l => l.label !== null).map(l => l.item));
+  const saved = readLabels(file), done = new Set(saved.filter(l => l.label !== null).map(l => l.item));
   for (const i of sample.filter(x => x.gold === null && !done.has(x.id))) {
-    const r = await meter.around('judge', `judge:${i.id.slice(0, 21)}:${BG1_CANONICAL_JUDGE}`, 'judge', () => judgeAnswer(client, instrument, questions.get(i.question_id)!, answers.get(i.answer_id)!.text, { judge: BG1_CANONICAL_JUDGE, judgeReplicate: 0, view: 'descriptive' }));
+    const maxAttempts = JUDGE_ATTEMPTS * (1 + saved.filter(l => l.item === i.id).length);
+    const r = await meter.around('judge', `judge:${i.id.slice(0, 21)}:${BG1_CANONICAL_JUDGE}`, 'judge', () => judgeAnswer(client, instrument, questions.get(i.question_id)!, answers.get(i.answer_id)!.text, { judge: BG1_CANONICAL_JUDGE, judgeReplicate: 0, view: 'descriptive', maxAttempts }));
     if (r.error !== undefined) return `${BG1_CANONICAL_JUDGE} on ${i.id}: ${String((r.error as Error).message).slice(0, 200)}`;
     const score = gradeOf(r.value!).score;
     appendFileSync(file, JSON.stringify({ item: i.id, text_sha256: i.text_sha256, label: score === null ? null : score >= 1 ? 1 : 0, judgment: r.value } satisfies ModelLabel & { judgment: unknown }) + '\n');
@@ -214,7 +221,7 @@ export async function main(argv: string[], log: (s: string) => void = s => conso
   const [ledger, runId, leaseUsd, cap] = [one('--budget-ledger'), one('--run-id'), Number(one('--lease-usd')), Number(one('--ledger-cap-usd'))];
   if (mode === 'label' && !dryRun) {
     if (!ledger || !runId || !(leaseUsd > 0) || !(cap > 0)) { console.error('label needs --budget-ledger, --run-id, --lease-usd and --ledger-cap-usd, or --dry-run'); return 2; }
-    if (leaseUsd > WEEKLY_LINE_LABEL_CAP_USD + 1e-9) { console.error(`--lease-usd ${leaseUsd} is above the labelling cap of $${WEEKLY_LINE_LABEL_CAP_USD}`); return 2; }
+    if (leaseUsd > WEEKLY_LINE_LABEL_CAP_USD + 1e-9 || cap > WEEKLY_LINE_LABEL_CAP_USD + 1e-9) { console.error(`--lease-usd ${leaseUsd} and --ledger-cap-usd ${cap} may not pass the labelling cap of $${WEEKLY_LINE_LABEL_CAP_USD}, which bounds the labelling ledger across resumes`); return 2; }
     try { requireRs1Window(argv, { what: 'the weekly judge check\'s labelling without --keyless-upstream', keyless: !!keyless, caps: () => [{ label: '--ledger-cap-usd', usd: cap }, { label: '--lease-usd', usd: leaseUsd }] }); }
     catch (e) { if (!(e instanceof WindowRefusal)) throw e; console.error(e.message); return 2; }
   }

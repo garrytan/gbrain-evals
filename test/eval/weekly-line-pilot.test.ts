@@ -24,7 +24,7 @@ import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { toolCalls } from '../../eval/runner/systems/file-agent.ts';
 import { WL_BLOCK_WORLDS } from '../../eval/runner/weekly-line/design.ts';
 import { analyze, answerKind, buildSample, labelInstrument, labelWithGemini, main as judgeCheckMain, MODEL_LABEL_SOURCE, poolAnswers, ruleZero } from '../../eval/runner/weekly-line/judge-check.ts';
-import { main as pilotMain, pilotPlan, pilotReport, readRow, writePilotCampaigns, type RowReading } from '../../eval/runner/weekly-line/pilot.ts';
+import { main as pilotMain, pilotPlan, pilotReport, readReread, readRow, writePilotCampaigns, type RowReading } from '../../eval/runner/weekly-line/pilot.ts';
 
 const tmp = mkdtempSync(join(tmpdir(), 'weekly-line-pilot-'));
 let n = 0;
@@ -169,14 +169,16 @@ describe('pilot.ts', () => {
       block: 'BGW-pilot', worlds: ['bg1-dev-01'], answers: 64, by_reader: row === 'grep-agent' ? { [OPUS]: 64, [PARTICLE]: 64 } : { [OPUS]: 64 }, outcomes: { scored: 64 }, verdicts: { needed: 64, given: 64, parse_failed: 0 },
       accuracy: { [OPUS]: 0.9 }, spend_usd: 2, spend_source: 'proxy', part_under_test: { ran: true, detail: {} }, ...o });
     const rows = [reading('gbrain'), reading('grep-agent', { accuracy: { [OPUS]: 0.97 } }), reading('extract-first', { part_under_test: { ran: false, detail: {} } }), reading('memory-bank', { spend_usd: 50 })];
-    const rereads = rows.filter(r => r.row !== 'grep-agent').map(r => ({ cell: `${r.cell}.x.reread-particle-particle-1`, answers: 64, unjudged: 0, accuracy: 0.5, spend_usd: 0.2, status: 'complete' }));
+    const rereads = rows.filter(r => r.row !== 'grep-agent').map(r => ({ cell: `${r.cell}.x.reread-particle-particle-1`, answers: 64, verdicts: { needed: 64, given: 64 }, accuracy: 0.5, spend_usd: 0.2, status: 'complete' }));
     const rep = pilotReport(rows, rereads, manifest);
     expect(Object.fromEntries(Object.entries(rep.rows).map(([k, v]) => [k, v.pass]))).toEqual({ gbrain: true, 'grep-agent': true, 'extract-first': false, 'memory-bank': false });
     expect(rep.rows['memory-bank'].checks!.under_cap).toBe(false);
     expect(rep.ceiling.triggers_longer_worlds).toBe(true);
     expect(rep.projected_week.usd).toBeCloseTo((2.2 + 2 + 2.2 + 50.2) * 8, 2);
-    const partial = pilotReport(rows, rereads.map((x, i) => (i === 0 ? { ...x, status: 'partial', unjudged: 1 } : x)), manifest);
-    expect(partial.rows.gbrain.checks!.every_answer_judged).toBe(false);
+    for (const bad of [{ status: 'partial' }, { verdicts: { needed: 64, given: 63 } }]) {
+      const partial = pilotReport(rows, rereads.map((x, i) => (i === 0 ? { ...x, ...bad } : x)), manifest);
+      expect(partial.rows.gbrain.checks!.every_answer_judged).toBe(false);
+    }
   });
 });
 
@@ -275,6 +277,7 @@ describe('the judge check', () => {
     const paid = ['label', ...args, '--out', out, '--budget-ledger', join(tmp, 'ledger'), '--run-id', 'r1', '--ledger-cap-usd', '1', '--world-end', WORLD_END];
     expect(await judgeCheckMain([...paid, '--lease-usd', '1'], () => {})).toBe(2);
     expect(await judgeCheckMain([...paid, '--lease-usd', '5', '--paid-window', 'w', '--window-cap-usd', '300'], () => {})).toBe(2);
+    expect(await judgeCheckMain([...paid.map(a => (a === '1' ? '300' : a)), '--lease-usd', '1', '--paid-window', 'w', '--window-cap-usd', '300'], () => {})).toBe(2);
     expect(existsSync(out)).toBe(false);
   });
 
@@ -298,15 +301,22 @@ describe('the judge check', () => {
   test("the report reads a grep-agent cell's tool calls, verdicts and rates", () => {
     const out = writeCell(scratch('row'), 'BGW-pilot');
     const [row] = readRow(out);
-    expect([row.row, row.block, row.part_under_test.ran, row.verdicts.given, row.verdicts.parse_failed]).toEqual(['grep-agent', 'BGW-pilot', true, row.verdicts.needed, 0]);
+    expect([row.row, row.block, row.part_under_test.ran, row.verdicts.given, row.verdicts.parse_failed]).toEqual(['grep-agent', 'BGW-pilot', false, row.verdicts.needed, 0]);
+    expect(row.part_under_test.detail.agent_answers_without_a_returned_grep).toBeGreaterThan(0);
     expect(row.answers).toBe(128);
     expect(row.outcomes.turn_cap).toBeGreaterThan(0);
     expect(row.agent!.rates.no_tool_call).toBeGreaterThan(0);
     expect(row.agent!.ripgrep).toBe('14.1.0');
     const answersFile = join(out, 'cells', pilot.find(c => c.system === 'baseline-file-agent')!.arms[0].cell_id, 'answers.ndjson');
     const recs = readFileSync(answersFile, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l));
-    writeFileSync(answersFile, recs.map((a, i) => JSON.stringify(i === 5 ? { ...a, outcome: 'reader_error', tool_calls: undefined } : a)).join('\n') + '\n');
+    const searched = recs.map(a => ({ ...a, tool_calls: { grep: { calls: 1, failed: 0 } } }));
+    const write = (xs: object[]) => writeFileSync(answersFile, xs.map(a => JSON.stringify(a)).join('\n') + '\n');
+    write(searched);
     expect(readRow(out)[0].part_under_test.ran).toBe(true);
+    write(searched.map((a, i) => (i === 5 ? { ...a, outcome: 'reader_error', tool_calls: undefined } : a)));
+    expect(readRow(out)[0].part_under_test.ran).toBe(true);
+    write(searched.map((a, i) => (i === 5 ? { ...a, tool_calls: { grep: { calls: 1, failed: 1 } } } : a)));
+    expect(readRow(out)[0].part_under_test.ran).toBe(false);
   });
 
   // Value: protects=a labelling resume retries an item whose gemini-3.8-flash grade did not parse, instead of leaving it unlabelled for good; fails_when=labelWithGemini counts a null label as done, so one flaky call fails a judge's 100-label gate; why_new=/ship review p1/red-team#1; seam=judge-check.ts labelWithGemini with a scripted client that never returns a parseable grade; no_claim=gemini's real grades
@@ -315,7 +325,8 @@ describe('the judge check', () => {
     const sample = buildSample(pool, questions).filter(i => i.gold === null).slice(0, 2);
     const file = join(scratch('labels'), 'labels.ndjson');
     let calls = 0;
-    const client = { chat: async () => { calls++; return { text: 'not a verdict', usage: { input: 1, output: 1, cache_read: 0, cache_write: 0 }, cached: false, latency_ms: 1 } as any; } };
+    const attempts: number[] = [];
+    const client = { chat: async (_m: string, _p: string, o: { attempt?: number }) => { calls++; attempts.push(o.attempt ?? 0); return { text: 'not a verdict', usage: { input: 1, output: 1, cache_read: 0, cache_write: 0 }, cached: false, latency_ms: 1 } as any; } };
     const meter = metering(null, { meter: () => {} }, {});
     const byId = new Map(pool.map(a => [a.answer_id, a]));
     expect(await labelWithGemini(sample, byId, questions, client, meter, labelInstrument(), file)).toBeNull();
@@ -323,7 +334,22 @@ describe('the judge check', () => {
     expect(first).toBeGreaterThan(0);
     expect(readFileSync(file, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l).label)).toEqual([null, null]);
     expect(await labelWithGemini(sample, byId, questions, client, meter, labelInstrument(), file)).toBeNull();
-    expect(calls).toBe(first * 2);
+    expect(calls).toBe(first * 3);
+    expect([Math.max(...attempts.slice(0, first)), Math.max(...attempts.slice(first))]).toEqual([2, 5]);
+  });
+
+  // Value: protects=a re-read counts as fully judged only when every answer that needs a verdict has a parsed one from its reader's gating judge, as a cell row does; fails_when=readReread trusts the receipt's unjudged count, where a judge_error record counts as judged; why_new=/ship review p2 (red-team, outside voice); seam=pilot.ts readReread over re-read files; no_claim=reread-cell.ts's own receipt
+  test("a re-read's unparsed gating verdict leaves it short of judged", () => {
+    const out = scratch('reread-read'), cell = 'bgw-pilot.ext-memory-bank.recipe.component-b8000.reread-particle-particle-1', dir = join(out, 'cells', cell);
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, 'receipt.json'), JSON.stringify({ cell_id: cell, run_status: 'complete', counts: { answers: 2, unjudged: 0 }, per_reader_mean: { [PARTICLE]: 1 }, spend: { reader_usd: 0.1, judge_usd: 0.1 } }));
+    const qs = corpus.questions.slice(0, 2);
+    const recs = qs.map(q => ({ answer_id: answerId(cell, q.id, PARTICLE, 0), cell_id: cell, realization_id: 'r', question_id: q.id, conversation: q.conversation, system: 'ext-memory-bank', arm: 'component', reader: PARTICLE, replicate: 0, effort: null,
+      context_sha256: sha256(q.id), text: 'x', usage: { input: 1, output: 1, cache_read: 0, cache_write: 0 }, provider_input_tokens: 1, latency_ms: 1, outcome: 'scored' }));
+    writeFileSync(join(dir, 'answers.ndjson'), recs.map(a => JSON.stringify(a)).join('\n') + '\n');
+    const judgment = (a: { answer_id: string }, ok: boolean) => JSON.stringify({ answer_id: a.answer_id, instrument_id: 'bg1', instrument_sha256: sha256('i'), judge: bg1JudgeOf(PARTICLE), judge_replicate: 0, temperature: null, score: ok ? 1 : null, parse_ok: ok, raw_sha256: sha256('[]'), outcome: ok ? 'scored' : 'judge_error' });
+    writeFileSync(join(dir, 'judgments.ndjson'), [judgment(recs[0], true), judgment(recs[1], false)].join('\n') + '\n');
+    expect(readReread(out).map(r => [r.status, r.verdicts])).toEqual([['complete', { needed: 2, given: 1 }]]);
   });
 
   // Value: protects=an answer records each tool's calls and failures, so the pilot can show the grep agent searched; fails_when=toolCalls counts a grep error as a search or a tool error as a success; why_new=R111's proof that the grep agent's part ran; seam=file-agent.ts toolCalls; no_claim=the agent loop
