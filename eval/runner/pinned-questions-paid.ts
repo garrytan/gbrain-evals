@@ -38,7 +38,7 @@ import { createHash } from 'node:crypto';
 import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import type { OperationContext } from 'gbrain/operations';
-import { BudgetExceededError, budgetOptionsFrom, chatPrice, receiptCost, startPaidRun, type RunSummary } from './budget-ledger.ts';
+import { BudgetExceededError, budgetOptionsFrom, chatPrice, paidRequestGuardActive, receiptCost, startPaidRun, type RunSummary } from './budget-ledger.ts';
 import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from './gbrain-under-test.ts';
 import { gbrainPin } from './gbrain-version.ts';
 import { HERMETIC_KEY_PATTERN, redactUrlPasswords, withHermeticEnv } from './hermetic-env.ts';
@@ -551,6 +551,9 @@ const isBudgetRefusal = (e: unknown) => e instanceof BudgetExceededError || (e i
 export interface PaidRunResult { worlds: PqWorld[]; rows: PaidRow[]; acc: ProbeAccounting; harnessErrors: string[]; resumedUnits: number }
 
 export async function runPinnedQuestionsPaid(opts: { gut: GbrainUnderTest; models: readonly string[]; seeds: readonly number[]; companies?: number; maxOutputTokens?: number; output: string; mode: PaidMode; log?: (s: string) => void }): Promise<PaidRunResult> {
+  if (opts.mode.kind === 'paid' && !paidRequestGuardActive()) {
+    throw new PaidArmRefusal(`${CATEGORY}: a paid run needs the budget ledger's request guard installed first (startPaidRun, as main() does); refusing before any request.`);
+  }
   const log = opts.log ?? (() => {});
   const models = opts.models.map(canonicalModel);
   for (const m of models) judgeFor(m);

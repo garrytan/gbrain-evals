@@ -53,6 +53,24 @@ describe('pinned-questions paid arm: refusal', () => {
   });
 });
 
+describe('pinned-questions paid arm: the exported runner', () => {
+  test('paid mode refuses before any request when no budget-ledger request guard is installed', async () => {
+    const out = mkdtempSync(join(tmpdir(), 'pq-paid-noguard-'));
+    const realFetch = globalThis.fetch;
+    let fetches = 0;
+    globalThis.fetch = (async () => { fetches++; throw new Error('no network in this test'); }) as unknown as typeof fetch;
+    try {
+      const gut = resolveGbrainUnderTest(gbrainSpecFrom([]));
+      await expect(runPinnedQuestionsPaid({ gut, models: ['particle:particle-1'], seeds: [1], companies: 8, output: out, mode: { kind: 'paid', keys: { PARTICLE_API_KEY: 'not-a-real-key-000' } } })).rejects.toThrow(PaidArmRefusal);
+      expect(fetches).toBe(0);
+      expect(existsSync(join(out, 'checkpoint.ndjson'))).toBe(false);
+    } finally {
+      globalThis.fetch = realFetch;
+      rmSync(out, { recursive: true, force: true });
+    }
+  });
+});
+
 describe('pinned-questions paid arm: models and judges', () => {
   test('a paid launch is refused when a model under test or its judge has no provider key', () => {
     const all = { ANTHROPIC_API_KEY: 'a'.repeat(12), OPENAI_API_KEY: 'o'.repeat(12), PARTICLE_API_KEY: 'p'.repeat(12) };
