@@ -12,7 +12,7 @@ import { writeReceipt } from '../../eval/runner/receipt.ts';
 import {
   JUDGE_MIN_LABELS, PINNED_QUESTIONS_JUDGE_PROMPT, PINNED_QUESTIONS_MODELS_UNDER_TEST, STAGE_SEEDS, TRUNCATION_BAR, buildReceipt, canonicalModel, cohenKappa,
   familyOf, judgeAgreement, judgeCheckPasses, judgeFor, judgeUserMessage, modelRoles, parseJudgeLabels, requirePaidFlags, ruleLabels,
-  runPinnedQuestionsPaid, summarizePaid,
+  redactProviderText, runPinnedQuestionsPaid, summarizePaid,
   type ChatTransport, type GradedAnswer, type PaidRow, type PaidRunResult,
 } from '../../eval/runner/pinned-questions-paid.ts';
 
@@ -162,6 +162,8 @@ function stubTransport(world: PqWorld, stale: Set<string>, calls: Array<{ model:
     let text: string;
     let stopReason = 'end';
     if (judge) {
+      const judgeFailure = fail(c.slug, 0, String(opts.model));
+      if (judgeFailure) throw judgeFailure;
       const answer = user.slice(user.indexOf('\nAnswer:\n') + '\nAnswer:\n'.length);
       const labels: Record<string, string> = {};
       for (const line of user.split('\n').filter(l => /^- (city|flagship|ceo|founded): current/.test(l))) {
@@ -405,6 +407,28 @@ describe('pinned-questions paid arm: provider errors, safety stops and budget re
     expect((await run(out, () => null, undefined, calls)).resumedUnits).toBe(1);
     expect(calls).toHaveLength(0);
   }, 120_000);
+
+  test('provider failure text and judge errors are kept with every key and credential redacted', async () => {
+    const out = dir();
+    const tokens = [['sk', 'ant', 'api03', 'Zq9Xw2Lm8Pv4Rt6Yn1Bc3Df5Gh7'].join('-'), ['sk', 'proj', 'Qw3Er5Ty7Ui9Op1As2Df4Gh6Jk8'].join('-'), ['Hj2Kl4Zx6Cv8Bn0', 'Mq1Wr3Et5'].join('')];
+    const r = await run(out, (slug, n) => (slug === a && n === 2 ? new Error(`401 invalid x-api-key ${tokens[0]} (Authorization: Bearer ${tokens[2]}) provider_error`)
+      : slug === b && n === 0 ? new Error(`judge 400: key ${tokens[1]} rejected`) : null));
+    const rowA = r.rows.find(x => x.company === a)!, rowB = r.rows.find(x => x.company === b)!;
+    expect(rowA.refresh.failure_message).toContain('[redacted]');
+    expect(rowB.first.judge_error).toStartWith('judge_call_failed: ');
+    expect(rowB.first.judge_error).toContain('[redacted]');
+    const kept = [JSON.stringify(r.rows), JSON.stringify(r.acc.summary()), r.harnessErrors.join('\n'), readFileSync(join(out, 'checkpoint.ndjson'), 'utf8')].join('\n');
+    for (const t of tokens) expect(kept).not.toContain(t);
+  }, 120_000);
+
+  test('redactProviderText removes key values set under key names, key-shaped tokens, credentials and URL passwords, before any cut', () => {
+    const value = ['pv', 'Lk8Jh6Gf4Ds2Aq9Wz7'].join('');
+    const text = `refused for ${value}; sk-${'ant-'}${'Rt5Yu7Io9Pa1Sd3Fg5Hj7Kl'} Basic ${'dXNlcjpwYXNzd29yZA'} api_key=${'Zx9Cv7Bn5Mm3Qq1Ww'} postgres://u:${'hunter2secret'}@db/x`;
+    const red = redactProviderText(text, { PARTICLE_API_KEY: value, HOME: '/home/someone-long' });
+    for (const s of [value, 'Rt5Yu7Io9Pa1Sd3Fg5Hj7Kl', 'dXNlcjpwYXNzd29yZA', 'Zx9Cv7Bn5Mm3Qq1Ww', 'hunter2secret']) expect(red).not.toContain(s);
+    expect(red).toStartWith('refused for [redacted];');
+    expect(redactProviderText('no secrets here: 503 upstream', {})).toBe('no secrets here: 503 upstream');
+  });
 
   test('a budget refusal pauses the run at the unit boundary and checkpoints nothing for that unit', async () => {
     const out = dir();

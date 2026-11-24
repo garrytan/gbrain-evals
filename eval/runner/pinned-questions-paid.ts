@@ -41,10 +41,11 @@ import type { OperationContext } from 'gbrain/operations';
 import { BudgetExceededError, budgetOptionsFrom, chatPrice, receiptCost, startPaidRun, type RunSummary } from './budget-ledger.ts';
 import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from './gbrain-under-test.ts';
 import { gbrainPin } from './gbrain-version.ts';
-import { withHermeticEnv } from './hermetic-env.ts';
+import { HERMETIC_KEY_PATTERN, redactUrlPasswords, withHermeticEnv } from './hermetic-env.ts';
 import { acceptsTemperature } from './openai-judge-shim.ts';
 import { PaidArmRefusal, requirePaidArm } from './paid-arm.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
+import { KEY_PATTERNS } from './q1/secret-scan.ts';
 import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, noModelSpend, sourceTreeIdentity, writeReceipt, type Receipt } from './receipt.ts';
 import {
   CLAIMS, DEV_SEEDS, PINNED_QUESTIONS_GENERATOR_VERSION, generatePinnedQuestionsWorld,
@@ -359,11 +360,26 @@ interface Gateway {
   __setChatTransportForTests(fn: ChatTransport | null): void;
 }
 
-const callRecord = (r: QReceipt, usage: Usage, failure: string | null): CallRecord => ({
-  status: r.refresh?.status ?? 'none', mode: r.refresh?.mode ?? null,
-  error: r.refresh?.error ?? r.refresh?.blocked_reason ?? (r.refresh?.status === 'published' ? null : r.last_error),
-  failure_message: r.refresh?.status === 'published' ? null : failure, cost_usd: r.refresh?.cost_usd ?? null, usage,
-});
+/**
+ * Provider and judge error text, safe to keep in rows, checkpoints, receipts and logs: every key value set in `env`
+ * under a key-shaped name, every key-shaped token, bearer and basic credentials and URL passwords are replaced with
+ * [redacted]. Redact before truncating, so a cut never leaves part of a key behind.
+ */
+export function redactProviderText(text: string, env: Record<string, string | undefined> = process.env): string {
+  let out = text;
+  for (const [name, value] of Object.entries(env)) if (value && value.length >= 8 && HERMETIC_KEY_PATTERN.test(name)) out = out.split(value).join('[redacted]');
+  for (const { re } of KEY_PATTERNS) out = out.replace(re, '[redacted]');
+  out = out.replace(/\b(Bearer|Basic)\s+[A-Za-z0-9._~+/=-]{8,}/gi, '$1 [redacted]').replace(/\b(x-api-key|api[_-]?key)(["']?\s*[:=]\s*["']?)[A-Za-z0-9._~+/=-]{8,}/gi, '$1$2[redacted]');
+  return redactUrlPasswords(out, '[redacted]');
+}
+
+const callRecord = (r: QReceipt, usage: Usage, failure: string | null): CallRecord => {
+  const error = r.refresh?.error ?? r.refresh?.blocked_reason ?? (r.refresh?.status === 'published' ? null : r.last_error);
+  return {
+    status: r.refresh?.status ?? 'none', mode: r.refresh?.mode ?? null, error: error ? redactProviderText(error) : null,
+    failure_message: r.refresh?.status === 'published' ? null : failure, cost_usd: r.refresh?.cost_usd ?? null, usage,
+  };
+};
 const FAILURE_LINE = /\[questions\] refresh of \S+ failed: (.*)/;
 const modelText = (r: QReceipt) => (r.answer ?? []).filter(s => s.origin === 'model');
 
@@ -383,8 +399,9 @@ async function runUnit(gut: GbrainUnderTest, gateway: Gateway, gatewayConfig: (c
     const write = process.stderr.write;
     process.stderr.write = ((chunk: unknown, ...rest: unknown[]) => {
       const m = FAILURE_LINE.exec(String(chunk));
-      if (m) failure = m[1]!.slice(0, 500);
-      return (write as (...a: unknown[]) => boolean).call(process.stderr, chunk, ...rest);
+      if (!m) return (write as (...a: unknown[]) => boolean).call(process.stderr, chunk, ...rest);
+      failure = redactProviderText(m[1]!).slice(0, 500);
+      return (write as (...a: unknown[]) => boolean).call(process.stderr, redactProviderText(String(chunk)), ...rest);
     }) as typeof process.stderr.write;
     try { return { value: await fn(), usage: u, failure }; } finally { usage.current = null; process.stderr.write = write; }
   };
@@ -460,7 +477,7 @@ async function runUnit(gut: GbrainUnderTest, gateway: Gateway, gatewayConfig: (c
           g.judge_labels = parseJudgeLabels(res.text);
           g.judge_error = g.judge_labels ? null : 'judge_output_not_json';
         } catch (e) {
-          g.judge_error = `judge_call_failed: ${e instanceof Error ? e.message.slice(0, 300) : String(e)}`;
+          g.judge_error = `judge_call_failed: ${redactProviderText(e instanceof Error ? e.message : String(e)).slice(0, 300)}`;
           return;
         }
         if (g.judge_labels) return;
@@ -550,7 +567,7 @@ export async function runPinnedQuestionsPaid(opts: { gut: GbrainUnderTest; model
           try {
             unit = await runUnit(opts.gut, gateway, gatewayConfig, usage, model, world, opts.maxOutputTokens);
           } catch (e) {
-            const msg = `${model} seed ${world.seed}: ${e instanceof Error ? e.message : String(e)}`;
+            const msg = `${model} seed ${world.seed}: ${redactProviderText(e instanceof Error ? e.message : String(e))}`;
             harnessErrors.push(msg);
             for (const c of world.companies) acc.error(`${model}|s${world.seed}|${c.slug}`, 'harness', msg);
             log(`[pq-paid] ${msg}`);
