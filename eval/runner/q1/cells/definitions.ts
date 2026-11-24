@@ -170,7 +170,13 @@ export interface CellDefinition {
    */
   descriptive_view?: false;
   /** Write-start-to-queryable probes: the last session plus `sample` sessions per conversation, seeded. */
-  probes: { sample: number; seed: string; /** Probe only this many seeded conversations (null: all). */ conversations?: number | null };
+  probes: { sample: number; seed: string; /** Probe only this many seeded conversations (null: all). */ conversations?: number | null;
+    /**
+     * Cost and speed (docs/benchmarks/2026-11-24-cost-speed-preregistration.md): hold the last N sessions back from the bulk
+     * import; `sample` then picks bulk-import probes from the rest, and after the import each held-back session is written
+     * on an idle system as a counted write-to-queryable probe, behind a probe-label calibration window. Absent: no held-back probes.
+     */
+    held_back?: number };
   /** Dev smoke cells: only these conversations of the split run (the set's `only_conversations`). */
   only_conversations?: string[];
   /** Ingest probes: write only the first N sessions of each conversation (a fixed fraction, for a system too slow or costly to ingest whole on a smoke). */

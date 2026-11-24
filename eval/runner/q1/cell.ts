@@ -81,6 +81,7 @@ import { cachedOpenAIEmbedder, PG_EMBED_DIMS } from '../cat40/pg-arm.ts';
 import { DecideError, renderOperatorMessage } from '../decisions/errors.ts';
 import { loadSplit } from '../decisions/splits.ts';
 import { ndcgAtK, percentile, recallAllAtK, recallAnyAtK } from '../metrics.ts';
+import { awaitIdle, finishDrained, probePassage, probeRecord, unlabelledMeterRoutes, type Poll, type ProbeRecord as WriteProbeRecord } from '../memory-qa/cost-speed-probes.ts';
 import { DEFAULT_ROUTE_CAPS, ProxyControl, upstreamTrouble, type Meter, type Phase } from '../metering-proxy.ts';
 import { BG1_SET, BG1C_SET, bg1RunClock, fromHome, bg1SealedSet, bg1UnitConversations, bg1WorldEnd, loadCorpus, readBg1Manifest, readRs1Manifest, rs1UnitConversations, type Bg1Manifest, type Corpus, type MemoryQuestion, type Rs1Manifest, type Session } from '../memory-qa/corpus.ts';
 import { ContextStore } from '../memory-qa/arms.ts';
@@ -407,6 +408,9 @@ export interface CellOptions {
   finishTimeoutS?: number;
   probeTimeoutMs?: number;
   probeIntervalMs?: number;
+  /** Held-back probes: how long the slot must be quiet before a probe (default 60 s) and the longest wait for it (default 10 minutes). */
+  idleQuietMs?: number;
+  idleMaxMs?: number;
   /** Keyless baseline-hybrid: hash vectors instead of OpenAI embeddings. */
   embed?: 'hash' | 'real';
   /** How long questions wait for the launcher's store snapshot after ingest (default 4 hours); the snapshot stops the stack. */
@@ -453,6 +457,8 @@ export interface CellResult { cell: string; out: string; status: 'complete' | 'p
 interface RealizationEvent {
   realization_id: string; conversation: string; attempt: number; event: 'started' | 'ingested' | 'invalidated'; at: string;
   reason?: string; restored_from?: string; ingest?: IngestSummary; probes?: ProbeRecord[];
+  /** Held-back probe cells (cost and speed): the bulk-import and held-back write-to-queryable probes and the label calibration window. */
+  write_probes?: WriteProbe[]; calibration?: ProbeCalibration;
   /** A22: the earlier realization whose answers, judgments and final retrievals this one carries. */
   carried_from?: string; carried?: { answers: number; judgments: number; retrievals: number };
 }
@@ -467,6 +473,14 @@ export interface IngestSummary {
   readiness_probe: string; degraded: boolean; errors: Array<{ source_id: string; kind: string; message: string }>;
 }
 export interface ProbeRecord { realization_id: string; source_id: string; kind: 'last' | 'sample'; status: 'found' | 'missed' | 'not-measurable'; write_start_to_queryable_ms: number | null; polls: number }
+/**
+ * A held-back probe cell's write-to-queryable probe (eval/runner/memory-qa/cost-speed-probes.ts): `bulk` during the bulk import
+ * (reported apart), `held-back` one at a time on an idle system (counted). A held-back miss is `late` when one search after
+ * the next idle check finds the session and `never` when it doesn't.
+ */
+export interface WriteProbe extends WriteProbeRecord { realization_id: string; kind: 'bulk' | 'held-back'; miss: 'late' | 'never' | null; idle_waited_ms: number | null; poll_errors: string[] }
+/** The probe label's calibration window: searches on a drained system with their passages registered, closed by an idle check; any request not labelled probe names a route the label misses. */
+export interface ProbeCalibration { drained: boolean; started_idle: boolean; searches: number; errored: number; idle: boolean; waited_ms: number; requests: number | null; by_phase: Meter['byPhase'] | null; unlabelled_routes: string[] | null }
 export interface StagedRetrieval {
   key: string; question_id: string; policy: string; attempt: number; outcome: Outcome; error?: string; error_kind?: string;
   items: Item[]; applied_settings: Record<string, unknown>; truncated: boolean; latency_ms: number | null; harness_ms: number; query_time: string | null; at: string;
@@ -542,6 +556,10 @@ export interface Metering {
    * so far is written as a `background_tail` meter line first.
    */
   tail(slot: string, realization: { id: string; ns: string } | null): Promise<void>;
+  /** Label the slot's search requests whose every text is one of `queries` as probe (null clears). */
+  probe(slot: string, queries: string[] | null): Promise<void>;
+  /** The slot's requests in flight and when one last arrived or finished (epoch ms); null without a proxy or before the slot's first request. */
+  activity(slot: string): Promise<{ inflight: number; last_ms: number } | null>;
 }
 
 /** A run's proxy slots and meters (a no-op without a proxy); each finalized key's spend is written to `sink`. */
@@ -551,6 +569,8 @@ export function metering(proxy: string | null, sink: { meter(m: MeterLine): void
     async around(_slot, _key, _phase, fn) { try { return { value: await fn(), meter: null }; } catch (error) { return { error, meter: null }; } },
     async phase() {},
     async tail() {},
+    async probe() {},
+    async activity() { return null; },
   };
   const ctl = new ProxyControl(proxy);
   const compat = [...Object.entries(COMPAT_PROVIDERS), ...Object.entries(JUDGE_PROVIDERS)];
@@ -586,6 +606,8 @@ export function metering(proxy: string | null, sink: { meter(m: MeterLine): void
       await rebind(slot);
       if (prior) { const m = await ctl.finalize(prior.key); if (m.requests) record('background_tail', prior.key, m); }
     },
+    async probe(slot, queries) { await ctl.probeQueries(slot, queries); },
+    activity: slot => ctl.slotActivity(slot),
   };
 }
 
@@ -955,9 +977,11 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
     const ns = sanitizer.ns(convId);
     staging.event({ realization_id: rid, conversation: convId, attempt, event: 'started', at: new Date().toISOString() });
     const plan = ingestPlan(conv);
-    const sample = probedConversation(convId, [...byConv.keys()], def.probes) ? probeSample(plan, def.probes.sample, `${def.probes.seed}|${convId}`) : new Map<number, 'last' | 'sample'>();
+    const heldBack = def.probes.held_back ?? 0;
+    const bulk = heldBack ? plan.slice(0, Math.max(0, plan.length - heldBack)) : plan;
+    const sample = probedConversation(convId, [...byConv.keys()], def.probes) ? probeSample(bulk, def.probes.sample, `${def.probes.seed}|${convId}`) : new Map<number, 'last' | 'sample'>();
     const canProbe = probeable(capabilities);
-    const fixed = policyFor(identities.size ? [...identities.keys()][0] : 'fixed-evidence');
+    const fixed = heldBack ? policyFor('vendor-default') : policyFor(identities.size ? [...identities.keys()][0] : 'fixed-evidence');
     const errors: IngestSummary['errors'] = [];
     const writes: number[] = [];
     let failed = 0, synthetic = 0, messages = 0, tokens = 0;
@@ -981,13 +1005,60 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
         await Bun.sleep(opts.probeIntervalMs ?? 2000);
       }
     };
+    /** Held-back probe cells: passages being searched, registered with the proxy so their searches are labelled probe. */
+    const labelled = new Map<string, number>();
+    const label = async (passage: string, delta: 1 | -1) => {
+      const n = (labelled.get(passage) ?? 0) + delta;
+      if (n > 0) labelled.set(passage, n); else labelled.delete(passage);
+      await meter.probe(slot, labelled.size ? [...labelled.keys()] : null);
+    };
+    const horizonMs = opts.probeTimeoutMs ?? 600_000;
+    const idleCheck = () => awaitIdle({
+      pending: async () => null,
+      lastRequestAt: async () => { const a = await meter.activity(slot); return a ? (a.inflight > 0 ? Date.now() : a.last_ms) : null; },
+      quietMs: opts.idleQuietMs ?? 60_000, maxMs: opts.idleMaxMs ?? 600_000,
+    });
+    const search = async (passage: string, sourceId: string): Promise<{ found: boolean; unattributed: number }> => {
+      const res = await system.retrieve(ns, { text: passage, query_time: null }, fixed);
+      return { found: res.items.some(i => i.source_ids.includes(sourceId)), unattributed: res.items.filter(i => !i.source_ids.length).length };
+    };
+    /** One write-to-queryable probe: search every second from the write's return until a returned poll names the session or returns at or after the horizon. */
+    const writeProbe = async (input: SessionInput, kind: WriteProbe['kind'], w0: number, startedIdle: boolean, idleWaited: number | null): Promise<WriteProbe> => {
+      const passage = probePassage(input.turns);
+      const polls: Poll[] = [];
+      const errors: string[] = [];
+      if (passage !== null) {
+        await label(passage, 1);
+        try {
+          while (true) {
+            let poll: Poll;
+            try { const r = await search(passage, input.source_id); poll = { at_ms: Math.round((performance.now() - w0) * 10) / 10, ...r }; }
+            catch (e) { poll = { at_ms: Math.round((performance.now() - w0) * 10) / 10, error: (e as Error).message.slice(0, 200) }; errors.push(poll.error); }
+            polls.push(poll);
+            if (('found' in poll && poll.found) || poll.at_ms >= horizonMs) break;
+            await Bun.sleep(opts.probeIntervalMs ?? 1000);
+          }
+        } finally { await label(passage, -1); }
+      }
+      const rec = probeRecord(input.source_id, polls, startedIdle, horizonMs);
+      let miss: WriteProbe['miss'] = null;
+      if (rec.status === 'missed' && kind === 'held-back' && passage !== null) {
+        await idleCheck();
+        await label(passage, 1);
+        try { miss = (await search(passage, input.source_id)).found ? 'late' : 'never'; }
+        catch (e) { errors.push((e as Error).message.slice(0, 200)); }
+        finally { await label(passage, -1); }
+      }
+      return { ...rec, realization_id: rid, kind, miss, idle_waited_ms: idleWaited, poll_errors: errors.slice(0, 20) };
+    };
+    const bulkProbes: Array<Promise<WriteProbe>> = [];
     const t0 = performance.now();
     let importError: string | null = null;
     await meter.tail(slot, { id: rid, ns });
     const ran = await meter.around(slot, `ingest:${ns}`, 'ingest', async () => {
       await system.reset(ns);
       await meter.phase(slot, 'commit');
-      for (const [i, step] of plan.entries()) {
+      for (const [i, step] of bulk.entries()) {
         if (step.synthetic_time) synthetic++;
         messages += step.input.turns.length;
         tokens += encodingCount('cl100k_base', step.input.turns.map(t => `${t.speaker}: ${t.content}`).join('\n'));
@@ -1003,7 +1074,8 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
           errors.push({ source_id: step.input.source_id, kind: (e as { kind?: string }).kind ?? 'product_error', message: (e as Error).message.slice(0, 300) });
         }
         const kind = sample.get(i);
-        if (kind) probes.push(probe(step, kind, w0));
+        if (kind && heldBack && canProbe) bulkProbes.push(writeProbe(step.input, 'bulk', w0, false, null));
+        else if (kind) probes.push(probe(step, kind, w0));
       }
       await meter.phase(slot, 'background');
       let finish: IngestSummary['finish'] = { ready: false, waited_ms: 0, completeness: 'not reached' };
@@ -1017,13 +1089,58 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
       }
       if (finish.ready) drained = true;
       const probeRecords = await Promise.all(probes);
+      const bulkRecords = await Promise.all(bulkProbes);
       await meter.phase(slot, null);
-      return { finish, probeRecords };
+      return { finish, probeRecords, bulkRecords };
     });
+    let calibration: ProbeCalibration | undefined;
+    const heldRecords: WriteProbe[] = [];
+    if (heldBack && canProbe && !importError && !ran.error && ran.value?.finish.ready) {
+      const f = ran.value.finish;
+      const finishedDrained = finishDrained({ ready: f.ready, raw: { background_liabilities: f.background_liabilities as { drained?: boolean } | undefined } });
+      const picks = bulk.map(s => ({ s, k: hashKey(`${def.probes.seed}|${convId}|calibration`, s.input.source_id) })).sort((a, b) => (a.k < b.k ? -1 : 1))
+        .map(x => ({ id: x.s.input.source_id, passage: probePassage(x.s.input.turns) })).filter((x): x is { id: string; passage: string } => x.passage !== null).slice(0, 10);
+      const cal = await meter.around(slot, `calibration:${ns}`, 'ingest', async () => {
+        const before = await idleCheck();
+        await meter.probe(slot, picks.map(p => p.passage));
+        let errored = 0;
+        try {
+          for (const p of picks) { try { await search(p.passage, p.id); } catch { errored++; } }
+          return { errored, started_idle: before.idle, ...(await idleCheck()) };
+        } finally { await meter.probe(slot, null); }
+      });
+      calibration = { drained: finishedDrained, started_idle: cal.value?.started_idle ?? false, searches: picks.length, errored: cal.value?.errored ?? picks.length, idle: cal.value?.idle ?? false, waited_ms: cal.value?.waited_ms ?? 0,
+        requests: cal.meter?.requests ?? null, by_phase: cal.meter?.byPhase ?? null, unlabelled_routes: cal.meter ? unlabelledMeterRoutes(cal.meter.byPhase) : null };
+      const held = await meter.around(slot, `ingest:${ns}#held-back`, 'ingest', async () => {
+        for (const step of plan.slice(bulk.length)) {
+          const idle = await idleCheck();
+          if (step.synthetic_time) synthetic++;
+          messages += step.input.turns.length;
+          tokens += encodingCount('cl100k_base', step.input.turns.map(t => `${t.speaker}: ${t.content}`).join('\n'));
+          await meter.phase(slot, 'commit');
+          const w0 = performance.now();
+          try {
+            const res = await system.ingestSession(ns, step.input, step.event_time);
+            writes.push(res.service_ms ?? performance.now() - w0);
+            if (res.errors.length || res.completeness === 'degraded') { failed++; errors.push({ source_id: step.input.source_id, kind: res.errors.length ? 'reported' : 'degraded', message: (res.errors.map(String).join('; ') || `completeness ${res.completeness}`).slice(0, 300) }); }
+          } catch (e) {
+            if (e instanceof SanitizerLeakError) { importError = e.message; invalidReasons.push(`sanitizer tripwire during ingest: ${e.message}`); break; }
+            if (/budget|BudgetExceeded/i.test(String((e as Error).message))) { importError = `budget: ${(e as Error).message.slice(0, 200)}`; break; }
+            failed++;
+            errors.push({ source_id: step.input.source_id, kind: (e as { kind?: string }).kind ?? 'product_error', message: (e as Error).message.slice(0, 300) });
+          }
+          await meter.phase(slot, 'background');
+          heldRecords.push(await writeProbe(step.input, 'held-back', w0, idle.idle, idle.waited_ms));
+        }
+        await meter.phase(slot, null);
+      });
+      if (held.error) importError ??= (held.error as Error).message.slice(0, 300);
+    }
     if (ran.error) importError ??= (ran.error as Error).message.slice(0, 300);
     if (importError?.startsWith('budget:')) { stopped = importError; return 'stopped'; }
     const finish = ran.value?.finish ?? { ready: false, waited_ms: 0, completeness: `error: ${importError}` };
     const probeRecords = ran.value?.probeRecords ?? [];
+    const writeProbes = [...(ran.value?.bulkRecords ?? []), ...heldRecords];
     const probed = canProbe && !importError && finish.ready ? await meter.around(slot, `probe:${ns}`, 'ingest', () => readinessProbe(system, ns, plan.at(-1)?.input, fixed, capabilities)) : null;
     const barrier = !canProbe ? 'not-measurable' : probed ? probed.value ?? 'missed' : 'skipped';
     const ingest: IngestSummary = {
@@ -1032,7 +1149,8 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
       degraded: !!importError || failed / Math.max(1, plan.length) > 0.01 || !finish.ready || barrier === 'missed', errors: errors.slice(0, 200),
     };
     writeAtomic(join(staging.dir(rid), 'readiness.ndjson'), probeRecords.map(p => JSON.stringify(p) + '\n').join(''));
-    staging.event({ realization_id: rid, conversation: convId, attempt, event: 'ingested', at: new Date().toISOString(), ingest, probes: probeRecords });
+    if (heldBack) writeAtomic(join(staging.dir(rid), 'write-probes.ndjson'), writeProbes.map(p => JSON.stringify(p) + '\n').join(''));
+    staging.event({ realization_id: rid, conversation: convId, attempt, event: 'ingested', at: new Date().toISOString(), ingest, probes: probeRecords, ...(heldBack ? { write_probes: writeProbes, ...(calibration ? { calibration } : {}) } : {}) });
     return 'ok';
   }
 

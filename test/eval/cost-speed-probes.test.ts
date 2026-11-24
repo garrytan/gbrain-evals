@@ -10,7 +10,7 @@ import { join } from 'node:path';
 import { BudgetRun, closeLedgers } from '../../eval/runner/budget-ledger.ts';
 import { MeteringProxy, ProxyControl, searchTexts, type UsageLine } from '../../eval/runner/metering-proxy.ts';
 import { costSpeed, usagePhase } from '../../eval/runner/cost-speed.ts';
-import { awaitIdle, finishDrained, probePassage, probeRecord, probeSummary, unlabelledMeterRoutes, unlabelledSearchRoutes, windowVoid, type ProbeRecord } from '../../eval/runner/cost-speed-probes.ts';
+import { awaitIdle, finishDrained, probePassage, probeRecord, probeSummary, unlabelledMeterRoutes, unlabelledSearchRoutes, windowVoid, type ProbeRecord } from '../../eval/runner/memory-qa/cost-speed-probes.ts';
 
 const tmp = mkdtempSync(join(tmpdir(), 'cost-speed-probes-'));
 afterAll(() => { closeLedgers(); rmSync(tmp, { recursive: true, force: true }); });

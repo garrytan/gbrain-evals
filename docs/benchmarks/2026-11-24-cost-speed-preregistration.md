@@ -405,8 +405,8 @@ and the text above differ, this amendment wins.
    expansion, for one) would carry the passage inside a prompt that this label doesn't read, so the pilot checks the
    label: before its probes, each system answers 10 calibration searches while drained and idle. The window closes
    only when the idle check after the last search passes, so work a read sets off later falls inside it, and any
-   provider request in it not labelled `probe` names a route the label misses (`unlabelledSearchRoutes` in
-   `eval/runner/cost-speed-probes.ts`). Such a system fails its pilot until its read's provider calls go through a
+   provider request in it not labelled `probe` names a route the label misses (`unlabelledMeterRoutes` in
+   `eval/runner/memory-qa/cost-speed-probes.ts`). Such a system fails its pilot until its read's provider calls go through a
    slot of their own. gbrain v0.60.769.0's read made only Voyage embedding and rerank calls in the keyless check, but
    the pilot checks it like every other system.
 2. **A bounded idle check replaces "the system reports ready" between probes.** gbrain's shim can wait several minutes
@@ -424,7 +424,7 @@ and the text above differ, this amendment wins.
    continues until a poll returns at or after the horizon, so a true miss always reaches it. Errored probes are reported per system but stay out of p50, p95 and the miss share in decision 3. A world
    whose probes are more than a tenth errored or not idle is void: none of its probes count, and it is reported.
    The pilot's 20 probes must be found or missed, with none errored. The probe-record, void-window and idle rules are
-   in `eval/runner/cost-speed-probes.ts`; the cells that use them are built on the results branch before the pilot.
+   in `eval/runner/memory-qa/cost-speed-probes.ts`; the cells that use them are built on the results branch before the pilot.
 4. **The pilot and capacity worlds stay out of the counted pool.** If the smallest-difference check raises the world
    count, it draws only from the 18 dev worlds other than `bg1-dev-11` and `bg1-dev-12`. If 18 worlds can't resolve
    the stated difference, the results say so and report the interval they reach instead of adding those two.

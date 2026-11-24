@@ -1,0 +1,129 @@
+/**
+ * Held-back write-to-queryable probes in the Q1 cell runner (cost and speed, amendment of 2026-11-24), keyless: a fake
+ * system that embeds each write and each search through a real lease proxy with a dead upstream stand-in and placeholder
+ * keys. The bulk import leaves the last sessions out; after it drains, a calibration window checks the probe label, then
+ * each held-back session is written on an idle system and polled until found; a late find after the horizon is a late
+ * miss. Probe searches are labelled probe, writes keep their write and background phases, and a read that also calls a
+ * model shows up as an unlabelled route.
+ */
+import { afterAll, beforeEach, describe, expect, test } from 'bun:test';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
+import { realizationId, runCell, type WriteProbe } from '../../eval/runner/q1/cell.ts';
+import { estimateCell, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
+import { BudgetRun, closeLedgers } from '../../eval/runner/budget-ledger.ts';
+import { MeteringProxy, type UsageLine } from '../../eval/runner/metering-proxy.ts';
+import { FakeMemorySystem } from '../../eval/runner/systems/fake.ts';
+import type { Corpus, MemoryQuestion } from '../../eval/runner/memory-qa/corpus.ts';
+import type { ChatLike } from '../../eval/runner/memory-qa/qa-v2.ts';
+
+const ROOT = resolve(import.meta.dir, '../..');
+const tmp = mkdtempSync(join(tmpdir(), 'cost-speed-cell-'));
+afterAll(() => { closeLedgers(); rmSync(tmp, { recursive: true, force: true }); });
+const raw = JSON.parse(readFileSync(join(ROOT, 'test/eval/fixtures/q1-cell/locomo-shaped.json'), 'utf8')) as { conversations: Corpus['conversations']; questions: MemoryQuestion[] };
+const corpus: Corpus = { benchmark: 'fixture', conversations: raw.conversations, questions: raw.questions, source: { name: 'LoCoMo-shaped fixture (invented)', files: [{ path: 'test/eval/fixtures/q1-cell/locomo-shaped.json', sha256: 'fixture' }], revision: 'repo', license: 'MIT' } };
+const NO_META = { finish: null, usage: null, response_model: null, attempt_errors: [] as string[] };
+const reader: ChatLike = { async chat() { return { text: 'The history does not say.', input_tokens: 10, output_tokens: 5, cached: false, ...NO_META }; } };
+const judge: ChatLike = { async chat() { return { text: 'no', input_tokens: 10, output_tokens: 1, cached: false, ...NO_META }; } };
+const KEYS = { OPENAI_API_KEY: 'placeholder', ANTHROPIC_API_KEY: 'placeholder', VOYAGE_API_KEY: 'placeholder' };
+const LATE = new Set(['conv-a']);
+
+/** Embeds every write and every search on its own slot; optionally expands each search with a model call, and hides the session with a turn reading `hide` for `hideMs` after its write. */
+class EmbeddingFake extends FakeMemorySystem {
+  private written = new Map<string, number>();
+  private hidden: string | null = null;
+  constructor(private readonly provider: string, private readonly opts: { expand?: boolean; hide?: string; hideMs?: number } = {}) { super(); }
+  private post(path: string, body: unknown) {
+    return fetch(`${this.provider}/fake/openai/v1/${path}`, { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer dummy' }, body: JSON.stringify(body) });
+  }
+  async ingestSession(ns: string, session: Parameters<FakeMemorySystem['ingestSession']>[1], when: string | null) {
+    await this.post('embeddings', { model: 'text-embedding-3-small', input: session.turns.map(t => `${t.speaker}: ${t.content}`) });
+    this.written.set(session.source_id, performance.now());
+    if (this.opts.hide && session.turns.some(t => t.content === this.opts.hide)) this.hidden = session.source_id;
+    return super.ingestSession(ns, session, when);
+  }
+  async retrieve(ns: string, q: Parameters<FakeMemorySystem['retrieve']>[1], policy: Parameters<FakeMemorySystem['retrieve']>[2]) {
+    if (this.opts.expand) await this.post('chat/completions', { model: 'gpt-4.1-mini', max_tokens: 50, messages: [{ role: 'user', content: `Rewrite: ${q.text}` }] });
+    await this.post('embeddings', { model: 'text-embedding-3-small', input: q.text });
+    const res = await super.retrieve(ns, q, policy);
+    const h = this.hidden;
+    const hidden = h !== null && performance.now() - this.written.get(h)! < (this.opts.hideMs ?? 0);
+    return hidden ? { ...res, items: res.items.filter(i => !i.source_ids.includes(h)) } : res;
+  }
+}
+
+function heldBackDef(): CellDefinition {
+  const id = 's3.ext-graph-pipeline.recipe';
+  const base: Omit<CellDefinition, 'estimate'> = {
+    schema: 'gbrain-evals/q1-cell/v1', id, set: 'S3', block: 'T2-S3', benchmark: 'locomo', split: 'dev', selection: { kind: 'all' }, exclusions: [], system: 'ext-graph-pipeline',
+    configuration: 'recipe', runner: 'shim', ingest_replicate: 1, effort: 'medium', canonical_instrument: 'locomo', probes: { sample: 1, seed: 'cs', held_back: 2 }, shards: 1, expected_hours: 1,
+    arms: [{ cell_id: `${id}.component-b8000`, set: 'S3', arm: 'component', policy: 'fixed-evidence', mode: 'packed', id: 'component-b8000', budget: 8000, questions: null, readers: ['anthropic:claude-opus-5-5'],
+      reader_replicates: {}, frontier: null, judge_repeats: null, label: 'component' }],
+  };
+  return { ...base, estimate: estimateCell(base) };
+}
+
+async function run(name: string, opts: ConstructorParameters<typeof EmbeddingFake>[1]) {
+  const upstream = (async (url: RequestInfo | URL) => String(url).endsWith('/chat/completions')
+    ? Response.json({ choices: [{ message: { content: 'x' } }], usage: { prompt_tokens: 100, completion_tokens: 10 } })
+    : Response.json({ data: [{ embedding: [0.1] }], usage: { prompt_tokens: 100, total_tokens: 100 } })) as unknown as typeof fetch;
+  const usageLog = join(tmp, `${name}.ndjson`);
+  const lease = BudgetRun.openLease({ runId: name, leaseUsd: 1, ledgerPath: join(tmp, `${name}.sqlite`) });
+  const proxy = new MeteringProxy({ fetchImpl: upstream, policy: { lease, env: KEYS, usageLog } });
+  proxy.start();
+  const base = `http://127.0.0.1:${proxy.port}`;
+  const saved = { ...process.env };
+  process.env.GBRAIN_EVALS_QA_CACHE = join(tmp, `qa-cache-${name}`);
+  try {
+    const def = heldBackDef();
+    const out = join(tmp, name);
+    const res = await runCell(def, { out, providerProxy: base, probeIntervalMs: 5, probeTimeoutMs: 150, idleQuietMs: 40, idleMaxMs: 3000 }, { corpus, system: new EmbeddingFake(base, opts), reader, judge });
+    const events = readFileSync(join(out, 'runs', def.id, 'realizations.ndjson'), 'utf8').trim().split('\n').map(l => JSON.parse(l)).filter(e => e.event === 'ingested');
+    const usage = readFileSync(usageLog, 'utf8').trim().split('\n').map(l => JSON.parse(l) as UsageLine);
+    return { def, res, events, usage, out };
+  } finally {
+    for (const k of Object.keys(process.env)) if (!(k in saved)) delete process.env[k];
+    Object.assign(process.env, saved);
+    proxy.stop();
+  }
+}
+
+describe('held-back probes', () => {
+  beforeEach(() => closeLedgers());
+
+  test('bulk import leaves the last sessions out; each held-back session is written on an idle system and found; probe searches are labelled probe and writes keep their phases', async () => {
+    const hide = raw.conversations.find(c => LATE.has(c.id))!.sessions.at(-1)!.turns[0].content;
+    const { def, res, events, usage, out } = await run('held-back', { hide, hideMs: 600 });
+    expect(res.status).not.toBe('invalid');
+    expect(events).toHaveLength(3);
+    for (const e of events) {
+      expect(e.ingest.sessions).toBe(5);
+      const probes = e.write_probes as WriteProbe[];
+      const bulk = probes.filter(p => p.kind === 'bulk'), held = probes.filter(p => p.kind === 'held-back');
+      expect(bulk).toHaveLength(2);
+      expect(held).toHaveLength(2);
+      for (const p of held) expect([p.started_idle, p.polls > 0, p.errored_polls]).toEqual([true, true, 0]);
+      expect(e.calibration).toMatchObject({ drained: true, started_idle: true, searches: 3, errored: 0, idle: true, unlabelled_routes: [] });
+      const lastHeld = held.at(-1)!;
+      if (LATE.has(e.conversation)) expect([lastHeld.status, lastHeld.miss]).toEqual(['missed', 'late']);
+      else expect(held.every(p => p.status === 'found' && p.write_to_queryable_ms! >= 0 && p.miss === null)).toBe(true);
+      const file = readFileSync(join(out, 'runs', def.id, 'r', realizationId(def.id, e.conversation, 0), 'write-probes.ndjson'), 'utf8').trim().split('\n');
+      expect(file).toHaveLength(4);
+    }
+    const ok = usage.filter(l => l.outcome === 'forwarded');
+    const writes = ok.filter(l => l.slot === 'fake' && l.phase === 'commit');
+    expect(writes).toHaveLength(15);
+    expect(writes.filter(l => l.key.endsWith('#held-back'))).toHaveLength(6);
+    expect(writes.every(l => l.key.startsWith('ingest:'))).toBe(true);
+    const probeLines = ok.filter(l => l.phase === 'probe');
+    expect(probeLines.length).toBeGreaterThanOrEqual(3 * (2 + 2 + 3));
+    expect(probeLines.every(l => l.route === '/v1/embeddings')).toBe(true);
+    expect(ok.some(l => l.key.startsWith('calibration:') && l.phase !== 'probe')).toBe(false);
+  }, 60_000);
+
+  test('a read that also calls a model shows up in the calibration window as a route the probe label misses', async () => {
+    const { events } = await run('expanding', { expand: true });
+    for (const e of events) expect(e.calibration.unlabelled_routes).toEqual(['openai/v1/chat/completions']);
+  }, 60_000);
+});
