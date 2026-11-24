@@ -761,17 +761,17 @@ export async function runPinnedQuestionsPaid(opts: { gut: GbrainUnderTest; model
     const finish: { current: SafetyFinish | null | undefined } = { current: undefined };
     const noteFinish = (f: SafetyFinish | null) => { if (f && finish.current !== undefined) finish.current ??= f; };
     const outerFetch = globalThis.fetch;
-    if (opts.mode.kind === 'keyless') {
-      const transport = opts.mode.transport;
-      gateway.__setChatTransportForTests(async o => {
-        try { const res = await transport(o); noteFinish(safetyFinishOf({ stopReason: res.stopReason })); return res; } catch (e) { noteRefusal(e); throw e; }
-      });
-    } else {
-      globalThis.fetch = Object.assign(async (...a: Parameters<typeof fetch>) => { try { return await outerFetch(...a); } catch (e) { noteRefusal(e); throw e; } }, outerFetch);
-      const { generateText } = await import(Bun.resolveSync('ai', opts.gut.root)) as { generateText: (o: any) => Promise<any> };
-      gateway.__setGenerateTextTransportForTests(recordingGenerateText(generateText, noteFinish));
-    }
     try {
+      if (opts.mode.kind === 'keyless') {
+        const transport = opts.mode.transport;
+        gateway.__setChatTransportForTests(async o => {
+          try { const res = await transport(o); noteFinish(safetyFinishOf({ stopReason: res.stopReason })); return res; } catch (e) { noteRefusal(e); throw e; }
+        });
+      } else {
+        globalThis.fetch = Object.assign(async (...a: Parameters<typeof fetch>) => { try { return await outerFetch(...a); } catch (e) { noteRefusal(e); throw e; } }, outerFetch);
+        const { generateText } = await import(Bun.resolveSync('ai', opts.gut.root)) as { generateText: (o: any) => Promise<any> };
+        gateway.__setGenerateTextTransportForTests(recordingGenerateText(generateText, noteFinish));
+      }
       const worlds = opts.seeds.map(seed => generatePinnedQuestionsWorld({ seed, companies: opts.companies }));
       const ckPath = join(opts.output, 'checkpoint.ndjson');
       const ckKey = checkpointKey({ mode: opts.mode.kind, gut: opts.gut, companies: opts.companies, maxOutputTokens: opts.maxOutputTokens });

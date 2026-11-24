@@ -1,13 +1,13 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import { spawnSync } from 'node:child_process';
-import { appendFileSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { CLAIMS, generatePinnedQuestionsWorld, type PqCompany, type PqWorld } from '../../eval/generators/pinned-questions-gen.ts';
 import { claimSentence } from '../../eval/runner/pinned-questions.ts';
-import { gbrainSpecFrom, overlaySummary, resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
+import { gbrainSpecFrom, importGbrain, overlaySummary, resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
 import { createHash } from 'node:crypto';
-import { BudgetExceededError, chatPrice } from '../../eval/runner/budget-ledger.ts';
+import { BudgetExceededError, budgetOptionsFrom, chatPrice, initLedger, startPaidRun } from '../../eval/runner/budget-ledger.ts';
 import { PaidArmRefusal } from '../../eval/runner/paid-arm.ts';
 import { writeReceipt } from '../../eval/runner/receipt.ts';
 import {
@@ -55,6 +55,27 @@ describe('pinned-questions paid arm: refusal', () => {
 });
 
 describe('pinned-questions paid arm: the exported runner', () => {
+  test('when paid setup fails partway, the fetch wrapper and the usage sink are removed again', async () => {
+    const d = mkdtempSync(join(tmpdir(), 'pq-paid-setup-'));
+    const real = resolveGbrainUnderTest(gbrainSpecFrom([]));
+    symlinkSync(join(real.root, 'src'), join(d, 'src'));
+    const gut = { ...real, root: d };
+    const ledgerPath = join(d, 'ledger.sqlite');
+    initLedger({ ledgerPath, programCapUsd: 5 });
+    const paid = startPaidRun('pq-setup-test', { ...budgetOptionsFrom(['--budget-usd', '1', '--budget-ledger', ledgerPath], {}), estimateUsd: 0, log: () => {} });
+    const sinks = (await importGbrain<{ __chatUsageSinkCountForTests(): number }>(gut, 'src/core/ai/chat-usage.ts')).__chatUsageSinkCountForTests;
+    const before = { fetch: globalThis.fetch, sinks: sinks() };
+    try {
+      await expect(runPinnedQuestionsPaid({ gut, models: ['particle:particle-1'], seeds: [1], companies: 8, output: join(d, 'out'), mode: { kind: 'paid', keys: {} } })).rejects.toThrow();
+      expect(globalThis.fetch).toBe(before.fetch);
+      expect(sinks()).toBe(before.sinks);
+    } finally {
+      paid.guard.uninstall();
+      paid.run.close();
+      rmSync(d, { recursive: true, force: true });
+    }
+  });
+
   test('paid mode refuses before any request when no budget-ledger request guard is installed', async () => {
     const out = mkdtempSync(join(tmpdir(), 'pq-paid-noguard-'));
     const realFetch = globalThis.fetch;
