@@ -227,6 +227,20 @@ const TRANSIENT = /^refresh_failed:(rate_limited|timeout|network|provider_error)
 const NO_ANSWER_REACHED = /^refresh_failed:(rate_limited|timeout|network)$/;
 const SAFETY = /safety|content[ _-]?filter|content[ _-]?policy|usage polic|\brefusal\b|\brefused to\b|flagged/i;
 
+/**
+ * gbrain refused to call the model for a reason that is the run's setup, not the model: no key, no consent, no worker or
+ * gbrain's own spend limit. The question is a harness error, never a scored not-correct answer.
+ */
+const HARNESS_BLOCKS = new Set(['no_model_key', 'awaiting_consent', 'no_worker', 'budget_exhausted']);
+export const harnessBlocked = (c: Pick<CallRecord, 'status' | 'error'>) => c.status === 'blocked' && c.error !== null && HARNESS_BLOCKS.has(c.error);
+
+/** Refuse a paid launch unless every model under test and every judge it needs has its provider key set. */
+export function requireProviderKeys(models: readonly string[], env: Record<string, string | undefined> = process.env): void {
+  const keyOf = (m: string) => ({ anthropic: 'ANTHROPIC_API_KEY', openai: 'OPENAI_API_KEY', particle: 'PARTICLE_API_KEY' } as Record<string, string>)[m.split(':')[0]!] ?? `no known key for ${m}`;
+  const missing = [...new Set(models.flatMap(m => [m, judgeFor(m)]))].filter(m => !env[keyOf(m)]).map(m => `${m} (${keyOf(m)})`);
+  if (missing.length) throw new PaidArmRefusal(`${CATEGORY}: no provider key for ${missing.join(', ')}; set it before a paid launch, or a run scores that model as all wrong.`);
+}
+
 export function outcomeOf(c: Pick<CallRecord, 'status' | 'error' | 'failure_message' | 'safety_finish'>): Outcome {
   if (c.status === 'published') return 'published';
   if (c.error?.includes('answer_too_long')) return 'answer_too_long';
@@ -242,6 +256,7 @@ export function outcomeOf(c: Pick<CallRecord, 'status' | 'error' | 'failure_mess
  * as a refresh), else the judge's verdict.
  */
 export function scoredCorrect(r: Pick<PaidRow, 'pin' | 'refresh' | 'refreshed'>): boolean | null {
+  if (harnessBlocked(r.pin) || harnessBlocked(r.refresh)) return null;
   if (outcomeOf(r.pin) === 'provider_error' || outcomeOf(r.refresh) === 'provider_error') return null;
   if (outcomeOf(r.refresh) !== 'published') return false;
   return r.refreshed.answer_correct;
@@ -616,9 +631,12 @@ export async function runPinnedQuestionsPaid(opts: { gut: GbrainUnderTest; model
         for (const r of unit) {
           const probe = `${model}|s${r.seed}|${r.company}`;
           if (r.correct !== null) acc.score(probe, Number(r.correct));
+          else if (harnessBlocked(r.pin) || harnessBlocked(r.refresh)) acc.error(probe, 'harness', `gbrain blocked the call: ${harnessBlocked(r.refresh) ? r.refresh.error : r.pin.error}`);
           else if (r.outcome === 'provider_error' || outcomeOf(r.pin) === 'provider_error') acc.error(probe, 'dependency', r.refresh.failure_message ?? r.refresh.error ?? r.pin.error ?? 'provider error');
           else acc.error(probe, 'judge', r.refreshed.judge_error ?? 'no judge labels');
         }
+        const blocked = unit.filter(r => harnessBlocked(r.pin) || harnessBlocked(r.refresh)).length;
+        if (blocked) harnessErrors.push(`${model} seed ${world.seed}: gbrain blocked ${blocked} question(s) for a setup reason (no key, consent, worker or gbrain spend limit); fix the setup, these are not model results`);
         rows.push(...unit);
         log(`[pq-paid] ${model} seed ${world.seed}${prior ? ' (from checkpoint)' : ''}: refreshed correct ${unit.filter(r => r.correct).length}/${unit.length}`);
       }
@@ -710,6 +728,7 @@ async function main(): Promise<void> {
   const output = resolve(outFlag);
   const estimate = estimateUsd(models, seeds.length, companies, maxOutputTokens);
   requirePaidFlags(argv, estimate);
+  requireProviderKeys(models);
   const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
   const keys = Object.fromEntries(PAID_KEY_NAMES.map(k => [k, process.env[k]]).filter(([, v]) => v)) as Partial<Record<typeof PAID_KEY_NAMES[number], string>>;
   const startedAt = new Date().toISOString();

@@ -12,7 +12,7 @@ import { writeReceipt } from '../../eval/runner/receipt.ts';
 import {
   JUDGE_MIN_LABELS, PINNED_QUESTIONS_JUDGE_PROMPT, PINNED_QUESTIONS_MODELS_UNDER_TEST, STAGE_SEEDS, TRUNCATION_BAR, buildReceipt, canonicalModel, cohenKappa,
   familyOf, judgeAgreement, judgeCheckPasses, judgeFor, judgeUserMessage, modelRoles, parseJudgeLabels, requirePaidFlags, ruleLabels,
-  outcomeOf, recordingGenerateText, redactProviderText, runPinnedQuestionsPaid, summarizePaid,
+  harnessBlocked, outcomeOf, recordingGenerateText, redactProviderText, requireProviderKeys, runPinnedQuestionsPaid, scoredCorrect, summarizePaid,
   type ChatTransport, type GradedAnswer, type PaidRow, type PaidRunResult,
 } from '../../eval/runner/pinned-questions-paid.ts';
 
@@ -54,6 +54,26 @@ describe('pinned-questions paid arm: refusal', () => {
 });
 
 describe('pinned-questions paid arm: models and judges', () => {
+  test('a paid launch is refused when a model under test or its judge has no provider key', () => {
+    const all = { ANTHROPIC_API_KEY: 'a'.repeat(12), OPENAI_API_KEY: 'o'.repeat(12), PARTICLE_API_KEY: 'p'.repeat(12) };
+    const models = [...PINNED_QUESTIONS_MODELS_UNDER_TEST];
+    expect(() => requireProviderKeys(models, all)).not.toThrow();
+    expect(() => requireProviderKeys(models, { ...all, PARTICLE_API_KEY: undefined })).toThrow(/particle:particle-1 \(PARTICLE_API_KEY\)/);
+    expect(() => requireProviderKeys(['anthropic:claude-opus-5-5'], { ANTHROPIC_API_KEY: all.ANTHROPIC_API_KEY })).toThrow(/openai:gpt-6.2-astra \(OPENAI_API_KEY\)/);
+    expect(() => requireProviderKeys(['openai:gpt-6.2-sol'], { OPENAI_API_KEY: all.OPENAI_API_KEY })).toThrow(PaidArmRefusal);
+  });
+
+  test('a question gbrain blocked for a setup reason is a harness error, not a scored wrong answer', () => {
+    const call = (status: string, error: string | null) => ({ status, mode: null, error, failure_message: null, cost_usd: null, usage: { calls: 0, input_tokens: 0, output_tokens: 0, cache_read_tokens: 0, cache_write_tokens: 0 } });
+    const graded = { sentences: [], judge_labels: null, judge_error: null, answer_correct: null, rule_labels: {}, rule_correct: null, judge_usage: call('x', null).usage, stale: [] } as unknown as PaidRow['refreshed'];
+    for (const reason of ['no_model_key', 'awaiting_consent', 'no_worker', 'budget_exhausted']) {
+      expect(harnessBlocked(call('blocked', reason))).toBe(true);
+      expect(scoredCorrect({ pin: call('blocked', reason), refresh: { ...call('blocked', reason), freshness: 'stale', stale_sentences: 0 }, refreshed: graded })).toBeNull();
+    }
+    expect(harnessBlocked(call('failed', 'refresh_failed:model_output_not_json'))).toBe(false);
+    expect(scoredCorrect({ pin: call('published', null), refresh: { ...call('failed', 'refresh_failed:model_output_not_json'), freshness: 'stale', stale_sentences: 0 }, refreshed: graded })).toBe(false);
+  });
+
   test('bare ids get their provider prefix, and no judge grades its own family or is particle-1', () => {
     expect(['claude-opus-5-5', 'particle:particle-1', 'gpt-6.2-sol'].map(canonicalModel)).toEqual([...PINNED_QUESTIONS_MODELS_UNDER_TEST]);
     expect(judgeFor('anthropic:claude-opus-5-5')).toBe('openai:gpt-6.2-astra');
