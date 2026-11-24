@@ -188,8 +188,15 @@ export const weeklyLineSetOf = (batch: string): WeeklyLineCountedSet => {
 
 /** The world length BG1-C's per-world rates were measured at (bg1c.ts BG1C_RATES, its sets' 200,000 tokens a world). */
 export const WEEKLY_LINE_RATE_WORLD_TOKENS = 200_000;
-/** An 8,000-token row's ingest for one world of `tokens`: BG1's measured ingest per million tokens, and for gbrain its fact extraction at F6's rate. */
-const ingestUsd = (key: string, tokens: number) => (BG1_MEASURED.ingest_usd_per_mtok[key] ?? 0) * tokens / 1e6 + (key === 'gbrain-defaults:rs1-stable' ? f6ExtractionUsd(tokens) : 0);
+/**
+ * An 8,000-token row's ingest for one world of `tokens`: BG1's measured ingest per million tokens, and for gbrain its fact
+ * extraction at F6's rate. A row with no measured ingest rate refuses, so a longer world's extra ingest is never priced at nothing.
+ */
+const ingestUsd = (key: string, tokens: number) => {
+  const rate = BG1_MEASURED.ingest_usd_per_mtok[key];
+  if (!(rate >= 0)) throw new Error(`the weekly line has no measured ingest rate for ${key} (BG1_MEASURED.ingest_usd_per_mtok), so a world longer than ${WEEKLY_LINE_RATE_WORLD_TOKENS.toLocaleString('en-US')} tokens can't be priced`);
+  return rate * tokens / 1e6 + (key === 'gbrain-defaults:rs1-stable' ? f6ExtractionUsd(tokens) : 0);
+};
 
 /**
  * A weekly cell's estimate for a full week: BG1-C's rate per world for an 8,000-token row, plus its ingest over the

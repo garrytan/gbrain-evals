@@ -228,6 +228,17 @@ describe('the weekly cells on W1-long worlds', () => {
     expect(buildWeeklyPilotManifest(GBRAIN).rates).toEqual({ ...WEEKLY_LINE_RATES });
   });
 
+  // Value: protects=a long week's estimate refuses a row whose ingest rate was never measured instead of pricing its extra 800,000 tokens a world at nothing, while a standard week, which prices no extra ingest, still plans; fails_when=ingestUsd reads a missing rate as 0, so a long week's cap and leases leave out that row's ingest; why_new=GBEV-3's follow-up to #625 (a missing ingest rate refuses instead of counting as zero); seam=weekly-line.ts ingestUsd through generateWeeklyLineCells; no_claim=the measured rates themselves
+  test('a long week refuses a row with no measured ingest rate, and a standard week does not need one', () => {
+    const rates = BG1_MEASURED.ingest_usd_per_mtok, key = 'ext-memory-bank:recipe', was = rates[key];
+    delete rates[key];
+    try {
+      expect(() => generateWeeklyLineCells(input('bgw-2001', 2001))).toThrow(`the weekly line has no measured ingest rate for ${key} (BG1_MEASURED.ingest_usd_per_mtok), so a world longer than 200,000 tokens can't be priced`);
+      expect(generateWeeklyLineCells(input('bgw-1001', 1001))).toEqual(std);
+    } finally { rates[key] = was; }
+    expect(generateWeeklyLineCells(input('bgw-2001', 2001))).toEqual(long);
+  });
+
   // Value: protects=the launch check refuses a week whose cells run another length than its batch; fails_when=a W1-long week launches on BGW cells, a W1 week on BGW-long cells, a cell (or launch unit) whose planned hours outrun one VM's limit launches and is stopped after spending, or a split cell's units skip or repeat a world; why_new=GBEV-3's brief (no guard weakened by the long set); seam=weekly-line/launch.ts weeklyLineLaunchProblems; no_claim=the cell VM
   test('the launch check refuses cells whose set is not the length their batch plans at, or that would outrun one VM', () => {
     const deps = { ripgrep: () => 'ripgrep 14.1.1', registry: [...weeklyLineRegistryModels(), { model: 'text-embedding-3-large', role: 'system-internal', system: 'extract-first server (common setup embedder)' }] };
