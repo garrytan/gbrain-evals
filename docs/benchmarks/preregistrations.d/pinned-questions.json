@@ -33,6 +33,10 @@
           "then": "we document that refreshes stay on the deep tier, or recommend nothing at this sample size"
         },
         {
+          "if": "paid: more than 5% of a model's pilot pin and refresh calls are cut off at gbrain's 2,000-token output cap",
+          "then": "we report the cap to GBRA-108 as a gbrain finding, run the raised-cap arm (8,000 tokens) on the counted seeds, and the particle-1 recommendation names the cap at which it holds"
+        },
+        {
           "if": "paid: Opus correctness after a contradiction is at least 15 points below its correctness after a direct edit",
           "then": "design note to GBRA-108: recompute in full when new in-scope evidence arrives"
         }
@@ -74,8 +78,8 @@
         {
           "arm": "paid-refresh",
           "max_budget_fraction": 0.1,
-          "part_under_test_ran": "seed 21: each model's refreshes carry answer_model equal to that model and appear as ledger request rows",
-          "judge_passes": "both judges reach kappa of at least 0.6 on the 144 pilot outputs before any counted unit",
+          "part_under_test_ran": "seed 21 (--stage pilot): each model's refreshes carry answer_model equal to that model and appear as ledger request rows; at most 5% of each model's pin and refresh calls are cut off at the output cap, else the raised-cap arm runs",
+          "judge_passes": "a tenth cannot buy 100 labels per judge, so the judge check runs in its own stage before any counted unit: --stage judge-check on seeds 21 to 23 (seed 21 resumed from the pilot's checkpoint); both judges reach kappa of at least 0.6 on at least 100 real outputs each (gpt-6.2-astra 288, claude-opus-5-5 144), enforced by judgeCheckPasses",
           "units_supplied_at_rate": "all 24 seed-21 questions pin and refresh for every model"
         }
       ],
@@ -87,7 +91,7 @@
               "claude-opus-5-5",
               "particle-1"
             ],
-            "labelled_outputs": 144,
+            "labelled_outputs": 288,
             "kappa_min": 0.6
           },
           {

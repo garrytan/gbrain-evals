@@ -42,8 +42,8 @@ confirmation.
   second, separately labelled measurement on the same seeds, run when it ships, and it is compared with the frozen
   baseline. Running the baseline build next to it is allowed because the question is about that change.
 - **Worlds:** `eval/generators/pinned-questions-gen.ts` (`pinned-questions-gen/1`), 24 fictional companies per seed,
-  3 per change class. Counted seeds 11 to 20 (240 questions, 960 answer sentences per arm). Pilot seed 21. The
-  receipt records each seed's ledger fingerprint.
+  3 per change class. Counted seeds 11 to 20 (240 questions, 960 answer sentences per arm). Pilot seed 21
+  (`--stage pilot`); judge-check seeds 21 to 23 (`--stage judge-check`). The receipt records each seed's ledger fingerprint.
 - **gbrain-evals:** the merge commit of this preregistration, recorded in each receipt.
 
 ## Arms
@@ -71,7 +71,13 @@ Models under test, called by gbrain's gateway (the product path, not an agent ha
 The judge prompt is frozen in the runner (`PINNED_QUESTIONS_JUDGE_PROMPT`, hash in the receipt). Output limits are
 gbrain's defaults (`cycle.standing_questions.max_output_tokens` 2,000), so a model that thinks inside that limit is
 measured as shipped; a reply cut off at the cap is gbrain's `answer_too_long` and counts as an incorrect answer,
-reported separately. Two settings differ from the product default and are recorded in the receipt: pin and refresh
+reported per model in its own column (pin and refresh calls cut off, and their share of the model's calls).
+
+**P, raised cap (secondary, conditional).** If the pilot shows more than 5% of any model's pin and refresh calls cut off
+at the cap (`data.summary.truncation`), the cap is reported to GBRA-108 as a gbrain finding, and P runs a second time
+on the counted seeds with `--max-output-tokens 8000` (`cycle.standing_questions.max_output_tokens` 8,000) for every
+model, with the same judges and analysis. It is labelled as a raised-cap arm, never merged with the default-cap
+numbers, and the particle-1 decision below reads it. Two settings differ from the product default and are recorded in the receipt: pin and refresh
 wait up to 300 seconds (`wait_ms`, the maximum, so a slow answer is graded rather than timed out), and particle-1 is
 sent `reasoning_effort: high` (its default) through gbrain's `provider_chat_options`.
 
@@ -103,7 +109,9 @@ correctness, and cost per correct answer from the ledger's usage fields.
   recall on edits, supersessions and deletions does not fall (McNemar, two-sided 0.05).
 - **P:** two primary comparisons, each paired by question against `claude-opus-5-5`: particle-1 and gpt-6.2-sol,
   Holm-corrected at 0.05. particle-1 is non-inferior when the lower bound of the paired 95% interval of
-  (particle-1 minus Opus) is above -10 points. Smallest detectable difference: about 8 points at 80% power with 240
+  (particle-1 minus Opus) is above -10 points. When the raised-cap arm runs, the same two comparisons run on it as a
+  separate, labelled family (Holm within it), and the particle-1 recommendation names the cap at which non-inferiority
+  holds: at the default cap, only at the raised cap (then the cap change is part of the recommendation), or at neither. Smallest detectable difference: about 8 points at 80% power with 240
   paired questions and 20% discordance. A smaller difference is reported as "no measurable difference at this sample
   size", never as equal.
 
@@ -114,24 +122,34 @@ correctness, and cost per correct answer from the ledger's usage fields.
 | K: spillover and missed signals (the dev finding) | GBRA-108 ships the scheduling fix it has accepted; we rerun K on that release | We withdraw the fix request and correct the handoff | Rerun K with 20 seeds before asking GBRA-108 to change anything |
 | K: false-flag rate on unrelated edits to cited pages | The paragraph-level evidence design note goes to GBRA-108 as a plan to build | We close the design note | The note stays parked |
 | P: particle-1 non-inferior to Opus | We ask GBRA-108 to document particle-1 as the low-cost choice for `models.standing_questions` | We document that refreshes should stay on the deep tier | We say no measurable difference at this size and recommend nothing |
+| P: a model's pilot calls more than 5% cut off at the output cap | We report the cap to GBRA-108 as a gbrain finding and run the raised-cap arm, which the particle-1 decision also reads | The default-cap arm stands alone | Not applicable: the bar is a count |
 | P: Opus correctness after a contradiction at least 15 points below after a direct edit | Design note to GBRA-108: recompute in full when new in-scope evidence arrives, instead of editing the old answer | No change | No change |
 
 ## Pilot per arm
 
 - **K:** none needed beyond the dev runs: it is keyless, and the dev seeds already showed the part under test ran (every
   claim answered at pin, zero baseline flags, deletions flagged on the first read).
-- **P:** seed 21, all three models, 24 questions each: 72 pins and 72 refreshes, at most a tenth of P's budget. It
-  must show, on each model's own outputs, that refresh ran through gbrain's gateway with that model (the receipt's
-  `answer_model` and the ledger's request rows), that every question could be pinned and refreshed, and that the judges
-  pass the check below on these outputs. A model that fails is fixed or left out and reported as left out.
+- **P:** seed 21 (`--stage pilot`), all three models, 24 questions each: 72 pins and 72 refreshes, a tenth of the
+  counted seeds and so at most a tenth of P's budget. It must show, on each model's own outputs, that refresh ran
+  through gbrain's gateway with that model (the receipt's `answer_model` and the ledger's request rows) and that every
+  question could be pinned and refreshed. It also reads the truncation bar: at most 5% of each model's pin and refresh
+  calls cut off at the output cap; a model above it triggers the raised-cap arm. A model that fails the other checks is
+  fixed or left out and reported as left out. A tenth can't buy the judge check's 100 labelled outputs per judge (seed
+  21 gives the Opus judge 48), so, as the template allows, the judge check runs in its own stage before any counted
+  unit: `--stage judge-check` into the pilot's `--output` resumes seed 21 from its checkpoint without re-asking it
+  and adds seeds 22 and 23 (below). The truncation bar is read again on all three seeds.
 
 ## Judge check
 
 Two judges: `gpt-6.2-astra` grades `claude-opus-5-5` and particle-1 rows, `claude-opus-5-5` grades `gpt-6.2-sol`
-rows. No judge grades its own family, and particle-1 never judges. Each judge is checked on all 144 pilot outputs (72
-first answers and 72 refreshed answers), at least 100 labelled outputs, before any counted unit runs. Labels: the claim
-values are unique synthetic tokens, so each output gets a rule label (new value present and old value absent is
-correct; old present and new absent is stale; neither is missing); an output whose rule label is ambiguous (both values present) is left out of
+rows. No judge grades its own family, and particle-1 never judges. Each judge is checked on the real outputs of the
+rows it grades in the judge-check stage (seeds 21 to 23), before any counted unit runs: `gpt-6.2-astra` on 288 (first
+and refreshed answers of the 144 Opus and particle-1 questions) and `claude-opus-5-5` on 144 (first and refreshed
+answers of the 72 Sol questions). The check needs at least 100 labelled outputs per judge after exclusions, and the
+runner enforces it (`judgeCheckPasses`, `JUDGE_MIN_LABELS` 100): a judge with fewer fails. If exclusions leave a judge
+under 100, a dated amendment adds judge-check seed 24 before any counted unit runs. Labels: the claim values are unique
+synthetic tokens, so each output gets a rule label (new value present and old value absent is correct; old present and
+new absent is stale; neither is missing); an output whose rule label is ambiguous (both values present) is left out of
 the agreement set and counted, so the labels are rule labels, not model labels. Each judge must
 reach Cohen's kappa of at least 0.6 on answer correctness, and its disagreements are read per model, not pooled. A
 judge that fails is replaced by a stated alternative from another family in a dated amendment before the counted run.

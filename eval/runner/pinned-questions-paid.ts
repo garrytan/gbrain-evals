@@ -27,8 +27,11 @@
  * (runPinnedQuestionsPaid with a transport): gbrain's test chat transport, a
  * placeholder key, dead upstream base URLs and no provider keys.
  *
- * Usage: bun eval/runner/pinned-questions-paid.ts --models claude-opus-5-5,particle:particle-1,gpt-6.2-sol --seeds 1,2,3
- *   [--companies 24] --output <dir> [--gbrain <checkout>[@ref]] --paid (--budget-usd N | --budget-run-id ID)
+ * Usage: bun eval/runner/pinned-questions-paid.ts --models claude-opus-5-5,particle:particle-1,gpt-6.2-sol
+ *   [--stage dev|pilot|judge-check|counted] [--seeds 1,2,3] [--companies 24] [--max-output-tokens N] --output <dir>
+ *   [--gbrain <checkout>[@ref]] --paid (--budget-usd N | --budget-run-id ID)
+ * --stage picks the preregistered seeds (pilot 21; judge-check 21-23 into the pilot's --output; counted 11-20), and
+ * --seeds overrides them. --max-output-tokens sets cycle.standing_questions.max_output_tokens for the raised-cap arm.
  */
 import './budget-ledger.ts';
 import { createHash } from 'node:crypto';
@@ -64,6 +67,17 @@ export const WAIT_MS = 300_000;
 export const JUDGE_MAX_TOKENS = 8_192;
 /** Sent to Particle through gbrain's provider_chat_options: its default, sent explicitly (CLAUDE.md "Choose models"). */
 export const PARTICLE_REASONING_EFFORT = 'high';
+/** gbrain's config key for one refresh call's output cap (src/core/questions/refresh.ts MAX_OUTPUT_TOKENS_KEY); its default is 2,000. */
+export const MAX_OUTPUT_TOKENS_KEY = 'cycle.standing_questions.max_output_tokens';
+/**
+ * The preregistration's stages and their seeds. The pilot (a tenth of the counted seeds) checks that refresh ran with
+ * each model and that every question could be supplied. A tenth can't give each judge JUDGE_MIN_LABELS outputs, so the
+ * judge-check stage runs into the pilot's --output, resumes seed 21 from its checkpoint and adds seeds 22 and 23.
+ */
+export const STAGE_SEEDS = { dev: DEV_SEEDS, pilot: [21], 'judge-check': [21, 22, 23], counted: [11, 12, 13, 14, 15, 16, 17, 18, 19, 20] } as const;
+export type Stage = keyof typeof STAGE_SEEDS;
+/** Pilot bar: above this share of a model's pin and refresh calls cut off at the output cap, the cap is a gbrain finding and the raised-cap arm runs. */
+export const TRUNCATION_BAR = 0.05;
 /** Provider keys restored for the paid run; nothing else leaves the hermetic environment. */
 export const PAID_KEY_NAMES = ['ANTHROPIC_API_KEY', 'OPENAI_API_KEY', 'PARTICLE_API_KEY'] as const;
 /** Keyless mode's dead upstream: nothing listens there, so a request that escaped the test transport fails locally. */
@@ -235,13 +249,17 @@ export function judgeAgreement(rows: ReadonlyArray<Pick<PaidRow, 'judge_model' |
   return out;
 }
 
-/** The judge check a receipt's verdict reports: every judge's kappa against the rule labels at least this. */
+/** The judge check a receipt's verdict reports: every judge's kappa against the rule labels at least this, on at least JUDGE_MIN_LABELS outputs (R78). */
 export const JUDGE_KAPPA_FLOOR = 0.6;
+export const JUDGE_MIN_LABELS = 100;
 
 export function judgeCheckPasses(rows: ReadonlyArray<Pick<PaidRow, 'judge_model' | 'first' | 'refreshed'>>): boolean {
   const a = Object.values(judgeAgreement(rows));
-  return a.length > 0 && a.every(x => x.n > 0 && (x.kappa === null ? x.agreement === 1 : x.kappa >= JUDGE_KAPPA_FLOOR));
+  return a.length > 0 && a.every(x => x.n >= JUDGE_MIN_LABELS && (x.kappa === null ? x.agreement === 1 : x.kappa >= JUDGE_KAPPA_FLOOR));
 }
+
+/** A pin or refresh that gbrain failed because the reply hit the output cap. */
+export const answerTooLong = (c: Pick<CallRecord, 'error'>) => c.error?.includes('answer_too_long') ?? false;
 
 const rate = (xs: Array<boolean | null>) => { const s = xs.filter((x): x is boolean => x !== null); return s.length ? s.filter(Boolean).length / s.length : null; };
 const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null);
@@ -252,8 +270,7 @@ export function summarizePaid(rows: readonly PaidRow[]) {
     const us = rows.flatMap(pick).filter(u => u.calls > 0);
     return { calls: us.reduce((a, u) => a + u.calls, 0), mean_input_tokens: mean(us.map(u => u.input_tokens / u.calls)), mean_output_tokens: mean(us.map(u => u.output_tokens / u.calls)) };
   };
-  return {
-    by_model: Object.fromEntries(models.map(m => {
+  const byModel = Object.fromEntries(models.map(m => {
       const rs = rows.filter(r => r.model === m);
       const counts = (f: (r: PaidRow) => string) => rs.reduce<Record<string, number>>((o, r) => { o[f(r)] = (o[f(r)] ?? 0) + 1; return o; }, {});
       return [m, {
@@ -261,6 +278,11 @@ export function summarizePaid(rows: readonly PaidRow[]) {
         first_correct: rate(rs.map(r => r.first.answer_correct)),
         refreshed_correct: rate(rs.map(r => r.refreshed.answer_correct)),
         refreshed_correct_rule: rate(rs.map(r => r.refreshed.rule_correct)),
+        answer_too_long: (() => {
+          const pin = rs.filter(r => answerTooLong(r.pin)).length, refresh = rs.filter(r => answerTooLong(r.refresh)).length;
+          const share = (pin + refresh) / (2 * rs.length);
+          return { pin, refresh, share, over_bar: share > TRUNCATION_BAR };
+        })(),
         pin_status: counts(r => r.pin.status), refresh_status: counts(r => r.refresh.status), refresh_mode: counts(r => r.refresh.mode ?? 'none'),
         by_mutation: Object.fromEntries([...new Set(rs.map(r => r.mutation))].sort().map(k => {
           const ks = rs.filter(r => r.mutation === k);
@@ -268,20 +290,24 @@ export function summarizePaid(rows: readonly PaidRow[]) {
         })),
         cost_usd_gbrain_reported: rs.reduce((a, r) => a + (r.pin.cost_usd ?? 0) + (r.refresh.cost_usd ?? 0), 0),
       }];
-    })),
+    }));
+  return {
+    by_model: byModel,
     judge_agreement: judgeAgreement(rows),
+    truncation: { bar: TRUNCATION_BAR, models_over_bar: models.filter(m => byModel[m]!.answer_too_long.over_bar) },
     tokens_per_call: { pin: perCall(r => [r.pin.usage]), refresh: perCall(r => [r.refresh.usage]), judge: perCall(r => [r.first.judge_usage, r.refreshed.judge_usage]) },
   };
 }
 
 /** Ledger estimate in dollars for a run, from EST_TOKENS and the ledger's prices. */
-export function estimateUsd(models: readonly string[], seeds: number, companies: number): number {
+export function estimateUsd(models: readonly string[], seeds: number, companies: number, maxOutputTokens?: number): number {
+  const answerOutput = Math.max(EST_TOKENS.pin.output, maxOutputTokens ?? 0);
   const cost = (model: string, t: { input: number; output: number }) => {
     const p = chatPrice(model);
     if (!p) throw new Error(`${model} has no ledger price; register one in eval/runner/budget-ledger.ts`);
     return (t.input * p.input + t.output * p.output) / 1e6;
   };
-  return models.reduce((sum, m) => sum + seeds * companies * (cost(m, EST_TOKENS.pin) + cost(m, EST_TOKENS.refresh) + 2 * cost(judgeFor(m), EST_TOKENS.judge)), 0);
+  return models.reduce((sum, m) => sum + seeds * companies * (cost(m, { ...EST_TOKENS.pin, output: answerOutput }) + cost(m, { ...EST_TOKENS.refresh, output: answerOutput }) + 2 * cost(judgeFor(m), EST_TOKENS.judge)), 0);
 }
 
 interface Sentence { id: string; text: string; origin: string; stale: boolean }
@@ -305,7 +331,7 @@ const callRecord = (r: QReceipt, usage: Usage): CallRecord => ({
 const modelText = (r: QReceipt) => (r.answer ?? []).filter(s => s.origin === 'model');
 
 /** One (model, seed) unit: a fresh brain, every question pinned, changed, refreshed and graded. */
-async function runUnit(gut: GbrainUnderTest, gateway: Gateway, gatewayConfig: (chatModel: string) => Record<string, unknown>, usage: { current: Usage | null }, model: string, world: PqWorld): Promise<PaidRow[]> {
+async function runUnit(gut: GbrainUnderTest, gateway: Gateway, gatewayConfig: (chatModel: string) => Record<string, unknown>, usage: { current: Usage | null }, model: string, world: PqWorld, maxOutputTokens?: number): Promise<PaidRow[]> {
   const { PGLiteEngine } = await importGbrain<{ PGLiteEngine: new () => Engine }>(gut, 'src/core/pglite-engine.ts');
   const { operations } = await importGbrain<{ operations: Array<{ name: string; handler: (ctx: OperationContext, p: Record<string, unknown>) => Promise<unknown> }> }>(gut, 'src/core/operations.ts');
   const service = await importGbrain<{
@@ -345,6 +371,7 @@ async function runUnit(gut: GbrainUnderTest, gateway: Gateway, gatewayConfig: (c
   const pending: Array<{ c: PqCompany; pin: CallRecord; first: string[]; refresh: PaidRow['refresh']; refreshed: Sentence[] }> = [];
   try {
     await engine.setConfig('models.standing_questions', model);
+    if (maxOutputTokens) await engine.setConfig(MAX_OUTPUT_TOKENS_KEY, String(maxOutputTokens));
     for (const p of world.pages) await put(p.slug, p.content);
     const facts = new Map<string, number>();
     for (const f of world.facts) {
@@ -415,7 +442,7 @@ export type PaidMode = { kind: 'paid'; keys: Partial<Record<typeof PAID_KEY_NAME
 
 export interface PaidRunResult { worlds: PqWorld[]; rows: PaidRow[]; acc: ProbeAccounting; harnessErrors: string[]; resumedUnits: number }
 
-export async function runPinnedQuestionsPaid(opts: { gut: GbrainUnderTest; models: readonly string[]; seeds: readonly number[]; companies?: number; output: string; mode: PaidMode; log?: (s: string) => void }): Promise<PaidRunResult> {
+export async function runPinnedQuestionsPaid(opts: { gut: GbrainUnderTest; models: readonly string[]; seeds: readonly number[]; companies?: number; maxOutputTokens?: number; output: string; mode: PaidMode; log?: (s: string) => void }): Promise<PaidRunResult> {
   const log = opts.log ?? (() => {});
   const models = opts.models.map(canonicalModel);
   for (const m of models) judgeFor(m);
@@ -442,7 +469,7 @@ export async function runPinnedQuestionsPaid(opts: { gut: GbrainUnderTest; model
       const worlds = opts.seeds.map(seed => generatePinnedQuestionsWorld({ seed, companies: opts.companies }));
       const ckPath = join(opts.output, 'checkpoint.ndjson');
       const ckKey = JSON.stringify({
-        mode: opts.mode.kind, gbrain: opts.gut.overlay?.build.commit ?? opts.gut.version, generator: PINNED_QUESTIONS_GENERATOR_VERSION, companies: opts.companies ?? 24,
+        mode: opts.mode.kind, gbrain: opts.gut.overlay?.build.commit ?? opts.gut.version, generator: PINNED_QUESTIONS_GENERATOR_VERSION, companies: opts.companies ?? 24, max_output_tokens: opts.maxOutputTokens ?? null,
         judge_prompt_sha256: createHash('sha256').update(PINNED_QUESTIONS_JUDGE_PROMPT).digest('hex'),
       });
       const done = existsSync(ckPath)
@@ -460,7 +487,7 @@ export async function runPinnedQuestionsPaid(opts: { gut: GbrainUnderTest; model
           resumedUnits++;
         } else {
           try {
-            unit = await runUnit(opts.gut, gateway, gatewayConfig, usage, model, world);
+            unit = await runUnit(opts.gut, gateway, gatewayConfig, usage, model, world, opts.maxOutputTokens);
           } catch (e) {
             const msg = `${model} seed ${world.seed}: ${e instanceof Error ? e.message : String(e)}`;
             harnessErrors.push(msg);
@@ -496,7 +523,7 @@ export function modelRoles(models: readonly string[]): Array<{ model: string; ro
   ];
 }
 
-export function buildReceipt(opts: { gut: GbrainUnderTest; models: readonly string[]; seeds: readonly number[]; companies: number; result: PaidRunResult; cost: RunSummary | null; startedAt: string; mode: PaidMode['kind'] }): Receipt {
+export function buildReceipt(opts: { gut: GbrainUnderTest; models: readonly string[]; seeds: readonly number[]; companies: number; stage: Stage; maxOutputTokens?: number; result: PaidRunResult; cost: RunSummary | null; startedAt: string; mode: PaidMode['kind'] }): Receipt {
   const r = opts.result;
   const a = r.acc.summary();
   return {
@@ -516,11 +543,13 @@ export function buildReceipt(opts: { gut: GbrainUnderTest; models: readonly stri
       caller: 'operation handlers and src/core/questions/service.ts (pinQuestion, refreshQuestion, questionStatus) with OperationContext { remote: false, sourceId: default }; no injected chat',
       gate: 'report-only',
       models: modelRoles(opts.models),
-      model_config: 'models.standing_questions set to the model under test per brain; gbrain defaults otherwise (refresh output cap 2,000 tokens, budget $1 per refresh)',
+      stage: opts.stage,
+      model_config: `models.standing_questions set to the model under test per brain; ${opts.maxOutputTokens ? `${MAX_OUTPUT_TOKENS_KEY} raised to ${opts.maxOutputTokens} (the raised-cap arm)` : 'refresh output cap at gbrain\'s default of 2,000 tokens'}; gbrain defaults otherwise (budget $1 per refresh)`,
+      max_output_tokens: opts.maxOutputTokens ?? null,
       particle_reasoning_effort: `${PARTICLE_REASONING_EFFORT} (provider_chat_options.particle.reasoningEffort)`,
       wait_ms: WAIT_MS,
       judge: { prompt_sha256: createHash('sha256').update(PINNED_QUESTIONS_JUDGE_PROMPT).digest('hex'), max_tokens: JUDGE_MAX_TOKENS, temperature_sent: null, route: 'gbrain gateway chat, allowFallback false', retries: 'one retry on unparseable output' },
-      verdict: `judge check only (every judge's kappa against the rule labels at least ${JUDGE_KAPPA_FLOOR}); the category is report-only`,
+      verdict: `judge check only (every judge's kappa against the rule labels at least ${JUDGE_KAPPA_FLOOR} on at least ${JUDGE_MIN_LABELS} outputs); the category is report-only; data.summary.truncation names the models over the ${TRUNCATION_BAR * 100}% cut-off bar`,
       grading: 'first answers against the ledger before the change, refreshed answers against it after; answer_correct = every claim correct (a removed claim is correct when not asserted)',
       seeds: opts.seeds, companies_per_seed: opts.companies, generator_version: PINNED_QUESTIONS_GENERATOR_VERSION,
       resumed_units: r.resumedUnits,
@@ -550,12 +579,17 @@ export function requirePaidFlags(argv: readonly string[], estimate: number): voi
 async function main(): Promise<void> {
   const argv = process.argv.slice(2);
   const models = (argValue(argv, '--models') ?? PINNED_QUESTIONS_MODELS_UNDER_TEST.join(',')).split(',').map(canonicalModel);
-  const seeds = (argValue(argv, '--seeds') ?? DEV_SEEDS.join(',')).split(',').map(Number);
+  const stage = (argValue(argv, '--stage') ?? 'dev') as Stage;
+  if (!(stage in STAGE_SEEDS)) throw new Error(`--stage must be one of ${Object.keys(STAGE_SEEDS).join(', ')}`);
+  const seeds = (argValue(argv, '--seeds') ?? STAGE_SEEDS[stage].join(',')).split(',').map(Number);
   const companies = Number(argValue(argv, '--companies') ?? 24);
+  const capFlag = argValue(argv, '--max-output-tokens');
+  const maxOutputTokens = capFlag === undefined ? undefined : Number(capFlag);
+  if (maxOutputTokens !== undefined && !(Number.isInteger(maxOutputTokens) && maxOutputTokens > 0)) throw new Error('--max-output-tokens must be a positive integer');
   const outFlag = argValue(argv, '--output');
   if (!outFlag) throw new Error('--output <dir> is required: it holds checkpoint.ndjson, so an interrupted run resumes');
   const output = resolve(outFlag);
-  const estimate = estimateUsd(models, seeds.length, companies);
+  const estimate = estimateUsd(models, seeds.length, companies, maxOutputTokens);
   requirePaidFlags(argv, estimate);
   const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
   const keys = Object.fromEntries(PAID_KEY_NAMES.map(k => [k, process.env[k]]).filter(([, v]) => v)) as Partial<Record<typeof PAID_KEY_NAMES[number], string>>;
@@ -564,14 +598,14 @@ async function main(): Promise<void> {
   let result: PaidRunResult;
   let cost: RunSummary;
   try {
-    result = await runPinnedQuestionsPaid({ gut, models, seeds, companies, output, mode: { kind: 'paid', keys }, log: s => console.error(s) });
+    result = await runPinnedQuestionsPaid({ gut, models, seeds, companies, maxOutputTokens, output, mode: { kind: 'paid', keys }, log: s => console.error(s) });
   } finally {
     cost = paid.run.close();
     paid.guard.uninstall();
   }
-  writeReceipt(join(output, 'receipt.json'), buildReceipt({ gut, models, seeds, companies, result, cost, startedAt, mode: 'paid' }));
+  writeReceipt(join(output, 'receipt.json'), buildReceipt({ gut, models, seeds, companies, stage, maxOutputTokens, result, cost, startedAt, mode: 'paid' }));
   const s = summarizePaid(result.rows);
-  console.log(JSON.stringify({ by_model: Object.fromEntries(Object.entries(s.by_model).map(([m, v]) => [m, { first_correct: v.first_correct, refreshed_correct: v.refreshed_correct, refresh_status: v.refresh_status }])), judge_agreement: s.judge_agreement, cost_usd: receiptCost(cost).usd }, null, 2));
+  console.log(JSON.stringify({ by_model: Object.fromEntries(Object.entries(s.by_model).map(([m, v]) => [m, { first_correct: v.first_correct, refreshed_correct: v.refreshed_correct, refresh_status: v.refresh_status, answer_too_long: v.answer_too_long }])), judge_agreement: s.judge_agreement, truncation: s.truncation, cost_usd: receiptCost(cost).usd }, null, 2));
   process.exit(result.harnessErrors.length ? 3 : 0);
 }
 

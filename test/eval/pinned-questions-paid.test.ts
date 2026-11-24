@@ -9,8 +9,9 @@ import { gbrainSpecFrom, resolveGbrainUnderTest } from '../../eval/runner/gbrain
 import { PaidArmRefusal } from '../../eval/runner/paid-arm.ts';
 import { writeReceipt } from '../../eval/runner/receipt.ts';
 import {
-  PINNED_QUESTIONS_JUDGE_PROMPT, PINNED_QUESTIONS_MODELS_UNDER_TEST, buildReceipt, canonicalModel, cohenKappa, familyOf, judgeAgreement, judgeFor,
-  judgeUserMessage, modelRoles, parseJudgeLabels, requirePaidFlags, ruleLabels, runPinnedQuestionsPaid,
+  JUDGE_MIN_LABELS, PINNED_QUESTIONS_JUDGE_PROMPT, PINNED_QUESTIONS_MODELS_UNDER_TEST, STAGE_SEEDS, TRUNCATION_BAR, buildReceipt, canonicalModel, cohenKappa,
+  familyOf, judgeAgreement, judgeCheckPasses, judgeFor, judgeUserMessage, modelRoles, parseJudgeLabels, requirePaidFlags, ruleLabels,
+  runPinnedQuestionsPaid, summarizePaid,
   type ChatTransport, type GradedAnswer, type PaidRow, type PaidRunResult,
 } from '../../eval/runner/pinned-questions-paid.ts';
 
@@ -105,6 +106,28 @@ describe('pinned-questions paid arm: kappa', () => {
     expect(a['openai:gpt-6.2-astra']!.kappa).toBeCloseTo(0.4, 10);
     expect(a['anthropic:claude-opus-5-5']).toMatchObject({ n: 2, agreement: 1, kappa: 1 });
   });
+
+  test('the judge check needs at least 100 labelled outputs per judge, not only a high kappa', () => {
+    const rowsOf = (judge: string, answers: number) => Array.from({ length: answers / 2 }, (_, i): Pick<PaidRow, 'judge_model' | 'first' | 'refreshed'> => ({
+      judge_model: judge, first: g(i % 2 === 0, i % 2 === 0), refreshed: { ...g(i % 3 === 0, i % 3 === 0), stale: [] },
+    }));
+    expect(JUDGE_MIN_LABELS).toBe(100);
+    expect(judgeCheckPasses([...rowsOf('openai:gpt-6.2-astra', 100), ...rowsOf('anthropic:claude-opus-5-5', 100)])).toBe(true);
+    expect(judgeCheckPasses([...rowsOf('openai:gpt-6.2-astra', 100), ...rowsOf('anthropic:claude-opus-5-5', 98)])).toBe(false);
+    const ambiguous = rowsOf('openai:gpt-6.2-astra', 100).map((r, i) => (i === 0 ? { ...r, first: g(true, null) } : r));
+    expect(judgeCheckPasses(ambiguous)).toBe(false);
+  });
+
+  test('the judge-check stage gives each judge at least 100 outputs from the rows it grades; the pilot alone does not', () => {
+    const outputs = (judge: string, seeds: readonly number[]) => PINNED_QUESTIONS_MODELS_UNDER_TEST.filter(m => judgeFor(m) === judge).length * seeds.length * 24 * 2;
+    expect(outputs('openai:gpt-6.2-astra', STAGE_SEEDS['judge-check'])).toBe(288);
+    expect(outputs('anthropic:claude-opus-5-5', STAGE_SEEDS['judge-check'])).toBe(144);
+    expect(outputs('anthropic:claude-opus-5-5', STAGE_SEEDS.pilot)).toBeLessThan(JUDGE_MIN_LABELS);
+    expect(STAGE_SEEDS.pilot).toEqual([21]);
+    expect(STAGE_SEEDS['judge-check'][0]).toBe(STAGE_SEEDS.pilot[0]);
+    expect(STAGE_SEEDS.pilot.length * 10).toBe(STAGE_SEEDS.counted.length);
+    expect(STAGE_SEEDS.counted).toEqual([11, 12, 13, 14, 15, 16, 17, 18, 19, 20]);
+  });
 });
 
 /**
@@ -112,7 +135,7 @@ describe('pinned-questions paid arm: kappa', () => {
  * (before the change while pinning; after it on refresh, except for the
  * companies in `stale`, which repeat the old values), and grades like the rule.
  */
-function stubTransport(world: PqWorld, stale: Set<string>, calls: Array<{ model: string; kind: 'question' | 'judge'; graded?: string; chars: number }>): ChatTransport {
+function stubTransport(world: PqWorld, stale: Set<string>, calls: Array<{ model: string; kind: 'question' | 'judge'; graded?: string; chars: number; maxTokens?: number }>, truncate = new Set<string>()): ChatTransport {
   const byQuestion = new Map(world.companies.map(c => [c.question, c]));
   const seen = new Map<string, number>();
   return async (opts) => {
@@ -120,8 +143,9 @@ function stubTransport(world: PqWorld, stale: Set<string>, calls: Array<{ model:
     const judge = opts.system === PINNED_QUESTIONS_JUDGE_PROMPT;
     const qline = user.split('\n').find(l => l.startsWith('Question: '))!.slice('Question: '.length);
     const c = byQuestion.get(qline)!;
-    calls.push({ model: String(opts.model), kind: judge ? 'judge' : 'question', graded: c.slug, chars: (opts.system?.length ?? 0) + user.length });
+    calls.push({ model: String(opts.model), kind: judge ? 'judge' : 'question', graded: c.slug, chars: (opts.system?.length ?? 0) + user.length, maxTokens: opts.maxTokens });
     let text: string;
+    let stopReason = 'end';
     if (judge) {
       const answer = user.slice(user.indexOf('\nAnswer:\n') + '\nAnswer:\n'.length);
       const labels: Record<string, string> = {};
@@ -139,11 +163,12 @@ function stubTransport(world: PqWorld, stale: Set<string>, calls: Array<{ model:
       const n = (seen.get(unit) ?? 0) + 1;
       seen.set(unit, n);
       const values = n === 1 || stale.has(c.slug) ? c.before : c.after;
+      if (n > 1 && truncate.has(c.slug) && (opts.maxTokens ?? 0) <= 2_000) stopReason = 'length';
       const cite = user.split('\n').filter(l => /^E\d+: /.test(l) && l.includes(c.name)).map(l => l.slice(0, l.indexOf(':'))).slice(0, 1);
       text = JSON.stringify({ sentences: CLAIMS.filter(cl => values[cl] !== null).map(cl => ({ text: claimSentence(c, cl, values[cl]!), cite })), gaps: [] });
     }
     const chars = (opts.system?.length ?? 0) + user.length;
-    return { text, blocks: [{ type: 'text', text }], stopReason: 'end', model: String(opts.model), providerId: 'stub',
+    return { text, blocks: [{ type: 'text', text }], stopReason, model: String(opts.model), providerId: 'stub',
       usage: { input_tokens: Math.ceil(chars / 4), output_tokens: Math.ceil(text.length / 4), cache_read_tokens: 0, cache_creation_tokens: 0 } };
   };
 }
@@ -233,15 +258,67 @@ describe('pinned-questions paid arm: keyless run through gbrain\'s product path'
   });
 
   test('the receipt validates, lists every model with its role and spends nothing', () => {
-    const receipt = buildReceipt({ gut, models: ['claude-opus-5-5', 'particle:particle-1', 'gpt-6.2-sol'], seeds: [1], companies: 8, result, cost: null, startedAt: new Date().toISOString(), mode: 'keyless' }) as unknown as Record<string, any>;
+    const receipt = buildReceipt({ gut, models: ['claude-opus-5-5', 'particle:particle-1', 'gpt-6.2-sol'], seeds: [1], companies: 8, stage: 'dev', result, cost: null, startedAt: new Date().toISOString(), mode: 'keyless' }) as unknown as Record<string, any>;
     writeReceipt(join(out, 'receipt.json'), receipt as never);
     expect(receipt.cost.usd).toBe(0);
     expect(receipt.publishable).toBe(false);
-    expect(receipt.verdict).toBe('pass');
+    expect(receipt.verdict).toBe('fail');
+    expect(receipt.data.summary.judge_agreement['openai:gpt-6.2-astra']).toMatchObject({ n: 32, agreement: 1 });
+    expect(receipt.resolved_config).toMatchObject({ stage: 'dev', max_output_tokens: null });
+    expect(receipt.data.summary.truncation).toEqual({ bar: TRUNCATION_BAR, models_over_bar: [] });
     expect(receipt.resolved_config.models.map((m: { model: string; role: string }) => `${m.role}:${m.model}`)).toEqual([
       'model under test:anthropic:claude-opus-5-5', 'model under test:particle:particle-1', 'model under test:openai:gpt-6.2-sol',
       'judge:openai:gpt-6.2-astra', 'judge:anthropic:claude-opus-5-5',
     ]);
     expect(receipt.n_scored).toBe(24);
+  });
+});
+
+describe('pinned-questions paid arm: refresh output cap', () => {
+  const gut = resolveGbrainUnderTest(gbrainSpecFrom([]));
+  const world = generatePinnedQuestionsWorld({ seed: 1, companies: 8 });
+  const truncate = new Set(world.companies.slice(0, 2).map(c => c.slug));
+  const outs = [mkdtempSync(join(tmpdir(), 'pq-paid-cap-')), mkdtempSync(join(tmpdir(), 'pq-paid-raised-'))];
+  const realFetch = globalThis.fetch;
+  const savedKeys: Record<string, string | undefined> = {};
+  const calls: Array<Array<{ model: string; kind: 'question' | 'judge'; graded?: string; chars: number; maxTokens?: number }>> = [[], []];
+  let fetches = 0;
+  let atDefault: PaidRunResult;
+  let raised: PaidRunResult;
+
+  beforeAll(async () => {
+    for (const k of Object.keys(process.env).filter(k => KEY_NAMES.test(k))) { savedKeys[k] = process.env[k]; delete process.env[k]; }
+    globalThis.fetch = (async () => { fetches++; throw new Error('no network in this test'); }) as unknown as typeof fetch;
+    const run = (i: number, maxOutputTokens?: number) => runPinnedQuestionsPaid({ gut, models: ['particle:particle-1'], seeds: [1], companies: 8, maxOutputTokens, output: outs[i]!, mode: { kind: 'keyless', transport: stubTransport(world, new Set(), calls[i]!, truncate) } });
+    atDefault = await run(0);
+    raised = await run(1, 4_000);
+  }, 240_000);
+
+  afterAll(() => {
+    globalThis.fetch = realFetch;
+    for (const [k, v] of Object.entries(savedKeys)) if (v !== undefined) process.env[k] = v;
+    for (const o of outs) rmSync(o, { recursive: true, force: true });
+  });
+
+  test('a refresh cut off at the default cap is counted as answer_too_long and puts the model over the bar', () => {
+    expect(fetches).toBe(0);
+    expect(atDefault.harnessErrors).toEqual([]);
+    expect(calls[0]!.filter(c => c.kind === 'question').every(c => c.maxTokens === 2_000)).toBe(true);
+    const tooLong = atDefault.rows.filter(r => r.refresh.error?.includes('answer_too_long')).map(r => r.company).sort();
+    expect(tooLong).toEqual([...truncate].sort());
+    const s = summarizePaid(atDefault.rows);
+    expect(s.by_model['particle:particle-1']!.answer_too_long).toEqual({ pin: 0, refresh: 2, share: 2 / 16, over_bar: true });
+    expect(s.truncation).toEqual({ bar: TRUNCATION_BAR, models_over_bar: ['particle:particle-1'] });
+  });
+
+  test('the raised-cap arm sends the raised cap, records it, and the same replies fit', () => {
+    expect(raised.harnessErrors).toEqual([]);
+    expect(calls[1]!.filter(c => c.kind === 'question').every(c => c.maxTokens === 4_000)).toBe(true);
+    const s = summarizePaid(raised.rows);
+    expect(s.by_model['particle:particle-1']!.answer_too_long).toEqual({ pin: 0, refresh: 0, share: 0, over_bar: false });
+    expect(raised.rows.every(r => r.refresh.status === 'published')).toBe(true);
+    const receipt = buildReceipt({ gut, models: ['particle:particle-1'], seeds: [1], companies: 8, stage: 'dev', maxOutputTokens: 4_000, result: raised, cost: null, startedAt: new Date().toISOString(), mode: 'keyless' }) as unknown as Record<string, any>;
+    expect(receipt.resolved_config.max_output_tokens).toBe(4_000);
+    expect(receipt.resolved_config.model_config).toContain('cycle.standing_questions.max_output_tokens raised to 4000');
   });
 });
