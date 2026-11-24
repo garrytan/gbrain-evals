@@ -82,7 +82,7 @@ import { DecideError, renderOperatorMessage } from '../decisions/errors.ts';
 import { loadSplit } from '../decisions/splits.ts';
 import { ndcgAtK, percentile, recallAllAtK, recallAnyAtK } from '../metrics.ts';
 import { DEFAULT_ROUTE_CAPS, ProxyControl, upstreamTrouble, type Meter, type Phase } from '../metering-proxy.ts';
-import { BG1_SET, BG1C_SET, bg1RunClock, bg1SealedSet, bg1UnitConversations, bg1WorldEnd, loadCorpus, readBg1Manifest, readRs1Manifest, rs1UnitConversations, type Bg1Manifest, type Corpus, type MemoryQuestion, type Rs1Manifest, type Session } from '../memory-qa/corpus.ts';
+import { BG1_SET, BG1C_SET, bg1RunClock, fromHome, bg1SealedSet, bg1UnitConversations, bg1WorldEnd, loadCorpus, readBg1Manifest, readRs1Manifest, rs1UnitConversations, type Bg1Manifest, type Corpus, type MemoryQuestion, type Rs1Manifest, type Session } from '../memory-qa/corpus.ts';
 import { ContextStore } from '../memory-qa/arms.ts';
 import { instrumentFor, type Instrument } from '../memory-qa/instruments.ts';
 import { DEFAULT_MAX_ATTEMPTS, OUTCOMES, type Outcome } from '../memory-qa/outcomes.ts';
@@ -1650,7 +1650,7 @@ export function weeklyCampaignManifest(w: WeeklyCellsFile, o: { cellsPath: strin
   if (!week || w.cells.some(c => JSON.stringify(c.week) !== JSON.stringify(week))) throw refuse(usage(`${o.cellsPath} does not hold one week's cells`));
   const campaign = campaignManifest(weeklyManifest(w, o.cap_usd), { units: { campaign_id: `q1-scoreboard-${w.run_id}`, cap_usd: o.cap_usd, units: w.cells.map(c => c.id), cell_manifest: 'weekly' } });
   const cellsSha = sha256File(o.cellsPath);
-  const filled = o.bgwManifest ?? process.env.GBRAIN_EVALS_BGW_MANIFEST;
+  const filled = o.bgwManifest ?? fromHome(process.env.GBRAIN_EVALS_BGW_MANIFEST);
   const held = filled && existsSync(filled) ? sha256File(filled) : null;
   const out = ' --out "$SHOOTOUT_OUT"';
   const exports = `export ${WEEKLY_RUN_ENV}=${w.run_id}; export ${WEEKLY_CELLS_SHA256_ENV}=${cellsSha}; export GBRAIN_EVALS_BG1_WORLD_END=${week.world_end}; `;
@@ -1706,7 +1706,7 @@ export interface WeeklyCellsFile { run_id: string; cells: CellDefinition[]; rere
  * client or output exists.
  */
 export function loadWeeklyCells(env: Record<string, string | undefined> = process.env): WeeklyCellsFile {
-  const path = env[WEEKLY_CELLS_ENV], want = env[WEEKLY_CELLS_SHA256_ENV], run = env[WEEKLY_RUN_ENV];
+  const path = fromHome(env[WEEKLY_CELLS_ENV]), want = env[WEEKLY_CELLS_SHA256_ENV], run = env[WEEKLY_RUN_ENV];
   const fail = (message: string) => refuse({ code: 'PREFLIGHT_FAILED', message, why: 'a weekly unit runs exactly the cells its week planned and launched, under that week\'s run id',
     fix: { next: 'ask_user', user_message: `launch the weekly cells through the weekly runner's unit order, which names ${WEEKLY_CELLS_ENV}, ${WEEKLY_CELLS_SHA256_ENV} and ${WEEKLY_RUN_ENV}` } });
   if (!path || !existsSync(path)) throw fail(`--manifest weekly reads the week's cells.json from ${WEEKLY_CELLS_ENV}, which ${path ? `names ${path}, a file that does not exist` : 'is not set'}`);

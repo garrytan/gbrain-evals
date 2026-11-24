@@ -87,7 +87,7 @@ import { DEFAULT_MAX_OUTPUT_TOKENS, DEFAULT_ROUTE_CAPS, KEY_ENV, keylessUpstream
 import { refuse, ScoreboardError } from './q1/scoreboard-errors.ts';
 import { isWindowedBenchmark } from './q1/cells/definitions.ts';
 import { BEAM10M_MANIFEST } from './memory-qa/beam10m-corpus.ts';
-import { rs1UnitConversations, type Rs1Manifest } from './memory-qa/corpus.ts';
+import { fromHome, rs1UnitConversations, type Rs1Manifest } from './memory-qa/corpus.ts';
 import { insideRepository, sha256File } from './sealed-confirmation-lib.ts';
 
 const REPO_ROOT = resolve(import.meta.dir, '../..');
@@ -487,7 +487,7 @@ export function weeklyCustodyPush(env: Record<string, string | undefined> = proc
   if (first === null) throw refuse({ code: 'USAGE', message: `weekly unit batch ${JSON.stringify(unit.batch)} is not a Set W world id`, why: 'a Set W batch is named by its first world', fix: { next: 'report' } });
   const set = bgwSet(first);
   const push = bg1CustodyPush(env, campaign, undefined, set, unit.worlds);
-  const cells = env[WEEKLY_CELLS_ENV];
+  const cells = fromHome(env[WEEKLY_CELLS_ENV]);
   if (!cells || !existsSync(cells)) throw refuse({ code: 'CUSTODY_REQUIRED', message: `a weekly unit needs the week's cells.json and ${WEEKLY_CELLS_ENV} ${cells ? `names ${cells}, which does not exist` : 'is not set'}`,
     why: "the VM resolves its unit from the week's cells.json (cell.ts --manifest weekly)", fix: { next: 'tell_user_to_run', argv: ['bun', 'eval/runner/weekly-line/runner.ts', 'launch', '--run', '<run dir>'], user_message: `on the custodian host, export ${WEEKLY_CELLS_ENV}=<the run directory's cells.json>` } });
   return { ...push, env: [...push.env, `GBRAIN_EVALS_BGW_BATCH=${unit.batch}`, `${WEEKLY_CELLS_ENV}=~/custody/weekly/${basename(cells)}`],
@@ -889,7 +889,7 @@ export class Campaign {
       if (!unit) throw refuse({ code: 'CUSTODY_REQUIRED', message: `weekly unit ${cellId} names no week (weekly_unit)`, why: 'a weekly unit pushes only its own week\'s worlds', fix: { next: 'ask_user', user_message: 'launch the week again through the weekly runner, which writes the campaign' } });
       const push = weeklyCustodyPush(env, this.manifestPath, unit);
       const set = bgwSet(bgwSlotOf(unit.batch)!);
-      const held = { manifest: sha256File(env[set.env.manifest]!), cells: sha256File(env[WEEKLY_CELLS_ENV]!) };
+      const held = { manifest: sha256File(fromHome(env[set.env.manifest])!), cells: sha256File(fromHome(env[WEEKLY_CELLS_ENV])!) };
       const recorded = { manifest: this.manifest.bgw_manifest_sha256, cells: this.manifest.weekly_cells_sha256 };
       for (const k of ['manifest', 'cells'] as const) if (recorded[k] !== held[k]) throw refuse({ code: 'CUSTODY_REQUIRED', message: recorded[k] ? `the ${k === 'manifest' ? 'filled Set W manifest' : "week's cells.json"} is not the one campaign ${this.manifest.campaign_id} recorded (it holds ${held[k].slice(0, 12)}, the campaign ${recorded[k]!.slice(0, 12)})` : `campaign ${this.manifest.campaign_id} records no ${k === 'manifest' ? 'filled Set W manifest' : "week's cells.json"} SHA-256`,
         why: 'a weekly campaign\'s hash covers its worlds and cells through the files it records, so a unit pushes only those', fix: { next: 'ask_user', user_message: 'stop: launch the week again on the custody host with the files it planned, and ask before launching if they changed' } });

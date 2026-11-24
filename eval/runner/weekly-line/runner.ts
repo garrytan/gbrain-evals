@@ -332,8 +332,8 @@ export function planWeek(o: PlanInput, deps: RunnerDeps): { run: RunIdentity; st
 export interface LaunchReread { id: string; argv: string[] }
 export interface LaunchOrder {
   run_id: string; window: string; env: Record<string, string>; stages: Array<{ stage: Stage; units: string[] }>;
-  /** With the week's cells.json: the window cap, the campaign manifest of the week's cells (CAMPAIGN_FILE) and the re-read commands. */
-  cap_usd?: number; campaign?: string; rereads?: LaunchReread[];
+  /** With the week's cells.json: the window cap and its split (the re-reads' share, their plans' estimates, and the cells' campaign, the rest), the campaign manifest of the week's cells (CAMPAIGN_FILE) and the re-read commands. */
+  cap_usd?: number; cells_cap_usd?: number; rereads_cap_usd?: number; campaign?: string; rereads?: LaunchReread[];
 }
 
 /**
@@ -346,7 +346,10 @@ export interface LaunchOrder {
  * cell.ts weeklyCampaignManifest: each unit's command names `--manifest weekly` inside the window and exports the run id,
  * the cells.json SHA-256 and the world end, and its VM receives only its week's worlds and the cells.json), and `env` names
  * everything a weekly unit or re-read on the custody host reads: the run id, the cells.json and its SHA-256, the world end,
- * the Set W batch and the week's worlds as the loader's unit scope.
+ * the Set W batch and the week's worlds as the loader's unit scope. The window's cap is split once, so the cells and the
+ * re-reads can't together approve more than it: the re-reads take their plans' estimates (each re-read command's
+ * --window-cap-usd, which bounds its ledger cap) and the cells' campaign takes the rest (its cap_usd and every unit's
+ * --window-cap-usd); a cap that leaves the cells nothing refuses.
  */
 export function launchWeek(dir: string, window: string | undefined, deps: Pick<RunnerDeps, 'now' | 'launchCheck'>, capUsd?: number): LaunchOrder {
   const { run, steps } = loadRun(dir);
@@ -361,9 +364,12 @@ export function launchWeek(dir: string, window: string | undefined, deps: Pick<R
     if (!(Number.isFinite(capUsd) && capUsd! > 0)) refuse('WEEKLY_NO_WINDOW', `week ${run.week}'s units carry the granted window's cap in every command; pass --window-cap-usd <the window's cap> with --window-granted`);
     const file = readJson(cellsPath) as WeeklyCellsFile;
     const week = file.cells[0].week!;
-    writeJson(join(dir, CAMPAIGN_FILE), weeklyCampaignManifest(file, { cellsPath, window: window!, cap_usd: capUsd! }));
-    const flags = ['--manifest', 'weekly', '--paid-window', window!, '--window-cap-usd', String(capUsd)];
-    order = { ...order, cap_usd: capUsd!, campaign: CAMPAIGN_FILE,
+    const rereadsCap = Math.ceil(file.rereads.reduce((n, r) => n + r.estimate.usd, 0) * 100) / 100;
+    const cellsCap = Math.floor((capUsd! - rereadsCap) * 100) / 100;
+    if (!(cellsCap > 0)) refuse('WEEKLY_NO_WINDOW', `week ${run.week}'s re-reads are estimated at ${rereadsCap}, which leaves the cells nothing of the window's cap ${capUsd}`);
+    writeJson(join(dir, CAMPAIGN_FILE), weeklyCampaignManifest(file, { cellsPath, window: window!, cap_usd: cellsCap }));
+    const flags = ['--manifest', 'weekly', '--paid-window', window!, '--window-cap-usd', String(rereadsCap)];
+    order = { ...order, cap_usd: capUsd!, cells_cap_usd: cellsCap, rereads_cap_usd: rereadsCap, campaign: CAMPAIGN_FILE,
       env: { ...order.env, [WEEKLY_CELLS_ENV]: cellsPath, [WEEKLY_CELLS_SHA256_ENV]: sha256(readFileSync(cellsPath)), GBRAIN_EVALS_BG1_WORLD_END: week.world_end, GBRAIN_EVALS_BGW_BATCH: week.batch, GBRAIN_EVALS_BGW_UNIT: week.worlds.join(',') },
       rereads: file.rereads.map(r => ({ id: r.id, argv: ['bun', 'eval/runner/q1/reread-cell.ts', '--cell', r.cell, '--arm', r.arm, '--reader', r.reader, ...flags] })) };
   }

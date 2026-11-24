@@ -400,7 +400,7 @@ export function loadBeam(size: '100k' | '500k' | '1m', only?: ReadonlySet<string
 export const D8_MANIFEST = 'eval/decisions/datasets/d8-manifest.json';
 export const D8_CONVERSATIONS: readonly string[] = Array.from({ length: 10 }, (_, i) => `d8-${i + 1}`);
 /** A sealed VM's env names its custody paths from the VM user's home (`~/custody/d8`, as the launcher's push sets them). */
-const fromHome = (p: string | undefined) => !p ? undefined : p.startsWith('~/') ? join(homedir(), p.slice(2)) : p;
+export const fromHome = (p: string | undefined) => !p ? undefined : p.startsWith('~/') ? join(homedir(), p.slice(2)) : p;
 export const d8ManifestPath = () => fromHome(process.env.GBRAIN_EVALS_D8_MANIFEST) ?? join(REPO_ROOT, D8_MANIFEST);
 export interface D8Manifest { dataset: string; status: 'unfilled' | 'filled'; layout: string; note: string; files: Array<{ path: string; sha256: string }>; filled_at: string | null }
 const D8_FILL = ['bun', 'eval/runner/q1/d8-manifest.ts', 'fill', '--write'];

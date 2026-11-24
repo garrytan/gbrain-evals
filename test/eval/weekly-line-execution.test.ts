@@ -158,21 +158,34 @@ describe('OV1: the weekly units resolve and run under their week', () => {
     const w = launchedWeek();
     const sha = sha256(readFileSync(w.cellsPath));
     expect(w.campaign.cells.map(c => c.id).sort()).toEqual([...w.order.stages[0].units].sort());
-    expect([w.campaign.weekly_cells_sha256, w.campaign.bgw_manifest_sha256, w.order.campaign, w.order.cap_usd]).toEqual([sha, sha256(readFileSync(w.set.path)), CAMPAIGN_FILE, 500]);
+    const cellsCap = w.order.cells_cap_usd!, rereadsCap = w.order.rereads_cap_usd!;
+    expect([w.campaign.weekly_cells_sha256, w.campaign.bgw_manifest_sha256, w.order.campaign, w.order.cap_usd, w.campaign.cap_usd]).toEqual([sha, sha256(readFileSync(w.set.path)), CAMPAIGN_FILE, 500, cellsCap]);
     for (const c of w.campaign.cells) {
       expect(c.command.startsWith(`export ${WEEKLY_RUN_ENV}=${w.run.run_id}; export ${WEEKLY_CELLS_SHA256_ENV}=${sha}; export GBRAIN_EVALS_BG1_WORLD_END=${WEEK.world_end}; `)).toBe(true);
       expect(c.command).toContain(`--cell ${c.id} --manifest weekly `);
-      expect(c.command).toContain('--paid-window WL-T --window-cap-usd 500 --out "$SHOOTOUT_OUT"');
+      expect(c.command).toContain(`--paid-window WL-T --window-cap-usd ${cellsCap} --out "$SHOOTOUT_OUT"`);
       expect([c.sealed, c.weekly_unit, c.benchmark, Number.isInteger(c.wave)]).toEqual([true, { batch: 'bgw-1001', worlds: WORLDS }, 'bgw', true]);
       expect([c.pass, c.providers, c.gemini_key_env]).toEqual([expect.not.arrayContaining(['GEMINI_API_KEY', 'BG1_GEMINI_API_KEY']), expect.not.arrayContaining(['gemini']), undefined]);
     }
     expect(w.order.rereads!.map(r => r.id)).toEqual(w.run.rereads);
-    for (const r of w.order.rereads!) expect(r.argv).toEqual(expect.arrayContaining(['eval/runner/q1/reread-cell.ts', '--manifest', 'weekly', '--reader', 'particle:particle-1', '--paid-window', 'WL-T', '--window-cap-usd', '500']));
+    for (const r of w.order.rereads!) expect(r.argv).toEqual(expect.arrayContaining(['eval/runner/q1/reread-cell.ts', '--manifest', 'weekly', '--reader', 'particle:particle-1', '--paid-window', 'WL-T', '--window-cap-usd', String(rereadsCap)]));
     Object.assign(process.env, { [WEEKLY_CELLS_ENV]: w.cellsPath, [WEEKLY_CELLS_SHA256_ENV]: sha, [WEEKLY_RUN_ENV]: w.run.run_id });
     expect(bg1LaunchProblems(w.campaign)).toEqual([]);
     const edited = { ...w.campaign, cells: w.campaign.cells.map((c, i) => (i ? c : { ...c, lease_usd: c.lease_usd + 1 })) };
     expect(bg1LaunchProblems(edited)).toContain(`unit ${w.campaign.cells[0].id} leases ${w.campaign.cells[0].lease_usd + 1}, not the ${w.campaign.cells[0].lease_usd} the week's cells.json prices it at`);
     expect(message(() => launchWeek(w.dir, 'WL-T', runnerDeps()))).toMatch(/WEEKLY_NO_WINDOW: .*--window-cap-usd/);
+  });
+
+  // Value: protects=one granted window's cap is split once between the week's cells and its re-reads, so following the printed order can't approve more than the window; fails_when=launchWeek hands the full cap to both the campaign and every re-read command, so cell leases plus a re-read ledger cap set to the window cap approve up to about twice it (/ship review finding p1/red-team#2), or a cap too small for the re-reads leaves the cells a zero or negative campaign; why_new=PR #621's review; seam=runner.ts launchWeek; no_claim=the estimates themselves
+  test("the window's cap is split once: the re-reads take their estimates and the cells' campaign the rest", () => {
+    const w = launchedWeek();
+    const plans = JSON.parse(readFileSync(w.cellsPath, 'utf8')).rereads as Array<{ estimate: { usd: number } }>;
+    const rereadsCap = Math.ceil(plans.reduce((n, r) => n + r.estimate.usd, 0) * 100) / 100;
+    expect([w.order.rereads_cap_usd, w.order.cells_cap_usd]).toEqual([rereadsCap, Math.floor((500 - rereadsCap) * 100) / 100]);
+    expect(w.order.cells_cap_usd! + w.order.rereads_cap_usd!).toBeLessThanOrEqual(500);
+    for (const r of w.order.rereads!) expect(r.argv[r.argv.indexOf('--window-cap-usd') + 1]).toBe(String(rereadsCap));
+    for (const c of w.campaign.cells) expect(/--window-cap-usd (\S+)/.exec(c.command)![1]).toBe(String(w.campaign.cap_usd));
+    expect(message(() => launchWeek(w.dir, 'WL-T', runnerDeps(), rereadsCap))).toMatch(/^WEEKLY_NO_WINDOW: .*leaves the cells nothing of the window's cap/);
   });
 
   // Value: protects=a weekly unit's VM receives exactly its week's pinned Set W worlds and the week's cells.json, both held to the hashes its campaign recorded; fails_when=Campaign.custodyPush has no bgw branch (the VM gets no worlds and no cells.json), pushes another week's or an unkept world, or accepts a cells.json or batch manifest the campaign did not record; why_new=#619 OV1 and the custody lane's step 1 (copy one week's worlds to each cell VM); seam=shootout-cell.ts weeklyCustodyPush, Campaign.custodyPush and launchArgv; no_claim=ubi-runner's push itself
@@ -207,6 +220,21 @@ describe('OV1: the weekly units resolve and run under their week', () => {
       env: { PATH: process.env.PATH ?? '/usr/bin:/bin', HOME: process.env.HOME ?? '/tmp', OPENAI_API_KEY: '', ANTHROPIC_API_KEY: '', GEMINI_API_KEY: '', PARTICLE_API_KEY: '', VOYAGE_API_KEY: '', ...w.order.env } });
     expect([r.status, existsSync(out)]).toEqual([2, false]);
     expect(r.stderr).toContain(`[PAID_FLAGS_MISSING] Set W cell ${unit} spends real keys`);
+  }, 60_000);
+
+  // Value: protects=on a cell VM, where the custody push names the cells.json as the literal ~/custody/weekly/cells.json (ubi-runner writes it with %q, so no shell expands it), cell.ts still resolves the unit; fails_when=loadWeeklyCells checks the literal '~/' path, so every weekly unit refuses after its VM boots (/ship review finding p1/red-team#1, QA captures 002 and 003); why_new=PR #621's review; seam=cell.ts main run with the push's own env value and HOME at a temporary VM home; no_claim=ubi-runner's push itself
+  test("on a VM, cell.ts resolves the unit from the push's '~/custody/weekly/cells.json'", () => {
+    const w = launchedWeek();
+    const unit = w.order.stages[0].units[0];
+    const home = scratch('vm-home');
+    mkdirSync(join(home, 'custody', 'weekly'), { recursive: true });
+    cpSync(w.cellsPath, join(home, 'custody', 'weekly', 'cells.json'));
+    const pushed = weeklyCustodyPush({ GBRAIN_EVALS_BGW_SOURCE: w.set.root, GBRAIN_EVALS_BGW_MANIFEST: w.set.path, [WEEKLY_CELLS_ENV]: w.cellsPath }, 'c', { batch: 'bgw-1001', worlds: WORLDS }).env.find(e => e.startsWith(`${WEEKLY_CELLS_ENV}=`))!.split('=')[1];
+    expect(pushed).toBe('~/custody/weekly/cells.json');
+    const out = join(scratch('cli'), 'out');
+    const r = spawnSync('bun', ['eval/runner/q1/cell.ts', 'run', '--cell', unit, '--manifest', 'weekly', '--out', out], { cwd: REPO, encoding: 'utf8', timeout: 60_000,
+      env: { PATH: process.env.PATH ?? '/usr/bin:/bin', HOME: home, OPENAI_API_KEY: '', ANTHROPIC_API_KEY: '', GEMINI_API_KEY: '', PARTICLE_API_KEY: '', VOYAGE_API_KEY: '', ...w.order.env, [WEEKLY_CELLS_ENV]: pushed } });
+    expect([r.status, existsSync(out), r.stderr.split('\n')[0]]).toEqual([2, false, expect.stringContaining(`[PAID_FLAGS_MISSING] Set W cell ${unit} spends real keys`)]);
   }, 60_000);
 });
 
