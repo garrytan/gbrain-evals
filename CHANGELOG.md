@@ -2,6 +2,22 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.274] - 2026-11-24
+
+### New category: pinned questions (preregistered)
+
+- `eval/runner/pinned-questions.ts` tests gbrain's pinned questions on seeded fictional-company worlds: after one
+  controlled change per question (edit, fact supersession, deletion, contradiction, unrelated edit), does gbrain flag
+  exactly the sentences whose evidence changed, schedule the right questions for refresh, and come back with a
+  matching answer? Keyless, with a scripted answerer. Generator `eval/generators/pinned-questions-gen.ts`, scorer
+  `eval/runner/pinned-questions-score.ts`, registry row `pinned-questions`.
+- `eval/runner/pinned-questions-paid.ts` measures whether a real model's refreshed answer is correct, through gbrain's
+  own refresh path, with a judge from another model family. It reports, per model, how many answers gbrain cut off
+  at its output cap, and `--max-output-tokens` runs a raised-cap arm. Its judge check needs at least 100 real outputs
+  per judge, from a judge-check stage on three seeds before any counted run.
+- [docs/benchmarks/2026-11-24-pinned-questions-preregistration.md](docs/benchmarks/2026-11-24-pinned-questions-preregistration.md)
+  fixes the counted seeds, metrics, judge check and what each outcome changes before any counted run.
+
 ## [0.10.273] - 2026-11-24
 
 - **Preregistration: cost and write-to-queryable time for a personal agent.** [docs/benchmarks/2026-11-24-cost-speed-preregistration.md](docs/benchmarks/2026-11-24-cost-speed-preregistration.md) plans how README's "Dollars per month, personal agent" and "Write to queryable, p50" columns get measured: gbrain's newest release at its shipped defaults and the extract-first, memory-bank and verbatim-session servers, hybrid search and the file agent at their shipped configurations, on ten public synthetic chat histories, with every provider call priced from the metering proxy's usage fields, hosting priced from each stack's measured memory and disk, and a probe that writes a session and searches until it comes back. Its registry entry is [docs/benchmarks/preregistrations.d/cost-speed-personal.json](docs/benchmarks/preregistrations.d/cost-speed-personal.json). Nothing has run.
