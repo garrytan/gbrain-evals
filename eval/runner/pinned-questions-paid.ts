@@ -46,6 +46,7 @@ import { acceptsTemperature } from './openai-judge-shim.ts';
 import { PaidArmRefusal, requirePaidArm } from './paid-arm.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
 import { KEY_PATTERNS } from './q1/secret-scan.ts';
+import { comparisonFamily, pairedComparison } from './pinned-questions-stats.ts';
 import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, noModelSpend, sourceTreeIdentity, writeReceipt, type Receipt } from './receipt.ts';
 import {
   CLAIMS, DEV_SEEDS, PINNED_QUESTIONS_GENERATOR_VERSION, generatePinnedQuestionsWorld,
@@ -394,9 +395,27 @@ export function summarizePaid(rows: readonly PaidRow[]) {
   return {
     by_model: byModel,
     judge_agreement: judgeAgreement(rows),
+    comparisons: refreshComparisons(rows),
     truncation: { bar: TRUNCATION_BAR, models_over_bar: models.filter(m => byModel[m]!.answer_too_long.over_bar) },
     tokens_per_call: { pin: perCall(r => [r.pin.usage]), refresh: perCall(r => [r.refresh.usage]), judge: perCall(r => [r.first.judge_usage, r.refreshed.judge_usage]) },
   };
+}
+
+/** The reference every P comparison is paired against. */
+export const P_REFERENCE_MODEL = 'anthropic:claude-opus-5-5';
+
+/**
+ * P's primary comparisons: each other model against P_REFERENCE_MODEL on the scored refreshed outcome, paired by
+ * question (seed and company, both scored), Holm-corrected within this run's family, with the non-inferiority call. A
+ * raised-cap run is its own receipt and so its own family. Empty when the reference did not run.
+ */
+export function refreshComparisons(rows: readonly PaidRow[]) {
+  const ref = new Map(rows.filter(r => r.model === P_REFERENCE_MODEL && r.correct !== null).map(r => [`${r.seed}|${r.company}`, r.correct!]));
+  if (!ref.size) return {};
+  const others = [...new Set(rows.map(r => r.model))].filter(m => m !== P_REFERENCE_MODEL);
+  return comparisonFamily(Object.fromEntries(others.map(m => [m, pairedComparison(rows
+    .filter(r => r.model === m && r.correct !== null && ref.has(`${r.seed}|${r.company}`))
+    .map(r => ({ a: ref.get(`${r.seed}|${r.company}`)!, b: r.correct! })))])));
 }
 
 /** Ledger estimate in dollars for a run, from EST_TOKENS and the ledger's prices. */

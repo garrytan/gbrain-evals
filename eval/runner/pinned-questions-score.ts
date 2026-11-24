@@ -10,6 +10,7 @@
  * since the answer's watermark (either one makes the scheduler refresh it).
  */
 import { CONTRADICTION_CLASSES, MUTATION_CLASSES, type Claim, type MutationClass } from '../generators/pinned-questions-gen.ts';
+import { BOOTSTRAP_DRAWS, clusterBootstrapAll, clustersBy, pairedComparison, type PairedComparison } from './pinned-questions-stats.ts';
 
 export interface SentenceRow {
   seed: number; company: string; mutation: MutationClass; claim: Claim; text: string;
@@ -48,7 +49,7 @@ export function confusion(rows: ReadonlyArray<{ affected: boolean; flagged: bool
   return { tp, fp, fn, tn, precision, recall, f1, false_flag_rate: ratio(fp, fp + tn) };
 }
 
-/** Wilson 95% interval for k of n. */
+/** Wilson 95% interval for k of n, treating sentences as independent: exploratory only; the registered intervals are flagIntervals. */
 export function wilson(k: number, n: number): [number, number] | null {
   if (n === 0) return null;
   const z = 1.959964, p = k / n, d = 1 + (z * z) / n;
@@ -56,8 +57,28 @@ export function wilson(k: number, n: number): [number, number] | null {
   return [Math.max(0, c - h), Math.min(1, c + h)];
 }
 
+/** Registered 95% intervals for precision, recall and false-flag rate: cluster bootstrap over questions (seed and company), BOOTSTRAP_DRAWS draws. */
+export interface FlagIntervals { precision: [number, number] | null; recall: [number, number] | null; false_flag_rate: [number, number] | null; draws: number; clusters: number }
+
+export function flagIntervals(sentences: readonly SentenceRow[], draws = BOOTSTRAP_DRAWS): FlagIntervals {
+  const clusters = clustersBy(sentences, s => `${s.seed}|${s.company}`);
+  const [precision, recall, false_flag_rate] = clusterBootstrapAll(clusters, rows => { const c = confusion(rows); return [c.precision, c.recall, c.false_flag_rate]; }, draws);
+  return { precision: precision ?? null, recall: recall ?? null, false_flag_rate: false_flag_rate ?? null, draws, clusters: clusters.length };
+}
+
+/**
+ * The fix build against the baseline on the same seeds: recall on the affected sentences of `classes`, paired by
+ * sentence (seed, company, claim), with McNemar's exact test (the decision rule's "does not fall").
+ */
+export function pairedRecall(base: readonly SentenceRow[], fix: readonly SentenceRow[], classes: readonly MutationClass[]): PairedComparison {
+  const key = (s: SentenceRow) => `${s.seed}|${s.company}|${s.claim}`;
+  const fixed = new Map(fix.map(s => [key(s), s]));
+  const pairs = base.filter(s => s.affected && classes.includes(s.mutation) && fixed.has(key(s))).map(s => ({ a: s.flagged, b: fixed.get(key(s))!.flagged }));
+  return pairedComparison(pairs);
+}
+
 export interface ClassSummary {
-  questions: number; sentences: number; flags: Confusion;
+  questions: number; sentences: number; flags: Confusion; flags_ci: FlagIntervals;
   signal_rate: number | null; spillover_per_change: number | null; corrected_within_run: number | null; median_cycles_to_correct: number | null; refreshes: number;
 }
 
@@ -70,7 +91,7 @@ function median(xs: number[]): number | null {
 function classSummary(sentences: readonly SentenceRow[], questions: readonly QuestionRow[]): ClassSummary {
   const affected = questions.filter(q => q.gold_signal);
   return {
-    questions: questions.length, sentences: sentences.length, flags: confusion(sentences),
+    questions: questions.length, sentences: sentences.length, flags: confusion(sentences), flags_ci: flagIntervals(sentences),
     signal_rate: ratio(questions.filter(q => q.signalled).length, questions.length),
     spillover_per_change: ratio(questions.reduce((a, q) => a + q.spillover, 0), questions.length),
     corrected_within_run: ratio(affected.filter(q => q.cycles_to_correct !== null).length, affected.length),
@@ -81,6 +102,8 @@ function classSummary(sentences: readonly SentenceRow[], questions: readonly Que
 
 export interface PinnedQuestionsSummary {
   overall: ClassSummary & { precision_ci: [number, number] | null; recall_ci: [number, number] | null };
+  /** Registered intervals for the two families the decision rule reads. */
+  documented_ci: FlagIntervals; contradiction_ci: FlagIntervals;
   /** Edits, removals and unrelated changes: the changes gbrain's guide says it flags (or must not flag). */
   documented: Confusion;
   /** A contradicting source added beside the cited evidence. */
@@ -103,9 +126,11 @@ export function summarize(sentences: readonly SentenceRow[], questions: readonly
   }
   const isContra = (m: MutationClass) => CONTRADICTION_CLASSES.includes(m);
   return {
-    overall: { ...base, precision_ci: wilson(f.tp, f.tp + f.fp), recall_ci: wilson(f.tp, f.tp + f.fn) },
+    overall: { ...base, precision_ci: base.flags_ci.precision, recall_ci: base.flags_ci.recall },
     documented: confusion(sentences.filter(s => !isContra(s.mutation))),
     contradiction: confusion(sentences.filter(s => isContra(s.mutation))),
+    documented_ci: flagIntervals(sentences.filter(s => !isContra(s.mutation))),
+    contradiction_ci: flagIntervals(sentences.filter(s => isContra(s.mutation))),
     question_signal: confusion(questions.map(q => ({ affected: q.gold_signal, flagged: q.signalled }))),
     by_class,
     wasted_refreshes: questions.filter(q => !q.gold_signal).reduce((a, q) => a + q.refreshes, 0),
