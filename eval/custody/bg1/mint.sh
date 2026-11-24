@@ -275,7 +275,7 @@ if [ "$MODE" = real ] && [ "$GATED" = 1 ]; then
     [ ! -e "$f" ] || ! grep -Eq '"renderer": ?"(fake-)?template"' "$f" || die "this --out holds a template-rendered world ($(basename "$(dirname "$f")")), and a real mint never starts on a drill's --out"
   done
 fi
-BG1_KEY=""
+BG1_KEY="" KEY_VAR=""
 # BG1-C and Set W: a real mint renders only from the seed and phrasing its seed commitment file records (commitment.ts).
 if [ "$MODE" = real ] && [ "$GATED" = 1 ]; then
   env -i PATH=/usr/bin:/bin HOME="$HOME" LANG=C.UTF-8 TZ=UTC "$BUN" "$HERE/commitment.ts" "${SET_ARGS[0]}" --seed-file "$SEED_FILE" --phrasing "$PHRASING" || exit 2
@@ -289,7 +289,9 @@ if [ "$MODE" = real ]; then
   # A --dev mint renders public worlds only, so it may take Gemini's key from its own GEMINI_API_KEY (passed to a VM's
   # process, never written to disk); a sealed mint, and a --dev mint without it, take it only from the key file.
   [ "$DEV" = 0 ] || BG1_KEY="${GEMINI_API_KEY:-}"
+  KEY_VAR=GEMINI_API_KEY
   if [ -z "$BG1_KEY" ]; then
+    KEY_VAR=BG1_GEMINI_API_KEY
     KEY_FILE="$HOME/.config/gbrain-evals/bg1.env"
     [ -f "$KEY_FILE" ] || die "real mode takes Gemini's key only from BG1_GEMINI_API_KEY in ~/.config/gbrain-evals/bg1.env (or, for --dev, from GEMINI_API_KEY), which does not exist"
     owner_only "$KEY_FILE" || die "~/.config/gbrain-evals/bg1.env must be mode 600 or 400"
@@ -402,7 +404,7 @@ if [ "$DEV" = 1 ]; then
     esac
   done
   dev_report
-  say "summary=dev mode=$MODE worlds=${#DEV_IDS[@]} written=$WRITTEN skipped=$SKIPPED"
+  say "summary=dev mode=$MODE worlds=${#DEV_IDS[@]} written=$WRITTEN skipped=$SKIPPED${KEY_VAR:+ gemini_key_var=$KEY_VAR}"
   exit 0
 fi
 

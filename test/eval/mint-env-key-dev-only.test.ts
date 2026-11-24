@@ -66,6 +66,7 @@ describe('mint.sh: GEMINI_API_KEY is a --dev-only key route', () => {
     }
     const dev = h.mint(['--dev', '--out', 'dev-out', '--worlds', 'bg1-dev-long-01']);
     expect(dev.code).toBe(0);
+    expect(dev.all).toContain('summary=dev mode=real worlds=1 written=1 skipped=0 gemini_key_var=GEMINI_API_KEY');
     const proxies = dev.calls.filter(([, a]) => a.split(' ')[0].endsWith('harness-metering-proxy.ts'));
     expect(proxies.map(([seen, a]) => [seen, / --cell-id \S+-gemini /.test(` ${a} `)])).toEqual([['gemini-key', true], ['', false]]);
     expect(dev.calls.filter(([, a]) => a.split(' ')[0].endsWith('render.ts')).every(([seen]) => seen === '')).toBe(true);

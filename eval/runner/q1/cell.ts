@@ -111,7 +111,7 @@ import { bg1Stage1OverCap, listPrice, loadBG1Manifest, type BG1Manifest } from '
 import { BG1C_MANIFEST_PATH, type BG1CManifest } from './cells/bg1c.ts';
 import { BG1C_BLOCK_IDS, isWindowedBenchmark, WEEKLY_PILOT_BLOCK_IDS } from './cells/definitions.ts';
 import { buildWeeklyPilotManifest, WEEKLY_PILOT_COUNTED, WEEKLY_PILOT_GBRAIN_ENV, WEEKLY_PILOT_LENGTH_ENV, weeklyPilotBuild, weeklyPilotLength, type WeeklyLineRereadPlan, type WeeklyPilotManifest } from './cells/weekly-line.ts';
-import { BGW_CAMPAIGN } from '../memory-qa/bg1-names.ts';
+import { BG1_DEV_LONG_CONVERSATIONS, BGW_CAMPAIGN } from '../memory-qa/bg1-names.ts';
 import { ledgerCaps as bg1LedgerCaps, requireRs1Window as requireBg1Window, WindowRefusal as Bg1WindowRefusal } from '../paid-arm.ts';
 import { exitCodeOf, refuse, renderMessage, ScoreboardError, type ScoreboardMessage } from './scoreboard-errors.ts';
 import type { UsageReceipt } from '../usage-receipt.ts';
@@ -232,15 +232,17 @@ export function selectCellQuestions(questions: readonly MemoryQuestion[], sel: S
   return order([...floor, ...roundRobin(strata, sel.limit - floor.length, sel.seed)]);
 }
 
-/** The conversations a split admits for a benchmark: `all` is dev and sealed together; LongMemEval-M and fixtures have no split file. */
+/** The conversations a split admits for a benchmark: `all` is dev and sealed together; LongMemEval-M and fixtures have no split file. bg1-dev's dev also admits the three long public dev worlds, which only a cell naming them in only_conversations loads (devOnly). */
 export function splitConversations(benchmark: string, split: CellDefinition['split'], corpus: Corpus): Set<string> {
   if (benchmark === 'lme-m' || benchmark === 'fixture' || corpus.benchmark === 'fixture') return new Set(corpus.conversations.map(c => c.id));
   const s = loadSplit(benchmark);
-  return new Set(split === 'dev' ? s.dev : split === 'sealed' ? s.sealed : [...s.dev, ...s.sealed]);
+  const dev = benchmark === 'bg1-dev' ? [...s.dev, ...BG1_DEV_LONG_CONVERSATIONS] : s.dev;
+  return new Set(split === 'dev' ? dev : split === 'sealed' ? s.sealed : [...dev, ...s.sealed]);
 }
 
-/** A dev cell's conversations, so the loader never reads a sealed conversation's file (BEAM) or keeps it (LoCoMo); null loads everything. */
+/** A dev cell's conversations, so the loader never reads a sealed conversation's file (BEAM) or keeps it (LoCoMo), and a bg1-dev cell naming a long dev world loads that world rather than stage 1's three; null loads everything. */
 export function devOnly(def: Pick<CellDefinition, 'benchmark' | 'split' | 'only_conversations'>): Set<string> | null {
+  if (def.benchmark === 'bg1-dev' && def.only_conversations?.some(c => BG1_DEV_LONG_CONVERSATIONS.includes(c))) return new Set(def.only_conversations);
   if (def.split !== 'dev' || !(def.benchmark === 'locomo' || def.benchmark.startsWith('beam-'))) return null;
   const dev = loadSplit(def.benchmark).dev;
   const outside = (def.only_conversations ?? []).filter(c => !dev.includes(c));

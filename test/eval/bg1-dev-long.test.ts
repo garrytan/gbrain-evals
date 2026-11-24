@@ -15,7 +15,7 @@ import { BG1_CUSTODY_MARKER, BG1_DATA_DIR, BG1_DEV_SEEDS, BG1_PROFILES, checkPla
 import { BG1_DEV_CONVERSATIONS, BG1_DEV_EXTRA_CONVERSATIONS, BG1_DEV_LONG_CONVERSATIONS, bgwWorldId } from '../../eval/runner/memory-qa/bg1-names.ts';
 import { BG1_FIXTURES_ROOT, loadBg1Dev } from '../../eval/runner/memory-qa/corpus.ts';
 import { bg1LaunchProblems } from '../../eval/runner/bg1/launch.ts';
-import { finishTimeoutFor, loadWeeklyPilotManifest, windowedRunGuard } from '../../eval/runner/q1/cell.ts';
+import { devOnly, finishTimeoutFor, loadWeeklyPilotManifest, scheduledQuestions, windowedRunGuard } from '../../eval/runner/q1/cell.ts';
 import { CELL_VM_MAX_HOURS, cellVmHours, isWeeklyLineCell } from '../../eval/runner/q1/cells/definitions.ts';
 import {
   buildWeeklyPilotManifest, generateWeeklyLineCells, generateWeeklyLineJudgeCheckCells, generateWeeklyLinePilotCells, WEEKLY_LINE_JUDGE_CHECK_PAUSE_USD, WEEKLY_LINE_LABEL_CAP_USD,
@@ -181,7 +181,18 @@ describe('the long pilot and judge check', () => {
     expect([manifest.length, manifest.pilot_caps, manifest.cells.map(c => c.id)]).toEqual(['long', caps, [...pilot, ...judge].map(c => c.id)]);
   });
 
-  // Value: protects=a VM regenerates the long pilot's cells only from the length its command exports, and no long cell runs outside a granted window; fails_when=loadWeeklyPilotManifest ignores the length variable, takes a malformed one as standard, or the window guard skips the long cells; why_new=the long pilot's units run on VMs from `--manifest weekly-pilot`; seam=cell.ts loadWeeklyPilotManifest and windowedRunGuard; no_claim=a granted run
+  // Value: protects=a VM regenerates the long pilot's cells only from the length its command exports, and no long cell runs outside a granted window; fails_when=loadWeeklyPilotManifest ignores the length variable, takes a malformed one as standard, or the window guard skips the long cells; why_new=the long pilot's units run on VMs from `--manifest weekly-pilot`; seam=cell.ts loadWeeklyPilotManifest and windowedRunGuard; no_claim=a granted run  // Value: protects=a long pilot or judge-check cell loads its own long worlds and schedules every one of their questions, while the 200,000-token pilot keeps its load; fails_when=cell.ts loads stage 1's three worlds for a long cell, or schedules none of a long world's questions because the bg1-dev split leaves the long ids out; why_new=/ship review v1/outside-voice#1 (#627: every long unit scheduled zero questions); seam=cell.ts devOnly and scheduledQuestions over the long worlds' template fixtures; no_claim=the rendered worlds
+  test('each long cell loads its own worlds and schedules all their questions', () => {
+    for (const def of [...pilot, ...judge]) {
+      expect(devOnly(def)).toEqual(new Set(def.only_conversations));
+      const corpus = loadBg1Dev({ root: BG1_FIXTURES_ROOT, only: devOnly(def)!, worldEnd: WORLD_END, keyless: true });
+      expect(scheduledQuestions(def, corpus, null).length).toBe(corpus.questions.length);
+      expect(corpus.questions.length).toBe(64 * def.only_conversations!.length);
+    }
+    for (const def of generateWeeklyLinePilotCells(GBRAIN)) expect(devOnly(def)).toBeNull();
+  });
+
+
   test('the pilot manifest loads the long cells only from the length variable, and each refuses outside a window', async () => {
     expect(loadWeeklyPilotManifest({ ...GBRAIN_ENV, [WEEKLY_PILOT_LENGTH_ENV]: 'long' }).cells.map(c => c.id)).toEqual(manifest.cells.map(c => c.id));
     expect(loadWeeklyPilotManifest(GBRAIN_ENV).length).toBe('standard');
