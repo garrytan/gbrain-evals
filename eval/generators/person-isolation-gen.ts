@@ -81,7 +81,8 @@ export function generatePersonWorld(seed: number = PI_DEFAULT_SEED): PIWorld {
       if (!used.has(w)) { used.add(w); return w; }
     }
   };
-  const firsts = [...FIRST].sort(() => r() - 0.5);
+  const firsts = [...FIRST];
+  for (let i = firsts.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [firsts[i], firsts[j]] = [firsts[j]!, firsts[i]!]; }
   const [tw1, tw2] = pick(TOPICS);
   const topic = tw1 + ' ' + tw2;
   const companyName = pick(COMPANIES);
