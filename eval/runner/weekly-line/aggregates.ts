@@ -280,10 +280,10 @@ const zOut = (z: number | null) => (z === null || !Number.isFinite(z) ? null : r
 /** What a later week reads back from a weekly aggregates file: its build and its per-world differences. */
 export interface WeekLike {
   week: string; no_point: WlNoPoint | null; gbrain: { release: string; commit: string } | null;
-  worlds: ReadonlyArray<{ world: string; classes: Record<string, { differences: Record<string, { pooled: number | null; readers: Record<WlReaderKey, number | null> }> }> }>;
+  worlds: ReadonlyArray<{ world: string; seed_id: string; phrasing_id: string; classes: Record<string, { differences: Record<string, { pooled: number | null; readers: Record<WlReaderKey, number | null> }> }> }>;
 }
 /** What a week reads back from the previous block's file: each comparison's 95% interval and per-world differences. */
-export interface BlockLike { ended: boolean; comparisons: Record<string, Record<string, { pooled: { ci95: [number, number] | null }; per_world: ReadonlyArray<{ d: number }> }>> }
+export interface BlockLike { ended: boolean; worlds: ReadonlyArray<{ world: string; seed_id: string; phrasing_id: string }>; comparisons: Record<string, Record<string, { pooled: { ci95: [number, number] | null }; per_world: ReadonlyArray<{ d: number }> }>> }
 
 /** The week's per-world differences, as a later week's rolling display reads them back. */
 export function pointWeekOf(a: WeekLike): PointWeek | null {
@@ -315,6 +315,8 @@ export function weekAggregates(meta: WeekMeta, questions: readonly WlQuestion[],
   if (history.some(h => h.week === meta.week)) refuse(`the history already holds week ${meta.week}`);
   const earlier = new Set(earlierWorlds);
   if (ids.some(w => earlier.has(w))) refuse(`week ${meta.week} counts a world an earlier week already counted; each world is counted in exactly one week`);
+  const lengths = worldSeedProblems([...meta.worlds, ...history.flatMap(h => h.worlds), ...(o.previousBlock ? o.previousBlock.worlds : [])]);
+  if (lengths.length) refuse(`week ${meta.week} with its history and previous block: ${lengths.slice(0, 3).join('; ')}`);
   const compared = new Map(WL_COMPARISONS.map(c => [c.key, compare(questions, c, ids)]));
   const worlds = meta.worlds.map(w => ({
     world: w.world, seed_id: w.seed_id, phrasing_id: w.phrasing_id,

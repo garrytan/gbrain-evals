@@ -1984,13 +1984,16 @@ export async function main(argv: string[]): Promise<number> {
       const from = many('--from').map(f => resolve(f));
       if (!from.length) throw refuse(usage('merge needs --from <shard out dir>...'));
       if (def.week && from.length !== def.shards) throw refuse(usage(`${def.id} runs as ${def.shards} launch unit${def.shards === 1 ? '' : 's'} of its week's worlds, so its merge takes one --from per unit, not ${from.length}`));
+      if (needsCustody(def)) custodyGate(def, out, process.env, `q1 merge ${def.id}`);
       // RS1 kept cells load only the kept conversations the shards staged; later slots may never have been minted.
       const week = weekScope(def, process.env);
       const corpus = loadCorpus(def.benchmark, undefined, week ? new Set(week) : def.kept_units ? new Set(from.flatMap(f => [...gatherStaging(def.id, [f]).keys()])) : undefined);
       const offWeek = weekCorpusProblems(def, corpus);
       if (offWeek) throw refuse({ code: 'PREFLIGHT_FAILED', message: offWeek, why: "a weekly cell's shards merge only its own week's worlds", fix: { next: 'report' } });
       const selected = selectCellQuestions(corpus.questions.filter(q => splitConversations(def.benchmark, def.split, corpus).has(q.conversation)), def.selection);
-      const capabilities = JSON.parse(readFileSync(join(from[0], 'cells', def.arms[0].cell_id, 'receipt.json'), 'utf8')).system.capabilities as CapabilityRecord;
+      const receipts = def.arms.flatMap(a => from.map(f => JSON.parse(readFileSync(join(f, 'cells', a.cell_id, 'receipt.json'), 'utf8')) as { invalid_reasons?: string[]; system: { capabilities: CapabilityRecord } }));
+      const capabilities = receipts[0].system.capabilities;
+      const invalidReasons = [...new Set(receipts.flatMap(r => r.invalid_reasons ?? []))];
       // A weekly cell split across VMs publishes the week's run config: its units' configs, each with its own worlds' part of
       // the week's schedule and dataset, agree in everything else and cover the week exactly, and the merged one freezes all of it.
       const split = !!def.week && def.shards > 1;
@@ -2006,7 +2009,7 @@ export async function main(argv: string[]): Promise<number> {
         writeAtomic(join(out, 'cells', a.cell_id, 'run-config.json'), t);
         return [a.id, { text: t, sha: sha256(t) }];
       }));
-      const res = publishCell(def, def.arms, from, out, { instrument: instrumentFor(def.canonical_instrument), selected, invalidReasons: [], configs, capabilities, stopped: null, maxAttempts: DEFAULT_MAX_ATTEMPTS });
+      const res = publishCell(def, def.arms, from, out, { instrument: instrumentFor(def.canonical_instrument), selected, invalidReasons, configs, capabilities, stopped: null, maxAttempts: DEFAULT_MAX_ATTEMPTS });
       console.log(JSON.stringify(res, null, 2));
       return res.every(r => r.status === 'complete') ? 0 : 4;
     }

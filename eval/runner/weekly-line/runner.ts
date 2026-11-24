@@ -435,9 +435,10 @@ export function settleWeek(dir: string, o: { costs?: CostCell[]; gbrainFailed?: 
   const pending = work.filter(s => !progress.has(s.id));
   if (pending.length && !o.gbrainFailed) refuse('WEEKLY_NOT_SETTLED', `${pending.length} of week ${run.week}'s ${work.length} cells, re-reads and judgments are not done or recorded as harness failures (first ${pending[0].id})`);
   const saved: CostCell[] = [];
+  const split = new Set(work.filter(s => s.stage === 'merge').flatMap(s => s.after));
   if (!run.no_point && !o.gbrainFailed) {
     const recordsOf = (s: Step) => run.rereads.includes(s.target) ? s.target : run.cells.find(id => s.target === id || s.target.startsWith(`${id}.`)) ?? s.target;
-    const uncovered = work.filter(s => progress.get(s.id) === 'done').map(s => join('cells', recordsOf(s), s.stage === 'judge' ? 'judgments.ndjson' : 'answers.ndjson')).filter(f => !existsSync(join(dir, f)));
+    const uncovered = work.filter(s => progress.get(s.id) === 'done' && !split.has(s.id)).map(s => join('cells', recordsOf(s), s.stage === 'judge' ? 'judgments.ndjson' : 'answers.ndjson')).filter(f => !existsSync(join(dir, f)));
     if (uncovered.length) refuse('WEEKLY_RECORDS', `${uncovered.length} done step${uncovered.length === 1 ? ' has' : 's have'} no record file in the run directory, so nothing is settled (first ${uncovered[0]})`);
     const recs = existsSync(join(dir, 'cells')) ? readRecordDirs([dir]) : { answers: [], judgments: [] };
     const stamps = recordBindingProblems(run, recs.answers, recs.judgments);
@@ -464,7 +465,6 @@ export function settleWeek(dir: string, o: { costs?: CostCell[]; gbrainFailed?: 
   const worlds = no_point ? [] : run.worlds;
   const meta: WeekMeta = { week: run.week, run_id: run.run_id, gbrain: run.gbrain, comparators: run.comparators, worlds, costs: no_point ? [] : saved, no_point };
   const count = (stage: Stage) => work.filter(s => s.stage === stage && progress.has(s.id)).length;
-  const split = new Set(work.filter(s => s.stage === 'merge').flatMap(s => s.after));
   const marker: SettledMarker = { schema: SETTLED_SCHEMA, run_id: run.run_id, week: run.week, no_point, gbrain: run.gbrain, worlds: worlds.map(w => w.world),
     steps: { cells: count('launch') - work.filter(s => split.has(s.id) && progress.has(s.id)).length + count('merge'), rereads: count('reread'), judgments: count('judge'), harness_failures: work.filter(s => progress.get(s.id) === 'harness_failure').length },
     records: recordDigests(dir) };

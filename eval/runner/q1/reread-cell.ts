@@ -71,7 +71,7 @@ import { loadCorpus, readRs1Manifest, type Corpus, type MemoryQuestion } from '.
 import { instrumentFor, type Instrument } from '../memory-qa/instruments.ts';
 import { DEFAULT_MAX_ATTEMPTS, type Outcome } from '../memory-qa/outcomes.ts';
 import { ChatClient, hasChatRoute, judgeAnswer, type ChatLike } from '../memory-qa/qa-v2.ts';
-import { answerId, answerRecord, judgmentKey, readRecords, RecordLog, sha256, type AnswerRecord } from '../memory-qa/records.ts';
+import { answerId, answerRecord, judgmentKey, readRecords, RecordLog, sha256, type AnswerRecord, type WeeklyRunStamp } from '../memory-qa/records.ts';
 import { DEFAULT_ROUTE_CAPS, keylessKeys, keylessUpstream, MeteringProxy, usageSplit } from '../metering-proxy.ts';
 import { DEFAULT_ROUTE_CLASSES } from '../shootout-cell.ts';
 import type { PackedContext } from '../systems/render-v2.ts';
@@ -135,7 +135,7 @@ export { readingConfig, REREAD_LAUNCH_FIELDS } from './cell.ts';
  * The byte-for-byte check of every source and the reading plan. Problems are counted, never named by question, since
  * the sources hold sealed text; the plan is returned only when there are none.
  */
-export function verifySources(def: CellDefinition, arm: ArmDefinition, sources: string[], corpus: Corpus, reader: string): { verify: RereadVerify; plan: PlannedRead[] | null } {
+export function verifySources(def: CellDefinition, arm: ArmDefinition, sources: string[], corpus: Corpus, reader: string, weeklyRun?: WeeklyRunStamp): { verify: RereadVerify; plan: PlannedRead[] | null } {
   const problems: string[] = [];
   const counts = { contexts_checked: 0, contexts_matched: 0, scheduled_questions: 0, questions_with_context: 0, questions_without_context: 0, stored_answers_cross_checked: 0, published_answers: 0, contexts_not_read: 0 };
   const verify: RereadVerify = { schema: REREAD_VERIFY_SCHEMA, ok: false, cell: def.id, arm: arm.id, arm_cell_id: arm.cell_id, reader, sources: [], counts, source_config_sha256: null, problems,
@@ -183,6 +183,8 @@ export function verifySources(def: CellDefinition, arm: ArmDefinition, sources: 
       mine.push(...readRecords(join(dir, 'answers.ndjson'), 'answer').filter(a => a.cell_id === arm.cell_id));
       for (const [k, r] of latestBy<StagedRetrieval>(join(dir, 'retrievals.ndjson'), r => r.key)) retrievals.set(k, r);
     }
+    const otherRun = weeklyRun ? mine.filter(a => a.weekly_run?.run_id !== weeklyRun.run_id || a.weekly_run?.week !== weeklyRun.week).length : 0;
+    if (otherRun) problems.push(`source ${i}: ${otherRun} staged answer${otherRun === 1 ? ' was' : 's were'} not written by weekly run ${weeklyRun!.run_id}`);
     staged.push(...mine);
     const published = readRecords(join(out, 'cells', arm.cell_id, 'answers.ndjson'), 'answer');
     counts.published_answers += published.length;
@@ -310,7 +312,7 @@ export function prepareReread(def: CellDefinition, arm: ArmDefinition, opts: Rer
   const corpus = deps.corpus ?? loadCorpus(def.benchmark, undefined, week ? new Set(week) : staged ?? devOnly(def) ?? undefined, { keyless: !!opts.keyless });
   const offCorpus = weekCorpusProblems(def, corpus);
   if (offCorpus) throw refuse({ code: 'PREFLIGHT_FAILED', message: offCorpus, why: "a weekly re-read verifies its sources against exactly its week's worlds", fix: { next: 'report' } });
-  const { verify, plan } = verifySources(def, arm, opts.sources, corpus, opts.reader);
+  const { verify, plan } = verifySources(def, arm, opts.sources, corpus, opts.reader, weeklyRunStamp(def, env));
   const frozen = join(out, 'reread-source.json');
   const resuming = existsSync(frozen);
   if (!plan) {

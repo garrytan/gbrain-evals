@@ -592,7 +592,7 @@ describe('a cell too long for one VM runs as launch units of its week', () => {
       definitions: { ...plan.definitions!, cells: plan.definitions!.cells.map(c => (c.id === SPLIT ? { ...c, shards: 2, kept_units: 1 } : c)) } };
   };
 
-  // Value: protects=on a split cell's VM, each unit opens only its own worlds under the unit scope its push names, refuses another unit's scope or a run without its shard, and the merge of every unit into the run directory gives the records settle reads, which it refuses until every unit and the merge are recorded; fails_when=a unit opens the whole week, a unit's VM is refused for holding only its own worlds (weekScope wants the whole week), the merge takes fewer units than the cell has, merged records don't bind to the run, or settle counts each unit as a cell; why_new=GBEV-3's follow-up scope (settle coverage counting every shard; keep #619's and #621's guards); seam=runner.ts plan and launch with a split cell set, cell.ts runCell --shard over the real Set W loader on template fixtures, the cell.ts merge CLI with the launch's merge argv, and settleWeek; no_claim=the systems under test (an in-memory fake)
+  // Value: protects=on a split cell's VM, each unit opens only its own worlds under the unit scope its push names, refuses another unit's scope or a run without its shard, and the merge of every unit into the run directory gives the records settle reads, which it refuses until every unit and the merge are recorded; fails_when=a unit opens the whole week, a unit's VM is refused for holding only its own worlds (weekScope wants the whole week), the merge takes fewer units than the cell has, merged records don't bind to the run, settle counts each unit as a cell, the merge writes sealed records into the checkout or publishes an invalid unit as complete, or a re-read verifies a unit staged by another weekly run (#626 round-2 review: outside-voice#1, #2 and #4); why_new=GBEV-3's follow-up scope (settle coverage counting every shard; keep #619's and #621's guards); seam=runner.ts plan and launch with a split cell set, cell.ts runCell --shard over the real Set W loader on template fixtures, the cell.ts merge CLI with the launch's merge argv, and settleWeek; no_claim=the systems under test (an in-memory fake)
   test("a split cell's units each open only their worlds, and their merge is what the week settles on", async () => {
     const host = custodyHost(WEEK.launch, WEEK.world_end, WORLDS);
     const hostEnv = Object.fromEntries(['GBRAIN_EVALS_BGW_SOURCE', 'GBRAIN_EVALS_BGW_MANIFEST', 'GBRAIN_EVALS_CUSTODY_LOG'].map(k => [k, process.env[k]!]));
@@ -642,6 +642,17 @@ describe('a cell too long for one VM runs as launch units of its week', () => {
     const runConfig = (out: string) => JSON.parse(readFileSync(join(out, 'cells', arm, 'run-config.json'), 'utf8'));
     const weekSha = sha256(scheduledQuestions(def, fixtureCorpus(WORLDS), null).map(q => q.id).join('\n'));
     expect([...outs.map(o => runConfig(o).scheduled_sha256 === weekSha), runConfig(dir).scheduled_sha256 === weekSha]).toEqual([false, false, true]);
+    expect(merge.argv.slice(-2)).toEqual(['--out', dir]);
+    const mergeTo = (to: string) => spawnSync(merge.argv[0], [...merge.argv.slice(1, -2), '--out', to, ...outs.flatMap(f => ['--from', f])], { cwd: REPO, encoding: 'utf8', timeout: 60_000, env });
+    const inRepo = join(REPO, 'eval/reports/q1', `split-merge-${process.pid}`);
+    const local = mergeTo(inRepo);
+    expect([local.status === 0, local.stderr.includes('custody root outside the repository'), existsSync(inRepo)]).toEqual([false, true, false]);
+    const receiptPath = join(outs[1], 'cells', arm, 'receipt.json'), receipt = readFileSync(receiptPath, 'utf8');
+    writeFileSync(receiptPath, JSON.stringify({ ...JSON.parse(receipt), run_status: 'invalid', invalid_reasons: ['sanitizer tripwire during retrieval: fixture'] }));
+    const bad = join(scratch('merge-invalid'), 'out');
+    const invalid = mergeTo(bad);
+    writeFileSync(receiptPath, receipt);
+    expect([invalid.status, JSON.parse(readFileSync(join(bad, 'cells', arm, 'receipt.json'), 'utf8'))]).toMatchObject([4, { run_status: 'invalid', invalid_reasons: ['sanitizer tripwire during retrieval: fixture'] }]);
 
     const reread = order.rereads!.find(r => r.argv.includes(SPLIT))!;
     expect(reread.units).toEqual([`${SPLIT}.c0`, `${SPLIT}.c1`]);
@@ -649,6 +660,9 @@ describe('a cell too long for one VM runs as launch units of its week', () => {
     process.env.GBRAIN_EVALS_BGW_UNIT = WORLDS.join(',');
     const rereadOf = (name: string, from: string[]) => prepareReread(def, def.arms[0], { sources: from.map(o => join(o, 'runs', SPLIT)), reader: PARTICLE, out: join(scratch(name), 'out'), manifest: 'weekly' });
     expect(rereadOf('reread-split', outs).verify).toMatchObject({ ok: true, problems: [] });
+    const otherRun = `wl-${WEEK.launch}-${'0'.repeat(12)}`;
+    expect(message(() => prepareReread(def, def.arms[0], { sources: outs.map(o => join(o, 'runs', SPLIT)), reader: PARTICLE, out: join(scratch('reread-other-run'), 'out'), manifest: 'weekly', env: { ...process.env, [WEEKLY_RUN_ENV]: otherRun } })))
+      .toContain(`source 0: ${answers.filter(a => (a.conversation_id ?? a.conversation) === WORLDS[0]).length} staged answers were not written by weekly run ${otherRun}`);
     expect(message(() => rereadOf('reread-one', outs.slice(1)))).toContain(`the sources stage 1 launch unit (${WORLDS[1]}), not ${SPLIT}'s 2 (${WORLDS[0]}; ${WORLDS[1]})`);
 
     for (const st of steps) if (st.stage === 'launch') markStep(dir, st.id, 'done');
@@ -660,4 +674,22 @@ describe('a cell too long for one VM runs as launch units of its week', () => {
     for (const st of steps) if (st.stage !== 'launch' && st.stage !== 'aggregates') markStep(dir, st.id, 'done');
     expect(settleWeek(dir, { costs }).steps).toEqual({ cells: run.cells.length + 1, rereads: run.rereads.length, judgments: run.cells.length + 1 + run.rereads.length, harness_failures: 0 });
   }, 180_000);
+
+  // Value: protects=a split cell whose unit and merge failed, recorded as harness failures, still lets the week settle, because a unit's records are its merge's; fails_when=settle wants run-directory records for a done unit whose merge failed, so the week never settles (#626 round-2 review: adversarial-native#1, outside-voice#3); why_new=round-2 review of GBEV-3's long-week follow-up; seam=runner.ts markStep and settleWeek over a split cell set's real step ids; no_claim=the records' contents
+  test("a split cell whose unit and merge failed settles with them as harness failures", () => {
+    custodyHost(WEEK.launch, WEEK.world_end, WORLDS);
+    const manifest = JSON.parse(readFileSync(process.env.GBRAIN_EVALS_BGW_MANIFEST!, 'utf8')) as Bg1Manifest;
+    const dir = scratch('split-failed');
+    const { run, steps } = planWeek({ dir, launch: WEEK.launch, batch: { first: 1001, week1: WEEK.launch, manifest } }, { ...runnerDeps(), cellSet: splitSet });
+    const arm = memoryBank.arms[0].cell_id;
+    const failed = steps.filter(s => s.id.includes(arm) && s.id !== `launch:${arm}:c0`);
+    expect(failed.map(s => s.id)).toEqual(expect.arrayContaining([`launch:${arm}:c1`, `merge:${arm}`]));
+    for (const id of [...run.cells.filter(c => c !== arm), ...run.rereads.filter(r => !r.startsWith(`${arm}.`))]) {
+      mkdirSync(join(dir, 'cells', id), { recursive: true });
+      for (const f of ['answers.ndjson', 'judgments.ndjson']) writeFileSync(join(dir, 'cells', id, f), '');
+    }
+    for (const st of steps) if (st.stage !== 'aggregates') markStep(dir, st.id, failed.includes(st) ? 'harness_failure' : 'done');
+    const costs = WL_ROWS.flatMap(row => (['claude-opus-5-5', 'particle-1'] as const).flatMap(reader => WORLDS.map(world => ({ row, reader, world, usd: 0.25 }))));
+    expect(settleWeek(dir, { costs }).steps.harness_failures).toBe(failed.length);
+  });
 });
