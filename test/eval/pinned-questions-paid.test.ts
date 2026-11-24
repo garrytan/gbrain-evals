@@ -7,7 +7,7 @@ import { CLAIMS, generatePinnedQuestionsWorld, type PqCompany, type PqWorld } fr
 import { claimSentence } from '../../eval/runner/pinned-questions.ts';
 import { gbrainSpecFrom, importGbrain, overlaySummary, resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
 import { createHash } from 'node:crypto';
-import { BudgetExceededError, budgetOptionsFrom, chatPrice, initLedger, startPaidRun } from '../../eval/runner/budget-ledger.ts';
+import { BudgetExceededError, budgetOptionsFrom, chatPrice, initLedger, paidRequestGuardActive, startPaidRun } from '../../eval/runner/budget-ledger.ts';
 import { PaidArmRefusal } from '../../eval/runner/paid-arm.ts';
 import { writeReceipt } from '../../eval/runner/receipt.ts';
 import {
@@ -55,6 +55,24 @@ describe('pinned-questions paid arm: refusal', () => {
 });
 
 describe('pinned-questions paid arm: the exported runner', () => {
+  test('paid mode refuses when no guard is installed and the ledger\'s delegating fetch is still in place', async () => {
+    const d = mkdtempSync(join(tmpdir(), 'pq-paid-noguard2-'));
+    const ledgerPath = join(d, 'ledger.sqlite');
+    initLedger({ ledgerPath, programCapUsd: 5 });
+    const gut = { ...resolveGbrainUnderTest(gbrainSpecFrom([])), root: join(d, 'no-gbrain-here') };
+    try {
+      expect(paidRequestGuardActive()).toBe(false);
+      await expect(runPinnedQuestionsPaid({ gut, models: ['particle:particle-1'], seeds: [1], companies: 8, output: join(d, 'out'), mode: { kind: 'paid', keys: {} } })).rejects.toThrow(PaidArmRefusal);
+      const paid = startPaidRun('pq-guard-test', { ...budgetOptionsFrom(['--budget-usd', '1', '--budget-ledger', ledgerPath], {}), estimateUsd: 0, log: () => {} });
+      expect(paidRequestGuardActive()).toBe(true);
+      paid.guard.uninstall();
+      paid.run.close();
+      expect(paidRequestGuardActive()).toBe(false);
+    } finally {
+      rmSync(d, { recursive: true, force: true });
+    }
+  });
+
   test('when paid setup fails partway, the fetch wrapper and the usage sink are removed again', async () => {
     const d = mkdtempSync(join(tmpdir(), 'pq-paid-setup-'));
     const real = resolveGbrainUnderTest(gbrainSpecFrom([]));
