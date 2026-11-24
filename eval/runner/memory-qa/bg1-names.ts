@@ -55,6 +55,11 @@ export const BG1_CONVERSATIONS: readonly string[] = Array.from({ length: BG1_SLO
 export const BG1_DEV_CONVERSATIONS: readonly string[] = ['bg1-dev-01', 'bg1-dev-02', 'bg1-dev-03'];
 /** The 17 extra public dev worlds of BG1's dev loop (GST-2854), a list of their own beside the stage 1 three. */
 export const BG1_DEV_EXTRA_CONVERSATIONS: readonly string[] = Array.from({ length: 17 }, (_, i) => `bg1-dev-${String(i + 4).padStart(2, '0')}`);
+/**
+ * The three long public dev worlds (GBEV-128): changing-facts-gen@2 plans of about 1,000,000 tokens from public seeds,
+ * for the weekly line's long pilot (bg1-dev-long-01) and the grep agent's long judge check (bg1-dev-long-02 and -03).
+ */
+export const BG1_DEV_LONG_CONVERSATIONS: readonly string[] = ['bg1-dev-long-01', 'bg1-dev-long-02', 'bg1-dev-long-03'];
 /** Kept worlds per launch unit; wave A (the internal pilot) is the first BG1_WAVE_A kept worlds. */
 export const BG1_KEPT_UNITS = 6;
 export const BG1_WAVE_A = 12;

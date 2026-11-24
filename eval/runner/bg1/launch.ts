@@ -31,7 +31,7 @@
  */
 import { BG1_GEMINI_KEY_ENV, campaignCells, loadCellManifest } from '../q1/cell.ts';
 import { isWindowedBenchmark, WEEKLY_PILOT_BLOCK_IDS } from '../q1/cells/definitions.ts';
-import { WEEKLY_PILOT_GBRAIN_ENV } from '../q1/cells/weekly-line.ts';
+import { WEEKLY_PILOT_GBRAIN_ENV, WEEKLY_PILOT_LENGTH_ENV } from '../q1/cells/weekly-line.ts';
 import { refuse } from '../q1/scoreboard-errors.ts';
 import type { CampaignManifest } from '../shootout-cell.ts';
 
@@ -40,10 +40,16 @@ const SETS = { bg1: { label: 'BG1', file: 'bg1-cells.json' }, bg1c: { label: 'BG
 type SetId = keyof typeof SETS;
 /** Each set's unit leases as campaignCells prices them; the weekly line's from the running week's cells.json (cell.ts loadWeeklyCells), so a weekly campaign refuses where that file cannot be read. */
 const priced = (which: SetId, env: Record<string, string | undefined> = process.env) => new Map(campaignCells(loadCellManifest(which, env), { smoke: true, addons: true }).map(c => [c.id, c.lease_usd]));
-/** The gbrain build every pilot unit's command exports (WEEKLY_PILOT_GBRAIN_ENV); empty, so the pilot manifest refuses, when the units name none or disagree. */
+/**
+ * The gbrain build and the world length every pilot unit's command exports (WEEKLY_PILOT_GBRAIN_ENV and
+ * WEEKLY_PILOT_LENGTH_ENV); each empty, so the pilot manifest refuses, when the units name none or disagree.
+ */
 function pilotBuildEnv(m: Pick<CampaignManifest, 'cells'>): Record<string, string> {
-  const builds = new Set(m.cells.filter(inPilot).map(c => new RegExp(`export ${WEEKLY_PILOT_GBRAIN_ENV}=(\\S+?);`).exec(c.command)?.[1] ?? ''));
-  return { [WEEKLY_PILOT_GBRAIN_ENV]: builds.size === 1 ? [...builds][0] : '' };
+  const one = (name: string) => {
+    const values = new Set(m.cells.filter(inPilot).map(c => new RegExp(`export ${name}=(\\S+?);`).exec(c.command)?.[1] ?? ''));
+    return values.size === 1 ? [...values][0] : '';
+  };
+  return { [WEEKLY_PILOT_GBRAIN_ENV]: one(WEEKLY_PILOT_GBRAIN_ENV), [WEEKLY_PILOT_LENGTH_ENV]: one(WEEKLY_PILOT_LENGTH_ENV) };
 }
 
 const inPilot = (c: Pick<CampaignManifest['cells'][number], 'block'>) => (WEEKLY_PILOT_BLOCK_IDS as readonly string[]).includes(c.block ?? '');

@@ -1,0 +1,10317 @@
+{
+ "schema": "gbrain-evals/bg1-plan/v1",
+ "generator": "changing-facts-gen@2",
+ "id": "bg1-dev-long-02",
+ "seed": "bg1-dev-long-seed-v1:bg1-dev-long-02",
+ "gold_audit": true,
+ "world_end_weekday": "Sunday",
+ "entities": [
+  {
+   "id": "company-01",
+   "type": "company",
+   "name": "Corbel Systems"
+  },
+  {
+   "id": "person-01",
+   "type": "person",
+   "name": "Umar Quintero"
+  },
+  {
+   "id": "company-02",
+   "type": "company",
+   "name": "Stonechat Robotics"
+  },
+  {
+   "id": "project-01",
+   "type": "project",
+   "name": "Project Tamarind"
+  },
+  {
+   "id": "person-02",
+   "type": "person",
+   "name": "Bastian Sandoval"
+  },
+  {
+   "id": "person-03",
+   "type": "person",
+   "name": "Saoirse Delacroix"
+  },
+  {
+   "id": "project-02",
+   "type": "project",
+   "name": "Project Sandpiper"
+  },
+  {
+   "id": "deal-01",
+   "type": "deal",
+   "name": "Alder"
+  },
+  {
+   "id": "project-03",
+   "type": "project",
+   "name": "Project Halyard"
+  },
+  {
+   "id": "person-04",
+   "type": "person",
+   "name": "Soren Takahashi"
+  },
+  {
+   "id": "project-04",
+   "type": "project",
+   "name": "Project Granite"
+  },
+  {
+   "id": "person-05",
+   "type": "person",
+   "name": "Esme Zielinski"
+  },
+  {
+   "id": "person-06",
+   "type": "person",
+   "name": "Benedikt Whitlock"
+  },
+  {
+   "id": "company-03",
+   "type": "company",
+   "name": "Brackenridge Media"
+  },
+  {
+   "id": "deal-02",
+   "type": "deal",
+   "name": "Harbor"
+  },
+  {
+   "id": "deal-03",
+   "type": "deal",
+   "name": "Ridgeway"
+  },
+  {
+   "id": "deal-04",
+   "type": "deal",
+   "name": "Wexley"
+  },
+  {
+   "id": "deal-05",
+   "type": "deal",
+   "name": "Beacon"
+  },
+  {
+   "id": "company-04",
+   "type": "company",
+   "name": "Lowmoor Retail"
+  },
+  {
+   "id": "company-05",
+   "type": "company",
+   "name": "Fenwick Labs"
+  },
+  {
+   "id": "project-05",
+   "type": "project",
+   "name": "Project Mistletoe"
+  },
+  {
+   "id": "company-05-twin",
+   "type": "company",
+   "name": "Fenwick Lane",
+   "twin_of": "company-05"
+  },
+  {
+   "id": "deal-02-twin",
+   "type": "deal",
+   "name": "Harbor Point",
+   "twin_of": "deal-02"
+  },
+  {
+   "id": "deal-01-twin",
+   "type": "deal",
+   "name": "Alderley",
+   "twin_of": "deal-01"
+  },
+  {
+   "id": "project-05-twin",
+   "type": "project",
+   "name": "Project Mistlethrush",
+   "twin_of": "project-05"
+  },
+  {
+   "id": "company-04-twin",
+   "type": "company",
+   "name": "Lowmoor Rentals",
+   "twin_of": "company-04"
+  },
+  {
+   "id": "person-01-twin",
+   "type": "person",
+   "name": "Umar Quintana",
+   "twin_of": "person-01"
+  },
+  {
+   "id": "deal-03-twin",
+   "type": "deal",
+   "name": "Ridgeline",
+   "twin_of": "deal-03"
+  },
+  {
+   "id": "person-02-twin",
+   "type": "person",
+   "name": "Bastian Sandvik",
+   "twin_of": "person-02"
+  },
+  {
+   "id": "deal-04-twin",
+   "type": "deal",
+   "name": "Wexford",
+   "twin_of": "deal-04"
+  }
+ ],
+ "slots": [
+  {
+   "id": "company-01.hq",
+   "entity": "company-01",
+   "kind": "hq",
+   "stratum": "s1_updated",
+   "events": [
+    {
+     "id": "company-01.hq#0",
+     "type": "state",
+     "value": "Turin",
+     "session": "s051",
+     "said": -505,
+     "valid_from": -505
+    },
+    {
+     "id": "company-01.hq#1",
+     "type": "change",
+     "value": "Bordeaux",
+     "session": "s291",
+     "said": -334,
+     "valid_from": -334
+    },
+    {
+     "id": "company-01.hq#2",
+     "type": "change",
+     "value": "Edinburgh",
+     "session": "s619",
+     "said": -78,
+     "valid_from": -78
+    },
+    {
+     "id": "company-01.hq#3",
+     "type": "scheduled",
+     "value": "Denver",
+     "session": "s656",
+     "said": -50,
+     "valid_from": 99
+    }
+   ],
+   "intent": {
+    "now": "Edinburgh",
+    "history": [
+     "Turin",
+     "Bordeaux",
+     "Edinburgh"
+    ]
+   }
+  },
+  {
+   "id": "person-01.role",
+   "entity": "person-01",
+   "kind": "role",
+   "stratum": "s1_updated",
+   "events": [
+    {
+     "id": "person-01.role#0",
+     "type": "state",
+     "value": "Quality Lead",
+     "session": "s062",
+     "said": -498,
+     "valid_from": -498
+    },
+    {
+     "id": "person-01.role#1",
+     "type": "change",
+     "value": "Chief of Staff",
+     "session": "s340",
+     "said": -293,
+     "valid_from": -293
+    },
+    {
+     "id": "person-01.role#2",
+     "type": "change",
+     "value": "Field CTO",
+     "session": "s417",
+     "said": -230,
+     "valid_from": -230
+    },
+    {
+     "id": "person-01.role#3",
+     "type": "change",
+     "value": "Programme Director",
+     "session": "s615",
+     "said": -80,
+     "valid_from": -80
+    }
+   ],
+   "intent": {
+    "now": "Programme Director",
+    "history": [
+     "Quality Lead",
+     "Chief of Staff",
+     "Field CTO",
+     "Programme Director"
+    ]
+   }
+  },
+  {
+   "id": "company-02.ops_lead",
+   "entity": "company-02",
+   "kind": "ops_lead",
+   "stratum": "s1_updated",
+   "events": [
+    {
+     "id": "company-02.ops_lead#0",
+     "type": "state",
+     "value": "Zainab Zoric",
+     "session": "s124",
+     "said": -460,
+     "valid_from": -460
+    },
+    {
+     "id": "company-02.ops_lead#1",
+     "type": "late",
+     "value": "Mirela Larsen",
+     "session": "s625",
+     "said": -72,
+     "valid_from": -122
+    }
+   ],
+   "intent": {
+    "now": "Mirela Larsen",
+    "history": [
+     "Zainab Zoric",
+     "Mirela Larsen"
+    ]
+   }
+  },
+  {
+   "id": "project-01.lead",
+   "entity": "project-01",
+   "kind": "lead",
+   "stratum": "s1_updated",
+   "events": [
+    {
+     "id": "project-01.lead#0",
+     "type": "state",
+     "value": "Yusuf Dimitrov",
+     "session": "s067",
+     "said": -496,
+     "valid_from": -496
+    },
+    {
+     "id": "project-01.lead#1",
+     "type": "change",
+     "value": "Hiro Tran",
+     "session": "s263",
+     "said": -354,
+     "valid_from": -354
+    },
+    {
+     "id": "project-01.lead#2",
+     "type": "late",
+     "value": "Matteo Holm",
+     "session": "s461",
+     "said": -193,
+     "valid_from": -235
+    },
+    {
+     "id": "project-01.lead#3",
+     "type": "change",
+     "value": "Willa Raman",
+     "session": "s611",
+     "said": -85,
+     "valid_from": -85
+    }
+   ],
+   "intent": {
+    "now": "Willa Raman",
+    "history": [
+     "Yusuf Dimitrov",
+     "Hiro Tran",
+     "Matteo Holm",
+     "Willa Raman"
+    ]
+   }
+  },
+  {
+   "id": "person-01.employer",
+   "entity": "person-01",
+   "kind": "employer",
+   "stratum": "s1_updated",
+   "events": [
+    {
+     "id": "person-01.employer#0",
+     "type": "state",
+     "value": "Copperleaf Systems",
+     "session": "s014",
+     "said": -536,
+     "valid_from": -536
+    },
+    {
+     "id": "person-01.employer#1",
+     "type": "change",
+     "value": "Tarnwood Logistics",
+     "session": "s271",
+     "said": -348,
+     "valid_from": -348
+    },
+    {
+     "id": "person-01.employer#2",
+     "type": "late",
+     "value": "Kettlebrook Brewing",
+     "session": "s392",
+     "said": -249,
+     "valid_from": -282
+    },
+    {
+     "id": "person-01.employer#3",
+     "type": "change",
+     "value": "Yarrowby Seeds",
+     "session": "s590",
+     "said": -99,
+     "valid_from": -99
+    }
+   ],
+   "intent": {
+    "now": "Yarrowby Seeds",
+    "history": [
+     "Copperleaf Systems",
+     "Tarnwood Logistics",
+     "Kettlebrook Brewing",
+     "Yarrowby Seeds"
+    ]
+   }
+  },
+  {
+   "id": "person-02.city",
+   "entity": "person-02",
+   "kind": "city",
+   "stratum": "s1_updated",
+   "events": [
+    {
+     "id": "person-02.city#0",
+     "type": "state",
+     "value": "Galway",
+     "session": "s019",
+     "said": -531,
+     "valid_from": -531
+    },
+    {
+     "id": "person-02.city#1",
+     "type": "change",
+     "value": "Oslo",
+     "session": "s265",
+     "said": -353,
+     "valid_from": -353
+    },
+    {
+     "id": "person-02.city#2",
+     "type": "change",
+     "value": "Seville",
+     "session": "s640",
+     "said": -61,
+     "valid_from": -61
+    },
+    {
+     "id": "person-02.city#3",
+     "type": "scheduled",
+     "value": "Valencia",
+     "session": "s664",
+     "said": -46,
+     "valid_from": 111
+    }
+   ],
+   "intent": {
+    "now": "Seville",
+    "history": [
+     "Galway",
+     "Oslo",
+     "Seville"
+    ]
+   }
+  },
+  {
+   "id": "person-03.city",
+   "entity": "person-03",
+   "kind": "city",
+   "stratum": "s2_corrected",
+   "events": [
+    {
+     "id": "person-03.city#0",
+     "type": "state",
+     "value": "Kyoto",
+     "session": "s061",
+     "said": -500,
+     "valid_from": -500
+    },
+    {
+     "id": "person-03.city#1",
+     "type": "correct",
+     "value": "Bilbao",
+     "session": "s170",
+     "said": -425,
+     "valid_from": -500,
+     "replaces": "person-03.city#0"
+    }
+   ],
+   "intent": {
+    "now": "Bilbao",
+    "history": [
+     "Bilbao"
+    ]
+   }
+  },
+  {
+   "id": "company-02.hq",
+   "entity": "company-02",
+   "kind": "hq",
+   "stratum": "s2_corrected",
+   "events": [
+    {
+     "id": "company-02.hq#0",
+     "type": "state",
+     "value": "Gothenburg",
+     "session": "s071",
+     "said": -495,
+     "valid_from": -495
+    },
+    {
+     "id": "company-02.hq#1",
+     "type": "change",
+     "value": "Lisbon",
+     "session": "s348",
+     "said": -284,
+     "valid_from": -284
+    },
+    {
+     "id": "company-02.hq#2",
+     "type": "correct",
+     "value": "Taipei",
+     "session": "s409",
+     "said": -237,
+     "valid_from": -284,
+     "replaces": "company-02.hq#1"
+    }
+   ],
+   "intent": {
+    "now": "Taipei",
+    "history": [
+     "Gothenburg",
+     "Taipei"
+    ]
+   }
+  },
+  {
+   "id": "project-02.vendor",
+   "entity": "project-02",
+   "kind": "vendor",
+   "stratum": "s2_corrected",
+   "events": [
+    {
+     "id": "project-02.vendor#0",
+     "type": "state",
+     "value": "Fernhollow Labs",
+     "session": "s075",
+     "said": -494,
+     "valid_from": -494
+    },
+    {
+     "id": "project-02.vendor#1",
+     "type": "change",
+     "value": "Foxglove Cosmetics",
+     "session": "s328",
+     "said": -301,
+     "valid_from": -301
+    },
+    {
+     "id": "project-02.vendor#2",
+     "type": "correct",
+     "value": "Nettlefield Supply",
+     "session": "s438",
+     "said": -215,
+     "valid_from": -301,
+     "replaces": "project-02.vendor#1"
+    }
+   ],
+   "intent": {
+    "now": "Nettlefield Supply",
+    "history": [
+     "Fernhollow Labs",
+     "Nettlefield Supply"
+    ]
+   }
+  },
+  {
+   "id": "deal-01.price",
+   "entity": "deal-01",
+   "kind": "price",
+   "stratum": "s2_corrected",
+   "events": [
+    {
+     "id": "deal-01.price#0",
+     "type": "state",
+     "value": "$190,000",
+     "session": "s184",
+     "said": -415,
+     "valid_from": -415
+    },
+    {
+     "id": "deal-01.price#1",
+     "type": "correct",
+     "value": "$244,000",
+     "session": "s223",
+     "said": -384,
+     "valid_from": -415,
+     "replaces": "deal-01.price#0"
+    }
+   ],
+   "intent": {
+    "now": "$244,000",
+    "history": [
+     "$244,000"
+    ]
+   }
+  },
+  {
+   "id": "project-03.lead",
+   "entity": "project-03",
+   "kind": "lead",
+   "stratum": "s2_corrected",
+   "events": [
+    {
+     "id": "project-03.lead#0",
+     "type": "state",
+     "value": "Freya Eriksen",
+     "session": "s106",
+     "said": -474,
+     "valid_from": -474
+    },
+    {
+     "id": "project-03.lead#1",
+     "type": "correct",
+     "value": "Hamid Coelho",
+     "session": "s286",
+     "said": -338,
+     "valid_from": -474,
+     "replaces": "project-03.lead#0"
+    }
+   ],
+   "intent": {
+    "now": "Hamid Coelho",
+    "history": [
+     "Hamid Coelho"
+    ]
+   }
+  },
+  {
+   "id": "person-04.role",
+   "entity": "person-04",
+   "kind": "role",
+   "stratum": "s2_corrected",
+   "events": [
+    {
+     "id": "person-04.role#0",
+     "type": "state",
+     "value": "Head of Platform",
+     "session": "s048",
+     "said": -507,
+     "valid_from": -507
+    },
+    {
+     "id": "person-04.role#1",
+     "type": "change",
+     "value": "VP of Sales",
+     "session": "s344",
+     "said": -287,
+     "valid_from": -287
+    },
+    {
+     "id": "person-04.role#2",
+     "type": "correct",
+     "value": "Lead Recruiter",
+     "session": "s390",
+     "said": -251,
+     "valid_from": -287,
+     "replaces": "person-04.role#1"
+    }
+   ],
+   "intent": {
+    "now": "Lead Recruiter",
+    "history": [
+     "Head of Platform",
+     "Lead Recruiter"
+    ]
+   }
+  },
+  {
+   "id": "project-04.vendor",
+   "entity": "project-04",
+   "kind": "vendor",
+   "stratum": "s3_repeated_stale",
+   "events": [
+    {
+     "id": "project-04.vendor#0",
+     "type": "state",
+     "value": "Lindenhall Bank",
+     "session": "s083",
+     "said": -487,
+     "valid_from": -487
+    },
+    {
+     "id": "project-04.vendor#1",
+     "type": "mention",
+     "value": "Lindenhall Bank",
+     "session": "s099",
+     "said": -477,
+     "valid_from": null
+    },
+    {
+     "id": "project-04.vendor#2",
+     "type": "mention",
+     "value": "Lindenhall Bank",
+     "session": "s161",
+     "said": -432,
+     "valid_from": null
+    },
+    {
+     "id": "project-04.vendor#3",
+     "type": "mention",
+     "value": "Lindenhall Bank",
+     "session": "s390",
+     "said": -251,
+     "valid_from": null
+    },
+    {
+     "id": "project-04.vendor#4",
+     "type": "mention",
+     "value": "Lindenhall Bank",
+     "session": "s452",
+     "said": -205,
+     "valid_from": null
+    },
+    {
+     "id": "project-04.vendor#5",
+     "type": "mention",
+     "value": "Lindenhall Bank",
+     "session": "s484",
+     "said": -168,
+     "valid_from": null
+    },
+    {
+     "id": "project-04.vendor#6",
+     "type": "mention",
+     "value": "Lindenhall Bank",
+     "session": "s519",
+     "said": -144,
+     "valid_from": null
+    },
+    {
+     "id": "project-04.vendor#7",
+     "type": "mention",
+     "value": "Lindenhall Bank",
+     "session": "s556",
+     "said": -121,
+     "valid_from": null
+    },
+    {
+     "id": "project-04.vendor#8",
+     "type": "change",
+     "value": "Ironbark Security",
+     "session": "s612",
+     "said": -84,
+     "valid_from": -84
+    }
+   ],
+   "intent": {
+    "now": "Ironbark Security",
+    "history": [
+     "Lindenhall Bank",
+     "Ironbark Security"
+    ]
+   }
+  },
+  {
+   "id": "person-05.city",
+   "entity": "person-05",
+   "kind": "city",
+   "stratum": "s3_repeated_stale",
+   "events": [
+    {
+     "id": "person-05.city#0",
+     "type": "state",
+     "value": "Malmo",
+     "session": "s108",
+     "said": -473,
+     "valid_from": -473
+    },
+    {
+     "id": "person-05.city#1",
+     "type": "mention",
+     "value": "Malmo",
+     "session": "s141",
+     "said": -450,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.city#2",
+     "type": "mention",
+     "value": "Malmo",
+     "session": "s173",
+     "said": -421,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.city#3",
+     "type": "mention",
+     "value": "Malmo",
+     "session": "s183",
+     "said": -416,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.city#4",
+     "type": "mention",
+     "value": "Malmo",
+     "session": "s184",
+     "said": -415,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.city#5",
+     "type": "mention",
+     "value": "Malmo",
+     "session": "s186",
+     "said": -414,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.city#6",
+     "type": "mention",
+     "value": "Malmo",
+     "session": "s206",
+     "said": -401,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.city#7",
+     "type": "mention",
+     "value": "Malmo",
+     "session": "s225",
+     "said": -383,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.city#8",
+     "type": "mention",
+     "value": "Malmo",
+     "session": "s239",
+     "said": -375,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.city#9",
+     "type": "mention",
+     "value": "Malmo",
+     "session": "s330",
+     "said": -301,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.city#10",
+     "type": "mention",
+     "value": "Malmo",
+     "session": "s378",
+     "said": -260,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.city#11",
+     "type": "mention",
+     "value": "Malmo",
+     "session": "s406",
+     "said": -239,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.city#12",
+     "type": "mention",
+     "value": "Malmo",
+     "session": "s412",
+     "said": -235,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.city#13",
+     "type": "mention",
+     "value": "Malmo",
+     "session": "s436",
+     "said": -217,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.city#14",
+     "type": "mention",
+     "value": "Malmo",
+     "session": "s452",
+     "said": -205,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.city#15",
+     "type": "change",
+     "value": "Tampere",
+     "session": "s538",
+     "said": -131,
+     "valid_from": -131
+    }
+   ],
+   "intent": {
+    "now": "Tampere",
+    "history": [
+     "Malmo",
+     "Tampere"
+    ]
+   }
+  },
+  {
+   "id": "person-06.employer",
+   "entity": "person-06",
+   "kind": "employer",
+   "stratum": "s3_repeated_stale",
+   "events": [
+    {
+     "id": "person-06.employer#0",
+     "type": "state",
+     "value": "Willowmere Hotels",
+     "session": "s122",
+     "said": -461,
+     "valid_from": -461
+    },
+    {
+     "id": "person-06.employer#1",
+     "type": "mention",
+     "value": "Willowmere Hotels",
+     "session": "s177",
+     "said": -418,
+     "valid_from": null
+    },
+    {
+     "id": "person-06.employer#2",
+     "type": "mention",
+     "value": "Willowmere Hotels",
+     "session": "s232",
+     "said": -380,
+     "valid_from": null
+    },
+    {
+     "id": "person-06.employer#3",
+     "type": "mention",
+     "value": "Willowmere Hotels",
+     "session": "s251",
+     "said": -364,
+     "valid_from": null
+    },
+    {
+     "id": "person-06.employer#4",
+     "type": "mention",
+     "value": "Willowmere Hotels",
+     "session": "s256",
+     "said": -361,
+     "valid_from": null
+    },
+    {
+     "id": "person-06.employer#5",
+     "type": "mention",
+     "value": "Willowmere Hotels",
+     "session": "s330",
+     "said": -301,
+     "valid_from": null
+    },
+    {
+     "id": "person-06.employer#6",
+     "type": "mention",
+     "value": "Willowmere Hotels",
+     "session": "s368",
+     "said": -270,
+     "valid_from": null
+    },
+    {
+     "id": "person-06.employer#7",
+     "type": "mention",
+     "value": "Willowmere Hotels",
+     "session": "s387",
+     "said": -254,
+     "valid_from": null
+    },
+    {
+     "id": "person-06.employer#8",
+     "type": "mention",
+     "value": "Willowmere Hotels",
+     "session": "s414",
+     "said": -234,
+     "valid_from": null
+    },
+    {
+     "id": "person-06.employer#9",
+     "type": "mention",
+     "value": "Willowmere Hotels",
+     "session": "s419",
+     "said": -228,
+     "valid_from": null
+    },
+    {
+     "id": "person-06.employer#10",
+     "type": "mention",
+     "value": "Willowmere Hotels",
+     "session": "s474",
+     "said": -177,
+     "valid_from": null
+    },
+    {
+     "id": "person-06.employer#11",
+     "type": "change",
+     "value": "Larkspur Foods",
+     "session": "s671",
+     "said": -42,
+     "valid_from": -42
+    }
+   ],
+   "intent": {
+    "now": "Larkspur Foods",
+    "history": [
+     "Willowmere Hotels",
+     "Larkspur Foods"
+    ]
+   }
+  },
+  {
+   "id": "company-01.ops_lead",
+   "entity": "company-01",
+   "kind": "ops_lead",
+   "stratum": "s3_repeated_stale",
+   "events": [
+    {
+     "id": "company-01.ops_lead#0",
+     "type": "state",
+     "value": "Kasimir Rossi",
+     "session": "s133",
+     "said": -454,
+     "valid_from": -454
+    },
+    {
+     "id": "company-01.ops_lead#1",
+     "type": "mention",
+     "value": "Kasimir Rossi",
+     "session": "s177",
+     "said": -418,
+     "valid_from": null
+    },
+    {
+     "id": "company-01.ops_lead#2",
+     "type": "mention",
+     "value": "Kasimir Rossi",
+     "session": "s193",
+     "said": -408,
+     "valid_from": null
+    },
+    {
+     "id": "company-01.ops_lead#3",
+     "type": "mention",
+     "value": "Kasimir Rossi",
+     "session": "s219",
+     "said": -388,
+     "valid_from": null
+    },
+    {
+     "id": "company-01.ops_lead#4",
+     "type": "mention",
+     "value": "Kasimir Rossi",
+     "session": "s323",
+     "said": -305,
+     "valid_from": null
+    },
+    {
+     "id": "company-01.ops_lead#5",
+     "type": "mention",
+     "value": "Kasimir Rossi",
+     "session": "s401",
+     "said": -244,
+     "valid_from": null
+    },
+    {
+     "id": "company-01.ops_lead#6",
+     "type": "mention",
+     "value": "Kasimir Rossi",
+     "session": "s482",
+     "said": -170,
+     "valid_from": null
+    },
+    {
+     "id": "company-01.ops_lead#7",
+     "type": "mention",
+     "value": "Kasimir Rossi",
+     "session": "s516",
+     "said": -147,
+     "valid_from": null
+    },
+    {
+     "id": "company-01.ops_lead#8",
+     "type": "mention",
+     "value": "Kasimir Rossi",
+     "session": "s546",
+     "said": -124,
+     "valid_from": null
+    },
+    {
+     "id": "company-01.ops_lead#9",
+     "type": "change",
+     "value": "Ines Moreau",
+     "session": "s550",
+     "said": -123,
+     "valid_from": -123
+    }
+   ],
+   "intent": {
+    "now": "Ines Moreau",
+    "history": [
+     "Kasimir Rossi",
+     "Ines Moreau"
+    ]
+   }
+  },
+  {
+   "id": "person-06.city",
+   "entity": "person-06",
+   "kind": "city",
+   "stratum": "s3_repeated_stale",
+   "events": [
+    {
+     "id": "person-06.city#0",
+     "type": "state",
+     "value": "Prague",
+     "session": "s130",
+     "said": -456,
+     "valid_from": -456
+    },
+    {
+     "id": "person-06.city#1",
+     "type": "mention",
+     "value": "Prague",
+     "session": "s160",
+     "said": -433,
+     "valid_from": null
+    },
+    {
+     "id": "person-06.city#2",
+     "type": "mention",
+     "value": "Prague",
+     "session": "s167",
+     "said": -427,
+     "valid_from": null
+    },
+    {
+     "id": "person-06.city#3",
+     "type": "mention",
+     "value": "Prague",
+     "session": "s205",
+     "said": -401,
+     "valid_from": null
+    },
+    {
+     "id": "person-06.city#4",
+     "type": "mention",
+     "value": "Prague",
+     "session": "s220",
+     "said": -387,
+     "valid_from": null
+    },
+    {
+     "id": "person-06.city#5",
+     "type": "mention",
+     "value": "Prague",
+     "session": "s233",
+     "said": -379,
+     "valid_from": null
+    },
+    {
+     "id": "person-06.city#6",
+     "type": "mention",
+     "value": "Prague",
+     "session": "s241",
+     "said": -372,
+     "valid_from": null
+    },
+    {
+     "id": "person-06.city#7",
+     "type": "mention",
+     "value": "Prague",
+     "session": "s270",
+     "said": -349,
+     "valid_from": null
+    },
+    {
+     "id": "person-06.city#8",
+     "type": "mention",
+     "value": "Prague",
+     "session": "s333",
+     "said": -300,
+     "valid_from": null
+    },
+    {
+     "id": "person-06.city#9",
+     "type": "mention",
+     "value": "Prague",
+     "session": "s341",
+     "said": -290,
+     "valid_from": null
+    },
+    {
+     "id": "person-06.city#10",
+     "type": "mention",
+     "value": "Prague",
+     "session": "s368",
+     "said": -270,
+     "valid_from": null
+    },
+    {
+     "id": "person-06.city#11",
+     "type": "mention",
+     "value": "Prague",
+     "session": "s375",
+     "said": -263,
+     "valid_from": null
+    },
+    {
+     "id": "person-06.city#12",
+     "type": "mention",
+     "value": "Prague",
+     "session": "s387",
+     "said": -254,
+     "valid_from": null
+    },
+    {
+     "id": "person-06.city#13",
+     "type": "mention",
+     "value": "Prague",
+     "session": "s461",
+     "said": -193,
+     "valid_from": null
+    },
+    {
+     "id": "person-06.city#14",
+     "type": "mention",
+     "value": "Prague",
+     "session": "s543",
+     "said": -126,
+     "valid_from": null
+    },
+    {
+     "id": "person-06.city#15",
+     "type": "change",
+     "value": "Bergen",
+     "session": "s568",
+     "said": -114,
+     "valid_from": -114
+    }
+   ],
+   "intent": {
+    "now": "Bergen",
+    "history": [
+     "Prague",
+     "Bergen"
+    ]
+   }
+  },
+  {
+   "id": "company-03.ops_lead",
+   "entity": "company-03",
+   "kind": "ops_lead",
+   "stratum": "s3_repeated_stale",
+   "events": [
+    {
+     "id": "company-03.ops_lead#0",
+     "type": "state",
+     "value": "Vera Okonjo",
+     "session": "s079",
+     "said": -491,
+     "valid_from": -491
+    },
+    {
+     "id": "company-03.ops_lead#1",
+     "type": "mention",
+     "value": "Vera Okonjo",
+     "session": "s106",
+     "said": -474,
+     "valid_from": null
+    },
+    {
+     "id": "company-03.ops_lead#2",
+     "type": "mention",
+     "value": "Vera Okonjo",
+     "session": "s135",
+     "said": -453,
+     "valid_from": null
+    },
+    {
+     "id": "company-03.ops_lead#3",
+     "type": "mention",
+     "value": "Vera Okonjo",
+     "session": "s195",
+     "said": -408,
+     "valid_from": null
+    },
+    {
+     "id": "company-03.ops_lead#4",
+     "type": "mention",
+     "value": "Vera Okonjo",
+     "session": "s232",
+     "said": -380,
+     "valid_from": null
+    },
+    {
+     "id": "company-03.ops_lead#5",
+     "type": "mention",
+     "value": "Vera Okonjo",
+     "session": "s246",
+     "said": -367,
+     "valid_from": null
+    },
+    {
+     "id": "company-03.ops_lead#6",
+     "type": "mention",
+     "value": "Vera Okonjo",
+     "session": "s394",
+     "said": -248,
+     "valid_from": null
+    },
+    {
+     "id": "company-03.ops_lead#7",
+     "type": "mention",
+     "value": "Vera Okonjo",
+     "session": "s424",
+     "said": -222,
+     "valid_from": null
+    },
+    {
+     "id": "company-03.ops_lead#8",
+     "type": "mention",
+     "value": "Vera Okonjo",
+     "session": "s451",
+     "said": -206,
+     "valid_from": null
+    },
+    {
+     "id": "company-03.ops_lead#9",
+     "type": "change",
+     "value": "Petra Grieve",
+     "session": "s649",
+     "said": -53,
+     "valid_from": -53
+    }
+   ],
+   "intent": {
+    "now": "Petra Grieve",
+    "history": [
+     "Vera Okonjo",
+     "Petra Grieve"
+    ]
+   }
+  },
+  {
+   "id": "deal-01.discount",
+   "entity": "deal-01",
+   "kind": "discount",
+   "stratum": "s4_conflicting",
+   "events": [
+    {
+     "id": "deal-01.discount#0",
+     "type": "source",
+     "value": "17%",
+     "session": "s165",
+     "said": -428,
+     "valid_from": -428,
+     "source": "draft"
+    },
+    {
+     "id": "deal-01.discount#1",
+     "type": "source",
+     "value": "16%",
+     "session": "s209",
+     "said": -397,
+     "valid_from": -397,
+     "source": "executed"
+    },
+    {
+     "id": "deal-01.discount#2",
+     "type": "source",
+     "value": "20%",
+     "session": "s235",
+     "said": -377,
+     "valid_from": -377,
+     "source": "recap"
+    },
+    {
+     "id": "deal-01.discount#3",
+     "type": "source",
+     "value": "29%",
+     "session": "s285",
+     "said": -340,
+     "valid_from": -340,
+     "source": "agent_note"
+    },
+    {
+     "id": "deal-01.discount#4",
+     "type": "source",
+     "value": "14%",
+     "session": "s312",
+     "said": -319,
+     "valid_from": -319,
+     "source": "draft"
+    }
+   ],
+   "intent": {
+    "now": "16%",
+    "history": [
+     "16%"
+    ]
+   }
+  },
+  {
+   "id": "deal-02.seats",
+   "entity": "deal-02",
+   "kind": "seats",
+   "stratum": "s4_conflicting",
+   "events": [
+    {
+     "id": "deal-02.seats#0",
+     "type": "source",
+     "value": "350 seats",
+     "session": "s345",
+     "said": -287,
+     "valid_from": -287,
+     "source": "owner_confirmed"
+    },
+    {
+     "id": "deal-02.seats#1",
+     "type": "source",
+     "value": "810 seats",
+     "session": "s351",
+     "said": -282,
+     "valid_from": -282,
+     "source": "draft"
+    },
+    {
+     "id": "deal-02.seats#2",
+     "type": "source",
+     "value": "410 seats",
+     "session": "s352",
+     "said": -282,
+     "valid_from": -282,
+     "source": "recap"
+    },
+    {
+     "id": "deal-02.seats#3",
+     "type": "source",
+     "value": "230 seats",
+     "session": "s397",
+     "said": -246,
+     "valid_from": -246,
+     "source": "agent_note"
+    }
+   ],
+   "intent": {
+    "now": "350 seats",
+    "history": [
+     "350 seats"
+    ]
+   }
+  },
+  {
+   "id": "deal-03.seats",
+   "entity": "deal-03",
+   "kind": "seats",
+   "stratum": "s4_conflicting",
+   "events": [
+    {
+     "id": "deal-03.seats#0",
+     "type": "source",
+     "value": "730 seats",
+     "session": "s117",
+     "said": -464,
+     "valid_from": -464,
+     "source": "recap"
+    },
+    {
+     "id": "deal-03.seats#1",
+     "type": "source",
+     "value": "930 seats",
+     "session": "s151",
+     "said": -440,
+     "valid_from": -440,
+     "source": "executed"
+    },
+    {
+     "id": "deal-03.seats#2",
+     "type": "source",
+     "value": "220 seats",
+     "session": "s167",
+     "said": -427,
+     "valid_from": -427,
+     "source": "agent_note"
+    },
+    {
+     "id": "deal-03.seats#3",
+     "type": "source",
+     "value": "720 seats",
+     "session": "s240",
+     "said": -374,
+     "valid_from": -374,
+     "source": "draft"
+    },
+    {
+     "id": "deal-03.seats#4",
+     "type": "source",
+     "value": "310 seats",
+     "session": "s255",
+     "said": -362,
+     "valid_from": -362,
+     "source": "draft"
+    }
+   ],
+   "intent": {
+    "now": "930 seats",
+    "history": [
+     "930 seats"
+    ]
+   }
+  },
+  {
+   "id": "deal-03.term",
+   "entity": "deal-03",
+   "kind": "term",
+   "stratum": "s4_conflicting",
+   "events": [
+    {
+     "id": "deal-03.term#0",
+     "type": "source",
+     "value": "9 months",
+     "session": "s102",
+     "said": -475,
+     "valid_from": -475,
+     "source": "owner_confirmed"
+    },
+    {
+     "id": "deal-03.term#1",
+     "type": "source",
+     "value": "42 months",
+     "session": "s117",
+     "said": -464,
+     "valid_from": -464,
+     "source": "agent_note"
+    },
+    {
+     "id": "deal-03.term#2",
+     "type": "source",
+     "value": "33 months",
+     "session": "s136",
+     "said": -453,
+     "valid_from": -453,
+     "source": "agent_note"
+    },
+    {
+     "id": "deal-03.term#3",
+     "type": "source",
+     "value": "66 months",
+     "session": "s169",
+     "said": -425,
+     "valid_from": -425,
+     "source": "recap"
+    },
+    {
+     "id": "deal-03.term#4",
+     "type": "source",
+     "value": "45 months",
+     "session": "s191",
+     "said": -412,
+     "valid_from": -412,
+     "source": "recap"
+    }
+   ],
+   "intent": {
+    "now": "9 months",
+    "history": [
+     "9 months"
+    ]
+   }
+  },
+  {
+   "id": "deal-04.seats",
+   "entity": "deal-04",
+   "kind": "seats",
+   "stratum": "s4_conflicting",
+   "events": [
+    {
+     "id": "deal-04.seats#0",
+     "type": "source",
+     "value": "200 seats",
+     "session": "s198",
+     "said": -405,
+     "valid_from": -405,
+     "source": "recap"
+    },
+    {
+     "id": "deal-04.seats#1",
+     "type": "source",
+     "value": "790 seats",
+     "session": "s204",
+     "said": -401,
+     "valid_from": -401,
+     "source": "executed"
+    },
+    {
+     "id": "deal-04.seats#2",
+     "type": "source",
+     "value": "470 seats",
+     "session": "s251",
+     "said": -364,
+     "valid_from": -364,
+     "source": "draft"
+    }
+   ],
+   "intent": {
+    "now": "790 seats",
+    "history": [
+     "790 seats"
+    ]
+   }
+  },
+  {
+   "id": "deal-05.price",
+   "entity": "deal-05",
+   "kind": "price",
+   "stratum": "s4_conflicting",
+   "events": [
+    {
+     "id": "deal-05.price#0",
+     "type": "source",
+     "value": "$38,000",
+     "session": "s510",
+     "said": -150,
+     "valid_from": -150,
+     "source": "owner_confirmed"
+    },
+    {
+     "id": "deal-05.price#1",
+     "type": "source",
+     "value": "$136,000",
+     "session": "s570",
+     "said": -113,
+     "valid_from": -113,
+     "source": "draft"
+    },
+    {
+     "id": "deal-05.price#2",
+     "type": "source",
+     "value": "$26,000",
+     "session": "s574",
+     "said": -110,
+     "valid_from": -110,
+     "source": "agent_note"
+    }
+   ],
+   "intent": {
+    "now": "$38,000",
+    "history": [
+     "$38,000"
+    ]
+   }
+  },
+  {
+   "id": "company-04.offsite",
+   "entity": "company-04",
+   "kind": "offsite",
+   "stratum": "s5_withdrawn",
+   "events": [
+    {
+     "id": "company-04.offsite#0",
+     "type": "plan",
+     "value": "Porto",
+     "session": "s230",
+     "said": -380,
+     "valid_from": -380
+    },
+    {
+     "id": "company-04.offsite#1",
+     "type": "plan",
+     "value": "Porto",
+     "session": "s265",
+     "said": -353,
+     "valid_from": -353
+    },
+    {
+     "id": "company-04.offsite#2",
+     "type": "plan",
+     "value": "Porto",
+     "session": "s289",
+     "said": -335,
+     "valid_from": -335
+    },
+    {
+     "id": "company-04.offsite#3",
+     "type": "withdraw",
+     "value": "Porto",
+     "session": "s400",
+     "said": -245,
+     "valid_from": null,
+     "rumour": true
+    }
+   ],
+   "intent": {
+    "now": null,
+    "history": []
+   }
+  },
+  {
+   "id": "company-03.offsite",
+   "entity": "company-03",
+   "kind": "offsite",
+   "stratum": "s5_withdrawn",
+   "events": [
+    {
+     "id": "company-03.offsite#0",
+     "type": "plan",
+     "value": "Leeds",
+     "session": "s441",
+     "said": -214,
+     "valid_from": -214
+    },
+    {
+     "id": "company-03.offsite#1",
+     "type": "plan",
+     "value": "Leeds",
+     "session": "s464",
+     "said": -190,
+     "valid_from": -190
+    },
+    {
+     "id": "company-03.offsite#2",
+     "type": "plan",
+     "value": "Leeds",
+     "session": "s477",
+     "said": -175,
+     "valid_from": -175
+    },
+    {
+     "id": "company-03.offsite#3",
+     "type": "withdraw",
+     "value": "Leeds",
+     "session": "s666",
+     "said": -45,
+     "valid_from": null,
+     "rumour": false
+    }
+   ],
+   "intent": {
+    "now": null,
+    "history": []
+   }
+  },
+  {
+   "id": "company-04.merger",
+   "entity": "company-04",
+   "kind": "merger",
+   "stratum": "s5_withdrawn",
+   "events": [
+    {
+     "id": "company-04.merger#0",
+     "type": "plan",
+     "value": "Brightline Analytics",
+     "session": "s203",
+     "said": -402,
+     "valid_from": -402
+    },
+    {
+     "id": "company-04.merger#1",
+     "type": "plan",
+     "value": "Brightline Analytics",
+     "session": "s252",
+     "said": -363,
+     "valid_from": -363
+    },
+    {
+     "id": "company-04.merger#2",
+     "type": "withdraw",
+     "value": "Brightline Analytics",
+     "session": "s586",
+     "said": -101,
+     "valid_from": null,
+     "rumour": false
+    }
+   ],
+   "intent": {
+    "now": null,
+    "history": []
+   }
+  },
+  {
+   "id": "company-05.merger",
+   "entity": "company-05",
+   "kind": "merger",
+   "stratum": "s5_withdrawn",
+   "events": [
+    {
+     "id": "company-05.merger#0",
+     "type": "plan",
+     "value": "Oakhaven Health",
+     "session": "s210",
+     "said": -395,
+     "valid_from": -395
+    },
+    {
+     "id": "company-05.merger#1",
+     "type": "withdraw",
+     "value": "Oakhaven Health",
+     "session": "s486",
+     "said": -165,
+     "valid_from": null,
+     "rumour": false
+    }
+   ],
+   "intent": {
+    "now": null,
+    "history": []
+   }
+  },
+  {
+   "id": "company-05.offsite",
+   "entity": "company-05",
+   "kind": "offsite",
+   "stratum": "s5_withdrawn",
+   "events": [
+    {
+     "id": "company-05.offsite#0",
+     "type": "plan",
+     "value": "Vienna",
+     "session": "s223",
+     "said": -384,
+     "valid_from": -384
+    },
+    {
+     "id": "company-05.offsite#1",
+     "type": "plan",
+     "value": "Vienna",
+     "session": "s258",
+     "said": -357,
+     "valid_from": -357
+    },
+    {
+     "id": "company-05.offsite#2",
+     "type": "plan",
+     "value": "Vienna",
+     "session": "s289",
+     "said": -335,
+     "valid_from": -335
+    },
+    {
+     "id": "company-05.offsite#3",
+     "type": "withdraw",
+     "value": "Vienna",
+     "session": "s577",
+     "said": -107,
+     "valid_from": null,
+     "rumour": true
+    }
+   ],
+   "intent": {
+    "now": null,
+    "history": []
+   }
+  },
+  {
+   "id": "project-05.pilot",
+   "entity": "project-05",
+   "kind": "pilot",
+   "stratum": "s5_withdrawn",
+   "events": [
+    {
+     "id": "project-05.pilot#0",
+     "type": "plan",
+     "value": "Cinderford Steel",
+     "session": "s347",
+     "said": -286,
+     "valid_from": -286
+    },
+    {
+     "id": "project-05.pilot#1",
+     "type": "plan",
+     "value": "Cinderford Steel",
+     "session": "s385",
+     "said": -255,
+     "valid_from": -255
+    },
+    {
+     "id": "project-05.pilot#2",
+     "type": "withdraw",
+     "value": "Cinderford Steel",
+     "session": "s436",
+     "said": -217,
+     "valid_from": null,
+     "rumour": false
+    }
+   ],
+   "intent": {
+    "now": null,
+    "history": []
+   }
+  },
+  {
+   "id": "company-05-twin.merger",
+   "entity": "company-05-twin",
+   "kind": "merger",
+   "stratum": "decoy",
+   "twin_slot": "company-05.merger",
+   "events": [
+    {
+     "id": "company-05-twin.merger#0",
+     "type": "plan",
+     "value": "Lanternfish Games",
+     "session": "s419",
+     "said": -228,
+     "valid_from": -228
+    }
+   ],
+   "intent": {
+    "now": "Lanternfish Games",
+    "history": [
+     "Lanternfish Games"
+    ]
+   }
+  },
+  {
+   "id": "deal-02-twin.seats",
+   "entity": "deal-02-twin",
+   "kind": "seats",
+   "stratum": "decoy",
+   "twin_slot": "deal-02.seats",
+   "events": [
+    {
+     "id": "deal-02-twin.seats#0",
+     "type": "source",
+     "value": "380 seats",
+     "session": "s479",
+     "said": -172,
+     "valid_from": -172,
+     "source": "executed"
+    }
+   ],
+   "intent": {
+    "now": "380 seats",
+    "history": [
+     "380 seats"
+    ]
+   }
+  },
+  {
+   "id": "deal-01-twin.discount",
+   "entity": "deal-01-twin",
+   "kind": "discount",
+   "stratum": "decoy",
+   "twin_slot": "deal-01.discount",
+   "events": [
+    {
+     "id": "deal-01-twin.discount#0",
+     "type": "source",
+     "value": "26%",
+     "session": "s191",
+     "said": -412,
+     "valid_from": -412,
+     "source": "executed"
+    }
+   ],
+   "intent": {
+    "now": "26%",
+    "history": [
+     "26%"
+    ]
+   }
+  },
+  {
+   "id": "project-05-twin.pilot",
+   "entity": "project-05-twin",
+   "kind": "pilot",
+   "stratum": "decoy",
+   "twin_slot": "project-05.pilot",
+   "events": [
+    {
+     "id": "project-05-twin.pilot#0",
+     "type": "plan",
+     "value": "Vellumworks Print",
+     "session": "s193",
+     "said": -408,
+     "valid_from": -408
+    }
+   ],
+   "intent": {
+    "now": "Vellumworks Print",
+    "history": [
+     "Vellumworks Print"
+    ]
+   }
+  },
+  {
+   "id": "company-04-twin.offsite",
+   "entity": "company-04-twin",
+   "kind": "offsite",
+   "stratum": "decoy",
+   "twin_slot": "company-04.offsite",
+   "events": [
+    {
+     "id": "company-04-twin.offsite#0",
+     "type": "plan",
+     "value": "Accra",
+     "session": "s238",
+     "said": -375,
+     "valid_from": -375
+    }
+   ],
+   "intent": {
+    "now": "Accra",
+    "history": [
+     "Accra"
+    ]
+   }
+  },
+  {
+   "id": "person-01-twin.role",
+   "entity": "person-01-twin",
+   "kind": "role",
+   "stratum": "decoy",
+   "twin_slot": "person-01.role",
+   "events": [
+    {
+     "id": "person-01-twin.role#0",
+     "type": "state",
+     "value": "Director of Research",
+     "session": "s428",
+     "said": -220,
+     "valid_from": -220
+    }
+   ],
+   "intent": {
+    "now": "Director of Research",
+    "history": [
+     "Director of Research"
+    ]
+   }
+  },
+  {
+   "id": "deal-03-twin.term",
+   "entity": "deal-03-twin",
+   "kind": "term",
+   "stratum": "decoy",
+   "twin_slot": "deal-03.term",
+   "events": [
+    {
+     "id": "deal-03-twin.term#0",
+     "type": "source",
+     "value": "21 months",
+     "session": "s218",
+     "said": -389,
+     "valid_from": -389,
+     "source": "executed"
+    }
+   ],
+   "intent": {
+    "now": "21 months",
+    "history": [
+     "21 months"
+    ]
+   }
+  },
+  {
+   "id": "person-02-twin.city",
+   "entity": "person-02-twin",
+   "kind": "city",
+   "stratum": "decoy",
+   "twin_slot": "person-02.city",
+   "events": [
+    {
+     "id": "person-02-twin.city#0",
+     "type": "state",
+     "value": "Montreal",
+     "session": "s175",
+     "said": -421,
+     "valid_from": -421
+    }
+   ],
+   "intent": {
+    "now": "Montreal",
+    "history": [
+     "Montreal"
+    ]
+   }
+  },
+  {
+   "id": "deal-04-twin.seats",
+   "entity": "deal-04-twin",
+   "kind": "seats",
+   "stratum": "decoy",
+   "twin_slot": "deal-04.seats",
+   "events": [
+    {
+     "id": "deal-04-twin.seats#0",
+     "type": "source",
+     "value": "260 seats",
+     "session": "s629",
+     "said": -70,
+     "valid_from": -70,
+     "source": "executed"
+    }
+   ],
+   "intent": {
+    "now": "260 seats",
+    "history": [
+     "260 seats"
+    ]
+   }
+  },
+  {
+   "id": "person-01-twin.employer",
+   "entity": "person-01-twin",
+   "kind": "employer",
+   "stratum": "decoy",
+   "twin_slot": "person-01.employer",
+   "events": [
+    {
+     "id": "person-01-twin.employer#0",
+     "type": "state",
+     "value": "Kinglet Telecom",
+     "session": "s300",
+     "said": -328,
+     "valid_from": -328
+    }
+   ],
+   "intent": {
+    "now": "Kinglet Telecom",
+    "history": [
+     "Kinglet Telecom"
+    ]
+   }
+  }
+ ],
+ "sessions": [
+  {
+   "id": "s001",
+   "day": -544,
+   "time": "18:30",
+   "topic": "a pottery class",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s002",
+   "day": -544,
+   "time": "19:10",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s003",
+   "day": -544,
+   "time": "19:20",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s004",
+   "day": -543,
+   "time": "11:25",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s005",
+   "day": -543,
+   "time": "17:25",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s006",
+   "day": -542,
+   "time": "09:50",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s007",
+   "day": -542,
+   "time": "13:30",
+   "topic": "a podcast episode",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s008",
+   "day": -542,
+   "time": "15:20",
+   "topic": "marathon training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s009",
+   "day": -542,
+   "time": "19:25",
+   "topic": "a jigsaw puzzle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s010",
+   "day": -541,
+   "time": "13:15",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s011",
+   "day": -541,
+   "time": "19:05",
+   "topic": "a board game night",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s012",
+   "day": -539,
+   "time": "08:05",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s013",
+   "day": -539,
+   "time": "17:00",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s014",
+   "day": -536,
+   "time": "21:40",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": [
+    {
+     "text": "Quick note for later: Umar Quintero is employed by Copperleaf Systems.",
+     "slot": "person-01.employer",
+     "event": "person-01.employer#0",
+     "values": [
+      "Copperleaf Systems"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s015",
+   "day": -535,
+   "time": "08:00",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s016",
+   "day": -534,
+   "time": "17:20",
+   "topic": "marathon training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s017",
+   "day": -533,
+   "time": "12:05",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s018",
+   "day": -531,
+   "time": "17:50",
+   "topic": "restoring an old bicycle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s019",
+   "day": -531,
+   "time": "19:10",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": [
+    {
+     "text": "Bastian Sandoval is based in Galway.",
+     "slot": "person-02.city",
+     "event": "person-02.city#0",
+     "values": [
+      "Galway"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s020",
+   "day": -530,
+   "time": "09:00",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s021",
+   "day": -530,
+   "time": "14:00",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s022",
+   "day": -529,
+   "time": "08:00",
+   "topic": "a language exchange",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s023",
+   "day": -529,
+   "time": "20:05",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s024",
+   "day": -528,
+   "time": "14:40",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s025",
+   "day": -527,
+   "time": "12:10",
+   "topic": "restoring an old bicycle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s026",
+   "day": -527,
+   "time": "21:10",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s027",
+   "day": -524,
+   "time": "12:50",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s028",
+   "day": -524,
+   "time": "17:40",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s029",
+   "day": -524,
+   "time": "20:50",
+   "topic": "planning a camping trip",
+   "long": true,
+   "lines": []
+  },
+  {
+   "id": "s030",
+   "day": -522,
+   "time": "11:20",
+   "topic": "a language exchange",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s031",
+   "day": -522,
+   "time": "19:00",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s032",
+   "day": -521,
+   "time": "21:15",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s033",
+   "day": -520,
+   "time": "11:50",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s034",
+   "day": -520,
+   "time": "15:20",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s035",
+   "day": -516,
+   "time": "17:25",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s036",
+   "day": -514,
+   "time": "13:20",
+   "topic": "a book club novel",
+   "long": true,
+   "lines": []
+  },
+  {
+   "id": "s037",
+   "day": -514,
+   "time": "14:25",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s038",
+   "day": -513,
+   "time": "11:00",
+   "topic": "a jigsaw puzzle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s039",
+   "day": -512,
+   "time": "16:45",
+   "topic": "a photography walk",
+   "long": true,
+   "lines": []
+  },
+  {
+   "id": "s040",
+   "day": -511,
+   "time": "10:10",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s041",
+   "day": -511,
+   "time": "10:55",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s042",
+   "day": -510,
+   "time": "19:20",
+   "topic": "a language exchange",
+   "long": true,
+   "lines": []
+  },
+  {
+   "id": "s043",
+   "day": -509,
+   "time": "09:35",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s044",
+   "day": -509,
+   "time": "13:10",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s045",
+   "day": -508,
+   "time": "19:10",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s046",
+   "day": -508,
+   "time": "19:45",
+   "topic": "a pottery class",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s047",
+   "day": -507,
+   "time": "12:30",
+   "topic": "restoring an old bicycle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s048",
+   "day": -507,
+   "time": "21:30",
+   "topic": "sourdough baking",
+   "long": true,
+   "lines": [
+    {
+     "text": "Soren Takahashi works as Head of Platform.",
+     "slot": "person-04.role",
+     "event": "person-04.role#0",
+     "values": [
+      "Head of Platform"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s049",
+   "day": -506,
+   "time": "17:05",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s050",
+   "day": -505,
+   "time": "10:25",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s051",
+   "day": -505,
+   "time": "17:05",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": [
+    {
+     "text": "For the record, Corbel Systems is headquartered in Turin.",
+     "slot": "company-01.hq",
+     "event": "company-01.hq#0",
+     "values": [
+      "Turin"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s052",
+   "day": -504,
+   "time": "15:05",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s053",
+   "day": -503,
+   "time": "12:45",
+   "topic": "a jigsaw puzzle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s054",
+   "day": -503,
+   "time": "16:50",
+   "topic": "a language exchange",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s055",
+   "day": -503,
+   "time": "17:40",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s056",
+   "day": -502,
+   "time": "18:20",
+   "topic": "restoring an old bicycle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s057",
+   "day": -501,
+   "time": "08:50",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s058",
+   "day": -501,
+   "time": "13:15",
+   "topic": "a language exchange",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s059",
+   "day": -501,
+   "time": "15:10",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s060",
+   "day": -501,
+   "time": "18:05",
+   "topic": "a rescue dog's training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s061",
+   "day": -500,
+   "time": "13:00",
+   "topic": "a podcast episode",
+   "long": false,
+   "lines": [
+    {
+     "text": "For the record, Saoirse Delacroix is based in Kyoto.",
+     "slot": "person-03.city",
+     "event": "person-03.city#0",
+     "values": [
+      "Kyoto"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s062",
+   "day": -498,
+   "time": "09:20",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": [
+    {
+     "text": "Quick note for later: Umar Quintero holds the title Quality Lead.",
+     "slot": "person-01.role",
+     "event": "person-01.role#0",
+     "values": [
+      "Quality Lead"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s063",
+   "day": -498,
+   "time": "11:50",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s064",
+   "day": -498,
+   "time": "18:30",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s065",
+   "day": -497,
+   "time": "08:20",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s066",
+   "day": -496,
+   "time": "11:15",
+   "topic": "restoring an old bicycle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s067",
+   "day": -496,
+   "time": "14:10",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": [
+    {
+     "text": "Writing this down so I remember: Yusuf Dimitrov leads Project Tamarind.",
+     "slot": "project-01.lead",
+     "event": "project-01.lead#0",
+     "values": [
+      "Yusuf Dimitrov"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s068",
+   "day": -495,
+   "time": "08:15",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s069",
+   "day": -495,
+   "time": "11:00",
+   "topic": "learning the cello",
+   "long": true,
+   "lines": []
+  },
+  {
+   "id": "s070",
+   "day": -495,
+   "time": "14:20",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s071",
+   "day": -495,
+   "time": "19:35",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": [
+    {
+     "text": "For the record, Stonechat Robotics has its head office in Gothenburg.",
+     "slot": "company-02.hq",
+     "event": "company-02.hq#0",
+     "values": [
+      "Gothenburg"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s072",
+   "day": -494,
+   "time": "11:30",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s073",
+   "day": -494,
+   "time": "13:15",
+   "topic": "a rescue dog's training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s074",
+   "day": -494,
+   "time": "14:15",
+   "topic": "a photography walk",
+   "long": true,
+   "lines": []
+  },
+  {
+   "id": "s075",
+   "day": -494,
+   "time": "15:30",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": [
+    {
+     "text": "Quick note for later: Project Sandpiper buys from Fernhollow Labs.",
+     "slot": "project-02.vendor",
+     "event": "project-02.vendor#0",
+     "values": [
+      "Fernhollow Labs"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s076",
+   "day": -493,
+   "time": "08:45",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s077",
+   "day": -491,
+   "time": "08:30",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s078",
+   "day": -491,
+   "time": "14:30",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s079",
+   "day": -491,
+   "time": "21:05",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": [
+    {
+     "text": "For the record, Vera Okonjo is the head of operations at Brackenridge Media.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#0",
+     "values": [
+      "Vera Okonjo"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s080",
+   "day": -490,
+   "time": "12:40",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s081",
+   "day": -489,
+   "time": "12:10",
+   "topic": "a podcast episode",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s082",
+   "day": -488,
+   "time": "13:35",
+   "topic": "marathon training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s083",
+   "day": -487,
+   "time": "09:45",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": [
+    {
+     "text": "For the record, Project Granite uses Lindenhall Bank as its vendor.",
+     "slot": "project-04.vendor",
+     "event": "project-04.vendor#0",
+     "values": [
+      "Lindenhall Bank"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s084",
+   "day": -487,
+   "time": "18:50",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s085",
+   "day": -487,
+   "time": "19:00",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s086",
+   "day": -487,
+   "time": "20:45",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s087",
+   "day": -486,
+   "time": "17:50",
+   "topic": "a weekend hiking route",
+   "long": true,
+   "lines": []
+  },
+  {
+   "id": "s088",
+   "day": -485,
+   "time": "10:40",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s089",
+   "day": -484,
+   "time": "18:35",
+   "topic": "a language exchange",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s090",
+   "day": -482,
+   "time": "16:55",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s091",
+   "day": -481,
+   "time": "14:45",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s092",
+   "day": -481,
+   "time": "16:25",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s093",
+   "day": -481,
+   "time": "19:05",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s094",
+   "day": -480,
+   "time": "13:10",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s095",
+   "day": -479,
+   "time": "17:40",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s096",
+   "day": -478,
+   "time": "15:55",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s097",
+   "day": -478,
+   "time": "21:20",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s098",
+   "day": -477,
+   "time": "19:55",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s099",
+   "day": -477,
+   "time": "21:20",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": [
+    {
+     "text": "The Lindenhall Bank support desk fixed the Project Granite outage.",
+     "slot": "project-04.vendor",
+     "event": "project-04.vendor#1",
+     "values": [
+      "Lindenhall Bank"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s100",
+   "day": -476,
+   "time": "10:40",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s101",
+   "day": -476,
+   "time": "21:45",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s102",
+   "day": -475,
+   "time": "16:10",
+   "topic": "a balcony herb garden",
+   "long": true,
+   "lines": [
+    {
+     "text": "Our CFO confirmed in writing that the contract term for the Ridgeway deal is final at 9 months.",
+     "slot": "deal-03.term",
+     "event": "deal-03.term#0",
+     "values": [
+      "9 months"
+     ],
+     "speaker": "user",
+     "position": "middle"
+    }
+   ]
+  },
+  {
+   "id": "s103",
+   "day": -475,
+   "time": "20:35",
+   "topic": "a pottery class",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s104",
+   "day": -474,
+   "time": "08:00",
+   "topic": "marathon training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s105",
+   "day": -474,
+   "time": "10:00",
+   "topic": "a pottery class",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s106",
+   "day": -474,
+   "time": "12:20",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: Vera Okonjo signed off on the Brackenridge Media supplier list.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#1",
+     "values": [
+      "Vera Okonjo"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Quick note for later: Freya Eriksen leads Project Halyard.",
+     "slot": "project-03.lead",
+     "event": "project-03.lead#0",
+     "values": [
+      "Freya Eriksen"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s107",
+   "day": -474,
+   "time": "16:45",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s108",
+   "day": -473,
+   "time": "17:15",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": [
+    {
+     "text": "Writing this down so I remember: Esme Zielinski is based in Malmo.",
+     "slot": "person-05.city",
+     "event": "person-05.city#0",
+     "values": [
+      "Malmo"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s109",
+   "day": -472,
+   "time": "08:50",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s110",
+   "day": -472,
+   "time": "16:30",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s111",
+   "day": -468,
+   "time": "08:15",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s112",
+   "day": -468,
+   "time": "20:40",
+   "topic": "marathon training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s113",
+   "day": -467,
+   "time": "15:50",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s114",
+   "day": -466,
+   "time": "09:10",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s115",
+   "day": -466,
+   "time": "14:50",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s116",
+   "day": -465,
+   "time": "16:25",
+   "topic": "a board game night",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s117",
+   "day": -464,
+   "time": "15:55",
+   "topic": "a chess opening",
+   "long": true,
+   "lines": [
+    {
+     "text": "My agent's notes on the Ridgeway deal record the contract term as 42 months.",
+     "slot": "deal-03.term",
+     "event": "deal-03.term#1",
+     "values": [
+      "42 months"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "The recap email from the Ridgeway kickoff says the seat count is 730 seats.",
+     "slot": "deal-03.seats",
+     "event": "deal-03.seats#0",
+     "values": [
+      "730 seats"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s118",
+   "day": -462,
+   "time": "08:20",
+   "topic": "marathon training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s119",
+   "day": -461,
+   "time": "08:30",
+   "topic": "a rescue dog's training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s120",
+   "day": -461,
+   "time": "09:25",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s121",
+   "day": -461,
+   "time": "13:35",
+   "topic": "a jigsaw puzzle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s122",
+   "day": -461,
+   "time": "17:20",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": [
+    {
+     "text": "For the record, Benedikt Whitlock is employed by Willowmere Hotels.",
+     "slot": "person-06.employer",
+     "event": "person-06.employer#0",
+     "values": [
+      "Willowmere Hotels"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s123",
+   "day": -461,
+   "time": "18:40",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s124",
+   "day": -460,
+   "time": "18:30",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": [
+    {
+     "text": "For the record, Zainab Zoric runs operations at Stonechat Robotics.",
+     "slot": "company-02.ops_lead",
+     "event": "company-02.ops_lead#0",
+     "values": [
+      "Zainab Zoric"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s125",
+   "day": -458,
+   "time": "15:35",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s126",
+   "day": -457,
+   "time": "11:20",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s127",
+   "day": -457,
+   "time": "18:45",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s128",
+   "day": -457,
+   "time": "20:05",
+   "topic": "a pottery class",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s129",
+   "day": -456,
+   "time": "10:45",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s130",
+   "day": -456,
+   "time": "16:00",
+   "topic": "marathon training",
+   "long": false,
+   "lines": [
+    {
+     "text": "For the record, Benedikt Whitlock lives in Prague.",
+     "slot": "person-06.city",
+     "event": "person-06.city#0",
+     "values": [
+      "Prague"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s131",
+   "day": -455,
+   "time": "12:15",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s132",
+   "day": -455,
+   "time": "14:25",
+   "topic": "a jigsaw puzzle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s133",
+   "day": -454,
+   "time": "21:50",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": [
+    {
+     "text": "For the record, Kasimir Rossi runs operations at Corbel Systems.",
+     "slot": "company-01.ops_lead",
+     "event": "company-01.ops_lead#0",
+     "values": [
+      "Kasimir Rossi"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s134",
+   "day": -453,
+   "time": "12:20",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s135",
+   "day": -453,
+   "time": "16:20",
+   "topic": "a rescue dog's training",
+   "long": true,
+   "lines": [
+    {
+     "text": "Side note, Vera Okonjo is still untangling the Brackenridge Media shipping backlog.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#2",
+     "values": [
+      "Vera Okonjo"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s136",
+   "day": -453,
+   "time": "19:50",
+   "topic": "a pottery class",
+   "long": false,
+   "lines": [
+    {
+     "text": "My agent's notes on the Ridgeway deal record the contract term as 33 months.",
+     "slot": "deal-03.term",
+     "event": "deal-03.term#2",
+     "values": [
+      "33 months"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s137",
+   "day": -452,
+   "time": "12:55",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s138",
+   "day": -452,
+   "time": "16:25",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s139",
+   "day": -452,
+   "time": "18:00",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s140",
+   "day": -451,
+   "time": "21:20",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s141",
+   "day": -450,
+   "time": "09:20",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: Esme Zielinski sent photos from a walk around Malmo.",
+     "slot": "person-05.city",
+     "event": "person-05.city#1",
+     "values": [
+      "Malmo"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s142",
+   "day": -450,
+   "time": "13:55",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s143",
+   "day": -450,
+   "time": "18:30",
+   "topic": "a board game night",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s144",
+   "day": -445,
+   "time": "17:40",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s145",
+   "day": -443,
+   "time": "15:55",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s146",
+   "day": -442,
+   "time": "17:15",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s147",
+   "day": -442,
+   "time": "17:40",
+   "topic": "a rescue dog's training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s148",
+   "day": -441,
+   "time": "09:05",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s149",
+   "day": -441,
+   "time": "19:40",
+   "topic": "marathon training",
+   "long": true,
+   "lines": []
+  },
+  {
+   "id": "s150",
+   "day": -441,
+   "time": "21:40",
+   "topic": "a broken dishwasher",
+   "long": true,
+   "lines": []
+  },
+  {
+   "id": "s151",
+   "day": -440,
+   "time": "15:30",
+   "topic": "a podcast episode",
+   "long": true,
+   "lines": [
+    {
+     "text": "Both sides executed the Ridgeway agreement today, and it fixes the seat count at 930 seats.",
+     "slot": "deal-03.seats",
+     "event": "deal-03.seats#1",
+     "values": [
+      "930 seats"
+     ],
+     "speaker": "user",
+     "position": "middle"
+    }
+   ]
+  },
+  {
+   "id": "s152",
+   "day": -438,
+   "time": "10:55",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s153",
+   "day": -438,
+   "time": "16:00",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s154",
+   "day": -437,
+   "time": "17:45",
+   "topic": "restoring an old bicycle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s155",
+   "day": -436,
+   "time": "20:15",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s156",
+   "day": -435,
+   "time": "08:45",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s157",
+   "day": -435,
+   "time": "16:05",
+   "topic": "a jigsaw puzzle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s158",
+   "day": -435,
+   "time": "20:45",
+   "topic": "a board game night",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s159",
+   "day": -435,
+   "time": "21:20",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s160",
+   "day": -433,
+   "time": "15:30",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: Benedikt Whitlock sent photos from a walk around Prague.",
+     "slot": "person-06.city",
+     "event": "person-06.city#1",
+     "values": [
+      "Prague"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s161",
+   "day": -432,
+   "time": "10:10",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: Project Granite had a review call with Lindenhall Bank.",
+     "slot": "project-04.vendor",
+     "event": "project-04.vendor#2",
+     "values": [
+      "Lindenhall Bank"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s162",
+   "day": -432,
+   "time": "13:00",
+   "topic": "marathon training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s163",
+   "day": -431,
+   "time": "12:45",
+   "topic": "a language exchange",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s164",
+   "day": -430,
+   "time": "16:40",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s165",
+   "day": -428,
+   "time": "14:00",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": [
+    {
+     "text": "A redlined draft of the Alder amendment proposes 17% as the discount.",
+     "slot": "deal-01.discount",
+     "event": "deal-01.discount#0",
+     "values": [
+      "17%"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s166",
+   "day": -428,
+   "time": "14:25",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s167",
+   "day": -427,
+   "time": "15:25",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": [
+    {
+     "text": "My agent's notes on the Ridgeway deal record the seat count as 220 seats.",
+     "slot": "deal-03.seats",
+     "event": "deal-03.seats#2",
+     "values": [
+      "220 seats"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Side note, Benedikt Whitlock sent photos from a walk around Prague.",
+     "slot": "person-06.city",
+     "event": "person-06.city#2",
+     "values": [
+      "Prague"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s168",
+   "day": -425,
+   "time": "08:30",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s169",
+   "day": -425,
+   "time": "09:50",
+   "topic": "a podcast episode",
+   "long": false,
+   "lines": [
+    {
+     "text": "The meeting summary for the Ridgeway deal lists the contract term as 66 months.",
+     "slot": "deal-03.term",
+     "event": "deal-03.term#3",
+     "values": [
+      "66 months"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s170",
+   "day": -425,
+   "time": "10:25",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": [
+    {
+     "text": "Correction: I had that wrong earlier. It was never Kyoto; Saoirse Delacroix is based in Bilbao.",
+     "slot": "person-03.city",
+     "event": "person-03.city#1",
+     "values": [
+      "Kyoto",
+      "Bilbao"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s171",
+   "day": -425,
+   "time": "17:35",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s172",
+   "day": -422,
+   "time": "14:30",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s173",
+   "day": -421,
+   "time": "08:55",
+   "topic": "a language exchange",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: Esme Zielinski is busy redecorating the flat in Malmo.",
+     "slot": "person-05.city",
+     "event": "person-05.city#2",
+     "values": [
+      "Malmo"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s174",
+   "day": -421,
+   "time": "18:25",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s175",
+   "day": -421,
+   "time": "19:35",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": [
+    {
+     "text": "Writing this down so I remember: Bastian Sandvik is based in Montreal.",
+     "slot": "person-02-twin.city",
+     "event": "person-02-twin.city#0",
+     "values": [
+      "Montreal"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s176",
+   "day": -420,
+   "time": "16:15",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s177",
+   "day": -418,
+   "time": "09:10",
+   "topic": "marathon training",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: Benedikt Whitlock is buried in quarter planning at Willowmere Hotels.",
+     "slot": "person-06.employer",
+     "event": "person-06.employer#1",
+     "values": [
+      "Willowmere Hotels"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Kasimir Rossi chaired the Corbel Systems operations standup.",
+     "slot": "company-01.ops_lead",
+     "event": "company-01.ops_lead#1",
+     "values": [
+      "Kasimir Rossi"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s178",
+   "day": -418,
+   "time": "12:45",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s179",
+   "day": -418,
+   "time": "16:15",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s180",
+   "day": -418,
+   "time": "20:15",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s181",
+   "day": -416,
+   "time": "12:00",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s182",
+   "day": -416,
+   "time": "18:40",
+   "topic": "restoring an old bicycle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s183",
+   "day": -416,
+   "time": "20:25",
+   "topic": "restoring an old bicycle",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, Esme Zielinski is hosting the book club at home in Malmo this month.",
+     "slot": "person-05.city",
+     "event": "person-05.city#3",
+     "values": [
+      "Malmo"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s184",
+   "day": -415,
+   "time": "10:40",
+   "topic": "a language exchange",
+   "long": true,
+   "lines": [
+    {
+     "text": "Funny timing: Esme Zielinski recommended a bakery near home in Malmo.",
+     "slot": "person-05.city",
+     "event": "person-05.city#4",
+     "values": [
+      "Malmo"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "The renewal price on the Alder deal is $190,000 a year.",
+     "slot": "deal-01.price",
+     "event": "deal-01.price#0",
+     "values": [
+      "$190,000"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s185",
+   "day": -415,
+   "time": "14:30",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s186",
+   "day": -414,
+   "time": "19:50",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, I had coffee with Esme Zielinski in Malmo again.",
+     "slot": "person-05.city",
+     "event": "person-05.city#5",
+     "values": [
+      "Malmo"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s187",
+   "day": -413,
+   "time": "10:55",
+   "topic": "a board game night",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s188",
+   "day": -412,
+   "time": "12:05",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s189",
+   "day": -412,
+   "time": "13:45",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s190",
+   "day": -412,
+   "time": "16:15",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s191",
+   "day": -412,
+   "time": "18:40",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": [
+    {
+     "text": "The meeting summary for the Ridgeway deal lists the contract term as 45 months.",
+     "slot": "deal-03.term",
+     "event": "deal-03.term#4",
+     "values": [
+      "45 months"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Both sides executed the Alderley agreement today, and it fixes the discount at 26%.",
+     "slot": "deal-01-twin.discount",
+     "event": "deal-01-twin.discount#0",
+     "values": [
+      "26%"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s192",
+   "day": -409,
+   "time": "11:30",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s193",
+   "day": -408,
+   "time": "10:35",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, Kasimir Rossi rearranged the warehouse shifts at Corbel Systems.",
+     "slot": "company-01.ops_lead",
+     "event": "company-01.ops_lead#2",
+     "values": [
+      "Kasimir Rossi"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Project Mistlethrush is running a pilot with Vellumworks Print.",
+     "slot": "project-05-twin.pilot",
+     "event": "project-05-twin.pilot#0",
+     "values": [
+      "Vellumworks Print"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s194",
+   "day": -408,
+   "time": "17:05",
+   "topic": "a podcast episode",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s195",
+   "day": -408,
+   "time": "18:25",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: Vera Okonjo signed off on the Brackenridge Media supplier list.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#3",
+     "values": [
+      "Vera Okonjo"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s196",
+   "day": -407,
+   "time": "09:45",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s197",
+   "day": -407,
+   "time": "19:00",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s198",
+   "day": -405,
+   "time": "10:25",
+   "topic": "marathon training",
+   "long": true,
+   "lines": [
+    {
+     "text": "The recap email from the Wexley kickoff says the seat count is 200 seats.",
+     "slot": "deal-04.seats",
+     "event": "deal-04.seats#0",
+     "values": [
+      "200 seats"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s199",
+   "day": -405,
+   "time": "17:25",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s200",
+   "day": -405,
+   "time": "21:25",
+   "topic": "a board game night",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s201",
+   "day": -404,
+   "time": "13:05",
+   "topic": "a jigsaw puzzle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s202",
+   "day": -403,
+   "time": "14:55",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s203",
+   "day": -402,
+   "time": "11:55",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": [
+    {
+     "text": "Keep this quiet for now, but Lowmoor Retail agreed to merge with Brightline Analytics.",
+     "slot": "company-04.merger",
+     "event": "company-04.merger#0",
+     "values": [
+      "Brightline Analytics"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s204",
+   "day": -401,
+   "time": "08:40",
+   "topic": "learning the cello",
+   "long": true,
+   "lines": [
+    {
+     "text": "The countersigned Wexley contract sets the seat count at 790 seats.",
+     "slot": "deal-04.seats",
+     "event": "deal-04.seats#1",
+     "values": [
+      "790 seats"
+     ],
+     "speaker": "user",
+     "position": "middle"
+    }
+   ]
+  },
+  {
+   "id": "s205",
+   "day": -401,
+   "time": "09:15",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: Benedikt Whitlock recommended a bakery near home in Prague.",
+     "slot": "person-06.city",
+     "event": "person-06.city#3",
+     "values": [
+      "Prague"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s206",
+   "day": -401,
+   "time": "15:40",
+   "topic": "sourdough baking",
+   "long": true,
+   "lines": [
+    {
+     "text": "Esme Zielinski complained about the weather in Malmo.",
+     "slot": "person-05.city",
+     "event": "person-05.city#6",
+     "values": [
+      "Malmo"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s207",
+   "day": -400,
+   "time": "11:10",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s208",
+   "day": -398,
+   "time": "19:25",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s209",
+   "day": -397,
+   "time": "11:50",
+   "topic": "a birthday party for a niece",
+   "long": true,
+   "lines": [
+    {
+     "text": "The countersigned Alder contract sets the discount at 16%.",
+     "slot": "deal-01.discount",
+     "event": "deal-01.discount#1",
+     "values": [
+      "16%"
+     ],
+     "speaker": "user",
+     "position": "middle"
+    }
+   ]
+  },
+  {
+   "id": "s210",
+   "day": -395,
+   "time": "16:40",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": [
+    {
+     "text": "Keep this quiet for now, but Fenwick Labs is merging with Oakhaven Health.",
+     "slot": "company-05.merger",
+     "event": "company-05.merger#0",
+     "values": [
+      "Oakhaven Health"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s211",
+   "day": -395,
+   "time": "19:50",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s212",
+   "day": -393,
+   "time": "09:30",
+   "topic": "marathon training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s213",
+   "day": -393,
+   "time": "11:15",
+   "topic": "a jigsaw puzzle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s214",
+   "day": -392,
+   "time": "21:00",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s215",
+   "day": -391,
+   "time": "16:20",
+   "topic": "a language exchange",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s216",
+   "day": -390,
+   "time": "08:25",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s217",
+   "day": -390,
+   "time": "14:40",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s218",
+   "day": -389,
+   "time": "20:40",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": [
+    {
+     "text": "Both sides executed the Ridgeline agreement today, and it fixes the contract term at 21 months.",
+     "slot": "deal-03-twin.term",
+     "event": "deal-03-twin.term#0",
+     "values": [
+      "21 months"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s219",
+   "day": -388,
+   "time": "16:10",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, Kasimir Rossi ran the Corbel Systems operations review again.",
+     "slot": "company-01.ops_lead",
+     "event": "company-01.ops_lead#3",
+     "values": [
+      "Kasimir Rossi"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s220",
+   "day": -387,
+   "time": "09:50",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: Benedikt Whitlock sent photos from a walk around Prague.",
+     "slot": "person-06.city",
+     "event": "person-06.city#4",
+     "values": [
+      "Prague"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s221",
+   "day": -384,
+   "time": "12:35",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s222",
+   "day": -384,
+   "time": "15:50",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s223",
+   "day": -384,
+   "time": "16:35",
+   "topic": "a board game night",
+   "long": false,
+   "lines": [
+    {
+     "text": "Big news: the Fenwick Labs team offsite will be in Vienna.",
+     "slot": "company-05.offsite",
+     "event": "company-05.offsite#0",
+     "values": [
+      "Vienna"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Correction: I had that wrong earlier. It was never $190,000; the renewal price on the Alder deal is $244,000 a year.",
+     "slot": "deal-01.price",
+     "event": "deal-01.price#1",
+     "values": [
+      "$190,000",
+      "$244,000"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s224",
+   "day": -384,
+   "time": "20:05",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s225",
+   "day": -383,
+   "time": "11:00",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, I had coffee with Esme Zielinski in Malmo again.",
+     "slot": "person-05.city",
+     "event": "person-05.city#7",
+     "values": [
+      "Malmo"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s226",
+   "day": -383,
+   "time": "15:55",
+   "topic": "restoring an old bicycle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s227",
+   "day": -383,
+   "time": "17:10",
+   "topic": "a rescue dog's training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s228",
+   "day": -383,
+   "time": "17:35",
+   "topic": "a language exchange",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s229",
+   "day": -381,
+   "time": "16:20",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s230",
+   "day": -380,
+   "time": "09:55",
+   "topic": "a board game night",
+   "long": false,
+   "lines": [
+    {
+     "text": "The Lowmoor Retail team offsite will be in Porto.",
+     "slot": "company-04.offsite",
+     "event": "company-04.offsite#0",
+     "values": [
+      "Porto"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s231",
+   "day": -380,
+   "time": "16:00",
+   "topic": "restoring an old bicycle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s232",
+   "day": -380,
+   "time": "20:00",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": [
+    {
+     "text": "Vera Okonjo chaired the Brackenridge Media operations standup.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#4",
+     "values": [
+      "Vera Okonjo"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Benedikt Whitlock said the coffee at Willowmere Hotels is still terrible.",
+     "slot": "person-06.employer",
+     "event": "person-06.employer#2",
+     "values": [
+      "Willowmere Hotels"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s233",
+   "day": -379,
+   "time": "14:50",
+   "topic": "a jigsaw puzzle",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: Benedikt Whitlock is busy redecorating the flat in Prague.",
+     "slot": "person-06.city",
+     "event": "person-06.city#5",
+     "values": [
+      "Prague"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s234",
+   "day": -379,
+   "time": "18:00",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s235",
+   "day": -377,
+   "time": "17:35",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": [
+    {
+     "text": "The meeting summary for the Alder deal lists the discount as 20%.",
+     "slot": "deal-01.discount",
+     "event": "deal-01.discount#2",
+     "values": [
+      "20%"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s236",
+   "day": -375,
+   "time": "08:30",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s237",
+   "day": -375,
+   "time": "09:50",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s238",
+   "day": -375,
+   "time": "18:30",
+   "topic": "restoring an old bicycle",
+   "long": false,
+   "lines": [
+    {
+     "text": "Lowmoor Rentals is holding its team offsite in Accra.",
+     "slot": "company-04-twin.offsite",
+     "event": "company-04-twin.offsite#0",
+     "values": [
+      "Accra"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s239",
+   "day": -375,
+   "time": "21:30",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, Esme Zielinski recommended a bakery near home in Malmo.",
+     "slot": "person-05.city",
+     "event": "person-05.city#8",
+     "values": [
+      "Malmo"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s240",
+   "day": -374,
+   "time": "19:35",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": [
+    {
+     "text": "A redlined draft of the Ridgeway amendment proposes 720 seats as the seat count.",
+     "slot": "deal-03.seats",
+     "event": "deal-03.seats#3",
+     "values": [
+      "720 seats"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s241",
+   "day": -372,
+   "time": "19:05",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: Benedikt Whitlock recommended a bakery near home in Prague.",
+     "slot": "person-06.city",
+     "event": "person-06.city#6",
+     "values": [
+      "Prague"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s242",
+   "day": -371,
+   "time": "12:20",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s243",
+   "day": -371,
+   "time": "20:45",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s244",
+   "day": -368,
+   "time": "08:55",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s245",
+   "day": -367,
+   "time": "09:10",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s246",
+   "day": -367,
+   "time": "12:05",
+   "topic": "a pottery class",
+   "long": false,
+   "lines": [
+    {
+     "text": "Vera Okonjo rearranged the warehouse shifts at Brackenridge Media.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#5",
+     "values": [
+      "Vera Okonjo"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s247",
+   "day": -367,
+   "time": "17:25",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s248",
+   "day": -366,
+   "time": "11:50",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s249",
+   "day": -365,
+   "time": "15:35",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s250",
+   "day": -365,
+   "time": "18:55",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s251",
+   "day": -364,
+   "time": "16:50",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, Benedikt Whitlock said the coffee at Willowmere Hotels is still terrible.",
+     "slot": "person-06.employer",
+     "event": "person-06.employer#3",
+     "values": [
+      "Willowmere Hotels"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "The draft amendment for the Wexley deal floats 470 seats for the seat count.",
+     "slot": "deal-04.seats",
+     "event": "deal-04.seats#2",
+     "values": [
+      "470 seats"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s252",
+   "day": -363,
+   "time": "08:00",
+   "topic": "a birthday party for a niece",
+   "long": true,
+   "lines": [
+    {
+     "text": "Big news: Lowmoor Retail agreed to merge with Brightline Analytics.",
+     "slot": "company-04.merger",
+     "event": "company-04.merger#1",
+     "values": [
+      "Brightline Analytics"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s253",
+   "day": -363,
+   "time": "09:00",
+   "topic": "a board game night",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s254",
+   "day": -363,
+   "time": "10:55",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s255",
+   "day": -362,
+   "time": "15:45",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": [
+    {
+     "text": "The draft amendment for the Ridgeway deal floats 310 seats for the seat count.",
+     "slot": "deal-03.seats",
+     "event": "deal-03.seats#4",
+     "values": [
+      "310 seats"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s256",
+   "day": -361,
+   "time": "15:15",
+   "topic": "a pottery class",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: Benedikt Whitlock got a new badge photo at Willowmere Hotels.",
+     "slot": "person-06.employer",
+     "event": "person-06.employer#4",
+     "values": [
+      "Willowmere Hotels"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s257",
+   "day": -360,
+   "time": "20:45",
+   "topic": "a weekend hiking route",
+   "long": true,
+   "lines": []
+  },
+  {
+   "id": "s258",
+   "day": -357,
+   "time": "20:05",
+   "topic": "a jigsaw puzzle",
+   "long": false,
+   "lines": [
+    {
+     "text": "Keep this quiet for now, but Fenwick Labs is holding its team offsite in Vienna.",
+     "slot": "company-05.offsite",
+     "event": "company-05.offsite#1",
+     "values": [
+      "Vienna"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s259",
+   "day": -356,
+   "time": "21:10",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s260",
+   "day": -355,
+   "time": "11:25",
+   "topic": "a podcast episode",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s261",
+   "day": -355,
+   "time": "17:45",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s262",
+   "day": -354,
+   "time": "09:00",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s263",
+   "day": -354,
+   "time": "20:45",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": [
+    {
+     "text": "Heard today that Hiro Tran became the lead on Project Tamarind.",
+     "slot": "project-01.lead",
+     "event": "project-01.lead#1",
+     "values": [
+      "Hiro Tran"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s264",
+   "day": -353,
+   "time": "15:40",
+   "topic": "a language exchange",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s265",
+   "day": -353,
+   "time": "17:35",
+   "topic": "a rescue dog's training",
+   "long": false,
+   "lines": [
+    {
+     "text": "Lowmoor Retail is holding its team offsite in Porto.",
+     "slot": "company-04.offsite",
+     "event": "company-04.offsite#1",
+     "values": [
+      "Porto"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "News from this week: Bastian Sandoval relocated to Oslo.",
+     "slot": "person-02.city",
+     "event": "person-02.city#1",
+     "values": [
+      "Oslo"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s266",
+   "day": -353,
+   "time": "19:10",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s267",
+   "day": -352,
+   "time": "10:30",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s268",
+   "day": -352,
+   "time": "11:15",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s269",
+   "day": -349,
+   "time": "08:15",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s270",
+   "day": -349,
+   "time": "18:15",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: I had coffee with Benedikt Whitlock in Prague again.",
+     "slot": "person-06.city",
+     "event": "person-06.city#7",
+     "values": [
+      "Prague"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s271",
+   "day": -348,
+   "time": "08:25",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": [
+    {
+     "text": "Update: Umar Quintero started a new job at Tarnwood Logistics.",
+     "slot": "person-01.employer",
+     "event": "person-01.employer#1",
+     "values": [
+      "Tarnwood Logistics"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s272",
+   "day": -348,
+   "time": "17:10",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s273",
+   "day": -346,
+   "time": "11:55",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s274",
+   "day": -345,
+   "time": "18:30",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s275",
+   "day": -343,
+   "time": "19:25",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s276",
+   "day": -342,
+   "time": "16:10",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s277",
+   "day": -342,
+   "time": "16:55",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s278",
+   "day": -342,
+   "time": "17:50",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s279",
+   "day": -342,
+   "time": "18:15",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s280",
+   "day": -342,
+   "time": "21:30",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s281",
+   "day": -341,
+   "time": "11:30",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s282",
+   "day": -341,
+   "time": "13:05",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s283",
+   "day": -341,
+   "time": "19:10",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s284",
+   "day": -340,
+   "time": "08:15",
+   "topic": "a pottery class",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s285",
+   "day": -340,
+   "time": "21:40",
+   "topic": "a rescue dog's training",
+   "long": false,
+   "lines": [
+    {
+     "text": "The assistant's call notes for the Alder deal say the discount is 29%.",
+     "slot": "deal-01.discount",
+     "event": "deal-01.discount#3",
+     "values": [
+      "29%"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s286",
+   "day": -338,
+   "time": "10:40",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": [
+    {
+     "text": "I need to fix something I told you: not Freya Eriksen. In fact Hamid Coelho is the lead on Project Halyard.",
+     "slot": "project-03.lead",
+     "event": "project-03.lead#1",
+     "values": [
+      "Freya Eriksen",
+      "Hamid Coelho"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s287",
+   "day": -338,
+   "time": "17:40",
+   "topic": "a jigsaw puzzle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s288",
+   "day": -336,
+   "time": "19:50",
+   "topic": "a backyard bird feeder",
+   "long": true,
+   "lines": []
+  },
+  {
+   "id": "s289",
+   "day": -335,
+   "time": "19:40",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": [
+    {
+     "text": "Keep this quiet for now, but the Fenwick Labs team offsite will be in Vienna.",
+     "slot": "company-05.offsite",
+     "event": "company-05.offsite#2",
+     "values": [
+      "Vienna"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Keep this quiet for now, but Lowmoor Retail is holding its team offsite in Porto.",
+     "slot": "company-04.offsite",
+     "event": "company-04.offsite#2",
+     "values": [
+      "Porto"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s290",
+   "day": -334,
+   "time": "11:20",
+   "topic": "a pottery class",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s291",
+   "day": -334,
+   "time": "11:25",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": [
+    {
+     "text": "News from this week: Corbel Systems relocated its head office to Bordeaux.",
+     "slot": "company-01.hq",
+     "event": "company-01.hq#1",
+     "values": [
+      "Bordeaux"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s292",
+   "day": -334,
+   "time": "16:45",
+   "topic": "a chess opening",
+   "long": true,
+   "lines": []
+  },
+  {
+   "id": "s293",
+   "day": -334,
+   "time": "20:25",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s294",
+   "day": -332,
+   "time": "09:10",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s295",
+   "day": -332,
+   "time": "13:20",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s296",
+   "day": -331,
+   "time": "17:20",
+   "topic": "a rescue dog's training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s297",
+   "day": -329,
+   "time": "16:40",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s298",
+   "day": -329,
+   "time": "17:10",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s299",
+   "day": -328,
+   "time": "09:00",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s300",
+   "day": -328,
+   "time": "19:20",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": [
+    {
+     "text": "Writing this down so I remember: Umar Quintana is employed by Kinglet Telecom.",
+     "slot": "person-01-twin.employer",
+     "event": "person-01-twin.employer#0",
+     "values": [
+      "Kinglet Telecom"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s301",
+   "day": -326,
+   "time": "10:15",
+   "topic": "a slow cooker stew",
+   "long": true,
+   "lines": []
+  },
+  {
+   "id": "s302",
+   "day": -326,
+   "time": "15:20",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s303",
+   "day": -326,
+   "time": "16:40",
+   "topic": "a birthday party for a niece",
+   "long": true,
+   "lines": []
+  },
+  {
+   "id": "s304",
+   "day": -325,
+   "time": "10:50",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s305",
+   "day": -325,
+   "time": "21:45",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s306",
+   "day": -324,
+   "time": "18:00",
+   "topic": "restoring an old bicycle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s307",
+   "day": -322,
+   "time": "15:00",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s308",
+   "day": -322,
+   "time": "20:30",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s309",
+   "day": -321,
+   "time": "09:55",
+   "topic": "a rescue dog's training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s310",
+   "day": -321,
+   "time": "14:35",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s311",
+   "day": -320,
+   "time": "16:15",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s312",
+   "day": -319,
+   "time": "15:40",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": [
+    {
+     "text": "The draft amendment for the Alder deal floats 14% for the discount.",
+     "slot": "deal-01.discount",
+     "event": "deal-01.discount#4",
+     "values": [
+      "14%"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s313",
+   "day": -319,
+   "time": "20:05",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s314",
+   "day": -318,
+   "time": "09:55",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s315",
+   "day": -316,
+   "time": "18:35",
+   "topic": "a board game night",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s316",
+   "day": -316,
+   "time": "21:15",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s317",
+   "day": -314,
+   "time": "14:05",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s318",
+   "day": -313,
+   "time": "12:45",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s319",
+   "day": -312,
+   "time": "13:10",
+   "topic": "a podcast episode",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s320",
+   "day": -310,
+   "time": "21:40",
+   "topic": "a rescue dog's training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s321",
+   "day": -309,
+   "time": "18:10",
+   "topic": "a pottery class",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s322",
+   "day": -309,
+   "time": "18:45",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s323",
+   "day": -305,
+   "time": "13:05",
+   "topic": "a podcast episode",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: Kasimir Rossi chaired the Corbel Systems operations standup.",
+     "slot": "company-01.ops_lead",
+     "event": "company-01.ops_lead#4",
+     "values": [
+      "Kasimir Rossi"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s324",
+   "day": -304,
+   "time": "18:25",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s325",
+   "day": -302,
+   "time": "12:10",
+   "topic": "restoring an old bicycle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s326",
+   "day": -302,
+   "time": "19:45",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s327",
+   "day": -301,
+   "time": "08:45",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s328",
+   "day": -301,
+   "time": "12:10",
+   "topic": "a language exchange",
+   "long": false,
+   "lines": [
+    {
+     "text": "Heard today that Project Sandpiper moved its contract over to Foxglove Cosmetics.",
+     "slot": "project-02.vendor",
+     "event": "project-02.vendor#1",
+     "values": [
+      "Foxglove Cosmetics"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s329",
+   "day": -301,
+   "time": "17:05",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s330",
+   "day": -301,
+   "time": "17:45",
+   "topic": "a rescue dog's training",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: Esme Zielinski recommended a bakery near home in Malmo.",
+     "slot": "person-05.city",
+     "event": "person-05.city#9",
+     "values": [
+      "Malmo"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Benedikt Whitlock got a new badge photo at Willowmere Hotels.",
+     "slot": "person-06.employer",
+     "event": "person-06.employer#5",
+     "values": [
+      "Willowmere Hotels"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s331",
+   "day": -301,
+   "time": "21:10",
+   "topic": "marathon training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s332",
+   "day": -300,
+   "time": "17:20",
+   "topic": "a board game night",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s333",
+   "day": -300,
+   "time": "18:15",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: Benedikt Whitlock complained about the weather in Prague.",
+     "slot": "person-06.city",
+     "event": "person-06.city#8",
+     "values": [
+      "Prague"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s334",
+   "day": -297,
+   "time": "19:55",
+   "topic": "marathon training",
+   "long": true,
+   "lines": []
+  },
+  {
+   "id": "s335",
+   "day": -296,
+   "time": "11:35",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s336",
+   "day": -296,
+   "time": "13:25",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s337",
+   "day": -295,
+   "time": "08:05",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s338",
+   "day": -294,
+   "time": "19:20",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s339",
+   "day": -293,
+   "time": "17:30",
+   "topic": "restoring an old bicycle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s340",
+   "day": -293,
+   "time": "20:05",
+   "topic": "a board game night",
+   "long": false,
+   "lines": [
+    {
+     "text": "Update: Umar Quintero took on the Chief of Staff role.",
+     "slot": "person-01.role",
+     "event": "person-01.role#1",
+     "values": [
+      "Chief of Staff"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s341",
+   "day": -290,
+   "time": "12:00",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": [
+    {
+     "text": "Benedikt Whitlock recommended a bakery near home in Prague.",
+     "slot": "person-06.city",
+     "event": "person-06.city#9",
+     "values": [
+      "Prague"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s342",
+   "day": -289,
+   "time": "14:45",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s343",
+   "day": -287,
+   "time": "08:55",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s344",
+   "day": -287,
+   "time": "09:35",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": [
+    {
+     "text": "News from this week: Soren Takahashi took on the VP of Sales role.",
+     "slot": "person-04.role",
+     "event": "person-04.role#1",
+     "values": [
+      "VP of Sales"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s345",
+   "day": -287,
+   "time": "12:35",
+   "topic": "a board game night",
+   "long": true,
+   "lines": [
+    {
+     "text": "The account owner signed off in writing on 350 seats as the binding seat count for the Harbor deal.",
+     "slot": "deal-02.seats",
+     "event": "deal-02.seats#0",
+     "values": [
+      "350 seats"
+     ],
+     "speaker": "user",
+     "position": "middle"
+    }
+   ]
+  },
+  {
+   "id": "s346",
+   "day": -287,
+   "time": "19:35",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s347",
+   "day": -286,
+   "time": "21:30",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": [
+    {
+     "text": "Big news: Project Mistletoe is running a pilot with Cinderford Steel.",
+     "slot": "project-05.pilot",
+     "event": "project-05.pilot#0",
+     "values": [
+      "Cinderford Steel"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s348",
+   "day": -284,
+   "time": "14:35",
+   "topic": "a podcast episode",
+   "long": false,
+   "lines": [
+    {
+     "text": "Heard today that Stonechat Robotics relocated its head office to Lisbon.",
+     "slot": "company-02.hq",
+     "event": "company-02.hq#1",
+     "values": [
+      "Lisbon"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s349",
+   "day": -283,
+   "time": "12:50",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s350",
+   "day": -283,
+   "time": "18:35",
+   "topic": "a board game night",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s351",
+   "day": -282,
+   "time": "18:15",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": [
+    {
+     "text": "A redlined draft of the Harbor amendment proposes 810 seats as the seat count.",
+     "slot": "deal-02.seats",
+     "event": "deal-02.seats#1",
+     "values": [
+      "810 seats"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s352",
+   "day": -282,
+   "time": "18:50",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": [
+    {
+     "text": "The meeting summary for the Harbor deal lists the seat count as 410 seats.",
+     "slot": "deal-02.seats",
+     "event": "deal-02.seats#2",
+     "values": [
+      "410 seats"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s353",
+   "day": -282,
+   "time": "19:15",
+   "topic": "marathon training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s354",
+   "day": -282,
+   "time": "21:45",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s355",
+   "day": -281,
+   "time": "11:45",
+   "topic": "a rescue dog's training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s356",
+   "day": -281,
+   "time": "15:40",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s357",
+   "day": -280,
+   "time": "21:20",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s358",
+   "day": -280,
+   "time": "21:40",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s359",
+   "day": -279,
+   "time": "10:15",
+   "topic": "a board game night",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s360",
+   "day": -278,
+   "time": "18:05",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s361",
+   "day": -276,
+   "time": "11:45",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s362",
+   "day": -273,
+   "time": "15:00",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s363",
+   "day": -271,
+   "time": "13:30",
+   "topic": "a podcast episode",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s364",
+   "day": -271,
+   "time": "21:50",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s365",
+   "day": -270,
+   "time": "10:50",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s366",
+   "day": -270,
+   "time": "11:25",
+   "topic": "restoring an old bicycle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s367",
+   "day": -270,
+   "time": "16:55",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s368",
+   "day": -270,
+   "time": "17:30",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: Benedikt Whitlock is busy redecorating the flat in Prague.",
+     "slot": "person-06.city",
+     "event": "person-06.city#10",
+     "values": [
+      "Prague"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Funny timing: Benedikt Whitlock is leading a hiring push at Willowmere Hotels.",
+     "slot": "person-06.employer",
+     "event": "person-06.employer#6",
+     "values": [
+      "Willowmere Hotels"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s369",
+   "day": -269,
+   "time": "14:00",
+   "topic": "a home office rebuild",
+   "long": true,
+   "lines": []
+  },
+  {
+   "id": "s370",
+   "day": -269,
+   "time": "17:40",
+   "topic": "restoring an old bicycle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s371",
+   "day": -269,
+   "time": "19:35",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s372",
+   "day": -269,
+   "time": "20:50",
+   "topic": "meal prep for the week",
+   "long": true,
+   "lines": []
+  },
+  {
+   "id": "s373",
+   "day": -267,
+   "time": "09:20",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s374",
+   "day": -265,
+   "time": "10:30",
+   "topic": "a rescue dog's training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s375",
+   "day": -263,
+   "time": "09:50",
+   "topic": "a language exchange",
+   "long": false,
+   "lines": [
+    {
+     "text": "Benedikt Whitlock is hosting the book club at home in Prague this month.",
+     "slot": "person-06.city",
+     "event": "person-06.city#11",
+     "values": [
+      "Prague"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s376",
+   "day": -262,
+   "time": "12:40",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s377",
+   "day": -261,
+   "time": "15:20",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s378",
+   "day": -260,
+   "time": "18:05",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": [
+    {
+     "text": "I had coffee with Esme Zielinski in Malmo again.",
+     "slot": "person-05.city",
+     "event": "person-05.city#10",
+     "values": [
+      "Malmo"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s379",
+   "day": -259,
+   "time": "11:05",
+   "topic": "a language exchange",
+   "long": true,
+   "lines": []
+  },
+  {
+   "id": "s380",
+   "day": -259,
+   "time": "14:35",
+   "topic": "restoring an old bicycle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s381",
+   "day": -256,
+   "time": "16:30",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s382",
+   "day": -256,
+   "time": "20:15",
+   "topic": "a rescue dog's training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s383",
+   "day": -256,
+   "time": "20:45",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s384",
+   "day": -256,
+   "time": "21:50",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s385",
+   "day": -255,
+   "time": "08:50",
+   "topic": "a podcast episode",
+   "long": false,
+   "lines": [
+    {
+     "text": "Keep this quiet for now, but Project Mistletoe is running a pilot with Cinderford Steel.",
+     "slot": "project-05.pilot",
+     "event": "project-05.pilot#1",
+     "values": [
+      "Cinderford Steel"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s386",
+   "day": -254,
+   "time": "10:25",
+   "topic": "a board game night",
+   "long": true,
+   "lines": []
+  },
+  {
+   "id": "s387",
+   "day": -254,
+   "time": "14:55",
+   "topic": "a board game night",
+   "long": false,
+   "lines": [
+    {
+     "text": "Benedikt Whitlock recommended a bakery near home in Prague.",
+     "slot": "person-06.city",
+     "event": "person-06.city#12",
+     "values": [
+      "Prague"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Benedikt Whitlock brought a Willowmere Hotels tote bag to the picnic.",
+     "slot": "person-06.employer",
+     "event": "person-06.employer#7",
+     "values": [
+      "Willowmere Hotels"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s388",
+   "day": -253,
+   "time": "15:05",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s389",
+   "day": -252,
+   "time": "09:20",
+   "topic": "a jigsaw puzzle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s390",
+   "day": -251,
+   "time": "21:45",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": [
+    {
+     "text": "Lindenhall Bank sent another invoice for Project Granite.",
+     "slot": "project-04.vendor",
+     "event": "project-04.vendor#3",
+     "values": [
+      "Lindenhall Bank"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Correction: I had that wrong earlier. It was never VP of Sales; Soren Takahashi works as Lead Recruiter.",
+     "slot": "person-04.role",
+     "event": "person-04.role#2",
+     "values": [
+      "VP of Sales",
+      "Lead Recruiter"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s391",
+   "day": -250,
+   "time": "11:55",
+   "topic": "a language exchange",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s392",
+   "day": -249,
+   "time": "18:35",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": [
+    {
+     "text": "I only just heard that Umar Quintero started a new job at Kettlebrook Brewing back on [[D:-282]].",
+     "slot": "person-01.employer",
+     "event": "person-01.employer#2",
+     "values": [
+      "Kettlebrook Brewing"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s393",
+   "day": -248,
+   "time": "11:40",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s394",
+   "day": -248,
+   "time": "13:05",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, Vera Okonjo ran the Brackenridge Media operations review again.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#6",
+     "values": [
+      "Vera Okonjo"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s395",
+   "day": -248,
+   "time": "14:45",
+   "topic": "a jigsaw puzzle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s396",
+   "day": -246,
+   "time": "10:50",
+   "topic": "a podcast episode",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s397",
+   "day": -246,
+   "time": "19:00",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": [
+    {
+     "text": "My agent's notes on the Harbor deal record the seat count as 230 seats.",
+     "slot": "deal-02.seats",
+     "event": "deal-02.seats#3",
+     "values": [
+      "230 seats"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s398",
+   "day": -245,
+   "time": "10:35",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s399",
+   "day": -245,
+   "time": "12:55",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s400",
+   "day": -245,
+   "time": "14:15",
+   "topic": "a board game night",
+   "long": true,
+   "lines": [
+    {
+     "text": "Forget what I said earlier about how the Lowmoor Retail team offsite will be in Porto; that was only a rumour and it is not happening.",
+     "slot": "company-04.offsite",
+     "event": "company-04.offsite#3",
+     "values": [
+      "Porto"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s401",
+   "day": -244,
+   "time": "09:15",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: Kasimir Rossi chaired the Corbel Systems operations standup.",
+     "slot": "company-01.ops_lead",
+     "event": "company-01.ops_lead#5",
+     "values": [
+      "Kasimir Rossi"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s402",
+   "day": -243,
+   "time": "19:30",
+   "topic": "restoring an old bicycle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s403",
+   "day": -241,
+   "time": "09:50",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s404",
+   "day": -240,
+   "time": "08:30",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s405",
+   "day": -240,
+   "time": "10:20",
+   "topic": "learning the cello",
+   "long": true,
+   "lines": []
+  },
+  {
+   "id": "s406",
+   "day": -239,
+   "time": "13:30",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: I had coffee with Esme Zielinski in Malmo again.",
+     "slot": "person-05.city",
+     "event": "person-05.city#11",
+     "values": [
+      "Malmo"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s407",
+   "day": -238,
+   "time": "09:35",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s408",
+   "day": -237,
+   "time": "10:15",
+   "topic": "a pottery class",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s409",
+   "day": -237,
+   "time": "14:50",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": [
+    {
+     "text": "Correction: I had that wrong earlier. It was never Lisbon; Stonechat Robotics has its head office in Taipei.",
+     "slot": "company-02.hq",
+     "event": "company-02.hq#2",
+     "values": [
+      "Lisbon",
+      "Taipei"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s410",
+   "day": -237,
+   "time": "15:10",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s411",
+   "day": -236,
+   "time": "18:05",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s412",
+   "day": -235,
+   "time": "14:45",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": [
+    {
+     "text": "Esme Zielinski recommended a bakery near home in Malmo.",
+     "slot": "person-05.city",
+     "event": "person-05.city#12",
+     "values": [
+      "Malmo"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s413",
+   "day": -235,
+   "time": "20:55",
+   "topic": "a pottery class",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s414",
+   "day": -234,
+   "time": "14:20",
+   "topic": "marathon training",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, Benedikt Whitlock brought a Willowmere Hotels tote bag to the picnic.",
+     "slot": "person-06.employer",
+     "event": "person-06.employer#8",
+     "values": [
+      "Willowmere Hotels"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s415",
+   "day": -233,
+   "time": "16:15",
+   "topic": "a weekend hiking route",
+   "long": true,
+   "lines": []
+  },
+  {
+   "id": "s416",
+   "day": -231,
+   "time": "16:20",
+   "topic": "restoring an old bicycle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s417",
+   "day": -230,
+   "time": "15:50",
+   "topic": "a jigsaw puzzle",
+   "long": false,
+   "lines": [
+    {
+     "text": "Something changed: Umar Quintero took on the Field CTO role.",
+     "slot": "person-01.role",
+     "event": "person-01.role#2",
+     "values": [
+      "Field CTO"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s418",
+   "day": -229,
+   "time": "13:45",
+   "topic": "a rescue dog's training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s419",
+   "day": -228,
+   "time": "11:15",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": [
+    {
+     "text": "Benedikt Whitlock is buried in quarter planning at Willowmere Hotels.",
+     "slot": "person-06.employer",
+     "event": "person-06.employer#9",
+     "values": [
+      "Willowmere Hotels"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Fenwick Lane agreed to merge with Lanternfish Games.",
+     "slot": "company-05-twin.merger",
+     "event": "company-05-twin.merger#0",
+     "values": [
+      "Lanternfish Games"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s420",
+   "day": -225,
+   "time": "14:05",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s421",
+   "day": -224,
+   "time": "17:50",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s422",
+   "day": -223,
+   "time": "16:10",
+   "topic": "a jigsaw puzzle",
+   "long": true,
+   "lines": []
+  },
+  {
+   "id": "s423",
+   "day": -222,
+   "time": "09:30",
+   "topic": "a board game night",
+   "long": true,
+   "lines": []
+  },
+  {
+   "id": "s424",
+   "day": -222,
+   "time": "15:45",
+   "topic": "a podcast episode",
+   "long": false,
+   "lines": [
+    {
+     "text": "Vera Okonjo signed off on the Brackenridge Media supplier list.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#7",
+     "values": [
+      "Vera Okonjo"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s425",
+   "day": -222,
+   "time": "21:35",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s426",
+   "day": -221,
+   "time": "09:50",
+   "topic": "a language exchange",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s427",
+   "day": -221,
+   "time": "11:35",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s428",
+   "day": -220,
+   "time": "09:30",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": [
+    {
+     "text": "Writing this down so I remember: Umar Quintana works as Director of Research.",
+     "slot": "person-01-twin.role",
+     "event": "person-01-twin.role#0",
+     "values": [
+      "Director of Research"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s429",
+   "day": -220,
+   "time": "13:40",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s430",
+   "day": -220,
+   "time": "14:35",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s431",
+   "day": -220,
+   "time": "15:05",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s432",
+   "day": -219,
+   "time": "13:30",
+   "topic": "marathon training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s433",
+   "day": -219,
+   "time": "17:15",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s434",
+   "day": -217,
+   "time": "11:50",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s435",
+   "day": -217,
+   "time": "19:25",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s436",
+   "day": -217,
+   "time": "20:15",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, Esme Zielinski sent photos from a walk around Malmo.",
+     "slot": "person-05.city",
+     "event": "person-05.city#13",
+     "values": [
+      "Malmo"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Change of plans: the Project Mistletoe pilot with Cinderford Steel is cancelled.",
+     "slot": "project-05.pilot",
+     "event": "project-05.pilot#2",
+     "values": [
+      "Cinderford Steel"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s437",
+   "day": -216,
+   "time": "19:45",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s438",
+   "day": -215,
+   "time": "17:15",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": [
+    {
+     "text": "I need to fix something I told you: not Foxglove Cosmetics. In fact Project Sandpiper buys from Nettlefield Supply.",
+     "slot": "project-02.vendor",
+     "event": "project-02.vendor#2",
+     "values": [
+      "Foxglove Cosmetics",
+      "Nettlefield Supply"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s439",
+   "day": -215,
+   "time": "17:25",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s440",
+   "day": -215,
+   "time": "18:10",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s441",
+   "day": -214,
+   "time": "14:25",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": [
+    {
+     "text": "The Brackenridge Media team offsite will be in Leeds.",
+     "slot": "company-03.offsite",
+     "event": "company-03.offsite#0",
+     "values": [
+      "Leeds"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s442",
+   "day": -213,
+   "time": "11:00",
+   "topic": "a rescue dog's training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s443",
+   "day": -213,
+   "time": "12:00",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s444",
+   "day": -210,
+   "time": "19:30",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s445",
+   "day": -209,
+   "time": "12:10",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s446",
+   "day": -209,
+   "time": "12:35",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s447",
+   "day": -208,
+   "time": "12:40",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s448",
+   "day": -206,
+   "time": "08:15",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s449",
+   "day": -206,
+   "time": "11:40",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s450",
+   "day": -206,
+   "time": "21:15",
+   "topic": "a pottery class",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s451",
+   "day": -206,
+   "time": "21:40",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: Vera Okonjo ran the Brackenridge Media operations review again.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#8",
+     "values": [
+      "Vera Okonjo"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s452",
+   "day": -205,
+   "time": "16:00",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, the Lindenhall Bank support desk fixed the Project Granite outage.",
+     "slot": "project-04.vendor",
+     "event": "project-04.vendor#4",
+     "values": [
+      "Lindenhall Bank"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Esme Zielinski recommended a bakery near home in Malmo.",
+     "slot": "person-05.city",
+     "event": "person-05.city#14",
+     "values": [
+      "Malmo"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s453",
+   "day": -204,
+   "time": "19:10",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s454",
+   "day": -204,
+   "time": "20:00",
+   "topic": "a weekend hiking route",
+   "long": true,
+   "lines": []
+  },
+  {
+   "id": "s455",
+   "day": -202,
+   "time": "08:20",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s456",
+   "day": -202,
+   "time": "18:00",
+   "topic": "a rescue dog's training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s457",
+   "day": -198,
+   "time": "17:35",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s458",
+   "day": -193,
+   "time": "14:00",
+   "topic": "a rescue dog's training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s459",
+   "day": -193,
+   "time": "14:05",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s460",
+   "day": -193,
+   "time": "19:00",
+   "topic": "a rescue dog's training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s461",
+   "day": -193,
+   "time": "20:25",
+   "topic": "restoring an old bicycle",
+   "long": false,
+   "lines": [
+    {
+     "text": "Catching up on old news: Matteo Holm took over as lead of Project Tamarind on [[D:-235]].",
+     "slot": "project-01.lead",
+     "event": "project-01.lead#2",
+     "values": [
+      "Matteo Holm"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Benedikt Whitlock recommended a bakery near home in Prague.",
+     "slot": "person-06.city",
+     "event": "person-06.city#13",
+     "values": [
+      "Prague"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s462",
+   "day": -193,
+   "time": "21:35",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s463",
+   "day": -190,
+   "time": "08:20",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s464",
+   "day": -190,
+   "time": "18:00",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": [
+    {
+     "text": "The Brackenridge Media team offsite will be in Leeds.",
+     "slot": "company-03.offsite",
+     "event": "company-03.offsite#1",
+     "values": [
+      "Leeds"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s465",
+   "day": -189,
+   "time": "15:50",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s466",
+   "day": -189,
+   "time": "17:50",
+   "topic": "marathon training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s467",
+   "day": -188,
+   "time": "10:45",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s468",
+   "day": -188,
+   "time": "21:20",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s469",
+   "day": -187,
+   "time": "20:20",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s470",
+   "day": -183,
+   "time": "11:25",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s471",
+   "day": -179,
+   "time": "14:40",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s472",
+   "day": -179,
+   "time": "15:00",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s473",
+   "day": -178,
+   "time": "11:05",
+   "topic": "a pottery class",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s474",
+   "day": -177,
+   "time": "20:55",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, Benedikt Whitlock is leading a hiring push at Willowmere Hotels.",
+     "slot": "person-06.employer",
+     "event": "person-06.employer#10",
+     "values": [
+      "Willowmere Hotels"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s475",
+   "day": -176,
+   "time": "08:55",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s476",
+   "day": -176,
+   "time": "18:55",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s477",
+   "day": -175,
+   "time": "20:45",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": [
+    {
+     "text": "The Brackenridge Media team offsite will be in Leeds.",
+     "slot": "company-03.offsite",
+     "event": "company-03.offsite#2",
+     "values": [
+      "Leeds"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s478",
+   "day": -172,
+   "time": "15:50",
+   "topic": "restoring an old bicycle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s479",
+   "day": -172,
+   "time": "16:35",
+   "topic": "a board game night",
+   "long": false,
+   "lines": [
+    {
+     "text": "The countersigned Harbor Point contract sets the seat count at 380 seats.",
+     "slot": "deal-02-twin.seats",
+     "event": "deal-02-twin.seats#0",
+     "values": [
+      "380 seats"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s480",
+   "day": -170,
+   "time": "08:20",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s481",
+   "day": -170,
+   "time": "11:15",
+   "topic": "a board game night",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s482",
+   "day": -170,
+   "time": "17:50",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, Kasimir Rossi rearranged the warehouse shifts at Corbel Systems.",
+     "slot": "company-01.ops_lead",
+     "event": "company-01.ops_lead#6",
+     "values": [
+      "Kasimir Rossi"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s483",
+   "day": -168,
+   "time": "08:15",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s484",
+   "day": -168,
+   "time": "21:50",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, Project Granite had a review call with Lindenhall Bank.",
+     "slot": "project-04.vendor",
+     "event": "project-04.vendor#5",
+     "values": [
+      "Lindenhall Bank"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s485",
+   "day": -167,
+   "time": "11:30",
+   "topic": "a language exchange",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s486",
+   "day": -165,
+   "time": "13:40",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": [
+    {
+     "text": "Change of plans: the merger between Fenwick Labs and Oakhaven Health is off.",
+     "slot": "company-05.merger",
+     "event": "company-05.merger#1",
+     "values": [
+      "Oakhaven Health"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s487",
+   "day": -164,
+   "time": "15:20",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s488",
+   "day": -164,
+   "time": "17:35",
+   "topic": "a kitchen repaint",
+   "long": true,
+   "lines": []
+  },
+  {
+   "id": "s489",
+   "day": -163,
+   "time": "08:15",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s490",
+   "day": -162,
+   "time": "10:50",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s491",
+   "day": -162,
+   "time": "17:15",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s492",
+   "day": -162,
+   "time": "21:20",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s493",
+   "day": -161,
+   "time": "08:20",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s494",
+   "day": -160,
+   "time": "13:10",
+   "topic": "a language exchange",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s495",
+   "day": -160,
+   "time": "20:20",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s496",
+   "day": -159,
+   "time": "09:30",
+   "topic": "a podcast episode",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s497",
+   "day": -159,
+   "time": "13:50",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s498",
+   "day": -159,
+   "time": "21:20",
+   "topic": "a language exchange",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s499",
+   "day": -158,
+   "time": "12:50",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s500",
+   "day": -158,
+   "time": "16:00",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s501",
+   "day": -158,
+   "time": "16:50",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s502",
+   "day": -158,
+   "time": "19:15",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s503",
+   "day": -158,
+   "time": "20:10",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s504",
+   "day": -156,
+   "time": "11:15",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s505",
+   "day": -156,
+   "time": "13:40",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s506",
+   "day": -155,
+   "time": "17:50",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s507",
+   "day": -154,
+   "time": "10:25",
+   "topic": "restoring an old bicycle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s508",
+   "day": -154,
+   "time": "17:30",
+   "topic": "a pottery class",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s509",
+   "day": -151,
+   "time": "11:20",
+   "topic": "a rescue dog's training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s510",
+   "day": -150,
+   "time": "12:10",
+   "topic": "learning the cello",
+   "long": true,
+   "lines": [
+    {
+     "text": "Our CFO confirmed in writing that the annual price for the Beacon deal is final at $38,000.",
+     "slot": "deal-05.price",
+     "event": "deal-05.price#0",
+     "values": [
+      "$38,000"
+     ],
+     "speaker": "user",
+     "position": "middle"
+    }
+   ]
+  },
+  {
+   "id": "s511",
+   "day": -150,
+   "time": "17:25",
+   "topic": "a language exchange",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s512",
+   "day": -150,
+   "time": "21:20",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s513",
+   "day": -149,
+   "time": "10:15",
+   "topic": "restoring an old bicycle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s514",
+   "day": -147,
+   "time": "09:40",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s515",
+   "day": -147,
+   "time": "11:20",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s516",
+   "day": -147,
+   "time": "13:30",
+   "topic": "a podcast episode",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, Kasimir Rossi sent the weekly Corbel Systems operations numbers.",
+     "slot": "company-01.ops_lead",
+     "event": "company-01.ops_lead#7",
+     "values": [
+      "Kasimir Rossi"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s517",
+   "day": -146,
+   "time": "16:05",
+   "topic": "a language exchange",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s518",
+   "day": -146,
+   "time": "16:10",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s519",
+   "day": -144,
+   "time": "18:00",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: I renewed the Project Granite support plan with Lindenhall Bank.",
+     "slot": "project-04.vendor",
+     "event": "project-04.vendor#6",
+     "values": [
+      "Lindenhall Bank"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s520",
+   "day": -143,
+   "time": "10:40",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s521",
+   "day": -143,
+   "time": "13:30",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s522",
+   "day": -143,
+   "time": "17:35",
+   "topic": "restoring an old bicycle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s523",
+   "day": -140,
+   "time": "17:00",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s524",
+   "day": -139,
+   "time": "10:40",
+   "topic": "a board game night",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s525",
+   "day": -139,
+   "time": "11:30",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s526",
+   "day": -139,
+   "time": "11:45",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s527",
+   "day": -139,
+   "time": "17:10",
+   "topic": "restoring an old bicycle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s528",
+   "day": -139,
+   "time": "19:00",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s529",
+   "day": -139,
+   "time": "19:40",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s530",
+   "day": -138,
+   "time": "12:55",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s531",
+   "day": -137,
+   "time": "15:10",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s532",
+   "day": -134,
+   "time": "08:05",
+   "topic": "a jigsaw puzzle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s533",
+   "day": -134,
+   "time": "17:15",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s534",
+   "day": -134,
+   "time": "18:45",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s535",
+   "day": -133,
+   "time": "09:40",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s536",
+   "day": -133,
+   "time": "19:25",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s537",
+   "day": -132,
+   "time": "10:20",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s538",
+   "day": -131,
+   "time": "09:40",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": [
+    {
+     "text": "Update: Esme Zielinski relocated to Tampere.",
+     "slot": "person-05.city",
+     "event": "person-05.city#15",
+     "values": [
+      "Tampere"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s539",
+   "day": -130,
+   "time": "18:20",
+   "topic": "a slow cooker stew",
+   "long": true,
+   "lines": []
+  },
+  {
+   "id": "s540",
+   "day": -128,
+   "time": "10:20",
+   "topic": "marathon training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s541",
+   "day": -128,
+   "time": "14:50",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s542",
+   "day": -127,
+   "time": "12:55",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s543",
+   "day": -126,
+   "time": "11:35",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": [
+    {
+     "text": "Benedikt Whitlock complained about the weather in Prague.",
+     "slot": "person-06.city",
+     "event": "person-06.city#14",
+     "values": [
+      "Prague"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s544",
+   "day": -126,
+   "time": "17:45",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s545",
+   "day": -124,
+   "time": "08:55",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s546",
+   "day": -124,
+   "time": "11:25",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: Kasimir Rossi rearranged the warehouse shifts at Corbel Systems.",
+     "slot": "company-01.ops_lead",
+     "event": "company-01.ops_lead#8",
+     "values": [
+      "Kasimir Rossi"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s547",
+   "day": -124,
+   "time": "12:40",
+   "topic": "a podcast episode",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s548",
+   "day": -124,
+   "time": "18:35",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s549",
+   "day": -124,
+   "time": "18:50",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s550",
+   "day": -123,
+   "time": "11:40",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": [
+    {
+     "text": "News from this week: Ines Moreau took over operations at Corbel Systems.",
+     "slot": "company-01.ops_lead",
+     "event": "company-01.ops_lead#9",
+     "values": [
+      "Ines Moreau"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s551",
+   "day": -123,
+   "time": "16:10",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s552",
+   "day": -122,
+   "time": "13:25",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s553",
+   "day": -122,
+   "time": "16:05",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s554",
+   "day": -122,
+   "time": "21:20",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s555",
+   "day": -121,
+   "time": "18:00",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s556",
+   "day": -121,
+   "time": "21:50",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, the Lindenhall Bank support desk fixed the Project Granite outage.",
+     "slot": "project-04.vendor",
+     "event": "project-04.vendor#7",
+     "values": [
+      "Lindenhall Bank"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s557",
+   "day": -120,
+   "time": "11:00",
+   "topic": "a pottery class",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s558",
+   "day": -119,
+   "time": "10:25",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s559",
+   "day": -119,
+   "time": "15:50",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s560",
+   "day": -119,
+   "time": "18:00",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s561",
+   "day": -118,
+   "time": "08:25",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s562",
+   "day": -118,
+   "time": "19:35",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s563",
+   "day": -117,
+   "time": "16:15",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s564",
+   "day": -116,
+   "time": "11:50",
+   "topic": "a language exchange",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s565",
+   "day": -115,
+   "time": "12:40",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s566",
+   "day": -115,
+   "time": "18:20",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s567",
+   "day": -115,
+   "time": "19:00",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s568",
+   "day": -114,
+   "time": "16:05",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": [
+    {
+     "text": "Update: Benedikt Whitlock moved to Bergen.",
+     "slot": "person-06.city",
+     "event": "person-06.city#15",
+     "values": [
+      "Bergen"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s569",
+   "day": -113,
+   "time": "15:55",
+   "topic": "a board game night",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s570",
+   "day": -113,
+   "time": "21:15",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": [
+    {
+     "text": "The draft amendment for the Beacon deal floats $136,000 for the annual price.",
+     "slot": "deal-05.price",
+     "event": "deal-05.price#1",
+     "values": [
+      "$136,000"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s571",
+   "day": -112,
+   "time": "17:30",
+   "topic": "a jigsaw puzzle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s572",
+   "day": -111,
+   "time": "08:45",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s573",
+   "day": -111,
+   "time": "15:50",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s574",
+   "day": -110,
+   "time": "13:20",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": [
+    {
+     "text": "My agent's notes on the Beacon deal record the annual price as $26,000.",
+     "slot": "deal-05.price",
+     "event": "deal-05.price#2",
+     "values": [
+      "$26,000"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s575",
+   "day": -108,
+   "time": "09:35",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s576",
+   "day": -108,
+   "time": "15:45",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s577",
+   "day": -107,
+   "time": "15:10",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": [
+    {
+     "text": "Forget what I said earlier about how the Fenwick Labs team offsite will be in Vienna; that was only a rumour and it is not happening.",
+     "slot": "company-05.offsite",
+     "event": "company-05.offsite#3",
+     "values": [
+      "Vienna"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s578",
+   "day": -107,
+   "time": "15:50",
+   "topic": "a board game night",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s579",
+   "day": -106,
+   "time": "12:45",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s580",
+   "day": -105,
+   "time": "17:00",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s581",
+   "day": -104,
+   "time": "20:00",
+   "topic": "a jigsaw puzzle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s582",
+   "day": -103,
+   "time": "12:50",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s583",
+   "day": -102,
+   "time": "20:30",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s584",
+   "day": -102,
+   "time": "21:55",
+   "topic": "a rescue dog's training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s585",
+   "day": -101,
+   "time": "11:55",
+   "topic": "a pottery class",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s586",
+   "day": -101,
+   "time": "17:30",
+   "topic": "a language exchange",
+   "long": false,
+   "lines": [
+    {
+     "text": "Change of plans: Lowmoor Retail walked away from the merger with Brightline Analytics.",
+     "slot": "company-04.merger",
+     "event": "company-04.merger#2",
+     "values": [
+      "Brightline Analytics"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s587",
+   "day": -100,
+   "time": "19:55",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s588",
+   "day": -100,
+   "time": "20:45",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s589",
+   "day": -99,
+   "time": "11:40",
+   "topic": "a podcast episode",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s590",
+   "day": -99,
+   "time": "16:20",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": [
+    {
+     "text": "Something changed: Umar Quintero started a new job at Yarrowby Seeds.",
+     "slot": "person-01.employer",
+     "event": "person-01.employer#3",
+     "values": [
+      "Yarrowby Seeds"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s591",
+   "day": -98,
+   "time": "09:05",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s592",
+   "day": -98,
+   "time": "09:30",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s593",
+   "day": -98,
+   "time": "17:40",
+   "topic": "a pottery class",
+   "long": true,
+   "lines": []
+  },
+  {
+   "id": "s594",
+   "day": -97,
+   "time": "12:25",
+   "topic": "restoring an old bicycle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s595",
+   "day": -97,
+   "time": "19:40",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s596",
+   "day": -95,
+   "time": "10:05",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s597",
+   "day": -93,
+   "time": "17:15",
+   "topic": "a language exchange",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s598",
+   "day": -93,
+   "time": "19:55",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s599",
+   "day": -92,
+   "time": "17:35",
+   "topic": "a jigsaw puzzle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s600",
+   "day": -92,
+   "time": "20:40",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s601",
+   "day": -91,
+   "time": "16:45",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s602",
+   "day": -90,
+   "time": "17:15",
+   "topic": "marathon training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s603",
+   "day": -89,
+   "time": "09:15",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s604",
+   "day": -89,
+   "time": "16:50",
+   "topic": "a board game night",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s605",
+   "day": -89,
+   "time": "18:10",
+   "topic": "a rescue dog's training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s606",
+   "day": -88,
+   "time": "20:40",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s607",
+   "day": -87,
+   "time": "13:00",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s608",
+   "day": -86,
+   "time": "11:30",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s609",
+   "day": -86,
+   "time": "19:10",
+   "topic": "a podcast episode",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s610",
+   "day": -86,
+   "time": "21:00",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s611",
+   "day": -85,
+   "time": "17:55",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": [
+    {
+     "text": "News from this week: Willa Raman became the lead on Project Tamarind.",
+     "slot": "project-01.lead",
+     "event": "project-01.lead#3",
+     "values": [
+      "Willa Raman"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s612",
+   "day": -84,
+   "time": "10:10",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": [
+    {
+     "text": "News from this week: Project Granite moved its contract over to Ironbark Security.",
+     "slot": "project-04.vendor",
+     "event": "project-04.vendor#8",
+     "values": [
+      "Ironbark Security"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s613",
+   "day": -82,
+   "time": "12:25",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s614",
+   "day": -81,
+   "time": "12:00",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s615",
+   "day": -80,
+   "time": "19:55",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": [
+    {
+     "text": "Update: Umar Quintero took on the Programme Director role.",
+     "slot": "person-01.role",
+     "event": "person-01.role#3",
+     "values": [
+      "Programme Director"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s616",
+   "day": -79,
+   "time": "12:30",
+   "topic": "a language exchange",
+   "long": true,
+   "lines": []
+  },
+  {
+   "id": "s617",
+   "day": -79,
+   "time": "21:05",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s618",
+   "day": -78,
+   "time": "13:45",
+   "topic": "a board game night",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s619",
+   "day": -78,
+   "time": "17:55",
+   "topic": "a board game night",
+   "long": false,
+   "lines": [
+    {
+     "text": "Heard today that Corbel Systems moved its headquarters to Edinburgh.",
+     "slot": "company-01.hq",
+     "event": "company-01.hq#2",
+     "values": [
+      "Edinburgh"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s620",
+   "day": -77,
+   "time": "13:45",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s621",
+   "day": -75,
+   "time": "20:50",
+   "topic": "restoring an old bicycle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s622",
+   "day": -73,
+   "time": "18:35",
+   "topic": "a language exchange",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s623",
+   "day": -72,
+   "time": "11:05",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s624",
+   "day": -72,
+   "time": "13:20",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s625",
+   "day": -72,
+   "time": "18:10",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": [
+    {
+     "text": "I only just heard that Mirela Larsen took over operations at Stonechat Robotics back on [[D:-122]].",
+     "slot": "company-02.ops_lead",
+     "event": "company-02.ops_lead#1",
+     "values": [
+      "Mirela Larsen"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s626",
+   "day": -70,
+   "time": "14:45",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s627",
+   "day": -70,
+   "time": "17:05",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s628",
+   "day": -70,
+   "time": "17:25",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s629",
+   "day": -70,
+   "time": "21:45",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": [
+    {
+     "text": "Both sides executed the Wexford agreement today, and it fixes the seat count at 260 seats.",
+     "slot": "deal-04-twin.seats",
+     "event": "deal-04-twin.seats#0",
+     "values": [
+      "260 seats"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s630",
+   "day": -69,
+   "time": "16:45",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s631",
+   "day": -69,
+   "time": "19:55",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s632",
+   "day": -68,
+   "time": "19:25",
+   "topic": "a pottery class",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s633",
+   "day": -67,
+   "time": "20:50",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s634",
+   "day": -65,
+   "time": "14:20",
+   "topic": "restoring an old bicycle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s635",
+   "day": -64,
+   "time": "14:40",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s636",
+   "day": -63,
+   "time": "16:35",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s637",
+   "day": -62,
+   "time": "17:25",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s638",
+   "day": -61,
+   "time": "09:10",
+   "topic": "a rescue dog's training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s639",
+   "day": -61,
+   "time": "13:00",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s640",
+   "day": -61,
+   "time": "17:45",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": [
+    {
+     "text": "News from this week: Bastian Sandoval moved to Seville.",
+     "slot": "person-02.city",
+     "event": "person-02.city#2",
+     "values": [
+      "Seville"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s641",
+   "day": -59,
+   "time": "15:45",
+   "topic": "a pottery class",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s642",
+   "day": -59,
+   "time": "17:45",
+   "topic": "a pottery class",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s643",
+   "day": -58,
+   "time": "13:40",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s644",
+   "day": -57,
+   "time": "19:25",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s645",
+   "day": -55,
+   "time": "11:30",
+   "topic": "a board game night",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s646",
+   "day": -55,
+   "time": "17:40",
+   "topic": "a rescue dog's training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s647",
+   "day": -55,
+   "time": "18:30",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s648",
+   "day": -54,
+   "time": "17:25",
+   "topic": "a podcast episode",
+   "long": true,
+   "lines": []
+  },
+  {
+   "id": "s649",
+   "day": -53,
+   "time": "09:05",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": [
+    {
+     "text": "News from this week: Petra Grieve took over operations at Brackenridge Media.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#9",
+     "values": [
+      "Petra Grieve"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s650",
+   "day": -53,
+   "time": "13:25",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s651",
+   "day": -53,
+   "time": "18:00",
+   "topic": "a podcast episode",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s652",
+   "day": -53,
+   "time": "18:40",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s653",
+   "day": -52,
+   "time": "10:40",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s654",
+   "day": -50,
+   "time": "12:55",
+   "topic": "a podcast episode",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s655",
+   "day": -50,
+   "time": "16:05",
+   "topic": "a pottery class",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s656",
+   "day": -50,
+   "time": "21:55",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": [
+    {
+     "text": "It is official that Corbel Systems moves its headquarters to Denver on [[D:99]].",
+     "slot": "company-01.hq",
+     "event": "company-01.hq#3",
+     "values": [
+      "Denver"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s657",
+   "day": -49,
+   "time": "17:45",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s658",
+   "day": -48,
+   "time": "16:30",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s659",
+   "day": -48,
+   "time": "21:50",
+   "topic": "marathon training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s660",
+   "day": -47,
+   "time": "11:10",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s661",
+   "day": -47,
+   "time": "18:40",
+   "topic": "a rescue dog's training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s662",
+   "day": -46,
+   "time": "11:45",
+   "topic": "meal prep for the week",
+   "long": true,
+   "lines": []
+  },
+  {
+   "id": "s663",
+   "day": -46,
+   "time": "16:40",
+   "topic": "a language exchange",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s664",
+   "day": -46,
+   "time": "18:35",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": [
+    {
+     "text": "Heads up: Bastian Sandoval moves to Valencia on [[D:111]].",
+     "slot": "person-02.city",
+     "event": "person-02.city#3",
+     "values": [
+      "Valencia"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s665",
+   "day": -45,
+   "time": "10:30",
+   "topic": "a podcast episode",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s666",
+   "day": -45,
+   "time": "15:15",
+   "topic": "marathon training",
+   "long": false,
+   "lines": [
+    {
+     "text": "It fell through: Brackenridge Media cancelled its team offsite in Leeds.",
+     "slot": "company-03.offsite",
+     "event": "company-03.offsite#3",
+     "values": [
+      "Leeds"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s667",
+   "day": -45,
+   "time": "15:30",
+   "topic": "marathon training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s668",
+   "day": -45,
+   "time": "18:30",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s669",
+   "day": -44,
+   "time": "12:40",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s670",
+   "day": -42,
+   "time": "10:55",
+   "topic": "restoring an old bicycle",
+   "long": true,
+   "lines": []
+  },
+  {
+   "id": "s671",
+   "day": -42,
+   "time": "15:00",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": [
+    {
+     "text": "Something changed: Benedikt Whitlock started a new job at Larkspur Foods.",
+     "slot": "person-06.employer",
+     "event": "person-06.employer#11",
+     "values": [
+      "Larkspur Foods"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s672",
+   "day": -42,
+   "time": "15:40",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s673",
+   "day": -41,
+   "time": "12:45",
+   "topic": "a rescue dog's training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s674",
+   "day": -40,
+   "time": "12:35",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s675",
+   "day": -40,
+   "time": "19:30",
+   "topic": "a podcast episode",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s676",
+   "day": -39,
+   "time": "10:35",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s677",
+   "day": -39,
+   "time": "19:10",
+   "topic": "a board game night",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s678",
+   "day": -38,
+   "time": "19:30",
+   "topic": "a podcast episode",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s679",
+   "day": -36,
+   "time": "19:00",
+   "topic": "a board game night",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s680",
+   "day": -36,
+   "time": "20:45",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s681",
+   "day": -35,
+   "time": "20:50",
+   "topic": "a board game night",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s682",
+   "day": -30,
+   "time": "11:45",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s683",
+   "day": -30,
+   "time": "16:35",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s684",
+   "day": -30,
+   "time": "21:45",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s685",
+   "day": -29,
+   "time": "12:25",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s686",
+   "day": -29,
+   "time": "16:20",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s687",
+   "day": -28,
+   "time": "09:25",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s688",
+   "day": -28,
+   "time": "11:40",
+   "topic": "a birthday party for a niece",
+   "long": true,
+   "lines": []
+  },
+  {
+   "id": "s689",
+   "day": -28,
+   "time": "15:25",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s690",
+   "day": -27,
+   "time": "16:45",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s691",
+   "day": -26,
+   "time": "11:35",
+   "topic": "a pottery class",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s692",
+   "day": -24,
+   "time": "10:00",
+   "topic": "a board game night",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s693",
+   "day": -23,
+   "time": "16:00",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s694",
+   "day": -23,
+   "time": "20:30",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s695",
+   "day": -21,
+   "time": "11:35",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s696",
+   "day": -20,
+   "time": "10:45",
+   "topic": "a podcast episode",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s697",
+   "day": -20,
+   "time": "21:45",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s698",
+   "day": -19,
+   "time": "11:30",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s699",
+   "day": -19,
+   "time": "13:35",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s700",
+   "day": -19,
+   "time": "17:50",
+   "topic": "a board game night",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s701",
+   "day": -16,
+   "time": "08:20",
+   "topic": "a birthday party for a niece",
+   "long": true,
+   "lines": []
+  },
+  {
+   "id": "s702",
+   "day": -16,
+   "time": "16:25",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s703",
+   "day": -15,
+   "time": "10:55",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s704",
+   "day": -15,
+   "time": "15:55",
+   "topic": "a language exchange",
+   "long": true,
+   "lines": []
+  },
+  {
+   "id": "s705",
+   "day": -14,
+   "time": "08:25",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s706",
+   "day": -13,
+   "time": "19:45",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s707",
+   "day": -12,
+   "time": "09:20",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s708",
+   "day": -12,
+   "time": "16:00",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s709",
+   "day": -11,
+   "time": "08:45",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s710",
+   "day": -9,
+   "time": "08:35",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s711",
+   "day": -9,
+   "time": "13:50",
+   "topic": "a language exchange",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s712",
+   "day": -8,
+   "time": "18:55",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s713",
+   "day": -7,
+   "time": "18:15",
+   "topic": "a rescue dog's training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s714",
+   "day": -7,
+   "time": "18:40",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s715",
+   "day": -6,
+   "time": "12:00",
+   "topic": "a pottery class",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s716",
+   "day": -6,
+   "time": "15:20",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s717",
+   "day": -4,
+   "time": "16:40",
+   "topic": "learning the cello",
+   "long": true,
+   "lines": []
+  },
+  {
+   "id": "s718",
+   "day": -4,
+   "time": "18:40",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s719",
+   "day": -3,
+   "time": "13:10",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s720",
+   "day": -3,
+   "time": "17:55",
+   "topic": "a podcast episode",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s721",
+   "day": -3,
+   "time": "18:25",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s722",
+   "day": -2,
+   "time": "12:20",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s723",
+   "day": 0,
+   "time": "16:25",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s724",
+   "day": 0,
+   "time": "20:35",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": []
+  }
+ ],
+ "lexicon": {
+  "$136,000": {
+   "aliases": [
+    "136,000",
+    "$136k",
+    "136k",
+    "136 thousand"
+   ],
+   "implications": []
+  },
+  "$190,000": {
+   "aliases": [
+    "190,000",
+    "$190k",
+    "190k",
+    "190 thousand"
+   ],
+   "implications": []
+  },
+  "$244,000": {
+   "aliases": [
+    "244,000",
+    "$244k",
+    "244k",
+    "244 thousand"
+   ],
+   "implications": []
+  },
+  "$26,000": {
+   "aliases": [
+    "26,000",
+    "$26k",
+    "26k",
+    "26 thousand"
+   ],
+   "implications": []
+  },
+  "$38,000": {
+   "aliases": [
+    "38,000",
+    "$38k",
+    "38k",
+    "38 thousand"
+   ],
+   "implications": []
+  },
+  "14%": {
+   "aliases": [
+    "14 percent",
+    "14 per cent"
+   ],
+   "implications": []
+  },
+  "16%": {
+   "aliases": [
+    "16 percent",
+    "16 per cent"
+   ],
+   "implications": []
+  },
+  "17%": {
+   "aliases": [
+    "17 percent",
+    "17 per cent"
+   ],
+   "implications": []
+  },
+  "20%": {
+   "aliases": [
+    "20 percent",
+    "20 per cent"
+   ],
+   "implications": []
+  },
+  "200 seats": {
+   "aliases": [
+    "200 licenses",
+    "200 licences",
+    "200 users"
+   ],
+   "implications": []
+  },
+  "21 months": {
+   "aliases": [
+    "21-month",
+    "21 mo"
+   ],
+   "implications": []
+  },
+  "220 seats": {
+   "aliases": [
+    "220 licenses",
+    "220 licences",
+    "220 users"
+   ],
+   "implications": []
+  },
+  "230 seats": {
+   "aliases": [
+    "230 licenses",
+    "230 licences",
+    "230 users"
+   ],
+   "implications": []
+  },
+  "26%": {
+   "aliases": [
+    "26 percent",
+    "26 per cent"
+   ],
+   "implications": []
+  },
+  "260 seats": {
+   "aliases": [
+    "260 licenses",
+    "260 licences",
+    "260 users"
+   ],
+   "implications": []
+  },
+  "29%": {
+   "aliases": [
+    "29 percent",
+    "29 per cent"
+   ],
+   "implications": []
+  },
+  "310 seats": {
+   "aliases": [
+    "310 licenses",
+    "310 licences",
+    "310 users"
+   ],
+   "implications": []
+  },
+  "33 months": {
+   "aliases": [
+    "33-month",
+    "33 mo"
+   ],
+   "implications": []
+  },
+  "350 seats": {
+   "aliases": [
+    "350 licenses",
+    "350 licences",
+    "350 users"
+   ],
+   "implications": []
+  },
+  "380 seats": {
+   "aliases": [
+    "380 licenses",
+    "380 licences",
+    "380 users"
+   ],
+   "implications": []
+  },
+  "410 seats": {
+   "aliases": [
+    "410 licenses",
+    "410 licences",
+    "410 users"
+   ],
+   "implications": []
+  },
+  "42 months": {
+   "aliases": [
+    "42-month",
+    "42 mo"
+   ],
+   "implications": []
+  },
+  "45 months": {
+   "aliases": [
+    "45-month",
+    "45 mo"
+   ],
+   "implications": []
+  },
+  "470 seats": {
+   "aliases": [
+    "470 licenses",
+    "470 licences",
+    "470 users"
+   ],
+   "implications": []
+  },
+  "66 months": {
+   "aliases": [
+    "66-month",
+    "66 mo"
+   ],
+   "implications": []
+  },
+  "720 seats": {
+   "aliases": [
+    "720 licenses",
+    "720 licences",
+    "720 users"
+   ],
+   "implications": []
+  },
+  "730 seats": {
+   "aliases": [
+    "730 licenses",
+    "730 licences",
+    "730 users"
+   ],
+   "implications": []
+  },
+  "790 seats": {
+   "aliases": [
+    "790 licenses",
+    "790 licences",
+    "790 users"
+   ],
+   "implications": []
+  },
+  "810 seats": {
+   "aliases": [
+    "810 licenses",
+    "810 licences",
+    "810 users"
+   ],
+   "implications": []
+  },
+  "9 months": {
+   "aliases": [
+    "9-month",
+    "9 mo"
+   ],
+   "implications": []
+  },
+  "930 seats": {
+   "aliases": [
+    "930 licenses",
+    "930 licences",
+    "930 users"
+   ],
+   "implications": []
+  },
+  "Accra": {
+   "aliases": [],
+   "implications": [
+    "Ghana"
+   ]
+  },
+  "Bergen": {
+   "aliases": [],
+   "implications": [
+    "Norway"
+   ]
+  },
+  "Bilbao": {
+   "aliases": [],
+   "implications": [
+    "Spain"
+   ]
+  },
+  "Bordeaux": {
+   "aliases": [],
+   "implications": [
+    "France"
+   ]
+  },
+  "Brightline Analytics": {
+   "aliases": [
+    "Brightline"
+   ],
+   "implications": []
+  },
+  "Chief of Staff": {
+   "aliases": [],
+   "implications": []
+  },
+  "Cinderford Steel": {
+   "aliases": [
+    "Cinderford"
+   ],
+   "implications": []
+  },
+  "Copperleaf Systems": {
+   "aliases": [
+    "Copperleaf"
+   ],
+   "implications": []
+  },
+  "Denver": {
+   "aliases": [],
+   "implications": [
+    "Colorado"
+   ]
+  },
+  "Director of Research": {
+   "aliases": [],
+   "implications": []
+  },
+  "Edinburgh": {
+   "aliases": [],
+   "implications": [
+    "Scotland"
+   ]
+  },
+  "Fernhollow Labs": {
+   "aliases": [
+    "Fernhollow"
+   ],
+   "implications": []
+  },
+  "Field CTO": {
+   "aliases": [],
+   "implications": []
+  },
+  "Foxglove Cosmetics": {
+   "aliases": [
+    "Foxglove"
+   ],
+   "implications": []
+  },
+  "Freya Eriksen": {
+   "aliases": [
+    "Freya",
+    "Eriksen"
+   ],
+   "implications": []
+  },
+  "Galway": {
+   "aliases": [],
+   "implications": [
+    "Ireland"
+   ]
+  },
+  "Gothenburg": {
+   "aliases": [
+    "Göteborg"
+   ],
+   "implications": [
+    "Sweden"
+   ]
+  },
+  "Hamid Coelho": {
+   "aliases": [
+    "Hamid",
+    "Coelho"
+   ],
+   "implications": []
+  },
+  "Head of Platform": {
+   "aliases": [],
+   "implications": []
+  },
+  "Hiro Tran": {
+   "aliases": [
+    "Hiro",
+    "Tran"
+   ],
+   "implications": []
+  },
+  "Ines Moreau": {
+   "aliases": [
+    "Ines",
+    "Moreau"
+   ],
+   "implications": []
+  },
+  "Ironbark Security": {
+   "aliases": [
+    "Ironbark"
+   ],
+   "implications": []
+  },
+  "Kasimir Rossi": {
+   "aliases": [
+    "Kasimir",
+    "Rossi"
+   ],
+   "implications": []
+  },
+  "Kettlebrook Brewing": {
+   "aliases": [
+    "Kettlebrook"
+   ],
+   "implications": []
+  },
+  "Kinglet Telecom": {
+   "aliases": [
+    "Kinglet"
+   ],
+   "implications": []
+  },
+  "Kyoto": {
+   "aliases": [],
+   "implications": [
+    "Japan"
+   ]
+  },
+  "Lanternfish Games": {
+   "aliases": [
+    "Lanternfish"
+   ],
+   "implications": []
+  },
+  "Larkspur Foods": {
+   "aliases": [
+    "Larkspur"
+   ],
+   "implications": []
+  },
+  "Lead Recruiter": {
+   "aliases": [],
+   "implications": []
+  },
+  "Leeds": {
+   "aliases": [],
+   "implications": [
+    "Yorkshire"
+   ]
+  },
+  "Lindenhall Bank": {
+   "aliases": [
+    "Lindenhall"
+   ],
+   "implications": []
+  },
+  "Lisbon": {
+   "aliases": [
+    "Lisboa"
+   ],
+   "implications": [
+    "Portugal"
+   ]
+  },
+  "Malmo": {
+   "aliases": [
+    "Malmö"
+   ],
+   "implications": [
+    "Sweden"
+   ]
+  },
+  "Matteo Holm": {
+   "aliases": [
+    "Matteo",
+    "Holm"
+   ],
+   "implications": []
+  },
+  "Mirela Larsen": {
+   "aliases": [
+    "Mirela",
+    "Larsen"
+   ],
+   "implications": []
+  },
+  "Montreal": {
+   "aliases": [
+    "Montréal"
+   ],
+   "implications": [
+    "Quebec"
+   ]
+  },
+  "Nettlefield Supply": {
+   "aliases": [
+    "Nettlefield"
+   ],
+   "implications": []
+  },
+  "Oakhaven Health": {
+   "aliases": [
+    "Oakhaven"
+   ],
+   "implications": []
+  },
+  "Oslo": {
+   "aliases": [],
+   "implications": [
+    "Norway"
+   ]
+  },
+  "Petra Grieve": {
+   "aliases": [
+    "Petra",
+    "Grieve"
+   ],
+   "implications": []
+  },
+  "Porto": {
+   "aliases": [],
+   "implications": [
+    "Portugal"
+   ]
+  },
+  "Prague": {
+   "aliases": [
+    "Praha"
+   ],
+   "implications": [
+    "Czechia"
+   ]
+  },
+  "Programme Director": {
+   "aliases": [],
+   "implications": []
+  },
+  "Quality Lead": {
+   "aliases": [],
+   "implications": []
+  },
+  "Seville": {
+   "aliases": [
+    "Sevilla"
+   ],
+   "implications": [
+    "Spain"
+   ]
+  },
+  "Taipei": {
+   "aliases": [],
+   "implications": [
+    "Taiwan"
+   ]
+  },
+  "Tampere": {
+   "aliases": [],
+   "implications": [
+    "Finland"
+   ]
+  },
+  "Tarnwood Logistics": {
+   "aliases": [
+    "Tarnwood"
+   ],
+   "implications": []
+  },
+  "Turin": {
+   "aliases": [
+    "Torino"
+   ],
+   "implications": [
+    "Italy"
+   ]
+  },
+  "VP of Sales": {
+   "aliases": [],
+   "implications": []
+  },
+  "Valencia": {
+   "aliases": [],
+   "implications": [
+    "Spain"
+   ]
+  },
+  "Vellumworks Print": {
+   "aliases": [
+    "Vellumworks"
+   ],
+   "implications": []
+  },
+  "Vera Okonjo": {
+   "aliases": [
+    "Vera",
+    "Okonjo"
+   ],
+   "implications": []
+  },
+  "Vienna": {
+   "aliases": [
+    "Wien"
+   ],
+   "implications": [
+    "Austria"
+   ]
+  },
+  "Willa Raman": {
+   "aliases": [
+    "Willa",
+    "Raman"
+   ],
+   "implications": []
+  },
+  "Willowmere Hotels": {
+   "aliases": [
+    "Willowmere"
+   ],
+   "implications": []
+  },
+  "Yarrowby Seeds": {
+   "aliases": [
+    "Yarrowby"
+   ],
+   "implications": []
+  },
+  "Yusuf Dimitrov": {
+   "aliases": [
+    "Yusuf",
+    "Dimitrov"
+   ],
+   "implications": []
+  },
+  "Zainab Zoric": {
+   "aliases": [
+    "Zainab",
+    "Zoric"
+   ],
+   "implications": []
+  }
+ }
+}

@@ -3,8 +3,10 @@
  * The weekly held-out line's judge check (preregistration docs/benchmarks/2026-11-23-weekly-outcome-line-preregistration.md,
  * "Readers and judges", R78): each gating judge is checked against at least 100 labelled grep-agent answers from public
  * dev worlds before its numbers count, at a kappa of 0.6 or more. The answers come from the grep-agent cells the weekly
- * generator builds for public worlds: the judge-check cell on bg1-dev-02 and bg1-dev-03 and the pilot's on bg1-dev-01
- * (eval/runner/q1/cells/weekly-line.ts generateWeeklyLineJudgeCheckCells and generateWeeklyLinePilotCells).
+ * generator builds for public worlds: the judge-check cell on bg1-dev-02 and bg1-dev-03 and the pilot's on bg1-dev-01, or
+ * at the long length the judge-check cell on bg1-dev-long-02 and -03 and the pilot's on bg1-dev-long-01
+ * (eval/runner/q1/cells/weekly-line.ts generateWeeklyLineJudgeCheckCells and generateWeeklyLinePilotCells). The sample, the
+ * labels and the gates are the same at either length; the answers' worlds pick the dev worlds loaded.
  *
  *   bun eval/runner/weekly-line/judge-check.ts label  --cell <grep-agent cell out dir>... --dry-run [--keyless-upstream <url>]
  *                                                     [--world-end <Sunday>] [--seed <n>]

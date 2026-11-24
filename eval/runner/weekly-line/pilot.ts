@@ -6,10 +6,15 @@
  * weekly generator builds for public worlds (eval/runner/q1/cells/weekly-line.ts generateWeeklyLinePilotCells and
  * generateWeeklyLineJudgeCheckCells); it never calls a provider.
  *
- *   bun eval/runner/weekly-line/pilot.ts plan      [--gbrain <release>@<commit>] [--world-end <Sunday>] [--json]
- *   bun eval/runner/weekly-line/pilot.ts campaigns --out <dir> --window-granted <unit> --window-cap-usd <the window's cap>
- *                                                  --world-end <Sunday> [--gbrain <release>@<commit>]
- *   bun eval/runner/weekly-line/pilot.ts report    --cell <cell out dir>... [--reread <re-read out dir>...] [--json]
+ *   bun eval/runner/weekly-line/pilot.ts plan      [--length standard|long] [--gbrain <release>@<commit>] [--world-end <Sunday>] [--json]
+ *   bun eval/runner/weekly-line/pilot.ts campaigns [--length standard|long] --out <dir> --window-granted <unit>
+ *                                                  --window-cap-usd <the window's cap> --world-end <Sunday> [--gbrain <release>@<commit>]
+ *   bun eval/runner/weekly-line/pilot.ts report    [--length standard|long] --cell <cell out dir>... [--reread <re-read out dir>...] [--json]
+ *
+ * --length picks the pilot's worlds (weekly-line.ts WEEKLY_PILOT_SETS): standard, the default, runs the pilot on
+ * bg1-dev-01 and the judge check on bg1-dev-02 and -03 at set BGW's caps; long runs them on bg1-dev-long-01, and
+ * bg1-dev-long-02 and -03 (about 1,000,000 tokens each), at set BGW-long's caps, under campaign ids of their own. Without
+ * --length the length is WEEKLY_PILOT_LENGTH_ENV's, standard when that is unset too.
  *
  * plan is the dry run: every cell with its estimate, every ledger with its cap, and the totals, printed without calling
  * anything but `git ls-remote --tags` on gbrain's repository when --gbrain is not given (the newest release, R100).
@@ -38,7 +43,7 @@ import { JUDGED, gatherStaging, loadWeeklyPilotManifest, weeklyPilotCampaignMani
 import { readRecords } from '../memory-qa/records.ts';
 import { bg1JudgeOf, type CellDefinition } from '../q1/cells/definitions.ts';
 import {
-  WEEKLY_LINE_BLOCK_WORLDS, WEEKLY_LINE_PILOT_FRACTION, WEEKLY_LINE_QUICK_LOOK, WEEKLY_LINE_ROWS, WEEKLY_PILOT_GBRAIN_ENV, weeklyLineBuildProblems,
+  WEEKLY_LINE_BLOCK_WORLDS, WEEKLY_LINE_PILOT_FRACTION, WEEKLY_LINE_QUICK_LOOK, WEEKLY_LINE_ROWS, WEEKLY_PILOT_GBRAIN_ENV, WEEKLY_PILOT_LENGTH_ENV, weeklyLineBuildProblems,
   type WeeklyLineGbrainBuild, type WeeklyPilotManifest,
 } from '../q1/cells/weekly-line.ts';
 import { exitCodeOf, renderMessage, ScoreboardError } from '../q1/scoreboard-errors.ts';
@@ -63,7 +68,7 @@ export const WEEK_OVERRUN_SHARE = 0.2;
 /** One ledger of the pilot or the judge check: a campaign of one unit, a re-read, or the labelling pass. */
 export interface PilotLedger { name: string; kind: 'campaign' | 'reread' | 'label'; row: WlRow | 'judge-check'; units: string[]; estimate_usd: number; cap_usd: number; campaign_id?: string }
 export interface PilotPlan {
-  gbrain: WeeklyLineGbrainBuild; world_end: string | null; ledgers: PilotLedger[]; cells: Array<Pick<CellDefinition, 'id' | 'block' | 'system' | 'only_conversations' | 'expected_hours'> & { estimate_usd: number; lease_usd: number }>;
+  length: WeeklyPilotManifest['length']; gbrain: WeeklyLineGbrainBuild; world_end: string | null; ledgers: PilotLedger[]; cells: Array<Pick<CellDefinition, 'id' | 'block' | 'system' | 'only_conversations' | 'expected_hours'> & { estimate_usd: number; lease_usd: number }>;
   caps: WeeklyPilotManifest['pilot_caps']; judge_check: WeeklyPilotManifest['judge_check']; quick_look: typeof WEEKLY_LINE_QUICK_LOOK;
   totals: { estimate_usd: number; cap_usd: number; pilot_cap_usd: number; judge_check_cap_usd: number; quick_look_cap_usd: number };
 }
@@ -75,17 +80,18 @@ const pilotCell = (m: WeeklyPilotManifest, row: WlRow) => m.cells.find(c => c.bl
 export function pilotPlan(m: WeeklyPilotManifest, worldEnd: string | null): PilotPlan {
   const judge = m.cells.find(c => c.block === 'BGW-judge')!;
   const ledgers: PilotLedger[] = [];
+  const long = m.length === 'long' ? '-long' : '';
   for (const row of PILOT_ORDER) {
     const c = pilotCell(m, row), cap = m.pilot_caps[row];
-    ledgers.push({ name: `pilot-${row}`, kind: 'campaign', row, units: [c.id], estimate_usd: c.estimate.usd, cap_usd: cap.cells_cap_usd, campaign_id: `q1-scoreboard-weekly-pilot-${row}` });
+    ledgers.push({ name: `pilot-${row}`, kind: 'campaign', row, units: [c.id], estimate_usd: c.estimate.usd, cap_usd: cap.cells_cap_usd, campaign_id: `q1-scoreboard-weekly-pilot${long}-${row}` });
     for (const r of m.reread_plans.filter(p => p.cell === c.id)) ledgers.push({ name: `pilot-${row}-reread`, kind: 'reread', row, units: [r.id], estimate_usd: r.estimate.usd, cap_usd: cap.reread_cap_usd });
   }
-  ledgers.push({ name: 'judge-check', kind: 'campaign', row: 'judge-check', units: [judge.id], estimate_usd: judge.estimate.usd, cap_usd: m.judge_check.cells_cap_usd, campaign_id: 'q1-scoreboard-weekly-judge-check' });
+  ledgers.push({ name: 'judge-check', kind: 'campaign', row: 'judge-check', units: [judge.id], estimate_usd: judge.estimate.usd, cap_usd: m.judge_check.cells_cap_usd, campaign_id: `q1-scoreboard-weekly-judge-check${long}` });
   const labelEstimate = m.blocks.find(b => b.id === 'BGW-judge')!.estimate_usd - judge.estimate.usd;
   ledgers.push({ name: 'judge-check-label', kind: 'label', row: 'judge-check', units: [], estimate_usd: r2(labelEstimate), cap_usd: m.judge_check.label_cap_usd });
   const pilotCap = r2(Object.values(m.pilot_caps).reduce((s, c) => s + c.cap_usd, 0));
   return {
-    gbrain: m.gbrain_build, world_end: worldEnd, ledgers,
+    length: m.length, gbrain: m.gbrain_build, world_end: worldEnd, ledgers,
     cells: m.cells.map(c => ({ id: c.id, block: c.block, system: c.system, only_conversations: c.only_conversations, expected_hours: c.expected_hours, estimate_usd: c.estimate.usd, lease_usd: c.lease!.usd })),
     caps: m.pilot_caps, judge_check: m.judge_check, quick_look: m.quick_look,
     totals: { estimate_usd: r2(ledgers.reduce((s, l) => s + l.estimate_usd, 0)), cap_usd: r2(ledgers.reduce((s, l) => s + l.cap_usd, 0)), pilot_cap_usd: pilotCap, judge_check_cap_usd: m.judge_check.pause_usd, quick_look_cap_usd: m.quick_look.cap_usd },
@@ -100,7 +106,7 @@ export function renderPilotPlan(p: PilotPlan): string {
     `gbrain build: ${p.gbrain.release} (${p.gbrain.commit})`,
     `world end: ${p.world_end ?? 'set at launch (--world-end, a Sunday at most 14 days back)'}`,
     '',
-    `Pilot on bg1-dev-01 (R111): each row under ${WEEKLY_LINE_PILOT_FRACTION * 100}% of its block budget, the row's rate a world times ${WEEKLY_LINE_BLOCK_WORLDS} worlds`,
+    `Pilot on ${[...new Set(p.cells.filter(c => c.block === 'BGW-pilot').flatMap(c => c.only_conversations ?? []))].join(', ')} (${p.length} length, R111): each row under ${WEEKLY_LINE_PILOT_FRACTION * 100}% of its block budget, the row's rate a world times ${WEEKLY_LINE_BLOCK_WORLDS} worlds`,
     '| row | rate a world | block budget | pilot cap | cell ledger | re-read ledger |',
     '|---|---:|---:|---:|---:|---:|',
     ...rows.map(c => `| ${c.row} | ${usd(c.rate_usd_per_world)} | ${usd(c.block_budget_usd)} | ${usd(c.cap_usd)} | ${usd(c.cells_cap_usd)} | ${c.reread_cap_usd ? usd(c.reread_cap_usd) : '-'} |`),
@@ -151,7 +157,7 @@ export function writePilotCampaigns(m: WeeklyPilotManifest, o: { out: string; wi
     }),
     ...plan.ledgers.filter(l => l.kind === 'label').map(l => ({ name: l.name, argv: ['bun', 'eval/runner/weekly-line/judge-check.ts', 'label', ...paid(l.cap_usd)] })),
   ];
-  const env = { GBRAIN_EVALS_BG1_WORLD_END: o.worldEnd!, [WEEKLY_PILOT_GBRAIN_ENV]: `${m.gbrain_build.release}@${m.gbrain_build.commit}` };
+  const env = { GBRAIN_EVALS_BG1_WORLD_END: o.worldEnd!, [WEEKLY_PILOT_GBRAIN_ENV]: `${m.gbrain_build.release}@${m.gbrain_build.commit}`, [WEEKLY_PILOT_LENGTH_ENV]: m.length };
   writeFileSync(join(o.out, 'plan.json'), JSON.stringify({ ...plan, window: o.window, window_cap_usd: o.windowCapUsd, env, campaigns: campaigns.map(c => ({ name: c.name, file: c.file })), commands }, null, 2) + '\n');
   return { plan, env, campaigns, commands };
 }
@@ -290,19 +296,21 @@ export function pilotBuild(argv: readonly string[], deps: PilotDeps): WeeklyLine
   return { release, commit };
 }
 
-const manifestAt = (gbrain: WeeklyLineGbrainBuild, env: PilotDeps['env']) => loadWeeklyPilotManifest({ ...env, [WEEKLY_PILOT_GBRAIN_ENV]: `${gbrain.release}@${gbrain.commit}` });
+/** The environment with --length's world length, when given, in WEEKLY_PILOT_LENGTH_ENV; loadWeeklyPilotManifest refuses a length that is neither standard nor long. */
+const withLength = (argv: readonly string[], env: PilotDeps['env']) => { const length = flag(argv, '--length'); return length === undefined ? env : { ...env, [WEEKLY_PILOT_LENGTH_ENV]: length }; };
+const manifestAt = (gbrain: WeeklyLineGbrainBuild, argv: readonly string[], env: PilotDeps['env']) => loadWeeklyPilotManifest({ ...withLength(argv, env), [WEEKLY_PILOT_GBRAIN_ENV]: `${gbrain.release}@${gbrain.commit}` });
 
 export function main(argv: readonly string[], deps: PilotDeps = DEFAULT_DEPS, log: (s: string) => void = s => console.log(s)): number {
   const [mode, ...rest] = argv;
   if (mode === 'plan') {
-    const plan = pilotPlan(manifestAt(pilotBuild(rest, deps), deps.env), flag(rest, '--world-end') ?? null);
+    const plan = pilotPlan(manifestAt(pilotBuild(rest, deps), rest, deps.env), flag(rest, '--world-end') ?? null);
     log(rest.includes('--json') ? JSON.stringify(plan, null, 2) : renderPilotPlan(plan));
     return 0;
   }
   if (mode === 'campaigns') {
     const out = resolve(flag(rest, '--out') ?? refuse('USAGE', 'pass --out <dir>'));
     const cap = flag(rest, '--window-cap-usd');
-    const r = writePilotCampaigns(manifestAt(pilotBuild(rest, deps), deps.env), { out, window: flag(rest, '--window-granted'), windowCapUsd: cap === undefined ? undefined : Number(cap), worldEnd: flag(rest, '--world-end') });
+    const r = writePilotCampaigns(manifestAt(pilotBuild(rest, deps), rest, deps.env), { out, window: flag(rest, '--window-granted'), windowCapUsd: cap === undefined ? undefined : Number(cap), worldEnd: flag(rest, '--world-end') });
     log(renderPilotPlan(r.plan));
     log(`\nwrote ${r.campaigns.length} campaigns and plan.json to ${out}; every command runs with ${Object.entries(r.env).map(([k, v]) => `${k}=${v}`).join(' ')}`);
     for (const c of r.campaigns) log(`campaign ${c.name}: ${c.file}`);
@@ -312,7 +320,7 @@ export function main(argv: readonly string[], deps: PilotDeps = DEFAULT_DEPS, lo
   if (mode === 'report') {
     const cells = flags(rest, '--cell'), rereads = flags(rest, '--reread');
     if (!cells.length) refuse('USAGE', 'pass --cell <cell out dir> for each pilot or judge-check unit');
-    const m = loadWeeklyPilotManifest(deps.env);
+    const m = loadWeeklyPilotManifest(withLength(rest, deps.env));
     const report = pilotReport(cells.flatMap(d => readRow(resolve(d))), rereads.flatMap(d => readReread(resolve(d))), m);
     log(rest.includes('--json') ? JSON.stringify(report, null, 2) : [
       ...Object.entries(report.rows).map(([row, x]) => `${row}: ${x.reading ? `${x.pass ? 'pass' : 'FAIL'} (${Object.entries(x.checks!).map(([k, v]) => `${k} ${v ? 'yes' : 'NO'}`).join(', ')}); spend ${x.spend_usd === null ? 'unknown' : usd(x.spend_usd)} of cap ${usd(x.cap_usd)}` : 'no pilot output'}`),

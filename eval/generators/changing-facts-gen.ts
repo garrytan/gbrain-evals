@@ -54,7 +54,9 @@
  * adds the Gemini-rendered world.json beside them), and fixtures/worlds/<id>/{world,questions}.json, the same worlds
  * from the template renderer at BG1_FIXTURE_TOKENS, for keyless tests. The dev worlds are stage 1's three
  * (BG1_DEV_CONVERSATIONS) and the dev loop's 17 extra (BG1_DEV_EXTRA_CONVERSATIONS, bg1-dev-04 to bg1-dev-20), whose
- * Gemini-rendered world.json the dev loop's mint adds.
+ * Gemini-rendered world.json the dev loop's mint adds, and the weekly line's three long ones (BG1_DEV_LONG_CONVERSATIONS,
+ * bg1-dev-long-01 to -03), planned at the long profile with the gold-audit fixes; their template fixtures are at
+ * BG1_FIXTURE_TOKENS like the others, and their Gemini-rendered world.json comes in its own change after a privacy read.
  *
  *   bun eval/generators/changing-facts-gen.ts write   write the dev plans and questions and the template fixtures
  *   bun eval/generators/changing-facts-gen.ts check   exit 1 when a committed file differs from a fresh generation
@@ -64,7 +66,7 @@
 import { createHash, createHmac } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-import { BG1_DEV_CONVERSATIONS, BG1_DEV_EXTRA_CONVERSATIONS, BG1_PRIMARY, BG1_QUESTIONS_PER_STRATUM, BG1_STRATA, familyOf, type Bg1QuestionFields, type Bg1Stratum } from '../runner/bg1/types.ts';
+import { BG1_DEV_CONVERSATIONS, BG1_DEV_EXTRA_CONVERSATIONS, BG1_DEV_LONG_CONVERSATIONS, BG1_PRIMARY, BG1_QUESTIONS_PER_STRATUM, BG1_STRATA, familyOf, type Bg1QuestionFields, type Bg1Stratum } from '../runner/bg1/types.ts';
 import { encodingCount } from '../runner/systems/render-v2.ts';
 import { ForwardJobState } from './job-state.ts';
 import { Rng, addDays } from './seeded.ts';
@@ -106,7 +108,14 @@ export function profileOf(plan: Pick<WorldPlan, 'id' | 'generator'>): Bg1Profile
   return p;
 }
 export const BG1_MAX_LINES_PER_SESSION = 3;
-export const BG1_DEV_SEEDS: Readonly<Record<string, string>> = Object.fromEntries([...BG1_DEV_CONVERSATIONS, ...BG1_DEV_EXTRA_CONVERSATIONS].map(id => [id, `bg1-dev-seed-v1:${id}`]));
+export const BG1_DEV_SEEDS: Readonly<Record<string, string>> = Object.fromEntries([
+  ...[...BG1_DEV_CONVERSATIONS, ...BG1_DEV_EXTRA_CONVERSATIONS].map(id => [id, `bg1-dev-seed-v1:${id}`]),
+  ...BG1_DEV_LONG_CONVERSATIONS.map(id => [id, `bg1-dev-long-seed-v1:${id}`]),
+]);
+/** Every public dev world, in --fake-break order: stage 1's three, the dev loop's 17 extra, then the three long ones. */
+export const BG1_DEV_ALL_IDS: readonly string[] = [...BG1_DEV_CONVERSATIONS, ...BG1_DEV_EXTRA_CONVERSATIONS, ...BG1_DEV_LONG_CONVERSATIONS];
+/** A public dev world's length profile: long for the three long dev worlds, standard for the rest. */
+export const devProfileOf = (id: string): Bg1ProfileId => (BG1_DEV_LONG_CONVERSATIONS.includes(id) ? 'long' : 'standard');
 /** Embedded in every sealed plan, world, gold item and custody phrasing set; the sealed key's text rule matches it. */
 export const BG1_CUSTODY_MARKER = ['BG1', 'SEALED', 'CUSTODY', 'v1'].join('-');
 export const BG1_DATA_DIR = resolve(import.meta.dir, '../data/changing-facts-v1');
@@ -1177,8 +1186,8 @@ export function renderBriefs(plan: WorldPlan, worldTokensTarget = profileOf(plan
 
 const json = (v: unknown) => JSON.stringify(v, null, 1) + '\n';
 
-/** A public dev world's plan from its public seed; an extra dev world's with the gold-audit fixes. */
-export const devWorldPlan = (id: string) => planWorld(id, BG1_DEV_SEEDS[id], { publicSeed: true, goldAudit: BG1_DEV_EXTRA_CONVERSATIONS.includes(id) });
+/** A public dev world's plan from its public seed at its profile; an extra or long dev world's with the gold-audit fixes. */
+export const devWorldPlan = (id: string) => planWorld(id, BG1_DEV_SEEDS[id], { publicSeed: true, goldAudit: BG1_DEV_EXTRA_CONVERSATIONS.includes(id) || BG1_DEV_LONG_CONVERSATIONS.includes(id), profile: devProfileOf(id) });
 
 /**
  * The long profile's keyless fixture: a public plan at changing-facts-gen@2 with the sealed worlds' gold-audit fixes, never
@@ -1202,7 +1211,7 @@ export function longFixtureSpread(): { note: string; worlds: EvidenceSpread[] } 
 /** The committed dev files (paths relative to eval/data/changing-facts-v1), generated from the public seeds. */
 export function devFiles(): Map<string, string> {
   const files = new Map<string, string>();
-  for (const id of [...BG1_DEV_CONVERSATIONS, ...BG1_DEV_EXTRA_CONVERSATIONS]) {
+  for (const id of BG1_DEV_ALL_IDS) {
     const plan = devWorldPlan(id);
     const questions = json(buildQuestions(plan));
     files.set(`dev/worlds/${id}/plan.json`, json(plan));
@@ -1223,6 +1232,6 @@ if (import.meta.main) {
     if (cmd === 'write') { mkdirSync(dirname(path), { recursive: true }); writeFileSync(path, text); continue; }
     if (!existsSync(path) || readFileSync(path, 'utf8') !== text) { differ++; console.error(`changing-facts-gen: ${rel} differs from a fresh generation`); }
   }
-  console.log(`changing-facts-gen ${cmd} worlds=${BG1_DEV_CONVERSATIONS.length + BG1_DEV_EXTRA_CONVERSATIONS.length} differ=${differ}`);
+  console.log(`changing-facts-gen ${cmd} worlds=${BG1_DEV_ALL_IDS.length} differ=${differ}`);
   process.exit(differ ? 1 : 0);
 }
