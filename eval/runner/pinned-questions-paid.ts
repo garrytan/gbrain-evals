@@ -600,6 +600,40 @@ const isBudgetRefusal = (e: unknown) => e instanceof BudgetExceededError || (e i
 
 export interface PaidRunResult { worlds: PqWorld[]; rows: PaidRow[]; acc: ProbeAccounting; harnessErrors: string[]; resumedUnits: number }
 
+/** What a checkpointed unit must match to be reused: mode, gbrain build, generator, world size, output cap and judge prompt. */
+export function checkpointKey(o: { mode: PaidMode['kind']; gut: GbrainUnderTest; companies?: number; maxOutputTokens?: number }): string {
+  return JSON.stringify({
+    mode: o.mode, gbrain: o.gut.overlay?.build.commit ?? o.gut.version, generator: PINNED_QUESTIONS_GENERATOR_VERSION, companies: o.companies ?? 24, max_output_tokens: o.maxOutputTokens ?? null,
+    judge_prompt_sha256: createHash('sha256').update(PINNED_QUESTIONS_JUDGE_PROMPT).digest('hex'),
+  });
+}
+
+/** The (model, seed) units a launch would still ask: those with no checkpointed unit, or one owed its retry. */
+export function pendingUnits(output: string, key: string, models: readonly string[], seeds: readonly number[]): Array<{ model: string; seed: number }> {
+  const done = readCheckpoint(join(output, 'checkpoint.ndjson')).filter(x => x.key === key);
+  return models.flatMap(model => seeds.map(seed => ({ model, seed }))).filter(({ model, seed }) => {
+    const prior = done.filter(x => x.model === model && x.seed === seed).at(-1);
+    return !prior || (prior.transient && prior.attempt < MAX_UNIT_ATTEMPTS);
+  });
+}
+
+/**
+ * Spend for a receipt whose rows may come from several processes: each paid process appends its ledger summary to
+ * ledger-costs.ndjson in the output directory, under the checkpoint key, and the receipt sums every summary under that
+ * key, so a resumed receipt carries the cost of every attempt behind its rows, not only the last process's.
+ */
+export function combinedCost(output: string, key: string, current: RunSummary): RunSummary & { processes: number } {
+  const path = join(output, 'ledger-costs.ndjson');
+  appendFileSync(path, JSON.stringify({ key, summary: current }) + '\n');
+  const all = readFileSync(path, 'utf8').split('\n').flatMap(l => { try { const x = JSON.parse(l) as { key: string; summary: RunSummary }; return x.key === key ? [x.summary] : []; } catch { return []; } });
+  const sum = (f: (s: RunSummary) => number) => all.reduce((a, s) => a + f(s), 0);
+  return {
+    ...current, run_id: [...new Set(all.map(s => s.run_id))].join(','), processes: all.length,
+    reserved_usd: sum(s => s.reserved_usd), actual_usd: sum(s => s.actual_usd), charged_reservations: sum(s => s.charged_reservations), requests: sum(s => s.requests),
+    input_tokens: sum(s => s.input_tokens), output_tokens: sum(s => s.output_tokens), overshoot_usd: sum(s => s.overshoot_usd),
+  };
+}
+
 export async function runPinnedQuestionsPaid(opts: { gut: GbrainUnderTest; models: readonly string[]; seeds: readonly number[]; companies?: number; maxOutputTokens?: number; output: string; mode: PaidMode; log?: (s: string) => void }): Promise<PaidRunResult> {
   if (opts.mode.kind === 'paid' && !paidRequestGuardActive()) {
     throw new PaidArmRefusal(`${CATEGORY}: a paid run needs the budget ledger's request guard installed first (startPaidRun, as main() does); refusing before any request.`);
@@ -643,10 +677,7 @@ export async function runPinnedQuestionsPaid(opts: { gut: GbrainUnderTest; model
     try {
       const worlds = opts.seeds.map(seed => generatePinnedQuestionsWorld({ seed, companies: opts.companies }));
       const ckPath = join(opts.output, 'checkpoint.ndjson');
-      const ckKey = JSON.stringify({
-        mode: opts.mode.kind, gbrain: opts.gut.overlay?.build.commit ?? opts.gut.version, generator: PINNED_QUESTIONS_GENERATOR_VERSION, companies: opts.companies ?? 24, max_output_tokens: opts.maxOutputTokens ?? null,
-        judge_prompt_sha256: createHash('sha256').update(PINNED_QUESTIONS_JUDGE_PROMPT).digest('hex'),
-      });
+      const ckKey = checkpointKey({ mode: opts.mode.kind, gut: opts.gut, companies: opts.companies, maxOutputTokens: opts.maxOutputTokens });
       const done = readCheckpoint(ckPath, log).filter(x => x.key === ckKey);
       const acc = new ProbeAccounting(models.length * worlds.reduce((a, w) => a + w.companies.length, 0));
       const rows: PaidRow[] = [];
@@ -746,6 +777,7 @@ export function buildReceipt(opts: { gut: GbrainUnderTest; models: readonly stri
       seeds: opts.seeds, companies_per_seed: opts.companies, generator_version: PINNED_QUESTIONS_GENERATOR_VERSION,
       resumed_units: r.resumedUnits,
       judge_check_receipt_sha256: opts.judgeCheckSha256 ?? null,
+      cost_processes: opts.cost && 'processes' in opts.cost ? opts.cost.processes : null,
       gbrain_overlay: overlaySummary(opts.gut),
     },
     hashes: Object.fromEntries(r.worlds.map(w => [`ledger_seed_${w.seed}`, w.fingerprint])),
@@ -782,10 +814,12 @@ async function main(): Promise<void> {
   const outFlag = argValue(argv, '--output');
   if (!outFlag) throw new Error('--output <dir> is required: it holds checkpoint.ndjson, so an interrupted run resumes');
   const output = resolve(outFlag);
-  const estimate = estimateUsd(models, seeds.length, companies, maxOutputTokens);
+  const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
+  const key = checkpointKey({ mode: 'paid', gut, companies, maxOutputTokens });
+  const pending = pendingUnits(output, key, models, seeds);
+  const estimate = models.reduce((s, m) => s + estimateUsd([m], pending.filter(u => u.model === m).length, companies, maxOutputTokens), 0);
   requirePaidFlags(argv, estimate);
   requireProviderKeys(models);
-  const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
   const judgeCheck = stage === 'counted' ? argValue(argv, '--judge-check') : undefined;
   if (stage === 'counted') requireJudgeCheck(judgeCheck, { gut, models });
   const judgeCheckSha256 = judgeCheck ? createHash('sha256').update(readFileSync(judgeCheck)).digest('hex') : null;
@@ -797,7 +831,7 @@ async function main(): Promise<void> {
   try {
     result = await runPinnedQuestionsPaid({ gut, models, seeds, companies, maxOutputTokens, output, mode: { kind: 'paid', keys }, log: s => console.error(s) });
   } finally {
-    cost = paid.run.close();
+    cost = combinedCost(output, key, paid.run.close());
     paid.guard.uninstall();
   }
   writeReceipt(join(output, 'receipt.json'), buildReceipt({ gut, models, seeds, companies, stage, maxOutputTokens, result, cost, startedAt, mode: 'paid', judgeCheckSha256 }));

@@ -13,7 +13,7 @@ import { writeReceipt } from '../../eval/runner/receipt.ts';
 import {
   JUDGE_MIN_LABELS, PINNED_QUESTIONS_JUDGE_PROMPT, PINNED_QUESTIONS_MODELS_UNDER_TEST, STAGE_SEEDS, TRUNCATION_BAR, buildReceipt, canonicalModel, cohenKappa,
   familyOf, judgeAgreement, judgeCheckPasses, judgeFor, judgeUserMessage, modelRoles, parseJudgeLabels, requirePaidFlags, ruleLabels,
-  harnessBlocked, outcomeOf, readCheckpoint, recordingGenerateText, redactProviderText, requireJudgeCheck, requireProviderKeys, runPinnedQuestionsPaid, scoredCorrect, summarizePaid,
+  checkpointKey, combinedCost, harnessBlocked, outcomeOf, pendingUnits, readCheckpoint, recordingGenerateText, redactProviderText, requireJudgeCheck, requireProviderKeys, runPinnedQuestionsPaid, scoredCorrect, summarizePaid,
   type ChatTransport, type GradedAnswer, type PaidRow, type PaidRunResult,
 } from '../../eval/runner/pinned-questions-paid.ts';
 
@@ -541,6 +541,21 @@ describe('pinned-questions paid arm: provider errors, safety stops and budget re
     expect(readCheckpoint(ck)).toHaveLength(2);
     writeFileSync(ck, `{"torn\n${intact}`);
     expect(() => readCheckpoint(ck)).toThrow(/line 1 is not valid JSON/);
+  }, 120_000);
+
+  test('a resume estimates only the units still to ask, and its receipt sums the spend of every process behind its rows', async () => {
+    const out = dir();
+    const models = ['particle:particle-1', 'gpt-6.2-sol'].map(canonicalModel);
+    const key = checkpointKey({ mode: 'keyless', gut, companies: 8 });
+    expect(pendingUnits(out, key, models, [1, 2])).toHaveLength(4);
+    await run(out, (slug, n, model) => (model.includes('gpt-6.2-sol') && slug === a && n === 2 ? new Error('503 Service Unavailable: upstream provider_error') : null), models);
+    expect(pendingUnits(out, key, models, [1, 2])).toEqual([{ model: 'particle:particle-1', seed: 2 }, { model: 'openai:gpt-6.2-sol', seed: 1 }, { model: 'openai:gpt-6.2-sol', seed: 2 }]);
+    expect(pendingUnits(out, checkpointKey({ mode: 'keyless', gut, companies: 8, maxOutputTokens: 8000 }), models, [1])).toHaveLength(2);
+    const summary = (run_id: string, usd: number, requests: number) => ({ run_id, budget_usd: 50, reserved_usd: usd, actual_usd: usd, charged_reservations: 0, requests, input_tokens: requests * 10, output_tokens: requests * 5, overshoot_usd: 0, ledger_path: 'l', program_cap_usd: 500, event_loop_lag_ms: null });
+    combinedCost(out, 'other-key', summary('r0', 9, 9));
+    combinedCost(out, key, summary('r1', 1.5, 3));
+    const both = combinedCost(out, key, summary('r1', 0, 0));
+    expect([both.processes, both.actual_usd, both.requests, both.input_tokens, both.run_id]).toEqual([2, 1.5, 3, 30, 'r1']);
   }, 120_000);
 
   test('a refused connection is a provider error, not a safety stop', async () => {
