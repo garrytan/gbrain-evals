@@ -488,7 +488,7 @@ export class MeteringProxy {
   unbind(slot: string, key?: string) { if (key === undefined || this.bindings.get(slot)?.key === key) this.bindings.delete(slot); }
   /** Label the slot's later requests with a phase (commit, background, query) until it changes; a binding's own phase wins. */
   setPhase(slot: string, phase: Phase | null) { if (phase) this.phases.set(slot, phase); else this.phases.delete(slot); }
-  /** Label the slot's later requests `probe` when one of their search texts is exactly one of `queries` (a write-to-queryable probe's passage), whatever phase the slot is in; null clears them. Held in memory only, never logged. */
+  /** Label the slot's later requests `probe` when every one of their search texts is exactly one of `queries` (a write-to-queryable probe's passage), whatever phase the slot is in; null clears them. Held in memory only, never logged. */
   setProbeQueries(slot: string, queries: string[] | null) { if (queries?.length) this.probeQueries.set(slot, new Set(queries)); else this.probeQueries.delete(slot); }
   private meter(key: string): Meter { let m = this.meters.get(key); if (!m) this.meters.set(key, m = newMeter()); return m; }
   private settled(key: string) {
@@ -687,7 +687,8 @@ export class MeteringProxy {
       if (!body || typeof body !== 'object' || Array.isArray(body)) return refuse(400, 'invalid_request', 'request body must be a JSON object');
     }
     const probes = this.probeQueries.get(tag.slot);
-    if (probes && searchTexts(prov, route, body).some(t => probes.has(t))) tagged.phase = tag.phase = 'probe';
+    const texts = probes ? searchTexts(prov, route, body) : [];
+    if (texts.length && texts.every(t => probes!.has(t))) tagged.phase = tag.phase = 'probe';
     const model = typeof body?.model === 'string' ? body.model : null;
     const modelCap = routeClass !== undefined && model ? p.routeCaps!.caps[`${routeClass}@${prov}:${model}`] : undefined;
     if (modelCap !== undefined) tagged.output_cap = cap = modelCap;

@@ -4,12 +4,13 @@
  * record, when a system counts as idle before the next probe, and the summary that feeds the results.
  *
  * - A poll either returns (with or without an item naming the session) or errors. A probe is `found` at its first
- *   returned poll that names the session, `missed` when every poll returned and none named it by the horizon, and
- *   `errored` when it never found the session and at least one poll errored: an outage, a configuration error or a
- *   refused lease is not a slow index, so errored probes stay out of the percentiles and the miss rate.
+ *   returned poll that names the session within the horizon, `missed` when its polls reached the horizon, every one
+ *   returned and none named it in time, and `errored` otherwise (a poll errored, or polling stopped short): an outage,
+ *   a configuration error, a refused lease or a crashed harness is not a slow index, so errored probes stay out of the
+ *   percentiles and the miss rate.
  * - A probe window (one world's counted probes) is void when more than a tenth of its probes errored or started
  *   without the system idle; a void window contributes no counted probe.
- * - Idle: the system reports no pending background work (or cannot say) and its provider slot has been quiet for
+ * - Idle: the system reports no pending background work (or has no way to report it) and its provider slot has been quiet for
  *   `quietMs`, checked every `intervalMs` up to `maxMs`. The check only watches; it never drains or stops the
  *   system's own scheduler. A shim's /finish that says ready while its background liabilities are not drained is not
  *   idle.
@@ -29,11 +30,13 @@ export interface ProbeRecord {
   started_idle: boolean;
 }
 
-export function probeRecord(sourceId: string, polls: Poll[], startedIdle: boolean): ProbeRecord {
-  const hit = polls.find(p => 'found' in p && p.found);
+/** A find after the horizon is a miss; a probe that never found the session and either errored or stopped polling before the horizon is errored. */
+export function probeRecord(sourceId: string, polls: Poll[], startedIdle: boolean, horizonMs: number): ProbeRecord {
+  const hit = polls.find(p => 'found' in p && p.found && p.at_ms <= horizonMs);
   const errored = polls.filter(p => 'error' in p).length;
+  const reachedHorizon = polls.some(p => p.at_ms >= horizonMs);
   const unattributed = polls.reduce((n, p) => n + ('unattributed' in p ? p.unattributed ?? 0 : 0), 0);
-  const status: ProbeStatus = hit ? 'found' : errored ? 'errored' : 'missed';
+  const status: ProbeStatus = hit ? 'found' : errored || !reachedHorizon ? 'errored' : 'missed';
   return { source_id: sourceId, status, write_to_queryable_ms: hit ? hit.at_ms : null, polls: polls.length, errored_polls: errored, unattributed_returns: unattributed, started_idle: startedIdle };
 }
 
@@ -75,7 +78,7 @@ export function finishDrained(f: { ready: boolean; raw?: { background_liabilitie
 }
 
 export interface IdleCheck {
-  /** Pending background jobs the system reports, or null when it cannot say. */
+  /** Pending background jobs the system reports, or null when it has no way to report them; a call that throws is not idle. */
   pending: () => Promise<number | null>;
   /** When the system's provider slot last sent a request (epoch ms), or null when it never has. */
   lastRequestAt: () => number | null;
@@ -92,10 +95,19 @@ export async function awaitIdle(c: IdleCheck): Promise<{ idle: boolean; waited_m
   const quiet = c.quietMs ?? 60_000, max = c.maxMs ?? 600_000, step = c.intervalMs ?? 1_000;
   const t0 = now();
   while (true) {
-    const pending = await c.pending().catch(() => null);
+    const pending = await c.pending().catch(() => undefined);
     const last = c.lastRequestAt();
     if ((pending === null || pending === 0) && (last === null || now() - last >= quiet)) return { idle: true, waited_ms: now() - t0 };
     if (now() - t0 >= max) return { idle: false, waited_ms: now() - t0 };
     await sleep(step);
   }
+}
+
+/**
+ * The pilot's label check: during a window in which the drained, idle system answers only calibration searches (each
+ * with its passage registered), every provider request is a search request. Any request in that window not labelled
+ * `probe` is a route the label misses; the system's probes would then bill that route to another phase.
+ */
+export function unlabelledSearchRoutes(windowLines: Array<{ phase?: string | null; provider: string; route: string; outcome?: string }>): string[] {
+  return [...new Set(windowLines.filter(l => l.outcome !== 'refused' && l.phase !== 'probe').map(l => `${l.provider}${l.route}`))].sort();
 }

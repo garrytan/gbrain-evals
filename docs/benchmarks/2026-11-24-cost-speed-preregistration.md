@@ -395,23 +395,33 @@ and the text above differ, this amendment wins.
    searches, because some systems (the extract-first server among them) return from a write before their work ends.
    So phase by arrival time alone could bill a write's requests to the probe or the reverse. Before each probe the
    harness registers the probe's passage with the metering proxy (`/__proxy/probe` in
-   `eval/runner/metering-proxy.ts`). An embedding or rerank request whose search text is exactly that passage is
-   labelled `probe`, and every other request keeps its write, background or idle phase. Each request is still logged
-   and charged once, so the phases sum to the bill; a keyless test in `test/eval/cost-speed-probes.test.ts` overlaps
-   a write and a probe on one slot and checks both.
+   `eval/runner/metering-proxy.ts`). An embedding or rerank request whose every search text is exactly that passage
+   is labelled `probe`, so a batched write embedding that happens to hold the passage keeps its own phase; every
+   other request keeps its write, background or idle phase. Each request is still logged and charged once, so the
+   phases sum to the bill; a keyless test in `test/eval/cost-speed-probes.test.ts` overlaps a write and a probe on
+   one slot and checks both. The harness takes the passage as a strict part of its turn, never a whole turn, so a
+   system that embeds turn by turn never sends it as a write. A search that also calls a language model (query
+   expansion, for one) would carry the passage inside a prompt that this label doesn't read, so the pilot checks the
+   label: before its probes, each system answers 10 calibration searches while drained and idle, and any provider
+   request in that window not labelled `probe` names a route the label misses (`unlabelledSearchRoutes` in
+   `eval/runner/cost-speed-probes.ts`). Such a system fails its pilot until its read's provider calls go through a
+   slot of their own. gbrain v0.60.769.0's read made only Voyage embedding and rerank calls in the keyless check, but
+   the pilot checks it like every other system.
 2. **A bounded idle check replaces "the system reports ready" between probes.** gbrain's shim can wait several minutes
    per drain round, and its `/finish` can say ready while background work is undrained. Before each counted probe
    the harness waits until the system reports no pending background work (or can't say) and its provider slot has been
-   quiet for 60 seconds, checking each second, for at most 10 minutes. The check only watches: it never drains or
+   quiet for 60 seconds, checking each second, for at most 10 minutes; a status call that fails counts as not idle.
+   The check only watches: it never drains or
    stops the system's scheduler. A probe that starts after the 10 minutes without the system idle is recorded as
    "not idle" and doesn't count. A `/finish` that says ready with undrained background work isn't drained.
    Each counted world adds up to 21 × 20 minutes (7 hours) of probe and idle time to the machine hours above, and the
    pilot up to 20 × 20 minutes. The pilot's machine-hours check counts this allowance.
-3. **Errored polls are not misses.** A probe is found at its first poll that returns the session, missed when every
-   poll returned without it by the horizon, and errored when it never found the session and at least one poll
-   errored. Errored probes are reported per system but stay out of p50, p95 and the miss share in decision 3. A world
+3. **Errored polls are not misses.** A probe is found at its first poll within the horizon that returns the session,
+   missed when its polls reached the horizon, every one returned and none found the session in time, and errored
+   otherwise: a poll errored, or polling stopped before the horizon. Errored probes are reported per system but stay out of p50, p95 and the miss share in decision 3. A world
    whose probes are more than a tenth errored or not idle is void: none of its probes count, and it is reported.
-   The pilot's 20 probes must be found or missed, with none errored. Rules in `eval/runner/cost-speed-probes.ts`.
+   The pilot's 20 probes must be found or missed, with none errored. The probe-record, void-window and idle rules are
+   in `eval/runner/cost-speed-probes.ts`; the cells that use them are built on the results branch before the pilot.
 4. **The pilot and capacity worlds stay out of the counted pool.** If the smallest-difference check raises the world
    count, it draws only from the 18 dev worlds other than `bg1-dev-11` and `bg1-dev-12`. If 18 worlds can't resolve
    the stated difference, the results say so and report the interval they reach instead of adding those two.

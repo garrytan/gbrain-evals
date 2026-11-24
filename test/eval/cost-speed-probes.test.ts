@@ -10,7 +10,7 @@ import { join } from 'node:path';
 import { BudgetRun, closeLedgers } from '../../eval/runner/budget-ledger.ts';
 import { MeteringProxy, ProxyControl, searchTexts, type UsageLine } from '../../eval/runner/metering-proxy.ts';
 import { costSpeed, usagePhase } from '../../eval/runner/cost-speed.ts';
-import { awaitIdle, finishDrained, probeRecord, probeSummary, windowVoid, type ProbeRecord } from '../../eval/runner/cost-speed-probes.ts';
+import { awaitIdle, finishDrained, probeRecord, probeSummary, unlabelledSearchRoutes, windowVoid, type ProbeRecord } from '../../eval/runner/cost-speed-probes.ts';
 
 const tmp = mkdtempSync(join(tmpdir(), 'cost-speed-probes-'));
 afterAll(() => { closeLedgers(); rmSync(tmp, { recursive: true, force: true }); });
@@ -25,11 +25,13 @@ describe('probe attribution in the lease proxy', () => {
     const fetchImpl = (async (_url: RequestInfo | URL, init?: RequestInit) => {
       const body = JSON.parse(String(init?.body));
       if (Array.isArray(body.input) && body.input[0] !== PASSAGE) await gate;
-      return Response.json({ data: [{ embedding: [0.1] }], usage: { prompt_tokens: Array.isArray(body.input) ? 400 : 20, total_tokens: Array.isArray(body.input) ? 400 : 20 } });
+      const tokens = Array.isArray(body.input) ? 2_000_000 : 100_000;
+      return Response.json({ data: [{ embedding: [0.1] }], usage: { prompt_tokens: tokens, total_tokens: tokens } });
     }) as unknown as typeof fetch;
     const lease = BudgetRun.openLease({ runId: 'probe-overlap', leaseUsd: 1, ledgerPath: join(tmp, 'ledger.sqlite') });
     const usageLog = join(tmp, 'usage.ndjson');
     const proxy = new MeteringProxy({ fetchImpl, policy: { lease, env: FAKE_ENV, usageLog }, controlToken: 'ctl' });
+    const lineSum = (ls: UsageLine[]) => ls.reduce((n, l) => n + (l.actual_usd ?? 0), 0);
     proxy.start();
     const base = `http://127.0.0.1:${proxy.port}`;
     const post = (body: unknown) => fetch(`${base}/ext-extract-first/openai/v1/embeddings`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
@@ -42,18 +44,31 @@ describe('probe attribution in the lease proxy', () => {
       expect((await post({ model: 'text-embedding-3-small', input: PASSAGE })).status).toBe(200);
       release();
       expect((await write).status).toBe(200);
+      expect((await post({ model: 'text-embedding-3-small', input: [PASSAGE, 'user: another turn of the same session'] })).status).toBe(200);
       await ctl.probeQueries('ext-extract-first', null);
       expect((await post({ model: 'text-embedding-3-small', input: PASSAGE })).status).toBe(200);
       const lines = readFileSync(usageLog, 'utf8').trim().split('\n').map(l => JSON.parse(l) as UsageLine).filter(l => l.outcome !== 'refused');
-      expect(lines.map(l => [l.phase, usagePhase(l)])).toEqual([['probe', 'probe'], ['background', 'ingest'], ['background', 'ingest']]);
-      expect(new Set(lines.map(l => l.request_id)).size).toBe(3);
-      const billed = lines.reduce((n, l) => n + (l.actual_usd ?? 0), 0);
+      expect(lines.map(l => [l.phase, usagePhase(l)])).toEqual([['probe', 'probe'], ['background', 'ingest'], ['background', 'ingest'], ['background', 'ingest']]);
+      expect(new Set(lines.map(l => l.request_id)).size).toBe(4);
+      const billed = lineSum(lines);
       expect(billed).toBeCloseTo(Number(proxy.status().billed_usd), 10);
+      const probeUsd = lineSum(lines.filter(l => l.phase === 'probe'));
+      expect(probeUsd).toBeGreaterThan(0.001);
       const cs = costSpeed({ usage: lines, rows: [] } as never);
       const p = cs.spend.campaign.by_phase;
+      expect(p.ingest).toBeCloseTo(lineSum(lines.filter(l => l.phase === 'background')), 4);
+      expect(p.other).toBeCloseTo(probeUsd, 4);
       expect(p.ingest + p.retrieval + p.answer + p.judge + p.other).toBeCloseTo(billed, 4);
-      expect(p.ingest).toBeCloseTo(lines.filter(l => l.phase === 'background').reduce((n, l) => n + (l.actual_usd ?? 0), 0), 4);
     } finally { proxy.stop(); }
+  });
+
+  test('the pilot label check names every search route the probe label misses, such as a query-expansion call', () => {
+    const lines = [
+      { phase: 'probe', provider: 'voyage', route: '/v1/embeddings' }, { phase: 'probe', provider: 'voyage', route: '/v1/rerank' },
+      { phase: null, provider: 'anthropic', route: '/v1/messages' }, { phase: 'query', provider: 'anthropic', route: '/v1/messages', outcome: 'refused' },
+    ];
+    expect(unlabelledSearchRoutes(lines)).toEqual(['anthropic/v1/messages']);
+    expect(unlabelledSearchRoutes(lines.slice(0, 2))).toEqual([]);
   });
 
   test('search texts come from embedding inputs and rerank queries only', () => {
@@ -69,9 +84,16 @@ describe('probe records and summary', () => {
     ({ source_id: 's', status, write_to_queryable_ms: ms, polls: 1, errored_polls: status === 'errored' ? 1 : 0, unattributed_returns: 0, started_idle: idle });
 
   test('a probe whose polls errored and never found the session is errored, not missed', () => {
-    expect(probeRecord('s1', [{ at_ms: 1000, error: 'HTTP 503' }, { at_ms: 2000, error: 'HTTP 503' }], true).status).toBe('errored');
-    expect(probeRecord('s1', [{ at_ms: 1000, found: false, unattributed: 2 }, { at_ms: 2000, found: false }], true)).toMatchObject({ status: 'missed', unattributed_returns: 2 });
-    expect(probeRecord('s1', [{ at_ms: 1000, error: 'HTTP 503' }, { at_ms: 2000, found: true }], true)).toMatchObject({ status: 'found', write_to_queryable_ms: 2000, errored_polls: 1 });
+    const H = 2000;
+    expect(probeRecord('s1', [{ at_ms: 1000, error: 'HTTP 503' }, { at_ms: 2000, error: 'HTTP 503' }], true, H).status).toBe('errored');
+    expect(probeRecord('s1', [{ at_ms: 1000, found: false, unattributed: 2 }, { at_ms: 2000, found: false }], true, H)).toMatchObject({ status: 'missed', unattributed_returns: 2 });
+    expect(probeRecord('s1', [{ at_ms: 1000, error: 'HTTP 503' }, { at_ms: 2000, found: true }], true, H)).toMatchObject({ status: 'found', write_to_queryable_ms: 2000, errored_polls: 1 });
+  });
+
+  test('polling that stops before the horizon is errored, and a find after the horizon is a miss', () => {
+    expect(probeRecord('s1', [], true, 2000).status).toBe('errored');
+    expect(probeRecord('s1', [{ at_ms: 1000, found: false }], true, 2000).status).toBe('errored');
+    expect(probeRecord('s1', [{ at_ms: 2000, found: false }, { at_ms: 3000, found: true }], true, 2000)).toMatchObject({ status: 'missed', write_to_queryable_ms: null });
   });
 
   test('errored probes stay out of the percentiles and the miss share, and a window with more than a tenth errored is void', () => {
@@ -102,6 +124,12 @@ describe('idle check', () => {
     const r = await awaitIdle({ pending: async () => { calls++; return 3; }, lastRequestAt: () => null, maxMs: 600_000, intervalMs: 1_000, ...c });
     expect(r).toEqual({ idle: false, waited_ms: 600_000 });
     expect(calls).toBe(601);
+  });
+
+  test('a pending-work check that throws is not idle', async () => {
+    const c = clock();
+    const r = await awaitIdle({ pending: async () => { throw new Error('shim down'); }, lastRequestAt: () => null, maxMs: 5_000, intervalMs: 1_000, ...c });
+    expect(r).toEqual({ idle: false, waited_ms: 5_000 });
   });
 
   test('idle once nothing is pending and the slot has been quiet for the quiet window', async () => {
