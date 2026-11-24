@@ -368,18 +368,24 @@ export function settleWeek(dir: string, o: { costs?: CostCell[]; gbrainFailed?: 
   if (o.gbrainFailed && (run.no_point || !run.gbrain)) refuse('WEEKLY_NO_POINT', `week ${run.week} has no gbrain row to fail`);
   const pending = work.filter(s => !progress.has(s.id));
   if (pending.length && !o.gbrainFailed) refuse('WEEKLY_NOT_SETTLED', `${pending.length} of week ${run.week}'s ${work.length} cells, re-reads and judgments are not done or recorded as harness failures (first ${pending[0].id})`);
+  const saved: CostCell[] = [];
   if (!run.no_point && !o.gbrainFailed) {
+    const recordsOf = (s: Step) => run.cells.find(id => s.target === id || s.target.startsWith(`${id}.`)) ?? s.target;
+    const uncovered = work.filter(s => progress.get(s.id) === 'done').map(s => join('cells', recordsOf(s), s.stage === 'judge' ? 'judgments.ndjson' : 'answers.ndjson')).filter(f => !existsSync(join(dir, f)));
+    if (uncovered.length) refuse('WEEKLY_RECORDS', `${uncovered.length} done step${uncovered.length === 1 ? ' has' : 's have'} no record file in the run directory, so nothing is settled (first ${uncovered[0]})`);
     const costs = o.costs ?? refuse('WEEKLY_COSTS', `week ${run.week} has a point, so settling it needs its metered spend for every row, reader and world (--costs)`);
     const key = (row: string, reader: string, world: string) => `${row}|${reader}|${world}`;
     if (!Array.isArray(costs)) refuse('WEEKLY_COSTS', `week ${run.week}'s spend must be a list of row, reader, world and usd entries`);
     const want = new Set(WL_ROWS.flatMap(row => WL_READER_KEYS.flatMap(reader => run.worlds.map(w => key(row, reader, w.world)))));
     const given = new Set<string>(), bad: string[] = [];
     for (const c of costs) {
-      const k = key(String(c?.row), String(c?.reader), String(c?.world));
+      if (typeof c?.row !== 'string' || typeof c?.reader !== 'string' || typeof c?.world !== 'string') { bad.push(`${JSON.stringify(c)} does not name its row, reader and world as text`); continue; }
+      const k = key(c.row, c.reader, c.world);
       if (!want.has(k)) bad.push(`${k} is not a row, reader and world of the week`);
       else if (given.has(k)) bad.push(`${k} is listed twice`);
-      if (typeof c?.usd !== 'number' || !Number.isFinite(c.usd) || c.usd < 0) bad.push(`${k} is not a finite number of at least 0`);
+      if (typeof c.usd !== 'number' || !Number.isFinite(c.usd) || c.usd < 0) bad.push(`${k} is not a finite number of at least 0`);
       given.add(k);
+      saved.push({ row: c.row, reader: c.reader, world: c.world, usd: c.usd });
     }
     if (bad.length) refuse('WEEKLY_COSTS', `week ${run.week}'s spend list has ${bad.length} bad entr${bad.length === 1 ? 'y' : 'ies'}, so nothing is settled (first: ${bad[0]})`);
     const missing = [...want].filter(k => !given.has(k));
@@ -387,7 +393,7 @@ export function settleWeek(dir: string, o: { costs?: CostCell[]; gbrainFailed?: 
   }
   const no_point: WlNoPoint | null = o.gbrainFailed ? 'gbrain release failed to run' : run.no_point;
   const worlds = no_point ? [] : run.worlds;
-  const meta: WeekMeta = { week: run.week, run_id: run.run_id, gbrain: run.gbrain, comparators: run.comparators, worlds, costs: no_point ? [] : o.costs ?? [], no_point };
+  const meta: WeekMeta = { week: run.week, run_id: run.run_id, gbrain: run.gbrain, comparators: run.comparators, worlds, costs: no_point ? [] : saved, no_point };
   const count = (stage: Stage) => work.filter(s => s.stage === stage && progress.has(s.id)).length;
   const marker: SettledMarker = { schema: SETTLED_SCHEMA, run_id: run.run_id, week: run.week, no_point, gbrain: run.gbrain, worlds: worlds.map(w => w.world),
     steps: { cells: count('launch'), rereads: count('reread'), judgments: count('judge'), harness_failures: work.filter(s => progress.get(s.id) === 'harness_failure').length },

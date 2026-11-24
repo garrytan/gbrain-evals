@@ -255,6 +255,7 @@ describe('launch, progress and the settled marker', () => {
     expect(message(() => settleWeek(dir))).toMatch(/1 of week 2026-12-08's 16 .*first judge:mb-p1/);
     markStep(dir, work.at(-1)!.id, 'done');
     expect(progressOf(dir).get('judge:fs-p1')).toBe('harness_failure');
+    touchRecords(dir);
     expect(message(() => settleWeek(dir))).toMatch(/^WEEKLY_COSTS: week 2026-12-08 has a point, so settling it needs its metered spend/);
     expect(message(() => settleWeek(dir, { costs: costsFor(ids(8)).slice(1) }))).toMatch(/^WEEKLY_COSTS: .*lacks 1 row, reader and world cell .*first gbrain\|claude-opus-5-5\|bgw-1001/);
     expect(message(() => settleWeek(dir, { costs: costsFor(ids(8)).map((c, i) => (i ? c : { ...c, usd: -1 })) }))).toMatch(/^WEEKLY_COSTS: /);
@@ -273,6 +274,7 @@ describe('launch, progress and the settled marker', () => {
     const dir = join(tmp, 'settle-costs');
     const { steps } = planWeek({ dir, launch: '2026-12-08', batch: batch() }, deps('2026-12-08'));
     for (const s of steps) if (s.stage !== 'aggregates') markStep(dir, s.id, 'done');
+    touchRecords(dir);
     const full = costsFor(ids(8));
     const refused = (costs: unknown[]) => { const m = message(() => settleWeek(dir, { costs: costs as typeof full })); expect(existsSync(join(dir, 'settled.json'))).toBe(false); expect(existsSync(join(dir, 'meta.json'))).toBe(false); return m; };
     expect(refused([...full, full[0]])).toMatch(/^WEEKLY_COSTS: .*bad entry.*gbrain\|claude-opus-5-5\|bgw-1001 is listed twice/);
@@ -281,8 +283,25 @@ describe('launch, progress and the settled marker', () => {
     expect(refused([...full, { ...full[0], usd: Number.NaN }])).toMatch(/^WEEKLY_COSTS: .*bad entries/);
     expect(refused(full.map((c, i) => (i === 3 ? { ...c, usd: Number.POSITIVE_INFINITY } : c)))).toMatch(/^WEEKLY_COSTS: .*is not a finite number of at least 0/);
     expect(refused(full.map((c, i) => (i === 3 ? { ...c, usd: -0.5 } : c)))).toMatch(/^WEEKLY_COSTS: .*is not a finite number of at least 0/);
-    settleWeek(dir, { costs: full });
+    expect(refused([...full.slice(1), { ...full[0], world: [full[0].world] }])).toMatch(/^WEEKLY_COSTS: .*does not name its row, reader and world as text/);
+    settleWeek(dir, { costs: full.map(c => ({ ...c, note: 'meter export' })) });
     expect(JSON.parse(readFileSync(join(dir, 'meta.json'), 'utf8')).costs).toEqual(full);
+  });
+
+  // Value: protects=settle seals a week only when every done cell and re-read has its answer file and every done judgment its judgment file in the run directory, while a harness failure needs none; fails_when=settle writes its marker before the records are copied in, so the week can neither aggregate nor settle again; why_new=GBEV-3 ruling on #619, OV5 (runner.ts:394); seam=runner.ts settleWeek; no_claim=the record files' contents
+  test('settle refuses until the record files cover every done cell, re-read and judgment, and writes nothing', () => {
+    const dir = join(tmp, 'settle-records');
+    const { steps } = planWeek({ dir, launch: '2026-12-08', batch: batch() }, deps('2026-12-08'));
+    for (const s of steps) if (s.stage !== 'aggregates') markStep(dir, s.id, s.id === 'judge:fs-p1' ? 'harness_failure' : 'done');
+    const costs = costsFor(ids(8));
+    expect(message(() => settleWeek(dir, { costs }))).toMatch(/^WEEKLY_RECORDS: 15 done steps have no record file .*first cells\/ef-opus\/answers\.ndjson/);
+    touchRecords(dir);
+    rmSync(join(dir, 'cells', 'fs-p1', 'judgments.ndjson'));
+    rmSync(join(dir, 'cells', 'g8-p1', 'answers.ndjson'));
+    expect(message(() => settleWeek(dir, { costs }))).toMatch(/^WEEKLY_RECORDS: 1 done step has no record file .*first cells\/g8-p1\/answers\.ndjson\)$/);
+    expect(existsSync(join(dir, 'settled.json'))).toBe(false);
+    writeFileSync(join(dir, 'cells', 'g8-p1', 'answers.ndjson'), '');
+    expect(settleWeek(dir, { costs }).steps.harness_failures).toBe(1);
   });
 
   test('a week with no point settles at once, and a gbrain row that failed settles as no point with its build', () => {
@@ -344,6 +363,15 @@ function writeRecords(dir: string, worlds: readonly string[], stamp?: { run_id: 
     mkdirSync(d, { recursive: true });
     writeFileSync(join(d, 'answers.ndjson'), c.answers.map(x => JSON.stringify(x)).join('\n') + '\n');
     writeFileSync(join(d, 'judgments.ndjson'), c.judgments.map(x => JSON.stringify(x)).join('\n') + '\n');
+  }
+}
+
+/** An empty answer and judgment file for every cell and re-read of the run, so settle finds its records. */
+function touchRecords(dir: string): void {
+  const run = JSON.parse(readFileSync(join(dir, RUN_FILE), 'utf8'));
+  for (const id of [...run.cells, ...run.rereads]) {
+    mkdirSync(join(dir, 'cells', id), { recursive: true });
+    for (const f of ['answers.ndjson', 'judgments.ndjson']) writeFileSync(join(dir, 'cells', id, f), '');
   }
 }
 
