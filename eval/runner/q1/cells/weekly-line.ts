@@ -43,7 +43,7 @@ import { bgwWeekWorldEnd } from '../../memory-qa/corpus.ts';
 import { COMPAT_PROVIDERS } from '../../providers/openai-compatible.ts';
 import { FILE_AGENT_MAX_TURNS } from '../../systems/file-agent.ts';
 import {
-  ALL_SETS, ASSUMPTIONS, BG1_MEASURED, bg1JudgeOf, F6_ASSUMPTIONS, f6ExtractionLedgerUsd, f6ExtractionUsd, makeCell, MANIFEST_SCHEMA, PER_READER_JUDGE_SETTINGS, priceOf, SOTA_ASSUMPTIONS, WEEKLY_LINE_SETS,
+  ALL_SETS, ASSUMPTIONS, BG1_MEASURED, bg1JudgeOf, CELL_VM_MAX_HOURS, cellVmHours, F6_ASSUMPTIONS, f6ExtractionLedgerUsd, f6ExtractionUsd, makeCell, MANIFEST_SCHEMA, PER_READER_JUDGE_SETTINGS, priceOf, SOTA_ASSUMPTIONS, WEEKLY_LINE_SETS,
   type ArmDefinition, type ArmSpec, type CellDefinition, type CellEstimate, type Manifest, type WeeklyLineSetId,
 } from './definitions.ts';
 import { listPrice, OPUS, PARTICLE, type RereadPlan } from './bg1.ts';
@@ -238,6 +238,19 @@ const WL_ROW_OF = Object.fromEntries((Object.keys(WEEKLY_LINE_ROWS) as WeeklyLin
 type WeeklyLineTarget = { set: WeeklyLineCountedSet; week: WeeklyLineWeek; worlds: readonly string[] } | { set: 'BGW-pilot' | 'BGW-judge' };
 
 /**
+ * How a week's cell too long for one VM splits into launch units: the most worlds one unit can ingest and answer within
+ * the VM limit (CELL_VM_MAX_HOURS, with cellVmHours' margin) at the row's measured hours per million tokens, the units
+ * that takes for the week's `worlds`, and one unit's expected hours.
+ */
+export function weeklyLineUnits(hoursPerMtok: number, set: WeeklyLineSetId, worlds: number): { shards: number; worlds: number; hours: number } {
+  const s = ALL_SETS[set], unitHours = (k: number) => Math.ceil(hoursPerMtok * s.corpus_tokens / s.conversations * k / 1e6 * BG1C_WORLD_RATIO);
+  let k = worlds;
+  while (k > 0 && cellVmHours(unitHours(k)) > CELL_VM_MAX_HOURS) k--;
+  if (!k) throw new Error(`one ${set} world takes ${unitHours(1)} hours at ${hoursPerMtok} hours per million tokens, past what one VM can run in ${CELL_VM_MAX_HOURS} hours`);
+  return { shards: Math.ceil(worlds / k), worlds: k, hours: unitHours(Math.min(k, worlds)) };
+}
+
+/**
  * The line's cells for one target, in WEEKLY_LINE_ROWS order over `rows`: the counted week and the public-world runs are
  * built here alone, so a pilot cell differs from a counted one only in its set (and with it its loader and worlds) and in
  * the gbrain build passed in. `gbrain` is needed only when `rows` holds the gbrain row.
@@ -254,9 +267,11 @@ function weeklyLineCells(target: WeeklyLineTarget, gbrain: WeeklyLineGbrainBuild
       ...(g8 ? { launch: { env: { ...BG1C_GBRAIN_LAUNCH.env, GBRAIN_SHA: gbrain!.commit }, config: BG1C_GBRAIN_LAUNCH.config }, launchEnv: { GBRAIN_F6_EXTRACT_CAP_USD: String(extractionCapUsd(target.set)) } } : {}),
     });
     const hours = BG1_MEASURED.hours_per_mtok[`${system}:${configuration}`];
+    const expected = system === 'baseline-file-agent' ? weeklyLineFileAgentHours(worlds) : hours ? Math.ceil(hours * ALL_SETS[target.set].corpus_tokens / 1e6 * BG1C_WORLD_RATIO) : made.expected_hours;
+    const units = 'week' in target && hours && system !== 'baseline-file-agent' && cellVmHours(expected) > CELL_VM_MAX_HOURS ? weeklyLineUnits(hours, target.set, worlds) : null;
     const def: CellDefinition = {
-      ...made, canonical_instrument: 'bg1', effort: WEEKLY_LINE_EFFORT, shards: 1,
-      expected_hours: system === 'baseline-file-agent' ? weeklyLineFileAgentHours(worlds) : hours ? Math.ceil(hours * ALL_SETS[target.set].corpus_tokens / 1e6 * BG1C_WORLD_RATIO) : made.expected_hours,
+      ...made, canonical_instrument: 'bg1', effort: WEEKLY_LINE_EFFORT, shards: units?.shards ?? 1, ...(units && units.shards > 1 ? { kept_units: units.worlds } : {}),
+      expected_hours: units?.hours ?? expected,
       ...('week' in target ? { week: { ...target.week, worlds: [...target.worlds] } } : {}), ...(g8 ? { gbrain_build: { release: gbrain!.release, commit: gbrain!.commit } } : {}),
     };
     return { ...def, estimate: weeklyEstimate(def) };

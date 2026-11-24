@@ -228,14 +228,19 @@ describe('the weekly cells on W1-long worlds', () => {
     expect(buildWeeklyPilotManifest(GBRAIN).rates).toEqual({ ...WEEKLY_LINE_RATES });
   });
 
-  // Value: protects=the launch check refuses a week whose cells run another length than its batch; fails_when=a W1-long week launches on BGW cells, a W1 week on BGW-long cells, or a cell whose planned hours outrun one VM's limit launches and is stopped after spending; why_new=GBEV-3's brief (no guard weakened by the long set); seam=weekly-line/launch.ts weeklyLineLaunchProblems; no_claim=the cell VM
+  // Value: protects=the launch check refuses a week whose cells run another length than its batch; fails_when=a W1-long week launches on BGW cells, a W1 week on BGW-long cells, a cell (or launch unit) whose planned hours outrun one VM's limit launches and is stopped after spending, or a split cell's units skip or repeat a world; why_new=GBEV-3's brief (no guard weakened by the long set); seam=weekly-line/launch.ts weeklyLineLaunchProblems; no_claim=the cell VM
   test('the launch check refuses cells whose set is not the length their batch plans at, or that would outrun one VM', () => {
     const deps = { ripgrep: () => 'ripgrep 14.1.1', registry: [...weeklyLineRegistryModels(), { model: 'text-embedding-3-large', role: 'system-internal', system: 'extract-first server (common setup embedder)' }] };
     const problems = (cells: typeof std) => weeklyLineLaunchProblems({ gbrain: GBRAIN, cells, rereads: weeklyLineRereadPlans(cells) }, deps).filter(p => p.includes('length'));
     expect(problems(long)).toEqual([]);
     const vm = (cells: typeof std) => weeklyLineLaunchProblems({ gbrain: GBRAIN, cells, rereads: weeklyLineRereadPlans(cells) }, deps).filter(p => p.includes('-hour limit'));
     expect(vm(std)).toEqual([]);
-    expect(vm(long)).toEqual([`cell ${by(long, 'ext-extract-first').id} plans 121 hours, so its VM would need 184 hours with margin, past the 72-hour limit on one VM; it would be stopped before it finished`]);
+    expect(vm(long)).toEqual([]);
+    const whole = long.map(c => (c.system === 'ext-extract-first' ? { ...c, shards: 1, kept_units: undefined, expected_hours: 121 } : c));
+    expect(vm(whole)).toEqual([`cell ${by(long, 'ext-extract-first').id} plans 121 hours, so its VM would need 184 hours with margin, past the 72-hour limit on one VM; it would be stopped before it finished`]);
+    const units = (cells: typeof std) => weeklyLineLaunchProblems({ gbrain: GBRAIN, cells, rereads: weeklyLineRereadPlans(cells) }, deps).filter(p => p.includes('launch unit'));
+    expect(units(long)).toEqual([]);
+    expect(units(long.map(c => (c.system === 'ext-extract-first' ? { ...c, kept_units: 2 } : c)))).toEqual([`cell ${by(long, 'ext-extract-first').id}'s 3 launch units run worlds bgw-2001, bgw-2002, bgw-2003, bgw-2004, bgw-2005, bgw-2006, not each of its week's worlds once`]);
     expect(problems(long.map(c => ({ ...c, set: 'BGW' as const })))[0]).toContain('runs set BGW, and batch bgw-2001\'s worlds are set BGW-long\'s length');
     expect(problems(std.map(c => ({ ...c, set: 'BGW-long' as const })))[0]).toContain('runs set BGW-long, and batch bgw-1001\'s worlds are set BGW\'s length');
   });

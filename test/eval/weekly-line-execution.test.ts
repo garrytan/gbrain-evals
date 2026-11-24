@@ -14,6 +14,8 @@
  *   OV5  settle holds every re-read to its own records under the real re-read id, not its arm's.
  *   Dry run: the fixture week runs from plan to aggregates through the runner, the week's campaign, the real lease proxy
  *        in front of a scripted loopback upstream and the re-reads the launch hands over.
+ *   Split cells: a cell too long for one VM (a W1-long week's extract-first) runs as launch units of its week's worlds,
+ *        each within one VM's hours and leased its share, merged into the run directory before its re-read and judging.
  */
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from 'bun:test';
 import { spawnSync } from 'node:child_process';
@@ -28,9 +30,9 @@ import { BG1_FIXTURES_ROOT, bg1Conversation, type Bg1Manifest, type Corpus } fro
 import type { ChatLike, ChatResult } from '../../eval/runner/memory-qa/qa-v2.ts';
 import { DEFAULT_ROUTE_CAPS, keylessKeys, keylessUpstream, MeteringProxy } from '../../eval/runner/metering-proxy.ts';
 import { sha256, WEEKLY_CELLS_ENV, WEEKLY_CELLS_SHA256_ENV, WEEKLY_RUN_ENV } from '../../eval/runner/memory-qa/records.ts';
-import { findCell, runCell, windowedRunGuard } from '../../eval/runner/q1/cell.ts';
-import { pinnedJudgeRouteCaps } from '../../eval/runner/q1/cells/definitions.ts';
-import { generateWeeklyLineCells, WEEKLY_LINE_MODELS } from '../../eval/runner/q1/cells/weekly-line.ts';
+import { findCell, runCell, weeklyCampaignManifest, windowedRunGuard } from '../../eval/runner/q1/cell.ts';
+import { CELL_VM_MAX_HOURS, cellVmHours, pinnedJudgeRouteCaps, weeklyUnitWorlds } from '../../eval/runner/q1/cells/definitions.ts';
+import { generateWeeklyLineCells, WEEKLY_LINE_MODELS, weeklyLineRereadPlans } from '../../eval/runner/q1/cells/weekly-line.ts';
 import { prepareReread, rereadArm, rereadCellId, rereadKeys, rereadRouteCaps, runReread } from '../../eval/runner/q1/reread-cell.ts';
 import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { Campaign, DEFAULT_ROUTE_CLASSES, runRemote, weeklyCustodyPush, type CampaignManifest } from '../../eval/runner/shootout-cell.ts';
@@ -38,7 +40,7 @@ import { FakeMemorySystem } from '../../eval/runner/systems/fake.ts';
 import type { AgentAnswer } from '../../eval/runner/systems/file-agent.ts';
 import { main as aggregatesMain } from '../../eval/runner/weekly-line/aggregates.ts';
 import { WL_ROWS } from '../../eval/runner/weekly-line/design.ts';
-import { CAMPAIGN_FILE, CELLS_FILE, launchWeek, markStep, planWeek, settleWeek, weeklyLaunchCheck, WIRED_CELL_SET, type RunnerDeps } from '../../eval/runner/weekly-line/runner.ts';
+import { CAMPAIGN_FILE, CELLS_FILE, launchWeek, markStep, planWeek, settleWeek, weeklyLaunchCheck, WIRED_CELL_SET, type RunnerDeps, type WeeklyCellSet } from '../../eval/runner/weekly-line/runner.ts';
 
 const tmp = mkdtempSync(join(tmpdir(), 'weekly-line-execution-'));
 let n = 0;
@@ -504,3 +506,146 @@ describe('the fixture week, end to end and keyless', () => {
   }, 300_000);
 });
 
+
+
+// ─── Split cells ─────────────────────────────────────────────────────
+
+describe('a cell too long for one VM runs as launch units of its week', () => {
+  const LONG_WEEK = { launch: '2026-12-08', world_end: '2026-12-06', batch: 'bgw-2001' };
+  const LONG_WORLDS = Array.from({ length: 8 }, (_, i) => `bgw-${2001 + i}`);
+  const long = generateWeeklyLineCells({ week: LONG_WEEK, worlds: LONG_WORLDS, gbrain: GBRAIN });
+  const extract = long.find(c => c.system === 'ext-extract-first')!;
+  /** A filled manifest keeping the long batch's first week, as the custodian's would (no world is read through it). */
+  const longManifest = (): Bg1Manifest => ({ dataset: bgwBatchDataset(2001), status: 'filled', layout: 'test', note: 'fixture', filled_at: '2026-12-01', kept: [...LONG_WORLDS], n_final: LONG_WORLDS.length,
+    files: LONG_WORLDS.flatMap(id => ['world.json', 'questions.json'].map(f => ({ path: `worlds/${id}/${f}`, sha256: sha256(`${id} ${f}`) }))) });
+
+  // Value: protects=a W1-long week's extract-first cell, which plans 121 hours on one VM, runs as three launch units of 3, 3 and 2 worlds, each inside one VM's 72 hours, every world in exactly one unit, while the other rows and every 200k-token week stay one unit; fails_when=the long cell still plans one unit past the VM limit (the launch check refuses the week), a unit's hours outrun the VM, a world falls in no unit or in two, or a standard week's cells change shape; why_new=GBEV-3's follow-up to #625 (long-week sharding before the first long week); seam=weekly-line.ts weeklyLineUnits through generateWeeklyLineCells and definitions.ts weeklyUnitWorlds; no_claim=the measured hours themselves
+  test("a long week's extract-first cell splits into units that each fit one VM, and nothing else splits", () => {
+    expect([extract.shards, extract.kept_units, extract.expected_hours]).toEqual([3, 3, 46]);
+    expect(cellVmHours(extract.expected_hours)).toBeLessThanOrEqual(CELL_VM_MAX_HOURS);
+    const units = [0, 1, 2].map(i => weeklyUnitWorlds(extract, i));
+    expect(units).toEqual([LONG_WORLDS.slice(0, 3), LONG_WORLDS.slice(3, 6), LONG_WORLDS.slice(6)]);
+    expect(() => weeklyUnitWorlds(extract, 3)).toThrow(/runs as 3 launch units, and unit 3 is not one of them/);
+    for (const c of long.filter(c => c !== extract)) expect([c.id, c.shards, c.kept_units, cellVmHours(c.expected_hours) <= CELL_VM_MAX_HOURS]).toEqual([c.id, 1, undefined, true]);
+    for (const c of cells) expect([c.id, c.shards, c.kept_units]).toEqual([c.id, 1, undefined]);
+  });
+
+  // Value: protects=each launch unit of a split weekly cell is its own campaign unit that runs --shard i/N inside the granted window, is pushed only its own worlds and is leased its share of the cell's estimate, the shares summing to the estimate to within a cent per unit; fails_when=a split cell's units run without the window or shard flag, each lease holds the whole estimate (N times the cap) or a third whatever its world count, or every unit's VM gets the whole week; why_new=GBEV-3's follow-up scope (per-shard leases that sum to the cell's cap; no shard outside a granted window); seam=cell.ts weeklyCampaignManifest over campaignCells; no_claim=ubi-runner's push itself
+  test("a split cell's units each run their shard in the window, pushed and leased only their own worlds", () => {
+    const dir = scratch('long-campaign');
+    const cellsPath = join(dir, 'cells.json');
+    const file = { run_id: `wl-2026-12-08-${'b'.repeat(12)}`, cells: long, rereads: weeklyLineRereadPlans(long) };
+    writeFileSync(cellsPath, JSON.stringify(file));
+    const campaign = weeklyCampaignManifest(file, { cellsPath, window: 'WL-T', cap_usd: 5000 });
+    const units = campaign.cells.filter(c => c.id.startsWith(`${extract.id}.c`));
+    expect(units.map(c => c.id)).toEqual([0, 1, 2].map(i => `${extract.id}.c${i}`));
+    expect(campaign.cells.some(c => c.id === extract.id)).toBe(false);
+    units.forEach((c, i) => {
+      expect(c.command).toContain(`--cell ${extract.id} --manifest weekly --shard ${i}/3 `);
+      expect(c.command).toContain('--paid-window WL-T --window-cap-usd 5000 --out "$SHOOTOUT_OUT"');
+      expect([c.weekly_unit, c.timeout_hours! <= CELL_VM_MAX_HOURS]).toEqual([{ batch: 'bgw-2001', worlds: weeklyUnitWorlds(extract, i) }, true]);
+      expect(c.lease_usd).toBe(Math.ceil(extract.estimate.usd * weeklyUnitWorlds(extract, i).length / 8 * 100) / 100);
+    });
+    const leased = units.reduce((n, c) => n + c.lease_usd, 0);
+    expect(leased).toBeGreaterThanOrEqual(extract.estimate.usd - 1e-9);
+    expect(leased).toBeLessThanOrEqual(extract.estimate.usd + 0.03 + 1e-9);
+    for (const c of campaign.cells.filter(c => !units.includes(c))) expect([c.id, c.weekly_unit?.worlds, c.command.includes('--shard')]).toEqual([c.id, LONG_WORLDS, false]);
+  });
+
+  // Value: protects=the runner plans a split cell as one launch step per unit and a merge after all of them, its re-read and judging wait on the merge, launch.json hands the host the merge with its units in order, and a standard week's plan and launch.json are as before; fails_when=a re-read or judgment can start on one unit's answers, the merge can be marked before a unit, launch.json omits the merge or its units, or a standard week grows a merge stage; why_new=GBEV-3's follow-up scope (a shard merge in the weekly runner); seam=runner.ts planWeek (weekSteps), markStep and launchWeek; no_claim=the host's own process for the order
+  test("a long week's plan launches each unit, merges them, and only then re-reads and judges the cell", () => {
+    const dir = scratch('long-run');
+    const manifest = longManifest();
+    const { run, steps } = planWeek({ dir, launch: LONG_WEEK.launch, batch: { first: 2001, week1: LONG_WEEK.launch, manifest } }, runnerDeps());
+    const arm = extract.arms[0].cell_id, parts = [0, 1, 2].map(i => `launch:${arm}:c${i}`);
+    expect(steps.filter(s => s.target === arm && s.stage === 'launch').map(s => [s.id, s.unit])).toEqual(parts.map((p, i) => [p, `${extract.id}.c${i}`]));
+    expect(steps.find(s => s.id === `merge:${arm}`)).toMatchObject({ stage: 'merge', unit: extract.id, after: parts });
+    expect(steps.find(s => s.id === `judge:${arm}`)!.after).toEqual([`merge:${arm}`]);
+    const reread = run.rereads.find(id => id.startsWith(`${arm}.`))!;
+    expect(steps.find(s => s.id === `reread:${reread}`)!.after).toEqual([`merge:${arm}`]);
+    expect(steps.filter(s => s.stage === 'merge')).toHaveLength(1);
+    const ids = steps.map(s => s.id);
+    expect(ids.indexOf(`merge:${arm}`)).toBeGreaterThan(Math.max(...parts.map(p => ids.indexOf(p))));
+
+    const held = join(scratch('long-set'), 'bgw-2001-manifest.json');
+    writeFileSync(held, JSON.stringify(manifest));
+    process.env.GBRAIN_EVALS_BGW_MANIFEST = held;
+    const order = launchWeek(dir, 'WL-T', runnerDeps(), 5000);
+    expect(order.stages.map(s => s.stage)).toEqual(['launch', 'merge', 'reread', 'judge']);
+    expect(order.stages[1].units).toEqual([extract.id]);
+    expect(order.merges).toEqual([{ cell: extract.id, units: [0, 1, 2].map(i => `${extract.id}.c${i}`), argv: ['bun', 'eval/runner/q1/cell.ts', 'merge', '--cell', extract.id, '--manifest', 'weekly', '--out', dir] }]);
+    const campaign = JSON.parse(readFileSync(join(dir, CAMPAIGN_FILE), 'utf8')) as CampaignManifest;
+    expect(campaign.cells.map(c => c.id).sort()).toEqual([...order.stages[0].units].sort());
+    markStep(dir, parts[0], 'done');
+    expect(message(() => markStep(dir, `merge:${arm}`, 'done'))).toBe(`WEEKLY_STEP: merge:${arm} waits on ${parts.slice(1).join(', ')}`);
+
+    const std = launchedWeek();
+    const stdSteps = JSON.parse(readFileSync(join(std.dir, 'plan.json'), 'utf8')).steps as Array<{ id: string; stage: string }>;
+    expect([std.order.stages.map(s => s.stage), 'merges' in std.order, stdSteps.some(s => s.stage === 'merge' || /:c\d+$/.test(s.id))]).toEqual([['launch', 'reread', 'judge'], false, false]);
+  });
+
+  /** WIRED_CELL_SET with the fixture week's memory-bank cell split into one launch unit per world. */
+  const SPLIT = memoryBank.id;
+  const splitSet: WeeklyCellSet = input => {
+    const plan = WIRED_CELL_SET(input);
+    return { ...plan, cells: plan.cells.map(c => (c.unit === SPLIT ? { ...c, shards: 2 } : c)),
+      definitions: { ...plan.definitions!, cells: plan.definitions!.cells.map(c => (c.id === SPLIT ? { ...c, shards: 2, kept_units: 1 } : c)) } };
+  };
+
+  // Value: protects=on a split cell's VM, each unit opens only its own worlds under the unit scope its push names, refuses another unit's scope or a run without its shard, and the merge of every unit into the run directory gives the records settle reads, which it refuses until every unit and the merge are recorded; fails_when=a unit opens the whole week, a unit's VM is refused for holding only its own worlds (weekScope wants the whole week), the merge takes fewer units than the cell has, merged records don't bind to the run, or settle counts each unit as a cell; why_new=GBEV-3's follow-up scope (settle coverage counting every shard; keep #619's and #621's guards); seam=runner.ts plan and launch with a split cell set, cell.ts runCell --shard over the real Set W loader on template fixtures, the cell.ts merge CLI with the launch's merge argv, and settleWeek; no_claim=the systems under test (an in-memory fake)
+  test("a split cell's units each open only their worlds, and their merge is what the week settles on", async () => {
+    const host = custodyHost(WEEK.launch, WEEK.world_end, WORLDS);
+    const hostEnv = Object.fromEntries(['GBRAIN_EVALS_BGW_SOURCE', 'GBRAIN_EVALS_BGW_MANIFEST', 'GBRAIN_EVALS_CUSTODY_LOG'].map(k => [k, process.env[k]!]));
+    const manifest = JSON.parse(readFileSync(process.env.GBRAIN_EVALS_BGW_MANIFEST!, 'utf8')) as Bg1Manifest;
+    const dir = scratch('split-week');
+    const deps = { ...runnerDeps(), cellSet: splitSet };
+    const { run, steps } = planWeek({ dir, launch: WEEK.launch, batch: { first: 1001, week1: WEEK.launch, manifest } }, deps);
+    const order = launchWeek(dir, 'WL-T', deps, 500);
+    const campaign = JSON.parse(readFileSync(join(dir, CAMPAIGN_FILE), 'utf8')) as CampaignManifest;
+    Object.assign(process.env, order.env);
+    const def = findCell(SPLIT, undefined, 'weekly', process.env);
+    expect([def.shards, def.kept_units]).toEqual([2, 1]);
+    const s = scripted();
+    const runUnit = (i: number, unitScope: string, shard: { index: number; count: number } | null = { index: i, count: 2 }) => {
+      process.env.GBRAIN_EVALS_BGW_UNIT = unitScope;
+      const out = join(scratch(`unit-${i}`), 'out');
+      return { out, p: runCell(def, { out, ...quiet, ...(shard ? { shard } : {}) }, { system: new FakeMemorySystem(), reader: s.reader, judge: s.judge }) };
+    };
+    const outs: string[] = [];
+    for (const i of [0, 1]) {
+      const unit = campaign.cells.find(c => c.id === `${SPLIT}.c${i}`)!;
+      expect([unit.weekly_unit, unit.command.includes(`--shard ${i}/2`)]).toEqual([{ batch: 'bgw-1001', worlds: [WORLDS[i]] }, true]);
+      const before = existsSync(host.log) ? host.opened().length : 0;
+      const r = runUnit(i, WORLDS[i]);
+      expect((await r.p).status).toBe('complete');
+      expect([...new Set(host.opened().slice(before))]).toEqual([WORLDS[i]]);
+      outs.push(r.out);
+    }
+    const other = runUnit(0, WORLDS[1]);
+    expect(await refused(other.p)).toMatchObject({ code: 'PREFLIGHT_FAILED', message: expect.stringContaining(`this launch unit ${WORLDS[0]}`) });
+    const whole = runUnit(0, WORLDS.join(','), null);
+    expect((await refused(whole.p))?.message).toBe(`${SPLIT} runs as 2 launch units of its week's worlds; --shard must be i/2`);
+    expect([existsSync(other.out), existsSync(whole.out)]).toEqual([false, false]);
+
+    const merge = order.merges!.find(m => m.cell === SPLIT)!;
+    expect(merge.units).toEqual([`${SPLIT}.c0`, `${SPLIT}.c1`]);
+    const env = { PATH: process.env.PATH ?? '/usr/bin:/bin', HOME: process.env.HOME ?? '/tmp', OPENAI_API_KEY: '', ANTHROPIC_API_KEY: '', GEMINI_API_KEY: '', PARTICLE_API_KEY: '', VOYAGE_API_KEY: '', ...order.env, ...hostEnv };
+    const cli = (from: string[]) => spawnSync(merge.argv[0], [...merge.argv.slice(1), ...from.flatMap(f => ['--from', f])], { cwd: REPO, encoding: 'utf8', timeout: 60_000, env });
+    const short = cli(outs.slice(0, 1));
+    expect([short.status, short.stderr]).toEqual([2, expect.stringContaining(`${SPLIT} runs as 2 launch units of its week's worlds, so its merge takes one --from per unit, not 1`)]);
+    const merged = cli(outs);
+    expect([merged.status, merged.stderr.split('\n').filter(l => l.startsWith('['))]).toEqual([0, []]);
+    const arm = def.arms[0].cell_id;
+    const answers = readFileSync(join(dir, 'cells', arm, 'answers.ndjson'), 'utf8').trim().split('\n').map(l => JSON.parse(l));
+    expect([...new Set(answers.map(a => a.conversation_id ?? a.conversation))].sort()).toEqual(WORLDS);
+
+    for (const st of steps) if (st.stage === 'launch') markStep(dir, st.id, 'done');
+    const touch = (ids: readonly string[]) => { for (const id of ids) { mkdirSync(join(dir, 'cells', id), { recursive: true }); for (const f of ['answers.ndjson', 'judgments.ndjson']) if (!existsSync(join(dir, 'cells', id, f))) writeFileSync(join(dir, 'cells', id, f), ''); } };
+    touch([...run.cells.filter(id => id !== arm), ...run.rereads]);
+    const costs = WL_ROWS.flatMap(row => (['claude-opus-5-5', 'particle-1'] as const).flatMap(reader => WORLDS.map(world => ({ row, reader, world, usd: 0.25 }))));
+    expect(message(() => settleWeek(dir, { costs }))).toMatch(/^WEEKLY_NOT_SETTLED: /);
+    expect(message(() => settleWeek(dir, { costs }))).toEndWith(`(first merge:${arm})`);
+    for (const st of steps) if (st.stage !== 'launch' && st.stage !== 'aggregates') markStep(dir, st.id, 'done');
+    expect(settleWeek(dir, { costs }).steps).toEqual({ cells: run.cells.length + 1, rereads: run.rereads.length, judgments: run.cells.length + 1 + run.rereads.length, harness_failures: 0 });
+  }, 180_000);
+});
