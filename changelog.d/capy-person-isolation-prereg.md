@@ -1,0 +1,1 @@
+- A preregistration for a keyless zero-leak check that one person's memory never reaches another person on a gbrain brain that serves several people, over MCP dispatch, HTTP and the CLI on PGLite and Postgres ([docs/benchmarks/2026-11-24-person-isolation-preregistration.md](docs/benchmarks/2026-11-24-person-isolation-preregistration.md)).
