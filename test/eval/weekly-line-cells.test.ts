@@ -8,13 +8,13 @@
 import { describe, expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { requireWeeklyLineLaunch, weeklyLineCalledModels, weeklyLineLaunchProblems, weeklyLineModelProblems, weeklyLineRegistryModels } from '../../eval/runner/weekly-line/launch.ts';
+import { committedLockSha256, requireWeeklyLineLaunch, weeklyLineCalledModels, weeklyLineLaunchProblems, weeklyLineModelProblems, weeklyLineRegistryModels } from '../../eval/runner/weekly-line/launch.ts';
 import { OPUS, PARTICLE } from '../../eval/runner/q1/cells/bg1.ts';
 import { BG1C_GBRAIN_LAUNCH, BG1C_RATES } from '../../eval/runner/q1/cells/bg1c.ts';
 import { ALL_SETS, definitionProblems, PER_READER_JUDGE_SETTINGS, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
 import { F6_ARMS } from '../../eval/runner/q1/cells/f6.ts';
 import {
-  generateWeeklyLineCells, WEEKLY_LINE_FILE_AGENT_HOURS_MARGIN, WEEKLY_LINE_FILE_AGENT_SECONDS_PER_ANSWER, weeklyLineFileAgentHours, WEEKLY_LINE_MODELS, WEEKLY_LINE_PARTICLE_MAX_TOKENS, WEEKLY_LINE_ROWS, weeklyLineRereadPlans,
+  generateWeeklyLineCells, WEEKLY_LINE_BUNDLE_LOCKS, WEEKLY_LINE_FILE_AGENT_HOURS_MARGIN, WEEKLY_LINE_FILE_AGENT_SECONDS_PER_ANSWER, weeklyLineFileAgentHours, WEEKLY_LINE_MODELS, WEEKLY_LINE_PARTICLE_MAX_TOKENS, WEEKLY_LINE_ROWS, weeklyLineRereadPlans,
   type RegistryModel, type WeeklyLineInput,
 } from '../../eval/runner/q1/cells/weekly-line.ts';
 import { WL_SYSTEMS } from '../../eval/runner/weekly-line/design.ts';
@@ -190,6 +190,16 @@ describe('weeklyLineLaunchProblems', () => {
     expect(launch({ cells: agentServer }).join('; ')).toContain("reads in mode agent at no token budget, not its row's packed at 8000 token budget");
     const twoArms = edit('ext-memory-bank', c => { c.arms.push({ ...c.arms[0], id: 'b16000', cell_id: `${c.id}.b16000`, budget: 16000 }); return c; });
     expect(launch({ cells: twoArms }).join('; ')).toContain('cell bgw.ext-memory-bank.recipe has 2 arms');
+  });
+
+  // Value: protects=a week launches only when the committed bundle lockfiles of both servers (the pin table's and the shim's) hash to #594's patched locks, extract-first 9c32b495 and memory-bank 29b875e0; fails_when=a lockfile is missing, reverted to BG1-C's lock or edited and the week still launches; why_new=GBEV-3 ruling 2026-11-23 (bundle locks); seam=launch.ts weeklyLineLaunchProblems over WEEKLY_LINE_BUNDLE_LOCKS and committedLockSha256; no_claim=the lock the machine's image actually installs, which the cell's capability receipt records
+  test("refuses unless both servers' committed lockfiles are #594's patched locks", () => {
+    expect(Object.values(WEEKLY_LINE_BUNDLE_LOCKS).flatMap(l => l.files.map(f => committedLockSha256(f)!.slice(0, 8)))).toEqual(['9c32b495', '9c32b495', '29b875e0', '29b875e0']);
+    expect(launch()).toEqual([]);
+    const pinned = (over: Record<string, string | null>) => ({ ...RG, lockSha256: (f: string) => (f in over ? over[f] : committedLockSha256(f)) });
+    expect(launch({}, pinned({ 'eval/systems/extract-first/uv.lock': '9777b7a8'.padEnd(64, '0') }))).toEqual(["ext-extract-first's bundle lock eval/systems/extract-first/uv.lock hashes to 9777b7a8, not the patched lock 9c32b495 the line runs on"]);
+    expect(launch({}, pinned({ 'docs/comparison-systems/ext-memory-bank/uv.lock': null }))).toEqual(["ext-memory-bank's bundle lock docs/comparison-systems/ext-memory-bank/uv.lock is missing, not the patched lock 29b875e0 the line runs on"]);
+    expect(launch({ cells: cells.filter(c => c.system !== 'ext-memory-bank') }, pinned({ 'docs/comparison-systems/ext-memory-bank/uv.lock': null })).join('; ')).not.toContain('bundle lock');
   });
 
   test('refuses a world outside Set W, a cell on another set, and cells or re-reads of different weeks', () => {

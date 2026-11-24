@@ -73,6 +73,17 @@ export const WEEKLY_LINE_COMPARATORS = {
   'memory-bank': { version: '0.10.2', fixed: '2026-11-23' },
 } as const;
 
+/**
+ * The bundle locks the line runs on (GBEV-3 ruling, 2026-11-23): gbrain-evals#594's patched locks, extract-first
+ * 9c32b495 and memory-bank 29b875e0, each the SHA-256 of a committed uv.lock as #594's relock and the comparison pin table
+ * (docs/comparison-systems.md) record it. Both copies are checked: the pin table's lock_file and the shim's own lock,
+ * which the cell's machine builds from. BG1-C ran on the earlier locks 9777b7a8 and f54d89df.
+ */
+export const WEEKLY_LINE_BUNDLE_LOCKS: Readonly<Record<string, { sha256: string; files: readonly string[] }>> = {
+  'ext-extract-first': { sha256: '9c32b495ffd262519959b9d00c5d7b7a3db453765c5a6c9324008bc3e5fbaeae', files: ['docs/comparison-systems/ext-extract-first/uv.lock', 'eval/systems/extract-first/uv.lock'] },
+  'ext-memory-bank': { sha256: '29b875e0c591f5314b095923a248b5c8c02e85686d8699c517270ad508327ddf', files: ['docs/comparison-systems/ext-memory-bank/uv.lock', 'eval/systems/memory-bank/uv.lock'] },
+};
+
 /** One model of a registry entry's `models` list. */
 export interface RegistryModel { model: string; role: string; system?: string }
 

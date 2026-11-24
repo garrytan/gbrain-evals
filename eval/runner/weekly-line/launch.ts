@@ -3,14 +3,15 @@
  * 1 and 3): the weekly runner calls requireWeeklyLineLaunch on the custody host before any of a week's cells or
  * particle-1's re-reads starts. It lives apart from eval/runner/bg1/launch.ts so the cell VMs' file set is unchanged.
  */
-import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { BGW_CAMPAIGN } from '../memory-qa/bg1-names.ts';
 import { bareModelId, suspendedModelProblem } from '../model-defaults.ts';
 import { OPUS, PARTICLE } from '../q1/cells/bg1.ts';
 import { frontierJudgesFor, type CellDefinition } from '../q1/cells/definitions.ts';
 import {
-  WEEKLY_LINE_JUDGE_BY_READER, WEEKLY_LINE_MODELS, WEEKLY_LINE_READERS, WEEKLY_LINE_REGISTRY, WEEKLY_LINE_ROWS, weeklyLineBuildProblems, weeklyLineWeekProblems,
+  WEEKLY_LINE_BUNDLE_LOCKS, WEEKLY_LINE_JUDGE_BY_READER, WEEKLY_LINE_MODELS, WEEKLY_LINE_READERS, WEEKLY_LINE_REGISTRY, WEEKLY_LINE_ROWS, weeklyLineBuildProblems, weeklyLineWeekProblems,
   type RegistryModel, type WeeklyLineGbrainBuild, type WeeklyLineRereadPlan,
 } from '../q1/cells/weekly-line.ts';
 import { refuse } from '../q1/scoreboard-errors.ts';
@@ -20,6 +21,8 @@ import { ripgrepVersion } from '../systems/file-agent.ts';
  * Why a week may not launch; empty when it may. It refuses:
  *
  *   ripgrep   a week with the grep agent on a host where ripgrep can't run, because a missing rg would cripple that row;
+ *   locks     a server cell whose committed bundle lockfiles (WEEKLY_LINE_BUNDLE_LOCKS: the pin table's and the shim's
+ *             uv.lock) don't hash to #594's patched locks, extract-first 9c32b495 and memory-bank 29b875e0;
  *   rows      a week that doesn't hold each of the four preregistered rows exactly once, or holds another cell, or a cell
  *             whose arms aren't its row's one arm at the row's mode and reading budget (WEEKLY_LINE_ROWS), so a
  *             hand-edited 16,000-token read refuses;
@@ -38,7 +41,7 @@ import { ripgrepVersion } from '../systems/file-agent.ts';
  *             registry entry don't both name in that role.
  */
 export function weeklyLineLaunchProblems(l: { gbrain: WeeklyLineGbrainBuild; cells: readonly CellDefinition[]; rereads: readonly WeeklyLineRereadPlan[] },
-  deps: { ripgrep?: () => string | null; registry?: readonly RegistryModel[] } = {}): string[] {
+  deps: { ripgrep?: () => string | null; registry?: readonly RegistryModel[]; lockSha256?: (file: string) => string | null } = {}): string[] {
   const p: string[] = [...weeklyLineBuildProblems(l.gbrain)];
   if (!l.cells.length) return [...p, 'the week has no cells'];
   const week = l.cells[0].week;
@@ -65,6 +68,13 @@ export function weeklyLineLaunchProblems(l: { gbrain: WeeklyLineGbrainBuild; cel
     }
   }
   if (l.cells.some(c => c.system === 'baseline-file-agent') && (deps.ripgrep ?? ripgrepVersion)() === null) p.push('ripgrep (rg) can\'t run on this host, and the grep agent\'s cell needs it');
+  for (const [system, lock] of Object.entries(WEEKLY_LINE_BUNDLE_LOCKS)) {
+    if (!l.cells.some(c => c.system === system)) continue;
+    for (const file of lock.files) {
+      const got = (deps.lockSha256 ?? committedLockSha256)(file);
+      if (got !== lock.sha256) p.push(`${system}'s bundle lock ${file} ${got === null ? 'is missing' : `hashes to ${got.slice(0, 8)}`}, not the patched lock ${lock.sha256.slice(0, 8)} the line runs on`);
+    }
+  }
   const used = new Set<string>();
   const readerJudge = (where: string, reader: string, judges: readonly string[]) => {
     for (const m of [reader, ...judges]) used.add(m);
@@ -115,6 +125,12 @@ export function weeklyLineCalledModels(cells: readonly CellDefinition[], rereads
   }
   for (const r of rereads) out.push({ model: r.reader, role: 'under-test' }, ...r.judges.map(model => ({ model, role: 'judge' })));
   return out;
+}
+
+/** The SHA-256 of a committed file's bytes, by its path from the repository root, as #594's relock hashed each uv.lock; null when it is missing. */
+export function committedLockSha256(file: string): string | null {
+  const path = join(import.meta.dir, '../../..', file);
+  return existsSync(path) ? createHash('sha256').update(readFileSync(path)).digest('hex') : null;
 }
 
 /** The weekly line registry entry's models list (WEEKLY_LINE_REGISTRY). */
