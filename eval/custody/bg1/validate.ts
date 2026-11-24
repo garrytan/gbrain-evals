@@ -13,6 +13,9 @@
  *       --phrasing <path>.bgw-phrasing.json (--report <path outside the set> | --slot <n>) [--target-tokens 200000]
  *       [--tolerance 0.15]
  *
+ *   bun eval/custody/bg1/validate.ts --dev <bg1-dev-01 to bg1-dev-20 | bg1-dev-long-01 to -03> --set <out>/set
+ *       [--target-tokens <the dev world's profile's>] [--tolerance 0.15] [--fake]
+ *
  * --target-tokens defaults to the set's length: 200,000 for BG1, BG1-C and a W1 batch, and 1,000,000 for a W1-long batch
  * (its seed set's profile, bg1-names.ts BGW_SEED_SETS), so a long world validates at its own length.
  *
@@ -47,14 +50,20 @@
  * world that fails (the kept set is the first 40 slots that pass validation). It writes a counts-only record,
  * <out>/render/<id>.validation.json (status pass or fail, the failed gates, sessions, tokens and controls_dropped), prints one line and
  * exits 0 on a pass and 12 on a fail.
+ *
+ * --dev is the same gates for one public dev world that render.ts --dev (or mint.sh --dev) wrote, planned from its public
+ * seed and phrasing, with no custody marker allowed in its files and the length at its profile (200,000 tokens, or
+ * 1,000,000 for bg1-dev-long-01 to -03). It refuses before reading the world unless the plan and questions committed
+ * under eval/data/changing-facts-v1/dev/worlds/<id> are a fresh generation's, writes <set>/render/<id>.validation.json,
+ * prints one line and exits 0 on a pass and 12 on a fail.
  */
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
-import { BG1_CUSTODY_MARKER, BG1_TARGET_TOKENS, buildQuestions, goldFields, PlanError, renderBriefs, worldTokens, type QuestionRecord, type World } from '../../generators/changing-facts-gen.ts';
+import { BG1_CUSTODY_MARKER, BG1_DEV_ALL_IDS, BG1_PROFILES, BG1_TARGET_TOKENS, buildQuestions, devProfileOf, goldFields, PlanError, PUBLIC_PHRASING, renderBriefs, worldTokens, type QuestionRecord, type World, type WorldPlan } from '../../generators/changing-facts-gen.ts';
 import { BG1_CONVERSATIONS, BG1_N_CAP, BG1C_CONVERSATIONS, BG1C_N_FINAL, BGW_BATCH_KEPT, bgwBatchIds, bgwSlotOf } from '../../runner/bg1/types.ts';
 import { BG1_TEMPLATE_RENDERERS } from '../../runner/memory-qa/corpus.ts';
-import { checkSession, readPhrasing, readSeedLine, RenderRefusal, sealedPlan, sealedTargetTokens, type SealedKind } from './render.ts';
+import { checkSession, devPlan, readPhrasing, readSeedLine, RenderRefusal, sealedPlan, sealedTargetTokens, type SealedKind } from './render.ts';
 
 export const VALIDATION_SCHEMA = 'gbrain-evals/bg1-validation/v1';
 export const WORLD_FILES = ['plan.json', 'questions.json', 'world.json'] as const;
@@ -74,15 +83,25 @@ export interface ValidationReport {
   counts: { checked: number; passed: number; failed: number; render_dropped: number; controls_dropped: number };
 }
 
-/** The gates one world fails, given its directory and its plan inputs; empty when it passes. */
-export function validateWorld(dir: string, slot: number, seedLine: string, phrasing: ReturnType<typeof readPhrasing>, opts: { targetTokens: number; tolerance: number; kind?: SealedKind; drill?: boolean }): { failed: string[]; sessions: number; tokens: number | null; worldText: string | null } {
+type WorldGates = { failed: string[]; sessions: number; tokens: number | null; worldText: string | null };
+
+/** The gates one sealed world fails, given its directory and its plan inputs; empty when it passes. */
+export function validateWorld(dir: string, slot: number, seedLine: string, phrasing: ReturnType<typeof readPhrasing>, opts: { targetTokens: number; tolerance: number; kind?: SealedKind; drill?: boolean }): WorldGates {
+  return worldGates(dir, () => sealedPlan(seedLine, slot, phrasing, opts.kind), phrasing, { ...opts, custody: true });
+}
+
+/**
+ * The gates one world fails against the plan `planOf` gives: a sealed world's files each carry the custody marker, and a
+ * public dev world's (custody false) carry none.
+ */
+function worldGates(dir: string, planOf: () => WorldPlan, phrasing: ReturnType<typeof readPhrasing>, opts: { targetTokens: number; tolerance: number; drill?: boolean; custody: boolean }): WorldGates {
   const files = WORLD_FILES.map(f => join(dir, f));
   if (files.some(f => !existsSync(f))) return { failed: ['files'], sessions: 0, tokens: null, worldText: null };
   const [planText, questionsText, worldText] = files.map(f => readFileSync(f, 'utf8'));
   const failed = new Set<string>();
-  if ([planText, questionsText, worldText].some(t => !t.includes(BG1_CUSTODY_MARKER))) failed.add('files');
+  if ([planText, questionsText, worldText].some(t => t.includes(BG1_CUSTODY_MARKER) !== opts.custody)) failed.add('files');
   let plan;
-  try { plan = sealedPlan(seedLine, slot, phrasing, opts.kind); } catch (e) { if (e instanceof PlanError) return { failed: ['plan'], sessions: 0, tokens: null, worldText }; throw e; }
+  try { plan = planOf(); } catch (e) { if (e instanceof PlanError) return { failed: ['plan'], sessions: 0, tokens: null, worldText }; throw e; }
   if (json(plan) !== planText) failed.add('plan');
   const questions = buildQuestions(plan, phrasing);
   if (json(questions) !== questionsText) failed.add('gold');
@@ -172,6 +191,33 @@ export function validateSlot(argv: string[]): { pass: boolean; line: string } {
 }
 
 /**
+ * One public dev world's gates (--dev), as render.ts --dev wrote it under --set: the sealed gates against the dev
+ * world's plan from its public seed and phrasing (render.ts devPlan, which first refuses unless that plan and its
+ * questions are the committed ones), with no custody marker in any file and the length at the dev world's profile
+ * (about 1,000,000 tokens for a long one) unless --target-tokens says otherwise. It writes a counts-only record,
+ * <set>/render/<id>.validation.json, prints one line and passes or fails as --slot does.
+ */
+export function validateDev(argv: string[], devWorlds?: string): { pass: boolean; line: string } {
+  const flag = (name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
+  const id = flag('--dev') ?? '', set = flag('--set');
+  if (!BG1_DEV_ALL_IDS.includes(id) || !set) throw new RenderRefusal('usage: --dev <bg1-dev-01 to bg1-dev-20> (or bg1-dev-long-01 to -03) --set <dir> [--target-tokens <n>] [--tolerance <x>] [--fake]');
+  if (['--seed-file', '--phrasing', '--slot', '--report', '--bg1c', '--bgw'].some(f => argv.includes(f))) throw new RenderRefusal('--dev checks a public dev world against its public seed and phrasing, so it takes no --seed-file, --phrasing, --slot, --report, --bg1c or --bgw');
+  const targetTokens = Number(flag('--target-tokens') ?? BG1_PROFILES[devProfileOf(id)].target_tokens), tolerance = Number(flag('--tolerance') ?? 0.15);
+  if (!(targetTokens >= 1000) || !(tolerance > 0 && tolerance < 1)) throw new RenderRefusal('--target-tokens must be at least 1000 and --tolerance between 0 and 1');
+  const dir = join(resolve(set), 'worlds', id);
+  if (!existsSync(join(dir, 'world.json'))) throw new RenderRefusal(`${id} has no written world to validate`);
+  const r = worldGates(dir, () => devPlan(id, devWorlds), PUBLIC_PHRASING, { targetTokens, tolerance, drill: argv.includes('--fake'), custody: false });
+  const status = r.failed.length ? 'fail' : 'pass';
+  const controls = controlsDropped(join(resolve(set), 'render', `${id}.json`));
+  const record = join(resolve(set), 'render', `${id}.validation.json`);
+  mkdirSync(dirname(record), { recursive: true });
+  const tmp = `${record}.${process.pid}.tmp`;
+  writeFileSync(tmp, json({ schema: VALIDATION_SCHEMA, world: id, mode: argv.includes('--fake') ? 'drill' : 'real', status, failed: r.failed, sessions: r.sessions, tokens: r.tokens, target_tokens: targetTokens, tolerance, world_sha256: r.worldText === null ? null : sha256(r.worldText), controls_dropped: controls }), { mode: 0o600 });
+  renameSync(tmp, record);
+  return { pass: status === 'pass', line: `bg1-validate world=${id} status=${status} gates=${r.failed.join(',') || 'none'} sessions=${r.sessions} tokens=${r.tokens ?? 'none'} target_tokens=${targetTokens} controls_dropped=${controls ?? 'none'}` };
+}
+
+/**
  * --bgw's batch, its first slot from --batch; null without --bgw. Refuses --bgw without a batch, a batch that is not a
  * Set W slot or that would run past its seed set, and --bgw beside --bg1c.
  */
@@ -212,6 +258,7 @@ export function main(argv: string[]): { report: ValidationReport; line: string }
 if (import.meta.main) {
   try {
     const argv = process.argv.slice(2);
+    if (argv.includes('--dev')) { const r = validateDev(argv); console.log(r.line); process.exit(r.pass ? 0 : 12); }
     if (argv.includes('--slot')) { const r = validateSlot(argv); console.log(r.line); process.exit(r.pass ? 0 : 12); }
     console.log(main(argv).line);
     process.exit(0);

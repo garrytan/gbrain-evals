@@ -110,8 +110,8 @@ import { loadBN10Manifest } from './cells/bn10.ts';
 import { bg1Stage1OverCap, listPrice, loadBG1Manifest, type BG1Manifest } from './cells/bg1.ts';
 import { BG1C_MANIFEST_PATH, type BG1CManifest } from './cells/bg1c.ts';
 import { BG1C_BLOCK_IDS, isWindowedBenchmark, WEEKLY_PILOT_BLOCK_IDS } from './cells/definitions.ts';
-import { buildWeeklyPilotManifest, WEEKLY_PILOT_GBRAIN_ENV, weeklyPilotBuild, type WeeklyLineRereadPlan, type WeeklyPilotManifest } from './cells/weekly-line.ts';
-import { BGW_CAMPAIGN } from '../memory-qa/bg1-names.ts';
+import { buildWeeklyPilotManifest, WEEKLY_PILOT_COUNTED, WEEKLY_PILOT_GBRAIN_ENV, WEEKLY_PILOT_LENGTH_ENV, weeklyPilotBuild, weeklyPilotLength, type WeeklyLineRereadPlan, type WeeklyPilotManifest } from './cells/weekly-line.ts';
+import { BG1_DEV_LONG_CONVERSATIONS, BGW_CAMPAIGN } from '../memory-qa/bg1-names.ts';
 import { ledgerCaps as bg1LedgerCaps, requireRs1Window as requireBg1Window, WindowRefusal as Bg1WindowRefusal } from '../paid-arm.ts';
 import { exitCodeOf, refuse, renderMessage, ScoreboardError, type ScoreboardMessage } from './scoreboard-errors.ts';
 import type { UsageReceipt } from '../usage-receipt.ts';
@@ -232,15 +232,17 @@ export function selectCellQuestions(questions: readonly MemoryQuestion[], sel: S
   return order([...floor, ...roundRobin(strata, sel.limit - floor.length, sel.seed)]);
 }
 
-/** The conversations a split admits for a benchmark: `all` is dev and sealed together; LongMemEval-M and fixtures have no split file. */
+/** The conversations a split admits for a benchmark: `all` is dev and sealed together; LongMemEval-M and fixtures have no split file. bg1-dev's dev also admits the three long public dev worlds, which only a cell naming them in only_conversations loads (devOnly). */
 export function splitConversations(benchmark: string, split: CellDefinition['split'], corpus: Corpus): Set<string> {
   if (benchmark === 'lme-m' || benchmark === 'fixture' || corpus.benchmark === 'fixture') return new Set(corpus.conversations.map(c => c.id));
   const s = loadSplit(benchmark);
-  return new Set(split === 'dev' ? s.dev : split === 'sealed' ? s.sealed : [...s.dev, ...s.sealed]);
+  const dev = benchmark === 'bg1-dev' ? [...s.dev, ...BG1_DEV_LONG_CONVERSATIONS] : s.dev;
+  return new Set(split === 'dev' ? dev : split === 'sealed' ? s.sealed : [...dev, ...s.sealed]);
 }
 
-/** A dev cell's conversations, so the loader never reads a sealed conversation's file (BEAM) or keeps it (LoCoMo); null loads everything. */
+/** A dev cell's conversations, so the loader never reads a sealed conversation's file (BEAM) or keeps it (LoCoMo), and a bg1-dev cell naming a long dev world loads that world rather than stage 1's three; null loads everything. */
 export function devOnly(def: Pick<CellDefinition, 'benchmark' | 'split' | 'only_conversations'>): Set<string> | null {
+  if (def.benchmark === 'bg1-dev' && def.only_conversations?.some(c => BG1_DEV_LONG_CONVERSATIONS.includes(c))) return new Set(def.only_conversations);
   if (def.split !== 'dev' || !(def.benchmark === 'locomo' || def.benchmark.startsWith('beam-'))) return null;
   const dev = loadSplit(def.benchmark).dev;
   const outside = (def.only_conversations ?? []).filter(c => !dev.includes(c));
@@ -1761,8 +1763,8 @@ export function weeklyCampaignManifest(w: WeeklyCellsFile, o: { cellsPath: strin
  * One campaign of the weekly line's pilot or judge check (`--manifest weekly-pilot`): the named units of the pilot
  * manifest as launch units of the existing Q1 campaign, each run naming `--manifest weekly-pilot` inside the granted
  * paid window at the campaign's cap, as BG1's campaigns do. Every unit's command exports the world end its bg1-dev load
- * resolves dates from and the gbrain build the manifest was generated at (WEEKLY_PILOT_GBRAIN_ENV), so the VM's run
- * regenerates exactly these cells. The units read public dev worlds only, so none is sealed or pushed from custody, and
+ * resolves dates from, the gbrain build the manifest was generated at (WEEKLY_PILOT_GBRAIN_ENV) and its world length
+ * (WEEKLY_PILOT_LENGTH_ENV), so the VM's run regenerates exactly these cells. The units read public dev worlds only, so none is sealed or pushed from custody, and
  * none is given Gemini. Refused without a granted window before any file is written.
  */
 export function weeklyPilotCampaignManifest(m: WeeklyPilotManifest, o: { units: string[]; campaign_id: string; cap_usd: number; window: string; worldEnd: string }): Q1Campaign {
@@ -1771,7 +1773,7 @@ export function weeklyPilotCampaignManifest(m: WeeklyPilotManifest, o: { units: 
   const worldEnd = bg1WorldEnd({ worldEnd: o.worldEnd });
   const campaign = campaignManifest(m, { units: { campaign_id: o.campaign_id, cap_usd: o.cap_usd, units: o.units, cell_manifest: 'weekly-pilot' } });
   const out = ' --out "$SHOOTOUT_OUT"';
-  const exports = `export GBRAIN_EVALS_BG1_WORLD_END=${worldEnd}; export ${WEEKLY_PILOT_GBRAIN_ENV}=${m.gbrain_build.release}@${m.gbrain_build.commit}; `;
+  const exports = `export GBRAIN_EVALS_BG1_WORLD_END=${worldEnd}; export ${WEEKLY_PILOT_GBRAIN_ENV}=${m.gbrain_build.release}@${m.gbrain_build.commit}; export ${WEEKLY_PILOT_LENGTH_ENV}=${m.length}; `;
   return { ...campaign, executes: [...(campaign.executes ?? []), ...BG1_DATA_PATHS], cells: campaign.cells.map(cell => {
     if (cell.command.split(out).length !== 2) throw new Error(`weekly pilot unit ${cell.id} has no single${out} in its command to put the paid window before`);
     return { ...cell, command: `${exports}${cell.command.replace(out, () => ` --paid-window ${o.window} --window-cap-usd ${o.cap_usd}${out}`)}` };
@@ -1818,11 +1820,12 @@ export function loadCellManifest(which?: string, env: Record<string, string | un
 
 /**
  * The weekly line's pilot and judge check (`--manifest weekly-pilot`), generated by weekly-line.ts at the gbrain build
- * WEEKLY_PILOT_GBRAIN_ENV names, the build every pilot command exports, so the host and each VM resolve the same cells.
- * Refuses before any corpus, client or output exists when the build is unset or malformed.
+ * WEEKLY_PILOT_GBRAIN_ENV names and the world length WEEKLY_PILOT_LENGTH_ENV names (standard when unset; long runs on the
+ * long dev worlds at set BGW-long's caps), both of which every pilot command exports, so the host and each VM resolve
+ * the same cells. Refuses before any corpus, client or output exists when the build or the length is unset or malformed.
  */
 export function loadWeeklyPilotManifest(env: Record<string, string | undefined> = process.env): WeeklyPilotManifest {
-  try { return buildWeeklyPilotManifest(weeklyPilotBuild(env)); }
+  try { const length = weeklyPilotLength(env); return buildWeeklyPilotManifest(weeklyPilotBuild(env), WEEKLY_PILOT_COUNTED[length], length); }
   catch (e) {
     throw refuse({ code: 'PREFLIGHT_FAILED', message: (e as Error).message, why: 'a pilot unit runs the cells its pilot plan generated, at the gbrain build that plan resolved',
       fix: { next: 'run', argv: ['bun', 'eval/runner/weekly-line/pilot.ts', 'plan'], user_message: `export ${WEEKLY_PILOT_GBRAIN_ENV}=<release>@<commit> as the pilot's campaigns do` } });

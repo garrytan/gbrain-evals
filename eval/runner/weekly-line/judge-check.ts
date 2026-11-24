@@ -3,15 +3,19 @@
  * The weekly held-out line's judge check (preregistration docs/benchmarks/2026-11-23-weekly-outcome-line-preregistration.md,
  * "Readers and judges", R78): each gating judge is checked against at least 100 labelled grep-agent answers from public
  * dev worlds before its numbers count, at a kappa of 0.6 or more. The answers come from the grep-agent cells the weekly
- * generator builds for public worlds: the judge-check cell on bg1-dev-02 and bg1-dev-03 and the pilot's on bg1-dev-01
- * (eval/runner/q1/cells/weekly-line.ts generateWeeklyLineJudgeCheckCells and generateWeeklyLinePilotCells).
+ * generator builds for public worlds: the judge-check cell on bg1-dev-02 and bg1-dev-03 and the pilot's on bg1-dev-01, or
+ * at the long length the judge-check cell on bg1-dev-long-02 and -03 and the pilot's on bg1-dev-long-01
+ * (eval/runner/q1/cells/weekly-line.ts generateWeeklyLineJudgeCheckCells and generateWeeklyLinePilotCells). The sample, the
+ * labels and the gates are the same at either length; the answers' worlds pick the dev worlds loaded. Every --cell must be
+ * a cell of the length given by --length, or else GBRAIN_EVALS_WEEKLY_PILOT_LENGTH (standard when neither is set), so one
+ * judge check never pools standard and long answers.
  *
- *   bun eval/runner/weekly-line/judge-check.ts label  --cell <grep-agent cell out dir>... --dry-run [--keyless-upstream <url>]
+ *   bun eval/runner/weekly-line/judge-check.ts label  [--length standard|long] --cell <grep-agent cell out dir>... --dry-run [--keyless-upstream <url>]
  *                                                     [--world-end <Sunday>] [--seed <n>]
- *   bun eval/runner/weekly-line/judge-check.ts label  --cell <dir>... --out <dir> --budget-ledger <file> --run-id <id>
+ *   bun eval/runner/weekly-line/judge-check.ts label  [--length standard|long] --cell <dir>... --out <dir> --budget-ledger <file> --run-id <id>
  *                                                     --lease-usd <n> --ledger-cap-usd <n> [--world-end <Sunday>] [--seed <n>]
  *                                                     (--keyless-upstream <url> | --paid-window <unit> --window-cap-usd <n>)
- *   bun eval/runner/weekly-line/judge-check.ts report --cell <dir>... --out <dir> [--json]
+ *   bun eval/runner/weekly-line/judge-check.ts report [--length standard|long] --cell <dir>... --out <dir> [--json]
  *
  * Sample. The judge of an answer is its reader's gating judge (definitions.ts bg1JudgeOf), so each judge's sample is drawn
  * from its reader's answers that carry that judge's parsed verdict: at least 100 per judge, at least 40% of them judged
@@ -46,7 +50,7 @@ import { requireRs1Window, WindowRefusal } from '../paid-arm.ts';
 import { claimOut, keylessUpstreamArg } from '../q1/calibration-cell.ts';
 import { JUDGED, metering, onSlot, type MeterLine } from '../q1/cell.ts';
 import { BG1_MEASURED, bg1JudgeOf } from '../q1/cells/definitions.ts';
-import { generateWeeklyLineJudgeCheckCells, WEEKLY_LINE_JUDGE_CHECK_PER_JUDGE, WEEKLY_LINE_LABEL_CAP_USD, WEEKLY_LINE_LABELLER } from '../q1/cells/weekly-line.ts';
+import { generateWeeklyLineJudgeCheckCells, WEEKLY_LINE_JUDGE_CHECK_PER_JUDGE, WEEKLY_LINE_LABEL_CAP_USD, WEEKLY_LINE_LABELLER, WEEKLY_PILOT_LENGTH_ENV, WEEKLY_PILOT_SETS, weeklyPilotLength, type WeeklyPilotLength } from '../q1/cells/weekly-line.ts';
 import { classifyV3 } from '../q1/hedge.ts';
 import { exitCodeOf, renderMessage, ScoreboardError } from '../q1/scoreboard-errors.ts';
 import { openRereadLease } from '../q1/reread-cell.ts';
@@ -79,8 +83,9 @@ export interface SampleItem {
   gold: 0 | 1 | null;
 }
 
-/** The grep-agent cells a judge check reads: each cell out dir's one arm, from a pilot or judge-check block. */
-export function poolAnswers(dirs: readonly string[]): PoolAnswer[] {
+/** The grep-agent cells a judge check reads: each cell out dir's one arm, from a pilot or judge-check cell of that pilot length. */
+export function poolAnswers(dirs: readonly string[], length: WeeklyPilotLength = 'standard'): PoolAnswer[] {
+  const sets = WEEKLY_PILOT_SETS[length], prefixes = [sets.pilot, sets.judge].map(s => `${s.toLowerCase()}.`);
   const pool = dirs.flatMap(out => {
     const cells = join(out, 'cells');
     const arms = existsSync(cells) ? readdirSync(cells).sort().filter(d => existsSync(join(cells, d, 'receipt.json'))) : [];
@@ -88,6 +93,7 @@ export function poolAnswers(dirs: readonly string[]): PoolAnswer[] {
     return arms.flatMap(arm => {
       const dir = join(cells, arm), receipt = JSON.parse(readFileSync(join(dir, 'receipt.json'), 'utf8'));
       if (!['BGW-pilot', 'BGW-judge'].includes(receipt.block) || receipt.system?.kind !== 'baseline-file-agent') refuse(`${dir} is not a weekly grep-agent pilot or judge-check cell (block ${receipt.block}, system ${receipt.system?.kind})`);
+      if (!prefixes.some(x => String(receipt.run_cell).startsWith(x))) refuse(`${dir} is cell ${receipt.run_cell}, not a cell of the ${length} pilot (${sets.pilot} or ${sets.judge}); pass the --length its campaigns were written with`);
       const verdicts = new Map(readRecords(join(dir, 'judgments.ndjson'), 'judgment').filter(j => j.judge_replicate === 0).map(j => [`${j.answer_id}|${j.judge}`, gradeOf(j).score]));
       return readRecords(join(dir, 'answers.ndjson'), 'answer').map((a: AnswerRecord): PoolAnswer => {
         const judge = bg1JudgeOf(a.reader), score = JUDGED.has(a.outcome) ? verdicts.get(`${a.answer_id}|${judge}`) ?? null : null;
@@ -229,9 +235,11 @@ export async function main(argv: string[], log: (s: string) => void = s => conso
   const savedFile = out ? join(out, 'sample.json') : null;
   const saved = savedFile && existsSync(savedFile) ? JSON.parse(readFileSync(savedFile, 'utf8')) as { seed: number; world_end: string; keyless: boolean; sample: SampleItem[] } : null;
   const loadKeyless = mode === 'label' ? !!keyless : (marker && existsSync(marker) ? JSON.parse(readFileSync(marker, 'utf8')).keyless === true : false);
+  let length: WeeklyPilotLength;
+  try { length = weeklyPilotLength(one('--length') === undefined ? process.env : { [WEEKLY_PILOT_LENGTH_ENV]: one('--length') }); } catch (e) { console.error((e as Error).message); return 2; }
   let answers: PoolAnswer[], questions: Map<string, MemoryQuestion>, sample: SampleItem[], worldEnd: string;
   try {
-    answers = poolAnswers(dirs);
+    answers = poolAnswers(dirs, length);
     worldEnd = one('--world-end') ?? (mode === 'report' ? saved?.world_end : undefined) ?? process.env.GBRAIN_EVALS_BG1_WORLD_END ?? refuse('pass --world-end <Sunday>, the world end the cells ran at (GBRAIN_EVALS_BG1_WORLD_END)');
     const corpus = loadBg1Dev({ only: new Set(answers.map(a => a.conversation)), worldEnd, keyless: loadKeyless });
     questions = new Map(corpus.questions.map(q => [q.id, q]));

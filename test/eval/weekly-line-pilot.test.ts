@@ -282,6 +282,19 @@ describe('the judge check', () => {
     expect(message(() => poolAnswers([dir, dir]))).toContain('appears twice across the --cell directories');
   });
 
+  // Value: protects=one judge check pools only cells of the pilot length it was given, so a long judge's kappa never counts 200,000-token answers and a standard one never counts long ones; fails_when=poolAnswers or the CLI accepts a cell whose run_cell is another length's; why_new=/ship review p1/red-team#1 and v1/outside-voice#2 (#627), GBEV-3's ruling A; seam=judge-check.ts poolAnswers and main label --dry-run over written cells; no_claim=the labels or kappa
+  test('the judge check refuses cells from the other pilot length', async () => {
+    const dirs = cells();
+    expect(poolAnswers(dirs).length).toBeGreaterThan(0);
+    expect(message(() => poolAnswers(dirs, 'long'))).toContain('not a cell of the long pilot (BGW-pilot-long or BGW-judge-long)');
+    const err: string[] = [];
+    const origError = console.error;
+    console.error = (s: string) => { err.push(String(s)); };
+    try { expect(await judgeCheckMain(['label', ...dirs.flatMap(d => ['--cell', d]), '--dry-run', '--length', 'long', '--world-end', WORLD_END], () => {})).toBe(2); }
+    finally { console.error = origError; }
+    expect(err.join('\n')).toContain('not a cell of the long pilot');
+  });
+
   // Value: protects=a judge's kappa is Cohen's kappa of its verdicts against the labels, an unlabelled or stale-labelled item stays out, and the gates stop a judge under 0.6 or under 100 labels; fails_when=analyze counts a missing model label as wrong, accepts a label for another text, or gates on agreement instead of kappa; why_new=R78's kappa gate; seam=judge-check.ts analyze; no_claim=the interval's width
   test('kappa is computed against the labels, and the gates stop a weak or short judge', () => {
     const item = (k: number, judged: 0 | 1, gold: 0 | 1 | null) => ({ id: `i${k}`, judge: 'j', reader: OPUS, cell: 'c', answer_id: `a${k}`, question_id: 'q', conversation: 'w', text_sha256: `s${k}`, kind: 'other' as const, judged, match: 'other' as const, gold });
@@ -327,6 +340,14 @@ describe('the judge check', () => {
     const rep = JSON.parse(readFileSync(join(out, 'report.json'), 'utf8'));
     expect(rep.items.length).toBe(200);
     expect(rep.items.every((i: { label_source: string }) => ['gold-settled', MODEL_LABEL_SOURCE].includes(i.label_source))).toBe(true);
+  });
+
+  // Value: protects=pilot.ts report judges only cells of the --length it was given, so a long cell is never held to set BGW's caps or a standard one to BGW-long's; fails_when=report reads a cell whose run_cell is not in that length's manifest; why_new=/ship review p1/specialist-batched#1 (#627); seam=pilot.ts main report over a written cell; no_claim=readRow's reading of the cell
+  test('report refuses a cell from the other pilot length', () => {
+    const out = writeCell(scratch('length'), 'BGW-pilot');
+    const lines: string[] = [];
+    expect(message(() => pilotMain(['report', '--length', 'long', '--cell', out], { lsRemote: () => '', env: GBRAIN_ENV }, s => lines.push(s)))).toContain('PILOT_REPORT: bgw-pilot.baseline-file-agent.baseline is not a unit of the long pilot');
+    expect(message(() => pilotMain(['report', '--cell', out], { lsRemote: () => '', env: GBRAIN_ENV }, s => lines.push(s)))).toBeNull();
   });
 
   // Value: protects=the pilot report reads a grep-agent cell's own output: ripgrep's version, every answer's tool calls, every verdict and the no-tool-call share; fails_when=readRow reads the wrong judge's verdict, counts a turn-cap answer as needing one, or calls the agent's part run without its tool calls; why_new=R111's per-arm proof on real cell files; seam=pilot.ts readRow over cell output; no_claim=the server and gbrain rows' retrieval files

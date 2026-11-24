@@ -8,7 +8,8 @@
  *       [--cache <dir>, default <set>/../render-cache] [--target-tokens 200000]
  *       (--fake [--fake-break <slot>:<session index>:<attempts>,... or <slot>:length]
  *        | --paid-window <unit> --window-cap-usd <n> --budget-ledger <file> --budget-run-id <id>)
- *   bun eval/custody/bg1/render.ts --dev <bg1-dev-01 to bg1-dev-20> --set <out>/set [--cache <dir>] [--target-tokens 200000]
+ *   bun eval/custody/bg1/render.ts --dev <bg1-dev-01 to bg1-dev-20 | bg1-dev-long-01 to -03> --set <out>/set [--cache <dir>]
+ *       [--target-tokens <the dev world's profile's: 200000, or 1000000 for a long one>]
  *       (--fake [--fake-break <dev number>:<session index>:<attempts>,...] | --paid-window ... as above)
  *   bun eval/custody/bg1/render.ts --dev-report <bg1-dev-NN> --set <out>/set [--budget-ledger <file> --budget-run-id <id>]
  *
@@ -66,7 +67,9 @@
  * or a Set W slot first runs commitment.ts's check, as mint.sh does, so a direct call renders only from the seed and
  * phrasing whose hashes launch amendment A published.
  *
- * --dev renders one of stage 1's three public dev worlds instead of a mint slot (mint.sh --dev runs all three). It
+ * --dev renders one public dev world instead of a mint slot (mint.sh --dev runs stage 1's three by default): stage 1's
+ * three, the dev loop's 17 extra or the weekly line's three long ones (bg1-dev-long-01 to -03, changing-facts-gen@2,
+ * rendered to about 1,000,000 tokens unless --target-tokens says otherwise). It
  * plans the world from its public seed and the public phrasing, as changing-facts-gen.ts devFiles() does, and reads no
  * seed or phrasing file, so it takes no --seed-file, --phrasing or --slot. Before any model call it refuses unless the
  * plan and its questions are byte-identical to the committed eval/data/changing-facts-v1/dev/worlds/<id>/plan.json and
@@ -82,11 +85,11 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, realpathSync, renameSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import {
-  BG1_DATA_DIR, BG1_PROFILES, BG1_TARGET_TOKENS, BG1_WORLD_SCHEMA, buildQuestions, devWorldPlan, loadPhrasing, PlanError, planWorld, PUBLIC_PHRASING, renderBriefs, renderTemplateSession,
+  BG1_DATA_DIR, BG1_DEV_ALL_IDS, BG1_PROFILES, BG1_WORLD_SCHEMA, buildQuestions, devProfileOf, devWorldPlan, loadPhrasing, PlanError, planWorld, PUBLIC_PHRASING, renderBriefs, renderTemplateSession,
   bgwWorldSeed, sealedWorldSeed, termRegex, type Phrasing, type RenderBrief, type Turn, type World, type WorldPlan,
 } from '../../generators/changing-facts-gen.ts';
 import { readLedger } from '../../runner/budget-ledger.ts';
-import { BG1_DEV_CONVERSATIONS, BG1_DEV_EXTRA_CONVERSATIONS, BG1C_FIRST_SLOT, BG1C_LAST_SLOT, BGW_SEED_SETS, bg1WorldId, bgwProfileOf, bgwSeedSetOf, bgwWorldId } from '../../runner/bg1/types.ts';
+import { BG1C_FIRST_SLOT, BG1C_LAST_SLOT, BGW_SEED_SETS, bg1WorldId, bgwProfileOf, bgwSeedSetOf, bgwWorldId } from '../../runner/bg1/types.ts';
 import { ledgerCaps, requireRs1Window, WindowRefusal } from '../../runner/paid-arm.ts';
 import { checkCommitment } from './commitment.ts';
 import { PROXY_REFUSAL_MARKERS } from '../../runner/providers/openai-compatible.ts';
@@ -499,8 +502,8 @@ export const sealedTargetTokens = (slot: number, kind: SealedKind) => BG1_PROFIL
 
 /** The committed public dev worlds' plans and questions, as changing-facts-gen.ts devFiles() writes them. */
 export const BG1_DEV_WORLDS = join(BG1_DATA_DIR, 'dev', 'worlds');
-/** Stage 1's three dev worlds, then the dev loop's 17 extra; a dev world's place here is its --fake-break number. */
-const DEV_IDS: readonly string[] = [...BG1_DEV_CONVERSATIONS, ...BG1_DEV_EXTRA_CONVERSATIONS];
+/** Stage 1's three dev worlds, the dev loop's 17 extra, then the three long ones; a dev world's place here is its --fake-break number. */
+const DEV_IDS = BG1_DEV_ALL_IDS;
 
 /**
  * A public dev world's plan, planned as devFiles() plans it. Refuses unless the plan and its questions are
@@ -533,7 +536,7 @@ export function insideCheckout(path: string): boolean {
 export function devReport(argv: string[]): string {
   const flag = (name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
   const id = flag('--dev-report') ?? '', set = flag('--set'), ledger = flag('--budget-ledger'), run = flag('--budget-run-id');
-  if (!DEV_IDS.includes(id) || !set || !ledger !== !run) throw new RenderRefusal('usage: --dev-report <bg1-dev-NN> --set <dir> [--budget-ledger <file> --budget-run-id <id>]');
+  if (!DEV_IDS.includes(id) || !set || !ledger !== !run) throw new RenderRefusal('usage: --dev-report <bg1-dev-NN | bg1-dev-long-NN> --set <dir> [--budget-ledger <file> --budget-run-id <id>]');
   const record = join(resolve(set), 'render', `${id}.json`);
   const stats = existsSync(record) ? JSON.parse(readFileSync(record, 'utf8')) as { status: string; attempts: number; regenerated: number } : null;
   const parts = [`bg1-render world=${id} report`, stats ? `status=${stats.status} attempts=${stats.attempts} regenerated=${stats.regenerated}` : 'record=missing'];
@@ -563,13 +566,13 @@ export async function main(argv: string[], env: Record<string, string | undefine
   if (dev !== null) {
     if (seedFile || phrasingFile || slotText) throw new RenderRefusal('--dev plans a public dev world from its public seed and phrasing, so it takes no --seed-file, --phrasing or --slot');
     if (kind === 'bgw') throw new RenderRefusal('--dev plans a public dev world, so it takes no --bgw');
-    if (!set || !DEV_IDS.includes(dev)) throw new RenderRefusal(`usage: --dev <bg1-dev-01 to bg1-dev-20> --set <dir> (--fake | --paid-window <unit> --window-cap-usd <n> --budget-ledger <file> --budget-run-id <id>)`);
+    if (!set || !DEV_IDS.includes(dev)) throw new RenderRefusal(`usage: --dev <bg1-dev-01 to bg1-dev-20> (or bg1-dev-long-01 to -03) --set <dir> (--fake | --paid-window <unit> --window-cap-usd <n> --budget-ledger <file> --budget-run-id <id>)`);
   } else if (!set || !seedFile || !phrasingFile || !slotText) throw new RenderRefusal(`usage: [--bgw] --set <dir> --seed-file <path>.${kind}-seed --phrasing <path>.${kind}-phrasing.json --slot <n> (--fake | --paid-window <unit> --window-cap-usd <n> --budget-ledger <file> --budget-run-id <id>)`);
   if (insideCheckout(set)) throw new RenderRefusal('--set must sit outside any git checkout');
   const cache = resolve(flag('--cache') ?? join(dirname(resolve(set)), 'render-cache'));
   if (insideCheckout(cache)) throw new RenderRefusal('--cache must sit outside any git checkout');
   const fake = argv.includes('--fake');
-  const targetTokens = Number(flag('--target-tokens') ?? (dev === null ? sealedTargetTokens(Number(slotText), kind) : BG1_TARGET_TOKENS));
+  const targetTokens = Number(flag('--target-tokens') ?? (dev === null ? sealedTargetTokens(Number(slotText), kind) : BG1_PROFILES[devProfileOf(dev)].target_tokens));
   if (!(Number.isInteger(targetTokens) && targetTokens >= 1000)) throw new RenderRefusal('--target-tokens must be a whole number of at least 1000');
   let make = models;
   if (!make && !fake) {

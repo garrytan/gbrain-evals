@@ -9,7 +9,7 @@
 #   eval/custody/bg1/mint.sh --bgw --batch <first slot> [--previous <previous batch's --out>] [--tolerance 0.15]
 #       [--supply-ack <id>] --out <dir>/bgw-custody --seed-file <path>.bgw-seed --phrasing <path>.bgw-phrasing.json
 #       [--count <n>] [--start <slot>] [--target-tokens <the seed set's>] [--yield-gate-ack <id>] (--fake ... | --budget-ledger ... as above)
-#   eval/custody/bg1/mint.sh --dev --out <dir> [--worlds bg1-dev-01,...] [--target-tokens 200000]
+#   eval/custody/bg1/mint.sh --dev --out <dir> [--worlds bg1-dev-01,...] [--target-tokens <each world's profile's>]
 #       (--fake [--fake-break <dev number>:<session>:<attempts>,...] | --budget-ledger ... as above)
 #
 # Two sealed sets share the seed, phrasing and world ids, each on slots of its own. Without --bg1c the mint is BG1's:
@@ -81,9 +81,11 @@
 #     relative --out or --budget-ledger never resolves against a directory the caller's CDPATH names.
 #   - One key per proxy. Real mode needs the granted paid window: without --paid-window and --window-cap-usd, or with
 #     the ledger's program cap or the run's budget unknown or above the window cap, it exits 2 before any proxy starts
-#     (eval/runner/rs1/paid-window.ts check, the window guard in eval/runner/paid-arm.ts). Gemini's key comes only from
-#     BG1_GEMINI_API_KEY in ~/.config/gbrain-evals/bg1.env (mode 600 or 400), never from GEMINI_API_KEY, and
-#     claude-haiku-5-5's from ANTHROPIC_API_KEY in this shell. For each slot it starts two metering proxies
+#     (eval/runner/rs1/paid-window.ts check, the window guard in eval/runner/paid-arm.ts). A sealed mint takes Gemini's key
+#     only from BG1_GEMINI_API_KEY in ~/.config/gbrain-evals/bg1.env (mode 600 or 400), never from GEMINI_API_KEY; a --dev
+#     mint, which renders public worlds only, takes it from GEMINI_API_KEY in this shell when that is set, so a VM given
+#     the key in its environment needs no key file, and from bg1.env otherwise. claude-haiku-5-5's comes from
+#     ANTHROPIC_API_KEY in this shell. For each slot it starts two metering proxies
 #     (eval/runner/harness-metering-proxy.ts), each holding only its own provider's key and joined to the open ledger
 #     run, so every request is priced and reserved before it is sent. render.ts runs under 'env -i' with only their
 #     ready files and never sees a real key. A key reaches its proxy through the environment, never a command line.
@@ -119,7 +121,9 @@
 # (exit 2) before the window check or any proxy.
 #
 # --dev renders public dev worlds through render.ts --dev: stage 1's three, bg1-dev-01, -02 and -03 in that order, or
-# the ones --worlds lists, in its order, from those three and the dev loop's 17 extra (bg1-dev-04 to bg1-dev-20),
+# the ones --worlds lists, in its order, from those three, the dev loop's 17 extra (bg1-dev-04 to bg1-dev-20) and the
+# weekly line's three long ones (bg1-dev-long-01 to -03). Each renders at its own profile's length (200,000 tokens, or
+# 1,000,000 for a long one) unless --target-tokens names one length for all,
 # behind the same pair of metering proxies per world, on one ledger, after the same window check and with the same key
 # sources as above. It reads no seed or phrasing file: render.ts plans each world from its public seed and refuses one
 # whose plan or questions differ from the committed files. So it takes no --seed-file, --phrasing, --count, --start or
@@ -258,7 +262,8 @@ if [ "$BGW" = 1 ]; then
     [ "$(cat "$OUT/batch.json")" = "$BATCH_RECORD" ] || die "this --out is another batch's (its batch.json does not name bgw-$BATCH); each Set W batch mints into a custody --out of its own"
   fi
 fi
-TARGET="${TARGET:-$SET_TARGET}"
+# A dev world renders at its own profile's length (render.ts --dev's default) unless --target-tokens was given.
+[ "$DEV" = 1 ] || TARGET="${TARGET:-$SET_TARGET}"
 # BG1-C and Set W: a real mint never starts on an --out (or a --previous batch) a --fake drill wrote into (a drill
 # render or validation record, or a template-rendered world), so drill passes and drops never count toward the supply
 # check, the drop cap, the kept stop or the next batch's start.
@@ -270,7 +275,7 @@ if [ "$MODE" = real ] && [ "$GATED" = 1 ]; then
     [ ! -e "$f" ] || ! grep -Eq '"renderer": ?"(fake-)?template"' "$f" || die "this --out holds a template-rendered world ($(basename "$(dirname "$f")")), and a real mint never starts on a drill's --out"
   done
 fi
-BG1_KEY=""
+BG1_KEY="" KEY_VAR=""
 # BG1-C and Set W: a real mint renders only from the seed and phrasing its seed commitment file records (commitment.ts).
 if [ "$MODE" = real ] && [ "$GATED" = 1 ]; then
   env -i PATH=/usr/bin:/bin HOME="$HOME" LANG=C.UTF-8 TZ=UTC "$BUN" "$HERE/commitment.ts" "${SET_ARGS[0]}" --seed-file "$SEED_FILE" --phrasing "$PHRASING" || exit 2
@@ -281,13 +286,20 @@ if [ "$MODE" = real ]; then
   [ -d "$(dirname "$LEDGER")" ] || die "the --budget-ledger directory does not exist"
   LEDGER="$(cd "$(dirname "$LEDGER")" && pwd)/$(basename "$LEDGER")"
   "$BUN" "$REPO/eval/runner/rs1/paid-window.ts" check --paid-window "$WINDOW" --window-cap-usd "$WINDOW_CAP" --budget-ledger "$LEDGER" --budget-run-id "$RUN_ID" >/dev/null || exit 2
-  KEY_FILE="$HOME/.config/gbrain-evals/bg1.env"
-  [ -f "$KEY_FILE" ] || die "real mode takes Gemini's key only from BG1_GEMINI_API_KEY in ~/.config/gbrain-evals/bg1.env, which does not exist"
-  owner_only "$KEY_FILE" || die "~/.config/gbrain-evals/bg1.env must be mode 600 or 400"
-  BG1_KEY="$(sed -nE 's/^(export[[:space:]]+)?BG1_GEMINI_API_KEY=//p' "$KEY_FILE" | tail -n 1)"
-  BG1_KEY="${BG1_KEY%\"}"
-  BG1_KEY="${BG1_KEY#\"}"
-  [ -n "$BG1_KEY" ] || die "~/.config/gbrain-evals/bg1.env has no BG1_GEMINI_API_KEY line"
+  # A --dev mint renders public worlds only, so it may take Gemini's key from its own GEMINI_API_KEY (passed to a VM's
+  # process, never written to disk); a sealed mint, and a --dev mint without it, take it only from the key file.
+  [ "$DEV" = 0 ] || BG1_KEY="${GEMINI_API_KEY:-}"
+  KEY_VAR=GEMINI_API_KEY
+  if [ -z "$BG1_KEY" ]; then
+    KEY_VAR=BG1_GEMINI_API_KEY
+    KEY_FILE="$HOME/.config/gbrain-evals/bg1.env"
+    [ -f "$KEY_FILE" ] || die "real mode takes Gemini's key only from BG1_GEMINI_API_KEY in ~/.config/gbrain-evals/bg1.env (or, for --dev, from GEMINI_API_KEY), which does not exist"
+    owner_only "$KEY_FILE" || die "~/.config/gbrain-evals/bg1.env must be mode 600 or 400"
+    BG1_KEY="$(sed -nE 's/^(export[[:space:]]+)?BG1_GEMINI_API_KEY=//p' "$KEY_FILE" | tail -n 1)"
+    BG1_KEY="${BG1_KEY%\"}"
+    BG1_KEY="${BG1_KEY#\"}"
+    [ -n "$BG1_KEY" ] || die "~/.config/gbrain-evals/bg1.env has no BG1_GEMINI_API_KEY line"
+  fi
   test -n "${ANTHROPIC_API_KEY:-}" || die "ANTHROPIC_API_KEY is not set (claude-haiku-5-5 is the second validator)"
 fi
 [ "$MODE" != real ] || [ "$BGW" = 0 ] || [ "$TARGET" = "$SET_TARGET" ] || die "a real Set W mint renders batch bgw-$BATCH at its seed set's $SET_TARGET tokens, so --target-tokens may not be $TARGET"
@@ -346,7 +358,8 @@ start_proxy() {
 render_one() {
   local id="$1"
   shift
-  local allow=(PATH=/usr/bin:/bin HOME="$HOME" LANG=C.UTF-8 TZ=UTC) args=("$@" --cache "$OUT/render-cache" --target-tokens "$TARGET")
+  local allow=(PATH=/usr/bin:/bin HOME="$HOME" LANG=C.UTF-8 TZ=UTC) args=("$@" --cache "$OUT/render-cache")
+  [ -z "$TARGET" ] || args+=(--target-tokens "$TARGET")
   if [ "$MODE" = fake ]; then
     args+=(--fake)
     [ -z "$BREAKS" ] || args+=(--fake-break "$BREAKS")
@@ -375,7 +388,7 @@ if [ "$DEV" = 1 ]; then
   IFS=, read -r -a DEV_IDS <<<"$DEV_WORLDS"
   [ ${#DEV_IDS[@]} -gt 0 ] || die "--worlds names no world"
   for id in "${DEV_IDS[@]}"; do
-    [[ "$id" =~ ^bg1-dev-(0[1-9]|1[0-9]|20)$ ]] || die "--worlds takes bg1-dev-01 to bg1-dev-20, not $id"
+    [[ "$id" =~ ^bg1-dev-(0[1-9]|1[0-9]|20|long-0[1-3])$ ]] || die "--worlds takes bg1-dev-01 to bg1-dev-20 and bg1-dev-long-01 to -03, not $id"
   done
   [ "$(printf '%s\n' "${DEV_IDS[@]}" | sort | uniq -d)" = "" ] || die "--worlds lists a world twice"
   for id in "${DEV_IDS[@]}"; do
@@ -391,7 +404,7 @@ if [ "$DEV" = 1 ]; then
     esac
   done
   dev_report
-  say "summary=dev mode=$MODE worlds=${#DEV_IDS[@]} written=$WRITTEN skipped=$SKIPPED"
+  say "summary=dev mode=$MODE worlds=${#DEV_IDS[@]} written=$WRITTEN skipped=$SKIPPED${KEY_VAR:+ gemini_key_var=$KEY_VAR}"
   exit 0
 fi
 
