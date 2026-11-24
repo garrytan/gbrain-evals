@@ -72,7 +72,7 @@ export interface Caller {
 }
 
 /** Near-miss ids for a target's external id: none of them is linked to the target. */
-export function nearMisses(target: PIMember, world: PIWorld): Array<{ actor: string; label: string; reads_as: string | null }> {
+export function nearMisses(target: PIMember, world: PIWorld, trimsWhitespace = false): Array<{ actor: string; label: string; reads_as: string | null }> {
   const linked = new Map(world.members.map(m => [m.ext, m.id]));
   const swapCase = target.ext.replace(/[a-z]/gi, ch => ch === ch.toLowerCase() ? ch.toUpperCase() : ch.toLowerCase());
   const out = [
@@ -81,7 +81,7 @@ export function nearMisses(target: PIMember, world: PIWorld): Array<{ actor: str
     { actor: target.ext + 'x', label: 'trailing-char' },
     { actor: target.ext.slice(0, -1), label: 'truncated' },
   ];
-  return out.filter(v => v.actor !== target.ext).map(v => ({ ...v, reads_as: linked.get(v.actor) ?? null }));
+  return out.filter(v => v.actor !== target.ext && !(trimsWhitespace && v.actor.trim() === target.ext)).map(v => ({ ...v, reads_as: linked.get(v.actor) ?? null }));
 }
 
 /** The callers that probe one target person, none of them that person. Q rotates over the other people by index. */
@@ -93,7 +93,7 @@ export function callersFor(world: PIWorld, target: PIMember, rotation: number, t
   if (transport !== 'cli') {
     out.push({ kind: 'attested-dm', as: q.id, client: 'qm-dm', actor: q.ext, label: 'attested-dm' });
     out.push({ kind: 'attested-room', as: q.id, client: 'qm-room', actor: q.ext, extra: { source_id: world.team_source }, label: 'attested-room' });
-    for (const v of nearMisses(target, world)) out.push({ kind: 'attested-variant', as: v.reads_as, client: 'qm-dm', actor: v.actor, label: 'attested-variant:' + v.label });
+    for (const v of nearMisses(target, world, transport === 'http')) out.push({ kind: 'attested-variant', as: v.reads_as, client: 'qm-dm', actor: v.actor, label: 'attested-variant:' + v.label });
     out.push({ kind: 'attested-variant', as: q.id, client: 'qm-dm', actor: q.ext, acting_user: target.ext, label: 'attested-variant:acting-user-mismatch' });
     out.push({ kind: 'bare-attest', as: null, client: 'qm-dm', label: 'bare-attest' });
     if (target.role !== 'left') out.push({ kind: 'left', as: null, client: 'qm-dm', actor: left.ext, label: 'left:attested' });
@@ -293,7 +293,7 @@ export function normalizeForOracle(text: string, masks: readonly string[]): stri
 
 // ─── Transports ────────────────────────────────────────────────────────
 
-export interface Outcome { exposed: boolean; ok: boolean; error_code?: string; text: string; timed_out?: boolean; harness?: boolean }
+export interface Outcome { exposed: boolean; ok: boolean; error_code?: string; text: string; timed_out?: boolean; harness?: boolean; decoded?: string; body?: string }
 type Call = (caller: Caller, op: string, args: Record<string, unknown>, session: string) => Promise<Outcome>;
 
 interface Client { id: string; secret: string }
@@ -308,11 +308,12 @@ function withTimeout(p: Promise<Outcome>, ms: number): Promise<Outcome> {
 const DENIAL = /access_member_disabled|credential_scope_required|invalid_token|invalid_client|permission_denied|requester_scope_required|actor_not_attested|actor_unlinked|insufficient_scope|not_attested|unknown tool|tool not found|not_exposed|unauthori[sz]ed|forbidden|refused/i;
 
 function toolResultText(result: { content?: Array<{ type?: string; text?: string }>; structuredContent?: unknown; _meta?: unknown; isError?: boolean }): Outcome {
-  const text = (result.content ?? []).map(c => c.text ?? '').join('\n') + '\n' + JSON.stringify(result.structuredContent ?? null) + '\n' + JSON.stringify(result._meta ?? null);
+  const body = (result.content ?? []).map(c => c.text ?? '').join('\n') + '\n' + JSON.stringify(result.structuredContent ?? null);
+  const text = body + '\n' + JSON.stringify(result._meta ?? null);
   const ok = result.isError !== true;
   // memory_recall answers an unlinked actor with an empty success carrying the refusal code (documented), so that is a refusal too.
   const soft = ok && /"code"\s*:\s*"(actor_unlinked|requester_scope_required)"/.test(text);
-  return { exposed: ok ? !soft : !DENIAL.test(text), ok, text, error_code: ok ? undefined : ((/"code"\s*:\s*"([a-z_]+)"/.exec(text)?.[1]) ?? 'error') };
+  return { exposed: ok ? !soft : !DENIAL.test(text), ok, text, decoded: text, body, error_code: ok ? undefined : ((/"code"\s*:\s*"([a-z_]+)"/.exec(text)?.[1]) ?? 'error') };
 }
 
 async function buildBrain(gut: GbrainUnderTest, world: PIWorld, engine: EngineKind, pgAdminUrl: string | null, attestOps: string[], log: (s: string) => void): Promise<Brain> {
@@ -510,7 +511,7 @@ async function openHttp(gut: GbrainUnderTest, brain: Brain): Promise<TransportHa
     if (!r.msg) return { exposed: !(r.status === 401 || r.status === 403), ok: false, error_code: 'http_' + r.status, text: all };
     if (r.msg.error) return { exposed: !/unknown tool|not found|method not found/i.test(JSON.stringify(r.msg.error)), ok: false, error_code: 'rpc_error', text: all };
     const o = toolResultText(r.msg.result ?? {});
-    return { ...o, text: all + '\n' + o.text };
+    return { ...o, text: all + '\n' + o.text, decoded: o.text };
   })(), TIMEOUT_MS.http);
   return {
     call, port: () => server.port,
@@ -586,9 +587,10 @@ async function seedPeople(call: Call, world: PIWorld): Promise<{ fixture: Fixtur
   const fixture: Fixture = { world, facts: new Map(), requests: new Map(), proposals: new Map(), idempotency: new Map(), public_fact_id: null, max_fact_id: 0 };
   const writes: WriteRow[] = [];
   const record = (m: PIMember, channel: string, o: Outcome) => {
-    const ok = o.ok && WRITE_OK.test(o.text);
+    const body = o.body ?? o.text;
+    const ok = o.ok && WRITE_OK.test(body);
     writes.push({ member: m.id, channel, ok, ...(ok ? {} : { code: o.error_code ?? 'no_status', sample: o.text.slice(0, 600) }) });
-    return writeIdsIn(o.text);
+    return writeIdsIn(body);
   };
   for (const m of world.members.filter(x => x.writes)) {
     const h = world.holdings.find(x => x.member === m.id)!;
@@ -780,7 +782,7 @@ async function runProbe(s: CellState, call: Call, p: ProbeSpec, cond: Condition,
   if (refused) bump(s, p.op.name, caller, cond, 'refusals');
   if (p.ghost && caller.as !== s.ghostMember) {
     const g = await call(caller, p.op.name, p.ghost, session);
-    if (!g.harness && normalizeForOracle(o.text, p.masks) !== normalizeForOracle(g.text, p.masks)) {
+    if (!g.harness && normalizeForOracle(o.decoded ?? o.text, p.masks) !== normalizeForOracle(g.decoded ?? g.text, p.masks)) {
       bump(s, p.op.name, caller, cond, 'oracle');
       const r: LeakRecord = { cell: s.cell, seed: s.seed, condition: cond, op: p.op.name, caller: caller.label, target: target.id, kind: p.kind, variant: p.variant, contract: 'existence_oracle', detail: [], args: { protected: p.args, ghost: p.ghost }, response: (o.text.slice(0, 10_000) + '\n<<<ghost>>>\n' + g.text.slice(0, 10_000)) };
       s.leaks.push(r); appendFileSync(ctx.leakFile, JSON.stringify(r) + '\n');
