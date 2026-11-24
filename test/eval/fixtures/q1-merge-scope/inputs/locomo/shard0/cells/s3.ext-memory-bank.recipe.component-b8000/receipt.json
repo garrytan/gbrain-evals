@@ -1,0 +1,232 @@
+{
+  "schema": "gbrain-evals/q1-cell-receipt/v1",
+  "cell_id": "s3.ext-memory-bank.recipe.component-b8000",
+  "run_cell": "s3.ext-memory-bank.recipe",
+  "config_sha256": "7e4ff62fb5df434bfccf39f4bd26b1483a283510f3f44831a8857351be602265",
+  "run_status": "partial",
+  "invalid_reasons": [],
+  "stopped": null,
+  "set": "S3",
+  "benchmark": "locomo",
+  "split": "all",
+  "block": "T2-S3",
+  "system": {
+    "kind": "ext-memory-bank",
+    "configuration": "recipe",
+    "runner": "shim",
+    "capability_system": "fake",
+    "versions": {
+      "package": "in-repo",
+      "lock_sha256": null,
+      "image": null,
+      "vendor_benchmark_code": null
+    },
+    "capabilities": {
+      "system": "fake",
+      "protocol": 1,
+      "versions": {
+        "package": "in-repo",
+        "lock_sha256": null,
+        "image": null,
+        "vendor_benchmark_code": null
+      },
+      "configs": {
+        "recipe": {
+          "model_roles": {},
+          "notes": "keyword overlap, no provider calls"
+        },
+        "common": {
+          "model_roles": {},
+          "unsettable": [
+            "extraction",
+            "embedder"
+          ]
+        }
+      },
+      "time": "native",
+      "provenance": {
+        "status": "exact",
+        "mechanism": "one item per ingested session"
+      },
+      "delete": "native",
+      "readiness": "synchronous",
+      "namespace": "in-memory dict key",
+      "parallel_namespaces": true,
+      "retrieval_policies": {
+        "vendor-default": {
+          "settings": {
+            "k": 5
+          }
+        },
+        "fixed-evidence": {
+          "settings": {
+            "k": 20
+          }
+        }
+      },
+      "streaming": "disabled",
+      "telemetry_off": [],
+      "agent_surface": {
+        "kind": "none"
+      },
+      "deviations_from_vendor_code": []
+    }
+  },
+  "arm": {
+    "id": "component-b8000",
+    "arm": "component",
+    "mode": "packed",
+    "policy": "fixed-evidence",
+    "budget": 8000,
+    "variant": null,
+    "label": "component, 8,000 tokens"
+  },
+  "readers": [
+    "anthropic:claude-opus-5-5",
+    "openai:gpt-6.1-sol",
+    "anthropic:claude-sonnet-5-5"
+  ],
+  "reader_replicates": {},
+  "effort": "medium",
+  "instrument": {
+    "id": "locomo",
+    "sha256": "754c83f541b77e652f0b97edac9cb82a1561b8a38822eb88591c807c0dad13be",
+    "judge": "openai:gpt-4o-2024-08-06"
+  },
+  "frontier": {
+    "judges": [
+      "anthropic:claude-opus-5-5",
+      "openai:gpt-6.1-sol"
+    ],
+    "readers": null,
+    "sample": 6,
+    "instrument_ids": [
+      "locomo@anthropic:claude-opus-5-5",
+      "locomo@openai:gpt-6.1-sol"
+    ]
+  },
+  "selection": {
+    "questions": 16,
+    "conversations": 4,
+    "scheduled_sha256": "df7d230cb3e6d26cf43a47a43164331e55aa20e2e127baa83dff53c1ef4f68d2"
+  },
+  "counts": {
+    "rows": 8,
+    "answers": 24,
+    "answers_promised": 48,
+    "judgments": 42,
+    "unjudged": 0,
+    "outcomes": {
+      "scored": 24
+    }
+  },
+  "per_reader_mean": {
+    "anthropic:claude-opus-5-5": null,
+    "openai:gpt-6.1-sol": null,
+    "anthropic:claude-sonnet-5-5": null
+  },
+  "realizations": [
+    {
+      "conversation": "conv-a",
+      "realization_id": "f3e62aa02be6246eaa7a532e7f7abda4f26e77c588b35dcd0eb742b28db81909",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "conv-c",
+      "realization_id": "a706f5d14e007df050d5b5fc9cc72bf982824b4b2f1e12a6d8b7680489ce85d0",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "conv-e",
+      "realization_id": "afec29b556c3dba1416d04407cf95ed10f1a591dd70c93fc2ae46fa1c71cef0a",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "conv-g",
+      "realization_id": "fbf782671e479f4f386a07653d57dde2d745ddc1968e494297c59b9f517d9df1",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    }
+  ],
+  "ingest": {
+    "conversations": 4,
+    "messages": 40,
+    "ingested_tokens": 510,
+    "wall_ms": {
+      "total": 0,
+      "p50": 0,
+      "p95": 0
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 0,
+    "readiness_samples_ms": [
+      0.3,
+      0.1,
+      0.1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0.1,
+      0.1,
+      0.1,
+      0.1,
+      0
+    ],
+    "write_start_to_queryable_ms": {
+      "p50": 0,
+      "p95": 0.1,
+      "probes": 20,
+      "found": 20,
+      "missed": 0,
+      "not_measurable": 0
+    }
+  },
+  "timings": {
+    "retrieval_ms": {
+      "p50": 0,
+      "p95": 0
+    },
+    "answer_ms": {
+      "p50": 0,
+      "p95": 0
+    }
+  },
+  "usage": {
+    "input": 240,
+    "output": 120,
+    "cache_read": 0,
+    "cache_write": 0
+  },
+  "spend": {
+    "source": null,
+    "note": "no metering proxy: the budget ledger holds this run's spend"
+  },
+  "files": {
+    "rows": "rows.ndjson",
+    "answers": "answers.ndjson",
+    "judgments": "judgments.ndjson",
+    "run_config": "run-config.json",
+    "readiness": "readiness.ndjson",
+    "contexts": "../../runs/s3.ext-memory-bank.recipe/contexts.ndjson"
+  }
+}

@@ -1483,6 +1483,42 @@ export function publishCell(def: CellDefinition, arms: ArmDefinition[], roots: s
   });
 }
 
+/**
+ * `cell.ts merge`: publish a cell from the out directories of its shards or launch units. Only a weekly cell passes the
+ * custody gate here and keeps its units' invalid reasons; every other cell merges as it did before the weekly line split
+ * cells across VMs (test/eval/q1-merge-scope.test.ts holds its output to main's, byte for byte).
+ */
+export function mergeCell(def: CellDefinition, from: string[], out: string, o: { env?: Record<string, string | undefined>; corpus?: Corpus } = {}): ArmResult[] {
+  const env = o.env ?? process.env;
+  if (def.week && from.length !== def.shards) throw refuse(usage(`${def.id} runs as ${def.shards} launch unit${def.shards === 1 ? '' : 's'} of its week's worlds, so its merge takes one --from per unit, not ${from.length}`));
+  if (def.week && needsCustody(def)) custodyGate(def, out, env, `q1 merge ${def.id}`);
+  // RS1 kept cells load only the kept conversations the shards staged; later slots may never have been minted.
+  const week = weekScope(def, env);
+  const corpus = o.corpus ?? loadCorpus(def.benchmark, undefined, week ? new Set(week) : def.kept_units ? new Set(from.flatMap(f => [...gatherStaging(def.id, [f]).keys()])) : undefined);
+  const offWeek = weekCorpusProblems(def, corpus);
+  if (offWeek) throw refuse({ code: 'PREFLIGHT_FAILED', message: offWeek, why: "a weekly cell's shards merge only its own week's worlds", fix: { next: 'report' } });
+  const selected = selectCellQuestions(corpus.questions.filter(q => splitConversations(def.benchmark, def.split, corpus).has(q.conversation)), def.selection);
+  const receipt = (f: string, cellId: string) => JSON.parse(readFileSync(join(f, 'cells', cellId, 'receipt.json'), 'utf8')) as { invalid_reasons?: string[]; system: { capabilities: CapabilityRecord } };
+  const capabilities = receipt(from[0], def.arms[0].cell_id).system.capabilities;
+  const invalidReasons = def.week ? [...new Set(def.arms.flatMap(a => from.flatMap(f => receipt(f, a.cell_id).invalid_reasons ?? [])))] : [];
+  // A weekly cell split across VMs publishes the week's run config: its units' configs, each with its own worlds' part of
+  // the week's schedule and dataset, agree in everything else and cover the week exactly, and the merged one freezes all of it.
+  const split = !!def.week && def.shards > 1;
+  const configs = new Map(def.arms.map(a => {
+    const texts = (split ? from : from.slice(0, 1)).map(f => readFileSync(join(f, 'cells', a.cell_id, 'run-config.json'), 'utf8'));
+    let t = texts[0];
+    if (split) {
+      const problems = new Set(texts.map(x => readingConfig(x, true) ?? x)).size > 1 ? [`the units publish different run configurations for ${a.cell_id}`]
+        : splitScheduleProblems(def, selected, corpus.source.files, from.map((f, i) => ({ worlds: [...gatherStaging(def.id, [f]).keys()], config: texts[i] })));
+      if (problems.length) throw refuse({ code: 'PREFLIGHT_FAILED', message: `${def.id}'s units can't merge: ${problems.join('; ')}`, why: "a split weekly cell merges only its launch units, which together run the week's schedule exactly", fix: { next: 'report' } });
+      t = JSON.stringify({ ...JSON.parse(t), dataset: corpus.source, scheduled_sha256: sha256(selected.map(q => q.id).join('\n')) }, null, 2) + '\n';
+    }
+    writeAtomic(join(out, 'cells', a.cell_id, 'run-config.json'), t);
+    return [a.id, { text: t, sha: sha256(t) }];
+  }));
+  return publishCell(def, def.arms, from, out, { instrument: instrumentFor(def.canonical_instrument), selected, invalidReasons, configs, capabilities, stopped: null, maxAttempts: DEFAULT_MAX_ATTEMPTS });
+}
+
 // ─── Aggregates (the only output a sealed cell may write inside the repository) ───
 
 const AGG_KEYS = ['cell_id', 'run_cell', 'config_sha256', 'run_status', 'set', 'benchmark', 'split', 'block', 'readers', 'counts', 'per_reader_mean', 'timings', 'spend'] as const;
@@ -1983,33 +2019,7 @@ export async function main(argv: string[]): Promise<number> {
     if (sub === 'merge') {
       const from = many('--from').map(f => resolve(f));
       if (!from.length) throw refuse(usage('merge needs --from <shard out dir>...'));
-      if (def.week && from.length !== def.shards) throw refuse(usage(`${def.id} runs as ${def.shards} launch unit${def.shards === 1 ? '' : 's'} of its week's worlds, so its merge takes one --from per unit, not ${from.length}`));
-      if (needsCustody(def)) custodyGate(def, out, process.env, `q1 merge ${def.id}`);
-      // RS1 kept cells load only the kept conversations the shards staged; later slots may never have been minted.
-      const week = weekScope(def, process.env);
-      const corpus = loadCorpus(def.benchmark, undefined, week ? new Set(week) : def.kept_units ? new Set(from.flatMap(f => [...gatherStaging(def.id, [f]).keys()])) : undefined);
-      const offWeek = weekCorpusProblems(def, corpus);
-      if (offWeek) throw refuse({ code: 'PREFLIGHT_FAILED', message: offWeek, why: "a weekly cell's shards merge only its own week's worlds", fix: { next: 'report' } });
-      const selected = selectCellQuestions(corpus.questions.filter(q => splitConversations(def.benchmark, def.split, corpus).has(q.conversation)), def.selection);
-      const receipts = def.arms.flatMap(a => from.map(f => JSON.parse(readFileSync(join(f, 'cells', a.cell_id, 'receipt.json'), 'utf8')) as { invalid_reasons?: string[]; system: { capabilities: CapabilityRecord } }));
-      const capabilities = receipts[0].system.capabilities;
-      const invalidReasons = [...new Set(receipts.flatMap(r => r.invalid_reasons ?? []))];
-      // A weekly cell split across VMs publishes the week's run config: its units' configs, each with its own worlds' part of
-      // the week's schedule and dataset, agree in everything else and cover the week exactly, and the merged one freezes all of it.
-      const split = !!def.week && def.shards > 1;
-      const configs = new Map(def.arms.map(a => {
-        const texts = from.map(f => readFileSync(join(f, 'cells', a.cell_id, 'run-config.json'), 'utf8'));
-        let t = texts[0];
-        if (split) {
-          const problems = new Set(texts.map(x => readingConfig(x, true) ?? x)).size > 1 ? [`the units publish different run configurations for ${a.cell_id}`]
-            : splitScheduleProblems(def, selected, corpus.source.files, from.map((f, i) => ({ worlds: [...gatherStaging(def.id, [f]).keys()], config: texts[i] })));
-          if (problems.length) throw refuse({ code: 'PREFLIGHT_FAILED', message: `${def.id}'s units can't merge: ${problems.join('; ')}`, why: "a split weekly cell merges only its launch units, which together run the week's schedule exactly", fix: { next: 'report' } });
-          t = JSON.stringify({ ...JSON.parse(t), dataset: corpus.source, scheduled_sha256: sha256(selected.map(q => q.id).join('\n')) }, null, 2) + '\n';
-        }
-        writeAtomic(join(out, 'cells', a.cell_id, 'run-config.json'), t);
-        return [a.id, { text: t, sha: sha256(t) }];
-      }));
-      const res = publishCell(def, def.arms, from, out, { instrument: instrumentFor(def.canonical_instrument), selected, invalidReasons, configs, capabilities, stopped: null, maxAttempts: DEFAULT_MAX_ATTEMPTS });
+      const res = mergeCell(def, from, out);
       console.log(JSON.stringify(res, null, 2));
       return res.every(r => r.status === 'complete') ? 0 : 4;
     }
