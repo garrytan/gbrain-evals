@@ -13,8 +13,8 @@ import { join } from 'node:path';
 import { bgwBatchDataset } from '../../eval/runner/memory-qa/bg1-names.ts';
 import type { Bg1Manifest } from '../../eval/runner/memory-qa/corpus.ts';
 import { instrumentFor } from '../../eval/runner/memory-qa/instruments.ts';
-import { answerId, type AnswerRecord, type JudgmentRecord } from '../../eval/runner/memory-qa/records.ts';
-import { frontierInstrumentId } from '../../eval/runner/q1/cell.ts';
+import { answerId, answerProblems, RecordLog, WEEKLY_RUN_ENV, type AnswerRecord, type JudgmentRecord } from '../../eval/runner/memory-qa/records.ts';
+import { frontierInstrumentId, weeklyRunStamp } from '../../eval/runner/q1/cell.ts';
 import { bg1JudgeOf, PER_READER_JUDGE_SETTINGS } from '../../eval/runner/q1/cells/definitions.ts';
 import { main as aggregatesMain, writeBlockFiles } from '../../eval/runner/weekly-line/aggregates.ts';
 import { plannedQuestions, WL_READERS, WL_ROWS, WL_SYSTEMS, type WlRow } from '../../eval/runner/weekly-line/design.ts';
@@ -326,14 +326,16 @@ const CELL_OF: Record<WlRow, Record<string, string>> = {
   'extract-first': { [OPUS]: 'ef-opus', [PARTICLE]: 'ef-p1' }, 'memory-bank': { [OPUS]: 'mb-opus', [PARTICLE]: 'mb-p1' },
 };
 
-/** Synthetic cell records in the run directory: gbrain passes the first 5 questions of each kind, every other row the first 4. */
-function writeRecords(dir: string, worlds: readonly string[]): void {
+/** Synthetic cell records in the run directory, stamped with its run (or `stamp`): gbrain passes the first 5 questions of each kind, every other row the first 4. */
+function writeRecords(dir: string, worlds: readonly string[], stamp?: { run_id: string; week: string }): void {
+  const run = JSON.parse(readFileSync(join(dir, RUN_FILE), 'utf8'));
+  const weekly_run = stamp ?? { run_id: run.run_id, week: run.week };
   const by = new Map<string, { answers: AnswerRecord[]; judgments: JudgmentRecord[] }>();
   for (const world of worlds) for (const q of plannedQuestions(world)) for (const row of WL_ROWS) for (const reader of WL_READERS) {
     const cell_id = CELL_OF[row][reader], k = Number(q.id.split(':')[2]);
-    const a: AnswerRecord = { answer_id: answerId(cell_id, q.id, reader, 0), cell_id, realization_id: 'r0', question_id: q.id, conversation: world, system: SYSTEM_OF[row], arm: row, reader, replicate: 0, effort: 'medium', context_sha256: 'f'.repeat(64), text: 'synthetic', usage: { input: 1, output: 1, cache_read: 0, cache_write: 0 }, provider_input_tokens: 1, latency_ms: 1, outcome: 'scored' };
+    const a: AnswerRecord = { answer_id: answerId(cell_id, q.id, reader, 0), cell_id, realization_id: 'r0', question_id: q.id, conversation: world, system: SYSTEM_OF[row], arm: row, reader, replicate: 0, effort: 'medium', context_sha256: 'f'.repeat(64), text: 'synthetic', usage: { input: 1, output: 1, cache_read: 0, cache_write: 0 }, provider_input_tokens: 1, latency_ms: 1, outcome: 'scored', weekly_run };
     const judge = bg1JudgeOf(reader);
-    const j: JudgmentRecord = { answer_id: a.answer_id, instrument_id: frontierInstrumentId(INSTRUMENT.id, judge), instrument_sha256: INSTRUMENT.sha256, judge, judge_replicate: 0, temperature: null, score: k < (row === 'gbrain' ? 5 : 4) ? 1 : 0, parse_ok: true, raw_sha256: 'e'.repeat(64), outcome: 'scored', settings: { ...PER_READER_JUDGE_SETTINGS }, view: 'gating', judge_versions: ['synthetic-1'] };
+    const j: JudgmentRecord = { answer_id: a.answer_id, instrument_id: frontierInstrumentId(INSTRUMENT.id, judge), instrument_sha256: INSTRUMENT.sha256, judge, judge_replicate: 0, temperature: null, score: k < (row === 'gbrain' ? 5 : 4) ? 1 : 0, parse_ok: true, raw_sha256: 'e'.repeat(64), outcome: 'scored', settings: { ...PER_READER_JUDGE_SETTINGS }, view: 'gating', judge_versions: ['synthetic-1'], weekly_run };
     const c = by.get(cell_id) ?? { answers: [], judgments: [] };
     c.answers.push(a); c.judgments.push(j); by.set(cell_id, c);
   }
@@ -391,6 +393,34 @@ describe('a run end to end', () => {
     expect(() => writeBlock(1, dirs.slice(0, 3), out)).toThrow(/WEEKLY_BLOCK_ENDED/);
     expect(readFileSync(path, 'utf8')).toBe(ended);
   }, 60_000);
+
+  // Value: protects=every record a weekly cell writes carries the run id and week it ran under, and the aggregates refuse any answer or judgment in a run directory that this run's cells did not write, even with the run's own cell ids and worlds; fails_when=another run's records (same week, cells and worlds) or unstamped ones left in a run directory are scored, a weekly cell runs without its week's run id, or a record log mixes runs; why_new=GBEV-3 ruling on #616, finding 3 (aggregates.ts:459); seam=memory-qa/records.ts RecordLog stamp, q1/cell.ts weeklyRunStamp, identity.ts recordBindingProblems, aggregates.ts boundRecords; no_claim=records forged with a recomputed stamp, outside the crew's threat model
+  test("records carry their run's stamp, and the aggregates refuse records another run's cells wrote", () => {
+    const mine = join(root, 'stamp-mine'), theirs = join(root, 'stamp-theirs'), out = join(root, 'stamp-out');
+    const a = planWeek({ dir: mine, launch: '2026-12-08', batch: batch(short) }, deps('2026-12-08')).run;
+    const b = planWeek({ dir: theirs, launch: '2026-12-08', batch: batch(short) }, deps('2026-12-08', `${TAGS}\n${C3}\trefs/tags/v0.61.11.0`)).run;
+    expect([a.week, a.cells, a.worlds]).toEqual([b.week, b.cells, b.worlds]);
+    expect(a.run_id).not.toBe(b.run_id);
+    writeRecords(mine, ids(8), { run_id: b.run_id, week: b.week });
+    settleAll(mine);
+    expect(() => aggregatesMain(['week', '--meta', join(mine, 'meta.json'), '--records', mine, '--out', out])).toThrow(/^WEEKLY_RUN_IDENTITY: .*8192 records in run .* were not written by this run's cells/);
+
+    const stamp = weeklyRunStamp({ id: 'bgw.x', week: { launch: '2026-12-08', world_end: '2026-12-06', batch: 'bgw-1001', worlds: ids(8) } }, { [WEEKLY_RUN_ENV]: a.run_id });
+    expect(stamp).toEqual({ run_id: a.run_id, week: '2026-12-08' });
+    const weekly = { id: 'bgw.x', week: { launch: '2026-12-15', world_end: '2026-12-13', batch: 'bgw-1001', worlds: ids(8) } };
+    expect(message(() => weeklyRunStamp(weekly, {}))).toMatch(/is a weekly-line cell of week 2026-12-15, so it runs only under one of that week's run ids in GBRAIN_EVALS_WEEKLY_RUN/);
+    expect(message(() => weeklyRunStamp(weekly, { [WEEKLY_RUN_ENV]: a.run_id }))).toMatch(/weekly-line cell of week 2026-12-15/);
+    expect(weeklyRunStamp({ id: 'q1.x' }, { [WEEKLY_RUN_ENV]: a.run_id })).toBeUndefined();
+
+    const log = join(root, 'stamp-log', 'answers.ndjson');
+    const rec = JSON.parse(readFileSync(join(mine, 'cells', 'g8-opus', 'answers.ndjson'), 'utf8').split('\n')[0]);
+    const { weekly_run: _w, ...bare } = rec;
+    new RecordLog(log, 'answer', stamp).append(bare);
+    expect(JSON.parse(readFileSync(log, 'utf8')).weekly_run).toEqual(stamp);
+    expect(() => new RecordLog(log, 'answer', { run_id: b.run_id, week: b.week })).toThrow(/refusing a answer of weekly run .* in weekly run/);
+    expect(() => new RecordLog(join(root, 'stamp-log2', 'answers.ndjson'), 'answer', stamp).append({ ...bare, weekly_run: { run_id: b.run_id, week: b.week } })).toThrow(/refusing a answer of weekly run/);
+    expect(answerProblems({ ...bare, weekly_run: { run_id: a.run_id, week: '2026-12-15' } })).toContain('answer.weekly_run is missing or invalid');
+  });
 
   // Value: protects=settle records the SHA-256 of every answer and judgment file it settles, and the aggregates refuse a run whose record files changed, appeared or went missing since; fails_when=a judgment rewritten, a cell's files added or removed after settle is scored by the week or block aggregates; why_new=GBEV-3 ruling on #616, finding 2 (runner.ts:325); seam=runner.ts settleWeek over settled.ts recordDigests, read by aggregates.ts boundRecords; no_claim=deliberate forgery that rewrites settled.json too, outside the crew's threat model
   test('settle digests the record files, and the aggregates refuse any that changed after it', () => {

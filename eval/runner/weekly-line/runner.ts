@@ -34,7 +34,9 @@
  * server's, then the grep agent's; then particle-1's re-reads of the frozen contexts; then the judging, each answer by
  * its reader's preregistered judge; then the aggregates writer. plan writes the run's identity (identity.ts, run.json)
  * and the ordered steps (plan.json) and prints them; launch writes the unit order (launch.json) for the existing launch
- * path and prints it, and refuses without --window-granted or when the launch check refuses the week's cells. Neither starts a VM, a cell or a provider call.
+ * path, with the run id every weekly cell and re-read must run under (GBRAIN_EVALS_WEEKLY_RUN, which stamps each record),
+ * and prints it, and refuses without --window-granted or when the launch check refuses the week's cells. Neither starts
+ * a VM, a cell or a provider call.
  *
  * Settled. mark records each step as done or as a harness failure, in order (a re-read after its cell, a judgment after
  * the answers it judges). settle writes the week's meta (meta.json) and its settled marker (settled.ts, settled.json)
@@ -57,6 +59,7 @@ import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSyn
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { GBRAIN_REPO, newestRelease } from '../gbrain-pin.ts';
+import { WEEKLY_RUN_ENV } from '../memory-qa/records.ts';
 import { BGW_BATCH_KEPT, BGW_BATCH_SLOTS, BGW_WEEKS_PER_BATCH, BGW_WORLDS_PER_WEEK, bgwBatchName, bgwSeedSetOf, bgwSlotOf } from '../memory-qa/bg1-names.ts';
 import { bg1Kept, bg1RunClock, bgwSet, bgwWeekWorldEnd, bgwWeekWorlds, readBg1Manifest, type Bg1Manifest } from '../memory-qa/corpus.ts';
 import { bg1JudgeOf, type CellDefinition } from '../q1/cells/definitions.ts';
@@ -328,14 +331,14 @@ export function planWeek(o: PlanInput, deps: RunnerDeps): { run: RunIdentity; st
  * clock, for a week with no point, or when the launch check refuses the week's cells. Launch and re-read stages list each
  * launch unit once; the judge stage lists every judged target. Starts nothing.
  */
-export function launchWeek(dir: string, window: string | undefined, deps: Pick<RunnerDeps, 'now' | 'launchCheck'>): { run_id: string; window: string; stages: Array<{ stage: Stage; units: string[] }> } {
+export function launchWeek(dir: string, window: string | undefined, deps: Pick<RunnerDeps, 'now' | 'launchCheck'>): { run_id: string; window: string; env: Record<string, string>; stages: Array<{ stage: Stage; units: string[] }> } {
   const { run, steps } = loadRun(dir);
   if (!window) refuse('WEEKLY_NO_WINDOW', `week ${run.week}'s cells spend on providers, so they launch only inside a granted paid window; pass --window-granted <unit> once it is granted`);
   weekClock(run.week, deps.now());
   if (run.no_point) refuse('WEEKLY_NO_POINT', `week ${run.week} has no point (${run.no_point}), so nothing launches`);
   deps.launchCheck(dir, run);
   const stages = (['launch', 'reread', 'judge'] as const).map(stage => ({ stage, units: [...new Set(steps.filter(s => s.stage === stage).map(s => (stage === 'judge' ? s.target : s.unit ?? s.target)))] }));
-  const order = { run_id: run.run_id, window: window!, stages };
+  const order = { run_id: run.run_id, window: window!, env: { [WEEKLY_RUN_ENV]: run.run_id }, stages };
   writeJson(join(dir, LAUNCH_FILE), order);
   return order;
 }
@@ -484,7 +487,7 @@ export function main(argv: readonly string[], deps: RunnerDeps = DEFAULT_DEPS, l
   }
   if (mode === 'launch') {
     const order = launchWeek(need(rest, '--run'), flag(rest, '--window-granted'), deps);
-    log(`run ${order.run_id} under window ${order.window}: hand these units to the launch path in this order`);
+    log(`run ${order.run_id} under window ${order.window}: hand these units to the launch path in this order, each with ${Object.entries(order.env).map(([k, v]) => `${k}=${v}`).join(' ')}`);
     for (const s of order.stages) log(`${s.stage}: ${s.units.join(' ')}`);
     return 0;
   }

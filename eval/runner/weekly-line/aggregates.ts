@@ -459,7 +459,7 @@ export function boundRecords(dirs: readonly string[], metas: readonly WeekMeta[]
     if (seen.has(m.run_id)) refuse(`run ${m.run_id}'s records were passed twice`);
     seen.add(m.run_id);
     const recs = readRecordDirs([d]);
-    const p = [...runBindingProblems(run, m), ...recordBindingProblems(run, recs.answers)];
+    const p = [...runBindingProblems(run, m), ...recordBindingProblems(run, recs.answers, recs.judgments)];
     if (p.length) refuse(`WEEKLY_RUN_IDENTITY: ${d}: ${p.slice(0, 3).join('; ')}`);
     const settledPath = join(d, SETTLED_FILE);
     if (!existsSync(settledPath)) refuse(`WEEKLY_NOT_SETTLED: ${d} has no ${SETTLED_FILE}, so its records were never settled`);

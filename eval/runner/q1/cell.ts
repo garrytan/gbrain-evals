@@ -87,7 +87,7 @@ import { ContextStore } from '../memory-qa/arms.ts';
 import { instrumentFor, type Instrument } from '../memory-qa/instruments.ts';
 import { DEFAULT_MAX_ATTEMPTS, OUTCOMES, type Outcome } from '../memory-qa/outcomes.ts';
 import { ChatClient, chatWithReceipts, isCompatModel, judgeAnswer, READER_TEMPLATE, type ChatLike } from '../memory-qa/qa-v2.ts';
-import { answerId, answerRecord, judgmentKey, readerAttempts, readRecords, RecordLog, sha256, type AnswerPayload, type AnswerRecord, type JudgmentRecord, type Q1Row, type ReaderAttempt } from '../memory-qa/records.ts';
+import { answerId, answerRecord, judgmentKey, readerAttempts, readRecords, RecordLog, sha256, WEEKLY_RUN_ENV, WEEKLY_RUN_ID, type AnswerPayload, type AnswerRecord, type JudgmentRecord, type Q1Row, type ReaderAttempt, type WeeklyRunStamp } from '../memory-qa/records.ts';
 import { failureRow, hashEmbed, readinessProbe, selectQuestions } from '../memory-qa/run-systems.ts';
 import { checkSealedDestinations, sealedPaths } from '../memory-qa/sealed-profile.ts';
 import { ledgerCaps, PaidArmRefusal, requirePaidArm, requireRs1Window, WindowRefusal } from '../paid-arm.ts';
@@ -253,6 +253,21 @@ export function devOnly(def: Pick<CellDefinition, 'benchmark' | 'split' | 'only_
  * shootout's LoCoMo), and questions that start before it drains read a half-built store.
  */
 export const finishTimeoutFor = (def: Pick<CellDefinition, 'expected_hours'>) => Math.max(600, Math.round(def.expected_hours * 1.5 * 3600));
+
+/**
+ * The weekly-line run every record of a weekly cell (one with a `week`) is stamped with: the run id in WEEKLY_RUN_ENV, which
+ * must be a run of the cell's own week. Refuses a weekly cell without it before anything runs; undefined for every other cell.
+ */
+export function weeklyRunStamp(def: Pick<CellDefinition, 'id' | 'week'>, env: Record<string, string | undefined>): WeeklyRunStamp | undefined {
+  if (!def.week) return undefined;
+  const run_id = env[WEEKLY_RUN_ENV];
+  if (!run_id || !WEEKLY_RUN_ID.test(run_id) || run_id.slice(3, 13) !== def.week.launch) {
+    throw refuse({ code: 'PREFLIGHT_FAILED', message: `${def.id} is a weekly-line cell of week ${def.week.launch}, so it runs only under one of that week's run ids in ${WEEKLY_RUN_ENV} (wl-${def.week.launch}-<12 hex>)`,
+      why: "the weekly line's aggregates score only records stamped with the week's run, so a record written without it could never be counted",
+      fix: { next: 'ask_user', user_message: `launch the weekly cells through the weekly runner's unit order, which names the run id (${WEEKLY_RUN_ENV})` } });
+  }
+  return { run_id, week: def.week.launch };
+}
 
 export function needsCustody(def: Pick<CellDefinition, 'benchmark' | 'split'>): boolean {
   if (def.split === 'dev' || def.benchmark === 'lme-m') return false;
@@ -653,6 +668,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
   refuseCompatJudges(def.id, [...(def.descriptive_view === false ? [] : [instrument.canonical_judge]), ...(opts.frontier === false ? [] : arms.flatMap(a => a.frontier?.judges ?? []))]);
 
   // Custody before anything reads the corpus.
+  const weeklyRun = weeklyRunStamp(def, env);
   const custody = !deps.corpus && needsCustody(def);
   if (custody) custodyGate(def, out, env, `q1 cell ${def.id}`);
   mkdirSync(out, { recursive: true });
@@ -943,8 +959,8 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
     const degraded = staging.latest(convId)?.ingest?.degraded ?? false;
     const retrievalsPath = join(dir, 'retrievals.ndjson');
     const retrievals = latestBy<StagedRetrieval>(retrievalsPath, r => r.key);
-    const answers = new RecordLog(join(dir, 'answers.ndjson'), 'answer');
-    const judgments = new RecordLog(join(dir, 'judgments.ndjson'), 'judgment');
+    const answers = new RecordLog(join(dir, 'answers.ndjson'), 'answer', weeklyRun);
+    const judgments = new RecordLog(join(dir, 'judgments.ndjson'), 'judgment', weeklyRun);
     const appendAnswer = answerAppender(dir, answers, maxAttempts);
     const rowBuffer: Q1Row[] = [];
     const flush = () => {
@@ -1203,9 +1219,9 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
     const judgmentsIn = readRecords(join(from, 'judgments.ndjson'), 'judgment').filter(j => !drop.has(j.answer_id));
     const kept = [...latestBy<StagedRetrieval>(join(from, 'retrievals.ndjson'), r => r.key).values()].filter(r => FINAL.has(r.outcome) || (r.attempt >= maxAttempts && !redone.has(r.question_id))).map(r => ({ ...r, realization_id: r.realization_id ?? earlier }));
     if (!answersIn.length && !judgmentsIn.length && !kept.length) return;
-    const answerLog = new RecordLog(join(to, 'answers.ndjson'), 'answer');
+    const answerLog = new RecordLog(join(to, 'answers.ndjson'), 'answer', weeklyRun);
     for (const a of answersIn) answerLog.append(a);
-    const judgmentLog = new RecordLog(join(to, 'judgments.ndjson'), 'judgment');
+    const judgmentLog = new RecordLog(join(to, 'judgments.ndjson'), 'judgment', weeklyRun);
     for (const j of judgmentsIn) judgmentLog.append(j);
     const tries = readLines<{ answer_id: string }>(join(from, 'answer-attempts.ndjson')).filter(t => !drop.has(t.answer_id));
     if (tries.length) appendFileSync(join(to, 'answer-attempts.ndjson'), tries.map(t => JSON.stringify(t) + '\n').join(''));

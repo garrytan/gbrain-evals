@@ -8,14 +8,18 @@
  * the week's worlds in slot order with their seed and phrasing ids, the cells and particle-1 re-reads, and the week's
  * no-point reason, if any. Its run id is `wl-<week>-<first 12 hex of the SHA-256 of the rest>`, so an edited identity no
  * longer matches its id. The aggregates refuse a week meta, a record directory, a settled marker or a record that belongs
- * to another run or week (runBindingProblems).
+ * to another run or week (runBindingProblems). Each record a weekly cell writes carries the run id and week it ran under
+ * (memory-qa/records.ts weekly_run, from the run id the launch path passes in GBRAIN_EVALS_WEEKLY_RUN), and the aggregates
+ * refuse any answer or judgment without this run's stamp (recordBindingProblems), so another run's files left in a run
+ * directory never count.
  */
 import { createHash } from 'node:crypto';
+import { WEEKLY_RUN_ID, type WeeklyRunStamp } from '../memory-qa/records.ts';
 import type { WlNoPoint, WlServer } from './design.ts';
 
 export const RUN_SCHEMA = 'gbrain-evals/weekly-line-run/v1';
 export const RUN_FILE = 'run.json';
-export const RUN_ID = /^wl-\d{4}-\d{2}-\d{2}-[0-9a-f]{12}$/;
+export const RUN_ID = WEEKLY_RUN_ID;
 
 export interface GbrainBuild { release: string; commit: string }
 export interface RunWorld { world: string; seed_id: string; phrasing_id: string }
@@ -76,12 +80,18 @@ export function runBindingProblems(run: unknown, week: RunWeek): string[] {
   return p;
 }
 
-/** Why a run's records do not belong to it: a record from a cell outside the run or a world outside its week. */
-export function recordBindingProblems(run: Pick<RunIdentity, 'run_id' | 'cells' | 'rereads' | 'worlds'>, answers: ReadonlyArray<{ cell_id: string; conversation: string }>): string[] {
+/**
+ * Why a run's records do not belong to it: an answer or judgment not stamped by this run's cells (weekly_run, written by
+ * the cell under the run id the launch path passes it), a record from a cell outside the run or a world outside its week.
+ */
+export function recordBindingProblems(run: Pick<RunIdentity, 'run_id' | 'week' | 'cells' | 'rereads' | 'worlds'>, answers: ReadonlyArray<{ cell_id: string; conversation: string; weekly_run?: WeeklyRunStamp }>,
+  judgments: ReadonlyArray<{ weekly_run?: WeeklyRunStamp }> = []): string[] {
   const cells = new Set([...run.cells, ...run.rereads]), worlds = new Set(run.worlds.map(w => w.world));
   const strayCells = new Set(answers.filter(a => !cells.has(a.cell_id)).map(a => a.cell_id));
   const strayWorlds = answers.filter(a => !worlds.has(a.conversation)).length;
+  const unstamped = [...answers, ...judgments].filter(r => r.weekly_run?.run_id !== run.run_id || r.weekly_run?.week !== run.week).length;
   return [
+    ...(unstamped ? [`${unstamped} record${unstamped === 1 ? '' : 's'} in run ${run.run_id}'s records ${unstamped === 1 ? 'was' : 'were'} not written by this run's cells (no weekly_run stamp of run ${run.run_id}, week ${run.week})`] : []),
     ...(strayCells.size ? [`${strayCells.size} cell${strayCells.size === 1 ? '' : 's'} in run ${run.run_id}'s records ${strayCells.size === 1 ? 'is' : 'are'} not among its cells and re-reads`] : []),
     ...(strayWorlds ? [`${strayWorlds} answer${strayWorlds === 1 ? '' : 's'} in run ${run.run_id}'s records ${strayWorlds === 1 ? 'is' : 'are'} on a world outside its week`] : []),
   ];

@@ -313,6 +313,9 @@ describe('beside the verdict', () => {
 /** BG1-C's custody receipt for a false-alarm pool. */
 const receiptOf = (pool: Record<string, number[]>) => ({ schema: FALSE_ALARM_RECEIPT_SCHEMA, campaign: BG1C_CAMPAIGN, dataset: BG1C_DATASET, comparisons: Object.keys(pool), pool_sha256: falseAlarmPoolSha256(pool) });
 
+/** The stamp a run's cells write into every record (memory-qa/records.ts weekly_run). */
+const stampOf = (run: Pick<RunIdentity, 'run_id' | 'week'>) => ({ run_id: run.run_id, week: run.week });
+
 /** The runner's settled marker for each week, agreeing with its meta. */
 const settledOf = (metas: readonly WeekMeta[]) => metas.map(m => ({
   schema: SETTLED_SCHEMA, run_id: m.run_id, week: m.week, no_point: m.no_point ?? null, gbrain: m.gbrain, worlds: m.no_point ? [] : m.worlds.map(w => w.world),
@@ -633,22 +636,23 @@ describe('records', () => {
     const big = synth(16, { 'now|grep-agent': alt(-3, -4) });
     const r = recordsOf(big.questions);
     const out = join(tmp, 'run');
-    const dirs = [big.worlds.slice(0, 8), big.worlds.slice(8)].map((ws, k) => {
-      const root = join(tmp, `records-w${k + 1}`);
-      for (const row of WL_ROWS) {
-        const dir = join(root, 'cells', `wl-${row}`);
-        mkdirSync(dir, { recursive: true });
-        const ans = r.answers.filter(a => a.cell_id === `wl-${row}` && ws.includes(a.conversation)), ids = new Set(ans.map(a => a.answer_id));
-        writeFileSync(join(dir, 'answers.ndjson'), ans.map(a => JSON.stringify(a)).join('\n') + '\n');
-        writeFileSync(join(dir, 'judgments.ndjson'), r.judgments.filter(j => ids.has(j.answer_id)).map(j => JSON.stringify(j)).join('\n') + '\n');
-      }
-      return root;
-    });
     const runOf = (week: string, ws: readonly string[], release: string, k: number) => {
       const m = meta(week, ws, release);
       return runIdentity({ week, world_end: '2026-11-29', batch: 'bgw-1001', week_of_batch: k, spares_from: null, gbrain: m.gbrain, comparators: m.comparators, worlds: m.worlds, cells: WL_ROWS.map(row => `wl-${row}`), rereads: [], no_point: null });
     };
     const runs = [runOf('2026-12-01', big.worlds.slice(0, 8), A, 1), runOf('2026-12-08', big.worlds.slice(8), B, 2)];
+    const dirs = [big.worlds.slice(0, 8), big.worlds.slice(8)].map((ws, k) => {
+      const root = join(tmp, `records-w${k + 1}`);
+      const stamp = (x: object) => JSON.stringify({ ...x, weekly_run: stampOf(runs[k]) });
+      for (const row of WL_ROWS) {
+        const dir = join(root, 'cells', `wl-${row}`);
+        mkdirSync(dir, { recursive: true });
+        const ans = r.answers.filter(a => a.cell_id === `wl-${row}` && ws.includes(a.conversation)), ids = new Set(ans.map(a => a.answer_id));
+        writeFileSync(join(dir, 'answers.ndjson'), ans.map(stamp).join('\n') + '\n');
+        writeFileSync(join(dir, 'judgments.ndjson'), r.judgments.filter(j => ids.has(j.answer_id)).map(stamp).join('\n') + '\n');
+      }
+      return root;
+    });
     runs.forEach((run, k) => writeFileSync(join(dirs[k], RUN_FILE), JSON.stringify(run)));
     const m1 = join(tmp, 'w1.json'), m2 = join(tmp, 'w2.json'), s1 = join(tmp, 's1.json'), s2 = join(tmp, 's2.json');
     const metaObjs = [{ ...meta('2026-12-01', big.worlds.slice(0, 8), A), run_id: runs[0].run_id }, { ...meta('2026-12-08', big.worlds.slice(8), B), run_id: runs[1].run_id }];
@@ -694,12 +698,13 @@ describe('records', () => {
     };
     const dirFor = (name: string, run: object, ws: readonly string[], answers = recs.answers) => {
       const root = join(tmp, name);
+      const stamp = (x: object) => JSON.stringify({ ...x, weekly_run: stampOf(run as RunIdentity) });
       for (const cell of new Set(answers.map(a => a.cell_id))) {
         const dir = join(root, 'cells', cell);
         mkdirSync(dir, { recursive: true });
         const ans = answers.filter(a => a.cell_id === cell && ws.includes(a.conversation)), ids = new Set(ans.map(a => a.answer_id));
-        writeFileSync(join(dir, 'answers.ndjson'), ans.map(a => JSON.stringify(a)).join('\n') + '\n');
-        writeFileSync(join(dir, 'judgments.ndjson'), recs.judgments.filter(j => ids.has(j.answer_id)).map(j => JSON.stringify(j)).join('\n') + '\n');
+        writeFileSync(join(dir, 'answers.ndjson'), ans.map(stamp).join('\n') + '\n');
+        writeFileSync(join(dir, 'judgments.ndjson'), recs.judgments.filter(j => ids.has(j.answer_id)).map(stamp).join('\n') + '\n');
       }
       writeFileSync(join(root, RUN_FILE), JSON.stringify(run));
       const r = run as RunIdentity;

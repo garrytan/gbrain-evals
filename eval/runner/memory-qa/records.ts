@@ -66,6 +66,17 @@ export const readerAttempts = (receipts: readonly UsageReceipt[]): ReaderAttempt
   output_limit: r.request?.output_limit ?? null, retry_after_ms: r.retry_after_ms ?? null,
 }));
 
+/** A weekly-line run id, wl-<week>-<12 hex> (eval/runner/weekly-line/identity.ts reads it from here, so the cells need nothing from that directory). */
+export const WEEKLY_RUN_ID = /^wl-\d{4}-\d{2}-\d{2}-[0-9a-f]{12}$/;
+/** The variable the weekly line's launch path sets to the week's run id on every weekly cell and re-read (weekly-line/runner.ts launch.json `env`). */
+export const WEEKLY_RUN_ENV = 'GBRAIN_EVALS_WEEKLY_RUN';
+/** The weekly-line run and week whose cell wrote a record; the weekly line's aggregates refuse a record without this run's stamp. */
+export interface WeeklyRunStamp { run_id: string; week: string }
+export const isWeeklyRunStamp = (v: unknown): v is WeeklyRunStamp => {
+  const s = v as Partial<WeeklyRunStamp> | null;
+  return !!s && typeof s === 'object' && typeof s.run_id === 'string' && WEEKLY_RUN_ID.test(s.run_id) && s.week === s.run_id.slice(3, 13) && Object.keys(s).length === 2;
+};
+
 /** Mirrors eval/runner/q1/hedge.ts HEDGE_VERDICTS without importing it, so the classifier stays out of the cell's executed tree. */
 const HEDGE_VERDICTS = ['abstain', 'hedged', 'confident'] as const;
 type HedgeVerdict = (typeof HEDGE_VERDICTS)[number];
@@ -116,6 +127,8 @@ export interface AnswerRecord {
   truncated?: boolean;
   /** OpenAI-compatible readers only: every provider attempt of the call that produced this record. */
   attempts?: ReaderAttempt[];
+  /** Weekly-line cells only: the weekly run and week whose cell wrote this answer. */
+  weekly_run?: WeeklyRunStamp;
 }
 
 /**
@@ -159,6 +172,8 @@ export interface JudgmentRecord {
   /** RS1's judgments: the view this judge serves (gating decides, descriptive is reported) and the model versions the provider returned. */
   view?: 'gating' | 'descriptive';
   judge_versions?: string[];
+  /** Weekly-line cells only: the weekly run and week whose cell wrote this judgment. */
+  weekly_run?: WeeklyRunStamp;
 }
 
 export interface Q1RowFields {
@@ -213,6 +228,7 @@ export function answerProblems(rec: unknown): string[] {
     delivered_tokens: v => v === undefined || (!!v && typeof v === 'object' && !Array.isArray(v) && Object.values(v as object).every(int)),
     finish: v => v === undefined || v === null || str(v), truncated: v => v === undefined || typeof v === 'boolean',
     attempts: v => v === undefined || (Array.isArray(v) && v.every(a => !!a && typeof a === 'object' && ['ok', 'error'].includes((a as ReaderAttempt).status) && typeof (a as ReaderAttempt).from_cache === 'boolean')),
+    weekly_run: v => v === undefined || isWeeklyRunStamp(v),
   }, r => typeof r.cell_id === 'string' && typeof r.question_id === 'string' && typeof r.reader === 'string' && Number.isInteger(r.replicate)
     && r.answer_id !== answerId(r.cell_id, r.question_id, r.reader, r.replicate as number) ? ['answer.answer_id is not sha256(cell_id|question_id|reader|replicate)'] : []);
 }
@@ -221,7 +237,7 @@ export function judgmentProblems(rec: unknown): string[] {
   return check('judgment', rec, {
     answer_id: hex, instrument_id: str, instrument_sha256: hex, judge: str, judge_replicate: int, temperature: nullable(num),
     score: nullable(v => typeof v === 'number' && v >= 0 && v <= 1), parse_ok: v => typeof v === 'boolean', raw_sha256: hex,
-    outcome: v => v === 'scored' || v === 'judge_error',
+    outcome: v => v === 'scored' || v === 'judge_error', weekly_run: v => v === undefined || isWeeklyRunStamp(v),
   }, r => [
     ...(r.outcome === 'scored' && (r.score === null || r.parse_ok !== true) ? ['judgment: a scored judgment needs a score and parse_ok'] : []),
     ...(r.outcome === 'judge_error' && r.score !== null ? ['judgment: a failed judgment has a null score, never a "no"'] : []),
@@ -270,11 +286,14 @@ export function readRecords<K extends RecordKind>(path: string, kind: K): Array<
   return out;
 }
 
-/** An append-only, key-unique record file. */
+/**
+ * An append-only, key-unique record file. With a weekly-line run's `stamp`, every appended record carries it as
+ * `weekly_run`, and a record of another weekly run (already in the file, or appended) refuses.
+ */
 export class RecordLog<K extends ImmutableKind> {
   private byKey = new Map<string, string>();
 
-  constructor(readonly path: string, readonly kind: K) {
+  constructor(readonly path: string, readonly kind: K, readonly stamp?: WeeklyRunStamp) {
     mkdirSync(dirname(path), { recursive: true });
     if (existsSync(path)) {
       const text = readFileSync(path, 'utf8');
@@ -289,7 +308,13 @@ export class RecordLog<K extends ImmutableKind> {
     }
   }
 
+  private otherRun(r: RecordOf<K>): void {
+    const s = (r as { weekly_run?: WeeklyRunStamp }).weekly_run;
+    if (this.stamp && (!s || s.run_id !== this.stamp.run_id || s.week !== this.stamp.week)) throw new Error(`${this.path}: refusing a ${this.kind} of ${s ? `weekly run ${s.run_id}` : 'no weekly run'} in weekly run ${this.stamp.run_id}`);
+  }
+
   private remember(r: RecordOf<K>): void {
+    this.otherRun(r);
     const key = KEYS[this.kind](r as never);
     const json = JSON.stringify(r);
     const prior = this.byKey.get(key);
@@ -303,7 +328,9 @@ export class RecordLog<K extends ImmutableKind> {
   all(): Array<RecordOf<K>> { return [...this.byKey.values()].map(j => JSON.parse(j)); }
 
   /** Append one record; `exists` when an identical record is already there, an error when a different one is. */
-  append(rec: RecordOf<K>): 'appended' | 'exists' {
+  append(given: RecordOf<K>): 'appended' | 'exists' {
+    const rec = this.stamp && !(given as { weekly_run?: unknown }).weekly_run ? { ...given, weekly_run: this.stamp } : given;
+    this.otherRun(rec);
     const problems = PROBLEMS[this.kind](rec);
     if (problems.length) throw new Error(`refusing to write an invalid ${this.kind}: ${problems.join('; ')}`);
     const key = KEYS[this.kind](rec as never);
