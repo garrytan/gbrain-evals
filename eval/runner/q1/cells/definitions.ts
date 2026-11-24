@@ -639,6 +639,10 @@ export const BG1_ASSUMPTIONS = {
   canonical_judge_tokens: { input: 600, output: 250 },
 };
 
+/** The longest a launch unit's VM may run, and the VM hours a unit asks for: its expected hours with half again as margin, plus two. */
+export const CELL_VM_MAX_HOURS = 72;
+export const cellVmHours = (expectedHours: number) => Math.ceil(expectedHours * 1.5) + 2;
+
 /**
  * Stage 1's measured rates (the preregistration's Amendment 5), which price BG1's counted cells (benchmark bg1: sets BG1
  * and BG1-fc10) from the stage 2 freeze on. Stage 1's own cells (bg1-dev) keep BG1_ASSUMPTIONS, so stage 1's estimate

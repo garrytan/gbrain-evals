@@ -435,10 +435,11 @@ export const WEEKLY_LINE_LABELLER = 'gemini:gemini-3.8-flash';
 /**
  * The pilot's and the judge check's cell manifest (cell.ts `--manifest weekly-pilot`), for the gbrain build passed in: the
  * pilot's four cells and the judge check's grep-agent cell, particle-1's re-reads of the pilot's three 8,000-token rows,
- * and each block's estimate and cap (the pilot's: its rows' caps; the judge check's: its pause).
+ * and each block's estimate and cap (the pilot's: its rows' caps; the judge check's: its pause). The pilot's caps and recorded
+ * rates are those of the counted set it precedes, `counted` (BGW unless a W1-long block is amended in).
  */
-export function buildWeeklyPilotManifest(gbrain: WeeklyLineGbrainBuild): WeeklyPilotManifest {
-  const pilot = generateWeeklyLinePilotCells(gbrain), judge = generateWeeklyLineJudgeCheckCells(), caps = weeklyLinePilotCaps();
+export function buildWeeklyPilotManifest(gbrain: WeeklyLineGbrainBuild, counted: WeeklyLineCountedSet = 'BGW'): WeeklyPilotManifest {
+  const pilot = generateWeeklyLinePilotCells(gbrain, counted), judge = generateWeeklyLineJudgeCheckCells(), caps = weeklyLinePilotCaps(counted);
   const rereads = weeklyLineRereadPlans(pilot);
   const sum = (xs: Array<{ estimate: CellEstimate }>) => xs.reduce((s, x) => s + x.estimate.usd, 0);
   const labelUsd = WEEKLY_LINE_READERS.length * WEEKLY_LINE_JUDGE_CHECK_PER_JUDGE * BG1_MEASURED.canonical_judge_usd_per_call;
@@ -455,7 +456,7 @@ export function buildWeeklyPilotManifest(gbrain: WeeklyLineGbrainBuild): WeeklyP
     ],
     cells: [...pilot, ...judge], smoke_cells: [], addon_cells: [],
     total_usd: round(pilotUsd + judgeUsd), plan_total_usd: round(pilotUsd + judgeUsd), cap_usd: round(pilotCap + WEEKLY_LINE_JUDGE_CHECK_PAUSE_USD),
-    campaign_id: BGW_CAMPAIGN, gbrain_build: { ...gbrain }, frontier_judges: { ...WEEKLY_LINE_JUDGE_BY_READER }, reread_plans: rereads, pilot_caps: caps, rates: { ...WEEKLY_LINE_RATES },
+    campaign_id: BGW_CAMPAIGN, gbrain_build: { ...gbrain }, frontier_judges: { ...WEEKLY_LINE_JUDGE_BY_READER }, reread_plans: rereads, pilot_caps: caps, rates: weeklyLineRates(counted),
     judge_check: { pause_usd: WEEKLY_LINE_JUDGE_CHECK_PAUSE_USD, cells_cap_usd: judge[0].lease!.usd, label_cap_usd: WEEKLY_LINE_LABEL_CAP_USD, per_judge: WEEKLY_LINE_JUDGE_CHECK_PER_JUDGE, labeller: WEEKLY_LINE_LABELLER },
     quick_look: WEEKLY_LINE_QUICK_LOOK,
   };

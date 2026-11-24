@@ -103,7 +103,7 @@ import { HttpMemorySystem } from '../systems/http.ts';
 import { encodingCount, NATIVE_READER_TEMPLATE, packContext, readerCounter, readerTokenizer, RENDERER_VERSION, strictSources, validateSources, type PackCounter, type PackedContext } from '../systems/render-v2.ts';
 import { Sanitizer, SanitizerLeakError, type IngestStep } from '../systems/sanitize.ts';
 import { answerModes, passiveUnsupported, policyKnobs, type CapabilityRecord, type Item, type MemorySystem, type OwnAnswerSystem, type RetrievalPolicy, type SessionInput, type OwnAnswer } from '../systems/types.ts';
-import { ALL_SETS, definitionProblems, estimateCell, F6_ASSUMPTIONS, frontierJudgesFor, launchPrefix, loadManifest, MANIFEST_PATH, pinnedJudgeRouteCaps, policyKey, shimLaunch, type ArmDefinition, type CellDefinition, type JudgeSettings, type Manifest, type RetrievalIdentity, type Selection } from './cells/definitions.ts';
+import { ALL_SETS, CELL_VM_MAX_HOURS, cellVmHours, definitionProblems, estimateCell, F6_ASSUMPTIONS, frontierJudgesFor, launchPrefix, loadManifest, MANIFEST_PATH, pinnedJudgeRouteCaps, policyKey, shimLaunch, type ArmDefinition, type CellDefinition, type JudgeSettings, type Manifest, type RetrievalIdentity, type Selection } from './cells/definitions.ts';
 import { F6_MANIFEST_PATH, loadF6Manifest } from './cells/f6.ts';
 import { loadRS1Manifest, stage1OverCap, type RS1Manifest } from './cells/rs1.ts';
 import { loadBN10Manifest } from './cells/bn10.ts';
@@ -1508,7 +1508,7 @@ export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight
       id, system: c.system, benchmark: c.benchmark, config: c.configuration, lease_usd: lease, command,
       // A launch's build arguments (F6's GBRAIN_BUN_IMAGE and GBRAIN_SHA) and an own-bundle configuration reach setup too, so the image it builds is the one up runs.
       setup_command: `${launchPrefix({ ...launch, env: Object.fromEntries(Object.entries(launch.env).filter(([k]) => k === 'GBRAIN_SHA' || k === 'GBRAIN_BUN_IMAGE')) })}bash eval/systems/bootstrap.sh setup${stack ? ` --system ${c.system}${downConfig}` : ''} --datasets ${c.benchmark}${c.only_conversations ? ` --conversations ${c.only_conversations.join(',')}` : ''}`,
-      vm: { size: `standard-${VM_VCPU}` }, timeout_hours: Math.min(72, Math.ceil(c.expected_hours * 1.5) + 2), block: c.block, sealed: c.split !== 'dev',
+      vm: { size: `standard-${VM_VCPU}` }, timeout_hours: Math.min(CELL_VM_MAX_HOURS, cellVmHours(c.expected_hours)), block: c.block, sealed: c.split !== 'dev',
       ...(smoke ? { smoke: true } : {}), ...(c.only_conversations ? { conversations: c.only_conversations } : {}), providers, pass: providers.map(p => PROVIDER_KEYS[p]),
       expected_hours: c.expected_hours, wave: headline(c) ? waveOf.get(`${c.id}|${i}`)! : t1Waves + T2_WAVES[c.block],
       ...(c.snapshot_command ? { snapshot_command: c.snapshot_command } : {}), ...(c.restore_command ? { restore_command: c.restore_command } : {}),

@@ -9,7 +9,7 @@ import { join } from 'node:path';
 import { BGW_CAMPAIGN, bgwSlotOf } from '../memory-qa/bg1-names.ts';
 import { bareModelId, suspendedModelProblem } from '../model-defaults.ts';
 import { OPUS, PARTICLE } from '../q1/cells/bg1.ts';
-import { frontierJudgesFor, type CellDefinition } from '../q1/cells/definitions.ts';
+import { CELL_VM_MAX_HOURS, cellVmHours, frontierJudgesFor, type CellDefinition } from '../q1/cells/definitions.ts';
 import {
   WEEKLY_LINE_BUNDLE_LOCKS, WEEKLY_LINE_JUDGE_BY_READER, WEEKLY_LINE_MODELS, WEEKLY_LINE_READERS, WEEKLY_LINE_REGISTRY, WEEKLY_LINE_ROWS, weeklyLineBuildProblems, weeklyLineSetOf, weeklyLineWeekProblems,
   type RegistryModel, type WeeklyLineGbrainBuild, type WeeklyLineRereadPlan,
@@ -51,6 +51,7 @@ export function weeklyLineLaunchProblems(l: { gbrain: WeeklyLineGbrainBuild; cel
     else if (c.week && bgwSlotOf(c.week.batch) !== null && c.set !== weeklyLineSetOf(c.week.batch)) p.push(`cell ${c.id} runs set ${c.set}, and batch ${c.week.batch}'s worlds are set ${weeklyLineSetOf(c.week.batch)}'s length`);
     if (JSON.stringify(c.week) !== JSON.stringify(week)) p.push(`cell ${c.id} runs another week than ${l.cells[0].id}`);
     if (c.descriptive_view !== false) p.push(`cell ${c.id} would add its instrument's canonical judge to every answer (descriptive_view is not false)`);
+    if (cellVmHours(c.expected_hours) > CELL_VM_MAX_HOURS) p.push(`cell ${c.id} plans ${c.expected_hours} hours, so its VM would need ${cellVmHours(c.expected_hours)} hours with margin, past the ${CELL_VM_MAX_HOURS}-hour limit on one VM; it would be stopped before it finished`);
   }
   for (const [row, { system, configuration }] of Object.entries(WEEKLY_LINE_ROWS)) {
     const n = l.cells.filter(c => c.system === system && c.configuration === configuration).length;

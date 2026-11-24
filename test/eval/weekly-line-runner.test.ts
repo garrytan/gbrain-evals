@@ -87,6 +87,8 @@ describe("the week's Set W worlds", () => {
       expect(w.worlds.map(x => x.world)).toEqual(all.slice(8 * (k - 1), 8 * k));
     }
     expect(weekWorlds('2026-12-08', batch()).worlds[0]).toEqual({ world: 'bgw-1001', seed_id: 'W1', phrasing_id: 'W1' });
+    const long = { first: 2001, week1: '2026-12-08', manifest: { ...manifestOf(ids(34, 2001), 34), dataset: bgwBatchDataset(2001) } };
+    expect(weekWorlds('2026-12-08', long).worlds).toEqual(ids(8, 2001).map(world => ({ world, seed_id: 'W1', phrasing_id: 'W1' })));
     expect(message(() => weekWorlds('2027-01-05', batch()))).toMatch(/^WEEKLY_NOT_IN_BATCH: week 2027-01-05 is not one of the 4 weeks of batch bgw-1001/);
     expect(message(() => weekWorlds('2026-12-01', batch()))).toMatch(/^WEEKLY_NOT_IN_BATCH/);
     expect(message(() => weekWorlds('2026-12-08', { ...batch(), week1: '2026-12-09' }))).toMatch(/not a Tuesday/);

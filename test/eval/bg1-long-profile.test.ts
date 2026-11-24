@@ -21,7 +21,7 @@ import { sealedPlan, sealedTargetTokens } from '../../eval/custody/bg1/render.ts
 import { ALL_SETS, BG1_MEASURED, f6ExtractionUsd } from '../../eval/runner/q1/cells/definitions.ts';
 import { BG1C_RATES } from '../../eval/runner/q1/cells/bg1c.ts';
 import {
-  generateWeeklyLineCells, generateWeeklyLinePilotCells, WEEKLY_LINE_RATES, weeklyLinePilotCaps, weeklyLineRates, weeklyLineRereadPlans, weeklyLineSetOf, type WeeklyLineInput,
+  buildWeeklyPilotManifest, generateWeeklyLineCells, generateWeeklyLinePilotCells, WEEKLY_LINE_RATES, weeklyLinePilotCaps, weeklyLineRates, weeklyLineRereadPlans, weeklyLineSetOf, type WeeklyLineInput,
 } from '../../eval/runner/q1/cells/weekly-line.ts';
 import { weeklyLineLaunchProblems, weeklyLineRegistryModels } from '../../eval/runner/weekly-line/launch.ts';
 
@@ -222,13 +222,20 @@ describe('the weekly cells on W1-long worlds', () => {
     expect(caps['grep-agent'].cap_usd).toBe(stdCaps['grep-agent'].cap_usd);
     expect(generateWeeklyLinePilotCells(GBRAIN)).toEqual(generateWeeklyLinePilotCells(GBRAIN, 'BGW'));
     expect(generateWeeklyLinePilotCells(GBRAIN, 'BGW-long').every(c => c.set === 'BGW-pilot')).toBe(true);
+    const pm = buildWeeklyPilotManifest(GBRAIN, 'BGW-long');
+    expect([pm.rates, pm.pilot_caps]).toEqual([weeklyLineRates('BGW-long'), caps]);
+    expect(buildWeeklyPilotManifest(GBRAIN)).toEqual(buildWeeklyPilotManifest(GBRAIN, 'BGW'));
+    expect(buildWeeklyPilotManifest(GBRAIN).rates).toEqual({ ...WEEKLY_LINE_RATES });
   });
 
-  // Value: protects=the launch check refuses a week whose cells run another length than its batch; fails_when=a W1-long week launches on BGW cells, or a W1 week on BGW-long cells; why_new=GBEV-3's brief (no guard weakened by the long set); seam=weekly-line/launch.ts weeklyLineLaunchProblems; no_claim=the cell VM
-  test('the launch check refuses cells whose set is not the length their batch plans at', () => {
+  // Value: protects=the launch check refuses a week whose cells run another length than its batch; fails_when=a W1-long week launches on BGW cells, a W1 week on BGW-long cells, or a cell whose planned hours outrun one VM's limit launches and is stopped after spending; why_new=GBEV-3's brief (no guard weakened by the long set); seam=weekly-line/launch.ts weeklyLineLaunchProblems; no_claim=the cell VM
+  test('the launch check refuses cells whose set is not the length their batch plans at, or that would outrun one VM', () => {
     const deps = { ripgrep: () => 'ripgrep 14.1.1', registry: [...weeklyLineRegistryModels(), { model: 'text-embedding-3-large', role: 'system-internal', system: 'extract-first server (common setup embedder)' }] };
     const problems = (cells: typeof std) => weeklyLineLaunchProblems({ gbrain: GBRAIN, cells, rereads: weeklyLineRereadPlans(cells) }, deps).filter(p => p.includes('length'));
     expect(problems(long)).toEqual([]);
+    const vm = (cells: typeof std) => weeklyLineLaunchProblems({ gbrain: GBRAIN, cells, rereads: weeklyLineRereadPlans(cells) }, deps).filter(p => p.includes('-hour limit'));
+    expect(vm(std)).toEqual([]);
+    expect(vm(long)).toEqual([`cell ${by(long, 'ext-extract-first').id} plans 121 hours, so its VM would need 184 hours with margin, past the 72-hour limit on one VM; it would be stopped before it finished`]);
     expect(problems(long.map(c => ({ ...c, set: 'BGW' as const })))[0]).toContain('runs set BGW, and batch bgw-2001\'s worlds are set BGW-long\'s length');
     expect(problems(std.map(c => ({ ...c, set: 'BGW-long' as const })))[0]).toContain('runs set BGW-long, and batch bgw-1001\'s worlds are set BGW\'s length');
   });
