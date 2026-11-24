@@ -280,6 +280,7 @@ export function scan(text: string, gold: Gold, sent: string): LeakHits {
 export function normalizeForOracle(text: string, masks: readonly string[]): string {
   let t = text
     .replace(/\beyJ[A-Za-z0-9_+/-]+=*/g, tok => { try { const d = Buffer.from(tok.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8'); JSON.parse(d); return '<b64:' + d + '>'; } catch { return '<b64>'; } })
+    .replace(/^date: .*GMT$/gm, 'date: <date>')
     .replace(/\[gbrain notice [^\]]*\][^\n]*(\n(why|fix|next|docs):[^\n]*)*/g, '<notice>')
     .replace(/"gbrain_notices"\s*:\s*\[(?:[^\[\]]|\[[^\]]*\])*\]\s*,?/g, '')
     .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, '<uuid>')
@@ -507,9 +508,10 @@ async function openHttp(gut: GbrainUnderTest, brain: Brain): Promise<TransportHa
     const params = { ...args, ...(caller.extra ?? {}), ...(caller.acting_user ? { acting_user: caller.acting_user } : {}) };
     const r = await post(bearer, headers, { jsonrpc: '2.0', id: rpcId++, method: 'tools/call', params: { name: op, arguments: params } }, sid || undefined);
     const all = r.hdrs + '\n' + r.text;
-    if (r.status === 429 || r.status >= 500) return { exposed: true, ok: false, error_code: 'harness_http_' + r.status, text: all, harness: true };
-    if (!r.msg) return { exposed: !(r.status === 401 || r.status === 403), ok: false, error_code: 'http_' + r.status, text: all };
-    if (r.msg.error) return { exposed: !/unknown tool|not found|method not found/i.test(JSON.stringify(r.msg.error)), ok: false, error_code: 'rpc_error', text: all };
+    const decoded = 'HTTP ' + r.status + '\n' + r.text;
+    if (r.status === 429 || r.status >= 500) return { exposed: true, ok: false, error_code: 'harness_http_' + r.status, text: all, decoded, harness: true };
+    if (!r.msg) return { exposed: !(r.status === 401 || r.status === 403), ok: false, error_code: 'http_' + r.status, text: all, decoded };
+    if (r.msg.error) return { exposed: !/unknown tool|not found|method not found/i.test(JSON.stringify(r.msg.error)), ok: false, error_code: 'rpc_error', text: all, decoded: JSON.stringify(r.msg.error) };
     const o = toolResultText(r.msg.result ?? {});
     return { ...o, text: all + '\n' + o.text, decoded: o.text };
   })(), TIMEOUT_MS.http);
