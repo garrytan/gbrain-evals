@@ -282,7 +282,7 @@ CLAUDE.md asks; they go in the paid-window request and the tracking issue.
 | Row | Write and background, dollars per million ingested tokens | Answer-model input per question | Machine hours per world |
 |---|---|---|---|
 | `gbrain-defaults` | 1.0 (measured embeddings 0.08, plus background fact extraction at an assumed 0.9 or less) | 23,800 tokens | 2 |
-| `ext-extract-first` | 25 (20.09 measured for gpt-4.1-mini in its matched configuration, scaled for gpt-5-mini's price and reasoning output) | 1,200 tokens | 4 |
+| `ext-extract-first` | 95 (its recipe's rate from the scoreboard's development smokes, `ingest_usd_per_mtok` in `definitions.ts`; the battleground's 20.09 for gpt-4.1-mini in its matched configuration, times the 2.84 per-call ratio [its pilot](../../eval/systems/extract-first/PILOT.md) measured for gpt-5-mini, gives about 57, so the plan takes the higher) | 1,200 tokens | 20 (its recipe's 110 hours per million tokens, `hours_per_mtok`, for a world of about 0.18 million) |
 | `ext-memory-bank` | 3.7 (1.85 measured for its recipe with observations off, doubled for observations) | 10,400 tokens | 2 |
 | `ext-verbatim-session` | 0 | 8,000 tokens | 1.5 |
 | `baseline-hybrid` | 0.14 (measured) | 7,100 tokens | 1 |
