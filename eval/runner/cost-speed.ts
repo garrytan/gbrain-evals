@@ -28,6 +28,11 @@
  *               the measured unit costs, plus an always-on VM when
  *               --vm-usd-per-hour is given.
  *
+ * The cost-and-speed experiment (docs/benchmarks/2026-11-24-cost-speed-preregistration.md) adds pure functions over
+ * explicit per-world records (`cs1Aggregate` and its parts): monthly lines for both profiles, cost per correct answer,
+ * the full-context range, history growth, the paired cluster bootstrap over worlds, the five decision rules and
+ * README's table (`renderCs1Table`). A loader maps a run's files onto `Cs1Input`; nothing here reads files.
+ *
  * Three different dollar numbers, never mixed: campaign spend (what the proxy
  * billed this cell, with reserved-unsettled dollars apart), cached-replay
  * spend (the list price of answers this run reused from the answer cache or
@@ -37,12 +42,16 @@
  * done and invalid; spend per block against its cap; VMs by owner (from the
  * repository runner's `usage`, when a Ubicloud token is present).
  */
+import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { percentile } from './metrics.ts';
 import { priceRequest } from './budget-ledger.ts';
 import type { UsageLine } from './metering-proxy.ts';
 import { refuse, ScoreboardError, renderMessage, exitCodeOf } from './q1/scoreboard-errors.ts';
+import { seededRandom } from './stats/paired.ts';
+import { probeSummary, type ProbeRecord } from './memory-qa/cost-speed-probes.ts';
+import type { MatchClass } from './bg1/match.ts';
 
 export const WORKLOADS = {
   personal: { messages: 2_000, questions: 300 },
@@ -234,6 +243,490 @@ async function vmsByOwner(): Promise<string | null> {
     const [out, code] = await Promise.all([new Response(p.stdout).text(), p.exited]);
     return code === 0 ? out : null;
   } catch { return null; }
+}
+
+/** The cost-and-speed experiment's workload profiles (docs/benchmarks/2026-11-24-cost-speed-preregistration.md, "Workload profile"): ingested tokens and questions a month, and the one-year history that storage and the full-context row are priced at. */
+export const CS1_PROFILES = {
+  heavy: { messages: 2_000, tokens: 80_700, questions: 300, history_tokens: 968_000 },
+  light: { messages: 215, tokens: 8_700, questions: 32, history_tokens: 104_000 },
+} as const;
+export type Cs1Profile = keyof typeof CS1_PROFILES;
+const CS1_PROFILE_NAMES: readonly Cs1Profile[] = ['heavy', 'light'];
+
+/** The preregistered bootstrap: 10,000 resamples of worlds, seeded from the string `cost-speed-1`. */
+export const CS1_SEED = 'cost-speed-1';
+export const CS1_DRAWS = 10_000;
+/** The write-to-queryable horizon: a percentile past it renders as "more than 10 minutes". */
+export const CS1_HORIZON_MS = 600_000;
+/** Rows named by "What the result decides": gbrain, the three compared memory servers, the four passive systems besides gbrain and the five compared systems. */
+export const CS1_GBRAIN = 'gbrain-defaults';
+export const CS1_SERVERS = ['ext-extract-first', 'ext-memory-bank', 'ext-verbatim-session'] as const;
+export const CS1_PASSIVE = [...CS1_SERVERS, 'baseline-hybrid'] as const;
+export const CS1_COMPARED = [...CS1_PASSIVE, 'baseline-file-agent'] as const;
+/** The profile's reader first (decisions 2, 4 and 5 use it), then the low-cost reader. */
+export const CS1_READERS = ['claude-opus-5-5', 'particle-1'] as const;
+/** The decision rules' margins and the history-growth flag. */
+export const CS1_BARS = { system_ratio: 1.25, answer_ratio: 1.5, p50_ms: 60_000, p95_ms: 300_000, miss_share: 0.05, system_share: 0.1, total_ratio: 1.25, growth: 1.25 } as const;
+const GIB = 2 ** 30;
+const MEMORY_HEADROOM = 1.5;
+
+export type Interval = [number, number];
+
+/** One reader's answers in one world: questions asked, the reader's provider dollars, and each answer's class from eval/runner/bg1/match.ts. */
+export interface Cs1ReaderWorld {
+  questions: number;
+  usd: number;
+  classes: readonly MatchClass[];
+}
+
+/** One system's measured lines in one world. Probe dollars are carried for the record and never counted in cost. */
+export interface Cs1World {
+  world: string;
+  ingested_tokens: number;
+  sessions: number;
+  /** Questions the system answered with its own read; its read dollars are divided by this. */
+  questions: number;
+  usd: { write: number; background: number; read: number; probe: number };
+  /** Optional split of a phase's dollars by model, for decision 1's largest line. */
+  by_model?: Partial<Record<'write' | 'background' | 'read', Record<string, number>>>;
+  /** The idle window, on the two worlds per system that ran one. */
+  idle?: { usd: number; window_ms: number } | null;
+  /** Write-and-background dollars per million tokens over the world's first and last quarter of sessions. */
+  quarters?: { first_usd_per_mtok: number; last_usd_per_mtok: number } | null;
+  readers: Readonly<Record<string, Cs1ReaderWorld>>;
+  /** The world's counted write-to-queryable probe records (eval/runner/memory-qa/cost-speed-probes.ts). */
+  probes?: readonly ProbeRecord[] | null;
+}
+
+/** A system's steady-peak resident memory and disk bytes, and the ingested tokens the disk held when sampled (the projection's base). */
+export interface Cs1Hosted { resident_bytes: number; disk_bytes: number; disk_tokens: number }
+
+/** One system's worlds and hosting sample; hosting null means there is no stack to host (the question-only floor). */
+export interface Cs1System { system: string; worlds: readonly Cs1World[]; hosting: Cs1Hosted | null }
+
+/** The hosting price ladder from the freeze amendment: one provider's general-purpose instances and its block-storage price. */
+export interface Cs1PriceLadder {
+  provider: string;
+  instances: ReadonlyArray<{ name: string; memory_gib: number; usd_per_hour: number }>;
+  storage_usd_per_gb_month: number;
+}
+
+/** One reader's whole-world full-context reads in one world, with input dollars split by cache kind. */
+export interface Cs1FullContextWorld {
+  world: string;
+  questions: number;
+  cached_tokens: number;
+  cached_usd: number;
+  cache_write_tokens: number;
+  cache_write_usd: number;
+  uncached_usd: number;
+  output_usd: number;
+  classes: readonly MatchClass[];
+}
+
+/** baseline-full-context for one reader: its measured reads and, per profile, whether the one-year prompt fits the reader (`checkFit`). */
+export interface Cs1FullContextReader {
+  worlds: readonly Cs1FullContextWorld[];
+  fit: Readonly<Record<Cs1Profile, { fits: boolean; prompt_tokens?: number }>>;
+}
+
+/** Everything the aggregation reads; a loader maps a run's files onto it. */
+export interface Cs1Input {
+  systems: readonly Cs1System[];
+  ladder: Cs1PriceLadder;
+  full_context?: Readonly<Record<string, Cs1FullContextReader>> | null;
+  not_run?: ReadonlyArray<{ system: string; reason: string }>;
+  readers?: readonly string[];
+  seed?: string;
+  draws?: number;
+}
+
+/** A system's monthly lines in one world (or their world means) for one profile. */
+export interface Cs1Lines {
+  write: number;
+  background: number;
+  write_background: number;
+  read: number;
+  idle: number;
+  hosting: number;
+  system: number;
+  system_without_hosting: number;
+  readers: Record<string, { reader: number; total: number; total_without_hosting: number }>;
+}
+
+/** A system's hosting a month for one profile: the smallest instance holding 1.5 times the steady peak for 730 hours, plus storage projected to the profile's one-year history. */
+export interface Cs1HostingLine { instance: string | null; memory_needed_gib: number; compute_usd: number; storage_gb: number; storage_usd: number; usd: number }
+
+/** Hosting from the price ladder; refuses when no instance holds the peak or the disk sample can't be projected. */
+export function cs1Hosting(h: Cs1Hosted | null, ladder: Cs1PriceLadder, profile: Cs1Profile): Cs1HostingLine {
+  if (!h) return { instance: null, memory_needed_gib: 0, compute_usd: 0, storage_gb: 0, storage_usd: 0, usd: 0 };
+  if (!(h.disk_tokens > 0)) throw new Error('cost-speed hosting: the disk sample names no ingested tokens to project from');
+  const need = h.resident_bytes * MEMORY_HEADROOM / GIB;
+  const pick = ladder.instances.filter(i => i.memory_gib >= need).sort((a, b) => a.memory_gib - b.memory_gib || a.usd_per_hour - b.usd_per_hour)[0];
+  if (!pick) throw new Error(`cost-speed hosting: no ${ladder.provider} instance holds ${need.toFixed(2)} GiB (1.5 times the steady peak)`);
+  const gb = h.disk_bytes / h.disk_tokens * CS1_PROFILES[profile].history_tokens / GIB;
+  const compute = pick.usd_per_hour * HOURS_PER_MONTH, storage = gb * ladder.storage_usd_per_gb_month;
+  return { instance: pick.name, memory_needed_gib: need, compute_usd: compute, storage_gb: gb, storage_usd: storage, usd: compute + storage };
+}
+
+/** A system's idle dollars a month: its idle windows' dollars per hour, pooled over the worlds that ran one, times 730; null when none did. */
+export function cs1IdleUsdPerMonth(worlds: readonly Cs1World[]): number | null {
+  const ran = worlds.filter(w => w.idle && w.idle.window_ms > 0);
+  if (!ran.length) return null;
+  const usd = ran.reduce((n, w) => n + w.idle!.usd, 0), hours = ran.reduce((n, w) => n + w.idle!.window_ms, 0) / 3_600_000;
+  return usd / hours * HOURS_PER_MONTH;
+}
+
+/** One world's monthly lines at a profile's volumes; idle and hosting are the system's fixed monthly figures. */
+export function cs1MonthlyLines(w: Cs1World, profile: Cs1Profile, fixed: { idle_usd: number; hosting_usd: number }, readers: readonly string[] = CS1_READERS): Cs1Lines {
+  const p = CS1_PROFILES[profile];
+  const write = w.ingested_tokens > 0 ? w.usd.write / w.ingested_tokens * p.tokens : 0;
+  const background = w.ingested_tokens > 0 ? w.usd.background / w.ingested_tokens * p.tokens : 0;
+  const read = w.questions > 0 ? w.usd.read / w.questions * p.questions : 0;
+  const system = write + background + read + fixed.idle_usd + fixed.hosting_usd;
+  return {
+    write, background, write_background: write + background, read, idle: fixed.idle_usd, hosting: fixed.hosting_usd, system, system_without_hosting: system - fixed.hosting_usd,
+    readers: Object.fromEntries(readers.map(r => {
+      const reader = w.readers[r].usd / w.readers[r].questions * p.questions;
+      return [r, { reader, total: system + reader, total_without_hosting: system - fixed.hosting_usd + reader }];
+    })),
+  };
+}
+
+/** Key-matched accuracy: `unclear` counts as not correct and is also counted on its own. */
+export function cs1Accuracy(rs: ReadonlyArray<{ questions: number; classes: readonly MatchClass[] }>) {
+  const questions = rs.reduce((n, r) => n + r.questions, 0);
+  const correct = rs.reduce((n, r) => n + r.classes.filter(c => c === 'correct').length, 0);
+  const unclear = rs.reduce((n, r) => n + r.classes.filter(c => c === 'unclear').length, 0);
+  return { questions, correct, unclear, not_correct: questions - correct, key_matched: questions ? correct / questions : null };
+}
+
+/** History growth: world-mean last-quarter over first-quarter write-and-background dollars per million tokens, flagged above 1.25. */
+export function cs1Growth(worlds: readonly Cs1World[]) {
+  const q = worlds.flatMap(w => w.quarters ? [w.quarters] : []);
+  if (!q.length) return { worlds: 0, first_usd_per_mtok: null, last_usd_per_mtok: null, ratio: null, flagged: false, note: 'not measured' };
+  const first = q.reduce((n, x) => n + x.first_usd_per_mtok, 0) / q.length, last = q.reduce((n, x) => n + x.last_usd_per_mtok, 0) / q.length;
+  if (!(first > 0)) return { worlds: q.length, first_usd_per_mtok: first, last_usd_per_mtok: last, ratio: null, flagged: false, note: 'not defined: no write-and-background spend in the first quarter' };
+  return { worlds: q.length, first_usd_per_mtok: first, last_usd_per_mtok: last, ratio: last / first, flagged: last / first > CS1_BARS.growth, note: null };
+}
+
+/** The bootstrap's resamples: `draws` lists of cluster indices drawn with replacement, seeded from the string seed through stats/paired.ts's generator. */
+export function cs1Draws(clusters: number, seed: string = CS1_SEED, draws: number = CS1_DRAWS): number[][] {
+  const rand = seededRandom(createHash('sha256').update(seed).digest().readUInt32LE(0));
+  return Array.from({ length: draws }, () => Array.from({ length: clusters }, () => Math.floor(rand() * clusters)));
+}
+
+const quantileAt = (sorted: readonly number[], q: number) => sorted[Math.min(sorted.length - 1, Math.max(0, Math.floor(q * sorted.length)))];
+
+/**
+ * baseline-full-context for one reader and profile: warm and cold monthly bounds from the measured input dollars per
+ * token by cache kind, scaled to the profile's one-year prompt. Warm writes the history to the cache once a day and
+ * reads it from cache for the day's other questions; cold writes it for every question. Both add the measured
+ * uncached and output dollars per question. Not bootstrapped: it is a priced range, not a measured monthly figure.
+ */
+export function cs1FullContext(fc: Cs1FullContextReader, profile: Cs1Profile) {
+  const accuracy = cs1Accuracy(fc.worlds);
+  const fit = fc.fit[profile];
+  if (!fit?.fits) return { fits: false as const, history_tokens: null, warm_usd: null, cold_usd: null, cost_per_correct: null, accuracy, note: "doesn't fit" };
+  const sum = (f: (w: Cs1FullContextWorld) => number) => fc.worlds.reduce((n, w) => n + f(w), 0);
+  const p = CS1_PROFILES[profile], history = fit.prompt_tokens ?? p.history_tokens;
+  const writeRate = sum(w => w.cache_write_tokens) > 0 ? sum(w => w.cache_write_usd) / sum(w => w.cache_write_tokens) : null;
+  const cachedRate = sum(w => w.cached_tokens) > 0 ? sum(w => w.cached_usd) / sum(w => w.cached_tokens) : null;
+  const perQuestion = sum(w => w.questions) > 0 ? (sum(w => w.uncached_usd) + sum(w => w.output_usd)) / sum(w => w.questions) : null;
+  if (writeRate === null || perQuestion === null) return { fits: true as const, history_tokens: history, warm_usd: null, cold_usd: null, cost_per_correct: null, accuracy, note: 'not priced: no cache-write reads measured' };
+  const writes = Math.min(p.questions, HOURS_PER_MONTH / 24);
+  const warm = cachedRate === null ? null : writes * history * writeRate + (p.questions - writes) * history * cachedRate + p.questions * perQuestion;
+  const cold = p.questions * history * writeRate + p.questions * perQuestion;
+  const perCorrect = (v: number | null) => v === null || !accuracy.correct ? null : v / (p.questions * accuracy.key_matched!);
+  return {
+    fits: true as const, history_tokens: history, warm_usd: warm, cold_usd: cold, accuracy,
+    cost_per_correct: accuracy.correct ? { warm_usd: perCorrect(warm), cold_usd: perCorrect(cold) } : null,
+    note: accuracy.correct ? (warm === null ? 'warm bound not priced: no cached reads measured' : null) : 'no correct answers',
+  };
+}
+
+/** A decision rule's outcome with the numbers behind it. */
+export interface Cs1Rule { rule: 1 | 2 | 3 | 4 | 5; status: 'fired' | 'not fired' | 'not evaluated'; reason: string; numbers: Record<string, unknown> }
+
+/**
+ * The cost-and-speed aggregation (preregistration "Measures", "Statistics" and "What the result decides"): monthly
+ * lines per system, world, profile and reader; world means with 95% intervals from the paired cluster bootstrap over
+ * worlds; key-matched cost per correct answer with the zero rule; write-to-queryable p50 and p95 with intervals from
+ * resampled worlds' probe windows; history growth; the full-context range; and the five decision rules at the heavy
+ * profile and the first reader. Hosting and the idle rate are held fixed outside the resample: hosting comes from a
+ * price ladder, and the idle rate is one system-level dollars-per-hour figure from its idle worlds, applied to every
+ * world. Every system must hold the same worlds, so each resample pairs them.
+ */
+export function cs1Aggregate(inp: Cs1Input) {
+  const readers = inp.readers ?? CS1_READERS;
+  const ids = [...new Set(inp.systems[0]?.worlds.map(w => w.world) ?? [])].sort();
+  const problems: string[] = [];
+  if (!ids.length) problems.push('no worlds');
+  if (new Set(inp.systems.map(s => s.system)).size !== inp.systems.length) problems.push('a system appears twice');
+  for (const s of inp.systems) {
+    const own = s.worlds.map(w => w.world);
+    if (new Set(own).size !== own.length || own.length !== ids.length || own.some(w => !ids.includes(w))) problems.push(`${s.system}: its worlds differ from ${inp.systems[0].system}'s, so resamples can't pair them`);
+    if (s.hosting && !(s.hosting.disk_tokens > 0)) problems.push(`${s.system}: hosting names no ingested tokens to project disk from`);
+    for (const w of s.worlds) {
+      if (w.usd.write + w.usd.background > 0 && !(w.ingested_tokens > 0)) problems.push(`${s.system}/${w.world}: write dollars with no ingested tokens`);
+      if (w.usd.read > 0 && !(w.questions > 0)) problems.push(`${s.system}/${w.world}: read dollars with no questions`);
+      for (const r of readers) {
+        const x = w.readers[r];
+        if (!x || !(x.questions > 0)) problems.push(`${s.system}/${w.world}: reader ${r} asked no questions`);
+        else if (x.classes.length > x.questions) problems.push(`${s.system}/${w.world}: reader ${r} has more matcher classes than questions`);
+      }
+    }
+  }
+  if (problems.length) throw new Error(`cost-speed aggregate refused: ${problems.join('; ')}`);
+
+  const draws = cs1Draws(ids.length, inp.seed ?? CS1_SEED, inp.draws ?? CS1_DRAWS);
+  const all = ids.map((_, i) => i);
+  type Stat = (idx: readonly number[]) => number;
+  const avg = (idx: readonly number[], f: (i: number) => number) => idx.reduce((n, i) => n + f(i), 0) / idx.length;
+  const interval = (f: (idx: readonly number[]) => number | null): Interval | null => {
+    const xs: number[] = [];
+    for (const d of draws) {
+      const v = f(d);
+      if (v === null || Number.isNaN(v)) return null;
+      xs.push(v);
+    }
+    xs.sort((a, b) => a - b);
+    return [quantileAt(xs, 0.025), quantileAt(xs, 0.975)];
+  };
+  const est = (f: Stat) => ({ usd: f(all), ci95: interval(f) });
+
+  const prepared = new Map(inp.systems.map(s => {
+    const worlds = ids.map(id => s.worlds.find(w => w.world === id)!);
+    const idle = cs1IdleUsdPerMonth(worlds);
+    const hosting = Object.fromEntries(CS1_PROFILE_NAMES.map(p => [p, cs1Hosting(s.hosting, inp.ladder, p)])) as Record<Cs1Profile, Cs1HostingLine>;
+    const lines = Object.fromEntries(CS1_PROFILE_NAMES.map(p => [p, worlds.map(w => cs1MonthlyLines(w, p, { idle_usd: idle ?? 0, hosting_usd: hosting[p].usd }, readers))])) as Record<Cs1Profile, Cs1Lines[]>;
+    const correct = Object.fromEntries(readers.map(r => [r, worlds.map(w => w.readers[r].classes.filter(c => c === 'correct').length)]));
+    return [s.system, { s, worlds, idle, hosting, lines, correct }];
+  }));
+  const of = (name: string) => prepared.get(name)!;
+  const sysStat = (name: string, p: Cs1Profile, key: 'system' | 'system_without_hosting'): Stat => idx => avg(idx, i => of(name).lines[p][i][key]);
+  const readerStat = (name: string, p: Cs1Profile, r: string, key: 'reader' | 'total' | 'total_without_hosting'): Stat => idx => avg(idx, i => of(name).lines[p][i].readers[r][key]);
+  const perQuestionStat = (name: string, r: string): Stat => idx => avg(idx, i => of(name).worlds[i].readers[r].usd / of(name).worlds[i].readers[r].questions);
+  const meanLines = (ls: readonly Cs1Lines[]): Cs1Lines => {
+    const m = (f: (l: Cs1Lines) => number) => ls.reduce((n, l) => n + f(l), 0) / ls.length;
+    return {
+      write: m(l => l.write), background: m(l => l.background), write_background: m(l => l.write_background), read: m(l => l.read), idle: m(l => l.idle), hosting: m(l => l.hosting),
+      system: m(l => l.system), system_without_hosting: m(l => l.system_without_hosting),
+      readers: Object.fromEntries(readers.map(r => [r, { reader: m(l => l.readers[r].reader), total: m(l => l.readers[r].total), total_without_hosting: m(l => l.readers[r].total_without_hosting) }])),
+    };
+  };
+
+  const systems = inp.systems.map(({ system }) => {
+    const x = of(system);
+    const windows = x.worlds.map(w => [...(w.probes ?? [])]);
+    let probes: (ReturnType<typeof probeSummary> & { p50_ci95: [number | null, number | null] | null; p95_ci95: [number | null, number | null] | null }) | null = null;
+    if (windows.some(w => w.length)) {
+      const p50s: number[] = [], p95s: number[] = [];
+      let defined = true;
+      for (const d of draws) {
+        const s = probeSummary(d.map(i => windows[i]), CS1_HORIZON_MS);
+        if (!s.counted) { defined = false; break; }
+        p50s.push(s.p50_ms ?? Infinity);
+        p95s.push(s.p95_ms ?? Infinity);
+      }
+      const ci = (xs: number[]): [number | null, number | null] | null => {
+        if (!defined) return null;
+        xs.sort((a, b) => a - b);
+        const lo = quantileAt(xs, 0.025), hi = quantileAt(xs, 0.975);
+        return [Number.isFinite(lo) ? lo : null, Number.isFinite(hi) ? hi : null];
+      };
+      probes = { ...probeSummary(windows, CS1_HORIZON_MS), p50_ci95: ci(p50s), p95_ci95: ci(p95s) };
+    }
+    const profiles = Object.fromEntries(CS1_PROFILE_NAMES.map(p => [p, {
+      lines: meanLines(x.lines[p]),
+      per_world: ids.map((world, i) => ({ world, lines: x.lines[p][i] })),
+      system: est(sysStat(system, p, 'system')),
+      system_without_hosting: est(sysStat(system, p, 'system_without_hosting')),
+      readers: Object.fromEntries(readers.map(r => {
+        const cpc = (idx: readonly number[]) => {
+          const correct = idx.reduce((n, i) => n + x.correct[r][i], 0), questions = idx.reduce((n, i) => n + x.worlds[i].readers[r].questions, 0);
+          return correct ? readerStat(system, p, r, 'total')(idx) / (CS1_PROFILES[p].questions * correct / questions) : null;
+        };
+        const point = cpc(all), ci = point === null ? null : interval(cpc);
+        return [r, {
+          reader: est(readerStat(system, p, r, 'reader')),
+          total: est(readerStat(system, p, r, 'total')),
+          total_without_hosting: est(readerStat(system, p, r, 'total_without_hosting')),
+          cost_per_correct: { usd: point, ci95: ci, note: point === null ? 'no correct answers' : ci ? null : 'interval not defined' },
+        }];
+      })),
+    }])) as Record<Cs1Profile, { lines: Cs1Lines; per_world: Array<{ world: string; lines: Cs1Lines }>; system: { usd: number; ci95: Interval | null }; system_without_hosting: { usd: number; ci95: Interval | null };
+      readers: Record<string, { reader: { usd: number; ci95: Interval | null }; total: { usd: number; ci95: Interval | null }; total_without_hosting: { usd: number; ci95: Interval | null }; cost_per_correct: { usd: number | null; ci95: Interval | null; note: string | null } }> }>;
+    return {
+      system, worlds: ids.length,
+      probe_usd: x.worlds.reduce((n, w) => n + w.usd.probe, 0),
+      idle: { usd_per_month: x.idle ?? 0, measured_worlds: x.worlds.filter(w => w.idle && w.idle.window_ms > 0).length, note: x.idle === null ? 'no idle window measured: idle line is zero' : null },
+      hosting: x.hosting,
+      accuracy: Object.fromEntries(readers.map(r => [r, cs1Accuracy(x.worlds.map(w => w.readers[r]))])),
+      growth: cs1Growth(x.worlds),
+      probes,
+      profiles,
+    };
+  });
+
+  const ratio = (num: Stat, den: Stat) => {
+    const n = num(all), d = den(all);
+    const ci95 = d > 0 ? interval(idx => { const dd = den(idx); return dd > 0 ? num(idx) / dd : null; }) : null;
+    return { ratio: d > 0 ? n / d : null, ci95, gap_usd: n - d, gap_ci95: interval(idx => num(idx) - den(idx)), note: d > 0 ? (ci95 ? null : 'interval not defined: a resample\'s denominator is zero') : 'ratio not defined: the denominator is zero' };
+  };
+  const above = (c: { ci95: Interval | null }, bar: number) => c.ci95 !== null && c.ci95[0] > bar;
+  const missing = (names: readonly string[]) => names.filter(n => !prepared.has(n));
+  const notEvaluated = (rule: Cs1Rule['rule'], names: string[]): Cs1Rule => ({ rule, status: 'not evaluated', reason: `missing ${names.join(', ')}`, numbers: {} });
+  const P: Cs1Profile = 'heavy', r0 = readers[0];
+  const gbrainOut = systems.find(s => s.system === CS1_GBRAIN);
+
+  const rule1 = (): Cs1Rule => {
+    const need = missing([CS1_GBRAIN, ...CS1_SERVERS]);
+    if (need.length) return notEvaluated(1, need);
+    const cheapest = (key: 'system' | 'system_without_hosting') => {
+      const pickAt = (idx: readonly number[]) => CS1_SERVERS.map(s => ({ s, v: sysStat(s, P, key)(idx) })).sort((a, b) => a.v - b.v)[0];
+      const chosen = Object.fromEntries(CS1_SERVERS.map(s => [s, 0]));
+      for (const d of draws) chosen[pickAt(d).s]++;
+      return { at_point: pickAt(all).s, chosen_share: Object.fromEntries(CS1_SERVERS.map(s => [s, chosen[s] / draws.length])), ...ratio(sysStat(CS1_GBRAIN, P, key), idx => pickAt(idx).v) };
+    };
+    const withHosting = cheapest('system'), withoutHosting = cheapest('system_without_hosting');
+    const g = of(CS1_GBRAIN), lines = gbrainOut!.profiles[P].lines;
+    const phases = (['write', 'background', 'read', 'idle', 'hosting'] as const).map(phase => ({ phase, usd: lines[phase] })).sort((a, b) => b.usd - a.usd);
+    const top = phases[0].phase;
+    const models = top === 'write' || top === 'background' || top === 'read'
+      ? Object.entries(g.worlds.reduce<Record<string, number>>((acc, w) => { for (const [m, v] of Object.entries(w.by_model?.[top] ?? {})) acc[m] = (acc[m] ?? 0) + v; return acc; }, {})).sort((a, b) => b[1] - a[1])
+      : [];
+    const fired = above(withHosting, CS1_BARS.system_ratio);
+    return {
+      rule: 1, status: fired ? 'fired' : 'not fired',
+      reason: `gbrain's system cost over the cheapest server's: ${withHosting.ratio === null ? 'not defined' : withHosting.ratio.toFixed(3)}, interval's lower end ${withHosting.ci95 ? withHosting.ci95[0].toFixed(3) : 'not defined'} against ${CS1_BARS.system_ratio}`,
+      numbers: { with_hosting: withHosting, without_hosting: withoutHosting, largest_line: { phase: top, usd: phases[0].usd, model: top === 'hosting' ? g.hosting[P].instance : models[0]?.[0] ?? null }, lines: phases },
+    };
+  };
+
+  const rule2 = (): Cs1Rule => {
+    const need = missing([CS1_GBRAIN, ...CS1_PASSIVE]);
+    if (need.length) return notEvaluated(2, need);
+    const median: Stat = idx => {
+      const xs = CS1_PASSIVE.map(s => perQuestionStat(s, r0)(idx)).sort((a, b) => a - b);
+      return xs.length % 2 ? xs[(xs.length - 1) / 2] : (xs[xs.length / 2 - 1] + xs[xs.length / 2]) / 2;
+    };
+    const c = ratio(perQuestionStat(CS1_GBRAIN, r0), median);
+    const lines = gbrainOut!.profiles[P].lines, readerLine = lines.readers[r0].reader;
+    const largest = [...(['write', 'background', 'read', 'idle', 'hosting'] as const).map(line => ({ line: line as string, usd: lines[line] })), { line: 'reader', usd: readerLine }].sort((a, b) => b.usd - a.usd)[0];
+    const fired = above(c, CS1_BARS.answer_ratio);
+    return {
+      rule: 2, status: fired ? 'fired' : 'not fired',
+      reason: `gbrain's ${r0} cost per question over the median of the four other passive systems: ${c.ratio === null ? 'not defined' : c.ratio.toFixed(3)}, interval's lower end ${c.ci95 ? c.ci95[0].toFixed(3) : 'not defined'} against ${CS1_BARS.answer_ratio}`,
+      numbers: {
+        reader: r0, gbrain_usd_per_question: perQuestionStat(CS1_GBRAIN, r0)(all), median_usd_per_question: median(all), comparison: c,
+        per_system_usd_per_question: Object.fromEntries(CS1_PASSIVE.map(s => [s, perQuestionStat(s, r0)(all)])),
+        shipped_read_is_largest: (['write', 'background', 'idle', 'hosting'] as const).every(k => readerLine > lines[k]), largest_line: largest,
+      },
+    };
+  };
+
+  const rule3 = (): Cs1Rule => {
+    if (!gbrainOut) return notEvaluated(3, [CS1_GBRAIN]);
+    const p = gbrainOut.probes;
+    if (!p || !p.counted) return { rule: 3, status: 'not evaluated', reason: 'gbrain has no counted probes', numbers: { probes: p } };
+    const p50Over = p.p50_ms === null || p.p50_ms > CS1_BARS.p50_ms, p95Over = p.p95_ms === null || p.p95_ms > CS1_BARS.p95_ms, missOver = (p.miss_share ?? 0) > CS1_BARS.miss_share;
+    const fired = p50Over || p95Over || missOver;
+    return {
+      rule: 3, status: fired ? 'fired' : 'not fired',
+      reason: `p50 ${p.p50_ms === null ? 'more than 10 minutes' : `${p.p50_ms} ms`}, p95 ${p.p95_ms === null ? 'more than 10 minutes' : `${p.p95_ms} ms`}, ${p.missed} of ${p.counted} counted probes missed`,
+      numbers: { p50_ms: p.p50_ms, p95_ms: p.p95_ms, miss_share: p.miss_share, counted: p.counted, missed: p.missed, p50_over: p50Over, p95_over: p95Over, miss_over: missOver },
+    };
+  };
+
+  const rule4 = (): Cs1Rule => {
+    const need = missing([...CS1_SERVERS]);
+    if (need.length) return notEvaluated(4, need);
+    const shares = Object.fromEntries(CS1_SERVERS.map(s => {
+      const f = (idx: readonly number[]) => { const t = readerStat(s, P, r0, 'total')(idx); return t > 0 ? sysStat(s, P, 'system')(idx) / t : null; };
+      return [s, { share: f(all), ci95: interval(f) }];
+    }));
+    const fired = CS1_SERVERS.every(s => shares[s].ci95 !== null && shares[s].ci95![1] < CS1_BARS.system_share);
+    return {
+      rule: 4, status: fired ? 'fired' : 'not fired',
+      reason: `upper ends of the servers' system share of total at ${r0}: ${CS1_SERVERS.map(s => `${s} ${shares[s].ci95 ? shares[s].ci95![1].toFixed(3) : 'not defined'}`).join(', ')}, against ${CS1_BARS.system_share}`,
+      numbers: { reader: r0, shares },
+    };
+  };
+
+  const rule5 = (): Cs1Rule => {
+    const need = missing([CS1_GBRAIN]);
+    if (need.length) return notEvaluated(5, need);
+    const present = CS1_COMPARED.filter(s => prepared.has(s));
+    const comparisons = Object.fromEntries(present.map(s => [s, {
+      with_hosting: ratio(readerStat(s, P, r0, 'total'), readerStat(CS1_GBRAIN, P, r0, 'total')),
+      without_hosting: ratio(readerStat(s, P, r0, 'total_without_hosting'), readerStat(CS1_GBRAIN, P, r0, 'total_without_hosting')),
+    }]));
+    const firing = present.filter(s => above(comparisons[s].with_hosting, CS1_BARS.total_ratio));
+    return {
+      rule: 5, status: firing.length ? 'fired' : 'not fired',
+      reason: firing.length ? `total at least ${CS1_BARS.total_ratio} times gbrain's: ${firing.join(', ')}` : `no compared system's total is at least ${CS1_BARS.total_ratio} times gbrain's`,
+      numbers: { reader: r0, firing, comparisons, not_present: CS1_COMPARED.filter(s => !prepared.has(s)) },
+    };
+  };
+
+  return {
+    method: `paired cluster bootstrap over ${ids.length} worlds, ${draws.length} resamples, seed ${inp.seed ?? CS1_SEED}, 95% percentile intervals; hosting and the idle rate held fixed outside the resample; decisions at the heavy profile and ${r0}`,
+    readers: [...readers], worlds: ids, ladder: inp.ladder,
+    systems,
+    full_context: inp.full_context ? Object.fromEntries(Object.entries(inp.full_context).map(([r, fc]) => [r, Object.fromEntries(CS1_PROFILE_NAMES.map(p => [p, cs1FullContext(fc, p)])) as Record<Cs1Profile, ReturnType<typeof cs1FullContext>>])) : null,
+    not_run: [...(inp.not_run ?? [])],
+    rules: [rule1(), rule2(), rule3(), rule4(), rule5()],
+  };
+}
+
+export type Cs1Result = ReturnType<typeof cs1Aggregate>;
+
+const cs1Usd = (v: number) => v === 0 ? '$0' : Math.abs(v) >= 100 ? `$${Math.round(v).toLocaleString('en-US')}` : Math.abs(v) >= 1 ? `$${v.toFixed(2)}` : Math.abs(v) >= 0.0001 ? `$${Number(v.toPrecision(2))}` : 'under $0.0001';
+const cs1Duration = (ms: number | null) => ms === null ? 'more than 10 minutes' : ms < 1_000 ? `${Math.round(ms)} ms` : ms < 60_000 ? `${(ms / 1_000).toFixed(1)} s` : `${(ms / 60_000).toFixed(1)} min`;
+
+/**
+ * README's cost-and-speed table (preregistration, "README"): one row per run system, then the full-context range, then
+ * not-run rows with their reasons; every row names its build and measurement date from `rows`. Dollars are a
+ * month at the profile (heavy unless given), with 95% intervals in brackets; a write-to-queryable percentile that lands
+ * on a miss reads "more than 10 minutes".
+ */
+export function renderCs1Table(res: Cs1Result, rows: Readonly<Record<string, { build: string; date: string }>>, profile: Cs1Profile = 'heavy'): string {
+  const [r0, ...rest] = res.readers;
+  const named = [...res.systems.map(s => s.system), ...(res.full_context ? ['baseline-full-context'] : [])];
+  const unnamed = named.filter(s => !rows[s]);
+  if (unnamed.length) throw new Error(`cost-speed table: every row names its build and date; missing ${unnamed.join(', ')}`);
+  const withCi = (e: { usd: number; ci95: Interval | null }) => e.ci95 ? `${cs1Usd(e.usd)} (${cs1Usd(e.ci95[0])} to ${cs1Usd(e.ci95[1])})` : cs1Usd(e.usd);
+  const perCorrect = (c: { usd: number | null; ci95: Interval | null; note: string | null }) => c.usd === null ? 'no correct answers' : c.ci95 ? withCi({ usd: c.usd, ci95: c.ci95 }) : `${cs1Usd(c.usd)} (interval not defined)`;
+  const percentileCell = (p: Cs1Result['systems'][number]['probes'], key: 'p50' | 'p95') => {
+    if (!p) return 'not measured';
+    if (!p.counted) return 'no counted probes';
+    const ci = p[`${key}_ci95`];
+    return `${cs1Duration(p[`${key}_ms`])}${ci ? ` (${cs1Duration(ci[0])} to ${cs1Duration(ci[1])})` : ''}`;
+  };
+  const cell = (s: string) => s.replace(/\|/g, '\\|');
+  const readerHeads = [r0, ...rest];
+  const header = ['System', 'System cost a month', ...readerHeads.map(r => `Answer model a month, ${r}`), `Total a month, ${r0}`, ...readerHeads.map(r => `Cost per correct answer, ${r}`), 'Write to queryable, p50', 'Write to queryable, p95', 'Build', 'Measured'];
+  const runRows = res.systems.map(s => {
+    const p = s.profiles[profile];
+    return [s.system, withCi(p.system), ...readerHeads.map(r => withCi(p.readers[r].reader)), withCi(p.readers[r0].total), ...readerHeads.map(r => perCorrect(p.readers[r].cost_per_correct)), percentileCell(s.probes, 'p50'), percentileCell(s.probes, 'p95'), rows[s.system].build, rows[s.system].date];
+  });
+  const range = (fc: ReturnType<typeof cs1FullContext> | undefined, pick: (f: ReturnType<typeof cs1FullContext>) => { warm: number | null; cold: number | null } | null) => {
+    if (!fc) return 'not measured';
+    if (!fc.fits) return "doesn't fit";
+    const v = pick(fc);
+    if (!v) return fc.note ?? 'not priced';
+    return `${v.warm === null ? 'warm not priced' : cs1Usd(v.warm)} to ${v.cold === null ? 'cold not priced' : cs1Usd(v.cold)} (warm to cold)`;
+  };
+  const fcRow = res.full_context ? [[
+    'baseline-full-context', '$0',
+    ...readerHeads.map(r => range(res.full_context![r]?.[profile], f => ({ warm: f.warm_usd, cold: f.cold_usd }))),
+    range(res.full_context[r0]?.[profile], f => ({ warm: f.warm_usd, cold: f.cold_usd })),
+    ...readerHeads.map(r => range(res.full_context![r]?.[profile], f => f.cost_per_correct ? { warm: f.cost_per_correct.warm_usd, cold: f.cost_per_correct.cold_usd } : null)),
+    'no write', 'no write', rows['baseline-full-context'].build, rows['baseline-full-context'].date,
+  ]] : [];
+  const notRun = res.not_run.map(n => [n.system, `not run: ${n.reason}`, ...Array(header.length - 4).fill(''), rows[n.system]?.build ?? '', rows[n.system]?.date ?? '']);
+  return [header, header.map(() => '---'), ...runRows, ...fcRow, ...notRun].map(r => `| ${r.map(c => cell(String(c))).join(' | ')} |`).join('\n') + '\n';
 }
 
 if (import.meta.main) {
