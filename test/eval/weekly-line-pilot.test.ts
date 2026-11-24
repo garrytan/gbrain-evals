@@ -14,12 +14,15 @@ import { cohenKappa } from '../../eval/runner/bg1/judge-check.ts';
 import { loadBg1Dev, type MemoryQuestion } from '../../eval/runner/memory-qa/corpus.ts';
 import { answerId, answerProblems, sha256, type AnswerRecord } from '../../eval/runner/memory-qa/records.ts';
 import { loadWeeklyPilotManifest, metering, windowedRunGuard } from '../../eval/runner/q1/cell.ts';
-import { bg1JudgeOf, isWeeklyLineCell } from '../../eval/runner/q1/cells/definitions.ts';
+import { bg1JudgeOf, isWeeklyLineCell, PER_READER_JUDGE_SETTINGS } from '../../eval/runner/q1/cells/definitions.ts';
 import {
   buildWeeklyPilotManifest, generateWeeklyLineCells, generateWeeklyLineJudgeCheckCells, generateWeeklyLinePilotCells, WEEKLY_LINE_BLOCK_WORLDS, WEEKLY_LINE_JUDGE_CHECK_PAUSE_USD,
-  WEEKLY_LINE_LABEL_CAP_USD, WEEKLY_LINE_RATES, WEEKLY_LINE_READERS, WEEKLY_PILOT_GBRAIN_ENV, weeklyLinePilotCaps,
+  WEEKLY_LINE_LABEL_CAP_USD, WEEKLY_LINE_PARTICLE_MAX_TOKENS, WEEKLY_LINE_RATES, WEEKLY_LINE_READERS, WEEKLY_PILOT_GBRAIN_ENV, weeklyLinePilotCaps, weeklyRereadJudgeReservationUsd,
 } from '../../eval/runner/q1/cells/weekly-line.ts';
-import { prepareReread } from '../../eval/runner/q1/reread-cell.ts';
+import { openRereadLease, prepareReread } from '../../eval/runner/q1/reread-cell.ts';
+import { BudgetExceededError, priceRequest, reservationUsd } from '../../eval/runner/budget-ledger.ts';
+import { UPSTREAM } from '../../eval/runner/metering-proxy.ts';
+import { BG1C_RATES } from '../../eval/runner/q1/cells/bg1c.ts';
 import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { toolCalls } from '../../eval/runner/systems/file-agent.ts';
 import { WL_BLOCK_WORLDS } from '../../eval/runner/weekly-line/design.ts';
@@ -81,6 +84,35 @@ describe('the pilot and judge-check cells', () => {
     for (const p of pilot) expect(p.lease!.usd).toBeGreaterThan(p.estimate.usd);
     expect(judge[0].lease!.usd + WEEKLY_LINE_LABEL_CAP_USD).toBeLessThanOrEqual(WEEKLY_LINE_JUDGE_CHECK_PAUSE_USD + 1e-9);
     expect(manifest.reread_plans.map(r => r.reader)).toEqual([PARTICLE, PARTICLE, PARTICLE]);
+  });
+
+  // Value: protects=each pilot re-read can finish its 64 answers under its own ledger, because the lease proxy reserves every particle-1 read's and claude-opus-5-5 judge call's worst case before sending it; fails_when=a re-read ledger is sized at its mean estimate, so a judge call's 8,000-token reservation is refused partway through (the final review's blocker, GBEV-3 ruling A); why_new=#623's read-only final review; seam=reread-cell.ts openRereadLease and BudgetRun reserve/settle with budget-ledger.ts priceRequest and reservationUsd, the proxy's own reservation math; no_claim=the measured per-answer rates
+  test("a pilot re-read's ledger covers its 64 answers' worst-case reservations", () => {
+    const pilotSet = manifest.sets.find(s => s.id === 'BGW-pilot')!;
+    const readBody = { model: 'particle-1', max_tokens: WEEKLY_LINE_PARTICLE_MAX_TOKENS, messages: [{ role: 'user', content: 'x'.repeat(3 * 8000) }] };
+    const readPrice = priceRequest(`${UPSTREAM.particle}/v1/chat/completions`, readBody)!;
+    const readReserve = reservationUsd({ ...readPrice, inputTokens: Math.max(readPrice.inputTokens, Buffer.byteLength(JSON.stringify(readBody)) + 64) });
+    const judgeReserve = weeklyRereadJudgeReservationUsd();
+    expect(judgeReserve).toBeGreaterThan(PER_READER_JUDGE_SETTINGS.max_tokens * 20 / 1e6);
+    const drive = (capUsd: number) => {
+      const lease = openRereadLease({ runId: `reread-${++n}`, leaseUsd: capUsd, ledgerPath: join(scratch('reread-ledger'), 'ledger.sqlite'), capUsd });
+      let answered = 0;
+      try {
+        for (let i = 0; i < pilotSet.questions; i++) {
+          lease.settle(lease.reserve(readReserve, 'particle read'), { usd: BG1C_RATES.particle_read_usd_per_answer });
+          lease.settle(lease.reserve(judgeReserve, 'opus judge'), { usd: BG1C_RATES.particle_judge_usd_per_answer });
+          answered++;
+        }
+      } catch (e) { if (!(e instanceof BudgetExceededError)) throw e; } finally { lease.close(); }
+      return answered;
+    };
+    const caps = weeklyLinePilotCaps();
+    for (const row of ['gbrain', 'extract-first', 'memory-bank'] as const) {
+      expect(drive(caps[row].reread_cap_usd)).toBe(64);
+      expect(caps[row].cells_cap_usd + caps[row].reread_cap_usd).toBeCloseTo(caps[row].cap_usd, 9);
+    }
+    const estimateOnly = Math.ceil(pilotSet.questions * (BG1C_RATES.particle_read_usd_per_answer + BG1C_RATES.particle_judge_usd_per_answer) * 100) / 100;
+    expect(drive(estimateOnly)).toBeLessThan(64);
   });
 
   // Value: protects=a pilot unit on a VM regenerates exactly the cells its plan named; fails_when=loadWeeklyPilotManifest falls back to some default build when the variable is unset or malformed; why_new=the pilot's cells carry a gbrain build that only its plan resolved (R100); seam=cell.ts loadWeeklyPilotManifest; no_claim=the build's resolution from git tags (pilot.ts plan test)

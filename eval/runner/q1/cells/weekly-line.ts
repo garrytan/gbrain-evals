@@ -39,6 +39,8 @@ import {
   type ArmDefinition, type ArmSpec, type CellDefinition, type CellEstimate, type Manifest,
 } from './definitions.ts';
 import { listPrice, OPUS, PARTICLE, type RereadPlan } from './bg1.ts';
+import { priceRequest, reservationUsd } from '../../budget-ledger.ts';
+import { BG1_JUDGE_PROMPT, BG1_ORDERED_RULE } from '../../memory-qa/instruments.ts';
 import { BG1C_GBRAIN_LAUNCH, BG1C_RATES, BG1C_WORLD_RATIO } from './bg1c.ts';
 import { F6_ARMS } from './f6.ts';
 
@@ -305,19 +307,41 @@ export const WEEKLY_LINE_LABEL_CAP_USD = Math.max(1, ceilCents(2 * WEEKLY_LINE_R
  */
 export const WEEKLY_LINE_QUICK_LOOK = { cap_usd: 100, status: 'skipped', reason: 'needs a new Claude Code runner (sessions as files, drive masking, judged records), not a small adapter' } as const;
 
+/** Bytes a judge prompt's question, reference answer and value lists may take beyond its template: a bound, far above any dev or Set W question's. */
+const JUDGE_QUESTION_BYTES = 8_192;
+
+/**
+ * The worst-case reservation of one claude-opus-5-5 gating-judge call on a particle-1 re-read answer, as the lease proxy
+ * holds it before sending (metering-proxy.ts: budget-ledger.ts priceRequest, its input bounded by the body's bytes, then
+ * reservationUsd): the judge's pinned output cap, and an input of the bg1 judge prompt around the longest answer
+ * particle-1 may write (its output floor, at four bytes a token).
+ */
+export function weeklyRereadJudgeReservationUsd(): number {
+  const judge = bg1JudgeOf(PARTICLE);
+  const template = Buffer.byteLength([BG1_JUDGE_PROMPT, BG1_ORDERED_RULE].join('\n'));
+  const body = { model: judge.slice(judge.indexOf(':') + 1), max_tokens: PER_READER_JUDGE_SETTINGS.max_tokens, output_config: { effort: PER_READER_JUDGE_SETTINGS.effort },
+    messages: [{ role: 'user', content: 'x'.repeat(template + JUDGE_QUESTION_BYTES + 4 * WEEKLY_LINE_PARTICLE_MAX_TOKENS) }] };
+  const price = priceRequest('https://api.anthropic.com/v1/messages', body);
+  if (!price) throw new Error(`${judge} has no price in budget-ledger.ts, so its re-read reservation cannot be sized`);
+  return reservationUsd({ ...price, inputTokens: Math.max(price.inputTokens, Buffer.byteLength(JSON.stringify(body)) + 64) });
+}
+/** Worst-case judge reservations each re-read ledger holds above its estimate, so its last answers are never refused for headroom. */
+export const WEEKLY_REREAD_JUDGE_RESERVATIONS = 2;
+
 /** One row's pilot money: its block budget, its cap (a tenth of the budget), its re-read's share and the cells' share (the cell's lease). */
 export interface WeeklyPilotCap { row: WeeklyLineRow; rate_usd_per_world: number; block_budget_usd: number; cap_usd: number; reread_cap_usd: number; cells_cap_usd: number }
 
 /**
  * Each row's pilot caps (R111): the block budget is the row's rate times a block's worlds, and the cap is a tenth of it,
- * rounded down to the cent. On an 8,000-token row the particle-1 re-read takes its own pilot estimate, rounded up, and the
- * cell takes the rest, so the two ledgers together never pass the cap.
+ * rounded down to the cent. On an 8,000-token row the particle-1 re-read takes its own pilot estimate plus two worst-case
+ * gating-judge reservations (weeklyRereadJudgeReservationUsd), rounded up, and the cell takes the rest, so the two
+ * ledgers together never pass the cap.
  */
 export function weeklyLinePilotCaps(): Record<WeeklyLineRow, WeeklyPilotCap> {
   const pilot = ALL_SETS['BGW-pilot'];
   return Object.fromEntries((Object.keys(WEEKLY_LINE_ROWS) as WeeklyLineRow[]).map(row => {
     const rate = WEEKLY_LINE_RATES[row], budget = rate * WEEKLY_LINE_BLOCK_WORLDS, cap = floorCents(budget * WEEKLY_LINE_PILOT_FRACTION);
-    const reread = WEEKLY_LINE_ROWS[row].mode === 'packed' ? ceilCents(pilot.questions * rereadUsdPerAnswer()) : 0;
+    const reread = WEEKLY_LINE_ROWS[row].mode === 'packed' ? ceilCents(pilot.questions * rereadUsdPerAnswer() + WEEKLY_REREAD_JUDGE_RESERVATIONS * weeklyRereadJudgeReservationUsd()) : 0;
     return [row, { row, rate_usd_per_world: Math.round(rate * 10_000) / 10_000, block_budget_usd: Math.round(budget * 100) / 100, cap_usd: cap, reread_cap_usd: reread, cells_cap_usd: floorCents(cap - reread) }];
   })) as Record<WeeklyLineRow, WeeklyPilotCap>;
 }
