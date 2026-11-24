@@ -200,7 +200,7 @@ frontier readers; everything else runs once. A task's success in an arm is the m
 
 1. The world validates and its digest equals the one recorded below.
 2. The judge check has run and its result is recorded below.
-3. Every slot of both builds passes the write, restore and rerank probes with 0 queued persistence effects at
+3. Every slot passes the write, restore and rerank probes with 0 queued persistence effects at
    snapshot, the config reads back as each arm sets it, and the served instructions' and tools' hashes are recorded per arm.
 4. Oracle on every planned task with Opus 5.5 and GPT-6.2 Sol: pooled success at least 95%, or no counted cell runs
    on that world and the result is reported.
@@ -267,7 +267,7 @@ end. Dollar amounts stay in the tracking issue (GST-3683).
 ## Recorded before cells
 
 To be appended before the first counted cell: the GST-3786 commits and the release under test with its commit;
-gbrain's own provider models on each build (embedding pin, reranker, query expansion); the harness commit; the six worlds' digests, document counts and H4 variant
+gbrain's own provider models on the build (embedding pin, reranker, query expansion); the harness commit; the six worlds' digests, document counts and H4 variant
 counts; the judge check's result; model freshness; slot receipts and served hashes per arm; the oracle gate; pilots;
 the VM names and ledger run ids.
 
