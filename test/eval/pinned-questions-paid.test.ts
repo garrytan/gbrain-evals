@@ -12,7 +12,7 @@ import { writeReceipt } from '../../eval/runner/receipt.ts';
 import {
   JUDGE_MIN_LABELS, PINNED_QUESTIONS_JUDGE_PROMPT, PINNED_QUESTIONS_MODELS_UNDER_TEST, STAGE_SEEDS, TRUNCATION_BAR, buildReceipt, canonicalModel, cohenKappa,
   familyOf, judgeAgreement, judgeCheckPasses, judgeFor, judgeUserMessage, modelRoles, parseJudgeLabels, requirePaidFlags, ruleLabels,
-  outcomeOf, redactProviderText, runPinnedQuestionsPaid, summarizePaid,
+  outcomeOf, recordingGenerateText, redactProviderText, runPinnedQuestionsPaid, summarizePaid,
   type ChatTransport, type GradedAnswer, type PaidRow, type PaidRunResult,
 } from '../../eval/runner/pinned-questions-paid.ts';
 
@@ -149,8 +149,10 @@ describe('pinned-questions paid arm: kappa', () => {
  * (before the change while pinning; after it on refresh, except for the
  * companies in `stale`, which repeat the old values), and grades like the rule.
  */
+type Failure = Error | { stopReason: string; text: string } | null;
+
 function stubTransport(world: PqWorld, stale: Set<string>, calls: Array<{ model: string; kind: 'question' | 'judge'; graded?: string; chars: number; maxTokens?: number }>, truncate = new Set<string>(),
-  fail: (slug: string, n: number, model: string) => Error | null = () => null): ChatTransport {
+  fail: (slug: string, n: number, model: string) => Failure = () => null): ChatTransport {
   const byQuestion = new Map(world.companies.map(c => [c.question, c]));
   const seen = new Map<string, number>();
   return async (opts) => {
@@ -163,7 +165,7 @@ function stubTransport(world: PqWorld, stale: Set<string>, calls: Array<{ model:
     let stopReason = 'end';
     if (judge) {
       const judgeFailure = fail(c.slug, 0, String(opts.model));
-      if (judgeFailure) throw judgeFailure;
+      if (judgeFailure instanceof Error) throw judgeFailure;
       const answer = user.slice(user.indexOf('\nAnswer:\n') + '\nAnswer:\n'.length);
       const labels: Record<string, string> = {};
       for (const line of user.split('\n').filter(l => /^- (city|flagship|ceo|founded): current/.test(l))) {
@@ -180,11 +182,12 @@ function stubTransport(world: PqWorld, stale: Set<string>, calls: Array<{ model:
       const n = (seen.get(unit) ?? 0) + 1;
       seen.set(unit, n);
       const failure = fail(c.slug, n, String(opts.model));
-      if (failure) throw failure;
+      if (failure instanceof Error) throw failure;
       const values = n === 1 || stale.has(c.slug) ? c.before : c.after;
       if (n > 1 && truncate.has(c.slug) && (opts.maxTokens ?? 0) <= 2_000) stopReason = 'length';
       const cite = user.split('\n').filter(l => /^E\d+: /.test(l) && l.includes(c.name)).map(l => l.slice(0, l.indexOf(':'))).slice(0, 1);
-      text = JSON.stringify({ sentences: CLAIMS.filter(cl => values[cl] !== null).map(cl => ({ text: claimSentence(c, cl, values[cl]!), cite })), gaps: [] });
+      text = failure ? failure.text : JSON.stringify({ sentences: CLAIMS.filter(cl => values[cl] !== null).map(cl => ({ text: claimSentence(c, cl, values[cl]!), cite })), gaps: [] });
+      if (failure) stopReason = failure.stopReason;
     }
     const chars = (opts.system?.length ?? 0) + user.length;
     return { text, blocks: [{ type: 'text', text }], stopReason, model: String(opts.model), providerId: 'stub',
@@ -356,7 +359,7 @@ describe('pinned-questions paid arm: provider errors, safety stops and budget re
   const savedKeys: Record<string, string | undefined> = {};
   const dirs: string[] = [];
   let fetches = 0;
-  const run = (out: string, fail: (slug: string, n: number, model: string) => Error | null, models = ['particle:particle-1'], calls: Array<{ model: string; kind: 'question' | 'judge'; chars: number }> = []) =>
+  const run = (out: string, fail: (slug: string, n: number, model: string) => Failure, models = ['particle:particle-1'], calls: Array<{ model: string; kind: 'question' | 'judge'; chars: number }> = []) =>
     runPinnedQuestionsPaid({ gut, models, seeds: [1], companies: 8, output: out, mode: { kind: 'keyless', transport: stubTransport(world, new Set(), calls, new Set(), fail) } });
   const dir = () => { const d = mkdtempSync(join(tmpdir(), 'pq-paid-err-')); dirs.push(d); return d; };
 
@@ -428,6 +431,21 @@ describe('pinned-questions paid arm: provider errors, safety stops and budget re
     for (const s of [value, 'Rt5Yu7Io9Pa1Sd3Fg5Hj7Kl', 'dXNlcjpwYXNzd29yZA', 'Zx9Cv7Bn5Mm3Qq1Ww', 'hunter2secret']) expect(red).not.toContain(s);
     expect(red).toStartWith('refused for [redacted];');
     expect(redactProviderText('no secrets here: 503 upstream', {})).toBe('no secrets here: 503 upstream');
+  });
+
+  test('a structured refusal or content-filter finish is a safety stop even when gbrain reports only invalid output', async () => {
+    const out = dir();
+    const r = await run(out, (slug, n) => (slug === b && n >= 2 ? { stopReason: 'content_filter', text: 'I can not help with that request.' } : null));
+    const row = r.rows.find(x => x.company === b)!;
+    expect([row.outcome, row.correct, row.refresh.safety_finish]).toEqual(['safety_stop', false, 'content_filter']);
+    expect(r.rows.filter(x => x.company !== b).every(x => x.refresh.safety_finish === null)).toBe(true);
+  }, 120_000);
+
+  test('the paid arm reads the safety finish from each AI SDK result and passes the result through unchanged', async () => {
+    const seen: Array<string | null> = [];
+    const results = [{ finishReason: 'content-filter' }, { finishReason: 'other', rawFinishReason: 'refusal' }, { finishReason: 'content-filter', providerMetadata: { anthropic: { stopReason: 'refusal' } } }, { finishReason: 'stop', text: 'ok' }];
+    for (const res of results) expect(await recordingGenerateText(async () => res, f => seen.push(f))({})).toBe(res);
+    expect(seen).toEqual(['content_filter', 'refusal', 'refusal', null]);
   });
 
   test('a refused connection is a provider error, not a safety stop', async () => {

@@ -194,8 +194,28 @@ export function parseJudgeLabels(text: string): Record<Claim, JudgeLabel> | null
 export interface Usage { calls: number; input_tokens: number; output_tokens: number; cache_read_tokens: number; cache_write_tokens: number }
 const noUsage = (): Usage => ({ calls: 0, input_tokens: 0, output_tokens: 0, cache_read_tokens: 0, cache_write_tokens: 0 });
 
-/** failure_message: the provider's own words when gbrain logged a failed refresh, which its error code alone loses (a safety stop reads as provider_error). */
-export interface CallRecord { status: string; mode: 'full' | 'incremental' | null; error: string | null; failure_message: string | null; cost_usd: number | null; usage: Usage }
+/**
+ * failure_message: the provider's own words when gbrain logged a failed refresh, which its error code alone loses (a safety stop reads as provider_error).
+ * safety_finish: a structured refusal or content-filter finish reason a provider returned during a call that did not publish; gbrain's
+ * question adapter keeps only `length`, so the runner records it from the gateway's own result.
+ */
+export interface CallRecord { status: string; mode: 'full' | 'incremental' | null; error: string | null; failure_message: string | null; safety_finish?: SafetyFinish | null; cost_usd: number | null; usage: Usage }
+export type SafetyFinish = 'refusal' | 'content_filter';
+
+/** The AI SDK's generateText, passing every result through and reporting its structured safety finish (the paid arm's only hook on it). */
+export const recordingGenerateText = (generate: (o: any) => Promise<any>, note: (f: SafetyFinish | null) => void) => async (o: any) => {
+  const r = await generate(o);
+  note(safetyFinishOf(r));
+  return r;
+};
+
+/** The structured safety finish of one AI SDK result, mapped as gbrain's gateway maps it (refusal first, then content_filter). */
+export function safetyFinishOf(r: { finishReason?: string; rawFinishReason?: string; providerMetadata?: Record<string, any> } | { stopReason?: string }): SafetyFinish | null {
+  if ('stopReason' in r) return r.stopReason === 'refusal' || r.stopReason === 'content_filter' ? r.stopReason : null;
+  const anthropic = r.providerMetadata?.anthropic?.stopReason ?? r.providerMetadata?.anthropic?.stop_reason;
+  if (r.rawFinishReason === 'refusal' || anthropic === 'refusal') return 'refusal';
+  return r.finishReason === 'content-filter' || r.finishReason === 'content_filter' ? 'content_filter' : null;
+}
 
 /**
  * What a pin or refresh came to. provider_error (a 5xx, rate limit, timeout or dropped connection before any answer) is
@@ -207,11 +227,11 @@ const TRANSIENT = /^refresh_failed:(rate_limited|timeout|network|provider_error)
 const NO_ANSWER_REACHED = /^refresh_failed:(rate_limited|timeout|network)$/;
 const SAFETY = /safety|content[ _-]?filter|content[ _-]?policy|usage polic|\brefusal\b|\brefused to\b|flagged/i;
 
-export function outcomeOf(c: Pick<CallRecord, 'status' | 'error' | 'failure_message'>): Outcome {
+export function outcomeOf(c: Pick<CallRecord, 'status' | 'error' | 'failure_message' | 'safety_finish'>): Outcome {
   if (c.status === 'published') return 'published';
   if (c.error?.includes('answer_too_long')) return 'answer_too_long';
   if (c.error && NO_ANSWER_REACHED.test(c.error)) return 'provider_error';
-  if (c.failure_message && SAFETY.test(c.failure_message)) return 'safety_stop';
+  if (c.safety_finish || (c.failure_message && SAFETY.test(c.failure_message))) return 'safety_stop';
   if (c.status === 'timeout' || (c.error !== null && TRANSIENT.test(c.error))) return 'provider_error';
   return 'not_published';
 }
@@ -358,6 +378,7 @@ export type ChatTransport = (opts: ChatOpts) => Promise<ChatResult>;
 
 interface Gateway {
   configureGateway(c: Record<string, unknown>): void;
+  __setGenerateTextTransportForTests(fn: ((o: any) => Promise<any>) | null): void;
   chat(o: ChatOpts): Promise<ChatResult>;
   __setChatTransportForTests(fn: ChatTransport | null): void;
 }
@@ -375,18 +396,18 @@ export function redactProviderText(text: string, env: Record<string, string | un
   return redactUrlPasswords(out, '[redacted]');
 }
 
-const callRecord = (r: QReceipt, usage: Usage, failure: string | null): CallRecord => {
+const callRecord = (r: QReceipt, usage: Usage, failure: string | null, safetyFinish: SafetyFinish | null): CallRecord => {
   const error = r.refresh?.error ?? r.refresh?.blocked_reason ?? (r.refresh?.status === 'published' ? null : r.last_error);
   return {
     status: r.refresh?.status ?? 'none', mode: r.refresh?.mode ?? null, error: error ? redactProviderText(error) : null,
-    failure_message: r.refresh?.status === 'published' ? null : failure, cost_usd: r.refresh?.cost_usd ?? null, usage,
+    failure_message: r.refresh?.status === 'published' ? null : failure, safety_finish: r.refresh?.status === 'published' ? null : safetyFinish, cost_usd: r.refresh?.cost_usd ?? null, usage,
   };
 };
 const FAILURE_LINE = /\[questions\] refresh of \S+ failed: (.*)/;
 const modelText = (r: QReceipt) => (r.answer ?? []).filter(s => s.origin === 'model');
 
 /** One (model, seed) unit: a fresh brain, every question pinned, changed, refreshed and graded. */
-async function runUnit(gut: GbrainUnderTest, gateway: Gateway, gatewayConfig: (chatModel: string) => Record<string, unknown>, usage: { current: Usage | null }, model: string, world: PqWorld, maxOutputTokens?: number): Promise<PaidRow[]> {
+async function runUnit(gut: GbrainUnderTest, gateway: Gateway, gatewayConfig: (chatModel: string) => Record<string, unknown>, usage: { current: Usage | null }, finish: { current: SafetyFinish | null | undefined }, model: string, world: PqWorld, maxOutputTokens?: number): Promise<PaidRow[]> {
   const { PGLiteEngine } = await importGbrain<{ PGLiteEngine: new () => Engine }>(gut, 'src/core/pglite-engine.ts');
   const { operations } = await importGbrain<{ operations: Array<{ name: string; handler: (ctx: OperationContext, p: Record<string, unknown>) => Promise<unknown> }> }>(gut, 'src/core/operations.ts');
   const service = await importGbrain<{
@@ -394,9 +415,10 @@ async function runUnit(gut: GbrainUnderTest, gateway: Gateway, gatewayConfig: (c
     questionStatus(ctx: OperationContext, p: Record<string, unknown>): Promise<QReceipt>;
     refreshQuestion(ctx: OperationContext, p: Record<string, unknown>): Promise<QReceipt>;
   }>(gut, 'src/core/questions/service.ts');
-  const metered = async <T>(fn: () => Promise<T>): Promise<{ value: T; usage: Usage; failure: string | null }> => {
+  const metered = async <T>(fn: () => Promise<T>): Promise<{ value: T; usage: Usage; failure: string | null; safetyFinish: SafetyFinish | null }> => {
     const u = noUsage();
     usage.current = u;
+    finish.current = null;
     let failure: string | null = null;
     const write = process.stderr.write;
     process.stderr.write = ((chunk: unknown, ...rest: unknown[]) => {
@@ -405,7 +427,7 @@ async function runUnit(gut: GbrainUnderTest, gateway: Gateway, gatewayConfig: (c
       failure = redactProviderText(m[1]!).slice(0, 500);
       return (write as (...a: unknown[]) => boolean).call(process.stderr, redactProviderText(String(chunk)), ...rest);
     }) as typeof process.stderr.write;
-    try { return { value: await fn(), usage: u, failure }; } finally { usage.current = null; process.stderr.write = write; }
+    try { return { value: await fn(), usage: u, failure, safetyFinish: finish.current ?? null }; } finally { usage.current = null; finish.current = undefined; process.stderr.write = write; }
   };
 
   gateway.configureGateway(gatewayConfig(model));
@@ -443,8 +465,8 @@ async function runUnit(gut: GbrainUnderTest, gateway: Gateway, gatewayConfig: (c
     }
     const pins = new Map<string, { id: string; pin: CallRecord; first: string[] }>();
     for (const c of world.companies) {
-      const { value, usage: u, failure } = await metered(() => service.pinQuestion(ctx, { question: c.question, scope: { entity: c.slug }, wait_ms: WAIT_MS }));
-      pins.set(c.slug, { id: value.receipt.id, pin: callRecord(value.receipt, u, failure), first: modelText(value.receipt).map(s => s.text) });
+      const { value, usage: u, failure, safetyFinish } = await metered(() => service.pinQuestion(ctx, { question: c.question, scope: { entity: c.slug }, wait_ms: WAIT_MS }));
+      pins.set(c.slug, { id: value.receipt.id, pin: callRecord(value.receipt, u, failure, safetyFinish), first: modelText(value.receipt).map(s => s.text) });
     }
     for (const c of world.companies) {
       for (const step of c.steps) {
@@ -458,9 +480,9 @@ async function runUnit(gut: GbrainUnderTest, gateway: Gateway, gatewayConfig: (c
         }
       }
       const p = pins.get(c.slug)!;
-      const { value, usage: u, failure } = await metered(() => service.refreshQuestion(ctx, { id: p.id, wait_ms: WAIT_MS }));
+      const { value, usage: u, failure, safetyFinish } = await metered(() => service.refreshQuestion(ctx, { id: p.id, wait_ms: WAIT_MS }));
       const status = await service.questionStatus(ctx, { id: p.id });
-      pending.push({ c, pin: p.pin, first: p.first, refresh: { ...callRecord(value, u, failure), freshness: status.freshness, stale_sentences: status.sentences.stale }, refreshed: modelText(status) });
+      pending.push({ c, pin: p.pin, first: p.first, refresh: { ...callRecord(value, u, failure, safetyFinish), freshness: status.freshness, stale_sentences: status.sentences.stale }, refreshed: modelText(status) });
     }
   } finally {
     await engine.disconnect().catch(() => {});
@@ -537,12 +559,18 @@ export async function runPinnedQuestionsPaid(opts: { gut: GbrainUnderTest; model
     });
     const spend: { stop: string | null } = { stop: null };
     const noteRefusal = (e: unknown) => { if (isBudgetRefusal(e)) spend.stop ??= (e as Error).message.slice(0, 300); };
+    const finish: { current: SafetyFinish | null | undefined } = { current: undefined };
+    const noteFinish = (f: SafetyFinish | null) => { if (f && finish.current !== undefined) finish.current ??= f; };
     const outerFetch = globalThis.fetch;
     if (opts.mode.kind === 'keyless') {
       const transport = opts.mode.transport;
-      gateway.__setChatTransportForTests(async o => { try { return await transport(o); } catch (e) { noteRefusal(e); throw e; } });
+      gateway.__setChatTransportForTests(async o => {
+        try { const res = await transport(o); noteFinish(safetyFinishOf({ stopReason: res.stopReason })); return res; } catch (e) { noteRefusal(e); throw e; }
+      });
     } else {
       globalThis.fetch = Object.assign(async (...a: Parameters<typeof fetch>) => { try { return await outerFetch(...a); } catch (e) { noteRefusal(e); throw e; } }, outerFetch);
+      const { generateText } = await import(Bun.resolveSync('ai', opts.gut.root)) as { generateText: (o: any) => Promise<any> };
+      gateway.__setGenerateTextTransportForTests(recordingGenerateText(generateText, noteFinish));
     }
     try {
       const worlds = opts.seeds.map(seed => generatePinnedQuestionsWorld({ seed, companies: opts.companies }));
@@ -567,7 +595,7 @@ export async function runPinnedQuestionsPaid(opts: { gut: GbrainUnderTest; model
         } else {
           const attempt = (prior?.attempt ?? 0) + 1;
           try {
-            unit = await runUnit(opts.gut, gateway, gatewayConfig, usage, model, world, opts.maxOutputTokens);
+            unit = await runUnit(opts.gut, gateway, gatewayConfig, usage, finish, model, world, opts.maxOutputTokens);
           } catch (e) {
             const msg = `${model} seed ${world.seed}: ${redactProviderText(e instanceof Error ? e.message : String(e))}`;
             harnessErrors.push(msg);
@@ -598,7 +626,7 @@ export async function runPinnedQuestionsPaid(opts: { gut: GbrainUnderTest; model
     } finally {
       deregister();
       if (opts.mode.kind === 'keyless') gateway.__setChatTransportForTests(null);
-      else globalThis.fetch = outerFetch;
+      else { globalThis.fetch = outerFetch; gateway.__setGenerateTextTransportForTests(null); }
     }
   });
 }
