@@ -216,6 +216,63 @@ metric, a model, a judge or a bar; each makes the runner do what this plan alrea
   McNemar, Holm, the paired non-inferiority interval, every interval resampling whole questions); the sentence-level
   Wilson interval is exploratory only.
 
+### 2026-11-24: stale probes for the judge check, after the judge-check stage
+
+Made after the pilot and judge-check stages (seeds 21 to 23) and before any counted unit. It changes how the judge
+check is measured. It changes no arm, seed, metric, model, judge, bar or threshold: each judge still needs at least
+100 labelled outputs and Cohen's kappa of at least 0.6, `gpt-6.2-astra` still grades the `claude-opus-5-5` and
+particle-1 rows, `claude-opus-5-5` still grades the `gpt-6.2-sol` rows, and particle-1 judges nothing.
+
+**What happened.** The judge-check stage completed with every question scored, no harness error and no model over the
+truncation bar, and its judge check failed. Nearly every answer was correct, so the rule labels held almost no
+negatives, and kappa can't measure agreement without them. `claude-opus-5-5` agreed with the rule on 143 of its 144
+labelled outputs, with no rule negative among them. The one disagreement is a `gpt-6.2-sol` refreshed answer that
+correctly left out a removed chief executive, which the judge labelled missing although its prompt calls that correct.
+The judge was wrong there. With no negatives, its kappa was 0, below the bar. `gpt-6.2-astra` reached kappa 1 on 248
+outputs, but only one of them was a rule negative. Any judge, including a perfect one, gets an undefined or near-zero
+kappa on rows like these, so replacing the judge would not fix the check.
+
+**The change.** The judge check adds labelled negatives, called stale probes. For each judge-check row whose change
+altered a claim (five of the eight change classes, so 135 of the 216 rows), the row's first answer is judged again by
+the row's own judge. The judge uses the frozen prompt and the answer key from after the change, the same key format a
+refreshed answer is graded against. No model under test is asked anything, and only judges are called. The rule label
+comes from the same rule as before: an answer that still states a changed claim's old value is labelled stale, and an
+answer that names a removed holder is labelled stale.
+
+**Why these are valid agreement items.** These negatives are first answers, not refreshed ones. A first answer was
+written before the change, so it states the old value of every changed claim. The judge sees an answer and a key, with
+nothing that says when the answer was written. To the judge, a stale probe looks exactly like a refreshed answer that
+kept the old value, which is the failure this experiment exists to catch. Because the claim values are unique
+synthetic tokens, the stale rule label rests on token presence alone (old value present, new value absent). It is not
+a model label.
+
+The probes don't cover everything. They test whether the judge recognises a stale value, and they don't test the
+"wrong" label (a third value). They are probably easier than the hardest natural disagreements. A row whose change
+altered no claim gets no probe, because against an unchanged key its probe would repeat the first answer's own judge
+item. An answer whose rule label is ambiguous is left out, as before, and is not sent to the judge.
+
+**What counts.** Each judge's kappa is computed over its judge-check outputs and its stale probes together, and every
+existing output stays in the set, including `claude-opus-5-5`'s missed removed-CEO answer. Agreement is also
+reported for the probes alone and per model under test.
+
+**Enforcement.**
+
+- `--stage stale-probes --judge-check <receipt.judge-check.json>` judges the probes once and writes
+  `receipt.stale-probes.json`.
+- That receipt names the judge-check receipt by its sha256.
+- A directory where a stale-probes run has already started is refused, so the probes can't be paid for twice by
+  accident.
+- A counted launch needs both receipts (`--judge-check` and `--stale-probes`). It recomputes the judge check from
+  both, and it checks two things:
+  - every probe is its row's first answer, judged by that row's judge against the key from after the change;
+  - every stored rule label in the judge-check receipt equals the one the runner computes from the regenerated worlds.
+
+The judge-check receipt was written by the runner source from before this change (sha256 `209ca793…`). That one
+earlier source is accepted, because the code changed after it only to add the probes, and the rule-label recomputation
+shows that its grading is unchanged.
+
+If a judge still fails with the probes, no counted unit runs until a further dated amendment decides what to do.
+
 ## Disclosures
 
 - gbrain is Garry Tan's own project.
