@@ -11,7 +11,7 @@ import { BudgetExceededError, budgetOptionsFrom, chatPrice, initLedger, startPai
 import { PaidArmRefusal } from '../../eval/runner/paid-arm.ts';
 import { writeReceipt } from '../../eval/runner/receipt.ts';
 import {
-  EST_TOKENS, JUDGE_CALLS_PER_ANSWER, JUDGE_MAX_TOKENS, JUDGE_MIN_LABELS, PINNED_QUESTIONS_JUDGE_PROMPT, estimateUsd, measuredJudge, PINNED_QUESTIONS_MODELS_UNDER_TEST, STAGE_SEEDS, TRUNCATION_BAR, buildReceipt, canonicalModel, cohenKappa,
+  EST_TOKENS, JUDGE_CALLS_PER_ANSWER, JUDGE_MAX_TOKENS, JUDGE_MIN_LABELS, PINNED_QUESTIONS_JUDGE_PROMPT, RUNNER_SOURCE_SHA256, estimateUsd, measuredJudge, PINNED_QUESTIONS_MODELS_UNDER_TEST, STAGE_SEEDS, TRUNCATION_BAR, buildReceipt, canonicalModel, cohenKappa,
   familyOf, judgeAgreement, judgeCheckPasses, judgeFor, judgeUserMessage, modelRoles, parseJudgeLabels, requirePaidFlags, ruleLabels,
   checkpointKey, combinedCost, harnessBlocked, judgeEstimateRows, recordProcessCost, requireStageDirectory, receiptFile, servedWrongModel, outcomeOf, pendingUnits, readCheckpoint, recordingGenerateText, redactProviderText, requireJudgeCheck, requireProviderKeys, runPinnedQuestionsPaid, scoredCorrect, summarizePaid,
   type ChatTransport, type GradedAnswer, type PaidRow, type PaidRunResult,
@@ -228,7 +228,7 @@ describe('pinned-questions paid arm: kappa', () => {
     const models = [...PINNED_QUESTIONS_MODELS_UNDER_TEST];
     const rowsOf = (judge: string) => Array.from({ length: 60 }, (_, i): Pick<PaidRow, 'judge_model' | 'first' | 'refreshed'> => ({ judge_model: judge, first: g(i % 2 === 0, i % 2 === 0), refreshed: { ...g(i % 3 === 0, i % 3 === 0), stale: [] } }));
     const receipt = { category: 'pinned-questions-paid', run_status: 'completed', gbrain_version: gut.version,
-      resolved_config: { mode: 'paid', stage: 'judge-check', models: modelRoles(models), judge: { prompt_sha256: createHash('sha256').update(PINNED_QUESTIONS_JUDGE_PROMPT).digest('hex') }, gbrain_overlay: overlaySummary(gut) },
+      resolved_config: { mode: 'paid', stage: 'judge-check', runner_source_sha256: RUNNER_SOURCE_SHA256, models: modelRoles(models), judge: { prompt_sha256: createHash('sha256').update(PINNED_QUESTIONS_JUDGE_PROMPT).digest('hex') }, gbrain_overlay: overlaySummary(gut) },
       data: { rows: [...rowsOf('openai:gpt-6.2-astra'), ...rowsOf('anthropic:claude-opus-5-5')] } };
     const d = mkdtempSync(join(tmpdir(), 'pq-judge-check-'));
     const at = (name: string, r: unknown) => { const p = join(d, name); writeFileSync(p, JSON.stringify(r)); return p; };
@@ -239,6 +239,7 @@ describe('pinned-questions paid arm: kappa', () => {
       expect(() => requireJudgeCheck(at('pilot.json', { ...receipt, resolved_config: { ...receipt.resolved_config, stage: 'pilot' } }), { gut, models })).toThrow(/not a paid/);
       expect(() => requireJudgeCheck(at('error.json', { ...receipt, run_status: 'error' }), { gut, models })).toThrow(/run_status is error/);
       expect(() => requireJudgeCheck(at('build.json', { ...receipt, gbrain_version: '0.0.1' }), { gut, models })).toThrow(/not the build under test/);
+      expect(() => requireJudgeCheck(at('runner.json', { ...receipt, resolved_config: { ...receipt.resolved_config, runner_source_sha256: 'older' } }), { gut, models })).toThrow(/different version of this runner/);
       expect(() => requireJudgeCheck(at('prompt.json', { ...receipt, resolved_config: { ...receipt.resolved_config, judge: { prompt_sha256: 'x' } } }), { gut, models })).toThrow(/judge prompt differs/);
       expect(() => requireJudgeCheck(at('models.json', { ...receipt, resolved_config: { ...receipt.resolved_config, models: modelRoles(['claude-opus-5-5']) } }), { gut, models })).toThrow(/did not run particle:particle-1, openai:gpt-6.2-sol/);
       expect(() => requireJudgeCheck(at('one-judge.json', { ...receipt, data: { rows: rowsOf('openai:gpt-6.2-astra') } }), { gut, models })).toThrow(/judge check fails/);

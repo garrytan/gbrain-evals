@@ -363,7 +363,7 @@ export function judgeCheckPasses(rows: ReadonlyArray<Pick<PaidRow, 'judge_model'
 }
 
 /**
- * A counted launch needs the judge-check stage's receipt: same gbrain build and judge prompt, every counted model in its
+ * A counted launch needs the judge-check stage's receipt: same gbrain build, judge prompt and runner source, every counted model in its
  * model set, and the judge check recomputed from its rows passing for every judge the counted models need. The output
  * cap is not tied: the judge grades answers, and the raised-cap arm only lets them run longer.
  */
@@ -371,12 +371,13 @@ export function requireJudgeCheck(path: string | undefined, opts: { gut: GbrainU
   const refuse = (why: string) => { throw new PaidArmRefusal(`${CATEGORY}: a counted launch needs a passing judge-check receipt (--judge-check <receipt.json> from --stage judge-check): ${why}`); };
   if (!path) return refuse('none given');
   if (!existsSync(path)) return refuse(`${path} does not exist`);
-  const r = JSON.parse(readFileSync(path, 'utf8')) as { category?: string; run_status?: string; gbrain_version?: string; execution?: { product?: unknown }; resolved_config?: { mode?: string; stage?: string; models?: Array<{ model: string; role: string }>; judge?: { prompt_sha256?: string }; gbrain_overlay?: unknown }; data?: { rows?: PaidRow[] } };
+  const r = JSON.parse(readFileSync(path, 'utf8')) as { category?: string; run_status?: string; gbrain_version?: string; execution?: { product?: unknown }; resolved_config?: { mode?: string; stage?: string; runner_source_sha256?: string; models?: Array<{ model: string; role: string }>; judge?: { prompt_sha256?: string }; gbrain_overlay?: unknown }; data?: { rows?: PaidRow[] } };
   const c = r.resolved_config;
   if (r.category !== CATEGORY || c?.stage !== 'judge-check' || c.mode !== 'paid') return refuse(`${path} is not a paid ${CATEGORY} judge-check receipt`);
   if (r.run_status !== 'completed') return refuse(`its run_status is ${r.run_status}`);
   if (r.gbrain_version !== opts.gut.version || JSON.stringify(c.gbrain_overlay ?? null) !== JSON.stringify(overlaySummary(opts.gut) ?? null)) return refuse(`it measured gbrain ${r.gbrain_version}, not the build under test (${opts.gut.version})`);
   if (c.judge?.prompt_sha256 !== createHash('sha256').update(PINNED_QUESTIONS_JUDGE_PROMPT).digest('hex')) return refuse('its judge prompt differs from this runner\'s');
+  if (c.runner_source_sha256 !== RUNNER_SOURCE_SHA256) return refuse('it was made by a different version of this runner or its generator (rule labels and grading may differ); rerun the judge-check stage');
   const checked = new Set((c.models ?? []).filter(m => m.role === 'model under test').map(m => m.model));
   const missing = opts.models.map(canonicalModel).filter(m => !checked.has(m));
   if (missing.length) return refuse(`it did not run ${missing.join(', ')}`);
@@ -682,7 +683,7 @@ export function checkpointKey(o: { mode: PaidMode['kind']; gut: GbrainUnderTest;
   });
 }
 
-const RUNNER_SOURCE_SHA256 = createHash('sha256').update(readFileSync(import.meta.path)).update(readFileSync(resolve(import.meta.dir, '../generators/pinned-questions-gen.ts'))).digest('hex');
+export const RUNNER_SOURCE_SHA256 = createHash('sha256').update(readFileSync(import.meta.path)).update(readFileSync(resolve(import.meta.dir, '../generators/pinned-questions-gen.ts'))).digest('hex');
 
 /**
  * Refuse a launch into an output directory whose checkpoint holds units outside this launch's seeds: each stage gets its
@@ -877,6 +878,7 @@ export function buildReceipt(opts: { gut: GbrainUnderTest; models: readonly stri
       seeds: opts.seeds, companies_per_seed: opts.companies, generator_version: PINNED_QUESTIONS_GENERATOR_VERSION,
       resumed_units: r.resumedUnits,
       judge_check_receipt_sha256: opts.judgeCheckSha256 ?? null,
+      runner_source_sha256: RUNNER_SOURCE_SHA256,
       cost_processes: opts.cost && 'processes' in opts.cost ? opts.cost.processes : null,
       gbrain_overlay: overlaySummary(opts.gut),
     },
