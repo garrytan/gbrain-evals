@@ -50,7 +50,9 @@ the answer model; "total" adds the answer model's reading at the profile's reade
   bootstrap over worlds (Statistics). "The cheapest server" is the server with the lowest world-mean system cost,
   chosen again inside each bootstrap resample, so the interval carries the choice.
 - Hosting is part of system cost in every rule, held fixed outside the resample (Measures); each ratio is also reported
-  without hosting.
+  without hosting where it is defined. Verbatim-session makes no provider calls, so without hosting its system cost is
+  zero and a ratio over it has no value; that sensitivity row reports gbrain's gap in dollars a month over the cheapest
+  server instead, with its paired interval, and marks the ratio "not defined".
 
 1. **gbrain's monthly system cost is at least 1.25 times the cheapest server's**, the interval's lower end above 1.25:
    gbrain's largest cost line, by phase (write, background, read, idle, hosting) and model, goes to gbrain's
@@ -59,14 +61,18 @@ the answer model; "total" adds the answer model's reading at the profile's reade
 2. **gbrain's answer-model cost per question, at its shipped read with claude-opus-5-5 reading, is at least 1.5 times
    the median over the four other passive systems** (the three servers and hybrid search), the interval's lower end
    above 1.5: gbrain's maintainers get an issue proposing a smaller default delivery for remote agents, with its cost
-   per correct answer beside the 8,000-token rows in [settings by workload](../settings.md), and README says the
-   shipped read is the largest part of gbrain's bill. **Expected in advance:** the scoreboard's measured default
+   per correct answer beside the 8,000-token rows in [settings by workload](../settings.md). README says the shipped
+   read is the largest part of gbrain's bill only if gbrain's own per-phase split also shows the answer model's read
+   above each of gbrain's write, background, idle and hosting lines (paired world means); otherwise README names the
+   line that is largest. **Expected in advance:** the scoreboard's measured default
    delivery (`vendor_default_tokens` in `eval/runner/q1/cells/definitions.ts`: gbrain 23,800 tokens against 1,200 to
    10,400 for the others) predicts this rule fires. The experiment measures its size on this workload and whether cost
    per correct answer still favours gbrain.
 3. **gbrain's write-to-queryable p50 is above 60 seconds, its p95 above 5 minutes, or more than 5% of its counted
-   probes miss the 10-minute horizon:** gbrain's maintainers get an issue naming which stage the probes waited on (the
-   write, the keyword index, or embeddings and background extraction), from the probe records. The 5-minute p95 is the
+   probes miss the 10-minute horizon:** gbrain's maintainers get an issue with the probe records and gbrain's own logs from
+   the probe windows. The probe records alone can't show which stage a probe waited on (the write, the keyword index,
+   or embeddings and background extraction), so the issue names a stage only where gbrain's logs show it, and says
+   "stage not identified" otherwise. The 5-minute p95 is the
    write-to-findable bar gbrain's own improvement plan set (item E-C in the 10x memory plan). Otherwise README states
    the number and no issue is filed. Only the counted probes (written to an idle system) feed this rule; the
    bulk-import probes never do.
@@ -137,7 +143,7 @@ product runs by default switched on.
 | `baseline-hybrid` | this repository's plain Postgres full-text plus pgvector search | text-embedding-3-large at 1,536 dimensions, one call per session and per question | yes |
 | `baseline-file-agent` | this repository's list, grep and read agent, uncapped grep, 40 turns | nothing on write: the write is a Markdown file | yes |
 | `baseline-none` | the question alone | nothing | priced: system cost is zero by construction, reader cost measured |
-| `baseline-full-context` | the whole history in the prompt, with prompt caching | nothing | priced from measured whole-world reads: each reader reads each world whole, and its cached and uncached input dollars per token are scaled to each profile's one-year history (light: 2,580 messages, about 104,000 tokens of text; heavy: 24,000 messages, about 968,000). The harness renders each profile's one-year prompt the way it renders a whole world and checks it against each reader's input limit (`checkFit` in `eval/runner/systems/baselines.ts`); a profile and reader whose prompt doesn't fit is reported as "doesn't fit", not priced |
+| `baseline-full-context` | the whole history in the prompt, with prompt caching | nothing | priced from measured whole-world reads: each reader reads each world whole, and its cached, cache-write and uncached input dollars per token are scaled to each profile's one-year history (light: 2,580 messages, about 104,000 tokens of text; heavy: 24,000 messages, about 968,000). The harness renders each profile's one-year prompt the way it renders a whole world and checks it against each reader's input limit (`checkFit` in `eval/runner/systems/baselines.ts`); a profile and reader whose prompt doesn't fit is reported as "doesn't fit", not priced. The measured reads ask consecutive questions of a fixed world, so they hit the cache more often than an agent whose history grows each day and whose ten daily questions are spread across the day. The monthly cost is therefore shown as a range: a warm bound, where the history is written to the cache once a day and the day's other questions read it from cache, and a cold bound, where every question writes the history to the cache again |
 | `ext-temporal-graph` | | | not run: its pinned configuration calls a reranker and an ingest model its provider retired, and a compared system's settings are never changed (the scoreboard's ruling of 2026-10-26) |
 | `ext-graph-pipeline`, `ext-markdown-kb` | | | not run in this experiment: left out of its scope. Their published "not run" reasons (a 32 GiB graph-store limit, reindex time that grows with the square of the chunk count) were measured at BEAM-10M scale, so a run at this workload's size may be possible; it is listed as follow-up work, not claimed impossible |
 | `ext-agent-runtime` | | | not run: it has no passive write and search interface; its agent edits its own memory, so a per-write cost and a write-to-queryable time aren't defined the same way |
@@ -201,17 +207,21 @@ is its own column, and every total is also shown without it.
 **Monthly cost.** For each system, world and reader:
 
 - write and background: provider dollars per million ingested tokens, times the profile's tokens a month;
-- read: the system's own provider dollars per question, times 300;
+- read: the system's own provider dollars per question, times the profile's questions a month (300);
 - idle: as above;
 - hosting: as above;
-- reader: the reader's provider dollars per question, times 300.
+- reader: the reader's provider dollars per question, times the profile's questions a month (300).
 
 The system cost is the first four lines; the total adds the reader. Each is reported per world and summarised across
-worlds. The light profile uses the same unit costs.
+worlds. The light profile uses the same unit costs at its own volumes: 215 messages (about 8,700 tokens) and 32
+questions a month.
 
 **Cost per correct answer.** For each system and reader, the profile's monthly total divided by the correct answers
-it would give in that month: 300 times its key-matched accuracy. It is reported for both profiles, with the accuracy
-beside it.
+it would give in that month: the profile's own questions a month (300, or 32 for the light profile) times its
+key-matched accuracy. It is reported for both profiles, with the accuracy beside it. A system and reader with no
+key-matched correct answer get "no correct answers" in place of a cost per correct answer, and an interval is reported
+only when every bootstrap resample has at least one correct answer; otherwise the row gives the point estimate and
+says the interval is not defined.
 
 **History growth.** Some systems compare each write with what they already hold, so a write can cost more as memory
 grows. For each system the results report write-and-background dollars per million tokens over each world's last
@@ -230,6 +240,13 @@ report ready and searches once more, and the miss is **late** if that search fin
 it doesn't. Each poll's errors are recorded, not swallowed. p50 and p95 are taken over all counted probes with misses
 ranked above the horizon, so a percentile that falls on a miss is reported as "more than 10 minutes", and late and
 never-found misses are counted per system. Ten worlds give 210 counted probes per system.
+
+What this measures is **source-attributed session retrieval**, and the results label it that way. A search counts as
+finding the session only when a returned item carries that session's id. A system can return the fact without an id
+(memory-bank's consolidated observations carry none), which this rule records as not found, and a keyword match can
+return a session before background extraction finishes, so a hit shows the session can be retrieved, not that its facts
+are extracted. Polls that return items with no session id are counted per system and reported beside the probe times
+as unattributed returns.
 
 A **bulk-import probe**, the same measurement on a seeded sample of 20 sessions during the bulk import, is reported as a
 separate, labelled number: what a search sees while the system works through a backlog, such as a first import of old
@@ -251,7 +268,7 @@ confirmation's cost-per-correct ratios over 24 worlds had intervals about 1.5% e
 1.08 and 0.33 to 0.34), and 10 worlds widen that by about the square root of 24/10, so a 1.10 ratio is resolved; the
 decision rules use 1.25 and 1.5, practical margins above it. For write-to-queryable p50 ratios, 1.5 times, assuming a
 log-normal spread of probe times with a log standard deviation of 1 and 210 probes clustered in 10 worlds. Before the
-freeze the harness simulates both from the pilot's two worlds, with the battleground confirmation's interval widths as
+freeze the harness simulates both from the pilot's records (its probes for the spread of probe times), with the battleground confirmation's interval widths as
 the floor for the cost spread. If either simulated difference is larger than stated, a dated amendment raises the world
 count, up to all 20 dev worlds, before any counted cell.
 
@@ -280,17 +297,33 @@ destroyed when its cell ends. Answer output is capped at the reader settings the
 
 ## Pilot (R111)
 
-Before any counted cell, one pilot cell per system on worlds `bg1-dev-11` and `bg1-dev-12` (not among the ten counted
-worlds), with four questions per world and reader, at no more than a tenth of that system's planned spend. Each
-system's pilot must show:
+Before any counted cell, one paid pilot cell per system on world `bg1-dev-11` (not among the ten counted worlds), at
+no more than a tenth of that system's planned spend. A full pilot world would not fit that cap for a system that pays
+per write: two worlds hold about a fifth of the counted sessions. So the paid pilot writes only the first 60 sessions of
+`bg1-dev-11`: the first 40 as its bulk import, then the next 20 one at a time as probes, as the counted cells do. That
+is about 4% of the roughly 1,500 sessions the counted cells write, 20 probes against 210, and four seeded questions per
+reader against 200, so every paid part is under a tenth of its counted counterpart. The questions may ask about facts
+the first 60 sessions don't hold, so pilot answers check only that reads run and get a matcher class; pilot accuracy
+is not a check. `baseline-none` and `baseline-full-context` write nothing, so their pilot reads the four questions,
+and for full context the whole of `bg1-dev-11`.
+
+A separate **keyless capacity check** writes all of world `bg1-dev-12` to each system with its provider calls
+answered by the repository's fake upstream (`eval/systems/gbrain-defaults/fake_upstream.py`, extended on the results
+branch to the other systems' provider endpoints), no keys present, to show the stack holds and indexes a whole world on the
+planned machine. It says nothing about provider latency. A system whose provider calls the fake upstream can't answer
+is named in the freeze amendment, and its capacity is checked on its first counted world instead, which stops at the
+cell boundary if ingest runs past 1.5 times the planned machine hours.
+
+Each system's pilot must show:
 
 - **the part under test ran:** usage lines with provider usage fields for each call the table above says the system
   makes on write and on read (verbatim-session, the file agent and the floors must show no provider write lines), at
   least 20 completed counted probes with a time or a miss, no probe search billed to another phase, hosting samples
   with nonzero resident memory, and for memory-bank, consolidation calls in its background lines;
 - **no judge:** there is none; every pilot answer gets a matcher class;
-- **the units can be supplied:** each world ingests inside the planned machine hours, and the write and background rate
-  falls inside 1.5 times the planned rate above; for `baseline-none`, every pilot question is read inside the planned
+- **the units can be supplied:** the paid pilot's write-and-drain time per session, times a world's session count, is
+  inside the planned machine hours, the keyless capacity check finishes, and the write and background rate falls inside
+  1.5 times the planned rate above; for `baseline-none`, every pilot question is read inside the planned
   reader rate. A rate outside that band, or more than 2 times the battleground's measured rate for a system it ran, is
   explained and re-planned in the freeze amendment before the counted run.
 

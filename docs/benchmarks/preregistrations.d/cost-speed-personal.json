@@ -13,16 +13,16 @@
       "paid_tier": "under-500",
       "decision": [
         {
-          "if": "gbrain's monthly system cost is at least 1.25 times the cheapest compared server's (chosen inside each bootstrap resample), interval's lower end above 1.25",
+          "if": "gbrain's monthly system cost is at least 1.25 times the cheapest compared server's (chosen inside each bootstrap resample), interval's lower end above 1.25; without hosting, where verbatim-session's zero system cost leaves the ratio undefined, the sensitivity row reports gbrain's dollar gap over the cheapest server with its interval",
           "then": "gbrain's largest cost line by phase and model goes to gbrain's maintainers as an issue with the aggregates, and README's cost paragraph names it; otherwise no cost issue is filed"
         },
         {
           "if": "gbrain's answer-model cost per question at its shipped read with claude-opus-5-5 is at least 1.5 times the median of the three servers and hybrid search, interval's lower end above 1.5",
-          "then": "gbrain's maintainers get an issue proposing a smaller default delivery for remote agents, with cost per correct answer beside the 8,000-token rows, and README says the shipped read is the largest part of gbrain's bill"
+          "then": "gbrain's maintainers get an issue proposing a smaller default delivery for remote agents, with cost per correct answer beside the 8,000-token rows; README says the shipped read is the largest part of gbrain's bill only if gbrain's own per-phase split shows the answer-model read above each of its write, background, idle and hosting lines, and otherwise names the largest line"
         },
         {
           "if": "gbrain's counted write-to-queryable p50 is above 60 seconds, its p95 above 5 minutes, or more than 5% of its counted probes miss the 10-minute horizon",
-          "then": "gbrain's maintainers get an issue naming the stage the probes waited on, from the probe records; otherwise README states the number and no issue is filed"
+          "then": "gbrain's maintainers get an issue with the probe records and gbrain's own logs from the probe windows, naming a stalled stage only where those logs show it and otherwise saying stage not identified; otherwise README states the number and no issue is filed"
         },
         {
           "if": "the upper end of every compared server's system share of its total at claude-opus-5-5 is under 10%",
@@ -95,58 +95,58 @@
         {
           "arm": "gbrain-defaults",
           "max_budget_fraction": 0.1,
-          "part_under_test_ran": "on worlds bg1-dev-11 and bg1-dev-12 the metering proxy records provider usage fields for every call the preregistration says the system makes on write and on read (consolidation calls for memory-bank), at least 20 counted write-to-queryable probes complete with a time or a miss and no probe search billed to another phase, hosting samples record nonzero resident memory, and every pilot answer gets a matcher class",
+          "part_under_test_ran": "on world bg1-dev-11, writing only its first 60 sessions (40 as the bulk import, then 20 one at a time as probes), with four seeded questions per reader, the metering proxy records provider usage fields for every call the preregistration says the system makes on write and on read (consolidation calls for memory-bank), at least 20 counted write-to-queryable probes complete with a time or a miss and no probe search billed to another phase, hosting samples record nonzero resident memory, and every pilot answer gets a matcher class",
           "judge_passes": "no model judge: answers are scored by the deterministic key matcher eval/runner/bg1/match.ts",
-          "units_supplied_at_rate": "each world ingests inside the planned machine hours and the write and background rate falls inside 1.5 times the preregistration's planned rate"
+          "units_supplied_at_rate": "the paid pilot's write-and-drain time per session, times a world's session count, is inside the planned machine hours; a keyless capacity check writes all of bg1-dev-12 with provider calls answered by the fake upstream and finishes (or the system is named in the freeze amendment and checked on its first counted world); and the write and background rate falls inside 1.5 times the preregistration's planned rate"
         },
         {
           "arm": "ext-extract-first",
           "max_budget_fraction": 0.1,
-          "part_under_test_ran": "on worlds bg1-dev-11 and bg1-dev-12 the metering proxy records provider usage fields for every call the preregistration says the system makes on write and on read (consolidation calls for memory-bank), at least 20 counted write-to-queryable probes complete with a time or a miss and no probe search billed to another phase, hosting samples record nonzero resident memory, and every pilot answer gets a matcher class",
+          "part_under_test_ran": "on world bg1-dev-11, writing only its first 60 sessions (40 as the bulk import, then 20 one at a time as probes), with four seeded questions per reader, the metering proxy records provider usage fields for every call the preregistration says the system makes on write and on read (consolidation calls for memory-bank), at least 20 counted write-to-queryable probes complete with a time or a miss and no probe search billed to another phase, hosting samples record nonzero resident memory, and every pilot answer gets a matcher class",
           "judge_passes": "no model judge: answers are scored by the deterministic key matcher eval/runner/bg1/match.ts",
-          "units_supplied_at_rate": "each world ingests inside the planned machine hours and the write and background rate falls inside 1.5 times the preregistration's planned rate"
+          "units_supplied_at_rate": "the paid pilot's write-and-drain time per session, times a world's session count, is inside the planned machine hours; a keyless capacity check writes all of bg1-dev-12 with provider calls answered by the fake upstream and finishes (or the system is named in the freeze amendment and checked on its first counted world); and the write and background rate falls inside 1.5 times the preregistration's planned rate"
         },
         {
           "arm": "ext-memory-bank",
           "max_budget_fraction": 0.1,
-          "part_under_test_ran": "on worlds bg1-dev-11 and bg1-dev-12 the metering proxy records provider usage fields for every call the preregistration says the system makes on write and on read (consolidation calls for memory-bank), at least 20 counted write-to-queryable probes complete with a time or a miss and no probe search billed to another phase, hosting samples record nonzero resident memory, and every pilot answer gets a matcher class",
+          "part_under_test_ran": "on world bg1-dev-11, writing only its first 60 sessions (40 as the bulk import, then 20 one at a time as probes), with four seeded questions per reader, the metering proxy records provider usage fields for every call the preregistration says the system makes on write and on read (consolidation calls for memory-bank), at least 20 counted write-to-queryable probes complete with a time or a miss and no probe search billed to another phase, hosting samples record nonzero resident memory, and every pilot answer gets a matcher class",
           "judge_passes": "no model judge: answers are scored by the deterministic key matcher eval/runner/bg1/match.ts",
-          "units_supplied_at_rate": "each world ingests inside the planned machine hours and the write and background rate falls inside 1.5 times the preregistration's planned rate"
+          "units_supplied_at_rate": "the paid pilot's write-and-drain time per session, times a world's session count, is inside the planned machine hours; a keyless capacity check writes all of bg1-dev-12 with provider calls answered by the fake upstream and finishes (or the system is named in the freeze amendment and checked on its first counted world); and the write and background rate falls inside 1.5 times the preregistration's planned rate"
         },
         {
           "arm": "ext-verbatim-session",
           "max_budget_fraction": 0.1,
-          "part_under_test_ran": "on worlds bg1-dev-11 and bg1-dev-12 the system ingests with no provider write lines, completes at least 20 counted write-to-queryable probes with a time or a miss and no probe search billed to another phase, records hosting samples with nonzero resident memory, and every pilot answer gets a matcher class",
+          "part_under_test_ran": "on world bg1-dev-11, writing only its first 60 sessions (40 as the bulk import, then 20 one at a time as probes), with four seeded questions per reader, the system ingests with no provider write lines, completes at least 20 counted write-to-queryable probes with a time or a miss and no probe search billed to another phase, records hosting samples with nonzero resident memory, and every pilot answer gets a matcher class",
           "judge_passes": "no model judge: answers are scored by the deterministic key matcher eval/runner/bg1/match.ts",
-          "units_supplied_at_rate": "each world ingests inside the planned machine hours and the write and background rate falls inside 1.5 times the preregistration's planned rate"
+          "units_supplied_at_rate": "the paid pilot's write-and-drain time per session, times a world's session count, is inside the planned machine hours; a keyless capacity check writes all of bg1-dev-12 with provider calls answered by the fake upstream and finishes (or the system is named in the freeze amendment and checked on its first counted world); and the write and background rate falls inside 1.5 times the preregistration's planned rate"
         },
         {
           "arm": "baseline-hybrid",
           "max_budget_fraction": 0.1,
-          "part_under_test_ran": "on worlds bg1-dev-11 and bg1-dev-12 the metering proxy records provider usage fields for every call the preregistration says the system makes on write and on read (consolidation calls for memory-bank), at least 20 counted write-to-queryable probes complete with a time or a miss and no probe search billed to another phase, hosting samples record nonzero resident memory, and every pilot answer gets a matcher class",
+          "part_under_test_ran": "on world bg1-dev-11, writing only its first 60 sessions (40 as the bulk import, then 20 one at a time as probes), with four seeded questions per reader, the metering proxy records provider usage fields for every call the preregistration says the system makes on write and on read (consolidation calls for memory-bank), at least 20 counted write-to-queryable probes complete with a time or a miss and no probe search billed to another phase, hosting samples record nonzero resident memory, and every pilot answer gets a matcher class",
           "judge_passes": "no model judge: answers are scored by the deterministic key matcher eval/runner/bg1/match.ts",
-          "units_supplied_at_rate": "each world ingests inside the planned machine hours and the write and background rate falls inside 1.5 times the preregistration's planned rate"
+          "units_supplied_at_rate": "the paid pilot's write-and-drain time per session, times a world's session count, is inside the planned machine hours; a keyless capacity check writes all of bg1-dev-12 with provider calls answered by the fake upstream and finishes (or the system is named in the freeze amendment and checked on its first counted world); and the write and background rate falls inside 1.5 times the preregistration's planned rate"
         },
         {
           "arm": "baseline-file-agent",
           "max_budget_fraction": 0.1,
-          "part_under_test_ran": "on worlds bg1-dev-11 and bg1-dev-12 the system ingests with no provider write lines, completes at least 20 counted write-to-queryable probes with a time or a miss and no probe search billed to another phase, records hosting samples with nonzero resident memory, and every pilot answer gets a matcher class",
+          "part_under_test_ran": "on world bg1-dev-11, writing only its first 60 sessions (40 as the bulk import, then 20 one at a time as probes), with four seeded questions per reader, the system ingests with no provider write lines, completes at least 20 counted write-to-queryable probes with a time or a miss and no probe search billed to another phase, records hosting samples with nonzero resident memory, and every pilot answer gets a matcher class",
           "judge_passes": "no model judge: answers are scored by the deterministic key matcher eval/runner/bg1/match.ts",
-          "units_supplied_at_rate": "each world ingests inside the planned machine hours and the write and background rate falls inside 1.5 times the preregistration's planned rate"
+          "units_supplied_at_rate": "the paid pilot's write-and-drain time per session, times a world's session count, is inside the planned machine hours; a keyless capacity check writes all of bg1-dev-12 with provider calls answered by the fake upstream and finishes (or the system is named in the freeze amendment and checked on its first counted world); and the write and background rate falls inside 1.5 times the preregistration's planned rate"
         },
         {
           "arm": "baseline-none",
           "max_budget_fraction": 0.1,
-          "part_under_test_ran": "on worlds bg1-dev-11 and bg1-dev-12 every pilot question is read by both readers with usage fields recorded, gets a matcher class, and no system provider line exists",
+          "part_under_test_ran": "on world bg1-dev-11 four seeded questions are read by each reader with usage fields recorded, each gets a matcher class, and no system provider line exists",
           "judge_passes": "no model judge: answers are scored by the deterministic key matcher eval/runner/bg1/match.ts",
           "units_supplied_at_rate": "every pilot question is read inside the planned reader rate"
         },
         {
           "arm": "baseline-full-context",
           "max_budget_fraction": 0.1,
-          "part_under_test_ran": "on worlds bg1-dev-11 and bg1-dev-12 both readers read the whole world with prompt caching, the second and later reads record cached input in their usage fields, and every answer gets a matcher class",
+          "part_under_test_ran": "on world bg1-dev-11 each reader reads the whole world with prompt caching for four seeded questions, the second and later reads record cached input in their usage fields, and every answer gets a matcher class",
           "judge_passes": "no model judge: answers are scored by the deterministic key matcher eval/runner/bg1/match.ts",
-          "units_supplied_at_rate": "each world ingests inside the planned machine hours and the write and background rate falls inside 1.5 times the preregistration's planned rate"
+          "units_supplied_at_rate": "every pilot read fits the reader's input limit and its input dollars per token fall inside 1.5 times the planned reader rate"
         }
       ],
       "judge_check": {
