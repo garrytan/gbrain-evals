@@ -34,9 +34,8 @@ describe('bn10-cells.json', () => {
     expect(m.cells[0].shards).toBe(10);
   });
 
-  test('the stack runs the gbrain commit package.json pins', () => {
-    const pin = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')).dependencies.gbrain as string;
-    expect(pin.endsWith(`#${BN10_ASSUMPTIONS.gbrain_sha}`)).toBe(true);
+  test('the stack runs the gbrain commit its counted runs froze, v0.60.748.0, wherever package.json has since moved', () => {
+    expect(BN10_ASSUMPTIONS).toMatchObject({ gbrain_sha: '7f162344652afc725793dd476945716e09d26104', gbrain_version: 'v0.60.748.0' });
     for (const c of [...m.cells, ...m.smoke_cells]) expect(c.launch?.env.GBRAIN_SHA).toBe(BN10_ASSUMPTIONS.gbrain_sha);
   });
 

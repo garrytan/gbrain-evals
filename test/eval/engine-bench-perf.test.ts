@@ -1,5 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { spawnSync } from 'node:child_process';
+import { mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
   DEFAULT_MARGINS, buildDataset, hashEmbed, higherIsBetter, lowerIsBetter, marginsFromPrereg, medianRatio, missingMetric, pageMarkdown,
@@ -119,9 +121,10 @@ describe('margins and arguments', () => {
     expect(parseArgs(['--dev']).engines).toEqual(['pglite', 'postgres', 'rust']);
     expect(() => parseArgs(['--dev', '--engines', 'sqlite'])).toThrow(/Unknown engine/);
   });
-  test('the rust arm refuses with exit code 3 until the gbrain build carries the engine', () => {
-    const r = spawnSync(process.execPath, ['eval/runner/engine-bench/perf.ts', '--dev', '--engines', 'pglite,rust', '--scale', '20'], { cwd: REPO, encoding: 'utf-8', env: { PATH: process.env.PATH ?? '', HOME: process.env.HOME ?? '' }, timeout: 60_000 });
+  test('the rust arm refuses with exit code 3 when no Rust addon is installed', () => {
+    const home = mkdtempSync(join(tmpdir(), 'perf-rust-home-'));
+    const r = spawnSync(process.execPath, ['eval/runner/engine-bench/perf.ts', '--dev', '--engines', 'pglite,rust', '--scale', '20'], { cwd: REPO, encoding: 'utf-8', env: { PATH: process.env.PATH ?? '', HOME: home, GBRAIN_HOME: home }, timeout: 60_000 });
     expect(r.status).toBe(3);
-    expect(r.stderr).toMatch(/rust_kind_unsupported/);
+    expect(r.stderr).toMatch(/rust_engine_addon_missing/);
   }, 90_000);
 });

@@ -97,11 +97,38 @@ describe('cliEngineConfig', () => {
 });
 
 describe('openEvalEngine', () => {
-  test('rust refuses on the pinned gbrain, whose factory does not construct it', async () => {
+  test('rust refuses on the pinned gbrain when no Rust addon is installed', async () => {
     const gut = resolveGbrainUnderTest(null);
     const err = await openEvalEngine({ gut, kind: 'rust', databasePath: '/nowhere' }).catch(e => e);
     expect(err).toBeInstanceOf(EvalEngineUnavailable);
-    expect(err.reason).toBe('rust_kind_unsupported');
+    expect(err.reason).toBe('rust_engine_addon_missing');
+  });
+  test('on the pinned gbrain, a stray addon in the gbrain home that the release manifest does not name is refused as a mismatch on rust and never reached by pglite', async () => {
+    const gut = resolveGbrainUnderTest(null);
+    const { detectAddonTarget } = await import(join(gut.root, 'src/core/rust-engine/addon-target.ts'));
+    const target = detectAddonTarget();
+    const home = mkdtempSync(join(tmpdir(), 'eval-engine-stray-addon-'));
+    const rustDir = join(home, '.gbrain', 'engines', 'rust');
+    mkdirSync(join(rustDir, 'stray'), { recursive: true });
+    writeFileSync(join(rustDir, 'stray', `${target}.node`), 'not an addon');
+    writeFileSync(join(rustDir, `manifest-${gut.version}.json`), JSON.stringify({ gbrain_version: gut.version, engine_abi: 1, engine_build: 'stray', targets: { [target]: { asset: `${target}.node`, sha256: '0'.repeat(64), bytes: 12 } } }));
+    const saved = process.env.GBRAIN_HOME;
+    process.env.GBRAIN_HOME = home;
+    try {
+      const err = await openEvalEngine({ gut, kind: 'rust', databasePath: join(home, 'b.rust') }).catch(e => e);
+      expect(err).toBeInstanceOf(EvalEngineUnavailable);
+      expect(err.reason).toBe('rust_engine_addon_mismatch');
+      expect(err.message).toContain('SHA-256');
+      const { engine, kind } = await openEvalEngine({ gut, kind: 'pglite' });
+      try {
+        expect(kind).toBe('pglite');
+        expect(engine.kind).toBe('pglite');
+      } finally {
+        await engine.disconnect();
+      }
+    } finally {
+      process.env.GBRAIN_HOME = saved;
+    }
   });
   test('rust refuses when the factory does not know the kind', async () => {
     const gut = fakeGbrain('export async function constructEngine(c) { throw new Error(`Unknown engine type: "${c.engine}"`); }');
