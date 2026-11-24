@@ -279,6 +279,7 @@ export function scan(text: string, gold: Gold, sent: string): LeakHits {
 /** A response with target values and volatile fields masked, for the protected-versus-ghost comparison. */
 export function normalizeForOracle(text: string, masks: readonly string[]): string {
   let t = text
+    .replace(/\beyJ[A-Za-z0-9_+/-]+=*/g, tok => { try { const d = Buffer.from(tok.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8'); JSON.parse(d); return '<b64:' + d + '>'; } catch { return '<b64>'; } })
     .replace(/\[gbrain notice [^\]]*\][^\n]*(\n(why|fix|next|docs):[^\n]*)*/g, '<notice>')
     .replace(/"gbrain_notices"\s*:\s*\[(?:[^\[\]]|\[[^\]]*\])*\]\s*,?/g, '')
     .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, '<uuid>')
