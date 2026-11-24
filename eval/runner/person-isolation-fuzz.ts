@@ -557,9 +557,17 @@ async function openCli(gut: GbrainUnderTest, brain: Brain, http: TransportHandle
   const call: Call = async (caller, op, args) => withTimeout((async () => {
     const argv = cliArgv(ops.get(op)!, args);
     if (!argv) return { exposed: false, ok: false, error_code: 'not_cli', text: '' };
+    let thinEnv: NodeJS.ProcessEnv | undefined;
+    if (caller.client !== 'host') {
+      try { thinEnv = await thin(caller.client); } catch (e) {
+        const text = String(e instanceof Error ? e.message : e);
+        if (/returned 40[13]|token rejected|invalid_client|access_member_disabled/.test(text)) return { exposed: false, ok: false, error_code: 'thin_init_refused', text };
+        throw e;
+      }
+    }
     const r = caller.client === 'host'
       ? await brain.cli([...argv, '--as', caller.as!])
-      : await brain.cli(argv, undefined, await thin(caller.client));
+      : await brain.cli(argv, undefined, thinEnv);
     const text = r.stdout + '\n' + r.stderr;
     return { exposed: !DENIAL.test(text) || r.code === 0, ok: r.code === 0, error_code: r.code === 0 ? undefined : 'exit_' + r.code, text };
   })(), TIMEOUT_MS.cli);
@@ -746,7 +754,11 @@ function account(s: CellState, spec: Pick<ProbeSpec, 'op' | 'target' | 'kind' | 
   const op = spec.op.name;
   bump(s, op, caller, cond, 'probes');
   noteServed(s, op, caller, o);
-  if (o.harness) { bump(s, op, caller, cond, 'harness'); s.harnessByOp.set(op, (s.harnessByOp.get(op) ?? 0) + 1); return { leaked: false }; }
+  if (o.harness) {
+    bump(s, op, caller, cond, 'harness'); s.harnessByOp.set(op, (s.harnessByOp.get(op) ?? 0) + 1);
+    if ((s.harnessByOp.get(op) ?? 0) <= 5) appendFileSync(leakFile.replace(/leaks\.jsonl$/, 'harness.jsonl'), JSON.stringify({ op, caller: caller.label, cond, args, error_code: o.error_code, text: o.text.slice(0, 2000) }) + '\n');
+    return { leaked: false };
+  }
   const sent = JSON.stringify(args) + '|' + (caller.actor ?? '') + '|' + (caller.acting_user ?? '');
   const hits = scanAs(s, caller, sent, o);
   const record = (contract: string, detail: string[]) => {
