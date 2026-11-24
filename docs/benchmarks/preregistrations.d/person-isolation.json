@@ -18,7 +18,7 @@
         },
         {
           "if": "any content leak, identifier leak, identity slip or write-shaped slip on any cell",
-          "then": "the repro goes privately to gbrain's maintainers as a severe hotfix the same day; no public text names the path until the fix ships; the gate lands in CI once green on the fixed release, named by a dated amendment before the re-run"
+          "then": "the repro and per-operation detail go privately to gbrain's maintainers as a severe hotfix the same day; public CI and receipts show only the total and FAIL; the results pull request stays unmerged and no public text names the path until the fix ships; the gate lands in CI once green on the fixed release, named by a dated amendment before the re-run"
         },
         {
           "if": "only existence oracles",
@@ -29,7 +29,7 @@
           "then": "FIX-METHOD: fixed by a dated amendment before the counted run if seen in the pilot, otherwise reported uncovered on that cell and carried as a known gap in the CI gate"
         },
         {
-          "if": "a cell is invalid (harness errors, failed writes)",
+          "if": "a cell is invalid (harness errors, failed writes, or a must-fail control that passed)",
           "then": "that cell is re-run after the harness is fixed, by a dated amendment, and publishes no number"
         }
       ],
@@ -43,50 +43,50 @@
       ],
       "models": [
         {
-          "model": "scripted-echo (in-process test seam, no provider)",
-          "role": "simulator"
+          "model": "none (keyless; no model is called)",
+          "role": "protocol-fixed"
         }
       ],
       "pilots": [
         {
           "arm": "mcp-dispatch-pglite",
           "max_budget_fraction": 0.1,
-          "part_under_test_ran": "on seed 20261124, every channel's write receipt is committed for every person and each mandatory operation's positive control reads the owner's canary at least once",
+          "part_under_test_ran": "on seed 20261124, every channel's write receipt is committed for every person, each mandatory operation's positive control reads the owner's canary at least once, and both must-fail controls (planted canary, operator misgrant) are caught",
           "judge_passes": "no model judge: leaks are exact canary and identifier matches against the generator ledger",
           "units_supplied_at_rate": "the world seeds through the CLI and the transport and the cell's stratified tenth finishes inside its time limit (30 minutes in process, 60 minutes over HTTP and the CLI)"
         },
         {
           "arm": "mcp-dispatch-postgres",
           "max_budget_fraction": 0.1,
-          "part_under_test_ran": "on seed 20261124, every channel's write receipt is committed for every person and each mandatory operation's positive control reads the owner's canary at least once",
+          "part_under_test_ran": "on seed 20261124, every channel's write receipt is committed for every person, each mandatory operation's positive control reads the owner's canary at least once, and both must-fail controls (planted canary, operator misgrant) are caught",
           "judge_passes": "no model judge: leaks are exact canary and identifier matches against the generator ledger",
           "units_supplied_at_rate": "the world seeds through the CLI and the transport and the cell's stratified tenth finishes inside its time limit (30 minutes in process, 60 minutes over HTTP and the CLI)"
         },
         {
           "arm": "http-pglite",
           "max_budget_fraction": 0.1,
-          "part_under_test_ran": "on seed 20261124, every channel's write receipt is committed for every person and each mandatory operation's positive control reads the owner's canary at least once",
+          "part_under_test_ran": "on seed 20261124, every channel's write receipt is committed for every person, each mandatory operation's positive control reads the owner's canary at least once, and both must-fail controls (planted canary, operator misgrant) are caught",
           "judge_passes": "no model judge: leaks are exact canary and identifier matches against the generator ledger",
           "units_supplied_at_rate": "the world seeds through the CLI and the transport and the cell's stratified tenth finishes inside its time limit (30 minutes in process, 60 minutes over HTTP and the CLI)"
         },
         {
           "arm": "http-postgres",
           "max_budget_fraction": 0.1,
-          "part_under_test_ran": "on seed 20261124, every channel's write receipt is committed for every person and each mandatory operation's positive control reads the owner's canary at least once",
+          "part_under_test_ran": "on seed 20261124, every channel's write receipt is committed for every person, each mandatory operation's positive control reads the owner's canary at least once, and both must-fail controls (planted canary, operator misgrant) are caught",
           "judge_passes": "no model judge: leaks are exact canary and identifier matches against the generator ledger",
           "units_supplied_at_rate": "the world seeds through the CLI and the transport and the cell's stratified tenth finishes inside its time limit (30 minutes in process, 60 minutes over HTTP and the CLI)"
         },
         {
           "arm": "cli-pglite",
           "max_budget_fraction": 0.1,
-          "part_under_test_ran": "on seed 20261124, every channel's write receipt is committed for every person and each mandatory operation's positive control reads the owner's canary at least once",
+          "part_under_test_ran": "on seed 20261124, every channel's write receipt is committed for every person, each mandatory operation's positive control reads the owner's canary at least once, and both must-fail controls (planted canary, operator misgrant) are caught",
           "judge_passes": "no model judge: leaks are exact canary and identifier matches against the generator ledger",
           "units_supplied_at_rate": "the world seeds through the CLI and the transport and the cell's stratified tenth finishes inside its time limit (30 minutes in process, 60 minutes over HTTP and the CLI)"
         },
         {
           "arm": "cli-postgres",
           "max_budget_fraction": 0.1,
-          "part_under_test_ran": "on seed 20261124, every channel's write receipt is committed for every person and each mandatory operation's positive control reads the owner's canary at least once",
+          "part_under_test_ran": "on seed 20261124, every channel's write receipt is committed for every person, each mandatory operation's positive control reads the owner's canary at least once, and both must-fail controls (planted canary, operator misgrant) are caught",
           "judge_passes": "no model judge: leaks are exact canary and identifier matches against the generator ledger",
           "units_supplied_at_rate": "the world seeds through the CLI and the transport and the cell's stratified tenth finishes inside its time limit (30 minutes in process, 60 minutes over HTTP and the CLI)"
         }
