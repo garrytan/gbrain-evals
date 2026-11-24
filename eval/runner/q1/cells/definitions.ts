@@ -601,6 +601,13 @@ export function f6ExtractionUsd(tokens: number): number {
 export const isBg1Benchmark = (benchmark: string) => benchmark === 'bg1' || benchmark === 'bg1c' || benchmark === 'bg1-dev';
 
 /**
+ * The changing-facts benchmarks whose cells spend only inside a granted paid window: BG1's (isBg1Benchmark) and Set W
+ * (bgw), the weekly outcome line's worlds. Every gate that guards money or sealed data uses this; BG1's measured rates and
+ * hours (bg1Rates) stay isBg1Benchmark's, because a weekly cell carries its own estimate and hours (weekly-line.ts).
+ */
+export const isWindowedBenchmark = (benchmark: string) => isBg1Benchmark(benchmark) || benchmark === 'bgw';
+
+/**
  * BG1's rates (eval/runner/q1/cells/bg1.ts and eval/runner/bg1/pricing.ts), each a named assumption stage 1 replaces
  * with a measurement on the three dev worlds. They live apart from Q1's, F6's and RS1's so those manifests stay
  * byte-identical. gbrain runs RS1's stable tag and rs1-stable configuration (shimLaunch), with no tuning on BG1.

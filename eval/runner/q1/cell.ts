@@ -82,12 +82,12 @@ import { DecideError, renderOperatorMessage } from '../decisions/errors.ts';
 import { loadSplit } from '../decisions/splits.ts';
 import { ndcgAtK, percentile, recallAllAtK, recallAnyAtK } from '../metrics.ts';
 import { DEFAULT_ROUTE_CAPS, ProxyControl, upstreamTrouble, type Meter, type Phase } from '../metering-proxy.ts';
-import { BG1_SET, BG1C_SET, bg1RunClock, bg1SealedSet, bg1UnitConversations, bg1WorldEnd, loadCorpus, readBg1Manifest, readRs1Manifest, rs1UnitConversations, type Bg1Manifest, type Corpus, type MemoryQuestion, type Rs1Manifest, type Session } from '../memory-qa/corpus.ts';
+import { BG1_SET, BG1C_SET, bg1RunClock, fromHome, bg1SealedSet, bg1UnitConversations, bg1WorldEnd, loadCorpus, readBg1Manifest, readRs1Manifest, rs1UnitConversations, type Bg1Manifest, type Corpus, type MemoryQuestion, type Rs1Manifest, type Session } from '../memory-qa/corpus.ts';
 import { ContextStore } from '../memory-qa/arms.ts';
 import { instrumentFor, type Instrument } from '../memory-qa/instruments.ts';
 import { DEFAULT_MAX_ATTEMPTS, OUTCOMES, type Outcome } from '../memory-qa/outcomes.ts';
 import { ChatClient, chatWithReceipts, isCompatModel, judgeAnswer, READER_TEMPLATE, type ChatLike } from '../memory-qa/qa-v2.ts';
-import { answerId, answerRecord, judgmentKey, readerAttempts, readRecords, RecordLog, sha256, WEEKLY_RUN_ENV, WEEKLY_RUN_ID, type AnswerPayload, type AnswerRecord, type JudgmentRecord, type Q1Row, type ReaderAttempt, type WeeklyRunStamp } from '../memory-qa/records.ts';
+import { answerId, answerRecord, judgmentKey, readerAttempts, readRecords, RecordLog, sha256, WEEKLY_CELLS_ENV, WEEKLY_CELLS_SHA256_ENV, WEEKLY_RUN_ENV, WEEKLY_RUN_ID, type AnswerPayload, type AnswerRecord, type JudgmentRecord, type Q1Row, type ReaderAttempt, type WeeklyRunStamp } from '../memory-qa/records.ts';
 import { failureRow, hashEmbed, readinessProbe, selectQuestions } from '../memory-qa/run-systems.ts';
 import { checkSealedDestinations, sealedPaths } from '../memory-qa/sealed-profile.ts';
 import { ledgerCaps, PaidArmRefusal, requirePaidArm, requireRs1Window, WindowRefusal } from '../paid-arm.ts';
@@ -107,9 +107,11 @@ import { ALL_SETS, definitionProblems, estimateCell, F6_ASSUMPTIONS, frontierJud
 import { F6_MANIFEST_PATH, loadF6Manifest } from './cells/f6.ts';
 import { loadRS1Manifest, stage1OverCap, type RS1Manifest } from './cells/rs1.ts';
 import { loadBN10Manifest } from './cells/bn10.ts';
-import { bg1Stage1OverCap, loadBG1Manifest, type BG1Manifest } from './cells/bg1.ts';
+import { bg1Stage1OverCap, listPrice, loadBG1Manifest, type BG1Manifest } from './cells/bg1.ts';
 import { BG1C_MANIFEST_PATH, type BG1CManifest } from './cells/bg1c.ts';
-import { BG1C_BLOCK_IDS, isBg1Benchmark } from './cells/definitions.ts';
+import { BG1C_BLOCK_IDS, isWindowedBenchmark } from './cells/definitions.ts';
+import type { WeeklyLineRereadPlan } from './cells/weekly-line.ts';
+import { BGW_CAMPAIGN } from '../memory-qa/bg1-names.ts';
 import { ledgerCaps as bg1LedgerCaps, requireRs1Window as requireBg1Window, WindowRefusal as Bg1WindowRefusal } from '../paid-arm.ts';
 import { exitCodeOf, refuse, renderMessage, ScoreboardError, type ScoreboardMessage } from './scoreboard-errors.ts';
 import type { UsageReceipt } from '../usage-receipt.ts';
@@ -268,6 +270,31 @@ export function weeklyRunStamp(def: Pick<CellDefinition, 'id' | 'week'>, env: Re
       fix: { next: 'ask_user', user_message: `launch the weekly cells through the weekly runner's unit order, which names the run id (${WEEKLY_RUN_ENV})` } });
   }
   return { run_id, week: def.week.launch };
+}
+
+/**
+ * A weekly-line cell's worlds (#619 OV3): exactly its week's (def.week.worlds), never the rest of its Set W batch. Refuses
+ * before any corpus is read when the environment names another batch (GBRAIN_EVALS_BGW_BATCH), another unit scope
+ * (GBRAIN_EVALS_BGW_UNIT) or another world end (GBRAIN_EVALS_BG1_WORLD_END) than the week's; null for any other cell.
+ */
+export function weekScope(def: Pick<CellDefinition, 'id' | 'week'>, env: Record<string, string | undefined>): string[] | null {
+  if (!def.week) return null;
+  const w = def.week, worlds = [...w.worlds].sort().join(',');
+  const want: Record<string, string> = { GBRAIN_EVALS_BGW_BATCH: w.batch, GBRAIN_EVALS_BGW_UNIT: worlds, GBRAIN_EVALS_BG1_WORLD_END: w.world_end };
+  const held = (k: string) => k === 'GBRAIN_EVALS_BGW_UNIT' ? env[k]!.split(',').map(s => s.trim()).filter(Boolean).sort().join(',') : env[k];
+  const off = Object.keys(want).filter(k => env[k] !== undefined && held(k) !== want[k]);
+  if (off.length) throw refuse({ code: 'PREFLIGHT_FAILED', message: `${def.id} runs week ${w.launch} (batch ${w.batch}, worlds ${worlds}, world end ${w.world_end}), and ${off.map(k => `${k} is ${env[k]}`).join(', ')}`,
+    why: "a weekly cell reads only its own week's worlds, from its batch, at its week's world end", fix: { next: 'ask_user', user_message: "launch the weekly cells through the weekly runner's unit order, which names the week's batch, worlds and world end" } });
+  return [...w.worlds];
+}
+
+/** A weekly-line cell's corpus holds exactly its week's worlds (weekScope): none outside the week and none missing. */
+export function weekCorpusProblems(def: Pick<CellDefinition, 'id' | 'week'>, corpus: Pick<Corpus, 'conversations'>): string | null {
+  if (!def.week) return null;
+  const held = corpus.conversations.map(c => c.id), week = def.week.worlds;
+  const outside = held.filter(id => !week.includes(id)), missing = week.filter(id => !held.includes(id));
+  if (!outside.length && !missing.length) return null;
+  return `${def.id}'s corpus ${outside.length ? `holds ${outside.join(', ')}, outside week ${def.week.launch}` : ''}${outside.length && missing.length ? ' and ' : ''}${missing.length ? `is missing week ${def.week.launch}'s ${missing.join(', ')}` : ''}`;
 }
 
 export function needsCustody(def: Pick<CellDefinition, 'benchmark' | 'split'>): boolean {
@@ -670,12 +697,15 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
 
   // Custody before anything reads the corpus.
   const weeklyRun = weeklyRunStamp(def, env);
+  const week = weekScope(def, env);
   const custody = !deps.corpus && needsCustody(def);
   if (custody) custodyGate(def, out, env, `q1 cell ${def.id}`);
   mkdirSync(out, { recursive: true });
   const shard = opts.shard ?? { index: 0, count: 1 };
-  const unitConvs = !def.kept_units ? null : def.benchmark === 'bg1' || def.benchmark === 'bg1c' ? bg1KeptUnit(def, shard, deps.bg1Manifest) : keptUnit(def, shard, deps.rs1Manifest);
+  const unitConvs = week ?? (!def.kept_units ? null : def.benchmark === 'bg1' || def.benchmark === 'bg1c' ? bg1KeptUnit(def, shard, deps.bg1Manifest) : keptUnit(def, shard, deps.rs1Manifest));
   const corpus = deps.corpus ?? loadCorpus(def.benchmark, undefined, unitConvs ? new Set(unitConvs) : devOnly(def) ?? undefined, { keyless: opts.keyless });
+  const offWeek = weekCorpusProblems(def, corpus);
+  if (offWeek) throw refuse({ code: 'PREFLIGHT_FAILED', message: offWeek, why: "a weekly cell answers only its own week's worlds", fix: { next: 'report' } });
   const selected = scheduledQuestions(def, corpus, opts.limit ?? null).filter(q => !unitConvs || unitConvs.includes(q.conversation));
   const convIds = [...new Set(selected.map(q => q.conversation))].sort().filter((_, i) => unitConvs || i % shard.count === shard.index);
   const armQs = new Map(arms.map(a => [a.id, new Set((a.questions ? selectCellQuestions(selected, a.questions) : selected).map(q => q.id))]));
@@ -1448,14 +1478,14 @@ const VM_VCPU = 4;
 /** The provider keys a cell's VM receives (ubi-runner --pass): only its metering proxy reads them; the cell sees dummy keys. */
 const PROVIDER_KEYS = { openai: 'OPENAI_API_KEY', anthropic: 'ANTHROPIC_API_KEY', voyage: 'VOYAGE_API_KEY', particle: COMPAT_PROVIDERS.particle.key_env } as const;
 /** Waves: T1 first (S1 shim shards packed under the overnight cap), then each T2 set after T1 settles, in the preregistered scope-reduction order reversed. */
-const T2_WAVES: Record<string, number> = { 'T2-S2b': 1, 'T2-S3': 2, 'T2-S2a': 3, 'T2-S4-S5': 4, 'F6-T2': 1, 'F6-D8': 2, 'F6-S4': 3, 'F6-dry': 1, 'F6-P1': 1, 'RS1-S1': 1, RS1: 1, 'BG1-S1': 1, BG1: 1, 'BG1C-smoke': 1, BG1C: 1 };
+const T2_WAVES: Record<string, number> = { 'T2-S2b': 1, 'T2-S3': 2, 'T2-S2a': 3, 'T2-S4-S5': 4, 'F6-T2': 1, 'F6-D8': 2, 'F6-S4': 3, 'F6-dry': 1, 'F6-P1': 1, 'RS1-S1': 1, RS1: 1, 'BG1-S1': 1, BG1: 1, 'BG1C-smoke': 1, BG1C: 1, BGW: 1 };
 
 /** In-process systems whose adapter drives the bundle's own container: the unit builds it at setup and brings it up around the run like a shim stack (A19). */
 const IN_PROCESS_STACKS = new Set(['ext-agent-runtime']);
 
 /** One launch unit per cell, or per conversation shard for an S1 shim cell, in the shootout campaign's cell format; `addons` adds the manifest's addon_cells (a unit selection's campaign). */
-export type CellManifestId = 'q1' | 'f6' | 'rs1' | 'bg1' | 'bg1c' | 'bn10';
-const CELL_MANIFESTS: readonly CellManifestId[] = ['q1', 'f6', 'rs1', 'bg1', 'bg1c', 'bn10'];
+export type CellManifestId = 'q1' | 'f6' | 'rs1' | 'bg1' | 'bg1c' | 'bn10' | 'weekly';
+const CELL_MANIFESTS: readonly CellManifestId[] = ['q1', 'f6', 'rs1', 'bg1', 'bg1c', 'bn10', 'weekly'];
 
 export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight?: number; cellManifest?: CellManifestId; addons?: boolean; paidWindow?: { unit: string; cap_usd: number } } = {}): CellSpec[] {
   const perWave = Math.floor((opts.vcpuCapNight ?? 200) / VM_VCPU);
@@ -1603,6 +1633,34 @@ export function bg1CampaignManifest(m: Manifest, opts: { smoke?: boolean; sealed
   }) };
 }
 
+/**
+ * One week's campaign manifest (#619 OV1): the week's cells from its cells.json as launch units of the existing Q1
+ * campaign (campaignManifest, campaignCells), each run naming `--manifest weekly` inside the granted paid window, as BG1's
+ * campaigns do. Every unit's command exports the week's run id (WEEKLY_RUN_ENV, which stamps every record the unit writes),
+ * the SHA-256 of the cells.json bytes it must find (WEEKLY_CELLS_SHA256_ENV) and the week's world end, so the VM's run, its
+ * loader and its records all name the same week. Each unit is sealed and carries its week (weekly_unit: the Set W batch and
+ * the week's worlds), so the custodian pushes only those worlds and the cells.json (shootout-cell.ts weeklyCustodyPush), and
+ * the campaign records the SHA-256 of the batch's filled manifest (`bgwManifest`, else GBRAIN_EVALS_BGW_MANIFEST) and of
+ * the cells.json, which Campaign.custodyPush holds every unit to. Refused without a granted window before any file is written.
+ */
+export function weeklyCampaignManifest(w: WeeklyCellsFile, o: { cellsPath: string; window: string; cap_usd: number; bgwManifest?: string }): Q1Campaign {
+  if (!/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(o.window ?? '') || !(o.cap_usd > 0)) throw refuse({ code: 'PAID_FLAGS_MISSING', message: 'a weekly campaign needs the granted paid window and its cap',
+    why: 'every weekly unit spends real keys, so its command carries the granted window and the unit refuses outside it', fix: { next: 'run', argv: ['bun', 'eval/runner/weekly-line/runner.ts', 'launch', '--run', '<run dir>', '--window-granted', '<unit>', '--window-cap-usd', '<cap>'] } });
+  const week = w.cells[0]?.week;
+  if (!week || w.cells.some(c => JSON.stringify(c.week) !== JSON.stringify(week))) throw refuse(usage(`${o.cellsPath} does not hold one week's cells`));
+  const campaign = campaignManifest(weeklyManifest(w, o.cap_usd), { units: { campaign_id: `q1-scoreboard-${w.run_id}`, cap_usd: o.cap_usd, units: w.cells.map(c => c.id), cell_manifest: 'weekly' } });
+  const cellsSha = sha256File(o.cellsPath);
+  const filled = o.bgwManifest ?? fromHome(process.env.GBRAIN_EVALS_BGW_MANIFEST);
+  const held = filled && existsSync(filled) ? sha256File(filled) : null;
+  const out = ' --out "$SHOOTOUT_OUT"';
+  const exports = `export ${WEEKLY_RUN_ENV}=${w.run_id}; export ${WEEKLY_CELLS_SHA256_ENV}=${cellsSha}; export GBRAIN_EVALS_BG1_WORLD_END=${week.world_end}; `;
+  return { ...campaign, executes: [...(campaign.executes ?? []), ...BG1_DATA_PATHS], weekly_cells_sha256: cellsSha, ...(held ? { bgw_manifest_sha256: held } : {}), cells: campaign.cells.map(cell => {
+    if (cell.command.split(out).length !== 2) throw new Error(`weekly unit ${cell.id} has no single${out} in its command to put the paid window before`);
+    return { ...cell, sealed: true, weekly_unit: { batch: week.batch, worlds: [...week.worlds] },
+      command: `${exports}${cell.command.replace(out, () => ` --paid-window ${o.window} --window-cap-usd ${o.cap_usd}${out}`)}` };
+  }) };
+}
+
 export function renderPlan(m: Manifest): string {
   const cells = campaignCells(m);
   const waves = [...new Set(cells.map(c => c.wave!))].sort((a, b) => a - b).map(w => ({ w, n: cells.filter(c => c.wave === w).length, hours: Math.max(...cells.filter(c => c.wave === w).map(c => c.expected_hours ?? 0)), blocks: [...new Set(cells.filter(c => c.wave === w).map(c => c.block))].join(', ') }));
@@ -1632,17 +1690,53 @@ export function renderPlan(m: Manifest): string {
 /** BG1-C's cell manifest (eval/runner/q1/cells/bg1c-cells.json, written by bg1c.ts). */
 export const loadBG1CManifest = (path = BG1C_MANIFEST_PATH) => JSON.parse(readFileSync(path, 'utf8')) as BG1CManifest;
 
-/** The cell manifest `--manifest` names: q1 (default), f6, rs1, bg1, bg1c or bn10. */
-export function loadCellManifest(which?: string): Manifest {
-  if (which !== undefined && !(CELL_MANIFESTS as readonly string[]).includes(which)) throw refuse(usage(`--manifest takes q1 or f6 (or rs1 for RS1's cells, bg1 for BG1's, bg1c for BG1-C's, bn10 for the BEAM-10M re-measure's), not ${which}`));
-  return which === 'f6' ? loadF6Manifest() : which === 'rs1' ? loadRS1Manifest() : which === 'bg1' ? loadBG1Manifest() : which === 'bg1c' ? loadBG1CManifest() : which === 'bn10' ? loadBN10Manifest() : loadManifest();
+/** The cell manifest `--manifest` names: q1 (default), f6, rs1, bg1, bg1c, bn10, or weekly (the running week's cells.json, loadWeeklyCells). */
+export function loadCellManifest(which?: string, env: Record<string, string | undefined> = process.env): Manifest {
+  if (which !== undefined && !(CELL_MANIFESTS as readonly string[]).includes(which)) throw refuse(usage(`--manifest takes q1 or f6 (or rs1 for RS1's cells, bg1 for BG1's, bg1c for BG1-C's, bn10 for the BEAM-10M re-measure's, weekly for the running week of the weekly line), not ${which}`));
+  return which === 'f6' ? loadF6Manifest() : which === 'rs1' ? loadRS1Manifest() : which === 'bg1' ? loadBG1Manifest() : which === 'bg1c' ? loadBG1CManifest() : which === 'bn10' ? loadBN10Manifest() : which === 'weekly' ? weeklyManifest(loadWeeklyCells(env)) : loadManifest();
 }
 
-/** The cell manifest a BG1 or BG1-C cell is defined in: bg1c for BG1-C's blocks, else bg1. */
-export const bg1CellManifest = (def: Pick<CellDefinition, 'block'>): CellManifestId => ((BG1C_BLOCK_IDS as readonly string[]).includes(def.block) ? 'bg1c' : 'bg1');
+/** The weekly runner's cells.json (weekly-line/runner.ts plan): one week's cell definitions and particle-1 re-read plans, under its run id. */
+export interface WeeklyCellsFile { run_id: string; cells: CellDefinition[]; rereads: WeeklyLineRereadPlan[] }
 
-export function findCell(id: string, given?: Manifest, manifest?: string): CellDefinition {
-  const m = given ?? loadCellManifest(manifest);
+/**
+ * The running week's cells.json, as `--manifest weekly` resolves a weekly unit (#619 OV1): the file WEEKLY_CELLS_ENV
+ * names, whose bytes must hash to WEEKLY_CELLS_SHA256_ENV (the launch's record, so a re-planned or edited file refuses)
+ * and whose run id must be WEEKLY_RUN_ENV's, the run every record of the unit is stamped with. Refuses before any corpus,
+ * client or output exists.
+ */
+export function loadWeeklyCells(env: Record<string, string | undefined> = process.env): WeeklyCellsFile {
+  const path = fromHome(env[WEEKLY_CELLS_ENV]), want = env[WEEKLY_CELLS_SHA256_ENV], run = env[WEEKLY_RUN_ENV];
+  const fail = (message: string) => refuse({ code: 'PREFLIGHT_FAILED', message, why: 'a weekly unit runs exactly the cells its week planned and launched, under that week\'s run id',
+    fix: { next: 'ask_user', user_message: `launch the weekly cells through the weekly runner's unit order, which names ${WEEKLY_CELLS_ENV}, ${WEEKLY_CELLS_SHA256_ENV} and ${WEEKLY_RUN_ENV}` } });
+  if (!path || !existsSync(path)) throw fail(`--manifest weekly reads the week's cells.json from ${WEEKLY_CELLS_ENV}, which ${path ? `names ${path}, a file that does not exist` : 'is not set'}`);
+  const bytes = readFileSync(path);
+  if (!want || sha256(bytes) !== want) throw fail(`${path} ${want ? `hashes to ${sha256(bytes).slice(0, 12)}, not the ${want.slice(0, 12)} the week's launch recorded` : `has no launch record: ${WEEKLY_CELLS_SHA256_ENV} is not set`}`);
+  const file = JSON.parse(bytes.toString('utf8')) as WeeklyCellsFile;
+  if (!run || !WEEKLY_RUN_ID.test(run) || file.run_id !== run) throw fail(`${path} holds run ${String(file.run_id)}'s cells, and ${WEEKLY_RUN_ENV} names ${run ? run : 'no run'}`);
+  return file;
+}
+
+/**
+ * A week's cells as a cell manifest, priced as BG1-C's is (bg1c.ts buildBG1CManifest): its cells, no smoke or add-on cells,
+ * list prices for every reader, re-reader and judge and gbrain's extraction model, one block (BGW) at the window cap the
+ * campaign names, and the line's campaign id, which gives its campaign gbrain's pinned Bun image as BG1-C's has.
+ */
+function weeklyManifest(w: WeeklyCellsFile, capUsd = 0): Manifest {
+  const usd = Math.round(w.cells.reduce((s, c) => s + c.estimate.usd, 0) * 100) / 100;
+  const readers = [...new Set(w.cells.flatMap(c => c.arms.flatMap(a => a.readers)))].sort();
+  const models = [...new Set([...readers, ...w.rereads.flatMap(r => [r.reader, ...r.judges]), ...w.cells.flatMap(c => c.arms.flatMap(a => a.frontier?.judges ?? [])), F6_ASSUMPTIONS.extraction.model])].sort();
+  return { readers, prices: Object.fromEntries(models.map(m => { const { input, output, cache_read, cache_write } = listPrice(m); return [m, { input, output, ...(cache_read !== undefined ? { cache_read } : {}), ...(cache_write !== undefined ? { cache_write } : {}) }]; })),
+    cells: w.cells, smoke_cells: [], addon_cells: [], blocks: [{ id: 'BGW', label: 'weekly outcome line', plan_usd: usd, estimate_usd: usd, cap_usd: capUsd }],
+    total_usd: usd, plan_total_usd: usd, cap_usd: capUsd, campaign_id: BGW_CAMPAIGN } as unknown as Manifest;
+}
+
+/** The cell manifest a BG1, BG1-C or Set W cell is defined in: weekly for the weekly line's block, bg1c for BG1-C's blocks, else bg1. */
+export const bg1CellManifest = (def: Pick<CellDefinition, 'block'>): CellManifestId => (def.block === 'BGW' ? 'weekly' : (BG1C_BLOCK_IDS as readonly string[]).includes(def.block) ? 'bg1c' : 'bg1');
+const windowedLabel = (def: Pick<CellDefinition, 'block'>) => ({ weekly: 'Set W', bg1c: 'BG1-C', bg1: 'BG1' } as Record<string, string>)[bg1CellManifest(def)];
+
+export function findCell(id: string, given?: Manifest, manifest?: string, env: Record<string, string | undefined> = process.env): CellDefinition {
+  const m = given ?? loadCellManifest(manifest, env);
   const inManifest = (x: Manifest) => x.cells.find(c => c.id === id) ?? (x.smoke_cells ?? []).find(c => c.id === id) ?? (x.addon_cells ?? []).find(c => c.id === id);
   const c = inManifest(m);
   const f6 = !given && !manifest && existsSync(F6_MANIFEST_PATH) ? loadF6Manifest() : null;
@@ -1681,14 +1775,29 @@ export async function bg1CellWindow(argv: string[], def: CellDefinition, env: Re
   const named = env.SHOOTOUT_LEASE_USD;
   const differs = !!named && held !== null && !(Math.abs(Number(named) - held) <= 1e-9);
   try {
-    requireBg1Window(argv, { what: `${bg1CellManifest(def) === 'bg1c' ? 'BG1-C' : 'BG1'} cell ${def.id}`, keyless: status?.keyless === true,
+    requireBg1Window(argv, { what: `${windowedLabel(def)} cell ${def.id}`, keyless: status?.keyless === true,
       caps: () => proxy ? [{ label: differs ? `the lease proxy's lease (its status reports ${held}, SHOOTOUT_LEASE_USD names ${named})` : "the lease proxy's lease (GET /__proxy/status in lease mode)", usd: differs ? null : held }] : bg1LedgerCaps(budgetOptionsFrom(argv).ledgerPath, one('--budget-run-id')) });
   } catch (e) {
     if (!(e instanceof Bg1WindowRefusal)) throw e;
-    throw refuse({ code: 'PAID_FLAGS_MISSING', message: e.message, why: 'every BG1 cell that can spend real keys runs inside a granted paid window, and no cap it spends under exceeds the window cap',
+    throw refuse({ code: 'PAID_FLAGS_MISSING', message: e.message, why: `every ${windowedLabel(def)} cell that can spend real keys runs inside a granted paid window, and no cap it spends under exceeds the window cap`,
       fix: { next: 'run', argv: [...FRONT, 'run', '--cell', def.id, '--manifest', bg1CellManifest(def), '--paid-window', '<granted unit>', '--window-cap-usd', '<granted cap>'] } });
   }
   return status?.keyless === true;
+}
+
+/**
+ * The guard `run` puts in front of a windowed cell (isWindowedBenchmark: BG1, BG1-C and Set W): the granted paid window
+ * (bg1CellWindow), the world-end clock, and Gemini's key handed only to a cell whose answers get the Gemini view. Returns
+ * whether the lease proxy reports a keyless upstream, or null for a cell that is not windowed. It runs before any provider
+ * client, corpus or output exists.
+ */
+export async function windowedRunGuard(argv: string[], def: CellDefinition, env: Record<string, string | undefined> = process.env): Promise<boolean | null> {
+  if (!isWindowedBenchmark(def.benchmark)) return null;
+  const one = (n: string) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : undefined; };
+  const keyless = await bg1CellWindow(argv, def, env);
+  bg1RunClock({ env });
+  if (!(one('--provider-proxy') ?? env.SHOOTOUT_PROXY)) { if (def.descriptive_view === false) delete env.GEMINI_API_KEY; else env.GEMINI_API_KEY = bg1GeminiKey(env); }
+  return keyless;
 }
 
 /** The paid-run guard for `run` without a lease proxy: --paid and an open ledger run with room for the estimate. */
@@ -1742,6 +1851,7 @@ export async function main(argv: string[]): Promise<number> {
     // --manifest bg1: BG1's (bg1-cells.json), refused the same way at BG1's stage 1 cap;
     // --manifest bg1c: BG1-C's (bg1c-cells.json), planned as BG1's are (bg1CampaignManifest);
     // --units <file>: a UnitSelection (JSON), the named units alone under its own campaign id and cap.
+    if (one('--manifest') === 'weekly') throw refuse(usage('the weekly cells are planned by the weekly runner (bun eval/runner/weekly-line/runner.ts plan), which writes the week\'s cells.json, and launched by its launch, which writes the campaign'));
     const m = loadCellManifest(one('--manifest'));
     const over = one('--manifest') === 'rs1' ? stage1OverCap(m as RS1Manifest) : one('--manifest') === 'bg1' ? bg1Stage1OverCap(m as BG1Manifest) : null;
     if (over) throw refuse(over);
@@ -1770,14 +1880,16 @@ export async function main(argv: string[]): Promise<number> {
     const id = one('--cell');
     if (!id) throw refuse(usage(`${sub} needs --cell <id>`));
     const def = findCell(id, undefined, one('--manifest'));
-    let keyless = false;
-    if (sub === 'run' && isBg1Benchmark(def.benchmark)) { keyless = await bg1CellWindow(argv, def); bg1RunClock(); if (!(one('--provider-proxy') ?? process.env.SHOOTOUT_PROXY)) { if (def.descriptive_view === false) delete process.env.GEMINI_API_KEY; else process.env.GEMINI_API_KEY = bg1GeminiKey(); } }
+    const keyless = sub === 'run' ? (await windowedRunGuard(argv, def)) ?? false : false;
     const out = resolve(one('--out') ?? process.env.SHOOTOUT_OUT ?? join(REPO_ROOT, 'eval/reports/q1', def.id));
     if (sub === 'merge') {
       const from = many('--from').map(f => resolve(f));
       if (!from.length) throw refuse(usage('merge needs --from <shard out dir>...'));
       // RS1 kept cells load only the kept conversations the shards staged; later slots may never have been minted.
-      const corpus = loadCorpus(def.benchmark, undefined, def.kept_units ? new Set(from.flatMap(f => [...gatherStaging(def.id, [f]).keys()])) : undefined);
+      const week = weekScope(def, process.env);
+      const corpus = loadCorpus(def.benchmark, undefined, week ? new Set(week) : def.kept_units ? new Set(from.flatMap(f => [...gatherStaging(def.id, [f]).keys()])) : undefined);
+      const offWeek = weekCorpusProblems(def, corpus);
+      if (offWeek) throw refuse({ code: 'PREFLIGHT_FAILED', message: offWeek, why: "a weekly cell's shards merge only its own week's worlds", fix: { next: 'report' } });
       const selected = selectCellQuestions(corpus.questions.filter(q => splitConversations(def.benchmark, def.split, corpus).has(q.conversation)), def.selection);
       const capabilities = JSON.parse(readFileSync(join(from[0], 'cells', def.arms[0].cell_id, 'receipt.json'), 'utf8')).system.capabilities as CapabilityRecord;
       const configs = new Map(def.arms.map(a => { const t = readFileSync(join(from[0], 'cells', a.cell_id, 'run-config.json'), 'utf8'); writeAtomic(join(out, 'cells', a.cell_id, 'run-config.json'), t); return [a.id, { text: t, sha: sha256(t) }]; }));

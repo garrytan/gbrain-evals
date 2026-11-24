@@ -203,7 +203,8 @@ describe('the wired cell set', () => {
       [`${FS}.whole-agent.anthropic-claude-opus-5-5`, FS, OPUS], [`${FS}.whole-agent.particle-particle-1`, FS, PARTICLE],
     ]);
     expect(steps.find(s => s.id === `reread:${RR(`${G8}.p`)}`)!.after).toEqual([`launch:${G8}.p`]);
-    const order = launchWeek(dir, 'weekly-line-2026-12-08', deps('2026-12-08', TAGS, WIRED_CELL_SET, ok));
+    expect(message(() => launchWeek(dir, 'weekly-line-2026-12-08', deps('2026-12-08', TAGS, WIRED_CELL_SET, ok)))).toMatch(/^WEEKLY_NO_WINDOW: .*--window-cap-usd/);
+    const order = launchWeek(dir, 'weekly-line-2026-12-08', deps('2026-12-08', TAGS, WIRED_CELL_SET, ok), 500);
     expect(order.stages.slice(0, 2).map(s => s.units)).toEqual([[EF, G8, MB, FS], [RR(`${EF}.component-b8000`), RR(`${G8}.p`), RR(`${MB}.component-b8000`)]]);
     rmSync(join(dir, 'launch.json'));
     const noRg = weeklyLaunchCheck({ ripgrep: () => null, registry: WEEKLY_LINE_MODELS });
@@ -430,7 +431,11 @@ describe('a run end to end', () => {
     expect([a.week, a.cells, a.worlds]).toEqual([b.week, b.cells, b.worlds]);
     expect(a.run_id).not.toBe(b.run_id);
     writeRecords(mine, ids(8), { run_id: b.run_id, week: b.week });
-    settleAll(mine);
+    expect(() => settleAll(mine)).toThrow(/^WEEKLY_RUN_IDENTITY: .*8192 records in run .* were not written by this run's cells/);
+    expect(existsSync(join(mine, 'settled.json'))).toBe(false);
+    writeRecords(mine, ids(8));
+    settleWeek(mine, { costs: costsFor(a.worlds.map(w => w.world)) });
+    writeRecords(mine, ids(8), { run_id: b.run_id, week: b.week });
     expect(() => aggregatesMain(['week', '--meta', join(mine, 'meta.json'), '--records', mine, '--out', out])).toThrow(/^WEEKLY_RUN_IDENTITY: .*8192 records in run .* were not written by this run's cells/);
 
     const stamp = weeklyRunStamp({ id: 'bgw.x', week: { launch: '2026-12-08', world_end: '2026-12-06', batch: 'bgw-1001', worlds: ids(8) } }, { [WEEKLY_RUN_ENV]: a.run_id });

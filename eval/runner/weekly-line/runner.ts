@@ -9,7 +9,7 @@
  *   bun eval/runner/weekly-line/runner.ts plan   --launch <Tuesday> --out <run dir> --batch bgw-<first> --batch-week1 <Tuesday>
  *                                                (--manifest <filled batch manifest> | --mint-failed)
  *                                                [--spares bgw-<first> --spare-manifest <filled manifest>] [--no-point "custody host offline"]
- *   bun eval/runner/weekly-line/runner.ts launch --run <run dir> --window-granted <unit>
+ *   bun eval/runner/weekly-line/runner.ts launch --run <run dir> --window-granted <unit> --window-cap-usd <the window's cap>
  *   bun eval/runner/weekly-line/runner.ts mark   --run <run dir> --step <step id> (--done | --harness-failure)
  *   bun eval/runner/weekly-line/runner.ts settle --run <run dir> [--costs <costs.json>] [--no-point "gbrain release failed to run"]
  *   bun eval/runner/weekly-line/runner.ts block  --block <n> --run <run dir>... --out <dir>
@@ -59,16 +59,17 @@ import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSyn
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { GBRAIN_REPO, newestRelease } from '../gbrain-pin.ts';
-import { WEEKLY_RUN_ENV } from '../memory-qa/records.ts';
+import { sha256, WEEKLY_CELLS_ENV, WEEKLY_CELLS_SHA256_ENV, WEEKLY_RUN_ENV } from '../memory-qa/records.ts';
+import { weeklyCampaignManifest, type WeeklyCellsFile } from '../q1/cell.ts';
 import { BGW_BATCH_KEPT, BGW_BATCH_SLOTS, BGW_WEEKS_PER_BATCH, BGW_WORLDS_PER_WEEK, bgwBatchName, bgwSeedSetOf, bgwSlotOf } from '../memory-qa/bg1-names.ts';
 import { bg1Kept, bg1RunClock, bgwSet, bgwWeekWorldEnd, bgwWeekWorlds, readBg1Manifest, type Bg1Manifest } from '../memory-qa/corpus.ts';
 import { bg1JudgeOf, type CellDefinition } from '../q1/cells/definitions.ts';
 import { generateWeeklyLineCells, WEEKLY_LINE_COMPARATORS, weeklyLineRereadPlans, type WeeklyLineRereadPlan, type WeeklyLineWeek } from '../q1/cells/weekly-line.ts';
 import { blockAggregates, boundRecords, writeBlockFiles, type WeekMeta } from './aggregates.ts';
 import { WL_READER_KEYS, WL_READERS, WL_ROWS, WL_SERVERS, WL_SYSTEMS, WL_WEEKS_PER_BLOCK, type WlNoPoint, type WlRow, type WlServer } from './design.ts';
-import { RUN_FILE, runIdentity, type GbrainBuild, type RunIdentity, type RunWorld } from './identity.ts';
+import { recordBindingProblems, RUN_FILE, runIdentity, type GbrainBuild, type RunIdentity, type RunWorld } from './identity.ts';
 import { requireWeeklyLineLaunch, type weeklyLineLaunchProblems } from './launch.ts';
-import { plannedFor, questionsFromRecords, type WlQuestion } from './records.ts';
+import { plannedFor, questionsFromRecords, readRecordDirs, type WlQuestion } from './records.ts';
 import { recordDigests, SETTLED_FILE, SETTLED_SCHEMA, type SettledMarker } from './settled.ts';
 import type { CostCell } from './stats.ts';
 
@@ -252,6 +253,7 @@ export const LAUNCH_FILE = 'launch.json';
 export const META_FILE = 'meta.json';
 export { SETTLED_FILE };
 export const CELLS_FILE = 'cells.json';
+export const CAMPAIGN_FILE = 'campaign.json';
 
 const readJson = (path: string): any => (existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : refuse('WEEKLY_RUN', `${path} does not exist`));
 const writeJson = (path: string, x: unknown) => writeFileSync(path, JSON.stringify(x, null, 2) + '\n');
@@ -326,19 +328,52 @@ export function planWeek(o: PlanInput, deps: RunnerDeps): { run: RunIdentity; st
   return { run, steps, frozen: false };
 }
 
+/** One particle-1 re-read as launch.json hands it over: the reread-cell.ts command inside the window, to which the host adds --source, --out and the lease flags. */
+export interface LaunchReread { id: string; argv: string[] }
+export interface LaunchOrder {
+  run_id: string; window: string; env: Record<string, string>; stages: Array<{ stage: Stage; units: string[] }>;
+  /** With the week's cells.json: the window cap and its split (the re-reads' share, their plans' estimates, and the cells' campaign, the rest), the campaign manifest of the week's cells (CAMPAIGN_FILE) and the re-read commands. */
+  cap_usd?: number; cells_cap_usd?: number; rereads_cap_usd?: number; campaign?: string; rereads?: LaunchReread[];
+}
+
 /**
  * The unit order for the existing launch path, written to launch.json; refuses without a granted paid window, past the
  * clock, for a week with no point, or when the launch check refuses the week's cells. Launch and re-read stages list each
  * launch unit once; the judge stage lists every judged target. Starts nothing.
+ *
+ * A run planned from the wired cell set holds its cells.json (the launch check refuses a run without one), and its launch
+ * also needs the window's cap (`capUsd`, --window-cap-usd). It writes the week's campaign manifest (campaign.json,
+ * cell.ts weeklyCampaignManifest: each unit's command names `--manifest weekly` inside the window and exports the run id,
+ * the cells.json SHA-256 and the world end, and its VM receives only its week's worlds and the cells.json), and `env` names
+ * everything a weekly unit or re-read on the custody host reads: the run id, the cells.json and its SHA-256, the world end,
+ * the Set W batch and the week's worlds as the loader's unit scope. The window's cap is split once, so the cells and the
+ * re-reads can't together approve more than it: each re-read takes its own plan's estimate, rounded up to the cent (its
+ * command's --window-cap-usd, which bounds its ledger cap), and the cells' campaign takes the rest (its cap_usd and every unit's
+ * --window-cap-usd); a cap that leaves the cells nothing refuses.
  */
-export function launchWeek(dir: string, window: string | undefined, deps: Pick<RunnerDeps, 'now' | 'launchCheck'>): { run_id: string; window: string; env: Record<string, string>; stages: Array<{ stage: Stage; units: string[] }> } {
+export function launchWeek(dir: string, window: string | undefined, deps: Pick<RunnerDeps, 'now' | 'launchCheck'>, capUsd?: number): LaunchOrder {
   const { run, steps } = loadRun(dir);
   if (!window) refuse('WEEKLY_NO_WINDOW', `week ${run.week}'s cells spend on providers, so they launch only inside a granted paid window; pass --window-granted <unit> once it is granted`);
   weekClock(run.week, deps.now());
   if (run.no_point) refuse('WEEKLY_NO_POINT', `week ${run.week} has no point (${run.no_point}), so nothing launches`);
   deps.launchCheck(dir, run);
   const stages = (['launch', 'reread', 'judge'] as const).map(stage => ({ stage, units: [...new Set(steps.filter(s => s.stage === stage).map(s => (stage === 'judge' ? s.target : s.unit ?? s.target)))] }));
-  const order = { run_id: run.run_id, window: window!, env: { [WEEKLY_RUN_ENV]: run.run_id }, stages };
+  let order: LaunchOrder = { run_id: run.run_id, window: window!, env: { [WEEKLY_RUN_ENV]: run.run_id }, stages };
+  const cellsPath = join(dir, CELLS_FILE);
+  if (existsSync(cellsPath)) {
+    if (!(Number.isFinite(capUsd) && capUsd! > 0)) refuse('WEEKLY_NO_WINDOW', `week ${run.week}'s units carry the granted window's cap in every command; pass --window-cap-usd <the window's cap> with --window-granted`);
+    const file = readJson(cellsPath) as WeeklyCellsFile;
+    const week = file.cells[0].week!;
+    const rereadCaps = file.rereads.map(r => Math.ceil(r.estimate.usd * 100) / 100);
+    const rereadsCap = Math.round(rereadCaps.reduce((n, c) => n + c, 0) * 100) / 100;
+    const cellsCap = Math.floor((capUsd! - rereadsCap) * 100) / 100;
+    if (!(cellsCap > 0)) refuse('WEEKLY_NO_WINDOW', `week ${run.week}'s re-reads are estimated at ${rereadsCap}, which leaves the cells nothing of the window's cap ${capUsd}`);
+    writeJson(join(dir, CAMPAIGN_FILE), weeklyCampaignManifest(file, { cellsPath, window: window!, cap_usd: cellsCap }));
+    const flags = ['--manifest', 'weekly', '--paid-window', window!];
+    order = { ...order, cap_usd: capUsd!, cells_cap_usd: cellsCap, rereads_cap_usd: rereadsCap, campaign: CAMPAIGN_FILE,
+      env: { ...order.env, [WEEKLY_CELLS_ENV]: cellsPath, [WEEKLY_CELLS_SHA256_ENV]: sha256(readFileSync(cellsPath)), GBRAIN_EVALS_BG1_WORLD_END: week.world_end, GBRAIN_EVALS_BGW_BATCH: week.batch, GBRAIN_EVALS_BGW_UNIT: week.worlds.join(',') },
+      rereads: file.rereads.map((r, i) => ({ id: r.id, argv: ['bun', 'eval/runner/q1/reread-cell.ts', '--cell', r.cell, '--arm', r.arm, '--reader', r.reader, ...flags, '--window-cap-usd', String(rereadCaps[i])] })) };
+  }
   writeJson(join(dir, LAUNCH_FILE), order);
   return order;
 }
@@ -370,9 +405,12 @@ export function settleWeek(dir: string, o: { costs?: CostCell[]; gbrainFailed?: 
   if (pending.length && !o.gbrainFailed) refuse('WEEKLY_NOT_SETTLED', `${pending.length} of week ${run.week}'s ${work.length} cells, re-reads and judgments are not done or recorded as harness failures (first ${pending[0].id})`);
   const saved: CostCell[] = [];
   if (!run.no_point && !o.gbrainFailed) {
-    const recordsOf = (s: Step) => run.cells.find(id => s.target === id || s.target.startsWith(`${id}.`)) ?? s.target;
+    const recordsOf = (s: Step) => run.rereads.includes(s.target) ? s.target : run.cells.find(id => s.target === id || s.target.startsWith(`${id}.`)) ?? s.target;
     const uncovered = work.filter(s => progress.get(s.id) === 'done').map(s => join('cells', recordsOf(s), s.stage === 'judge' ? 'judgments.ndjson' : 'answers.ndjson')).filter(f => !existsSync(join(dir, f)));
     if (uncovered.length) refuse('WEEKLY_RECORDS', `${uncovered.length} done step${uncovered.length === 1 ? ' has' : 's have'} no record file in the run directory, so nothing is settled (first ${uncovered[0]})`);
+    const recs = existsSync(join(dir, 'cells')) ? readRecordDirs([dir]) : { answers: [], judgments: [] };
+    const stamps = recordBindingProblems(run, recs.answers, recs.judgments);
+    if (stamps.length) refuse('WEEKLY_RUN_IDENTITY', `week ${run.week}'s run directory holds records this run's cells did not write, so nothing is settled: ${stamps.slice(0, 3).join('; ')}`);
     const costs = o.costs ?? refuse('WEEKLY_COSTS', `week ${run.week} has a point, so settling it needs its metered spend for every row, reader and world (--costs)`);
     const key = (row: string, reader: string, world: string) => `${row}|${reader}|${world}`;
     if (!Array.isArray(costs)) refuse('WEEKLY_COSTS', `week ${run.week}'s spend must be a list of row, reader, world and usd entries`);
@@ -492,8 +530,9 @@ export function main(argv: readonly string[], deps: RunnerDeps = DEFAULT_DEPS, l
     return 0;
   }
   if (mode === 'launch') {
-    const order = launchWeek(need(rest, '--run'), flag(rest, '--window-granted'), deps);
-    log(`run ${order.run_id} under window ${order.window}: hand these units to the launch path in this order, each with ${Object.entries(order.env).map(([k, v]) => `${k}=${v}`).join(' ')}`);
+    const cap = flag(rest, '--window-cap-usd');
+    const order = launchWeek(need(rest, '--run'), flag(rest, '--window-granted'), deps, cap === undefined ? undefined : Number(cap));
+    log(`run ${order.run_id} under window ${order.window}: hand these units to the launch path in this order, each with ${Object.entries(order.env).map(([k, v]) => `${k}=${v}`).join(' ')}${order.campaign ? `; the cells' campaign manifest is ${join(need(rest, '--run'), order.campaign)}` : ''}`);
     for (const s of order.stages) log(`${s.stage}: ${s.units.join(' ')}`);
     return 0;
   }
