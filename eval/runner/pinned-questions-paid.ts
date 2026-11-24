@@ -323,9 +323,36 @@ export function judgeAgreement(rows: ReadonlyArray<Pick<PaidRow, 'judge_model' |
 export const JUDGE_KAPPA_FLOOR = 0.6;
 export const JUDGE_MIN_LABELS = 100;
 
-export function judgeCheckPasses(rows: ReadonlyArray<Pick<PaidRow, 'judge_model' | 'first' | 'refreshed'>>): boolean {
-  const a = Object.values(judgeAgreement(rows));
-  return a.length > 0 && a.every(x => x.n >= JUDGE_MIN_LABELS && (x.kappa === null ? x.agreement === 1 : x.kappa >= JUDGE_KAPPA_FLOOR));
+/**
+ * Every judge in `judges` (by default, every judge the rows name) has at least JUDGE_MIN_LABELS labelled outputs and a
+ * defined kappa of at least JUDGE_KAPPA_FLOOR. An undefined kappa (unanimous labels, so chance agreement is 1) is no
+ * evidence of agreement and fails, and a judge with no rows fails.
+ */
+export function judgeCheckPasses(rows: ReadonlyArray<Pick<PaidRow, 'judge_model' | 'first' | 'refreshed'>>, judges: readonly string[] = [...new Set(rows.map(r => r.judge_model))]): boolean {
+  const a = judgeAgreement(rows);
+  return judges.length > 0 && judges.every(j => { const x = a[j]; return !!x && x.n >= JUDGE_MIN_LABELS && x.kappa !== null && x.kappa >= JUDGE_KAPPA_FLOOR; });
+}
+
+/**
+ * A counted launch needs the judge-check stage's receipt: same gbrain build and judge prompt, every counted model in its
+ * model set, and the judge check recomputed from its rows passing for every judge the counted models need. The output
+ * cap is not tied: the judge grades answers, and the raised-cap arm only lets them run longer.
+ */
+export function requireJudgeCheck(path: string | undefined, opts: { gut: GbrainUnderTest; models: readonly string[] }): void {
+  const refuse = (why: string) => { throw new PaidArmRefusal(`${CATEGORY}: a counted launch needs a passing judge-check receipt (--judge-check <receipt.json> from --stage judge-check): ${why}`); };
+  if (!path) return refuse('none given');
+  if (!existsSync(path)) return refuse(`${path} does not exist`);
+  const r = JSON.parse(readFileSync(path, 'utf8')) as { category?: string; run_status?: string; gbrain_version?: string; execution?: { product?: unknown }; resolved_config?: { mode?: string; stage?: string; models?: Array<{ model: string; role: string }>; judge?: { prompt_sha256?: string }; gbrain_overlay?: unknown }; data?: { rows?: PaidRow[] } };
+  const c = r.resolved_config;
+  if (r.category !== CATEGORY || c?.stage !== 'judge-check' || c.mode !== 'paid') return refuse(`${path} is not a paid ${CATEGORY} judge-check receipt`);
+  if (r.run_status !== 'completed') return refuse(`its run_status is ${r.run_status}`);
+  if (r.gbrain_version !== opts.gut.version || JSON.stringify(c.gbrain_overlay ?? null) !== JSON.stringify(overlaySummary(opts.gut) ?? null)) return refuse(`it measured gbrain ${r.gbrain_version}, not the build under test (${opts.gut.version})`);
+  if (c.judge?.prompt_sha256 !== createHash('sha256').update(PINNED_QUESTIONS_JUDGE_PROMPT).digest('hex')) return refuse('its judge prompt differs from this runner\'s');
+  const checked = new Set((c.models ?? []).filter(m => m.role === 'model under test').map(m => m.model));
+  const missing = opts.models.map(canonicalModel).filter(m => !checked.has(m));
+  if (missing.length) return refuse(`it did not run ${missing.join(', ')}`);
+  const judges = [...new Set(opts.models.map(m => judgeFor(canonicalModel(m))))];
+  if (!judgeCheckPasses(r.data?.rows ?? [], judges)) return refuse(`recomputed from its rows, the judge check fails for at least one of ${judges.join(', ')}`);
 }
 
 /** A pin or refresh that gbrain failed because the reply hit the output cap. */
@@ -687,7 +714,7 @@ export function modelRoles(models: readonly string[]): Array<{ model: string; ro
   ];
 }
 
-export function buildReceipt(opts: { gut: GbrainUnderTest; models: readonly string[]; seeds: readonly number[]; companies: number; stage: Stage; maxOutputTokens?: number; result: PaidRunResult; cost: RunSummary | null; startedAt: string; mode: PaidMode['kind'] }): Receipt {
+export function buildReceipt(opts: { gut: GbrainUnderTest; models: readonly string[]; seeds: readonly number[]; companies: number; stage: Stage; maxOutputTokens?: number; result: PaidRunResult; cost: RunSummary | null; startedAt: string; mode: PaidMode['kind']; judgeCheckSha256?: string | null }): Receipt {
   const r = opts.result;
   const a = r.acc.summary();
   return {
@@ -696,7 +723,7 @@ export function buildReceipt(opts: { gut: GbrainUnderTest; models: readonly stri
     benchmark_version: BENCHMARK_VERSION,
     category: CATEGORY,
     run_status: r.harnessErrors.length ? 'error' : 'completed',
-    ...(r.harnessErrors.length ? {} : { verdict: judgeCheckPasses(r.rows) ? 'pass' as const : 'fail' as const }),
+    ...(r.harnessErrors.length ? {} : { verdict: judgeCheckPasses(r.rows, [...new Set(opts.models.map(m => judgeFor(canonicalModel(m))))]) ? 'pass' as const : 'fail' as const }),
     n_total: a.n_total, n_scored: a.n_scored, completion_rate: a.completion_rate, errors: a.errors,
     publishable: a.publishable && r.harnessErrors.length === 0 && opts.mode === 'paid',
     gbrain_version: opts.gut.version,
@@ -718,6 +745,7 @@ export function buildReceipt(opts: { gut: GbrainUnderTest; models: readonly stri
       retries: `a unit with provider or judge-call errors is asked again once in a resumed run (${MAX_UNIT_ATTEMPTS} attempts), then kept with those questions left out; a budget-ledger refusal pauses the run at the unit boundary without checkpointing that unit`,
       seeds: opts.seeds, companies_per_seed: opts.companies, generator_version: PINNED_QUESTIONS_GENERATOR_VERSION,
       resumed_units: r.resumedUnits,
+      judge_check_receipt_sha256: opts.judgeCheckSha256 ?? null,
       gbrain_overlay: overlaySummary(opts.gut),
     },
     hashes: Object.fromEntries(r.worlds.map(w => [`ledger_seed_${w.seed}`, w.fingerprint])),
@@ -758,6 +786,9 @@ async function main(): Promise<void> {
   requirePaidFlags(argv, estimate);
   requireProviderKeys(models);
   const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
+  const judgeCheck = stage === 'counted' ? argValue(argv, '--judge-check') : undefined;
+  if (stage === 'counted') requireJudgeCheck(judgeCheck, { gut, models });
+  const judgeCheckSha256 = judgeCheck ? createHash('sha256').update(readFileSync(judgeCheck)).digest('hex') : null;
   const keys = Object.fromEntries(PAID_KEY_NAMES.map(k => [k, process.env[k]]).filter(([, v]) => v)) as Partial<Record<typeof PAID_KEY_NAMES[number], string>>;
   const startedAt = new Date().toISOString();
   const paid = startPaidRun(CATEGORY, { ...budgetOptionsFrom(argv), estimateUsd: estimate });
@@ -769,7 +800,7 @@ async function main(): Promise<void> {
     cost = paid.run.close();
     paid.guard.uninstall();
   }
-  writeReceipt(join(output, 'receipt.json'), buildReceipt({ gut, models, seeds, companies, stage, maxOutputTokens, result, cost, startedAt, mode: 'paid' }));
+  writeReceipt(join(output, 'receipt.json'), buildReceipt({ gut, models, seeds, companies, stage, maxOutputTokens, result, cost, startedAt, mode: 'paid', judgeCheckSha256 }));
   const s = summarizePaid(result.rows);
   console.log(JSON.stringify({ by_model: Object.fromEntries(Object.entries(s.by_model).map(([m, v]) => [m, { first_correct: v.first_correct, refreshed_correct: v.refreshed_correct, refresh_outcome: v.refresh_outcome, refreshed_excluded: v.refreshed_excluded, answer_too_long: v.answer_too_long }])), judge_agreement: s.judge_agreement, truncation: s.truncation, cost_usd: receiptCost(cost).usd }, null, 2));
   process.exit(result.harnessErrors.length ? 3 : 0);

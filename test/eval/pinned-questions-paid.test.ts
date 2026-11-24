@@ -5,14 +5,15 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { CLAIMS, generatePinnedQuestionsWorld, type PqCompany, type PqWorld } from '../../eval/generators/pinned-questions-gen.ts';
 import { claimSentence } from '../../eval/runner/pinned-questions.ts';
-import { gbrainSpecFrom, resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
+import { gbrainSpecFrom, overlaySummary, resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
+import { createHash } from 'node:crypto';
 import { BudgetExceededError } from '../../eval/runner/budget-ledger.ts';
 import { PaidArmRefusal } from '../../eval/runner/paid-arm.ts';
 import { writeReceipt } from '../../eval/runner/receipt.ts';
 import {
   JUDGE_MIN_LABELS, PINNED_QUESTIONS_JUDGE_PROMPT, PINNED_QUESTIONS_MODELS_UNDER_TEST, STAGE_SEEDS, TRUNCATION_BAR, buildReceipt, canonicalModel, cohenKappa,
   familyOf, judgeAgreement, judgeCheckPasses, judgeFor, judgeUserMessage, modelRoles, parseJudgeLabels, requirePaidFlags, ruleLabels,
-  harnessBlocked, outcomeOf, readCheckpoint, recordingGenerateText, redactProviderText, requireProviderKeys, runPinnedQuestionsPaid, scoredCorrect, summarizePaid,
+  harnessBlocked, outcomeOf, readCheckpoint, recordingGenerateText, redactProviderText, requireJudgeCheck, requireProviderKeys, runPinnedQuestionsPaid, scoredCorrect, summarizePaid,
   type ChatTransport, type GradedAnswer, type PaidRow, type PaidRunResult,
 } from '../../eval/runner/pinned-questions-paid.ts';
 
@@ -168,6 +169,41 @@ describe('pinned-questions paid arm: kappa', () => {
     expect(judgeCheckPasses([...rowsOf('openai:gpt-6.2-astra', 100), ...rowsOf('anthropic:claude-opus-5-5', 98)])).toBe(false);
     const ambiguous = rowsOf('openai:gpt-6.2-astra', 100).map((r, i) => (i === 0 ? { ...r, first: g(true, null) } : r));
     expect(judgeCheckPasses(ambiguous)).toBe(false);
+  });
+
+  test('an undefined kappa or a missing judge fails the judge check', () => {
+    const unanimous = Array.from({ length: 50 }, (): Pick<PaidRow, 'judge_model' | 'first' | 'refreshed'> => ({ judge_model: 'openai:gpt-6.2-astra', first: g(true, true), refreshed: { ...g(true, true), stale: [] } }));
+    expect(judgeAgreement(unanimous)['openai:gpt-6.2-astra']).toMatchObject({ n: 100, agreement: 1, kappa: null });
+    expect(judgeCheckPasses(unanimous)).toBe(false);
+    const good = Array.from({ length: 50 }, (_, i): Pick<PaidRow, 'judge_model' | 'first' | 'refreshed'> => ({ judge_model: 'openai:gpt-6.2-astra', first: g(i % 2 === 0, i % 2 === 0), refreshed: { ...g(i % 3 === 0, i % 3 === 0), stale: [] } }));
+    expect(judgeCheckPasses(good)).toBe(true);
+    expect(judgeCheckPasses(good, ['openai:gpt-6.2-astra', 'anthropic:claude-opus-5-5'])).toBe(false);
+    expect(judgeCheckPasses([], [])).toBe(false);
+  });
+
+  test('a counted launch needs a matching judge-check receipt whose rows pass for every judge it needs', () => {
+    const gut = resolveGbrainUnderTest(gbrainSpecFrom([]));
+    const models = [...PINNED_QUESTIONS_MODELS_UNDER_TEST];
+    const rowsOf = (judge: string) => Array.from({ length: 60 }, (_, i): Pick<PaidRow, 'judge_model' | 'first' | 'refreshed'> => ({ judge_model: judge, first: g(i % 2 === 0, i % 2 === 0), refreshed: { ...g(i % 3 === 0, i % 3 === 0), stale: [] } }));
+    const receipt = { category: 'pinned-questions-paid', run_status: 'completed', gbrain_version: gut.version,
+      resolved_config: { mode: 'paid', stage: 'judge-check', models: modelRoles(models), judge: { prompt_sha256: createHash('sha256').update(PINNED_QUESTIONS_JUDGE_PROMPT).digest('hex') }, gbrain_overlay: overlaySummary(gut) },
+      data: { rows: [...rowsOf('openai:gpt-6.2-astra'), ...rowsOf('anthropic:claude-opus-5-5')] } };
+    const d = mkdtempSync(join(tmpdir(), 'pq-judge-check-'));
+    const at = (name: string, r: unknown) => { const p = join(d, name); writeFileSync(p, JSON.stringify(r)); return p; };
+    try {
+      expect(() => requireJudgeCheck(at('ok.json', receipt), { gut, models })).not.toThrow();
+      expect(() => requireJudgeCheck(undefined, { gut, models })).toThrow(PaidArmRefusal);
+      expect(() => requireJudgeCheck(join(d, 'missing.json'), { gut, models })).toThrow(/does not exist/);
+      expect(() => requireJudgeCheck(at('pilot.json', { ...receipt, resolved_config: { ...receipt.resolved_config, stage: 'pilot' } }), { gut, models })).toThrow(/not a paid/);
+      expect(() => requireJudgeCheck(at('error.json', { ...receipt, run_status: 'error' }), { gut, models })).toThrow(/run_status is error/);
+      expect(() => requireJudgeCheck(at('build.json', { ...receipt, gbrain_version: '0.0.1' }), { gut, models })).toThrow(/not the build under test/);
+      expect(() => requireJudgeCheck(at('prompt.json', { ...receipt, resolved_config: { ...receipt.resolved_config, judge: { prompt_sha256: 'x' } } }), { gut, models })).toThrow(/judge prompt differs/);
+      expect(() => requireJudgeCheck(at('models.json', { ...receipt, resolved_config: { ...receipt.resolved_config, models: modelRoles(['claude-opus-5-5']) } }), { gut, models })).toThrow(/did not run particle:particle-1, openai:gpt-6.2-sol/);
+      expect(() => requireJudgeCheck(at('one-judge.json', { ...receipt, data: { rows: rowsOf('openai:gpt-6.2-astra') } }), { gut, models })).toThrow(/judge check fails/);
+      expect(() => requireJudgeCheck(at('one-judge.json', { ...receipt, data: { rows: rowsOf('openai:gpt-6.2-astra') } }), { gut, models: ['claude-opus-5-5', 'particle-1'] })).not.toThrow();
+    } finally {
+      rmSync(d, { recursive: true, force: true });
+    }
   });
 
   test('the judge-check stage gives each judge at least 100 outputs from the rows it grades; the pilot alone does not', () => {
