@@ -403,9 +403,9 @@ and the text above differ, this amendment wins.
    is 300 characters or shorter, the turn without its last word (`probePassage`), so it is never a whole turn and a
    system that embeds turn by turn never sends it as a write. A search that also calls a language model (query
    expansion, for one) would carry the passage inside a prompt that this label doesn't read, so the pilot checks the
-   label: before its probes, each system answers 10 calibration searches while drained and idle, and any provider
-   request in that window, which closes only once the idle check after the last search passes, so work a read sets off
-   later is inside it, not labelled `probe` names a route the label misses (`unlabelledSearchRoutes` in
+   label: before its probes, each system answers 10 calibration searches while drained and idle. The window closes
+   only when the idle check after the last search passes, so work a read sets off later falls inside it, and any
+   provider request in it not labelled `probe` names a route the label misses (`unlabelledSearchRoutes` in
    `eval/runner/cost-speed-probes.ts`). Such a system fails its pilot until its read's provider calls go through a
    slot of their own. gbrain v0.60.769.0's read made only Voyage embedding and rerank calls in the keyless check, but
    the pilot checks it like every other system.
