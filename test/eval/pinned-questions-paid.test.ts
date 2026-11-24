@@ -146,6 +146,9 @@ describe('pinned-questions paid arm: rule labels and judge parsing', () => {
     expect(ruleLabels(c, 'refreshed', say(c, c.before)).ceo).toBe('stale');
     expect(ruleLabels(c, 'refreshed', [...say(c, c.after), claimSentence(c, 'ceo', 'Someone Else')]).ceo).toBe('ambiguous');
     expect(ruleLabels(c, 'refreshed', [...say(c, c.after), `${c.name} is now led by Someone Else.`]).ceo).toBe('ambiguous');
+    for (const none of [`No chief executive of ${c.name} is named in the notes.`, `The CEO of ${c.name} is not recorded.`, `${c.name} has no CEO on record.`]) {
+      expect(ruleLabels(c, 'refreshed', [...say(c, c.after), none]).ceo).toBe('correct');
+    }
     expect(judgeUserMessage(c, 'refreshed', [])).toContain(`- ceo: current (none: removed); previous (no longer true) ${JSON.stringify(c.before.ceo)}`);
   });
 

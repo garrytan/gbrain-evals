@@ -166,14 +166,15 @@ export function judgeUserMessage(c: PqCompany, kind: 'first' | 'refreshed', sent
  * correct when the previous value is absent.
  */
 /**
- * Words that show an answer still states a claim. When a claim was removed and the answer has these words without the
+ * Words that show an answer still states a claim (for the CEO, a capitalised name after "chief executive ... is" or
+ * "led by", so "no chief executive is named" does not count). When a claim was removed and the answer has these without the
  * old value, it may assert a different, wrong value, which token presence cannot tell from a correct non-answer, so the
  * rule label is ambiguous and the answer is left out of the judge check.
  */
 const ASSERTS: Record<Claim, RegExp> = {
   city: /\b(builds|built|based|headquartered|located|manufactur\w*)\b/i,
   flagship: /\bflagship\b/i,
-  ceo: /chief executive|\bceo\b|\bled by\b|\bheaded by\b/i,
+  ceo: /(\b[Cc]hief [Ee]xecutive|\bCEO)(\s+of\s+[^.]+?)?\s+(is|was|remains|became|is now)\s+[A-Z]|\b(led|headed|run) by\s+[A-Z]/,
   founded: /\b(founded|established)\b/i,
 };
 
