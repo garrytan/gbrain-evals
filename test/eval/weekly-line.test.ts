@@ -23,8 +23,8 @@ import { BG1C_CAMPAIGN, BG1C_DATASET } from '../../eval/runner/memory-qa/bg1-nam
 import { plannedQuestions, WL_CLASSES, WL_COMPARISONS, WL_OBF_BOUNDS, WL_READER_KEYS, WL_READERS, WL_ROWS, WL_SYSTEMS, type WlClass, type WlReaderKey, type WlRow } from '../../eval/runner/weekly-line/design.ts';
 import { plannedFor, questionsFromRecords, WeeklyRecordsError, type WlQuestion } from '../../eval/runner/weekly-line/records.ts';
 import { renderBlock, renderWeek } from '../../eval/runner/weekly-line/scorecard.ts';
-import { SETTLED_SCHEMA } from '../../eval/runner/weekly-line/settled.ts';
-import { RUN_FILE, runIdentity } from '../../eval/runner/weekly-line/identity.ts';
+import { recordDigests, SETTLED_FILE, SETTLED_SCHEMA } from '../../eval/runner/weekly-line/settled.ts';
+import { RUN_FILE, runIdentity, type RunIdentity } from '../../eval/runner/weekly-line/identity.ts';
 import { analyzeBlock, analyzeLook, compare, costPerCorrect, estimate, falseAlarmRate, grepStops, holmStepDown, regressionFlag, rolling, weeklySdd, type BlockWorld } from '../../eval/runner/weekly-line/stats.ts';
 
 const tmp = mkdtempSync(join(tmpdir(), 'weekly-line-'));
@@ -312,6 +312,9 @@ describe('beside the verdict', () => {
 
 /** BG1-C's custody receipt for a false-alarm pool. */
 const receiptOf = (pool: Record<string, number[]>) => ({ schema: FALSE_ALARM_RECEIPT_SCHEMA, campaign: BG1C_CAMPAIGN, dataset: BG1C_DATASET, comparisons: Object.keys(pool), pool_sha256: falseAlarmPoolSha256(pool) });
+
+/** The stamp a run's cells write into every record (memory-qa/records.ts weekly_run). */
+const stampOf = (run: Pick<RunIdentity, 'run_id' | 'week'>) => ({ run_id: run.run_id, week: run.week });
 
 /** The runner's settled marker for each week, agreeing with its meta. */
 const settledOf = (metas: readonly WeekMeta[]) => metas.map(m => ({
@@ -633,30 +636,38 @@ describe('records', () => {
     const big = synth(16, { 'now|grep-agent': alt(-3, -4) });
     const r = recordsOf(big.questions);
     const out = join(tmp, 'run');
-    const dirs = [big.worlds.slice(0, 8), big.worlds.slice(8)].map((ws, k) => {
-      const root = join(tmp, `records-w${k + 1}`);
-      for (const row of WL_ROWS) {
-        const dir = join(root, 'cells', `wl-${row}`);
-        mkdirSync(dir, { recursive: true });
-        const ans = r.answers.filter(a => a.cell_id === `wl-${row}` && ws.includes(a.conversation)), ids = new Set(ans.map(a => a.answer_id));
-        writeFileSync(join(dir, 'answers.ndjson'), ans.map(a => JSON.stringify(a)).join('\n') + '\n');
-        writeFileSync(join(dir, 'judgments.ndjson'), r.judgments.filter(j => ids.has(j.answer_id)).map(j => JSON.stringify(j)).join('\n') + '\n');
-      }
-      return root;
-    });
     const runOf = (week: string, ws: readonly string[], release: string, k: number) => {
       const m = meta(week, ws, release);
       return runIdentity({ week, world_end: '2026-11-29', batch: 'bgw-1001', week_of_batch: k, spares_from: null, gbrain: m.gbrain, comparators: m.comparators, worlds: m.worlds, cells: WL_ROWS.map(row => `wl-${row}`), rereads: [], no_point: null });
     };
     const runs = [runOf('2026-12-01', big.worlds.slice(0, 8), A, 1), runOf('2026-12-08', big.worlds.slice(8), B, 2)];
+    const dirs = [big.worlds.slice(0, 8), big.worlds.slice(8)].map((ws, k) => {
+      const root = join(tmp, `records-w${k + 1}`);
+      const stamp = (x: object) => JSON.stringify({ ...x, weekly_run: stampOf(runs[k]) });
+      for (const row of WL_ROWS) {
+        const dir = join(root, 'cells', `wl-${row}`);
+        mkdirSync(dir, { recursive: true });
+        const ans = r.answers.filter(a => a.cell_id === `wl-${row}` && ws.includes(a.conversation)), ids = new Set(ans.map(a => a.answer_id));
+        writeFileSync(join(dir, 'answers.ndjson'), ans.map(stamp).join('\n') + '\n');
+        writeFileSync(join(dir, 'judgments.ndjson'), r.judgments.filter(j => ids.has(j.answer_id)).map(stamp).join('\n') + '\n');
+      }
+      return root;
+    });
     runs.forEach((run, k) => writeFileSync(join(dirs[k], RUN_FILE), JSON.stringify(run)));
-    const m1 = join(tmp, 'w1.json'), m2 = join(tmp, 'w2.json');
-    writeFileSync(m1, JSON.stringify({ ...meta('2026-12-01', big.worlds.slice(0, 8), A), run_id: runs[0].run_id }));
-    writeFileSync(m2, JSON.stringify({ ...meta('2026-12-08', big.worlds.slice(8), B), run_id: runs[1].run_id }));
+    const m1 = join(tmp, 'w1.json'), m2 = join(tmp, 'w2.json'), s1 = join(tmp, 's1.json'), s2 = join(tmp, 's2.json');
+    const metaObjs = [{ ...meta('2026-12-01', big.worlds.slice(0, 8), A), run_id: runs[0].run_id }, { ...meta('2026-12-08', big.worlds.slice(8), B), run_id: runs[1].run_id }];
+    writeFileSync(m1, JSON.stringify(metaObjs[0]));
+    writeFileSync(m2, JSON.stringify(metaObjs[1]));
+    settledOf(metaObjs).forEach((s, k) => {
+      const marker = JSON.stringify({ ...s, records: recordDigests(dirs[k]) });
+      writeFileSync([s1, s2][k], marker);
+      writeFileSync(join(dirs[k], SETTLED_FILE), marker);
+    });
     expect(() => main(['week', '--meta', m1, '--records', dirs[0], '--records', dirs[1], '--out', out])).toThrow(/not the run of any week passed with --meta/);
     expect(main(['week', '--meta', m1, '--records', dirs[0], '--out', out])).toBe(0);
     expect(main(['week', '--meta', m2, '--records', dirs[1], '--history', join(out, 'week-2026-12-01.json'), '--out', out])).toBe(0);
-    expect(main(['block', '--block', '1', '--meta', m1, '--meta', m2, '--records', dirs[0], '--records', dirs[1], '--out', out])).toBe(0);
+    expect(() => main(['block', '--block', '1', '--meta', m1, '--meta', m2, '--records', dirs[0], '--records', dirs[1], '--settled', s1, '--out', out])).toThrow(/^WEEKLY_NOT_SETTLED: .*week 2026-12-08 has no settled marker/);
+    expect(main(['block', '--block', '1', '--meta', m1, '--meta', m2, '--records', dirs[0], '--records', dirs[1], '--settled', s1, '--settled', s2, '--out', out])).toBe(0);
     expect(() => main(['week', '--meta', m1, '--meta', m2, '--records', dirs[0], '--out', out])).toThrow(/exactly one --meta/);
     expect(() => main(['month', '--meta', m1, '--records', dirs[0], '--out', out])).toThrow(/week or block/);
     expect(() => main(['week', '--meta', m1, '--records', dirs[0]])).toThrow(/--out/);
@@ -687,14 +698,18 @@ describe('records', () => {
     };
     const dirFor = (name: string, run: object, ws: readonly string[], answers = recs.answers) => {
       const root = join(tmp, name);
+      const stamp = (x: object) => JSON.stringify({ ...x, weekly_run: stampOf(run as RunIdentity) });
       for (const cell of new Set(answers.map(a => a.cell_id))) {
         const dir = join(root, 'cells', cell);
         mkdirSync(dir, { recursive: true });
         const ans = answers.filter(a => a.cell_id === cell && ws.includes(a.conversation)), ids = new Set(ans.map(a => a.answer_id));
-        writeFileSync(join(dir, 'answers.ndjson'), ans.map(a => JSON.stringify(a)).join('\n') + '\n');
-        writeFileSync(join(dir, 'judgments.ndjson'), recs.judgments.filter(j => ids.has(j.answer_id)).map(j => JSON.stringify(j)).join('\n') + '\n');
+        writeFileSync(join(dir, 'answers.ndjson'), ans.map(stamp).join('\n') + '\n');
+        writeFileSync(join(dir, 'judgments.ndjson'), recs.judgments.filter(j => ids.has(j.answer_id)).map(stamp).join('\n') + '\n');
       }
       writeFileSync(join(root, RUN_FILE), JSON.stringify(run));
+      const r = run as RunIdentity;
+      writeFileSync(join(root, SETTLED_FILE), JSON.stringify({ schema: SETTLED_SCHEMA, run_id: r.run_id, week: r.week, no_point: null, gbrain: r.gbrain, worlds: r.worlds.map(w => w.world),
+        steps: { cells: 4, rereads: 0, judgments: 4, harness_failures: 0 }, records: recordDigests(root) }));
       return root;
     };
     const ws1 = small.worlds.slice(0, 2), ws2 = small.worlds.slice(2);

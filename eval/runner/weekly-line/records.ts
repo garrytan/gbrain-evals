@@ -11,8 +11,8 @@
  * Refused: an answer from a system that is not one of the four rows, a reader that is not one of the two, a world outside
  * the given worlds, a question that is not planned (<world>:<stratum>:<k>), two answers for one question, row and reader,
  * two gating judgments for one answer and instrument, and, on gbrain and both servers, a particle-1 re-read whose
- * context_sha256 differs from claude-opus-5-5's live read (the protocol's byte-for-byte re-read). Binding the records to
- * the week's full run identity (its arm and cells) waits for the weekly runner, which writes that identity.
+ * context_sha256 differs from claude-opus-5-5's live read (the protocol's byte-for-byte re-read). The aggregates bind the
+ * records to the week's run before they get here (aggregates.ts boundRecords, identity.ts recordBindingProblems).
  */
 import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';

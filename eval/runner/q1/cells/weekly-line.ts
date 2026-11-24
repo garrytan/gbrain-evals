@@ -53,13 +53,36 @@ export const WEEKLY_LINE_EFFORT = 'medium';
 /** particle-1's output limit on its re-reads: its provider row's output floor, which leaves room for its reasoning, as BG1-C's re-reads sent it. */
 export const WEEKLY_LINE_PARTICLE_MAX_TOKENS = COMPAT_PROVIDERS.particle.models['particle-1'].output_floor;
 
-/** The four rows, keyed by the preregistration's row names (weekly-line/design.ts WL_ROWS): each row's system and configuration. */
+/**
+ * The four rows, keyed by the preregistration's row names (weekly-line/design.ts WL_ROWS): each row's system and
+ * configuration, and the mode and reading budget of its one arm (an 8,000-token read, or the grep agent with none).
+ */
 export const WEEKLY_LINE_ROWS = {
-  gbrain: { system: 'gbrain-defaults', configuration: 'rs1-stable' },
-  'grep-agent': { system: 'baseline-file-agent', configuration: 'baseline' },
-  'extract-first': { system: 'ext-extract-first', configuration: 'common' },
-  'memory-bank': { system: 'ext-memory-bank', configuration: 'recipe' },
+  gbrain: { system: 'gbrain-defaults', configuration: 'rs1-stable', mode: 'packed', budget: 8000 },
+  'grep-agent': { system: 'baseline-file-agent', configuration: 'baseline', mode: 'agent', budget: null },
+  'extract-first': { system: 'ext-extract-first', configuration: 'common', mode: 'packed', budget: 8000 },
+  'memory-bank': { system: 'ext-memory-bank', configuration: 'recipe', mode: 'packed', budget: 8000 },
 } as const;
+
+/**
+ * The two servers as the week records them (weekly-line/aggregates.ts meta `comparators`): each bundle's package version and
+ * the date its lock was last fixed, the patched locks of gbrain-evals#594 (GBEV-3 ruling, 2026-11-23).
+ */
+export const WEEKLY_LINE_COMPARATORS = {
+  'extract-first': { version: '2.2.1', fixed: '2026-11-23' },
+  'memory-bank': { version: '0.10.2', fixed: '2026-11-23' },
+} as const;
+
+/**
+ * The bundle locks the line runs on (GBEV-3 ruling, 2026-11-23): gbrain-evals#594's patched locks, extract-first
+ * 9c32b495 and memory-bank 29b875e0, each the SHA-256 of a committed uv.lock as #594's relock and the comparison pin table
+ * (docs/comparison-systems.md) record it. Both copies are checked: the pin table's lock_file and the shim's own lock,
+ * which the cell's machine builds from. BG1-C ran on the earlier locks 9777b7a8 and f54d89df.
+ */
+export const WEEKLY_LINE_BUNDLE_LOCKS: Readonly<Record<string, { sha256: string; files: readonly string[] }>> = {
+  'ext-extract-first': { sha256: '9c32b495ffd262519959b9d00c5d7b7a3db453765c5a6c9324008bc3e5fbaeae', files: ['docs/comparison-systems/ext-extract-first/uv.lock', 'eval/systems/extract-first/uv.lock'] },
+  'ext-memory-bank': { sha256: '29b875e0c591f5314b095923a248b5c8c02e85686d8699c517270ad508327ddf', files: ['docs/comparison-systems/ext-memory-bank/uv.lock', 'eval/systems/memory-bank/uv.lock'] },
+};
 
 /** One model of a registry entry's `models` list. */
 export interface RegistryModel { model: string; role: string; system?: string }
@@ -68,12 +91,15 @@ export interface RegistryModel { model: string; role: string; system?: string }
  * Every model the weekly cells call, with its role, as the registry entry lists them (WEEKLY_LINE_REGISTRY `models`, less
  * its simulators, which are the mint's): the readers under test, their judges, and each compared system's shipped models
  * as system-internal. gpt-4o-mini is the memory-bank server's shipped extraction model, tested as shipped; no gpt-4o
- * model sits in a role we choose.
+ * model sits in a role we choose. The extract-first server's `common` setup also embeds with text-embedding-3-large
+ * (eval/systems/extract-first/shim.py memory_config); the registry entry lists it from launch amendment A, and until
+ * then the launch check refuses.
  */
 export const WEEKLY_LINE_MODELS: ReadonlyArray<RegistryModel> = [
   ...WEEKLY_LINE_READERS.map(model => ({ model, role: 'under-test' })),
   ...[...new Set(Object.values(WEEKLY_LINE_JUDGE_BY_READER))].map(model => ({ model, role: 'judge' })),
   { model: 'openai:gpt-4.1-mini', role: 'system-internal', system: 'ext-extract-first' },
+  { model: 'openai:text-embedding-3-large', role: 'system-internal', system: 'ext-extract-first' },
   { model: 'openai:gpt-4o-mini', role: 'system-internal', system: 'ext-memory-bank' },
   { model: F6_ASSUMPTIONS.extraction.model, role: 'system-internal', system: 'gbrain-defaults' },
   { model: F6_ASSUMPTIONS.embedding_model, role: 'system-internal', system: 'gbrain-defaults' },
@@ -124,6 +150,23 @@ const listUsd = (model: string, input: number, output: number) => { const p = pr
 /** The file agent's tokens per answer: the SOTA dev test's assumption for the same loop, until the pilot measures it on Set W's worlds. */
 export const WEEKLY_LINE_FILE_AGENT_TOKENS = { input: SOTA_ASSUMPTIONS.agent['baseline-file-agent']['SOTA-dev'] as number, output: SOTA_ASSUMPTIONS.agent['baseline-file-agent'].output as number };
 
+/**
+ * The grep agent's wall time per answer, its gating judgment included, in seconds: an assumption, because neither the
+ * SOTA dev test nor any earlier file-agent run records one (SOTA_ASSUMPTIONS holds tokens per answer only: 73,000 in and
+ * 2,000 out, over at most 40 turns). 90 s is a 40-turn loop's typical dozen turns at several seconds a turn, plus the
+ * judge call; the pilot measures it on Set W's dev world and a dated amendment replaces it.
+ */
+export const WEEKLY_LINE_FILE_AGENT_SECONDS_PER_ANSWER = 90;
+/** The margin on the grep agent's hours, over the per-answer assumption. */
+export const WEEKLY_LINE_FILE_AGENT_HOURS_MARGIN = 1.5;
+/**
+ * The grep agent cell's expected hours: every answer of the week (its worlds times 64 questions times both readers, run
+ * one after another in the cell) at the per-answer assumption, times the margin, rounded up. A full week is 1,024 answers,
+ * 39 hours, so its VM timeout (cell.ts plan: 1.5 times the expected hours plus 2, at most 72) is 61 hours.
+ */
+export const weeklyLineFileAgentHours = (worlds: number) =>
+  Math.ceil(worlds * (ALL_SETS.BGW.questions / ALL_SETS.BGW.conversations) * WEEKLY_LINE_READERS.length * WEEKLY_LINE_FILE_AGENT_SECONDS_PER_ANSWER * WEEKLY_LINE_FILE_AGENT_HOURS_MARGIN / 3600);
+
 /** A weekly cell's estimate for a full week: BG1-C's rate per world for an 8,000-token row, else the file agent's reads and their gating judges. */
 function weeklyEstimate(c: CellDefinition): CellEstimate {
   const s = ALL_SETS[c.set], key = `${c.system}:${c.configuration}`;
@@ -151,11 +194,12 @@ const perReader = (readers: readonly string[]): NonNullable<ArmDefinition['front
 });
 /** The 8,000-token rows are read live by claude-opus-5-5; particle-1 re-reads them (weeklyLineRereadPlans). */
 const LIVE = [OPUS];
+const R = WEEKLY_LINE_ROWS;
 const ARMS: Record<keyof typeof WEEKLY_LINE_ROWS, () => ArmSpec> = {
-  gbrain: () => ({ id: 'p', mode: 'packed', budget: 8000, label: F6_ARMS.p.label, retrieval: F6_ARMS.p.retrieval, readers: [...LIVE], frontier: perReader(LIVE) }),
-  'grep-agent': () => ({ id: 'whole-agent', mode: 'agent', label: `grep agent, uncapped ripgrep, ${FILE_AGENT_MAX_TURNS} turns`, readers: [...WEEKLY_LINE_READERS], frontier: perReader(WEEKLY_LINE_READERS) }),
-  'extract-first': () => ({ id: 'component-b8000', mode: 'packed', budget: 8000, label: 'component, 8,000 tokens', readers: [...LIVE], frontier: perReader(LIVE) }),
-  'memory-bank': () => ({ id: 'component-b8000', mode: 'packed', budget: 8000, label: 'component, 8,000 tokens', readers: [...LIVE], frontier: perReader(LIVE) }),
+  gbrain: () => ({ id: 'p', mode: R.gbrain.mode, budget: R.gbrain.budget, label: F6_ARMS.p.label, retrieval: F6_ARMS.p.retrieval, readers: [...LIVE], frontier: perReader(LIVE) }),
+  'grep-agent': () => ({ id: 'whole-agent', mode: R['grep-agent'].mode, label: `grep agent, uncapped ripgrep, ${FILE_AGENT_MAX_TURNS} turns`, readers: [...WEEKLY_LINE_READERS], frontier: perReader(WEEKLY_LINE_READERS) }),
+  'extract-first': () => ({ id: 'component-b8000', mode: R['extract-first'].mode, budget: R['extract-first'].budget, label: 'component, 8,000 tokens', readers: [...LIVE], frontier: perReader(LIVE) }),
+  'memory-bank': () => ({ id: 'component-b8000', mode: R['memory-bank'].mode, budget: R['memory-bank'].budget, label: 'component, 8,000 tokens', readers: [...LIVE], frontier: perReader(LIVE) }),
 };
 
 /**
@@ -177,7 +221,7 @@ export function generateWeeklyLineCells(input: WeeklyLineInput): CellDefinition[
     const hours = BG1_MEASURED.hours_per_mtok[`${system}:${configuration}`];
     const def: CellDefinition = {
       ...made, canonical_instrument: 'bg1', effort: WEEKLY_LINE_EFFORT, shards: 1,
-      expected_hours: hours ? Math.ceil(hours * ALL_SETS.BGW.corpus_tokens / 1e6 * BG1C_WORLD_RATIO) : made.expected_hours,
+      expected_hours: system === 'baseline-file-agent' ? weeklyLineFileAgentHours(worlds.length) : hours ? Math.ceil(hours * ALL_SETS.BGW.corpus_tokens / 1e6 * BG1C_WORLD_RATIO) : made.expected_hours,
       week: { ...week, worlds: [...worlds] }, ...(g8 ? { gbrain_build: { release: gbrain.release, commit: gbrain.commit } } : {}),
     };
     return { ...def, estimate: weeklyEstimate(def) };

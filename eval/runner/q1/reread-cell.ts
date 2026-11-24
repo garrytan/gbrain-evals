@@ -70,7 +70,7 @@ import { DEFAULT_ROUTE_CLASSES } from '../shootout-cell.ts';
 import type { PackedContext } from '../systems/render-v2.ts';
 import { claimOut, keylessUpstreamArg } from './calibration-cell.ts';
 import { answerAppender, bg1GeminiKey, custodyGate, devOnly, findCell, frontierInstrumentId, gatherStaging, JUDGED, latestBy, loadBG1CManifest, metering, needsCustody, onSlot, readerMaxTokens, readPrompt, refuseCompatJudges, requiredJudges, scheduledQuestions,
-  selectCellQuestions, type CellManifestId, type MeterLine, type RequiredJudge, type StagedRetrieval } from './cell.ts';
+  selectCellQuestions, weeklyRunStamp, type CellManifestId, type MeterLine, type RequiredJudge, type StagedRetrieval } from './cell.ts';
 import { frontierJudgesFor, isBg1Benchmark, PER_READER_JUDGE_SETTINGS, pinnedJudgeRouteCaps, policyKey, type ArmDefinition, type CellDefinition } from './cells/definitions.ts';
 import { loadRS1Manifest } from './cells/rs1.ts';
 import { exitCodeOf, refuse, renderMessage, ScoreboardError } from './scoreboard-errors.ts';
@@ -315,10 +315,11 @@ export async function runReread(p: PreparedReread, opts: { providerProxy?: strin
   const env = opts.env ?? process.env;
   const maxAttempts = opts.maxAttempts ?? DEFAULT_MAX_ATTEMPTS;
   const cellId = p.cell_id;
+  const weeklyRun = weeklyRunStamp(def, env);
   const dir = join(p.out, 'cells', cellId);
   mkdirSync(dir, { recursive: true });
-  const answers = new RecordLog(join(dir, 'answers.ndjson'), 'answer');
-  const judgments = new RecordLog(join(dir, 'judgments.ndjson'), 'judgment');
+  const answers = new RecordLog(join(dir, 'answers.ndjson'), 'answer', weeklyRun);
+  const judgments = new RecordLog(join(dir, 'judgments.ndjson'), 'judgment', weeklyRun);
   const appendAnswer = answerAppender(dir, answers, maxAttempts);
   const meters = join(dir, 'meters.ndjson');
   const meter = metering(opts.providerProxy ?? null, { meter: (m: MeterLine) => appendFileSync(meters, JSON.stringify(m) + '\n') }, env);
