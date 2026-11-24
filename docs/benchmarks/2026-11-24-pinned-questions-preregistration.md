@@ -183,31 +183,38 @@ registry entry.
 
 ## Amendments
 
-### 2026-11-25: enforcement and scoring fixes before the pilot
+### 2026-11-24: enforcement and scoring fixes before the pilot
 
 Made before any paid call or counted run, from the preregistration PR's review. None changes an arm, a seed, a
 metric, a model, a judge or a bar; each makes the runner do what this plan already says, or closes a case it got wrong.
 
 - **Judge check.** A counted launch refuses unless `--judge-check` names the judge-check stage's receipt, on the same
-  gbrain build and judge prompt, that ran every counted model and whose rows pass the check for every judge the
+  gbrain build, judge prompt and runner source, that ran every counted model and whose rows pass the check for every judge the
   counted models need. A judge with an undefined kappa (unanimous labels) or no rows fails. When a claim was removed
   and the answer still states that claim (for the CEO, words such as "chief executive" or "led by") without the old
-  value, its rule label is ambiguous, since token presence cannot tell a correct non-answer from a wrong replacement.
+  value, its rule label is ambiguous, since token presence cannot tell a correct non-answer from a wrong replacement;
+  for the CEO that needs a capitalised name after the phrase, so "no chief executive is named" stays correct.
   Agreement is also reported per model under test.
 - **Outcomes.** A provider's structured refusal or content-filter finish reason counts as a safety stop, read from
   gbrain's gateway result, since gbrain's question adapter keeps only the length signal. A refused connection is a
   provider error, not a safety stop. A question gbrain blocks for a setup reason (no key, consent, worker or gbrain's
   own spend limit), or one another model answered, is a harness error, never a scored answer, and a paid launch
-  refuses unless every model and judge has its provider key. Each row records `answer_model` from the gateway.
+  refuses unless every model and judge has its provider key. Each row records `answer_model` from gbrain's gateway
+  usage record, which names the model gbrain requested (`provider:modelId`), not the id the provider served, so the
+  wrong-model check catches gbrain routing a call to another model; a dated snapshot of the model under test (an id
+  that begins with its bare id) counts as that model.
 - **Runs and receipts.** A run with a unit still owed its retry is incomplete and unpublishable. A torn final
   checkpoint line is cut off and the run resumes. Each stage writes `receipt.<stage>.json`, so the judge-check stage no
-  longer replaces the pilot's receipt; a resumed receipt sums the spend of every process behind its rows; the preflight
-  estimates only the units still to ask and prices the judge at its worst case until graded rows measure it.
+  longer replaces the pilot's receipt, and a launch refuses an output directory that holds another stage's seeds; a
+  receipt sums the spend of every process that asked a unit behind its rows, never another stage's; the preflight
+  estimates only the units still to ask and prices the judge at its worst case until graded rows under the same
+  checkpoint key measure it.
   Provider failure text and judge errors are kept with keys and credentials redacted.
-- **Keyless arm.** A gbrain error partway through a change keeps the question's row, marked, out of every rate and
-  failing exact conformance; a failed presence check voids the seed.
+- **Keyless arm.** A gbrain error partway through a change keeps the question's row, marked, records none of its
+  sentences, leaves it out of every rate and fails exact conformance; a failed presence check voids the seed.
 - **Analysis.** The receipts compute the intervals and tests this plan registers (cluster bootstrap over questions,
-  McNemar, Holm, the paired non-inferiority interval); the sentence-level Wilson interval is exploratory only.
+  McNemar, Holm, the paired non-inferiority interval, every interval resampling whole questions); the sentence-level
+  Wilson interval is exploratory only.
 
 ## Disclosures
 
