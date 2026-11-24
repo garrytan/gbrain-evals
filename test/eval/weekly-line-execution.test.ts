@@ -30,7 +30,7 @@ import { BG1_FIXTURES_ROOT, bg1Conversation, type Bg1Manifest, type Corpus } fro
 import type { ChatLike, ChatResult } from '../../eval/runner/memory-qa/qa-v2.ts';
 import { DEFAULT_ROUTE_CAPS, keylessKeys, keylessUpstream, MeteringProxy } from '../../eval/runner/metering-proxy.ts';
 import { sha256, WEEKLY_CELLS_ENV, WEEKLY_CELLS_SHA256_ENV, WEEKLY_RUN_ENV } from '../../eval/runner/memory-qa/records.ts';
-import { findCell, runCell, weeklyCampaignManifest, windowedRunGuard } from '../../eval/runner/q1/cell.ts';
+import { findCell, runCell, scheduledQuestions, weeklyCampaignManifest, windowedRunGuard } from '../../eval/runner/q1/cell.ts';
 import { CELL_VM_MAX_HOURS, cellVmHours, pinnedJudgeRouteCaps, weeklyUnitWorlds } from '../../eval/runner/q1/cells/definitions.ts';
 import { generateWeeklyLineCells, WEEKLY_LINE_MODELS, weeklyLineRereadPlans } from '../../eval/runner/q1/cells/weekly-line.ts';
 import { prepareReread, rereadArm, rereadCellId, rereadKeys, rereadRouteCaps, runReread } from '../../eval/runner/q1/reread-cell.ts';
@@ -603,6 +603,7 @@ describe('a cell too long for one VM runs as launch units of its week', () => {
     const order = launchWeek(dir, 'WL-T', deps, 500);
     const campaign = JSON.parse(readFileSync(join(dir, CAMPAIGN_FILE), 'utf8')) as CampaignManifest;
     Object.assign(process.env, order.env);
+    expect(bg1LaunchProblems(campaign)).toEqual([]);
     const def = findCell(SPLIT, undefined, 'weekly', process.env);
     expect([def.shards, def.kept_units]).toEqual([2, 1]);
     const s = scripted();
@@ -638,6 +639,17 @@ describe('a cell too long for one VM runs as launch units of its week', () => {
     const arm = def.arms[0].cell_id;
     const answers = readFileSync(join(dir, 'cells', arm, 'answers.ndjson'), 'utf8').trim().split('\n').map(l => JSON.parse(l));
     expect([...new Set(answers.map(a => a.conversation_id ?? a.conversation))].sort()).toEqual(WORLDS);
+    const runConfig = (out: string) => JSON.parse(readFileSync(join(out, 'cells', arm, 'run-config.json'), 'utf8'));
+    const weekSha = sha256(scheduledQuestions(def, fixtureCorpus(WORLDS), null).map(q => q.id).join('\n'));
+    expect([...outs.map(o => runConfig(o).scheduled_sha256 === weekSha), runConfig(dir).scheduled_sha256 === weekSha]).toEqual([false, false, true]);
+
+    const reread = order.rereads!.find(r => r.argv.includes(SPLIT))!;
+    expect(reread.units).toEqual([`${SPLIT}.c0`, `${SPLIT}.c1`]);
+    expect(order.rereads!.filter(r => r !== reread).every(r => r.units === undefined)).toBe(true);
+    process.env.GBRAIN_EVALS_BGW_UNIT = WORLDS.join(',');
+    const rereadOf = (name: string, from: string[]) => prepareReread(def, def.arms[0], { sources: from.map(o => join(o, 'runs', SPLIT)), reader: PARTICLE, out: join(scratch(name), 'out'), manifest: 'weekly' });
+    expect(rereadOf('reread-split', outs).verify).toMatchObject({ ok: true, problems: [] });
+    expect(message(() => rereadOf('reread-one', outs.slice(1)))).toContain(`the sources stage 1 launch unit (${WORLDS[1]}), not ${SPLIT}'s 2 (${WORLDS[0]}; ${WORLDS[1]})`);
 
     for (const st of steps) if (st.stage === 'launch') markStep(dir, st.id, 'done');
     const touch = (ids: readonly string[]) => { for (const id of ids) { mkdirSync(join(dir, 'cells', id), { recursive: true }); for (const f of ['answers.ndjson', 'judgments.ndjson']) if (!existsSync(join(dir, 'cells', id, f))) writeFileSync(join(dir, 'cells', id, f), ''); } };

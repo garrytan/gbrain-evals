@@ -312,6 +312,49 @@ export function weeklyShardWorlds(def: Pick<CellDefinition, 'id' | 'week' | 'sha
   return weeklyUnitWorlds(def, shard.index);
 }
 
+/**
+ * The launch metadata in a run config's `cell` that a re-read's sources may differ in (GBEV-3's decision A, A6 revision):
+ * Q1 wrote these into run-config.json before A24, so shards of one cell launched under A17, A23 and A24 publish different
+ * bytes for the same reading. Deny by default: every other field, a new or unknown one included, must match.
+ */
+export const REREAD_LAUNCH_FIELDS = ['expected_hours', 'fresh_before', 'lease', 'restore_command', 'snapshot_command', 'shards'] as const;
+
+/**
+ * A run config without REREAD_LAUNCH_FIELDS, serialized as runConfigText writes it; null when the bytes are not that
+ * serialization of their own JSON, so a difference in anything but those fields (whitespace included) still refuses.
+ * `unitParts` also leaves out scheduled_sha256 and dataset.files, the two parts the launch units of a weekly cell split
+ * across VMs freeze for their own worlds only (splitScheduleProblems checks those parts instead).
+ */
+export function readingConfig(text: string, unitParts = false): string | null {
+  let c: { cell?: unknown; scheduled_sha256?: unknown; dataset?: unknown };
+  try { c = JSON.parse(text); } catch { return null; }
+  if (JSON.stringify(c, null, 2) + '\n' !== text) return null;
+  if (c.cell && typeof c.cell === 'object') for (const k of REREAD_LAUNCH_FIELDS) delete (c.cell as Record<string, unknown>)[k];
+  if (unitParts) { delete c.scheduled_sha256; if (c.dataset && typeof c.dataset === 'object') delete (c.dataset as Record<string, unknown>).files; }
+  return JSON.stringify(c, null, 2) + '\n';
+}
+
+/**
+ * Why sources are not a weekly cell's launch units, each with its own part of the week: the units' staged worlds must be
+ * the cell's launch units (weeklyUnitWorlds), each once, and each unit's run config must freeze the week's `selected`
+ * questions on its worlds (scheduled_sha256) and the week's dataset files for its worlds (`files`: the whole week's
+ * load, its manifest and each world's files). Empty when they are, so a re-read or merge of a split cell covers the
+ * week's schedule and dataset exactly.
+ */
+export function splitScheduleProblems(def: Pick<CellDefinition, 'id' | 'week' | 'shards' | 'kept_units'>, selected: readonly MemoryQuestion[], files: Corpus['source']['files'],
+  units: ReadonlyArray<{ worlds: readonly string[]; config: string | null }>): string[] {
+  const want = Array.from({ length: def.shards }, (_, i) => [...weeklyUnitWorlds(def, i)].sort().join(','));
+  const got = units.map(u => [...u.worlds].sort().join(','));
+  if (got.length !== want.length || want.some(w => !got.includes(w))) return [`the sources stage ${got.length} launch unit${got.length === 1 ? '' : 's'} (${got.join('; ') || 'none'}), not ${def.id}'s ${def.shards} (${want.join('; ')})`];
+  const off = units.filter(u => {
+    let c: { scheduled_sha256?: unknown; dataset?: { files?: unknown } };
+    try { c = JSON.parse(u.config ?? ''); } catch { return true; }
+    const mine = files.filter(f => !f.path.startsWith('worlds/') || u.worlds.some(w => f.path.startsWith(`worlds/${w}/`)));
+    return c.scheduled_sha256 !== sha256(selected.filter(q => u.worlds.includes(q.conversation)).map(q => q.id).join('\n')) || JSON.stringify(c.dataset?.files) !== JSON.stringify(mine);
+  }).length;
+  return off ? [`${off} of ${def.id}'s launch units froze a schedule or dataset that is not this tree's for its worlds`] : [];
+}
+
 export function needsCustody(def: Pick<CellDefinition, 'benchmark' | 'split'>): boolean {
   if (def.split === 'dev' || def.benchmark === 'lme-m') return false;
   try { return loadSplit(def.benchmark).sealed.length > 0; } catch { return true; }
@@ -1948,7 +1991,21 @@ export async function main(argv: string[]): Promise<number> {
       if (offWeek) throw refuse({ code: 'PREFLIGHT_FAILED', message: offWeek, why: "a weekly cell's shards merge only its own week's worlds", fix: { next: 'report' } });
       const selected = selectCellQuestions(corpus.questions.filter(q => splitConversations(def.benchmark, def.split, corpus).has(q.conversation)), def.selection);
       const capabilities = JSON.parse(readFileSync(join(from[0], 'cells', def.arms[0].cell_id, 'receipt.json'), 'utf8')).system.capabilities as CapabilityRecord;
-      const configs = new Map(def.arms.map(a => { const t = readFileSync(join(from[0], 'cells', a.cell_id, 'run-config.json'), 'utf8'); writeAtomic(join(out, 'cells', a.cell_id, 'run-config.json'), t); return [a.id, { text: t, sha: sha256(t) }]; }));
+      // A weekly cell split across VMs publishes the week's run config: its units' configs, each with its own worlds' part of
+      // the week's schedule and dataset, agree in everything else and cover the week exactly, and the merged one freezes all of it.
+      const split = !!def.week && def.shards > 1;
+      const configs = new Map(def.arms.map(a => {
+        const texts = from.map(f => readFileSync(join(f, 'cells', a.cell_id, 'run-config.json'), 'utf8'));
+        let t = texts[0];
+        if (split) {
+          const problems = new Set(texts.map(x => readingConfig(x, true) ?? x)).size > 1 ? [`the units publish different run configurations for ${a.cell_id}`]
+            : splitScheduleProblems(def, selected, corpus.source.files, from.map((f, i) => ({ worlds: [...gatherStaging(def.id, [f]).keys()], config: texts[i] })));
+          if (problems.length) throw refuse({ code: 'PREFLIGHT_FAILED', message: `${def.id}'s units can't merge: ${problems.join('; ')}`, why: "a split weekly cell merges only its launch units, which together run the week's schedule exactly", fix: { next: 'report' } });
+          t = JSON.stringify({ ...JSON.parse(t), dataset: corpus.source, scheduled_sha256: sha256(selected.map(q => q.id).join('\n')) }, null, 2) + '\n';
+        }
+        writeAtomic(join(out, 'cells', a.cell_id, 'run-config.json'), t);
+        return [a.id, { text: t, sha: sha256(t) }];
+      }));
       const res = publishCell(def, def.arms, from, out, { instrument: instrumentFor(def.canonical_instrument), selected, invalidReasons: [], configs, capabilities, stopped: null, maxAttempts: DEFAULT_MAX_ATTEMPTS });
       console.log(JSON.stringify(res, null, 2));
       return res.every(r => r.status === 'complete') ? 0 : 4;

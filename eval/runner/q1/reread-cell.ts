@@ -24,7 +24,8 @@
  * of every source. Each frozen context of the arm must hash to its prompt_sha256 and to its context_sha256 (render-v2:
  * sha256 of the pack identity, a NUL and the prompt), which ties the bytes to the answers that read them; the
  * published run-configs must agree in every field but REREAD_LAUNCH_FIELDS, and their schedule must be the one this
- * tree selects; the published answers must be the staged ones;
+ * tree selects (for a weekly cell split across VMs, the sources must be every launch unit, each with its own worlds' part
+ * of the week's schedule: splitScheduleProblems); the published answers must be the staged ones;
  * and each scheduled question must have one frozen context that every stored answer of the arm read (a question whose
  * retrieval failed has none and keeps that failure, as the source cell recorded it). verify.json in --out holds the counts and each contexts file's
  * sha256; any problem refuses the whole run, and stdout carries only counts and hashes.
@@ -76,7 +77,7 @@ import { DEFAULT_ROUTE_CLASSES } from '../shootout-cell.ts';
 import type { PackedContext } from '../systems/render-v2.ts';
 import { claimOut, keylessUpstreamArg } from './calibration-cell.ts';
 import { answerAppender, bg1CellManifest, bg1GeminiKey, custodyGate, devOnly, findCell, frontierInstrumentId, gatherStaging, JUDGED, latestBy, loadBG1CManifest, metering, needsCustody, onSlot, readerMaxTokens, readPrompt, refuseCompatJudges, requiredJudges, scheduledQuestions,
-  selectCellQuestions, weekCorpusProblems, weeklyRunStamp, weekScope, type CellManifestId, type MeterLine, type RequiredJudge, type StagedRetrieval } from './cell.ts';
+  readingConfig, REREAD_LAUNCH_FIELDS, selectCellQuestions, splitScheduleProblems, weekCorpusProblems, weeklyRunStamp, weekScope, type CellManifestId, type MeterLine, type RequiredJudge, type StagedRetrieval } from './cell.ts';
 import { bg1JudgeOf, frontierJudgesFor, isWeeklyLineCell, isWindowedBenchmark, PER_READER_JUDGE_SETTINGS, pinnedJudgeRouteCaps, policyKey, type ArmDefinition, type CellDefinition } from './cells/definitions.ts';
 import { loadRS1Manifest } from './cells/rs1.ts';
 import { exitCodeOf, refuse, renderMessage, ScoreboardError } from './scoreboard-errors.ts';
@@ -128,24 +129,7 @@ const armOf = (key: string) => key.slice(key.lastIndexOf('|') + 1);
 const questionOf = (key: string) => key.slice(key.indexOf('|') + 1, key.lastIndexOf('|'));
 const answerIdentity = (xs: AnswerRecord[]) => xs.map(a => JSON.stringify(a)).sort().join('\n');
 
-/**
- * The launch metadata in a run config's `cell` that a re-read's sources may differ in (GBEV-3's decision A, A6 revision):
- * Q1 wrote these into run-config.json before A24, so shards of one cell launched under A17, A23 and A24 publish different
- * bytes for the same reading. Deny by default: every other field, a new or unknown one included, must match.
- */
-export const REREAD_LAUNCH_FIELDS = ['expected_hours', 'fresh_before', 'lease', 'restore_command', 'snapshot_command', 'shards'] as const;
-
-/**
- * A run config without REREAD_LAUNCH_FIELDS, serialized as runConfigText writes it; null when the bytes are not that
- * serialization of their own JSON, so a difference in anything but those fields (whitespace included) still refuses.
- */
-export function readingConfig(text: string): string | null {
-  let c: { cell?: unknown };
-  try { c = JSON.parse(text); } catch { return null; }
-  if (JSON.stringify(c, null, 2) + '\n' !== text) return null;
-  if (c.cell && typeof c.cell === 'object') for (const k of REREAD_LAUNCH_FIELDS) delete (c.cell as Record<string, unknown>)[k];
-  return JSON.stringify(c, null, 2) + '\n';
-}
+export { readingConfig, REREAD_LAUNCH_FIELDS } from './cell.ts';
 
 /**
  * The byte-for-byte check of every source and the reading plan. Problems are counted, never named by question, since
@@ -161,6 +145,8 @@ export function verifySources(def: CellDefinition, arm: ArmDefinition, sources: 
   const staged: AnswerRecord[] = [];
   const retrievals = new Map<string, StagedRetrieval>();
   const seen = new Set<string>();
+  const split = !!def.week && def.shards > 1;
+  const units: Array<{ worlds: string[]; config: string | null }> = [];
   for (const [i, given] of sources.entries()) {
     const root = resolve(given);
     const out = dirname(dirname(root));
@@ -184,10 +170,13 @@ export function verifySources(def: CellDefinition, arm: ArmDefinition, sources: 
     }
     if (malformed) problems.push(`source ${i}: ${malformed} contexts.ndjson line(s) are not JSON`);
     const config = join(out, 'cells', arm.cell_id, 'run-config.json');
-    if (existsSync(config)) { src.config_sha256 = sha256(readFileSync(config)); configs.set(readFileSync(config, 'utf8'), src.config_sha256); }
+    const configText = existsSync(config) ? readFileSync(config, 'utf8') : null;
+    if (configText !== null) { src.config_sha256 = sha256(configText); configs.set(configText, src.config_sha256); }
     else problems.push(`source ${i} has no published run-config.json for ${arm.cell_id}`);
     const mine: AnswerRecord[] = [];
-    for (const [conv, s] of gatherStaging(def.id, [out])) {
+    const stagedHere = gatherStaging(def.id, [out]);
+    if (split) units.push({ worlds: [...stagedHere.keys()], config: configText });
+    for (const [conv, s] of stagedHere) {
       if (seen.has(conv)) { problems.push(`source ${i} stages a conversation another source stages too`); continue; }
       seen.add(conv);
       const dir = join(s.root, 'r', s.rid);
@@ -203,16 +192,18 @@ export function verifySources(def: CellDefinition, arm: ArmDefinition, sources: 
     if (stagedQs !== publishedQs.size) problems.push(`source ${i}: ${stagedQs} questions have staged answers and ${publishedQs.size} published ones; republish its cells (bun eval/runner/q1/cell.ts merge)`);
   }
   if (counts.contexts_matched !== counts.contexts_checked) problems.push(`${counts.contexts_checked - counts.contexts_matched} of ${counts.contexts_checked} frozen contexts of arm ${arm.id} do not hash to their prompt_sha256 and context_sha256`);
-  const readings = new Set([...configs.keys()].map(t => (configs.size > 1 ? readingConfig(t) : null) ?? t));
-  if (readings.size > 1) problems.push(`the sources publish ${readings.size} different run configurations for ${arm.cell_id}, comparing every field but cell.${REREAD_LAUNCH_FIELDS.join(', cell.')}`);
+  const readings = new Set([...configs.keys()].map(t => (configs.size > 1 || split ? readingConfig(t, split) : null) ?? t));
+  if (readings.size > 1) problems.push(`the sources publish ${readings.size} different run configurations for ${arm.cell_id}, comparing every field but cell.${REREAD_LAUNCH_FIELDS.join(', cell.')}${split ? ', and each launch unit\'s scheduled_sha256 and dataset.files' : ''}`);
   if (problems.length) return { verify, plan: null };
 
   const [configText] = readings;
-  verify.source_config_sha256 = configs.size > 1 ? sha256(configText) : configs.get(configText)!;
-  const config = JSON.parse(configText) as { limit: number | null; scheduled_sha256: string };
+  verify.source_config_sha256 = configs.size > 1 || split ? sha256(configText) : configs.get(configText)!;
+  const config = JSON.parse(configText) as { limit: number | null; scheduled_sha256?: string };
   const selected = scheduledQuestions(def, corpus, config.limit);
-  if (sha256(selected.map(q => q.id).join('\n')) !== config.scheduled_sha256) {
-    problems.push(`this tree schedules ${selected.length} questions for ${def.id}, not the schedule its run-config.json froze`);
+  const schedule = split ? splitScheduleProblems(def, selected, corpus.source.files, units)
+    : sha256(selected.map(q => q.id).join('\n')) !== config.scheduled_sha256 ? [`this tree schedules ${selected.length} questions for ${def.id}, not the schedule its run-config.json froze`] : [];
+  if (schedule.length) {
+    problems.push(...schedule);
     return { verify, plan: null };
   }
   const scheduled = arm.questions ? selectCellQuestions(selected, arm.questions) : selected;

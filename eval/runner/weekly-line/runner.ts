@@ -344,8 +344,12 @@ export function planWeek(o: PlanInput, deps: RunnerDeps): { run: RunIdentity; st
   return { run, steps, frozen: false };
 }
 
-/** One particle-1 re-read as launch.json hands it over: the reread-cell.ts command inside the window, to which the host adds --source, --out and the lease flags. */
-export interface LaunchReread { id: string; argv: string[] }
+/**
+ * One particle-1 re-read as launch.json hands it over: the reread-cell.ts command inside the window, to which the host adds
+ * --source, --out and the lease flags. A re-read of a cell split across VMs names its launch units (`units`), and the host
+ * adds one --source per unit, in that order.
+ */
+export interface LaunchReread { id: string; argv: string[]; units?: string[] }
 /** One split cell's merge as launch.json hands it over: the cell.ts merge command into the run directory, to which the host adds one --from per launch unit, in `units` order. */
 export interface LaunchMerge { cell: string; units: string[]; argv: string[] }
 export interface LaunchOrder {
@@ -395,7 +399,11 @@ export function launchWeek(dir: string, window: string | undefined, deps: Pick<R
     const flags = ['--manifest', 'weekly', '--paid-window', window!];
     order = { ...order, cap_usd: capUsd!, cells_cap_usd: cellsCap, rereads_cap_usd: rereadsCap, campaign: CAMPAIGN_FILE,
       env: { ...order.env, [WEEKLY_CELLS_ENV]: cellsPath, [WEEKLY_CELLS_SHA256_ENV]: sha256(readFileSync(cellsPath)), GBRAIN_EVALS_BG1_WORLD_END: week.world_end, GBRAIN_EVALS_BGW_BATCH: week.batch, GBRAIN_EVALS_BGW_UNIT: week.worlds.join(',') },
-      rereads: file.rereads.map((r, i) => ({ id: r.id, argv: ['bun', 'eval/runner/q1/reread-cell.ts', '--cell', r.cell, '--arm', r.arm, '--reader', r.reader, ...flags, '--window-cap-usd', String(rereadCaps[i])] })) };
+      rereads: file.rereads.map((r, i) => {
+        const n = file.cells.find(c => c.id === r.cell)?.shards ?? 1;
+        return { id: r.id, argv: ['bun', 'eval/runner/q1/reread-cell.ts', '--cell', r.cell, '--arm', r.arm, '--reader', r.reader, ...flags, '--window-cap-usd', String(rereadCaps[i])],
+          ...(n > 1 ? { units: Array.from({ length: n }, (_, k) => `${r.cell}.c${k}`) } : {}) };
+      }) };
   }
   writeJson(join(dir, LAUNCH_FILE), order);
   return order;
