@@ -70,9 +70,10 @@ const r4 = (n: number) => Math.round(n * 10_000) / 10_000;
 const pct = (xs: number[]) => xs.length ? { p50: r4(percentile(xs, 50)), p95: r4(percentile(xs, 95)), n: xs.length } : null;
 
 /** Which spend a usage line belongs to: ingest, retrieval, the harness's reader and judge, or something else. */
-export function usagePhase(u: UsageLine): 'ingest' | 'retrieval' | 'answer' | 'judge' | 'other' {
+export function usagePhase(u: UsageLine): 'ingest' | 'retrieval' | 'answer' | 'judge' | 'probe' | 'other' {
   if (u.route_class === 'judge' || u.slot === 'judge') return 'judge';
   if (u.bucket === 'harness' || u.route_class === 'reader' || u.slot === 'harness') return 'answer';
+  if (u.phase === 'probe') return 'probe';
   if (u.key.startsWith('ingest:') || u.phase === 'commit' || u.phase === 'background' || u.bucket === 'unattributed-background') return 'ingest';
   if (u.key.startsWith('q:') || u.phase === 'query') return 'retrieval';
   return 'other';
@@ -147,7 +148,7 @@ export function costSpeed(inp: CostSpeedInputs) {
     per_question_usd: { retrieval: questions ? r4(retrievalUsd / questions) : null, answer: questions ? r4(answerUsd / questions) : null },
     spend: {
       campaign: { billed_usd: r4(forwarded.filter(u => !u.charged_reservation).reduce((n, u) => n + (u.actual_usd ?? 0), 0)), reserved_unsettled_usd: r4(forwarded.filter(u => u.charged_reservation).reduce((n, u) => n + (u.actual_usd ?? 0), 0)),
-        by_phase: { ingest: ingestUsd, retrieval: retrievalUsd, answer: answerUsd, judge: sum(by('judge')), other: sum(by('other')) }, requests: forwarded.length, refused: inp.usage.length - forwarded.length },
+        by_phase: { ingest: ingestUsd, retrieval: retrievalUsd, answer: answerUsd, judge: sum(by('judge')), other: sum([...by('other'), ...by('probe')]) }, requests: forwarded.length, refused: inp.usage.length - forwarded.length },
       cached_replay_usd: inp.answers ? replayValueUsd(inp.answers) : null,
       projected_monthly: { personal: workload(WORKLOADS.personal), team: workload(WORKLOADS.team) },
     },

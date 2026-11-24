@@ -74,6 +74,10 @@
  *     Phases (`commit` during /ingest calls, `background` from the last /ingest
  *     to /finish ready, `query`) are labels; cost-speed.ts splits commit from
  *     background only for systems whose capability record says synchronous.
+ *     `/__proxy/probe {slot, queries}` labels `probe` any embedding or rerank
+ *     request whose search text is exactly a registered probe passage, so a
+ *     write that overlaps a probe search keeps its own phase and the search is
+ *     never billed to the write (each request still charged exactly once).
  *   route output caps  `--route-caps extraction=4096,reader=2048,judge=2048` with
  *     `--route-class harness=reader,judge=judge` (other slots use
  *     `--default-route-class`, extraction by default) replace the one output
@@ -219,8 +223,16 @@ export interface RouteCaps { caps: Record<string, number>; slots: Record<string,
  */
 export const DEFAULT_ROUTE_CAPS: Record<string, number> = { extraction: 4096, reader: 2048, judge: 2048, agent: 16000, 'reader@particle:particle-1': PARTICLE.models['particle-1'].output_floor };
 
-export type Phase = 'commit' | 'background' | 'query';
-export const PHASES: readonly Phase[] = ['commit', 'background', 'query'];
+export type Phase = 'commit' | 'background' | 'query' | 'probe';
+export const PHASES: readonly Phase[] = ['commit', 'background', 'query', 'probe'];
+
+/** The search texts a provider request carries: an embedding request's inputs and a rerank request's query. */
+export function searchTexts(prov: ProviderName, route: string, body: Record<string, any> | undefined): string[] {
+  if (!body) return [];
+  if (/\/embeddings$/.test(route) && (prov === 'openai' || prov === 'voyage')) return (Array.isArray(body.input) ? body.input : [body.input]).filter((x: unknown): x is string => typeof x === 'string');
+  if (prov === 'voyage' && /\/rerank$/.test(route) && typeof body.query === 'string') return [body.query];
+  return [];
+}
 
 export interface ProviderLimits { rpm?: number; tpm?: number; concurrency?: number }
 
@@ -452,6 +464,7 @@ export class MeteringProxy {
   readonly unattributed = new Map<string, { usd: number; requests: number }>();
   private bindings = new Map<string, { key: string; brain: string | null; phase: Phase | null }>();
   private phases = new Map<string, Phase>();
+  private probeQueries = new Map<string, Set<string>>();
   private seq = 0;
   /** Set by the first response whose usage the ledger cannot price; every later paid request is refused before forwarding. */
   private unpriced: string | null = null;
@@ -475,6 +488,8 @@ export class MeteringProxy {
   unbind(slot: string, key?: string) { if (key === undefined || this.bindings.get(slot)?.key === key) this.bindings.delete(slot); }
   /** Label the slot's later requests with a phase (commit, background, query) until it changes; a binding's own phase wins. */
   setPhase(slot: string, phase: Phase | null) { if (phase) this.phases.set(slot, phase); else this.phases.delete(slot); }
+  /** Label the slot's later requests `probe` when one of their search texts is exactly one of `queries` (a write-to-queryable probe's passage), whatever phase the slot is in; null clears them. Held in memory only, never logged. */
+  setProbeQueries(slot: string, queries: string[] | null) { if (queries?.length) this.probeQueries.set(slot, new Set(queries)); else this.probeQueries.delete(slot); }
   private meter(key: string): Meter { let m = this.meters.get(key); if (!m) this.meters.set(key, m = newMeter()); return m; }
   private settled(key: string) {
     const n = (this.inflight.get(key) ?? 1) - 1;
@@ -559,12 +574,17 @@ export class MeteringProxy {
 
   private async control(path: string, req: Request): Promise<Response> {
     if (this.options.controlToken && req.headers.get('x-proxy-control') !== this.options.controlToken) return json(403, 'invalid_request', 'control endpoints need the x-proxy-control token');
-    let body: { slot?: string; key?: string; timeout_ms?: number; brain?: string | null; phase?: Phase | null };
+    let body: { slot?: string; key?: string; timeout_ms?: number; brain?: string | null; phase?: Phase | null; queries?: string[] | null };
     try { body = await req.json() as typeof body; } catch { return json(400, 'invalid_request', 'control body is not JSON'); }
     if (body.phase !== undefined && body.phase !== null && !PHASES.includes(body.phase)) return json(400, 'invalid_request', `phase must be one of ${PHASES.join(', ')}`);
     if (path === '/__proxy/bind' && body.slot && body.key) { this.bind(body.slot, body.key, { brain: body.brain, phase: body.phase }); return Response.json({ ok: true }); }
     if (path === '/__proxy/unbind' && body.slot) { this.unbind(body.slot); return Response.json({ ok: true }); }
     if (path === '/__proxy/phase' && body.slot) { this.setPhase(body.slot, body.phase ?? null); return Response.json({ ok: true }); }
+    if (path === '/__proxy/probe' && body.slot) {
+      if (body.queries != null && !(Array.isArray(body.queries) && body.queries.every(q => typeof q === 'string'))) return json(400, 'invalid_request', 'queries must be a list of strings or null');
+      this.setProbeQueries(body.slot, body.queries ?? null);
+      return Response.json({ ok: true });
+    }
     if (path === '/__proxy/finalize' && body.key) return Response.json(await this.finalize(body.key, Math.min(Number(body.timeout_ms ?? 30_000), 120_000)));
     return json(404, 'invalid_request', `no control route ${path}`);
   }
@@ -666,6 +686,8 @@ export class MeteringProxy {
       try { body = JSON.parse(raw); } catch { return refuse(400, 'invalid_request', 'request body is not JSON'); }
       if (!body || typeof body !== 'object' || Array.isArray(body)) return refuse(400, 'invalid_request', 'request body must be a JSON object');
     }
+    const probes = this.probeQueries.get(tag.slot);
+    if (probes && searchTexts(prov, route, body).some(t => probes.has(t))) tagged.phase = tag.phase = 'probe';
     const model = typeof body?.model === 'string' ? body.model : null;
     const modelCap = routeClass !== undefined && model ? p.routeCaps!.caps[`${routeClass}@${prov}:${model}`] : undefined;
     if (modelCap !== undefined) tagged.output_cap = cap = modelCap;
@@ -799,6 +821,8 @@ export class ProxyControl {
   unbind(slot: string) { return this.post('/__proxy/unbind', { slot }); }
   /** Label the slot's later requests with a phase: `commit` during /ingest calls, `background` from the last /ingest to /finish ready, `query`. */
   phase(slot: string, phase: Phase | null) { return this.post('/__proxy/phase', { slot, phase }); }
+  /** Label the slot's search requests whose text is exactly one of `queries` as `probe`, until cleared with null. */
+  probeQueries(slot: string, queries: string[] | null) { return this.post('/__proxy/probe', { slot, queries }); }
   finalize(key: string, timeoutMs = 30_000) { return this.post('/__proxy/finalize', { key, timeout_ms: timeoutMs }) as Promise<Meter>; }
   /** Run `fn` with the slot's provider calls charged to `key`; returns its result and the key's meter. */
   async around<T>(slot: string, key: string, fn: () => Promise<T>): Promise<{ value?: T; error?: unknown; meter: Meter }> {
