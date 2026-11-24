@@ -1,0 +1,2108 @@
+{
+  "schema": "gbrain-evals/q1-cell-manifest/v1",
+  "generated_by": "bun eval/runner/q1/cells/cs1.ts",
+  "preregistration": "docs/benchmarks/2026-11-24-cost-speed-preregistration.md",
+  "readers": [
+    "anthropic:claude-opus-5-5",
+    "particle:particle-1"
+  ],
+  "effort": "medium",
+  "prices": {
+    "anthropic:claude-haiku-5-5": {
+      "input": 0.1,
+      "output": 0.5,
+      "cache_read": 0.01,
+      "cache_write": 0.125
+    },
+    "anthropic:claude-opus-5-5": {
+      "input": 4,
+      "output": 20,
+      "cache_read": 0.2,
+      "cache_write": 5
+    },
+    "openai:gpt-4o-mini": {
+      "input": 0.15,
+      "output": 0.6,
+      "cache_read": 0.075,
+      "cache_write": 0.15
+    },
+    "openai:gpt-5-mini": {
+      "input": 0.25,
+      "output": 2,
+      "cache_read": 0.025,
+      "cache_write": 0.25
+    },
+    "particle:particle-1": {
+      "input": 0.25,
+      "output": 1,
+      "cache_read": 0.03
+    }
+  },
+  "assumptions": {
+    "reader_input_overhead_tokens": {
+      "default": 180,
+      "openai:gpt-6.1-sol": 130
+    },
+    "reader_tokens_per_budget_token": {
+      "default": 1,
+      "openai:gpt-6.1-sol": 0.66
+    },
+    "reader_tokens_per_cl100k": {
+      "default": 1.47,
+      "anthropic:claude-opus-5-5": 1.47,
+      "anthropic:claude-sonnet-5-5": 1.45,
+      "openai:gpt-6.1-sol": 0.975
+    },
+    "reader_output_tokens": {
+      "default": 400,
+      "anthropic:claude-opus-5-5": 720,
+      "anthropic:claude-sonnet-5-5": 395,
+      "openai:gpt-6.1-sol": 155
+    },
+    "vendor_default_tokens": {
+      "gbrain-defaults": 23800,
+      "ext-extract-first": 1200,
+      "ext-memory-bank": 10400,
+      "ext-graph-pipeline": 2200,
+      "ext-markdown-kb": 2300,
+      "ext-verbatim-session": 8000,
+      "baseline-hybrid": 7100,
+      "default": 8000
+    },
+    "ingest_usd_per_mtok": {
+      "ext-extract-first:common": 2.8,
+      "ext-extract-first:recipe": 95,
+      "ext-memory-bank:recipe": 1.72,
+      "ext-memory-bank:common": 1.4,
+      "ext-graph-pipeline:recipe": 18.4,
+      "ext-graph-pipeline:recipe:beam": 3.5,
+      "ext-graph-pipeline:common": 1.4,
+      "ext-graph-pipeline:common:beam": 3.98,
+      "ext-temporal-graph:common": 26.97,
+      "ext-temporal-graph:recipe": 90,
+      "ext-markdown-kb:recipe": 0,
+      "ext-markdown-kb:common": 0.1,
+      "ext-verbatim-session:recipe": 0,
+      "ext-verbatim-session:common": 0.1,
+      "gbrain-defaults:shipped-defaults": 0.12,
+      "gbrain-defaults:full-surface": 0.12,
+      "gbrain-defaults:common-embedder": 0.13,
+      "baseline-hybrid:baseline": 0.14
+    },
+    "gbrain_query_usd": 0.00176,
+    "probe_usd": {
+      "gbrain-defaults": {
+        "per_mtok": 6.5,
+        "max_per_conversation": 1.3
+      },
+      "ext-temporal-graph": {
+        "per_mtok": 1.7,
+        "max_per_conversation": 0.13
+      }
+    },
+    "judge": {
+      "lme": {
+        "model": "openai:gpt-4o-2024-08-06",
+        "calls": 1,
+        "input": 370,
+        "output": 2
+      },
+      "beam": {
+        "model": "openai:gpt-4.1-mini",
+        "calls": 3,
+        "input": 900,
+        "output": 60
+      }
+    },
+    "frontier_judge_output_tokens": 60,
+    "agent": {
+      "baseline-file-agent": {
+        "S1": 130000,
+        "S2a": 30000,
+        "S2b": 73000,
+        "S3": {
+          "anthropic:claude-opus-5-5": 9700,
+          "openai:gpt-6.1-sol": 7800,
+          "anthropic:claude-sonnet-5-5": 4950,
+          "default": 9700
+        },
+        "output": 2000,
+        "output_S3": {
+          "anthropic:claude-opus-5-5": 860,
+          "openai:gpt-6.1-sol": 210,
+          "anthropic:claude-sonnet-5-5": 460,
+          "default": 860
+        }
+      },
+      "think": {
+        "S1": 66200,
+        "S2a": 38600,
+        "S2b": 55200,
+        "S3": 36800,
+        "output": 1840
+      },
+      "ext-agent-runtime": {
+        "S3": 7000,
+        "output": 2000
+      }
+    },
+    "synthesize": {
+      "model": "anthropic:claude-opus-4-7",
+      "input": 34700,
+      "output": 850,
+      "price": {
+        "input": 5,
+        "output": 25
+      }
+    },
+    "hours_per_mtok": {
+      "shim": 4,
+      "in-process": 0.05,
+      "ext-extract-first:recipe": 110,
+      "ext-extract-first:common": 1.74,
+      "ext-memory-bank:recipe": 2.32,
+      "ext-graph-pipeline:recipe": 5.6,
+      "ext-graph-pipeline:recipe:beam": 4.93,
+      "ext-graph-pipeline:common:beam": 3.56,
+      "ext-temporal-graph:common": 3.53,
+      "ext-temporal-graph:recipe": 6.6,
+      "ext-markdown-kb:recipe": 0.53,
+      "ext-verbatim-session:recipe": 0.15,
+      "gbrain-defaults:shipped-defaults": 0.9
+    },
+    "vcpu": {
+      "shim": 8,
+      "in-process": 8
+    }
+  },
+  "sets": [
+    {
+      "id": "CS1",
+      "benchmark": "bg1-dev",
+      "split": "dev",
+      "questions": 200,
+      "conversations": 10,
+      "corpus_tokens": 1807195,
+      "messages": 44801,
+      "block": "CS1",
+      "selection": {
+        "kind": "per-conversation",
+        "per_conversation": 20,
+        "seed": "cost-speed-1"
+      },
+      "exclusions": [],
+      "role": "public",
+      "exposure": "E2",
+      "label": "cost and speed, ten public dev worlds bg1-dev-01 to bg1-dev-10 (20 seeded questions each)",
+      "only_conversations": [
+        "bg1-dev-01",
+        "bg1-dev-02",
+        "bg1-dev-03",
+        "bg1-dev-04",
+        "bg1-dev-05",
+        "bg1-dev-06",
+        "bg1-dev-07",
+        "bg1-dev-08",
+        "bg1-dev-09",
+        "bg1-dev-10"
+      ],
+      "sessions": 154
+    },
+    {
+      "id": "CS1-pilot",
+      "benchmark": "bg1-dev",
+      "split": "dev",
+      "questions": 4,
+      "conversations": 1,
+      "corpus_tokens": 183055,
+      "messages": 4518,
+      "block": "CS1-pilot",
+      "selection": {
+        "kind": "per-conversation",
+        "per_conversation": 4,
+        "seed": "cost-speed-1"
+      },
+      "exclusions": [],
+      "role": "smoke",
+      "exposure": "E2",
+      "label": "cost and speed pilot, public dev world bg1-dev-11 (its first 60 sessions written, 4 seeded questions)",
+      "only_conversations": [
+        "bg1-dev-11"
+      ],
+      "sessions": 159
+    },
+    {
+      "id": "CS1-capacity",
+      "benchmark": "bg1-dev",
+      "split": "dev",
+      "questions": 20,
+      "conversations": 1,
+      "corpus_tokens": 183107,
+      "messages": 4468,
+      "block": "CS1-capacity",
+      "selection": {
+        "kind": "per-conversation",
+        "per_conversation": 20,
+        "seed": "cost-speed-1"
+      },
+      "exclusions": [],
+      "role": "smoke",
+      "exposure": "E2",
+      "label": "cost and speed keyless capacity check, public dev world bg1-dev-12 written whole against the fake upstream",
+      "only_conversations": [
+        "bg1-dev-12"
+      ],
+      "sessions": 154
+    }
+  ],
+  "blocks": [
+    {
+      "id": "CS1",
+      "label": "cost and speed counted cells: the eight rows on public dev worlds bg1-dev-01 to bg1-dev-10",
+      "plan_usd": 361.33,
+      "estimate_usd": 361.33,
+      "cap_usd": 542
+    },
+    {
+      "id": "CS1-pilot",
+      "label": "cost and speed pilot (R111): the eight rows on bg1-dev-11, its first 60 sessions written",
+      "plan_usd": 12.27,
+      "estimate_usd": 12.27,
+      "cap_usd": 37.76
+    },
+    {
+      "id": "CS1-capacity",
+      "label": "cost and speed keyless capacity check: every row that writes, on bg1-dev-12 against the fake upstream",
+      "plan_usd": 0,
+      "estimate_usd": 0,
+      "cap_usd": 56.04
+    }
+  ],
+  "cells": [
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "cs1.gbrain-defaults.shipped-defaults",
+      "set": "CS1",
+      "block": "CS1",
+      "benchmark": "bg1-dev",
+      "split": "dev",
+      "selection": {
+        "kind": "per-conversation",
+        "per_conversation": 20,
+        "seed": "cost-speed-1"
+      },
+      "exclusions": [],
+      "system": "gbrain-defaults",
+      "configuration": "shipped-defaults",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "bg1-dev",
+      "descriptive_view": false,
+      "probes": {
+        "sample": 19,
+        "seed": "cost-speed-1",
+        "held_back": 21
+      },
+      "only_conversations": [
+        "bg1-dev-01",
+        "bg1-dev-02",
+        "bg1-dev-03",
+        "bg1-dev-04",
+        "bg1-dev-05",
+        "bg1-dev-06",
+        "bg1-dev-07",
+        "bg1-dev-08",
+        "bg1-dev-09",
+        "bg1-dev-10"
+      ],
+      "shards": 3,
+      "expected_hours": 40,
+      "launch": {
+        "env": {
+          "GBRAIN_BUN_IMAGE": "oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4",
+          "GBRAIN_SHA": "38831bb696139024923e9bc43e3da0d7993951e9"
+        },
+        "config": "recipe"
+      },
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=38831bb696139024923e9bc43e3da0d7993951e9 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=38831bb696139024923e9bc43e3da0d7993951e9 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\"",
+      "arms": [
+        {
+          "id": "whole-default",
+          "cell_id": "cs1.gbrain-defaults.shipped-defaults.whole-default",
+          "set": "CS1",
+          "arm": "whole-system",
+          "mode": "native-default",
+          "policy": "vendor-default",
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "particle:particle-1"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "shipped read, own default amount"
+        }
+      ],
+      "estimate": {
+        "usd": 34.66,
+        "lines": {
+          "readers": 32.85,
+          "write_background": 1.81
+        }
+      },
+      "scoring": "key-match",
+      "idle_window": {
+        "worlds": [
+          "bg1-dev-02",
+          "bg1-dev-03"
+        ],
+        "ms": 7200000,
+        "min_ms": 1800000,
+        "max_ms": 7200000,
+        "jobs": [
+          {
+            "job": "serve idle tick: idle sweep, then idle upkeep when due (a stdio serve with no input for a full tick)",
+            "cadence_minutes": 10,
+            "source": "gbrain v0.60.769.0 src/commands/serve.ts IDLE_SWEEP_INTERVAL_MS, src/core/maintenance/idle.ts; eval/systems/gbrain-defaults/shim.py docstring"
+          },
+          {
+            "job": "idle upkeep round (link and timeline extraction, repair lanes, bookkeeping GC, the capped embedding step), due a day after the last round finished, run in 3-second slices on the idle tick; priced per run through gbrain maintain --unattended",
+            "cadence_minutes": 1440,
+            "source": "gbrain v0.60.769.0 src/core/maintenance/run.ts UPKEEP_INTERVAL_MS, src/core/maintenance/idle.ts IDLE_UPKEEP_BUDGET_MS"
+          },
+          {
+            "job": "facts drain timer: queued facts-absorb extraction jobs",
+            "cadence_minutes": 10,
+            "source": "gbrain v0.60.769.0 src/core/facts/drain-scheduler.ts FACTS_DRAIN_TICK_MS"
+          },
+          {
+            "job": "autopilot daemon cycle (every 5 minutes when installed): not started, because the shim installs with --no-autopilot-install and gbrain documents autopilot for a Postgres brain with a repo, while this brain is PGLite",
+            "cadence_minutes": null,
+            "source": "gbrain v0.60.769.0 src/commands/autopilot.ts (default --interval 300), docs/guides/cron-schedule.md; eval/systems/gbrain-defaults/shim.py apply-migrations"
+          }
+        ]
+      },
+      "hosting_samples": true,
+      "gbrain_build": {
+        "release": "v0.60.769.0",
+        "commit": "38831bb696139024923e9bc43e3da0d7993951e9"
+      },
+      "lease": {
+        "usd": 18.4,
+        "basis": "cost and speed: the largest unit's share ($13.98, 4 worlds at 1.0085 times the mean world) x 1.25 plus twice the peak reservation ($0.4571, reader anthropic:claude-opus-5-5)"
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "cs1.ext-extract-first.recipe",
+      "set": "CS1",
+      "block": "CS1",
+      "benchmark": "bg1-dev",
+      "split": "dev",
+      "selection": {
+        "kind": "per-conversation",
+        "per_conversation": 20,
+        "seed": "cost-speed-1"
+      },
+      "exclusions": [],
+      "system": "ext-extract-first",
+      "configuration": "recipe",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "bg1-dev",
+      "descriptive_view": false,
+      "probes": {
+        "sample": 19,
+        "seed": "cost-speed-1",
+        "held_back": 21
+      },
+      "only_conversations": [
+        "bg1-dev-01",
+        "bg1-dev-02",
+        "bg1-dev-03",
+        "bg1-dev-04",
+        "bg1-dev-05",
+        "bg1-dev-06",
+        "bg1-dev-07",
+        "bg1-dev-08",
+        "bg1-dev-09",
+        "bg1-dev-10"
+      ],
+      "shards": 10,
+      "expected_hours": 28,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-extract-first --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-extract-first.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-extract-first --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-extract-first.tar\"",
+      "arms": [
+        {
+          "id": "whole-default",
+          "cell_id": "cs1.ext-extract-first.recipe.whole-default",
+          "set": "CS1",
+          "arm": "whole-system",
+          "mode": "native-default",
+          "policy": "vendor-default",
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "particle:particle-1"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "shipped read, own default amount"
+        }
+      ],
+      "estimate": {
+        "usd": 176.3,
+        "lines": {
+          "readers": 4.61,
+          "write_background": 171.68
+        }
+      },
+      "scoring": "key-match",
+      "idle_window": {
+        "worlds": [
+          "bg1-dev-02",
+          "bg1-dev-03"
+        ],
+        "ms": 1800000,
+        "min_ms": 1800000,
+        "max_ms": 7200000,
+        "jobs": [
+          {
+            "job": "per-namespace ingest worker: one Memory.add per chunk after /ingest returns; no scheduled job",
+            "cadence_minutes": null,
+            "source": "docs/comparison-systems/ext-extract-first/README.md (/ingest), shim.py"
+          }
+        ]
+      },
+      "hosting_samples": true,
+      "lease": {
+        "usd": 22.38,
+        "basis": "cost and speed: the largest unit's share ($17.78, 1 world at 1.0085 times the mean world) x 1.25 plus twice the peak reservation ($0.0774, reader anthropic:claude-opus-5-5)"
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "cs1.ext-memory-bank.recipe",
+      "set": "CS1",
+      "block": "CS1",
+      "benchmark": "bg1-dev",
+      "split": "dev",
+      "selection": {
+        "kind": "per-conversation",
+        "per_conversation": 20,
+        "seed": "cost-speed-1"
+      },
+      "exclusions": [],
+      "system": "ext-memory-bank",
+      "configuration": "recipe",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "bg1-dev",
+      "descriptive_view": false,
+      "probes": {
+        "sample": 19,
+        "seed": "cost-speed-1",
+        "held_back": 21
+      },
+      "only_conversations": [
+        "bg1-dev-01",
+        "bg1-dev-02",
+        "bg1-dev-03",
+        "bg1-dev-04",
+        "bg1-dev-05",
+        "bg1-dev-06",
+        "bg1-dev-07",
+        "bg1-dev-08",
+        "bg1-dev-09",
+        "bg1-dev-10"
+      ],
+      "shards": 2,
+      "expected_hours": 46,
+      "launch": {
+        "env": {},
+        "config": "observations"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-memory-bank --config observations --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-memory-bank.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-memory-bank --config observations --from \"$SHOOTOUT_RESTORE_DIR/ext-memory-bank.tar\"",
+      "arms": [
+        {
+          "id": "whole-default",
+          "cell_id": "cs1.ext-memory-bank.recipe.whole-default",
+          "set": "CS1",
+          "arm": "whole-system",
+          "mode": "native-default",
+          "policy": "vendor-default",
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "particle:particle-1"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "shipped read, own default amount"
+        }
+      ],
+      "estimate": {
+        "usd": 22.79,
+        "lines": {
+          "readers": 16.11,
+          "write_background": 6.69
+        }
+      },
+      "scoring": "key-match",
+      "idle_window": {
+        "worlds": [
+          "bg1-dev-02",
+          "bg1-dev-03"
+        ],
+        "ms": 1800000,
+        "min_ms": 1800000,
+        "max_ms": 7200000,
+        "jobs": [
+          {
+            "job": "observation consolidation on the server worker after each retain; no scheduled job",
+            "cadence_minutes": null,
+            "source": "the vendor's observations guide (How Consolidation Works); docs/comparison-systems/ext-memory-bank/README.md"
+          }
+        ]
+      },
+      "hosting_samples": true,
+      "lease": {
+        "usd": 14.83,
+        "basis": "cost and speed: the largest unit's share ($11.49, 5 worlds at 1.0085 times the mean world) x 1.25 plus twice the peak reservation ($0.2319, reader anthropic:claude-opus-5-5)"
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "cs1.ext-verbatim-session.recipe",
+      "set": "CS1",
+      "block": "CS1",
+      "benchmark": "bg1-dev",
+      "split": "dev",
+      "selection": {
+        "kind": "per-conversation",
+        "per_conversation": 20,
+        "seed": "cost-speed-1"
+      },
+      "exclusions": [],
+      "system": "ext-verbatim-session",
+      "configuration": "recipe",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "bg1-dev",
+      "descriptive_view": false,
+      "probes": {
+        "sample": 19,
+        "seed": "cost-speed-1",
+        "held_back": 21
+      },
+      "only_conversations": [
+        "bg1-dev-01",
+        "bg1-dev-02",
+        "bg1-dev-03",
+        "bg1-dev-04",
+        "bg1-dev-05",
+        "bg1-dev-06",
+        "bg1-dev-07",
+        "bg1-dev-08",
+        "bg1-dev-09",
+        "bg1-dev-10"
+      ],
+      "shards": 2,
+      "expected_hours": 44,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-verbatim-session --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-verbatim-session.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-verbatim-session --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-verbatim-session.tar\"",
+      "arms": [
+        {
+          "id": "whole-default",
+          "cell_id": "cs1.ext-verbatim-session.recipe.whole-default",
+          "set": "CS1",
+          "arm": "whole-system",
+          "mode": "native-default",
+          "policy": "vendor-default",
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "particle:particle-1"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "shipped read, own default amount"
+        }
+      ],
+      "estimate": {
+        "usd": 13.11,
+        "lines": {
+          "readers": 13.11
+        }
+      },
+      "scoring": "key-match",
+      "idle_window": {
+        "worlds": [
+          "bg1-dev-02",
+          "bg1-dev-03"
+        ],
+        "ms": 1800000,
+        "min_ms": 1800000,
+        "max_ms": 7200000,
+        "jobs": [
+          {
+            "job": "none: the local embedder indexes each session inside its write",
+            "cadence_minutes": null,
+            "source": "docs/comparison-systems/ext-verbatim-session/README.md (/ingest)"
+          }
+        ]
+      },
+      "hosting_samples": true,
+      "lease": {
+        "usd": 8.65,
+        "basis": "cost and speed: the largest unit's share ($6.61, 5 worlds at 1.0085 times the mean world) x 1.25 plus twice the peak reservation ($0.1916, reader anthropic:claude-opus-5-5)"
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "cs1.baseline-hybrid.baseline",
+      "set": "CS1",
+      "block": "CS1",
+      "benchmark": "bg1-dev",
+      "split": "dev",
+      "selection": {
+        "kind": "per-conversation",
+        "per_conversation": 20,
+        "seed": "cost-speed-1"
+      },
+      "exclusions": [],
+      "system": "baseline-hybrid",
+      "configuration": "baseline",
+      "runner": "in-process",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "bg1-dev",
+      "descriptive_view": false,
+      "probes": {
+        "sample": 19,
+        "seed": "cost-speed-1",
+        "held_back": 21
+      },
+      "only_conversations": [
+        "bg1-dev-01",
+        "bg1-dev-02",
+        "bg1-dev-03",
+        "bg1-dev-04",
+        "bg1-dev-05",
+        "bg1-dev-06",
+        "bg1-dev-07",
+        "bg1-dev-08",
+        "bg1-dev-09",
+        "bg1-dev-10"
+      ],
+      "shards": 2,
+      "expected_hours": 41,
+      "arms": [
+        {
+          "id": "whole-default",
+          "cell_id": "cs1.baseline-hybrid.baseline.whole-default",
+          "set": "CS1",
+          "arm": "whole-system",
+          "mode": "native-default",
+          "policy": "vendor-default",
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "particle:particle-1"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "shipped read, own default amount"
+        }
+      ],
+      "estimate": {
+        "usd": 12.24,
+        "lines": {
+          "readers": 11.98,
+          "write_background": 0.25
+        }
+      },
+      "scoring": "key-match",
+      "idle_window": {
+        "worlds": [
+          "bg1-dev-02",
+          "bg1-dev-03"
+        ],
+        "ms": 1800000,
+        "min_ms": 1800000,
+        "max_ms": 7200000,
+        "jobs": [
+          {
+            "job": "none: sessions are embedded and written in buffers during the write and at finish",
+            "cadence_minutes": null,
+            "source": "eval/runner/systems/baselines.ts PlainHybridSystem"
+          }
+        ]
+      },
+      "hosting_samples": true,
+      "lease": {
+        "usd": 8.07,
+        "basis": "cost and speed: the largest unit's share ($6.17, 5 worlds at 1.0085 times the mean world) x 1.25 plus twice the peak reservation ($0.1765, reader anthropic:claude-opus-5-5)"
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "cs1.baseline-file-agent.baseline",
+      "set": "CS1",
+      "block": "CS1",
+      "benchmark": "bg1-dev",
+      "split": "dev",
+      "selection": {
+        "kind": "per-conversation",
+        "per_conversation": 20,
+        "seed": "cost-speed-1"
+      },
+      "exclusions": [],
+      "system": "baseline-file-agent",
+      "configuration": "baseline",
+      "runner": "in-process",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "bg1-dev",
+      "descriptive_view": false,
+      "probes": {
+        "sample": 19,
+        "seed": "cost-speed-1",
+        "held_back": 21
+      },
+      "only_conversations": [
+        "bg1-dev-01",
+        "bg1-dev-02",
+        "bg1-dev-03",
+        "bg1-dev-04",
+        "bg1-dev-05",
+        "bg1-dev-06",
+        "bg1-dev-07",
+        "bg1-dev-08",
+        "bg1-dev-09",
+        "bg1-dev-10"
+      ],
+      "shards": 2,
+      "expected_hours": 44,
+      "arms": [
+        {
+          "id": "whole-agent",
+          "cell_id": "cs1.baseline-file-agent.baseline.whole-agent",
+          "set": "CS1",
+          "arm": "whole-system",
+          "mode": "agent",
+          "policy": null,
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "particle:particle-1"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "file agent, uncapped grep, 40 turns, each reader as the agent"
+        }
+      ],
+      "estimate": {
+        "usd": 70.45,
+        "lines": {
+          "agent": 70.45
+        }
+      },
+      "scoring": "key-match",
+      "idle_window": {
+        "worlds": [
+          "bg1-dev-02",
+          "bg1-dev-03"
+        ],
+        "ms": 1800000,
+        "min_ms": 1800000,
+        "max_ms": 7200000,
+        "jobs": [
+          {
+            "job": "none: the write is a Markdown file",
+            "cadence_minutes": null,
+            "source": "eval/runner/systems/file-agent.ts"
+          }
+        ]
+      },
+      "hosting_samples": true,
+      "lease": {
+        "usd": 56.61,
+        "basis": "cost and speed: the largest unit's share ($35.52, 5 worlds at 1.0085 times the mean world) x 1.25 plus twice the peak reservation ($6.1, file agent: one first turn per reader at once (2))"
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "cs1.baseline-none.baseline",
+      "set": "CS1",
+      "block": "CS1",
+      "benchmark": "bg1-dev",
+      "split": "dev",
+      "selection": {
+        "kind": "per-conversation",
+        "per_conversation": 20,
+        "seed": "cost-speed-1"
+      },
+      "exclusions": [],
+      "system": "baseline-none",
+      "configuration": "baseline",
+      "runner": "in-process",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "bg1-dev",
+      "descriptive_view": false,
+      "probes": {
+        "sample": 0,
+        "seed": "cost-speed-1",
+        "conversations": 0
+      },
+      "only_conversations": [
+        "bg1-dev-01",
+        "bg1-dev-02",
+        "bg1-dev-03",
+        "bg1-dev-04",
+        "bg1-dev-05",
+        "bg1-dev-06",
+        "bg1-dev-07",
+        "bg1-dev-08",
+        "bg1-dev-09",
+        "bg1-dev-10"
+      ],
+      "shards": 1,
+      "expected_hours": 5,
+      "arms": [
+        {
+          "id": "whole-default",
+          "cell_id": "cs1.baseline-none.baseline.whole-default",
+          "set": "CS1",
+          "arm": "whole-system",
+          "mode": "native-default",
+          "policy": "vendor-default",
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "particle:particle-1"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "shipped read, own default amount"
+        }
+      ],
+      "estimate": {
+        "usd": 3.11,
+        "lines": {
+          "readers": 3.11
+        }
+      },
+      "scoring": "key-match",
+      "hosting_samples": true,
+      "lease": {
+        "usd": 4.04,
+        "basis": "cost and speed: the largest unit's share ($3.14, 10 worlds at 1.0085 times the mean world) x 1.25 plus twice the peak reservation ($0.0572, reader anthropic:claude-opus-5-5)"
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "cs1.baseline-full-context.baseline",
+      "set": "CS1",
+      "block": "CS1",
+      "benchmark": "bg1-dev",
+      "split": "dev",
+      "selection": {
+        "kind": "per-conversation",
+        "per_conversation": 20,
+        "seed": "cost-speed-1"
+      },
+      "exclusions": [],
+      "system": "baseline-full-context",
+      "configuration": "baseline",
+      "runner": "in-process",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "bg1-dev",
+      "descriptive_view": false,
+      "probes": {
+        "sample": 0,
+        "seed": "cost-speed-1",
+        "conversations": 0
+      },
+      "only_conversations": [
+        "bg1-dev-01",
+        "bg1-dev-02",
+        "bg1-dev-03",
+        "bg1-dev-04",
+        "bg1-dev-05",
+        "bg1-dev-06",
+        "bg1-dev-07",
+        "bg1-dev-08",
+        "bg1-dev-09",
+        "bg1-dev-10"
+      ],
+      "shards": 1,
+      "expected_hours": 5,
+      "arms": [
+        {
+          "id": "whole-full-context",
+          "cell_id": "cs1.baseline-full-context.baseline.whole-full-context",
+          "set": "CS1",
+          "arm": "whole-system",
+          "mode": "full-context",
+          "policy": null,
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "particle:particle-1"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "whole history, read whole by each reader with prompt caching"
+        }
+      ],
+      "estimate": {
+        "usd": 28.67,
+        "lines": {
+          "full_context": 28.67
+        }
+      },
+      "scoring": "key-match",
+      "hosting_samples": true,
+      "lease": {
+        "usd": 43.92,
+        "basis": "cost and speed: the largest unit's share ($28.91, 10 worlds at 1.0085 times the mean world) x 1.25 plus twice the peak reservation ($3.8886, whole-world read by anthropic:claude-opus-5-5)"
+      }
+    }
+  ],
+  "smoke_cells": [],
+  "addon_cells": [
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "cs1-pilot.gbrain-defaults.shipped-defaults",
+      "set": "CS1-pilot",
+      "block": "CS1-pilot",
+      "benchmark": "bg1-dev",
+      "split": "dev",
+      "selection": {
+        "kind": "per-conversation",
+        "per_conversation": 4,
+        "seed": "cost-speed-1"
+      },
+      "exclusions": [],
+      "system": "gbrain-defaults",
+      "configuration": "shipped-defaults",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "bg1-dev",
+      "descriptive_view": false,
+      "probes": {
+        "sample": 19,
+        "seed": "cost-speed-1",
+        "held_back": 20
+      },
+      "only_conversations": [
+        "bg1-dev-11"
+      ],
+      "shards": 1,
+      "expected_hours": 8,
+      "launch": {
+        "env": {
+          "GBRAIN_BUN_IMAGE": "oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4",
+          "GBRAIN_SHA": "38831bb696139024923e9bc43e3da0d7993951e9"
+        },
+        "config": "recipe"
+      },
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=38831bb696139024923e9bc43e3da0d7993951e9 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=38831bb696139024923e9bc43e3da0d7993951e9 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\"",
+      "arms": [
+        {
+          "id": "whole-default",
+          "cell_id": "cs1-pilot.gbrain-defaults.shipped-defaults.whole-default",
+          "set": "CS1-pilot",
+          "arm": "whole-system",
+          "mode": "native-default",
+          "policy": "vendor-default",
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "particle:particle-1"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "shipped read, own default amount"
+        }
+      ],
+      "estimate": {
+        "usd": 0.73,
+        "lines": {
+          "readers": 0.66,
+          "write_background": 0.08
+        }
+      },
+      "scoring": "key-match",
+      "ingest_sessions": 60,
+      "hosting_samples": true,
+      "gbrain_build": {
+        "release": "v0.60.769.0",
+        "commit": "38831bb696139024923e9bc43e3da0d7993951e9"
+      },
+      "lease": {
+        "usd": 1.83,
+        "basis": "cost and speed: the largest unit's share ($0.73, 1 world) x 1.25 plus twice the peak reservation ($0.4571, reader anthropic:claude-opus-5-5)"
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "cs1-pilot.ext-extract-first.recipe",
+      "set": "CS1-pilot",
+      "block": "CS1-pilot",
+      "benchmark": "bg1-dev",
+      "split": "dev",
+      "selection": {
+        "kind": "per-conversation",
+        "per_conversation": 4,
+        "seed": "cost-speed-1"
+      },
+      "exclusions": [],
+      "system": "ext-extract-first",
+      "configuration": "recipe",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "bg1-dev",
+      "descriptive_view": false,
+      "probes": {
+        "sample": 19,
+        "seed": "cost-speed-1",
+        "held_back": 20
+      },
+      "only_conversations": [
+        "bg1-dev-11"
+      ],
+      "shards": 1,
+      "expected_hours": 15,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-extract-first --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-extract-first.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-extract-first --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-extract-first.tar\"",
+      "arms": [
+        {
+          "id": "whole-default",
+          "cell_id": "cs1-pilot.ext-extract-first.recipe.whole-default",
+          "set": "CS1-pilot",
+          "arm": "whole-system",
+          "mode": "native-default",
+          "policy": "vendor-default",
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "particle:particle-1"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "shipped read, own default amount"
+        }
+      ],
+      "estimate": {
+        "usd": 7.3,
+        "lines": {
+          "readers": 0.09,
+          "write_background": 7.21
+        }
+      },
+      "scoring": "key-match",
+      "ingest_sessions": 60,
+      "hosting_samples": true,
+      "lease": {
+        "usd": 9.28,
+        "basis": "cost and speed: the largest unit's share ($7.30, 1 world) x 1.25 plus twice the peak reservation ($0.0774, reader anthropic:claude-opus-5-5)"
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "cs1-pilot.ext-memory-bank.recipe",
+      "set": "CS1-pilot",
+      "block": "CS1-pilot",
+      "benchmark": "bg1-dev",
+      "split": "dev",
+      "selection": {
+        "kind": "per-conversation",
+        "per_conversation": 4,
+        "seed": "cost-speed-1"
+      },
+      "exclusions": [],
+      "system": "ext-memory-bank",
+      "configuration": "recipe",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "bg1-dev",
+      "descriptive_view": false,
+      "probes": {
+        "sample": 19,
+        "seed": "cost-speed-1",
+        "held_back": 20
+      },
+      "only_conversations": [
+        "bg1-dev-11"
+      ],
+      "shards": 1,
+      "expected_hours": 8,
+      "launch": {
+        "env": {},
+        "config": "observations"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-memory-bank --config observations --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-memory-bank.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-memory-bank --config observations --from \"$SHOOTOUT_RESTORE_DIR/ext-memory-bank.tar\"",
+      "arms": [
+        {
+          "id": "whole-default",
+          "cell_id": "cs1-pilot.ext-memory-bank.recipe.whole-default",
+          "set": "CS1-pilot",
+          "arm": "whole-system",
+          "mode": "native-default",
+          "policy": "vendor-default",
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "particle:particle-1"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "shipped read, own default amount"
+        }
+      ],
+      "estimate": {
+        "usd": 0.6,
+        "lines": {
+          "readers": 0.32,
+          "write_background": 0.28
+        }
+      },
+      "scoring": "key-match",
+      "ingest_sessions": 60,
+      "hosting_samples": true,
+      "lease": {
+        "usd": 1.22,
+        "basis": "cost and speed: the largest unit's share ($0.60, 1 world) x 1.25 plus twice the peak reservation ($0.2319, reader anthropic:claude-opus-5-5)"
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "cs1-pilot.ext-verbatim-session.recipe",
+      "set": "CS1-pilot",
+      "block": "CS1-pilot",
+      "benchmark": "bg1-dev",
+      "split": "dev",
+      "selection": {
+        "kind": "per-conversation",
+        "per_conversation": 4,
+        "seed": "cost-speed-1"
+      },
+      "exclusions": [],
+      "system": "ext-verbatim-session",
+      "configuration": "recipe",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "bg1-dev",
+      "descriptive_view": false,
+      "probes": {
+        "sample": 19,
+        "seed": "cost-speed-1",
+        "held_back": 20
+      },
+      "only_conversations": [
+        "bg1-dev-11"
+      ],
+      "shards": 1,
+      "expected_hours": 8,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-verbatim-session --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-verbatim-session.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-verbatim-session --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-verbatim-session.tar\"",
+      "arms": [
+        {
+          "id": "whole-default",
+          "cell_id": "cs1-pilot.ext-verbatim-session.recipe.whole-default",
+          "set": "CS1-pilot",
+          "arm": "whole-system",
+          "mode": "native-default",
+          "policy": "vendor-default",
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "particle:particle-1"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "shipped read, own default amount"
+        }
+      ],
+      "estimate": {
+        "usd": 0.26,
+        "lines": {
+          "readers": 0.26
+        }
+      },
+      "scoring": "key-match",
+      "ingest_sessions": 60,
+      "hosting_samples": true,
+      "lease": {
+        "usd": 0.71,
+        "basis": "cost and speed: the largest unit's share ($0.26, 1 world) x 1.25 plus twice the peak reservation ($0.1916, reader anthropic:claude-opus-5-5)"
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "cs1-pilot.baseline-hybrid.baseline",
+      "set": "CS1-pilot",
+      "block": "CS1-pilot",
+      "benchmark": "bg1-dev",
+      "split": "dev",
+      "selection": {
+        "kind": "per-conversation",
+        "per_conversation": 4,
+        "seed": "cost-speed-1"
+      },
+      "exclusions": [],
+      "system": "baseline-hybrid",
+      "configuration": "baseline",
+      "runner": "in-process",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "bg1-dev",
+      "descriptive_view": false,
+      "probes": {
+        "sample": 19,
+        "seed": "cost-speed-1",
+        "held_back": 20
+      },
+      "only_conversations": [
+        "bg1-dev-11"
+      ],
+      "shards": 1,
+      "expected_hours": 8,
+      "arms": [
+        {
+          "id": "whole-default",
+          "cell_id": "cs1-pilot.baseline-hybrid.baseline.whole-default",
+          "set": "CS1-pilot",
+          "arm": "whole-system",
+          "mode": "native-default",
+          "policy": "vendor-default",
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "particle:particle-1"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "shipped read, own default amount"
+        }
+      ],
+      "estimate": {
+        "usd": 0.25,
+        "lines": {
+          "readers": 0.24,
+          "write_background": 0.01
+        }
+      },
+      "scoring": "key-match",
+      "ingest_sessions": 60,
+      "hosting_samples": true,
+      "lease": {
+        "usd": 0.67,
+        "basis": "cost and speed: the largest unit's share ($0.25, 1 world) x 1.25 plus twice the peak reservation ($0.1765, reader anthropic:claude-opus-5-5)"
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "cs1-pilot.baseline-file-agent.baseline",
+      "set": "CS1-pilot",
+      "block": "CS1-pilot",
+      "benchmark": "bg1-dev",
+      "split": "dev",
+      "selection": {
+        "kind": "per-conversation",
+        "per_conversation": 4,
+        "seed": "cost-speed-1"
+      },
+      "exclusions": [],
+      "system": "baseline-file-agent",
+      "configuration": "baseline",
+      "runner": "in-process",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "bg1-dev",
+      "descriptive_view": false,
+      "probes": {
+        "sample": 19,
+        "seed": "cost-speed-1",
+        "held_back": 20
+      },
+      "only_conversations": [
+        "bg1-dev-11"
+      ],
+      "shards": 1,
+      "expected_hours": 8,
+      "arms": [
+        {
+          "id": "whole-agent",
+          "cell_id": "cs1-pilot.baseline-file-agent.baseline.whole-agent",
+          "set": "CS1-pilot",
+          "arm": "whole-system",
+          "mode": "agent",
+          "policy": null,
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "particle:particle-1"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "file agent, uncapped grep, 40 turns, each reader as the agent"
+        }
+      ],
+      "estimate": {
+        "usd": 1.41,
+        "lines": {
+          "agent": 1.41
+        }
+      },
+      "scoring": "key-match",
+      "ingest_sessions": 60,
+      "hosting_samples": true,
+      "lease": {
+        "usd": 13.97,
+        "basis": "cost and speed: the largest unit's share ($1.41, 1 world) x 1.25 plus twice the peak reservation ($6.1, file agent: one first turn per reader at once (2))"
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "cs1-pilot.baseline-none.baseline",
+      "set": "CS1-pilot",
+      "block": "CS1-pilot",
+      "benchmark": "bg1-dev",
+      "split": "dev",
+      "selection": {
+        "kind": "per-conversation",
+        "per_conversation": 4,
+        "seed": "cost-speed-1"
+      },
+      "exclusions": [],
+      "system": "baseline-none",
+      "configuration": "baseline",
+      "runner": "in-process",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "bg1-dev",
+      "descriptive_view": false,
+      "probes": {
+        "sample": 0,
+        "seed": "cost-speed-1",
+        "conversations": 0
+      },
+      "only_conversations": [
+        "bg1-dev-11"
+      ],
+      "shards": 1,
+      "expected_hours": 1,
+      "arms": [
+        {
+          "id": "whole-default",
+          "cell_id": "cs1-pilot.baseline-none.baseline.whole-default",
+          "set": "CS1-pilot",
+          "arm": "whole-system",
+          "mode": "native-default",
+          "policy": "vendor-default",
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "particle:particle-1"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "shipped read, own default amount"
+        }
+      ],
+      "estimate": {
+        "usd": 0.06,
+        "lines": {
+          "readers": 0.06
+        }
+      },
+      "scoring": "key-match",
+      "hosting_samples": true,
+      "lease": {
+        "usd": 0.19,
+        "basis": "cost and speed: the largest unit's share ($0.06, 1 world) x 1.25 plus twice the peak reservation ($0.0572, reader anthropic:claude-opus-5-5)"
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "cs1-pilot.baseline-full-context.baseline",
+      "set": "CS1-pilot",
+      "block": "CS1-pilot",
+      "benchmark": "bg1-dev",
+      "split": "dev",
+      "selection": {
+        "kind": "per-conversation",
+        "per_conversation": 4,
+        "seed": "cost-speed-1"
+      },
+      "exclusions": [],
+      "system": "baseline-full-context",
+      "configuration": "baseline",
+      "runner": "in-process",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "bg1-dev",
+      "descriptive_view": false,
+      "probes": {
+        "sample": 0,
+        "seed": "cost-speed-1",
+        "conversations": 0
+      },
+      "only_conversations": [
+        "bg1-dev-11"
+      ],
+      "shards": 1,
+      "expected_hours": 1,
+      "arms": [
+        {
+          "id": "whole-full-context",
+          "cell_id": "cs1-pilot.baseline-full-context.baseline.whole-full-context",
+          "set": "CS1-pilot",
+          "arm": "whole-system",
+          "mode": "full-context",
+          "policy": null,
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "particle:particle-1"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "whole history, read whole by each reader with prompt caching"
+        }
+      ],
+      "estimate": {
+        "usd": 1.66,
+        "lines": {
+          "full_context": 1.66
+        }
+      },
+      "scoring": "key-match",
+      "hosting_samples": true,
+      "lease": {
+        "usd": 9.89,
+        "basis": "cost and speed: the largest unit's share ($1.66, 1 world) x 1.25 plus twice the peak reservation ($3.9054, whole-world read by anthropic:claude-opus-5-5)"
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "cs1-capacity.gbrain-defaults.shipped-defaults",
+      "set": "CS1-capacity",
+      "block": "CS1-capacity",
+      "benchmark": "bg1-dev",
+      "split": "dev",
+      "selection": {
+        "kind": "per-conversation",
+        "per_conversation": 20,
+        "seed": "cost-speed-1"
+      },
+      "exclusions": [],
+      "system": "gbrain-defaults",
+      "configuration": "shipped-defaults",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "bg1-dev",
+      "descriptive_view": false,
+      "probes": {
+        "sample": 19,
+        "seed": "cost-speed-1",
+        "held_back": 21
+      },
+      "only_conversations": [
+        "bg1-dev-12"
+      ],
+      "shards": 1,
+      "expected_hours": 9,
+      "launch": {
+        "env": {
+          "GBRAIN_BUN_IMAGE": "oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4",
+          "GBRAIN_SHA": "38831bb696139024923e9bc43e3da0d7993951e9"
+        },
+        "config": "recipe"
+      },
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=38831bb696139024923e9bc43e3da0d7993951e9 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=38831bb696139024923e9bc43e3da0d7993951e9 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\"",
+      "arms": [
+        {
+          "id": "whole-default",
+          "cell_id": "cs1-capacity.gbrain-defaults.shipped-defaults.whole-default",
+          "set": "CS1-capacity",
+          "arm": "whole-system",
+          "mode": "native-default",
+          "policy": "vendor-default",
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "particle:particle-1"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "shipped read, own default amount"
+        }
+      ],
+      "estimate": {
+        "usd": 0,
+        "lines": {}
+      },
+      "scoring": "key-match",
+      "hosting_samples": true,
+      "gbrain_build": {
+        "release": "v0.60.769.0",
+        "commit": "38831bb696139024923e9bc43e3da0d7993951e9"
+      },
+      "lease": {
+        "usd": 5.29,
+        "basis": "keyless capacity check, leased as one counted world because its lease proxy prices the fake upstream's usage fields: the largest unit's share ($3.50, 1 world at 1.0085 times the mean world) x 1.25 plus twice the peak reservation ($0.4571, reader anthropic:claude-opus-5-5)"
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "cs1-capacity.ext-extract-first.recipe",
+      "set": "CS1-capacity",
+      "block": "CS1-capacity",
+      "benchmark": "bg1-dev",
+      "split": "dev",
+      "selection": {
+        "kind": "per-conversation",
+        "per_conversation": 20,
+        "seed": "cost-speed-1"
+      },
+      "exclusions": [],
+      "system": "ext-extract-first",
+      "configuration": "recipe",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "bg1-dev",
+      "descriptive_view": false,
+      "probes": {
+        "sample": 19,
+        "seed": "cost-speed-1",
+        "held_back": 21
+      },
+      "only_conversations": [
+        "bg1-dev-12"
+      ],
+      "shards": 1,
+      "expected_hours": 27,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-extract-first --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-extract-first.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-extract-first --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-extract-first.tar\"",
+      "arms": [
+        {
+          "id": "whole-default",
+          "cell_id": "cs1-capacity.ext-extract-first.recipe.whole-default",
+          "set": "CS1-capacity",
+          "arm": "whole-system",
+          "mode": "native-default",
+          "policy": "vendor-default",
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "particle:particle-1"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "shipped read, own default amount"
+        }
+      ],
+      "estimate": {
+        "usd": 0,
+        "lines": {}
+      },
+      "scoring": "key-match",
+      "hosting_samples": true,
+      "lease": {
+        "usd": 22.38,
+        "basis": "keyless capacity check, leased as one counted world because its lease proxy prices the fake upstream's usage fields: the largest unit's share ($17.78, 1 world at 1.0085 times the mean world) x 1.25 plus twice the peak reservation ($0.0774, reader anthropic:claude-opus-5-5)"
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "cs1-capacity.ext-memory-bank.recipe",
+      "set": "CS1-capacity",
+      "block": "CS1-capacity",
+      "benchmark": "bg1-dev",
+      "split": "dev",
+      "selection": {
+        "kind": "per-conversation",
+        "per_conversation": 20,
+        "seed": "cost-speed-1"
+      },
+      "exclusions": [],
+      "system": "ext-memory-bank",
+      "configuration": "recipe",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "bg1-dev",
+      "descriptive_view": false,
+      "probes": {
+        "sample": 19,
+        "seed": "cost-speed-1",
+        "held_back": 21
+      },
+      "only_conversations": [
+        "bg1-dev-12"
+      ],
+      "shards": 1,
+      "expected_hours": 9,
+      "launch": {
+        "env": {},
+        "config": "observations"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-memory-bank --config observations --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-memory-bank.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-memory-bank --config observations --from \"$SHOOTOUT_RESTORE_DIR/ext-memory-bank.tar\"",
+      "arms": [
+        {
+          "id": "whole-default",
+          "cell_id": "cs1-capacity.ext-memory-bank.recipe.whole-default",
+          "set": "CS1-capacity",
+          "arm": "whole-system",
+          "mode": "native-default",
+          "policy": "vendor-default",
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "particle:particle-1"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "shipped read, own default amount"
+        }
+      ],
+      "estimate": {
+        "usd": 0,
+        "lines": {}
+      },
+      "scoring": "key-match",
+      "hosting_samples": true,
+      "lease": {
+        "usd": 3.34,
+        "basis": "keyless capacity check, leased as one counted world because its lease proxy prices the fake upstream's usage fields: the largest unit's share ($2.30, 1 world at 1.0085 times the mean world) x 1.25 plus twice the peak reservation ($0.2319, reader anthropic:claude-opus-5-5)"
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "cs1-capacity.ext-verbatim-session.recipe",
+      "set": "CS1-capacity",
+      "block": "CS1-capacity",
+      "benchmark": "bg1-dev",
+      "split": "dev",
+      "selection": {
+        "kind": "per-conversation",
+        "per_conversation": 20,
+        "seed": "cost-speed-1"
+      },
+      "exclusions": [],
+      "system": "ext-verbatim-session",
+      "configuration": "recipe",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "bg1-dev",
+      "descriptive_view": false,
+      "probes": {
+        "sample": 19,
+        "seed": "cost-speed-1",
+        "held_back": 21
+      },
+      "only_conversations": [
+        "bg1-dev-12"
+      ],
+      "shards": 1,
+      "expected_hours": 9,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-verbatim-session --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-verbatim-session.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-verbatim-session --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-verbatim-session.tar\"",
+      "arms": [
+        {
+          "id": "whole-default",
+          "cell_id": "cs1-capacity.ext-verbatim-session.recipe.whole-default",
+          "set": "CS1-capacity",
+          "arm": "whole-system",
+          "mode": "native-default",
+          "policy": "vendor-default",
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "particle:particle-1"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "shipped read, own default amount"
+        }
+      ],
+      "estimate": {
+        "usd": 0,
+        "lines": {}
+      },
+      "scoring": "key-match",
+      "hosting_samples": true,
+      "lease": {
+        "usd": 2.04,
+        "basis": "keyless capacity check, leased as one counted world because its lease proxy prices the fake upstream's usage fields: the largest unit's share ($1.32, 1 world at 1.0085 times the mean world) x 1.25 plus twice the peak reservation ($0.1916, reader anthropic:claude-opus-5-5)"
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "cs1-capacity.baseline-hybrid.baseline",
+      "set": "CS1-capacity",
+      "block": "CS1-capacity",
+      "benchmark": "bg1-dev",
+      "split": "dev",
+      "selection": {
+        "kind": "per-conversation",
+        "per_conversation": 20,
+        "seed": "cost-speed-1"
+      },
+      "exclusions": [],
+      "system": "baseline-hybrid",
+      "configuration": "baseline",
+      "runner": "in-process",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "bg1-dev",
+      "descriptive_view": false,
+      "probes": {
+        "sample": 19,
+        "seed": "cost-speed-1",
+        "held_back": 21
+      },
+      "only_conversations": [
+        "bg1-dev-12"
+      ],
+      "shards": 1,
+      "expected_hours": 8,
+      "arms": [
+        {
+          "id": "whole-default",
+          "cell_id": "cs1-capacity.baseline-hybrid.baseline.whole-default",
+          "set": "CS1-capacity",
+          "arm": "whole-system",
+          "mode": "native-default",
+          "policy": "vendor-default",
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "particle:particle-1"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "shipped read, own default amount"
+        }
+      ],
+      "estimate": {
+        "usd": 0,
+        "lines": {}
+      },
+      "scoring": "key-match",
+      "hosting_samples": true,
+      "lease": {
+        "usd": 1.9,
+        "basis": "keyless capacity check, leased as one counted world because its lease proxy prices the fake upstream's usage fields: the largest unit's share ($1.23, 1 world at 1.0085 times the mean world) x 1.25 plus twice the peak reservation ($0.1765, reader anthropic:claude-opus-5-5)"
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "cs1-capacity.baseline-file-agent.baseline",
+      "set": "CS1-capacity",
+      "block": "CS1-capacity",
+      "benchmark": "bg1-dev",
+      "split": "dev",
+      "selection": {
+        "kind": "per-conversation",
+        "per_conversation": 20,
+        "seed": "cost-speed-1"
+      },
+      "exclusions": [],
+      "system": "baseline-file-agent",
+      "configuration": "baseline",
+      "runner": "in-process",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "bg1-dev",
+      "descriptive_view": false,
+      "probes": {
+        "sample": 19,
+        "seed": "cost-speed-1",
+        "held_back": 21
+      },
+      "only_conversations": [
+        "bg1-dev-12"
+      ],
+      "shards": 1,
+      "expected_hours": 9,
+      "arms": [
+        {
+          "id": "whole-agent",
+          "cell_id": "cs1-capacity.baseline-file-agent.baseline.whole-agent",
+          "set": "CS1-capacity",
+          "arm": "whole-system",
+          "mode": "agent",
+          "policy": null,
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "particle:particle-1"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "file agent, uncapped grep, 40 turns, each reader as the agent"
+        }
+      ],
+      "estimate": {
+        "usd": 0,
+        "lines": {}
+      },
+      "scoring": "key-match",
+      "hosting_samples": true,
+      "lease": {
+        "usd": 21.09,
+        "basis": "keyless capacity check, leased as one counted world because its lease proxy prices the fake upstream's usage fields: the largest unit's share ($7.10, 1 world at 1.0085 times the mean world) x 1.25 plus twice the peak reservation ($6.1, file agent: one first turn per reader at once (2))"
+      }
+    }
+  ],
+  "total_usd": 361.33,
+  "plan_total_usd": 361.33,
+  "cap_usd": 542,
+  "campaign_id": "q1-scoreboard-cost-speed",
+  "registry": "docs/benchmarks/preregistrations.d/cost-speed-personal.json",
+  "gbrain_build": {
+    "release": "v0.60.769.0",
+    "commit": "38831bb696139024923e9bc43e3da0d7993951e9"
+  },
+  "seed": "cost-speed-1",
+  "models": [
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "role": "reader"
+    },
+    {
+      "model": "particle:particle-1",
+      "role": "reader"
+    },
+    {
+      "model": "voyage:voyage-4",
+      "role": "system-internal",
+      "system": "gbrain-defaults"
+    },
+    {
+      "model": "voyage:rerank-3-lite",
+      "role": "system-internal",
+      "system": "gbrain-defaults"
+    },
+    {
+      "model": "anthropic:claude-haiku-5-5",
+      "role": "system-internal",
+      "system": "gbrain-defaults"
+    },
+    {
+      "model": "openai:gpt-5-mini",
+      "role": "system-internal",
+      "system": "ext-extract-first"
+    },
+    {
+      "model": "openai:text-embedding-3-small",
+      "role": "system-internal",
+      "system": "ext-extract-first"
+    },
+    {
+      "model": "openai:gpt-4o-mini",
+      "role": "system-internal",
+      "system": "ext-memory-bank"
+    },
+    {
+      "model": "openai:text-embedding-3-large",
+      "role": "embedder",
+      "system": "baseline-hybrid"
+    }
+  ],
+  "plan": {
+    "gbrain-defaults": {
+      "write_usd_per_mtok": 1,
+      "answer_input_tokens": 23800,
+      "hours_per_world": 2
+    },
+    "ext-extract-first": {
+      "write_usd_per_mtok": 95,
+      "answer_input_tokens": 1200,
+      "hours_per_world": 20
+    },
+    "ext-memory-bank": {
+      "write_usd_per_mtok": 3.7,
+      "answer_input_tokens": 10400,
+      "hours_per_world": 2
+    },
+    "ext-verbatim-session": {
+      "write_usd_per_mtok": 0,
+      "answer_input_tokens": 8000,
+      "hours_per_world": 1.5
+    },
+    "baseline-hybrid": {
+      "write_usd_per_mtok": 0.14,
+      "answer_input_tokens": 7100,
+      "hours_per_world": 1
+    },
+    "baseline-file-agent": {
+      "write_usd_per_mtok": 0,
+      "answer_input_tokens": 73000,
+      "hours_per_world": 1.5
+    },
+    "baseline-none": {
+      "write_usd_per_mtok": 0,
+      "answer_input_tokens": 0,
+      "hours_per_world": 0.5
+    },
+    "baseline-full-context": {
+      "write_usd_per_mtok": 0,
+      "answer_input_tokens": null,
+      "hours_per_world": 0.5
+    }
+  },
+  "profiles": {
+    "heavy": {
+      "messages_per_month": 2000,
+      "questions_per_month": 300,
+      "history_messages": 24000
+    },
+    "light": {
+      "messages_per_month": 215,
+      "questions_per_month": 32,
+      "history_messages": 2580
+    }
+  },
+  "idle_worlds": [
+    "bg1-dev-02",
+    "bg1-dev-03"
+  ],
+  "units": {
+    "CS1": [
+      "cs1.gbrain-defaults.shipped-defaults.c0",
+      "cs1.gbrain-defaults.shipped-defaults.c1",
+      "cs1.gbrain-defaults.shipped-defaults.c2",
+      "cs1.ext-extract-first.recipe.c0",
+      "cs1.ext-extract-first.recipe.c1",
+      "cs1.ext-extract-first.recipe.c2",
+      "cs1.ext-extract-first.recipe.c3",
+      "cs1.ext-extract-first.recipe.c4",
+      "cs1.ext-extract-first.recipe.c5",
+      "cs1.ext-extract-first.recipe.c6",
+      "cs1.ext-extract-first.recipe.c7",
+      "cs1.ext-extract-first.recipe.c8",
+      "cs1.ext-extract-first.recipe.c9",
+      "cs1.ext-memory-bank.recipe.c0",
+      "cs1.ext-memory-bank.recipe.c1",
+      "cs1.ext-verbatim-session.recipe.c0",
+      "cs1.ext-verbatim-session.recipe.c1",
+      "cs1.baseline-hybrid.baseline.c0",
+      "cs1.baseline-hybrid.baseline.c1",
+      "cs1.baseline-file-agent.baseline.c0",
+      "cs1.baseline-file-agent.baseline.c1",
+      "cs1.baseline-none.baseline",
+      "cs1.baseline-full-context.baseline"
+    ],
+    "CS1-pilot": [
+      "cs1-pilot.gbrain-defaults.shipped-defaults",
+      "cs1-pilot.ext-extract-first.recipe",
+      "cs1-pilot.ext-memory-bank.recipe",
+      "cs1-pilot.ext-verbatim-session.recipe",
+      "cs1-pilot.baseline-hybrid.baseline",
+      "cs1-pilot.baseline-file-agent.baseline",
+      "cs1-pilot.baseline-none.baseline",
+      "cs1-pilot.baseline-full-context.baseline"
+    ],
+    "CS1-capacity": [
+      "cs1-capacity.gbrain-defaults.shipped-defaults",
+      "cs1-capacity.ext-extract-first.recipe",
+      "cs1-capacity.ext-memory-bank.recipe",
+      "cs1-capacity.ext-verbatim-session.recipe",
+      "cs1-capacity.baseline-hybrid.baseline",
+      "cs1-capacity.baseline-file-agent.baseline"
+    ]
+  }
+}
