@@ -12,5 +12,5 @@
   shell cannot reach them.
 - The BEAM-10M cell test now checks that its cells run the build their counted runs froze (v0.60.748.0) instead of
   package.json's pin, since those results are published and package.json has moved on.
-- gbrain now reads `EXA_API_KEY`, for an opt-in web search in `gbrain dedupe --exa`. Tests blank it and gbrain eval
-  runs strip it, like every other provider key, because no suite uses that search.
+- gbrain now reads `EXA_API_KEY`, for an opt-in web search in `gbrain dedupe --exa`. Tests now blank it, and gbrain eval
+  runs already stripped it by name pattern (the stripped list now names it), because no suite uses that search.
