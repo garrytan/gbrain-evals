@@ -44,7 +44,7 @@ export const PREREGISTRATION = 'docs/benchmarks/2026-10-06-scoreboard-preregistr
 
 export type Q1SetId = 'S1' | 'S1-sweep' | 'S2a' | 'S2b' | 'S3' | 'S4' | 'S4-slice' | 'S5' | 'S3-smoke' | 'S3-smoke-default' | 'S2b-ingest';
 /** F6's own set (eval/runner/q1/cells/f6.ts): the D8 long-history reserve. */
-export type SetId = Q1SetId | 'D8' | RS1SetId | BG1SetId | BG1CSetId | SotaSetId | WeeklyLineSetId;
+export type SetId = Q1SetId | 'D8' | RS1SetId | BG1SetId | BG1CSetId | SotaSetId | WeeklyLineSetId | CS1SetId;
 /** RS1's sets (eval/runner/q1/cells/rs1.ts): the sealed set and stage 1's two public dev conversations. */
 export type RS1SetId = 'RS1' | 'RS1-dev2';
 /** BG1's sets (eval/runner/q1/cells/bg1.ts): the sealed changing-facts set, its full-context worlds and stage 1's three public dev worlds. */
@@ -57,6 +57,11 @@ export type BG1CSetId = 'BG1C' | 'BG1C-dev1';
  * the same two on the long public dev worlds ahead of a W1-long block: bg1-dev-long-01, and bg1-dev-long-02 and -03.
  */
 export type WeeklyLineSetId = 'BGW' | 'BGW-long' | 'BGW-pilot' | 'BGW-judge' | 'BGW-pilot-long' | 'BGW-judge-long';
+/**
+ * The cost-and-speed experiment's sets (cs1.ts): the ten counted public dev worlds bg1-dev-01 to -10, the paid pilot on
+ * bg1-dev-11 and the keyless capacity check on bg1-dev-12.
+ */
+export type CS1SetId = 'CS1' | 'CS1-pilot' | 'CS1-capacity';
 /** The SOTA loop's sets (generateSotaDevCells, generateSotaLeaderCells). */
 export type SotaSetId = 'SOTA-dev' | 'SOTA-leader-beam' | 'SOTA-leader-lme';
 export type Q1BlockId = 'T1' | 'T2-S2a' | 'T2-S2b' | 'T2-S3' | 'T2-S4-S5';
@@ -72,7 +77,9 @@ export type BG1CBlockId = 'BG1C-smoke' | 'BG1C';
 export type SotaBlockId = 'SOTA-dev' | 'SOTA-leader';
 export type BN10BlockId = 'BN10-dry' | 'BN10';
 export type WeeklyLineBlockId = 'BGW' | 'BGW-pilot' | 'BGW-judge';
-export type BlockId = Q1BlockId | F6BlockId | RS1BlockId | BG1BlockId | BG1CBlockId | SotaBlockId | BN10BlockId | WeeklyLineBlockId;
+/** The cost-and-speed experiment's spend blocks (cs1.ts): the counted cells, the paid pilot and the keyless capacity check. */
+export type CS1BlockId = 'CS1' | 'CS1-pilot' | 'CS1-capacity';
+export type BlockId = Q1BlockId | F6BlockId | RS1BlockId | BG1BlockId | BG1CBlockId | SotaBlockId | BN10BlockId | WeeklyLineBlockId | CS1BlockId;
 export type Split = 'dev' | 'sealed' | 'all';
 
 export type Selection =
@@ -177,6 +184,21 @@ export interface CellDefinition {
      * on an idle system as a counted write-to-queryable probe, behind a probe-label calibration window. Absent: no held-back probes.
      */
     held_back?: number };
+  /**
+   * Cost and speed: the CS1 worlds whose stack stays up with no traffic after its questions, for `ms` (one cycle of the
+   * system's longest scheduled background job, held between `min_ms` and `max_ms`), and the scheduled jobs that set it,
+   * each with its shipped cadence in minutes (null when it runs on an event, not a schedule) and where that was read.
+   * Absent: no idle window.
+   */
+  idle_window?: { worlds: string[]; ms: number; min_ms: number; max_ms: number; jobs: Array<{ job: string; cadence_minutes: number | null; source: string }> };
+  /** Cost and speed: sample the stack's resident memory and disk after the bulk import drains, through the probes, the questions and the idle window. Absent: no hosting samples. */
+  hosting_samples?: true;
+  /**
+   * How answers are graded. `key-match` (cost and speed): no model judges any answer; each is scored after the run by
+   * the changing-facts battleground's deterministic matcher (eval/runner/bg1/match.ts), so the cell has no canonical
+   * judge (descriptive_view false) and no arm has frontier judges or judge repeats. Absent: model judges grade answers.
+   */
+  scoring?: 'key-match';
   /** Dev smoke cells: only these conversations of the split run (the set's `only_conversations`). */
   only_conversations?: string[];
   /** Ingest probes: write only the first N sessions of each conversation (a fixed fraction, for a system too slow or costly to ingest whole on a smoke). */
@@ -185,7 +207,7 @@ export interface CellDefinition {
   shards: number;
   expected_hours: number;
   /** Shim cells: the stack's bootstrap environment and config (`GBRAIN_FULL_SURFACE=1` for gbrain's full-surface cell). */
-  launch?: { env: Record<string, string>; config: 'recipe' | 'common' | 'shipped-0.31' };
+  launch?: { env: Record<string, string>; config: 'recipe' | 'common' | 'shipped-0.31' | 'observations' };
   /**
    * RS1, BG1 and BG1-C: the cell's conversations are the custodian's kept list (eval/runner/memory-qa/corpus.ts rs1Kept, bg1Kept),
    * in slot order, and launch unit (shard) i runs kept conversations i x kept_units to (i + 1) x kept_units - 1. A Set W cell
@@ -392,8 +414,24 @@ export const SOTA_SETS: Record<SotaSetId, SetFacts> = {
     block: 'SOTA-leader', selection: { kind: 'ids', ids: SOTA_LEADER_LME_IDS }, exclusions: [], role: 'smoke', exposure: 'E3',
     label: 'SOTA loop leader cache: the whole history on the nightly LongMemEval-S pool questions' },
 };
-/** Every set a cell may name: Q1's, F6's, RS1's, BG1's, BG1-C's and the SOTA loop's. */
-export const ALL_SETS: Record<SetId, SetFacts> = { ...SETS, ...F6_SETS, ...RS1_SETS, ...BG1_SETS, ...BG1C_SETS, ...SOTA_SETS, ...WEEKLY_LINE_SETS };
+/**
+ * The cost-and-speed experiment's sets (docs/benchmarks/2026-11-24-cost-speed-preregistration.md, "Workload data" and
+ * "Pilot (R111)"), all public dev worlds of the changing-facts battleground (loader bg1-dev), each counted from its world
+ * file: sessions, messages, and cl100k_base tokens over every turn's content (the preregistration's 180,720 mean over the
+ * ten counted worlds). CS1 is the ten counted worlds, 1,540 sessions, with the seeded 20 of each world's 64 questions;
+ * CS1-pilot is bg1-dev-11 (159 sessions, of which its cells write the first 60) with 4 seeded questions; CS1-capacity is
+ * bg1-dev-12 (154 sessions), the keyless capacity check, with the counted 20. sessions is a world's mean.
+ */
+export const CS1_SETS: Record<CS1SetId, SetFacts> = {
+  CS1: { id: 'CS1', benchmark: 'bg1-dev', split: 'dev', questions: 200, conversations: 10, corpus_tokens: 1_807_195, messages: 44_801, block: 'CS1', selection: { kind: 'per-conversation', per_conversation: 20, seed: 'cost-speed-1' }, exclusions: [], role: 'public', exposure: 'E2',
+    label: 'cost and speed, ten public dev worlds bg1-dev-01 to bg1-dev-10 (20 seeded questions each)', only_conversations: Array.from({ length: 10 }, (_, i) => `bg1-dev-${String(i + 1).padStart(2, '0')}`), sessions: 154 },
+  'CS1-pilot': { id: 'CS1-pilot', benchmark: 'bg1-dev', split: 'dev', questions: 4, conversations: 1, corpus_tokens: 183_055, messages: 4_518, block: 'CS1-pilot', selection: { kind: 'per-conversation', per_conversation: 4, seed: 'cost-speed-1' }, exclusions: [], role: 'smoke', exposure: 'E2',
+    label: 'cost and speed pilot, public dev world bg1-dev-11 (its first 60 sessions written, 4 seeded questions)', only_conversations: ['bg1-dev-11'], sessions: 159 },
+  'CS1-capacity': { id: 'CS1-capacity', benchmark: 'bg1-dev', split: 'dev', questions: 20, conversations: 1, corpus_tokens: 183_107, messages: 4_468, block: 'CS1-capacity', selection: { kind: 'per-conversation', per_conversation: 20, seed: 'cost-speed-1' }, exclusions: [], role: 'smoke', exposure: 'E2',
+    label: 'cost and speed keyless capacity check, public dev world bg1-dev-12 written whole against the fake upstream', only_conversations: ['bg1-dev-12'], sessions: 154 },
+};
+/** Every set a cell may name: Q1's, F6's, RS1's, BG1's, BG1-C's, the SOTA loop's, the weekly line's and cost and speed's. */
+export const ALL_SETS: Record<SetId, SetFacts> = { ...SETS, ...F6_SETS, ...RS1_SETS, ...BG1_SETS, ...BG1C_SETS, ...SOTA_SETS, ...WEEKLY_LINE_SETS, ...CS1_SETS };
 
 /** PLAN §7 block lines (the approved estimate the re-priced manifest is compared with). */
 export const PLAN_BLOCKS: Record<Q1BlockId, { label: string; plan_usd: number }> = {
@@ -995,6 +1033,9 @@ export function shimLaunch(system: string, configuration: string): NonNullable<C
   return { env: configuration === 'full-surface' ? { GBRAIN_FULL_SURFACE: '1' } : {}, config: configuration === 'common' || configuration === 'common-embedder' ? 'common' : 'recipe' };
 }
 
+/** Launch configurations with their own bundle directory (<bundle>/<config>/docker-compose.yml), which every bootstrap call names: the temporal graph's 0.31.2 defaults and the memory-bank server with observations on. */
+export const OWN_BUNDLE_CONFIGS: readonly string[] = ['shipped-0.31', 'observations'];
+
 /** `KEY=value ` for a launch environment, in key order. */
 export const launchPrefix = (launch: NonNullable<CellDefinition['launch']>) => Object.entries(launch.env).sort(([a], [b]) => (a < b ? -1 : 1)).map(([k, v]) => `${k}=${v} `).join('');
 
@@ -1003,8 +1044,8 @@ function shimCommands(system: string, launch: NonNullable<CellDefinition['launch
   const pre = launchPrefix(launch);
   return {
     launch,
-    // A configuration with its own bundle directory (shipped-0.31) names it on every bootstrap call, or the call reaches the pinned stack.
-    snapshot_command: `${pre}bash eval/systems/bootstrap.sh snapshot --system ${system}${launch.config === 'shipped-0.31' ? ' --config shipped-0.31' : ''} --out "$SHOOTOUT_SNAPSHOT_DIR/${system}.tar"`,
+    // A configuration with its own bundle directory (OWN_BUNDLE_CONFIGS) names it on every bootstrap call, or the call reaches the pinned stack.
+    snapshot_command: `${pre}bash eval/systems/bootstrap.sh snapshot --system ${system}${OWN_BUNDLE_CONFIGS.includes(launch.config) ? ` --config ${launch.config}` : ''} --out "$SHOOTOUT_SNAPSHOT_DIR/${system}.tar"`,
     restore_command: `${pre}bash eval/systems/bootstrap.sh restore --system ${system} --config ${launch.config} --from "$SHOOTOUT_RESTORE_DIR/${system}.tar"`,
   };
 }
@@ -1203,6 +1244,7 @@ export const BG1C_BLOCK_IDS: readonly BG1CBlockId[] = ['BG1C-smoke', 'BG1C'];
 export const BN10_BLOCK_IDS: readonly BN10BlockId[] = ['BN10-dry', 'BN10'];
 export const SOTA_BLOCK_IDS: readonly SotaBlockId[] = ['SOTA-dev', 'SOTA-leader'];
 export const WEEKLY_LINE_BLOCK_IDS: readonly WeeklyLineBlockId[] = ['BGW', 'BGW-pilot', 'BGW-judge'];
+export const CS1_BLOCK_IDS: readonly CS1BlockId[] = ['CS1', 'CS1-pilot', 'CS1-capacity'];
 
 /** An arm's retrieval identity: only on gbrain cells whose stack runs F6 (GBRAIN_F6=1), on a packed, retrieval-only or native-default arm, naming a known op, its own arguments and all six overlay keys. */
 function retrievalProblems(d: CellDefinition, a: ArmDefinition, w: string): string[] {
@@ -1247,7 +1289,7 @@ export function definitionProblems(d: CellDefinition, kinds: ReadonlySet<string>
   if (d.schema !== CELL_SCHEMA) p.push(`schema must be ${CELL_SCHEMA}`);
   if (!ID.test(d.id ?? '')) p.push(`id ${JSON.stringify(d.id)} must be 1-80 characters of [a-z0-9.-]`);
   if (!ALL_SETS[d.set]) p.push(`set ${d.set} is unknown`);
-  if (!(PLAN_BLOCKS as Record<string, unknown>)[d.block] && !([...F6_BLOCK_IDS, ...RS1_BLOCK_IDS, ...BG1_BLOCK_IDS, ...BG1C_BLOCK_IDS, ...SOTA_BLOCK_IDS, ...BN10_BLOCK_IDS, ...WEEKLY_LINE_BLOCK_IDS] as readonly string[]).includes(d.block)) p.push(`block ${d.block} is unknown`);
+  if (!(PLAN_BLOCKS as Record<string, unknown>)[d.block] && !([...F6_BLOCK_IDS, ...RS1_BLOCK_IDS, ...BG1_BLOCK_IDS, ...BG1C_BLOCK_IDS, ...SOTA_BLOCK_IDS, ...BN10_BLOCK_IDS, ...WEEKLY_LINE_BLOCK_IDS, ...CS1_BLOCK_IDS] as readonly string[]).includes(d.block)) p.push(`block ${d.block} is unknown`);
   if (!['dev', 'sealed', 'all'].includes(d.split)) p.push('split must be dev, sealed or all');
   p.push(...selectionProblems(d.selection, 'selection'));
   if (d.selection?.kind === 'ids' && d.split !== 'dev') p.push('an ids selection names dev questions only, since sealed ids never live in a manifest');
@@ -1263,7 +1305,8 @@ export function definitionProblems(d: CellDefinition, kinds: ReadonlySet<string>
     : (d.benchmark === 'beam-rs1' || d.benchmark === 'bg1' || d.benchmark === 'bg1c') && d.shards === Math.ceil(ALL_SETS[d.set].conversations / d.kept_units!));
   if (d.kept_units !== undefined && !keptUnitsOk) p.push('kept_units runs a beam-rs1, bg1 or bg1c cell over the custodian\'s kept list, or a Set W cell over its week\'s worlds, in units of a positive number of conversations, one shard per unit');
   if (d.benchmark === 'bgw' && d.shards > 1 && d.kept_units === undefined) p.push('a Set W cell that runs as more than one launch unit names how many of its week\'s worlds each unit runs (kept_units)');
-  if (d.descriptive_view !== undefined && !(d.descriptive_view === false && (d.arms ?? []).every(a => a.mode === 'retrieval-only' || (a.frontier?.per_reader === true && a.frontier.readers === null && a.frontier.sample === null && Object.values(a.reader_replicates ?? {}).every(n => n <= 1))))) p.push('descriptive_view is false or absent, and false only when every judged arm gives every answer its per-reader gating judge (frontier.per_reader over all readers, one replicate each, unsampled), so no answer goes ungraded without the canonical judge');
+  if (d.scoring !== undefined && !(d.scoring === 'key-match' && d.descriptive_view === false && (d.arms ?? []).every(a => a.frontier === null && a.judge_repeats === null))) p.push('scoring is key-match or absent, and key-match only on a cell with no canonical judge (descriptive_view false) whose arms have no frontier judges or judge repeats, so no model judges any answer');
+  if (d.descriptive_view !== undefined && d.scoring !== 'key-match' && !(d.descriptive_view === false && (d.arms ?? []).every(a => a.mode === 'retrieval-only' || (a.frontier?.per_reader === true && a.frontier.readers === null && a.frontier.sample === null && Object.values(a.reader_replicates ?? {}).every(n => n <= 1))))) p.push('descriptive_view is false or absent, and false only when every judged arm gives every answer its per-reader gating judge (frontier.per_reader over all readers, one replicate each, unsampled), so no answer goes ungraded without the canonical judge');
   if ((d.benchmark === 'bgw') !== (d.week !== undefined)) p.push('a Set W (bgw) cell names its week (launch, world_end, batch, worlds), and only a Set W cell does');
   if (d.week !== undefined) {
     const w = d.week.worlds;
