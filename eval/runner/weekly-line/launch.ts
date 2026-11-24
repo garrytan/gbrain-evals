@@ -112,7 +112,8 @@ export function weeklyLineLaunchProblems(l: { gbrain: WeeklyLineGbrainBuild; cel
 /**
  * Every model a week's cells and re-reads can call, with its role: each arm's and re-read's readers (under-test) and
  * judges (judge), and the shipped models of each cell's system (system-internal, as WEEKLY_LINE_MODELS names them by
- * system).
+ * system). The shipped models come from that hand-kept list, not from the servers' own configuration, so a shipped model
+ * missing from WEEKLY_LINE_MODELS passes; the registry comparison is what this check adds for them.
  */
 export function weeklyLineCalledModels(cells: readonly CellDefinition[], rereads: readonly WeeklyLineRereadPlan[]): RegistryModel[] {
   const out: RegistryModel[] = [];
