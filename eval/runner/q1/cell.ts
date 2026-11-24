@@ -110,9 +110,10 @@ import { loadRS1Manifest, stage1OverCap, type RS1Manifest } from './cells/rs1.ts
 import { loadBN10Manifest } from './cells/bn10.ts';
 import { bg1Stage1OverCap, listPrice, loadBG1Manifest, type BG1Manifest } from './cells/bg1.ts';
 import { BG1C_MANIFEST_PATH, type BG1CManifest } from './cells/bg1c.ts';
-import { BG1C_BLOCK_IDS, isWindowedBenchmark, WEEKLY_PILOT_BLOCK_IDS } from './cells/definitions.ts';
+import { CS1_CAMPAIGN, loadCS1Manifest } from './cells/cs1.ts';
+import { BG1C_BLOCK_IDS, CS1_BLOCK_IDS, isWindowedBenchmark, OWN_BUNDLE_CONFIGS, WEEKLY_PILOT_BLOCK_IDS } from './cells/definitions.ts';
 import { buildWeeklyPilotManifest, WEEKLY_PILOT_COUNTED, WEEKLY_PILOT_GBRAIN_ENV, WEEKLY_PILOT_LENGTH_ENV, weeklyPilotBuild, weeklyPilotLength, type WeeklyLineRereadPlan, type WeeklyPilotManifest } from './cells/weekly-line.ts';
-import { BG1_DEV_LONG_CONVERSATIONS, BGW_CAMPAIGN } from '../memory-qa/bg1-names.ts';
+import { BG1_DEV_CONVERSATIONS, BG1_DEV_LONG_CONVERSATIONS, BGW_CAMPAIGN } from '../memory-qa/bg1-names.ts';
 import { ledgerCaps as bg1LedgerCaps, requireRs1Window as requireBg1Window, WindowRefusal as Bg1WindowRefusal } from '../paid-arm.ts';
 import { exitCodeOf, refuse, renderMessage, ScoreboardError, type ScoreboardMessage } from './scoreboard-errors.ts';
 import type { UsageReceipt } from '../usage-receipt.ts';
@@ -241,9 +242,9 @@ export function splitConversations(benchmark: string, split: CellDefinition['spl
   return new Set(split === 'dev' ? dev : split === 'sealed' ? s.sealed : [...dev, ...s.sealed]);
 }
 
-/** A dev cell's conversations, so the loader never reads a sealed conversation's file (BEAM) or keeps it (LoCoMo), and a bg1-dev cell naming a long dev world loads that world rather than stage 1's three; null loads everything. */
+/** A dev cell's conversations, so the loader never reads a sealed conversation's file (BEAM) or keeps it (LoCoMo), and a bg1-dev cell naming a world outside stage 1's three (an extra or a long dev world) loads the worlds it names rather than those three; null loads everything. */
 export function devOnly(def: Pick<CellDefinition, 'benchmark' | 'split' | 'only_conversations'>): Set<string> | null {
-  if (def.benchmark === 'bg1-dev' && def.only_conversations?.some(c => BG1_DEV_LONG_CONVERSATIONS.includes(c))) return new Set(def.only_conversations);
+  if (def.benchmark === 'bg1-dev' && def.only_conversations?.some(c => !BG1_DEV_CONVERSATIONS.includes(c))) return new Set(def.only_conversations);
   if (def.split !== 'dev' || !(def.benchmark === 'locomo' || def.benchmark.startsWith('beam-'))) return null;
   const dev = loadSplit(def.benchmark).dev;
   const outside = (def.only_conversations ?? []).filter(c => !dev.includes(c));
@@ -1692,14 +1693,14 @@ const VM_VCPU = 4;
 /** The provider keys a cell's VM receives (ubi-runner --pass): only its metering proxy reads them; the cell sees dummy keys. */
 const PROVIDER_KEYS = { openai: 'OPENAI_API_KEY', anthropic: 'ANTHROPIC_API_KEY', voyage: 'VOYAGE_API_KEY', particle: COMPAT_PROVIDERS.particle.key_env } as const;
 /** Waves: T1 first (S1 shim shards packed under the overnight cap), then each T2 set after T1 settles, in the preregistered scope-reduction order reversed. */
-const T2_WAVES: Record<string, number> = { 'T2-S2b': 1, 'T2-S3': 2, 'T2-S2a': 3, 'T2-S4-S5': 4, 'F6-T2': 1, 'F6-D8': 2, 'F6-S4': 3, 'F6-dry': 1, 'F6-P1': 1, 'RS1-S1': 1, RS1: 1, 'BG1-S1': 1, BG1: 1, 'BG1C-smoke': 1, BG1C: 1, BGW: 1, 'BGW-pilot': 1, 'BGW-judge': 1 };
+const T2_WAVES: Record<string, number> = { 'T2-S2b': 1, 'T2-S3': 2, 'T2-S2a': 3, 'T2-S4-S5': 4, 'F6-T2': 1, 'F6-D8': 2, 'F6-S4': 3, 'F6-dry': 1, 'F6-P1': 1, 'RS1-S1': 1, RS1: 1, 'BG1-S1': 1, BG1: 1, 'BG1C-smoke': 1, BG1C: 1, BGW: 1, 'BGW-pilot': 1, 'BGW-judge': 1, CS1: 1, 'CS1-pilot': 1, 'CS1-capacity': 1 };
 
 /** In-process systems whose adapter drives the bundle's own container: the unit builds it at setup and brings it up around the run like a shim stack (A19). */
 const IN_PROCESS_STACKS = new Set(['ext-agent-runtime']);
 
 /** One launch unit per cell, or per conversation shard for an S1 shim cell, in the shootout campaign's cell format; `addons` adds the manifest's addon_cells (a unit selection's campaign). */
-export type CellManifestId = 'q1' | 'f6' | 'rs1' | 'bg1' | 'bg1c' | 'bn10' | 'weekly' | 'weekly-pilot';
-const CELL_MANIFESTS: readonly CellManifestId[] = ['q1', 'f6', 'rs1', 'bg1', 'bg1c', 'bn10', 'weekly', 'weekly-pilot'];
+export type CellManifestId = 'q1' | 'f6' | 'rs1' | 'bg1' | 'bg1c' | 'bn10' | 'weekly' | 'weekly-pilot' | 'cs1';
+const CELL_MANIFESTS: readonly CellManifestId[] = ['q1', 'f6', 'rs1', 'bg1', 'bg1c', 'bn10', 'weekly', 'weekly-pilot', 'cs1'];
 
 export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight?: number; cellManifest?: CellManifestId; addons?: boolean; paidWindow?: { unit: string; cap_usd: number } } = {}): CellSpec[] {
   const perWave = Math.floor((opts.vcpuCapNight ?? 200) / VM_VCPU);
@@ -1713,8 +1714,8 @@ export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight
     const launch = c.launch ?? shimLaunch(c.system, c.configuration);
     const providers: Array<keyof typeof PROVIDER_KEYS> = [...(c.system === 'gbrain-defaults' ? ['openai', 'anthropic', 'voyage'] as const : ['openai', 'anthropic'] as const), ...(c.arms.some(a => a.readers.some(r => r.startsWith('particle:'))) ? ['particle'] as const : [])];
     const stack = c.runner === 'shim' || IN_PROCESS_STACKS.has(c.system);
-    // A configuration with its own bundle directory (shipped-0.31) names it on down too, or down reaches the pinned stack.
-    const downConfig = launch.config === 'shipped-0.31' ? ` --config ${launch.config}` : '';
+    // A configuration with its own bundle directory (OWN_BUNDLE_CONFIGS) names it on down too, or down reaches the pinned stack.
+    const downConfig = OWN_BUNDLE_CONFIGS.includes(launch.config) ? ` --config ${launch.config}` : '';
     const command = stack ? `${launchPrefix(launch)}bash eval/systems/bootstrap.sh up --system ${c.system} --config ${launch.config} && ${run}; rc=$?; bash eval/systems/bootstrap.sh down --system ${c.system}${downConfig}; exit $rc` : run;
     /** A smoke measures what the estimate assumes, so its lease holds twice the estimate; a counted unit takes its cell's lease override (A20), else the estimate per shard (a Set W unit's share of its week's worlds). */
     const share = c.week && c.shards > 1 ? c.estimate.usd * weeklyUnitWorlds(c, i).length / c.week.worlds.length : c.estimate.usd / c.shards;
@@ -1817,14 +1818,18 @@ export const BG1_DATA_PATHS = ['eval/data/changing-facts-v1'];
  * bg1c-cells.json and its sealed units' filled manifest from GBRAIN_EVALS_BG1C_MANIFEST recorded as
  * bg1c_manifest_sha256. A unit whose cell has descriptive_view false (every BG1-C cell) never calls Gemini, so it gets
  * no Gemini provider, key or gemini_key_env.
+ * Cost and speed: a manifest whose campaign_id is CS1_CAMPAIGN (cs1-cells.json) plans the same way, every unit's run
+ * naming cs1-cells.json; its units read public dev worlds only and no model judges them, so none is sealed or given Gemini.
  */
 export function bg1CampaignManifest(m: Manifest, opts: { smoke?: boolean; sealed?: { cap_usd: number }; smokeOnly?: boolean; units?: Partial<Bg1UnitSelection>; worldEnd?: string; bg1Manifest?: string } = {}): Q1Campaign {
-  const bg1c = (m as { campaign_id?: string }).campaign_id === BG1C_SET.campaign;
+  const campaignId = (m as { campaign_id?: string }).campaign_id;
+  const bg1c = campaignId === BG1C_SET.campaign, cs1 = campaignId === CS1_CAMPAIGN;
   const set = bg1c ? BG1C_SET : BG1_SET;
-  const which: CellManifestId = bg1c ? 'bg1c' : 'bg1';
+  const which: CellManifestId = bg1c ? 'bg1c' : cs1 ? 'cs1' : 'bg1';
+  const label = cs1 ? 'cost-and-speed' : set.label;
   const u = opts.units;
-  if (!u?.paid_window || !/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(u.paid_window) || !(Number(u.cap_usd) > 0)) throw refuse({ code: 'PAID_FLAGS_MISSING', message: `a ${set.label} campaign needs a unit selection (--units) naming its granted paid window as paid_window, with the window cap as cap_usd`,
-    why: `every ${set.label} unit spends real keys, so its command carries the granted window and the unit refuses outside it`, fix: { next: 'run', argv: [...FRONT, 'plan', '--manifest', which, '--units', '<selection with paid_window and cap_usd>', '--campaign-out', '<file>'] } });
+  if (!u?.paid_window || !/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(u.paid_window) || !(Number(u.cap_usd) > 0)) throw refuse({ code: 'PAID_FLAGS_MISSING', message: `a ${label} campaign needs a unit selection (--units) naming its granted paid window as paid_window, with the window cap as cap_usd`,
+    why: `every ${label} unit spends real keys, so its command carries the granted window and the unit refuses outside it`, fix: { next: 'run', argv: [...FRONT, 'plan', '--manifest', which, '--units', '<selection with paid_window and cap_usd>', '--campaign-out', '<file>'] } });
   const { paid_window, ...units } = u as Bg1UnitSelection;
   const worldEnd = bg1WorldEnd({ worldEnd: opts.worldEnd });
   const campaign = campaignManifest(m, { ...opts, units: { ...units, cell_manifest: which } });
@@ -1839,7 +1844,7 @@ export function bg1CampaignManifest(m: Manifest, opts: { smoke?: boolean; sealed
   const held = campaign.cells.some(c => c.sealed) && filled && existsSync(filled) ? sha256File(filled) : null;
   const recorded = !held ? {} : bg1c ? { bg1c_manifest_sha256: held } : { bg1_manifest_sha256: held };
   return { ...campaign, executes: [...(campaign.executes ?? []), ...BG1_DATA_PATHS], ...recorded, cells: campaign.cells.map(cell => {
-    if (cell.command.split(out).length !== 2) throw new Error(`${set.label} unit ${cell.id} has no single${out} in its command to put the paid window before`);
+    if (cell.command.split(out).length !== 2) throw new Error(`${label} unit ${cell.id} has no single${out} in its command to put the paid window before`);
     const { def, index } = defOf(cell.id);
     const unit = cell.sealed && def?.kept_units ? { index, size: def.kept_units } : undefined;
     const gemini = def?.descriptive_view !== false ? { providers: [...(cell.providers ?? []), 'gemini' as const], pass: [...(cell.pass ?? []), BG1_GEMINI_KEY_ENV], gemini_key_env: BG1_GEMINI_KEY_ENV } : {};
@@ -1929,11 +1934,12 @@ export const loadBG1CManifest = (path = BG1C_MANIFEST_PATH) => JSON.parse(readFi
 
 /**
  * The cell manifest `--manifest` names: q1 (default), f6, rs1, bg1, bg1c, bn10, weekly (the running week's cells.json,
- * loadWeeklyCells) or weekly-pilot (the weekly line's pilot and judge check, loadWeeklyPilotManifest).
+ * loadWeeklyCells), weekly-pilot (the weekly line's pilot and judge check, loadWeeklyPilotManifest) or cs1 (cost and
+ * speed's, cs1-cells.json).
  */
 export function loadCellManifest(which?: string, env: Record<string, string | undefined> = process.env): Manifest {
-  if (which !== undefined && !(CELL_MANIFESTS as readonly string[]).includes(which)) throw refuse(usage(`--manifest takes q1 or f6 (or rs1 for RS1's cells, bg1 for BG1's, bg1c for BG1-C's, bn10 for the BEAM-10M re-measure's, weekly for the running week of the weekly line, weekly-pilot for its pilot and judge check), not ${which}`));
-  return which === 'f6' ? loadF6Manifest() : which === 'rs1' ? loadRS1Manifest() : which === 'bg1' ? loadBG1Manifest() : which === 'bg1c' ? loadBG1CManifest() : which === 'bn10' ? loadBN10Manifest() : which === 'weekly' ? weeklyManifest(loadWeeklyCells(env)) : which === 'weekly-pilot' ? loadWeeklyPilotManifest(env) : loadManifest();
+  if (which !== undefined && !(CELL_MANIFESTS as readonly string[]).includes(which)) throw refuse(usage(`--manifest takes q1 or f6 (or rs1 for RS1's cells, bg1 for BG1's, bg1c for BG1-C's, bn10 for the BEAM-10M re-measure's, weekly for the running week of the weekly line, weekly-pilot for its pilot and judge check, cs1 for cost and speed's), not ${which}`));
+  return which === 'cs1' ? loadCS1Manifest() : which === 'f6' ? loadF6Manifest() : which === 'rs1' ? loadRS1Manifest() : which === 'bg1' ? loadBG1Manifest() : which === 'bg1c' ? loadBG1CManifest() : which === 'bn10' ? loadBN10Manifest() : which === 'weekly' ? weeklyManifest(loadWeeklyCells(env)) : which === 'weekly-pilot' ? loadWeeklyPilotManifest(env) : loadManifest();
 }
 
 /**
@@ -1985,9 +1991,9 @@ function weeklyManifest(w: WeeklyCellsFile, capUsd = 0): Manifest {
     total_usd: usd, plan_total_usd: usd, cap_usd: capUsd, campaign_id: BGW_CAMPAIGN } as unknown as Manifest;
 }
 
-/** The cell manifest a BG1, BG1-C or weekly-line cell is defined in: weekly for the weekly line's block, weekly-pilot for its pilot and judge check, bg1c for BG1-C's blocks, else bg1. */
-export const bg1CellManifest = (def: Pick<CellDefinition, 'block'>): CellManifestId => (def.block === 'BGW' ? 'weekly' : (WEEKLY_PILOT_BLOCK_IDS as readonly string[]).includes(def.block) ? 'weekly-pilot' : (BG1C_BLOCK_IDS as readonly string[]).includes(def.block) ? 'bg1c' : 'bg1');
-const windowedLabel = (def: Pick<CellDefinition, 'block'>) => ({ weekly: 'Set W', 'weekly-pilot': 'weekly pilot', bg1c: 'BG1-C', bg1: 'BG1' } as Record<string, string>)[bg1CellManifest(def)];
+/** The cell manifest a BG1, BG1-C, weekly-line or cost-and-speed cell is defined in: weekly for the weekly line's block, weekly-pilot for its pilot and judge check, bg1c for BG1-C's blocks, cs1 for cost and speed's, else bg1. */
+export const bg1CellManifest = (def: Pick<CellDefinition, 'block'>): CellManifestId => ((CS1_BLOCK_IDS as readonly string[]).includes(def.block) ? 'cs1' : def.block === 'BGW' ? 'weekly' : (WEEKLY_PILOT_BLOCK_IDS as readonly string[]).includes(def.block) ? 'weekly-pilot' : (BG1C_BLOCK_IDS as readonly string[]).includes(def.block) ? 'bg1c' : 'bg1');
+const windowedLabel = (def: Pick<CellDefinition, 'block'>) => ({ weekly: 'Set W', 'weekly-pilot': 'weekly pilot', bg1c: 'BG1-C', bg1: 'BG1', cs1: 'cost-and-speed' } as Record<string, string>)[bg1CellManifest(def)];
 
 export function findCell(id: string, given?: Manifest, manifest?: string, env: Record<string, string | undefined> = process.env): CellDefinition {
   const m = given ?? loadCellManifest(manifest, env);
@@ -2103,7 +2109,7 @@ export async function main(argv: string[]): Promise<number> {
     // --manifest f6: F6's manifest (eval/runner/q1/cells/f6-cells.json); --dry-run-only keeps its dry-run cells alone;
     // --manifest rs1: RS1's (rs1-cells.json), refused while its stage 1 estimate is above stage 1's cap;
     // --manifest bg1: BG1's (bg1-cells.json), refused the same way at BG1's stage 1 cap;
-    // --manifest bg1c: BG1-C's (bg1c-cells.json), planned as BG1's are (bg1CampaignManifest);
+    // --manifest bg1c: BG1-C's (bg1c-cells.json), planned as BG1's are (bg1CampaignManifest), and --manifest cs1 cost and speed's (cs1-cells.json);
     // --units <file>: a UnitSelection (JSON), the named units alone under its own campaign id and cap.
     if (one('--manifest') === 'weekly') throw refuse(usage('the weekly cells are planned by the weekly runner (bun eval/runner/weekly-line/runner.ts plan), which writes the week\'s cells.json, and launched by its launch, which writes the campaign'));
     if (one('--manifest') === 'weekly-pilot') throw refuse(usage('the weekly line\'s pilot and judge check are planned by bun eval/runner/weekly-line/pilot.ts plan, and their campaigns written by its campaigns command'));
@@ -2117,7 +2123,7 @@ export async function main(argv: string[]): Promise<number> {
     const unitsFile = one('--units');
     if (unitsFile && !campaignOut) throw refuse(usage('--units needs --campaign-out <file>'));
     const units = unitsFile ? JSON.parse(readFileSync(resolve(unitsFile), 'utf8')) as UnitSelection : undefined;
-    if (campaignOut) { writeAtomic(resolve(campaignOut), JSON.stringify((one('--manifest') === 'bg1' || one('--manifest') === 'bg1c' ? bg1CampaignManifest : campaignManifest)(m, { smoke: smokeOnly || argv.includes('--with-smoke'), smokeOnly, sealed: sealedCap ? { cap_usd: Number(sealedCap) } : undefined, units }), null, 2) + '\n'); console.error(`campaign manifest written to ${campaignOut}; next: bun run eval:scoreboard plan --campaign ${campaignOut}`); }
+    if (campaignOut) { writeAtomic(resolve(campaignOut), JSON.stringify((['bg1', 'bg1c', 'cs1'].includes(one('--manifest') ?? '') ? bg1CampaignManifest : campaignManifest)(m, { smoke: smokeOnly || argv.includes('--with-smoke'), smokeOnly, sealed: sealedCap ? { cap_usd: Number(sealedCap) } : undefined, units }), null, 2) + '\n'); console.error(`campaign manifest written to ${campaignOut}; next: bun run eval:scoreboard plan --campaign ${campaignOut}`); }
     console.log(json ? JSON.stringify({ ...m, waves: campaignCells(m).map(c => ({ id: c.id, wave: c.wave, lease_usd: c.lease_usd })) }, null, 2) : renderPlan(m));
     return 0;
   }
