@@ -171,31 +171,42 @@ export function targetKindsFor(op: Pick<Operation, 'params'>): Set<TargetKind> {
   return kinds;
 }
 
-/** One argument set aimed at a target; never carries a canary. */
+/** One argument set aimed at a target, one value per role (slug, query, name), never a canary; widening flags are variants. */
 export function argsFor(op: Pick<Operation, 'params'>, t: Target, sessionId: string): Record<string, unknown> {
   const args: Record<string, unknown> = {};
-  const bySlug = !!t.slug && Object.keys(op.params ?? {}).some(n => SLUG_PARAMS.has(n) || SLUG_LIST_PARAMS.has(n));
-  for (const [name, def] of Object.entries(op.params ?? {}) as Array<[string, { type?: string; required?: boolean; enum?: unknown[]; items?: { type?: string } }]>) {
-    let v: unknown;
-    if (SLUG_PARAMS.has(name) && t.slug) v = t.slug;
-    else if (SLUG_LIST_PARAMS.has(name) && t.slug) v = [t.slug];
-    else if (QUERY_PARAMS.has(name) && (def.required || !bySlug)) v = t.query;
-    else if (name === 'window') v = def.type === 'array' ? [{ role: 'user', content: 'I am meeting ' + (t.name ?? t.query) + ' about the ' + t.query }] : 'user: I am meeting ' + (t.name ?? t.query) + ' about the ' + t.query;
-    else if (NAME_PARAMS.has(name)) v = t.name ?? t.query;
-    else if (NAME_LIST_PARAMS.has(name)) v = [t.name ?? t.query];
-    else if (FACT_PARAMS.has(name) && t.fact_id) v = def.type === 'number' ? Number(t.fact_id) : t.fact_id;
-    else if (name === 'ids' && t.fact_id) v = [def.items?.type === 'string' ? t.fact_id : Number(t.fact_id)];
-    else if (REQUEST_PARAMS.has(name) && t.request_id) v = t.request_id;
-    else if (name === 'source_id' && t.source_id) v = t.source_id;
-    else if (name === 'session_id') v = sessionId;
-    else if (name === 'since') v = '2000-01-01';
-    else if (name === 'until') v = '2999-01-01';
-    else if (name === 'limit') v = 50;
-    else if (WIDENING.has(name) && def.type === 'boolean') v = true;
-    else if (def.required) v = def.enum?.length ? def.enum[0] : def.type === 'number' ? 1 : def.type === 'boolean' ? true : def.type === 'array' ? [] : def.type === 'object' ? {} : t.query;
-    if (v !== undefined) args[name] = v;
+  const params = (op.params ?? {}) as Record<string, { type?: string; required?: boolean; enum?: unknown[]; items?: { type?: string } }>;
+  const names = Object.keys(params);
+  const first = (order: readonly string[]) => order.find(n => n in params);
+  const asType = (name: string, v: string) => params[name]!.type === 'array' ? [v] : v;
+  const slugP = t.slug ? first(['slug', 'page_slug', 'entity_slug', 'page', 'source_slug', 'target', 'from', 'to', 'anchor', 'since_slug', 'slugs', 'pages']) : undefined;
+  if (slugP) args[slugP] = asType(slugP, t.slug!);
+  const queryP = first(['query', 'question', 'q', 'topic', 'prompt', 'text', 'phrase', 'claim', 'turn_text', 'summary', 'prior_context', 'grep']);
+  if (queryP && (params[queryP]!.required || !slugP)) args[queryP] = t.query;
+  const nameP = first(['entity', 'name', 'person', 'who', 'symbol', 'entry_point', 'entities', 'names']);
+  if (nameP && (params[nameP]!.required || !slugP || t.kind === 'colleague_page' || t.kind === 'company')) args[nameP] = asType(nameP, t.name ?? t.query);
+  if ('window' in params) args.window = params.window!.type === 'array' ? [{ role: 'user', content: 'I am meeting ' + (t.name ?? t.query) + ' about the ' + t.query }] : 'user: I am meeting ' + (t.name ?? t.query) + ' about the ' + t.query;
+  const factP = t.fact_id ? first(['fact_id', 'id', 'answer_id', 'ids']) : undefined;
+  if (factP) args[factP] = factP === 'ids' ? [params.ids!.items?.type === 'string' ? t.fact_id : Number(t.fact_id)] : params[factP]!.type === 'number' ? Number(t.fact_id) : t.fact_id;
+  if (t.request_id && 'request_id' in params) args.request_id = t.request_id;
+  if (t.source_id && 'source_id' in params) args.source_id = t.source_id;
+  if ('session_id' in params) args.session_id = sessionId;
+  if ('since' in params && !params.since!.required && params.since!.type === 'string') args.since = '2000-01-01';
+  if ('until' in params && params.until!.type === 'string') args.until = '2999-01-01';
+  if ('limit' in params) args.limit = 50;
+  for (const name of names) {
+    const def = params[name]!;
+    if (args[name] !== undefined || !def.required) continue;
+    args[name] = def.enum?.length ? def.enum[0] : def.type === 'number' || def.type === 'integer' ? 1 : def.type === 'boolean' ? true : def.type === 'array' ? [] : def.type === 'object' ? {} : t.query;
   }
   return args;
+}
+
+/** One variant per widening boolean an operation takes, each alone (some combinations are refused as conflicting). */
+export function wideningVariants(op: Pick<Operation, 'params'>, base: Record<string, unknown>): Array<{ id: string; args: Record<string, unknown> }> {
+  const params = (op.params ?? {}) as Record<string, { type?: string }>;
+  return Object.keys(params).filter(n => WIDENING.has(n) && params[n]!.type === 'boolean' && base[n] === undefined)
+    .map(n => ({ id: n + '=true', args: { ...base, [n]: true, ...(n === 'all_sources' ? { source_id: undefined } : {}) } }))
+    .map(v => ({ id: v.id, args: Object.fromEntries(Object.entries(v.args).filter(([, x]) => x !== undefined)) }));
 }
 
 /** The base argument set plus one variant per value of each enum parameter the base set does not fix. */
@@ -267,14 +278,16 @@ export function scan(text: string, gold: Gold, sent: string): LeakHits {
 
 /** A response with target values and volatile fields masked, for the protected-versus-ghost comparison. */
 export function normalizeForOracle(text: string, masks: readonly string[]): string {
-  let t = text;
-  for (const m of [...masks].filter(Boolean).sort((a, b) => b.length - a.length)) t = t.split(m).join('<T>');
-  return t
+  let t = text
+    .replace(/\[gbrain notice [^\]]*\][^\n]*(\n(why|fix|next|docs):[^\n]*)*/g, '<notice>')
+    .replace(/"gbrain_notices"\s*:\s*\[(?:[^\[\]]|\[[^\]]*\])*\]\s*,?/g, '')
     .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, '<uuid>')
     .replace(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?/g, '<ts>')
     .replace(/"(\w*(?:_ms|ms|latency|elapsed|duration|took|took_ms|generated_at|served_at|now|at))"\s*:\s*-?\d+(?:\.\d+)?/gi, '"$1":<n>')
     .replace(/\b[0-9a-f]{16,}\b/gi, '<hex>')
     .replace(/(session|request|trace|span)[_-]?id"\s*:\s*"[^"]*"/gi, '$1_id":"<id>"');
+  for (const m of [...masks].filter(Boolean).sort((a, b) => b.length - a.length)) t = t.replace(new RegExp('(?<![A-Za-z0-9_/-])' + esc(m) + '(?![A-Za-z0-9_-])', 'g'), '<T>');
+  return t.split('\n').filter(l => l.trim() !== '' && l.trim() !== '<notice>').join('\n');
 }
 
 // ─── Transports ────────────────────────────────────────────────────────
@@ -650,18 +663,20 @@ export function planProbes(f: Fixture, ops: Operation[], transport: Transport, p
         const base = argsFor(op, tk.protected, sid);
         const extra: Array<{ id: string; args: Record<string, unknown> }> = [];
         if ('source_id' in (op.params ?? {})) for (const s of [p.dm_source, '__all__']) if (base.source_id !== s) extra.push({ id: 'source_id=' + s, args: { ...base, source_id: s } });
-        const variants = profile === 'ci' ? [{ id: 'base', args: base }] : [...variantsFor(op, base, 4), ...extra].slice(0, 4);
+        const variants = profile === 'ci' ? [{ id: 'base', args: base }] : [...variantsFor(op, base, 4), ...wideningVariants(op, base), ...extra];
         const ghostBase = tk.ghost ? argsFor(op, tk.ghost, sid) : null;
         const twinBase = argsFor(op, tk.twin, sid);
         for (const v of variants) {
           const over = Object.fromEntries(Object.entries(v.args).filter(([k, x]) => base[k] !== x && k !== 'source_id'));
           const srcOver = v.id.startsWith('source_id=') ? { source_id: v.args.source_id } : {};
+          const dropped = Object.keys(base).filter(k => !(k in v.args));
+          const apply = (a: Record<string, unknown>) => Object.fromEntries(Object.entries({ ...a, ...over, ...srcOver }).filter(([k]) => !dropped.includes(k)));
           const masks = [tk.protected.slug, tk.protected.fact_id, tk.protected.request_id, tk.protected.source_id, tk.ghost?.slug, tk.ghost?.fact_id, tk.ghost?.request_id, tk.ghost?.source_id, p.dm_source, w.members.find(m => m.id === w.ghost_member)!.dm_source].filter((x): x is string => !!x);
           const seenCallerKinds = new Set<CallerKind>();
           for (const caller of callers) {
             if (profile === 'ci' && seenCallerKinds.has(caller.kind)) continue;
             seenCallerKinds.add(caller.kind);
-            const spec: ProbeSpec = { op, target: p, kind: tk.protected.kind, variant: v.id, args: v.args, ghost: ghostBase ? { ...ghostBase, ...over, ...srcOver } : null, twin: { ...twinBase, ...over }, masks, caller };
+            const spec: ProbeSpec = { op, target: p, kind: tk.protected.kind, variant: v.id, args: v.args, ghost: ghostBase ? apply(ghostBase) : null, twin: apply(twinBase), masks, caller };
             if (profile === 'pilot') {
               const strat = op.name + '|' + caller.kind;
               const keep = !firstSeen.has(strat) || hash32(op.name + p.id + tk.protected.kind + v.id + caller.label) % 10 === 0;
@@ -690,6 +705,8 @@ interface CellState {
   channelOf: Map<string, string>;
   publicMarkers: string[];
   ghostMember: string;
+  /** Operations gbrain answers for a caller bound to nobody by design (requester-scope exempt); scanned, never slips. */
+  scopeExempt: Set<string>;
 }
 
 function bump(s: CellState, op: string, caller: Caller, cond: Condition, k: keyof Tally, n = 1) {
@@ -736,7 +753,7 @@ function account(s: CellState, spec: Pick<ProbeSpec, 'op' | 'target' | 'kind' | 
   };
   if (hits.content.length) { bump(s, op, caller, cond, 'content'); record('content', hits.content); }
   if (hits.identifier.length) { bump(s, op, caller, cond, 'identifier'); record('identifier', hits.identifier); }
-  if (mustRefuse(caller) && o.ok && o.exposed) { bump(s, op, caller, cond, 'slip'); record('identity_slip', [o.error_code ?? 'answered']); }
+  if (mustRefuse(caller) && o.ok && o.exposed && !s.scopeExempt.has(op)) { bump(s, op, caller, cond, 'slip'); record('identity_slip', [o.error_code ?? 'answered']); }
   return { leaked: hits.content.length + hits.identifier.length > 0 };
 }
 
@@ -878,7 +895,7 @@ export interface CellResult {
   mandatory_without_signal: string[]; ops_planned: number; probes_planned: number; write_shaped_pairs: number;
   rows_changed: string[]; cycle: { exit: number | null; pages_with_canaries_elsewhere: number; not_covered: string[] };
   controls: { planted: ControlResult; misgrant: ControlResult };
-  cap_reached: boolean; elapsed_ms: number; leaks: number; late_unbound_client: string;
+  cap_reached: boolean; elapsed_ms: number; leaks: number; late_unbound_client: string; scope_exempt_ops: string[];
 }
 
 interface CellOptions { profile: Profile; pgAdminUrl: string | null; only: string[] | null; outDir: string; log: (s: string) => void }
@@ -890,6 +907,7 @@ async function runCell(gut: GbrainUnderTest, world: PIWorld, cell: CellId, o: Ce
   const leakFile = join(o.outDir, 'leaks.jsonl');
   const { operations } = await importGbrain<{ operations: Operation[] }>(gut, 'src/core/operations.ts');
   const { attestableOp } = await importGbrain<{ attestableOp: (name: string, op: Operation) => boolean }>(gut, 'src/core/access/actor.ts');
+  const { requiresRequesterScope } = await importGbrain<{ requiresRequesterScope: (op: Operation, auth: { scopes: string[] }) => boolean }>(gut, 'src/core/access/requester-scope.ts');
   const attestOps = operations.filter(op => attestableOp(op.name, op) && (!(op as { mutating?: boolean }).mutating || ATTEST_WRITES.includes(op.name))).map(op => op.name);
   const brain = await buildBrain(gut, world, engine, o.pgAdminUrl, attestOps, o.log);
   {
@@ -906,7 +924,7 @@ async function runCell(gut: GbrainUnderTest, world: PIWorld, cell: CellId, o: Ce
   const result: CellResult = {
     cell, seed: world.seed, stops: [], stop_detail: [], total: zeroTally(), by_op: {}, by_caller: {}, by_condition: {}, served: {}, writes: [], channels_read_back: {}, channels_missing: [],
     mandatory_without_signal: [], ops_planned: 0, probes_planned: 0, write_shaped_pairs: 0, rows_changed: [], cycle: { exit: null, pages_with_canaries_elsewhere: 0, not_covered: ['synthesize'] },
-    controls: { planted: { probes: 0, caught: 0 }, misgrant: { probes: 0, caught: 0 } }, cap_reached: false, elapsed_ms: 0, leaks: 0, late_unbound_client: brain.unboundRefusal,
+    controls: { planted: { probes: 0, caught: 0 }, misgrant: { probes: 0, caught: 0 } }, cap_reached: false, elapsed_ms: 0, leaks: 0, late_unbound_client: brain.unboundRefusal, scope_exempt_ops: [],
   };
   const stop = (code: StopCode, detail: string) => { if (!result.stops.includes(code)) result.stops.push(code); result.stop_detail.push(code + ': ' + detail); };
   try {
@@ -942,7 +960,9 @@ async function runCell(gut: GbrainUnderTest, world: PIWorld, cell: CellId, o: Ce
       golds: new Map(world.members.filter(m => m.writes).map(m => [m.id, goldFor(f, m.id)])),
       channelOf: new Map(world.holdings.flatMap(h => Object.entries(h.canaries).map(([ch, c]) => [c, ch] as [string, string]))),
       publicMarkers: world.public_markers, ghostMember: world.ghost_member,
+      scopeExempt: new Set(operations.filter(op => !requiresRequesterScope(op, { scopes: ['read', 'write'] })).map(op => op.name)),
     };
+    result.scope_exempt_ops = [...s.scopeExempt].sort();
     const readOps = operations.filter(op => !(op as { mutating?: boolean }).mutating || WRITE_READS.includes(op.name));
     let ops = transport === 'cli' ? readOps.filter(op => (MANDATORY_CLI as readonly string[]).includes(op.name) && cliArgv(op, {}) !== null) : readOps;
     if (o.only) ops = ops.filter(op => o.only!.includes(op.name));
