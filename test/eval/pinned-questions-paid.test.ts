@@ -418,11 +418,15 @@ describe('pinned-questions paid arm: provider errors, safety stops and budget re
     expect([row.outcome, row.correct]).toEqual(['provider_error', null]);
     expect(first.acc.summary().errors).toEqual([{ probe_id: `particle:particle-1|s1|${a}`, origin: 'dependency', message: '503 Service Unavailable: upstream provider_error' }]);
     expect(summarizePaid(first.rows).by_model['particle:particle-1']).toMatchObject({ refreshed_excluded: 1, refreshed_correct: 1 });
+    expect(first.harnessErrors).toEqual([expect.stringContaining('the run is incomplete until a rerun')]);
+    const pending = buildReceipt({ gut, models: ['particle:particle-1'], seeds: [1], companies: 8, stage: 'dev', result: first, cost: null, startedAt: new Date().toISOString(), mode: 'paid' }) as unknown as { run_status: string; publishable: boolean };
+    expect([pending.run_status, pending.publishable]).toEqual(['error', false]);
     const calls: Array<{ model: string; kind: 'question' | 'judge'; chars: number }> = [];
     const second = await run(out, () => null, undefined, calls);
     expect(second.resumedUnits).toBe(0);
     expect(calls.length).toBeGreaterThan(0);
     expect(second.rows.find(r => r.company === a)).toMatchObject({ outcome: 'published', correct: true });
+    expect(second.harnessErrors).toEqual([]);
     const third: Array<{ model: string; kind: 'question' | 'judge'; chars: number }> = [];
     expect((await run(out, () => null, undefined, third)).resumedUnits).toBe(1);
     expect(third).toHaveLength(0);
@@ -434,6 +438,7 @@ describe('pinned-questions paid arm: provider errors, safety stops and budget re
     await run(out, failA);
     const second = await run(out, failA);
     expect(second.rows.find(r => r.company === a)).toMatchObject({ outcome: 'provider_error', correct: null });
+    expect(second.harnessErrors).toEqual([]);
     const calls: Array<{ model: string; kind: 'question' | 'judge'; chars: number }> = [];
     expect((await run(out, () => null, undefined, calls)).resumedUnits).toBe(1);
     expect(calls).toHaveLength(0);

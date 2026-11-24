@@ -650,7 +650,11 @@ export async function runPinnedQuestionsPaid(opts: { gut: GbrainUnderTest; model
             break units;
           }
           appendFileSync(ckPath, JSON.stringify({ key: ckKey, model, seed: world.seed, attempt, transient: unitTransient(unit), rows: unit } satisfies Checkpointed) + '\n');
-          if (unitTransient(unit) && attempt < MAX_UNIT_ATTEMPTS) log(`[pq-paid] ${model} seed ${world.seed}: provider or judge-call errors; a resumed run asks this unit again once`);
+          if (unitTransient(unit) && attempt < MAX_UNIT_ATTEMPTS) {
+            const msg = `${model} seed ${world.seed}: provider or judge-call errors on attempt ${attempt} of ${MAX_UNIT_ATTEMPTS}; the run is incomplete until a rerun with the same arguments asks this unit again`;
+            harnessErrors.push(msg);
+            log(`[pq-paid] ${msg}`);
+          }
         }
         for (const r of unit) {
           const probe = `${model}|s${r.seed}|${r.company}`;
