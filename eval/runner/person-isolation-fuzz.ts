@@ -510,7 +510,7 @@ async function openHttp(gut: GbrainUnderTest, brain: Brain): Promise<TransportHa
     if (!r.msg) return { exposed: !(r.status === 401 || r.status === 403), ok: false, error_code: 'http_' + r.status, text: all };
     if (r.msg.error) return { exposed: !/unknown tool|not found|method not found/i.test(JSON.stringify(r.msg.error)), ok: false, error_code: 'rpc_error', text: all };
     const o = toolResultText(r.msg.result ?? {});
-    return { ...o, text: all };
+    return { ...o, text: all + '\n' + o.text };
   })(), TIMEOUT_MS.http);
   return {
     call, port: () => server.port,
