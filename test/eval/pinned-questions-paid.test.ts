@@ -7,11 +7,11 @@ import { CLAIMS, generatePinnedQuestionsWorld, type PqCompany, type PqWorld } fr
 import { claimSentence } from '../../eval/runner/pinned-questions.ts';
 import { gbrainSpecFrom, overlaySummary, resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
 import { createHash } from 'node:crypto';
-import { BudgetExceededError } from '../../eval/runner/budget-ledger.ts';
+import { BudgetExceededError, chatPrice } from '../../eval/runner/budget-ledger.ts';
 import { PaidArmRefusal } from '../../eval/runner/paid-arm.ts';
 import { writeReceipt } from '../../eval/runner/receipt.ts';
 import {
-  JUDGE_MIN_LABELS, PINNED_QUESTIONS_JUDGE_PROMPT, PINNED_QUESTIONS_MODELS_UNDER_TEST, STAGE_SEEDS, TRUNCATION_BAR, buildReceipt, canonicalModel, cohenKappa,
+  EST_TOKENS, JUDGE_CALLS_PER_ANSWER, JUDGE_MAX_TOKENS, JUDGE_MIN_LABELS, PINNED_QUESTIONS_JUDGE_PROMPT, estimateUsd, measuredJudge, PINNED_QUESTIONS_MODELS_UNDER_TEST, STAGE_SEEDS, TRUNCATION_BAR, buildReceipt, canonicalModel, cohenKappa,
   familyOf, judgeAgreement, judgeCheckPasses, judgeFor, judgeUserMessage, modelRoles, parseJudgeLabels, requirePaidFlags, ruleLabels,
   checkpointKey, combinedCost, harnessBlocked, receiptFile, servedWrongModel, outcomeOf, pendingUnits, readCheckpoint, recordingGenerateText, redactProviderText, requireJudgeCheck, requireProviderKeys, runPinnedQuestionsPaid, scoredCorrect, summarizePaid,
   type ChatTransport, type GradedAnswer, type PaidRow, type PaidRunResult,
@@ -73,6 +73,22 @@ describe('pinned-questions paid arm: the exported runner', () => {
 });
 
 describe('pinned-questions paid arm: models and judges', () => {
+  test('the preflight estimate prices the judge at its max_tokens with one retry until graded rows measure it', () => {
+    const per = (m: string, t: { input: number; output: number }) => { const p = chatPrice(m)!; return (t.input * p.input + t.output * p.output) / 1e6; };
+    const astra = 'openai:gpt-6.2-astra', opus = 'anthropic:claude-opus-5-5';
+    const expected = 3 * 24 * (per(opus, EST_TOKENS.pin) + per(opus, EST_TOKENS.refresh) + 2 * JUDGE_CALLS_PER_ANSWER * per(astra, { input: EST_TOKENS.judge.input, output: JUDGE_MAX_TOKENS }));
+    expect(EST_TOKENS.judge.output).toBe(JUDGE_MAX_TOKENS);
+    expect(JUDGE_CALLS_PER_ANSWER).toBe(2);
+    expect(estimateUsd([opus], 3, 24)).toBeCloseTo(expected, 9);
+    const u = (calls: number, output_tokens: number) => ({ calls, input_tokens: 0, output_tokens, cache_read_tokens: 0, cache_write_tokens: 0 });
+    const graded = [{ first: { judge_usage: u(1, 400) }, refreshed: { judge_usage: u(2, 1_000) } }, { first: { judge_usage: u(1, 200) }, refreshed: { judge_usage: u(1, 400) } }] as unknown as PaidRow[];
+    const m = measuredJudge(graded)!;
+    expect(m).toEqual({ outputTokens: Math.ceil(1.5 * 2_000 / 5), callsPerAnswer: 5 / 4 });
+    expect(estimateUsd([opus], 3, 24, undefined, m)).toBeCloseTo(3 * 24 * (per(opus, EST_TOKENS.pin) + per(opus, EST_TOKENS.refresh) + 2 * 1.25 * per(astra, { input: EST_TOKENS.judge.input, output: 600 })), 9);
+    expect(measuredJudge([])).toBeNull();
+    expect(measuredJudge([{ first: { judge_usage: u(1, 20_000) }, refreshed: { judge_usage: u(1, 20_000) } }] as unknown as PaidRow[])!.outputTokens).toBe(JUDGE_MAX_TOKENS);
+  });
+
   test('a paid launch is refused when a model under test or its judge has no provider key', () => {
     const all = { ANTHROPIC_API_KEY: 'a'.repeat(12), OPENAI_API_KEY: 'o'.repeat(12), PARTICLE_API_KEY: 'p'.repeat(12) };
     const models = [...PINNED_QUESTIONS_MODELS_UNDER_TEST];

@@ -89,14 +89,17 @@ export const DEAD_UPSTREAM = { anthropic: 'http://127.0.0.1:9', openai: 'http://
  * Tokens per call for the cost estimate. Inputs are from the prompts of a keyless
  * run (seed 2, 24 companies: pin about 10,000 characters, refresh up to 11,400,
  * judge about 1,600; 4 characters per token, rounded up). Outputs are bounds: the
- * refresh output cap (2,000) and a judge allowance, both covering thinking; a
- * visible answer is about 75 tokens.
+ * refresh output cap (2,000) and the judge's max_tokens (JUDGE_MAX_TOKENS), both
+ * covering thinking: the worst case, which a launch prices until graded rows measure
+ * the judge (measuredJudge); a visible answer is about 75 tokens.
  */
 export const EST_TOKENS = {
   pin: { input: 2_600, output: 2_000 },
   refresh: { input: 2_900, output: 2_000 },
-  judge: { input: 450, output: 2_000 },
+  judge: { input: 450, output: JUDGE_MAX_TOKENS },
 } as const;
+/** Judge calls per graded answer at worst: the first call and its one retry on unparseable output (JUDGE_RETRY_NOTE). */
+export const JUDGE_CALLS_PER_ANSWER = 2;
 
 /** The judge's system prompt, frozen: changing it changes the judge and voids earlier agreement checks. */
 export const PINNED_QUESTIONS_JUDGE_PROMPT = [
@@ -446,14 +449,26 @@ export function refreshComparisons(rows: readonly PaidRow[]) {
 }
 
 /** Ledger estimate in dollars for a run, from EST_TOKENS and the ledger's prices. */
-export function estimateUsd(models: readonly string[], seeds: number, companies: number, maxOutputTokens?: number): number {
+/**
+ * What the judge measurably costs per graded answer, from rows already graded with this judge prompt: output tokens per
+ * call with half again as margin (never above JUDGE_MAX_TOKENS), and calls per answer (retries included). Null with no
+ * graded rows, so a first launch prices the worst case.
+ */
+export function measuredJudge(rows: ReadonlyArray<Pick<PaidRow, 'first' | 'refreshed'>>): { outputTokens: number; callsPerAnswer: number } | null {
+  const us = rows.flatMap(r => [r.first.judge_usage, r.refreshed.judge_usage]);
+  const calls = us.reduce((a, u) => a + u.calls, 0);
+  if (!calls) return null;
+  return { outputTokens: Math.min(JUDGE_MAX_TOKENS, Math.ceil(1.5 * us.reduce((a, u) => a + u.output_tokens, 0) / calls)), callsPerAnswer: calls / us.length };
+}
+
+export function estimateUsd(models: readonly string[], seeds: number, companies: number, maxOutputTokens?: number, judge: { outputTokens: number; callsPerAnswer: number } | null = null): number {
   const answerOutput = Math.max(EST_TOKENS.pin.output, maxOutputTokens ?? 0);
   const cost = (model: string, t: { input: number; output: number }) => {
     const p = chatPrice(model);
     if (!p) throw new Error(`${model} has no ledger price; register one in eval/runner/budget-ledger.ts`);
     return (t.input * p.input + t.output * p.output) / 1e6;
   };
-  return models.reduce((sum, m) => sum + seeds * companies * (cost(m, { ...EST_TOKENS.pin, output: answerOutput }) + cost(m, { ...EST_TOKENS.refresh, output: answerOutput }) + 2 * cost(judgeFor(m), EST_TOKENS.judge)), 0);
+  return models.reduce((sum, m) => sum + seeds * companies * (cost(m, { ...EST_TOKENS.pin, output: answerOutput }) + cost(m, { ...EST_TOKENS.refresh, output: answerOutput }) + 2 * (judge?.callsPerAnswer ?? JUDGE_CALLS_PER_ANSWER) * cost(judgeFor(m), { ...EST_TOKENS.judge, output: judge?.outputTokens ?? EST_TOKENS.judge.output })), 0);
 }
 
 interface Sentence { id: string; text: string; origin: string; stale: boolean }
@@ -873,10 +888,12 @@ async function main(): Promise<void> {
   const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
   const key = checkpointKey({ mode: 'paid', gut, companies, maxOutputTokens });
   const pending = pendingUnits(output, key, models, seeds);
-  const estimate = models.reduce((s, m) => s + estimateUsd([m], pending.filter(u => u.model === m).length, companies, maxOutputTokens), 0);
+  const judgeCheck = stage === 'counted' ? argValue(argv, '--judge-check') : undefined;
+  const graded = judgeCheck && existsSync(judgeCheck) ? (JSON.parse(readFileSync(judgeCheck, 'utf8')) as { data?: { rows?: PaidRow[] } }).data?.rows ?? [] : readCheckpoint(join(output, 'checkpoint.ndjson')).flatMap(x => x.rows);
+  const judge = measuredJudge(graded);
+  const estimate = models.reduce((s, m) => s + estimateUsd([m], pending.filter(u => u.model === m).length, companies, maxOutputTokens, judge), 0);
   requirePaidFlags(argv, estimate);
   requireProviderKeys(models);
-  const judgeCheck = stage === 'counted' ? argValue(argv, '--judge-check') : undefined;
   if (stage === 'counted') requireJudgeCheck(judgeCheck, { gut, models });
   const judgeCheckSha256 = judgeCheck ? createHash('sha256').update(readFileSync(judgeCheck)).digest('hex') : null;
   const keys = Object.fromEntries(PAID_KEY_NAMES.map(k => [k, process.env[k]]).filter(([, v]) => v)) as Partial<Record<typeof PAID_KEY_NAMES[number], string>>;
