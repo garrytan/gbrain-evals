@@ -40,7 +40,9 @@ import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, noModelSpend, receiptPath, s
 export const PI_CATEGORY = 'person-isolation-fuzz';
 export const PI_PREREGISTRATION = 'docs/benchmarks/2026-11-24-person-isolation-preregistration.md';
 export const MANDATORY_OPS = ['memory_recall', 'recall', 'query', 'search', 'get_page', 'get_chunks', 'entity', 'context_pack', 'delta', 'think', 'volunteer_context', 'whois', 'get_backlinks', 'get_timeline', 'list_write_requests', 'get_write_request'] as const;
-export const MANDATORY_CLI = ['query', 'search', 'get_page', 'recall', 'think'] as const;
+export const MANDATORY_CLI = ['query', 'search', 'get_page', 'think'] as const;
+/** Probed over the CLI but not mandatory there: thin-client `gbrain recall` answered owners without their own facts in the pilot, and `--as` refuses it (launch amendment). */
+export const CLI_PROBED = [...MANDATORY_CLI, 'recall'] as const;
 export type Transport = 'mcp-dispatch' | 'http' | 'cli';
 export type EngineKind = 'pglite' | 'postgres';
 export const CELLS = ['mcp-dispatch-pglite', 'http-pglite', 'cli-pglite', 'mcp-dispatch-postgres', 'http-postgres', 'cli-postgres'] as const;
@@ -525,6 +527,13 @@ async function openHttp(gut: GbrainUnderTest, brain: Brain): Promise<TransportHa
 
 /** CLI command and argv for an op, from its registry CLI hints; null when the CLI does not serve it. */
 export function cliArgv(op: Operation, args: Record<string, unknown>): string[] | null {
+  if (op.name === 'recall') {
+    const argv = ['recall'];
+    if (typeof args.entity === 'string') argv.push(args.entity);
+    if (typeof args.session_id === 'string') argv.push('--session', args.session_id);
+    if (typeof args.query === 'string') argv.push('--grep', args.query);
+    return [...argv, '--json'];
+  }
   const hints = (op as { cliHints?: { name?: string; positional?: string[] } }).cliHints;
   if (!hints?.name || (op as { localOnly?: boolean }).localOnly) return null;
   const argv = [hints.name];
@@ -987,7 +996,7 @@ async function runCell(gut: GbrainUnderTest, world: PIWorld, cell: CellId, o: Ce
     };
     result.scope_exempt_ops = [...s.scopeExempt].sort();
     const readOps = operations.filter(op => !(op as { mutating?: boolean }).mutating || WRITE_READS.includes(op.name));
-    let ops = transport === 'cli' ? readOps.filter(op => (MANDATORY_CLI as readonly string[]).includes(op.name) && cliArgv(op, {}) !== null) : readOps;
+    let ops = transport === 'cli' ? readOps.filter(op => (CLI_PROBED as readonly string[]).includes(op.name) && cliArgv(op, {}) !== null) : readOps;
     if (o.only) ops = ops.filter(op => o.only!.includes(op.name));
     result.ops_planned = ops.length;
     const deadline = t0 + CAP_MS[o.profile][transport];
