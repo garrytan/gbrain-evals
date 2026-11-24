@@ -109,8 +109,8 @@ import { loadRS1Manifest, stage1OverCap, type RS1Manifest } from './cells/rs1.ts
 import { loadBN10Manifest } from './cells/bn10.ts';
 import { bg1Stage1OverCap, listPrice, loadBG1Manifest, type BG1Manifest } from './cells/bg1.ts';
 import { BG1C_MANIFEST_PATH, type BG1CManifest } from './cells/bg1c.ts';
-import { BG1C_BLOCK_IDS, isWindowedBenchmark } from './cells/definitions.ts';
-import type { WeeklyLineRereadPlan } from './cells/weekly-line.ts';
+import { BG1C_BLOCK_IDS, isWindowedBenchmark, WEEKLY_PILOT_BLOCK_IDS } from './cells/definitions.ts';
+import { buildWeeklyPilotManifest, WEEKLY_PILOT_GBRAIN_ENV, weeklyPilotBuild, type WeeklyLineRereadPlan, type WeeklyPilotManifest } from './cells/weekly-line.ts';
 import { BGW_CAMPAIGN } from '../memory-qa/bg1-names.ts';
 import { ledgerCaps as bg1LedgerCaps, requireRs1Window as requireBg1Window, WindowRefusal as Bg1WindowRefusal } from '../paid-arm.ts';
 import { exitCodeOf, refuse, renderMessage, ScoreboardError, type ScoreboardMessage } from './scoreboard-errors.ts';
@@ -1478,14 +1478,14 @@ const VM_VCPU = 4;
 /** The provider keys a cell's VM receives (ubi-runner --pass): only its metering proxy reads them; the cell sees dummy keys. */
 const PROVIDER_KEYS = { openai: 'OPENAI_API_KEY', anthropic: 'ANTHROPIC_API_KEY', voyage: 'VOYAGE_API_KEY', particle: COMPAT_PROVIDERS.particle.key_env } as const;
 /** Waves: T1 first (S1 shim shards packed under the overnight cap), then each T2 set after T1 settles, in the preregistered scope-reduction order reversed. */
-const T2_WAVES: Record<string, number> = { 'T2-S2b': 1, 'T2-S3': 2, 'T2-S2a': 3, 'T2-S4-S5': 4, 'F6-T2': 1, 'F6-D8': 2, 'F6-S4': 3, 'F6-dry': 1, 'F6-P1': 1, 'RS1-S1': 1, RS1: 1, 'BG1-S1': 1, BG1: 1, 'BG1C-smoke': 1, BG1C: 1, BGW: 1 };
+const T2_WAVES: Record<string, number> = { 'T2-S2b': 1, 'T2-S3': 2, 'T2-S2a': 3, 'T2-S4-S5': 4, 'F6-T2': 1, 'F6-D8': 2, 'F6-S4': 3, 'F6-dry': 1, 'F6-P1': 1, 'RS1-S1': 1, RS1: 1, 'BG1-S1': 1, BG1: 1, 'BG1C-smoke': 1, BG1C: 1, BGW: 1, 'BGW-pilot': 1, 'BGW-judge': 1 };
 
 /** In-process systems whose adapter drives the bundle's own container: the unit builds it at setup and brings it up around the run like a shim stack (A19). */
 const IN_PROCESS_STACKS = new Set(['ext-agent-runtime']);
 
 /** One launch unit per cell, or per conversation shard for an S1 shim cell, in the shootout campaign's cell format; `addons` adds the manifest's addon_cells (a unit selection's campaign). */
-export type CellManifestId = 'q1' | 'f6' | 'rs1' | 'bg1' | 'bg1c' | 'bn10' | 'weekly';
-const CELL_MANIFESTS: readonly CellManifestId[] = ['q1', 'f6', 'rs1', 'bg1', 'bg1c', 'bn10', 'weekly'];
+export type CellManifestId = 'q1' | 'f6' | 'rs1' | 'bg1' | 'bg1c' | 'bn10' | 'weekly' | 'weekly-pilot';
+const CELL_MANIFESTS: readonly CellManifestId[] = ['q1', 'f6', 'rs1', 'bg1', 'bg1c', 'bn10', 'weekly', 'weekly-pilot'];
 
 export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight?: number; cellManifest?: CellManifestId; addons?: boolean; paidWindow?: { unit: string; cap_usd: number } } = {}): CellSpec[] {
   const perWave = Math.floor((opts.vcpuCapNight ?? 200) / VM_VCPU);
@@ -1661,6 +1661,27 @@ export function weeklyCampaignManifest(w: WeeklyCellsFile, o: { cellsPath: strin
   }) };
 }
 
+/**
+ * One campaign of the weekly line's pilot or judge check (`--manifest weekly-pilot`): the named units of the pilot
+ * manifest as launch units of the existing Q1 campaign, each run naming `--manifest weekly-pilot` inside the granted
+ * paid window at the campaign's cap, as BG1's campaigns do. Every unit's command exports the world end its bg1-dev load
+ * resolves dates from and the gbrain build the manifest was generated at (WEEKLY_PILOT_GBRAIN_ENV), so the VM's run
+ * regenerates exactly these cells. The units read public dev worlds only, so none is sealed or pushed from custody, and
+ * none is given Gemini. Refused without a granted window before any file is written.
+ */
+export function weeklyPilotCampaignManifest(m: WeeklyPilotManifest, o: { units: string[]; campaign_id: string; cap_usd: number; window: string; worldEnd: string }): Q1Campaign {
+  if (!/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(o.window ?? '') || !(o.cap_usd > 0)) throw refuse({ code: 'PAID_FLAGS_MISSING', message: 'a weekly pilot campaign needs the granted paid window and its cap',
+    why: 'every pilot unit spends real keys, so its command carries the granted window and the unit refuses outside it', fix: { next: 'run', argv: ['bun', 'eval/runner/weekly-line/pilot.ts', 'campaigns', '--out', '<dir>', '--window-granted', '<unit>', '--world-end', '<Sunday>'] } });
+  const worldEnd = bg1WorldEnd({ worldEnd: o.worldEnd });
+  const campaign = campaignManifest(m, { units: { campaign_id: o.campaign_id, cap_usd: o.cap_usd, units: o.units, cell_manifest: 'weekly-pilot' } });
+  const out = ' --out "$SHOOTOUT_OUT"';
+  const exports = `export GBRAIN_EVALS_BG1_WORLD_END=${worldEnd}; export ${WEEKLY_PILOT_GBRAIN_ENV}=${m.gbrain_build.release}@${m.gbrain_build.commit}; `;
+  return { ...campaign, executes: [...(campaign.executes ?? []), ...BG1_DATA_PATHS], cells: campaign.cells.map(cell => {
+    if (cell.command.split(out).length !== 2) throw new Error(`weekly pilot unit ${cell.id} has no single${out} in its command to put the paid window before`);
+    return { ...cell, command: `${exports}${cell.command.replace(out, () => ` --paid-window ${o.window} --window-cap-usd ${o.cap_usd}${out}`)}` };
+  }) };
+}
+
 export function renderPlan(m: Manifest): string {
   const cells = campaignCells(m);
   const waves = [...new Set(cells.map(c => c.wave!))].sort((a, b) => a - b).map(w => ({ w, n: cells.filter(c => c.wave === w).length, hours: Math.max(...cells.filter(c => c.wave === w).map(c => c.expected_hours ?? 0)), blocks: [...new Set(cells.filter(c => c.wave === w).map(c => c.block))].join(', ') }));
@@ -1690,10 +1711,26 @@ export function renderPlan(m: Manifest): string {
 /** BG1-C's cell manifest (eval/runner/q1/cells/bg1c-cells.json, written by bg1c.ts). */
 export const loadBG1CManifest = (path = BG1C_MANIFEST_PATH) => JSON.parse(readFileSync(path, 'utf8')) as BG1CManifest;
 
-/** The cell manifest `--manifest` names: q1 (default), f6, rs1, bg1, bg1c, bn10, or weekly (the running week's cells.json, loadWeeklyCells). */
+/**
+ * The cell manifest `--manifest` names: q1 (default), f6, rs1, bg1, bg1c, bn10, weekly (the running week's cells.json,
+ * loadWeeklyCells) or weekly-pilot (the weekly line's pilot and judge check, loadWeeklyPilotManifest).
+ */
 export function loadCellManifest(which?: string, env: Record<string, string | undefined> = process.env): Manifest {
-  if (which !== undefined && !(CELL_MANIFESTS as readonly string[]).includes(which)) throw refuse(usage(`--manifest takes q1 or f6 (or rs1 for RS1's cells, bg1 for BG1's, bg1c for BG1-C's, bn10 for the BEAM-10M re-measure's, weekly for the running week of the weekly line), not ${which}`));
-  return which === 'f6' ? loadF6Manifest() : which === 'rs1' ? loadRS1Manifest() : which === 'bg1' ? loadBG1Manifest() : which === 'bg1c' ? loadBG1CManifest() : which === 'bn10' ? loadBN10Manifest() : which === 'weekly' ? weeklyManifest(loadWeeklyCells(env)) : loadManifest();
+  if (which !== undefined && !(CELL_MANIFESTS as readonly string[]).includes(which)) throw refuse(usage(`--manifest takes q1 or f6 (or rs1 for RS1's cells, bg1 for BG1's, bg1c for BG1-C's, bn10 for the BEAM-10M re-measure's, weekly for the running week of the weekly line, weekly-pilot for its pilot and judge check), not ${which}`));
+  return which === 'f6' ? loadF6Manifest() : which === 'rs1' ? loadRS1Manifest() : which === 'bg1' ? loadBG1Manifest() : which === 'bg1c' ? loadBG1CManifest() : which === 'bn10' ? loadBN10Manifest() : which === 'weekly' ? weeklyManifest(loadWeeklyCells(env)) : which === 'weekly-pilot' ? loadWeeklyPilotManifest(env) : loadManifest();
+}
+
+/**
+ * The weekly line's pilot and judge check (`--manifest weekly-pilot`), generated by weekly-line.ts at the gbrain build
+ * WEEKLY_PILOT_GBRAIN_ENV names, the build every pilot command exports, so the host and each VM resolve the same cells.
+ * Refuses before any corpus, client or output exists when the build is unset or malformed.
+ */
+export function loadWeeklyPilotManifest(env: Record<string, string | undefined> = process.env): WeeklyPilotManifest {
+  try { return buildWeeklyPilotManifest(weeklyPilotBuild(env)); }
+  catch (e) {
+    throw refuse({ code: 'PREFLIGHT_FAILED', message: (e as Error).message, why: 'a pilot unit runs the cells its pilot plan generated, at the gbrain build that plan resolved',
+      fix: { next: 'run', argv: ['bun', 'eval/runner/weekly-line/pilot.ts', 'plan'], user_message: `export ${WEEKLY_PILOT_GBRAIN_ENV}=<release>@<commit> as the pilot's campaigns do` } });
+  }
 }
 
 /** The weekly runner's cells.json (weekly-line/runner.ts plan): one week's cell definitions and particle-1 re-read plans, under its run id. */
@@ -1731,9 +1768,9 @@ function weeklyManifest(w: WeeklyCellsFile, capUsd = 0): Manifest {
     total_usd: usd, plan_total_usd: usd, cap_usd: capUsd, campaign_id: BGW_CAMPAIGN } as unknown as Manifest;
 }
 
-/** The cell manifest a BG1, BG1-C or Set W cell is defined in: weekly for the weekly line's block, bg1c for BG1-C's blocks, else bg1. */
-export const bg1CellManifest = (def: Pick<CellDefinition, 'block'>): CellManifestId => (def.block === 'BGW' ? 'weekly' : (BG1C_BLOCK_IDS as readonly string[]).includes(def.block) ? 'bg1c' : 'bg1');
-const windowedLabel = (def: Pick<CellDefinition, 'block'>) => ({ weekly: 'Set W', bg1c: 'BG1-C', bg1: 'BG1' } as Record<string, string>)[bg1CellManifest(def)];
+/** The cell manifest a BG1, BG1-C or weekly-line cell is defined in: weekly for the weekly line's block, weekly-pilot for its pilot and judge check, bg1c for BG1-C's blocks, else bg1. */
+export const bg1CellManifest = (def: Pick<CellDefinition, 'block'>): CellManifestId => (def.block === 'BGW' ? 'weekly' : (WEEKLY_PILOT_BLOCK_IDS as readonly string[]).includes(def.block) ? 'weekly-pilot' : (BG1C_BLOCK_IDS as readonly string[]).includes(def.block) ? 'bg1c' : 'bg1');
+const windowedLabel = (def: Pick<CellDefinition, 'block'>) => ({ weekly: 'Set W', 'weekly-pilot': 'weekly pilot', bg1c: 'BG1-C', bg1: 'BG1' } as Record<string, string>)[bg1CellManifest(def)];
 
 export function findCell(id: string, given?: Manifest, manifest?: string, env: Record<string, string | undefined> = process.env): CellDefinition {
   const m = given ?? loadCellManifest(manifest, env);
@@ -1852,6 +1889,7 @@ export async function main(argv: string[]): Promise<number> {
     // --manifest bg1c: BG1-C's (bg1c-cells.json), planned as BG1's are (bg1CampaignManifest);
     // --units <file>: a UnitSelection (JSON), the named units alone under its own campaign id and cap.
     if (one('--manifest') === 'weekly') throw refuse(usage('the weekly cells are planned by the weekly runner (bun eval/runner/weekly-line/runner.ts plan), which writes the week\'s cells.json, and launched by its launch, which writes the campaign'));
+    if (one('--manifest') === 'weekly-pilot') throw refuse(usage('the weekly line\'s pilot and judge check are planned by bun eval/runner/weekly-line/pilot.ts plan, and their campaigns written by its campaigns command'));
     const m = loadCellManifest(one('--manifest'));
     const over = one('--manifest') === 'rs1' ? stage1OverCap(m as RS1Manifest) : one('--manifest') === 'bg1' ? bg1Stage1OverCap(m as BG1Manifest) : null;
     if (over) throw refuse(over);
