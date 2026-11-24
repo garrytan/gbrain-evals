@@ -2,6 +2,29 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.273] - 2026-11-24
+
+- **Preregistration: cost and write-to-queryable time for a personal agent.** [docs/benchmarks/2026-11-24-cost-speed-preregistration.md](docs/benchmarks/2026-11-24-cost-speed-preregistration.md) plans how README's "Dollars per month, personal agent" and "Write to queryable, p50" columns get measured: gbrain's newest release at its shipped defaults and the extract-first, memory-bank and verbatim-session servers, hybrid search and the file agent at their shipped configurations, on ten public synthetic chat histories, with every provider call priced from the metering proxy's usage fields, hosting priced from each stack's measured memory and disk, and a probe that writes a session and searches until it comes back. Its registry entry is [docs/benchmarks/preregistrations.d/cost-speed-personal.json](docs/benchmarks/preregistrations.d/cost-speed-personal.json). Nothing has run.
+
+- A preregistration for a keyless zero-leak check that one person's memory never reaches another person on a gbrain brain that serves several people, over MCP dispatch, HTTP and the CLI on PGLite and Postgres ([docs/benchmarks/2026-11-24-person-isolation-preregistration.md](docs/benchmarks/2026-11-24-person-isolation-preregistration.md)).
+
+### Tests run against gbrain v0.60.769.0
+
+- `package.json` and `bun.lock` move the `gbrain` dependency from v0.60.748.0 (`7f1623446`) to v0.60.769.0
+  (`38831bb69`), gbrain's newest release on 2026-11-24, 21 releases and 162 commits later.
+  [docs/gbrain-under-test.md](docs/gbrain-under-test.md#the-pin) names the new pin. No result was rerun.
+- From this release gbrain's own engine factory opens the Rust engine (gbrain #9946) when a checked addon is
+  installed. Without one it refuses with `rust_engine_addon_missing`, and with an addon whose SHA-256 the release
+  manifest does not name it refuses with `rust_engine_addon_mismatch`. The engine-bench tests now expect those
+  reasons in place of the older `rust_kind_unsupported`, and a new keyless test checks that a stray addon in the gbrain
+  home is refused on the Rust engine and never reached by PGLite. With no addon, the Rust arm is still refused before
+  any engine call, with no receipt. Tests also unset `GBRAIN_RUST_ENGINE_ADDON`, so an addon exported in a developer's
+  shell cannot reach them.
+- The BEAM-10M cell test now checks that its cells run the build their counted runs froze (v0.60.748.0) instead of
+  package.json's pin, since those results are published and package.json has moved on.
+- gbrain now reads `EXA_API_KEY`, for an opt-in web search in `gbrain dedupe --exa`. Tests now blank it, and gbrain eval
+  runs already stripped it by name pattern (the stripped list now names it), because no suite uses that search.
+
 ## [0.10.272] - 2026-11-24
 
 - **What changed.** The code review that runs before a pull request is marked ready now leaves out the generated plans,
