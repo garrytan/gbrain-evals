@@ -8,7 +8,7 @@
 #        | --budget-ledger <sqlite> --budget-run-id <id> --paid-window <unit> --window-cap-usd <n>)
 #   eval/custody/bg1/mint.sh --bgw --batch <first slot> [--previous <previous batch's --out>] [--tolerance 0.15]
 #       [--supply-ack <id>] --out <dir>/bgw-custody --seed-file <path>.bgw-seed --phrasing <path>.bgw-phrasing.json
-#       [--count <n>] [--start <slot>] [--target-tokens 200000] [--yield-gate-ack <id>] (--fake ... | --budget-ledger ... as above)
+#       [--count <n>] [--start <slot>] [--target-tokens <the seed set's>] [--yield-gate-ack <id>] (--fake ... | --budget-ledger ... as above)
 #   eval/custody/bg1/mint.sh --dev --out <dir> [--worlds bg1-dev-01,...] [--target-tokens 200000]
 #       (--fake [--fake-break <dev number>:<session>:<attempts>,...] | --budget-ledger ... as above)
 #
@@ -103,6 +103,12 @@
 # the kept stop at 34 worlds (four weeks of eight and two spares) and slots_exhausted at the batch's last slot. An --out
 # holding a bg1-NNN entry refuses a Set W mint, and one holding a bgw-NNNN entry refuses a BG1 or BG1-C mint.
 #
+# Each Set W seed set names its world length (bg1-names.ts BGW_SEED_SETS, changing-facts-gen.ts BG1_PROFILES): W1 on slots
+# 1001 to 1999 plans at changing-facts-gen@1 and about 200,000 tokens, and W1-long on slots 2001 to 2999 plans from W1's
+# seed and phrasing at changing-facts-gen@2 and about 1,000,000 tokens. bgw-checks.ts length prints the batch's length,
+# which --target-tokens defaults to for render.ts and validate.ts; a real Set W mint refuses any other
+# --target-tokens, so a batch is minted only at its own length (a --fake drill may shorten it).
+#
 # --fake renders with the template renderer and fake checks: no network, and no key or key file is read.
 #
 # A real --bg1c or --bgw mint first runs commitment.ts: the seed, its nonce and the phrasing must re-derive the commitment
@@ -137,7 +143,7 @@ die() { printf 'bg1-mint refused: %s\n' "$*" >&2; exit 2; }
 file_mode() { stat -c %a "$1" 2>/dev/null || stat -f %Lp "$1"; }
 owner_only() { case "$(file_mode "$1")" in 600|400) return 0 ;; *) return 1 ;; esac; }
 
-OUT="" SEED_FILE="${BG1_SEED_FILE:-}" PHRASING="${BG1_PHRASING_FILE:-}" COUNT="" START="" TARGET=200000 MODE=real BREAKS=""
+OUT="" SEED_FILE="${BG1_SEED_FILE:-}" PHRASING="${BG1_PHRASING_FILE:-}" COUNT="" START="" TARGET="" SET_TARGET=200000 MODE=real BREAKS=""
 LEDGER="" RUN_ID="" WINDOW="" WINDOW_CAP="" ACK="" SUPPLY_ACK="" DEV=0 BG1C=0 BGW=0 BATCH="" PREVIOUS="" SEALED_ONLY="" DEV_WORLDS="bg1-dev-01,bg1-dev-02,bg1-dev-03" DEV_ONLY="" TOLERANCE=""
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -208,7 +214,7 @@ if [ "$START" -le 30 ] && [ "$END" -ge 31 ]; then die "slots $START to $END mix 
 if [ "$BGW" = 0 ] && [ "$START" -ge 1001 ]; then die "slots 1001 and up are Set W's, so they need --bgw --batch <first slot>"; fi
 if [ "$BG1C" = 0 ] && [ "$BGW" = 0 ] && [ "$START" -ge 31 ]; then die "slots 31 to 96 are BG1-C's, so they need --bg1c"; fi
 [ "$START" -ge "$FIRST" ] && [ "$START" -le "$LAST" ] && [ "$END" -le "$LAST" ] || die "--start must be at least $FIRST and the last slot at most $LAST ($SET's slots)"
-[[ "$TARGET" =~ ^[0-9]+$ ]] || die "--target-tokens must be a whole number"
+[ -z "$TARGET" ] || [[ "$TARGET" =~ ^[0-9]+$ ]] || die "--target-tokens must be a whole number"
 [ "$MODE" = fake ] || [ -z "$BREAKS" ] || die "--fake-break is a --fake drill"
 [ -z "$ACK" ] || [[ "$ACK" =~ ^a-[0-9a-f]{12}$ ]] || die "--yield-gate-ack takes GBEV-3's approval id, a- and 12 hex digits"
 [ -z "$SUPPLY_ACK" ] || [ "$GATED" = 1 ] || die "--supply-ack acknowledges BG1-C's supply check, so it needs --bg1c (or Set W's, with --bgw)"
@@ -240,13 +246,16 @@ BATCH_SET=""
 if [ "$BGW" = 1 ]; then
   [ -z "$PREVIOUS" ] || { [ -d "$PREVIOUS" ] || die "--previous is not a directory"; PREVIOUS="$(cd "$PREVIOUS" && pwd)"; }
   BATCH_LINE="$(env -i PATH=/usr/bin:/bin HOME="$HOME" LANG=C.UTF-8 TZ=UTC "$BUN" "$HERE/bgw-checks.ts" batch --batch "$BATCH" ${PREVIOUS:+--previous "$PREVIOUS"})" || exit 2
-  [[ "$BATCH_LINE" =~ \ set=(W[0-9]+)\  ]] || die "bgw-checks.ts batch printed no seed set"
+  [[ "$BATCH_LINE" =~ \ set=(W[0-9]+(-long)?)\  ]] || die "bgw-checks.ts batch printed no seed set"
   BATCH_SET="${BASH_REMATCH[1]}"
+  SET_TARGET="$(env -i PATH=/usr/bin:/bin HOME="$HOME" LANG=C.UTF-8 TZ=UTC "$BUN" "$HERE/bgw-checks.ts" length --batch "$BATCH")" || exit 2
+  [[ "$SET_TARGET" =~ ^[1-9][0-9]*$ ]] || die "bgw-checks.ts length printed no world length"
   BATCH_RECORD="{\"set\":\"$BATCH_SET\",\"batch\":\"bgw-$BATCH\"}"
   if [ -e "$OUT/batch.json" ] || [ -L "$OUT/batch.json" ]; then
     [ "$(cat "$OUT/batch.json")" = "$BATCH_RECORD" ] || die "this --out is another batch's (its batch.json does not name bgw-$BATCH); each Set W batch mints into a custody --out of its own"
   fi
 fi
+TARGET="${TARGET:-$SET_TARGET}"
 # BG1-C and Set W: a real mint never starts on an --out (or a --previous batch) a --fake drill wrote into (a drill
 # render or validation record, or a template-rendered world), so drill passes and drops never count toward the supply
 # check, the drop cap, the kept stop or the next batch's start.
@@ -278,6 +287,7 @@ if [ "$MODE" = real ]; then
   [ -n "$BG1_KEY" ] || die "~/.config/gbrain-evals/bg1.env has no BG1_GEMINI_API_KEY line"
   test -n "${ANTHROPIC_API_KEY:-}" || die "ANTHROPIC_API_KEY is not set (claude-haiku-5-5 is the second validator)"
 fi
+[ "$MODE" != real ] || [ "$BGW" = 0 ] || [ "$TARGET" = "$SET_TARGET" ] || die "a real Set W mint renders batch bgw-$BATCH at its seed set's $SET_TARGET tokens, so --target-tokens may not be $TARGET"
 
 inside_checkout() {
   local d="$1"

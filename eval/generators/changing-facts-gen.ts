@@ -64,12 +64,14 @@
 import { createHash, createHmac } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-import { BG1_DEV_CONVERSATIONS, BG1_DEV_EXTRA_CONVERSATIONS, BG1_PRIMARY, BG1_QUESTIONS_PER_STRATUM, familyOf, type Bg1QuestionFields, type Bg1Stratum } from '../runner/bg1/types.ts';
+import { BG1_DEV_CONVERSATIONS, BG1_DEV_EXTRA_CONVERSATIONS, BG1_PRIMARY, BG1_QUESTIONS_PER_STRATUM, BG1_STRATA, familyOf, type Bg1QuestionFields, type Bg1Stratum } from '../runner/bg1/types.ts';
 import { encodingCount } from '../runner/systems/render-v2.ts';
 import { ForwardJobState } from './job-state.ts';
 import { Rng, addDays } from './seeded.ts';
 
 export const BG1_GENERATOR_VERSION = 'changing-facts-gen@1';
+/** The long profile's generator version: the same planner and oracles at about five times the length (BG1_PROFILES.long). */
+export const BG1_LONG_GENERATOR_VERSION = 'changing-facts-gen@2';
 export const BG1_PLAN_SCHEMA = 'gbrain-evals/bg1-plan/v1';
 export const BG1_WORLD_SCHEMA = 'gbrain-evals/bg1-world/v1';
 export const BG1_SPAN_DAYS = 547;
@@ -83,6 +85,26 @@ export const BG1_FUTURE_DAYS = { min: 45, max: 120 } as const;
 export const BG1_TARGET_TOKENS = 200_000;
 /** The committed template fixtures are smaller than a counted world. */
 export const BG1_FIXTURE_TOKENS = 30_000;
+/**
+ * World length profiles. standard is changing-facts-gen@1, BG1's: 140 to 160 sessions, about 200,000 tokens. long is
+ * changing-facts-gen@2, for the weekly line's ceiling rule (about 1,000,000 tokens, BEAM-1M's scale): about five times the
+ * sessions over the same 18 months at the same tokens per session, so the 30 tracked slots, their events and the 64
+ * questions keep their place in time and their evidence keeps its spread across the whole history, while the filler
+ * between them grows fivefold. A plan names its profile by its generator version, and only the planner's session-count
+ * draw reads the profile, so a standard plan is byte-identical to changing-facts-gen@1's.
+ */
+export type Bg1ProfileId = 'standard' | 'long';
+export interface Bg1Profile { generator: string; sessions: { min: number; max: number }; target_tokens: number }
+export const BG1_PROFILES: Readonly<Record<Bg1ProfileId, Bg1Profile>> = {
+  standard: { generator: BG1_GENERATOR_VERSION, sessions: BG1_SESSIONS, target_tokens: BG1_TARGET_TOKENS },
+  long: { generator: BG1_LONG_GENERATOR_VERSION, sessions: { min: 700, max: 800 }, target_tokens: 1_000_000 },
+};
+/** A plan's profile, from its generator version; throws on a version no profile has. */
+export function profileOf(plan: Pick<WorldPlan, 'id' | 'generator'>): Bg1Profile {
+  const p = Object.values(BG1_PROFILES).find(x => x.generator === plan.generator);
+  if (!p) throw new PlanError(`plan ${plan.id}: generator ${JSON.stringify(plan.generator)} is not one of ${Object.values(BG1_PROFILES).map(x => x.generator).join(', ')}`);
+  return p;
+}
 export const BG1_MAX_LINES_PER_SESSION = 3;
 export const BG1_DEV_SEEDS: Readonly<Record<string, string>> = Object.fromEntries([...BG1_DEV_CONVERSATIONS, ...BG1_DEV_EXTRA_CONVERSATIONS].map(id => [id, `bg1-dev-seed-v1:${id}`]));
 /** Embedded in every sealed plan, world, gold item and custody phrasing set; the sealed key's text rule matches it. */
@@ -524,7 +546,7 @@ const TOPICS = [
   'a sleep schedule', 'a language exchange', 'a jigsaw puzzle', 'a backyard bird feeder',
 ];
 
-export interface PlanOptions { phrasing?: Phrasing; custody?: boolean; publicSeed?: boolean; goldAudit?: boolean }
+export interface PlanOptions { phrasing?: Phrasing; custody?: boolean; publicSeed?: boolean; goldAudit?: boolean; profile?: Bg1ProfileId }
 
 /**
  * The world plan for one world id and seed. Deterministic: the same id, seed and phrasing give the same plan. A seed
@@ -535,7 +557,7 @@ export function planWorld(id: string, seed: string, opts: PlanOptions = {}): Wor
   let last: Error | null = null;
   for (let attempt = 0; attempt < 25; attempt++) {
     try {
-      const plan = buildPlan(id, `${seed}#${attempt}`, phrasing, opts.custody === true, opts.publicSeed ? seed : undefined, opts.goldAudit === true);
+      const plan = buildPlan(id, `${seed}#${attempt}`, phrasing, opts.custody === true, opts.publicSeed ? seed : undefined, opts.goldAudit === true, BG1_PROFILES[opts.profile ?? 'standard']);
       buildQuestions(plan, phrasing);
       return plan;
     } catch (e) {
@@ -546,14 +568,14 @@ export function planWorld(id: string, seed: string, opts: PlanOptions = {}): Wor
   throw new PlanError(`world ${id}: no attempt could be placed (${last?.message})`);
 }
 
-function buildPlan(id: string, seed: string, phrasing: Phrasing, custody: boolean, publicSeed: string | undefined, goldAudit: boolean): WorldPlan {
+function buildPlan(id: string, seed: string, phrasing: Phrasing, custody: boolean, publicSeed: string | undefined, goldAudit: boolean, profile: Bg1Profile): WorldPlan {
   const rng = new Rng(seedNumber(seed));
   const names = new Names(rng, [...phrasingTexts(phrasing), ...TOPICS, ...FILLER_TEXTS, ...WEEKDAYS]);
   const audited = custody || goldAudit;
   const frames = audited ? { ...phrasing.frames, retract: phrasing.frames.retract.filter(t => NONE_FORMS.some(f => termRegex(f).test(t))) } : phrasing.frames;
   if (!frames.retract.length) throw new Error('the phrasing set has no retract template that says the plan is not happening (gold audit, Amendment 4)');
 
-  const n = rng.int(BG1_SESSIONS.min, BG1_SESSIONS.max);
+  const n = rng.int(profile.sessions.min, profile.sessions.max);
   const first = -(BG1_SPAN_DAYS - 1) + rng.int(0, 4), lastDay = -rng.int(0, 2);
   const days = [first, lastDay, ...Array.from({ length: n - 2 }, () => rng.int(first, lastDay))].sort((a, b) => a - b);
   const sessions: SessionPlan[] = days.map(day => ({ id: '', day, time: `${pad2(rng.int(8, 21))}:${pad2(rng.int(0, 11) * 5)}`, topic: rng.pick(TOPICS), long: rng.float() < 0.08, lines: [] }));
@@ -758,7 +780,7 @@ function buildPlan(id: string, seed: string, phrasing: Phrasing, custody: boolea
 
   for (const s of sessions) if (s.lines.length > 1) s.lines = rng.shuffle(s.lines);
   const plan: WorldPlan = {
-    schema: BG1_PLAN_SCHEMA, generator: BG1_GENERATOR_VERSION, id, ...(publicSeed ? { seed: publicSeed } : {}), ...(custody ? { custody: BG1_CUSTODY_MARKER } : goldAudit ? { gold_audit: true as const } : {}),
+    schema: BG1_PLAN_SCHEMA, generator: profile.generator, id, ...(publicSeed ? { seed: publicSeed } : {}), ...(custody ? { custody: BG1_CUSTODY_MARKER } : goldAudit ? { gold_audit: true as const } : {}),
     world_end_weekday: BG1_WORLD_END_WEEKDAY, entities, slots, sessions, lexicon: Object.fromEntries(Object.entries(lexicon).sort(([a], [b]) => (a < b ? -1 : 1))),
   };
   checkPlan(plan);
@@ -772,12 +794,14 @@ function laterTime(t: string): string {
 }
 
 /**
- * Plan invariants: 140 to 160 sessions over about 18 months ending on day 0, 30 tracked slots (six per primary
- * stratum), no value sharing a term with another, and every line holding its own values and no other value's term.
+ * Plan invariants: its profile's session count (140 to 160 for changing-facts-gen@1, 700 to 800 for @2) over about 18
+ * months ending on day 0, 30 tracked slots (six per primary stratum), no value sharing a term with another, and every line
+ * holding its own values and no other value's term.
  */
 export function checkPlan(plan: WorldPlan): void {
   const fail = (why: string): never => { throw new PlanError(`plan ${plan.id}: ${why}`); };
-  if (plan.sessions.length < BG1_SESSIONS.min || plan.sessions.length > BG1_SESSIONS.max) fail('the session count is outside 140 to 160');
+  const { sessions } = profileOf(plan);
+  if (plan.sessions.length < sessions.min || plan.sessions.length > sessions.max) fail(`the session count is outside ${sessions.min} to ${sessions.max}`);
   if (plan.sessions.some((s, i) => i > 0 && !(plan.sessions[i - 1].day < s.day || (plan.sessions[i - 1].day === s.day && plan.sessions[i - 1].time < s.time)))) fail('the sessions are not in strict time order');
   const span = plan.sessions[plan.sessions.length - 1].day - plan.sessions[0].day;
   if (span < BG1_SPAN_DAYS - 10 || plan.sessions.some(s => s.day > 0)) fail('the sessions do not span about 18 months ending on day 0');
@@ -1101,6 +1125,25 @@ export function worldTokens(world: World): number {
   return world.sessions.reduce((n, s) => n + s.turns.reduce((m, t) => m + encodingCount('cl100k_base', t.content), 0), 0);
 }
 
+/** Where a world's question evidence sits: per stratum, evidence sessions counted by the token-position decile of their middle. */
+export interface EvidenceSpread { world: string; generator: string; sessions: number; tokens: number; deciles: Record<Bg1Stratum | 'all', number[]> }
+
+/**
+ * The evidence spread of a world: every (question, evidence session) pair, placed at the decile of the world's tokens
+ * where that session's middle falls, counted per stratum and over all strata. Evidence crowded into one end shows as
+ * empty deciles at the other.
+ */
+export function evidenceSpread(plan: WorldPlan, world: World, questions: readonly QuestionRecord[]): EvidenceSpread {
+  const sizes = world.sessions.map(s => s.turns.reduce((n, t) => n + countTokens(t.content), 0));
+  const total = sizes.reduce((a, b) => a + b, 0);
+  const decileOf = new Map<string, number>();
+  let before = 0;
+  world.sessions.forEach((s, i) => { decileOf.set(s.id, Math.min(9, Math.floor((10 * (before + sizes[i] / 2)) / total))); before += sizes[i]; });
+  const deciles = Object.fromEntries([...BG1_STRATA, 'all'].map(k => [k, Array.from({ length: 10 }, () => 0)])) as EvidenceSpread['deciles'];
+  for (const q of questions) for (const s of q.evidence_sessions) { const d = decileOf.get(s)!; deciles[q.bg1.stratum][d]++; deciles.all[d]++; }
+  return { world: world.id, generator: plan.generator, sessions: world.sessions.length, tokens: total, deciles };
+}
+
 // ─── render briefs ───────────────────────────────────────────────────
 
 export interface RenderBrief {
@@ -1116,7 +1159,8 @@ export interface RenderBrief {
   entities: string[];
 }
 
-export function renderBriefs(plan: WorldPlan, worldTokensTarget = BG1_TARGET_TOKENS): RenderBrief[] {
+/** Each session's brief; the world's length defaults to its profile's target. */
+export function renderBriefs(plan: WorldPlan, worldTokensTarget = profileOf(plan).target_tokens): RenderBrief[] {
   const targets = sessionTargets(plan, worldTokensTarget);
   const forbidden = [...new Set(Object.entries(plan.lexicon).flatMap(([v, l]) => termsOf(v, l)))].sort();
   const entities = plan.entities.map(e => e.name).sort();
@@ -1136,6 +1180,25 @@ const json = (v: unknown) => JSON.stringify(v, null, 1) + '\n';
 /** A public dev world's plan from its public seed; an extra dev world's with the gold-audit fixes. */
 export const devWorldPlan = (id: string) => planWorld(id, BG1_DEV_SEEDS[id], { publicSeed: true, goldAudit: BG1_DEV_EXTRA_CONVERSATIONS.includes(id) });
 
+/**
+ * The long profile's keyless fixture: a public plan at changing-facts-gen@2 with the sealed worlds' gold-audit fixes, never
+ * sealed and never Gemini-rendered, for checking the long profile's question spread against a 200,000-token world.
+ */
+export const BG1_LONG_FIXTURE = 'bg1-long-fixture-01';
+export const longFixturePlan = () => planWorld(BG1_LONG_FIXTURE, `bg1-long-fixture-seed-v1:${BG1_LONG_FIXTURE}`, { publicSeed: true, goldAudit: true, profile: 'long' });
+
+/**
+ * The spread report (long-fixture/spread.json): the long fixture template-rendered at the long profile's target beside the
+ * pilot's dev world bg1-dev-01 template-rendered at the standard profile's, each with its evidence spread.
+ */
+export function longFixtureSpread(): { note: string; worlds: EvidenceSpread[] } {
+  const spread = (plan: WorldPlan) => evidenceSpread(plan, renderTemplateWorld(plan, profileOf(plan).target_tokens), buildQuestions(plan));
+  return {
+    note: 'Keyless and template-rendered, never sealed: each world\'s 64 questions\' evidence sessions, counted by the decile of the world\'s cl100k tokens where each session\'s middle falls, per stratum. The long fixture is changing-facts-gen@2 at about 1,000,000 tokens; bg1-dev-01 is changing-facts-gen@1 at about 200,000. Regenerated by bun eval/generators/changing-facts-gen.ts write.',
+    worlds: [spread(longFixturePlan()), spread(devWorldPlan('bg1-dev-01'))],
+  };
+}
+
 /** The committed dev files (paths relative to eval/data/changing-facts-v1), generated from the public seeds. */
 export function devFiles(): Map<string, string> {
   const files = new Map<string, string>();
@@ -1147,6 +1210,10 @@ export function devFiles(): Map<string, string> {
     files.set(`fixtures/worlds/${id}/world.json`, json(renderTemplateWorld(plan)));
     files.set(`fixtures/worlds/${id}/questions.json`, questions);
   }
+  const long = longFixturePlan();
+  files.set(`long-fixture/${BG1_LONG_FIXTURE}/plan.json`, json(long));
+  files.set(`long-fixture/${BG1_LONG_FIXTURE}/questions.json`, json(buildQuestions(long)));
+  files.set('long-fixture/spread.json', json(longFixtureSpread()));
   return files;
 }
 

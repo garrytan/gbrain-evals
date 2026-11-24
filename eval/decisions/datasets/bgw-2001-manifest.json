@@ -1,0 +1,9 @@
+{
+ "dataset": "Set W weekly outcome line, batch bgw-2001",
+ "status": "unfilled",
+ "generator": "eval/generators/changing-facts-gen.ts (changing-facts-gen@2, the long profile at about 1,000,000 tokens a world, with BG1's sealed fixes) from Set W's own custody seed and phrasing (seed set W1-long, which plans from W1's seed line and phrasing), rendered by gemini-3.8-flash and validated in custody by eval/custody/bg1/mint.sh --bgw --batch 2001",
+ "layout": "worlds/<id>/world.json and worlds/<id>/questions.json under GBRAIN_EVALS_BGW_SOURCE (mint.sh --bgw's <out>/set), id = bgw-2001 to bgw-2056 (batch bgw-2001's 56 mint slots, minted in slot order from 2001 until 34 are kept); worlds/<id>/plan.json sits beside them in custody and is never loaded or pinned here",
+ "note": "Hashes only; no Set W text is committed. Until the custodian fills it on the custody host, `files` is empty and bgw loads with a notice that its bytes are unpinned. The filled manifest is bgw-2001-manifest.json beside the worlds/ folder of the batch's set root, where GBRAIN_EVALS_BGW_MANIFEST points, with GBRAIN_EVALS_BGW_BATCH set to bgw-2001. Once filled, every file the loader reads must be listed here with a matching SHA-256, and every listed file of a loaded world must be present. A filled manifest also lists `kept`, the kept worlds in slot order (the first slots that passed validation, at most 34), and once the batch is final `n_final`: 34, or fewer for a short batch. Week k reads kept worlds 8(k-1)+1 to 8k; worlds 33 and 34 are spares. BG1's and BG1-C's manifests are separate files and pin none of these worlds (docs/benchmarks/2026-11-23-weekly-outcome-line-preregistration.md).",
+ "files": [],
+ "filled_at": null
+}

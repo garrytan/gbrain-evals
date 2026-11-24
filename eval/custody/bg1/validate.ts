@@ -13,6 +13,9 @@
  *       --phrasing <path>.bgw-phrasing.json (--report <path outside the set> | --slot <n>) [--target-tokens 200000]
  *       [--tolerance 0.15]
  *
+ * --target-tokens defaults to the set's length: 200,000 for BG1, BG1-C and a W1 batch, and 1,000,000 for a W1-long batch
+ * (its seed set's profile, bg1-names.ts BGW_SEED_SETS), so a long world validates at its own length.
+ *
  * Without --bg1c it validates BG1's set (slots 1 to 30); with it, BG1-C's (slots 31 to 96, mint.sh --bg1c;
  * docs/benchmarks/2026-11-19-changing-facts-confirmation-preregistration.md), whose --n-final is at most 40. With --bgw
  * it validates one Set W batch (the weekly outcome line, mint.sh --bgw; bg1-names.ts bgwBatchSlots): the batch's slots,
@@ -51,7 +54,7 @@ import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { BG1_CUSTODY_MARKER, BG1_TARGET_TOKENS, buildQuestions, goldFields, PlanError, renderBriefs, worldTokens, type QuestionRecord, type World } from '../../generators/changing-facts-gen.ts';
 import { BG1_CONVERSATIONS, BG1_N_CAP, BG1C_CONVERSATIONS, BG1C_N_FINAL, BGW_BATCH_KEPT, bgwBatchIds, bgwSlotOf } from '../../runner/bg1/types.ts';
 import { BG1_TEMPLATE_RENDERERS } from '../../runner/memory-qa/corpus.ts';
-import { checkSession, readPhrasing, readSeedLine, RenderRefusal, sealedPlan, type SealedKind } from './render.ts';
+import { checkSession, readPhrasing, readSeedLine, RenderRefusal, sealedPlan, sealedTargetTokens, type SealedKind } from './render.ts';
 
 export const VALIDATION_SCHEMA = 'gbrain-evals/bg1-validation/v1';
 export const WORLD_FILES = ['plan.json', 'questions.json', 'world.json'] as const;
@@ -150,7 +153,7 @@ export function validateSlot(argv: string[]): { pass: boolean; line: string } {
   const ids: readonly string[] = batch === null ? BG1C_CONVERSATIONS : bgwBatchIds(batch);
   const id = ids.find(c => slotOf(c) === slot);
   if (!id) throw new RenderRefusal(batch === null ? '--slot must be one of BG1-C\'s slots, 31 to 96' : `--slot must be one of batch bgw-${batch}'s slots, ${batch} to ${slotOf(ids.at(-1)!)}`);
-  const targetTokens = Number(flag('--target-tokens') ?? BG1_TARGET_TOKENS), tolerance = Number(flag('--tolerance') ?? 0.15);
+  const targetTokens = Number(flag('--target-tokens') ?? (batch === null ? BG1_TARGET_TOKENS : sealedTargetTokens(batch, 'bgw'))), tolerance = Number(flag('--tolerance') ?? 0.15);
   if (!(targetTokens >= 1000) || !(tolerance > 0 && tolerance < 1)) throw new RenderRefusal('--target-tokens must be at least 1000 and --tolerance between 0 and 1');
   const worldsDir = join(resolve(set), 'worlds');
   if (!existsSync(join(worldsDir, id, 'world.json'))) throw new RenderRefusal(`${id} has no written world to validate`);
@@ -191,11 +194,11 @@ export function main(argv: string[]): { report: ValidationReport; line: string }
   const set = flag('--set'), seedFile = flag('--seed-file'), phrasingFile = flag('--phrasing'), reportPath = flag('--report');
   if (!set || !seedFile || !phrasingFile || !reportPath) throw new RenderRefusal('usage: --set <dir> --seed-file <path>.bg1-seed --phrasing <path>.bg1-phrasing.json --report <path> [--target-tokens <n>] [--tolerance <x>] [--n-final <n>]');
   if (inside(resolve(reportPath), resolve(set))) throw new RenderRefusal('--report must be outside --set');
-  const targetTokens = Number(flag('--target-tokens') ?? BG1_TARGET_TOKENS), tolerance = Number(flag('--tolerance') ?? 0.15);
+  const batch = bgwBatchOf(argv), kind: SealedKind = batch === null ? 'bg1' : 'bgw';
+  const targetTokens = Number(flag('--target-tokens') ?? (batch === null ? BG1_TARGET_TOKENS : sealedTargetTokens(batch, 'bgw'))), tolerance = Number(flag('--tolerance') ?? 0.15);
   const nFinal = flag('--n-final') === undefined ? null : Number(flag('--n-final'));
   if (!(targetTokens >= 1000) || !(tolerance > 0 && tolerance < 1)) throw new RenderRefusal('--target-tokens must be at least 1000 and --tolerance between 0 and 1');
   const bg1c = argv.includes('--bg1c'), cap = bg1c ? BG1C_N_FINAL : BG1_N_CAP;
-  const batch = bgwBatchOf(argv), kind: SealedKind = batch === null ? 'bg1' : 'bgw';
   if (batch !== null && nFinal !== null) throw new RenderRefusal(`--bgw takes no --n-final: a Set W batch keeps its first ${BGW_BATCH_KEPT} passing worlds`);
   if (nFinal !== null && !(Number.isInteger(nFinal) && nFinal >= 1 && nFinal <= cap)) throw new RenderRefusal(`--n-final must be a whole number from 1 to ${cap}`);
   const report = validateSet(resolve(set), readSeedLine(resolve(seedFile), kind), readPhrasing(resolve(phrasingFile), kind), { targetTokens, tolerance, nFinal, bg1c, drill: argv.includes('--fake'), ...(batch === null ? {} : { bgwBatch: batch }) });
