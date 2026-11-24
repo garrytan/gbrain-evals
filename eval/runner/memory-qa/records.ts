@@ -70,6 +70,9 @@ export const readerAttempts = (receipts: readonly UsageReceipt[]): ReaderAttempt
 export const WEEKLY_RUN_ID = /^wl-\d{4}-\d{2}-\d{2}-[0-9a-f]{12}$/;
 /** The variable the weekly line's launch path sets to the week's run id on every weekly cell and re-read (weekly-line/runner.ts launch.json `env`). */
 export const WEEKLY_RUN_ENV = 'GBRAIN_EVALS_WEEKLY_RUN';
+/** Where a weekly unit finds the week's cells.json (q1/cell.ts loadWeeklyCells), and the SHA-256 of its bytes the week's launch recorded. */
+export const WEEKLY_CELLS_ENV = 'GBRAIN_EVALS_WEEKLY_CELLS';
+export const WEEKLY_CELLS_SHA256_ENV = 'GBRAIN_EVALS_WEEKLY_CELLS_SHA256';
 /** The weekly-line run and week whose cell wrote a record; the weekly line's aggregates refuse a record without this run's stamp. */
 export interface WeeklyRunStamp { run_id: string; week: string }
 export const isWeeklyRunStamp = (v: unknown): v is WeeklyRunStamp => {

@@ -79,7 +79,9 @@ import { appendFileSync, copyFileSync, cpSync, existsSync, mkdirSync, readdirSyn
 import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import { execFileSync } from 'node:child_process';
-import { BG1_SET, BG1_TEMPLATE_RENDERERS, BG1C_SET, bg1SealedSet, bg1UnitConversations, type Bg1Manifest, type Bg1SealedSet } from './memory-qa/corpus.ts';
+import { BG1_SET, BG1_TEMPLATE_RENDERERS, BG1C_SET, bg1Kept, bg1SealedSet, bg1UnitConversations, bgwSet, type Bg1Manifest, type Bg1SealedSet } from './memory-qa/corpus.ts';
+import { bgwSlotOf } from './memory-qa/bg1-names.ts';
+import { WEEKLY_CELLS_ENV } from './memory-qa/records.ts';
 import { BudgetExceededError, BudgetRun, initLedger, ledgerStatus, readLedger, setProgramCap, setRunBudget, withFileLock } from './budget-ledger.ts';
 import { DEFAULT_MAX_OUTPUT_TOKENS, DEFAULT_ROUTE_CAPS, KEY_ENV, keylessUpstream, type ProviderLimits, type ProviderName } from './metering-proxy.ts';
 import { refuse, ScoreboardError } from './q1/scoreboard-errors.ts';
@@ -156,6 +158,8 @@ export interface CellSpec {
   gemini_key_env?: string;
   /** Q1: a sealed BG1 launch unit (its index and size in kept worlds), whose pinned worlds alone its VM receives (bg1CustodyPush). */
   bg1_unit?: { index: number; size: number };
+  /** Q1: a weekly-line unit's week (its Set W batch and the week's worlds), whose pinned worlds and cells.json alone its VM receives (weeklyCustodyPush). */
+  weekly_unit?: { batch: string; worlds: string[] };
   /** Q1: expected wall-clock hours, for the schedule. */
   expected_hours?: number;
   /** Q1: an explicit schedule wave (1-based); otherwise the planner packs cells under the vCPU cap. */
@@ -209,6 +213,9 @@ export interface CampaignManifest {
   bg1_manifest_sha256?: string;
   /** BG1-C: the same for the custodian's filled bg1c-manifest.json (GBRAIN_EVALS_BG1C_MANIFEST), which Campaign.custodyPush holds a sealed BG1-C unit to. */
   bg1c_manifest_sha256?: string;
+  /** The weekly line: the SHA-256 of the custodian's filled Set W batch manifest (GBRAIN_EVALS_BGW_MANIFEST) and of the week's cells.json, which Campaign.custodyPush holds every weekly unit to. */
+  bgw_manifest_sha256?: string;
+  weekly_cells_sha256?: string;
   /** Q1: the hedge classifier version the derived columns use at render (`none` when no version met its bar, amendment A6). */
   hedge_classifier?: string;
   /** Q1: spend blocks (T1, T2-S2a, ...) with their estimate and hard cap. */
@@ -422,8 +429,8 @@ export function ownerTag(raw: string | undefined): string | null {
   return t.slice(0, 12);
 }
 
-/** A custody push: the listed files under `source` go to `dest` (relative to the VM user's home) before setup, and `env` points the loader there. */
-export interface CustodyPush { source: string; dest: string; list: string[]; env: string[] }
+/** A custody push: the listed files under `source` go to `dest` (relative to the VM user's home) before setup, and `env` points the loader there; `also` names further directories pushed the same way (a weekly unit's cells.json). */
+export interface CustodyPush { source: string; dest: string; list: string[]; env: string[]; also?: Array<{ source: string; dest: string; list: string[] }> }
 
 /**
  * BG1: the custodian's files for one sealed BG1 launch unit, mirroring rs1CustodyPush. GBRAIN_EVALS_BG1_SOURCE names
@@ -436,7 +443,7 @@ export interface CustodyPush { source: string; dest: string; list: string[]; env
  * BG1-C (`set` BG1C_SET) pushes the same way from its own variables (GBRAIN_EVALS_BG1C_SOURCE, _MANIFEST and _UNIT)
  * to ~/custody/bg1c, its unit's worlds from BG1-C's kept list, and refuses a manifest that is not BG1-C's.
  */
-export function bg1CustodyPush(env: Record<string, string | undefined> = process.env, campaign = '<campaign>', unit?: { index: number; size: number }, set: Bg1SealedSet = BG1_SET): CustodyPush {
+export function bg1CustodyPush(env: Record<string, string | undefined> = process.env, campaign = '<campaign>', unit?: { index: number; size: number }, set: Bg1SealedSet = BG1_SET, named?: readonly string[]): CustodyPush {
   const v = set.env, label = set.label, dir = `custody/${set.benchmark}`;
   const source = env[v.source];
   const fix = { next: 'tell_user_to_run' as const, argv: ['bun', 'run', 'eval:scoreboard', 'doctor', '--for', 'sealed', '--campaign', campaign], user_message: `on the custodian host, export ${v.source}=<the ${label} set root, outside the checkout> and ${v.manifest}=<the filled ${basename(set.manifest)} inside it>` };
@@ -449,8 +456,10 @@ export function bg1CustodyPush(env: Record<string, string | undefined> = process
   const m = JSON.parse(readFileSync(manifest, 'utf8')) as Bg1Manifest;
   if (m.status !== 'filled' || !m.files?.length) throw refuse({ code: 'CUSTODY_REQUIRED', message: `the ${label} manifest has no hashes`, why: 'only pinned bytes are pushed', fix });
   if (m.drill) throw refuse({ code: 'CUSTODY_REQUIRED', message: `the ${label} manifest was filled by a --fake drill`, why: 'a drill pins template text, never minted worlds, and the push refuses before any VM exists', fix });
-  if (set === BG1C_SET && m.dataset !== set.dataset) throw refuse({ code: 'CUSTODY_REQUIRED', message: `${v.manifest} is the manifest of ${JSON.stringify(m.dataset ?? null)}, not of the ${label} set`, why: `a ${label} unit pushes only worlds its own manifest pins`, fix });
-  const worlds = unit ? bg1UnitConversations(m, unit.index, unit.size, set) : null;
+  if (set !== BG1_SET && m.dataset !== set.dataset) throw refuse({ code: 'CUSTODY_REQUIRED', message: `${v.manifest} is the manifest of ${JSON.stringify(m.dataset ?? null)}, not of the ${label} set`, why: `a ${label} unit pushes only worlds its own manifest pins`, fix });
+  const unkept = named ? named.filter(id => !bg1Kept(m, set).kept.includes(id)) : [];
+  if (unkept.length) throw refuse({ code: 'CUSTODY_REQUIRED', message: `${unkept.length} of the unit's worlds (first ${unkept[0]}) are not on the ${label} manifest's kept list`, why: 'a unit pushes only kept worlds its manifest pins', fix });
+  const worlds = named ? [...named] : unit ? bg1UnitConversations(m, unit.index, unit.size, set) : null;
   const list: string[] = [];
   for (const f of m.files.filter(x => !worlds || worlds.includes(x.path.split('/')[1]))) {
     const abs = join(source, f.path);
@@ -464,6 +473,25 @@ export function bg1CustodyPush(env: Record<string, string | undefined> = process
   }
   return { source: resolve(source), dest: dir, list: [...list, rel],
     env: [`${v.source}=~/${dir}`, `${v.manifest}=~/${dir}/${rel}`, ...(worlds ? [`${v.unit}=${worlds.join(',')}`] : [])] };
+}
+
+/**
+ * The weekly line: what one weekly unit's VM receives (#619 OV1). Its week's Set W worlds, pushed as a BG1 unit's are
+ * (bg1CustodyPush on the batch's set, from GBRAIN_EVALS_BGW_SOURCE and GBRAIN_EVALS_BGW_MANIFEST, each world on the filled
+ * manifest's kept list and hashed against it before any VM exists) to ~/custody/bgw with GBRAIN_EVALS_BGW_UNIT naming
+ * exactly the week's worlds, plus the week's cells.json (GBRAIN_EVALS_WEEKLY_CELLS on the custody host) to
+ * ~/custody/weekly, where `cell.ts run --manifest weekly` reads it. The remote command wipes both at teardown.
+ */
+export function weeklyCustodyPush(env: Record<string, string | undefined> = process.env, campaign = '<campaign>', unit: { batch: string; worlds: readonly string[] }): CustodyPush {
+  const first = bgwSlotOf(unit.batch);
+  if (first === null) throw refuse({ code: 'USAGE', message: `weekly unit batch ${JSON.stringify(unit.batch)} is not a Set W world id`, why: 'a Set W batch is named by its first world', fix: { next: 'report' } });
+  const set = bgwSet(first);
+  const push = bg1CustodyPush(env, campaign, undefined, set, unit.worlds);
+  const cells = env[WEEKLY_CELLS_ENV];
+  if (!cells || !existsSync(cells)) throw refuse({ code: 'CUSTODY_REQUIRED', message: `a weekly unit needs the week's cells.json and ${WEEKLY_CELLS_ENV} ${cells ? `names ${cells}, which does not exist` : 'is not set'}`,
+    why: "the VM resolves its unit from the week's cells.json (cell.ts --manifest weekly)", fix: { next: 'tell_user_to_run', argv: ['bun', 'eval/runner/weekly-line/runner.ts', 'launch', '--run', '<run dir>'], user_message: `on the custodian host, export ${WEEKLY_CELLS_ENV}=<the run directory's cells.json>` } });
+  return { ...push, env: [...push.env, `GBRAIN_EVALS_BGW_BATCH=${unit.batch}`, `${WEEKLY_CELLS_ENV}=~/custody/weekly/${basename(cells)}`],
+    also: [{ source: dirname(resolve(cells)), dest: 'custody/weekly', list: [basename(cells)] }] };
 }
 
 /**
@@ -856,6 +884,17 @@ export class Campaign {
   custodyPush(cellId: string, env: Record<string, string | undefined> = process.env): CustodyPush | null {
     if (!this.sealedQ1(cellId)) return null;
     const benchmark = this.cell(cellId).benchmark;
+    if (benchmark === 'bgw') {
+      const unit = this.cell(cellId).weekly_unit;
+      if (!unit) throw refuse({ code: 'CUSTODY_REQUIRED', message: `weekly unit ${cellId} names no week (weekly_unit)`, why: 'a weekly unit pushes only its own week\'s worlds', fix: { next: 'ask_user', user_message: 'launch the week again through the weekly runner, which writes the campaign' } });
+      const push = weeklyCustodyPush(env, this.manifestPath, unit);
+      const set = bgwSet(bgwSlotOf(unit.batch)!);
+      const held = { manifest: sha256File(env[set.env.manifest]!), cells: sha256File(env[WEEKLY_CELLS_ENV]!) };
+      const recorded = { manifest: this.manifest.bgw_manifest_sha256, cells: this.manifest.weekly_cells_sha256 };
+      for (const k of ['manifest', 'cells'] as const) if (recorded[k] !== held[k]) throw refuse({ code: 'CUSTODY_REQUIRED', message: recorded[k] ? `the ${k === 'manifest' ? 'filled Set W manifest' : "week's cells.json"} is not the one campaign ${this.manifest.campaign_id} recorded (it holds ${held[k].slice(0, 12)}, the campaign ${recorded[k]!.slice(0, 12)})` : `campaign ${this.manifest.campaign_id} records no ${k === 'manifest' ? 'filled Set W manifest' : "week's cells.json"} SHA-256`,
+        why: 'a weekly campaign\'s hash covers its worlds and cells through the files it records, so a unit pushes only those', fix: { next: 'ask_user', user_message: 'stop: launch the week again on the custody host with the files it planned, and ask before launching if they changed' } });
+      return push;
+    }
     if (benchmark === 'bg1' || benchmark === 'bg1c') {
       const set = bg1SealedSet(benchmark);
       const push = bg1CustodyPush(env, this.manifestPath, this.cell(cellId).bg1_unit, set);
@@ -954,6 +993,11 @@ export class Campaign {
       const listFile = join(this.stateDir, 'setup', `${l.cell}.push`);
       writeFileSync(listFile, push.list.join('\n') + '\n');
       pushArgs = ['--push', `${push.source}:${push.dest}:${listFile}`, ...push.env.flatMap(e => ['--env', e])];
+      for (const [i, a] of (push.also ?? []).entries()) {
+        const also = join(this.stateDir, 'setup', `${l.cell}.push${i + 1}`);
+        writeFileSync(also, a.list.join('\n') + '\n');
+        pushArgs.push('--push', `${a.source}:${a.dest}:${also}`);
+      }
     }
     if (opts.restore?.dir === '~/custody/restore' && opts.restoreFrom) pushArgs.push('--push', `${opts.restoreFrom}:custody/restore`);
     let onlyArgs: string[] = [];
