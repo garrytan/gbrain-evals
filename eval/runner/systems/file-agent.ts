@@ -461,6 +461,21 @@ export class FileAgentSystem implements AnsweringSystem {
     return t;
   }
 
+  /**
+   * The cost-and-speed write-to-queryable poll for the file agent: a deterministic grep for `passage` (a fixed string)
+   * over the namespace's tree through the agent's own grep tool, with no model call; the source ids of the matching files.
+   * Grep matches line by line, so a passage that spans lines is searched by its first line. A grep error or cancellation
+   * throws, so the poll is recorded as errored.
+   */
+  async grepSources(ns: string, passage: string): Promise<string[]> {
+    const { root, files } = this.tree(ns);
+    const line = passage.split('\n').find(l => l.trim()) ?? passage;
+    const out = await ripgrep(root, this.opts.grepLimits ?? DEFAULT_GREP_LIMITS, e => { this.limitEvents.push(e); })({ pattern: line.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), path: '.', ignore_case: false, max_results: null, files_only: true });
+    if (/^grep (error|cancelled)/.test(out)) throw new Error(out.slice(0, 200));
+    if (out === 'No matches.') return [];
+    return [...new Set(out.split('\n').filter(Boolean).flatMap(p => { const src = files.get(cleanPath(p))?.source_id; return src ? [src] : []; }))];
+  }
+
   async answer(ns: string, q: PublicQuestion, opts: AnswerOptions): Promise<AgentAnswer> {
     const { root, files } = this.tree(ns);
     const store = new FileStore(new Map([...files].map(([p, f]) => [p, f.content])));

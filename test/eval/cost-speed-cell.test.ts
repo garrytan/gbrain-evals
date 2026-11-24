@@ -16,6 +16,7 @@ import { BudgetRun, closeLedgers } from '../../eval/runner/budget-ledger.ts';
 import { MeteringProxy, type UsageLine } from '../../eval/runner/metering-proxy.ts';
 import { dockerReading, parseBytes } from '../../eval/runner/memory-qa/hosting-samples.ts';
 import { FakeMemorySystem } from '../../eval/runner/systems/fake.ts';
+import { FileAgentSystem } from '../../eval/runner/systems/file-agent.ts';
 import type { Corpus, MemoryQuestion } from '../../eval/runner/memory-qa/corpus.ts';
 import type { ChatLike } from '../../eval/runner/memory-qa/qa-v2.ts';
 
@@ -160,5 +161,18 @@ describe('hosting readings', () => {
       ? 'stack-db-1\t123.4MiB / 15.6GiB\nstack-shim-1\t40MiB / 15.6GiB\n'
       : JSON.stringify({ Volumes: [{ Name: 'stack_db-data', Size: '12.3MB' }] });
     expect(await dockerReading(run)).toEqual({ containers: [{ name: 'stack-db-1', mem_bytes: 129_394_278 }, { name: 'stack-shim-1', mem_bytes: 41_943_040 }], volumes: [{ name: 'stack_db-data', bytes: 12_300_000 }] });
+  });
+});
+
+describe("the file agent's write-to-queryable poll", () => {
+  test('a fixed-string grep over its tree finds the written session with no model call, regex characters and all', async () => {
+    const fa = new FileAgentSystem({ workDir: join(tmp, 'file-agent'), effort: 'medium' });
+    const turns = (text: string) => [{ speaker: 'user', content: text }, { speaker: 'assistant', content: 'Noted.' }];
+    await fa.ingestSession('ns', { source_id: 'src-a', turns: turns('The desk (by the window) costs $40+ [used].\nSecond line.') } as never, '2026-01-01T00:00:00Z');
+    expect(await fa.grepSources('ns', 'The desk (by the window) costs $40+ [used].\nSecond')).toEqual(['src-a']);
+    expect(await fa.grepSources('ns', 'nothing like this was said')).toEqual([]);
+    await fa.ingestSession('ns', { source_id: 'src-b', turns: turns('A later chat about the desk (by the window) costs $40+ [used]. again') } as never, '2026-01-02T00:00:00Z');
+    expect((await fa.grepSources('ns', 'the desk (by the window) costs $40+ [used].')).sort()).toEqual(['src-b']);
+    expect((await fa.grepSources('ns', 'desk (by the window) costs $40+ [used].')).sort()).toEqual(['src-a', 'src-b']);
   });
 });

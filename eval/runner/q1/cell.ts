@@ -997,7 +997,8 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
     const heldBack = def.probes.held_back ?? 0;
     const bulk = heldBack ? plan.slice(0, Math.max(0, plan.length - heldBack)) : plan;
     const sample = probedConversation(convId, [...byConv.keys()], def.probes) ? probeSample(bulk, def.probes.sample, `${def.probes.seed}|${convId}`) : new Map<number, 'last' | 'sample'>();
-    const canProbe = probeable(capabilities);
+    const grep = heldBack && system instanceof FileAgentSystem ? system : null;
+    const canProbe = probeable(capabilities) || !!grep;
     const fixed = heldBack ? policyFor('vendor-default') : policyFor(identities.size ? [...identities.keys()][0] : 'fixed-evidence');
     const errors: IngestSummary['errors'] = [];
     const writes: number[] = [];
@@ -1036,6 +1037,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
       quietMs: opts.idleQuietMs ?? 60_000, maxMs: opts.idleMaxMs ?? 600_000,
     });
     const search = async (passage: string, sourceId: string): Promise<{ found: boolean; unattributed: number }> => {
+      if (grep) return { found: (await grep.grepSources(ns, passage)).includes(sourceId), unattributed: 0 };
       const res = await system.retrieve(ns, { text: passage, query_time: null }, fixed);
       return { found: res.items.some(i => i.source_ids.includes(sourceId)), unattributed: res.items.filter(i => !i.source_ids.length).length };
     };
@@ -1161,7 +1163,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
     const finish = ran.value?.finish ?? { ready: false, waited_ms: 0, completeness: `error: ${importError}` };
     const probeRecords = ran.value?.probeRecords ?? [];
     const writeProbes = [...(ran.value?.bulkRecords ?? []), ...heldRecords];
-    const probed = canProbe && !importError && finish.ready ? await meter.around(slot, `probe:${ns}`, 'ingest', () => readinessProbe(system, ns, plan.at(-1)?.input, fixed, capabilities)) : null;
+    const probed = canProbe && !grep && !importError && finish.ready ? await meter.around(slot, `probe:${ns}`, 'ingest', () => readinessProbe(system, ns, plan.at(-1)?.input, fixed, capabilities)) : null;
     const barrier = !canProbe ? 'not-measurable' : probed ? probed.value ?? 'missed' : 'skipped';
     const ingest: IngestSummary = {
       sessions: plan.length, failed_sessions: failed, synthetic_times: synthetic, messages, ingested_tokens: tokens, wall_ms: Math.round(performance.now() - t0),
