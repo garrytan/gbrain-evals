@@ -129,7 +129,7 @@ describe('weeklyLineLaunchProblems', () => {
 
   test('refuses the grep agent without ripgrep', () => {
     expect(launch({}, { ripgrep: () => null })).toEqual(["ripgrep (rg) can't run on this host, and the grep agent's cell needs it"]);
-    expect(launch({ cells: cells.filter(c => c.system !== 'baseline-file-agent') }, { ripgrep: () => null })).toEqual([]);
+    expect(launch({ cells: cells.filter(c => c.system !== 'baseline-file-agent') }, { ripgrep: () => null })).toEqual(['the week has 0 grep-agent cells (baseline-file-agent.baseline), not one']);
     expect(() => requireWeeklyLineLaunch({ gbrain: GBRAIN, cells, rereads }, { ripgrep: () => null })).toThrow('refused before any cell starts');
   });
 
@@ -138,7 +138,16 @@ describe('weeklyLineLaunchProblems', () => {
     expect(launch({ gbrain: newer })).toEqual([`cell bgw.gbrain-defaults.rs1-stable pins gbrain v0.60.800.0 at ${GBRAIN.commit}, not v0.60.801.0 at ${newer.commit}, the build resolved at launch`]);
     const sha = edit('gbrain-defaults', c => ({ ...c, launch: { ...c.launch!, env: { ...c.launch!.env, GBRAIN_SHA: newer.commit } } }));
     expect(launch({ cells: sha })).toContain(`cell bgw.gbrain-defaults.rs1-stable pins gbrain v0.60.800.0 at ${newer.commit}, not v0.60.800.0 at ${GBRAIN.commit}, the build resolved at launch`);
-    expect(launch({ cells: cells.slice(1), rereads: rereads.slice(1) })).toEqual(['the week has 0 gbrain cells, not one']);
+  });
+
+  test('refuses a week that does not hold each preregistered row exactly once, or that adds a canonical judge', () => {
+    expect(launch({ cells: cells.slice(1), rereads: rereads.slice(1) })).toEqual(['the week has 0 gbrain cells (gbrain-defaults.rs1-stable), not one']);
+    expect(launch({ cells: cells.filter(c => c.system !== 'ext-memory-bank'), rereads: rereads.filter(r => !r.cell.includes('memory-bank')) })).toEqual(['the week has 0 memory-bank cells (ext-memory-bank.recipe), not one']);
+    expect(launch({ cells: [...cells, cells[1]] })).toEqual(['the week has 2 grep-agent cells (baseline-file-agent.baseline), not one']);
+    const other = { ...cells[3], id: 'bgw.ext-memory-bank.common', configuration: 'common' };
+    expect(launch({ cells: [...cells, other] })).toContain('cell bgw.ext-memory-bank.common is not one of the preregistered rows');
+    const graded = edit('ext-extract-first', c => { const { descriptive_view: _, ...rest } = c; return rest as CellDefinition; });
+    expect(launch({ cells: graded })).toEqual(["cell bgw.ext-extract-first.common would add its instrument's canonical judge to every answer (descriptive_view is not false)"]);
   });
 
   test('refuses a world outside Set W, a cell on another set, and cells or re-reads of different weeks', () => {
@@ -148,22 +157,26 @@ describe('weeklyLineLaunchProblems', () => {
     expect(launch({ cells: later, rereads: weeklyLineRereadPlans(later) })).toEqual(['world(s) bgw-1057 are not Set W worlds of batch bgw-1001']);
     expect(launch({ cells: edit('ext-memory-bank', c => ({ ...c, set: 'BG1C', benchmark: 'bg1c', block: 'BG1C' })) })).toContain('cell bgw.ext-memory-bank.recipe runs set BG1C (bg1c), not Set W');
     expect(launch({ cells: edit('ext-memory-bank', c => ({ ...c, week: { ...c.week!, worlds: WORLDS.slice(0, 4) } })) })).toContain('cell bgw.ext-memory-bank.recipe runs another week than bgw.gbrain-defaults.rs1-stable');
-    expect(launch({ rereads: rereads.map((r, i) => (i ? r : { ...r, arm_cell_id: 'bgw.baseline-file-agent.baseline.whole-agent', cell: 'bgw.baseline-file-agent.baseline' })) })).toEqual([`re-read ${rereads[0].id} reads no 8,000-token arm of this week's cells`]);
+    expect(launch({ rereads: rereads.map((r, i) => (i ? r : { ...r, arm_cell_id: 'bgw.baseline-file-agent.baseline.whole-agent', cell: 'bgw.baseline-file-agent.baseline' })) })).toContain(`re-read ${rereads[0].id} reads no 8,000-token arm of this week's cells`);
     expect(launch({ rereads: rereads.map((r, i) => (i ? r : { ...r, worlds: WORLDS.slice(4) })) })).toEqual([`re-read ${rereads[0].id} reads worlds ${WORLDS.slice(4).join(', ')}, not the week's`]);
   });
 
   test('refuses a reader or a judge outside the preregistered lists', () => {
     const sol = 'openai:gpt-6.2-sol';
     const solReader = edit('ext-extract-first', c => ({ ...c, arms: c.arms.map(a => ({ ...a, readers: [OPUS, sol], frontier: { ...a.frontier!, judge_by_reader: { ...a.frontier!.judge_by_reader, [sol]: OPUS } } })) }));
-    expect(launch({ cells: solReader })).toContain(`arm bgw.ext-extract-first.common.component-b8000: reader ${sol} is not one of ${OPUS}`);
+    expect(launch({ cells: solReader })).toContain(`arm bgw.ext-extract-first.common.component-b8000 is read by ${OPUS}, ${sol}, not ${OPUS}`);
     const liveParticle = edit('ext-extract-first', c => ({ ...c, arms: c.arms.map(a => ({ ...a, readers: [OPUS, PARTICLE], frontier: { ...a.frontier!, judge_by_reader: { ...a.frontier!.judge_by_reader, [PARTICLE]: OPUS } } })) }));
-    expect(launch({ cells: liveParticle })).toContain(`arm bgw.ext-extract-first.common.component-b8000: reader ${PARTICLE} is not one of ${OPUS}`);
+    expect(launch({ cells: liveParticle })).toEqual([`arm bgw.ext-extract-first.common.component-b8000 is read by ${OPUS}, ${PARTICLE}, not ${OPUS}`]);
+    const opusOnlyAgent = edit('baseline-file-agent', c => ({ ...c, arms: c.arms.map(a => ({ ...a, readers: [OPUS] })) }));
+    expect(launch({ cells: opusOnlyAgent })).toEqual([`arm bgw.baseline-file-agent.baseline.whole-agent is read by ${OPUS}, not ${OPUS}, ${PARTICLE}`]);
+    expect(launch({ rereads: rereads.slice(1) })).toEqual([`arm bgw.gbrain-defaults.rs1-stable.p has 0 particle-1 re-reads, not one`]);
+    expect(launch({ rereads: [...rereads, rereads[2]] })).toEqual([`arm bgw.ext-memory-bank.recipe.component-b8000 has 2 particle-1 re-reads, not one`]);
     const selfJudged = edit('baseline-file-agent', c => ({ ...c, arms: c.arms.map(a => ({ ...a, frontier: { ...a.frontier!, judge_by_reader: { ...a.frontier!.judge_by_reader, [OPUS]: OPUS } } })) }));
     expect(launch({ cells: selfJudged })).toContain(`arm bgw.baseline-file-agent.baseline.whole-agent: ${OPUS} is judged by ${OPUS}, not ${ASTRA}`);
     const particleJudges = rereads.map((r, i) => (i ? r : { ...r, judges: [PARTICLE] }));
     expect(launch({ rereads: particleJudges })).toContain(`re-read ${rereads[0].id}: ${PARTICLE} is judged by ${PARTICLE}, not ${OPUS}`);
     const opusReread = rereads.map((r, i) => (i ? r : { ...r, reader: OPUS, judges: [ASTRA] }));
-    expect(launch({ rereads: opusReread })).toContain(`re-read ${rereads[0].id}: reader ${OPUS} is not one of ${PARTICLE}`);
+    expect(launch({ rereads: opusReread })).toEqual([`re-read ${rereads[0].id} is read by ${OPUS}, not ${PARTICLE}`]);
   });
 
   test('refuses a suspended model in a role we choose, and allows gpt-4o-mini only as the memory-bank server\'s system-internal model', () => {

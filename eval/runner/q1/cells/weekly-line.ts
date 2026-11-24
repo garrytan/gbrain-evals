@@ -2,7 +2,9 @@
  * The weekly outcome line's cell set (docs/benchmarks/2026-11-23-weekly-outcome-line-preregistration.md, "Systems",
  * "Readers and judges" and harness item 3): gbrain, the two memory servers and the grep agent on one week's Set W worlds,
  * with both readers and their judges, built with BG1-C's tooling (definitions.ts makeCell and definitionProblems, bg1c.ts
- * rates and launch) so a weekly cell is a Q1 cell definition the same runner executes.
+ * rates and launch), so a weekly cell is a valid Q1 cell definition. Running one is the weekly runner's job: cell.ts gives
+ * BG1's paid-window gate, world-end clock and Gemini key handling only to isBg1Benchmark's benchmarks, which bgw is not
+ * yet, so the runner wires those for Set W before any weekly cell runs.
  *
  *   G8  gbrain-defaults, configuration rs1-stable as BG1-C's arm P ran it (default fact extraction with name tags,
  *       `query` with the facts block, an 8,000-token read), at the gbrain build the week passes in.
