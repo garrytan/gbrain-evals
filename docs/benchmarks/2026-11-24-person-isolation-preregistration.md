@@ -184,11 +184,13 @@ operations (at least `query`, `search`, `get`, `recall` and `think`), enumerated
 **Write-shaped reads.** Calls that write but answer with data, made as Q against P's ids: `memory_write` replaying P's
 idempotency key with fresh decoy facts that carry no canary (compared with the same decoys under a key nobody used),
 `forget_fact` and `forget` on P's fact ids, `get_write_request` and `cancel_write_request` on P's receipt and proposal
-ids, and `memory_propose` aimed at P's restricted pages. Each must answer exactly as it does for a never-written id.
-They run after every read probe of the seed, and afterwards P's rows (fact text, visibility, page, proposal state) must
-be byte-for-byte what they were before.
+ids, and `memory_propose` aimed at P's restricted pages. Each pair must have the same outcome as the same call on a
+never-written id: both accepted or both refused, with the same status and error code. Fresh receipt and fact ids may
+differ, and are masked before the comparison; neither response may carry one of P's ids or canaries. They run after every
+read probe of the seed, and afterwards P's rows (fact text, visibility, page, proposal state), read on the host, must be
+byte-for-byte what they were before.
 
-**After the maintenance cycle.** The host runs `gbrain dream` with every phase that runs keyless, and, on the in-process
+**After the maintenance cycle.** The host runs `gbrain dream` with every phase that runs keyless;
 then the mandatory operations run again as every caller in the table, and no P canary may be returned to anyone but P.
 The runner also lists every page holding a P canary after the cycle and fails if any of them is readable, by its source,
 folder rule or `readable_by`, by a member other than P (the owner, who reads everything, is not counted). A phase that
@@ -209,8 +211,10 @@ Six cells: three transports on two engines.
 Each on PGLite and on Postgres. Every cell runs these conditions:
 
 - **cold:** each probe on a fresh session;
-- **warm and shared:** P's positive control runs immediately before Q's probe on the same client and, for the attested
-  callers, the same MCP session, as one QM process serving two people would;
+- **warm and shared:** P's positive control runs immediately before Q's probe. For the attested callers it runs on the
+  same client and the same MCP session, as one QM process serving two people would; a member-bound credential always
+  reads as its own member, so for `member-key` P's control runs on P's own key against the same server or engine, and
+  for the callers acting for nobody on P's key;
 - **concurrent:** 8 requests in flight, mixing people on one client.
 
 The brain is keyless, so search is keyword search; the vector and hybrid paths are not exercised (see "What this does
@@ -251,13 +255,18 @@ caller pair from the served table.
 A probe's whole response is scanned: text content, `structuredContent`, `_meta`, notices, error bodies and HTTP headers;
 on the CLI, stdout and stderr.
 
-- **Content leak:** any of P's canaries in a response to anyone but P.
-- **Identifier leak:** one of P's private fact ids, receipt or proposal ids, direct-message page slugs or restricted
-  slugs in a response to a probe that did not send it.
-- **Existence oracle:** on a targeted probe, the response to P's target differs from the response to a ghost target of
+Every response is checked against every person's canaries and identifiers except those of the person the caller reads
+as, whoever the probe was aimed at, so a third person's memory in a response to Q's probe of P counts.
+
+- **Content leak:** any person's canary in a response to anyone but that person.
+- **Identifier leak:** one of a person's private fact ids, receipt or proposal ids, direct-message page slugs or
+  restricted slugs in a response to anyone but that person, on a probe that did not send it.
+- **Existence oracle:** on a probe aimed at one of P's protected targets (member page, `readable_by` page, folder page,
+  direct-message page and source, fact ids, receipt and proposal ids), the response to P's target differs from the response to a ghost target of
   the same shape, after the target values and volatile fields (timestamps, request ids, latency) are masked. Ghosts: P6's
   member page (P6 never saved anything), a fact id 1,000 above the largest, a fresh receipt id, never-written slugs of
-  the same shape, and an empty source bound to P6.
+  the same shape, and an empty source bound to P6. Shared targets (the company page, the colleague's people page and
+  the topic queries) have no ghost and are scanned for leaks only.
 - **Identity slip:** a near-miss id or a mismatched `acting_user` that reads as P, or a disabled member's credential or
   id that reads anything.
 - **Write-shaped slip:** a write-shaped read that answers differently for P's id than for a ghost id, or that changes
@@ -273,7 +282,9 @@ An operation has signal on a cell when at least one of its probes does.
 - **Gate (all must be zero, on every cell):** content leaks, identifier leaks, existence oracles, identity slips and
   write-shaped slips, summed over every probe, caller, condition and seed.
 - **Coverage floor:** every mandatory operation has signal on every cell that serves it, and every channel of every
-  person is read back by its owner on at least one operation per cell (so a world that failed to seed cannot pass).
+  person is read back by its owner on at least one operation per cell (so a world that failed to seed cannot pass). D's
+  channels are read back right after D's writes, before D is disabled. The proposal channel is read back through its
+  owner's own `get_write_request` on the proposal id; no other read path is expected to return a pending proposal.
 - **Validity:** a probe that times out (10 s in process, 30 s over HTTP and the CLI) or throws inside the harness is a
   harness error. More than 2 harness errors on one operation in one cell, any failed write receipt, a must-fail control
   that passes, or a provider key visible to the run makes the cell an error, which fails the gate. Each stop has a
@@ -313,9 +324,10 @@ A leak is a security bug. The runner writes a leaking probe's full arguments and
 per-caller counts, only to the ignored `eval/reports/` folder. On a failing run, the console, CI logs and any committed
 receipt carry only the total and `FAIL`, never which operation, caller or channel leaked. The repro and the detail go to
 GBRA-108 through GBEV-3's private channel the same turn it is found. Until gbrain has shipped the fix, no commit message,
-pull request body, results page or CI log in this public repository describes the exposure, and the results pull
-request (runner, generator and CI job) stays unmerged, because the public runner and world would let anyone reproduce
-it. The CI gate runs only on releases already measured green; a pin bump to a leaking release fails it with the total
+pull request body, results page or CI log in this public repository describes the exposure. A public pull request shows
+its commits before it merges, so the runner, generator and CI job stay on a local, unpushed branch until the pilot and
+the counted run have finished: if either finds a leak, none of them is pushed to any public branch or pull request until
+gbrain ships the fix. The CI gate runs only on releases already measured green; a pin bump to a leaking release fails it with the total
 alone.
 
 ## Pilot per cell (R111)
