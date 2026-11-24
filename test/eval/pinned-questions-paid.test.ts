@@ -13,7 +13,7 @@ import { writeReceipt } from '../../eval/runner/receipt.ts';
 import {
   EST_TOKENS, JUDGE_CALLS_PER_ANSWER, JUDGE_MAX_TOKENS, JUDGE_MIN_LABELS, PINNED_QUESTIONS_JUDGE_PROMPT, estimateUsd, measuredJudge, PINNED_QUESTIONS_MODELS_UNDER_TEST, STAGE_SEEDS, TRUNCATION_BAR, buildReceipt, canonicalModel, cohenKappa,
   familyOf, judgeAgreement, judgeCheckPasses, judgeFor, judgeUserMessage, modelRoles, parseJudgeLabels, requirePaidFlags, ruleLabels,
-  checkpointKey, combinedCost, harnessBlocked, receiptFile, servedWrongModel, outcomeOf, pendingUnits, readCheckpoint, recordingGenerateText, redactProviderText, requireJudgeCheck, requireProviderKeys, runPinnedQuestionsPaid, scoredCorrect, summarizePaid,
+  checkpointKey, combinedCost, harnessBlocked, recordProcessCost, requireStageDirectory, receiptFile, servedWrongModel, outcomeOf, pendingUnits, readCheckpoint, recordingGenerateText, redactProviderText, requireJudgeCheck, requireProviderKeys, runPinnedQuestionsPaid, scoredCorrect, summarizePaid,
   type ChatTransport, type GradedAnswer, type PaidRow, type PaidRunResult,
 } from '../../eval/runner/pinned-questions-paid.ts';
 
@@ -583,10 +583,24 @@ describe('pinned-questions paid arm: provider errors, safety stops and budget re
     const src = readFileSync('eval/runner/pinned-questions-paid.ts');
     expect(JSON.parse(key).runner_sha256).toBe(createHash('sha256').update(src).update(readFileSync('eval/generators/pinned-questions-gen.ts')).digest('hex'));
     const summary = (run_id: string, usd: number, requests: number) => ({ run_id, budget_usd: 50, reserved_usd: usd, actual_usd: usd, charged_reservations: 0, requests, input_tokens: requests * 10, output_tokens: requests * 5, overshoot_usd: 0, ledger_path: 'l', program_cap_usd: 500, event_loop_lag_ms: null });
-    combinedCost(out, 'other-key', summary('r0', 9, 9));
-    combinedCost(out, key, summary('r1', 1.5, 3));
-    const both = combinedCost(out, key, summary('r1', 0, 0));
-    expect([both.processes, both.actual_usd, both.requests, both.input_tokens, both.run_id]).toEqual([2, 1.5, 3, 30, 'r1']);
+    const opus = 'anthropic:claude-opus-5-5', unit = (seed: number) => ({ model: opus, seed });
+    recordProcessCost(out, { key: 'other-key', stage: 'pilot', asked: [unit(21)], summary: summary('r0', 9, 9) });
+    recordProcessCost(out, { key, stage: 'pilot', asked: [unit(21)], summary: summary('r1', 1.5, 3) });
+    recordProcessCost(out, { key, stage: 'judge-check', asked: [unit(22), unit(23)], summary: summary('r2', 4, 6) });
+    recordProcessCost(out, { key, stage: 'judge-check', asked: [], summary: summary('r2', 0, 0) });
+    const judgeCheck = combinedCost(out, key, [unit(21), unit(22), unit(23)], summary('r2', 0, 0));
+    expect([judgeCheck.processes, judgeCheck.actual_usd, judgeCheck.requests, judgeCheck.input_tokens, judgeCheck.run_id]).toEqual([2, 5.5, 9, 90, 'r1,r2']);
+    const counted = combinedCost(out, key, [unit(11), unit(12)], summary('r3', 0, 0));
+    expect([counted.processes, counted.actual_usd, counted.run_id]).toEqual([0, 0, 'r3']);
+    expect(combinedCost(out, key, [unit(22)], summary('r2', 0, 0)).actual_usd).toBe(4);
+  }, 120_000);
+
+  test('a launch refuses an output directory holding another stage\'s units; the judge-check stage may resume the pilot\'s seed', async () => {
+    const out = dir();
+    await run(out, () => null);
+    expect(() => requireStageDirectory(out, [1, 2])).not.toThrow();
+    expect(() => requireStageDirectory(out, [11, 12])).toThrow(/seeds 1, outside this launch's seeds \(11, 12\)/);
+    expect(() => requireStageDirectory(join(out, 'empty'), [11])).not.toThrow();
   }, 120_000);
 
   test('each row records the model that answered, and a row another model answered is a harness error, not a result', async () => {

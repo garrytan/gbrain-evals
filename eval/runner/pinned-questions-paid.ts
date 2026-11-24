@@ -677,6 +677,15 @@ export function checkpointKey(o: { mode: PaidMode['kind']; gut: GbrainUnderTest;
 
 const RUNNER_SOURCE_SHA256 = createHash('sha256').update(readFileSync(import.meta.path)).update(readFileSync(resolve(import.meta.dir, '../generators/pinned-questions-gen.ts'))).digest('hex');
 
+/**
+ * Refuse a launch into an output directory whose checkpoint holds units outside this launch's seeds: each stage gets its
+ * own directory, except that the judge-check stage resumes the pilot's seed in the pilot's directory.
+ */
+export function requireStageDirectory(output: string, seeds: readonly number[]): void {
+  const foreign = [...new Set(readCheckpoint(join(output, 'checkpoint.ndjson')).map(x => x.seed).filter(s => !seeds.includes(s)))];
+  if (foreign.length) throw new PaidArmRefusal(`${CATEGORY}: ${output} already holds checkpointed units for seeds ${foreign.join(', ')}, outside this launch's seeds (${seeds.join(', ')}); give this stage its own --output`);
+}
+
 /** The (model, seed) units a launch would still ask: those with no checkpointed unit, or one owed its retry. */
 export function pendingUnits(output: string, key: string, models: readonly string[], seeds: readonly number[]): Array<{ model: string; seed: number }> {
   const done = readCheckpoint(join(output, 'checkpoint.ndjson')).filter(x => x.key === key);
@@ -686,18 +695,29 @@ export function pendingUnits(output: string, key: string, models: readonly strin
   });
 }
 
+type Unit = { model: string; seed: number };
+const unitId = (u: Unit) => `${u.model}|${u.seed}`;
+interface CostLine { key: string; stage: Stage; asked: Unit[]; summary: RunSummary }
+
+/** Each paid process appends its ledger summary to ledger-costs.ndjson, with its stage and the units it asked. */
+export function recordProcessCost(output: string, line: CostLine): void {
+  mkdirSync(output, { recursive: true });
+  appendFileSync(join(output, 'ledger-costs.ndjson'), JSON.stringify(line) + '\n');
+}
+
 /**
- * Spend for a receipt whose rows may come from several processes: each paid process appends its ledger summary to
- * ledger-costs.ndjson in the output directory, under the checkpoint key, and the receipt sums every summary under that
- * key, so a resumed receipt carries the cost of every attempt behind its rows, not only the last process's.
+ * Spend for a receipt whose rows may come from several processes: every recorded summary under the checkpoint key
+ * whose process asked a unit behind the receipt's rows, so a resumed receipt carries the cost of every attempt behind
+ * its rows, and never the spend of another stage's units that share the output directory.
  */
-export function combinedCost(output: string, key: string, current: RunSummary): RunSummary & { processes: number } {
+export function combinedCost(output: string, key: string, behind: readonly Unit[], current: RunSummary): RunSummary & { processes: number } {
   const path = join(output, 'ledger-costs.ndjson');
-  appendFileSync(path, JSON.stringify({ key, summary: current }) + '\n');
-  const all = readFileSync(path, 'utf8').split('\n').flatMap(l => { try { const x = JSON.parse(l) as { key: string; summary: RunSummary }; return x.key === key ? [x.summary] : []; } catch { return []; } });
+  const ids = new Set(behind.map(unitId));
+  const lines = existsSync(path) ? readFileSync(path, 'utf8').split('\n').flatMap(l => { try { return [JSON.parse(l) as CostLine]; } catch { return []; } }) : [];
+  const all = lines.filter(x => x.key === key && (x.asked ?? []).some(u => ids.has(unitId(u)))).map(x => x.summary);
   const sum = (f: (s: RunSummary) => number) => all.reduce((a, s) => a + f(s), 0);
   return {
-    ...current, run_id: [...new Set(all.map(s => s.run_id))].join(','), processes: all.length,
+    ...current, run_id: [...new Set(all.map(s => s.run_id))].join(',') || current.run_id, processes: all.length,
     reserved_usd: sum(s => s.reserved_usd), actual_usd: sum(s => s.actual_usd), charged_reservations: sum(s => s.charged_reservations), requests: sum(s => s.requests),
     input_tokens: sum(s => s.input_tokens), output_tokens: sum(s => s.output_tokens), overshoot_usd: sum(s => s.overshoot_usd),
   };
@@ -889,6 +909,7 @@ async function main(): Promise<void> {
   const output = resolve(outFlag);
   const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
   const key = checkpointKey({ mode: 'paid', gut, companies, maxOutputTokens });
+  requireStageDirectory(output, seeds);
   const pending = pendingUnits(output, key, models, seeds);
   const judgeCheck = stage === 'counted' ? argValue(argv, '--judge-check') : undefined;
   const graded = judgeCheck && existsSync(judgeCheck) ? (JSON.parse(readFileSync(judgeCheck, 'utf8')) as { data?: { rows?: PaidRow[] } }).data?.rows ?? [] : readCheckpoint(join(output, 'checkpoint.ndjson')).flatMap(x => x.rows);
@@ -902,13 +923,15 @@ async function main(): Promise<void> {
   const startedAt = new Date().toISOString();
   const paid = startPaidRun(CATEGORY, { ...budgetOptionsFrom(argv), estimateUsd: estimate });
   let result: PaidRunResult;
-  let cost: RunSummary;
+  let closed: RunSummary;
   try {
     result = await runPinnedQuestionsPaid({ gut, models, seeds, companies, maxOutputTokens, output, mode: { kind: 'paid', keys }, log: s => console.error(s) });
   } finally {
-    cost = combinedCost(output, key, paid.run.close());
+    closed = paid.run.close();
     paid.guard.uninstall();
+    recordProcessCost(output, { key, stage, asked: pending, summary: closed });
   }
+  const cost = combinedCost(output, key, result.rows.map(r => ({ model: r.model, seed: r.seed })), closed);
   writeReceipt(receiptFile(output, stage), buildReceipt({ gut, models, seeds, companies, stage, maxOutputTokens, result, cost, startedAt, mode: 'paid', judgeCheckSha256 }));
   const s = summarizePaid(result.rows);
   console.log(JSON.stringify({ by_model: Object.fromEntries(Object.entries(s.by_model).map(([m, v]) => [m, { first_correct: v.first_correct, refreshed_correct: v.refreshed_correct, refresh_outcome: v.refresh_outcome, refreshed_excluded: v.refreshed_excluded, answer_too_long: v.answer_too_long }])), judge_agreement: s.judge_agreement, truncation: s.truncation, cost_usd: receiptCost(cost).usd }, null, 2));
