@@ -18,10 +18,13 @@ import { instrumentFor } from '../../eval/runner/memory-qa/instruments.ts';
 import { answerId, type AnswerRecord, type JudgmentRecord } from '../../eval/runner/memory-qa/records.ts';
 import { frontierInstrumentId } from '../../eval/runner/q1/cell.ts';
 import { bg1JudgeOf, PER_READER_JUDGE_SETTINGS } from '../../eval/runner/q1/cells/definitions.ts';
-import { aggregateProblems, assertAggregate, blockAggregates, main, WEEK_SCHEMA, weekAggregates, WeeklyAggregateError, writeAggregate, type WeekMeta } from '../../eval/runner/weekly-line/aggregates.ts';
+import { aggregateProblems, assertAggregate, blockAggregates, FALSE_ALARM_RECEIPT_SCHEMA, falseAlarmPoolSha256, main, WEEK_SCHEMA, weekAggregates, WeeklyAggregateError, writeAggregate, writeBlockFiles, boundRecords, type WeekMeta } from '../../eval/runner/weekly-line/aggregates.ts';
+import { BG1C_CAMPAIGN, BG1C_DATASET } from '../../eval/runner/memory-qa/bg1-names.ts';
 import { plannedQuestions, WL_CLASSES, WL_COMPARISONS, WL_OBF_BOUNDS, WL_READER_KEYS, WL_READERS, WL_ROWS, WL_SYSTEMS, type WlClass, type WlReaderKey, type WlRow } from '../../eval/runner/weekly-line/design.ts';
 import { plannedFor, questionsFromRecords, WeeklyRecordsError, type WlQuestion } from '../../eval/runner/weekly-line/records.ts';
 import { renderBlock, renderWeek } from '../../eval/runner/weekly-line/scorecard.ts';
+import { SETTLED_SCHEMA } from '../../eval/runner/weekly-line/settled.ts';
+import { RUN_FILE, runIdentity } from '../../eval/runner/weekly-line/identity.ts';
 import { analyzeBlock, analyzeLook, compare, costPerCorrect, estimate, falseAlarmRate, grepStops, holmStepDown, regressionFlag, rolling, weeklySdd, type BlockWorld } from '../../eval/runner/weekly-line/stats.ts';
 
 const tmp = mkdtempSync(join(tmpdir(), 'weekly-line-'));
@@ -307,9 +310,18 @@ describe('beside the verdict', () => {
 
 // ─── The aggregates and their allow-list ─────────────────────────────
 
+/** BG1-C's custody receipt for a false-alarm pool. */
+const receiptOf = (pool: Record<string, number[]>) => ({ schema: FALSE_ALARM_RECEIPT_SCHEMA, campaign: BG1C_CAMPAIGN, dataset: BG1C_DATASET, comparisons: Object.keys(pool), pool_sha256: falseAlarmPoolSha256(pool) });
+
+/** The runner's settled marker for each week, agreeing with its meta. */
+const settledOf = (metas: readonly WeekMeta[]) => metas.map(m => ({
+  schema: SETTLED_SCHEMA, run_id: m.run_id, week: m.week, no_point: m.no_point ?? null, gbrain: m.gbrain, worlds: m.no_point ? [] : m.worlds.map(w => w.world),
+  steps: m.no_point ? { cells: 0, rereads: 0, judgments: 0, harness_failures: 0 } : { cells: 5, rereads: 3, judgments: 8, harness_failures: 0 },
+}));
+
 function meta(week: string, worlds: readonly string[], release: string): WeekMeta {
   return {
-    week, gbrain: { release, commit: COMMIT }, comparators: { 'extract-first': { version: '1.4.2', fixed: '2026-11-19' }, 'memory-bank': { version: '0.9.0', fixed: '2026-11-19' } },
+    week, run_id: `wl-${week}-${'a'.repeat(12)}`, gbrain: { release, commit: COMMIT }, comparators: { 'extract-first': { version: '1.4.2', fixed: '2026-11-19' }, 'memory-bank': { version: '0.9.0', fixed: '2026-11-19' } },
     worlds: worlds.map(world => ({ world, seed_id: 'W1', phrasing_id: 'W1' })),
     costs: worlds.flatMap(world => WL_ROWS.flatMap(row => WL_READER_KEYS.map(reader => ({ row, reader, world, usd: 0.25 })))),
   };
@@ -320,7 +332,7 @@ describe('the aggregates that leave custody', () => {
   const metas = [0, 1, 2, 3].map(k => meta(`2026-12-${String(1 + 7 * k).padStart(2, '0')}`, worlds.slice(8 * k, 8 * k + 8), k < 2 ? A : B));
   const weeks: ReturnType<typeof weekAggregates>[] = [];
   for (const m of metas) weeks.push(weekAggregates(m, questions, { history: [...weeks] }));
-  const block = blockAggregates(1, metas, questions, { draws: 199 });
+  const block = blockAggregates(1, metas, questions, { draws: 199, settled: settledOf(metas) });
 
   test('weekly and block aggregates pass their allow-lists, and a week carries no verdict word', () => {
     for (const w of weeks) assertAggregate(w, 'week');
@@ -338,7 +350,7 @@ describe('the aggregates that leave custody', () => {
   test('a week after a block reads the regression flag against that block', () => {
     const next = synth(40, { 'now|grep-agent': i => (i < 32 ? -3 - (i % 2) : 4) });
     const pool = { 'now|extract-first': [1, -1, 2, -2], 'now|memory-bank': [1, -1, 2, -2], 'past|extract-first': [1, -1, 2, -2], 'past|memory-bank': [1, -1, 2, -2] };
-    const later = weekAggregates(meta('2027-01-05', next.worlds.slice(32), B), next.questions, { history: weeks, previousBlock: block, falseAlarmPool: pool });
+    const later = weekAggregates(meta('2027-01-05', next.worlds.slice(32), B), next.questions, { history: weeks, previousBlock: block, falseAlarmPool: pool, falseAlarmReceipt: receiptOf(pool) });
     assertAggregate(later, 'week');
     const f = later.regression!.now['grep-agent'];
     expect(f.flagged).toBe(true);
@@ -354,19 +366,38 @@ describe('the aggregates that leave custody', () => {
     const next = synth(40, { 'now|grep-agent': i => (i < 32 ? -3 - (i % 2) : 4) });
     const pool = { 'now|extract-first': [1, -1, 2, -2], 'now|memory-bank': [1, -1, 2, -2], 'past|extract-first': [1, -1, 2, -2], 'past|memory-bank': [1, -1, 2, -2] };
     const at = (o: Parameters<typeof weekAggregates>[2]) => weekAggregates(meta('2027-01-05', next.worlds.slice(32), B), next.questions, { history: weeks, previousBlock: block, ...o });
-    const ok = at({ falseAlarmPool: pool }), g = ok.regression!.now['grep-agent'];
+    const ok = at({ falseAlarmPool: pool, falseAlarmReceipt: receiptOf(pool) }), g = ok.regression!.now['grep-agent'];
     expect([g.false_alarm_rate, g.false_alarm_source]).toEqual([null, 'unavailable']);
+    expect(ok.regression!.now['extract-first'].false_alarm_source).toBe('BG1-C pool');
     expect(renderWeek(ok)).toContain('unavailable (no registered calibration)');
-    expect(() => at({})).toThrow(/BG1-C's per-world differences/);
-    expect(() => at({ falseAlarmPool: { ...pool, 'now|extract-first': [1] } })).toThrow(/at least two of BG1-C's per-world differences/);
-    expect(() => at({ falseAlarmPool: { ...pool, 'now|extract-first': [1, Number.NaN] } })).toThrow(/each a finite number/);
+    const short = { ...pool, 'now|extract-first': [1] }, nan = { ...pool, 'now|extract-first': [1, Number.NaN] };
+    expect(() => at({ falseAlarmPool: short, falseAlarmReceipt: receiptOf(short) })).toThrow(/at least two of BG1-C's per-world differences/);
+    expect(() => at({ falseAlarmPool: nan, falseAlarmReceipt: receiptOf(nan) })).toThrow(/each a finite number/);
     expect(() => at({ falseAlarmPool: { ...pool, 'now|grep-agent': [1, -1] } })).toThrow(/never ran the grep agent/);
+  }, 60_000);
+
+  // Value: protects=no flag line publishes a false-alarm rate labelled BG1-C unless BG1-C's custody receipt vouches for the pool by its SHA-256; fails_when=a pool with no receipt, or with a receipt for other numbers, another campaign or other comparisons, publishes a rate (#611 read-only review blocker 4); why_new=GBEV-3 ruling on #611, 2026-11-23; seam=aggregates.ts weekAggregates over falseAlarmPoolProblems; no_claim=forged receipts with recomputed hashes, outside the crew's threat model
+  test('without BG1-C\'s custody receipt for the pool, every false-alarm rate is unavailable', () => {
+    const next = synth(40, { 'now|grep-agent': i => (i < 32 ? -3 - (i % 2) : 4) });
+    const pool = { 'now|extract-first': [1, -1, 2, -2], 'now|memory-bank': [1, -1, 2, -2], 'past|extract-first': [1, -1, 2, -2], 'past|memory-bank': [1, -1, 2, -2] };
+    const at = (o: Parameters<typeof weekAggregates>[2]) => weekAggregates(meta('2027-01-05', next.worlds.slice(32), B), next.questions, { history: weeks, previousBlock: block, ...o });
+    const rates = (w: ReturnType<typeof at>) => WL_COMPARISONS.map(c => [w.regression![c.cls][c.other].false_alarm_rate, w.regression![c.cls][c.other].false_alarm_source]);
+    const none = Array(6).fill([null, 'unavailable']);
+    expect(rates(at({}))).toEqual(none);
+    expect(rates(at({ falseAlarmPool: pool }))).toEqual(none);
+    expect(rates(at({ falseAlarmPool: pool, falseAlarmReceipt: receiptOf(pool) })).filter(([, s]) => s === 'BG1-C pool')).toHaveLength(4);
+    const other = { ...pool, 'now|extract-first': [9, -9, 9, -9] };
+    expect(() => at({ falseAlarmPool: other, falseAlarmReceipt: receiptOf(pool) })).toThrow(/SHA-256 does not match its custody receipt/);
+    expect(() => at({ falseAlarmPool: pool, falseAlarmReceipt: { ...receiptOf(pool), campaign: 'q1-scoreboard-bg1-changing-facts' } })).toThrow(/does not name BG1-C's campaign/);
+    expect(() => at({ falseAlarmPool: pool, falseAlarmReceipt: { ...receiptOf(pool), comparisons: ['now|extract-first'] } })).toThrow(/other comparisons than the pool/);
+    expect(() => at({ falseAlarmPool: pool, falseAlarmReceipt: { pool_sha256: falseAlarmPoolSha256(pool) } })).toThrow(/is not a gbrain-evals\/weekly-line-false-alarm-pool-receipt\/v1 receipt/);
+    expect(() => at({ falseAlarmReceipt: receiptOf(pool) })).toThrow(/without its pool/);
   }, 60_000);
 
   test('a constant nonzero gap writes a null z beside its crossing', () => {
     const flat = synth(32, { 'now|grep-agent': () => 4 });
     const m4 = [0, 1, 2, 3].map(k => meta(`2026-12-${String(1 + 7 * k).padStart(2, '0')}`, flat.worlds.slice(8 * k, 8 * k + 8), A));
-    const c = blockAggregates(1, m4, flat.questions, { draws: 99 }).comparisons.now['grep-agent'];
+    const c = blockAggregates(1, m4, flat.questions, { draws: 99, settled: settledOf(m4) }).comparisons.now['grep-agent'];
     expect([c.look!.z, c.look!.crossed, c.final!.z, c.final!.crossed]).toEqual([null, true, null, true]);
   });
 
@@ -434,12 +465,13 @@ describe('the aggregates that leave custody', () => {
   test('the block section words each outcome', () => {
     const ahead = synth(32, { 'now|grep-agent': alt(4, 5), 'past|memory-bank': alt(6, -6), 'now|memory-bank': (i, r) => (r === 'claude-opus-5-5' ? 6 + (i % 2) : -2 + (i % 2)) }, { base: { past: 12 } });
     const m4 = [0, 1, 2, 3].map(k => meta(`2026-12-${String(1 + 7 * k).padStart(2, '0')}`, ahead.worlds.slice(8 * k, 8 * k + 8), A));
-    const page = renderBlock(blockAggregates(2, m4, ahead.questions, { draws: 99 }));
+    const page = renderBlock(blockAggregates(2, m4, ahead.questions, { draws: 99, settled: settledOf(m4) }));
     expect(page).toContain(`gbrain (release ${A}) beats a grep agent on held-out questions about what is true now by`);
     expect(page).toContain('gbrain against the memory-bank server on questions about the past: no measurable difference at this sample size (claude-opus-5-5');
     expect(page).toContain('gbrain against the memory-bank server on what is true now: split by reader (claude-opus-5-5');
     const ceil = synth(32, {}, { base: { now: 40 } });
-    expect(renderBlock(blockAggregates(3, m4.map((m, k) => ({ ...m, worlds: ceil.worlds.slice(8 * k, 8 * k + 8).map(world => ({ world, seed_id: 'W1', phrasing_id: 'W1' })) })), ceil.questions, { draws: 99 }))).toContain('gbrain against a grep agent on what is true now: ceiling');
+    const mc = m4.map((m, k) => ({ ...m, worlds: ceil.worlds.slice(8 * k, 8 * k + 8).map(world => ({ world, seed_id: 'W1', phrasing_id: 'W1' })) }));
+    expect(renderBlock(blockAggregates(3, mc, ceil.questions, { draws: 99, settled: settledOf(mc) }))).toContain('gbrain against a grep agent on what is true now: ceiling');
   });
 });
 
@@ -450,7 +482,8 @@ describe('the end of a block', () => {
   const { worlds, questions } = synth(24, { 'now|grep-agent': halves(alt(2, -1), alt(5, 4)), 'past|grep-agent': alt(4, 5) });
   const metas = [0, 1, 2].map(k => meta(week(k), worlds.slice(8 * k, 8 * k + 8), A));
   const open = blockAggregates(1, metas, questions, { draws: 99 });
-  const done = blockAggregates(1, [...metas, { ...meta(week(3), [], A), no_point: 'custody host offline' as const }], questions, { draws: 99 });
+  const four = [...metas, { ...meta(week(3), [], A), no_point: 'custody host offline' as const }];
+  const done = blockAggregates(1, four, questions, { draws: 99, settled: settledOf(four) });
 
   test('a block written after the look but before its fourth week entry gives only early words', () => {
     expect([open.ended, done.ended]).toEqual([false, true]);
@@ -475,6 +508,52 @@ describe('the end of a block', () => {
     expect(renderBlock(done)).toContain('early, at the 16th counted world. The full block (');
   });
 
+  // Value: protects=a block ends only when all four weeks carry the runner's settled marker, so a fourth week still running (one world with one record) never ends it; fails_when=ended reads only the number of week entries (#611 read-only review blocker 1, aggregates.ts:322), or a marker from another week, build or world list settles a week; why_new=GBEV-3 ruling on #611, 2026-11-23; seam=aggregates.ts blockAggregates over settled.ts settledProblems; no_claim=the runner writes the marker only when every step is done (weekly-line-runner.test.ts)
+  test('a fourth week that is still running does not end the block, and a marker must agree with its week', () => {
+    const { worlds: w4, questions: q4 } = synth(32, { 'now|grep-agent': alt(4, 5) });
+    const m4 = [0, 1, 2, 3].map(k => meta(week(k), w4.slice(8 * k, 8 * k + 8), A));
+    const partial = [...m4.slice(0, 3), meta(week(3), w4.slice(24, 25), A)];
+    const oneRecord = q4.filter(q => q.world !== w4[24] || q.id === `${w4[24]}:s1_updated:0`);
+    const running = blockAggregates(1, partial, oneRecord, { draws: 99, settled: settledOf(partial.slice(0, 3)) });
+    expect(running.ended).toBe(false);
+    expect(Object.values(running.comparisons).flatMap(c => Object.values(c)).every(c => c.final === null)).toBe(true);
+    expect(blockAggregates(1, m4, q4, { draws: 99 }).ended).toBe(false);
+    expect(blockAggregates(1, m4, q4, { draws: 99, settled: settledOf(m4) }).ended).toBe(true);
+    const marks = settledOf(m4);
+    expect(() => blockAggregates(1, m4, q4, { draws: 99, settled: [...marks.slice(0, 3), { ...marks[3], worlds: marks[3].worlds.slice(1) }] })).toThrow(/names other worlds than its meta/);
+    expect(() => blockAggregates(1, m4, q4, { draws: 99, settled: [...marks.slice(0, 3), { ...marks[3], gbrain: { release: B, commit: COMMIT } }] })).toThrow(/another gbrain build/);
+    expect(() => blockAggregates(1, m4, q4, { draws: 99, settled: [...marks, marks[3]] })).toThrow(/more than one settled marker/);
+    expect(() => blockAggregates(1, m4.slice(0, 3), q4, { draws: 99, settled: marks })).toThrow(/a week outside the block/);
+    expect(() => blockAggregates(1, m4, q4, { draws: 99, settled: [...marks.slice(0, 3), { ...marks[3], schema: 'other' }] })).toThrow(/is not a gbrain-evals\/weekly-line-settled\/v1 marker/);
+    expect(() => blockAggregates(1, m4, q4, { draws: 99, settled: [...marks.slice(0, 3), { ...marks[3], steps: { cells: 0, rereads: 0, judgments: 0, harness_failures: 0 } }] })).toThrow(/no cells or judgments/);
+  });
+
+  // Value: protects=an open block publishes no simultaneous interval and no wild bootstrap p-value, which are end-of-block readings and would otherwise be an interim test outside the one look; fails_when=an open block file carries either (#611 read-only review blocker 2, aggregates.ts:342-343); why_new=GBEV-3 ruling on #611, 2026-11-23 (R113 integrity); seam=aggregates.ts blockAggregates; no_claim=the look's own z, which the look publishes by design
+  test('before the end, a block file holds no simultaneous interval and no wild bootstrap', () => {
+    const all = (b: typeof open) => Object.values(b.comparisons).flatMap(c => Object.values(c));
+    expect(all(open).every(c => c.simultaneous === null && c.wild === null)).toBe(true);
+    expect(all(done).every(c => c.simultaneous !== null)).toBe(true);
+    expect(all(done).some(c => c.wild !== null)).toBe(true);
+    assertAggregate(open, 'block');
+    assertAggregate(done, 'block');
+  });
+
+  // Value: protects=an ended block-<n>.json is never replaced by an open one, so re-running a block on three of its weeks after the four-week write cannot erase its verdict; fails_when=the writer overwrites an ended file with an open block, or an unreadable existing file (#611 read-only review blocker 3); why_new=GBEV-3 ruling on #611, 2026-11-23 (R113 integrity); seam=aggregates.ts writeBlockFiles and main's block mode; no_claim=replacing one ended file with another ended file, which a corrected recount may need
+  test('an ended block file is never replaced by an open one', () => {
+    const out = mkdtempSync(join(tmp, 'ended-'));
+    const path = writeBlockFiles(out, done);
+    const before = readFileSync(path, 'utf8');
+    expect(() => writeBlockFiles(out, open)).toThrow(/WEEKLY_BLOCK_ENDED/);
+    expect(readFileSync(path, 'utf8')).toBe(before);
+    expect(writeBlockFiles(out, done)).toBe(path);
+    const fresh = mkdtempSync(join(tmp, 'open-'));
+    writeBlockFiles(fresh, open);
+    expect(writeBlockFiles(fresh, done)).toBe(join(fresh, 'block-1.json'));
+    const broken = mkdtempSync(join(tmp, 'broken-'));
+    writeFileSync(join(broken, 'block-1.json'), '{');
+    expect(() => writeBlockFiles(broken, open)).toThrow(/not readable JSON/);
+  });
+
   test('a week refuses a previous block that has not ended', () => {
     expect(() => weekAggregates(metas[0], questions, { previousBlock: open })).toThrow(/previous block has not ended/);
   });
@@ -485,11 +564,12 @@ describe('the end of a block', () => {
   });
 
   test('a block refuses a repeated or non-consecutive week', () => {
-    expect(() => blockAggregates(1, [metas[0], { ...metas[1], week: week(0) }], questions, { draws: 99 })).toThrow(/lists week 2026-12-01 twice/);
+    const at = (m: WeekMeta, w: string): WeekMeta => ({ ...m, week: w, run_id: `wl-${w}-${'a'.repeat(12)}` });
+    expect(() => blockAggregates(1, [metas[0], at(metas[1], week(0))], questions, { draws: 99 })).toThrow(/lists week 2026-12-01 twice/);
     expect(() => blockAggregates(1, [metas[0], metas[2]], questions, { draws: 99 })).toThrow(/consecutive, 7 days apart/);
-    expect(() => blockAggregates(1, [metas[0], { ...metas[1], week: '2026-12-09' }], questions, { draws: 99 })).toThrow(/consecutive/);
-    expect(() => blockAggregates(1, [metas[0], { ...metas[1], week: '2026-13-01' }], questions, { draws: 99 })).toThrow(/is not a date/);
-    expect(() => blockAggregates(1, [{ ...metas[0], week: '2027-02-23' }, { ...metas[1], week: '2027-02-30' }], questions, { draws: 99 })).toThrow(/2027-02-30 is not a date/);
+    expect(() => blockAggregates(1, [metas[0], at(metas[1], '2026-12-09')], questions, { draws: 99 })).toThrow(/consecutive/);
+    expect(() => blockAggregates(1, [metas[0], at(metas[1], '2026-13-01')], questions, { draws: 99 })).toThrow(/is not a date/);
+    expect(() => blockAggregates(1, [at(metas[0], '2027-02-23'), at(metas[1], '2027-02-30')], questions, { draws: 99 })).toThrow(/2027-02-30 is not a date/);
   });
 });
 
@@ -564,17 +644,23 @@ describe('records', () => {
       }
       return root;
     });
+    const runOf = (week: string, ws: readonly string[], release: string, k: number) => {
+      const m = meta(week, ws, release);
+      return runIdentity({ week, world_end: '2026-11-29', batch: 'bgw-1001', week_of_batch: k, spares_from: null, gbrain: m.gbrain, comparators: m.comparators, worlds: m.worlds, cells: WL_ROWS.map(row => `wl-${row}`), rereads: [], no_point: null });
+    };
+    const runs = [runOf('2026-12-01', big.worlds.slice(0, 8), A, 1), runOf('2026-12-08', big.worlds.slice(8), B, 2)];
+    runs.forEach((run, k) => writeFileSync(join(dirs[k], RUN_FILE), JSON.stringify(run)));
     const m1 = join(tmp, 'w1.json'), m2 = join(tmp, 'w2.json');
-    writeFileSync(m1, JSON.stringify(meta('2026-12-01', big.worlds.slice(0, 8), A)));
-    writeFileSync(m2, JSON.stringify(meta('2026-12-08', big.worlds.slice(8), B)));
-    expect(() => main(['week', '--meta', m1, '--records', dirs[0], '--records', dirs[1], '--out', out])).toThrow(/outside the given worlds/);
+    writeFileSync(m1, JSON.stringify({ ...meta('2026-12-01', big.worlds.slice(0, 8), A), run_id: runs[0].run_id }));
+    writeFileSync(m2, JSON.stringify({ ...meta('2026-12-08', big.worlds.slice(8), B), run_id: runs[1].run_id }));
+    expect(() => main(['week', '--meta', m1, '--records', dirs[0], '--records', dirs[1], '--out', out])).toThrow(/not the run of any week passed with --meta/);
     expect(main(['week', '--meta', m1, '--records', dirs[0], '--out', out])).toBe(0);
     expect(main(['week', '--meta', m2, '--records', dirs[1], '--history', join(out, 'week-2026-12-01.json'), '--out', out])).toBe(0);
     expect(main(['block', '--block', '1', '--meta', m1, '--meta', m2, '--records', dirs[0], '--records', dirs[1], '--out', out])).toBe(0);
     expect(() => main(['week', '--meta', m1, '--meta', m2, '--records', dirs[0], '--out', out])).toThrow(/exactly one --meta/);
     expect(() => main(['month', '--meta', m1, '--records', dirs[0], '--out', out])).toThrow(/week or block/);
     expect(() => main(['week', '--meta', m1, '--records', dirs[0]])).toThrow(/--out/);
-    expect(() => main(['week', '--meta', m2, '--records', join(tmp, 'w1.json'), '--out', out])).toThrow(/no cells\/ directory/);
+    expect(() => main(['week', '--meta', m2, '--records', join(tmp, 'w1.json'), '--out', out])).toThrow(/has no run\.json/);
     const badPool = join(tmp, 'pool.json');
     writeFileSync(badPool, JSON.stringify({ 'now|grep-agent': ['Lisbon'] }));
     expect(() => main(['week', '--meta', m2, '--records', dirs[1], '--false-alarm-pool', badPool, '--out', out])).toThrow(/comparison keys to lists/);
@@ -588,5 +674,53 @@ describe('records', () => {
     expect(b.comparisons.now['grep-agent'].early.releases).toEqual([A, B]);
     expect(readFileSync(join(out, 'block-1.md'), 'utf8')).toContain('## Block 1 (weeks 2026-12-01 to 2026-12-08)');
     expect(readFileSync(join(out, 'week-2026-12-08.md'), 'utf8')).toContain(`gbrain ${B} (commit ${COMMIT.slice(0, 12)})`);
+  });
+
+  // Value: protects=the aggregates score exactly one week's run: its run id, week, frozen gbrain build and Set W world ids, and refuse records of any other run or week; fails_when=a record directory of another run or week, a record from a cell outside the run, an edited run identity, a meta naming another build or worlds, or a week whose run passed no records is scored; why_new=weekly-line preregistration "Harness" item 4 and harness PR (d)'s brief; seam=aggregates.ts boundRecords over identity.ts runBindingProblems and recordBindingProblems; no_claim=forged identities with recomputed ids, outside the crew's threat model
+  test("the aggregates score exactly the week's run and refuse records of another run or week", () => {
+    const small = synth(4, {});
+    const recs = recordsOf(small.questions);
+    const cells = WL_ROWS.map(row => `wl-${row}`);
+    const runFor = (week: string, ws: readonly string[], release = A) => {
+      const m = meta(week, ws, release);
+      return { m, run: runIdentity({ week, world_end: '2026-11-29', batch: 'bgw-1001', week_of_batch: 1, spares_from: null, gbrain: m.gbrain, comparators: m.comparators, worlds: m.worlds, cells, rereads: [], no_point: null }) };
+    };
+    const dirFor = (name: string, run: object, ws: readonly string[], answers = recs.answers) => {
+      const root = join(tmp, name);
+      for (const cell of new Set(answers.map(a => a.cell_id))) {
+        const dir = join(root, 'cells', cell);
+        mkdirSync(dir, { recursive: true });
+        const ans = answers.filter(a => a.cell_id === cell && ws.includes(a.conversation)), ids = new Set(ans.map(a => a.answer_id));
+        writeFileSync(join(dir, 'answers.ndjson'), ans.map(a => JSON.stringify(a)).join('\n') + '\n');
+        writeFileSync(join(dir, 'judgments.ndjson'), recs.judgments.filter(j => ids.has(j.answer_id)).map(j => JSON.stringify(j)).join('\n') + '\n');
+      }
+      writeFileSync(join(root, RUN_FILE), JSON.stringify(run));
+      return root;
+    };
+    const ws1 = small.worlds.slice(0, 2), ws2 = small.worlds.slice(2);
+    const w1 = runFor('2026-12-01', ws1), w2 = runFor('2026-12-08', ws2);
+    const d1 = dirFor('bind-w1', w1.run, ws1), d2 = dirFor('bind-w2', w2.run, ws2);
+    const m1 = { ...w1.m, run_id: w1.run.run_id }, m2 = { ...w2.m, run_id: w2.run.run_id };
+    expect(boundRecords([d1], [m1]).answers.length).toBeGreaterThan(0);
+    expect(() => boundRecords([d2], [m1])).toThrow(/not the run of any week passed with --meta/);
+    expect(() => boundRecords([d1, d1], [m1])).toThrow(/passed twice/);
+    expect(() => boundRecords([], [m1])).toThrow(/has no records passed with --records/);
+    expect(() => boundRecords([d1], [{ ...m1, gbrain: { release: B, commit: COMMIT } }])).toThrow(/WEEKLY_RUN_IDENTITY: .*another gbrain build/);
+    expect(() => boundRecords([d1], [{ ...m1, worlds: m1.worlds.slice(1) }])).toThrow(/not week 2026-12-01's Set W worlds/);
+    const edited = dirFor('bind-edited', { ...w1.run, gbrain: { release: B, commit: COMMIT } }, ws1);
+    expect(() => boundRecords([edited], [{ ...m1, gbrain: { release: B, commit: COMMIT } }])).toThrow(/does not match its own contents/);
+    const stray = dirFor('bind-stray', w1.run, ws1, recs.answers.map(a => (a.cell_id === 'wl-gbrain' ? { ...a, cell_id: 'wl-gbrain-other-run', answer_id: answerId('wl-gbrain-other-run', a.question_id, a.reader, 0) } : a)));
+    expect(() => boundRecords([stray], [m1])).toThrow(/1 cell in run .* is not among its cells and re-reads/);
+    const wide = dirFor('bind-wide', w1.run, small.worlds);
+    expect(() => boundRecords([wide], [m1])).toThrow(/on a world outside its week/);
+    const both = boundRecords([d1, d2], [m1, m2]);
+    expect(new Set(both.answers.map(a => a.conversation))).toEqual(new Set(small.worlds));
+    expect(() => weekAggregates({ ...m1, run_id: 'wl-2026-12-08-aaaaaaaaaaaa' }, small.questions)).toThrow(/names no run of that week/);
+    const wk = weekAggregates(m1, small.questions);
+    expect(wk.run_id).toBe(w1.run.run_id);
+    assertAggregate(wk, 'week');
+    expect(blockAggregates(1, [m1, m2], small.questions, { draws: 19 }).weeks.map(w => w.run_id)).toEqual([w1.run.run_id, w2.run.run_id]);
+    const marks = settledOf([m1, m2]);
+    expect(() => blockAggregates(1, [m1, m2], small.questions, { draws: 19, settled: [marks[0], { ...marks[1], run_id: w1.run.run_id }] })).toThrow(/settles run .*, not the week's run/);
   });
 });

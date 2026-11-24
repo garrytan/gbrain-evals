@@ -8,14 +8,25 @@
  * per-block file.
  *
  *   bun eval/runner/weekly-line/aggregates.ts week  --meta <week.json> --records <out dir>... [--history <week aggregates>]...
- *                                                   [--previous-block <block aggregates>] [--false-alarm-pool <pool.json>] --out <dir>
- *   bun eval/runner/weekly-line/aggregates.ts block --block <n> --meta <week.json>... --records <out dir>... [--exposure <exposure.json>] --out <dir>
+ *                                                   [--previous-block <block aggregates>] [--false-alarm-pool <pool.json> --false-alarm-receipt <receipt.json>]
+ *                                                   --out <dir>
+ *   bun eval/runner/weekly-line/aggregates.ts block --block <n> --meta <week.json>... --records <out dir>... [--settled <settled.json>]...
+ *                                                   [--exposure <exposure.json>] --out <dir>
  *
  * A week's meta file (written in custody by the weekly runner) names the week (its Tuesday launch date), the gbrain
  * release and commit, each server's version and the date it was fixed, the week's worlds in slot order with their seed and
  * phrasing ids, each row's metered spend per reader and world (costs), and no_point when the week recorded none. The
  * records are the cells' answers and judgments (records.ts). The week writes week-<date>.json and its scorecard
- * week-<date>.md; the block writes block-<n>.json and its page section block-<n>.md.
+ * week-<date>.md; the block writes block-<n>.json and its page section block-<n>.md. A block ends only when it lists all
+ * four weeks and each carries the runner's settled marker (settled.ts) agreeing with its meta, so a fourth week that is
+ * still running never ends a block.
+ *
+ * Each meta names its weekly run (identity.ts), and the command line scores exactly that run: every --records directory
+ * holds its run's run.json, which must be the run of one of the metas and agree with it on the week, the frozen gbrain
+ * build and the Set W world ids, and every record in it must come from one of that run's cells or re-reads on one of its
+ * worlds (boundRecords). Records of another run or week refuse (WEEKLY_RUN_IDENTITY). Until a block ends its file carries no simultaneous interval and no wild bootstrap,
+ * because both are end-of-block readings and an open block's would be an interim p-value outside the one look (R113).
+ * The block writer never replaces an ended block-<n>.json with an open one (writeBlockFiles).
  *
  * The writer refuses any field that could carry question text, a value, a name or plan content, by an allow-list: every
  * key is fixed (or one of a fixed set, such as the rows, readers, classes and kinds), every number finite, and every
@@ -27,16 +38,19 @@
  * the weekly list, so they leave once per block, per week; the seed and phrasing ids are the set label (W1, ...) or the
  * SHA-256 a rotation amendment publishes; a weekly row mean is over the questions where that row holds both readers'
  * values; the regression flag fires on either side and says which; its false-alarm rate is simulated from BG1-C's
- * per-world differences (recomputed in custody), which a week with a previous block must supply for each server
- * comparison; BG1-C never ran the grep agent, so its comparisons' rate is unavailable until an amendment defines one; a
+ * per-world differences (recomputed in custody), and a server comparison publishes that rate only beside BG1-C's custody
+ * receipt for the pool, whose SHA-256 of the pool must match (falseAlarmPoolProblems); without the receipt, the rate is
+ * unavailable (#611 read-only review blocker 4, GBEV-3 ruling 2026-11-23); BG1-C never ran the grep agent, so its
+ * comparisons' rate is unavailable until an amendment defines one; a
  * z with no finite value (every world the same nonzero difference) is written null beside its crossing.
  *
  * Refused besides the allow-list: a point week's world with no answer records, a cost cell repeated for a row, reader
  * and world, one outside the week's worlds, and a spend that is not a finite number of at least 0.
  */
+import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { BG1_STRATA, type Bg1Stratum } from '../memory-qa/bg1-names.ts';
+import { BG1_STRATA, BG1C_CAMPAIGN, BG1C_DATASET, type Bg1Stratum } from '../memory-qa/bg1-names.ts';
 import { questionsFromRecords, readRecordDirs, type WlQuestion } from './records.ts';
 import {
   analyzeBlock, compare, costPerCorrect, falseAlarmRate, grepStops, regressionFlag, rolling, rowMean, rowWorldMean, weeklySdd,
@@ -47,6 +61,8 @@ import {
   type WlNoPoint, type WlReaderKey, type WlServer,
 } from './design.ts';
 import { renderBlock, renderWeek } from './scorecard.ts';
+import { settledProblems } from './settled.ts';
+import { recordBindingProblems, RUN_FILE, RUN_ID, runBindingProblems, type RunIdentity } from './identity.ts';
 
 export class WeeklyAggregateError extends Error {}
 const refuse = (m: string): never => { throw new WeeklyAggregateError(m); };
@@ -67,6 +83,7 @@ export const ID = {
   release: { t: 'id', re: /^v\d{1,4}(\.\d{1,6}){1,3}$/, what: 'a release tag' },
   commit: { t: 'id', re: /^[0-9a-f]{40}$/, what: 'a 40-hex commit' },
   world: { t: 'id', re: /^bgw-\d{4,5}$/, what: 'a set W world id' },
+  run: { t: 'id', re: RUN_ID, what: 'a weekly run id' },
   set: { t: 'id', re: /^(W[1-9]\d{0,2}|[0-9a-f]{64})$/, what: 'a set label or SHA-256' },
   version: { t: 'id', re: /^v?\d{1,4}(\.\d{1,6}){0,3}([-+.](rc|alpha|beta|post|dev)\.?\d{0,6})?$/, what: 'a version number' },
 } as const satisfies Record<string, Schema>;
@@ -90,6 +107,7 @@ const MAX_WORLDS = WL_WEEK_WORLDS * WL_WEEKS_PER_BLOCK;
 export const WEEK_SCHEMA: Schema = obj({
   schema: en(['gbrain-evals/weekly-line-week/v1']),
   week: ID.date,
+  run_id: ID.run,
   no_point: n(en(WL_NO_POINT)),
   gbrain: n(gbrain),
   comparators: n(comparators),
@@ -119,7 +137,7 @@ const holm = obj({ z: n(num), holm_step: int, bound: num, crossed: bool });
 export const BLOCK_SCHEMA: Schema = obj({
   schema: en(['gbrain-evals/weekly-line-block/v1']),
   block: int, ended: bool,
-  weeks: arr(obj({ week: ID.date, no_point: n(en(WL_NO_POINT)), gbrain: n(gbrain), comparators: n(comparators), worlds: int }), WL_WEEKS_PER_BLOCK),
+  weeks: arr(obj({ week: ID.date, run_id: ID.run, no_point: n(en(WL_NO_POINT)), gbrain: n(gbrain), comparators: n(comparators), worlds: int }), WL_WEEKS_PER_BLOCK),
   counted_worlds: int,
   releases: arr(ID.release, MAX_WORLDS),
   worlds: arr(obj({ world: ID.world, week: ID.date, release: ID.release, seed_id: ID.set, phrasing_id: ID.set }), MAX_WORLDS),
@@ -130,7 +148,7 @@ export const BLOCK_SCHEMA: Schema = obj({
     look: n(obj({ ...((holm as { keys: Record<string, Schema> }).keys), withheld: n(en(['descriptive', 'ceiling', 'split by reader'])), pooled: est })),
     final: n(holm),
     pooled: est, readers: readers(est),
-    simultaneous: obj({ level: num, ci: n(pair) }),
+    simultaneous: n(obj({ level: num, ci: n(pair) })),
     wild: n(obj({ estimate: num, p: num, ci95: pair })),
     mask: obj({ planned: int, kept: int, lost: int, share: num }),
     descriptive: bool, ceiling: bool,
@@ -193,6 +211,8 @@ export function writeAggregate(path: string, x: unknown, kind: AggregateKind): v
 /** A week as the weekly runner describes it in custody. */
 export interface WeekMeta {
   week: string;
+  /** The weekly run this meta describes (identity.ts); its records must carry the same run identity. */
+  run_id: string;
   gbrain: { release: string; commit: string } | null;
   comparators: Record<WlServer, { version: string; fixed: string }> | null;
   worlds: Array<{ world: string; seed_id: string; phrasing_id: string }>;
@@ -208,6 +228,7 @@ const outCost = (c: ReturnType<typeof costPerCorrect>) => outReaders(c, rows => 
 const byClassOther = <T,>(f: (c: typeof WL_COMPARISONS[number]) => T) => Object.fromEntries(WL_CLASS_KEYS.map(cls => [cls, Object.fromEntries(WL_COMPARISONS.filter(c => c.cls === cls).map(c => [c.other, f(c)]))]));
 
 function checkMeta(m: WeekMeta): void {
+  if (typeof m.run_id !== 'string' || !RUN_ID.test(m.run_id) || !m.run_id.startsWith(`wl-${m.week}-`)) refuse(`week ${m.week}'s meta names no run of that week (run_id wl-${m.week}-<12 hex>)`);
   if (!m.no_point) {
     if (!m.worlds.length) refuse(`week ${m.week} has no worlds; record no_point "no worlds"`);
     if (m.worlds.length > WL_WEEK_WORLDS) refuse(`week ${m.week} lists ${m.worlds.length} worlds; a week holds at most ${WL_WEEK_WORLDS}`);
@@ -227,6 +248,28 @@ function checkMeta(m: WeekMeta): void {
 function checkRecords(m: WeekMeta, questions: readonly WlQuestion[]): void {
   const answered = new Set(questions.filter(q => Object.values(q.rows).some(cells => cells && Object.keys(cells).length)).map(q => q.world));
   if (m.worlds.some(w => !answered.has(w.world))) refuse(`week ${m.week} counts a world with no answer records`);
+}
+
+/** The custody receipt that vouches for the false-alarm pool: BG1-C's campaign and dataset, the pool's comparisons and the SHA-256 of the pool. */
+export const FALSE_ALARM_RECEIPT_SCHEMA = 'gbrain-evals/weekly-line-false-alarm-pool-receipt/v1';
+export interface FalseAlarmPoolReceipt { schema: typeof FALSE_ALARM_RECEIPT_SCHEMA; campaign: string; dataset: string; comparisons: string[]; pool_sha256: string }
+type Pool = Readonly<Record<string, readonly number[]>>;
+
+/** The pool's SHA-256 over its comparisons in sorted order, as the custody receipt records it. */
+export function falseAlarmPoolSha256(pool: Pool): string {
+  return createHash('sha256').update(JSON.stringify(Object.keys(pool).sort().map(k => [k, pool[k]]))).digest('hex');
+}
+
+/** Why a receipt does not vouch for the pool; empty when it does. */
+export function falseAlarmPoolProblems(pool: Pool, receipt: unknown): string[] {
+  const r = receipt as Partial<FalseAlarmPoolReceipt> | null;
+  if (!isPlain(r) || r.schema !== FALSE_ALARM_RECEIPT_SCHEMA) return [`the false-alarm receipt is not a ${FALSE_ALARM_RECEIPT_SCHEMA} receipt`];
+  const p: string[] = [];
+  if (r.campaign !== BG1C_CAMPAIGN || r.dataset !== BG1C_DATASET) p.push("the false-alarm receipt does not name BG1-C's campaign and dataset");
+  const keys = Object.keys(pool).sort();
+  if (!Array.isArray(r.comparisons) || [...r.comparisons].sort().join(',') !== keys.join(',')) p.push("the false-alarm receipt lists other comparisons than the pool");
+  if (r.pool_sha256 !== falseAlarmPoolSha256(pool)) p.push("the false-alarm pool's SHA-256 does not match its custody receipt");
+  return p;
 }
 
 const zOut = (z: number | null) => (z === null || !Number.isFinite(z) ? null : r4(z));
@@ -257,9 +300,9 @@ export type BlockAggregates = ReturnType<typeof blockAggregates>;
  * point with intervals and no word; cost per correct answer; the rolling display over this week and the earlier weekly
  * aggregates in `history`; and the regression flag against `previousBlock`'s 95% intervals.
  */
-export function weekAggregates(meta: WeekMeta, questions: readonly WlQuestion[], o: { history?: readonly WeekLike[]; previousBlock?: BlockLike | null; falseAlarmPool?: Readonly<Record<string, readonly number[]>> } = {}) {
+export function weekAggregates(meta: WeekMeta, questions: readonly WlQuestion[], o: { history?: readonly WeekLike[]; previousBlock?: BlockLike | null; falseAlarmPool?: Pool; falseAlarmReceipt?: unknown } = {}) {
   checkMeta(meta);
-  const base = { schema: 'gbrain-evals/weekly-line-week/v1' as const, week: meta.week, no_point: meta.no_point ?? null, gbrain: meta.gbrain, comparators: meta.comparators };
+  const base = { schema: 'gbrain-evals/weekly-line-week/v1' as const, week: meta.week, run_id: meta.run_id, no_point: meta.no_point ?? null, gbrain: meta.gbrain, comparators: meta.comparators };
   if (meta.no_point) return { ...base, worlds: [] as never[], classes: null, cost_per_correct: null, rolling: null, regression: null };
   checkRecords(meta, questions);
   const ids = meta.worlds.map(w => w.world);
@@ -290,11 +333,17 @@ export function weekAggregates(meta: WeekMeta, questions: readonly WlQuestion[],
   const prev = o.previousBlock ?? null;
   if (prev && !prev.ended) refuse('the previous block has not ended, so its interval cannot anchor the regression flag');
   if (Object.keys(o.falseAlarmPool ?? {}).some(k => k.endsWith('|grep-agent'))) refuse('BG1-C never ran the grep agent, so the false-alarm pool holds no grep-agent comparison');
+  if (o.falseAlarmReceipt !== undefined) {
+    if (!o.falseAlarmPool) refuse('a false-alarm receipt was given without its pool');
+    const p = falseAlarmPoolProblems(o.falseAlarmPool!, o.falseAlarmReceipt);
+    if (p.length) refuse(`WEEKLY_FALSE_ALARM_RECEIPT: ${p.join('; ')}`);
+  }
+  const vouched = o.falseAlarmReceipt !== undefined ? o.falseAlarmPool : undefined;
   const regression = prev ? byClassOther(c => {
     const pc = prev.comparisons[c.cls][c.other], sdd = weeklySdd(c.family), point = compared.get(c.key)!.pooled.mean;
     const flag = regressionFlag(point, pc.pooled.ci95, sdd);
-    if (c.other === 'grep-agent') return { point: r4(point), previous_ci95: pc.pooled.ci95, sdd: r4(sdd)!, flagged: flag.flagged, direction: flag.direction, false_alarm_rate: null, false_alarm_source: 'unavailable' as const };
-    const pool = o.falseAlarmPool?.[c.key];
+    if (c.other === 'grep-agent' || !vouched) return { point: r4(point), previous_ci95: pc.pooled.ci95, sdd: r4(sdd)!, flagged: flag.flagged, direction: flag.direction, false_alarm_rate: null, false_alarm_source: 'unavailable' as const };
+    const pool = vouched[c.key];
     if (!pool || pool.length < 2 || !pool.every(Number.isFinite)) return refuse(`the regression flag's false-alarm rate needs at least two of BG1-C's per-world differences for ${c.key}, each a finite number; pass them with --false-alarm-pool`);
     return { point: r4(point), previous_ci95: pc.pooled.ci95, sdd: r4(sdd)!, flagged: flag.flagged, direction: flag.direction, false_alarm_rate: r4(falseAlarmRate(pool, sdd)), false_alarm_source: 'BG1-C pool' as const };
   }) : null;
@@ -305,8 +354,8 @@ export function weekAggregates(meta: WeekMeta, questions: readonly WlQuestion[],
   };
 }
 
-/** A block's per-block file: whether it has ended (all four week entries, weeks with no point included), the words with the look, the release set, both readers' rows, per-kind rows and exposure (null until the block ends, so they leave once per block), the grep agent's stops per week and cost per correct answer. */
-export function blockAggregates(block: number, metas: readonly WeekMeta[], questions: readonly WlQuestion[], o: { exposure?: unknown; draws?: number } = {}) {
+/** A block's per-block file: whether it has ended (all four week entries, weeks with no point included, each settled by a marker in `settled`), the words with the look, the release set, both readers' rows, per-kind rows and exposure (null until the block ends, so they leave once per block), the grep agent's stops per week and cost per correct answer. */
+export function blockAggregates(block: number, metas: readonly WeekMeta[], questions: readonly WlQuestion[], o: { exposure?: unknown; draws?: number; settled?: readonly unknown[] } = {}) {
   if (!Number.isInteger(block) || block < 1) refuse('the block number must be a whole number from 1');
   if (metas.length > WL_WEEKS_PER_BLOCK) refuse(`a block holds at most ${WL_WEEKS_PER_BLOCK} weeks, not ${metas.length}`);
   metas.forEach(checkMeta);
@@ -319,7 +368,18 @@ export function blockAggregates(block: number, metas: readonly WeekMeta[], quest
     if (i && day(w.week) - day(weeks[i - 1].week) !== 7) refuse(`the block's weeks must be consecutive, 7 days apart, not ${weeks[i - 1].week} then ${w.week}`);
   });
   weeks.filter(w => !w.no_point).forEach(w => checkRecords(w, questions));
-  const ended = weeks.length === WL_WEEKS_PER_BLOCK;
+  const markers = o.settled ?? [];
+  const weekOf = (m: unknown) => (typeof m === 'object' && m !== null ? (m as { week?: unknown }).week : undefined);
+  const strays = markers.filter(m => !weeks.some(w => w.week === weekOf(m)));
+  if (strays.length) refuse(`${strays.length} settled marker${strays.length === 1 ? ' names' : 's name'} a week outside the block`);
+  const settled = weeks.filter(w => {
+    const mine = markers.filter(m => weekOf(m) === w.week);
+    if (mine.length > 1) refuse(`week ${w.week} has more than one settled marker`);
+    const p = mine.length ? settledProblems(mine[0], w) : [];
+    if (p.length) refuse(p.join('; '));
+    return mine.length === 1;
+  });
+  const ended = weeks.length === WL_WEEKS_PER_BLOCK && settled.length === WL_WEEKS_PER_BLOCK;
   const counted = weeks.filter(w => !w.no_point).flatMap(w => w.worlds.map(x => ({ world: x.world, week: w.week, release: w.gbrain!.release, commit: w.gbrain!.commit, seed_id: x.seed_id, phrasing_id: x.phrasing_id })));
   if (new Set(counted.map(w => w.world)).size !== counted.length) refuse('a world is counted in two weeks of the block');
   const ids = counted.map(w => w.world);
@@ -327,7 +387,7 @@ export function blockAggregates(block: number, metas: readonly WeekMeta[], quest
   const costs = weeks.flatMap(w => w.costs ?? []);
   return {
     schema: 'gbrain-evals/weekly-line-block/v1' as const, block, ended,
-    weeks: weeks.map(w => ({ week: w.week, no_point: w.no_point ?? null, gbrain: w.gbrain, comparators: w.comparators, worlds: w.no_point ? 0 : w.worlds.length })),
+    weeks: weeks.map(w => ({ week: w.week, run_id: w.run_id, no_point: w.no_point ?? null, gbrain: w.gbrain, comparators: w.comparators, worlds: w.no_point ? 0 : w.worlds.length })),
     counted_worlds: counted.length, releases: r.releases,
     worlds: counted.map(w => ({ world: w.world, week: w.week, release: w.release, seed_id: w.seed_id, phrasing_id: w.phrasing_id })),
     look: r.look ? { worlds: r.look.worlds.length, releases: r.look.releases } : null,
@@ -339,8 +399,8 @@ export function blockAggregates(block: number, metas: readonly WeekMeta[], quest
         look: l ? { z: zOut(l.z), holm_step: l.holm_step, bound: l.bound, crossed: l.crossed, withheld: l.withheld, pooled: outEst(l.pooled) } : null,
         final: ended ? { z: zOut(x.z), holm_step: x.holm_step, bound: x.bound, crossed: x.crossed } : null,
         pooled: outEst(x.pooled), readers: outReaders(x.readers, outEst),
-        simultaneous: { level: x.simultaneous.level, ci: r4p(x.simultaneous.ci) },
-        wild: x.wild ? { estimate: r4(x.wild.estimate)!, p: r4(x.wild.p)!, ci95: r4p(x.wild.ci95)! } : null,
+        simultaneous: ended ? { level: x.simultaneous.level, ci: r4p(x.simultaneous.ci) } : null,
+        wild: ended && x.wild ? { estimate: r4(x.wild.estimate)!, p: r4(x.wild.p)!, ci95: r4p(x.wild.ci95)! } : null,
         mask: { ...x.mask, share: r4(x.mask.share)! }, descriptive: x.descriptive, ceiling: x.ceiling,
         means: { gbrain: r4(x.means.gbrain), other: r4(x.means.other) },
         per_world: x.diffs.map(d => ({ world: d.world, questions: d.n, d: r4(d.d)!, readers: outReaders(d.readers, v => r4(v)!) })),
@@ -358,11 +418,52 @@ export function blockAggregates(block: number, metas: readonly WeekMeta[], quest
   };
 }
 
+/**
+ * Write a block's file and page section. Refuses (WEEKLY_BLOCK_ENDED) to replace a block file that has ended with one
+ * that has not, so re-running a block on three of its weeks after the four-week write never puts an open block over the
+ * ended one; an existing file it cannot read refuses too. Returns the file's path.
+ */
+export function writeBlockFiles(out: string, a: BlockAggregates): string {
+  const json = join(out, `block-${a.block}.json`);
+  if (existsSync(json) && !a.ended) {
+    let earlier: unknown;
+    try { earlier = JSON.parse(readFileSync(json, 'utf8')); } catch { refuse(`WEEKLY_BLOCK_ENDED: ${json} exists and is not readable JSON, so it may hold the ended block; move it aside by hand before writing block ${a.block} again`); }
+    if (!isPlain(earlier) || earlier.ended !== false) refuse(`WEEKLY_BLOCK_ENDED: ${json} holds block ${a.block} after its end, and this write has not ended; an ended block file is never replaced by an open one`);
+  }
+  writeAggregate(json, a, 'block');
+  writeFileSync(join(out, `block-${a.block}.md`), renderBlock(a));
+  return json;
+}
+
 // ─── The command line ────────────────────────────────────────────────
 
 const readJson = (path: string): any => (existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : refuse(`${path} does not exist`));
 const flags = (argv: readonly string[], name: string) => argv.flatMap((a, i) => (a === name ? [argv[i + 1] ?? refuse(`${name} needs a value`)] : []));
 const flag = (argv: readonly string[], name: string) => flags(argv, name).at(-1);
+
+/**
+ * The records of exactly the weeks' runs: each record directory holds its run's run.json, which must be the run one of
+ * the metas names and agree with it on the week, the gbrain build and the worlds, and every answer in it must come from
+ * one of that run's cells or re-reads on one of its worlds. Each week with a point needs its run's records, once.
+ */
+export function boundRecords(dirs: readonly string[], metas: readonly WeekMeta[]): ReturnType<typeof readRecordDirs> {
+  const seen = new Set<string>();
+  const parts = dirs.map(d => {
+    const path = join(d, RUN_FILE);
+    if (!existsSync(path)) refuse(`${d} has no ${RUN_FILE}, so its records cannot be bound to a week's run`);
+    const run = readJson(path) as RunIdentity;
+    const m = metas.find(x => x.run_id === run.run_id) ?? refuse(`${d} holds the records of run ${String(run.run_id)}, which is not the run of any week passed with --meta`);
+    if (seen.has(m.run_id)) refuse(`run ${m.run_id}'s records were passed twice`);
+    seen.add(m.run_id);
+    const recs = readRecordDirs([d]);
+    const p = [...runBindingProblems(run, m), ...recordBindingProblems(run, recs.answers)];
+    if (p.length) refuse(`WEEKLY_RUN_IDENTITY: ${d}: ${p.slice(0, 3).join('; ')}`);
+    return recs;
+  });
+  const missing = metas.filter(m => !m.no_point && !seen.has(m.run_id));
+  if (missing.length) refuse(`week ${missing[0].week}'s run ${missing[0].run_id} has no records passed with --records`);
+  return { answers: parts.flatMap(p => p.answers), judgments: parts.flatMap(p => p.judgments) };
+}
 
 export function main(argv: readonly string[]): number {
   const [mode, ...rest] = argv;
@@ -370,18 +471,19 @@ export function main(argv: readonly string[]): number {
   mkdirSync(out, { recursive: true });
   const metas = flags(rest, '--meta').map(p => readJson(p) as WeekMeta);
   if (!metas.length) refuse('pass --meta <week.json>');
-  const records = readRecordDirs(flags(rest, '--records'));
+  if (mode === 'week' && metas.length !== 1) refuse('week reads exactly one --meta');
+  const records = boundRecords(flags(rest, '--records'), metas);
   const worlds = metas.filter(m => !m.no_point).flatMap(m => m.worlds.map(w => w.world));
   const questions = questionsFromRecords(worlds, records.answers, records.judgments);
   if (mode === 'week') {
-    if (metas.length !== 1) refuse('week reads exactly one --meta');
     const history = flags(rest, '--history').map(p => { const h = readJson(p); assertAggregate(h, 'week', p); return h as WeekLike; });
     const prevPath = flag(rest, '--previous-block');
     const previousBlock = prevPath ? (() => { const b = readJson(prevPath); assertAggregate(b, 'block', prevPath); return b as BlockLike; })() : null;
     const poolPath = flag(rest, '--false-alarm-pool');
     const pool = poolPath ? readJson(poolPath) : undefined;
     if (pool !== undefined && (!isPlain(pool) || Object.entries(pool).some(([k, v]) => !WL_COMPARISONS.some(c => c.key === k) || !Array.isArray(v) || !v.every(x => typeof x === 'number' && Number.isFinite(x))))) refuse(`${poolPath} must map comparison keys to lists of per-world differences`);
-    const a = weekAggregates(metas[0], questions, { history, previousBlock, falseAlarmPool: pool });
+    const receiptPath = flag(rest, '--false-alarm-receipt');
+    const a = weekAggregates(metas[0], questions, { history, previousBlock, falseAlarmPool: pool, falseAlarmReceipt: receiptPath ? readJson(receiptPath) : undefined });
     const json = join(out, `week-${a.week}.json`);
     writeAggregate(json, a, 'week');
     writeFileSync(join(out, `week-${a.week}.md`), renderWeek(a));
@@ -391,11 +493,8 @@ export function main(argv: readonly string[]): number {
   if (mode === 'block') {
     const block = Number(flag(rest, '--block') ?? refuse('pass --block <n>'));
     const expPath = flag(rest, '--exposure');
-    const a = blockAggregates(block, metas, questions, { exposure: expPath ? readJson(expPath) : undefined });
-    const json = join(out, `block-${block}.json`);
-    writeAggregate(json, a, 'block');
-    writeFileSync(join(out, `block-${block}.md`), renderBlock(a));
-    console.log(`wrote ${json} and its page section`);
+    const a = blockAggregates(block, metas, questions, { exposure: expPath ? readJson(expPath) : undefined, settled: flags(rest, '--settled').map(readJson) });
+    console.log(`wrote ${writeBlockFiles(out, a)} and its page section`);
     return 0;
   }
   return refuse('the mode is week or block');
