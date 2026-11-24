@@ -23,8 +23,8 @@ import { BG1C_CAMPAIGN, BG1C_DATASET } from '../../eval/runner/memory-qa/bg1-nam
 import { plannedQuestions, WL_CLASSES, WL_COMPARISONS, WL_OBF_BOUNDS, WL_READER_KEYS, WL_READERS, WL_ROWS, WL_SYSTEMS, type WlClass, type WlReaderKey, type WlRow } from '../../eval/runner/weekly-line/design.ts';
 import { plannedFor, questionsFromRecords, WeeklyRecordsError, type WlQuestion } from '../../eval/runner/weekly-line/records.ts';
 import { renderBlock, renderWeek } from '../../eval/runner/weekly-line/scorecard.ts';
-import { SETTLED_SCHEMA } from '../../eval/runner/weekly-line/settled.ts';
-import { RUN_FILE, runIdentity } from '../../eval/runner/weekly-line/identity.ts';
+import { recordDigests, SETTLED_FILE, SETTLED_SCHEMA } from '../../eval/runner/weekly-line/settled.ts';
+import { RUN_FILE, runIdentity, type RunIdentity } from '../../eval/runner/weekly-line/identity.ts';
 import { analyzeBlock, analyzeLook, compare, costPerCorrect, estimate, falseAlarmRate, grepStops, holmStepDown, regressionFlag, rolling, weeklySdd, type BlockWorld } from '../../eval/runner/weekly-line/stats.ts';
 
 const tmp = mkdtempSync(join(tmpdir(), 'weekly-line-'));
@@ -654,7 +654,11 @@ describe('records', () => {
     const metaObjs = [{ ...meta('2026-12-01', big.worlds.slice(0, 8), A), run_id: runs[0].run_id }, { ...meta('2026-12-08', big.worlds.slice(8), B), run_id: runs[1].run_id }];
     writeFileSync(m1, JSON.stringify(metaObjs[0]));
     writeFileSync(m2, JSON.stringify(metaObjs[1]));
-    settledOf(metaObjs).forEach((s, k) => writeFileSync([s1, s2][k], JSON.stringify(s)));
+    settledOf(metaObjs).forEach((s, k) => {
+      const marker = JSON.stringify({ ...s, records: recordDigests(dirs[k]) });
+      writeFileSync([s1, s2][k], marker);
+      writeFileSync(join(dirs[k], SETTLED_FILE), marker);
+    });
     expect(() => main(['week', '--meta', m1, '--records', dirs[0], '--records', dirs[1], '--out', out])).toThrow(/not the run of any week passed with --meta/);
     expect(main(['week', '--meta', m1, '--records', dirs[0], '--out', out])).toBe(0);
     expect(main(['week', '--meta', m2, '--records', dirs[1], '--history', join(out, 'week-2026-12-01.json'), '--out', out])).toBe(0);
@@ -698,6 +702,9 @@ describe('records', () => {
         writeFileSync(join(dir, 'judgments.ndjson'), recs.judgments.filter(j => ids.has(j.answer_id)).map(j => JSON.stringify(j)).join('\n') + '\n');
       }
       writeFileSync(join(root, RUN_FILE), JSON.stringify(run));
+      const r = run as RunIdentity;
+      writeFileSync(join(root, SETTLED_FILE), JSON.stringify({ schema: SETTLED_SCHEMA, run_id: r.run_id, week: r.week, no_point: null, gbrain: r.gbrain, worlds: r.worlds.map(w => w.world),
+        steps: { cells: 4, rereads: 0, judgments: 4, harness_failures: 0 }, records: recordDigests(root) }));
       return root;
     };
     const ws1 = small.worlds.slice(0, 2), ws2 = small.worlds.slice(2);

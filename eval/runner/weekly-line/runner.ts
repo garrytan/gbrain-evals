@@ -66,7 +66,7 @@ import { WL_READER_KEYS, WL_READERS, WL_ROWS, WL_SERVERS, WL_SYSTEMS, WL_WEEKS_P
 import { RUN_FILE, runIdentity, type GbrainBuild, type RunIdentity, type RunWorld } from './identity.ts';
 import { requireWeeklyLineLaunch, type weeklyLineLaunchProblems } from './launch.ts';
 import { plannedFor, questionsFromRecords, type WlQuestion } from './records.ts';
-import { SETTLED_SCHEMA, type SettledMarker } from './settled.ts';
+import { recordDigests, SETTLED_FILE, SETTLED_SCHEMA, type SettledMarker } from './settled.ts';
 import type { CostCell } from './stats.ts';
 
 export class WeeklyRunnerError extends Error {}
@@ -247,7 +247,7 @@ export const PLAN_FILE = 'plan.json';
 export const PROGRESS_FILE = 'progress.ndjson';
 export const LAUNCH_FILE = 'launch.json';
 export const META_FILE = 'meta.json';
-export const SETTLED_FILE = 'settled.json';
+export { SETTLED_FILE };
 export const CELLS_FILE = 'cells.json';
 
 const readJson = (path: string): any => (existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : refuse('WEEKLY_RUN', `${path} does not exist`));
@@ -387,7 +387,8 @@ export function settleWeek(dir: string, o: { costs?: CostCell[]; gbrainFailed?: 
   const meta: WeekMeta = { week: run.week, run_id: run.run_id, gbrain: run.gbrain, comparators: run.comparators, worlds, costs: no_point ? [] : o.costs ?? [], no_point };
   const count = (stage: Stage) => work.filter(s => s.stage === stage && progress.has(s.id)).length;
   const marker: SettledMarker = { schema: SETTLED_SCHEMA, run_id: run.run_id, week: run.week, no_point, gbrain: run.gbrain, worlds: worlds.map(w => w.world),
-    steps: { cells: count('launch'), rereads: count('reread'), judgments: count('judge'), harness_failures: work.filter(s => progress.get(s.id) === 'harness_failure').length } };
+    steps: { cells: count('launch'), rereads: count('reread'), judgments: count('judge'), harness_failures: work.filter(s => progress.get(s.id) === 'harness_failure').length },
+    records: recordDigests(dir) };
   writeJson(join(dir, META_FILE), meta);
   writeJson(join(dir, SETTLED_FILE), marker);
   return marker;
@@ -420,7 +421,7 @@ export function blockWriterProblems(w: BlockWriter): string[] {
   const metas: WeekMeta[] = weeks.map((week, i) => ({ week, run_id: `wl-${week}-${'0'.repeat(12)}`, gbrain: i ? null : gbrain, comparators: i ? null : comparators,
     worlds: i ? [] : worlds.map(world => ({ world, seed_id: 'W1', phrasing_id: 'W1' })), no_point: i ? 'no worlds' : null }));
   const settled = metas.map((m, i): SettledMarker => ({ schema: SETTLED_SCHEMA, run_id: m.run_id, week: m.week, no_point: m.no_point ?? null, gbrain: m.gbrain, worlds: m.worlds.map(x => x.world),
-    steps: i ? { cells: 0, rereads: 0, judgments: 0, harness_failures: 0 } : { cells: 5, rereads: 3, judgments: 8, harness_failures: 0 } }));
+    steps: i ? { cells: 0, rereads: 0, judgments: 0, harness_failures: 0 } : { cells: 5, rereads: 3, judgments: 8, harness_failures: 0 }, records: [] }));
   const p: string[] = [];
   const dir = mkdtempSync(join(tmpdir(), 'weekly-line-guard-'));
   try {

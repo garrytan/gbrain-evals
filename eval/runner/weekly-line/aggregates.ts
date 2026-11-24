@@ -62,7 +62,7 @@ import {
   type WlNoPoint, type WlReaderKey, type WlServer,
 } from './design.ts';
 import { renderBlock, renderWeek } from './scorecard.ts';
-import { settledProblems } from './settled.ts';
+import { recordDigestProblems, SETTLED_FILE, settledProblems } from './settled.ts';
 import { recordBindingProblems, RUN_FILE, RUN_ID, runBindingProblems, type RunIdentity } from './identity.ts';
 
 export class WeeklyAggregateError extends Error {}
@@ -445,7 +445,9 @@ const flag = (argv: readonly string[], name: string) => flags(argv, name).at(-1)
 /**
  * The records of exactly the weeks' runs: each record directory holds its run's run.json, which must be the run one of
  * the metas names and agree with it on the week, the gbrain build and the worlds, and every answer in it must come from
- * one of that run's cells or re-reads on one of its worlds. Each week with a point needs its run's records, once.
+ * one of that run's cells or re-reads on one of its worlds. It must also hold the runner's settled.json for that week,
+ * and its answer and judgment files must be exactly the ones that marker digested (WEEKLY_SETTLED_RECORDS). Each week
+ * with a point needs its run's records, once.
  */
 export function boundRecords(dirs: readonly string[], metas: readonly WeekMeta[]): ReturnType<typeof readRecordDirs> {
   const seen = new Set<string>();
@@ -459,6 +461,11 @@ export function boundRecords(dirs: readonly string[], metas: readonly WeekMeta[]
     const recs = readRecordDirs([d]);
     const p = [...runBindingProblems(run, m), ...recordBindingProblems(run, recs.answers)];
     if (p.length) refuse(`WEEKLY_RUN_IDENTITY: ${d}: ${p.slice(0, 3).join('; ')}`);
+    const settledPath = join(d, SETTLED_FILE);
+    if (!existsSync(settledPath)) refuse(`WEEKLY_NOT_SETTLED: ${d} has no ${SETTLED_FILE}, so its records were never settled`);
+    const marker = readJson(settledPath);
+    const s = [...settledProblems(marker, m), ...recordDigestProblems(marker, d)];
+    if (s.length) refuse(`WEEKLY_SETTLED_RECORDS: ${d}: ${s.slice(0, 3).join('; ')}`);
     return recs;
   });
   const missing = metas.filter(m => !m.no_point && !seen.has(m.run_id));

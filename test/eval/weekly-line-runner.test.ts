@@ -392,6 +392,35 @@ describe('a run end to end', () => {
     expect(readFileSync(path, 'utf8')).toBe(ended);
   }, 60_000);
 
+  // Value: protects=settle records the SHA-256 of every answer and judgment file it settles, and the aggregates refuse a run whose record files changed, appeared or went missing since; fails_when=a judgment rewritten, a cell's files added or removed after settle is scored by the week or block aggregates; why_new=GBEV-3 ruling on #616, finding 2 (runner.ts:325); seam=runner.ts settleWeek over settled.ts recordDigests, read by aggregates.ts boundRecords; no_claim=deliberate forgery that rewrites settled.json too, outside the crew's threat model
+  test('settle digests the record files, and the aggregates refuse any that changed after it', () => {
+    const dir = join(root, 'digests'), out = join(root, 'digests-out');
+    planWeek({ dir, launch: '2026-12-08', batch: batch(short) }, deps('2026-12-08'));
+    writeRecords(dir, ids(8));
+    const marker = settleAll(dir);
+    expect(marker.records.map(r => r.file)).toEqual(Object.values(CELL_OF).flatMap(c => Object.values(c)).sort().flatMap(c => [`cells/${c}/answers.ndjson`, `cells/${c}/judgments.ndjson`]));
+    expect(marker.records.every(r => /^[0-9a-f]{64}$/.test(r.sha256))).toBe(true);
+    const week = () => aggregatesMain(['week', '--meta', join(dir, 'meta.json'), '--records', dir, '--out', out]);
+    expect(week()).toBe(0);
+    const judgments = join(dir, 'cells', 'g8-opus', 'judgments.ndjson'), kept = readFileSync(judgments, 'utf8');
+    writeFileSync(judgments, kept.replace('"score":0', '"score":1'));
+    expect(week).toThrow(/^WEEKLY_SETTLED_RECORDS: .*1 record file changed since the week settled \(first cells\/g8-opus\/judgments\.ndjson\)/);
+    writeFileSync(judgments, kept);
+    expect(week()).toBe(0);
+    const extra = join(dir, 'cells', 'g8-opus-old');
+    mkdirSync(extra, { recursive: true });
+    writeFileSync(join(extra, 'answers.ndjson'), '');
+    expect(week).toThrow(/^WEEKLY_SETTLED_RECORDS: .*appeared since the week settled \(first cells\/g8-opus-old\/answers\.ndjson\)/);
+    rmSync(extra, { recursive: true });
+    rmSync(join(dir, 'cells', 'mb-p1', 'judgments.ndjson'));
+    expect(week).toThrow(/^WEEKLY_SETTLED_RECORDS: .*is missing \(first cells\/mb-p1\/judgments\.ndjson\)/);
+    const unsettled = join(root, 'digests-unsettled');
+    planWeek({ dir: unsettled, launch: '2026-12-08', batch: batch(short) }, deps('2026-12-08'));
+    writeRecords(unsettled, ids(8));
+    writeFileSync(join(unsettled, 'meta.json'), readFileSync(join(dir, 'meta.json')));
+    expect(() => aggregatesMain(['week', '--meta', join(unsettled, 'meta.json'), '--records', unsettled, '--out', out])).toThrow(/^WEEKLY_NOT_SETTLED: .*has no settled\.json/);
+  });
+
   // Value: protects=the standalone aggregates block command reads settled weeks only, refusing any week passed without its settled marker before it computes the look, as the runner's block does; fails_when=aggregates.ts block computes a block, its look or its file from a week with no settled marker; why_new=GBEV-3 ruling on #616, finding 1 (aggregates.ts:383); seam=aggregates.ts main block; no_claim=the marker's agreement with its meta (blockAggregates, weekly-line.test.ts)
   test('the aggregates block command refuses a week without its settled marker before computing anything', () => {
     const out = join(root, 'standalone');
