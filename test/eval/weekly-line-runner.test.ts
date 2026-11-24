@@ -392,6 +392,18 @@ describe('a run end to end', () => {
     expect(readFileSync(path, 'utf8')).toBe(ended);
   }, 60_000);
 
+  // Value: protects=the standalone aggregates block command reads settled weeks only, refusing any week passed without its settled marker before it computes the look, as the runner's block does; fails_when=aggregates.ts block computes a block, its look or its file from a week with no settled marker; why_new=GBEV-3 ruling on #616, finding 1 (aggregates.ts:383); seam=aggregates.ts main block; no_claim=the marker's agreement with its meta (blockAggregates, weekly-line.test.ts)
+  test('the aggregates block command refuses a week without its settled marker before computing anything', () => {
+    const out = join(root, 'standalone');
+    const metas = dirs.flatMap(d => ['--meta', join(d, 'meta.json')]);
+    const marks = dirs.map(d => join(d, 'settled.json'));
+    expect(() => aggregatesMain(['block', '--block', '1', ...metas, '--records', dirs[0], ...marks.slice(0, 3).flatMap(s => ['--settled', s]), '--out', out])).toThrow(/^WEEKLY_NOT_SETTLED: .*week 2026-12-29 has no settled marker/);
+    expect(() => aggregatesMain(['block', '--block', '1', ...metas, '--records', dirs[0], '--out', out])).toThrow(/^WEEKLY_NOT_SETTLED: .*week 2026-12-08 \(and 3 more\) has no settled marker/);
+    expect(existsSync(join(out, 'block-1.json'))).toBe(false);
+    expect(aggregatesMain(['block', '--block', '1', ...metas, '--records', dirs[0], ...marks.flatMap(s => ['--settled', s]), '--out', out])).toBe(0);
+    expect(JSON.parse(readFileSync(join(out, 'block-1.json'), 'utf8')).ended).toBe(true);
+  });
+
   test('the runner refuses to write a counted block file through a block writer without fixes 2 and 3', () => {
     expect(blockWriterProblems(BLOCK_WRITER)).toEqual([]);
     const leaky = { ...BLOCK_WRITER, build: ((...args: Parameters<typeof BLOCK_WRITER.build>) => {

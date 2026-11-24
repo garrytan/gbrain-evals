@@ -17,9 +17,10 @@
  * release and commit, each server's version and the date it was fixed, the week's worlds in slot order with their seed and
  * phrasing ids, each row's metered spend per reader and world (costs), and no_point when the week recorded none. The
  * records are the cells' answers and judgments (records.ts). The week writes week-<date>.json and its scorecard
- * week-<date>.md; the block writes block-<n>.json and its page section block-<n>.md. A block ends only when it lists all
- * four weeks and each carries the runner's settled marker (settled.ts) agreeing with its meta, so a fourth week that is
- * still running never ends a block.
+ * week-<date>.md; the block writes block-<n>.json and its page section block-<n>.md. The block command reads settled weeks
+ * only: it refuses (WEEKLY_NOT_SETTLED) any week passed without the runner's settled marker before it computes anything,
+ * so a week still running never reaches the look, as the runner's own block refuses. A block ends only when it lists all
+ * four weeks and each carries a settled marker (settled.ts) agreeing with its meta.
  *
  * Each meta names its weekly run (identity.ts), and the command line scores exactly that run: every --records directory
  * holds its run's run.json, which must be the run of one of the metas and agree with it on the week, the frozen gbrain
@@ -472,6 +473,9 @@ export function main(argv: readonly string[]): number {
   const metas = flags(rest, '--meta').map(p => readJson(p) as WeekMeta);
   if (!metas.length) refuse('pass --meta <week.json>');
   if (mode === 'week' && metas.length !== 1) refuse('week reads exactly one --meta');
+  const settled = mode === 'block' ? flags(rest, '--settled').map(readJson) : [];
+  const unsettled = mode === 'block' ? metas.filter(m => !settled.some(s => isPlain(s) && s.week === m.week)) : [];
+  if (unsettled.length) refuse(`WEEKLY_NOT_SETTLED: a block reads settled weeks only, and week ${unsettled[0].week}${unsettled.length > 1 ? ` (and ${unsettled.length - 1} more)` : ''} has no settled marker passed with --settled`);
   const records = boundRecords(flags(rest, '--records'), metas);
   const worlds = metas.filter(m => !m.no_point).flatMap(m => m.worlds.map(w => w.world));
   const questions = questionsFromRecords(worlds, records.answers, records.judgments);
@@ -493,7 +497,7 @@ export function main(argv: readonly string[]): number {
   if (mode === 'block') {
     const block = Number(flag(rest, '--block') ?? refuse('pass --block <n>'));
     const expPath = flag(rest, '--exposure');
-    const a = blockAggregates(block, metas, questions, { exposure: expPath ? readJson(expPath) : undefined, settled: flags(rest, '--settled').map(readJson) });
+    const a = blockAggregates(block, metas, questions, { exposure: expPath ? readJson(expPath) : undefined, settled });
     console.log(`wrote ${writeBlockFiles(out, a)} and its page section`);
     return 0;
   }
