@@ -10,7 +10,7 @@ import { join } from 'node:path';
 import { BudgetRun, closeLedgers } from '../../eval/runner/budget-ledger.ts';
 import { MeteringProxy, ProxyControl, searchTexts, type UsageLine } from '../../eval/runner/metering-proxy.ts';
 import { costSpeed, usagePhase } from '../../eval/runner/cost-speed.ts';
-import { awaitIdle, finishDrained, probeRecord, probeSummary, unlabelledSearchRoutes, windowVoid, type ProbeRecord } from '../../eval/runner/cost-speed-probes.ts';
+import { awaitIdle, finishDrained, probePassage, probeRecord, probeSummary, unlabelledSearchRoutes, windowVoid, type ProbeRecord } from '../../eval/runner/cost-speed-probes.ts';
 
 const tmp = mkdtempSync(join(tmpdir(), 'cost-speed-probes-'));
 afterAll(() => { closeLedgers(); rmSync(tmp, { recursive: true, force: true }); });
@@ -69,6 +69,14 @@ describe('probe attribution in the lease proxy', () => {
     ];
     expect(unlabelledSearchRoutes(lines)).toEqual(['anthropic/v1/messages']);
     expect(unlabelledSearchRoutes(lines.slice(0, 2))).toEqual([]);
+  });
+
+  test('a probe passage is never a whole turn', () => {
+    const long = 'word '.repeat(100);
+    expect(probePassage([{ content: 'hi' }, { content: long }])).toBe(long.slice(0, 300));
+    expect(probePassage([{ content: 'the desk is by the window now' }, { content: 'ok' }])).toBe('the desk is by the window');
+    expect(probePassage([{ content: 'ok' }])).toBeNull();
+    for (const turns of [[{ content: 'the desk is by the window now' }], [{ content: long }]]) expect(turns.map(t => t.content)).not.toContain(probePassage(turns));
   });
 
   test('search texts come from embedding inputs and rerank queries only', () => {

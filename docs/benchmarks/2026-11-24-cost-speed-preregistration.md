@@ -399,11 +399,13 @@ and the text above differ, this amendment wins.
    is labelled `probe`, so a batched write embedding that happens to hold the passage keeps its own phase; every
    other request keeps its write, background or idle phase. Each request is still logged and charged once, so the
    phases sum to the bill; a keyless test in `test/eval/cost-speed-probes.test.ts` overlaps a write and a probe on
-   one slot and checks both. The harness takes the passage as a strict part of its turn, never a whole turn, so a
+   one slot and checks both. The passage is the first 300 characters of the session's longest turn, or, when that turn
+   is 300 characters or shorter, the turn without its last word (`probePassage`), so it is never a whole turn and a
    system that embeds turn by turn never sends it as a write. A search that also calls a language model (query
    expansion, for one) would carry the passage inside a prompt that this label doesn't read, so the pilot checks the
    label: before its probes, each system answers 10 calibration searches while drained and idle, and any provider
-   request in that window not labelled `probe` names a route the label misses (`unlabelledSearchRoutes` in
+   request in that window, which closes only once the idle check after the last search passes, so work a read sets off
+   later is inside it, not labelled `probe` names a route the label misses (`unlabelledSearchRoutes` in
    `eval/runner/cost-speed-probes.ts`). Such a system fails its pilot until its read's provider calls go through a
    slot of their own. gbrain v0.60.769.0's read made only Voyage embedding and rerank calls in the keyless check, but
    the pilot checks it like every other system.
@@ -418,7 +420,8 @@ and the text above differ, this amendment wins.
    pilot up to 20 × 20 minutes. The pilot's machine-hours check counts this allowance.
 3. **Errored polls are not misses.** A probe is found at its first poll within the horizon that returns the session,
    missed when its polls reached the horizon, every one returned and none found the session in time, and errored
-   otherwise: a poll errored, or polling stopped before the horizon. Errored probes are reported per system but stay out of p50, p95 and the miss share in decision 3. A world
+   otherwise: a poll errored, or polling stopped before the horizon. A poll's time is when it returned, and polling
+   continues until a poll returns at or after the horizon, so a true miss always reaches it. Errored probes are reported per system but stay out of p50, p95 and the miss share in decision 3. A world
    whose probes are more than a tenth errored or not idle is void: none of its probes count, and it is reported.
    The pilot's 20 probes must be found or missed, with none errored. The probe-record, void-window and idle rules are
    in `eval/runner/cost-speed-probes.ts`; the cells that use them are built on the results branch before the pilot.

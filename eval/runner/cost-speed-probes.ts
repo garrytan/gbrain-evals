@@ -30,7 +30,11 @@ export interface ProbeRecord {
   started_idle: boolean;
 }
 
-/** A find after the horizon is a miss; a probe that never found the session and either errored or stopped polling before the horizon is errored. */
+/**
+ * A find after the horizon is a miss; a probe that never found the session and either errored or stopped polling before
+ * the horizon is errored. `at_ms` is when a poll returned, measured from the write's start, and the caller keeps
+ * polling until a poll returns at or after the horizon, so a true miss always reaches it.
+ */
 export function probeRecord(sourceId: string, polls: Poll[], startedIdle: boolean, horizonMs: number): ProbeRecord {
   const hit = polls.find(p => 'found' in p && p.found && p.at_ms <= horizonMs);
   const errored = polls.filter(p => 'error' in p).length;
@@ -110,4 +114,16 @@ export async function awaitIdle(c: IdleCheck): Promise<{ idle: boolean; waited_m
  */
 export function unlabelledSearchRoutes(windowLines: Array<{ phase?: string | null; provider: string; route: string; outcome?: string }>): string[] {
   return [...new Set(windowLines.filter(l => l.outcome !== 'refused' && l.phase !== 'probe').map(l => `${l.provider}${l.route}`))].sort();
+}
+
+/**
+ * A probe's search passage: the first 300 characters of the session's longest turn, or, when that turn is 300
+ * characters or shorter, the turn without its last word, so the passage is never a whole turn and a system that embeds
+ * turn by turn never sends it as a write. Null when the longest turn has a single word.
+ */
+export function probePassage(turns: Array<{ content: string }>): string | null {
+  const longest = turns.reduce<string>((best, t) => t.content.length > best.length ? t.content : best, '');
+  if (longest.length > 300) return longest.slice(0, 300);
+  const cut = longest.trimEnd().lastIndexOf(' ');
+  return cut > 0 ? longest.slice(0, cut) : null;
 }
