@@ -12,7 +12,7 @@ import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSy
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { BG1_CUSTODY_MARKER, BG1_DATA_DIR, BG1_DEV_SEEDS, BG1_PROFILES, checkPlan, devFiles, devWorldPlan, PUBLIC_PHRASING } from '../../eval/generators/changing-facts-gen.ts';
-import { BG1_DEV_CONVERSATIONS, BG1_DEV_EXTRA_CONVERSATIONS, BG1_DEV_LONG_CONVERSATIONS } from '../../eval/runner/memory-qa/bg1-names.ts';
+import { BG1_DEV_CONVERSATIONS, BG1_DEV_EXTRA_CONVERSATIONS, BG1_DEV_LONG_CONVERSATIONS, bgwWorldId } from '../../eval/runner/memory-qa/bg1-names.ts';
 import { BG1_FIXTURES_ROOT, loadBg1Dev } from '../../eval/runner/memory-qa/corpus.ts';
 import { bg1LaunchProblems } from '../../eval/runner/bg1/launch.ts';
 import { finishTimeoutFor, loadWeeklyPilotManifest, windowedRunGuard } from '../../eval/runner/q1/cell.ts';
@@ -149,7 +149,8 @@ describe('the long public dev worlds', () => {
 });
 
 describe('the long pilot and judge check', () => {
-  const longWeek = generateWeeklyLineCells({ week: { launch: '2026-12-15', world_end: '2026-12-13', batch: 'bgw-2001' }, worlds: ['bgw-2001', 'bgw-2002'], gbrain: GBRAIN });
+  const [w1, w2] = [2001, 2002].map(bgwWorldId);
+  const longWeek = generateWeeklyLineCells({ week: { launch: '2026-12-15', world_end: '2026-12-13', batch: w1 }, worlds: [w1, w2], gbrain: GBRAIN });
   const pilot = generateWeeklyLinePilotCells(GBRAIN, 'BGW-long', 'long');
   const judge = generateWeeklyLineJudgeCheckCells('long');
   const manifest = buildWeeklyPilotManifest(GBRAIN, 'BGW-long', 'long');
