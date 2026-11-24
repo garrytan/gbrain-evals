@@ -8,7 +8,7 @@
 import { afterAll, describe, expect, test } from 'bun:test';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { chmodSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import {
@@ -166,14 +166,18 @@ describe('Set W\'s W1-long seed set', () => {
     expect(bgwCommittedProblems(2057)).not.toEqual([]);
   });
 
-  // Value: protects=mint.sh, validate.ts and fill-manifest.ts accept the long set with every custody guard of W1, and a real fill pins a long batch only at its own length; fails_when=the long batch mints into another batch's --out, plans at the wrong version, or a real fill pins it at another length; why_new=GBEV-3's brief (mint.sh, render.ts and the loader accept the set; no guard weakened); seam=mint.sh --bgw --batch 2001 --fake, validate.ts --bgw, fill-manifest.ts --bgw; no_claim=a paid render or the Gemini checks
+  // Value: protects=mint.sh, validate.ts and fill-manifest.ts accept the long set with every custody guard of W1, a long batch's mint pauses after its first five slots until its supply is measured or acknowledged, and a real fill pins a long batch only at its own length; fails_when=the long batch mints into another batch's --out, plans at the wrong version, mints its sixth slot with no supply limit recorded, or a real fill pins it at another length; why_new=GBEV-3's brief (mint.sh, render.ts and the loader accept the set; no guard weakened); seam=mint.sh --bgw --batch 2001 --fake, validate.ts --bgw, fill-manifest.ts --bgw; no_claim=a paid render or the Gemini checks
   test('a --fake long batch mints under the same guards, and a real fill refuses another length', () => {
     const j = inputs('w1-long');
     const out = join(j.dir, 'bgw-custody-long');
-    const m = mint(out, j, [...LONG, ...LENGTH, '--fake', '--count', '8']);
-    expect(m.code).toBe(0);
-    expect(m.out.startsWith('bgw-batch batch=bgw-2001 set=W1-long slots=2001-2056 previous=none status=pass\n')).toBe(true);
-    expect(m.out).toMatch(/bg1-render slot=2001 world=bgw-2001 status=written /);
+    const paused = mint(out, j, [...LONG, ...LENGTH, '--fake', '--count', '8']);
+    expect(paused.code).toBe(3);
+    expect(paused.out).toMatch(/\nbg1-supply slots=2001-2005 gemini_requests=\d+ kept=5 per_kept_world=[\d.]+ limit=none status=unmeasured\nbg1-mint summary=paused reason=supply /);
+    expect(existsSync(join(out, 'set/worlds/bgw-2006'))).toBe(false);
+    const m = mint(out, j, [...LONG, ...LENGTH, '--fake', '--start', '2006', '--count', '3', '--supply-ack', 'a-0123456789ab']);
+    expect([m.code, m.out.includes('bg1-mint supply=acked ack=a-0123456789ab\n')]).toEqual([0, true]);
+    expect(paused.out.startsWith('bgw-batch batch=bgw-2001 set=W1-long slots=2001-2056 previous=none status=pass\n')).toBe(true);
+    expect(paused.out).toMatch(/bg1-render slot=2001 world=bgw-2001 status=written /);
     expect(readFileSync(join(out, 'batch.json'), 'utf8')).toBe('{"set":"W1-long","batch":"bgw-2001"}\n');
     const plan = JSON.parse(readFileSync(join(out, 'set/worlds/bgw-2001/plan.json'), 'utf8')) as WorldPlan;
     expect([plan.generator, plan.sessions.length >= 700]).toEqual(['changing-facts-gen@2', true]);
