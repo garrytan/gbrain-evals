@@ -123,11 +123,13 @@ describe('pinned-questions paid arm: rule labels and judge parsing', () => {
     expect(ruleLabels(c, 'first', say(c, c.before)).city).toBe('correct');
   });
 
-  test('a removed CEO is correct when not named and stale when still named', () => {
+  test('a removed CEO is correct when not named, stale when still named, and ambiguous when another CEO is named', () => {
     const c = of('remove_source_page');
     expect(c.after.ceo).toBeNull();
     expect(ruleLabels(c, 'refreshed', say(c, c.after)).ceo).toBe('correct');
     expect(ruleLabels(c, 'refreshed', say(c, c.before)).ceo).toBe('stale');
+    expect(ruleLabels(c, 'refreshed', [...say(c, c.after), claimSentence(c, 'ceo', 'Someone Else')]).ceo).toBe('ambiguous');
+    expect(ruleLabels(c, 'refreshed', [...say(c, c.after), `${c.name} is now led by Someone Else.`]).ceo).toBe('ambiguous');
     expect(judgeUserMessage(c, 'refreshed', [])).toContain(`- ceo: current (none: removed); previous (no longer true) ${JSON.stringify(c.before.ceo)}`);
   });
 

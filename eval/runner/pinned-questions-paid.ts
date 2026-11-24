@@ -162,12 +162,24 @@ export function judgeUserMessage(c: PqCompany, kind: 'first' | 'refreshed', sent
  * absent is stale, neither is missing, both is ambiguous. A removed claim is
  * correct when the previous value is absent.
  */
+/**
+ * Words that show an answer still states a claim. When a claim was removed and the answer has these words without the
+ * old value, it may assert a different, wrong value, which token presence cannot tell from a correct non-answer, so the
+ * rule label is ambiguous and the answer is left out of the judge check.
+ */
+const ASSERTS: Record<Claim, RegExp> = {
+  city: /\b(builds|built|based|headquartered|located|manufactur\w*)\b/i,
+  flagship: /\bflagship\b/i,
+  ceo: /chief executive|\bceo\b|\bled by\b|\bheaded by\b/i,
+  founded: /\b(founded|established)\b/i,
+};
+
 export function ruleLabels(c: PqCompany, kind: 'first' | 'refreshed', sentences: readonly string[]): Record<Claim, RuleLabel> {
   const text = sentences.join(' ');
   const key = keyFor(c, kind);
   return Object.fromEntries(CLAIMS.map(claim => {
     const { now, was } = key[claim];
-    if (now === null) return [claim, wordIn(c.before[claim], text) ? 'stale' : 'correct'];
+    if (now === null) return [claim, wordIn(c.before[claim], text) ? 'stale' : ASSERTS[claim].test(text) ? 'ambiguous' : 'correct'];
     const n = wordIn(now, text);
     if (was === null) return [claim, n ? 'correct' : 'missing'];
     const o = wordIn(was, text);
