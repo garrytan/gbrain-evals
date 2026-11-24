@@ -415,6 +415,10 @@ and the text above differ, this amendment wins.
 4. **The pilot and capacity worlds stay out of the counted pool.** If the smallest-difference check raises the world
    count, it draws only from the 18 dev worlds other than `bg1-dev-11` and `bg1-dev-12`. If 18 worlds can't resolve
    the stated difference, the results say so and report the interval they reach instead of adding those two.
+5. **No interim look.** The counted run is planned within the registry's `under-500` tier (R113), so it takes no
+   interim look and runs every counted world in one pass. If the cap set before the counted run falls above that tier,
+   a dated amendment before the first counted cell preregisters instead one look at half the worlds, with its stop
+   bounds, and the registry entry's tier and `interim_look` change with it.
 
 ## Disclosures
 
