@@ -204,11 +204,13 @@ export interface CallRecord { status: string; mode: 'full' | 'incremental' | nul
  */
 export type Outcome = 'published' | 'answer_too_long' | 'safety_stop' | 'provider_error' | 'not_published';
 const TRANSIENT = /^refresh_failed:(rate_limited|timeout|network|provider_error)$/;
-const SAFETY = /safety|content[ _-]?filter|content[ _-]?policy|usage polic|refus|flagged/i;
+const NO_ANSWER_REACHED = /^refresh_failed:(rate_limited|timeout|network)$/;
+const SAFETY = /safety|content[ _-]?filter|content[ _-]?policy|usage polic|\brefusal\b|\brefused to\b|flagged/i;
 
 export function outcomeOf(c: Pick<CallRecord, 'status' | 'error' | 'failure_message'>): Outcome {
   if (c.status === 'published') return 'published';
   if (c.error?.includes('answer_too_long')) return 'answer_too_long';
+  if (c.error && NO_ANSWER_REACHED.test(c.error)) return 'provider_error';
   if (c.failure_message && SAFETY.test(c.failure_message)) return 'safety_stop';
   if (c.status === 'timeout' || (c.error !== null && TRANSIENT.test(c.error))) return 'provider_error';
   return 'not_published';

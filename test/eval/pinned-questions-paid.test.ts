@@ -12,7 +12,7 @@ import { writeReceipt } from '../../eval/runner/receipt.ts';
 import {
   JUDGE_MIN_LABELS, PINNED_QUESTIONS_JUDGE_PROMPT, PINNED_QUESTIONS_MODELS_UNDER_TEST, STAGE_SEEDS, TRUNCATION_BAR, buildReceipt, canonicalModel, cohenKappa,
   familyOf, judgeAgreement, judgeCheckPasses, judgeFor, judgeUserMessage, modelRoles, parseJudgeLabels, requirePaidFlags, ruleLabels,
-  redactProviderText, runPinnedQuestionsPaid, summarizePaid,
+  outcomeOf, redactProviderText, runPinnedQuestionsPaid, summarizePaid,
   type ChatTransport, type GradedAnswer, type PaidRow, type PaidRunResult,
 } from '../../eval/runner/pinned-questions-paid.ts';
 
@@ -429,6 +429,14 @@ describe('pinned-questions paid arm: provider errors, safety stops and budget re
     expect(red).toStartWith('refused for [redacted];');
     expect(redactProviderText('no secrets here: 503 upstream', {})).toBe('no secrets here: 503 upstream');
   });
+
+  test('a refused connection is a provider error, not a safety stop', async () => {
+    const out = dir();
+    const r = await run(out, (slug, n) => (slug === b && n === 2 ? new Error('connect ECONNREFUSED 127.0.0.1:443') : null));
+    expect(r.rows.find(x => x.company === b)).toMatchObject({ outcome: 'provider_error', correct: null });
+    expect(outcomeOf({ status: 'failed', error: 'refresh_failed:provider_error', failure_message: 'upstream connection refused' })).toBe('provider_error');
+    expect(outcomeOf({ status: 'failed', error: 'refresh_failed:provider_error', failure_message: 'the model refused to answer under its usage policy' })).toBe('safety_stop');
+  }, 120_000);
 
   test('a budget refusal pauses the run at the unit boundary and checkpoints nothing for that unit', async () => {
     const out = dir();
