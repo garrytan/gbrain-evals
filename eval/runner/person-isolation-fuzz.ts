@@ -887,7 +887,7 @@ const CAP_MS: Record<Profile, Record<Transport, number>> = {
   ci: { 'mcp-dispatch': 12 * 60_000, http: 12 * 60_000, cli: 12 * 60_000 },
 };
 
-export interface ControlResult { probes: number; caught: number }
+export interface ControlResult { probes: number; caught: number; missed: string[] }
 export interface CellResult {
   cell: CellId; seed: number; stops: StopCode[]; stop_detail: string[];
   total: Tally; by_op: Record<string, Tally>; by_caller: Record<string, Tally>; by_condition: Record<string, Tally>;
@@ -925,7 +925,7 @@ async function runCell(gut: GbrainUnderTest, world: PIWorld, cell: CellId, o: Ce
   const result: CellResult = {
     cell, seed: world.seed, stops: [], stop_detail: [], total: zeroTally(), by_op: {}, by_caller: {}, by_condition: {}, served: {}, writes: [], channels_read_back: {}, channels_missing: [],
     mandatory_without_signal: [], ops_planned: 0, probes_planned: 0, write_shaped_pairs: 0, rows_changed: [], cycle: { exit: null, pages_with_canaries_elsewhere: 0, not_covered: ['synthesize'] },
-    controls: { planted: { probes: 0, caught: 0 }, misgrant: { probes: 0, caught: 0 } }, cap_reached: false, elapsed_ms: 0, leaks: 0, late_unbound_client: brain.unboundRefusal, scope_exempt_ops: [],
+    controls: { planted: { probes: 0, caught: 0, missed: [] }, misgrant: { probes: 0, caught: 0, missed: [] } }, cap_reached: false, elapsed_ms: 0, leaks: 0, late_unbound_client: brain.unboundRefusal, scope_exempt_ops: [],
   };
   const stop = (code: StopCode, detail: string) => { if (!result.stops.includes(code)) result.stops.push(code); result.stop_detail.push(code + ': ' + detail); };
   try {
@@ -1031,7 +1031,7 @@ async function runCell(gut: GbrainUnderTest, world: PIWorld, cell: CellId, o: Ce
       for (const [op, args] of [['get_page', { slug: planted }], ['search', { query: 'planted ' + tw1 }]] as Array<[string, Record<string, unknown>]>) {
         const t = await probe.call(c, op, args, 'control');
         result.controls.planted.probes++;
-        if (caught(c, t)) result.controls.planted.caught++;
+        if (caught(c, t)) result.controls.planted.caught++; else result.controls.planted.missed.push(op + ' ' + c.label + ' ' + (t.ok ? 'ok' : 'refused ' + t.error_code));
       }
     }
     const q = world.members.find(m => m.role === 'p3')!;
@@ -1043,7 +1043,7 @@ async function runCell(gut: GbrainUnderTest, world: PIWorld, cell: CellId, o: Ce
     for (const args of [{ slug: h1.dm_source.slug, source_id: p1.dm_source }, { slug: h1.dm_source.slug }]) {
       const t = await probe.call(mis, 'get_page', args, 'control');
       result.controls.misgrant.probes++;
-      if (caught(mis, t)) result.controls.misgrant.caught++;
+      if (caught(mis, t)) result.controls.misgrant.caught++; else result.controls.misgrant.missed.push('get_page ' + JSON.stringify(args) + ' ' + (t.ok ? 'ok' : 'refused ' + t.error_code));
     }
     // Verdicts.
     result.by_op = Object.fromEntries(s.byOp); result.by_caller = Object.fromEntries(s.byCaller); result.by_condition = Object.fromEntries(s.byCondition);
