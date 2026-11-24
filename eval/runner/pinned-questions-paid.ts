@@ -204,8 +204,18 @@ export function parseJudgeLabels(text: string): Record<Claim, JudgeLabel> | null
   }
 }
 
-export interface Usage { calls: number; input_tokens: number; output_tokens: number; cache_read_tokens: number; cache_write_tokens: number }
-const noUsage = (): Usage => ({ calls: 0, input_tokens: 0, output_tokens: 0, cache_read_tokens: 0, cache_write_tokens: 0 });
+/** models: every "provider:modelId" gbrain's gateway reported as the model that answered in this window. */
+export interface Usage { calls: number; input_tokens: number; output_tokens: number; cache_read_tokens: number; cache_write_tokens: number; models?: string[] }
+const noUsage = (): Usage => ({ calls: 0, input_tokens: 0, output_tokens: 0, cache_read_tokens: 0, cache_write_tokens: 0, models: [] });
+
+/** The served id is the model under test, or a dated snapshot of it (the provider's id begins with the bare id). */
+const servedAs = (model: string, served: string) => (served.split(':').pop() ?? served).startsWith(model.split(':').pop() ?? model);
+
+/** A pin or refresh call that some other model answered: the row is not evidence about the model under test. */
+export const servedWrongModel = (r: Pick<PaidRow, 'model' | 'pin' | 'refresh'>) => [r.pin, r.refresh].some(c => (c.usage.models ?? []).some(s => !servedAs(r.model, s)));
+
+/** The model that answered the refresh (else the pin), from the gateway's usage record: the receipt's proof of what ran. */
+export const answerModelOf = (r: Pick<PaidRow, 'pin' | 'refresh'>) => r.refresh.usage.models?.at(-1) ?? r.pin.usage.models?.at(-1) ?? null;
 
 /**
  * failure_message: the provider's own words when gbrain logged a failed refresh, which its error code alone loses (a safety stop reads as provider_error).
@@ -268,8 +278,8 @@ export function outcomeOf(c: Pick<CallRecord, 'status' | 'error' | 'failure_mess
  * failed, false when the refresh did not publish (the brain still holds the pin-time answer, so its text is not graded
  * as a refresh), else the judge's verdict.
  */
-export function scoredCorrect(r: Pick<PaidRow, 'pin' | 'refresh' | 'refreshed'>): boolean | null {
-  if (harnessBlocked(r.pin) || harnessBlocked(r.refresh)) return null;
+export function scoredCorrect(r: Pick<PaidRow, 'model' | 'pin' | 'refresh' | 'refreshed'>): boolean | null {
+  if (harnessBlocked(r.pin) || harnessBlocked(r.refresh) || servedWrongModel({ model: r.model, pin: r.pin, refresh: r.refresh })) return null;
   if (outcomeOf(r.pin) === 'provider_error' || outcomeOf(r.refresh) === 'provider_error') return null;
   if (outcomeOf(r.refresh) !== 'published') return false;
   return r.refreshed.answer_correct;
@@ -296,6 +306,8 @@ export interface PaidRow {
   /** The refresh's outcome and the scored result (scoredCorrect): P's primary metric reads `correct`, never the judge alone. */
   outcome: Outcome;
   correct: boolean | null;
+  /** The model gbrain's gateway reported answering the refresh (else the pin); null on rows checkpointed before it was recorded. */
+  answer_model?: string | null;
 }
 
 /** Cohen's kappa for two binary raters from the 2x2 table; null when chance agreement is total. */
@@ -412,6 +424,9 @@ export function summarizePaid(rows: readonly PaidRow[]) {
     tokens_per_call: { pin: perCall(r => [r.pin.usage]), refresh: perCall(r => [r.refresh.usage]), judge: perCall(r => [r.first.judge_usage, r.refreshed.judge_usage]) },
   };
 }
+
+/** One receipt per stage, so the judge-check stage, which resumes the pilot's seed in the same output directory, never replaces the pilot's receipt. */
+export const receiptFile = (output: string, stage: Stage) => join(output, `receipt.${stage}.json`);
 
 /** The reference every P comparison is paired against. */
 export const P_REFERENCE_MODEL = 'anthropic:claude-opus-5-5';
@@ -592,7 +607,7 @@ async function runUnit(gut: GbrainUnderTest, gateway: Gateway, gatewayConfig: (c
       model, seed: world.seed, company: p.c.slug, mutation: p.c.mutation, affected: [...p.c.affected], judge_model: judge,
       pin: p.pin, refresh: p.refresh, first, refreshed: { ...refreshed, stale: p.refreshed.map(s => s.stale) },
     };
-    rows.push({ ...row, outcome: outcomeOf(p.refresh), correct: scoredCorrect(row) });
+    rows.push({ ...row, answer_model: answerModelOf(row), outcome: outcomeOf(p.refresh), correct: scoredCorrect(row) });
   }
   return rows;
 }
@@ -695,6 +710,7 @@ export async function runPinnedQuestionsPaid(opts: { gut: GbrainUnderTest; model
       const u = usage.current;
       if (!u) return;
       u.calls++; u.input_tokens += r.input_tokens; u.output_tokens += r.output_tokens; u.cache_read_tokens += r.cache_read_tokens; u.cache_write_tokens += r.cache_write_tokens;
+      if (!u.models!.includes(r.model)) u.models!.push(r.model);
     });
     const spend: { stop: string | null } = { stop: null };
     const noteRefusal = (e: unknown) => { if (isBudgetRefusal(e)) spend.stop ??= (e as Error).message.slice(0, 300); };
@@ -755,10 +771,13 @@ export async function runPinnedQuestionsPaid(opts: { gut: GbrainUnderTest; model
           const probe = `${model}|s${r.seed}|${r.company}`;
           if (r.correct !== null) acc.score(probe, Number(r.correct));
           else if (harnessBlocked(r.pin) || harnessBlocked(r.refresh)) acc.error(probe, 'harness', `gbrain blocked the call: ${harnessBlocked(r.refresh) ? r.refresh.error : r.pin.error}`);
+          else if (servedWrongModel(r)) acc.error(probe, 'harness', `answered by ${[...new Set([...(r.pin.usage.models ?? []), ...(r.refresh.usage.models ?? [])])].join(', ')}, not ${r.model}`);
           else if (r.outcome === 'provider_error' || outcomeOf(r.pin) === 'provider_error') acc.error(probe, 'dependency', r.refresh.failure_message ?? r.refresh.error ?? r.pin.error ?? 'provider error');
           else acc.error(probe, 'judge', r.refreshed.judge_error ?? 'no judge labels');
         }
         const blocked = unit.filter(r => harnessBlocked(r.pin) || harnessBlocked(r.refresh)).length;
+        const misrouted = unit.filter(r => servedWrongModel(r)).length;
+        if (misrouted) harnessErrors.push(`${model} seed ${world.seed}: another model answered ${misrouted} question(s); these rows are not results for ${model}`);
         if (blocked) harnessErrors.push(`${model} seed ${world.seed}: gbrain blocked ${blocked} question(s) for a setup reason (no key, consent, worker or gbrain spend limit); fix the setup, these are not model results`);
         rows.push(...unit);
         log(`[pq-paid] ${model} seed ${world.seed}${prior ? ' (from checkpoint)' : ''}: refreshed correct ${unit.filter(r => r.correct).length}/${unit.length}`);
@@ -871,7 +890,7 @@ async function main(): Promise<void> {
     cost = combinedCost(output, key, paid.run.close());
     paid.guard.uninstall();
   }
-  writeReceipt(join(output, 'receipt.json'), buildReceipt({ gut, models, seeds, companies, stage, maxOutputTokens, result, cost, startedAt, mode: 'paid', judgeCheckSha256 }));
+  writeReceipt(receiptFile(output, stage), buildReceipt({ gut, models, seeds, companies, stage, maxOutputTokens, result, cost, startedAt, mode: 'paid', judgeCheckSha256 }));
   const s = summarizePaid(result.rows);
   console.log(JSON.stringify({ by_model: Object.fromEntries(Object.entries(s.by_model).map(([m, v]) => [m, { first_correct: v.first_correct, refreshed_correct: v.refreshed_correct, refresh_outcome: v.refresh_outcome, refreshed_excluded: v.refreshed_excluded, answer_too_long: v.answer_too_long }])), judge_agreement: s.judge_agreement, truncation: s.truncation, cost_usd: receiptCost(cost).usd }, null, 2));
   process.exit(result.harnessErrors.length ? 3 : 0);

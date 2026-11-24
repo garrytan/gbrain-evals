@@ -13,7 +13,7 @@ import { writeReceipt } from '../../eval/runner/receipt.ts';
 import {
   JUDGE_MIN_LABELS, PINNED_QUESTIONS_JUDGE_PROMPT, PINNED_QUESTIONS_MODELS_UNDER_TEST, STAGE_SEEDS, TRUNCATION_BAR, buildReceipt, canonicalModel, cohenKappa,
   familyOf, judgeAgreement, judgeCheckPasses, judgeFor, judgeUserMessage, modelRoles, parseJudgeLabels, requirePaidFlags, ruleLabels,
-  checkpointKey, combinedCost, harnessBlocked, outcomeOf, pendingUnits, readCheckpoint, recordingGenerateText, redactProviderText, requireJudgeCheck, requireProviderKeys, runPinnedQuestionsPaid, scoredCorrect, summarizePaid,
+  checkpointKey, combinedCost, harnessBlocked, receiptFile, servedWrongModel, outcomeOf, pendingUnits, readCheckpoint, recordingGenerateText, redactProviderText, requireJudgeCheck, requireProviderKeys, runPinnedQuestionsPaid, scoredCorrect, summarizePaid,
   type ChatTransport, type GradedAnswer, type PaidRow, type PaidRunResult,
 } from '../../eval/runner/pinned-questions-paid.ts';
 
@@ -83,7 +83,7 @@ describe('pinned-questions paid arm: models and judges', () => {
   });
 
   test('a question gbrain blocked for a setup reason is a harness error, not a scored wrong answer', () => {
-    const call = (status: string, error: string | null) => ({ status, mode: null, error, failure_message: null, cost_usd: null, usage: { calls: 0, input_tokens: 0, output_tokens: 0, cache_read_tokens: 0, cache_write_tokens: 0 } });
+    const call = (status: string, error: string | null) => ({ model: 'particle:particle-1', status, mode: null, error, failure_message: null, cost_usd: null, usage: { calls: 0, input_tokens: 0, output_tokens: 0, cache_read_tokens: 0, cache_write_tokens: 0 } });
     const graded = { sentences: [], judge_labels: null, judge_error: null, answer_correct: null, rule_labels: {}, rule_correct: null, judge_usage: call('x', null).usage, stale: [] } as unknown as PaidRow['refreshed'];
     for (const reason of ['no_model_key', 'awaiting_consent', 'no_worker', 'budget_exhausted']) {
       expect(harnessBlocked(call('blocked', reason))).toBe(true);
@@ -225,7 +225,7 @@ describe('pinned-questions paid arm: kappa', () => {
  * (before the change while pinning; after it on refresh, except for the
  * companies in `stale`, which repeat the old values), and grades like the rule.
  */
-type Failure = Error | { stopReason: string; text: string } | null;
+type Failure = Error | { stopReason?: string; text?: string; model?: string } | null;
 
 function stubTransport(world: PqWorld, stale: Set<string>, calls: Array<{ model: string; kind: 'question' | 'judge'; graded?: string; chars: number; maxTokens?: number }>, truncate = new Set<string>(),
   fail: (slug: string, n: number, model: string) => Failure = () => null): ChatTransport {
@@ -239,6 +239,7 @@ function stubTransport(world: PqWorld, stale: Set<string>, calls: Array<{ model:
     calls.push({ model: String(opts.model), kind: judge ? 'judge' : 'question', graded: c.slug, chars: (opts.system?.length ?? 0) + user.length, maxTokens: opts.maxTokens });
     let text: string;
     let stopReason = 'end';
+    let served: string | undefined;
     if (judge) {
       const judgeFailure = fail(c.slug, 0, String(opts.model));
       if (judgeFailure instanceof Error) throw judgeFailure;
@@ -262,11 +263,12 @@ function stubTransport(world: PqWorld, stale: Set<string>, calls: Array<{ model:
       const values = n === 1 || stale.has(c.slug) ? c.before : c.after;
       if (n > 1 && truncate.has(c.slug) && (opts.maxTokens ?? 0) <= 2_000) stopReason = 'length';
       const cite = user.split('\n').filter(l => /^E\d+: /.test(l) && l.includes(c.name)).map(l => l.slice(0, l.indexOf(':'))).slice(0, 1);
-      text = failure ? failure.text : JSON.stringify({ sentences: CLAIMS.filter(cl => values[cl] !== null).map(cl => ({ text: claimSentence(c, cl, values[cl]!), cite })), gaps: [] });
-      if (failure) stopReason = failure.stopReason;
+      text = failure?.text ?? JSON.stringify({ sentences: CLAIMS.filter(cl => values[cl] !== null).map(cl => ({ text: claimSentence(c, cl, values[cl]!), cite })), gaps: [] });
+      stopReason = failure?.stopReason ?? stopReason;
+      served = failure?.model;
     }
     const chars = (opts.system?.length ?? 0) + user.length;
-    return { text, blocks: [{ type: 'text', text }], stopReason, model: String(opts.model), providerId: 'stub',
+    return { text, blocks: [{ type: 'text', text }], stopReason, model: served ?? String(opts.model), providerId: 'stub',
       usage: { input_tokens: Math.ceil(chars / 4), output_tokens: Math.ceil(text.length / 4), cache_read_tokens: 0, cache_creation_tokens: 0 } };
   };
 }
@@ -560,6 +562,20 @@ describe('pinned-questions paid arm: provider errors, safety stops and budget re
     combinedCost(out, key, summary('r1', 1.5, 3));
     const both = combinedCost(out, key, summary('r1', 0, 0));
     expect([both.processes, both.actual_usd, both.requests, both.input_tokens, both.run_id]).toEqual([2, 1.5, 3, 30, 'r1']);
+  }, 120_000);
+
+  test('each row records the model that answered, and a row another model answered is a harness error, not a result', async () => {
+    const out = dir();
+    const r = await run(out, (slug, n) => (slug === b && n === 2 ? { model: 'particle:particle-0' } : null));
+    expect(r.rows.filter(x => x.company !== b).every(x => x.answer_model === 'particle:particle-1')).toBe(true);
+    const row = r.rows.find(x => x.company === b)!;
+    expect([row.answer_model, row.correct]).toEqual(['particle:particle-0', null]);
+    expect(r.acc.summary().errors).toEqual([expect.objectContaining({ origin: 'harness', message: expect.stringContaining('answered by particle:particle-1, particle:particle-0') })]);
+    expect(r.harnessErrors).toEqual([expect.stringContaining('another model answered 1 question')]);
+    expect(servedWrongModel({ model: 'openai:gpt-6.2-sol', pin: row.pin, refresh: { ...row.refresh, usage: { ...row.refresh.usage, models: ['openai:gpt-6.2-sol-2026-10-01'] } } })).toBe(true);
+    expect(servedWrongModel({ model: 'openai:gpt-6.2-sol', pin: { ...row.pin, usage: { ...row.pin.usage, models: [] } }, refresh: { ...row.refresh, usage: { ...row.refresh.usage, models: ['openai:gpt-6.2-sol-2026-10-01'] } } })).toBe(false);
+    expect(receiptFile('/out', 'pilot')).toBe('/out/receipt.pilot.json');
+    expect(receiptFile('/out', 'judge-check')).not.toBe(receiptFile('/out', 'pilot'));
   }, 120_000);
 
   test('a refused connection is a provider error, not a safety stop', async () => {
