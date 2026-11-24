@@ -35,7 +35,7 @@
  */
 import './budget-ledger.ts';
 import { createHash } from 'node:crypto';
-import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, readFileSync, truncateSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import type { OperationContext } from 'gbrain/operations';
 import { BudgetExceededError, budgetOptionsFrom, chatPrice, paidRequestGuardActive, receiptCost, startPaidRun, type RunSummary } from './budget-ledger.ts';
@@ -543,9 +543,32 @@ export type PaidMode = { kind: 'paid'; keys: Partial<Record<typeof PAID_KEY_NAME
 
 /** A unit is asked at most this often: a unit with provider or judge-call errors is asked again once, then kept with those questions left out. */
 export const MAX_UNIT_ATTEMPTS = 2;
-interface Checkpointed { key: string; model: string; seed: number; attempt: number; transient: boolean; rows: PaidRow[] }
+export interface Checkpointed { key: string; model: string; seed: number; attempt: number; transient: boolean; rows: PaidRow[] }
 export const unitTransient = (unit: readonly PaidRow[]) => unit.some(r =>
   outcomeOf(r.pin) === 'provider_error' || r.outcome === 'provider_error' || [r.first.judge_error, r.refreshed.judge_error].some(e => e?.startsWith('judge_call_failed')));
+/**
+ * Checkpointed units. A final line with no newline that does not parse is an append a crash or full disk cut short: it
+ * is cut off the file, so earlier units are reused and the next append starts on a clean line. Any other line that does
+ * not parse is corruption, and the run stops rather than drop units silently.
+ */
+export function readCheckpoint(path: string, log: (s: string) => void = () => {}): Checkpointed[] {
+  if (!existsSync(path)) return [];
+  const text = readFileSync(path, 'utf8');
+  const end = text.lastIndexOf('\n') + 1;
+  const tail = text.slice(end);
+  if (tail.trim()) {
+    try { JSON.parse(tail); appendFileSync(path, '\n'); } catch {
+      truncateSync(path, Buffer.byteLength(text.slice(0, end)));
+      log(`[pq-paid] ${path}: cut off a torn final line (${tail.length} chars) left by an interrupted append; its unit runs again`);
+      return readCheckpoint(path, log);
+    }
+  }
+  return text.split('\n').flatMap((l, i) => {
+    if (!l.trim()) return [];
+    try { return [JSON.parse(l) as Checkpointed]; } catch { throw new Error(`${path}: line ${i + 1} is not valid JSON and is not a torn final line; refusing to resume over a corrupt checkpoint`); }
+  });
+}
+
 const isBudgetRefusal = (e: unknown) => e instanceof BudgetExceededError || (e instanceof Error && e.name === 'BudgetExceededError');
 
 export interface PaidRunResult { worlds: PqWorld[]; rows: PaidRow[]; acc: ProbeAccounting; harnessErrors: string[]; resumedUnits: number }
@@ -597,9 +620,7 @@ export async function runPinnedQuestionsPaid(opts: { gut: GbrainUnderTest; model
         mode: opts.mode.kind, gbrain: opts.gut.overlay?.build.commit ?? opts.gut.version, generator: PINNED_QUESTIONS_GENERATOR_VERSION, companies: opts.companies ?? 24, max_output_tokens: opts.maxOutputTokens ?? null,
         judge_prompt_sha256: createHash('sha256').update(PINNED_QUESTIONS_JUDGE_PROMPT).digest('hex'),
       });
-      const done = existsSync(ckPath)
-        ? readFileSync(ckPath, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l) as Checkpointed).filter(x => x.key === ckKey)
-        : [];
+      const done = readCheckpoint(ckPath, log).filter(x => x.key === ckKey);
       const acc = new ProbeAccounting(models.length * worlds.reduce((a, w) => a + w.companies.length, 0));
       const rows: PaidRow[] = [];
       const harnessErrors: string[] = [];

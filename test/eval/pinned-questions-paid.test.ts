@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { CLAIMS, generatePinnedQuestionsWorld, type PqCompany, type PqWorld } from '../../eval/generators/pinned-questions-gen.ts';
@@ -12,7 +12,7 @@ import { writeReceipt } from '../../eval/runner/receipt.ts';
 import {
   JUDGE_MIN_LABELS, PINNED_QUESTIONS_JUDGE_PROMPT, PINNED_QUESTIONS_MODELS_UNDER_TEST, STAGE_SEEDS, TRUNCATION_BAR, buildReceipt, canonicalModel, cohenKappa,
   familyOf, judgeAgreement, judgeCheckPasses, judgeFor, judgeUserMessage, modelRoles, parseJudgeLabels, requirePaidFlags, ruleLabels,
-  harnessBlocked, outcomeOf, recordingGenerateText, redactProviderText, requireProviderKeys, runPinnedQuestionsPaid, scoredCorrect, summarizePaid,
+  harnessBlocked, outcomeOf, readCheckpoint, recordingGenerateText, redactProviderText, requireProviderKeys, runPinnedQuestionsPaid, scoredCorrect, summarizePaid,
   type ChatTransport, type GradedAnswer, type PaidRow, type PaidRunResult,
 } from '../../eval/runner/pinned-questions-paid.ts';
 
@@ -485,6 +485,22 @@ describe('pinned-questions paid arm: provider errors, safety stops and budget re
     for (const res of results) expect(await recordingGenerateText(async () => res, f => seen.push(f))({})).toBe(res);
     expect(seen).toEqual(['content_filter', 'refusal', 'refusal', null]);
   });
+
+  test('a torn final checkpoint line is cut off and the run resumes every intact unit; a corrupt earlier line refuses', async () => {
+    const out = dir();
+    const models = ['particle:particle-1', 'gpt-6.2-sol'];
+    await run(out, () => null, models);
+    const ck = join(out, 'checkpoint.ndjson');
+    const intact = readFileSync(ck, 'utf8');
+    appendFileSync(ck, intact.split('\n')[0]!.slice(0, 200));
+    const calls: Array<{ model: string; kind: 'question' | 'judge'; chars: number }> = [];
+    const resumed = await run(out, () => null, models, calls);
+    expect([resumed.resumedUnits, calls.length]).toEqual([2, 0]);
+    expect(readFileSync(ck, 'utf8')).toBe(intact);
+    expect(readCheckpoint(ck)).toHaveLength(2);
+    writeFileSync(ck, `{"torn\n${intact}`);
+    expect(() => readCheckpoint(ck)).toThrow(/line 1 is not valid JSON/);
+  }, 120_000);
 
   test('a refused connection is a provider error, not a safety stop', async () => {
     const out = dir();
