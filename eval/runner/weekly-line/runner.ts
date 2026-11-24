@@ -34,7 +34,7 @@
  * server's, then the grep agent's; then particle-1's re-reads of the frozen contexts; then the judging, each answer by
  * its reader's preregistered judge; then the aggregates writer. plan writes the run's identity (identity.ts, run.json)
  * and the ordered steps (plan.json) and prints them; launch writes the unit order (launch.json) for the existing launch
- * path and prints it, and refuses without --window-granted. Neither starts a VM, a cell or a provider call.
+ * path and prints it, and refuses without --window-granted or when the launch check refuses the week's cells. Neither starts a VM, a cell or a provider call.
  *
  * Settled. mark records each step as done or as a harness failure, in order (a re-read after its cell, a judgment after
  * the answers it judges). settle writes the week's meta (meta.json) and its settled marker (settled.ts, settled.json)
@@ -46,8 +46,11 @@
  * read-only review blockers 2 and 3, which GBEV-3 ruled R113 integrity on 2026-11-23); otherwise it refuses
  * (WEEKLY_BLOCK_GUARDS).
  *
- * The cell set (harness PR (c)) plugs in at one wiring point, WIRED_CELL_SET below. Until it is wired, plan refuses a
- * week with a point (WEEKLY_CELLS_NOT_WIRED); the tests inject a cell set.
+ * Cells. WIRED_CELL_SET builds the week's cells with harness PR (c)'s generateWeeklyLineCells and weeklyLineRereadPlans
+ * (eval/runner/q1/cells/weekly-line.ts) from the week, its worlds and the frozen gbrain build, and plan keeps those
+ * definitions in the run directory (cells.json). launch refuses unless they are the run's cells and pass the launch check
+ * (launch.ts requireWeeklyLineLaunch) before it writes the unit order (WEEKLY_LAUNCH_CHECK, PREFLIGHT_FAILED). The tests
+ * inject a cell set and a launch check.
  */
 import { spawnSync } from 'node:child_process';
 import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -56,10 +59,12 @@ import { join } from 'node:path';
 import { GBRAIN_REPO, newestRelease } from '../gbrain-pin.ts';
 import { BGW_BATCH_KEPT, BGW_BATCH_SLOTS, BGW_WEEKS_PER_BATCH, BGW_WORLDS_PER_WEEK, bgwBatchName, bgwSeedSetOf, bgwSlotOf } from '../memory-qa/bg1-names.ts';
 import { bg1Kept, bg1RunClock, bgwSet, bgwWeekWorldEnd, bgwWeekWorlds, readBg1Manifest, type Bg1Manifest } from '../memory-qa/corpus.ts';
-import { bg1JudgeOf } from '../q1/cells/definitions.ts';
+import { bg1JudgeOf, type CellDefinition } from '../q1/cells/definitions.ts';
+import { generateWeeklyLineCells, WEEKLY_LINE_COMPARATORS, weeklyLineRereadPlans, type WeeklyLineRereadPlan, type WeeklyLineWeek } from '../q1/cells/weekly-line.ts';
 import { blockAggregates, boundRecords, writeBlockFiles, type WeekMeta } from './aggregates.ts';
-import { WL_READER_KEYS, WL_READERS, WL_ROWS, WL_SERVERS, WL_WEEKS_PER_BLOCK, type WlNoPoint, type WlRow, type WlServer } from './design.ts';
+import { WL_READER_KEYS, WL_READERS, WL_ROWS, WL_SERVERS, WL_SYSTEMS, WL_WEEKS_PER_BLOCK, type WlNoPoint, type WlRow, type WlServer } from './design.ts';
 import { RUN_FILE, runIdentity, type GbrainBuild, type RunIdentity, type RunWorld } from './identity.ts';
+import { requireWeeklyLineLaunch, type weeklyLineLaunchProblems } from './launch.ts';
 import { plannedFor, questionsFromRecords, type WlQuestion } from './records.ts';
 import { SETTLED_SCHEMA, type SettledMarker } from './settled.ts';
 import type { CostCell } from './stats.ts';
@@ -151,16 +156,38 @@ export function lsRemoteTags(): string {
   return p.stdout;
 }
 
-// ─── The cell set (harness PR (c)) ───────────────────────────────────
+// ─── The cell set (harness PR (c), eval/runner/q1/cells/weekly-line.ts) ─
 
-export interface WeeklyCell { id: string; row: WlRow; reader: string; worlds: string[] }
+/**
+ * One reader's answers in one row. `unit` is the launch unit that runs it (the cell definition's id) and `records` the
+ * cell id its answer records carry (the arm's cell id); both default to `id`. The grep agent's one cell runs both readers,
+ * so its two entries share a unit and a records id.
+ */
+export interface WeeklyCell { id: string; row: WlRow; reader: string; worlds: string[]; unit?: string; records?: string }
+/** particle-1's re-read of claude-opus-5-5's cell `from`; its id is its launch unit and the cell id its records carry. */
 export interface WeeklyReread { id: string; row: WlRow; from: string; reader: string }
-export interface WeeklyCellPlan { cells: WeeklyCell[]; rereads: WeeklyReread[]; comparators: Record<WlServer, { version: string; fixed: string }> }
-/** The week's cells and particle-1 re-reads for its worlds and frozen gbrain build. */
-export type WeeklyCellSet = (input: { week: string; worlds: readonly string[]; gbrain: GbrainBuild }) => WeeklyCellPlan;
+/** The cell definitions and re-read plans the launch path runs, kept in the run directory (cells.json) for the launch check. */
+export interface WeeklyDefinitions { cells: CellDefinition[]; rereads: WeeklyLineRereadPlan[] }
+export interface WeeklyCellPlan { cells: WeeklyCell[]; rereads: WeeklyReread[]; comparators: Record<WlServer, { version: string; fixed: string }>; definitions?: WeeklyDefinitions }
+/** The week's cells and particle-1 re-reads for its week, worlds and frozen gbrain build. */
+export type WeeklyCellSet = (input: { week: WeeklyLineWeek; worlds: readonly string[]; gbrain: GbrainBuild }) => WeeklyCellPlan;
 
-// WIRING POINT: harness PR (c)'s weekly cell set goes here.
-export const WIRED_CELL_SET: WeeklyCellSet | null = null;
+const readerSlug = (reader: string) => reader.replace(/[^a-z0-9.-]+/gi, '-').toLowerCase();
+const rowOf = (system: string): WlRow => WL_SYSTEMS[system] ?? refuse('WEEKLY_CELL_PLAN', `the cell set holds system ${system}, which is not one of the line's rows`);
+
+/** The cell set: generateWeeklyLineCells and weeklyLineRereadPlans for the week, its worlds and the frozen gbrain build. */
+export const WIRED_CELL_SET: WeeklyCellSet = ({ week, worlds, gbrain }) => {
+  const cells = generateWeeklyLineCells({ week, worlds, gbrain });
+  const rereads = weeklyLineRereadPlans(cells);
+  return {
+    cells: cells.flatMap(c => c.arms.flatMap(a => a.readers.map(reader => ({
+      id: a.readers.length > 1 ? `${a.cell_id}.${readerSlug(reader)}` : a.cell_id, row: rowOf(c.system), reader, worlds: [...worlds], unit: c.id, records: a.cell_id,
+    })))),
+    rereads: rereads.map(r => ({ id: r.id, row: rowOf(cells.find(c => c.id === r.cell)!.system), from: r.arm_cell_id, reader: r.reader })),
+    comparators: structuredClone(WEEKLY_LINE_COMPARATORS) as WeeklyCellPlan['comparators'],
+    definitions: { cells, rereads },
+  };
+};
 
 const ID_RE = /^[a-z0-9][a-z0-9._-]{0,120}$/;
 
@@ -200,17 +227,18 @@ export function cellPlanProblems(plan: WeeklyCellPlan, worlds: readonly string[]
 export const LAUNCH_ORDER: readonly WlRow[] = ['extract-first', 'gbrain', 'memory-bank', 'grep-agent'];
 
 export type Stage = 'launch' | 'reread' | 'judge' | 'aggregates';
-export interface Step { id: string; stage: Stage; target: string; row: WlRow | null; reader: string | null; judge: string | null; after: string[] }
+/** A step of the week; `unit` is the launch unit a launch or re-read step hands the launch path, null for judging and the aggregates. */
+export interface Step { id: string; stage: Stage; target: string; unit: string | null; row: WlRow | null; reader: string | null; judge: string | null; after: string[] }
 
 /** The week's steps in order: every cell's launch, then every re-read, then every judgment, then the aggregates. */
 export function weekSteps(plan: WeeklyCellPlan): Step[] {
   const rank = (row: WlRow, reader: string) => LAUNCH_ORDER.indexOf(row) * 2 + (reader === OPUS ? 0 : 1);
   const cells = [...plan.cells].sort((a, b) => rank(a.row, a.reader) - rank(b.row, b.reader));
   const rereads = [...plan.rereads].sort((a, b) => LAUNCH_ORDER.indexOf(a.row) - LAUNCH_ORDER.indexOf(b.row));
-  const launch = cells.map((c): Step => ({ id: `launch:${c.id}`, stage: 'launch', target: c.id, row: c.row, reader: c.reader, judge: null, after: [] }));
-  const reread = rereads.map((r): Step => ({ id: `reread:${r.id}`, stage: 'reread', target: r.id, row: r.row, reader: r.reader, judge: null, after: [`launch:${r.from}`] }));
-  const judge = [...launch, ...reread].map((s): Step => ({ id: `judge:${s.target}`, stage: 'judge', target: s.target, row: s.row, reader: s.reader, judge: bg1JudgeOf(s.reader!), after: [s.id] }));
-  return [...launch, ...reread, ...judge, { id: 'aggregates:week', stage: 'aggregates', target: 'week', row: null, reader: null, judge: null, after: judge.map(j => j.id) }];
+  const launch = cells.map((c): Step => ({ id: `launch:${c.id}`, stage: 'launch', target: c.id, unit: c.unit ?? c.id, row: c.row, reader: c.reader, judge: null, after: [] }));
+  const reread = rereads.map((r): Step => ({ id: `reread:${r.id}`, stage: 'reread', target: r.id, unit: r.id, row: r.row, reader: r.reader, judge: null, after: [`launch:${r.from}`] }));
+  const judge = [...launch, ...reread].map((s): Step => ({ id: `judge:${s.target}`, stage: 'judge', target: s.target, unit: null, row: s.row, reader: s.reader, judge: bg1JudgeOf(s.reader!), after: [s.id] }));
+  return [...launch, ...reread, ...judge, { id: 'aggregates:week', stage: 'aggregates', target: 'week', unit: null, row: null, reader: null, judge: null, after: judge.map(j => j.id) }];
 }
 
 // ─── Files in the run directory ──────────────────────────────────────
@@ -220,6 +248,7 @@ export const PROGRESS_FILE = 'progress.ndjson';
 export const LAUNCH_FILE = 'launch.json';
 export const META_FILE = 'meta.json';
 export const SETTLED_FILE = 'settled.json';
+export const CELLS_FILE = 'cells.json';
 
 const readJson = (path: string): any => (existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : refuse('WEEKLY_RUN', `${path} does not exist`));
 const writeJson = (path: string, x: unknown) => writeFileSync(path, JSON.stringify(x, null, 2) + '\n');
@@ -237,8 +266,28 @@ export function progressOf(dir: string): Map<string, Status> {
 
 // ─── Commands ────────────────────────────────────────────────────────
 
-export interface RunnerDeps { now: () => Date; lsRemote: () => string; cellSet: WeeklyCellSet | null }
-export const DEFAULT_DEPS: RunnerDeps = { now: () => new Date(), lsRemote: lsRemoteTags, cellSet: WIRED_CELL_SET };
+/** The check launch runs on a planned week before it writes the unit order; it throws to refuse. */
+export type LaunchCheck = (dir: string, run: RunIdentity) => void;
+
+/**
+ * The launch check on the week's cell definitions (cells.json): they must be the run's cells and re-reads, and pass
+ * requireWeeklyLineLaunch at the frozen gbrain build. `deps` reaches weeklyLineLaunchProblems (ripgrep, the registry).
+ */
+export function weeklyLaunchCheck(deps: Parameters<typeof weeklyLineLaunchProblems>[1] = {}): LaunchCheck {
+  return (dir, run) => {
+    const path = join(dir, CELLS_FILE);
+    if (!existsSync(path)) refuse('WEEKLY_LAUNCH_CHECK', `week ${run.week}'s run has no ${CELLS_FILE}, so its cells cannot be checked before they launch; plan it again in a fresh run directory`);
+    const d = readJson(path) as { run_id: string } & WeeklyDefinitions;
+    const records = [...new Set(d.cells.flatMap(c => c.arms.map(a => a.cell_id)))].sort(), rereads = d.rereads.map(r => r.id).sort();
+    if (d.run_id !== run.run_id || JSON.stringify(records) !== JSON.stringify([...run.cells].sort()) || JSON.stringify(rereads) !== JSON.stringify([...run.rereads].sort())) {
+      refuse('WEEKLY_LAUNCH_CHECK', `${path} does not hold run ${run.run_id}'s cells and re-reads`);
+    }
+    requireWeeklyLineLaunch({ gbrain: run.gbrain!, cells: d.cells, rereads: d.rereads }, deps);
+  };
+}
+
+export interface RunnerDeps { now: () => Date; lsRemote: () => string; cellSet: WeeklyCellSet | null; launchCheck: LaunchCheck }
+export const DEFAULT_DEPS: RunnerDeps = { now: () => new Date(), lsRemote: lsRemoteTags, cellSet: WIRED_CELL_SET, launchCheck: weeklyLaunchCheck() };
 
 export interface PlanInput { dir: string; launch: string; batch: BatchInput; spares?: { first: number; manifest: Bg1Manifest }; noPoint?: 'custody host offline' }
 
@@ -253,32 +302,39 @@ export function planWeek(o: PlanInput, deps: RunnerDeps): { run: RunIdentity; st
   const w = o.noPoint ? null : weekWorlds(o.launch, o.batch, o.spares);
   const noPoint: WlNoPoint | null = o.noPoint ?? (w!.worlds.length ? null : 'no worlds');
   const base = { week, world_end, batch: w?.batch ?? bgwBatchName(o.batch.first), week_of_batch: w?.week_of_batch ?? null, spares_from: w?.spares_from ?? null };
-  let body: Parameters<typeof runIdentity>[0], steps: Step[] = [];
+  let body: Parameters<typeof runIdentity>[0], steps: Step[] = [], definitions: WeeklyDefinitions | null = null;
   if (noPoint) body = { ...base, gbrain: null, comparators: null, worlds: [], cells: [], rereads: [], no_point: noPoint };
   else {
     const gbrain = newestGbrainRelease(deps.lsRemote());
-    const cellSet = deps.cellSet ?? refuse('WEEKLY_CELLS_NOT_WIRED', "the weekly cell set (harness PR (c)) is not wired into runner.ts's WIRED_CELL_SET yet, so no week with a point can be planned");
+    const cellSet = deps.cellSet ?? refuse('WEEKLY_CELLS_NOT_WIRED', 'no weekly cell set is wired into this runner, so no week with a point can be planned');
     const ids = w!.worlds.map(x => x.world);
-    const plan = cellSet({ week, worlds: ids, gbrain });
+    const plan = cellSet({ week: { launch: week, world_end, batch: w!.spares_from ?? w!.batch }, worlds: ids, gbrain });
     const p = cellPlanProblems(plan, ids);
     if (p.length) refuse('WEEKLY_CELL_PLAN', p.slice(0, 5).join('; '));
     steps = weekSteps(plan);
-    body = { ...base, gbrain, comparators: plan.comparators, worlds: w!.worlds, cells: plan.cells.map(c => c.id), rereads: plan.rereads.map(r => r.id), no_point: null };
+    definitions = plan.definitions ?? null;
+    body = { ...base, gbrain, comparators: plan.comparators, worlds: w!.worlds, cells: [...new Set(plan.cells.map(c => c.records ?? c.id))], rereads: plan.rereads.map(r => r.id), no_point: null };
   }
   const run = runIdentity(body);
   mkdirSync(o.dir, { recursive: true });
   writeJson(join(o.dir, RUN_FILE), run);
   writeJson(join(o.dir, PLAN_FILE), { run_id: run.run_id, steps });
+  if (definitions) writeJson(join(o.dir, CELLS_FILE), { run_id: run.run_id, ...definitions });
   return { run, steps, frozen: false };
 }
 
-/** The unit order for the existing launch path, written to launch.json; refuses without a granted paid window, past the clock, or for a week with no point. Starts nothing. */
-export function launchWeek(dir: string, window: string | undefined, deps: Pick<RunnerDeps, 'now'>): { run_id: string; window: string; stages: Array<{ stage: Stage; units: string[] }> } {
+/**
+ * The unit order for the existing launch path, written to launch.json; refuses without a granted paid window, past the
+ * clock, for a week with no point, or when the launch check refuses the week's cells. Launch and re-read stages list each
+ * launch unit once; the judge stage lists every judged target. Starts nothing.
+ */
+export function launchWeek(dir: string, window: string | undefined, deps: Pick<RunnerDeps, 'now' | 'launchCheck'>): { run_id: string; window: string; stages: Array<{ stage: Stage; units: string[] }> } {
   const { run, steps } = loadRun(dir);
   if (!window) refuse('WEEKLY_NO_WINDOW', `week ${run.week}'s cells spend on providers, so they launch only inside a granted paid window; pass --window-granted <unit> once it is granted`);
   weekClock(run.week, deps.now());
   if (run.no_point) refuse('WEEKLY_NO_POINT', `week ${run.week} has no point (${run.no_point}), so nothing launches`);
-  const stages = (['launch', 'reread', 'judge'] as const).map(stage => ({ stage, units: steps.filter(s => s.stage === stage).map(s => s.target) }));
+  deps.launchCheck(dir, run);
+  const stages = (['launch', 'reread', 'judge'] as const).map(stage => ({ stage, units: [...new Set(steps.filter(s => s.stage === stage).map(s => (stage === 'judge' ? s.target : s.unit ?? s.target)))] }));
   const order = { run_id: run.run_id, window: window!, stages };
   writeJson(join(dir, LAUNCH_FILE), order);
   return order;

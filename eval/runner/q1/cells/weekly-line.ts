@@ -61,6 +61,15 @@ export const WEEKLY_LINE_ROWS = {
   'memory-bank': { system: 'ext-memory-bank', configuration: 'recipe' },
 } as const;
 
+/**
+ * The two servers as the week records them (weekly-line/aggregates.ts meta `comparators`): each bundle's package version and
+ * the date its lock was last fixed, the patched locks of gbrain-evals#594 (GBEV-3 ruling, 2026-11-23).
+ */
+export const WEEKLY_LINE_COMPARATORS = {
+  'extract-first': { version: '2.2.1', fixed: '2026-11-23' },
+  'memory-bank': { version: '0.10.2', fixed: '2026-11-23' },
+} as const;
+
 /** One model of a registry entry's `models` list. */
 export interface RegistryModel { model: string; role: string; system?: string }
 

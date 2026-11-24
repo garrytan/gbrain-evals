@@ -20,9 +20,10 @@ import { main as aggregatesMain, writeBlockFiles } from '../../eval/runner/weekl
 import { plannedQuestions, WL_READERS, WL_ROWS, WL_SYSTEMS, type WlRow } from '../../eval/runner/weekly-line/design.ts';
 import { RUN_FILE, runBindingProblems, runIdOf } from '../../eval/runner/weekly-line/identity.ts';
 import {
-  BLOCK_WRITER, blockWriterProblems, cellPlanProblems, launchWeek, main, markStep, newestGbrainRelease, planWeek, progressOf, settleWeek, weekClock, weekSteps, weekWorlds, writeBlock,
-  WeeklyRunnerError, type RunnerDeps, type WeeklyCellPlan, type WeeklyCellSet,
+  BLOCK_WRITER, blockWriterProblems, cellPlanProblems, DEFAULT_DEPS, launchWeek, main, markStep, newestGbrainRelease, planWeek, progressOf, settleWeek, weekClock, weekSteps, weekWorlds,
+  WIRED_CELL_SET, weeklyLaunchCheck, writeBlock, WeeklyRunnerError, type LaunchCheck, type RunnerDeps, type WeeklyCellPlan, type WeeklyCellSet,
 } from '../../eval/runner/weekly-line/runner.ts';
+import { generateWeeklyLineCells, WEEKLY_LINE_COMPARATORS, WEEKLY_LINE_MODELS } from '../../eval/runner/q1/cells/weekly-line.ts';
 import { settledProblems } from '../../eval/runner/weekly-line/settled.ts';
 
 const tmp = mkdtempSync(join(tmpdir(), 'weekly-line-runner-'));
@@ -55,7 +56,7 @@ const cellSet: WeeklyCellSet = ({ worlds }) => ({
   ],
   comparators: { 'extract-first': { version: '1.4.2', fixed: '2026-11-19' }, 'memory-bank': { version: '0.9.0', fixed: '2026-11-19' } },
 });
-const deps = (now: string, tags = TAGS, cells: WeeklyCellSet | null = cellSet): RunnerDeps => ({ now: at(now), lsRemote: () => tags, cellSet: cells });
+const deps = (now: string, tags = TAGS, cells: WeeklyCellSet | null = cellSet, launchCheck: LaunchCheck = () => {}): RunnerDeps => ({ now: at(now), lsRemote: () => tags, cellSet: cells, launchCheck });
 const batch = (manifest: Bg1Manifest | null = FULL, first = 1001) => ({ first, week1: '2026-12-08', manifest });
 /** Metered spend for every row, reader and world of a week. */
 const costsFor = (worlds: readonly string[]) => WL_ROWS.flatMap(row => (['claude-opus-5-5', 'particle-1'] as const).flatMap(reader => worlds.map(world => ({ row, reader, world, usd: 0.25 }))));
@@ -135,7 +136,7 @@ describe("gbrain's newest release", () => {
 // ─── Order and the cell set ──────────────────────────────────────────
 
 describe('the launch order and the cell set', () => {
-  const plan = cellSet({ week: '2026-12-08', worlds: ids(8), gbrain: { release: 'v0.61.10.0', commit: C2 } });
+  const plan = cellSet({ week: { launch: '2026-12-08', world_end: '2026-12-06', batch: 'bgw-1001' }, worlds: ids(8), gbrain: { release: 'v0.61.10.0', commit: C2 } });
 
   // Value: protects=the extract-first server launches first, then gbrain, the memory-bank server and the grep agent; particle-1's re-reads come after every cell, judging after every answer with the reader's preregistered judge, and the aggregates last; fails_when=the order changes, a re-read runs before its cell, or an answer is judged by its own family or particle-1; why_new=the plan's "Where it runs" order and harness PR (d)'s brief; seam=runner.ts weekSteps; no_claim=the launch path's own unit scheduling
   test('extract-first first, then gbrain, memory-bank and the grep agent; then re-reads, judging and the aggregates', () => {
@@ -176,6 +177,43 @@ describe('the launch order and the cell set', () => {
     expect([none.run.no_point, none.run.gbrain, none.steps]).toEqual(['no worlds', null, []]);
     const offline = planWeek({ dir: join(tmp, 'offline'), launch: '2026-12-08', batch: batch(), noPoint: 'custody host offline' }, deps('2026-12-08', TAGS, null));
     expect(offline.run.no_point).toBe('custody host offline');
+  });
+});
+
+// ─── The wired cell set ──────────────────────────────────────────────
+
+describe('the wired cell set', () => {
+  const G8 = 'bgw.gbrain-defaults.rs1-stable', FS = 'bgw.baseline-file-agent.baseline', EF = 'bgw.ext-extract-first.common', MB = 'bgw.ext-memory-bank.recipe';
+  const RR = (cell: string) => `${cell}.reread-particle-particle-1`;
+  const ok = weeklyLaunchCheck({ ripgrep: () => 'ripgrep 14.1.1', registry: WEEKLY_LINE_MODELS });
+
+  // Value: protects=a week with a point is planned from harness PR (c)'s cell set at the week, its worlds and the frozen gbrain build, and launch hands the launch path the week's cell definitions only after the launch check passes on them; fails_when=the runner plans from no cell set, from cells of another build or week, or launches cells the launch check refuses or that are not the run's; why_new=the wiring PR's brief, part A (replace the wiring point with generateWeeklyLineCells, weeklyLineRereadPlans and requireWeeklyLineLaunch); seam=runner.ts WIRED_CELL_SET, planWeek, weeklyLaunchCheck and launchWeek; no_claim=the launch path's own window and lease checks, and running any cell
+  test('plans the week from generateWeeklyLineCells and launches only through the launch check', () => {
+    expect(DEFAULT_DEPS.cellSet).toBe(WIRED_CELL_SET);
+    const dir = join(tmp, 'wired');
+    const { run, steps } = planWeek({ dir, launch: '2026-12-08', batch: batch() }, deps('2026-12-08', TAGS, WIRED_CELL_SET, ok));
+    const defs = JSON.parse(readFileSync(join(dir, 'cells.json'), 'utf8'));
+    const want = generateWeeklyLineCells({ week: { launch: '2026-12-08', world_end: '2026-12-06', batch: 'bgw-1001' }, worlds: ids(8), gbrain: { release: 'v0.61.10.0', commit: C2 } });
+    expect(defs).toEqual(JSON.parse(JSON.stringify({ run_id: run.run_id, cells: want, rereads: defs.rereads })));
+    expect(defs.rereads.map((r: { id: string }) => r.id)).toEqual([RR(`${G8}.p`), RR(`${EF}.component-b8000`), RR(`${MB}.component-b8000`)]);
+    expect([run.gbrain, run.comparators]).toEqual([{ release: 'v0.61.10.0', commit: C2 }, WEEKLY_LINE_COMPARATORS]);
+    expect(run.cells).toEqual([`${G8}.p`, `${FS}.whole-agent`, `${EF}.component-b8000`, `${MB}.component-b8000`]);
+    expect(steps.filter(s => s.stage === 'launch').map(s => [s.target, s.unit, s.reader])).toEqual([
+      [`${EF}.component-b8000`, EF, OPUS], [`${G8}.p`, G8, OPUS], [`${MB}.component-b8000`, MB, OPUS],
+      [`${FS}.whole-agent.anthropic-claude-opus-5-5`, FS, OPUS], [`${FS}.whole-agent.particle-particle-1`, FS, PARTICLE],
+    ]);
+    expect(steps.find(s => s.id === `reread:${RR(`${G8}.p`)}`)!.after).toEqual([`launch:${G8}.p`]);
+    const order = launchWeek(dir, 'weekly-line-2026-12-08', deps('2026-12-08', TAGS, WIRED_CELL_SET, ok));
+    expect(order.stages.slice(0, 2).map(s => s.units)).toEqual([[EF, G8, MB, FS], [RR(`${EF}.component-b8000`), RR(`${G8}.p`), RR(`${MB}.component-b8000`)]]);
+    rmSync(join(dir, 'launch.json'));
+    const noRg = weeklyLaunchCheck({ ripgrep: () => null, registry: WEEKLY_LINE_MODELS });
+    expect(message(() => launchWeek(dir, 'w', deps('2026-12-08', TAGS, WIRED_CELL_SET, noRg)))).toMatch(/refused before any cell starts: .*ripgrep/);
+    const cells = JSON.parse(readFileSync(join(dir, 'cells.json'), 'utf8'));
+    writeFileSync(join(dir, 'cells.json'), JSON.stringify({ ...cells, cells: cells.cells.slice(1) }));
+    expect(message(() => launchWeek(dir, 'w', deps('2026-12-08', TAGS, WIRED_CELL_SET, ok)))).toMatch(/^WEEKLY_LAUNCH_CHECK: .*does not hold run/);
+    rmSync(join(dir, 'cells.json'));
+    expect(message(() => launchWeek(dir, 'w', deps('2026-12-08', TAGS, WIRED_CELL_SET, ok)))).toMatch(/^WEEKLY_LAUNCH_CHECK: .*has no cells\.json/);
+    expect(existsSync(join(dir, 'launch.json'))).toBe(false);
   });
 });
 
