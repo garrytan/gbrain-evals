@@ -335,6 +335,10 @@ export function prepareReread(def: CellDefinition, arm: ArmDefinition, opts: Rer
   return { def, arm, reader: opts.reader, out, manifest: opts.manifest ?? null, keyless: !!opts.keyless, instrument, dataset: corpus.source, verify, plan, gating: gating ?? null, cell_id: cellId, half };
 }
 
+/** The re-read lease proxy's output caps: Q1's defaults, the arm's pinned judges' caps, and the gating judge's at PER_READER_JUDGE_SETTINGS, which grades every answer of a gated re-read (a weekly arm's map names no particle-1 judge, so its pinned caps leave it out). */
+export const rereadRouteCaps = (p: Pick<PreparedReread, 'arm' | 'gating'>): Record<string, number> =>
+  ({ ...DEFAULT_ROUTE_CAPS, ...pinnedJudgeRouteCaps([p.arm]), ...(p.gating ? { [`judge@${p.gating}`]: PER_READER_JUDGE_SETTINGS.max_tokens } : {}) });
+
 export interface RereadResult { cell_id: string; dir: string; status: 'complete' | 'partial'; stopped: string | null; receipt: Record<string, unknown> }
 
 /** Read and judge the plan, resuming from --out, then write receipt.json; `lease` names the lease and its proxy's usage log for the receipt. */
@@ -478,7 +482,7 @@ if (import.meta.main) {
     const lease = openRereadLease({ runId, leaseUsd, ledgerPath: resolve(ledger), capUsd: ledgerCap });
     const usageLog = join(out, 'usage.ndjson');
     const proxy = new MeteringProxy({ ...(keyless ? { upstream: keylessUpstream(keyless) } : {}), cellToken, controlToken,
-      policy: { lease, usageLog, env: keys, routeCaps: { caps: { ...DEFAULT_ROUTE_CAPS, ...pinnedJudgeRouteCaps([arm]) }, slots: { ...DEFAULT_ROUTE_CLASSES }, defaultClass: 'extraction' } } });
+      policy: { lease, usageLog, env: keys, routeCaps: { caps: rereadRouteCaps(prepared), slots: { ...DEFAULT_ROUTE_CLASSES }, defaultClass: 'extraction' } } });
     proxy.start();
     try {
       const res = await runReread(prepared, { providerProxy: `http://127.0.0.1:${proxy.port}`, lease: { usd: leaseUsd, usageLog } });

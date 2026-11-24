@@ -12,24 +12,31 @@
  *        refuse another batch, unit scope, world end or week's sources.
  *   OV4  a weekly re-read is graded by its reader's preregistered gating judge alone (claude-opus-5-5 for particle-1).
  *   OV5  settle holds every re-read to its own records under the real re-read id, not its arm's.
+ *   Dry run: the fixture week runs from plan to aggregates through the runner, the week's campaign, the real lease proxy
+ *        in front of a scripted loopback upstream and the re-reads the launch hands over.
  */
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from 'bun:test';
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { bg1LaunchProblems } from '../../eval/runner/bg1/launch.ts';
+import { BudgetRun } from '../../eval/runner/budget-ledger.ts';
 import { freePort } from '../../eval/runner/lifecycle/slice.ts';
 import { bgwBatchDataset } from '../../eval/runner/memory-qa/bg1-names.ts';
 import { BG1_FIXTURES_ROOT, bg1Conversation, type Bg1Manifest, type Corpus } from '../../eval/runner/memory-qa/corpus.ts';
 import type { ChatLike, ChatResult } from '../../eval/runner/memory-qa/qa-v2.ts';
+import { DEFAULT_ROUTE_CAPS, keylessKeys, keylessUpstream, MeteringProxy } from '../../eval/runner/metering-proxy.ts';
 import { sha256, WEEKLY_CELLS_ENV, WEEKLY_CELLS_SHA256_ENV, WEEKLY_RUN_ENV } from '../../eval/runner/memory-qa/records.ts';
 import { findCell, runCell, windowedRunGuard } from '../../eval/runner/q1/cell.ts';
+import { pinnedJudgeRouteCaps } from '../../eval/runner/q1/cells/definitions.ts';
 import { generateWeeklyLineCells, WEEKLY_LINE_MODELS } from '../../eval/runner/q1/cells/weekly-line.ts';
-import { prepareReread, rereadCellId, rereadKeys, runReread } from '../../eval/runner/q1/reread-cell.ts';
+import { prepareReread, rereadArm, rereadCellId, rereadKeys, rereadRouteCaps, runReread } from '../../eval/runner/q1/reread-cell.ts';
 import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
-import { Campaign, runRemote, weeklyCustodyPush, type CampaignManifest } from '../../eval/runner/shootout-cell.ts';
+import { Campaign, DEFAULT_ROUTE_CLASSES, runRemote, weeklyCustodyPush, type CampaignManifest } from '../../eval/runner/shootout-cell.ts';
 import { FakeMemorySystem } from '../../eval/runner/systems/fake.ts';
+import type { AgentAnswer } from '../../eval/runner/systems/file-agent.ts';
+import { main as aggregatesMain } from '../../eval/runner/weekly-line/aggregates.ts';
 import { WL_ROWS } from '../../eval/runner/weekly-line/design.ts';
 import { CAMPAIGN_FILE, CELLS_FILE, launchWeek, markStep, planWeek, settleWeek, weeklyLaunchCheck, WIRED_CELL_SET, type RunnerDeps } from '../../eval/runner/weekly-line/runner.ts';
 
@@ -232,15 +239,15 @@ const fixtureCorpus = (ids: readonly string[], worldEnd = WEEK.world_end): Corpu
  * fixtures under a root outside the repository, pinned by a filled manifest, with the access log and the week's run
  * named in process.env as the custody host's launch names them. No unit scope is set, as on the custody host.
  */
-function custodyHost(launch = WEEK.launch, worldEnd = WEEK.world_end) {
+function custodyHost(launch = WEEK.launch, worldEnd = WEEK.world_end, kept = ['bgw-1001', 'bgw-1002', 'bgw-1003']) {
   const root = scratch('bgw-host');
-  const files = fixtureFiles(['bgw-1001', 'bgw-1002', 'bgw-1003']).flatMap(f => (['world', 'questions'] as const).map(k => {
+  const files = fixtureFiles(kept).flatMap(f => (['world', 'questions'] as const).map(k => {
     const path = `worlds/${f.id}/${k}.json`;
     mkdirSync(join(root, 'worlds', f.id), { recursive: true });
     writeFileSync(join(root, path), f[k]);
     return { path, sha256: sha256(f[k]) };
   }));
-  const manifest: Bg1Manifest = { dataset: bgwBatchDataset(1001), status: 'filled', layout: 'test', note: 'fixture', filled_at: '2026-12-01', kept: ['bgw-1001', 'bgw-1002', 'bgw-1003'], n_final: 3, files };
+  const manifest: Bg1Manifest = { dataset: bgwBatchDataset(1001), status: 'filled', layout: 'test', note: 'fixture', filled_at: '2026-12-01', kept: [...kept], n_final: kept.length, files };
   writeFileSync(join(root, 'bgw-1001-manifest.json'), JSON.stringify(manifest));
   const log = join(scratch('custody-log'), 'access.ndjson');
   Object.assign(process.env, { GBRAIN_EVALS_BGW_SOURCE: root, GBRAIN_EVALS_BGW_MANIFEST: join(root, 'bgw-1001-manifest.json'), GBRAIN_EVALS_BGW_BATCH: 'bgw-1001',
@@ -368,5 +375,101 @@ describe("OV5: settle covers every re-read by its own records", () => {
     touch([first]);
     expect(settleWeek(dir, { costs }).steps).toMatchObject({ rereads: run.rereads.length });
   });
+});
+
+
+// ─── Dry run ─────────────────────────────────────────────────────────
+
+/** A loopback upstream: readers answer RIGHT or WRONG by the question's hash, judges grade by that word, and a Gemini request fails; every request is logged. */
+function scriptedUpstream() {
+  const log: Array<{ path: string; model: string; judging: boolean; max: unknown }> = [];
+  const server = Bun.serve({ hostname: '127.0.0.1', port: 0, async fetch(req) {
+    const path = new URL(req.url).pathname, body = await req.json() as Record<string, any>;
+    const prompt = (body.messages as Array<{ content: unknown }>).map(x => (typeof x.content === 'string' ? x.content : (x.content as Array<{ text?: string }>).map(c => c.text ?? '').join(''))).join('\n');
+    const judging = /\nResponse: [\s\S]*?\n\nThe response is correct/.test(prompt);
+    log.push({ path, model: String(body.model), judging, max: body.max_tokens ?? body.max_completion_tokens });
+    if (String(body.model).startsWith('gemini')) return Response.json({ error: { message: 'no weekly answer is graded by Gemini' } }, { status: 500 });
+    const text = judging ? verdictOf(prompt) : answerOf(prompt);
+    if (path.endsWith('/v1/messages')) return Response.json({ id: 'msg_1', type: 'message', role: 'assistant', model: body.model, stop_reason: 'end_turn', content: [{ type: 'text', text }], usage: { input_tokens: 100, output_tokens: 5 } });
+    if (path.endsWith('/chat/completions')) return Response.json({ id: 'chatcmpl-1', object: 'chat.completion', created: 0, model: body.model, choices: [{ index: 0, message: { role: 'assistant', content: text }, finish_reason: 'stop' }], usage: { prompt_tokens: 100, completion_tokens: 5, total_tokens: 105 } });
+    return Response.json({ error: { message: `no route ${path}` } }, { status: 404 });
+  } });
+  return { url: `http://127.0.0.1:${server.port}`, log, stop: () => server.stop(true) };
+}
+
+/** The real lease proxy, keyless: every provider at the scripted upstream, placeholder keys, the given output caps. */
+function leaseProxy(name: string, upstream: string, caps: Record<string, number>) {
+  const lease = BudgetRun.openLease({ runId: `wl-dry-${name}`, leaseUsd: 25, ledgerPath: join(scratch('ledger'), 'lease.sqlite') });
+  const proxy = new MeteringProxy({ upstream: keylessUpstream(upstream), policy: { lease, usageLog: join(scratch('usage'), 'usage.ndjson'), env: keylessKeys(), routeCaps: { caps, slots: { ...DEFAULT_ROUTE_CLASSES }, defaultClass: 'extraction' } } });
+  proxy.start();
+  return { url: `http://127.0.0.1:${proxy.port}`, stop: () => { proxy.stop(); lease.close(); } };
+}
+
+/** The grep agent's stand-in: the in-memory fake, answering each question as the scripted reader would, with no model call. */
+class FakeAgent extends FakeMemorySystem {
+  async answer(_ns: string, q: { text: string }): Promise<AgentAnswer> {
+    return { text: answerOf(`Question: ${q.text}\n`), stop_reason: 'submitted', outcome: 'scored', usage: { input: 1, output: 1, cache_read: 0, cache_write: 0 }, provider_input_tokens: 1, latency_ms: 1, turns: 1, usd: 0, opened_source_ids: [] };
+  }
+}
+
+describe('the fixture week, end to end and keyless', () => {
+  // Value: protects=a week runs from plan to aggregates through the wired path: the runner plans and launches it, every campaign unit resolves from cells.json under the exports its command carries and runs through the real lease proxy, every re-read the launch hands over runs under its id and is graded by its gating judge, and settle and the aggregates read the week; fails_when=any link the OV1 to OV5 fixes wire breaks (a unit doesn't resolve or runs off-week, a re-read refuses for want of a judge or is capped out by its proxy, settle misses a re-read, the aggregates refuse the records); why_new=GBEV-3 ruling B's execution-wiring PR (a keyless end-to-end dry run before any weekly cell spends); seam=runner.ts plan, launch and settle, cell.ts findCell and runCell, reread-cell.ts prepareReread, rereadRouteCaps and runReread, aggregates.ts week, over template fixtures in a custody root and a scripted loopback upstream; no_claim=the systems under test (in-memory fakes, and the grep agent answers with no model call), ubi-runner and the VM push, and any spend figure
+  test('plan, launch, cells, re-reads, judgments, settle and the aggregates run on the fixture week', async () => {
+    custodyHost(WEEK.launch, WEEK.world_end, WORLDS);
+    const manifest = JSON.parse(readFileSync(process.env.GBRAIN_EVALS_BGW_MANIFEST!, 'utf8')) as Bg1Manifest;
+    const dir = scratch('week');
+    const { run, steps } = planWeek({ dir, launch: WEEK.launch, batch: { first: 1001, week1: WEEK.launch, manifest } }, runnerDeps());
+    const order = launchWeek(dir, 'WL-T', runnerDeps(), 500);
+    const campaign = JSON.parse(readFileSync(join(dir, CAMPAIGN_FILE), 'utf8')) as CampaignManifest;
+    const up = scriptedUpstream();
+    const outs = new Map<string, string>();
+    const offline = globalThis.fetch;
+    globalThis.fetch = ((input: string | URL | Request, init?: RequestInit) => {
+      const url = new URL(typeof input === 'string' || input instanceof URL ? input : input.url);
+      if (url.hostname !== '127.0.0.1') throw new Error(`the dry run reached ${url.hostname}`);
+      return realFetch(input, init);
+    }) as typeof fetch;
+    try {
+      Object.assign(process.env, order.env);
+      for (const unit of order.stages[0].units) {
+        const c = campaign.cells.find(x => x.id === unit)!;
+        Object.assign(process.env, Object.fromEntries([...c.command.matchAll(/export (\w+)=([^;]+); /g)].map(m => [m[1], m[2]])));
+        const def = findCell(unit, undefined, 'weekly', process.env);
+        const out = join(scratch('unit'), 'out');
+        const proxy = leaseProxy(unit, up.url, { ...DEFAULT_ROUTE_CAPS, ...pinnedJudgeRouteCaps(def.arms) });
+        try {
+          const res = await runCell(def, { out, providerProxy: proxy.url, keyless: true, ...quiet }, { system: def.arms.some(a => a.mode === 'agent') ? new FakeAgent() : new FakeMemorySystem() });
+          expect([unit, res.status, res.stopped, res.invalid_reasons]).toEqual([unit, 'complete', null, []]);
+        } finally { proxy.stop(); }
+        outs.set(unit, out);
+        for (const a of def.arms) cpSync(join(out, 'cells', a.cell_id), join(dir, 'cells', a.cell_id), { recursive: true });
+      }
+      for (const r of order.rereads!) {
+        const arg = (name: string) => r.argv[r.argv.indexOf(name) + 1];
+        const def = findCell(arg('--cell'), undefined, 'weekly', process.env);
+        const p = prepareReread(def, rereadArm(def, arg('--arm')), { sources: [join(outs.get(def.id)!, 'runs', def.id)], reader: arg('--reader'), out: join(scratch('reread'), 'out'), keyless: true, manifest: 'weekly' });
+        expect([p.cell_id, p.gating]).toEqual([r.id, OPUS]);
+        const proxy = leaseProxy(r.id, up.url, rereadRouteCaps(p));
+        try { expect((await runReread(p, { providerProxy: proxy.url })).status).toBe('complete'); } finally { proxy.stop(); }
+        cpSync(join(p.out, 'cells', p.cell_id), join(dir, 'cells', p.cell_id), { recursive: true });
+      }
+    } finally { globalThis.fetch = offline; up.stop(); }
+
+    for (const s of steps) if (s.stage !== 'aggregates') markStep(dir, s.id, 'done');
+    const costs = WL_ROWS.flatMap(row => ['claude-opus-5-5', 'particle-1'].flatMap(reader => WORLDS.map(world => ({ row, reader, world, usd: 0.25 }))));
+    const marker = settleWeek(dir, { costs });
+    expect(marker.steps).toEqual({ cells: run.cells.length + 1, rereads: run.rereads.length, judgments: run.cells.length + 1 + run.rereads.length, harness_failures: 0 });
+    const aggregates = scratch('aggregates');
+    expect(aggregatesMain(['week', '--meta', join(dir, 'meta.json'), '--records', dir, '--out', aggregates])).toBe(0);
+    const week = JSON.parse(readFileSync(join(aggregates, `week-${WEEK.launch}.json`), 'utf8'));
+    expect([week.run_id, week.worlds.length]).toEqual([run.run_id, WORLDS.length]);
+    for (const [cls, c] of Object.entries(week.classes as Record<string, { means: Record<string, { readers: Record<string, number> }>; differences: Record<string, { lost: number }> }>)) {
+      expect([cls, Object.keys(c.means).sort()]).toEqual([cls, [...WL_ROWS].sort()]);
+      for (const m of Object.values(c.means)) expect(Object.keys(m.readers).sort()).toEqual(['claude-opus-5-5', 'particle-1']);
+      for (const d of Object.values(c.differences)) expect(d.lost).toBe(0);
+    }
+    const sent = [...new Set(up.log.map(l => `${l.judging ? 'judge' : 'read'} ${l.model}`))].sort();
+    expect(sent).toEqual(['judge claude-opus-5-5', 'judge gpt-6-astra', 'read claude-opus-5-5', 'read particle-1']);
+  }, 300_000);
 });
 
