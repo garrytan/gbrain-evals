@@ -150,6 +150,20 @@ describe('weeklyLineLaunchProblems', () => {
     expect(launch({ cells: graded })).toEqual(["cell bgw.ext-extract-first.common would add its instrument's canonical judge to every answer (descriptive_view is not false)"]);
   });
 
+  // Value: protects=each cell's arm reads at its row's mode and reading budget (an 8,000-token read, or the grep agent with none), and has only that arm; fails_when=a hand-edited 16,000-token read, a packed grep agent, an agent-mode server or a second arm passes the launch check; why_new=#615 final review finding 1 (launch.ts:65), owed by the wiring PR (GBEV-3 ruling); seam=launch.ts weeklyLineLaunchProblems over WEEKLY_LINE_ROWS; no_claim=the arm's retrieval settings
+  test("refuses an arm whose mode or reading budget is not its row's, or a second arm", () => {
+    const wide = edit('ext-extract-first', c => { c.arms[0].budget = 16000; return c; });
+    expect(launch({ cells: wide }).join('; ')).toContain("arm bgw.ext-extract-first.common.component-b8000 reads in mode packed at 16000 token budget, not its row's packed at 8000 token budget");
+    const g8 = edit('gbrain-defaults', c => { c.arms[0].budget = 16000; return c; });
+    expect(launch({ cells: g8 }).join('; ')).toContain("not its row's packed at 8000 token budget");
+    const packedGrep = edit('baseline-file-agent', c => { c.arms[0].mode = 'packed'; c.arms[0].budget = 8000; return c; });
+    expect(launch({ cells: packedGrep }).join('; ')).toContain("reads in mode packed at 8000 token budget, not its row's agent at no token budget");
+    const agentServer = edit('ext-memory-bank', c => { c.arms[0].mode = 'agent'; delete (c.arms[0] as { budget?: number }).budget; return c; });
+    expect(launch({ cells: agentServer }).join('; ')).toContain("reads in mode agent at no token budget, not its row's packed at 8000 token budget");
+    const twoArms = edit('ext-memory-bank', c => { c.arms.push({ ...c.arms[0], id: 'b16000', cell_id: `${c.id}.b16000`, budget: 16000 }); return c; });
+    expect(launch({ cells: twoArms }).join('; ')).toContain('cell bgw.ext-memory-bank.recipe has 2 arms');
+  });
+
   test('refuses a world outside Set W, a cell on another set, and cells or re-reads of different weeks', () => {
     const outside = cells.map(c => ({ ...c, week: { ...c.week!, worlds: [...WORLDS.slice(0, 7), 'bg1-031'] } }));
     expect(launch({ cells: outside, rereads: weeklyLineRereadPlans(outside) })).toContain('world(s) bg1-031 are not Set W worlds of batch bgw-1001');

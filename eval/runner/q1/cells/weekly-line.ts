@@ -53,12 +53,15 @@ export const WEEKLY_LINE_EFFORT = 'medium';
 /** particle-1's output limit on its re-reads: its provider row's output floor, which leaves room for its reasoning, as BG1-C's re-reads sent it. */
 export const WEEKLY_LINE_PARTICLE_MAX_TOKENS = COMPAT_PROVIDERS.particle.models['particle-1'].output_floor;
 
-/** The four rows, keyed by the preregistration's row names (weekly-line/design.ts WL_ROWS): each row's system and configuration. */
+/**
+ * The four rows, keyed by the preregistration's row names (weekly-line/design.ts WL_ROWS): each row's system and
+ * configuration, and the mode and reading budget of its one arm (an 8,000-token read, or the grep agent with none).
+ */
 export const WEEKLY_LINE_ROWS = {
-  gbrain: { system: 'gbrain-defaults', configuration: 'rs1-stable' },
-  'grep-agent': { system: 'baseline-file-agent', configuration: 'baseline' },
-  'extract-first': { system: 'ext-extract-first', configuration: 'common' },
-  'memory-bank': { system: 'ext-memory-bank', configuration: 'recipe' },
+  gbrain: { system: 'gbrain-defaults', configuration: 'rs1-stable', mode: 'packed', budget: 8000 },
+  'grep-agent': { system: 'baseline-file-agent', configuration: 'baseline', mode: 'agent', budget: null },
+  'extract-first': { system: 'ext-extract-first', configuration: 'common', mode: 'packed', budget: 8000 },
+  'memory-bank': { system: 'ext-memory-bank', configuration: 'recipe', mode: 'packed', budget: 8000 },
 } as const;
 
 /**
@@ -160,11 +163,12 @@ const perReader = (readers: readonly string[]): NonNullable<ArmDefinition['front
 });
 /** The 8,000-token rows are read live by claude-opus-5-5; particle-1 re-reads them (weeklyLineRereadPlans). */
 const LIVE = [OPUS];
+const R = WEEKLY_LINE_ROWS;
 const ARMS: Record<keyof typeof WEEKLY_LINE_ROWS, () => ArmSpec> = {
-  gbrain: () => ({ id: 'p', mode: 'packed', budget: 8000, label: F6_ARMS.p.label, retrieval: F6_ARMS.p.retrieval, readers: [...LIVE], frontier: perReader(LIVE) }),
-  'grep-agent': () => ({ id: 'whole-agent', mode: 'agent', label: `grep agent, uncapped ripgrep, ${FILE_AGENT_MAX_TURNS} turns`, readers: [...WEEKLY_LINE_READERS], frontier: perReader(WEEKLY_LINE_READERS) }),
-  'extract-first': () => ({ id: 'component-b8000', mode: 'packed', budget: 8000, label: 'component, 8,000 tokens', readers: [...LIVE], frontier: perReader(LIVE) }),
-  'memory-bank': () => ({ id: 'component-b8000', mode: 'packed', budget: 8000, label: 'component, 8,000 tokens', readers: [...LIVE], frontier: perReader(LIVE) }),
+  gbrain: () => ({ id: 'p', mode: R.gbrain.mode, budget: R.gbrain.budget, label: F6_ARMS.p.label, retrieval: F6_ARMS.p.retrieval, readers: [...LIVE], frontier: perReader(LIVE) }),
+  'grep-agent': () => ({ id: 'whole-agent', mode: R['grep-agent'].mode, label: `grep agent, uncapped ripgrep, ${FILE_AGENT_MAX_TURNS} turns`, readers: [...WEEKLY_LINE_READERS], frontier: perReader(WEEKLY_LINE_READERS) }),
+  'extract-first': () => ({ id: 'component-b8000', mode: R['extract-first'].mode, budget: R['extract-first'].budget, label: 'component, 8,000 tokens', readers: [...LIVE], frontier: perReader(LIVE) }),
+  'memory-bank': () => ({ id: 'component-b8000', mode: R['memory-bank'].mode, budget: R['memory-bank'].budget, label: 'component, 8,000 tokens', readers: [...LIVE], frontier: perReader(LIVE) }),
 };
 
 /**

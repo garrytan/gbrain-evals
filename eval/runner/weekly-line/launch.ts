@@ -20,7 +20,9 @@ import { ripgrepVersion } from '../systems/file-agent.ts';
  * Why a week may not launch; empty when it may. It refuses:
  *
  *   ripgrep   a week with the grep agent on a host where ripgrep can't run, because a missing rg would cripple that row;
- *   rows      a week that doesn't hold each of the four preregistered rows exactly once, or holds another cell;
+ *   rows      a week that doesn't hold each of the four preregistered rows exactly once, or holds another cell, or a cell
+ *             whose arms aren't its row's one arm at the row's mode and reading budget (WEEKLY_LINE_ROWS), so a
+ *             hand-edited 16,000-token read refuses;
  *   gbrain    a gbrain cell whose launch GBRAIN_SHA or recorded gbrain_build isn't the build the runner resolved and
  *             passed in (the newest release at launch);
  *   worlds    a cell outside Set W (set, benchmark or block), cells that don't share one week, a week whose launch, world
@@ -47,7 +49,12 @@ export function weeklyLineLaunchProblems(l: { gbrain: WeeklyLineGbrainBuild; cel
     const n = l.cells.filter(c => c.system === system && c.configuration === configuration).length;
     if (n !== 1) p.push(`the week has ${n} ${row} cells (${system}.${configuration}), not one`);
   }
-  for (const c of l.cells) if (!Object.values(WEEKLY_LINE_ROWS).some(r => r.system === c.system && r.configuration === c.configuration)) p.push(`cell ${c.id} is not one of the preregistered rows`);
+  for (const c of l.cells) {
+    const row = Object.values(WEEKLY_LINE_ROWS).find(r => r.system === c.system && r.configuration === c.configuration);
+    if (!row) { p.push(`cell ${c.id} is not one of the preregistered rows`); continue; }
+    if (c.arms.length !== 1) p.push(`cell ${c.id} has ${c.arms.length} arms, not its row's one`);
+    for (const a of c.arms) if (a.mode !== row.mode || (a.budget ?? null) !== row.budget) p.push(`arm ${a.cell_id} reads in mode ${a.mode} at ${a.budget ?? 'no'} token budget, not its row's ${row.mode} at ${row.budget ?? 'no'} token budget`);
+  }
   if (!week) p.push(`cell ${l.cells[0].id} names no week`);
   else p.push(...weeklyLineWeekProblems(week, week.worlds));
   for (const c of l.cells.filter(c => c.system === 'gbrain-defaults')) {
