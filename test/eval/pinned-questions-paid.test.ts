@@ -551,6 +551,8 @@ describe('pinned-questions paid arm: provider errors, safety stops and budget re
     await run(out, (slug, n, model) => (model.includes('gpt-6.2-sol') && slug === a && n === 2 ? new Error('503 Service Unavailable: upstream provider_error') : null), models);
     expect(pendingUnits(out, key, models, [1, 2])).toEqual([{ model: 'particle:particle-1', seed: 2 }, { model: 'openai:gpt-6.2-sol', seed: 1 }, { model: 'openai:gpt-6.2-sol', seed: 2 }]);
     expect(pendingUnits(out, checkpointKey({ mode: 'keyless', gut, companies: 8, maxOutputTokens: 8000 }), models, [1])).toHaveLength(2);
+    const src = readFileSync('eval/runner/pinned-questions-paid.ts');
+    expect(JSON.parse(key).runner_sha256).toBe(createHash('sha256').update(src).update(readFileSync('eval/generators/pinned-questions-gen.ts')).digest('hex'));
     const summary = (run_id: string, usd: number, requests: number) => ({ run_id, budget_usd: 50, reserved_usd: usd, actual_usd: usd, charged_reservations: 0, requests, input_tokens: requests * 10, output_tokens: requests * 5, overshoot_usd: 0, ledger_path: 'l', program_cap_usd: 500, event_loop_lag_ms: null });
     combinedCost(out, 'other-key', summary('r0', 9, 9));
     combinedCost(out, key, summary('r1', 1.5, 3));

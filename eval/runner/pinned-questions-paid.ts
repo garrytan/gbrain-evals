@@ -600,13 +600,19 @@ const isBudgetRefusal = (e: unknown) => e instanceof BudgetExceededError || (e i
 
 export interface PaidRunResult { worlds: PqWorld[]; rows: PaidRow[]; acc: ProbeAccounting; harnessErrors: string[]; resumedUnits: number }
 
-/** What a checkpointed unit must match to be reused: mode, gbrain build, generator, world size, output cap and judge prompt. */
+/**
+ * What a checkpointed unit must match to be reused: mode, gbrain build, generator, world size, output cap, judge prompt,
+ * and the runner's and generator's own source (WAIT_MS, the judge routing, the grading and every other constant here).
+ */
 export function checkpointKey(o: { mode: PaidMode['kind']; gut: GbrainUnderTest; companies?: number; maxOutputTokens?: number }): string {
   return JSON.stringify({
+    runner_sha256: RUNNER_SOURCE_SHA256,
     mode: o.mode, gbrain: o.gut.overlay?.build.commit ?? o.gut.version, generator: PINNED_QUESTIONS_GENERATOR_VERSION, companies: o.companies ?? 24, max_output_tokens: o.maxOutputTokens ?? null,
     judge_prompt_sha256: createHash('sha256').update(PINNED_QUESTIONS_JUDGE_PROMPT).digest('hex'),
   });
 }
+
+const RUNNER_SOURCE_SHA256 = createHash('sha256').update(readFileSync(import.meta.path)).update(readFileSync(resolve(import.meta.dir, '../generators/pinned-questions-gen.ts'))).digest('hex');
 
 /** The (model, seed) units a launch would still ask: those with no checkpointed unit, or one owed its retry. */
 export function pendingUnits(output: string, key: string, models: readonly string[], seeds: readonly number[]): Array<{ model: string; seed: number }> {
