@@ -407,7 +407,7 @@ describe('runSurfaceParity on the pinned gbrain', () => {
   test('pglite runs every surface keyless through the real CLI; rust is refused', async () => {
     const gut = resolveGbrainUnderTest(null);
     const r = await runSurfaceParity({ gut, engines: ['pglite', 'rust'], corpus: tinyCorpus, script: tinyScript });
-    expect(r.engines.rust).toMatchObject({ status: 'refused', refusal_reason: 'rust_kind_unsupported' });
+    expect(r.engines.rust).toMatchObject({ status: 'refused', refusal_reason: 'rust_engine_addon_missing' });
     expect(r.engines.pglite.status).toBe('ran');
     expect(r.engines.pglite.setup.every(s => s.code === 0)).toBe(true);
     const ops = SURFACES_OF(r);
