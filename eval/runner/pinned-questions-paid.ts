@@ -463,6 +463,12 @@ export function measuredJudge(rows: ReadonlyArray<Pick<PaidRow, 'first' | 'refre
   return { outputTokens: Math.min(JUDGE_MAX_TOKENS, Math.ceil(1.5 * us.reduce((a, u) => a + u.output_tokens, 0) / calls)), callsPerAnswer: calls / us.length };
 }
 
+/** The graded rows a launch prices the judge from: the judge-check receipt's for a counted launch, else this directory's checkpointed units under the same key. */
+export function judgeEstimateRows(output: string, key: string, judgeCheck?: string): PaidRow[] {
+  if (judgeCheck && existsSync(judgeCheck)) return (JSON.parse(readFileSync(judgeCheck, 'utf8')) as { data?: { rows?: PaidRow[] } }).data?.rows ?? [];
+  return readCheckpoint(join(output, 'checkpoint.ndjson')).filter(x => x.key === key).flatMap(x => x.rows);
+}
+
 export function estimateUsd(models: readonly string[], seeds: number, companies: number, maxOutputTokens?: number, judge: { outputTokens: number; callsPerAnswer: number } | null = null): number {
   const answerOutput = Math.max(EST_TOKENS.pin.output, maxOutputTokens ?? 0);
   const cost = (model: string, t: { input: number; output: number }) => {
@@ -912,8 +918,7 @@ async function main(): Promise<void> {
   requireStageDirectory(output, seeds);
   const pending = pendingUnits(output, key, models, seeds);
   const judgeCheck = stage === 'counted' ? argValue(argv, '--judge-check') : undefined;
-  const graded = judgeCheck && existsSync(judgeCheck) ? (JSON.parse(readFileSync(judgeCheck, 'utf8')) as { data?: { rows?: PaidRow[] } }).data?.rows ?? [] : readCheckpoint(join(output, 'checkpoint.ndjson')).flatMap(x => x.rows);
-  const judge = measuredJudge(graded);
+  const judge = measuredJudge(judgeEstimateRows(output, key, judgeCheck));
   const estimate = models.reduce((s, m) => s + estimateUsd([m], pending.filter(u => u.model === m).length, companies, maxOutputTokens, judge), 0);
   requirePaidFlags(argv, estimate);
   requireProviderKeys(models);

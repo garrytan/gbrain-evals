@@ -13,7 +13,7 @@ import { writeReceipt } from '../../eval/runner/receipt.ts';
 import {
   EST_TOKENS, JUDGE_CALLS_PER_ANSWER, JUDGE_MAX_TOKENS, JUDGE_MIN_LABELS, PINNED_QUESTIONS_JUDGE_PROMPT, estimateUsd, measuredJudge, PINNED_QUESTIONS_MODELS_UNDER_TEST, STAGE_SEEDS, TRUNCATION_BAR, buildReceipt, canonicalModel, cohenKappa,
   familyOf, judgeAgreement, judgeCheckPasses, judgeFor, judgeUserMessage, modelRoles, parseJudgeLabels, requirePaidFlags, ruleLabels,
-  checkpointKey, combinedCost, harnessBlocked, recordProcessCost, requireStageDirectory, receiptFile, servedWrongModel, outcomeOf, pendingUnits, readCheckpoint, recordingGenerateText, redactProviderText, requireJudgeCheck, requireProviderKeys, runPinnedQuestionsPaid, scoredCorrect, summarizePaid,
+  checkpointKey, combinedCost, harnessBlocked, judgeEstimateRows, recordProcessCost, requireStageDirectory, receiptFile, servedWrongModel, outcomeOf, pendingUnits, readCheckpoint, recordingGenerateText, redactProviderText, requireJudgeCheck, requireProviderKeys, runPinnedQuestionsPaid, scoredCorrect, summarizePaid,
   type ChatTransport, type GradedAnswer, type PaidRow, type PaidRunResult,
 } from '../../eval/runner/pinned-questions-paid.ts';
 
@@ -601,6 +601,9 @@ describe('pinned-questions paid arm: provider errors, safety stops and budget re
     expect(() => requireStageDirectory(out, [1, 2])).not.toThrow();
     expect(() => requireStageDirectory(out, [11, 12])).toThrow(/seeds 1, outside this launch's seeds \(11, 12\)/);
     expect(() => requireStageDirectory(join(out, 'empty'), [11])).not.toThrow();
+    const key = checkpointKey({ mode: 'keyless', gut, companies: 8 });
+    expect(judgeEstimateRows(out, key)).toHaveLength(8);
+    expect(judgeEstimateRows(out, checkpointKey({ mode: 'paid', gut, companies: 8 }))).toHaveLength(0);
   }, 120_000);
 
   test('each row records the model that answered, and a row another model answered is a harness error, not a result', async () => {
