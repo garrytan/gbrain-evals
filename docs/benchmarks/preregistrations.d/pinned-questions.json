@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "experiments": [
+    {
+      "id": "pinned-questions",
+      "preregistration": "docs/benchmarks/2026-11-24-pinned-questions-preregistration.md",
+      "results": [
+        "docs/benchmarks/pinned-questions/**",
+        "docs/benchmarks/pinned-questions-results.md"
+      ],
+      "results_page": "docs/benchmarks/pinned-questions-results.md",
+      "registered": "2026-11-24",
+      "paid_tier": "under-500",
+      "decision": [
+        {
+          "if": "keyless: one change makes unrelated pins due, or a contradiction in an existing note is never signalled",
+          "then": "GBRA-108 ships the scheduling fix it accepted, and we rerun the keyless arm on that release"
+        },
+        {
+          "if": "keyless: neither scheduling failure appears on the counted seeds",
+          "then": "we withdraw the fix request and correct the handoff"
+        },
+        {
+          "if": "keyless: the false-flag rate on unrelated edits to cited pages has a 95% lower bound above 10%",
+          "then": "the paragraph-level evidence design note goes to GBRA-108 as a plan to build; otherwise it closes"
+        },
+        {
+          "if": "paid: particle-1 is non-inferior to claude-opus-5-5 within 10 points on refreshed-answer correctness",
+          "then": "we ask GBRA-108 to document particle-1 as the low-cost models.standing_questions choice"
+        },
+        {
+          "if": "paid: particle-1 is inferior or the result is inconclusive",
+          "then": "we document that refreshes stay on the deep tier, or recommend nothing at this sample size"
+        },
+        {
+          "if": "paid: Opus correctness after a contradiction is at least 15 points below its correctness after a direct edit",
+          "then": "design note to GBRA-108: recompute in full when new in-scope evidence arrives"
+        }
+      ],
+      "arms": [
+        "keyless-flags",
+        "paid-refresh"
+      ],
+      "models": [
+        {
+          "model": "claude-opus-5-5",
+          "role": "under-test"
+        },
+        {
+          "model": "particle:particle-1",
+          "role": "under-test"
+        },
+        {
+          "model": "gpt-6.2-sol",
+          "role": "under-test"
+        },
+        {
+          "model": "gpt-6.2-astra",
+          "role": "judge"
+        },
+        {
+          "model": "claude-opus-5-5",
+          "role": "judge"
+        }
+      ],
+      "pilots": [
+        {
+          "arm": "keyless-flags",
+          "max_budget_fraction": 0.1,
+          "part_under_test_ran": "keyless: dev seeds 1 to 3 answered every claim at pin, flagged nothing before a change and flagged every deletion on the first status read",
+          "judge_passes": "no model judge in this arm",
+          "units_supplied_at_rate": "keyless: 72 dev questions in about 40 seconds"
+        },
+        {
+          "arm": "paid-refresh",
+          "max_budget_fraction": 0.1,
+          "part_under_test_ran": "seed 21: each model's refreshes carry answer_model equal to that model and appear as ledger request rows",
+          "judge_passes": "both judges reach kappa of at least 0.6 on the 144 pilot outputs before any counted unit",
+          "units_supplied_at_rate": "all 24 seed-21 questions pin and refresh for every model"
+        }
+      ],
+      "judge_check": {
+        "judges": [
+          {
+            "model": "gpt-6.2-astra",
+            "grades": [
+              "claude-opus-5-5",
+              "particle-1"
+            ],
+            "labelled_outputs": 144,
+            "kappa_min": 0.6
+          },
+          {
+            "model": "claude-opus-5-5",
+            "grades": [
+              "gpt-6.2-sol"
+            ],
+            "labelled_outputs": 144,
+            "kappa_min": 0.6
+          }
+        ],
+        "read_per_arm": true
+      },
+      "interim_look": {
+        "not_required": "the paid run is planned under $500"
+      }
+    }
+  ]
+}

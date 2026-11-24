@@ -25,6 +25,7 @@ import { JUDGE_MODEL as LME_ANSWERS_JUDGE } from '../../eval/runner/longmemeval-
 import { READER_MODEL as A4_READER } from '../../eval/runner/a4-abstention.ts';
 import { DEFAULT_AGENT_MODEL as CHRONICLE_AGENT } from '../../eval/runner/chronicle-lift.ts';
 import { DEFAULT_DEV_MODEL as TEMPORAL_CONTRADICTIONS_DEV } from '../../eval/runner/temporal-contradictions.ts';
+import { PINNED_QUESTIONS_JUDGES, PINNED_QUESTIONS_MODELS_UNDER_TEST } from '../../eval/runner/pinned-questions-paid.ts';
 import { DEFAULT_THINK_MODEL as PRECISIONMEMBENCH_THINK } from '../../eval/precisionmembench/gbrainThinkAdapter.ts';
 import { DEFAULT_JUDGE as QA_JUDGE, DEFAULT_READER as QA_READER } from '../../eval/runner/memory-qa/qa.ts';
 import { DEFAULT_QA as LIFECYCLE_QA } from '../../eval/runner/lifecycle-lite/run.ts';
@@ -83,6 +84,7 @@ const DEFAULTS: Record<string, Registered> = {
   'A4 house reader': { test: [A4_READER] },
   'chronicle-lift agent': { test: [CHRONICLE_AGENT] },
   'temporal-contradictions dev model': { test: [TEMPORAL_CONTRADICTIONS_DEV] },
+  'pinned-questions paid arm models and judges': { test: [...PINNED_QUESTIONS_MODELS_UNDER_TEST], judge: [...PINNED_QUESTIONS_JUDGES] },
   'PrecisionMemBench think model': { test: [PRECISIONMEMBENCH_THINK] },
   ...Object.fromEntries(Object.keys(QA_READER).map(b => [`memory-qa ${b} reader and judge`, { test: [QA_READER[b]!], judge: [QA_JUDGE[b]!] }])),
   'memory-qa and feedback-replay think model': { test: [MEMORY_QA_THINK] },
