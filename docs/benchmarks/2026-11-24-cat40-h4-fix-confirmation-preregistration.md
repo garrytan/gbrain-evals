@@ -115,7 +115,7 @@ frontier readers; everything else runs once. A task's success in an arm is the m
   unsupported; it never decides success, which the deterministic scorer (`cat40-hard-score-v2`) does.
   `gpt-6.2-sol` grades the Claude Opus 5.5 rows; `claude-opus-5-5` grades the GPT-6.2 Sol rows and the particle-1
   rows. No model grades its own family's rows, no older generation sits in a judge role, particle-1 never judges, and
-  each row records its judge. The judge's output feeds one secondary endpoint (contradicted claims per answer, below);
+  each row records its judge. The judge's output feeds one secondary endpoint (contradicted or unsupported claims per answer, below);
   the Hard runner requires a judge on every cell, so it runs on every counted cell either way.
 - **Judge check (before any counted cell), per judge.** Each judge grades its own set of 100 constructed answers on
   the public world N1's tasks, 20 per family, 50 good (the accepted value with its governing documents) and 50 bad (a
@@ -124,8 +124,8 @@ frontier readers; everything else runs once. A task's success in an arm is the m
   answers for `claude-opus-5-5`). The construction label is the reference, so these are construction-labelled, not
   model-labelled. A judge passes at Cohen's kappa of at least 0.6, reading "at least one contradicted or unsupported
   claim" as bad, with at least 40 items of each class graded and at most 1% unparseable; its errors are reported per
-  arm. A judge that fails leaves the claim endpoints of the rows
-  it grades descriptive; the success endpoints use no judge and are unaffected.
+  arm. No counted cell runs until both judges pass. A judge that fails is revised and checked again on a fresh set
+  of 100, or replaced by another judge outside the graded rows' family, by dated amendment before any counted cell.
 
 ## Metric and denominator
 
@@ -150,12 +150,12 @@ frontier readers; everything else runs once. A task's success in an arm is the m
 - **Key secondary endpoints**, reported with the same bootstrap and no multiplicity correction, labelled secondary:
   1. Δ_H4 pooled over Opus 5.5 and GPT-6.2 Sol (each task's two readers averaged), and Δ_H4 for GPT-6.2 Sol alone.
   2. **No harm:** Δ_other = `gbrain-section` minus `gbrain-default` on H1, H2, H3 and H5 (160 tasks), pooled over the two
-     frontier readers. Section delivery **does no harm** when Δ_other's lower bound is above -5 points. The margin is at least
-     the detectable difference below (4.5 points); if the recorded values before cells put that difference above 5,
-     the margin becomes that difference.
-  3. **The gap:** `gbrain-section` minus `fs` on H4, per reader and pooled. "Level with files" when the interval's lower
-     bound is above -3 points and its upper bound is not below 0; "behind files" when the upper bound is below 0;
-     otherwise "not distinguishable from files", with the point estimate. With files near the ceiling on H4, the pooled
+     frontier readers. Section delivery **does no harm** when Δ_other's lower bound is above -5 points. The margin is fixed at
+     -5 points whatever the recorded values show; a lower bound at or below -5 means harm is not ruled out.
+  3. **The gap:** `gbrain-section` minus `fs` on H4, per reader and pooled. "Ahead of files" when the interval's lower
+     bound is above 0; "level with files" (no more than 3 points behind) when the lower bound is above -3 points and
+     at or below 0; "behind files" when the upper bound is below 0; otherwise "not distinguishable from files", with
+     the point estimate. With files near the ceiling on H4, the pooled
      gap's detectable difference is about 7 points, so "level" needs a gap near zero.
   4. From the transcripts, per gbrain arm: searches where a long page was delivered as its section, grep calls with
      `a|b` and how many returned matches, and H4 items whose governing document was never returned, grouped by how the
@@ -164,7 +164,8 @@ frontier readers; everything else runs once. A task's success in an arm is the m
      correct answer.
   6. Cost per cell and per correct answer for each gbrain arm and reader (the prototype raised Opus's H4 cost per cell
      by about a fifth).
-  7. Contradicted claims per answer, per arm and reader, from the claims judge.
+  7. Contradicted or unsupported claims per answer, per arm and reader, from the claims judge: the measure the judge
+     check validates. Contradicted claims alone are listed beside it, labelled unvalidated.
 - **Wording.** "Helps" when the primary interval's lower bound is above 0; "hurts" when its upper bound is below 0;
   otherwise "not distinguishable", with the point estimate.
 - **Smallest detectable difference** (two-sided α 0.05, 80% power, 2.8 standard errors), estimated from GBEV-134's
@@ -192,6 +193,7 @@ frontier readers; everything else runs once. A task's success in an arm is the m
 | Helps, but harm is not ruled out (Δ_other's lower bound at or below -5) | The flip does not go to Garry as it stands; GBRA-108 gets the per-family split as evidence for a scoped version (contract and amendment pages, or keyword searches), which would need its own check |
 | Not distinguishable | The flip is closed. One "Why null?" cycle from secondary 4 (did section delivery fire on sealed worlds, did long documents cross the 20,000-character threshold, did the 5-page cap bite, did the governing record come back at all) records why, with a verdict, weighing the cost per cell (secondary 6): KEEP as an opt-in setting, FIX-METHOD or CUT-CANDIDATE, any cut candidate reported to Garry in plain words |
 | Hurts | The flip is closed, and GBRA-108 gets the paired numbers and the transcript statistics |
+| `gbrain-section` is ahead of files on H4 | README says gbrain answers more of these questions than plain files, with the interval |
 | `gbrain-section` is level with files on H4 | README says gbrain is level with plain files on these questions, with the interval |
 | The gap is not distinguishable from files | README gives the gap with its interval and says the run cannot tell level from behind |
 | `gbrain-section` is still behind files on H4 | README says so with the number, and the gap's share from manager-phrase records (secondary 4) goes to GBRA-108 |
@@ -211,7 +213,7 @@ frontier readers; everything else runs once. A task's success in an arm is the m
 
 Each arm's pilot costs at most a tenth of that arm's planned spend and runs before its counted cells, on S3: five cells
 per frontier reader, one task per family. A pilot shows the part under test ran on the arm's own outputs, that tasks
-can be supplied at the planned concurrency with no rate-limit stop, and that the judges pass the judge check above.
+can be supplied at the planned concurrency with no rate-limit stop, and that both judges have passed the judge check above.
 - `gbrain-section`: every cell calls gbrain tools, none gets `param_not_on_surface`, and at least one search across the
   arm's pilot and the S3 oracle-gate H4 probe shows section delivery firing (a search row carrying `delivered: {unit: "section"}`). If no pilot cell exercises it, five more H4 cells on S3 run as the pilot;
   if those don't either, the arm is reported as not exercised and the run stops for a dated amendment.
@@ -227,9 +229,13 @@ Planned paid spend is above the size at which the factory's rules require an int
 two halves fixed by task id: half A is H4 tasks 01 to 10 of every world (60 tasks), half B tasks 11 to 20. When half A
 has finished for both gbrain arms and both frontier readers, the look computes z = Δ_H4 (Opus 5.5, half A) divided by
 its bootstrap standard error.
+- **No variation.** If the bootstrap standard error is 0 (every resample gives the same difference), no stop is
+  taken and half B runs.
 - **Stop for a difference** if |z| ≥ 2.80, either direction.
-- **Stop for futility** if conditional power to end with z ≥ 1.98 under the planned effect of +12.2 points (the
-  primary's detectable difference), at information fraction 0.5, is below 10%.
+- **Stop for futility** only when both directions are out of reach: conditional power to end with z ≥ 1.98 under an
+  effect of +12.2 points (the primary's detectable difference), and to end with z ≤ -1.98 under -12.2 points, at
+  information fraction 0.5, are each below 10%. A look trending toward harm therefore keeps running unless harm is
+  also out of reach.
 - **Otherwise half B runs**, and the final primary interval is the bootstrap percentile interval at the 1.98 level
   (2.39% to 97.61%).
 **What a stop ends.** A stop for a difference or for futility ends every half-B H4 cell in every arm and reader

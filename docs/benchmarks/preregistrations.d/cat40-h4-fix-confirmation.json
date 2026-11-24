@@ -13,7 +13,7 @@
       "paid_tier": "over-500",
       "decision": [
         {
-          "if": "gbrain-section beats gbrain-default on H4 for claude-opus-5-5 (primary interval above 0) and the other four families show no harm (pooled lower bound above -5 points)",
+          "if": "gbrain-section beats gbrain-default on H4 for claude-opus-5-5 (primary interval above 0) and the other four families show no harm (pooled lower bound above -5 points, a fixed margin)",
           "then": "the default flip of search.long_page_unit to section goes to Garry, through GBRA-108, with these numbers"
         },
         {
@@ -27,6 +27,10 @@
         {
           "if": "section delivery hurts on H4 (primary interval below 0)",
           "then": "the flip is closed, and GBRA-108 gets the paired numbers"
+        },
+        {
+          "if": "gbrain-section is ahead of files on H4 (gap interval above 0)",
+          "then": "README says gbrain with section delivery answers more of these questions than plain files, with the interval"
         },
         {
           "if": "gbrain-section is level with files on H4",
@@ -130,7 +134,7 @@
         "at_units_fraction": 0.5,
         "bounds": "obrien-fleming",
         "alpha": 0.05,
-        "futility_stop": "stop when conditional power to end with z of at least 1.98 under the planned +12.2-point effect on the primary endpoint (gbrain-section minus gbrain-default, Opus 5.5, H4) falls below 10% at half the H4 tasks"
+        "futility_stop": "stop only when conditional power to end with z of at least 1.98 under +12.2 points and to end with z of at most -1.98 under -12.2 points are each below 10% at half the H4 tasks (primary endpoint: gbrain-section minus gbrain-default, Opus 5.5, H4); a zero bootstrap standard error takes no stop"
       }
     }
   ]
