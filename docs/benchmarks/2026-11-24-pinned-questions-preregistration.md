@@ -240,7 +240,9 @@ comes from the same rule as before: an answer that still states a changed claim'
 answer that names a removed holder is labelled stale.
 
 **Why these are valid agreement items.** These negatives are first answers, not refreshed ones. A first answer was
-written before the change, so it states the old value of every changed claim. The judge sees an answer and a key, with
+written before the change, so it normally states the old value of every changed claim. One judge-check first answer
+does not match by token: particle-1 wrote the old chief executive's name with a Cyrillic letter, so its rule label is
+missing and its probe's is correct. That probe is a rule error and stays in the set as it is. The judge sees an answer and a key, with
 nothing that says when the answer was written. To the judge, a stale probe looks exactly like a refreshed answer that
 kept the old value, which is the failure this experiment exists to catch. Because the claim values are unique
 synthetic tokens, the stale rule label rests on token presence alone (old value present, new value absent). It is not
