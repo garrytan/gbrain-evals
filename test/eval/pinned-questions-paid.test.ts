@@ -99,14 +99,14 @@ describe('pinned-questions paid arm: models and judges', () => {
   });
 
   test('a question gbrain blocked for a setup reason is a harness error, not a scored wrong answer', () => {
-    const call = (status: string, error: string | null) => ({ model: 'particle:particle-1', status, mode: null, error, failure_message: null, cost_usd: null, usage: { calls: 0, input_tokens: 0, output_tokens: 0, cache_read_tokens: 0, cache_write_tokens: 0 } });
+    const call = (status: string, error: string | null) => ({ status, mode: null, error, failure_message: null, cost_usd: null, usage: { calls: 0, input_tokens: 0, output_tokens: 0, cache_read_tokens: 0, cache_write_tokens: 0 } });
     const graded = { sentences: [], judge_labels: null, judge_error: null, answer_correct: null, rule_labels: {}, rule_correct: null, judge_usage: call('x', null).usage, stale: [] } as unknown as PaidRow['refreshed'];
     for (const reason of ['no_model_key', 'awaiting_consent', 'no_worker', 'budget_exhausted']) {
       expect(harnessBlocked(call('blocked', reason))).toBe(true);
-      expect(scoredCorrect({ pin: call('blocked', reason), refresh: { ...call('blocked', reason), freshness: 'stale', stale_sentences: 0 }, refreshed: graded })).toBeNull();
+      expect(scoredCorrect({ model: 'particle:particle-1', pin: call('blocked', reason), refresh: { ...call('blocked', reason), freshness: 'stale', stale_sentences: 0 }, refreshed: graded })).toBeNull();
     }
     expect(harnessBlocked(call('failed', 'refresh_failed:model_output_not_json'))).toBe(false);
-    expect(scoredCorrect({ pin: call('published', null), refresh: { ...call('failed', 'refresh_failed:model_output_not_json'), freshness: 'stale', stale_sentences: 0 }, refreshed: graded })).toBe(false);
+    expect(scoredCorrect({ model: 'particle:particle-1', pin: call('published', null), refresh: { ...call('failed', 'refresh_failed:model_output_not_json'), freshness: 'stale', stale_sentences: 0 }, refreshed: graded })).toBe(false);
   });
 
   test('bare ids get their provider prefix, and no judge grades its own family or is particle-1', () => {

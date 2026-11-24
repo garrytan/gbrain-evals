@@ -236,8 +236,8 @@ export const recordingGenerateText = (generate: (o: any) => Promise<any>, note: 
 };
 
 /** The structured safety finish of one AI SDK result, mapped as gbrain's gateway maps it (refusal first, then content_filter). */
-export function safetyFinishOf(r: { finishReason?: string; rawFinishReason?: string; providerMetadata?: Record<string, any> } | { stopReason?: string }): SafetyFinish | null {
-  if ('stopReason' in r) return r.stopReason === 'refusal' || r.stopReason === 'content_filter' ? r.stopReason : null;
+export function safetyFinishOf(r: { finishReason?: string; rawFinishReason?: string; providerMetadata?: Record<string, any>; stopReason?: string }): SafetyFinish | null {
+  if (r.stopReason !== undefined) return r.stopReason === 'refusal' || r.stopReason === 'content_filter' ? r.stopReason : null;
   const anthropic = r.providerMetadata?.anthropic?.stopReason ?? r.providerMetadata?.anthropic?.stop_reason;
   if (r.rawFinishReason === 'refusal' || anthropic === 'refusal') return 'refusal';
   return r.finishReason === 'content-filter' || r.finishReason === 'content_filter' ? 'content_filter' : null;
@@ -716,7 +716,7 @@ export async function runPinnedQuestionsPaid(opts: { gut: GbrainUnderTest; model
       for (const [k, v] of Object.entries(opts.mode.keys)) if (v) process.env[k] = v;
     }
     const gateway = await importGbrain<Gateway>(opts.gut, 'src/core/ai/gateway.ts');
-    const { registerChatUsageSink } = await importGbrain<{ registerChatUsageSink(sink: (r: { input_tokens: number; output_tokens: number; cache_read_tokens: number; cache_write_tokens: number }) => void): () => void }>(opts.gut, 'src/core/ai/chat-usage.ts');
+    const { registerChatUsageSink } = await importGbrain<{ registerChatUsageSink(sink: (r: { model: string; input_tokens: number; output_tokens: number; cache_read_tokens: number; cache_write_tokens: number }) => void): () => void }>(opts.gut, 'src/core/ai/chat-usage.ts');
     const env = opts.mode.kind === 'paid' ? { ...opts.mode.keys } : { ANTHROPIC_API_KEY: 'keyless-placeholder-not-a-key' };
     const gatewayConfig = (chatModel: string) => ({
       chat_model: chatModel, env, provider_chat_options: { particle: { reasoningEffort: PARTICLE_REASONING_EFFORT } },
