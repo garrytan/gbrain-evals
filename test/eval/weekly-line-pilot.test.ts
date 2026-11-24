@@ -13,7 +13,7 @@ import { bg1LaunchProblems } from '../../eval/runner/bg1/launch.ts';
 import { cohenKappa } from '../../eval/runner/bg1/judge-check.ts';
 import { loadBg1Dev, type MemoryQuestion } from '../../eval/runner/memory-qa/corpus.ts';
 import { answerId, answerProblems, sha256, type AnswerRecord } from '../../eval/runner/memory-qa/records.ts';
-import { loadWeeklyPilotManifest, windowedRunGuard } from '../../eval/runner/q1/cell.ts';
+import { loadWeeklyPilotManifest, metering, windowedRunGuard } from '../../eval/runner/q1/cell.ts';
 import { bg1JudgeOf, isWeeklyLineCell } from '../../eval/runner/q1/cells/definitions.ts';
 import {
   buildWeeklyPilotManifest, generateWeeklyLineCells, generateWeeklyLineJudgeCheckCells, generateWeeklyLinePilotCells, WEEKLY_LINE_BLOCK_WORLDS, WEEKLY_LINE_JUDGE_CHECK_PAUSE_USD,
@@ -23,7 +23,7 @@ import { prepareReread } from '../../eval/runner/q1/reread-cell.ts';
 import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { toolCalls } from '../../eval/runner/systems/file-agent.ts';
 import { WL_BLOCK_WORLDS } from '../../eval/runner/weekly-line/design.ts';
-import { analyze, answerKind, buildSample, main as judgeCheckMain, MODEL_LABEL_SOURCE, poolAnswers, ruleZero, type PoolAnswer } from '../../eval/runner/weekly-line/judge-check.ts';
+import { analyze, answerKind, buildSample, labelInstrument, labelWithGemini, main as judgeCheckMain, MODEL_LABEL_SOURCE, poolAnswers, ruleZero } from '../../eval/runner/weekly-line/judge-check.ts';
 import { main as pilotMain, pilotPlan, pilotReport, readRow, writePilotCampaigns, type RowReading } from '../../eval/runner/weekly-line/pilot.ts';
 
 const tmp = mkdtempSync(join(tmpdir(), 'weekly-line-pilot-'));
@@ -169,12 +169,14 @@ describe('pilot.ts', () => {
       block: 'BGW-pilot', worlds: ['bg1-dev-01'], answers: 64, by_reader: row === 'grep-agent' ? { [OPUS]: 64, [PARTICLE]: 64 } : { [OPUS]: 64 }, outcomes: { scored: 64 }, verdicts: { needed: 64, given: 64, parse_failed: 0 },
       accuracy: { [OPUS]: 0.9 }, spend_usd: 2, spend_source: 'proxy', part_under_test: { ran: true, detail: {} }, ...o });
     const rows = [reading('gbrain'), reading('grep-agent', { accuracy: { [OPUS]: 0.97 } }), reading('extract-first', { part_under_test: { ran: false, detail: {} } }), reading('memory-bank', { spend_usd: 50 })];
-    const rereads = rows.filter(r => r.row !== 'grep-agent').map(r => ({ cell: `${r.cell}.x.reread-particle-particle-1`, answers: 64, verdicts: { needed: 64, given: 64 }, accuracy: 0.5, spend_usd: 0.2, status: 'complete' }));
+    const rereads = rows.filter(r => r.row !== 'grep-agent').map(r => ({ cell: `${r.cell}.x.reread-particle-particle-1`, answers: 64, unjudged: 0, accuracy: 0.5, spend_usd: 0.2, status: 'complete' }));
     const rep = pilotReport(rows, rereads, manifest);
     expect(Object.fromEntries(Object.entries(rep.rows).map(([k, v]) => [k, v.pass]))).toEqual({ gbrain: true, 'grep-agent': true, 'extract-first': false, 'memory-bank': false });
     expect(rep.rows['memory-bank'].checks!.under_cap).toBe(false);
     expect(rep.ceiling.triggers_longer_worlds).toBe(true);
     expect(rep.projected_week.usd).toBeCloseTo((2.2 + 2 + 2.2 + 50.2) * 8, 2);
+    const partial = pilotReport(rows, rereads.map((x, i) => (i === 0 ? { ...x, status: 'partial', unjudged: 1 } : x)), manifest);
+    expect(partial.rows.gbrain.checks!.every_answer_judged).toBe(false);
   });
 });
 
@@ -242,6 +244,8 @@ describe('the judge check', () => {
     expect(new Set(report.items.map(i => i.label_source))).toEqual(new Set(['gold-settled', MODEL_LABEL_SOURCE]));
     expect(report.items.every(i => i.label_source === (sample.find(s => s.id === i.id)!.gold === null ? MODEL_LABEL_SOURCE : 'gold-settled'))).toBe(true);
     expect(message(() => buildSample(pool.filter(a => a.reader !== OPUS || a.verdict === 1), questions))).toContain('JUDGE_CHECK_SHORT');
+    const dir = writeCell(scratch('twice'), 'BGW-pilot');
+    expect(message(() => poolAnswers([dir, dir]))).toContain('appears twice across the --cell directories');
   });
 
   // Value: protects=a judge's kappa is Cohen's kappa of its verdicts against the labels, an unlabelled or stale-labelled item stays out, and the gates stop a judge under 0.6 or under 100 labels; fails_when=analyze counts a missing model label as wrong, accepts a label for another text, or gates on agreement instead of kappa; why_new=R78's kappa gate; seam=judge-check.ts analyze; no_claim=the interval's width
@@ -299,6 +303,27 @@ describe('the judge check', () => {
     expect(row.outcomes.turn_cap).toBeGreaterThan(0);
     expect(row.agent!.rates.no_tool_call).toBeGreaterThan(0);
     expect(row.agent!.ripgrep).toBe('14.1.0');
+    const answersFile = join(out, 'cells', pilot.find(c => c.system === 'baseline-file-agent')!.arms[0].cell_id, 'answers.ndjson');
+    const recs = readFileSync(answersFile, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l));
+    writeFileSync(answersFile, recs.map((a, i) => JSON.stringify(i === 5 ? { ...a, outcome: 'reader_error', tool_calls: undefined } : a)).join('\n') + '\n');
+    expect(readRow(out)[0].part_under_test.ran).toBe(true);
+  });
+
+  // Value: protects=a labelling resume retries an item whose gemini-3.8-flash grade did not parse, instead of leaving it unlabelled for good; fails_when=labelWithGemini counts a null label as done, so one flaky call fails a judge's 100-label gate; why_new=/ship review p1/red-team#1; seam=judge-check.ts labelWithGemini with a scripted client that never returns a parseable grade; no_claim=gemini's real grades
+  test('a resume retries an unparsed model label', async () => {
+    const pool = poolAnswers(cells());
+    const sample = buildSample(pool, questions).filter(i => i.gold === null).slice(0, 2);
+    const file = join(scratch('labels'), 'labels.ndjson');
+    let calls = 0;
+    const client = { chat: async () => { calls++; return { text: 'not a verdict', usage: { input: 1, output: 1, cache_read: 0, cache_write: 0 }, cached: false, latency_ms: 1 } as any; } };
+    const meter = metering(null, { meter: () => {} }, {});
+    const byId = new Map(pool.map(a => [a.answer_id, a]));
+    expect(await labelWithGemini(sample, byId, questions, client, meter, labelInstrument(), file)).toBeNull();
+    const first = calls;
+    expect(first).toBeGreaterThan(0);
+    expect(readFileSync(file, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l).label)).toEqual([null, null]);
+    expect(await labelWithGemini(sample, byId, questions, client, meter, labelInstrument(), file)).toBeNull();
+    expect(calls).toBe(first * 2);
   });
 
   // Value: protects=an answer records each tool's calls and failures, so the pilot can show the grep agent searched; fails_when=toolCalls counts a grep error as a search or a tool error as a success; why_new=R111's proof that the grep agent's part ran; seam=file-agent.ts toolCalls; no_claim=the agent loop

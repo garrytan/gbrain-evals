@@ -27,8 +27,8 @@
  *
  * report reads what each pilot unit and re-read wrote and prints what R111 asks of each row: that the part under test ran
  * (gbrain's facts block reached the reader's context; each server ingested the world and returned memories; ripgrep's
- * version is recorded, every grep-agent answer records its tool calls and each reader's agent got grep results back at
- * least once, with its no-tool-call share reported), every answer's gating verdict, each row's cost from the metering
+ * version is recorded and each reader's agent got grep results back at least once, with how many answers recorded their
+ * tool calls and the no-tool-call share reported), every answer's gating verdict, each row's cost from the metering
  * proxy's usage fields, the grep agent's seconds, tokens and dollars per answer, the ceiling reading (the grep agent with
  * claude-opus-5-5 at 95% or more) and a week projected at the measured rates.
  */
@@ -174,7 +174,8 @@ export interface RowReading {
   part_under_test: { ran: boolean; detail: Record<string, unknown> };
   agent?: { seconds_per_answer: number | null; input_tokens_per_answer: number | null; output_tokens_per_answer: number | null; usd_per_answer: number | null; turns_per_answer: number | null; rates: Record<string, number | null>; ripgrep: string | null };
 }
-export interface RereadReading { cell: string; answers: number; verdicts: { needed: number; given: number }; accuracy: number | null; spend_usd: number | null; status: string | null }
+/** One re-read: complete means every planned answer exists and every answer that needs a verdict has one (reread-cell.ts's run_status). */
+export interface RereadReading { cell: string; answers: number; unjudged: number | null; accuracy: number | null; spend_usd: number | null; status: string | null }
 
 /** The arm cells a cell out dir holds (cells/<arm cell id>/ with a receipt). */
 const armDirs = (out: string) => (existsSync(join(out, 'cells')) ? readdirSync(join(out, 'cells')).sort().map(d => join(out, 'cells', d)).filter(d => existsSync(join(d, 'receipt.json'))) : []);
@@ -202,7 +203,7 @@ export function readRow(out: string): RowReading[] {
       const recorded = answers.filter(a => a.tool_calls !== undefined).length;
       const ripgrep = receipt.system?.versions?.ripgrep ?? null;
       const searchedPerReader = Object.fromEntries(readers.map(r => [r, answers.filter(a => a.reader === r && searchedBy(a)).length]));
-      part = { ran: ripgrep !== null && answers.length > 0 && recorded === answers.length && readers.every(r => searchedPerReader[r] > 0),
+      part = { ran: ripgrep !== null && answers.length > 0 && readers.every(r => searchedPerReader[r] > 0),
         detail: { ripgrep, answers_with_tool_calls: recorded, answers_with_a_returned_grep: answers.filter(searchedBy).length, answers_with_a_returned_grep_by_reader: searchedPerReader } };
       const per = (f: (a: (typeof answers)[number]) => number | undefined) => r4(mean(answers.map(f).filter((x): x is number => typeof x === 'number')));
       const rate = (k: (a: (typeof answers)[number]) => boolean) => (answers.length ? r4(answers.filter(k).length / answers.length) : null);
@@ -232,7 +233,7 @@ export function readReread(out: string): RereadReading[] {
   return armDirs(out).map(dir => {
     const receipt = readJson(join(dir, 'receipt.json'));
     const spend = receipt.spend ?? {};
-    return { cell: String(receipt.cell_id ?? dir), answers: receipt.counts?.answers ?? 0, verdicts: { needed: receipt.counts?.answers_promised ?? 0, given: receipt.counts?.judgments ?? 0 },
+    return { cell: String(receipt.cell_id ?? dir), answers: receipt.counts?.answers ?? 0, unjudged: typeof receipt.counts?.unjudged === 'number' ? receipt.counts.unjudged : null,
       accuracy: Object.values(receipt.per_reader_mean ?? {})[0] as number | null ?? null, spend_usd: typeof spend.reader_usd === 'number' && typeof spend.judge_usd === 'number' ? r2(spend.reader_usd + spend.judge_usd) : null, status: receipt.run_status ?? null };
   });
 }
@@ -247,7 +248,7 @@ export function pilotReport(rows: RowReading[], rereads: RereadReading[], m: Pic
     const worlds = r?.worlds.length || 1;
     const checks = r ? {
       part_under_test_ran: r.part_under_test.ran,
-      every_answer_judged: r.verdicts.needed > 0 && r.verdicts.given === r.verdicts.needed && rr.every(x => x.verdicts.given >= x.verdicts.needed),
+      every_answer_judged: r.verdicts.needed > 0 && r.verdicts.given === r.verdicts.needed && rr.every(x => x.status === 'complete' && x.unjudged === 0),
       both_readers_answered: row === 'grep-agent' ? Object.keys(r.by_reader).length === 2 : rr.length === 1 && rr[0].answers > 0,
       under_cap: spend !== null && spend <= m.pilot_caps[row].cap_usd + 1e-9,
     } : null;

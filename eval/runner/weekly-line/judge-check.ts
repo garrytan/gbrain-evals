@@ -81,7 +81,7 @@ export interface SampleItem {
 
 /** The grep-agent cells a judge check reads: each cell out dir's one arm, from a pilot or judge-check block. */
 export function poolAnswers(dirs: readonly string[]): PoolAnswer[] {
-  return dirs.flatMap(out => {
+  const pool = dirs.flatMap(out => {
     const cells = join(out, 'cells');
     const arms = existsSync(cells) ? readdirSync(cells).sort().filter(d => existsSync(join(cells, d, 'receipt.json'))) : [];
     if (!arms.length) refuse(`${out} holds no cell receipt under cells/`);
@@ -95,6 +95,9 @@ export function poolAnswers(dirs: readonly string[]): PoolAnswer[] {
       });
     });
   });
+  const seen = new Set<string>();
+  for (const a of pool) { if (seen.has(a.answer_id)) refuse(`answer ${a.answer_id} appears twice across the --cell directories; pass each cell out dir once`); seen.add(a.answer_id); }
+  return pool;
 }
 
 export const answerKind = (a: Pick<PoolAnswer, 'stop_reason' | 'text'>): AnswerKind =>
@@ -180,9 +183,9 @@ export type WeeklyJudgeCheckReport = ReturnType<typeof analyze>;
 /** The labelling instrument: the judge-check cells' own, so gemini-3.8-flash sees the request the gating judges saw. */
 export const labelInstrument = (): Instrument => instrumentFor(generateWeeklyLineJudgeCheckCells()[0].canonical_instrument);
 
-/** gemini-3.8-flash labels every item without a gold-settled label not yet labelled; a failed call stops the pass. */
+/** gemini-3.8-flash labels every item without a gold-settled label that has no parsed label yet, so a resume retries an unparsed one; a failed call stops the pass. */
 export async function labelWithGemini(sample: readonly SampleItem[], answers: ReadonlyMap<string, PoolAnswer>, questions: ReadonlyMap<string, MemoryQuestion>, client: Parameters<typeof judgeAnswer>[0], meter: ReturnType<typeof metering>, instrument: Instrument, file: string): Promise<string | null> {
-  const done = new Set(readLabels(file).map(l => l.item));
+  const done = new Set(readLabels(file).filter(l => l.label !== null).map(l => l.item));
   for (const i of sample.filter(x => x.gold === null && !done.has(x.id))) {
     const r = await meter.around('judge', `judge:${i.id.slice(0, 21)}:${BG1_CANONICAL_JUDGE}`, 'judge', () => judgeAnswer(client, instrument, questions.get(i.question_id)!, answers.get(i.answer_id)!.text, { judge: BG1_CANONICAL_JUDGE, judgeReplicate: 0, view: 'descriptive' }));
     if (r.error !== undefined) return `${BG1_CANONICAL_JUDGE} on ${i.id}: ${String((r.error as Error).message).slice(0, 200)}`;
@@ -199,7 +202,7 @@ const usage = 'usage: judge-check.ts label --cell <dir>... (--dry-run | --out <d
 export async function main(argv: string[], log: (s: string) => void = s => console.log(s)): Promise<number> {
   const mode = argv[0], dryRun = argv.includes('--dry-run');
   const one = (n: string) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : undefined; };
-  const dirs = argv.flatMap((a, i) => (a === '--cell' && argv[i + 1] ? [resolve(argv[i + 1])] : []));
+  const dirs = [...new Set(argv.flatMap((a, i) => (a === '--cell' && argv[i + 1] ? [resolve(argv[i + 1])] : [])))];
   const out = one('--out') ? resolve(one('--out')!) : null;
   if (!['label', 'report'].includes(mode) || !dirs.length || (!out && !(mode === 'label' && dryRun))) { console.error(usage); return 2; }
   const seed = one('--seed') ? Number(one('--seed')) : WEEKLY_JUDGE_CHECK_SEED;
