@@ -1,0 +1,1 @@
+- Whole-history reads by OpenAI models no longer send `n: 1`, which GPT-6.2 Sol now refuses with a 400 before answering. The request shaping sits in `eval/runner/providers/openai-default-params.ts`, outside every cached row's version hash, so rows already bought stay fresh.
