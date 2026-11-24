@@ -169,4 +169,18 @@ describe('pinned-questions runner on the pinned gbrain', () => {
     expect(s.by_class.remove_source_page!.flags.recall).toBe(1);
     expect(r.sentences).toHaveLength(32);
   }, 120_000);
+
+  test('a gbrain error partway through a change keeps its question row, marked, records none of its sentences and fails conformance', async () => {
+    const world = generatePinnedQuestionsWorld({ seed: 1, companies: 8 });
+    const broken = world.companies[2]!.slug;
+    const r = await runPinnedQuestions({ gut: resolveGbrainUnderTest(gbrainSpecFrom([])), seeds: [1], companies: 8, cycles: 2, hooks: { afterRead: slug => { if (slug === broken) throw new Error('status read failed mid-change'); } } });
+    expect(r.harnessError).toBeNull();
+    expect(r.questions).toHaveLength(8);
+    expect(r.questions.find(q => q.company === broken)).toMatchObject({ error: 'status read failed mid-change' });
+    expect(r.sentences.some(s => s.company === broken)).toBe(false);
+    expect(r.sentences).toHaveLength(28);
+    expect(r.acc.summary().errors).toEqual([expect.objectContaining({ origin: 'sut', message: 'status read failed mid-change' })]);
+    expect(summarize(r.sentences, r.questions).overall).toMatchObject({ questions: 7, errors: 1 });
+    expect(exactConformance(r.sentences, r.questions).pass).toBe(false);
+  }, 120_000);
 });

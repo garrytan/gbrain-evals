@@ -251,7 +251,10 @@ export function failedQuestion(seed: number, c: PqCompany, baselineStale: number
   };
 }
 
-async function changePass(gut: GbrainUnderTest, world: PqWorld, citation: CitationPolicy, cycles: number, sentences: SentenceRow[], questions: QuestionRow[], acc: ProbeAccounting): Promise<void> {
+/** afterRead: called once a change's status reads are in and its row is built, before the refresh days (a test seam for a gbrain error partway through). */
+export interface ChangeHooks { afterRead?(slug: string): void | Promise<void> }
+
+async function changePass(gut: GbrainUnderTest, world: PqWorld, citation: CitationPolicy, cycles: number, sentences: SentenceRow[], questions: QuestionRow[], acc: ProbeAccounting, hooks: ChangeHooks = {}): Promise<void> {
   const b = await buildBrain(gut, world, citation);
   try {
     const baseline = new Map<string, number>();
@@ -286,6 +289,7 @@ async function changePass(gut: GbrainUnderTest, world: PqWorld, citation: Citati
           baseline_stale: baseline.get(c.slug) ?? 0, freshness: r.freshness, new_evidence: r.new_evidence_since_watermark === true,
           stale_sentences: r.sentences.stale, gold_signal: gold, signalled: signalOf(r), spillover, cycles_to_correct: null, refreshes: 0,
         };
+        await hooks.afterRead?.(c.slug);
         b.calls.clear();
         for (let day = 1; day <= cycles; day++) {
           await b.sut.engine.executeRaw(`UPDATE pinned_questions SET last_attempt_at = last_attempt_at - interval '1 day' WHERE last_attempt_at IS NOT NULL`);
@@ -303,7 +307,6 @@ async function changePass(gut: GbrainUnderTest, world: PqWorld, citation: Citati
       } catch (e) {
         const message = e instanceof Error ? e.message : String(e);
         if (voidsSeed(message)) throw e;
-        if (row) sentences.push(...local);
         questions.push({ ...(row ?? failedQuestion(world.seed, c, baseline.get(c.slug) ?? 0)), error: message });
         acc.error(probe, 'sut', message);
       }
@@ -315,7 +318,7 @@ async function changePass(gut: GbrainUnderTest, world: PqWorld, citation: Citati
 
 export interface PqRunResult { worlds: PqWorld[]; sentences: SentenceRow[]; questions: QuestionRow[]; acc: ProbeAccounting; harnessError: string | null }
 
-export async function runPinnedQuestions(opts: { gut: GbrainUnderTest; seeds?: readonly number[]; companies?: number; cycles?: number; citation?: CitationPolicy; log?: (s: string) => void }): Promise<PqRunResult> {
+export async function runPinnedQuestions(opts: { gut: GbrainUnderTest; seeds?: readonly number[]; companies?: number; cycles?: number; citation?: CitationPolicy; log?: (s: string) => void; hooks?: ChangeHooks }): Promise<PqRunResult> {
   return withHermeticEnv(CATEGORY, async () => {
     const log = opts.log ?? (() => {});
     const cycles = opts.cycles ?? DEFAULT_CYCLES;
@@ -327,7 +330,7 @@ export async function runPinnedQuestions(opts: { gut: GbrainUnderTest; seeds?: r
     for (const world of worlds) {
       const seed = world.seed;
       try {
-        await changePass(opts.gut, world, opts.citation ?? 'all', cycles, sentences, questions, acc);
+        await changePass(opts.gut, world, opts.citation ?? 'all', cycles, sentences, questions, acc, opts.hooks);
         log(`seed ${seed}: ${world.pages.length} pages, ${world.facts.length} facts, ${world.companies.length} questions`);
       } catch (e) {
         harnessError = `seed ${seed}: ${e instanceof Error ? e.message : String(e)}`;

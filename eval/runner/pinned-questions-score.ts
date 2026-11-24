@@ -30,7 +30,7 @@ export interface QuestionRow {
   cycles_to_correct: number | null;
   /** Refreshes the phase ran, on any question, in the days counted for this change. */
   refreshes: number;
-  /** The gbrain error that stopped this change's measurement partway; the row is kept so the count is never lost. */
+  /** The gbrain error that stopped this change's measurement partway; the row is kept so the count is never lost, and the change's sentences are not recorded. */
   error?: string;
 }
 
