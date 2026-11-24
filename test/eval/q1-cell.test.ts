@@ -392,6 +392,26 @@ describe('whole-system arms through the cell runner', () => {
     const rec = JSON.parse(readFileSync(join(out, 'cells', def.arms[0].cell_id, 'receipt.json'), 'utf8'));
     expect(rec.per_reader_mean[READERS[0]]).toBe(1);
   });
+
+  test('full context: an OpenAI reader that refuses `n` is sent none (n: 1 is the API default) and is scored', async () => {
+    const def = cellDef('baseline-full-context', 'in-process', [{ id: 'whole-full-context', mode: 'full-context' }], { configuration: 'baseline' });
+    const out = join(tmp, 'full-no-n');
+    const sent: Record<string, unknown>[] = [];
+    const fetchImpl = (async (url: string, init: RequestInit) => {
+      if (String(url).includes('anthropic')) return Response.json({ content: [{ type: 'text', text: 'x' }], usage: { input_tokens: 10, output_tokens: 3 } });
+      const body = JSON.parse(String(init.body));
+      sent.push(body);
+      if ('n' in body) return Response.json({ error: { message: "Unsupported parameter: 'n' is not supported with this model. Omit 'n' from the request.", type: 'invalid_request_error', param: 'n', code: 'unsupported_parameter' } }, { status: 400 });
+      return Response.json({ choices: [{ message: { content: 'x' } }], usage: { prompt_tokens: 10, completion_tokens: 3 } });
+    }) as unknown as typeof fetch;
+    const res = await runCell(def, { out, maxAttempts: 1, ...quiet }, { corpus, system: new FullContextSystem('whole-history'), judge: scriptedJudge(), fullContextFetch: fetchImpl });
+    expect(res.status).toBe('complete');
+    const answers = ndjson(join(out, 'cells', def.arms[0].cell_id, 'answers.ndjson')).filter(a => a.reader.startsWith('openai:'));
+    expect(answers.length).toBeGreaterThan(0);
+    expect(answers.every(a => a.outcome === 'scored')).toBe(true);
+    expect(sent.length).toBe(answers.length);
+    expect(sent.every(b => !('n' in b) && b.reasoning_effort === 'medium' && typeof b.prompt_cache_key === 'string')).toBe(true);
+  });
 });
 
 describe('reader usage (eval/runner/q1/usage.ts)', () => {

@@ -92,6 +92,7 @@ import { failureRow, hashEmbed, readinessProbe, selectQuestions } from '../memor
 import { checkSealedDestinations, sealedPaths } from '../memory-qa/sealed-profile.ts';
 import { ledgerCaps, PaidArmRefusal, requirePaidArm, requireRs1Window, WindowRefusal } from '../paid-arm.ts';
 import { COMPAT_PROVIDERS, JUDGE_PROVIDERS, compatMayHaveBilled } from '../providers/openai-compatible.ts';
+import { withoutDefaultN } from '../providers/openai-default-params.ts';
 import { appendAccessLog, sha256File } from '../sealed-confirmation-lib.ts';
 import { DEFAULT_ROUTE_CLASSES, EXECUTES, Q1_CAMPAIGN_ID, type CampaignManifest as Q1Campaign, type CellSpec } from '../shootout-cell.ts';
 import { AgentRuntimeSystem } from '../systems/agent-runtime.ts';
@@ -1074,7 +1075,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
         if (answers.has(aid)) continue;
         if (!isLive) continue;
         if (arm.mode === 'full-context') {
-          const res = await meter.around('harness', `read:${aid.slice(0, 16)}`, 'reader', () => answerFullContext({ reader: rd, prompt: pack!.prompt, conversation: ns, maxOutputTokens: readerMaxTokens(rd), effort: def.effort, tokenizer: fitTokenizer(rd), ...(deps.fullContextFetch ? { fetchImpl: deps.fullContextFetch } : {}) }));
+          const res = await meter.around('harness', `read:${aid.slice(0, 16)}`, 'reader', () => answerFullContext({ reader: rd, prompt: pack!.prompt, conversation: ns, maxOutputTokens: readerMaxTokens(rd), effort: def.effort, tokenizer: fitTokenizer(rd), fetchImpl: withoutDefaultN(deps.fullContextFetch) }));
           const a = res.value;
           if (!a) { appendAnswer(answerRecord(id, { text: '', outcome: 'reader_error', usage: zero, latency_ms: 0, provider_input_tokens: null }), String((res.error as Error)?.message)); continue; }
           extra.fit = { ...(extra.fit ?? {}), [rd]: { fits: a.fit.fits, prompt_tokens: a.fit.prompt_tokens, max_input_tokens: a.fit.max_input_tokens, tokenizer: a.fit.tokenizer } };
