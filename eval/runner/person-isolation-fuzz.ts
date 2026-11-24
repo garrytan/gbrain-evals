@@ -539,15 +539,21 @@ export function cliArgv(op: Operation, args: Record<string, unknown>): string[] 
 
 async function openCli(gut: GbrainUnderTest, brain: Brain, http: TransportHandle & { port: () => number }): Promise<TransportHandle> {
   const homes = new Map<string, NodeJS.ProcessEnv>();
+  const refusedInit = new Map<string, string>();
   const thin = async (client: string): Promise<NodeJS.ProcessEnv> => {
     if (homes.has(client)) return homes.get(client)!;
+    if (refusedInit.has(client)) throw new Error(refusedInit.get(client)!);
     const dir = mkdtempSync(join(brain.work, 'thin-'));
     mkdirSync(join(dir, 'home'), { recursive: true });
     const env = { ...brain.env, GBRAIN_HOME: dir, HOME: join(dir, 'home') };
     const c = brain.clients[client]!;
     const base = 'http://127.0.0.1:' + http.port();
     const r = await brain.cli(['init', '--mcp-only', '--issuer-url', base, '--mcp-url', base + '/mcp', '--oauth-client-id', c.id, '--oauth-client-secret', c.secret, '--non-interactive'], undefined, env);
-    if (r.code !== 0) throw new Error('thin-client init failed for ' + client + ': ' + (r.stdout + r.stderr).replace(/gbrain_[a-z]{2}_[0-9a-f]+/g, '<redacted>').slice(-400));
+    if (r.code !== 0) {
+      const msg = 'thin-client init failed for ' + client + ': ' + (r.stdout + r.stderr).replace(/gbrain_[a-z]{2}_[0-9a-f]+/g, '<redacted>').slice(-400);
+      if (/returned 40[13]|token rejected|invalid_client|access_member_disabled/.test(msg)) refusedInit.set(client, msg);
+      throw new Error(msg);
+    }
     homes.set(client, env);
     return env;
   };
