@@ -8,7 +8,7 @@
 import { describe, expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { requireWeeklyLineLaunch, weeklyLineLaunchProblems, weeklyLineModelProblems, weeklyLineRegistryModels } from '../../eval/runner/weekly-line/launch.ts';
+import { requireWeeklyLineLaunch, weeklyLineCalledModels, weeklyLineLaunchProblems, weeklyLineModelProblems, weeklyLineRegistryModels } from '../../eval/runner/weekly-line/launch.ts';
 import { OPUS, PARTICLE } from '../../eval/runner/q1/cells/bg1.ts';
 import { BG1C_GBRAIN_LAUNCH, BG1C_RATES } from '../../eval/runner/q1/cells/bg1c.ts';
 import { ALL_SETS, definitionProblems, PER_READER_JUDGE_SETTINGS, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
@@ -27,7 +27,9 @@ const GBRAIN = { release: 'v0.60.800.0', commit: 'a'.repeat(40) };
 const INPUT: WeeklyLineInput = { week: { launch: '2026-12-08', world_end: '2026-12-06', batch: 'bgw-1001' }, worlds: WORLDS, gbrain: GBRAIN };
 const cells = generateWeeklyLineCells(INPUT);
 const rereads = weeklyLineRereadPlans(cells);
-const RG = { ripgrep: () => 'ripgrep 14.1.1' };
+/** The registry entry as launch amendment A will make it: today's entry plus the extract-first server's common embedder. */
+const AMENDED: RegistryModel[] = [...weeklyLineRegistryModels(), { model: 'text-embedding-3-large', role: 'system-internal', system: 'extract-first server (common setup embedder)' }];
+const RG = { ripgrep: () => 'ripgrep 14.1.1', registry: AMENDED };
 const launch = (over: { gbrain?: typeof GBRAIN; cells?: CellDefinition[]; rereads?: typeof rereads } = {}, deps: Parameters<typeof weeklyLineLaunchProblems>[1] = RG) =>
   weeklyLineLaunchProblems({ gbrain: over.gbrain ?? GBRAIN, cells: over.cells ?? cells, rereads: over.rereads ?? rereads }, deps);
 const edit = (system: string, f: (c: CellDefinition) => CellDefinition) => cells.map(c => (c.system === system ? f(structuredClone(c)) : c));
@@ -87,6 +89,7 @@ describe('generateWeeklyLineCells', () => {
     const internal = WEEKLY_LINE_MODELS.filter(m => m.role === 'system-internal');
     expect(internal).toEqual([
       { model: 'openai:gpt-4.1-mini', role: 'system-internal', system: 'ext-extract-first' },
+      { model: 'openai:text-embedding-3-large', role: 'system-internal', system: 'ext-extract-first' },
       { model: 'openai:gpt-4o-mini', role: 'system-internal', system: 'ext-memory-bank' },
       { model: 'anthropic:claude-haiku-5-5', role: 'system-internal', system: 'gbrain-defaults' },
       { model: 'voyage:voyage-4', role: 'system-internal', system: 'gbrain-defaults' },
@@ -96,10 +99,22 @@ describe('generateWeeklyLineCells', () => {
     ]);
   });
 
-  test('the models list matches the registry entry, less the mint\'s simulators', () => {
+  // Value: protects=every model a weekly cell can call is in both the code's list and the registry entry, the extract-first server's common embedder included, so the launch check refuses until launch amendment A registers it; fails_when=a model a cell calls (text-embedding-3-large from shim.py's common setup, or a reader, judge or shipped model) is missing from either list and the week still launches; why_new=#615 final review finding 2 (weekly-line.ts:76), owed by the wiring PR (GBEV-3 ruling); seam=weekly-line.ts WEEKLY_LINE_MODELS and launch.ts weeklyLineLaunchProblems over weeklyLineCalledModels; no_claim=parsing the shims' own configuration
+  test('the models list matches the registry entry less the mint\'s simulators, except the common embedder until launch amendment A', () => {
     const registry = weeklyLineRegistryModels();
     expect(registry.length).toBeGreaterThan(0);
-    expect(weeklyLineModelProblems(registry)).toEqual([]);
+    expect(readFileSync(join(ROOT, 'eval/systems/extract-first/shim.py'), 'utf8')).toContain('"model": "text-embedding-3-large"');
+    expect(weeklyLineModelProblems(registry)).toEqual(['the cell set calls text-embedding-3-large as system-internal, which the registry entry (docs/benchmarks/preregistrations.d/weekly-outcome-line.json) doesn\'t list']);
+    expect(weeklyLineModelProblems(AMENDED)).toEqual([]);
+    expect(launch({}, { ...RG, registry })).toEqual([
+      'the cell set calls text-embedding-3-large as system-internal, which the registry entry (docs/benchmarks/preregistrations.d/weekly-outcome-line.json) doesn\'t list',
+      'a weekly cell can call text-embedding-3-large as system-internal, which the registry entry (docs/benchmarks/preregistrations.d/weekly-outcome-line.json) doesn\'t list',
+    ]);
+    expect(() => requireWeeklyLineLaunch({ gbrain: GBRAIN, cells, rereads }, { ripgrep: RG.ripgrep })).toThrow(/refused before any cell starts: .*text-embedding-3-large/);
+    expect(weeklyLineCalledModels(cells, rereads).filter(m => m.role === 'system-internal').map(m => m.model).sort()).toEqual(WEEKLY_LINE_MODELS.filter(m => m.role === 'system-internal').map(m => m.model).sort());
+    const unlisted = rereads.map((r, i) => (i ? r : { ...r, judges: ['openai:gpt-6.2-astra'] }));
+    expect(launch({ rereads: unlisted })).toContain("a weekly cell can call gpt-6.2-astra as judge, which WEEKLY_LINE_MODELS doesn't name");
+    expect(launch({ rereads: unlisted })).toContain("a weekly cell can call gpt-6.2-astra as judge, which the registry entry (docs/benchmarks/preregistrations.d/weekly-outcome-line.json) doesn't list");
   });
 
   test('definitionProblems: a Set W cell names its week and only a Set W cell does; gbrain_build sits on the gbrain cell it launches', () => {
@@ -128,9 +143,9 @@ describe('weeklyLineLaunchProblems', () => {
   });
 
   test('refuses the grep agent without ripgrep', () => {
-    expect(launch({}, { ripgrep: () => null })).toEqual(["ripgrep (rg) can't run on this host, and the grep agent's cell needs it"]);
-    expect(launch({ cells: cells.filter(c => c.system !== 'baseline-file-agent') }, { ripgrep: () => null })).toEqual(['the week has 0 grep-agent cells (baseline-file-agent.baseline), not one']);
-    expect(() => requireWeeklyLineLaunch({ gbrain: GBRAIN, cells, rereads }, { ripgrep: () => null })).toThrow('refused before any cell starts');
+    expect(launch({}, { ...RG, ripgrep: () => null })).toEqual(["ripgrep (rg) can't run on this host, and the grep agent's cell needs it"]);
+    expect(launch({ cells: cells.filter(c => c.system !== 'baseline-file-agent') }, { ...RG, ripgrep: () => null })).toEqual(['the week has 0 grep-agent cells (baseline-file-agent.baseline), not one']);
+    expect(() => requireWeeklyLineLaunch({ gbrain: GBRAIN, cells, rereads }, { ...RG, ripgrep: () => null })).toThrow('refused before any cell starts');
   });
 
   test('refuses a gbrain cell pinned to a build other than the one resolved at launch', () => {
@@ -199,15 +214,18 @@ describe('weeklyLineLaunchProblems', () => {
     expect(launch({ cells: judged })).toContain(`${suspended}: gpt-4o and gpt-4o-mini are suspended for new campaigns from 2026-11-21 (CLAUDE.md "Choose models")`);
     const read = rereads.map((r, i) => (i ? r : { ...r, reader: 'openai:gpt-4o' }));
     expect(launch({ rereads: read })).toContain('openai:gpt-4o: gpt-4o and gpt-4o-mini are suspended for new campaigns from 2026-11-21 (CLAUDE.md "Choose models")');
-    const registry = weeklyLineRegistryModels();
+    const registry = AMENDED;
     const asJudge: RegistryModel[] = registry.map(m => (m.model === 'gpt-4o-mini' ? { ...m, role: 'judge' } : m));
     expect(launch({}, { ...RG, registry: asJudge })).toContain('gpt-4o-mini: gpt-4o and gpt-4o-mini are suspended for new campaigns from 2026-11-21 (CLAUDE.md "Choose models")');
     expect(weeklyLineModelProblems(registry, WEEKLY_LINE_MODELS.map(m => (m.system === 'ext-memory-bank' ? { model: m.model, role: 'extractor' } : m)))).toContain('openai:gpt-4o-mini: gpt-4o and gpt-4o-mini are suspended for new campaigns from 2026-11-21 (CLAUDE.md "Choose models")');
   });
 
   test('refuses a models list that disagrees with the registry entry', () => {
-    const registry = weeklyLineRegistryModels();
-    expect(launch({}, { ...RG, registry: registry.filter(m => m.model !== 'gpt-4.1-mini') })).toEqual(['the cell set calls gpt-4.1-mini as system-internal, which the registry entry (docs/benchmarks/preregistrations.d/weekly-outcome-line.json) doesn\'t list']);
+    const registry = AMENDED;
+    expect(launch({}, { ...RG, registry: registry.filter(m => m.model !== 'gpt-4.1-mini') })).toEqual([
+      'the cell set calls gpt-4.1-mini as system-internal, which the registry entry (docs/benchmarks/preregistrations.d/weekly-outcome-line.json) doesn\'t list',
+      'a weekly cell can call gpt-4.1-mini as system-internal, which the registry entry (docs/benchmarks/preregistrations.d/weekly-outcome-line.json) doesn\'t list',
+    ]);
     expect(launch({}, { ...RG, registry: [...registry, { model: 'gpt-6.2-sol', role: 'under-test' }] })).toEqual(['the registry entry lists gpt-6.2-sol as under-test, which the cell set doesn\'t call']);
     expect(launch({}, { ...RG, registry: [...registry, { model: 'gemini-4-argon', role: 'simulator' }] })).toEqual([]);
   });

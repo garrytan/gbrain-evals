@@ -80,12 +80,15 @@ export interface RegistryModel { model: string; role: string; system?: string }
  * Every model the weekly cells call, with its role, as the registry entry lists them (WEEKLY_LINE_REGISTRY `models`, less
  * its simulators, which are the mint's): the readers under test, their judges, and each compared system's shipped models
  * as system-internal. gpt-4o-mini is the memory-bank server's shipped extraction model, tested as shipped; no gpt-4o
- * model sits in a role we choose.
+ * model sits in a role we choose. The extract-first server's `common` setup also embeds with text-embedding-3-large
+ * (eval/systems/extract-first/shim.py memory_config); the registry entry lists it from launch amendment A, and until
+ * then the launch check refuses.
  */
 export const WEEKLY_LINE_MODELS: ReadonlyArray<RegistryModel> = [
   ...WEEKLY_LINE_READERS.map(model => ({ model, role: 'under-test' })),
   ...[...new Set(Object.values(WEEKLY_LINE_JUDGE_BY_READER))].map(model => ({ model, role: 'judge' })),
   { model: 'openai:gpt-4.1-mini', role: 'system-internal', system: 'ext-extract-first' },
+  { model: 'openai:text-embedding-3-large', role: 'system-internal', system: 'ext-extract-first' },
   { model: 'openai:gpt-4o-mini', role: 'system-internal', system: 'ext-memory-bank' },
   { model: F6_ASSUMPTIONS.extraction.model, role: 'system-internal', system: 'gbrain-defaults' },
   { model: F6_ASSUMPTIONS.embedding_model, role: 'system-internal', system: 'gbrain-defaults' },

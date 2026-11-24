@@ -33,7 +33,9 @@ import { ripgrepVersion } from '../systems/file-agent.ts';
  *             so particle-1 never judges and no model grades its own family, or a cell whose canonical judge would also
  *             grade every answer (descriptive_view not false);
  *   models    a suspended model (gpt-4o, gpt-4o-mini) as a reader or judge, a cell set whose models list disagrees with the
- *             registry entry's, or a suspended model listed anywhere but as a compared system's system-internal model.
+ *             registry entry's, a suspended model listed anywhere but as a compared system's system-internal model, or a
+ *             model a cell or re-read can call (weeklyLineCalledModels) that the code's list (WEEKLY_LINE_MODELS) and the
+ *             registry entry don't both name in that role.
  */
 export function weeklyLineLaunchProblems(l: { gbrain: WeeklyLineGbrainBuild; cells: readonly CellDefinition[]; rereads: readonly WeeklyLineRereadPlan[] },
   deps: { ripgrep?: () => string | null; registry?: readonly RegistryModel[] } = {}): string[] {
@@ -86,8 +88,33 @@ export function weeklyLineLaunchProblems(l: { gbrain: WeeklyLineGbrainBuild; cel
     if (JSON.stringify(r.worlds) !== JSON.stringify(week?.worlds)) p.push(`re-read ${r.id} reads worlds ${r.worlds.join(', ')}, not the week's`);
   }
   p.push(...[...used].flatMap(m => suspendedModelProblem(m) ?? []));
-  p.push(...weeklyLineModelProblems(deps.registry ?? weeklyLineRegistryModels()));
+  const registry = deps.registry ?? weeklyLineRegistryModels();
+  p.push(...weeklyLineModelProblems(registry));
+  const key = (m: RegistryModel) => `${bareModelId(m.model)} as ${m.role}`;
+  const listed = new Set(WEEKLY_LINE_MODELS.map(key)), registered = new Set(registry.map(key));
+  for (const m of weeklyLineCalledModels(l.cells, l.rereads)) {
+    if (!listed.has(key(m))) p.push(`a weekly cell can call ${key(m)}, which WEEKLY_LINE_MODELS doesn't name`);
+    if (!registered.has(key(m))) p.push(`a weekly cell can call ${key(m)}, which the registry entry (${WEEKLY_LINE_REGISTRY}) doesn't list`);
+  }
   return [...new Set(p)];
+}
+
+/**
+ * Every model a week's cells and re-reads can call, with its role: each arm's and re-read's readers (under-test) and
+ * judges (judge), and the shipped models of each cell's system (system-internal, as WEEKLY_LINE_MODELS names them by
+ * system).
+ */
+export function weeklyLineCalledModels(cells: readonly CellDefinition[], rereads: readonly WeeklyLineRereadPlan[]): RegistryModel[] {
+  const out: RegistryModel[] = [];
+  for (const c of cells) {
+    for (const a of c.arms) {
+      out.push(...a.readers.map(model => ({ model, role: 'under-test' })));
+      out.push(...[...(a.frontier?.judges ?? []), ...Object.values(a.frontier?.judge_by_reader ?? {})].map(model => ({ model, role: 'judge' })));
+    }
+    out.push(...WEEKLY_LINE_MODELS.filter(m => m.role === 'system-internal' && m.system === c.system));
+  }
+  for (const r of rereads) out.push({ model: r.reader, role: 'under-test' }, ...r.judges.map(model => ({ model, role: 'judge' })));
+  return out;
 }
 
 /** The weekly line registry entry's models list (WEEKLY_LINE_REGISTRY). */
