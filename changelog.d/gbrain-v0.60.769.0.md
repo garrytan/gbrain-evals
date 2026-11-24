@@ -8,6 +8,9 @@
   manifest does not name it refuses with `rust_engine_addon_mismatch`. The engine-bench tests now expect those
   reasons in place of the older `rust_kind_unsupported`, and a new keyless test checks that a stray addon in the gbrain
   home is refused on the Rust engine and never reached by PGLite. With no addon, the Rust arm is still refused before
-  any engine call, with no receipt.
+  any engine call, with no receipt. Tests also unset `GBRAIN_RUST_ENGINE_ADDON`, so an addon exported in a developer's
+  shell cannot reach them.
+- The BEAM-10M cell test now checks that its cells run the build their counted runs froze (v0.60.748.0) instead of
+  package.json's pin, since those results are published and package.json has moved on.
 - gbrain now reads `EXA_API_KEY`, for an opt-in web search in `gbrain dedupe --exa`. Tests blank it and gbrain eval
   runs strip it, like every other provider key, because no suite uses that search.

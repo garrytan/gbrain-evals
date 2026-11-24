@@ -10,7 +10,8 @@
  *
  * gbrain fills a blank provider key from its own config file ($GBRAIN_HOME/.gbrain/config.json, else
  * ~/.gbrain/config.json), so GBRAIN_HOME points at a fresh empty directory too, and no test or child sees the
- * config of the machine it runs on. A test that needs a brain home sets its own.
+ * config of the machine it runs on. A test that needs a brain home sets its own. GBRAIN_RUST_ENGINE_ADDON and its digest
+ * are unset for the same reason: a Rust addon exported in the shell would otherwise reach every test's Rust arm.
  */
 import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -32,6 +33,8 @@ export const PROVIDER_KEYS = [
 ];
 for (const k of PROVIDER_KEYS) process.env[k] = '';
 process.env.GBRAIN_HOME = mkdtempSync(join(tmpdir(), 'no-provider-keys-gbrain-home-'));
+delete process.env.GBRAIN_RUST_ENGINE_ADDON;
+delete process.env.GBRAIN_RUST_ENGINE_ADDON_SHA256;
 const withEnv = <T extends (...a: any[]) => any>(spawn: T): T => ((cmd: any, opts?: any) => (Array.isArray(cmd)
   ? spawn(cmd, { ...opts, env: opts?.env ?? { ...process.env } })
   : spawn({ ...cmd, env: cmd?.env ?? { ...process.env } }))) as T;
