@@ -1,0 +1,117 @@
+{
+  "schema": "gbrain-evals/q1-run-config/v1",
+  "cell_id": "s3.ext-memory-bank.recipe.component-b8000",
+  "run_cell": "s3.ext-memory-bank.recipe",
+  "cell": {
+    "schema": "gbrain-evals/q1-cell/v1",
+    "id": "s3.ext-memory-bank.recipe",
+    "set": "S3",
+    "block": "T2-S3",
+    "benchmark": "locomo",
+    "split": "all",
+    "selection": {
+      "kind": "stratified",
+      "limit": 200,
+      "stratify": "category",
+      "seed": "q1-locomo",
+      "min": {
+        "adversarial": 40
+      }
+    },
+    "exclusions": [],
+    "system": "ext-memory-bank",
+    "configuration": "recipe",
+    "runner": "shim",
+    "ingest_replicate": 1,
+    "effort": "medium",
+    "canonical_instrument": "locomo",
+    "probes": {
+      "sample": 20,
+      "seed": "q1-probes-s3",
+      "conversations": null
+    },
+    "launch": {
+      "env": {},
+      "config": "recipe"
+    }
+  },
+  "arm": {
+    "id": "component-b8000",
+    "cell_id": "s3.ext-memory-bank.recipe.component-b8000",
+    "set": "S3",
+    "arm": "component",
+    "mode": "packed",
+    "policy": "fixed-evidence",
+    "budget": 8000,
+    "questions": null,
+    "readers": [
+      "anthropic:claude-opus-5-5",
+      "openai:gpt-6.1-sol",
+      "anthropic:claude-sonnet-5-5"
+    ],
+    "reader_replicates": {},
+    "frontier": {
+      "judges": [
+        "anthropic:claude-opus-5-5",
+        "openai:gpt-6.1-sol"
+      ],
+      "readers": null,
+      "sample": 6
+    },
+    "judge_repeats": {
+      "count": 10,
+      "readers": [
+        "anthropic:claude-sonnet-5-5"
+      ]
+    },
+    "label": "component, 8,000 tokens"
+  },
+  "instrument": {
+    "id": "locomo",
+    "sha256": "754c83f541b77e652f0b97edac9cb82a1561b8a38822eb88591c807c0dad13be",
+    "judge": "openai:gpt-4o-2024-08-06"
+  },
+  "reader": {
+    "effort": "medium",
+    "max_tokens": 2048,
+    "prompt_sha256": "215660c5a2fb85c3068e09b2b02f047c9557393b505ef22c59c08918addfd3be"
+  },
+  "renderer": "memory-render-v2",
+  "counter": {
+    "counter": "reader-max-v1",
+    "tokenizer": "@dqbd/tiktoken@1.0.22",
+    "readers": [
+      {
+        "reader": "anthropic:claude-opus-5-5",
+        "encoding": "cl100k_base",
+        "calibration": 1.4708,
+        "calibrated": true
+      },
+      {
+        "reader": "anthropic:claude-sonnet-5-5",
+        "encoding": "cl100k_base",
+        "calibration": 1.4524,
+        "calibrated": true
+      },
+      {
+        "reader": "openai:gpt-6.1-sol",
+        "encoding": "o200k_base",
+        "calibration": 1.0009,
+        "calibrated": true
+      }
+    ]
+  },
+  "dataset": {
+    "name": "LoCoMo-shaped fixture (invented)",
+    "files": [
+      {
+        "path": "test/eval/fixtures/q1-cell/locomo-shaped.json",
+        "sha256": "fixture"
+      }
+    ],
+    "revision": "repo",
+    "license": "MIT"
+  },
+  "scheduled_sha256": "df7d230cb3e6d26cf43a47a43164331e55aa20e2e127baa83dff53c1ef4f68d2",
+  "limit": null
+}

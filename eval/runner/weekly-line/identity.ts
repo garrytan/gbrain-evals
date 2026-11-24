@@ -5,7 +5,8 @@
  *
  * The identity names the week (its Tuesday launch date) and world end, the Set W batch and week of that batch the worlds
  * came from (or the batch whose spares filled the week), the frozen gbrain release and commit, the comparators' versions,
- * the week's worlds in slot order with their seed and phrasing ids, the cells and particle-1 re-reads, and the week's
+ * the week's worlds in slot order with their seed and phrasing ids (the world's Set W seed set, W1-long for a long world,
+ * and the seed line it phrases from; worldSeedProblems), the cells and particle-1 re-reads, and the week's
  * no-point reason, if any. Its run id is `wl-<week>-<first 12 hex of the SHA-256 of the rest>`, so an edited identity no
  * longer matches its id. The aggregates refuse a week meta, a record directory, a settled marker or a record that belongs
  * to another run or week (runBindingProblems). Each record a weekly cell writes carries the run id and week it ran under
@@ -14,6 +15,7 @@
  * directory never count.
  */
 import { createHash } from 'node:crypto';
+import { bgwSeedSetOf, bgwSlotOf } from '../memory-qa/bg1-names.ts';
 import { WEEKLY_RUN_ID, type WeeklyRunStamp } from '../memory-qa/records.ts';
 import type { WlNoPoint, WlServer } from './design.ts';
 
@@ -54,6 +56,23 @@ export const runIdOf = (b: RunBody): string => `wl-${b.week}-${createHash('sha25
 /** A run identity from its body, with its run id. */
 export const runIdentity = (b: RunBody): RunIdentity => ({ schema: RUN_SCHEMA, run_id: runIdOf(b), ...b });
 
+/**
+ * Why worlds may not be counted together: a world whose seed id is not its slot's Set W seed set (bg1-names.ts
+ * BGW_SEED_SETS: W1 on slots 1001 to 1999, W1-long on 2001 to 2999) or whose phrasing id is not that set's seed line, or
+ * worlds of more than one length profile, so a standard and a long world are never confused or pooled. Empty when none.
+ */
+export function worldSeedProblems(worlds: ReadonlyArray<{ world: string; seed_id: string; phrasing_id: string }>): string[] {
+  const p: string[] = [], lengths = new Set<string>();
+  for (const w of worlds) {
+    const set = bgwSeedSetOf(bgwSlotOf(w.world) ?? Number.NaN);
+    if (!set) { p.push(`${w.world} is in no Set W seed set`); continue; }
+    lengths.add(set.profile);
+    if (w.seed_id !== set.id || w.phrasing_id !== set.seed) p.push(`${w.world} is seed set ${set.id}'s world (phrasing ${set.seed}), not seed ${w.seed_id} with phrasing ${w.phrasing_id}`);
+  }
+  if (lengths.size > 1) p.push(`the worlds mix the ${[...lengths].sort().join(' and ')} lengths, which are never counted together`);
+  return p;
+}
+
 /** The part of a week's meta a run must agree with. */
 export interface RunWeek {
   run_id: string;
@@ -77,6 +96,7 @@ export function runBindingProblems(run: unknown, week: RunWeek): string[] {
   if ((g === null) !== (wg === null) || (g && wg && (g.release !== wg.release || g.commit !== wg.commit))) p.push(`the run froze another gbrain build than week ${week.week}'s meta names`);
   const ws = r.worlds ?? [];
   if (ws.length !== week.worlds.length || ws.some((w, i) => w.world !== week.worlds[i].world || w.seed_id !== week.worlds[i].seed_id || w.phrasing_id !== week.worlds[i].phrasing_id)) p.push(`the run's worlds are not week ${week.week}'s Set W worlds`);
+  p.push(...worldSeedProblems(ws));
   return p;
 }
 

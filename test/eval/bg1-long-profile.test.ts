@@ -8,7 +8,7 @@
 import { afterAll, describe, expect, test } from 'bun:test';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { chmodSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import {
@@ -166,14 +166,18 @@ describe('Set W\'s W1-long seed set', () => {
     expect(bgwCommittedProblems(2057)).not.toEqual([]);
   });
 
-  // Value: protects=mint.sh, validate.ts and fill-manifest.ts accept the long set with every custody guard of W1, and a real fill pins a long batch only at its own length; fails_when=the long batch mints into another batch's --out, plans at the wrong version, or a real fill pins it at another length; why_new=GBEV-3's brief (mint.sh, render.ts and the loader accept the set; no guard weakened); seam=mint.sh --bgw --batch 2001 --fake, validate.ts --bgw, fill-manifest.ts --bgw; no_claim=a paid render or the Gemini checks
+  // Value: protects=mint.sh, validate.ts and fill-manifest.ts accept the long set with every custody guard of W1, a long batch's mint pauses after its first five slots until its supply is measured or acknowledged, and a real fill pins a long batch only at its own length; fails_when=the long batch mints into another batch's --out, plans at the wrong version, mints its sixth slot with no supply limit recorded, or a real fill pins it at another length; why_new=GBEV-3's brief (mint.sh, render.ts and the loader accept the set; no guard weakened); seam=mint.sh --bgw --batch 2001 --fake, validate.ts --bgw, fill-manifest.ts --bgw; no_claim=a paid render or the Gemini checks
   test('a --fake long batch mints under the same guards, and a real fill refuses another length', () => {
     const j = inputs('w1-long');
     const out = join(j.dir, 'bgw-custody-long');
-    const m = mint(out, j, [...LONG, ...LENGTH, '--fake', '--count', '8']);
-    expect(m.code).toBe(0);
-    expect(m.out.startsWith('bgw-batch batch=bgw-2001 set=W1-long slots=2001-2056 previous=none status=pass\n')).toBe(true);
-    expect(m.out).toMatch(/bg1-render slot=2001 world=bgw-2001 status=written /);
+    const paused = mint(out, j, [...LONG, ...LENGTH, '--fake', '--count', '8']);
+    expect(paused.code).toBe(3);
+    expect(paused.out).toMatch(/\nbg1-supply slots=2001-2005 gemini_requests=\d+ kept=5 per_kept_world=[\d.]+ limit=none status=unmeasured\nbg1-mint summary=paused reason=supply /);
+    expect(existsSync(join(out, 'set/worlds/bgw-2006'))).toBe(false);
+    const m = mint(out, j, [...LONG, ...LENGTH, '--fake', '--start', '2006', '--count', '3', '--supply-ack', 'a-0123456789ab']);
+    expect([m.code, m.out.includes('bg1-mint supply=acked ack=a-0123456789ab\n')]).toEqual([0, true]);
+    expect(paused.out.startsWith('bgw-batch batch=bgw-2001 set=W1-long slots=2001-2056 previous=none status=pass\n')).toBe(true);
+    expect(paused.out).toMatch(/bg1-render slot=2001 world=bgw-2001 status=written /);
     expect(readFileSync(join(out, 'batch.json'), 'utf8')).toBe('{"set":"W1-long","batch":"bgw-2001"}\n');
     const plan = JSON.parse(readFileSync(join(out, 'set/worlds/bgw-2001/plan.json'), 'utf8')) as WorldPlan;
     expect([plan.generator, plan.sessions.length >= 700]).toEqual(['changing-facts-gen@2', true]);
@@ -228,14 +232,30 @@ describe('the weekly cells on W1-long worlds', () => {
     expect(buildWeeklyPilotManifest(GBRAIN).rates).toEqual({ ...WEEKLY_LINE_RATES });
   });
 
-  // Value: protects=the launch check refuses a week whose cells run another length than its batch; fails_when=a W1-long week launches on BGW cells, a W1 week on BGW-long cells, or a cell whose planned hours outrun one VM's limit launches and is stopped after spending; why_new=GBEV-3's brief (no guard weakened by the long set); seam=weekly-line/launch.ts weeklyLineLaunchProblems; no_claim=the cell VM
+  // Value: protects=a long week's estimate refuses a row whose ingest rate was never measured instead of pricing its extra 800,000 tokens a world at nothing, while a standard week, which prices no extra ingest, still plans; fails_when=ingestUsd reads a missing rate as 0, so a long week's cap and leases leave out that row's ingest; why_new=GBEV-3's follow-up to #625 (a missing ingest rate refuses instead of counting as zero); seam=weekly-line.ts ingestUsd through generateWeeklyLineCells; no_claim=the measured rates themselves
+  test('a long week refuses a row with no measured ingest rate, and a standard week does not need one', () => {
+    const rates = BG1_MEASURED.ingest_usd_per_mtok, key = 'ext-memory-bank:recipe', was = rates[key];
+    delete rates[key];
+    try {
+      expect(() => generateWeeklyLineCells(input('bgw-2001', 2001))).toThrow(`the weekly line has no measured ingest rate for ${key} (BG1_MEASURED.ingest_usd_per_mtok), so a world longer than 200,000 tokens can't be priced`);
+      expect(generateWeeklyLineCells(input('bgw-1001', 1001))).toEqual(std);
+    } finally { rates[key] = was; }
+    expect(generateWeeklyLineCells(input('bgw-2001', 2001))).toEqual(long);
+  });
+
+  // Value: protects=the launch check refuses a week whose cells run another length than its batch; fails_when=a W1-long week launches on BGW cells, a W1 week on BGW-long cells, a cell (or launch unit) whose planned hours outrun one VM's limit launches and is stopped after spending, or a split cell's units skip or repeat a world; why_new=GBEV-3's brief (no guard weakened by the long set); seam=weekly-line/launch.ts weeklyLineLaunchProblems; no_claim=the cell VM
   test('the launch check refuses cells whose set is not the length their batch plans at, or that would outrun one VM', () => {
     const deps = { ripgrep: () => 'ripgrep 14.1.1', registry: [...weeklyLineRegistryModels(), { model: 'text-embedding-3-large', role: 'system-internal', system: 'extract-first server (common setup embedder)' }] };
     const problems = (cells: typeof std) => weeklyLineLaunchProblems({ gbrain: GBRAIN, cells, rereads: weeklyLineRereadPlans(cells) }, deps).filter(p => p.includes('length'));
     expect(problems(long)).toEqual([]);
     const vm = (cells: typeof std) => weeklyLineLaunchProblems({ gbrain: GBRAIN, cells, rereads: weeklyLineRereadPlans(cells) }, deps).filter(p => p.includes('-hour limit'));
     expect(vm(std)).toEqual([]);
-    expect(vm(long)).toEqual([`cell ${by(long, 'ext-extract-first').id} plans 121 hours, so its VM would need 184 hours with margin, past the 72-hour limit on one VM; it would be stopped before it finished`]);
+    expect(vm(long)).toEqual([]);
+    const whole = long.map(c => (c.system === 'ext-extract-first' ? { ...c, shards: 1, kept_units: undefined, expected_hours: 121 } : c));
+    expect(vm(whole)).toEqual([`cell ${by(long, 'ext-extract-first').id} plans 121 hours, so its VM would need 184 hours with margin, past the 72-hour limit on one VM; it would be stopped before it finished`]);
+    const units = (cells: typeof std) => weeklyLineLaunchProblems({ gbrain: GBRAIN, cells, rereads: weeklyLineRereadPlans(cells) }, deps).filter(p => p.includes('launch unit'));
+    expect(units(long)).toEqual([]);
+    expect(units(long.map(c => (c.system === 'ext-extract-first' ? { ...c, kept_units: 2 } : c)))).toEqual([`cell ${by(long, 'ext-extract-first').id}'s 3 launch units run worlds bgw-2001, bgw-2002, bgw-2003, bgw-2004, bgw-2005, bgw-2006, not each of its week's worlds once`]);
     expect(problems(long.map(c => ({ ...c, set: 'BGW' as const })))[0]).toContain('runs set BGW, and batch bgw-2001\'s worlds are set BGW-long\'s length');
     expect(problems(std.map(c => ({ ...c, set: 'BGW-long' as const })))[0]).toContain('runs set BGW-long, and batch bgw-1001\'s worlds are set BGW\'s length');
   });

@@ -102,7 +102,7 @@ export interface WeekWorlds { batch: string; week_of_batch: number; spares_from:
 
 const runWorld = (id: string): RunWorld => {
   const set = bgwSeedSetOf(bgwSlotOf(id) ?? Number.NaN) ?? refuse('WEEKLY_WORLDS', `${id} is not a Set W world`);
-  return { world: id, seed_id: set.seed, phrasing_id: set.seed };
+  return { world: id, seed_id: set.id, phrasing_id: set.seed };
 };
 
 function keptOf(b: { first: number; manifest: Bg1Manifest | null }): { kept: string[]; final: boolean } {
@@ -165,9 +165,10 @@ export function lsRemoteTags(): string {
 /**
  * One reader's answers in one row. `unit` is the launch unit that runs it (the cell definition's id) and `records` the
  * cell id its answer records carry (the arm's cell id); both default to `id`. The grep agent's one cell runs both readers,
- * so its two entries share a unit and a records id.
+ * so its two entries share a unit and a records id. `shards` is how many launch units the unit splits into (1 by default):
+ * a cell too long for one VM runs as units `<unit>.c<i>`, merged into the run directory before its re-read and judging.
  */
-export interface WeeklyCell { id: string; row: WlRow; reader: string; worlds: string[]; unit?: string; records?: string }
+export interface WeeklyCell { id: string; row: WlRow; reader: string; worlds: string[]; unit?: string; records?: string; shards?: number }
 /** particle-1's re-read of claude-opus-5-5's cell `from`; its id is its launch unit and the cell id its records carry. */
 export interface WeeklyReread { id: string; row: WlRow; from: string; reader: string }
 /** The cell definitions and re-read plans the launch path runs, kept in the run directory (cells.json) for the launch check. */
@@ -185,7 +186,7 @@ export const WIRED_CELL_SET: WeeklyCellSet = ({ week, worlds, gbrain }) => {
   const rereads = weeklyLineRereadPlans(cells);
   return {
     cells: cells.flatMap(c => c.arms.flatMap(a => a.readers.map(reader => ({
-      id: a.readers.length > 1 ? `${a.cell_id}.${readerSlug(reader)}` : a.cell_id, row: rowOf(c.system), reader, worlds: [...worlds], unit: c.id, records: a.cell_id,
+      id: a.readers.length > 1 ? `${a.cell_id}.${readerSlug(reader)}` : a.cell_id, row: rowOf(c.system), reader, worlds: [...worlds], unit: c.id, records: a.cell_id, ...(c.shards > 1 ? { shards: c.shards } : {}),
     })))),
     rereads: rereads.map(r => ({ id: r.id, row: rowOf(cells.find(c => c.id === r.cell)!.system), from: r.arm_cell_id, reader: r.reader })),
     comparators: structuredClone(WEEKLY_LINE_COMPARATORS) as WeeklyCellPlan['comparators'],
@@ -230,19 +231,34 @@ export function cellPlanProblems(plan: WeeklyCellPlan, worlds: readonly string[]
 /** Launch order: the extract-first server's ingest is the longest, so its cells go first, then gbrain's, the memory-bank server's and the grep agent's. */
 export const LAUNCH_ORDER: readonly WlRow[] = ['extract-first', 'gbrain', 'memory-bank', 'grep-agent'];
 
-export type Stage = 'launch' | 'reread' | 'judge' | 'aggregates';
-/** A step of the week; `unit` is the launch unit a launch or re-read step hands the launch path, null for judging and the aggregates. */
+export type Stage = 'launch' | 'merge' | 'reread' | 'judge' | 'aggregates';
+/**
+ * A step of the week; `unit` is the launch unit a launch or re-read step hands the launch path (for a merge, the cell its
+ * units merge into), null for judging and the aggregates.
+ */
 export interface Step { id: string; stage: Stage; target: string; unit: string | null; row: WlRow | null; reader: string | null; judge: string | null; after: string[] }
 
-/** The week's steps in order: every cell's launch, then every re-read, then every judgment, then the aggregates. */
+/**
+ * The week's steps in order: every cell's launch (one per launch unit of a cell split across VMs, then its merge), then
+ * every re-read, then every judgment, then the aggregates. A split cell's answers are whole only after its merge, so its
+ * re-read and judging wait on the merge, and the merge on every one of its units.
+ */
 export function weekSteps(plan: WeeklyCellPlan): Step[] {
   const rank = (row: WlRow, reader: string) => LAUNCH_ORDER.indexOf(row) * 2 + (reader === OPUS ? 0 : 1);
   const cells = [...plan.cells].sort((a, b) => rank(a.row, a.reader) - rank(b.row, b.reader));
   const rereads = [...plan.rereads].sort((a, b) => LAUNCH_ORDER.indexOf(a.row) - LAUNCH_ORDER.indexOf(b.row));
-  const launch = cells.map((c): Step => ({ id: `launch:${c.id}`, stage: 'launch', target: c.id, unit: c.unit ?? c.id, row: c.row, reader: c.reader, judge: null, after: [] }));
-  const reread = rereads.map((r): Step => ({ id: `reread:${r.id}`, stage: 'reread', target: r.id, unit: r.id, row: r.row, reader: r.reader, judge: null, after: [`launch:${r.from}`] }));
-  const judge = [...launch, ...reread].map((s): Step => ({ id: `judge:${s.target}`, stage: 'judge', target: s.target, unit: null, row: s.row, reader: s.reader, judge: bg1JudgeOf(s.reader!), after: [s.id] }));
-  return [...launch, ...reread, ...judge, { id: 'aggregates:week', stage: 'aggregates', target: 'week', unit: null, row: null, reader: null, judge: null, after: judge.map(j => j.id) }];
+  const step = (s: Pick<Step, 'id' | 'stage' | 'target' | 'unit' | 'after'>, c: { row: WlRow; reader: string }): Step => ({ ...s, row: c.row, reader: c.reader, judge: null });
+  const launch: Step[] = [], merge: Step[] = [], whole = new Map<string, Step>();
+  for (const c of cells) {
+    const unit = c.unit ?? c.id, n = c.shards ?? 1;
+    if (n === 1) { const s = step({ id: `launch:${c.id}`, stage: 'launch', target: c.id, unit, after: [] }, c); launch.push(s); whole.set(c.id, s); continue; }
+    const parts = Array.from({ length: n }, (_, i) => step({ id: `launch:${c.id}:c${i}`, stage: 'launch', target: c.id, unit: `${unit}.c${i}`, after: [] }, c));
+    const m = step({ id: `merge:${c.id}`, stage: 'merge', target: c.id, unit, after: parts.map(p => p.id) }, c);
+    launch.push(...parts); merge.push(m); whole.set(c.id, m);
+  }
+  const reread = rereads.map((r): Step => step({ id: `reread:${r.id}`, stage: 'reread', target: r.id, unit: r.id, after: [whole.get(r.from)?.id ?? `launch:${r.from}`] }, r));
+  const judge = [...whole.values(), ...reread].map((s): Step => ({ id: `judge:${s.target}`, stage: 'judge', target: s.target, unit: null, row: s.row, reader: s.reader, judge: bg1JudgeOf(s.reader!), after: [s.id] }));
+  return [...launch, ...merge, ...reread, ...judge, { id: 'aggregates:week', stage: 'aggregates', target: 'week', unit: null, row: null, reader: null, judge: null, after: judge.map(j => j.id) }];
 }
 
 // ─── Files in the run directory ──────────────────────────────────────
@@ -328,12 +344,20 @@ export function planWeek(o: PlanInput, deps: RunnerDeps): { run: RunIdentity; st
   return { run, steps, frozen: false };
 }
 
-/** One particle-1 re-read as launch.json hands it over: the reread-cell.ts command inside the window, to which the host adds --source, --out and the lease flags. */
-export interface LaunchReread { id: string; argv: string[] }
+/**
+ * One particle-1 re-read as launch.json hands it over: the reread-cell.ts command inside the window, to which the host adds
+ * --source, --out and the lease flags. A re-read of a cell split across VMs names its launch units (`units`), and the host
+ * adds one --source per unit, in that order.
+ */
+export interface LaunchReread { id: string; argv: string[]; units?: string[] }
+/** One split cell's merge as launch.json hands it over: the cell.ts merge command into the run directory, to which the host adds one --from per launch unit, in `units` order. */
+export interface LaunchMerge { cell: string; units: string[]; argv: string[] }
 export interface LaunchOrder {
   run_id: string; window: string; env: Record<string, string>; stages: Array<{ stage: Stage; units: string[] }>;
   /** With the week's cells.json: the window cap and its split (the re-reads' share, their plans' estimates, and the cells' campaign, the rest), the campaign manifest of the week's cells (CAMPAIGN_FILE) and the re-read commands. */
   cap_usd?: number; cells_cap_usd?: number; rereads_cap_usd?: number; campaign?: string; rereads?: LaunchReread[];
+  /** The merges of cells split across VMs, each after all of its launch units. */
+  merges?: LaunchMerge[];
 }
 
 /**
@@ -357,8 +381,11 @@ export function launchWeek(dir: string, window: string | undefined, deps: Pick<R
   weekClock(run.week, deps.now());
   if (run.no_point) refuse('WEEKLY_NO_POINT', `week ${run.week} has no point (${run.no_point}), so nothing launches`);
   deps.launchCheck(dir, run);
-  const stages = (['launch', 'reread', 'judge'] as const).map(stage => ({ stage, units: [...new Set(steps.filter(s => s.stage === stage).map(s => (stage === 'judge' ? s.target : s.unit ?? s.target)))] }));
-  let order: LaunchOrder = { run_id: run.run_id, window: window!, env: { [WEEKLY_RUN_ENV]: run.run_id }, stages };
+  const stages = (['launch', 'merge', 'reread', 'judge'] as const).map(stage => ({ stage, units: [...new Set(steps.filter(s => s.stage === stage).map(s => (stage === 'judge' ? s.target : s.unit ?? s.target)))] }))
+    .filter(s => s.stage !== 'merge' || s.units.length);
+  const merges = steps.filter(s => s.stage === 'merge').map(s => ({ cell: s.unit!, units: steps.filter(p => s.after.includes(p.id)).map(p => p.unit!),
+    argv: ['bun', 'eval/runner/q1/cell.ts', 'merge', '--cell', s.unit!, '--manifest', 'weekly', '--out', dir] }));
+  let order: LaunchOrder = { run_id: run.run_id, window: window!, env: { [WEEKLY_RUN_ENV]: run.run_id }, stages, ...(merges.length ? { merges } : {}) };
   const cellsPath = join(dir, CELLS_FILE);
   if (existsSync(cellsPath)) {
     if (!(Number.isFinite(capUsd) && capUsd! > 0)) refuse('WEEKLY_NO_WINDOW', `week ${run.week}'s units carry the granted window's cap in every command; pass --window-cap-usd <the window's cap> with --window-granted`);
@@ -372,7 +399,11 @@ export function launchWeek(dir: string, window: string | undefined, deps: Pick<R
     const flags = ['--manifest', 'weekly', '--paid-window', window!];
     order = { ...order, cap_usd: capUsd!, cells_cap_usd: cellsCap, rereads_cap_usd: rereadsCap, campaign: CAMPAIGN_FILE,
       env: { ...order.env, [WEEKLY_CELLS_ENV]: cellsPath, [WEEKLY_CELLS_SHA256_ENV]: sha256(readFileSync(cellsPath)), GBRAIN_EVALS_BG1_WORLD_END: week.world_end, GBRAIN_EVALS_BGW_BATCH: week.batch, GBRAIN_EVALS_BGW_UNIT: week.worlds.join(',') },
-      rereads: file.rereads.map((r, i) => ({ id: r.id, argv: ['bun', 'eval/runner/q1/reread-cell.ts', '--cell', r.cell, '--arm', r.arm, '--reader', r.reader, ...flags, '--window-cap-usd', String(rereadCaps[i])] })) };
+      rereads: file.rereads.map((r, i) => {
+        const n = file.cells.find(c => c.id === r.cell)?.shards ?? 1;
+        return { id: r.id, argv: ['bun', 'eval/runner/q1/reread-cell.ts', '--cell', r.cell, '--arm', r.arm, '--reader', r.reader, ...flags, '--window-cap-usd', String(rereadCaps[i])],
+          ...(n > 1 ? { units: Array.from({ length: n }, (_, k) => `${r.cell}.c${k}`) } : {}) };
+      }) };
   }
   writeJson(join(dir, LAUNCH_FILE), order);
   return order;
@@ -404,9 +435,10 @@ export function settleWeek(dir: string, o: { costs?: CostCell[]; gbrainFailed?: 
   const pending = work.filter(s => !progress.has(s.id));
   if (pending.length && !o.gbrainFailed) refuse('WEEKLY_NOT_SETTLED', `${pending.length} of week ${run.week}'s ${work.length} cells, re-reads and judgments are not done or recorded as harness failures (first ${pending[0].id})`);
   const saved: CostCell[] = [];
+  const split = new Set(work.filter(s => s.stage === 'merge').flatMap(s => s.after));
   if (!run.no_point && !o.gbrainFailed) {
     const recordsOf = (s: Step) => run.rereads.includes(s.target) ? s.target : run.cells.find(id => s.target === id || s.target.startsWith(`${id}.`)) ?? s.target;
-    const uncovered = work.filter(s => progress.get(s.id) === 'done').map(s => join('cells', recordsOf(s), s.stage === 'judge' ? 'judgments.ndjson' : 'answers.ndjson')).filter(f => !existsSync(join(dir, f)));
+    const uncovered = work.filter(s => progress.get(s.id) === 'done' && !split.has(s.id)).map(s => join('cells', recordsOf(s), s.stage === 'judge' ? 'judgments.ndjson' : 'answers.ndjson')).filter(f => !existsSync(join(dir, f)));
     if (uncovered.length) refuse('WEEKLY_RECORDS', `${uncovered.length} done step${uncovered.length === 1 ? ' has' : 's have'} no record file in the run directory, so nothing is settled (first ${uncovered[0]})`);
     const recs = existsSync(join(dir, 'cells')) ? readRecordDirs([dir]) : { answers: [], judgments: [] };
     const stamps = recordBindingProblems(run, recs.answers, recs.judgments);
@@ -434,7 +466,7 @@ export function settleWeek(dir: string, o: { costs?: CostCell[]; gbrainFailed?: 
   const meta: WeekMeta = { week: run.week, run_id: run.run_id, gbrain: run.gbrain, comparators: run.comparators, worlds, costs: no_point ? [] : saved, no_point };
   const count = (stage: Stage) => work.filter(s => s.stage === stage && progress.has(s.id)).length;
   const marker: SettledMarker = { schema: SETTLED_SCHEMA, run_id: run.run_id, week: run.week, no_point, gbrain: run.gbrain, worlds: worlds.map(w => w.world),
-    steps: { cells: count('launch'), rereads: count('reread'), judgments: count('judge'), harness_failures: work.filter(s => progress.get(s.id) === 'harness_failure').length },
+    steps: { cells: count('launch') - work.filter(s => split.has(s.id) && progress.has(s.id)).length + count('merge'), rereads: count('reread'), judgments: count('judge'), harness_failures: work.filter(s => progress.get(s.id) === 'harness_failure').length },
     records: recordDigests(dir) };
   writeJson(join(dir, META_FILE), meta);
   writeJson(join(dir, SETTLED_FILE), marker);
