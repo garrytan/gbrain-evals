@@ -34,9 +34,10 @@ confirmation.
 
 ## Build and data
 
-- **gbrain:** the newest release tag on gbrain's master at launch, today v0.60.769.0 (`38831bb6`), pinned in
-  `package.json` by this change. If a newer release lands before the first counted run, a dated amendment re-pins
-  before that run. The build freezes once counted runs start, and the results record it.
+- **gbrain:** the newest release tag on gbrain's master at launch, today v0.60.769.0 (`38831bb6`). Counted runs load
+  it with `--gbrain <checkout>@<tag>` (a copied overlay the receipt records), or through `package.json` if a pin bump
+  to that release has merged by then. If a newer release lands before the first counted run, a dated amendment names
+  it before that run. The build freezes once counted runs start, and the results record it.
 - **Hill-climb build:** the release that ships GBRA-108's fix for the scheduling problem (below). Its keyless rerun is a
   second, separately labelled measurement on the same seeds, run when it ships, and it is compared with the frozen
   baseline. Running the baseline build next to it is allowed because the question is about that change.
@@ -87,7 +88,10 @@ a missing sentence counts as flagged.
 **P (primary):** refreshed answer fully correct, per model, over the 240 counted questions: every claim states the
 ledger's value after the change, and a removed claim is not asserted. Judged per claim (correct, stale, wrong,
 missing). A failed or blocked refresh, a provider safety stop, or a reply cut at the output cap counts as not correct
-and is reported in its own column. **P (secondary):** correctness by change class and by refresh mode, first-answer
+and is reported in its own column. A provider error before any answer (a 5xx, a timeout, a dropped connection) is not a
+model outcome: the unit is retried once in a resumed run, and a unit that still fails is reported as an error and left
+out of the denominator, with the count per model. A provider safety stop is its own reported outcome and counts as not
+correct. **P (secondary):** correctness by change class and by refresh mode, first-answer
 correctness, and cost per correct answer from the ledger's usage fields.
 
 ## Decision rule
@@ -127,8 +131,8 @@ Two judges: `gpt-6.2-astra` grades `claude-opus-5-5` and particle-1 rows, `claud
 rows. No judge grades its own family, and particle-1 never judges. Each judge is checked on all 144 pilot outputs (72
 first answers and 72 refreshed answers), at least 100 labelled outputs, before any counted unit runs. Labels: the claim
 values are unique synthetic tokens, so each output gets a rule label (new value present and old value absent is
-correct; old present and new absent is stale; neither is missing); an output with both or an unclear sentence is
-hand-labelled by GBEV-133 (an Opus agent, so the labels are model-labelled and the write-up says so). Each judge must
+correct; old present and new absent is stale; neither is missing); an output whose rule label is ambiguous (both values present) is left out of
+the agreement set and counted, so the labels are rule labels, not model labels. Each judge must
 reach Cohen's kappa of at least 0.6 on answer correctness, and its disagreements are read per model, not pooled. A
 judge that fails is replaced by a stated alternative from another family in a dated amendment before the counted run.
 
@@ -141,7 +145,8 @@ None: the paid run is planned under $500, so no look is planned.
 Ledger `.budget/ledger.sqlite` through `startPaidRun`; every request is reserved against the ledger before it is sent.
 A cap is set in the ledger run; reaching it pauses the run at the unit boundary until the cap is extended, and a rerun
 with the same arguments resumes from `checkpoint.ndjson` without re-asking finished units. Paid calls run only inside a
-granted paid window. Amounts stay in the tracking issue.
+granted paid window, on a Ubicloud VM, detached, with that VM's ledger as the single writer; the VM is destroyed when
+the run ends. Amounts stay in the tracking issue.
 
 ## The hill-climb round
 
@@ -151,3 +156,14 @@ signals, spillover included), the biggest is scheduling: one new note made 23 un
 written into an existing note was never refreshed. The patch went to GBRA-108 on 2026-11-24
 (org drive `handoffs/gbrain/gbev133/`), which accepted it. Page-granularity false flags went as a design note. The
 counted ranking on seeds 11 to 20 decides which one the results lead with.
+
+The fix-build rerun is keyless. If the fix release ships before the results PR is ready, the rerun is in it. Otherwise
+the results PR reports the baseline alone, and the rerun is published later as its own keyless follow-up with its own
+registry entry.
+
+## Disclosures
+
+- gbrain is Garry Tan's own project.
+- Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1.
+- Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator.
+  Garry Tan runs Y Combinator.
