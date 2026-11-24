@@ -89,8 +89,8 @@ something it was told before.
 |---|---|---|
 | Messages written to memory | 2,000 a month (about 67 a day) | the Q1 scoreboard's preregistered personal workload, kept so the two experiments price the same agent |
 | Memory reads (questions) | 300 a month (10 a day) | the same |
-| Message length | the measured mean of the ten worlds below, in cl100k tokens | the workload's own text, so write cost per token is priced on the text that was written |
-| How messages are saved | one save per chat session, as the harness writes them (the worlds average about 29 messages a session) | what the harness measures; see the caveat below |
+| Message length | 40.3 cl100k tokens, the measured mean of the ten worlds below (about 80,700 tokens a month) | the workload's own text, so write cost per token is priced on the text that was written |
+| How messages are saved | one save per chat session, as the harness writes them (the worlds average 29.1 messages a session) | what the harness measures; see the caveat below |
 | History when the month is priced | one year at this rate: 24,000 messages | a year-old assistant; storage and the full-context check use it |
 | Answer model (reader) | claude-opus-5-5 | the primary frontier model; particle-1 is priced beside it as the low-cost reader |
 
@@ -112,7 +112,8 @@ save and per token, and label the per-token projection a lower bound for per-mes
 Ten public synthetic chat histories: worlds `bg1-dev-01` to `bg1-dev-10` of
 [`eval/data/changing-facts-v1/dev/worlds`](../../eval/data/changing-facts-v1/dev/worlds), rendered from the changing-facts
 generator's plans. Each is one fictional person's chats with an assistant over 545 days: 142 to 158 sessions, 4,461 to
-4,503 messages (mean 4,480) and about 930,000 characters, with 64 questions about facts that change over time, each
+4,503 messages (mean 4,480) and 178,203 to 182,251 cl100k tokens (mean 180,720, counted with gbrain's own cl100k
+counter at the pin), with 64 questions about facts that change over time, each
 keyed with its accepted answers and its earlier, superseded values. They are public, already used by the
 changing-facts battleground's development runs, and contain no real person's data. No world, question or label is
 changed for this experiment.
@@ -136,7 +137,7 @@ product runs by default switched on.
 | `baseline-hybrid` | this repository's plain Postgres full-text plus pgvector search | text-embedding-3-large at 1,536 dimensions, one call per session and per question | yes |
 | `baseline-file-agent` | this repository's list, grep and read agent, uncapped grep, 40 turns | nothing on write: the write is a Markdown file | yes |
 | `baseline-none` | the question alone | nothing | priced: system cost is zero by construction, reader cost measured |
-| `baseline-full-context` | the whole history in the prompt, with prompt caching | nothing | light profile only: its one-year history (2,580 messages) fits the reader's window, so whole-history reads are measured and priced for it. At the heavy profile's one-year history (24,000 messages, about a million tokens at the worlds' message length) the history no longer fits claude-opus-5-5's 1,000,000-token input limit with the question and answer, so that row is not run |
+| `baseline-full-context` | the whole history in the prompt, with prompt caching | nothing | priced from measured whole-world reads: each reader reads each world whole, and its cached and uncached input dollars per token are scaled to each profile's one-year history (light: 2,580 messages, about 104,000 tokens of text; heavy: 24,000 messages, about 968,000). The harness renders each profile's one-year prompt the way it renders a whole world and checks it against each reader's input limit (`checkFit` in `eval/runner/systems/baselines.ts`); a profile and reader whose prompt doesn't fit is reported as "doesn't fit", not priced |
 | `ext-temporal-graph` | | | not run: its pinned configuration calls a reranker and an ingest model its provider retired, and a compared system's settings are never changed (the scoreboard's ruling of 2026-10-26) |
 | `ext-graph-pipeline`, `ext-markdown-kb` | | | not run in this experiment: left out of its scope. Their published "not run" reasons (a 32 GiB graph-store limit, reindex time that grows with the square of the chunk count) were measured at BEAM-10M scale, so a run at this workload's size may be possible; it is listed as follow-up work, not claimed impossible |
 | `ext-agent-runtime` | | | not run: it has no passive write and search interface; its agent edits its own memory, so a per-write cost and a write-to-queryable time aren't defined the same way |
@@ -270,7 +271,7 @@ CLAUDE.md asks; they go in the paid-window request and the tracking issue.
 | `baseline-hybrid` | 0.14 (measured) | 7,100 tokens | 1 |
 | `baseline-file-agent` | 0 | 73,000 tokens over the agent's turns | 1.5 |
 | `baseline-none` | 0 | the question only | 0.5 |
-| `baseline-full-context`, light profile | 0 | the whole world, cached after the first read | 0.5 |
+| `baseline-full-context` | 0 | the whole world, cached after the first read | 0.5 |
 
 Hours include the probes, the questions for both readers and, on the two idle worlds, up to 2 more hours for the idle
 window. Every multi-hour cell runs on its own Ubicloud VM through the repository's runner (`eval/runner/q1/cell.ts` with
@@ -308,7 +309,8 @@ planned rates above, and the results say where the new rates differ from them.
 
 - Cell definitions for this experiment (`eval/runner/q1/cells/cs1.ts`) over the ten worlds and the two pilot worlds: one
   cell per system, readers claude-opus-5-5 and particle-1 on the twenty-question sample, the held-back counted probes,
-  the bulk-import probes, the idle window on two worlds, and the full-context row for the light profile.
+  the bulk-import probes, the idle window on two worlds, and the full-context row's whole-world reads with each
+  profile's fit check.
 - Every new runner behaviour (the held-back probe mode, the probe read as the shipped read, 1-second polls, the
   10-minute horizon, late and never-found misses, the probe meter phase, the idle window and hosting samples) is a
   per-cell option that only `cs1.ts` sets. Every existing cell manifest stays byte-identical, and a test holds that.
