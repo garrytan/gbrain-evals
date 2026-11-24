@@ -272,6 +272,31 @@ export function weeklyRunStamp(def: Pick<CellDefinition, 'id' | 'week'>, env: Re
   return { run_id, week: def.week.launch };
 }
 
+/**
+ * A weekly-line cell's worlds (#619 OV3): exactly its week's (def.week.worlds), never the rest of its Set W batch. Refuses
+ * before any corpus is read when the environment names another batch (GBRAIN_EVALS_BGW_BATCH), another unit scope
+ * (GBRAIN_EVALS_BGW_UNIT) or another world end (GBRAIN_EVALS_BG1_WORLD_END) than the week's; null for any other cell.
+ */
+export function weekScope(def: Pick<CellDefinition, 'id' | 'week'>, env: Record<string, string | undefined>): string[] | null {
+  if (!def.week) return null;
+  const w = def.week, worlds = [...w.worlds].sort().join(',');
+  const want: Record<string, string> = { GBRAIN_EVALS_BGW_BATCH: w.batch, GBRAIN_EVALS_BGW_UNIT: worlds, GBRAIN_EVALS_BG1_WORLD_END: w.world_end };
+  const held = (k: string) => k === 'GBRAIN_EVALS_BGW_UNIT' ? env[k]!.split(',').map(s => s.trim()).filter(Boolean).sort().join(',') : env[k];
+  const off = Object.keys(want).filter(k => env[k] !== undefined && held(k) !== want[k]);
+  if (off.length) throw refuse({ code: 'PREFLIGHT_FAILED', message: `${def.id} runs week ${w.launch} (batch ${w.batch}, worlds ${worlds}, world end ${w.world_end}), and ${off.map(k => `${k} is ${env[k]}`).join(', ')}`,
+    why: "a weekly cell reads only its own week's worlds, from its batch, at its week's world end", fix: { next: 'ask_user', user_message: "launch the weekly cells through the weekly runner's unit order, which names the week's batch, worlds and world end" } });
+  return [...w.worlds];
+}
+
+/** A weekly-line cell's corpus holds exactly its week's worlds (weekScope): none outside the week and none missing. */
+export function weekCorpusProblems(def: Pick<CellDefinition, 'id' | 'week'>, corpus: Pick<Corpus, 'conversations'>): string | null {
+  if (!def.week) return null;
+  const held = corpus.conversations.map(c => c.id), week = def.week.worlds;
+  const outside = held.filter(id => !week.includes(id)), missing = week.filter(id => !held.includes(id));
+  if (!outside.length && !missing.length) return null;
+  return `${def.id}'s corpus ${outside.length ? `holds ${outside.join(', ')}, outside week ${def.week.launch}` : ''}${outside.length && missing.length ? ' and ' : ''}${missing.length ? `is missing week ${def.week.launch}'s ${missing.join(', ')}` : ''}`;
+}
+
 export function needsCustody(def: Pick<CellDefinition, 'benchmark' | 'split'>): boolean {
   if (def.split === 'dev' || def.benchmark === 'lme-m') return false;
   try { return loadSplit(def.benchmark).sealed.length > 0; } catch { return true; }
@@ -672,12 +697,15 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
 
   // Custody before anything reads the corpus.
   const weeklyRun = weeklyRunStamp(def, env);
+  const week = weekScope(def, env);
   const custody = !deps.corpus && needsCustody(def);
   if (custody) custodyGate(def, out, env, `q1 cell ${def.id}`);
   mkdirSync(out, { recursive: true });
   const shard = opts.shard ?? { index: 0, count: 1 };
-  const unitConvs = !def.kept_units ? null : def.benchmark === 'bg1' || def.benchmark === 'bg1c' ? bg1KeptUnit(def, shard, deps.bg1Manifest) : keptUnit(def, shard, deps.rs1Manifest);
+  const unitConvs = week ?? (!def.kept_units ? null : def.benchmark === 'bg1' || def.benchmark === 'bg1c' ? bg1KeptUnit(def, shard, deps.bg1Manifest) : keptUnit(def, shard, deps.rs1Manifest));
   const corpus = deps.corpus ?? loadCorpus(def.benchmark, undefined, unitConvs ? new Set(unitConvs) : devOnly(def) ?? undefined, { keyless: opts.keyless });
+  const offWeek = weekCorpusProblems(def, corpus);
+  if (offWeek) throw refuse({ code: 'PREFLIGHT_FAILED', message: offWeek, why: "a weekly cell answers only its own week's worlds", fix: { next: 'report' } });
   const selected = scheduledQuestions(def, corpus, opts.limit ?? null).filter(q => !unitConvs || unitConvs.includes(q.conversation));
   const convIds = [...new Set(selected.map(q => q.conversation))].sort().filter((_, i) => unitConvs || i % shard.count === shard.index);
   const armQs = new Map(arms.map(a => [a.id, new Set((a.questions ? selectCellQuestions(selected, a.questions) : selected).map(q => q.id))]));
@@ -1858,7 +1886,10 @@ export async function main(argv: string[]): Promise<number> {
       const from = many('--from').map(f => resolve(f));
       if (!from.length) throw refuse(usage('merge needs --from <shard out dir>...'));
       // RS1 kept cells load only the kept conversations the shards staged; later slots may never have been minted.
-      const corpus = loadCorpus(def.benchmark, undefined, def.kept_units ? new Set(from.flatMap(f => [...gatherStaging(def.id, [f]).keys()])) : undefined);
+      const week = weekScope(def, process.env);
+      const corpus = loadCorpus(def.benchmark, undefined, week ? new Set(week) : def.kept_units ? new Set(from.flatMap(f => [...gatherStaging(def.id, [f]).keys()])) : undefined);
+      const offWeek = weekCorpusProblems(def, corpus);
+      if (offWeek) throw refuse({ code: 'PREFLIGHT_FAILED', message: offWeek, why: "a weekly cell's shards merge only its own week's worlds", fix: { next: 'report' } });
       const selected = selectCellQuestions(corpus.questions.filter(q => splitConversations(def.benchmark, def.split, corpus).has(q.conversation)), def.selection);
       const capabilities = JSON.parse(readFileSync(join(from[0], 'cells', def.arms[0].cell_id, 'receipt.json'), 'utf8')).system.capabilities as CapabilityRecord;
       const configs = new Map(def.arms.map(a => { const t = readFileSync(join(from[0], 'cells', a.cell_id, 'run-config.json'), 'utf8'); writeAtomic(join(out, 'cells', a.cell_id, 'run-config.json'), t); return [a.id, { text: t, sha: sha256(t) }]; }));

@@ -70,7 +70,7 @@ import { DEFAULT_ROUTE_CLASSES } from '../shootout-cell.ts';
 import type { PackedContext } from '../systems/render-v2.ts';
 import { claimOut, keylessUpstreamArg } from './calibration-cell.ts';
 import { answerAppender, bg1GeminiKey, custodyGate, devOnly, findCell, frontierInstrumentId, gatherStaging, JUDGED, latestBy, loadBG1CManifest, metering, needsCustody, onSlot, readerMaxTokens, readPrompt, refuseCompatJudges, requiredJudges, scheduledQuestions,
-  selectCellQuestions, weeklyRunStamp, type CellManifestId, type MeterLine, type RequiredJudge, type StagedRetrieval } from './cell.ts';
+  selectCellQuestions, weekCorpusProblems, weeklyRunStamp, weekScope, type CellManifestId, type MeterLine, type RequiredJudge, type StagedRetrieval } from './cell.ts';
 import { frontierJudgesFor, isWindowedBenchmark, PER_READER_JUDGE_SETTINGS, pinnedJudgeRouteCaps, policyKey, type ArmDefinition, type CellDefinition } from './cells/definitions.ts';
 import { loadRS1Manifest } from './cells/rs1.ts';
 import { exitCodeOf, refuse, renderMessage, ScoreboardError } from './scoreboard-errors.ts';
@@ -272,7 +272,7 @@ export function prepareReread(def: CellDefinition, arm: ArmDefinition, opts: Rer
   if (def.benchmark === 'beam-rs1' && (deps.corpus ? deps.corpus.source.revision === 'unfilled' : readRs1Manifest().manifest.status !== 'filled')) throw refuse({ code: 'PREFLIGHT_FAILED', message: `beam-rs1: the RS1 manifest is unfilled, so ${arm.cell_id} cannot be re-read`,
     why: 'a re-read is scored only against the filled manifest\'s pinned bytes, and verdict.ts checks the re-read receipt\'s dataset against it', fix: { next: 'ask_user', user_message: 'the custodian fills the RS1 manifest before any RS1 re-read' } });
   if (!hasChatRoute(opts.reader)) throw refuse({ code: 'USAGE', message: `reader ${opts.reader} has no chat route`, why: 'a re-read sends each frozen prompt to one provider:model reader', fix: { next: 'run', argv: [...FRONT, '--reader', 'particle:particle-1'] } });
-  const sealed = def.benchmark === 'bg1' || def.benchmark === 'bg1c' ? bg1SealedSet(def.benchmark) : null;
+  const sealed = def.benchmark === 'bg1' || def.benchmark === 'bg1c' || def.benchmark === 'bgw' ? bg1SealedSet(def.benchmark, env) : null;
   if (sealed && (deps.corpus ? deps.corpus.source.revision === 'unfilled' : readBg1Manifest(undefined, sealed).manifest.status !== 'filled')) throw refuse({ code: 'PREFLIGHT_FAILED', message: `${sealed.benchmark}: the ${sealed.label} manifest is unfilled, so ${arm.cell_id} cannot be re-read`,
     why: 'a re-read is scored only against the filled manifest\'s pinned bytes, and BG1\'s verdict.ts checks every receipt\'s dataset against it', fix: { next: 'ask_user', user_message: `the custodian fills the ${sealed.label} manifest before any ${sealed.label} re-read` } });
   const halves = def.block === 'BG1C';
@@ -285,7 +285,11 @@ export function prepareReread(def: CellDefinition, arm: ArmDefinition, opts: Rer
   const cellId = half?.id ?? rereadCellId(arm.cell_id, opts.reader);
   if (!deps.corpus && needsCustody(def)) custodyGate(def, out, env, `q1 reread ${arm.cell_id} with ${opts.reader}`);
   // RS1 kept cells load only the conversations the sources staged (one launch unit's); later slots may never have been minted.
-  const staged = def.kept_units ? new Set(opts.sources.flatMap(s => [...gatherStaging(def.id, [dirname(dirname(resolve(s)))]).keys()])) : null;
+  const week = weekScope(def, env);
+  const staged = def.kept_units || week ? new Set(opts.sources.flatMap(s => [...gatherStaging(def.id, [dirname(dirname(resolve(s)))]).keys()])) : null;
+  const offWeek = week ? [...staged!].filter(w => !week.includes(w)) : [];
+  if (week && (offWeek.length || !staged!.size)) throw refuse({ code: 'USAGE', message: `${staged!.size ? `the sources stage ${offWeek.join(', ')}, outside` : 'the sources stage no world of'} week ${def.week!.launch}'s worlds (${week.join(', ')}) of ${def.id}`,
+    why: "a weekly re-read reads only its own week's answers", fix: { next: 'run', argv: [...FRONT, '--cell', def.id, '--manifest', 'weekly', '--source', "<out>/runs/<cell id> of this week's unit>"] } });
   if (half) {
     const kept = deps.bg1Manifest ?? readBg1Manifest(undefined, BG1C_SET).manifest;
     const worlds = new Set(half.units.flatMap(i => bg1UnitConversations(kept, i, def.kept_units!, BG1C_SET)));
@@ -298,7 +302,9 @@ export function prepareReread(def: CellDefinition, arm: ArmDefinition, opts: Rer
     why: 'verify.json, the lease usage log and the keyless/paid marker sit at the --out root, and each re-read receipt points at them', fix: { next: 'run', argv: [...FRONT, '--out', '<a fresh directory>'] } });
   mkdirSync(out, { recursive: true });
   claimOut(out, !!opts.keyless, 'reread');
-  const corpus = deps.corpus ?? loadCorpus(def.benchmark, undefined, staged ?? devOnly(def) ?? undefined, { keyless: !!opts.keyless });
+  const corpus = deps.corpus ?? loadCorpus(def.benchmark, undefined, week ? new Set(week) : staged ?? devOnly(def) ?? undefined, { keyless: !!opts.keyless });
+  const offCorpus = weekCorpusProblems(def, corpus);
+  if (offCorpus) throw refuse({ code: 'PREFLIGHT_FAILED', message: offCorpus, why: "a weekly re-read verifies its sources against exactly its week's worlds", fix: { next: 'report' } });
   const { verify, plan } = verifySources(def, arm, opts.sources, corpus, opts.reader);
   const frozen = join(out, 'reread-source.json');
   const resuming = existsSync(frozen);

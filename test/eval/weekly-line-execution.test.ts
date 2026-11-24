@@ -8,6 +8,8 @@
  *   OV1  a weekly unit resolves from its week's cells.json (`--manifest weekly`) under the run id and hash its launch
  *        recorded; the launch writes a campaign whose units run in the window, export the run and week, and push only
  *        the week's worlds and the cells.json to their VMs.
+ *   OV3  a weekly cell, its re-read and its merge open exactly the week's worlds, never the rest of the batch, and
+ *        refuse another batch, unit scope, world end or week's sources.
  */
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from 'bun:test';
 import { spawnSync } from 'node:child_process';
@@ -17,13 +19,15 @@ import { join, resolve } from 'node:path';
 import { bg1LaunchProblems } from '../../eval/runner/bg1/launch.ts';
 import { freePort } from '../../eval/runner/lifecycle/slice.ts';
 import { bgwBatchDataset } from '../../eval/runner/memory-qa/bg1-names.ts';
-import type { Bg1Manifest } from '../../eval/runner/memory-qa/corpus.ts';
+import { BG1_FIXTURES_ROOT, bg1Conversation, type Bg1Manifest, type Corpus } from '../../eval/runner/memory-qa/corpus.ts';
+import type { ChatLike, ChatResult } from '../../eval/runner/memory-qa/qa-v2.ts';
 import { sha256, WEEKLY_CELLS_ENV, WEEKLY_CELLS_SHA256_ENV, WEEKLY_RUN_ENV } from '../../eval/runner/memory-qa/records.ts';
-import { findCell, windowedRunGuard } from '../../eval/runner/q1/cell.ts';
+import { findCell, runCell, windowedRunGuard } from '../../eval/runner/q1/cell.ts';
 import { generateWeeklyLineCells, WEEKLY_LINE_MODELS } from '../../eval/runner/q1/cells/weekly-line.ts';
-import { rereadKeys } from '../../eval/runner/q1/reread-cell.ts';
+import { prepareReread, rereadKeys } from '../../eval/runner/q1/reread-cell.ts';
 import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { Campaign, runRemote, weeklyCustodyPush, type CampaignManifest } from '../../eval/runner/shootout-cell.ts';
+import { FakeMemorySystem } from '../../eval/runner/systems/fake.ts';
 import { CAMPAIGN_FILE, CELLS_FILE, launchWeek, planWeek, weeklyLaunchCheck, WIRED_CELL_SET, type RunnerDeps } from '../../eval/runner/weekly-line/runner.ts';
 
 const tmp = mkdtempSync(join(tmpdir(), 'weekly-line-execution-'));
@@ -194,5 +198,122 @@ describe('OV1: the weekly units resolve and run under their week', () => {
     expect([r.status, existsSync(out)]).toEqual([2, false]);
     expect(r.stderr).toContain(`[PAID_FLAGS_MISSING] Set W cell ${unit} spends real keys`);
   }, 60_000);
+});
+
+
+// ─── OV3 ─────────────────────────────────────────────────────────────
+
+const NO_META = { finish: 'stop', usage: null, response_model: null, attempt_errors: [] as string[] };
+const quiet = { probeIntervalMs: 5, probeTimeoutMs: 2000 };
+const answerOf = (prompt: string) => { const q = /Question: (.*)\n/.exec(prompt)?.[1] ?? ''; return `${sha256(q)[0] === '0' ? 'WRONG' : 'RIGHT'} ${q}`; };
+const verdictOf = (prompt: string) => JSON.stringify({ correct: /\nResponse: RIGHT/.test(prompt) ? 1 : 0 });
+/** In-process reader and judge: no client, no network; the judge records the model each grade went to. */
+const scripted = () => {
+  const judged: string[] = [];
+  const reader: ChatLike = { async chat(_m, prompt): Promise<ChatResult> { return { text: answerOf(prompt), input_tokens: 10, output_tokens: 8, cached: false, ...NO_META }; } };
+  const judge: ChatLike = { async chat(model, prompt): Promise<ChatResult> { judged.push(model); return { text: verdictOf(prompt), input_tokens: 100, output_tokens: 4, cached: false, ...NO_META }; } };
+  return { reader, judge, judged };
+};
+/** The committed template fixtures bg1-dev-01 to bg1-dev-0k under Set W ids. */
+const fixtureFiles = (ids: readonly string[]) => ids.map((id, i) => {
+  const dev = `bg1-dev-0${i + 1}`;
+  const read = (f: string) => readFileSync(join(BG1_FIXTURES_ROOT, 'worlds', dev, f), 'utf8').replaceAll(dev, id);
+  return { id, world: read('world.json'), questions: read('questions.json') };
+});
+const fixtureCorpus = (ids: readonly string[], worldEnd = WEEK.world_end): Corpus => {
+  const parts = fixtureFiles(ids).map(f => bg1Conversation(f.id, f.world, f.questions, worldEnd));
+  return { benchmark: 'bgw', conversations: parts.map(p => p.conversation), questions: parts.flatMap(p => p.questions), source: { name: bgwBatchDataset(1001), files: [], revision: 'synthetic-fill', license: 'test' } };
+};
+/**
+ * A custody host for the fixture batch: three Set W worlds (the week's two and bgw-1003, a later week's) as template
+ * fixtures under a root outside the repository, pinned by a filled manifest, with the access log and the week's run
+ * named in process.env as the custody host's launch names them. No unit scope is set, as on the custody host.
+ */
+function custodyHost(launch = WEEK.launch, worldEnd = WEEK.world_end) {
+  const root = scratch('bgw-host');
+  const files = fixtureFiles(['bgw-1001', 'bgw-1002', 'bgw-1003']).flatMap(f => (['world', 'questions'] as const).map(k => {
+    const path = `worlds/${f.id}/${k}.json`;
+    mkdirSync(join(root, 'worlds', f.id), { recursive: true });
+    writeFileSync(join(root, path), f[k]);
+    return { path, sha256: sha256(f[k]) };
+  }));
+  const manifest: Bg1Manifest = { dataset: bgwBatchDataset(1001), status: 'filled', layout: 'test', note: 'fixture', filled_at: '2026-12-01', kept: ['bgw-1001', 'bgw-1002', 'bgw-1003'], n_final: 3, files };
+  writeFileSync(join(root, 'bgw-1001-manifest.json'), JSON.stringify(manifest));
+  const log = join(scratch('custody-log'), 'access.ndjson');
+  Object.assign(process.env, { GBRAIN_EVALS_BGW_SOURCE: root, GBRAIN_EVALS_BGW_MANIFEST: join(root, 'bgw-1001-manifest.json'), GBRAIN_EVALS_BGW_BATCH: 'bgw-1001',
+    GBRAIN_EVALS_BG1_WORLD_END: worldEnd, GBRAIN_EVALS_CUSTODY_LOG: log, [WEEKLY_RUN_ENV]: `wl-${launch}-${'a'.repeat(12)}` });
+  delete process.env.GBRAIN_EVALS_BGW_UNIT;
+  const opened = () => readFileSync(log, 'utf8').trim().split('\n').map(l => JSON.parse(l).purpose as string).filter(p => /^bgw bgw-/.test(p)).map(p => p.split(' ')[1].replace(/:$/, ''));
+  return { root, log, opened };
+}
+const memoryBank = cells.find(c => c.id === 'bgw.ext-memory-bank.recipe')!;
+const OPUS = 'anthropic:claude-opus-5-5', ASTRA = 'openai:gpt-6-astra', PARTICLE = 'particle:particle-1';
+
+describe("OV3: a weekly cell reads only its week's worlds", () => {
+  // Value: protects=a weekly cell on the custody host opens, answers and scores exactly its week's worlds, never the rest of its batch; fails_when=runCell gives a weekly cell no unit scope (it has no kept_units), so the loader opens every world of the batch, a later week's included; why_new=#619's deferred finding at cell.ts:677 (the corpus loader is not given week.worlds); seam=runCell over the real Set W loader on template fixtures under a custody root, in-process reader and judge; no_claim=the system's or judge's quality
+  test("on the custody host, a weekly cell opens and answers its week's two worlds and not the batch's third", async () => {
+    const host = custodyHost();
+    const out = join(scratch('cell'), 'out');
+    const s = scripted();
+    await runCell(memoryBank, { out, ...quiet }, { system: new FakeMemorySystem(), reader: s.reader, judge: s.judge });
+    const arm = memoryBank.arms[0];
+    const receipt = JSON.parse(readFileSync(join(out, 'cells', arm.cell_id, 'receipt.json'), 'utf8'));
+    expect(receipt.realizations.map((r: { conversation: string }) => r.conversation)).toEqual(WORLDS);
+    expect([...new Set(host.opened())].sort()).toEqual(WORLDS);
+    expect([...new Set(s.judged)]).toEqual([ASTRA]);
+  }, 120_000);
+
+  // Value: protects=a weekly cell refuses, before its --out exists, an environment naming another batch, unit scope or world end than its week's, and any corpus holding a world outside its week or missing one of its worlds; fails_when=a VM's pushed unit, a re-planned launch's batch or a stale world end runs the cell on other worlds or dates, or a supplied corpus is answered whole; why_new=#619 OV3; seam=runCell's weekScope and weekCorpusProblems; no_claim=forged files, outside the crew's threat model
+  test("a weekly cell refuses another batch, unit scope or world end, and a corpus that is not exactly its week", async () => {
+    custodyHost();
+    const s = scripted();
+    const run = (name: string, corpus?: Corpus) => { const out = join(scratch(name), 'out'); return { out, p: runCell(memoryBank, { out, ...quiet }, { system: new FakeMemorySystem(), reader: s.reader, judge: s.judge, ...(corpus ? { corpus } : {}) }) }; };
+    for (const [k, v] of [['GBRAIN_EVALS_BGW_UNIT', 'bgw-1001,bgw-1003'], ['GBRAIN_EVALS_BGW_BATCH', 'bgw-1035'], ['GBRAIN_EVALS_BG1_WORLD_END', '2026-12-13']] as const) {
+      const was = process.env[k];
+      process.env[k] = v;
+      const r = run(k);
+      expect(await refused(r.p)).toMatchObject({ code: 'PREFLIGHT_FAILED', message: expect.stringContaining(`${k} is ${v}`) });
+      expect(existsSync(r.out)).toBe(false);
+      if (was === undefined) delete process.env[k]; else process.env[k] = was;
+    }
+    process.env.GBRAIN_EVALS_BGW_UNIT = 'bgw-1002,bgw-1001';
+    const extra = run('extra', fixtureCorpus(['bgw-1001', 'bgw-1002', 'bgw-1003']));
+    expect((await refused(extra.p))?.message).toBe(`${memoryBank.id}'s corpus holds bgw-1003, outside week ${WEEK.launch}`);
+    const short = run('short', fixtureCorpus(['bgw-1001']));
+    expect((await refused(short.p))?.message).toBe(`${memoryBank.id}'s corpus is missing week ${WEEK.launch}'s bgw-1002`);
+  }, 60_000);
+
+  // Value: protects=a weekly re-read and merge load exactly the week's worlds, and a re-read refuses sources staging a world of another week, a corpus that isn't the week or an unfilled batch manifest; fails_when=prepareReread or cell.ts merge give a weekly cell no unit scope (they load the whole batch, or refuse under the launch's unit scope), a re-read takes another week's answers of the same cell id, or the filled-manifest check skips Set W; why_new=#619 OV3 applied to the re-read and merge; seam=prepareReread over the real Set W loader with the reader's gating judge named, and the cell.ts merge CLI with the launch's environment; no_claim=the re-read's grades (OV4 and the dry run)
+  test("a weekly re-read loads its week's worlds, and refuses another week's answers of the same cell", async () => {
+    const later = generateWeeklyLineCells({ week: { launch: '2026-12-15', world_end: '2026-12-13', batch: 'bgw-1001' }, worlds: ['bgw-1003'], gbrain: GBRAIN }).find(c => c.id === memoryBank.id)!;
+    custodyHost('2026-12-15', '2026-12-13');
+    const theirs = join(scratch('later'), 'out');
+    const s = scripted();
+    await runCell(later, { out: theirs, ...quiet }, { system: new FakeMemorySystem(), reader: s.reader, judge: s.judge });
+    const host = custodyHost();
+    const mine = join(scratch('mine'), 'out');
+    await runCell(memoryBank, { out: mine, ...quiet }, { system: new FakeMemorySystem(), reader: s.reader, judge: s.judge });
+    const arm = memoryBank.arms[0];
+    const opts = (name: string, source: string) => ({ sources: [join(source, 'runs', memoryBank.id)], reader: PARTICLE, out: join(scratch(name), 'out'), gating: OPUS, manifest: 'weekly' as const });
+    const wrong = opts('wrong', theirs);
+    expect(refusal(() => prepareReread(memoryBank, arm, wrong))?.message).toBe(`the sources stage bgw-1003, outside week ${WEEK.launch}'s worlds (${WORLDS.join(', ')}) of ${memoryBank.id}`);
+    expect(existsSync(wrong.out)).toBe(false);
+    expect(refusal(() => prepareReread(memoryBank, arm, opts('extra', mine), { corpus: fixtureCorpus(['bgw-1001', 'bgw-1002', 'bgw-1003']) }))?.message).toBe(`${memoryBank.id}'s corpus holds bgw-1003, outside week ${WEEK.launch}`);
+    expect(refusal(() => prepareReread(memoryBank, arm, opts('unfilled', mine), { corpus: { ...fixtureCorpus(WORLDS), source: { ...fixtureCorpus(WORLDS).source, revision: 'unfilled' } } }))?.message).toBe(`bgw: the Set W batch bgw-1001 manifest is unfilled, so ${arm.cell_id} cannot be re-read`);
+    const before = host.opened().length;
+    const p = prepareReread(memoryBank, arm, opts('right', mine));
+    expect([p.verify.problems, p.gating, p.dataset.revision]).toEqual([[], OPUS, expect.stringMatching(/^[0-9a-f]{7}$/)]);
+    expect([...new Set(host.opened().slice(before))].sort()).toEqual(WORLDS);
+
+    const hostEnv = Object.fromEntries(['GBRAIN_EVALS_BGW_SOURCE', 'GBRAIN_EVALS_BGW_MANIFEST', 'GBRAIN_EVALS_CUSTODY_LOG'].map(k => [k, process.env[k]!]));
+    const w = launchedWeek();
+    const before2 = host.opened().length;
+    const merged = join(scratch('merged'), 'out');
+    const env = { PATH: process.env.PATH ?? '/usr/bin:/bin', HOME: process.env.HOME ?? '/tmp', OPENAI_API_KEY: '', ANTHROPIC_API_KEY: '', GEMINI_API_KEY: '', PARTICLE_API_KEY: '', VOYAGE_API_KEY: '',
+      ...w.order.env, ...hostEnv };
+    const r = spawnSync('bun', ['eval/runner/q1/cell.ts', 'merge', '--cell', memoryBank.id, '--manifest', 'weekly', '--from', mine, '--out', merged], { cwd: REPO, encoding: 'utf8', timeout: 60_000, env });
+    expect([r.status, r.stderr.split('\n').filter(l => l.startsWith('['))]).toEqual([0, []]);
+    expect([...new Set(host.opened().slice(before2))].sort()).toEqual(WORLDS);
+  }, 120_000);
 });
 
