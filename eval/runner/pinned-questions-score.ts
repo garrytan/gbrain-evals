@@ -30,6 +30,8 @@ export interface QuestionRow {
   cycles_to_correct: number | null;
   /** Refreshes the phase ran, on any question, in the days counted for this change. */
   refreshes: number;
+  /** The gbrain error that stopped this change's measurement partway; the row is kept so the count is never lost. */
+  error?: string;
 }
 
 export interface Confusion { tp: number; fp: number; fn: number; tn: number; precision: number | null; recall: number | null; f1: number | null; false_flag_rate: number | null }
@@ -78,7 +80,8 @@ export function pairedRecall(base: readonly SentenceRow[], fix: readonly Sentenc
 }
 
 export interface ClassSummary {
-  questions: number; sentences: number; flags: Confusion; flags_ci: FlagIntervals;
+  /** Questions measured, and questions whose measurement a gbrain error stopped (left out of every rate here, and failing exact conformance). */
+  questions: number; errors: number; sentences: number; flags: Confusion; flags_ci: FlagIntervals;
   signal_rate: number | null; spillover_per_change: number | null; corrected_within_run: number | null; median_cycles_to_correct: number | null; refreshes: number;
 }
 
@@ -88,10 +91,11 @@ function median(xs: number[]): number | null {
   return s.length % 2 ? s[(s.length - 1) / 2]! : (s[s.length / 2 - 1]! + s[s.length / 2]!) / 2;
 }
 
-function classSummary(sentences: readonly SentenceRow[], questions: readonly QuestionRow[]): ClassSummary {
+function classSummary(sentences: readonly SentenceRow[], all: readonly QuestionRow[]): ClassSummary {
+  const questions = all.filter(q => !q.error);
   const affected = questions.filter(q => q.gold_signal);
   return {
-    questions: questions.length, sentences: sentences.length, flags: confusion(sentences), flags_ci: flagIntervals(sentences),
+    questions: questions.length, errors: all.length - questions.length, sentences: sentences.length, flags: confusion(sentences), flags_ci: flagIntervals(sentences),
     signal_rate: ratio(questions.filter(q => q.signalled).length, questions.length),
     spillover_per_change: ratio(questions.reduce((a, q) => a + q.spillover, 0), questions.length),
     corrected_within_run: ratio(affected.filter(q => q.cycles_to_correct !== null).length, affected.length),
@@ -131,7 +135,7 @@ export function summarize(sentences: readonly SentenceRow[], questions: readonly
     contradiction: confusion(sentences.filter(s => isContra(s.mutation))),
     documented_ci: flagIntervals(sentences.filter(s => !isContra(s.mutation))),
     contradiction_ci: flagIntervals(sentences.filter(s => isContra(s.mutation))),
-    question_signal: confusion(questions.map(q => ({ affected: q.gold_signal, flagged: q.signalled }))),
+    question_signal: confusion(questions.filter(q => !q.error).map(q => ({ affected: q.gold_signal, flagged: q.signalled }))),
     by_class,
     wasted_refreshes: questions.filter(q => !q.gold_signal).reduce((a, q) => a + q.refreshes, 0),
     baseline_false_flags: questions.reduce((a, q) => a + q.baseline_stale, 0),
@@ -143,5 +147,9 @@ export function summarize(sentences: readonly SentenceRow[], questions: readonly
 export function exactConformance(sentences: readonly SentenceRow[], questions: readonly QuestionRow[]): { pass: boolean; detail: string } {
   const f = confusion(sentences), q = confusion(questions.map(x => ({ affected: x.gold_signal, flagged: x.signalled })));
   const spill = questions.reduce((a, x) => a + x.spillover, 0);
-  return { pass: f.fp === 0 && f.fn === 0 && q.fp === 0 && q.fn === 0 && spill === 0, detail: `sentences tp ${f.tp} fp ${f.fp} fn ${f.fn}; questions tp ${q.tp} fp ${q.fp} fn ${q.fn}; spillover ${spill}` };
+  const errors = questions.filter(x => x.error).length;
+  return {
+    pass: questions.length > 0 && sentences.length > 0 && errors === 0 && f.fp === 0 && f.fn === 0 && q.fp === 0 && q.fn === 0 && spill === 0,
+    detail: `sentences tp ${f.tp} fp ${f.fp} fn ${f.fn}; questions tp ${q.tp} fp ${q.fp} fn ${q.fn}; spillover ${spill}; measurement errors ${errors}`,
+  };
 }

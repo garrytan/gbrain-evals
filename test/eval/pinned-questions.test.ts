@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { assertScorerRejectsFakeSystems } from '../../eval/runner/mutation-kit.ts';
 import { AFFECTED, CLAIMS, MUTATION_CLASSES, generatePinnedQuestionsWorld, type PqCompany } from '../../eval/generators/pinned-questions-gen.ts';
-import { answerMatches, claimOf, claimSentence, oracleChat, runPinnedQuestions } from '../../eval/runner/pinned-questions.ts';
+import { answerMatches, claimOf, claimSentence, failedQuestion, oracleChat, runPinnedQuestions, voidsSeed } from '../../eval/runner/pinned-questions.ts';
 import { gbrainSpecFrom, resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
 import { confusion, exactConformance, summarize, wilson, type QuestionRow, type SentenceRow } from '../../eval/runner/pinned-questions-score.ts';
 
@@ -104,6 +104,25 @@ describe('pinned-questions scorer', () => {
     const { sentences, questions } = goldRows(w.companies);
     expect(exactConformance(sentences.map(s => ({ ...s, flagged: false })), questions.map(q => ({ ...q, signalled: false }))).pass).toBe(false);
     expect(exactConformance(sentences, questions.map((q, i) => (i === 0 ? { ...q, spillover: 3 } : q))).pass).toBe(false);
+  });
+
+  test('a change whose measurement gbrain broke stays in the counts and fails conformance; an empty run never passes', () => {
+    const { sentences, questions } = goldRows(w.companies);
+    const c = w.companies.find(x => x.affected.length > 0)!;
+    const broken = questions.map(q => (q.company === c.slug ? { ...failedQuestion(1, c, 0), error: 'status read threw' } : q));
+    const kept = sentences.filter(s => s.company !== c.slug);
+    expect(exactConformance(kept, broken)).toMatchObject({ pass: false, detail: expect.stringContaining('measurement errors 1') });
+    const s = summarize(kept, broken);
+    expect([s.overall.questions, s.overall.errors, s.question_signal.fn]).toEqual([questions.length - 1, 1, 0]);
+    expect(s.by_class[c.mutation]!.errors).toBe(1);
+    expect(exactConformance([], []).pass).toBe(false);
+  });
+
+  test('a failed presence check or an oracle sentence with no claim voids the seed; any other error is gbrain\'s', () => {
+    expect(voidsSeed('presence: remember wrote no live fact row for acme: x')).toBe(true);
+    expect(voidsSeed('presence: page acme was not stored')).toBe(true);
+    expect(voidsSeed('oracle sentence with no claim: hello')).toBe(true);
+    expect(voidsSeed('pinned question not found')).toBe(false);
   });
 
   test('confusion, wilson and the class summary', () => {

@@ -240,6 +240,17 @@ const signalOf = (r: Receipt0) => r.freshness === 'stale' || r.new_evidence_sinc
  *   5. refresh every question that still signals, so the next change starts
  *      from fresh answers and current watermarks.
  */
+/** A presence check that failed, or an oracle sentence with no claim, is the harness's fault: it voids the seed instead of scoring gbrain. */
+export const voidsSeed = (message: string) => message.startsWith('presence:') || message.startsWith('oracle sentence with no claim');
+
+/** The question row for a change whose first status read threw: nothing was read, so it has no sentences and no signal. */
+export function failedQuestion(seed: number, c: PqCompany, baselineStale: number): QuestionRow {
+  return {
+    seed, company: c.slug, mutation: c.mutation, affected: [...c.affected], unanswered_at_pin: [], baseline_stale: baselineStale, freshness: 'error', new_evidence: false,
+    stale_sentences: 0, gold_signal: c.affected.length > 0, signalled: false, spillover: 0, cycles_to_correct: null, refreshes: 0,
+  };
+}
+
 async function changePass(gut: GbrainUnderTest, world: PqWorld, citation: CitationPolicy, cycles: number, sentences: SentenceRow[], questions: QuestionRow[], acc: ProbeAccounting): Promise<void> {
   const b = await buildBrain(gut, world, citation);
   try {
@@ -247,6 +258,8 @@ async function changePass(gut: GbrainUnderTest, world: PqWorld, citation: Citati
     for (const c of world.companies) baseline.set(c.slug, (await b.sut.status(b.ids.get(c.slug)!)).sentences.stale);
     for (const c of world.companies) {
       const probe = `s${world.seed}:${c.slug}`;
+      const local: SentenceRow[] = [];
+      let row: QuestionRow | null = null;
       try {
         await applyChange(b, c);
         const r = await b.sut.status(b.ids.get(c.slug)!);
@@ -257,7 +270,7 @@ async function changePass(gut: GbrainUnderTest, world: PqWorld, citation: Citati
           if (!claim) throw new Error(`oracle sentence with no claim: ${s.text}`);
           answered.add(claim);
           const now = flags.get(s.id);
-          sentences.push({
+          local.push({
             seed: world.seed, company: c.slug, mutation: c.mutation, claim, text: s.text,
             cites: b.cites.get(`${b.ids.get(c.slug)!.split(':').slice(1).join(':')}|${s.id}`) ?? [],
             affected: c.affected.includes(claim), flagged: now ? now.stale : true, reasons: now ? now.reasons : ['sentence_missing'],
@@ -268,26 +281,31 @@ async function changePass(gut: GbrainUnderTest, world: PqWorld, citation: Citati
           if (o.slug !== c.slug && signalOf(await b.sut.status(b.ids.get(o.slug)!))) spillover++;
         }
         const gold = c.affected.length > 0;
-        questions.push({
+        row = {
           seed: world.seed, company: c.slug, mutation: c.mutation, affected: [...c.affected], unanswered_at_pin: CLAIMS.filter(x => !answered.has(x)),
           baseline_stale: baseline.get(c.slug) ?? 0, freshness: r.freshness, new_evidence: r.new_evidence_since_watermark === true,
           stale_sentences: r.sentences.stale, gold_signal: gold, signalled: signalOf(r), spillover, cycles_to_correct: null, refreshes: 0,
-        });
-        acc.score(probe, Number(signalOf(r) === gold));
-        const row = questions[questions.length - 1]!;
+        };
         b.calls.clear();
         for (let day = 1; day <= cycles; day++) {
           await b.sut.engine.executeRaw(`UPDATE pinned_questions SET last_attempt_at = last_attempt_at - interval '1 day' WHERE last_attempt_at IS NOT NULL`);
           await b.sut.cycle(b.chat);
           const now = await b.sut.status(b.ids.get(c.slug)!);
-          if (now.freshness === 'fresh' && answerMatches(c, now.answer ?? [])) { row.cycles_to_correct = day; break; }
+          if (now.freshness === 'fresh' && answerMatches(c, now.answer ?? [])) { row!.cycles_to_correct = day; break; }
         }
         row.refreshes = [...b.calls.values()].reduce((x, y) => x + y, 0);
         for (const o of world.companies) {
           if (signalOf(await b.sut.status(b.ids.get(o.slug)!))) await b.sut.refresh(b.ids.get(o.slug)!, b.chat);
         }
+        sentences.push(...local);
+        questions.push(row);
+        acc.score(probe, Number(row.signalled === row.gold_signal));
       } catch (e) {
-        acc.error(probe, 'sut', e instanceof Error ? e.message : String(e));
+        const message = e instanceof Error ? e.message : String(e);
+        if (voidsSeed(message)) throw e;
+        if (row) sentences.push(...local);
+        questions.push({ ...(row ?? failedQuestion(world.seed, c, baseline.get(c.slug) ?? 0)), error: message });
+        acc.error(probe, 'sut', message);
       }
     }
   } finally {
