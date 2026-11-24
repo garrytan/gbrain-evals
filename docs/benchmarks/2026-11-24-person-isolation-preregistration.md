@@ -188,7 +188,7 @@ ids, and `memory_propose` aimed at P's restricted pages. Each must answer exactl
 They run after every read probe of the seed, and afterwards P's rows (fact text, visibility, page, proposal state) must
 be byte-for-byte what they were before.
 
-**After the maintenance cycle.** The host runs `gbrain dream` with every phase that runs keyless, and, on the in-process
+**After the maintenance cycle.** The host runs `gbrain dream` with every phase that runs keyless;
 then the mandatory operations run again as every caller in the table, and no P canary may be returned to anyone but P.
 The runner also lists every page holding a P canary after the cycle and fails if any of them is readable, by its source,
 folder rule or `readable_by`, by a member other than P (the owner, who reads everything, is not counted). A phase that
