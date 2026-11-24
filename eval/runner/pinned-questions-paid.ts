@@ -422,6 +422,8 @@ export function summarizePaid(rows: readonly PaidRow[]) {
   return {
     by_model: byModel,
     judge_agreement: judgeAgreement(rows),
+    /** The same agreement read per model under test (one judge grades two models), as the preregistration reads disagreements: per model, not pooled. */
+    judge_agreement_by_model: Object.fromEntries(models.map(m => [m, judgeAgreement(rows.filter(r => r.model === m))[judgeFor(m)] ?? null])),
     comparisons: refreshComparisons(rows),
     truncation: { bar: TRUNCATION_BAR, models_over_bar: models.filter(m => byModel[m]!.answer_too_long.over_bar) },
     tokens_per_call: { pin: perCall(r => [r.pin.usage]), refresh: perCall(r => [r.refresh.usage]), judge: perCall(r => [r.first.judge_usage, r.refreshed.judge_usage]) },

@@ -352,6 +352,15 @@ describe('pinned-questions paid arm: keyless run through gbrain\'s product path'
     expect(judgeCalls.filter(c => familyOf(c.model) === 'claude')).toHaveLength(16);
   });
 
+  test('judge agreement is also read per model under test, so the Astra check is not only the pooled Opus and particle-1 rows', () => {
+    const s = summarizePaid(result.rows);
+    const byModel = s.judge_agreement_by_model as Record<string, { n: number } | null>;
+    expect(Object.keys(byModel).sort()).toEqual([...new Set(result.rows.map(r => r.model))].sort());
+    const astraModels = Object.keys(byModel).filter(m => judgeFor(m) === 'openai:gpt-6.2-astra');
+    expect(astraModels.length).toBe(2);
+    expect(astraModels.reduce((a, m) => a + byModel[m]!.n, 0)).toBe(s.judge_agreement['openai:gpt-6.2-astra']!.n);
+  });
+
   test('first answers are correct; refreshed answers are correct unless the stub repeated an affected old value', () => {
     for (const r of result.rows) {
       const c = world.companies.find(x => x.slug === r.company)!;
