@@ -1,5 +1,5 @@
-{"realization_id":"adab2b83558d487269099efcb058749b50c108c3416910b87e8a0d06ae6a106d","source_id":"src-254f5ad43e57e2ad","kind":"sample","status":"found","write_start_to_queryable_ms":0,"polls":1}
-{"realization_id":"adab2b83558d487269099efcb058749b50c108c3416910b87e8a0d06ae6a106d","source_id":"src-86b9f896af1953e1","kind":"sample","status":"found","write_start_to_queryable_ms":0,"polls":1}
+{"realization_id":"adab2b83558d487269099efcb058749b50c108c3416910b87e8a0d06ae6a106d","source_id":"src-254f5ad43e57e2ad","kind":"sample","status":"found","write_start_to_queryable_ms":0.1,"polls":1}
+{"realization_id":"adab2b83558d487269099efcb058749b50c108c3416910b87e8a0d06ae6a106d","source_id":"src-86b9f896af1953e1","kind":"sample","status":"found","write_start_to_queryable_ms":0.1,"polls":1}
 {"realization_id":"adab2b83558d487269099efcb058749b50c108c3416910b87e8a0d06ae6a106d","source_id":"src-0b31fcbdadec5d8e","kind":"sample","status":"found","write_start_to_queryable_ms":0,"polls":1}
 {"realization_id":"adab2b83558d487269099efcb058749b50c108c3416910b87e8a0d06ae6a106d","source_id":"src-6d249f16bcfd68d6","kind":"sample","status":"found","write_start_to_queryable_ms":0,"polls":1}
 {"realization_id":"adab2b83558d487269099efcb058749b50c108c3416910b87e8a0d06ae6a106d","source_id":"src-6966ce8f600774a7","kind":"last","status":"found","write_start_to_queryable_ms":0,"polls":1}

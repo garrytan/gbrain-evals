@@ -2,7 +2,7 @@
   "schema": "gbrain-evals/q1-cell-receipt/v1",
   "cell_id": "bg1.ext-memory-bank.recipe.component-b8000",
   "run_cell": "bg1.ext-memory-bank.recipe",
-  "config_sha256": "51f3251131360226b26ee6461164f3537c5eb6c520b731877165644d6219e857",
+  "config_sha256": "10d15d3c535322a5ed7e11857baea6fc0b434d4bd44ced03c8c3e1a15803299b",
   "run_status": "partial",
   "invalid_reasons": [],
   "stopped": null,
@@ -114,18 +114,18 @@
     ]
   },
   "selection": {
-    "questions": 24,
-    "conversations": 12,
-    "scheduled_sha256": "8282ebe2e527bf45771bdd9e3d656a320bdec38a7c4174502ed178b2fc230819"
+    "questions": 16,
+    "conversations": 8,
+    "scheduled_sha256": "df7d230cb3e6d26cf43a47a43164331e55aa20e2e127baa83dff53c1ef4f68d2"
   },
   "counts": {
-    "rows": 24,
-    "answers": 48,
-    "answers_promised": 48,
+    "rows": 16,
+    "answers": 32,
+    "answers_promised": 32,
     "judgments": 0,
-    "unjudged": 48,
+    "unjudged": 32,
     "outcomes": {
-      "scored": 48
+      "scored": 32
     }
   },
   "per_reader_mean": {
@@ -138,96 +138,64 @@
   },
   "realizations": [
     {
-      "conversation": "bg1-001",
-      "realization_id": "d95be8f35e52862c5852af53bc4b75bc914a52456f2146811eaab871ae4acd63",
+      "conversation": "conv-a",
+      "realization_id": "24d41ffdd8d3cbe38b5574d77cdcd798912aa7ce3e3fadfc7fade610d45d953b",
       "attempts": 1,
       "restored_from": null,
       "degraded": false,
       "background_liabilities": null
     },
     {
-      "conversation": "bg1-002",
-      "realization_id": "a8ce8b049ef624523adda30d98d11b963dee0eeead470d686aeb7a9c17748c2d",
+      "conversation": "conv-b",
+      "realization_id": "d5948ac1d3a0f621ccd169ea63dce4e8cf9049ed7fb974529f12715b294e68ee",
       "attempts": 1,
       "restored_from": null,
       "degraded": false,
       "background_liabilities": null
     },
     {
-      "conversation": "bg1-003",
-      "realization_id": "16467438b2848a5646ed9f7c8290e5bb3abeb582e6eb5a8e2a366b09be0cec75",
+      "conversation": "conv-c",
+      "realization_id": "76d1317018446708f3357f641d2540e0ed4a688d22332ed2a3f7af082a5f5911",
       "attempts": 1,
       "restored_from": null,
       "degraded": false,
       "background_liabilities": null
     },
     {
-      "conversation": "bg1-004",
-      "realization_id": "8d825c91ba81da60c9931796ff76504d0a870e8393cc5170ea404acd8b8b2e1e",
+      "conversation": "conv-d",
+      "realization_id": "350de94feb82535a614996538cb7ed83c28dbb53f62e78f03d200a9e4f385949",
       "attempts": 1,
       "restored_from": null,
       "degraded": false,
       "background_liabilities": null
     },
     {
-      "conversation": "bg1-005",
-      "realization_id": "a19d13a0e48df570b6463b4b118a42d99844ec2b44fa3d13ee45cfe8f91f5287",
+      "conversation": "conv-e",
+      "realization_id": "b48733262bcfee8367f2809333bdb9eda36d555a6ab2dd5cc68ccf37eaa24518",
       "attempts": 1,
       "restored_from": null,
       "degraded": false,
       "background_liabilities": null
     },
     {
-      "conversation": "bg1-006",
-      "realization_id": "f5debd3ee17da2d3cb2f458066a9ac7d9bb8f4eb8b412fdcad7a1d108f4e6cfd",
+      "conversation": "conv-f",
+      "realization_id": "8d74af3fd8fa8db1ddc188016346a3f7c7cd412a7257332c5e53f279c0b28f48",
       "attempts": 1,
       "restored_from": null,
       "degraded": false,
       "background_liabilities": null
     },
     {
-      "conversation": "bg1-007",
-      "realization_id": "09a90cda02dd7426150ae52b915ac603bf016b98db6d0ad44815a78d6fa50c41",
+      "conversation": "conv-g",
+      "realization_id": "27ece4875a6c2d7f2cae39dd8ded9f394efb9b21cd90d0c4c4ee589790124516",
       "attempts": 1,
       "restored_from": null,
       "degraded": false,
       "background_liabilities": null
     },
     {
-      "conversation": "bg1-008",
-      "realization_id": "da7bb5660990603b37d0684945f0e9c0baead3c3de40aa6d31e8bce4c1526959",
-      "attempts": 1,
-      "restored_from": null,
-      "degraded": false,
-      "background_liabilities": null
-    },
-    {
-      "conversation": "bg1-009",
-      "realization_id": "598dc141a138632ae575b661198d9f5df615a5ab85468dafdc762f8c1b5c9229",
-      "attempts": 1,
-      "restored_from": null,
-      "degraded": false,
-      "background_liabilities": null
-    },
-    {
-      "conversation": "bg1-010",
-      "realization_id": "31e31b70c1058bb5df8435db446dac71bcb253db0cfed14ffeae3893d2f5dfb6",
-      "attempts": 1,
-      "restored_from": null,
-      "degraded": false,
-      "background_liabilities": null
-    },
-    {
-      "conversation": "bg1-011",
-      "realization_id": "8dd240013576a69c5265ca837a2acc96de21dda9fb1d817b9a804d4e7187c8f3",
-      "attempts": 1,
-      "restored_from": null,
-      "degraded": false,
-      "background_liabilities": null
-    },
-    {
-      "conversation": "bg1-012",
-      "realization_id": "8acd960cc4c6fc63bdc102d4c10b43883493192307a9c62d885e155c4980dd01",
+      "conversation": "conv-h",
+      "realization_id": "29b59ec8e97be36f751aff4d11de02ac316c9cc49d7ad692e3714c63f967f8bf",
       "attempts": 1,
       "restored_from": null,
       "degraded": false,
@@ -235,9 +203,9 @@
     }
   ],
   "ingest": {
-    "conversations": 12,
-    "messages": 120,
-    "ingested_tokens": 1488,
+    "conversations": 8,
+    "messages": 80,
+    "ingested_tokens": 998,
     "wall_ms": {
       "total": 0,
       "p50": 0,
@@ -266,8 +234,8 @@
     }
   },
   "usage": {
-    "input": 480,
-    "output": 240,
+    "input": 320,
+    "output": 160,
     "cache_read": 0,
     "cache_write": 0
   },

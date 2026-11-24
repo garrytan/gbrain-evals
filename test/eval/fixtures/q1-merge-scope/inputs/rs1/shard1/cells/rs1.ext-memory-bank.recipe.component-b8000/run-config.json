@@ -24,7 +24,6 @@
       "seed": "rs1-probes-rs1",
       "conversations": 0
     },
-    "kept_units": 5,
     "launch": {
       "env": {},
       "config": "recipe"
@@ -105,6 +104,6 @@
     "revision": "repo",
     "license": "MIT"
   },
-  "scheduled_sha256": "3f890c148d7337d9d032354da78d6866bafb8aa41aea835664ffda3315a77d45",
+  "scheduled_sha256": "df7d230cb3e6d26cf43a47a43164331e55aa20e2e127baa83dff53c1ef4f68d2",
   "limit": null
 }

@@ -24,7 +24,6 @@
       "seed": "bg1c-probes-bg1c",
       "conversations": 0
     },
-    "kept_units": 5,
     "launch": {
       "env": {},
       "config": "recipe"
@@ -106,6 +105,6 @@
     "revision": "repo",
     "license": "MIT"
   },
-  "scheduled_sha256": "4163a4870f40e3834fa655ac08c7cef3af578ffe19ad5bdfce227ed7ac88fe4c",
+  "scheduled_sha256": "df7d230cb3e6d26cf43a47a43164331e55aa20e2e127baa83dff53c1ef4f68d2",
   "limit": null
 }

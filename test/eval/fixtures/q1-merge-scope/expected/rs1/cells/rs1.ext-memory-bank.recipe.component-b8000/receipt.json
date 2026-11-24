@@ -2,7 +2,7 @@
   "schema": "gbrain-evals/q1-cell-receipt/v1",
   "cell_id": "rs1.ext-memory-bank.recipe.component-b8000",
   "run_cell": "rs1.ext-memory-bank.recipe",
-  "config_sha256": "494bdd647c90147ade80485be2836e0a7501c2d7e6fccc36e01359f1d8580be8",
+  "config_sha256": "69b0a84648ecd5fa9af251ba13b61b49a2823bf434f1b477680e49e17887d6b7",
   "run_status": "complete",
   "invalid_reasons": [],
   "stopped": null,
@@ -114,18 +114,18 @@
     ]
   },
   "selection": {
-    "questions": 20,
-    "conversations": 10,
-    "scheduled_sha256": "12e746dd7ec841c030b40db12f982c8998249fb5702204e41a4dc902303f08ed"
+    "questions": 16,
+    "conversations": 8,
+    "scheduled_sha256": "df7d230cb3e6d26cf43a47a43164331e55aa20e2e127baa83dff53c1ef4f68d2"
   },
   "counts": {
-    "rows": 20,
-    "answers": 40,
-    "answers_promised": 40,
-    "judgments": 80,
+    "rows": 16,
+    "answers": 32,
+    "answers_promised": 32,
+    "judgments": 64,
     "unjudged": 0,
     "outcomes": {
-      "scored": 40
+      "scored": 32
     }
   },
   "per_reader_mean": {
@@ -138,80 +138,64 @@
   },
   "realizations": [
     {
-      "conversation": "rs1-001",
-      "realization_id": "f1dec1162ea8c3150de43b60922c212549297e881aa2b577a3b82de7d5cb4469",
+      "conversation": "conv-a",
+      "realization_id": "3b20800f808f251774159f1f465fd2f054fd6e58808ccef84eaafbd76c8d47b8",
       "attempts": 1,
       "restored_from": null,
       "degraded": false,
       "background_liabilities": null
     },
     {
-      "conversation": "rs1-002",
-      "realization_id": "ccc5ce7c133bf050aca81386908547a00bd894a8b540d539f418a161ad35b98b",
+      "conversation": "conv-b",
+      "realization_id": "abf15123de5a1bfa828702de592a6e9bf9278204da7dde3e7ec10c1c6b12c665",
       "attempts": 1,
       "restored_from": null,
       "degraded": false,
       "background_liabilities": null
     },
     {
-      "conversation": "rs1-003",
-      "realization_id": "dd22e302b51fafb55a4c31057af018dce6a83508ac7483cc96c297da60a888d5",
+      "conversation": "conv-c",
+      "realization_id": "605e853f702b62b66ad8f5b68105b821d342de7477eb10394be8fe95d74f3240",
       "attempts": 1,
       "restored_from": null,
       "degraded": false,
       "background_liabilities": null
     },
     {
-      "conversation": "rs1-004",
-      "realization_id": "e0705e4ff6d379078ceeb504037e605230191553c4171f2240a8fa00e73ee4e5",
+      "conversation": "conv-d",
+      "realization_id": "5df552e78ea6ffad3477f27ce9d3d8171dc86ec1943be83c6190dad1a13c8ea6",
       "attempts": 1,
       "restored_from": null,
       "degraded": false,
       "background_liabilities": null
     },
     {
-      "conversation": "rs1-005",
-      "realization_id": "ac81084b414ecba7a93d0ab19b0cba3430f61cc94786086ce8cc8241fb4db1a2",
+      "conversation": "conv-e",
+      "realization_id": "f5dda45916fd6840f5b1446b9c875374520db499a9e2fa800ca4e2957a576db1",
       "attempts": 1,
       "restored_from": null,
       "degraded": false,
       "background_liabilities": null
     },
     {
-      "conversation": "rs1-006",
-      "realization_id": "3b3ae087f1cc438db8e434e8c8bfdc673f5ceb540841e4e8456f8e1950f64966",
+      "conversation": "conv-f",
+      "realization_id": "808dcc57c5c162884304ae45e2625f1f0b87efec2657536458d14f678c8fd84c",
       "attempts": 1,
       "restored_from": null,
       "degraded": false,
       "background_liabilities": null
     },
     {
-      "conversation": "rs1-007",
-      "realization_id": "e23177f73969db461fb5f05b59d8ec26fbb48d30962f26c18cf66306debc034a",
+      "conversation": "conv-g",
+      "realization_id": "5bac84719720aa0940854e41d7c329ffcd578709f6ada08cad9eea5090a09c8b",
       "attempts": 1,
       "restored_from": null,
       "degraded": false,
       "background_liabilities": null
     },
     {
-      "conversation": "rs1-008",
-      "realization_id": "7f7292d436d7f7469cec71de541db564cfeecae24d6b58ad5077118f25e7aa43",
-      "attempts": 1,
-      "restored_from": null,
-      "degraded": false,
-      "background_liabilities": null
-    },
-    {
-      "conversation": "rs1-009",
-      "realization_id": "c2770a7c3c987567df93f2eea8d20890864b8b868bdd5d8909746a0ef23000d6",
-      "attempts": 1,
-      "restored_from": null,
-      "degraded": false,
-      "background_liabilities": null
-    },
-    {
-      "conversation": "rs1-010",
-      "realization_id": "a334d50661f6f219567bad0a4258a26e8f5568b1d858c1a3e3058cf26d952688",
+      "conversation": "conv-h",
+      "realization_id": "4e6e35d3bb36148547ea53d338c1f59c99e5a27040c0d15a98e9be99ecd25f1e",
       "attempts": 1,
       "restored_from": null,
       "degraded": false,
@@ -219,13 +203,13 @@
     }
   ],
   "ingest": {
-    "conversations": 10,
-    "messages": 100,
-    "ingested_tokens": 1254,
+    "conversations": 8,
+    "messages": 80,
+    "ingested_tokens": 998,
     "wall_ms": {
-      "total": 73,
+      "total": 90,
       "p50": 0,
-      "p95": 40.1
+      "p95": 58.5
     },
     "failed_sessions": 0,
     "degraded_conversations": 0,
@@ -242,7 +226,7 @@
   "timings": {
     "retrieval_ms": {
       "p50": 0,
-      "p95": 0
+      "p95": 0.1
     },
     "answer_ms": {
       "p50": 0,
@@ -250,8 +234,8 @@
     }
   },
   "usage": {
-    "input": 400,
-    "output": 200,
+    "input": 320,
+    "output": 160,
     "cache_read": 0,
     "cache_write": 0
   },

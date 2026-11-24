@@ -17,7 +17,7 @@ for (const c of MERGE_SCOPE_CELLS) {
   const def = cell.findCell(c.id, undefined, c.manifest);
   const from = [0, 1].map(i => join(inputs, c.set, `shard${i}`));
   const to = join(out, c.set);
-  const corpus = mergeScopeCorpus(c.ids);
+  const corpus = mergeScopeCorpus();
   const selected = cell.selectCellQuestions(corpus.questions.filter((q: { conversation: string }) => cell.splitConversations(def.benchmark, def.split, corpus).has(q.conversation)), def.selection);
   const capabilities = JSON.parse(readFileSync(join(from[0], 'cells', def.arms[0].cell_id, 'receipt.json'), 'utf8')).system.capabilities;
   const configs = new Map(def.arms.map((a: { id: string; cell_id: string }) => {

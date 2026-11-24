@@ -2,7 +2,7 @@
   "schema": "gbrain-evals/q1-cell-receipt/v1",
   "cell_id": "bg1.ext-memory-bank.recipe.component-b8000",
   "run_cell": "bg1.ext-memory-bank.recipe",
-  "config_sha256": "51f3251131360226b26ee6461164f3537c5eb6c520b731877165644d6219e857",
+  "config_sha256": "10d15d3c535322a5ed7e11857baea6fc0b434d4bd44ced03c8c3e1a15803299b",
   "run_status": "partial",
   "invalid_reasons": [],
   "stopped": null,
@@ -114,18 +114,18 @@
     ]
   },
   "selection": {
-    "questions": 12,
-    "conversations": 6,
-    "scheduled_sha256": "8641f6b66515ce379d48939b36de5bd840a1afc56b734a99e1dd22f745a87c13"
+    "questions": 16,
+    "conversations": 4,
+    "scheduled_sha256": "df7d230cb3e6d26cf43a47a43164331e55aa20e2e127baa83dff53c1ef4f68d2"
   },
   "counts": {
-    "rows": 12,
-    "answers": 24,
-    "answers_promised": 24,
+    "rows": 8,
+    "answers": 16,
+    "answers_promised": 32,
     "judgments": 0,
-    "unjudged": 24,
+    "unjudged": 16,
     "outcomes": {
-      "scored": 24
+      "scored": 16
     }
   },
   "per_reader_mean": {
@@ -138,48 +138,32 @@
   },
   "realizations": [
     {
-      "conversation": "bg1-001",
-      "realization_id": "d95be8f35e52862c5852af53bc4b75bc914a52456f2146811eaab871ae4acd63",
+      "conversation": "conv-a",
+      "realization_id": "24d41ffdd8d3cbe38b5574d77cdcd798912aa7ce3e3fadfc7fade610d45d953b",
       "attempts": 1,
       "restored_from": null,
       "degraded": false,
       "background_liabilities": null
     },
     {
-      "conversation": "bg1-002",
-      "realization_id": "a8ce8b049ef624523adda30d98d11b963dee0eeead470d686aeb7a9c17748c2d",
+      "conversation": "conv-c",
+      "realization_id": "76d1317018446708f3357f641d2540e0ed4a688d22332ed2a3f7af082a5f5911",
       "attempts": 1,
       "restored_from": null,
       "degraded": false,
       "background_liabilities": null
     },
     {
-      "conversation": "bg1-003",
-      "realization_id": "16467438b2848a5646ed9f7c8290e5bb3abeb582e6eb5a8e2a366b09be0cec75",
+      "conversation": "conv-e",
+      "realization_id": "b48733262bcfee8367f2809333bdb9eda36d555a6ab2dd5cc68ccf37eaa24518",
       "attempts": 1,
       "restored_from": null,
       "degraded": false,
       "background_liabilities": null
     },
     {
-      "conversation": "bg1-004",
-      "realization_id": "8d825c91ba81da60c9931796ff76504d0a870e8393cc5170ea404acd8b8b2e1e",
-      "attempts": 1,
-      "restored_from": null,
-      "degraded": false,
-      "background_liabilities": null
-    },
-    {
-      "conversation": "bg1-005",
-      "realization_id": "a19d13a0e48df570b6463b4b118a42d99844ec2b44fa3d13ee45cfe8f91f5287",
-      "attempts": 1,
-      "restored_from": null,
-      "degraded": false,
-      "background_liabilities": null
-    },
-    {
-      "conversation": "bg1-006",
-      "realization_id": "f5debd3ee17da2d3cb2f458066a9ac7d9bb8f4eb8b412fdcad7a1d108f4e6cfd",
+      "conversation": "conv-g",
+      "realization_id": "27ece4875a6c2d7f2cae39dd8ded9f394efb9b21cd90d0c4c4ee589790124516",
       "attempts": 1,
       "restored_from": null,
       "degraded": false,
@@ -187,9 +171,9 @@
     }
   ],
   "ingest": {
-    "conversations": 6,
-    "messages": 60,
-    "ingested_tokens": 744,
+    "conversations": 4,
+    "messages": 40,
+    "ingested_tokens": 510,
     "wall_ms": {
       "total": 0,
       "p50": 0,
@@ -218,8 +202,8 @@
     }
   },
   "usage": {
-    "input": 240,
-    "output": 120,
+    "input": 160,
+    "output": 80,
     "cache_read": 0,
     "cache_write": 0
   },
