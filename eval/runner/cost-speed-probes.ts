@@ -84,8 +84,8 @@ export function finishDrained(f: { ready: boolean; raw?: { background_liabilitie
 export interface IdleCheck {
   /** Pending background jobs the system reports, or null when it has no way to report them; a call that throws is not idle. */
   pending: () => Promise<number | null>;
-  /** When the system's provider slot last sent a request (epoch ms), or null when it never has. */
-  lastRequestAt: () => number | null;
+  /** When the system's provider slot last sent or finished a request (epoch ms), or null when it never has; a call that throws counts as a request now. */
+  lastRequestAt: () => number | null | Promise<number | null>;
   quietMs?: number;
   maxMs?: number;
   intervalMs?: number;
@@ -100,7 +100,7 @@ export async function awaitIdle(c: IdleCheck): Promise<{ idle: boolean; waited_m
   const t0 = now();
   while (true) {
     const pending = await c.pending().catch(() => undefined);
-    const last = c.lastRequestAt();
+    const last = await Promise.resolve().then(c.lastRequestAt).catch(() => now());
     if ((pending === null || pending === 0) && (last === null || now() - last >= quiet)) return { idle: true, waited_ms: now() - t0 };
     if (now() - t0 >= max) return { idle: false, waited_ms: now() - t0 };
     await sleep(step);
@@ -114,6 +114,11 @@ export async function awaitIdle(c: IdleCheck): Promise<{ idle: boolean; waited_m
  */
 export function unlabelledSearchRoutes(windowLines: Array<{ phase?: string | null; provider: string; route: string; outcome?: string }>): string[] {
   return [...new Set(windowLines.filter(l => l.outcome !== 'refused' && l.phase !== 'probe').map(l => `${l.provider}${l.route}`))].sort();
+}
+
+/** The same check from a calibration window's meter: every `provider/route` the proxy charged under a phase other than `probe`. */
+export function unlabelledMeterRoutes(byPhase: Record<string, { routes: Record<string, number> }> | undefined): string[] {
+  return [...new Set(Object.entries(byPhase ?? {}).filter(([phase]) => phase !== 'probe').flatMap(([, v]) => Object.keys(v.routes)))].sort();
 }
 
 /**

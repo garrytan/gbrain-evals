@@ -203,6 +203,8 @@ export interface Meter {
   reserved_unsettled_usd?: number;
   /** Requests the proxy refused before forwarding, by error kind (`budget`, `rate_limited`, `invalid_request`), so a caller can tell a lease stop the system swallowed from a product failure. In-process mode counts only `budget`. */
   refused?: Record<string, number>;
+  /** Lease mode: forwarded and failed requests by the phase they were labelled with (`none` when unlabelled), each with its dollars and `provider/route` counts. */
+  byPhase?: Record<string, { requests: number; usd: number; routes: Record<string, number> }>;
   /** In-process mode: the last budget refusal's message (a finished run, a spent allowance), so a probe can name it. */
   last_refusal?: string;
 }
@@ -465,6 +467,8 @@ export class MeteringProxy {
   private bindings = new Map<string, { key: string; brain: string | null; phase: Phase | null }>();
   private phases = new Map<string, Phase>();
   private probeQueries = new Map<string, Set<string>>();
+  /** Per slot: provider requests in flight and when one last arrived or finished (epoch ms), for idle checks. */
+  private activity = new Map<string, { inflight: number; last_ms: number }>();
   private seq = 0;
   /** Set by the first response whose usage the ledger cannot price; every later paid request is refused before forwarding. */
   private unpriced: string | null = null;
@@ -511,6 +515,18 @@ export class MeteringProxy {
   private log(line: UsageLine) {
     if (line.outcome === 'refused') this.counts.refused++; else if (line.outcome === 'failed') this.counts.failed++; else this.counts.forwarded++;
     if (this.options.policy?.usageLog) appendFileSync(this.options.policy.usageLog, JSON.stringify(line) + '\n');
+    if (!this.options.policy || line.outcome === 'refused') return;
+    const m = this.meter(line.key);
+    const ph = (m.byPhase ??= {})[line.phase ?? 'none'] ??= { requests: 0, usd: 0, routes: {} };
+    ph.requests++;
+    ph.usd += line.actual_usd ?? 0;
+    ph.routes[`${line.provider}${line.route}`] = (ph.routes[`${line.provider}${line.route}`] ?? 0) + 1;
+  }
+  private touch(slot: string, delta: number) {
+    const a = this.activity.get(slot) ?? { inflight: 0, last_ms: 0 };
+    a.inflight += delta;
+    a.last_ms = Date.now();
+    this.activity.set(slot, a);
   }
   /** The harness's reader and judge slots (by route class, else `harness` and `judge`). */
   private harnessSlot(slot: string): boolean {
@@ -549,14 +565,16 @@ export class MeteringProxy {
         const tag: RequestTag = { request_id: `${this.options.policy?.lease.runId ?? 'proxy'}-${++this.seq}`, slot, brain: bound?.brain ?? req.headers.get('x-proxy-brain') ?? null,
           phase: bound?.phase ?? this.phases.get(slot) ?? null, bucket: bound ? 'attributed' : this.harnessSlot(slot) ? 'harness' : 'unattributed-background' };
         this.inflight.set(key, (this.inflight.get(key) ?? 0) + 1);
+        this.touch(slot, 1);
+        const done = () => { this.settled(key); this.touch(slot, -1); };
         let streaming = false;
         try {
           const r = this.options.policy
-            ? await this.forwardLeased(req, prov, rest, url.search, key, send, () => { streaming = true; return () => this.settled(key); }, tag)
+            ? await this.forwardLeased(req, prov, rest, url.search, key, send, () => { streaming = true; return done; }, tag)
             : await this.forwardInProcess(req, slot, prov, rest, url.search, key, send);
           r.headers.set('x-proxy-request-id', tag.request_id);
           return r;
-        } finally { if (!streaming) this.settled(key); }
+        } finally { if (!streaming) done(); }
       },
     });
   }
@@ -568,6 +586,7 @@ export class MeteringProxy {
     const unattributed = Object.fromEntries(this.unattributed);
     return { mode: p ? 'lease' : 'in-process', keyless: servesKeyless(this.options.upstream, p?.env ?? process.env), run_id: p?.lease.runId ?? null, control_sha256: this.options.controlToken ? createHash('sha256').update(this.options.controlToken).digest('hex') : null, lease_usd: run?.budget_usd ?? p?.lease.budgetUsd ?? null, committed_usd: run?.committed_usd ?? null,
       max_output_tokens: p ? p.maxOutputTokens ?? DEFAULT_MAX_OUTPUT_TOKENS : null, ...this.counts, unpriced_usage: this.unpriced,
+      slots: Object.fromEntries([...this.activity].map(([s, a]) => [s, { inflight: a.inflight, last_request_at: new Date(a.last_ms).toISOString() }])),
       ...(p ? { billed_usd: this.totals.billed_usd, reserved_unsettled_usd: this.totals.reserved_unsettled_usd, unattributed_background: unattributed,
         route_caps: p.routeCaps ?? null, admission: p.admission ? { limits: p.admission.limits, ...p.admission.stats } : null, cell_token: !!this.options.cellToken, trust_local: !!this.options.trustLocal } : {}) };
   }
@@ -825,6 +844,13 @@ export class ProxyControl {
   /** Label the slot's search requests whose text is exactly one of `queries` as `probe`, until cleared with null. */
   probeQueries(slot: string, queries: string[] | null) { return this.post('/__proxy/probe', { slot, queries }); }
   finalize(key: string, timeoutMs = 30_000) { return this.post('/__proxy/finalize', { key, timeout_ms: timeoutMs }) as Promise<Meter>; }
+  /** A slot's provider requests in flight and when one last arrived or finished (epoch ms), or null when it has sent none. */
+  async slotActivity(slot: string): Promise<{ inflight: number; last_ms: number } | null> {
+    const res = await fetch(`${this.base.replace(/\/$/, '')}/__proxy/status`, { keepalive: false });
+    if (!res.ok) throw new Error(`metering proxy /__proxy/status: HTTP ${res.status}`);
+    const a = ((await res.json()) as { slots?: Record<string, { inflight: number; last_request_at: string }> }).slots?.[slot];
+    return a ? { inflight: a.inflight, last_ms: Date.parse(a.last_request_at) } : null;
+  }
   /** Run `fn` with the slot's provider calls charged to `key`; returns its result and the key's meter. */
   async around<T>(slot: string, key: string, fn: () => Promise<T>): Promise<{ value?: T; error?: unknown; meter: Meter }> {
     await this.bind(slot, key);

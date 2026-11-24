@@ -10,7 +10,7 @@ import { join } from 'node:path';
 import { BudgetRun, closeLedgers } from '../../eval/runner/budget-ledger.ts';
 import { MeteringProxy, ProxyControl, searchTexts, type UsageLine } from '../../eval/runner/metering-proxy.ts';
 import { costSpeed, usagePhase } from '../../eval/runner/cost-speed.ts';
-import { awaitIdle, finishDrained, probePassage, probeRecord, probeSummary, unlabelledSearchRoutes, windowVoid, type ProbeRecord } from '../../eval/runner/cost-speed-probes.ts';
+import { awaitIdle, finishDrained, probePassage, probeRecord, probeSummary, unlabelledMeterRoutes, unlabelledSearchRoutes, windowVoid, type ProbeRecord } from '../../eval/runner/cost-speed-probes.ts';
 
 const tmp = mkdtempSync(join(tmpdir(), 'cost-speed-probes-'));
 afterAll(() => { closeLedgers(); rmSync(tmp, { recursive: true, force: true }); });
@@ -59,6 +59,39 @@ describe('probe attribution in the lease proxy', () => {
       expect(p.ingest).toBeCloseTo(lineSum(lines.filter(l => l.phase === 'background')), 4);
       expect(p.other).toBeCloseTo(probeUsd, 4);
       expect(p.ingest + p.retrieval + p.answer + p.judge + p.other).toBeCloseTo(billed, 4);
+    } finally { proxy.stop(); }
+  });
+
+  test("a calibration window's meter splits requests by label, and the slot's activity feeds the idle check", async () => {
+    const fetchImpl = (async (url: RequestInfo | URL) => String(url).endsWith('/rerank')
+      ? Response.json({ data: [], usage: { total_tokens: 1000 } })
+      : Response.json({ data: [{ embedding: [0.1] }], usage: { prompt_tokens: 1000, total_tokens: 1000 } })) as unknown as typeof fetch;
+    const lease = BudgetRun.openLease({ runId: 'probe-calibration', leaseUsd: 1, ledgerPath: join(tmp, 'ledger-calibration.sqlite') });
+    const proxy = new MeteringProxy({ fetchImpl, policy: { lease, env: FAKE_ENV }, controlToken: 'ctl' });
+    proxy.start();
+    const base = `http://127.0.0.1:${proxy.port}`;
+    const post = (path: string, body: unknown) => fetch(`${base}/sys/${path}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+    try {
+      const ctl = new ProxyControl(base, 'ctl');
+      expect(await ctl.slotActivity('sys')).toBeNull();
+      const t0 = Date.now();
+      await ctl.bind('sys', 'calib:w1');
+      await ctl.probeQueries('sys', [PASSAGE]);
+      expect((await post('openai/v1/embeddings', { model: 'text-embedding-3-small', input: PASSAGE })).status).toBe(200);
+      expect((await post('voyage/v1/rerank', { model: 'rerank-2.5', query: PASSAGE, documents: ['a', 'b'] })).status).toBe(200);
+      expect((await post('openai/v1/embeddings', { model: 'text-embedding-3-small', input: 'an expanded rewrite of the passage' })).status).toBe(200);
+      const a = await ctl.slotActivity('sys');
+      expect(a!.inflight).toBe(0);
+      expect(a!.last_ms).toBeGreaterThanOrEqual(t0 - 5);
+      expect(proxy.status().slots.sys.inflight).toBe(0);
+      await ctl.unbind('sys');
+      const m = await ctl.finalize('calib:w1');
+      expect(m.requests).toBe(3);
+      expect(m.byPhase!.probe).toMatchObject({ requests: 2, routes: { 'openai/v1/embeddings': 1, 'voyage/v1/rerank': 1 } });
+      expect(m.byPhase!.none).toMatchObject({ requests: 1, routes: { 'openai/v1/embeddings': 1 } });
+      expect(m.byPhase!.probe.usd + m.byPhase!.none.usd).toBeCloseTo(m.usd, 10);
+      expect(unlabelledMeterRoutes(m.byPhase)).toEqual(['openai/v1/embeddings']);
+      expect(unlabelledMeterRoutes({ probe: m.byPhase!.probe })).toEqual([]);
     } finally { proxy.stop(); }
   });
 
@@ -144,6 +177,14 @@ describe('idle check', () => {
     const c = clock();
     const r = await awaitIdle({ pending: async () => 0, lastRequestAt: () => 0, quietMs: 60_000, intervalMs: 1_000, ...c });
     expect(r).toEqual({ idle: true, waited_ms: 60_000 });
+  });
+
+  test('a slot-activity read that fails counts as a request now, so the system is not idle', async () => {
+    const c = clock();
+    const r = await awaitIdle({ pending: async () => null, lastRequestAt: async () => { throw new Error('proxy down'); }, quietMs: 60_000, maxMs: 10_000, intervalMs: 1_000, ...c });
+    expect(r).toEqual({ idle: false, waited_ms: 10_000 });
+    const ok = await awaitIdle({ pending: async () => null, lastRequestAt: async () => 0, quietMs: 60_000, intervalMs: 1_000, ...c });
+    expect(ok.idle).toBe(true);
   });
 
   test('a /finish that says ready with undrained background liabilities is not drained', () => {
