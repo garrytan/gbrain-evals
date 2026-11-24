@@ -88,8 +88,11 @@ export interface PairedComparison {
   mcnemar_p: number;
 }
 
-/** A paired comparison of two binary outcomes, one pair per cluster (question): the difference, its bootstrap interval over pairs, and McNemar's exact p. */
-export function pairedComparison(pairs: ReadonlyArray<{ a: boolean; b: boolean }>, draws = BOOTSTRAP_DRAWS, seed = 1): PairedComparison {
+/**
+ * A paired comparison of two binary outcomes: the difference, its bootstrap interval resampling whole clusters (pairs
+ * sharing `cluster`, such as a question's sentences; each pair alone when unset), and McNemar's exact p.
+ */
+export function pairedComparison(pairs: ReadonlyArray<{ a: boolean; b: boolean; cluster?: string }>, draws = BOOTSTRAP_DRAWS, seed = 1): PairedComparison {
   const only_a = pairs.filter(p => p.a && !p.b).length, only_b = pairs.filter(p => !p.a && p.b).length;
   const diff = (rows: ReadonlyArray<{ a: boolean; b: boolean }>) => (rows.length ? rows.reduce((s, p) => s + Number(p.b) - Number(p.a), 0) / rows.length : null);
   return {
@@ -97,7 +100,7 @@ export function pairedComparison(pairs: ReadonlyArray<{ a: boolean; b: boolean }
     rate_a: pairs.length ? pairs.filter(p => p.a).length / pairs.length : null,
     rate_b: pairs.length ? pairs.filter(p => p.b).length / pairs.length : null,
     difference: diff(pairs),
-    difference_ci: clusterBootstrap(pairs.map(p => [p]), diff, draws, seed),
+    difference_ci: clusterBootstrap(pairs.some(p => p.cluster !== undefined) ? clustersBy(pairs, p => p.cluster ?? '') : pairs.map(p => [p]), diff, draws, seed),
     mcnemar_p: mcnemarExact(only_a, only_b),
   };
 }

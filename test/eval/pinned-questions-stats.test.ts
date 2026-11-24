@@ -85,4 +85,12 @@ describe('pinned-questions analysis: paired comparisons', () => {
     const r = pairedRecall(base, fix, ['edit_claim_page', 'edit_claim_fact', 'remove_source_page']);
     expect([r.pairs, r.only_a, r.only_b, r.rate_a, r.rate_b]).toEqual([2, 0, 1, 0.5, 1]);
   });
+
+  test('pairedRecall resamples whole questions, so sentences that move together widen the interval', () => {
+    const rows = (flag: (q: number) => boolean): SentenceRow[] => Array.from({ length: 30 }, (_, q) => (['city', 'flagship', 'ceo', 'founded'] as const).map(claim => ({ seed: 11, company: `c${q}`, mutation: 'edit_claim_page' as const, claim, text: '', cites: [], affected: true, flagged: flag(q), reasons: [] }))).flat();
+    const r = pairedRecall(rows(q => q % 3 === 0), rows(q => q % 2 === 0), ['edit_claim_page']);
+    const pooled = pairedComparison(rows(q => q % 3 === 0).map((s, i) => ({ a: s.flagged, b: rows(q => q % 2 === 0)[i]!.flagged })));
+    expect(r.difference).toBe(pooled.difference);
+    expect(width(r.difference_ci)).toBeGreaterThan(1.5 * width(pooled.difference_ci));
+  });
 });

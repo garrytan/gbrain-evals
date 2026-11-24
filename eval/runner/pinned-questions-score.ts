@@ -70,12 +70,13 @@ export function flagIntervals(sentences: readonly SentenceRow[], draws = BOOTSTR
 
 /**
  * The fix build against the baseline on the same seeds: recall on the affected sentences of `classes`, paired by
- * sentence (seed, company, claim), with McNemar's exact test (the decision rule's "does not fall").
+ * sentence (seed, company, claim), with McNemar's exact test (the decision rule's "does not fall"); its interval
+ * resamples whole questions (seed, company), as the plan clusters every interval.
  */
 export function pairedRecall(base: readonly SentenceRow[], fix: readonly SentenceRow[], classes: readonly MutationClass[]): PairedComparison {
   const key = (s: SentenceRow) => `${s.seed}|${s.company}|${s.claim}`;
   const fixed = new Map(fix.map(s => [key(s), s]));
-  const pairs = base.filter(s => s.affected && classes.includes(s.mutation) && fixed.has(key(s))).map(s => ({ a: s.flagged, b: fixed.get(key(s))!.flagged }));
+  const pairs = base.filter(s => s.affected && classes.includes(s.mutation) && fixed.has(key(s))).map(s => ({ a: s.flagged, b: fixed.get(key(s))!.flagged, cluster: `${s.seed}|${s.company}` }));
   return pairedComparison(pairs);
 }
 
