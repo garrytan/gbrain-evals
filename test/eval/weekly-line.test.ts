@@ -350,6 +350,24 @@ describe('the aggregates that leave custody', () => {
     expect(block.leading_competitor).toEqual({ now: 'extract-first', past: 'extract-first' });
   });
 
+  // Value: protects=a W1-long world counts under its own seed id (W1-long, phrased from W1), and a week or block refuses a long world recorded as W1 or worlds of both lengths together, in its own worlds, its history or its previous block, so the 200,000-token line never pools or confuses a 1,000,000-token world; fails_when=the runner stamps long worlds W1, the aggregates' set id refuses W1-long, or a week or block counts both lengths; why_new=GBEV-3's follow-up to #625 (long worlds get their own seed_id so custody records can't confuse the two lengths); seam=aggregates.ts weekAggregates and blockAggregates over identity.ts worldSeedProblems; no_claim=the long worlds' own scores
+  test('a long world counts as seed W1-long, and a week or block never mixes or confuses the two lengths', () => {
+    const s = synth(8, {});
+    const longIds = s.worlds.map(w => w.replace('bgw-10', 'bgw-20'));
+    const longQs = JSON.parse(JSON.stringify(s.questions).replaceAll('bgw-10', 'bgw-20')) as WlQuestion[];
+    const lm = { ...meta('2026-12-29', longIds, B), worlds: longIds.map(world => ({ world, seed_id: 'W1-long', phrasing_id: 'W1' })) };
+    const wk = weekAggregates(lm, longQs);
+    assertAggregate(wk, 'week');
+    expect(wk.worlds.map(w => [w.seed_id, w.phrasing_id])).toEqual(longIds.map(() => ['W1-long', 'W1']));
+    expect(() => weekAggregates(meta('2026-12-29', longIds, B), longQs)).toThrow("week 2026-12-29's worlds: bgw-2001 is seed set W1-long's world (phrasing W1), not seed W1 with phrasing W1");
+    const mixed = { ...lm, worlds: [...lm.worlds.slice(0, 4), ...s.worlds.slice(4).map(world => ({ world, seed_id: 'W1', phrasing_id: 'W1' }))] };
+    expect(() => weekAggregates(mixed, [...longQs, ...s.questions])).toThrow(/the worlds mix the long and standard lengths, which are never counted together/);
+    const four = [...metas.slice(0, 3), { ...lm, week: metas[3].week, run_id: metas[3].run_id }];
+    expect(() => blockAggregates(1, four, [...questions, ...longQs], { draws: 199, settled: settledOf(four) })).toThrow(/^block 1's worlds: the worlds mix the long and standard lengths/);
+    expect(() => weekAggregates(lm, longQs, { history: weeks })).toThrow("week 2026-12-29 with its history and previous block: the worlds mix the long and standard lengths, which are never counted together");
+    expect(() => weekAggregates(lm, longQs, { previousBlock: block })).toThrow(/^week 2026-12-29 with its history and previous block: the worlds mix the long and standard lengths/);
+  });
+
   test('a week after a block reads the regression flag against that block', () => {
     const next = synth(40, { 'now|grep-agent': i => (i < 32 ? -3 - (i % 2) : 4) });
     const pool = { 'now|extract-first': [1, -1, 2, -2], 'now|memory-bank': [1, -1, 2, -2], 'past|extract-first': [1, -1, 2, -2], 'past|memory-bank': [1, -1, 2, -2] };

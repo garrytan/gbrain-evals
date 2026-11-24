@@ -1,0 +1,254 @@
+{
+  "schema": "gbrain-evals/q1-cell-receipt/v1",
+  "cell_id": "bg1.ext-memory-bank.recipe.component-b8000",
+  "run_cell": "bg1.ext-memory-bank.recipe",
+  "config_sha256": "10d15d3c535322a5ed7e11857baea6fc0b434d4bd44ced03c8c3e1a15803299b",
+  "run_status": "partial",
+  "invalid_reasons": [],
+  "stopped": null,
+  "set": "BG1",
+  "benchmark": "bg1",
+  "split": "sealed",
+  "block": "BG1",
+  "system": {
+    "kind": "ext-memory-bank",
+    "configuration": "recipe",
+    "runner": "shim",
+    "capability_system": "fake",
+    "versions": {
+      "package": "in-repo",
+      "lock_sha256": null,
+      "image": null,
+      "vendor_benchmark_code": null
+    },
+    "capabilities": {
+      "system": "fake",
+      "protocol": 1,
+      "versions": {
+        "package": "in-repo",
+        "lock_sha256": null,
+        "image": null,
+        "vendor_benchmark_code": null
+      },
+      "configs": {
+        "recipe": {
+          "model_roles": {},
+          "notes": "keyword overlap, no provider calls"
+        },
+        "common": {
+          "model_roles": {},
+          "unsettable": [
+            "extraction",
+            "embedder"
+          ]
+        }
+      },
+      "time": "native",
+      "provenance": {
+        "status": "exact",
+        "mechanism": "one item per ingested session"
+      },
+      "delete": "native",
+      "readiness": "synchronous",
+      "namespace": "in-memory dict key",
+      "parallel_namespaces": true,
+      "retrieval_policies": {
+        "vendor-default": {
+          "settings": {
+            "k": 5
+          }
+        },
+        "fixed-evidence": {
+          "settings": {
+            "k": 20
+          }
+        }
+      },
+      "streaming": "disabled",
+      "telemetry_off": [],
+      "agent_surface": {
+        "kind": "none"
+      },
+      "deviations_from_vendor_code": []
+    }
+  },
+  "arm": {
+    "id": "component-b8000",
+    "arm": "component",
+    "mode": "packed",
+    "policy": "fixed-evidence",
+    "budget": 8000,
+    "variant": null,
+    "label": "component, 8,000 tokens"
+  },
+  "readers": [
+    "anthropic:claude-opus-5-5",
+    "openai:gpt-6.1-sol"
+  ],
+  "reader_replicates": {},
+  "effort": "medium",
+  "instrument": {
+    "id": "bg1",
+    "sha256": "9598aacb076ba7bc8e589546008d6db30fa57d078e4140194b1ea05e2564102a",
+    "judge": "gemini:gemini-3.8-flash"
+  },
+  "frontier": {
+    "judges": [
+      "anthropic:claude-opus-5-5",
+      "openai:gpt-6-astra"
+    ],
+    "readers": null,
+    "sample": null,
+    "per_reader": true,
+    "judge_by_reader": {
+      "anthropic:claude-opus-5-5": "openai:gpt-6-astra",
+      "openai:gpt-6.1-sol": "anthropic:claude-opus-5-5"
+    },
+    "settings": {
+      "effort": "medium",
+      "max_tokens": 8000
+    },
+    "instrument_ids": [
+      "bg1@anthropic:claude-opus-5-5",
+      "bg1@openai:gpt-6-astra"
+    ]
+  },
+  "selection": {
+    "questions": 16,
+    "conversations": 8,
+    "scheduled_sha256": "df7d230cb3e6d26cf43a47a43164331e55aa20e2e127baa83dff53c1ef4f68d2"
+  },
+  "counts": {
+    "rows": 16,
+    "answers": 32,
+    "answers_promised": 32,
+    "judgments": 0,
+    "unjudged": 32,
+    "outcomes": {
+      "scored": 32
+    }
+  },
+  "per_reader_mean": {
+    "anthropic:claude-opus-5-5": null,
+    "openai:gpt-6.1-sol": null
+  },
+  "per_reader_frontier_mean": {
+    "anthropic:claude-opus-5-5": null,
+    "openai:gpt-6.1-sol": null
+  },
+  "realizations": [
+    {
+      "conversation": "conv-a",
+      "realization_id": "24d41ffdd8d3cbe38b5574d77cdcd798912aa7ce3e3fadfc7fade610d45d953b",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "conv-b",
+      "realization_id": "d5948ac1d3a0f621ccd169ea63dce4e8cf9049ed7fb974529f12715b294e68ee",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "conv-c",
+      "realization_id": "76d1317018446708f3357f641d2540e0ed4a688d22332ed2a3f7af082a5f5911",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "conv-d",
+      "realization_id": "350de94feb82535a614996538cb7ed83c28dbb53f62e78f03d200a9e4f385949",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "conv-e",
+      "realization_id": "b48733262bcfee8367f2809333bdb9eda36d555a6ab2dd5cc68ccf37eaa24518",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "conv-f",
+      "realization_id": "8d74af3fd8fa8db1ddc188016346a3f7c7cd412a7257332c5e53f279c0b28f48",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "conv-g",
+      "realization_id": "27ece4875a6c2d7f2cae39dd8ded9f394efb9b21cd90d0c4c4ee589790124516",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "conv-h",
+      "realization_id": "29b59ec8e97be36f751aff4d11de02ac316c9cc49d7ad692e3714c63f967f8bf",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    }
+  ],
+  "ingest": {
+    "conversations": 8,
+    "messages": 80,
+    "ingested_tokens": 998,
+    "wall_ms": {
+      "total": 0,
+      "p50": 0,
+      "p95": 0
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 0,
+    "readiness_samples_ms": [],
+    "write_start_to_queryable_ms": {
+      "p50": null,
+      "p95": null,
+      "probes": 0,
+      "found": 0,
+      "missed": 0,
+      "not_measurable": 0
+    }
+  },
+  "timings": {
+    "retrieval_ms": {
+      "p50": 0,
+      "p95": 0
+    },
+    "answer_ms": {
+      "p50": 0,
+      "p95": 0
+    }
+  },
+  "usage": {
+    "input": 320,
+    "output": 160,
+    "cache_read": 0,
+    "cache_write": 0
+  },
+  "spend": {
+    "source": null,
+    "note": "no metering proxy: the budget ledger holds this run's spend"
+  },
+  "files": {
+    "rows": "rows.ndjson",
+    "answers": "answers.ndjson",
+    "judgments": "judgments.ndjson",
+    "run_config": "run-config.json",
+    "readiness": "readiness.ndjson",
+    "contexts": "../../runs/bg1.ext-memory-bank.recipe/contexts.ndjson"
+  }
+}

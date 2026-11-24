@@ -9,7 +9,7 @@ import { join } from 'node:path';
 import { BGW_CAMPAIGN, bgwSlotOf } from '../memory-qa/bg1-names.ts';
 import { bareModelId, suspendedModelProblem } from '../model-defaults.ts';
 import { OPUS, PARTICLE } from '../q1/cells/bg1.ts';
-import { CELL_VM_MAX_HOURS, cellVmHours, frontierJudgesFor, type CellDefinition } from '../q1/cells/definitions.ts';
+import { CELL_VM_MAX_HOURS, cellVmHours, frontierJudgesFor, weeklyUnitWorlds, type CellDefinition } from '../q1/cells/definitions.ts';
 import {
   WEEKLY_LINE_BUNDLE_LOCKS, WEEKLY_LINE_JUDGE_BY_READER, WEEKLY_LINE_MODELS, WEEKLY_LINE_READERS, WEEKLY_LINE_REGISTRY, WEEKLY_LINE_ROWS, weeklyLineBuildProblems, weeklyLineSetOf, weeklyLineWeekProblems,
   type RegistryModel, type WeeklyLineGbrainBuild, type WeeklyLineRereadPlan,
@@ -30,7 +30,9 @@ import { ripgrepVersion } from '../systems/file-agent.ts';
  *             passed in (the newest release at launch);
  *   worlds    a cell outside Set W (set, benchmark or block), a cell whose set (BGW or BGW-long) isn't the length its
  *             week's batch plans at (weeklyLineSetOf), cells that don't share one week, a week whose launch, world end,
- *             batch or worlds weeklyLineWeekProblems rejects, or a re-read of another week's worlds;
+ *             batch or worlds weeklyLineWeekProblems rejects, a re-read of another week's worlds, or a cell whose launch
+ *             units (weeklyUnitWorlds) don't run each of its week's worlds exactly once;
+ *   VM hours  a cell (or one launch unit of a cell split across VMs) that plans more hours than one VM can run;
  *   readers   an 8,000-token arm not read live by claude-opus-5-5 alone, a grep-agent arm not run by both readers, an
  *             8,000-token arm without exactly one particle-1 re-read, or a re-read by anything but particle-1;
  *   judges    a judge that isn't the reader's mapped one (gpt-6-astra for claude-opus-5-5, claude-opus-5-5 for particle-1),
@@ -52,6 +54,11 @@ export function weeklyLineLaunchProblems(l: { gbrain: WeeklyLineGbrainBuild; cel
     if (JSON.stringify(c.week) !== JSON.stringify(week)) p.push(`cell ${c.id} runs another week than ${l.cells[0].id}`);
     if (c.descriptive_view !== false) p.push(`cell ${c.id} would add its instrument's canonical judge to every answer (descriptive_view is not false)`);
     if (cellVmHours(c.expected_hours) > CELL_VM_MAX_HOURS) p.push(`cell ${c.id} plans ${c.expected_hours} hours, so its VM would need ${cellVmHours(c.expected_hours)} hours with margin, past the ${CELL_VM_MAX_HOURS}-hour limit on one VM; it would be stopped before it finished`);
+    if (c.week) {
+      let units: string[] = [];
+      try { units = Array.from({ length: c.shards }, (_, i) => weeklyUnitWorlds(c, i)).flat(); } catch (e) { p.push(`cell ${c.id}'s launch units can't be read: ${(e as Error).message}`); continue; }
+      if (units.length !== c.week.worlds.length || new Set(units).size !== units.length || c.week.worlds.some(w => !units.includes(w))) p.push(`cell ${c.id}'s ${c.shards} launch unit${c.shards === 1 ? '' : 's'} run worlds ${units.join(', ')}, not each of its week's worlds once`);
+    }
   }
   for (const [row, { system, configuration }] of Object.entries(WEEKLY_LINE_ROWS)) {
     const n = l.cells.filter(c => c.system === system && c.configuration === configuration).length;

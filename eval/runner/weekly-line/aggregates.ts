@@ -63,7 +63,7 @@ import {
 } from './design.ts';
 import { renderBlock, renderWeek } from './scorecard.ts';
 import { recordDigestProblems, SETTLED_FILE, settledProblems } from './settled.ts';
-import { recordBindingProblems, RUN_FILE, RUN_ID, runBindingProblems, type RunIdentity } from './identity.ts';
+import { recordBindingProblems, RUN_FILE, RUN_ID, runBindingProblems, worldSeedProblems, type RunIdentity } from './identity.ts';
 
 export class WeeklyAggregateError extends Error {}
 const refuse = (m: string): never => { throw new WeeklyAggregateError(m); };
@@ -85,7 +85,7 @@ export const ID = {
   commit: { t: 'id', re: /^[0-9a-f]{40}$/, what: 'a 40-hex commit' },
   world: { t: 'id', re: /^bgw-\d{4,5}$/, what: 'a set W world id' },
   run: { t: 'id', re: RUN_ID, what: 'a weekly run id' },
-  set: { t: 'id', re: /^(W[1-9]\d{0,2}|[0-9a-f]{64})$/, what: 'a set label or SHA-256' },
+  set: { t: 'id', re: /^(W[1-9]\d{0,2}(-long)?|[0-9a-f]{64})$/, what: 'a set label or SHA-256' },
   version: { t: 'id', re: /^v?\d{1,4}(\.\d{1,6}){0,3}([-+.](rc|alpha|beta|post|dev)\.?\d{0,6})?$/, what: 'a version number' },
 } as const satisfies Record<string, Schema>;
 
@@ -236,6 +236,8 @@ function checkMeta(m: WeekMeta): void {
     if (!m.gbrain || !m.comparators) refuse(`week ${m.week} has a point, so it needs the gbrain release and the comparators' versions`);
   }
   if (new Set(m.worlds.map(w => w.world)).size !== m.worlds.length) refuse(`week ${m.week} lists a world twice`);
+  const seeds = worldSeedProblems(m.worlds);
+  if (seeds.length) refuse(`week ${m.week}'s worlds: ${seeds.slice(0, 3).join('; ')}`);
   const worlds = new Set(m.worlds.map(w => w.world)), seen = new Set<string>();
   for (const c of m.costs ?? []) {
     const key = `${c.row}|${c.reader}|${c.world}`;
@@ -278,10 +280,10 @@ const zOut = (z: number | null) => (z === null || !Number.isFinite(z) ? null : r
 /** What a later week reads back from a weekly aggregates file: its build and its per-world differences. */
 export interface WeekLike {
   week: string; no_point: WlNoPoint | null; gbrain: { release: string; commit: string } | null;
-  worlds: ReadonlyArray<{ world: string; classes: Record<string, { differences: Record<string, { pooled: number | null; readers: Record<WlReaderKey, number | null> }> }> }>;
+  worlds: ReadonlyArray<{ world: string; seed_id: string; phrasing_id: string; classes: Record<string, { differences: Record<string, { pooled: number | null; readers: Record<WlReaderKey, number | null> }> }> }>;
 }
 /** What a week reads back from the previous block's file: each comparison's 95% interval and per-world differences. */
-export interface BlockLike { ended: boolean; comparisons: Record<string, Record<string, { pooled: { ci95: [number, number] | null }; per_world: ReadonlyArray<{ d: number }> }>> }
+export interface BlockLike { ended: boolean; worlds: ReadonlyArray<{ world: string; seed_id: string; phrasing_id: string }>; comparisons: Record<string, Record<string, { pooled: { ci95: [number, number] | null }; per_world: ReadonlyArray<{ d: number }> }>> }
 
 /** The week's per-world differences, as a later week's rolling display reads them back. */
 export function pointWeekOf(a: WeekLike): PointWeek | null {
@@ -313,6 +315,8 @@ export function weekAggregates(meta: WeekMeta, questions: readonly WlQuestion[],
   if (history.some(h => h.week === meta.week)) refuse(`the history already holds week ${meta.week}`);
   const earlier = new Set(earlierWorlds);
   if (ids.some(w => earlier.has(w))) refuse(`week ${meta.week} counts a world an earlier week already counted; each world is counted in exactly one week`);
+  const lengths = worldSeedProblems([...meta.worlds, ...history.flatMap(h => h.worlds), ...(o.previousBlock ? o.previousBlock.worlds : [])]);
+  if (lengths.length) refuse(`week ${meta.week} with its history and previous block: ${lengths.slice(0, 3).join('; ')}`);
   const compared = new Map(WL_COMPARISONS.map(c => [c.key, compare(questions, c, ids)]));
   const worlds = meta.worlds.map(w => ({
     world: w.world, seed_id: w.seed_id, phrasing_id: w.phrasing_id,
@@ -383,6 +387,8 @@ export function blockAggregates(block: number, metas: readonly WeekMeta[], quest
   const ended = weeks.length === WL_WEEKS_PER_BLOCK && settled.length === WL_WEEKS_PER_BLOCK;
   const counted = weeks.filter(w => !w.no_point).flatMap(w => w.worlds.map(x => ({ world: x.world, week: w.week, release: w.gbrain!.release, commit: w.gbrain!.commit, seed_id: x.seed_id, phrasing_id: x.phrasing_id })));
   if (new Set(counted.map(w => w.world)).size !== counted.length) refuse('a world is counted in two weeks of the block');
+  const seeds = worldSeedProblems(counted);
+  if (seeds.length) refuse(`block ${block}'s worlds: ${seeds.slice(0, 3).join('; ')}`);
   const ids = counted.map(w => w.world);
   const r = analyzeBlock(questions, counted, { ended, draws: o.draws });
   const costs = weeks.flatMap(w => w.costs ?? []);

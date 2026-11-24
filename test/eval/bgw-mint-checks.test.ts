@@ -2,7 +2,7 @@
  * Set W's mint top-up and custody checks (the weekly outcome line; docs/benchmarks/2026-11-23-weekly-outcome-line-
  * preregistration.md, "The worlds", "Custody and exposure" and "Pilots"): mint.sh --bgw validates each slot and keeps
  * minting until 34 pass, a world that fails validation counts as a dropped world for both stops, supply.ts checks Gemini
- * requests per kept world over the batch's first five slots, and bgw-checks.ts runs the phrasing check over a batch, the
+ * requests per kept world over the batch's first five slots against its seed set's own limit, and bgw-checks.ts runs the phrasing check over a batch, the
  * seed check that keeps Set W's seed and phrasing apart from BG1's and prints the seed commitment, and the batch check
  * that holds each batch to its committed files and to starting where the batch before it ended. Keyless: mint.sh runs in
  * --fake mode, every child process has the provider keys blanked, nothing reaches a provider, and the seeds, phrasing and
@@ -17,6 +17,7 @@ import { join, resolve } from 'node:path';
 import { BG1_CUSTODY_MARKER, buildQuestions, PUBLIC_PHRASING } from '../../eval/generators/changing-facts-gen.ts';
 import { batchCheck, bgwBatchEnd } from '../../eval/custody/bg1/bgw-checks.ts';
 import { sealedPlan } from '../../eval/custody/bg1/render.ts';
+import { SUPPLY_BASELINES, supplyLimitOf } from '../../eval/custody/bg1/supply.ts';
 import { bgwBatchDataset, bgwBatchIds, bgwBatchManifest } from '../../eval/runner/bg1/types.ts';
 
 const REPO = resolve(import.meta.dir, '../..');
@@ -122,6 +123,24 @@ describe('supply.ts on a Set W batch\'s first five slots (R111)', () => {
     expect(run('bun', [SUPPLY, ...BATCH, '--out', out])).toMatchObject({ code: 12, out: 'bg1-supply slots=1001-1005 gemini_requests=2525 kept=5 per_kept_world=505.0 limit=504 status=fail\n' });
     expect(run('bun', [SUPPLY, '--out', out])).toMatchObject({ code: 2, err: expect.stringContaining('slots 31 to 35 are not all resolved') });
   }, 240_000);
+
+  // Value: protects=each Set W seed set's mint is held to its own supply limit: W1 keeps BG1-C's 504 requests per kept world, and a W1-long batch, whose worlds are about five times longer and whose requests no mint has measured, pauses after its first five slots whatever they used, recording what they measured, until a limit measured from them is recorded; fails_when=a long batch is checked against W1's 504 (so it pauses on any real long world, or passes on a guess), a guessed multiple of 504 is hardcoded for it, or a seed set with no entry mints with no check; why_new=GBEV-3's follow-up to #625 (a measured long supply limit before the first long week); seam=supply.ts supplyCheck and supplyLimitOf through the CLI mint.sh runs; no_claim=the long mint's real request counts
+  test("each seed set has its own supply limit, and a long batch pauses after five slots until one is measured", () => {
+    expect(SUPPLY_BASELINES).toEqual({ 'BG1-C': 336, W1: 336, 'W1-long': null });
+    expect([supplyLimitOf('BG1-C'), supplyLimitOf('W1'), supplyLimitOf('W1-long')]).toEqual([504, 504, null]);
+    expect(() => supplyLimitOf('W2')).toThrow('set W2 has no supply baseline entry (supply.ts SUPPLY_BASELINES), so its mint has no supply check');
+    const measured = (first: number) => {
+      const out = join(scratch(`supply-${first}`), 'custody');
+      mkdirSync(join(out, 'proxy', 'requests'), { recursive: true });
+      for (const slot of range(first, first + 4)) { record(out, slot, 'pass'); writeFileSync(join(out, 'proxy', 'requests', `${id(slot)}-gemini.jsonl`), '{"refused":false}\n'.repeat(400)); }
+      return { out, r: run('bun', [SUPPLY, '--bgw', '--batch', String(first), '--out', out]) };
+    };
+    const w1 = measured(1001);
+    expect(w1.r).toMatchObject({ code: 0, out: 'bg1-supply slots=1001-1005 gemini_requests=2000 kept=5 per_kept_world=400.0 limit=504 status=pass\n' });
+    const long = measured(2001);
+    expect(long.r).toMatchObject({ code: 12, out: 'bg1-supply slots=2001-2005 gemini_requests=2000 kept=5 per_kept_world=400.0 limit=none status=unmeasured\n' });
+    expect(JSON.parse(readFileSync(join(long.out, 'render', 'supply.json'), 'utf8'))).toMatchObject({ gemini_requests: 2000, kept: 5, per_kept_world: 400, limit: null, status: 'unmeasured' });
+  }, 60_000);
 });
 
 describe('bgw-checks.ts: phrasing, seed and batch', () => {

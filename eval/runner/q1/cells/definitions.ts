@@ -182,7 +182,8 @@ export interface CellDefinition {
   launch?: { env: Record<string, string>; config: 'recipe' | 'common' | 'shipped-0.31' };
   /**
    * RS1, BG1 and BG1-C: the cell's conversations are the custodian's kept list (eval/runner/memory-qa/corpus.ts rs1Kept, bg1Kept),
-   * in slot order, and launch unit (shard) i runs kept conversations i x kept_units to (i + 1) x kept_units - 1.
+   * in slot order, and launch unit (shard) i runs kept conversations i x kept_units to (i + 1) x kept_units - 1. A Set W cell
+   * too long for one VM splits its week's worlds the same way (weeklyUnitWorlds), and its expected_hours are one unit's.
    */
   kept_units?: number;
   /** Shim cells: tar the stack's named volumes into the realization once ingest is complete (the launcher sets SHOOTOUT_SNAPSHOT_DIR). */
@@ -645,6 +646,17 @@ export const BG1_ASSUMPTIONS = {
 /** The longest a launch unit's VM may run, and the VM hours a unit asks for: its expected hours with half again as margin, plus two. */
 export const CELL_VM_MAX_HOURS = 72;
 export const cellVmHours = (expectedHours: number) => Math.ceil(expectedHours * 1.5) + 2;
+
+/**
+ * A Set W cell's launch unit `index`: its week's worlds in slot order, kept_units of them at a time, or all of them when the
+ * cell runs as one unit. Every world of the week falls in exactly one unit.
+ */
+export function weeklyUnitWorlds(def: Pick<CellDefinition, 'id' | 'week' | 'shards' | 'kept_units'>, index: number): string[] {
+  if (!def.week) throw new Error(`${def.id} is not a Set W cell, so it has no week to split into launch units`);
+  if (!(Number.isInteger(index) && index >= 0 && index < def.shards)) throw new Error(`${def.id} runs as ${def.shards} launch unit${def.shards === 1 ? '' : 's'}, and unit ${index} is not one of them`);
+  const worlds = [...def.week.worlds].sort((a, b) => bgwSlotOf(a)! - bgwSlotOf(b)!);
+  return def.shards === 1 ? worlds : worlds.slice(index * def.kept_units!, (index + 1) * def.kept_units!);
+}
 
 /**
  * Stage 1's measured rates (the preregistration's Amendment 5), which price BG1's counted cells (benchmark bg1: sets BG1
@@ -1240,7 +1252,11 @@ export function definitionProblems(d: CellDefinition, kinds: ReadonlySet<string>
   if (d.ingest_sessions !== undefined && !(Number.isInteger(d.ingest_sessions) && d.ingest_sessions > 0)) p.push('ingest_sessions must be a positive whole number of sessions');
   if (d.only_conversations !== undefined && !(Array.isArray(d.only_conversations) && d.only_conversations.length && d.only_conversations.every(c => typeof c === 'string' && c) && d.split === 'dev')) p.push('only_conversations must list dev conversation ids on a dev-split cell');
   if (!Array.isArray(d.arms) || !d.arms.length) p.push('arms must list at least one arm');
-  if (d.kept_units !== undefined && !(Number.isInteger(d.kept_units) && d.kept_units > 0 && (d.benchmark === 'beam-rs1' || d.benchmark === 'bg1' || d.benchmark === 'bg1c') && d.shards === Math.ceil(ALL_SETS[d.set].conversations / d.kept_units))) p.push('kept_units runs a beam-rs1, bg1 or bg1c cell over the custodian\'s kept list, in units of a positive number of conversations, one shard per unit');
+  const keptUnitsOk = Number.isInteger(d.kept_units) && d.kept_units! > 0 && (d.benchmark === 'bgw'
+    ? Array.isArray(d.week?.worlds) && d.shards > 1 && d.shards === Math.ceil(d.week!.worlds.length / d.kept_units!)
+    : (d.benchmark === 'beam-rs1' || d.benchmark === 'bg1' || d.benchmark === 'bg1c') && d.shards === Math.ceil(ALL_SETS[d.set].conversations / d.kept_units!));
+  if (d.kept_units !== undefined && !keptUnitsOk) p.push('kept_units runs a beam-rs1, bg1 or bg1c cell over the custodian\'s kept list, or a Set W cell over its week\'s worlds, in units of a positive number of conversations, one shard per unit');
+  if (d.benchmark === 'bgw' && d.shards > 1 && d.kept_units === undefined) p.push('a Set W cell that runs as more than one launch unit names how many of its week\'s worlds each unit runs (kept_units)');
   if (d.descriptive_view !== undefined && !(d.descriptive_view === false && (d.arms ?? []).every(a => a.mode === 'retrieval-only' || (a.frontier?.per_reader === true && a.frontier.readers === null && a.frontier.sample === null && Object.values(a.reader_replicates ?? {}).every(n => n <= 1))))) p.push('descriptive_view is false or absent, and false only when every judged arm gives every answer its per-reader gating judge (frontier.per_reader over all readers, one replicate each, unsampled), so no answer goes ungraded without the canonical judge');
   if ((d.benchmark === 'bgw') !== (d.week !== undefined)) p.push('a Set W (bgw) cell names its week (launch, world_end, batch, worlds), and only a Set W cell does');
   if (d.week !== undefined) {

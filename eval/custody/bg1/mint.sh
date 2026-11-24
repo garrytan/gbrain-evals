@@ -70,7 +70,8 @@
 #   - BG1-C's supply check (--bg1c; --bgw per batch, below; R111, the preregistration's pilot condition 3). Once slot 35 resolves (written
 #     and validated, or dropped), and before a run that starts past slot 35 renders anything, mint.sh runs
 #     eval/custody/bg1/supply.ts on slots 31 to 35 and prints its counts-only line; a run past slot 35 with any of them
-#     unresolved refuses. More than 504 Gemini requests per kept world, or no kept world, pauses the mint with exit 3
+#     unresolved refuses. More than the set's limit of Gemini requests per kept world (504 for BG1-C and W1; W1-long has
+#     no limit until one measured from its first five slots is recorded in supply.ts), or no kept world, pauses the mint with exit 3
 #     and a summary=paused reason=supply line, for GBEV-3, before slot 36 renders, and every later run pauses the same
 #     way. GBEV-3's approval id comes back as --supply-ack (a- and 12 hex digits), which mint.sh takes only while the
 #     check fails and appends to render/supply-acks.jsonl; from then on the failed check prints supply=acked and the
@@ -109,7 +110,9 @@
 # 1001 to 1999 plans at changing-facts-gen@1 and about 200,000 tokens, and W1-long on slots 2001 to 2999 plans from W1's
 # seed and phrasing at changing-facts-gen@2 and about 1,000,000 tokens. bgw-checks.ts length prints the batch's length,
 # which --target-tokens defaults to for render.ts and validate.ts; a real Set W mint refuses any other
-# --target-tokens, so a batch is minted only at its own length (a --fake drill may shorten it).
+# --target-tokens, so a batch is minted only at its own length (a --fake drill may shorten it). The supply check holds each
+# batch to its own seed set's limit (supply.ts SUPPLY_BASELINES): W1's is BG1-C's 504, and W1-long's is unrecorded until
+# its first five slots are measured, so a long batch's mint always pauses for GBEV-3 after its first five slots.
 #
 # --fake renders with the template renderer and fake checks: no network, and no key or key file is read.
 #
