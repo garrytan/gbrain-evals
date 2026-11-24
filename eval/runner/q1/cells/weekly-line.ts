@@ -139,6 +139,23 @@ const listUsd = (model: string, input: number, output: number) => { const p = pr
 /** The file agent's tokens per answer: the SOTA dev test's assumption for the same loop, until the pilot measures it on Set W's worlds. */
 export const WEEKLY_LINE_FILE_AGENT_TOKENS = { input: SOTA_ASSUMPTIONS.agent['baseline-file-agent']['SOTA-dev'] as number, output: SOTA_ASSUMPTIONS.agent['baseline-file-agent'].output as number };
 
+/**
+ * The grep agent's wall time per answer, its gating judgment included, in seconds: an assumption, because neither the
+ * SOTA dev test nor any earlier file-agent run records one (SOTA_ASSUMPTIONS holds tokens per answer only: 73,000 in and
+ * 2,000 out, over at most 40 turns). 90 s is a 40-turn loop's typical dozen turns at several seconds a turn, plus the
+ * judge call; the pilot measures it on Set W's dev world and a dated amendment replaces it.
+ */
+export const WEEKLY_LINE_FILE_AGENT_SECONDS_PER_ANSWER = 90;
+/** The margin on the grep agent's hours, over the per-answer assumption. */
+export const WEEKLY_LINE_FILE_AGENT_HOURS_MARGIN = 1.5;
+/**
+ * The grep agent cell's expected hours: every answer of the week (its worlds times 64 questions times both readers, run
+ * one after another in the cell) at the per-answer assumption, times the margin, rounded up. A full week is 1,024 answers,
+ * 39 hours, so its VM timeout (cell.ts plan: 1.5 times the expected hours plus 2, at most 72) is 61 hours.
+ */
+export const weeklyLineFileAgentHours = (worlds: number) =>
+  Math.ceil(worlds * (ALL_SETS.BGW.questions / ALL_SETS.BGW.conversations) * WEEKLY_LINE_READERS.length * WEEKLY_LINE_FILE_AGENT_SECONDS_PER_ANSWER * WEEKLY_LINE_FILE_AGENT_HOURS_MARGIN / 3600);
+
 /** A weekly cell's estimate for a full week: BG1-C's rate per world for an 8,000-token row, else the file agent's reads and their gating judges. */
 function weeklyEstimate(c: CellDefinition): CellEstimate {
   const s = ALL_SETS[c.set], key = `${c.system}:${c.configuration}`;
@@ -193,7 +210,7 @@ export function generateWeeklyLineCells(input: WeeklyLineInput): CellDefinition[
     const hours = BG1_MEASURED.hours_per_mtok[`${system}:${configuration}`];
     const def: CellDefinition = {
       ...made, canonical_instrument: 'bg1', effort: WEEKLY_LINE_EFFORT, shards: 1,
-      expected_hours: hours ? Math.ceil(hours * ALL_SETS.BGW.corpus_tokens / 1e6 * BG1C_WORLD_RATIO) : made.expected_hours,
+      expected_hours: system === 'baseline-file-agent' ? weeklyLineFileAgentHours(worlds.length) : hours ? Math.ceil(hours * ALL_SETS.BGW.corpus_tokens / 1e6 * BG1C_WORLD_RATIO) : made.expected_hours,
       week: { ...week, worlds: [...worlds] }, ...(g8 ? { gbrain_build: { release: gbrain.release, commit: gbrain.commit } } : {}),
     };
     return { ...def, estimate: weeklyEstimate(def) };

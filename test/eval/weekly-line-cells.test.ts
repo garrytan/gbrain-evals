@@ -14,7 +14,7 @@ import { BG1C_GBRAIN_LAUNCH, BG1C_RATES } from '../../eval/runner/q1/cells/bg1c.
 import { ALL_SETS, definitionProblems, PER_READER_JUDGE_SETTINGS, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
 import { F6_ARMS } from '../../eval/runner/q1/cells/f6.ts';
 import {
-  generateWeeklyLineCells, WEEKLY_LINE_MODELS, WEEKLY_LINE_PARTICLE_MAX_TOKENS, WEEKLY_LINE_ROWS, weeklyLineRereadPlans,
+  generateWeeklyLineCells, WEEKLY_LINE_FILE_AGENT_HOURS_MARGIN, WEEKLY_LINE_FILE_AGENT_SECONDS_PER_ANSWER, weeklyLineFileAgentHours, WEEKLY_LINE_MODELS, WEEKLY_LINE_PARTICLE_MAX_TOKENS, WEEKLY_LINE_ROWS, weeklyLineRereadPlans,
   type RegistryModel, type WeeklyLineInput,
 } from '../../eval/runner/q1/cells/weekly-line.ts';
 import { WL_SYSTEMS } from '../../eval/runner/weekly-line/design.ts';
@@ -115,6 +115,19 @@ describe('generateWeeklyLineCells', () => {
     const unlisted = rereads.map((r, i) => (i ? r : { ...r, judges: ['openai:gpt-6.2-astra'] }));
     expect(launch({ rereads: unlisted })).toContain("a weekly cell can call gpt-6.2-astra as judge, which WEEKLY_LINE_MODELS doesn't name");
     expect(launch({ rereads: unlisted })).toContain("a weekly cell can call gpt-6.2-astra as judge, which the registry entry (docs/benchmarks/preregistrations.d/weekly-outcome-line.json) doesn't list");
+  });
+
+  // Value: protects=the grep agent's cell is timed from the week's answer count at the stated per-answer assumption with a margin, so its VM is not stopped mid-week by the one-hour default; fails_when=the grep agent keeps the default hours (a 4-hour VM limit for 1,024 agent answers) or its hours ignore the week's world count; why_new=#615 final review finding 3 (weekly-line.ts:180), owed by the wiring PR (GBEV-3 ruling); seam=weekly-line.ts generateWeeklyLineCells and weeklyLineFileAgentHours; no_claim=the per-answer time itself, which the pilot measures
+  test("the grep agent's hours follow the week's answer count at the per-answer assumption with its margin", () => {
+    const fs = cells.find(c => c.system === 'baseline-file-agent')!;
+    expect([WEEKLY_LINE_FILE_AGENT_SECONDS_PER_ANSWER, WEEKLY_LINE_FILE_AGENT_HOURS_MARGIN]).toEqual([90, 1.5]);
+    expect(fs.expected_hours).toBe(Math.ceil(8 * 64 * 2 * 90 * 1.5 / 3600));
+    expect(fs.expected_hours).toBe(39);
+    expect(Math.min(72, Math.ceil(fs.expected_hours * 1.5) + 2)).toBe(61);
+    const short = generateWeeklyLineCells({ ...INPUT, worlds: WORLDS.slice(0, 2) }).find(c => c.system === 'baseline-file-agent')!;
+    expect(short.expected_hours).toBe(weeklyLineFileAgentHours(2));
+    expect(short.expected_hours).toBe(10);
+    expect(definitionProblems(fs, KINDS)).toEqual([]);
   });
 
   test('definitionProblems: a Set W cell names its week and only a Set W cell does; gbrain_build sits on the gbrain cell it launches', () => {
