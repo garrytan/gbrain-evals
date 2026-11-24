@@ -101,10 +101,24 @@ export const BG1C_DATASET = 'BG1-C changing-facts confirmation set';
  * BG1-C's (two drops among its first five slots), and its drop cap is BG1-C's three drops per 40 kept worlds scaled to
  * 34 and rounded down. Each batch has a committed manifest template (bgwBatchManifest) and its slots in the committed
  * split file (BGW_SPLIT) before it mints, and the custodian fills the template beside the batch's set root.
+ *
+ * A seed set also names its world length profile (changing-facts-gen.ts BG1_PROFILES) and the seed line it plans from.
+ * W1-long, on slots 2001 to 2999, is W1's seed line and phrasing at the long profile (changing-facts-gen@2, about
+ * 1,000,000 tokens a world): the worlds week 1 runs if the preregistration's ceiling rule moves the line to longer worlds
+ * by dated amendment. Its batches, weeks, gates and custody rules are every other seed set's.
  */
 export const BGW_BENCHMARK = 'bgw';
-/** Set W's seed sets, one per quarter, each on a slot range of its own; a rotation amendment adds the next. */
-export const BGW_SEED_SETS: ReadonlyArray<{ id: string; first: number; last: number }> = [{ id: 'W1', first: 1001, last: 1999 }];
+/** A seed set's world length profile: changing-facts-gen.ts BG1_PROFILES (standard at about 200,000 tokens, long at about 1,000,000). */
+export type BgwProfile = 'standard' | 'long';
+export interface BgwSeedSet { id: string; first: number; last: number; profile: BgwProfile; seed: string }
+/**
+ * Set W's seed sets, one per quarter, each on a slot range of its own; a rotation amendment adds the next. `seed` names the
+ * seed set whose seed line and phrasing it plans from: W1-long plans from W1's.
+ */
+export const BGW_SEED_SETS: ReadonlyArray<BgwSeedSet> = [
+  { id: 'W1', first: 1001, last: 1999, profile: 'standard', seed: 'W1' },
+  { id: 'W1-long', first: 2001, last: 2999, profile: 'long', seed: 'W1' },
+];
 export const BGW_FIRST_SLOT = 1001;
 export const BGW_WORLDS_PER_WEEK = 8;
 export const BGW_WEEKS_PER_BATCH = 4;
@@ -129,7 +143,13 @@ export const bgwSlotOf = (id: string): number | null => {
   return m && bgwSeedSetOf(Number(m[1])) ? Number(m[1]) : null;
 };
 /** The seed set a slot belongs to, or null. */
-export const bgwSeedSetOf = (slot: number) => (Number.isInteger(slot) ? BGW_SEED_SETS.find(s => slot >= s.first && slot <= s.last) ?? null : null);
+export const bgwSeedSetOf = (slot: number): BgwSeedSet | null => (Number.isInteger(slot) ? BGW_SEED_SETS.find(s => slot >= s.first && slot <= s.last) ?? null : null);
+/** A Set W slot's length profile, from its seed set; throws for a slot outside every seed set. */
+export const bgwProfileOf = (slot: number): BgwProfile => {
+  const set = bgwSeedSetOf(slot);
+  if (!set) throw new Error(`slot ${slot} is not in any Set W seed set`);
+  return set.profile;
+};
 /** A batch's name: its first world's id. */
 export const bgwBatchName = (first: number): string => bgwWorldId(first);
 /** The slots a batch may use, first to first + BGW_BATCH_SLOTS - 1, all inside one seed set; refuses a batch that would cross its set's end. */

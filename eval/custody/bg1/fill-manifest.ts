@@ -35,7 +35,8 @@
  * slot of the batch (a short batch); a fill without n_final needs at least one week's eight worlds, so the first weeks can
  * launch while the batch is still minting, and a refill adds the rest. The batch's template and split entries must be in
  * the checkout's HEAD commit and unchanged in its working tree, as the mint's batch check requires, so an uncommitted
- * edit is never pinned. Every other rule is the same.
+ * edit is never pinned. --target-tokens defaults to the batch's seed set's world length (200,000 for W1, 1,000,000 for
+ * W1-long), and a real Set W fill refuses any other, so a batch is pinned only at its own length. Every other rule is the same.
  *
  * When <root>/bg1-manifest.json already holds a filled manifest the fill is a refill: the earlier kept list must start
  * the new one in the same order, every file the earlier fill pins keeps its hash, an n_final once set never changes, and
@@ -49,6 +50,7 @@ import { BG1_TARGET_TOKENS } from '../../generators/changing-facts-gen.ts';
 import { BG1_WAVE_A, BG1C_N_FINAL, BGW_BATCH_KEPT, BGW_WORLDS_PER_WEEK, bgwFilledManifest } from '../../runner/bg1/types.ts';
 import { DecideError } from '../../runner/decisions/errors.ts';
 import { BG1_SET, BG1_TEMPLATE_RENDERERS, BG1C_SET, bg1Kept, bg1ManifestFiles, bg1Source, bgwCommittedProblems, bgwSet, readBg1Manifest, type Bg1Manifest } from '../../runner/memory-qa/corpus.ts';
+import { sealedTargetTokens } from './render.ts';
 import { VALIDATION_SCHEMA, WORLD_FILES, type ValidationReport } from './validate.ts';
 
 export class FillError extends Error {}
@@ -74,7 +76,8 @@ export function fillManifest(opts: { root: string; report: string; targetTokens?
   let report: ValidationReport;
   try { report = JSON.parse(readFileSync(resolve(opts.report), 'utf8')) as ValidationReport; } catch { throw new FillError('--report is not a readable JSON file'); }
   if (report?.schema !== VALIDATION_SCHEMA || !Array.isArray(report.worlds) || !Array.isArray(report.kept)) throw new FillError(`--report is not a ${VALIDATION_SCHEMA} report`);
-  const targetTokens = opts.targetTokens ?? BG1_TARGET_TOKENS, tolerance = opts.tolerance ?? 0.15;
+  const setTokens = bgw ? sealedTargetTokens(opts.bgwBatch!, 'bgw') : BG1_TARGET_TOKENS;
+  const targetTokens = opts.targetTokens ?? setTokens, tolerance = opts.tolerance ?? 0.15;
   if (report.target_tokens !== targetTokens || report.tolerance !== tolerance) throw new FillError(`the report was validated at ${report.target_tokens} tokens within ${report.tolerance}, not ${targetTokens} within ${tolerance}`);
 
   const kept = report.kept, nFinal = report.n_final ?? null;
@@ -103,6 +106,7 @@ export function fillManifest(opts: { root: string; report: string; targetTokens?
   const drill = !!opts.drill;
   const templated = kept.filter(id => { try { return BG1_TEMPLATE_RENDERERS.includes((JSON.parse(readFileSync(join(root, 'worlds', id, 'world.json'), 'utf8')) as { renderer?: string }).renderer ?? ''); } catch { return false; } });
   if (templated.length && !drill) throw new FillError(`${templated.length} kept world(s) were written by a template renderer (first ${templated[0]}); only a --fake drill fills template worlds`);
+  if (bgw && !drill && targetTokens !== setTokens) throw new FillError(`a real Set W fill pins batch bgw-${opts.bgwBatch} at its seed set's ${setTokens} tokens, not ${targetTokens}`);
   const files = bg1ManifestFiles(root, kept, set);
 
   let earlier: { manifest: Bg1Manifest; sha256: string } | null = null;

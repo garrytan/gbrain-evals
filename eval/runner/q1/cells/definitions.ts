@@ -55,7 +55,7 @@ export type BG1CSetId = 'BG1C' | 'BG1C-dev1';
  * The weekly outcome line's sets (weekly-line.ts): one week's Set W worlds, the pilot on public dev world bg1-dev-01
  * (R111) and the grep agent's judge check on public dev worlds bg1-dev-02 and bg1-dev-03 (R78).
  */
-export type WeeklyLineSetId = 'BGW' | 'BGW-pilot' | 'BGW-judge';
+export type WeeklyLineSetId = 'BGW' | 'BGW-long' | 'BGW-pilot' | 'BGW-judge';
 /** The SOTA loop's sets (generateSotaDevCells, generateSotaLeaderCells). */
 export type SotaSetId = 'SOTA-dev' | 'SOTA-leader-beam' | 'SOTA-leader-lme';
 export type Q1BlockId = 'T1' | 'T2-S2a' | 'T2-S2b' | 'T2-S3' | 'T2-S4-S5';
@@ -302,6 +302,7 @@ export const BG1C_SETS: Record<BG1CSetId, SetFacts> = {
  */
 export const WEEKLY_LINE_SETS: Record<WeeklyLineSetId, SetFacts> = {
   BGW: { id: 'BGW', benchmark: 'bgw', split: 'sealed', questions: BGW_WORLDS_PER_WEEK * 64, conversations: BGW_WORLDS_PER_WEEK, corpus_tokens: BGW_WORLDS_PER_WEEK * 200_000, messages: BGW_WORLDS_PER_WEEK * 2_000, block: 'BGW', selection: { kind: 'all' }, exclusions: [], role: 'headline', exposure: 'E0', label: 'weekly outcome line, one week of Set W worlds', sessions: 150 },
+  'BGW-long': { id: 'BGW-long', benchmark: 'bgw', split: 'sealed', questions: BGW_WORLDS_PER_WEEK * 64, conversations: BGW_WORLDS_PER_WEEK, corpus_tokens: BGW_WORLDS_PER_WEEK * 1_000_000, messages: BGW_WORLDS_PER_WEEK * 10_000, block: 'BGW', selection: { kind: 'all' }, exclusions: [], role: 'headline', exposure: 'E0', label: 'weekly outcome line, one week of W1-long worlds (about 1,000,000 tokens each)', sessions: 750 },
   'BGW-pilot': { id: 'BGW-pilot', benchmark: 'bg1-dev', split: 'dev', questions: 64, conversations: 1, corpus_tokens: 200_000, messages: 2_000, block: 'BGW-pilot', selection: { kind: 'all' }, exclusions: [], role: 'smoke', exposure: 'E2', label: 'weekly outcome line pilot, public dev world bg1-dev-01 at the counted settings', only_conversations: ['bg1-dev-01'], sessions: 150 },
   'BGW-judge': { id: 'BGW-judge', benchmark: 'bg1-dev', split: 'dev', questions: 128, conversations: 2, corpus_tokens: 400_000, messages: 4_000, block: 'BGW-judge', selection: { kind: 'all' }, exclusions: [], role: 'smoke', exposure: 'E2', label: "weekly outcome line, the grep agent's judge check on public dev worlds bg1-dev-02 and bg1-dev-03", only_conversations: ['bg1-dev-02', 'bg1-dev-03'], sessions: 150 },
 };
@@ -637,6 +638,10 @@ export const BG1_ASSUMPTIONS = {
   /** The canonical judge's tokens per call (one short-answer verdict, thinking included), at its list price. */
   canonical_judge_tokens: { input: 600, output: 250 },
 };
+
+/** The longest a launch unit's VM may run, and the VM hours a unit asks for: its expected hours with half again as margin, plus two. */
+export const CELL_VM_MAX_HOURS = 72;
+export const cellVmHours = (expectedHours: number) => Math.ceil(expectedHours * 1.5) + 2;
 
 /**
  * Stage 1's measured rates (the preregistration's Amendment 5), which price BG1's counted cells (benchmark bg1: sets BG1

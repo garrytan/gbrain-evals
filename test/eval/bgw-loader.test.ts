@@ -71,7 +71,7 @@ const keptManifest = (kept: string[], n_final?: number, dataset = bgwBatchDatase
 describe('Set W\'s slots, ids and batches', () => {
   // Value: protects=Set W lives on its own four-digit slots, apart from BG1's and BG1-C's, and a batch is 56 slots inside one seed set; fails_when=a Set W id has three digits, overlaps BG1 or BG1-C, or a batch crosses its seed set's end; why_new=weekly-line preregistration "The worlds" (set W on slots 1001 and up, bgw-1001 onward); seam=bg1-names.ts; no_claim=custody
   test('W1 holds slots 1001 to 1999 with ids bgw-1001 to bgw-1999, four digits, and no slot outside a seed set has an id', () => {
-    expect(BGW_SEED_SETS).toEqual([{ id: 'W1', first: 1001, last: 1999 }]);
+    expect(BGW_SEED_SETS).toEqual([{ id: 'W1', first: 1001, last: 1999, profile: 'standard', seed: 'W1' }, { id: 'W1-long', first: 2001, last: 2999, profile: 'long', seed: 'W1' }]);
     expect([1001, 1056, 1999].map(bgwWorldId)).toEqual(['bgw-1001', 'bgw-1056', 'bgw-1999']);
     for (const slot of [1000, 2000, 31, 96, 1001.5]) expect(() => bgwWorldId(slot)).toThrow('is not in any Set W seed set');
     expect(['bgw-1001', 'bgw-1999', 'bgw-01001', 'bgw-101', 'bgw-2000', 'bgw-1001x', 'bg1-031', 'bg1-1001'].map(bgwSlotOf)).toEqual([1001, 1999, null, null, null, null, null, null]);
@@ -86,7 +86,7 @@ describe('Set W\'s slots, ids and batches', () => {
 
   // Value: protects=the first batch's split entries and manifest template are committed before any Set W world is minted, and a batch without them cannot load; fails_when=the split misses a slot of bgw-1001, the template is filled or carries another dataset, or an uncommitted batch loads; why_new=weekly-line preregistration "Custody and exposure" (a filled manifest of the line's own pins every file of set W); seam=the committed split and template and corpus.ts bgwSet; no_claim=later batches' files
   test('batch bgw-1001 has its committed split entries and unfilled template; an uncommitted batch refuses', () => {
-    expect(loadSplit('bgw')).toMatchObject({ benchmark: 'bgw', dev: [], sealed: bgwBatchIds(1001), dev_fraction: 0 });
+    expect(loadSplit('bgw')).toMatchObject({ benchmark: 'bgw', dev: [], sealed: [...bgwBatchIds(1001), ...bgwBatchIds(2001)], dev_fraction: 0 });
     expect(BGW_SPLIT).toBe('eval/decisions/splits/bgw.json');
     const { manifest } = readBg1Manifest(join(REPO, bgwBatchManifest(1001)), W1());
     expect(manifest).toMatchObject({ dataset: bgwBatchDataset(1001), status: 'unfilled', files: [], filled_at: null });

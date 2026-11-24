@@ -9,14 +9,19 @@
  *   bun eval/custody/bg1/bgw-checks.ts seed --seed-file <path>.bgw-seed --phrasing <path>.bgw-phrasing.json
  *       --bg1-seed-file <path>.bg1-seed --bg1-phrasing <path>.bg1-phrasing.json
  *   bun eval/custody/bg1/bgw-checks.ts batch --batch <first slot> [--previous <the previous batch's mint.sh --bgw --out>]
+ *   bun eval/custody/bg1/bgw-checks.ts length --batch <first slot>
+ *
+ * length prints the batch's world length in cl100k tokens and nothing else: its seed set's profile's target
+ * (changing-facts-gen.ts BG1_PROFILES), 200000 for W1 and 1000000 for W1-long. mint.sh --bgw renders and validates to it
+ * unless --target-tokens is given, and a real mint refuses any other.
  *
  * phrasing: the generator's phrasing check (loadPhrasing: keys, placeholders and the custody marker), then each slot of
  * the batch, its plan and questions from Set W's seed and the phrasing, in memory. Nothing is written. It passes when every
  * slot plans.
  *
  * seed: the line uses a seed and phrasing set of its own. It fails when Set W's seed holds BG1's 64 hex digits, when any
- * slot of Set W's seed set (W1: 1001 to 1999) gets a world seed (bgwWorldSeed) equal to the one BG1's seed gives that
- * slot (sealedWorldSeed), or when the phrasing set shares any template with BG1's private phrasing. On a pass it prints,
+ * slot of a seed set that plans from W1's seed line (W1: 1001 to 1999; W1-long: 2001 to 2999) gets a world seed
+ * (bgwWorldSeed) equal to the one BG1's seed gives that slot (sealedWorldSeed), or when the phrasing set shares any template with BG1's private phrasing. On a pass it prints,
  * for launch amendment A, the SHA-256 of the seed commitment, "gbrain-evals weekly-line seed commitment v1|<seed
  * line>|nonce=<nonce>", and of the phrasing file. The nonce is 32 random bytes in hex, kept beside the seed as
  * <name>.bgw-nonce (one line, mode 600): the first pass writes it and every later pass reuses it, so the commitment never
@@ -39,8 +44,8 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-import { buildQuestions, bgwWorldSeed, PlanError, sealedWorldSeed, type Phrasing } from '../../generators/changing-facts-gen.ts';
-import { BGW_BATCH_KEPT, BGW_FIRST_SLOT, bgwBatchIds, bgwBatchSlots, bgwSeedSetOf, bgwSlotOf } from '../../runner/memory-qa/bg1-names.ts';
+import { BG1_PROFILES, buildQuestions, bgwWorldSeed, PlanError, sealedWorldSeed, type Phrasing } from '../../generators/changing-facts-gen.ts';
+import { BGW_BATCH_KEPT, BGW_FIRST_SLOT, BGW_SEED_SETS, bgwBatchIds, bgwBatchSlots, bgwSeedSetOf, bgwSlotOf } from '../../runner/memory-qa/bg1-names.ts';
 import { bgwCommittedProblems } from '../../runner/memory-qa/corpus.ts';
 import { COMMITMENT_PREFIXES, recordCommitment } from './commitment.ts';
 import { insideCheckout, ownerOnly, readPhrasing, readSeedLine, RenderRefusal, sealedPlan } from './render.ts';
@@ -107,13 +112,13 @@ export function seedCheck(argv: string[]): { pass: boolean; line: string } {
   if (!bg1Seed || !bg1Phrasing) throw new RenderRefusal('seed needs BG1\'s seed and private phrasing (--bg1-seed-file and --bg1-phrasing) to check that Set W uses neither');
   for (const f of [bg1Seed, bg1Phrasing]) if (insideCheckout(dirname(resolve(f)))) throw new RenderRefusal('BG1\'s seed and phrasing files must sit outside any git checkout');
   const bg1Line = readSeedLine(resolve(bg1Seed), 'bg1'), bg1Templates = templates(readPhrasing(resolve(bg1Phrasing), 'bg1'));
-  const set = bgwSeedSetOf(BGW_FIRST_SLOT)!;
+  const set = bgwSeedSetOf(BGW_FIRST_SLOT)!, planned = BGW_SEED_SETS.filter(s => s.seed === set.id);
   const hexDistinct = seedLine.split(':')[1] !== bg1Line.split(':')[1];
-  let collisions = 0;
-  for (let slot = set.first; slot <= set.last; slot++) if (bgwWorldSeed(seedLine, slot) === sealedWorldSeed(bg1Line, slot)) collisions++;
+  let collisions = 0, slots = 0;
+  for (const s of planned) for (let slot = s.first; slot <= s.last; slot++, slots++) if (bgwWorldSeed(seedLine, slot) === sealedWorldSeed(bg1Line, slot)) collisions++;
   const shared = [...templates(phrasing)].filter(t => bg1Templates.has(t)).length;
   const pass = hexDistinct && collisions === 0 && shared === 0;
-  const counts = `bgw-seed set=${set.id} slots=${set.last - set.first + 1} seed_distinct=${hexDistinct ? 'pass' : 'fail'} slot_seed_collisions=${collisions} shared_templates=${shared}`;
+  const counts = `bgw-seed set=${set.id} seed_sets=${planned.map(s => s.id).join(',')} slots=${slots} seed_distinct=${hexDistinct ? 'pass' : 'fail'} slot_seed_collisions=${collisions} shared_templates=${shared}`;
   if (!pass) return { pass, line: `${counts} status=fail` };
   const { nonce, written } = custodyNonce(seedFile);
   const commitment = sha256(`${COMMITMENT_PREFIX}|${seedLine}|nonce=${nonce}`), phrasingSha = sha256(readFileSync(phrasingFile));
@@ -168,6 +173,7 @@ export function batchCheck(argv: string[], repo?: string): { pass: boolean; line
 if (import.meta.main) {
   try {
     const [sub, ...argv] = process.argv.slice(2);
+    if (sub === 'length') { console.log(String(BG1_PROFILES[bgwSeedSetOf(batchArg(argv[argv.indexOf('--batch') + 1]))!.profile].target_tokens)); process.exit(0); }
     if (sub !== 'phrasing' && sub !== 'seed' && sub !== 'batch') throw new RenderRefusal('usage: bgw-checks.ts phrasing|seed --seed-file <path>.bgw-seed --phrasing <path>.bgw-phrasing.json [phrasing: --batch <first slot>; seed: --bg1-seed-file <path>.bg1-seed --bg1-phrasing <path>.bg1-phrasing.json], or batch --batch <first slot> [--previous <out>]');
     const r = sub === 'phrasing' ? phrasingCheck(argv) : sub === 'seed' ? seedCheck(argv) : batchCheck(argv);
     console.log(r.line);

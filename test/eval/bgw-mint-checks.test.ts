@@ -156,19 +156,19 @@ describe('bgw-checks.ts: phrasing, seed and batch', () => {
     expect(nonce).toMatch(/^[0-9a-f]{64}$/);
     expect(statSync(nonceFile).mode & 0o777).toBe(0o600);
     const commitment = sha(`gbrain-evals weekly-line seed commitment v1|${j.seedLine}|nonce=${nonce}`);
-    expect(first.out).toBe(`bgw-seed set=W1 slots=999 seed_distinct=pass slot_seed_collisions=0 shared_templates=0 status=pass nonce=written commitment_sha256=${commitment} phrasing_sha256=${sha(readFileSync(j.phrasing))}\n`);
+    expect(first.out).toBe(`bgw-seed set=W1 seed_sets=W1,W1-long slots=1998 seed_distinct=pass slot_seed_collisions=0 shared_templates=0 status=pass nonce=written commitment_sha256=${commitment} phrasing_sha256=${sha(readFileSync(j.phrasing))}\n`);
     expect(first.out).not.toContain(nonce);
     expect(first.out).not.toContain(j.hex);
     expect(check(j).out).toContain(`status=pass nonce=reused commitment_sha256=${commitment} `);
     expect(readFileSync(nonceFile, 'utf8').trim()).toBe(nonce);
 
     const same = inputs('seed-same', 'bgw', custodyPhrasing, bg1.hex);
-    expect(check(same)).toMatchObject({ code: 12, out: 'bgw-seed set=W1 slots=999 seed_distinct=fail slot_seed_collisions=0 shared_templates=0 status=fail\n' });
+    expect(check(same)).toMatchObject({ code: 12, out: 'bgw-seed set=W1 seed_sets=W1,W1-long slots=1998 seed_distinct=fail slot_seed_collisions=0 shared_templates=0 status=fail\n' });
     expect(existsSync(join(same.dir, 'test.bgw-nonce'))).toBe(false);
     const reused = inputs('seed-phrasing', 'bgw', JSON.parse(readFileSync(bg1.phrasing, 'utf8')));
     const r = check(reused);
     expect(r.code).toBe(12);
-    expect(r.out).toMatch(/^bgw-seed set=W1 slots=999 seed_distinct=pass slot_seed_collisions=0 shared_templates=[1-9]\d* status=fail\n$/);
+    expect(r.out).toMatch(/^bgw-seed set=W1 seed_sets=W1,W1-long slots=1998 seed_distinct=pass slot_seed_collisions=0 shared_templates=[1-9]\d* status=fail\n$/);
     expect(existsSync(join(reused.dir, 'test.bgw-nonce'))).toBe(false);
     refusal(check(j, []), 'seed needs BG1\'s seed and private phrasing (--bg1-seed-file and --bg1-phrasing)');
     refusal(check(j, ['--bg1-seed-file', j.seed, '--bg1-phrasing', bg1.phrasing]), 'the seed file must be named *.bg1-seed');

@@ -13,8 +13,10 @@
  *   bun eval/custody/bg1/render.ts --dev-report <bg1-dev-NN> --set <out>/set [--budget-ledger <file> --budget-run-id <id>]
  *
  * --bgw renders a Set W slot instead (the weekly outcome line, mint.sh --bgw): the seed file is a *.bgw-seed holding one
- * "bgw-seed-v1:" line, the phrasing file a *.bgw-phrasing.json, the slot one of Set W's (W1: 1001 to 1999), its world id
- * bgw- and four digits (slot 1001 is bgw-1001), and its seed bgwWorldSeed. Everything else below is the same.
+ * "bgw-seed-v1:" line, the phrasing file a *.bgw-phrasing.json, the slot one of Set W's (W1: 1001 to 1999; W1-long: 2001
+ * to 2999), its world id bgw- and four digits (slot 1001 is bgw-1001), and its seed bgwWorldSeed. The slot's seed set names
+ * its length profile (bg1-names.ts BGW_SEED_SETS): a W1-long slot plans at changing-facts-gen@2 and renders to about
+ * 1,000,000 tokens unless --target-tokens says otherwise. Everything else below is the same.
  *
  * Checks on every attempt at a session:
  *   1. deterministic (checkSession): the turns alternate, starting with the user; every planned line appears exactly
@@ -80,11 +82,11 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, realpathSync, renameSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import {
-  BG1_DATA_DIR, BG1_TARGET_TOKENS, BG1_WORLD_SCHEMA, buildQuestions, devWorldPlan, loadPhrasing, PlanError, planWorld, PUBLIC_PHRASING, renderBriefs, renderTemplateSession,
+  BG1_DATA_DIR, BG1_PROFILES, BG1_TARGET_TOKENS, BG1_WORLD_SCHEMA, buildQuestions, devWorldPlan, loadPhrasing, PlanError, planWorld, PUBLIC_PHRASING, renderBriefs, renderTemplateSession,
   bgwWorldSeed, sealedWorldSeed, termRegex, type Phrasing, type RenderBrief, type Turn, type World, type WorldPlan,
 } from '../../generators/changing-facts-gen.ts';
 import { readLedger } from '../../runner/budget-ledger.ts';
-import { BG1_DEV_CONVERSATIONS, BG1_DEV_EXTRA_CONVERSATIONS, BG1C_FIRST_SLOT, BG1C_LAST_SLOT, BGW_SEED_SETS, bg1WorldId, bgwSeedSetOf, bgwWorldId } from '../../runner/bg1/types.ts';
+import { BG1_DEV_CONVERSATIONS, BG1_DEV_EXTRA_CONVERSATIONS, BG1C_FIRST_SLOT, BG1C_LAST_SLOT, BGW_SEED_SETS, bg1WorldId, bgwProfileOf, bgwSeedSetOf, bgwWorldId } from '../../runner/bg1/types.ts';
 import { ledgerCaps, requireRs1Window, WindowRefusal } from '../../runner/paid-arm.ts';
 import { checkCommitment } from './commitment.ts';
 import { PROXY_REFUSAL_MARKERS } from '../../runner/providers/openai-compatible.ts';
@@ -408,7 +410,7 @@ export interface RenderStats { sessions: number; attempts: number; regenerated: 
  * the world, or null with dropped_session set once a session fails every attempt (sessions not yet started are skipped).
  */
 export async function renderWorld(plan: WorldPlan, models: Models, opts: { targetTokens?: number; concurrency?: number } = {}): Promise<{ world: World | null; stats: RenderStats }> {
-  const briefs = renderBriefs(plan, opts.targetTokens ?? BG1_TARGET_TOKENS);
+  const briefs = renderBriefs(plan, opts.targetTokens);
   const stats: RenderStats = { sessions: briefs.length, attempts: 0, regenerated: 0, checks: 0, failures: {}, dropped_session: null, tokens: 0, controls_dropped: 0 };
   const done: Array<Turn[] | null> = briefs.map(() => null);
   const one = async (i: number) => {
@@ -483,12 +485,17 @@ export const bgwWorldIdOf = (slot: number) => {
 
 /**
  * The sealed plan of one mint slot: deterministic from the custody seed line, the slot and the phrasing set. A Set W plan
- * takes Set W's seed line and bgwWorldSeed, and refuses BG1's seed line, so a Set W world is never planned from BG1's seed.
+ * takes Set W's seed line and bgwWorldSeed, and refuses BG1's seed line, so a Set W world is never planned from BG1's seed;
+ * it plans at its seed set's length profile. BG1 and BG1-C plan at the standard profile, changing-facts-gen@1.
  */
 export const sealedPlan = (seedLine: string, slot: number, phrasing: Phrasing, kind: SealedKind = 'bg1') => {
   if (!SEED_LINE[kind].test(seedLine.trim())) throw new RenderRefusal(`a ${kind === 'bgw' ? 'Set W' : 'BG1'} plan needs a ${kind}-seed-v1 line`);
-  return planWorld(kind === 'bgw' ? bgwWorldIdOf(slot) : worldIdOf(slot), (kind === 'bgw' ? bgwWorldSeed : sealedWorldSeed)(seedLine, slot), { phrasing, custody: true });
+  if (kind === 'bg1') return planWorld(worldIdOf(slot), sealedWorldSeed(seedLine, slot), { phrasing, custody: true });
+  return planWorld(bgwWorldIdOf(slot), bgwWorldSeed(seedLine, slot), { phrasing, custody: true, profile: bgwProfileOf(slot) });
 };
+
+/** A sealed slot's world length target: its Set W seed set's profile, or the standard profile's for BG1, BG1-C, a dev world or a slot outside every set. */
+export const sealedTargetTokens = (slot: number, kind: SealedKind) => BG1_PROFILES[kind === 'bgw' ? bgwSeedSetOf(slot)?.profile ?? 'standard' : 'standard'].target_tokens;
 
 /** The committed public dev worlds' plans and questions, as changing-facts-gen.ts devFiles() writes them. */
 export const BG1_DEV_WORLDS = join(BG1_DATA_DIR, 'dev', 'worlds');
@@ -562,7 +569,7 @@ export async function main(argv: string[], env: Record<string, string | undefine
   const cache = resolve(flag('--cache') ?? join(dirname(resolve(set)), 'render-cache'));
   if (insideCheckout(cache)) throw new RenderRefusal('--cache must sit outside any git checkout');
   const fake = argv.includes('--fake');
-  const targetTokens = Number(flag('--target-tokens') ?? BG1_TARGET_TOKENS);
+  const targetTokens = Number(flag('--target-tokens') ?? (dev === null ? sealedTargetTokens(Number(slotText), kind) : BG1_TARGET_TOKENS));
   if (!(Number.isInteger(targetTokens) && targetTokens >= 1000)) throw new RenderRefusal('--target-tokens must be a whole number of at least 1000');
   let make = models;
   if (!make && !fake) {

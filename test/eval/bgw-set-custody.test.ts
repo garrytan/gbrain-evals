@@ -88,7 +88,7 @@ describe('mint.sh --bgw keeps a Set W batch on its own slots, ids and custody --
 
   test('render.ts gives Set W slots four-digit ids and refuses any other slot under --bgw', () => {
     expect([1001, 1056, 1999].map(bgwWorldIdOf)).toEqual(['bgw-1001', 'bgw-1056', 'bgw-1999']);
-    for (const slot of [31, 1000, 2000]) expect(() => bgwWorldIdOf(slot)).toThrow('--slot must be a Set W slot (W1: 1001 to 1999)');
+    for (const slot of [31, 1000, 2000, 3000]) expect(() => bgwWorldIdOf(slot)).toThrow('--slot must be a Set W slot (W1: 1001 to 1999; W1-long: 2001 to 2999)');
     expect(() => worldIdOf(1001)).toThrow('--slot must be a whole number from 1 to 96');
     expect(run('bun', [RENDER, '--dev', 'bg1-dev-01', '--fake', '--bgw', '--set', join(scratch('render-dev'), 'set')])).toMatchObject({ code: 2, err: expect.stringContaining('--dev plans a public dev world, so it takes no --bgw') });
   });

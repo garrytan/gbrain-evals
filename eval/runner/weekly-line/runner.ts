@@ -102,7 +102,7 @@ export interface WeekWorlds { batch: string; week_of_batch: number; spares_from:
 
 const runWorld = (id: string): RunWorld => {
   const set = bgwSeedSetOf(bgwSlotOf(id) ?? Number.NaN) ?? refuse('WEEKLY_WORLDS', `${id} is not a Set W world`);
-  return { world: id, seed_id: set.id, phrasing_id: set.id };
+  return { world: id, seed_id: set.seed, phrasing_id: set.seed };
 };
 
 function keptOf(b: { first: number; manifest: Bg1Manifest | null }): { kept: string[]; final: boolean } {

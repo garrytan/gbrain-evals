@@ -6,12 +6,12 @@
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { BGW_CAMPAIGN } from '../memory-qa/bg1-names.ts';
+import { BGW_CAMPAIGN, bgwSlotOf } from '../memory-qa/bg1-names.ts';
 import { bareModelId, suspendedModelProblem } from '../model-defaults.ts';
 import { OPUS, PARTICLE } from '../q1/cells/bg1.ts';
-import { frontierJudgesFor, type CellDefinition } from '../q1/cells/definitions.ts';
+import { CELL_VM_MAX_HOURS, cellVmHours, frontierJudgesFor, type CellDefinition } from '../q1/cells/definitions.ts';
 import {
-  WEEKLY_LINE_BUNDLE_LOCKS, WEEKLY_LINE_JUDGE_BY_READER, WEEKLY_LINE_MODELS, WEEKLY_LINE_READERS, WEEKLY_LINE_REGISTRY, WEEKLY_LINE_ROWS, weeklyLineBuildProblems, weeklyLineWeekProblems,
+  WEEKLY_LINE_BUNDLE_LOCKS, WEEKLY_LINE_JUDGE_BY_READER, WEEKLY_LINE_MODELS, WEEKLY_LINE_READERS, WEEKLY_LINE_REGISTRY, WEEKLY_LINE_ROWS, weeklyLineBuildProblems, weeklyLineSetOf, weeklyLineWeekProblems,
   type RegistryModel, type WeeklyLineGbrainBuild, type WeeklyLineRereadPlan,
 } from '../q1/cells/weekly-line.ts';
 import { refuse } from '../q1/scoreboard-errors.ts';
@@ -28,8 +28,9 @@ import { ripgrepVersion } from '../systems/file-agent.ts';
  *             hand-edited 16,000-token read refuses;
  *   gbrain    a gbrain cell whose launch GBRAIN_SHA or recorded gbrain_build isn't the build the runner resolved and
  *             passed in (the newest release at launch);
- *   worlds    a cell outside Set W (set, benchmark or block), cells that don't share one week, a week whose launch, world
- *             end, batch or worlds weeklyLineWeekProblems rejects, or a re-read of another week's worlds;
+ *   worlds    a cell outside Set W (set, benchmark or block), a cell whose set (BGW or BGW-long) isn't the length its
+ *             week's batch plans at (weeklyLineSetOf), cells that don't share one week, a week whose launch, world end,
+ *             batch or worlds weeklyLineWeekProblems rejects, or a re-read of another week's worlds;
  *   readers   an 8,000-token arm not read live by claude-opus-5-5 alone, a grep-agent arm not run by both readers, an
  *             8,000-token arm without exactly one particle-1 re-read, or a re-read by anything but particle-1;
  *   judges    a judge that isn't the reader's mapped one (gpt-6-astra for claude-opus-5-5, claude-opus-5-5 for particle-1),
@@ -46,9 +47,11 @@ export function weeklyLineLaunchProblems(l: { gbrain: WeeklyLineGbrainBuild; cel
   if (!l.cells.length) return [...p, 'the week has no cells'];
   const week = l.cells[0].week;
   for (const c of l.cells) {
-    if (c.set !== 'BGW' || c.benchmark !== 'bgw' || c.block !== 'BGW') p.push(`cell ${c.id} runs set ${c.set} (${c.benchmark}), not Set W`);
+    if ((c.set !== 'BGW' && c.set !== 'BGW-long') || c.benchmark !== 'bgw' || c.block !== 'BGW') p.push(`cell ${c.id} runs set ${c.set} (${c.benchmark}), not Set W`);
+    else if (c.week && bgwSlotOf(c.week.batch) !== null && c.set !== weeklyLineSetOf(c.week.batch)) p.push(`cell ${c.id} runs set ${c.set}, and batch ${c.week.batch}'s worlds are set ${weeklyLineSetOf(c.week.batch)}'s length`);
     if (JSON.stringify(c.week) !== JSON.stringify(week)) p.push(`cell ${c.id} runs another week than ${l.cells[0].id}`);
     if (c.descriptive_view !== false) p.push(`cell ${c.id} would add its instrument's canonical judge to every answer (descriptive_view is not false)`);
+    if (cellVmHours(c.expected_hours) > CELL_VM_MAX_HOURS) p.push(`cell ${c.id} plans ${c.expected_hours} hours, so its VM would need ${cellVmHours(c.expected_hours)} hours with margin, past the ${CELL_VM_MAX_HOURS}-hour limit on one VM; it would be stopped before it finished`);
   }
   for (const [row, { system, configuration }] of Object.entries(WEEKLY_LINE_ROWS)) {
     const n = l.cells.filter(c => c.system === system && c.configuration === configuration).length;
