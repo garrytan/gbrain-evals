@@ -47,13 +47,13 @@ describe('receipt fields and refusal', () => {
 });
 
 describe('preflight and scratch engines', () => {
-  test('pglite and postgres need no preflight; rust refuses on the pinned gbrain', async () => {
+  test('pglite and postgres need no preflight; rust refuses on the pinned gbrain with no addon installed', async () => {
     const gut = resolveGbrainUnderTest(null);
     await preflightEvalEngine(gut, 'pglite');
     await preflightEvalEngine(gut, 'postgres');
     const err = await preflightEvalEngine(gut, 'rust').catch(e => e);
     expect(err).toBeInstanceOf(EvalEngineUnavailable);
-    expect(err.reason).toBe('rust_kind_unsupported');
+    expect(err.reason).toBe('rust_engine_addon_missing');
   });
   test('rust refuses when the addon does not load', async () => {
     const err = await preflightEvalEngine(fakeGbrain(NO_ADDON), 'rust').catch(e => e);
@@ -311,7 +311,7 @@ describe('runners refuse rust today with exit 69 and no receipt', () => {
         cwd: ROOT, encoding: 'utf8', timeout: 120_000,
         env: { PATH: process.env.PATH, HOME: home, GBRAIN_HOME: home, TZ: 'UTC', GBRAIN_EVAL_ENGINE: 'rust' },
       });
-      expect(r.stderr).toMatch(/REFUSED: .* did not run on engine rust\. EvalEngineUnavailable \(rust_kind_unsupported\)/);
+      expect(r.stderr).toMatch(/REFUSED: .* did not run on engine rust\. EvalEngineUnavailable \(rust_engine_addon_missing\)/);
       expect(r.status).toBe(EVAL_ENGINE_REFUSED_EXIT);
       expect(readdirSync(out)).toEqual([]);
     }, 130_000);
