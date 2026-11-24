@@ -97,7 +97,9 @@ missing). A failed or blocked refresh, a provider safety stop, or a reply cut at
 and is reported in its own column. A provider error before any answer (a 5xx, a timeout, a dropped connection) is not a
 model outcome: the unit is retried once in a resumed run, and a unit that still fails is reported as an error and left
 out of the denominator, with the count per model. A provider safety stop is its own reported outcome and counts as not
-correct. **P (secondary):** correctness by change class and by refresh mode, first-answer
+correct; gbrain's error code does not tell it from a provider error, so the runner reads the provider's message that
+gbrain logs (a content-filter, safety or refusal message is a safety stop). A failed refresh leaves the pin-time answer
+in place, so a refresh that did not publish is scored not correct whatever the judge says of that old text. **P (secondary):** correctness by change class and by refresh mode, first-answer
 correctness, and cost per correct answer from the ledger's usage fields.
 
 ## Decision rule

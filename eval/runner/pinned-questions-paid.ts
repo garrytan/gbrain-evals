@@ -38,7 +38,7 @@ import { createHash } from 'node:crypto';
 import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import type { OperationContext } from 'gbrain/operations';
-import { budgetOptionsFrom, chatPrice, receiptCost, startPaidRun, type RunSummary } from './budget-ledger.ts';
+import { BudgetExceededError, budgetOptionsFrom, chatPrice, receiptCost, startPaidRun, type RunSummary } from './budget-ledger.ts';
 import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from './gbrain-under-test.ts';
 import { gbrainPin } from './gbrain-version.ts';
 import { withHermeticEnv } from './hermetic-env.ts';
@@ -193,7 +193,36 @@ export function parseJudgeLabels(text: string): Record<Claim, JudgeLabel> | null
 export interface Usage { calls: number; input_tokens: number; output_tokens: number; cache_read_tokens: number; cache_write_tokens: number }
 const noUsage = (): Usage => ({ calls: 0, input_tokens: 0, output_tokens: 0, cache_read_tokens: 0, cache_write_tokens: 0 });
 
-export interface CallRecord { status: string; mode: 'full' | 'incremental' | null; error: string | null; cost_usd: number | null; usage: Usage }
+/** failure_message: the provider's own words when gbrain logged a failed refresh, which its error code alone loses (a safety stop reads as provider_error). */
+export interface CallRecord { status: string; mode: 'full' | 'incremental' | null; error: string | null; failure_message: string | null; cost_usd: number | null; usage: Usage }
+
+/**
+ * What a pin or refresh came to. provider_error (a 5xx, rate limit, timeout or dropped connection before any answer) is
+ * not a model outcome: the unit is retried once and then left out of the denominator. Every other outcome but
+ * published counts as not correct, and each is reported in its own column.
+ */
+export type Outcome = 'published' | 'answer_too_long' | 'safety_stop' | 'provider_error' | 'not_published';
+const TRANSIENT = /^refresh_failed:(rate_limited|timeout|network|provider_error)$/;
+const SAFETY = /safety|content[ _-]?filter|content[ _-]?policy|usage polic|refus|flagged/i;
+
+export function outcomeOf(c: Pick<CallRecord, 'status' | 'error' | 'failure_message'>): Outcome {
+  if (c.status === 'published') return 'published';
+  if (c.error?.includes('answer_too_long')) return 'answer_too_long';
+  if (c.failure_message && SAFETY.test(c.failure_message)) return 'safety_stop';
+  if (c.status === 'timeout' || (c.error !== null && TRANSIENT.test(c.error))) return 'provider_error';
+  return 'not_published';
+}
+
+/**
+ * The scored refreshed answer: null (left out) when a provider error stopped the pin or refresh or the judge call
+ * failed, false when the refresh did not publish (the brain still holds the pin-time answer, so its text is not graded
+ * as a refresh), else the judge's verdict.
+ */
+export function scoredCorrect(r: Pick<PaidRow, 'pin' | 'refresh' | 'refreshed'>): boolean | null {
+  if (outcomeOf(r.pin) === 'provider_error' || outcomeOf(r.refresh) === 'provider_error') return null;
+  if (outcomeOf(r.refresh) !== 'published') return false;
+  return r.refreshed.answer_correct;
+}
 
 export interface GradedAnswer {
   sentences: string[];
@@ -213,6 +242,9 @@ export interface PaidRow {
   refresh: CallRecord & { freshness: string; stale_sentences: number };
   first: GradedAnswer;
   refreshed: GradedAnswer & { stale: boolean[] };
+  /** The refresh's outcome and the scored result (scoredCorrect): P's primary metric reads `correct`, never the judge alone. */
+  outcome: Outcome;
+  correct: boolean | null;
 }
 
 /** Cohen's kappa for two binary raters from the 2x2 table; null when chance agreement is total. */
@@ -271,26 +303,29 @@ export function summarizePaid(rows: readonly PaidRow[]) {
     return { calls: us.reduce((a, u) => a + u.calls, 0), mean_input_tokens: mean(us.map(u => u.input_tokens / u.calls)), mean_output_tokens: mean(us.map(u => u.output_tokens / u.calls)) };
   };
   const byModel = Object.fromEntries(models.map(m => {
-      const rs = rows.filter(r => r.model === m);
-      const counts = (f: (r: PaidRow) => string) => rs.reduce<Record<string, number>>((o, r) => { o[f(r)] = (o[f(r)] ?? 0) + 1; return o; }, {});
-      return [m, {
-        questions: rs.length, judge_model: rs[0]!.judge_model,
-        first_correct: rate(rs.map(r => r.first.answer_correct)),
-        refreshed_correct: rate(rs.map(r => r.refreshed.answer_correct)),
-        refreshed_correct_rule: rate(rs.map(r => r.refreshed.rule_correct)),
-        answer_too_long: (() => {
-          const pin = rs.filter(r => answerTooLong(r.pin)).length, refresh = rs.filter(r => answerTooLong(r.refresh)).length;
-          const share = (pin + refresh) / (2 * rs.length);
-          return { pin, refresh, share, over_bar: share > TRUNCATION_BAR };
-        })(),
-        pin_status: counts(r => r.pin.status), refresh_status: counts(r => r.refresh.status), refresh_mode: counts(r => r.refresh.mode ?? 'none'),
-        by_mutation: Object.fromEntries([...new Set(rs.map(r => r.mutation))].sort().map(k => {
-          const ks = rs.filter(r => r.mutation === k);
-          return [k, { questions: ks.length, refreshed_correct: rate(ks.map(r => r.refreshed.answer_correct)) }];
-        })),
-        cost_usd_gbrain_reported: rs.reduce((a, r) => a + (r.pin.cost_usd ?? 0) + (r.refresh.cost_usd ?? 0), 0),
-      }];
-    }));
+    const rs = rows.filter(r => r.model === m);
+    const counts = (f: (r: PaidRow) => string) => rs.reduce<Record<string, number>>((o, r) => { o[f(r)] = (o[f(r)] ?? 0) + 1; return o; }, {});
+    return [m, {
+      questions: rs.length, judge_model: rs[0]!.judge_model,
+      first_correct: rate(rs.map(r => r.first.answer_correct)),
+      refreshed_correct: rate(rs.map(r => r.correct)),
+      refreshed_excluded: rs.filter(r => r.correct === null).length,
+      refreshed_judge_correct_on_text: rate(rs.map(r => r.refreshed.answer_correct)),
+      refreshed_correct_rule: rate(rs.map(r => r.refreshed.rule_correct)),
+      refresh_outcome: counts(r => r.outcome),
+      answer_too_long: (() => {
+        const pin = rs.filter(r => answerTooLong(r.pin)).length, refresh = rs.filter(r => answerTooLong(r.refresh)).length;
+        const share = (pin + refresh) / (2 * rs.length);
+        return { pin, refresh, share, over_bar: share > TRUNCATION_BAR };
+      })(),
+      pin_status: counts(r => r.pin.status), refresh_status: counts(r => r.refresh.status), refresh_mode: counts(r => r.refresh.mode ?? 'none'),
+      by_mutation: Object.fromEntries([...new Set(rs.map(r => r.mutation))].sort().map(k => {
+        const ks = rs.filter(r => r.mutation === k);
+        return [k, { questions: ks.length, refreshed_correct: rate(ks.map(r => r.correct)) }];
+      })),
+      cost_usd_gbrain_reported: rs.reduce((a, r) => a + (r.pin.cost_usd ?? 0) + (r.refresh.cost_usd ?? 0), 0),
+    }];
+  }));
   return {
     by_model: byModel,
     judge_agreement: judgeAgreement(rows),
@@ -324,10 +359,12 @@ interface Gateway {
   __setChatTransportForTests(fn: ChatTransport | null): void;
 }
 
-const callRecord = (r: QReceipt, usage: Usage): CallRecord => ({
+const callRecord = (r: QReceipt, usage: Usage, failure: string | null): CallRecord => ({
   status: r.refresh?.status ?? 'none', mode: r.refresh?.mode ?? null,
-  error: r.refresh?.error ?? r.refresh?.blocked_reason ?? (r.refresh?.status === 'published' ? null : r.last_error), cost_usd: r.refresh?.cost_usd ?? null, usage,
+  error: r.refresh?.error ?? r.refresh?.blocked_reason ?? (r.refresh?.status === 'published' ? null : r.last_error),
+  failure_message: r.refresh?.status === 'published' ? null : failure, cost_usd: r.refresh?.cost_usd ?? null, usage,
 });
+const FAILURE_LINE = /\[questions\] refresh of \S+ failed: (.*)/;
 const modelText = (r: QReceipt) => (r.answer ?? []).filter(s => s.origin === 'model');
 
 /** One (model, seed) unit: a fresh brain, every question pinned, changed, refreshed and graded. */
@@ -339,10 +376,17 @@ async function runUnit(gut: GbrainUnderTest, gateway: Gateway, gatewayConfig: (c
     questionStatus(ctx: OperationContext, p: Record<string, unknown>): Promise<QReceipt>;
     refreshQuestion(ctx: OperationContext, p: Record<string, unknown>): Promise<QReceipt>;
   }>(gut, 'src/core/questions/service.ts');
-  const metered = async <T>(fn: () => Promise<T>): Promise<{ value: T; usage: Usage }> => {
+  const metered = async <T>(fn: () => Promise<T>): Promise<{ value: T; usage: Usage; failure: string | null }> => {
     const u = noUsage();
     usage.current = u;
-    try { return { value: await fn(), usage: u }; } finally { usage.current = null; }
+    let failure: string | null = null;
+    const write = process.stderr.write;
+    process.stderr.write = ((chunk: unknown, ...rest: unknown[]) => {
+      const m = FAILURE_LINE.exec(String(chunk));
+      if (m) failure = m[1]!.slice(0, 500);
+      return (write as (...a: unknown[]) => boolean).call(process.stderr, chunk, ...rest);
+    }) as typeof process.stderr.write;
+    try { return { value: await fn(), usage: u, failure }; } finally { usage.current = null; process.stderr.write = write; }
   };
 
   gateway.configureGateway(gatewayConfig(model));
@@ -380,8 +424,8 @@ async function runUnit(gut: GbrainUnderTest, gateway: Gateway, gatewayConfig: (c
     }
     const pins = new Map<string, { id: string; pin: CallRecord; first: string[] }>();
     for (const c of world.companies) {
-      const { value, usage: u } = await metered(() => service.pinQuestion(ctx, { question: c.question, scope: { entity: c.slug }, wait_ms: WAIT_MS }));
-      pins.set(c.slug, { id: value.receipt.id, pin: callRecord(value.receipt, u), first: modelText(value.receipt).map(s => s.text) });
+      const { value, usage: u, failure } = await metered(() => service.pinQuestion(ctx, { question: c.question, scope: { entity: c.slug }, wait_ms: WAIT_MS }));
+      pins.set(c.slug, { id: value.receipt.id, pin: callRecord(value.receipt, u, failure), first: modelText(value.receipt).map(s => s.text) });
     }
     for (const c of world.companies) {
       for (const step of c.steps) {
@@ -395,9 +439,9 @@ async function runUnit(gut: GbrainUnderTest, gateway: Gateway, gatewayConfig: (c
         }
       }
       const p = pins.get(c.slug)!;
-      const { value, usage: u } = await metered(() => service.refreshQuestion(ctx, { id: p.id, wait_ms: WAIT_MS }));
+      const { value, usage: u, failure } = await metered(() => service.refreshQuestion(ctx, { id: p.id, wait_ms: WAIT_MS }));
       const status = await service.questionStatus(ctx, { id: p.id });
-      pending.push({ c, pin: p.pin, first: p.first, refresh: { ...callRecord(value, u), freshness: status.freshness, stale_sentences: status.sentences.stale }, refreshed: modelText(status) });
+      pending.push({ c, pin: p.pin, first: p.first, refresh: { ...callRecord(value, u, failure), freshness: status.freshness, stale_sentences: status.sentences.stale }, refreshed: modelText(status) });
     }
   } finally {
     await engine.disconnect().catch(() => {});
@@ -430,15 +474,23 @@ async function runUnit(gut: GbrainUnderTest, gateway: Gateway, gatewayConfig: (c
   for (const p of pending) {
     const first = await grade(p.c, 'first', p.first);
     const refreshed = await grade(p.c, 'refreshed', p.refreshed.map(s => s.text));
-    rows.push({
+    const row = {
       model, seed: world.seed, company: p.c.slug, mutation: p.c.mutation, affected: [...p.c.affected], judge_model: judge,
       pin: p.pin, refresh: p.refresh, first, refreshed: { ...refreshed, stale: p.refreshed.map(s => s.stale) },
-    });
+    };
+    rows.push({ ...row, outcome: outcomeOf(p.refresh), correct: scoredCorrect(row) });
   }
   return rows;
 }
 
 export type PaidMode = { kind: 'paid'; keys: Partial<Record<typeof PAID_KEY_NAMES[number], string>> } | { kind: 'keyless'; transport: ChatTransport };
+
+/** A unit is asked at most this often: a unit with provider or judge-call errors is asked again once, then kept with those questions left out. */
+export const MAX_UNIT_ATTEMPTS = 2;
+interface Checkpointed { key: string; model: string; seed: number; attempt: number; transient: boolean; rows: PaidRow[] }
+export const unitTransient = (unit: readonly PaidRow[]) => unit.some(r =>
+  outcomeOf(r.pin) === 'provider_error' || r.outcome === 'provider_error' || [r.first.judge_error, r.refreshed.judge_error].some(e => e?.startsWith('judge_call_failed')));
+const isBudgetRefusal = (e: unknown) => e instanceof BudgetExceededError || (e instanceof Error && e.name === 'BudgetExceededError');
 
 export interface PaidRunResult { worlds: PqWorld[]; rows: PaidRow[]; acc: ProbeAccounting; harnessErrors: string[]; resumedUnits: number }
 
@@ -464,7 +516,15 @@ export async function runPinnedQuestionsPaid(opts: { gut: GbrainUnderTest; model
       if (!u) return;
       u.calls++; u.input_tokens += r.input_tokens; u.output_tokens += r.output_tokens; u.cache_read_tokens += r.cache_read_tokens; u.cache_write_tokens += r.cache_write_tokens;
     });
-    if (opts.mode.kind === 'keyless') gateway.__setChatTransportForTests(opts.mode.transport);
+    const spend: { stop: string | null } = { stop: null };
+    const noteRefusal = (e: unknown) => { if (isBudgetRefusal(e)) spend.stop ??= (e as Error).message.slice(0, 300); };
+    const outerFetch = globalThis.fetch;
+    if (opts.mode.kind === 'keyless') {
+      const transport = opts.mode.transport;
+      gateway.__setChatTransportForTests(async o => { try { return await transport(o); } catch (e) { noteRefusal(e); throw e; } });
+    } else {
+      globalThis.fetch = Object.assign(async (...a: Parameters<typeof fetch>) => { try { return await outerFetch(...a); } catch (e) { noteRefusal(e); throw e; } }, outerFetch);
+    }
     try {
       const worlds = opts.seeds.map(seed => generatePinnedQuestionsWorld({ seed, companies: opts.companies }));
       const ckPath = join(opts.output, 'checkpoint.ndjson');
@@ -473,19 +533,20 @@ export async function runPinnedQuestionsPaid(opts: { gut: GbrainUnderTest; model
         judge_prompt_sha256: createHash('sha256').update(PINNED_QUESTIONS_JUDGE_PROMPT).digest('hex'),
       });
       const done = existsSync(ckPath)
-        ? readFileSync(ckPath, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l) as { key: string; model: string; seed: number; rows: PaidRow[] }).filter(x => x.key === ckKey)
+        ? readFileSync(ckPath, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l) as Checkpointed).filter(x => x.key === ckKey)
         : [];
       const acc = new ProbeAccounting(models.length * worlds.reduce((a, w) => a + w.companies.length, 0));
       const rows: PaidRow[] = [];
       const harnessErrors: string[] = [];
       let resumedUnits = 0;
-      for (const model of models) for (const world of worlds) {
-        const prior = done.find(x => x.model === model && x.seed === world.seed);
+      units: for (const model of models) for (const world of worlds) {
+        const prior = done.filter(x => x.model === model && x.seed === world.seed).at(-1);
         let unit: PaidRow[];
-        if (prior) {
+        if (prior && !(prior.transient && prior.attempt < MAX_UNIT_ATTEMPTS)) {
           unit = prior.rows;
           resumedUnits++;
         } else {
+          const attempt = (prior?.attempt ?? 0) + 1;
           try {
             unit = await runUnit(opts.gut, gateway, gatewayConfig, usage, model, world, opts.maxOutputTokens);
           } catch (e) {
@@ -493,22 +554,32 @@ export async function runPinnedQuestionsPaid(opts: { gut: GbrainUnderTest; model
             harnessErrors.push(msg);
             for (const c of world.companies) acc.error(`${model}|s${world.seed}|${c.slug}`, 'harness', msg);
             log(`[pq-paid] ${msg}`);
+            if (spend.stop) break units;
             continue;
           }
-          appendFileSync(ckPath, JSON.stringify({ key: ckKey, model, seed: world.seed, rows: unit }) + '\n');
+          if (spend.stop) {
+            const msg = `${model} seed ${world.seed}: the budget ledger refused a request (${spend.stop}); paused at the unit boundary with this unit not checkpointed. Extend the cap and rerun with the same arguments to resume.`;
+            harnessErrors.push(msg);
+            log(`[pq-paid] ${msg}`);
+            break units;
+          }
+          appendFileSync(ckPath, JSON.stringify({ key: ckKey, model, seed: world.seed, attempt, transient: unitTransient(unit), rows: unit } satisfies Checkpointed) + '\n');
+          if (unitTransient(unit) && attempt < MAX_UNIT_ATTEMPTS) log(`[pq-paid] ${model} seed ${world.seed}: provider or judge-call errors; a resumed run asks this unit again once`);
         }
         for (const r of unit) {
           const probe = `${model}|s${r.seed}|${r.company}`;
-          if (r.refreshed.answer_correct === null) acc.error(probe, 'judge', r.refreshed.judge_error ?? 'no judge labels');
-          else acc.score(probe, Number(r.refreshed.answer_correct));
+          if (r.correct !== null) acc.score(probe, Number(r.correct));
+          else if (r.outcome === 'provider_error' || outcomeOf(r.pin) === 'provider_error') acc.error(probe, 'dependency', r.refresh.failure_message ?? r.refresh.error ?? r.pin.error ?? 'provider error');
+          else acc.error(probe, 'judge', r.refreshed.judge_error ?? 'no judge labels');
         }
         rows.push(...unit);
-        log(`[pq-paid] ${model} seed ${world.seed}${prior ? ' (from checkpoint)' : ''}: refreshed correct ${unit.filter(r => r.refreshed.answer_correct).length}/${unit.length}`);
+        log(`[pq-paid] ${model} seed ${world.seed}${prior ? ' (from checkpoint)' : ''}: refreshed correct ${unit.filter(r => r.correct).length}/${unit.length}`);
       }
       return { worlds, rows, acc, harnessErrors, resumedUnits };
     } finally {
       deregister();
       if (opts.mode.kind === 'keyless') gateway.__setChatTransportForTests(null);
+      else globalThis.fetch = outerFetch;
     }
   });
 }
@@ -550,7 +621,8 @@ export function buildReceipt(opts: { gut: GbrainUnderTest; models: readonly stri
       wait_ms: WAIT_MS,
       judge: { prompt_sha256: createHash('sha256').update(PINNED_QUESTIONS_JUDGE_PROMPT).digest('hex'), max_tokens: JUDGE_MAX_TOKENS, temperature_sent: null, route: 'gbrain gateway chat, allowFallback false', retries: 'one retry on unparseable output' },
       verdict: `judge check only (every judge's kappa against the rule labels at least ${JUDGE_KAPPA_FLOOR} on at least ${JUDGE_MIN_LABELS} outputs); the category is report-only; data.summary.truncation names the models over the ${TRUNCATION_BAR * 100}% cut-off bar`,
-      grading: 'first answers against the ledger before the change, refreshed answers against it after; answer_correct = every claim correct (a removed claim is correct when not asserted)',
+      grading: 'first answers against the ledger before the change, refreshed answers against it after; answer_correct = every claim correct (a removed claim is correct when not asserted); the scored row.correct is false when the refresh did not publish and null (left out) after a provider error or a failed judge call (scoredCorrect)',
+      retries: `a unit with provider or judge-call errors is asked again once in a resumed run (${MAX_UNIT_ATTEMPTS} attempts), then kept with those questions left out; a budget-ledger refusal pauses the run at the unit boundary without checkpointing that unit`,
       seeds: opts.seeds, companies_per_seed: opts.companies, generator_version: PINNED_QUESTIONS_GENERATOR_VERSION,
       resumed_units: r.resumedUnits,
       gbrain_overlay: overlaySummary(opts.gut),
@@ -605,7 +677,7 @@ async function main(): Promise<void> {
   }
   writeReceipt(join(output, 'receipt.json'), buildReceipt({ gut, models, seeds, companies, stage, maxOutputTokens, result, cost, startedAt, mode: 'paid' }));
   const s = summarizePaid(result.rows);
-  console.log(JSON.stringify({ by_model: Object.fromEntries(Object.entries(s.by_model).map(([m, v]) => [m, { first_correct: v.first_correct, refreshed_correct: v.refreshed_correct, refresh_status: v.refresh_status, answer_too_long: v.answer_too_long }])), judge_agreement: s.judge_agreement, truncation: s.truncation, cost_usd: receiptCost(cost).usd }, null, 2));
+  console.log(JSON.stringify({ by_model: Object.fromEntries(Object.entries(s.by_model).map(([m, v]) => [m, { first_correct: v.first_correct, refreshed_correct: v.refreshed_correct, refresh_outcome: v.refresh_outcome, refreshed_excluded: v.refreshed_excluded, answer_too_long: v.answer_too_long }])), judge_agreement: s.judge_agreement, truncation: s.truncation, cost_usd: receiptCost(cost).usd }, null, 2));
   process.exit(result.harnessErrors.length ? 3 : 0);
 }
 

@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { CLAIMS, generatePinnedQuestionsWorld, type PqCompany, type PqWorld } from '../../eval/generators/pinned-questions-gen.ts';
 import { claimSentence } from '../../eval/runner/pinned-questions.ts';
 import { gbrainSpecFrom, resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
+import { BudgetExceededError } from '../../eval/runner/budget-ledger.ts';
 import { PaidArmRefusal } from '../../eval/runner/paid-arm.ts';
 import { writeReceipt } from '../../eval/runner/receipt.ts';
 import {
@@ -135,7 +136,8 @@ describe('pinned-questions paid arm: kappa', () => {
  * (before the change while pinning; after it on refresh, except for the
  * companies in `stale`, which repeat the old values), and grades like the rule.
  */
-function stubTransport(world: PqWorld, stale: Set<string>, calls: Array<{ model: string; kind: 'question' | 'judge'; graded?: string; chars: number; maxTokens?: number }>, truncate = new Set<string>()): ChatTransport {
+function stubTransport(world: PqWorld, stale: Set<string>, calls: Array<{ model: string; kind: 'question' | 'judge'; graded?: string; chars: number; maxTokens?: number }>, truncate = new Set<string>(),
+  fail: (slug: string, n: number, model: string) => Error | null = () => null): ChatTransport {
   const byQuestion = new Map(world.companies.map(c => [c.question, c]));
   const seen = new Map<string, number>();
   return async (opts) => {
@@ -162,6 +164,8 @@ function stubTransport(world: PqWorld, stale: Set<string>, calls: Array<{ model:
       const unit = `${opts.model}|${c.slug}`;
       const n = (seen.get(unit) ?? 0) + 1;
       seen.set(unit, n);
+      const failure = fail(c.slug, n, String(opts.model));
+      if (failure) throw failure;
       const values = n === 1 || stale.has(c.slug) ? c.before : c.after;
       if (n > 1 && truncate.has(c.slug) && (opts.maxTokens ?? 0) <= 2_000) stopReason = 'length';
       const cite = user.split('\n').filter(l => /^E\d+: /.test(l) && l.includes(c.name)).map(l => l.slice(0, l.indexOf(':'))).slice(0, 1);
@@ -277,7 +281,7 @@ describe('pinned-questions paid arm: keyless run through gbrain\'s product path'
 describe('pinned-questions paid arm: refresh output cap', () => {
   const gut = resolveGbrainUnderTest(gbrainSpecFrom([]));
   const world = generatePinnedQuestionsWorld({ seed: 1, companies: 8 });
-  const truncate = new Set(world.companies.slice(0, 2).map(c => c.slug));
+  const truncate = new Set(world.companies.filter(c => c.mutation.startsWith('unrelated')).slice(0, 2).map(c => c.slug));
   const outs = [mkdtempSync(join(tmpdir(), 'pq-paid-cap-')), mkdtempSync(join(tmpdir(), 'pq-paid-raised-'))];
   const realFetch = globalThis.fetch;
   const savedKeys: Record<string, string | undefined> = {};
@@ -306,8 +310,14 @@ describe('pinned-questions paid arm: refresh output cap', () => {
     expect(calls[0]!.filter(c => c.kind === 'question').every(c => c.maxTokens === 2_000)).toBe(true);
     const tooLong = atDefault.rows.filter(r => r.refresh.error?.includes('answer_too_long')).map(r => r.company).sort();
     expect(tooLong).toEqual([...truncate].sort());
+    for (const r of atDefault.rows.filter(x => truncate.has(x.company))) {
+      expect([r.company, r.refresh.status, r.outcome]).toEqual([r.company, 'failed', 'answer_too_long']);
+      expect([r.company, r.refreshed.answer_correct, r.correct]).toEqual([r.company, true, false]);
+    }
     const s = summarizePaid(atDefault.rows);
     expect(s.by_model['particle:particle-1']!.answer_too_long).toEqual({ pin: 0, refresh: 2, share: 2 / 16, over_bar: true });
+    expect(s.by_model['particle:particle-1']!.refreshed_correct).toBe(6 / 8);
+    expect(s.by_model['particle:particle-1']!.refresh_outcome).toEqual({ published: 6, answer_too_long: 2 });
     expect(s.truncation).toEqual({ bar: TRUNCATION_BAR, models_over_bar: ['particle:particle-1'] });
   });
 
@@ -321,4 +331,80 @@ describe('pinned-questions paid arm: refresh output cap', () => {
     expect(receipt.resolved_config.max_output_tokens).toBe(4_000);
     expect(receipt.resolved_config.model_config).toContain('cycle.standing_questions.max_output_tokens raised to 4000');
   });
+});
+
+describe('pinned-questions paid arm: provider errors, safety stops and budget refusals', () => {
+  const gut = resolveGbrainUnderTest(gbrainSpecFrom([]));
+  const world = generatePinnedQuestionsWorld({ seed: 1, companies: 8 });
+  const [a, b] = [world.companies[0]!.slug, world.companies[1]!.slug];
+  const realFetch = globalThis.fetch;
+  const savedKeys: Record<string, string | undefined> = {};
+  const dirs: string[] = [];
+  let fetches = 0;
+  const run = (out: string, fail: (slug: string, n: number, model: string) => Error | null, models = ['particle:particle-1'], calls: Array<{ model: string; kind: 'question' | 'judge'; chars: number }> = []) =>
+    runPinnedQuestionsPaid({ gut, models, seeds: [1], companies: 8, output: out, mode: { kind: 'keyless', transport: stubTransport(world, new Set(), calls, new Set(), fail) } });
+  const dir = () => { const d = mkdtempSync(join(tmpdir(), 'pq-paid-err-')); dirs.push(d); return d; };
+
+  beforeAll(() => {
+    for (const k of Object.keys(process.env).filter(k => KEY_NAMES.test(k))) { savedKeys[k] = process.env[k]; delete process.env[k]; }
+    globalThis.fetch = (async () => { fetches++; throw new Error('no network in this test'); }) as unknown as typeof fetch;
+  });
+  afterAll(() => {
+    globalThis.fetch = realFetch;
+    for (const [k, v] of Object.entries(savedKeys)) if (v !== undefined) process.env[k] = v;
+    for (const d of dirs) rmSync(d, { recursive: true, force: true });
+  });
+
+  test('a provider error leaves the question out, and a resumed run asks the unit once more', async () => {
+    const out = dir();
+    const first = await run(out, (slug, n) => (slug === a && n === 2 ? new Error('503 Service Unavailable: upstream provider_error') : null));
+    const row = first.rows.find(r => r.company === a)!;
+    expect([row.outcome, row.correct]).toEqual(['provider_error', null]);
+    expect(first.acc.summary().errors).toEqual([{ probe_id: `particle:particle-1|s1|${a}`, origin: 'dependency', message: '503 Service Unavailable: upstream provider_error' }]);
+    expect(summarizePaid(first.rows).by_model['particle:particle-1']).toMatchObject({ refreshed_excluded: 1, refreshed_correct: 1 });
+    const calls: Array<{ model: string; kind: 'question' | 'judge'; chars: number }> = [];
+    const second = await run(out, () => null, undefined, calls);
+    expect(second.resumedUnits).toBe(0);
+    expect(calls.length).toBeGreaterThan(0);
+    expect(second.rows.find(r => r.company === a)).toMatchObject({ outcome: 'published', correct: true });
+    const third: Array<{ model: string; kind: 'question' | 'judge'; chars: number }> = [];
+    expect((await run(out, () => null, undefined, third)).resumedUnits).toBe(1);
+    expect(third).toHaveLength(0);
+  }, 120_000);
+
+  test('a unit that fails again on its second attempt is kept, with the question left out', async () => {
+    const out = dir();
+    const failA = (slug: string, n: number) => (slug === a && n === 2 ? new Error('fetch failed: network socket hang up') : null);
+    await run(out, failA);
+    const second = await run(out, failA);
+    expect(second.rows.find(r => r.company === a)).toMatchObject({ outcome: 'provider_error', correct: null });
+    const calls: Array<{ model: string; kind: 'question' | 'judge'; chars: number }> = [];
+    expect((await run(out, () => null, undefined, calls)).resumedUnits).toBe(1);
+    expect(calls).toHaveLength(0);
+  }, 120_000);
+
+  test('a safety stop is its own outcome, counts as not correct and is not retried', async () => {
+    const out = dir();
+    const r = await run(out, (slug, n) => (slug === b && n === 2 ? new Error('Output blocked by content filtering policy (safety)') : null));
+    const row = r.rows.find(x => x.company === b)!;
+    expect([row.outcome, row.correct, row.refresh.failure_message]).toEqual(['safety_stop', false, expect.stringContaining('content filtering')]);
+    const calls: Array<{ model: string; kind: 'question' | 'judge'; chars: number }> = [];
+    expect((await run(out, () => null, undefined, calls)).resumedUnits).toBe(1);
+    expect(calls).toHaveLength(0);
+  }, 120_000);
+
+  test('a budget refusal pauses the run at the unit boundary and checkpoints nothing for that unit', async () => {
+    const out = dir();
+    const models = ['particle:particle-1', 'gpt-6.2-sol'];
+    const r = await run(out, (slug, n, model) => (model.includes('gpt-6.2-sol') && slug === b && n === 2 ? new BudgetExceededError('run cap reached') : null), models);
+    expect(r.rows.map(x => x.model)).toEqual(Array(8).fill('particle:particle-1'));
+    expect(r.harnessErrors).toEqual([expect.stringContaining('paused at the unit boundary')]);
+    const lines = readFileSync(join(out, 'checkpoint.ndjson'), 'utf8').trim().split('\n').map(l => JSON.parse(l) as { model: string });
+    expect(lines.map(l => l.model)).toEqual(['particle:particle-1']);
+    const resumed = await run(out, () => null, models);
+    expect(resumed.resumedUnits).toBe(1);
+    expect(resumed.rows).toHaveLength(16);
+    expect(resumed.harnessErrors).toEqual([]);
+    expect(fetches).toBe(0);
+  }, 120_000);
 });
