@@ -81,6 +81,7 @@ import { cachedOpenAIEmbedder, PG_EMBED_DIMS } from '../cat40/pg-arm.ts';
 import { DecideError, renderOperatorMessage } from '../decisions/errors.ts';
 import { loadSplit } from '../decisions/splits.ts';
 import { ndcgAtK, percentile, recallAllAtK, recallAnyAtK } from '../metrics.ts';
+import { HostingSampler, type HostingSample } from '../memory-qa/hosting-samples.ts';
 import { awaitIdle, finishDrained, probePassage, probeRecord, unlabelledMeterRoutes, type Poll, type ProbeRecord as WriteProbeRecord } from '../memory-qa/cost-speed-probes.ts';
 import { DEFAULT_ROUTE_CAPS, ProxyControl, upstreamTrouble, type Meter, type Phase } from '../metering-proxy.ts';
 import { BG1_SET, BG1C_SET, bg1RunClock, fromHome, bg1SealedSet, bg1UnitConversations, bg1WorldEnd, loadCorpus, readBg1Manifest, readRs1Manifest, rs1UnitConversations, type Bg1Manifest, type Corpus, type MemoryQuestion, type Rs1Manifest, type Session } from '../memory-qa/corpus.ts';
@@ -411,6 +412,9 @@ export interface CellOptions {
   /** Held-back probes: how long the slot must be quiet before a probe (default 60 s) and the longest wait for it (default 10 minutes). */
   idleQuietMs?: number;
   idleMaxMs?: number;
+  /** Cells with an idle window: its length in place of the definition's (tests), and the hosting sample interval (default 60 s). */
+  idleWindowMs?: number;
+  hostingIntervalMs?: number;
   /** Keyless baseline-hybrid: hash vectors instead of OpenAI embeddings. */
   embed?: 'hash' | 'real';
   /** How long questions wait for the launcher's store snapshot after ingest (default 4 hours); the snapshot stops the stack. */
@@ -445,6 +449,8 @@ export interface CellDeps {
   rs1Manifest?: Rs1Manifest;
   /** BG1 kept cells: the filled manifest whose kept list names the unit's worlds (default: corpus.ts readBg1Manifest). */
   bg1Manifest?: Bg1Manifest;
+  /** Hosting samples (cells with hosting_samples): one reading of the stack's containers and volumes (default: the docker CLI). */
+  hostingRead?: () => Promise<Pick<HostingSample, 'containers' | 'volumes'>>;
 }
 
 export interface ArmResult { cell_id: string; dir: string; status: 'complete' | 'partial' | 'invalid'; config_sha256: string; answers: number; judgments: number; rows: number; readers: string[] }
@@ -898,6 +904,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
 
   // ─── Phase 1: one realization per conversation ───
   const realizations = new Map<string, string>();
+  const hosting = def.hosting_samples ? new HostingSampler(join(staging.root, 'hosting.ndjson'), opts.hostingIntervalMs, deps.hostingRead) : null;
   try {
     for (const convId of convIds) {
       const prior = staging.latest(convId);
@@ -947,9 +954,19 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
       const rid = realizations.get(convId);
       if (!rid || stopped) break;
       if (live.has(rid)) await meter.tail(slot, { id: rid, ns: sanitizer.ns(convId) });
+      await hosting?.stage(`questions:${convId}`);
       await runQuestions(rid, convId);
+      if (def.idle_window?.worlds.includes(convId) && live.has(rid)) {
+        await hosting?.stage(`idle:${convId}`);
+        const ms = opts.idleWindowMs ?? def.idle_window.ms;
+        const t0 = Date.now();
+        const idle = await meter.around(slot, `tail:idle:${rid}`, 'background_tail', () => Bun.sleep(ms));
+        writeAtomic(join(staging.dir(rid), 'idle.json'), JSON.stringify({ realization_id: rid, conversation: convId, planned_ms: ms, ms: Date.now() - t0, usd: idle.meter?.usd ?? null,
+          requests: idle.meter?.requests ?? null, unpriced: idle.meter?.unpriced ?? null, by_model: idle.meter?.byModel ?? null, jobs: def.idle_window.jobs }) + '\n');
+      }
     }
   } finally {
+    await hosting?.stop();
     try { await meter.tail(slot, null); } catch { /* the proxy is gone; its own summary keeps the slot's spend */ }
     try { await system.close?.(); } catch { /* closing is best effort */ }
   }
@@ -1054,6 +1071,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
     const bulkProbes: Array<Promise<WriteProbe>> = [];
     const t0 = performance.now();
     let importError: string | null = null;
+    await hosting?.stage(null);
     await meter.tail(slot, { id: rid, ns });
     const ran = await meter.around(slot, `ingest:${ns}`, 'ingest', async () => {
       await system.reset(ns);
@@ -1093,11 +1111,13 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
       await meter.phase(slot, null);
       return { finish, probeRecords, bulkRecords };
     });
+    if (ran.value?.finish.ready) await hosting?.stage(`drained:${convId}`);
     let calibration: ProbeCalibration | undefined;
     const heldRecords: WriteProbe[] = [];
     if (heldBack && canProbe && !importError && !ran.error && ran.value?.finish.ready) {
       const f = ran.value.finish;
       const finishedDrained = finishDrained({ ready: f.ready, raw: { background_liabilities: f.background_liabilities as { drained?: boolean } | undefined } });
+      await hosting?.stage(`probes:${convId}`);
       const picks = bulk.map(s => ({ s, k: hashKey(`${def.probes.seed}|${convId}|calibration`, s.input.source_id) })).sort((a, b) => (a.k < b.k ? -1 : 1))
         .map(x => ({ id: x.s.input.source_id, passage: probePassage(x.s.input.turns) })).filter((x): x is { id: string; passage: string } => x.passage !== null).slice(0, 10);
       const cal = await meter.around(slot, `calibration:${ns}`, 'ingest', async () => {

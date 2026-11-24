@@ -177,6 +177,13 @@ export interface CellDefinition {
      * on an idle system as a counted write-to-queryable probe, behind a probe-label calibration window. Absent: no held-back probes.
      */
     held_back?: number };
+  /**
+   * Cost and speed: on these worlds, after their questions, the stack stays up with no traffic for `ms` (one cycle of the
+   * system's longest scheduled background job, between `min_ms` and `max_ms`) and its provider calls are metered as idle.
+   */
+  idle_window?: { worlds: string[]; ms: number; min_ms: number; max_ms: number; jobs: Array<{ job: string; cadence_minutes: number | null; source: string }> };
+  /** Cost and speed: sample the stack's resident memory and disk after each bulk import drains, through the probes, the questions and the idle window. */
+  hosting_samples?: true;
   /** Dev smoke cells: only these conversations of the split run (the set's `only_conversations`). */
   only_conversations?: string[];
   /** Ingest probes: write only the first N sessions of each conversation (a fixed fraction, for a system too slow or costly to ingest whole on a smoke). */

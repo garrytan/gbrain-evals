@@ -14,6 +14,7 @@ import { realizationId, runCell, type WriteProbe } from '../../eval/runner/q1/ce
 import { estimateCell, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
 import { BudgetRun, closeLedgers } from '../../eval/runner/budget-ledger.ts';
 import { MeteringProxy, type UsageLine } from '../../eval/runner/metering-proxy.ts';
+import { dockerReading, parseBytes } from '../../eval/runner/memory-qa/hosting-samples.ts';
 import { FakeMemorySystem } from '../../eval/runner/systems/fake.ts';
 import type { Corpus, MemoryQuestion } from '../../eval/runner/memory-qa/corpus.ts';
 import type { ChatLike } from '../../eval/runner/memory-qa/qa-v2.ts';
@@ -57,14 +58,16 @@ function heldBackDef(): CellDefinition {
   const id = 's3.ext-graph-pipeline.recipe';
   const base: Omit<CellDefinition, 'estimate'> = {
     schema: 'gbrain-evals/q1-cell/v1', id, set: 'S3', block: 'T2-S3', benchmark: 'locomo', split: 'dev', selection: { kind: 'all' }, exclusions: [], system: 'ext-graph-pipeline',
-    configuration: 'recipe', runner: 'shim', ingest_replicate: 1, effort: 'medium', canonical_instrument: 'locomo', probes: { sample: 1, seed: 'cs', held_back: 2 }, shards: 1, expected_hours: 1,
+    configuration: 'recipe', runner: 'shim', ingest_replicate: 1, effort: 'medium', canonical_instrument: 'locomo', probes: { sample: 1, seed: 'cs', held_back: 2 }, shards: 1, expected_hours: 1, hosting_samples: true,
+    idle_window: { worlds: ['conv-b'], ms: 3_600_000, min_ms: 1_800_000, max_ms: 7_200_000, jobs: [{ job: 'consolidation', cadence_minutes: 60, source: 'invented' }] },
     arms: [{ cell_id: `${id}.component-b8000`, set: 'S3', arm: 'component', policy: 'fixed-evidence', mode: 'packed', id: 'component-b8000', budget: 8000, questions: null, readers: ['anthropic:claude-opus-5-5'],
       reader_replicates: {}, frontier: null, judge_repeats: null, label: 'component' }],
   };
   return { ...base, estimate: estimateCell(base) };
 }
 
-async function run(name: string, opts: ConstructorParameters<typeof EmbeddingFake>[1]) {
+/** One held-back cell through a real lease proxy; with `idleCall` the stack also calls a model on its own once questions start, so the idle window has something to meter. */
+async function run(name: string, opts: ConstructorParameters<typeof EmbeddingFake>[1], idleCall = false) {
   const upstream = (async (url: RequestInfo | URL) => String(url).endsWith('/chat/completions')
     ? Response.json({ choices: [{ message: { content: 'x' } }], usage: { prompt_tokens: 100, completion_tokens: 10 } })
     : Response.json({ data: [{ embedding: [0.1] }], usage: { prompt_tokens: 100, total_tokens: 100 } })) as unknown as typeof fetch;
@@ -78,7 +81,14 @@ async function run(name: string, opts: ConstructorParameters<typeof EmbeddingFak
   try {
     const def = heldBackDef();
     const out = join(tmp, name);
-    const res = await runCell(def, { out, providerProxy: base, probeIntervalMs: 5, probeTimeoutMs: 150, idleQuietMs: 40, idleMaxMs: 3000 }, { corpus, system: new EmbeddingFake(base, opts), reader, judge });
+    const system = new EmbeddingFake(base, opts);
+    const hostingRead = async () => ({ containers: [{ name: 'stack-db-1', mem_bytes: 2e8 }], volumes: [{ name: 'stack_db-data', bytes: 5e7 }] });
+    let timer: ReturnType<typeof setInterval> | null = null;
+    const chatter = () => { void fetch(`${base}/fake/openai/v1/chat/completions`, { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer dummy' }, body: JSON.stringify({ model: 'gpt-4.1-mini', max_tokens: 50, messages: [{ role: 'user', content: 'consolidate' }] }) }); };
+    const reading: ChatLike = { chat(...a) { if (idleCall && !timer) timer = setInterval(chatter, 40); return reader.chat(...a); } };
+    let res;
+    try { res = await runCell(def, { out, providerProxy: base, probeIntervalMs: 5, probeTimeoutMs: 150, idleQuietMs: 40, idleMaxMs: 3000, idleWindowMs: 150, hostingIntervalMs: 20 }, { corpus, system, reader: reading, judge, hostingRead }); }
+    finally { if (timer) clearInterval(timer); }
     const events = readFileSync(join(out, 'runs', def.id, 'realizations.ndjson'), 'utf8').trim().split('\n').map(l => JSON.parse(l)).filter(e => e.event === 'ingested');
     const usage = readFileSync(usageLog, 'utf8').trim().split('\n').map(l => JSON.parse(l) as UsageLine);
     return { def, res, events, usage, out };
@@ -122,8 +132,33 @@ describe('held-back probes', () => {
     expect(ok.some(l => l.key.startsWith('calibration:') && l.phase !== 'probe')).toBe(false);
   }, 60_000);
 
+  test('hosting samples skip the bulk import and cover the probes, the questions and the idle window; the idle window meters its calls on its own key', async () => {
+    const { def, out, usage } = await run('idle', {}, true);
+    const samples = readFileSync(join(out, 'runs', def.id, 'hosting.ndjson'), 'utf8').trim().split('\n').map(l => JSON.parse(l));
+    const stages = new Set(samples.map(s => s.stage.split(':')[0]));
+    expect(stages).toEqual(new Set(['drained', 'probes', 'questions', 'idle']));
+    expect(samples.every(s => s.containers[0].mem_bytes === 2e8 && s.harness_rss_bytes > 0 && !s.error)).toBe(true);
+    const rid = realizationId(def.id, 'conv-b', 0);
+    const idle = JSON.parse(readFileSync(join(out, 'runs', def.id, 'r', rid, 'idle.json'), 'utf8'));
+    expect(idle).toMatchObject({ realization_id: rid, conversation: 'conv-b', planned_ms: 150 });
+    expect(idle.ms).toBeGreaterThanOrEqual(150);
+    expect(idle.requests).toBeGreaterThan(0);
+    expect(usage.filter(l => l.key === `tail:idle:${rid}`).length).toBe(idle.requests);
+    for (const c of ['conv-a', 'conv-c']) expect(() => readFileSync(join(out, 'runs', def.id, 'r', realizationId(def.id, c, 0), 'idle.json'))).toThrow();
+  }, 60_000);
+
   test('a read that also calls a model shows up in the calibration window as a route the probe label misses', async () => {
     const { events } = await run('expanding', { expand: true });
     for (const e of events) expect(e.calibration.unlabelled_routes).toEqual(['openai/v1/chat/completions']);
   }, 60_000);
+});
+
+describe('hosting readings', () => {
+  test("docker's human sizes parse to bytes, and a reading lists each container's memory and each volume's size", async () => {
+    expect([parseBytes('0B'), parseBytes('512KiB'), parseBytes('123.4MiB'), parseBytes('12.3MB'), parseBytes('1.5GB'), parseBytes('n/a')]).toEqual([0, 524_288, 129_394_278, 12_300_000, 1_500_000_000, null]);
+    const run = async (args: string[]) => args[0] === 'stats'
+      ? 'stack-db-1\t123.4MiB / 15.6GiB\nstack-shim-1\t40MiB / 15.6GiB\n'
+      : JSON.stringify({ Volumes: [{ Name: 'stack_db-data', Size: '12.3MB' }] });
+    expect(await dockerReading(run)).toEqual({ containers: [{ name: 'stack-db-1', mem_bytes: 129_394_278 }, { name: 'stack-shim-1', mem_bytes: 41_943_040 }], volumes: [{ name: 'stack_db-data', bytes: 12_300_000 }] });
+  });
 });
