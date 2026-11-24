@@ -71,7 +71,7 @@ import type { PackedContext } from '../systems/render-v2.ts';
 import { claimOut, keylessUpstreamArg } from './calibration-cell.ts';
 import { answerAppender, bg1GeminiKey, custodyGate, devOnly, findCell, frontierInstrumentId, gatherStaging, JUDGED, latestBy, loadBG1CManifest, metering, needsCustody, onSlot, readerMaxTokens, readPrompt, refuseCompatJudges, requiredJudges, scheduledQuestions,
   selectCellQuestions, weeklyRunStamp, type CellManifestId, type MeterLine, type RequiredJudge, type StagedRetrieval } from './cell.ts';
-import { frontierJudgesFor, isBg1Benchmark, PER_READER_JUDGE_SETTINGS, pinnedJudgeRouteCaps, policyKey, type ArmDefinition, type CellDefinition } from './cells/definitions.ts';
+import { frontierJudgesFor, isWindowedBenchmark, PER_READER_JUDGE_SETTINGS, pinnedJudgeRouteCaps, policyKey, type ArmDefinition, type CellDefinition } from './cells/definitions.ts';
 import { loadRS1Manifest } from './cells/rs1.ts';
 import { exitCodeOf, refuse, renderMessage, ScoreboardError } from './scoreboard-errors.ts';
 import { BG1C_SET, bg1SealedSet, bg1UnitConversations, readBg1Manifest, type Bg1Manifest } from '../memory-qa/corpus.ts';
@@ -82,6 +82,16 @@ const FRONT = ['bun', 'eval/runner/q1/reread-cell.ts'];
 
 /** The re-read cell: the source arm's cell id and the reader, so no answer id meets one of the source cell's. */
 export const rereadCellId = (armCellId: string, reader: string) => `${armCellId}.reread-${reader.replace(/[^a-z0-9.-]+/gi, '-')}`;
+
+/**
+ * The provider keys a re-read's lease proxy holds: placeholders when keyless; otherwise the shell's keys, and for a
+ * windowed cell (BG1, BG1-C, Set W) Gemini's only from BG1_GEMINI_API_KEY and only when its answers get the Gemini view,
+ * so no BG1-C or Set W re-read carries a Gemini key.
+ */
+export function rereadKeys(def: Pick<CellDefinition, 'benchmark' | 'descriptive_view'>, keyless: boolean, env: Record<string, string | undefined> = process.env): Record<string, string | undefined> {
+  if (keyless) return keylessKeys();
+  return { ...env, ...(isWindowedBenchmark(def.benchmark) ? { GEMINI_API_KEY: def.descriptive_view === false ? undefined : bg1GeminiKey(env) } : {}) };
+}
 
 /** The arm a re-read reads: one whose readers read frozen packed contexts (packed or native-default). */
 export function rereadArm(def: CellDefinition, armId: string): ArmDefinition {
@@ -139,7 +149,7 @@ export function verifySources(def: CellDefinition, arm: ArmDefinition, sources: 
   const problems: string[] = [];
   const counts = { contexts_checked: 0, contexts_matched: 0, scheduled_questions: 0, questions_with_context: 0, questions_without_context: 0, stored_answers_cross_checked: 0, published_answers: 0, contexts_not_read: 0 };
   const verify: RereadVerify = { schema: REREAD_VERIFY_SCHEMA, ok: false, cell: def.id, arm: arm.id, arm_cell_id: arm.cell_id, reader, sources: [], counts, source_config_sha256: null, problems,
-    ...(isBg1Benchmark(def.benchmark) ? { dataset: corpus.source } : {}) };
+    ...(isWindowedBenchmark(def.benchmark) ? { dataset: corpus.source } : {}) };
   const contexts: FrozenContext[] = [];
   const configs = new Map<string, string>();
   const staged: AnswerRecord[] = [];
@@ -442,7 +452,7 @@ if (import.meta.main) {
       why: 'stage 1\'s $60 cap covers the dry-run campaign and its particle-1 re-reads together: the campaign is capped at $60 less the re-reads\' estimate, and the re-reads share one ledger capped at that estimate', fix: { next: 'run', user_message: `rerun with --ledger-cap-usd ${stage1.toFixed(2)} or less, on the one ledger every stage 1 re-read shares` } });
     const arm = rereadArm(def, armArg);
     const out = resolve(outArg);
-    const keys = keyless ? keylessKeys() : { ...process.env, ...(isBg1Benchmark(def.benchmark) ? { GEMINI_API_KEY: def.descriptive_view === false ? undefined : bg1GeminiKey() } : {}) };
+    const keys = rereadKeys(def, keyless);
     const prepared = prepareReread(def, arm, { sources, reader, out, manifest, keyless: !!keyless, ...(halfArg ? { half: Number(halfArg) as 1 | 2 } : {}) });
     const [cellToken, controlToken] = [randomUUID(), randomUUID()];
     Object.assign(process.env, { SHOOTOUT_CELL_TOKEN: cellToken, SHOOTOUT_PROXY_CONTROL_TOKEN: controlToken });

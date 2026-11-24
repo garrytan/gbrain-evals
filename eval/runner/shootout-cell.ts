@@ -83,6 +83,7 @@ import { BG1_SET, BG1_TEMPLATE_RENDERERS, BG1C_SET, bg1SealedSet, bg1UnitConvers
 import { BudgetExceededError, BudgetRun, initLedger, ledgerStatus, readLedger, setProgramCap, setRunBudget, withFileLock } from './budget-ledger.ts';
 import { DEFAULT_MAX_OUTPUT_TOKENS, DEFAULT_ROUTE_CAPS, KEY_ENV, keylessUpstream, type ProviderLimits, type ProviderName } from './metering-proxy.ts';
 import { refuse, ScoreboardError } from './q1/scoreboard-errors.ts';
+import { isWindowedBenchmark } from './q1/cells/definitions.ts';
 import { BEAM10M_MANIFEST } from './memory-qa/beam10m-corpus.ts';
 import { rs1UnitConversations, type Rs1Manifest } from './memory-qa/corpus.ts';
 import { insideRepository, sha256File } from './sealed-confirmation-lib.ts';
@@ -579,7 +580,7 @@ export class Campaign {
   private get eventsPath() { return join(this.stateDir, 'leases.ndjson'); }
   /** BG1 (#398 open note 6): leases.ndjson's SHA-256 as this campaign last wrote it. */
   private get eventsShaPath() { return join(this.stateDir, 'leases.sha256'); }
-  get bg1() { return this.q1 && this.manifest.cells.some(c => c.benchmark === 'bg1' || c.benchmark === 'bg1c' || c.benchmark === 'bg1-dev'); }
+  get bg1() { return this.q1 && this.manifest.cells.some(c => isWindowedBenchmark(c.benchmark)); }
   /** BG1: held while a process reads or writes the lease log, so units run in parallel on one --state never see each other's half-written append. */
   private get eventsLockPath() { return join(this.stateDir, 'leases.lock'); }
   private lockDepth = 0;
@@ -1372,7 +1373,7 @@ export async function runRemote(payload: RemotePayload, opts: { port?: number; p
     process.off('SIGTERM', onTerm);
     proxy.kill('SIGTERM');
     await proxy.exited;
-    if (custody && payload.cell) for (const d of ['datasets', 'restore', 'd8', 'rs1', 'bg1', 'bg1c']) rmSync(join(dirname(custody), d), { recursive: true, force: true });
+    if (custody && payload.cell) for (const d of ['datasets', 'restore', 'd8', 'rs1', 'bg1', 'bg1c', 'bgw', 'weekly']) rmSync(join(dirname(custody), d), { recursive: true, force: true });
     const s = ledgerStatus({ ledgerPath: ledger, runId: payload.lease_id });
     writeFileSync(join(out, 'lease-summary.json'), JSON.stringify({ run_id: payload.lease_id, lease_usd: payload.lease_usd, committed_usd: s.run?.committed_usd ?? payload.lease_usd,
       requests: s.run ? BudgetRun.runRequests(ledger, payload.lease_id) : null, max_output_tokens: s.run ? BudgetRun.leaseMaxOutputTokens(ledger, payload.lease_id) ?? DEFAULT_MAX_OUTPUT_TOKENS : null, cell_exit_code: code,

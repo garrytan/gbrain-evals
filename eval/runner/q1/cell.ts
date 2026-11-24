@@ -109,7 +109,7 @@ import { loadRS1Manifest, stage1OverCap, type RS1Manifest } from './cells/rs1.ts
 import { loadBN10Manifest } from './cells/bn10.ts';
 import { bg1Stage1OverCap, loadBG1Manifest, type BG1Manifest } from './cells/bg1.ts';
 import { BG1C_MANIFEST_PATH, type BG1CManifest } from './cells/bg1c.ts';
-import { BG1C_BLOCK_IDS, isBg1Benchmark } from './cells/definitions.ts';
+import { BG1C_BLOCK_IDS, isWindowedBenchmark } from './cells/definitions.ts';
 import { ledgerCaps as bg1LedgerCaps, requireRs1Window as requireBg1Window, WindowRefusal as Bg1WindowRefusal } from '../paid-arm.ts';
 import { exitCodeOf, refuse, renderMessage, ScoreboardError, type ScoreboardMessage } from './scoreboard-errors.ts';
 import type { UsageReceipt } from '../usage-receipt.ts';
@@ -1454,7 +1454,7 @@ const T2_WAVES: Record<string, number> = { 'T2-S2b': 1, 'T2-S3': 2, 'T2-S2a': 3,
 const IN_PROCESS_STACKS = new Set(['ext-agent-runtime']);
 
 /** One launch unit per cell, or per conversation shard for an S1 shim cell, in the shootout campaign's cell format; `addons` adds the manifest's addon_cells (a unit selection's campaign). */
-export type CellManifestId = 'q1' | 'f6' | 'rs1' | 'bg1' | 'bg1c' | 'bn10';
+export type CellManifestId = 'q1' | 'f6' | 'rs1' | 'bg1' | 'bg1c' | 'bn10' | 'weekly';
 const CELL_MANIFESTS: readonly CellManifestId[] = ['q1', 'f6', 'rs1', 'bg1', 'bg1c', 'bn10'];
 
 export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight?: number; cellManifest?: CellManifestId; addons?: boolean; paidWindow?: { unit: string; cap_usd: number } } = {}): CellSpec[] {
@@ -1638,8 +1638,9 @@ export function loadCellManifest(which?: string): Manifest {
   return which === 'f6' ? loadF6Manifest() : which === 'rs1' ? loadRS1Manifest() : which === 'bg1' ? loadBG1Manifest() : which === 'bg1c' ? loadBG1CManifest() : which === 'bn10' ? loadBN10Manifest() : loadManifest();
 }
 
-/** The cell manifest a BG1 or BG1-C cell is defined in: bg1c for BG1-C's blocks, else bg1. */
-export const bg1CellManifest = (def: Pick<CellDefinition, 'block'>): CellManifestId => ((BG1C_BLOCK_IDS as readonly string[]).includes(def.block) ? 'bg1c' : 'bg1');
+/** The cell manifest a BG1, BG1-C or Set W cell is defined in: weekly for the weekly line's block, bg1c for BG1-C's blocks, else bg1. */
+export const bg1CellManifest = (def: Pick<CellDefinition, 'block'>): CellManifestId => (def.block === 'BGW' ? 'weekly' : (BG1C_BLOCK_IDS as readonly string[]).includes(def.block) ? 'bg1c' : 'bg1');
+const windowedLabel = (def: Pick<CellDefinition, 'block'>) => ({ weekly: 'Set W', bg1c: 'BG1-C', bg1: 'BG1' } as Record<string, string>)[bg1CellManifest(def)];
 
 export function findCell(id: string, given?: Manifest, manifest?: string): CellDefinition {
   const m = given ?? loadCellManifest(manifest);
@@ -1681,14 +1682,29 @@ export async function bg1CellWindow(argv: string[], def: CellDefinition, env: Re
   const named = env.SHOOTOUT_LEASE_USD;
   const differs = !!named && held !== null && !(Math.abs(Number(named) - held) <= 1e-9);
   try {
-    requireBg1Window(argv, { what: `${bg1CellManifest(def) === 'bg1c' ? 'BG1-C' : 'BG1'} cell ${def.id}`, keyless: status?.keyless === true,
+    requireBg1Window(argv, { what: `${windowedLabel(def)} cell ${def.id}`, keyless: status?.keyless === true,
       caps: () => proxy ? [{ label: differs ? `the lease proxy's lease (its status reports ${held}, SHOOTOUT_LEASE_USD names ${named})` : "the lease proxy's lease (GET /__proxy/status in lease mode)", usd: differs ? null : held }] : bg1LedgerCaps(budgetOptionsFrom(argv).ledgerPath, one('--budget-run-id')) });
   } catch (e) {
     if (!(e instanceof Bg1WindowRefusal)) throw e;
-    throw refuse({ code: 'PAID_FLAGS_MISSING', message: e.message, why: 'every BG1 cell that can spend real keys runs inside a granted paid window, and no cap it spends under exceeds the window cap',
+    throw refuse({ code: 'PAID_FLAGS_MISSING', message: e.message, why: `every ${windowedLabel(def)} cell that can spend real keys runs inside a granted paid window, and no cap it spends under exceeds the window cap`,
       fix: { next: 'run', argv: [...FRONT, 'run', '--cell', def.id, '--manifest', bg1CellManifest(def), '--paid-window', '<granted unit>', '--window-cap-usd', '<granted cap>'] } });
   }
   return status?.keyless === true;
+}
+
+/**
+ * The guard `run` puts in front of a windowed cell (isWindowedBenchmark: BG1, BG1-C and Set W): the granted paid window
+ * (bg1CellWindow), the world-end clock, and Gemini's key handed only to a cell whose answers get the Gemini view. Returns
+ * whether the lease proxy reports a keyless upstream, or null for a cell that is not windowed. It runs before any provider
+ * client, corpus or output exists.
+ */
+export async function windowedRunGuard(argv: string[], def: CellDefinition, env: Record<string, string | undefined> = process.env): Promise<boolean | null> {
+  if (!isWindowedBenchmark(def.benchmark)) return null;
+  const one = (n: string) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : undefined; };
+  const keyless = await bg1CellWindow(argv, def, env);
+  bg1RunClock({ env });
+  if (!(one('--provider-proxy') ?? env.SHOOTOUT_PROXY)) { if (def.descriptive_view === false) delete env.GEMINI_API_KEY; else env.GEMINI_API_KEY = bg1GeminiKey(env); }
+  return keyless;
 }
 
 /** The paid-run guard for `run` without a lease proxy: --paid and an open ledger run with room for the estimate. */
@@ -1770,8 +1786,7 @@ export async function main(argv: string[]): Promise<number> {
     const id = one('--cell');
     if (!id) throw refuse(usage(`${sub} needs --cell <id>`));
     const def = findCell(id, undefined, one('--manifest'));
-    let keyless = false;
-    if (sub === 'run' && isBg1Benchmark(def.benchmark)) { keyless = await bg1CellWindow(argv, def); bg1RunClock(); if (!(one('--provider-proxy') ?? process.env.SHOOTOUT_PROXY)) { if (def.descriptive_view === false) delete process.env.GEMINI_API_KEY; else process.env.GEMINI_API_KEY = bg1GeminiKey(); } }
+    const keyless = sub === 'run' ? (await windowedRunGuard(argv, def)) ?? false : false;
     const out = resolve(one('--out') ?? process.env.SHOOTOUT_OUT ?? join(REPO_ROOT, 'eval/reports/q1', def.id));
     if (sub === 'merge') {
       const from = many('--from').map(f => resolve(f));

@@ -21,7 +21,7 @@
  * A campaign with no BG1 unit passes untouched.
  */
 import { BG1_GEMINI_KEY_ENV, campaignCells, loadCellManifest } from '../q1/cell.ts';
-import { isBg1Benchmark } from '../q1/cells/definitions.ts';
+import { isWindowedBenchmark } from '../q1/cells/definitions.ts';
 import { refuse } from '../q1/scoreboard-errors.ts';
 import type { CampaignManifest } from '../shootout-cell.ts';
 
@@ -37,7 +37,7 @@ function setOf(m: Pick<CampaignManifest, 'cells'>, prices: Record<SetId, Map<str
 
 /** Why a BG1 or BG1-C campaign may not boot a unit; empty when it may, or when the campaign has no BG1 unit. */
 export function bg1LaunchProblems(m: Pick<CampaignManifest, 'cap_usd' | 'cells' | 'blocks'>): string[] {
-  if (!m.cells.some(c => isBg1Benchmark(c.benchmark))) return [];
+  if (!m.cells.some(c => isWindowedBenchmark(c.benchmark))) return [];
   const prices = { bg1: priced('bg1'), bg1c: priced('bg1c') };
   const which = setOf(m, prices), { file } = SETS[which];
   const others = which === 'bg1c' ? m.cells.filter(c => prices.bg1.has(c.id)) : [];
