@@ -223,7 +223,7 @@ An arm that fails is fixed or left out and reported as left out.
 
 ## Interim look
 
-Planned paid spend is above $500, so the primary endpoint takes one look at half its units (R113). The H4 cells run in
+Planned paid spend is above the size at which the factory's rules require an interim look, so the primary endpoint takes one look at half its units (R113). The H4 cells run in
 two halves fixed by task id: half A is H4 tasks 01 to 10 of every world (60 tasks), half B tasks 11 to 20. When half A
 has finished for both gbrain arms and both frontier readers, the look computes z = Δ_H4 (Opus 5.5, half A) divided by
 its bootstrap standard error.
