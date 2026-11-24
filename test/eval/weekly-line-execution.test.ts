@@ -11,6 +11,7 @@
  *   OV3  a weekly cell, its re-read and its merge open exactly the week's worlds, never the rest of the batch, and
  *        refuse another batch, unit scope, world end or week's sources.
  *   OV4  a weekly re-read is graded by its reader's preregistered gating judge alone (claude-opus-5-5 for particle-1).
+ *   OV5  settle holds every re-read to its own records under the real re-read id, not its arm's.
  */
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from 'bun:test';
 import { spawnSync } from 'node:child_process';
@@ -25,11 +26,12 @@ import type { ChatLike, ChatResult } from '../../eval/runner/memory-qa/qa-v2.ts'
 import { sha256, WEEKLY_CELLS_ENV, WEEKLY_CELLS_SHA256_ENV, WEEKLY_RUN_ENV } from '../../eval/runner/memory-qa/records.ts';
 import { findCell, runCell, windowedRunGuard } from '../../eval/runner/q1/cell.ts';
 import { generateWeeklyLineCells, WEEKLY_LINE_MODELS } from '../../eval/runner/q1/cells/weekly-line.ts';
-import { prepareReread, rereadKeys, runReread } from '../../eval/runner/q1/reread-cell.ts';
+import { prepareReread, rereadCellId, rereadKeys, runReread } from '../../eval/runner/q1/reread-cell.ts';
 import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { Campaign, runRemote, weeklyCustodyPush, type CampaignManifest } from '../../eval/runner/shootout-cell.ts';
 import { FakeMemorySystem } from '../../eval/runner/systems/fake.ts';
-import { CAMPAIGN_FILE, CELLS_FILE, launchWeek, planWeek, weeklyLaunchCheck, WIRED_CELL_SET, type RunnerDeps } from '../../eval/runner/weekly-line/runner.ts';
+import { WL_ROWS } from '../../eval/runner/weekly-line/design.ts';
+import { CAMPAIGN_FILE, CELLS_FILE, launchWeek, markStep, planWeek, settleWeek, weeklyLaunchCheck, WIRED_CELL_SET, type RunnerDeps } from '../../eval/runner/weekly-line/runner.ts';
 
 const tmp = mkdtempSync(join(tmpdir(), 'weekly-line-execution-'));
 let n = 0;
@@ -341,5 +343,30 @@ describe("OV4: a weekly re-read is graded by its reader's gating judge", () => {
     expect([...new Set(s.judged)]).toEqual([OPUS]);
     expect(s.judged.length).toBe((res.receipt as { counts: { answers: number } }).counts.answers);
   }, 120_000);
+});
+
+
+// ─── OV5 ─────────────────────────────────────────────────────────────
+
+describe("OV5: settle covers every re-read by its own records", () => {
+  // Value: protects=settle refuses a week whose particle-1 re-reads are marked done while their own answer and judgment files are missing, under the real re-read ids (<arm cell id>.reread-particle-particle-1, the cell id the re-read writes); fails_when=settle maps a re-read id to its arm's records because the id starts with the arm's id, so a week settles with no re-read record at all; why_new=#619 OV5 (GBEV-3 ruling E: no settle on real custody data until fixed, with a test on the real id shape); seam=runner.ts settleWeek over the wired cell set's real ids; no_claim=the records' contents (the dry run)
+  test("a done re-read with no records of its own refuses settle, under the real re-read id", () => {
+    const dir = scratch('settle');
+    const { run, steps } = planWeek({ dir, launch: WEEK.launch, batch: { first: 1001, week1: WEEK.launch, manifest: custodyBatch().manifest } }, runnerDeps());
+    const packed = cells.flatMap(c => c.arms.filter(a => a.mode === 'packed').map(a => a.cell_id));
+    expect(run.rereads).toEqual(packed.map(id => rereadCellId(id, PARTICLE)));
+    expect(run.rereads[0]).toMatch(/^bgw\.[a-z-]+\.[a-z0-9-]+\.[a-z0-9-]+\.reread-particle-particle-1$/);
+    for (const s of steps) if (s.stage !== 'aggregates') markStep(dir, s.id, 'done');
+    const touch = (ids: readonly string[]) => { for (const id of ids) { mkdirSync(join(dir, 'cells', id), { recursive: true }); for (const f of ['answers.ndjson', 'judgments.ndjson']) writeFileSync(join(dir, 'cells', id, f), ''); } };
+    const costs = WL_ROWS.flatMap(row => ['claude-opus-5-5', 'particle-1'].flatMap(reader => WORLDS.map(world => ({ row, reader, world, usd: 0.25 }))));
+    touch(run.cells);
+    const rereadSteps = steps.filter(s => s.target.includes('.reread-')).length, first = steps.find(s => s.stage === 'reread')!.target;
+    expect(message(() => settleWeek(dir, { costs }))).toBe(`WEEKLY_RECORDS: ${rereadSteps} done steps have no record file in the run directory, so nothing is settled (first cells/${first}/answers.ndjson)`);
+    expect(existsSync(join(dir, 'settled.json'))).toBe(false);
+    touch(run.rereads.filter(id => id !== first));
+    expect(message(() => settleWeek(dir, { costs }))).toBe(`WEEKLY_RECORDS: 2 done steps have no record file in the run directory, so nothing is settled (first cells/${first}/answers.ndjson)`);
+    touch([first]);
+    expect(settleWeek(dir, { costs }).steps).toMatchObject({ rereads: run.rereads.length });
+  });
 });
 

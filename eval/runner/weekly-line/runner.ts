@@ -398,7 +398,7 @@ export function settleWeek(dir: string, o: { costs?: CostCell[]; gbrainFailed?: 
   if (pending.length && !o.gbrainFailed) refuse('WEEKLY_NOT_SETTLED', `${pending.length} of week ${run.week}'s ${work.length} cells, re-reads and judgments are not done or recorded as harness failures (first ${pending[0].id})`);
   const saved: CostCell[] = [];
   if (!run.no_point && !o.gbrainFailed) {
-    const recordsOf = (s: Step) => run.cells.find(id => s.target === id || s.target.startsWith(`${id}.`)) ?? s.target;
+    const recordsOf = (s: Step) => run.rereads.includes(s.target) ? s.target : run.cells.find(id => s.target === id || s.target.startsWith(`${id}.`)) ?? s.target;
     const uncovered = work.filter(s => progress.get(s.id) === 'done').map(s => join('cells', recordsOf(s), s.stage === 'judge' ? 'judgments.ndjson' : 'answers.ndjson')).filter(f => !existsSync(join(dir, f)));
     if (uncovered.length) refuse('WEEKLY_RECORDS', `${uncovered.length} done step${uncovered.length === 1 ? ' has' : 's have'} no record file in the run directory, so nothing is settled (first ${uncovered[0]})`);
     const recs = existsSync(join(dir, 'cells')) ? readRecordDirs([dir]) : { answers: [], judgments: [] };
