@@ -38,6 +38,19 @@ describe('pinned-questions paid arm: refusal', () => {
     const ledger = join(mkdtempSync(join(tmpdir(), 'pq-paid-ledger-')), 'ledger.sqlite');
     expect(() => requirePaidFlags(['--paid', '--budget-run-id', 'no-such-run', '--budget-ledger', ledger], 1)).toThrow(PaidArmRefusal);
   });
+
+  test('--paid with only a dollar cap is refused: every paid launch needs an open ledger run, as in the other paid runners', () => {
+    const ledger = join(mkdtempSync(join(tmpdir(), 'pq-paid-ledger-')), 'ledger.sqlite');
+    expect(() => requirePaidFlags(['--paid', '--budget-usd', '5', '--budget-ledger', ledger], 1)).toThrow(PaidArmRefusal);
+    const out = mkdtempSync(join(tmpdir(), 'pq-paid-refuse-'));
+    try {
+      const r = spawnSync('bun', ['eval/runner/pinned-questions-paid.ts', '--models', 'claude-opus-5-5', '--seeds', '1', '--companies', '8', '--output', out, '--paid', '--budget-usd', '1', '--budget-ledger', ledger], { env: keylessEnv(), encoding: 'utf8' });
+      expect(r.status).toBe(2);
+      expect(existsSync(join(out, 'checkpoint.ndjson'))).toBe(false);
+    } finally {
+      rmSync(out, { recursive: true, force: true });
+    }
+  });
 });
 
 describe('pinned-questions paid arm: models and judges', () => {

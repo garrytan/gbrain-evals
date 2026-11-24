@@ -20,8 +20,8 @@
  *      judge label sits a deterministic rule label from the unique synthetic
  *      tokens, for the judge agreement check (judgeAgreement).
  *
- * Paid: the run joins the eval budget ledger (--paid with --budget-usd N or
- * --budget-run-id ID); every request goes through the ledger's fetch guard.
+ * Paid: the run joins an open eval budget ledger run (--paid with --budget-run-id ID, checked by requirePaidArm like
+ * every paid runner here); every request goes through the ledger's fetch guard.
  * An interrupted run resumes from checkpoint.ndjson in --output and never
  * re-asks a finished (model, seed) unit. Tests use the keyless mode
  * (runPinnedQuestionsPaid with a transport): gbrain's test chat transport, a
@@ -29,7 +29,7 @@
  *
  * Usage: bun eval/runner/pinned-questions-paid.ts --models claude-opus-5-5,particle:particle-1,gpt-6.2-sol
  *   [--stage dev|pilot|judge-check|counted] [--seeds 1,2,3] [--companies 24] [--max-output-tokens N] --output <dir>
- *   [--gbrain <checkout>[@ref]] --paid (--budget-usd N | --budget-run-id ID)
+ *   [--gbrain <checkout>[@ref]] --paid --budget-run-id ID
  * --stage picks the preregistered seeds (pilot 21; judge-check 21-23 into the pilot's --output; counted 11-20), and
  * --seeds overrides them. --max-output-tokens sets cycle.standing_questions.max_output_tokens for the raised-cap arm.
  */
@@ -640,12 +640,12 @@ function argValue(argv: readonly string[], flag: string): string | undefined {
   return argv.find(a => a.startsWith(`${flag}=`))?.slice(flag.length + 1);
 }
 
-/** Refuses a run without --paid, and a --budget-run-id that names no open run with room for the estimate. */
+/** Refuses a run without --paid, and without a --budget-run-id naming an open ledger run with room for the estimate. */
 export function requirePaidFlags(argv: readonly string[], estimate: number): void {
   if (!argv.includes('--paid')) {
-    throw new PaidArmRefusal(`${CATEGORY} spends money (estimate $${estimate.toFixed(2)}), and --paid is missing. Pass --paid with --budget-usd <dollars> or --budget-run-id <id>.`);
+    throw new PaidArmRefusal(`${CATEGORY} spends money (estimate $${estimate.toFixed(2)}), and --paid is missing. Pass --paid with --budget-run-id <id>.`);
   }
-  if (argValue(argv, '--budget-run-id')) requirePaidArm(argv, { arm: CATEGORY, estimateUsd: estimate });
+  requirePaidArm(argv, { arm: CATEGORY, estimateUsd: estimate, ledgerPath: budgetOptionsFrom(argv).ledgerPath });
 }
 
 async function main(): Promise<void> {
