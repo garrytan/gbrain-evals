@@ -20,7 +20,7 @@ describe('CI workflow gates (audit C5 to C8)', () => {
     const exempt = /\n {6}- id: ([\w-]+)\n {8}uses: actions\/cache\/restore@\S+ # v4\.3\.0\n {8}continue-on-error: true\n {8}timeout-minutes: 2\n {8}with:\n {10}path: \.git\n(?: {10}.*\n)+\n {6}- if: steps\.\1\.outcome == 'failure'\n {8}name: Drop a partly restored git cache\n {8}run: rm -rf \.git\n/g;
     const save = /\n {8}uses: actions\/cache\/save@\S+ # v4\.3\.0\n {8}continue-on-error: true\n {8}timeout-minutes: 5\n/g;
     const pack = /\n {6}- id: harness-pack\n {8}uses: actions\/cache\/restore@\S+ # v4\.3\.0\n {8}continue-on-error: true\n {8}timeout-minutes: 2\n {8}with:\n {10}path: \.harness\/packs\n(?: {10}.*\n)+\n {6}- if: steps\.harness-pack\.outcome == 'failure'\n {8}name: Drop a partly restored harness pack\n {8}run: rm -rf \.harness\/packs\n/g;
-    expect([...workflow.matchAll(exempt)]).toHaveLength(8);
+    expect([...workflow.matchAll(exempt)]).toHaveLength(9);
     expect([...workflow.matchAll(pack)]).toHaveLength(1);
     expect([...workflow.matchAll(save)]).toHaveLength(2);
     expect(workflow).toContain("      - if: steps.harness-pack.outcome == 'success' && steps.harness-pack.outputs.cache-hit != 'true'\n        uses: actions/cache/save@");
@@ -36,6 +36,17 @@ describe('CI workflow gates (audit C5 to C8)', () => {
     const job = workflow.slice(workflow.indexOf('\n  brainbench:'));
     expect(job).toMatch(/^\n  brainbench:\n(?:.*\n)*?\s+shard: \[1, 2, 3\]/);
     expect(pkg.scripts['eval:brainbench']).toBe('bun eval/runner/all.ts --tier offline');
+  });
+
+  test('the person-isolation ci profile runs keyless on Postgres pinned by digest, and its reports are never uploaded', () => {
+    expect(runLines()).toContain('env -i PATH="$PATH" HOME="$HOME" PI_PG_URL=postgres://postgres@127.0.0.1:55432/postgres timeout 1500 bun eval/runner/person-isolation-fuzz.ts --profile ci --cells mcp-dispatch-postgres,http-postgres --output "$RUNNER_TEMP/person-isolation-postgres"');
+    const start = workflow.indexOf('\n  person-isolation-postgres:');
+    const end = workflow.slice(start + 1).search(/\n  [a-z-]+:\n/);
+    const job = workflow.slice(start, start + 1 + end);
+    expect(job).toMatch(/\n {8}image: pgvector\/pgvector@sha256:[0-9a-f]{64}\n/);
+    expect(job).not.toContain('upload-artifact@');
+    expect(workflow).not.toMatch(/path: eval\/reports\/?\n/);
+    expect(workflow.split('            eval/reports/\n            !eval/reports/person-isolation-fuzz/\n')).toHaveLength(3);
   });
 
   test('colocated eval/ unit tests, Python tests and validators all run', () => {

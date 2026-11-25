@@ -1,0 +1,4722 @@
+{
+  "cost": {
+    "usd": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "basis": "keyless: no model and no paid request (no provider key in any process)"
+  },
+  "delivered_tokens": {
+    "tokens": 0,
+    "basis": "keyless: no model and no paid request (no provider key in any process)"
+  },
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "person-isolation-fuzz",
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 126191,
+  "n_scored": 126191,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": false,
+  "gbrain_version": "0.60.769.0",
+  "gbrain_pin": "github:garrytan/gbrain#38831bb696139024923e9bc43e3da0d7993951e9",
+  "execution": {
+    "source_tree": {
+      "sha256": "4fbb67f95b4f4c4ccf705799f681044c068521a5adbf05cb5316f31aebd94682",
+      "scheme": "git-index-blob-v1",
+      "files": 17541,
+      "git_head": "c2bfa710ff4710d47d1fab3e4ffd381122fe85c9",
+      "dirty": true
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#38831bb696139024923e9bc43e3da0d7993951e9",
+      "declared_sha": "38831bb696139024923e9bc43e3da0d7993951e9",
+      "version": "0.60.769.0",
+      "package_sha256": "03183d36d7e247bf444cee2acccd80f5fc1790e8bc38e8c09aa887917d4d88be",
+      "loaded_git_head": null
+    }
+  },
+  "accounting": {
+    "planned": 126191,
+    "attempted": 126191,
+    "scored": 126191,
+    "errors": 0,
+    "misses": 0,
+    "source": "runner"
+  },
+  "resolved_config": {
+    "profile": "full",
+    "seeds": [
+      20261125
+    ],
+    "cells": [
+      "mcp-dispatch-postgres"
+    ],
+    "generator_version": "person-isolation-v1",
+    "preregistration": "docs/benchmarks/2026-11-24-person-isolation-preregistration.md",
+    "only": null,
+    "timeouts_ms": {
+      "mcp-dispatch": 10000,
+      "http": 30000,
+      "cli": 30000
+    },
+    "not_covered": [
+      "synthesize",
+      "vector and hybrid search (keyless)"
+    ]
+  },
+  "hashes": {
+    "world_20261125": "894c4a8494f0e7b9b67ecf01158a57d2e69461d3f23b2e0e9e10cf8d1bb59102"
+  },
+  "started_at": "2026-11-24T23:25:46.477Z",
+  "finished_at": "2026-11-24T23:47:33.862Z",
+  "data": {
+    "gate_total": 0,
+    "stops": [],
+    "cells": [
+      {
+        "cell": "mcp-dispatch-postgres",
+        "seed": 20261125,
+        "stops": [],
+        "stop_detail": [],
+        "probes": 126191,
+        "probes_planned": 37544,
+        "ops": 116,
+        "elapsed_ms": 1306507,
+        "cap_reached": false,
+        "tally": {
+          "probes": 126191,
+          "content": 0,
+          "identifier": 0,
+          "oracle": 0,
+          "slip": 0,
+          "write_slip": 0,
+          "harness": 0,
+          "signal": 27904,
+          "owner_hits": 15326,
+          "public_hits": 13258,
+          "refusals": 56526
+        },
+        "by_caller": {
+          "owner-attested": {
+            "probes": 22300,
+            "content": 0,
+            "identifier": 0,
+            "oracle": 0,
+            "slip": 0,
+            "write_slip": 0,
+            "harness": 0,
+            "signal": 0,
+            "owner_hits": 0,
+            "public_hits": 0,
+            "refusals": 0
+          },
+          "attested-dm": {
+            "probes": 8631,
+            "content": 0,
+            "identifier": 0,
+            "oracle": 0,
+            "slip": 0,
+            "write_slip": 0,
+            "harness": 0,
+            "signal": 2232,
+            "owner_hits": 1168,
+            "public_hits": 2846,
+            "refusals": 1945
+          },
+          "attested-room": {
+            "probes": 8439,
+            "content": 0,
+            "identifier": 0,
+            "oracle": 0,
+            "slip": 0,
+            "write_slip": 0,
+            "harness": 0,
+            "signal": 1825,
+            "owner_hits": 915,
+            "public_hits": 3240,
+            "refusals": 1525
+          },
+          "attested-variant": {
+            "probes": 36391,
+            "content": 0,
+            "identifier": 0,
+            "oracle": 0,
+            "slip": 0,
+            "write_slip": 0,
+            "harness": 0,
+            "signal": 11550,
+            "owner_hits": 5788,
+            "public_hits": 950,
+            "refusals": 28322
+          },
+          "bare-attest": {
+            "probes": 6805,
+            "content": 0,
+            "identifier": 0,
+            "oracle": 0,
+            "slip": 0,
+            "write_slip": 0,
+            "harness": 0,
+            "signal": 0,
+            "owner_hits": 1168,
+            "public_hits": 0,
+            "refusals": 5836
+          },
+          "left": {
+            "probes": 11462,
+            "content": 0,
+            "identifier": 0,
+            "oracle": 0,
+            "slip": 0,
+            "write_slip": 0,
+            "harness": 0,
+            "signal": 4878,
+            "owner_hits": 2438,
+            "public_hits": 0,
+            "refusals": 9894
+          },
+          "owner-key": {
+            "probes": 9922,
+            "content": 0,
+            "identifier": 0,
+            "oracle": 0,
+            "slip": 0,
+            "write_slip": 0,
+            "harness": 0,
+            "signal": 0,
+            "owner_hits": 0,
+            "public_hits": 0,
+            "refusals": 0
+          },
+          "member-key": {
+            "probes": 8631,
+            "content": 0,
+            "identifier": 0,
+            "oracle": 0,
+            "slip": 0,
+            "write_slip": 0,
+            "harness": 0,
+            "signal": 2453,
+            "owner_hits": 1283,
+            "public_hits": 3111,
+            "refusals": 1584
+          },
+          "unbound-unscoped": {
+            "probes": 6805,
+            "content": 0,
+            "identifier": 0,
+            "oracle": 0,
+            "slip": 0,
+            "write_slip": 0,
+            "harness": 0,
+            "signal": 2453,
+            "owner_hits": 1283,
+            "public_hits": 3111,
+            "refusals": 1584
+          },
+          "unbound": {
+            "probes": 6805,
+            "content": 0,
+            "identifier": 0,
+            "oracle": 0,
+            "slip": 0,
+            "write_slip": 0,
+            "harness": 0,
+            "signal": 2513,
+            "owner_hits": 1283,
+            "public_hits": 0,
+            "refusals": 5836
+          }
+        },
+        "by_condition": {
+          "warm": {
+            "probes": 88403,
+            "content": 0,
+            "identifier": 0,
+            "oracle": 0,
+            "slip": 0,
+            "write_slip": 0,
+            "harness": 0,
+            "signal": 13887,
+            "owner_hits": 15230,
+            "public_hits": 6598,
+            "refusals": 28234
+          },
+          "cold-concurrent": {
+            "probes": 37544,
+            "content": 0,
+            "identifier": 0,
+            "oracle": 0,
+            "slip": 0,
+            "write_slip": 0,
+            "harness": 0,
+            "signal": 13935,
+            "owner_hits": 0,
+            "public_hits": 6598,
+            "refusals": 28234
+          },
+          "after-cycle": {
+            "probes": 244,
+            "content": 0,
+            "identifier": 0,
+            "oracle": 0,
+            "slip": 0,
+            "write_slip": 0,
+            "harness": 0,
+            "signal": 82,
+            "owner_hits": 96,
+            "public_hits": 62,
+            "refusals": 58
+          }
+        },
+        "ops_with_signal": [
+          "assemble_evidence",
+          "cache_stats",
+          "chronicle_last_seen",
+          "chronicle_on_this_day",
+          "context_pack",
+          "delta",
+          "entity",
+          "entity_identity_list",
+          "extraction_pending",
+          "find_anomalies",
+          "find_contradictions",
+          "find_experts",
+          "find_orphans",
+          "find_pages",
+          "find_trajectory",
+          "get_active_schema_pack",
+          "get_backlinks",
+          "get_brain_health",
+          "get_brain_identity",
+          "get_calibration_profile",
+          "get_chunks",
+          "get_health",
+          "get_ingest_log",
+          "get_job_stats",
+          "get_links",
+          "get_memory_settings",
+          "get_page",
+          "get_raw_data",
+          "get_recent_salience",
+          "get_stats",
+          "get_status_snapshot",
+          "get_tags",
+          "get_timeline",
+          "get_usage",
+          "get_write_attribution",
+          "get_write_request",
+          "list_brain_skillpack",
+          "list_jobs",
+          "list_link_sources",
+          "list_pages",
+          "list_schema_packs",
+          "list_write_conflicts",
+          "list_write_requests",
+          "memory_recall",
+          "ontology_conflicts",
+          "ontology_dimensions",
+          "ontology_get",
+          "open_loops",
+          "quarantine_list",
+          "query",
+          "rank_entities",
+          "recall",
+          "reload_schema_pack",
+          "resolve_slugs",
+          "run_doctor",
+          "schema_explain_type",
+          "schema_graph",
+          "schema_lint",
+          "schema_review_orphans",
+          "schema_stats",
+          "search",
+          "search_exact",
+          "search_modes",
+          "search_stats",
+          "search_tune",
+          "sources_list",
+          "storage_find",
+          "storage_list",
+          "takes_calibration",
+          "takes_list",
+          "takes_scorecard",
+          "takes_search",
+          "think",
+          "traverse_graph",
+          "volunteer_chronicle",
+          "volunteer_context",
+          "wanted_pages",
+          "whoami",
+          "whois"
+        ],
+        "ops_without_signal": [
+          "advisor",
+          "cancel_write_request",
+          "chronicle_day",
+          "chronicle_since",
+          "code_blast",
+          "code_callees",
+          "code_callers",
+          "code_def",
+          "code_flow",
+          "code_refs",
+          "connectors_status",
+          "fetch",
+          "file_list",
+          "file_url",
+          "file_verify",
+          "forget",
+          "forget_fact",
+          "get_agent_job",
+          "get_job",
+          "get_job_progress",
+          "get_page_upload",
+          "get_recent_transcripts",
+          "get_skill",
+          "get_skill_asset",
+          "get_skill_policy",
+          "get_skill_retention",
+          "get_versions",
+          "list_page_purges",
+          "list_skills",
+          "list_watches",
+          "memory_propose",
+          "memory_write",
+          "questions_list",
+          "questions_status",
+          "reveal_secret",
+          "search_by_image",
+          "sources_inspect",
+          "sources_resolve_path",
+          "sources_status",
+          "storage_get",
+          "synthesize",
+          "wait_job"
+        ],
+        "mandatory": {
+          "memory_recall": {
+            "probes": 805,
+            "signal": 116,
+            "rule_of_three": 0.003727
+          },
+          "recall": {
+            "probes": 4615,
+            "signal": 1735,
+            "rule_of_three": 0.00065
+          },
+          "query": {
+            "probes": 796,
+            "signal": 296,
+            "rule_of_three": 0.003769
+          },
+          "search": {
+            "probes": 805,
+            "signal": 333,
+            "rule_of_three": 0.003727
+          },
+          "get_page": {
+            "probes": 10457,
+            "signal": 2976,
+            "rule_of_three": 0.000287
+          },
+          "get_chunks": {
+            "probes": 1507,
+            "signal": 727,
+            "rule_of_three": 0.001991
+          },
+          "entity": {
+            "probes": 2383,
+            "signal": 336,
+            "rule_of_three": 0.001259
+          },
+          "context_pack": {
+            "probes": 3871,
+            "signal": 1056,
+            "rule_of_three": 0.000775
+          },
+          "delta": {
+            "probes": 3488,
+            "signal": 1687,
+            "rule_of_three": 0.00086
+          },
+          "think": {
+            "probes": 1752,
+            "signal": 776,
+            "rule_of_three": 0.001712
+          },
+          "volunteer_context": {
+            "probes": 259,
+            "signal": 110,
+            "rule_of_three": 0.011583
+          },
+          "whois": {
+            "probes": 805,
+            "signal": 116,
+            "rule_of_three": 0.003727
+          },
+          "get_backlinks": {
+            "probes": 5945,
+            "signal": 1292,
+            "rule_of_three": 0.000505
+          },
+          "get_timeline": {
+            "probes": 4505,
+            "signal": 556,
+            "rule_of_three": 0.000666
+          },
+          "list_write_requests": {
+            "probes": 805,
+            "signal": 74,
+            "rule_of_three": 0.003727
+          },
+          "get_write_request": {
+            "probes": 1042,
+            "signal": 238,
+            "rule_of_three": 0.002879
+          }
+        },
+        "mandatory_without_signal": [],
+        "channels_missing": [],
+        "writes_failed": 0,
+        "late_unbound_client": "credential_scope_required",
+        "write_shaped_pairs": 192,
+        "rows_changed": 0,
+        "cycle": {
+          "exit": 0,
+          "pages_with_canaries_elsewhere": 0,
+          "not_covered": [
+            "synthesize"
+          ]
+        },
+        "controls": {
+          "planted": {
+            "probes": 12,
+            "caught": 10,
+            "missed": [
+              "get_page bare-attest refused requester_scope_required",
+              "search bare-attest refused requester_scope_required"
+            ]
+          },
+          "misgrant": {
+            "probes": 2,
+            "caught": 2,
+            "missed": []
+          }
+        },
+        "served": {
+          "entity": {
+            "owner-attested": {
+              "served": 290,
+              "error:invalid_params": 120
+            },
+            "attested-dm": {
+              "served": 52,
+              "refused:scope_denied": 54,
+              "error:invalid_params": 51
+            },
+            "attested-room": {
+              "served": 157
+            },
+            "attested-variant": {
+              "served": 19,
+              "refused:actor_not_attested": 288,
+              "refused:actor_unlinked": 354,
+              "refused:scope_denied": 18,
+              "error:invalid_params": 18
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 133
+            },
+            "left": {
+              "refused:actor_unlinked": 112,
+              "refused:access_member_disabled": 111
+            },
+            "owner-key": {
+              "served": 123,
+              "error:invalid_params": 60
+            },
+            "member-key": {
+              "served": 52,
+              "refused:scope_denied": 54,
+              "error:invalid_params": 51
+            },
+            "unbound-unscoped": {
+              "served": 40,
+              "refused:scope_denied": 54,
+              "error:invalid_params": 39
+            },
+            "unbound": {
+              "refused:requester_scope_required": 133
+            }
+          },
+          "synthesize": {
+            "owner-attested": {
+              "error:unavailable": 45
+            },
+            "attested-dm": {
+              "error:unavailable": 17
+            },
+            "attested-room": {
+              "error:unavailable": 17
+            },
+            "attested-variant": {
+              "error:unavailable": 6,
+              "refused:actor_not_attested": 30,
+              "refused:actor_unlinked": 35
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 13
+            },
+            "left": {
+              "refused:actor_unlinked": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "error:unavailable": 20
+            },
+            "member-key": {
+              "error:unavailable": 17
+            },
+            "unbound-unscoped": {
+              "error:unavailable": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 13
+            }
+          },
+          "get_page": {
+            "owner-attested": {
+              "served": 1264,
+              "error:page_not_found": 541,
+              "error:invalid_params": 45
+            },
+            "attested-dm": {
+              "error:page_not_found": 251,
+              "served": 281,
+              "refused:permission_denied": 156,
+              "error:invalid_params": 17
+            },
+            "attested-room": {
+              "error:page_not_found": 363,
+              "served": 325,
+              "error:invalid_params": 17
+            },
+            "attested-variant": {
+              "error:page_not_found": 85,
+              "served": 104,
+              "refused:actor_not_attested": 1266,
+              "refused:actor_unlinked": 1513,
+              "refused:permission_denied": 52,
+              "error:invalid_params": 6
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 564
+            },
+            "left": {
+              "refused:actor_unlinked": 476,
+              "refused:access_member_disabled": 475
+            },
+            "owner-key": {
+              "served": 603,
+              "error:page_not_found": 200,
+              "error:invalid_params": 20
+            },
+            "member-key": {
+              "error:page_not_found": 251,
+              "served": 281,
+              "refused:permission_denied": 156,
+              "error:invalid_params": 17
+            },
+            "unbound-unscoped": {
+              "error:page_not_found": 245,
+              "served": 150,
+              "refused:permission_denied": 156,
+              "error:invalid_params": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 564
+            }
+          },
+          "list_pages": {
+            "owner-attested": {
+              "served": 180
+            },
+            "attested-dm": {
+              "served": 51,
+              "refused:permission_denied": 18
+            },
+            "attested-room": {
+              "served": 69
+            },
+            "attested-variant": {
+              "served": 18,
+              "refused:actor_not_attested": 126,
+              "refused:actor_unlinked": 153,
+              "refused:permission_denied": 6
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 57
+            },
+            "left": {
+              "refused:actor_unlinked": 48,
+              "refused:access_member_disabled": 48
+            },
+            "owner-key": {
+              "served": 80
+            },
+            "member-key": {
+              "served": 51,
+              "refused:permission_denied": 18
+            },
+            "unbound-unscoped": {
+              "served": 39,
+              "refused:permission_denied": 18
+            },
+            "unbound": {
+              "refused:requester_scope_required": 57
+            }
+          },
+          "fetch": {
+            "owner-attested": {
+              "error:page_not_found": 180
+            },
+            "attested-dm": {
+              "error:page_not_found": 58
+            },
+            "attested-room": {
+              "error:page_not_found": 58
+            },
+            "attested-variant": {
+              "error:page_not_found": 20,
+              "refused:actor_not_attested": 108,
+              "refused:actor_unlinked": 134
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 50
+            },
+            "left": {
+              "refused:actor_unlinked": 42,
+              "refused:access_member_disabled": 42
+            },
+            "owner-key": {
+              "error:page_not_found": 80
+            },
+            "member-key": {
+              "error:page_not_found": 58
+            },
+            "unbound-unscoped": {
+              "error:page_not_found": 50
+            },
+            "unbound": {
+              "refused:requester_scope_required": 50
+            }
+          },
+          "find_pages": {
+            "owner-attested": {
+              "served": 135
+            },
+            "attested-dm": {
+              "served": 34,
+              "refused:permission_denied": 18
+            },
+            "attested-room": {
+              "served": 52
+            },
+            "attested-variant": {
+              "served": 12,
+              "refused:actor_not_attested": 96,
+              "refused:actor_unlinked": 118,
+              "refused:permission_denied": 6
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 44
+            },
+            "left": {
+              "refused:actor_unlinked": 37,
+              "refused:access_member_disabled": 37
+            },
+            "owner-key": {
+              "served": 60
+            },
+            "member-key": {
+              "served": 34,
+              "refused:permission_denied": 18
+            },
+            "unbound-unscoped": {
+              "served": 26,
+              "refused:permission_denied": 18
+            },
+            "unbound": {
+              "refused:requester_scope_required": 44
+            }
+          },
+          "get_page_upload": {
+            "owner-attested": {
+              "error:upload_not_found": 45
+            },
+            "attested-dm": {
+              "error:upload_not_found": 17
+            },
+            "attested-room": {
+              "error:upload_not_found": 17
+            },
+            "attested-variant": {
+              "error:upload_not_found": 6,
+              "refused:actor_not_attested": 30,
+              "refused:actor_unlinked": 35
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 13
+            },
+            "left": {
+              "refused:actor_unlinked": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "error:upload_not_found": 20
+            },
+            "member-key": {
+              "error:upload_not_found": 17
+            },
+            "unbound-unscoped": {
+              "error:upload_not_found": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 13
+            }
+          },
+          "get_write_request": {
+            "owner-attested": {
+              "served": 124,
+              "error:not_found": 61
+            },
+            "attested-dm": {
+              "error:not_found": 107
+            },
+            "attested-room": {
+              "error:not_found": 59
+            },
+            "attested-variant": {
+              "error:not_found": 20,
+              "refused:actor_not_attested": 108,
+              "refused:actor_unlinked": 135
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 51
+            },
+            "left": {
+              "refused:actor_unlinked": 43,
+              "refused:access_member_disabled": 42
+            },
+            "owner-key": {
+              "error:not_found": 63,
+              "served": 20
+            },
+            "member-key": {
+              "error:not_found": 107
+            },
+            "unbound-unscoped": {
+              "error:not_found": 51
+            },
+            "unbound": {
+              "refused:requester_scope_required": 51
+            }
+          },
+          "list_write_requests": {
+            "owner-attested": {
+              "refused:actor_unlinked": 44,
+              "served": 56,
+              "error:invalid_params": 40
+            },
+            "attested-dm": {
+              "refused:actor_unlinked": 18,
+              "served": 18,
+              "error:invalid_params": 17
+            },
+            "attested-room": {
+              "served": 53
+            },
+            "attested-variant": {
+              "refused:actor_unlinked": 125,
+              "refused:actor_not_attested": 96,
+              "served": 6,
+              "error:invalid_params": 6
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 45
+            },
+            "left": {
+              "refused:actor_unlinked": 38,
+              "refused:access_member_disabled": 37
+            },
+            "owner-key": {
+              "served": 43,
+              "error:invalid_params": 20
+            },
+            "member-key": {
+              "served": 36,
+              "error:invalid_params": 17
+            },
+            "unbound-unscoped": {
+              "served": 32,
+              "error:invalid_params": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 45
+            }
+          },
+          "list_write_conflicts": {
+            "owner-attested": {
+              "refused:actor_not_attested": 135
+            },
+            "attested-dm": {
+              "refused:actor_not_attested": 52
+            },
+            "attested-room": {
+              "refused:actor_not_attested": 52
+            },
+            "attested-variant": {
+              "refused:actor_not_attested": 232
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 44
+            },
+            "left": {
+              "refused:actor_not_attested": 37,
+              "refused:access_member_disabled": 37
+            },
+            "owner-key": {
+              "served": 40,
+              "error:invalid_params": 20
+            },
+            "member-key": {
+              "served": 17,
+              "refused:permission_denied": 18,
+              "error:invalid_params": 17
+            },
+            "unbound-unscoped": {
+              "served": 13,
+              "refused:permission_denied": 18,
+              "error:invalid_params": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 44
+            }
+          },
+          "search": {
+            "owner-attested": {
+              "served": 140
+            },
+            "attested-dm": {
+              "served": 35,
+              "refused:permission_denied": 18
+            },
+            "attested-room": {
+              "served": 53
+            },
+            "attested-variant": {
+              "served": 12,
+              "refused:actor_not_attested": 96,
+              "refused:actor_unlinked": 119,
+              "refused:permission_denied": 6
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 45
+            },
+            "left": {
+              "refused:actor_unlinked": 38,
+              "refused:access_member_disabled": 37
+            },
+            "owner-key": {
+              "served": 63
+            },
+            "member-key": {
+              "served": 35,
+              "refused:permission_denied": 18
+            },
+            "unbound-unscoped": {
+              "served": 27,
+              "refused:permission_denied": 18
+            },
+            "unbound": {
+              "refused:requester_scope_required": 45
+            }
+          },
+          "query": {
+            "owner-attested": {
+              "served": 135
+            },
+            "attested-dm": {
+              "served": 35,
+              "refused:permission_denied": 18
+            },
+            "attested-room": {
+              "served": 53
+            },
+            "attested-variant": {
+              "served": 12,
+              "refused:actor_not_attested": 96,
+              "refused:actor_unlinked": 119,
+              "refused:permission_denied": 6
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 45
+            },
+            "left": {
+              "refused:actor_unlinked": 37,
+              "refused:access_member_disabled": 37
+            },
+            "owner-key": {
+              "served": 60
+            },
+            "member-key": {
+              "served": 35,
+              "refused:permission_denied": 18
+            },
+            "unbound-unscoped": {
+              "served": 27,
+              "refused:permission_denied": 18
+            },
+            "unbound": {
+              "refused:requester_scope_required": 45
+            }
+          },
+          "assemble_evidence": {
+            "owner-attested": {
+              "served": 45
+            },
+            "attested-dm": {
+              "served": 17
+            },
+            "attested-room": {
+              "served": 17
+            },
+            "attested-variant": {
+              "served": 6,
+              "refused:actor_not_attested": 30,
+              "refused:actor_unlinked": 35
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 13
+            },
+            "left": {
+              "refused:actor_unlinked": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "served": 20
+            },
+            "member-key": {
+              "served": 17
+            },
+            "unbound-unscoped": {
+              "served": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 13
+            }
+          },
+          "search_stats": {
+            "owner-attested": {
+              "refused:actor_not_attested": 45
+            },
+            "attested-dm": {
+              "refused:actor_not_attested": 17
+            },
+            "attested-room": {
+              "refused:actor_not_attested": 17
+            },
+            "attested-variant": {
+              "refused:actor_not_attested": 71
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 13
+            },
+            "left": {
+              "refused:actor_not_attested": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "served": 20
+            },
+            "member-key": {
+              "served": 17
+            },
+            "unbound-unscoped": {
+              "served": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 13
+            }
+          },
+          "search_modes": {
+            "owner-attested": {
+              "served": 45
+            },
+            "attested-dm": {
+              "served": 17
+            },
+            "attested-room": {
+              "served": 17
+            },
+            "attested-variant": {
+              "served": 6,
+              "refused:actor_not_attested": 30,
+              "refused:actor_unlinked": 35
+            },
+            "bare-attest": {
+              "served": 13
+            },
+            "left": {
+              "refused:actor_unlinked": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "served": 20
+            },
+            "member-key": {
+              "served": 17
+            },
+            "unbound-unscoped": {
+              "served": 13
+            },
+            "unbound": {
+              "served": 13
+            }
+          },
+          "search_tune": {
+            "owner-attested": {
+              "refused:actor_not_attested": 45
+            },
+            "attested-dm": {
+              "refused:actor_not_attested": 17
+            },
+            "attested-room": {
+              "refused:actor_not_attested": 17
+            },
+            "attested-variant": {
+              "refused:actor_not_attested": 71
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 13
+            },
+            "left": {
+              "refused:actor_not_attested": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "served": 20
+            },
+            "member-key": {
+              "served": 17
+            },
+            "unbound-unscoped": {
+              "served": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 13
+            }
+          },
+          "cache_stats": {
+            "owner-attested": {
+              "refused:actor_not_attested": 45
+            },
+            "attested-dm": {
+              "refused:actor_not_attested": 17
+            },
+            "attested-room": {
+              "refused:actor_not_attested": 17
+            },
+            "attested-variant": {
+              "refused:actor_not_attested": 71
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 13
+            },
+            "left": {
+              "refused:actor_not_attested": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "served": 20
+            },
+            "member-key": {
+              "served": 17
+            },
+            "unbound-unscoped": {
+              "served": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 13
+            }
+          },
+          "search_exact": {
+            "owner-attested": {
+              "served": 135
+            },
+            "attested-dm": {
+              "served": 34,
+              "refused:permission_denied": 18
+            },
+            "attested-room": {
+              "served": 52
+            },
+            "attested-variant": {
+              "served": 12,
+              "refused:actor_not_attested": 96,
+              "refused:actor_unlinked": 118,
+              "refused:permission_denied": 6
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 44
+            },
+            "left": {
+              "refused:actor_unlinked": 37,
+              "refused:access_member_disabled": 37
+            },
+            "owner-key": {
+              "served": 60
+            },
+            "member-key": {
+              "served": 34,
+              "refused:permission_denied": 18
+            },
+            "unbound-unscoped": {
+              "served": 26,
+              "refused:permission_denied": 18
+            },
+            "unbound": {
+              "refused:requester_scope_required": 44
+            }
+          },
+          "search_by_image": {
+            "owner-attested": {
+              "error:invalid_params": 135
+            },
+            "attested-dm": {
+              "error:invalid_params": 52
+            },
+            "attested-room": {
+              "error:invalid_params": 52
+            },
+            "attested-variant": {
+              "error:invalid_params": 18,
+              "refused:actor_not_attested": 96,
+              "refused:actor_unlinked": 118
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 44
+            },
+            "left": {
+              "refused:actor_unlinked": 37,
+              "refused:access_member_disabled": 37
+            },
+            "owner-key": {
+              "error:invalid_params": 60
+            },
+            "member-key": {
+              "error:invalid_params": 52
+            },
+            "unbound-unscoped": {
+              "error:invalid_params": 44
+            },
+            "unbound": {
+              "refused:requester_scope_required": 44
+            }
+          },
+          "get_tags": {
+            "owner-attested": {
+              "served": 270
+            },
+            "attested-dm": {
+              "served": 102
+            },
+            "attested-room": {
+              "served": 102
+            },
+            "attested-variant": {
+              "served": 36,
+              "refused:actor_not_attested": 180,
+              "refused:actor_unlinked": 210
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 78
+            },
+            "left": {
+              "refused:actor_unlinked": 66,
+              "refused:access_member_disabled": 66
+            },
+            "owner-key": {
+              "served": 120
+            },
+            "member-key": {
+              "served": 102
+            },
+            "unbound-unscoped": {
+              "served": 78
+            },
+            "unbound": {
+              "refused:requester_scope_required": 78
+            }
+          },
+          "get_links": {
+            "owner-attested": {
+              "served": 1005,
+              "error:invalid_params": 30
+            },
+            "attested-dm": {
+              "served": 294,
+              "refused:permission_denied": 102
+            },
+            "attested-room": {
+              "served": 294,
+              "error:invalid_params": 102
+            },
+            "attested-variant": {
+              "served": 104,
+              "refused:actor_not_attested": 720,
+              "refused:actor_unlinked": 870,
+              "refused:permission_denied": 34
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 324
+            },
+            "left": {
+              "refused:actor_unlinked": 273,
+              "refused:access_member_disabled": 273
+            },
+            "owner-key": {
+              "served": 460
+            },
+            "member-key": {
+              "served": 294,
+              "refused:permission_denied": 102
+            },
+            "unbound-unscoped": {
+              "served": 222,
+              "refused:permission_denied": 102
+            },
+            "unbound": {
+              "refused:requester_scope_required": 324
+            }
+          },
+          "get_backlinks": {
+            "owner-attested": {
+              "served": 1010,
+              "refused:invalid_params": 30
+            },
+            "attested-dm": {
+              "served": 295,
+              "refused:permission_denied": 102
+            },
+            "attested-room": {
+              "served": 295,
+              "refused:invalid_params": 102
+            },
+            "attested-variant": {
+              "served": 105,
+              "refused:actor_not_attested": 720,
+              "refused:actor_unlinked": 870,
+              "refused:permission_denied": 34
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 325
+            },
+            "left": {
+              "refused:actor_unlinked": 274,
+              "refused:access_member_disabled": 273
+            },
+            "owner-key": {
+              "served": 463
+            },
+            "member-key": {
+              "served": 295,
+              "refused:permission_denied": 102
+            },
+            "unbound-unscoped": {
+              "served": 223,
+              "refused:permission_denied": 102
+            },
+            "unbound": {
+              "refused:requester_scope_required": 325
+            }
+          },
+          "list_link_sources": {
+            "owner-attested": {
+              "served": 45
+            },
+            "attested-dm": {
+              "served": 17
+            },
+            "attested-room": {
+              "served": 17
+            },
+            "attested-variant": {
+              "served": 6,
+              "refused:actor_not_attested": 30,
+              "refused:actor_unlinked": 35
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 13
+            },
+            "left": {
+              "refused:actor_unlinked": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "served": 20
+            },
+            "member-key": {
+              "served": 17
+            },
+            "unbound-unscoped": {
+              "served": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 13
+            }
+          },
+          "traverse_graph": {
+            "owner-attested": {
+              "served": 1005,
+              "error:invalid_params": 30
+            },
+            "attested-dm": {
+              "served": 294,
+              "refused:permission_denied": 102
+            },
+            "attested-room": {
+              "served": 294,
+              "error:invalid_params": 102
+            },
+            "attested-variant": {
+              "served": 104,
+              "refused:actor_not_attested": 720,
+              "refused:actor_unlinked": 870,
+              "refused:permission_denied": 34
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 324
+            },
+            "left": {
+              "refused:actor_unlinked": 273,
+              "refused:access_member_disabled": 273
+            },
+            "owner-key": {
+              "served": 460
+            },
+            "member-key": {
+              "served": 294,
+              "refused:permission_denied": 102
+            },
+            "unbound-unscoped": {
+              "served": 222,
+              "refused:permission_denied": 102
+            },
+            "unbound": {
+              "refused:requester_scope_required": 324
+            }
+          },
+          "wanted_pages": {
+            "owner-attested": {
+              "served": 95,
+              "error:not_found": 40
+            },
+            "attested-dm": {
+              "served": 17,
+              "error:not_found": 35
+            },
+            "attested-room": {
+              "served": 52
+            },
+            "attested-variant": {
+              "served": 6,
+              "refused:actor_not_attested": 96,
+              "refused:actor_unlinked": 118,
+              "error:not_found": 12
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 44
+            },
+            "left": {
+              "refused:actor_unlinked": 37,
+              "refused:access_member_disabled": 37
+            },
+            "owner-key": {
+              "served": 40,
+              "error:not_found": 20
+            },
+            "member-key": {
+              "served": 17,
+              "error:not_found": 35
+            },
+            "unbound-unscoped": {
+              "served": 13,
+              "error:not_found": 31
+            },
+            "unbound": {
+              "refused:requester_scope_required": 44
+            }
+          },
+          "get_timeline": {
+            "owner-attested": {
+              "served": 530,
+              "error:invalid_params": 240
+            },
+            "attested-dm": {
+              "served": 97,
+              "refused:permission_denied": 102,
+              "error:invalid_params": 108
+            },
+            "attested-room": {
+              "served": 307
+            },
+            "attested-variant": {
+              "served": 33,
+              "refused:actor_not_attested": 552,
+              "refused:actor_unlinked": 660,
+              "refused:permission_denied": 34,
+              "error:invalid_params": 36
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 247
+            },
+            "left": {
+              "refused:actor_unlinked": 208,
+              "refused:access_member_disabled": 207
+            },
+            "owner-key": {
+              "served": 223,
+              "error:invalid_params": 120
+            },
+            "member-key": {
+              "served": 97,
+              "refused:permission_denied": 102,
+              "error:invalid_params": 108
+            },
+            "unbound-unscoped": {
+              "served": 67,
+              "refused:permission_denied": 102,
+              "error:invalid_params": 78
+            },
+            "unbound": {
+              "refused:requester_scope_required": 247
+            }
+          },
+          "get_stats": {
+            "owner-attested": {
+              "refused:actor_not_attested": 45
+            },
+            "attested-dm": {
+              "refused:actor_not_attested": 18
+            },
+            "attested-room": {
+              "refused:actor_not_attested": 18
+            },
+            "attested-variant": {
+              "refused:actor_not_attested": 72
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 13
+            },
+            "left": {
+              "refused:actor_not_attested": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "served": 20
+            },
+            "member-key": {
+              "served": 18
+            },
+            "unbound-unscoped": {
+              "served": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 13
+            }
+          },
+          "get_health": {
+            "owner-attested": {
+              "refused:actor_not_attested": 45
+            },
+            "attested-dm": {
+              "refused:actor_not_attested": 18
+            },
+            "attested-room": {
+              "refused:actor_not_attested": 18
+            },
+            "attested-variant": {
+              "refused:actor_not_attested": 72
+            },
+            "bare-attest": {
+              "served": 13
+            },
+            "left": {
+              "refused:actor_not_attested": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "served": 20
+            },
+            "member-key": {
+              "served": 18
+            },
+            "unbound-unscoped": {
+              "served": 13
+            },
+            "unbound": {
+              "served": 13
+            }
+          },
+          "run_doctor": {
+            "owner-attested": {
+              "refused:actor_not_attested": 45
+            },
+            "attested-dm": {
+              "refused:actor_not_attested": 18
+            },
+            "attested-room": {
+              "refused:actor_not_attested": 18
+            },
+            "attested-variant": {
+              "refused:actor_not_attested": 72
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 13
+            },
+            "left": {
+              "refused:actor_not_attested": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "served": 20
+            },
+            "member-key": {
+              "served": 18
+            },
+            "unbound-unscoped": {
+              "served": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 13
+            }
+          },
+          "get_brain_health": {
+            "owner-attested": {
+              "served": 45
+            },
+            "attested-dm": {
+              "served": 18
+            },
+            "attested-room": {
+              "served": 18
+            },
+            "attested-variant": {
+              "served": 6,
+              "refused:actor_not_attested": 31,
+              "refused:actor_unlinked": 35
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 13
+            },
+            "left": {
+              "refused:actor_unlinked": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "served": 20
+            },
+            "member-key": {
+              "served": 18
+            },
+            "unbound-unscoped": {
+              "served": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 13
+            }
+          },
+          "get_versions": {
+            "owner-attested": {
+              "error:invalid_params": 765
+            },
+            "attested-dm": {
+              "error:invalid_params": 294
+            },
+            "attested-room": {
+              "error:invalid_params": 294
+            },
+            "attested-variant": {
+              "error:invalid_params": 102,
+              "refused:actor_not_attested": 540,
+              "refused:actor_unlinked": 660
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 246
+            },
+            "left": {
+              "refused:actor_unlinked": 207,
+              "refused:access_member_disabled": 207
+            },
+            "owner-key": {
+              "error:invalid_params": 340
+            },
+            "member-key": {
+              "error:invalid_params": 294
+            },
+            "unbound-unscoped": {
+              "error:invalid_params": 246
+            },
+            "unbound": {
+              "refused:requester_scope_required": 246
+            }
+          },
+          "get_brain_identity": {
+            "owner-attested": {
+              "served": 45
+            },
+            "attested-dm": {
+              "served": 17
+            },
+            "attested-room": {
+              "served": 17
+            },
+            "attested-variant": {
+              "served": 6,
+              "refused:actor_not_attested": 30,
+              "refused:actor_unlinked": 35
+            },
+            "bare-attest": {
+              "served": 13
+            },
+            "left": {
+              "refused:actor_unlinked": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "served": 20
+            },
+            "member-key": {
+              "served": 17
+            },
+            "unbound-unscoped": {
+              "served": 13
+            },
+            "unbound": {
+              "served": 13
+            }
+          },
+          "quarantine_list": {
+            "owner-attested": {
+              "refused:actor_not_attested": 45
+            },
+            "attested-dm": {
+              "refused:actor_not_attested": 17
+            },
+            "attested-room": {
+              "refused:actor_not_attested": 17
+            },
+            "attested-variant": {
+              "refused:actor_not_attested": 71
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 13
+            },
+            "left": {
+              "refused:actor_not_attested": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "served": 20
+            },
+            "member-key": {
+              "served": 17
+            },
+            "unbound-unscoped": {
+              "served": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 13
+            }
+          },
+          "get_write_attribution": {
+            "owner-attested": {
+              "refused:actor_not_attested": 270
+            },
+            "attested-dm": {
+              "refused:actor_not_attested": 102
+            },
+            "attested-room": {
+              "refused:actor_not_attested": 102
+            },
+            "attested-variant": {
+              "refused:actor_not_attested": 426
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 78
+            },
+            "left": {
+              "refused:actor_not_attested": 66,
+              "refused:access_member_disabled": 66
+            },
+            "owner-key": {
+              "served": 120
+            },
+            "member-key": {
+              "error:page_not_found": 38,
+              "served": 64
+            },
+            "unbound-unscoped": {
+              "error:page_not_found": 48,
+              "served": 30
+            },
+            "unbound": {
+              "refused:requester_scope_required": 78
+            }
+          },
+          "list_skills": {
+            "owner-attested": {
+              "error:invalid_params": 135
+            },
+            "attested-dm": {
+              "error:invalid_params": 52
+            },
+            "attested-room": {
+              "error:invalid_params": 52
+            },
+            "attested-variant": {
+              "error:invalid_params": 18,
+              "refused:actor_not_attested": 96,
+              "refused:actor_unlinked": 118
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 44
+            },
+            "left": {
+              "refused:actor_unlinked": 37,
+              "refused:access_member_disabled": 37
+            },
+            "owner-key": {
+              "error:invalid_params": 60
+            },
+            "member-key": {
+              "error:invalid_params": 52
+            },
+            "unbound-unscoped": {
+              "error:invalid_params": 44
+            },
+            "unbound": {
+              "refused:requester_scope_required": 44
+            }
+          },
+          "get_skill": {
+            "owner-attested": {
+              "error:invalid_params": 405
+            },
+            "attested-dm": {
+              "error:invalid_params": 156
+            },
+            "attested-room": {
+              "error:invalid_params": 156
+            },
+            "attested-variant": {
+              "error:invalid_params": 54,
+              "refused:actor_not_attested": 288,
+              "refused:actor_unlinked": 354
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 132
+            },
+            "left": {
+              "refused:actor_unlinked": 111,
+              "refused:access_member_disabled": 111
+            },
+            "owner-key": {
+              "error:invalid_params": 180
+            },
+            "member-key": {
+              "error:invalid_params": 156
+            },
+            "unbound-unscoped": {
+              "error:invalid_params": 132
+            },
+            "unbound": {
+              "refused:requester_scope_required": 132
+            }
+          },
+          "list_brain_skillpack": {
+            "owner-attested": {
+              "served": 45
+            },
+            "attested-dm": {
+              "served": 17
+            },
+            "attested-room": {
+              "served": 17
+            },
+            "attested-variant": {
+              "served": 6,
+              "refused:actor_not_attested": 30,
+              "refused:actor_unlinked": 35
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 13
+            },
+            "left": {
+              "refused:actor_unlinked": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "served": 20
+            },
+            "member-key": {
+              "served": 17
+            },
+            "unbound-unscoped": {
+              "served": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 13
+            }
+          },
+          "advisor": {
+            "owner-attested": {
+              "refused:permission_denied": 45
+            },
+            "attested-dm": {
+              "refused:permission_denied": 17
+            },
+            "attested-room": {
+              "refused:permission_denied": 17
+            },
+            "attested-variant": {
+              "refused:permission_denied": 6,
+              "refused:actor_not_attested": 30,
+              "refused:actor_unlinked": 35
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 13
+            },
+            "left": {
+              "refused:actor_unlinked": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "refused:permission_denied": 20
+            },
+            "member-key": {
+              "refused:permission_denied": 17
+            },
+            "unbound-unscoped": {
+              "refused:permission_denied": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 13
+            }
+          },
+          "get_status_snapshot": {
+            "owner-attested": {
+              "refused:actor_not_attested": 45
+            },
+            "attested-dm": {
+              "refused:actor_not_attested": 17
+            },
+            "attested-room": {
+              "refused:actor_not_attested": 17
+            },
+            "attested-variant": {
+              "refused:actor_not_attested": 71
+            },
+            "bare-attest": {
+              "served": 13
+            },
+            "left": {
+              "refused:actor_not_attested": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "served": 20
+            },
+            "member-key": {
+              "served": 17
+            },
+            "unbound-unscoped": {
+              "served": 13
+            },
+            "unbound": {
+              "served": 13
+            }
+          },
+          "get_skill_asset": {
+            "owner-attested": {
+              "error:invalid_params": 405
+            },
+            "attested-dm": {
+              "error:invalid_params": 156
+            },
+            "attested-room": {
+              "error:invalid_params": 156
+            },
+            "attested-variant": {
+              "error:invalid_params": 54,
+              "refused:actor_not_attested": 288,
+              "refused:actor_unlinked": 354
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 132
+            },
+            "left": {
+              "refused:actor_unlinked": 111,
+              "refused:access_member_disabled": 111
+            },
+            "owner-key": {
+              "error:invalid_params": 180
+            },
+            "member-key": {
+              "error:invalid_params": 156
+            },
+            "unbound-unscoped": {
+              "error:invalid_params": 132
+            },
+            "unbound": {
+              "refused:requester_scope_required": 132
+            }
+          },
+          "get_skill_policy": {
+            "owner-attested": {
+              "refused:actor_not_attested": 135
+            },
+            "attested-dm": {
+              "refused:actor_not_attested": 52
+            },
+            "attested-room": {
+              "refused:actor_not_attested": 52
+            },
+            "attested-variant": {
+              "refused:actor_not_attested": 232
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 44
+            },
+            "left": {
+              "refused:actor_not_attested": 37,
+              "refused:access_member_disabled": 37
+            },
+            "owner-key": {
+              "refused:insufficient_scope": 60
+            },
+            "member-key": {
+              "refused:insufficient_scope": 52
+            },
+            "unbound-unscoped": {
+              "refused:insufficient_scope": 44
+            },
+            "unbound": {
+              "refused:requester_scope_required": 44
+            }
+          },
+          "get_skill_retention": {
+            "owner-attested": {
+              "refused:actor_not_attested": 135
+            },
+            "attested-dm": {
+              "refused:actor_not_attested": 52
+            },
+            "attested-room": {
+              "refused:actor_not_attested": 52
+            },
+            "attested-variant": {
+              "refused:actor_not_attested": 232
+            },
+            "bare-attest": {
+              "refused:unknown_tool": 44
+            },
+            "left": {
+              "refused:actor_not_attested": 37,
+              "refused:access_member_disabled": 37
+            },
+            "owner-key": {
+              "refused:unknown_tool": 60
+            },
+            "member-key": {
+              "refused:unknown_tool": 52
+            },
+            "unbound-unscoped": {
+              "refused:unknown_tool": 44
+            },
+            "unbound": {
+              "refused:unknown_tool": 44
+            }
+          },
+          "get_raw_data": {
+            "owner-attested": {
+              "served": 240,
+              "error:invalid_params": 30
+            },
+            "attested-dm": {
+              "served": 102
+            },
+            "attested-room": {
+              "error:invalid_params": 102
+            },
+            "attested-variant": {
+              "served": 36,
+              "refused:actor_not_attested": 180,
+              "refused:actor_unlinked": 210
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 78
+            },
+            "left": {
+              "refused:actor_unlinked": 66,
+              "refused:access_member_disabled": 66
+            },
+            "owner-key": {
+              "served": 120
+            },
+            "member-key": {
+              "served": 102
+            },
+            "unbound-unscoped": {
+              "served": 78
+            },
+            "unbound": {
+              "refused:requester_scope_required": 78
+            }
+          },
+          "resolve_slugs": {
+            "owner-attested": {
+              "served": 135
+            },
+            "attested-dm": {
+              "served": 34,
+              "refused:permission_denied": 18
+            },
+            "attested-room": {
+              "served": 52
+            },
+            "attested-variant": {
+              "served": 12,
+              "refused:actor_not_attested": 96,
+              "refused:actor_unlinked": 118,
+              "refused:permission_denied": 6
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 44
+            },
+            "left": {
+              "refused:actor_unlinked": 37,
+              "refused:access_member_disabled": 37
+            },
+            "owner-key": {
+              "served": 60
+            },
+            "member-key": {
+              "served": 34,
+              "refused:permission_denied": 18
+            },
+            "unbound-unscoped": {
+              "served": 26,
+              "refused:permission_denied": 18
+            },
+            "unbound": {
+              "refused:requester_scope_required": 44
+            }
+          },
+          "get_chunks": {
+            "owner-attested": {
+              "served": 275
+            },
+            "attested-dm": {
+              "served": 104
+            },
+            "attested-room": {
+              "served": 104
+            },
+            "attested-variant": {
+              "served": 36,
+              "refused:actor_not_attested": 180,
+              "refused:actor_unlinked": 211
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 79
+            },
+            "left": {
+              "refused:actor_unlinked": 67,
+              "refused:access_member_disabled": 66
+            },
+            "owner-key": {
+              "served": 123
+            },
+            "member-key": {
+              "served": 104
+            },
+            "unbound-unscoped": {
+              "served": 79
+            },
+            "unbound": {
+              "refused:requester_scope_required": 79
+            }
+          },
+          "whois": {
+            "owner-attested": {
+              "served": 140
+            },
+            "attested-dm": {
+              "served": 35,
+              "refused:permission_denied": 18
+            },
+            "attested-room": {
+              "served": 53
+            },
+            "attested-variant": {
+              "served": 12,
+              "refused:actor_not_attested": 96,
+              "refused:actor_unlinked": 119,
+              "refused:permission_denied": 6
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 45
+            },
+            "left": {
+              "refused:actor_unlinked": 38,
+              "refused:access_member_disabled": 37
+            },
+            "owner-key": {
+              "served": 63
+            },
+            "member-key": {
+              "served": 35,
+              "refused:permission_denied": 18
+            },
+            "unbound-unscoped": {
+              "served": 27,
+              "refused:permission_denied": 18
+            },
+            "unbound": {
+              "refused:requester_scope_required": 45
+            }
+          },
+          "get_ingest_log": {
+            "owner-attested": {
+              "served": 45
+            },
+            "attested-dm": {
+              "served": 17
+            },
+            "attested-room": {
+              "served": 17
+            },
+            "attested-variant": {
+              "served": 6,
+              "refused:actor_not_attested": 30,
+              "refused:actor_unlinked": 35
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 13
+            },
+            "left": {
+              "refused:actor_unlinked": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "served": 20
+            },
+            "member-key": {
+              "served": 17
+            },
+            "unbound-unscoped": {
+              "served": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 13
+            }
+          },
+          "get_usage": {
+            "owner-attested": {
+              "refused:actor_not_attested": 45
+            },
+            "attested-dm": {
+              "refused:actor_not_attested": 17
+            },
+            "attested-room": {
+              "refused:actor_not_attested": 17
+            },
+            "attested-variant": {
+              "refused:actor_not_attested": 71
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 13
+            },
+            "left": {
+              "refused:actor_not_attested": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "served": 20
+            },
+            "member-key": {
+              "served": 17
+            },
+            "unbound-unscoped": {
+              "served": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 13
+            }
+          },
+          "file_list": {
+            "owner-attested": {
+              "refused:actor_not_attested": 270
+            },
+            "attested-dm": {
+              "refused:actor_not_attested": 102
+            },
+            "attested-room": {
+              "refused:actor_not_attested": 102
+            },
+            "attested-variant": {
+              "refused:actor_not_attested": 426
+            },
+            "bare-attest": {
+              "refused:unknown_tool": 78
+            },
+            "left": {
+              "refused:actor_not_attested": 66,
+              "refused:access_member_disabled": 66
+            },
+            "owner-key": {
+              "refused:unknown_tool": 120
+            },
+            "member-key": {
+              "refused:unknown_tool": 102
+            },
+            "unbound-unscoped": {
+              "refused:unknown_tool": 78
+            },
+            "unbound": {
+              "refused:unknown_tool": 78
+            }
+          },
+          "file_url": {
+            "owner-attested": {
+              "refused:actor_not_attested": 45
+            },
+            "attested-dm": {
+              "refused:actor_not_attested": 17
+            },
+            "attested-room": {
+              "refused:actor_not_attested": 17
+            },
+            "attested-variant": {
+              "refused:actor_not_attested": 71
+            },
+            "bare-attest": {
+              "refused:unknown_tool": 13
+            },
+            "left": {
+              "refused:actor_not_attested": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "refused:unknown_tool": 20
+            },
+            "member-key": {
+              "refused:unknown_tool": 17
+            },
+            "unbound-unscoped": {
+              "refused:unknown_tool": 13
+            },
+            "unbound": {
+              "refused:unknown_tool": 13
+            }
+          },
+          "file_verify": {
+            "owner-attested": {
+              "refused:actor_not_attested": 270
+            },
+            "attested-dm": {
+              "refused:actor_not_attested": 102
+            },
+            "attested-room": {
+              "refused:actor_not_attested": 102
+            },
+            "attested-variant": {
+              "refused:actor_not_attested": 426
+            },
+            "bare-attest": {
+              "refused:unknown_tool": 78
+            },
+            "left": {
+              "refused:actor_not_attested": 66,
+              "refused:access_member_disabled": 66
+            },
+            "owner-key": {
+              "refused:unknown_tool": 120
+            },
+            "member-key": {
+              "refused:unknown_tool": 102
+            },
+            "unbound-unscoped": {
+              "refused:unknown_tool": 78
+            },
+            "unbound": {
+              "refused:unknown_tool": 78
+            }
+          },
+          "storage_find": {
+            "owner-attested": {
+              "served": 45
+            },
+            "attested-dm": {
+              "served": 17
+            },
+            "attested-room": {
+              "served": 17
+            },
+            "attested-variant": {
+              "served": 6,
+              "refused:actor_not_attested": 30,
+              "refused:actor_unlinked": 35
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 13
+            },
+            "left": {
+              "refused:actor_unlinked": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "served": 20
+            },
+            "member-key": {
+              "served": 17
+            },
+            "unbound-unscoped": {
+              "served": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 13
+            }
+          },
+          "storage_get": {
+            "owner-attested": {
+              "error:not_found": 90
+            },
+            "attested-dm": {
+              "error:not_found": 29
+            },
+            "attested-room": {
+              "error:not_found": 29
+            },
+            "attested-variant": {
+              "error:not_found": 10,
+              "refused:actor_not_attested": 54,
+              "refused:actor_unlinked": 67
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 25
+            },
+            "left": {
+              "refused:actor_unlinked": 21,
+              "refused:access_member_disabled": 21
+            },
+            "owner-key": {
+              "error:not_found": 40
+            },
+            "member-key": {
+              "error:not_found": 29
+            },
+            "unbound-unscoped": {
+              "error:not_found": 25
+            },
+            "unbound": {
+              "refused:requester_scope_required": 25
+            }
+          },
+          "storage_list": {
+            "owner-attested": {
+              "served": 45
+            },
+            "attested-dm": {
+              "served": 17
+            },
+            "attested-room": {
+              "served": 17
+            },
+            "attested-variant": {
+              "served": 6,
+              "refused:actor_not_attested": 30,
+              "refused:actor_unlinked": 35
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 13
+            },
+            "left": {
+              "refused:actor_unlinked": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "served": 20
+            },
+            "member-key": {
+              "served": 17
+            },
+            "unbound-unscoped": {
+              "served": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 13
+            }
+          },
+          "reveal_secret": {
+            "owner-attested": {
+              "refused:secret_reveal_forbidden": 90
+            },
+            "attested-dm": {
+              "refused:secret_reveal_forbidden": 29
+            },
+            "attested-room": {
+              "refused:secret_reveal_forbidden": 29
+            },
+            "attested-variant": {
+              "refused:secret_reveal_forbidden": 10,
+              "refused:actor_not_attested": 54,
+              "refused:actor_unlinked": 67
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 25
+            },
+            "left": {
+              "refused:actor_unlinked": 21,
+              "refused:access_member_disabled": 21
+            },
+            "owner-key": {
+              "refused:secret_reveal_forbidden": 40
+            },
+            "member-key": {
+              "refused:secret_reveal_forbidden": 29
+            },
+            "unbound-unscoped": {
+              "refused:secret_reveal_forbidden": 25
+            },
+            "unbound": {
+              "refused:requester_scope_required": 25
+            }
+          },
+          "get_job": {
+            "owner-attested": {
+              "refused:actor_not_attested": 90
+            },
+            "attested-dm": {
+              "refused:actor_not_attested": 30
+            },
+            "attested-room": {
+              "refused:actor_not_attested": 30
+            },
+            "attested-variant": {
+              "refused:actor_not_attested": 132
+            },
+            "bare-attest": {
+              "error:not_found": 25
+            },
+            "left": {
+              "refused:actor_not_attested": 21,
+              "refused:access_member_disabled": 21
+            },
+            "owner-key": {
+              "error:not_found": 40
+            },
+            "member-key": {
+              "error:not_found": 30
+            },
+            "unbound-unscoped": {
+              "error:not_found": 25
+            },
+            "unbound": {
+              "error:not_found": 25
+            }
+          },
+          "wait_job": {
+            "owner-attested": {
+              "refused:actor_not_attested": 90
+            },
+            "attested-dm": {
+              "refused:actor_not_attested": 30
+            },
+            "attested-room": {
+              "refused:actor_not_attested": 30
+            },
+            "attested-variant": {
+              "refused:actor_not_attested": 132
+            },
+            "bare-attest": {
+              "error:not_found": 25
+            },
+            "left": {
+              "refused:actor_not_attested": 21,
+              "refused:access_member_disabled": 21
+            },
+            "owner-key": {
+              "error:not_found": 40
+            },
+            "member-key": {
+              "error:not_found": 30
+            },
+            "unbound-unscoped": {
+              "error:not_found": 25
+            },
+            "unbound": {
+              "error:not_found": 25
+            }
+          },
+          "list_jobs": {
+            "owner-attested": {
+              "refused:actor_not_attested": 135
+            },
+            "attested-dm": {
+              "refused:actor_not_attested": 54
+            },
+            "attested-room": {
+              "refused:actor_not_attested": 54
+            },
+            "attested-variant": {
+              "refused:actor_not_attested": 216
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 39
+            },
+            "left": {
+              "refused:actor_not_attested": 33,
+              "refused:access_member_disabled": 33
+            },
+            "owner-key": {
+              "served": 60
+            },
+            "member-key": {
+              "served": 54
+            },
+            "unbound-unscoped": {
+              "served": 39
+            },
+            "unbound": {
+              "refused:requester_scope_required": 39
+            }
+          },
+          "get_job_progress": {
+            "owner-attested": {
+              "refused:actor_not_attested": 90
+            },
+            "attested-dm": {
+              "refused:actor_not_attested": 30
+            },
+            "attested-room": {
+              "refused:actor_not_attested": 30
+            },
+            "attested-variant": {
+              "refused:actor_not_attested": 132
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 25
+            },
+            "left": {
+              "refused:actor_not_attested": 21,
+              "refused:access_member_disabled": 21
+            },
+            "owner-key": {
+              "error:not_found": 40
+            },
+            "member-key": {
+              "error:not_found": 30
+            },
+            "unbound-unscoped": {
+              "error:not_found": 25
+            },
+            "unbound": {
+              "refused:requester_scope_required": 25
+            }
+          },
+          "get_agent_job": {
+            "owner-attested": {
+              "error:not_found": 90
+            },
+            "attested-dm": {
+              "error:not_found": 30
+            },
+            "attested-room": {
+              "error:not_found": 30
+            },
+            "attested-variant": {
+              "error:not_found": 10,
+              "refused:actor_not_attested": 55,
+              "refused:actor_unlinked": 67
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 25
+            },
+            "left": {
+              "refused:actor_unlinked": 21,
+              "refused:access_member_disabled": 21
+            },
+            "owner-key": {
+              "error:not_found": 40
+            },
+            "member-key": {
+              "error:not_found": 30
+            },
+            "unbound-unscoped": {
+              "error:not_found": 25
+            },
+            "unbound": {
+              "refused:requester_scope_required": 25
+            }
+          },
+          "get_job_stats": {
+            "owner-attested": {
+              "refused:actor_not_attested": 45
+            },
+            "attested-dm": {
+              "refused:actor_not_attested": 17
+            },
+            "attested-room": {
+              "refused:actor_not_attested": 17
+            },
+            "attested-variant": {
+              "refused:actor_not_attested": 71
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 13
+            },
+            "left": {
+              "refused:actor_not_attested": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "served": 20
+            },
+            "member-key": {
+              "served": 17
+            },
+            "unbound-unscoped": {
+              "served": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 13
+            }
+          },
+          "list_watches": {
+            "owner-attested": {
+              "refused:actor_not_attested": 45
+            },
+            "attested-dm": {
+              "refused:actor_not_attested": 17
+            },
+            "attested-room": {
+              "refused:actor_not_attested": 17
+            },
+            "attested-variant": {
+              "refused:actor_not_attested": 36,
+              "refused:actor_unlinked": 35
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 13
+            },
+            "left": {
+              "refused:actor_unlinked": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "error:wakeshift_not_enabled": 20
+            },
+            "member-key": {
+              "error:wakeshift_not_enabled": 17
+            },
+            "unbound-unscoped": {
+              "error:wakeshift_not_enabled": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 13
+            }
+          },
+          "find_orphans": {
+            "owner-attested": {
+              "served": 95,
+              "error:not_found": 40
+            },
+            "attested-dm": {
+              "served": 17,
+              "error:not_found": 35
+            },
+            "attested-room": {
+              "served": 52
+            },
+            "attested-variant": {
+              "served": 6,
+              "refused:actor_not_attested": 96,
+              "refused:actor_unlinked": 118,
+              "error:not_found": 12
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 44
+            },
+            "left": {
+              "refused:actor_unlinked": 37,
+              "refused:access_member_disabled": 37
+            },
+            "owner-key": {
+              "served": 40,
+              "error:not_found": 20
+            },
+            "member-key": {
+              "served": 17,
+              "error:not_found": 35
+            },
+            "unbound-unscoped": {
+              "served": 13,
+              "error:not_found": 31
+            },
+            "unbound": {
+              "refused:requester_scope_required": 44
+            }
+          },
+          "rank_entities": {
+            "owner-attested": {
+              "served": 135
+            },
+            "attested-dm": {
+              "served": 34,
+              "error:not_found": 18
+            },
+            "attested-room": {
+              "served": 52
+            },
+            "attested-variant": {
+              "served": 12,
+              "refused:actor_not_attested": 96,
+              "refused:actor_unlinked": 118,
+              "error:not_found": 6
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 44
+            },
+            "left": {
+              "refused:actor_unlinked": 37,
+              "refused:access_member_disabled": 37
+            },
+            "owner-key": {
+              "served": 60
+            },
+            "member-key": {
+              "served": 34,
+              "error:not_found": 18
+            },
+            "unbound-unscoped": {
+              "served": 26,
+              "error:not_found": 18
+            },
+            "unbound": {
+              "refused:requester_scope_required": 44
+            }
+          },
+          "get_calibration_profile": {
+            "owner-attested": {
+              "served": 45
+            },
+            "attested-dm": {
+              "served": 17
+            },
+            "attested-room": {
+              "served": 17
+            },
+            "attested-variant": {
+              "served": 6,
+              "refused:actor_not_attested": 30,
+              "refused:actor_unlinked": 35
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 13
+            },
+            "left": {
+              "refused:actor_unlinked": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "served": 20
+            },
+            "member-key": {
+              "served": 17
+            },
+            "unbound-unscoped": {
+              "served": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 13
+            }
+          },
+          "takes_list": {
+            "owner-attested": {
+              "served": 270
+            },
+            "attested-dm": {
+              "served": 102
+            },
+            "attested-room": {
+              "served": 102
+            },
+            "attested-variant": {
+              "served": 36,
+              "refused:actor_not_attested": 180,
+              "refused:actor_unlinked": 210
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 78
+            },
+            "left": {
+              "refused:actor_unlinked": 66,
+              "refused:access_member_disabled": 66
+            },
+            "owner-key": {
+              "served": 120
+            },
+            "member-key": {
+              "served": 102
+            },
+            "unbound-unscoped": {
+              "served": 78
+            },
+            "unbound": {
+              "refused:requester_scope_required": 78
+            }
+          },
+          "takes_search": {
+            "owner-attested": {
+              "served": 45
+            },
+            "attested-dm": {
+              "served": 17
+            },
+            "attested-room": {
+              "served": 17
+            },
+            "attested-variant": {
+              "served": 6,
+              "refused:actor_not_attested": 30,
+              "refused:actor_unlinked": 35
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 13
+            },
+            "left": {
+              "refused:actor_unlinked": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "served": 20
+            },
+            "member-key": {
+              "served": 17
+            },
+            "unbound-unscoped": {
+              "served": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 13
+            }
+          },
+          "think": {
+            "owner-attested": {
+              "served": 284,
+              "error:invalid_params": 36
+            },
+            "attested-dm": {
+              "served": 120
+            },
+            "attested-room": {
+              "error:invalid_params": 120
+            },
+            "attested-variant": {
+              "served": 42,
+              "refused:actor_not_attested": 210,
+              "refused:actor_unlinked": 246
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 92
+            },
+            "left": {
+              "refused:actor_unlinked": 78,
+              "refused:access_member_disabled": 77
+            },
+            "owner-key": {
+              "served": 143
+            },
+            "member-key": {
+              "served": 120
+            },
+            "unbound-unscoped": {
+              "served": 92
+            },
+            "unbound": {
+              "refused:requester_scope_required": 92
+            }
+          },
+          "takes_scorecard": {
+            "owner-attested": {
+              "served": 45
+            },
+            "attested-dm": {
+              "served": 17
+            },
+            "attested-room": {
+              "served": 17
+            },
+            "attested-variant": {
+              "served": 6,
+              "refused:actor_not_attested": 30,
+              "refused:actor_unlinked": 35
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 13
+            },
+            "left": {
+              "refused:actor_unlinked": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "served": 20
+            },
+            "member-key": {
+              "served": 17
+            },
+            "unbound-unscoped": {
+              "served": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 13
+            }
+          },
+          "takes_calibration": {
+            "owner-attested": {
+              "served": 45
+            },
+            "attested-dm": {
+              "served": 17
+            },
+            "attested-room": {
+              "served": 17
+            },
+            "attested-variant": {
+              "served": 6,
+              "refused:actor_not_attested": 30,
+              "refused:actor_unlinked": 35
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 13
+            },
+            "left": {
+              "refused:actor_unlinked": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "served": 20
+            },
+            "member-key": {
+              "served": 17
+            },
+            "unbound-unscoped": {
+              "served": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 13
+            }
+          },
+          "whoami": {
+            "owner-attested": {
+              "served": 45
+            },
+            "attested-dm": {
+              "served": 17
+            },
+            "attested-room": {
+              "served": 17
+            },
+            "attested-variant": {
+              "served": 6,
+              "refused:actor_not_attested": 30,
+              "refused:actor_unlinked": 35
+            },
+            "bare-attest": {
+              "served": 13
+            },
+            "left": {
+              "refused:actor_unlinked": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "served": 20
+            },
+            "member-key": {
+              "served": 17
+            },
+            "unbound-unscoped": {
+              "served": 13
+            },
+            "unbound": {
+              "served": 13
+            }
+          },
+          "sources_list": {
+            "owner-attested": {
+              "served": 90
+            },
+            "attested-dm": {
+              "served": 34
+            },
+            "attested-room": {
+              "served": 34
+            },
+            "attested-variant": {
+              "served": 12,
+              "refused:actor_not_attested": 60,
+              "refused:actor_unlinked": 70
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 26
+            },
+            "left": {
+              "refused:actor_unlinked": 22,
+              "refused:access_member_disabled": 22
+            },
+            "owner-key": {
+              "served": 40
+            },
+            "member-key": {
+              "served": 34
+            },
+            "unbound-unscoped": {
+              "served": 26
+            },
+            "unbound": {
+              "refused:requester_scope_required": 26
+            }
+          },
+          "sources_status": {
+            "owner-attested": {
+              "error:not_found": 90
+            },
+            "attested-dm": {
+              "error:not_found": 29
+            },
+            "attested-room": {
+              "error:not_found": 29
+            },
+            "attested-variant": {
+              "error:not_found": 10,
+              "refused:actor_not_attested": 54,
+              "refused:actor_unlinked": 67
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 25
+            },
+            "left": {
+              "refused:actor_unlinked": 21,
+              "refused:access_member_disabled": 21
+            },
+            "owner-key": {
+              "error:not_found": 40
+            },
+            "member-key": {
+              "error:not_found": 29
+            },
+            "unbound-unscoped": {
+              "error:not_found": 25
+            },
+            "unbound": {
+              "refused:requester_scope_required": 25
+            }
+          },
+          "sources_inspect": {
+            "owner-attested": {
+              "refused:actor_not_attested": 45
+            },
+            "attested-dm": {
+              "refused:actor_not_attested": 17
+            },
+            "attested-room": {
+              "refused:actor_not_attested": 17
+            },
+            "attested-variant": {
+              "refused:actor_not_attested": 71
+            },
+            "bare-attest": {
+              "refused:unknown_tool": 13
+            },
+            "left": {
+              "refused:actor_not_attested": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "refused:unknown_tool": 20
+            },
+            "member-key": {
+              "refused:unknown_tool": 17
+            },
+            "unbound-unscoped": {
+              "refused:unknown_tool": 13
+            },
+            "unbound": {
+              "refused:unknown_tool": 13
+            }
+          },
+          "sources_resolve_path": {
+            "owner-attested": {
+              "error:not_found": 90
+            },
+            "attested-dm": {
+              "error:not_found": 29
+            },
+            "attested-room": {
+              "error:not_found": 29
+            },
+            "attested-variant": {
+              "error:not_found": 10,
+              "refused:actor_not_attested": 54,
+              "refused:actor_unlinked": 67
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 25
+            },
+            "left": {
+              "refused:actor_unlinked": 21,
+              "refused:access_member_disabled": 21
+            },
+            "owner-key": {
+              "error:not_found": 40
+            },
+            "member-key": {
+              "error:not_found": 29
+            },
+            "unbound-unscoped": {
+              "error:not_found": 25
+            },
+            "unbound": {
+              "refused:requester_scope_required": 25
+            }
+          },
+          "get_recent_salience": {
+            "owner-attested": {
+              "served": 45
+            },
+            "attested-dm": {
+              "served": 17
+            },
+            "attested-room": {
+              "served": 17
+            },
+            "attested-variant": {
+              "served": 6,
+              "refused:actor_not_attested": 30,
+              "refused:actor_unlinked": 35
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 13
+            },
+            "left": {
+              "refused:actor_unlinked": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "served": 20
+            },
+            "member-key": {
+              "served": 17
+            },
+            "unbound-unscoped": {
+              "served": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 13
+            }
+          },
+          "find_anomalies": {
+            "owner-attested": {
+              "served": 45
+            },
+            "attested-dm": {
+              "served": 17
+            },
+            "attested-room": {
+              "served": 17
+            },
+            "attested-variant": {
+              "served": 6,
+              "refused:actor_not_attested": 30,
+              "refused:actor_unlinked": 35
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 13
+            },
+            "left": {
+              "refused:actor_unlinked": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "served": 20
+            },
+            "member-key": {
+              "served": 17
+            },
+            "unbound-unscoped": {
+              "served": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 13
+            }
+          },
+          "get_recent_transcripts": {
+            "owner-attested": {
+              "refused:actor_not_attested": 45
+            },
+            "attested-dm": {
+              "refused:actor_not_attested": 17
+            },
+            "attested-room": {
+              "refused:actor_not_attested": 17
+            },
+            "attested-variant": {
+              "refused:actor_not_attested": 71
+            },
+            "bare-attest": {
+              "refused:unknown_tool": 13
+            },
+            "left": {
+              "refused:actor_not_attested": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "refused:unknown_tool": 20
+            },
+            "member-key": {
+              "refused:unknown_tool": 17
+            },
+            "unbound-unscoped": {
+              "refused:unknown_tool": 13
+            },
+            "unbound": {
+              "refused:unknown_tool": 13
+            }
+          },
+          "connectors_status": {
+            "owner-attested": {
+              "refused:actor_not_attested": 45
+            },
+            "attested-dm": {
+              "refused:actor_not_attested": 17
+            },
+            "attested-room": {
+              "refused:actor_not_attested": 17
+            },
+            "attested-variant": {
+              "refused:actor_not_attested": 71
+            },
+            "bare-attest": {
+              "refused:unknown_tool": 13
+            },
+            "left": {
+              "refused:actor_not_attested": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "refused:unknown_tool": 20
+            },
+            "member-key": {
+              "refused:unknown_tool": 17
+            },
+            "unbound-unscoped": {
+              "refused:unknown_tool": 13
+            },
+            "unbound": {
+              "refused:unknown_tool": 13
+            }
+          },
+          "chronicle_day": {
+            "owner-attested": {
+              "error:internal_error": 45
+            },
+            "attested-dm": {
+              "error:internal_error": 17
+            },
+            "attested-room": {
+              "error:internal_error": 17
+            },
+            "attested-variant": {
+              "error:internal_error": 6,
+              "refused:actor_not_attested": 30,
+              "refused:actor_unlinked": 35
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 13
+            },
+            "left": {
+              "refused:actor_unlinked": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "error:internal_error": 20
+            },
+            "member-key": {
+              "error:internal_error": 17
+            },
+            "unbound-unscoped": {
+              "error:internal_error": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 13
+            }
+          },
+          "chronicle_on_this_day": {
+            "owner-attested": {
+              "served": 45
+            },
+            "attested-dm": {
+              "served": 17
+            },
+            "attested-room": {
+              "served": 17
+            },
+            "attested-variant": {
+              "served": 6,
+              "refused:actor_not_attested": 30,
+              "refused:actor_unlinked": 35
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 13
+            },
+            "left": {
+              "refused:actor_unlinked": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "served": 20
+            },
+            "member-key": {
+              "served": 17
+            },
+            "unbound-unscoped": {
+              "served": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 13
+            }
+          },
+          "chronicle_since": {
+            "owner-attested": {
+              "error:internal_error": 45
+            },
+            "attested-dm": {
+              "error:internal_error": 17
+            },
+            "attested-room": {
+              "error:internal_error": 17
+            },
+            "attested-variant": {
+              "error:internal_error": 6,
+              "refused:actor_not_attested": 30,
+              "refused:actor_unlinked": 35
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 13
+            },
+            "left": {
+              "refused:actor_unlinked": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "error:internal_error": 20
+            },
+            "member-key": {
+              "error:internal_error": 17
+            },
+            "unbound-unscoped": {
+              "error:internal_error": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 13
+            }
+          },
+          "chronicle_last_seen": {
+            "owner-attested": {
+              "served": 135
+            },
+            "attested-dm": {
+              "served": 51
+            },
+            "attested-room": {
+              "served": 51
+            },
+            "attested-variant": {
+              "served": 18,
+              "refused:actor_not_attested": 90,
+              "refused:actor_unlinked": 105
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 39
+            },
+            "left": {
+              "refused:actor_unlinked": 33,
+              "refused:access_member_disabled": 33
+            },
+            "owner-key": {
+              "served": 60
+            },
+            "member-key": {
+              "served": 51
+            },
+            "unbound-unscoped": {
+              "served": 39
+            },
+            "unbound": {
+              "refused:requester_scope_required": 39
+            }
+          },
+          "ontology_get": {
+            "owner-attested": {
+              "served": 270
+            },
+            "attested-dm": {
+              "served": 102
+            },
+            "attested-room": {
+              "served": 102
+            },
+            "attested-variant": {
+              "served": 36,
+              "refused:actor_not_attested": 180,
+              "refused:actor_unlinked": 210
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 78
+            },
+            "left": {
+              "refused:actor_unlinked": 66,
+              "refused:access_member_disabled": 66
+            },
+            "owner-key": {
+              "served": 120
+            },
+            "member-key": {
+              "served": 102
+            },
+            "unbound-unscoped": {
+              "served": 78
+            },
+            "unbound": {
+              "refused:requester_scope_required": 78
+            }
+          },
+          "ontology_dimensions": {
+            "owner-attested": {
+              "served": 45
+            },
+            "attested-dm": {
+              "served": 17
+            },
+            "attested-room": {
+              "served": 17
+            },
+            "attested-variant": {
+              "served": 6,
+              "refused:actor_not_attested": 30,
+              "refused:actor_unlinked": 35
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 13
+            },
+            "left": {
+              "refused:actor_unlinked": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "served": 20
+            },
+            "member-key": {
+              "served": 17
+            },
+            "unbound-unscoped": {
+              "served": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 13
+            }
+          },
+          "ontology_conflicts": {
+            "owner-attested": {
+              "served": 45
+            },
+            "attested-dm": {
+              "served": 18
+            },
+            "attested-room": {
+              "served": 18
+            },
+            "attested-variant": {
+              "served": 6,
+              "refused:actor_not_attested": 31,
+              "refused:actor_unlinked": 35
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 13
+            },
+            "left": {
+              "refused:actor_unlinked": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "served": 20
+            },
+            "member-key": {
+              "served": 18
+            },
+            "unbound-unscoped": {
+              "served": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 13
+            }
+          },
+          "volunteer_chronicle": {
+            "owner-attested": {
+              "served": 135
+            },
+            "attested-dm": {
+              "served": 54
+            },
+            "attested-room": {
+              "served": 54
+            },
+            "attested-variant": {
+              "served": 18,
+              "refused:actor_not_attested": 93,
+              "refused:actor_unlinked": 105
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 39
+            },
+            "left": {
+              "refused:actor_unlinked": 33,
+              "refused:access_member_disabled": 33
+            },
+            "owner-key": {
+              "served": 60
+            },
+            "member-key": {
+              "served": 54
+            },
+            "unbound-unscoped": {
+              "served": 39
+            },
+            "unbound": {
+              "refused:requester_scope_required": 39
+            }
+          },
+          "volunteer_context": {
+            "owner-attested": {
+              "served": 40,
+              "error:invalid_params": 5
+            },
+            "attested-dm": {
+              "served": 19
+            },
+            "attested-room": {
+              "error:invalid_params": 19
+            },
+            "attested-variant": {
+              "served": 6,
+              "refused:actor_not_attested": 31,
+              "refused:actor_unlinked": 36
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 14
+            },
+            "left": {
+              "refused:actor_unlinked": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "served": 20
+            },
+            "member-key": {
+              "served": 19
+            },
+            "unbound-unscoped": {
+              "served": 14
+            },
+            "unbound": {
+              "refused:requester_scope_required": 14
+            }
+          },
+          "extraction_pending": {
+            "owner-attested": {
+              "served": 45
+            },
+            "attested-dm": {
+              "served": 18
+            },
+            "attested-room": {
+              "served": 18
+            },
+            "attested-variant": {
+              "served": 6,
+              "refused:actor_not_attested": 31,
+              "refused:actor_unlinked": 35
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 13
+            },
+            "left": {
+              "refused:actor_unlinked": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "served": 20
+            },
+            "member-key": {
+              "served": 18
+            },
+            "unbound-unscoped": {
+              "served": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 13
+            }
+          },
+          "entity_identity_list": {
+            "owner-attested": {
+              "served": 270
+            },
+            "attested-dm": {
+              "served": 108
+            },
+            "attested-room": {
+              "served": 108
+            },
+            "attested-variant": {
+              "served": 36,
+              "refused:actor_not_attested": 186,
+              "refused:actor_unlinked": 210
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 78
+            },
+            "left": {
+              "refused:actor_unlinked": 66,
+              "refused:access_member_disabled": 66
+            },
+            "owner-key": {
+              "served": 120
+            },
+            "member-key": {
+              "served": 108
+            },
+            "unbound-unscoped": {
+              "served": 78
+            },
+            "unbound": {
+              "refused:requester_scope_required": 78
+            }
+          },
+          "recall": {
+            "owner-attested": {
+              "served": 695,
+              "error:invalid_params": 120
+            },
+            "attested-dm": {
+              "served": 205,
+              "refused:scope_denied": 54,
+              "error:invalid_params": 51
+            },
+            "attested-room": {
+              "served": 310
+            },
+            "attested-variant": {
+              "served": 73,
+              "refused:actor_not_attested": 558,
+              "refused:actor_unlinked": 669,
+              "refused:scope_denied": 18,
+              "error:invalid_params": 18
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 250
+            },
+            "left": {
+              "refused:actor_unlinked": 211,
+              "refused:access_member_disabled": 210
+            },
+            "owner-key": {
+              "served": 303,
+              "error:invalid_params": 60
+            },
+            "member-key": {
+              "served": 205,
+              "refused:scope_denied": 54,
+              "error:invalid_params": 51
+            },
+            "unbound-unscoped": {
+              "served": 157,
+              "refused:scope_denied": 54,
+              "error:invalid_params": 39
+            },
+            "unbound": {
+              "refused:requester_scope_required": 250
+            }
+          },
+          "context_pack": {
+            "owner-attested": {
+              "served": 484,
+              "refused:invalid_params": 76,
+              "error:invalid_params": 120
+            },
+            "attested-dm": {
+              "served": 154,
+              "refused:scope_denied": 54,
+              "error:invalid_params": 51
+            },
+            "attested-room": {
+              "refused:invalid_params": 259
+            },
+            "attested-variant": {
+              "served": 55,
+              "refused:actor_not_attested": 468,
+              "refused:actor_unlinked": 564,
+              "refused:scope_denied": 18,
+              "error:invalid_params": 18
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 211
+            },
+            "left": {
+              "refused:actor_unlinked": 178,
+              "refused:access_member_disabled": 177
+            },
+            "owner-key": {
+              "served": 243,
+              "error:invalid_params": 60
+            },
+            "member-key": {
+              "served": 154,
+              "refused:scope_denied": 54,
+              "error:invalid_params": 51
+            },
+            "unbound-unscoped": {
+              "served": 118,
+              "refused:scope_denied": 54,
+              "error:invalid_params": 39
+            },
+            "unbound": {
+              "refused:requester_scope_required": 211
+            }
+          },
+          "delta": {
+            "owner-attested": {
+              "served": 635
+            },
+            "attested-dm": {
+              "served": 239
+            },
+            "attested-room": {
+              "served": 239
+            },
+            "attested-variant": {
+              "served": 84,
+              "refused:actor_not_attested": 420,
+              "refused:actor_unlinked": 491
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 183
+            },
+            "left": {
+              "refused:actor_unlinked": 155,
+              "refused:access_member_disabled": 154
+            },
+            "owner-key": {
+              "served": 283
+            },
+            "member-key": {
+              "served": 239
+            },
+            "unbound-unscoped": {
+              "served": 183
+            },
+            "unbound": {
+              "refused:requester_scope_required": 183
+            }
+          },
+          "list_page_purges": {
+            "owner-attested": {
+              "refused:actor_not_attested": 135
+            },
+            "attested-dm": {
+              "refused:actor_not_attested": 52
+            },
+            "attested-room": {
+              "refused:actor_not_attested": 52
+            },
+            "attested-variant": {
+              "refused:actor_not_attested": 232
+            },
+            "bare-attest": {
+              "refused:trusted_local_only": 44
+            },
+            "left": {
+              "refused:actor_not_attested": 37,
+              "refused:access_member_disabled": 37
+            },
+            "owner-key": {
+              "refused:trusted_local_only": 60
+            },
+            "member-key": {
+              "refused:trusted_local_only": 52
+            },
+            "unbound-unscoped": {
+              "refused:trusted_local_only": 44
+            },
+            "unbound": {
+              "refused:trusted_local_only": 44
+            }
+          },
+          "memory_recall": {
+            "owner-attested": {
+              "served": 100,
+              "error:invalid_params": 40
+            },
+            "attested-dm": {
+              "served": 18,
+              "refused:permission_denied": 18,
+              "error:invalid_params": 17
+            },
+            "attested-room": {
+              "served": 53
+            },
+            "attested-variant": {
+              "served": 125,
+              "refused:actor_not_attested": 96,
+              "refused:permission_denied": 6,
+              "error:invalid_params": 6
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 45
+            },
+            "left": {
+              "served": 38,
+              "refused:access_member_disabled": 37
+            },
+            "owner-key": {
+              "served": 43,
+              "error:invalid_params": 20
+            },
+            "member-key": {
+              "served": 18,
+              "refused:permission_denied": 18,
+              "error:invalid_params": 17
+            },
+            "unbound-unscoped": {
+              "served": 14,
+              "refused:permission_denied": 18,
+              "error:invalid_params": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 45
+            }
+          },
+          "get_memory_settings": {
+            "owner-attested": {
+              "served": 45
+            },
+            "attested-dm": {
+              "served": 17
+            },
+            "attested-room": {
+              "served": 17
+            },
+            "attested-variant": {
+              "served": 6,
+              "refused:actor_not_attested": 30,
+              "refused:actor_unlinked": 35
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 13
+            },
+            "left": {
+              "refused:actor_unlinked": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "served": 20
+            },
+            "member-key": {
+              "served": 17
+            },
+            "unbound-unscoped": {
+              "served": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 13
+            }
+          },
+          "find_contradictions": {
+            "owner-attested": {
+              "served": 270
+            },
+            "attested-dm": {
+              "served": 102
+            },
+            "attested-room": {
+              "served": 102
+            },
+            "attested-variant": {
+              "served": 36,
+              "refused:actor_not_attested": 180,
+              "refused:actor_unlinked": 210
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 78
+            },
+            "left": {
+              "refused:actor_unlinked": 66,
+              "refused:access_member_disabled": 66
+            },
+            "owner-key": {
+              "served": 120
+            },
+            "member-key": {
+              "served": 102
+            },
+            "unbound-unscoped": {
+              "served": 78
+            },
+            "unbound": {
+              "refused:requester_scope_required": 78
+            }
+          },
+          "find_experts": {
+            "owner-attested": {
+              "served": 40,
+              "error:invalid_params": 5
+            },
+            "attested-dm": {
+              "served": 17
+            },
+            "attested-room": {
+              "error:invalid_params": 17
+            },
+            "attested-variant": {
+              "served": 6,
+              "refused:actor_not_attested": 30,
+              "refused:actor_unlinked": 35
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 13
+            },
+            "left": {
+              "refused:actor_unlinked": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "served": 20
+            },
+            "member-key": {
+              "served": 17
+            },
+            "unbound-unscoped": {
+              "served": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 13
+            }
+          },
+          "find_trajectory": {
+            "owner-attested": {
+              "served": 270
+            },
+            "attested-dm": {
+              "served": 102
+            },
+            "attested-room": {
+              "served": 102
+            },
+            "attested-variant": {
+              "served": 36,
+              "refused:actor_not_attested": 180,
+              "refused:actor_unlinked": 210
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 78
+            },
+            "left": {
+              "refused:actor_unlinked": 66,
+              "refused:access_member_disabled": 66
+            },
+            "owner-key": {
+              "served": 120
+            },
+            "member-key": {
+              "served": 102
+            },
+            "unbound-unscoped": {
+              "served": 78
+            },
+            "unbound": {
+              "refused:requester_scope_required": 78
+            }
+          },
+          "code_callers": {
+            "owner-attested": {
+              "refused:permission_denied": 540
+            },
+            "attested-dm": {
+              "refused:permission_denied": 207
+            },
+            "attested-room": {
+              "refused:permission_denied": 207
+            },
+            "attested-variant": {
+              "refused:permission_denied": 72,
+              "refused:actor_not_attested": 378,
+              "refused:actor_unlinked": 459
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 171
+            },
+            "left": {
+              "refused:actor_unlinked": 144,
+              "refused:access_member_disabled": 144
+            },
+            "owner-key": {
+              "refused:permission_denied": 240
+            },
+            "member-key": {
+              "refused:permission_denied": 207
+            },
+            "unbound-unscoped": {
+              "refused:permission_denied": 171
+            },
+            "unbound": {
+              "refused:requester_scope_required": 171
+            }
+          },
+          "code_callees": {
+            "owner-attested": {
+              "refused:permission_denied": 540
+            },
+            "attested-dm": {
+              "refused:permission_denied": 207
+            },
+            "attested-room": {
+              "refused:permission_denied": 207
+            },
+            "attested-variant": {
+              "refused:permission_denied": 72,
+              "refused:actor_not_attested": 378,
+              "refused:actor_unlinked": 459
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 171
+            },
+            "left": {
+              "refused:actor_unlinked": 144,
+              "refused:access_member_disabled": 144
+            },
+            "owner-key": {
+              "refused:permission_denied": 240
+            },
+            "member-key": {
+              "refused:permission_denied": 207
+            },
+            "unbound-unscoped": {
+              "refused:permission_denied": 171
+            },
+            "unbound": {
+              "refused:requester_scope_required": 171
+            }
+          },
+          "code_def": {
+            "owner-attested": {
+              "refused:permission_denied": 135
+            },
+            "attested-dm": {
+              "refused:permission_denied": 51
+            },
+            "attested-room": {
+              "refused:permission_denied": 51
+            },
+            "attested-variant": {
+              "refused:permission_denied": 18,
+              "refused:actor_not_attested": 90,
+              "refused:actor_unlinked": 105
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 39
+            },
+            "left": {
+              "refused:actor_unlinked": 33,
+              "refused:access_member_disabled": 33
+            },
+            "owner-key": {
+              "refused:permission_denied": 60
+            },
+            "member-key": {
+              "refused:permission_denied": 51
+            },
+            "unbound-unscoped": {
+              "refused:permission_denied": 39
+            },
+            "unbound": {
+              "refused:requester_scope_required": 39
+            }
+          },
+          "code_refs": {
+            "owner-attested": {
+              "refused:permission_denied": 135
+            },
+            "attested-dm": {
+              "refused:permission_denied": 51
+            },
+            "attested-room": {
+              "refused:permission_denied": 51
+            },
+            "attested-variant": {
+              "refused:permission_denied": 18,
+              "refused:actor_not_attested": 90,
+              "refused:actor_unlinked": 105
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 39
+            },
+            "left": {
+              "refused:actor_unlinked": 33,
+              "refused:access_member_disabled": 33
+            },
+            "owner-key": {
+              "refused:permission_denied": 60
+            },
+            "member-key": {
+              "refused:permission_denied": 51
+            },
+            "unbound-unscoped": {
+              "refused:permission_denied": 39
+            },
+            "unbound": {
+              "refused:requester_scope_required": 39
+            }
+          },
+          "code_blast": {
+            "owner-attested": {
+              "refused:permission_denied": 405
+            },
+            "attested-dm": {
+              "refused:permission_denied": 156
+            },
+            "attested-room": {
+              "refused:permission_denied": 156
+            },
+            "attested-variant": {
+              "refused:permission_denied": 54,
+              "refused:actor_not_attested": 288,
+              "refused:actor_unlinked": 354
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 132
+            },
+            "left": {
+              "refused:actor_unlinked": 111,
+              "refused:access_member_disabled": 111
+            },
+            "owner-key": {
+              "refused:permission_denied": 180
+            },
+            "member-key": {
+              "refused:permission_denied": 156
+            },
+            "unbound-unscoped": {
+              "refused:permission_denied": 132
+            },
+            "unbound": {
+              "refused:requester_scope_required": 132
+            }
+          },
+          "code_flow": {
+            "owner-attested": {
+              "refused:permission_denied": 405
+            },
+            "attested-dm": {
+              "refused:permission_denied": 156
+            },
+            "attested-room": {
+              "refused:permission_denied": 156
+            },
+            "attested-variant": {
+              "refused:permission_denied": 54,
+              "refused:actor_not_attested": 288,
+              "refused:actor_unlinked": 354
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 132
+            },
+            "left": {
+              "refused:actor_unlinked": 111,
+              "refused:access_member_disabled": 111
+            },
+            "owner-key": {
+              "refused:permission_denied": 180
+            },
+            "member-key": {
+              "refused:permission_denied": 156
+            },
+            "unbound-unscoped": {
+              "refused:permission_denied": 132
+            },
+            "unbound": {
+              "refused:requester_scope_required": 132
+            }
+          },
+          "get_active_schema_pack": {
+            "owner-attested": {
+              "served": 45
+            },
+            "attested-dm": {
+              "served": 17
+            },
+            "attested-room": {
+              "served": 17
+            },
+            "attested-variant": {
+              "served": 6,
+              "refused:actor_not_attested": 30,
+              "refused:actor_unlinked": 35
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 13
+            },
+            "left": {
+              "refused:actor_unlinked": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "served": 20
+            },
+            "member-key": {
+              "served": 17
+            },
+            "unbound-unscoped": {
+              "served": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 13
+            }
+          },
+          "list_schema_packs": {
+            "owner-attested": {
+              "served": 45
+            },
+            "attested-dm": {
+              "served": 17
+            },
+            "attested-room": {
+              "served": 17
+            },
+            "attested-variant": {
+              "served": 6,
+              "refused:actor_not_attested": 30,
+              "refused:actor_unlinked": 35
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 13
+            },
+            "left": {
+              "refused:actor_unlinked": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "served": 20
+            },
+            "member-key": {
+              "served": 17
+            },
+            "unbound-unscoped": {
+              "served": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 13
+            }
+          },
+          "schema_stats": {
+            "owner-attested": {
+              "served": 45
+            },
+            "attested-dm": {
+              "served": 17
+            },
+            "attested-room": {
+              "served": 17
+            },
+            "attested-variant": {
+              "served": 6,
+              "refused:actor_not_attested": 30,
+              "refused:actor_unlinked": 35
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 13
+            },
+            "left": {
+              "refused:actor_unlinked": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "served": 20
+            },
+            "member-key": {
+              "served": 17
+            },
+            "unbound-unscoped": {
+              "served": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 13
+            }
+          },
+          "schema_lint": {
+            "owner-attested": {
+              "served": 45
+            },
+            "attested-dm": {
+              "served": 17
+            },
+            "attested-room": {
+              "served": 17
+            },
+            "attested-variant": {
+              "served": 6,
+              "refused:actor_not_attested": 30,
+              "refused:actor_unlinked": 35
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 13
+            },
+            "left": {
+              "refused:actor_unlinked": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "served": 20
+            },
+            "member-key": {
+              "served": 17
+            },
+            "unbound-unscoped": {
+              "served": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 13
+            }
+          },
+          "schema_graph": {
+            "owner-attested": {
+              "served": 45
+            },
+            "attested-dm": {
+              "served": 17
+            },
+            "attested-room": {
+              "served": 17
+            },
+            "attested-variant": {
+              "served": 6,
+              "refused:actor_not_attested": 30,
+              "refused:actor_unlinked": 35
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 13
+            },
+            "left": {
+              "refused:actor_unlinked": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "served": 20
+            },
+            "member-key": {
+              "served": 17
+            },
+            "unbound-unscoped": {
+              "served": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 13
+            }
+          },
+          "schema_explain_type": {
+            "owner-attested": {
+              "served": 45
+            },
+            "attested-dm": {
+              "served": 17
+            },
+            "attested-room": {
+              "served": 17
+            },
+            "attested-variant": {
+              "served": 6,
+              "refused:actor_not_attested": 30,
+              "refused:actor_unlinked": 35
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 13
+            },
+            "left": {
+              "refused:actor_unlinked": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "served": 20
+            },
+            "member-key": {
+              "served": 17
+            },
+            "unbound-unscoped": {
+              "served": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 13
+            }
+          },
+          "schema_review_orphans": {
+            "owner-attested": {
+              "served": 45
+            },
+            "attested-dm": {
+              "served": 17
+            },
+            "attested-room": {
+              "served": 17
+            },
+            "attested-variant": {
+              "served": 6,
+              "refused:actor_not_attested": 30,
+              "refused:actor_unlinked": 35
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 13
+            },
+            "left": {
+              "refused:actor_unlinked": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "served": 20
+            },
+            "member-key": {
+              "served": 17
+            },
+            "unbound-unscoped": {
+              "served": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 13
+            }
+          },
+          "reload_schema_pack": {
+            "owner-attested": {
+              "refused:actor_not_attested": 45
+            },
+            "attested-dm": {
+              "refused:actor_not_attested": 17
+            },
+            "attested-room": {
+              "refused:actor_not_attested": 17
+            },
+            "attested-variant": {
+              "refused:actor_not_attested": 71
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 13
+            },
+            "left": {
+              "refused:actor_not_attested": 11,
+              "refused:access_member_disabled": 11
+            },
+            "owner-key": {
+              "served": 20
+            },
+            "member-key": {
+              "served": 17
+            },
+            "unbound-unscoped": {
+              "served": 13
+            },
+            "unbound": {
+              "refused:requester_scope_required": 13
+            }
+          },
+          "open_loops": {
+            "owner-attested": {
+              "served": 370,
+              "refused:permission_denied": 80
+            },
+            "attested-dm": {
+              "served": 87,
+              "refused:permission_denied": 59
+            },
+            "attested-room": {
+              "served": 146
+            },
+            "attested-variant": {
+              "served": 30,
+              "refused:actor_not_attested": 276,
+              "refused:actor_unlinked": 348,
+              "refused:permission_denied": 20
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 130
+            },
+            "left": {
+              "refused:actor_unlinked": 109,
+              "refused:access_member_disabled": 109
+            },
+            "owner-key": {
+              "served": 160,
+              "refused:permission_denied": 40
+            },
+            "member-key": {
+              "served": 87,
+              "refused:permission_denied": 59
+            },
+            "unbound-unscoped": {
+              "served": 75,
+              "refused:permission_denied": 55
+            },
+            "unbound": {
+              "refused:requester_scope_required": 130
+            }
+          },
+          "questions_list": {
+            "owner-attested": {
+              "error:question_owner_only": 80,
+              "error:invalid_params": 10
+            },
+            "attested-dm": {
+              "error:question_owner_only": 34
+            },
+            "attested-room": {
+              "error:invalid_params": 34
+            },
+            "attested-variant": {
+              "error:question_owner_only": 12,
+              "refused:actor_not_attested": 60,
+              "refused:actor_unlinked": 70
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 26
+            },
+            "left": {
+              "refused:actor_unlinked": 22,
+              "refused:access_member_disabled": 22
+            },
+            "owner-key": {
+              "error:question_owner_only": 40
+            },
+            "member-key": {
+              "error:question_owner_only": 34
+            },
+            "unbound-unscoped": {
+              "error:question_owner_only": 26
+            },
+            "unbound": {
+              "refused:requester_scope_required": 26
+            }
+          },
+          "questions_status": {
+            "owner-attested": {
+              "error:question_owner_only": 90
+            },
+            "attested-dm": {
+              "error:question_owner_only": 30
+            },
+            "attested-room": {
+              "error:question_owner_only": 30
+            },
+            "attested-variant": {
+              "error:question_owner_only": 10,
+              "refused:actor_not_attested": 55,
+              "refused:actor_unlinked": 67
+            },
+            "bare-attest": {
+              "refused:requester_scope_required": 25
+            },
+            "left": {
+              "refused:actor_unlinked": 21,
+              "refused:access_member_disabled": 21
+            },
+            "owner-key": {
+              "error:question_owner_only": 40
+            },
+            "member-key": {
+              "error:question_owner_only": 30
+            },
+            "unbound-unscoped": {
+              "error:question_owner_only": 25
+            },
+            "unbound": {
+              "refused:requester_scope_required": 25
+            }
+          },
+          "memory_write": {
+            "attested-dm": {
+              "served": 12
+            },
+            "member-key": {
+              "refused:actor_not_attested": 12
+            }
+          },
+          "forget_fact": {
+            "attested-dm": {
+              "error:fact_not_found": 24
+            },
+            "member-key": {
+              "error:fact_not_found": 24
+            }
+          },
+          "forget": {
+            "attested-dm": {
+              "error:not_found": 24
+            },
+            "member-key": {
+              "error:not_found": 24
+            }
+          },
+          "cancel_write_request": {
+            "attested-dm": {
+              "error:not_found": 48
+            },
+            "member-key": {
+              "error:not_found": 48
+            }
+          },
+          "memory_propose": {
+            "attested-dm": {
+              "error:page_not_found": 24,
+              "refused:permission_denied": 12
+            },
+            "member-key": {
+              "refused:actor_not_attested": 36
+            }
+          }
+        }
+      }
+    ]
+  },
+  "latency_ms": null
+}

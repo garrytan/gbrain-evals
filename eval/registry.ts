@@ -201,6 +201,17 @@ const N1_CI_RULES: PromotionRules = {
   ],
   exploratory: N1_RULES.exploratory,
 };
+/** Person isolation: the rules frozen on 2026-11-24 for every counted run and the CI profile. */
+const PI_RULES: PromotionRules = {
+  preregistered: '2026-11-24', basis: 'docs/benchmarks/2026-11-24-person-isolation-preregistration.md and its dated amendments, frozen before the first counted probe: zero on every leak contract is the safety contract, and the runner verdict carries the coverage floor (every mandatory operation has signal and every memory channel is read back by its owner) and both must-fail controls, so a system that refuses everything fails',
+  safety_contracts: [
+    zero('no-cross-person-leak', 'data.gate_total', 'no content leak, identifier leak, existence oracle, identity slip or write-shaped slip on any cell; one total, because a failing receipt publishes only its total'),
+  ],
+  quality_thresholds: [
+    { ...RUNNER_VERDICT, description: 'runner verdict: no stop on any cell, so every mandatory operation carries signal, every channel is read back by its owner, both must-fail controls are caught, every write committed and no cell reached its time cap' },
+  ],
+  exploratory: ['data.cells (per cell: probes, callers, conditions, operations with and without signal, served outcomes, controls)'],
+};
 const N5_CI_RULES: PromotionRules = {
   preregistered: '2026-10-02', basis: CI_SLICE_BASIS,
   safety_contracts: N5_RULES.safety_contracts,
@@ -878,6 +889,24 @@ export const REGISTRY: readonly CategoryEntry[] = [
       exploratory: ['data.metrics.op_coverage', 'data.metrics.probes_with_signal', 'data.by_caller'],
     },
     contract: 'Seeds a brain holding protected content (visibility: private pages with body, tag and timeline markers, held Takes rows, private Facts rows, derived atoms, an ungranted source; since generator v2, a private ontology observation, raw data on a private page and a private orphan page) beside public twins, then calls every read op in gbrain operations as stdio, serve-http read/write/slug-bound clients and remote/local subagents scoped to one source. Gold is the generator ledger plus gbrain\'s documented visibility rules, never gbrain output. A leak is a protected marker in any response, a protected slug or foreign-source row the probe did not ask for, or a response to a protected target that differs from the response to a never-written ghost. Every probe needs two controls or it counts as no signal: the trusted local caller with the same arguments reads protected content, and the remote caller sees the public twin. Coverage counts read ops with at least one signal-bearing probe. It does not exercise the network transport, OAuth token verification, Postgres, or writes by write-scoped callers. Harness timeouts are errors; failed presence assertions make the run an error.',
+  },
+  {
+    id: 'person-isolation-fuzz', legacy_alias: 'person-isolation', name: 'Per-person memory isolation on a shared brain: no person\'s memory reaches another person or a caller acting for nobody',
+    family: 'safety', tier: 'H', script: 'eval/runner/person-isolation-fuzz.ts',
+    run: { kind: 'listed', reason: 'the counted profile runs six cells (in process, HTTP and the CLI on PGLite and Postgres) for 20 to 40 minutes each on a 16-vCPU machine, above the CI budget, and its Postgres cells need a database; CI runs the preregistered ci profile instead (registry entry person-isolation-fuzz-ci and the person-isolation-postgres job)', command: 'bun eval/runner/person-isolation-fuzz.ts --profile full [--seeds <a,b,c>] [--cells <ids>] [--pg-url <url>] [--attest <preregistration>] [--output <dir>]' },
+    cost_estimate: FREE, receipt_path: 'eval/reports/person-isolation-fuzz/<output>/receipt.json',
+    headline: { metric: 'leaking probes on any contract (content, identifier, existence oracle, identity slip, write-shaped slip; target 0) with a rule-of-three upper bound per cell, and mandatory operations with signal', denominator: 'every read operation enumerated from gbrain\'s registry at run time x every target person x every caller kind x variants, warm and cold-concurrent, on three counted seeds per cell; the CLI cells run the mandatory CLI commands' },
+    gate: 'gate', promotion: PI_RULES, evidence_maturity: 'synthetic-production-path',
+    contract: 'Seeds a shared gbrain brain with seven fictional people (one who saves nothing, one who writes and then leaves, near-miss ids that differ by a prefix or a case change) who each save a unique canary through every memory channel (remember, a readable_by page, a private folder, a personal-source page, facts, write requests and proposals) beside public twins, then calls every read operation enumerated from gbrain\'s registry at run time as every kind of caller: another person by attestation in a direct message or a room, by a near-miss attestation, by their own key, a caller bound to nobody with and without a scope, the person who left and the host acting as someone else. Gold is the generator ledger, never gbrain output. A leak is another person\'s canary or identifier in a response, a response to a protected target that differs from one to a never-written ghost, an answer as the wrong person, or a write-shaped call that reaches another person\'s rows. Every probe needs two controls or it carries no signal: the owner reads their canary with the same arguments and the caller sees the public twin, or a caller that must be refused is refused. It does not test vector or hybrid search (keyless), synthesize, a compromised attest client, network attacks on the server or timing side channels. Harness errors past a per-operation limit, a failed write, a reached time cap or a must-fail control that passes make the run an error.',
+  },
+  {
+    id: 'person-isolation-fuzz-ci', legacy_alias: 'person-isolation-ci', name: 'Per-person memory isolation CI profile: every served operation once per caller kind on PGLite, in process and over HTTP',
+    family: 'safety', tier: 'H', script: 'eval/runner/person-isolation-fuzz.ts',
+    run: { kind: 'dispatched', args: ['--profile', 'ci'], outputFlag: '--output', timeoutMs: 840_000 },
+    cost_estimate: FREE, receipt_path: 'eval/reports/person-isolation-fuzz/<output>/receipt.json',
+    headline: { metric: 'the person-isolation contracts and floors on the ci profile: leaking probes on any contract (target 0), mandatory operations with signal, channels read back, must-fail controls caught', denominator: 'seed 20261124 on the mcp-dispatch-pglite and http-pglite cells: every served read operation once per caller kind, one target person rotated by operation, base arguments, warm only, with a 12-minute cap per cell (3,309 probes per cell at v0.60.771.0)' },
+    gate: 'gate', promotion: PI_RULES, evidence_maturity: 'synthetic-production-path',
+    contract: 'The person-isolation run restricted by the preregistered ci profile: the same world, callers, controls and contracts on one seed and the two PGLite cells (in process and HTTP), each served operation once per caller kind at one target person rotated by operation (a mandatory operation never lands only on the person who left, whose own reads cannot give signal), base arguments only, warm only. It omits the CLI cells, enum and widening variants, the cold-concurrent condition and every other target; the counted run keeps them, and the person-isolation-postgres CI job runs the same profile on Postgres. A reached cap, a failed write or a must-fail control that passes makes the run an error.',
   },
   {
     id: 'format-fidelity', legacy_alias: 'N12', name: 'Ingestion format fidelity: transcript adapters, conversation-parser patterns and attendance',

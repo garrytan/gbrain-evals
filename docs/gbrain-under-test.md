@@ -7,7 +7,7 @@ gives the results; this page holds the version detail behind them. Every row of 
 
 ## The pin
 
-This repository installs gbrain v0.60.769.0 ([`38831bb69`](https://github.com/garrytan/gbrain/tree/38831bb696139024923e9bc43e3da0d7993951e9)), gbrain's newest release on 2026-11-24.
+This repository installs gbrain v0.60.771.0 ([`97ef356f5`](https://github.com/garrytan/gbrain/tree/97ef356f574a66709ef1bf4ae1cad604727852d8)), gbrain's newest release on 2026-11-25.
 It is declared as `gbrain` in `package.json`, and this is the one page that names it: the README and the other hub
 pages link here. Every new run measures gbrain's newest release ([CLAUDE.md, "Choose the gbrain
 build"](../CLAUDE.md#choose-the-gbrain-build)), and `bun eval/runner/gbrain-pin.ts bump` moves the pin there when gbrain
@@ -164,6 +164,11 @@ them ran again at `6ce7195b4`: 9 behave as recorded, and N2-2 (`find-contradicti
 Rows marked `c5fb0201` were measured in the October round at an earlier pin (the paid runs and the attendance world).
 
 ## Changelog
+
+### 2026-11-25: Re-pin to gbrain `97ef356f5` (v0.60.771.0)
+
+`bun eval/runner/gbrain-pin.ts bump` moved the pin from `38831bb69` (v0.60.769.0) to `97ef356f5` (v0.60.771.0),
+2 releases and 19 commits later. Only the pin line changed, and no result was rerun.
 
 ### 2026-11-24: Re-pin to gbrain `38831bb69` (v0.60.769.0)
 
