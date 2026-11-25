@@ -10,6 +10,7 @@ The generator lives in [`eval/generators/hard-sealed/`](../../../eval/generators
 - **Ran once.** It ran under the preregistered confirmation ([PREREG.md](../../plans/2026-10-07-cat40-hard-fix/PREREG.md)) on 2026-10-10 and 2026-10-11, on two custody VMs. Another lane's VM cleanup destroyed the first after the oracle gate and before any sealed slot or counted cell finished; the second ran the slots and counted cells. Both VMs are now destroyed.
 - **Only aggregates are published:** [RESULTS.md](../../plans/2026-10-07-cat40-hard-fix/RESULTS.md) and the [2026-10-10 confirmation report](../2026-10-10-model-ladder-hard-confirmation.md).
 - **Custody.** The seed, the documents and the task text stay in owner custody. None was committed or put on Capy Drive.
+- **Next seeds (S3 to S8).** The [H4 section-delivery confirmation](../2026-11-24-cat40-h4-fix-confirmation-preregistration.md) mints six new seeds on the seed owner's machine, records each world's digest with `--digest-only` in that preregistration before any world is generated, and keeps seeds, documents and task text in owner custody. Until the first of them runs, they are first-look held-out worlds. S1 and S2 (the [next-wave confirmation](../../plans/2026-10-11-cat40-next-wave/PREREG.md)) have also run, so they are repeats too.
 - **Consequence.** The sealed world is no longer a first-look held-out set. Any future result on this seed is a repeat measurement, not a new held-out test, and the next confirmation needs a new sealed seed (choose and record it as below).
 
 ## Committed digest

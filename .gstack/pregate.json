@@ -17,7 +17,7 @@
     {"finding": "env.kv", "paths": ["eval/runner/lme-redis/vm-stage.sh"], "pattern": "\\$\\(python3 -c \"import json;print\\(json\\.load\\(open\\('\\$LME_REDIS_STATE_DIR/proxy-ready\\.json'\\)\\)\\['env'\\]\\['gbrain'\\]\\['VOYAGE_API_KEY'\\]\\)\"\\)(?=\\s*$)", "reason": "the LongMemEval run's VM step reads the Voyage key at run time from the metering proxy's ready file into a shell variable; the line holds the read command, not a key"}
   ],
   "sealed": {
-    "paths": ["**/rs1-custody*", "**/rs1-custody*/**", "**/*.rs1-seed", "**/bg1-custody*", "**/bg1-custody*/**", "**/*.bg1-seed", "**/*.bg1-phrasing.json", "**/bgw-custody*", "**/bgw-custody*/**", "**/*.bgw-seed", "**/*.bgw-phrasing.json", "**/*.bgw-nonce"],
+    "paths": ["**/rs1-custody*", "**/rs1-custody*/**", "**/*.rs1-seed", "**/bg1-custody*", "**/bg1-custody*/**", "**/*.bg1-seed", "**/*.bg1-phrasing.json", "**/bgw-custody*", "**/bgw-custody*/**", "**/*.bgw-seed", "**/*.bgw-phrasing.json", "**/*.bgw-nonce", "**/h4fix-custody*", "**/h4fix-custody*/**", "**/cat40-h4fix-seed*", "**/h4fix-confirm/*/world/**"],
     "case_insensitive": true,
     "answer_markers": ["RS1-SEALED-CUSTODY-v[0-9]+", "BG1-SEALED-CUSTODY-v[0-9]+"],
     "seed_patterns": ["rs1-seed-v1:[0-9a-f]{64}", "bg1-seed-v1:[0-9a-f]{64}", "bgw-seed-v1:[0-9a-f]{64}"]
