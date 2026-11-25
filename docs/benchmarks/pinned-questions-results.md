@@ -9,35 +9,41 @@
 - **We learned that a contradiction is gbrain's weak spot. You should refresh a pinned answer by hand, and read it,
   after you add a note that contradicts an older one.** gbrain flagged none of the 60 sentences a contradicting note made
   wrong. When the contradiction was written into an existing note, it never asked for a refresh. When it came as a new
-  note, it scheduled a refresh, and it also made 23 other pinned questions due each time. After a contradiction, the
-  refreshed answer was right 37 of 60 times for claude-opus-5-5 and 19 of 60 for particle-1, and 59 of 60 for
-  gpt-6.2-sol. Opus and particle-1 usually reported both the old and the new value, and the preregistered metric counts
-  that as not correct.
-- **We learned that particle-1 matches claude-opus-5-5 on every change except contradictions, at about one eighteenth of
-  the answer cost per correct answer, but it is not shown to be within 10 points of Opus overall.** particle-1 was right
-  on 199 of 240 refreshed answers against Opus's 217: 7.5 points lower (95% interval 3.8 to 11.7 lower). The whole gap
-  is on contradictions; on the other 180 questions both models were right every time.
+  note, it scheduled a refresh, and it also made 23 other pinned questions due each time.
+- **We learned that this test can't yet tell the three models apart, because every gap between them comes from how one
+  judge scored answers that reported a contradiction.** On the preregistered labels, refreshed answers were right 217 of
+  240 times for claude-opus-5-5, 199 for particle-1 and 233 for gpt-6.2-sol, so particle-1 is 7.5 points below Opus
+  (95% interval 3.8 to 11.7 lower) and not shown within 10 points. But each of Opus's 23 misses and particle-1's 41 is
+  a contradiction answer that gave the new city and the old one together, with every other claim right. The judge
+  accepted 37 of Opus's 60 answers like that and rejected 23, with no wording difference we could find. Counted as
+  correct, those answers give Opus and particle-1 240 of 240 each, and gpt-6.2-sol 233 (239 with the judge note below).
 
-Settled call: keep pinned-question refreshes on a frontier model (gpt-6.2-sol was the most accurate here) rather than
-particle-1, and treat a contradiction as the case where gbrain needs a fix: it should flag the contradicted sentence,
-signal a contradiction in an existing note, and recompute the answer in full instead of editing the old one.
+Settled call: don't move pinned-question refreshes to particle-1 on this result, and don't rule it out. The model gap
+rests on one judge's inconsistent scoring of answers that report both values, so the next step is a rescoring of these
+same answers, with a written rule for that case, preregistered before it runs. gbrain's own contradiction handling
+needs a fix whichever way that lands: it should flag the contradicted sentence, signal a contradiction in an existing
+note, and recompute the answer in full instead of editing the old one.
 
 This is the results file of the [pinned-questions preregistration](2026-11-24-pinned-questions-preregistration.md),
 including both of its 2026-11-24 amendments. Every number here comes from synthetic, fictional-company worlds generated
 from a public generator, at one gbrain build (v0.60.769.0, `38831bb6`), on counted seeds 11 to 20, which no run had
 touched before.
 
-Refreshed answers fully correct, per model, with answer cost per correct answer relative to claude-opus-5-5:
+Refreshed answers fully correct, per model, with answer cost per correct answer relative to claude-opus-5-5. The
+second and third columns are the preregistered result; the fourth counts the both-city contradiction answers as
+correct:
 
-| Model | Refreshed answers correct (of 240) | Paired difference from claude-opus-5-5 (95% interval) | Answer cost per correct answer, Opus = 1 |
-|---|---:|---|---:|
-| claude-opus-5-5 | 217 (90.4%) | reference | 1.00 |
-| particle-1 | 199 (82.9%) | -7.5 points (-11.7 to -3.8); not non-inferior at the 10-point margin | 0.056 |
-| gpt-6.2-sol | 233 (97.1%) | +6.7 points (+2.5 to +11.3) | 0.32 |
+| Model | Refreshed answers correct (of 240) | Paired difference from claude-opus-5-5 (95% interval) | Correct with both-city answers accepted | Answer cost per correct answer, Opus = 1 |
+|---|---:|---|---:|---:|
+| claude-opus-5-5 | 217 (90.4%) | reference | 240 | 1.00 |
+| particle-1 | 199 (82.9%) | -7.5 points (-11.7 to -3.8); not non-inferior at the 10-point margin | 240 | 0.056 |
+| gpt-6.2-sol | 233 (97.1%) | +6.7 points (+2.5 to +11.3) | 233 (239 with the judge note below) | 0.32 |
 
-Both differences are significant after Holm's correction (McNemar, Holm p 0.001 for particle-1 and 0.005 for
-gpt-6.2-sol). Cost per correct answer counts only the pin and refresh calls that gbrain reported for each model, not the
-judge; the judge's cost is the same for every row it grades.
+Both preregistered differences are significant after Holm's correction (McNemar, Holm p 0.001 for particle-1 and
+0.005 for gpt-6.2-sol). With both-city answers accepted, particle-1 and Opus are level, and gpt-6.2-sol is 2.9 points
+below Opus (0.4 points below with the judge note's six rows relabelled). Cost per correct answer counts only the pin
+and refresh calls that gbrain reported for each model, not the judge; the judge's cost is the same for every row it grades. The ratios are in
+[paid-counted.json](pinned-questions/paid-counted.json) under `relative_answer_cost`.
 
 ## The test
 
@@ -80,14 +86,20 @@ Every one of the 720 refreshes published an answer. None was cut off at gbrain's
 provider safety stop, and there were no provider errors. Every row was answered by the model it names. Every first
 answer, from before the change, was right for all three models.
 
-**Contradictions.** Every contradiction refresh ran in gbrain's incremental mode. Every one of Opus's 23 misses, and
-every one of particle-1's 41, gave the new city and the old city together. For example: "A press note says Brumis moved
-all production of its turbines to Koudrathford ..., while the Brumis company page still says it builds turbines in
-Vumaford." The frozen judge prompt labels an answer that gives the current value with a conflicting one as wrong, so
-these count as not correct. gpt-6.2-sol stated only the new city, except once, when it left the city out. Opus was
-right after a contradiction 61.7% of the time (37 of 60) and after a direct edit 100% of the time (60 of 60), 38.3
-points apart. That is past the preregistered 15-point line, so the design note in the next section goes to gbrain's
-maintainers.
+**Contradictions.** Every contradiction refresh ran in gbrain's incremental mode. All 60 of claude-opus-5-5's
+contradiction answers named both the new city and the old one, and so did all 41 of particle-1's misses and 5 of its
+hits. gpt-6.2-sol named the old city 6 times, each time only as the place production moved from, and was right on all
+6; its one miss left the city out. The frozen judge prompt labels an answer wrong when it gives the current value
+together with a conflicting one. gpt-6.2-astra, which judged the Opus and particle-1 rows, accepted 37 of Opus's 60
+both-city answers and 5 of particle-1's 46, and rejected the other 64, every one of which had all its other claims
+right. We found no wording difference between the two groups. It accepted "A press note says Lidrem moved all
+production of its valves to Grezendford and builds valves there from this month, although the Lidrem company page
+still lists Mobemford", and rejected "A press note says Brumis moved all production of its turbines to Koudrathford
+and builds turbines there from this month, while the Brumis company page still says it builds turbines in Vumaford."
+So the contradiction scores below measure how one judge treated answers that report the conflict, more than whether a
+model found the new city. Opus was right after a contradiction 61.7% of the time (37 of 60) and after a direct edit
+100% of the time (60 of 60), 38.3 points apart. That is past the preregistered 15-point line, so the design note in the
+next section goes to gbrain's maintainers, with this caveat attached.
 
 **Judge note for gpt-6.2-sol's six deleted-source misses.** After the chief executive's page was deleted, all three
 models left the chief executive out of the refreshed answer, all 90 times. gpt-6.2-astra labelled all 60 of those
@@ -125,9 +137,9 @@ to 21.7%), because fewer sentences share a cited line with an unrelated edit.
 |---|---|---|
 | Keyless: spillover and missed signals | Shown: 23 pins made due per new page, and contradictions in existing notes never signalled | gbrain's maintainers ship the scheduling fix they accepted, and the keyless arm reruns on that release |
 | Keyless: false flags after unrelated edits to cited pages | Shown: 75%, lower bound above the 10% line | The paragraph-level evidence design note goes to gbrain's maintainers as a plan to build |
-| Paid: particle-1 within 10 points of Opus | Not shown: the interval's lower end is -11.7 points | Refreshes stay on the frontier tier; particle-1 is not documented as the low-cost refresh model |
+| Paid: particle-1 within 10 points of Opus | Not shown on the preregistered labels (interval's lower end -11.7 points); level with Opus when both-city answers are accepted | No recommendation at this sample: particle-1 is not documented as the low-cost refresh model, and a preregistered rescoring with a written rule for both-value answers comes next |
 | Paid: more than 5% of a model's pilot calls cut off | No: 0 cut off for every model | The default-cap arm stands alone |
-| Paid: Opus after a contradiction at least 15 points below after a direct edit | Yes: 38.3 points below | Design note to gbrain's maintainers: recompute the answer in full when new in-scope evidence arrives, instead of editing the old answer |
+| Paid: Opus after a contradiction at least 15 points below after a direct edit | Yes: 38.3 points below, all of it both-city answers the judge rejected | Design note to gbrain's maintainers: recompute the answer in full when new in-scope evidence arrives, instead of editing the old answer |
 
 ## Judge check
 
@@ -151,6 +163,11 @@ with lookalike characters from another alphabet. The only character outside ASCI
 appears in 363 of the 1,440 counted answers, and the token rule treats it as a word boundary. No counted score depends
 on the token rule.
 
+The judge check did not test the both-city contradiction answers. The rule labels a city "ambiguous" when an answer
+names both the old and the new value, and the agreement check leaves ambiguous labels out. In the counted rows that
+excludes all 112 both-city contradiction answers (106 judged by gpt-6.2-astra, 6 by claude-opus-5-5), so neither
+judge's handling of them was compared with a reference.
+
 ## Runs and build
 
 | Run | Seeds | Questions | Result file |
@@ -173,9 +190,8 @@ the one above.
 
 - The worlds are synthetic and the generator is public. These are synthetic-production-path results at one build, not
   held-out confirmation.
-- The contradiction result depends on the frozen judge prompt, which counts an answer that reports both the old and the
-  new value as not correct. A reader who wants both values reported would score Opus and particle-1 higher on those 60
-  questions.
+- The contradiction scores, and with them every difference between the models, depend on one judge's call on answers
+  that report both the old and the new city, a call it made inconsistently and that the judge check never tested.
 - The stale probes test whether a judge recognises a stale value. They don't test the "wrong" label.
 - One judge grades each model, so judge differences between the families can move a model's score. The removed
   chief executive case is the one we found.

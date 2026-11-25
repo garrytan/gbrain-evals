@@ -401,5 +401,25 @@
       }
     }
   },
+  "relative_answer_cost": {
+    "note": "pin and refresh calls gbrain reported per model, relative to claude-opus-5-5; judge calls excluded",
+    "models": {
+      "anthropic:claude-opus-5-5": {
+        "answer_cost_relative_to_opus": 1,
+        "refreshed_correct": 217,
+        "answer_cost_per_correct_relative_to_opus": 1
+      },
+      "particle:particle-1": {
+        "answer_cost_relative_to_opus": 0.0517,
+        "refreshed_correct": 199,
+        "answer_cost_per_correct_relative_to_opus": 0.0564
+      },
+      "openai:gpt-6.2-sol": {
+        "answer_cost_relative_to_opus": 0.3397,
+        "refreshed_correct": 233,
+        "answer_cost_per_correct_relative_to_opus": 0.3164
+      }
+    }
+  },
   "harness_errors": []
 }
