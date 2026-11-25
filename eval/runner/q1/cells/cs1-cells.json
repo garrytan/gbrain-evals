@@ -437,10 +437,10 @@
       "expected_hours": 28,
       "launch": {
         "env": {},
-        "config": "recipe"
+        "config": "read-route"
       },
-      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-extract-first --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-extract-first.tar\"",
-      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-extract-first --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-extract-first.tar\"",
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-extract-first --config read-route --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-extract-first.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-extract-first --config read-route --from \"$SHOOTOUT_RESTORE_DIR/ext-extract-first.tar\"",
       "arms": [
         {
           "id": "whole-default",
@@ -1114,10 +1114,10 @@
       "expected_hours": 15,
       "launch": {
         "env": {},
-        "config": "recipe"
+        "config": "read-route"
       },
-      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-extract-first --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-extract-first.tar\"",
-      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-extract-first --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-extract-first.tar\"",
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-extract-first --config read-route --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-extract-first.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-extract-first --config read-route --from \"$SHOOTOUT_RESTORE_DIR/ext-extract-first.tar\"",
       "arms": [
         {
           "id": "whole-default",
@@ -1655,10 +1655,10 @@
       "expected_hours": 27,
       "launch": {
         "env": {},
-        "config": "recipe"
+        "config": "read-route"
       },
-      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-extract-first --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-extract-first.tar\"",
-      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-extract-first --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-extract-first.tar\"",
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-extract-first --config read-route --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-extract-first.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-extract-first --config read-route --from \"$SHOOTOUT_RESTORE_DIR/ext-extract-first.tar\"",
       "arms": [
         {
           "id": "whole-default",

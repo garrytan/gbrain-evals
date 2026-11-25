@@ -62,6 +62,37 @@ describe('probe attribution in the lease proxy', () => {
     } finally { proxy.stop(); }
   });
 
+  test("a slot's read route is the slot itself, labelled probe while a probe is registered, and its writes never are", async () => {
+    const fetchImpl = (async () => Response.json({ data: [{ embedding: [0.1] }], usage: { prompt_tokens: 1000, total_tokens: 1000 } })) as unknown as typeof fetch;
+    const lease = BudgetRun.openLease({ runId: 'probe-read-route', leaseUsd: 1, ledgerPath: join(tmp, 'ledger-read-route.sqlite') });
+    const usageLog = join(tmp, 'usage-read-route.ndjson');
+    const proxy = new MeteringProxy({ fetchImpl, policy: { lease, env: FAKE_ENV, usageLog }, controlToken: 'ctl' });
+    proxy.start();
+    const base = `http://127.0.0.1:${proxy.port}`;
+    const post = (slot: string, input: unknown) => fetch(`${base}/${slot}/openai/v1/embeddings`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ model: 'text-embedding-3-small', input }) });
+    try {
+      const ctl = new ProxyControl(base, 'ctl');
+      await ctl.bind('ext-extract-first', 'ingest:ns-a#held-back', { brain: 'ns-a', phase: 'background' });
+      await ctl.probeQueries('ext-extract-first', [PASSAGE]);
+      expect((await post('ext-extract-first~read', PASSAGE)).status).toBe(200);
+      expect((await post('ext-extract-first~read', ['standing desk', 'window'])).status).toBe(200);
+      expect((await post('ext-extract-first', ['standing desk'])).status).toBe(200);
+      await ctl.probeQueries('ext-extract-first', null);
+      expect((await post('ext-extract-first~read', ['standing desk'])).status).toBe(200);
+      expect((await post('~read', 'x')).status).toBe(200);
+      const lines = readFileSync(usageLog, 'utf8').trim().split('\n').map(l => JSON.parse(l) as UsageLine & { read?: true });
+      expect(lines.map(l => [l.key, l.slot, l.phase, l.read ?? null])).toEqual([
+        ['ingest:ns-a#held-back', 'ext-extract-first', 'probe', true], ['ingest:ns-a#held-back', 'ext-extract-first', 'probe', true],
+        ['ingest:ns-a#held-back', 'ext-extract-first', 'background', null], ['ingest:ns-a#held-back', 'ext-extract-first', 'background', true],
+        ['slot:~read', '~read', null, null],
+      ]);
+      expect(new Set(lines.map(l => l.request_id)).size).toBe(5);
+      expect(lines.reduce((n, l) => n + (l.actual_usd ?? 0), 0)).toBeCloseTo(Number(proxy.status().billed_usd), 10);
+      expect(proxy.status().slots['ext-extract-first~read']).toBeUndefined();
+      expect(proxy.status().slots['ext-extract-first'].inflight).toBe(0);
+    } finally { proxy.stop(); }
+  });
+
   test("a calibration window's meter splits requests by label, and the slot's activity feeds the idle check", async () => {
     const fetchImpl = (async (url: RequestInfo | URL) => String(url).endsWith('/rerank')
       ? Response.json({ data: [], usage: { total_tokens: 1000 } })

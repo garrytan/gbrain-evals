@@ -420,7 +420,14 @@ export interface UsageLine {
 }
 
 /** How one provider request is attributed: its stable id, the slot it came in on, the bound brain and phase, and its bucket. */
-export interface RequestTag { request_id: string; slot: string; brain: string | null; phase: Phase | null; bucket: Bucket }
+export interface RequestTag { request_id: string; slot: string; brain: string | null; phase: Phase | null; bucket: Bucket; read?: true }
+/**
+ * A slot's read route: `/<slot>~read/<provider>/...` is the slot itself (its binding, phase, caps and activity), for a
+ * system whose searches send requests the probe label can't read (the extract-first server's entity embedding). Only the
+ * system's search sends through it, so while the slot has probe queries registered its every request is labelled
+ * `probe`; otherwise it keeps the slot's phase.
+ */
+export const READ_ROUTE_SUFFIX = '~read';
 /** `harness`: the harness's own reader and judge slots, never background work. */
 export type Bucket = 'attributed' | 'harness' | 'unattributed-background';
 export const HARNESS_CLASSES = new Set(['reader', 'judge', 'agent']);
@@ -554,7 +561,9 @@ export class MeteringProxy {
         const path = t ? t[2] : url.pathname;
         const m = path.match(/^\/(?:([^/]+)\/)?(anthropic|openai|voyage|particle|gemini)(\/.*)$/);
         if (!m) return json(404, 'invalid_request', `no provider route ${t ? '/_t/<token>' + path : path}`);
-        const [, slot = 'default', prov, rest] = m as unknown as [string, string | undefined, ProviderName, string];
+        const [, routed = 'default', prov, rest] = m as unknown as [string, string | undefined, ProviderName, string];
+        const read = routed.length > READ_ROUTE_SUFFIX.length && routed.endsWith(READ_ROUTE_SUFFIX);
+        const slot = read ? routed.slice(0, -READ_ROUTE_SUFFIX.length) : routed;
         if (!this.authorized(req, t ? decodeURIComponent(t[1]) : null, server.requestIP(req)?.address ?? null)) {
           this.counts.unauthorized++;
           this.log({ at: new Date().toISOString(), key: `slot:${slot}`, provider: prov, route: rest, model: null, outcome: 'refused', reason: 'no cell token', status: 401, slot });
@@ -563,7 +572,7 @@ export class MeteringProxy {
         const bound = this.bindings.get(slot);
         const key = bound?.key ?? `slot:${slot}`;
         const tag: RequestTag = { request_id: `${this.options.policy?.lease.runId ?? 'proxy'}-${++this.seq}`, slot, brain: bound?.brain ?? req.headers.get('x-proxy-brain') ?? null,
-          phase: bound?.phase ?? this.phases.get(slot) ?? null, bucket: bound ? 'attributed' : this.harnessSlot(slot) ? 'harness' : 'unattributed-background' };
+          phase: bound?.phase ?? this.phases.get(slot) ?? null, bucket: bound ? 'attributed' : this.harnessSlot(slot) ? 'harness' : 'unattributed-background', ...(read ? { read: true as const } : {}) };
         this.inflight.set(key, (this.inflight.get(key) ?? 0) + 1);
         this.touch(slot, 1);
         const done = () => { this.settled(key); this.touch(slot, -1); };
@@ -681,7 +690,7 @@ export class MeteringProxy {
     const at = new Date().toISOString();
     const routeClass = p.routeCaps ? p.routeCaps.slots[tag.slot] ?? p.routeCaps.defaultClass : undefined;
     let cap = routeClass !== undefined && p.routeCaps!.caps[routeClass] !== undefined ? p.routeCaps!.caps[routeClass] : p.maxOutputTokens ?? DEFAULT_MAX_OUTPUT_TOKENS;
-    const tagged = { request_id: tag.request_id, slot: tag.slot, brain: tag.brain, phase: tag.phase, bucket: tag.bucket, ...(routeClass !== undefined ? { route_class: routeClass } : {}), output_cap: cap };
+    const tagged = { request_id: tag.request_id, slot: tag.slot, brain: tag.brain, phase: tag.phase, bucket: tag.bucket, ...(tag.read ? { read: true as const } : {}), ...(routeClass !== undefined ? { route_class: routeClass } : {}), output_cap: cap };
     const refuse = (status: number, kind: string, reason: string, model: string | null = null, extra: Record<string, string> = {}) => {
       this.log({ at, key, provider: prov, route, model, outcome: 'refused', reason, status, ...tagged });
       const m = this.meter(key);
@@ -706,8 +715,8 @@ export class MeteringProxy {
       if (!body || typeof body !== 'object' || Array.isArray(body)) return refuse(400, 'invalid_request', 'request body must be a JSON object');
     }
     const probes = this.probeQueries.get(tag.slot);
-    const texts = probes ? searchTexts(prov, route, body) : [];
-    if (texts.length && texts.every(t => probes!.has(t))) tagged.phase = tag.phase = 'probe';
+    const texts = probes && !tag.read ? searchTexts(prov, route, body) : [];
+    if (tag.read ? !!probes : texts.length && texts.every(t => probes!.has(t))) tagged.phase = tag.phase = 'probe';
     const model = typeof body?.model === 'string' ? body.model : null;
     const modelCap = routeClass !== undefined && model ? p.routeCaps!.caps[`${routeClass}@${prov}:${model}`] : undefined;
     if (modelCap !== undefined) tagged.output_cap = cap = modelCap;

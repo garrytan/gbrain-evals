@@ -1034,7 +1034,7 @@ export function shimLaunch(system: string, configuration: string): NonNullable<C
 }
 
 /** Launch configurations with their own bundle directory (<bundle>/<config>/docker-compose.yml), which every bootstrap call names: the temporal graph's 0.31.2 defaults and the memory-bank server with observations on. */
-export const OWN_BUNDLE_CONFIGS: readonly string[] = ['shipped-0.31', 'observations'];
+export const OWN_BUNDLE_CONFIGS: readonly string[] = ['shipped-0.31', 'observations', 'read-route'];
 
 /** `KEY=value ` for a launch environment, in key order. */
 export const launchPrefix = (launch: NonNullable<CellDefinition['launch']>) => Object.entries(launch.env).sort(([a], [b]) => (a < b ? -1 : 1)).map(([k, v]) => `${k}=${v} `).join('');

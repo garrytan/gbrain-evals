@@ -85,6 +85,13 @@ export const CS1_GBRAIN_BUILD = { release: 'v0.60.771.0', commit: '97ef356f574a6
 export const CS1_GBRAIN_LAUNCH: NonNullable<CellDefinition['launch']> = { env: { GBRAIN_BUN_IMAGE: F6_ASSUMPTIONS.bun_image, GBRAIN_SHA: CS1_GBRAIN_BUILD.commit }, config: 'recipe' };
 /** The memory-bank server with observations on: its own bundle (docs/comparison-systems/ext-memory-bank/observations), so the pinned bundle's files and hash stay as they are. */
 export const CS1_MEMORY_BANK_LAUNCH: NonNullable<CellDefinition['launch']> = { env: {}, config: 'observations' };
+/**
+ * The extract-first server with its searches embedding through its metering slot's read route: its own bundle
+ * (docs/comparison-systems/ext-extract-first/read-route; eval/runner/metering-proxy.ts READ_ROUTE_SUFFIX), so the pinned
+ * bundle's files and hash stay as they are. Each search also embeds the query's entities, a text the probe label can't
+ * match, so the keyless label check failed without it. Same model and requests.
+ */
+export const CS1_EXTRACT_FIRST_LAUNCH: NonNullable<CellDefinition['launch']> = { env: {}, config: 'read-route' };
 
 /**
  * The plan table ("Plan and machines (R111)"), by row: write and background dollars per million ingested tokens, the
@@ -286,7 +293,7 @@ function cell(set: CS1SetId, row: (typeof CS1_ROWS)[number]): CellDefinition {
     probes: writes ? { sample: PROBES[set].sample, seed: CS1_SEED, held_back: PROBES[set].held_back } : { sample: 0, seed: CS1_SEED, conversations: 0 },
     descriptiveView: false,
     ...(system === 'baseline-file-agent' ? { runner: 'in-process' as const } : {}),
-    ...(system === 'gbrain-defaults' ? { launch: CS1_GBRAIN_LAUNCH } : system === 'ext-memory-bank' ? { launch: CS1_MEMORY_BANK_LAUNCH } : {}),
+    ...(system === 'gbrain-defaults' ? { launch: CS1_GBRAIN_LAUNCH } : system === 'ext-memory-bank' ? { launch: CS1_MEMORY_BANK_LAUNCH } : system === 'ext-extract-first' ? { launch: CS1_EXTRACT_FIRST_LAUNCH } : {}),
   });
   const def: CellDefinition = {
     ...made, effort: CS1_EFFORT, scoring: 'key-match',

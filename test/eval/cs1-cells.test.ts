@@ -81,9 +81,48 @@ describe('cs1-cells.json', () => {
       expect(c.snapshot_command).toContain('--config observations');
       expect(c.restore_command).toContain('--config observations');
     }
+    for (const c of all.filter(c => c.system === 'ext-extract-first')) {
+      expect([c.configuration, c.launch]).toEqual(['recipe', { env: {}, config: 'read-route' }]);
+      expect(c.snapshot_command).toContain('--config read-route');
+      expect(c.restore_command).toContain('--config read-route');
+    }
     for (const c of all.filter(c => c.system !== 'gbrain-defaults')) expect(c.gbrain_build ?? null).toBeNull();
     expect(all.filter(c => c.system === 'baseline-file-agent').every(c => c.runner === 'in-process' && c.arms[0].mode === 'agent')).toBe(true);
     expect(all.filter(c => c.system === 'baseline-full-context').every(c => c.arms[0].mode === 'full-context')).toBe(true);
+  });
+
+  test("the extract-first read-route stack searches through the slot's read route and writes through the bundle's", () => {
+    const code = [
+      'import importlib.util, json, sys',
+      "sys.path.insert(0, 'eval/systems/_shim')",
+      "spec = importlib.util.spec_from_file_location('read_route', 'docs/comparison-systems/ext-extract-first/read-route/read_route.py')",
+      'm = importlib.util.module_from_spec(spec)',
+      "sys.modules['read_route'] = m",
+      'spec.loader.exec_module(m)',
+      'class W:',
+      '    llm = "writer-llm"',
+      '    def search(self, *a, **k): return "writer"',
+      'class S:',
+      '    def search(self, *a, **k): return "searcher"',
+      'split = m.SplitMemory(W(), S())',
+      'out = {"url": m.read_base_url("http://proxy:8787/ext-extract-first/openai/v1"), "embedder": m.search_config("http://proxy:8787/ext-extract-first/openai/v1")["embedder"], "plain": m.base.mem0_config()["embedder"], "search": split.search("q"), "llm": split.llm}',
+      'try:',
+      '    m.read_base_url("http://fake:9000/v1")',
+      'except SystemExit as e:',
+      '    out["refused"] = str(e)',
+      'print(json.dumps(out))',
+    ].join('\n');
+    const r = Bun.spawnSync(['python3', '-c', code], { cwd: ROOT, env: { PATH: process.env.PATH!, SHIM_DATA_DIR: tmp } });
+    if (r.exitCode !== 0) throw new Error(r.stderr.toString());
+    const out = JSON.parse(r.stdout.toString());
+    expect(out.url).toBe('http://proxy:8787/ext-extract-first~read/openai/v1');
+    expect(out.embedder).toEqual({ ...out.plain, config: { ...out.plain.config, openai_base_url: 'http://proxy:8787/ext-extract-first~read/openai/v1' } });
+    expect([out.search, out.llm]).toEqual(['searcher', 'writer-llm']);
+    expect(out.refused).toContain('/<slot>/openai/v1');
+    const compose = readFileSync(join(ROOT, 'docs/comparison-systems/ext-extract-first/read-route/docker-compose.yml'), 'utf8');
+    expect(compose).toContain('dockerfile: docs/comparison-systems/ext-extract-first/read-route/Dockerfile');
+    expect(compose).toContain('SHIM_CONFIG: recipe');
+    expect(readFileSync(join(ROOT, 'docs/comparison-systems/ext-extract-first/read-route/Dockerfile'), 'utf8')).toContain('CMD ["python", "read_route.py"]');
   });
 
   test('probes, the pilot\'s 60-session prefix and the idle window on rows that write; hosting samples everywhere', () => {
