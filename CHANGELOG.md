@@ -2,6 +2,10 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.275] - 2026-11-25
+
+- **Preregistered a sealed check of section delivery for "sources disagree" questions.** [docs/benchmarks/2026-11-24-cat40-h4-fix-confirmation-preregistration.md](docs/benchmarks/2026-11-24-cat40-h4-fix-confirmation-preregistration.md) fixes, before any cell runs, how gbrain with `search.long_page_unit=section` will be compared with the same release on its defaults and with plain files on six new sealed Cat 40 Hard worlds, and what each outcome changes: a win takes the default flip to Garry, a null or a loss closes it. It runs once gbrain releases its grep fix.
+
 ## [0.10.274] - 2026-11-24
 
 ### New category: pinned questions (preregistered)
