@@ -15,6 +15,7 @@ import { estimateCell, type CellDefinition } from '../../eval/runner/q1/cells/de
 import { BudgetRun, closeLedgers } from '../../eval/runner/budget-ledger.ts';
 import { MeteringProxy, type UsageLine } from '../../eval/runner/metering-proxy.ts';
 import { dockerReading, parseBytes } from '../../eval/runner/memory-qa/hosting-samples.ts';
+import { cs1Bucket, cs1Load, hostingOf } from '../../eval/runner/cs1-load.ts';
 import { FakeMemorySystem } from '../../eval/runner/systems/fake.ts';
 import { FileAgentSystem } from '../../eval/runner/systems/file-agent.ts';
 import type { Corpus, MemoryQuestion } from '../../eval/runner/memory-qa/corpus.ts';
@@ -199,10 +200,58 @@ describe('held-back probes', () => {
     for (const c of ['conv-a', 'conv-c']) expect(() => readFileSync(join(out, 'runs', def.id, 'r', realizationId(def.id, c, 0), 'idle.json'))).toThrow();
   }, 60_000);
 
+  test('the loader puts every billed dollar in one bucket of one world, and the buckets sum back to the usage log', async () => {
+    const { def, out, usage } = await run('load', { trigger: true });
+    const questions = new Map(corpus.questions.map(q => [q.id, { id: q.id, bg1: { gold_values: ['history does not say'], stale_values: [], decoy_values: [], ordered: false } as never }]));
+    const ladder = { provider: 'invented', instances: [{ name: 'small', memory_gib: 2, usd_per_hour: 0.02 }], storage_usd_per_gb_month: 0.1 };
+    const { input, problems, checks } = cs1Load([{ dir: out, usage }], { cells: new Map([[def.id, def.system]]), questions, ladder, stacks: { [def.system]: 'stack' } });
+    expect(problems).toEqual([]);
+    const billed = usage.reduce((n, l) => n + (l.actual_usd ?? 0), 0);
+    expect(checks.sum_back.billed_usd).toBeCloseTo(billed, 12);
+    expect(Math.abs(checks.sum_back.difference_usd)).toBeLessThan(1e-12);
+    expect(checks.sum_back.unattributed_usd).toBe(0);
+    const [sys] = input.systems;
+    expect(sys.worlds.map(w => w.world)).toEqual(['conv-a', 'conv-b', 'conv-c']);
+    const perWorld = sys.worlds.reduce((n, w) => n + w.usd.write + w.usd.background + w.usd.read + w.usd.probe + (w.idle?.usd ?? 0) + (w.idle?.triggers ?? []).reduce((m, t) => m + t.usd, 0), 0);
+    expect(perWorld).toBeCloseTo(billed, 12);
+    expect(checks.by_bucket.write).toBeCloseTo(sys.worlds.reduce((n, w) => n + w.usd.write, 0), 12);
+    for (const w of sys.worlds) {
+      expect([w.usd.write > 0, w.usd.probe > 0, w.probes!.length, w.bulk_probes!.length, w.sessions]).toEqual([true, true, 2, 2, 5]);
+      expect(w.ingested_tokens).toBeGreaterThan(0);
+      expect(w.readers['claude-opus-5-5'].classes.every(c => c === 'correct')).toBe(true);
+    }
+    const b = sys.worlds.find(w => w.world === 'conv-b')!;
+    expect(b.idle!.window_ms).toBeGreaterThanOrEqual(150);
+    expect(b.idle!.triggers).toEqual([{ job: 'daily upkeep round', usd: checks.by_bucket.trigger, cadence_minutes: 1440 }]);
+    expect(b.idle!.triggers![0].usd).toBeGreaterThan(0);
+    expect(sys.worlds.filter(w => w.idle).length).toBe(1);
+    expect(sys.hosting).toMatchObject({ resident_bytes: 2e8, disk_bytes: 5e7 });
+    expect(sys.hosting!.disk_tokens).toBe(sys.worlds.reduce((n, w) => n + w.ingested_tokens, 0));
+  }, 60_000);
+
   test('a read that also calls a model shows up in the calibration window as a route the probe label misses', async () => {
     const { events } = await run('expanding', { expand: true });
     for (const e of events) expect(e.calibration.unlabelled_routes).toEqual(['openai/v1/chat/completions']);
   }, 60_000);
+});
+
+describe('loader keys and hosting', () => {
+  test('each meter key maps to one bucket and world', () => {
+    const keys = { ns: new Map([['ns-a', 'w1']]), rid: new Map([['ab12', 'w1']]), answer: new Map([['0123456789abcdef', 'w1']]) };
+    const b = (key: string, phase: string | null = null) => cs1Bucket({ key, phase } as never, keys);
+    expect([b('ingest:ns-a', 'commit'), b('ingest:ns-a#held-back', 'probe'), b('ingest:ns-a', null), b('calibration:ns-a'), b('probe:ns-a')]).toEqual([
+      { bucket: 'write', conv: 'w1' }, { bucket: 'probe', conv: 'w1' }, { bucket: 'background', conv: 'w1' }, { bucket: 'probe', conv: 'w1' }, { bucket: 'probe', conv: 'w1' }]);
+    expect([b('tail:ab12'), b('tail:idle:ab12'), b('tail:trigger:ab12:maintain'), b('q:w1:s1_updated:4:vendor-default'), b('read:0123456789abcdef'), b('read:ffffffffffffffff'), b('slot:sys')]).toEqual([
+      { bucket: 'background', conv: 'w1' }, { bucket: 'idle', conv: 'w1' }, { bucket: 'trigger', conv: 'w1', job: 'maintain' }, { bucket: 'read', conv: 'w1' },
+      { bucket: 'reader', conv: 'w1' }, { bucket: 'unattributed', conv: null }, { bucket: 'unattributed', conv: null }]);
+  });
+  test("hosting counts only the system's own compose project, or the harness process and its files when in process", () => {
+    const s = (at: string, rss: number, files = 0) => ({ at, stage: 'questions:w1', harness_rss_bytes: rss, containers: [{ name: 'stack-db-1', mem_bytes: 100 }, { name: 'other-db-1', mem_bytes: 900 }], volumes: [{ name: 'stack_data', bytes: 50 }, { name: 'other_data', bytes: 500 }], dirs: [{ path: '/x', bytes: files }] });
+    const rs = [{ at: '2026-11-25T00:00:00Z', ingest: { content_tokens: 1000, ingested_tokens: 1100, sessions: 5 } }, { at: '2026-11-25T02:00:00Z', ingest: { content_tokens: 2000, ingested_tokens: 2200, sessions: 5 } }];
+    expect(hostingOf([s('2026-11-25T01:00:00Z', 7)], 'stack', rs)).toEqual({ resident_bytes: 100, disk_bytes: 50, disk_tokens: 1000 });
+    expect(hostingOf([s('2026-11-25T01:00:00Z', 7, 3), s('2026-11-25T03:00:00Z', 9, 4)], null, rs)).toEqual({ resident_bytes: 9, disk_bytes: 4, disk_tokens: 3000 });
+    expect(hostingOf([], null, rs)).toBeNull();
+  });
 });
 
 describe('hosting readings', () => {

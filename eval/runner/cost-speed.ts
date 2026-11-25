@@ -299,6 +299,8 @@ export interface Cs1World {
   readers: Readonly<Record<string, Cs1ReaderWorld>>;
   /** The world's counted write-to-queryable probe records (eval/runner/memory-qa/cost-speed-probes.ts). */
   probes?: readonly ProbeRecord[] | null;
+  /** The bulk import's probes, polled while later sessions were still being written: descriptive, never counted. */
+  bulk_probes?: readonly ProbeRecord[] | null;
 }
 
 /** A system's steady-peak resident memory and disk bytes, and the ingested tokens the disk held when sampled (the projection's base). */
@@ -322,6 +324,8 @@ export interface Cs1FullContextWorld {
   cached_usd: number;
   cache_write_tokens: number;
   cache_write_usd: number;
+  /** Input tokens read neither from nor into the cache, and their dollars. */
+  uncached_tokens?: number;
   uncached_usd: number;
   output_usd: number;
   classes: readonly MatchClass[];
@@ -406,6 +410,15 @@ export function cs1MonthlyLines(w: Cs1World, profile: Cs1Profile, fixed: { idle_
   };
 }
 
+/** The bulk import's probes pooled over worlds: how many, how many were found within the horizon, and the p50 of the found ones' times (misses rank above it, so a p50 on one is null). */
+export function cs1BulkProbes(worlds: readonly Cs1World[]) {
+  const all = worlds.flatMap(w => w.bulk_probes ?? []).filter(r => r.status !== 'errored');
+  if (!all.length) return null;
+  const ranked = all.map(r => r.status === 'found' ? r.write_to_queryable_ms! : Infinity).sort((a, b) => a - b);
+  const p50 = ranked[Math.max(0, Math.ceil(0.5 * ranked.length) - 1)];
+  return { probes: all.length, found: all.filter(r => r.status === 'found').length, p50_ms: Number.isFinite(p50) && p50 <= CS1_HORIZON_MS ? p50 : null };
+}
+
 /** Key-matched accuracy: `unclear` counts as not correct and is also counted on its own. */
 export function cs1Accuracy(rs: ReadonlyArray<{ questions: number; classes: readonly MatchClass[] }>) {
   const questions = rs.reduce((n, r) => n + r.questions, 0);
@@ -443,6 +456,14 @@ export function cs1FullContext(fc: Cs1FullContextReader, profile: Cs1Profile) {
   if (!fit?.fits) return { fits: false as const, history_tokens: null, warm_usd: null, cold_usd: null, cost_per_correct: null, accuracy, note: "doesn't fit" };
   const sum = (f: (w: Cs1FullContextWorld) => number) => fc.worlds.reduce((n, w) => n + f(w), 0);
   const p = CS1_PROFILES[profile], history = fit.prompt_tokens ?? p.history_tokens;
+  const perCorrect = (v: number | null) => v === null || !accuracy.correct ? null : v / (p.questions * accuracy.key_matched!);
+  const uncachedRate = sum(w => w.uncached_tokens ?? 0) > 0 ? sum(w => w.uncached_usd) / sum(w => w.uncached_tokens ?? 0) : null;
+  if (sum(w => w.cache_write_tokens) === 0 && uncachedRate !== null && sum(w => w.questions) > 0) {
+    // A reader that reports no cache writes sends the whole history uncached with every question: warm and cold agree.
+    const usd = p.questions * (history * uncachedRate + sum(w => w.output_usd) / sum(w => w.questions));
+    return { fits: true as const, history_tokens: history, warm_usd: usd, cold_usd: usd, accuracy, cost_per_correct: accuracy.correct ? { warm_usd: perCorrect(usd), cold_usd: perCorrect(usd) } : null,
+      note: accuracy.correct ? 'no cache writes reported: priced at the uncached input rate' : 'no correct answers' };
+  }
   const writeRate = sum(w => w.cache_write_tokens) > 0 ? sum(w => w.cache_write_usd) / sum(w => w.cache_write_tokens) : null;
   const cachedRate = sum(w => w.cached_tokens) > 0 ? sum(w => w.cached_usd) / sum(w => w.cached_tokens) : null;
   const perQuestion = sum(w => w.questions) > 0 ? (sum(w => w.uncached_usd) + sum(w => w.output_usd)) / sum(w => w.questions) : null;
@@ -450,7 +471,6 @@ export function cs1FullContext(fc: Cs1FullContextReader, profile: Cs1Profile) {
   const writes = Math.min(p.questions, HOURS_PER_MONTH / 24);
   const warm = cachedRate === null ? null : writes * history * writeRate + (p.questions - writes) * history * cachedRate + p.questions * perQuestion;
   const cold = p.questions * history * writeRate + p.questions * perQuestion;
-  const perCorrect = (v: number | null) => v === null || !accuracy.correct ? null : v / (p.questions * accuracy.key_matched!);
   return {
     fits: true as const, history_tokens: history, warm_usd: warm, cold_usd: cold, accuracy,
     cost_per_correct: accuracy.correct ? { warm_usd: perCorrect(warm), cold_usd: perCorrect(cold) } : null,
@@ -578,6 +598,7 @@ export function cs1Aggregate(inp: Cs1Input) {
       accuracy: Object.fromEntries(readers.map(r => [r, cs1Accuracy(x.worlds.map(w => w.readers[r]))])),
       growth: cs1Growth(x.worlds),
       probes,
+      bulk_probes: cs1BulkProbes(x.worlds),
       profiles,
     };
   });

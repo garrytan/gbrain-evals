@@ -11,7 +11,7 @@ import { createHash } from 'node:crypto';
 import type { MatchClass } from '../../eval/runner/bg1/match.ts';
 import { CS1_DRAWS, CS1_PROFILES, CS1_SEED, cs1Accuracy, cs1Aggregate, cs1Draws, cs1FullContext, cs1Growth, cs1Hosting, cs1IdleUsdPerMonth, cs1MonthlyLines, renderCs1Table,
   type Cs1Input, type Cs1Rule, type Cs1System, type Cs1World } from '../../eval/runner/cost-speed.ts';
-import type { ProbeRecord } from '../../eval/runner/memory-qa/cost-speed-probes.ts';
+import { probeSummary, type ProbeRecord } from '../../eval/runner/memory-qa/cost-speed-probes.ts';
 import { seededRandom } from '../../eval/runner/stats/paired.ts';
 
 const GIB = 2 ** 30;
@@ -207,6 +207,14 @@ describe('write to queryable', () => {
 });
 
 describe('history growth', () => {
+  test('bulk probes are pooled descriptively; late and never-found misses are counted among counted misses', () => {
+    const rec = (k: number, status: 'found' | 'missed', ms: number | null, extra: object = {}): ProbeRecord => ({ source_id: `s${k}`, status, write_to_queryable_ms: ms, polls: 1, errored_polls: 0, unattributed_returns: 0, started_idle: false, ...extra });
+    const worlds = system('x').worlds.map((w, i) => ({ ...w, bulk_probes: i === 0 ? [rec(1, 'found', 100), rec(2, 'found', 300), rec(3, 'missed', null)] : [] }));
+    expect(cs1Aggregate({ ...input(), systems: [{ system: 'x', hosting: null, worlds }] }).systems[0].bulk_probes).toEqual({ probes: 3, found: 2, p50_ms: 300 });
+    const held = [rec(1, 'missed', null, { started_idle: true, miss: 'late' }), rec(2, 'missed', null, { started_idle: true, miss: 'never' }), ...Array.from({ length: 8 }, (_, k) => rec(3 + k, 'found', 50, { started_idle: true }))];
+    expect(probeSummary([held], 600_000)).toMatchObject({ counted: 10, missed: 2, late: 1, never: 1 });
+  });
+
   test('last quarter over first, flagged above 1.25; not defined when the first quarter cost nothing', () => {
     const w = (q: [number, number]) => system('x', { quarters: q }).worlds;
     expect(cs1Growth(w([1, 1.5]))).toMatchObject({ ratio: 1.5, flagged: true });
@@ -233,6 +241,15 @@ describe('baseline-full-context', () => {
   });
   test('a prompt that does not fit is reported, not priced', () => {
     expect(cs1FullContext(fc(false), 'heavy')).toMatchObject({ fits: false, warm_usd: null, cold_usd: null, note: "doesn't fit" });
+  });
+  test('a reader that reports no cache writes is priced at its uncached input rate, warm and cold alike', () => {
+    const plain = { worlds: WORLDS.slice(0, 2).map(world => ({ world, questions: 20, cached_tokens: 0, cached_usd: 0, cache_write_tokens: 0, cache_write_usd: 0, uncached_tokens: 20 * 180_000, uncached_usd: 20 * 180_000 * 2.5e-7, output_usd: 0.1, classes: classes(10) })),
+      fit: { heavy: { fits: true }, light: { fits: true, prompt_tokens: 110_000 } } };
+    const heavy = cs1FullContext(plain, 'heavy');
+    expect(heavy.cold_usd).toBeCloseTo(300 * (968_000 * 2.5e-7 + 0.005), 6);
+    expect(heavy.warm_usd).toBe(heavy.cold_usd);
+    expect(heavy.note).toBe('no cache writes reported: priced at the uncached input rate');
+    expect(cs1FullContext({ ...plain, worlds: plain.worlds.map(w => ({ ...w, uncached_tokens: 0 })) }, 'heavy').note).toBe('not priced: no cache-write reads measured');
   });
 });
 

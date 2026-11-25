@@ -28,6 +28,8 @@ export interface ProbeRecord {
   unattributed_returns: number;
   /** Whether the idle check before this probe found the system idle. */
   started_idle: boolean;
+  /** A held-back miss, searched once more after the system was idle again: found then (late) or not (never). */
+  miss?: 'late' | 'never' | null;
 }
 
 /**
@@ -69,6 +71,7 @@ export function probeSummary(windows: ProbeRecord[][], horizonMs: number) {
   const all = windows.flat();
   return {
     counted: counted.length, found: counted.filter(r => r.status === 'found').length, missed: counted.filter(r => r.status === 'missed').length,
+    late: counted.filter(r => r.status === 'missed' && r.miss === 'late').length, never: counted.filter(r => r.status === 'missed' && r.miss === 'never').length,
     miss_share: counted.length ? counted.filter(r => r.status === 'missed').length / counted.length : null,
     p50_ms: at(0.5), p95_ms: at(0.95),
     errored: all.filter(r => r.status === 'errored').length, not_idle: all.filter(r => !r.started_idle).length,

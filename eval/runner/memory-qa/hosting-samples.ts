@@ -5,7 +5,8 @@
  * (`docker stats`) and every volume's size (`docker system df -v`), plus the harness process's own resident memory
  * for in-process systems. A read that fails is recorded with its error, never dropped.
  */
-import { appendFileSync } from 'node:fs';
+import { appendFileSync, lstatSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
 
 export interface HostingSample {
   at: string;
@@ -13,6 +14,8 @@ export interface HostingSample {
   harness_rss_bytes: number;
   containers: Array<{ name: string; mem_bytes: number }>;
   volumes: Array<{ name: string; bytes: number }>;
+  /** An in-process system's own files (the file agent's tree), by path. */
+  dirs?: Array<{ path: string; bytes: number }>;
   error?: string;
 }
 
@@ -43,6 +46,19 @@ async function dockerCli(args: string[]): Promise<string> {
   return out;
 }
 
+/** Bytes of every regular file under `root` (0 when it doesn't exist yet). */
+export function treeBytes(root: string): number {
+  let n = 0;
+  const walk = (p: string) => {
+    let st;
+    try { st = lstatSync(p); } catch { return; }
+    if (st.isDirectory()) for (const e of readdirSync(p)) walk(join(p, e));
+    else if (st.isFile()) n += st.size;
+  };
+  walk(root);
+  return n;
+}
+
 /**
  * Samples into `path` every `intervalMs` while a stage is set; `stage(label)` takes a sample at once and sets the label
  * later samples carry, and `stage(null)` pauses sampling (the bulk import).
@@ -51,7 +67,8 @@ export class HostingSampler {
   private label: string | null = null;
   private timer: ReturnType<typeof setInterval> | null = null;
   private pending: Promise<void> = Promise.resolve();
-  constructor(private readonly path: string, private readonly intervalMs = 60_000, private readonly read: () => Promise<Pick<HostingSample, 'containers' | 'volumes'>> = () => dockerReading()) {}
+  constructor(private readonly path: string, private readonly intervalMs = 60_000, private readonly read: () => Promise<Pick<HostingSample, 'containers' | 'volumes'>> = () => dockerReading(),
+    private readonly dirs: readonly string[] = []) {}
 
   async stage(label: string | null): Promise<void> {
     this.label = label;
@@ -70,7 +87,7 @@ export class HostingSampler {
     if (stage === null) return;
     const base = { at: new Date().toISOString(), stage, harness_rss_bytes: process.memoryUsage().rss };
     let line: HostingSample;
-    try { line = { ...base, ...(await this.read()) }; }
+    try { line = { ...base, ...(await this.read()), ...(this.dirs.length ? { dirs: this.dirs.map(p => ({ path: p, bytes: treeBytes(p) })) } : {}) }; }
     catch (e) { line = { ...base, containers: [], volumes: [], error: (e as Error).message.slice(0, 300) }; }
     appendFileSync(this.path, JSON.stringify(line) + '\n');
   }

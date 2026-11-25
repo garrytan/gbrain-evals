@@ -468,6 +468,8 @@ interface RealizationEvent {
   reason?: string; restored_from?: string; ingest?: IngestSummary; probes?: ProbeRecord[];
   /** Held-back probe cells (cost and speed): the bulk-import and held-back write-to-queryable probes and the label calibration window. */
   write_probes?: WriteProbe[]; calibration?: ProbeCalibration;
+  /** Held-back probe cells: the realization's opaque namespace, which names its ingest, calibration and probe meter keys. */
+  ns?: string;
   /** A22: the earlier realization whose answers, judgments and final retrievals this one carries. */
   carried_from?: string; carried?: { answers: number; judgments: number; retrievals: number };
 }
@@ -909,7 +911,8 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
 
   // ─── Phase 1: one realization per conversation ───
   const realizations = new Map<string, string>();
-  const hosting = def.hosting_samples ? new HostingSampler(join(staging.root, 'hosting.ndjson'), opts.hostingIntervalMs, deps.hostingRead) : null;
+  const hosting = def.hosting_samples ? new HostingSampler(join(staging.root, 'hosting.ndjson'), opts.hostingIntervalMs, deps.hostingRead,
+    def.system === 'baseline-file-agent' ? [join(opts.out, 'runs', def.id, 'file-agent')] : []) : null;
   try {
     for (const convId of convIds) {
       const prior = staging.latest(convId);
@@ -1020,6 +1023,8 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
     const writes: number[] = [];
     let failed = 0, synthetic = 0, messages = 0, tokens = 0, contentTokens = 0;
     let bulkWallMs: number | null = null;
+    /** Held-back probe cells: each bulk write's wall-clock window and content tokens, so history growth can price the first and last quarter. */
+    const bulkWrites: Array<{ i: number; source_id: string; start_at: string; end_at: string; content_tokens: number }> = [];
     const probes: Array<Promise<ProbeRecord>> = [];
     /** Set once /finish has returned: the store is as queryable as it will get, so a probe whose next poll misses is missed. */
     let drained = false;
@@ -1102,8 +1107,10 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
         if (step.synthetic_time) synthetic++;
         messages += step.input.turns.length;
         tokens += encodingCount('cl100k_base', step.input.turns.map(t => `${t.speaker}: ${t.content}`).join('\n'));
-        if (heldBack) contentTokens += encodingCount('cl100k_base', step.input.turns.map(t => t.content).join('\n'));
+        const sessionTokens = heldBack ? encodingCount('cl100k_base', step.input.turns.map(t => t.content).join('\n')) : 0;
+        contentTokens += sessionTokens;
         const failedBefore = failed;
+        const startAt = new Date().toISOString();
         const w0 = performance.now();
         try {
           const res = await system.ingestSession(ns, step.input, step.event_time);
@@ -1115,6 +1122,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
           failed++;
           errors.push({ source_id: step.input.source_id, kind: (e as { kind?: string }).kind ?? 'product_error', message: (e as Error).message.slice(0, 300) });
         }
+        if (heldBack) bulkWrites.push({ i, source_id: step.input.source_id, start_at: startAt, end_at: new Date().toISOString(), content_tokens: sessionTokens });
         const kind = sample.get(i);
         if (kind && heldBack && canProbe) bulkProbes.push(failed > failedBefore ? Promise.resolve(writeFailedProbe(step.input, 'bulk', false, null)) : writeProbe(step.input, 'bulk', w0, false, null));
         else if (kind) probes.push(probe(step, kind, w0));
@@ -1199,7 +1207,8 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
     };
     writeAtomic(join(staging.dir(rid), 'readiness.ndjson'), probeRecords.map(p => JSON.stringify(p) + '\n').join(''));
     if (heldBack) writeAtomic(join(staging.dir(rid), 'write-probes.ndjson'), writeProbes.map(p => JSON.stringify(p) + '\n').join(''));
-    staging.event({ realization_id: rid, conversation: convId, attempt, event: 'ingested', at: new Date().toISOString(), ingest, probes: probeRecords, ...(heldBack ? { write_probes: writeProbes, ...(calibration ? { calibration } : {}) } : {}) });
+    if (heldBack) writeAtomic(join(staging.dir(rid), 'writes.ndjson'), bulkWrites.map(w => JSON.stringify(w) + '\n').join(''));
+    staging.event({ realization_id: rid, conversation: convId, attempt, event: 'ingested', at: new Date().toISOString(), ingest, probes: probeRecords, ...(heldBack ? { ns, write_probes: writeProbes, ...(calibration ? { calibration } : {}) } : {}) });
     return 'ok';
   }
 
