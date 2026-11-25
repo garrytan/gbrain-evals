@@ -612,11 +612,12 @@ class GbrainDefaultsAdapter(Adapter):
     def outbox_pending(self) -> dict[str, int]:
         """Write effects still in gbrain's outbox, by kind, through starter `list_write_requests` on the live serve.
         Receipts come newest first and the consumer claims effects in request order, so paging stops at the first page
-        with none pending."""
+        with none pending. Pages are gbrain's default size: `limit` is full-surface only, and since v0.60.740.0 a starter
+        caller that passes it is refused with param_not_on_surface."""
         by_kind: dict[str, int] = {}
         before = None
         while True:
-            body, _m, _n, _ms = self.call("list_write_requests", {"limit": 100, **({"before": before} if before else {})})
+            body, _m, _n, _ms = self.call("list_write_requests", {"before": before} if before else {})
             body = body if isinstance(body, dict) else {}
             pending = [e for r in body.get("requests") or [] for e in r.get("effects") or [] if e.get("state") in PENDING_EFFECT_STATES]
             for e in pending:

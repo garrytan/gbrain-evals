@@ -297,3 +297,32 @@ describe('fake_upstream.py (keyless provider stand-in)', () => {
     expect((await post('/voyage/v1/rerank', { query: 'a', documents: ['a'] })).status).toBe(200);
   });
 });
+
+describe('starter-surface parameters', () => {
+  test('outbox_pending pages list_write_requests with only the parameters a starter caller may pass in the pinned gbrain', async () => {
+    const { paramCallable } = await import('../../node_modules/gbrain/src/mcp/surface.ts');
+    const { OPERATION_MANIFEST } = await import('../../node_modules/gbrain/src/core/operation-manifest.generated.ts');
+    const code = [
+      'import importlib.util, json, types',
+      `spec = importlib.util.spec_from_file_location("gbrain_defaults_shim", ${JSON.stringify(`${ROOT}/${BUNDLE}/shim.py`)})`,
+      'shim = importlib.util.module_from_spec(spec)',
+      'spec.loader.exec_module(shim)',
+      'state = next(iter(shim.PENDING_EFFECT_STATES))',
+      'pages = [{"requests": [{"effects": [{"state": state, "kind": "embed"}]}], "next": "c1"}, {"requests": [{"effects": [{"state": "done", "kind": "embed"}]}], "next": None}]',
+      'calls = []',
+      'def call(op, params):',
+      '    calls.append({"op": op, "params": params})',
+      '    return pages[len(calls) - 1], {}, [], 0.0',
+      'stub = types.SimpleNamespace(call=call)',
+      'pending = shim.GbrainDefaultsAdapter.outbox_pending(stub)',
+      'print(json.dumps({"pending": pending, "calls": calls}))',
+    ].join('\n');
+    const r = Bun.spawnSync(['python3', '-c', code], { cwd: ROOT });
+    if (r.exitCode !== 0) throw new Error(r.stderr.toString());
+    const out = JSON.parse(r.stdout.toString()) as { pending: Record<string, number>; calls: Array<{ op: string; params: Record<string, unknown> }> };
+    expect(out.pending).toEqual({ embed: 1 });
+    expect(out.calls.map(c => c.params)).toEqual([{}, { before: 'c1' }]);
+    const op = OPERATION_MANIFEST.find(o => o.name === 'list_write_requests')!;
+    for (const c of out.calls) for (const p of Object.keys(c.params)) expect([p, paramCallable(op, p, 'starter')]).toEqual([p, true]);
+  });
+});
