@@ -263,6 +263,11 @@ async function changePass(gut: GbrainUnderTest, world: PqWorld, citation: Citati
       const probe = `s${world.seed}:${c.slug}`;
       const local: SentenceRow[] = [];
       let row: QuestionRow | null = null;
+      const restore = async () => {
+        for (const o of world.companies) {
+          if (signalOf(await b.sut.status(b.ids.get(o.slug)!))) await b.sut.refresh(b.ids.get(o.slug)!, b.chat);
+        }
+      };
       try {
         await applyChange(b, c);
         const r = await b.sut.status(b.ids.get(c.slug)!);
@@ -298,9 +303,7 @@ async function changePass(gut: GbrainUnderTest, world: PqWorld, citation: Citati
           if (now.freshness === 'fresh' && answerMatches(c, now.answer ?? [])) { row!.cycles_to_correct = day; break; }
         }
         row.refreshes = [...b.calls.values()].reduce((x, y) => x + y, 0);
-        for (const o of world.companies) {
-          if (signalOf(await b.sut.status(b.ids.get(o.slug)!))) await b.sut.refresh(b.ids.get(o.slug)!, b.chat);
-        }
+        await restore();
         sentences.push(...local);
         questions.push(row);
         acc.score(probe, Number(row.signalled === row.gold_signal));
@@ -309,6 +312,9 @@ async function changePass(gut: GbrainUnderTest, world: PqWorld, citation: Citati
         if (voidsSeed(message)) throw e;
         questions.push({ ...(row ?? failedQuestion(world.seed, c, baseline.get(c.slug) ?? 0)), error: message });
         acc.error(probe, 'sut', message);
+        try { await restore(); } catch (e2) {
+          throw new Error(`restoring the brain after ${c.slug}'s error failed, so later questions would read its change: ${e2 instanceof Error ? e2.message : String(e2)}`);
+        }
       }
     }
   } finally {

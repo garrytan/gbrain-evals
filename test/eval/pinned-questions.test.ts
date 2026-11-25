@@ -183,4 +183,17 @@ describe('pinned-questions runner on the pinned gbrain', () => {
     expect(summarize(r.sentences, r.questions).overall).toMatchObject({ questions: 7, errors: 1 });
     expect(exactConformance(r.sentences, r.questions).pass).toBe(false);
   }, 120_000);
+
+  test('a gbrain error after a change still refreshes the signalled questions, so later questions do not read it as spillover', async () => {
+    const world = generatePinnedQuestionsWorld({ seed: 1, companies: 8 });
+    const broken = world.companies.find(c => c.affected.length > 0)!.slug;
+    const gut = resolveGbrainUnderTest(gbrainSpecFrom([]));
+    const clean = await runPinnedQuestions({ gut, seeds: [1], companies: 8, cycles: 0 });
+    const r = await runPinnedQuestions({ gut, seeds: [1], companies: 8, cycles: 0, hooks: { afterRead: slug => { if (slug === broken) throw new Error('status read failed mid-change'); } } });
+    expect(r.harnessError).toBeNull();
+    const after = world.companies.slice(world.companies.findIndex(c => c.slug === broken) + 1).map(c => c.slug);
+    expect(after.length).toBeGreaterThan(0);
+    const spill = (x: typeof r) => after.map(slug => x.questions.find(q => q.company === slug)!.spillover);
+    expect(spill(r)).toEqual(spill(clean));
+  }, 120_000);
 });
