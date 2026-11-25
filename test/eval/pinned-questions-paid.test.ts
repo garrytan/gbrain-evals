@@ -206,7 +206,7 @@ describe('pinned-questions paid arm: rule labels and judge parsing', () => {
 function judgeCheckFixture(gut: ReturnType<typeof resolveGbrainUnderTest>, models: readonly string[]) {
   const seeds = [21, 22, 23];
   const worlds = new Map(seeds.map(seed => [seed, generatePinnedQuestionsWorld({ seed })] as const));
-  const said = (c: PqCompany, values: PqCompany['before']) => CLAIMS.filter(cl => values[cl] !== null).map(cl => claimSentence(c, cl, values[cl]!));
+  const said = (c: PqCompany, values: PqCompany['after']) => CLAIMS.filter(cl => values[cl] !== null).map(cl => claimSentence(c, cl, values[cl]!));
   const graded = (c: PqCompany, kind: 'first' | 'refreshed', sentences: string[]): GradedAnswer => {
     const rule = ruleLabels(c, kind, sentences);
     const correct = Object.values(rule).includes('ambiguous') ? null : Object.values(rule).every(l => l === 'correct');

@@ -1508,6 +1508,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'metrics.ts': { role: 'shared retrieval metrics' },
   'mutation-kit.ts': { role: 'scorer mutation kit: fake systems every category scorer must fail' },
   'pinned-questions-score.ts': { role: 'pinned-questions scoring: sentence flag confusion, question signal, spillover and latency summaries', part_of: 'pinned-questions' },
+  'pinned-questions-stats.ts': { role: 'pinned-questions statistics: cluster bootstrap intervals, McNemar tests, Holm correction and the paired non-inferiority comparison', part_of: 'pinned-questions' },
   'attendance-world-score.ts': { role: 'keyless W3 attendance scorer over N9 receipts, against the list on each meeting page', part_of: 'multi-hop-paraphrase' },
   'attendee-role-planner.ts': { role: 'attendee-role questions (constrained-relational development phrasing) with planner and parser instrumentation, hermetic', part_of: 'multi-hop-paraphrase' },
   'n2-3-prompt-ab.ts': { role: 'matched before/after of the gbrain contradiction-judge prompt (N2-3) on a fresh N2 seed, development data', part_of: 'contradiction-surfacing' },
