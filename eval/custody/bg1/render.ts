@@ -8,8 +8,8 @@
  *       [--cache <dir>, default <set>/../render-cache] [--target-tokens 200000]
  *       (--fake [--fake-break <slot>:<session index>:<attempts>,... or <slot>:length]
  *        | --paid-window <unit> --window-cap-usd <n> --budget-ledger <file> --budget-run-id <id>)
- *   bun eval/custody/bg1/render.ts --dev <bg1-dev-01 to bg1-dev-20 | bg1-dev-long-01 to -03> --set <out>/set [--cache <dir>]
- *       [--target-tokens <the dev world's profile's: 200000, or 1000000 for a long one>]
+ *   bun eval/custody/bg1/render.ts --dev <bg1-dev-01 to bg1-dev-20 | bg1-dev-long-01 to -03 | bg1-dev-alias-01 to -03> --set <out>/set
+ *       [--cache <dir>] [--target-tokens <the dev world's profile's: 200000, or 1000000 for a long one>]
  *       (--fake [--fake-break <dev number>:<session index>:<attempts>,...] | --paid-window ... as above)
  *   bun eval/custody/bg1/render.ts --dev-report <bg1-dev-NN> --set <out>/set [--budget-ledger <file> --budget-run-id <id>]
  *
@@ -68,7 +68,8 @@
  * phrasing whose hashes launch amendment A published.
  *
  * --dev renders one public dev world instead of a mint slot (mint.sh --dev runs stage 1's three by default): stage 1's
- * three, the dev loop's 17 extra or the weekly line's three long ones (bg1-dev-long-01 to -03, changing-facts-gen@2,
+ * three, the dev loop's 17 extra, the weekly line's three alias ones (bg1-dev-alias-01 to -03, changing-facts-gen@3, at
+ * about 200,000 tokens) or its three long ones (bg1-dev-long-01 to -03, changing-facts-gen@2,
  * rendered to about 1,000,000 tokens unless --target-tokens says otherwise). It
  * plans the world from its public seed and the public phrasing, as changing-facts-gen.ts devFiles() does, and reads no
  * seed or phrasing file, so it takes no --seed-file, --phrasing or --slot. Before any model call it refuses unless the
@@ -502,7 +503,7 @@ export const sealedTargetTokens = (slot: number, kind: SealedKind) => BG1_PROFIL
 
 /** The committed public dev worlds' plans and questions, as changing-facts-gen.ts devFiles() writes them. */
 export const BG1_DEV_WORLDS = join(BG1_DATA_DIR, 'dev', 'worlds');
-/** Stage 1's three dev worlds, the dev loop's 17 extra, then the three long ones; a dev world's place here is its --fake-break number. */
+/** Stage 1's three dev worlds, the dev loop's 17 extra, the three long ones, then the three alias ones; a dev world's place here is its --fake-break number. */
 const DEV_IDS = BG1_DEV_ALL_IDS;
 
 /**
@@ -536,7 +537,7 @@ export function insideCheckout(path: string): boolean {
 export function devReport(argv: string[]): string {
   const flag = (name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
   const id = flag('--dev-report') ?? '', set = flag('--set'), ledger = flag('--budget-ledger'), run = flag('--budget-run-id');
-  if (!DEV_IDS.includes(id) || !set || !ledger !== !run) throw new RenderRefusal('usage: --dev-report <bg1-dev-NN | bg1-dev-long-NN> --set <dir> [--budget-ledger <file> --budget-run-id <id>]');
+  if (!DEV_IDS.includes(id) || !set || !ledger !== !run) throw new RenderRefusal('usage: --dev-report <bg1-dev-NN | bg1-dev-long-NN | bg1-dev-alias-NN> --set <dir> [--budget-ledger <file> --budget-run-id <id>]');
   const record = join(resolve(set), 'render', `${id}.json`);
   const stats = existsSync(record) ? JSON.parse(readFileSync(record, 'utf8')) as { status: string; attempts: number; regenerated: number } : null;
   const parts = [`bg1-render world=${id} report`, stats ? `status=${stats.status} attempts=${stats.attempts} regenerated=${stats.regenerated}` : 'record=missing'];
@@ -566,7 +567,7 @@ export async function main(argv: string[], env: Record<string, string | undefine
   if (dev !== null) {
     if (seedFile || phrasingFile || slotText) throw new RenderRefusal('--dev plans a public dev world from its public seed and phrasing, so it takes no --seed-file, --phrasing or --slot');
     if (kind === 'bgw') throw new RenderRefusal('--dev plans a public dev world, so it takes no --bgw');
-    if (!set || !DEV_IDS.includes(dev)) throw new RenderRefusal(`usage: --dev <bg1-dev-01 to bg1-dev-20> (or bg1-dev-long-01 to -03) --set <dir> (--fake | --paid-window <unit> --window-cap-usd <n> --budget-ledger <file> --budget-run-id <id>)`);
+    if (!set || !DEV_IDS.includes(dev)) throw new RenderRefusal(`usage: --dev <bg1-dev-01 to bg1-dev-20> (or bg1-dev-long-01 to -03) (or bg1-dev-alias-01 to -03) --set <dir> (--fake | --paid-window <unit> --window-cap-usd <n> --budget-ledger <file> --budget-run-id <id>)`);
   } else if (!set || !seedFile || !phrasingFile || !slotText) throw new RenderRefusal(`usage: [--bgw] --set <dir> --seed-file <path>.${kind}-seed --phrasing <path>.${kind}-phrasing.json --slot <n> (--fake | --paid-window <unit> --window-cap-usd <n> --budget-ledger <file> --budget-run-id <id>)`);
   if (insideCheckout(set)) throw new RenderRefusal('--set must sit outside any git checkout');
   const cache = resolve(flag('--cache') ?? join(dirname(resolve(set)), 'render-cache'));

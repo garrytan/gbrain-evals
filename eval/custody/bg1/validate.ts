@@ -13,7 +13,7 @@
  *       --phrasing <path>.bgw-phrasing.json (--report <path outside the set> | --slot <n>) [--target-tokens 200000]
  *       [--tolerance 0.15]
  *
- *   bun eval/custody/bg1/validate.ts --dev <bg1-dev-01 to bg1-dev-20 | bg1-dev-long-01 to -03> --set <out>/set
+ *   bun eval/custody/bg1/validate.ts --dev <bg1-dev-01 to bg1-dev-20 | bg1-dev-long-01 to -03 | bg1-dev-alias-01 to -03> --set <out>/set
  *       [--target-tokens <the dev world's profile's>] [--tolerance 0.15] [--fake]
  *
  * --target-tokens defaults to the set's length: 200,000 for BG1, BG1-C and a W1 batch, and 1,000,000 for a W1-long batch
@@ -36,6 +36,9 @@
  *   - sessions: world.json holds the plan's sessions (ids, days and times) and each passes checkSession against its
  *     brief;
  *   - length: the world's cl100k tokens are within the target plus or minus the tolerance (default 15%);
+ *   - alias_leak (changing-facts-gen@3 worlds only, today the alias dev worlds): no session names an entity by its
+ *     canonical name outside the planned line that introduces it, and no question's evidence session holds one of that
+ *     question's key terms (the generator's renderLeaks), so a render can't hand a grep the link the plan withheld;
  *   - duplicate: no earlier world in the set has the same world bytes;
  *   - renderer: world.json was not written by a template renderer (render.ts --fake or the generator's fixtures), unless
  *     --fake declares the run a drill, so a drill's worlds never pass a real validation and reach a manifest fill.
@@ -60,7 +63,7 @@
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
-import { BG1_CUSTODY_MARKER, BG1_DEV_ALL_IDS, BG1_PROFILES, BG1_TARGET_TOKENS, buildQuestions, devProfileOf, goldFields, PlanError, PUBLIC_PHRASING, renderBriefs, worldTokens, type QuestionRecord, type World, type WorldPlan } from '../../generators/changing-facts-gen.ts';
+import { BG1_CUSTODY_MARKER, BG1_DEV_ALL_IDS, BG1_PROFILES, BG1_TARGET_TOKENS, buildQuestions, devProfileOf, goldFields, PlanError, PUBLIC_PHRASING, renderBriefs, renderLeaks, worldTokens, type QuestionRecord, type World, type WorldPlan } from '../../generators/changing-facts-gen.ts';
 import { BG1_CONVERSATIONS, BG1_N_CAP, BG1C_CONVERSATIONS, BG1C_N_FINAL, BGW_BATCH_KEPT, bgwBatchIds, bgwSlotOf } from '../../runner/bg1/types.ts';
 import { BG1_TEMPLATE_RENDERERS } from '../../runner/memory-qa/corpus.ts';
 import { checkSession, devPlan, readPhrasing, readSeedLine, RenderRefusal, sealedPlan, sealedTargetTokens, type SealedKind } from './render.ts';
@@ -121,6 +124,7 @@ function worldGates(dir: string, planOf: () => WorldPlan, phrasing: ReturnType<t
   if (world && BG1_TEMPLATE_RENDERERS.includes(world.renderer) && !opts.drill) failed.add('renderer');
   const tokens = world && !failed.has('sessions') ? worldTokens(world) : null;
   if (tokens !== null && Math.abs(tokens - opts.targetTokens) > opts.tolerance * opts.targetTokens) failed.add('length');
+  if (world && Array.isArray(world.sessions) && world.sessions.every(s => Array.isArray(s?.turns)) && renderLeaks(plan, questions, world).length) failed.add('alias_leak');
   return { failed: [...failed].sort(), sessions: world?.sessions?.length ?? 0, tokens, worldText };
 }
 
@@ -200,7 +204,7 @@ export function validateSlot(argv: string[]): { pass: boolean; line: string } {
 export function validateDev(argv: string[], devWorlds?: string): { pass: boolean; line: string } {
   const flag = (name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
   const id = flag('--dev') ?? '', set = flag('--set');
-  if (!BG1_DEV_ALL_IDS.includes(id) || !set) throw new RenderRefusal('usage: --dev <bg1-dev-01 to bg1-dev-20> (or bg1-dev-long-01 to -03) --set <dir> [--target-tokens <n>] [--tolerance <x>] [--fake]');
+  if (!BG1_DEV_ALL_IDS.includes(id) || !set) throw new RenderRefusal('usage: --dev <bg1-dev-01 to bg1-dev-20> (or bg1-dev-long-01 to -03) (or bg1-dev-alias-01 to -03) --set <dir> [--target-tokens <n>] [--tolerance <x>] [--fake]');
   if (['--seed-file', '--phrasing', '--slot', '--report', '--bg1c', '--bgw'].some(f => argv.includes(f))) throw new RenderRefusal('--dev checks a public dev world against its public seed and phrasing, so it takes no --seed-file, --phrasing, --slot, --report, --bg1c or --bgw');
   const targetTokens = Number(flag('--target-tokens') ?? BG1_PROFILES[devProfileOf(id)].target_tokens), tolerance = Number(flag('--tolerance') ?? 0.15);
   if (!(targetTokens >= 1000) || !(tolerance > 0 && tolerance < 1)) throw new RenderRefusal('--target-tokens must be at least 1000 and --tolerance between 0 and 1');

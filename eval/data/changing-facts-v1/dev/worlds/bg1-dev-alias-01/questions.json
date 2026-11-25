@@ -1,0 +1,2885 @@
+[
+ {
+  "id": "bg1-dev-alias-01:s1_updated:0",
+  "question": "What job title does the former boss of the person who did the calligraphy on our wedding invitations hold now?",
+  "answer": "Head of Security",
+  "evidence_sessions": [
+   "s119"
+  ],
+  "bg1": {
+   "stratum": "s1_updated",
+   "family": "primary",
+   "form": "exact",
+   "slot": "person-01.role",
+   "gold_values": [
+    "Head of Security"
+   ],
+   "stale_values": [
+    "Quality Lead",
+    "Product Marketing Lead",
+    "Programme Director"
+   ],
+   "decoy_values": [
+    "Head of Support"
+   ]
+  },
+  "subject": {
+   "entity": "person-01",
+   "steps": [
+    {
+     "entity": "person-03",
+     "by": "property:calligraphy"
+    },
+    {
+     "entity": "person-01",
+     "by": "relation:boss"
+    }
+   ],
+   "description": "the former boss of the person who did the calligraphy on our wedding invitations",
+   "terms": [
+    "calligraphy",
+    "boss"
+   ],
+   "resolution_sessions": [
+    "s013",
+    "s018",
+    "s026",
+    "s098",
+    "s125",
+    "s128",
+    "s142"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s1_updated:1",
+  "question": "What role does the person who sets crosswords for a local paper hold these days?",
+  "answer": "Head of Security",
+  "evidence_sessions": [
+   "s119"
+  ],
+  "bg1": {
+   "stratum": "s1_updated",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "person-01.role",
+   "gold_values": [
+    "Head of Security"
+   ],
+   "stale_values": [
+    "Quality Lead",
+    "Product Marketing Lead",
+    "Programme Director"
+   ],
+   "decoy_values": [
+    "Head of Support"
+   ]
+  },
+  "subject": {
+   "entity": "person-01",
+   "steps": [
+    {
+     "entity": "person-01",
+     "by": "property:crosswords"
+    }
+   ],
+   "description": "the person who sets crosswords for a local paper",
+   "terms": [
+    "crosswords"
+   ],
+   "resolution_sessions": [
+    "s013",
+    "s018",
+    "s026",
+    "s142"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s1_updated:2",
+  "question": "Where is the company that makes ice cream headquartered now?",
+  "answer": "Gothenburg",
+  "evidence_sessions": [
+   "s108",
+   "s111"
+  ],
+  "bg1": {
+   "stratum": "s1_updated",
+   "family": "primary",
+   "form": "exact",
+   "slot": "company-01.hq",
+   "gold_values": [
+    "Gothenburg",
+    "Göteborg"
+   ],
+   "stale_values": [
+    "Krakow",
+    "Valencia",
+    "Denver"
+   ],
+   "decoy_values": []
+  },
+  "subject": {
+   "entity": "company-01",
+   "steps": [
+    {
+     "entity": "company-01",
+     "by": "property:ice-cream"
+    }
+   ],
+   "description": "the company that makes ice cream",
+   "terms": [
+    "ice cream"
+   ],
+   "resolution_sessions": [
+    "s028",
+    "s048",
+    "s094",
+    "s125"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s1_updated:3",
+  "question": "Who is in charge of operations at the company that runs vertical farms these days?",
+  "answer": "Yusuf Weber",
+  "evidence_sessions": [
+   "s095"
+  ],
+  "bg1": {
+   "stratum": "s1_updated",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "company-02.ops_lead",
+   "gold_values": [
+    "Yusuf Weber",
+    "Yusuf",
+    "Weber"
+   ],
+   "stale_values": [
+    "Dmitri Uddin",
+    "Ilse Ortega"
+   ],
+   "decoy_values": [
+    "Nadia Grieve"
+   ]
+  },
+  "subject": {
+   "entity": "company-02",
+   "steps": [
+    {
+     "entity": "company-02",
+     "by": "property:vertical-farms"
+    }
+   ],
+   "description": "the company that runs vertical farms",
+   "terms": [
+    "vertical farms"
+   ],
+   "resolution_sessions": [
+    "s099",
+    "s144",
+    "s146"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s1_updated:4",
+  "question": "Where does the person who plays the bagpipes work now?",
+  "answer": "Zephyrine Aviation",
+  "evidence_sessions": [
+   "s109"
+  ],
+  "bg1": {
+   "stratum": "s1_updated",
+   "family": "primary",
+   "form": "exact",
+   "slot": "person-02.employer",
+   "gold_values": [
+    "Zephyrine Aviation",
+    "Zephyrine"
+   ],
+   "stale_values": [
+    "Heathmont Schools",
+    "Lindenhall Bank"
+   ],
+   "decoy_values": []
+  },
+  "subject": {
+   "entity": "person-02",
+   "steps": [
+    {
+     "entity": "person-02",
+     "by": "property:bagpipes"
+    }
+   ],
+   "description": "the person who plays the bagpipes",
+   "terms": [
+    "bagpipes"
+   ],
+   "resolution_sessions": [
+    "s004",
+    "s015",
+    "s054"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s1_updated:5",
+  "question": "Which city is the person who did the calligraphy on our wedding invitations based in now?",
+  "answer": "Utrecht",
+  "evidence_sessions": [
+   "s123",
+   "s130"
+  ],
+  "bg1": {
+   "stratum": "s1_updated",
+   "family": "primary",
+   "form": "exact",
+   "slot": "person-03.city",
+   "gold_values": [
+    "Utrecht"
+   ],
+   "stale_values": [
+    "Edinburgh",
+    "Porto",
+    "Helsinki"
+   ],
+   "decoy_values": [
+    "Prague"
+   ]
+  },
+  "subject": {
+   "entity": "person-03",
+   "steps": [
+    {
+     "entity": "person-03",
+     "by": "property:calligraphy"
+    }
+   ],
+   "description": "the person who did the calligraphy on our wedding invitations",
+   "terms": [
+    "calligraphy"
+   ],
+   "resolution_sessions": [
+    "s098",
+    "s125",
+    "s128"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s1_updated:6",
+  "question": "Where does the person who did the calligraphy on our wedding invitations live these days?",
+  "answer": "Utrecht",
+  "evidence_sessions": [
+   "s123",
+   "s130"
+  ],
+  "bg1": {
+   "stratum": "s1_updated",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "person-03.city",
+   "gold_values": [
+    "Utrecht"
+   ],
+   "stale_values": [
+    "Edinburgh",
+    "Porto",
+    "Helsinki"
+   ],
+   "decoy_values": [
+    "Prague"
+   ]
+  },
+  "subject": {
+   "entity": "person-03",
+   "steps": [
+    {
+     "entity": "person-03",
+     "by": "property:calligraphy"
+    }
+   ],
+   "description": "the person who did the calligraphy on our wedding invitations",
+   "terms": [
+    "calligraphy"
+   ],
+   "resolution_sessions": [
+    "s098",
+    "s125",
+    "s128"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s1_updated:7",
+  "question": "Who is running the project measuring our carbon footprint these days?",
+  "answer": "Jonah Bauer",
+  "evidence_sessions": [
+   "s097"
+  ],
+  "bg1": {
+   "stratum": "s1_updated",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "project-01.lead",
+   "gold_values": [
+    "Jonah Bauer",
+    "Jonah",
+    "Bauer"
+   ],
+   "stale_values": [
+    "Fenna Vidal"
+   ],
+   "decoy_values": []
+  },
+  "subject": {
+   "entity": "project-01",
+   "steps": [
+    {
+     "entity": "project-01",
+     "by": "property:carbon"
+    }
+   ],
+   "description": "the project measuring our carbon footprint",
+   "terms": [
+    "carbon"
+   ],
+   "resolution_sessions": [
+    "s106",
+    "s117",
+    "s129",
+    "s134"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s2_corrected:0",
+  "question": "Where is the company that launches weather satellites headquartered now?",
+  "answer": "Taipei",
+  "evidence_sessions": [
+   "s049",
+   "s062"
+  ],
+  "bg1": {
+   "stratum": "s2_corrected",
+   "family": "primary",
+   "form": "exact",
+   "slot": "company-03.hq",
+   "gold_values": [
+    "Taipei"
+   ],
+   "stale_values": [
+    "Adelaide"
+   ],
+   "decoy_values": []
+  },
+  "subject": {
+   "entity": "company-03",
+   "steps": [
+    {
+     "entity": "company-03",
+     "by": "property:satellites"
+    }
+   ],
+   "description": "the company that launches weather satellites",
+   "terms": [
+    "satellites"
+   ],
+   "resolution_sessions": [
+    "s004",
+    "s030",
+    "s125",
+    "s141"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s2_corrected:1",
+  "question": "In which city does the company founded by the person who built a telescope in the garage have its head office these days?",
+  "answer": "Taipei",
+  "evidence_sessions": [
+   "s049",
+   "s062"
+  ],
+  "bg1": {
+   "stratum": "s2_corrected",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "company-03.hq",
+   "gold_values": [
+    "Taipei"
+   ],
+   "stale_values": [
+    "Adelaide"
+   ],
+   "decoy_values": []
+  },
+  "subject": {
+   "entity": "company-03",
+   "steps": [
+    {
+     "entity": "person-03-twin",
+     "by": "property:telescope"
+    },
+    {
+     "entity": "company-03",
+     "by": "relation:founded"
+    }
+   ],
+   "description": "the company founded by the person who built a telescope in the garage",
+   "terms": [
+    "telescope",
+    "founded"
+   ],
+   "resolution_sessions": [
+    "s004",
+    "s005",
+    "s008",
+    "s030",
+    "s107",
+    "s125",
+    "s135",
+    "s141"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s2_corrected:2",
+  "question": "How much does the deal that covers the airport lounges renew for each year now?",
+  "answer": "$178,000",
+  "evidence_sessions": [
+   "s062",
+   "s081"
+  ],
+  "bg1": {
+   "stratum": "s2_corrected",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "deal-01.price",
+   "gold_values": [
+    "$178,000",
+    "178,000",
+    "$178k",
+    "178k",
+    "178 thousand"
+   ],
+   "stale_values": [
+    "$292,000"
+   ],
+   "decoy_values": [
+    "$338,000"
+   ]
+  },
+  "subject": {
+   "entity": "deal-01",
+   "steps": [
+    {
+     "entity": "deal-01",
+     "by": "property:lounges"
+    }
+   ],
+   "description": "the deal that covers the airport lounges",
+   "terms": [
+    "lounges"
+   ],
+   "resolution_sessions": [
+    "s036",
+    "s058",
+    "s069",
+    "s071"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s2_corrected:3",
+  "question": "What job title does the person who taught me to make kimchi hold now?",
+  "answer": "Developer Advocate",
+  "evidence_sessions": [
+   "s098",
+   "s131"
+  ],
+  "bg1": {
+   "stratum": "s2_corrected",
+   "family": "primary",
+   "form": "exact",
+   "slot": "person-04.role",
+   "gold_values": [
+    "Developer Advocate"
+   ],
+   "stale_values": [
+    "Director of Partnerships"
+   ],
+   "decoy_values": []
+  },
+  "subject": {
+   "entity": "person-04",
+   "steps": [
+    {
+     "entity": "person-04",
+     "by": "property:kimchi"
+    }
+   ],
+   "description": "the person who taught me to make kimchi",
+   "terms": [
+    "kimchi"
+   ],
+   "resolution_sessions": [
+    "s060",
+    "s130",
+    "s139"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s2_corrected:4",
+  "question": "Who supplies the project commissioned by the company that designs escape rooms at the moment?",
+  "answer": "Kettlebrook Brewing",
+  "evidence_sessions": [
+   "s047",
+   "s065"
+  ],
+  "bg1": {
+   "stratum": "s2_corrected",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "project-01.vendor",
+   "gold_values": [
+    "Kettlebrook Brewing",
+    "Kettlebrook"
+   ],
+   "stale_values": [
+    "Thistledown Textiles",
+    "Moonvale Pharma"
+   ],
+   "decoy_values": [
+    "Quillfeather Media"
+   ]
+  },
+  "subject": {
+   "entity": "project-01",
+   "steps": [
+    {
+     "entity": "company-05",
+     "by": "property:escape-rooms"
+    },
+    {
+     "entity": "project-01",
+     "by": "relation:commissioned"
+    }
+   ],
+   "description": "the project commissioned by the company that designs escape rooms",
+   "terms": [
+    "escape rooms",
+    "commissioned"
+   ],
+   "resolution_sessions": [
+    "s003",
+    "s038",
+    "s064",
+    "s106",
+    "s117",
+    "s129",
+    "s134"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s2_corrected:5",
+  "question": "Which city is the person who taught me to make kimchi based in now?",
+  "answer": "Gdansk",
+  "evidence_sessions": [
+   "s085",
+   "s102"
+  ],
+  "bg1": {
+   "stratum": "s2_corrected",
+   "family": "primary",
+   "form": "exact",
+   "slot": "person-04.city",
+   "gold_values": [
+    "Gdansk",
+    "Gdańsk"
+   ],
+   "stale_values": [
+    "Oslo",
+    "Tampere"
+   ],
+   "decoy_values": [
+    "Vienna"
+   ]
+  },
+  "subject": {
+   "entity": "person-04",
+   "steps": [
+    {
+     "entity": "person-04",
+     "by": "property:kimchi"
+    }
+   ],
+   "description": "the person who taught me to make kimchi",
+   "terms": [
+    "kimchi"
+   ],
+   "resolution_sessions": [
+    "s060",
+    "s130",
+    "s139"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s2_corrected:6",
+  "question": "Where does the person who taught me to make kimchi live these days?",
+  "answer": "Gdansk",
+  "evidence_sessions": [
+   "s085",
+   "s102"
+  ],
+  "bg1": {
+   "stratum": "s2_corrected",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "person-04.city",
+   "gold_values": [
+    "Gdansk",
+    "Gdańsk"
+   ],
+   "stale_values": [
+    "Oslo",
+    "Tampere"
+   ],
+   "decoy_values": [
+    "Vienna"
+   ]
+  },
+  "subject": {
+   "entity": "person-04",
+   "steps": [
+    {
+     "entity": "person-04",
+     "by": "property:kimchi"
+    }
+   ],
+   "description": "the person who taught me to make kimchi",
+   "terms": [
+    "kimchi"
+   ],
+   "resolution_sessions": [
+    "s060",
+    "s130",
+    "s139"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s2_corrected:7",
+  "question": "Who leads the project adding braille labels to our packaging now?",
+  "answer": "Ronan Sato",
+  "evidence_sessions": [
+   "s095",
+   "s103"
+  ],
+  "bg1": {
+   "stratum": "s2_corrected",
+   "family": "primary",
+   "form": "exact",
+   "slot": "project-02.lead",
+   "gold_values": [
+    "Ronan Sato",
+    "Ronan",
+    "Sato"
+   ],
+   "stale_values": [
+    "Esme Quigley",
+    "Aurelio Varga"
+   ],
+   "decoy_values": []
+  },
+  "subject": {
+   "entity": "project-02",
+   "steps": [
+    {
+     "entity": "project-02",
+     "by": "property:braille"
+    }
+   ],
+   "description": "the project adding braille labels to our packaging",
+   "terms": [
+    "braille"
+   ],
+   "resolution_sessions": [
+    "s067",
+    "s075",
+    "s114",
+    "s146"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s3_repeated_stale:0",
+  "question": "Who runs operations at the company that sells oat milk to cafes now?",
+  "answer": "Vera Dimitrov",
+  "evidence_sessions": [
+   "s096"
+  ],
+  "bg1": {
+   "stratum": "s3_repeated_stale",
+   "family": "primary",
+   "form": "exact",
+   "slot": "company-04.ops_lead",
+   "gold_values": [
+    "Vera Dimitrov",
+    "Vera",
+    "Dimitrov"
+   ],
+   "stale_values": [
+    "Kasimir Raman"
+   ],
+   "decoy_values": []
+  },
+  "subject": {
+   "entity": "company-04",
+   "steps": [
+    {
+     "entity": "company-04",
+     "by": "property:oat-milk"
+    }
+   ],
+   "description": "the company that sells oat milk to cafes",
+   "terms": [
+    "oat milk"
+   ],
+   "resolution_sessions": [
+    "s138",
+    "s140",
+    "s143"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s3_repeated_stale:1",
+  "question": "Who is in charge of operations at the company that makes ice cream these days?",
+  "answer": "Saoirse Wojcik",
+  "evidence_sessions": [
+   "s114"
+  ],
+  "bg1": {
+   "stratum": "s3_repeated_stale",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "company-01.ops_lead",
+   "gold_values": [
+    "Saoirse Wojcik",
+    "Saoirse",
+    "Wojcik"
+   ],
+   "stale_values": [
+    "Cosima Zoric"
+   ],
+   "decoy_values": []
+  },
+  "subject": {
+   "entity": "company-01",
+   "steps": [
+    {
+     "entity": "company-01",
+     "by": "property:ice-cream"
+    }
+   ],
+   "description": "the company that makes ice cream",
+   "terms": [
+    "ice cream"
+   ],
+   "resolution_sessions": [
+    "s028",
+    "s048",
+    "s094",
+    "s125"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s3_repeated_stale:2",
+  "question": "Which vendor does the project adding braille labels to our packaging use now?",
+  "answer": "Umberfield Mining",
+  "evidence_sessions": [
+   "s101"
+  ],
+  "bg1": {
+   "stratum": "s3_repeated_stale",
+   "family": "primary",
+   "form": "exact",
+   "slot": "project-02.vendor",
+   "gold_values": [
+    "Umberfield Mining",
+    "Umberfield"
+   ],
+   "stale_values": [
+    "Larkspur Foods"
+   ],
+   "decoy_values": []
+  },
+  "subject": {
+   "entity": "project-02",
+   "steps": [
+    {
+     "entity": "project-02",
+     "by": "property:braille"
+    }
+   ],
+   "description": "the project adding braille labels to our packaging",
+   "terms": [
+    "braille"
+   ],
+   "resolution_sessions": [
+    "s067",
+    "s075",
+    "s114",
+    "s146"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s3_repeated_stale:3",
+  "question": "Who supplies the project commissioned by the company that runs vertical farms at the moment?",
+  "answer": "Umberfield Mining",
+  "evidence_sessions": [
+   "s101"
+  ],
+  "bg1": {
+   "stratum": "s3_repeated_stale",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "project-02.vendor",
+   "gold_values": [
+    "Umberfield Mining",
+    "Umberfield"
+   ],
+   "stale_values": [
+    "Larkspur Foods"
+   ],
+   "decoy_values": []
+  },
+  "subject": {
+   "entity": "project-02",
+   "steps": [
+    {
+     "entity": "company-02",
+     "by": "property:vertical-farms"
+    },
+    {
+     "entity": "project-02",
+     "by": "relation:commissioned"
+    }
+   ],
+   "description": "the project commissioned by the company that runs vertical farms",
+   "terms": [
+    "vertical farms",
+    "commissioned"
+   ],
+   "resolution_sessions": [
+    "s067",
+    "s075",
+    "s099",
+    "s114",
+    "s144",
+    "s146"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s3_repeated_stale:4",
+  "question": "Which city is the person who plays the bagpipes based in now?",
+  "answer": "Bologna",
+  "evidence_sessions": [
+   "s127"
+  ],
+  "bg1": {
+   "stratum": "s3_repeated_stale",
+   "family": "primary",
+   "form": "exact",
+   "slot": "person-02.city",
+   "gold_values": [
+    "Bologna"
+   ],
+   "stale_values": [
+    "Ghent"
+   ],
+   "decoy_values": []
+  },
+  "subject": {
+   "entity": "person-02",
+   "steps": [
+    {
+     "entity": "person-02",
+     "by": "property:bagpipes"
+    }
+   ],
+   "description": "the person who plays the bagpipes",
+   "terms": [
+    "bagpipes"
+   ],
+   "resolution_sessions": [
+    "s004",
+    "s015",
+    "s054"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s3_repeated_stale:5",
+  "question": "Where does the person who did the calligraphy on our wedding invitations work now?",
+  "answer": "Elmstead Clinics",
+  "evidence_sessions": [
+   "s138"
+  ],
+  "bg1": {
+   "stratum": "s3_repeated_stale",
+   "family": "primary",
+   "form": "exact",
+   "slot": "person-03.employer",
+   "gold_values": [
+    "Elmstead Clinics",
+    "Elmstead"
+   ],
+   "stale_values": [
+    "Kinglet Telecom"
+   ],
+   "decoy_values": []
+  },
+  "subject": {
+   "entity": "person-03",
+   "steps": [
+    {
+     "entity": "person-03",
+     "by": "property:calligraphy"
+    }
+   ],
+   "description": "the person who did the calligraphy on our wedding invitations",
+   "terms": [
+    "calligraphy"
+   ],
+   "resolution_sessions": [
+    "s098",
+    "s125",
+    "s128"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s3_repeated_stale:6",
+  "question": "Which company employs the person who did the calligraphy on our wedding invitations at the moment?",
+  "answer": "Elmstead Clinics",
+  "evidence_sessions": [
+   "s138"
+  ],
+  "bg1": {
+   "stratum": "s3_repeated_stale",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "person-03.employer",
+   "gold_values": [
+    "Elmstead Clinics",
+    "Elmstead"
+   ],
+   "stale_values": [
+    "Kinglet Telecom"
+   ],
+   "decoy_values": []
+  },
+  "subject": {
+   "entity": "person-03",
+   "steps": [
+    {
+     "entity": "person-03",
+     "by": "property:calligraphy"
+    }
+   ],
+   "description": "the person who did the calligraphy on our wedding invitations",
+   "terms": [
+    "calligraphy"
+   ],
+   "resolution_sessions": [
+    "s098",
+    "s125",
+    "s128"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s3_repeated_stale:7",
+  "question": "Who supplies the project automating library lending at the moment?",
+  "answer": "Rookwood Design",
+  "evidence_sessions": [
+   "s135"
+  ],
+  "bg1": {
+   "stratum": "s3_repeated_stale",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "project-03.vendor",
+   "gold_values": [
+    "Rookwood Design",
+    "Rookwood"
+   ],
+   "stale_values": [
+    "Willowmere Hotels"
+   ],
+   "decoy_values": [
+    "Brightline Analytics"
+   ]
+  },
+  "subject": {
+   "entity": "project-03",
+   "steps": [
+    {
+     "entity": "project-03",
+     "by": "property:library"
+    }
+   ],
+   "description": "the project automating library lending",
+   "terms": [
+    "library"
+   ],
+   "resolution_sessions": [
+    "s002",
+    "s109",
+    "s112"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s4_conflicting:0",
+  "question": "What discount did we actually sign on the deal whose counterparty is the company that launches weather satellites?",
+  "answer": "13%",
+  "evidence_sessions": [
+   "s044"
+  ],
+  "bg1": {
+   "stratum": "s4_conflicting",
+   "family": "primary",
+   "form": "exact",
+   "slot": "deal-01.discount",
+   "gold_values": [
+    "13%",
+    "13 percent",
+    "13 per cent"
+   ],
+   "stale_values": [
+    "31%",
+    "36%",
+    "18%",
+    "21%"
+   ],
+   "decoy_values": [],
+   "deciding_line": "Both sides executed the agreement for the flagship deal today, and it fixes the discount at 13%."
+  },
+  "subject": {
+   "entity": "deal-01",
+   "steps": [
+    {
+     "entity": "company-03",
+     "by": "property:satellites"
+    },
+    {
+     "entity": "deal-01",
+     "by": "relation:counterparty"
+    }
+   ],
+   "description": "the deal whose counterparty is the company that launches weather satellites",
+   "terms": [
+    "satellites",
+    "counterparty"
+   ],
+   "resolution_sessions": [
+    "s004",
+    "s030",
+    "s036",
+    "s058",
+    "s069",
+    "s071",
+    "s125",
+    "s141"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s4_conflicting:1",
+  "question": "What yearly price is binding on the deal that covers the lab freezers?",
+  "answer": "$164,000",
+  "evidence_sessions": [
+   "s053"
+  ],
+  "bg1": {
+   "stratum": "s4_conflicting",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "deal-02.price",
+   "gold_values": [
+    "$164,000",
+    "164,000",
+    "$164k",
+    "164k",
+    "164 thousand"
+   ],
+   "stale_values": [
+    "$210,000",
+    "$112,000",
+    "$140,000"
+   ],
+   "decoy_values": [],
+   "deciding_line": "The account owner signed off in writing on $164,000 as the binding annual price for the Carryck deal."
+  },
+  "subject": {
+   "entity": "deal-02",
+   "steps": [
+    {
+     "entity": "deal-02",
+     "by": "property:freezers"
+    }
+   ],
+   "description": "the deal that covers the lab freezers",
+   "terms": [
+    "freezers"
+   ],
+   "resolution_sessions": [
+    "s013",
+    "s018",
+    "s052",
+    "s072"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s4_conflicting:2",
+  "question": "What contract term did we actually sign for the deal whose counterparty is the company that runs vertical farms?",
+  "answer": "18 months",
+  "evidence_sessions": [
+   "s041"
+  ],
+  "bg1": {
+   "stratum": "s4_conflicting",
+   "family": "primary",
+   "form": "exact",
+   "slot": "deal-03.term",
+   "gold_values": [
+    "18 months",
+    "18-month",
+    "18 mo"
+   ],
+   "stale_values": [
+    "57 months",
+    "30 months"
+   ],
+   "decoy_values": [],
+   "deciding_line": "Both sides executed the agreement for the multi-year deal today, and it fixes the contract term at 18 months."
+  },
+  "subject": {
+   "entity": "deal-03",
+   "steps": [
+    {
+     "entity": "company-02",
+     "by": "property:vertical-farms"
+    },
+    {
+     "entity": "deal-03",
+     "by": "relation:counterparty"
+    }
+   ],
+   "description": "the deal whose counterparty is the company that runs vertical farms",
+   "terms": [
+    "vertical farms",
+    "counterparty"
+   ],
+   "resolution_sessions": [
+    "s025",
+    "s059",
+    "s099",
+    "s105",
+    "s121",
+    "s144",
+    "s146"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s4_conflicting:3",
+  "question": "How long is the binding term on the deal for the school laptops?",
+  "answer": "18 months",
+  "evidence_sessions": [
+   "s041"
+  ],
+  "bg1": {
+   "stratum": "s4_conflicting",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "deal-03.term",
+   "gold_values": [
+    "18 months",
+    "18-month",
+    "18 mo"
+   ],
+   "stale_values": [
+    "57 months",
+    "30 months"
+   ],
+   "decoy_values": [],
+   "deciding_line": "Both sides executed the agreement for the multi-year deal today, and it fixes the contract term at 18 months."
+  },
+  "subject": {
+   "entity": "deal-03",
+   "steps": [
+    {
+     "entity": "deal-03",
+     "by": "property:laptops"
+    }
+   ],
+   "description": "the deal for the school laptops",
+   "terms": [
+    "laptops"
+   ],
+   "resolution_sessions": [
+    "s025",
+    "s059",
+    "s105",
+    "s121"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s4_conflicting:4",
+  "question": "What seat count is binding on the deal that covers the lab freezers?",
+  "answer": "460 seats",
+  "evidence_sessions": [
+   "s086"
+  ],
+  "bg1": {
+   "stratum": "s4_conflicting",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "deal-02.seats",
+   "gold_values": [
+    "460 seats",
+    "460 licenses",
+    "460 licences",
+    "460 users"
+   ],
+   "stale_values": [
+    "370 seats",
+    "50 seats",
+    "750 seats"
+   ],
+   "decoy_values": [
+    "490 seats"
+   ],
+   "deciding_line": "The account owner signed off in writing on 460 seats as the binding seat count for the rescue deal."
+  },
+  "subject": {
+   "entity": "deal-02",
+   "steps": [
+    {
+     "entity": "deal-02",
+     "by": "property:freezers"
+    }
+   ],
+   "description": "the deal that covers the lab freezers",
+   "terms": [
+    "freezers"
+   ],
+   "resolution_sessions": [
+    "s013",
+    "s018",
+    "s052",
+    "s072"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s4_conflicting:5",
+  "question": "What contract term did we actually sign for the deal for the stadium screens?",
+  "answer": "21 months",
+  "evidence_sessions": [
+   "s082"
+  ],
+  "bg1": {
+   "stratum": "s4_conflicting",
+   "family": "primary",
+   "form": "exact",
+   "slot": "deal-04.term",
+   "gold_values": [
+    "21 months",
+    "21-month",
+    "21 mo"
+   ],
+   "stale_values": [
+    "51 months",
+    "15 months",
+    "66 months",
+    "27 months"
+   ],
+   "decoy_values": [],
+   "deciding_line": "Our CFO confirmed in writing that the contract term for the Ridgaway deal is final at 21 months."
+  },
+  "subject": {
+   "entity": "deal-04",
+   "steps": [
+    {
+     "entity": "deal-04",
+     "by": "property:stadium"
+    }
+   ],
+   "description": "the deal for the stadium screens",
+   "terms": [
+    "stadium"
+   ],
+   "resolution_sessions": [
+    "s065",
+    "s073",
+    "s091"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s4_conflicting:6",
+  "question": "How long is the binding term on the deal for the stadium screens?",
+  "answer": "21 months",
+  "evidence_sessions": [
+   "s082"
+  ],
+  "bg1": {
+   "stratum": "s4_conflicting",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "deal-04.term",
+   "gold_values": [
+    "21 months",
+    "21-month",
+    "21 mo"
+   ],
+   "stale_values": [
+    "51 months",
+    "15 months",
+    "66 months",
+    "27 months"
+   ],
+   "decoy_values": [],
+   "deciding_line": "Our CFO confirmed in writing that the contract term for the Ridgaway deal is final at 21 months."
+  },
+  "subject": {
+   "entity": "deal-04",
+   "steps": [
+    {
+     "entity": "deal-04",
+     "by": "property:stadium"
+    }
+   ],
+   "description": "the deal for the stadium screens",
+   "terms": [
+    "stadium"
+   ],
+   "resolution_sessions": [
+    "s065",
+    "s073",
+    "s091"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s4_conflicting:7",
+  "question": "What discount did we actually sign on the deal whose counterparty is the company that runs vertical farms?",
+  "answer": "7%",
+  "evidence_sessions": [
+   "s055"
+  ],
+  "bg1": {
+   "stratum": "s4_conflicting",
+   "family": "primary",
+   "form": "exact",
+   "slot": "deal-03.discount",
+   "gold_values": [
+    "7%",
+    "7 percent",
+    "7 per cent"
+   ],
+   "stale_values": [
+    "28%",
+    "14%",
+    "37%",
+    "12%"
+   ],
+   "decoy_values": [
+    "35%"
+   ],
+   "deciding_line": "The countersigned contract for Harbor sets the discount at 7%."
+  },
+  "subject": {
+   "entity": "deal-03",
+   "steps": [
+    {
+     "entity": "company-02",
+     "by": "property:vertical-farms"
+    },
+    {
+     "entity": "deal-03",
+     "by": "relation:counterparty"
+    }
+   ],
+   "description": "the deal whose counterparty is the company that runs vertical farms",
+   "terms": [
+    "vertical farms",
+    "counterparty"
+   ],
+   "resolution_sessions": [
+    "s025",
+    "s059",
+    "s099",
+    "s105",
+    "s121",
+    "s144",
+    "s146"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s5_withdrawn:0",
+  "question": "Who is the company that runs vertical farms merging with?",
+  "answer": "None: the report about Goldcrest Insurance was a rumour, and nothing is planned.",
+  "evidence_sessions": [
+   "s017",
+   "s039"
+  ],
+  "bg1": {
+   "stratum": "s5_withdrawn",
+   "family": "primary",
+   "form": "exact",
+   "slot": "company-02.merger",
+   "gold_values": [
+    "none",
+    "no one",
+    "nothing",
+    "called off",
+    "cancelled",
+    "canceled",
+    "not happening",
+    "no longer"
+   ],
+   "stale_values": [
+    "Goldcrest Insurance"
+   ],
+   "decoy_values": [
+    "Copperleaf Systems"
+   ]
+  },
+  "subject": {
+   "entity": "company-02",
+   "steps": [
+    {
+     "entity": "company-02",
+     "by": "property:vertical-farms"
+    }
+   ],
+   "description": "the company that runs vertical farms",
+   "terms": [
+    "vertical farms"
+   ],
+   "resolution_sessions": [
+    "s099",
+    "s144",
+    "s146"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s5_withdrawn:1",
+  "question": "Who is the company that runs vertical farms set to merge with at this point?",
+  "answer": "None: the report about Goldcrest Insurance was a rumour, and nothing is planned.",
+  "evidence_sessions": [
+   "s017",
+   "s039"
+  ],
+  "bg1": {
+   "stratum": "s5_withdrawn",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "company-02.merger",
+   "gold_values": [
+    "none",
+    "no one",
+    "nothing",
+    "called off",
+    "cancelled",
+    "canceled",
+    "not happening",
+    "no longer"
+   ],
+   "stale_values": [
+    "Goldcrest Insurance"
+   ],
+   "decoy_values": [
+    "Copperleaf Systems"
+   ]
+  },
+  "subject": {
+   "entity": "company-02",
+   "steps": [
+    {
+     "entity": "company-02",
+     "by": "property:vertical-farms"
+    }
+   ],
+   "description": "the company that runs vertical farms",
+   "terms": [
+    "vertical farms"
+   ],
+   "resolution_sessions": [
+    "s099",
+    "s144",
+    "s146"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s5_withdrawn:2",
+  "question": "Which customer is the project about self-checkout kiosks piloting with?",
+  "answer": "None: the plan with Orchardly Retail was called off.",
+  "evidence_sessions": [
+   "s012",
+   "s081"
+  ],
+  "bg1": {
+   "stratum": "s5_withdrawn",
+   "family": "primary",
+   "form": "exact",
+   "slot": "project-04.pilot",
+   "gold_values": [
+    "none",
+    "no one",
+    "nothing",
+    "called off",
+    "cancelled",
+    "canceled",
+    "not happening",
+    "no longer"
+   ],
+   "stale_values": [
+    "Orchardly Retail"
+   ],
+   "decoy_values": []
+  },
+  "subject": {
+   "entity": "project-04",
+   "steps": [
+    {
+     "entity": "project-04",
+     "by": "property:kiosks"
+    }
+   ],
+   "description": "the project about self-checkout kiosks",
+   "terms": [
+    "kiosks"
+   ],
+   "resolution_sessions": [
+    "s069",
+    "s121",
+    "s123"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s5_withdrawn:3",
+  "question": "Who is the company that sells oat milk to cafes merging with?",
+  "answer": "None: the plan with Bramblecote Bakery was called off.",
+  "evidence_sessions": [
+   "s010",
+   "s026",
+   "s035",
+   "s120"
+  ],
+  "bg1": {
+   "stratum": "s5_withdrawn",
+   "family": "primary",
+   "form": "exact",
+   "slot": "company-04.merger",
+   "gold_values": [
+    "none",
+    "no one",
+    "nothing",
+    "called off",
+    "cancelled",
+    "canceled",
+    "not happening",
+    "no longer"
+   ],
+   "stale_values": [
+    "Bramblecote Bakery"
+   ],
+   "decoy_values": []
+  },
+  "subject": {
+   "entity": "company-04",
+   "steps": [
+    {
+     "entity": "company-04",
+     "by": "property:oat-milk"
+    }
+   ],
+   "description": "the company that sells oat milk to cafes",
+   "terms": [
+    "oat milk"
+   ],
+   "resolution_sessions": [
+    "s138",
+    "s140",
+    "s143"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s5_withdrawn:4",
+  "question": "Who is the company that designs escape rooms set to merge with at this point?",
+  "answer": "None: the plan with Jasperwood Furniture was called off.",
+  "evidence_sessions": [
+   "s034",
+   "s042",
+   "s078"
+  ],
+  "bg1": {
+   "stratum": "s5_withdrawn",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "company-05.merger",
+   "gold_values": [
+    "none",
+    "no one",
+    "nothing",
+    "called off",
+    "cancelled",
+    "canceled",
+    "not happening",
+    "no longer"
+   ],
+   "stale_values": [
+    "Jasperwood Furniture"
+   ],
+   "decoy_values": []
+  },
+  "subject": {
+   "entity": "company-05",
+   "steps": [
+    {
+     "entity": "company-05",
+     "by": "property:escape-rooms"
+    }
+   ],
+   "description": "the company that designs escape rooms",
+   "terms": [
+    "escape rooms"
+   ],
+   "resolution_sessions": [
+    "s003",
+    "s038",
+    "s064"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s5_withdrawn:5",
+  "question": "Where is the company that makes sunscreen holding its team offsite?",
+  "answer": "None: the report about Galway was a rumour, and nothing is planned.",
+  "evidence_sessions": [
+   "s056",
+   "s124"
+  ],
+  "bg1": {
+   "stratum": "s5_withdrawn",
+   "family": "primary",
+   "form": "exact",
+   "slot": "company-06.offsite",
+   "gold_values": [
+    "none",
+    "no one",
+    "nothing",
+    "called off",
+    "cancelled",
+    "canceled",
+    "not happening",
+    "no longer"
+   ],
+   "stale_values": [
+    "Galway"
+   ],
+   "decoy_values": []
+  },
+  "subject": {
+   "entity": "company-06",
+   "steps": [
+    {
+     "entity": "company-06",
+     "by": "property:sunscreen"
+    }
+   ],
+   "description": "the company that makes sunscreen",
+   "terms": [
+    "sunscreen"
+   ],
+   "resolution_sessions": [
+    "s067",
+    "s071",
+    "s099",
+    "s105"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s5_withdrawn:6",
+  "question": "In which city is the company founded by the person who plays the harp at weddings holding its offsite?",
+  "answer": "None: the report about Galway was a rumour, and nothing is planned.",
+  "evidence_sessions": [
+   "s056",
+   "s124"
+  ],
+  "bg1": {
+   "stratum": "s5_withdrawn",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "company-06.offsite",
+   "gold_values": [
+    "none",
+    "no one",
+    "nothing",
+    "called off",
+    "cancelled",
+    "canceled",
+    "not happening",
+    "no longer"
+   ],
+   "stale_values": [
+    "Galway"
+   ],
+   "decoy_values": []
+  },
+  "subject": {
+   "entity": "company-06",
+   "steps": [
+    {
+     "entity": "person-04-twin",
+     "by": "property:harp"
+    },
+    {
+     "entity": "company-06",
+     "by": "relation:founded"
+    }
+   ],
+   "description": "the company founded by the person who plays the harp at weddings",
+   "terms": [
+    "harp",
+    "founded"
+   ],
+   "resolution_sessions": [
+    "s020",
+    "s046",
+    "s067",
+    "s071",
+    "s099",
+    "s105",
+    "s116"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s5_withdrawn:7",
+  "question": "In which city is the company that maintains elevators holding its offsite?",
+  "answer": "None: the plan with Lyon was called off.",
+  "evidence_sessions": [
+   "s011",
+   "s025",
+   "s029",
+   "s100"
+  ],
+  "bg1": {
+   "stratum": "s5_withdrawn",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "company-07.offsite",
+   "gold_values": [
+    "none",
+    "no one",
+    "nothing",
+    "called off",
+    "cancelled",
+    "canceled",
+    "not happening",
+    "no longer"
+   ],
+   "stale_values": [
+    "Lyon"
+   ],
+   "decoy_values": []
+  },
+  "subject": {
+   "entity": "company-07",
+   "steps": [
+    {
+     "entity": "company-07",
+     "by": "property:elevators"
+    }
+   ],
+   "description": "the company that maintains elevators",
+   "terms": [
+    "elevators"
+   ],
+   "resolution_sessions": [
+    "s079",
+    "s080",
+    "s137"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s6_as_of:0",
+  "question": "On [[D:-362]], who was in charge of operations at the company that makes ice cream?",
+  "answer": "Cosima Zoric",
+  "evidence_sessions": [
+   "s026"
+  ],
+  "bg1": {
+   "stratum": "s6_as_of",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "company-01.ops_lead",
+   "gold_values": [
+    "Cosima Zoric",
+    "Cosima",
+    "Zoric"
+   ],
+   "stale_values": [
+    "Saoirse Wojcik"
+   ],
+   "decoy_values": []
+  },
+  "subject": {
+   "entity": "company-01",
+   "steps": [
+    {
+     "entity": "company-01",
+     "by": "property:ice-cream"
+    }
+   ],
+   "description": "the company that makes ice cream",
+   "terms": [
+    "ice cream"
+   ],
+   "resolution_sessions": [
+    "s028",
+    "s048",
+    "s094",
+    "s125"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s6_as_of:1",
+  "question": "What job title did the former boss of the person who did the calligraphy on our wedding invitations hold on [[D:-245]]?",
+  "answer": "Product Marketing Lead",
+  "evidence_sessions": [
+   "s056"
+  ],
+  "bg1": {
+   "stratum": "s6_as_of",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "person-01.role",
+   "gold_values": [
+    "Product Marketing Lead"
+   ],
+   "stale_values": [
+    "Quality Lead",
+    "Programme Director",
+    "Head of Security"
+   ],
+   "decoy_values": [
+    "Head of Support"
+   ]
+  },
+  "subject": {
+   "entity": "person-01",
+   "steps": [
+    {
+     "entity": "person-03",
+     "by": "property:calligraphy"
+    },
+    {
+     "entity": "person-01",
+     "by": "relation:boss"
+    }
+   ],
+   "description": "the former boss of the person who did the calligraphy on our wedding invitations",
+   "terms": [
+    "calligraphy",
+    "boss"
+   ],
+   "resolution_sessions": [
+    "s013",
+    "s018",
+    "s026",
+    "s098",
+    "s125",
+    "s128",
+    "s142"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s6_as_of:2",
+  "question": "On [[D:-292]], where did the person who plays the bagpipes live?",
+  "answer": "Ghent",
+  "evidence_sessions": [
+   "s012"
+  ],
+  "bg1": {
+   "stratum": "s6_as_of",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "person-02.city",
+   "gold_values": [
+    "Ghent",
+    "Gent"
+   ],
+   "stale_values": [
+    "Bologna"
+   ],
+   "decoy_values": []
+  },
+  "subject": {
+   "entity": "person-02",
+   "steps": [
+    {
+     "entity": "person-02",
+     "by": "property:bagpipes"
+    }
+   ],
+   "description": "the person who plays the bagpipes",
+   "terms": [
+    "bagpipes"
+   ],
+   "resolution_sessions": [
+    "s004",
+    "s015",
+    "s054"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s6_as_of:3",
+  "question": "On [[D:-129]], which company was the person who did the calligraphy on our wedding invitations employed by?",
+  "answer": "Kinglet Telecom",
+  "evidence_sessions": [
+   "s020"
+  ],
+  "bg1": {
+   "stratum": "s6_as_of",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "person-03.employer",
+   "gold_values": [
+    "Kinglet Telecom",
+    "Kinglet"
+   ],
+   "stale_values": [
+    "Elmstead Clinics"
+   ],
+   "decoy_values": []
+  },
+  "subject": {
+   "entity": "person-03",
+   "steps": [
+    {
+     "entity": "person-03",
+     "by": "property:calligraphy"
+    }
+   ],
+   "description": "the person who did the calligraphy on our wedding invitations",
+   "terms": [
+    "calligraphy"
+   ],
+   "resolution_sessions": [
+    "s098",
+    "s125",
+    "s128"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s6_as_of:4",
+  "question": "Who ran operations at the company that sells oat milk to cafes on [[D:-421]]?",
+  "answer": "Kasimir Raman",
+  "evidence_sessions": [
+   "s007"
+  ],
+  "bg1": {
+   "stratum": "s6_as_of",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "company-04.ops_lead",
+   "gold_values": [
+    "Kasimir Raman",
+    "Kasimir",
+    "Raman"
+   ],
+   "stale_values": [
+    "Vera Dimitrov"
+   ],
+   "decoy_values": []
+  },
+  "subject": {
+   "entity": "company-04",
+   "steps": [
+    {
+     "entity": "company-04",
+     "by": "property:oat-milk"
+    }
+   ],
+   "description": "the company that sells oat milk to cafes",
+   "terms": [
+    "oat milk"
+   ],
+   "resolution_sessions": [
+    "s138",
+    "s140",
+    "s143"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s6_as_of:5",
+  "question": "Where was the company founded by the person who plays the bagpipes headquartered on [[D:-202]]?",
+  "answer": "Valencia",
+  "evidence_sessions": [
+   "s072"
+  ],
+  "bg1": {
+   "stratum": "s6_as_of",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "company-01.hq",
+   "gold_values": [
+    "Valencia"
+   ],
+   "stale_values": [
+    "Krakow",
+    "Gothenburg",
+    "Denver"
+   ],
+   "decoy_values": []
+  },
+  "subject": {
+   "entity": "company-01",
+   "steps": [
+    {
+     "entity": "person-02",
+     "by": "property:bagpipes"
+    },
+    {
+     "entity": "company-01",
+     "by": "relation:founded"
+    }
+   ],
+   "description": "the company founded by the person who plays the bagpipes",
+   "terms": [
+    "bagpipes",
+    "founded"
+   ],
+   "resolution_sessions": [
+    "s004",
+    "s015",
+    "s028",
+    "s048",
+    "s054",
+    "s094",
+    "s125"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s6_as_of:6",
+  "question": "Where did the person who plays the bagpipes work on [[D:-287]]?",
+  "answer": "Heathmont Schools",
+  "evidence_sessions": [
+   "s024"
+  ],
+  "bg1": {
+   "stratum": "s6_as_of",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "person-02.employer",
+   "gold_values": [
+    "Heathmont Schools",
+    "Heathmont"
+   ],
+   "stale_values": [
+    "Lindenhall Bank",
+    "Zephyrine Aviation"
+   ],
+   "decoy_values": []
+  },
+  "subject": {
+   "entity": "person-02",
+   "steps": [
+    {
+     "entity": "person-02",
+     "by": "property:bagpipes"
+    }
+   ],
+   "description": "the person who plays the bagpipes",
+   "terms": [
+    "bagpipes"
+   ],
+   "resolution_sessions": [
+    "s004",
+    "s015",
+    "s054"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s6_as_of:7",
+  "question": "On [[D:-392]], who supplied the project commissioned by the company that runs vertical farms?",
+  "answer": "Larkspur Foods",
+  "evidence_sessions": [
+   "s027"
+  ],
+  "bg1": {
+   "stratum": "s6_as_of",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "project-02.vendor",
+   "gold_values": [
+    "Larkspur Foods",
+    "Larkspur"
+   ],
+   "stale_values": [
+    "Umberfield Mining"
+   ],
+   "decoy_values": []
+  },
+  "subject": {
+   "entity": "project-02",
+   "steps": [
+    {
+     "entity": "company-02",
+     "by": "property:vertical-farms"
+    },
+    {
+     "entity": "project-02",
+     "by": "relation:commissioned"
+    }
+   ],
+   "description": "the project commissioned by the company that runs vertical farms",
+   "terms": [
+    "vertical farms",
+    "commissioned"
+   ],
+   "resolution_sessions": [
+    "s067",
+    "s075",
+    "s099",
+    "s114",
+    "s144",
+    "s146"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s7_as_known:0",
+  "question": "As of [[D:-339]], in which city did I think the company founded by the person who built a telescope in the garage had its head office?",
+  "answer": "Adelaide",
+  "evidence_sessions": [
+   "s049"
+  ],
+  "bg1": {
+   "stratum": "s7_as_known",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "company-03.hq",
+   "gold_values": [
+    "Adelaide"
+   ],
+   "stale_values": [
+    "Taipei"
+   ],
+   "decoy_values": []
+  },
+  "subject": {
+   "entity": "company-03",
+   "steps": [
+    {
+     "entity": "person-03-twin",
+     "by": "property:telescope"
+    },
+    {
+     "entity": "company-03",
+     "by": "relation:founded"
+    }
+   ],
+   "description": "the company founded by the person who built a telescope in the garage",
+   "terms": [
+    "telescope",
+    "founded"
+   ],
+   "resolution_sessions": [
+    "s004",
+    "s005",
+    "s008",
+    "s030",
+    "s107",
+    "s125",
+    "s135",
+    "s141"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s7_as_known:1",
+  "question": "As of [[D:-84]], which role did I think the person who taught me to make kimchi held?",
+  "answer": "Director of Partnerships",
+  "evidence_sessions": [
+   "s098"
+  ],
+  "bg1": {
+   "stratum": "s7_as_known",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "person-04.role",
+   "gold_values": [
+    "Director of Partnerships"
+   ],
+   "stale_values": [
+    "Developer Advocate"
+   ],
+   "decoy_values": []
+  },
+  "subject": {
+   "entity": "person-04",
+   "steps": [
+    {
+     "entity": "person-04",
+     "by": "property:kimchi"
+    }
+   ],
+   "description": "the person who taught me to make kimchi",
+   "terms": [
+    "kimchi"
+   ],
+   "resolution_sessions": [
+    "s060",
+    "s130",
+    "s139"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s7_as_known:2",
+  "question": "On [[D:-306]], who had I been told ran operations at the company that runs vertical farms?",
+  "answer": "Dmitri Uddin",
+  "evidence_sessions": [
+   "s020"
+  ],
+  "bg1": {
+   "stratum": "s7_as_known",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "company-02.ops_lead",
+   "gold_values": [
+    "Dmitri Uddin",
+    "Dmitri",
+    "Uddin"
+   ],
+   "stale_values": [
+    "Ilse Ortega",
+    "Yusuf Weber"
+   ],
+   "decoy_values": [
+    "Nadia Grieve"
+   ]
+  },
+  "subject": {
+   "entity": "company-02",
+   "steps": [
+    {
+     "entity": "company-02",
+     "by": "property:vertical-farms"
+    }
+   ],
+   "description": "the company that runs vertical farms",
+   "terms": [
+    "vertical farms"
+   ],
+   "resolution_sessions": [
+    "s099",
+    "s144",
+    "s146"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s7_as_known:3",
+  "question": "On [[D:-170]], who had I been told led the project adding braille labels to our packaging?",
+  "answer": "Aurelio Varga",
+  "evidence_sessions": [
+   "s095"
+  ],
+  "bg1": {
+   "stratum": "s7_as_known",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "project-02.lead",
+   "gold_values": [
+    "Aurelio Varga",
+    "Aurelio",
+    "Varga"
+   ],
+   "stale_values": [
+    "Esme Quigley",
+    "Ronan Sato"
+   ],
+   "decoy_values": []
+  },
+  "subject": {
+   "entity": "project-02",
+   "steps": [
+    {
+     "entity": "project-02",
+     "by": "property:braille"
+    }
+   ],
+   "description": "the project adding braille labels to our packaging",
+   "terms": [
+    "braille"
+   ],
+   "resolution_sessions": [
+    "s067",
+    "s075",
+    "s114",
+    "s146"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s7_as_known:4",
+  "question": "On [[D:-199]], which city had I been told the person who taught me to make kimchi was based in?",
+  "answer": "Tampere",
+  "evidence_sessions": [
+   "s085"
+  ],
+  "bg1": {
+   "stratum": "s7_as_known",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "person-04.city",
+   "gold_values": [
+    "Tampere"
+   ],
+   "stale_values": [
+    "Oslo",
+    "Gdansk"
+   ],
+   "decoy_values": [
+    "Vienna"
+   ]
+  },
+  "subject": {
+   "entity": "person-04",
+   "steps": [
+    {
+     "entity": "person-04",
+     "by": "property:kimchi"
+    }
+   ],
+   "description": "the person who taught me to make kimchi",
+   "terms": [
+    "kimchi"
+   ],
+   "resolution_sessions": [
+    "s060",
+    "s130",
+    "s139"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s7_as_known:5",
+  "question": "On [[D:-326]], which city had I been told the person who did the calligraphy on our wedding invitations was based in?",
+  "answer": "Edinburgh",
+  "evidence_sessions": [
+   "s009"
+  ],
+  "bg1": {
+   "stratum": "s7_as_known",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "person-03.city",
+   "gold_values": [
+    "Edinburgh"
+   ],
+   "stale_values": [
+    "Porto",
+    "Utrecht",
+    "Helsinki"
+   ],
+   "decoy_values": [
+    "Prague"
+   ]
+  },
+  "subject": {
+   "entity": "person-03",
+   "steps": [
+    {
+     "entity": "person-03",
+     "by": "property:calligraphy"
+    }
+   ],
+   "description": "the person who did the calligraphy on our wedding invitations",
+   "terms": [
+    "calligraphy"
+   ],
+   "resolution_sessions": [
+    "s098",
+    "s125",
+    "s128"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s7_as_known:6",
+  "question": "As of [[D:-322]], who did I think supplied the project measuring our carbon footprint?",
+  "answer": "Moonvale Pharma",
+  "evidence_sessions": [
+   "s047"
+  ],
+  "bg1": {
+   "stratum": "s7_as_known",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "project-01.vendor",
+   "gold_values": [
+    "Moonvale Pharma",
+    "Moonvale"
+   ],
+   "stale_values": [
+    "Thistledown Textiles",
+    "Kettlebrook Brewing"
+   ],
+   "decoy_values": [
+    "Quillfeather Media"
+   ]
+  },
+  "subject": {
+   "entity": "project-01",
+   "steps": [
+    {
+     "entity": "project-01",
+     "by": "property:carbon"
+    }
+   ],
+   "description": "the project measuring our carbon footprint",
+   "terms": [
+    "carbon"
+   ],
+   "resolution_sessions": [
+    "s106",
+    "s117",
+    "s129",
+    "s134"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s7_as_known:7",
+  "question": "As of [[D:-141]], in which city did I think the company that makes ice cream had its head office?",
+  "answer": "Valencia",
+  "evidence_sessions": [
+   "s072"
+  ],
+  "bg1": {
+   "stratum": "s7_as_known",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "company-01.hq",
+   "gold_values": [
+    "Valencia"
+   ],
+   "stale_values": [
+    "Krakow",
+    "Gothenburg",
+    "Denver"
+   ],
+   "decoy_values": []
+  },
+  "subject": {
+   "entity": "company-01",
+   "steps": [
+    {
+     "entity": "company-01",
+     "by": "property:ice-cream"
+    }
+   ],
+   "description": "the company that makes ice cream",
+   "terms": [
+    "ice cream"
+   ],
+   "resolution_sessions": [
+    "s028",
+    "s048",
+    "s094",
+    "s125"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s8_history:0",
+  "question": "List the job titles the former boss of the person who did the calligraphy on our wedding invitations has held, oldest first.",
+  "answer": "Quality Lead, then Product Marketing Lead, then Programme Director, then Head of Security",
+  "evidence_sessions": [
+   "s006",
+   "s056",
+   "s085",
+   "s119"
+  ],
+  "bg1": {
+   "stratum": "s8_history",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "person-01.role",
+   "gold_values": [
+    "Quality Lead",
+    "Product Marketing Lead",
+    "Programme Director",
+    "Head of Security"
+   ],
+   "stale_values": [],
+   "decoy_values": [
+    "Head of Support"
+   ],
+   "ordered": true
+  },
+  "subject": {
+   "entity": "person-01",
+   "steps": [
+    {
+     "entity": "person-03",
+     "by": "property:calligraphy"
+    },
+    {
+     "entity": "person-01",
+     "by": "relation:boss"
+    }
+   ],
+   "description": "the former boss of the person who did the calligraphy on our wedding invitations",
+   "terms": [
+    "calligraphy",
+    "boss"
+   ],
+   "resolution_sessions": [
+    "s013",
+    "s018",
+    "s026",
+    "s098",
+    "s125",
+    "s128",
+    "s142"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s8_history:1",
+  "question": "In order from earliest, which employers has the person who plays the bagpipes had?",
+  "answer": "Heathmont Schools, then Lindenhall Bank, then Zephyrine Aviation",
+  "evidence_sessions": [
+   "s024",
+   "s087",
+   "s109"
+  ],
+  "bg1": {
+   "stratum": "s8_history",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "person-02.employer",
+   "gold_values": [
+    "Heathmont Schools",
+    "Lindenhall Bank",
+    "Zephyrine Aviation"
+   ],
+   "stale_values": [],
+   "decoy_values": [],
+   "ordered": true
+  },
+  "subject": {
+   "entity": "person-02",
+   "steps": [
+    {
+     "entity": "person-02",
+     "by": "property:bagpipes"
+    }
+   ],
+   "description": "the person who plays the bagpipes",
+   "terms": [
+    "bagpipes"
+   ],
+   "resolution_sessions": [
+    "s004",
+    "s015",
+    "s054"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s8_history:2",
+  "question": "In order from earliest, who has been in charge of operations at the company that runs vertical farms?",
+  "answer": "Dmitri Uddin, then Ilse Ortega, then Yusuf Weber",
+  "evidence_sessions": [
+   "s020",
+   "s077",
+   "s095"
+  ],
+  "bg1": {
+   "stratum": "s8_history",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "company-02.ops_lead",
+   "gold_values": [
+    "Dmitri Uddin",
+    "Ilse Ortega",
+    "Yusuf Weber"
+   ],
+   "stale_values": [],
+   "decoy_values": [
+    "Nadia Grieve"
+   ],
+   "ordered": true
+  },
+  "subject": {
+   "entity": "company-02",
+   "steps": [
+    {
+     "entity": "company-02",
+     "by": "property:vertical-farms"
+    }
+   ],
+   "description": "the company that runs vertical farms",
+   "terms": [
+    "vertical farms"
+   ],
+   "resolution_sessions": [
+    "s099",
+    "s144",
+    "s146"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s8_history:3",
+  "question": "List the cities the person who plays the bagpipes has been based in, oldest first.",
+  "answer": "Ghent, then Bologna",
+  "evidence_sessions": [
+   "s012",
+   "s127"
+  ],
+  "bg1": {
+   "stratum": "s8_history",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "person-02.city",
+   "gold_values": [
+    "Ghent",
+    "Bologna"
+   ],
+   "stale_values": [],
+   "decoy_values": [],
+   "ordered": true
+  },
+  "subject": {
+   "entity": "person-02",
+   "steps": [
+    {
+     "entity": "person-02",
+     "by": "property:bagpipes"
+    }
+   ],
+   "description": "the person who plays the bagpipes",
+   "terms": [
+    "bagpipes"
+   ],
+   "resolution_sessions": [
+    "s004",
+    "s015",
+    "s054"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s8_history:4",
+  "question": "In order from earliest, who has supplied the project automating library lending?",
+  "answer": "Willowmere Hotels, then Rookwood Design",
+  "evidence_sessions": [
+   "s010",
+   "s135"
+  ],
+  "bg1": {
+   "stratum": "s8_history",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "project-03.vendor",
+   "gold_values": [
+    "Willowmere Hotels",
+    "Rookwood Design"
+   ],
+   "stale_values": [],
+   "decoy_values": [
+    "Brightline Analytics"
+   ],
+   "ordered": true
+  },
+  "subject": {
+   "entity": "project-03",
+   "steps": [
+    {
+     "entity": "project-03",
+     "by": "property:library"
+    }
+   ],
+   "description": "the project automating library lending",
+   "terms": [
+    "library"
+   ],
+   "resolution_sessions": [
+    "s002",
+    "s109",
+    "s112"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s8_history:5",
+  "question": "In order from earliest, who has supplied the project adding braille labels to our packaging?",
+  "answer": "Larkspur Foods, then Umberfield Mining",
+  "evidence_sessions": [
+   "s027",
+   "s101"
+  ],
+  "bg1": {
+   "stratum": "s8_history",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "project-02.vendor",
+   "gold_values": [
+    "Larkspur Foods",
+    "Umberfield Mining"
+   ],
+   "stale_values": [],
+   "decoy_values": [],
+   "ordered": true
+  },
+  "subject": {
+   "entity": "project-02",
+   "steps": [
+    {
+     "entity": "project-02",
+     "by": "property:braille"
+    }
+   ],
+   "description": "the project adding braille labels to our packaging",
+   "terms": [
+    "braille"
+   ],
+   "resolution_sessions": [
+    "s067",
+    "s075",
+    "s114",
+    "s146"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s8_history:6",
+  "question": "List the people who have run operations at the company that makes ice cream, oldest first.",
+  "answer": "Cosima Zoric, then Saoirse Wojcik",
+  "evidence_sessions": [
+   "s026",
+   "s114"
+  ],
+  "bg1": {
+   "stratum": "s8_history",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "company-01.ops_lead",
+   "gold_values": [
+    "Cosima Zoric",
+    "Saoirse Wojcik"
+   ],
+   "stale_values": [],
+   "decoy_values": [],
+   "ordered": true
+  },
+  "subject": {
+   "entity": "company-01",
+   "steps": [
+    {
+     "entity": "company-01",
+     "by": "property:ice-cream"
+    }
+   ],
+   "description": "the company that makes ice cream",
+   "terms": [
+    "ice cream"
+   ],
+   "resolution_sessions": [
+    "s028",
+    "s048",
+    "s094",
+    "s125"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s8_history:7",
+  "question": "List the companies the person who did the calligraphy on our wedding invitations has worked at, oldest first.",
+  "answer": "Kinglet Telecom, then Elmstead Clinics",
+  "evidence_sessions": [
+   "s020",
+   "s138"
+  ],
+  "bg1": {
+   "stratum": "s8_history",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "person-03.employer",
+   "gold_values": [
+    "Kinglet Telecom",
+    "Elmstead Clinics"
+   ],
+   "stale_values": [],
+   "decoy_values": [],
+   "ordered": true
+  },
+  "subject": {
+   "entity": "person-03",
+   "steps": [
+    {
+     "entity": "person-03",
+     "by": "property:calligraphy"
+    }
+   ],
+   "description": "the person who did the calligraphy on our wedding invitations",
+   "terms": [
+    "calligraphy"
+   ],
+   "resolution_sessions": [
+    "s098",
+    "s125",
+    "s128"
+   ]
+  }
+ }
+]

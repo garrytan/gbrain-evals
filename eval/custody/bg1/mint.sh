@@ -122,8 +122,8 @@
 #
 # --dev renders public dev worlds through render.ts --dev: stage 1's three, bg1-dev-01, -02 and -03 in that order, or
 # the ones --worlds lists, in its order, from those three, the dev loop's 17 extra (bg1-dev-04 to bg1-dev-20) and the
-# weekly line's three long ones (bg1-dev-long-01 to -03). Each renders at its own profile's length (200,000 tokens, or
-# 1,000,000 for a long one) unless --target-tokens names one length for all,
+# weekly line's three long ones (bg1-dev-long-01 to -03) and three alias ones (bg1-dev-alias-01 to -03,
+# changing-facts-gen@3). Each renders at its own profile's length (200,000 tokens, or 1,000,000 for a long one) unless --target-tokens names one length for all,
 # behind the same pair of metering proxies per world, on one ledger, after the same window check and with the same key
 # sources as above. It reads no seed or phrasing file: render.ts plans each world from its public seed and refuses one
 # whose plan or questions differ from the committed files. So it takes no --seed-file, --phrasing, --count, --start or
@@ -388,7 +388,7 @@ if [ "$DEV" = 1 ]; then
   IFS=, read -r -a DEV_IDS <<<"$DEV_WORLDS"
   [ ${#DEV_IDS[@]} -gt 0 ] || die "--worlds names no world"
   for id in "${DEV_IDS[@]}"; do
-    [[ "$id" =~ ^bg1-dev-(0[1-9]|1[0-9]|20|long-0[1-3])$ ]] || die "--worlds takes bg1-dev-01 to bg1-dev-20 and bg1-dev-long-01 to -03, not $id"
+    [[ "$id" =~ ^bg1-dev-(0[1-9]|1[0-9]|20|long-0[1-3]|alias-0[1-3])$ ]] || die "--worlds takes bg1-dev-01 to bg1-dev-20 and bg1-dev-long-01 to -03, not $id (and the alias worlds bg1-dev-alias-01 to -03)"
   done
   [ "$(printf '%s\n' "${DEV_IDS[@]}" | sort | uniq -d)" = "" ] || die "--worlds lists a world twice"
   for id in "${DEV_IDS[@]}"; do
