@@ -2089,6 +2089,8 @@ export async function bg1CellWindow(argv: string[], def: CellDefinition, env: Re
   const proxy = (one('--provider-proxy') ?? env.SHOOTOUT_PROXY ?? '').replace(/\/$/, '') || null;
   const status = proxy ? await fetch(`${proxy}/__proxy/status`, { signal: AbortSignal.timeout(5000) }).then(r => r.json() as Promise<{ keyless?: unknown; mode?: unknown; lease_usd?: unknown } | null>).catch(() => null) : null;
   const held = status?.mode === 'lease' && typeof status.lease_usd === 'number' && status.lease_usd > 0 ? status.lease_usd : null;
+  if (def.block === 'CS1-capacity' && status?.keyless !== true) throw refuse({ code: 'USAGE', message: `${def.id} is a keyless-only capacity unit: it runs by hand against the fake upstream, behind a lease proxy that reports a keyless upstream, and never in a paid window`,
+    why: 'the capacity block has no cap of its own to spend under; it measures the write-to-queryable path before any paid run', fix: { next: 'run', argv: [...FRONT, 'run', '--cell', def.id, '--manifest', 'cs1', '--provider-proxy', '<keyless lease proxy>'] } });
   const named = env.SHOOTOUT_LEASE_USD;
   const differs = !!named && held !== null && !(Math.abs(Number(named) - held) <= 1e-9);
   try {

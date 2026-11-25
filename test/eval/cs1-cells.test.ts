@@ -11,7 +11,9 @@ import { spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { bg1CampaignManifest, campaignCells, devOnly, loadCellManifest, readerFitTokenizer, readerMaxTokens, runCell } from '../../eval/runner/q1/cell.ts';
+import { bg1CampaignManifest, bg1CellWindow, campaignCells, devOnly, findCell, loadCellManifest, readerFitTokenizer, readerMaxTokens, runCell } from '../../eval/runner/q1/cell.ts';
+import { keylessUpstream, MeteringProxy } from '../../eval/runner/metering-proxy.ts';
+import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { ALL_SETS, CELL_VM_MAX_HOURS, cellVmHours, CS1_SETS, definitionProblems, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
 import {
   buildCS1Manifest, CS1_CAMPAIGN, CS1_GBRAIN_BUILD, CS1_IDLE_WORLDS, CS1_MANIFEST_PATH, CS1_MODELS, CS1_PILOT_SESSIONS, CS1_REGISTRY, CS1_ROWS, CS1_WRITES_NOTHING, cs1FullContextFit, cs1ManifestText,
@@ -223,7 +225,7 @@ describe('planning and launch', () => {
   test('plan --manifest cs1 runs keyless and writes a campaign the launch check accepts', () => {
     const plain = spawnSync('bun', ['eval/runner/q1/cell.ts', 'plan', '--manifest', 'cs1'], { cwd: ROOT, encoding: 'utf8', timeout: 60_000, env: bare() });
     expect(plain.status).toBe(0);
-    const units = ['cs1-pilot.baseline-hybrid.baseline', 'cs1-capacity.ext-memory-bank.recipe', 'cs1.gbrain-defaults.shipped-defaults.c1'];
+    const units = ['cs1-pilot.baseline-hybrid.baseline', 'cs1-pilot.ext-memory-bank.recipe', 'cs1.gbrain-defaults.shipped-defaults.c1'];
     const priced = new Map(campaignCells(m, { smoke: true, addons: true }).map(c => [c.id, c.lease_usd]));
     const cap = Math.round(units.reduce((n, u) => n + priced.get(u)!, 0) * 100) / 100;
     const file = join(tmp, 'units.json'), out = join(tmp, 'campaign.json');
@@ -241,7 +243,23 @@ describe('planning and launch', () => {
     expect(bg1LaunchProblems({ ...c, blocks: {}, cells: c.cells.map((x: { lease_usd: number }, i: number) => (i ? x : { ...x, lease_usd: x.lease_usd + 1 })) }).join()).toContain('cs1-cells.json prices it at');
     const bg1 = bg1CampaignManifest(loadCellManifest('bg1'), { units: { campaign_id: 'q1-scoreboard-bg1-t', cap_usd: cap, units: ['bg1.baseline-none.baseline.c0'], paid_window: 'CS1-T' }, worldEnd: DEV_WORLD_END }).cells[0];
     expect(bg1LaunchProblems({ ...c, blocks: {}, cells: [...c.cells, bg1] }).join()).toContain('each set runs in its own campaign');
+    expect(bg1LaunchProblems({ ...c, blocks: {}, cells: c.cells.map((x: { block: string }, i: number) => (i ? x : { ...x, block: 'CS1-capacity' })) }).join()).toContain('is a keyless-only capacity unit');
   }, 120_000);
+
+  // Value: protects=a capacity unit never spends: its block has no cap and its fake-upstream workload is not a counted measurement; fails_when=a capacity cell runs with a granted paid window behind a proxy with real upstreams; why_new=cost-speed results branch note 5; seam=bg1CellWindow over lease-less proxies with a dead fetch; no_claim=the VM run
+  test('a capacity cell runs only behind a proxy reporting a keyless upstream, never in a paid window', async () => {
+    const dead = (async () => { throw new Error('no provider is reachable from this test'); }) as unknown as typeof fetch;
+    const def = findCell('cs1-capacity.ext-memory-bank.recipe', undefined, 'cs1');
+    const real = new MeteringProxy({ fetchImpl: dead }), keyless = new MeteringProxy({ fetchImpl: dead, upstream: keylessUpstream('http://127.0.0.1:9') });
+    real.start(); keyless.start();
+    const refused = async (p: Promise<unknown>) => { try { await p; } catch (e) { if (e instanceof ScoreboardError) return e.op; throw e; } return null; };
+    try {
+      const window = ['--paid-window', 'CS1-T', '--window-cap-usd', '50'];
+      expect(await refused(bg1CellWindow(['--provider-proxy', `http://127.0.0.1:${real.port}`, ...window], def, {}))).toMatchObject({ code: 'USAGE', message: expect.stringContaining('keyless-only capacity unit') });
+      expect((await refused(bg1CellWindow([...window], def, {})))?.code).toBe('USAGE');
+      expect(await refused(bg1CellWindow(['--provider-proxy', `http://127.0.0.1:${keyless.port}`], def, {}))).toBeNull();
+    } finally { real.stop(); keyless.stop(); }
+  });
 });
 
 describe('the full-context row\'s one-year fit check', () => {

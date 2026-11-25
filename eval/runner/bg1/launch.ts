@@ -72,6 +72,7 @@ export function bg1LaunchProblems(m: Pick<CampaignManifest, 'cap_usd' | 'cells' 
   problems.push(...m.cells.flatMap(c => {
     const lease = own.get(c.id), cap = /--window-cap-usd (\S+)/.exec(c.command)?.[1];
     return [
+      ...(which === 'cs1' && c.block === 'CS1-capacity' ? [`unit ${c.id} is a keyless-only capacity unit: it runs by hand against the fake upstream and never in a paid campaign`] : []),
       ...(others.includes(c) ? [] : lease === undefined ? [`unit ${c.id} is not a unit of the committed ${file}`] : near(c.lease_usd, lease) ? [] : [`unit ${c.id} leases ${c.lease_usd}, not the ${lease} ${file} prices it at`]),
       ...(cap !== undefined && near(Number(cap), m.cap_usd) ? [] : [`unit ${c.id} carries --window-cap-usd ${cap ?? 'nowhere'}, not the campaign's cap_usd ${m.cap_usd}`]),
       ...(which !== 'bg1' && (c.providers?.includes('gemini') || c.pass?.includes(BG1_GEMINI_KEY_ENV) || c.gemini_key_env !== undefined) ? [`unit ${c.id} is given Gemini (provider, ${BG1_GEMINI_KEY_ENV} or gemini_key_env), which no ${SETS[which].label} unit calls`] : []),
