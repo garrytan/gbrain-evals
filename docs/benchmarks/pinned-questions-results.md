@@ -189,8 +189,8 @@ each launch. The pilot and judge check ran from gbrain-evals `6646f4db`, and the
 the keyless runs from `0c7c4dbb`. Each file is a summary of the full receipt, whose sha256 is in
 [manifest.json](pinned-questions/manifest.json). The counted receipt's own `verdict` field reads "fail" because it
 recomputes the judge check from the counted rows alone, without probes. On those rows alone, claude-opus-5-5's kappa on
-the gpt-6.2-sol rows is 0.247 (474 labelled outputs, 7 rule negatives, 6 of them the removed-chief-executive
-disagreements above), and gpt-6.2-astra's is undefined, because its 825 labelled counted outputs hold no rule negative.
+the gpt-6.2-sol rows is 0.247 (474 labelled outputs: the judge marked 7 not correct, 6 of them the
+removed-chief-executive answers the rule marked correct, and the rule marked 1), and gpt-6.2-astra's is undefined, because its 825 labelled counted outputs hold no rule negative.
 The judge check that gates a counted launch is the one above.
 
 ## Limits
