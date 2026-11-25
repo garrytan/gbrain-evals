@@ -405,6 +405,45 @@ keyless test that fails without it:
   reference answers still score 192 of 192 and the stale set 0 of 192. A keyless test checks that a run whose lease proxy
   reports paid mode records its granted window.
 
+**Stage 2 on the misspelling questions (2026-11-25).** The grep agent's reading came in below 0.95 with the judge check
+short, so the table above held the other rows for the line's owner. Garry Tan decided on 2026-11-25 ("Do it" to GBEV-3's
+J2): the other rows run a stage 2 of their own, in a paid window of its own with no mint, as follows. Written before any
+stage-2 cell runs.
+
+- **Question filter.** gbrain, extract-first and memory-bank run on all three alias worlds, each world ingested whole, and
+  are asked only the 34 questions whose evidence names their subject by its misspelling: a planned line in one of the
+  question's evidence sessions refers to its subject by the misspelling alias (`changing-facts-gen.ts
+  misspellingQuestionIds`, set `BGW-misspell-alias`, `pilot.ts campaigns --length alias --misspelling-stage`). It is
+  the split the stage-1 results read the grep agent's 22 of 34 on. The 34 ids: `bg1-dev-alias-01:s2_corrected:0`,
+  `bg1-dev-alias-01:s2_corrected:1`, `bg1-dev-alias-01:s3_repeated_stale:5`, `bg1-dev-alias-01:s3_repeated_stale:6`,
+  `bg1-dev-alias-01:s3_repeated_stale:7`, `bg1-dev-alias-01:s4_conflicting:1`, `bg1-dev-alias-01:s4_conflicting:5`,
+  `bg1-dev-alias-01:s4_conflicting:6`, `bg1-dev-alias-01:s5_withdrawn:7`, `bg1-dev-alias-01:s7_as_known:0`,
+  `bg1-dev-alias-01:s7_as_known:2`, `bg1-dev-alias-01:s8_history:2`, `bg1-dev-alias-01:s8_history:4`,
+  `bg1-dev-alias-01:s8_history:7`, `bg1-dev-alias-02:s2_corrected:3`, `bg1-dev-alias-02:s5_withdrawn:0`,
+  `bg1-dev-alias-02:s5_withdrawn:1`, `bg1-dev-alias-02:s5_withdrawn:4`, `bg1-dev-alias-02:s5_withdrawn:5`,
+  `bg1-dev-alias-02:s8_history:1`, `bg1-dev-alias-03:s1_updated:0`, `bg1-dev-alias-03:s1_updated:4`,
+  `bg1-dev-alias-03:s1_updated:5`, `bg1-dev-alias-03:s2_corrected:0`, `bg1-dev-alias-03:s2_corrected:1`,
+  `bg1-dev-alias-03:s5_withdrawn:2`, `bg1-dev-alias-03:s5_withdrawn:3`, `bg1-dev-alias-03:s6_as_of:6`,
+  `bg1-dev-alias-03:s7_as_known:5`, `bg1-dev-alias-03:s7_as_known:7`, `bg1-dev-alias-03:s8_history:0`,
+  `bg1-dev-alias-03:s8_history:1`, `bg1-dev-alias-03:s8_history:2`, `bg1-dev-alias-03:s8_history:3`.
+- **The comparison.** Each row's claude-opus-5-5 answers on exactly those 34 ids are compared with the grep agent's
+  claude-opus-5-5 answers from stage 1 on the same ids, 22 of 34 right, paired by question: the discordant pairs both ways,
+  listed by id, and an exact McNemar test. Both sides are scored by the same gating judge, gpt-6-astra. No number on the
+  other 158 questions comes from stage 2, since no row is asked them.
+- **Readers.** claude-opus-5-5 reads each row live with its gating judge, gpt-6-astra. particle-1 is left out of stage 2 on
+  cost, and there are no re-reads.
+- **gbrain build (R100).** gbrain's newest release at launch, the highest version tag on its main branch when the stage
+  starts, v0.60.773.0 or later (v0.60.774.0, commit e8791f54e6b12cfa307363c3414b5bfe43db0b8a, when this line was written;
+  checked again with `git ls-remote --tags` at launch). This re-pins the alias pilot's gbrain row from the build named
+  below; no counted gbrain run has started.
+- **Judge check.** Stage 2's answers that gpt-6-astra judges wrong join that judge's pool beside the grep agent's. The
+  check's gates are unchanged: labelling runs only if each judge's pool reaches 40 answers judged wrong. claude-opus-5-5's
+  pool gains nothing, since no particle-1 answer is read in stage 2, so unless labelling runs the comparison is reported as
+  having an unchecked judge.
+- **Money.** Each row's cell has its own ledger at its cap, and the three caps together stay inside stage 2's window
+  (`WEEKLY_ALIAS_STAGE2_MONEY`); `campaigns --misspelling-stage` refuses otherwise. A cap reached pauses its row at the
+  cell boundary for an extension.
+
 **Readers and judges.** Unchanged: claude-opus-5-5 and particle-1 read every row; gpt-6-astra judges claude-opus-5-5's
 answers and claude-opus-5-5 judges particle-1's.
 
