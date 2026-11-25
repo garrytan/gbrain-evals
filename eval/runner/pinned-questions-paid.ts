@@ -32,19 +32,23 @@
  *   [--gbrain <checkout>[@ref]] --paid --budget-run-id ID
  * --stage picks the preregistered seeds (pilot 21; judge-check 21-23 into the pilot's --output; counted 11-20), and
  * --seeds overrides them. --max-output-tokens sets cycle.standing_questions.max_output_tokens for the raised-cap arm.
+ * --stage stale-probes --judge-check <receipt.judge-check.json> judges the stale probes (runStaleProbes) and asks no
+ * model under test; a counted launch needs --judge-check and --stale-probes <receipt.stale-probes.json>.
  */
 import './budget-ledger.ts';
 import { createHash } from 'node:crypto';
-import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, readFileSync, truncateSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import type { OperationContext } from 'gbrain/operations';
-import { BudgetExceededError, budgetOptionsFrom, chatPrice, receiptCost, startPaidRun, type RunSummary } from './budget-ledger.ts';
+import { BudgetExceededError, budgetOptionsFrom, chatPrice, paidRequestGuardActive, receiptCost, startPaidRun, type RunSummary } from './budget-ledger.ts';
 import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from './gbrain-under-test.ts';
 import { gbrainPin } from './gbrain-version.ts';
-import { withHermeticEnv } from './hermetic-env.ts';
+import { HERMETIC_KEY_PATTERN, redactUrlPasswords, withHermeticEnv } from './hermetic-env.ts';
 import { acceptsTemperature } from './openai-judge-shim.ts';
 import { PaidArmRefusal, requirePaidArm } from './paid-arm.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
+import { KEY_PATTERNS } from './q1/secret-scan.ts';
+import { comparisonFamily, pairedComparison } from './pinned-questions-stats.ts';
 import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, noModelSpend, sourceTreeIdentity, writeReceipt, type Receipt } from './receipt.ts';
 import {
   CLAIMS, DEV_SEEDS, PINNED_QUESTIONS_GENERATOR_VERSION, generatePinnedQuestionsWorld,
@@ -87,14 +91,17 @@ export const DEAD_UPSTREAM = { anthropic: 'http://127.0.0.1:9', openai: 'http://
  * Tokens per call for the cost estimate. Inputs are from the prompts of a keyless
  * run (seed 2, 24 companies: pin about 10,000 characters, refresh up to 11,400,
  * judge about 1,600; 4 characters per token, rounded up). Outputs are bounds: the
- * refresh output cap (2,000) and a judge allowance, both covering thinking; a
- * visible answer is about 75 tokens.
+ * refresh output cap (2,000) and the judge's max_tokens (JUDGE_MAX_TOKENS), both
+ * covering thinking: the worst case, which a launch prices until graded rows measure
+ * the judge (measuredJudge); a visible answer is about 75 tokens.
  */
 export const EST_TOKENS = {
   pin: { input: 2_600, output: 2_000 },
   refresh: { input: 2_900, output: 2_000 },
-  judge: { input: 450, output: 2_000 },
+  judge: { input: 450, output: JUDGE_MAX_TOKENS },
 } as const;
+/** Judge calls per graded answer at worst: the first call and its one retry on unparseable output (JUDGE_RETRY_NOTE). */
+export const JUDGE_CALLS_PER_ANSWER = 2;
 
 /** The judge's system prompt, frozen: changing it changes the judge and voids earlier agreement checks. */
 export const PINNED_QUESTIONS_JUDGE_PROMPT = [
@@ -160,12 +167,25 @@ export function judgeUserMessage(c: PqCompany, kind: 'first' | 'refreshed', sent
  * absent is stale, neither is missing, both is ambiguous. A removed claim is
  * correct when the previous value is absent.
  */
+/**
+ * Words that show an answer still states a claim (for the CEO, a capitalised name after "chief executive ... is" or
+ * "led by", so "no chief executive is named" does not count). When a claim was removed and the answer has these without the
+ * old value, it may assert a different, wrong value, which token presence cannot tell from a correct non-answer, so the
+ * rule label is ambiguous and the answer is left out of the judge check.
+ */
+const ASSERTS: Record<Claim, RegExp> = {
+  city: /\b(builds|built|based|headquartered|located|manufactur\w*)\b/i,
+  flagship: /\bflagship\b/i,
+  ceo: /(\b[Cc]hief [Ee]xecutive|\bCEO)(\s+of\s+[^.]+?)?\s+(is|was|remains|became|is now)\s+[A-Z]|\b(led|headed|run) by\s+[A-Z]/,
+  founded: /\b(founded|established)\b/i,
+};
+
 export function ruleLabels(c: PqCompany, kind: 'first' | 'refreshed', sentences: readonly string[]): Record<Claim, RuleLabel> {
   const text = sentences.join(' ');
   const key = keyFor(c, kind);
   return Object.fromEntries(CLAIMS.map(claim => {
     const { now, was } = key[claim];
-    if (now === null) return [claim, wordIn(c.before[claim], text) ? 'stale' : 'correct'];
+    if (now === null) return [claim, wordIn(c.before[claim], text) ? 'stale' : ASSERTS[claim].test(text) ? 'ambiguous' : 'correct'];
     const n = wordIn(now, text);
     if (was === null) return [claim, n ? 'correct' : 'missing'];
     const o = wordIn(was, text);
@@ -190,11 +210,41 @@ export function parseJudgeLabels(text: string): Record<Claim, JudgeLabel> | null
   }
 }
 
-export interface Usage { calls: number; input_tokens: number; output_tokens: number; cache_read_tokens: number; cache_write_tokens: number }
-const noUsage = (): Usage => ({ calls: 0, input_tokens: 0, output_tokens: 0, cache_read_tokens: 0, cache_write_tokens: 0 });
+/** models: every "provider:modelId" gbrain's gateway reported as the model that answered in this window. */
+export interface Usage { calls: number; input_tokens: number; output_tokens: number; cache_read_tokens: number; cache_write_tokens: number; models?: string[] }
+const noUsage = (): Usage => ({ calls: 0, input_tokens: 0, output_tokens: 0, cache_read_tokens: 0, cache_write_tokens: 0, models: [] });
 
-/** failure_message: the provider's own words when gbrain logged a failed refresh, which its error code alone loses (a safety stop reads as provider_error). */
-export interface CallRecord { status: string; mode: 'full' | 'incremental' | null; error: string | null; failure_message: string | null; cost_usd: number | null; usage: Usage }
+/** The served id is the model under test, or a dated snapshot of it (the provider's id begins with the bare id). */
+const servedAs = (model: string, served: string) => (served.split(':').pop() ?? served).startsWith(model.split(':').pop() ?? model);
+
+/** A pin or refresh call that some other model answered: the row is not evidence about the model under test. */
+export const servedWrongModel = (r: Pick<PaidRow, 'model' | 'pin' | 'refresh'>) => [r.pin, r.refresh].some(c => (c.usage.models ?? []).some(s => !servedAs(r.model, s)));
+
+/** The model that answered the refresh (else the pin), from the gateway's usage record: the receipt's proof of what ran. */
+export const answerModelOf = (r: Pick<PaidRow, 'pin' | 'refresh'>) => r.refresh.usage.models?.at(-1) ?? r.pin.usage.models?.at(-1) ?? null;
+
+/**
+ * failure_message: the provider's own words when gbrain logged a failed refresh, which its error code alone loses (a safety stop reads as provider_error).
+ * safety_finish: a structured refusal or content-filter finish reason a provider returned during a call that did not publish; gbrain's
+ * question adapter keeps only `length`, so the runner records it from the gateway's own result.
+ */
+export interface CallRecord { status: string; mode: 'full' | 'incremental' | null; error: string | null; failure_message: string | null; safety_finish?: SafetyFinish | null; cost_usd: number | null; usage: Usage }
+export type SafetyFinish = 'refusal' | 'content_filter';
+
+/** The AI SDK's generateText, passing every result through and reporting its structured safety finish (the paid arm's only hook on it). */
+export const recordingGenerateText = (generate: (o: any) => Promise<any>, note: (f: SafetyFinish | null) => void) => async (o: any) => {
+  const r = await generate(o);
+  note(safetyFinishOf(r));
+  return r;
+};
+
+/** The structured safety finish of one AI SDK result, mapped as gbrain's gateway maps it (refusal first, then content_filter). */
+export function safetyFinishOf(r: { finishReason?: string; rawFinishReason?: string; providerMetadata?: Record<string, any>; stopReason?: string }): SafetyFinish | null {
+  if (r.stopReason !== undefined) return r.stopReason === 'refusal' || r.stopReason === 'content_filter' ? r.stopReason : null;
+  const anthropic = r.providerMetadata?.anthropic?.stopReason ?? r.providerMetadata?.anthropic?.stop_reason;
+  if (r.rawFinishReason === 'refusal' || anthropic === 'refusal') return 'refusal';
+  return r.finishReason === 'content-filter' || r.finishReason === 'content_filter' ? 'content_filter' : null;
+}
 
 /**
  * What a pin or refresh came to. provider_error (a 5xx, rate limit, timeout or dropped connection before any answer) is
@@ -203,12 +253,28 @@ export interface CallRecord { status: string; mode: 'full' | 'incremental' | nul
  */
 export type Outcome = 'published' | 'answer_too_long' | 'safety_stop' | 'provider_error' | 'not_published';
 const TRANSIENT = /^refresh_failed:(rate_limited|timeout|network|provider_error)$/;
-const SAFETY = /safety|content[ _-]?filter|content[ _-]?policy|usage polic|refus|flagged/i;
+const NO_ANSWER_REACHED = /^refresh_failed:(rate_limited|timeout|network)$/;
+const SAFETY = /safety|content[ _-]?filter|content[ _-]?policy|usage polic|\brefusal\b|\brefused to\b|flagged/i;
 
-export function outcomeOf(c: Pick<CallRecord, 'status' | 'error' | 'failure_message'>): Outcome {
+/**
+ * gbrain refused to call the model for a reason that is the run's setup, not the model: no key, no consent, no worker or
+ * gbrain's own spend limit. The question is a harness error, never a scored not-correct answer.
+ */
+const HARNESS_BLOCKS = new Set(['no_model_key', 'awaiting_consent', 'no_worker', 'budget_exhausted']);
+export const harnessBlocked = (c: Pick<CallRecord, 'status' | 'error'>) => c.status === 'blocked' && c.error !== null && HARNESS_BLOCKS.has(c.error);
+
+/** Refuse a paid launch unless every model under test and every judge it needs has its provider key set. */
+export function requireProviderKeys(models: readonly string[], env: Record<string, string | undefined> = process.env): void {
+  const keyOf = (m: string) => ({ anthropic: 'ANTHROPIC_API_KEY', openai: 'OPENAI_API_KEY', particle: 'PARTICLE_API_KEY' } as Record<string, string>)[m.split(':')[0]!] ?? `no known key for ${m}`;
+  const missing = [...new Set(models.flatMap(m => [m, judgeFor(m)]))].filter(m => !env[keyOf(m)]).map(m => `${m} (${keyOf(m)})`);
+  if (missing.length) throw new PaidArmRefusal(`${CATEGORY}: no provider key for ${missing.join(', ')}; set it before a paid launch, or a run scores that model as all wrong.`);
+}
+
+export function outcomeOf(c: Pick<CallRecord, 'status' | 'error' | 'failure_message' | 'safety_finish'>): Outcome {
   if (c.status === 'published') return 'published';
   if (c.error?.includes('answer_too_long')) return 'answer_too_long';
-  if (c.failure_message && SAFETY.test(c.failure_message)) return 'safety_stop';
+  if (c.error && NO_ANSWER_REACHED.test(c.error)) return 'provider_error';
+  if (c.safety_finish || (c.failure_message && SAFETY.test(c.failure_message))) return 'safety_stop';
   if (c.status === 'timeout' || (c.error !== null && TRANSIENT.test(c.error))) return 'provider_error';
   return 'not_published';
 }
@@ -218,7 +284,8 @@ export function outcomeOf(c: Pick<CallRecord, 'status' | 'error' | 'failure_mess
  * failed, false when the refresh did not publish (the brain still holds the pin-time answer, so its text is not graded
  * as a refresh), else the judge's verdict.
  */
-export function scoredCorrect(r: Pick<PaidRow, 'pin' | 'refresh' | 'refreshed'>): boolean | null {
+export function scoredCorrect(r: Pick<PaidRow, 'model' | 'pin' | 'refresh' | 'refreshed'>): boolean | null {
+  if (harnessBlocked(r.pin) || harnessBlocked(r.refresh) || servedWrongModel({ model: r.model, pin: r.pin, refresh: r.refresh })) return null;
   if (outcomeOf(r.pin) === 'provider_error' || outcomeOf(r.refresh) === 'provider_error') return null;
   if (outcomeOf(r.refresh) !== 'published') return false;
   return r.refreshed.answer_correct;
@@ -245,6 +312,8 @@ export interface PaidRow {
   /** The refresh's outcome and the scored result (scoredCorrect): P's primary metric reads `correct`, never the judge alone. */
   outcome: Outcome;
   correct: boolean | null;
+  /** The model gbrain's gateway reported answering the refresh (else the pin); null on rows checkpointed before it was recorded. */
+  answer_model?: string | null;
 }
 
 /** Cohen's kappa for two binary raters from the 2x2 table; null when chance agreement is total. */
@@ -259,20 +328,25 @@ export function cohenKappa(t: { both: number; judge_only: number; rule_only: num
 
 export interface Agreement { n: number; excluded_ambiguous: number; excluded_no_judge: number; both: number; judge_only: number; rule_only: number; neither: number; agreement: number | null; kappa: number | null }
 
-/** Judge versus rule on answer_correct, per judge model, over first and refreshed answers whose rule labels hold no ambiguous claim. */
-export function judgeAgreement(rows: ReadonlyArray<Pick<PaidRow, 'judge_model' | 'first' | 'refreshed'>>): Record<string, Agreement> {
+/** One judged output: the judge that graded it, with its judge and rule labels. */
+export type Judged = { judge_model: string; graded: GradedAnswer };
+
+/**
+ * Judge versus rule on answer_correct, per judge model, over first and refreshed answers, and any stale probes, whose
+ * rule labels hold no ambiguous claim.
+ */
+export function judgeAgreement(rows: ReadonlyArray<Pick<PaidRow, 'judge_model' | 'first' | 'refreshed'>>, probes: readonly Judged[] = []): Record<string, Agreement> {
   const out: Record<string, Agreement> = {};
-  for (const r of rows) {
-    const a = out[r.judge_model] ??= { n: 0, excluded_ambiguous: 0, excluded_no_judge: 0, both: 0, judge_only: 0, rule_only: 0, neither: 0, agreement: null, kappa: null };
-    for (const g of [r.first, r.refreshed]) {
-      if (g.rule_correct === null) { a.excluded_ambiguous++; continue; }
-      if (g.answer_correct === null) { a.excluded_no_judge++; continue; }
-      a.n++;
-      if (g.answer_correct && g.rule_correct) a.both++;
-      else if (g.answer_correct) a.judge_only++;
-      else if (g.rule_correct) a.rule_only++;
-      else a.neither++;
-    }
+  const items = [...rows.flatMap(r => [{ judge_model: r.judge_model, graded: r.first }, { judge_model: r.judge_model, graded: r.refreshed }]), ...probes];
+  for (const { judge_model, graded: g } of items) {
+    const a = out[judge_model] ??= { n: 0, excluded_ambiguous: 0, excluded_no_judge: 0, both: 0, judge_only: 0, rule_only: 0, neither: 0, agreement: null, kappa: null };
+    if (g.rule_correct === null) { a.excluded_ambiguous++; continue; }
+    if (g.answer_correct === null) { a.excluded_no_judge++; continue; }
+    a.n++;
+    if (g.answer_correct && g.rule_correct) a.both++;
+    else if (g.answer_correct) a.judge_only++;
+    else if (g.rule_correct) a.rule_only++;
+    else a.neither++;
   }
   for (const a of Object.values(out)) {
     a.agreement = a.n ? (a.both + a.neither) / a.n : null;
@@ -285,9 +359,121 @@ export function judgeAgreement(rows: ReadonlyArray<Pick<PaidRow, 'judge_model' |
 export const JUDGE_KAPPA_FLOOR = 0.6;
 export const JUDGE_MIN_LABELS = 100;
 
-export function judgeCheckPasses(rows: ReadonlyArray<Pick<PaidRow, 'judge_model' | 'first' | 'refreshed'>>): boolean {
-  const a = Object.values(judgeAgreement(rows));
-  return a.length > 0 && a.every(x => x.n >= JUDGE_MIN_LABELS && (x.kappa === null ? x.agreement === 1 : x.kappa >= JUDGE_KAPPA_FLOOR));
+/**
+ * Every judge in `judges` (by default, every judge the rows name) has at least JUDGE_MIN_LABELS labelled outputs, stale
+ * probes included, and a defined kappa of at least JUDGE_KAPPA_FLOOR. An undefined kappa (unanimous labels, so chance
+ * agreement is 1) is no evidence of agreement and fails, and a judge with no rows fails.
+ */
+export function judgeCheckPasses(rows: ReadonlyArray<Pick<PaidRow, 'judge_model' | 'first' | 'refreshed'>>, judges: readonly string[] = [...new Set(rows.map(r => r.judge_model))], probes: readonly Judged[] = []): boolean {
+  const a = judgeAgreement(rows, probes);
+  return judges.length > 0 && judges.every(j => { const x = a[j]; return !!x && x.n >= JUDGE_MIN_LABELS && x.kappa !== null && x.kappa >= JUDGE_KAPPA_FLOOR; });
+}
+
+/**
+ * The runner source the judge-check stage ran on 2026-11-24 (results branch at 6646f4db). The runner changed after it
+ * only to add the stale probes (preregistration amendment "Stale probes for the judge check", 2026-11-24), so that
+ * receipt stays usable; readJudgeCheck still recomputes every rule label in it from the regenerated worlds.
+ */
+export const JUDGE_CHECK_RUNNER_SOURCES = ['209ca79335425287d886d903e858a71ec5ad21c87b697d657a87c88f64e0e0dd'] as const;
+
+export const STALE_PROBES_STAGE = 'stale-probes';
+
+/**
+ * A stale probe: a judge-check row's first answer, written before the change, judged again against the key after it, by
+ * the row's own judge with the frozen prompt. Where the change altered a claim the answer still states the old value, so
+ * its rule label is stale: a labelled negative for the judge check.
+ */
+export interface StaleProbe extends Judged { model: string; seed: number; company: string; mutation: MutationClass }
+
+/** The rows a stale probe is asked for: those whose change altered a claim. An unchanged key would repeat the first answer's own judge item. */
+export const probed = (r: Pick<PaidRow, 'affected'>) => r.affected.length > 0;
+
+const rowId = (r: { model: string; seed: number; company: string }) => `${r.model}|${r.seed}|${r.company}`;
+const judgePromptSha256 = () => createHash('sha256').update(PINNED_QUESTIONS_JUDGE_PROMPT).digest('hex');
+
+interface StageReceipt {
+  category?: string; run_status?: string; gbrain_version?: string; hashes?: Record<string, string>;
+  resolved_config?: { mode?: string; stage?: string; runner_source_sha256?: string; models?: Array<{ model: string; role: string }>; judge?: { prompt_sha256?: string }; gbrain_overlay?: unknown; seeds?: number[]; companies_per_seed?: number; judge_check_receipt_sha256?: string | null };
+  data?: { rows?: PaidRow[]; probes?: StaleProbe[] };
+}
+export interface JudgeCheck { rows: PaidRow[]; worlds: Map<number, PqWorld>; sha256: string }
+
+const JUDGE_CHECK_NEED = 'a counted launch needs a passing judge-check receipt (--judge-check <receipt.json> from --stage judge-check)';
+
+/**
+ * The judge-check stage's receipt, checked for use: paid and completed, on the build under test and this judge prompt,
+ * every model in `models` run, each row judged by its family's judge, made by this runner or one in
+ * JUDGE_CHECK_RUNNER_SOURCES, every world regenerating to its recorded fingerprint, and every stored rule label equal to
+ * the one this runner computes, so the grading did not change under it.
+ */
+export function readJudgeCheck(path: string | undefined, opts: { gut: GbrainUnderTest; models: readonly string[] }): JudgeCheck {
+  const refuse = (why: string): never => { throw new PaidArmRefusal(`${CATEGORY}: ${JUDGE_CHECK_NEED}: ${why}`); };
+  if (!path) return refuse('none given');
+  if (!existsSync(path)) return refuse(`${path} does not exist`);
+  const r = JSON.parse(readFileSync(path, 'utf8')) as StageReceipt;
+  const c = r.resolved_config;
+  if (r.category !== CATEGORY || c?.stage !== 'judge-check' || c.mode !== 'paid') return refuse(`${path} is not a paid ${CATEGORY} judge-check receipt`);
+  if (r.run_status !== 'completed') return refuse(`its run_status is ${r.run_status}`);
+  if (r.gbrain_version !== opts.gut.version || JSON.stringify(c.gbrain_overlay ?? null) !== JSON.stringify(overlaySummary(opts.gut) ?? null)) return refuse(`it measured gbrain ${r.gbrain_version}, not the build under test (${opts.gut.version})`);
+  if (c.judge?.prompt_sha256 !== judgePromptSha256()) return refuse('its judge prompt differs from this runner\'s');
+  if (c.runner_source_sha256 !== RUNNER_SOURCE_SHA256 && !(JUDGE_CHECK_RUNNER_SOURCES as readonly string[]).includes(c.runner_source_sha256 ?? '')) return refuse('it was made by a different version of this runner or its generator (rule labels and grading may differ); rerun the judge-check stage');
+  const checked = new Set((c.models ?? []).filter(m => m.role === 'model under test').map(m => m.model));
+  const missing = opts.models.map(canonicalModel).filter(m => !checked.has(m));
+  if (missing.length) return refuse(`it did not run ${missing.join(', ')}`);
+  const worlds = new Map((c.seeds ?? []).map(seed => [seed, generatePinnedQuestionsWorld({ seed, companies: c.companies_per_seed })] as const));
+  for (const [seed, w] of worlds) if (r.hashes?.[`ledger_seed_${seed}`] !== w.fingerprint) return refuse(`seed ${seed}'s world does not regenerate to the fingerprint it records`);
+  const rows = r.data?.rows ?? [];
+  for (const row of rows) {
+    const company = worlds.get(row.seed)?.companies.find(x => x.slug === row.company);
+    if (!company) return refuse(`row ${rowId(row)} names no company in its recorded worlds`);
+    if (row.judge_model !== judgeFor(row.model)) return refuse(`row ${rowId(row)} was judged by ${row.judge_model}, not ${judgeFor(row.model)}`);
+    const same = (kind: 'first' | 'refreshed', g: GradedAnswer) => JSON.stringify(ruleLabels(company, kind, g.sentences)) === JSON.stringify(g.rule_labels);
+    if (!same('first', row.first) || !same('refreshed', row.refreshed)) return refuse(`row ${rowId(row)}'s stored rule labels differ from this runner's (rule labels and grading may differ); rerun the judge-check stage`);
+  }
+  return { rows, worlds, sha256: createHash('sha256').update(readFileSync(path)).digest('hex') };
+}
+
+/**
+ * The stale probes for a judge-check receipt: paid and completed, made by this runner, on the build under test and this
+ * judge prompt, naming that judge-check receipt by its sha256, with exactly one probe per probed row, each that row's
+ * first answer judged by the row's judge against the key after the change.
+ */
+export function readStaleProbes(path: string | undefined, jc: JudgeCheck, opts: { gut: GbrainUnderTest }): StaleProbe[] {
+  const refuse = (why: string): never => { throw new PaidArmRefusal(`${CATEGORY}: a counted launch needs the stale probes for its judge-check receipt (--stale-probes <receipt.stale-probes.json> from --stage stale-probes): ${why}`); };
+  if (!path) return refuse('none given');
+  if (!existsSync(path)) return refuse(`${path} does not exist`);
+  const r = JSON.parse(readFileSync(path, 'utf8')) as StageReceipt;
+  const c = r.resolved_config;
+  if (r.category !== CATEGORY || c?.stage !== STALE_PROBES_STAGE || c.mode !== 'paid') return refuse(`${path} is not a paid ${CATEGORY} stale-probes receipt`);
+  if (r.run_status !== 'completed') return refuse(`its run_status is ${r.run_status}`);
+  if (r.gbrain_version !== opts.gut.version || JSON.stringify(c.gbrain_overlay ?? null) !== JSON.stringify(overlaySummary(opts.gut) ?? null)) return refuse(`it measured gbrain ${r.gbrain_version}, not the build under test (${opts.gut.version})`);
+  if (c.judge?.prompt_sha256 !== judgePromptSha256()) return refuse('its judge prompt differs from this runner\'s');
+  if (c.runner_source_sha256 !== RUNNER_SOURCE_SHA256) return refuse('it was made by a different version of this runner or its generator; asking the probes again needs a paid window');
+  if (c.judge_check_receipt_sha256 !== jc.sha256) return refuse('it was made from a different judge-check receipt');
+  const probes = r.data?.probes ?? [];
+  const rows = new Map(jc.rows.filter(probed).map(row => [rowId(row), row]));
+  if (probes.length !== rows.size || new Set(probes.map(rowId)).size !== probes.length) return refuse(`it holds ${probes.length} probes for ${rows.size} probed rows`);
+  for (const p of probes) {
+    const row = rows.get(rowId(p));
+    if (!row) return refuse(`probe ${rowId(p)} matches no probed row`);
+    const company = jc.worlds.get(row.seed)!.companies.find(x => x.slug === row.company)!;
+    if (p.judge_model !== row.judge_model || JSON.stringify(p.graded.sentences) !== JSON.stringify(row.first.sentences) || JSON.stringify(p.graded.rule_labels) !== JSON.stringify(ruleLabels(company, 'refreshed', row.first.sentences))) {
+      return refuse(`probe ${rowId(p)} is not its row's first answer judged by ${row.judge_model} against the key after the change`);
+    }
+  }
+  return probes;
+}
+
+/**
+ * A counted launch needs the judge-check stage's receipt (readJudgeCheck) and its stale probes (readStaleProbes), with
+ * the judge check recomputed from both passing for every judge the counted models need. The output cap is not tied: the
+ * judge grades answers, and the raised-cap arm only lets them run longer.
+ */
+export function requireJudgeCheck(path: string | undefined, opts: { gut: GbrainUnderTest; models: readonly string[]; staleProbes?: string }): void {
+  const jc = readJudgeCheck(path, opts);
+  const probes = readStaleProbes(opts.staleProbes, jc, opts);
+  const judges = [...new Set(opts.models.map(m => judgeFor(canonicalModel(m))))];
+  if (!judgeCheckPasses(jc.rows, judges, probes)) throw new PaidArmRefusal(`${CATEGORY}: ${JUDGE_CHECK_NEED}: recomputed from its rows and stale probes, the judge check fails for at least one of ${judges.join(', ')}`);
 }
 
 /** A pin or refresh that gbrain failed because the reply hit the output cap. */
@@ -329,20 +515,61 @@ export function summarizePaid(rows: readonly PaidRow[]) {
   return {
     by_model: byModel,
     judge_agreement: judgeAgreement(rows),
+    /** The same agreement read per model under test (one judge grades two models), as the preregistration reads disagreements: per model, not pooled. */
+    judge_agreement_by_model: Object.fromEntries(models.map(m => [m, judgeAgreement(rows.filter(r => r.model === m))[judgeFor(m)] ?? null])),
+    comparisons: refreshComparisons(rows),
     truncation: { bar: TRUNCATION_BAR, models_over_bar: models.filter(m => byModel[m]!.answer_too_long.over_bar) },
     tokens_per_call: { pin: perCall(r => [r.pin.usage]), refresh: perCall(r => [r.refresh.usage]), judge: perCall(r => [r.first.judge_usage, r.refreshed.judge_usage]) },
   };
 }
 
+/** One receipt per stage, so the judge-check stage, which resumes the pilot's seed in the same output directory, never replaces the pilot's receipt. */
+export const receiptFile = (output: string, stage: Stage) => join(output, `receipt.${stage}.json`);
+
+/** The reference every P comparison is paired against. */
+export const P_REFERENCE_MODEL = 'anthropic:claude-opus-5-5';
+
+/**
+ * P's primary comparisons: each other model against P_REFERENCE_MODEL on the scored refreshed outcome, paired by
+ * question (seed and company, both scored), Holm-corrected within this run's family, with the non-inferiority call. A
+ * raised-cap run is its own receipt and so its own family. Empty when the reference did not run.
+ */
+export function refreshComparisons(rows: readonly PaidRow[]) {
+  const ref = new Map(rows.filter(r => r.model === P_REFERENCE_MODEL && r.correct !== null).map(r => [`${r.seed}|${r.company}`, r.correct!]));
+  if (!ref.size) return {};
+  const others = [...new Set(rows.map(r => r.model))].filter(m => m !== P_REFERENCE_MODEL);
+  return comparisonFamily(Object.fromEntries(others.map(m => [m, pairedComparison(rows
+    .filter(r => r.model === m && r.correct !== null && ref.has(`${r.seed}|${r.company}`))
+    .map(r => ({ a: ref.get(`${r.seed}|${r.company}`)!, b: r.correct! })))])));
+}
+
 /** Ledger estimate in dollars for a run, from EST_TOKENS and the ledger's prices. */
-export function estimateUsd(models: readonly string[], seeds: number, companies: number, maxOutputTokens?: number): number {
+/**
+ * What the judge measurably costs per graded answer, from rows already graded with this judge prompt: output tokens per
+ * call with half again as margin (never above JUDGE_MAX_TOKENS), and calls per answer (retries included). Null with no
+ * graded rows, so a first launch prices the worst case.
+ */
+export function measuredJudge(rows: ReadonlyArray<Pick<PaidRow, 'first' | 'refreshed'>>): { outputTokens: number; callsPerAnswer: number } | null {
+  const us = rows.flatMap(r => [r.first.judge_usage, r.refreshed.judge_usage]);
+  const calls = us.reduce((a, u) => a + u.calls, 0);
+  if (!calls) return null;
+  return { outputTokens: Math.min(JUDGE_MAX_TOKENS, Math.ceil(1.5 * us.reduce((a, u) => a + u.output_tokens, 0) / calls)), callsPerAnswer: calls / us.length };
+}
+
+/** The graded rows a launch prices the judge from: the judge-check receipt's for a counted launch, else this directory's checkpointed units under the same key. */
+export function judgeEstimateRows(output: string, key: string, judgeCheck?: string): PaidRow[] {
+  if (judgeCheck && existsSync(judgeCheck)) return (JSON.parse(readFileSync(judgeCheck, 'utf8')) as { data?: { rows?: PaidRow[] } }).data?.rows ?? [];
+  return readCheckpoint(join(output, 'checkpoint.ndjson')).filter(x => x.key === key).flatMap(x => x.rows);
+}
+
+export function estimateUsd(models: readonly string[], seeds: number, companies: number, maxOutputTokens?: number, judge: { outputTokens: number; callsPerAnswer: number } | null = null): number {
   const answerOutput = Math.max(EST_TOKENS.pin.output, maxOutputTokens ?? 0);
   const cost = (model: string, t: { input: number; output: number }) => {
     const p = chatPrice(model);
     if (!p) throw new Error(`${model} has no ledger price; register one in eval/runner/budget-ledger.ts`);
     return (t.input * p.input + t.output * p.output) / 1e6;
   };
-  return models.reduce((sum, m) => sum + seeds * companies * (cost(m, { ...EST_TOKENS.pin, output: answerOutput }) + cost(m, { ...EST_TOKENS.refresh, output: answerOutput }) + 2 * cost(judgeFor(m), EST_TOKENS.judge)), 0);
+  return models.reduce((sum, m) => sum + seeds * companies * (cost(m, { ...EST_TOKENS.pin, output: answerOutput }) + cost(m, { ...EST_TOKENS.refresh, output: answerOutput }) + 2 * (judge?.callsPerAnswer ?? JUDGE_CALLS_PER_ANSWER) * cost(judgeFor(m), { ...EST_TOKENS.judge, output: judge?.outputTokens ?? EST_TOKENS.judge.output })), 0);
 }
 
 interface Sentence { id: string; text: string; origin: string; stale: boolean }
@@ -355,20 +582,64 @@ export type ChatTransport = (opts: ChatOpts) => Promise<ChatResult>;
 
 interface Gateway {
   configureGateway(c: Record<string, unknown>): void;
+  __setGenerateTextTransportForTests(fn: ((o: any) => Promise<any>) | null): void;
   chat(o: ChatOpts): Promise<ChatResult>;
   __setChatTransportForTests(fn: ChatTransport | null): void;
 }
 
-const callRecord = (r: QReceipt, usage: Usage, failure: string | null): CallRecord => ({
-  status: r.refresh?.status ?? 'none', mode: r.refresh?.mode ?? null,
-  error: r.refresh?.error ?? r.refresh?.blocked_reason ?? (r.refresh?.status === 'published' ? null : r.last_error),
-  failure_message: r.refresh?.status === 'published' ? null : failure, cost_usd: r.refresh?.cost_usd ?? null, usage,
-});
+/**
+ * Provider and judge error text, safe to keep in rows, checkpoints, receipts and logs: every key value set in `env`
+ * under a key-shaped name, every key-shaped token, bearer and basic credentials and URL passwords are replaced with
+ * [redacted]. Redact before truncating, so a cut never leaves part of a key behind.
+ */
+export function redactProviderText(text: string, env: Record<string, string | undefined> = process.env): string {
+  let out = text;
+  for (const [name, value] of Object.entries(env)) if (value && value.length >= 8 && HERMETIC_KEY_PATTERN.test(name)) out = out.split(value).join('[redacted]');
+  for (const { re } of KEY_PATTERNS) out = out.replace(re, '[redacted]');
+  out = out.replace(/\b(Bearer|Basic)\s+[A-Za-z0-9._~+/=-]{8,}/gi, '$1 [redacted]').replace(/\b(x-api-key|api[_-]?key)(["']?\s*[:=]\s*["']?)[A-Za-z0-9._~+/=-]{8,}/gi, '$1$2[redacted]');
+  return redactUrlPasswords(out, '[redacted]');
+}
+
+const callRecord = (r: QReceipt, usage: Usage, failure: string | null, safetyFinish: SafetyFinish | null): CallRecord => {
+  const error = r.refresh?.error ?? r.refresh?.blocked_reason ?? (r.refresh?.status === 'published' ? null : r.last_error);
+  return {
+    status: r.refresh?.status ?? 'none', mode: r.refresh?.mode ?? null, error: error ? redactProviderText(error) : null,
+    failure_message: r.refresh?.status === 'published' ? null : failure, safety_finish: r.refresh?.status === 'published' ? null : safetyFinish, cost_usd: r.refresh?.cost_usd ?? null, usage,
+  };
+};
 const FAILURE_LINE = /\[questions\] refresh of \S+ failed: (.*)/;
 const modelText = (r: QReceipt) => (r.answer ?? []).filter(s => s.origin === 'model');
 
 /** One (model, seed) unit: a fresh brain, every question pinned, changed, refreshed and graded. */
-async function runUnit(gut: GbrainUnderTest, gateway: Gateway, gatewayConfig: (chatModel: string) => Record<string, unknown>, usage: { current: Usage | null }, model: string, world: PqWorld, maxOutputTokens?: number): Promise<PaidRow[]> {
+/**
+ * One answer graded: rule labels from the synthetic tokens beside the judge's labels from one call, and one retry on
+ * unparseable output, through gbrain's gateway, already configured for `judge`. With `skipAmbiguous`, an answer whose
+ * rule label is ambiguous, and so is left out of the judge check, is not sent to the judge.
+ */
+async function gradeAnswer(gateway: Gateway, meter: (fn: () => Promise<void>) => Promise<{ usage: Usage }>, judge: string, c: PqCompany, kind: 'first' | 'refreshed', sentences: string[], skipAmbiguous = false): Promise<GradedAnswer> {
+  const rule = ruleLabels(c, kind, sentences);
+  const g: GradedAnswer = { sentences, judge_labels: null, judge_error: null, answer_correct: null, rule_labels: rule, rule_correct: Object.values(rule).includes('ambiguous') ? null : Object.values(rule).every(l => l === 'correct'), judge_usage: noUsage() };
+  if (skipAmbiguous && g.rule_correct === null) return g;
+  const user = judgeUserMessage(c, kind, sentences);
+  const { usage: u } = await meter(async () => {
+    for (const content of [user, `${user}\n\n${JUDGE_RETRY_NOTE}`]) {
+      try {
+        const res = await gateway.chat({ model: judge, system: PINNED_QUESTIONS_JUDGE_PROMPT, messages: [{ role: 'user', content }], maxTokens: JUDGE_MAX_TOKENS, allowFallback: false, ...(acceptsTemperature(judge) ? { temperature: 0 } : {}) });
+        g.judge_labels = parseJudgeLabels(res.text);
+        g.judge_error = g.judge_labels ? null : 'judge_output_not_json';
+      } catch (e) {
+        g.judge_error = `judge_call_failed: ${redactProviderText(e instanceof Error ? e.message : String(e)).slice(0, 300)}`;
+        return;
+      }
+      if (g.judge_labels) return;
+    }
+  });
+  g.judge_usage = u;
+  g.answer_correct = g.judge_labels ? CLAIMS.every(claim => g.judge_labels![claim] === 'correct') : null;
+  return g;
+}
+
+async function runUnit(gut: GbrainUnderTest, gateway: Gateway, gatewayConfig: (chatModel: string) => Record<string, unknown>, usage: { current: Usage | null }, finish: { current: SafetyFinish | null | undefined }, model: string, world: PqWorld, maxOutputTokens?: number): Promise<PaidRow[]> {
   const { PGLiteEngine } = await importGbrain<{ PGLiteEngine: new () => Engine }>(gut, 'src/core/pglite-engine.ts');
   const { operations } = await importGbrain<{ operations: Array<{ name: string; handler: (ctx: OperationContext, p: Record<string, unknown>) => Promise<unknown> }> }>(gut, 'src/core/operations.ts');
   const service = await importGbrain<{
@@ -376,17 +647,19 @@ async function runUnit(gut: GbrainUnderTest, gateway: Gateway, gatewayConfig: (c
     questionStatus(ctx: OperationContext, p: Record<string, unknown>): Promise<QReceipt>;
     refreshQuestion(ctx: OperationContext, p: Record<string, unknown>): Promise<QReceipt>;
   }>(gut, 'src/core/questions/service.ts');
-  const metered = async <T>(fn: () => Promise<T>): Promise<{ value: T; usage: Usage; failure: string | null }> => {
+  const metered = async <T>(fn: () => Promise<T>): Promise<{ value: T; usage: Usage; failure: string | null; safetyFinish: SafetyFinish | null }> => {
     const u = noUsage();
     usage.current = u;
+    finish.current = null;
     let failure: string | null = null;
     const write = process.stderr.write;
     process.stderr.write = ((chunk: unknown, ...rest: unknown[]) => {
       const m = FAILURE_LINE.exec(String(chunk));
-      if (m) failure = m[1]!.slice(0, 500);
-      return (write as (...a: unknown[]) => boolean).call(process.stderr, chunk, ...rest);
+      if (!m) return (write as (...a: unknown[]) => boolean).call(process.stderr, chunk, ...rest);
+      failure = redactProviderText(m[1]!).slice(0, 500);
+      return (write as (...a: unknown[]) => boolean).call(process.stderr, redactProviderText(String(chunk)), ...rest);
     }) as typeof process.stderr.write;
-    try { return { value: await fn(), usage: u, failure }; } finally { usage.current = null; process.stderr.write = write; }
+    try { return { value: await fn(), usage: u, failure, safetyFinish: finish.current ?? null }; } finally { usage.current = null; finish.current = undefined; process.stderr.write = write; }
   };
 
   gateway.configureGateway(gatewayConfig(model));
@@ -424,8 +697,8 @@ async function runUnit(gut: GbrainUnderTest, gateway: Gateway, gatewayConfig: (c
     }
     const pins = new Map<string, { id: string; pin: CallRecord; first: string[] }>();
     for (const c of world.companies) {
-      const { value, usage: u, failure } = await metered(() => service.pinQuestion(ctx, { question: c.question, scope: { entity: c.slug }, wait_ms: WAIT_MS }));
-      pins.set(c.slug, { id: value.receipt.id, pin: callRecord(value.receipt, u, failure), first: modelText(value.receipt).map(s => s.text) });
+      const { value, usage: u, failure, safetyFinish } = await metered(() => service.pinQuestion(ctx, { question: c.question, scope: { entity: c.slug }, wait_ms: WAIT_MS }));
+      pins.set(c.slug, { id: value.receipt.id, pin: callRecord(value.receipt, u, failure, safetyFinish), first: modelText(value.receipt).map(s => s.text) });
     }
     for (const c of world.companies) {
       for (const step of c.steps) {
@@ -439,9 +712,9 @@ async function runUnit(gut: GbrainUnderTest, gateway: Gateway, gatewayConfig: (c
         }
       }
       const p = pins.get(c.slug)!;
-      const { value, usage: u, failure } = await metered(() => service.refreshQuestion(ctx, { id: p.id, wait_ms: WAIT_MS }));
+      const { value, usage: u, failure, safetyFinish } = await metered(() => service.refreshQuestion(ctx, { id: p.id, wait_ms: WAIT_MS }));
       const status = await service.questionStatus(ctx, { id: p.id });
-      pending.push({ c, pin: p.pin, first: p.first, refresh: { ...callRecord(value, u, failure), freshness: status.freshness, stale_sentences: status.sentences.stale }, refreshed: modelText(status) });
+      pending.push({ c, pin: p.pin, first: p.first, refresh: { ...callRecord(value, u, failure, safetyFinish), freshness: status.freshness, stale_sentences: status.sentences.stale }, refreshed: modelText(status) });
     }
   } finally {
     await engine.disconnect().catch(() => {});
@@ -449,27 +722,7 @@ async function runUnit(gut: GbrainUnderTest, gateway: Gateway, gatewayConfig: (c
 
   const judge = judgeFor(model);
   gateway.configureGateway(gatewayConfig(judge));
-  const grade = async (c: PqCompany, kind: 'first' | 'refreshed', sentences: string[]): Promise<GradedAnswer> => {
-    const rule = ruleLabels(c, kind, sentences);
-    const g: GradedAnswer = { sentences, judge_labels: null, judge_error: null, answer_correct: null, rule_labels: rule, rule_correct: Object.values(rule).includes('ambiguous') ? null : Object.values(rule).every(l => l === 'correct'), judge_usage: noUsage() };
-    const user = judgeUserMessage(c, kind, sentences);
-    const { usage: u } = await metered(async () => {
-      for (const content of [user, `${user}\n\n${JUDGE_RETRY_NOTE}`]) {
-        try {
-          const res = await gateway.chat({ model: judge, system: PINNED_QUESTIONS_JUDGE_PROMPT, messages: [{ role: 'user', content }], maxTokens: JUDGE_MAX_TOKENS, allowFallback: false, ...(acceptsTemperature(judge) ? { temperature: 0 } : {}) });
-          g.judge_labels = parseJudgeLabels(res.text);
-          g.judge_error = g.judge_labels ? null : 'judge_output_not_json';
-        } catch (e) {
-          g.judge_error = `judge_call_failed: ${e instanceof Error ? e.message.slice(0, 300) : String(e)}`;
-          return;
-        }
-        if (g.judge_labels) return;
-      }
-    });
-    g.judge_usage = u;
-    g.answer_correct = g.judge_labels ? CLAIMS.every(claim => g.judge_labels![claim] === 'correct') : null;
-    return g;
-  };
+  const grade = (c: PqCompany, kind: 'first' | 'refreshed', sentences: string[]) => gradeAnswer(gateway, metered, judge, c, kind, sentences);
   const rows: PaidRow[] = [];
   for (const p of pending) {
     const first = await grade(p.c, 'first', p.first);
@@ -478,7 +731,7 @@ async function runUnit(gut: GbrainUnderTest, gateway: Gateway, gatewayConfig: (c
       model, seed: world.seed, company: p.c.slug, mutation: p.c.mutation, affected: [...p.c.affected], judge_model: judge,
       pin: p.pin, refresh: p.refresh, first, refreshed: { ...refreshed, stale: p.refreshed.map(s => s.stale) },
     };
-    rows.push({ ...row, outcome: outcomeOf(p.refresh), correct: scoredCorrect(row) });
+    rows.push({ ...row, answer_model: answerModelOf(row), outcome: outcomeOf(p.refresh), correct: scoredCorrect(row) });
   }
   return rows;
 }
@@ -487,54 +740,160 @@ export type PaidMode = { kind: 'paid'; keys: Partial<Record<typeof PAID_KEY_NAME
 
 /** A unit is asked at most this often: a unit with provider or judge-call errors is asked again once, then kept with those questions left out. */
 export const MAX_UNIT_ATTEMPTS = 2;
-interface Checkpointed { key: string; model: string; seed: number; attempt: number; transient: boolean; rows: PaidRow[] }
+export interface Checkpointed { key: string; model: string; seed: number; attempt: number; transient: boolean; rows: PaidRow[] }
 export const unitTransient = (unit: readonly PaidRow[]) => unit.some(r =>
   outcomeOf(r.pin) === 'provider_error' || r.outcome === 'provider_error' || [r.first.judge_error, r.refreshed.judge_error].some(e => e?.startsWith('judge_call_failed')));
+/**
+ * Checkpointed units. A final line with no newline that does not parse is an append a crash or full disk cut short: it
+ * is cut off the file, so earlier units are reused and the next append starts on a clean line. Any other line that does
+ * not parse is corruption, and the run stops rather than drop units silently.
+ */
+export function readCheckpoint(path: string, log: (s: string) => void = () => {}): Checkpointed[] {
+  if (!existsSync(path)) return [];
+  const text = readFileSync(path, 'utf8');
+  const end = text.lastIndexOf('\n') + 1;
+  const tail = text.slice(end);
+  if (tail.trim()) {
+    try { JSON.parse(tail); appendFileSync(path, '\n'); } catch {
+      truncateSync(path, Buffer.byteLength(text.slice(0, end)));
+      log(`[pq-paid] ${path}: cut off a torn final line (${tail.length} chars) left by an interrupted append; its unit runs again`);
+      return readCheckpoint(path, log);
+    }
+  }
+  return text.split('\n').flatMap((l, i) => {
+    if (!l.trim()) return [];
+    try { return [JSON.parse(l) as Checkpointed]; } catch { throw new Error(`${path}: line ${i + 1} is not valid JSON and is not a torn final line; refusing to resume over a corrupt checkpoint`); }
+  });
+}
+
 const isBudgetRefusal = (e: unknown) => e instanceof BudgetExceededError || (e instanceof Error && e.name === 'BudgetExceededError');
 
 export interface PaidRunResult { worlds: PqWorld[]; rows: PaidRow[]; acc: ProbeAccounting; harnessErrors: string[]; resumedUnits: number }
 
-export async function runPinnedQuestionsPaid(opts: { gut: GbrainUnderTest; models: readonly string[]; seeds: readonly number[]; companies?: number; maxOutputTokens?: number; output: string; mode: PaidMode; log?: (s: string) => void }): Promise<PaidRunResult> {
-  const log = opts.log ?? (() => {});
-  const models = opts.models.map(canonicalModel);
-  for (const m of models) judgeFor(m);
-  mkdirSync(opts.output, { recursive: true });
+/**
+ * What a checkpointed unit must match to be reused: mode, gbrain build, generator, world size, output cap, judge prompt,
+ * and the runner's and generator's own source (WAIT_MS, the judge routing, the grading and every other constant here).
+ */
+export function checkpointKey(o: { mode: PaidMode['kind']; gut: GbrainUnderTest; companies?: number; maxOutputTokens?: number }): string {
+  return JSON.stringify({
+    runner_sha256: RUNNER_SOURCE_SHA256,
+    mode: o.mode, gbrain: o.gut.overlay?.build.commit ?? o.gut.version, generator: PINNED_QUESTIONS_GENERATOR_VERSION, companies: o.companies ?? 24, max_output_tokens: o.maxOutputTokens ?? null,
+    judge_prompt_sha256: createHash('sha256').update(PINNED_QUESTIONS_JUDGE_PROMPT).digest('hex'),
+  });
+}
+
+export const RUNNER_SOURCE_SHA256 = createHash('sha256').update(readFileSync(import.meta.path)).update(readFileSync(resolve(import.meta.dir, '../generators/pinned-questions-gen.ts'))).digest('hex');
+
+/**
+ * Refuse a launch into an output directory whose checkpoint holds units outside this launch's seeds: each stage gets its
+ * own directory, except that the judge-check stage resumes the pilot's seed in the pilot's directory.
+ */
+export function requireStageDirectory(output: string, seeds: readonly number[]): void {
+  const foreign = [...new Set(readCheckpoint(join(output, 'checkpoint.ndjson')).map(x => x.seed).filter(s => !seeds.includes(s)))];
+  if (foreign.length) throw new PaidArmRefusal(`${CATEGORY}: ${output} already holds checkpointed units for seeds ${foreign.join(', ')}, outside this launch's seeds (${seeds.join(', ')}); give this stage its own --output`);
+}
+
+/** The (model, seed) units a launch would still ask: those with no checkpointed unit, or one owed its retry. */
+export function pendingUnits(output: string, key: string, models: readonly string[], seeds: readonly number[]): Array<{ model: string; seed: number }> {
+  const done = readCheckpoint(join(output, 'checkpoint.ndjson')).filter(x => x.key === key);
+  return models.flatMap(model => seeds.map(seed => ({ model, seed }))).filter(({ model, seed }) => {
+    const prior = done.filter(x => x.model === model && x.seed === seed).at(-1);
+    return !prior || (prior.transient && prior.attempt < MAX_UNIT_ATTEMPTS);
+  });
+}
+
+type Unit = { model: string; seed: number };
+const unitId = (u: Unit) => `${u.model}|${u.seed}`;
+interface CostLine { key: string; stage: Stage; asked: Unit[]; summary: RunSummary }
+
+/** Each paid process appends its ledger summary to ledger-costs.ndjson, with its stage and the units it asked. */
+export function recordProcessCost(output: string, line: CostLine): void {
+  mkdirSync(output, { recursive: true });
+  appendFileSync(join(output, 'ledger-costs.ndjson'), JSON.stringify(line) + '\n');
+}
+
+/**
+ * Spend for a receipt whose rows may come from several processes: every recorded summary under the checkpoint key
+ * whose process asked a unit behind the receipt's rows, so a resumed receipt carries the cost of every attempt behind
+ * its rows, and never the spend of another stage's units that share the output directory.
+ */
+export function combinedCost(output: string, key: string, behind: readonly Unit[], current: RunSummary): RunSummary & { processes: number } {
+  const path = join(output, 'ledger-costs.ndjson');
+  const ids = new Set(behind.map(unitId));
+  const lines = existsSync(path) ? readFileSync(path, 'utf8').split('\n').flatMap(l => { try { return [JSON.parse(l) as CostLine]; } catch { return []; } }) : [];
+  const all = lines.filter(x => x.key === key && (x.asked ?? []).some(u => ids.has(unitId(u)))).map(x => x.summary);
+  const sum = (f: (s: RunSummary) => number) => all.reduce((a, s) => a + f(s), 0);
+  return {
+    ...current, run_id: [...new Set(all.map(s => s.run_id))].join(',') || current.run_id, processes: all.length,
+    reserved_usd: sum(s => s.reserved_usd), actual_usd: sum(s => s.actual_usd), charged_reservations: sum(s => s.charged_reservations), requests: sum(s => s.requests),
+    input_tokens: sum(s => s.input_tokens), output_tokens: sum(s => s.output_tokens), overshoot_usd: sum(s => s.overshoot_usd),
+  };
+}
+
+interface GatewayRun { gateway: Gateway; gatewayConfig: (chatModel: string) => Record<string, unknown>; usage: { current: Usage | null }; finish: { current: SafetyFinish | null | undefined }; spend: { stop: string | null } }
+
+/**
+ * gbrain's gateway for one paid or keyless run, inside the hermetic env: paid keys or gbrain's test chat transport, the
+ * usage sink, and the budget-refusal and safety-finish records, all removed again when `body` ends. A paid run refuses
+ * before any request unless the budget ledger's request guard is installed.
+ */
+async function withGateway<T>(mode: PaidMode, gut: GbrainUnderTest, body: (g: GatewayRun) => Promise<T>): Promise<T> {
+  if (mode.kind === 'paid' && !paidRequestGuardActive()) {
+    throw new PaidArmRefusal(`${CATEGORY}: a paid run needs the budget ledger's request guard installed first (startPaidRun, as main() does); refusing before any request.`);
+  }
   return withHermeticEnv(CATEGORY, async () => {
-    if (opts.mode.kind === 'paid') {
-      for (const [k, v] of Object.entries(opts.mode.keys)) if (v) process.env[k] = v;
+    if (mode.kind === 'paid') {
+      for (const [k, v] of Object.entries(mode.keys)) if (v) process.env[k] = v;
     }
-    const gateway = await importGbrain<Gateway>(opts.gut, 'src/core/ai/gateway.ts');
-    const { registerChatUsageSink } = await importGbrain<{ registerChatUsageSink(sink: (r: { input_tokens: number; output_tokens: number; cache_read_tokens: number; cache_write_tokens: number }) => void): () => void }>(opts.gut, 'src/core/ai/chat-usage.ts');
-    const env = opts.mode.kind === 'paid' ? { ...opts.mode.keys } : { ANTHROPIC_API_KEY: 'keyless-placeholder-not-a-key' };
+    const gateway = await importGbrain<Gateway>(gut, 'src/core/ai/gateway.ts');
+    const { registerChatUsageSink } = await importGbrain<{ registerChatUsageSink(sink: (r: { model: string; input_tokens: number; output_tokens: number; cache_read_tokens: number; cache_write_tokens: number }) => void): () => void }>(gut, 'src/core/ai/chat-usage.ts');
+    const env = mode.kind === 'paid' ? { ...mode.keys } : { ANTHROPIC_API_KEY: 'keyless-placeholder-not-a-key' };
     const gatewayConfig = (chatModel: string) => ({
       chat_model: chatModel, env, provider_chat_options: { particle: { reasoningEffort: PARTICLE_REASONING_EFFORT } },
-      ...(opts.mode.kind === 'keyless' ? { base_urls: DEAD_UPSTREAM } : {}),
+      ...(mode.kind === 'keyless' ? { base_urls: DEAD_UPSTREAM } : {}),
     });
     const usage: { current: Usage | null } = { current: null };
     const deregister = registerChatUsageSink(r => {
       const u = usage.current;
       if (!u) return;
       u.calls++; u.input_tokens += r.input_tokens; u.output_tokens += r.output_tokens; u.cache_read_tokens += r.cache_read_tokens; u.cache_write_tokens += r.cache_write_tokens;
+      if (!u.models!.includes(r.model)) u.models!.push(r.model);
     });
     const spend: { stop: string | null } = { stop: null };
     const noteRefusal = (e: unknown) => { if (isBudgetRefusal(e)) spend.stop ??= (e as Error).message.slice(0, 300); };
+    const finish: { current: SafetyFinish | null | undefined } = { current: undefined };
+    const noteFinish = (f: SafetyFinish | null) => { if (f && finish.current !== undefined) finish.current ??= f; };
     const outerFetch = globalThis.fetch;
-    if (opts.mode.kind === 'keyless') {
-      const transport = opts.mode.transport;
-      gateway.__setChatTransportForTests(async o => { try { return await transport(o); } catch (e) { noteRefusal(e); throw e; } });
-    } else {
-      globalThis.fetch = Object.assign(async (...a: Parameters<typeof fetch>) => { try { return await outerFetch(...a); } catch (e) { noteRefusal(e); throw e; } }, outerFetch);
-    }
     try {
+      if (mode.kind === 'keyless') {
+        const transport = mode.transport;
+        gateway.__setChatTransportForTests(async o => {
+          try { const res = await transport(o); noteFinish(safetyFinishOf({ stopReason: res.stopReason })); return res; } catch (e) { noteRefusal(e); throw e; }
+        });
+      } else {
+        globalThis.fetch = Object.assign(async (...a: Parameters<typeof fetch>) => { try { return await outerFetch(...a); } catch (e) { noteRefusal(e); throw e; } }, outerFetch);
+        const { generateText } = await import(Bun.resolveSync('ai', gut.root)) as { generateText: (o: any) => Promise<any> };
+        gateway.__setGenerateTextTransportForTests(recordingGenerateText(generateText, noteFinish));
+      }
+      return await body({ gateway, gatewayConfig, usage, finish, spend });
+    } finally {
+      deregister();
+      if (mode.kind === 'keyless') gateway.__setChatTransportForTests(null);
+      else { globalThis.fetch = outerFetch; gateway.__setGenerateTextTransportForTests(null); }
+    }
+  });
+}
+
+export async function runPinnedQuestionsPaid(opts: { gut: GbrainUnderTest; models: readonly string[]; seeds: readonly number[]; companies?: number; maxOutputTokens?: number; output: string; mode: PaidMode; log?: (s: string) => void }): Promise<PaidRunResult> {
+  const log = opts.log ?? (() => {});
+  const models = opts.models.map(canonicalModel);
+  for (const m of models) judgeFor(m);
+  return withGateway(opts.mode, opts.gut, async ({ gateway, gatewayConfig, usage, finish, spend }) => {
+      mkdirSync(opts.output, { recursive: true });
       const worlds = opts.seeds.map(seed => generatePinnedQuestionsWorld({ seed, companies: opts.companies }));
       const ckPath = join(opts.output, 'checkpoint.ndjson');
-      const ckKey = JSON.stringify({
-        mode: opts.mode.kind, gbrain: opts.gut.overlay?.build.commit ?? opts.gut.version, generator: PINNED_QUESTIONS_GENERATOR_VERSION, companies: opts.companies ?? 24, max_output_tokens: opts.maxOutputTokens ?? null,
-        judge_prompt_sha256: createHash('sha256').update(PINNED_QUESTIONS_JUDGE_PROMPT).digest('hex'),
-      });
-      const done = existsSync(ckPath)
-        ? readFileSync(ckPath, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l) as Checkpointed).filter(x => x.key === ckKey)
-        : [];
+      const ckKey = checkpointKey({ mode: opts.mode.kind, gut: opts.gut, companies: opts.companies, maxOutputTokens: opts.maxOutputTokens });
+      const done = readCheckpoint(ckPath, log).filter(x => x.key === ckKey);
       const acc = new ProbeAccounting(models.length * worlds.reduce((a, w) => a + w.companies.length, 0));
       const rows: PaidRow[] = [];
       const harnessErrors: string[] = [];
@@ -548,9 +907,9 @@ export async function runPinnedQuestionsPaid(opts: { gut: GbrainUnderTest; model
         } else {
           const attempt = (prior?.attempt ?? 0) + 1;
           try {
-            unit = await runUnit(opts.gut, gateway, gatewayConfig, usage, model, world, opts.maxOutputTokens);
+            unit = await runUnit(opts.gut, gateway, gatewayConfig, usage, finish, model, world, opts.maxOutputTokens);
           } catch (e) {
-            const msg = `${model} seed ${world.seed}: ${e instanceof Error ? e.message : String(e)}`;
+            const msg = `${model} seed ${world.seed}: ${redactProviderText(e instanceof Error ? e.message : String(e))}`;
             harnessErrors.push(msg);
             for (const c of world.companies) acc.error(`${model}|s${world.seed}|${c.slug}`, 'harness', msg);
             log(`[pq-paid] ${msg}`);
@@ -564,24 +923,113 @@ export async function runPinnedQuestionsPaid(opts: { gut: GbrainUnderTest; model
             break units;
           }
           appendFileSync(ckPath, JSON.stringify({ key: ckKey, model, seed: world.seed, attempt, transient: unitTransient(unit), rows: unit } satisfies Checkpointed) + '\n');
-          if (unitTransient(unit) && attempt < MAX_UNIT_ATTEMPTS) log(`[pq-paid] ${model} seed ${world.seed}: provider or judge-call errors; a resumed run asks this unit again once`);
+          if (unitTransient(unit) && attempt < MAX_UNIT_ATTEMPTS) {
+            const msg = `${model} seed ${world.seed}: provider or judge-call errors on attempt ${attempt} of ${MAX_UNIT_ATTEMPTS}; the run is incomplete until a rerun with the same arguments asks this unit again`;
+            harnessErrors.push(msg);
+            log(`[pq-paid] ${msg}`);
+          }
         }
         for (const r of unit) {
           const probe = `${model}|s${r.seed}|${r.company}`;
           if (r.correct !== null) acc.score(probe, Number(r.correct));
+          else if (harnessBlocked(r.pin) || harnessBlocked(r.refresh)) acc.error(probe, 'harness', `gbrain blocked the call: ${harnessBlocked(r.refresh) ? r.refresh.error : r.pin.error}`);
+          else if (servedWrongModel(r)) acc.error(probe, 'harness', `answered by ${[...new Set([...(r.pin.usage.models ?? []), ...(r.refresh.usage.models ?? [])])].join(', ')}, not ${r.model}`);
           else if (r.outcome === 'provider_error' || outcomeOf(r.pin) === 'provider_error') acc.error(probe, 'dependency', r.refresh.failure_message ?? r.refresh.error ?? r.pin.error ?? 'provider error');
           else acc.error(probe, 'judge', r.refreshed.judge_error ?? 'no judge labels');
         }
+        const blocked = unit.filter(r => harnessBlocked(r.pin) || harnessBlocked(r.refresh)).length;
+        const misrouted = unit.filter(r => servedWrongModel(r)).length;
+        if (misrouted) harnessErrors.push(`${model} seed ${world.seed}: another model answered ${misrouted} question(s); these rows are not results for ${model}`);
+        if (blocked) harnessErrors.push(`${model} seed ${world.seed}: gbrain blocked ${blocked} question(s) for a setup reason (no key, consent, worker or gbrain spend limit); fix the setup, these are not model results`);
         rows.push(...unit);
         log(`[pq-paid] ${model} seed ${world.seed}${prior ? ' (from checkpoint)' : ''}: refreshed correct ${unit.filter(r => r.correct).length}/${unit.length}`);
       }
       return { worlds, rows, acc, harnessErrors, resumedUnits };
-    } finally {
-      deregister();
-      if (opts.mode.kind === 'keyless') gateway.__setChatTransportForTests(null);
-      else globalThis.fetch = outerFetch;
-    }
   });
+}
+
+/**
+ * The stale probes for a judge-check receipt's rows (preregistration amendment "Stale probes for the judge check",
+ * 2026-11-24): every probed row's first answer, judged again by the row's own judge against the key after the change.
+ * No model under test is asked anything. A budget-ledger refusal stops the probes, and the run is then incomplete; an
+ * answer whose rule label is ambiguous is not sent to the judge.
+ */
+export async function runStaleProbes(opts: { gut: GbrainUnderTest; judgeCheck: JudgeCheck; mode: PaidMode; log?: (s: string) => void }): Promise<{ probes: StaleProbe[]; harnessErrors: string[] }> {
+  const rows = opts.judgeCheck.rows.filter(probed);
+  return withGateway(opts.mode, opts.gut, async ({ gateway, gatewayConfig, usage, spend }) => {
+    const meter = async (fn: () => Promise<void>) => {
+      const u = noUsage();
+      usage.current = u;
+      try { await fn(); return { usage: u }; } finally { usage.current = null; }
+    };
+    const probes: StaleProbe[] = [];
+    for (const judge of [...new Set(rows.map(r => r.judge_model))]) {
+      gateway.configureGateway(gatewayConfig(judge));
+      for (const r of rows.filter(x => x.judge_model === judge)) {
+        const c = opts.judgeCheck.worlds.get(r.seed)!.companies.find(x => x.slug === r.company)!;
+        const graded = await gradeAnswer(gateway, meter, judge, c, 'refreshed', r.first.sentences, true);
+        if (spend.stop) return { probes, harnessErrors: [`the budget ledger refused a request (${spend.stop}); ${rows.length - probes.length} stale probes not asked`] };
+        probes.push({ model: r.model, seed: r.seed, company: r.company, mutation: r.mutation, judge_model: judge, graded });
+      }
+      opts.log?.(`[pq-paid] stale probes judged by ${judge}: ${probes.filter(p => p.judge_model === judge).length}`);
+    }
+    return { probes, harnessErrors: [] };
+  });
+}
+
+/** Ledger estimate in dollars for the stale probes: each probed row's judge at its measured output and calls per answer, else at its worst case. */
+export function staleProbesEstimateUsd(rows: ReadonlyArray<Pick<PaidRow, 'judge_model' | 'affected'>>, judge: { outputTokens: number; callsPerAnswer: number } | null): number {
+  return rows.filter(probed).reduce((sum, r) => {
+    const p = chatPrice(r.judge_model);
+    if (!p) throw new Error(`${r.judge_model} has no ledger price; register one in eval/runner/budget-ledger.ts`);
+    return sum + (judge?.callsPerAnswer ?? JUDGE_CALLS_PER_ANSWER) * (EST_TOKENS.judge.input * p.input + (judge?.outputTokens ?? EST_TOKENS.judge.output) * p.output) / 1e6;
+  }, 0);
+}
+
+export function buildStaleProbesReceipt(opts: { gut: GbrainUnderTest; models: readonly string[]; judgeCheck: JudgeCheck; probes: StaleProbe[]; harnessErrors: string[]; cost: RunSummary | null; startedAt: string; mode: PaidMode['kind'] }): Receipt {
+  const { judgeCheck: jc, probes } = opts;
+  const acc = new ProbeAccounting(jc.rows.filter(probed).length);
+  for (const p of probes) {
+    if (p.graded.judge_error) acc.error(rowId(p), 'judge', p.graded.judge_error);
+    else if (p.graded.rule_correct !== null) acc.score(rowId(p), Number(p.graded.answer_correct === p.graded.rule_correct));
+  }
+  const a = acc.summary();
+  const models = opts.models.map(canonicalModel);
+  const judges = [...new Set(models.map(judgeFor))];
+  return {
+    ...(opts.cost ? { cost: receiptCost(opts.cost), delivered_tokens: null } : noModelSpend('keyless: gbrain test chat transport, placeholder key, dead upstream; no paid request')),
+    schema_version: RECEIPT_SCHEMA_VERSION,
+    benchmark_version: BENCHMARK_VERSION,
+    category: CATEGORY,
+    run_status: opts.harnessErrors.length ? 'error' : 'completed',
+    ...(opts.harnessErrors.length ? {} : { verdict: judgeCheckPasses(jc.rows, judges, probes) ? 'pass' as const : 'fail' as const }),
+    n_total: a.n_total, n_scored: a.n_scored, completion_rate: a.completion_rate, errors: a.errors,
+    publishable: a.publishable && opts.harnessErrors.length === 0 && opts.mode === 'paid',
+    gbrain_version: opts.gut.version,
+    gbrain_pin: gbrainPin(),
+    execution: { source_tree: sourceTreeIdentity(), product: productIdentityFor(opts.gut) },
+    resolved_config: {
+      mode: opts.mode, stage: STALE_PROBES_STAGE, gate: 'report-only',
+      models: modelRoles(models),
+      judge: { prompt_sha256: judgePromptSha256(), max_tokens: JUDGE_MAX_TOKENS, temperature_sent: null, route: 'gbrain gateway chat, allowFallback false', retries: 'one retry on unparseable output' },
+      grading: 'each judge-check row whose change altered a claim: its first answer, written before the change, judged by the row\'s judge against the key after the change, beside its rule label against that key; an answer with an ambiguous rule label is not sent to the judge. No model under test is asked anything.',
+      verdict: `the judge check over the judge-check rows and these probes together: every judge's kappa against the rule labels at least ${JUDGE_KAPPA_FLOOR} on at least ${JUDGE_MIN_LABELS} outputs`,
+      judge_check_receipt_sha256: jc.sha256,
+      runner_source_sha256: RUNNER_SOURCE_SHA256,
+      gbrain_overlay: overlaySummary(opts.gut),
+    },
+    hashes: Object.fromEntries([...jc.worlds].map(([seed, w]) => [`ledger_seed_${seed}`, w.fingerprint])),
+    started_at: opts.startedAt,
+    finished_at: new Date().toISOString(),
+    data: {
+      summary: {
+        judge_agreement: judgeAgreement(jc.rows, probes),
+        judge_agreement_by_model: Object.fromEntries(models.map(m => [m, judgeAgreement(jc.rows.filter(r => r.model === m), probes.filter(p => p.model === m))[judgeFor(m)] ?? null])),
+        probes_alone: judgeAgreement([], probes),
+      },
+      probes, harness_errors: opts.harnessErrors,
+    },
+  } as unknown as Receipt;
 }
 
 /** The roles every model plays, for the receipt and the registry entry. */
@@ -594,7 +1042,7 @@ export function modelRoles(models: readonly string[]): Array<{ model: string; ro
   ];
 }
 
-export function buildReceipt(opts: { gut: GbrainUnderTest; models: readonly string[]; seeds: readonly number[]; companies: number; stage: Stage; maxOutputTokens?: number; result: PaidRunResult; cost: RunSummary | null; startedAt: string; mode: PaidMode['kind'] }): Receipt {
+export function buildReceipt(opts: { gut: GbrainUnderTest; models: readonly string[]; seeds: readonly number[]; companies: number; stage: Stage; maxOutputTokens?: number; result: PaidRunResult; cost: RunSummary | null; startedAt: string; mode: PaidMode['kind']; judgeCheckSha256?: string | null; staleProbesSha256?: string | null }): Receipt {
   const r = opts.result;
   const a = r.acc.summary();
   return {
@@ -603,7 +1051,7 @@ export function buildReceipt(opts: { gut: GbrainUnderTest; models: readonly stri
     benchmark_version: BENCHMARK_VERSION,
     category: CATEGORY,
     run_status: r.harnessErrors.length ? 'error' : 'completed',
-    ...(r.harnessErrors.length ? {} : { verdict: judgeCheckPasses(r.rows) ? 'pass' as const : 'fail' as const }),
+    ...(r.harnessErrors.length ? {} : { verdict: judgeCheckPasses(r.rows, [...new Set(opts.models.map(m => judgeFor(canonicalModel(m))))]) ? 'pass' as const : 'fail' as const }),
     n_total: a.n_total, n_scored: a.n_scored, completion_rate: a.completion_rate, errors: a.errors,
     publishable: a.publishable && r.harnessErrors.length === 0 && opts.mode === 'paid',
     gbrain_version: opts.gut.version,
@@ -625,6 +1073,10 @@ export function buildReceipt(opts: { gut: GbrainUnderTest; models: readonly stri
       retries: `a unit with provider or judge-call errors is asked again once in a resumed run (${MAX_UNIT_ATTEMPTS} attempts), then kept with those questions left out; a budget-ledger refusal pauses the run at the unit boundary without checkpointing that unit`,
       seeds: opts.seeds, companies_per_seed: opts.companies, generator_version: PINNED_QUESTIONS_GENERATOR_VERSION,
       resumed_units: r.resumedUnits,
+      judge_check_receipt_sha256: opts.judgeCheckSha256 ?? null,
+      stale_probes_receipt_sha256: opts.staleProbesSha256 ?? null,
+      runner_source_sha256: RUNNER_SOURCE_SHA256,
+      cost_processes: opts.cost && 'processes' in opts.cost ? opts.cost.processes : null,
       gbrain_overlay: overlaySummary(opts.gut),
     },
     hashes: Object.fromEntries(r.worlds.map(w => [`ledger_seed_${w.seed}`, w.fingerprint])),
@@ -648,9 +1100,48 @@ export function requirePaidFlags(argv: readonly string[], estimate: number): voi
   requirePaidArm(argv, { arm: CATEGORY, estimateUsd: estimate, ledgerPath: budgetOptionsFrom(argv).ledgerPath });
 }
 
+/**
+ * --stage stale-probes --judge-check <receipt.judge-check.json> --output <dir>: judges the stale probes once and writes
+ * receipt.stale-probes.json. A directory where a stale-probes run already started is refused, so the probes are never
+ * paid for twice without someone removing its marker on purpose.
+ */
+async function staleProbesMain(argv: readonly string[], models: readonly string[]): Promise<void> {
+  const judgeCheckPath = argValue(argv, '--judge-check');
+  const outFlag = argValue(argv, '--output');
+  if (!judgeCheckPath || !outFlag) throw new Error('--stage stale-probes needs --judge-check <receipt.judge-check.json> and --output <dir>');
+  const output = resolve(outFlag);
+  const marker = join(output, `${STALE_PROBES_STAGE}.started`);
+  if (existsSync(marker)) throw new PaidArmRefusal(`${CATEGORY}: a stale-probes run already started in ${output} (${marker}); asking the probes again spends again, so it needs the owner's approval and then the marker removed`);
+  const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
+  const jc = readJudgeCheck(judgeCheckPath, { gut, models });
+  const judges = [...new Set(models.map(judgeFor))];
+  const estimate = staleProbesEstimateUsd(jc.rows, measuredJudge(jc.rows));
+  requirePaidFlags(argv, estimate);
+  requireProviderKeys(judges);
+  const judgeKeys = new Set(judges.map(j => ({ anthropic: 'ANTHROPIC_API_KEY', openai: 'OPENAI_API_KEY' } as Record<string, string>)[j.split(':')[0]!]));
+  const keys = Object.fromEntries(PAID_KEY_NAMES.filter(k => judgeKeys.has(k)).map(k => [k, process.env[k]]).filter(([, v]) => v)) as Partial<Record<typeof PAID_KEY_NAMES[number], string>>;
+  mkdirSync(output, { recursive: true });
+  writeFileSync(marker, new Date().toISOString() + '\n', { flag: 'wx' });
+  const startedAt = new Date().toISOString();
+  const paid = startPaidRun(`${CATEGORY}-${STALE_PROBES_STAGE}`, { ...budgetOptionsFrom(argv), estimateUsd: estimate });
+  let result: { probes: StaleProbe[]; harnessErrors: string[] };
+  let closed: RunSummary;
+  try {
+    result = await runStaleProbes({ gut, judgeCheck: jc, mode: { kind: 'paid', keys }, log: s => console.error(s) });
+  } finally {
+    closed = paid.run.close();
+    paid.guard.uninstall();
+  }
+  const receipt = buildStaleProbesReceipt({ gut, models, judgeCheck: jc, probes: result.probes, harnessErrors: result.harnessErrors, cost: closed, startedAt, mode: 'paid' }) as unknown as { data: { summary: unknown }; verdict?: string };
+  writeReceipt(join(output, `receipt.${STALE_PROBES_STAGE}.json`), receipt as unknown as Receipt);
+  console.log(JSON.stringify({ verdict: receipt.verdict ?? null, ...(receipt.data.summary as object), harness_errors: result.harnessErrors, cost_usd: receiptCost(closed).usd }, null, 2));
+  process.exit(result.harnessErrors.length ? 3 : 0);
+}
+
 async function main(): Promise<void> {
   const argv = process.argv.slice(2);
   const models = (argValue(argv, '--models') ?? PINNED_QUESTIONS_MODELS_UNDER_TEST.join(',')).split(',').map(canonicalModel);
+  if (argValue(argv, '--stage') === STALE_PROBES_STAGE) return staleProbesMain(argv, models);
   const stage = (argValue(argv, '--stage') ?? 'dev') as Stage;
   if (!(stage in STAGE_SEEDS)) throw new Error(`--stage must be one of ${Object.keys(STAGE_SEEDS).join(', ')}`);
   const seeds = (argValue(argv, '--seeds') ?? STAGE_SEEDS[stage].join(',')).split(',').map(Number);
@@ -661,21 +1152,33 @@ async function main(): Promise<void> {
   const outFlag = argValue(argv, '--output');
   if (!outFlag) throw new Error('--output <dir> is required: it holds checkpoint.ndjson, so an interrupted run resumes');
   const output = resolve(outFlag);
-  const estimate = estimateUsd(models, seeds.length, companies, maxOutputTokens);
-  requirePaidFlags(argv, estimate);
   const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
+  const key = checkpointKey({ mode: 'paid', gut, companies, maxOutputTokens });
+  requireStageDirectory(output, seeds);
+  const pending = pendingUnits(output, key, models, seeds);
+  const judgeCheck = stage === 'counted' ? argValue(argv, '--judge-check') : undefined;
+  const judge = measuredJudge(judgeEstimateRows(output, key, judgeCheck));
+  const estimate = models.reduce((s, m) => s + estimateUsd([m], pending.filter(u => u.model === m).length, companies, maxOutputTokens, judge), 0);
+  requirePaidFlags(argv, estimate);
+  requireProviderKeys(models);
+  const staleProbes = stage === 'counted' ? argValue(argv, '--stale-probes') : undefined;
+  if (stage === 'counted') requireJudgeCheck(judgeCheck, { gut, models, staleProbes });
+  const judgeCheckSha256 = judgeCheck ? createHash('sha256').update(readFileSync(judgeCheck)).digest('hex') : null;
+  const staleProbesSha256 = staleProbes ? createHash('sha256').update(readFileSync(staleProbes)).digest('hex') : null;
   const keys = Object.fromEntries(PAID_KEY_NAMES.map(k => [k, process.env[k]]).filter(([, v]) => v)) as Partial<Record<typeof PAID_KEY_NAMES[number], string>>;
   const startedAt = new Date().toISOString();
   const paid = startPaidRun(CATEGORY, { ...budgetOptionsFrom(argv), estimateUsd: estimate });
   let result: PaidRunResult;
-  let cost: RunSummary;
+  let closed: RunSummary;
   try {
     result = await runPinnedQuestionsPaid({ gut, models, seeds, companies, maxOutputTokens, output, mode: { kind: 'paid', keys }, log: s => console.error(s) });
   } finally {
-    cost = paid.run.close();
+    closed = paid.run.close();
     paid.guard.uninstall();
+    recordProcessCost(output, { key, stage, asked: pending, summary: closed });
   }
-  writeReceipt(join(output, 'receipt.json'), buildReceipt({ gut, models, seeds, companies, stage, maxOutputTokens, result, cost, startedAt, mode: 'paid' }));
+  const cost = combinedCost(output, key, result.rows.map(r => ({ model: r.model, seed: r.seed })), closed);
+  writeReceipt(receiptFile(output, stage), buildReceipt({ gut, models, seeds, companies, stage, maxOutputTokens, result, cost, startedAt, mode: 'paid', judgeCheckSha256, staleProbesSha256 }));
   const s = summarizePaid(result.rows);
   console.log(JSON.stringify({ by_model: Object.fromEntries(Object.entries(s.by_model).map(([m, v]) => [m, { first_correct: v.first_correct, refreshed_correct: v.refreshed_correct, refresh_outcome: v.refresh_outcome, refreshed_excluded: v.refreshed_excluded, answer_too_long: v.answer_too_long }])), judge_agreement: s.judge_agreement, truncation: s.truncation, cost_usd: receiptCost(cost).usd }, null, 2));
   process.exit(result.harnessErrors.length ? 3 : 0);

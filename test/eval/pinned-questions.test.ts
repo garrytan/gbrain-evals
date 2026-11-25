@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { assertScorerRejectsFakeSystems } from '../../eval/runner/mutation-kit.ts';
 import { AFFECTED, CLAIMS, MUTATION_CLASSES, generatePinnedQuestionsWorld, type PqCompany } from '../../eval/generators/pinned-questions-gen.ts';
-import { answerMatches, claimOf, claimSentence, oracleChat, runPinnedQuestions } from '../../eval/runner/pinned-questions.ts';
+import { answerMatches, claimOf, claimSentence, failedQuestion, oracleChat, runPinnedQuestions, voidsSeed } from '../../eval/runner/pinned-questions.ts';
 import { gbrainSpecFrom, resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
 import { confusion, exactConformance, summarize, wilson, type QuestionRow, type SentenceRow } from '../../eval/runner/pinned-questions-score.ts';
 
@@ -106,6 +106,25 @@ describe('pinned-questions scorer', () => {
     expect(exactConformance(sentences, questions.map((q, i) => (i === 0 ? { ...q, spillover: 3 } : q))).pass).toBe(false);
   });
 
+  test('a change whose measurement gbrain broke stays in the counts and fails conformance; an empty run never passes', () => {
+    const { sentences, questions } = goldRows(w.companies);
+    const c = w.companies.find(x => x.affected.length > 0)!;
+    const broken = questions.map(q => (q.company === c.slug ? { ...failedQuestion(1, c, 0), error: 'status read threw' } : q));
+    const kept = sentences.filter(s => s.company !== c.slug);
+    expect(exactConformance(kept, broken)).toMatchObject({ pass: false, detail: expect.stringContaining('measurement errors 1') });
+    const s = summarize(kept, broken);
+    expect([s.overall.questions, s.overall.errors, s.question_signal.fn]).toEqual([questions.length - 1, 1, 0]);
+    expect(s.by_class[c.mutation]!.errors).toBe(1);
+    expect(exactConformance([], []).pass).toBe(false);
+  });
+
+  test('a failed presence check or an oracle sentence with no claim voids the seed; any other error is gbrain\'s', () => {
+    expect(voidsSeed('presence: remember wrote no live fact row for acme: x')).toBe(true);
+    expect(voidsSeed('presence: page acme was not stored')).toBe(true);
+    expect(voidsSeed('oracle sentence with no claim: hello')).toBe(true);
+    expect(voidsSeed('pinned question not found')).toBe(false);
+  });
+
   test('confusion, wilson and the class summary', () => {
     expect(confusion([{ affected: true, flagged: true }, { affected: false, flagged: true }, { affected: true, flagged: false }, { affected: false, flagged: false }]))
       .toEqual({ tp: 1, fp: 1, fn: 1, tn: 1, precision: 0.5, recall: 0.5, f1: 0.5, false_flag_rate: 0.5 });
@@ -149,5 +168,19 @@ describe('pinned-questions runner on the pinned gbrain', () => {
     expect(s.baseline_false_flags).toBe(0);
     expect(s.by_class.remove_source_page!.flags.recall).toBe(1);
     expect(r.sentences).toHaveLength(32);
+  }, 120_000);
+
+  test('a gbrain error partway through a change keeps its question row, marked, records none of its sentences and fails conformance', async () => {
+    const world = generatePinnedQuestionsWorld({ seed: 1, companies: 8 });
+    const broken = world.companies[2]!.slug;
+    const r = await runPinnedQuestions({ gut: resolveGbrainUnderTest(gbrainSpecFrom([])), seeds: [1], companies: 8, cycles: 2, hooks: { afterRead: slug => { if (slug === broken) throw new Error('status read failed mid-change'); } } });
+    expect(r.harnessError).toBeNull();
+    expect(r.questions).toHaveLength(8);
+    expect(r.questions.find(q => q.company === broken)).toMatchObject({ error: 'status read failed mid-change' });
+    expect(r.sentences.some(s => s.company === broken)).toBe(false);
+    expect(r.sentences).toHaveLength(28);
+    expect(r.acc.summary().errors).toEqual([expect.objectContaining({ origin: 'sut', message: 'status read failed mid-change' })]);
+    expect(summarize(r.sentences, r.questions).overall).toMatchObject({ questions: 7, errors: 1 });
+    expect(exactConformance(r.sentences, r.questions).pass).toBe(false);
   }, 120_000);
 });

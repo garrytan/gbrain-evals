@@ -181,6 +181,100 @@ The fix-build rerun is keyless. If the fix release ships before the results PR i
 the results PR reports the baseline alone, and the rerun is published later as its own keyless follow-up with its own
 registry entry.
 
+## Amendments
+
+### 2026-11-24: enforcement and scoring fixes before the pilot
+
+Made before any paid call or counted run, from the preregistration PR's review. None changes an arm, a seed, a
+metric, a model, a judge or a bar; each makes the runner do what this plan already says, or closes a case it got wrong.
+
+- **Judge check.** A counted launch refuses unless `--judge-check` names the judge-check stage's receipt, on the same
+  gbrain build, judge prompt and runner source, that ran every counted model and whose rows pass the check for every judge the
+  counted models need. A judge with an undefined kappa (unanimous labels) or no rows fails. When a claim was removed
+  and the answer still states that claim (for the CEO, words such as "chief executive" or "led by") without the old
+  value, its rule label is ambiguous, since token presence cannot tell a correct non-answer from a wrong replacement;
+  for the CEO that needs a capitalised name after the phrase, so "no chief executive is named" stays correct.
+  Agreement is also reported per model under test.
+- **Outcomes.** A provider's structured refusal or content-filter finish reason counts as a safety stop, read from
+  gbrain's gateway result, since gbrain's question adapter keeps only the length signal. A refused connection is a
+  provider error, not a safety stop. A question gbrain blocks for a setup reason (no key, consent, worker or gbrain's
+  own spend limit), or one another model answered, is a harness error, never a scored answer, and a paid launch
+  refuses unless every model and judge has its provider key. Each row records `answer_model` from gbrain's gateway
+  usage record, which names the model gbrain requested (`provider:modelId`), not the id the provider served, so the
+  wrong-model check catches gbrain routing a call to another model; a dated snapshot of the model under test (an id
+  that begins with its bare id) counts as that model.
+- **Runs and receipts.** A run with a unit still owed its retry is incomplete and unpublishable. A torn final
+  checkpoint line is cut off and the run resumes. Each stage writes `receipt.<stage>.json`, so the judge-check stage no
+  longer replaces the pilot's receipt, and a launch refuses an output directory that holds another stage's seeds; a
+  receipt sums the spend of every process that asked a unit behind its rows, never another stage's; the preflight
+  estimates only the units still to ask and prices the judge at its worst case until graded rows under the same
+  checkpoint key measure it.
+  Provider failure text and judge errors are kept with keys and credentials redacted.
+- **Keyless arm.** A gbrain error partway through a change keeps the question's row, marked, records none of its
+  sentences, leaves it out of every rate and fails exact conformance; a failed presence check voids the seed.
+- **Analysis.** The receipts compute the intervals and tests this plan registers (cluster bootstrap over questions,
+  McNemar, Holm, the paired non-inferiority interval, every interval resampling whole questions); the sentence-level
+  Wilson interval is exploratory only.
+
+### 2026-11-24: stale probes for the judge check, after the judge-check stage
+
+Made after the pilot and judge-check stages (seeds 21 to 23) and before any counted unit. It changes how the judge
+check is measured. It changes no arm, seed, metric, model, judge, bar or threshold: each judge still needs at least
+100 labelled outputs and Cohen's kappa of at least 0.6, `gpt-6.2-astra` still grades the `claude-opus-5-5` and
+particle-1 rows, `claude-opus-5-5` still grades the `gpt-6.2-sol` rows, and particle-1 judges nothing.
+
+**What happened.** The judge-check stage completed with every question scored, no harness error and no model over the
+truncation bar, and its judge check failed. Nearly every answer was correct, so the rule labels held almost no
+negatives, and kappa can't measure agreement without them. `claude-opus-5-5` agreed with the rule on 143 of its 144
+labelled outputs, with no rule negative among them. The one disagreement is a `gpt-6.2-sol` refreshed answer that
+correctly left out a removed chief executive, which the judge labelled missing although its prompt calls that correct.
+The judge was wrong there. With no negatives, its kappa was 0, below the bar. `gpt-6.2-astra` reached kappa 1 on 248
+outputs, but only one of them was a rule negative. Any judge, including a perfect one, gets an undefined or near-zero
+kappa on rows like these, so replacing the judge would not fix the check.
+
+**The change.** The judge check adds labelled negatives, called stale probes. For each judge-check row whose change
+altered a claim (five of the eight change classes, so 135 of the 216 rows), the row's first answer is judged again by
+the row's own judge. The judge uses the frozen prompt and the answer key from after the change, the same key format a
+refreshed answer is graded against. No model under test is asked anything, and only judges are called. The rule label
+comes from the same rule as before: an answer that still states a changed claim's old value is labelled stale, and an
+answer that names a removed holder is labelled stale.
+
+**Why these are valid agreement items.** These negatives are first answers, not refreshed ones. A first answer was
+written before the change, so it normally states the old value of every changed claim. One judge-check first answer
+does not match by token: particle-1 wrote the old chief executive's name with a Cyrillic letter, so its rule label is
+missing and its probe's is correct. That probe is a rule error and stays in the set as it is. The judge sees an answer and a key, with
+nothing that says when the answer was written. To the judge, a stale probe looks exactly like a refreshed answer that
+kept the old value, which is the failure this experiment exists to catch. Because the claim values are unique
+synthetic tokens, the stale rule label rests on token presence alone (old value present, new value absent). It is not
+a model label.
+
+The probes don't cover everything. They test whether the judge recognises a stale value, and they don't test the
+"wrong" label (a third value). They are probably easier than the hardest natural disagreements. A row whose change
+altered no claim gets no probe, because against an unchanged key its probe would repeat the first answer's own judge
+item. An answer whose rule label is ambiguous is left out, as before, and is not sent to the judge.
+
+**What counts.** Each judge's kappa is computed over its judge-check outputs and its stale probes together, and every
+existing output stays in the set, including `claude-opus-5-5`'s missed removed-CEO answer. Agreement is also
+reported for the probes alone and per model under test.
+
+**Enforcement.**
+
+- `--stage stale-probes --judge-check <receipt.judge-check.json>` judges the probes once and writes
+  `receipt.stale-probes.json`.
+- That receipt names the judge-check receipt by its sha256.
+- A directory where a stale-probes run has already started is refused, so the probes can't be paid for twice by
+  accident.
+- A counted launch needs both receipts (`--judge-check` and `--stale-probes`). It recomputes the judge check from
+  both, and it checks two things:
+  - every probe is its row's first answer, judged by that row's judge against the key from after the change;
+  - every stored rule label in the judge-check receipt equals the one the runner computes from the regenerated worlds.
+
+The judge-check receipt was written by the runner source from before this change (sha256 `209ca793…`). That one
+earlier source is accepted, because the code changed after it only to add the probes, and the rule-label recomputation
+shows that its grading is unchanged.
+
+If a judge still fails with the probes, no counted unit runs until a further dated amendment decides what to do.
+
 ## Disclosures
 
 - gbrain is Garry Tan's own project.

@@ -1,19 +1,20 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { CLAIMS, generatePinnedQuestionsWorld, type PqCompany, type PqWorld } from '../../eval/generators/pinned-questions-gen.ts';
 import { claimSentence } from '../../eval/runner/pinned-questions.ts';
-import { gbrainSpecFrom, resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
-import { BudgetExceededError } from '../../eval/runner/budget-ledger.ts';
+import { gbrainSpecFrom, importGbrain, overlaySummary, resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
+import { createHash } from 'node:crypto';
+import { BudgetExceededError, budgetOptionsFrom, chatPrice, initLedger, paidRequestGuardActive, startPaidRun } from '../../eval/runner/budget-ledger.ts';
 import { PaidArmRefusal } from '../../eval/runner/paid-arm.ts';
 import { writeReceipt } from '../../eval/runner/receipt.ts';
 import {
-  JUDGE_MIN_LABELS, PINNED_QUESTIONS_JUDGE_PROMPT, PINNED_QUESTIONS_MODELS_UNDER_TEST, STAGE_SEEDS, TRUNCATION_BAR, buildReceipt, canonicalModel, cohenKappa,
+  EST_TOKENS, JUDGE_CALLS_PER_ANSWER, JUDGE_CHECK_RUNNER_SOURCES, probed, runStaleProbes, staleProbesEstimateUsd, buildStaleProbesReceipt, JUDGE_MAX_TOKENS, JUDGE_MIN_LABELS, PINNED_QUESTIONS_JUDGE_PROMPT, RUNNER_SOURCE_SHA256, estimateUsd, measuredJudge, PINNED_QUESTIONS_MODELS_UNDER_TEST, STAGE_SEEDS, TRUNCATION_BAR, buildReceipt, canonicalModel, cohenKappa,
   familyOf, judgeAgreement, judgeCheckPasses, judgeFor, judgeUserMessage, modelRoles, parseJudgeLabels, requirePaidFlags, ruleLabels,
-  runPinnedQuestionsPaid, summarizePaid,
-  type ChatTransport, type GradedAnswer, type PaidRow, type PaidRunResult,
+  checkpointKey, combinedCost, harnessBlocked, judgeEstimateRows, recordProcessCost, requireStageDirectory, receiptFile, servedWrongModel, outcomeOf, pendingUnits, readCheckpoint, recordingGenerateText, redactProviderText, requireJudgeCheck, requireProviderKeys, runPinnedQuestionsPaid, scoredCorrect, summarizePaid,
+  type ChatTransport, type GradedAnswer, type PaidRow, type PaidRunResult, type StaleProbe,
 } from '../../eval/runner/pinned-questions-paid.ts';
 
 const KEY_NAMES = /(_API_KEY|_API_TOKEN|_BEARER_TOKEN)$|^(TYPESAFE|JEV)_/;
@@ -53,7 +54,100 @@ describe('pinned-questions paid arm: refusal', () => {
   });
 });
 
+describe('pinned-questions paid arm: the exported runner', () => {
+  test('paid mode refuses when no guard is installed and the ledger\'s delegating fetch is still in place', async () => {
+    const d = mkdtempSync(join(tmpdir(), 'pq-paid-noguard2-'));
+    const ledgerPath = join(d, 'ledger.sqlite');
+    initLedger({ ledgerPath, programCapUsd: 5 });
+    const gut = { ...resolveGbrainUnderTest(gbrainSpecFrom([])), root: join(d, 'no-gbrain-here') };
+    try {
+      expect(paidRequestGuardActive()).toBe(false);
+      await expect(runPinnedQuestionsPaid({ gut, models: ['particle:particle-1'], seeds: [1], companies: 8, output: join(d, 'out'), mode: { kind: 'paid', keys: {} } })).rejects.toThrow(PaidArmRefusal);
+      const paid = startPaidRun('pq-guard-test', { ...budgetOptionsFrom(['--budget-usd', '1', '--budget-ledger', ledgerPath], {}), estimateUsd: 0, log: () => {} });
+      expect(paidRequestGuardActive()).toBe(true);
+      paid.guard.uninstall();
+      paid.run.close();
+      expect(paidRequestGuardActive()).toBe(false);
+    } finally {
+      rmSync(d, { recursive: true, force: true });
+    }
+  });
+
+  test('when paid setup fails partway, the fetch wrapper and the usage sink are removed again', async () => {
+    const d = mkdtempSync(join(tmpdir(), 'pq-paid-setup-'));
+    const real = resolveGbrainUnderTest(gbrainSpecFrom([]));
+    symlinkSync(join(real.root, 'src'), join(d, 'src'));
+    const gut = { ...real, root: d };
+    const ledgerPath = join(d, 'ledger.sqlite');
+    initLedger({ ledgerPath, programCapUsd: 5 });
+    const paid = startPaidRun('pq-setup-test', { ...budgetOptionsFrom(['--budget-usd', '1', '--budget-ledger', ledgerPath], {}), estimateUsd: 0, log: () => {} });
+    const sinks = (await importGbrain<{ __chatUsageSinkCountForTests(): number }>(gut, 'src/core/ai/chat-usage.ts')).__chatUsageSinkCountForTests;
+    const before = { fetch: globalThis.fetch, sinks: sinks() };
+    try {
+      await expect(runPinnedQuestionsPaid({ gut, models: ['particle:particle-1'], seeds: [1], companies: 8, output: join(d, 'out'), mode: { kind: 'paid', keys: {} } })).rejects.toThrow();
+      expect(globalThis.fetch).toBe(before.fetch);
+      expect(sinks()).toBe(before.sinks);
+    } finally {
+      paid.guard.uninstall();
+      paid.run.close();
+      rmSync(d, { recursive: true, force: true });
+    }
+  });
+
+  test('paid mode refuses before any request when no budget-ledger request guard is installed', async () => {
+    const out = mkdtempSync(join(tmpdir(), 'pq-paid-noguard-'));
+    const realFetch = globalThis.fetch;
+    let fetches = 0;
+    globalThis.fetch = (async () => { fetches++; throw new Error('no network in this test'); }) as unknown as typeof fetch;
+    try {
+      const gut = resolveGbrainUnderTest(gbrainSpecFrom([]));
+      await expect(runPinnedQuestionsPaid({ gut, models: ['particle:particle-1'], seeds: [1], companies: 8, output: out, mode: { kind: 'paid', keys: { PARTICLE_API_KEY: 'not-a-real-key-000' } } })).rejects.toThrow(PaidArmRefusal);
+      expect(fetches).toBe(0);
+      expect(existsSync(join(out, 'checkpoint.ndjson'))).toBe(false);
+    } finally {
+      globalThis.fetch = realFetch;
+      rmSync(out, { recursive: true, force: true });
+    }
+  });
+});
+
 describe('pinned-questions paid arm: models and judges', () => {
+  test('the preflight estimate prices the judge at its max_tokens with one retry until graded rows measure it', () => {
+    const per = (m: string, t: { input: number; output: number }) => { const p = chatPrice(m)!; return (t.input * p.input + t.output * p.output) / 1e6; };
+    const astra = 'openai:gpt-6.2-astra', opus = 'anthropic:claude-opus-5-5';
+    const expected = 3 * 24 * (per(opus, EST_TOKENS.pin) + per(opus, EST_TOKENS.refresh) + 2 * JUDGE_CALLS_PER_ANSWER * per(astra, { input: EST_TOKENS.judge.input, output: JUDGE_MAX_TOKENS }));
+    expect(EST_TOKENS.judge.output).toBe(JUDGE_MAX_TOKENS);
+    expect(JUDGE_CALLS_PER_ANSWER).toBe(2);
+    expect(estimateUsd([opus], 3, 24)).toBeCloseTo(expected, 9);
+    const u = (calls: number, output_tokens: number) => ({ calls, input_tokens: 0, output_tokens, cache_read_tokens: 0, cache_write_tokens: 0 });
+    const graded = [{ first: { judge_usage: u(1, 400) }, refreshed: { judge_usage: u(2, 1_000) } }, { first: { judge_usage: u(1, 200) }, refreshed: { judge_usage: u(1, 400) } }] as unknown as PaidRow[];
+    const m = measuredJudge(graded)!;
+    expect(m).toEqual({ outputTokens: Math.ceil(1.5 * 2_000 / 5), callsPerAnswer: 5 / 4 });
+    expect(estimateUsd([opus], 3, 24, undefined, m)).toBeCloseTo(3 * 24 * (per(opus, EST_TOKENS.pin) + per(opus, EST_TOKENS.refresh) + 2 * 1.25 * per(astra, { input: EST_TOKENS.judge.input, output: 600 })), 9);
+    expect(measuredJudge([])).toBeNull();
+    expect(measuredJudge([{ first: { judge_usage: u(1, 20_000) }, refreshed: { judge_usage: u(1, 20_000) } }] as unknown as PaidRow[])!.outputTokens).toBe(JUDGE_MAX_TOKENS);
+  });
+
+  test('a paid launch is refused when a model under test or its judge has no provider key', () => {
+    const all = { ANTHROPIC_API_KEY: 'a'.repeat(12), OPENAI_API_KEY: 'o'.repeat(12), PARTICLE_API_KEY: 'p'.repeat(12) };
+    const models = [...PINNED_QUESTIONS_MODELS_UNDER_TEST];
+    expect(() => requireProviderKeys(models, all)).not.toThrow();
+    expect(() => requireProviderKeys(models, { ...all, PARTICLE_API_KEY: undefined })).toThrow(/particle:particle-1 \(PARTICLE_API_KEY\)/);
+    expect(() => requireProviderKeys(['anthropic:claude-opus-5-5'], { ANTHROPIC_API_KEY: all.ANTHROPIC_API_KEY })).toThrow(/openai:gpt-6.2-astra \(OPENAI_API_KEY\)/);
+    expect(() => requireProviderKeys(['openai:gpt-6.2-sol'], { OPENAI_API_KEY: all.OPENAI_API_KEY })).toThrow(PaidArmRefusal);
+  });
+
+  test('a question gbrain blocked for a setup reason is a harness error, not a scored wrong answer', () => {
+    const call = (status: string, error: string | null) => ({ status, mode: null, error, failure_message: null, cost_usd: null, usage: { calls: 0, input_tokens: 0, output_tokens: 0, cache_read_tokens: 0, cache_write_tokens: 0 } });
+    const graded = { sentences: [], judge_labels: null, judge_error: null, answer_correct: null, rule_labels: {}, rule_correct: null, judge_usage: call('x', null).usage, stale: [] } as unknown as PaidRow['refreshed'];
+    for (const reason of ['no_model_key', 'awaiting_consent', 'no_worker', 'budget_exhausted']) {
+      expect(harnessBlocked(call('blocked', reason))).toBe(true);
+      expect(scoredCorrect({ model: 'particle:particle-1', pin: call('blocked', reason), refresh: { ...call('blocked', reason), freshness: 'stale', stale_sentences: 0 }, refreshed: graded })).toBeNull();
+    }
+    expect(harnessBlocked(call('failed', 'refresh_failed:model_output_not_json'))).toBe(false);
+    expect(scoredCorrect({ model: 'particle:particle-1', pin: call('published', null), refresh: { ...call('failed', 'refresh_failed:model_output_not_json'), freshness: 'stale', stale_sentences: 0 }, refreshed: graded })).toBe(false);
+  });
+
   test('bare ids get their provider prefix, and no judge grades its own family or is particle-1', () => {
     expect(['claude-opus-5-5', 'particle:particle-1', 'gpt-6.2-sol'].map(canonicalModel)).toEqual([...PINNED_QUESTIONS_MODELS_UNDER_TEST]);
     expect(judgeFor('anthropic:claude-opus-5-5')).toBe('openai:gpt-6.2-astra');
@@ -84,11 +178,16 @@ describe('pinned-questions paid arm: rule labels and judge parsing', () => {
     expect(ruleLabels(c, 'first', say(c, c.before)).city).toBe('correct');
   });
 
-  test('a removed CEO is correct when not named and stale when still named', () => {
+  test('a removed CEO is correct when not named, stale when still named, and ambiguous when another CEO is named', () => {
     const c = of('remove_source_page');
     expect(c.after.ceo).toBeNull();
     expect(ruleLabels(c, 'refreshed', say(c, c.after)).ceo).toBe('correct');
     expect(ruleLabels(c, 'refreshed', say(c, c.before)).ceo).toBe('stale');
+    expect(ruleLabels(c, 'refreshed', [...say(c, c.after), claimSentence(c, 'ceo', 'Someone Else')]).ceo).toBe('ambiguous');
+    expect(ruleLabels(c, 'refreshed', [...say(c, c.after), `${c.name} is now led by Someone Else.`]).ceo).toBe('ambiguous');
+    for (const none of [`No chief executive of ${c.name} is named in the notes.`, `The CEO of ${c.name} is not recorded.`, `${c.name} has no CEO on record.`]) {
+      expect(ruleLabels(c, 'refreshed', [...say(c, c.after), none]).ceo).toBe('correct');
+    }
     expect(judgeUserMessage(c, 'refreshed', [])).toContain(`- ceo: current (none: removed); previous (no longer true) ${JSON.stringify(c.before.ceo)}`);
   });
 
@@ -98,6 +197,42 @@ describe('pinned-questions paid arm: rule labels and judge parsing', () => {
     expect(parseJudgeLabels('no json')).toBeNull();
   });
 });
+
+/**
+ * A judge-check receipt like the stage writes (seeds 21 to 23, 24 companies), where every model answers each question
+ * correctly before and after its change and the judge agrees with the rule labels, so the rule labels hold no negatives;
+ * with the stale probes a perfect judge gives for it.
+ */
+function judgeCheckFixture(gut: ReturnType<typeof resolveGbrainUnderTest>, models: readonly string[]) {
+  const seeds = [21, 22, 23];
+  const worlds = new Map(seeds.map(seed => [seed, generatePinnedQuestionsWorld({ seed })] as const));
+  const said = (c: PqCompany, values: PqCompany['after']) => CLAIMS.filter(cl => values[cl] !== null).map(cl => claimSentence(c, cl, values[cl]!));
+  const graded = (c: PqCompany, kind: 'first' | 'refreshed', sentences: string[]): GradedAnswer => {
+    const rule = ruleLabels(c, kind, sentences);
+    const correct = Object.values(rule).includes('ambiguous') ? null : Object.values(rule).every(l => l === 'correct');
+    return { sentences, judge_labels: null, judge_error: null, answer_correct: correct, rule_labels: rule, rule_correct: correct, judge_usage: { calls: 1, input_tokens: 450, output_tokens: 30, cache_read_tokens: 0, cache_write_tokens: 0 } };
+  };
+  const rows = models.map(canonicalModel).flatMap(model => [...worlds.values()].flatMap(w => w.companies.map(c => ({
+    model, seed: w.seed, company: c.slug, mutation: c.mutation, affected: [...c.affected], judge_model: judgeFor(model),
+    first: graded(c, 'first', said(c, c.before)), refreshed: { ...graded(c, 'refreshed', said(c, c.after)), stale: [] as boolean[] },
+  } as unknown as PaidRow))));
+  const receipt = {
+    category: 'pinned-questions-paid', run_status: 'completed', gbrain_version: gut.version,
+    hashes: Object.fromEntries([...worlds.values()].map(w => [`ledger_seed_${w.seed}`, w.fingerprint])),
+    resolved_config: { mode: 'paid', stage: 'judge-check', runner_source_sha256: JUDGE_CHECK_RUNNER_SOURCES[0] as string, models: modelRoles(models), judge: { prompt_sha256: createHash('sha256').update(PINNED_QUESTIONS_JUDGE_PROMPT).digest('hex') }, gbrain_overlay: overlaySummary(gut), seeds, companies_per_seed: 24 },
+    data: { rows },
+  };
+  const probesFor = (rs: readonly PaidRow[]): StaleProbe[] => rs.filter(probed).map(r => ({ model: r.model, seed: r.seed, company: r.company, mutation: r.mutation, judge_model: r.judge_model, graded: graded(worlds.get(r.seed)!.companies.find(c => c.slug === r.company)!, 'refreshed', r.first.sentences) }));
+  const probesReceipt = (jcPath: string) => {
+    const jc = JSON.parse(readFileSync(jcPath, 'utf8')) as { data: { rows: PaidRow[] } };
+    return {
+      category: 'pinned-questions-paid', run_status: 'completed', gbrain_version: gut.version,
+      resolved_config: { mode: 'paid', stage: 'stale-probes', runner_source_sha256: RUNNER_SOURCE_SHA256, judge: { prompt_sha256: createHash('sha256').update(PINNED_QUESTIONS_JUDGE_PROMPT).digest('hex') }, gbrain_overlay: overlaySummary(gut), judge_check_receipt_sha256: createHash('sha256').update(readFileSync(jcPath)).digest('hex') },
+      data: { probes: probesFor(jc.data.rows) },
+    };
+  };
+  return { worlds, receipt, probes: probesFor(rows), probesReceipt };
+}
 
 describe('pinned-questions paid arm: kappa', () => {
   const g = (judge: boolean | null, rule: boolean | null): GradedAnswer => ({ sentences: [], judge_labels: null, judge_error: null, answer_correct: judge, rule_labels: { city: 'correct', flagship: 'correct', ceo: 'correct', founded: 'correct' }, rule_correct: rule, judge_usage: { calls: 0, input_tokens: 0, output_tokens: 0, cache_read_tokens: 0, cache_write_tokens: 0 } });
@@ -132,6 +267,136 @@ describe('pinned-questions paid arm: kappa', () => {
     expect(judgeCheckPasses(ambiguous)).toBe(false);
   });
 
+  test('an undefined kappa or a missing judge fails the judge check', () => {
+    const unanimous = Array.from({ length: 50 }, (): Pick<PaidRow, 'judge_model' | 'first' | 'refreshed'> => ({ judge_model: 'openai:gpt-6.2-astra', first: g(true, true), refreshed: { ...g(true, true), stale: [] } }));
+    expect(judgeAgreement(unanimous)['openai:gpt-6.2-astra']).toMatchObject({ n: 100, agreement: 1, kappa: null });
+    expect(judgeCheckPasses(unanimous)).toBe(false);
+    const good = Array.from({ length: 50 }, (_, i): Pick<PaidRow, 'judge_model' | 'first' | 'refreshed'> => ({ judge_model: 'openai:gpt-6.2-astra', first: g(i % 2 === 0, i % 2 === 0), refreshed: { ...g(i % 3 === 0, i % 3 === 0), stale: [] } }));
+    expect(judgeCheckPasses(good)).toBe(true);
+    expect(judgeCheckPasses(good, ['openai:gpt-6.2-astra', 'anthropic:claude-opus-5-5'])).toBe(false);
+    expect(judgeCheckPasses([], [])).toBe(false);
+  });
+
+  test('a counted launch needs a judge-check receipt and its stale probes, checked against this runner, passing for every judge it needs', () => {
+    const gut = resolveGbrainUnderTest(gbrainSpecFrom([]));
+    const models = [...PINNED_QUESTIONS_MODELS_UNDER_TEST];
+    const d = mkdtempSync(join(tmpdir(), 'pq-judge-check-'));
+    const at = (name: string, r: unknown) => { const p = join(d, name); writeFileSync(p, JSON.stringify(r)); return p; };
+    try {
+      const f = judgeCheckFixture(gut, models);
+      const jc = at('jc.json', f.receipt);
+      const probes = at('probes.json', f.probesReceipt(jc));
+      const check = (jcPath: string | undefined, staleProbes: string | undefined, ms: readonly string[] = models) => () => requireJudgeCheck(jcPath, { gut, models: ms, staleProbes });
+      expect(check(jc, probes)).not.toThrow();
+      expect(check(undefined, probes)).toThrow(PaidArmRefusal);
+      expect(check(join(d, 'missing.json'), probes)).toThrow(/does not exist/);
+      expect(check(at('pilot.json', { ...f.receipt, resolved_config: { ...f.receipt.resolved_config, stage: 'pilot' } }), probes)).toThrow(/not a paid/);
+      expect(check(at('error.json', { ...f.receipt, run_status: 'error' }), probes)).toThrow(/run_status is error/);
+      expect(check(at('build.json', { ...f.receipt, gbrain_version: '0.0.1' }), probes)).toThrow(/not the build under test/);
+      expect(check(at('runner.json', { ...f.receipt, resolved_config: { ...f.receipt.resolved_config, runner_source_sha256: 'older' } }), probes)).toThrow(/different version of this runner/);
+      expect(check(at('prompt.json', { ...f.receipt, resolved_config: { ...f.receipt.resolved_config, judge: { prompt_sha256: 'x' } } }), probes)).toThrow(/judge prompt differs/);
+      expect(check(at('models.json', { ...f.receipt, resolved_config: { ...f.receipt.resolved_config, models: modelRoles(['claude-opus-5-5']) } }), probes)).toThrow(/did not run particle:particle-1, openai:gpt-6.2-sol/);
+      const current = at('current.json', { ...f.receipt, resolved_config: { ...f.receipt.resolved_config, runner_source_sha256: RUNNER_SOURCE_SHA256 } });
+      expect(check(current, at('current-probes.json', f.probesReceipt(current)))).not.toThrow();
+      const fingerprint = at('fingerprint.json', { ...f.receipt, hashes: { ...f.receipt.hashes, ledger_seed_22: 'x' } });
+      expect(check(fingerprint, at('fp-probes.json', f.probesReceipt(fingerprint)))).toThrow(/does not regenerate to the fingerprint/);
+      const relabelled = f.receipt.data.rows.map((r, i) => (i === 0 ? { ...r, refreshed: { ...r.refreshed, rule_labels: { ...r.refreshed.rule_labels, city: 'stale' } } } : r));
+      const labels = at('labels.json', { ...f.receipt, data: { rows: relabelled } });
+      expect(check(labels, at('labels-probes.json', f.probesReceipt(labels)))).toThrow(/stored rule labels differ/);
+      const ownFamily = f.receipt.data.rows.map(r => (r.model === 'openai:gpt-6.2-sol' ? { ...r, judge_model: 'openai:gpt-6.2-astra' } : r));
+      const family = at('family.json', { ...f.receipt, data: { rows: ownFamily } });
+      expect(check(family, at('family-probes.json', f.probesReceipt(family)))).toThrow(/was judged by openai:gpt-6.2-astra, not anthropic:claude-opus-5-5/);
+
+      expect(check(jc, undefined)).toThrow(/stale probes for its judge-check receipt.*none given/);
+      expect(check(jc, join(d, 'no-probes.json'))).toThrow(/does not exist/);
+      const p = f.probesReceipt(jc);
+      expect(check(jc, at('p-stage.json', { ...p, resolved_config: { ...p.resolved_config, stage: 'judge-check' } }))).toThrow(/not a paid pinned-questions-paid stale-probes receipt/);
+      expect(check(jc, at('p-error.json', { ...p, run_status: 'error' }))).toThrow(/run_status is error/);
+      expect(check(jc, at('p-runner.json', { ...p, resolved_config: { ...p.resolved_config, runner_source_sha256: 'older' } }))).toThrow(/different version of this runner/);
+      expect(check(jc, at('p-other.json', f.probesReceipt(current)))).toThrow(/different judge-check receipt/);
+      expect(check(jc, at('p-short.json', { ...p, data: { probes: p.data.probes.slice(1) } }))).toThrow(/probes for \d+ probed rows/);
+      const twice = [...p.data.probes.slice(1), p.data.probes[1]!];
+      expect(check(jc, at('p-twice.json', { ...p, data: { probes: twice } }))).toThrow(/probes for \d+ probed rows/);
+      const refreshedText = p.data.probes.map((x, i) => (i === 0 ? { ...x, graded: { ...x.graded, sentences: f.receipt.data.rows.find(r => r.model === x.model && r.seed === x.seed && r.company === x.company)!.refreshed.sentences } } : x));
+      expect(check(jc, at('p-text.json', { ...p, data: { probes: refreshedText } }))).toThrow(/is not its row's first answer/);
+      const otherJudge = p.data.probes.map((x, i) => (i === 0 ? { ...x, judge_model: 'particle:particle-1' } : x));
+      expect(check(jc, at('p-judge.json', { ...p, data: { probes: otherJudge } }))).toThrow(/is not its row's first answer judged by/);
+      const blind = p.data.probes.map(x => (x.judge_model === 'anthropic:claude-opus-5-5' ? { ...x, graded: { ...x.graded, answer_correct: true } } : x));
+      expect(check(jc, at('p-blind.json', { ...p, data: { probes: blind } }))).toThrow(/judge check fails for at least one of/);
+
+      const astraOnly = f.receipt.data.rows.filter(r => r.judge_model === 'openai:gpt-6.2-astra');
+      const oneJudge = at('one-judge.json', { ...f.receipt, data: { rows: astraOnly } });
+      const oneJudgeProbes = at('one-judge-probes.json', f.probesReceipt(oneJudge));
+      expect(check(oneJudge, oneJudgeProbes)).toThrow(/judge check fails/);
+      expect(check(oneJudge, oneJudgeProbes, ['claude-opus-5-5', 'particle-1'])).not.toThrow();
+    } finally {
+      rmSync(d, { recursive: true, force: true });
+    }
+  });
+
+  test('stale probes give a judge labelled negatives where the rule labels had none, and a judge blind to stale answers still fails', () => {
+    const gut = resolveGbrainUnderTest(gbrainSpecFrom([]));
+    const f = judgeCheckFixture(gut, [...PINNED_QUESTIONS_MODELS_UNDER_TEST]);
+    const rows = f.receipt.data.rows;
+    const opus = 'anthropic:claude-opus-5-5';
+    expect(judgeAgreement(rows)[opus]).toMatchObject({ n: 144, neither: 0, kappa: null });
+    expect(judgeCheckPasses(rows)).toBe(false);
+    expect(f.probes).toHaveLength(rows.filter(probed).length);
+    expect(f.probes.every(p => p.graded.rule_correct === false && Object.values(p.graded.rule_labels).includes('stale'))).toBe(true);
+    expect(f.probes.filter(p => p.judge_model === opus)).toHaveLength(45);
+    expect(judgeAgreement(rows, f.probes)[opus]).toMatchObject({ n: 189, both: 144, neither: 45, kappa: 1 });
+    expect(judgeCheckPasses(rows, undefined, f.probes)).toBe(true);
+    const oneMiss = rows.map((r, i) => (i === rows.findIndex(x => x.judge_model === opus) ? { ...r, refreshed: { ...r.refreshed, answer_correct: false } } : r));
+    expect(judgeAgreement(oneMiss, f.probes)[opus]).toMatchObject({ rule_only: 1 });
+    expect(judgeCheckPasses(oneMiss, undefined, f.probes)).toBe(true);
+    const blind = f.probes.map(p => ({ ...p, graded: { ...p.graded, answer_correct: true } }));
+    expect(judgeCheckPasses(rows, undefined, blind)).toBe(false);
+    expect(probed({ affected: [] })).toBe(false);
+  });
+
+  test('the stale probes are priced from the probed rows only, at the judge\'s worst case until rows measure it', () => {
+    const rows = [{ judge_model: 'anthropic:claude-opus-5-5', affected: ['city' as const] }, { judge_model: 'anthropic:claude-opus-5-5', affected: [] }];
+    const p = chatPrice('anthropic:claude-opus-5-5')!;
+    expect(staleProbesEstimateUsd(rows, null)).toBeCloseTo(JUDGE_CALLS_PER_ANSWER * (EST_TOKENS.judge.input * p.input + JUDGE_MAX_TOKENS * p.output) / 1e6, 10);
+    expect(staleProbesEstimateUsd(rows, { outputTokens: 50, callsPerAnswer: 1 })).toBeCloseTo((EST_TOKENS.judge.input * p.input + 50 * p.output) / 1e6, 10);
+  });
+
+  test('the stale-probes CLI refuses without --paid before any request, and refuses a directory where a run already started', () => {
+    const gut = resolveGbrainUnderTest(gbrainSpecFrom([]));
+    const d = mkdtempSync(join(tmpdir(), 'pq-stale-cli-'));
+    try {
+      const jc = join(d, 'receipt.judge-check.json');
+      writeFileSync(jc, JSON.stringify(judgeCheckFixture(gut, [...PINNED_QUESTIONS_MODELS_UNDER_TEST]).receipt));
+      const run = (extra: string[]) => spawnSync('bun', ['eval/runner/pinned-questions-paid.ts', '--stage', 'stale-probes', '--judge-check', jc, '--output', d, ...extra], { env: keylessEnv(), encoding: 'utf8' });
+      const r = run([]);
+      expect(r.status).toBe(2);
+      expect(r.stderr).toContain('--paid is missing');
+      expect(existsSync(join(d, 'stale-probes.started'))).toBe(false);
+      writeFileSync(join(d, 'stale-probes.started'), 'x');
+      const again = run(['--paid', '--budget-run-id', 'any']);
+      expect(again.status).toBe(2);
+      expect(again.stderr).toContain('already started');
+      expect(existsSync(join(d, 'receipt.stale-probes.json'))).toBe(false);
+    } finally {
+      rmSync(d, { recursive: true, force: true });
+    }
+  }, 60_000);
+
+  test('stale probes refuse in paid mode before any request when no budget-ledger request guard is installed', async () => {
+    const realFetch = globalThis.fetch;
+    let fetches = 0;
+    globalThis.fetch = (async () => { fetches++; throw new Error('no network in this test'); }) as unknown as typeof fetch;
+    try {
+      const gut = resolveGbrainUnderTest(gbrainSpecFrom([]));
+      const f = judgeCheckFixture(gut, ['claude-opus-5-5']);
+      const judgeCheck = { rows: f.receipt.data.rows, worlds: f.worlds, sha256: 'x' };
+      await expect(runStaleProbes({ gut, judgeCheck, mode: { kind: 'paid', keys: { OPENAI_API_KEY: 'not-a-real-key-000' } } })).rejects.toThrow(PaidArmRefusal);
+      expect(fetches).toBe(0);
+    } finally {
+      globalThis.fetch = realFetch;
+    }
+  });
+
   test('the judge-check stage gives each judge at least 100 outputs from the rows it grades; the pilot alone does not', () => {
     const outputs = (judge: string, seeds: readonly number[]) => PINNED_QUESTIONS_MODELS_UNDER_TEST.filter(m => judgeFor(m) === judge).length * seeds.length * 24 * 2;
     expect(outputs('openai:gpt-6.2-astra', STAGE_SEEDS['judge-check'])).toBe(288);
@@ -149,8 +414,10 @@ describe('pinned-questions paid arm: kappa', () => {
  * (before the change while pinning; after it on refresh, except for the
  * companies in `stale`, which repeat the old values), and grades like the rule.
  */
+type Failure = Error | { stopReason?: string; text?: string; model?: string } | null;
+
 function stubTransport(world: PqWorld, stale: Set<string>, calls: Array<{ model: string; kind: 'question' | 'judge'; graded?: string; chars: number; maxTokens?: number }>, truncate = new Set<string>(),
-  fail: (slug: string, n: number, model: string) => Error | null = () => null): ChatTransport {
+  fail: (slug: string, n: number, model: string) => Failure = () => null): ChatTransport {
   const byQuestion = new Map(world.companies.map(c => [c.question, c]));
   const seen = new Map<string, number>();
   return async (opts) => {
@@ -161,7 +428,10 @@ function stubTransport(world: PqWorld, stale: Set<string>, calls: Array<{ model:
     calls.push({ model: String(opts.model), kind: judge ? 'judge' : 'question', graded: c.slug, chars: (opts.system?.length ?? 0) + user.length, maxTokens: opts.maxTokens });
     let text: string;
     let stopReason = 'end';
+    let served: string | undefined;
     if (judge) {
+      const judgeFailure = fail(c.slug, 0, String(opts.model));
+      if (judgeFailure instanceof Error) throw judgeFailure;
       const answer = user.slice(user.indexOf('\nAnswer:\n') + '\nAnswer:\n'.length);
       const labels: Record<string, string> = {};
       for (const line of user.split('\n').filter(l => /^- (city|flagship|ceo|founded): current/.test(l))) {
@@ -178,14 +448,16 @@ function stubTransport(world: PqWorld, stale: Set<string>, calls: Array<{ model:
       const n = (seen.get(unit) ?? 0) + 1;
       seen.set(unit, n);
       const failure = fail(c.slug, n, String(opts.model));
-      if (failure) throw failure;
+      if (failure instanceof Error) throw failure;
       const values = n === 1 || stale.has(c.slug) ? c.before : c.after;
       if (n > 1 && truncate.has(c.slug) && (opts.maxTokens ?? 0) <= 2_000) stopReason = 'length';
       const cite = user.split('\n').filter(l => /^E\d+: /.test(l) && l.includes(c.name)).map(l => l.slice(0, l.indexOf(':'))).slice(0, 1);
-      text = JSON.stringify({ sentences: CLAIMS.filter(cl => values[cl] !== null).map(cl => ({ text: claimSentence(c, cl, values[cl]!), cite })), gaps: [] });
+      text = failure?.text ?? JSON.stringify({ sentences: CLAIMS.filter(cl => values[cl] !== null).map(cl => ({ text: claimSentence(c, cl, values[cl]!), cite })), gaps: [] });
+      stopReason = failure?.stopReason ?? stopReason;
+      served = failure?.model;
     }
     const chars = (opts.system?.length ?? 0) + user.length;
-    return { text, blocks: [{ type: 'text', text }], stopReason, model: String(opts.model), providerId: 'stub',
+    return { text, blocks: [{ type: 'text', text }], stopReason, model: served ?? String(opts.model), providerId: 'stub',
       usage: { input_tokens: Math.ceil(chars / 4), output_tokens: Math.ceil(text.length / 4), cache_read_tokens: 0, cache_creation_tokens: 0 } };
   };
 }
@@ -253,6 +525,15 @@ describe('pinned-questions paid arm: keyless run through gbrain\'s product path'
     expect(judgeCalls.filter(c => familyOf(c.model) === 'claude')).toHaveLength(16);
   });
 
+  test('judge agreement is also read per model under test, so the Astra check is not only the pooled Opus and particle-1 rows', () => {
+    const s = summarizePaid(result.rows);
+    const byModel = s.judge_agreement_by_model as Record<string, { n: number } | null>;
+    expect(Object.keys(byModel).sort()).toEqual([...new Set(result.rows.map(r => r.model))].sort());
+    const astraModels = Object.keys(byModel).filter(m => judgeFor(m) === 'openai:gpt-6.2-astra');
+    expect(astraModels.length).toBe(2);
+    expect(astraModels.reduce((a, m) => a + byModel[m]!.n, 0)).toBe(s.judge_agreement['openai:gpt-6.2-astra']!.n);
+  });
+
   test('first answers are correct; refreshed answers are correct unless the stub repeated an affected old value', () => {
     for (const r of result.rows) {
       const c = world.companies.find(x => x.slug === r.company)!;
@@ -272,6 +553,34 @@ describe('pinned-questions paid arm: keyless run through gbrain\'s product path'
     expect(second.resumedUnits).toBe(3);
     expect(second.rows).toEqual(result.rows);
     expect(readFileSync(join(out, 'checkpoint.ndjson'), 'utf8').trim().split('\n')).toHaveLength(3);
+  });
+
+  test('stale probes judge each changed question\'s first answer against the key after the change, ask no model under test, and their receipt validates', async () => {
+    const before = calls.length;
+    const judgeCheck = { rows: result.rows, worlds: new Map([[1, world]]), sha256: 'judge-check-sha' };
+    const { probes, harnessErrors } = await runStaleProbes({ gut, judgeCheck, mode: { kind: 'keyless', transport: stubTransport(world, stale, calls) } });
+    const asked = calls.slice(before);
+    expect(harnessErrors).toEqual([]);
+    expect(fetches).toBe(0);
+    expect(asked.every(c => c.kind === 'judge')).toBe(true);
+    const changed = result.rows.filter(r => world.companies.find(c => c.slug === r.company)!.affected.length > 0);
+    expect(probes).toHaveLength(changed.length);
+    expect(asked).toHaveLength(changed.length);
+    for (const p of probes) {
+      const row = result.rows.find(r => r.model === p.model && r.company === p.company)!;
+      expect(p.judge_model).toBe(judgeFor(p.model));
+      expect(p.graded.sentences).toEqual(row.first.sentences);
+      expect([p.company, p.graded.rule_correct, p.graded.answer_correct]).toEqual([p.company, false, false]);
+      expect(Object.values(p.graded.judge_labels!)).toContain('stale');
+    }
+    expect(new Set(asked.map(c => c.model.split(':').pop()))).toEqual(new Set(['gpt-6.2-astra', 'claude-opus-5-5']));
+    const receipt = buildStaleProbesReceipt({ gut, models: ['claude-opus-5-5', 'particle:particle-1', 'gpt-6.2-sol'], judgeCheck, probes, harnessErrors, cost: null, startedAt: new Date().toISOString(), mode: 'keyless' }) as unknown as Record<string, any>;
+    writeReceipt(join(out, 'receipt.stale-probes.json'), receipt as never);
+    expect(receipt.resolved_config).toMatchObject({ stage: 'stale-probes', judge_check_receipt_sha256: 'judge-check-sha', runner_source_sha256: RUNNER_SOURCE_SHA256 });
+    expect(receipt.n_total).toBe(changed.length);
+    expect(receipt.n_scored).toBe(changed.length);
+    expect(receipt.data.summary.probes_alone['anthropic:claude-opus-5-5']).toMatchObject({ n: changed.filter(r => r.model === 'openai:gpt-6.2-sol').length, neither: changed.filter(r => r.model === 'openai:gpt-6.2-sol').length });
+    expect(receipt.data.summary.judge_agreement['anthropic:claude-opus-5-5'].n).toBe(16 + changed.filter(r => r.model === 'openai:gpt-6.2-sol').length);
   });
 
   test('the receipt validates, lists every model with its role and spends nothing', () => {
@@ -354,7 +663,7 @@ describe('pinned-questions paid arm: provider errors, safety stops and budget re
   const savedKeys: Record<string, string | undefined> = {};
   const dirs: string[] = [];
   let fetches = 0;
-  const run = (out: string, fail: (slug: string, n: number, model: string) => Error | null, models = ['particle:particle-1'], calls: Array<{ model: string; kind: 'question' | 'judge'; chars: number }> = []) =>
+  const run = (out: string, fail: (slug: string, n: number, model: string) => Failure, models = ['particle:particle-1'], calls: Array<{ model: string; kind: 'question' | 'judge'; chars: number }> = []) =>
     runPinnedQuestionsPaid({ gut, models, seeds: [1], companies: 8, output: out, mode: { kind: 'keyless', transport: stubTransport(world, new Set(), calls, new Set(), fail) } });
   const dir = () => { const d = mkdtempSync(join(tmpdir(), 'pq-paid-err-')); dirs.push(d); return d; };
 
@@ -375,11 +684,15 @@ describe('pinned-questions paid arm: provider errors, safety stops and budget re
     expect([row.outcome, row.correct]).toEqual(['provider_error', null]);
     expect(first.acc.summary().errors).toEqual([{ probe_id: `particle:particle-1|s1|${a}`, origin: 'dependency', message: '503 Service Unavailable: upstream provider_error' }]);
     expect(summarizePaid(first.rows).by_model['particle:particle-1']).toMatchObject({ refreshed_excluded: 1, refreshed_correct: 1 });
+    expect(first.harnessErrors).toEqual([expect.stringContaining('the run is incomplete until a rerun')]);
+    const pending = buildReceipt({ gut, models: ['particle:particle-1'], seeds: [1], companies: 8, stage: 'dev', result: first, cost: null, startedAt: new Date().toISOString(), mode: 'paid' }) as unknown as { run_status: string; publishable: boolean };
+    expect([pending.run_status, pending.publishable]).toEqual(['error', false]);
     const calls: Array<{ model: string; kind: 'question' | 'judge'; chars: number }> = [];
     const second = await run(out, () => null, undefined, calls);
     expect(second.resumedUnits).toBe(0);
     expect(calls.length).toBeGreaterThan(0);
     expect(second.rows.find(r => r.company === a)).toMatchObject({ outcome: 'published', correct: true });
+    expect(second.harnessErrors).toEqual([]);
     const third: Array<{ model: string; kind: 'question' | 'judge'; chars: number }> = [];
     expect((await run(out, () => null, undefined, third)).resumedUnits).toBe(1);
     expect(third).toHaveLength(0);
@@ -391,6 +704,7 @@ describe('pinned-questions paid arm: provider errors, safety stops and budget re
     await run(out, failA);
     const second = await run(out, failA);
     expect(second.rows.find(r => r.company === a)).toMatchObject({ outcome: 'provider_error', correct: null });
+    expect(second.harnessErrors).toEqual([]);
     const calls: Array<{ model: string; kind: 'question' | 'judge'; chars: number }> = [];
     expect((await run(out, () => null, undefined, calls)).resumedUnits).toBe(1);
     expect(calls).toHaveLength(0);
@@ -404,6 +718,115 @@ describe('pinned-questions paid arm: provider errors, safety stops and budget re
     const calls: Array<{ model: string; kind: 'question' | 'judge'; chars: number }> = [];
     expect((await run(out, () => null, undefined, calls)).resumedUnits).toBe(1);
     expect(calls).toHaveLength(0);
+  }, 120_000);
+
+  test('provider failure text and judge errors are kept with every key and credential redacted', async () => {
+    const out = dir();
+    const tokens = [['sk', 'ant', 'api03', 'Zq9Xw2Lm8Pv4Rt6Yn1Bc3Df5Gh7'].join('-'), ['sk', 'proj', 'Qw3Er5Ty7Ui9Op1As2Df4Gh6Jk8'].join('-'), ['Hj2Kl4Zx6Cv8Bn0', 'Mq1Wr3Et5'].join('')];
+    const r = await run(out, (slug, n) => (slug === a && n === 2 ? new Error(`401 invalid x-api-key ${tokens[0]} (Authorization: Bearer ${tokens[2]}) provider_error`)
+      : slug === b && n === 0 ? new Error(`judge 400: key ${tokens[1]} rejected`) : null));
+    const rowA = r.rows.find(x => x.company === a)!, rowB = r.rows.find(x => x.company === b)!;
+    expect(rowA.refresh.failure_message).toContain('[redacted]');
+    expect(rowB.first.judge_error).toStartWith('judge_call_failed: ');
+    expect(rowB.first.judge_error).toContain('[redacted]');
+    const kept = [JSON.stringify(r.rows), JSON.stringify(r.acc.summary()), r.harnessErrors.join('\n'), readFileSync(join(out, 'checkpoint.ndjson'), 'utf8')].join('\n');
+    for (const t of tokens) expect(kept).not.toContain(t);
+  }, 120_000);
+
+  test('redactProviderText removes key values set under key names, key-shaped tokens, credentials and URL passwords, before any cut', () => {
+    const value = ['pv', 'Lk8Jh6Gf4Ds2Aq9Wz7'].join('');
+    const text = `refused for ${value}; sk-${'ant-'}${'Rt5Yu7Io9Pa1Sd3Fg5Hj7Kl'} Basic ${'dXNlcjpwYXNzd29yZA'} api_key=${'Zx9Cv7Bn5Mm3Qq1Ww'} postgres://u:${'hunter2secret'}@db/x`;
+    const red = redactProviderText(text, { PARTICLE_API_KEY: value, HOME: '/home/someone-long' });
+    for (const s of [value, 'Rt5Yu7Io9Pa1Sd3Fg5Hj7Kl', 'dXNlcjpwYXNzd29yZA', 'Zx9Cv7Bn5Mm3Qq1Ww', 'hunter2secret']) expect(red).not.toContain(s);
+    expect(red).toStartWith('refused for [redacted];');
+    expect(redactProviderText('no secrets here: 503 upstream', {})).toBe('no secrets here: 503 upstream');
+  });
+
+  test('a structured refusal or content-filter finish is a safety stop even when gbrain reports only invalid output', async () => {
+    const out = dir();
+    const r = await run(out, (slug, n) => (slug === b && n >= 2 ? { stopReason: 'content_filter', text: 'I can not help with that request.' } : null));
+    const row = r.rows.find(x => x.company === b)!;
+    expect([row.outcome, row.correct, row.refresh.safety_finish]).toEqual(['safety_stop', false, 'content_filter']);
+    expect(r.rows.filter(x => x.company !== b).every(x => x.refresh.safety_finish === null)).toBe(true);
+  }, 120_000);
+
+  test('the paid arm reads the safety finish from each AI SDK result and passes the result through unchanged', async () => {
+    const seen: Array<string | null> = [];
+    const results = [{ finishReason: 'content-filter' }, { finishReason: 'other', rawFinishReason: 'refusal' }, { finishReason: 'content-filter', providerMetadata: { anthropic: { stopReason: 'refusal' } } }, { finishReason: 'stop', text: 'ok' }];
+    for (const res of results) expect(await recordingGenerateText(async () => res, f => seen.push(f))({})).toBe(res);
+    expect(seen).toEqual(['content_filter', 'refusal', 'refusal', null]);
+  });
+
+  test('a torn final checkpoint line is cut off and the run resumes every intact unit; a corrupt earlier line refuses', async () => {
+    const out = dir();
+    const models = ['particle:particle-1', 'gpt-6.2-sol'];
+    await run(out, () => null, models);
+    const ck = join(out, 'checkpoint.ndjson');
+    const intact = readFileSync(ck, 'utf8');
+    appendFileSync(ck, intact.split('\n')[0]!.slice(0, 200));
+    const calls: Array<{ model: string; kind: 'question' | 'judge'; chars: number }> = [];
+    const resumed = await run(out, () => null, models, calls);
+    expect([resumed.resumedUnits, calls.length]).toEqual([2, 0]);
+    expect(readFileSync(ck, 'utf8')).toBe(intact);
+    expect(readCheckpoint(ck)).toHaveLength(2);
+    writeFileSync(ck, `{"torn\n${intact}`);
+    expect(() => readCheckpoint(ck)).toThrow(/line 1 is not valid JSON/);
+  }, 120_000);
+
+  test('a resume estimates only the units still to ask, and its receipt sums the spend of every process behind its rows', async () => {
+    const out = dir();
+    const models = ['particle:particle-1', 'gpt-6.2-sol'].map(canonicalModel);
+    const key = checkpointKey({ mode: 'keyless', gut, companies: 8 });
+    expect(pendingUnits(out, key, models, [1, 2])).toHaveLength(4);
+    await run(out, (slug, n, model) => (model.includes('gpt-6.2-sol') && slug === a && n === 2 ? new Error('503 Service Unavailable: upstream provider_error') : null), models);
+    expect(pendingUnits(out, key, models, [1, 2])).toEqual([{ model: 'particle:particle-1', seed: 2 }, { model: 'openai:gpt-6.2-sol', seed: 1 }, { model: 'openai:gpt-6.2-sol', seed: 2 }]);
+    expect(pendingUnits(out, checkpointKey({ mode: 'keyless', gut, companies: 8, maxOutputTokens: 8000 }), models, [1])).toHaveLength(2);
+    const src = readFileSync('eval/runner/pinned-questions-paid.ts');
+    expect(JSON.parse(key).runner_sha256).toBe(createHash('sha256').update(src).update(readFileSync('eval/generators/pinned-questions-gen.ts')).digest('hex'));
+    const summary = (run_id: string, usd: number, requests: number) => ({ run_id, budget_usd: 50, reserved_usd: usd, actual_usd: usd, charged_reservations: 0, requests, input_tokens: requests * 10, output_tokens: requests * 5, overshoot_usd: 0, ledger_path: 'l', program_cap_usd: 500, event_loop_lag_ms: null });
+    const opus = 'anthropic:claude-opus-5-5', unit = (seed: number) => ({ model: opus, seed });
+    recordProcessCost(out, { key: 'other-key', stage: 'pilot', asked: [unit(21)], summary: summary('r0', 9, 9) });
+    recordProcessCost(out, { key, stage: 'pilot', asked: [unit(21)], summary: summary('r1', 1.5, 3) });
+    recordProcessCost(out, { key, stage: 'judge-check', asked: [unit(22), unit(23)], summary: summary('r2', 4, 6) });
+    recordProcessCost(out, { key, stage: 'judge-check', asked: [], summary: summary('r2', 0, 0) });
+    const judgeCheck = combinedCost(out, key, [unit(21), unit(22), unit(23)], summary('r2', 0, 0));
+    expect([judgeCheck.processes, judgeCheck.actual_usd, judgeCheck.requests, judgeCheck.input_tokens, judgeCheck.run_id]).toEqual([2, 5.5, 9, 90, 'r1,r2']);
+    const counted = combinedCost(out, key, [unit(11), unit(12)], summary('r3', 0, 0));
+    expect([counted.processes, counted.actual_usd, counted.run_id]).toEqual([0, 0, 'r3']);
+    expect(combinedCost(out, key, [unit(22)], summary('r2', 0, 0)).actual_usd).toBe(4);
+  }, 120_000);
+
+  test('a launch refuses an output directory holding another stage\'s units; the judge-check stage may resume the pilot\'s seed', async () => {
+    const out = dir();
+    await run(out, () => null);
+    expect(() => requireStageDirectory(out, [1, 2])).not.toThrow();
+    expect(() => requireStageDirectory(out, [11, 12])).toThrow(/seeds 1, outside this launch's seeds \(11, 12\)/);
+    expect(() => requireStageDirectory(join(out, 'empty'), [11])).not.toThrow();
+    const key = checkpointKey({ mode: 'keyless', gut, companies: 8 });
+    expect(judgeEstimateRows(out, key)).toHaveLength(8);
+    expect(judgeEstimateRows(out, checkpointKey({ mode: 'paid', gut, companies: 8 }))).toHaveLength(0);
+  }, 120_000);
+
+  test('each row records the model that answered, and a row another model answered is a harness error, not a result', async () => {
+    const out = dir();
+    const r = await run(out, (slug, n) => (slug === b && n === 2 ? { model: 'particle:particle-0' } : null));
+    expect(r.rows.filter(x => x.company !== b).every(x => x.answer_model === 'particle:particle-1')).toBe(true);
+    const row = r.rows.find(x => x.company === b)!;
+    expect([row.answer_model, row.correct]).toEqual(['particle:particle-0', null]);
+    expect(r.acc.summary().errors).toEqual([expect.objectContaining({ origin: 'harness', message: expect.stringContaining('answered by particle:particle-1, particle:particle-0') })]);
+    expect(r.harnessErrors).toEqual([expect.stringContaining('another model answered 1 question')]);
+    expect(servedWrongModel({ model: 'openai:gpt-6.2-sol', pin: row.pin, refresh: { ...row.refresh, usage: { ...row.refresh.usage, models: ['openai:gpt-6.2-sol-2026-10-01'] } } })).toBe(true);
+    expect(servedWrongModel({ model: 'openai:gpt-6.2-sol', pin: { ...row.pin, usage: { ...row.pin.usage, models: [] } }, refresh: { ...row.refresh, usage: { ...row.refresh.usage, models: ['openai:gpt-6.2-sol-2026-10-01'] } } })).toBe(false);
+    expect(receiptFile('/out', 'pilot')).toBe('/out/receipt.pilot.json');
+    expect(receiptFile('/out', 'judge-check')).not.toBe(receiptFile('/out', 'pilot'));
+  }, 120_000);
+
+  test('a refused connection is a provider error, not a safety stop', async () => {
+    const out = dir();
+    const r = await run(out, (slug, n) => (slug === b && n === 2 ? new Error('connect ECONNREFUSED 127.0.0.1:443') : null));
+    expect(r.rows.find(x => x.company === b)).toMatchObject({ outcome: 'provider_error', correct: null });
+    expect(outcomeOf({ status: 'failed', error: 'refresh_failed:provider_error', failure_message: 'upstream connection refused' })).toBe('provider_error');
+    expect(outcomeOf({ status: 'failed', error: 'refresh_failed:provider_error', failure_message: 'the model refused to answer under its usage policy' })).toBe('safety_stop');
   }, 120_000);
 
   test('a budget refusal pauses the run at the unit boundary and checkpoints nothing for that unit', async () => {

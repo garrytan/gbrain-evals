@@ -1589,6 +1589,9 @@ globalThis.fetch = delegatingFetch;
 /** The fetch this module found at load, which no guard wraps (the metering proxy reserves on its own). */
 export const unguardedFetch: typeof fetch = baseFetch;
 
+/** True while a paid-request guard is installed and globalThis.fetch still routes through it. */
+export const paidRequestGuardActive = (): boolean => active !== null && globalThis.fetch === delegatingFetch;
+
 /** Most recent OpenAI responses remembered for continuation pricing. */
 const CHAIN_MEMORY = 100_000;
 
