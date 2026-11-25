@@ -514,6 +514,31 @@ settled. It found four things, fixed here:
     `bg1-dev-11` for the same window as its counted cell (2 hours for gbrain, 30 minutes for the others), with the same
     jobs and triggers.
 
+Added after a scoped review of items 12 and 13, before any paid call:
+
+16. **No harness cache in a measured call.** Item 12 scoped the reply cache to the cell, but in a cost-and-speed cell
+    any harness-side cache in the measurement path is wrong: a hit is unmetered spend and a near-zero latency. The
+    review also found the hybrid baseline's embedding cache shared across the machine, keyed only by model, size and
+    text; on the pilot VM it held the first rehearsal's fake vectors, and the third rehearsal's hybrid cell made no
+    embedding call at all. Cost-and-speed cells now run with both caches off (`uncachedCell` in
+    `eval/runner/q1/cell.ts`): the reader's reply cache neither reads nor stores a reply, and the hybrid embedder
+    sends every call's texts, so no cell has a cache hit to mark or count. The VM's shared caches were deleted before
+    the paid pilot. A search of the code these cells run, for caches and memos kept outside the cell's output
+    directory, found:
+    - the reply cache (`ChatClient`, `eval/runner/memory-qa/qa-v2.ts`) and the hybrid embedding cache
+      (`cachedOpenAIEmbedder`, `eval/runner/cat40/pg-arm.ts`): off, as above;
+    - two in-process memos in `cell.ts` (`memoCounter`, `readerFitTokenizer`) that hold local tokenizer counts:
+      harmless, because counting makes no provider call and adds no time to a measured call;
+    - the judge-path cache in `eval/runner/memory-qa/qa.ts` and the embedding cache in
+      `eval/runner/memory-qa/run-systems.ts`: not on these cells' path, which has no judge and builds its systems in
+      `cell.ts`;
+    - the file agent's tree and full-context reads: the tree lives under the cell's output directory and is rebuilt
+      for every write, and full-context reads have no cache;
+    - caches inside the compared systems themselves (gbrain's query cache, each vendor server's own state): shipped
+      behavior and part of what is measured. Their state lives in each stack's volumes, which
+      `eval/systems/bootstrap.sh down -v` removes after every cell, and gbrain's shim records a query-cache hit on the
+      read.
+
 ## Disclosures
 
 gbrain is Garry Tan's own project.

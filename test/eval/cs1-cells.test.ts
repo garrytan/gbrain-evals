@@ -8,10 +8,11 @@
  */
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { bg1CampaignManifest, bg1CellWindow, campaignCells, devOnly, findCell, loadCellManifest, qaCacheRoot, readerFitTokenizer, readerMaxTokens, runCell } from '../../eval/runner/q1/cell.ts';
+import { bg1CampaignManifest, bg1CellWindow, campaignCells, devOnly, findCell, loadCellManifest, qaCacheRoot, readerFitTokenizer, readerMaxTokens, runCell, uncachedCell } from '../../eval/runner/q1/cell.ts';
+import { cachedOpenAIEmbedder } from '../../eval/runner/cat40/pg-arm.ts';
 import { keylessUpstream, MeteringProxy } from '../../eval/runner/metering-proxy.ts';
 import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { ALL_SETS, CELL_VM_MAX_HOURS, cellVmHours, CS1_SETS, definitionProblems, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
@@ -23,7 +24,7 @@ import { bg1LaunchProblems } from '../../eval/runner/bg1/launch.ts';
 import { DEV_WORLD_END } from '../../eval/runner/bg1/dev-loop.ts';
 import { Q1_CAMPAIGN_ID } from '../../eval/runner/shootout-cell.ts';
 import { loadCorpus, type Corpus, type MemoryQuestion } from '../../eval/runner/memory-qa/corpus.ts';
-import type { ChatLike, ChatResult } from '../../eval/runner/memory-qa/qa-v2.ts';
+import { ChatClient, type ChatLike, type ChatResult } from '../../eval/runner/memory-qa/qa-v2.ts';
 import { FakeMemorySystem } from '../../eval/runner/systems/fake.ts';
 import { closeLedgers } from '../../eval/runner/budget-ledger.ts';
 
@@ -159,6 +160,37 @@ describe('reply cache', () => {
     expect(qaCacheRoot({ block: 'BG1' }, '/o', { ...shared, SHOOTOUT_KEYLESS_UPSTREAM: 'http://127.0.0.1:18999' }, false)).toBe('/o/cache/qa');
     expect(qaCacheRoot({ block: 'BG1' }, '/o', shared, true)).toBe('/o/cache/qa');
     expect(qaCacheRoot({ block: 'BG1' }, '/o', shared, false)).toBe('/shared/qa');
+  });
+
+  test('cost-and-speed cells run with the reply and embedding caches off: every repeat goes to the provider and nothing is stored', async () => {
+    expect(['CS1', 'CS1-pilot', 'CS1-capacity'].map(block => uncachedCell({ block: block as never }))).toEqual([true, true, true]);
+    expect(uncachedCell({ block: 'BG1' })).toBe(false);
+    const real = globalThis.fetch;
+    const calls: string[] = [];
+    globalThis.fetch = (async (url: string, init: RequestInit) => {
+      calls.push(String(url));
+      if (String(url).endsWith('/embeddings')) {
+        const input = JSON.parse(String(init.body)).input as string[];
+        return new Response(JSON.stringify({ data: input.map((_, index) => ({ index, embedding: [index + 1, 0] })), usage: { prompt_tokens: input.length, total_tokens: input.length } }), { status: 200 });
+      }
+      return new Response(JSON.stringify({ choices: [{ message: { content: `reply ${calls.length}` } }], usage: { prompt_tokens: 1, completion_tokens: 1 } }), { status: 200 });
+    }) as never;
+    const dir = mkdtempSync(join(tmpdir(), 'cs1-nocache-'));
+    try {
+      const off = new ChatClient(join(dir, 'qa'), () => 0, undefined, { noCache: true });
+      const opts = { maxTokens: 5, replicate: 0 };
+      const [a, b] = [await off.chat('openai:gpt-6.2-sol', 'p', opts), await off.chat('openai:gpt-6.2-sol', 'p', opts)];
+      expect([a.cached, b.cached, calls.length, readdirSync(join(dir, 'qa'))]).toEqual([false, false, 2, []]);
+      const on = new ChatClient(join(dir, 'shared'), () => 0);
+      await on.chat('openai:gpt-6.2-sol', 'p', opts);
+      expect((await on.chat('openai:gpt-6.2-sol', 'p', opts)).cached).toBe(true);
+      calls.length = 0;
+      const embed = cachedOpenAIEmbedder(null, globalThis.fetch, 'http://proxy.invalid/v1');
+      await embed(['one', 'two', 'one']);
+      await embed(['one']);
+      expect(calls).toEqual(['http://proxy.invalid/v1/embeddings', 'http://proxy.invalid/v1/embeddings']);
+      expect(readdirSync(dir).sort()).toEqual(['qa', 'shared']);
+    } finally { globalThis.fetch = real; rmSync(dir, { recursive: true, force: true }); }
   });
 });
 

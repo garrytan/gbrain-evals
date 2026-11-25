@@ -377,6 +377,12 @@ export function qaCacheRoot(def: Pick<CellDefinition, 'block'>, out: string, env
 }
 
 /**
+ * A cost-and-speed cell runs with the harness's reply and embedding caches off: each measured call goes to the provider
+ * through the lease proxy, because a cache hit would be unmetered spend with a near-zero latency.
+ */
+export const uncachedCell = (def: Pick<CellDefinition, 'block'>): boolean => (CS1_BLOCK_IDS as readonly string[]).includes(def.block);
+
+/**
  * Contract 10 for a run that opens a sealed cell's conversations: GBRAIN_EVALS_CUSTODY_LOG set, `out` a custody root
  * outside the repository, and the opening logged (with `purpose`) before the corpus or any sealed staging is read.
  */
@@ -653,7 +659,7 @@ export function systemFor(def: CellDefinition, opts: CellOptions, sanitizer: San
     case 'baseline-recency': return new FullContextSystem('recency');
     case 'baseline-none': return new NoMemorySystem();
     case 'baseline-hybrid': return new PlainHybridSystem(opts.embed === 'hash' ? async texts => texts.map(t => hashEmbed(t, PG_EMBED_DIMS))
-      : cachedOpenAIEmbedder(join(process.env.GBRAIN_EVALS_EMBED_CACHE ?? join(homedir(), '.cache', 'gbrain-evals', 'embed-cache'), 'plain-hybrid-te3l-1536.json'), fetch, opts.providerProxy ? `${opts.providerProxy}/${def.system}/openai/v1` : undefined), opts.embed === 'hash' ? `hash@${PG_EMBED_DIMS} (keyless control)` : undefined);
+      : cachedOpenAIEmbedder(uncachedCell(def) ? null : join(process.env.GBRAIN_EVALS_EMBED_CACHE ?? join(homedir(), '.cache', 'gbrain-evals', 'embed-cache'), 'plain-hybrid-te3l-1536.json'), fetch, opts.providerProxy ? `${opts.providerProxy}/${def.system}/openai/v1` : undefined), opts.embed === 'hash' ? `hash@${PG_EMBED_DIMS} (keyless control)` : undefined);
     case 'baseline-file-agent': return new FileAgentSystem({ workDir: join(opts.out, 'runs', def.id, 'file-agent'), effort: def.effort });
     case 'gbrain-defaults':
       if (opts.providerProxy) throw refuse({ code: 'NOT_YET_AVAILABLE', message: `cell ${def.id} runs the gbrain agent in process, and a metering proxy was given`,
@@ -864,7 +870,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
         : runnable.length ? { next: 'run', argv: [...FRONT, 'run', '--cell', def.id, '--arms', runnable.join(',')], user_message: 'run the other arms now; the blocked arms wait for the system\'s answer route' } : { next: 'report', user_message: 'the cell waits for an answer route in the system\'s shim' } });
   }
   const readersOf = new Map(arms.map(a => [a.id, armReaders(a, capabilities)]));
-  const chat = deps.reader ?? deps.judge ?? new ChatClient(qaCacheRoot(def, out, env, custody));
+  const chat = deps.reader ?? deps.judge ?? new ChatClient(qaCacheRoot(def, out, env, custody), undefined, undefined, { noCache: uncachedCell(def) });
   const reader = onSlot(deps.reader ?? chat, meter, 'harness');
   const judge = onSlot(deps.judge ?? chat, meter, 'judge');
   const fitTokenizer = deps.fitTokenizer ?? readerFitTokenizer;
