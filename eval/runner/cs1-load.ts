@@ -101,7 +101,7 @@ function quarterRate(writes: ReadonlyArray<{ start_at: string; content_tokens: n
   return spend / tokens * 1e6;
 }
 
-/** One reader's full-context reads in one world, with input split by cache kind at the model's list prices. */
+/** One reader's full-context reads in one world: each line's `actual_usd` split by cache kind in proportion to the model's list prices. */
 function fullContextWorld(world: string, ans: readonly Answer[], readerLines: ReadonlyMap<string, UsageLine[]>, classes: MatchClass[]): Cs1FullContextWorld {
   const w = { world, questions: ans.length, cached_tokens: 0, cached_usd: 0, cache_write_tokens: 0, cache_write_usd: 0, uncached_tokens: 0, uncached_usd: 0, output_usd: 0, classes };
   for (const a of ans) for (const l of readerLines.get(a.answer_id.slice(0, 16)) ?? []) {
@@ -109,10 +109,12 @@ function fullContextWorld(world: string, ans: readonly Answer[], readerLines: Re
     const base = priceOf(`${l.provider}:${l.model}`);
     const input = l.input_tokens ?? 0, cr = l.cache_read_tokens ?? 0, cw = l.cache_write_tokens ?? 0;
     const p = base.long && input > base.long.above_input_tokens ? { ...base, ...base.long } : base;
-    w.cached_tokens += cr; w.cached_usd += cr * (p.cache_read ?? p.input) / 1e6;
-    w.cache_write_tokens += cw; w.cache_write_usd += cw * (p.cache_write ?? p.input) / 1e6;
-    w.uncached_tokens += input - cr - cw; w.uncached_usd += (input - cr - cw) * p.input / 1e6;
-    w.output_usd += (l.output_tokens ?? 0) * p.output / 1e6;
+    const parts = [cr * (p.cache_read ?? p.input), cw * (p.cache_write ?? p.input), (input - cr - cw) * p.input, (l.output_tokens ?? 0) * p.output];
+    const list = parts.reduce((n, x) => n + x, 0), scale = list > 0 ? usd(l) / list : 0;
+    w.cached_tokens += cr; w.cached_usd += parts[0] * scale;
+    w.cache_write_tokens += cw; w.cache_write_usd += parts[1] * scale;
+    w.uncached_tokens += input - cr - cw; w.uncached_usd += parts[2] * scale;
+    w.output_usd += parts[3] * scale;
   }
   return w;
 }
@@ -178,7 +180,7 @@ export function cs1Load(units: readonly Cs1Unit[], opts: Cs1LoadOptions) {
         }
         const idle = lines<{ ms: number; usd: number | null; triggers?: Array<{ job: string; trigger: string; cadence_minutes: number | null; error: string | null }> }>(join(dir, 'r', r.rid, 'idle.json'))[0];
         const writes = lines<{ start_at: string; content_tokens: number }>(join(dir, 'r', r.rid, 'writes.ndjson'));
-        const ingestLines = [...(b?.write ?? []), ...(b?.background ?? [])];
+        const ingestLines = r.ns ? [...(b?.write ?? []), ...(b?.background ?? [])].filter(l => l.key === `ingest:${r.ns}`) : [];
         const q = writes.length >= 4 ? Math.floor(writes.length / 4) : 0;
         const end = Math.max(...ingestLines.map(l => Date.parse(l.at)), Date.parse(r.at)) + 1;
         const first = q ? quarterRate(writes, 0, q, end, ingestLines) : null, last = q ? quarterRate(writes, writes.length - q, writes.length, end, ingestLines) : null;
@@ -226,11 +228,15 @@ export function cs1Load(units: readonly Cs1Unit[], opts: Cs1LoadOptions) {
     if (!fit) problems.push(`full context: no fit check for ${reader}`);
     return [reader, { worlds: ws, fit: fit ?? { heavy: { fits: false }, light: { fits: false } } } satisfies Cs1FullContextReader];
   })) : null;
-  const attributed = Object.entries(totals).filter(([k]) => k !== 'unattributed').reduce((n, [, v]) => n + v, 0);
+  const inWorlds = systems.reduce((n, s) => n + s.worlds.reduce((m, w) => m + w.usd.write + w.usd.background + w.usd.read + w.usd.probe + (w.idle?.usd ?? 0)
+    + (w.idle?.triggers ?? []).reduce((k, t) => k + t.usd, 0) + Object.values(w.readers).reduce((k, x) => k + x.usd, 0), 0), 0)
+    + Object.values(full_context ?? {}).reduce((n, f) => n + f.worlds.reduce((m, w) => m + w.cached_usd + w.cache_write_usd + w.uncached_usd + w.output_usd, 0), 0);
+  const dropped = billed - inWorlds - totals.unattributed;
+  if (Math.abs(dropped) > 1e-6) problems.push(`${dropped.toFixed(6)} billed dollars are in no world's lines and not unattributed (an errored trigger, a replicate above 0, or a harness-slot line that isn't a reader's)`);
   const input: Cs1Input = { systems, ladder: opts.ladder, full_context, readers };
   return {
     input, problems,
-    checks: { sum_back: { billed_usd: billed, attributed_usd: attributed, unattributed_usd: totals.unattributed, difference_usd: billed - attributed - totals.unattributed }, by_bucket: totals, unattributed_keys: Object.fromEntries(unattributedKeys) },
+    checks: { sum_back: { billed_usd: billed, attributed_usd: inWorlds, unattributed_usd: totals.unattributed, difference_usd: dropped }, by_bucket: totals, unattributed_keys: Object.fromEntries(unattributedKeys) },
   };
 }
 

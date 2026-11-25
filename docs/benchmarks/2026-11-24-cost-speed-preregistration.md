@@ -452,7 +452,10 @@ Made on the results branch before any paid call. Where this amendment and the te
    documented trigger once before the window, under its own meter key, and counting that run's dollars times the runs a
    month at its shipped cadence; the window's own rate covers everything else. gbrain's daily upkeep is
    `gbrain maintain --unattended`, run with serve stopped; a keyless run on v0.60.771.0 ran its 15 steps and a second
-   run reported upkeep not due, so the restarted server doesn't run it again inside the window.
+   run reported upkeep not due, so the restarted server doesn't run it again inside the window. The priced run is the
+   brain's first upkeep after the bulk import, so its embedding catch-up (capped by gbrain at a daily amount) covers the
+   whole imported history rather than one day's writes; this can only overstate gbrain's idle line, and the results say
+   so beside it.
 4. **Hosting prices.** The primary ladder is AWS EC2 m7i on demand (Linux, us-east-1) with EBS gp3 storage; the
    sensitivity row is m7g (Graviton) on the same terms. Prices were read on 2026-11-25 from AWS's public price lists and
    are fixed in `CS1_PRICE_LADDERS` (`eval/runner/q1/cells/cs1.ts`).

@@ -7,7 +7,7 @@
  * model shows up as an unlabelled route.
  */
 import { afterAll, beforeEach, describe, expect, test } from 'bun:test';
-import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { realizationId, runCell, type WriteProbe } from '../../eval/runner/q1/cell.ts';
@@ -245,6 +245,24 @@ describe('loader keys and hosting', () => {
       { bucket: 'background', conv: 'w1' }, { bucket: 'idle', conv: 'w1' }, { bucket: 'trigger', conv: 'w1', job: 'maintain' }, { bucket: 'read', conv: 'w1' },
       { bucket: 'reader', conv: 'w1' }, { bucket: 'unattributed', conv: null }, { bucket: 'unattributed', conv: null }]);
     expect([b('answer:0123456789abcdef'), b('answer:ffffffffffffffff')]).toEqual([{ bucket: 'reader', conv: 'w1' }, { bucket: 'unattributed', conv: null }]);
+  });
+  // Value: protects=history growth compares the bulk import's first and last quarters only; fails_when=the last quarter's window takes in held-back writes, so their dollars inflate its rate against the bulk tokens; why_new=fresh-eyes reader of the cost-speed fix commits (F1); seam=cs1Load over a hand-built unit; no_claim=the cell writing these files
+  test('history growth counts only the bulk import: a held-back write after it, however costly, leaves both quarters alone', () => {
+    const dir = join(tmp, 'growth-unit'), cell = 'cs1-capacity.baseline-hybrid.baseline', rid = 'ab'.repeat(32);
+    mkdirSync(join(dir, 'runs', cell, 'r', rid), { recursive: true });
+    const at = (s: number) => new Date(Date.UTC(2026, 10, 25, 0, 0, s)).toISOString();
+    writeFileSync(join(dir, 'runs', cell, 'realizations.ndjson'), JSON.stringify({ realization_id: rid, conversation: 'w1', event: 'ingested', at: at(100), ns: 'ns-a', ingest: { content_tokens: 8000, ingested_tokens: 8800, sessions: 10 } }) + '\n');
+    writeFileSync(join(dir, 'runs', cell, 'r', rid, 'writes.ndjson'), Array.from({ length: 8 }, (_, i) => JSON.stringify({ i, source_id: `src-${i}`, start_at: at(i * 10), end_at: at(i * 10 + 1), content_tokens: 1000 })).join('\n') + '\n');
+    const line = (key: string, s: number, usd: number, phase: string) => ({ key, at: at(s), actual_usd: usd, phase, slot: 'sys' }) as never;
+    const bulk = Array.from({ length: 8 }, (_, i) => line('ingest:ns-a', i * 10 + 1, 0.001, 'commit'));
+    const opts = { cells: new Map([[cell, 'baseline-hybrid']]), questions: new Map(), ladder: { provider: 'invented', instances: [{ name: 'small', memory_gib: 2, usd_per_hour: 0.02 }], storage_usd_per_gb_month: 0.1 } };
+    const quarters = (usage: never[]) => cs1Load([{ dir, usage }], opts).input.systems[0].worlds[0].quarters;
+    const plain = quarters(bulk);
+    expect(plain).toEqual({ first_usd_per_mtok: 1, last_usd_per_mtok: 1 });
+    expect(quarters([...bulk, line('ingest:ns-a#held-back', 90, 1, 'commit'), line('ingest:ns-a#held-back', 95, 1, 'background'), line(`tail:${rid}`, 99, 1, 'background')])).toEqual(plain);
+    const lost = cs1Load([{ dir, usage: [...bulk, line(`tail:trigger:${rid}:maintain`, 99, 0.5, 'background')] as never[] }], opts);
+    expect(lost.checks.sum_back.difference_usd).toBeCloseTo(0.5, 12);
+    expect(lost.problems.join('\n')).toContain('billed dollars are in no world');
   });
   test("hosting counts only the system's own compose project, or the harness process and its files when in process", () => {
     const s = (at: string, rss: number, files = 0) => ({ at, stage: 'questions:w1', harness_rss_bytes: rss, containers: [{ name: 'stack-db-1', mem_bytes: 100 }, { name: 'other-db-1', mem_bytes: 900 }], volumes: [{ name: 'stack_data', bytes: 50 }, { name: 'other_data', bytes: 500 }], dirs: [{ path: '/x', bytes: files }] });
