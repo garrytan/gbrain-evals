@@ -125,7 +125,7 @@ export interface SearchHit {
   /** The text the agent actually receives in the result row. */
   delivered: string;
 }
-export interface IngestOutcome { status: 'stored' | 'refused' | 'error'; code?: string; message?: string; pages: number; chunks: number; embed_skip: string | null; write_errors: number; storage?: BodyStorage | null; pending?: PendingWrites | null; projection?: ProjectionSettle | null }
+export interface IngestOutcome { status: 'stored' | 'refused' | 'error'; code?: string; message?: string; pages: number | null; chunks: number | null; not_applicable?: string; embed_skip: string | null; write_errors: number; storage?: BodyStorage | null; pending?: PendingWrites | null; projection?: ProjectionSettle | null }
 /** Body storage of the document's entry page (Amendment 2): `segmented` pages keep their body in content-addressed segments. */
 /** Writes that replied `write_pending` and were polled to a final state (Amendment 3). */
 export interface PendingWrites { writes: number; wait_ms: number }
@@ -134,7 +134,7 @@ export interface ProjectionSettle { sealed_at_reply: boolean; sealed: boolean; s
 export interface BodyStorage { body_storage: string; body_bytes: number | null; segment_count: number | null; body_generation: number | null }
 /** Segment rows an append wrote (Amendment 2): live manifest rows at the new generation, and segment texts added. */
 export interface SegmentWrites { generation_before: number | null; generation_after: number | null; live_segments: number; segments_at_new_generation: number; segment_texts_added: number; segment_text_bytes_added: number }
-export interface AppendOutcome { status: 'ok' | 'refused' | 'error'; code?: string; message?: string; chunks_before: number; chunks_after: number; chunks_rewritten: number; chunks_deleted: number; path: string; segments?: SegmentWrites | null; pending?: PendingWrites | null; projection?: ProjectionSettle | null }
+export interface AppendOutcome { status: 'ok' | 'refused' | 'error'; code?: string; message?: string; chunks_before: number | null; chunks_after: number | null; chunks_rewritten: number | null; chunks_deleted: number | null; not_applicable?: string; path: string; segments?: SegmentWrites | null; pending?: PendingWrites | null; projection?: ProjectionSettle | null }
 export interface EmbedCount { inputs: number; tokens: number }
 export interface CallFrame { op: string; bytes: number }
 
@@ -172,7 +172,8 @@ export interface ArmRun {
   doc: string;
   bytes: number;
   ingest: IngestOutcome & { wall_ms: number };
-  stored: { contains: number; total: number };
+  /** contains is null when the engine cannot read stored bodies (no raw SQL). */
+  stored: { contains: number | null; total: number };
   control: { hits: number; total: number; missed: string[] };
   probes: ProbeRow[];
   reads: ReadRow[];
@@ -235,12 +236,16 @@ export async function evaluateArm(adapter: N14Adapter, ledger: N14DocLedger, raw
   const t0 = performance.now();
   let ingest: IngestOutcome;
   try { ingest = await adapter.ingest(ledger, raw); }
-  catch (e) { ingest = { status: 'error', code: errCode(e), message: errMsg(e).slice(0, 500), pages: 0, chunks: 0, embed_skip: null, write_errors: 1 }; }
+  catch (e) { ingest = { status: 'error', code: errCode(e), message: errMsg(e).slice(0, 500), pages: null, chunks: null, embed_skip: null, write_errors: 1 }; }
   const ingestMs = performance.now() - t0;
   memory.push(mark('ingest'));
 
   let contains = 0;
-  for (const n of ledger.needles) { try { if (await adapter.storedContains(n.answer)) contains++; } catch { /* counted as absent */ } }
+  let storedMeasured = true;
+  for (const n of ledger.needles) {
+    try { if (await adapter.storedContains(n.answer)) contains++; }
+    catch (e) { if (errCode(e) === 'not_applicable') { storedMeasured = false; break; } }
+  }
 
   const searchPassages = async (query: string) => {
     const hits = await adapter.search(query);
@@ -297,7 +302,7 @@ export async function evaluateArm(adapter: N14Adapter, ledger: N14DocLedger, raw
   const ta = performance.now();
   let app: AppendOutcome;
   try { app = await adapter.append(appendText); }
-  catch (e) { app = { status: 'error', code: errCode(e), message: errMsg(e).slice(0, 500), chunks_before: 0, chunks_after: 0, chunks_rewritten: 0, chunks_deleted: 0, path: 'unknown' }; }
+  catch (e) { app = { status: 'error', code: errCode(e), message: errMsg(e).slice(0, 500), chunks_before: null, chunks_after: null, chunks_rewritten: null, chunks_deleted: null, path: 'unknown' }; }
   const appendMs = performance.now() - ta;
   let appendEmbed: EmbedCount | null = null;
   if (opts.embed !== false && embedInitial) {
@@ -353,7 +358,7 @@ export async function evaluateArm(adapter: N14Adapter, ledger: N14DocLedger, raw
   return {
     arm: adapter.arm, doc: ledger.id, bytes: ledger.bytes,
     ingest: { ...ingest, wall_ms: Math.round(ingestMs) },
-    stored: { contains, total: ledger.needles.length },
+    stored: { contains: storedMeasured ? contains : null, total: ledger.needles.length },
     control, probes, reads, direct_read: directRead, ...(directReadAgent ? { direct_read_agent: directReadAgent } : {}),
     embed_initial: embedInitial,
     ...(embedError ? { embed_error: embedError } : {}),
@@ -377,8 +382,9 @@ export interface ArmSummary {
   tier: TierId;
   status: 'ran' | 'crashed' | 'capability_absent';
   crash?: string;
-  ingest: { status: string; code?: string; chunks: number; pages: number; embed_skip: string | null; wall_ms: number | null; rss_peak_mb: number | null; rss_over_baseline_mb: number | null; storage?: BodyStorage | null; pending?: PendingWrites | null; projection?: ProjectionSettle | null };
-  stored_needles: Rate;
+  ingest: { status: string; code?: string; chunks: number | null; pages: number | null; not_applicable?: string; embed_skip: string | null; wall_ms: number | null; rss_peak_mb: number | null; rss_over_baseline_mb: number | null; storage?: BodyStorage | null; pending?: PendingWrites | null; projection?: ProjectionSettle | null };
+  /** Null when the engine cannot read stored bodies (no raw SQL); the receipt's not_applicable list says why. */
+  stored_needles: Rate | null;
   keyword_recall: Rate;
   keyword_recall_by_decile: Rate[];
   min_decile_recall: number;
@@ -390,7 +396,7 @@ export interface ArmSummary {
   direct_read_agent_bytes?: number | null;
   max_frame_bytes: number;
   responses_over_cap: number;
-  append: { status: string; code?: string; wall_ms: number | null; embed_inputs: number | null; embed_tokens: number | null; appended_tokens: number; embed_ratio: number | null; chunks_rewritten: number; chunks_deleted: number; visible: boolean; path: string; segments?: SegmentWrites | null; pending?: PendingWrites | null; projection?: ProjectionSettle | null } | null;
+  append: { status: string; code?: string; wall_ms: number | null; embed_inputs: number | null; embed_tokens: number | null; appended_tokens: number; embed_ratio: number | null; chunks_rewritten: number | null; chunks_deleted: number | null; not_applicable?: string; visible: boolean; path: string; segments?: SegmentWrites | null; pending?: PendingWrites | null; projection?: ProjectionSettle | null } | null;
   embed_initial: { inputs: number; tokens: number; wall_ms: number; tokens_per_mb: number } | null;
   roundtrip: string;
   segment_roundtrip?: string;
@@ -408,19 +414,19 @@ export function summarizeArm(run: ArmRun, tier: TierId): ArmSummary {
   const afterIngest = run.memory.find(m => m.phase === 'ingest');
   const chunksAfter = run.append.chunks_after;
   // Append cost is defined only for a page that is searchable after the append.
-  const ratio = run.append.status === 'ok' && run.append.embed && chunksAfter > 0 ? run.append.embed.tokens / run.append.appended_tokens : null;
+  const ratio = run.append.status === 'ok' && run.append.embed && chunksAfter !== null && chunksAfter > 0 ? run.append.embed.tokens / run.append.appended_tokens : null;
   const attempted = run.reads.filter(r => r.attempted);
   return {
     arm: run.arm, doc: run.doc, tier, status: 'ran',
     ingest: {
-      status: run.ingest.status, ...(run.ingest.code ? { code: run.ingest.code } : {}), chunks: run.ingest.chunks, pages: run.ingest.pages, embed_skip: run.ingest.embed_skip,
+      status: run.ingest.status, ...(run.ingest.code ? { code: run.ingest.code } : {}), chunks: run.ingest.chunks, pages: run.ingest.pages, ...(run.ingest.not_applicable ? { not_applicable: run.ingest.not_applicable } : {}), embed_skip: run.ingest.embed_skip,
       wall_ms: run.ingest.wall_ms, rss_peak_mb: afterIngest?.max_rss_mb || null,
       rss_over_baseline_mb: afterIngest && baseline && afterIngest.max_rss_mb ? Math.max(0, Math.round(afterIngest.max_rss_mb - baseline.rss_mb)) : null,
       ...(run.ingest.storage !== undefined ? { storage: run.ingest.storage } : {}),
       ...(run.ingest.pending ? { pending: run.ingest.pending } : {}),
       ...(run.ingest.projection ? { projection: run.ingest.projection } : {}),
     },
-    stored_needles: rate(run.stored.contains, run.stored.total),
+    stored_needles: run.stored.contains === null ? null : rate(run.stored.contains, run.stored.total),
     keyword_recall: rate(hits, run.probes.length),
     keyword_recall_by_decile: byDecile,
     min_decile_recall: Math.min(...byDecile.map(r => r.rate)),
@@ -434,7 +440,7 @@ export function summarizeArm(run: ArmRun, tier: TierId): ArmSummary {
     append: {
       status: run.append.status, ...(run.append.code ? { code: run.append.code } : {}), wall_ms: run.append.wall_ms,
       embed_inputs: run.append.embed?.inputs ?? null, embed_tokens: run.append.embed?.tokens ?? null, appended_tokens: run.append.appended_tokens,
-      embed_ratio: ratio === null ? null : Number(ratio.toFixed(3)), chunks_rewritten: run.append.chunks_rewritten, chunks_deleted: run.append.chunks_deleted,
+      embed_ratio: ratio === null ? null : Number(ratio.toFixed(3)), chunks_rewritten: run.append.chunks_rewritten, chunks_deleted: run.append.chunks_deleted, ...(run.append.not_applicable ? { not_applicable: run.append.not_applicable } : {}),
       visible: run.append.visible_rank !== null, path: run.append.path, ...(run.append.segments !== undefined ? { segments: run.append.segments } : {}), ...(run.append.pending ? { pending: run.append.pending } : {}), ...(run.append.projection ? { projection: run.append.projection } : {}),
     },
     embed_initial: run.embed_initial ? { inputs: run.embed_initial.inputs, tokens: run.embed_initial.tokens, wall_ms: Math.round(run.embed_initial.wall_ms), tokens_per_mb: Math.round(run.embed_initial.tokens / (run.bytes / 1e6)) } : null,
@@ -650,6 +656,22 @@ export function lifecycleFence(): string {
     '<!--- gbrain:facts:end -->', ''].join('\n');
 }
 type Embedder = { kind: 'counting' } | { kind: 'none' } | { kind: 'real'; model: string; dims: number; env: Record<string, string> };
+
+/** The ingest outcome on an engine without raw SQL (rust): status from write errors alone, and no stored-page counts. */
+export function ingestWithoutSql(writeErrors: number, first: { code: string; message: string } | null, pending: PendingWrites | null, projection: ProjectionSettle | null): IngestOutcome {
+  const status: IngestOutcome['status'] = writeErrors === 0 ? 'stored' : first && /too_large|file_too_large|oversized|request_too_large/.test(first.code + first.message) ? 'refused' : 'error';
+  return { status, ...(first ? { code: first.code, message: first.message } : {}), pages: null, chunks: null, not_applicable: 'not_applicable: stored page and chunk counts read content_chunks with raw SQL', embed_skip: null, write_errors: writeErrors, storage: null, pending, projection };
+}
+
+/** Chunk counts of an append from content_chunks snapshots before and after; null on an engine without raw SQL (rust). */
+export function chunkDelta(before: Map<number, string> | null, after: Map<number, string> | null): Pick<AppendOutcome, 'chunks_before' | 'chunks_after' | 'chunks_rewritten' | 'chunks_deleted' | 'not_applicable'> {
+  if (!before || !after) return { chunks_before: null, chunks_after: null, chunks_rewritten: null, chunks_deleted: null, not_applicable: 'not_applicable: append chunk counts snapshot content_chunks with raw SQL' };
+  let rewritten = 0;
+  for (const [id, h] of after) if (before.get(id) !== h) rewritten++;
+  let deleted = 0;
+  for (const id of before.keys()) if (!after.has(id)) deleted++;
+  return { chunks_before: before.size, chunks_after: after.size, chunks_rewritten: rewritten, chunks_deleted: deleted };
+}
 
 export class GbrainAdapter implements N14Adapter {
   readonly frames: CallFrame[] = [];
@@ -891,10 +913,7 @@ export class GbrainAdapter implements N14Adapter {
 
   async #ingestOutcome(writeErrors: number, first: { code: string; message: string } | null): Promise<IngestOutcome> {
     const projection = this.arm === 'managed-parts' ? null : await this.#settleProjection();
-    if (!this.#rawSql) {
-      const status: IngestOutcome['status'] = writeErrors === 0 ? 'stored' : first && /too_large|file_too_large|oversized|request_too_large/.test(first.code + first.message) ? 'refused' : 'error';
-      return { status, ...(first ? { code: first.code, message: first.message } : {}), pages: 0, chunks: 0, embed_skip: null, write_errors: writeErrors, storage: null, pending: this.#takePending(), projection };
-    }
+    if (!this.#rawSql) return ingestWithoutSql(writeErrors, first, this.#takePending(), projection);
     const docPages = await this.sql<{ n: number; chunks: number; skip: string | null }>(
       `SELECT count(*)::int AS n, coalesce(sum((SELECT count(*) FROM content_chunks c WHERE c.page_id = p.id)), 0)::int AS chunks,
               max(p.frontmatter->'embed_skip'->>'reason') AS skip
@@ -1003,8 +1022,8 @@ export class GbrainAdapter implements N14Adapter {
     return { inputs: this.#embedCount.inputs - before.inputs, tokens: this.#embedCount.tokens - before.tokens };
   }
 
-  async #chunkSnapshot(): Promise<Map<number, string>> {
-    if (!this.#rawSql) return new Map();
+  async #chunkSnapshot(): Promise<Map<number, string> | null> {
+    if (!this.#rawSql) return null;
     const rows = await this.sql<{ id: number; h: string }>(`SELECT c.id, md5(c.chunk_text) AS h FROM content_chunks c JOIN pages p ON p.id = c.page_id WHERE p.deleted_at IS NULL AND p.slug <> $1`, [CONTROL_SLUG]);
     return new Map(rows.map(r => [Number(r.id), r.h]));
   }
@@ -1042,10 +1061,6 @@ export class GbrainAdapter implements N14Adapter {
     }
     const projection = storageBefore && !failure ? await this.#settleProjection() : null;
     const after = await this.#chunkSnapshot();
-    let rewritten = 0;
-    for (const [id, h] of after) if (before.get(id) !== h) rewritten++;
-    let deleted = 0;
-    for (const id of before.keys()) if (!after.has(id)) deleted++;
     let segments: SegmentWrites | null = null;
     const storageAfter = storageBefore ? await this.#storage() : null;
     if (textsBefore && storageAfter && (storageBefore?.body_storage === 'segmented' || storageAfter.body_storage === 'segmented')) {
@@ -1056,7 +1071,7 @@ export class GbrainAdapter implements N14Adapter {
       segments = { generation_before: storageBefore?.body_generation ?? null, generation_after: storageAfter.body_generation, live_segments: Number(live[0]?.n ?? 0),
         segments_at_new_generation: Number(live[0]?.at_new ?? 0), segment_texts_added: textsAfter.n - textsBefore.n, segment_text_bytes_added: textsAfter.bytes - textsBefore.bytes };
     }
-    return { status: failure ? failure.status : 'ok', ...(failure ? { code: failure.code, message: failure.message } : {}), chunks_before: before.size, chunks_after: after.size, chunks_rewritten: rewritten, chunks_deleted: deleted, path, ...(storageBefore ? { segments } : {}), pending: this.#takePending(), ...(projection ? { projection } : {}) };
+    return { status: failure ? failure.status : 'ok', ...(failure ? { code: failure.code, message: failure.message } : {}), ...chunkDelta(before, after), path, ...(storageBefore ? { segments } : {}), pending: this.#takePending(), ...(projection ? { projection } : {}) };
   }
 
   async exportBody(): Promise<string> {
@@ -1465,7 +1480,7 @@ export function n14Findings(r: N14RunResult, gut: GbrainUnderTest): BugEntry[] {
       surface: 'put_page -> content sanity (embed_skip, PAGE_OVERSIZED)',
       repro: repro(skipped.tier, 'single-page'),
       expected: 'a stored page is keyword-searchable: a query for a planted needle returns the chunk that holds it',
-      actual: `the ${(skipped.doc)} document (${skipped.tier}) is stored with embed_skip=${skipped.ingest.embed_skip} and ${skipped.ingest.chunks} chunks; keyword needle recall@10 ${skipped.keyword_recall.hits}/${skipped.keyword_recall.total} while every needle is in the stored body (${skipped.stored_needles.hits}/${skipped.stored_needles.total})`,
+      actual: `the ${(skipped.doc)} document (${skipped.tier}) is stored with embed_skip=${skipped.ingest.embed_skip} and ${skipped.ingest.chunks} chunks; keyword needle recall@10 ${skipped.keyword_recall.hits}/${skipped.keyword_recall.total} while every needle is in the stored body (${skipped.stored_needles?.hits ?? 'n/a'}/${skipped.stored_needles?.total ?? 'n/a'})`,
     });
   }
   const refused = single.find(a => a.ingest.status === 'refused');
@@ -1800,7 +1815,7 @@ async function main(): Promise<void> {
     log('\n| tier | doc | arm | ingest | chunks | keyword recall@10 | min decile | delivered | reads ok | max frame B | append embed ratio | rewritten | round trip | ingest s | RSS over base MB |');
     log('|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|');
     for (const x of s.arms) {
-      log(`| ${x.tier} | ${x.doc} | ${x.arm} | ${x.ingest.status}${x.ingest.code ? ` (${x.ingest.code})` : ''}${x.ingest.embed_skip ? ` embed_skip=${x.ingest.embed_skip}` : ''} | ${x.ingest.chunks} | ${pct(x.keyword_recall)} | ${x.min_decile_recall.toFixed(2)} | ${pct(x.delivered_recall)} | ${x.reads.correct}/${x.reads.attempted} | ${x.max_frame_bytes} | ${x.append?.embed_ratio ?? 'n/a'} | ${x.append?.chunks_rewritten ?? 'n/a'} | ${x.roundtrip} | ${x.ingest.wall_ms === null ? 'n/a' : (x.ingest.wall_ms / 1000).toFixed(1)} | ${x.ingest.rss_over_baseline_mb ?? 'n/a'} |`);
+      log(`| ${x.tier} | ${x.doc} | ${x.arm} | ${x.ingest.status}${x.ingest.code ? ` (${x.ingest.code})` : ''}${x.ingest.embed_skip ? ` embed_skip=${x.ingest.embed_skip}` : ''} | ${x.ingest.chunks ?? 'n/a'} | ${pct(x.keyword_recall)} | ${x.min_decile_recall.toFixed(2)} | ${pct(x.delivered_recall)} | ${x.reads.correct}/${x.reads.attempted} | ${x.max_frame_bytes} | ${x.append?.embed_ratio ?? 'n/a'} | ${x.append?.chunks_rewritten ?? 'n/a'} | ${x.roundtrip} | ${x.ingest.wall_ms === null ? 'n/a' : (x.ingest.wall_ms / 1000).toFixed(1)} | ${x.ingest.rss_over_baseline_mb ?? 'n/a'} |`);
     }
   }
   const upgrades = r.tiers.flatMap(t => t.upgrade ?? []);
@@ -1811,7 +1826,7 @@ async function main(): Promise<void> {
     for (const u of upgrades) {
       const b = u.backfill as { reindexed?: number; candidates?: number; held_for_approval?: number } | null;
       const x = u.summary;
-      log(`| ${u.doc} | ${u.seed ? `${u.seed.status}${u.seed.embed_skip ? ` embed_skip=${u.seed.embed_skip}` : ''}, ${u.seed.chunks} chunks` : `crash ${u.seed_crash}`} | ${b ? `${b.reindexed}/${b.candidates} (${b.held_for_approval})` : 'n/a'} | ${u.marker_removed ?? 'n/a'} | ${x?.ingest.chunks ?? 'n/a'} | ${x ? pct(x.keyword_recall) : 'n/a'} | ${x ? x.min_decile_recall.toFixed(2) : 'n/a'} | ${x ? `${x.reads.correct}/${x.reads.attempted}` : 'n/a'} | ${x?.max_frame_bytes ?? 'n/a'} | ${x?.roundtrip ?? (u.crash ? `crash ${u.crash}` : 'n/a')} |`);
+      log(`| ${u.doc} | ${u.seed ? `${u.seed.status}${u.seed.embed_skip ? ` embed_skip=${u.seed.embed_skip}` : ''}, ${u.seed.chunks ?? 'n/a'} chunks` : `crash ${u.seed_crash}`} | ${b ? `${b.reindexed}/${b.candidates} (${b.held_for_approval})` : 'n/a'} | ${u.marker_removed ?? 'n/a'} | ${x?.ingest.chunks ?? 'n/a'} | ${x ? pct(x.keyword_recall) : 'n/a'} | ${x ? x.min_decile_recall.toFixed(2) : 'n/a'} | ${x ? `${x.reads.correct}/${x.reads.attempted}` : 'n/a'} | ${x?.max_frame_bytes ?? 'n/a'} | ${x?.roundtrip ?? (u.crash ? `crash ${u.crash}` : 'n/a')} |`);
     }
   }
   const lifecycles = r.runs.filter(x => x.run.lifecycle);
