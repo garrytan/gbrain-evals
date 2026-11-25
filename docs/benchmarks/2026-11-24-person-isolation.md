@@ -15,8 +15,9 @@
   listed below, so you can see what the zero doesn't cover. Vector and hybrid search weren't tested, because the run
   uses no keys.
 
-Settled call: the person-isolation gate goes into CI at gbrain v0.60.771.0. It runs the PGLite cells in the offline tier
-on every pull request and gbrain pin bump, and the Postgres cells in their own CI job. gbrain's multi-person setup may
+Settled call: the person-isolation check goes into CI at gbrain v0.60.771.0. It runs the PGLite cells in the offline tier
+on every pull request and gbrain pin bump, and the Postgres cells in their own CI job. Neither is yet a check that must
+pass before a pull request can merge, so a leak shows as a red check but does not block the merge on its own. gbrain's multi-person setup may
 cite "no cross-person leak in 1,492,098 probes at v0.60.771.0", with the operation lists and bounds below.
 
 The study ran on November 24 and 25, 2026, under the [frozen plan and its two amendments](2026-11-24-person-isolation-preregistration.md).
@@ -56,14 +57,18 @@ All five were zero on all 18 cell runs. Each cell also passed its validity check
 - Both must-fail controls were caught: a planted canary copied onto a page everyone can read, and an operator grant
   that wrongly gives one person another's private source.
 - No cell hit its time limit.
-- No operation had harness errors.
+- No counted probe had a harness error. Ghost calls, made only to compare with a protected call, are not in that
+  tally: a ghost call that errored would have been dropped from its comparison without being counted.
 
 A probe counts toward **signal** only when it was able to find a leak. The owner, asking the same thing, must read
 their own canary. The caller must then either see the public twin or, if it must be refused, be refused. An operation
 "with signal" had at least one such probe.
 
-**Per mandatory operation.** The plan gives the rule-of-three bound, 3/n, only per operation and cell. It measures how
-many distinct argument sets and callers reached the operation. It is not a probability that the operation leaks.
+**Per mandatory operation.** The plan gives the rule-of-three bound, 3/n, only per operation and cell. Here n is the
+operation's probe count in that cell: every call made, including the owner and public-twin calls that check for signal,
+calls that were refused, and the same arguments repeated warm and cold. So n overstates how many distinct argument sets
+and callers reached the operation, and the bound is looser than it looks. It is not a probability that the operation
+leaks.
 PGLite and Postgres planned the same probes, so one column covers both engines.
 
 | Operation | In process: probes (3/n) | HTTP: probes (3/n) | CLI: probes (3/n) |
@@ -157,7 +162,9 @@ match, a case change and a leading space.
 - on the CLI, the host previewing as someone else.
 
 Each operation gets base arguments, every widening flag (`include_private`, `all_sources` and the rest) and, where it
-takes one, the person's direct-message source and `__all__`. Probes run warm on shared sessions and again cold with
+takes one, the person's direct-message source and `__all__`. The room caller is the exception for the source: the room
+client always sends the team source, which overrides the probe's own, so its direct-message and `__all__` variants
+reached gbrain as team-source calls and test the room's other arguments only. Probes run warm on shared sessions and again cold with
 concurrent callers; the CLI cells run warm only. A write-shaped phase checks that another person's write calls never
 change P's rows, and a run of gbrain's dream cycle checks that derived pages don't carry a canary to another person.
 
@@ -181,7 +188,7 @@ A mandatory operation with no signal also stops the cell. None of the 18 counted
 
 ## In CI
 
-The gate now runs on every pull request in this repository:
+The check now runs on every pull request in this repository:
 
 - The ci profile on the in-process and HTTP PGLite cells runs in the offline tier, as the registry entry
   `person-isolation-fuzz-ci`. It runs each served operation once per caller kind against one target person rotated by
@@ -189,7 +196,8 @@ The gate now runs on every pull request in this repository:
 - A `person-isolation-postgres` job runs the same profile on the two Postgres cells, against a Postgres service pinned
   by digest.
 
-Both fail on any leak, on a mandatory operation without signal, and on a must-fail control that passes. A failing run in
+Both fail on any leak, on a mandatory operation without signal, and on a must-fail control that passes. Neither is yet
+required for merge. A failing run in
 public CI prints and keeps only its total, and its report folder is never uploaded.
 
 ## Notes on the receipts

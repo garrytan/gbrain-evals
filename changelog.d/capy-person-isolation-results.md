@@ -1,4 +1,4 @@
-### Per-person memory isolation results and CI gate
+### Per-person memory isolation results and CI check
 
 - [docs/benchmarks/2026-11-24-person-isolation.md](docs/benchmarks/2026-11-24-person-isolation.md) reports the
   per-person memory isolation fuzz: at gbrain v0.60.771.0, no person's saved memory reached another person, or a caller
