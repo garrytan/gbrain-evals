@@ -214,7 +214,7 @@ frontier readers; everything else runs once. A task's success in an arm is the m
 Each arm's pilot costs at most a tenth of that arm's planned spend and runs before its counted cells, on S3: five cells
 per frontier reader, one task per family. A pilot shows the part under test ran on the arm's own outputs, that tasks
 can be supplied at the planned concurrency with no rate-limit stop, and that both judges have passed the judge check above.
-- `gbrain-section`: every cell calls gbrain tools, none gets `param_not_on_surface`, and at least one search across the
+- `gbrain-section` (as amended 2026-11-25): every cell calls gbrain tools, none gets `param_not_on_surface`, and at least one search across the
   arm's pilot and the S3 oracle-gate H4 probe shows section delivery firing (a search row carrying `delivered: {unit: "section"}`). If no pilot cell exercises it, five more H4 cells on S3 run as the pilot;
   if those don't either, the arm is reported as not exercised and the run stops for a dated amendment.
 - `gbrain-default`: every cell calls gbrain tools, none gets `param_not_on_surface`, and no search row carries `delivered: {unit: "section"}`.
@@ -279,7 +279,25 @@ the VM names and ledger run ids.
 
 ## Amendments
 
-None yet.
+### 2026-11-25: launch gate met; section delivery counted where the setting fired; gap wording precedence
+
+Made before any world was minted and before any cell, on the results branch. Both changes settle the two open notes
+from the preregistration's final review.
+
+- **Launch gate met.** gbrain v0.60.774.0 (`e8791f54e6b12cfa307363c3414b5bfe43db0b8a`) carries GST-3786
+  (`9df317b1573638986082e5866a5fcd6d5bc9f1ad`: `get_page` grep reads `a|b` as alternatives). The release under
+  test is still the newest release at launch, recorded under "Recorded before cells", and the step program's
+  `launch-gate` step checks that it contains that commit.
+- **Section delivery is counted where the setting fired.** An agent on either gbrain arm can ask for a unit itself
+  (`search`'s `return_unit`), and gbrain then skips the long-page setting for that call. So the arms differ by one
+  setting only for calls that leave the unit to gbrain. The `gbrain-section` pilot needs a search row delivered by
+  the setting (`delivered: {unit: "section", reason: "long_page"}`); the `gbrain-default` pilot needs none with
+  `reason: "long_page"` (rows the agent asked for are allowed). Secondary 4 counts rows with `reason: "long_page"`
+  per arm and, on their own line, calls where the agent passed `return_unit`.
+- **Gap wording is exclusive.** "Behind files" (upper bound below 0) takes precedence. Then "ahead of files" (lower
+  bound above 0), then "level with files" (lower bound above -3 points and upper bound at or above 0), else "not
+  distinguishable from files". The registry's decision rows now list "behind" and "not distinguishable" separately, as
+  the outcome table does.
 
 ## Disclosures
 

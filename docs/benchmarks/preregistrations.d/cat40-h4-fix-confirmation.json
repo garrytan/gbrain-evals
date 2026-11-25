@@ -37,8 +37,12 @@
           "then": "README says gbrain with section delivery is level with plain files on these questions, with the interval"
         },
         {
-          "if": "gbrain-section is still behind files on H4, or the gap is not distinguishable",
-          "then": "README gives the gap with its interval, and the manager-phrase share of the misses goes to GBRA-108"
+          "if": "gbrain-section is behind files on H4 (gap interval below 0, which takes precedence)",
+          "then": "README says so with the number, and the gap's share from manager-phrase records goes to GBRA-108"
+        },
+        {
+          "if": "the gap to files is not distinguishable",
+          "then": "README gives the gap with its interval and says the run cannot tell level from behind"
         }
       ],
       "arms": [
@@ -82,14 +86,14 @@
         {
           "arm": "gbrain-section",
           "max_budget_fraction": 0.1,
-          "part_under_test_ran": "every pilot cell calls gbrain tools with no param_not_on_surface, the config reads back search.long_page_unit=section, and at least one search row carries delivered {unit: section}; five more H4 cells run if none does",
+          "part_under_test_ran": "every pilot cell calls gbrain tools with no param_not_on_surface, the config reads back search.long_page_unit=section, and at least one search row carries delivered {unit: section, reason: long_page}; five more H4 cells run if none does (amended 2026-11-25)",
           "judge_passes": "both judges pass the 100-item construction-labelled judge check before any counted cell",
           "units_supplied_at_rate": "five cells per frontier reader on S3 at the planned concurrency end submitted or at the turn cap with no rate-limit stop"
         },
         {
           "arm": "gbrain-default",
           "max_budget_fraction": 0.1,
-          "part_under_test_ran": "every pilot cell calls gbrain tools with no param_not_on_surface, the config reads back {}, and no search row carries delivered {unit: section}",
+          "part_under_test_ran": "every pilot cell calls gbrain tools with no param_not_on_surface, the config reads back {}, and no search row carries delivered reason long_page (amended 2026-11-25)",
           "judge_passes": "both judges pass the 100-item construction-labelled judge check before any counted cell",
           "units_supplied_at_rate": "five cells per frontier reader on S3 at the planned concurrency end submitted or at the turn cap with no rate-limit stop"
         },
