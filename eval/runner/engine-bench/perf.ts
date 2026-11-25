@@ -562,7 +562,7 @@ function cgroupWorkingSetBytes(dir?: string): number | null {
   try {
     const cur = Number(readFileSync(join(dir, 'memory.current'), 'utf-8'));
     const inactive = Number(readFileSync(join(dir, 'memory.stat'), 'utf-8').match(/^inactive_file (\d+)/m)?.[1] ?? 0);
-    return cur - inactive;
+    return Number.isFinite(cur - inactive) ? cur - inactive : null;
   } catch { return null; }
 }
 

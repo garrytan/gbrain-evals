@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
@@ -168,10 +168,21 @@ describe('a measurement source that is unavailable records null, never 0', () =>
   });
   test('a Postgres arm whose server memory was not read has no engine RSS, not the client alone', () => {
     expect(engineRss({ memory: { client_engine_peak_rss_bytes: 1000, server_peak_working_set_bytes: null } }, 'postgres')).toBeNull();
-    const sampler = new MemSampler(join(mkdtempSync(join(tmpdir(), 'no-cgroup-')), 'docker-x.scope'), null);
-    sampler.start();
-    sampler.stop();
-    expect([sampler.peakServerWs, sampler.peakRssKb]).toEqual([null, null]);
+    const dir = mkdtempSync(join(tmpdir(), 'no-cgroup-'));
+    try {
+      const missing = new MemSampler(join(dir, 'docker-x.scope'), null);
+      missing.start();
+      missing.stop();
+      expect([missing.peakServerWs, missing.peakRssKb]).toEqual([null, null]);
+      writeFileSync(join(dir, 'memory.current'), 'max\n');
+      writeFileSync(join(dir, 'memory.stat'), 'inactive_file 0\n');
+      const unparseable = new MemSampler(dir, null);
+      unparseable.start();
+      unparseable.stop();
+      expect(unparseable.peakServerWs).toBeNull();
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
   test('a baseline reading alone is no peak', () => {
     expect(clientPeakKb([null, null, null], 4096)).toBeNull();
