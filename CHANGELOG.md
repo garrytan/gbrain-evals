@@ -2,6 +2,24 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.279] - 2026-11-25
+
+### Per-person memory isolation results and CI check
+
+- [docs/benchmarks/2026-11-24-person-isolation.md](docs/benchmarks/2026-11-24-person-isolation.md) reports the
+  per-person memory isolation fuzz. At gbrain v0.60.771.0, no person's saved memory reached another person, or a caller
+  acting for nobody, in 1,492,098 probes over three seeds, in process, over HTTP and through the CLI, on PGLite and
+  Postgres. On v0.60.769.0 the CLI's `--as` preview leaked, and gbrain fixed it in v0.60.771.0.
+- `eval/runner/person-isolation-fuzz.ts` and its world generator are new. The registry adds `person-isolation-fuzz` and
+  its CI profile `person-isolation-fuzz-ci`, which runs in the offline tier. A new `person-isolation-postgres` CI job
+  runs the Postgres cells. CI never uploads person-isolation reports as artifacts.
+
+### Tests run against gbrain v0.60.771.0
+
+- `package.json` and `bun.lock` move the `gbrain` dependency from v0.60.769.0 (`38831bb69`) to v0.60.771.0
+  (`97ef356f5`), gbrain's newest release on 2026-11-25, 2 releases and 19 commits later.
+  [docs/gbrain-under-test.md](docs/gbrain-under-test.md#the-pin) names the new pin. No published result was rerun; the per-person memory isolation results were measured on it.
+
 ## [0.10.278] - 2026-11-25
 
 - **N14 large-page fidelity no longer reports counts it could not take as 0 on an engine without raw SQL.** On such an
