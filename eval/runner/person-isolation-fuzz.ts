@@ -657,7 +657,7 @@ async function readBack(call: Call, f: Fixture): Promise<Map<string, Set<string>
 
 export type Condition = 'warm' | 'cold-concurrent' | 'after-cycle';
 export interface Tally { probes: number; content: number; identifier: number; oracle: number; slip: number; write_slip: number; harness: number; signal: number; owner_hits: number; public_hits: number; refusals: number }
-const zeroTally = (): Tally => ({ probes: 0, content: 0, identifier: 0, oracle: 0, slip: 0, write_slip: 0, harness: 0, signal: 0, owner_hits: 0, public_hits: 0, refusals: 0 });
+export const zeroTally = (): Tally => ({ probes: 0, content: 0, identifier: 0, oracle: 0, slip: 0, write_slip: 0, harness: 0, signal: 0, owner_hits: 0, public_hits: 0, refusals: 0 });
 export const gateTotal = (t: Tally) => t.content + t.identifier + t.oracle + t.slip + t.write_slip;
 
 /** Callers with nobody to read as, whose every answer must be a refusal. */
@@ -725,7 +725,17 @@ export function planProbes(f: Fixture, ops: Operation[], transport: Transport, p
 
 export interface LeakRecord { cell: string; seed: number; condition: Condition; op: string; caller: string; target: string; kind: string; variant: string; contract: string; detail: string[]; args: Record<string, unknown>; response: string }
 
-interface CellState {
+/** Mandatory operations with no probe that had signal, counting any the registry or CLI no longer serves; --only narrows the list. */
+export function mandatoryWithoutSignal(mandatory: readonly string[], only: readonly string[] | null, byOp: ReadonlyMap<string, Pick<Tally, 'signal'>>): string[] {
+  return mandatory.filter(op => (!only || only.includes(op)) && !byOp.get(op)?.signal);
+}
+
+/** A dream run that exited nonzero didn't test derived memory, so the cell can't vouch for it. */
+export function dreamFailure(cycle: { exit: number | null }): string | null {
+  return cycle.exit !== null && cycle.exit !== 0 ? 'gbrain dream exited ' + cycle.exit : null;
+}
+
+export interface CellState {
   cell: CellId; seed: number; transport: Transport;
   total: Tally; byOp: Map<string, Tally>; byCaller: Map<string, Tally>; byCondition: Map<string, Tally>;
   served: Map<string, Map<string, Map<string, number>>>;
@@ -770,26 +780,36 @@ function scanAs(s: CellState, caller: Caller, sent: string, o: Outcome): { conte
 }
 
 
-function account(s: CellState, spec: Pick<ProbeSpec, 'op' | 'target' | 'kind' | 'variant'>, caller: Caller, cond: Condition, args: Record<string, unknown>, o: Outcome, leakFile: string): { leaked: boolean } {
+type Spec = Pick<ProbeSpec, 'op' | 'target' | 'kind' | 'variant'>;
+
+function recordLeak(s: CellState, spec: Spec, caller: Caller, cond: Condition, args: Record<string, unknown>, o: Outcome, leakFile: string, contract: string, detail: string[]) {
+  const r: LeakRecord = { cell: s.cell, seed: s.seed, condition: cond, op: spec.op.name, caller: caller.label, target: spec.target.id, kind: spec.kind, variant: spec.variant, contract, detail, args, response: o.text.slice(0, 20_000) };
+  s.leaks.push(r);
+  appendFileSync(leakFile, JSON.stringify(r) + '\n');
+}
+
+/** Scan any response, harness errors and ghost answers included, and record what it gives away; returns the hit count. */
+function scanAndRecord(s: CellState, spec: Spec, caller: Caller, cond: Condition, args: Record<string, unknown>, o: Outcome, leakFile: string): number {
+  const op = spec.op.name;
+  const hits = scanAs(s, caller, JSON.stringify(args) + '|' + (caller.actor ?? '') + '|' + (caller.acting_user ?? ''), o);
+  if (hits.content.length) { bump(s, op, caller, cond, 'content'); recordLeak(s, spec, caller, cond, args, o, leakFile, 'content', hits.content); }
+  if (hits.identifier.length) { bump(s, op, caller, cond, 'identifier'); recordLeak(s, spec, caller, cond, args, o, leakFile, 'identifier', hits.identifier); }
+  return hits.content.length + hits.identifier.length;
+}
+
+function noteHarness(s: CellState, op: string, caller: Caller, cond: Condition, args: Record<string, unknown>, o: Outcome, leakFile: string) {
+  bump(s, op, caller, cond, 'harness'); s.harnessByOp.set(op, (s.harnessByOp.get(op) ?? 0) + 1);
+  if ((s.harnessByOp.get(op) ?? 0) <= 5) appendFileSync(leakFile.replace(/leaks\.jsonl$/, 'harness.jsonl'), JSON.stringify({ op, caller: caller.label, cond, args, error_code: o.error_code, text: o.text.slice(0, 2000) }) + '\n');
+}
+
+export function account(s: CellState, spec: Spec, caller: Caller, cond: Condition, args: Record<string, unknown>, o: Outcome, leakFile: string): { leaked: boolean } {
   const op = spec.op.name;
   bump(s, op, caller, cond, 'probes');
   noteServed(s, op, caller, o);
-  if (o.harness) {
-    bump(s, op, caller, cond, 'harness'); s.harnessByOp.set(op, (s.harnessByOp.get(op) ?? 0) + 1);
-    if ((s.harnessByOp.get(op) ?? 0) <= 5) appendFileSync(leakFile.replace(/leaks\.jsonl$/, 'harness.jsonl'), JSON.stringify({ op, caller: caller.label, cond, args, error_code: o.error_code, text: o.text.slice(0, 2000) }) + '\n');
-    return { leaked: false };
-  }
-  const sent = JSON.stringify(args) + '|' + (caller.actor ?? '') + '|' + (caller.acting_user ?? '');
-  const hits = scanAs(s, caller, sent, o);
-  const record = (contract: string, detail: string[]) => {
-    const r: LeakRecord = { cell: s.cell, seed: s.seed, condition: cond, op, caller: caller.label, target: spec.target.id, kind: spec.kind, variant: spec.variant, contract, detail, args, response: o.text.slice(0, 20_000) };
-    s.leaks.push(r);
-    appendFileSync(leakFile, JSON.stringify(r) + '\n');
-  };
-  if (hits.content.length) { bump(s, op, caller, cond, 'content'); record('content', hits.content); }
-  if (hits.identifier.length) { bump(s, op, caller, cond, 'identifier'); record('identifier', hits.identifier); }
-  if (mustRefuse(caller) && o.ok && o.exposed && !s.scopeExempt.has(op)) { bump(s, op, caller, cond, 'slip'); record('identity_slip', [o.error_code ?? 'answered']); }
-  return { leaked: hits.content.length + hits.identifier.length > 0 };
+  const leaked = scanAndRecord(s, spec, caller, cond, args, o, leakFile) > 0;
+  if (o.harness) { noteHarness(s, op, caller, cond, args, o, leakFile); return { leaked }; }
+  if (mustRefuse(caller) && o.ok && o.exposed && !s.scopeExempt.has(op)) { bump(s, op, caller, cond, 'slip'); recordLeak(s, spec, caller, cond, args, o, leakFile, 'identity_slip', [o.error_code ?? 'answered']); }
+  return { leaked };
 }
 
 const specKey = (p: ProbeSpec) => [p.op.name, p.target.id, p.kind, p.variant, p.caller.label].join('|');
@@ -814,7 +834,9 @@ async function runProbe(s: CellState, call: Call, p: ProbeSpec, cond: Condition,
   if (refused) bump(s, p.op.name, caller, cond, 'refusals');
   if (p.ghost && caller.as !== s.ghostMember) {
     const g = await call(caller, p.op.name, p.ghost, session);
-    if (!g.harness && normalizeForOracle(o.decoded ?? o.text, p.masks) !== normalizeForOracle(g.decoded ?? g.text, p.masks)) {
+    scanAndRecord(s, p, caller, cond, p.ghost, g, ctx.leakFile);
+    if (g.harness) noteHarness(s, p.op.name, caller, cond, p.ghost, g, ctx.leakFile);
+    else if (normalizeForOracle(o.decoded ?? o.text, p.masks) !== normalizeForOracle(g.decoded ?? g.text, p.masks)) {
       bump(s, p.op.name, caller, cond, 'oracle');
       const r: LeakRecord = { cell: s.cell, seed: s.seed, condition: cond, op: p.op.name, caller: caller.label, target: target.id, kind: p.kind, variant: p.variant, contract: 'existence_oracle', detail: [], args: { protected: p.args, ghost: p.ghost }, response: (o.text.slice(0, 10_000) + '\n<<<ghost>>>\n' + g.text.slice(0, 10_000)) };
       s.leaks.push(r); appendFileSync(ctx.leakFile, JSON.stringify(r) + '\n');
@@ -1092,7 +1114,9 @@ async function runCell(gut: GbrainUnderTest, world: PIWorld, cell: CellId, o: Ce
     result.leaks = s.leaks.length;
     for (const [m, chs] of s.ownerChannels) { result.channels_read_back[m] = [...chs].sort(); for (const ch of PI_CHANNELS) if (!chs.has(ch)) result.channels_missing.push(m + ':' + ch); }
     const mandatory = transport === 'cli' ? MANDATORY_CLI as readonly string[] : MANDATORY_OPS as readonly string[];
-    result.mandatory_without_signal = mandatory.filter(op => ops.some(x => x.name === op) && !(s.byOp.get(op)?.signal));
+    result.mandatory_without_signal = mandatoryWithoutSignal(mandatory, o.only, s.byOp);
+    const dream = dreamFailure(result.cycle);
+    if (dream) stop('PI_HARNESS', dream);
     if (gateTotal(result.total) > 0) stop('PI_LEAK', 'gate total ' + gateTotal(result.total));
     if ([...s.harnessByOp.values()].some(n => n > MAX_HARNESS_ERRORS_PER_OP)) stop('PI_HARNESS', 'more than ' + MAX_HARNESS_ERRORS_PER_OP + ' harness errors on an operation');
     if (result.cap_reached) stop('PI_HARNESS', 'profile time cap reached');

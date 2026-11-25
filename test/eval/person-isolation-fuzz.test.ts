@@ -1,8 +1,12 @@
 import { describe, expect, test } from 'bun:test';
+import { mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { generatePersonWorld, canariesOf, PI_CHANNELS, PI_DEFAULT_SEED } from '../../eval/generators/person-isolation-gen.ts';
 import {
   containsSlug, factIdsInText, mustRefuse, nearMisses, normalizeForOracle, outcomeOf, publicData, scan, writeIdsIn, callersFor, planProbes, MANDATORY_OPS,
-  type Outcome,
+  account, dreamFailure, mandatoryWithoutSignal, zeroTally,
+  type CellState, type Outcome,
 } from '../../eval/runner/person-isolation-fuzz.ts';
 
 const world = generatePersonWorld(PI_DEFAULT_SEED);
@@ -122,3 +126,35 @@ describe('person-isolation public receipt', () => {
     expect(publicData([], ['PI_LEAK'])).toEqual({ verdict: 'fail', gate_total: 0 });
   });
 });
+
+describe('person-isolation fail-closed checks', () => {
+  const state = (): CellState => ({
+    cell: 'mcp-dispatch-pglite', seed: 1, transport: 'mcp-dispatch', total: zeroTally(), byOp: new Map(), byCaller: new Map(), byCondition: new Map(), served: new Map(),
+    ownerChannels: new Map(), harnessByOp: new Map(), leaks: [], golds: new Map([['p', { canaries: ['PI-CANARY-P-1'], slugs: [], request_ids: [], fact_ids: [] }]]),
+    channelOf: new Map(), publicMarkers: [], ghostMember: 'ghost', scopeExempt: new Set(),
+  });
+  const spec = { op: { name: 'get_page' }, target: { id: 'p' }, kind: 'member_page', variant: 'base' } as any;
+  const q = { kind: 'attested-dm', as: 'q', client: 'qm-dm', label: 'attested-dm' } as const;
+
+  test('a harness error whose body carries another person\'s canary still counts as a content leak', () => {
+    const s = state();
+    const leakFile = join(mkdtempSync(join(tmpdir(), 'pi-test-')), 'leaks.jsonl');
+    const o: Outcome = { exposed: true, ok: false, harness: true, error_code: 'harness_exception', text: 'boom: PI-CANARY-P-1' };
+    expect(account(s, spec, q, 'warm', { slug: 'x' }, o, leakFile).leaked).toBe(true);
+    expect(s.total.content).toBe(1);
+    expect(s.total.harness).toBe(1);
+  });
+
+  test('a mandatory operation the registry no longer serves counts as without signal; --only narrows the list', () => {
+    const byOp = new Map([['query', { signal: 3 }]]);
+    expect(mandatoryWithoutSignal(['query', 'search'], null, byOp)).toEqual(['search']);
+    expect(mandatoryWithoutSignal(['query', 'search'], ['query'], byOp)).toEqual([]);
+  });
+
+  test('a dream run that exits nonzero fails the cell; one that never ran is left to the time cap', () => {
+    expect(dreamFailure({ exit: 1 })).toBe('gbrain dream exited 1');
+    expect(dreamFailure({ exit: 0 })).toBeNull();
+    expect(dreamFailure({ exit: null })).toBeNull();
+  });
+});
+

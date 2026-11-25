@@ -512,6 +512,33 @@ uploaded as CI artifacts, so a failing run in public CI shows only its total. Th
 request. That pull request opens only after the re-run is green, so the gate lands in CI green on the fixed release, as
 this plan requires.
 
+### Amendment 3: scanning every response, and two fail-closed checks (2026-11-25, before the second re-run's first counted probe)
+
+Committed on the results branch before the second re-run's first counted probe.
+
+**What review found.** Review of the results pull request found three places where the runner, at `bc0d8763e`, could
+pass a cell it should fail:
+
+- A response classed as a harness error (an HTTP 429 or 5xx, or a thrown dispatch error) was tallied but never scanned
+  for another person's canaries or identifiers. Every counted cell at `bc0d8763e` recorded zero harness errors, so no
+  counted probe took that path. All other responses were scanned, refusals included.
+- The answer to a ghost call, made only to compare with the protected call, was never scanned. A ghost call that
+  errored was dropped from its comparison without being counted. The receipts don't keep ghost answers, so they can't
+  be re-scanned afterwards.
+- A mandatory operation that the registry or the CLI no longer served was left out of the coverage check, and a
+  nonzero exit from `gbrain dream` didn't fail the cell. Every counted cell recorded dream exit 0 and every
+  mandatory operation with signal, so neither changed the result at `bc0d8763e`.
+
+**Change.** Every response is scanned, harness errors and ghost answers included, and any hit counts toward the gate as
+a content or identifier leak. A ghost call's harness error counts toward the limit of two per operation. A mandatory
+operation that wasn't probed counts as one without signal (`--only` narrows the list), and a nonzero dream exit stops
+the cell with `PI_HARNESS`. Probe counts and every other rule are unchanged.
+
+**Second re-run.** The leak claim on the results page has to rest on a scan that covered error bodies. So all six
+cells re-run on gbrain v0.60.771.0 with the same three seeds and the full profile, from a clean tree at the commit that
+carries this amendment, and those receipts replace the `bc0d8763e` receipts as the published result. The build stays
+v0.60.771.0, frozen since amendment 2's re-run.
+
 ## Disclosures
 
 gbrain is Garry Tan's own project. Disclosure: QM is a project of Y Combinator, which Garry Tan runs.
