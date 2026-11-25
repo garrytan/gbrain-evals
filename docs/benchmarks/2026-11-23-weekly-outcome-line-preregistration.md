@@ -399,6 +399,11 @@ keyless test that fails without it:
   ran under, and `campaigns --grep-cell` refuses a keyless rehearsal cell or a receipt without that record.
 - The window's caps are re-split (a28f552f3): the mint's cap rises above its estimate, the grep agent's stage is unchanged
   and the other rows' stage shrinks to fit, inside the same window (`WEEKLY_ALIAS_PILOT_MONEY`).
+- The stop rule's withdrawal label is tightened, and the paid window's record is tested (the commit after 1b144674d,
+  "2026-11-25: a withdrawal answer must also end on 'none' to count for the stop rule"). A withdrawal answer now counts
+  as right only when its last tracked value is a none-form too, so "None, Goldcrest Insurance" no longer does; the
+  reference answers still score 192 of 192 and the stale set 0 of 192. A keyless test checks that a run whose lease proxy
+  reports paid mode records its granted window.
 
 **Readers and judges.** Unchanged: claude-opus-5-5 and particle-1 read every row; gpt-6-astra judges claude-opus-5-5's
 answers and claude-opus-5-5 judges particle-1's.

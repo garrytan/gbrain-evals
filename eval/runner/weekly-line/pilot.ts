@@ -331,18 +331,18 @@ export function readReread(out: string): RereadReading[] {
 
 /**
  * The stop rule's construction label of one answer: the judge check's gold-settled label (judge-check.ts goldLabel), and
- * on a withdrawn question (s5_withdrawn, whose gold is the none-forms) a confident answer whose first tracked value is a
- * none-form and that names no decoy is right, so "None: the plan with Lisbon was called off" counts as the reference
+ * on a withdrawn question (s5_withdrawn, whose gold is the none-forms) a confident answer whose first and last tracked
+ * values are none-forms and that names no decoy is right, so "None: the plan with Lisbon was called off" counts as the reference
  * answer it is. goldLabel reads that answer as unsettled because BG1's matchAnswer, which BG1's and BG1-C's counted
  * verdicts and the judge check's labels share, calls a none-form beside the withdrawn value "unclear"; this path leaves
- * matchAnswer and goldLabel as they are and changes no other kind. An answer that leads with the withdrawn value, hedges
- * or abstains stays unsettled, which the stop rule counts as wrong.
+ * matchAnswer and goldLabel as they are and changes no other kind. An answer that leads or ends with the withdrawn value
+ * ("None, Goldcrest Insurance"), hedges or abstains stays unsettled, which the stop rule counts as wrong.
  */
 export function stopRuleLabel(q: Pick<MemoryQuestion, 'id' | 'bg1'>, a: Pick<PoolAnswer, 'stop_reason' | 'text'>): 0 | 1 | null {
   const { match, gold } = goldLabel(q, a);
   if (gold !== null || match !== 'unclear' || q.bg1?.stratum !== 's5_withdrawn' || answerKind(a) === 'hedged') return gold;
   const hits = findValues(a.text, { gold: q.bg1.gold_values, stale: q.bg1.stale_values, decoy: q.bg1.decoy_values });
-  return hits[0]?.kind === 'gold' && !hits.some(h => h.kind === 'decoy') ? 1 : null;
+  return hits[0]?.kind === 'gold' && hits.at(-1)?.kind === 'gold' && !hits.some(h => h.kind === 'decoy') ? 1 : null;
 }
 
 /**

@@ -26,13 +26,13 @@ import { bg1LaunchProblems } from '../../eval/runner/bg1/launch.ts';
 import { BudgetRun } from '../../eval/runner/budget-ledger.ts';
 import { freePort } from '../../eval/runner/lifecycle/slice.ts';
 import { bgwBatchDataset } from '../../eval/runner/memory-qa/bg1-names.ts';
-import { BG1_FIXTURES_ROOT, bg1Conversation, type Bg1Manifest, type Corpus } from '../../eval/runner/memory-qa/corpus.ts';
+import { BG1_FIXTURES_ROOT, bg1Conversation, loadBg1Dev, type Bg1Manifest, type Corpus } from '../../eval/runner/memory-qa/corpus.ts';
 import type { ChatLike, ChatResult } from '../../eval/runner/memory-qa/qa-v2.ts';
 import { DEFAULT_ROUTE_CAPS, keylessKeys, keylessUpstream, MeteringProxy } from '../../eval/runner/metering-proxy.ts';
 import { sha256, WEEKLY_CELLS_ENV, WEEKLY_CELLS_SHA256_ENV, WEEKLY_RUN_ENV } from '../../eval/runner/memory-qa/records.ts';
-import { findCell, runCell, scheduledQuestions, weeklyCampaignManifest, windowedRunGuard } from '../../eval/runner/q1/cell.ts';
+import { findCell, runCell, runUpstreamOptions, scheduledQuestions, weeklyCampaignManifest, windowedRunGuard } from '../../eval/runner/q1/cell.ts';
 import { CELL_VM_MAX_HOURS, cellVmHours, pinnedJudgeRouteCaps, weeklyUnitWorlds } from '../../eval/runner/q1/cells/definitions.ts';
-import { generateWeeklyLineCells, WEEKLY_LINE_MODELS, weeklyLineRereadPlans } from '../../eval/runner/q1/cells/weekly-line.ts';
+import { generateWeeklyLineCells, generateWeeklyLinePilotCells, WEEKLY_LINE_MODELS, weeklyLineRereadPlans } from '../../eval/runner/q1/cells/weekly-line.ts';
 import { prepareReread, rereadArm, rereadCellId, rereadKeys, rereadRouteCaps, runReread } from '../../eval/runner/q1/reread-cell.ts';
 import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { Campaign, DEFAULT_ROUTE_CLASSES, runRemote, weeklyCustodyPush, type CampaignManifest } from '../../eval/runner/shootout-cell.ts';
@@ -508,6 +508,31 @@ describe('the fixture week, end to end and keyless', () => {
 });
 
 
+describe('a paid run records its window', () => {
+  // Value: protects=a windowed cell run whose lease proxy reports paid lease mode records the granted --paid-window in its receipt, and one whose proxy reports keyless records none, so the alias stop rule can tell a paid cell from a rehearsal; fails_when=cell.ts drops the --paid-window it hands runCell, records it for a keyless proxy, or runCell leaves it out of the receipt, which would refuse every paid grep-agent cell (PILOT_NOT_PAID) only after the window had spent; why_new=GBEV-3's ruling C1 of 2026-11-25 (the reader's N5 on #652); seam=cell.ts runUpstreamOptions against a status-only fake proxy, then runCell's receipt through the lease proxy on a scripted loopback upstream; no_claim=a real provider or a real window
+  test('a proxy reporting paid lease mode makes the run record paid_window, and a keyless one records none', async () => {
+    const def = generateWeeklyLinePilotCells(GBRAIN, 'BGW', 'alias').find(c => c.system === 'baseline-file-agent')!;
+    const statusOf = (keyless: boolean) => Bun.serve({ hostname: '127.0.0.1', port: 0, fetch: req => (new URL(req.url).pathname === '/__proxy/status' ? Response.json({ keyless, mode: 'lease', lease_usd: 4 }) : Response.json({ error: 'status only' }, { status: 404 })) });
+    const env = { GBRAIN_EVALS_BG1_WORLD_END: '2026-11-22' };
+    const argv = (url: string) => ['run', '--cell', def.id, '--manifest', 'weekly-pilot', '--provider-proxy', url, '--paid-window', 'test-window-7', '--window-cap-usd', '45'];
+    const up = scriptedUpstream(), offline = globalThis.fetch;
+    globalThis.fetch = ((input: string | URL | Request, init?: RequestInit) => {
+      const url = new URL(typeof input === 'string' || input instanceof URL ? input : input.url);
+      if (url.hostname !== '127.0.0.1') throw new Error(`the test reached ${url.hostname}`);
+      return realFetch(input, init);
+    }) as typeof fetch;
+    const paid = statusOf(false), keyless = statusOf(true);
+    try {
+      const options = await runUpstreamOptions(argv(`http://127.0.0.1:${paid.port}`), def, { ...env });
+      expect(options).toEqual({ keyless: false, paidWindow: 'test-window-7' });
+      expect(await runUpstreamOptions(argv(`http://127.0.0.1:${keyless.port}`), def, { ...env })).toEqual({ keyless: true, paidWindow: null });
+      const out = join(scratch('paid-unit'), 'out'), proxy = leaseProxy('paid-unit', up.url, { ...DEFAULT_ROUTE_CAPS, ...pinnedJudgeRouteCaps(def.arms) });
+      const corpus = loadBg1Dev({ root: BG1_FIXTURES_ROOT, only: new Set(def.only_conversations), worldEnd: env.GBRAIN_EVALS_BG1_WORLD_END, keyless: true });
+      try { expect((await runCell(def, { out, providerProxy: proxy.url, ...options, ...quiet }, { corpus, system: new FakeAgent() })).status).toBe('complete'); } finally { proxy.stop(); }
+      for (const a of def.arms) expect(JSON.parse(readFileSync(join(out, 'cells', a.cell_id, 'receipt.json'), 'utf8')).upstream).toEqual({ keyless: false, paid_window: 'test-window-7' });
+    } finally { globalThis.fetch = offline; paid.stop(true); keyless.stop(true); up.stop(); }
+  }, 120_000);
+});
 
 // ─── Split cells ─────────────────────────────────────────────────────
 

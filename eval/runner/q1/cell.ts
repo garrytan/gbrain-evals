@@ -1950,6 +1950,16 @@ export async function windowedRunGuard(argv: string[], def: CellDefinition, env:
   return keyless;
 }
 
+/**
+ * What `run` hands runCell for its receipt's upstream record (CellUpstream), after the windowed guard (windowedRunGuard):
+ * keyless when the lease proxy reports a keyless upstream, and the granted --paid-window only for a windowed cell whose
+ * proxy did not, the one case the guard accepted that window. A cell that is not windowed records no window.
+ */
+export async function runUpstreamOptions(argv: string[], def: CellDefinition, env: Record<string, string | undefined> = process.env): Promise<Required<Pick<CellOptions, 'keyless' | 'paidWindow'>>> {
+  const guarded = await windowedRunGuard(argv, def, env), i = argv.indexOf('--paid-window');
+  return { keyless: guarded ?? false, paidWindow: guarded === false && i >= 0 ? argv[i + 1] ?? null : null };
+}
+
 /** The paid-run guard for `run` without a lease proxy: --paid and an open ledger run with room for the estimate. */
 /** Refuses a run the budget run can't cover: the estimate of the arms it runs (every arm without --arms), cut to --limit's share. */
 export function paidGuard(argv: string[], def: CellDefinition, limit: number | null, arms: readonly string[] | null = null): number {
@@ -2031,7 +2041,7 @@ export async function main(argv: string[]): Promise<number> {
     const id = one('--cell');
     if (!id) throw refuse(usage(`${sub} needs --cell <id>`));
     const def = findCell(id, undefined, one('--manifest'));
-    const guarded = sub === 'run' ? await windowedRunGuard(argv, def) : null, keyless = guarded ?? false;
+    const upstream = sub === 'run' ? await runUpstreamOptions(argv, def) : { keyless: false, paidWindow: null };
     const out = resolve(one('--out') ?? process.env.SHOOTOUT_OUT ?? join(REPO_ROOT, 'eval/reports/q1', def.id));
     if (sub === 'merge') {
       const from = many('--from').map(f => resolve(f));
@@ -2050,7 +2060,7 @@ export async function main(argv: string[]): Promise<number> {
     const shardRaw = one('--shard') ?? '0/1';
     const [si, sn] = shardRaw.split('/').map(Number);
     if (!Number.isInteger(si) || !Number.isInteger(sn) || sn < 1 || si < 0 || si >= sn) throw refuse(usage('--shard must look like i/n with 0 <= i < n'));
-    const result = await runCell(def, { out, limit, shard: { index: si, count: sn }, arms: one('--arms')?.split(',') ?? null, systemUrl: one('--system-url') ?? null, providerProxy: proxy, keyless, paidWindow: guarded === false ? one('--paid-window') ?? null : null,
+    const result = await runCell(def, { out, limit, shard: { index: si, count: sn }, arms: one('--arms')?.split(',') ?? null, systemUrl: one('--system-url') ?? null, providerProxy: proxy, ...upstream,
       maxAttempts: one('--max-attempts') ? Number(one('--max-attempts')) : undefined, frontier: !argv.includes('--no-frontier'),
       finishTimeoutS: one('--finish-timeout-s') ? Number(one('--finish-timeout-s')) : undefined, probeTimeoutMs: one('--probe-timeout-s') ? Number(one('--probe-timeout-s')) * 1000 : undefined,
       reanswerInvalidBefore: one('--reanswer-invalid-before') ?? null, reanswerOutcomes: reanswerOutcomes(one('--reanswer-outcomes')), freshBefore: one('--fresh-before') ?? null });

@@ -269,6 +269,8 @@ describe('the alias pilot and judge check', () => {
       const [partner] = q.bg1!.stale_values;
       expect(stopRuleLabel(q, { stop_reason: null, text: partner })).toBe(0);
       expect(stopRuleLabel(q, { stop_reason: null, text: partner + ', and nothing else is planned.' })).toBeNull();
+      for (const text of ['None, ' + partner, 'Nothing has changed: ' + partner + '.', 'None of the old plans fell through; it is still with ' + partner + '.'])
+        expect([text, stopRuleLabel(q, { stop_reason: null, text })]).toEqual([text, null]);
       expect(stopRuleLabel(q, { stop_reason: null, text: "I couldn't find anything; nothing came up about " + partner + '.' })).toBeNull();
       if (q.bg1!.decoy_values.length) expect(stopRuleLabel(q, { stop_reason: null, text: 'None: ' + partner + ' was called off, but ' + q.bg1!.decoy_values[0] + ' is in talks.' })).toBeNull();
     }
