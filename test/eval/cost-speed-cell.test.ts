@@ -244,6 +244,7 @@ describe('loader keys and hosting', () => {
     expect([b('tail:ab12'), b('tail:idle:ab12'), b('tail:trigger:ab12:maintain'), b('q:w1:s1_updated:4:vendor-default'), b('read:0123456789abcdef'), b('read:ffffffffffffffff'), b('slot:sys')]).toEqual([
       { bucket: 'background', conv: 'w1' }, { bucket: 'idle', conv: 'w1' }, { bucket: 'trigger', conv: 'w1', job: 'maintain' }, { bucket: 'read', conv: 'w1' },
       { bucket: 'reader', conv: 'w1' }, { bucket: 'unattributed', conv: null }, { bucket: 'unattributed', conv: null }]);
+    expect([b('answer:0123456789abcdef'), b('answer:ffffffffffffffff')]).toEqual([{ bucket: 'reader', conv: 'w1' }, { bucket: 'unattributed', conv: null }]);
   });
   test("hosting counts only the system's own compose project, or the harness process and its files when in process", () => {
     const s = (at: string, rss: number, files = 0) => ({ at, stage: 'questions:w1', harness_rss_bytes: rss, containers: [{ name: 'stack-db-1', mem_bytes: 100 }, { name: 'other-db-1', mem_bytes: 900 }], volumes: [{ name: 'stack_data', bytes: 50 }, { name: 'other_data', bytes: 500 }], dirs: [{ path: '/x', bytes: files }] });

@@ -12,6 +12,7 @@
  *   tail:trigger:<rid>:<job>             one run of a scheduled job's documented trigger, priced per run
  *   q:<question id>:<policy>             the system's own read for a question
  *   read:<answer id, 16 hex>             the reader's answer (harness slot)
+ *   answer:<answer id, 16 hex>           the file agent's whole answer, the reader being the agent (agent slot)
  * Anything else is unattributed and reported; a world's ingest lines are found through the namespace its ingested event
  * names. History growth prices the bulk import's first and last quarter of sessions from each write's wall-clock window
  * (writes.ndjson): a quarter's write and background lines arriving from its first write until the next quarter's first.
@@ -67,7 +68,7 @@ export function cs1Bucket(l: UsageLine, keys: { ns: ReadonlyMap<string, string>;
   if ((m = k.match(/^tail:idle:([0-9a-f]+)$/))) return { bucket: 'idle', conv: keys.rid.get(m[1]) ?? null };
   if ((m = k.match(/^tail:([0-9a-f]+)$/))) return { bucket: 'background', conv: keys.rid.get(m[1]) ?? null };
   if ((m = k.match(/^q:([^:]+):/))) return { bucket: 'read', conv: m[1] };
-  if ((m = k.match(/^read:([0-9a-f]{16})$/))) { const conv = keys.answer.get(m[1]) ?? null; return { bucket: conv ? 'reader' : 'unattributed', conv }; }
+  if ((m = k.match(/^(?:read|answer):([0-9a-f]{16})$/))) { const conv = keys.answer.get(m[1]) ?? null; return { bucket: conv ? 'reader' : 'unattributed', conv }; }
   return { bucket: 'unattributed', conv: null };
 }
 
@@ -152,7 +153,7 @@ export function cs1Load(units: readonly Cs1Unit[], opts: Cs1LoadOptions) {
         by.set(b.conv, slot);
         slot[b.bucket].push(l);
         if (b.bucket === 'trigger') { const t = triggers.get(b.conv) ?? new Map(); t.set(b.job!, (t.get(b.job!) ?? 0) + usd(l)); triggers.set(b.conv, t); }
-        if (b.bucket === 'reader') { const k = l.key.slice(5); readerLines.set(k, [...(readerLines.get(k) ?? []), l]); }
+        if (b.bucket === 'reader') { const k = l.key.slice(l.key.indexOf(':') + 1); readerLines.set(k, [...(readerLines.get(k) ?? []), l]); }
       }
       const sum = (ls: readonly UsageLine[] | undefined) => (ls ?? []).reduce((n, l) => n + usd(l), 0);
       const rows = new Map<string, number>();
@@ -246,4 +247,53 @@ export function hostingOf(samples: readonly HostingSample[], stack: string | nul
   const last = ok[ok.length - 1];
   const tokens = rs.filter(r => Date.parse(r.at) <= Date.parse(last.at)).reduce((n, r) => n + (r.ingest.content_tokens ?? r.ingest.ingested_tokens), 0);
   return { resident_bytes: Math.max(...ok.map(resident)), disk_bytes: mine(last.volumes).reduce((n, v) => n + v.bytes, 0) + (last.dirs ?? []).reduce((n, d) => n + d.bytes, 0), disk_tokens: tokens };
+}
+
+/**
+ * CLI: bun eval/runner/cs1-load.ts --unit <cell --out dir>:<proxy usage.ndjson> [--unit ...] --out <result.json>
+ *   [--ladder primary|sensitivity] [--rows <rows.json> --table <table.md> [--profile heavy|light]] [--keyless]
+ * Loads the units, aggregates them (cs1Aggregate) and writes { checks, problems, ladder, result }; with --rows (each
+ * system's build and date) it also renders README's table. Reads only local files: no provider is called.
+ */
+if (import.meta.main) {
+  const argv = process.argv.slice(2);
+  const all = (n: string) => argv.flatMap((a, i) => (a === n && argv[i + 1] ? [argv[i + 1]] : []));
+  const one = (n: string) => all(n)[0];
+  const out = one('--out');
+  const specs = all('--unit');
+  if (!out || !specs.length) { console.error('usage: bun eval/runner/cs1-load.ts --unit <out dir>:<usage.ndjson> [--unit ...] --out <result.json> [--ladder primary|sensitivity] [--rows <rows.json> --table <table.md>]'); process.exit(2); }
+  const { writeFileSync } = await import('node:fs');
+  const { loadCS1Manifest, CS1_PRICE_LADDERS, cs1FullContextFit } = await import('./q1/cells/cs1.ts');
+  const { readerFitTokenizer, readerMaxTokens } = await import('./q1/cell.ts');
+  const { loadCorpus } = await import('./memory-qa/corpus.ts');
+  const { cs1Aggregate, renderCs1Table } = await import('./cost-speed.ts');
+  const units = specs.map(s => { const i = s.lastIndexOf(':'); return { dir: s.slice(0, i), usage: lines<UsageLine>(s.slice(i + 1)) }; });
+  const m = loadCS1Manifest();
+  const defs = [...m.cells, ...(m.smoke_cells ?? []), ...(m.addon_cells ?? [])];
+  const cells = new Map(defs.map(c => [c.id, c.system]));
+  const stacks: Record<string, string> = {};
+  for (const c of defs) {
+    if (c.runner !== 'shim' || stacks[c.system]) continue;
+    const base = [`eval/systems/${c.system}`, `docs/comparison-systems/${c.system}`].find(d => existsSync(join(d, 'docker-compose.yml')));
+    if (!base) continue;
+    const cfg = c.launch?.config;
+    const file = cfg && existsSync(join(base, cfg, 'docker-compose.yml')) ? join(base, cfg, 'docker-compose.yml') : join(base, 'docker-compose.yml');
+    const name = /^name:\s*(\S+)/m.exec(readFileSync(file, 'utf8'))?.[1];
+    if (name) stacks[c.system] = name;
+  }
+  const convs = new Set(units.flatMap(u => { const runs = join(u.dir, 'runs'); return existsSync(runs) ? readdirSync(runs).sort().filter(id => cells.has(id)).flatMap(id => realizations(join(runs, id)).map(r => r.conv)) : []; }));
+  const corpus = loadCorpus('bg1-dev', undefined, convs, { keyless: argv.includes('--keyless') });
+  const questions = new Map(corpus.questions.map(q => [q.id, q]));
+  const fullContextFit: Record<string, Record<Cs1Profile, { fits: boolean; prompt_tokens?: number }>> = {};
+  const conv = corpus.conversations[0], q = conv && corpus.questions.find(x => x.conversation === conv.id);
+  if (conv && q) for (const reader of m.readers) fullContextFit[readerName(reader)] = Object.fromEntries((['heavy', 'light'] as const).map(p => { const f = cs1FullContextFit(conv, q, p, reader, { tokenizer: readerFitTokenizer(reader), outputTokens: readerMaxTokens(reader) }); return [p, { fits: f.fits, prompt_tokens: f.prompt_tokens }]; })) as Record<Cs1Profile, { fits: boolean; prompt_tokens?: number }>;
+  const which = (one('--ladder') ?? 'primary') as keyof typeof CS1_PRICE_LADDERS;
+  const ladder = CS1_PRICE_LADDERS[which];
+  if (!ladder) { console.error(`--ladder must be one of ${Object.keys(CS1_PRICE_LADDERS).join(', ')}`); process.exit(2); }
+  const loaded = cs1Load(units, { cells, questions, ladder, stacks, fullContextFit });
+  const result = cs1Aggregate(loaded.input);
+  writeFileSync(out, JSON.stringify({ checks: loaded.checks, problems: loaded.problems, ladder, stacks, result }, null, 2) + '\n');
+  const rowsFile = one('--rows'), table = one('--table');
+  if (rowsFile && table) writeFileSync(table, renderCs1Table(result, JSON.parse(readFileSync(rowsFile, 'utf8')), (one('--profile') ?? 'heavy') as Cs1Profile));
+  console.log(JSON.stringify({ out, table: rowsFile && table ? table : null, sum_back: loaded.checks.sum_back, problems: loaded.problems.length }));
 }

@@ -77,6 +77,32 @@ export const CS1_EFFORT = 'medium';
  * release before the first counted gbrain cell re-pins here by a dated amendment; the build freezes once it starts.
  */
 export const CS1_GBRAIN_BUILD = { release: 'v0.60.771.0', commit: '97ef356f574a66709ef1bf4ae1cad604727852d8' } as const;
+
+/**
+ * Hosting's price ladders (preregistration, "Hosting"): the primary is one public cloud's general-purpose family, the
+ * sensitivity row a second family, both on-demand Linux in one region with block storage at that provider's price.
+ * Read from the providers' public price lists on `read_at` and fixed in the freeze amendment.
+ */
+export const CS1_PRICE_LADDERS = {
+  primary: {
+    provider: 'AWS EC2 m7i on demand, us-east-1, Linux; EBS gp3', read_at: '2026-11-25',
+    instances: [
+      { name: 'm7i.large', memory_gib: 8, usd_per_hour: 0.1008 }, { name: 'm7i.xlarge', memory_gib: 16, usd_per_hour: 0.2016 },
+      { name: 'm7i.2xlarge', memory_gib: 32, usd_per_hour: 0.4032 }, { name: 'm7i.4xlarge', memory_gib: 64, usd_per_hour: 0.8064 },
+      { name: 'm7i.8xlarge', memory_gib: 128, usd_per_hour: 1.6128 },
+    ],
+    storage_usd_per_gb_month: 0.08,
+  },
+  sensitivity: {
+    provider: 'AWS EC2 m7g (Graviton) on demand, us-east-1, Linux; EBS gp3', read_at: '2026-11-25',
+    instances: [
+      { name: 'm7g.medium', memory_gib: 4, usd_per_hour: 0.0408 }, { name: 'm7g.large', memory_gib: 8, usd_per_hour: 0.0816 },
+      { name: 'm7g.xlarge', memory_gib: 16, usd_per_hour: 0.1632 }, { name: 'm7g.2xlarge', memory_gib: 32, usd_per_hour: 0.3264 },
+      { name: 'm7g.4xlarge', memory_gib: 64, usd_per_hour: 0.6528 }, { name: 'm7g.8xlarge', memory_gib: 128, usd_per_hour: 1.3056 },
+    ],
+    storage_usd_per_gb_month: 0.08,
+  },
+} as const;
 /**
  * How every cost-and-speed gbrain cell starts: the gbrain-defaults image built at CS1_GBRAIN_BUILD on Bun 1.4.4 (the
  * release's engines floor, F6's image), with gbrain's shipped defaults: no F6 build (GBRAIN_F6 unset) and serve's idle
