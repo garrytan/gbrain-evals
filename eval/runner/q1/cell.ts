@@ -405,6 +405,8 @@ export interface CellOptions {
   providerProxy?: string | null;
   /** BG1: the run's lease proxy reports a keyless upstream (bg1CellWindow), so a bg1-dev load may read the template fixtures. */
   keyless?: boolean;
+  /** The granted paid window a windowed cell's run spends under (--paid-window, which bg1CellWindow checked), else null. */
+  paidWindow?: string | null;
   finishTimeoutS?: number;
   probeTimeoutMs?: number;
   probeIntervalMs?: number;
@@ -750,6 +752,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
   if (problems.length) throw refuse({ code: 'USAGE', message: `cell ${def.id} is not a valid definition: ${problems.slice(0, 4).join('; ')}`, why: 'the runner executes only definitions that pass the cell schema', fix: { next: 'run', argv: ['bun', 'eval/runner/q1/cells/definitions.ts'], verify: [...FRONT, 'show', '--cell', def.id] } });
   const out = resolve(opts.out);
   const maxAttempts = opts.maxAttempts ?? DEFAULT_MAX_ATTEMPTS;
+  const upstream: CellUpstream = { keyless: opts.keyless === true, paid_window: opts.keyless ? null : opts.paidWindow ?? null };
   const arms = def.arms.filter(a => !opts.arms || opts.arms.includes(a.id));
   if (!arms.length) throw refuse({ code: 'USAGE', message: `--arms ${opts.arms?.join(',')} names no arm of ${def.id}`, why: 'a run needs at least one arm', fix: { next: 'run', argv: [...FRONT, 'show', '--cell', def.id] } });
   if (opts.frontier === false && def.descriptive_view === false) throw refuse({ code: 'USAGE', message: `--no-frontier on ${def.id} would leave every answer ungraded: the cell has no canonical judge (descriptive_view false), so its per-reader judge is the only grade`, why: 'a paid run must not buy answers it cannot grade', fix: { next: 'ask_user', user_message: 'rerun your original command without --no-frontier, keeping every other flag' } });
@@ -933,7 +936,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
     try { await system.close?.(); } catch { /* closing is best effort */ }
   }
 
-  const armResults = publishCell(def, arms, [out], out, { instrument, selected, invalidReasons, configs, capabilities, stopped, maxAttempts });
+  const armResults = publishCell(def, arms, [out], out, { instrument, selected, invalidReasons, configs, capabilities, stopped, maxAttempts, upstream });
   let share: ShareResult | undefined;
   if (shard.count > 1) {
     const mineQs = new Set(selected.filter(q => convIds.includes(q.conversation)).map(q => q.id));
@@ -1057,7 +1060,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
     const rowBuffer: Q1Row[] = [];
     const flush = () => {
       if (rowBuffer.length) appendFileSync(join(dir, 'attempts.ndjson'), rowBuffer.splice(0).map(r => JSON.stringify(r) + '\n').join(''));
-      publishCell(def, arms, [out], out, { instrument, selected, invalidReasons, configs, capabilities, stopped, maxAttempts });
+      publishCell(def, arms, [out], out, { instrument, selected, invalidReasons, configs, capabilities, stopped, maxAttempts, upstream });
     };
 
     const retrieve = async (q: MemoryQuestion, mode: string): Promise<StagedRetrieval | null> => {
@@ -1385,9 +1388,15 @@ export function withDerived(a: AnswerRecord, pack: PackedContext | null): Answer
 
 // ─── Publish ─────────────────────────────────────────────────────────
 
+/**
+ * Where a cell's provider calls went, as its receipt records it: a keyless upstream (a rehearsal), or real providers under
+ * the granted paid window named. Receipts written before 2026-11-25 carry neither, so a reader that needs paid answers
+ * refuses them.
+ */
+export interface CellUpstream { keyless: boolean; paid_window: string | null }
 interface PublishCtx {
   instrument: Instrument; selected: MemoryQuestion[]; invalidReasons: string[]; configs: Map<string, { text: string; sha: string }>;
-  capabilities: CapabilityRecord; stopped: string | null; maxAttempts: number;
+  capabilities: CapabilityRecord; stopped: string | null; maxAttempts: number; upstream?: CellUpstream;
 }
 
 /** The valid realization of each conversation across staging roots (shards), and its records. */
@@ -1455,6 +1464,7 @@ export function publishCell(def: CellDefinition, arms: ArmDefinition[], roots: s
     };
     const receipt = {
       schema: CELL_RECEIPT_SCHEMA, cell_id: arm.cell_id, run_cell: def.id, config_sha256: config?.sha ?? null, run_status: status, invalid_reasons: ctx.invalidReasons, stopped: ctx.stopped,
+      ...(ctx.upstream ? { upstream: ctx.upstream } : {}),
       set: arm.set, benchmark: def.benchmark, split: def.split, block: def.block,
       system: { kind: def.system, configuration: def.configuration, runner: def.runner, capability_system: ctx.capabilities.system, versions: ctx.capabilities.versions, capabilities: ctx.capabilities },
       arm: { id: arm.id, arm: arm.arm, mode: arm.mode, policy: arm.policy, budget: arm.budget, variant: arm.variant ?? null, label: arm.label },
@@ -1501,7 +1511,7 @@ export function mergeCell(def: CellDefinition, from: string[], out: string, o: {
   const offWeek = weekCorpusProblems(def, corpus);
   if (offWeek) throw refuse({ code: 'PREFLIGHT_FAILED', message: offWeek, why: "a weekly cell's shards merge only its own week's worlds", fix: { next: 'report' } });
   const selected = selectCellQuestions(corpus.questions.filter(q => splitConversations(def.benchmark, def.split, corpus).has(q.conversation)), def.selection);
-  const receipt = (f: string, cellId: string) => JSON.parse(readFileSync(join(f, 'cells', cellId, 'receipt.json'), 'utf8')) as { invalid_reasons?: string[]; system: { capabilities: CapabilityRecord } };
+  const receipt = (f: string, cellId: string) => JSON.parse(readFileSync(join(f, 'cells', cellId, 'receipt.json'), 'utf8')) as { invalid_reasons?: string[]; system: { capabilities: CapabilityRecord }; upstream?: CellUpstream };
   const capabilities = receipt(from[0], def.arms[0].cell_id).system.capabilities;
   const invalidReasons = def.week ? [...new Set(def.arms.flatMap(a => from.flatMap(f => receipt(f, a.cell_id).invalid_reasons ?? [])))] : [];
   // A weekly cell split across VMs publishes the week's run config: its units' configs, each with its own worlds' part of
@@ -1519,7 +1529,10 @@ export function mergeCell(def: CellDefinition, from: string[], out: string, o: {
     writeAtomic(join(out, 'cells', a.cell_id, 'run-config.json'), t);
     return [a.id, { text: t, sha: sha256(t) }];
   }));
-  return publishCell(def, def.arms, from, out, { instrument: instrumentFor(def.canonical_instrument), selected, invalidReasons, configs, capabilities, stopped: null, maxAttempts: DEFAULT_MAX_ATTEMPTS });
+  const ups = def.arms.flatMap(a => from.map(f => receipt(f, a.cell_id).upstream));
+  const keyless = ups.some(u => u?.keyless), windows = new Set(ups.map(u => u?.paid_window));
+  const upstream = ups.every(u => u) ? { keyless, paid_window: !keyless && windows.size === 1 ? ups[0]!.paid_window : null } : undefined;
+  return publishCell(def, def.arms, from, out, { instrument: instrumentFor(def.canonical_instrument), selected, invalidReasons, configs, capabilities, stopped: null, maxAttempts: DEFAULT_MAX_ATTEMPTS, upstream });
 }
 
 // ─── Aggregates (the only output a sealed cell may write inside the repository) ───
@@ -2018,7 +2031,7 @@ export async function main(argv: string[]): Promise<number> {
     const id = one('--cell');
     if (!id) throw refuse(usage(`${sub} needs --cell <id>`));
     const def = findCell(id, undefined, one('--manifest'));
-    const keyless = sub === 'run' ? (await windowedRunGuard(argv, def)) ?? false : false;
+    const guarded = sub === 'run' ? await windowedRunGuard(argv, def) : null, keyless = guarded ?? false;
     const out = resolve(one('--out') ?? process.env.SHOOTOUT_OUT ?? join(REPO_ROOT, 'eval/reports/q1', def.id));
     if (sub === 'merge') {
       const from = many('--from').map(f => resolve(f));
@@ -2037,7 +2050,7 @@ export async function main(argv: string[]): Promise<number> {
     const shardRaw = one('--shard') ?? '0/1';
     const [si, sn] = shardRaw.split('/').map(Number);
     if (!Number.isInteger(si) || !Number.isInteger(sn) || sn < 1 || si < 0 || si >= sn) throw refuse(usage('--shard must look like i/n with 0 <= i < n'));
-    const result = await runCell(def, { out, limit, shard: { index: si, count: sn }, arms: one('--arms')?.split(',') ?? null, systemUrl: one('--system-url') ?? null, providerProxy: proxy, keyless,
+    const result = await runCell(def, { out, limit, shard: { index: si, count: sn }, arms: one('--arms')?.split(',') ?? null, systemUrl: one('--system-url') ?? null, providerProxy: proxy, keyless, paidWindow: guarded === false ? one('--paid-window') ?? null : null,
       maxAttempts: one('--max-attempts') ? Number(one('--max-attempts')) : undefined, frontier: !argv.includes('--no-frontier'),
       finishTimeoutS: one('--finish-timeout-s') ? Number(one('--finish-timeout-s')) : undefined, probeTimeoutMs: one('--probe-timeout-s') ? Number(one('--probe-timeout-s')) * 1000 : undefined,
       reanswerInvalidBefore: one('--reanswer-invalid-before') ?? null, reanswerOutcomes: reanswerOutcomes(one('--reanswer-outcomes')), freshBefore: one('--fresh-before') ?? null });

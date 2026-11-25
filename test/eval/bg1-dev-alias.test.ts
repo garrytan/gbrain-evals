@@ -199,11 +199,12 @@ describe('the alias pilot and judge check', () => {
   const corpus = loadBg1Dev({ root: BG1_FIXTURES_ROOT, only: new Set(ALIAS), worldEnd: WORLD_END, keyless: true });
   const pilotGrep = pilot.find(c => c.system === 'baseline-file-agent')!, judgeGrep = judge[0];
   type Answer = { text: string; outcome?: AnswerRecord['outcome'] };
-  /** A grep-agent cell's out dir on its alias worlds: each reader's answer from `answer` and its gating judge's verdict from `verdict`. */
-  function grepCell(def: typeof judgeGrep, answer: (q: MemoryQuestion, reader: string, i: number) => Answer, verdict: (q: MemoryQuestion, reader: string, i: number) => 0 | 1 | null, status = 'complete') {
+  const PAID = { keyless: false, paid_window: 'test-window' };
+  /** A grep-agent cell's out dir on its alias worlds: each reader's answer from `answer`, its gating judge's verdict from `verdict`, and the receipt's upstream record. */
+  function grepCell(def: typeof judgeGrep, answer: (q: MemoryQuestion, reader: string, i: number) => Answer, verdict: (q: MemoryQuestion, reader: string, i: number) => 0 | 1 | null, status = 'complete', upstream: object | null = PAID) {
     const out = scratch('grep-cell'), cell = def.arms[0].cell_id, dir = join(out, 'cells', cell);
     mkdirSync(dir, { recursive: true });
-    writeFileSync(join(dir, 'receipt.json'), JSON.stringify({ run_cell: def.id, block: def.block, run_status: status, system: { kind: 'baseline-file-agent', versions: { ripgrep: '14.1.0' } } }));
+    writeFileSync(join(dir, 'receipt.json'), JSON.stringify({ run_cell: def.id, block: def.block, run_status: status, ...(upstream ? { upstream } : {}), system: { kind: 'baseline-file-agent', versions: { ripgrep: '14.1.0' } } }));
     const answers: string[] = [], judgments: string[] = [];
     corpus.questions.filter(q => def.only_conversations!.includes(q.conversation)).forEach((q, i) => {
       for (const reader of [OPUS, PARTICLE]) {
@@ -294,6 +295,21 @@ describe('the alias pilot and judge check', () => {
     const held = Object.entries(pilotReport(rows, [], manifest, short).rows).filter(([row]) => row !== 'grep-agent').map(([, x]) => [x.pass, (x as { held?: string }).held]);
     expect(held).toEqual(['extract-first', 'gbrain', 'memory-bank'].map(() => [false, 'the judge check is short: ' + short]));
     expect(() => writePilotCampaigns(manifest, { out: scratch('held'), window: 'test-window', windowCapUsd: 45, worldEnd: WORLD_END, stopReading: { ...reading, judge_check_short: short } })).toThrow('PILOT_JUDGE_CHECK_SHORT');
+  });
+
+  // Value: protects=campaigns --grep-cell writes the other rows only from cells whose receipts record real providers under a granted paid window, so a completed keyless rehearsal, which shares the paid cell's id, or a receipt from before the record never moves the stop rule; fails_when=the stop rule reads a keyless or unrecorded cell as complete, or campaigns writes the other rows from one; why_new=GBEV-3's ruling of 2026-11-25 on #650's blocker 3; seam=pilot.ts main campaigns --grep-cell through readRow, stopRuleReading and writePilotCampaigns on written cells; no_claim=the cell runner's own receipt, which weekly-line-execution.test.ts reads
+  test('campaigns --grep-cell refuses a completed keyless or rehearsal cell', () => {
+    const someStale = (q: MemoryQuestion, r: string, i: number) => (i % 10 === 0 ? stale(q) : gold(q));
+    const half = (q: MemoryQuestion, r: string, i: number) => (i % 2 ? 1 : 0) as 0 | 1;
+    const campaigns = (dirs: string[]) => pilotMain(['campaigns', '--length', 'alias', '--out', scratch('camp'), '--window-granted', 'test-window', '--window-cap-usd', '45', '--world-end', WORLD_END, ...dirs.flatMap(d => ['--grep-cell', d])], { lsRemote, env: {} }, () => {});
+    expect(campaigns([grepCell(pilotGrep, someStale, half), grepCell(judgeGrep, someStale, half)])).toBe(0);
+    for (const upstream of [{ keyless: true, paid_window: null }, null, { keyless: false, paid_window: null }]) {
+      const rehearsal = grepCell(pilotGrep, someStale, half, 'complete', upstream), paid = grepCell(judgeGrep, someStale, half);
+      expect(stopRuleReading(manifest, [...readRow(rehearsal), ...readRow(paid)])).toMatchObject({ cells_complete: true, unpaid: [pilotGrep.id], complete: false, stops_line: false });
+      expect(() => campaigns([rehearsal, paid])).toThrow('PILOT_NOT_PAID: ' + pilotGrep.id + ' is not a paid cell');
+    }
+    const allGold = [grepCell(pilotGrep, gold, half, 'complete', { keyless: true, paid_window: null }), grepCell(judgeGrep, gold, half, 'complete', { keyless: true, paid_window: null })];
+    expect(stopRuleReading(manifest, allGold.flatMap(d => readRow(d)))).toMatchObject({ grep_agent_opus_accuracy: 1, complete: false, stops_line: false });
   });
 
   // Value: protects=the alias campaigns write the mint, the grep agent's pilot, the judge check and its labelling first, hold the other rows until a complete reading below 0.95 that the judge check can sample, and refuse either stage unless the mint and both stages fit one window's cap together; fails_when=campaigns writes a row the stop rule or a short judge check keeps from running, writes the grep stage again with the other rows, or lets the two stages and the mint pass the window between them; why_new=/ship review p1 specialist (the stop rule was only a label), p2 targeted money note and GBEV-3's ruling of 2026-11-25 (items 4 and 6); seam=pilot.ts writePilotCampaigns with fake readings; no_claim=the VM run

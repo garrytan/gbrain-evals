@@ -473,6 +473,7 @@ describe('the fixture week, end to end and keyless', () => {
         try {
           const res = await runCell(def, { out, providerProxy: proxy.url, keyless: true, ...quiet }, { system: def.arms.some(a => a.mode === 'agent') ? new FakeAgent() : new FakeMemorySystem() });
           expect([unit, res.status, res.stopped, res.invalid_reasons]).toEqual([unit, 'complete', null, []]);
+          for (const a of def.arms) expect(JSON.parse(readFileSync(join(out, 'cells', a.cell_id, 'receipt.json'), 'utf8')).upstream).toEqual({ keyless: true, paid_window: null });
         } finally { proxy.stop(); }
         outs.set(unit, out);
         for (const a of def.arms) cpSync(join(out, 'cells', a.cell_id), join(dir, 'cells', a.cell_id), { recursive: true });

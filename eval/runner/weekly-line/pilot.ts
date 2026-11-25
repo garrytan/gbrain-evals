@@ -50,7 +50,7 @@
  */
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { JUDGED, gatherStaging, loadWeeklyPilotManifest, scheduledQuestions, weeklyPilotCampaignManifest } from '../q1/cell.ts';
+import { JUDGED, gatherStaging, loadWeeklyPilotManifest, scheduledQuestions, weeklyPilotCampaignManifest, type CellUpstream } from '../q1/cell.ts';
 import { readRecords } from '../memory-qa/records.ts';
 import { BG1_FIXTURES_ROOT, loadBg1Dev } from '../memory-qa/corpus.ts';
 import { BG1C_RATES } from '../q1/cells/bg1c.ts';
@@ -198,6 +198,7 @@ export function writePilotCampaigns(m: WeeklyPilotManifest, o: { out: string; wi
   if (!o.worldEnd) refuse('USAGE', 'pass --world-end <Sunday>, the world end every pilot unit resolves dates from');
   const plan = pilotPlan(m, o.worldEnd!), alias = m.length === 'alias', reading = o.stopReading;
   if (!alias && reading) refuse('USAGE', `only the alias pilot takes the grep agent's stop-rule reading, not the ${m.length} pilot`);
+  if (reading?.unpaid.length) refuse('PILOT_NOT_PAID', `${reading.unpaid.join(', ')} ${reading.unpaid.length === 1 ? 'is not a paid cell' : 'are not paid cells'}: the receipt records a keyless upstream or no paid window, so the stop rule does not read ${reading.unpaid.length === 1 ? 'it' : 'them'} and no other row's campaign is written; pass the paid cells' out dirs`);
   if (reading && !(reading.complete && reading.grep_agent_opus_accuracy !== null)) refuse('PILOT_STOP_RULE', `the grep agent's stop-rule reading is not complete (${reading.answers} of ${reading.expected_answers} claude-opus-5-5 answers on ${reading.worlds.join(', ') || 'no world'}, every cell complete: ${reading.cells_complete ? 'yes' : 'no'}), so no other row's campaign is written`);
   if (reading?.stops_line) refuse('PILOT_STOP_RULE', `${STOP_RULE} It pooled at ${reading.grep_agent_opus_accuracy}, so no other row's campaign is written`);
   if (reading && reading.judge_check_short !== null) refuse('PILOT_JUDGE_CHECK_SHORT', `the judge check can't draw its sample from the grep agent's answers (${reading.judge_check_short ?? 'not read'}), so the other rows stay held and the reading goes back to the owner`);
@@ -236,7 +237,9 @@ const r4 = (x: number | null) => (x === null ? null : Math.round(x * 10_000) / 1
 export interface RowReading {
   row: WlRow; cell: string; block: string; worlds: string[]; answers: number;
   /** The cell receipt's run_status (complete, partial or invalid); the stop rule counts only complete cells. */
-  status?: string | null; by_reader: Record<string, number>; outcomes: Record<string, number>;
+  status?: string | null;
+  /** Where the cell's provider calls went (cell.ts CellUpstream), null on a receipt that predates the record; the stop rule counts only paid cells. */
+  upstream?: CellUpstream | null; by_reader: Record<string, number>; outcomes: Record<string, number>;
   /** Answers that need a verdict (scored or ingest_degraded) and how many have one from their reader's gating judge, parsed. */
   verdicts: { needed: number; given: number; parse_failed: number };
   /** Mean gating score per reader, product failures as 0. */
@@ -306,7 +309,7 @@ export function readRow(out: string): RowReading[] {
         detail: { ingested_conversations: ingest.conversations ?? 0, ingested_tokens: ingest.ingested_tokens ?? 0, failed_sessions: ingest.failed_sessions ?? null, degraded: ingest.degraded_conversations ?? null, questions: questions.size, questions_with_memories: withMemories.size } };
     }
     return {
-      row, cell: cellId, block: receipt.block, status: receipt.run_status ?? null, worlds: [...staged.keys()].sort(), answers: answers.length, by_reader: count(answers, a => a.reader), outcomes: count(answers, a => a.outcome),
+      row, cell: cellId, block: receipt.block, status: receipt.run_status ?? null, upstream: receipt.upstream ?? null, worlds: [...staged.keys()].sort(), answers: answers.length, by_reader: count(answers, a => a.reader), outcomes: count(answers, a => a.outcome),
       verdicts: { needed: needed.length, given: needed.filter(a => verdictOf(a)?.parse_ok).length, parse_failed: needed.filter(a => verdictOf(a) && !verdictOf(a)!.parse_ok).length },
       accuracy, spend_usd: typeof receipt.spend?.total_usd === 'number' ? receipt.spend.total_usd : null, spend_source: receipt.spend?.source ?? null, part_under_test: part, ...(construction ? { construction } : {}), ...(agent ? { agent } : {}),
     };
@@ -349,7 +352,9 @@ export function stopRuleLabel(q: Pick<MemoryQuestion, 'id' | 'bg1'>, a: Pick<Poo
  * context-overflow answers count as wrong, as R111's rule scores them. It is complete only when every cell finished
  * complete and claude-opus-5-5's own loop answered each question in `expected` exactly once and no other; a question
  * whose answer is missing or failed (a reader error, a budget stop) blocks the reading until a resume answers it, and
- * never counts as right. Only a complete reading stops the line or lets the other rows run.
+ * never counts as right. A cell whose receipt doesn't record real providers under a granted paid window (a keyless
+ * rehearsal, which shares the paid cell's id, or a receipt from before that record) is unpaid, and an unpaid cell keeps
+ * the reading incomplete. Only a complete reading stops the line or lets the other rows run.
  */
 export function pooledGrepOpus(rows: RowReading[], expected: readonly string[]) {
   const grep = rows.filter(r => r.row === 'grep-agent' && r.construction);
@@ -359,9 +364,10 @@ export function pooledGrepOpus(rows: RowReading[], expected: readonly string[]) 
   const correct = grep.reduce((s, r) => s + r.construction!.correct, 0), unsettled = grep.reduce((s, r) => s + r.construction!.unsettled, 0);
   const accuracy = answered.length ? r4(correct / answered.length) : null;
   const cellsComplete = grep.length > 0 && grep.every(r => r.status === 'complete');
-  const complete = expected.length > 0 && cellsComplete && missing === 0 && stray === 0 && answered.length === expected.length;
+  const unpaid = grep.filter(r => !(r.upstream?.keyless === false && typeof r.upstream.paid_window === 'string' && r.upstream.paid_window.length > 0)).map(r => r.cell);
+  const complete = expected.length > 0 && cellsComplete && unpaid.length === 0 && missing === 0 && stray === 0 && answered.length === expected.length;
   return { grep_agent_opus_accuracy: accuracy, scored_by: 'construction labels' as const, correct, unsettled, answers: answered.length, expected_answers: expected.length, missing, failed,
-    worlds: [...new Set(grep.flatMap(r => r.worlds))].sort(), cells_complete: cellsComplete, complete, line: CEILING, stops_line: complete && accuracy !== null && accuracy >= CEILING, rule: STOP_RULE };
+    worlds: [...new Set(grep.flatMap(r => r.worlds))].sort(), cells_complete: cellsComplete, unpaid, complete, line: CEILING, stops_line: complete && accuracy !== null && accuracy >= CEILING, rule: STOP_RULE };
 }
 
 /**
