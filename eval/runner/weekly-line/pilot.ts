@@ -7,7 +7,7 @@
  * generateWeeklyLineJudgeCheckCells); it never calls a provider.
  *
  *   bun eval/runner/weekly-line/pilot.ts plan      [--length standard|long|alias] [--gbrain <release>@<commit>] [--world-end <Sunday>] [--json]
- *   bun eval/runner/weekly-line/pilot.ts campaigns [--length standard|long|alias] --out <dir> --window-granted <unit> [--grep-cell <dir>...]
+ *   bun eval/runner/weekly-line/pilot.ts campaigns [--length standard|long|alias] --out <dir> --window-granted <unit> [--grep-cell <dir>... | --misspelling-stage]
  *                                                  --window-cap-usd <the window's cap> --world-end <Sunday> [--gbrain <release>@<commit>]
  *   bun eval/runner/weekly-line/pilot.ts report    [--length standard|long|alias] --cell <cell out dir>... [--reread <re-read out dir>...] [--json]
  *
@@ -56,7 +56,7 @@ import { BG1_FIXTURES_ROOT, loadBg1Dev } from '../memory-qa/corpus.ts';
 import { BG1C_RATES } from '../q1/cells/bg1c.ts';
 import { bg1JudgeOf, type CellDefinition } from '../q1/cells/definitions.ts';
 import {
-  WEEKLY_ALIAS_PILOT_MONEY, WEEKLY_LINE_BLOCK_WORLDS, WEEKLY_LINE_PILOT_FRACTION, WEEKLY_LINE_QUICK_LOOK, WEEKLY_LINE_ROWS, WEEKLY_PILOT_GBRAIN_ENV, WEEKLY_PILOT_LENGTH_ENV, weeklyLineBuildProblems,
+  WEEKLY_ALIAS_PILOT_MONEY, WEEKLY_ALIAS_STAGE2_MONEY, WEEKLY_ALIAS_STAGE2_SET, WEEKLY_LINE_BLOCK_WORLDS, WEEKLY_PILOT_SETS, WEEKLY_LINE_PILOT_FRACTION, WEEKLY_LINE_QUICK_LOOK, WEEKLY_LINE_ROWS, WEEKLY_PILOT_GBRAIN_ENV, WEEKLY_PILOT_LENGTH_ENV, weeklyLineBuildProblems,
   type WeeklyLineGbrainBuild, type WeeklyPilotManifest,
 } from '../q1/cells/weekly-line.ts';
 import { exitCodeOf, renderMessage, ScoreboardError } from '../q1/scoreboard-errors.ts';
@@ -99,12 +99,17 @@ export interface PilotPlan {
   stop_rule: string | null;
   /** The alias pilot's one window (Amendment 1): the mint's, the grep agent's stage's and the other rows' stage's caps, at most window_usd together. */
   window: { mint_usd: number; grep_first_usd: number; after_stop_rule_usd: number; total_usd: number; window_usd: number } | null;
+  /**
+   * The alias pilot's stage 2 (Amendment 1's stage-2 lines): its cells with the questions each schedules, one campaign
+   * ledger per row at the row's cap, and their caps together against the stage's own window. Null for the other lengths.
+   */
+  misspelling_stage: { cells: PilotPlan['cells']; ledgers: PilotLedger[]; cap_usd: number; window_usd: number } | null;
   caps: WeeklyPilotManifest['pilot_caps']; judge_check: WeeklyPilotManifest['judge_check']; quick_look: typeof WEEKLY_LINE_QUICK_LOOK;
   totals: { estimate_usd: number; cap_usd: number; pilot_cap_usd: number; judge_check_cap_usd: number; quick_look_cap_usd: number };
 }
 
 const rowOf = (c: Pick<CellDefinition, 'system'>): WlRow => WL_SYSTEMS[c.system];
-const pilotCell = (m: WeeklyPilotManifest, row: WlRow) => m.cells.find(c => c.block === 'BGW-pilot' && rowOf(c) === row)!;
+const pilotCell = (m: WeeklyPilotManifest, row: WlRow) => m.cells.find(c => c.set === WEEKLY_PILOT_SETS[m.length].pilot && rowOf(c) === row)!;
 /** Any Sunday: the world end moves a world's dates, never which of its questions a cell schedules. */
 const COUNT_WORLD_END = '2026-11-22';
 /** The questions a cell schedules (cell.ts scheduledQuestions), by id, on its worlds' committed template fixtures, keyless. */
@@ -134,9 +139,13 @@ export function pilotPlan(m: WeeklyPilotManifest, worldEnd: string | null): Pilo
   const pilotCap = r2(Object.values(m.pilot_caps).reduce((s, c) => s + c.cap_usd, 0));
   const capOf = (xs: PilotLedger[]) => r2(xs.reduce((s, l) => s + l.cap_usd, 0));
   const window = alias ? { mint_usd: mint.cap_usd, grep_first_usd: capOf(ledgers.filter(l => l.kind !== 'mint' && !l.after_stop_rule)), after_stop_rule_usd: capOf(ledgers.filter(l => l.after_stop_rule)), total_usd: capOf(ledgers), window_usd: WEEKLY_ALIAS_PILOT_MONEY.window_usd } : null;
+  const cellOf = (c: CellDefinition) => ({ id: c.id, block: c.block, system: c.system, only_conversations: c.only_conversations, expected_hours: c.expected_hours, estimate_usd: c.estimate.usd, lease_usd: c.lease!.usd, questions: scheduledCount(c) });
+  const stage2 = m.cells.filter(c => c.set === WEEKLY_ALIAS_STAGE2_SET);
+  const stage2Ledgers: PilotLedger[] = stage2.map(c => ({ name: `stage2-${rowOf(c)}`, kind: 'campaign', row: rowOf(c), units: [c.id], estimate_usd: c.estimate.usd, cap_usd: c.lease!.usd, campaign_id: `q1-scoreboard-weekly-alias-stage2-${rowOf(c)}` }));
   return {
     length: m.length, gbrain: m.gbrain_build, world_end: worldEnd, ledgers, stop_rule: alias ? STOP_RULE : null, window,
-    cells: m.cells.map(c => ({ id: c.id, block: c.block, system: c.system, only_conversations: c.only_conversations, expected_hours: c.expected_hours, estimate_usd: c.estimate.usd, lease_usd: c.lease!.usd, questions: scheduledCount(c) })),
+    misspelling_stage: stage2.length ? { cells: stage2.map(cellOf), ledgers: stage2Ledgers, cap_usd: capOf(stage2Ledgers), window_usd: WEEKLY_ALIAS_STAGE2_MONEY.window_usd } : null,
+    cells: m.cells.filter(c => c.set !== WEEKLY_ALIAS_STAGE2_SET).map(cellOf),
     caps: m.pilot_caps, judge_check: m.judge_check, quick_look: m.quick_look,
     totals: { estimate_usd: r2(ledgers.reduce((s, l) => s + l.estimate_usd, 0)), cap_usd: r2(ledgers.reduce((s, l) => s + l.cap_usd, 0)), pilot_cap_usd: pilotCap, judge_check_cap_usd: m.judge_check.pause_usd, quick_look_cap_usd: m.quick_look.cap_usd },
   };
@@ -166,6 +175,10 @@ export function renderPilotPlan(p: PilotPlan): string {
     ...p.ledgers.map(l => `| ${l.name}${l.campaign_id ? ` (${l.campaign_id})` : ''}${l.after_stop_rule ? ' (only below the stop rule)' : ''} | ${l.units.join(', ') || `${p.judge_check.labeller} on the model-labelled answers`} | ${usd(l.estimate_usd)} | ${usd(l.cap_usd)} |`),
     ...(p.window ? ['', `Alias window (Amendment 1): the mint ${usd(p.window.mint_usd)}, the grep agent's stage ${usd(p.window.grep_first_usd)} and the other rows' stage ${usd(p.window.after_stop_rule_usd)} cap at ${usd(p.window.total_usd)} together, at most the window's ${usd(p.window.window_usd)}`] : []),
     ...(p.stop_rule ? ['', `Stop rule: ${p.stop_rule} The grep agent's claude-opus-5-5 answers on ${[...new Set(p.cells.filter(c => c.system === p.cells.find(x => x.block === 'BGW-judge')?.system).flatMap(c => c.only_conversations ?? []))].join(', ')} are scored together against the construction labels; the rows marked "only below the stop rule" launch only when that score is below ${CEILING} and the judge check can draw its sample from those answers.`] : []),
+    ...(p.misspelling_stage ? ['', 'Stage 2 (Amendment 1, 2026-11-25): gbrain, extract-first and memory-bank on all three alias worlds, each world ingested whole, asking only the questions whose evidence names their subject by its misspelling; claude-opus-5-5 reads, no particle-1 re-read, no mint',
+      '| ledger | cell | worlds | questions | estimate | cap (lease) |', '|---|---|---|---:|---:|---:|',
+      ...p.misspelling_stage.ledgers.map((l, i) => { const c = p.misspelling_stage!.cells[i]; return `| ${l.name} (${l.campaign_id}) | ${c.id} | ${(c.only_conversations ?? []).join(', ')} | ${c.questions} | ${usd(l.estimate_usd)} | ${usd(l.cap_usd)} |`; }),
+      `Stage 2 caps ${usd(p.misspelling_stage.cap_usd)} together, at most its own window's ${usd(p.misspelling_stage.window_usd)} (pilot.ts campaigns --length alias --misspelling-stage)`] : []),
     '',
     `Judge check: pauses at ${usd(p.judge_check.pause_usd)} (its cell ${usd(p.judge_check.cells_cap_usd)}, labelling ${usd(p.judge_check.label_cap_usd)}); ${p.judge_check.per_judge} labelled answers per judge`,
     `Claude Code quick look: cap ${usd(p.quick_look.cap_usd)}, ${p.quick_look.status} (${p.quick_look.reason})`,
@@ -192,11 +205,31 @@ export interface PilotCampaigns { plan: PilotPlan; env: Record<string, string>; 
  * stage refuses unless all three stages' caps together fit the window's cap.
  */
 export type StopReading = ReturnType<typeof pooledGrepOpus> & { judge_check_short?: string | null };
-export function writePilotCampaigns(m: WeeklyPilotManifest, o: { out: string; window?: string; windowCapUsd?: number; worldEnd?: string; stopReading?: StopReading }): PilotCampaigns {
+/**
+ * With misspellingStage, the alias pilot's stage 2 alone (Amendment 1's stage-2 lines, on the owner's go after the held
+ * reading): one campaign per stage-2 row, in its own window with no mint, refused unless the stage's caps together fit
+ * both the granted window's cap and the stage's window (WEEKLY_ALIAS_STAGE2_MONEY), and never beside a stop-rule reading.
+ */
+export function writePilotCampaigns(m: WeeklyPilotManifest, o: { out: string; window?: string; windowCapUsd?: number; worldEnd?: string; stopReading?: StopReading; misspellingStage?: boolean }): PilotCampaigns {
   if (!o.window) refuse('PILOT_NO_WINDOW', 'the pilot and the judge check spend on providers, so their campaigns are written only for a granted paid window; pass --window-granted <unit>');
   if (!(Number.isFinite(o.windowCapUsd) && o.windowCapUsd! > 0)) refuse('PILOT_NO_WINDOW', 'pass --window-cap-usd <the granted window\'s cap>, which the ledgers\' caps together may not pass');
   if (!o.worldEnd) refuse('USAGE', 'pass --world-end <Sunday>, the world end every pilot unit resolves dates from');
   const plan = pilotPlan(m, o.worldEnd!), alias = m.length === 'alias', reading = o.stopReading;
+  if (o.misspellingStage) {
+    const stage = plan.misspelling_stage ?? refuse('USAGE', `only the alias pilot has a misspelling stage, not the ${m.length} pilot`);
+    if (reading) refuse('USAGE', 'the misspelling stage takes no stop-rule reading: it runs on the owner\'s go after the reading was held');
+    const over = Math.min(o.windowCapUsd!, stage.window_usd);
+    if (stage.cap_usd > over + 1e-9) refuse('PILOT_OVER_WINDOW', `the misspelling stage's ledgers cap at ${usd(stage.cap_usd)} together, above ${o.windowCapUsd! < stage.window_usd ? `the window's ${usd(o.windowCapUsd!)}` : `the stage's own window of ${usd(stage.window_usd)}`}`);
+    mkdirSync(o.out, { recursive: true });
+    const campaigns = stage.ledgers.map(l => {
+      const file = join(o.out, `${l.name}.campaign.json`);
+      writeFileSync(file, JSON.stringify(weeklyPilotCampaignManifest(m, { units: l.units, campaign_id: l.campaign_id!, cap_usd: l.cap_usd, window: o.window!, worldEnd: o.worldEnd! }), null, 2) + '\n');
+      return { name: l.name, file };
+    });
+    const env = { GBRAIN_EVALS_BG1_WORLD_END: o.worldEnd!, [WEEKLY_PILOT_GBRAIN_ENV]: `${m.gbrain_build.release}@${m.gbrain_build.commit}`, [WEEKLY_PILOT_LENGTH_ENV]: m.length };
+    writeFileSync(join(o.out, 'plan.json'), JSON.stringify({ ...plan, stage: 'misspelling', window: o.window, window_cap_usd: o.windowCapUsd, env, campaigns, commands: [] }, null, 2) + '\n');
+    return { plan, env, campaigns, commands: [] };
+  }
   if (!alias && reading) refuse('USAGE', `only the alias pilot takes the grep agent's stop-rule reading, not the ${m.length} pilot`);
   if (reading?.unpaid.length) refuse('PILOT_NOT_PAID', `${reading.unpaid.join(', ')} ${reading.unpaid.length === 1 ? 'is not a paid cell' : 'are not paid cells'}: the receipt records a keyless upstream or no paid window, so the stop rule does not read ${reading.unpaid.length === 1 ? 'it' : 'them'} and no other row's campaign is written; pass the paid cells' out dirs`);
   if (reading && !(reading.complete && reading.grep_agent_opus_accuracy !== null)) refuse('PILOT_STOP_RULE', `the grep agent's stop-rule reading is not complete (${reading.answers} of ${reading.expected_answers} claude-opus-5-5 answers on ${reading.worlds.join(', ') || 'no world'}, every cell complete: ${reading.cells_complete ? 'yes' : 'no'}), so no other row's campaign is written`);
@@ -466,7 +499,7 @@ export function main(argv: readonly string[], deps: PilotDeps = DEFAULT_DEPS, lo
     const cap = flag(rest, '--window-cap-usd');
     const m = manifestAt(pilotBuild(rest, deps), rest, deps.env), grepCells = flags(rest, '--grep-cell');
     const stopReading = grepCells.length ? { ...stopRuleReading(m, grepCells.flatMap(d => readRow(resolve(d)))), judge_check_short: judgeCheckShortfall(grepCells.map(d => resolve(d)), m.length) } : undefined;
-    const r = writePilotCampaigns(m, { out, window: flag(rest, '--window-granted'), windowCapUsd: cap === undefined ? undefined : Number(cap), worldEnd: flag(rest, '--world-end'), stopReading });
+    const r = writePilotCampaigns(m, { out, window: flag(rest, '--window-granted'), windowCapUsd: cap === undefined ? undefined : Number(cap), worldEnd: flag(rest, '--world-end'), stopReading, misspellingStage: rest.includes('--misspelling-stage') });
     log(renderPilotPlan(r.plan));
     log(`\nwrote ${r.campaigns.length} campaigns and plan.json to ${out}; every command runs with ${Object.entries(r.env).map(([k, v]) => `${k}=${v}`).join(' ')}`);
     for (const c of r.campaigns) log(`campaign ${c.name}: ${c.file}`);

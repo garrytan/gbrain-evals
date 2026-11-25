@@ -12,15 +12,17 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import {
   ALIAS_PHRASING, aliasPlanProblems, BG1_ALIAS_GENERATOR_VERSION, BG1_DATA_DIR, BG1_DEV_SEEDS, buildQuestions, checkPlan, devFiles, devWorldPlan, PlanError, planWorld,
-  isolatingWords, questionLeaks, renderLeaks, renderTemplateWorld, resolveSubject, type WorldPlan,
+  isolatingWords, misspellingQuestionIds, questionLeaks, renderLeaks, renderTemplateWorld, resolveSubject, type WorldPlan,
 } from '../../eval/generators/changing-facts-gen.ts';
 import { misspellings } from '../../eval/generators/changing-facts-alias.ts';
-import { BG1_DEV_ALIAS_CONVERSATIONS } from '../../eval/runner/memory-qa/bg1-names.ts';
+import { BG1_DEV_ALIAS_CONVERSATIONS, BG1_DEV_ALIAS_MISSPELLING_QUESTIONS } from '../../eval/runner/memory-qa/bg1-names.ts';
 import { BG1_FIXTURES_ROOT, loadBg1Dev, type MemoryQuestion } from '../../eval/runner/memory-qa/corpus.ts';
 import { answerId, sha256, type AnswerRecord } from '../../eval/runner/memory-qa/records.ts';
 import { devOnly, scheduledQuestions } from '../../eval/runner/q1/cell.ts';
 import { bg1JudgeOf } from '../../eval/runner/q1/cells/definitions.ts';
-import { buildWeeklyPilotManifest, generateWeeklyLineJudgeCheckCells, generateWeeklyLinePilotCells, WEEKLY_ALIAS_PILOT_MONEY, weeklyLinePilotCaps } from '../../eval/runner/q1/cells/weekly-line.ts';
+import {
+  buildWeeklyPilotManifest, generateWeeklyLineJudgeCheckCells, generateWeeklyLineMisspellingCells, generateWeeklyLinePilotCells, WEEKLY_ALIAS_PILOT_MONEY, WEEKLY_ALIAS_STAGE2_MONEY, weeklyLinePilotCaps,
+} from '../../eval/runner/q1/cells/weekly-line.ts';
 import {
   CEILING, judgeCheckShortfall, main as pilotMain, pilotPlan, pilotReport, PilotError, pooledGrepOpus, readRow, STOP_RULE, stopRuleLabel, stopRuleReading, writePilotCampaigns, type StopReading,
 } from '../../eval/runner/weekly-line/pilot.ts';
@@ -335,5 +337,76 @@ describe('the alias pilot and judge check', () => {
     expect(() => write(undefined, 44.99)).toThrow('PILOT_OVER_WINDOW');
     expect(() => write(reading(0.9), 44.99)).toThrow('PILOT_OVER_WINDOW');
     expect(() => writePilotCampaigns(buildWeeklyPilotManifest(GBRAIN), { out: scratch('std'), window: 'w', windowCapUsd: 1e6, worldEnd: WORLD_END, stopReading: reading(0.9) })).toThrow('only the alias pilot');
+  });
+});
+
+describe("the alias pilot's stage 2 on the misspelling questions", () => {
+  const manifest = buildWeeklyPilotManifest(GBRAIN, 'BGW', 'alias');
+  const stage2 = generateWeeklyLineMisspellingCells(GBRAIN);
+  const lsRemote = () => GBRAIN.commit + '\trefs/tags/' + GBRAIN.release;
+  /** Grep's 12 stage-1 misses on these questions, by hand in the stage-1 results' miss taxonomy. */
+  const GREP_MISSES = ['bg1-dev-alias-01:s3_repeated_stale:5', 'bg1-dev-alias-01:s3_repeated_stale:6', 'bg1-dev-alias-01:s4_conflicting:5', 'bg1-dev-alias-01:s8_history:2', 'bg1-dev-alias-01:s8_history:7', 'bg1-dev-alias-02:s8_history:1',
+    'bg1-dev-alias-03:s1_updated:0', 'bg1-dev-alias-03:s1_updated:4', 'bg1-dev-alias-03:s1_updated:5', 'bg1-dev-alias-03:s8_history:0', 'bg1-dev-alias-03:s8_history:1', 'bg1-dev-alias-03:s8_history:2'];
+
+  // Value: protects=the stage-2 filter is exactly the 34 questions whose evidence names their subject by its misspelling, the split stage 1's 22/34 was read on, by plan refs and by the rendered text alike, and it holds every one of grep's 12 misspelling misses; fails_when=the id list drifts from the plans, the split's rule changes, or a question with misspelled evidence is left out or one without it let in; why_new=GBEV-3's grant of 2026-11-25 (K1: name the 34 by id, compare paired on exactly those); seam=changing-facts-gen.ts misspellingQuestionIds over the committed plans and questions, bg1-names.ts BG1_DEV_ALIAS_MISSPELLING_QUESTIONS; no_claim=a Gemini render's wording
+  test('the filter is the 34 questions whose evidence names their subject by its misspelling', () => {
+    const committed = (id: string) => JSON.parse(readFileSync(join(BG1_DATA_DIR, 'dev/worlds/' + id + '/questions.json'), 'utf8'));
+    const ids = ALIAS.flatMap(id => misspellingQuestionIds(plans.get(id)!, committed(id)));
+    expect(ids).toEqual([...BG1_DEV_ALIAS_MISSPELLING_QUESTIONS]);
+    expect(ids).toHaveLength(34);
+    expect(ALIAS.map(id => ids.filter(q => q.startsWith(id + ':')).length)).toEqual([14, 6, 14]);
+    expect(ALIAS.flatMap(id => misspellingQuestionIds(plans.get(id)!))).toEqual(ids);
+    const byText = ALIAS.flatMap(id => {
+      const plan = plans.get(id)!, text = textOf(plan), names = new Map(plan.entities.map(e => [e.id, e.aliases!.misspelling]));
+      return buildQuestions(plan).filter(q => q.evidence_sessions.some(s => text(s).includes(names.get(q.subject!.entity)!))).map(q => q.id).sort();
+    });
+    expect(byText).toEqual(ids);
+    expect(GREP_MISSES.filter(id => !ids.includes(id))).toEqual([]);
+  });
+
+  // Value: protects=stage 2 runs gbrain, extract-first and memory-bank on all three alias worlds, ingesting each world whole and asking only the 34 ids, read by claude-opus-5-5 alone with its gpt-6-astra judge and no particle-1 re-read, each leased at its row's cap, with the caps together at most the stage's own window and the earlier alias cells unchanged; fails_when=a stage-2 cell loads fewer worlds, asks other questions, adds particle-1 or a re-read, runs the grep agent, or its caps pass the window; why_new=GBEV-3's grant of 2026-11-25 (K1, a hard cap for the whole window); seam=weekly-line.ts generateWeeklyLineMisspellingCells and buildWeeklyPilotManifest, cell.ts devOnly and scheduledQuestions over the template fixtures; no_claim=measured costs
+  test('stage 2 asks the 34 questions of three whole worlds with the Opus reader alone, inside its window', () => {
+    expect(stage2.map(c => c.system)).toEqual(['ext-extract-first', 'gbrain-defaults', 'ext-memory-bank']);
+    for (const def of stage2) {
+      expect([def.set, def.block, def.only_conversations]).toEqual(['BGW-misspell-alias', 'BGW-pilot', ALIAS]);
+      expect(devOnly(def)).toEqual(new Set(ALIAS));
+      const corpus = loadBg1Dev({ root: BG1_FIXTURES_ROOT, only: devOnly(def)!, worldEnd: WORLD_END, keyless: true });
+      expect(corpus.conversations.map(c => c.id)).toEqual(ALIAS);
+      expect(scheduledQuestions(def, corpus, null).map(q => q.id)).toEqual([...BG1_DEV_ALIAS_MISSPELLING_QUESTIONS]);
+      expect(def.arms.map(a => [a.readers, a.frontier?.judge_by_reader])).toEqual([[['anthropic:claude-opus-5-5'], { 'anthropic:claude-opus-5-5': 'openai:gpt-6-astra' }]]);
+      expect(def.gbrain_build ?? GBRAIN).toEqual(GBRAIN);
+    }
+    expect(manifest.cells.slice(-3)).toEqual(stage2);
+    expect(manifest.reread_plans.filter(r => stage2.some(c => c.id === r.cell))).toEqual([]);
+    expect(manifest.cells.slice(0, -3)).toEqual([...generateWeeklyLinePilotCells(GBRAIN, 'BGW', 'alias'), ...generateWeeklyLineJudgeCheckCells('alias')]);
+    expect(buildWeeklyPilotManifest(GBRAIN).cells.some(c => c.set === 'BGW-misspell-alias')).toBe(false);
+    const plan = pilotPlan(manifest, null), stage = plan.misspelling_stage!;
+    expect(stage.cells.map(c => c.questions)).toEqual([34, 34, 34]);
+    expect(stage.ledgers.map(l => [l.name, l.cap_usd])).toEqual(stage2.map(c => ['stage2-' + { 'gbrain-defaults': 'gbrain', 'ext-extract-first': 'extract-first', 'ext-memory-bank': 'memory-bank' }[c.system], c.lease!.usd]));
+    expect(stage.cap_usd).toBeLessThanOrEqual(WEEKLY_ALIAS_STAGE2_MONEY.window_usd);
+    expect(WEEKLY_ALIAS_STAGE2_MONEY.window_usd).toBeLessThanOrEqual(20);
+    expect(pilotPlan(buildWeeklyPilotManifest(GBRAIN), null).misspelling_stage).toBeNull();
+    const lines: string[] = [];
+    expect(pilotMain(['plan', '--length', 'alias'], { lsRemote, env: {} }, s => lines.push(s))).toBe(0);
+    expect(lines.join('\n')).toContain('Stage 2 caps');
+  });
+
+  // Value: protects=campaigns --misspelling-stage writes the three stage-2 campaigns alone, each its row's ledger at its cap, with no re-read, labelling or mint command, and refuses a window cap below the stage's caps, a stop-rule reading beside it, or a length with no stage 2; fails_when=the stage writes the grep stage or the alias-01 rows again, writes a particle-1 re-read, or its caps pass the window; why_new=GBEV-3's grant of 2026-11-25 (K1); seam=pilot.ts main campaigns and writePilotCampaigns; no_claim=the VM run
+  test('campaigns --misspelling-stage writes the three stage-2 campaigns inside the window', () => {
+    const campaigns = (cap: string, extra: string[] = [], length = 'alias') => pilotMain(['campaigns', '--length', length, '--misspelling-stage', '--out', scratch('stage2'), '--window-granted', 'test-window', '--window-cap-usd', cap, '--world-end', WORLD_END, ...extra], { lsRemote, env: {} }, () => {});
+    const out = scratch('stage2-write');
+    const r = writePilotCampaigns(manifest, { out, window: 'test-window', windowCapUsd: 20, worldEnd: WORLD_END, misspellingStage: true });
+    expect(r.campaigns.map(c => c.name)).toEqual(['stage2-extract-first', 'stage2-gbrain', 'stage2-memory-bank']);
+    expect(r.commands).toEqual([]);
+    for (const [i, c] of r.campaigns.entries()) {
+      const camp = JSON.parse(readFileSync(c.file, 'utf8'));
+      expect(camp.cells.map((x: { id: string }) => x.id).join(' ')).toContain(stage2[i].id);
+      expect(camp.cells.every((x: { command: string }) => x.command.includes('--paid-window test-window --window-cap-usd ' + stage2[i].lease!.usd))).toBe(true);
+    }
+    expect(JSON.parse(readFileSync(join(out, 'plan.json'), 'utf8')).stage).toBe('misspelling');
+    expect(campaigns('20')).toBe(0);
+    expect(() => campaigns('19.99')).toThrow('PILOT_OVER_WINDOW');
+    expect(() => campaigns('20', [], 'standard')).toThrow('only the alias pilot has a misspelling stage');
+    expect(() => writePilotCampaigns(manifest, { out, window: 'w', windowCapUsd: 20, worldEnd: WORLD_END, misspellingStage: true, stopReading: { ...pooledGrepOpus([], ['q']), judge_check_short: null } })).toThrow('takes no stop-rule reading');
   });
 });

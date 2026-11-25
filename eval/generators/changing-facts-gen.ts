@@ -1501,6 +1501,17 @@ export function isolatingWords(plan: WorldPlan, q: Pick<QuestionRecord, 'questio
   return [...where].filter(([, ids]) => [...ids].every(id => q.evidence_sessions.includes(id))).map(([k]) => stems.get(k)!).sort();
 }
 
+/**
+ * The questions whose evidence names their subject by its misspelling (the alias pilot's misspelling split, Amendment 1's
+ * 2026-11-25 stage-2 line): a planned line in one of the question's evidence sessions refers to the question's subject
+ * entity by its misspelling alias. Sorted by id.
+ */
+export function misspellingQuestionIds(plan: WorldPlan, qs: readonly Pick<QuestionRecord, 'id' | 'evidence_sessions' | 'subject'>[] = buildQuestions(plan)): string[] {
+  const sessions = new Map(plan.sessions.map(s => [s.id, s]));
+  return qs.filter(q => q.evidence_sessions.some(id => sessions.get(id)?.lines.some(l => l.refs?.some(r => r.entity === q.subject?.entity && r.alias === 'misspelling'))))
+    .map(q => q.id).sort();
+}
+
 export interface RenderLeak { session: string; kind: 'canonical' | 'question_term'; term: string; entity?: string; question?: string }
 /**
  * The render leak check of a rendered @3 world (validate.ts --dev): a session holds an entity's canonical name although no
