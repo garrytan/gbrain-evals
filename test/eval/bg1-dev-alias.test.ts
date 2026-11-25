@@ -200,7 +200,7 @@ describe('the alias pilot and judge check', () => {
   const pilotGrep = pilot.find(c => c.system === 'baseline-file-agent')!, judgeGrep = judge[0];
   type Answer = { text: string; outcome?: AnswerRecord['outcome'] };
   /** A grep-agent cell's out dir on its alias worlds: each reader's answer from `answer` and its gating judge's verdict from `verdict`. */
-  function grepCell(def: typeof judgeGrep, answer: (q: MemoryQuestion, reader: string, i: number) => Answer, verdict: (q: MemoryQuestion, reader: string, i: number) => 0 | 1, status = 'complete') {
+  function grepCell(def: typeof judgeGrep, answer: (q: MemoryQuestion, reader: string, i: number) => Answer, verdict: (q: MemoryQuestion, reader: string, i: number) => 0 | 1 | null, status = 'complete') {
     const out = scratch('grep-cell'), cell = def.arms[0].cell_id, dir = join(out, 'cells', cell);
     mkdirSync(dir, { recursive: true });
     writeFileSync(join(dir, 'receipt.json'), JSON.stringify({ run_cell: def.id, block: def.block, run_status: status, system: { kind: 'baseline-file-agent', versions: { ripgrep: '14.1.0' } } }));
@@ -211,7 +211,8 @@ describe('the alias pilot and judge check', () => {
         const rec = { answer_id: answerId(cell, q.id, reader, 0), cell_id: cell, realization_id: 'r', question_id: q.id, conversation: q.conversation, system: 'baseline-file-agent', arm: 'whole-agent', reader, replicate: 0, effort: 'high',
           context_sha256: sha256(q.id), text: a.text, usage: { input: 10, output: 5, cache_read: 0, cache_write: 0 }, provider_input_tokens: 10, latency_ms: 1000, outcome, stop_reason: 'submitted', turns: 3, tool_calls: { grep: { calls: 2, failed: 0 } }, usd: 0.01 };
         answers.push(JSON.stringify(rec));
-        if (outcome === 'scored') judgments.push(JSON.stringify({ answer_id: rec.answer_id, instrument_id: 'bg1', instrument_sha256: sha256('i'), judge: bg1JudgeOf(reader), judge_replicate: 0, temperature: null, score: verdict(q, reader, i), parse_ok: true, raw_sha256: sha256('[]'), outcome: 'scored' }));
+        const score = verdict(q, reader, i);
+        if (outcome === 'scored' && score !== null) judgments.push(JSON.stringify({ answer_id: rec.answer_id, instrument_id: 'bg1', instrument_sha256: sha256('i'), judge: bg1JudgeOf(reader), judge_replicate: 0, temperature: null, score, parse_ok: true, raw_sha256: sha256('[]'), outcome: 'scored' }));
       }
     });
     writeFileSync(join(dir, 'answers.ndjson'), answers.join('\n') + '\n');
@@ -278,6 +279,21 @@ describe('the alias pilot and judge check', () => {
     expect(judgeCheckShortfall([grepCell(pilotGrep, gold, right), grepCell(judgeGrep, gold, right)], 'alias')).toContain('JUDGE_CHECK_SHORT');
     const half = (q: MemoryQuestion, r: string, i: number) => (i % 2 ? 1 : 0) as 0 | 1;
     expect(judgeCheckShortfall([grepCell(pilotGrep, gold, half), grepCell(judgeGrep, gold, half)], 'alias')).toBeNull();
+  });
+
+  // Value: protects=a judge with no verdict at all reads as short, so the judge check never passes on the other judge alone and the other rows stay held; fails_when=buildSample draws only the judges that gave a verdict, so a pool where claude-opus-5-5's judge has 100 verdicts with 40 wrong and particle-1's judge has none reads as drawable; why_new=GBEV-3's ruling of 2026-11-25 on #650's blocker 2; seam=pilot.ts judgeCheckShortfall over judge-check.ts buildSample, then pilotReport and writePilotCampaigns, on written cells; no_claim=real verdicts
+  test('a judge with no verdicts reads as short and the other rows stay held', () => {
+    const at = new Map(corpus.questions.map((q, i) => [q.id, i]));
+    const oneJudge = (q: MemoryQuestion, r: string) => { const i = at.get(q.id)!; return r !== OPUS || i >= 100 ? null : i < 40 ? 0 : 1; };
+    const someStale = (q: MemoryQuestion, r: string, i: number) => (i % 10 === 0 ? stale(q) : gold(q));
+    const dirs = [grepCell(pilotGrep, someStale, oneJudge), grepCell(judgeGrep, someStale, oneJudge)];
+    const short = judgeCheckShortfall(dirs, 'alias');
+    expect(short).toContain('JUDGE_CHECK_SHORT: ' + bg1JudgeOf(PARTICLE) + ' has 0 answers with a verdict');
+    const rows = dirs.flatMap(d => readRow(d)), reading = stopRuleReading(manifest, rows);
+    expect(reading).toMatchObject({ complete: true, stops_line: false });
+    const held = Object.entries(pilotReport(rows, [], manifest, short).rows).filter(([row]) => row !== 'grep-agent').map(([, x]) => [x.pass, (x as { held?: string }).held]);
+    expect(held).toEqual(['extract-first', 'gbrain', 'memory-bank'].map(() => [false, 'the judge check is short: ' + short]));
+    expect(() => writePilotCampaigns(manifest, { out: scratch('held'), window: 'test-window', windowCapUsd: 45, worldEnd: WORLD_END, stopReading: { ...reading, judge_check_short: short } })).toThrow('PILOT_JUDGE_CHECK_SHORT');
   });
 
   // Value: protects=the alias campaigns write the mint, the grep agent's pilot, the judge check and its labelling first, hold the other rows until a complete reading below 0.95 that the judge check can sample, and refuse either stage unless the mint and both stages fit one window's cap together; fails_when=campaigns writes a row the stop rule or a short judge check keeps from running, writes the grep stage again with the other rows, or lets the two stages and the mint pass the window between them; why_new=/ship review p1 specialist (the stop rule was only a label), p2 targeted money note and GBEV-3's ruling of 2026-11-25 (items 4 and 6); seam=pilot.ts writePilotCampaigns with fake readings; no_claim=the VM run
