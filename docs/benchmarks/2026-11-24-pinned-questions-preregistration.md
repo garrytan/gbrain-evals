@@ -342,11 +342,11 @@ amendment, the preregistered token rule or the pattern below.
 **The pattern.** It labels the changed claim in an answer that names both its previous value (X) and its current value
 (Y). It is `bothValuePattern` in `eval/runner/pinned-questions-rescore.ts`, frozen in the commit that adds this
 paragraph. The answer is split into sentences, and each sentence into clauses at commas, semicolons, colons and
-brackets.
+parentheses.
 
 - A value is marked *not current* by "from <value>", or by a not-current word in a clause that names that value alone.
-  When the word's clause names neither value, it applies to the nearest earlier clause in the sentence that names one
-  ("..., which the note appears to supersede"). The not-current words are: previously, formerly, former, used to, out
+  When the word's clause names neither value, it applies to the nearest earlier clause in the sentence that names a
+  value, if that clause names one alone ("..., which the note appears to supersede"). The not-current words are: previously, formerly, former, used to, out
   of date, outdated, no longer, supersede(s, d), superseding, predate(s, d), predating, corrected, mistaken, an error,
   erroneous.
 - A sentence's *own voice* is its clauses before the first clause with an attribution word: say(s), said, according
@@ -361,7 +361,9 @@ brackets.
   not current, or X is marked and the answer also says it can't tell. **Not correct:** everything else, which covers
   sources set side by side with no ordering of the answer's own.
 
-The pattern reads words, not meaning, and its limits follow from that. A source named without one of the attribution
+The pattern reads words, not meaning, and its limits follow from that. The word lists ignore case, but "from",
+"moved ... to" and "now ... <value>" match only in lower case, and "moved ... to" and "now" don't reach across a
+semicolon. A source named without one of the attribution
 words ("per a press note, ...") counts as the answer's own voice. A value stated first and then attributed after a
 comma counts as stated. "Still lists X" never marks X as not current, so an answer whose only ordering is "the page
 still lists X" is not correct. Negation outside the listed words isn't read. **We wrote the pattern after reading the
