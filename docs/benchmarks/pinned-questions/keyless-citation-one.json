@@ -1,0 +1,440 @@
+{
+  "category": "pinned-questions",
+  "run_status": "completed",
+  "verdict": "fail",
+  "n_total": 240,
+  "n_scored": 240,
+  "errors": [],
+  "publishable": true,
+  "gbrain_version": "0.60.769.0",
+  "gbrain_pin": "github:garrytan/gbrain#38831bb696139024923e9bc43e3da0d7993951e9",
+  "git_head": "0c7c4dbb5ea76bd3076784cf1efc6eea4f5669cb",
+  "dirty": false,
+  "resolved_config": {
+    "engine": "pglite-in-memory",
+    "decide": "off (no key, fresh GBRAIN_HOME)",
+    "caller": "operation handlers and src/core/questions/service.ts with OperationContext { remote: false, sourceId: default } (the brain owner on the host)",
+    "gate": "report-only",
+    "seeds": [
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20
+    ],
+    "companies_per_seed": 24,
+    "cycles": 6,
+    "citation": "one",
+    "generator_version": "pinned-questions-gen/1",
+    "model": "oracle (scripted): one sentence per claim citing the evidence lines that state the ledger value and name the company (citation all: every such line; one: a fact row if any, else the first); values before the change while pinning, after it while refreshing",
+    "scheduler": "runPhaseStandingQuestions with gbrain defaults (cooldown 1 day, max 5 per run); each simulated day moves every last_attempt_at back one day first",
+    "flags": "first questions_status read after the change; a sentence missing from it counts as flagged",
+    "verdict": "exact conformance (scorer check only; the category is report-only)",
+    "gbrain_overlay": null
+  },
+  "hashes": {
+    "ledger_seed_11": "425e2d084a49f597c40f2a288083befa24ae9bd2034254f333107add2b98fe6a",
+    "ledger_seed_12": "a80f0a7917868eaec985e3bcb91b02de93f2437faef98b6aaf1e38f7aa3008c0",
+    "ledger_seed_13": "f20e990324f87bdd424720ceb66fe9b4ae0f2f0f101d333e35f5005f2d85fdc7",
+    "ledger_seed_14": "e58f1def0984fcc00a6f46daec00f37cd49cc03bf8f5c5c1cda380211898d858",
+    "ledger_seed_15": "fe39c54cfd248b607d9b1aa9ed892b6c3d8132ccafa1610c7d5cf2a7a87c8633",
+    "ledger_seed_16": "50a7756287388469a6ce21c60818f985a898671169224b238ab516dd2eddd82d",
+    "ledger_seed_17": "1bd7fcea16b468216cc29119e0bc92f419c39a0bbca287e2123636bac3a43a41",
+    "ledger_seed_18": "3eb35b3a553660d2d8c2270a208930b5d23925325fca5f3b5cc3b2f751f6cdfe",
+    "ledger_seed_19": "35399e0ab9ab2f51430b4a17471cc0d4e867b31c8b4c346016bcb429b6edc24e",
+    "ledger_seed_20": "26c1df534431cc9fd7e6f3fbc321e307d4292c1111ccb0ae4b20bcf5f2546b77"
+  },
+  "started_at": "2026-11-24T23:00:56.222Z",
+  "finished_at": "2026-11-24T23:03:08.201Z",
+  "tokens": {
+    "input": 0,
+    "output": 0
+  },
+  "summary": {
+    "overall": {
+      "questions": 240,
+      "errors": 0,
+      "sentences": 960,
+      "flags": {
+        "tp": 90,
+        "fp": 150,
+        "fn": 60,
+        "tn": 660,
+        "precision": 0.375,
+        "recall": 0.6,
+        "f1": 0.4615384615384615,
+        "false_flag_rate": 0.18518518518518517
+      },
+      "flags_ci": {
+        "precision": [
+          0.3306764875979951,
+          0.42083333333333334
+        ],
+        "recall": [
+          0.522005742411813,
+          0.6785714285714286
+        ],
+        "false_flag_rate": [
+          0.1533645357409396,
+          0.21728395061728395
+        ],
+        "draws": 10000,
+        "clusters": 240
+      },
+      "signal_rate": 0.75,
+      "spillover_per_change": 5.75,
+      "corrected_within_run": 0.8,
+      "median_cycles_to_correct": 1,
+      "refreshes": 678,
+      "precision_ci": [
+        0.3306764875979951,
+        0.42083333333333334
+      ],
+      "recall_ci": [
+        0.522005742411813,
+        0.6785714285714286
+      ]
+    },
+    "documented": {
+      "tp": 90,
+      "fp": 150,
+      "fn": 0,
+      "tn": 480,
+      "precision": 0.375,
+      "recall": 1,
+      "f1": 0.5454545454545454,
+      "false_flag_rate": 0.23809523809523808
+    },
+    "contradiction": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 60,
+      "tn": 180,
+      "precision": null,
+      "recall": 0,
+      "f1": null,
+      "false_flag_rate": 0
+    },
+    "documented_ci": {
+      "precision": [
+        0.33070866141732286,
+        0.4214876033057851
+      ],
+      "recall": [
+        1,
+        1
+      ],
+      "false_flag_rate": [
+        0.19968304278922344,
+        0.2765965903325102
+      ],
+      "draws": 10000,
+      "clusters": 180
+    },
+    "contradiction_ci": {
+      "precision": null,
+      "recall": [
+        0,
+        0
+      ],
+      "false_flag_rate": [
+        0,
+        0
+      ],
+      "draws": 10000,
+      "clusters": 60
+    },
+    "question_signal": {
+      "tp": 120,
+      "fp": 60,
+      "fn": 30,
+      "tn": 30,
+      "precision": 0.6666666666666666,
+      "recall": 0.8,
+      "f1": 0.7272727272727272,
+      "false_flag_rate": 0.6666666666666666
+    },
+    "by_class": {
+      "edit_claim_page": {
+        "questions": 30,
+        "errors": 0,
+        "sentences": 120,
+        "flags": {
+          "tp": 30,
+          "fp": 30,
+          "fn": 0,
+          "tn": 60,
+          "precision": 0.5,
+          "recall": 1,
+          "f1": 0.6666666666666666,
+          "false_flag_rate": 0.3333333333333333
+        },
+        "flags_ci": {
+          "precision": [
+            0.5,
+            0.5
+          ],
+          "recall": [
+            1,
+            1
+          ],
+          "false_flag_rate": [
+            0.3333333333333333,
+            0.3333333333333333
+          ],
+          "draws": 10000,
+          "clusters": 30
+        },
+        "signal_rate": 1,
+        "spillover_per_change": 0,
+        "corrected_within_run": 1,
+        "median_cycles_to_correct": 1,
+        "refreshes": 30
+      },
+      "edit_claim_fact": {
+        "questions": 30,
+        "errors": 0,
+        "sentences": 120,
+        "flags": {
+          "tp": 30,
+          "fp": 60,
+          "fn": 0,
+          "tn": 30,
+          "precision": 0.3333333333333333,
+          "recall": 1,
+          "f1": 0.5,
+          "false_flag_rate": 0.6666666666666666
+        },
+        "flags_ci": {
+          "precision": [
+            0.3333333333333333,
+            0.3333333333333333
+          ],
+          "recall": [
+            1,
+            1
+          ],
+          "false_flag_rate": [
+            0.6666666666666666,
+            0.6666666666666666
+          ],
+          "draws": 10000,
+          "clusters": 30
+        },
+        "signal_rate": 1,
+        "spillover_per_change": 0,
+        "corrected_within_run": 1,
+        "median_cycles_to_correct": 1,
+        "refreshes": 30
+      },
+      "remove_source_page": {
+        "questions": 30,
+        "errors": 0,
+        "sentences": 120,
+        "flags": {
+          "tp": 30,
+          "fp": 0,
+          "fn": 0,
+          "tn": 90,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1,
+          "false_flag_rate": 0
+        },
+        "flags_ci": {
+          "precision": [
+            1,
+            1
+          ],
+          "recall": [
+            1,
+            1
+          ],
+          "false_flag_rate": [
+            0,
+            0
+          ],
+          "draws": 10000,
+          "clusters": 30
+        },
+        "signal_rate": 1,
+        "spillover_per_change": 0,
+        "corrected_within_run": 1,
+        "median_cycles_to_correct": 1,
+        "refreshes": 30
+      },
+      "contradict_new_page": {
+        "questions": 30,
+        "errors": 0,
+        "sentences": 120,
+        "flags": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 30,
+          "tn": 90,
+          "precision": null,
+          "recall": 0,
+          "f1": null,
+          "false_flag_rate": 0
+        },
+        "flags_ci": {
+          "precision": null,
+          "recall": [
+            0,
+            0
+          ],
+          "false_flag_rate": [
+            0,
+            0
+          ],
+          "draws": 10000,
+          "clusters": 30
+        },
+        "signal_rate": 1,
+        "spillover_per_change": 23,
+        "corrected_within_run": 1,
+        "median_cycles_to_correct": 3,
+        "refreshes": 408
+      },
+      "contradict_existing_page": {
+        "questions": 30,
+        "errors": 0,
+        "sentences": 120,
+        "flags": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 30,
+          "tn": 90,
+          "precision": null,
+          "recall": 0,
+          "f1": null,
+          "false_flag_rate": 0
+        },
+        "flags_ci": {
+          "precision": null,
+          "recall": [
+            0,
+            0
+          ],
+          "false_flag_rate": [
+            0,
+            0
+          ],
+          "draws": 10000,
+          "clusters": 30
+        },
+        "signal_rate": 0,
+        "spillover_per_change": 0,
+        "corrected_within_run": 0,
+        "median_cycles_to_correct": null,
+        "refreshes": 0
+      },
+      "unrelated_edit_cited_page": {
+        "questions": 30,
+        "errors": 0,
+        "sentences": 120,
+        "flags": {
+          "tp": 0,
+          "fp": 60,
+          "fn": 0,
+          "tn": 60,
+          "precision": 0,
+          "recall": null,
+          "f1": null,
+          "false_flag_rate": 0.5
+        },
+        "flags_ci": {
+          "precision": [
+            0,
+            0
+          ],
+          "recall": null,
+          "false_flag_rate": [
+            0.5,
+            0.5
+          ],
+          "draws": 10000,
+          "clusters": 30
+        },
+        "signal_rate": 1,
+        "spillover_per_change": 0,
+        "corrected_within_run": null,
+        "median_cycles_to_correct": null,
+        "refreshes": 30
+      },
+      "unrelated_edit_uncited_page": {
+        "questions": 30,
+        "errors": 0,
+        "sentences": 120,
+        "flags": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "tn": 120,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "false_flag_rate": 0
+        },
+        "flags_ci": {
+          "precision": null,
+          "recall": null,
+          "false_flag_rate": [
+            0,
+            0
+          ],
+          "draws": 10000,
+          "clusters": 30
+        },
+        "signal_rate": 0,
+        "spillover_per_change": 0,
+        "corrected_within_run": null,
+        "median_cycles_to_correct": null,
+        "refreshes": 0
+      },
+      "unrelated_new_page": {
+        "questions": 30,
+        "errors": 0,
+        "sentences": 120,
+        "flags": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "tn": 120,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "false_flag_rate": 0
+        },
+        "flags_ci": {
+          "precision": null,
+          "recall": null,
+          "false_flag_rate": [
+            0,
+            0
+          ],
+          "draws": 10000,
+          "clusters": 30
+        },
+        "signal_rate": 1,
+        "spillover_per_change": 23,
+        "corrected_within_run": null,
+        "median_cycles_to_correct": null,
+        "refreshes": 150
+      }
+    },
+    "wasted_refreshes": 180,
+    "baseline_false_flags": 0,
+    "unanswered_at_pin": 0
+  },
+  "conformance": {
+    "pass": false,
+    "detail": "sentences tp 90 fp 150 fn 60; questions tp 120 fp 60 fn 30; spillover 1380; measurement errors 0"
+  },
+  "harness_error": null
+}

@@ -1,0 +1,386 @@
+{
+  "category": "pinned-questions-paid",
+  "run_status": "completed",
+  "verdict": "fail",
+  "n_total": 72,
+  "n_scored": 72,
+  "errors": [],
+  "publishable": true,
+  "gbrain_version": "0.60.769.0",
+  "gbrain_pin": "github:garrytan/gbrain#38831bb696139024923e9bc43e3da0d7993951e9",
+  "git_head": "6646f4db2f313fe99db8d2298a6ab213052656e9",
+  "dirty": false,
+  "resolved_config": {
+    "mode": "paid",
+    "engine": "pglite-in-memory",
+    "caller": "operation handlers and src/core/questions/service.ts (pinQuestion, refreshQuestion, questionStatus) with OperationContext { remote: false, sourceId: default }; no injected chat",
+    "gate": "report-only",
+    "models": [
+      {
+        "model": "anthropic:claude-opus-5-5",
+        "role": "model under test"
+      },
+      {
+        "model": "particle:particle-1",
+        "role": "model under test"
+      },
+      {
+        "model": "openai:gpt-6.2-sol",
+        "role": "model under test"
+      },
+      {
+        "model": "openai:gpt-6.2-astra",
+        "role": "judge",
+        "grades": [
+          "anthropic:claude-opus-5-5",
+          "particle:particle-1"
+        ]
+      },
+      {
+        "model": "anthropic:claude-opus-5-5",
+        "role": "judge",
+        "grades": [
+          "openai:gpt-6.2-sol"
+        ]
+      }
+    ],
+    "stage": "pilot",
+    "model_config": "models.standing_questions set to the model under test per brain; refresh output cap at gbrain's default of 2,000 tokens; gbrain defaults otherwise (gbrain's default per-refresh budget)",
+    "max_output_tokens": null,
+    "particle_reasoning_effort": "high (provider_chat_options.particle.reasoningEffort)",
+    "wait_ms": 300000,
+    "judge": {
+      "prompt_sha256": "992233441a979264fb6ce72e98eb4948aedd0dd3efae40f188b8361c3ac655b0",
+      "max_tokens": 8192,
+      "temperature_sent": null,
+      "route": "gbrain gateway chat, allowFallback false",
+      "retries": "one retry on unparseable output"
+    },
+    "verdict": "judge check only (every judge's kappa against the rule labels at least 0.6 on at least 100 outputs); the category is report-only; data.summary.truncation names the models over the 5% cut-off bar",
+    "grading": "first answers against the ledger before the change, refreshed answers against it after; answer_correct = every claim correct (a removed claim is correct when not asserted); the scored row.correct is false when the refresh did not publish and null (left out) after a provider error or a failed judge call (scoredCorrect)",
+    "retries": "a unit with provider or judge-call errors is asked again once in a resumed run (2 attempts), then kept with those questions left out; a budget-ledger refusal pauses the run at the unit boundary without checkpointing that unit",
+    "seeds": [
+      21
+    ],
+    "companies_per_seed": 24,
+    "generator_version": "pinned-questions-gen/1",
+    "resumed_units": 0,
+    "judge_check_receipt_sha256": null,
+    "runner_source_sha256": "209ca79335425287d886d903e858a71ec5ad21c87b697d657a87c88f64e0e0dd",
+    "gbrain_overlay": null
+  },
+  "hashes": {
+    "ledger_seed_21": "87425b5d2ae14a4b20794156388cdab3421998c1f89d99a4c9b49796b7097b11"
+  },
+  "started_at": "2026-11-24T21:49:38.792Z",
+  "finished_at": "2026-11-24T21:59:15.162Z",
+  "tokens": {
+    "input": 548191,
+    "output": 32901
+  },
+  "summary": {
+    "by_model": {
+      "anthropic:claude-opus-5-5": {
+        "questions": 24,
+        "judge_model": "openai:gpt-6.2-astra",
+        "first_correct": 1,
+        "refreshed_correct": 0.875,
+        "refreshed_excluded": 0,
+        "refreshed_judge_correct_on_text": 0.875,
+        "refreshed_correct_rule": 1,
+        "refresh_outcome": {
+          "published": 24
+        },
+        "answer_too_long": {
+          "pin": 0,
+          "refresh": 0,
+          "share": 0,
+          "over_bar": false
+        },
+        "pin_status": {
+          "published": 24
+        },
+        "refresh_status": {
+          "published": 24
+        },
+        "refresh_mode": {
+          "incremental": 18,
+          "full": 6
+        },
+        "by_mutation": {
+          "contradict_existing_page": {
+            "questions": 3,
+            "refreshed_correct": 0.6666666666666666
+          },
+          "contradict_new_page": {
+            "questions": 3,
+            "refreshed_correct": 0.3333333333333333
+          },
+          "edit_claim_fact": {
+            "questions": 3,
+            "refreshed_correct": 1
+          },
+          "edit_claim_page": {
+            "questions": 3,
+            "refreshed_correct": 1
+          },
+          "remove_source_page": {
+            "questions": 3,
+            "refreshed_correct": 1
+          },
+          "unrelated_edit_cited_page": {
+            "questions": 3,
+            "refreshed_correct": 1
+          },
+          "unrelated_edit_uncited_page": {
+            "questions": 3,
+            "refreshed_correct": 1
+          },
+          "unrelated_new_page": {
+            "questions": 3,
+            "refreshed_correct": 1
+          }
+        }
+      },
+      "particle:particle-1": {
+        "questions": 24,
+        "judge_model": "openai:gpt-6.2-astra",
+        "first_correct": 0.9583333333333334,
+        "refreshed_correct": 0.8333333333333334,
+        "refreshed_excluded": 0,
+        "refreshed_judge_correct_on_text": 0.8333333333333334,
+        "refreshed_correct_rule": 1,
+        "refresh_outcome": {
+          "published": 24
+        },
+        "answer_too_long": {
+          "pin": 0,
+          "refresh": 0,
+          "share": 0,
+          "over_bar": false
+        },
+        "pin_status": {
+          "published": 24
+        },
+        "refresh_status": {
+          "published": 24
+        },
+        "refresh_mode": {
+          "incremental": 18,
+          "full": 6
+        },
+        "by_mutation": {
+          "contradict_existing_page": {
+            "questions": 3,
+            "refreshed_correct": 0.6666666666666666
+          },
+          "contradict_new_page": {
+            "questions": 3,
+            "refreshed_correct": 0
+          },
+          "edit_claim_fact": {
+            "questions": 3,
+            "refreshed_correct": 1
+          },
+          "edit_claim_page": {
+            "questions": 3,
+            "refreshed_correct": 1
+          },
+          "remove_source_page": {
+            "questions": 3,
+            "refreshed_correct": 1
+          },
+          "unrelated_edit_cited_page": {
+            "questions": 3,
+            "refreshed_correct": 1
+          },
+          "unrelated_edit_uncited_page": {
+            "questions": 3,
+            "refreshed_correct": 1
+          },
+          "unrelated_new_page": {
+            "questions": 3,
+            "refreshed_correct": 1
+          }
+        }
+      },
+      "openai:gpt-6.2-sol": {
+        "questions": 24,
+        "judge_model": "anthropic:claude-opus-5-5",
+        "first_correct": 1,
+        "refreshed_correct": 1,
+        "refreshed_excluded": 0,
+        "refreshed_judge_correct_on_text": 1,
+        "refreshed_correct_rule": 1,
+        "refresh_outcome": {
+          "published": 24
+        },
+        "answer_too_long": {
+          "pin": 0,
+          "refresh": 0,
+          "share": 0,
+          "over_bar": false
+        },
+        "pin_status": {
+          "published": 24
+        },
+        "refresh_status": {
+          "published": 24
+        },
+        "refresh_mode": {
+          "incremental": 18,
+          "full": 6
+        },
+        "by_mutation": {
+          "contradict_existing_page": {
+            "questions": 3,
+            "refreshed_correct": 1
+          },
+          "contradict_new_page": {
+            "questions": 3,
+            "refreshed_correct": 1
+          },
+          "edit_claim_fact": {
+            "questions": 3,
+            "refreshed_correct": 1
+          },
+          "edit_claim_page": {
+            "questions": 3,
+            "refreshed_correct": 1
+          },
+          "remove_source_page": {
+            "questions": 3,
+            "refreshed_correct": 1
+          },
+          "unrelated_edit_cited_page": {
+            "questions": 3,
+            "refreshed_correct": 1
+          },
+          "unrelated_edit_uncited_page": {
+            "questions": 3,
+            "refreshed_correct": 1
+          },
+          "unrelated_new_page": {
+            "questions": 3,
+            "refreshed_correct": 1
+          }
+        }
+      }
+    },
+    "judge_agreement": {
+      "openai:gpt-6.2-astra": {
+        "n": 82,
+        "excluded_ambiguous": 14,
+        "excluded_no_judge": 0,
+        "both": 81,
+        "judge_only": 0,
+        "rule_only": 0,
+        "neither": 1,
+        "agreement": 1,
+        "kappa": 1
+      },
+      "anthropic:claude-opus-5-5": {
+        "n": 48,
+        "excluded_ambiguous": 0,
+        "excluded_no_judge": 0,
+        "both": 48,
+        "judge_only": 0,
+        "rule_only": 0,
+        "neither": 0,
+        "agreement": 1,
+        "kappa": null
+      }
+    },
+    "judge_agreement_by_model": {
+      "anthropic:claude-opus-5-5": {
+        "n": 39,
+        "excluded_ambiguous": 9,
+        "excluded_no_judge": 0,
+        "both": 39,
+        "judge_only": 0,
+        "rule_only": 0,
+        "neither": 0,
+        "agreement": 1,
+        "kappa": null
+      },
+      "particle:particle-1": {
+        "n": 43,
+        "excluded_ambiguous": 5,
+        "excluded_no_judge": 0,
+        "both": 42,
+        "judge_only": 0,
+        "rule_only": 0,
+        "neither": 1,
+        "agreement": 1,
+        "kappa": 1
+      },
+      "openai:gpt-6.2-sol": {
+        "n": 48,
+        "excluded_ambiguous": 0,
+        "excluded_no_judge": 0,
+        "both": 48,
+        "judge_only": 0,
+        "rule_only": 0,
+        "neither": 0,
+        "agreement": 1,
+        "kappa": null
+      }
+    },
+    "comparisons": {
+      "particle:particle-1": {
+        "pairs": 24,
+        "only_a": 2,
+        "only_b": 1,
+        "rate_a": 0.875,
+        "rate_b": 0.8333333333333334,
+        "difference": -0.041666666666666664,
+        "difference_ci": [
+          -0.16666666666666666,
+          0.08333333333333333
+        ],
+        "mcnemar_p": 1,
+        "holm_p": 1,
+        "significant": false,
+        "non_inferior": false
+      },
+      "openai:gpt-6.2-sol": {
+        "pairs": 24,
+        "only_a": 0,
+        "only_b": 3,
+        "rate_a": 0.875,
+        "rate_b": 1,
+        "difference": 0.125,
+        "difference_ci": [
+          0,
+          0.25
+        ],
+        "mcnemar_p": 0.25000000000000006,
+        "holm_p": 0.5000000000000001,
+        "significant": false,
+        "non_inferior": true
+      }
+    },
+    "truncation": {
+      "bar": 0.05,
+      "models_over_bar": []
+    },
+    "tokens_per_call": {
+      "pin": {
+        "calls": 72,
+        "mean_input_tokens": 3328.25,
+        "mean_output_tokens": 175.54166666666666
+      },
+      "refresh": {
+        "calls": 72,
+        "mean_input_tokens": 3398.8611111111113,
+        "mean_output_tokens": 211.625
+      },
+      "judge": {
+        "calls": 144,
+        "mean_input_tokens": 443.3263888888889,
+        "mean_output_tokens": 34.895833333333336
+      }
+    }
+  },
+  "harness_errors": []
+}
