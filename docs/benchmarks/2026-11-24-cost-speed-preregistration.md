@@ -433,6 +433,58 @@ and the text above differ, this amendment wins.
    a dated amendment before the first counted cell preregisters instead one look at half the worlds, with its stop
    bounds, and the registry entry's tier and `interim_look` change with it.
 
+### 2026-11-25: build, read route, scheduled jobs, hosting prices and the token basis
+
+Made on the results branch before any paid call. Where this amendment and the text above differ, this amendment wins.
+
+1. **gbrain build.** gbrain's newest release at launch is v0.60.771.0
+   (`97ef356f574a66709ef1bf4ae1cad604727852d8`), so every gbrain cell runs it (`CS1_GBRAIN_BUILD` in
+   `eval/runner/q1/cells/cs1.ts`), and the build freezes when the first counted gbrain cell starts. Its starter surface
+   no longer takes `limit` on `list_write_requests`, so the shim stopped sending it; before that fix the capacity
+   check's `/finish` errored and its probes were skipped.
+2. **Extract-first's read goes through a read route.** Its search embeds the entities it extracts from the query
+   with texts other than the probe passage, so the probe label (amendment of 2026-11-24, item 1) missed them. The
+   read-route stack (`docs/comparison-systems/ext-extract-first/read-route/`) sends the server's reads through the
+   proxy route `/<slot>~read/`, metered as the slot itself; while a probe is registered every request on that route is
+   labelled `probe`, and each usage line records `read: true`. Writes keep the plain slot. The pinned bundle's files
+   are unchanged.
+3. **Scheduled jobs priced per run.** A job whose cadence is longer than its idle window is priced by running its
+   documented trigger once before the window, under its own meter key, and counting that run's dollars times the runs a
+   month at its shipped cadence; the window's own rate covers everything else. gbrain's daily upkeep is
+   `gbrain maintain --unattended`, run with serve stopped; a keyless run on v0.60.771.0 ran its 15 steps and a second
+   run reported upkeep not due, so the restarted server doesn't run it again inside the window.
+4. **Hosting prices.** The primary ladder is AWS EC2 m7i on demand (Linux, us-east-1) with EBS gp3 storage; the
+   sensitivity row is m7g (Graviton) on the same terms. Prices were read on 2026-11-25 from AWS's public price lists and
+   are fixed in `CS1_PRICE_LADDERS` (`eval/runner/q1/cells/cs1.ts`).
+5. **Token basis.** Dollars per million tokens divide by the content tokens written (the turns' text, as the
+   workload profile counts them), not by the tokens of whatever framing a system adds, so systems are priced against the
+   same history.
+6. **History growth.** The first and last quarters are those of the bulk import's writes, each quarter's dollars being
+   the write and background lines that arrive from its first write until the next quarter's first
+   (`writes.ndjson` per world). Bulk writes are also polled for write-to-queryable time; those times are reported
+   beside the held-back probes and don't enter p50, p95 or decision 3.
+7. **Misses split.** A missed probe is searched once more after the system is idle again and reported as late (found
+   then) or never found; both count as misses in decision 3.
+8. **Capacity units are keyless only.** The launch check refuses a capacity unit in any campaign, and a capacity cell
+   refuses to run unless its lease proxy reports a keyless upstream.
+9. **Pilot leases.** Each pilot cell's planned spend is at most a tenth of its counted row (`estimate` in
+   `cs1-cells.json`). Its lease is a runaway stop that reserves each request's worst case, so for the two rows whose
+   reader runs whole agent loops or whole-history reads (the file agent and full context) the lease is larger than a
+   tenth; the window cap covers the leases, and the pilot report gives the spend.
+10. **gbrain's fixed-evidence read on the starter surface.** v0.60.771.0's starter surface refuses `limit` and
+    `autocut` on `query` before reading anything, so the harness's readiness probe (a fixed-evidence read) failed
+    on every gbrain cell and marked it degraded. The shim now drops each knob the surface refuses, runs the read at
+    gbrain's defaults for it, and records the dropped knobs on the read. Question reads use the shipped default read
+    and are unchanged.
+11. **Keyless capacity check.** Each capacity cell wrote all 154 sessions of `bg1-dev-12` behind the fake upstream.
+    gbrain v0.60.771.0 drained (`/finish` ready, no pending work), found 21 of 21 held-back probes and 20 of 20 bulk
+    probes, and its calibration window held only probe-labelled requests. Extract-first on the read route held the
+    whole world and its calibration window held only probe-labelled requests, but its extraction stores nothing from
+    the fake's replies, so every probe missed; memory-bank likewise stored nothing in the first capacity run. For those
+    two systems the fake can't stand in for the provider, so their capacity is checked on their first counted world,
+    as the Pilot section says. Verbatim-session, the hybrid baseline and the file agent held the whole world in the
+    first run. The answers are matcher-checked only for running: the fake's replies answer nothing.
+
 ## Disclosures
 
 gbrain is Garry Tan's own project.
