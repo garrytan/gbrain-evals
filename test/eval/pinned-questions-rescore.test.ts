@@ -13,10 +13,11 @@ import {
   type ChatTransport, type GradedAnswer, type PaidRow, type StaleProbe,
 } from '../../eval/runner/pinned-questions-paid.ts';
 import {
-  BOTH_VALUE_TEMPLATES, PINNED_QUESTIONS_RESCORE_PROMPT, RESCORE_SOURCE_SHA256, bothValueItems, buildRescoreReceipt, readRescoreInputs, rescoreEstimateUsd, rescorePlan,
+  BOTH_VALUE_TEMPLATES, PINNED_QUESTIONS_RESCORE_PROMPT, RESCORE_INPUTS, RESCORE_JOURNAL, RESCORE_SOURCE_SHA256, bothValueItems, buildRescoreReceipt, pendingRescoreCalls, readRescoreInputs, readRescoreJournal, rescoreEstimateUsd, rescorePlan,
   rescorePromptSha256, runRescore, type RescoreInputName, type RescoreResult,
 } from '../../eval/runner/pinned-questions-rescore.ts';
 import { writeReceipt } from '../../eval/runner/receipt.ts';
+import { BudgetExceededError } from '../../eval/runner/budget-ledger.ts';
 
 const KEY_NAMES = /(_API_KEY|_API_TOKEN|_BEARER_TOKEN)$|^(TYPESAFE|JEV)_/;
 const keylessEnv = () => Object.fromEntries(Object.entries(process.env).filter(([k]) => !KEY_NAMES.test(k)));
@@ -158,6 +159,11 @@ describe('pinned-questions rescore: the published inputs', () => {
     expect(read(f.paths, { ...f.expected, 'judge-check': 'y'.repeat(64) })).toThrow(PaidArmRefusal);
   });
 
+  test('the published inputs are the receipts the results manifest names', () => {
+    const manifest = JSON.parse(readFileSync('docs/benchmarks/pinned-questions/manifest.json', 'utf8')) as { receipts: Record<string, { sha256: string }> };
+    expect({ ...RESCORE_INPUTS } as Record<string, string>).toEqual({ counted: manifest.receipts.counted!.sha256, 'judge-check': manifest.receipts['judge-check']!.sha256, 'stale-probes': manifest.receipts['stale-probes']!.sha256 });
+  });
+
   test('the estimate prices every planned judge call: both judges on each both-value answer, each recheck item and each re-judged counted row', () => {
     const f = fixtures(d);
     const plan = rescorePlan(readRescoreInputs(f.paths, { gut, expected: f.expected }));
@@ -178,6 +184,9 @@ describe('pinned-questions rescore: the published inputs', () => {
     writeFileSync(join(out, 'rescore.started'), 'x\n');
     const second = cli();
     expect([second.status, second.stderr]).toEqual([2, expect.stringContaining('a rescore already started')]);
+    expect(second.stderr).toContain('--resume');
+    const noStart = spawnSync('bun', ['eval/runner/pinned-questions-rescore.ts', '--output', join(d, 'never-started'), '--resume', '--paid', '--budget-run-id', 'none'], { env: keylessEnv(), encoding: 'utf8' });
+    expect([noStart.status, noStart.stderr]).toEqual([2, expect.stringContaining('--resume, but no rescore started')]);
   });
 });
 
@@ -235,6 +244,7 @@ describe("pinned-questions rescore: keyless run through gbrain's gateway", () =>
     expect(s['anthropic:claude-opus-5-5']).toMatchObject({ preregistered: { correct: 24, scored: 24 }, rescored: { correct: 24 - n }, flipped_to_not_correct: n, flipped_to_correct: 0 });
     expect(s['particle:particle-1']).toMatchObject({ preregistered: { correct: 24 - n }, rescored: { correct: 24 }, flipped_to_correct: n, flipped_to_not_correct: 0 });
     expect(s['openai:gpt-6.2-sol']).toMatchObject({ preregistered: { correct: 23, scored: 24 }, rescored: { correct: 23, scored: 24 }, rejudged: 23 });
+    expect(s['anthropic:claude-opus-5-5']).toMatchObject({ both_value_answers: n, flipped_on_both_value_answers: { to_correct: 0, to_not_correct: n }, flipped_on_other_answers: { to_correct: 0, to_not_correct: 0 } });
     expect(Object.keys(receipt.data.summary.comparisons_rescored)).toEqual(['particle:particle-1', 'openai:gpt-6.2-sol']);
     expect(Object.keys(receipt.data.summary.comparisons_preregistered)).toEqual(['particle:particle-1', 'openai:gpt-6.2-sol']);
     expect(receipt.verdict).toBe('pass');
@@ -243,6 +253,29 @@ describe("pinned-questions rescore: keyless run through gbrain's gateway", () =>
     expect(receipt.cost.usd).toBe(0);
     expect(receipt.resolved_config).toMatchObject({ stage: 'rescore', runner_source_sha256: RESCORE_SOURCE_SHA256, inputs_sha256: f.expected, judge: { prompt_sha256: rescorePromptSha256() } });
     expect(receipt.resolved_config.models.map((m: { model: string; role: string }) => m.role)).toEqual(['judge', 'judge']);
+  });
+
+  test('a stage the budget ledger stops partway resumes from its journal, asks only what it lacks and ends where an unbroken run ends', async () => {
+    const inputs = readRescoreInputs(f.paths, { gut, expected: f.expected });
+    const worlds = [...f.jcWorlds.values(), ...f.countedWorlds.values()];
+    const out = join(d, 'resume');
+    const good = ruleJudge(worlds, []);
+    let n = 0;
+    const capped: ChatTransport = async o => { if (++n > 700) throw new BudgetExceededError('run cap reached'); return good(o); };
+    const stopped = await runRescore({ gut, inputs, mode: { kind: 'keyless', transport: capped }, output: out });
+    expect(stopped.harnessErrors).toEqual([expect.stringContaining('the budget ledger refused a request')]);
+    expect(stopped.counted).toEqual([]);
+    const journal = readRescoreJournal(out, inputs);
+    expect(journal.size).toBe(700);
+    expect(pendingRescoreCalls(rescorePlan(inputs), journal).counted).toHaveLength(71);
+    const resumedCalls: Array<{ model: string; system: string }> = [];
+    const resumed = await runRescore({ gut, inputs, mode: { kind: 'keyless', transport: ruleJudge(worlds, resumedCalls) }, output: out });
+    expect(resumed.harnessErrors).toEqual([]);
+    expect(resumedCalls).toHaveLength(calls.length - 700);
+    expect(resumed.gate).toEqual(result.gate);
+    expect(resumed.counted).toEqual(result.counted);
+    writeFileSync(join(out, RESCORE_JOURNAL), JSON.stringify({ key: 'another prompt', phase: 'counted', judge: 'x', id: 'y', graded: {} }) + '\n');
+    expect(() => readRescoreJournal(out, inputs)).toThrow(/from another prompt, input or runner/);
   });
 
   test('a judge that calls every both-value answer correct fails the gate, and no counted row is re-judged', () => {

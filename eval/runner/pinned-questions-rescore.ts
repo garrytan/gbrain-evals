@@ -15,14 +15,17 @@
  *      run scored as not published or left out keeps that result.
  *
  * The inputs are the published receipts, named by sha256 (RESCORE_INPUTS, from docs/benchmarks/pinned-questions/
- * manifest.json). A directory where a rescore already started is refused, so it is never paid for twice by accident.
+ * manifest.json). A directory where a rescore already started is refused without --resume, so it is never paid for
+ * twice by accident.
  *
  * Usage: bun eval/runner/pinned-questions-rescore.ts --counted <receipt.counted.json> --judge-check <receipt.judge-check.json>
- *   --stale-probes <receipt.stale-probes.json> --output <dir> [--gbrain <checkout>[@ref]] --paid --budget-run-id ID
+ *   --stale-probes <receipt.stale-probes.json> --output <dir> [--resume] [--gbrain <checkout>[@ref]] --paid --budget-run-id ID
+ * Every graded call is appended to rescore.ndjson in --output as it comes in; --resume continues a stage a crash or the
+ * budget ledger stopped, asking only the calls the journal does not hold (and any failed judge call).
  */
 import './budget-ledger.ts';
-import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { createHash, randomUUID } from 'node:crypto';
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { budgetOptionsFrom, chatPrice, receiptCost, startPaidRun, type RunSummary } from './budget-ledger.ts';
 import { gbrainSpecFrom, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from './gbrain-under-test.ts';
@@ -32,7 +35,7 @@ import { ProbeAccounting } from './probe-accounting.ts';
 import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, noModelSpend, sourceTreeIdentity, writeReceipt, type Receipt } from './receipt.ts';
 import {
   CATEGORY, EST_TOKENS, JUDGE_CALLS_PER_ANSWER, JUDGE_KAPPA_FLOOR, JUDGE_MAX_TOKENS, JUDGE_MIN_LABELS, PAID_KEY_NAMES, PINNED_QUESTIONS_JUDGES,
-  PINNED_QUESTIONS_JUDGE_PROMPT, gradeAnswer, judgeAgreement, judgeFor, measuredJudge, noUsage, outcomeOf, refreshComparisons, requirePaidFlags,
+  PINNED_QUESTIONS_JUDGE_PROMPT, combinedCost, gradeAnswer, recordProcessCost, recordProcessStart, judgeAgreement, judgeFor, measuredJudge, noUsage, outcomeOf, readCheckpoint, refreshComparisons, requirePaidFlags,
   requireProviderKeys, scoredCorrect, withGateway, type Agreement, type GradedAnswer, type Judged, type PaidMode, type PaidRow, type StaleProbe,
 } from './pinned-questions-paid.ts';
 import { claimSentence } from './pinned-questions.ts';
@@ -187,7 +190,7 @@ export function rescorePlan(inputs: RescoreInputs): RescorePlan {
 
 /** Ledger estimate in dollars: every planned judge call (both judges on each both-value item) at the judge's measured output and calls per answer, else its worst case. */
 export function rescoreEstimateUsd(plan: RescorePlan, judge: { outputTokens: number; callsPerAnswer: number } | null): number {
-  const judges = [...plan.bothValue.flatMap(() => PINNED_QUESTIONS_JUDGES), ...plan.recheck.map(x => x.judge_model), ...plan.counted.map(r => r.judge_model)];
+  const judges: string[] = [...plan.bothValue.flatMap(() => PINNED_QUESTIONS_JUDGES), ...plan.recheck.map(x => x.judge_model), ...plan.counted.map(r => r.judge_model)];
   return judges.reduce((sum, j) => {
     const p = chatPrice(j);
     if (!p) throw new Error(`${j} has no ledger price; register one in eval/runner/budget-ledger.ts`);
@@ -216,12 +219,54 @@ export interface RescoreResult {
   harnessErrors: string[];
 }
 
+/** One graded judge call in the journal, keyed by the prompt and the inputs, so a resume reuses only what this exact stage graded. */
+interface JournalLine { key: string; phase: 'both-value' | 'recheck' | 'counted'; judge: string; id: string; graded: GradedAnswer }
+export const RESCORE_JOURNAL = 'rescore.ndjson';
+const journalKey = (inputs: RescoreInputs) => JSON.stringify({ prompt_sha256: rescorePromptSha256(), inputs_sha256: inputs.sha256, runner_sha256: RESCORE_SOURCE_SHA256 });
+const itemId = {
+  'both-value': (x: BothValueItem) => `${x.seed}|${x.company}|${x.template}`,
+  recheck: (x: RecheckItem) => `${x.source}|${x.model}|${x.seed}|${x.company}`,
+  counted: (x: { model: string; seed: number; company: string }) => `${x.model}|${x.seed}|${x.company}`,
+};
+const retryable = (g: GradedAnswer) => g.judge_error?.startsWith('judge_call_failed') ?? false;
+
+/**
+ * Graded calls already in the journal under this stage's key, by phase, judge and item: the ones a resume does not ask
+ * again. A failed judge call is asked again. A line under another key refuses, since it graded something else; a torn
+ * final line is cut off (readCheckpoint) and a corrupt earlier one refuses.
+ */
+export function readRescoreJournal(output: string, inputs: RescoreInputs): Map<string, GradedAnswer> {
+  const key = journalKey(inputs);
+  const lines = readCheckpoint(join(output, RESCORE_JOURNAL)) as unknown as JournalLine[];
+  const foreign = lines.find(l => l.key !== key);
+  if (foreign) throw new PaidArmRefusal(`${CATEGORY}: ${join(output, RESCORE_JOURNAL)} holds graded calls from another prompt, input or runner; give this rescore its own --output`);
+  return new Map(lines.filter(l => !retryable(l.graded)).map(l => [`${l.phase}|${l.judge}|${l.id}`, l.graded]));
+}
+
+/** The judge calls the stage would still make: every planned call, less those the journal already holds. */
+export function pendingRescoreCalls(plan: RescorePlan, done: Map<string, GradedAnswer>): RescorePlan {
+  const has = (phase: JournalLine['phase'], judge: string, id: string) => done.has(`${phase}|${judge}|${id}`);
+  return {
+    bothValue: plan.bothValue.filter(x => PINNED_QUESTIONS_JUDGES.some(j => !has('both-value', j, itemId['both-value'](x)))),
+    recheck: plan.recheck.filter(x => !has('recheck', x.judge_model, itemId.recheck(x))),
+    counted: plan.counted.filter(r => !has('counted', r.judge_model, itemId.counted(r))),
+  };
+}
+
 /**
  * The stage: the gate's judge calls, the gate, and, only when it passes, the counted re-judging, all with the rescore
- * prompt. A budget-ledger refusal stops it, and the result is then incomplete.
+ * prompt. With `output`, every graded call is appended to its journal as it comes in, and calls the journal already
+ * holds are reused instead of asked, so a stage stopped by a crash or the budget ledger resumes where it stopped. A
+ * budget-ledger refusal stops it, and the result is then incomplete until a resume.
  */
-export async function runRescore(opts: { gut: GbrainUnderTest; inputs: RescoreInputs; mode: PaidMode; log?: (s: string) => void }): Promise<RescoreResult> {
+export async function runRescore(opts: { gut: GbrainUnderTest; inputs: RescoreInputs; mode: PaidMode; output?: string; log?: (s: string) => void }): Promise<RescoreResult> {
   const plan = rescorePlan(opts.inputs);
+  const done = opts.output ? readRescoreJournal(opts.output, opts.inputs) : new Map<string, GradedAnswer>();
+  const key = journalKey(opts.inputs);
+  if (opts.output) mkdirSync(opts.output, { recursive: true });
+  const record = (phase: JournalLine['phase'], judge: string, id: string, graded: GradedAnswer) => {
+    if (opts.output) appendFileSync(join(opts.output, RESCORE_JOURNAL), JSON.stringify({ key, phase, judge, id, graded } satisfies JournalLine) + '\n');
+  };
   const jcWorlds = opts.inputs.judgeCheck.worlds, countedWorlds = opts.inputs.counted.worlds;
   return withGateway(opts.mode, opts.gut, async ({ gateway, gatewayConfig, usage, spend }) => {
     const meter = async (fn: () => Promise<void>) => {
@@ -229,18 +274,25 @@ export async function runRescore(opts: { gut: GbrainUnderTest; inputs: RescoreIn
       usage.current = u;
       try { await fn(); return { usage: u }; } finally { usage.current = null; }
     };
-    const grade = (judge: string, c: PqCompany, kind: 'first' | 'refreshed', sentences: string[]) => gradeAnswer(gateway, meter, judge, c, kind, sentences, { prompt: PINNED_QUESTIONS_RESCORE_PROMPT });
+    const ask = (judge: string, c: PqCompany, kind: 'first' | 'refreshed', sentences: string[]) => gradeAnswer(gateway, meter, judge, c, kind, sentences, { prompt: PINNED_QUESTIONS_RESCORE_PROMPT });
+    const grade = async (phase: JournalLine['phase'], id: string, judge: string, c: PqCompany, kind: 'first' | 'refreshed', sentences: string[]) => {
+      const prior = done.get(`${phase}|${judge}|${id}`);
+      if (prior) return prior;
+      const g = await ask(judge, c, kind, sentences);
+      if (!spend.stop) record(phase, judge, id, g);
+      return g;
+    };
     const out: RescoreResult = { bothValue: [], recheck: [], gate: null, counted: [], harnessErrors: [] };
     const stopped = (what: string) => { out.harnessErrors.push(`the budget ledger refused a request (${spend.stop}); stopped during ${what}`); return out; };
     for (const judge of PINNED_QUESTIONS_JUDGES) {
       gateway.configureGateway(gatewayConfig(judge));
       for (const item of plan.bothValue) {
-        const g = await grade(judge, companyOf(jcWorlds, item.seed, item.company), 'refreshed', item.sentences);
+        const g = await grade('both-value', itemId['both-value'](item), judge, companyOf(jcWorlds, item.seed, item.company), 'refreshed', item.sentences);
         if (spend.stop) return stopped('the both-value set');
         out.bothValue.push({ ...item, judge_model: judge, graded: { ...g, rule_correct: item.label } });
       }
       for (const item of plan.recheck.filter(x => x.judge_model === judge)) {
-        const g = await grade(judge, companyOf(jcWorlds, item.seed, item.company), item.kind, item.sentences);
+        const g = await grade('recheck', itemId.recheck(item), judge, companyOf(jcWorlds, item.seed, item.company), item.kind, item.sentences);
         if (spend.stop) return stopped('the judge-check recheck');
         out.recheck.push({ ...item, graded: g });
       }
@@ -252,7 +304,7 @@ export async function runRescore(opts: { gut: GbrainUnderTest; inputs: RescoreIn
     for (const judge of PINNED_QUESTIONS_JUDGES) {
       gateway.configureGateway(gatewayConfig(judge));
       for (const r of plan.counted.filter(x => x.judge_model === judge)) {
-        const g = await grade(judge, companyOf(countedWorlds, r.seed, r.company), 'refreshed', r.refreshed.sentences);
+        const g = await grade('counted', itemId.counted(r), judge, companyOf(countedWorlds, r.seed, r.company), 'refreshed', r.refreshed.sentences);
         if (spend.stop) return stopped('the counted re-judging');
         out.counted.push({ model: r.model, seed: r.seed, company: r.company, mutation: r.mutation, judge_model: judge, graded: g });
       }
@@ -282,6 +334,7 @@ export function summarizeRescore(rows: readonly PaidRow[], counted: RescoreResul
     by_model: Object.fromEntries(models.map(m => {
       const before = rows.filter(r => r.model === m), after = rescored.filter(r => r.model === m);
       const pairs = before.map((r, i) => [r.correct, after[i]!.correct] as const);
+      const both = before.map(r => r.refreshed.rule_correct === null);
       return [m, {
         questions: before.length, judge_model: judgeFor(m),
         preregistered: column(before), rescored: column(after),
@@ -289,6 +342,9 @@ export function summarizeRescore(rows: readonly PaidRow[], counted: RescoreResul
         flipped_to_correct: pairs.filter(([a, b]) => a === false && b === true).length,
         flipped_to_not_correct: pairs.filter(([a, b]) => a === true && b === false).length,
         left_out_by_rescore: pairs.filter(([a, b]) => a !== null && b === null).length,
+        both_value_answers: both.filter(Boolean).length,
+        flipped_on_both_value_answers: { to_correct: pairs.filter(([a, b], i) => both[i] && a === false && b === true).length, to_not_correct: pairs.filter(([a, b], i) => both[i] && a === true && b === false).length },
+        flipped_on_other_answers: { to_correct: pairs.filter(([a, b], i) => !both[i] && a === false && b === true).length, to_not_correct: pairs.filter(([a, b], i) => !both[i] && a === true && b === false).length },
         by_mutation: Object.fromEntries([...new Set(before.map(r => r.mutation))].sort().map(k => [k, { preregistered: column(before.filter(r => r.mutation === k)), rescored: column(after.filter(r => r.mutation === k)) }])),
       }];
     })),
@@ -300,7 +356,7 @@ export function summarizeRescore(rows: readonly PaidRow[], counted: RescoreResul
 /** The rescore's own source with the paid runner and generator it grades through: its receipt's runner identity. */
 export const RESCORE_SOURCE_SHA256 = createHash('sha256').update(readFileSync(import.meta.path)).update(readFileSync(resolve(import.meta.dir, 'pinned-questions-paid.ts'))).update(readFileSync(resolve(import.meta.dir, '../generators/pinned-questions-gen.ts'))).digest('hex');
 
-export function buildRescoreReceipt(opts: { gut: GbrainUnderTest; inputs: RescoreInputs; result: RescoreResult; cost: RunSummary | null; startedAt: string; mode: PaidMode['kind'] }): Receipt {
+export function buildRescoreReceipt(opts: { gut: GbrainUnderTest; inputs: RescoreInputs; result: RescoreResult; cost: (RunSummary & { processes?: number; complete?: boolean }) | null; startedAt: string; mode: PaidMode['kind'] }): Receipt {
   const { inputs, result } = opts;
   const plan = rescorePlan(inputs);
   const acc = new ProbeAccounting(plan.counted.length);
@@ -318,7 +374,7 @@ export function buildRescoreReceipt(opts: { gut: GbrainUnderTest; inputs: Rescor
     run_status: complete ? 'completed' : 'error',
     ...(result.gate ? { verdict: result.gate.pass ? 'pass' as const : 'fail' as const } : {}),
     n_total: a.n_total, n_scored: a.n_scored, completion_rate: a.completion_rate, errors: a.errors,
-    publishable: a.publishable && complete && result.gate?.pass === true && opts.mode === 'paid',
+    publishable: a.publishable && complete && result.gate?.pass === true && opts.mode === 'paid' && opts.cost?.complete !== false,
     gbrain_version: opts.gut.version,
     gbrain_pin: gbrainPin(),
     execution: { source_tree: sourceTreeIdentity(), product: productIdentityFor(opts.gut) },
@@ -331,6 +387,8 @@ export function buildRescoreReceipt(opts: { gut: GbrainUnderTest; inputs: Rescor
       verdict: `the agreement gate: every judge's kappa at least ${JUDGE_KAPPA_FLOOR} on at least ${JUDGE_MIN_LABELS} labels, on the both-value set (labels by construction) and on the judge-check outputs and stale probes re-graded with the rescore prompt (rule labels); a failing gate re-judges no counted row`,
       both_value_templates: Object.fromEntries(Object.entries(BOTH_VALUE_TEMPLATES).map(([k, v]) => [k, [...v.correct, ...v.not_correct].map(t => ({ id: t.id, label: t.label ? 'correct' : 'not correct' }))])),
       inputs_sha256: inputs.sha256,
+      cost_processes: opts.cost?.processes ?? null,
+      cost_complete: opts.cost?.complete ?? null,
       runner_source_sha256: RESCORE_SOURCE_SHA256,
       gbrain_overlay: overlaySummary(opts.gut),
     },
@@ -361,29 +419,37 @@ async function main(): Promise<void> {
   if (!outFlag) throw new Error('--output <dir> is required');
   const output = resolve(outFlag);
   const marker = join(output, `${RESCORE_STAGE}.started`);
-  if (existsSync(marker)) throw new PaidArmRefusal(`${CATEGORY}: a rescore already started in ${output} (${marker}); judging again spends again, so it needs the owner's approval and then the marker removed`);
+  const resume = argv.includes('--resume');
+  if (existsSync(marker) && !resume) throw new PaidArmRefusal(`${CATEGORY}: a rescore already started in ${output} (${marker}); --resume continues it from ${RESCORE_JOURNAL}, asking only the calls it does not hold, inside the same paid window`);
+  if (resume && !existsSync(marker)) throw new PaidArmRefusal(`${CATEGORY}: --resume, but no rescore started in ${output}`);
   const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
   const inputs = readRescoreInputs({ counted: argValue(argv, '--counted'), 'judge-check': argValue(argv, '--judge-check'), 'stale-probes': argValue(argv, '--stale-probes') }, { gut });
-  const estimate = rescoreEstimateUsd(rescorePlan(inputs), measuredJudge(inputs.counted.rows));
+  const estimate = rescoreEstimateUsd(pendingRescoreCalls(rescorePlan(inputs), readRescoreJournal(output, inputs)), measuredJudge(inputs.counted.rows));
   requirePaidFlags(argv, estimate);
   requireProviderKeys(PINNED_QUESTIONS_JUDGES);
   const judgeKeys = new Set(PINNED_QUESTIONS_JUDGES.map(j => ({ anthropic: 'ANTHROPIC_API_KEY', openai: 'OPENAI_API_KEY' } as Record<string, string>)[j.split(':')[0]!]));
   const keys = Object.fromEntries(PAID_KEY_NAMES.filter(k => judgeKeys.has(k)).map(k => [k, process.env[k]]).filter(([, v]) => v)) as Partial<Record<typeof PAID_KEY_NAMES[number], string>>;
-  mkdirSync(output, { recursive: true });
-  writeFileSync(marker, new Date().toISOString() + '\n', { flag: 'wx' });
   const startedAt = new Date().toISOString();
   const paid = startPaidRun(`${CATEGORY}-${RESCORE_STAGE}`, { ...budgetOptionsFrom(argv), estimateUsd: estimate });
+  const processId = randomUUID();
+  const costKey = journalKey(inputs);
+  const unit = [{ model: RESCORE_STAGE, seed: 0 }];
   let result: RescoreResult;
   let closed: RunSummary;
   try {
-    result = await runRescore({ gut, inputs, mode: { kind: 'paid', keys }, log: s => console.error(s) });
+    mkdirSync(output, { recursive: true });
+    recordProcessStart(output, { key: costKey, stage: RESCORE_STAGE as never, asked: unit, process_id: processId, run_id: paid.run.runId });
+    if (!resume) writeFileSync(marker, new Date().toISOString() + '\n', { flag: 'wx' });
+    result = await runRescore({ gut, inputs, mode: { kind: 'paid', keys }, output, log: s => console.error(s) });
   } finally {
     closed = paid.run.close();
     paid.guard.uninstall();
+    recordProcessCost(output, { key: costKey, stage: RESCORE_STAGE as never, asked: unit, process_id: processId, summary: closed });
   }
-  const receipt = buildRescoreReceipt({ gut, inputs, result, cost: closed, startedAt, mode: 'paid' }) as unknown as { verdict?: string; publishable: boolean; data: { gate: unknown; summary: ReturnType<typeof summarizeRescore> } };
+  const cost = combinedCost(output, costKey, unit, closed);
+  const receipt = buildRescoreReceipt({ gut, inputs, result, cost, startedAt, mode: 'paid' }) as unknown as { verdict?: string; publishable: boolean; data: { gate: unknown; summary: ReturnType<typeof summarizeRescore> } };
   writeReceipt(join(output, `receipt.${RESCORE_STAGE}.json`), receipt as unknown as Receipt);
-  console.log(JSON.stringify({ verdict: receipt.verdict ?? null, publishable: receipt.publishable, gate: receipt.data.gate, by_model: Object.fromEntries(Object.entries(receipt.data.summary.by_model).map(([m, v]) => [m, { preregistered: v.preregistered, rescored: v.rescored, flipped_to_correct: v.flipped_to_correct, flipped_to_not_correct: v.flipped_to_not_correct, left_out_by_rescore: v.left_out_by_rescore }])), harness_errors: result.harnessErrors, cost_usd: receiptCost(closed).usd }, null, 2));
+  console.log(JSON.stringify({ verdict: receipt.verdict ?? null, publishable: receipt.publishable, gate: receipt.data.gate, by_model: Object.fromEntries(Object.entries(receipt.data.summary.by_model).map(([m, v]) => [m, { preregistered: v.preregistered, rescored: v.rescored, flipped_to_correct: v.flipped_to_correct, flipped_to_not_correct: v.flipped_to_not_correct, left_out_by_rescore: v.left_out_by_rescore }])), harness_errors: result.harnessErrors, cost_usd: receiptCost(cost).usd, cost_processes: cost.processes }, null, 2));
   process.exit(result.harnessErrors.length ? 3 : 0);
 }
 

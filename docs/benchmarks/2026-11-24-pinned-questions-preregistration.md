@@ -298,8 +298,19 @@ the previous value, but only as former or superseded ("moved there from X", "pre
 ordering it hedges, such as "which the note appears to supersede", still says which value is current. A claim is wrong
 when the answer names both values without saying which is current. Reporting what each source says ("a press note says
 Y; the company page still says X"), even with words like "later" or "still", doesn't say which is current, and
-neither does saying it's unclear. An answer that keeps the old value as current is stale, as before. The rescore
-prompt is the frozen prompt with only its "correct" and "wrong" lines replaced by these words
+neither does saying it's unclear. An answer that keeps the old value as current is stale, as before.
+
+Two worked examples, both phrasings that appear in counted answers:
+
+- **Wrong: sources only.** "A press note says Trobe moved all production of its bicycles to Brastirford and builds
+  bicycles there from this month. The Trobe company page still states that Trobe builds bicycles in Reinorford." The
+  answer reports two sources and never says, in its own words, which city is current. "Still" describes the page, not
+  the company.
+- **Correct: hedged ordering.** "A press note says Sanond moved all production of its turbines to Stopaiford ... The
+  Sanond company page still says Sanond builds turbines in Rusexford, which the press note appears to supersede." The
+  answer itself says the new city replaces the old one. The hedge ("appears to") doesn't undo that ordering.
+
+The rescore prompt is the frozen prompt with only its "correct" and "wrong" lines replaced by these words
 (`PINNED_QUESTIONS_RESCORE_PROMPT` in `eval/runner/pinned-questions-rescore.ts`).
 
 **The agreement gate.** A new prompt is a new judge, so it is checked before it grades any counted answer:
@@ -332,14 +343,25 @@ page says so in plain words, and that decision goes back to its owner instead of
 stale probes) only when each matches the sha256 recorded in `docs/benchmarks/pinned-questions/manifest.json`, and
 only when it is paid, completed and publishable, on the same gbrain build, with every world regenerating to its
 fingerprint and every row judged by its family's judge. It runs the gate first and stops before the counted answers if
-the gate fails. A directory where a rescore has started is refused, so the stage can't be paid for twice by accident.
-It runs as one judge-only paid window under the eval budget ledger, and amounts stay in the tracking issue.
+the gate fails. Every graded call is written to a journal as it comes in. A directory where a rescore has started is
+refused unless `--resume` is passed. A resume asks only the calls the journal doesn't hold, or whose judge call
+failed, so a crash or the budget ledger's cap pauses the stage instead of ending it. The receipt sums the spend of
+every process behind it. A test ties the three sha256 values in the runner to the manifest. The stage runs as one
+judge-only paid window under the eval budget ledger, and amounts stay in the tracking issue.
+
+The gate has limits. Its labels come from templates and token rules, and the recheck items never name both values,
+so it can't show that a judge applies the rule to the real counted answers that name both. The correction reports the
+flips on those 141 answers apart from the flips on the other 579, where a flip is judge noise rather than the rule.
+It also reports agreement per template, including the two a careful reader could dispute: the hedged ordering labelled
+correct, and "a later note says" labelled not correct. Nine of the 27 city companies changed by an edit to the
+company page, where no counted answer named both values, so the set is not shaped exactly like the counted answers.
 
 Before this stage, the five runner notes from the results PR were fixed, each with a keyless test that fails without
 the fix:
 
 - counted seeds run only in the counted stage;
-- a counted launch needs a publishable stale-probes receipt with every probe graded;
+- a counted launch needs a publishable stale-probes receipt in which every probe with an unambiguous rule label carries
+  the judge's labels;
 - a paid process records its ledger link before it asks anything, so a receipt with unrecorded spend is not
   publishable;
 - a unit with a harness error is never reused;

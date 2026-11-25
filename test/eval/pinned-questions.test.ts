@@ -195,5 +195,7 @@ describe('pinned-questions runner on the pinned gbrain', () => {
     expect(after.length).toBeGreaterThan(0);
     const spill = (x: typeof r) => after.map(slug => x.questions.find(q => q.company === slug)!.spillover);
     expect(spill(r)).toEqual(spill(clean));
+    const failed = await runPinnedQuestions({ gut, seeds: [1], companies: 8, cycles: 0, hooks: { afterRead: slug => { if (slug === broken) throw new Error('status read failed mid-change'); }, beforeRestore: () => { throw new Error('refresh failed'); } } });
+    expect(failed.harnessError).toBe(`seed 1: restoring the brain after ${broken}'s error failed, so later questions would read its change: refresh failed`);
   }, 120_000);
 });
