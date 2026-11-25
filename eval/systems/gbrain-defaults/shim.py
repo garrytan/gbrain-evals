@@ -1292,6 +1292,22 @@ class GbrainDefaultsAdapter(Adapter):
             raise ShimError("invalid_request", f"unknown policy settings {unknown}; allowed: {sorted(QUERY_KNOBS)} and on_degraded", 400)
         return {"query": question, **{k: settings[k] for k in sorted(QUERY_KNOBS) if k in settings}}
 
+    def query_on_surface(self, args: dict[str, Any]) -> tuple[Any, dict[str, Any], list[Any], float, dict[str, Any], list[str]]:
+        """A query on the starter surface, without each knob gbrain refuses there (since v0.60.740.0 `limit` and `autocut`
+        are full-surface only, refused with param_not_on_surface before anything is read), so a fixed-evidence read
+        still runs, at gbrain's defaults for those knobs; the dropped knobs are returned and recorded. A full-surface
+        stack sends every knob."""
+        dropped: list[str] = []
+        while True:
+            try:
+                return (*self.call("query", args), args, dropped)
+            except GbrainError as e:
+                m = re.search(r"parameter (\w+) is not on this connection's starter tool surface", str(e))
+                if FULL_SURFACE or F6 or not m or m.group(1) == "query" or m.group(1) not in args:
+                    raise
+                dropped.append(m.group(1))
+                args = {k: v for k, v in args.items() if k != m.group(1)}
+
     def retrieve(self, ns: str, question: str, query_time: str | None, policy: dict[str, Any]) -> dict[str, Any]:
         if "op" in (policy.get("settings") or {}):
             return self.f6_retrieve(ns, question, policy)
@@ -1300,7 +1316,7 @@ class GbrainDefaultsAdapter(Adapter):
         with self.lock:
             self.activate(ns)
             sources = {v["slug"]: sid for sid, v in self.state()["sessions"].items()}
-            rows, meta, notices, ms = self.call("query", args)
+            rows, meta, notices, ms, args, dropped = self.query_on_surface(args)
             retrieval = meta.get("retrieval") or {}
             verdict = classify_query_meta(retrieval, self.require_reference()["resolved"]["search"])
             for r in verdict["recorded"]:
@@ -1320,8 +1336,9 @@ class GbrainDefaultsAdapter(Adapter):
                     "provenance_status": "exact" if sid else "unavailable",
                 })
             raw = {"tool": "query", "args": args, "gbrain_ms": ms, "meta": retrieval, "notices": notices, "classification": verdict,
-                   "serve_session": self.serve_session, "query_time": "not sent: query takes no as-of date", "rows": len(items)}
-            self.receipt("retrieve", args=args, gbrain_ms=ms, classification=verdict, notices=len(notices), rows=len(items))
+                   "serve_session": self.serve_session, "query_time": "not sent: query takes no as-of date", "rows": len(items),
+                   **({"not_on_surface": dropped} if dropped else {})}
+            self.receipt("retrieve", args=args, gbrain_ms=ms, classification=verdict, notices=len(notices), rows=len(items), **({"not_on_surface": dropped} if dropped else {}))
             if verdict["outcome"] != "scored" and on_degraded == "error":
                 raise ShimError("invalid_request", f"degraded read (harness failure; retry after quiesce): {', '.join(verdict['reasons'])}", 503)
             return {"items": items, "applied_settings": args, "truncated": False, "raw": raw}

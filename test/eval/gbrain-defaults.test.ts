@@ -325,6 +325,39 @@ describe('starter-surface parameters', () => {
     const op = OPERATION_MANIFEST.find(o => o.name === 'list_write_requests')!;
     for (const c of out.calls) for (const p of Object.keys(c.params)) expect([p, paramCallable(op, p, 'starter')]).toEqual([p, true]);
   });
+
+  // Value: protects=a fixed-evidence read (the readiness probe's) runs on gbrain's starter surface; fails_when=the shim sends a knob the pinned gbrain refuses on starter, so every readiness probe misses and the cell is marked degraded; why_new=cost-speed capacity recheck (readiness_probe missed at v0.60.771.0); seam=GbrainDefaultsAdapter.query_on_surface over a stub that refuses like gbrain; no_claim=what the full surface returns
+  test('a fixed-evidence query drops each knob the starter surface refuses, records it, and sends only starter parameters', async () => {
+    const { paramCallable } = await import('../../node_modules/gbrain/src/mcp/surface.ts');
+    const { OPERATION_MANIFEST } = await import('../../node_modules/gbrain/src/core/operation-manifest.generated.ts');
+    const op = OPERATION_MANIFEST.find(o => o.name === 'query')!;
+    const code = [
+      'import importlib.util, json, sys, types',
+      `spec = importlib.util.spec_from_file_location("gbrain_defaults_shim", ${JSON.stringify(`${ROOT}/${BUNDLE}/shim.py`)})`,
+      'shim = importlib.util.module_from_spec(spec)',
+      'spec.loader.exec_module(shim)',
+      'callable_ = set(json.loads(sys.argv[1]))',
+      'calls = []',
+      'def call(name, args):',
+      '    calls.append(dict(args))',
+      '    bad = [k for k in args if k not in callable_]',
+      '    if bad: raise shim.GbrainError("gbrain returned an error: {\\n  \\"error\\": \\"param_not_on_surface\\",\\n  \\"message\\": \\"query: parameter %s is not on this connection\'s starter tool surface; nothing was read.\\"" % bad[0])',
+      '    return [], {}, [], 1.0',
+      'stub = types.SimpleNamespace(call=call)',
+      'rec = json.load(open(sys.argv[2]))',
+      'args = shim.GbrainDefaultsAdapter.query_args(types.SimpleNamespace(record=rec), "q?", {"mode": "fixed-evidence"})',
+      'out = shim.GbrainDefaultsAdapter.query_on_surface(stub, args)',
+      'print(json.dumps({"sent": out[4], "dropped": out[5], "calls": len(calls)}))',
+    ].join("\n");
+    const starter = ['query', 'limit', 'autocut', 'expand'].filter(p => paramCallable(op, p, 'starter'));
+    const r = Bun.spawnSync(['python3', '-c', code, JSON.stringify(starter), `${ROOT}/${BUNDLE}/capability.json`], { cwd: ROOT });
+    if (r.exitCode !== 0) throw new Error(r.stderr.toString());
+    const out = JSON.parse(r.stdout.toString()) as { sent: Record<string, unknown>; dropped: string[]; calls: number };
+    for (const p of Object.keys(out.sent)) expect([p, paramCallable(op, p, 'starter')]).toEqual([p, true]);
+    expect(out.dropped.sort()).toEqual(['autocut', 'limit'].filter(p => !starter.includes(p)).sort());
+    expect(out.dropped.length).toBeGreaterThan(0);
+    expect(out.calls).toBe(out.dropped.length + 1);
+  });
 });
 
 describe('POST /trigger', () => {
