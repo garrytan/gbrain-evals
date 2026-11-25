@@ -566,17 +566,23 @@ function cgroupWorkingSetBytes(dir?: string): number | null {
   } catch { return null; }
 }
 
-class MemSampler {
-  peakServerWs = 0;
-  peakRssKb = 0;
+/** Peak RSS of the run in KiB: null unless a reading taken after the baseline answered, so a baseline alone never reads as a peak. */
+export function clientPeakKb(laterKb: Array<number | null>, baselineKb: number | null): number | null {
+  const later = laterKb.filter((kb): kb is number => kb !== null);
+  return later.length ? Math.max(...later, baselineKb ?? 0) : null;
+}
+
+export class MemSampler {
+  peakServerWs: number | null = null;
+  peakRssKb: number | null = null;
   private timer: ReturnType<typeof setInterval> | null = null;
   constructor(private cgroupDir?: string, private rss: RssSource | null = null) {}
   start() {
     const tick = () => {
       const kb = this.rss?.rssKb() ?? null;
-      if (kb !== null) this.peakRssKb = Math.max(this.peakRssKb, kb);
+      if (kb !== null) this.peakRssKb = Math.max(this.peakRssKb ?? kb, kb);
       const ws = cgroupWorkingSetBytes(this.cgroupDir);
-      if (ws !== null) this.peakServerWs = Math.max(this.peakServerWs, ws);
+      if (ws !== null) this.peakServerWs = Math.max(this.peakServerWs ?? ws, ws);
     };
     tick();
     this.timer = setInterval(tick, 100);
@@ -809,8 +815,8 @@ async function runArmChild(input: ChildInput) {
   const stats = await engine.getStats() as unknown as Record<string, unknown>;
   result.stats = { page_count: stats.page_count, chunk_count: stats.chunk_count, embedded_count: stats.embedded_count };
   await engine.disconnect();
-  const peakReadings = [mem.peakRssKb || null, baselineRssKb, steadyRssKb, rss?.hwmKb() ?? null].filter((kb): kb is number => kb !== null);
-  const peakRssKb = peakReadings.length ? Math.max(...peakReadings) : null;
+  const peakRssKb = clientPeakKb([mem.peakRssKb, steadyRssKb, rss?.hwmKb() ?? null], baselineRssKb);
+  const server = runtime.kind === 'postgres' ? mem.peakServerWs : null;
   const bytes = (kb: number | null) => (kb === null ? null : kb * 1024);
   result.memory = {
     client_peak_rss_bytes: bytes(peakRssKb),
@@ -819,8 +825,12 @@ async function runArmChild(input: ChildInput) {
     client_engine_peak_rss_bytes: engineKbToBytes(peakRssKb, baselineRssKb),
     client_engine_steady_rss_bytes: engineKbToBytes(steadyRssKb, baselineRssKb),
     method: rss?.method ?? `not measurable on ${process.platform}: neither /proc/self/status nor process.memoryUsage() answered`,
-    server_peak_working_set_bytes: runtime.cgroupDir ? mem.peakServerWs : null,
-    server_method: runtime.cgroupDir ? 'container cgroup memory.current minus inactive_file (the docker stats definition), sampled every 100 ms' : 'not measurable',
+    server_peak_working_set_bytes: server,
+    server_method: runtime.kind !== 'postgres' ? 'no server process'
+      : server !== null ? 'container cgroup memory.current minus inactive_file (the docker stats definition), sampled every 100 ms'
+        : runtime.cgroupDir ? 'not measurable: every read of the container cgroup memory files failed'
+          : runtime.containerId ? 'not measurable: the container cgroup memory files are not readable on this host'
+            : 'not measured for an external server',
   };
   return result;
 }
@@ -1176,8 +1186,14 @@ export function computeAgreement(a: Rankings, b: Rankings) {
   return out;
 }
 
-/** Engine RSS a user pays for: the client's engine-attributable peak plus, for Postgres, the server's peak working set. */
-export const engineRss = (run: Record<string, any>): number | null => (run.memory.client_engine_peak_rss_bytes == null ? null : run.memory.client_engine_peak_rss_bytes + (run.memory.server_peak_working_set_bytes ?? 0));
+/** Engine RSS a user pays for: the client's engine-attributable peak plus, for Postgres, the server's peak working set. Null when either part was not measured. */
+export function engineRss(run: Record<string, any>, kind: EvalEngineKind): number | null {
+  const client = run.memory.client_engine_peak_rss_bytes;
+  if (client == null) return null;
+  if (kind !== 'postgres') return client;
+  const server = run.memory.server_peak_working_set_bytes;
+  return server == null ? null : client + server;
+}
 
 export async function orchestrate(opts: Options, argv: string[]) {
   const started = Date.now();
@@ -1224,7 +1240,7 @@ export async function orchestrate(opts: Options, argv: string[]) {
       for (let i = 0; i < opts.coldReps; i++) reps.push(await runChild('coldstart', input, workDir, `${id}-cold-${i}`));
       arms[id] = {
         id, label: spec.label, kind: spec.kind, info: handle.info, run, disk,
-        engine_rss_bytes: engineRss(run),
+        engine_rss_bytes: engineRss(run, id),
         cold_start: { reps, median_total_ms: median(reps.map((x) => x.total_ms)), method: 'each rep: a fresh process opens the existing store (connect and initSchema) and answers listPages and one keyword query. For Postgres the server keeps running, so this is a gbrain process start against a warm server. Module load is excluded; the OS file cache is warm.' },
       };
       (arms[id] as any)._probes = probeRankings;
