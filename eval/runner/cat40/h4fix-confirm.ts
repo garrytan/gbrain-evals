@@ -3,7 +3,7 @@
  * (docs/benchmarks/2026-11-24-cat40-h4-fix-confirmation-preregistration.md): the preregistered sealed worlds, arms,
  * readers, judges, halves and ledgers, and the exact command for every step of a world, in order.
  *
- *   bun eval/runner/cat40/h4fix-confirm.ts plan --world s3|s4|s5|s6|s7|s8 --build <40-character gbrain commit> --date YYYY-MM-DD [--json]
+ *   bun eval/runner/cat40/h4fix-confirm.ts plan --world s3|s4|s5|s6|s7|s8 --build <40-character gbrain commit> --date YYYY-MM-DD [--stopped] [--json]
  *   bun eval/runner/cat40/h4fix-confirm.ts check-world --world <w> --file <world.json> --digest <digest recorded before cells>
  *
  * Each world runs on its own owner-custody VM with its own ledger. Both gbrain arms read the same slots, built once
@@ -60,7 +60,8 @@ const cap = (id: string) => `$CAP_${id.toUpperCase().replace(/-/g, '_')}`;
 const short = (m: string) => (m.startsWith('claude') ? 'opus' : m.startsWith('gpt') ? 'sol' : 'particle');
 
 /** Every step of one world, in order. */
-export function worldPlan(world: H4FixWorld, build: string, harnessSha: string, date: string): Step[] {
+/** After a stop at the look (`stopped`), particle-1 runs H4 half A and, on S3 and S4, the other families, as an explicit task list. */
+export function worldPlan(world: H4FixWorld, build: string, harnessSha: string, date: string, stopped = false): Step[] {
   if (!/^[0-9a-f]{40}$/.test(build)) throw new Error(`build ${build} is not a 40-character gbrain commit`);
   const dir = `${H4FIX_REPORTS}/${world}`;
   const file = `${dir}/world/world.json`;
@@ -75,6 +76,8 @@ export function worldPlan(world: H4FixWorld, build: string, harnessSha: string, 
     ...(note ? { note } : {}), ...(model === PARTICLE ? { paid_window: 'particle' as const } : {}),
   });
   const families = full ? FAMILIES.join(',') : 'H4';
+  const otherTasks = OTHER_FAMILIES.flatMap(f => Array.from({ length: 20 }, (_, i) => `${f}-${String(i + 1).padStart(2, '0')}`));
+  const particleSel = stopped ? ['--tasks', [...h4Half('a'), ...(full ? otherTasks : [])].join(',')] : ['--families', families];
   const h4 = (half: keyof typeof HALVES) => ['--tasks', h4Half(half).join(',')];
   const halfSteps = (half: keyof typeof HALVES): Step[] => FRONTIER.flatMap(m => [
     run(`section-${short(m)}-h4${half}`, m, gbrain('section'), [...h4(half), '--repeat', '2']),
@@ -93,7 +96,7 @@ export function worldPlan(world: H4FixWorld, build: string, harnessSha: string, 
     { id: 'launch-gate', argv: ['git', '-C', '../gbrain', 'merge-base', '--is-ancestor', GREP_FIX_COMMIT, build], note: 'the release under test contains GST-3786; exit 0 or no cell runs' },
     { id: 'check-world', argv: ['bun', 'eval/runner/cat40/h4fix-confirm.ts', 'check-world', '--world', world, '--file', file, '--digest', `<${world} digest recorded before cells>`] },
     { id: 'freshness', argv: ['bun', 'scripts/model-freshness.ts', '--models', [...FRONTIER, PARTICLE].map(m => `${m.startsWith('gpt') ? 'openai' : m.startsWith('particle') ? 'particle' : 'anthropic'}:${m}`).join(',')], note: 'must exit 0 with no newer frontier Opus or GPT (gate 6)' },
-    { id: 'slots', argv: ['bun', 'eval/runner/cat40-model-ladder.ts', '--build-slots', '--world', file, ...slotArgs, ...drift, '--slot-build-allowance-usd', '6', '--budget-ledger', ledger, '--out', `${dir}/slots`, '--budget-usd', cap('slots')],
+    { id: 'slots', argv: ['bun', 'eval/runner/cat40-model-ladder.ts', '--build-slots', '--world', file, ...slotArgs, ...drift, '--slot-build-allowance-usd', cap('slot-allowance'), '--budget-ledger', ledger, '--out', `${dir}/slots`, '--budget-usd', cap('slots')],
       note: `one build for both gbrain arms (section delivery is read-time): re-read gbrain's tags first (the build freezes here); every slot passes the write, restore and rerank probes with 0 queued effects; the receipt names ${build} (gate 3)` },
     ...FRONTIER.map(m => run(`oracle-${short(m)}`, m, ['--arms', 'oracle'], ['--families', families, '--repeat', '1'])),
     { id: 'oracle-gate', argv: ['bun', 'eval/runner/cat40/hard-ops.ts', 'oracle-gate', '--models', FRONTIER.join(','), '--attempts', FRONTIER.map(m => `${dir}/oracle-${short(m)}/attempts.jsonl`).join(',')], note: 'pooled frontier oracle success >= 95%, or stop this world (gate 4)' },
@@ -112,9 +115,9 @@ export function worldPlan(world: H4FixWorld, build: string, harnessSha: string, 
       run('pilot-particle-default', PARTICLE, gbrain('default'), ['--per-family', '1', '--repeat', '1'], 'never counted'),
       run('pilot-particle-fs', PARTICLE, ['--arms', 'fs', '--hard-tool-limits', 'hard'], ['--per-family', '1', '--repeat', '1'], 'never counted'),
     ] : []),
-    run('section-particle', PARTICLE, gbrain('section'), ['--families', families, '--repeat', '1'], 'descriptive; inside the granted Particle window, one world at a time, after this world\'s frontier cells; after a stop at the look, H4 half B is dropped (--tasks)'),
-    run('default-particle', PARTICLE, gbrain('default'), ['--families', families, '--repeat', '1']),
-    run('fs-particle', PARTICLE, ['--arms', 'fs', '--hard-tool-limits', 'hard'], ['--families', families, '--repeat', '1']),
+    run('section-particle', PARTICLE, gbrain('section'), [...particleSel, '--repeat', '1'], `descriptive; inside the granted Particle window, one world at a time, after this world's frontier cells${stopped ? '; the look stopped, so H4 half B is dropped' : ''}`),
+    run('default-particle', PARTICLE, gbrain('default'), [...particleSel, '--repeat', '1']),
+    run('fs-particle', PARTICLE, ['--arms', 'fs', '--hard-tool-limits', 'hard'], [...particleSel, '--repeat', '1']),
   ];
 }
 
@@ -144,7 +147,7 @@ if (import.meta.main) {
     let attestation;
     try { attestation = attestPreregistration(H4FIX_PREREG); } catch (e) { console.error(`[h4fix-confirm] STOP: ${(e as Error).message}`); process.exit(3); }
     const sha = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
-    const steps = worldPlan(world, build, sha, date);
+    const steps = worldPlan(world, build, sha, date, argv.includes('--stopped'));
     if (argv.includes('--json')) console.log(JSON.stringify({ world, harness: sha, build, attestation, steps }, null, 2));
     else { console.log(`# attestation ${JSON.stringify(attestation)}`); for (const s of steps) console.log(`# ${s.id}${s.paid_window ? ' [Particle paid window]' : ''}${s.hold ? ` [hold: ${s.hold}]` : ''}${s.note ? ` (${s.note})` : ''}\n${s.argv.map(q).join(' ')}`); }
   } else if (argv[0] === 'check-world') {

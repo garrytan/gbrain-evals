@@ -40,7 +40,7 @@ describe('h4fix-confirm plan', () => {
       expect(new Set(g.map(s => val(s.argv, '--gbrain-root'))).size).toBe(1);
       for (const s of g) {
         const arm = val(s.argv, '--gbrain-label');
-        expect([ARMS.section, ARMS.default]).toContain(arm);
+        expect([ARMS.section, ARMS.default] as string[]).toContain(arm);
         expect(s.argv.includes('--gbrain-config')).toBe(arm === ARMS.section);
         if (arm === ARMS.section) expect(val(s.argv, '--gbrain-config')).toBe(SECTION_CONFIG);
         expect(s.argv).not.toContain('--gbrain-build-config');
@@ -71,11 +71,22 @@ describe('h4fix-confirm plan', () => {
       expect(ids.slice(0, record).some(i => /-h4[ab]$|-other$/.test(i))).toBe(false);
       for (const half of ['a', 'b'] as const) for (const s of steps.filter(x => x.id.endsWith(`-h4${half}`))) expect(val(s.argv, '--tasks')).toBe(h4Half(half).join(','));
     });
-    test(`${w}: every cap is a placeholder, never a dollar figure (R79)`, () => {
-      for (const s of steps.filter(x => x.argv.includes('--budget-usd'))) expect(val(s.argv, '--budget-usd')).toMatch(/^\$CAP_[A-Z0-9_]+$/);
+    test(`${w}: every cap and allowance is a placeholder, never a dollar figure (R79)`, () => {
+      for (const f of ['--budget-usd', '--slot-build-allowance-usd']) for (const s of steps.filter(x => x.argv.includes(f))) expect(val(s.argv, f)).toMatch(/^\$CAP_[A-Z0-9_]+$/);
       expect(val(steps[0].argv, '--program-cap-usd')).toBe('$CAP_PROGRAM');
     });
   }
+  test('after a stop at the look, particle-1 runs H4 half A (and the other families on S3 and S4) as an explicit list', () => {
+    for (const w of H4FIX_WORLDS) {
+      const p = worldPlan(w, BUILD, SHA, '2026-11-25', true).filter(s => s.paid_window && !s.id.startsWith('pilot'));
+      for (const s of p) {
+        const tasks = val(s.argv, '--tasks').split(',');
+        expect(tasks.filter(x => x.startsWith('H4-'))).toEqual(h4Half('a'));
+        expect(tasks.length).toBe(FULL_WORLDS.includes(w) ? 90 : 10);
+        expect(s.argv).not.toContain('--families');
+      }
+    }
+  });
   test('the halves are disjoint and together are H4-01 to H4-20', () => {
     const a = h4Half('a'), b = h4Half('b');
     expect(a).toHaveLength(10);
@@ -157,7 +168,7 @@ describe('h4fix_analysis.py', () => {
 
   describe('the final analysis', () => {
     test('a paired gain with no harm takes the flip to Garry; the gap reads level at a tie', () => {
-      const r = analyse((arm, _m, t) => !t.startsWith('H4') || arm !== 'gbrain-default' || n(t) % 2 === 0);
+      const r = analyse((arm, _m, t) => !t.startsWith('H4') || arm !== 'gbrain-default' || n(t) <= 10);
       expect(r.code).toBe(0);
       expect(r.json.primary).toMatchObject({ delta_pp: 50, interval_key: 'ci_z1.98', wording: 'helps' });
       expect(r.json.no_harm_other_families).toMatchObject({ delta_pp: 0, no_harm: true, margin_pp: -5 });
@@ -170,6 +181,22 @@ describe('h4fix_analysis.py', () => {
       const p = analyse(() => true, [], { drop: 'fs|particle-1|H4-07|0' });
       expect(p.code).toBe(0);
       expect(p.json.secondary.particle.incomplete).toBeDefined();
+    });
+    test('--stopped must match the look recomputed from half A, and no half-B cell may follow a stop', () => {
+      const stopWorthy: Ok = (arm, _m, t) => arm !== 'gbrain-default' || n(t) % 2 === 0;
+      expect(analyse(stopWorthy).err).toContain('LOOK_MISMATCH');
+      expect(analyse(() => true, ['--stopped', 'futility']).err).toContain('LOOK_MISMATCH');
+      expect(analyse(stopWorthy, ['--stopped', 'difference']).err).toContain('HALF_B_AFTER_STOP');
+    });
+    test('a cell that arrives from two files is refused (a pilot never replaces a counted cell)', () => {
+      const dir = mkdtempSync(join(tmpdir(), 'h4fix-dup-'));
+      const one = worldFile(dir, 'S3', () => true).split('=')[1];
+      const r = spawnSync('python3', [SCRIPT, '--world', `S3=${one},${one.replace('S3.jsonl', 'S3b.jsonl')}`], { encoding: 'utf8', input: '' });
+      writeFileSync(one.replace('S3.jsonl', 'S3b.jsonl'), readFileSync(one, 'utf8').split('\n')[0].replace('#1', '#2') + '\n');
+      const r2 = spawnSync('python3', [SCRIPT, '--world', `S3=${one},${one.replace('S3.jsonl', 'S3b.jsonl')}`], { encoding: 'utf8' });
+      rmSync(dir, { recursive: true, force: true });
+      expect(r.status).not.toBe(0);
+      expect(r2.stderr).toContain('DUPLICATE_CELL');
     });
     test('after a stop for a difference the H4 rows read half A at z 2.80 and say so', () => {
       const r = analyse((arm, _m, t) => arm !== 'gbrain-default' || n(t) % 2 === 0, ['--stopped', 'difference'], { h4: H4.slice(0, 10) });
@@ -201,7 +228,7 @@ describe('h4fix_analysis.py', () => {
     rmSync(dir, { recursive: true, force: true });
     expect(JSON.parse(out)).toEqual({
       'gbrain-default|claude-opus-5-5': { grep_alternation: 2, grep_alternation_matched: 1 },
-      'gbrain-section|claude-opus-5-5': { search: 2, search_long_page: 1, search_explicit_return_unit: 1 },
+      'gbrain-section|claude-opus-5-5': { search: 2, search_calls_long_page: 1, search_rows_long_page: 1, search_explicit_return_unit: 1 },
     });
   });
 });

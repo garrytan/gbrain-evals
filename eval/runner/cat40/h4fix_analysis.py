@@ -50,7 +50,7 @@ def conditional_power(z, theta=PLANNED_EFFECT, se_interim=None, t=INFO_FRACTION,
 
 def load(paths):
     """{(arm, model, task): [success per repeat, ...]} records, cost and cell counts per (arm, model)."""
-    canon, cost, attempts = {}, defaultdict(float), defaultdict(int)
+    canon, cost, attempts, source = {}, defaultdict(float), defaultdict(int), {}
     seen = set()
     for p in paths:
         with open(p) as f:
@@ -66,6 +66,8 @@ def load(paths):
                 if r.get('stop') == 'harness_error':
                     continue
                 k = (r['arm'], r['model'], r['task'], int(r.get('repeat') or 0))
+                if source.setdefault(k, p) != p:
+                    raise SystemExit(f'DUPLICATE_CELL: {"|".join(map(str, k))} appears in {source[k]} and {p}; pass each counted step\'s attempts once and never a pilot\'s')
                 if k not in canon or int(r.get('attempt') or 0) >= int(canon[k].get('attempt') or 0):
                     canon[k] = r
     cells = defaultdict(dict)
@@ -123,7 +125,8 @@ class Comparison:
         mean = sum(stats) / resamples
         res = {'delta_pp': round(point, 2), 'ci95': [round(stats[int(0.025 * resamples)], 2), round(stats[min(resamples - 1, int(0.975 * resamples))], 2)],
                'tasks': sum(len(v) for v in self.tasks.values()), 'missing': len(self.missing),
-               'se_pp': round(math.sqrt(sum((s - mean) ** 2 for s in stats) / (resamples - 1)), 3)}
+               'se_pp': round(math.sqrt(sum((s - mean) ** 2 for s in stats) / (resamples - 1)), 3),
+               '_point': point, '_se': math.sqrt(sum((s - mean) ** 2 for s in stats) / (resamples - 1))}
         for z in extra_z:
             p = phi(-z)
             res[f'ci_z{z:.2f}'] = [round(stats[int(p * resamples)], 2), round(stats[min(resamples - 1, int((1 - p) * resamples))], 2)]
@@ -181,6 +184,11 @@ def gaps(worlds, models, cells_planned):
     return dict(miss)
 
 
+def half_a(worlds):
+    """The look's cells: H4 half A for both gbrain arms and both frontier readers."""
+    return {w: {k: v for k, v in cells.items() if k[0] in (SECTION, DEFAULT) and k[1] in FRONTIER and k[2] in H4_A} for w, cells in worlds.items()}
+
+
 def interim(worlds, B, S):
     gbrain_cells = {w: {k: v for k, v in cells.items() if k[0] in (SECTION, DEFAULT) and k[1] in FRONTIER} for w, cells in worlds.items()}
     want = {(w, arm, m, t) for w in WORLDS for arm in (SECTION, DEFAULT) for m in FRONTIER for t in H4_A}
@@ -189,8 +197,8 @@ def interim(worlds, B, S):
     if have != want or stray:
         raise SystemExit(f'INTERIM_INCOMPLETE: the look needs exactly H4 half A at repeat 2 for both gbrain arms and both frontier readers on S3 to S8 ({len(want - have)} missing, {len(stray)} outside half A)')
     res = Comparison(worlds, SECTION, DEFAULT, [PRIMARY], lambda w: H4_A).run(B, S, extra_z=(INTERIM_Z,))
-    d, se = res['delta_pp'], res['se_pp']
-    if not se:
+    d, se = res.pop('_point'), res.pop('_se')
+    if se < 1e-9:
         res.update({'z': None, 'decision': 'continue', 'stopped_early': False, 'reason': 'bootstrap standard error is 0: no stop'})
         return res
     z = d / se
@@ -268,8 +276,10 @@ def tool_stats(paths, world_files=None):
                     seen_text += result
                     if name in ('search', 'query'):
                         row[f'{name}'] += 1
-                        if '"reason":"long_page"' in result.replace(' ', ''):
-                            row[f'{name}_long_page'] += 1
+                        rows = result.replace(' ', '').count('"reason":"long_page"')
+                        if rows:
+                            row[f'{name}_calls_long_page'] += 1
+                            row[f'{name}_rows_long_page'] += rows
                         if 'return_unit' in args:
                             row[f'{name}_explicit_return_unit'] += 1
                     if name == 'get_page' and '|' in str(args.get('grep') or ''):
@@ -286,11 +296,21 @@ def tool_stats(paths, world_files=None):
     return {k: dict(v) for k, v in sorted(s.items())}
 
 
+LOOK_FOR = {'continue': 'none', 'stop: futility': 'futility', 'stop: difference, section delivery ahead': 'difference', 'stop: difference, section delivery behind': 'difference'}
+
+
 def final(worlds, cost, stopped, B, S, transcripts, world_files):
     plan = planned(stopped)
     miss = gaps(worlds, FRONTIER, plan)
     if miss:
         raise SystemExit(f'FINAL_INCOMPLETE: planned frontier cells are missing: {json.dumps(miss, sort_keys=True)}')
+    look = interim(half_a(worlds), B, S)
+    if LOOK_FOR[look['decision']] != stopped:
+        raise SystemExit(f'LOOK_MISMATCH: the half-A cells give "{look["decision"]}", but --stopped is {stopped}')
+    if stopped != 'none':
+        late = sorted(f'{w}|{a}|{m}|{t}' for w, cells in worlds.items() for (a, m, t) in cells if t in H4_ALL and t not in H4_A)
+        if late:
+            raise SystemExit(f'HALF_B_AFTER_STOP: {len(late)} H4 half-B cells are present after a stop at the look, e.g. {late[0]}')
     h4 = h4_tasks(stopped)
     label = 'half A only' if stopped in ('difference', 'futility') else None
     h4_for = lambda w: h4
@@ -361,6 +381,11 @@ def main(argv=None):
     else:
         wf = dict(s.split('=', 1) for s in a.world_file)
         out = {'look': 'final', **final(worlds, cost, a.stopped, a.resamples, a.seed, a.transcripts.split(',') if a.transcripts else None, wf)}
+    def clean(o):
+        if isinstance(o, dict):
+            return {k: clean(v) for k, v in o.items() if not k.startswith('_')}
+        return [clean(v) for v in o] if isinstance(o, list) else o
+    out = clean(out)
     text = json.dumps(out, indent=2, sort_keys=True)
     if a.json:
         with open(a.json, 'w') as f:
