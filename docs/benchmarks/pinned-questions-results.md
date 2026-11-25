@@ -19,6 +19,14 @@
   a contradiction answer that gave the new city and the old one together, with every other claim right. The judge
   accepted 37 of Opus's 60 answers like that and rejected 23, with no wording difference we could find. Counted as
   correct, those answers give Opus and particle-1 240 of 240 each, and gpt-6.2-sol 233 (239 with the judge note below).
+- **We learned that a stricter rule for answers that give both values narrows particle-1's gap to Opus but doesn't settle
+  it. You should read the preregistered comparison as the result and the rescore as a sensitivity check.** After the
+  results, we wrote a rule for those answers, checked both judges against labels from fixed rules (kappa 0.92 to 1.00)
+  and re-judged all 720 refreshed answers ([rescore](#rescore-under-the-both-value-rule-added-after-the-results)).
+  particle-1 moves from 7.5 points below Opus to 4.2 below (95% interval 7.5 to 0.8 lower), inside the 10-point margin,
+  but the rule was written after the labels were seen, so it can't change the verdict. gpt-6.2-sol's lead goes from 6.7
+  points to 5.4 (interval reaching 0), and nearly all of that change is 15 removed-chief-executive answers that the
+  stricter judge marked incomplete and the token rule marks right.
 
 Settled call: don't move pinned-question refreshes to particle-1 on this result, and don't rule it out. The model gap
 rests on one judge's inconsistent scoring of answers that report both values, so the next step is a rescoring of these
@@ -26,23 +34,29 @@ same answers, with a written rule for that case, preregistered before it runs. g
 needs a fix whichever way that lands: it should flag the contradicted sentence, signal a contradiction in an existing
 note, and recompute the answer in full instead of editing the old one.
 
+That rescoring ran on 2026-11-25 under a dated amendment written after the labels were seen. The preregistered result
+stays primary for both comparisons, and the rescore doesn't settle particle-1, so there is still no recommendation
+either way. A fresh preregistered run with the both-value rule frozen before any answer is seen would settle it; that
+run is proposed, not started.
+
 This is the results file of the [pinned-questions preregistration](2026-11-24-pinned-questions-preregistration.md),
 including both of its 2026-11-24 amendments. Every number here comes from synthetic, fictional-company worlds generated
 from a public generator, at one gbrain build (v0.60.769.0, `38831bb6`), on counted seeds 11 to 20, which no run had
 touched before.
 
 Refreshed answers fully correct, per model, with answer cost per correct answer relative to claude-opus-5-5. The
-second and third columns are the preregistered result; the fourth counts the both-city contradiction answers as
-correct:
+second and third columns are the preregistered result. The fourth and fifth are the
+[rescore](#rescore-under-the-both-value-rule-added-after-the-results), a sensitivity check whose rule was written after
+the labels were seen. The sixth counts the both-city contradiction answers as correct:
 
-| Model | Refreshed answers correct (of 240) | Paired difference from claude-opus-5-5 (95% interval) | Correct with both-city answers accepted | Answer cost per correct answer, Opus = 1 |
-|---|---:|---|---:|---:|
-| claude-opus-5-5 | 217 (90.4%) | reference | 240 | 1.00 |
-| particle-1 | 199 (82.9%) | -7.5 points (-11.7 to -3.8); not non-inferior at the 10-point margin | 240 | 0.056 |
-| gpt-6.2-sol | 233 (97.1%) | +6.7 points (+2.5 to +11.3) | 233 (239 with the judge note below) | 0.32 |
+| Model | Refreshed answers correct (of 240) | Paired difference from claude-opus-5-5 (95% interval) | Rescored correct (post hoc) | Rescored paired difference (95% interval) | Correct with both-city answers accepted | Answer cost per correct answer, Opus = 1 |
+|---|---:|---|---:|---|---:|---:|
+| claude-opus-5-5 | 217 (90.4%) | reference | 211 (87.9%) | reference | 240 | 1.00 |
+| particle-1 | 199 (82.9%) | -7.5 points (-11.7 to -3.8); not non-inferior at the 10-point margin | 201 (83.8%) | -4.2 points (-7.5 to -0.8); not a verdict | 240 | 0.056 |
+| gpt-6.2-sol | 233 (97.1%) | +6.7 points (+2.5 to +11.3) | 224 (93.3%); 239 with the token rule's label on 15 removed-chief-executive rows | +5.4 points (0.0 to +10.8) | 233 (239 with the judge note below) | 0.32 |
 
 Both preregistered differences are significant after Holm's correction (McNemar, Holm p 0.001 for particle-1 and
-0.005 for gpt-6.2-sol). With both-city answers accepted, particle-1 and Opus are level, and gpt-6.2-sol is 2.9 points
+0.005 for gpt-6.2-sol). Neither rescored difference is (Holm p 0.062 and 0.072). With both-city answers accepted, particle-1 and Opus are level, and gpt-6.2-sol is 2.9 points
 below Opus (0.4 points below with the judge note's six rows relabelled). Cost per correct answer counts only the pin
 and refresh calls that gbrain reported for each model, not the judge; the judge's cost is the same for every row it grades. The ratios are in
 [paid-counted.json](pinned-questions/paid-counted.json) under `relative_answer_cost`.
@@ -112,6 +126,65 @@ labels disagree. The preregistered score keeps the judge's label, so gpt-6.2-sol
 replaced by the rule's, it has 239 of 240 (+9.2 points over Opus, 95% interval +5.4 to +12.9). Either way gpt-6.2-sol
 is ahead of Opus. Scores never use the rule labels; the rule labels feed only the judge agreement check.
 
+## Rescore under the both-value rule (added after the results)
+
+**This section is a sensitivity check, not a result.** We wrote its rule on 2026-11-24, after the counted results were
+published and after we had read their labels, in a dated amendment to the
+[preregistration](2026-11-24-pinned-questions-preregistration.md#2026-11-24-rescore-under-a-rule-for-answers-that-give-both-values-after-the-counted-run)
+committed before any answer was re-judged. The preregistered numbers above stay primary, and every decision on this page
+reads them.
+
+**The rule.** A claim is correct only if the answer, in its own words, gives the current value as current. It may name
+the previous value as former or superseded ("moved there from X", "X is out of date"), and a hedged ordering ("which the
+note appears to supersede") still counts. An answer that only reports what each source says ("a press note says Y; the
+company page still says X") doesn't say which value is current, so its claim is wrong. The rescore prompt is the frozen
+judge prompt with only its "correct" and "wrong" lines replaced by these words. The same two judges re-judged all 720
+counted refreshed answers, each on its own family's rows. No model under test was asked anything.
+
+**The check before any verdict was used.** Each judge was compared with labels from fixed rules, not from people or a
+model: the preregistered token rule, and a word pattern frozen in the amendment for answers that give both values. The
+pattern decided every item, so none was left out.
+
+| Judge | Both-value answers: templates | Both-value answers: counted | Both-value set, kappa | Recheck of the earlier judge check, kappa |
+|---|---:|---:|---:|---:|
+| gpt-6.2-astra | 144 of 144 agree | 131 of 135 agree | 0.971 (279 labels) | 0.992 (338 labels) |
+| claude-opus-5-5 | 144 of 144 agree | 6 of 6 agree | 1.00 (150 labels) | 0.916 (189 labels; all 6 disagreements are removed-chief-executive omissions) |
+
+The bar was a kappa of at least 0.6 on at least 100 labels per judge on each set, and both judges passed. The template
+answers were written from phrasings in the counted answers, and the pattern was refined on the same 141 counted answers
+it labels, so this check shows the judges apply the rule as the pattern reads it to answers like these, not to wordings
+neither has seen. claude-opus-5-5 judged only 6 counted both-value answers, so its both-value kappa rests mostly on the
+templates.
+
+Rescored refreshed answers correct, out of 30 per class (60 for edits), with the preregistered count in brackets:
+
+| Change | claude-opus-5-5 | particle-1 | gpt-6.2-sol |
+|---|---:|---:|---:|
+| Edits (page edit and superseded fact) | 60 (60) | 60 (60) | 60 (60) |
+| Deleted source page (chief executive removed) | 30 (30) | 30 (30) | 15 (24) |
+| Contradiction in a new note | 4 (12) | 4 (4) | 30 (30) |
+| Contradiction written into an existing note | 27 (25) | 17 (15) | 29 (29) |
+| Unrelated changes (three classes) | 90 (90) | 90 (90) | 90 (90) |
+
+**Where the flips are.** All of claude-opus-5-5's 12 flips (9 to not correct, 3 to correct) and all of particle-1's 8
+(3 to not correct, 5 to correct) are on the 141 answers that give both values, which is the change the rule makes.
+Most of Opus's contradiction answers in a new note reported the press note and the company page side by side, so they
+now count as wrong. gpt-6.2-sol's 15 flips (12 to not correct, 3 to correct) are all on the other answers: each is a
+deleted-source answer that leaves the removed chief executive out. The token rule labels every one of them correct. Under the new prompt, claude-opus-5-5, judging gpt-6.2-sol, marked 15
+of those 30 omissions "missing", against 6 under the frozen prompt: 12 it had passed before, and 3 of the earlier 6 it
+now passes. All 6 of its disagreements with the rule in the recheck are the same case: a removed chief executive left
+out, marked "missing". That is judge
+noise against the rule, not a gpt-6.2-sol regression. With those 15 rows taking the token rule's label, gpt-6.2-sol has
+239 of 240, 11.7 points above rescored Opus (95% interval 7.5 to 15.8).
+
+**What it changes.** Nothing is decided by it. On particle-1 against Opus, the preregistered test found particle-1 not
+non-inferior (-7.5 points). Under the rescore it lands at -4.2 points, inside the 10-point margin, so the comparison
+isn't settled, and this page makes no recommendation either way and doesn't call the two level. On gpt-6.2-sol against
+Opus, the preregistered gap is +6.7 points and the rescored gap +5.4 with an interval reaching 0, most of the change
+being the 15 removed-chief-executive rows above. Opus after a contradiction is right 31 of 60 times under the rescore,
+48.3 points below its 60 of 60 after a direct edit. A fresh preregistered run with the both-value rule frozen before any
+answer is seen would settle particle-1; it is proposed, not started.
+
 ## Keyless arm
 
 Per-sentence stale flags over the 960 counted answer sentences (oracle citing every evidence line; 95% intervals from
@@ -139,9 +212,9 @@ to 21.7%), because fewer sentences share a cited line with an unrelated edit.
 |---|---|---|
 | Keyless: spillover and missed signals | Shown: 23 pins made due per new page, and contradictions in existing notes never signalled | gbrain's maintainers ship the scheduling fix they accepted, and the keyless arm reruns on that release |
 | Keyless: false flags after unrelated edits to cited pages | Shown: 75%, lower bound above the 10% line | The paragraph-level evidence design note goes to gbrain's maintainers as a plan to build |
-| Paid: particle-1 within 10 points of Opus | Not shown on the preregistered labels (interval's lower end -11.7 points); level with Opus when both-city answers are accepted | No recommendation at this sample: particle-1 is not documented as the low-cost refresh model, and a preregistered rescoring with a written rule for both-value answers comes next |
+| Paid: particle-1 within 10 points of Opus | Not shown on the preregistered labels (interval's lower end -11.7 points); level with Opus when both-city answers are accepted; -4.2 points (-7.5 to -0.8) under the post-hoc rescore, which can't change the verdict | No recommendation at this sample: particle-1 is not documented as the low-cost refresh model. The rescore leaves it unsettled, and a fresh preregistered run with the both-value rule frozen in advance would settle it (proposed, not started) |
 | Paid: more than 5% of a model's pilot calls cut off | No: 0 cut off for every model | The default-cap arm stands alone |
-| Paid: Opus after a contradiction at least 15 points below after a direct edit | Yes: 38.3 points below, all of it both-city answers the judge rejected | Design note to gbrain's maintainers: recompute the answer in full when new in-scope evidence arrives, instead of editing the old answer |
+| Paid: Opus after a contradiction at least 15 points below after a direct edit | Yes: 38.3 points below, all of it both-city answers the judge rejected (48.3 points under the post-hoc rescore) | Design note to gbrain's maintainers: recompute the answer in full when new in-scope evidence arrives, instead of editing the old answer |
 
 ## Judge check
 
@@ -171,7 +244,9 @@ an answer names both, and the agreement check leaves ambiguous labels out. In th
 answers: all 112 both-city contradiction answers (106 judged by gpt-6.2-astra, 6 by claude-opus-5-5) and 29 of
 claude-opus-5-5's 30 superseded-fact answers, which give the new founding year with the old one ("founded in 1994, a
 record that superseded an earlier entry of 1991"). gpt-6.2-astra accepted all 29 of those, and they read as correct,
-but neither judge's handling of both-value answers was compared with a reference.
+but neither judge's handling of both-value answers was compared with a reference. The
+[rescore](#rescore-under-the-both-value-rule-added-after-the-results) compares both judges with fixed-rule labels on
+these answers, under its new prompt.
 
 ## Runs and build
 
@@ -181,12 +256,14 @@ but neither judge's handling of both-value answers was compared with a reference
 | Paid judge check | 21 to 23 | 216 | [paid-judge-check.json](pinned-questions/paid-judge-check.json), [rows](pinned-questions/paid-judge-check-rows.ndjson) |
 | Stale probes (judges only) | 21 to 23 | 135 probes | [paid-stale-probes.json](pinned-questions/paid-stale-probes.json) |
 | Paid counted | 11 to 20 | 720 | [paid-counted.json](pinned-questions/paid-counted.json), [rows](pinned-questions/paid-counted-rows.ndjson) |
+| Rescore (judges only, post hoc) | 11 to 20, with a gate on 21 to 23 | 720 re-judged; 429 both-value and 527 recheck gate items | [paid-rescore.json](pinned-questions/paid-rescore.json), [rows](pinned-questions/paid-rescore-rows.ndjson), [gate rows](pinned-questions/paid-rescore-gate-rows.ndjson) |
 | Keyless, one citation per claim line | 11 to 20 | 240 | [keyless-citation-all.json](pinned-questions/keyless-citation-all.json) |
 | Keyless, one citation per sentence | 11 to 20 | 240 | [keyless-citation-one.json](pinned-questions/keyless-citation-one.json) |
 
 All paid runs and both keyless runs used gbrain v0.60.769.0 (`38831bb6`), the newest release on gbrain's master at
 each launch. The pilot and judge check ran from gbrain-evals `6646f4db`, and the stale probes, the counted paid run and
-the keyless runs from `0c7c4dbb`. Each file is a summary of the full receipt, whose sha256 is in
+the keyless runs from `0c7c4dbb`. The rescore re-judged the counted answers on 2026-11-25 from `07be6572`, reading the
+same gbrain build. Each file is a summary of the full receipt, whose sha256 is in
 [manifest.json](pinned-questions/manifest.json). The counted receipt's own `verdict` field reads "fail" because it
 recomputes the judge check from the counted rows alone, without probes. On those rows alone, claude-opus-5-5's kappa on
 the gpt-6.2-sol rows is 0.247 (474 labelled outputs: the judge marked 7 not correct, 6 of them the
@@ -201,6 +278,9 @@ The judge check that gates a counted launch is the one above.
   that report both the old and the new city, a call it made inconsistently and that the judge check never tested. The
   same judge accepted all 29 of claude-opus-5-5's superseded-fact answers that gave both years, so Opus's edit score,
   and the 38.3-point gap between edits and contradictions, rest on that call too.
+- The rescore's rule and its word pattern were written after the counted labels were seen, and the pattern was refined
+  on the same 141 answers it labels, so the rescored column is a sensitivity check, not a result. Its check labels come
+  from fixed rules, not from people.
 - The stale probes test whether a judge recognises a stale value. They don't test the "wrong" label.
 - One judge grades each model, so judge differences between the families can move a model's score. The removed
   chief executive case is the one we found.
