@@ -175,7 +175,9 @@ of those 30 omissions "missing", against 6 under the frozen prompt: 12 it had pa
 now passes. All 6 of its disagreements with the rule in the recheck are the same case: a removed chief executive left
 out, marked "missing". That is judge
 noise against the rule, not a gpt-6.2-sol regression. With those 15 rows taking the token rule's label, gpt-6.2-sol has
-239 of 240, 11.7 points above rescored Opus (95% interval 7.5 to 15.8).
+239 of 240, 11.7 points above rescored Opus (95% interval 7.5 to 15.8). In that variant the Holm adjustment changes too,
+and particle-1's deficit against Opus becomes significant (Holm p 0.031, against 0.062 in the rescored column), so the
+particle-1 comparison stays unsettled across variants.
 
 **What it changes.** Nothing is decided by it. On particle-1 against Opus, the preregistered test found particle-1 not
 non-inferior (-7.5 points). Under the rescore it lands at -4.2 points, inside the 10-point margin, so the comparison
