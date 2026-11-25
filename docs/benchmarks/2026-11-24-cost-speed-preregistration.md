@@ -529,15 +529,19 @@ Added after a scoped review of items 12 and 13, before any paid call:
       (`cachedOpenAIEmbedder`, `eval/runner/cat40/pg-arm.ts`): off, as above;
     - two in-process memos in `cell.ts` (`memoCounter`, `readerFitTokenizer`) that hold local tokenizer counts:
       harmless, because counting makes no provider call and adds no time to a measured call;
-    - the judge-path cache in `eval/runner/memory-qa/qa.ts` and the embedding cache in
-      `eval/runner/memory-qa/run-systems.ts`: not on these cells' path, which has no judge and builds its systems in
-      `cell.ts`;
+    - the cache in `eval/runner/memory-qa/qa.ts`, whose client the reader's client extends: never read, because the
+      reader's client replaces its chat call; and the embedding cache in `eval/runner/memory-qa/run-systems.ts`: not
+      on these cells' path, which builds its systems in `cell.ts`;
     - the file agent's tree and full-context reads: the tree lives under the cell's output directory and is rebuilt
       for every write, and full-context reads have no cache;
     - caches inside the compared systems themselves (gbrain's query cache, each vendor server's own state): shipped
-      behavior and part of what is measured. Their state lives in each stack's volumes, which
-      `eval/systems/bootstrap.sh down -v` removes after every cell, and gbrain's shim records a query-cache hit on the
-      read.
+      behavior and part of what is measured. Their state lives in each stack's volumes, which the cell command's
+      `eval/systems/bootstrap.sh down -v` removes when the cell ends, and gbrain's shim records a query-cache hit on
+      the read. A cell killed before that step can leave its volumes behind, so the VM is checked for leftover
+      volumes before each paid cell starts.
+
+A keyless hybrid cell on the VM after the fix sent all 115 of its embedding calls and all 8 reads through the lease
+proxy, and no cache directory was created outside its output.
 
 ## Disclosures
 
