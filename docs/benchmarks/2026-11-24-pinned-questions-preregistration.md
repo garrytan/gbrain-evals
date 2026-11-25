@@ -390,7 +390,8 @@ only when it is paid, completed and publishable, on the same gbrain build, with 
 fingerprint and every row judged by its family's judge. It runs the gate first and stops before the counted answers if
 the gate fails. Every graded call is written to a journal as it comes in. A directory where a rescore has started is
 refused unless `--resume` is passed. A resume asks only the calls the journal doesn't hold, or whose judge call
-failed, so a crash or the budget ledger's cap pauses the stage instead of ending it. The receipt sums the spend of
+failed, so the budget ledger's cap pauses the stage instead of ending it. A crash ends a paid stage, and it needs a
+fresh `--output`. The receipt sums the spend of
 every process behind it. A test ties the three sha256 values in the runner to the manifest. The stage runs as one
 judge-only paid window under the eval budget ledger, and amounts stay in the tracking issue.
 

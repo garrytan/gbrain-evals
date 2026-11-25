@@ -22,8 +22,9 @@
  *
  * Usage: bun eval/runner/pinned-questions-rescore.ts --counted <receipt.counted.json> --judge-check <receipt.judge-check.json>
  *   --stale-probes <receipt.stale-probes.json> --output <dir> [--resume] [--gbrain <checkout>[@ref]] --paid --budget-run-id ID
- * Every graded call is appended to rescore.ndjson in --output as it comes in; --resume continues a stage a crash or the
- * budget ledger stopped, asking only the calls the journal does not hold (and any failed judge call).
+ * Every graded call is appended to rescore.ndjson in --output as it comes in; --resume continues a stage the budget
+ * ledger stopped, asking only the calls the journal does not hold (and any failed judge call). A crash ends a paid stage,
+ * and it needs a fresh --output.
  */
 import './budget-ledger.ts';
 import { createHash, randomUUID } from 'node:crypto';

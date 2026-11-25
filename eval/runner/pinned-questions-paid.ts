@@ -22,8 +22,9 @@
  *
  * Paid: the run joins an open eval budget ledger run (--paid with --budget-run-id ID, checked by requirePaidArm like
  * every paid runner here); every request goes through the ledger's fetch guard.
- * An interrupted run resumes from checkpoint.ndjson in --output and never
- * re-asks a finished (model, seed) unit. Tests use the keyless mode
+ * A run the budget ledger stopped resumes from checkpoint.ndjson in --output and
+ * never re-asks a finished (model, seed) unit; a crash ends a paid stage, and it
+ * needs a fresh --output. Tests use the keyless mode
  * (runPinnedQuestionsPaid with a transport): gbrain's test chat transport, a
  * placeholder key, dead upstream base URLs and no provider keys.
  *
@@ -1224,7 +1225,7 @@ async function main(): Promise<void> {
   const maxOutputTokens = capFlag === undefined ? undefined : Number(capFlag);
   if (maxOutputTokens !== undefined && !(Number.isInteger(maxOutputTokens) && maxOutputTokens > 0)) throw new Error('--max-output-tokens must be a positive integer');
   const outFlag = argValue(argv, '--output');
-  if (!outFlag) throw new Error('--output <dir> is required: it holds checkpoint.ndjson, so an interrupted run resumes');
+  if (!outFlag) throw new Error('--output <dir> is required: it holds checkpoint.ndjson, so a run the budget ledger stopped resumes (a crash ends a paid stage and needs a fresh --output)');
   const output = resolve(outFlag);
   requireStageSeeds(stage, seeds);
   const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
