@@ -236,7 +236,7 @@ export async function evaluateArm(adapter: N14Adapter, ledger: N14DocLedger, raw
   const t0 = performance.now();
   let ingest: IngestOutcome;
   try { ingest = await adapter.ingest(ledger, raw); }
-  catch (e) { ingest = { status: 'error', code: errCode(e), message: errMsg(e).slice(0, 500), pages: 0, chunks: 0, embed_skip: null, write_errors: 1 }; }
+  catch (e) { ingest = { status: 'error', code: errCode(e), message: errMsg(e).slice(0, 500), pages: null, chunks: null, embed_skip: null, write_errors: 1 }; }
   const ingestMs = performance.now() - t0;
   memory.push(mark('ingest'));
 
@@ -302,7 +302,7 @@ export async function evaluateArm(adapter: N14Adapter, ledger: N14DocLedger, raw
   const ta = performance.now();
   let app: AppendOutcome;
   try { app = await adapter.append(appendText); }
-  catch (e) { app = { status: 'error', code: errCode(e), message: errMsg(e).slice(0, 500), chunks_before: 0, chunks_after: 0, chunks_rewritten: 0, chunks_deleted: 0, path: 'unknown' }; }
+  catch (e) { app = { status: 'error', code: errCode(e), message: errMsg(e).slice(0, 500), chunks_before: null, chunks_after: null, chunks_rewritten: null, chunks_deleted: null, path: 'unknown' }; }
   const appendMs = performance.now() - ta;
   let appendEmbed: EmbedCount | null = null;
   if (opts.embed !== false && embedInitial) {

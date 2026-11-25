@@ -591,4 +591,15 @@ describe('N14 on an engine without raw SQL (rust)', () => {
     const ids = n14Findings({ tiers: [], capability: CAPABLE, summary: summarize([s], 0, CAPABLE), arms: [s] } as unknown as N14RunResult, gut).map(f => f.id);
     expect(ids).not.toContain('N14-1');
   });
+
+  test('an ingest or append that throws records no counts, not 0', async () => {
+    class Throws extends ReferenceAdapter {
+      async ingest(): Promise<IngestOutcome> { throw Object.assign(new Error('boom'), { code: 'boom' }); }
+      async append(): Promise<AppendOutcome> { throw Object.assign(new Error('boom'), { code: 'boom' }); }
+    }
+    const doc = small('conversation', 400_000);
+    const run = await evaluateArm(new Throws('single-page'), doc.ledger, doc.text);
+    expect([run.ingest.status, run.ingest.pages, run.ingest.chunks]).toEqual(['error', null, null]);
+    expect([run.append.status, run.append.chunks_before, run.append.chunks_after, run.append.chunks_rewritten, run.append.chunks_deleted]).toEqual(['error', null, null, null, null]);
+  });
 });
