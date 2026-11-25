@@ -289,8 +289,11 @@ export interface Cs1World {
   usd: { write: number; background: number; read: number; probe: number };
   /** Optional split of a phase's dollars by model, for decision 1's largest line. */
   by_model?: Partial<Record<'write' | 'background' | 'read', Record<string, number>>>;
-  /** The idle window, on the two worlds per system that ran one. */
-  idle?: { usd: number; window_ms: number } | null;
+  /**
+   * The idle window, on the two worlds per system that ran one, and each run of a job's documented trigger before it
+   * (a job whose cadence is longer than the window; its dollars are not in the window's).
+   */
+  idle?: { usd: number; window_ms: number; triggers?: ReadonlyArray<{ job: string; usd: number; cadence_minutes: number }> } | null;
   /** Write-and-background dollars per million tokens over the world's first and last quarter of sessions. */
   quarters?: { first_usd_per_mtok: number; last_usd_per_mtok: number } | null;
   readers: Readonly<Record<string, Cs1ReaderWorld>>;
@@ -369,12 +372,22 @@ export function cs1Hosting(h: Cs1Hosted | null, ladder: Cs1PriceLadder, profile:
   return { instance: pick.name, memory_needed_gib: need, compute_usd: compute, storage_gb: gb, storage_usd: storage, usd: compute + storage };
 }
 
-/** A system's idle dollars a month: its idle windows' dollars per hour, pooled over the worlds that ran one, times 730; null when none did. */
+/**
+ * A system's idle dollars a month, each job's cost per run times its shipped runs a month: the jobs inside the window
+ * as the windows' dollars per hour, pooled over the worlds that ran one, times 730; and each triggered job as its mean
+ * dollars per trigger run times 730 hours over its cadence. Null when no world ran a window.
+ */
 export function cs1IdleUsdPerMonth(worlds: readonly Cs1World[]): number | null {
   const ran = worlds.filter(w => w.idle && w.idle.window_ms > 0);
   if (!ran.length) return null;
   const usd = ran.reduce((n, w) => n + w.idle!.usd, 0), hours = ran.reduce((n, w) => n + w.idle!.window_ms, 0) / 3_600_000;
-  return usd / hours * HOURS_PER_MONTH;
+  const runs = new Map<string, { usd: number; n: number; cadence_minutes: number }>();
+  for (const t of ran.flatMap(w => w.idle!.triggers ?? [])) {
+    const r = runs.get(t.job) ?? { usd: 0, n: 0, cadence_minutes: t.cadence_minutes };
+    runs.set(t.job, { ...r, usd: r.usd + t.usd, n: r.n + 1 });
+  }
+  const triggered = [...runs.values()].reduce((n, r) => n + r.usd / r.n * HOURS_PER_MONTH * 60 / r.cadence_minutes, 0);
+  return usd / hours * HOURS_PER_MONTH + triggered;
 }
 
 /** One world's monthly lines at a profile's volumes; idle and hosting are the system's fixed monthly figures. */

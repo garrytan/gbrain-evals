@@ -372,7 +372,8 @@
           {
             "job": "idle upkeep round (link and timeline extraction, repair lanes, bookkeeping GC, the capped embedding step), due a day after the last round finished, run in 3-second slices on the idle tick; priced per run through gbrain maintain --unattended",
             "cadence_minutes": 1440,
-            "source": "gbrain v0.60.771.0 src/core/maintenance/run.ts UPKEEP_INTERVAL_MS, src/core/maintenance/idle.ts IDLE_UPKEEP_BUDGET_MS"
+            "source": "gbrain v0.60.771.0 src/core/maintenance/run.ts UPKEEP_INTERVAL_MS, src/core/maintenance/idle.ts IDLE_UPKEEP_BUDGET_MS, src/commands/maintain-schedule.ts SCHEDULED_RUN_ARGS",
+            "trigger": "maintain"
           },
           {
             "job": "facts drain timer: queued facts-absorb extraction jobs",

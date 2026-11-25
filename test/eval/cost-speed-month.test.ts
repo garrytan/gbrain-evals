@@ -90,6 +90,14 @@ describe('monthly lines', () => {
     expect(res.systems[0].idle).toMatchObject({ measured_worlds: 2, note: null });
   });
 
+  test('a daily job run through its trigger is priced per run times its runs a month, not at the window\'s hourly rate', () => {
+    const upkeep = (usd: number) => [{ job: 'upkeep round', usd, cadence_minutes: 1440 }];
+    const worlds = system('x').worlds.map((w, i) => ({ ...w, idle: i === 0 ? { usd: 0.5, window_ms: 1_800_000, triggers: upkeep(1) } : i === 1 ? { usd: 1.5, window_ms: 5_400_000, triggers: upkeep(3) } : null }));
+    expect(cs1IdleUsdPerMonth(worlds)).toBeCloseTo(730 + 2 * 730 / 24, 10);
+    const daily = worlds.map((w, i) => ({ ...w, idle: i < 2 ? { usd: 0, window_ms: 7_200_000, triggers: upkeep(0.24) } : null }));
+    expect(cs1IdleUsdPerMonth(daily)).toBeCloseTo(0.24 * 730 / 24, 10);
+  });
+
   test('hosting is the smallest instance holding 1.5 times the peak, plus storage projected to the profile history', () => {
     const small = cs1Hosting(HOSTED, LADDER, 'heavy');
     expect(small.instance).toBe('gp.small');

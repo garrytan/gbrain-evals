@@ -415,6 +415,8 @@ export interface CellOptions {
   idleMaxMs?: number;
   /** Cells with an idle window: its length in place of the definition's (tests), and the hosting sample interval (default 60 s). */
   idleWindowMs?: number;
+  /** A trigger run's timeout in seconds (default 7200). */
+  triggerTimeoutS?: number;
   hostingIntervalMs?: number;
   /** Keyless baseline-hybrid: hash vectors instead of OpenAI embeddings. */
   embed?: 'hash' | 'real';
@@ -475,6 +477,8 @@ export interface BackgroundLiabilities { pending_jobs: Record<string, number> | 
 export interface F6BuildSummary { ok: boolean; problems: string[]; recorded?: boolean; last_pass?: { status: string; pages_failed: number; pages_skipped_unparsed: number; failed_reasons: Record<string, number> }; [k: string]: unknown }
 export interface IngestSummary {
   sessions: number; failed_sessions: number; synthetic_times: number; messages: number; ingested_tokens: number;
+  /** Held-back probe cells (cost and speed): the turns' content alone in cl100k tokens, the workload profile's basis, and the bulk import's write-and-drain time, from its first write to /finish returning, without the probes and idle checks after it. */
+  content_tokens?: number; bulk_wall_ms?: number;
   wall_ms: number; write_ms: { p50: number | null; p95: number | null; total: number };
   finish: { ready: boolean; waited_ms: number; completeness: string; background_liabilities?: BackgroundLiabilities; f6_build?: F6BuildSummary };
   readiness_probe: string; degraded: boolean; errors: Array<{ source_id: string; kind: string; message: string }>;
@@ -959,11 +963,22 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
       await runQuestions(rid, convId);
       if (def.idle_window?.worlds.includes(convId) && live.has(rid)) {
         await hosting?.stage(`idle:${convId}`);
+        // A job whose cadence is longer than the window runs once through its documented trigger first, metered on its own key.
+        const triggers = [];
+        for (const j of def.idle_window.jobs.filter(j => j.trigger)) {
+          const t1 = Date.now();
+          const run = await meter.around(slot, `tail:trigger:${rid}:${j.trigger}`, 'background_tail', async () => {
+            if (!system.trigger) throw new Error(`${def.system} has no trigger route`);
+            return system.trigger(sanitizer.ns(convId), j.trigger!, opts.triggerTimeoutS ?? 7200);
+          });
+          triggers.push({ job: j.job, trigger: j.trigger, cadence_minutes: j.cadence_minutes, ms: Date.now() - t1, usd: run.meter?.usd ?? null, requests: run.meter?.requests ?? null,
+            unpriced: run.meter?.unpriced ?? null, by_model: run.meter?.byModel ?? null, result: run.value ?? null, error: run.error ? String((run.error as Error).message ?? run.error).slice(0, 300) : null });
+        }
         const ms = opts.idleWindowMs ?? def.idle_window.ms;
         const t0 = Date.now();
         const idle = await meter.around(slot, `tail:idle:${rid}`, 'background_tail', () => Bun.sleep(ms));
         writeAtomic(join(staging.dir(rid), 'idle.json'), JSON.stringify({ realization_id: rid, conversation: convId, planned_ms: ms, ms: Date.now() - t0, usd: idle.meter?.usd ?? null,
-          requests: idle.meter?.requests ?? null, unpriced: idle.meter?.unpriced ?? null, by_model: idle.meter?.byModel ?? null, jobs: def.idle_window.jobs }) + '\n');
+          requests: idle.meter?.requests ?? null, unpriced: idle.meter?.unpriced ?? null, by_model: idle.meter?.byModel ?? null, jobs: def.idle_window.jobs, ...(triggers.length ? { triggers } : {}) }) + '\n');
       }
     }
   } finally {
@@ -1003,7 +1018,8 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
     const fixed = heldBack ? policyFor('vendor-default') : policyFor(identities.size ? [...identities.keys()][0] : 'fixed-evidence');
     const errors: IngestSummary['errors'] = [];
     const writes: number[] = [];
-    let failed = 0, synthetic = 0, messages = 0, tokens = 0;
+    let failed = 0, synthetic = 0, messages = 0, tokens = 0, contentTokens = 0;
+    let bulkWallMs: number | null = null;
     const probes: Array<Promise<ProbeRecord>> = [];
     /** Set once /finish has returned: the store is as queryable as it will get, so a probe whose next poll misses is missed. */
     let drained = false;
@@ -1071,6 +1087,9 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
       }
       return { ...rec, realization_id: rid, kind, miss, idle_waited_ms: idleWaited, poll_errors: errors.slice(0, 20) };
     };
+    /** A probe whose write threw or reported errors: errored, never polled, so a failed write is never a miss. */
+    const writeFailedProbe = (input: SessionInput, kind: WriteProbe['kind'], startedIdle: boolean, idleWaited: number | null): WriteProbe =>
+      ({ ...probeRecord(input.source_id, [], startedIdle, horizonMs), realization_id: rid, kind, miss: null, idle_waited_ms: idleWaited, poll_errors: [`write failed: ${errors.at(-1)?.message ?? 'unknown'}`.slice(0, 200)] });
     const bulkProbes: Array<Promise<WriteProbe>> = [];
     const t0 = performance.now();
     let importError: string | null = null;
@@ -1083,6 +1102,8 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
         if (step.synthetic_time) synthetic++;
         messages += step.input.turns.length;
         tokens += encodingCount('cl100k_base', step.input.turns.map(t => `${t.speaker}: ${t.content}`).join('\n'));
+        if (heldBack) contentTokens += encodingCount('cl100k_base', step.input.turns.map(t => t.content).join('\n'));
+        const failedBefore = failed;
         const w0 = performance.now();
         try {
           const res = await system.ingestSession(ns, step.input, step.event_time);
@@ -1095,7 +1116,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
           errors.push({ source_id: step.input.source_id, kind: (e as { kind?: string }).kind ?? 'product_error', message: (e as Error).message.slice(0, 300) });
         }
         const kind = sample.get(i);
-        if (kind && heldBack && canProbe) bulkProbes.push(writeProbe(step.input, 'bulk', w0, false, null));
+        if (kind && heldBack && canProbe) bulkProbes.push(failed > failedBefore ? Promise.resolve(writeFailedProbe(step.input, 'bulk', false, null)) : writeProbe(step.input, 'bulk', w0, false, null));
         else if (kind) probes.push(probe(step, kind, w0));
       }
       await meter.phase(slot, 'background');
@@ -1109,6 +1130,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
         } catch (e) { finish = { ready: false, waited_ms: 0, completeness: `error: ${(e as Error).message.slice(0, 200)}` }; }
       }
       if (finish.ready) drained = true;
+      bulkWallMs = Math.round(performance.now() - t0);
       const probeRecords = await Promise.all(probes);
       const bulkRecords = await Promise.all(bulkProbes);
       await meter.phase(slot, null);
@@ -1123,23 +1145,25 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
       await hosting?.stage(`probes:${convId}`);
       const picks = bulk.map(s => ({ s, k: hashKey(`${def.probes.seed}|${convId}|calibration`, s.input.source_id) })).sort((a, b) => (a.k < b.k ? -1 : 1))
         .map(x => ({ id: x.s.input.source_id, passage: probePassage(x.s.input.turns) })).filter((x): x is { id: string; passage: string } => x.passage !== null).slice(0, 10);
+      const before = await idleCheck();
       const cal = await meter.around(slot, `calibration:${ns}`, 'ingest', async () => {
-        const before = await idleCheck();
         await meter.probe(slot, picks.map(p => p.passage));
         let errored = 0;
         try {
           for (const p of picks) { try { await search(p.passage, p.id); } catch { errored++; } }
-          return { errored, started_idle: before.idle, ...(await idleCheck()) };
+          return { errored, started_idle: before.idle && finishedDrained, ...(await idleCheck()) };
         } finally { await meter.probe(slot, null); }
       });
       calibration = { drained: finishedDrained, started_idle: cal.value?.started_idle ?? false, searches: picks.length, errored: cal.value?.errored ?? picks.length, idle: cal.value?.idle ?? false, waited_ms: cal.value?.waited_ms ?? 0,
-        requests: cal.meter?.requests ?? null, by_phase: cal.meter?.byPhase ?? null, unlabelled_routes: cal.meter ? unlabelledMeterRoutes(cal.meter.byPhase) : null };
+        requests: cal.meter?.requests ?? null, by_phase: cal.meter?.byPhase ?? null, unlabelled_routes: cal.meter?.byPhase ? unlabelledMeterRoutes(cal.meter.byPhase) : cal.meter?.requests === 0 ? [] : null };
       const held = await meter.around(slot, `ingest:${ns}#held-back`, 'ingest', async () => {
         for (const step of plan.slice(bulk.length)) {
           const idle = await idleCheck();
           if (step.synthetic_time) synthetic++;
           messages += step.input.turns.length;
           tokens += encodingCount('cl100k_base', step.input.turns.map(t => `${t.speaker}: ${t.content}`).join('\n'));
+          contentTokens += encodingCount('cl100k_base', step.input.turns.map(t => t.content).join('\n'));
+          const failedBefore = failed;
           await meter.phase(slot, 'commit');
           const w0 = performance.now();
           try {
@@ -1153,7 +1177,8 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
             errors.push({ source_id: step.input.source_id, kind: (e as { kind?: string }).kind ?? 'product_error', message: (e as Error).message.slice(0, 300) });
           }
           await meter.phase(slot, 'background');
-          heldRecords.push(await writeProbe(step.input, 'held-back', w0, idle.idle, idle.waited_ms));
+          const startedIdle = idle.idle && finishedDrained;
+          heldRecords.push(failed > failedBefore ? writeFailedProbe(step.input, 'held-back', startedIdle, idle.waited_ms) : await writeProbe(step.input, 'held-back', w0, startedIdle, idle.waited_ms));
         }
         await meter.phase(slot, null);
       });
@@ -1167,7 +1192,8 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
     const probed = canProbe && !grep && !importError && finish.ready ? await meter.around(slot, `probe:${ns}`, 'ingest', () => readinessProbe(system, ns, plan.at(-1)?.input, fixed, capabilities)) : null;
     const barrier = !canProbe ? 'not-measurable' : probed ? probed.value ?? 'missed' : 'skipped';
     const ingest: IngestSummary = {
-      sessions: plan.length, failed_sessions: failed, synthetic_times: synthetic, messages, ingested_tokens: tokens, wall_ms: Math.round(performance.now() - t0),
+      sessions: plan.length, failed_sessions: failed, synthetic_times: synthetic, messages, ingested_tokens: tokens,
+      ...(heldBack ? { content_tokens: contentTokens, ...(bulkWallMs !== null ? { bulk_wall_ms: bulkWallMs } : {}) } : {}), wall_ms: Math.round(performance.now() - t0),
       write_ms: { p50: pct(writes, 50), p95: pct(writes, 95), total: Math.round(writes.reduce((s, x) => s + x, 0)) }, finish, readiness_probe: barrier,
       degraded: !!importError || failed / Math.max(1, plan.length) > 0.01 || !finish.ready || barrier === 'missed', errors: errors.slice(0, 200),
     };

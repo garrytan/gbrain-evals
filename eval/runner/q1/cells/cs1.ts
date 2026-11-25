@@ -139,7 +139,8 @@ export const CS1_LARGEST_WORLD_TOKENS = 182_251;
 
 const IDLE_MIN_MS = 30 * 60_000;
 const IDLE_MAX_MS = 2 * 60 * 60_000;
-type IdleJob = { job: string; cadence_minutes: number | null; source: string };
+/** A job whose cadence is longer than the window names its documented trigger, run once before the window and priced per run. */
+type IdleJob = { job: string; cadence_minutes: number | null; source: string; trigger?: string };
 /**
  * Each writing row's background jobs with their shipped cadence (minutes; null for work set off by a write rather than
  * a schedule), as read before the freeze:
@@ -155,7 +156,7 @@ type IdleJob = { job: string; cadence_minutes: number | null; source: string };
 export const CS1_IDLE_JOBS: Readonly<Record<string, readonly IdleJob[]>> = {
   'gbrain-defaults': [
     { job: 'serve idle tick: idle sweep, then idle upkeep when due (a stdio serve with no input for a full tick)', cadence_minutes: 10, source: 'gbrain v0.60.771.0 src/commands/serve.ts IDLE_SWEEP_INTERVAL_MS, src/core/maintenance/idle.ts; eval/systems/gbrain-defaults/shim.py docstring' },
-    { job: 'idle upkeep round (link and timeline extraction, repair lanes, bookkeeping GC, the capped embedding step), due a day after the last round finished, run in 3-second slices on the idle tick; priced per run through gbrain maintain --unattended', cadence_minutes: 1440, source: 'gbrain v0.60.771.0 src/core/maintenance/run.ts UPKEEP_INTERVAL_MS, src/core/maintenance/idle.ts IDLE_UPKEEP_BUDGET_MS' },
+    { job: 'idle upkeep round (link and timeline extraction, repair lanes, bookkeeping GC, the capped embedding step), due a day after the last round finished, run in 3-second slices on the idle tick; priced per run through gbrain maintain --unattended', cadence_minutes: 1440, source: 'gbrain v0.60.771.0 src/core/maintenance/run.ts UPKEEP_INTERVAL_MS, src/core/maintenance/idle.ts IDLE_UPKEEP_BUDGET_MS, src/commands/maintain-schedule.ts SCHEDULED_RUN_ARGS', trigger: 'maintain' },
     { job: 'facts drain timer: queued facts-absorb extraction jobs', cadence_minutes: 10, source: 'gbrain v0.60.771.0 src/core/facts/drain-scheduler.ts FACTS_DRAIN_TICK_MS' },
     { job: 'autopilot daemon cycle (every 5 minutes when installed): not started, because the shim installs with --no-autopilot-install and gbrain documents autopilot for a Postgres brain with a repo, while this brain is PGLite', cadence_minutes: null, source: 'gbrain v0.60.771.0 src/commands/autopilot.ts (default --interval 300), docs/guides/cron-schedule.md; eval/systems/gbrain-defaults/shim.py apply-migrations' },
   ],

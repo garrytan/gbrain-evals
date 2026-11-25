@@ -35,7 +35,17 @@ const LATE = new Set(['conv-a']);
 class EmbeddingFake extends FakeMemorySystem {
   private written = new Map<string, number>();
   private hidden: string | null = null;
-  constructor(private readonly provider: string, private readonly opts: { expand?: boolean; hide?: string; hideMs?: number } = {}) { super(); }
+  constructor(private readonly provider: string, private readonly opts: { expand?: boolean; hide?: string; hideMs?: number; trigger?: boolean; fail?: string; undrained?: boolean } = {}) { super(); }
+  async finishIngest() {
+    const f = await super.finishIngest();
+    return this.opts.undrained ? { ...f, raw: { ...(f.raw ?? {}), background_liabilities: { drained: false, pending_jobs: { facts: 2 } } } } : f;
+  }
+  readonly triggered: string[] = [];
+  async trigger(ns: string, job: string) {
+    this.triggered.push(`${ns}:${job}`);
+    await this.post('chat/completions', { model: 'gpt-4.1-mini', max_tokens: 50, messages: [{ role: 'user', content: 'upkeep round' }] });
+    return { job, exit: 0 };
+  }
   private post(path: string, body: unknown) {
     return fetch(`${this.provider}/fake/openai/v1/${path}`, { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer dummy' }, body: JSON.stringify(body) });
   }
@@ -43,6 +53,7 @@ class EmbeddingFake extends FakeMemorySystem {
     await this.post('embeddings', { model: 'text-embedding-3-small', input: session.turns.map(t => `${t.speaker}: ${t.content}`) });
     this.written.set(session.source_id, performance.now());
     if (this.opts.hide && session.turns.some(t => t.content === this.opts.hide)) this.hidden = session.source_id;
+    if (this.opts.fail && session.turns.some(t => t.content === this.opts.fail)) return { items_created: 0, warnings: [], errors: ['extraction failed'], completeness: 'degraded' as const };
     return super.ingestSession(ns, session, when);
   }
   async retrieve(ns: string, q: Parameters<FakeMemorySystem['retrieve']>[1], policy: Parameters<FakeMemorySystem['retrieve']>[2]) {
@@ -69,6 +80,7 @@ function heldBackDef(): CellDefinition {
 
 /** One held-back cell through a real lease proxy; with `idleCall` the stack also calls a model on its own once questions start, so the idle window has something to meter. */
 async function run(name: string, opts: ConstructorParameters<typeof EmbeddingFake>[1], idleCall = false) {
+  const triggerJob = { job: 'daily upkeep round', cadence_minutes: 1440, source: 'invented', trigger: 'maintain' };
   const upstream = (async (url: RequestInfo | URL) => String(url).endsWith('/chat/completions')
     ? Response.json({ choices: [{ message: { content: 'x' } }], usage: { prompt_tokens: 100, completion_tokens: 10 } })
     : Response.json({ data: [{ embedding: [0.1] }], usage: { prompt_tokens: 100, total_tokens: 100 } })) as unknown as typeof fetch;
@@ -80,7 +92,8 @@ async function run(name: string, opts: ConstructorParameters<typeof EmbeddingFak
   const saved = { ...process.env };
   process.env.GBRAIN_EVALS_QA_CACHE = join(tmp, `qa-cache-${name}`);
   try {
-    const def = heldBackDef();
+    const plain = heldBackDef();
+    const def = opts?.trigger ? { ...plain, idle_window: { ...plain.idle_window!, jobs: [...plain.idle_window!.jobs, triggerJob] } } : plain;
     const out = join(tmp, name);
     const system = new EmbeddingFake(base, opts);
     const hostingRead = async () => ({ containers: [{ name: 'stack-db-1', mem_bytes: 2e8 }], volumes: [{ name: 'stack_db-data', bytes: 5e7 }] });
@@ -92,7 +105,7 @@ async function run(name: string, opts: ConstructorParameters<typeof EmbeddingFak
     finally { if (timer) clearInterval(timer); }
     const events = readFileSync(join(out, 'runs', def.id, 'realizations.ndjson'), 'utf8').trim().split('\n').map(l => JSON.parse(l)).filter(e => e.event === 'ingested');
     const usage = readFileSync(usageLog, 'utf8').trim().split('\n').map(l => JSON.parse(l) as UsageLine);
-    return { def, res, events, usage, out };
+    return { def, res, events, usage, out, system };
   } finally {
     for (const k of Object.keys(process.env)) if (!(k in saved)) delete process.env[k];
     Object.assign(process.env, saved);
@@ -145,6 +158,44 @@ describe('held-back probes', () => {
     expect(idle.ms).toBeGreaterThanOrEqual(150);
     expect(idle.requests).toBeGreaterThan(0);
     expect(usage.filter(l => l.key === `tail:idle:${rid}`).length).toBe(idle.requests);
+    for (const c of ['conv-a', 'conv-c']) expect(() => readFileSync(join(out, 'runs', def.id, 'r', realizationId(def.id, c, 0), 'idle.json'))).toThrow();
+  }, 60_000);
+
+  test('a held-back write that reports errors is an errored probe with no polls, never a miss; tokens are counted on the profile\'s content basis', async () => {
+    const fail = raw.conversations.find(c => LATE.has(c.id))!.sessions.at(-1)!.turns[0].content;
+    const { events } = await run('write-failed', { fail });
+    for (const e of events) {
+      const held = (e.write_probes as WriteProbe[]).filter(p => p.kind === 'held-back');
+      if (LATE.has(e.conversation)) {
+        expect(held.at(-1)).toMatchObject({ status: 'errored', polls: 0, errored_polls: 0, miss: null });
+        expect(held.at(-1)!.poll_errors[0]).toStartWith('write failed: ');
+      } else expect(held.every(p => p.status === 'found')).toBe(true);
+      expect(e.ingest.content_tokens).toBeGreaterThan(0);
+      expect(e.ingest.content_tokens).toBeLessThan(e.ingest.ingested_tokens);
+      expect(e.ingest.bulk_wall_ms).toBeLessThanOrEqual(e.ingest.wall_ms);
+    }
+  }, 60_000);
+
+  test('a /finish that is ready with undrained background work starts no probe or calibration idle', async () => {
+    const { events } = await run('undrained', { undrained: true });
+    for (const e of events) {
+      expect(e.calibration).toMatchObject({ drained: false, started_idle: false });
+      expect((e.write_probes as WriteProbe[]).filter(p => p.kind === 'held-back').every(p => !p.started_idle)).toBe(true);
+    }
+  }, 60_000);
+
+  test("a job longer than the window runs once through its trigger before the window, metered on its own key and kept out of the window's dollars", async () => {
+    const { def, out, usage, system } = await run('trigger', { trigger: true });
+    const rid = realizationId(def.id, 'conv-b', 0);
+    const idle = JSON.parse(readFileSync(join(out, 'runs', def.id, 'r', rid, 'idle.json'), 'utf8'));
+    expect(idle.triggers).toHaveLength(1);
+    expect(idle.triggers[0]).toMatchObject({ job: 'daily upkeep round', trigger: 'maintain', cadence_minutes: 1440, requests: 1, result: { job: 'maintain', exit: 0 }, error: null });
+    expect(idle.triggers[0].usd).toBeGreaterThan(0);
+    expect(system.triggered).toHaveLength(1);
+    const lines = usage.filter(l => l.key === `tail:trigger:${rid}:maintain`);
+    expect(lines.map(l => l.route)).toEqual(['/v1/chat/completions']);
+    expect(idle.requests).toBe(usage.filter(l => l.key === `tail:idle:${rid}`).length);
+    expect(usage.filter(l => l.key === `tail:idle:${rid}` && l.route === '/v1/chat/completions')).toHaveLength(0);
     for (const c of ['conv-a', 'conv-c']) expect(() => readFileSync(join(out, 'runs', def.id, 'r', realizationId(def.id, c, 0), 'idle.json'))).toThrow();
   }, 60_000);
 

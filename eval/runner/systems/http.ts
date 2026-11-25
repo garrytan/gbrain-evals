@@ -97,6 +97,10 @@ export class HttpMemorySystem implements OwnAnswerSystem {
     return { ready: ready === true, waited_ms: Number(waited_ms ?? 0), completeness, service_ms, ...(Object.keys(rest).length ? { raw: rest } : {}) };
   }
 
+  async trigger(ns: string, job: string, timeoutS = 7200): Promise<Record<string, unknown>> {
+    return this.call('POST', '/trigger', { ns: this.ns(ns), job, timeout_s: timeoutS }, (timeoutS + 600) * 1000);
+  }
+
   async retrieve(ns: string, question: PublicQuestion, policy: RetrievalPolicy): Promise<RetrieveResult> {
     const r = await this.call('POST', '/retrieve', { ns: this.ns(ns), question: question.text, query_time: question.query_time, policy });
     if (!Array.isArray(r.items)) throw new SystemError('product_error', 'retrieve must return items');

@@ -190,7 +190,7 @@ export interface CellDefinition {
    * each with its shipped cadence in minutes (null when it runs on an event, not a schedule) and where that was read.
    * Absent: no idle window.
    */
-  idle_window?: { worlds: string[]; ms: number; min_ms: number; max_ms: number; jobs: Array<{ job: string; cadence_minutes: number | null; source: string }> };
+  idle_window?: { worlds: string[]; ms: number; min_ms: number; max_ms: number; jobs: Array<{ job: string; cadence_minutes: number | null; source: string; trigger?: string }> };
   /** Cost and speed: sample the stack's resident memory and disk after the bulk import drains, through the probes, the questions and the idle window. Absent: no hosting samples. */
   hosting_samples?: true;
   /**
@@ -207,7 +207,7 @@ export interface CellDefinition {
   shards: number;
   expected_hours: number;
   /** Shim cells: the stack's bootstrap environment and config (`GBRAIN_FULL_SURFACE=1` for gbrain's full-surface cell). */
-  launch?: { env: Record<string, string>; config: 'recipe' | 'common' | 'shipped-0.31' | 'observations' };
+  launch?: { env: Record<string, string>; config: 'recipe' | 'common' | 'shipped-0.31' | 'observations' | 'read-route' };
   /**
    * RS1, BG1 and BG1-C: the cell's conversations are the custodian's kept list (eval/runner/memory-qa/corpus.ts rs1Kept, bg1Kept),
    * in slot order, and launch unit (shard) i runs kept conversations i x kept_units to (i + 1) x kept_units - 1. A Set W cell

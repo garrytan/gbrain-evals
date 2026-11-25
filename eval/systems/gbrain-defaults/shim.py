@@ -129,6 +129,8 @@ OUTBOX_WAIT_S = 10.0
 # Write-receipt effect states that still need serve's consumer (src/core/persistence/effect-model.ts; `dispatched`
 # means a facts effect queued its job, which the job queue then shows).
 PENDING_EFFECT_STATES = ("queued", "running")
+# POST /trigger: each scheduled job's documented trigger, by job name (GbrainDefaultsAdapter.trigger).
+TRIGGERS = {"maintain": ("maintain", "--unattended", "--json")}
 FORBIDDEN_QUERY_KEYS = {"token_budget", "return_unit"}
 QUERY_KNOBS = {"limit", "autocut", "expand"}
 # Evidence-delivery fallbacks that are gbrain's shipped, content-driven behavior (preregistered): `redaction_unmapped`
@@ -1362,11 +1364,38 @@ class GbrainDefaultsAdapter(Adapter):
     def delete_source(self, ns: str, source_id: str) -> dict[str, Any]:
         return {"status": "unsupported", "receipt": {"why": "the starter surface has no page delete (delete_page is a full-surface op); the scoreboard reads only starter ops"}}
 
+    def trigger(self, ns: str, job: str, timeout_s: float) -> dict[str, Any]:
+        """A scheduled job's documented trigger, run once on the namespace's brain with serve stopped, so the
+        cost-and-speed experiment can price a job whose cadence is longer than its idle window per run. `maintain` is
+        `gbrain maintain --unattended`, the command gbrain's upkeep schedule runs; it records the round, so the restarted
+        serve's idle tick finds upkeep not due. `gbrain maintain --status` is read after, with serve stopped."""
+        args = TRIGGERS.get(job)
+        if args is None:
+            raise ShimError("invalid_request", f"no trigger {job!r}; this shim runs {sorted(TRIGGERS)}", 400)
+        with self.lock:
+            self.place(ns)
+            t0 = time.perf_counter()
+            try:
+                r = self.cli(*args, timeout_s=timeout_s, check=False)
+                ms = round((time.perf_counter() - t0) * 1000, 1)
+                status = self.cli_json("maintain", "--status", "--json", timeout_s=300)
+            finally:
+                self.start_serve()
+            text = r.stdout.strip()
+            try:
+                report: Any = json.loads(text[text.index("{"):]) if "{" in text else None
+            except (ValueError, json.JSONDecodeError):
+                report = None
+            self.receipt("trigger", job=job, exit=r.returncode, ms=ms)
+            return {"job": job, "command": f"gbrain {' '.join(args)}", "exit": r.returncode, "ms": ms, "report": report, "status": status,
+                    **({"stderr_tail": (r.stderr or text)[-400:]} if r.returncode else {})}
+
 
 def extended_dispatch(adapter: GbrainDefaultsAdapter, method: str, path: str, body: dict[str, Any]) -> tuple[int, dict[str, Any]]:
-    """Protocol v1 with its optional POST /answer {ns, question, query_time, mode, model} (gbrain's own answer), plus two
-    gbrain-defaults routes: GET /stats (serve memory and brain size) and POST /restart {ns} (serve restart time)."""
-    routes = {("POST", "/answer"), ("GET", "/stats"), ("POST", "/restart")}
+    """Protocol v1 with its optional POST /answer {ns, question, query_time, mode, model} (gbrain's own answer), plus three
+    gbrain-defaults routes: GET /stats (serve memory and brain size), POST /restart {ns} (serve restart time) and
+    POST /trigger {ns, job, timeout_s} (one run of a scheduled job's documented trigger)."""
+    routes = {("POST", "/answer"), ("GET", "/stats"), ("POST", "/restart"), ("POST", "/trigger")}
     if (method, path) not in routes:
         return dispatch(adapter, method, path, body)
     start = time.perf_counter()
@@ -1374,10 +1403,11 @@ def extended_dispatch(adapter: GbrainDefaultsAdapter, method: str, path: str, bo
         if path == "/stats":
             out = adapter.stats()
         else:
-            missing = [k for k in (("ns", "question") if path == "/answer" else ("ns",)) if k not in body]
+            missing = [k for k in (("ns", "question") if path == "/answer" else ("ns", "job") if path == "/trigger" else ("ns",)) if k not in body]
             if missing:
                 raise ShimError("invalid_request", f"missing fields: {', '.join(missing)}", 400)
             out = adapter.restart(body["ns"]) if path == "/restart" else \
+                adapter.trigger(body["ns"], str(body["job"]), float(body.get("timeout_s", 7200))) if path == "/trigger" else \
                 adapter.answer(body["ns"], body["question"], body.get("query_time"), body.get("mode", "synthesize"), body.get("model"))
         status = 200
     except ShimError as e:

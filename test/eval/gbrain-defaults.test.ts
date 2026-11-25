@@ -326,3 +326,43 @@ describe('starter-surface parameters', () => {
     for (const c of out.calls) for (const p of Object.keys(c.params)) expect([p, paramCallable(op, p, 'starter')]).toEqual([p, true]);
   });
 });
+
+describe('POST /trigger', () => {
+  test('runs gbrain maintain --unattended once with serve stopped, reads the status after, and always starts serve again', () => {
+    const code = [
+      'import importlib.util, json, threading, types, subprocess',
+      `spec = importlib.util.spec_from_file_location("gbrain_defaults_shim", ${JSON.stringify(`${ROOT}/${BUNDLE}/shim.py`)})`,
+      'shim = importlib.util.module_from_spec(spec)',
+      'spec.loader.exec_module(shim)',
+      'log = []',
+      'def cli(*args, timeout_s=600, check=True):',
+      '    log.append(["cli", list(args), timeout_s])',
+      '    if stub.fail: raise subprocess.TimeoutExpired(args, timeout_s)',
+      '    return types.SimpleNamespace(returncode=0, stdout=\'{"status": "applied"}\', stderr="")',
+      'stub = types.SimpleNamespace(lock=threading.Lock(), fail=False, cli=cli,',
+      '    place=lambda ns: log.append(["place", ns]), start_serve=lambda: log.append(["start_serve"]),',
+      '    cli_json=lambda *a, timeout_s=600: (log.append(["cli_json", list(a)]), {"due": False})[1], receipt=lambda kind, **f: log.append(["receipt", kind, f["job"], f["exit"]]))',
+      'out = shim.GbrainDefaultsAdapter.trigger(stub, "ns-a", "maintain", 60)',
+      'ok_log = list(log); log.clear(); stub.fail = True',
+      'try:',
+      '    shim.GbrainDefaultsAdapter.trigger(stub, "ns-a", "maintain", 60)',
+      'except subprocess.TimeoutExpired:',
+      '    pass',
+      'fail_log = list(log); log.clear()',
+      'try:',
+      '    shim.GbrainDefaultsAdapter.trigger(stub, "ns-a", "dream", 60)',
+      '    refused = None',
+      'except shim.ShimError as e:',
+      '    refused = [e.kind, e.status]',
+      'print(json.dumps({"out": {k: out[k] for k in ("job", "command", "exit", "report", "status")}, "ok": ok_log, "fail": fail_log, "refused": refused, "other": log}))',
+    ].join('\n');
+    const r = Bun.spawnSync(['python3', '-c', code], { cwd: ROOT });
+    if (r.exitCode !== 0) throw new Error(r.stderr.toString());
+    const o = JSON.parse(r.stdout.toString());
+    expect(o.out).toEqual({ job: 'maintain', command: 'gbrain maintain --unattended --json', exit: 0, report: { status: 'applied' }, status: { due: false } });
+    expect(o.ok).toEqual([['place', 'ns-a'], ['cli', ['maintain', '--unattended', '--json'], 60], ['cli_json', ['maintain', '--status', '--json']], ['start_serve'], ['receipt', 'trigger', 'maintain', 0]]);
+    expect(o.fail).toEqual([['place', 'ns-a'], ['cli', ['maintain', '--unattended', '--json'], 60], ['start_serve']]);
+    expect(o.refused).toEqual(['invalid_request', 400]);
+    expect(o.other).toEqual([]);
+  });
+});
