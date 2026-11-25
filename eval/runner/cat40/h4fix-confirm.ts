@@ -101,7 +101,7 @@ export function worldPlan(world: H4FixWorld, build: string, harnessSha: string, 
     ...FRONTIER.map(m => run(`oracle-${short(m)}`, m, ['--arms', 'oracle'], ['--families', families, '--repeat', '1'])),
     { id: 'oracle-gate', argv: ['bun', 'eval/runner/cat40/hard-ops.ts', 'oracle-gate', '--models', FRONTIER.join(','), '--attempts', FRONTIER.map(m => `${dir}/oracle-${short(m)}/attempts.jsonl`).join(',')], note: 'pooled frontier oracle success >= 95%, or stop this world (gate 4)' },
     ...pilots,
-    { id: 'hold-record', argv: [], hold: 'record', note: 'the judge check, slot receipts, oracle gate and pilots are committed under "Recorded before cells" before any counted cell' },
+    { id: 'hold-record', argv: [], hold: 'record', note: 'the judge check (eval/runner/cat40/h4fix-judge-check.ts on N1, once for all worlds), slot receipts, oracle gate and pilots are committed under "Recorded before cells" before any counted cell' },
     ...halfSteps('a'),
     ...(full ? FRONTIER.flatMap(m => [
       run(`section-${short(m)}-other`, m, gbrain('section'), ['--families', OTHER_FAMILIES.join(','), '--repeat', '1']),
