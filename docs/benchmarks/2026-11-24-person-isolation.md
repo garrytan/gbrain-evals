@@ -198,7 +198,9 @@ public CI prints and keeps only its total, and its report folder is never upload
   attestation that the plan's newest commit is on GitHub. The plan itself kept this branch unpushed until the CLI cells
   passed, so that no public commit would describe the `--as` paths before the fix shipped. So no run could carry that
   attestation. The order is still on record: CI's preregistration-order check confirms the plan was committed before any
-  result file, and the branch history shows each amendment committed before the runs it governs.
+  result file, and each receipt's `git_head` contains the plan and the amendments that govern it. The re-run's head,
+  `bc0d8763e`, is the commit that adds amendment 2, and amendment 1 (`c2bfa710f`) is an ancestor of it. This pull request
+  merges as a merge commit, so those commits stay on main.
 - The v0.60.769.0 receipts record `dirty: true`: the working tree wasn't clean when that run launched. The runner and
   plan were committed at `c2bfa710f`. The re-run launched from a clean tree, and its receipts record `dirty: false`.
 - Everything here ran on Ubicloud machines. No model or paid API was called.
