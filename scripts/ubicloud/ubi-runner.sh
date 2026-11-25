@@ -131,13 +131,14 @@ require_ttl() {
 }
 
 # api OUT ARGS...: send one Ubicloud CLI command, write the body to OUT, and
-# print the HTTP status (000 when no response arrived).
+# print the HTTP status (000 when no response arrived). The API key reaches curl
+# as a header file on a pipe, never in its argv.
 api() {
   local out=$1 code
   shift
   code=$(python3 -c 'import json,sys; print(json.dumps({"argv": sys.argv[1:]}))' "$@" \
     | curl -sS -o "$out" -w '%{http_code}' --max-time "$API_TIMEOUT" -X POST \
-        -H "Authorization: Bearer $UBICLOUD_API_KEY" \
+        -H @<(printf 'Authorization: Bearer %s\n' "$UBICLOUD_API_KEY") \
         -H 'Accept: text/plain' -H 'Content-Type: application/json' \
         -H 'X-Ubi-Version: 1.0.0' --data @- "$API/cli") || true
   echo "${code:-000}"
