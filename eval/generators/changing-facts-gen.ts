@@ -54,9 +54,29 @@
  * adds the Gemini-rendered world.json beside them), and fixtures/worlds/<id>/{world,questions}.json, the same worlds
  * from the template renderer at BG1_FIXTURE_TOKENS, for keyless tests. The dev worlds are stage 1's three
  * (BG1_DEV_CONVERSATIONS) and the dev loop's 17 extra (BG1_DEV_EXTRA_CONVERSATIONS, bg1-dev-04 to bg1-dev-20), whose
- * Gemini-rendered world.json the dev loop's mint adds, and the weekly line's three long ones (BG1_DEV_LONG_CONVERSATIONS,
- * bg1-dev-long-01 to -03), planned at the long profile with the gold-audit fixes; their template fixtures are at
- * BG1_FIXTURE_TOKENS like the others, and their Gemini-rendered world.json comes in its own change after a privacy read.
+ * Gemini-rendered world.json the dev loop's mint adds, the weekly line's three long ones (BG1_DEV_LONG_CONVERSATIONS,
+ * bg1-dev-long-01 to -03), planned at the long profile with the gold-audit fixes, whose Gemini-rendered world.json is
+ * committed beside their plans (#647), and the weekly line's three described-subject ones (BG1_DEV_ALIAS_CONVERSATIONS,
+ * bg1-dev-alias-01 to -03), planned at the alias profile with the gold-audit fixes, whose Gemini-rendered world.json the
+ * weekly line's alias pilot adds. Every dev world's template fixture is at BG1_FIXTURE_TOKENS.
+ *
+ * Described subjects (changing-facts-gen@3, the alias profile; GBEV-3's brief after the grep agent answered every
+ * question of @1 and @2 worlds, because each question named its entity and that name was in every evidence session).
+ * The same planner, slots, events, oracles and eight strata at the standard profile's 140 to 160 sessions, but no shared
+ * keyword links a question to its evidence sessions. Each entity has an alias set (eval/generators/changing-facts-alias.ts):
+ * a canonical name said only in its introduction line, a nickname, a misspelling and a role, and for a person a pronoun
+ * that a line can use after naming the antecedent. Every fact line uses one alias other than the canonical name, and the
+ * line records which (PlannedLine.refs). A property line gives each entity the property its questions describe it by,
+ * and some entities have a relation to another (one-way: a landlord, a mentor, a founder), so a question can take two
+ * steps ("Which city is the landlord of the person who taught me to make kimchi based in now?"). Property and relation
+ * lines sit only in sessions with no tracked fact line, and link lines (canonical to nickname, nickname to role) never in
+ * a session with the entity's own fact lines. Decoy slots sit on entities of their own, not near-name twins. Gold is the
+ * same oracles over the same events, so each question has one answer by construction; questions.json adds `subject` (the
+ * entity, the steps that describe it, its key terms and the sessions that resolve it). aliasPlanProblems,
+ * questionLeaks and renderLeaks are the keyless checks: every alias resolves to one entity through the link lines, every
+ * description resolves to one entity, no question shares a distinctive word with its evidence, and (in validate.ts --dev)
+ * no rendered evidence session holds a canonical name or a question's key terms. @3 has a public phrasing set only
+ * (ALIAS_PHRASING); a custody set comes with Set W's re-cut, so a sealed @3 plan refuses.
  *
  *   bun eval/generators/changing-facts-gen.ts write   write the dev plans and questions and the template fixtures
  *   bun eval/generators/changing-facts-gen.ts check   exit 1 when a committed file differs from a fresh generation
@@ -66,14 +86,20 @@
 import { createHash, createHmac } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-import { BG1_DEV_CONVERSATIONS, BG1_DEV_EXTRA_CONVERSATIONS, BG1_DEV_LONG_CONVERSATIONS, BG1_PRIMARY, BG1_QUESTIONS_PER_STRATUM, BG1_STRATA, familyOf, type Bg1QuestionFields, type Bg1Stratum } from '../runner/bg1/types.ts';
+import { BG1_DEV_ALIAS_CONVERSATIONS, BG1_DEV_CONVERSATIONS, BG1_DEV_EXTRA_CONVERSATIONS, BG1_DEV_LONG_CONVERSATIONS, BG1_PRIMARY, BG1_QUESTIONS_PER_STRATUM, BG1_STRATA, familyOf, type Bg1QuestionFields, type Bg1Stratum } from '../runner/bg1/types.ts';
 import { encodingCount } from '../runner/systems/render-v2.ts';
+import {
+  ALIAS_COMPANIES, ALIAS_DEALS, ALIAS_FIRST_NAMES, ALIAS_PROJECTS, ALIAS_PROPERTIES, ALIAS_RELATIONS, ALIAS_ROLES, ALIAS_SURNAMES, ANTECEDENTS, INTRO_LINES, ROLE_LINES,
+  aliasTemplateTexts, editDistance, misspellings, type PropertySpec,
+} from './changing-facts-alias.ts';
 import { ForwardJobState } from './job-state.ts';
 import { Rng, addDays } from './seeded.ts';
 
 export const BG1_GENERATOR_VERSION = 'changing-facts-gen@1';
 /** The long profile's generator version: the same planner and oracles at about five times the length (BG1_PROFILES.long). */
 export const BG1_LONG_GENERATOR_VERSION = 'changing-facts-gen@2';
+/** The described-subject profile's generator version: the standard length, with aliases and described subjects (header, "Described subjects"). */
+export const BG1_ALIAS_GENERATOR_VERSION = 'changing-facts-gen@3';
 export const BG1_PLAN_SCHEMA = 'gbrain-evals/bg1-plan/v1';
 export const BG1_WORLD_SCHEMA = 'gbrain-evals/bg1-world/v1';
 export const BG1_SPAN_DAYS = 547;
@@ -95,11 +121,12 @@ export const BG1_FIXTURE_TOKENS = 30_000;
  * between them grows fivefold. A plan names its profile by its generator version, and only the planner's session-count
  * draw reads the profile, so a standard plan is byte-identical to changing-facts-gen@1's.
  */
-export type Bg1ProfileId = 'standard' | 'long';
+export type Bg1ProfileId = 'standard' | 'long' | 'alias';
 export interface Bg1Profile { generator: string; sessions: { min: number; max: number }; target_tokens: number }
 export const BG1_PROFILES: Readonly<Record<Bg1ProfileId, Bg1Profile>> = {
   standard: { generator: BG1_GENERATOR_VERSION, sessions: BG1_SESSIONS, target_tokens: BG1_TARGET_TOKENS },
   long: { generator: BG1_LONG_GENERATOR_VERSION, sessions: { min: 700, max: 800 }, target_tokens: 1_000_000 },
+  alias: { generator: BG1_ALIAS_GENERATOR_VERSION, sessions: BG1_SESSIONS, target_tokens: BG1_TARGET_TOKENS },
 };
 /** A plan's profile, from its generator version; throws on a version no profile has. */
 export function profileOf(plan: Pick<WorldPlan, 'id' | 'generator'>): Bg1Profile {
@@ -111,11 +138,12 @@ export const BG1_MAX_LINES_PER_SESSION = 3;
 export const BG1_DEV_SEEDS: Readonly<Record<string, string>> = Object.fromEntries([
   ...[...BG1_DEV_CONVERSATIONS, ...BG1_DEV_EXTRA_CONVERSATIONS].map(id => [id, `bg1-dev-seed-v1:${id}`]),
   ...BG1_DEV_LONG_CONVERSATIONS.map(id => [id, `bg1-dev-long-seed-v1:${id}`]),
+  ...BG1_DEV_ALIAS_CONVERSATIONS.map(id => [id, `bg1-dev-alias-seed-v1:${id}`]),
 ]);
-/** Every public dev world, in --fake-break order: stage 1's three, the dev loop's 17 extra, then the three long ones. */
-export const BG1_DEV_ALL_IDS: readonly string[] = [...BG1_DEV_CONVERSATIONS, ...BG1_DEV_EXTRA_CONVERSATIONS, ...BG1_DEV_LONG_CONVERSATIONS];
-/** A public dev world's length profile: long for the three long dev worlds, standard for the rest. */
-export const devProfileOf = (id: string): Bg1ProfileId => (BG1_DEV_LONG_CONVERSATIONS.includes(id) ? 'long' : 'standard');
+/** Every public dev world, in --fake-break order: stage 1's three, the dev loop's 17 extra, the three long ones, then the three alias ones. */
+export const BG1_DEV_ALL_IDS: readonly string[] = [...BG1_DEV_CONVERSATIONS, ...BG1_DEV_EXTRA_CONVERSATIONS, ...BG1_DEV_LONG_CONVERSATIONS, ...BG1_DEV_ALIAS_CONVERSATIONS];
+/** A public dev world's profile: long for the three long dev worlds, alias for the three described-subject ones, standard for the rest. */
+export const devProfileOf = (id: string): Bg1ProfileId => (BG1_DEV_LONG_CONVERSATIONS.includes(id) ? 'long' : BG1_DEV_ALIAS_CONVERSATIONS.includes(id) ? 'alias' : 'standard');
 /** Embedded in every sealed plan, world, gold item and custody phrasing set; the sealed key's text rule matches it. */
 export const BG1_CUSTODY_MARKER = ['BG1', 'SEALED', 'CUSTODY', 'v1'].join('-');
 export const BG1_DATA_DIR = resolve(import.meta.dir, '../data/changing-facts-v1');
@@ -131,7 +159,21 @@ export type Source = 'executed' | 'owner_confirmed' | 'draft' | 'recap' | 'agent
 export type EventType = 'state' | 'change' | 'late' | 'scheduled' | 'correct' | 'mention' | 'source' | 'plan' | 'withdraw';
 export type SlotStratum = Bg1Stratum | 'decoy';
 
-export interface Entity { id: string; type: EntityType; name: string; twin_of?: string }
+/** How a line names an entity (changing-facts-gen@3): its canonical name, nickname, misspelling or role, or a pronoun after an antecedent. */
+export type AliasKind = 'name' | 'nickname' | 'misspelling' | 'role' | 'pronoun';
+export interface AliasSet { name: string; nickname: string; misspelling: string; role: string; pronoun: 'she' | 'he' | 'it' }
+/**
+ * An entity. twin_of: a decoy entity, which holds a value of the same kind as the entity it names (a near-name twin in
+ * @1 and @2, an entity of its own in @3). aliases and property: @3 only, the alias set and the property its questions
+ * describe it by (an ALIAS_PROPERTIES id).
+ */
+export interface Entity { id: string; type: EntityType; name: string; twin_of?: string; aliases?: AliasSet; property?: string }
+/** One entity a @3 line names, and how; a pronoun line also names its antecedent's alias. */
+export interface LineRef { entity: string; alias: AliasKind; antecedent?: 'nickname' | 'role' }
+/** A @3 line that states no slot fact: an introduction (canonical name and nickname), a role link, a property or a relation. */
+export type LinePurpose = 'intro' | 'role' | 'property' | 'relation';
+/** A @3 relation: subject is the relation's id (an ALIAS_RELATIONS id) of object, stated in the line of session `session`. */
+export interface Relation { id: string; subject: string; object: string; session: string }
 export interface SlotEvent {
   id: string;
   type: EventType;
@@ -159,7 +201,7 @@ export interface Slot {
   /** What the planner meant the slot to say. Oracles never read it; the question builder checks them against it. */
   intent: { now: string | null; history: string[] };
 }
-export interface PlannedLine { text: string; slot: string; event: string; values: string[]; speaker: 'user'; position: 'any' | 'middle' }
+export interface PlannedLine { text: string; slot: string; event: string; values: string[]; speaker: 'user'; position: 'any' | 'middle'; refs?: LineRef[]; purpose?: LinePurpose }
 export interface SessionPlan { id: string; day: number; time: string; topic: string; long: boolean; lines: PlannedLine[] }
 export interface Lexeme { aliases: string[]; implications: string[] }
 export interface WorldPlan {
@@ -176,12 +218,20 @@ export interface WorldPlan {
   slots: Slot[];
   sessions: SessionPlan[];
   lexicon: Record<string, Lexeme>;
+  /** @3 only: the relations its two-step questions describe a subject through. */
+  relations?: Relation[];
 }
 
 export interface Turn { speaker: 'user' | 'assistant'; content: string }
 export interface WorldSession { id: string; day: number; time: string; turns: Turn[] }
 export interface World { schema: string; id: string; custody?: string; world_end_weekday: string; renderer: string; sessions: WorldSession[] }
-export interface QuestionRecord { id: string; question: string; answer: string; evidence_sessions: string[]; bg1: Bg1QuestionFields; custody?: string }
+/**
+ * How a @3 question describes its subject: the steps from the described entity to the subject (a property, then
+ * optionally a relation), the description itself, its key terms and the sessions whose lines resolve it (the property,
+ * relation and link lines of every entity in the steps). Never shown to a system under test.
+ */
+export interface QuestionSubject { entity: string; steps: Array<{ entity: string; by: string }>; description: string; terms: string[]; resolution_sessions: string[] }
+export interface QuestionRecord { id: string; question: string; answer: string; evidence_sessions: string[]; bg1: Bg1QuestionFields; custody?: string; subject?: QuestionSubject }
 
 // ─── pools ───────────────────────────────────────────────────────────
 
@@ -423,6 +473,58 @@ export const PUBLIC_PHRASING: Phrasing = {
   },
 };
 
+/**
+ * changing-facts-gen@3's public phrasing set: PUBLIC_PHRASING's shape with every entity slot an {e} that a line fills
+ * with one of the entity's aliases and a question fills with a description, so no template uses {n} or {e}'s. A person
+ * clause that opens with {e} can take a pronoun after an antecedent (the planner's pronoun-only lines).
+ */
+export const ALIAS_PHRASING: Phrasing = {
+  frames: {
+    ...PUBLIC_PHRASING.frames,
+    executed: ['The countersigned contract for {e} sets the {attr} at {v}.', 'Both sides executed the agreement for {e} today, and it fixes the {attr} at {v}.'],
+    draft: ['The draft amendment for {e} floats {v} for the {attr}.', 'A redlined draft amendment for {e} proposes {v} as the {attr}.'],
+    recap: ['The recap email from the kickoff for {e} says the {attr} is {v}.', 'The meeting summary for {e} lists the {attr} as {v}.'],
+  },
+  kinds: {
+    ...PUBLIC_PHRASING.kinds,
+    role: {
+      ...PUBLIC_PHRASING.kinds.role,
+      q: {
+        now: [['What job title does {e} hold now?'], ['What role does {e} hold these days?']],
+        asof: [['What job title did {e} hold on {date}?'], ['On {date}, what role did {e} hold?']],
+        known: [['On {date}, which job title had I been told {e} held?'], ['As of {date}, which role did I think {e} held?']],
+        history: [['List the job titles {e} has held, oldest first.'], ['In order from earliest, which roles has {e} held?']],
+      },
+    },
+    ops_lead: {
+      ...PUBLIC_PHRASING.kinds.ops_lead,
+      mention: ['{v} ran the operations review at {e} again', '{v} signed off on the supplier list for {e}', '{v} sent the weekly operations numbers for {e}', '{v} is still untangling the shipping backlog at {e}', '{v} chaired the operations standup at {e}', '{v} rearranged the warehouse shifts at {e}'],
+    },
+    hq: {
+      ...PUBLIC_PHRASING.kinds.hq,
+      q: {
+        now: [['Where is {e} headquartered now?'], ['In which city does {e} have its head office these days?']],
+        asof: [['Where was {e} headquartered on {date}?'], ['On {date}, in which city did {e} have its head office?']],
+        known: [['On {date}, where had I been told {e} was headquartered?'], ['As of {date}, in which city did I think {e} had its head office?']],
+        history: [['List the cities {e} has been headquartered in, oldest first.'], ['In order from earliest, where has {e} had its head office?']],
+      },
+    },
+    vendor: {
+      ...PUBLIC_PHRASING.kinds.vendor,
+      mention: ['{v} sent another invoice for {e}', 'the {v} support desk fixed an outage on {e}', '{e} had a review call with {v}', '{v} shipped the next batch for {e}', 'I renewed the support plan for {e} with {v}', '{v} asked for feedback on {e}'],
+    },
+    merger: { ...PUBLIC_PHRASING.kinds.merger, q: { now: [['Who is {e} merging with?'], ['Who is {e} set to merge with at this point?']] } },
+    offsite: {
+      plan: ['{e} will hold its team offsite in {v}', '{e} is holding its team offsite in {v}'], off: ['the team offsite {e} planned in {v} is cancelled', '{e} cancelled its team offsite in {v}'],
+      q: { now: [['Where is {e} holding its team offsite?'], ['In which city is {e} holding its offsite?']] },
+    },
+    pilot: {
+      plan: ['{e} is running a pilot with {v}', '{e} signed {v} as its pilot customer'], off: ['the pilot {e} was running with {v} is cancelled', '{v} pulled out of the pilot with {e}'],
+      q: { now: [['Which customer is {e} piloting with?'], ['Who is the pilot customer for {e} right now?']] },
+    },
+  },
+};
+
 /** Placeholders each frame must use; any frame may also name the entity ({e}, {n}). */
 const FRAME_NEEDS: Readonly<Record<FrameKey, readonly string[]>> = {
   state: ['is'], change: ['became'], late: ['became', 'date'], scheduled: ['will'], correct: ['old', 'is'], mention: ['mention'], plan: ['plan'], off: ['off'],
@@ -510,6 +612,12 @@ const pad2 = (n: number) => String(n).padStart(2, '0');
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const fill = (t: string, ctx: Record<string, string>) => t.replace(/\{([a-z]+)\}/g, (_, k: string) => { if (ctx[k] === undefined) throw new PlanError(`a template names {${k}}, which has no value here`); return ctx[k]; });
 
+/** A @3 entity's alias texts that a line can name it by: canonical name, nickname, misspelling and role. */
+export const aliasTextsOf = (e: Entity): string[] => (e.aliases ? [e.aliases.name, e.aliases.nickname, e.aliases.misspelling, e.aliases.role] : []);
+const NAME_FILLER = new Set(['the', 'deal', 'project']);
+/** The words of a @3 entity's names (canonical, nickname, misspelling), without "the", "deal" and "Project". */
+const nameWords = (e: Entity) => (e.aliases ? [e.aliases.name, e.aliases.nickname, e.aliases.misspelling].flatMap(t => t.split(' ')).filter(w => !NAME_FILLER.has(w.toLowerCase())) : []);
+
 class Names {
   readonly firsts = new Set<string>();
   readonly texts: string[] = [];
@@ -562,7 +670,8 @@ export interface PlanOptions { phrasing?: Phrasing; custody?: boolean; publicSee
  * that cannot be placed (rare) moves on to the next attempt of the same seed, so the result stays deterministic.
  */
 export function planWorld(id: string, seed: string, opts: PlanOptions = {}): WorldPlan {
-  const phrasing = opts.phrasing ?? PUBLIC_PHRASING;
+  if (opts.profile === 'alias' && (opts.custody || opts.phrasing)) throw new PlanError(`world ${id}: changing-facts-gen@3 has only its public phrasing set (ALIAS_PHRASING); a custody set comes with Set W's re-cut for it`);
+  const phrasing = opts.phrasing ?? (opts.profile === 'alias' ? ALIAS_PHRASING : PUBLIC_PHRASING);
   let last: Error | null = null;
   for (let attempt = 0; attempt < 25; attempt++) {
     try {
@@ -579,7 +688,8 @@ export function planWorld(id: string, seed: string, opts: PlanOptions = {}): Wor
 
 function buildPlan(id: string, seed: string, phrasing: Phrasing, custody: boolean, publicSeed: string | undefined, goldAudit: boolean, profile: Bg1Profile): WorldPlan {
   const rng = new Rng(seedNumber(seed));
-  const names = new Names(rng, [...phrasingTexts(phrasing), ...TOPICS, ...FILLER_TEXTS, ...WEEKDAYS]);
+  const alias = profile.generator === BG1_ALIAS_GENERATOR_VERSION;
+  const names = new Names(rng, [...phrasingTexts(phrasing), ...TOPICS, ...FILLER_TEXTS, ...WEEKDAYS, ...(alias ? aliasTemplateTexts() : [])]);
   const audited = custody || goldAudit;
   const frames = audited ? { ...phrasing.frames, retract: phrasing.frames.retract.filter(t => NONE_FORMS.some(f => termRegex(f).test(t))) } : phrasing.frames;
   if (!frames.retract.length) throw new Error('the phrasing set has no retract template that says the plan is not happening (gold audit, Amendment 4)');
@@ -614,10 +724,51 @@ function buildPlan(id: string, seed: string, phrasing: Phrasing, custody: boolea
     }
     throw new PlanError(`${type} names ran out`);
   };
+  const pools = alias ? {
+    person: rng.shuffle(ALIAS_FIRST_NAMES), surname: rng.shuffle(ALIAS_SURNAMES), company: rng.shuffle(ALIAS_COMPANIES), project: rng.shuffle(ALIAS_PROJECTS), deal: rng.shuffle(ALIAS_DEALS),
+    role: { person: rng.shuffle(ALIAS_ROLES.person), company: rng.shuffle(ALIAS_ROLES.company), project: rng.shuffle(ALIAS_ROLES.project), deal: rng.shuffle(ALIAS_ROLES.deal) },
+  } : null;
+  const taken = new Set<string>();
+  /** A name word at least two edits from every name word of another entity, so a misspelling reads as one entity only. */
+  const farFromOthers = (word: string) => entities.every(x => !x.aliases || nameWords(x).every(w => editDistance(w, word) >= 2));
+  const misspellOf = (word: string) => misspellings(word).find(m => names.ok([m]) && farFromOthers(m));
+  /** @3: a new entity with its alias set; a decoy (twinOf) is an entity of its own, with the tracked entity's id and -twin. */
+  const newAliasEntity = (type: EntityType, twinOf?: Entity): Entity => {
+    const P = pools!;
+    const role = P.role[type].find(r => !taken.has(r) && names.ok([r]));
+    let base: Omit<AliasSet, 'role'> | null = null;
+    if (type === 'person') {
+      for (const [first, nick, pronoun] of P.person) {
+        if (taken.has(first) || names.firsts.has(first) || names.firsts.has(nick) || !names.ok([first, nick]) || !farFromOthers(first) || !farFromOthers(nick)) continue;
+        const sur = P.surname.find(x => !taken.has(x) && names.ok([x]) && farFromOthers(x) && misspellOf(x) !== undefined);
+        if (!sur) break;
+        base = { name: `${first} ${sur}`, nickname: nick, misspelling: `${first} ${misspellOf(sur)}`, pronoun };
+        taken.add(first); taken.add(sur); names.firsts.add(first); names.firsts.add(nick);
+        break;
+      }
+    } else {
+      const pool: ReadonlyArray<readonly [string, string]> = type === 'company' ? P.company : (type === 'project' ? P.project : P.deal).map(n => [type === 'project' ? `Project ${n}` : `the ${n} deal`, n] as const);
+      for (const [name, nick] of pool) {
+        const m = taken.has(nick) || !names.ok([name, nick]) || !farFromOthers(nick) ? undefined : misspellOf(nick);
+        if (m === undefined) continue;
+        base = { name, nickname: nick, misspelling: type === 'company' ? name.replace(nick, m) : type === 'project' ? m : `the ${m} deal`, pronoun: 'it' };
+        taken.add(nick);
+        break;
+      }
+    }
+    if (!base || !role) throw new PlanError(`${type} names ran out`);
+    taken.add(role);
+    const aliases: AliasSet = { ...base, role };
+    names.add(aliases.name, aliases.nickname, aliases.misspelling, aliases.role);
+    const e: Entity = { id: twinOf ? `${twinOf.id}-twin` : `${type}-${pad2(entities.filter(x => x.type === type).length + 1)}`, type, name: aliases.name, ...(twinOf ? { twin_of: twinOf.id } : {}), aliases };
+    entities.push(e);
+    kindsOf.set(e.id, new Set());
+    return e;
+  };
   const entityFor = (kind: Kind): Entity => {
     const type = KINDS[kind].entity;
     const open = entities.filter(e => e.type === type && !kindsOf.get(e.id)!.has(kind) && kindsOf.get(e.id)!.size < 2);
-    const e = open.length && rng.float() < 0.5 ? rng.pick(open) : newEntity(type);
+    const e = open.length && rng.float() < 0.5 ? rng.pick(open) : alias ? newAliasEntity(type) : newEntity(type);
     kindsOf.get(e.id)!.add(kind);
     return e;
   };
@@ -646,7 +797,31 @@ function buildPlan(id: string, seed: string, phrasing: Phrasing, custody: boolea
     slot.events.push(e);
     return e;
   };
+  /**
+   * @3's fact line: the clause and frame drawn first, then the alias the line names the entity by (the nickname or the
+   * role three times in eight each, the misspelling once, and for a person whose clause opens with the entity a pronoun
+   * after an antecedent sentence), recorded in the line's refs.
+   */
+  const sayAlias = (slot: Slot, ev: SlotEvent, frame: FrameKey, extra: Record<string, string>, position: 'any' | 'middle') => {
+    const kp = phrasing.kinds[slot.kind];
+    const ent = entities.find(x => x.id === slot.entity)!, a = ent.aliases!;
+    const key = (frame === 'state' || frame === 'correct' ? 'is' : frame === 'change' || frame === 'late' ? 'became' : frame === 'scheduled' ? 'will' : frame === 'mention' ? 'mention' : frame === 'plan' || frame === 'retract' ? 'plan' : frame === 'off' ? 'off' : null) satisfies ClauseKey | null;
+    const tpl = key ? rng.pick(kp[key] as readonly string[]) : null;
+    const frameText = rng.pick(frames[frame]);
+    const pronounOk = ent.type === 'person' && tpl !== null && tpl.startsWith('{e} ');
+    const kind = rng.pick<AliasKind>(['nickname', 'nickname', 'nickname', 'role', 'role', 'role', 'misspelling', ...(pronounOk ? ['pronoun', 'pronoun'] as const : [])]);
+    const antecedent = kind === 'pronoun' ? rng.pick(['nickname', 'role'] as const) : undefined;
+    const base: Record<string, string> = { e: kind === 'pronoun' ? a.pronoun : a[kind as Exclude<AliasKind, 'pronoun'>], v: ev.value, ...extra };
+    const ctx: Record<string, string> = { ...base };
+    if (key) ctx[key] = fill(tpl!, base);
+    if (frame in SOURCE_RANK) ctx.attr = fill(rng.pick(kp.attr!), base);
+    const body = cap(fill(frameText, ctx));
+    const text = antecedent ? `${cap(fill(rng.pick(ANTECEDENTS), { a: a[antecedent] }))} ${body}` : body;
+    sessions.find(x => x.id === ev.session)!.lines.push({ text, slot: slot.id, event: ev.id, values: frame === 'correct' ? [extra.old, ev.value] : [ev.value], speaker: 'user', position,
+      refs: [{ entity: ent.id, alias: kind, ...(antecedent ? { antecedent } : {}) }] });
+  };
   const say = (slot: Slot, ev: SlotEvent, frame: FrameKey, extra: Record<string, string> = {}, position: 'any' | 'middle' = 'any') => {
+    if (alias) return sayAlias(slot, ev, frame, extra, position);
     const kp = phrasing.kinds[slot.kind];
     const base: Record<string, string> = { ...entityText(entities.find(x => x.id === slot.entity)!), v: ev.value, ...extra };
     const clause = (k: ClauseKey) => fill(rng.pick(kp[k] as readonly string[]), base);
@@ -772,6 +947,7 @@ function buildPlan(id: string, seed: string, phrasing: Phrasing, custody: boolea
   for (const t of rng.shuffle([...slots]).slice(0, BG1_DECOY_SLOTS)) {
     const ent = entities.find(e => e.id === t.entity)!;
     let twin = entities.find(e => e.twin_of === ent.id);
+    if (!twin && alias) twin = newAliasEntity(ent.type, ent);
     if (!twin) {
       const [a, b] = pairsOf(ent.type).find(([x]) => ent.name === x || ent.name.endsWith(` ${x}`))!;
       twin = { id: `${ent.id}-twin`, type: ent.type, name: ent.name.slice(0, ent.name.length - a.length) + b, twin_of: ent.id };
@@ -787,10 +963,69 @@ function buildPlan(id: string, seed: string, phrasing: Phrasing, custody: boolea
     slot.intent = { now: v, history: [v] };
   }
 
+  /**
+   * @3's lines that state no slot fact. Each entity gets a property, and about half get a one-way relation to another
+   * entity; then an introduction line (canonical name and nickname) and a role line (nickname and role), each in a
+   * session holding none of the entity's fact lines, and a property line, and a relation line per relation, each in a
+   * session holding no tracked fact line, so a question's describing words never share a session with its evidence.
+   */
+  function placeAliasLines(): Relation[] {
+    const slotOf = new Map(slots.map(x => [x.id, x]));
+    const factEntities = sessions.map(x => new Set(x.lines.map(l => slotOf.get(l.slot)!.entity)));
+    const trackedAt = sessions.map(x => x.lines.some(l => slotOf.get(l.slot)!.stratum !== 'decoy'));
+    const profileAt = sessions.map(() => new Set<string>());
+    const valueTerms = Object.entries(lexicon).flatMap(([v, l]) => termsOf(v, l));
+    const blocked = [...valueTerms, ...entities.flatMap(aliasTextsOf), ...phrasingTexts(phrasing), ...TOPICS, ...FILLER_TEXTS];
+    const keyOk = (keys: readonly string[]) => !clash(keys, blocked);
+    const props = Object.fromEntries((['person', 'company', 'project', 'deal'] as const).map(t => [t, rng.shuffle(ALIAS_PROPERTIES[t]).filter(x => keyOk(x.keys))])) as Record<EntityType, PropertySpec[]>;
+    for (const e of entities) {
+      const x = props[e.type].shift();
+      if (!x) throw new PlanError(`${e.type} properties ran out`);
+      e.property = x.id;
+    }
+    const relations: Relation[] = [];
+    for (const x of rng.shuffle(entities)) {
+      if (rng.float() >= 0.5) continue;
+      for (const spec of rng.shuffle(ALIAS_RELATIONS.filter(r => r.subject === x.type))) {
+        const ys = entities.filter(y => y.id !== x.id && y.type === spec.object && !relations.some(r => (r.id === spec.id && r.object === y.id) || (r.subject === y.id && r.object === x.id)));
+        if (!ys.length || !keyOk(spec.keys)) continue;
+        relations.push({ id: spec.id, subject: x.id, object: rng.pick(ys).id, session: '' });
+        break;
+      }
+    }
+    const pick = (avoid: readonly string[], clean: boolean, tag: string): number => {
+      const ok = sessions.map((_, i) => i).filter(i => !board.exclusive[i] && board.load[i] < BG1_MAX_LINES_PER_SESSION && !board.slotsAt[i].has(tag)
+        && avoid.every(e => !factEntities[i].has(e) && !profileAt[i].has(e)) && (!clean || !trackedAt[i]));
+      if (!ok.length) throw new PlanError(`no free session for the line ${tag}`);
+      const i = rng.pick(ok);
+      board.take(i, tag);
+      for (const e of avoid) profileAt[i].add(e);
+      return i;
+    };
+    const line = (i: number, text: string, tag: string, k: number, refs: LineRef[], purpose: LinePurpose) =>
+      sessions[i].lines.push({ text: `${cap(text)}.`, slot: tag, event: `${tag}#${k}`, values: [], speaker: 'user', position: 'any', refs, purpose });
+    for (const e of entities) {
+      const a = e.aliases!, tag = `${e.id}.profile`, p = ALIAS_PROPERTIES[e.type].find(x => x.id === e.property)!;
+      line(pick([e.id], false, tag), fill(rng.pick(INTRO_LINES[e.type]), { c: a.name, k: a.nickname }), tag, 0, [{ entity: e.id, alias: 'name' }, { entity: e.id, alias: 'nickname' }], 'intro');
+      line(pick([e.id], false, tag), fill(rng.pick(ROLE_LINES), { k: a.nickname, r: a.role }), tag, 1, [{ entity: e.id, alias: 'nickname' }, { entity: e.id, alias: 'role' }], 'role');
+      const via = rng.pick(['nickname', 'role'] as const);
+      line(pick([e.id], true, tag), fill(p.line, { a: a[via] }), tag, 2, [{ entity: e.id, alias: via }], 'property');
+    }
+    for (const r of relations) {
+      const spec = ALIAS_RELATIONS.find(x => x.id === r.id)!, x = entities.find(e => e.id === r.subject)!, y = entities.find(e => e.id === r.object)!, tag = `${x.id}.relation`;
+      const i = pick([x.id, y.id], true, tag);
+      line(i, fill(spec.line, { x: x.aliases!.nickname, y: y.aliases!.nickname }), tag, 0, [{ entity: x.id, alias: 'nickname' }, { entity: y.id, alias: 'nickname' }], 'relation');
+      r.session = sessions[i].id;
+    }
+    return relations;
+  }
+  const relations = alias ? placeAliasLines() : null;
+
   for (const s of sessions) if (s.lines.length > 1) s.lines = rng.shuffle(s.lines);
   const plan: WorldPlan = {
     schema: BG1_PLAN_SCHEMA, generator: profile.generator, id, ...(publicSeed ? { seed: publicSeed } : {}), ...(custody ? { custody: BG1_CUSTODY_MARKER } : goldAudit ? { gold_audit: true as const } : {}),
     world_end_weekday: BG1_WORLD_END_WEEKDAY, entities, slots, sessions, lexicon: Object.fromEntries(Object.entries(lexicon).sort(([a], [b]) => (a < b ? -1 : 1))),
+    ...(relations ? { relations } : {}),
   };
   checkPlan(plan);
   return plan;
@@ -826,6 +1061,7 @@ export function checkPlan(plan: WorldPlan): void {
       for (const w of values) if (!l.values.includes(w) && termsOf(w, plan.lexicon[w]).some(t => termRegex(t).test(l.text))) fail(`a line in ${s.id} holds another value's term`);
     }
   }
+  if (plan.generator === BG1_ALIAS_GENERATOR_VERSION) { const problems = aliasPlanProblems(plan); if (problems.length) fail(problems[0]); }
 }
 
 // ─── oracles ─────────────────────────────────────────────────────────
@@ -966,9 +1202,16 @@ const token = (d: number) => `[[D:${d}]]`;
  * a secondary stratum cannot find eight slots with a usable date.
  */
 export function buildQuestions(plan: WorldPlan, phrasing: Phrasing = PUBLIC_PHRASING): QuestionRecord[] {
+  const alias = plan.generator === BG1_ALIAS_GENERATOR_VERSION;
+  if (alias) phrasing = ALIAS_PHRASING;
   const rng = new Rng(seedNumber(`${plan.id}/questions/${plan.slots.map(s => s.id).join(',')}`));
   const out: QuestionRecord[] = [];
-  const entityText = (slot: Slot) => { const e = plan.entities.find(x => x.id === slot.entity)!; return { e: e.type === 'deal' ? `the ${e.name} deal` : e.name, n: e.name }; };
+  const subjects = new Rng(seedNumber(`${plan.id}/subjects`));
+  let subject: QuestionSubject | undefined;
+  const entityText = (slot: Slot) => {
+    if (alias) { subject = describeSubject(plan, slot.entity, subjects); return { e: subject.description, n: subject.description }; }
+    const e = plan.entities.find(x => x.id === slot.entity)!; return { e: e.type === 'deal' ? `the ${e.name} deal` : e.name, n: e.name };
+  };
   const balanced = (n: number) => rng.shuffle<'exact' | 'paraphrase'>(Array.from({ length: n }, (_, i) => (i % 2 ? 'paraphrase' : 'exact')));
   const ask = (slot: Slot, key: QuestionKey, form: 'exact' | 'paraphrase', extra: Record<string, string> = {}) => {
     const pair = phrasing.kinds[slot.kind].q[key];
@@ -981,7 +1224,8 @@ export function buildQuestions(plan: WorldPlan, phrasing: Phrasing = PUBLIC_PHRA
     if (gold.values.join('\u0000') !== want.join('\u0000')) throw new PlanError(`${plan.id} ${slot.id}: the ${stratum} oracle disagrees with the plan`);
     const { evidence_sessions, ...fields } = goldFields(plan, { question, bg1 });
     const answer = stratum === 's5_withdrawn' ? withdrawnAnswer(slot) : stratum === 's8_history' ? gold.values.join(', then ') : gold.values[0];
-    out.push({ id: `${plan.id}:${stratum}:${out.filter(q => q.bg1.stratum === stratum).length}`, question, answer, evidence_sessions, bg1: { ...bg1, ...fields }, ...(plan.custody ? { custody: plan.custody } : {}) });
+    out.push({ id: `${plan.id}:${stratum}:${out.filter(q => q.bg1.stratum === stratum).length}`, question, answer, evidence_sessions, bg1: { ...bg1, ...fields }, ...(plan.custody ? { custody: plan.custody } : {}), ...(alias ? { subject: subject! } : {}) });
+    subject = undefined;
   };
 
   for (const stratum of BG1_PRIMARY) {
@@ -1056,6 +1300,196 @@ export function buildQuestions(plan: WorldPlan, phrasing: Phrasing = PUBLIC_PHRA
 function withdrawnAnswer(slot: Slot): string {
   const w = slot.events.find(e => e.type === 'withdraw')!;
   return w.rumour ? `None: the report about ${w.value} was a rumour, and nothing is planned.` : `None: the plan with ${w.value} was called off.`;
+}
+
+// ─── described subjects (@3) ─────────────────────────────────────────
+
+const propertyOf = (e: Entity): PropertySpec => {
+  const p = e.property === undefined ? undefined : ALIAS_PROPERTIES[e.type].find(x => x.id === e.property);
+  if (!p) throw new PlanError(`${e.id} has no property`);
+  return p;
+};
+const relationSpec = (id: string) => ALIAS_RELATIONS.find(r => r.id === id)!;
+
+/** Every key term a @3 plan's properties and relations use. */
+export function keyTermsOf(plan: WorldPlan): string[] {
+  return [...new Set([...plan.entities.flatMap(e => (e.property ? propertyOf(e).keys : [])), ...(plan.relations ?? []).flatMap(r => relationSpec(r.id).keys)])].sort();
+}
+
+/** The sessions holding the property, link and relation lines of these entities: what resolves a description of them. */
+const resolvingSessions = (plan: WorldPlan, ids: readonly string[]) => plan.sessions.filter(s => s.lines.some(l => ids.some(id => l.slot === `${id}.profile` || l.slot === `${id}.relation`))).map(s => s.id);
+
+/**
+ * How one @3 question describes its subject: through the subject's relation, when it has one, four times in ten
+ * (two steps: the other entity's property, then the relation), else by the subject's own property.
+ */
+export function describeSubject(plan: WorldPlan, id: string, rng: Rng): QuestionSubject {
+  const byId = (x: string) => plan.entities.find(e => e.id === x)!;
+  const rel = plan.relations?.find(r => r.subject === id);
+  if (rel && rng.float() < 0.4) {
+    const y = byId(rel.object), py = propertyOf(y), spec = relationSpec(rel.id);
+    return { entity: id, steps: [{ entity: y.id, by: `property:${py.id}` }, { entity: id, by: `relation:${rel.id}` }], description: spec.np.replace('{Y}', py.np),
+      terms: [...py.keys, ...spec.keys], resolution_sessions: resolvingSessions(plan, [y.id, id]) };
+  }
+  const p = propertyOf(byId(id));
+  return { entity: id, steps: [{ entity: id, by: `property:${p.id}` }], description: p.np, terms: [...p.keys], resolution_sessions: resolvingSessions(plan, [id]) };
+}
+
+/** A line template ({a}, {x}, {y} as named groups) as a regular expression over a planned line's text (capitalised, with its full stop). */
+function templateRegex(template: string): RegExp {
+  const parts = template.split(/\{([a-z])\}/);
+  return new RegExp(`^${parts.map((t, i) => (i % 2 ? `(?<${t}>.+?)` : escapeRe(t))).join('')}\\.$`, 'iu');
+}
+
+/** The entity each alias text names (lower case), and every text that names two. */
+export function aliasIndex(plan: WorldPlan): { index: Map<string, string>; problems: string[] } {
+  const index = new Map<string, string>(), problems: string[] = [];
+  for (const e of plan.entities) for (const t of aliasTextsOf(e)) {
+    const had = index.get(t.toLowerCase());
+    if (had !== undefined && had !== e.id) problems.push(`the alias "${t}" names both ${had} and ${e.id}`);
+    index.set(t.toLowerCase(), e.id);
+  }
+  return { index, problems };
+}
+
+/**
+ * The entities a description's steps resolve to, read from the plan's line texts alone: a property step takes every line
+ * the property's template matches and the entity its captured alias names (and a line holding the property's key terms
+ * that the template does not match counts as an unknown entity, "?"); a relation step takes every line the relation's
+ * template matches whose object alias names an entity of the step before, and the entity its subject alias names.
+ */
+export function resolveSubject(plan: WorldPlan, steps: QuestionSubject['steps']): string[] {
+  const { index } = aliasIndex(plan);
+  const lines = plan.sessions.flatMap(s => s.lines.map(l => l.text));
+  const named = (text: string | undefined) => (text === undefined ? undefined : index.get(text.toLowerCase()));
+  let found = new Set<string>();
+  for (const step of steps) {
+    const [kind, id] = step.by.split(':');
+    if (kind === 'property') {
+      const spec = Object.values(ALIAS_PROPERTIES).flat().find(x => x.id === id);
+      if (!spec) return [];
+      const re = templateRegex(spec.line);
+      found = new Set(lines.flatMap(t => { const m = re.exec(t); return m ? [named(m.groups!.a) ?? '?'] : (spec.keys.every(k => termRegex(k).test(t)) ? ['?'] : []); }));
+    } else {
+      const re = templateRegex(relationSpec(id).line), prev = found;
+      found = new Set(lines.flatMap(t => { const m = re.exec(t); const y = named(m?.groups!.y); return m && y !== undefined && prev.has(y) ? [named(m.groups!.x) ?? '?'] : []; }));
+    }
+  }
+  return [...found].sort();
+}
+
+/**
+ * A @3 plan's alias invariants, as problems (empty when it holds them): every entity has an alias set and a property; no
+ * alias text names two entities or holds another entity's; every line names the aliases it records and no other
+ * entity's; a canonical name appears only in its entity's introduction line; a key term appears only in its own
+ * property or relation line; property and relation lines share no session with a tracked fact line, and no link or
+ * property line shares one with a fact line about its entity; and the alias graph (intro and role lines join the aliases
+ * they hold, and two alias texts of one word count at one or two edits apart join by likeness) ties each entity's
+ * aliases together and never ties two entities.
+ */
+export function aliasPlanProblems(plan: WorldPlan): string[] {
+  const ents = plan.entities;
+  if (ents.some(e => !e.aliases || !e.property)) return ['an entity has no alias set or property'];
+  const out = [...aliasIndex(plan).problems];
+  for (const [i, e] of ents.entries()) for (const f of ents.slice(i + 1)) if (clash(aliasTextsOf(e), aliasTextsOf(f))) out.push(`${e.id} and ${f.id} share an alias term`);
+  const slotOf = new Map(plan.slots.map(x => [x.id, x]));
+  const byId = new Map(ents.map(e => [e.id, e]));
+  const keys = keyTermsOf(plan);
+  for (const s of plan.sessions) {
+    for (const l of s.lines) {
+      const refs = l.refs ?? [];
+      if (!refs.length || refs.some(r => !byId.has(r.entity))) { out.push(`a line in ${s.id} records no known alias`); continue; }
+      for (const r of refs) {
+        const a = byId.get(r.entity)!.aliases!;
+        if (r.alias === 'pronoun' ? !r.antecedent || !termRegex(a[r.antecedent]).test(l.text) || !termRegex(a.pronoun).test(l.text) : !termRegex(a[r.alias]).test(l.text)) out.push(`a line in ${s.id} lacks the ${r.alias} it records`);
+      }
+      const mine = new Set(refs.map(r => r.entity));
+      for (const e of ents) {
+        if (!mine.has(e.id) && aliasTextsOf(e).some(t => termRegex(t).test(l.text))) out.push(`a line in ${s.id} names ${e.id}, which it does not record`);
+        if (termRegex(e.aliases!.name).test(l.text) && !(l.purpose === 'intro' && mine.has(e.id))) out.push(`a line in ${s.id} holds ${e.id}'s canonical name outside its introduction`);
+      }
+      const own = l.purpose === 'property' ? propertyOf(byId.get(refs[0].entity)!).keys : l.purpose === 'relation' ? relationSpec(plan.relations?.find(r => r.subject === refs[0].entity)?.id ?? '')?.keys ?? [] : [];
+      for (const k of keys) if (termRegex(k).test(l.text) && !own.includes(k)) out.push(`a line in ${s.id} holds the key term "${k}" outside its own property or relation line`);
+    }
+    const facts = s.lines.filter(l => !l.purpose);
+    const tracked = facts.some(l => slotOf.get(l.slot)?.stratum !== 'decoy');
+    for (const l of s.lines.filter(x => x.purpose)) {
+      if ((l.purpose === 'property' || l.purpose === 'relation') && tracked) out.push(`${s.id} holds a ${l.purpose} line beside a tracked fact line`);
+      if (facts.some(f => f.refs?.some(fr => l.refs!.some(r => r.entity === fr.entity)))) out.push(`${s.id} holds a ${l.purpose} line beside a fact line about the same entity`);
+    }
+  }
+  const texts = [...new Set(ents.flatMap(e => aliasTextsOf(e).map(t => t.toLowerCase())))];
+  const parent = new Map(texts.map(t => [t, t]));
+  const find = (t: string): string => { let r = t; while (parent.get(r) !== r) r = parent.get(r)!; return r; };
+  const join = (a: string, b: string) => parent.set(find(a), find(b));
+  for (const l of plan.sessions.flatMap(s => s.lines).filter(x => x.purpose === 'intro' || x.purpose === 'role')) {
+    const here = texts.filter(t => termRegex(t).test(l.text));
+    for (const t of here.slice(1)) join(here[0], t);
+  }
+  for (const [i, a] of texts.entries()) for (const b of texts.slice(i + 1)) {
+    const wa = a.split(' '), wb = b.split(' '), d = editDistance(a, b);
+    if (wa.length === wb.length && d >= 1 && d <= 2 && wa.every((w, k) => editDistance(w, wb[k]) <= 1)) join(a, b);
+  }
+  const owner = new Map<string, string>();
+  for (const e of ents) {
+    const roots = new Set(aliasTextsOf(e).map(t => find(t.toLowerCase())));
+    if (roots.size !== 1) out.push(`${e.id}'s aliases are not tied together by its lines`);
+    for (const r of roots) { if (owner.has(r) && owner.get(r) !== e.id) out.push(`the alias graph ties ${owner.get(r)} and ${e.id} together`); owner.set(r, e.id); }
+  }
+  return [...new Set(out)];
+}
+
+const LEAK_STOPWORDS = ('a an the and or but of to in on at for with by from as is are was were be been being it its this that these those i me my we our us you your he she him her his '
+  + 'they them their who whom whose which what when where why how do does did has have had not no so than then there here into over under up out off about also just only very can could would '
+  + 'should will may might must one now these days still again yet any all some each every').split(' ');
+/** A text's words for the leak check: lower case, date tokens dropped, split on everything that is not a letter or digit. */
+export const leakTokens = (text: string) => text.replace(/\[\[[DW]:-?\d+\]\]/g, ' ').toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(t => t.length > 1);
+let leakVocab: ReadonlySet<string> | null = null;
+/**
+ * The words the leak check ignores: stopwords and every word of the templates every @3 world is built from (the phrasing
+ * set, the filler and topics, the property and relation templates with their key terms taken out, the link and
+ * antecedent templates). A template word is in every world's lines or questions for every entity of its kind, so it
+ * never picks one subject out. Every word of a key term stays distinctive, as do names, aliases and values.
+ */
+export function leakVocabulary(): ReadonlySet<string> {
+  if (leakVocab) return leakVocab;
+  const props = Object.values(ALIAS_PROPERTIES).flat();
+  const keyWords = new Set([...props.flatMap(p => p.keys), ...ALIAS_RELATIONS.flatMap(r => r.keys)].flatMap(leakTokens));
+  const strip = (t: string, keys: readonly string[]) => keys.reduce((x, k) => x.replace(new RegExp(termRegex(k).source, 'giu'), ' '), t);
+  const texts = [...phrasingTexts(ALIAS_PHRASING), ...FILLER_TEXTS, ...TOPICS, ...WEEKDAYS, ...props.flatMap(p => [strip(p.line, p.keys), strip(p.np, p.keys)]),
+    ...ALIAS_RELATIONS.flatMap(r => [strip(r.line, r.keys), strip(r.np, r.keys)]), ...Object.values(INTRO_LINES).flat(), ...ROLE_LINES, ...ANTECEDENTS];
+  leakVocab = new Set([...LEAK_STOPWORDS, ...texts.flatMap(t => leakTokens(t.replace(/\{[a-zA-Z]+\}/g, ' ')))].filter(w => !keyWords.has(w)));
+  return leakVocab;
+}
+
+/** A question's distinctive words: its words outside leakVocabulary. */
+export const distinctiveWords = (question: string) => [...new Set(leakTokens(question).filter(w => !leakVocabulary().has(w)))].sort();
+
+/** The leak check of one question: the distinctive words it shares with the text of any of its evidence sessions. */
+export function questionLeaks(q: Pick<QuestionRecord, 'question' | 'evidence_sessions'>, sessionText: (id: string) => string): string[] {
+  const mine = new Set(distinctiveWords(q.question));
+  const shared = new Set<string>();
+  for (const id of q.evidence_sessions) for (const w of leakTokens(sessionText(id))) if (mine.has(w)) shared.add(w);
+  return [...shared].sort();
+}
+
+export interface RenderLeak { session: string; kind: 'canonical' | 'question_term'; term: string; entity?: string; question?: string }
+/**
+ * The render leak check of a rendered @3 world (validate.ts --dev): a session holds an entity's canonical name although no
+ * planned line of it introduces that entity, or an evidence session of a question holds one of the question's key
+ * terms. Empty for a world of another generator.
+ */
+export function renderLeaks(plan: WorldPlan, questions: readonly QuestionRecord[], world: Pick<World, 'sessions'>): RenderLeak[] {
+  if (plan.generator !== BG1_ALIAS_GENERATOR_VERSION) return [];
+  const planned = new Map(plan.sessions.map(s => [s.id, s]));
+  const out: RenderLeak[] = [];
+  for (const s of world.sessions) {
+    const text = s.turns.map(t => t.content).join('\n');
+    const introduced = new Set((planned.get(s.id)?.lines ?? []).filter(l => l.purpose === 'intro').flatMap(l => l.refs!.map(r => r.entity)));
+    for (const e of plan.entities) if (e.aliases && !introduced.has(e.id) && termRegex(e.aliases.name).test(text)) out.push({ session: s.id, kind: 'canonical', term: e.aliases.name, entity: e.id });
+    for (const q of questions) if (q.evidence_sessions.includes(s.id)) for (const t of q.subject?.terms ?? []) if (termRegex(t).test(text)) out.push({ session: s.id, kind: 'question_term', term: t, question: q.id });
+  }
+  return out;
 }
 
 // ─── template renderer ───────────────────────────────────────────────
@@ -1158,25 +1592,26 @@ export function evidenceSpread(plan: WorldPlan, world: World, questions: readonl
 export interface RenderBrief {
   world: string; session: string; day: number; weekday: string; time: string; topic: string; long: boolean; target_tokens: number;
   lines: Array<{ text: string; speaker: 'user'; position: 'any' | 'middle' }>;
-  /** A planned line is on a tracked slot (not only decoys): the second validator reads the session. */
+  /** A planned line is on a tracked slot (not only decoys), or is an @3 world's intro, role, property or relation line: the second validator reads the session. */
   tracked: boolean;
   /** Date tokens the session may use: its planned lines' tokens and its own date and weekday. */
   allowed_tokens: string[];
-  /** Every value, alias and implication in the world; each may appear only inside a planned line. */
+  /** Every value, alias and implication in the world, and in an @3 world every entity's alias set and every property or relation key term; each may appear only inside a planned line. */
   forbidden: string[];
-  /** Tracked and decoy entity names: the session states no fact about them beyond its planned lines. */
+  /** Tracked and decoy entity names (in an @3 world, every alias of every entity): the session states no fact about them beyond its planned lines. */
   entities: string[];
 }
 
 /** Each session's brief; the world's length defaults to its profile's target. */
 export function renderBriefs(plan: WorldPlan, worldTokensTarget = profileOf(plan).target_tokens): RenderBrief[] {
   const targets = sessionTargets(plan, worldTokensTarget);
-  const forbidden = [...new Set(Object.entries(plan.lexicon).flatMap(([v, l]) => termsOf(v, l)))].sort();
-  const entities = plan.entities.map(e => e.name).sort();
+  const alias = plan.generator === BG1_ALIAS_GENERATOR_VERSION;
+  const forbidden = [...new Set([...Object.entries(plan.lexicon).flatMap(([v, l]) => termsOf(v, l)), ...(alias ? [...plan.entities.flatMap(aliasTextsOf), ...keyTermsOf(plan)] : [])])].sort();
+  const entities = [...new Set(alias ? plan.entities.flatMap(aliasTextsOf) : plan.entities.map(e => e.name))].sort();
   return plan.sessions.map((s, i) => ({
     world: plan.id, session: s.id, day: s.day, weekday: weekdayOf(s.day), time: s.time, topic: s.topic, long: s.long, target_tokens: targets[i],
     lines: s.lines.map(l => ({ text: l.text, speaker: l.speaker, position: l.position })),
-    tracked: s.lines.some(l => plan.slots.find(x => x.id === l.slot)!.stratum !== 'decoy'),
+    tracked: s.lines.some(l => { const st = plan.slots.find(x => x.id === l.slot)?.stratum; return st === undefined ? l.purpose !== undefined : st !== 'decoy'; }),
     allowed_tokens: [...new Set([...s.lines.flatMap(l => [...l.text.matchAll(/\[\[[DW]:-?\d+\]\]/g)].map(m => m[0])), token(s.day), `[[W:${s.day}]]`])].sort(),
     forbidden, entities,
   }));

@@ -242,17 +242,20 @@ const ARMS: Record<keyof typeof WEEKLY_LINE_ROWS, () => ArmSpec> = {
 type WeeklyLineRow = keyof typeof WEEKLY_LINE_ROWS;
 const WL_ROW_OF = Object.fromEntries((Object.keys(WEEKLY_LINE_ROWS) as WeeklyLineRow[]).map(r => [WEEKLY_LINE_ROWS[r].system, r])) as Record<string, WeeklyLineRow>;
 /**
- * The pilot's world length: standard, on bg1-dev-01 to -03 (about 200,000 tokens) ahead of a W1 block, or long, on
- * bg1-dev-long-01 to -03 (about 1,000,000 tokens) ahead of a W1-long block (GBEV-3's ruling A on the judge check).
+ * The pilot's worlds: standard, on bg1-dev-01 to -03 (about 200,000 tokens) ahead of a W1 block; long, on bg1-dev-long-01
+ * to -03 (about 1,000,000 tokens) ahead of a W1-long block (GBEV-3's ruling A on the judge check); or alias, on
+ * bg1-dev-alias-01 to -03 (about 200,000 tokens, changing-facts-gen@3's described subjects) at set BGW's caps, the
+ * pilot the preregistration's 2026-11-25 amendment runs with the grep agent first.
  */
-export type WeeklyPilotLength = 'standard' | 'long';
+export type WeeklyPilotLength = 'standard' | 'long' | 'alias';
 /** Each pilot length's sets: the pilot's (one world, the four rows) and the judge check's (two worlds, the grep agent). */
 export const WEEKLY_PILOT_SETS = {
   standard: { pilot: 'BGW-pilot', judge: 'BGW-judge' },
   long: { pilot: 'BGW-pilot-long', judge: 'BGW-judge-long' },
+  alias: { pilot: 'BGW-pilot-alias', judge: 'BGW-judge-alias' },
 } as const satisfies Record<WeeklyPilotLength, { pilot: WeeklyLineSetId; judge: WeeklyLineSetId }>;
 /** The counted set each pilot length precedes, whose rates set the pilot's caps. */
-export const WEEKLY_PILOT_COUNTED: Readonly<Record<WeeklyPilotLength, WeeklyLineCountedSet>> = { standard: 'BGW', long: 'BGW-long' };
+export const WEEKLY_PILOT_COUNTED: Readonly<Record<WeeklyPilotLength, WeeklyLineCountedSet>> = { standard: 'BGW', long: 'BGW-long', alias: 'BGW' };
 type WeeklyPilotSetId = (typeof WEEKLY_PILOT_SETS)[WeeklyPilotLength][keyof (typeof WEEKLY_PILOT_SETS)[WeeklyPilotLength]];
 /** Where a set of the line's cells runs: one week of Set W (BGW, or BGW-long for a W1-long batch), or the public dev worlds of the pilot or the judge check at either length (WEEKLY_PILOT_SETS). */
 type WeeklyLineTarget = { set: WeeklyLineCountedSet; week: WeeklyLineWeek; worlds: readonly string[] } | { set: WeeklyPilotSetId };
@@ -422,10 +425,11 @@ const withLease = (c: CellDefinition, usd: number, basis: string): CellDefinitio
  * settings with the gbrain build passed in. Each cell's lease is its row's cells cap (weeklyLinePilotCaps on `counted`,
  * the counted set the pilot precedes), so a unit stops before its row's pilot passes a tenth of its block budget. The
  * world is `length`'s: bg1-dev-01 (set BGW-pilot, about 200,000 tokens) by default, whichever set follows, or
- * bg1-dev-long-01 (set BGW-pilot-long, about 1,000,000 tokens), which only a W1-long block's pilot runs.
+ * bg1-dev-long-01 (set BGW-pilot-long, about 1,000,000 tokens), which only a W1-long block's pilot runs, or bg1-dev-alias-01
+ * (set BGW-pilot-alias, about 200,000 tokens of changing-facts-gen@3) at set BGW's caps.
  */
 export function generateWeeklyLinePilotCells(gbrain: WeeklyLineGbrainBuild, counted: WeeklyLineCountedSet = 'BGW', length: WeeklyPilotLength = 'standard'): CellDefinition[] {
-  const problems = [...weeklyLineBuildProblems(gbrain), ...(length === 'long' && counted !== 'BGW-long' ? ['a long pilot precedes a W1-long block, so its caps are set BGW-long\'s, not ' + counted + '\'s'] : [])];
+  const problems = [...weeklyLineBuildProblems(gbrain), ...(length !== 'standard' && counted !== WEEKLY_PILOT_COUNTED[length] ? [`${length === 'alias' ? 'an' : 'a'} ${length} pilot precedes a ${WEEKLY_PILOT_COUNTED[length] === 'BGW-long' ? 'W1-long' : 'W1'} block, so its caps are set ${WEEKLY_PILOT_COUNTED[length]}'s, not ${counted}'s`] : [])];
   if (problems.length) throw new Error(`the weekly line's pilot can't build: ${problems.join('; ')}`);
   const caps = weeklyLinePilotCaps(counted);
   return weeklyLineCells({ set: WEEKLY_PILOT_SETS[length].pilot }, gbrain, Object.keys(WEEKLY_LINE_ROWS) as WeeklyLineRow[]).map(c => {
@@ -437,7 +441,8 @@ export function generateWeeklyLinePilotCells(gbrain: WeeklyLineGbrainBuild, coun
 /**
  * The grep agent's judge check (R78): the grep agent alone, both readers as agents with their gating judges, on two public
  * dev worlds, so that with the pilot's grep-agent answers each reader has 192 to sample from: bg1-dev-02 and bg1-dev-03
- * (set BGW-judge) by default, or bg1-dev-long-02 and -03 (set BGW-judge-long) for the long pilot. Its lease is the judge
+ * (set BGW-judge) by default, bg1-dev-long-02 and -03 (set BGW-judge-long) for the long pilot, or bg1-dev-alias-02 and -03
+ * (set BGW-judge-alias) for the alias pilot. Its lease is the judge
  * check's pause less the labelling pass's cap, at either length.
  */
 export function generateWeeklyLineJudgeCheckCells(length: WeeklyPilotLength = 'standard'): CellDefinition[] {
@@ -451,10 +456,10 @@ export const WEEKLY_PILOT_GBRAIN_ENV = 'GBRAIN_EVALS_WEEKLY_PILOT_GBRAIN';
 /** The variable that names the pilot's world length to every pilot command (WeeklyPilotLength); unset is standard. */
 export const WEEKLY_PILOT_LENGTH_ENV = 'GBRAIN_EVALS_WEEKLY_PILOT_LENGTH';
 
-/** The pilot's world length from WEEKLY_PILOT_LENGTH_ENV: standard when unset, else standard or long; throws on anything else. */
+/** The pilot's world length from WEEKLY_PILOT_LENGTH_ENV: standard when unset, else standard, long or alias; throws on anything else. */
 export function weeklyPilotLength(env: Record<string, string | undefined> = process.env): WeeklyPilotLength {
   const raw = env[WEEKLY_PILOT_LENGTH_ENV] || 'standard';
-  if (raw !== 'standard' && raw !== 'long') throw new Error(`${WEEKLY_PILOT_LENGTH_ENV}=${raw} is not standard or long, the pilot's world lengths`);
+  if (raw !== 'standard' && raw !== 'long' && raw !== 'alias') throw new Error(`${WEEKLY_PILOT_LENGTH_ENV}=${raw} is not standard, long or alias, the pilot's world lengths`);
   return raw;
 }
 
@@ -484,7 +489,8 @@ export const WEEKLY_LINE_LABELLER = 'gemini:gemini-3.8-flash';
  * pilot's four cells and the judge check's grep-agent cell, particle-1's re-reads of the pilot's three 8,000-token rows,
  * and each block's estimate and cap (the pilot's: its rows' caps; the judge check's: its pause). The pilot's caps and recorded
  * rates are those of the counted set it precedes, `counted` (BGW unless a W1-long block is amended in), and its worlds
- * are `length`'s (WEEKLY_PILOT_SETS), so the long pilot is buildWeeklyPilotManifest(gbrain, 'BGW-long', 'long').
+ * are `length`'s (WEEKLY_PILOT_SETS), so the long pilot is buildWeeklyPilotManifest(gbrain, 'BGW-long', 'long') and the
+ * alias pilot buildWeeklyPilotManifest(gbrain, 'BGW', 'alias').
  */
 export function buildWeeklyPilotManifest(gbrain: WeeklyLineGbrainBuild, counted: WeeklyLineCountedSet = 'BGW', length: WeeklyPilotLength = 'standard'): WeeklyPilotManifest {
   const pilot = generateWeeklyLinePilotCells(gbrain, counted, length), judge = generateWeeklyLineJudgeCheckCells(length), caps = weeklyLinePilotCaps(counted);

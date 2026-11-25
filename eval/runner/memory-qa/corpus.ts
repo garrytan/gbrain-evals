@@ -22,12 +22,12 @@ import { decideError } from '../decisions/errors.ts';
 import { appendAccessLog } from '../sealed-confirmation-lib.ts';
 import { beam10mManifestPath, beam10mRoot, loadBeam10mCorpus } from './beam10m-corpus.ts';
 import { loadBeam10mQuestions } from './beam10m-questions.ts';
-import { BG1_CONVERSATIONS, BG1_DEV_CONVERSATIONS, BG1_DEV_EXTRA_CONVERSATIONS, BG1_DEV_LONG_CONVERSATIONS, BG1_N_CAP, BG1_N_FLOOR, BG1_STRATA, BG1C_CAMPAIGN, BG1C_CONVERSATIONS, BG1C_DATASET, BG1C_N_FINAL,
+import { BG1_CONVERSATIONS, BG1_DEV_CONVERSATIONS, BG1_DEV_EXTRA_CONVERSATIONS, BG1_DEV_LONG_CONVERSATIONS, BG1_DEV_ALIAS_CONVERSATIONS, BG1_N_CAP, BG1_N_FLOOR, BG1_STRATA, BG1C_CAMPAIGN, BG1C_CONVERSATIONS, BG1C_DATASET, BG1C_N_FINAL,
   BGW_BATCH_KEPT, BGW_CAMPAIGN, BGW_DATASET_PREFIX, BGW_SPLIT, BGW_WEEKS_PER_BATCH, BGW_WORLDS_PER_WEEK, bgwBatchDataset, bgwBatchIds, bgwBatchManifest, bgwBatchName, bgwSlotOf,
   type Bg1QuestionFields } from './bg1-names.ts';
 
-/** Every public dev world: stage 1's three, the dev loop's 17 extra, then the weekly line's three long ones. A load without `only` reads the three. */
-const BG1_DEV_ALL: readonly string[] = [...BG1_DEV_CONVERSATIONS, ...BG1_DEV_EXTRA_CONVERSATIONS, ...BG1_DEV_LONG_CONVERSATIONS];
+/** Every public dev world: stage 1's three, the dev loop's 17 extra, then the weekly line's three long ones and its three alias ones. A load without `only` reads the three. */
+const BG1_DEV_ALL: readonly string[] = [...BG1_DEV_CONVERSATIONS, ...BG1_DEV_EXTRA_CONVERSATIONS, ...BG1_DEV_LONG_CONVERSATIONS, ...BG1_DEV_ALIAS_CONVERSATIONS];
 
 export interface Turn { speaker: string; content: string; message_ids?: number[] }
 /** `original_id`: the dataset's own session id when `id` is an occurrence id (LongMemEval-M repeats a session id across a haystack). */

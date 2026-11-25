@@ -292,7 +292,88 @@ This file is frozen by the commit that adds it. The registry entry is
 
 ## Amendments
 
-None yet.
+### Amendment 1 (2026-11-25): questions that describe their subject, at 200,000 tokens, before week 1
+
+Written before any counted week, any mint of set W and any counted gbrain run. It changes the worlds, the pilot and the
+order the pilot runs in. Everything this amendment doesn't name stays as frozen above.
+
+**Why.** The pilot on public development worlds hit the ceiling twice. The grep agent with claude-opus-5-5 scored 0.990 on
+the 200,000-token worlds, and on three 1,000,000-token worlds it answered 192 of 192 questions, so the move to longer worlds
+that "Ceiling" calls for changed nothing. Every question names its subject, and that name appears in nearly every evidence
+session, so one ripgrep call for the name returns the handful of sessions that matter. The questions measured reasoning
+over sessions a keyword had already found, not memory. The re-plan offered four options; Garry Tan chose the first on
+2026-11-25 ("Do it 1"): questions that no shared keyword ties to their sessions, back at 200,000 tokens.
+
+**Generator.** The line moves to `changing-facts-gen@3` (`eval/generators/changing-facts-gen.ts`, with its name, role and property
+pools in `eval/generators/changing-facts-alias.ts`). It keeps @2's 140 to 160 sessions, its eight kinds of eight questions and
+its oracles, and changes how sessions and questions refer to people, companies, projects and deals:
+
+- Each entity has an alias set: a canonical name, a nickname, a role ("my yoga teacher", "the firm downstairs"), a
+  misspelling of one letter that keeps the first two, and a pronoun. A session names an entity by its nickname, role,
+  misspelling or pronoun, and a pronoun line carries its antecedent in the same line. The canonical name appears only in
+  the line that introduces it with the nickname, and a separate line links the nickname to the role.
+- Each entity has a property ("sets crosswords for a local paper"), and about half have a one-way relation to another
+  entity (landlord, mentor, former boss, founder, commissioner, counterparty). Property and relation lines sit only in
+  sessions that hold no tracked fact.
+- A question never names its subject. It describes it by its property, or in two steps through a relation ("the former
+  boss of the person who did the calligraphy on our wedding invitations"); 13, 11 and 11 of the 64 questions in the three
+  development worlds take two steps.
+- Ground truth stays fixed by construction: the generator knows every alias, so each question's gold and the entity its
+  description picks out come from the plan, never from rendered text.
+- Checks before a world is written: no question shares a distinctive word (one outside the generator's own templates and
+  stopwords) with the text of any of its evidence sessions; every description resolves to exactly one entity through the
+  world's own lines; no alias names two entities. `eval/custody/bg1/validate.ts` adds the gate `alias_leak` for @3 worlds: a
+  rendered session that names an entity's canonical name outside its introducing line, or an evidence session that holds
+  one of its question's key terms, fails the world.
+- @3 has only a public phrasing set so far, and a sealed @3 plan refuses until set W's custody inputs are re-cut for it
+  (below).
+
+**Length.** About 200,000 tokens. The longer-world move in "Ceiling" is withdrawn, since length did not change the
+result.
+
+**Pilot worlds.** The pilot and the judge check run on three new public development worlds of @3,
+`bg1-dev-alias-01` (the pilot) and `bg1-dev-alias-02` and `-03` (the judge check), committed with their plans and questions
+under `eval/data/changing-facts-v1/` and rendered by the custody renderer before the pilot. They replace `bg1-dev-01` to
+`-03` for the pilot, at the counted settings and set BGW's caps
+(`bun eval/runner/weekly-line/pilot.ts plan --length alias`).
+
+**Pilot order and the stop rule.** The grep agent goes first, on all three alias worlds: its pilot cell on
+`bg1-dev-alias-01` and the judge check's cell on `-02` and `-03`, 192 questions for each reader. Its claude-opus-5-5
+accuracy is pooled over those 192 answers, weighted by answers. The other three rows run their pilots only if it pools
+below 0.95.
+
+If the Opus grep agent scores 95% or more on the pilot, the line stops and we publish the grep result.
+
+| Pilot result | What happens |
+|---|---|
+| The grep agent with claude-opus-5-5 pools at 0.95 or more | The line stops before week 1 and no other row runs. We publish the grep result as a findings write-up, with the named-subject results at 200,000 and 1,000,000 tokens beside it, and commit the long and alias worlds as public development worlds so anyone can reproduce it (the re-plan's option 4) |
+| Below 0.95, and gbrain's pilot accuracy is within 3 points of the grep agent's on `bg1-dev-alias-01` (inside the level band a block resolves) | The line runs as frozen above, from launch amendment A. One world can't give a verdict, so the first block decides |
+| Below 0.95, and gbrain is more than 3 points behind the grep agent on the pilot world | The line runs as frozen above. Because the world is public, its per-kind rows go to gbrain's maintainers at once as an advisory issue naming retrieval or reading, ahead of the first block. No claim is published from the pilot |
+| Below 0.95, and gbrain is more than 3 points ahead of the grep agent on the pilot world | The line runs as frozen above. No claim is published until a block reads gbrain ahead |
+
+Either way the pilot publishes no verdict of its own, and a row that fails its R111 checks is fixed or left out as
+"Pilots" says.
+
+**Judge check.** Unchanged in its gates: at least 100 labelled grep-agent answers per judge, at least 40% of them judged
+wrong, and a kappa of at least 0.6. Its labels keep the construction rule: the oracle gold labels an answer wherever it
+settles it, and gemini-3.8-flash labels the rest, reported as model-labelled. Harder questions should also give the check
+the wrong answers the named-subject pilot was short of.
+
+**Readers and judges.** Unchanged: claude-opus-5-5 and particle-1 read every row; gpt-6-astra judges claude-opus-5-5's
+answers and claude-opus-5-5 judges particle-1's.
+
+**gbrain build.** gbrain's newest release at launch, the highest version tag on its main branch when each run starts
+(v0.60.772.0, commit d12c584e087952cf48a170ce36011e0370ab9e27, when this amendment was written). If a newer release lands
+before the first counted gbrain run, a dated amendment re-pins it before that run; once counted gbrain runs start, the
+build is frozen for the block.
+
+**No-gstack arm (R44).** No row has gstack installed or loaded, and gstack is not under test, so every row is the no-kit
+condition and R44 holds as in "Systems". The Claude Code quick look, if it runs, keeps no gstack installed.
+
+**Custody.** Set W's W1 seed line and phrasing set, and W1-long's, were written for @1 and @2. Before week 1, the line's
+owner re-cuts both in custody for @3 (a new private phrasing set with @3's question templates, which describe their
+subject and never name it), and launch amendment A publishes their commitment and phrasing SHA-256 as frozen above. No
+world of set W has been minted, so no counted world changes.
 
 ## Disclosures
 

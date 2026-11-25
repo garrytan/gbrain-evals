@@ -6,15 +6,21 @@
  * weekly generator builds for public worlds (eval/runner/q1/cells/weekly-line.ts generateWeeklyLinePilotCells and
  * generateWeeklyLineJudgeCheckCells); it never calls a provider.
  *
- *   bun eval/runner/weekly-line/pilot.ts plan      [--length standard|long] [--gbrain <release>@<commit>] [--world-end <Sunday>] [--json]
- *   bun eval/runner/weekly-line/pilot.ts campaigns [--length standard|long] --out <dir> --window-granted <unit>
+ *   bun eval/runner/weekly-line/pilot.ts plan      [--length standard|long|alias] [--gbrain <release>@<commit>] [--world-end <Sunday>] [--json]
+ *   bun eval/runner/weekly-line/pilot.ts campaigns [--length standard|long|alias] --out <dir> --window-granted <unit>
  *                                                  --window-cap-usd <the window's cap> --world-end <Sunday> [--gbrain <release>@<commit>]
- *   bun eval/runner/weekly-line/pilot.ts report    [--length standard|long] --cell <cell out dir>... [--reread <re-read out dir>...] [--json]
+ *   bun eval/runner/weekly-line/pilot.ts report    [--length standard|long|alias] --cell <cell out dir>... [--reread <re-read out dir>...] [--json]
  *
  * --length picks the pilot's worlds (weekly-line.ts WEEKLY_PILOT_SETS): standard, the default, runs the pilot on
  * bg1-dev-01 and the judge check on bg1-dev-02 and -03 at set BGW's caps; long runs them on bg1-dev-long-01, and
- * bg1-dev-long-02 and -03 (about 1,000,000 tokens each), at set BGW-long's caps, under campaign ids of their own. Without
- * --length the length is WEEKLY_PILOT_LENGTH_ENV's, standard when that is unset too.
+ * bg1-dev-long-02 and -03 (about 1,000,000 tokens each), at set BGW-long's caps, under campaign ids of their own; alias
+ * runs them on bg1-dev-alias-01, and bg1-dev-alias-02 and -03 (changing-facts-gen@3's described subjects, about 200,000
+ * tokens each), at set BGW's caps, under campaign ids of its own. Without --length the length is WEEKLY_PILOT_LENGTH_ENV's,
+ * standard when that is unset too.
+ *
+ * The alias pilot follows the preregistration's 2026-11-25 amendment: the grep agent goes first, on all three alias worlds
+ * (its pilot cell and the judge check's cell), and the other three rows launch only when the grep agent with
+ * claude-opus-5-5 pools below CEILING over those three worlds (STOP_RULE). Their ledgers say so (after_stop_rule).
  *
  * plan is the dry run: every cell with its estimate, every ledger with its cap, and the totals, printed without calling
  * anything but `git ls-remote --tags` on gbrain's repository when --gbrain is not given (the newest release, R100).
@@ -39,8 +45,9 @@
  */
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { JUDGED, gatherStaging, loadWeeklyPilotManifest, weeklyPilotCampaignManifest } from '../q1/cell.ts';
+import { JUDGED, gatherStaging, loadWeeklyPilotManifest, scheduledQuestions, weeklyPilotCampaignManifest } from '../q1/cell.ts';
 import { readRecords } from '../memory-qa/records.ts';
+import { BG1_FIXTURES_ROOT, loadBg1Dev } from '../memory-qa/corpus.ts';
 import { bg1JudgeOf, type CellDefinition } from '../q1/cells/definitions.ts';
 import {
   WEEKLY_LINE_BLOCK_WORLDS, WEEKLY_LINE_PILOT_FRACTION, WEEKLY_LINE_QUICK_LOOK, WEEKLY_LINE_ROWS, WEEKLY_PILOT_GBRAIN_ENV, WEEKLY_PILOT_LENGTH_ENV, weeklyLineBuildProblems,
@@ -57,8 +64,13 @@ const r2 = (x: number) => Math.round(x * 100) / 100;
 
 /** The order the pilot launches in, the weekly runner's: the extract-first server's ingest is the longest. */
 export const PILOT_ORDER: readonly WlRow[] = ['extract-first', 'gbrain', 'memory-bank', 'grep-agent'];
+/** The alias pilot's order (the 2026-11-25 amendment): the grep agent first, then the other rows only below the stop rule's line. */
+export const ALIAS_PILOT_ORDER: readonly WlRow[] = ['grep-agent', 'extract-first', 'gbrain', 'memory-bank'];
 /** A week's ceiling on the grep agent: 95% or more with claude-opus-5-5 moves the line to longer worlds (the preregistration's "Ceiling"). */
 export const CEILING = 0.95;
+/** The alias pilot's stop rule, in the amendment's words: the grep agent's claude-opus-5-5 accuracy pooled over the three alias worlds. */
+export const STOP_RULE = 'If the Opus grep agent scores 95% or more on the pilot, the line stops and we publish the grep result.';
+const OPUS = 'anthropic:claude-opus-5-5';
 /** The top of the planned weekly range, and the share above it that goes back to the owner before week 1 (the plan's section 5). */
 export const WEEK_RANGE_TOP_USD = 850;
 export const WEEK_OVERRUN_SHARE = 0.2;
@@ -66,33 +78,47 @@ export const WEEK_OVERRUN_SHARE = 0.2;
 // ─── The plan ────────────────────────────────────────────────────────
 
 /** One ledger of the pilot or the judge check: a campaign of one unit, a re-read, or the labelling pass. */
-export interface PilotLedger { name: string; kind: 'campaign' | 'reread' | 'label'; row: WlRow | 'judge-check'; units: string[]; estimate_usd: number; cap_usd: number; campaign_id?: string }
+export interface PilotLedger {
+  name: string; kind: 'campaign' | 'reread' | 'label'; row: WlRow | 'judge-check'; units: string[]; estimate_usd: number; cap_usd: number; campaign_id?: string;
+  /** The alias pilot's rows after the grep agent: launched only when the stop rule leaves the line running. */
+  after_stop_rule?: true;
+}
 export interface PilotPlan {
-  length: WeeklyPilotManifest['length']; gbrain: WeeklyLineGbrainBuild; world_end: string | null; ledgers: PilotLedger[]; cells: Array<Pick<CellDefinition, 'id' | 'block' | 'system' | 'only_conversations' | 'expected_hours'> & { estimate_usd: number; lease_usd: number }>;
+  length: WeeklyPilotManifest['length']; gbrain: WeeklyLineGbrainBuild; world_end: string | null; ledgers: PilotLedger[];
+  /** Each cell with the questions it schedules on its worlds (scheduledCount), so a cell that would load no question shows 0 before any spend. */
+  cells: Array<Pick<CellDefinition, 'id' | 'block' | 'system' | 'only_conversations' | 'expected_hours'> & { estimate_usd: number; lease_usd: number; questions: number }>;
+  stop_rule: string | null;
   caps: WeeklyPilotManifest['pilot_caps']; judge_check: WeeklyPilotManifest['judge_check']; quick_look: typeof WEEKLY_LINE_QUICK_LOOK;
   totals: { estimate_usd: number; cap_usd: number; pilot_cap_usd: number; judge_check_cap_usd: number; quick_look_cap_usd: number };
 }
 
 const rowOf = (c: Pick<CellDefinition, 'system'>): WlRow => WL_SYSTEMS[c.system];
 const pilotCell = (m: WeeklyPilotManifest, row: WlRow) => m.cells.find(c => c.block === 'BGW-pilot' && rowOf(c) === row)!;
+/** Any Sunday: the world end moves a world's dates, never which of its questions a cell schedules. */
+const COUNT_WORLD_END = '2026-11-22';
+/** The questions a cell schedules (cell.ts scheduledQuestions), counted on its worlds' committed template fixtures, keyless. */
+const scheduledCount = (c: CellDefinition) => scheduledQuestions(c, loadBg1Dev({ root: BG1_FIXTURES_ROOT, only: new Set(c.only_conversations ?? []), worldEnd: COUNT_WORLD_END, keyless: true }), null).length;
 
 /** The pilot's and the judge check's ledgers and totals for the manifest at one gbrain build. */
 export function pilotPlan(m: WeeklyPilotManifest, worldEnd: string | null): PilotPlan {
   const judge = m.cells.find(c => c.block === 'BGW-judge')!;
-  const ledgers: PilotLedger[] = [];
-  const long = m.length === 'long' ? '-long' : '';
-  for (const row of PILOT_ORDER) {
-    const c = pilotCell(m, row), cap = m.pilot_caps[row];
-    ledgers.push({ name: `pilot-${row}`, kind: 'campaign', row, units: [c.id], estimate_usd: c.estimate.usd, cap_usd: cap.cells_cap_usd, campaign_id: `q1-scoreboard-weekly-pilot${long}-${row}` });
-    for (const r of m.reread_plans.filter(p => p.cell === c.id)) ledgers.push({ name: `pilot-${row}-reread`, kind: 'reread', row, units: [r.id], estimate_usd: r.estimate.usd, cap_usd: cap.reread_cap_usd });
+  const rows: PilotLedger[] = [];
+  const suffix = m.length === 'standard' ? '' : `-${m.length}`, alias = m.length === 'alias';
+  for (const row of alias ? ALIAS_PILOT_ORDER : PILOT_ORDER) {
+    const c = pilotCell(m, row), cap = m.pilot_caps[row], gated = alias && row !== 'grep-agent' ? { after_stop_rule: true as const } : {};
+    rows.push({ name: `pilot-${row}`, kind: 'campaign', row, units: [c.id], estimate_usd: c.estimate.usd, cap_usd: cap.cells_cap_usd, campaign_id: `q1-scoreboard-weekly-pilot${suffix}-${row}`, ...gated });
+    for (const r of m.reread_plans.filter(p => p.cell === c.id)) rows.push({ name: `pilot-${row}-reread`, kind: 'reread', row, units: [r.id], estimate_usd: r.estimate.usd, cap_usd: cap.reread_cap_usd, ...gated });
   }
-  ledgers.push({ name: 'judge-check', kind: 'campaign', row: 'judge-check', units: [judge.id], estimate_usd: judge.estimate.usd, cap_usd: m.judge_check.cells_cap_usd, campaign_id: `q1-scoreboard-weekly-judge-check${long}` });
   const labelEstimate = m.blocks.find(b => b.id === 'BGW-judge')!.estimate_usd - judge.estimate.usd;
-  ledgers.push({ name: 'judge-check-label', kind: 'label', row: 'judge-check', units: [], estimate_usd: r2(labelEstimate), cap_usd: m.judge_check.label_cap_usd });
+  const judgeCheck: PilotLedger[] = [
+    { name: 'judge-check', kind: 'campaign', row: 'judge-check', units: [judge.id], estimate_usd: judge.estimate.usd, cap_usd: m.judge_check.cells_cap_usd, campaign_id: `q1-scoreboard-weekly-judge-check${suffix}` },
+    { name: 'judge-check-label', kind: 'label', row: 'judge-check', units: [], estimate_usd: r2(labelEstimate), cap_usd: m.judge_check.label_cap_usd },
+  ];
+  const ledgers = alias ? [rows[0], ...judgeCheck, ...rows.slice(1)] : [...rows, ...judgeCheck];
   const pilotCap = r2(Object.values(m.pilot_caps).reduce((s, c) => s + c.cap_usd, 0));
   return {
-    length: m.length, gbrain: m.gbrain_build, world_end: worldEnd, ledgers,
-    cells: m.cells.map(c => ({ id: c.id, block: c.block, system: c.system, only_conversations: c.only_conversations, expected_hours: c.expected_hours, estimate_usd: c.estimate.usd, lease_usd: c.lease!.usd })),
+    length: m.length, gbrain: m.gbrain_build, world_end: worldEnd, ledgers, stop_rule: alias ? STOP_RULE : null,
+    cells: m.cells.map(c => ({ id: c.id, block: c.block, system: c.system, only_conversations: c.only_conversations, expected_hours: c.expected_hours, estimate_usd: c.estimate.usd, lease_usd: c.lease!.usd, questions: scheduledCount(c) })),
     caps: m.pilot_caps, judge_check: m.judge_check, quick_look: m.quick_look,
     totals: { estimate_usd: r2(ledgers.reduce((s, l) => s + l.estimate_usd, 0)), cap_usd: r2(ledgers.reduce((s, l) => s + l.cap_usd, 0)), pilot_cap_usd: pilotCap, judge_check_cap_usd: m.judge_check.pause_usd, quick_look_cap_usd: m.quick_look.cap_usd },
   };
@@ -112,14 +138,15 @@ export function renderPilotPlan(p: PilotPlan): string {
     ...rows.map(c => `| ${c.row} | ${usd(c.rate_usd_per_world)} | ${usd(c.block_budget_usd)} | ${usd(c.cap_usd)} | ${usd(c.cells_cap_usd)} | ${c.reread_cap_usd ? usd(c.reread_cap_usd) : '-'} |`),
     '',
     'Cells',
-    '| cell | worlds | estimate | lease | hours |',
-    '|---|---|---:|---:|---:|',
-    ...p.cells.map(c => `| ${c.id} | ${(c.only_conversations ?? []).join(', ')} | ${usd(c.estimate_usd)} | ${usd(c.lease_usd)} | ${c.expected_hours} |`),
+    '| cell | worlds | questions | estimate | lease | hours |',
+    '|---|---|---:|---:|---:|---:|',
+    ...p.cells.map(c => `| ${c.id} | ${(c.only_conversations ?? []).join(', ')} | ${c.questions} | ${usd(c.estimate_usd)} | ${usd(c.lease_usd)} | ${c.expected_hours} |`),
     '',
     'Ledgers, in launch order',
     '| ledger | units | estimate | cap |',
     '|---|---|---:|---:|',
-    ...p.ledgers.map(l => `| ${l.name}${l.campaign_id ? ` (${l.campaign_id})` : ''} | ${l.units.join(', ') || `${p.judge_check.labeller} on the model-labelled answers`} | ${usd(l.estimate_usd)} | ${usd(l.cap_usd)} |`),
+    ...p.ledgers.map(l => `| ${l.name}${l.campaign_id ? ` (${l.campaign_id})` : ''}${l.after_stop_rule ? ' (only below the stop rule)' : ''} | ${l.units.join(', ') || `${p.judge_check.labeller} on the model-labelled answers`} | ${usd(l.estimate_usd)} | ${usd(l.cap_usd)} |`),
+    ...(p.stop_rule ? ['', `Stop rule: ${p.stop_rule} The grep agent with claude-opus-5-5 is pooled over ${[...new Set(p.cells.filter(c => c.system === p.cells.find(x => x.block === 'BGW-judge')?.system).flatMap(c => c.only_conversations ?? []))].join(', ')}; the rows marked "only below the stop rule" launch only when it pools below ${CEILING}.`] : []),
     '',
     `Judge check: pauses at ${usd(p.judge_check.pause_usd)} (its cell ${usd(p.judge_check.cells_cap_usd)}, labelling ${usd(p.judge_check.label_cap_usd)}); ${p.judge_check.per_judge} labelled answers per judge`,
     `Claude Code quick look: cap ${usd(p.quick_look.cap_usd)}, ${p.quick_look.status} (${p.quick_look.reason})`,
@@ -251,8 +278,25 @@ export function readReread(out: string): RereadReading[] {
   });
 }
 
-/** R111's verdict per pilot row, the ceiling reading and the week projected at the measured rates. */
-export function pilotReport(rows: RowReading[], rereads: RereadReading[], m: Pick<WeeklyPilotManifest, 'pilot_caps'>) {
+/**
+ * The alias pilot's stop-rule reading: the grep agent's claude-opus-5-5 accuracy pooled over its pilot and judge-check
+ * cells, weighted by answers, and whether those cells cover every world `worlds` names; null accuracy with no grep-agent answers.
+ */
+export function pooledGrepOpus(rows: RowReading[], worlds: readonly string[]) {
+  const grep = rows.filter(r => r.row === 'grep-agent' && (r.by_reader[OPUS] ?? 0) > 0);
+  const answers = grep.reduce((s, r) => s + r.by_reader[OPUS], 0);
+  const seen = [...new Set(grep.flatMap(r => r.worlds))].sort();
+  const accuracy = answers ? r4(grep.reduce((s, r) => s + (r.accuracy[OPUS] ?? 0) * r.by_reader[OPUS], 0) / answers) : null;
+  const complete = worlds.length > 0 && worlds.every(w => seen.includes(w));
+  return { grep_agent_opus_accuracy: accuracy, answers, worlds: seen, complete, line: CEILING, stops_line: complete && accuracy !== null && accuracy >= CEILING, rule: STOP_RULE };
+}
+
+/**
+ * R111's verdict per pilot row, the ceiling reading and the week projected at the measured rates. For the alias pilot the
+ * ceiling is the stop rule (pooledGrepOpus over the manifest's pilot and judge-check worlds), and when it stops the line a
+ * row the rule kept from launching has no reading and is reported as not run, which fails nothing.
+ */
+export function pilotReport(rows: RowReading[], rereads: RereadReading[], m: Pick<WeeklyPilotManifest, 'pilot_caps'> & Partial<Pick<WeeklyPilotManifest, 'length' | 'cells'>>) {
   const pilot = rows.filter(r => r.block === 'BGW-pilot');
   const perRow = Object.fromEntries((Object.keys(WEEKLY_LINE_ROWS) as WlRow[]).map(row => {
     const r = pilot.find(x => x.row === row);
@@ -268,12 +312,16 @@ export function pilotReport(rows: RowReading[], rereads: RereadReading[], m: Pic
     return [row, { reading: r ?? null, rereads: rr, spend_usd: spend, usd_per_world: spend === null ? null : r2(spend / worlds), cap_usd: m.pilot_caps[row].cap_usd, checks, pass: checks !== null && Object.values(checks).every(Boolean) }];
   }));
   const grep = pilot.find(r => r.row === 'grep-agent');
-  const opus = grep?.accuracy['anthropic:claude-opus-5-5'] ?? null;
+  const opus = grep?.accuracy[OPUS] ?? null;
+  const stop = m.length === 'alias' ? pooledGrepOpus(rows, [...new Set((m.cells ?? []).flatMap(c => c.only_conversations ?? []))]) : null;
+  if (stop?.stops_line) for (const [row, x] of Object.entries(perRow)) if (row !== 'grep-agent' && x.reading === null) Object.assign(x, { pass: true, not_run: 'the stop rule' });
   const measured = Object.values(perRow).every(x => x.usd_per_world !== null);
   const week = measured ? r2(Object.values(perRow).reduce((s, x) => s + x.usd_per_world!, 0) * WL_WEEK_WORLDS) : null;
   return {
     rows: perRow, judge_check: rows.filter(r => r.block === 'BGW-judge'),
-    ceiling: { grep_agent_opus_accuracy: opus, line: CEILING, triggers_longer_worlds: opus !== null && opus >= CEILING },
+    ceiling: stop
+      ? { grep_agent_opus_accuracy: stop.grep_agent_opus_accuracy, line: CEILING, triggers_longer_worlds: false, stop_rule: stop }
+      : { grep_agent_opus_accuracy: opus, line: CEILING, triggers_longer_worlds: opus !== null && opus >= CEILING, stop_rule: null },
     projected_week: { usd: week, worlds: WL_WEEK_WORLDS, block_worlds: WL_BLOCK_WORLDS, range_top_usd: WEEK_RANGE_TOP_USD, over_by_more_than_share: week !== null && week > WEEK_RANGE_TOP_USD * (1 + WEEK_OVERRUN_SHARE) },
   };
 }
@@ -326,8 +374,10 @@ export function main(argv: readonly string[], deps: PilotDeps = DEFAULT_DEPS, lo
     if (stray.length) refuse('PILOT_REPORT', `${stray.join(', ')} ${stray.length === 1 ? 'is not a unit' : 'are not units'} of the ${m.length} pilot, whose caps this report would judge ${stray.length === 1 ? 'it' : 'them'} by; pass the --length its campaigns were written with`);
     const report = pilotReport(rows, rereads.flatMap(d => readReread(resolve(d))), m);
     log(rest.includes('--json') ? JSON.stringify(report, null, 2) : [
-      ...Object.entries(report.rows).map(([row, x]) => `${row}: ${x.reading ? `${x.pass ? 'pass' : 'FAIL'} (${Object.entries(x.checks!).map(([k, v]) => `${k} ${v ? 'yes' : 'NO'}`).join(', ')}); spend ${x.spend_usd === null ? 'unknown' : usd(x.spend_usd)} of cap ${usd(x.cap_usd)}` : 'no pilot output'}`),
-      `ceiling: the grep agent with claude-opus-5-5 at ${report.ceiling.grep_agent_opus_accuracy ?? 'n/a'}${report.ceiling.triggers_longer_worlds ? `, at or above ${CEILING}: launch amendment A moves to longer worlds` : ''}`,
+      ...Object.entries(report.rows).map(([row, x]) => `${row}: ${'not_run' in x ? `not run (${x.not_run})` : x.reading ? `${x.pass ? 'pass' : 'FAIL'} (${Object.entries(x.checks!).map(([k, v]) => `${k} ${v ? 'yes' : 'NO'}`).join(', ')}); spend ${x.spend_usd === null ? 'unknown' : usd(x.spend_usd)} of cap ${usd(x.cap_usd)}` : 'no pilot output'}`),
+      report.ceiling.stop_rule
+        ? `stop rule: the grep agent with claude-opus-5-5 pooled at ${report.ceiling.stop_rule.grep_agent_opus_accuracy ?? 'n/a'} over ${report.ceiling.stop_rule.answers} answers on ${report.ceiling.stop_rule.worlds.join(', ') || 'no world'}${report.ceiling.stop_rule.complete ? '' : ' (not every alias world read yet)'}${report.ceiling.stop_rule.stops_line ? `, at or above ${CEILING}: the line stops and we publish the grep result` : ''}`
+        : `ceiling: the grep agent with claude-opus-5-5 at ${report.ceiling.grep_agent_opus_accuracy ?? 'n/a'}${report.ceiling.triggers_longer_worlds ? `, at or above ${CEILING}: launch amendment A moves to longer worlds` : ''}`,
       `projected week at the measured rates: ${report.projected_week.usd === null ? 'not every row measured' : usd(report.projected_week.usd)}${report.projected_week.over_by_more_than_share ? ` (more than ${WEEK_OVERRUN_SHARE * 100}% over ${usd(WEEK_RANGE_TOP_USD)}: back to the owner before week 1)` : ''}`,
     ].join('\n'));
     return Object.values(report.rows).every(x => x.pass) ? 0 : 3;
