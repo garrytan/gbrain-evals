@@ -72,10 +72,11 @@ export const CS1_READERS = [OPUS, PARTICLE] as const;
 export const CS1_EFFORT = 'medium';
 /**
  * gbrain's build on every cost-and-speed gbrain cell: the newest release tag on gbrain's master when the cells were
- * built (v0.60.769.0, read with git ls-remote --tags on 2026-11-24), the preregistration's build at registration. A newer
+ * built, the preregistration's build at registration (v0.60.769.0, read with git ls-remote --tags on 2026-11-24), re-pinned
+ * by the dated freeze amendment to v0.60.771.0 (read the same way on 2026-11-25 UTC, before any counted gbrain cell). A newer
  * release before the first counted gbrain cell re-pins here by a dated amendment; the build freezes once it starts.
  */
-export const CS1_GBRAIN_BUILD = { release: 'v0.60.769.0', commit: '38831bb696139024923e9bc43e3da0d7993951e9' } as const;
+export const CS1_GBRAIN_BUILD = { release: 'v0.60.771.0', commit: '97ef356f574a66709ef1bf4ae1cad604727852d8' } as const;
 /**
  * How every cost-and-speed gbrain cell starts: the gbrain-defaults image built at CS1_GBRAIN_BUILD on Bun 1.4.4 (the
  * release's engines floor, F6's image), with gbrain's shipped defaults: no F6 build (GBRAIN_F6 unset) and serve's idle
@@ -135,7 +136,7 @@ type IdleJob = { job: string; cadence_minutes: number | null; source: string };
 /**
  * Each writing row's background jobs with their shipped cadence (minutes; null for work set off by a write rather than
  * a schedule), as read before the freeze:
- *   - gbrain v0.60.769.0: a stdio serve with no input for a full 10-minute tick runs its idle sweep and, from it, idle
+ *   - gbrain v0.60.771.0: a stdio serve with no input for a full 10-minute tick runs its idle sweep and, from it, idle
  *     upkeep, whose round is due again a day after it finishes and runs in 3-second slices; the facts drain timer runs
  *     queued fact extraction every 10 minutes; the autopilot daemon (every 5 minutes, documented for a Postgres brain
  *     with a repo) is not started, because the shim installs with --no-autopilot-install on PGLite. The daily round is
@@ -146,10 +147,10 @@ type IdleJob = { job: string; cadence_minutes: number | null; source: string };
  */
 export const CS1_IDLE_JOBS: Readonly<Record<string, readonly IdleJob[]>> = {
   'gbrain-defaults': [
-    { job: 'serve idle tick: idle sweep, then idle upkeep when due (a stdio serve with no input for a full tick)', cadence_minutes: 10, source: 'gbrain v0.60.769.0 src/commands/serve.ts IDLE_SWEEP_INTERVAL_MS, src/core/maintenance/idle.ts; eval/systems/gbrain-defaults/shim.py docstring' },
-    { job: 'idle upkeep round (link and timeline extraction, repair lanes, bookkeeping GC, the capped embedding step), due a day after the last round finished, run in 3-second slices on the idle tick; priced per run through gbrain maintain --unattended', cadence_minutes: 1440, source: 'gbrain v0.60.769.0 src/core/maintenance/run.ts UPKEEP_INTERVAL_MS, src/core/maintenance/idle.ts IDLE_UPKEEP_BUDGET_MS' },
-    { job: 'facts drain timer: queued facts-absorb extraction jobs', cadence_minutes: 10, source: 'gbrain v0.60.769.0 src/core/facts/drain-scheduler.ts FACTS_DRAIN_TICK_MS' },
-    { job: 'autopilot daemon cycle (every 5 minutes when installed): not started, because the shim installs with --no-autopilot-install and gbrain documents autopilot for a Postgres brain with a repo, while this brain is PGLite', cadence_minutes: null, source: 'gbrain v0.60.769.0 src/commands/autopilot.ts (default --interval 300), docs/guides/cron-schedule.md; eval/systems/gbrain-defaults/shim.py apply-migrations' },
+    { job: 'serve idle tick: idle sweep, then idle upkeep when due (a stdio serve with no input for a full tick)', cadence_minutes: 10, source: 'gbrain v0.60.771.0 src/commands/serve.ts IDLE_SWEEP_INTERVAL_MS, src/core/maintenance/idle.ts; eval/systems/gbrain-defaults/shim.py docstring' },
+    { job: 'idle upkeep round (link and timeline extraction, repair lanes, bookkeeping GC, the capped embedding step), due a day after the last round finished, run in 3-second slices on the idle tick; priced per run through gbrain maintain --unattended', cadence_minutes: 1440, source: 'gbrain v0.60.771.0 src/core/maintenance/run.ts UPKEEP_INTERVAL_MS, src/core/maintenance/idle.ts IDLE_UPKEEP_BUDGET_MS' },
+    { job: 'facts drain timer: queued facts-absorb extraction jobs', cadence_minutes: 10, source: 'gbrain v0.60.771.0 src/core/facts/drain-scheduler.ts FACTS_DRAIN_TICK_MS' },
+    { job: 'autopilot daemon cycle (every 5 minutes when installed): not started, because the shim installs with --no-autopilot-install and gbrain documents autopilot for a Postgres brain with a repo, while this brain is PGLite', cadence_minutes: null, source: 'gbrain v0.60.771.0 src/commands/autopilot.ts (default --interval 300), docs/guides/cron-schedule.md; eval/systems/gbrain-defaults/shim.py apply-migrations' },
   ],
   'ext-extract-first': [
     { job: 'per-namespace ingest worker: one Memory.add per chunk after /ingest returns; no scheduled job', cadence_minutes: null, source: 'docs/comparison-systems/ext-extract-first/README.md (/ingest), shim.py' },

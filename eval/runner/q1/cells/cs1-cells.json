@@ -321,12 +321,12 @@
       "launch": {
         "env": {
           "GBRAIN_BUN_IMAGE": "oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4",
-          "GBRAIN_SHA": "38831bb696139024923e9bc43e3da0d7993951e9"
+          "GBRAIN_SHA": "97ef356f574a66709ef1bf4ae1cad604727852d8"
         },
         "config": "recipe"
       },
-      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=38831bb696139024923e9bc43e3da0d7993951e9 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
-      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=38831bb696139024923e9bc43e3da0d7993951e9 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\"",
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=97ef356f574a66709ef1bf4ae1cad604727852d8 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=97ef356f574a66709ef1bf4ae1cad604727852d8 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\"",
       "arms": [
         {
           "id": "whole-default",
@@ -367,29 +367,29 @@
           {
             "job": "serve idle tick: idle sweep, then idle upkeep when due (a stdio serve with no input for a full tick)",
             "cadence_minutes": 10,
-            "source": "gbrain v0.60.769.0 src/commands/serve.ts IDLE_SWEEP_INTERVAL_MS, src/core/maintenance/idle.ts; eval/systems/gbrain-defaults/shim.py docstring"
+            "source": "gbrain v0.60.771.0 src/commands/serve.ts IDLE_SWEEP_INTERVAL_MS, src/core/maintenance/idle.ts; eval/systems/gbrain-defaults/shim.py docstring"
           },
           {
             "job": "idle upkeep round (link and timeline extraction, repair lanes, bookkeeping GC, the capped embedding step), due a day after the last round finished, run in 3-second slices on the idle tick; priced per run through gbrain maintain --unattended",
             "cadence_minutes": 1440,
-            "source": "gbrain v0.60.769.0 src/core/maintenance/run.ts UPKEEP_INTERVAL_MS, src/core/maintenance/idle.ts IDLE_UPKEEP_BUDGET_MS"
+            "source": "gbrain v0.60.771.0 src/core/maintenance/run.ts UPKEEP_INTERVAL_MS, src/core/maintenance/idle.ts IDLE_UPKEEP_BUDGET_MS"
           },
           {
             "job": "facts drain timer: queued facts-absorb extraction jobs",
             "cadence_minutes": 10,
-            "source": "gbrain v0.60.769.0 src/core/facts/drain-scheduler.ts FACTS_DRAIN_TICK_MS"
+            "source": "gbrain v0.60.771.0 src/core/facts/drain-scheduler.ts FACTS_DRAIN_TICK_MS"
           },
           {
             "job": "autopilot daemon cycle (every 5 minutes when installed): not started, because the shim installs with --no-autopilot-install and gbrain documents autopilot for a Postgres brain with a repo, while this brain is PGLite",
             "cadence_minutes": null,
-            "source": "gbrain v0.60.769.0 src/commands/autopilot.ts (default --interval 300), docs/guides/cron-schedule.md; eval/systems/gbrain-defaults/shim.py apply-migrations"
+            "source": "gbrain v0.60.771.0 src/commands/autopilot.ts (default --interval 300), docs/guides/cron-schedule.md; eval/systems/gbrain-defaults/shim.py apply-migrations"
           }
         ]
       },
       "hosting_samples": true,
       "gbrain_build": {
-        "release": "v0.60.769.0",
-        "commit": "38831bb696139024923e9bc43e3da0d7993951e9"
+        "release": "v0.60.771.0",
+        "commit": "97ef356f574a66709ef1bf4ae1cad604727852d8"
       },
       "lease": {
         "usd": 18.4,
@@ -1037,12 +1037,12 @@
       "launch": {
         "env": {
           "GBRAIN_BUN_IMAGE": "oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4",
-          "GBRAIN_SHA": "38831bb696139024923e9bc43e3da0d7993951e9"
+          "GBRAIN_SHA": "97ef356f574a66709ef1bf4ae1cad604727852d8"
         },
         "config": "recipe"
       },
-      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=38831bb696139024923e9bc43e3da0d7993951e9 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
-      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=38831bb696139024923e9bc43e3da0d7993951e9 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\"",
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=97ef356f574a66709ef1bf4ae1cad604727852d8 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=97ef356f574a66709ef1bf4ae1cad604727852d8 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\"",
       "arms": [
         {
           "id": "whole-default",
@@ -1074,8 +1074,8 @@
       "ingest_sessions": 60,
       "hosting_samples": true,
       "gbrain_build": {
-        "release": "v0.60.769.0",
-        "commit": "38831bb696139024923e9bc43e3da0d7993951e9"
+        "release": "v0.60.771.0",
+        "commit": "97ef356f574a66709ef1bf4ae1cad604727852d8"
       },
       "lease": {
         "usd": 1.83,
@@ -1582,12 +1582,12 @@
       "launch": {
         "env": {
           "GBRAIN_BUN_IMAGE": "oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4",
-          "GBRAIN_SHA": "38831bb696139024923e9bc43e3da0d7993951e9"
+          "GBRAIN_SHA": "97ef356f574a66709ef1bf4ae1cad604727852d8"
         },
         "config": "recipe"
       },
-      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=38831bb696139024923e9bc43e3da0d7993951e9 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
-      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=38831bb696139024923e9bc43e3da0d7993951e9 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\"",
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=97ef356f574a66709ef1bf4ae1cad604727852d8 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=97ef356f574a66709ef1bf4ae1cad604727852d8 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\"",
       "arms": [
         {
           "id": "whole-default",
@@ -1615,8 +1615,8 @@
       "scoring": "key-match",
       "hosting_samples": true,
       "gbrain_build": {
-        "release": "v0.60.769.0",
-        "commit": "38831bb696139024923e9bc43e3da0d7993951e9"
+        "release": "v0.60.771.0",
+        "commit": "97ef356f574a66709ef1bf4ae1cad604727852d8"
       },
       "lease": {
         "usd": 5.29,
@@ -1953,8 +1953,8 @@
   "campaign_id": "q1-scoreboard-cost-speed",
   "registry": "docs/benchmarks/preregistrations.d/cost-speed-personal.json",
   "gbrain_build": {
-    "release": "v0.60.769.0",
-    "commit": "38831bb696139024923e9bc43e3da0d7993951e9"
+    "release": "v0.60.771.0",
+    "commit": "97ef356f574a66709ef1bf4ae1cad604727852d8"
   },
   "seed": "cost-speed-1",
   "models": [
