@@ -7,7 +7,7 @@
  * model shows up as an unlabelled route.
  */
 import { afterAll, beforeEach, describe, expect, test } from 'bun:test';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { realizationId, runCell, type WriteProbe } from '../../eval/runner/q1/cell.ts';
@@ -274,5 +274,20 @@ describe("the file agent's write-to-queryable poll", () => {
     await fa.ingestSession('ns', { source_id: 'src-b', turns: turns('A later chat about the desk (by the window) costs $40+ [used]. again') } as never, '2026-01-02T00:00:00Z');
     expect((await fa.grepSources('ns', 'the desk (by the window) costs $40+ [used].')).sort()).toEqual(['src-b']);
     expect((await fa.grepSources('ns', 'desk (by the window) costs $40+ [used].')).sort()).toEqual(['src-a', 'src-b']);
+  });
+
+  // Value: protects=a bulk probe's poll is not spoiled by the next bulk write; fails_when=a write deletes the tree a running poll greps, so the poll errors or misses; why_new=cost-speed results branch note 13 (bulk writes and probe polls run concurrently); seam=FileAgentSystem over local ripgrep; no_claim=answer-time greps, which run after ingest
+  test('a write landing while a poll greps leaves that poll its tree, and the old tree is removed once the poll ends', async () => {
+    const dir = join(tmp, 'file-agent-race');
+    const fa = new FileAgentSystem({ workDir: dir, effort: 'medium' });
+    const turns = (text: string) => [{ speaker: 'user', content: text }, { speaker: 'assistant', content: 'Noted.' }];
+    await fa.ingestSession('ns', { source_id: 'src-a', turns: turns('The blue kettle is in the attic.') } as never, '2026-01-01T00:00:00Z');
+    for (let i = 0; i < 5; i++) {
+      const poll = fa.grepSources('ns', 'The blue kettle is in the attic.');
+      await fa.ingestSession('ns', { source_id: `src-${i}`, turns: turns(`Chat ${i}.`) } as never, '2026-01-02T00:00:00Z');
+      expect(await poll).toEqual(['src-a']);
+    }
+    expect(await fa.grepSources('ns', 'Chat 4.')).toEqual(['src-4']);
+    expect(readdirSync(join(dir, 'ns'))).toHaveLength(1);
   });
 });
