@@ -18,15 +18,15 @@
   "n_scored": 117187,
   "completion_rate": 1,
   "errors": [],
-  "publishable": false,
+  "publishable": true,
   "gbrain_version": "0.60.771.0",
   "gbrain_pin": "github:garrytan/gbrain#97ef356f574a66709ef1bf4ae1cad604727852d8",
   "execution": {
     "source_tree": {
-      "sha256": "c2386d65fbd2b502f3419f017e7bd00840d7b24bcc095248b70236d1ee218e37",
+      "sha256": "e6fc7e09832decfc42a8a1c46eedc76fd741083ca1756db20f9f34e211a51813",
       "scheme": "git-index-blob-v1",
-      "files": 17531,
-      "git_head": "bc0d8763e9b71b727ae6296d7bf6742981ef33ab",
+      "files": 17594,
+      "git_head": "360b8d8382039c7a5a0920b43bf5047370ccbeba",
       "dirty": false
     },
     "product": {
@@ -70,8 +70,8 @@
   "hashes": {
     "world_20261126": "0baa1527c7dc0505acda5f0a6230101680d8605013733c797475ab87c6ca2152"
   },
-  "started_at": "2026-11-25T03:10:03.196Z",
-  "finished_at": "2026-11-25T03:32:57.268Z",
+  "started_at": "2026-11-25T05:48:11.259Z",
+  "finished_at": "2026-11-25T06:12:08.797Z",
   "data": {
     "gate_total": 0,
     "stops": [],
@@ -84,7 +84,7 @@
         "probes": 117187,
         "probes_planned": 34650,
         "ops": 117,
-        "elapsed_ms": 1373286,
+        "elapsed_ms": 1436735,
         "cap_reached": false,
         "tally": {
           "probes": 117187,
@@ -4749,6 +4749,14 @@
         }
       }
     ]
+  },
+  "preregistration_attestation": {
+    "preregistration": "docs/benchmarks/2026-11-24-person-isolation-preregistration.md",
+    "preregistration_commit": "360b8d8382039c7a5a0920b43bf5047370ccbeba",
+    "runner_commit": "360b8d8382039c7a5a0920b43bf5047370ccbeba",
+    "worktree_clean_for_preregistration": true,
+    "on_origin": true,
+    "attested_at": "2026-11-25T05:48:11.134Z"
   },
   "latency_ms": null
 }

@@ -28,16 +28,18 @@ gbrain's output.
 
 gbrain v0.60.771.0 (`97ef356f574a66709ef1bf4ae1cad604727852d8`) was the newest release on gbrain's master when the
 re-run started. The runs used three seeds (20261124, 20261125 and 20261126), one 16-vCPU machine per seed, with all six
-cells in parallel. The runner was at commit `bc0d8763e`, and every receipt records a clean tree (`dirty: false`).
+cells in parallel. The runner was at commit `360b8d838`, which scans every response, error responses included (see
+[Notes on the receipts](#notes-on-the-receipts)). Every receipt records a clean tree (`dirty: false`) and
+`publishable: true`.
 
 | Cell | Probes (3 seeds) | Leaks | Read operations with signal | Mandatory operations with signal | Minutes per seed |
 |---|---:|---:|---:|---:|---|
-| [mcp-dispatch-pglite](2026-11-24-person-isolation/v0.60.771.0/20261124/mcp-dispatch-pglite.json) | 379,392 | **0** | 80 of 117 | 16 of 16 | 18.9, 20.2, 19.5 |
-| [mcp-dispatch-postgres](2026-11-24-person-isolation/v0.60.771.0/20261124/mcp-dispatch-postgres.json) | 379,392 | **0** | 80 of 117 | 16 of 16 | 19.4, 20.0, 19.9 |
-| [http-pglite](2026-11-24-person-isolation/v0.60.771.0/20261124/http-pglite.json) | 351,561 | **0** | 67 of 117 | 16 of 16 | 22.6, 24.1, 22.9 |
-| [http-postgres](2026-11-24-person-isolation/v0.60.771.0/20261124/http-postgres.json) | 351,561 | **0** | 67 of 117 | 16 of 16 | 24.3, 25.0, 24.1 |
-| [cli-pglite](2026-11-24-person-isolation/v0.60.771.0/20261124/cli-pglite.json) | 15,096 | **0** | 4 of 5 | 4 of 4 | 33.3, 34.2, 33.9 |
-| [cli-postgres](2026-11-24-person-isolation/v0.60.771.0/20261124/cli-postgres.json) | 15,096 | **0** | 4 of 5 | 4 of 4 | 31.1, 32.0, 31.5 |
+| [mcp-dispatch-pglite](2026-11-24-person-isolation/v0.60.771.0/20261124/mcp-dispatch-pglite.json) | 379,392 | **0** | 80 of 117 | 16 of 16 | 20.2, 19.3, 20.3 |
+| [mcp-dispatch-postgres](2026-11-24-person-isolation/v0.60.771.0/20261124/mcp-dispatch-postgres.json) | 379,392 | **0** | 80 of 117 | 16 of 16 | 20.2, 19.3, 20.1 |
+| [http-pglite](2026-11-24-person-isolation/v0.60.771.0/20261124/http-pglite.json) | 351,561 | **0** | 67 of 117 | 16 of 16 | 23.8, 23.2, 23.9 |
+| [http-postgres](2026-11-24-person-isolation/v0.60.771.0/20261124/http-postgres.json) | 351,561 | **0** | 67 of 117 | 16 of 16 | 24.8, 24.2, 25.2 |
+| [cli-pglite](2026-11-24-person-isolation/v0.60.771.0/20261124/cli-pglite.json) | 15,096 | **0** | 4 of 5 | 4 of 4 | 34.1, 33.5, 34.7 |
+| [cli-postgres](2026-11-24-person-isolation/v0.60.771.0/20261124/cli-postgres.json) | 15,096 | **0** | 4 of 5 | 4 of 4 | 31.5, 31.0, 32.4 |
 
 The links go to seed 20261124's receipts. The other seeds are in the same folder, under
 [`v0.60.771.0/`](2026-11-24-person-isolation/v0.60.771.0).
@@ -57,8 +59,10 @@ All five were zero on all 18 cell runs. Each cell also passed its validity check
 - Both must-fail controls were caught: a planted canary copied onto a page everyone can read, and an operator grant
   that wrongly gives one person another's private source.
 - No cell hit its time limit.
-- No counted probe had a harness error. Ghost calls, made only to compare with a protected call, are not in that
-  tally: a ghost call that errored would have been dropped from its comparison without being counted.
+- No call had a harness error, including the ghost calls made only to compare with a protected call.
+
+Every response was scanned for other people's canaries and identifiers, including refusals, harness errors and the
+ghost calls' answers.
 
 A probe counts toward **signal** only when it was able to find a leak. The owner, asking the same thing, must read
 their own canary. The caller must then either see the public twin or, if it must be refused, be refused. An operation
@@ -123,7 +127,9 @@ host's `--as` preview, which lets the operator run a command as if they were a g
 As the plan requires, the detail went privately to gbrain's maintainers the same day. They shipped the fix in
 v0.60.771.0. A dated [amendment](2026-11-24-person-isolation-preregistration.md#amendment-2-re-run-on-the-fixed-release-and-ci-2026-11-25-before-the-re-runs-first-counted-probe)
 moved the run to that release before the re-run's first counted probe. The other operations and callers on the CLI
-cells, and every caller on the other four cells, were at zero on v0.60.769.0 as well.
+cells, and every caller on the other four cells, were at zero on v0.60.769.0 as well. That run used the runner from
+before amendment 3, which didn't scan ghost answers or harness-error responses; none of its passing cells had a
+harness error.
 
 | Cell at v0.60.769.0 | Probes (3 seeds) | Leaks | Read operations with signal |
 |---|---:|---:|---:|
@@ -173,9 +179,10 @@ change P's rows, and a run of gbrain's dream cycle checks that derived pages don
 - a write fails;
 - an operation has more than two harness errors;
 - the cell reaches its time limit;
+- `gbrain dream` exits nonzero;
 - a must-fail control passes.
 
-A mandatory operation with no signal also stops the cell. None of the 18 counted re-run cells stopped.
+A mandatory operation with no signal, or one that was never probed, also stops the cell. None of the 18 counted re-run cells stopped.
 
 **What it doesn't test.** It doesn't test the following:
 
@@ -196,21 +203,28 @@ The check now runs on every pull request in this repository:
 - A `person-isolation-postgres` job runs the same profile on the two Postgres cells, against a Postgres service pinned
   by digest.
 
-Both fail on any leak, on a mandatory operation without signal, and on a must-fail control that passes. Neither is yet
-required for merge. A failing run in
-public CI prints and keeps only its total, and its report folder is never uploaded.
+Both fail on any leak, on a mandatory operation without signal, on a nonzero `gbrain dream` exit and on a must-fail
+control that passes. Neither is yet required for merge. A failing run in public CI prints and keeps only its total, and
+its report folder is never uploaded.
 
 ## Notes on the receipts
 
-- Every receipt here records `publishable: false`. The runner marks a receipt publishable only when the run carries an
-  attestation that the plan's newest commit is on GitHub. The plan itself kept this branch unpushed until the CLI cells
-  passed, so that no public commit would describe the `--as` paths before the fix shipped. So no run could carry that
-  attestation. The order is still on record: CI's preregistration-order check confirms the plan was committed before any
-  result file, and each receipt's `git_head` contains the plan and the amendments that govern it. The re-run's head,
-  `bc0d8763e`, is the commit that adds amendment 2, and amendment 1 (`c2bfa710f`) is an ancestor of it. This pull request
+- The v0.60.771.0 receipts come from a second re-run, made under
+  [amendment 3](2026-11-24-person-isolation-preregistration.md#amendment-3-scanning-every-response-and-two-fail-closed-checks-2026-11-25-before-the-second-re-runs-first-counted-probe).
+  Review of this page's pull request found that the runner before it didn't scan two kinds of response: one classed as
+  a harness error, and the answer to a ghost call. It also didn't fail a cell when `gbrain dream` exited nonzero, or
+  when a mandatory operation was never probed. The runner at `360b8d838` does all four. The first re-run at v0.60.771.0
+  (runner `bc0d8763e`) had the same probe counts, signal and controls, zero leaks and zero harness errors, but its
+  receipts can't show that the ghost answers held nothing, so they were replaced.
+- The v0.60.771.0 receipts record `publishable: true`: each run carried an attestation that its plan commit,
+  `360b8d838`, was on GitHub. The v0.60.769.0 receipts record `publishable: false`. The plan kept this branch unpushed
+  until the CLI cells passed, so that no public commit would describe the `--as` paths before the fix shipped, and no
+  run before then could carry that attestation. Their order is still on record: CI's preregistration-order check
+  confirms the plan was committed before any result file, and each receipt's `git_head` contains the plan and the
+  amendments that govern it. Amendment 1 (`c2bfa710f`) is an ancestor of every later run's head. This pull request
   merges as a merge commit, so those commits stay on main.
 - The v0.60.769.0 receipts record `dirty: true`: the working tree wasn't clean when that run launched. The runner and
-  plan were committed at `c2bfa710f`. The re-run launched from a clean tree, and its receipts record `dirty: false`.
+  plan were committed at `c2bfa710f`. Both re-runs launched from a clean tree, and their receipts record `dirty: false`.
 - Everything here ran on Ubicloud machines. No model or paid API was called.
 
 ## Disclosures

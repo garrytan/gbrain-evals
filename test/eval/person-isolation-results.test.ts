@@ -6,7 +6,7 @@ const D = 'docs/benchmarks/2026-11-24-person-isolation';
 const page = readFileSync('docs/benchmarks/2026-11-24-person-isolation.md', 'utf8');
 const SEEDS = ['20261124', '20261125', '20261126'];
 const CELLS = ['mcp-dispatch-pglite', 'mcp-dispatch-postgres', 'http-pglite', 'http-postgres', 'cli-pglite', 'cli-postgres'];
-type R = { verdict: string; n_total: number; gbrain_version: string; execution: { source_tree: { dirty: boolean; git_head: string } }; data: { gate_total: number; cells?: Array<{ ops_with_signal: string[]; mandatory: Record<string, { probes: number }> }> } };
+type R = { verdict: string; publishable: boolean; n_total: number; gbrain_version: string; execution: { source_tree: { dirty: boolean; git_head: string } }; data: { gate_total: number; cells?: Array<{ ops_with_signal: string[]; mandatory: Record<string, { probes: number }> }> } };
 const load = (build: string, cell: string) => SEEDS.map(s => JSON.parse(readFileSync(join(D, build, s, cell + '.json'), 'utf8')) as R);
 const fmt = (n: number) => n.toLocaleString('en-US');
 
@@ -25,7 +25,7 @@ describe('person-isolation results page matches its receipts', () => {
       const rs = load('v0.60.771.0', cell);
       for (const r of rs) {
         expect([cell, r.verdict, r.data.gate_total, r.gbrain_version, r.execution.source_tree.dirty]).toEqual([cell, 'pass', 0, '0.60.771.0', false]);
-        expect(r.execution.source_tree.git_head.startsWith('bc0d8763e')).toBe(true);
+        expect([r.execution.source_tree.git_head.slice(0, 9), r.publishable]).toEqual(['360b8d838', true]);
       }
       const probes = rs.reduce((n, r) => n + r.n_total, 0);
       total += probes;
