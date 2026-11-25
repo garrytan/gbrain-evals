@@ -1473,6 +1473,25 @@ export function questionLeaks(q: Pick<QuestionRecord, 'question' | 'evidence_ses
   return [...shared].sort();
 }
 
+/**
+ * The words of a question that alone find its evidence: a word of four letters or more, outside the stopwords, whose
+ * stem (its first four letters, so "piloting" finds "pilot") appears in planned lines of the question's evidence sessions
+ * and of no other session. questionLeaks leaves template words out because each kind's words recur for every entity of
+ * that kind; when only one entity in a world holds a slot of the question's kind, the kind word alone (offsite, pilot,
+ * seats, term) isolates the evidence, and this is how many questions that holds for.
+ */
+export function isolatingWords(plan: WorldPlan, q: Pick<QuestionRecord, 'question' | 'evidence_sessions'>): string[] {
+  const stem = (w: string) => w.slice(0, 4);
+  const stems = new Map(leakTokens(q.question).filter(w => w.length >= 4 && !LEAK_STOPWORDS.includes(w)).map(w => [stem(w), w]));
+  const where = new Map<string, Set<string>>();
+  for (const s of plan.sessions) for (const l of s.lines) for (const t of leakTokens(l.text)) {
+    if (!stems.has(stem(t))) continue;
+    if (!where.has(stem(t))) where.set(stem(t), new Set());
+    where.get(stem(t))!.add(s.id);
+  }
+  return [...where].filter(([, ids]) => [...ids].every(id => q.evidence_sessions.includes(id))).map(([k]) => stems.get(k)!).sort();
+}
+
 export interface RenderLeak { session: string; kind: 'canonical' | 'question_term'; term: string; entity?: string; question?: string }
 /**
  * The render leak check of a rendered @3 world (validate.ts --dev): a session holds an entity's canonical name although no

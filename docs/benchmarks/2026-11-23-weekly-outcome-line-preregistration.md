@@ -322,7 +322,10 @@ its oracles, and changes how sessions and questions refer to people, companies, 
   description picks out come from the plan, never from rendered text.
 - Checks before a world is written: no question shares a distinctive word (one outside the generator's own templates and
   stopwords) with the text of any of its evidence sessions; every description resolves to exactly one entity through the
-  world's own lines; no alias names two entities. `eval/custody/bg1/validate.ts` adds the gate `alias_leak` for @3 worlds: a
+  world's own lines; no alias names two entities. The leak check leaves the templates' words out because each recurs for
+  every entity of its kind, so where only one entity in a world holds a slot of the question's kind, the kind word alone
+  ("offsite", "pilot", "job title") still finds the evidence: 8 of the 192 questions in the three development worlds
+  (the generator's `isolatingWords`), and the stop rule's reading includes them. `eval/custody/bg1/validate.ts` adds the gate `alias_leak` for @3 worlds: a
   rendered session that names an entity's canonical name outside its introducing line, or an evidence session that holds
   one of its question's key terms, fails the world.
 - @3 has only a public phrasing set so far, and a sealed @3 plan refuses until set W's custody inputs are re-cut for it
@@ -339,8 +342,9 @@ under `eval/data/changing-facts-v1/` and rendered by the custody renderer before
 
 **Pilot order and the stop rule.** The grep agent goes first, on all three alias worlds: its pilot cell on
 `bg1-dev-alias-01` and the judge check's cell on `-02` and `-03`, 192 questions for each reader. Its claude-opus-5-5
-accuracy is pooled over those 192 answers, weighted by answers. The other three rows run their pilots only if it pools
-below 0.95.
+accuracy is pooled over those 192 answers, weighted by answers, and counts only when both cells finished complete and
+claude-opus-5-5 answered all 192. The other three rows run their pilots only if it pools below 0.95; their campaigns are
+written only from that reading (`pilot.ts campaigns --length alias --grep-cell <dir>...`).
 
 If the Opus grep agent scores 95% or more on the pilot, the line stops and we publish the grep result.
 

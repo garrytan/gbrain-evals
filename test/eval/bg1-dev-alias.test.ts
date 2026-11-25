@@ -12,14 +12,14 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import {
   ALIAS_PHRASING, aliasPlanProblems, BG1_ALIAS_GENERATOR_VERSION, BG1_DATA_DIR, BG1_DEV_SEEDS, buildQuestions, checkPlan, devFiles, devWorldPlan, PlanError, planWorld,
-  questionLeaks, renderLeaks, renderTemplateWorld, resolveSubject, type WorldPlan,
+  isolatingWords, questionLeaks, renderLeaks, renderTemplateWorld, resolveSubject, type WorldPlan,
 } from '../../eval/generators/changing-facts-gen.ts';
 import { misspellings } from '../../eval/generators/changing-facts-alias.ts';
 import { BG1_DEV_ALIAS_CONVERSATIONS } from '../../eval/runner/memory-qa/bg1-names.ts';
 import { BG1_FIXTURES_ROOT, loadBg1Dev } from '../../eval/runner/memory-qa/corpus.ts';
 import { devOnly, scheduledQuestions } from '../../eval/runner/q1/cell.ts';
 import { buildWeeklyPilotManifest, generateWeeklyLineJudgeCheckCells, generateWeeklyLinePilotCells, weeklyLinePilotCaps } from '../../eval/runner/q1/cells/weekly-line.ts';
-import { CEILING, main as pilotMain, pilotPlan, pilotReport, pooledGrepOpus, STOP_RULE, type RowReading } from '../../eval/runner/weekly-line/pilot.ts';
+import { CEILING, main as pilotMain, pilotPlan, pilotReport, PilotError, pooledGrepOpus, STOP_RULE, writePilotCampaigns, type RowReading } from '../../eval/runner/weekly-line/pilot.ts';
 
 const REPO = resolve(import.meta.dir, '../..');
 const RENDER = join(REPO, 'eval/custody/bg1/render.ts');
@@ -72,6 +72,12 @@ describe('the alias public dev worlds', () => {
       for (const q of qs) expect(resolveSubject(plan, q.subject!.steps)).toEqual([q.subject!.entity]);
       expect(qs.filter(q => q.subject!.steps.length === 2).length).toBeGreaterThanOrEqual(8);
     }
+  });
+
+  // Value: protects=the number of questions whose kind word alone finds their evidence (only one entity in the world holds a slot of that kind) stays the 8 of 192 Amendment 1 states; fails_when=a generator change lets more questions be found by a kind word without resolving the subject, or the amendment's count goes stale; why_new=/ship review p1 red-team (the leak check leaves template words out); seam=changing-facts-gen.ts isolatingWords over the committed plans; no_claim=how a grep agent phrases its searches
+  test('8 of the 192 questions can be found by their kind word alone, as Amendment 1 states', () => {
+    const counts = [...plans.values()].map(plan => buildQuestions(plan).filter(q => isolatingWords(plan, q).length).length);
+    expect(counts).toEqual([3, 2, 3]);
   });
 
   // Value: protects=the leak check bites on the questions it replaces: @2 questions name their subject, so they share words with their evidence; fails_when=questionLeaks returns nothing for any question, so the zero leaks above prove nothing; why_new=the contrast the leak statistic is reported against; seam=questionLeaks on bg1-dev-01 (@2); no_claim=which words a grep agent would choose
@@ -163,16 +169,34 @@ describe('the alias pilot and judge check', () => {
 
   // Value: protects=the stop rule pools the grep agent's claude-opus-5-5 accuracy over all three alias worlds weighted by answers, stops only when every world is read and the pool reaches 0.95, and then reports the rows it kept from launching as not run rather than failed; fails_when=the rule reads one world, averages cells unweighted, stops with a world missing, or fails the line for rows it never launched; why_new=the 2026-11-25 amendment; seam=pilot.ts pooledGrepOpus and pilotReport on fake readings; no_claim=real answers
   test('the stop rule pools all three worlds and leaves the unlaunched rows as not run', () => {
-    const row = (block: string, worlds: string[], n: number, acc: number): RowReading => ({ row: 'grep-agent', cell: block, block, worlds, answers: 2 * n, by_reader: { 'anthropic:claude-opus-5-5': n, 'particle:particle-1': n },
+    const row = (block: string, worlds: string[], n: number, acc: number, status = 'complete'): RowReading => ({ row: 'grep-agent', cell: block, block, status, worlds, answers: 2 * n, by_reader: { 'anthropic:claude-opus-5-5': n, 'particle:particle-1': n },
       outcomes: { scored: 2 * n }, verdicts: { needed: 2 * n, given: 2 * n, parse_failed: 0 }, accuracy: { 'anthropic:claude-opus-5-5': acc, 'particle:particle-1': 0.5 }, spend_usd: 1, spend_source: 'proxy', part_under_test: { ran: true, detail: {} } });
     const p = row('BGW-pilot', ['bg1-dev-alias-01'], 64, 0.92), j = row('BGW-judge', ['bg1-dev-alias-02', 'bg1-dev-alias-03'], 128, 0.98);
-    expect(pooledGrepOpus([p, j], ALIAS)).toMatchObject({ grep_agent_opus_accuracy: 0.96, answers: 192, complete: true, stops_line: true });
-    expect(pooledGrepOpus([j], ALIAS)).toMatchObject({ complete: false, stops_line: false });
-    expect(pooledGrepOpus([p, row('BGW-judge', ['bg1-dev-alias-02', 'bg1-dev-alias-03'], 128, 0.95)], ALIAS).stops_line).toBe(false);
+    expect(pooledGrepOpus([p, j], ALIAS, 192)).toMatchObject({ grep_agent_opus_accuracy: 0.96, answers: 192, complete: true, stops_line: true });
+    expect(pooledGrepOpus([j], ALIAS, 192)).toMatchObject({ complete: false, stops_line: false });
+    expect(pooledGrepOpus([p, row('BGW-judge', ['bg1-dev-alias-02', 'bg1-dev-alias-03'], 128, 0.95)], ALIAS, 192).stops_line).toBe(false);
+    expect(pooledGrepOpus([p, row('BGW-judge', ['bg1-dev-alias-02', 'bg1-dev-alias-03'], 128, 0.98, 'partial')], ALIAS, 192)).toMatchObject({ cells_complete: false, complete: false, stops_line: false });
+    expect(pooledGrepOpus([p, row('BGW-judge', ['bg1-dev-alias-02', 'bg1-dev-alias-03'], 86, 0.99)], ALIAS, 192)).toMatchObject({ answers: 150, complete: false, stops_line: false });
     const report = pilotReport([p, j], [], manifest);
     expect(report.ceiling).toMatchObject({ grep_agent_opus_accuracy: 0.96, line: CEILING, triggers_longer_worlds: false, stop_rule: { stops_line: true } });
     expect(Object.entries(report.rows).filter(([r]) => r !== 'grep-agent').map(([, x]) => [x.pass, (x as { not_run?: string }).not_run])).toEqual([[true, 'the stop rule'], [true, 'the stop rule'], [true, 'the stop rule']]);
     const below = pilotReport([p, row('BGW-judge', ['bg1-dev-alias-02', 'bg1-dev-alias-03'], 128, 0.9)], [], manifest);
     expect(Object.entries(below.rows).filter(([r]) => r !== 'grep-agent').every(([, x]) => !x.pass)).toBe(true);
+  });
+
+  // Value: protects=the alias campaigns hold the other rows until a complete stop-rule reading below 0.95 exists: the first write is the grep agent's pilot, the judge check and its labelling only, a reading at or above the line or an incomplete one refuses, and a reading below it writes only the other rows; fails_when=campaigns writes a row the stop rule keeps from running, or writes the grep stage again with the other rows; why_new=/ship review p1 specialist (the stop rule was only a label); seam=pilot.ts writePilotCampaigns with fake readings; no_claim=the VM run
+  test('the alias campaigns write the other rows only after a complete reading below the line', () => {
+    const reading = (acc: number, complete = true) => ({ ...pooledGrepOpus([], ALIAS, 192), grep_agent_opus_accuracy: acc, answers: 192, worlds: ALIAS, cells_complete: complete, complete, stops_line: complete && acc >= CEILING });
+    const write = (stopReading?: ReturnType<typeof reading>) => writePilotCampaigns(manifest, { out: scratch('campaigns'), window: 'test-window', windowCapUsd: 1e6, worldEnd: WORLD_END, stopReading });
+    const first = write();
+    expect(first.campaigns.map(c => c.name)).toEqual(['pilot-grep-agent', 'judge-check']);
+    expect(first.commands.map(c => c.name)).toEqual(['judge-check-label']);
+    expect(() => write(reading(0.97))).toThrow(PilotError);
+    expect(() => write(reading(0.97))).toThrow(STOP_RULE);
+    expect(() => write(reading(0.9, false))).toThrow('not complete');
+    const rest = write(reading(0.9));
+    expect(rest.campaigns.map(c => c.name)).toEqual(['pilot-extract-first', 'pilot-gbrain', 'pilot-memory-bank']);
+    expect(rest.commands.map(c => c.name)).toEqual(['pilot-extract-first-reread', 'pilot-gbrain-reread', 'pilot-memory-bank-reread']);
+    expect(() => writePilotCampaigns(buildWeeklyPilotManifest(GBRAIN), { out: scratch('std'), window: 'w', windowCapUsd: 1e6, worldEnd: WORLD_END, stopReading: reading(0.9) })).toThrow('only the alias pilot');
   });
 });
