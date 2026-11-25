@@ -310,19 +310,17 @@ measures.
 
 ## Changelog
 
-<<<<<<< HEAD
 ### 2026-11-25: Per-person memory isolation results
 
 The per-person memory isolation row moves from the protocols table to the correctness and access checks with its
 [results](benchmarks/2026-11-24-person-isolation.md): 0 leaks in 1,492,098 probes at gbrain v0.60.771.0, after the
 CLI's `--as` preview leaked on v0.60.769.0 and gbrain fixed it.
-=======
+
 ### 2026-11-25: Pinned-questions rescore
 
 The pinned-questions row adds the post-hoc rescore under a rule for answers that give both values, written after the
 labels were seen: particle-1 is 4.2 points below claude-opus-5-5 on it, inside the 10-point margin, but the
 preregistered result (7.5 points below, not shown within 10) stays the verdict.
->>>>>>> origin/main
 
 ### 2026-11-24: Pinned-questions results
 

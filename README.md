@@ -686,19 +686,17 @@ Garry Tan runs Y Combinator.
 
 ## Changelog
 
-<<<<<<< HEAD
 ### 2026-11-25: Per-person memory isolation
 
 The checks table adds the [per-person memory isolation results](docs/benchmarks/2026-11-24-person-isolation.md) at gbrain
 v0.60.771.0: no person's saved memory reached another person, or a caller acting for nobody, in 1,492,098 probes. The
 release before it leaked through the CLI's `--as` preview, and gbrain fixed that in v0.60.771.0.
-=======
+
 ### 2026-11-25: Pinned questions rescore
 
 The pinned-questions row adds the post-hoc rescore under a rule for answers that give both values: particle-1 moves
 from 7.5 to 4.2 points below claude-opus-5-5, which leaves the comparison unsettled. The preregistered numbers stay
 the result.
->>>>>>> origin/main
 
 ### 2026-11-24: Pinned questions
 
