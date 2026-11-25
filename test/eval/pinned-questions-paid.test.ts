@@ -820,7 +820,7 @@ describe('pinned-questions paid arm: provider errors, safety stops and budget re
     expect(() => combinedCost(out, 'k', [u(11)], summary('r1', 0, 0))).toThrow(/line 1 is not valid JSON/);
 
     const r = await run(dir(), () => null);
-    const cost = { ...summary('r1', 0, 0), processes: 1, complete: true, unrecorded_processes: [], unrecorded_units: [], lost_lines: 0 };
+    const cost = { ...summary('r1', 0, 0), processes: 1, complete: true, unrecorded_processes: [] as string[], unrecorded_units: [] as string[], lost_lines: 0 };
     const receipt = (c: typeof cost) => buildReceipt({ gut, models: ['particle:particle-1'], seeds: [1], companies: 8, stage: 'dev', result: r, cost: c, startedAt: new Date().toISOString(), mode: 'paid' }) as unknown as { publishable: boolean };
     expect(receipt(cost).publishable).toBe(true);
     expect(receipt({ ...cost, complete: false, unrecorded_processes: ['p2'] }).publishable).toBe(false);

@@ -275,6 +275,76 @@ shows that its grading is unchanged.
 
 If a judge still fails with the probes, no counted unit runs until a further dated amendment decides what to do.
 
+### 2026-11-24: rescore under a rule for answers that give both values, after the counted run
+
+**We wrote this rule after the counted run's results were published (gbrain-evals#639) and after we had read its
+labels.** It doesn't change any published number. The preregistered numbers stay primary and every decision in this
+plan still reads them. The rescore adds one column beside them. It changes no arm, seed, model, judge, metric, bar or
+threshold.
+
+**What happened.** The frozen judge prompt labels a claim correct when the answer "states the key's current value ...
+and does not also give a different value as current", and wrong when it "gives the current value and a conflicting
+value together". It doesn't say what to do with an answer that names both values and says which one is current, such
+as "builds its valves in Y, having moved production there from X". In the counted run, 141 of the 720 refreshed
+answers named both a changed claim's old and new values. That is a city after a contradiction in 112 of them and a
+founding year after a fact was superseded in 29. Their rule label is ambiguous, so they were left out of the judge
+check, and the judges split on them. `gpt-6.2-astra` called the city or year correct in 71 of the 135 answers it
+judged from `claude-opus-5-5` and particle-1, and wrong in 64. `claude-opus-5-5` called all 6 of its `gpt-6.2-sol`
+answers correct. Reading them, the split mostly follows one line: whether the answer says, in its own words, which
+value is current, or only reports what each source says.
+
+**The rule.** A claim is correct only if the answer, in its own words, gives the current value as current. It may name
+the previous value, but only as former or superseded ("moved there from X", "previously X", "X is out of date"). An
+ordering it hedges, such as "which the note appears to supersede", still says which value is current. A claim is wrong
+when the answer names both values without saying which is current. Reporting what each source says ("a press note says
+Y; the company page still says X"), even with words like "later" or "still", doesn't say which is current, and
+neither does saying it's unclear. An answer that keeps the old value as current is stale, as before. The rescore
+prompt is the frozen prompt with only its "correct" and "wrong" lines replaced by these words
+(`PINNED_QUESTIONS_RESCORE_PROMPT` in `eval/runner/pinned-questions-rescore.ts`).
+
+**The agreement gate.** A new prompt is a new judge, so it is checked before it grades any counted answer:
+
+- **Both-value set.** 144 answers on the judge-check seeds (21 to 23). Every company whose change moved its city (27)
+  or its founding year (9) gets four answers. Each answer states the other claims' current values and gives both
+  values of the changed claim, using templates. Two of the four are correct under the rule and two are not: no
+  ordering, "unclear", both given as current, or the old value kept. The labels come from the templates, not from a
+  model. We wrote the templates after reading real counted answers, so they copy phrasings that appeared there, and
+  they may be easier than real answers.
+- **Recheck.** Every judge-check output and stale probe with an unambiguous rule label (527) is graded again by its own
+  judge with the new prompt, against its rule label, so the new wording can't quietly break what the old prompt got
+  right.
+- **Bar.** Both judges grade every both-value answer. Each judge needs Cohen's kappa of at least 0.6 on at least 100
+  labels, on each set separately. If either judge fails either set, no counted answer is re-judged, and the
+  correction reports the failed gate instead of a rescored column.
+
+**What is re-judged.** All 720 counted refreshed answers, because every counted refresh published and was scored.
+Each goes to the judge that graded it (`gpt-6.2-astra` for the `claude-opus-5-5` and particle-1 rows,
+`claude-opus-5-5` for the `gpt-6.2-sol` rows), so no judge grades its own family, and particle-1 judges nothing. No
+model under test is asked anything. A row the counted run scored as not published or left out keeps that result; none
+is in this run. The receipt reports, per model and per change class, the preregistered and rescored correctness side
+by side, the answers that flipped each way, and the paired comparisons against `claude-opus-5-5` under both labelings.
+
+**How it's published.** One correction PR adds the rescored column beside the preregistered numbers on the results
+page and replaces nothing. If the rescored column would come out on the other side of a decision in this plan, the
+page says so in plain words, and that decision goes back to its owner instead of changing on its own.
+
+**Enforcement.** `eval/runner/pinned-questions-rescore.ts` reads the three published receipts (counted, judge-check,
+stale probes) only when each matches the sha256 recorded in `docs/benchmarks/pinned-questions/manifest.json`, and
+only when it is paid, completed and publishable, on the same gbrain build, with every world regenerating to its
+fingerprint and every row judged by its family's judge. It runs the gate first and stops before the counted answers if
+the gate fails. A directory where a rescore has started is refused, so the stage can't be paid for twice by accident.
+It runs as one judge-only paid window under the eval budget ledger, and amounts stay in the tracking issue.
+
+Before this stage, the five runner notes from the results PR were fixed, each with a keyless test that fails without
+the fix:
+
+- counted seeds run only in the counted stage;
+- a counted launch needs a publishable stale-probes receipt with every probe graded;
+- a paid process records its ledger link before it asks anything, so a receipt with unrecorded spend is not
+  publishable;
+- a unit with a harness error is never reused;
+- the keyless runner restores the brain after a gbrain error that follows a change.
+
 ## Disclosures
 
 - gbrain is Garry Tan's own project.

@@ -222,7 +222,7 @@ export function parseJudgeLabels(text: string): Record<Claim, JudgeLabel> | null
 
 /** models: every "provider:modelId" gbrain's gateway reported as the model that answered in this window. */
 export interface Usage { calls: number; input_tokens: number; output_tokens: number; cache_read_tokens: number; cache_write_tokens: number; models?: string[] }
-const noUsage = (): Usage => ({ calls: 0, input_tokens: 0, output_tokens: 0, cache_read_tokens: 0, cache_write_tokens: 0, models: [] });
+export const noUsage = (): Usage => ({ calls: 0, input_tokens: 0, output_tokens: 0, cache_read_tokens: 0, cache_write_tokens: 0, models: [] });
 
 /** The served id is the model under test, or a dated snapshot of it (the provider's id begins with the bare id). */
 const servedAs = (model: string, served: string) => (served.split(':').pop() ?? served).startsWith(model.split(':').pop() ?? model);
@@ -593,7 +593,7 @@ type ChatResult = { text: string; model: string; providerId?: string; stopReason
 /** gbrain's test chat transport shape (src/core/ai/gateway.ts __setChatTransportForTests). */
 export type ChatTransport = (opts: ChatOpts) => Promise<ChatResult>;
 
-interface Gateway {
+export interface Gateway {
   configureGateway(c: Record<string, unknown>): void;
   __setGenerateTextTransportForTests(fn: ((o: any) => Promise<any>) | null): void;
   chat(o: ChatOpts): Promise<ChatResult>;
@@ -627,17 +627,18 @@ const modelText = (r: QReceipt) => (r.answer ?? []).filter(s => s.origin === 'mo
 /**
  * One answer graded: rule labels from the synthetic tokens beside the judge's labels from one call, and one retry on
  * unparseable output, through gbrain's gateway, already configured for `judge`. With `skipAmbiguous`, an answer whose
- * rule label is ambiguous, and so is left out of the judge check, is not sent to the judge.
+ * rule label is ambiguous, and so is left out of the judge check, is not sent to the judge. `prompt` is the judge's
+ * system prompt: the frozen one unless a stage registered another (the rescore stage, pinned-questions-rescore.ts).
  */
-async function gradeAnswer(gateway: Gateway, meter: (fn: () => Promise<void>) => Promise<{ usage: Usage }>, judge: string, c: PqCompany, kind: 'first' | 'refreshed', sentences: string[], skipAmbiguous = false): Promise<GradedAnswer> {
+export async function gradeAnswer(gateway: Gateway, meter: (fn: () => Promise<void>) => Promise<{ usage: Usage }>, judge: string, c: PqCompany, kind: 'first' | 'refreshed', sentences: string[], opts: { skipAmbiguous?: boolean; prompt?: string } = {}): Promise<GradedAnswer> {
   const rule = ruleLabels(c, kind, sentences);
   const g: GradedAnswer = { sentences, judge_labels: null, judge_error: null, answer_correct: null, rule_labels: rule, rule_correct: Object.values(rule).includes('ambiguous') ? null : Object.values(rule).every(l => l === 'correct'), judge_usage: noUsage() };
-  if (skipAmbiguous && g.rule_correct === null) return g;
+  if (opts.skipAmbiguous && g.rule_correct === null) return g;
   const user = judgeUserMessage(c, kind, sentences);
   const { usage: u } = await meter(async () => {
     for (const content of [user, `${user}\n\n${JUDGE_RETRY_NOTE}`]) {
       try {
-        const res = await gateway.chat({ model: judge, system: PINNED_QUESTIONS_JUDGE_PROMPT, messages: [{ role: 'user', content }], maxTokens: JUDGE_MAX_TOKENS, allowFallback: false, ...(acceptsTemperature(judge) ? { temperature: 0 } : {}) });
+        const res = await gateway.chat({ model: judge, system: opts.prompt ?? PINNED_QUESTIONS_JUDGE_PROMPT, messages: [{ role: 'user', content }], maxTokens: JUDGE_MAX_TOKENS, allowFallback: false, ...(acceptsTemperature(judge) ? { temperature: 0 } : {}) });
         g.judge_labels = parseJudgeLabels(res.text);
         g.judge_error = g.judge_labels ? null : 'judge_output_not_json';
       } catch (e) {
@@ -759,7 +760,7 @@ export const unitTransient = (unit: readonly PaidRow[]) => unit.some(r =>
 /** A unit with a harness error (a call gbrain blocked for a setup reason, or another model answered): never reused, so a rerun after the setup is fixed asks it again. */
 export const unitHarnessError = (unit: readonly PaidRow[]) => unit.some(r => harnessBlocked(r.pin) || harnessBlocked(r.refresh) || servedWrongModel(r));
 /** A checkpointed unit a launch reuses instead of asking: no harness error, and not a transient failure still owed its retry. */
-export const reusableUnit = (prior: Checkpointed | undefined): prior is Checkpointed => !!prior && !unitHarnessError(prior.rows) && !(prior.transient && prior.attempt < MAX_UNIT_ATTEMPTS);
+export const reusableUnit = (prior: Checkpointed | undefined): boolean => !!prior && !unitHarnessError(prior.rows) && !(prior.transient && prior.attempt < MAX_UNIT_ATTEMPTS);
 /**
  * Checkpointed units. A final line with no newline that does not parse is an append a crash or full disk cut short: it
  * is cut off the file, so earlier units are reused and the next append starts on a clean line. Any other line that does
@@ -889,14 +890,14 @@ export function combinedCost(output: string, key: string, behind: readonly Unit[
   };
 }
 
-interface GatewayRun { gateway: Gateway; gatewayConfig: (chatModel: string) => Record<string, unknown>; usage: { current: Usage | null }; finish: { current: SafetyFinish | null | undefined }; spend: { stop: string | null } }
+export interface GatewayRun { gateway: Gateway; gatewayConfig: (chatModel: string) => Record<string, unknown>; usage: { current: Usage | null }; finish: { current: SafetyFinish | null | undefined }; spend: { stop: string | null } }
 
 /**
  * gbrain's gateway for one paid or keyless run, inside the hermetic env: paid keys or gbrain's test chat transport, the
  * usage sink, and the budget-refusal and safety-finish records, all removed again when `body` ends. A paid run refuses
  * before any request unless the budget ledger's request guard is installed.
  */
-async function withGateway<T>(mode: PaidMode, gut: GbrainUnderTest, body: (g: GatewayRun) => Promise<T>): Promise<T> {
+export async function withGateway<T>(mode: PaidMode, gut: GbrainUnderTest, body: (g: GatewayRun) => Promise<T>): Promise<T> {
   if (mode.kind === 'paid' && !paidRequestGuardActive()) {
     throw new PaidArmRefusal(`${CATEGORY}: a paid run needs the budget ledger's request guard installed first (startPaidRun, as main() does); refusing before any request.`);
   }
@@ -961,7 +962,7 @@ export async function runPinnedQuestionsPaid(opts: { gut: GbrainUnderTest; model
         const prior = done.filter(x => x.model === model && x.seed === world.seed).at(-1);
         let unit: PaidRow[];
         if (reusableUnit(prior)) {
-          unit = prior.rows;
+          unit = prior!.rows;
           resumedUnits++;
         } else {
           const attempt = (prior?.attempt ?? 0) + 1;
@@ -1026,7 +1027,7 @@ export async function runStaleProbes(opts: { gut: GbrainUnderTest; judgeCheck: J
       gateway.configureGateway(gatewayConfig(judge));
       for (const r of rows.filter(x => x.judge_model === judge)) {
         const c = opts.judgeCheck.worlds.get(r.seed)!.companies.find(x => x.slug === r.company)!;
-        const graded = await gradeAnswer(gateway, meter, judge, c, 'refreshed', r.first.sentences, true);
+        const graded = await gradeAnswer(gateway, meter, judge, c, 'refreshed', r.first.sentences, { skipAmbiguous: true });
         if (spend.stop) return { probes, harnessErrors: [`the budget ledger refused a request (${spend.stop}); ${rows.length - probes.length} stale probes not asked`] };
         probes.push({ model: r.model, seed: r.seed, company: r.company, mutation: r.mutation, judge_model: judge, graded });
       }
