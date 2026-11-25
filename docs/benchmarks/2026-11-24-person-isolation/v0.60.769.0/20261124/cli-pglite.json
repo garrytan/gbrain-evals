@@ -1,0 +1,80 @@
+{
+  "cost": {
+    "usd": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "basis": "keyless: no model and no paid request (no provider key in any process)"
+  },
+  "delivered_tokens": {
+    "tokens": 0,
+    "basis": "keyless: no model and no paid request (no provider key in any process)"
+  },
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "person-isolation-fuzz",
+  "run_status": "completed",
+  "verdict": "fail",
+  "n_total": 5032,
+  "n_scored": 5032,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": false,
+  "gbrain_version": "0.60.769.0",
+  "gbrain_pin": "github:garrytan/gbrain#38831bb696139024923e9bc43e3da0d7993951e9",
+  "execution": {
+    "source_tree": {
+      "sha256": "26e8ac57a6ba89f4a07db6c81e2480576d09321eb3b13f15a1afd8033f262742",
+      "scheme": "git-index-blob-v1",
+      "files": 17549,
+      "git_head": "c2bfa710ff4710d47d1fab3e4ffd381122fe85c9",
+      "dirty": true
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#38831bb696139024923e9bc43e3da0d7993951e9",
+      "declared_sha": "38831bb696139024923e9bc43e3da0d7993951e9",
+      "version": "0.60.769.0",
+      "package_sha256": "03183d36d7e247bf444cee2acccd80f5fc1790e8bc38e8c09aa887917d4d88be",
+      "loaded_git_head": null
+    }
+  },
+  "accounting": {
+    "planned": 5032,
+    "attempted": 5032,
+    "scored": 5032,
+    "errors": 0,
+    "misses": 0,
+    "source": "runner"
+  },
+  "resolved_config": {
+    "profile": "full",
+    "seeds": [
+      20261124
+    ],
+    "cells": [
+      "cli-pglite"
+    ],
+    "generator_version": "person-isolation-v1",
+    "preregistration": "docs/benchmarks/2026-11-24-person-isolation-preregistration.md",
+    "only": null,
+    "timeouts_ms": {
+      "mcp-dispatch": 10000,
+      "http": 30000,
+      "cli": 30000
+    },
+    "not_covered": [
+      "synthesize",
+      "vector and hybrid search (keyless)"
+    ]
+  },
+  "hashes": {
+    "world_20261124": "7fb2b20c9e77b4f95b21d14fdd69249bd1b55c3c8d3e598681405cf02f660316"
+  },
+  "started_at": "2026-11-24T23:45:05.338Z",
+  "finished_at": "2026-11-25T00:20:21.852Z",
+  "data": {
+    "verdict": "fail",
+    "gate_total": 139
+  },
+  "latency_ms": null
+}

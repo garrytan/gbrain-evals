@@ -1,0 +1,391 @@
+{
+  "cost": {
+    "usd": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "basis": "keyless: no model and no paid request (no provider key in any process)"
+  },
+  "delivered_tokens": {
+    "tokens": 0,
+    "basis": "keyless: no model and no paid request (no provider key in any process)"
+  },
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "person-isolation-fuzz",
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 5032,
+  "n_scored": 5032,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": false,
+  "gbrain_version": "0.60.771.0",
+  "gbrain_pin": "github:garrytan/gbrain#97ef356f574a66709ef1bf4ae1cad604727852d8",
+  "execution": {
+    "source_tree": {
+      "sha256": "c2386d65fbd2b502f3419f017e7bd00840d7b24bcc095248b70236d1ee218e37",
+      "scheme": "git-index-blob-v1",
+      "files": 17531,
+      "git_head": "bc0d8763e9b71b727ae6296d7bf6742981ef33ab",
+      "dirty": false
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#97ef356f574a66709ef1bf4ae1cad604727852d8",
+      "declared_sha": "97ef356f574a66709ef1bf4ae1cad604727852d8",
+      "version": "0.60.771.0",
+      "package_sha256": "ba28e6fd7e454a9bb43177b3706c018dd73f3a7d44728e9e2b5ed398e4467cb3",
+      "loaded_git_head": null
+    }
+  },
+  "accounting": {
+    "planned": 5032,
+    "attempted": 5032,
+    "scored": 5032,
+    "errors": 0,
+    "misses": 0,
+    "source": "runner"
+  },
+  "resolved_config": {
+    "profile": "full",
+    "seeds": [
+      20261126
+    ],
+    "cells": [
+      "cli-postgres"
+    ],
+    "generator_version": "person-isolation-v1",
+    "preregistration": "docs/benchmarks/2026-11-24-person-isolation-preregistration.md",
+    "only": null,
+    "timeouts_ms": {
+      "mcp-dispatch": 10000,
+      "http": 30000,
+      "cli": 30000
+    },
+    "not_covered": [
+      "synthesize",
+      "vector and hybrid search (keyless)"
+    ]
+  },
+  "hashes": {
+    "world_20261126": "0baa1527c7dc0505acda5f0a6230101680d8605013733c797475ab87c6ca2152"
+  },
+  "started_at": "2026-11-25T03:10:03.204Z",
+  "finished_at": "2026-11-25T03:41:36.295Z",
+  "data": {
+    "gate_total": 0,
+    "stops": [],
+    "cells": [
+      {
+        "cell": "cli-postgres",
+        "seed": 20261126,
+        "stops": [],
+        "stop_detail": [],
+        "probes": 5032,
+        "probes_planned": 2088,
+        "ops": 5,
+        "elapsed_ms": 1892313,
+        "cap_reached": false,
+        "tally": {
+          "probes": 5032,
+          "content": 0,
+          "identifier": 0,
+          "oracle": 0,
+          "slip": 0,
+          "write_slip": 0,
+          "harness": 0,
+          "signal": 672,
+          "owner_hits": 702,
+          "public_hits": 704,
+          "refusals": 1016
+        },
+        "by_caller": {
+          "owner-key": {
+            "probes": 1816,
+            "content": 0,
+            "identifier": 0,
+            "oracle": 0,
+            "slip": 0,
+            "write_slip": 0,
+            "harness": 0,
+            "signal": 0,
+            "owner_hits": 0,
+            "public_hits": 0,
+            "refusals": 0
+          },
+          "member-key": {
+            "probes": 807,
+            "content": 0,
+            "identifier": 0,
+            "oracle": 0,
+            "slip": 0,
+            "write_slip": 0,
+            "harness": 0,
+            "signal": 133,
+            "owner_hits": 143,
+            "public_hits": 250,
+            "refusals": 72
+          },
+          "unbound-unscoped": {
+            "probes": 563,
+            "content": 0,
+            "identifier": 0,
+            "oracle": 0,
+            "slip": 0,
+            "write_slip": 0,
+            "harness": 0,
+            "signal": 133,
+            "owner_hits": 143,
+            "public_hits": 250,
+            "refusals": 72
+          },
+          "unbound": {
+            "probes": 563,
+            "content": 0,
+            "identifier": 0,
+            "oracle": 0,
+            "slip": 0,
+            "write_slip": 0,
+            "harness": 0,
+            "signal": 143,
+            "owner_hits": 143,
+            "public_hits": 0,
+            "refusals": 436
+          },
+          "left": {
+            "probes": 480,
+            "content": 0,
+            "identifier": 0,
+            "oracle": 0,
+            "slip": 0,
+            "write_slip": 0,
+            "harness": 0,
+            "signal": 143,
+            "owner_hits": 143,
+            "public_hits": 0,
+            "refusals": 364
+          },
+          "host-as": {
+            "probes": 803,
+            "content": 0,
+            "identifier": 0,
+            "oracle": 0,
+            "slip": 0,
+            "write_slip": 0,
+            "harness": 0,
+            "signal": 120,
+            "owner_hits": 130,
+            "public_hits": 204,
+            "refusals": 72
+          }
+        },
+        "by_condition": {
+          "warm": {
+            "probes": 5000,
+            "content": 0,
+            "identifier": 0,
+            "oracle": 0,
+            "slip": 0,
+            "write_slip": 0,
+            "harness": 0,
+            "signal": 660,
+            "owner_hits": 690,
+            "public_hits": 696,
+            "refusals": 1008
+          },
+          "after-cycle": {
+            "probes": 32,
+            "content": 0,
+            "identifier": 0,
+            "oracle": 0,
+            "slip": 0,
+            "write_slip": 0,
+            "harness": 0,
+            "signal": 12,
+            "owner_hits": 12,
+            "public_hits": 8,
+            "refusals": 8
+          }
+        },
+        "ops_with_signal": [
+          "get_page",
+          "query",
+          "search",
+          "think"
+        ],
+        "ops_without_signal": [
+          "recall"
+        ],
+        "mandatory": {
+          "query": {
+            "probes": 225,
+            "signal": 64,
+            "rule_of_three": 0.013333
+          },
+          "search": {
+            "probes": 225,
+            "signal": 64,
+            "rule_of_three": 0.013333
+          },
+          "get_page": {
+            "probes": 2851,
+            "signal": 400,
+            "rule_of_three": 0.001052
+          },
+          "think": {
+            "probes": 477,
+            "signal": 144,
+            "rule_of_three": 0.006289
+          }
+        },
+        "mandatory_without_signal": [],
+        "channels_missing": [],
+        "writes_failed": 0,
+        "late_unbound_client": "credential_scope_required",
+        "write_shaped_pairs": 0,
+        "rows_changed": 0,
+        "cycle": {
+          "exit": 0,
+          "pages_with_canaries_elsewhere": 0,
+          "not_covered": [
+            "synthesize"
+          ]
+        },
+        "controls": {
+          "planted": {
+            "probes": 4,
+            "caught": 4,
+            "missed": []
+          },
+          "misgrant": {
+            "probes": 2,
+            "caught": 2,
+            "missed": []
+          }
+        },
+        "served": {
+          "get_page": {
+            "owner-key": {
+              "served": 754,
+              "error:exit_1": 250,
+              "error:exit_2": 25
+            },
+            "member-key": {
+              "error:exit_1": 137,
+              "served": 214,
+              "refused:exit_1": 96,
+              "error:exit_2": 11
+            },
+            "unbound-unscoped": {
+              "error:exit_1": 125,
+              "served": 90,
+              "refused:exit_1": 96,
+              "error:exit_2": 7
+            },
+            "unbound": {
+              "refused:exit_1": 318
+            },
+            "left": {
+              "refused:thin_init_refused": 271
+            },
+            "host-as": {
+              "error:exit_1": 136,
+              "served": 214,
+              "refused:exit_1": 96,
+              "error:exit_2": 11
+            }
+          },
+          "search": {
+            "owner-key": {
+              "served": 79
+            },
+            "member-key": {
+              "served": 23,
+              "refused:exit_1": 12
+            },
+            "unbound-unscoped": {
+              "served": 15,
+              "refused:exit_1": 12
+            },
+            "unbound": {
+              "refused:exit_1": 27
+            },
+            "left": {
+              "refused:thin_init_refused": 23
+            },
+            "host-as": {
+              "served": 22,
+              "refused:exit_1": 12
+            }
+          },
+          "query": {
+            "owner-key": {
+              "served": 79
+            },
+            "member-key": {
+              "served": 23,
+              "refused:exit_1": 12
+            },
+            "unbound-unscoped": {
+              "served": 15,
+              "refused:exit_1": 12
+            },
+            "unbound": {
+              "refused:exit_1": 27
+            },
+            "left": {
+              "refused:thin_init_refused": 23
+            },
+            "host-as": {
+              "served": 22,
+              "refused:exit_1": 12
+            }
+          },
+          "think": {
+            "owner-key": {
+              "served": 144,
+              "error:exit_2": 35
+            },
+            "member-key": {
+              "served": 78
+            },
+            "unbound-unscoped": {
+              "served": 50
+            },
+            "unbound": {
+              "refused:exit_1": 50
+            },
+            "left": {
+              "refused:thin_init_refused": 43
+            },
+            "host-as": {
+              "error:exit_2": 77
+            }
+          },
+          "recall": {
+            "owner-key": {
+              "served": 360,
+              "error:exit_2": 90
+            },
+            "member-key": {
+              "served": 201
+            },
+            "unbound-unscoped": {
+              "served": 141
+            },
+            "unbound": {
+              "refused:exit_1": 141
+            },
+            "left": {
+              "refused:thin_init_refused": 120
+            },
+            "host-as": {
+              "error:exit_2": 201
+            }
+          }
+        }
+      }
+    ]
+  },
+  "latency_ms": null
+}
