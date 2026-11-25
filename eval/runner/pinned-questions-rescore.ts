@@ -37,7 +37,7 @@ import { ProbeAccounting } from './probe-accounting.ts';
 import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, noModelSpend, sourceTreeIdentity, writeReceipt, type Receipt } from './receipt.ts';
 import {
   CATEGORY, EST_TOKENS, JUDGE_CALLS_PER_ANSWER, JUDGE_KAPPA_FLOOR, JUDGE_MAX_TOKENS, JUDGE_MIN_LABELS, PAID_KEY_NAMES, PINNED_QUESTIONS_JUDGES,
-  PINNED_QUESTIONS_JUDGE_PROMPT, combinedCost, gradeAnswer, recordProcessCost, recordProcessStart, judgeAgreement, judgeFor, measuredJudge, noUsage, outcomeOf, readCheckpoint, refreshComparisons, requirePaidFlags,
+  PINNED_QUESTIONS_JUDGE_PROMPT, combinedCost, gradeAnswer, recordProcessCost, recordProcessStart, requireClosedProcesses, judgeAgreement, judgeFor, measuredJudge, noUsage, outcomeOf, readCheckpoint, refreshComparisons, requirePaidFlags,
   requireProviderKeys, ruleLabels, scoredCorrect, withGateway, type Agreement, type GradedAnswer, type Judged, type PaidMode, type PaidRow, type StaleProbe,
 } from './pinned-questions-paid.ts';
 import { claimSentence } from './pinned-questions.ts';
@@ -531,10 +531,11 @@ async function main(): Promise<void> {
   requireProviderKeys(PINNED_QUESTIONS_JUDGES);
   const judgeKeys = new Set(PINNED_QUESTIONS_JUDGES.map(j => ({ anthropic: 'ANTHROPIC_API_KEY', openai: 'OPENAI_API_KEY' } as Record<string, string>)[j.split(':')[0]!]));
   const keys = Object.fromEntries(PAID_KEY_NAMES.filter(k => judgeKeys.has(k)).map(k => [k, process.env[k]]).filter(([, v]) => v)) as Partial<Record<typeof PAID_KEY_NAMES[number], string>>;
+  const costKey = journalKey(inputs);
+  requireClosedProcesses(output, costKey);
   const startedAt = new Date().toISOString();
   const paid = startPaidRun(`${CATEGORY}-${RESCORE_STAGE}`, { ...budgetOptionsFrom(argv), estimateUsd: estimate });
   const processId = randomUUID();
-  const costKey = journalKey(inputs);
   const unit = [{ model: RESCORE_STAGE, seed: 0 }];
   let result: RescoreResult;
   let closed: RunSummary;

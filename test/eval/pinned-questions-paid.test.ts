@@ -13,7 +13,7 @@ import { writeReceipt } from '../../eval/runner/receipt.ts';
 import {
   EST_TOKENS, JUDGE_CALLS_PER_ANSWER, JUDGE_CHECK_RUNNER_SOURCES, probed, runStaleProbes, staleProbesEstimateUsd, buildStaleProbesReceipt, JUDGE_MAX_TOKENS, JUDGE_MIN_LABELS, PINNED_QUESTIONS_JUDGE_PROMPT, RUNNER_SOURCE_SHA256, estimateUsd, measuredJudge, PINNED_QUESTIONS_MODELS_UNDER_TEST, STAGE_SEEDS, TRUNCATION_BAR, buildReceipt, canonicalModel, cohenKappa,
   familyOf, judgeAgreement, judgeCheckPasses, judgeFor, judgeUserMessage, modelRoles, parseJudgeLabels, requirePaidFlags, ruleLabels,
-  checkpointKey, combinedCost, harnessBlocked, recordProcessStart, requireStageSeeds, judgeEstimateRows, recordProcessCost, requireStageDirectory, receiptFile, servedWrongModel, outcomeOf, pendingUnits, readCheckpoint, recordingGenerateText, redactProviderText, requireJudgeCheck, requireProviderKeys, runPinnedQuestionsPaid, scoredCorrect, summarizePaid,
+  checkpointKey, combinedCost, harnessBlocked, recordProcessStart, requireClosedProcesses, requireStageSeeds, judgeEstimateRows, recordProcessCost, requireStageDirectory, receiptFile, servedWrongModel, outcomeOf, pendingUnits, readCheckpoint, recordingGenerateText, redactProviderText, requireJudgeCheck, requireProviderKeys, runPinnedQuestionsPaid, scoredCorrect, summarizePaid,
   type ChatTransport, type GradedAnswer, type PaidRow, type PaidRunResult, type StaleProbe,
 } from '../../eval/runner/pinned-questions-paid.ts';
 
@@ -818,6 +818,11 @@ describe('pinned-questions paid arm: provider errors, safety stops and budget re
     expect(combinedCost(out, 'k', [u(11), u(14)], summary('r1', 0, 0))).toMatchObject({ complete: false, actual_usd: 3, lost_lines: 1 });
     writeFileSync(path, `{"bad\n${readFileSync(path, 'utf8')}`);
     expect(() => combinedCost(out, 'k', [u(11)], summary('r1', 0, 0))).toThrow(/line 1 is not valid JSON/);
+    expect(() => requireClosedProcesses(out, 'k')).toThrow(/p2, which started and never recorded its spend/);
+    expect(() => requireClosedProcesses(out, 'other')).not.toThrow();
+    recordProcessCost(out, { key: 'k', stage: 'counted', asked: [u(12)], process_id: 'p2', summary: summary('r1', 1, 1) });
+    expect(() => requireClosedProcesses(out, 'k')).not.toThrow();
+    expect(() => requireClosedProcesses(dir(), 'k')).not.toThrow();
 
     const r = await run(dir(), () => null);
     const cost = { ...summary('r1', 0, 0), processes: 1, complete: true, unrecorded_processes: [] as string[], unrecorded_units: [] as string[], lost_lines: 0 };

@@ -25,8 +25,8 @@
   and re-judged all 720 refreshed answers ([rescore](#rescore-under-the-both-value-rule-added-after-the-results)).
   particle-1 moves from 7.5 points below Opus to 4.2 below (95% interval 7.5 to 0.8 lower), inside the 10-point margin,
   but the rule was written after the labels were seen, so it can't change the verdict. gpt-6.2-sol's lead goes from 6.7
-  points to 5.4 (interval reaching 0), and nearly all of that change is 15 removed-chief-executive answers that the
-  stricter judge marked incomplete and the token rule marks right.
+  points to 5.4 (interval reaching 0): gpt-6.2-sol loses 9 answers net, all removed-chief-executive answers that the
+  stricter judge marked incomplete and the token rule marks right, while Opus loses 6 that give both values.
 
 Settled call: don't move pinned-question refreshes to particle-1 on this result, and don't rule it out. The model gap
 rests on one judge's inconsistent scoring of answers that report both values, so the next step is a rescoring of these
@@ -180,8 +180,9 @@ noise against the rule, not a gpt-6.2-sol regression. With those 15 rows taking 
 **What it changes.** Nothing is decided by it. On particle-1 against Opus, the preregistered test found particle-1 not
 non-inferior (-7.5 points). Under the rescore it lands at -4.2 points, inside the 10-point margin, so the comparison
 isn't settled, and this page makes no recommendation either way and doesn't call the two level. On gpt-6.2-sol against
-Opus, the preregistered gap is +6.7 points and the rescored gap +5.4 with an interval reaching 0, most of the change
-being the 15 removed-chief-executive rows above. Opus after a contradiction is right 31 of 60 times under the rescore,
+Opus, the preregistered gap is +6.7 points and the rescored gap +5.4 with an interval reaching 0. gpt-6.2-sol loses 9
+answers net, all on the removed-chief-executive rows above, and Opus loses 6 on answers that give both values, so the
+lead narrows by 1.3 points. Opus after a contradiction is right 31 of 60 times under the rescore,
 48.3 points below its 60 of 60 after a direct edit. A fresh preregistered run with the both-value rule frozen before any
 answer is seen would settle particle-1; it is proposed, not started.
 

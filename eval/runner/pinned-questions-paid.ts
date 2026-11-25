@@ -853,6 +853,19 @@ export function recordProcessStart(output: string, line: { key: string; stage: S
   appendCostLine(output, line);
 }
 
+/**
+ * Before a paid launch in an output directory: refuse when a process under this key started and never recorded its
+ * spend, since no receipt from the directory can then be publishable (combinedCost) and a resume would pay for nothing.
+ */
+export function requireClosedProcesses(output: string, key: string): void {
+  const path = join(output, COST_FILE);
+  if (!existsSync(path)) return;
+  const lines = readFileSync(path, 'utf8').split('\n').flatMap(l => { try { return l.trim() ? [JSON.parse(l) as CostLine & { torn?: number }] : []; } catch { return []; } }).filter(x => x.torn === undefined && x.key === key);
+  const closed = new Set(lines.filter(x => x.summary).map(x => x.process_id));
+  const open = [...new Set(lines.filter(x => !x.summary && !closed.has(x.process_id)).map(x => x.process_id))];
+  if (open.length) throw new PaidArmRefusal(`${CATEGORY}: ${path} holds paid process ${open.join(', ')}, which started and never recorded its spend, so no receipt from this directory can be publishable; refusing before any request. Give the launch a fresh --output`);
+}
+
 /** When a paid process ends: its ledger summary, with its stage and the units it asked. */
 export function recordProcessCost(output: string, line: CostLine & { summary: RunSummary }): void {
   appendCostLine(output, line);
@@ -1228,6 +1241,7 @@ async function main(): Promise<void> {
   const judgeCheckSha256 = judgeCheck ? createHash('sha256').update(readFileSync(judgeCheck)).digest('hex') : null;
   const staleProbesSha256 = staleProbes ? createHash('sha256').update(readFileSync(staleProbes)).digest('hex') : null;
   const keys = Object.fromEntries(PAID_KEY_NAMES.map(k => [k, process.env[k]]).filter(([, v]) => v)) as Partial<Record<typeof PAID_KEY_NAMES[number], string>>;
+  requireClosedProcesses(output, key);
   const startedAt = new Date().toISOString();
   const paid = startPaidRun(CATEGORY, { ...budgetOptionsFrom(argv), estimateUsd: estimate });
   const processId = randomUUID();
