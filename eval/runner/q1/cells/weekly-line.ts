@@ -406,11 +406,13 @@ export const WEEKLY_REREAD_JUDGE_RESERVATIONS = 2;
  * each stage's expected spend instead of R111's tenth of a block budget: the mint (mint.sh --dev on the three alias
  * worlds); the grep agent's stage, its pilot row and the judge check's cells, with the labelling pass at
  * WEEKLY_LINE_LABEL_CAP_USD; and the other rows' stage, each row's cap split between its cell and particle-1's re-read
- * as weeklyLinePilotCaps splits it.
+ * as weeklyLinePilotCaps splits it. The 2026-11-25 re-split (GBEV-3's ruling on #650) raises the mint to its estimate
+ * with room, keeps the grep agent's stage, and takes the other rows' stage down to fit: each of those rows keeps its re-read
+ * share and its cell gets the stage's rest in proportion to the cells' estimates.
  */
 export const WEEKLY_ALIAS_PILOT_MONEY = {
-  window_usd: 45, mint_usd: 11, judge_check_cells_usd: 8.67,
-  row_cap_usd: { 'grep-agent': 4.33, 'extract-first': 9.42, gbrain: 5.47, 'memory-bank': 5.11 } as Readonly<Record<WeeklyLineRow, number>>,
+  window_usd: 45, mint_usd: 15, judge_check_cells_usd: 8.67,
+  row_cap_usd: { 'grep-agent': 4.33, 'extract-first': 7.42, gbrain: 4.43, 'memory-bank': 4.15 } as Readonly<Record<WeeklyLineRow, number>>,
 } as const;
 
 /** One row's pilot money: its block budget, its cap (a tenth of the budget), its re-read's share and the cells' share (the cell's lease). */

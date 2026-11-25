@@ -185,7 +185,9 @@ describe('the alias pilot and judge check', () => {
       ['pilot-gbrain', true], ['pilot-gbrain-reread', true], ['pilot-memory-bank', true], ['pilot-memory-bank-reread', true]]);
     expect(plan.ledgers.filter(l => l.campaign_id).every(l => /^q1-scoreboard-weekly-(pilot|judge-check)-alias/.test(l.campaign_id!))).toBe(true);
     expect(plan.cells.map(c => c.questions)).toEqual([64, 64, 64, 64, 128]);
-    expect(plan.window).toEqual({ mint_usd: 11, grep_first_usd: 14, after_stop_rule_usd: 20, total_usd: 45, window_usd: 45 });
+    expect(plan.window).toEqual({ mint_usd: 15, grep_first_usd: 14, after_stop_rule_usd: 16, total_usd: 45, window_usd: 45 });
+    expect(plan.ledgers.filter(l => l.kind === 'reread').map(l => l.cap_usd)).toEqual([1.15, 1.15, 1.15]);
+    expect(plan.ledgers.find(l => l.kind === 'mint')!.estimate_usd).toBeLessThanOrEqual(15);
     expect(plan.totals.cap_usd).toBeLessThanOrEqual(WEEKLY_ALIAS_PILOT_MONEY.window_usd);
     expect(STOP_RULE).toBe('If the Opus grep agent scores 95% or more on the pilot, the line stops and we publish the grep result.');
     expect(plan.stop_rule).toBe(STOP_RULE);
@@ -319,7 +321,7 @@ describe('the alias pilot and judge check', () => {
     const first = write();
     expect(first.campaigns.map(c => c.name)).toEqual(['pilot-grep-agent', 'judge-check']);
     expect(first.commands.map(c => c.name)).toEqual(['judge-check-label', 'mint']);
-    expect(first.commands.find(c => c.name === 'mint')!.argv).toEqual(['eval/custody/bg1/mint.sh', '--dev', '--worlds', ALIAS.join(','), '--paid-window', 'test-window', '--window-cap-usd', '11']);
+    expect(first.commands.find(c => c.name === 'mint')!.argv).toEqual(['eval/custody/bg1/mint.sh', '--dev', '--worlds', ALIAS.join(','), '--paid-window', 'test-window', '--window-cap-usd', '15']);
     expect(() => write(reading(0.97))).toThrow(PilotError);
     expect(() => write(reading(0.97))).toThrow(STOP_RULE);
     expect(() => write(reading(0.9, false))).toThrow('not complete');
