@@ -109,7 +109,7 @@ export function worldPlan(world: H4FixWorld, build: string, harnessSha: string, 
       run(`fs-${short(m)}-other`, m, ['--arms', 'fs', '--hard-tool-limits', 'hard'], ['--families', OTHER_FAMILIES.join(','), '--repeat', '1']),
     ]) : []),
     { id: 'interim-look', argv: [], hold: 'look', note: 'every world finished half A for both gbrain arms and both frontier readers; h4fix_analysis.py --look interim decides; half B runs only if it continues (R113)' },
-    ...halfSteps('b'),
+    ...(stopped ? [] : halfSteps('b')),
     ...(world === 's3' ? [
       run('pilot-particle-section', PARTICLE, gbrain('section'), ['--per-family', '1', '--repeat', '1'], 'particle-1 pilot inside the granted window; never counted'),
       run('pilot-particle-default', PARTICLE, gbrain('default'), ['--per-family', '1', '--repeat', '1'], 'never counted'),

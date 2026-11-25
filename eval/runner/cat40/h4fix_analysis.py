@@ -305,7 +305,7 @@ def final(worlds, cost, stopped, B, S, transcripts, world_files):
     miss = gaps(worlds, FRONTIER, plan)
     if miss:
         raise SystemExit(f'FINAL_INCOMPLETE: planned frontier cells are missing: {json.dumps(miss, sort_keys=True)}')
-    look = interim(half_a(worlds), B, S)
+    look = interim(half_a(worlds), 10000, 1)
     if LOOK_FOR[look['decision']] != stopped:
         raise SystemExit(f'LOOK_MISMATCH: the half-A cells give "{look["decision"]}", but --stopped is {stopped}')
     if stopped != 'none':

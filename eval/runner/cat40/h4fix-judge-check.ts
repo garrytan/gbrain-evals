@@ -15,6 +15,7 @@
  *           written in the answer style of the readers whose rows the judge counts: gpt-6.2-sol gets Opus-style
  *           answers (numbered notes naming each account); claude-opus-5-5 gets GPT-6.2 Sol-style answers (one terse
  *           note) and, for particle-1, answers with no notes, alternating by task.
+ *           plan records N1's scale (large) and world digest; run refuses another world file or a missing ledger.
  *   Gates   per judge, reading "at least one contradicted or unsupported claim" as bad: Cohen's kappa against the
  *           labels at least 0.6, every planned item graded, at least 40 graded in each class, and at most 1% of outputs
  *           malformed after one retry. Errors are reported per answer style. report exits 3 (JUDGE_CHECK_STOP) when a
@@ -25,6 +26,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { HardTask, HardWorld } from '../../generators/hard/schema.ts';
+import { hardWorldDigest } from '../../generators/model-ladder-hard.ts';
 import { budgetOptionsFrom, startPaidRun } from '../budget-ledger.ts';
 import { seededRandom } from '../stats/paired.ts';
 import { cohenKappa, gradeAll, type CheckItem, type Grade } from './judge-check-hard.ts';
@@ -94,6 +96,7 @@ const passes = (world: HardWorld, task: HardTask, final: Final) => scoreHardTask
 /** Each judge's 100 construction items: TASKS_PER_FAMILY tasks per family, a good and a bad answer each. */
 export function planItems(world: HardWorld, seed: number): { items: Item[]; skipped: string[] } {
   if (world.seed !== N1_SEED) throw new Error(`the judge check runs on public world N1 (seed ${N1_SEED}), got seed ${world.seed}`);
+  if (world.scale !== 'large') throw new Error(`the judge check runs on N1 at --scale large, got scale ${world.scale}`);
   const items: Item[] = [], skipped = new Set<string>();
   JUDGES.forEach((judge, j) => {
     const rand = seededRandom(seed * 10 + j);
@@ -160,22 +163,26 @@ if (import.meta.main) {
   const usage = (msg: string): never => { console.error(`h4fix-judge-check: ${msg}`); process.exit(2); };
   const out = flag('--out') ?? usage('--out is required');
   const worldOf = () => JSON.parse(readFileSync(flag('--world') ?? usage('--world is required'), 'utf8')) as HardWorld;
-  const planned = () => JSON.parse(readFileSync(join(out, 'items.json'), 'utf8')) as { items: Item[] };
+  const planned = (world?: HardWorld) => {
+    const p = JSON.parse(readFileSync(join(out, 'items.json'), 'utf8')) as { items: Item[]; world_digest: string };
+    if (world && hardWorldDigest(world) !== p.world_digest) usage(`--world is not the world items.json was planned on (digest ${p.world_digest})`);
+    return p;
+  };
   if (cmd === 'plan') {
-    const seed = Number(flag('--seed') ?? 1);
-    const { items, skipped } = planItems(worldOf(), seed);
+    const seed = Number(flag('--seed') ?? 1), world = worldOf();
+    const { items, skipped } = planItems(world, seed);
     mkdirSync(out, { recursive: true });
-    writeFileSync(join(out, 'items.json'), JSON.stringify({ seed, world_seed: N1_SEED, skipped, items }, null, 1) + '\n');
+    writeFileSync(join(out, 'items.json'), JSON.stringify({ seed, world_seed: N1_SEED, world_scale: world.scale, world_digest: hardWorldDigest(world), skipped, items }, null, 1) + '\n');
     console.log(`planned ${items.length} construction items (${skipped.length} tasks skipped) in ${join(out, 'items.json')}`);
   } else if (cmd === 'run') {
     const window = flag('--paid-window'), cap = Number(flag('--window-cap-usd')), budget = Number(flag('--budget-usd'));
     if (!window) usage('run needs --paid-window <unit>: judge calls are paid and run only inside a granted window');
     if (!(cap > 0) || !(budget > 0) || budget > cap) usage('run needs --window-cap-usd and --budget-usd, with the budget at or below the window cap');
-    const world = worldOf();
-    if (world.seed !== N1_SEED) usage(`--world must be N1 (seed ${N1_SEED})`);
+    if (!flag('--budget-ledger')) usage('run needs --budget-ledger <file>, the window\'s own ledger');
+    const world = worldOf(), { items } = planned(world);
     const { run, guard } = startPaidRun('cat40-h4fix-judge-check', { ...budgetOptionsFrom(argv), estimateUsd: null });
     let complete = false;
-    try { console.log(`graded ${await gradeItems(world, planned().items, out)} items (window ${window})`); complete = true; }
+    try { console.log(`graded ${await gradeItems(world, items, out)} items (window ${window})`); complete = true; }
     finally { run.close({ finish: complete }); guard.uninstall(); }
   } else if (cmd === 'report') {
     const r = checkReport(planned().items, readJsonl<Grade>(join(out, 'grades.jsonl')));

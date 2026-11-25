@@ -85,6 +85,8 @@ describe('h4fix-confirm plan', () => {
         expect(tasks.length).toBe(FULL_WORLDS.includes(w) ? 90 : 10);
         expect(s.argv).not.toContain('--families');
       }
+      expect(worldPlan(w, BUILD, SHA, '2026-11-25', true).some(s => s.id.endsWith('-h4b'))).toBe(false);
+      expect(worldPlan(w, BUILD, SHA, '2026-11-25').filter(s => s.id.endsWith('-h4b')).length).toBe(6);
     }
   });
   test('the halves are disjoint and together are H4-01 to H4-20', () => {

@@ -17,7 +17,7 @@ import { scoreHardTask } from '../../eval/runner/cat40/score-hard.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
 const knobs = validateKnobs(JSON.parse(readFileSync(join(ROOT, 'docs/benchmarks/cat40-hard/knobs.frozen.json'), 'utf8')));
-const world = generateHardWorld(N1_SEED, knobs);
+const world = generateHardWorld(N1_SEED, knobs, { scale: 'large' });
 const dirs: string[] = [];
 const tmp = () => { const d = mkdtempSync(join(tmpdir(), 'h4fix-judge-check-')); dirs.push(d); return d; };
 afterEach(() => { for (const d of dirs.splice(0)) rmSync(d, { recursive: true, force: true }); });
@@ -50,6 +50,7 @@ describe('construction items', () => {
   });
   test('refuses any world but N1', () => {
     expect(() => planItems({ ...world, seed: HARD_SEEDS.calibration }, 1)).toThrow(/N1/);
+    expect(() => planItems({ ...world, scale: undefined }, 1)).toThrow(/scale large/);
   });
 });
 
@@ -86,9 +87,11 @@ describe('gates', () => {
   });
 });
 
-test('run refuses before any request without a paid window or with a budget above the cap', () => {
-  const out = tmp(), wf = join(out, 'world.json');
+test('run refuses before any request without a paid window, with a budget above the cap, without a ledger, or on another world', () => {
+  const out = tmp(), wf = join(out, 'world.json'), other = join(out, 'other.json');
   writeFileSync(wf, JSON.stringify(world));
+  writeFileSync(other, JSON.stringify({ ...world, today: '2000-01-01' }));
+  expect(spawnSync('bun', ['eval/runner/cat40/h4fix-judge-check.ts', 'plan', '--world', wf, '--out', out], { cwd: ROOT, encoding: 'utf8' }).status).toBe(0);
   const env = { ...process.env, ANTHROPIC_API_KEY: '', OPENAI_API_KEY: '', ANTHROPIC_BASE_URL: 'http://127.0.0.1:9', OPENAI_BASE_URL: 'http://127.0.0.1:9' };
   const run = (extra: string[]) => spawnSync('bun', ['eval/runner/cat40/h4fix-judge-check.ts', 'run', '--world', wf, '--out', out, ...extra], { cwd: ROOT, env, encoding: 'utf8' });
   const a = run(['--window-cap-usd', '5', '--budget-usd', '5']);
@@ -96,5 +99,11 @@ test('run refuses before any request without a paid window or with a budget abov
   expect(a.stderr).toMatch(/paid-window/);
   const b = run(['--paid-window', 'u', '--window-cap-usd', '5', '--budget-usd', '6']);
   expect(b.status).toBe(2);
+  const c = run(['--paid-window', 'u', '--window-cap-usd', '5', '--budget-usd', '5']);
+  expect(c.status).toBe(2);
+  expect(c.stderr).toMatch(/budget-ledger/);
+  const d = spawnSync('bun', ['eval/runner/cat40/h4fix-judge-check.ts', 'run', '--world', other, '--out', out, '--paid-window', 'u', '--window-cap-usd', '5', '--budget-usd', '5', '--budget-ledger', join(out, 'l.sqlite')], { cwd: ROOT, env, encoding: 'utf8' });
+  expect(d.status).toBe(2);
+  expect(d.stderr).toMatch(/not the world items.json was planned on/);
   expect(STYLES_FOR['gpt-6.2-sol']).toEqual(['opus']);
 });
