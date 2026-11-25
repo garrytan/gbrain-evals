@@ -2507,108 +2507,7 @@
  },
  {
   "id": "bg1-dev-alias-02:s8_history:0",
-  "question": "In order from earliest, who has been in charge of operations at the company that recycles old tyres?",
-  "answer": "Ines Holm, then Nadia Ferreira, then Ulla Moreau, then Halima Yeboah",
-  "evidence_sessions": [
-   "s006",
-   "s060",
-   "s103",
-   "s115"
-  ],
-  "bg1": {
-   "stratum": "s8_history",
-   "family": "secondary",
-   "form": "paraphrase",
-   "slot": "company-01.ops_lead",
-   "gold_values": [
-    "Ines Holm",
-    "Nadia Ferreira",
-    "Ulla Moreau",
-    "Halima Yeboah"
-   ],
-   "stale_values": [
-    "Bastian Yamada"
-   ],
-   "decoy_values": [],
-   "ordered": true
-  },
-  "subject": {
-   "entity": "company-01",
-   "steps": [
-    {
-     "entity": "company-01",
-     "by": "property:tyres"
-    }
-   ],
-   "description": "the company that recycles old tyres",
-   "terms": [
-    "tyres"
-   ],
-   "resolution_sessions": [
-    "s058",
-    "s132",
-    "s147"
-   ]
-  }
- },
- {
-  "id": "bg1-dev-alias-02:s8_history:1",
-  "question": "In order from earliest, where has the landlord of the person who took a glassblowing course with me lived?",
-  "answer": "Utrecht, then Calgary, then Bologna, then Rotterdam",
-  "evidence_sessions": [
-   "s011",
-   "s062",
-   "s072",
-   "s125"
-  ],
-  "bg1": {
-   "stratum": "s8_history",
-   "family": "secondary",
-   "form": "paraphrase",
-   "slot": "person-01.city",
-   "gold_values": [
-    "Utrecht",
-    "Calgary",
-    "Bologna",
-    "Rotterdam"
-   ],
-   "stale_values": [
-    "Turin"
-   ],
-   "decoy_values": [],
-   "ordered": true
-  },
-  "subject": {
-   "entity": "person-01",
-   "steps": [
-    {
-     "entity": "person-03",
-     "by": "property:glassblowing"
-    },
-    {
-     "entity": "person-01",
-     "by": "relation:landlord"
-    }
-   ],
-   "description": "the landlord of the person who took a glassblowing course with me",
-   "terms": [
-    "glassblowing",
-    "landlord"
-   ],
-   "resolution_sessions": [
-    "s003",
-    "s012",
-    "s027",
-    "s068",
-    "s071",
-    "s094",
-    "s148"
-   ]
-  }
- },
- {
-  "id": "bg1-dev-alias-02:s8_history:2",
-  "question": "List the companies the landlord of the person who took a glassblowing course with me has worked at, oldest first.",
+  "question": "In order from earliest, which employers has the landlord of the person who took a glassblowing course with me had?",
   "answer": "Fernhollow Labs, then Northgate Freight, then Copperleaf Systems, then Quarryhill Materials",
   "evidence_sessions": [
    "s005",
@@ -2619,7 +2518,7 @@
   "bg1": {
    "stratum": "s8_history",
    "family": "secondary",
-   "form": "exact",
+   "form": "paraphrase",
    "slot": "person-01.employer",
    "gold_values": [
     "Fernhollow Labs",
@@ -2656,6 +2555,100 @@
     "s071",
     "s094",
     "s148"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-02:s8_history:1",
+  "question": "In order from earliest, who has run the project commissioned by the company that builds crop-spraying drones?",
+  "answer": "Wanjiru Sokolov, then Ivo Varga, then Hamid Kiplagat",
+  "evidence_sessions": [
+   "s023",
+   "s062",
+   "s134"
+  ],
+  "bg1": {
+   "stratum": "s8_history",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "project-01.lead",
+   "gold_values": [
+    "Wanjiru Sokolov",
+    "Ivo Varga",
+    "Hamid Kiplagat"
+   ],
+   "stale_values": [],
+   "decoy_values": [],
+   "ordered": true
+  },
+  "subject": {
+   "entity": "project-01",
+   "steps": [
+    {
+     "entity": "company-06",
+     "by": "property:drones"
+    },
+    {
+     "entity": "project-01",
+     "by": "relation:commissioned"
+    }
+   ],
+   "description": "the project commissioned by the company that builds crop-spraying drones",
+   "terms": [
+    "drones",
+    "commissioned"
+   ],
+   "resolution_sessions": [
+    "s044",
+    "s052",
+    "s087",
+    "s100",
+    "s129",
+    "s140",
+    "s150"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-02:s8_history:2",
+  "question": "List the cities the company that sells oat milk to cafes has been headquartered in, oldest first.",
+  "answer": "Gdansk, then Montreal, then Zurich",
+  "evidence_sessions": [
+   "s003",
+   "s083",
+   "s111"
+  ],
+  "bg1": {
+   "stratum": "s8_history",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "company-02.hq",
+   "gold_values": [
+    "Gdansk",
+    "Montreal",
+    "Zurich"
+   ],
+   "stale_values": [],
+   "decoy_values": [],
+   "ordered": true
+  },
+  "subject": {
+   "entity": "company-02",
+   "steps": [
+    {
+     "entity": "company-02",
+     "by": "property:oat-milk"
+    }
+   ],
+   "description": "the company that sells oat milk to cafes",
+   "terms": [
+    "oat milk"
+   ],
+   "resolution_sessions": [
+    "s052",
+    "s082",
+    "s098",
+    "s151"
    ]
   }
  },
@@ -2703,65 +2696,60 @@
  },
  {
   "id": "bg1-dev-alias-02:s8_history:4",
-  "question": "In order from earliest, who has run the project doing wayfinding for hospitals?",
-  "answer": "Wanjiru Sokolov, then Ivo Varga, then Hamid Kiplagat",
+  "question": "In order from earliest, who has supplied the project revamping recipe search?",
+  "answer": "Foxglove Cosmetics, then Emberly Energy",
   "evidence_sessions": [
-   "s023",
-   "s062",
-   "s134"
+   "s002",
+   "s110"
   ],
   "bg1": {
    "stratum": "s8_history",
    "family": "secondary",
    "form": "paraphrase",
-   "slot": "project-01.lead",
+   "slot": "project-04.vendor",
    "gold_values": [
-    "Wanjiru Sokolov",
-    "Ivo Varga",
-    "Hamid Kiplagat"
+    "Foxglove Cosmetics",
+    "Emberly Energy"
    ],
    "stale_values": [],
    "decoy_values": [],
    "ordered": true
   },
   "subject": {
-   "entity": "project-01",
+   "entity": "project-04",
    "steps": [
     {
-     "entity": "project-01",
-     "by": "property:wayfinding"
+     "entity": "project-04",
+     "by": "property:recipe"
     }
    ],
-   "description": "the project doing wayfinding for hospitals",
+   "description": "the project revamping recipe search",
    "terms": [
-    "wayfinding"
+    "recipe"
    ],
    "resolution_sessions": [
-    "s087",
-    "s100",
-    "s129",
-    "s150"
+    "s008",
+    "s041",
+    "s135"
    ]
   }
  },
  {
   "id": "bg1-dev-alias-02:s8_history:5",
-  "question": "List the cities the company founded by the person who trained as a falconer has been headquartered in, oldest first.",
-  "answer": "Gdansk, then Montreal, then Zurich",
+  "question": "List the people who have run operations at the company founded by the person who trained as a falconer, oldest first.",
+  "answer": "Petra Lindholm, then Aurelio Adeyemi",
   "evidence_sessions": [
-   "s003",
-   "s083",
-   "s111"
+   "s022",
+   "s107"
   ],
   "bg1": {
    "stratum": "s8_history",
    "family": "secondary",
    "form": "exact",
-   "slot": "company-02.hq",
+   "slot": "company-02.ops_lead",
    "gold_values": [
-    "Gdansk",
-    "Montreal",
-    "Zurich"
+    "Petra Lindholm",
+    "Aurelio Adeyemi"
    ],
    "stale_values": [],
    "decoy_values": [],
@@ -2838,51 +2826,41 @@
  },
  {
   "id": "bg1-dev-alias-02:s8_history:7",
-  "question": "List the people who have run operations at the company founded by the person who trained as a falconer, oldest first.",
-  "answer": "Petra Lindholm, then Aurelio Adeyemi",
+  "question": "List the cities the person who collects rare stamps has been based in, oldest first.",
+  "answer": "Helsinki, then Busan",
   "evidence_sessions": [
-   "s022",
-   "s107"
+   "s016",
+   "s141"
   ],
   "bg1": {
    "stratum": "s8_history",
    "family": "secondary",
    "form": "exact",
-   "slot": "company-02.ops_lead",
+   "slot": "person-02.city",
    "gold_values": [
-    "Petra Lindholm",
-    "Aurelio Adeyemi"
+    "Helsinki",
+    "Busan"
    ],
    "stale_values": [],
    "decoy_values": [],
    "ordered": true
   },
   "subject": {
-   "entity": "company-02",
+   "entity": "person-02",
    "steps": [
     {
-     "entity": "person-03-twin",
-     "by": "property:falconer"
-    },
-    {
-     "entity": "company-02",
-     "by": "relation:founded"
+     "entity": "person-02",
+     "by": "property:stamps"
     }
    ],
-   "description": "the company founded by the person who trained as a falconer",
+   "description": "the person who collects rare stamps",
    "terms": [
-    "falconer",
-    "founded"
+    "stamps"
    ],
    "resolution_sessions": [
-    "s012",
-    "s052",
-    "s082",
-    "s094",
-    "s098",
-    "s129",
-    "s144",
-    "s151"
+    "s070",
+    "s127",
+    "s150"
    ]
   }
  }

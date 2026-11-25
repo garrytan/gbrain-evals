@@ -295,7 +295,7 @@ This file is frozen by the commit that adds it. The registry entry is
 ### Amendment 1 (2026-11-25): questions that describe their subject, at 200,000 tokens, before week 1
 
 Written before any counted week, any mint of set W and any counted gbrain run. It changes the worlds, the pilot and the
-order the pilot runs in. Everything this amendment doesn't name stays as frozen above.
+order the pilot runs in, and its caps. Everything this amendment doesn't name stays as frozen above.
 
 **Why.** The pilot on public development worlds hit the ceiling twice. The grep agent with claude-opus-5-5 scored 0.990 on
 the 200,000-token worlds, and on three 1,000,000-token worlds it answered 192 of 192 questions, so the move to longer worlds
@@ -316,18 +316,25 @@ its oracles, and changes how sessions and questions refer to people, companies, 
   entity (landlord, mentor, former boss, founder, commissioner, counterparty). Property and relation lines sit only in
   sessions that hold no tracked fact.
 - A question never names its subject. It describes it by its property, or in two steps through a relation ("the former
-  boss of the person who did the calligraphy on our wedding invitations"); 13, 11 and 11 of the 64 questions in the three
+  boss of the person who did the calligraphy on our wedding invitations"); 13, 10 and 11 of the 64 questions in the three
   development worlds take two steps.
 - Ground truth stays fixed by construction: the generator knows every alias, so each question's gold and the entity its
-  description picks out come from the plan, never from rendered text.
-- Checks before a world is written: no question shares a distinctive word (one outside the generator's own templates and
-  stopwords) with the text of any of its evidence sessions; every description resolves to exactly one entity through the
-  world's own lines; no alias names two entities. The leak check leaves the templates' words out because each recurs for
-  every entity of its kind, so where only one entity in a world holds a slot of the question's kind, the kind word alone
-  ("offsite", "pilot", "job title") still finds the evidence: 8 of the 192 questions in the three development worlds
-  (the generator's `isolatingWords`), and the stop rule's reading includes them. `eval/custody/bg1/validate.ts` adds the gate `alias_leak` for @3 worlds: a
-  rendered session that names an entity's canonical name outside its introducing line, or an evidence session that holds
-  one of its question's key terms, fails the world.
+  description picks out come from the plan, never from rendered text. The alias worlds carry the gold-audit fixes the
+  extra and long development worlds already have: a withdrawn fact's retraction says the plan is not happening, not only
+  that a report was false, and a history question never asks about a slot with a scheduled change.
+- The generator refuses to plan a world that fails any of these checks (`buildQuestions` and `aliasPlanProblems` in
+  `eval/generators/changing-facts-gen.ts`): a question shares a distinctive word (one outside the generator's own
+  templates and stopwords) with the planned lines of any of its evidence sessions; a description resolves to no entity or
+  to more than one through the world's own lines; an alias names two entities. The leak check leaves the templates' words
+  out because each recurs for every entity of its kind, so where only one entity in a world holds a slot of the
+  question's kind, the kind word alone ("offsite", "piloting", "job title") still finds the evidence: 8 of the 192
+  questions in the three development worlds (the generator's `isolatingWords`), and the stop rule's reading includes
+  them. A question's evidence sessions are the sessions holding its fact; the lines that resolve its description sit in
+  other sessions, so retrieval measured on evidence sessions measures finding the fact, not resolving the subject.
+- `eval/custody/bg1/validate.ts` adds the gate `alias_leak` for @3 worlds: a rendered session that names an entity's
+  canonical name outside its introducing line, or an evidence session that holds one of its question's key terms as a
+  whole phrase, fails the world. It matches a key term of two words only as the phrase, so one of its words alone ("milk"
+  from "oat milk") in a rendered evidence session passes the gate.
 - @3 has only a public phrasing set so far, and a sealed @3 plan refuses until set W's custody inputs are re-cut for it
   (below).
 
@@ -337,20 +344,27 @@ result.
 **Pilot worlds.** The pilot and the judge check run on three new public development worlds of @3,
 `bg1-dev-alias-01` (the pilot) and `bg1-dev-alias-02` and `-03` (the judge check), committed with their plans and questions
 under `eval/data/changing-facts-v1/` and rendered by the custody renderer before the pilot. They replace `bg1-dev-01` to
-`-03` for the pilot, at the counted settings and set BGW's caps
+`-03` for the pilot, at the counted settings and the caps "Money" sets below
 (`bun eval/runner/weekly-line/pilot.ts plan --length alias`).
 
 **Pilot order and the stop rule.** The grep agent goes first, on all three alias worlds: its pilot cell on
 `bg1-dev-alias-01` and the judge check's cell on `-02` and `-03`, 192 questions for each reader. Its claude-opus-5-5
-accuracy is pooled over those 192 answers, weighted by answers, and counts only when both cells finished complete and
-claude-opus-5-5 answered all 192. The other three rows run their pilots only if it pools below 0.95; their campaigns are
-written only from that reading (`pilot.ts campaigns --length alias --grep-cell <dir>...`).
+answers are scored together against the construction labels, not the judges' verdicts: an answer counts as right only
+when it names the question's gold with no stale or decoy value and doesn't hedge (the judge check's gold-settled rule),
+and every other answer, a turn-cap or context-overflow answer included, counts as wrong. So a judge's error or a failed
+judge call can't move the reading across 0.95, and an answer the labels leave unsettled can only lower it. The reading
+counts only when both cells finished complete and claude-opus-5-5's own loop answered each of the 192 questions once; a
+missing or failed answer (a reader error, a budget stop) holds the reading until a resume answers it, and never counts as
+right. Only the two cells of this pilot count. The other three rows run their pilots only if the reading is below 0.95
+and the judge check can draw its sample from the grep agent's answers; their campaigns are written only from that
+reading (`pilot.ts campaigns --length alias --grep-cell <dir>...`).
 
 If the Opus grep agent scores 95% or more on the pilot, the line stops and we publish the grep result.
 
 | Pilot result | What happens |
 |---|---|
-| The grep agent with claude-opus-5-5 pools at 0.95 or more | The line stops before week 1 and no other row runs. We publish the grep result as a findings write-up, with the named-subject results at 200,000 and 1,000,000 tokens beside it, and commit the long and alias worlds as public development worlds so anyone can reproduce it (the re-plan's option 4) |
+| The grep agent with claude-opus-5-5 scores 0.95 or more | The line stops before week 1 and no other row runs. We publish the grep result as a findings write-up, with the named-subject results at 200,000 and 1,000,000 tokens beside it, and commit the long and alias worlds as public development worlds so anyone can reproduce it (the re-plan's option 4) |
+| Below 0.95, and the judge check can't draw at least 40 answers each judge called wrong from the grep agent's answers | The other three rows stay held and the reading goes back to the line's owner, who decides before any of them runs. No claim is published from the pilot |
 | Below 0.95, and gbrain's pilot accuracy is within 3 points of the grep agent's on `bg1-dev-alias-01` (inside the level band a block resolves) | The line runs as frozen above, from launch amendment A. One world can't give a verdict, so the first block decides |
 | Below 0.95, and gbrain is more than 3 points behind the grep agent on the pilot world | The line runs as frozen above. Because the world is public, its per-kind rows go to gbrain's maintainers at once as an advisory issue naming retrieval or reading, ahead of the first block. No claim is published from the pilot |
 | Below 0.95, and gbrain is more than 3 points ahead of the grep agent on the pilot world | The line runs as frozen above. No claim is published until a block reads gbrain ahead |
@@ -361,7 +375,15 @@ Either way the pilot publishes no verdict of its own, and a row that fails its R
 **Judge check.** Unchanged in its gates: at least 100 labelled grep-agent answers per judge, at least 40% of them judged
 wrong, and a kappa of at least 0.6. Its labels keep the construction rule: the oracle gold labels an answer wherever it
 settles it, and gemini-3.8-flash labels the rest, reported as model-labelled. Harder questions should also give the check
-the wrong answers the named-subject pilot was short of.
+the wrong answers the named-subject pilot was short of; if they don't, the other rows stay held, as the table says.
+
+**Money (2026-11-25).** One paid window covers the alias worlds' mint and both stages of the pilot: the grep agent's
+stage (its pilot cell, the judge check's cell and the labelling pass) and the other rows' stage. The per-ledger caps are
+resized for that window from each stage's expected spend, in place of a tenth of each row's block budget, so the mint
+and both stages together fit inside the window's cap (`WEEKLY_ALIAS_PILOT_MONEY` in
+`eval/runner/q1/cells/weekly-line.ts`). `pilot.ts campaigns` refuses either stage unless the mint's and both stages'
+caps together fit the window's cap, and the dry run (`pilot.ts plan --length alias`) prints each ledger's cap. A cap
+reached pauses its run for an extension, as the line's other caps do.
 
 **Readers and judges.** Unchanged: claude-opus-5-5 and particle-1 read every row; gpt-6-astra judges claude-opus-5-5's
 answers and claude-opus-5-5 judges particle-1's.

@@ -3,6 +3,7 @@
  "generator": "changing-facts-gen@3",
  "id": "bg1-dev-alias-01",
  "seed": "bg1-dev-alias-seed-v1:bg1-dev-alias-01",
+ "gold_audit": true,
  "world_end_weekday": "Sunday",
  "entities": [
   {
@@ -3489,7 +3490,7 @@
      ]
     },
     {
-     "text": "Please ignore the report that the outfit with the green logo agreed to merge with Goldcrest Insurance; it turned out to be false.",
+     "text": "Forget what I said earlier about how the outfit with the green logo agreed to merge with Goldcrest Insurance; that was only a rumour and it is not happening.",
      "slot": "company-02.merger",
      "event": "company-02.merger#1",
      "values": [
@@ -6773,7 +6774,7 @@
      ]
     },
     {
-     "text": "Please ignore the report that Lowmoor is holding its team offsite in Galway; it turned out to be false.",
+     "text": "Forget what I said earlier about how Lowmoor is holding its team offsite in Galway; that was only a rumour and it is not happening.",
      "slot": "company-06.offsite",
      "event": "company-06.offsite#1",
      "values": [

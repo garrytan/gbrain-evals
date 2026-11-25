@@ -3,6 +3,7 @@
  "generator": "changing-facts-gen@3",
  "id": "bg1-dev-alias-02",
  "seed": "bg1-dev-alias-seed-v1:bg1-dev-alias-02",
+ "gold_audit": true,
  "world_end_weekday": "Sunday",
  "entities": [
   {
@@ -6806,7 +6807,7 @@
      ]
     },
     {
-     "text": "Please ignore the report that the family firm is merging with Driftmark Software; it turned out to be false.",
+     "text": "Forget what I said earlier about how the family firm is merging with Driftmark Software; that was only a rumour and it is not happening.",
      "slot": "company-06.merger",
      "event": "company-06.merger#2",
      "values": [

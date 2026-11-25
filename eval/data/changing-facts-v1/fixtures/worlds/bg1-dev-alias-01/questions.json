@@ -2680,179 +2680,6 @@
  },
  {
   "id": "bg1-dev-alias-01:s8_history:3",
-  "question": "List the cities the company that makes ice cream has been headquartered in, oldest first.",
-  "answer": "Krakow, then Valencia, then Gothenburg",
-  "evidence_sessions": [
-   "s006",
-   "s072",
-   "s108"
-  ],
-  "bg1": {
-   "stratum": "s8_history",
-   "family": "secondary",
-   "form": "exact",
-   "slot": "company-01.hq",
-   "gold_values": [
-    "Krakow",
-    "Valencia",
-    "Gothenburg"
-   ],
-   "stale_values": [
-    "Denver"
-   ],
-   "decoy_values": [],
-   "ordered": true
-  },
-  "subject": {
-   "entity": "company-01",
-   "steps": [
-    {
-     "entity": "company-01",
-     "by": "property:ice-cream"
-    }
-   ],
-   "description": "the company that makes ice cream",
-   "terms": [
-    "ice cream"
-   ],
-   "resolution_sessions": [
-    "s028",
-    "s048",
-    "s094",
-    "s125"
-   ]
-  }
- },
- {
-  "id": "bg1-dev-alias-01:s8_history:4",
-  "question": "In order from earliest, where has the person who did the calligraphy on our wedding invitations lived?",
-  "answer": "Edinburgh, then Porto, then Utrecht",
-  "evidence_sessions": [
-   "s009",
-   "s062",
-   "s123"
-  ],
-  "bg1": {
-   "stratum": "s8_history",
-   "family": "secondary",
-   "form": "paraphrase",
-   "slot": "person-03.city",
-   "gold_values": [
-    "Edinburgh",
-    "Porto",
-    "Utrecht"
-   ],
-   "stale_values": [
-    "Helsinki"
-   ],
-   "decoy_values": [
-    "Prague"
-   ],
-   "ordered": true
-  },
-  "subject": {
-   "entity": "person-03",
-   "steps": [
-    {
-     "entity": "person-03",
-     "by": "property:calligraphy"
-    }
-   ],
-   "description": "the person who did the calligraphy on our wedding invitations",
-   "terms": [
-    "calligraphy"
-   ],
-   "resolution_sessions": [
-    "s098",
-    "s125",
-    "s128"
-   ]
-  }
- },
- {
-  "id": "bg1-dev-alias-01:s8_history:5",
-  "question": "In order from earliest, who has been in charge of operations at the company that sells oat milk to cafes?",
-  "answer": "Kasimir Raman, then Vera Dimitrov",
-  "evidence_sessions": [
-   "s007",
-   "s096"
-  ],
-  "bg1": {
-   "stratum": "s8_history",
-   "family": "secondary",
-   "form": "paraphrase",
-   "slot": "company-04.ops_lead",
-   "gold_values": [
-    "Kasimir Raman",
-    "Vera Dimitrov"
-   ],
-   "stale_values": [],
-   "decoy_values": [],
-   "ordered": true
-  },
-  "subject": {
-   "entity": "company-04",
-   "steps": [
-    {
-     "entity": "company-04",
-     "by": "property:oat-milk"
-    }
-   ],
-   "description": "the company that sells oat milk to cafes",
-   "terms": [
-    "oat milk"
-   ],
-   "resolution_sessions": [
-    "s138",
-    "s140",
-    "s143"
-   ]
-  }
- },
- {
-  "id": "bg1-dev-alias-01:s8_history:6",
-  "question": "List the vendors the project automating library lending has used, oldest first.",
-  "answer": "Willowmere Hotels, then Rookwood Design",
-  "evidence_sessions": [
-   "s010",
-   "s135"
-  ],
-  "bg1": {
-   "stratum": "s8_history",
-   "family": "secondary",
-   "form": "exact",
-   "slot": "project-03.vendor",
-   "gold_values": [
-    "Willowmere Hotels",
-    "Rookwood Design"
-   ],
-   "stale_values": [],
-   "decoy_values": [
-    "Brightline Analytics"
-   ],
-   "ordered": true
-  },
-  "subject": {
-   "entity": "project-03",
-   "steps": [
-    {
-     "entity": "project-03",
-     "by": "property:library"
-    }
-   ],
-   "description": "the project automating library lending",
-   "terms": [
-    "library"
-   ],
-   "resolution_sessions": [
-    "s002",
-    "s109",
-    "s112"
-   ]
-  }
- },
- {
-  "id": "bg1-dev-alias-01:s8_history:7",
   "question": "List the cities the person who plays the bagpipes has been based in, oldest first.",
   "answer": "Ghent, then Bologna",
   "evidence_sessions": [
@@ -2888,6 +2715,170 @@
     "s004",
     "s015",
     "s054"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s8_history:4",
+  "question": "In order from earliest, who has supplied the project automating library lending?",
+  "answer": "Willowmere Hotels, then Rookwood Design",
+  "evidence_sessions": [
+   "s010",
+   "s135"
+  ],
+  "bg1": {
+   "stratum": "s8_history",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "project-03.vendor",
+   "gold_values": [
+    "Willowmere Hotels",
+    "Rookwood Design"
+   ],
+   "stale_values": [],
+   "decoy_values": [
+    "Brightline Analytics"
+   ],
+   "ordered": true
+  },
+  "subject": {
+   "entity": "project-03",
+   "steps": [
+    {
+     "entity": "project-03",
+     "by": "property:library"
+    }
+   ],
+   "description": "the project automating library lending",
+   "terms": [
+    "library"
+   ],
+   "resolution_sessions": [
+    "s002",
+    "s109",
+    "s112"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s8_history:5",
+  "question": "In order from earliest, who has supplied the project adding braille labels to our packaging?",
+  "answer": "Larkspur Foods, then Umberfield Mining",
+  "evidence_sessions": [
+   "s027",
+   "s101"
+  ],
+  "bg1": {
+   "stratum": "s8_history",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "project-02.vendor",
+   "gold_values": [
+    "Larkspur Foods",
+    "Umberfield Mining"
+   ],
+   "stale_values": [],
+   "decoy_values": [],
+   "ordered": true
+  },
+  "subject": {
+   "entity": "project-02",
+   "steps": [
+    {
+     "entity": "project-02",
+     "by": "property:braille"
+    }
+   ],
+   "description": "the project adding braille labels to our packaging",
+   "terms": [
+    "braille"
+   ],
+   "resolution_sessions": [
+    "s067",
+    "s075",
+    "s114",
+    "s146"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s8_history:6",
+  "question": "List the people who have run operations at the company that makes ice cream, oldest first.",
+  "answer": "Cosima Zoric, then Saoirse Wojcik",
+  "evidence_sessions": [
+   "s026",
+   "s114"
+  ],
+  "bg1": {
+   "stratum": "s8_history",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "company-01.ops_lead",
+   "gold_values": [
+    "Cosima Zoric",
+    "Saoirse Wojcik"
+   ],
+   "stale_values": [],
+   "decoy_values": [],
+   "ordered": true
+  },
+  "subject": {
+   "entity": "company-01",
+   "steps": [
+    {
+     "entity": "company-01",
+     "by": "property:ice-cream"
+    }
+   ],
+   "description": "the company that makes ice cream",
+   "terms": [
+    "ice cream"
+   ],
+   "resolution_sessions": [
+    "s028",
+    "s048",
+    "s094",
+    "s125"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-01:s8_history:7",
+  "question": "List the companies the person who did the calligraphy on our wedding invitations has worked at, oldest first.",
+  "answer": "Kinglet Telecom, then Elmstead Clinics",
+  "evidence_sessions": [
+   "s020",
+   "s138"
+  ],
+  "bg1": {
+   "stratum": "s8_history",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "person-03.employer",
+   "gold_values": [
+    "Kinglet Telecom",
+    "Elmstead Clinics"
+   ],
+   "stale_values": [],
+   "decoy_values": [],
+   "ordered": true
+  },
+  "subject": {
+   "entity": "person-03",
+   "steps": [
+    {
+     "entity": "person-03",
+     "by": "property:calligraphy"
+    }
+   ],
+   "description": "the person who did the calligraphy on our wedding invitations",
+   "terms": [
+    "calligraphy"
+   ],
+   "resolution_sessions": [
+    "s098",
+    "s125",
+    "s128"
    ]
   }
  }

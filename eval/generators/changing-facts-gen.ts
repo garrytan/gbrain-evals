@@ -44,7 +44,7 @@
  * worlds, has a seed line and phrasing set of its own (*.bgw-seed, *.bgw-phrasing.json) and seeds its worlds from
  * "bgw/world/<slot>" (bgwWorldSeed).
  *
- * Gold-audit fixes (stage 1, Amendment 4), on sealed worlds and the extra dev worlds, never on stage 1's three dev
+ * Gold-audit fixes (stage 1, Amendment 4), on sealed worlds and the extra, long and alias dev worlds, never on stage 1's three dev
  * worlds, so those still match a fresh generation: an audited retraction uses only retract templates that say the plan
  * is not happening (one of NONE_FORMS), because "the report was false" alone does not support the s5 gold; and an
  * audited s8 question never asks about a slot with a scheduled change, because a value due after the world end is
@@ -1294,6 +1294,15 @@ export function buildQuestions(plan: WorldPlan, phrasing: Phrasing = PUBLIC_PHRA
     const form = f8.shift()!;
     push('s8_history', slot, form, ask(slot, 'history', form), slot.intent.history);
   }
+  if (alias) {
+    const text = new Map(plan.sessions.map(x => [x.id, x.lines.map(l => l.text).join('\n')]));
+    for (const q of out) {
+      const shared = questionLeaks(q, id => text.get(id) ?? '');
+      if (shared.length) throw new PlanError(`${q.id} shares ${shared.join(', ')} with its evidence sessions`);
+      const found = resolveSubject(plan, q.subject!.steps);
+      if (found.length !== 1 || found[0] !== q.subject!.entity) throw new PlanError(`${q.id}: its description fits ${found.join(' and ') || 'no entity'}, not only ${q.subject!.entity}`);
+    }
+  }
   return out;
 }
 
@@ -1640,8 +1649,8 @@ export function renderBriefs(plan: WorldPlan, worldTokensTarget = profileOf(plan
 
 const json = (v: unknown) => JSON.stringify(v, null, 1) + '\n';
 
-/** A public dev world's plan from its public seed at its profile; an extra or long dev world's with the gold-audit fixes. */
-export const devWorldPlan = (id: string) => planWorld(id, BG1_DEV_SEEDS[id], { publicSeed: true, goldAudit: BG1_DEV_EXTRA_CONVERSATIONS.includes(id) || BG1_DEV_LONG_CONVERSATIONS.includes(id), profile: devProfileOf(id) });
+/** A public dev world's plan from its public seed at its profile; an extra, long or alias dev world's with the gold-audit fixes. */
+export const devWorldPlan = (id: string) => planWorld(id, BG1_DEV_SEEDS[id], { publicSeed: true, goldAudit: BG1_DEV_EXTRA_CONVERSATIONS.includes(id) || BG1_DEV_LONG_CONVERSATIONS.includes(id) || BG1_DEV_ALIAS_CONVERSATIONS.includes(id), profile: devProfileOf(id) });
 
 /**
  * The long profile's keyless fixture: a public plan at changing-facts-gen@2 with the sealed worlds' gold-audit fixes, never

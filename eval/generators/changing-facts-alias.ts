@@ -15,7 +15,8 @@
  * describing words never share a session with its evidence.
  *
  * All names are fictional. Every pool entry names its key terms: the words that pick the entity out, which no fact
- * line, alias or template may use (the planner checks it, and changing-facts-alias-checks.ts checks it again).
+ * line, alias or template may use (checkPlan checks it through aliasPlanProblems, and buildQuestions refuses a question
+ * that shares a distinctive word with its evidence or whose description fits more than one entity).
  */
 import type { EntityType } from './changing-facts-gen.ts';
 

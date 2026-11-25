@@ -3,6 +3,7 @@
  "generator": "changing-facts-gen@3",
  "id": "bg1-dev-alias-03",
  "seed": "bg1-dev-alias-seed-v1:bg1-dev-alias-03",
+ "gold_audit": true,
  "world_end_weekday": "Sunday",
  "entities": [
   {

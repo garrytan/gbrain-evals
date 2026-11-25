@@ -2562,49 +2562,46 @@
  },
  {
   "id": "bg1-dev-alias-03:s8_history:1",
-  "question": "In order from earliest, where has the person who built a telescope in the garage lived?",
-  "answer": "Accra, then Vilnius, then Malmo, then Seville",
+  "question": "In order from earliest, which employers has the person who competes in archery had?",
+  "answer": "Oakhaven Health, then Saltmarsh Marine, then Cinderford Steel",
   "evidence_sessions": [
-   "s017",
-   "s061",
-   "s074",
-   "s115"
+   "s003",
+   "s046",
+   "s125"
   ],
   "bg1": {
    "stratum": "s8_history",
    "family": "secondary",
    "form": "paraphrase",
-   "slot": "person-01.city",
+   "slot": "person-02.employer",
    "gold_values": [
-    "Accra",
-    "Vilnius",
-    "Malmo",
-    "Seville"
+    "Oakhaven Health",
+    "Saltmarsh Marine",
+    "Cinderford Steel"
    ],
-   "stale_values": [
-    "Utrecht"
-   ],
+   "stale_values": [],
    "decoy_values": [
-    "Helsinki"
+    "Larkspur Foods"
    ],
    "ordered": true
   },
   "subject": {
-   "entity": "person-01",
+   "entity": "person-02",
    "steps": [
     {
-     "entity": "person-01",
-     "by": "property:telescope"
+     "entity": "person-02",
+     "by": "property:archery"
     }
    ],
-   "description": "the person who built a telescope in the garage",
+   "description": "the person who competes in archery",
    "terms": [
-    "telescope"
+    "archery"
    ],
    "resolution_sessions": [
-    "s044",
-    "s071",
-    "s132"
+    "s002",
+    "s118",
+    "s144",
+    "s145"
    ]
   }
  },
@@ -2694,46 +2691,41 @@
  },
  {
   "id": "bg1-dev-alias-03:s8_history:4",
-  "question": "In order from earliest, which employers has the person who competes in archery had?",
-  "answer": "Oakhaven Health, then Saltmarsh Marine, then Cinderford Steel",
+  "question": "In order from earliest, who has been in charge of operations at the company that makes hearing aids?",
+  "answer": "Jonah Pires, then Zofia Uddin",
   "evidence_sessions": [
-   "s003",
-   "s046",
-   "s125"
+   "s011",
+   "s110"
   ],
   "bg1": {
    "stratum": "s8_history",
    "family": "secondary",
    "form": "paraphrase",
-   "slot": "person-02.employer",
+   "slot": "company-03.ops_lead",
    "gold_values": [
-    "Oakhaven Health",
-    "Saltmarsh Marine",
-    "Cinderford Steel"
+    "Jonah Pires",
+    "Zofia Uddin"
    ],
    "stale_values": [],
-   "decoy_values": [
-    "Larkspur Foods"
-   ],
+   "decoy_values": [],
    "ordered": true
   },
   "subject": {
-   "entity": "person-02",
+   "entity": "company-03",
    "steps": [
     {
-     "entity": "person-02",
-     "by": "property:archery"
+     "entity": "company-03",
+     "by": "property:hearing-aids"
     }
    ],
-   "description": "the person who competes in archery",
+   "description": "the company that makes hearing aids",
    "terms": [
-    "archery"
+    "hearing aids"
    ],
    "resolution_sessions": [
-    "s002",
-    "s118",
-    "s144",
-    "s145"
+    "s046",
+    "s084",
+    "s096"
    ]
   }
  },
@@ -2790,85 +2782,82 @@
  },
  {
   "id": "bg1-dev-alias-03:s8_history:6",
-  "question": "List the people who have led the project automating library lending, oldest first.",
-  "answer": "Aurelio Raman, then Theo Dimitrov",
+  "question": "List the companies the person who talked me into my first triathlon has worked at, oldest first.",
+  "answer": "Tarnwood Logistics, then Bramblecote Bakery",
   "evidence_sessions": [
-   "s024",
-   "s140"
+   "s003",
+   "s118"
   ],
   "bg1": {
    "stratum": "s8_history",
    "family": "secondary",
    "form": "exact",
-   "slot": "project-01.lead",
+   "slot": "person-03.employer",
    "gold_values": [
-    "Aurelio Raman",
-    "Theo Dimitrov"
-   ],
-   "stale_values": [
-    "Vera Iqbal"
-   ],
-   "decoy_values": [
-    "Ximena Yeboah"
-   ],
-   "ordered": true
-  },
-  "subject": {
-   "entity": "project-01",
-   "steps": [
-    {
-     "entity": "project-01",
-     "by": "property:library"
-    }
-   ],
-   "description": "the project automating library lending",
-   "terms": [
-    "library"
-   ],
-   "resolution_sessions": [
-    "s063",
-    "s142",
-    "s145"
-   ]
-  }
- },
- {
-  "id": "bg1-dev-alias-03:s8_history:7",
-  "question": "List the people who have run operations at the company that makes hearing aids, oldest first.",
-  "answer": "Jonah Pires, then Zofia Uddin",
-  "evidence_sessions": [
-   "s011",
-   "s110"
-  ],
-  "bg1": {
-   "stratum": "s8_history",
-   "family": "secondary",
-   "form": "exact",
-   "slot": "company-03.ops_lead",
-   "gold_values": [
-    "Jonah Pires",
-    "Zofia Uddin"
+    "Tarnwood Logistics",
+    "Bramblecote Bakery"
    ],
    "stale_values": [],
    "decoy_values": [],
    "ordered": true
   },
   "subject": {
-   "entity": "company-03",
+   "entity": "person-03",
    "steps": [
     {
-     "entity": "company-03",
-     "by": "property:hearing-aids"
+     "entity": "person-03",
+     "by": "property:triathlon"
     }
    ],
-   "description": "the company that makes hearing aids",
+   "description": "the person who talked me into my first triathlon",
    "terms": [
-    "hearing aids"
+    "triathlon"
    ],
    "resolution_sessions": [
+    "s033",
+    "s048",
+    "s103"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-alias-03:s8_history:7",
+  "question": "List the vendors the project covering car parks with solar canopies has used, oldest first.",
+  "answer": "Inkberry Publishing, then Pinecrest Robotics",
+  "evidence_sessions": [
+   "s006",
+   "s134"
+  ],
+  "bg1": {
+   "stratum": "s8_history",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "project-03.vendor",
+   "gold_values": [
+    "Inkberry Publishing",
+    "Pinecrest Robotics"
+   ],
+   "stale_values": [],
+   "decoy_values": [],
+   "ordered": true
+  },
+  "subject": {
+   "entity": "project-03",
+   "steps": [
+    {
+     "entity": "project-03",
+     "by": "property:solar"
+    }
+   ],
+   "description": "the project covering car parks with solar canopies",
+   "terms": [
+    "solar"
+   ],
+   "resolution_sessions": [
+    "s029",
     "s046",
-    "s084",
-    "s096"
+    "s077",
+    "s153"
    ]
   }
  }
