@@ -24,6 +24,10 @@
     "keyless-citation-one": {
       "sha256": "e82931c9281ff6eb5b60420d3ccf4ff973b1cf015a7f765f4194683bd8de9c4d",
       "bytes": 460657
+    },
+    "rescore": {
+      "sha256": "a9a178398cbf66202b9dfcc91a11b2dbcfd6ae2dfb3bd144956e6f7098127eb4",
+      "bytes": 2449725
     }
   }
 }
