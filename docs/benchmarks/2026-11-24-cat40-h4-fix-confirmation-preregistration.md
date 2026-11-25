@@ -277,6 +277,24 @@ gbrain's own provider models on the build (embedding pin, reranker, query expans
 counts; the judge check's result; model freshness; slot receipts and served hashes per arm; the oracle gate; pilots;
 the VM names and ledger run ids.
 
+### Judge check (2026-11-25)
+
+Run with `eval/runner/cat40/h4fix-judge-check.ts` at harness commit `ed68e3cbc26b56aa2fc106d084ffdfd97eb0040f` on public
+world N1 (`--scale large`, world digest `647d6123621842a5b43ec7291e94b440e18bd03bb0209f6b94c46d36cd5f52ac`, as recorded in `items.json`), plan seed 1, inside the granted
+window, on its own ledger. Labels are construction labels: each answer is a rule template filled with the task's
+accepted or listed-wrong values, account names and evidence ids, and the deterministic scorer passed every good answer
+and failed every bad one. No model wrote or labelled an item. The "answer styles" are those templates (numbered notes
+naming each account for Opus, one terse note for GPT-6.2 Sol, no notes for particle-1), not reader output, and errors
+are reported per style rather than per arm.
+
+| Judge | Grades rows of | Items (good / bad) | Unparseable | Kappa | Bad caught | Good flagged | Result |
+|---|---|---|---|---|---|---|---|
+| `gpt-6.2-sol` | claude-opus-5-5 | 100 (50 / 50) | 0 | 0.96 | 50 of 50 | 2 of 50 | pass |
+| `claude-opus-5-5` | gpt-6.2-sol, particle-1 | 100 (50 / 50) | 0 | 0.98 | 50 of 50 | 1 of 50 (particle-1 style) | pass |
+
+Both judges pass every gate (kappa at least 0.6, at least 40 per class, at most 1% unparseable), so counted cells may
+use them.
+
 ## Amendments
 
 ### 2026-11-25: launch gate met; section delivery counted where the setting fired; gap wording precedence
