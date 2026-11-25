@@ -225,8 +225,9 @@ def claims(worlds, arm, model, tasks=None):
         return None
     bad = [int(r['claims'].get('unsupported', 0)) + int(r['claims'].get('contradicted', 0)) for r in rows]
     contra = [int(r['claims'].get('contradicted', 0)) for r in rows]
-    return {'answers_judged': len(rows), 'contradicted_or_unsupported_per_answer': round(sum(bad) / len(rows), 3),
-            'contradicted_per_answer_unvalidated': round(sum(contra) / len(rows), 3)}
+    return {'answers_judged': len(rows), 'answers_flagged_share': round(sum(1 for b in bad if b) / len(rows), 3),
+            'descriptive_not_rule_checked': {'contradicted_or_unsupported_per_answer': round(sum(bad) / len(rows), 3),
+                                             'contradicted_per_answer': round(sum(contra) / len(rows), 3)}}
 
 
 def costs(worlds, cost):

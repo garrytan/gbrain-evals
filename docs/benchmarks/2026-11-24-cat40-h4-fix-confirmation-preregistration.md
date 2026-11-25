@@ -299,6 +299,37 @@ from the preregistration's final review.
   distinguishable from files". The registry's decision rows now list "behind" and "not distinguishable" separately, as
   the outcome table does.
 
+### 2026-11-25: S3 to S8 minted; claims endpoint narrowed to what the construction check decides
+
+Made after the six seeds were drawn and before any world was generated or any cell ran, on the results branch.
+
+- **Worlds S3 to S8 minted.** Six seeds were drawn with `od` on the seed owner's machine, as for S1 and S2, into
+  owner custody (mode 600, never printed, never committed, never on Capy Drive), from a temporary gbrain-evals checkout
+  at harness commit `de1be97722f80a2435b23b70927f4c75233740c5` that was removed afterwards. None of the six is a fixed
+  seed of this or the earlier plans or a test seed, and they are distinct; none needed redrawing. Each world's digest
+  was recorded with `--digest-only` (`hard-sealed-v2`, `--scale large`, frozen knobs, knob digest
+  `37a16085e0fbf2e92072b2e7cf00468d43451dd4fb35bb1232ebbf79d3027434`, matching the freeze). All six passed the
+  generator's own checks, so no seed was replaced (failures: 0).
+
+  | World | 50k world digest | Entities | Documents | Tasks |
+  |---|---|---|---|---|
+  | S3 | `e8486afeebb4a635a4b7fa63d67da1d74370368dabe2dca42204d14adbf0816a` | 2,870 | 55,607 | 100 |
+  | S4 | `5f768650070dcf1a030e4ef8d456b0669f35b463805cf9302d007a2ec4688aa4` | 2,882 | 55,840 | 100 |
+  | S5 | `08b231d8865c1d9ab214cafcddbce2b6688bcb48563461ccc55dc25e160646cf` | 2,887 | 56,070 | 100 |
+  | S6 | `eaf1d655181217ba8e319d7507e719315234f2136a0a120796124c91533392a5` | 2,883 | 55,959 | 100 |
+  | S7 | `1c247e010f70451be45a1c728c55453137ae8066d1001bcb99ccab824035241d` | 2,881 | 55,665 | 100 |
+  | S8 | `8c67a412a94c0ad071a509adc0365616449621d6768b35019f2b07b406bf23dc` | 2,874 | 55,608 | 100 |
+
+  Each world is generated later, on the seed owner's machine, with the same command without `--digest-only`; its
+  custody VM checks this digest and the world file's SHA-256 before any slot is built. The world files' SHA-256 and H4
+  variant counts are recorded under "Recorded before cells" when they exist.
+- **Claims endpoint narrowed.** The judge check labels each constructed answer good or bad by how it was built, a rule
+  with no model in the chain, so it can only vouch for the judge's answer-level reading. Secondary 7 therefore counts
+  one measure: the share of answers the claims judge flags with at least one contradicted or unsupported claim, per
+  arm and reader. Claim counts per answer and contradicted claims alone are reported beside it as descriptive and
+  labelled "not rule-checked". The judge check itself is unchanged and still gates every counted cell. No decision row
+  changes; every success endpoint is scored by the deterministic scorer.
+
 ## Disclosures
 
 gbrain is Garry Tan's own project. Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which

@@ -214,6 +214,11 @@ describe('h4fix_analysis.py', () => {
     test('conditional power is symmetric between a gain and harm', () => {
       expect(py('round(a.conditional_power(1.0, se_interim=8.0), 6) == round(a.conditional_power(-(-1.0), se_interim=8.0), 6), round(a.conditional_power(0.0, se_interim=12.9), 3)')).toBe('True 0.032');
     });
+    test('claims count only the rule-checked reading: the share of answers flagged; per-claim counts stay descriptive (2026-11-25 ruling)', () => {
+      const w = "{'S3': {('fs', 'm', 't1'): {1: {'claims': {'unsupported': 3, 'contradicted': 1}}}, ('fs', 'm', 't2'): {1: {'claims': {'supported': 2}}}}}";
+      expect(py(`__import__('json').dumps(a.claims(${w}, 'fs', 'm'), sort_keys=True)`)).toBe(
+        '{"answers_flagged_share": 0.5, "answers_judged": 2, "descriptive_not_rule_checked": {"contradicted_or_unsupported_per_answer": 2.0, "contradicted_per_answer": 0.5}}');
+    });
   });
 
   test('transcript counts separate setting-driven section delivery from units the agent asked for', () => {
