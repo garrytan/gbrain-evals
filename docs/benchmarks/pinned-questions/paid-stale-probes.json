@@ -1,0 +1,3749 @@
+{
+  "category": "pinned-questions-paid",
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 135,
+  "n_scored": 135,
+  "errors": [],
+  "publishable": true,
+  "gbrain_version": "0.60.769.0",
+  "gbrain_pin": "github:garrytan/gbrain#38831bb696139024923e9bc43e3da0d7993951e9",
+  "git_head": "0c7c4dbb5ea76bd3076784cf1efc6eea4f5669cb",
+  "dirty": false,
+  "resolved_config": {
+    "mode": "paid",
+    "stage": "stale-probes",
+    "gate": "report-only",
+    "models": [
+      {
+        "model": "anthropic:claude-opus-5-5",
+        "role": "model under test"
+      },
+      {
+        "model": "particle:particle-1",
+        "role": "model under test"
+      },
+      {
+        "model": "openai:gpt-6.2-sol",
+        "role": "model under test"
+      },
+      {
+        "model": "openai:gpt-6.2-astra",
+        "role": "judge",
+        "grades": [
+          "anthropic:claude-opus-5-5",
+          "particle:particle-1"
+        ]
+      },
+      {
+        "model": "anthropic:claude-opus-5-5",
+        "role": "judge",
+        "grades": [
+          "openai:gpt-6.2-sol"
+        ]
+      }
+    ],
+    "judge": {
+      "prompt_sha256": "992233441a979264fb6ce72e98eb4948aedd0dd3efae40f188b8361c3ac655b0",
+      "max_tokens": 8192,
+      "temperature_sent": null,
+      "route": "gbrain gateway chat, allowFallback false",
+      "retries": "one retry on unparseable output"
+    },
+    "grading": "each judge-check row whose change altered a claim: its first answer, written before the change, judged by the row's judge against the key after the change, beside its rule label against that key; an answer with an ambiguous rule label is not sent to the judge. No model under test is asked anything.",
+    "verdict": "the judge check over the judge-check rows and these probes together: every judge's kappa against the rule labels at least 0.6 on at least 100 outputs",
+    "judge_check_receipt_sha256": "9bc99103e79211b7b53d5e6e669834f3b4f660193d2ddd5d565d97e206815533",
+    "runner_source_sha256": "31abc005ed4499c298778cf94f39af3f4fce31376b4cc328c6d253e4b2f373c7",
+    "gbrain_overlay": null
+  },
+  "hashes": {
+    "ledger_seed_21": "87425b5d2ae14a4b20794156388cdab3421998c1f89d99a4c9b49796b7097b11",
+    "ledger_seed_22": "def281aa87c5a533a1538a8bd758dec75fc77b949278ab1319744533078869a2",
+    "ledger_seed_23": "aea1a09f1b9fe5f128e456e8080c6a8231e9e7396b046e4951dd2ef6322db8ea"
+  },
+  "started_at": "2026-11-24T22:47:30.230Z",
+  "finished_at": "2026-11-24T22:50:55.165Z",
+  "tokens": {
+    "input": 60942,
+    "output": 3780
+  },
+  "summary": {
+    "judge_agreement": {
+      "openai:gpt-6.2-astra": {
+        "n": 338,
+        "excluded_ambiguous": 40,
+        "excluded_no_judge": 0,
+        "both": 247,
+        "judge_only": 0,
+        "rule_only": 1,
+        "neither": 90,
+        "agreement": 0.9970414201183432,
+        "kappa": 0.9924550203134068
+      },
+      "anthropic:claude-opus-5-5": {
+        "n": 189,
+        "excluded_ambiguous": 0,
+        "excluded_no_judge": 0,
+        "both": 143,
+        "judge_only": 0,
+        "rule_only": 1,
+        "neither": 45,
+        "agreement": 0.9947089947089947,
+        "kappa": 0.9855272226050997
+      }
+    },
+    "judge_agreement_by_model": {
+      "anthropic:claude-opus-5-5": {
+        "n": 162,
+        "excluded_ambiguous": 27,
+        "excluded_no_judge": 0,
+        "both": 117,
+        "judge_only": 0,
+        "rule_only": 0,
+        "neither": 45,
+        "agreement": 1,
+        "kappa": 1
+      },
+      "particle:particle-1": {
+        "n": 176,
+        "excluded_ambiguous": 13,
+        "excluded_no_judge": 0,
+        "both": 130,
+        "judge_only": 0,
+        "rule_only": 1,
+        "neither": 45,
+        "agreement": 0.9943181818181818,
+        "kappa": 0.9851801953519702
+      },
+      "openai:gpt-6.2-sol": {
+        "n": 189,
+        "excluded_ambiguous": 0,
+        "excluded_no_judge": 0,
+        "both": 143,
+        "judge_only": 0,
+        "rule_only": 1,
+        "neither": 45,
+        "agreement": 0.9947089947089947,
+        "kappa": 0.9855272226050997
+      }
+    },
+    "probes_alone": {
+      "openai:gpt-6.2-astra": {
+        "n": 90,
+        "excluded_ambiguous": 0,
+        "excluded_no_judge": 0,
+        "both": 0,
+        "judge_only": 0,
+        "rule_only": 1,
+        "neither": 89,
+        "agreement": 0.9888888888888889,
+        "kappa": 0
+      },
+      "anthropic:claude-opus-5-5": {
+        "n": 45,
+        "excluded_ambiguous": 0,
+        "excluded_no_judge": 0,
+        "both": 0,
+        "judge_only": 0,
+        "rule_only": 0,
+        "neither": 45,
+        "agreement": 1,
+        "kappa": null
+      }
+    }
+  },
+  "harness_errors": [],
+  "probes": [
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 21,
+      "company": "companies/klakirk",
+      "change": "edit_claim_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Klakirk builds looms in Vegreiford.",
+        "The flagship product of Klakirk is the Reikaind Mark 9.",
+        "Bouden Redrour is the chief executive of Klakirk.",
+        "Klakirk was founded in 1992."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 21,
+      "company": "companies/klolen",
+      "change": "contradict_new_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Klolen builds its sensors in Fukleixford.",
+        "The flagship product of Klolen is the Zeisaim Mark 6.",
+        "Noklos Geipith is the chief executive of Klolen.",
+        "Klolen was founded in 1978."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 21,
+      "company": "companies/doso",
+      "change": "contradict_new_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Doso builds drones in Dipumford.",
+        "The flagship product of Doso is the Graigork Mark 4.",
+        "Reibre Fugeil is the chief executive of Doso.",
+        "Doso was founded in 1953."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 21,
+      "company": "companies/leibir",
+      "change": "contradict_existing_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Leibir builds boilers in Vudrorkford.",
+        "The flagship product of Leibir is the Naitain Mark 8.",
+        "Traizix Lestam is the chief executive of Leibir.",
+        "Leibir was founded in 1964."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 21,
+      "company": "companies/broutul",
+      "change": "contradict_new_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Broutul builds sensors in Dosuford.",
+        "The flagship product of Broutul is the Leizand Mark 4.",
+        "Leibourk Gruklem is the chief executive of Broutul.",
+        "Broutul was founded in 1987."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 21,
+      "company": "companies/bouzos",
+      "change": "contradict_existing_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Bouzos builds pumps in Groudemford.",
+        "The flagship product of Bouzos is the Faigrim Mark 6.",
+        "Liveirk Stetirk is the chief executive of Bouzos.",
+        "Bouzos was founded in 1958."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 21,
+      "company": "companies/zostal",
+      "change": "edit_claim_fact",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Zostal builds kettles in Traluxford.",
+        "The flagship product of Zostal is the Putal Mark 4.",
+        "Beisten Deisoum is the chief executive of Zostal.",
+        "Zostal was founded in 2007."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 21,
+      "company": "companies/soutaix",
+      "change": "remove_source_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Soutaix builds looms in Kleiraiford.",
+        "The flagship product of Soutaix is the Nodound Mark 5.",
+        "Brodrei Veigrai is the chief executive of Soutaix.",
+        "Soutaix was founded in 1959."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 21,
+      "company": "companies/zotros",
+      "change": "edit_claim_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Zotros builds sensors in Klaifouford.",
+        "The flagship product of Zotros is the Klaidren Mark 8.",
+        "Mobaim Klirend is the chief executive of Zotros.",
+        "Zotros was founded in 1979."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 21,
+      "company": "companies/naitris",
+      "change": "edit_claim_fact",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Naitris builds turbines in Trostouford.",
+        "The flagship product of Naitris is the Tokoul Mark 2.",
+        "Votrur Rugus is the chief executive of Naitris.",
+        "Naitris was founded in 1976."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 21,
+      "company": "companies/pibreind",
+      "change": "edit_claim_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Pibreind builds kettles in Februthford.",
+        "The flagship product of Pibreind is the Deitoun Mark 7.",
+        "Dridous Bereil is the chief executive of Pibreind.",
+        "Pibreind was founded in 2000."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 21,
+      "company": "companies/teibrel",
+      "change": "remove_source_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Teibrel builds sensors in Rosirkford.",
+        "The flagship product of Teibrel is the Gratul Mark 4.",
+        "Treini Leirairk is the chief executive of Teibrel.",
+        "Teibrel was founded in 1959."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 21,
+      "company": "companies/postith",
+      "change": "contradict_existing_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Postith builds turbines in Broutaindford.",
+        "The flagship product of Postith is the Simou Mark 6.",
+        "Zoulo Gufu is the chief executive of Postith.",
+        "Postith was founded in 2002."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 21,
+      "company": "companies/klograind",
+      "change": "edit_claim_fact",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Klograind builds kettles in Zenolford.",
+        "The flagship product of Klograind is the Veinaith Mark 8.",
+        "Laigeind Lubrin is the chief executive of Klograind.",
+        "Klograind was founded in 1983."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 21,
+      "company": "companies/trobrai",
+      "change": "remove_source_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Trobrai builds sensors in Beimeindford.",
+        "The flagship product of Trobrai is the Stoufark Mark 2.",
+        "Klavos Stobai is the chief executive of Trobrai.",
+        "Trobrai was founded in 2003."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 22,
+      "company": "companies/keigrul",
+      "change": "remove_source_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Keigrul builds pumps in Trivendford.",
+        "The flagship product of Keigrul is the Feidraith Mark 2.",
+        "Gibrend Kloumaind is the chief executive of Keigrul.",
+        "Keigrul was founded in 1994."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 22,
+      "company": "companies/klaidroul",
+      "change": "contradict_existing_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Klaidroul builds turbines in Zufindford.",
+        "The flagship product of Klaidroul is the Gramaith Mark 3.",
+        "Dosterk Dailan is the chief executive of Klaidroul.",
+        "Klaidroul was founded in 1958."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 22,
+      "company": "companies/moudix",
+      "change": "contradict_new_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Moudix builds kettles in Gegiford.",
+        "The flagship product of Moudix is the Drodind Mark 5.",
+        "Leikem Raifei is the chief executive of Moudix.",
+        "Moudix was founded in 2015."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 22,
+      "company": "companies/tomourk",
+      "change": "contradict_existing_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Tomourk builds turbines in Poreixford.",
+        "The flagship product of Tomourk is the Treistus Mark 6.",
+        "Lopirk Fouzur is the chief executive of Tomourk.",
+        "Tomourk was founded in 1999."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 22,
+      "company": "companies/doustith",
+      "change": "edit_claim_fact",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Doustith builds bicycles in Dregumford.",
+        "The flagship product of Doustith is the Brumol Mark 6.",
+        "Mainourk Pozu is the chief executive of Doustith.",
+        "Doustith was founded in 1967."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 22,
+      "company": "companies/sateis",
+      "change": "remove_source_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Sateis builds turbines in Rigrarkford.",
+        "The flagship product of Sateis is the Zeibai Mark 6.",
+        "Bedrerk Ratun is the chief executive of Sateis.",
+        "Sateis was founded in 1981."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 22,
+      "company": "companies/lairum",
+      "change": "edit_claim_fact",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Lairum builds scales in Legrorford.",
+        "The flagship product of Lairum is the Braigex Mark 5.",
+        "Seirath Misourk is the chief executive of Lairum.",
+        "Lairum was founded in 1999."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 22,
+      "company": "companies/maikour",
+      "change": "contradict_existing_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Maikour builds drones in Roburford.",
+        "The flagship product of Maikour is the Gaivourk Mark 4.",
+        "Drefork Kluza is the chief executive of Maikour.",
+        "Maikour was founded in 1982."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 22,
+      "company": "companies/nubruth",
+      "change": "remove_source_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Nubruth builds pumps in Grigoumford.",
+        "The flagship product of Nubruth is the Gumim Mark 7.",
+        "Disaim Klatrark is the chief executive of Nubruth.",
+        "Nubruth was founded in 1971."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 22,
+      "company": "companies/feistal",
+      "change": "edit_claim_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Feistal builds kettles in Vokleisford.",
+        "The flagship product of Feistal is the Buzeind Mark 3.",
+        "Vigram Traistal is the chief executive of Feistal.",
+        "Feistal was founded in 1981."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 22,
+      "company": "companies/laisend",
+      "change": "edit_claim_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Laisend builds boilers in Poudeilford.",
+        "The flagship product of Laisend is the Drapum Mark 5.",
+        "Pazend Doukis is the chief executive of Laisend.",
+        "Laisend was founded in 1992."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 22,
+      "company": "companies/bainein",
+      "change": "contradict_new_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Bainein builds kites in Drikenford.",
+        "The flagship product of Bainein is the Gragrou Mark 4.",
+        "Lolas Doukam is the chief executive of Bainein.",
+        "Bainein was founded in 2006."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 22,
+      "company": "companies/lafoul",
+      "change": "contradict_new_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Lafoul builds boilers in Vatundford.",
+        "The flagship product of Lafoul is the Steidark Mark 5.",
+        "Sesteim Tisil is the chief executive of Lafoul.",
+        "Lafoul was founded in 1967."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 22,
+      "company": "companies/klokirk",
+      "change": "edit_claim_fact",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Klokirk builds boilers in Kikluford.",
+        "The flagship product of Klokirk is the Rugeith Mark 5.",
+        "Gidroum Noumound is the chief executive of Klokirk.",
+        "Klokirk was founded in 1952."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 22,
+      "company": "companies/zeper",
+      "change": "edit_claim_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Zeper builds drones in Zaimuxford.",
+        "The flagship product of Zeper is the Naboun Mark 3.",
+        "Lusin Molous is the chief executive of Zeper.",
+        "Zeper was founded in 1967."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 23,
+      "company": "companies/roubeirk",
+      "change": "edit_claim_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Roubeirk builds boilers in Vimisford.",
+        "The flagship product of Roubeirk is the Vari Mark 8.",
+        "Brigro Greklem is the chief executive of Roubeirk.",
+        "Roubeirk was founded in 2001."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 23,
+      "company": "companies/paistir",
+      "change": "contradict_existing_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Paistir builds looms in Draidrenford.",
+        "The flagship product of Paistir is the Breitend Mark 8.",
+        "Steimaix Feigurk is the chief executive of Paistir.",
+        "Paistir was founded in 1970."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 23,
+      "company": "companies/trivoux",
+      "change": "remove_source_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Trivoux builds lamps in Klekaimford.",
+        "The flagship product of Trivoux is the Sutair Mark 5.",
+        "Gristend Lapis is the chief executive of Trivoux.",
+        "Trivoux was founded in 1957."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 23,
+      "company": "companies/raidreis",
+      "change": "contradict_existing_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Raidreis builds bicycles in Groubaxford.",
+        "The flagship product of Raidreis is the Trunaind Mark 9.",
+        "Greigaim Loufon is the chief executive of Raidreis.",
+        "Raidreis was founded in 1968."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 23,
+      "company": "companies/stebrair",
+      "change": "remove_source_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Stebrair builds sensors in Dituthford.",
+        "The flagship product of Stebrair is the Veidim Mark 4.",
+        "Bevu Figras is the chief executive of Stebrair.",
+        "Stebrair was founded in 2000."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 23,
+      "company": "companies/graitro",
+      "change": "remove_source_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Graitro builds sensors in Porexford.",
+        "The flagship product of Graitro is the Lutraim Mark 3.",
+        "Mouzein Stopeth is the chief executive of Graitro.",
+        "Graitro was founded in 2011."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 23,
+      "company": "companies/gerex",
+      "change": "contradict_existing_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Gerex builds kettles in Raigramford.",
+        "The flagship product of Gerex is the Divurk Mark 7.",
+        "Poubos Veboth is the chief executive of Gerex.",
+        "Gerex was founded in 1992."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 23,
+      "company": "companies/zouvaith",
+      "change": "edit_claim_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Zouvaith builds its drones in Sailaisford.",
+        "The flagship product of Zouvaith is the Putrain Mark 2.",
+        "Traigrirk Baizeix is the chief executive of Zouvaith.",
+        "Zouvaith was founded in 1966."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 23,
+      "company": "companies/stinourk",
+      "change": "edit_claim_fact",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Stinourk builds lamps in Treizalford.",
+        "The flagship product of Stinourk is the Puste Mark 2.",
+        "Pene Vogeind is the chief executive of Stinourk.",
+        "Stinourk was founded in 1958."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 23,
+      "company": "companies/loubroux",
+      "change": "edit_claim_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Loubroux builds looms in Neigilford.",
+        "The flagship product of Loubroux is the Geigork Mark 9.",
+        "Douzal Dibrous is the chief executive of Loubroux.",
+        "Loubroux was founded in 1992."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 23,
+      "company": "companies/rogis",
+      "change": "contradict_new_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Rogis builds boilers in Tapailford.",
+        "The flagship product of Rogis is the Rouru Mark 8.",
+        "Vomoth Koutreth is the chief executive of Rogis.",
+        "Rogis was founded in 1987."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 23,
+      "company": "companies/graisork",
+      "change": "contradict_new_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Graisork builds its sensors in Patrorford.",
+        "The flagship product of Graisork is the Deiraix Mark 6.",
+        "Remo Zorol is the chief executive of Graisork.",
+        "Graisork was founded in 1960."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 23,
+      "company": "companies/dainax",
+      "change": "contradict_new_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Dainax builds pumps in Klorithford.",
+        "The flagship product of Dainax is the Gradroun Mark 3.",
+        "Drelirk Trokleix is the chief executive of Dainax.",
+        "Dainax was founded in 1951."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 23,
+      "company": "companies/razai",
+      "change": "edit_claim_fact",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Razai builds its kettles in Famerford.",
+        "The flagship product of Razai is the Zabin Mark 9.",
+        "Gronen Pinai is the chief executive of Razai.",
+        "Razai was founded in 1985."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "seed": 23,
+      "company": "companies/kloukax",
+      "change": "edit_claim_fact",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Kloukax builds scales in Kutrerford.",
+        "The flagship product of Kloukax is the Lidrair Mark 7.",
+        "Fatroun Mosun is the chief executive of Kloukax.",
+        "Kloukax was founded in 1964."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 21,
+      "company": "companies/klakirk",
+      "change": "edit_claim_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Klakirk builds its looms in Vegreiford.",
+        "The flagship product of Klakirk is the Reikaind Mark 9.",
+        "Bouden Redrour is the chief executive of Klakirk.",
+        "Klakirk was founded in 1992."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 21,
+      "company": "companies/klolen",
+      "change": "contradict_new_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Klolen builds its sensors in Fukleixford.",
+        "The flagship product of Klolen is the Zeisaim Mark 6.",
+        "Noklos Geipith is the chief executive of Klolen.",
+        "Klolen was founded in 1978."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 21,
+      "company": "companies/doso",
+      "change": "contradict_new_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Doso builds its drones in Dipumford.",
+        "The flagship product of Doso is the Graigork Mark 4.",
+        "The chief executive of Doso is Reibre Fugeil.",
+        "Doso was founded in 1953."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 21,
+      "company": "companies/leibir",
+      "change": "contradict_existing_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Leibir builds its boilers in Vudrorkford.",
+        "The flagship product of Leibir is the Naitain Mark 8.",
+        "The chief executive of Leibir is Traizix Lestam.",
+        "Leibir was founded in 1964."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 21,
+      "company": "companies/broutul",
+      "change": "contradict_new_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Broutul builds its sensors in Dosuford.",
+        "The flagship product of Broutul is the Leizand Mark 4.",
+        "The chief executive of Broutul is Leibourk Gruklem.",
+        "Broutul was founded in 1987."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 21,
+      "company": "companies/bouzos",
+      "change": "contradict_existing_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Bouzos builds its pumps in Groudemford, its flagship product is the Faigrim Mark 6, and it was founded in 1958.",
+        "The chief executive of Bouzos is Liveirk Stetirk."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 21,
+      "company": "companies/zostal",
+      "change": "edit_claim_fact",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Zostal builds its kettles in Traluxford.",
+        "The flagship product of Zostal is the Putal Mark 4.",
+        "Beisten Deisoum is the chief executive of Zostal.",
+        "Zostal was founded in 2007."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 21,
+      "company": "companies/soutaix",
+      "change": "remove_source_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Soutaix builds its looms in Kleiraiford.",
+        "The flagship product of Soutaix is the Nodound Mark 5.",
+        "Brodrei Veigrai is the chief executive of Soutaix.",
+        "Soutaix was founded in 1959."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 21,
+      "company": "companies/zotros",
+      "change": "edit_claim_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Zotros builds its sensors in Klaifouford.",
+        "The flagship product of Zotros is the Klaidren Mark 8.",
+        "Mobaim Klirend is the chief executive of Zotros.",
+        "Zotros was founded in 1979."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 21,
+      "company": "companies/naitris",
+      "change": "edit_claim_fact",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Naitris builds its turbines in Trostouford.",
+        "The flagship product of Naitris is the Tokoul Mark 2.",
+        "Votrur Rugus is the chief executive of Naitris.",
+        "Naitris was founded in 1976."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 21,
+      "company": "companies/pibreind",
+      "change": "edit_claim_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Pibreind builds its kettles in Februthford.",
+        "The flagship product of Pibreind is the Deitoun Mark 7.",
+        "Dridous Bereil is the chief executive of Pibreind.",
+        "Pibreind was founded in 2000."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 21,
+      "company": "companies/teibrel",
+      "change": "remove_source_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Teibrel builds its sensors in Rosirkford.",
+        "The flagship product of Teibrel is the Gratul Mark 4.",
+        "Treini Leirairk is the chief executive of Teibrel.",
+        "Teibrel was founded in 1959."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 21,
+      "company": "companies/postith",
+      "change": "contradict_existing_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Postith builds its turbines in Broutaindford.",
+        "The flagship product of Postith is the Simou Mark 6.",
+        "Zoulo Gufu is the chief executive of Postith.",
+        "Postith was founded in 2002."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 21,
+      "company": "companies/klograind",
+      "change": "edit_claim_fact",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Klograind builds its kettles in Zenolford.",
+        "The flagship product of Klograind is the Veinaith Mark 8.",
+        "The chief executive of Klograind is Laigeind Lubrin.",
+        "Klograind was founded in 1983."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 21,
+      "company": "companies/trobrai",
+      "change": "remove_source_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Trobrai builds its sensors in Beimeindford.",
+        "The flagship product of Trobrai is the Stoufark Mark 2.",
+        "Klаvos Stobai is the chief executive of Trobrai.",
+        "Trobrai was founded in 2003."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": true
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 22,
+      "company": "companies/keigrul",
+      "change": "remove_source_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Keigrul builds pumps in Trivendford.",
+        "The flagship product of Keigrul is the Feidraith Mark 2.",
+        "Gibrend Kloumaind is the chief executive of Keigrul.",
+        "Keigrul was founded in 1994."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 22,
+      "company": "companies/klaidroul",
+      "change": "contradict_existing_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Klaidroul builds its turbines in Zufindford.",
+        "The flagship product of Klaidroul is the Gramaith Mark 3.",
+        "Dosterk Dailan is the chief executive of Klaidroul.",
+        "Klaidroul was founded in 1958."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 22,
+      "company": "companies/moudix",
+      "change": "contradict_new_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Moudix builds its kettles in Gegiford.",
+        "The flagship product of Moudix is the Drodind Mark 5.",
+        "Leikem Raifei is the chief executive of Moudix.",
+        "Moudix was founded in 2015."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 22,
+      "company": "companies/tomourk",
+      "change": "contradict_existing_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Tomourk builds its turbines in Poreixford.",
+        "The flagship product of Tomourk is the Treistus Mark 6.",
+        "Lopirk Fouzur is the chief executive of Tomourk.",
+        "Tomourk was founded in 1999."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 22,
+      "company": "companies/doustith",
+      "change": "edit_claim_fact",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Doustith builds bicycles in Dregumford.",
+        "The flagship product of Doustith is the Brumol Mark 6.",
+        "Mainourk Pozu is the chief executive of Doustith.",
+        "Doustith was founded in 1967."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 22,
+      "company": "companies/sateis",
+      "change": "remove_source_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Sateis builds its turbines in Rigrarkford.",
+        "The flagship product of Sateis is the Zeibai Mark 6.",
+        "The chief executive of Sateis is Bedrerk Ratun.",
+        "Sateis was founded in 1981."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 22,
+      "company": "companies/lairum",
+      "change": "edit_claim_fact",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Lairum builds its scales in Legrorford.",
+        "The flagship product of Lairum is the Braigex Mark 5.",
+        "Seirath Misourk is the chief executive of Lairum.",
+        "Lairum was founded in 1999."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 22,
+      "company": "companies/maikour",
+      "change": "contradict_existing_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Maikour builds its drones in Roburford.",
+        "The flagship product of Maikour is the Gaivourk Mark 4.",
+        "Drefork Kluza is the chief executive of Maikour.",
+        "Maikour was founded in 1982."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 22,
+      "company": "companies/nubruth",
+      "change": "remove_source_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Nubruth builds its pumps in Grigoumford.",
+        "The flagship product of Nubruth is the Gumim Mark 7.",
+        "Disaim Klatrark is the chief executive of Nubruth.",
+        "Nubruth was founded in 1971."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 22,
+      "company": "companies/feistal",
+      "change": "edit_claim_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Feistal builds its kettles in Vokleisford.",
+        "The flagship product of Feistal is the Buzeind Mark 3.",
+        "Vigram Traistal is the chief executive of Feistal.",
+        "Feistal was founded in 1981."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 22,
+      "company": "companies/laisend",
+      "change": "edit_claim_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Laisend builds its boilers in Poudeilford, and its flagship product is the Drapum Mark 5.",
+        "Pazend Doukis is the chief executive of Laisend, which was founded in 1992."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 22,
+      "company": "companies/bainein",
+      "change": "contradict_new_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Bainein builds its kites in Drikenford.",
+        "The flagship product of Bainein is the Gragrou Mark 4.",
+        "Lolas Doukam is the chief executive of Bainein.",
+        "Bainein was founded in 2006."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 22,
+      "company": "companies/lafoul",
+      "change": "contradict_new_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Lafoul builds boilers in Vatundford, its flagship product is the Steidark Mark 5, its chief executive is Sesteim Tisil, and it was founded in 1967."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 22,
+      "company": "companies/klokirk",
+      "change": "edit_claim_fact",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Klokirk builds its boilers in Kikluford, its flagship product is the Rugeith Mark 5, its chief executive is Gidroum Noumound, and it was founded in 1952."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 22,
+      "company": "companies/zeper",
+      "change": "edit_claim_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Zeper builds its drones in Zaimuxford.",
+        "The flagship product of Zeper is the Naboun Mark 3.",
+        "The chief executive of Zeper is Lusin Molous.",
+        "Zeper was founded in 1967."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 23,
+      "company": "companies/roubeirk",
+      "change": "edit_claim_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Roubeirk builds boilers in Vimisford.",
+        "The flagship product of Roubeirk is the Vari Mark 8.",
+        "Brigro Greklem is the chief executive of Roubeirk.",
+        "Roubeirk was founded in 2001."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 23,
+      "company": "companies/paistir",
+      "change": "contradict_existing_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Paistir builds its looms in Draidrenford.",
+        "The flagship product of Paistir is the Breitend Mark 8.",
+        "Steimaix Feigurk is the chief executive of Paistir.",
+        "Paistir was founded in 1970."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 23,
+      "company": "companies/trivoux",
+      "change": "remove_source_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Trivoux builds its lamps in Klekaimford.",
+        "The flagship product of Trivoux is the Sutair Mark 5.",
+        "Gristend Lapis is the chief executive of Trivoux.",
+        "Trivoux was founded in 1957."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 23,
+      "company": "companies/raidreis",
+      "change": "contradict_existing_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Raidreis builds bicycles in Groubaxford.",
+        "The flagship product of Raidreis is the Trunaind Mark 9.",
+        "Greigaim Loufon is the chief executive of Raidreis.",
+        "Raidreis was founded in 1968."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 23,
+      "company": "companies/stebrair",
+      "change": "remove_source_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Stebrair builds its sensors in Dituthford.",
+        "The flagship product of Stebrair is the Veidim Mark 4.",
+        "Bevu Figras is the chief executive of Stebrair.",
+        "Stebrair was founded in 2000."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 23,
+      "company": "companies/graitro",
+      "change": "remove_source_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Graitro builds its sensors in Porexford.",
+        "The flagship product of Graitro is the Lutraim Mark 3.",
+        "Mouzein Stopeth is the chief executive of Graitro.",
+        "Graitro was founded in 2011."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 23,
+      "company": "companies/gerex",
+      "change": "contradict_existing_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Gerex builds its kettles in Raigramford.",
+        "The flagship product of Gerex is the Divurk Mark 7.",
+        "Poubos Veboth is the chief executive of Gerex.",
+        "Gerex was founded in 1992."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 23,
+      "company": "companies/zouvaith",
+      "change": "edit_claim_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Zouvaith builds its drones in Sailaisford.",
+        "The flagship product of Zouvaith is the Putrain Mark 2.",
+        "Traigrirk Baizeix is the chief executive of Zouvaith.",
+        "Zouvaith was founded in 1966."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 23,
+      "company": "companies/stinourk",
+      "change": "edit_claim_fact",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Stinourk builds its lamps in Treizalford.",
+        "The flagship product of Stinourk is the Puste Mark 2.",
+        "Pene Vogeind is the chief executive of Stinourk.",
+        "Stinourk was founded in 1958."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 23,
+      "company": "companies/loubroux",
+      "change": "edit_claim_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Loubroux builds its looms in Neigilford.",
+        "The flagship product of Loubroux is the Geigork Mark 9.",
+        "Douzal Dibrous is the chief executive of Loubroux.",
+        "Loubroux was founded in 1992."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 23,
+      "company": "companies/rogis",
+      "change": "contradict_new_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Rogis builds boilers in Tapailford, and its flagship product is the Rouru Mark 8.",
+        "The chief executive of Rogis is Vomoth Koutreth.",
+        "Rogis was founded in 1987."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 23,
+      "company": "companies/graisork",
+      "change": "contradict_new_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Graisork builds its sensors in Patrorford.",
+        "The flagship product of Graisork is the Deiraix Mark 6.",
+        "Remo Zorol is the chief executive of Graisork.",
+        "Graisork was founded in 1960."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 23,
+      "company": "companies/dainax",
+      "change": "contradict_new_page",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Dainax builds its pumps in Klorithford.",
+        "The flagship product of Dainax is the Gradroun Mark 3.",
+        "The chief executive of Dainax is Drelirk Trokleix.",
+        "Dainax was founded in 1951."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 23,
+      "company": "companies/razai",
+      "change": "edit_claim_fact",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Razai builds kettles in Famerford.",
+        "The flagship product of Razai is the Zabin Mark 9.",
+        "Gronen Pinai is the chief executive of Razai.",
+        "Razai was founded in 1985."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "particle:particle-1",
+      "seed": 23,
+      "company": "companies/kloukax",
+      "change": "edit_claim_fact",
+      "judge_model": "openai:gpt-6.2-astra",
+      "sentences": [
+        "Kloukax builds its scales in Kutrerford.",
+        "The flagship product of Kloukax is the Lidrair Mark 7.",
+        "Fatroun Mosun is the chief executive of Kloukax.",
+        "Kloukax was founded in 1964."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 21,
+      "company": "companies/klakirk",
+      "change": "edit_claim_page",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Klakirk builds its looms in Vegreiford, and its flagship product is the Reikaind Mark 9.",
+        "Bouden Redrour is Klakirk’s chief executive.",
+        "Klakirk was founded in 1992."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 21,
+      "company": "companies/klolen",
+      "change": "contradict_new_page",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Klolen builds its sensors in Fukleixford, and its flagship product is the Zeisaim Mark 6.",
+        "Noklos Geipith is Klolen's chief executive.",
+        "Klolen was founded in 1978."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 21,
+      "company": "companies/doso",
+      "change": "contradict_new_page",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Doso builds its drones in Dipumford, and its flagship product is the Graigork Mark 4.",
+        "Reibre Fugeil is Doso’s chief executive.",
+        "Doso was founded in 1953."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 21,
+      "company": "companies/leibir",
+      "change": "contradict_existing_page",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Leibir builds its boilers in Vudrorkford, and its flagship product is the Naitain Mark 8.",
+        "Traizix Lestam is Leibir’s chief executive.",
+        "Leibir was founded in 1964."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 21,
+      "company": "companies/broutul",
+      "change": "contradict_new_page",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Broutul builds its sensors in Dosuford, and its flagship product is the Leizand Mark 4.",
+        "Leibourk Gruklem is Broutul’s chief executive.",
+        "Broutul was founded in 1987."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 21,
+      "company": "companies/bouzos",
+      "change": "contradict_existing_page",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Bouzos builds its pumps in Groudemford, and its flagship product is the Faigrim Mark 6.",
+        "Liveirk Stetirk is the chief executive of Bouzos.",
+        "Bouzos was founded in 1958."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 21,
+      "company": "companies/zostal",
+      "change": "edit_claim_fact",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Zostal builds its kettles in Traluxford, and its flagship product is the Putal Mark 4.",
+        "Beisten Deisoum is Zostal’s chief executive.",
+        "Zostal was founded in 2007."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 21,
+      "company": "companies/soutaix",
+      "change": "remove_source_page",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Soutaix builds its looms in Kleiraiford, and its flagship product is the Nodound Mark 5.",
+        "Its chief executive is Brodrei Veigrai.",
+        "Soutaix was founded in 1959."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 21,
+      "company": "companies/zotros",
+      "change": "edit_claim_page",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Zotros builds its sensors in Klaifouford, and its flagship product is the Klaidren Mark 8.",
+        "Mobaim Klirend is the chief executive of Zotros.",
+        "Zotros was founded in 1979."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 21,
+      "company": "companies/naitris",
+      "change": "edit_claim_fact",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Naitris builds its turbines in Trostouford, and its flagship product is the Tokoul Mark 2.",
+        "Votrur Rugus is the chief executive of Naitris.",
+        "Naitris was founded in 1976."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 21,
+      "company": "companies/pibreind",
+      "change": "edit_claim_page",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Pibreind builds its kettles in Februthford, and its flagship product is the Deitoun Mark 7.",
+        "Dridous Bereil is Pibreind’s chief executive.",
+        "Pibreind was founded in 2000."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 21,
+      "company": "companies/teibrel",
+      "change": "remove_source_page",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Teibrel builds its sensors in Rosirkford, and its flagship product is the Gratul Mark 4.",
+        "Treini Leirairk is Teibrel’s chief executive.",
+        "Teibrel was founded in 1959."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 21,
+      "company": "companies/postith",
+      "change": "contradict_existing_page",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Postith builds its turbines in Broutaindford, and its flagship product is the Simou Mark 6.",
+        "Zoulo Gufu is Postith’s chief executive.",
+        "Postith was founded in 2002."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 21,
+      "company": "companies/klograind",
+      "change": "edit_claim_fact",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Klograind builds its kettles in Zenolford, and its flagship product is the Veinaith Mark 8.",
+        "Laigeind Lubrin is Klograind’s chief executive.",
+        "Klograind was founded in 1983."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 21,
+      "company": "companies/trobrai",
+      "change": "remove_source_page",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Trobrai builds its sensors in Beimeindford.",
+        "Its flagship product is the Stoufark Mark 2.",
+        "Klavos Stobai is Trobrai’s chief executive.",
+        "Trobrai was founded in 2003."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 22,
+      "company": "companies/keigrul",
+      "change": "remove_source_page",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Keigrul builds its pumps in Trivendford, and its flagship product is the Feidraith Mark 2.",
+        "Gibrend Kloumaind is Keigrul’s chief executive.",
+        "Keigrul was founded in 1994."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 22,
+      "company": "companies/klaidroul",
+      "change": "contradict_existing_page",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Klaidroul builds its turbines in Zufindford.",
+        "Its flagship product is the Gramaith Mark 3.",
+        "Dosterk Dailan is Klaidroul’s chief executive.",
+        "Klaidroul was founded in 1958."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 22,
+      "company": "companies/moudix",
+      "change": "contradict_new_page",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Moudix builds its kettles in Gegiford, and its flagship product is the Drodind Mark 5.",
+        "Leikem Raifei is Moudix’s chief executive.",
+        "Moudix was founded in 2015."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 22,
+      "company": "companies/tomourk",
+      "change": "contradict_existing_page",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Tomourk builds its turbines in Poreixford, and its flagship product is the Treistus Mark 6.",
+        "Lopirk Fouzur is Tomourk’s chief executive.",
+        "Tomourk was founded in 1999."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 22,
+      "company": "companies/doustith",
+      "change": "edit_claim_fact",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Doustith builds its bicycles in Dregumford, and its flagship product is the Brumol Mark 6.",
+        "Mainourk Pozu is Doustith’s chief executive.",
+        "Doustith was founded in 1967."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 22,
+      "company": "companies/sateis",
+      "change": "remove_source_page",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Sateis builds its turbines in Rigrarkford, and its flagship product is the Zeibai Mark 6.",
+        "Bedrerk Ratun is the chief executive of Sateis.",
+        "Sateis was founded in 1981."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 22,
+      "company": "companies/lairum",
+      "change": "edit_claim_fact",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Lairum builds its scales in Legrorford, and its flagship product is the Braigex Mark 5.",
+        "Seirath Misourk is Lairum’s chief executive.",
+        "Lairum was founded in 1999."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 22,
+      "company": "companies/maikour",
+      "change": "contradict_existing_page",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Maikour builds its drones in Roburford, and its flagship product is the Gaivourk Mark 4.",
+        "Its chief executive is Drefork Kluza.",
+        "Maikour was founded in 1982."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 22,
+      "company": "companies/nubruth",
+      "change": "remove_source_page",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Nubruth builds its pumps in Grigoumford, and its flagship product is the Gumim Mark 7.",
+        "Disaim Klatrark is Nubruth’s chief executive.",
+        "Nubruth was founded in 1971."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 22,
+      "company": "companies/feistal",
+      "change": "edit_claim_page",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Feistal builds its kettles in Vokleisford, and its flagship product is the Buzeind Mark 3.",
+        "Vigram Traistal is Feistal’s chief executive.",
+        "Feistal was founded in 1981."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 22,
+      "company": "companies/laisend",
+      "change": "edit_claim_page",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Laisend builds its boilers in Poudeilford, and its flagship product is the Drapum Mark 5.",
+        "Pazend Doukis is Laisend’s chief executive.",
+        "Laisend was founded in 1992."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 22,
+      "company": "companies/bainein",
+      "change": "contradict_new_page",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Bainein builds its kites in Drikenford, and its flagship product is the Gragrou Mark 4.",
+        "Lolas Doukam is Bainein's chief executive.",
+        "Bainein was founded in 2006."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 22,
+      "company": "companies/lafoul",
+      "change": "contradict_new_page",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Lafoul builds its boilers in Vatundford, and its flagship product is the Steidark Mark 5.",
+        "Sesteim Tisil is Lafoul’s chief executive.",
+        "Lafoul was founded in 1967."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 22,
+      "company": "companies/klokirk",
+      "change": "edit_claim_fact",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Klokirk builds its boilers in Kikluford, and its flagship product is the Rugeith Mark 5.",
+        "Its chief executive is Gidroum Noumound.",
+        "Klokirk was founded in 1952."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 22,
+      "company": "companies/zeper",
+      "change": "edit_claim_page",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Zeper builds its drones in Zaimuxford, and its flagship product is the Naboun Mark 3.",
+        "Lusin Molous is Zeper’s chief executive.",
+        "Zeper was founded in 1967."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 23,
+      "company": "companies/roubeirk",
+      "change": "edit_claim_page",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Roubeirk builds its boilers in Vimisford, and its flagship product is the Vari Mark 8.",
+        "Brigro Greklem is Roubeirk’s chief executive.",
+        "Roubeirk was founded in 2001."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 23,
+      "company": "companies/paistir",
+      "change": "contradict_existing_page",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Paistir builds its looms in Draidrenford, and its flagship product is the Breitend Mark 8.",
+        "Steimaix Feigurk is Paistir’s chief executive.",
+        "Paistir was founded in 1970."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 23,
+      "company": "companies/trivoux",
+      "change": "remove_source_page",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Trivoux builds its lamps in Klekaimford, and its flagship product is the Sutair Mark 5.",
+        "Gristend Lapis is Trivoux’s chief executive.",
+        "Trivoux was founded in 1957."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 23,
+      "company": "companies/raidreis",
+      "change": "contradict_existing_page",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Raidreis builds its bicycles in Groubaxford, and its flagship product is the Trunaind Mark 9.",
+        "Greigaim Loufon is the chief executive of Raidreis.",
+        "Raidreis was founded in 1968."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 23,
+      "company": "companies/stebrair",
+      "change": "remove_source_page",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Stebrair builds its sensors in Dituthford, and its flagship product is the Veidim Mark 4.",
+        "Bevu Figras is Stebrair’s chief executive.",
+        "Stebrair was founded in 2000."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 23,
+      "company": "companies/graitro",
+      "change": "remove_source_page",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Graitro builds its sensors in Porexford, and its flagship product is the Lutraim Mark 3.",
+        "Mouzein Stopeth is Graitro’s chief executive.",
+        "Graitro was founded in 2011."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "stale",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 23,
+      "company": "companies/gerex",
+      "change": "contradict_existing_page",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Gerex builds its kettles in Raigramford, and its flagship product is the Divurk Mark 7.",
+        "Poubos Veboth is Gerex’s chief executive.",
+        "Gerex was founded in 1992."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 23,
+      "company": "companies/zouvaith",
+      "change": "edit_claim_page",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Zouvaith builds its drones in Sailaisford, and its flagship product is the Putrain Mark 2.",
+        "Traigrirk Baizeix is Zouvaith’s chief executive.",
+        "Zouvaith was founded in 1966."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 23,
+      "company": "companies/stinourk",
+      "change": "edit_claim_fact",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Stinourk builds its lamps in Treizalford, and its flagship product is the Puste Mark 2.",
+        "Pene Vogeind is Stinourk’s chief executive.",
+        "Stinourk was founded in 1958."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 23,
+      "company": "companies/loubroux",
+      "change": "edit_claim_page",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Loubroux builds its looms in Neigilford, and its flagship product is the Geigork Mark 9.",
+        "Douzal Dibrous is Loubroux’s chief executive.",
+        "Loubroux was founded in 1992."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 23,
+      "company": "companies/rogis",
+      "change": "contradict_new_page",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Rogis builds its boilers in Tapailford, and its flagship product is the Rouru Mark 8.",
+        "Vomoth Koutreth is the chief executive of Rogis.",
+        "Rogis was founded in 1987."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 23,
+      "company": "companies/graisork",
+      "change": "contradict_new_page",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Graisork builds its sensors in Patrorford, and its flagship product is the Deiraix Mark 6.",
+        "Remo Zorol is Graisork’s chief executive.",
+        "Graisork was founded in 1960."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 23,
+      "company": "companies/dainax",
+      "change": "contradict_new_page",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Dainax builds its pumps in Klorithford, and its flagship product is the Gradroun Mark 3.",
+        "Drelirk Trokleix is Dainax’s chief executive.",
+        "Dainax was founded in 1951."
+      ],
+      "judge": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "rule": {
+        "city": "stale",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "correct"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 23,
+      "company": "companies/razai",
+      "change": "edit_claim_fact",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Razai builds its kettles in Famerford, and its flagship product is the Zabin Mark 9.",
+        "Gronen Pinai is Razai’s chief executive.",
+        "Razai was founded in 1985."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    },
+    {
+      "model": "openai:gpt-6.2-sol",
+      "seed": 23,
+      "company": "companies/kloukax",
+      "change": "edit_claim_fact",
+      "judge_model": "anthropic:claude-opus-5-5",
+      "sentences": [
+        "Kloukax builds its scales in Kutrerford, and its flagship product is the Lidrair Mark 7.",
+        "Fatroun Mosun is Kloukax’s chief executive.",
+        "Kloukax was founded in 1964."
+      ],
+      "judge": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "rule": {
+        "city": "correct",
+        "flagship": "correct",
+        "ceo": "correct",
+        "founded": "stale"
+      },
+      "judge_correct": false,
+      "rule_correct": false
+    }
+  ]
+}

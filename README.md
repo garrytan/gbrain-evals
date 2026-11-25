@@ -204,6 +204,7 @@ behaviour, such as `forget` leaving nothing behind or a sync catching up, where 
 | **Keeping memory correct, private and safe** | | | |
 | Serving the new value after an update | **388 of 388** probes, never stale, on PGLite and Postgres through the CLI and MCP¹⁰ | `6ce7195b4` (v0.60.733.0) | [Knowledge updates](docs/benchmarks/2026-10-01-n1-knowledge-update.md) |
 | Nothing left behind after `forget` | **0** prohibited outputs, 6 of 6 reinstatements¹⁰ | `6ce7195b4` (v0.60.733.0) | [Forget residue](docs/benchmarks/2026-10-01-n5-forget-residue.md) |
+| Flagging the sentences of a pinned answer whose evidence changed, and refreshing the answer, after one note changes (240 synthetic questions per model) | **90 of 90** edited, superseded or deleted claims flagged, and every refreshed answer after them right; **0 of 60** contradictions flagged, and 25.9% of unchanged sentences flagged. Refreshed answers right: claude-opus-5-5 217 of 240, particle-1 199 of 240, gpt-6.2-sol 233 of 240 | \`38831bb6\` (v0.60.769.0) | [Pinned questions](docs/benchmarks/pinned-questions-results.md) |
 | Leaks: private pages reaching agent callers or remote callers not granted them (fewer is better) | **0**, in process and on Postgres over real HTTP (155 of 155 cells, 5 kinds of caller)¹⁰ | `6ce7195b4` (v0.60.733.0) | [Privacy on Postgres](docs/benchmarks/2026-10-06-n6-postgres-http.md) |
 | Keeping speaker and time across chat export formats | **every** registered format keeps the conversation whole (29 of 29 formats at `77cf8e111`)¹⁰ | `6ce7195b4` (v0.60.733.0) | [Chat formats](docs/benchmarks/2026-10-01-n12-format-fidelity.md) |
 | One very large document stored as one page (2 MB to 260 MiB, under the preregistered rules) | **Every preregistered rule passes**: 0 crashes, 0 responses over 1 MiB, 0 bytes lost on export, keyword recall in the top ten 1.00 at 2 MB¹¹ | `7a6bdd3` (v0.60.454.0) | [Large pages](docs/benchmarks/2026-10-25-n14-large-page-fidelity-wave-b4.md) |
@@ -683,6 +684,12 @@ Garry Tan runs Y Combinator.
 [Disclosures](docs/disclosures.md) lists every relationship and where each line goes.
 
 ## Changelog
+
+### 2026-11-24: Pinned questions
+
+The checks table adds the [pinned-questions results](docs/benchmarks/pinned-questions-results.md) at gbrain
+v0.60.769.0: gbrain flags and refreshes pinned answers after edits, superseded facts and deletions, and misses
+contradictions.
 
 ### 2026-11-23: How gbrain compares adds the changing-facts confirmation
 

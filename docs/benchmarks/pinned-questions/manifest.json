@@ -1,0 +1,29 @@
+{
+  "note": "sha256 of each full receipt these summaries were built from",
+  "receipts": {
+    "pilot": {
+      "sha256": "35169b0a8fec5cb74e57b85f9b8f1ae2e95d31857c69e74740e86fc7672e8f5d",
+      "bytes": 268320
+    },
+    "judge-check": {
+      "sha256": "9bc99103e79211b7b53d5e6e669834f3b4f660193d2ddd5d565d97e206815533",
+      "bytes": 779638
+    },
+    "stale-probes": {
+      "sha256": "1d9dac73f29489b1ee3970ae49ceef1b7266deaff0b1e4142905bf8b950984b5",
+      "bytes": 169759
+    },
+    "counted": {
+      "sha256": "7fc7e604a7facfb5609bc32b61a66047e9e3ba854c6b47c5f58506ca71161074",
+      "bytes": 2566339
+    },
+    "keyless-citation-all": {
+      "sha256": "b836a6be10ea7a95e652c8bd0221b2c24d623ba72330f9aeb39cc9b198fddde5",
+      "bytes": 471964
+    },
+    "keyless-citation-one": {
+      "sha256": "e82931c9281ff6eb5b60420d3ccf4ff973b1cf015a7f765f4194683bd8de9c4d",
+      "bytes": 460657
+    }
+  }
+}
