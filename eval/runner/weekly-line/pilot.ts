@@ -60,7 +60,9 @@ import {
   type WeeklyLineGbrainBuild, type WeeklyPilotManifest,
 } from '../q1/cells/weekly-line.ts';
 import { exitCodeOf, renderMessage, ScoreboardError } from '../q1/scoreboard-errors.ts';
-import { buildSample, goldLabel, JudgeCheckRefusal, poolAnswers } from './judge-check.ts';
+import { findValues } from '../bg1/match.ts';
+import type { MemoryQuestion } from '../memory-qa/corpus.ts';
+import { answerKind, buildSample, goldLabel, JudgeCheckRefusal, poolAnswers, type PoolAnswer } from './judge-check.ts';
 import { lsRemoteTags, newestGbrainRelease } from './runner.ts';
 import { WL_BLOCK_WORLDS, WL_SYSTEMS, WL_WEEK_WORLDS, type WlRow } from './design.ts';
 
@@ -242,7 +244,7 @@ export interface RowReading {
   spend_usd: number | null; spend_source: string | null;
   part_under_test: { ran: boolean; detail: Record<string, unknown> };
   /**
-   * A grep-agent cell's claude-opus-5-5 answers read against the construction labels (judge-check.ts goldLabel): the
+   * A grep-agent cell's claude-opus-5-5 answers read against the construction labels (stopRuleLabel): the
    * questions its own loop answered, the questions whose answer it never produced (a reader error, a budget stop), how
    * many answers the labels settle as right, and how many they leave unsettled (hedged, or naming none or several values).
    */
@@ -279,7 +281,7 @@ export function readRow(out: string): RowReading[] {
     let construction: RowReading['construction'];
     if (row === 'grep-agent') {
       const opus = answers.filter(a => a.reader === OPUS), questions = devQuestions([...new Set(opus.map(a => a.conversation))]);
-      const labels = opus.filter(a => JUDGED.has(a.outcome)).map(a => goldLabel(questions.get(a.question_id) ?? refuse('PILOT_REPORT', `question ${a.question_id} of ${a.answer_id} is not in the dev worlds`), { stop_reason: a.stop_reason ?? null, text: a.text }).gold);
+      const labels = opus.filter(a => JUDGED.has(a.outcome)).map(a => stopRuleLabel(questions.get(a.question_id) ?? refuse('PILOT_REPORT', `question ${a.question_id} of ${a.answer_id} is not in the dev worlds`), { stop_reason: a.stop_reason ?? null, text: a.text }));
       construction = { answered: opus.filter(a => AGENT_OUTCOMES.has(a.outcome)).map(a => a.question_id), failed: opus.filter(a => !AGENT_OUTCOMES.has(a.outcome)).map(a => a.question_id), correct: labels.filter(g => g === 1).length, unsettled: labels.filter(g => g === null).length };
       const searchedBy = (a: (typeof answers)[number]) => (a.tool_calls?.grep?.calls ?? 0) - (a.tool_calls?.grep?.failed ?? 0) >= 1;
       const recorded = answers.filter(a => a.tool_calls !== undefined).length;
@@ -325,9 +327,25 @@ export function readReread(out: string): RereadReading[] {
 }
 
 /**
+ * The stop rule's construction label of one answer: the judge check's gold-settled label (judge-check.ts goldLabel), and
+ * on a withdrawn question (s5_withdrawn, whose gold is the none-forms) a confident answer whose first tracked value is a
+ * none-form and that names no decoy is right, so "None: the plan with Lisbon was called off" counts as the reference
+ * answer it is. goldLabel reads that answer as unsettled because BG1's matchAnswer, which BG1's and BG1-C's counted
+ * verdicts and the judge check's labels share, calls a none-form beside the withdrawn value "unclear"; this path leaves
+ * matchAnswer and goldLabel as they are and changes no other kind. An answer that leads with the withdrawn value, hedges
+ * or abstains stays unsettled, which the stop rule counts as wrong.
+ */
+export function stopRuleLabel(q: Pick<MemoryQuestion, 'id' | 'bg1'>, a: Pick<PoolAnswer, 'stop_reason' | 'text'>): 0 | 1 | null {
+  const { match, gold } = goldLabel(q, a);
+  if (gold !== null || match !== 'unclear' || q.bg1?.stratum !== 's5_withdrawn' || answerKind(a) === 'hedged') return gold;
+  const hits = findValues(a.text, { gold: q.bg1.gold_values, stale: q.bg1.stale_values, decoy: q.bg1.decoy_values });
+  return hits[0]?.kind === 'gold' && !hits.some(h => h.kind === 'decoy') ? 1 : null;
+}
+
+/**
  * The alias pilot's stop-rule reading: the grep agent's claude-opus-5-5 score over its pilot and judge-check cells, read
- * against the construction labels (judge-check.ts goldLabel: an answer is right only when it names the gold with no stale
- * or decoy value and doesn't hedge), so no judge verdict enters it and a judge error can't move it. Turn-cap and
+ * against the construction labels (stopRuleLabel: an answer is right only when it names the gold with no stale or decoy
+ * value and doesn't hedge, or on a withdrawn question leads with a none-form and names no decoy), so no judge verdict enters it and a judge error can't move it. Turn-cap and
  * context-overflow answers count as wrong, as R111's rule scores them. It is complete only when every cell finished
  * complete and claude-opus-5-5's own loop answered each question in `expected` exactly once and no other; a question
  * whose answer is missing or failed (a reader error, a budget stop) blocks the reading until a resume answers it, and

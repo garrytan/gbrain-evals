@@ -22,8 +22,10 @@ import { devOnly, scheduledQuestions } from '../../eval/runner/q1/cell.ts';
 import { bg1JudgeOf } from '../../eval/runner/q1/cells/definitions.ts';
 import { buildWeeklyPilotManifest, generateWeeklyLineJudgeCheckCells, generateWeeklyLinePilotCells, WEEKLY_ALIAS_PILOT_MONEY, weeklyLinePilotCaps } from '../../eval/runner/q1/cells/weekly-line.ts';
 import {
-  CEILING, judgeCheckShortfall, main as pilotMain, pilotPlan, pilotReport, PilotError, pooledGrepOpus, readRow, STOP_RULE, stopRuleReading, writePilotCampaigns, type StopReading,
+  CEILING, judgeCheckShortfall, main as pilotMain, pilotPlan, pilotReport, PilotError, pooledGrepOpus, readRow, STOP_RULE, stopRuleLabel, stopRuleReading, writePilotCampaigns, type StopReading,
 } from '../../eval/runner/weekly-line/pilot.ts';
+import { goldLabel } from '../../eval/runner/weekly-line/judge-check.ts';
+import { matchAnswer } from '../../eval/runner/bg1/match.ts';
 
 const REPO = resolve(import.meta.dir, '../..');
 const RENDER = join(REPO, 'eval/custody/bg1/render.ts');
@@ -243,6 +245,32 @@ describe('the alias pilot and judge check', () => {
     expect(others(report)).toEqual([[true, 'the stop rule'], [true, 'the stop rule'], [true, 'the stop rule']]);
     expect(others(pilotReport(below, [], manifest))).toEqual([[false, undefined], [false, undefined], [false, undefined]]);
     expect(others(pilotReport(below, [], manifest, 'JUDGE_CHECK_SHORT: x'))).toEqual([[false, 'the judge check is short: JUDGE_CHECK_SHORT: x'], [false, 'the judge check is short: JUDGE_CHECK_SHORT: x'], [false, 'the judge check is short: JUDGE_CHECK_SHORT: x']]);
+  });
+
+  // Value: protects=the stop rule scores every committed reference answer of the three alias worlds right, 192 of 192, and a stale answer set (each question's latest withdrawn or superseded value) well below 0.95, while BG1's matchAnswer and the judge check's goldLabel read the withdrawal answers exactly as before; fails_when=the stop-rule scorer can't pass its own gold (the 24 withdrawal answers that name the withdrawn partner beside a none-form read as unsettled), passes a stale set, or the fix moves the shared matcher that BG1's and BG1-C's counted verdicts use; why_new=GBEV-3's ruling of 2026-11-25 on #650's blocker 1 ("the 192 reference answers must score 192/192 under the stop-rule scorer, and a deliberately stale answer set must score below 0.95"); seam=pilot.ts stopRuleLabel through readRow and stopRuleReading over written cells on the alias fixtures; no_claim=real answers
+  test('the stop rule scores the 192 reference answers 192/192 and a stale answer set below 0.95', () => {
+    const reference = (q: MemoryQuestion): Answer => ({ text: q.answer! });
+    const ref = stopRuleReading(manifest, read(reference, wrong));
+    console.log('reference answers: ' + ref.correct + '/' + ref.expected_answers + ', accuracy ' + ref.grep_agent_opus_accuracy);
+    expect(ref).toMatchObject({ correct: 192, answers: 192, expected_answers: 192, unsettled: 0, grep_agent_opus_accuracy: 1, complete: true });
+    const staleAnswer = (q: MemoryQuestion): Answer => ({ text: q.bg1!.stale_values.at(-1) ?? (q.bg1!.ordered ? [...q.bg1!.gold_values].reverse().join(', then ') : q.bg1!.decoy_values[0]) });
+    const st = stopRuleReading(manifest, read(staleAnswer, right));
+    console.log('stale answers: ' + st.correct + '/' + st.expected_answers + ', accuracy ' + st.grep_agent_opus_accuracy);
+    expect(st.complete).toBe(true);
+    expect(st.grep_agent_opus_accuracy!).toBeLessThan(0.95);
+    const withdrawn = corpus.questions.filter(q => q.bg1!.stratum === 's5_withdrawn');
+    expect(withdrawn).toHaveLength(24);
+    for (const q of withdrawn) {
+      expect([matchAnswer(q, q.answer!), goldLabel(q, { stop_reason: null, text: q.answer! }).gold]).toEqual(['unclear', null]);
+      const [partner] = q.bg1!.stale_values;
+      expect(stopRuleLabel(q, { stop_reason: null, text: partner })).toBe(0);
+      expect(stopRuleLabel(q, { stop_reason: null, text: partner + ', and nothing else is planned.' })).toBeNull();
+      expect(stopRuleLabel(q, { stop_reason: null, text: "I couldn't find anything; nothing came up about " + partner + '.' })).toBeNull();
+      if (q.bg1!.decoy_values.length) expect(stopRuleLabel(q, { stop_reason: null, text: 'None: ' + partner + ' was called off, but ' + q.bg1!.decoy_values[0] + ' is in talks.' })).toBeNull();
+    }
+    for (const q of corpus.questions.filter(x => x.bg1!.stratum !== 's5_withdrawn'))
+      for (const text of [q.answer!, staleAnswer(q).text, 'None: ' + q.answer + ' was called off.'])
+        expect(stopRuleLabel(q, { stop_reason: null, text })).toBe(goldLabel(q, { stop_reason: null, text }).gold);
   });
 
   // Value: protects=the judge check's own sampler reads the grep agent's cells as short when its judges called too few answers wrong, which holds the other rows; fails_when=judgeCheckShortfall reads a sample the judge check would refuse as drawable, or refuses a drawable one; why_new=GBEV-3's ruling of 2026-11-25 (item 4): the other rows wait when the judge check can't get 40 wrong answers; seam=pilot.ts judgeCheckShortfall over judge-check.ts poolAnswers and buildSample on written cells; no_claim=real verdicts
