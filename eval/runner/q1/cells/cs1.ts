@@ -126,11 +126,11 @@ export const CS1_EXTRACT_FIRST_LAUNCH: NonNullable<CellDefinition['launch']> = {
  * window's share as the plan counts them).
  */
 export const CS1_PLAN: Readonly<Record<string, { write_usd_per_mtok: number; answer_input_tokens: number | null; hours_per_world: number }>> = {
-  'gbrain-defaults': { write_usd_per_mtok: 1.0, answer_input_tokens: 23_800, hours_per_world: 2 },
-  'ext-extract-first': { write_usd_per_mtok: 95, answer_input_tokens: 1_200, hours_per_world: 20 },
-  'ext-memory-bank': { write_usd_per_mtok: 3.7, answer_input_tokens: 10_400, hours_per_world: 2 },
-  'ext-verbatim-session': { write_usd_per_mtok: 0, answer_input_tokens: 17_600, hours_per_world: 1.5 },
-  'baseline-hybrid': { write_usd_per_mtok: 0.14, answer_input_tokens: 22_500, hours_per_world: 1 },
+  'gbrain-defaults': { write_usd_per_mtok: 0.11, answer_input_tokens: 5_100, hours_per_world: 2 },
+  'ext-extract-first': { write_usd_per_mtok: 70.1, answer_input_tokens: 1_000, hours_per_world: 20 },
+  'ext-memory-bank': { write_usd_per_mtok: 9.06, answer_input_tokens: 9_550, hours_per_world: 2 },
+  'ext-verbatim-session': { write_usd_per_mtok: 0, answer_input_tokens: 15_900, hours_per_world: 1.5 },
+  'baseline-hybrid': { write_usd_per_mtok: 0.14, answer_input_tokens: 14_550, hours_per_world: 1 },
   'baseline-file-agent': { write_usd_per_mtok: 0, answer_input_tokens: 73_000, hours_per_world: 1.5 },
   'baseline-none': { write_usd_per_mtok: 0, answer_input_tokens: 0, hours_per_world: 0.5 },
   'baseline-full-context': { write_usd_per_mtok: 0, answer_input_tokens: null, hours_per_world: 0.5 },

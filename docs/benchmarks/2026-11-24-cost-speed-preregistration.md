@@ -281,11 +281,11 @@ CLAUDE.md asks; they go in the paid-window request and the tracking issue.
 
 | Row | Write and background, dollars per million ingested tokens | Answer-model input per question | Machine hours per world |
 |---|---|---|---|
-| `gbrain-defaults` | 1.0 (measured embeddings 0.08, plus background fact extraction at an assumed 0.9 or less) | 23,800 tokens | 2 |
-| `ext-extract-first` | 95 (its recipe's rate from the scoreboard's development smokes, `ingest_usd_per_mtok` in `definitions.ts`; the battleground's 20.09 for gpt-4.1-mini in its matched configuration, times the 2.84 per-call ratio [its pilot](../../eval/systems/extract-first/PILOT.md) measured for gpt-5-mini, gives about 57, so the plan takes the higher) | 1,200 tokens | 20 (its recipe's 110 hours per million tokens, `hours_per_mtok`, for a world of about 0.18 million) |
-| `ext-memory-bank` | 3.7 (1.85 measured for its recipe with observations off, doubled for observations) | 10,400 tokens | 2 |
-| `ext-verbatim-session` | 0 | 17,600 tokens (the pilot world's keyless rehearsal; amendment of 2026-11-25, item 14) | 1.5 |
-| `baseline-hybrid` | 0.14 (measured) | 22,500 tokens (the pilot world's keyless rehearsal; amendment of 2026-11-25, item 14) | 1 |
+| `gbrain-defaults` | 0.11 (the paid pilot; it makes no fact-extraction calls on conversation pages, amendment of 2026-11-25, item 19) | 5,100 tokens (the paid pilot) | 2 |
+| `ext-extract-first` | 70.1 (the paid pilot; item 19. Before it, 95: its recipe's rate from the scoreboard's development smokes, `ingest_usd_per_mtok` in `definitions.ts`; the battleground's 20.09 for gpt-4.1-mini in its matched configuration, times the 2.84 per-call ratio [its pilot](../../eval/systems/extract-first/PILOT.md) measured for gpt-5-mini, gives about 57, so the plan took the higher) | 1,000 tokens (the paid pilot) | 20 (its recipe's 110 hours per million tokens, `hours_per_mtok`, for a world of about 0.18 million) |
+| `ext-memory-bank` | 9.06 (the paid pilot, 2.45 times the earlier 3.7; item 19) | 9,550 tokens (the paid pilot) | 2 |
+| `ext-verbatim-session` | 0 | 15,900 tokens (the paid pilot; item 19) | 1.5 |
+| `baseline-hybrid` | 0.14 (measured) | 14,550 tokens (the paid pilot; item 19) | 1 |
 | `baseline-file-agent` | 0 | 73,000 tokens over the agent's turns | 1.5 |
 | `baseline-none` | 0 | the question only | 0.5 |
 | `baseline-full-context` | 0 | the whole world, cached after the first read | 0.5 |
@@ -542,6 +542,44 @@ Added after a scoped review of items 12 and 13, before any paid call:
 
 A keyless hybrid cell on the VM after the fix sent all 115 of its embedding calls and all 8 reads through the lease
 proxy, and no cache directory was created outside its output.
+
+Added after the paid pilot (window CS1-PILOT), before any counted cell. These items freeze the counted run:
+
+17. **The idle wait before a held-back probe is 20 minutes.** Extract-first's per-write extraction took 2 to 10
+    minutes to go quiet after each probe write. 3 of its 20 probes reached the 10-minute cap and started without the
+    system idle, which is more than a tenth, so its world's probe window was void and none of its probes counted, though
+    all 20 found their session. The wait is now at most 20 minutes (`CS1_IDLE_MAX_MS` in `eval/runner/q1/cell.ts`),
+    the amount amendment item 2 already planned per probe. It changes every row's probe procedure, not only
+    extract-first's. The other rows' pilots stand: none of their probes waited more than 10 minutes, so a 20-minute cap
+    would have given them the same records. The probe horizon (10 minutes to be found) is unchanged. Extract-first is
+    piloted again alone under the new wait before its counted cell.
+18. **World end and the pilot method.** The pool's world end is 2026-11-22 (`GBRAIN_EVALS_BG1_WORLD_END`); the
+    development default of 2026-11-08 is refused because it lies more than 14 days before launch, so every counted cell
+    starts by 2026-12-06 or this item is amended again. The pilot ran all eight pilot cells as local cells of one
+    campaign on one VM, each behind its own lease proxy and lease, with the three external stacks moved to their own shim
+    ports (8701 to 8703) beside gbrain's 8700, after keyless rehearsals of every cell on the same VM.
+19. **Pilot results and the re-plan.** Every pilot lease settled, and the loader put every billed dollar in a world.
+    gbrain, memory-bank, verbatim-session, hybrid, the file agent and the two floors passed every R111 check above;
+    extract-first passed all but the probe window (item 17). Measured against the plan:
+    - gbrain's write and background rate was 0.11 dollars per million tokens against the planned 1.0, below the band.
+      Shipped gbrain makes no fact-extraction calls on these sessions: the harness writes them as conversation pages, its
+      facts backstop skips conversation pages (`src/core/facts/eligibility.ts`, reason `conversation_pipeline`), and
+      conversation facts are extracted only by `gbrain extract-conversation-facts`, which a shipped install does not
+      run on its own and which only the F6 configuration of the shim calls. This is shipped behavior and is what the
+      row measures; the results page says, beside gbrain's dollar figure and not in a footnote, that gbrain's cost
+      reflects writing these sessions without extracting facts from them. Its daily upkeep ran through its trigger in
+      the 2-hour idle window and made no provider call.
+    - memory-bank's rate was 9.06 against the planned 3.7, 2.45 times it, outside the band. Its consolidation calls
+      ran in its background lines, as the plan expected, but at more than twice the rate the observations-off
+      measurement doubled suggested. The plan takes the measured rate.
+    - extract-first's rate was 70.1 against the planned 95, inside the band; it wrote and drained 60 sessions in 7.0
+      hours, about 17.5 hours for a counted world against the planned 20.
+    - Per-question reads were smaller than planned for gbrain (5,100 cl100k tokens against 23,800), verbatim-session
+      (15,900 against 17,600), hybrid (14,550 against 22,500), memory-bank (9,550 against 10,400) and extract-first
+      (1,000 against 1,200). The plan takes the measured sizes. The file agent keeps its planned 73,000, because the
+      pilot's 60-session tree is smaller than a counted world's, and full context is priced from its measured reads.
+    The plan table above carries the new values, and `cs1-cells.json` is regenerated from them. The counted run's
+    caps follow from them; their amounts are in the paid-window request, as the Plan section says.
 
 ## Disclosures
 

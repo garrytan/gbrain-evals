@@ -259,23 +259,23 @@
     {
       "id": "CS1",
       "label": "cost and speed counted cells: the eight rows on public dev worlds bg1-dev-01 to bg1-dev-10",
-      "plan_usd": 392.56,
-      "estimate_usd": 392.56,
-      "cap_usd": 588.84
+      "plan_usd": 318.91,
+      "estimate_usd": 318.91,
+      "cap_usd": 478.37
     },
     {
       "id": "CS1-pilot",
       "label": "cost and speed pilot (R111): the eight rows on bg1-dev-11, its first 60 sessions written",
-      "plan_usd": 12.9,
-      "estimate_usd": 12.9,
-      "cap_usd": 39.4
+      "plan_usd": 10.63,
+      "estimate_usd": 10.63,
+      "cap_usd": 35.58
     },
     {
       "id": "CS1-capacity",
       "label": "cost and speed keyless capacity check: every row that writes, on bg1-dev-12 against the fake upstream",
       "plan_usd": 0,
       "estimate_usd": 0,
-      "cap_usd": 60.81
+      "cap_usd": 50.54
     }
   ],
   "cells": [
@@ -348,10 +348,10 @@
         }
       ],
       "estimate": {
-        "usd": 34.66,
+        "usd": 9.68,
         "lines": {
-          "readers": 32.85,
-          "write_background": 1.81
+          "readers": 9.49,
+          "write_background": 0.2
         }
       },
       "scoring": "key-match",
@@ -393,8 +393,8 @@
         "commit": "97ef356f574a66709ef1bf4ae1cad604727852d8"
       },
       "lease": {
-        "usd": 18.4,
-        "basis": "cost and speed: the largest unit's share ($13.98, 4 worlds at 1.0085 times the mean world) x 1.25 plus twice the peak reservation ($0.4571, reader anthropic:claude-opus-5-5)"
+        "usd": 5.17,
+        "basis": "cost and speed: the largest unit's share ($3.90, 4 worlds at 1.0085 times the mean world) x 1.25 plus twice the peak reservation ($0.1429, reader anthropic:claude-opus-5-5)"
       }
     },
     {
@@ -463,10 +463,10 @@
         }
       ],
       "estimate": {
-        "usd": 176.3,
+        "usd": 131.05,
         "lines": {
-          "readers": 4.61,
-          "write_background": 171.68
+          "readers": 4.36,
+          "write_background": 126.68
         }
       },
       "scoring": "key-match",
@@ -488,8 +488,8 @@
       },
       "hosting_samples": true,
       "lease": {
-        "usd": 22.38,
-        "basis": "cost and speed: the largest unit's share ($17.78, 1 world at 1.0085 times the mean world) x 1.25 plus twice the peak reservation ($0.0774, reader anthropic:claude-opus-5-5)"
+        "usd": 16.67,
+        "basis": "cost and speed: the largest unit's share ($13.22, 1 world at 1.0085 times the mean world) x 1.25 plus twice the peak reservation ($0.074, reader anthropic:claude-opus-5-5)"
       }
     },
     {
@@ -558,10 +558,10 @@
         }
       ],
       "estimate": {
-        "usd": 22.79,
+        "usd": 31.42,
         "lines": {
-          "readers": 16.11,
-          "write_background": 6.69
+          "readers": 15.05,
+          "write_background": 16.37
         }
       },
       "scoring": "key-match",
@@ -583,8 +583,8 @@
       },
       "hosting_samples": true,
       "lease": {
-        "usd": 14.83,
-        "basis": "cost and speed: the largest unit's share ($11.49, 5 worlds at 1.0085 times the mean world) x 1.25 plus twice the peak reservation ($0.2319, reader anthropic:claude-opus-5-5)"
+        "usd": 20.24,
+        "basis": "cost and speed: the largest unit's share ($15.84, 5 worlds at 1.0085 times the mean world) x 1.25 plus twice the peak reservation ($0.2177, reader anthropic:claude-opus-5-5)"
       }
     },
     {
@@ -653,9 +653,9 @@
         }
       ],
       "estimate": {
-        "usd": 25.1,
+        "usd": 22.98,
         "lines": {
-          "readers": 25.1
+          "readers": 22.98
         }
       },
       "scoring": "key-match",
@@ -677,8 +677,8 @@
       },
       "hosting_samples": true,
       "lease": {
-        "usd": 16.53,
-        "basis": "cost and speed: the largest unit's share ($12.66, 5 worlds at 1.0085 times the mean world) x 1.25 plus twice the peak reservation ($0.3529, reader anthropic:claude-opus-5-5)"
+        "usd": 15.14,
+        "basis": "cost and speed: the largest unit's share ($11.59, 5 worlds at 1.0085 times the mean world) x 1.25 plus twice the peak reservation ($0.3243, reader anthropic:claude-opus-5-5)"
       }
     },
     {
@@ -741,9 +741,9 @@
         }
       ],
       "estimate": {
-        "usd": 31.48,
+        "usd": 21.55,
         "lines": {
-          "readers": 31.23,
+          "readers": 21.29,
           "write_background": 0.25
         }
       },
@@ -766,8 +766,8 @@
       },
       "hosting_samples": true,
       "lease": {
-        "usd": 20.72,
-        "basis": "cost and speed: the largest unit's share ($15.87, 5 worlds at 1.0085 times the mean world) x 1.25 plus twice the peak reservation ($0.4352, reader anthropic:claude-opus-5-5)"
+        "usd": 14.19,
+        "basis": "cost and speed: the largest unit's share ($10.87, 5 worlds at 1.0085 times the mean world) x 1.25 plus twice the peak reservation ($0.3017, reader anthropic:claude-opus-5-5)"
       }
     },
     {
@@ -1065,10 +1065,10 @@
         }
       ],
       "estimate": {
-        "usd": 0.73,
+        "usd": 0.2,
         "lines": {
-          "readers": 0.66,
-          "write_background": 0.08
+          "readers": 0.19,
+          "write_background": 0.01
         }
       },
       "scoring": "key-match",
@@ -1110,8 +1110,8 @@
         "commit": "97ef356f574a66709ef1bf4ae1cad604727852d8"
       },
       "lease": {
-        "usd": 1.83,
-        "basis": "cost and speed: the largest unit's share ($0.73, 1 world) x 1.25 plus twice the peak reservation ($0.4571, reader anthropic:claude-opus-5-5)"
+        "usd": 0.54,
+        "basis": "cost and speed: the largest unit's share ($0.20, 1 world) x 1.25 plus twice the peak reservation ($0.1429, reader anthropic:claude-opus-5-5)"
       }
     },
     {
@@ -1171,10 +1171,10 @@
         }
       ],
       "estimate": {
-        "usd": 7.3,
+        "usd": 5.41,
         "lines": {
           "readers": 0.09,
-          "write_background": 7.21
+          "write_background": 5.32
         }
       },
       "scoring": "key-match",
@@ -1196,8 +1196,8 @@
       },
       "hosting_samples": true,
       "lease": {
-        "usd": 9.28,
-        "basis": "cost and speed: the largest unit's share ($7.30, 1 world) x 1.25 plus twice the peak reservation ($0.0774, reader anthropic:claude-opus-5-5)"
+        "usd": 6.92,
+        "basis": "cost and speed: the largest unit's share ($5.41, 1 world) x 1.25 plus twice the peak reservation ($0.074, reader anthropic:claude-opus-5-5)"
       }
     },
     {
@@ -1257,10 +1257,10 @@
         }
       ],
       "estimate": {
-        "usd": 0.6,
+        "usd": 0.99,
         "lines": {
-          "readers": 0.32,
-          "write_background": 0.28
+          "readers": 0.3,
+          "write_background": 0.69
         }
       },
       "scoring": "key-match",
@@ -1282,8 +1282,8 @@
       },
       "hosting_samples": true,
       "lease": {
-        "usd": 1.22,
-        "basis": "cost and speed: the largest unit's share ($0.60, 1 world) x 1.25 plus twice the peak reservation ($0.2319, reader anthropic:claude-opus-5-5)"
+        "usd": 1.68,
+        "basis": "cost and speed: the largest unit's share ($0.99, 1 world) x 1.25 plus twice the peak reservation ($0.2177, reader anthropic:claude-opus-5-5)"
       }
     },
     {
@@ -1343,9 +1343,9 @@
         }
       ],
       "estimate": {
-        "usd": 0.5,
+        "usd": 0.46,
         "lines": {
-          "readers": 0.5
+          "readers": 0.46
         }
       },
       "scoring": "key-match",
@@ -1367,8 +1367,8 @@
       },
       "hosting_samples": true,
       "lease": {
-        "usd": 1.34,
-        "basis": "cost and speed: the largest unit's share ($0.50, 1 world) x 1.25 plus twice the peak reservation ($0.3529, reader anthropic:claude-opus-5-5)"
+        "usd": 1.23,
+        "basis": "cost and speed: the largest unit's share ($0.46, 1 world) x 1.25 plus twice the peak reservation ($0.3243, reader anthropic:claude-opus-5-5)"
       }
     },
     {
@@ -1422,9 +1422,9 @@
         }
       ],
       "estimate": {
-        "usd": 0.64,
+        "usd": 0.44,
         "lines": {
-          "readers": 0.62,
+          "readers": 0.43,
           "write_background": 0.01
         }
       },
@@ -1447,8 +1447,8 @@
       },
       "hosting_samples": true,
       "lease": {
-        "usd": 1.68,
-        "basis": "cost and speed: the largest unit's share ($0.64, 1 world) x 1.25 plus twice the peak reservation ($0.4352, reader anthropic:claude-opus-5-5)"
+        "usd": 1.16,
+        "basis": "cost and speed: the largest unit's share ($0.44, 1 world) x 1.25 plus twice the peak reservation ($0.3017, reader anthropic:claude-opus-5-5)"
       }
     },
     {
@@ -1726,8 +1726,8 @@
         "commit": "97ef356f574a66709ef1bf4ae1cad604727852d8"
       },
       "lease": {
-        "usd": 5.29,
-        "basis": "keyless capacity check, leased as one counted world because its lease proxy prices the fake upstream's usage fields: the largest unit's share ($3.50, 1 world at 1.0085 times the mean world) x 1.25 plus twice the peak reservation ($0.4571, reader anthropic:claude-opus-5-5)"
+        "usd": 1.51,
+        "basis": "keyless capacity check, leased as one counted world because its lease proxy prices the fake upstream's usage fields: the largest unit's share ($0.98, 1 world at 1.0085 times the mean world) x 1.25 plus twice the peak reservation ($0.1429, reader anthropic:claude-opus-5-5)"
       }
     },
     {
@@ -1793,8 +1793,8 @@
       "scoring": "key-match",
       "hosting_samples": true,
       "lease": {
-        "usd": 22.38,
-        "basis": "keyless capacity check, leased as one counted world because its lease proxy prices the fake upstream's usage fields: the largest unit's share ($17.78, 1 world at 1.0085 times the mean world) x 1.25 plus twice the peak reservation ($0.0774, reader anthropic:claude-opus-5-5)"
+        "usd": 16.67,
+        "basis": "keyless capacity check, leased as one counted world because its lease proxy prices the fake upstream's usage fields: the largest unit's share ($13.22, 1 world at 1.0085 times the mean world) x 1.25 plus twice the peak reservation ($0.074, reader anthropic:claude-opus-5-5)"
       }
     },
     {
@@ -1860,8 +1860,8 @@
       "scoring": "key-match",
       "hosting_samples": true,
       "lease": {
-        "usd": 3.34,
-        "basis": "keyless capacity check, leased as one counted world because its lease proxy prices the fake upstream's usage fields: the largest unit's share ($2.30, 1 world at 1.0085 times the mean world) x 1.25 plus twice the peak reservation ($0.2319, reader anthropic:claude-opus-5-5)"
+        "usd": 4.4,
+        "basis": "keyless capacity check, leased as one counted world because its lease proxy prices the fake upstream's usage fields: the largest unit's share ($3.17, 1 world at 1.0085 times the mean world) x 1.25 plus twice the peak reservation ($0.2177, reader anthropic:claude-opus-5-5)"
       }
     },
     {
@@ -1927,8 +1927,8 @@
       "scoring": "key-match",
       "hosting_samples": true,
       "lease": {
-        "usd": 3.87,
-        "basis": "keyless capacity check, leased as one counted world because its lease proxy prices the fake upstream's usage fields: the largest unit's share ($2.53, 1 world at 1.0085 times the mean world) x 1.25 plus twice the peak reservation ($0.3529, reader anthropic:claude-opus-5-5)"
+        "usd": 3.55,
+        "basis": "keyless capacity check, leased as one counted world because its lease proxy prices the fake upstream's usage fields: the largest unit's share ($2.32, 1 world at 1.0085 times the mean world) x 1.25 plus twice the peak reservation ($0.3243, reader anthropic:claude-opus-5-5)"
       }
     },
     {
@@ -1988,8 +1988,8 @@
       "scoring": "key-match",
       "hosting_samples": true,
       "lease": {
-        "usd": 4.84,
-        "basis": "keyless capacity check, leased as one counted world because its lease proxy prices the fake upstream's usage fields: the largest unit's share ($3.17, 1 world at 1.0085 times the mean world) x 1.25 plus twice the peak reservation ($0.4352, reader anthropic:claude-opus-5-5)"
+        "usd": 3.32,
+        "basis": "keyless capacity check, leased as one counted world because its lease proxy prices the fake upstream's usage fields: the largest unit's share ($2.17, 1 world at 1.0085 times the mean world) x 1.25 plus twice the peak reservation ($0.3017, reader anthropic:claude-opus-5-5)"
       }
     },
     {
@@ -2054,9 +2054,9 @@
       }
     }
   ],
-  "total_usd": 392.56,
-  "plan_total_usd": 392.56,
-  "cap_usd": 588.84,
+  "total_usd": 318.91,
+  "plan_total_usd": 318.91,
+  "cap_usd": 478.37,
   "campaign_id": "q1-scoreboard-cost-speed",
   "registry": "docs/benchmarks/preregistrations.d/cost-speed-personal.json",
   "gbrain_build": {
@@ -2111,28 +2111,28 @@
   ],
   "plan": {
     "gbrain-defaults": {
-      "write_usd_per_mtok": 1,
-      "answer_input_tokens": 23800,
+      "write_usd_per_mtok": 0.11,
+      "answer_input_tokens": 5100,
       "hours_per_world": 2
     },
     "ext-extract-first": {
-      "write_usd_per_mtok": 95,
-      "answer_input_tokens": 1200,
+      "write_usd_per_mtok": 70.1,
+      "answer_input_tokens": 1000,
       "hours_per_world": 20
     },
     "ext-memory-bank": {
-      "write_usd_per_mtok": 3.7,
-      "answer_input_tokens": 10400,
+      "write_usd_per_mtok": 9.06,
+      "answer_input_tokens": 9550,
       "hours_per_world": 2
     },
     "ext-verbatim-session": {
       "write_usd_per_mtok": 0,
-      "answer_input_tokens": 17600,
+      "answer_input_tokens": 15900,
       "hours_per_world": 1.5
     },
     "baseline-hybrid": {
       "write_usd_per_mtok": 0.14,
-      "answer_input_tokens": 22500,
+      "answer_input_tokens": 14550,
       "hours_per_world": 1
     },
     "baseline-file-agent": {

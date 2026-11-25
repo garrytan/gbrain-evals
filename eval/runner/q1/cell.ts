@@ -381,6 +381,9 @@ export function qaCacheRoot(def: Pick<CellDefinition, 'block'>, out: string, env
  * A cost-and-speed cell runs with the harness's reply and embedding caches off: each measured call goes to the provider
  * through the lease proxy, because a cache hit would be unmetered spend with a near-zero latency.
  */
+/** The longest wait for a held-back probe's slot to go quiet (amendment of 2026-11-25, item 17: extract-first's drain passed 10 minutes). */
+export const CS1_IDLE_MAX_MS = 20 * 60_000;
+
 export const uncachedCell = (def: Pick<CellDefinition, 'block'>): boolean => (CS1_BLOCK_IDS as readonly string[]).includes(def.block);
 
 /**
@@ -428,7 +431,7 @@ export interface CellOptions {
   finishTimeoutS?: number;
   probeTimeoutMs?: number;
   probeIntervalMs?: number;
-  /** Held-back probes: how long the slot must be quiet before a probe (default 60 s) and the longest wait for it (default 10 minutes). */
+  /** Held-back probes: how long the slot must be quiet before a probe (default 60 s) and the longest wait for it (default 20 minutes; cost and speed's amendment of 2026-11-25, item 17). */
   idleQuietMs?: number;
   idleMaxMs?: number;
   /** Cells with an idle window: its length in place of the definition's (tests), and the hosting sample interval (default 60 s). */
@@ -1074,7 +1077,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
     const idleCheck = () => awaitIdle({
       pending: async () => null,
       lastRequestAt: async () => { const a = await meter.activity(slot); return a ? (a.inflight > 0 ? Date.now() : a.last_ms) : null; },
-      quietMs: opts.idleQuietMs ?? 60_000, maxMs: opts.idleMaxMs ?? 600_000,
+      quietMs: opts.idleQuietMs ?? 60_000, maxMs: opts.idleMaxMs ?? CS1_IDLE_MAX_MS,
     });
     const search = async (passage: string, sourceId: string): Promise<{ found: boolean; unattributed: number }> => {
       if (grep) return { found: (await grep.grepSources(ns, passage)).includes(sourceId), unattributed: 0 };
