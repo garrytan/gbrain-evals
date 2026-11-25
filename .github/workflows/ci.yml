@@ -215,7 +215,7 @@ jobs:
       postgres:
         image: pgvector/pgvector@sha256:484e838076e04939d27d3e176e91c86eea96236126023be8d3059761122e579f
         env:
-          POSTGRES_PASSWORD: pi
+          POSTGRES_HOST_AUTH_METHOD: trust
         ports:
           - 55432:5432
         options: >-
@@ -247,7 +247,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Person isolation, ci profile on Postgres (in process and HTTP)
-        run: env -i PATH="$PATH" HOME="$HOME" PI_PG_URL=postgres://postgres:pi@127.0.0.1:55432/postgres timeout 1500 bun eval/runner/person-isolation-fuzz.ts --profile ci --cells mcp-dispatch-postgres,http-postgres --output "$RUNNER_TEMP/person-isolation-postgres"
+        run: env -i PATH="$PATH" HOME="$HOME" PI_PG_URL=postgres://postgres@127.0.0.1:55432/postgres timeout 1500 bun eval/runner/person-isolation-fuzz.ts --profile ci --cells mcp-dispatch-postgres,http-postgres --output "$RUNNER_TEMP/person-isolation-postgres"
 
   prereg-order:
     runs-on: ubicloud-standard-2-ubuntu-2604

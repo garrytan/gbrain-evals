@@ -39,7 +39,7 @@ describe('CI workflow gates (audit C5 to C8)', () => {
   });
 
   test('the person-isolation ci profile runs keyless on Postgres pinned by digest, and its reports are never uploaded', () => {
-    expect(runLines()).toContain('env -i PATH="$PATH" HOME="$HOME" PI_PG_URL=postgres://postgres:pi@127.0.0.1:55432/postgres timeout 1500 bun eval/runner/person-isolation-fuzz.ts --profile ci --cells mcp-dispatch-postgres,http-postgres --output "$RUNNER_TEMP/person-isolation-postgres"');
+    expect(runLines()).toContain('env -i PATH="$PATH" HOME="$HOME" PI_PG_URL=postgres://postgres@127.0.0.1:55432/postgres timeout 1500 bun eval/runner/person-isolation-fuzz.ts --profile ci --cells mcp-dispatch-postgres,http-postgres --output "$RUNNER_TEMP/person-isolation-postgres"');
     const start = workflow.indexOf('\n  person-isolation-postgres:');
     const end = workflow.slice(start + 1).search(/\n  [a-z-]+:\n/);
     const job = workflow.slice(start, start + 1 + end);
