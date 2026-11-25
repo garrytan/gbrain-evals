@@ -385,6 +385,21 @@ and both stages together fit inside the window's cap (`WEEKLY_ALIAS_PILOT_MONEY`
 caps together fit the window's cap, and the dry run (`pilot.ts plan --length alias`) prints each ledger's cap. A cap
 reached pauses its run for an extension, as the line's other caps do.
 
+**Fixes before the window (2026-11-25).** Four fixes land on the results branch before the paid window opens, each with a
+keyless test that fails without it:
+
+- The stop rule scores its own reference answers right (d7571ca82). A withdrawal answer that leads with "none" and names
+  the withdrawn partner only as context ("None: the plan with Lisbon was called off") now counts as right, so the 192
+  reference answers score 192 of 192 and a stale answer set scores 0 of 192. It is a label of the stop rule's own
+  (`pilot.ts stopRuleLabel`): BG1's `matchAnswer` and the judge check's `goldLabel`, which counted scoring also uses, are
+  unchanged.
+- A judge with no verdicts makes the judge check short (d9b663f57), so the other rows stay held instead of the check
+  passing on one judge alone.
+- The stop rule reads only paid cells (403dc365a). Cell receipts now record a keyless upstream or the paid window they
+  ran under, and `campaigns --grep-cell` refuses a keyless rehearsal cell or a receipt without that record.
+- The window's caps are re-split (a28f552f3): the mint's cap rises above its estimate, the grep agent's stage is unchanged
+  and the other rows' stage shrinks to fit, inside the same window (`WEEKLY_ALIAS_PILOT_MONEY`).
+
 **Readers and judges.** Unchanged: claude-opus-5-5 and particle-1 read every row; gpt-6-astra judges claude-opus-5-5's
 answers and claude-opus-5-5 judges particle-1's.
 
