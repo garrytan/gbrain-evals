@@ -84,7 +84,7 @@ describe('the long public dev worlds', () => {
       expect(r.out).toContain(`bg1-validate world=${id} status=pass gates=none`);
       expect(record(set, id)).toMatchObject({ status: 'pass', target_tokens: 1_000_000, failed: [] });
     }
-    const corpus = loadBg1Dev({ only: new Set(LONG), worldEnd: WORLD_END });
+    const corpus = loadBg1Dev({ root: join(BG1_DATA_DIR, 'dev'), only: new Set(LONG), worldEnd: WORLD_END });
     expect(corpus.conversations.map(c => c.id)).toEqual(LONG);
     expect(corpus.questions).toHaveLength(192);
   }, 120_000);
