@@ -13,6 +13,18 @@
       "paid_tier": "over-500",
       "decision": [
         {
+          "if": "the alias pilot's grep agent with claude-opus-5-5 scores 0.95 or more against the construction labels over all 192 questions of bg1-dev-alias-01 to -03 (Amendment 1)",
+          "then": "the line stops before week 1 and no other row runs; the grep result is published as a findings write-up with the named-subject results beside it, and the long and alias worlds are committed as public development worlds"
+        },
+        {
+          "if": "the alias pilot's grep agent scores below 0.95 and the judge check can't draw at least 40 answers each judge called wrong from its answers (Amendment 1)",
+          "then": "the other rows stay held and the reading goes back to the line's owner, who decides before any of them runs; no claim is published from the pilot"
+        },
+        {
+          "if": "the alias pilot's grep agent scores below 0.95 and the judge check can draw its sample (Amendment 1)",
+          "then": "the other rows run their pilots and the line runs as frozen from launch amendment A; a gbrain pilot gap of more than 3 points behind the grep agent sends that public world's per-kind rows to gbrain's maintainers as an advisory issue, and no claim is published from the pilot"
+        },
+        {
           "if": "a block reads gbrain behind the grep agent on a class",
           "then": "matching the grep agent on that class becomes the first item on gbrain's improvement list, ahead of new features, with per-kind rows and exposure naming retrieval or reading; no gbrain release note claims better recall than search on that class; a second behind block in a row on the same class starts one Why-null cycle ending in keep, fix-method or a cut candidate for the project owner"
         },
@@ -93,7 +105,7 @@
         {
           "arm": "gbrain",
           "max_budget_fraction": 0.1,
-          "part_under_test_ran": "on public world bg1-dev-01 at the counted settings, the newest release ingests the world with fact extraction on and the reader's context holds facts-block lines on at least one question",
+          "part_under_test_ran": "on public world bg1-dev-alias-01 (Amendment 1; bg1-dev-01 before it) at the counted settings, the newest release ingests the world with fact extraction on and the reader's context holds facts-block lines on at least one question",
           "judge_passes": "every pilot answer gets a parsable verdict from its judge, and the judge check's labels cover this row",
           "units_supplied_at_rate": "every pilot question is answered by both readers and the row's cost per world is inside its planned rate"
         },

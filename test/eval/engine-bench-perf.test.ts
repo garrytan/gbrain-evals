@@ -1,11 +1,11 @@
 import { describe, expect, test } from 'bun:test';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync } from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
   DEFAULT_MARGINS, buildDataset, hashEmbed, higherIsBetter, lowerIsBetter, marginsFromPrereg, medianRatio, missingMetric, pageMarkdown,
-  ENGINES, parseArgs, quantileRatio, recordedCommand, speedVerdict, type MetricVerdict, type PairedRow, type Options,
+  ENGINES, MemSampler, clientPeakKb, engineRss, measureDisk, parseArgs, quantileRatio, recordedCommand, rssSource, speedVerdict, type MetricVerdict, type PairedRow, type Options,
 } from '../../eval/runner/engine-bench/perf.ts';
 
 const REPO = join(import.meta.dir, '../..');
@@ -127,4 +127,67 @@ describe('margins and arguments', () => {
     expect(r.status).toBe(3);
     expect(r.stderr).toMatch(/rust_engine_addon_missing/);
   }, 90_000);
+});
+
+describe('a measurement source that is unavailable records null, never 0', () => {
+  const store = () => { const d = mkdtempSync(join(tmpdir(), 'perf-disk-')); writeFileSync(join(d, 'f'), 'x'.repeat(5000)); return d; };
+  const noProc = () => { throw new Error('ENOENT: /proc/self/status'); };
+  test('disk: du -sb on Linux, du -sk under its own method where -b is refused (macOS), and null when du answers nothing', () => {
+    const d = store();
+    const linux = measureDisk(d, 'PGLite', (args) => args[0] === '-sb' ? { status: 0, stdout: `5120\t${d}\n` } : { status: 1, stdout: '' });
+    expect(linux.total_bytes).toBe(5120);
+    expect(linux.method).toBe('du -sb of the PGLite store after the engine closed');
+    const bsd = measureDisk(d, 'PGLite', (args) => args[0] === '-sb' ? { status: 1, stdout: '' } : { status: 0, stdout: `8\t${d}\n` });
+    expect(bsd).toEqual({ total_bytes: 8192, method: expect.stringMatching(/^du -sk .*1 KiB blocks/) });
+    for (const answer of [{ status: 1, stdout: '' }, { status: 0, stdout: '' }, { status: null, stdout: null }, { status: 0, stdout: 'du: illegal option -- b' }]) {
+      const none = measureDisk(d, 'PGLite', () => answer);
+      expect(none.total_bytes).toBeNull();
+      expect(none.method).toMatch(/^not measurable on /);
+    }
+    expect(measureDisk(join(d, 'missing'), 'Rust').total_bytes).toBeNull();
+  });
+  test('memory: /proc on Linux, sampled process RSS under its own method without /proc, and no reading at all as null', () => {
+    const proc = rssSource(() => 'Name:\tbun\nVmHWM:\t  2048 kB\nVmRSS:\t  1024 kB\n', () => { throw new Error('unused'); })!;
+    expect([proc.rssKb(), proc.hwmKb()]).toEqual([1024, 2048]);
+    expect(proc.method).toMatch(/^VmHWM and VmRSS of the benchmark process from \/proc\/self\/status/);
+    const mac = rssSource(noProc, () => 3 * 1024 * 1024)!;
+    expect([mac.rssKb(), mac.hwmKb()]).toEqual([3072, null]);
+    expect(mac.method).toMatch(/^process\.memoryUsage\(\)\.rss .*not comparable with VmHWM/);
+    expect(rssSource(noProc, () => { throw new Error('no rusage'); })).toBeNull();
+    expect(rssSource(noProc, () => 0)).toBeNull();
+    expect(rssSource(() => 'Name:\tbun\n', () => 0)).toBeNull();
+    let reads = 0;
+    const flaky = rssSource(() => { if (++reads > 2) throw new Error('EMFILE'); return 'VmHWM:\t 2048 kB\nVmRSS:\t 1024 kB\n'; })!;
+    expect([flaky.rssKb(), flaky.hwmKb()]).toEqual([null, null]);
+  });
+  test('an arm with no memory reading has no engine RSS, where a 0 reading still counts', () => {
+    expect(engineRss({ memory: { client_engine_peak_rss_bytes: null, server_peak_working_set_bytes: null } }, 'pglite')).toBeNull();
+    expect(engineRss({ memory: { client_engine_peak_rss_bytes: 0, server_peak_working_set_bytes: null } }, 'rust')).toBe(0);
+    expect(engineRss({ memory: { client_engine_peak_rss_bytes: 1000, server_peak_working_set_bytes: 24 } }, 'postgres')).toBe(1024);
+    expect(engineRss({ memory: { client_engine_peak_rss_bytes: 1000, server_peak_working_set_bytes: 0 } }, 'postgres')).toBe(1000);
+  });
+  test('a Postgres arm whose server memory was not read has no engine RSS, not the client alone', () => {
+    expect(engineRss({ memory: { client_engine_peak_rss_bytes: 1000, server_peak_working_set_bytes: null } }, 'postgres')).toBeNull();
+    const dir = mkdtempSync(join(tmpdir(), 'no-cgroup-'));
+    try {
+      const missing = new MemSampler(join(dir, 'docker-x.scope'), null);
+      missing.start();
+      missing.stop();
+      expect([missing.peakServerWs, missing.peakRssKb]).toEqual([null, null]);
+      writeFileSync(join(dir, 'memory.current'), 'max\n');
+      writeFileSync(join(dir, 'memory.stat'), 'inactive_file 0\n');
+      const unparseable = new MemSampler(dir, null);
+      unparseable.start();
+      unparseable.stop();
+      expect(unparseable.peakServerWs).toBeNull();
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+  test('a baseline reading alone is no peak', () => {
+    expect(clientPeakKb([null, null, null], 4096)).toBeNull();
+    expect(clientPeakKb([null, null, null], null)).toBeNull();
+    expect(clientPeakKb([5000, null, 4500], 4096)).toBe(5000);
+    expect(clientPeakKb([null, 3000, null], 4096)).toBe(4096);
+  });
 });

@@ -2,6 +2,122 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.279] - 2026-11-25
+
+### Per-person memory isolation results and CI check
+
+- [docs/benchmarks/2026-11-24-person-isolation.md](docs/benchmarks/2026-11-24-person-isolation.md) reports the
+  per-person memory isolation fuzz. At gbrain v0.60.771.0, no person's saved memory reached another person, or a caller
+  acting for nobody, in 1,492,098 probes over three seeds, in process, over HTTP and through the CLI, on PGLite and
+  Postgres. On v0.60.769.0 the CLI's `--as` preview leaked, and gbrain fixed it in v0.60.771.0.
+- `eval/runner/person-isolation-fuzz.ts` and its world generator are new. The registry adds `person-isolation-fuzz` and
+  its CI profile `person-isolation-fuzz-ci`, which runs in the offline tier. A new `person-isolation-postgres` CI job
+  runs the Postgres cells. CI never uploads person-isolation reports as artifacts.
+
+### Tests run against gbrain v0.60.771.0
+
+- `package.json` and `bun.lock` move the `gbrain` dependency from v0.60.769.0 (`38831bb69`) to v0.60.771.0
+  (`97ef356f5`), gbrain's newest release on 2026-11-25, 2 releases and 19 commits later.
+  [docs/gbrain-under-test.md](docs/gbrain-under-test.md#the-pin) names the new pin. No published result was rerun; the per-person memory isolation results were measured on it.
+
+## [0.10.278] - 2026-11-25
+
+- **N14 large-page fidelity no longer reports counts it could not take as 0 on an engine without raw SQL.** On such an
+  engine (the Rust engine today), `eval/runner/n14-large-page-fidelity.ts` wrote the stored page and chunk counts, the
+  append's chunk counts and the stored-needle count as 0, so a page the engine had chunked read as "stored with 0
+  chunks" and could be filed as the zero-chunk finding N14-1. Those counts are now null, with a `not_applicable` reason
+  on the ingest and append rows, the stored-needle rate is null, the findings skip a null chunk count, and the
+  printed tables show n/a. An ingest or append that throws inside a running arm also records its counts as
+  null, on any engine; an arm whose process crashed still reports 0. No committed receipt is from an engine
+  without raw SQL, so no published number changes.
+
+- **The engine-bench speed runner no longer turns a missing memory reading into a measured one.** In
+  `eval/runner/engine-bench/perf.ts`, an arm whose only memory reading was the baseline taken before the engine opened
+  now records a null peak, where before the baseline stood in for the peak and the engine's share read as 0. A Postgres
+  arm whose server memory could not be read (a container whose cgroup files are not readable on the host, every
+  cgroup read failing or unparseable, or an external server) now records null server memory and a method saying why, so its engine
+  RSS is null and its peak-RSS comparison is reported as missing instead of counting the server as 0. Both published
+  speed runs read the Postgres container's cgroup memory, so no published number changes.
+
+- **The three long public dev worlds' rendered text is committed.** `bg1-dev-long-01` to `-03` now carry their model-rendered `world.json` under [eval/data/changing-facts-v1/dev/worlds/](eval/data/changing-facts-v1/dev/worlds/), so the weekly held-out line's long pilot and judge check can load them in a run that is not keyless. Each passes `validate.ts --dev` at its profile length of 1,000,000 tokens, and a test now checks that, in place of the earlier check that they were not yet rendered. The bg1-dev split keeps its 20 worlds.
+
+## [0.10.277] - 2026-11-25
+
+- **What changed.** The code review that runs before a pull request is marked ready now leaves out the person-isolation
+  run receipts under `docs/benchmarks/2026-11-24-person-isolation/`: about 3.3 MB of JSON that the runner writes. With
+  them in, the pull request that adds the results has a 3.6 MB review diff, over the review's 2 MB limit, so no reviewer
+  could read it.
+- **What stays the same.** The receipts stay in the repository. The results page, the preregistration, its registry
+  entry and the runner are still reviewed. No score or verdict changes.
+
+- **The engine-bench speed runner no longer records 0 for memory or disk it could not measure.** On macOS
+  `eval/runner/engine-bench/perf.ts` read memory from `/proc` and disk with `du -sb`, neither of which exists there, so
+  both came back as 0 and looked like measurements. Each now records null with a method saying why. Where `/proc` is
+  missing, memory falls back to the process's own sampled RSS, and disk falls back to `du -sk`, each under its own
+  method name because neither is comparable with the Linux reading. A peak-RSS comparison where one engine's own process
+  memory has no reading is reported as missing. A local Postgres server whose container memory can't be read still
+  counts as 0, as before. Counted runs are Linux only, so no published number changes. New keyless tests cover each case.
+
+- Pinned-questions rescore under a rule for answers that give both values, written after the counted labels were seen
+  and added beside the preregistered numbers in [the results](docs/benchmarks/pinned-questions-results.md): particle-1
+  moves from 7.5 to 4.2 points below claude-opus-5-5, which leaves the comparison unsettled, and the preregistered
+  result stays the verdict. The paid runner also stops reusing units with harness errors, records its ledger link
+  before asking anything, restores the brain after a gbrain error, and runs counted seeds only in the counted stage.
+
+## [0.10.276] - 2026-11-25
+
+### Pinned questions: enforcement and scoring fixes before the pilot
+
+- The paid arm ([eval/runner/pinned-questions-paid.ts](eval/runner/pinned-questions-paid.ts)) redacts keys and credentials from provider failure text and judge errors, refuses a launch without a provider key for every model and judge, refuses a counted launch without a passing judge-check receipt from the same build and runner, refuses an output directory holding another stage's units, and refuses paid mode without the budget ledger's request guard.
+- It scores a provider's structured refusal or content-filter finish as a safety stop and a refused connection as a provider error, treats setup-blocked questions and rows another model answered as harness errors, records `answer_model`, marks a run with a pending retry unpublishable, survives a torn checkpoint line, writes one receipt per stage and sums the spend of every process behind a receipt's rows.
+- New [eval/runner/pinned-questions-stats.ts](eval/runner/pinned-questions-stats.ts) computes the preregistered cluster-bootstrap intervals, McNemar tests, Holm correction and paired non-inferiority interval; the keyless arm keeps measurement errors in its counts and voids a seed on a failed presence check.
+- The preregistration records these as a dated amendment made before any paid call ([docs/benchmarks/2026-11-24-pinned-questions-preregistration.md](docs/benchmarks/2026-11-24-pinned-questions-preregistration.md)).
+- The judge check adds stale probes. Each judge-check answer written before a change is judged again against the answer key from after it, which gives the judge check the labelled stale negatives that nearly all-correct rule labels lacked. These calls ask only the judges. A counted launch now needs the stale-probes receipt (`--stage stale-probes`) beside the judge-check receipt, and it rechecks the judge-check receipt's rule labels against the regenerated worlds ([eval/runner/pinned-questions-paid.ts](eval/runner/pinned-questions-paid.ts); amendment of 2026-11-24 in [docs/benchmarks/2026-11-24-pinned-questions-preregistration.md](docs/benchmarks/2026-11-24-pinned-questions-preregistration.md)).
+- Results of the pinned-questions experiment at gbrain v0.60.769.0: gbrain flags and refreshes pinned answers after edits, superseded facts and deletions, and misses contradictions; the 7.5-point gap between particle-1 and claude-opus-5-5 on refreshed answers comes from how the judge scored answers that gave both the old and the new value ([docs/benchmarks/pinned-questions-results.md](docs/benchmarks/pinned-questions-results.md)).
+
+## [0.10.275] - 2026-11-25
+
+- **Preregistered a sealed check of section delivery for "sources disagree" questions.** [docs/benchmarks/2026-11-24-cat40-h4-fix-confirmation-preregistration.md](docs/benchmarks/2026-11-24-cat40-h4-fix-confirmation-preregistration.md) fixes, before any cell runs, how gbrain with `search.long_page_unit=section` will be compared with the same release on its defaults and with plain files on six new sealed Cat 40 Hard worlds, and what each outcome changes: a win takes the default flip to Garry, a null or a loss closes it. It runs once gbrain releases its grep fix.
+
+## [0.10.274] - 2026-11-24
+
+### New category: pinned questions (preregistered)
+
+- `eval/runner/pinned-questions.ts` tests gbrain's pinned questions on seeded fictional-company worlds: after one
+  controlled change per question (edit, fact supersession, deletion, contradiction, unrelated edit), does gbrain flag
+  exactly the sentences whose evidence changed, schedule the right questions for refresh, and come back with a
+  matching answer? Keyless, with a scripted answerer. Generator `eval/generators/pinned-questions-gen.ts`, scorer
+  `eval/runner/pinned-questions-score.ts`, registry row `pinned-questions`.
+- `eval/runner/pinned-questions-paid.ts` measures whether a real model's refreshed answer is correct, through gbrain's
+  own refresh path, with a judge from another model family. It reports, per model, how many answers gbrain cut off
+  at its output cap, and `--max-output-tokens` runs a raised-cap arm. Its judge check needs at least 100 real outputs
+  per judge, from a judge-check stage on three seeds before any counted run.
+- [docs/benchmarks/2026-11-24-pinned-questions-preregistration.md](docs/benchmarks/2026-11-24-pinned-questions-preregistration.md)
+  fixes the counted seeds, metrics, judge check and what each outcome changes before any counted run.
+
+## [0.10.273] - 2026-11-24
+
+- **Preregistration: cost and write-to-queryable time for a personal agent.** [docs/benchmarks/2026-11-24-cost-speed-preregistration.md](docs/benchmarks/2026-11-24-cost-speed-preregistration.md) plans how README's "Dollars per month, personal agent" and "Write to queryable, p50" columns get measured: gbrain's newest release at its shipped defaults and the extract-first, memory-bank and verbatim-session servers, hybrid search and the file agent at their shipped configurations, on ten public synthetic chat histories, with every provider call priced from the metering proxy's usage fields, hosting priced from each stack's measured memory and disk, and a probe that writes a session and searches until it comes back. Its registry entry is [docs/benchmarks/preregistrations.d/cost-speed-personal.json](docs/benchmarks/preregistrations.d/cost-speed-personal.json). Nothing has run.
+
+- A preregistration for a keyless zero-leak check that one person's memory never reaches another person on a gbrain brain that serves several people, over MCP dispatch, HTTP and the CLI on PGLite and Postgres ([docs/benchmarks/2026-11-24-person-isolation-preregistration.md](docs/benchmarks/2026-11-24-person-isolation-preregistration.md)).
+
+### Tests run against gbrain v0.60.769.0
+
+- `package.json` and `bun.lock` move the `gbrain` dependency from v0.60.748.0 (`7f1623446`) to v0.60.769.0
+  (`38831bb69`), gbrain's newest release on 2026-11-24, 21 releases and 162 commits later.
+  [docs/gbrain-under-test.md](docs/gbrain-under-test.md#the-pin) names the new pin. No result was rerun.
+- From this release gbrain's own engine factory opens the Rust engine (gbrain #9946) when a checked addon is
+  installed. Without one it refuses with `rust_engine_addon_missing`, and with an addon whose SHA-256 the release
+  manifest does not name it refuses with `rust_engine_addon_mismatch`. The engine-bench tests now expect those
+  reasons in place of the older `rust_kind_unsupported`, and a new keyless test checks that a stray addon in the gbrain
+  home is refused on the Rust engine and never reached by PGLite. With no addon, the Rust arm is still refused before
+  any engine call, with no receipt. Tests also unset `GBRAIN_RUST_ENGINE_ADDON`, so an addon exported in a developer's
+  shell cannot reach them.
+- The BEAM-10M cell test now checks that its cells run the build their counted runs froze (v0.60.748.0) instead of
+  package.json's pin, since those results are published and package.json has moved on.
+- gbrain now reads `EXA_API_KEY`, for an opt-in web search in `gbrain dedupe --exa`. Tests now blank it, and gbrain eval
+  runs already stripped it by name pattern (the stripped list now names it), because no suite uses that search.
+
 ## [0.10.272] - 2026-11-24
 
 - **What changed.** The code review that runs before a pull request is marked ready now leaves out the generated plans,

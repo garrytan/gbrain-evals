@@ -386,7 +386,7 @@ export interface ArmRuntime {
 export interface ArmHandle {
   runtime: ArmRuntime;
   info: Record<string, unknown>;
-  diskUsage(): Promise<{ total_bytes: number; method: string }>;
+  diskUsage(): Promise<DiskUsage>;
   teardown(): Promise<void>;
 }
 
@@ -397,9 +397,28 @@ export interface ArmSpec {
   prepare(ctx: { workDir: string; opts: Options }): Promise<ArmHandle>;
 }
 
-function duBytes(path: string): number {
-  if (!existsSync(path)) return 0;
-  return Number(spawnSync('du', ['-sb', path], { encoding: 'utf-8' }).stdout.split(/\s+/)[0]) || 0;
+/** A disk size, or null with the reason when no source could measure it: an unmeasured store never reads as 0 bytes. */
+export interface DiskUsage { total_bytes: number | null; method: string }
+
+type DuRun = (args: string[]) => { status: number | null; stdout: string | null };
+
+/** The first field of a successful du answer, or null. */
+function duField(r: ReturnType<DuRun>): number | null {
+  const field = r.status === 0 ? r.stdout?.trim().split(/\s+/)[0] : undefined;
+  return field && /^\d+$/.test(field) ? Number(field) : null;
+}
+
+/**
+ * The store's size from `du -sb` (GNU du, apparent bytes). BSD du (macOS) has no -b, so it falls back to `du -sk`
+ * (allocated 1 KiB blocks), named as a different method, and to null when neither answers.
+ */
+export function measureDisk(path: string, label: string, run: DuRun = (args) => spawnSync('du', args, { encoding: 'utf-8' })): DiskUsage {
+  if (!existsSync(path)) return { total_bytes: null, method: `not measured: the ${label} store is missing` };
+  const bytes = duField(run(['-sb', path]));
+  if (bytes !== null) return { total_bytes: bytes, method: `du -sb of the ${label} store after the engine closed` };
+  const kib = duField(run(['-sk', path]));
+  if (kib !== null) return { total_bytes: kib * 1024, method: `du -sk of the ${label} store after the engine closed (allocated 1 KiB blocks, not the apparent bytes du -sb reports)` };
+  return { total_bytes: null, method: `not measurable on ${process.platform}: du -sb and du -sk both failed` };
 }
 
 function embeddedArm(id: 'pglite' | 'rust', label: string, kind: string, store: string): ArmSpec {
@@ -410,7 +429,7 @@ function embeddedArm(id: 'pglite' | 'rust', label: string, kind: string, store: 
       return {
         runtime: { kind: id, databasePath: path },
         info: { store: `workdir/${store} (local disk)` },
-        async diskUsage() { return { total_bytes: duBytes(path), method: `du -sb of the ${label} store after the engine closed` }; },
+        async diskUsage() { return measureDisk(path, label); },
         async teardown() { rmSync(path, { recursive: true, force: true }); },
       };
     },
@@ -442,7 +461,7 @@ const postgresArm: ArmSpec = {
       return {
         runtime: { kind: 'postgres', databaseUrl: db.url },
         info: { mode: 'scratch database on an external server (--postgres-url); server CPU and memory not measured' },
-        async diskUsage() { return { total_bytes: 0, method: 'not measured for an external server' }; },
+        async diskUsage() { return { total_bytes: null, method: 'not measured for an external server' }; },
         async teardown() { await db.drop(); },
       };
     }
@@ -487,7 +506,8 @@ const postgresArm: ArmSpec = {
       async diskUsage() {
         info.pgvector_extension_version = docker(['exec', id, 'psql', '-U', 'postgres', '-Atc', "select extversion from pg_extension where extname='vector'"]).out || 'not installed';
         docker(['exec', id, 'psql', '-U', 'postgres', '-Atc', 'CHECKPOINT']);
-        return { total_bytes: Number(docker(['exec', id, 'du', '-sb', '/var/lib/postgresql/data']).out.split(/\s+/)[0]) || 0, method: 'du -sb of PGDATA inside the container after CHECKPOINT' };
+        const bytes = duField({ status: 0, stdout: docker(['exec', id, 'du', '-sb', '/var/lib/postgresql/data']).out });
+        return { total_bytes: bytes, method: bytes === null ? 'not measurable: du -sb of PGDATA inside the container failed' : 'du -sb of PGDATA inside the container after CHECKPOINT' };
       },
       async teardown() { remove(); process.removeListener('SIGINT', onSig); process.removeListener('SIGTERM', onSig); },
     };
@@ -507,32 +527,62 @@ export const ENGINES: Record<EvalEngineKind, ArmSpec> = {
 
 // ─── Measurement helpers (children) ─────────────────────────────────
 
-function readProcStatusKb(key: string): number {
+const RSS_SPAN = 'Baseline is RSS after the dataset is built and before the engine opens; engine RSS is that value minus baseline. Steady is RSS after 2,000 mixed reads that follow the import.';
+
+/** How the benchmark reads its own resident memory. A read that fails is null, a skipped sample; `hwmKb` is the kernel's high-water mark. */
+export interface RssSource { method: string; rssKb(): number | null; hwmKb(): number | null }
+
+/**
+ * /proc/self/status (VmRSS and VmHWM) on Linux. Where /proc is missing (macOS), process.memoryUsage().rss, sampled, under
+ * its own method name. Null when neither answers, so the receipt records no memory instead of 0 bytes.
+ */
+export function rssSource(readStatus = () => readFileSync('/proc/self/status', 'utf-8'), rssBytes = () => process.memoryUsage().rss): RssSource | null {
+  const field = (key: string) => {
+    const m = readStatus().match(new RegExp(`^${key}:\\s+(\\d+) kB`, 'm'));
+    if (!m) throw new Error(`/proc/self/status has no ${key}`);
+    return Number(m[1]);
+  };
+  const orNull = (read: () => number) => () => { try { return read(); } catch { return null; } };
   try {
-    const m = readFileSync('/proc/self/status', 'utf-8').match(new RegExp(`^${key}:\\s+(\\d+) kB`, 'm'));
-    return m ? Number(m[1]) : 0;
-  } catch { return 0; }
+    field('VmRSS');
+    field('VmHWM');
+    return { method: `VmHWM and VmRSS of the benchmark process from /proc/self/status (includes the WASM heap for PGLite and the addon for Rust). ${RSS_SPAN}`, rssKb: orNull(() => field('VmRSS')), hwmKb: orNull(() => field('VmHWM')) };
+  } catch { /* no usable /proc: try the runtime's own reading */ }
+  try {
+    if (!(rssBytes() > 0)) return null;
+    return { method: `process.memoryUsage().rss of the benchmark process, sampled every 100 ms, because /proc/self/status with VmRSS and VmHWM is not available on ${process.platform}. There is no kernel high-water mark, so a peak between samples is missed and the numbers are not comparable with VmHWM. ${RSS_SPAN}`, rssKb: orNull(() => Math.round(rssBytes() / 1024)), hwmKb: () => null };
+  } catch { return null; }
 }
+
+/** Engine-attributable bytes from KiB readings, null when memory was not measurable. */
+const engineKbToBytes = (kb: number | null, baselineKb: number | null) => (kb === null || baselineKb === null ? null : Math.max(0, kb - baselineKb) * 1024);
 
 function cgroupWorkingSetBytes(dir?: string): number | null {
   if (!dir) return null;
   try {
     const cur = Number(readFileSync(join(dir, 'memory.current'), 'utf-8'));
     const inactive = Number(readFileSync(join(dir, 'memory.stat'), 'utf-8').match(/^inactive_file (\d+)/m)?.[1] ?? 0);
-    return cur - inactive;
+    return Number.isFinite(cur - inactive) ? cur - inactive : null;
   } catch { return null; }
 }
 
-class MemSampler {
-  peakServerWs = 0;
-  peakRssKb = 0;
+/** Peak RSS of the run in KiB: null unless a reading taken after the baseline answered, so a baseline alone never reads as a peak. */
+export function clientPeakKb(laterKb: Array<number | null>, baselineKb: number | null): number | null {
+  const later = laterKb.filter((kb): kb is number => kb !== null);
+  return later.length ? Math.max(...later, baselineKb ?? 0) : null;
+}
+
+export class MemSampler {
+  peakServerWs: number | null = null;
+  peakRssKb: number | null = null;
   private timer: ReturnType<typeof setInterval> | null = null;
-  constructor(private cgroupDir?: string) {}
+  constructor(private cgroupDir?: string, private rss: RssSource | null = null) {}
   start() {
     const tick = () => {
-      this.peakRssKb = Math.max(this.peakRssKb, readProcStatusKb('VmRSS'));
+      const kb = this.rss?.rssKb() ?? null;
+      if (kb !== null) this.peakRssKb = Math.max(this.peakRssKb ?? kb, kb);
       const ws = cgroupWorkingSetBytes(this.cgroupDir);
-      if (ws !== null) this.peakServerWs = Math.max(this.peakServerWs, ws);
+      if (ws !== null) this.peakServerWs = Math.max(this.peakServerWs ?? ws, ws);
     };
     tick();
     this.timer = setInterval(tick, 100);
@@ -659,8 +709,9 @@ async function runArmChild(input: ChildInput) {
   const ds = buildDataset(opts.scale, opts.seed, DATA_DIR, await loadQualityQueries());
   log(`[${input.armId}] dataset ${JSON.stringify(ds.counts)} fingerprint ${ds.fingerprint.slice(0, 12)}`);
   const result: Record<string, any> = { dataset: ds.counts, dataset_fingerprint: ds.fingerprint };
-  const mem = new MemSampler(runtime.cgroupDir);
-  const baselineRssKb = readProcStatusKb('VmRSS');
+  const rss = rssSource();
+  const mem = new MemSampler(runtime.cgroupDir, rss);
+  const baselineRssKb = rss?.rssKb() ?? null;
   const t0open = performance.now();
   const engine = await openArm(gut, runtime);
   result.open_and_init_schema_ms = performance.now() - t0open;
@@ -759,21 +810,27 @@ async function runArmChild(input: ChildInput) {
   const mix = availableMix(await missingOps(ops, [engine], [...new Set(READ_MIX)]));
   result.steady_read_mix = mix;
   for (let i = 0; i < 2000 && mix.length; i++) await ops[mix[i % mix.length]](engine, i);
-  const steadyRssKb = readProcStatusKb('VmRSS');
+  const steadyRssKb = rss?.rssKb() ?? null;
   mem.stop();
   const stats = await engine.getStats() as unknown as Record<string, unknown>;
   result.stats = { page_count: stats.page_count, chunk_count: stats.chunk_count, embedded_count: stats.embedded_count };
   await engine.disconnect();
-  const peakRssKb = Math.max(mem.peakRssKb, readProcStatusKb('VmHWM'));
+  const peakRssKb = clientPeakKb([mem.peakRssKb, steadyRssKb, rss?.hwmKb() ?? null], baselineRssKb);
+  const server = runtime.kind === 'postgres' ? mem.peakServerWs : null;
+  const bytes = (kb: number | null) => (kb === null ? null : kb * 1024);
   result.memory = {
-    client_peak_rss_bytes: peakRssKb * 1024,
-    client_steady_rss_bytes: steadyRssKb * 1024,
-    client_baseline_rss_bytes: baselineRssKb * 1024,
-    client_engine_peak_rss_bytes: Math.max(0, peakRssKb - baselineRssKb) * 1024,
-    client_engine_steady_rss_bytes: Math.max(0, steadyRssKb - baselineRssKb) * 1024,
-    method: 'VmHWM and VmRSS of the benchmark process from /proc/self/status (includes the WASM heap for PGLite and the addon for Rust). Baseline is VmRSS after the dataset is built and before the engine opens; engine RSS is that value minus baseline. Steady is VmRSS after 2,000 mixed reads that follow the import.',
-    server_peak_working_set_bytes: runtime.cgroupDir ? mem.peakServerWs : null,
-    server_method: runtime.cgroupDir ? 'container cgroup memory.current minus inactive_file (the docker stats definition), sampled every 100 ms' : 'not measurable',
+    client_peak_rss_bytes: bytes(peakRssKb),
+    client_steady_rss_bytes: bytes(steadyRssKb),
+    client_baseline_rss_bytes: bytes(baselineRssKb),
+    client_engine_peak_rss_bytes: engineKbToBytes(peakRssKb, baselineRssKb),
+    client_engine_steady_rss_bytes: engineKbToBytes(steadyRssKb, baselineRssKb),
+    method: rss?.method ?? `not measurable on ${process.platform}: neither /proc/self/status nor process.memoryUsage() answered`,
+    server_peak_working_set_bytes: server,
+    server_method: runtime.kind !== 'postgres' ? 'no server process'
+      : server !== null ? 'container cgroup memory.current minus inactive_file (the docker stats definition), sampled every 100 ms'
+        : runtime.cgroupDir ? 'not measurable: every read of the container cgroup memory files failed'
+          : runtime.containerId ? 'not measurable: the container cgroup memory files are not readable on this host'
+            : 'not measured for an external server',
   };
   return result;
 }
@@ -1129,8 +1186,14 @@ export function computeAgreement(a: Rankings, b: Rankings) {
   return out;
 }
 
-/** Engine RSS a user pays for: the client's engine-attributable peak plus, for Postgres, the server's peak working set. */
-const engineRss = (run: Record<string, any>) => run.memory.client_engine_peak_rss_bytes + (run.memory.server_peak_working_set_bytes ?? 0);
+/** Engine RSS a user pays for: the client's engine-attributable peak plus, for Postgres, the server's peak working set. Null when either part was not measured. */
+export function engineRss(run: Record<string, any>, kind: EvalEngineKind): number | null {
+  const client = run.memory.client_engine_peak_rss_bytes;
+  if (client == null) return null;
+  if (kind !== 'postgres') return client;
+  const server = run.memory.server_peak_working_set_bytes;
+  return server == null ? null : client + server;
+}
 
 export async function orchestrate(opts: Options, argv: string[]) {
   const started = Date.now();
@@ -1177,7 +1240,7 @@ export async function orchestrate(opts: Options, argv: string[]) {
       for (let i = 0; i < opts.coldReps; i++) reps.push(await runChild('coldstart', input, workDir, `${id}-cold-${i}`));
       arms[id] = {
         id, label: spec.label, kind: spec.kind, info: handle.info, run, disk,
-        engine_rss_bytes: engineRss(run),
+        engine_rss_bytes: engineRss(run, id),
         cold_start: { reps, median_total_ms: median(reps.map((x) => x.total_ms)), method: 'each rep: a fresh process opens the existing store (connect and initSchema) and answers listPages and one keyword query. For Postgres the server keeps running, so this is a gbrain process start against a warm server. Module load is excluded; the OS file cache is warm.' },
       };
       (arms[id] as any)._probes = probeRankings;
@@ -1198,7 +1261,8 @@ export async function orchestrate(opts: Options, argv: string[]) {
       for (const c of THROUGHPUT_CLIENTS) for (const k of ['read', 'write'] as const) if (raw.throughput.some((t: ThroughputRow) => t.clients === c && t.kind === k)) throughput.push(analyzeThroughput(raw.throughput, c, k, opts.seed, margins));
       const cold = medianRatio(arms[refId].cold_start.reps.map((x: any) => x.total_ms), arms[otherId].cold_start.reps.map((x: any) => x.total_ms), opts.seed, margins.bootstrap_draws);
       const importRatio: Ratio = { ratio: arms[otherId].run.import.corpus_pages_per_sec / arms[refId].run.import.corpus_pages_per_sec, ci95: null };
-      const rssRatio: Ratio = { ratio: arms[otherId].engine_rss_bytes / Math.max(arms[refId].engine_rss_bytes, 1), ci95: null };
+      const rssMeasured = arms[otherId].engine_rss_bytes !== null && arms[refId].engine_rss_bytes !== null;
+      const rssRatio: Ratio | null = rssMeasured ? { ratio: arms[otherId].engine_rss_bytes / Math.max(arms[refId].engine_rss_bytes, 1), ci95: null } : null;
       const metrics: MetricVerdict[] = [];
       for (const op of PAIRED_OPS) {
         for (const q of ['p50', 'p99'] as const) {
@@ -1216,7 +1280,7 @@ export async function orchestrate(opts: Options, argv: string[]) {
       }
       metrics.push(lowerIsBetter('cold start', refId, cold, margins.point_ratio, false));
       metrics.push(higherIsBetter('corpus import', refId, importRatio, margins.throughput_ratio, false));
-      metrics.push(lowerIsBetter('peak RSS', refId, rssRatio, margins.point_ratio, false));
+      metrics.push(rssRatio ? lowerIsBetter('peak RSS', refId, rssRatio, margins.point_ratio, false) : missingMetric('peak RSS', refId, 'lower_is_better', false));
       pairs[tag] = {
         reference: refId, other: otherId,
         direction: 'ratios are other over reference: below 1 means other is faster or smaller for latency, cold start and RSS; above 1 means other is faster for throughput and import',

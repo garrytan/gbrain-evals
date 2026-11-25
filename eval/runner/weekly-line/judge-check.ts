@@ -4,18 +4,19 @@
  * "Readers and judges", R78): each gating judge is checked against at least 100 labelled grep-agent answers from public
  * dev worlds before its numbers count, at a kappa of 0.6 or more. The answers come from the grep-agent cells the weekly
  * generator builds for public worlds: the judge-check cell on bg1-dev-02 and bg1-dev-03 and the pilot's on bg1-dev-01, or
- * at the long length the judge-check cell on bg1-dev-long-02 and -03 and the pilot's on bg1-dev-long-01
+ * at the long length the judge-check cell on bg1-dev-long-02 and -03 and the pilot's on bg1-dev-long-01, or at the alias
+ * length (changing-facts-gen@3) the judge-check cell on bg1-dev-alias-02 and -03 and the pilot's on bg1-dev-alias-01
  * (eval/runner/q1/cells/weekly-line.ts generateWeeklyLineJudgeCheckCells and generateWeeklyLinePilotCells). The sample, the
- * labels and the gates are the same at either length; the answers' worlds pick the dev worlds loaded. Every --cell must be
+ * labels and the gates are the same at every length; the answers' worlds pick the dev worlds loaded. Every --cell must be
  * a cell of the length given by --length, or else GBRAIN_EVALS_WEEKLY_PILOT_LENGTH (standard when neither is set), so one
- * judge check never pools standard and long answers.
+ * judge check never pools answers of two lengths.
  *
- *   bun eval/runner/weekly-line/judge-check.ts label  [--length standard|long] --cell <grep-agent cell out dir>... --dry-run [--keyless-upstream <url>]
+ *   bun eval/runner/weekly-line/judge-check.ts label  [--length standard|long|alias] --cell <grep-agent cell out dir>... --dry-run [--keyless-upstream <url>]
  *                                                     [--world-end <Sunday>] [--seed <n>]
- *   bun eval/runner/weekly-line/judge-check.ts label  [--length standard|long] --cell <dir>... --out <dir> --budget-ledger <file> --run-id <id>
+ *   bun eval/runner/weekly-line/judge-check.ts label  [--length standard|long|alias] --cell <dir>... --out <dir> --budget-ledger <file> --run-id <id>
  *                                                     --lease-usd <n> --ledger-cap-usd <n> [--world-end <Sunday>] [--seed <n>]
  *                                                     (--keyless-upstream <url> | --paid-window <unit> --window-cap-usd <n>)
- *   bun eval/runner/weekly-line/judge-check.ts report [--length standard|long] --cell <dir>... --out <dir> [--json]
+ *   bun eval/runner/weekly-line/judge-check.ts report [--length standard|long|alias] --cell <dir>... --out <dir> [--json]
  *
  * Sample. The judge of an answer is its reader's gating judge (definitions.ts bg1JudgeOf), so each judge's sample is drawn
  * from its reader's answers that carry that judge's parsed verdict: at least 100 per judge, at least 40% of them judged

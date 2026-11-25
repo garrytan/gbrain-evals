@@ -1,0 +1,889 @@
+{
+  "category": "pinned-questions-paid",
+  "run_status": "completed",
+  "verdict": "pass",
+  "publishable": true,
+  "gbrain_version": "0.60.769.0",
+  "gbrain_pin": "github:garrytan/gbrain#38831bb696139024923e9bc43e3da0d7993951e9",
+  "git_head": "07be6572445720c05c13a6505d1d4c9a4cfb5666",
+  "dirty": false,
+  "resolved_config": {
+    "mode": "paid",
+    "stage": "rescore",
+    "gate": "report-only",
+    "models": [
+      {
+        "model": "openai:gpt-6.2-astra",
+        "role": "judge",
+        "grades": [
+          "anthropic:claude-opus-5-5",
+          "particle:particle-1"
+        ]
+      },
+      {
+        "model": "anthropic:claude-opus-5-5",
+        "role": "judge",
+        "grades": [
+          "openai:gpt-6.2-sol"
+        ]
+      }
+    ],
+    "judge": {
+      "prompt_sha256": "34c5067730322484d7ac7666cc0bfc05949cb619b2c7cc544dcf06f9c156dc26",
+      "frozen_prompt_sha256": "992233441a979264fb6ce72e98eb4948aedd0dd3efae40f188b8361c3ac655b0",
+      "max_tokens": 8192,
+      "temperature_sent": null,
+      "route": "gbrain gateway chat, allowFallback false",
+      "retries": "one retry on unparseable output"
+    },
+    "rule": "preregistration amendment \"Rescore under a rule for answers that give both values\" (2026-11-24), written after the counted labels were seen; the frozen prompt with its correct and wrong lines replaced",
+    "grading": "judge-only, no model under test asked: each counted row whose refresh published and was scored has its refreshed answer judged again by its own judge (judgeFor) with the rescore prompt; every other row keeps its counted result",
+    "verdict": "the agreement gate: every judge's kappa at least 0.6 on at least 100 labels, on the both-value set (template answers and counted answers that name both values, labelled by the frozen pattern bothValuePattern, undecided items left out) and on the judge-check outputs and stale probes re-graded with the rescore prompt (rule labels); a failing gate re-judges no counted row",
+    "both_value_templates": {
+      "city": [
+        "city-moved-from",
+        "city-used-to",
+        "city-out-of-date",
+        "city-former",
+        "city-from-to",
+        "city-hedged-order",
+        "city-sources-only",
+        "city-later-note",
+        "city-unclear",
+        "city-both-current",
+        "city-keeps-previous"
+      ],
+      "founded": [
+        "founded-superseded",
+        "founded-corrected",
+        "founded-out-of-date",
+        "founded-two-records",
+        "founded-disagree",
+        "founded-keeps-previous"
+      ]
+    },
+    "both_value_pattern": {
+      "not_current": "\\b(previously|formerly|former|used to|out of date|outdated|no longer|supersedes?|superseded|superseding|predates?|predated|predating|corrected|mistaken|an error|erroneous)\\b",
+      "attribution": "\\b(says?|said|according to|reports?|reported|states?|stated|lists?|listed|notes? that|records? that|claims?|claimed)\\b",
+      "uncertain": "\\b(unclear|uncertain|disagree|disagrees|not clear|cannot tell|can't tell|either)\\b"
+    },
+    "inputs_sha256": {
+      "counted": "7fc7e604a7facfb5609bc32b61a66047e9e3ba854c6b47c5f58506ca71161074",
+      "judge-check": "9bc99103e79211b7b53d5e6e669834f3b4f660193d2ddd5d565d97e206815533",
+      "stale-probes": "1d9dac73f29489b1ee3970ae49ceef1b7266deaff0b1e4142905bf8b950984b5"
+    },
+    "runner_source_sha256": "f362150a27c57ea57c3759d5415565709eafbf4404e696e2581c2c3740796d43",
+    "gbrain_overlay": null
+  },
+  "started_at": "2026-11-25T03:23:20.294Z",
+  "finished_at": "2026-11-25T04:06:36.147Z",
+  "tokens": {
+    "input": 885648,
+    "output": 55645
+  },
+  "gate": {
+    "pass": true,
+    "both_value": {
+      "openai:gpt-6.2-astra": {
+        "n": 279,
+        "excluded_ambiguous": 0,
+        "excluded_no_judge": 0,
+        "both": 137,
+        "judge_only": 2,
+        "rule_only": 2,
+        "neither": 138,
+        "agreement": 0.985663082437276,
+        "kappa": 0.9713257965056525
+      },
+      "anthropic:claude-opus-5-5": {
+        "n": 150,
+        "excluded_ambiguous": 0,
+        "excluded_no_judge": 0,
+        "both": 78,
+        "judge_only": 0,
+        "rule_only": 0,
+        "neither": 72,
+        "agreement": 1,
+        "kappa": 1
+      }
+    },
+    "recheck": {
+      "openai:gpt-6.2-astra": {
+        "n": 338,
+        "excluded_ambiguous": 0,
+        "excluded_no_judge": 0,
+        "both": 247,
+        "judge_only": 0,
+        "rule_only": 1,
+        "neither": 90,
+        "agreement": 0.9970414201183432,
+        "kappa": 0.9924550203134068
+      },
+      "anthropic:claude-opus-5-5": {
+        "n": 189,
+        "excluded_ambiguous": 0,
+        "excluded_no_judge": 0,
+        "both": 138,
+        "judge_only": 0,
+        "rule_only": 6,
+        "neither": 45,
+        "agreement": 0.9682539682539683,
+        "kappa": 0.9163346613545817
+      }
+    }
+  },
+  "both_value_by_source": {
+    "template": {
+      "openai:gpt-6.2-astra": {
+        "n": 144,
+        "excluded_ambiguous": 0,
+        "excluded_no_judge": 0,
+        "both": 72,
+        "judge_only": 0,
+        "rule_only": 0,
+        "neither": 72,
+        "agreement": 1,
+        "kappa": 1
+      },
+      "anthropic:claude-opus-5-5": {
+        "n": 144,
+        "excluded_ambiguous": 0,
+        "excluded_no_judge": 0,
+        "both": 72,
+        "judge_only": 0,
+        "rule_only": 0,
+        "neither": 72,
+        "agreement": 1,
+        "kappa": 1
+      }
+    },
+    "counted": {
+      "openai:gpt-6.2-astra": {
+        "n": 135,
+        "excluded_ambiguous": 0,
+        "excluded_no_judge": 0,
+        "both": 65,
+        "judge_only": 2,
+        "rule_only": 2,
+        "neither": 66,
+        "agreement": 0.9703703703703703,
+        "kappa": 0.9407374890254608
+      },
+      "anthropic:claude-opus-5-5": {
+        "n": 6,
+        "excluded_ambiguous": 0,
+        "excluded_no_judge": 0,
+        "both": 6,
+        "judge_only": 0,
+        "rule_only": 0,
+        "neither": 0,
+        "agreement": 1,
+        "kappa": null
+      }
+    }
+  },
+  "both_value_by_template": {
+    "city-moved-from": {
+      "openai:gpt-6.2-astra": {
+        "items": 10,
+        "undecided": 0,
+        "agreed": 10
+      },
+      "anthropic:claude-opus-5-5": {
+        "items": 10,
+        "undecided": 0,
+        "agreed": 10
+      }
+    },
+    "city-former": {
+      "openai:gpt-6.2-astra": {
+        "items": 10,
+        "undecided": 0,
+        "agreed": 10
+      },
+      "anthropic:claude-opus-5-5": {
+        "items": 10,
+        "undecided": 0,
+        "agreed": 10
+      }
+    },
+    "city-sources-only": {
+      "openai:gpt-6.2-astra": {
+        "items": 12,
+        "undecided": 0,
+        "agreed": 12
+      },
+      "anthropic:claude-opus-5-5": {
+        "items": 12,
+        "undecided": 0,
+        "agreed": 12
+      }
+    },
+    "city-unclear": {
+      "openai:gpt-6.2-astra": {
+        "items": 12,
+        "undecided": 0,
+        "agreed": 12
+      },
+      "anthropic:claude-opus-5-5": {
+        "items": 12,
+        "undecided": 0,
+        "agreed": 12
+      }
+    },
+    "city-used-to": {
+      "openai:gpt-6.2-astra": {
+        "items": 9,
+        "undecided": 0,
+        "agreed": 9
+      },
+      "anthropic:claude-opus-5-5": {
+        "items": 9,
+        "undecided": 0,
+        "agreed": 9
+      }
+    },
+    "city-from-to": {
+      "openai:gpt-6.2-astra": {
+        "items": 9,
+        "undecided": 0,
+        "agreed": 9
+      },
+      "anthropic:claude-opus-5-5": {
+        "items": 9,
+        "undecided": 0,
+        "agreed": 9
+      }
+    },
+    "city-later-note": {
+      "openai:gpt-6.2-astra": {
+        "items": 9,
+        "undecided": 0,
+        "agreed": 9
+      },
+      "anthropic:claude-opus-5-5": {
+        "items": 9,
+        "undecided": 0,
+        "agreed": 9
+      }
+    },
+    "city-both-current": {
+      "openai:gpt-6.2-astra": {
+        "items": 10,
+        "undecided": 0,
+        "agreed": 10
+      },
+      "anthropic:claude-opus-5-5": {
+        "items": 10,
+        "undecided": 0,
+        "agreed": 10
+      }
+    },
+    "city-out-of-date": {
+      "openai:gpt-6.2-astra": {
+        "items": 8,
+        "undecided": 0,
+        "agreed": 8
+      },
+      "anthropic:claude-opus-5-5": {
+        "items": 8,
+        "undecided": 0,
+        "agreed": 8
+      }
+    },
+    "city-hedged-order": {
+      "openai:gpt-6.2-astra": {
+        "items": 8,
+        "undecided": 0,
+        "agreed": 8
+      },
+      "anthropic:claude-opus-5-5": {
+        "items": 8,
+        "undecided": 0,
+        "agreed": 8
+      }
+    },
+    "city-keeps-previous": {
+      "openai:gpt-6.2-astra": {
+        "items": 11,
+        "undecided": 0,
+        "agreed": 11
+      },
+      "anthropic:claude-opus-5-5": {
+        "items": 11,
+        "undecided": 0,
+        "agreed": 11
+      }
+    },
+    "founded-superseded": {
+      "openai:gpt-6.2-astra": {
+        "items": 6,
+        "undecided": 0,
+        "agreed": 6
+      },
+      "anthropic:claude-opus-5-5": {
+        "items": 6,
+        "undecided": 0,
+        "agreed": 6
+      }
+    },
+    "founded-corrected": {
+      "openai:gpt-6.2-astra": {
+        "items": 5,
+        "undecided": 0,
+        "agreed": 5
+      },
+      "anthropic:claude-opus-5-5": {
+        "items": 5,
+        "undecided": 0,
+        "agreed": 5
+      }
+    },
+    "founded-two-records": {
+      "openai:gpt-6.2-astra": {
+        "items": 6,
+        "undecided": 0,
+        "agreed": 6
+      },
+      "anthropic:claude-opus-5-5": {
+        "items": 6,
+        "undecided": 0,
+        "agreed": 6
+      }
+    },
+    "founded-disagree": {
+      "openai:gpt-6.2-astra": {
+        "items": 5,
+        "undecided": 0,
+        "agreed": 5
+      },
+      "anthropic:claude-opus-5-5": {
+        "items": 5,
+        "undecided": 0,
+        "agreed": 5
+      }
+    },
+    "founded-out-of-date": {
+      "openai:gpt-6.2-astra": {
+        "items": 7,
+        "undecided": 0,
+        "agreed": 7
+      },
+      "anthropic:claude-opus-5-5": {
+        "items": 7,
+        "undecided": 0,
+        "agreed": 7
+      }
+    },
+    "founded-keeps-previous": {
+      "openai:gpt-6.2-astra": {
+        "items": 7,
+        "undecided": 0,
+        "agreed": 7
+      },
+      "anthropic:claude-opus-5-5": {
+        "items": 7,
+        "undecided": 0,
+        "agreed": 7
+      }
+    },
+    "counted answers": {
+      "openai:gpt-6.2-astra": {
+        "items": 135,
+        "undecided": 0,
+        "agreed": 131
+      },
+      "anthropic:claude-opus-5-5": {
+        "items": 6,
+        "undecided": 0,
+        "agreed": 6
+      }
+    }
+  },
+  "summary": {
+    "by_model": {
+      "anthropic:claude-opus-5-5": {
+        "questions": 240,
+        "judge_model": "openai:gpt-6.2-astra",
+        "preregistered": {
+          "correct": 217,
+          "scored": 240,
+          "rate": 0.9041666666666667
+        },
+        "rescored": {
+          "correct": 211,
+          "scored": 240,
+          "rate": 0.8791666666666667
+        },
+        "rejudged": 240,
+        "flipped_to_correct": 3,
+        "flipped_to_not_correct": 9,
+        "left_out_by_rescore": 0,
+        "both_value_answers": 89,
+        "flipped_on_both_value_answers": {
+          "to_correct": 3,
+          "to_not_correct": 9
+        },
+        "flipped_on_other_answers": {
+          "to_correct": 0,
+          "to_not_correct": 0
+        },
+        "by_mutation": {
+          "contradict_existing_page": {
+            "preregistered": {
+              "correct": 25,
+              "scored": 30,
+              "rate": 0.8333333333333334
+            },
+            "rescored": {
+              "correct": 27,
+              "scored": 30,
+              "rate": 0.9
+            }
+          },
+          "contradict_new_page": {
+            "preregistered": {
+              "correct": 12,
+              "scored": 30,
+              "rate": 0.4
+            },
+            "rescored": {
+              "correct": 4,
+              "scored": 30,
+              "rate": 0.13333333333333333
+            }
+          },
+          "edit_claim_fact": {
+            "preregistered": {
+              "correct": 30,
+              "scored": 30,
+              "rate": 1
+            },
+            "rescored": {
+              "correct": 30,
+              "scored": 30,
+              "rate": 1
+            }
+          },
+          "edit_claim_page": {
+            "preregistered": {
+              "correct": 30,
+              "scored": 30,
+              "rate": 1
+            },
+            "rescored": {
+              "correct": 30,
+              "scored": 30,
+              "rate": 1
+            }
+          },
+          "remove_source_page": {
+            "preregistered": {
+              "correct": 30,
+              "scored": 30,
+              "rate": 1
+            },
+            "rescored": {
+              "correct": 30,
+              "scored": 30,
+              "rate": 1
+            }
+          },
+          "unrelated_edit_cited_page": {
+            "preregistered": {
+              "correct": 30,
+              "scored": 30,
+              "rate": 1
+            },
+            "rescored": {
+              "correct": 30,
+              "scored": 30,
+              "rate": 1
+            }
+          },
+          "unrelated_edit_uncited_page": {
+            "preregistered": {
+              "correct": 30,
+              "scored": 30,
+              "rate": 1
+            },
+            "rescored": {
+              "correct": 30,
+              "scored": 30,
+              "rate": 1
+            }
+          },
+          "unrelated_new_page": {
+            "preregistered": {
+              "correct": 30,
+              "scored": 30,
+              "rate": 1
+            },
+            "rescored": {
+              "correct": 30,
+              "scored": 30,
+              "rate": 1
+            }
+          }
+        }
+      },
+      "particle:particle-1": {
+        "questions": 240,
+        "judge_model": "openai:gpt-6.2-astra",
+        "preregistered": {
+          "correct": 199,
+          "scored": 240,
+          "rate": 0.8291666666666667
+        },
+        "rescored": {
+          "correct": 201,
+          "scored": 240,
+          "rate": 0.8375
+        },
+        "rejudged": 240,
+        "flipped_to_correct": 5,
+        "flipped_to_not_correct": 3,
+        "left_out_by_rescore": 0,
+        "both_value_answers": 46,
+        "flipped_on_both_value_answers": {
+          "to_correct": 5,
+          "to_not_correct": 3
+        },
+        "flipped_on_other_answers": {
+          "to_correct": 0,
+          "to_not_correct": 0
+        },
+        "by_mutation": {
+          "contradict_existing_page": {
+            "preregistered": {
+              "correct": 15,
+              "scored": 30,
+              "rate": 0.5
+            },
+            "rescored": {
+              "correct": 17,
+              "scored": 30,
+              "rate": 0.5666666666666667
+            }
+          },
+          "contradict_new_page": {
+            "preregistered": {
+              "correct": 4,
+              "scored": 30,
+              "rate": 0.13333333333333333
+            },
+            "rescored": {
+              "correct": 4,
+              "scored": 30,
+              "rate": 0.13333333333333333
+            }
+          },
+          "edit_claim_fact": {
+            "preregistered": {
+              "correct": 30,
+              "scored": 30,
+              "rate": 1
+            },
+            "rescored": {
+              "correct": 30,
+              "scored": 30,
+              "rate": 1
+            }
+          },
+          "edit_claim_page": {
+            "preregistered": {
+              "correct": 30,
+              "scored": 30,
+              "rate": 1
+            },
+            "rescored": {
+              "correct": 30,
+              "scored": 30,
+              "rate": 1
+            }
+          },
+          "remove_source_page": {
+            "preregistered": {
+              "correct": 30,
+              "scored": 30,
+              "rate": 1
+            },
+            "rescored": {
+              "correct": 30,
+              "scored": 30,
+              "rate": 1
+            }
+          },
+          "unrelated_edit_cited_page": {
+            "preregistered": {
+              "correct": 30,
+              "scored": 30,
+              "rate": 1
+            },
+            "rescored": {
+              "correct": 30,
+              "scored": 30,
+              "rate": 1
+            }
+          },
+          "unrelated_edit_uncited_page": {
+            "preregistered": {
+              "correct": 30,
+              "scored": 30,
+              "rate": 1
+            },
+            "rescored": {
+              "correct": 30,
+              "scored": 30,
+              "rate": 1
+            }
+          },
+          "unrelated_new_page": {
+            "preregistered": {
+              "correct": 30,
+              "scored": 30,
+              "rate": 1
+            },
+            "rescored": {
+              "correct": 30,
+              "scored": 30,
+              "rate": 1
+            }
+          }
+        }
+      },
+      "openai:gpt-6.2-sol": {
+        "questions": 240,
+        "judge_model": "anthropic:claude-opus-5-5",
+        "preregistered": {
+          "correct": 233,
+          "scored": 240,
+          "rate": 0.9708333333333333
+        },
+        "rescored": {
+          "correct": 224,
+          "scored": 240,
+          "rate": 0.9333333333333333
+        },
+        "rejudged": 240,
+        "flipped_to_correct": 3,
+        "flipped_to_not_correct": 12,
+        "left_out_by_rescore": 0,
+        "both_value_answers": 6,
+        "flipped_on_both_value_answers": {
+          "to_correct": 0,
+          "to_not_correct": 0
+        },
+        "flipped_on_other_answers": {
+          "to_correct": 3,
+          "to_not_correct": 12
+        },
+        "by_mutation": {
+          "contradict_existing_page": {
+            "preregistered": {
+              "correct": 29,
+              "scored": 30,
+              "rate": 0.9666666666666667
+            },
+            "rescored": {
+              "correct": 29,
+              "scored": 30,
+              "rate": 0.9666666666666667
+            }
+          },
+          "contradict_new_page": {
+            "preregistered": {
+              "correct": 30,
+              "scored": 30,
+              "rate": 1
+            },
+            "rescored": {
+              "correct": 30,
+              "scored": 30,
+              "rate": 1
+            }
+          },
+          "edit_claim_fact": {
+            "preregistered": {
+              "correct": 30,
+              "scored": 30,
+              "rate": 1
+            },
+            "rescored": {
+              "correct": 30,
+              "scored": 30,
+              "rate": 1
+            }
+          },
+          "edit_claim_page": {
+            "preregistered": {
+              "correct": 30,
+              "scored": 30,
+              "rate": 1
+            },
+            "rescored": {
+              "correct": 30,
+              "scored": 30,
+              "rate": 1
+            }
+          },
+          "remove_source_page": {
+            "preregistered": {
+              "correct": 24,
+              "scored": 30,
+              "rate": 0.8
+            },
+            "rescored": {
+              "correct": 15,
+              "scored": 30,
+              "rate": 0.5
+            }
+          },
+          "unrelated_edit_cited_page": {
+            "preregistered": {
+              "correct": 30,
+              "scored": 30,
+              "rate": 1
+            },
+            "rescored": {
+              "correct": 30,
+              "scored": 30,
+              "rate": 1
+            }
+          },
+          "unrelated_edit_uncited_page": {
+            "preregistered": {
+              "correct": 30,
+              "scored": 30,
+              "rate": 1
+            },
+            "rescored": {
+              "correct": 30,
+              "scored": 30,
+              "rate": 1
+            }
+          },
+          "unrelated_new_page": {
+            "preregistered": {
+              "correct": 30,
+              "scored": 30,
+              "rate": 1
+            },
+            "rescored": {
+              "correct": 30,
+              "scored": 30,
+              "rate": 1
+            }
+          }
+        }
+      }
+    },
+    "comparisons_preregistered": {
+      "particle:particle-1": {
+        "pairs": 240,
+        "only_a": 22,
+        "only_b": 4,
+        "rate_a": 0.9041666666666667,
+        "rate_b": 0.8291666666666667,
+        "difference": -0.075,
+        "difference_ci": [
+          -0.11666666666666667,
+          -0.0375
+        ],
+        "mcnemar_p": 0.0005335211753845221,
+        "holm_p": 0.0010670423507690443,
+        "significant": true,
+        "non_inferior": false
+      },
+      "openai:gpt-6.2-sol": {
+        "pairs": 240,
+        "only_a": 7,
+        "only_b": 23,
+        "rate_a": 0.9041666666666667,
+        "rate_b": 0.9708333333333333,
+        "difference": 0.06666666666666667,
+        "difference_ci": [
+          0.025,
+          0.1125
+        ],
+        "mcnemar_p": 0.005222879350185394,
+        "holm_p": 0.005222879350185394,
+        "significant": true,
+        "non_inferior": true
+      }
+    },
+    "comparisons_rescored": {
+      "particle:particle-1": {
+        "pairs": 240,
+        "only_a": 14,
+        "only_b": 4,
+        "rate_a": 0.8791666666666667,
+        "rate_b": 0.8375,
+        "difference": -0.041666666666666664,
+        "difference_ci": [
+          -0.075,
+          -0.008333333333333333
+        ],
+        "mcnemar_p": 0.030883789062499986,
+        "holm_p": 0.06176757812499997,
+        "significant": false,
+        "non_inferior": true
+      },
+      "openai:gpt-6.2-sol": {
+        "pairs": 240,
+        "only_a": 16,
+        "only_b": 29,
+        "rate_a": 0.8791666666666667,
+        "rate_b": 0.9333333333333333,
+        "difference": 0.05416666666666667,
+        "difference_ci": [
+          0,
+          0.10833333333333334
+        ],
+        "mcnemar_p": 0.07245426016254435,
+        "holm_p": 0.07245426016254435,
+        "significant": false,
+        "non_inferior": true
+      }
+    }
+  },
+  "sensitivity_sol_removed_ceo_rule_label": {
+    "note": "rescored column with the gpt-6.2-sol removed-chief-executive rows the judge marked not correct, and the token rule marked correct, taking the rule label",
+    "gpt_6_2_sol_correct": 239,
+    "comparisons": {
+      "particle:particle-1": {
+        "pairs": 240,
+        "only_a": 14,
+        "only_b": 4,
+        "rate_a": 0.8791666666666667,
+        "rate_b": 0.8375,
+        "difference": -0.041666666666666664,
+        "difference_ci": [
+          -0.075,
+          -0.008333333333333333
+        ],
+        "mcnemar_p": 0.030883789062499986,
+        "holm_p": 0.030883789062499986,
+        "significant": true,
+        "non_inferior": true
+      },
+      "openai:gpt-6.2-sol": {
+        "pairs": 240,
+        "only_a": 1,
+        "only_b": 29,
+        "rate_a": 0.8791666666666667,
+        "rate_b": 0.9958333333333333,
+        "difference": 0.11666666666666667,
+        "difference_ci": [
+          0.075,
+          0.15833333333333333
+        ],
+        "mcnemar_p": 5.774199962615965e-8,
+        "holm_p": 1.154839992523193e-7,
+        "significant": true,
+        "non_inferior": true
+      }
+    }
+  },
+  "harness_errors": []
+}

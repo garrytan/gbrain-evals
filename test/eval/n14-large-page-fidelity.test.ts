@@ -17,7 +17,7 @@ import {
 } from '../../eval/generators/n14-large-page-gen.ts';
 import {
   EGRESS_CAP_BYTES, PASSAGE_CAP_BYTES, THRESHOLDS, canonicalBody, crashedSummary, absentSummary, estTokens, evaluateArm, frameBytes, hitRank, hubContent,
-  n14Findings, n14Verdict, parseConfigOverlay, parseNativeIngest, probeNativeCapability, scoreQa, splitIntoParts, summarize, summarizeArm,
+  chunkDelta, ingestWithoutSql, n14Findings, n14Verdict, parseConfigOverlay, parseNativeIngest, probeNativeCapability, scoreQa, splitIntoParts, summarize, summarizeArm,
   EMBED_PASS_TIERS, UPLOAD_ABOVE_BYTES, cutUploadParts, LIFECYCLE_CLAIM, LIFECYCLE_TOKEN, PROJECTION_SETTLE_MAX_MS, lifecycleFence, parseEngine, settleBoundMs,
   type LifecycleOutcome, type AppendOutcome, type Arm, type CallFrame, type EmbedCount, type IngestOutcome, type N14Adapter, type N14RunResult, type NativeCapability, type SearchHit,
 } from '../../eval/runner/n14-large-page-fidelity.ts';
@@ -343,7 +343,7 @@ describe('N14 adapters through evaluateArm', () => {
   test('a deliberately broken adapter (silent head-only ingest at 200 KB) fails the category', async () => {
     const broken = summarizeArm(await evaluateArm(new ReferenceAdapter('native', 200_000), doc.ledger, doc.text), '2mb');
     const parts = summarizeArm(await evaluateArm(new ReferenceAdapter('managed-parts'), doc.ledger, doc.text), '2mb');
-    expect(broken.stored_needles.hits).toBeLessThan(40);
+    expect(broken.stored_needles!.hits).toBeLessThan(40);
     expect(broken.keyword_recall_by_decile.slice(6).every(r => r.rate === 0)).toBe(true);
     expect(broken.roundtrip).toBe('mismatch');
     const v = n14Verdict(summarize([broken, parts], 0, CAPABLE));
@@ -560,5 +560,46 @@ describe('N14 Amendment 4: tiers, engine, settle bound, lifecycle', () => {
     const r = new Refused('native');
     expect((await evaluateArm(r, doc.ledger, doc.text, { lifecycle: true })).lifecycle).toBeUndefined();
     expect(r.seen).toBeNull();
+  });
+});
+
+describe('N14 on an engine without raw SQL (rust)', () => {
+  test('stored page and chunk counts are null with a not_applicable reason, never 0', () => {
+    const o = ingestWithoutSql(0, null, null, null);
+    expect([o.status, o.pages, o.chunks]).toEqual(['stored', null, null]);
+    expect(o.not_applicable).toMatch(/^not_applicable: /);
+    expect(ingestWithoutSql(1, { code: 'request_too_large', message: 'too big' }, null, null).status).toBe('refused');
+    const d = chunkDelta(null, null);
+    expect([d.chunks_before, d.chunks_after, d.chunks_rewritten, d.chunks_deleted]).toEqual([null, null, null, null]);
+    expect(d.not_applicable).toMatch(/^not_applicable: /);
+    expect(chunkDelta(new Map([[1, 'a'], [2, 'b']]), new Map([[1, 'a'], [3, 'c']]))).toEqual({ chunks_before: 2, chunks_after: 2, chunks_rewritten: 1, chunks_deleted: 1 });
+  });
+
+  test('a run without raw SQL reports its counts as missing and files no zero-chunk finding', async () => {
+    class NoSql extends ReferenceAdapter {
+      async ingest(ledger: N14DocLedger, raw: string): Promise<IngestOutcome> { await super.ingest(ledger, raw); return ingestWithoutSql(0, null, null, null); }
+      async storedContains(): Promise<boolean> { throw Object.assign(new Error('not_applicable: storedContains reads stored bodies with raw SQL'), { code: 'not_applicable' }); }
+      async append(text: string): Promise<AppendOutcome> { await super.append(text); return { status: 'ok', ...chunkDelta(null, null), path: 'append' }; }
+    }
+    const doc = small('conversation', 400_000);
+    const s = summarizeArm(await evaluateArm(new NoSql('single-page'), doc.ledger, doc.text), '2mb');
+    expect([s.ingest.pages, s.ingest.chunks, s.stored_needles, s.append?.chunks_rewritten, s.append?.chunks_deleted]).toEqual([null, null, null, null, null]);
+    expect(s.ingest.not_applicable).toMatch(/^not_applicable: /);
+    expect(s.append?.not_applicable).toMatch(/^not_applicable: /);
+    expect(s.keyword_recall.rate).toBe(1);
+    const gut = { root: '/x', version: 't', overlay: { build: { commit: 'c71fe7436e673db819c1be4532504b861e14ad50' } } } as unknown as GbrainUnderTest;
+    const ids = n14Findings({ tiers: [], capability: CAPABLE, summary: summarize([s], 0, CAPABLE), arms: [s] } as unknown as N14RunResult, gut).map(f => f.id);
+    expect(ids).not.toContain('N14-1');
+  });
+
+  test('an ingest or append that throws records no counts, not 0', async () => {
+    class Throws extends ReferenceAdapter {
+      async ingest(): Promise<IngestOutcome> { throw Object.assign(new Error('boom'), { code: 'boom' }); }
+      async append(): Promise<AppendOutcome> { throw Object.assign(new Error('boom'), { code: 'boom' }); }
+    }
+    const doc = small('conversation', 400_000);
+    const run = await evaluateArm(new Throws('single-page'), doc.ledger, doc.text);
+    expect([run.ingest.status, run.ingest.pages, run.ingest.chunks]).toEqual(['error', null, null]);
+    expect([run.append.status, run.append.chunks_before, run.append.chunks_after, run.append.chunks_rewritten, run.append.chunks_deleted]).toEqual(['error', null, null, null, null]);
   });
 });

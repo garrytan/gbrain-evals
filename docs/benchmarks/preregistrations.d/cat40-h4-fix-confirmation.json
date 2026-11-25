@@ -1,0 +1,141 @@
+{
+  "schema_version": 1,
+  "experiments": [
+    {
+      "id": "cat40-h4-fix-confirmation",
+      "preregistration": "docs/benchmarks/2026-11-24-cat40-h4-fix-confirmation-preregistration.md",
+      "results": [
+        "docs/benchmarks/2026-11-24-cat40-h4-fix-confirmation/**",
+        "docs/benchmarks/2026-11-24-cat40-h4-fix-confirmation.md"
+      ],
+      "results_page": "docs/benchmarks/2026-11-24-cat40-h4-fix-confirmation.md",
+      "registered": "2026-11-24",
+      "paid_tier": "over-500",
+      "decision": [
+        {
+          "if": "gbrain-section beats gbrain-default on H4 for claude-opus-5-5 (primary interval above 0) and the other four families show no harm (pooled lower bound above -5 points, a fixed margin)",
+          "then": "the default flip of search.long_page_unit to section goes to Garry, through GBRA-108, with these numbers"
+        },
+        {
+          "if": "section delivery helps on H4 but harm on the other families is not ruled out",
+          "then": "the flip does not go to Garry as it stands; GBRA-108 gets the per-family split as evidence for a scoped version"
+        },
+        {
+          "if": "the primary difference is not distinguishable from 0",
+          "then": "the flip is closed; one Why-null cycle records why, with a KEEP (as an opt-in setting), FIX-METHOD or CUT-CANDIDATE verdict"
+        },
+        {
+          "if": "section delivery hurts on H4 (primary interval below 0)",
+          "then": "the flip is closed, and GBRA-108 gets the paired numbers"
+        },
+        {
+          "if": "gbrain-section is ahead of files on H4 (gap interval above 0)",
+          "then": "README says gbrain with section delivery answers more of these questions than plain files, with the interval"
+        },
+        {
+          "if": "gbrain-section is level with files on H4",
+          "then": "README says gbrain with section delivery is level with plain files on these questions, with the interval"
+        },
+        {
+          "if": "gbrain-section is still behind files on H4, or the gap is not distinguishable",
+          "then": "README gives the gap with its interval, and the manager-phrase share of the misses goes to GBRA-108"
+        }
+      ],
+      "arms": [
+        "gbrain-section",
+        "gbrain-default",
+        "fs",
+        "oracle"
+      ],
+      "models": [
+        {
+          "model": "claude-opus-5-5",
+          "role": "under-test"
+        },
+        {
+          "model": "gpt-6.2-sol",
+          "role": "under-test"
+        },
+        {
+          "model": "particle:particle-1",
+          "role": "under-test"
+        },
+        {
+          "model": "gpt-6.2-sol",
+          "role": "judge"
+        },
+        {
+          "model": "claude-opus-5-5",
+          "role": "judge"
+        },
+        {
+          "model": "openai:text-embedding-3-large",
+          "role": "embedder"
+        },
+        {
+          "model": "voyage:rerank-3-lite",
+          "role": "system-internal",
+          "system": "gbrain (its shipped reranker; the release's actual reranker and query-expansion model are recorded before cells)"
+        }
+      ],
+      "pilots": [
+        {
+          "arm": "gbrain-section",
+          "max_budget_fraction": 0.1,
+          "part_under_test_ran": "every pilot cell calls gbrain tools with no param_not_on_surface, the config reads back search.long_page_unit=section, and at least one search row carries delivered {unit: section}; five more H4 cells run if none does",
+          "judge_passes": "both judges pass the 100-item construction-labelled judge check before any counted cell",
+          "units_supplied_at_rate": "five cells per frontier reader on S3 at the planned concurrency end submitted or at the turn cap with no rate-limit stop"
+        },
+        {
+          "arm": "gbrain-default",
+          "max_budget_fraction": 0.1,
+          "part_under_test_ran": "every pilot cell calls gbrain tools with no param_not_on_surface, the config reads back {}, and no search row carries delivered {unit: section}",
+          "judge_passes": "both judges pass the 100-item construction-labelled judge check before any counted cell",
+          "units_supplied_at_rate": "five cells per frontier reader on S3 at the planned concurrency end submitted or at the turn cap with no rate-limit stop"
+        },
+        {
+          "arm": "fs",
+          "max_budget_fraction": 0.1,
+          "part_under_test_ran": "every pilot cell calls grep and read_file",
+          "judge_passes": "both judges pass the 100-item construction-labelled judge check before any counted cell",
+          "units_supplied_at_rate": "five cells per frontier reader on S3 at the planned concurrency end submitted or at the turn cap with no rate-limit stop"
+        },
+        {
+          "arm": "oracle",
+          "max_budget_fraction": 0.1,
+          "part_under_test_ran": "every oracle prompt holds every document the task's key names; pooled oracle success at least 95% per world",
+          "judge_passes": "both judges pass the 100-item construction-labelled judge check before any counted cell",
+          "units_supplied_at_rate": "oracle cells on every planned task finish with no rate-limit stop"
+        }
+      ],
+      "judge_check": {
+        "judges": [
+          {
+            "model": "gpt-6.2-sol",
+            "grades": [
+              "claude-opus-5-5"
+            ],
+            "labelled_outputs": 100,
+            "kappa_min": 0.6
+          },
+          {
+            "model": "claude-opus-5-5",
+            "grades": [
+              "gpt-6.2-sol",
+              "particle:particle-1"
+            ],
+            "labelled_outputs": 100,
+            "kappa_min": 0.6
+          }
+        ],
+        "read_per_arm": true
+      },
+      "interim_look": {
+        "at_units_fraction": 0.5,
+        "bounds": "obrien-fleming",
+        "alpha": 0.05,
+        "futility_stop": "stop only when conditional power to end with z of at least 1.98 under +12.2 points and to end with z of at most -1.98 under -12.2 points are each below 10% at half the H4 tasks (primary endpoint: gbrain-section minus gbrain-default, Opus 5.5, H4); a zero bootstrap standard error takes no stop"
+      }
+    }
+  ]
+}

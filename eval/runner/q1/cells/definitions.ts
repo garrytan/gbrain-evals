@@ -54,9 +54,10 @@ export type BG1CSetId = 'BG1C' | 'BG1C-dev1';
 /**
  * The weekly outcome line's sets (weekly-line.ts): one week's Set W worlds (BGW, or BGW-long for a W1-long batch), the pilot on
  * public dev world bg1-dev-01 (R111) and the grep agent's judge check on public dev worlds bg1-dev-02 and bg1-dev-03 (R78), and
- * the same two on the long public dev worlds ahead of a W1-long block: bg1-dev-long-01, and bg1-dev-long-02 and -03.
+ * the same two on the long public dev worlds ahead of a W1-long block (bg1-dev-long-01, and bg1-dev-long-02 and -03) and on
+ * the alias public dev worlds of changing-facts-gen@3 (bg1-dev-alias-01, and bg1-dev-alias-02 and -03).
  */
-export type WeeklyLineSetId = 'BGW' | 'BGW-long' | 'BGW-pilot' | 'BGW-judge' | 'BGW-pilot-long' | 'BGW-judge-long';
+export type WeeklyLineSetId = 'BGW' | 'BGW-long' | 'BGW-pilot' | 'BGW-judge' | 'BGW-pilot-long' | 'BGW-judge-long' | 'BGW-pilot-alias' | 'BGW-judge-alias';
 /**
  * The cost-and-speed experiment's sets (cs1.ts): the ten counted public dev worlds bg1-dev-01 to -10, the paid pilot on
  * bg1-dev-11 and the keyless capacity check on bg1-dev-12.
@@ -337,6 +338,8 @@ export const WEEKLY_LINE_SETS: Record<WeeklyLineSetId, SetFacts> = {
   'BGW-judge': { id: 'BGW-judge', benchmark: 'bg1-dev', split: 'dev', questions: 128, conversations: 2, corpus_tokens: 400_000, messages: 4_000, block: 'BGW-judge', selection: { kind: 'all' }, exclusions: [], role: 'smoke', exposure: 'E2', label: "weekly outcome line, the grep agent's judge check on public dev worlds bg1-dev-02 and bg1-dev-03", only_conversations: ['bg1-dev-02', 'bg1-dev-03'], sessions: 150 },
   'BGW-pilot-long': { id: 'BGW-pilot-long', benchmark: 'bg1-dev', split: 'dev', questions: 64, conversations: 1, corpus_tokens: 1_000_000, messages: 10_000, block: 'BGW-pilot', selection: { kind: 'all' }, exclusions: [], role: 'smoke', exposure: 'E2', label: 'weekly outcome line long pilot, public dev world bg1-dev-long-01 (about 1,000,000 tokens) at the counted settings', only_conversations: ['bg1-dev-long-01'], sessions: 750 },
   'BGW-judge-long': { id: 'BGW-judge-long', benchmark: 'bg1-dev', split: 'dev', questions: 128, conversations: 2, corpus_tokens: 2_000_000, messages: 20_000, block: 'BGW-judge', selection: { kind: 'all' }, exclusions: [], role: 'smoke', exposure: 'E2', label: "weekly outcome line, the grep agent's long judge check on public dev worlds bg1-dev-long-02 and bg1-dev-long-03 (about 1,000,000 tokens each)", only_conversations: ['bg1-dev-long-02', 'bg1-dev-long-03'], sessions: 750 },
+  'BGW-pilot-alias': { id: 'BGW-pilot-alias', benchmark: 'bg1-dev', split: 'dev', questions: 64, conversations: 1, corpus_tokens: 200_000, messages: 2_000, block: 'BGW-pilot', selection: { kind: 'all' }, exclusions: [], role: 'smoke', exposure: 'E2', label: 'weekly outcome line alias pilot, public dev world bg1-dev-alias-01 (changing-facts-gen@3, described subjects) at the counted settings', only_conversations: ['bg1-dev-alias-01'], sessions: 150 },
+  'BGW-judge-alias': { id: 'BGW-judge-alias', benchmark: 'bg1-dev', split: 'dev', questions: 128, conversations: 2, corpus_tokens: 400_000, messages: 4_000, block: 'BGW-judge', selection: { kind: 'all' }, exclusions: [], role: 'smoke', exposure: 'E2', label: "weekly outcome line, the grep agent's alias judge check on public dev worlds bg1-dev-alias-02 and bg1-dev-alias-03 (changing-facts-gen@3)", only_conversations: ['bg1-dev-alias-02', 'bg1-dev-alias-03'], sessions: 150 },
 };
 /** The weekly line's blocks on public dev worlds: the pilot and the grep agent's judge check (weekly-line.ts generateWeeklyLinePilotCells). */
 export const WEEKLY_PILOT_BLOCK_IDS: readonly WeeklyLineBlockId[] = ['BGW-pilot', 'BGW-judge'];

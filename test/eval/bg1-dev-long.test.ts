@@ -8,7 +8,7 @@
  */
 import { afterAll, describe, expect, test } from 'bun:test';
 import { spawnSync } from 'node:child_process';
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { BG1_CUSTODY_MARKER, BG1_DATA_DIR, BG1_DEV_SEEDS, BG1_PROFILES, checkPlan, devFiles, devWorldPlan, PUBLIC_PHRASING } from '../../eval/generators/changing-facts-gen.ts';
@@ -47,7 +47,7 @@ const refusal = (f: () => unknown) => { try { f(); } catch (e) { if (e instanceo
 const record = (set: string, id: string) => JSON.parse(readFileSync(join(set, 'render', `${id}.validation.json`), 'utf8'));
 
 describe('the long public dev worlds', () => {
-  // Value: protects=the three long dev worlds are public plans at the long profile with the gold-audit fixes, committed as a fresh generation, while every earlier dev world's seed and plan stay as they were; fails_when=a long dev world plans at the standard profile, shares a seed with another world, drops the gold audit, carries the custody marker, or the committed files drift from the generator; why_new=GBEV-3's ruling A moves the judge check onto three public long dev worlds; seam=changing-facts-gen.ts devWorldPlan and devFiles against eval/data/changing-facts-v1; no_claim=the Gemini-rendered worlds, which come in their own change after a privacy read
+  // Value: protects=the three long dev worlds are public plans at the long profile with the gold-audit fixes, committed as a fresh generation, while every earlier dev world's seed and plan stay as they were; fails_when=a long dev world plans at the standard profile, shares a seed with another world, drops the gold audit, carries the custody marker, or the committed files drift from the generator; why_new=GBEV-3's ruling A moves the judge check onto three public long dev worlds; seam=changing-facts-gen.ts devWorldPlan and devFiles against eval/data/changing-facts-v1; no_claim=the rendered worlds' text, which the next test checks
   test('they are changing-facts-gen@2 plans from public seeds, committed as generated, and the earlier dev worlds are untouched', () => {
     expect(BG1_DEV_LONG_CONVERSATIONS).toEqual(LONG);
     const files = devFiles();
@@ -62,7 +62,10 @@ describe('the long public dev worlds', () => {
         expect(files.get(rel)!).not.toContain(BG1_CUSTODY_MARKER);
       }
       expect(JSON.parse(files.get(`dev/worlds/${id}/questions.json`)!)).toHaveLength(64);
-      expect(existsSync(join(BG1_DATA_DIR, 'dev', 'worlds', id, 'world.json'))).toBe(false);
+      const world = readFileSync(join(BG1_DATA_DIR, 'dev', 'worlds', id, 'world.json'), 'utf8');
+      expect(world).not.toContain(BG1_CUSTODY_MARKER);
+      const parsed = JSON.parse(world) as { id: string; renderer: string; sessions: { id: string }[] };
+      expect([parsed.id, parsed.renderer, parsed.sessions.map(s => s.id)]).toEqual([id, 'gemini:gemini-3.8-flash', plan.sessions.map(s => s.id)]);
     }
     expect(new Set(Object.values(BG1_DEV_SEEDS)).size).toBe(Object.keys(BG1_DEV_SEEDS).length);
     for (const id of [...BG1_DEV_CONVERSATIONS, ...BG1_DEV_EXTRA_CONVERSATIONS]) {
@@ -70,6 +73,21 @@ describe('the long public dev worlds', () => {
       expect(devWorldPlan(id).generator).toBe(BG1_PROFILES.standard.generator);
     }
   });
+
+  // Value: protects=the committed rendered long worlds pass validate.ts --dev at their 1,000,000-token profile and load in a load not declared keyless; fails_when=a committed long world.json drifts from its plan or questions, falls outside the profile's length, carries the custody marker, or was written by a template renderer; why_new=the rendered long worlds are committed (approval a-4efc7c31a86e on #627); seam=validate.ts --dev in a child process over a copy of the committed files, and loadBg1Dev on the committed dev root; no_claim=the worlds' answer quality
+  test('the committed rendered long worlds pass validate.ts --dev at their own length and load without the keyless flag', () => {
+    const set = scratch('committed');
+    for (const id of LONG) cpSync(join(BG1_DATA_DIR, 'dev', 'worlds', id), join(set, 'worlds', id), { recursive: true });
+    for (const id of LONG) {
+      const r = run('bun', [VALIDATE, '--dev', id, '--set', set]);
+      expect([r.code, r.err]).toEqual([0, '']);
+      expect(r.out).toContain(`bg1-validate world=${id} status=pass gates=none`);
+      expect(record(set, id)).toMatchObject({ status: 'pass', target_tokens: 1_000_000, failed: [] });
+    }
+    const corpus = loadBg1Dev({ root: join(BG1_DATA_DIR, 'dev'), only: new Set(LONG), worldEnd: WORLD_END });
+    expect(corpus.conversations.map(c => c.id)).toEqual(LONG);
+    expect(corpus.questions).toHaveLength(192);
+  }, 120_000);
 
   // Value: protects=a long dev world renders and validates at its own length unless told otherwise, as a public world with no custody marker; fails_when=render.ts or validate.ts --dev defaults a long world to 200,000 tokens, validate.ts passes a world with the custody marker, a template-rendered world outside a drill, or a world whose plan isn't the committed one; why_new=the 1M window mints these worlds with render.ts --dev and checks them with validate.ts, which had no dev mode; seam=render.ts and validate.ts --dev in child processes with --fake; no_claim=Gemini's render or the length a real world reaches
   test('render.ts and validate.ts --dev take a long world at its own length and check it as a public world', () => {

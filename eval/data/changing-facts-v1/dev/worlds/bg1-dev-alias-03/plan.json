@@ -1,0 +1,8751 @@
+{
+ "schema": "gbrain-evals/bg1-plan/v1",
+ "generator": "changing-facts-gen@3",
+ "id": "bg1-dev-alias-03",
+ "seed": "bg1-dev-alias-seed-v1:bg1-dev-alias-03",
+ "gold_audit": true,
+ "world_end_weekday": "Sunday",
+ "entities": [
+  {
+   "id": "person-01",
+   "type": "person",
+   "name": "Dominik Abernathy",
+   "aliases": {
+    "name": "Dominik Abernathy",
+    "nickname": "Dom",
+    "misspelling": "Dominik Abarnathy",
+    "pronoun": "he",
+    "role": "my bridge partner"
+   },
+   "property": "telescope"
+  },
+  {
+   "id": "project-01",
+   "type": "project",
+   "name": "Project Ostrava",
+   "aliases": {
+    "name": "Project Ostrava",
+    "nickname": "Ostrava",
+    "misspelling": "Ostreva",
+    "pronoun": "it",
+    "role": "the moonshot"
+   },
+   "property": "library"
+  },
+  {
+   "id": "company-01",
+   "type": "company",
+   "name": "Tidewell Energy",
+   "aliases": {
+    "name": "Tidewell Energy",
+    "nickname": "Tidewell",
+    "misspelling": "Tidawell Energy",
+    "pronoun": "it",
+    "role": "the client with the glass tower"
+   },
+   "property": "ferry"
+  },
+  {
+   "id": "company-02",
+   "type": "company",
+   "name": "Halcyon Freight",
+   "aliases": {
+    "name": "Halcyon Freight",
+    "nickname": "Halcyon",
+    "misspelling": "Halcion Freight",
+    "pronoun": "it",
+    "role": "the startup we advise"
+   },
+   "property": "payroll"
+  },
+  {
+   "id": "person-02",
+   "type": "person",
+   "name": "Clementine Haddad",
+   "aliases": {
+    "name": "Clementine Haddad",
+    "nickname": "Clem",
+    "misspelling": "Clementine Hadded",
+    "pronoun": "she",
+    "role": "my yoga teacher"
+   },
+   "property": "archery"
+  },
+  {
+   "id": "project-02",
+   "type": "project",
+   "name": "Project Tamarind",
+   "aliases": {
+    "name": "Project Tamarind",
+    "nickname": "Tamarind",
+    "misspelling": "Tamerind",
+    "pronoun": "it",
+    "role": "the quick-win project"
+   },
+   "property": "welsh"
+  },
+  {
+   "id": "person-03",
+   "type": "person",
+   "name": "Nathaniel Brennan",
+   "aliases": {
+    "name": "Nathaniel Brennan",
+    "nickname": "Nate",
+    "misspelling": "Nathaniel Brannan",
+    "pronoun": "he",
+    "role": "my former teammate"
+   },
+   "property": "triathlon"
+  },
+  {
+   "id": "person-04",
+   "type": "person",
+   "name": "Anneliese Gallagher",
+   "aliases": {
+    "name": "Anneliese Gallagher",
+    "nickname": "Annie",
+    "misspelling": "Anneliese Gallegher",
+    "pronoun": "she",
+    "role": "my old lab partner"
+   },
+   "property": "improv"
+  },
+  {
+   "id": "deal-01",
+   "type": "deal",
+   "name": "the Wexley deal",
+   "aliases": {
+    "name": "the Wexley deal",
+    "nickname": "Wexley",
+    "misspelling": "the Wexlay deal",
+    "pronoun": "it",
+    "role": "the tricky renewal"
+   },
+   "property": "lighting"
+  },
+  {
+   "id": "project-03",
+   "type": "project",
+   "name": "Project Halyard",
+   "aliases": {
+    "name": "Project Halyard",
+    "nickname": "Halyard",
+    "misspelling": "Haliard",
+    "pronoun": "it",
+    "role": "the pet project"
+   },
+   "property": "solar"
+  },
+  {
+   "id": "company-03",
+   "type": "company",
+   "name": "Wrenfield Optics",
+   "aliases": {
+    "name": "Wrenfield Optics",
+    "nickname": "Wrenfield",
+    "misspelling": "Wranfield Optics",
+    "pronoun": "it",
+    "role": "the client in the old mill building"
+   },
+   "property": "hearing-aids"
+  },
+  {
+   "id": "person-05",
+   "type": "person",
+   "name": "Peregrine Petrovic",
+   "aliases": {
+    "name": "Peregrine Petrovic",
+    "nickname": "Perry",
+    "misspelling": "Peregrine Petruvic",
+    "pronoun": "he",
+    "role": "the friend from the choir"
+   },
+   "property": "crosswords"
+  },
+  {
+   "id": "deal-02",
+   "type": "deal",
+   "name": "the Ridgeway deal",
+   "aliases": {
+    "name": "the Ridgeway deal",
+    "nickname": "Ridgeway",
+    "misspelling": "the Ridgaway deal",
+    "pronoun": "it",
+    "role": "the handshake deal"
+   },
+   "property": "laptops"
+  },
+  {
+   "id": "deal-03",
+   "type": "deal",
+   "name": "the Carrick deal",
+   "aliases": {
+    "name": "the Carrick deal",
+    "nickname": "Carrick",
+    "misspelling": "the Carryck deal",
+    "pronoun": "it",
+    "role": "the big renewal"
+   },
+   "property": "shelters"
+  },
+  {
+   "id": "deal-04",
+   "type": "deal",
+   "name": "the Juniper deal",
+   "aliases": {
+    "name": "the Juniper deal",
+    "nickname": "Juniper",
+    "misspelling": "the Junyper deal",
+    "pronoun": "it",
+    "role": "the enterprise deal"
+   },
+   "property": "headsets"
+  },
+  {
+   "id": "deal-05",
+   "type": "deal",
+   "name": "the Marlow deal",
+   "aliases": {
+    "name": "the Marlow deal",
+    "nickname": "Marlow",
+    "misspelling": "the Marluw deal",
+    "pronoun": "it",
+    "role": "the rescue deal"
+   },
+   "property": "stadium"
+  },
+  {
+   "id": "company-04",
+   "type": "company",
+   "name": "Brackenridge Media",
+   "aliases": {
+    "name": "Brackenridge Media",
+    "nickname": "Brackenridge",
+    "misspelling": "Breckenridge Media",
+    "pronoun": "it",
+    "role": "the firm downstairs"
+   },
+   "property": "subtitles"
+  },
+  {
+   "id": "project-04",
+   "type": "project",
+   "name": "Project Quillon",
+   "aliases": {
+    "name": "Project Quillon",
+    "nickname": "Quillon",
+    "misspelling": "Quyllon",
+    "pronoun": "it",
+    "role": "the cross-team project"
+   },
+   "property": "timetables"
+  },
+  {
+   "id": "company-05",
+   "type": "company",
+   "name": "Lowmoor Retail",
+   "aliases": {
+    "name": "Lowmoor Retail",
+    "nickname": "Lowmoor",
+    "misspelling": "Lowmuor Retail",
+    "pronoun": "it",
+    "role": "the agency we share an office with"
+   },
+   "property": "violins"
+  },
+  {
+   "id": "deal-02-twin",
+   "type": "deal",
+   "name": "the Cobalt deal",
+   "twin_of": "deal-02",
+   "aliases": {
+    "name": "the Cobalt deal",
+    "nickname": "Cobalt",
+    "misspelling": "the Cobelt deal",
+    "pronoun": "it",
+    "role": "the bundled deal"
+   },
+   "property": "cold-storage"
+  },
+  {
+   "id": "person-05-twin",
+   "type": "person",
+   "name": "Augustin Kowalski",
+   "twin_of": "person-05",
+   "aliases": {
+    "name": "Augustin Kowalski",
+    "nickname": "Gus",
+    "misspelling": "Augustin Kowelski",
+    "pronoun": "he",
+    "role": "my accountant"
+   },
+   "property": "esperanto"
+  },
+  {
+   "id": "company-02-twin",
+   "type": "company",
+   "name": "Gannetry Logistics",
+   "twin_of": "company-02",
+   "aliases": {
+    "name": "Gannetry Logistics",
+    "nickname": "Gannetry",
+    "misspelling": "Gannatry Logistics",
+    "pronoun": "it",
+    "role": "the client from the trade fair"
+   },
+   "property": "oat-milk"
+  },
+  {
+   "id": "company-05-twin",
+   "type": "company",
+   "name": "Vantor Biotech",
+   "twin_of": "company-05",
+   "aliases": {
+    "name": "Vantor Biotech",
+    "nickname": "Vantor",
+    "misspelling": "Vantur Biotech",
+    "pronoun": "it",
+    "role": "the outfit with the green logo"
+   },
+   "property": "escape-rooms"
+  },
+  {
+   "id": "project-01-twin",
+   "type": "project",
+   "name": "Project Mistletoe",
+   "twin_of": "project-01",
+   "aliases": {
+    "name": "Project Mistletoe",
+    "nickname": "Mistletoe",
+    "misspelling": "Mistlatoe",
+    "pronoun": "it",
+    "role": "the summer project"
+   },
+   "property": "carbon"
+  },
+  {
+   "id": "person-02-twin",
+   "type": "person",
+   "name": "Tobias Halloran",
+   "twin_of": "person-02",
+   "aliases": {
+    "name": "Tobias Halloran",
+    "nickname": "Toby",
+    "misspelling": "Tobias Halluran",
+    "pronoun": "he",
+    "role": "my running buddy"
+   },
+   "property": "origami"
+  },
+  {
+   "id": "person-04-twin",
+   "type": "person",
+   "name": "Reginald Zielinski",
+   "twin_of": "person-04",
+   "aliases": {
+    "name": "Reginald Zielinski",
+    "nickname": "Reggie",
+    "misspelling": "Reginald Zialinski",
+    "pronoun": "he",
+    "role": "my neighbour across the hall"
+   },
+   "property": "snowboard"
+  },
+  {
+   "id": "person-01-twin",
+   "type": "person",
+   "name": "Rosalind Oyelaran",
+   "twin_of": "person-01",
+   "aliases": {
+    "name": "Rosalind Oyelaran",
+    "nickname": "Roz",
+    "misspelling": "Rosalind Oyalaran",
+    "pronoun": "she",
+    "role": "the new hire in finance"
+   },
+   "property": "beehives"
+  },
+  {
+   "id": "deal-01-twin",
+   "type": "deal",
+   "name": "the Solent deal",
+   "twin_of": "deal-01",
+   "aliases": {
+    "name": "the Solent deal",
+    "nickname": "Solent",
+    "misspelling": "the Solant deal",
+    "pronoun": "it",
+    "role": "the year-end deal"
+   },
+   "property": "vending"
+  },
+  {
+   "id": "company-04-twin",
+   "type": "company",
+   "name": "Stonechat Robotics",
+   "twin_of": "company-04",
+   "aliases": {
+    "name": "Stonechat Robotics",
+    "nickname": "Stonechat",
+    "misspelling": "Stunechat Robotics",
+    "pronoun": "it",
+    "role": "our biggest client"
+   },
+   "property": "fireworks"
+  }
+ ],
+ "slots": [
+  {
+   "id": "person-01.city",
+   "entity": "person-01",
+   "kind": "city",
+   "stratum": "s1_updated",
+   "events": [
+    {
+     "id": "person-01.city#0",
+     "type": "state",
+     "value": "Accra",
+     "session": "s017",
+     "said": -483,
+     "valid_from": -483
+    },
+    {
+     "id": "person-01.city#1",
+     "type": "late",
+     "value": "Vilnius",
+     "session": "s061",
+     "said": -312,
+     "valid_from": -368
+    },
+    {
+     "id": "person-01.city#2",
+     "type": "change",
+     "value": "Malmo",
+     "session": "s074",
+     "said": -277,
+     "valid_from": -277
+    },
+    {
+     "id": "person-01.city#3",
+     "type": "change",
+     "value": "Seville",
+     "session": "s115",
+     "said": -137,
+     "valid_from": -137
+    },
+    {
+     "id": "person-01.city#4",
+     "type": "scheduled",
+     "value": "Utrecht",
+     "session": "s130",
+     "said": -76,
+     "valid_from": 55
+    }
+   ],
+   "intent": {
+    "now": "Seville",
+    "history": [
+     "Accra",
+     "Vilnius",
+     "Malmo",
+     "Seville"
+    ]
+   }
+  },
+  {
+   "id": "person-01.role",
+   "entity": "person-01",
+   "kind": "role",
+   "stratum": "s1_updated",
+   "events": [
+    {
+     "id": "person-01.role#0",
+     "type": "state",
+     "value": "Head of Platform",
+     "session": "s018",
+     "said": -476,
+     "valid_from": -476
+    },
+    {
+     "id": "person-01.role#1",
+     "type": "change",
+     "value": "Analytics Manager",
+     "session": "s045",
+     "said": -350,
+     "valid_from": -350
+    },
+    {
+     "id": "person-01.role#2",
+     "type": "change",
+     "value": "Director of Partnerships",
+     "session": "s098",
+     "said": -199,
+     "valid_from": -199
+    },
+    {
+     "id": "person-01.role#3",
+     "type": "change",
+     "value": "VP of Sales",
+     "session": "s113",
+     "said": -141,
+     "valid_from": -141
+    }
+   ],
+   "intent": {
+    "now": "VP of Sales",
+    "history": [
+     "Head of Platform",
+     "Analytics Manager",
+     "Director of Partnerships",
+     "VP of Sales"
+    ]
+   }
+  },
+  {
+   "id": "project-01.lead",
+   "entity": "project-01",
+   "kind": "lead",
+   "stratum": "s1_updated",
+   "events": [
+    {
+     "id": "project-01.lead#0",
+     "type": "state",
+     "value": "Aurelio Raman",
+     "session": "s024",
+     "said": -440,
+     "valid_from": -440
+    },
+    {
+     "id": "project-01.lead#1",
+     "type": "change",
+     "value": "Theo Dimitrov",
+     "session": "s140",
+     "said": -55,
+     "valid_from": -55
+    },
+    {
+     "id": "project-01.lead#2",
+     "type": "scheduled",
+     "value": "Vera Iqbal",
+     "session": "s148",
+     "said": -7,
+     "valid_from": 91
+    }
+   ],
+   "intent": {
+    "now": "Theo Dimitrov",
+    "history": [
+     "Aurelio Raman",
+     "Theo Dimitrov"
+    ]
+   }
+  },
+  {
+   "id": "company-01.hq",
+   "entity": "company-01",
+   "kind": "hq",
+   "stratum": "s1_updated",
+   "events": [
+    {
+     "id": "company-01.hq#0",
+     "type": "state",
+     "value": "Taipei",
+     "session": "s016",
+     "said": -484,
+     "valid_from": -484
+    },
+    {
+     "id": "company-01.hq#1",
+     "type": "late",
+     "value": "Lyon",
+     "session": "s065",
+     "said": -302,
+     "valid_from": -333
+    },
+    {
+     "id": "company-01.hq#2",
+     "type": "change",
+     "value": "Rotterdam",
+     "session": "s136",
+     "said": -64,
+     "valid_from": -64
+    }
+   ],
+   "intent": {
+    "now": "Rotterdam",
+    "history": [
+     "Taipei",
+     "Lyon",
+     "Rotterdam"
+    ]
+   }
+  },
+  {
+   "id": "company-02.ops_lead",
+   "entity": "company-02",
+   "kind": "ops_lead",
+   "stratum": "s1_updated",
+   "events": [
+    {
+     "id": "company-02.ops_lead#0",
+     "type": "state",
+     "value": "Nadia Holm",
+     "session": "s007",
+     "said": -533,
+     "valid_from": -533
+    },
+    {
+     "id": "company-02.ops_lead#1",
+     "type": "change",
+     "value": "Soren Osei",
+     "session": "s050",
+     "said": -339,
+     "valid_from": -339
+    },
+    {
+     "id": "company-02.ops_lead#2",
+     "type": "change",
+     "value": "Yusuf Tanaka",
+     "session": "s106",
+     "said": -163,
+     "valid_from": -163
+    }
+   ],
+   "intent": {
+    "now": "Yusuf Tanaka",
+    "history": [
+     "Nadia Holm",
+     "Soren Osei",
+     "Yusuf Tanaka"
+    ]
+   }
+  },
+  {
+   "id": "person-02.employer",
+   "entity": "person-02",
+   "kind": "employer",
+   "stratum": "s1_updated",
+   "events": [
+    {
+     "id": "person-02.employer#0",
+     "type": "state",
+     "value": "Oakhaven Health",
+     "session": "s003",
+     "said": -539,
+     "valid_from": -539
+    },
+    {
+     "id": "person-02.employer#1",
+     "type": "change",
+     "value": "Saltmarsh Marine",
+     "session": "s046",
+     "said": -350,
+     "valid_from": -350
+    },
+    {
+     "id": "person-02.employer#2",
+     "type": "late",
+     "value": "Cinderford Steel",
+     "session": "s125",
+     "said": -100,
+     "valid_from": -129
+    }
+   ],
+   "intent": {
+    "now": "Cinderford Steel",
+    "history": [
+     "Oakhaven Health",
+     "Saltmarsh Marine",
+     "Cinderford Steel"
+    ]
+   }
+  },
+  {
+   "id": "project-02.vendor",
+   "entity": "project-02",
+   "kind": "vendor",
+   "stratum": "s2_corrected",
+   "events": [
+    {
+     "id": "project-02.vendor#0",
+     "type": "state",
+     "value": "Gorseway Transit",
+     "session": "s035",
+     "said": -403,
+     "valid_from": -403
+    },
+    {
+     "id": "project-02.vendor#1",
+     "type": "change",
+     "value": "Zephyrine Aviation",
+     "session": "s057",
+     "said": -323,
+     "valid_from": -323
+    },
+    {
+     "id": "project-02.vendor#2",
+     "type": "correct",
+     "value": "Glasswing Studios",
+     "session": "s064",
+     "said": -302,
+     "valid_from": -323,
+     "replaces": "project-02.vendor#1"
+    }
+   ],
+   "intent": {
+    "now": "Glasswing Studios",
+    "history": [
+     "Gorseway Transit",
+     "Glasswing Studios"
+    ]
+   }
+  },
+  {
+   "id": "person-03.city",
+   "entity": "person-03",
+   "kind": "city",
+   "stratum": "s2_corrected",
+   "events": [
+    {
+     "id": "person-03.city#0",
+     "type": "state",
+     "value": "Riga",
+     "session": "s045",
+     "said": -350,
+     "valid_from": -350
+    },
+    {
+     "id": "person-03.city#1",
+     "type": "correct",
+     "value": "Montreal",
+     "session": "s091",
+     "said": -219,
+     "valid_from": -350,
+     "replaces": "person-03.city#0"
+    }
+   ],
+   "intent": {
+    "now": "Montreal",
+    "history": [
+     "Montreal"
+    ]
+   }
+  },
+  {
+   "id": "person-04.role",
+   "entity": "person-04",
+   "kind": "role",
+   "stratum": "s2_corrected",
+   "events": [
+    {
+     "id": "person-04.role#0",
+     "type": "state",
+     "value": "Chief of Staff",
+     "session": "s052",
+     "said": -330,
+     "valid_from": -330
+    },
+    {
+     "id": "person-04.role#1",
+     "type": "correct",
+     "value": "Compliance Officer",
+     "session": "s074",
+     "said": -277,
+     "valid_from": -330,
+     "replaces": "person-04.role#0"
+    }
+   ],
+   "intent": {
+    "now": "Compliance Officer",
+    "history": [
+     "Compliance Officer"
+    ]
+   }
+  },
+  {
+   "id": "deal-01.price",
+   "entity": "deal-01",
+   "kind": "price",
+   "stratum": "s2_corrected",
+   "events": [
+    {
+     "id": "deal-01.price#0",
+     "type": "state",
+     "value": "$122,000",
+     "session": "s023",
+     "said": -443,
+     "valid_from": -443
+    },
+    {
+     "id": "deal-01.price#1",
+     "type": "change",
+     "value": "$342,000",
+     "session": "s103",
+     "said": -186,
+     "valid_from": -186
+    },
+    {
+     "id": "deal-01.price#2",
+     "type": "correct",
+     "value": "$88,000",
+     "session": "s140",
+     "said": -55,
+     "valid_from": -186,
+     "replaces": "deal-01.price#1"
+    }
+   ],
+   "intent": {
+    "now": "$88,000",
+    "history": [
+     "$122,000",
+     "$88,000"
+    ]
+   }
+  },
+  {
+   "id": "project-02.lead",
+   "entity": "project-02",
+   "kind": "lead",
+   "stratum": "s2_corrected",
+   "events": [
+    {
+     "id": "project-02.lead#0",
+     "type": "state",
+     "value": "Benedikt Nilsen",
+     "session": "s005",
+     "said": -533,
+     "valid_from": -533
+    },
+    {
+     "id": "project-02.lead#1",
+     "type": "change",
+     "value": "Rania Zamora",
+     "session": "s080",
+     "said": -261,
+     "valid_from": -261
+    },
+    {
+     "id": "project-02.lead#2",
+     "type": "correct",
+     "value": "Cyrus Grieve",
+     "session": "s110",
+     "said": -154,
+     "valid_from": -261,
+     "replaces": "project-02.lead#1"
+    }
+   ],
+   "intent": {
+    "now": "Cyrus Grieve",
+    "history": [
+     "Benedikt Nilsen",
+     "Cyrus Grieve"
+    ]
+   }
+  },
+  {
+   "id": "company-02.hq",
+   "entity": "company-02",
+   "kind": "hq",
+   "stratum": "s2_corrected",
+   "events": [
+    {
+     "id": "company-02.hq#0",
+     "type": "state",
+     "value": "Vienna",
+     "session": "s057",
+     "said": -323,
+     "valid_from": -323
+    },
+    {
+     "id": "company-02.hq#1",
+     "type": "correct",
+     "value": "Tallinn",
+     "session": "s087",
+     "said": -239,
+     "valid_from": -323,
+     "replaces": "company-02.hq#0"
+    }
+   ],
+   "intent": {
+    "now": "Tallinn",
+    "history": [
+     "Tallinn"
+    ]
+   }
+  },
+  {
+   "id": "person-04.city",
+   "entity": "person-04",
+   "kind": "city",
+   "stratum": "s3_repeated_stale",
+   "events": [
+    {
+     "id": "person-04.city#0",
+     "type": "state",
+     "value": "Bergen",
+     "session": "s005",
+     "said": -533,
+     "valid_from": -533
+    },
+    {
+     "id": "person-04.city#1",
+     "type": "mention",
+     "value": "Bergen",
+     "session": "s009",
+     "said": -510,
+     "valid_from": null
+    },
+    {
+     "id": "person-04.city#2",
+     "type": "mention",
+     "value": "Bergen",
+     "session": "s023",
+     "said": -443,
+     "valid_from": null
+    },
+    {
+     "id": "person-04.city#3",
+     "type": "mention",
+     "value": "Bergen",
+     "session": "s035",
+     "said": -403,
+     "valid_from": null
+    },
+    {
+     "id": "person-04.city#4",
+     "type": "mention",
+     "value": "Bergen",
+     "session": "s042",
+     "said": -363,
+     "valid_from": null
+    },
+    {
+     "id": "person-04.city#5",
+     "type": "mention",
+     "value": "Bergen",
+     "session": "s080",
+     "said": -261,
+     "valid_from": null
+    },
+    {
+     "id": "person-04.city#6",
+     "type": "mention",
+     "value": "Bergen",
+     "session": "s088",
+     "said": -238,
+     "valid_from": null
+    },
+    {
+     "id": "person-04.city#7",
+     "type": "mention",
+     "value": "Bergen",
+     "session": "s089",
+     "said": -232,
+     "valid_from": null
+    },
+    {
+     "id": "person-04.city#8",
+     "type": "mention",
+     "value": "Bergen",
+     "session": "s090",
+     "said": -230,
+     "valid_from": null
+    },
+    {
+     "id": "person-04.city#9",
+     "type": "mention",
+     "value": "Bergen",
+     "session": "s110",
+     "said": -154,
+     "valid_from": null
+    },
+    {
+     "id": "person-04.city#10",
+     "type": "mention",
+     "value": "Bergen",
+     "session": "s114",
+     "said": -137,
+     "valid_from": null
+    },
+    {
+     "id": "person-04.city#11",
+     "type": "change",
+     "value": "Bologna",
+     "session": "s138",
+     "said": -58,
+     "valid_from": -58
+    }
+   ],
+   "intent": {
+    "now": "Bologna",
+    "history": [
+     "Bergen",
+     "Bologna"
+    ]
+   }
+  },
+  {
+   "id": "project-03.vendor",
+   "entity": "project-03",
+   "kind": "vendor",
+   "stratum": "s3_repeated_stale",
+   "events": [
+    {
+     "id": "project-03.vendor#0",
+     "type": "state",
+     "value": "Inkberry Publishing",
+     "session": "s006",
+     "said": -533,
+     "valid_from": -533
+    },
+    {
+     "id": "project-03.vendor#1",
+     "type": "mention",
+     "value": "Inkberry Publishing",
+     "session": "s010",
+     "said": -505,
+     "valid_from": null
+    },
+    {
+     "id": "project-03.vendor#2",
+     "type": "mention",
+     "value": "Inkberry Publishing",
+     "session": "s027",
+     "said": -428,
+     "valid_from": null
+    },
+    {
+     "id": "project-03.vendor#3",
+     "type": "mention",
+     "value": "Inkberry Publishing",
+     "session": "s032",
+     "said": -415,
+     "valid_from": null
+    },
+    {
+     "id": "project-03.vendor#4",
+     "type": "mention",
+     "value": "Inkberry Publishing",
+     "session": "s033",
+     "said": -413,
+     "valid_from": null
+    },
+    {
+     "id": "project-03.vendor#5",
+     "type": "mention",
+     "value": "Inkberry Publishing",
+     "session": "s051",
+     "said": -333,
+     "valid_from": null
+    },
+    {
+     "id": "project-03.vendor#6",
+     "type": "mention",
+     "value": "Inkberry Publishing",
+     "session": "s060",
+     "said": -320,
+     "valid_from": null
+    },
+    {
+     "id": "project-03.vendor#7",
+     "type": "mention",
+     "value": "Inkberry Publishing",
+     "session": "s079",
+     "said": -263,
+     "valid_from": null
+    },
+    {
+     "id": "project-03.vendor#8",
+     "type": "mention",
+     "value": "Inkberry Publishing",
+     "session": "s102",
+     "said": -187,
+     "valid_from": null
+    },
+    {
+     "id": "project-03.vendor#9",
+     "type": "mention",
+     "value": "Inkberry Publishing",
+     "session": "s104",
+     "said": -181,
+     "valid_from": null
+    },
+    {
+     "id": "project-03.vendor#10",
+     "type": "mention",
+     "value": "Inkberry Publishing",
+     "session": "s120",
+     "said": -112,
+     "valid_from": null
+    },
+    {
+     "id": "project-03.vendor#11",
+     "type": "mention",
+     "value": "Inkberry Publishing",
+     "session": "s123",
+     "said": -107,
+     "valid_from": null
+    },
+    {
+     "id": "project-03.vendor#12",
+     "type": "mention",
+     "value": "Inkberry Publishing",
+     "session": "s131",
+     "said": -75,
+     "valid_from": null
+    },
+    {
+     "id": "project-03.vendor#13",
+     "type": "change",
+     "value": "Pinecrest Robotics",
+     "session": "s134",
+     "said": -64,
+     "valid_from": -64
+    }
+   ],
+   "intent": {
+    "now": "Pinecrest Robotics",
+    "history": [
+     "Inkberry Publishing",
+     "Pinecrest Robotics"
+    ]
+   }
+  },
+  {
+   "id": "company-03.ops_lead",
+   "entity": "company-03",
+   "kind": "ops_lead",
+   "stratum": "s3_repeated_stale",
+   "events": [
+    {
+     "id": "company-03.ops_lead#0",
+     "type": "state",
+     "value": "Jonah Pires",
+     "session": "s011",
+     "said": -504,
+     "valid_from": -504
+    },
+    {
+     "id": "company-03.ops_lead#1",
+     "type": "mention",
+     "value": "Jonah Pires",
+     "session": "s015",
+     "said": -488,
+     "valid_from": null
+    },
+    {
+     "id": "company-03.ops_lead#2",
+     "type": "mention",
+     "value": "Jonah Pires",
+     "session": "s024",
+     "said": -440,
+     "valid_from": null
+    },
+    {
+     "id": "company-03.ops_lead#3",
+     "type": "mention",
+     "value": "Jonah Pires",
+     "session": "s042",
+     "said": -363,
+     "valid_from": null
+    },
+    {
+     "id": "company-03.ops_lead#4",
+     "type": "mention",
+     "value": "Jonah Pires",
+     "session": "s053",
+     "said": -329,
+     "valid_from": null
+    },
+    {
+     "id": "company-03.ops_lead#5",
+     "type": "mention",
+     "value": "Jonah Pires",
+     "session": "s056",
+     "said": -326,
+     "valid_from": null
+    },
+    {
+     "id": "company-03.ops_lead#6",
+     "type": "mention",
+     "value": "Jonah Pires",
+     "session": "s064",
+     "said": -302,
+     "valid_from": null
+    },
+    {
+     "id": "company-03.ops_lead#7",
+     "type": "mention",
+     "value": "Jonah Pires",
+     "session": "s070",
+     "said": -288,
+     "valid_from": null
+    },
+    {
+     "id": "company-03.ops_lead#8",
+     "type": "mention",
+     "value": "Jonah Pires",
+     "session": "s081",
+     "said": -257,
+     "valid_from": null
+    },
+    {
+     "id": "company-03.ops_lead#9",
+     "type": "mention",
+     "value": "Jonah Pires",
+     "session": "s087",
+     "said": -239,
+     "valid_from": null
+    },
+    {
+     "id": "company-03.ops_lead#10",
+     "type": "change",
+     "value": "Zofia Uddin",
+     "session": "s110",
+     "said": -154,
+     "valid_from": -154
+    }
+   ],
+   "intent": {
+    "now": "Zofia Uddin",
+    "history": [
+     "Jonah Pires",
+     "Zofia Uddin"
+    ]
+   }
+  },
+  {
+   "id": "person-03.employer",
+   "entity": "person-03",
+   "kind": "employer",
+   "stratum": "s3_repeated_stale",
+   "events": [
+    {
+     "id": "person-03.employer#0",
+     "type": "state",
+     "value": "Tarnwood Logistics",
+     "session": "s003",
+     "said": -539,
+     "valid_from": -539
+    },
+    {
+     "id": "person-03.employer#1",
+     "type": "mention",
+     "value": "Tarnwood Logistics",
+     "session": "s014",
+     "said": -489,
+     "valid_from": null
+    },
+    {
+     "id": "person-03.employer#2",
+     "type": "mention",
+     "value": "Tarnwood Logistics",
+     "session": "s019",
+     "said": -471,
+     "valid_from": null
+    },
+    {
+     "id": "person-03.employer#3",
+     "type": "mention",
+     "value": "Tarnwood Logistics",
+     "session": "s022",
+     "said": -462,
+     "valid_from": null
+    },
+    {
+     "id": "person-03.employer#4",
+     "type": "mention",
+     "value": "Tarnwood Logistics",
+     "session": "s029",
+     "said": -427,
+     "valid_from": null
+    },
+    {
+     "id": "person-03.employer#5",
+     "type": "mention",
+     "value": "Tarnwood Logistics",
+     "session": "s042",
+     "said": -363,
+     "valid_from": null
+    },
+    {
+     "id": "person-03.employer#6",
+     "type": "mention",
+     "value": "Tarnwood Logistics",
+     "session": "s055",
+     "said": -328,
+     "valid_from": null
+    },
+    {
+     "id": "person-03.employer#7",
+     "type": "mention",
+     "value": "Tarnwood Logistics",
+     "session": "s090",
+     "said": -230,
+     "valid_from": null
+    },
+    {
+     "id": "person-03.employer#8",
+     "type": "mention",
+     "value": "Tarnwood Logistics",
+     "session": "s114",
+     "said": -137,
+     "valid_from": null
+    },
+    {
+     "id": "person-03.employer#9",
+     "type": "change",
+     "value": "Bramblecote Bakery",
+     "session": "s118",
+     "said": -126,
+     "valid_from": -126
+    }
+   ],
+   "intent": {
+    "now": "Bramblecote Bakery",
+    "history": [
+     "Tarnwood Logistics",
+     "Bramblecote Bakery"
+    ]
+   }
+  },
+  {
+   "id": "person-05.employer",
+   "entity": "person-05",
+   "kind": "employer",
+   "stratum": "s3_repeated_stale",
+   "events": [
+    {
+     "id": "person-05.employer#0",
+     "type": "state",
+     "value": "Elmstead Clinics",
+     "session": "s014",
+     "said": -489,
+     "valid_from": -489
+    },
+    {
+     "id": "person-05.employer#1",
+     "type": "mention",
+     "value": "Elmstead Clinics",
+     "session": "s024",
+     "said": -440,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.employer#2",
+     "type": "mention",
+     "value": "Elmstead Clinics",
+     "session": "s030",
+     "said": -421,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.employer#3",
+     "type": "mention",
+     "value": "Elmstead Clinics",
+     "session": "s038",
+     "said": -392,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.employer#4",
+     "type": "mention",
+     "value": "Elmstead Clinics",
+     "session": "s059",
+     "said": -321,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.employer#5",
+     "type": "mention",
+     "value": "Elmstead Clinics",
+     "session": "s062",
+     "said": -310,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.employer#6",
+     "type": "mention",
+     "value": "Elmstead Clinics",
+     "session": "s069",
+     "said": -289,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.employer#7",
+     "type": "mention",
+     "value": "Elmstead Clinics",
+     "session": "s088",
+     "said": -238,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.employer#8",
+     "type": "mention",
+     "value": "Elmstead Clinics",
+     "session": "s089",
+     "said": -232,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.employer#9",
+     "type": "mention",
+     "value": "Elmstead Clinics",
+     "session": "s125",
+     "said": -100,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.employer#10",
+     "type": "mention",
+     "value": "Elmstead Clinics",
+     "session": "s126",
+     "said": -98,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.employer#11",
+     "type": "mention",
+     "value": "Elmstead Clinics",
+     "session": "s130",
+     "said": -76,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.employer#12",
+     "type": "change",
+     "value": "Lindenhall Bank",
+     "session": "s131",
+     "said": -75,
+     "valid_from": -75
+    }
+   ],
+   "intent": {
+    "now": "Lindenhall Bank",
+    "history": [
+     "Elmstead Clinics",
+     "Lindenhall Bank"
+    ]
+   }
+  },
+  {
+   "id": "person-02.city",
+   "entity": "person-02",
+   "kind": "city",
+   "stratum": "s3_repeated_stale",
+   "events": [
+    {
+     "id": "person-02.city#0",
+     "type": "state",
+     "value": "Bordeaux",
+     "session": "s018",
+     "said": -476,
+     "valid_from": -476
+    },
+    {
+     "id": "person-02.city#1",
+     "type": "mention",
+     "value": "Bordeaux",
+     "session": "s019",
+     "said": -471,
+     "valid_from": null
+    },
+    {
+     "id": "person-02.city#2",
+     "type": "mention",
+     "value": "Bordeaux",
+     "session": "s021",
+     "said": -463,
+     "valid_from": null
+    },
+    {
+     "id": "person-02.city#3",
+     "type": "mention",
+     "value": "Bordeaux",
+     "session": "s028",
+     "said": -428,
+     "valid_from": null
+    },
+    {
+     "id": "person-02.city#4",
+     "type": "mention",
+     "value": "Bordeaux",
+     "session": "s031",
+     "said": -416,
+     "valid_from": null
+    },
+    {
+     "id": "person-02.city#5",
+     "type": "mention",
+     "value": "Bordeaux",
+     "session": "s037",
+     "said": -398,
+     "valid_from": null
+    },
+    {
+     "id": "person-02.city#6",
+     "type": "mention",
+     "value": "Bordeaux",
+     "session": "s051",
+     "said": -333,
+     "valid_from": null
+    },
+    {
+     "id": "person-02.city#7",
+     "type": "mention",
+     "value": "Bordeaux",
+     "session": "s052",
+     "said": -330,
+     "valid_from": null
+    },
+    {
+     "id": "person-02.city#8",
+     "type": "mention",
+     "value": "Bordeaux",
+     "session": "s053",
+     "said": -329,
+     "valid_from": null
+    },
+    {
+     "id": "person-02.city#9",
+     "type": "mention",
+     "value": "Bordeaux",
+     "session": "s055",
+     "said": -328,
+     "valid_from": null
+    },
+    {
+     "id": "person-02.city#10",
+     "type": "mention",
+     "value": "Bordeaux",
+     "session": "s064",
+     "said": -302,
+     "valid_from": null
+    },
+    {
+     "id": "person-02.city#11",
+     "type": "mention",
+     "value": "Bordeaux",
+     "session": "s065",
+     "said": -302,
+     "valid_from": null
+    },
+    {
+     "id": "person-02.city#12",
+     "type": "mention",
+     "value": "Bordeaux",
+     "session": "s090",
+     "said": -230,
+     "valid_from": null
+    },
+    {
+     "id": "person-02.city#13",
+     "type": "mention",
+     "value": "Bordeaux",
+     "session": "s101",
+     "said": -190,
+     "valid_from": null
+    },
+    {
+     "id": "person-02.city#14",
+     "type": "mention",
+     "value": "Bordeaux",
+     "session": "s105",
+     "said": -164,
+     "valid_from": null
+    },
+    {
+     "id": "person-02.city#15",
+     "type": "change",
+     "value": "Adelaide",
+     "session": "s131",
+     "said": -75,
+     "valid_from": -75
+    }
+   ],
+   "intent": {
+    "now": "Adelaide",
+    "history": [
+     "Bordeaux",
+     "Adelaide"
+    ]
+   }
+  },
+  {
+   "id": "deal-01.seats",
+   "entity": "deal-01",
+   "kind": "seats",
+   "stratum": "s4_conflicting",
+   "events": [
+    {
+     "id": "deal-01.seats#0",
+     "type": "source",
+     "value": "860 seats",
+     "session": "s111",
+     "said": -150,
+     "valid_from": -150,
+     "source": "owner_confirmed"
+    },
+    {
+     "id": "deal-01.seats#1",
+     "type": "source",
+     "value": "200 seats",
+     "session": "s114",
+     "said": -137,
+     "valid_from": -137,
+     "source": "recap"
+    },
+    {
+     "id": "deal-01.seats#2",
+     "type": "source",
+     "value": "580 seats",
+     "session": "s119",
+     "said": -117,
+     "valid_from": -117,
+     "source": "draft"
+    },
+    {
+     "id": "deal-01.seats#3",
+     "type": "source",
+     "value": "460 seats",
+     "session": "s133",
+     "said": -74,
+     "valid_from": -74,
+     "source": "recap"
+    }
+   ],
+   "intent": {
+    "now": "860 seats",
+    "history": [
+     "860 seats"
+    ]
+   }
+  },
+  {
+   "id": "deal-02.price",
+   "entity": "deal-02",
+   "kind": "price",
+   "stratum": "s4_conflicting",
+   "events": [
+    {
+     "id": "deal-02.price#0",
+     "type": "source",
+     "value": "$224,000",
+     "session": "s100",
+     "said": -192,
+     "valid_from": -192,
+     "source": "executed"
+    },
+    {
+     "id": "deal-02.price#1",
+     "type": "source",
+     "value": "$170,000",
+     "session": "s108",
+     "said": -160,
+     "valid_from": -160,
+     "source": "draft"
+    },
+    {
+     "id": "deal-02.price#2",
+     "type": "source",
+     "value": "$212,000",
+     "session": "s112",
+     "said": -142,
+     "valid_from": -142,
+     "source": "agent_note"
+    }
+   ],
+   "intent": {
+    "now": "$224,000",
+    "history": [
+     "$224,000"
+    ]
+   }
+  },
+  {
+   "id": "deal-02.discount",
+   "entity": "deal-02",
+   "kind": "discount",
+   "stratum": "s4_conflicting",
+   "events": [
+    {
+     "id": "deal-02.discount#0",
+     "type": "source",
+     "value": "19%",
+     "session": "s025",
+     "said": -432,
+     "valid_from": -432,
+     "source": "executed"
+    },
+    {
+     "id": "deal-02.discount#1",
+     "type": "source",
+     "value": "34%",
+     "session": "s030",
+     "said": -421,
+     "valid_from": -421,
+     "source": "agent_note"
+    },
+    {
+     "id": "deal-02.discount#2",
+     "type": "source",
+     "value": "8%",
+     "session": "s036",
+     "said": -403,
+     "valid_from": -403,
+     "source": "draft"
+    },
+    {
+     "id": "deal-02.discount#3",
+     "type": "source",
+     "value": "41%",
+     "session": "s037",
+     "said": -398,
+     "valid_from": -398,
+     "source": "recap"
+    },
+    {
+     "id": "deal-02.discount#4",
+     "type": "source",
+     "value": "38%",
+     "session": "s040",
+     "said": -367,
+     "valid_from": -367,
+     "source": "recap"
+    }
+   ],
+   "intent": {
+    "now": "19%",
+    "history": [
+     "19%"
+    ]
+   }
+  },
+  {
+   "id": "deal-03.discount",
+   "entity": "deal-03",
+   "kind": "discount",
+   "stratum": "s4_conflicting",
+   "events": [
+    {
+     "id": "deal-03.discount#0",
+     "type": "source",
+     "value": "11%",
+     "session": "s020",
+     "said": -463,
+     "valid_from": -463,
+     "source": "owner_confirmed"
+    },
+    {
+     "id": "deal-03.discount#1",
+     "type": "source",
+     "value": "10%",
+     "session": "s028",
+     "said": -428,
+     "valid_from": -428,
+     "source": "agent_note"
+    },
+    {
+     "id": "deal-03.discount#2",
+     "type": "source",
+     "value": "14%",
+     "session": "s036",
+     "said": -403,
+     "valid_from": -403,
+     "source": "recap"
+    }
+   ],
+   "intent": {
+    "now": "11%",
+    "history": [
+     "11%"
+    ]
+   }
+  },
+  {
+   "id": "deal-04.discount",
+   "entity": "deal-04",
+   "kind": "discount",
+   "stratum": "s4_conflicting",
+   "events": [
+    {
+     "id": "deal-04.discount#0",
+     "type": "source",
+     "value": "33%",
+     "session": "s039",
+     "said": -389,
+     "valid_from": -389,
+     "source": "draft"
+    },
+    {
+     "id": "deal-04.discount#1",
+     "type": "source",
+     "value": "16%",
+     "session": "s047",
+     "said": -344,
+     "valid_from": -344,
+     "source": "executed"
+    },
+    {
+     "id": "deal-04.discount#2",
+     "type": "source",
+     "value": "40%",
+     "session": "s078",
+     "said": -264,
+     "valid_from": -264,
+     "source": "agent_note"
+    }
+   ],
+   "intent": {
+    "now": "16%",
+    "history": [
+     "16%"
+    ]
+   }
+  },
+  {
+   "id": "deal-05.term",
+   "entity": "deal-05",
+   "kind": "term",
+   "stratum": "s4_conflicting",
+   "events": [
+    {
+     "id": "deal-05.term#0",
+     "type": "source",
+     "value": "57 months",
+     "session": "s093",
+     "said": -214,
+     "valid_from": -214,
+     "source": "agent_note"
+    },
+    {
+     "id": "deal-05.term#1",
+     "type": "source",
+     "value": "27 months",
+     "session": "s097",
+     "said": -200,
+     "valid_from": -200,
+     "source": "owner_confirmed"
+    },
+    {
+     "id": "deal-05.term#2",
+     "type": "source",
+     "value": "63 months",
+     "session": "s109",
+     "said": -158,
+     "valid_from": -158,
+     "source": "draft"
+    }
+   ],
+   "intent": {
+    "now": "27 months",
+    "history": [
+     "27 months"
+    ]
+   }
+  },
+  {
+   "id": "company-04.offsite",
+   "entity": "company-04",
+   "kind": "offsite",
+   "stratum": "s5_withdrawn",
+   "events": [
+    {
+     "id": "company-04.offsite#0",
+     "type": "plan",
+     "value": "Brno",
+     "session": "s026",
+     "said": -430,
+     "valid_from": -430
+    },
+    {
+     "id": "company-04.offsite#1",
+     "type": "withdraw",
+     "value": "Brno",
+     "session": "s081",
+     "said": -257,
+     "valid_from": null,
+     "rumour": true
+    }
+   ],
+   "intent": {
+    "now": null,
+    "history": []
+   }
+  },
+  {
+   "id": "project-04.pilot",
+   "entity": "project-04",
+   "kind": "pilot",
+   "stratum": "s5_withdrawn",
+   "events": [
+    {
+     "id": "project-04.pilot#0",
+     "type": "plan",
+     "value": "Jasperwood Furniture",
+     "session": "s063",
+     "said": -308,
+     "valid_from": -308
+    },
+    {
+     "id": "project-04.pilot#1",
+     "type": "withdraw",
+     "value": "Jasperwood Furniture",
+     "session": "s092",
+     "said": -217,
+     "valid_from": null,
+     "rumour": true
+    }
+   ],
+   "intent": {
+    "now": null,
+    "history": []
+   }
+  },
+  {
+   "id": "project-01.pilot",
+   "entity": "project-01",
+   "kind": "pilot",
+   "stratum": "s5_withdrawn",
+   "events": [
+    {
+     "id": "project-01.pilot#0",
+     "type": "plan",
+     "value": "Foxglove Cosmetics",
+     "session": "s091",
+     "said": -219,
+     "valid_from": -219
+    },
+    {
+     "id": "project-01.pilot#1",
+     "type": "withdraw",
+     "value": "Foxglove Cosmetics",
+     "session": "s118",
+     "said": -126,
+     "valid_from": null,
+     "rumour": false
+    }
+   ],
+   "intent": {
+    "now": null,
+    "history": []
+   }
+  },
+  {
+   "id": "company-04.merger",
+   "entity": "company-04",
+   "kind": "merger",
+   "stratum": "s5_withdrawn",
+   "events": [
+    {
+     "id": "company-04.merger#0",
+     "type": "plan",
+     "value": "Thistledown Textiles",
+     "session": "s065",
+     "said": -302,
+     "valid_from": -302
+    },
+    {
+     "id": "company-04.merger#1",
+     "type": "plan",
+     "value": "Thistledown Textiles",
+     "session": "s068",
+     "said": -293,
+     "valid_from": -293
+    },
+    {
+     "id": "company-04.merger#2",
+     "type": "plan",
+     "value": "Thistledown Textiles",
+     "session": "s080",
+     "said": -261,
+     "valid_from": -261
+    },
+    {
+     "id": "company-04.merger#3",
+     "type": "withdraw",
+     "value": "Thistledown Textiles",
+     "session": "s096",
+     "said": -206,
+     "valid_from": null,
+     "rumour": false
+    }
+   ],
+   "intent": {
+    "now": null,
+    "history": []
+   }
+  },
+  {
+   "id": "company-05.merger",
+   "entity": "company-05",
+   "kind": "merger",
+   "stratum": "s5_withdrawn",
+   "events": [
+    {
+     "id": "company-05.merger#0",
+     "type": "plan",
+     "value": "Driftmark Software",
+     "session": "s023",
+     "said": -443,
+     "valid_from": -443
+    },
+    {
+     "id": "company-05.merger#1",
+     "type": "plan",
+     "value": "Driftmark Software",
+     "session": "s028",
+     "said": -428,
+     "valid_from": -428
+    },
+    {
+     "id": "company-05.merger#2",
+     "type": "withdraw",
+     "value": "Driftmark Software",
+     "session": "s076",
+     "said": -273,
+     "valid_from": null,
+     "rumour": false
+    }
+   ],
+   "intent": {
+    "now": null,
+    "history": []
+   }
+  },
+  {
+   "id": "company-01.offsite",
+   "entity": "company-01",
+   "kind": "offsite",
+   "stratum": "s5_withdrawn",
+   "events": [
+    {
+     "id": "company-01.offsite#0",
+     "type": "plan",
+     "value": "Krakow",
+     "session": "s082",
+     "said": -256,
+     "valid_from": -256
+    },
+    {
+     "id": "company-01.offsite#1",
+     "type": "plan",
+     "value": "Krakow",
+     "session": "s095",
+     "said": -206,
+     "valid_from": -206
+    },
+    {
+     "id": "company-01.offsite#2",
+     "type": "withdraw",
+     "value": "Krakow",
+     "session": "s141",
+     "said": -46,
+     "valid_from": null,
+     "rumour": false
+    }
+   ],
+   "intent": {
+    "now": null,
+    "history": []
+   }
+  },
+  {
+   "id": "deal-02-twin.price",
+   "entity": "deal-02-twin",
+   "kind": "price",
+   "stratum": "decoy",
+   "twin_slot": "deal-02.price",
+   "events": [
+    {
+     "id": "deal-02-twin.price#0",
+     "type": "source",
+     "value": "$318,000",
+     "session": "s129",
+     "said": -80,
+     "valid_from": -80,
+     "source": "executed"
+    }
+   ],
+   "intent": {
+    "now": "$318,000",
+    "history": [
+     "$318,000"
+    ]
+   }
+  },
+  {
+   "id": "person-05-twin.employer",
+   "entity": "person-05-twin",
+   "kind": "employer",
+   "stratum": "decoy",
+   "twin_slot": "person-05.employer",
+   "events": [
+    {
+     "id": "person-05-twin.employer#0",
+     "type": "state",
+     "value": "Pebblestone Data",
+     "session": "s039",
+     "said": -389,
+     "valid_from": -389
+    }
+   ],
+   "intent": {
+    "now": "Pebblestone Data",
+    "history": [
+     "Pebblestone Data"
+    ]
+   }
+  },
+  {
+   "id": "company-02-twin.hq",
+   "entity": "company-02-twin",
+   "kind": "hq",
+   "stratum": "decoy",
+   "twin_slot": "company-02.hq",
+   "events": [
+    {
+     "id": "company-02-twin.hq#0",
+     "type": "state",
+     "value": "Galway",
+     "session": "s084",
+     "said": -246,
+     "valid_from": -246
+    }
+   ],
+   "intent": {
+    "now": "Galway",
+    "history": [
+     "Galway"
+    ]
+   }
+  },
+  {
+   "id": "company-05-twin.merger",
+   "entity": "company-05-twin",
+   "kind": "merger",
+   "stratum": "decoy",
+   "twin_slot": "company-05.merger",
+   "events": [
+    {
+     "id": "company-05-twin.merger#0",
+     "type": "plan",
+     "value": "Heathmont Schools",
+     "session": "s083",
+     "said": -249,
+     "valid_from": -249
+    }
+   ],
+   "intent": {
+    "now": "Heathmont Schools",
+    "history": [
+     "Heathmont Schools"
+    ]
+   }
+  },
+  {
+   "id": "project-01-twin.lead",
+   "entity": "project-01-twin",
+   "kind": "lead",
+   "stratum": "decoy",
+   "twin_slot": "project-01.lead",
+   "events": [
+    {
+     "id": "project-01-twin.lead#0",
+     "type": "state",
+     "value": "Ximena Yeboah",
+     "session": "s026",
+     "said": -430,
+     "valid_from": -430
+    }
+   ],
+   "intent": {
+    "now": "Ximena Yeboah",
+    "history": [
+     "Ximena Yeboah"
+    ]
+   }
+  },
+  {
+   "id": "person-02-twin.employer",
+   "entity": "person-02-twin",
+   "kind": "employer",
+   "stratum": "decoy",
+   "twin_slot": "person-02.employer",
+   "events": [
+    {
+     "id": "person-02-twin.employer#0",
+     "type": "state",
+     "value": "Larkspur Foods",
+     "session": "s128",
+     "said": -80,
+     "valid_from": -80
+    }
+   ],
+   "intent": {
+    "now": "Larkspur Foods",
+    "history": [
+     "Larkspur Foods"
+    ]
+   }
+  },
+  {
+   "id": "person-04-twin.city",
+   "entity": "person-04-twin",
+   "kind": "city",
+   "stratum": "decoy",
+   "twin_slot": "person-04.city",
+   "events": [
+    {
+     "id": "person-04-twin.city#0",
+     "type": "state",
+     "value": "Gdansk",
+     "session": "s072",
+     "said": -280,
+     "valid_from": -280
+    }
+   ],
+   "intent": {
+    "now": "Gdansk",
+    "history": [
+     "Gdansk"
+    ]
+   }
+  },
+  {
+   "id": "person-01-twin.city",
+   "entity": "person-01-twin",
+   "kind": "city",
+   "stratum": "decoy",
+   "twin_slot": "person-01.city",
+   "events": [
+    {
+     "id": "person-01-twin.city#0",
+     "type": "state",
+     "value": "Helsinki",
+     "session": "s060",
+     "said": -320,
+     "valid_from": -320
+    }
+   ],
+   "intent": {
+    "now": "Helsinki",
+    "history": [
+     "Helsinki"
+    ]
+   }
+  },
+  {
+   "id": "deal-01-twin.seats",
+   "entity": "deal-01-twin",
+   "kind": "seats",
+   "stratum": "decoy",
+   "twin_slot": "deal-01.seats",
+   "events": [
+    {
+     "id": "deal-01-twin.seats#0",
+     "type": "source",
+     "value": "760 seats",
+     "session": "s079",
+     "said": -263,
+     "valid_from": -263,
+     "source": "executed"
+    }
+   ],
+   "intent": {
+    "now": "760 seats",
+    "history": [
+     "760 seats"
+    ]
+   }
+  },
+  {
+   "id": "company-04-twin.offsite",
+   "entity": "company-04-twin",
+   "kind": "offsite",
+   "stratum": "decoy",
+   "twin_slot": "company-04.offsite",
+   "events": [
+    {
+     "id": "company-04-twin.offsite#0",
+     "type": "plan",
+     "value": "Valencia",
+     "session": "s132",
+     "said": -75,
+     "valid_from": -75
+    }
+   ],
+   "intent": {
+    "now": "Valencia",
+    "history": [
+     "Valencia"
+    ]
+   }
+  }
+ ],
+ "sessions": [
+  {
+   "id": "s001",
+   "day": -542,
+   "time": "16:35",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": [
+    {
+     "text": "The year-end deal covers the vending machines.",
+     "slot": "deal-01-twin.profile",
+     "event": "deal-01-twin.profile#2",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-01-twin",
+       "alias": "role"
+      }
+     ],
+     "purpose": "property"
+    }
+   ]
+  },
+  {
+   "id": "s002",
+   "day": -540,
+   "time": "14:05",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": [
+    {
+     "text": "Clem mentored Perry early on.",
+     "slot": "person-02.relation",
+     "event": "person-02.relation#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-02",
+       "alias": "nickname"
+      },
+      {
+       "entity": "person-05",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "relation"
+    },
+    {
+     "text": "Brackenridge is what we call Brackenridge Media around here.",
+     "slot": "company-04.profile",
+     "event": "company-04.profile#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-04",
+       "alias": "name"
+      },
+      {
+       "entity": "company-04",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "intro"
+    }
+   ]
+  },
+  {
+   "id": "s003",
+   "day": -539,
+   "time": "18:05",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": [
+    {
+     "text": "For the record, Clem works at Oakhaven Health.",
+     "slot": "person-02.employer",
+     "event": "person-02.employer#0",
+     "values": [
+      "Oakhaven Health"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-02",
+       "alias": "nickname"
+      }
+     ]
+    },
+    {
+     "text": "Writing this down so I remember: my former teammate works at Tarnwood Logistics.",
+     "slot": "person-03.employer",
+     "event": "person-03.employer#0",
+     "values": [
+      "Tarnwood Logistics"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-03",
+       "alias": "role"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s004",
+   "day": -537,
+   "time": "13:25",
+   "topic": "restoring an old bicycle",
+   "long": false,
+   "lines": [
+    {
+     "text": "Wexley covers the museum lighting.",
+     "slot": "deal-01.profile",
+     "event": "deal-01.profile#2",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-01",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "property"
+    }
+   ]
+  },
+  {
+   "id": "s005",
+   "day": -533,
+   "time": "08:20",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": [
+    {
+     "text": "I had a long call with Annie. She lives in Bergen.",
+     "slot": "person-04.city",
+     "event": "person-04.city#0",
+     "values": [
+      "Bergen"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-04",
+       "alias": "pronoun",
+       "antecedent": "nickname"
+      }
+     ]
+    },
+    {
+     "text": "Benedikt Nilsen leads Tamarind.",
+     "slot": "project-02.lead",
+     "event": "project-02.lead#0",
+     "values": [
+      "Benedikt Nilsen"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-02",
+       "alias": "nickname"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s006",
+   "day": -533,
+   "time": "12:45",
+   "topic": "planning a camping trip",
+   "long": true,
+   "lines": [
+    {
+     "text": "Gannetry Logistics is the full name; most of us just say Gannetry.",
+     "slot": "company-02-twin.profile",
+     "event": "company-02-twin.profile#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-02-twin",
+       "alias": "name"
+      },
+      {
+       "entity": "company-02-twin",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "intro"
+    },
+    {
+     "text": "The pet project buys from Inkberry Publishing.",
+     "slot": "project-03.vendor",
+     "event": "project-03.vendor#0",
+     "values": [
+      "Inkberry Publishing"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-03",
+       "alias": "role"
+      }
+     ]
+    },
+    {
+     "text": "When I say Solent, I mean the Solent deal.",
+     "slot": "deal-01-twin.profile",
+     "event": "deal-01-twin.profile#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-01-twin",
+       "alias": "name"
+      },
+      {
+       "entity": "deal-01-twin",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "intro"
+    }
+   ]
+  },
+  {
+   "id": "s007",
+   "day": -533,
+   "time": "17:55",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": [
+    {
+     "text": "For the record, Nadia Holm runs operations at the startup we advise.",
+     "slot": "company-02.ops_lead",
+     "event": "company-02.ops_lead#0",
+     "values": [
+      "Nadia Holm"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-02",
+       "alias": "role"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s008",
+   "day": -520,
+   "time": "19:45",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": [
+    {
+     "text": "The quick-win project translates the manual into Welsh.",
+     "slot": "project-02.profile",
+     "event": "project-02.profile#2",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-02",
+       "alias": "role"
+      }
+     ],
+     "purpose": "property"
+    }
+   ]
+  },
+  {
+   "id": "s009",
+   "day": -510,
+   "time": "19:50",
+   "topic": "marathon training",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: Annie sent photos from a walk around Bergen.",
+     "slot": "person-04.city",
+     "event": "person-04.city#1",
+     "values": [
+      "Bergen"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-04",
+       "alias": "nickname"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s010",
+   "day": -505,
+   "time": "14:05",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, Halyard had a review call with Inkberry Publishing.",
+     "slot": "project-03.vendor",
+     "event": "project-03.vendor#1",
+     "values": [
+      "Inkberry Publishing"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-03",
+       "alias": "nickname"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s011",
+   "day": -504,
+   "time": "17:15",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": [
+    {
+     "text": "Writing this down so I remember: Jonah Pires is the head of operations at Wrenfield.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#0",
+     "values": [
+      "Jonah Pires"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-03",
+       "alias": "nickname"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s012",
+   "day": -503,
+   "time": "18:40",
+   "topic": "a jigsaw puzzle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s013",
+   "day": -498,
+   "time": "14:10",
+   "topic": "a board game night",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s014",
+   "day": -489,
+   "time": "14:40",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": [
+    {
+     "text": "Writing this down so I remember: the friend from the choir is employed by Elmstead Clinics.",
+     "slot": "person-05.employer",
+     "event": "person-05.employer#0",
+     "values": [
+      "Elmstead Clinics"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-05",
+       "alias": "role"
+      }
+     ]
+    },
+    {
+     "text": "I caught up with my former teammate yesterday. Side note, he is buried in quarter planning at Tarnwood Logistics.",
+     "slot": "person-03.employer",
+     "event": "person-03.employer#1",
+     "values": [
+      "Tarnwood Logistics"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-03",
+       "alias": "pronoun",
+       "antecedent": "role"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s015",
+   "day": -488,
+   "time": "21:55",
+   "topic": "learning the cello",
+   "long": true,
+   "lines": [
+    {
+     "text": "Side note, Jonah Pires sent the weekly operations numbers for the client in the old mill building.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#1",
+     "values": [
+      "Jonah Pires"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-03",
+       "alias": "role"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s016",
+   "day": -484,
+   "time": "12:25",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": [
+    {
+     "text": "Quick note for later: Tidewell has its head office in Taipei.",
+     "slot": "company-01.hq",
+     "event": "company-01.hq#0",
+     "values": [
+      "Taipei"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-01",
+       "alias": "nickname"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s017",
+   "day": -483,
+   "time": "18:50",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": [
+    {
+     "text": "When I mention the handshake deal, I mean Ridgeway.",
+     "slot": "deal-02.profile",
+     "event": "deal-02.profile#1",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-02",
+       "alias": "nickname"
+      },
+      {
+       "entity": "deal-02",
+       "alias": "role"
+      }
+     ],
+     "purpose": "role"
+    },
+    {
+     "text": "Writing this down so I remember: Dom lives in Accra.",
+     "slot": "person-01.city",
+     "event": "person-01.city#0",
+     "values": [
+      "Accra"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-01",
+       "alias": "nickname"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s018",
+   "day": -476,
+   "time": "17:55",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": [
+    {
+     "text": "Quick note for later: Clem lives in Bordeaux.",
+     "slot": "person-02.city",
+     "event": "person-02.city#0",
+     "values": [
+      "Bordeaux"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-02",
+       "alias": "nickname"
+      }
+     ]
+    },
+    {
+     "text": "Writing this down so I remember: Dominik Abarnathy works as Head of Platform.",
+     "slot": "person-01.role",
+     "event": "person-01.role#0",
+     "values": [
+      "Head of Platform"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-01",
+       "alias": "misspelling"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s019",
+   "day": -471,
+   "time": "15:55",
+   "topic": "a rescue dog's training",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, Clem complained about the weather in Bordeaux.",
+     "slot": "person-02.city",
+     "event": "person-02.city#1",
+     "values": [
+      "Bordeaux"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-02",
+       "alias": "nickname"
+      }
+     ]
+    },
+    {
+     "text": "Side note, my former teammate is leading a hiring push at Tarnwood Logistics.",
+     "slot": "person-03.employer",
+     "event": "person-03.employer#2",
+     "values": [
+      "Tarnwood Logistics"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-03",
+       "alias": "role"
+      }
+     ]
+    },
+    {
+     "text": "Stonechat is what we call Stonechat Robotics around here.",
+     "slot": "company-04-twin.profile",
+     "event": "company-04-twin.profile#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-04-twin",
+       "alias": "name"
+      },
+      {
+       "entity": "company-04-twin",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "intro"
+    }
+   ]
+  },
+  {
+   "id": "s020",
+   "day": -463,
+   "time": "12:05",
+   "topic": "meal prep for the week",
+   "long": true,
+   "lines": [
+    {
+     "text": "Our CFO confirmed in writing that the discount for Carrick is final at 11%.",
+     "slot": "deal-03.discount",
+     "event": "deal-03.discount#0",
+     "values": [
+      "11%"
+     ],
+     "speaker": "user",
+     "position": "middle",
+     "refs": [
+      {
+       "entity": "deal-03",
+       "alias": "nickname"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s021",
+   "day": -463,
+   "time": "16:45",
+   "topic": "a rescue dog's training",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: I had coffee with my yoga teacher in Bordeaux again.",
+     "slot": "person-02.city",
+     "event": "person-02.city#2",
+     "values": [
+      "Bordeaux"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-02",
+       "alias": "role"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s022",
+   "day": -462,
+   "time": "19:25",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, Nate is leading a hiring push at Tarnwood Logistics.",
+     "slot": "person-03.employer",
+     "event": "person-03.employer#3",
+     "values": [
+      "Tarnwood Logistics"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-03",
+       "alias": "nickname"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s023",
+   "day": -443,
+   "time": "09:10",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": [
+    {
+     "text": "Quick note for later: the renewal price on the tricky renewal is $122,000 a year.",
+     "slot": "deal-01.price",
+     "event": "deal-01.price#0",
+     "values": [
+      "$122,000"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-01",
+       "alias": "role"
+      }
+     ]
+    },
+    {
+     "text": "Side note, Annie is busy redecorating the flat in Bergen.",
+     "slot": "person-04.city",
+     "event": "person-04.city#2",
+     "values": [
+      "Bergen"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-04",
+       "alias": "nickname"
+      }
+     ]
+    },
+    {
+     "text": "Lowmoor agreed to merge with Driftmark Software.",
+     "slot": "company-05.merger",
+     "event": "company-05.merger#0",
+     "values": [
+      "Driftmark Software"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-05",
+       "alias": "nickname"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s024",
+   "day": -440,
+   "time": "21:30",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": [
+    {
+     "text": "Quick note for later: Aurelio Raman is the lead on the moonshot.",
+     "slot": "project-01.lead",
+     "event": "project-01.lead#0",
+     "values": [
+      "Aurelio Raman"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-01",
+       "alias": "role"
+      }
+     ]
+    },
+    {
+     "text": "Funny timing: the friend from the choir is buried in quarter planning at Elmstead Clinics.",
+     "slot": "person-05.employer",
+     "event": "person-05.employer#1",
+     "values": [
+      "Elmstead Clinics"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-05",
+       "alias": "role"
+      }
+     ]
+    },
+    {
+     "text": "Jonah Pires rearranged the warehouse shifts at the client in the old mill building.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#2",
+     "values": [
+      "Jonah Pires"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-03",
+       "alias": "role"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s025",
+   "day": -432,
+   "time": "20:25",
+   "topic": "a chess opening",
+   "long": true,
+   "lines": [
+    {
+     "text": "The countersigned contract for the handshake deal sets the discount at 19%.",
+     "slot": "deal-02.discount",
+     "event": "deal-02.discount#0",
+     "values": [
+      "19%"
+     ],
+     "speaker": "user",
+     "position": "middle",
+     "refs": [
+      {
+       "entity": "deal-02",
+       "alias": "role"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s026",
+   "day": -430,
+   "time": "10:15",
+   "topic": "marathon training",
+   "long": false,
+   "lines": [
+    {
+     "text": "On paper it is the Carrick deal, but everyone says Carrick.",
+     "slot": "deal-03.profile",
+     "event": "deal-03.profile#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-03",
+       "alias": "name"
+      },
+      {
+       "entity": "deal-03",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "intro"
+    },
+    {
+     "text": "Keep this quiet for now, but the firm downstairs will hold its team offsite in Brno.",
+     "slot": "company-04.offsite",
+     "event": "company-04.offsite#0",
+     "values": [
+      "Brno"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-04",
+       "alias": "role"
+      }
+     ]
+    },
+    {
+     "text": "Ximena Yeboah is the lead on the summer project.",
+     "slot": "project-01-twin.lead",
+     "event": "project-01-twin.lead#0",
+     "values": [
+      "Ximena Yeboah"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-01-twin",
+       "alias": "role"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s027",
+   "day": -428,
+   "time": "10:40",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": [
+    {
+     "text": "Inkberry Publishing asked for feedback on the pet project.",
+     "slot": "project-03.vendor",
+     "event": "project-03.vendor#2",
+     "values": [
+      "Inkberry Publishing"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-03",
+       "alias": "role"
+      }
+     ]
+    },
+    {
+     "text": "When I mention my running buddy, I mean Toby.",
+     "slot": "person-02-twin.profile",
+     "event": "person-02-twin.profile#1",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-02-twin",
+       "alias": "nickname"
+      },
+      {
+       "entity": "person-02-twin",
+       "alias": "role"
+      }
+     ],
+     "purpose": "role"
+    }
+   ]
+  },
+  {
+   "id": "s028",
+   "day": -428,
+   "time": "19:10",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": [
+    {
+     "text": "Keep this quiet for now, but Lowmoor is merging with Driftmark Software.",
+     "slot": "company-05.merger",
+     "event": "company-05.merger#1",
+     "values": [
+      "Driftmark Software"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-05",
+       "alias": "nickname"
+      }
+     ]
+    },
+    {
+     "text": "Funny timing: my yoga teacher sent photos from a walk around Bordeaux.",
+     "slot": "person-02.city",
+     "event": "person-02.city#3",
+     "values": [
+      "Bordeaux"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-02",
+       "alias": "role"
+      }
+     ]
+    },
+    {
+     "text": "My agent's notes on Carrick record the discount as 10%.",
+     "slot": "deal-03.discount",
+     "event": "deal-03.discount#1",
+     "values": [
+      "10%"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-03",
+       "alias": "nickname"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s029",
+   "day": -427,
+   "time": "20:40",
+   "topic": "a podcast episode",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, Nathaniel Brannan is buried in quarter planning at Tarnwood Logistics.",
+     "slot": "person-03.employer",
+     "event": "person-03.employer#4",
+     "values": [
+      "Tarnwood Logistics"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-03",
+       "alias": "misspelling"
+      }
+     ]
+    },
+    {
+     "text": "Project Halyard is the official name of what we call Halyard.",
+     "slot": "project-03.profile",
+     "event": "project-03.profile#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-03",
+       "alias": "name"
+      },
+      {
+       "entity": "project-03",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "intro"
+    }
+   ]
+  },
+  {
+   "id": "s030",
+   "day": -421,
+   "time": "16:15",
+   "topic": "marathon training",
+   "long": false,
+   "lines": [
+    {
+     "text": "The assistant's call notes for Ridgeway say the discount is 34%.",
+     "slot": "deal-02.discount",
+     "event": "deal-02.discount#1",
+     "values": [
+      "34%"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-02",
+       "alias": "nickname"
+      }
+     ]
+    },
+    {
+     "text": "Funny timing: Perry said the coffee at Elmstead Clinics is still terrible.",
+     "slot": "person-05.employer",
+     "event": "person-05.employer#2",
+     "values": [
+      "Elmstead Clinics"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-05",
+       "alias": "nickname"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s031",
+   "day": -416,
+   "time": "14:35",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": [
+    {
+     "text": "Clem sent photos from a walk around Bordeaux.",
+     "slot": "person-02.city",
+     "event": "person-02.city#4",
+     "values": [
+      "Bordeaux"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-02",
+       "alias": "nickname"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s032",
+   "day": -415,
+   "time": "15:20",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: Inkberry Publishing asked for feedback on the pet project.",
+     "slot": "project-03.vendor",
+     "event": "project-03.vendor#3",
+     "values": [
+      "Inkberry Publishing"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-03",
+       "alias": "role"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s033",
+   "day": -413,
+   "time": "16:20",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": [
+    {
+     "text": "Nate is my former teammate, in case I never said.",
+     "slot": "person-03.profile",
+     "event": "person-03.profile#1",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-03",
+       "alias": "nickname"
+      },
+      {
+       "entity": "person-03",
+       "alias": "role"
+      }
+     ],
+     "purpose": "role"
+    },
+    {
+     "text": "Funny timing: Inkberry Publishing asked for feedback on Halyard.",
+     "slot": "project-03.vendor",
+     "event": "project-03.vendor#4",
+     "values": [
+      "Inkberry Publishing"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-03",
+       "alias": "nickname"
+      }
+     ]
+    },
+    {
+     "text": "When I mention the client from the trade fair, I mean Gannetry.",
+     "slot": "company-02-twin.profile",
+     "event": "company-02-twin.profile#1",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-02-twin",
+       "alias": "nickname"
+      },
+      {
+       "entity": "company-02-twin",
+       "alias": "role"
+      }
+     ],
+     "purpose": "role"
+    }
+   ]
+  },
+  {
+   "id": "s034",
+   "day": -410,
+   "time": "17:15",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": [
+    {
+     "text": "Toby is what everyone calls Tobias Halloran.",
+     "slot": "person-02-twin.profile",
+     "event": "person-02-twin.profile#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-02-twin",
+       "alias": "name"
+      },
+      {
+       "entity": "person-02-twin",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "intro"
+    },
+    {
+     "text": "Roz is what everyone calls Rosalind Oyelaran.",
+     "slot": "person-01-twin.profile",
+     "event": "person-01-twin.profile#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-01-twin",
+       "alias": "name"
+      },
+      {
+       "entity": "person-01-twin",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "intro"
+    }
+   ]
+  },
+  {
+   "id": "s035",
+   "day": -403,
+   "time": "17:25",
+   "topic": "marathon training",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, Annie is busy redecorating the flat in Bergen.",
+     "slot": "person-04.city",
+     "event": "person-04.city#3",
+     "values": [
+      "Bergen"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-04",
+       "alias": "nickname"
+      }
+     ]
+    },
+    {
+     "text": "The quick-win project uses Gorseway Transit as its vendor.",
+     "slot": "project-02.vendor",
+     "event": "project-02.vendor#0",
+     "values": [
+      "Gorseway Transit"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-02",
+       "alias": "role"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s036",
+   "day": -403,
+   "time": "18:05",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": [
+    {
+     "text": "A redlined draft amendment for Ridgeway proposes 8% as the discount.",
+     "slot": "deal-02.discount",
+     "event": "deal-02.discount#2",
+     "values": [
+      "8%"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-02",
+       "alias": "nickname"
+      }
+     ]
+    },
+    {
+     "text": "The recap email from the kickoff for Carrick says the discount is 14%.",
+     "slot": "deal-03.discount",
+     "event": "deal-03.discount#2",
+     "values": [
+      "14%"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-03",
+       "alias": "nickname"
+      }
+     ]
+    },
+    {
+     "text": "Vantor is what we call Vantor Biotech around here.",
+     "slot": "company-05-twin.profile",
+     "event": "company-05-twin.profile#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-05-twin",
+       "alias": "name"
+      },
+      {
+       "entity": "company-05-twin",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "intro"
+    }
+   ]
+  },
+  {
+   "id": "s037",
+   "day": -398,
+   "time": "14:55",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": [
+    {
+     "text": "Annie is what everyone calls Anneliese Gallagher.",
+     "slot": "person-04.profile",
+     "event": "person-04.profile#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-04",
+       "alias": "name"
+      },
+      {
+       "entity": "person-04",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "intro"
+    },
+    {
+     "text": "The meeting summary for the handshake deal lists the discount as 41%.",
+     "slot": "deal-02.discount",
+     "event": "deal-02.discount#3",
+     "values": [
+      "41%"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-02",
+       "alias": "role"
+      }
+     ]
+    },
+    {
+     "text": "Funny timing: Clem sent photos from a walk around Bordeaux.",
+     "slot": "person-02.city",
+     "event": "person-02.city#5",
+     "values": [
+      "Bordeaux"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-02",
+       "alias": "nickname"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s038",
+   "day": -392,
+   "time": "11:40",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, Perry said the coffee at Elmstead Clinics is still terrible.",
+     "slot": "person-05.employer",
+     "event": "person-05.employer#3",
+     "values": [
+      "Elmstead Clinics"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-05",
+       "alias": "nickname"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s039",
+   "day": -389,
+   "time": "08:20",
+   "topic": "a board game night",
+   "long": false,
+   "lines": [
+    {
+     "text": "A redlined draft amendment for Juniper proposes 33% as the discount.",
+     "slot": "deal-04.discount",
+     "event": "deal-04.discount#0",
+     "values": [
+      "33%"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-04",
+       "alias": "nickname"
+      }
+     ]
+    },
+    {
+     "text": "Quick note for later: my accountant is employed by Pebblestone Data.",
+     "slot": "person-05-twin.employer",
+     "event": "person-05-twin.employer#0",
+     "values": [
+      "Pebblestone Data"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-05-twin",
+       "alias": "role"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s040",
+   "day": -367,
+   "time": "15:55",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": [
+    {
+     "text": "The meeting summary for Ridgeway lists the discount as 38%.",
+     "slot": "deal-02.discount",
+     "event": "deal-02.discount#4",
+     "values": [
+      "38%"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-02",
+       "alias": "nickname"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s041",
+   "day": -367,
+   "time": "17:45",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s042",
+   "day": -363,
+   "time": "19:35",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: I had coffee with my old lab partner in Bergen again.",
+     "slot": "person-04.city",
+     "event": "person-04.city#4",
+     "values": [
+      "Bergen"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-04",
+       "alias": "role"
+      }
+     ]
+    },
+    {
+     "text": "Funny timing: Nate was stuck in a long all-hands at Tarnwood Logistics.",
+     "slot": "person-03.employer",
+     "event": "person-03.employer#5",
+     "values": [
+      "Tarnwood Logistics"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-03",
+       "alias": "nickname"
+      }
+     ]
+    },
+    {
+     "text": "Side note, Jonah Pires ran the operations review at the client in the old mill building again.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#3",
+     "values": [
+      "Jonah Pires"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-03",
+       "alias": "role"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s043",
+   "day": -359,
+   "time": "20:15",
+   "topic": "a pottery class",
+   "long": false,
+   "lines": [
+    {
+     "text": "The counterparty on Solent is Lowmoor.",
+     "slot": "deal-01-twin.relation",
+     "event": "deal-01-twin.relation#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-01-twin",
+       "alias": "nickname"
+      },
+      {
+       "entity": "company-05",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "relation"
+    }
+   ]
+  },
+  {
+   "id": "s044",
+   "day": -354,
+   "time": "09:50",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": [
+    {
+     "text": "When I mention the cross-team project, I mean Quillon.",
+     "slot": "project-04.profile",
+     "event": "project-04.profile#1",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-04",
+       "alias": "nickname"
+      },
+      {
+       "entity": "project-04",
+       "alias": "role"
+      }
+     ],
+     "purpose": "role"
+    },
+    {
+     "text": "Lowmoor makes violins.",
+     "slot": "company-05.profile",
+     "event": "company-05.profile#2",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-05",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "property"
+    },
+    {
+     "text": "My bridge partner built a telescope in the garage.",
+     "slot": "person-01.profile",
+     "event": "person-01.profile#2",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-01",
+       "alias": "role"
+      }
+     ],
+     "purpose": "property"
+    }
+   ]
+  },
+  {
+   "id": "s045",
+   "day": -350,
+   "time": "13:50",
+   "topic": "a podcast episode",
+   "long": false,
+   "lines": [
+    {
+     "text": "Update: my bridge partner was promoted to Analytics Manager.",
+     "slot": "person-01.role",
+     "event": "person-01.role#1",
+     "values": [
+      "Analytics Manager"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-01",
+       "alias": "role"
+      }
+     ]
+    },
+    {
+     "text": "Quick note for later: Nathaniel Brannan lives in Riga.",
+     "slot": "person-03.city",
+     "event": "person-03.city#0",
+     "values": [
+      "Riga"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-03",
+       "alias": "misspelling"
+      }
+     ]
+    },
+    {
+     "text": "When I mention the big renewal, I mean Carrick.",
+     "slot": "deal-03.profile",
+     "event": "deal-03.profile#1",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-03",
+       "alias": "nickname"
+      },
+      {
+       "entity": "deal-03",
+       "alias": "role"
+      }
+     ],
+     "purpose": "role"
+    }
+   ]
+  },
+  {
+   "id": "s046",
+   "day": -350,
+   "time": "17:20",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": [
+    {
+     "text": "Wrenfield is the client in the old mill building, in case I never said.",
+     "slot": "company-03.profile",
+     "event": "company-03.profile#1",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-03",
+       "alias": "nickname"
+      },
+      {
+       "entity": "company-03",
+       "alias": "role"
+      }
+     ],
+     "purpose": "role"
+    },
+    {
+     "text": "Heard today that Clementine Hadded started a new job at Saltmarsh Marine.",
+     "slot": "person-02.employer",
+     "event": "person-02.employer#1",
+     "values": [
+      "Saltmarsh Marine"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-02",
+       "alias": "misspelling"
+      }
+     ]
+    },
+    {
+     "text": "When I mention the pet project, I mean Halyard.",
+     "slot": "project-03.profile",
+     "event": "project-03.profile#1",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-03",
+       "alias": "nickname"
+      },
+      {
+       "entity": "project-03",
+       "alias": "role"
+      }
+     ],
+     "purpose": "role"
+    }
+   ]
+  },
+  {
+   "id": "s047",
+   "day": -344,
+   "time": "08:55",
+   "topic": "a birthday party for a niece",
+   "long": true,
+   "lines": [
+    {
+     "text": "The countersigned contract for Juniper sets the discount at 16%.",
+     "slot": "deal-04.discount",
+     "event": "deal-04.discount#1",
+     "values": [
+      "16%"
+     ],
+     "speaker": "user",
+     "position": "middle",
+     "refs": [
+      {
+       "entity": "deal-04",
+       "alias": "nickname"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s048",
+   "day": -342,
+   "time": "11:00",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": [
+    {
+     "text": "My former teammate talked me into my first triathlon.",
+     "slot": "person-03.profile",
+     "event": "person-03.profile#2",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-03",
+       "alias": "role"
+      }
+     ],
+     "purpose": "property"
+    },
+    {
+     "text": "Cobalt covers the cold-storage sensors.",
+     "slot": "deal-02-twin.profile",
+     "event": "deal-02-twin.profile#2",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-02-twin",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "property"
+    }
+   ]
+  },
+  {
+   "id": "s049",
+   "day": -340,
+   "time": "16:00",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s050",
+   "day": -339,
+   "time": "13:10",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": [
+    {
+     "text": "Update: Soren Osei became head of operations at Halcion Freight.",
+     "slot": "company-02.ops_lead",
+     "event": "company-02.ops_lead#1",
+     "values": [
+      "Soren Osei"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-02",
+       "alias": "misspelling"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s051",
+   "day": -333,
+   "time": "09:25",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: Halyard had a review call with Inkberry Publishing.",
+     "slot": "project-03.vendor",
+     "event": "project-03.vendor#5",
+     "values": [
+      "Inkberry Publishing"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-03",
+       "alias": "nickname"
+      }
+     ]
+    },
+    {
+     "text": "Side note, Clementine Hadded is hosting the book club at home in Bordeaux this month.",
+     "slot": "person-02.city",
+     "event": "person-02.city#6",
+     "values": [
+      "Bordeaux"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-02",
+       "alias": "misspelling"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s052",
+   "day": -330,
+   "time": "18:30",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": [
+    {
+     "text": "Clementine Hadded recommended a bakery near home in Bordeaux.",
+     "slot": "person-02.city",
+     "event": "person-02.city#7",
+     "values": [
+      "Bordeaux"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-02",
+       "alias": "misspelling"
+      }
+     ]
+    },
+    {
+     "text": "For the record, Annie holds the title Chief of Staff.",
+     "slot": "person-04.role",
+     "event": "person-04.role#0",
+     "values": [
+      "Chief of Staff"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-04",
+       "alias": "nickname"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s053",
+   "day": -329,
+   "time": "13:50",
+   "topic": "a kitchen repaint",
+   "long": true,
+   "lines": [
+    {
+     "text": "Wexley is the tricky renewal, in case I never said.",
+     "slot": "deal-01.profile",
+     "event": "deal-01.profile#1",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-01",
+       "alias": "nickname"
+      },
+      {
+       "entity": "deal-01",
+       "alias": "role"
+      }
+     ],
+     "purpose": "role"
+    },
+    {
+     "text": "Side note, I had coffee with my yoga teacher in Bordeaux again.",
+     "slot": "person-02.city",
+     "event": "person-02.city#8",
+     "values": [
+      "Bordeaux"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-02",
+       "alias": "role"
+      }
+     ]
+    },
+    {
+     "text": "Side note, Jonah Pires sent the weekly operations numbers for Wranfield Optics.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#4",
+     "values": [
+      "Jonah Pires"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-03",
+       "alias": "misspelling"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s054",
+   "day": -328,
+   "time": "15:00",
+   "topic": "a birthday party for a niece",
+   "long": true,
+   "lines": [
+    {
+     "text": "When I mention my neighbour across the hall, I mean Reggie.",
+     "slot": "person-04-twin.profile",
+     "event": "person-04-twin.profile#1",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-04-twin",
+       "alias": "nickname"
+      },
+      {
+       "entity": "person-04-twin",
+       "alias": "role"
+      }
+     ],
+     "purpose": "role"
+    },
+    {
+     "text": "The counterparty on Marlow is Vantor.",
+     "slot": "deal-05.relation",
+     "event": "deal-05.relation#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-05",
+       "alias": "nickname"
+      },
+      {
+       "entity": "company-05-twin",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "relation"
+    }
+   ]
+  },
+  {
+   "id": "s055",
+   "day": -328,
+   "time": "17:30",
+   "topic": "restoring an old bicycle",
+   "long": false,
+   "lines": [
+    {
+     "text": "I caught up with Nate yesterday. Side note, he is leading a hiring push at Tarnwood Logistics.",
+     "slot": "person-03.employer",
+     "event": "person-03.employer#6",
+     "values": [
+      "Tarnwood Logistics"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-03",
+       "alias": "pronoun",
+       "antecedent": "nickname"
+      }
+     ]
+    },
+    {
+     "text": "Clem sent photos from a walk around Bordeaux.",
+     "slot": "person-02.city",
+     "event": "person-02.city#9",
+     "values": [
+      "Bordeaux"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-02",
+       "alias": "nickname"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s056",
+   "day": -326,
+   "time": "18:35",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": [
+    {
+     "text": "Jonah Pires is still untangling the shipping backlog at the client in the old mill building.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#5",
+     "values": [
+      "Jonah Pires"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-03",
+       "alias": "role"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s057",
+   "day": -323,
+   "time": "21:05",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": [
+    {
+     "text": "Update: Tamarind moved its contract over to Zephyrine Aviation.",
+     "slot": "project-02.vendor",
+     "event": "project-02.vendor#1",
+     "values": [
+      "Zephyrine Aviation"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-02",
+       "alias": "nickname"
+      }
+     ]
+    },
+    {
+     "text": "For the record, Halcyon is headquartered in Vienna.",
+     "slot": "company-02.hq",
+     "event": "company-02.hq#0",
+     "values": [
+      "Vienna"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-02",
+       "alias": "nickname"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s058",
+   "day": -322,
+   "time": "15:00",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s059",
+   "day": -321,
+   "time": "21:00",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": [
+    {
+     "text": "On paper it is the Cobalt deal, but everyone says Cobalt.",
+     "slot": "deal-02-twin.profile",
+     "event": "deal-02-twin.profile#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-02-twin",
+       "alias": "name"
+      },
+      {
+       "entity": "deal-02-twin",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "intro"
+    },
+    {
+     "text": "Funny timing: Peregrine Petruvic said the coffee at Elmstead Clinics is still terrible.",
+     "slot": "person-05.employer",
+     "event": "person-05.employer#4",
+     "values": [
+      "Elmstead Clinics"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-05",
+       "alias": "misspelling"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s060",
+   "day": -320,
+   "time": "16:55",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": [
+    {
+     "text": "Quick note for later: Roz is based in Helsinki.",
+     "slot": "person-01-twin.city",
+     "event": "person-01-twin.city#0",
+     "values": [
+      "Helsinki"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-01-twin",
+       "alias": "nickname"
+      }
+     ]
+    },
+    {
+     "text": "Inkberry Publishing shipped the next batch for Halyard.",
+     "slot": "project-03.vendor",
+     "event": "project-03.vendor#6",
+     "values": [
+      "Inkberry Publishing"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-03",
+       "alias": "nickname"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s061",
+   "day": -312,
+   "time": "19:50",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": [
+    {
+     "text": "On paper it is Project Tamarind, but everyone says Tamarind.",
+     "slot": "project-02.profile",
+     "event": "project-02.profile#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-02",
+       "alias": "name"
+      },
+      {
+       "entity": "project-02",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "intro"
+    },
+    {
+     "text": "I only just heard that Dom moved to Vilnius back on [[D:-368]].",
+     "slot": "person-01.city",
+     "event": "person-01.city#1",
+     "values": [
+      "Vilnius"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-01",
+       "alias": "nickname"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s062",
+   "day": -310,
+   "time": "17:10",
+   "topic": "a pottery class",
+   "long": false,
+   "lines": [
+    {
+     "text": "I caught up with the friend from the choir yesterday. He is buried in quarter planning at Elmstead Clinics.",
+     "slot": "person-05.employer",
+     "event": "person-05.employer#5",
+     "values": [
+      "Elmstead Clinics"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-05",
+       "alias": "pronoun",
+       "antecedent": "role"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s063",
+   "day": -308,
+   "time": "15:45",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": [
+    {
+     "text": "When I mention the moonshot, I mean Ostrava.",
+     "slot": "project-01.profile",
+     "event": "project-01.profile#1",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-01",
+       "alias": "nickname"
+      },
+      {
+       "entity": "project-01",
+       "alias": "role"
+      }
+     ],
+     "purpose": "role"
+    },
+    {
+     "text": "Big news: Quillon signed Jasperwood Furniture as its pilot customer.",
+     "slot": "project-04.pilot",
+     "event": "project-04.pilot#0",
+     "values": [
+      "Jasperwood Furniture"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-04",
+       "alias": "nickname"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s064",
+   "day": -302,
+   "time": "09:35",
+   "topic": "a slow cooker stew",
+   "long": true,
+   "lines": [
+    {
+     "text": "Clementine Hadded is hosting the book club at home in Bordeaux this month.",
+     "slot": "person-02.city",
+     "event": "person-02.city#10",
+     "values": [
+      "Bordeaux"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-02",
+       "alias": "misspelling"
+      }
+     ]
+    },
+    {
+     "text": "Side note, Jonah Pires is still untangling the shipping backlog at the client in the old mill building.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#6",
+     "values": [
+      "Jonah Pires"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-03",
+       "alias": "role"
+      }
+     ]
+    },
+    {
+     "text": "I need to fix something I told you: not Zephyrine Aviation. In fact Tamerind uses Glasswing Studios as its vendor.",
+     "slot": "project-02.vendor",
+     "event": "project-02.vendor#2",
+     "values": [
+      "Zephyrine Aviation",
+      "Glasswing Studios"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-02",
+       "alias": "misspelling"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s065",
+   "day": -302,
+   "time": "11:30",
+   "topic": "marathon training",
+   "long": true,
+   "lines": [
+    {
+     "text": "I only just heard that Tidewell moved its headquarters to Lyon back on [[D:-333]].",
+     "slot": "company-01.hq",
+     "event": "company-01.hq#1",
+     "values": [
+      "Lyon"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-01",
+       "alias": "nickname"
+      }
+     ]
+    },
+    {
+     "text": "My yoga teacher complained about the weather in Bordeaux.",
+     "slot": "person-02.city",
+     "event": "person-02.city#11",
+     "values": [
+      "Bordeaux"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-02",
+       "alias": "role"
+      }
+     ]
+    },
+    {
+     "text": "Brackenridge is merging with Thistledown Textiles.",
+     "slot": "company-04.merger",
+     "event": "company-04.merger#0",
+     "values": [
+      "Thistledown Textiles"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-04",
+       "alias": "nickname"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s066",
+   "day": -301,
+   "time": "21:00",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": [
+    {
+     "text": "My neighbour across the hall taught me to snowboard.",
+     "slot": "person-04-twin.profile",
+     "event": "person-04-twin.profile#2",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-04-twin",
+       "alias": "role"
+      }
+     ],
+     "purpose": "property"
+    }
+   ]
+  },
+  {
+   "id": "s067",
+   "day": -297,
+   "time": "20:25",
+   "topic": "marathon training",
+   "long": false,
+   "lines": [
+    {
+     "text": "Toby is Roz's landlord.",
+     "slot": "person-02-twin.relation",
+     "event": "person-02-twin.relation#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-02-twin",
+       "alias": "nickname"
+      },
+      {
+       "entity": "person-01-twin",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "relation"
+    },
+    {
+     "text": "My accountant is teaching me Esperanto.",
+     "slot": "person-05-twin.profile",
+     "event": "person-05-twin.profile#2",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-05-twin",
+       "alias": "role"
+      }
+     ],
+     "purpose": "property"
+    }
+   ]
+  },
+  {
+   "id": "s068",
+   "day": -293,
+   "time": "17:55",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": [
+    {
+     "text": "Big news: Brackenridge is merging with Thistledown Textiles.",
+     "slot": "company-04.merger",
+     "event": "company-04.merger#1",
+     "values": [
+      "Thistledown Textiles"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-04",
+       "alias": "nickname"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s069",
+   "day": -289,
+   "time": "21:05",
+   "topic": "a language exchange",
+   "long": false,
+   "lines": [
+    {
+     "text": "When I mention the rescue deal, I mean Marlow.",
+     "slot": "deal-05.profile",
+     "event": "deal-05.profile#1",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-05",
+       "alias": "nickname"
+      },
+      {
+       "entity": "deal-05",
+       "alias": "role"
+      }
+     ],
+     "purpose": "role"
+    },
+    {
+     "text": "Funny timing: the friend from the choir said the coffee at Elmstead Clinics is still terrible.",
+     "slot": "person-05.employer",
+     "event": "person-05.employer#6",
+     "values": [
+      "Elmstead Clinics"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-05",
+       "alias": "role"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s070",
+   "day": -288,
+   "time": "09:45",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: Jonah Pires chaired the operations standup at Wrenfield.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#7",
+     "values": [
+      "Jonah Pires"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-03",
+       "alias": "nickname"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s071",
+   "day": -283,
+   "time": "09:15",
+   "topic": "a pottery class",
+   "long": false,
+   "lines": [
+    {
+     "text": "Dom is my bridge partner, in case I never said.",
+     "slot": "person-01.profile",
+     "event": "person-01.profile#1",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-01",
+       "alias": "nickname"
+      },
+      {
+       "entity": "person-01",
+       "alias": "role"
+      }
+     ],
+     "purpose": "role"
+    },
+    {
+     "text": "Clem founded Lowmoor.",
+     "slot": "company-05.relation",
+     "event": "company-05.relation#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-05",
+       "alias": "nickname"
+      },
+      {
+       "entity": "person-02",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "relation"
+    }
+   ]
+  },
+  {
+   "id": "s072",
+   "day": -280,
+   "time": "10:55",
+   "topic": "marathon training",
+   "long": true,
+   "lines": [
+    {
+     "text": "Quick note for later: my neighbour across the hall is based in Gdansk.",
+     "slot": "person-04-twin.city",
+     "event": "person-04-twin.city#0",
+     "values": [
+      "Gdansk"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-04-twin",
+       "alias": "role"
+      }
+     ]
+    },
+    {
+     "text": "Dom founded Vantor.",
+     "slot": "company-05-twin.relation",
+     "event": "company-05-twin.relation#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-05-twin",
+       "alias": "nickname"
+      },
+      {
+       "entity": "person-01",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "relation"
+    }
+   ]
+  },
+  {
+   "id": "s073",
+   "day": -277,
+   "time": "08:20",
+   "topic": "a balcony herb garden",
+   "long": true,
+   "lines": [
+    {
+     "text": "The outfit with the green logo designs escape rooms.",
+     "slot": "company-05-twin.profile",
+     "event": "company-05-twin.profile#2",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-05-twin",
+       "alias": "role"
+      }
+     ],
+     "purpose": "property"
+    }
+   ]
+  },
+  {
+   "id": "s074",
+   "day": -277,
+   "time": "15:15",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": [
+    {
+     "text": "Heard today that Dom moved to Malmo.",
+     "slot": "person-01.city",
+     "event": "person-01.city#2",
+     "values": [
+      "Malmo"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-01",
+       "alias": "nickname"
+      }
+     ]
+    },
+    {
+     "text": "Correction: I had that wrong earlier. It was never Chief of Staff; my old lab partner works as Compliance Officer.",
+     "slot": "person-04.role",
+     "event": "person-04.role#1",
+     "values": [
+      "Chief of Staff",
+      "Compliance Officer"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-04",
+       "alias": "role"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s075",
+   "day": -274,
+   "time": "18:05",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": [
+    {
+     "text": "Brackenridge writes subtitles for streaming shows.",
+     "slot": "company-04.profile",
+     "event": "company-04.profile#2",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-04",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "property"
+    },
+    {
+     "text": "Reggie used to be Clem's boss.",
+     "slot": "person-04-twin.relation",
+     "event": "person-04-twin.relation#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-04-twin",
+       "alias": "nickname"
+      },
+      {
+       "entity": "person-02",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "relation"
+    }
+   ]
+  },
+  {
+   "id": "s076",
+   "day": -273,
+   "time": "16:35",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": [
+    {
+     "text": "It fell through: Lowmoor walked away from the merger with Driftmark Software.",
+     "slot": "company-05.merger",
+     "event": "company-05.merger#2",
+     "values": [
+      "Driftmark Software"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-05",
+       "alias": "nickname"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s077",
+   "day": -272,
+   "time": "20:00",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": [
+    {
+     "text": "Tidewell commissioned Halyard.",
+     "slot": "project-03.relation",
+     "event": "project-03.relation#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-03",
+       "alias": "nickname"
+      },
+      {
+       "entity": "company-01",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "relation"
+    },
+    {
+     "text": "Perry founded Brackenridge.",
+     "slot": "company-04.relation",
+     "event": "company-04.relation#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-04",
+       "alias": "nickname"
+      },
+      {
+       "entity": "person-05",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "relation"
+    }
+   ]
+  },
+  {
+   "id": "s078",
+   "day": -264,
+   "time": "12:40",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": [
+    {
+     "text": "Perry is the friend from the choir, in case I never said.",
+     "slot": "person-05.profile",
+     "event": "person-05.profile#1",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-05",
+       "alias": "nickname"
+      },
+      {
+       "entity": "person-05",
+       "alias": "role"
+      }
+     ],
+     "purpose": "role"
+    },
+    {
+     "text": "My agent's notes on the enterprise deal record the discount as 40%.",
+     "slot": "deal-04.discount",
+     "event": "deal-04.discount#2",
+     "values": [
+      "40%"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-04",
+       "alias": "role"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s079",
+   "day": -263,
+   "time": "12:35",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": [
+    {
+     "text": "Both sides executed the agreement for the year-end deal today, and it fixes the seat count at 760 seats.",
+     "slot": "deal-01-twin.seats",
+     "event": "deal-01-twin.seats#0",
+     "values": [
+      "760 seats"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-01-twin",
+       "alias": "role"
+      }
+     ]
+    },
+    {
+     "text": "Funny timing: Inkberry Publishing asked for feedback on Halyard.",
+     "slot": "project-03.vendor",
+     "event": "project-03.vendor#7",
+     "values": [
+      "Inkberry Publishing"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-03",
+       "alias": "nickname"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s080",
+   "day": -261,
+   "time": "16:05",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": [
+    {
+     "text": "Heard today that Rania Zamora took over as lead of Tamarind.",
+     "slot": "project-02.lead",
+     "event": "project-02.lead#1",
+     "values": [
+      "Rania Zamora"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-02",
+       "alias": "nickname"
+      }
+     ]
+    },
+    {
+     "text": "Funny timing: Anneliese Gallegher recommended a bakery near home in Bergen.",
+     "slot": "person-04.city",
+     "event": "person-04.city#5",
+     "values": [
+      "Bergen"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-04",
+       "alias": "misspelling"
+      }
+     ]
+    },
+    {
+     "text": "Keep this quiet for now, but the firm downstairs agreed to merge with Thistledown Textiles.",
+     "slot": "company-04.merger",
+     "event": "company-04.merger#2",
+     "values": [
+      "Thistledown Textiles"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-04",
+       "alias": "role"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s081",
+   "day": -257,
+   "time": "21:50",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": [
+    {
+     "text": "Jonah Pires chaired the operations standup at Wrenfield.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#8",
+     "values": [
+      "Jonah Pires"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-03",
+       "alias": "nickname"
+      }
+     ]
+    },
+    {
+     "text": "Forget what I said earlier about how Brackenridge is holding its team offsite in Brno; that was only a rumour and it is not happening.",
+     "slot": "company-04.offsite",
+     "event": "company-04.offsite#1",
+     "values": [
+      "Brno"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-04",
+       "alias": "nickname"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s082",
+   "day": -256,
+   "time": "08:30",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": [
+    {
+     "text": "The client with the glass tower is holding its team offsite in Krakow.",
+     "slot": "company-01.offsite",
+     "event": "company-01.offsite#0",
+     "values": [
+      "Krakow"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-01",
+       "alias": "role"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s083",
+   "day": -249,
+   "time": "15:00",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": [
+    {
+     "text": "The outfit with the green logo agreed to merge with Heathmont Schools.",
+     "slot": "company-05-twin.merger",
+     "event": "company-05-twin.merger#0",
+     "values": [
+      "Heathmont Schools"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-05-twin",
+       "alias": "role"
+      }
+     ]
+    },
+    {
+     "text": "Annie is Nate's landlord.",
+     "slot": "person-04.relation",
+     "event": "person-04.relation#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-04",
+       "alias": "nickname"
+      },
+      {
+       "entity": "person-03",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "relation"
+    },
+    {
+     "text": "Halcyon Freight is the full name; most of us just say Halcyon.",
+     "slot": "company-02.profile",
+     "event": "company-02.profile#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-02",
+       "alias": "name"
+      },
+      {
+       "entity": "company-02",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "intro"
+    }
+   ]
+  },
+  {
+   "id": "s084",
+   "day": -246,
+   "time": "14:05",
+   "topic": "restoring an old bicycle",
+   "long": false,
+   "lines": [
+    {
+     "text": "For the record, Gannatry Logistics has its head office in Galway.",
+     "slot": "company-02-twin.hq",
+     "event": "company-02-twin.hq#0",
+     "values": [
+      "Galway"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-02-twin",
+       "alias": "misspelling"
+      }
+     ]
+    },
+    {
+     "text": "The client in the old mill building makes hearing aids.",
+     "slot": "company-03.profile",
+     "event": "company-03.profile#2",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-03",
+       "alias": "role"
+      }
+     ],
+     "purpose": "property"
+    }
+   ]
+  },
+  {
+   "id": "s085",
+   "day": -246,
+   "time": "15:25",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s086",
+   "day": -241,
+   "time": "09:30",
+   "topic": "a birthday party for a niece",
+   "long": true,
+   "lines": [
+    {
+     "text": "The summer project measures our carbon footprint.",
+     "slot": "project-01-twin.profile",
+     "event": "project-01-twin.profile#2",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-01-twin",
+       "alias": "role"
+      }
+     ],
+     "purpose": "property"
+    }
+   ]
+  },
+  {
+   "id": "s087",
+   "day": -239,
+   "time": "11:20",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: Jonah Pires is still untangling the shipping backlog at Wrenfield.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#9",
+     "values": [
+      "Jonah Pires"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-03",
+       "alias": "nickname"
+      }
+     ]
+    },
+    {
+     "text": "Reggie is what everyone calls Reginald Zielinski.",
+     "slot": "person-04-twin.profile",
+     "event": "person-04-twin.profile#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-04-twin",
+       "alias": "name"
+      },
+      {
+       "entity": "person-04-twin",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "intro"
+    },
+    {
+     "text": "Scratch Vienna, that was my mistake; the startup we advise has its head office in Tallinn.",
+     "slot": "company-02.hq",
+     "event": "company-02.hq#1",
+     "values": [
+      "Vienna",
+      "Tallinn"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-02",
+       "alias": "role"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s088",
+   "day": -238,
+   "time": "21:25",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": [
+    {
+     "text": "I caught up with Perry yesterday. He is buried in quarter planning at Elmstead Clinics.",
+     "slot": "person-05.employer",
+     "event": "person-05.employer#7",
+     "values": [
+      "Elmstead Clinics"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-05",
+       "alias": "pronoun",
+       "antecedent": "nickname"
+      }
+     ]
+    },
+    {
+     "text": "Tamarind is the quick-win project, in case I never said.",
+     "slot": "project-02.profile",
+     "event": "project-02.profile#1",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-02",
+       "alias": "nickname"
+      },
+      {
+       "entity": "project-02",
+       "alias": "role"
+      }
+     ],
+     "purpose": "role"
+    },
+    {
+     "text": "Side note, my old lab partner is hosting the book club at home in Bergen this month.",
+     "slot": "person-04.city",
+     "event": "person-04.city#6",
+     "values": [
+      "Bergen"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-04",
+       "alias": "role"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s089",
+   "day": -232,
+   "time": "14:55",
+   "topic": "marathon training",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, Peregrine Petruvic is buried in quarter planning at Elmstead Clinics.",
+     "slot": "person-05.employer",
+     "event": "person-05.employer#8",
+     "values": [
+      "Elmstead Clinics"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-05",
+       "alias": "misspelling"
+      }
+     ]
+    },
+    {
+     "text": "Funny timing: Annie recommended a bakery near home in Bergen.",
+     "slot": "person-04.city",
+     "event": "person-04.city#7",
+     "values": [
+      "Bergen"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-04",
+       "alias": "nickname"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s090",
+   "day": -230,
+   "time": "21:10",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, Annie is busy redecorating the flat in Bergen.",
+     "slot": "person-04.city",
+     "event": "person-04.city#8",
+     "values": [
+      "Bergen"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-04",
+       "alias": "nickname"
+      }
+     ]
+    },
+    {
+     "text": "I had a long call with my yoga teacher. She recommended a bakery near home in Bordeaux.",
+     "slot": "person-02.city",
+     "event": "person-02.city#12",
+     "values": [
+      "Bordeaux"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-02",
+       "alias": "pronoun",
+       "antecedent": "role"
+      }
+     ]
+    },
+    {
+     "text": "Side note, my former teammate is buried in quarter planning at Tarnwood Logistics.",
+     "slot": "person-03.employer",
+     "event": "person-03.employer#7",
+     "values": [
+      "Tarnwood Logistics"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-03",
+       "alias": "role"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s091",
+   "day": -219,
+   "time": "09:00",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": [
+    {
+     "text": "Scratch Riga, that was my mistake; Nate lives in Montreal.",
+     "slot": "person-03.city",
+     "event": "person-03.city#1",
+     "values": [
+      "Riga",
+      "Montreal"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-03",
+       "alias": "nickname"
+      }
+     ]
+    },
+    {
+     "text": "Big news: Ostreva is running a pilot with Foxglove Cosmetics.",
+     "slot": "project-01.pilot",
+     "event": "project-01.pilot#0",
+     "values": [
+      "Foxglove Cosmetics"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-01",
+       "alias": "misspelling"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s092",
+   "day": -217,
+   "time": "19:40",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": [
+    {
+     "text": "Project Mistletoe is the official name of what we call Mistletoe.",
+     "slot": "project-01-twin.profile",
+     "event": "project-01-twin.profile#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-01-twin",
+       "alias": "name"
+      },
+      {
+       "entity": "project-01-twin",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "intro"
+    },
+    {
+     "text": "Forget what I said earlier about how Quyllon signed Jasperwood Furniture as its pilot customer; that was only a rumour and it is not happening.",
+     "slot": "project-04.pilot",
+     "event": "project-04.pilot#1",
+     "values": [
+      "Jasperwood Furniture"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-04",
+       "alias": "misspelling"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s093",
+   "day": -214,
+   "time": "11:20",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": [
+    {
+     "text": "The assistant's call notes for the rescue deal say the contract term is 57 months.",
+     "slot": "deal-05.term",
+     "event": "deal-05.term#0",
+     "values": [
+      "57 months"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-05",
+       "alias": "role"
+      }
+     ]
+    },
+    {
+     "text": "When I mention my accountant, I mean Gus.",
+     "slot": "person-05-twin.profile",
+     "event": "person-05-twin.profile#1",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-05-twin",
+       "alias": "nickname"
+      },
+      {
+       "entity": "person-05-twin",
+       "alias": "role"
+      }
+     ],
+     "purpose": "role"
+    }
+   ]
+  },
+  {
+   "id": "s094",
+   "day": -209,
+   "time": "19:20",
+   "topic": "a board game night",
+   "long": false,
+   "lines": [
+    {
+     "text": "Everyone calls Augustin Kowalski Gus.",
+     "slot": "person-05-twin.profile",
+     "event": "person-05-twin.profile#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-05-twin",
+       "alias": "name"
+      },
+      {
+       "entity": "person-05-twin",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "intro"
+    }
+   ]
+  },
+  {
+   "id": "s095",
+   "day": -206,
+   "time": "14:35",
+   "topic": "meal prep for the week",
+   "long": true,
+   "lines": [
+    {
+     "text": "On paper it is the Ridgeway deal, but everyone says Ridgeway.",
+     "slot": "deal-02.profile",
+     "event": "deal-02.profile#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-02",
+       "alias": "name"
+      },
+      {
+       "entity": "deal-02",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "intro"
+    },
+    {
+     "text": "When I mention the startup we advise, I mean Halcyon.",
+     "slot": "company-02.profile",
+     "event": "company-02.profile#1",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-02",
+       "alias": "nickname"
+      },
+      {
+       "entity": "company-02",
+       "alias": "role"
+      }
+     ],
+     "purpose": "role"
+    },
+    {
+     "text": "Keep this quiet for now, but Tidewell will hold its team offsite in Krakow.",
+     "slot": "company-01.offsite",
+     "event": "company-01.offsite#1",
+     "values": [
+      "Krakow"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-01",
+       "alias": "nickname"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s096",
+   "day": -206,
+   "time": "17:15",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": [
+    {
+     "text": "It fell through: the merger between Brackenridge and Thistledown Textiles is off.",
+     "slot": "company-04.merger",
+     "event": "company-04.merger#3",
+     "values": [
+      "Thistledown Textiles"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-04",
+       "alias": "nickname"
+      }
+     ]
+    },
+    {
+     "text": "Wrenfield Optics is the full name; most of us just say Wrenfield.",
+     "slot": "company-03.profile",
+     "event": "company-03.profile#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-03",
+       "alias": "name"
+      },
+      {
+       "entity": "company-03",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "intro"
+    }
+   ]
+  },
+  {
+   "id": "s097",
+   "day": -200,
+   "time": "12:05",
+   "topic": "a photography walk",
+   "long": true,
+   "lines": [
+    {
+     "text": "Our CFO confirmed in writing that the contract term for the rescue deal is final at 27 months.",
+     "slot": "deal-05.term",
+     "event": "deal-05.term#1",
+     "values": [
+      "27 months"
+     ],
+     "speaker": "user",
+     "position": "middle",
+     "refs": [
+      {
+       "entity": "deal-05",
+       "alias": "role"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s098",
+   "day": -199,
+   "time": "18:20",
+   "topic": "a jigsaw puzzle",
+   "long": true,
+   "lines": [
+    {
+     "text": "News from this week: Dominik Abarnathy took on the Director of Partnerships role.",
+     "slot": "person-01.role",
+     "event": "person-01.role#2",
+     "values": [
+      "Director of Partnerships"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-01",
+       "alias": "misspelling"
+      }
+     ]
+    },
+    {
+     "text": "When I say Wexley, I mean the Wexley deal.",
+     "slot": "deal-01.profile",
+     "event": "deal-01.profile#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-01",
+       "alias": "name"
+      },
+      {
+       "entity": "deal-01",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "intro"
+    }
+   ]
+  },
+  {
+   "id": "s099",
+   "day": -198,
+   "time": "12:50",
+   "topic": "marathon training",
+   "long": false,
+   "lines": [
+    {
+     "text": "Stonechat is our biggest client, in case I never said.",
+     "slot": "company-04-twin.profile",
+     "event": "company-04-twin.profile#1",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-04-twin",
+       "alias": "nickname"
+      },
+      {
+       "entity": "company-04-twin",
+       "alias": "role"
+      }
+     ],
+     "purpose": "role"
+    }
+   ]
+  },
+  {
+   "id": "s100",
+   "day": -192,
+   "time": "14:00",
+   "topic": "a balcony herb garden",
+   "long": true,
+   "lines": [
+    {
+     "text": "The countersigned contract for the handshake deal sets the annual price at $224,000.",
+     "slot": "deal-02.price",
+     "event": "deal-02.price#0",
+     "values": [
+      "$224,000"
+     ],
+     "speaker": "user",
+     "position": "middle",
+     "refs": [
+      {
+       "entity": "deal-02",
+       "alias": "role"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s101",
+   "day": -190,
+   "time": "19:45",
+   "topic": "a backyard bird feeder",
+   "long": true,
+   "lines": [
+    {
+     "text": "My yoga teacher is busy redecorating the flat in Bordeaux.",
+     "slot": "person-02.city",
+     "event": "person-02.city#13",
+     "values": [
+      "Bordeaux"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-02",
+       "alias": "role"
+      }
+     ]
+    },
+    {
+     "text": "On paper it is Project Quillon, but everyone says Quillon.",
+     "slot": "project-04.profile",
+     "event": "project-04.profile#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-04",
+       "alias": "name"
+      },
+      {
+       "entity": "project-04",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "intro"
+    }
+   ]
+  },
+  {
+   "id": "s102",
+   "day": -187,
+   "time": "11:45",
+   "topic": "a board game night",
+   "long": false,
+   "lines": [
+    {
+     "text": "Inkberry Publishing sent another invoice for the pet project.",
+     "slot": "project-03.vendor",
+     "event": "project-03.vendor#8",
+     "values": [
+      "Inkberry Publishing"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-03",
+       "alias": "role"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s103",
+   "day": -186,
+   "time": "21:35",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": [
+    {
+     "text": "Everyone calls Nathaniel Brennan Nate.",
+     "slot": "person-03.profile",
+     "event": "person-03.profile#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-03",
+       "alias": "name"
+      },
+      {
+       "entity": "person-03",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "intro"
+    },
+    {
+     "text": "Something changed: the renewal price on the tricky renewal changed to $342,000 a year.",
+     "slot": "deal-01.price",
+     "event": "deal-01.price#1",
+     "values": [
+      "$342,000"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-01",
+       "alias": "role"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s104",
+   "day": -181,
+   "time": "11:50",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": [
+    {
+     "text": "I renewed the support plan for the pet project with Inkberry Publishing.",
+     "slot": "project-03.vendor",
+     "event": "project-03.vendor#9",
+     "values": [
+      "Inkberry Publishing"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-03",
+       "alias": "role"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s105",
+   "day": -164,
+   "time": "15:45",
+   "topic": "a jigsaw puzzle",
+   "long": false,
+   "lines": [
+    {
+     "text": "Clem recommended a bakery near home in Bordeaux.",
+     "slot": "person-02.city",
+     "event": "person-02.city#14",
+     "values": [
+      "Bordeaux"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-02",
+       "alias": "nickname"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s106",
+   "day": -163,
+   "time": "20:15",
+   "topic": "a jigsaw puzzle",
+   "long": false,
+   "lines": [
+    {
+     "text": "Update: Yusuf Tanaka took over operations at the startup we advise.",
+     "slot": "company-02.ops_lead",
+     "event": "company-02.ops_lead#2",
+     "values": [
+      "Yusuf Tanaka"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-02",
+       "alias": "role"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s107",
+   "day": -160,
+   "time": "10:50",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": [
+    {
+     "text": "The client from the trade fair sells oat milk to cafes.",
+     "slot": "company-02-twin.profile",
+     "event": "company-02-twin.profile#2",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-02-twin",
+       "alias": "role"
+      }
+     ],
+     "purpose": "property"
+    }
+   ]
+  },
+  {
+   "id": "s108",
+   "day": -160,
+   "time": "19:40",
+   "topic": "marathon training",
+   "long": false,
+   "lines": [
+    {
+     "text": "The draft amendment for the handshake deal floats $170,000 for the annual price.",
+     "slot": "deal-02.price",
+     "event": "deal-02.price#1",
+     "values": [
+      "$170,000"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-02",
+       "alias": "role"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s109",
+   "day": -158,
+   "time": "19:30",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": [
+    {
+     "text": "The draft amendment for the rescue deal floats 63 months for the contract term.",
+     "slot": "deal-05.term",
+     "event": "deal-05.term#2",
+     "values": [
+      "63 months"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-05",
+       "alias": "role"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s110",
+   "day": -154,
+   "time": "16:10",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": [
+    {
+     "text": "Update: Zofia Uddin took over operations at Wrenfield.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#10",
+     "values": [
+      "Zofia Uddin"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-03",
+       "alias": "nickname"
+      }
+     ]
+    },
+    {
+     "text": "I need to fix something I told you: not Rania Zamora. In fact Cyrus Grieve leads Tamarind.",
+     "slot": "project-02.lead",
+     "event": "project-02.lead#2",
+     "values": [
+      "Rania Zamora",
+      "Cyrus Grieve"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-02",
+       "alias": "nickname"
+      }
+     ]
+    },
+    {
+     "text": "I caught up with Annie yesterday. She recommended a bakery near home in Bergen.",
+     "slot": "person-04.city",
+     "event": "person-04.city#9",
+     "values": [
+      "Bergen"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-04",
+       "alias": "pronoun",
+       "antecedent": "nickname"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s111",
+   "day": -150,
+   "time": "13:40",
+   "topic": "meal prep for the week",
+   "long": true,
+   "lines": [
+    {
+     "text": "The account owner signed off in writing on 860 seats as the binding seat count for Wexley.",
+     "slot": "deal-01.seats",
+     "event": "deal-01.seats#0",
+     "values": [
+      "860 seats"
+     ],
+     "speaker": "user",
+     "position": "middle",
+     "refs": [
+      {
+       "entity": "deal-01",
+       "alias": "nickname"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s112",
+   "day": -142,
+   "time": "19:00",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": [
+    {
+     "text": "The assistant's call notes for the Ridgaway deal say the annual price is $212,000.",
+     "slot": "deal-02.price",
+     "event": "deal-02.price#2",
+     "values": [
+      "$212,000"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-02",
+       "alias": "misspelling"
+      }
+     ]
+    },
+    {
+     "text": "Annie is my old lab partner, in case I never said.",
+     "slot": "person-04.profile",
+     "event": "person-04.profile#1",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-04",
+       "alias": "nickname"
+      },
+      {
+       "entity": "person-04",
+       "alias": "role"
+      }
+     ],
+     "purpose": "role"
+    }
+   ]
+  },
+  {
+   "id": "s113",
+   "day": -141,
+   "time": "18:05",
+   "topic": "a pottery class",
+   "long": false,
+   "lines": [
+    {
+     "text": "Update: my bridge partner took on the VP of Sales role.",
+     "slot": "person-01.role",
+     "event": "person-01.role#3",
+     "values": [
+      "VP of Sales"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-01",
+       "alias": "role"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s114",
+   "day": -137,
+   "time": "08:00",
+   "topic": "restoring an old bicycle",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, Nathaniel Brannan brought a Tarnwood Logistics tote bag to the picnic.",
+     "slot": "person-03.employer",
+     "event": "person-03.employer#8",
+     "values": [
+      "Tarnwood Logistics"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-03",
+       "alias": "misspelling"
+      }
+     ]
+    },
+    {
+     "text": "The meeting summary for the Wexlay deal lists the seat count as 200 seats.",
+     "slot": "deal-01.seats",
+     "event": "deal-01.seats#1",
+     "values": [
+      "200 seats"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-01",
+       "alias": "misspelling"
+      }
+     ]
+    },
+    {
+     "text": "I had a long call with Annie. Funny timing: she is hosting the book club at home in Bergen this month.",
+     "slot": "person-04.city",
+     "event": "person-04.city#10",
+     "values": [
+      "Bergen"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-04",
+       "alias": "pronoun",
+       "antecedent": "nickname"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s115",
+   "day": -137,
+   "time": "08:10",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": [
+    {
+     "text": "Heard today that Dominik Abarnathy relocated to Seville.",
+     "slot": "person-01.city",
+     "event": "person-01.city#3",
+     "values": [
+      "Seville"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-01",
+       "alias": "misspelling"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s116",
+   "day": -137,
+   "time": "13:00",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": [
+    {
+     "text": "The client with the glass tower runs the island ferry service.",
+     "slot": "company-01.profile",
+     "event": "company-01.profile#2",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-01",
+       "alias": "role"
+      }
+     ],
+     "purpose": "property"
+    },
+    {
+     "text": "Reggie founded Stonechat.",
+     "slot": "company-04-twin.relation",
+     "event": "company-04-twin.relation#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-04-twin",
+       "alias": "nickname"
+      },
+      {
+       "entity": "person-04-twin",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "relation"
+    },
+    {
+     "text": "Lowmoor is what we call Lowmoor Retail around here.",
+     "slot": "company-05.profile",
+     "event": "company-05.profile#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-05",
+       "alias": "name"
+      },
+      {
+       "entity": "company-05",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "intro"
+    }
+   ]
+  },
+  {
+   "id": "s117",
+   "day": -132,
+   "time": "13:50",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": [
+    {
+     "text": "The rescue deal is for the stadium screens.",
+     "slot": "deal-05.profile",
+     "event": "deal-05.profile#2",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-05",
+       "alias": "role"
+      }
+     ],
+     "purpose": "property"
+    }
+   ]
+  },
+  {
+   "id": "s118",
+   "day": -126,
+   "time": "10:15",
+   "topic": "a rescue dog's training",
+   "long": false,
+   "lines": [
+    {
+     "text": "Change of plans: Foxglove Cosmetics pulled out of the pilot with Ostrava.",
+     "slot": "project-01.pilot",
+     "event": "project-01.pilot#1",
+     "values": [
+      "Foxglove Cosmetics"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-01",
+       "alias": "nickname"
+      }
+     ]
+    },
+    {
+     "text": "Clem is what everyone calls Clementine Haddad.",
+     "slot": "person-02.profile",
+     "event": "person-02.profile#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-02",
+       "alias": "name"
+      },
+      {
+       "entity": "person-02",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "intro"
+    },
+    {
+     "text": "My former teammate rang me last night. News from this week: he joined Bramblecote Bakery.",
+     "slot": "person-03.employer",
+     "event": "person-03.employer#9",
+     "values": [
+      "Bramblecote Bakery"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-03",
+       "alias": "pronoun",
+       "antecedent": "role"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s119",
+   "day": -117,
+   "time": "14:10",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": [
+    {
+     "text": "A redlined draft amendment for Wexley proposes 580 seats as the seat count.",
+     "slot": "deal-01.seats",
+     "event": "deal-01.seats#2",
+     "values": [
+      "580 seats"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-01",
+       "alias": "nickname"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s120",
+   "day": -112,
+   "time": "15:05",
+   "topic": "a jigsaw puzzle",
+   "long": false,
+   "lines": [
+    {
+     "text": "When I mention the client with the glass tower, I mean Tidewell.",
+     "slot": "company-01.profile",
+     "event": "company-01.profile#1",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-01",
+       "alias": "nickname"
+      },
+      {
+       "entity": "company-01",
+       "alias": "role"
+      }
+     ],
+     "purpose": "role"
+    },
+    {
+     "text": "Side note, Inkberry Publishing sent another invoice for Halyard.",
+     "slot": "project-03.vendor",
+     "event": "project-03.vendor#10",
+     "values": [
+      "Inkberry Publishing"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-03",
+       "alias": "nickname"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s121",
+   "day": -112,
+   "time": "20:45",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": [
+    {
+     "text": "On paper it is the Marlow deal, but everyone says Marlow.",
+     "slot": "deal-05.profile",
+     "event": "deal-05.profile#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-05",
+       "alias": "name"
+      },
+      {
+       "entity": "deal-05",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "intro"
+    }
+   ]
+  },
+  {
+   "id": "s122",
+   "day": -112,
+   "time": "21:25",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": [
+    {
+     "text": "Gus used to be Roz's boss.",
+     "slot": "person-05-twin.relation",
+     "event": "person-05-twin.relation#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-05-twin",
+       "alias": "nickname"
+      },
+      {
+       "entity": "person-01-twin",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "relation"
+    }
+   ]
+  },
+  {
+   "id": "s123",
+   "day": -107,
+   "time": "08:00",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: I renewed the support plan for the pet project with Inkberry Publishing.",
+     "slot": "project-03.vendor",
+     "event": "project-03.vendor#11",
+     "values": [
+      "Inkberry Publishing"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-03",
+       "alias": "role"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s124",
+   "day": -101,
+   "time": "13:40",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": [
+    {
+     "text": "Stonechat puts on fireworks displays.",
+     "slot": "company-04-twin.profile",
+     "event": "company-04-twin.profile#2",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-04-twin",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "property"
+    }
+   ]
+  },
+  {
+   "id": "s125",
+   "day": -100,
+   "time": "10:50",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": [
+    {
+     "text": "I bumped into my yoga teacher at the market. Catching up on old news: she joined Cinderford Steel on [[D:-129]].",
+     "slot": "person-02.employer",
+     "event": "person-02.employer#2",
+     "values": [
+      "Cinderford Steel"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-02",
+       "alias": "pronoun",
+       "antecedent": "role"
+      }
+     ]
+    },
+    {
+     "text": "I caught up with Perry yesterday. He is leading a hiring push at Elmstead Clinics.",
+     "slot": "person-05.employer",
+     "event": "person-05.employer#9",
+     "values": [
+      "Elmstead Clinics"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-05",
+       "alias": "pronoun",
+       "antecedent": "nickname"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s126",
+   "day": -98,
+   "time": "08:55",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": [
+    {
+     "text": "Peregrine Petruvic is buried in quarter planning at Elmstead Clinics.",
+     "slot": "person-05.employer",
+     "event": "person-05.employer#10",
+     "values": [
+      "Elmstead Clinics"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-05",
+       "alias": "misspelling"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s127",
+   "day": -84,
+   "time": "11:40",
+   "topic": "a board game night",
+   "long": false,
+   "lines": [
+    {
+     "text": "Annie performs improv comedy.",
+     "slot": "person-04.profile",
+     "event": "person-04.profile#2",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-04",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "property"
+    },
+    {
+     "text": "The counterparty on Ridgeway is Tidewell.",
+     "slot": "deal-02.relation",
+     "event": "deal-02.relation#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-02",
+       "alias": "nickname"
+      },
+      {
+       "entity": "company-01",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "relation"
+    }
+   ]
+  },
+  {
+   "id": "s128",
+   "day": -80,
+   "time": "18:55",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": [
+    {
+     "text": "Wrenfield commissioned Tamarind.",
+     "slot": "project-02.relation",
+     "event": "project-02.relation#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-02",
+       "alias": "nickname"
+      },
+      {
+       "entity": "company-03",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "relation"
+    },
+    {
+     "text": "Writing this down so I remember: Tobias Halluran is employed by Larkspur Foods.",
+     "slot": "person-02-twin.employer",
+     "event": "person-02-twin.employer#0",
+     "values": [
+      "Larkspur Foods"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-02-twin",
+       "alias": "misspelling"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s129",
+   "day": -80,
+   "time": "20:10",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": [
+    {
+     "text": "The enterprise deal is for the call-centre headsets.",
+     "slot": "deal-04.profile",
+     "event": "deal-04.profile#2",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-04",
+       "alias": "role"
+      }
+     ],
+     "purpose": "property"
+    },
+    {
+     "text": "The big renewal is for the bus shelters.",
+     "slot": "deal-03.profile",
+     "event": "deal-03.profile#2",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-03",
+       "alias": "role"
+      }
+     ],
+     "purpose": "property"
+    },
+    {
+     "text": "The countersigned contract for the bundled deal sets the annual price at $318,000.",
+     "slot": "deal-02-twin.price",
+     "event": "deal-02-twin.price#0",
+     "values": [
+      "$318,000"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-02-twin",
+       "alias": "role"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s130",
+   "day": -76,
+   "time": "12:20",
+   "topic": "a language exchange",
+   "long": false,
+   "lines": [
+    {
+     "text": "The friend from the choir is buried in quarter planning at Elmstead Clinics.",
+     "slot": "person-05.employer",
+     "event": "person-05.employer#11",
+     "values": [
+      "Elmstead Clinics"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-05",
+       "alias": "role"
+      }
+     ]
+    },
+    {
+     "text": "Heads up: Dom moves to Utrecht on [[D:55]].",
+     "slot": "person-01.city",
+     "event": "person-01.city#4",
+     "values": [
+      "Utrecht"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-01",
+       "alias": "nickname"
+      }
+     ]
+    },
+    {
+     "text": "Tidewell is what we call Tidewell Energy around here.",
+     "slot": "company-01.profile",
+     "event": "company-01.profile#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-01",
+       "alias": "name"
+      },
+      {
+       "entity": "company-01",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "intro"
+    }
+   ]
+  },
+  {
+   "id": "s131",
+   "day": -75,
+   "time": "11:00",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: Inkberry Publishing shipped the next batch for the pet project.",
+     "slot": "project-03.vendor",
+     "event": "project-03.vendor#12",
+     "values": [
+      "Inkberry Publishing"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-03",
+       "alias": "role"
+      }
+     ]
+    },
+    {
+     "text": "Something changed: the friend from the choir joined Lindenhall Bank.",
+     "slot": "person-05.employer",
+     "event": "person-05.employer#12",
+     "values": [
+      "Lindenhall Bank"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-05",
+       "alias": "role"
+      }
+     ]
+    },
+    {
+     "text": "I bumped into my yoga teacher at the market. Something changed: she moved to Adelaide.",
+     "slot": "person-02.city",
+     "event": "person-02.city#15",
+     "values": [
+      "Adelaide"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-02",
+       "alias": "pronoun",
+       "antecedent": "role"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s132",
+   "day": -75,
+   "time": "20:55",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": [
+    {
+     "text": "Our biggest client will hold its team offsite in Valencia.",
+     "slot": "company-04-twin.offsite",
+     "event": "company-04-twin.offsite#0",
+     "values": [
+      "Valencia"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-04-twin",
+       "alias": "role"
+      }
+     ]
+    },
+    {
+     "text": "The counterparty on Cobalt is Gannetry.",
+     "slot": "deal-02-twin.relation",
+     "event": "deal-02-twin.relation#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-02-twin",
+       "alias": "nickname"
+      },
+      {
+       "entity": "company-02-twin",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "relation"
+    },
+    {
+     "text": "Everyone calls Dominik Abernathy Dom.",
+     "slot": "person-01.profile",
+     "event": "person-01.profile#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-01",
+       "alias": "name"
+      },
+      {
+       "entity": "person-01",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "intro"
+    }
+   ]
+  },
+  {
+   "id": "s133",
+   "day": -74,
+   "time": "21:55",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": [
+    {
+     "text": "The meeting summary for the Wexlay deal lists the seat count as 460 seats.",
+     "slot": "deal-01.seats",
+     "event": "deal-01.seats#3",
+     "values": [
+      "460 seats"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-01",
+       "alias": "misspelling"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s134",
+   "day": -64,
+   "time": "12:30",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": [
+    {
+     "text": "Something changed: Halyard moved its contract over to Pinecrest Robotics.",
+     "slot": "project-03.vendor",
+     "event": "project-03.vendor#13",
+     "values": [
+      "Pinecrest Robotics"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-03",
+       "alias": "nickname"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s135",
+   "day": -64,
+   "time": "18:55",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": [
+    {
+     "text": "When I mention the summer project, I mean Mistletoe.",
+     "slot": "project-01-twin.profile",
+     "event": "project-01-twin.profile#1",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-01-twin",
+       "alias": "nickname"
+      },
+      {
+       "entity": "project-01-twin",
+       "alias": "role"
+      }
+     ],
+     "purpose": "role"
+    },
+    {
+     "text": "Roz is the new hire in finance, in case I never said.",
+     "slot": "person-01-twin.profile",
+     "event": "person-01-twin.profile#1",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-01-twin",
+       "alias": "nickname"
+      },
+      {
+       "entity": "person-01-twin",
+       "alias": "role"
+      }
+     ],
+     "purpose": "role"
+    }
+   ]
+  },
+  {
+   "id": "s136",
+   "day": -64,
+   "time": "21:40",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": [
+    {
+     "text": "News from this week: Tidawell Energy moved its headquarters to Rotterdam.",
+     "slot": "company-01.hq",
+     "event": "company-01.hq#2",
+     "values": [
+      "Rotterdam"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-01",
+       "alias": "misspelling"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s137",
+   "day": -59,
+   "time": "08:45",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": [
+    {
+     "text": "Halcyon does payroll for restaurants.",
+     "slot": "company-02.profile",
+     "event": "company-02.profile#2",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-02",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "property"
+    },
+    {
+     "text": "Perry sets crosswords for a local paper.",
+     "slot": "person-05.profile",
+     "event": "person-05.profile#2",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-05",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "property"
+    }
+   ]
+  },
+  {
+   "id": "s138",
+   "day": -58,
+   "time": "17:10",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": [
+    {
+     "text": "Brackenridge is the firm downstairs, in case I never said.",
+     "slot": "company-04.profile",
+     "event": "company-04.profile#1",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-04",
+       "alias": "nickname"
+      },
+      {
+       "entity": "company-04",
+       "alias": "role"
+      }
+     ],
+     "purpose": "role"
+    },
+    {
+     "text": "Heard today that my old lab partner moved to Bologna.",
+     "slot": "person-04.city",
+     "event": "person-04.city#11",
+     "values": [
+      "Bologna"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-04",
+       "alias": "role"
+      }
+     ]
+    },
+    {
+     "text": "Everyone calls Peregrine Petrovic Perry.",
+     "slot": "person-05.profile",
+     "event": "person-05.profile#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-05",
+       "alias": "name"
+      },
+      {
+       "entity": "person-05",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "intro"
+    }
+   ]
+  },
+  {
+   "id": "s139",
+   "day": -57,
+   "time": "13:15",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": [
+    {
+     "text": "On paper it is the Juniper deal, but everyone says Juniper.",
+     "slot": "deal-04.profile",
+     "event": "deal-04.profile#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-04",
+       "alias": "name"
+      },
+      {
+       "entity": "deal-04",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "intro"
+    }
+   ]
+  },
+  {
+   "id": "s140",
+   "day": -55,
+   "time": "15:45",
+   "topic": "meal prep for the week",
+   "long": true,
+   "lines": [
+    {
+     "text": "Cobalt is the bundled deal, in case I never said.",
+     "slot": "deal-02-twin.profile",
+     "event": "deal-02-twin.profile#1",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-02-twin",
+       "alias": "nickname"
+      },
+      {
+       "entity": "deal-02-twin",
+       "alias": "role"
+      }
+     ],
+     "purpose": "role"
+    },
+    {
+     "text": "Scratch $342,000, that was my mistake; the renewal price on the tricky renewal is $88,000 a year.",
+     "slot": "deal-01.price",
+     "event": "deal-01.price#2",
+     "values": [
+      "$342,000",
+      "$88,000"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-01",
+       "alias": "role"
+      }
+     ]
+    },
+    {
+     "text": "Heard today that Theo Dimitrov became the lead on the moonshot.",
+     "slot": "project-01.lead",
+     "event": "project-01.lead#1",
+     "values": [
+      "Theo Dimitrov"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-01",
+       "alias": "role"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s141",
+   "day": -46,
+   "time": "21:40",
+   "topic": "sourdough baking",
+   "long": true,
+   "lines": [
+    {
+     "text": "When I mention the year-end deal, I mean Solent.",
+     "slot": "deal-01-twin.profile",
+     "event": "deal-01-twin.profile#1",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-01-twin",
+       "alias": "nickname"
+      },
+      {
+       "entity": "deal-01-twin",
+       "alias": "role"
+      }
+     ],
+     "purpose": "role"
+    },
+    {
+     "text": "Final word on that: the client with the glass tower cancelled its team offsite in Krakow.",
+     "slot": "company-01.offsite",
+     "event": "company-01.offsite#2",
+     "values": [
+      "Krakow"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-01",
+       "alias": "role"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s142",
+   "day": -39,
+   "time": "11:35",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": [
+    {
+     "text": "Project Ostrava is the official name of what we call Ostrava.",
+     "slot": "project-01.profile",
+     "event": "project-01.profile#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-01",
+       "alias": "name"
+      },
+      {
+       "entity": "project-01",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "intro"
+    }
+   ]
+  },
+  {
+   "id": "s143",
+   "day": -35,
+   "time": "20:40",
+   "topic": "a board game night",
+   "long": false,
+   "lines": [
+    {
+     "text": "Perry used to be Nate's boss.",
+     "slot": "person-05.relation",
+     "event": "person-05.relation#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-05",
+       "alias": "nickname"
+      },
+      {
+       "entity": "person-03",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "relation"
+    }
+   ]
+  },
+  {
+   "id": "s144",
+   "day": -34,
+   "time": "08:35",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": [
+    {
+     "text": "Clem competes in archery.",
+     "slot": "person-02.profile",
+     "event": "person-02.profile#2",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-02",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "property"
+    },
+    {
+     "text": "The handshake deal is for the school laptops.",
+     "slot": "deal-02.profile",
+     "event": "deal-02.profile#2",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-02",
+       "alias": "role"
+      }
+     ],
+     "purpose": "property"
+    }
+   ]
+  },
+  {
+   "id": "s145",
+   "day": -25,
+   "time": "10:05",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": [
+    {
+     "text": "When I mention my yoga teacher, I mean Clem.",
+     "slot": "person-02.profile",
+     "event": "person-02.profile#1",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-02",
+       "alias": "nickname"
+      },
+      {
+       "entity": "person-02",
+       "alias": "role"
+      }
+     ],
+     "purpose": "role"
+    },
+    {
+     "text": "Ostrava automates library lending.",
+     "slot": "project-01.profile",
+     "event": "project-01.profile#2",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-01",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "property"
+    },
+    {
+     "text": "Lowmoor is the agency we share an office with, in case I never said.",
+     "slot": "company-05.profile",
+     "event": "company-05.profile#1",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-05",
+       "alias": "nickname"
+      },
+      {
+       "entity": "company-05",
+       "alias": "role"
+      }
+     ],
+     "purpose": "role"
+    }
+   ]
+  },
+  {
+   "id": "s146",
+   "day": -15,
+   "time": "16:05",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": [
+    {
+     "text": "Gannetry commissioned Quillon.",
+     "slot": "project-04.relation",
+     "event": "project-04.relation#0",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-04",
+       "alias": "nickname"
+      },
+      {
+       "entity": "company-02-twin",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "relation"
+    },
+    {
+     "text": "Vantor is the outfit with the green logo, in case I never said.",
+     "slot": "company-05-twin.profile",
+     "event": "company-05-twin.profile#1",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "company-05-twin",
+       "alias": "nickname"
+      },
+      {
+       "entity": "company-05-twin",
+       "alias": "role"
+      }
+     ],
+     "purpose": "role"
+    }
+   ]
+  },
+  {
+   "id": "s147",
+   "day": -9,
+   "time": "17:10",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": [
+    {
+     "text": "When I mention the enterprise deal, I mean Juniper.",
+     "slot": "deal-04.profile",
+     "event": "deal-04.profile#1",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "deal-04",
+       "alias": "nickname"
+      },
+      {
+       "entity": "deal-04",
+       "alias": "role"
+      }
+     ],
+     "purpose": "role"
+    }
+   ]
+  },
+  {
+   "id": "s148",
+   "day": -7,
+   "time": "11:00",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": [
+    {
+     "text": "Planning note: Vera Iqbal takes over as lead of Ostrava on [[D:91]].",
+     "slot": "project-01.lead",
+     "event": "project-01.lead#2",
+     "values": [
+      "Vera Iqbal"
+     ],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-01",
+       "alias": "nickname"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s149",
+   "day": -7,
+   "time": "19:15",
+   "topic": "a board game night",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s150",
+   "day": -6,
+   "time": "16:20",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": [
+    {
+     "text": "The cross-team project generates school timetables.",
+     "slot": "project-04.profile",
+     "event": "project-04.profile#2",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-04",
+       "alias": "role"
+      }
+     ],
+     "purpose": "property"
+    },
+    {
+     "text": "The new hire in finance looks after a row of beehives.",
+     "slot": "person-01-twin.profile",
+     "event": "person-01-twin.profile#2",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-01-twin",
+       "alias": "role"
+      }
+     ],
+     "purpose": "property"
+    }
+   ]
+  },
+  {
+   "id": "s151",
+   "day": -4,
+   "time": "18:25",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s152",
+   "day": -2,
+   "time": "11:10",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s153",
+   "day": -2,
+   "time": "19:15",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": [
+    {
+     "text": "Halyard covers car parks with solar canopies.",
+     "slot": "project-03.profile",
+     "event": "project-03.profile#2",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "project-03",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "property"
+    },
+    {
+     "text": "Toby folds origami as a hobby.",
+     "slot": "person-02-twin.profile",
+     "event": "person-02-twin.profile#2",
+     "values": [],
+     "speaker": "user",
+     "position": "any",
+     "refs": [
+      {
+       "entity": "person-02-twin",
+       "alias": "nickname"
+      }
+     ],
+     "purpose": "property"
+    }
+   ]
+  }
+ ],
+ "lexicon": {
+  "$122,000": {
+   "aliases": [
+    "122,000",
+    "$122k",
+    "122k",
+    "122 thousand"
+   ],
+   "implications": []
+  },
+  "$170,000": {
+   "aliases": [
+    "170,000",
+    "$170k",
+    "170k",
+    "170 thousand"
+   ],
+   "implications": []
+  },
+  "$212,000": {
+   "aliases": [
+    "212,000",
+    "$212k",
+    "212k",
+    "212 thousand"
+   ],
+   "implications": []
+  },
+  "$224,000": {
+   "aliases": [
+    "224,000",
+    "$224k",
+    "224k",
+    "224 thousand"
+   ],
+   "implications": []
+  },
+  "$318,000": {
+   "aliases": [
+    "318,000",
+    "$318k",
+    "318k",
+    "318 thousand"
+   ],
+   "implications": []
+  },
+  "$342,000": {
+   "aliases": [
+    "342,000",
+    "$342k",
+    "342k",
+    "342 thousand"
+   ],
+   "implications": []
+  },
+  "$88,000": {
+   "aliases": [
+    "88,000",
+    "$88k",
+    "88k",
+    "88 thousand"
+   ],
+   "implications": []
+  },
+  "10%": {
+   "aliases": [
+    "10 percent",
+    "10 per cent"
+   ],
+   "implications": []
+  },
+  "11%": {
+   "aliases": [
+    "11 percent",
+    "11 per cent"
+   ],
+   "implications": []
+  },
+  "14%": {
+   "aliases": [
+    "14 percent",
+    "14 per cent"
+   ],
+   "implications": []
+  },
+  "16%": {
+   "aliases": [
+    "16 percent",
+    "16 per cent"
+   ],
+   "implications": []
+  },
+  "19%": {
+   "aliases": [
+    "19 percent",
+    "19 per cent"
+   ],
+   "implications": []
+  },
+  "200 seats": {
+   "aliases": [
+    "200 licenses",
+    "200 licences",
+    "200 users"
+   ],
+   "implications": []
+  },
+  "27 months": {
+   "aliases": [
+    "27-month",
+    "27 mo"
+   ],
+   "implications": []
+  },
+  "33%": {
+   "aliases": [
+    "33 percent",
+    "33 per cent"
+   ],
+   "implications": []
+  },
+  "34%": {
+   "aliases": [
+    "34 percent",
+    "34 per cent"
+   ],
+   "implications": []
+  },
+  "38%": {
+   "aliases": [
+    "38 percent",
+    "38 per cent"
+   ],
+   "implications": []
+  },
+  "40%": {
+   "aliases": [
+    "40 percent",
+    "40 per cent"
+   ],
+   "implications": []
+  },
+  "41%": {
+   "aliases": [
+    "41 percent",
+    "41 per cent"
+   ],
+   "implications": []
+  },
+  "460 seats": {
+   "aliases": [
+    "460 licenses",
+    "460 licences",
+    "460 users"
+   ],
+   "implications": []
+  },
+  "57 months": {
+   "aliases": [
+    "57-month",
+    "57 mo"
+   ],
+   "implications": []
+  },
+  "580 seats": {
+   "aliases": [
+    "580 licenses",
+    "580 licences",
+    "580 users"
+   ],
+   "implications": []
+  },
+  "63 months": {
+   "aliases": [
+    "63-month",
+    "63 mo"
+   ],
+   "implications": []
+  },
+  "760 seats": {
+   "aliases": [
+    "760 licenses",
+    "760 licences",
+    "760 users"
+   ],
+   "implications": []
+  },
+  "8%": {
+   "aliases": [
+    "8 percent",
+    "8 per cent"
+   ],
+   "implications": []
+  },
+  "860 seats": {
+   "aliases": [
+    "860 licenses",
+    "860 licences",
+    "860 users"
+   ],
+   "implications": []
+  },
+  "Accra": {
+   "aliases": [],
+   "implications": [
+    "Ghana"
+   ]
+  },
+  "Adelaide": {
+   "aliases": [],
+   "implications": [
+    "Australia"
+   ]
+  },
+  "Analytics Manager": {
+   "aliases": [],
+   "implications": []
+  },
+  "Aurelio Raman": {
+   "aliases": [
+    "Aurelio",
+    "Raman"
+   ],
+   "implications": []
+  },
+  "Benedikt Nilsen": {
+   "aliases": [
+    "Benedikt",
+    "Nilsen"
+   ],
+   "implications": []
+  },
+  "Bergen": {
+   "aliases": [],
+   "implications": [
+    "Norway"
+   ]
+  },
+  "Bologna": {
+   "aliases": [],
+   "implications": [
+    "Italy"
+   ]
+  },
+  "Bordeaux": {
+   "aliases": [],
+   "implications": [
+    "France"
+   ]
+  },
+  "Bramblecote Bakery": {
+   "aliases": [
+    "Bramblecote"
+   ],
+   "implications": []
+  },
+  "Brno": {
+   "aliases": [],
+   "implications": [
+    "Czechia"
+   ]
+  },
+  "Chief of Staff": {
+   "aliases": [],
+   "implications": []
+  },
+  "Cinderford Steel": {
+   "aliases": [
+    "Cinderford"
+   ],
+   "implications": []
+  },
+  "Compliance Officer": {
+   "aliases": [],
+   "implications": []
+  },
+  "Cyrus Grieve": {
+   "aliases": [
+    "Cyrus",
+    "Grieve"
+   ],
+   "implications": []
+  },
+  "Director of Partnerships": {
+   "aliases": [],
+   "implications": []
+  },
+  "Driftmark Software": {
+   "aliases": [
+    "Driftmark"
+   ],
+   "implications": []
+  },
+  "Elmstead Clinics": {
+   "aliases": [
+    "Elmstead"
+   ],
+   "implications": []
+  },
+  "Foxglove Cosmetics": {
+   "aliases": [
+    "Foxglove"
+   ],
+   "implications": []
+  },
+  "Galway": {
+   "aliases": [],
+   "implications": [
+    "Ireland"
+   ]
+  },
+  "Gdansk": {
+   "aliases": [
+    "Gdańsk"
+   ],
+   "implications": [
+    "Poland"
+   ]
+  },
+  "Glasswing Studios": {
+   "aliases": [
+    "Glasswing"
+   ],
+   "implications": []
+  },
+  "Gorseway Transit": {
+   "aliases": [
+    "Gorseway"
+   ],
+   "implications": []
+  },
+  "Head of Platform": {
+   "aliases": [],
+   "implications": []
+  },
+  "Heathmont Schools": {
+   "aliases": [
+    "Heathmont"
+   ],
+   "implications": []
+  },
+  "Helsinki": {
+   "aliases": [],
+   "implications": [
+    "Finland"
+   ]
+  },
+  "Inkberry Publishing": {
+   "aliases": [
+    "Inkberry"
+   ],
+   "implications": []
+  },
+  "Jasperwood Furniture": {
+   "aliases": [
+    "Jasperwood"
+   ],
+   "implications": []
+  },
+  "Jonah Pires": {
+   "aliases": [
+    "Jonah",
+    "Pires"
+   ],
+   "implications": []
+  },
+  "Krakow": {
+   "aliases": [
+    "Kraków"
+   ],
+   "implications": [
+    "Poland"
+   ]
+  },
+  "Larkspur Foods": {
+   "aliases": [
+    "Larkspur"
+   ],
+   "implications": []
+  },
+  "Lindenhall Bank": {
+   "aliases": [
+    "Lindenhall"
+   ],
+   "implications": []
+  },
+  "Lyon": {
+   "aliases": [],
+   "implications": [
+    "France"
+   ]
+  },
+  "Malmo": {
+   "aliases": [
+    "Malmö"
+   ],
+   "implications": [
+    "Sweden"
+   ]
+  },
+  "Montreal": {
+   "aliases": [
+    "Montréal"
+   ],
+   "implications": [
+    "Quebec"
+   ]
+  },
+  "Nadia Holm": {
+   "aliases": [
+    "Nadia",
+    "Holm"
+   ],
+   "implications": []
+  },
+  "Oakhaven Health": {
+   "aliases": [
+    "Oakhaven"
+   ],
+   "implications": []
+  },
+  "Pebblestone Data": {
+   "aliases": [
+    "Pebblestone"
+   ],
+   "implications": []
+  },
+  "Pinecrest Robotics": {
+   "aliases": [
+    "Pinecrest"
+   ],
+   "implications": []
+  },
+  "Rania Zamora": {
+   "aliases": [
+    "Rania",
+    "Zamora"
+   ],
+   "implications": []
+  },
+  "Riga": {
+   "aliases": [],
+   "implications": [
+    "Latvia"
+   ]
+  },
+  "Rotterdam": {
+   "aliases": [],
+   "implications": [
+    "Netherlands"
+   ]
+  },
+  "Saltmarsh Marine": {
+   "aliases": [
+    "Saltmarsh"
+   ],
+   "implications": []
+  },
+  "Seville": {
+   "aliases": [
+    "Sevilla"
+   ],
+   "implications": [
+    "Spain"
+   ]
+  },
+  "Soren Osei": {
+   "aliases": [
+    "Soren",
+    "Osei"
+   ],
+   "implications": []
+  },
+  "Taipei": {
+   "aliases": [],
+   "implications": [
+    "Taiwan"
+   ]
+  },
+  "Tallinn": {
+   "aliases": [],
+   "implications": [
+    "Estonia"
+   ]
+  },
+  "Tarnwood Logistics": {
+   "aliases": [
+    "Tarnwood"
+   ],
+   "implications": []
+  },
+  "Theo Dimitrov": {
+   "aliases": [
+    "Theo",
+    "Dimitrov"
+   ],
+   "implications": []
+  },
+  "Thistledown Textiles": {
+   "aliases": [
+    "Thistledown"
+   ],
+   "implications": []
+  },
+  "Utrecht": {
+   "aliases": [],
+   "implications": [
+    "Netherlands"
+   ]
+  },
+  "VP of Sales": {
+   "aliases": [],
+   "implications": []
+  },
+  "Valencia": {
+   "aliases": [],
+   "implications": [
+    "Spain"
+   ]
+  },
+  "Vera Iqbal": {
+   "aliases": [
+    "Vera",
+    "Iqbal"
+   ],
+   "implications": []
+  },
+  "Vienna": {
+   "aliases": [
+    "Wien"
+   ],
+   "implications": [
+    "Austria"
+   ]
+  },
+  "Vilnius": {
+   "aliases": [],
+   "implications": [
+    "Lithuania"
+   ]
+  },
+  "Ximena Yeboah": {
+   "aliases": [
+    "Ximena",
+    "Yeboah"
+   ],
+   "implications": []
+  },
+  "Yusuf Tanaka": {
+   "aliases": [
+    "Yusuf",
+    "Tanaka"
+   ],
+   "implications": []
+  },
+  "Zephyrine Aviation": {
+   "aliases": [
+    "Zephyrine"
+   ],
+   "implications": []
+  },
+  "Zofia Uddin": {
+   "aliases": [
+    "Zofia",
+    "Uddin"
+   ],
+   "implications": []
+  }
+ },
+ "relations": [
+  {
+   "id": "commissioned",
+   "subject": "project-03",
+   "object": "company-01",
+   "session": "s077"
+  },
+  {
+   "id": "counterparty",
+   "subject": "deal-01-twin",
+   "object": "company-05",
+   "session": "s043"
+  },
+  {
+   "id": "boss",
+   "subject": "person-05",
+   "object": "person-03",
+   "session": "s143"
+  },
+  {
+   "id": "boss",
+   "subject": "person-04-twin",
+   "object": "person-02",
+   "session": "s075"
+  },
+  {
+   "id": "counterparty",
+   "subject": "deal-02-twin",
+   "object": "company-02-twin",
+   "session": "s132"
+  },
+  {
+   "id": "commissioned",
+   "subject": "project-04",
+   "object": "company-02-twin",
+   "session": "s146"
+  },
+  {
+   "id": "mentor",
+   "subject": "person-02",
+   "object": "person-05",
+   "session": "s002"
+  },
+  {
+   "id": "landlord",
+   "subject": "person-04",
+   "object": "person-03",
+   "session": "s083"
+  },
+  {
+   "id": "founded",
+   "subject": "company-04",
+   "object": "person-05",
+   "session": "s077"
+  },
+  {
+   "id": "founded",
+   "subject": "company-04-twin",
+   "object": "person-04-twin",
+   "session": "s116"
+  },
+  {
+   "id": "founded",
+   "subject": "company-05",
+   "object": "person-02",
+   "session": "s071"
+  },
+  {
+   "id": "founded",
+   "subject": "company-05-twin",
+   "object": "person-01",
+   "session": "s072"
+  },
+  {
+   "id": "boss",
+   "subject": "person-05-twin",
+   "object": "person-01-twin",
+   "session": "s122"
+  },
+  {
+   "id": "counterparty",
+   "subject": "deal-02",
+   "object": "company-01",
+   "session": "s127"
+  },
+  {
+   "id": "landlord",
+   "subject": "person-02-twin",
+   "object": "person-01-twin",
+   "session": "s067"
+  },
+  {
+   "id": "commissioned",
+   "subject": "project-02",
+   "object": "company-03",
+   "session": "s128"
+  },
+  {
+   "id": "counterparty",
+   "subject": "deal-05",
+   "object": "company-05-twin",
+   "session": "s054"
+  }
+ ]
+}

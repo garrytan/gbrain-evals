@@ -142,7 +142,9 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: eval-reports
-          path: eval/reports/
+          path: |
+            eval/reports/
+            !eval/reports/person-isolation-fuzz/
           if-no-files-found: ignore
           retention-days: 14
 
@@ -194,9 +196,58 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: eval-reports-brainbench-${{ matrix.shard }}
-          path: eval/reports/
+          path: |
+            eval/reports/
+            !eval/reports/person-isolation-fuzz/
           if-no-files-found: ignore
           retention-days: 14
+
+  # The person-isolation ci profile on Postgres (preregistration
+  # docs/benchmarks/2026-11-24-person-isolation-preregistration.md, amendment 2);
+  # the PGLite cells run in the offline tier as person-isolation-ci. Keyless:
+  # env -i leaves no provider key, and the runner refuses to start if one is
+  # visible. A failing run prints and keeps only its total, so nothing under
+  # eval/reports/person-isolation-fuzz/ is uploaded.
+  person-isolation-postgres:
+    runs-on: ubicloud-standard-4-ubuntu-2604
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: pgvector/pgvector@sha256:484e838076e04939d27d3e176e91c86eea96236126023be8d3059761122e579f
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 55432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 30
+    steps:
+      - id: git-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: .git
+          key: ${{ format('git-objects-v1-{0}', github.sha) }}
+          restore-keys: git-objects-v1-
+
+      - if: steps.git-cache.outcome == 'failure'
+        name: Drop a partly restored git cache
+        run: rm -rf .git
+
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: 1.4.4
+
+      - name: Install (frozen lockfile)
+        run: bun install --frozen-lockfile
+
+      - name: Person isolation, ci profile on Postgres (in process and HTTP)
+        run: env -i PATH="$PATH" HOME="$HOME" PI_PG_URL=postgres://postgres@127.0.0.1:55432/postgres timeout 1500 bun eval/runner/person-isolation-fuzz.ts --profile ci --cells mcp-dispatch-postgres,http-postgres --output "$RUNNER_TEMP/person-isolation-postgres"
 
   prereg-order:
     runs-on: ubicloud-standard-2-ubuntu-2604

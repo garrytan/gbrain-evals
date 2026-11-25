@@ -60,6 +60,12 @@ export const BG1_DEV_EXTRA_CONVERSATIONS: readonly string[] = Array.from({ lengt
  * for the weekly line's long pilot (bg1-dev-long-01) and the grep agent's long judge check (bg1-dev-long-02 and -03).
  */
 export const BG1_DEV_LONG_CONVERSATIONS: readonly string[] = ['bg1-dev-long-01', 'bg1-dev-long-02', 'bg1-dev-long-03'];
+/**
+ * The three described-subject public dev worlds (GBEV-128's re-plan): changing-facts-gen@3 plans of about 200,000 tokens
+ * from public seeds, whose questions describe their subject instead of naming it, for the weekly line's alias pilot
+ * (bg1-dev-alias-01) and the grep agent's alias judge check (bg1-dev-alias-02 and -03).
+ */
+export const BG1_DEV_ALIAS_CONVERSATIONS: readonly string[] = ['bg1-dev-alias-01', 'bg1-dev-alias-02', 'bg1-dev-alias-03'];
 /** Kept worlds per launch unit; wave A (the internal pilot) is the first BG1_WAVE_A kept worlds. */
 export const BG1_KEPT_UNITS = 6;
 export const BG1_WAVE_A = 12;
