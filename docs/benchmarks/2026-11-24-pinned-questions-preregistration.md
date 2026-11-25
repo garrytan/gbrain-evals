@@ -313,20 +313,63 @@ Two worked examples, both phrasings that appear in counted answers:
 The rescore prompt is the frozen prompt with only its "correct" and "wrong" lines replaced by these words
 (`PINNED_QUESTIONS_RESCORE_PROMPT` in `eval/runner/pinned-questions-rescore.ts`).
 
-**The agreement gate.** A new prompt is a new judge, so it is checked before it grades any counted answer:
+**The agreement gate.** A new prompt is a new judge, so it is checked before any of its verdicts on a counted answer
+is used. No model makes any label the gate checks against: each label comes from a deterministic rule frozen in this
+amendment, the preregistered token rule or the pattern below.
 
-- **Both-value set.** 144 answers on the judge-check seeds (21 to 23). Every company whose change moved its city (27)
-  or its founding year (9) gets four answers. Each answer states the other claims' current values and gives both
-  values of the changed claim, using templates. Two of the four are correct under the rule and two are not: no
-  ordering, "unclear", both given as current, or the old value kept. The labels come from the templates, not from a
-  model. We wrote the templates after reading real counted answers, so they copy phrasings that appeared there, and
-  they may be easier than real answers.
+- **Both-value set, templates.** 144 answers on the judge-check seeds (21 to 23). Every company whose change moved its
+  city (27) or its founding year (9) gets four answers. Each states the other claims' current values and gives both
+  values of the changed claim, using templates written to be correct under the rule (two) or not (two: no ordering,
+  "unclear", both given as current, or the old value kept). The label that counts is the pattern's, and a test checks
+  that it matches what each template was written to show on every company, with none undecided. We wrote the
+  templates after reading real counted answers, so they copy phrasings that appeared there, and they may be easier
+  than real answers.
+- **Both-value set, counted.** The 141 counted refreshed answers that name both values of a changed claim, each graded
+  by the judge of its own row's family (`gpt-6.2-astra` for 135, `claude-opus-5-5` for 6). Each is labelled by the
+  pattern on the changed claim and by the token rule on the other claims. On the published receipts the pattern
+  decides all 141 (73 correct, 68 not); an answer it leaves undecided, or whose other claims the token rule finds
+  ambiguous, is left out of the kappa and counted in the receipt. `claude-opus-5-5` judges only 6 of these, so its
+  both-value kappa rests mostly on the templates.
 - **Recheck.** Every judge-check output and stale probe with an unambiguous rule label (527) is graded again by its own
   judge with the new prompt, against its rule label, so the new wording can't quietly break what the old prompt got
   right.
-- **Bar.** Both judges grade every both-value answer. Each judge needs Cohen's kappa of at least 0.6 on at least 100
-  labels, on each set separately. If either judge fails either set, no counted answer is re-judged, and the
-  correction reports the failed gate instead of a rescored column.
+- **Bar.** Both judges grade every template answer. Each judge needs Cohen's kappa of at least 0.6 on at least 100
+  labels, on the both-value set (templates and counted answers together) and on the recheck, separately. The receipt
+  also reports the templates, the counted answers and each template apart. If either judge fails either set, no
+  counted verdict from the new prompt is used, and the correction reports the failed gate instead of a rescored
+  column.
+
+**The pattern.** It labels the changed claim in an answer that names both its previous value (X) and its current value
+(Y). It is `bothValuePattern` in `eval/runner/pinned-questions-rescore.ts`, frozen in the commit that adds this
+paragraph. The answer is split into sentences, and each sentence into clauses at commas, semicolons, colons and
+brackets.
+
+- A value is marked *not current* by "from <value>", or by a not-current word in a clause that names that value alone.
+  When the word's clause names neither value, it applies to the nearest earlier clause in the sentence that names one
+  ("..., which the note appears to supersede"). The not-current words are: previously, formerly, former, used to, out
+  of date, outdated, no longer, supersede(s, d), superseding, predate(s, d), predating, corrected, mistaken, an error,
+  erroneous.
+- A sentence's *own voice* is its clauses before the first clause with an attribution word: say(s), said, according
+  to, report(s, ed), state(s, d), list(s, ed), note(s) that, record(s) that, claim(s, ed). A sentence whose first
+  clause attributes has no own voice. In the own voice, "moved ... to <value>", "now ... <value>", or "moved" or "now"
+  where the own voice names one value alone (not as "from <value>"), marks that value current and the other not
+  current. So does a first clause in the own voice that names one value alone and has no not-current word: "Kaifer
+  builds pumps in Y, according to a note ..." states Y.
+- An uncertain word (unclear, uncertain, disagree(s), not clear, cannot tell, can't tell, either), or "X or Y", says
+  the answer can't tell.
+- **Correct:** X is marked not current, Y is not, and nothing says the answer can't tell. **Undecided:** both are marked
+  not current, or X is marked and the answer also says it can't tell. **Not correct:** everything else, which covers
+  sources set side by side with no ordering of the answer's own.
+
+The pattern reads words, not meaning, and its limits follow from that. A source named without one of the attribution
+words ("per a press note, ...") counts as the answer's own voice. A value stated first and then attributed after a
+comma counts as stated. "Still lists X" never marks X as not current, so an answer whose only ordering is "the page
+still lists X" is not correct. Negation outside the listed words isn't read. **We wrote the pattern after reading the
+141 counted answers and the frozen judge's labels on them, and refined it until it separated the phrasings we saw.**
+Its agreement with the new judge on those answers is therefore not an out-of-sample check. On them it disagrees with
+the frozen judge on 24: 14 that report sources side by side, which the frozen judge passed, and 10 that order the
+values in their own voice while also reporting the page, which the frozen judge failed. That is the line the rule
+draws.
 
 **What is re-judged.** All 720 counted refreshed answers, because every counted refresh published and was scored.
 Each goes to the judge that graded it (`gpt-6.2-astra` for the `claude-opus-5-5` and particle-1 rows,
@@ -349,9 +392,10 @@ failed, so a crash or the budget ledger's cap pauses the stage instead of ending
 every process behind it. A test ties the three sha256 values in the runner to the manifest. The stage runs as one
 judge-only paid window under the eval budget ledger, and amounts stay in the tracking issue.
 
-The gate has limits. Its labels come from templates and token rules, and the recheck items never name both values,
-so it can't show that a judge applies the rule to the real counted answers that name both. The correction reports the
-flips on those 141 answers apart from the flips on the other 579, where a flip is judge noise rather than the rule.
+The gate has limits. The pattern was tuned on the same 141 answers it labels, and the templates copy their phrasings,
+so passing it shows a judge applies the rule as the pattern reads it to answers like these, not to phrasings neither
+has seen. The correction reports the flips on those 141 answers apart from the flips on the other 579, where a flip is
+judge noise rather than the rule.
 It also reports agreement per template, including the two a careful reader could dispute: the hedged ordering labelled
 correct, and "a later note says" labelled not correct. Nine of the 27 city companies changed by an edit to the
 company page, where no counted answer named both values, so the set is not shaped exactly like the counted answers.

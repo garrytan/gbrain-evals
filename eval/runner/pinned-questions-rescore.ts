@@ -6,8 +6,10 @@
  *
  * Judge-only: no model under test is asked anything, and each answer goes to the judge that graded it (judgeFor, never
  * its own family, never particle-1). In order, inside one paid process:
- *   1. The agreement gate. Both judges grade the both-value set (bothValueItems: answers built from templates on the
- *      judge-check seeds, labelled by the rule by construction), and each judge re-grades the judge-check stage's
+ *   1. The agreement gate. Both judges grade the template answers of the both-value set (bothValueItems, on the
+ *      judge-check seeds); each counted answer that names both values is graded by its own judge; all are labelled by
+ *      the frozen pattern (bothValuePattern, no model in its chain), and undecided items are left out. Each judge also
+ *      re-grades the judge-check stage's
  *      unambiguous outputs and stale probes with the new prompt against their rule labels. Every judge needs Cohen's
  *      kappa of at least JUDGE_KAPPA_FLOOR on at least JUDGE_MIN_LABELS labels on each set; a judge that fails stops
  *      the stage before any counted answer is re-judged.
@@ -36,7 +38,7 @@ import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, noModelSpend, sourceTreeIden
 import {
   CATEGORY, EST_TOKENS, JUDGE_CALLS_PER_ANSWER, JUDGE_KAPPA_FLOOR, JUDGE_MAX_TOKENS, JUDGE_MIN_LABELS, PAID_KEY_NAMES, PINNED_QUESTIONS_JUDGES,
   PINNED_QUESTIONS_JUDGE_PROMPT, combinedCost, gradeAnswer, recordProcessCost, recordProcessStart, judgeAgreement, judgeFor, measuredJudge, noUsage, outcomeOf, readCheckpoint, refreshComparisons, requirePaidFlags,
-  requireProviderKeys, scoredCorrect, withGateway, type Agreement, type GradedAnswer, type Judged, type PaidMode, type PaidRow, type StaleProbe,
+  requireProviderKeys, ruleLabels, scoredCorrect, withGateway, type Agreement, type GradedAnswer, type Judged, type PaidMode, type PaidRow, type StaleProbe,
 } from './pinned-questions-paid.ts';
 import { claimSentence } from './pinned-questions.ts';
 import { CLAIMS, generatePinnedQuestionsWorld, type Claim, type MutationClass, type PqCompany, type PqWorld } from '../generators/pinned-questions-gen.ts';
@@ -66,50 +68,123 @@ export const RESCORE_INPUTS = {
 export type RescoreInputName = keyof typeof RESCORE_INPUTS;
 
 /**
- * One both-value template for a changed claim: how an answer states the claim's sentence when it names the previous
- * value (was) beside the current one (now), and its label under the rule. correct: the answer says the current value
- * is current; not correct: it names both with no ordering of its own, says it cannot tell, or keeps the previous value.
+ * The frozen pattern that labels an answer naming a changed claim's current value (now) and previous value (was)
+ * together (preregistration amendment of 2026-11-24, "The pattern"). No model is in its chain. The answer is split into
+ * sentences, and each sentence into clauses at , ; : ( and ).
+ * - A value is marked not current by "from <value>", or by a NOT_CURRENT word in a clause that names that value alone,
+ *   or, when the word's clause names neither value, in the nearest earlier clause of the same sentence that names one
+ *   value alone (so "..., which the note appears to supersede" marks the value just before it).
+ * - The answer's own voice in a sentence is its clauses before the first clause with an ATTRIBUTION word (says,
+ *   according to, lists ...); a sentence whose first clause attributes has none. In the own voice, "moved ... to
+ *   <value>" or "now ... <value>", or "moved" or "now" where the own voice names one value alone (not as "from <value>"),
+ *   marks that value current, and so the other value not current.
+ * - A sentence's first clause, when it is own voice, has no NOT_CURRENT word and names one value alone, is the value the
+ *   answer states: it marks the other value not current ("X builds P in N, according to a note ..." states N).
+ * - An UNCERTAIN word, or "<one value> or <the other>", says the answer can't tell.
+ * Correct: the previous value is marked not current, the current one is not, and nothing says the answer can't tell.
+ * Undecided: both values are marked not current, or the previous one is marked and the answer also says it can't tell,
+ * or the answer doesn't name both values. Not correct: everything else (no ordering of its own, or the current value
+ * marked not current).
  */
-interface Template { id: string; label: boolean; text: (c: PqCompany, was: string, now: string) => string }
+const NOT_CURRENT = /\b(previously|formerly|former|used to|out of date|outdated|no longer|supersedes?|superseded|superseding|predates?|predated|predating|corrected|mistaken|an error|erroneous)\b/i;
+const ATTRIBUTION = /\b(says?|said|according to|reports?|reported|states?|stated|lists?|listed|notes? that|records? that|claims?|claimed)\b/i;
+const UNCERTAIN = /\b(unclear|uncertain|disagree|disagrees|not clear|cannot tell|can't tell|either)\b/i;
+export type PatternLabel = 'correct' | 'not_correct' | 'undecided';
+
+const escapeRe = (v: string) => v.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const has = (v: string, text: string) => new RegExp(`(^|[^A-Za-z0-9])${escapeRe(v)}([^A-Za-z0-9]|$)`).test(text);
+
+export function bothValuePattern(text: string, was: string, now: string): PatternLabel {
+  if (!has(was, text) || !has(now, text)) return 'undecided';
+  const notCurrent = new Set<string>();
+  for (const v of [was, now]) if (new RegExp(`\\bfrom\\s+${escapeRe(v)}([^A-Za-z0-9]|$)`).test(text)) notCurrent.add(v);
+  for (const sentence of text.split(/(?<=[.!?])\s+/)) {
+    const clauses = sentence.split(/[,;:()]/);
+    const alone = (clause: string) => { const vs = [was, now].filter(v => has(v, clause)); return vs.length === 1 ? vs[0]! : vs.length === 2 ? 'both' : null; };
+    clauses.forEach((clause, i) => {
+      if (!NOT_CURRENT.test(clause)) return;
+      let target = alone(clause);
+      for (let j = i - 1; target === null && j >= 0; j--) target = alone(clauses[j]!);
+      if (target && target !== 'both') notCurrent.add(target);
+    });
+    const pieces = sentence.split(/(?=[,;:()])/);
+    const cut = pieces.findIndex(piece => ATTRIBUTION.test(piece));
+    const voice = (cut === -1 ? pieces : pieces.slice(0, cut)).join('');
+    const stated = cut === 0 || NOT_CURRENT.test(pieces[0]!) ? null : alone(pieces[0]!);
+    if (stated && stated !== 'both') notCurrent.add(stated === was ? now : was);
+    for (const v of [was, now]) {
+      const e = escapeRe(v);
+      const own = alone(voice) === v && /\b(moved|now)\b/i.test(voice) && !new RegExp(`\\bfrom\\s+${e}([^A-Za-z0-9]|$)`).test(voice);
+      if (own || new RegExp(`\\bmoved\\b[^.;]*?\\bto\\s+${e}([^A-Za-z0-9]|$)`).test(voice) || new RegExp(`\\bnow\\b[^.;]*?(^|[^A-Za-z0-9])${e}([^A-Za-z0-9]|$)`).test(voice)) notCurrent.add(v === was ? now : was);
+    }
+  }
+  const uncertain = UNCERTAIN.test(text) || new RegExp(`${escapeRe(was)}\\s+or\\s+${escapeRe(now)}|${escapeRe(now)}\\s+or\\s+${escapeRe(was)}`).test(text);
+  if (notCurrent.has(was) && (notCurrent.has(now) || uncertain)) return 'undecided';
+  return notCurrent.has(was) ? 'correct' : 'not_correct';
+}
+
+/**
+ * The pattern's label for a whole answer whose changed claim is `claim`: true when the pattern finds that claim correct
+ * and every other claim's token rule label is correct, false when either is not, null (undecided, left out of the
+ * kappa) when the pattern is undecided or another claim's rule label is ambiguous.
+ */
+export function bothValueLabel(c: PqCompany, claim: Claim, sentences: readonly string[]): boolean | null {
+  const rule = ruleLabels(c, 'refreshed', sentences);
+  const others = CLAIMS.filter(k => k !== claim).map(k => rule[k]);
+  if (others.includes('ambiguous')) return null;
+  const p = bothValuePattern(sentences.join(' '), c.before[claim], c.after[claim]!);
+  if (p === 'undecided') return null;
+  return p === 'correct' && others.every(l => l === 'correct');
+}
+
+/**
+ * One template for a changed claim: an answer sentence naming the previous value (was) beside the current one (now).
+ * `intended` is what it was written to show; the label that counts is the pattern's (bothValueLabel), and a test
+ * checks that the two agree for every template.
+ */
+interface Template { id: string; intended: boolean; text: (c: PqCompany, was: string, now: string) => string }
 export const BOTH_VALUE_TEMPLATES: Record<'city' | 'founded', { correct: Template[]; not_correct: Template[] }> = {
   city: {
     correct: [
-      { id: 'city-moved-from', label: true, text: (c, was, now) => `${c.name} builds its ${c.product} in ${now}, having moved all production there from ${was}.` },
-      { id: 'city-used-to', label: true, text: (c, was, now) => `${c.name} now builds ${c.product} in ${now}; it used to build them in ${was}.` },
-      { id: 'city-out-of-date', label: true, text: (c, was, now) => `${c.name} builds ${c.product} in ${now}. The company page still lists ${was}, but that is out of date.` },
-      { id: 'city-former', label: true, text: (c, was, now) => `A press note says ${c.name} moved all production of its ${c.product} to ${now}, so ${c.name} now builds ${c.product} in ${now}; ${was} is its former location.` },
-      { id: 'city-from-to', label: true, text: (c, was, now) => `${c.name} moved production of its ${c.product} from ${was} to ${now}, where it builds them now.` },
-      { id: 'city-hedged-order', label: true, text: (c, was, now) => `A press note says ${c.name} moved all production of its ${c.product} to ${now}; the company page still says ${was}, which the press note appears to supersede.` },
+      { id: 'city-moved-from', intended: true, text: (c, was, now) => `${c.name} builds its ${c.product} in ${now}, having moved all production there from ${was}.` },
+      { id: 'city-used-to', intended: true, text: (c, was, now) => `${c.name} now builds ${c.product} in ${now}; it used to build them in ${was}.` },
+      { id: 'city-out-of-date', intended: true, text: (c, was, now) => `${c.name} builds ${c.product} in ${now}. The company page still lists ${was}, but that is out of date.` },
+      { id: 'city-former', intended: true, text: (c, was, now) => `A press note says ${c.name} moved all production of its ${c.product} to ${now}, so ${c.name} now builds ${c.product} in ${now}; ${was} is its former location.` },
+      { id: 'city-from-to', intended: true, text: (c, was, now) => `${c.name} moved production of its ${c.product} from ${was} to ${now}, where it builds them now.` },
+      { id: 'city-hedged-order', intended: true, text: (c, was, now) => `A press note says ${c.name} moved all production of its ${c.product} to ${now}; the company page still says ${was}, which the press note appears to supersede.` },
     ],
     not_correct: [
-      { id: 'city-sources-only', label: false, text: (c, was, now) => `A press note says ${c.name} moved all production of its ${c.product} to ${now}. The ${c.name} company page still says ${c.name} builds ${c.product} in ${was}.` },
-      { id: 'city-later-note', label: false, text: (c, was, now) => `The company page says ${c.name} builds ${c.product} in ${was}, and a later note says production moved to ${now}.` },
-      { id: 'city-unclear', label: false, text: (c, was, now) => `The notes disagree on where ${c.name} builds its ${c.product}: ${was} or ${now}, and it is unclear which is current.` },
-      { id: 'city-both-current', label: false, text: (c, was, now) => `${c.name} builds ${c.product} in ${was} and in ${now}.` },
-      { id: 'city-keeps-previous', label: false, text: (c, was, now) => `${c.name} builds ${c.product} in ${was}; a note about a move to ${now} looks mistaken.` },
+      { id: 'city-sources-only', intended: false, text: (c, was, now) => `A press note says ${c.name} moved all production of its ${c.product} to ${now}. The ${c.name} company page still says ${c.name} builds ${c.product} in ${was}.` },
+      { id: 'city-later-note', intended: false, text: (c, was, now) => `The company page says ${c.name} builds ${c.product} in ${was}, and a later note says production moved to ${now}.` },
+      { id: 'city-unclear', intended: false, text: (c, was, now) => `The notes disagree on where ${c.name} builds its ${c.product}: ${was} or ${now}, and it is unclear which is current.` },
+      { id: 'city-both-current', intended: false, text: (c, was, now) => `${c.name} builds ${c.product} in ${was} and in ${now}.` },
+      { id: 'city-keeps-previous', intended: false, text: (c, was, now) => `${c.name} builds ${c.product} in ${was}; a note about a move to ${now} looks mistaken.` },
     ],
   },
   founded: {
     correct: [
-      { id: 'founded-superseded', label: true, text: (c, was, now) => `${c.name} was founded in ${now}, a record that superseded an earlier entry giving ${was}.` },
-      { id: 'founded-corrected', label: true, text: (c, was, now) => `${c.name} was founded in ${now}; an older record giving ${was} has been corrected.` },
-      { id: 'founded-out-of-date', label: true, text: (c, was, now) => `${c.name} was founded in ${now} (the ${was} date in an earlier record is out of date).` },
+      { id: 'founded-superseded', intended: true, text: (c, was, now) => `${c.name} was founded in ${now}, a record that superseded an earlier entry giving ${was}.` },
+      { id: 'founded-corrected', intended: true, text: (c, was, now) => `${c.name} was founded in ${now}; an older record giving ${was} has been corrected.` },
+      { id: 'founded-out-of-date', intended: true, text: (c, was, now) => `${c.name} was founded in ${now} (the ${was} date in an earlier record is out of date).` },
     ],
     not_correct: [
-      { id: 'founded-two-records', label: false, text: (c, was, now) => `One record says ${c.name} was founded in ${was} and another says ${now}.` },
-      { id: 'founded-disagree', label: false, text: (c, was, now) => `${c.name} was founded in ${was} or ${now}; the records disagree.` },
-      { id: 'founded-keeps-previous', label: false, text: (c, was, now) => `${c.name} was founded in ${was}; a record giving ${now} appears to be an error.` },
+      { id: 'founded-two-records', intended: false, text: (c, was, now) => `One record says ${c.name} was founded in ${was} and another says ${now}.` },
+      { id: 'founded-disagree', intended: false, text: (c, was, now) => `${c.name} was founded in ${was} or ${now}; the records disagree.` },
+      { id: 'founded-keeps-previous', intended: false, text: (c, was, now) => `${c.name} was founded in ${was}; a record giving ${now} appears to be an error.` },
     ],
   },
 };
 
-/** One answer of the both-value set: its company, the changed claim, the template and the label by construction. */
-export interface BothValueItem { seed: number; company: string; claim: Claim; template: string; label: boolean; sentences: string[] }
+/**
+ * One answer of the both-value set: a template answer (graded by both judges) or a counted answer that names both values
+ * (graded by its own judge), with the pattern's label; null is undecided.
+ */
+export interface BothValueItem { source: 'template' | 'counted'; seed: number; company: string; claim: Claim; template: string | null; model: string | null; label: boolean | null; sentences: string[] }
 
 /**
- * The both-value set: for every company whose change moved its city or founding year, four answers that state the
- * other claims' current values and give the changed claim's current and previous values together, two labelled
- * correct and two not correct, the templates taken in turn so each is used about equally.
+ * The template half of the both-value set: for every company whose change moved its city or founding year, four
+ * answers that state the other claims' current values and give the changed claim's current and previous values
+ * together, two written to be correct and two not, the templates taken in turn so each is used about equally.
  */
 export function bothValueItems(worlds: readonly PqWorld[]): BothValueItem[] {
   const items: BothValueItem[] = [];
@@ -120,7 +195,8 @@ export function bothValueItems(worlds: readonly PqWorld[]): BothValueItem[] {
     const { correct, not_correct } = BOTH_VALUE_TEMPLATES[claim];
     const picks = [correct[i % correct.length]!, correct[(i + Math.floor(correct.length / 2)) % correct.length]!, not_correct[i % not_correct.length]!, not_correct[(i + Math.floor(not_correct.length / 2)) % not_correct.length]!];
     for (const t of picks) {
-      items.push({ seed: w.seed, company: c.slug, claim, template: t.id, label: t.label, sentences: CLAIMS.map(k => (k === claim ? t.text(c, c.before[claim], c.after[claim]!) : claimSentence(c, k, c.after[k]!))) });
+      const sentences = CLAIMS.map(k => (k === claim ? t.text(c, c.before[claim], c.after[claim]!) : claimSentence(c, k, c.after[k]!)));
+      items.push({ source: 'template', seed: w.seed, company: c.slug, claim, template: t.id, model: null, label: bothValueLabel(c, claim, sentences), sentences });
     }
     i++;
   }
@@ -175,7 +251,19 @@ const companyOf = (worlds: Map<number, PqWorld>, seed: number, slug: string): Pq
 /** A counted row the rescore re-judges: its refresh published and the counted run scored it. */
 export const rejudged = (r: PaidRow) => scoredCorrect(r) !== null && outcomeOf(r.refresh) === 'published';
 
-export interface RescorePlan { bothValue: BothValueItem[]; recheck: RecheckItem[]; counted: PaidRow[] }
+/** The claim a counted refreshed answer gives both values of: its one changed city or founding year, when that claim's rule label is ambiguous. */
+const bothValueClaim = (r: PaidRow): Claim | null => (r.affected.length === 1 && (r.affected[0] === 'city' || r.affected[0] === 'founded') && r.refreshed.rule_labels[r.affected[0]] === 'ambiguous' ? r.affected[0] : null);
+
+/** The counted half of the both-value set: every re-judged counted answer that names both values of its changed claim, with the pattern's label. */
+export function countedBothValueItems(rows: readonly PaidRow[], worlds: Map<number, PqWorld>): BothValueItem[] {
+  return rows.filter(rejudged).flatMap(r => {
+    const claim = bothValueClaim(r);
+    if (!claim) return [];
+    return [{ source: 'counted' as const, seed: r.seed, company: r.company, claim, template: null, model: r.model, label: bothValueLabel(companyOf(worlds, r.seed, r.company), claim, r.refreshed.sentences), sentences: r.refreshed.sentences }];
+  });
+}
+
+export interface RescorePlan { bothValue: BothValueItem[]; countedBothValue: BothValueItem[]; recheck: RecheckItem[]; counted: PaidRow[] }
 
 /** Every judge call the stage makes, before any is made: the gate's two sets, then the counted rows it re-judges. */
 export function rescorePlan(inputs: RescoreInputs): RescorePlan {
@@ -185,7 +273,7 @@ export function rescorePlan(inputs: RescoreInputs): RescorePlan {
     }))),
     ...inputs.probes.filter(p => p.graded.rule_correct !== null).map(p => ({ source: 'stale-probe' as const, model: p.model, seed: p.seed, company: p.company, judge_model: p.judge_model, kind: 'refreshed' as const, sentences: p.graded.sentences, rule_correct: p.graded.rule_correct! })),
   ];
-  return { bothValue: bothValueItems([...inputs.judgeCheck.worlds.values()]), recheck, counted: inputs.counted.rows.filter(rejudged) };
+  return { bothValue: bothValueItems([...inputs.judgeCheck.worlds.values()]), countedBothValue: countedBothValueItems(inputs.counted.rows, inputs.counted.worlds), recheck, counted: inputs.counted.rows.filter(rejudged) };
 }
 
 /** Ledger estimate in dollars: every planned judge call (both judges on each both-value item) at the judge's measured output and calls per answer, else its worst case. */
@@ -224,7 +312,7 @@ interface JournalLine { key: string; phase: 'both-value' | 'recheck' | 'counted'
 export const RESCORE_JOURNAL = 'rescore.ndjson';
 const journalKey = (inputs: RescoreInputs) => JSON.stringify({ prompt_sha256: rescorePromptSha256(), inputs_sha256: inputs.sha256, runner_sha256: RESCORE_SOURCE_SHA256 });
 const itemId = {
-  'both-value': (x: BothValueItem) => `${x.seed}|${x.company}|${x.template}`,
+  'both-value': (x: Pick<BothValueItem, 'seed' | 'company' | 'template'>) => `${x.seed}|${x.company}|${x.template}`,
   recheck: (x: RecheckItem) => `${x.source}|${x.model}|${x.seed}|${x.company}`,
   counted: (x: { model: string; seed: number; company: string }) => `${x.model}|${x.seed}|${x.company}`,
 };
@@ -248,14 +336,16 @@ export function pendingRescoreCalls(plan: RescorePlan, done: Map<string, GradedA
   const has = (phase: JournalLine['phase'], judge: string, id: string) => done.has(`${phase}|${judge}|${id}`);
   return {
     bothValue: plan.bothValue.filter(x => PINNED_QUESTIONS_JUDGES.some(j => !has('both-value', j, itemId['both-value'](x)))),
+    countedBothValue: plan.countedBothValue.filter(x => !has('counted', judgeFor(x.model!), itemId.counted({ model: x.model!, seed: x.seed, company: x.company }))),
     recheck: plan.recheck.filter(x => !has('recheck', x.judge_model, itemId.recheck(x))),
     counted: plan.counted.filter(r => !has('counted', r.judge_model, itemId.counted(r))),
   };
 }
 
 /**
- * The stage: the gate's judge calls, the gate, and, only when it passes, the counted re-judging, all with the rescore
- * prompt. With `output`, every graded call is appended to its journal as it comes in, and calls the journal already
+ * The stage: the gate's judge calls (the counted answers that name both values among them, each by its own family's
+ * judge), the gate, and, only when it passes, those answers' verdicts and the rest of the counted re-judging, all with
+ * the rescore prompt. With `output`, every graded call is appended to its journal as it comes in, and calls the journal already
  * holds are reused instead of asked, so a stage stopped by a crash or the budget ledger resumes where it stopped. A
  * budget-ledger refusal stops it, and the result is then incomplete until a resume.
  */
@@ -284,6 +374,7 @@ export async function runRescore(opts: { gut: GbrainUnderTest; inputs: RescoreIn
     };
     const out: RescoreResult = { bothValue: [], recheck: [], gate: null, counted: [], harnessErrors: [] };
     const stopped = (what: string) => { out.harnessErrors.push(`the budget ledger refused a request (${spend.stop}); stopped during ${what}`); return out; };
+    const gated: RescoreResult['counted'] = [];
     for (const judge of PINNED_QUESTIONS_JUDGES) {
       gateway.configureGateway(gatewayConfig(judge));
       for (const item of plan.bothValue) {
@@ -291,19 +382,28 @@ export async function runRescore(opts: { gut: GbrainUnderTest; inputs: RescoreIn
         if (spend.stop) return stopped('the both-value set');
         out.bothValue.push({ ...item, judge_model: judge, graded: { ...g, rule_correct: item.label } });
       }
+      for (const item of plan.countedBothValue.filter(x => judgeFor(x.model!) === judge)) {
+        const r = plan.counted.find(x => x.model === item.model && x.seed === item.seed && x.company === item.company)!;
+        const g = await grade('counted', itemId.counted(r), judge, companyOf(countedWorlds, r.seed, r.company), 'refreshed', r.refreshed.sentences);
+        if (spend.stop) return stopped('the counted answers that name both values');
+        gated.push({ model: r.model, seed: r.seed, company: r.company, mutation: r.mutation, judge_model: judge, graded: g });
+        out.bothValue.push({ ...item, judge_model: judge, graded: { ...g, rule_correct: item.label } });
+      }
       for (const item of plan.recheck.filter(x => x.judge_model === judge)) {
         const g = await grade('recheck', itemId.recheck(item), judge, companyOf(jcWorlds, item.seed, item.company), item.kind, item.sentences);
         if (spend.stop) return stopped('the judge-check recheck');
         out.recheck.push({ ...item, graded: g });
       }
-      opts.log?.(`[pq-rescore] ${judge}: ${out.bothValue.filter(x => x.judge_model === judge).length} both-value items, ${out.recheck.filter(x => x.judge_model === judge).length} recheck items`);
+      opts.log?.(`[pq-rescore] ${judge}: ${out.bothValue.filter(x => x.judge_model === judge).length} both-value items (${out.bothValue.filter(x => x.judge_model === judge && x.label === null).length} undecided), ${out.recheck.filter(x => x.judge_model === judge).length} recheck items`);
     }
     out.gate = rescoreGate(out.bothValue, out.recheck);
     opts.log?.(`[pq-rescore] gate ${out.gate.pass ? 'passes' : 'fails'}: ${JSON.stringify(Object.fromEntries(PINNED_QUESTIONS_JUDGES.map(j => [j, [out.gate!.both_value[j]?.kappa, out.gate!.recheck[j]?.kappa]])))}`);
     if (!out.gate.pass) return out;
+    out.counted.push(...gated);
     for (const judge of PINNED_QUESTIONS_JUDGES) {
       gateway.configureGateway(gatewayConfig(judge));
-      for (const r of plan.counted.filter(x => x.judge_model === judge)) {
+      const first = new Set(plan.countedBothValue.map(x => `${x.model}|${x.seed}|${x.company}`));
+      for (const r of plan.counted.filter(x => x.judge_model === judge && !first.has(`${x.model}|${x.seed}|${x.company}`))) {
         const g = await grade('counted', itemId.counted(r), judge, companyOf(countedWorlds, r.seed, r.company), 'refreshed', r.refreshed.sentences);
         if (spend.stop) return stopped('the counted re-judging');
         out.counted.push({ model: r.model, seed: r.seed, company: r.company, mutation: r.mutation, judge_model: judge, graded: g });
@@ -384,8 +484,9 @@ export function buildRescoreReceipt(opts: { gut: GbrainUnderTest; inputs: Rescor
       judge: { prompt_sha256: rescorePromptSha256(), frozen_prompt_sha256: createHash('sha256').update(PINNED_QUESTIONS_JUDGE_PROMPT).digest('hex'), max_tokens: JUDGE_MAX_TOKENS, temperature_sent: null, route: 'gbrain gateway chat, allowFallback false', retries: 'one retry on unparseable output' },
       rule: 'preregistration amendment "Rescore under a rule for answers that give both values" (2026-11-24), written after the counted labels were seen; the frozen prompt with its correct and wrong lines replaced',
       grading: 'judge-only, no model under test asked: each counted row whose refresh published and was scored has its refreshed answer judged again by its own judge (judgeFor) with the rescore prompt; every other row keeps its counted result',
-      verdict: `the agreement gate: every judge's kappa at least ${JUDGE_KAPPA_FLOOR} on at least ${JUDGE_MIN_LABELS} labels, on the both-value set (labels by construction) and on the judge-check outputs and stale probes re-graded with the rescore prompt (rule labels); a failing gate re-judges no counted row`,
-      both_value_templates: Object.fromEntries(Object.entries(BOTH_VALUE_TEMPLATES).map(([k, v]) => [k, [...v.correct, ...v.not_correct].map(t => ({ id: t.id, label: t.label ? 'correct' : 'not correct' }))])),
+      verdict: `the agreement gate: every judge's kappa at least ${JUDGE_KAPPA_FLOOR} on at least ${JUDGE_MIN_LABELS} labels, on the both-value set (template answers and counted answers that name both values, labelled by the frozen pattern bothValuePattern, undecided items left out) and on the judge-check outputs and stale probes re-graded with the rescore prompt (rule labels); a failing gate re-judges no counted row`,
+      both_value_templates: Object.fromEntries(Object.entries(BOTH_VALUE_TEMPLATES).map(([k, v]) => [k, [...v.correct, ...v.not_correct].map(t => t.id)])),
+      both_value_pattern: { not_current: NOT_CURRENT.source, attribution: ATTRIBUTION.source, uncertain: UNCERTAIN.source },
       inputs_sha256: inputs.sha256,
       cost_processes: opts.cost?.processes ?? null,
       cost_complete: opts.cost?.complete ?? null,
@@ -398,9 +499,10 @@ export function buildRescoreReceipt(opts: { gut: GbrainUnderTest; inputs: Rescor
     data: {
       gate: result.gate,
       summary: summarizeRescore(inputs.counted.rows, result.counted),
-      both_value_by_template: Object.fromEntries([...new Set(result.bothValue.map(x => x.template))].map(t => [t, Object.fromEntries(PINNED_QUESTIONS_JUDGES.map(j => {
-        const xs = result.bothValue.filter(x => x.template === t && x.judge_model === j);
-        return [j, { items: xs.length, agreed: xs.filter(x => x.graded.answer_correct === x.label).length }];
+      both_value_by_source: Object.fromEntries((['template', 'counted'] as const).map(src => [src, judgeAgreement([], result.bothValue.filter(x => x.source === src))])),
+      both_value_by_template: Object.fromEntries([...new Set(result.bothValue.map(x => x.template ?? 'counted answers'))].map(t => [t, Object.fromEntries(PINNED_QUESTIONS_JUDGES.map(j => {
+        const xs = result.bothValue.filter(x => (x.template ?? 'counted answers') === t && x.judge_model === j);
+        return [j, { items: xs.length, undecided: xs.filter(x => x.label === null).length, agreed: xs.filter(x => x.label !== null && x.graded.answer_correct === x.label).length }];
       }))])),
       both_value: result.bothValue, recheck: result.recheck, counted: result.counted, harness_errors: result.harnessErrors,
     },

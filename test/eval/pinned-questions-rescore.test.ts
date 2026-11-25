@@ -13,7 +13,7 @@ import {
   type ChatTransport, type GradedAnswer, type PaidRow, type StaleProbe,
 } from '../../eval/runner/pinned-questions-paid.ts';
 import {
-  BOTH_VALUE_TEMPLATES, PINNED_QUESTIONS_RESCORE_PROMPT, RESCORE_INPUTS, RESCORE_JOURNAL, RESCORE_SOURCE_SHA256, bothValueItems, buildRescoreReceipt, pendingRescoreCalls, readRescoreInputs, readRescoreJournal, rescoreEstimateUsd, rescorePlan,
+  BOTH_VALUE_TEMPLATES, PINNED_QUESTIONS_RESCORE_PROMPT, bothValuePattern, RESCORE_INPUTS, RESCORE_JOURNAL, RESCORE_SOURCE_SHA256, bothValueItems, buildRescoreReceipt, pendingRescoreCalls, readRescoreInputs, readRescoreJournal, rescoreEstimateUsd, rescorePlan,
   rescorePromptSha256, runRescore, type RescoreInputName, type RescoreResult,
 } from '../../eval/runner/pinned-questions-rescore.ts';
 import { writeReceipt } from '../../eval/runner/receipt.ts';
@@ -85,7 +85,7 @@ function ruleJudge(worlds: PqWorld[], calls: Array<{ model: string; system: stri
   for (const w of worlds) for (const c of w.companies) for (const claim of ['city', 'founded'] as const) {
     if (c.before[claim] === c.after[claim]) continue;
     for (const t of [...BOTH_VALUE_TEMPLATES[claim].correct, ...BOTH_VALUE_TEMPLATES[claim].not_correct]) {
-      known.set(t.text(c, c.before[claim], c.after[claim]!), { claim, label: blind || t.label ? 'correct' : t.id.endsWith('keeps-previous') ? 'stale' : 'wrong' });
+      known.set(t.text(c, c.before[claim], c.after[claim]!), { claim, label: blind || t.intended ? 'correct' : t.id.endsWith('keeps-previous') ? 'stale' : 'wrong' });
     }
   }
   return async opts => {
@@ -117,6 +117,25 @@ describe('pinned-questions rescore: the rule and the both-value set', () => {
     expect(rescorePromptSha256()).not.toBe(createHash('sha256').update(PINNED_QUESTIONS_JUDGE_PROMPT).digest('hex'));
   });
 
+  test('the frozen pattern: an ordering in the answer\'s own voice is correct, sources set side by side are not, and a contradiction is undecided', () => {
+    const cases: Array<[string, string]> = [
+      ['A press note says Trobe moved all production of its bicycles to Brastirford and builds bicycles there from this month. The Trobe company page still states that Trobe builds bicycles in Reinorford.', 'not_correct'],
+      ['A press note says Sanond moved all production of its turbines to Brastirford; the Sanond company page still says Sanond builds turbines in Reinorford, which the press note appears to supersede.', 'correct'],
+      ['Lousten has moved all production of its valves to Brastirford and builds them there, although its company page still lists Reinorford.', 'correct'],
+      ['Larin builds its looms in Brastirford, having moved all loom production there, although its company page still lists Reinorford.', 'correct'],
+      ['Samel builds its sensors in Brastirford, having recently moved all sensor production there. The company page still lists Reinorford as where Samel builds its sensors.', 'correct'],
+      ['Grileir now builds its turbines in Brastirford, according to a visit note. The Grileir company page still lists Reinorford.', 'correct'],
+      ['Treinim previously built its turbines in Reinorford, but a visit note reports that it has moved all turbine production to Brastirford.', 'correct'],
+      ['According to a press note, Soudrend moved all production of its bicycles to Brastirford. The Soudrend company page still lists Reinorford.', 'not_correct'],
+      ['The Naigas company page says Naigas builds its bicycles in Reinorford. A later press note, however, says Naigas moved all bicycle production to Brastirford.', 'not_correct'],
+      ['Luzo builds turbines in Reinorford according to its company page, while a press note says it moved all production to Brastirford.', 'not_correct'],
+      ['Kagrark builds kites in Reinorford. A visit note states that Kagrark moved all production of its kites to Brastirford.', 'not_correct'],
+      ['Treinim builds turbines in Brastirford; Brastirford is out of date, and Reinorford is its former location.', 'undecided'],
+      ['Treinim builds turbines in Brastirford.', 'undecided'],
+    ];
+    for (const [text, want] of cases) expect([text, bothValuePattern(text, 'Reinorford', 'Brastirford')]).toEqual([text, want]);
+  });
+
   test('the both-value set holds four answers per changed city or founding year on the judge-check seeds, half labelled correct, each naming both values and using every template', () => {
     const worlds = [...worldsOf(JC_SEEDS).values()];
     const items = bothValueItems(worlds);
@@ -124,6 +143,9 @@ describe('pinned-questions rescore: the rule and the both-value set', () => {
     expect(companies).toHaveLength(36);
     expect(items).toHaveLength(144);
     expect(items.filter(x => x.label)).toHaveLength(72);
+    expect(items.filter(x => x.label === null)).toHaveLength(0);
+    const templates = Object.values(BOTH_VALUE_TEMPLATES).flatMap(v => [...v.correct, ...v.not_correct]);
+    for (const x of items) expect([x.template, x.label]).toEqual([x.template, templates.find(t => t.id === x.template)!.intended]);
     for (const x of items) {
       const c = companies.find(k => k.slug === x.company)!;
       const text = x.sentences.join(' ');
@@ -169,7 +191,7 @@ describe('pinned-questions rescore: the published inputs', () => {
     const plan = rescorePlan(readRescoreInputs(f.paths, { gut, expected: f.expected }));
     expect([plan.bothValue.length, plan.counted.length]).toEqual([144, 71]);
     expect(plan.recheck).toHaveLength(216 * 2 + 135);
-    const one = rescoreEstimateUsd({ bothValue: [], recheck: [], counted: plan.counted.slice(0, 1) }, { outputTokens: 100, callsPerAnswer: 1 });
+    const one = rescoreEstimateUsd({ bothValue: [], countedBothValue: [], recheck: [], counted: plan.counted.slice(0, 1) }, { outputTokens: 100, callsPerAnswer: 1 });
     expect(one).toBeGreaterThan(0);
     expect(rescoreEstimateUsd(plan, null)).toBeGreaterThan(rescoreEstimateUsd(plan, { outputTokens: 100, callsPerAnswer: 1 }));
   });
@@ -228,7 +250,7 @@ describe("pinned-questions rescore: keyless run through gbrain's gateway", () =>
   test("both judges pass the gate on the both-value set and the recheck, and each counted row goes to its own family's judge", () => {
     expect(result.gate!.pass).toBe(true);
     for (const j of PINNED_QUESTIONS_JUDGES) {
-      expect(result.gate!.both_value[j]).toMatchObject({ n: 144, kappa: 1 });
+      expect(result.gate!.both_value[j]).toMatchObject({ n: j === 'openai:gpt-6.2-astra' ? 144 + 2 * f.contradictions : 144, kappa: 1, excluded_ambiguous: 0 });
       expect(result.gate!.recheck[j]!.kappa).toBe(1);
       expect(result.gate!.recheck[j]!.n).toBeGreaterThanOrEqual(100);
     }
@@ -267,7 +289,7 @@ describe("pinned-questions rescore: keyless run through gbrain's gateway", () =>
     expect(stopped.counted).toEqual([]);
     const journal = readRescoreJournal(out, inputs);
     expect(journal.size).toBe(700);
-    expect(pendingRescoreCalls(rescorePlan(inputs), journal).counted).toHaveLength(71);
+    expect(pendingRescoreCalls(rescorePlan(inputs), journal)).toMatchObject({ countedBothValue: [], counted: { length: 71 - 2 * f.contradictions } });
     const resumedCalls: Array<{ model: string; system: string }> = [];
     const resumed = await runRescore({ gut, inputs, mode: { kind: 'keyless', transport: ruleJudge(worlds, resumedCalls) }, output: out });
     expect(resumed.harnessErrors).toEqual([]);
@@ -282,7 +304,7 @@ describe("pinned-questions rescore: keyless run through gbrain's gateway", () =>
     expect(blind.gate!.pass).toBe(false);
     expect(blind.gate!.both_value['openai:gpt-6.2-astra']!.kappa).toBe(0);
     expect(blind.counted).toEqual([]);
-    expect(blindCalls).toHaveLength(144 * 2 + 216 * 2 + 135);
+    expect(blindCalls).toHaveLength(144 * 2 + 2 * f.contradictions + 216 * 2 + 135);
     const receipt = buildRescoreReceipt({ gut, inputs: readRescoreInputs(f.paths, { gut, expected: f.expected }), result: blind, cost: null, startedAt: new Date().toISOString(), mode: 'paid' }) as unknown as Record<string, any>;
     expect([receipt.verdict, receipt.publishable]).toEqual(['fail', false]);
     expect(receipt.data.summary.by_model['anthropic:claude-opus-5-5'].rescored.scored).toBe(0);
