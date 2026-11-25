@@ -2,6 +2,17 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.276] - 2026-11-25
+
+### Pinned questions: enforcement and scoring fixes before the pilot
+
+- The paid arm ([eval/runner/pinned-questions-paid.ts](eval/runner/pinned-questions-paid.ts)) redacts keys and credentials from provider failure text and judge errors, refuses a launch without a provider key for every model and judge, refuses a counted launch without a passing judge-check receipt from the same build and runner, refuses an output directory holding another stage's units, and refuses paid mode without the budget ledger's request guard.
+- It scores a provider's structured refusal or content-filter finish as a safety stop and a refused connection as a provider error, treats setup-blocked questions and rows another model answered as harness errors, records `answer_model`, marks a run with a pending retry unpublishable, survives a torn checkpoint line, writes one receipt per stage and sums the spend of every process behind a receipt's rows.
+- New [eval/runner/pinned-questions-stats.ts](eval/runner/pinned-questions-stats.ts) computes the preregistered cluster-bootstrap intervals, McNemar tests, Holm correction and paired non-inferiority interval; the keyless arm keeps measurement errors in its counts and voids a seed on a failed presence check.
+- The preregistration records these as a dated amendment made before any paid call ([docs/benchmarks/2026-11-24-pinned-questions-preregistration.md](docs/benchmarks/2026-11-24-pinned-questions-preregistration.md)).
+- The judge check adds stale probes. Each judge-check answer written before a change is judged again against the answer key from after it, which gives the judge check the labelled stale negatives that nearly all-correct rule labels lacked. These calls ask only the judges. A counted launch now needs the stale-probes receipt (`--stage stale-probes`) beside the judge-check receipt, and it rechecks the judge-check receipt's rule labels against the regenerated worlds ([eval/runner/pinned-questions-paid.ts](eval/runner/pinned-questions-paid.ts); amendment of 2026-11-24 in [docs/benchmarks/2026-11-24-pinned-questions-preregistration.md](docs/benchmarks/2026-11-24-pinned-questions-preregistration.md)).
+- Results of the pinned-questions experiment at gbrain v0.60.769.0: gbrain flags and refreshes pinned answers after edits, superseded facts and deletions, and misses contradictions; the 7.5-point gap between particle-1 and claude-opus-5-5 on refreshed answers comes from how the judge scored answers that gave both the old and the new value ([docs/benchmarks/pinned-questions-results.md](docs/benchmarks/pinned-questions-results.md)).
+
 ## [0.10.275] - 2026-11-25
 
 - **Preregistered a sealed check of section delivery for "sources disagree" questions.** [docs/benchmarks/2026-11-24-cat40-h4-fix-confirmation-preregistration.md](docs/benchmarks/2026-11-24-cat40-h4-fix-confirmation-preregistration.md) fixes, before any cell runs, how gbrain with `search.long_page_unit=section` will be compared with the same release on its defaults and with plain files on six new sealed Cat 40 Hard worlds, and what each outcome changes: a win takes the default flip to Garry, a null or a loss closes it. It runs once gbrain releases its grep fix.
