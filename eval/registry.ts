@@ -1536,6 +1536,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'memory-proof-wave-power.ts': { role: 'memory proof wave A0.1: free power and coverage simulation for the primary non-inferiority test (docs/benchmarks/2026-10-05-memory-proof-wave-power.md); not dispatched' },
   'metrics.ts': { role: 'shared retrieval metrics' },
   'mutation-kit.ts': { role: 'scorer mutation kit: fake systems every category scorer must fail' },
+  'pinned-questions-rescore.ts': { role: 'pinned-questions paid arm, judge-only: re-judges the counted refreshed answers under the rule for answers that give both values, behind its own agreement gate (preregistration amendment of 2026-11-24)', part_of: 'pinned-questions-refresh' },
   'pinned-questions-score.ts': { role: 'pinned-questions scoring: sentence flag confusion, question signal, spillover and latency summaries', part_of: 'pinned-questions' },
   'pinned-questions-stats.ts': { role: 'pinned-questions statistics: cluster bootstrap intervals, McNemar tests, Holm correction and the paired non-inferiority comparison', part_of: 'pinned-questions' },
   'attendance-world-score.ts': { role: 'keyless W3 attendance scorer over N9 receipts, against the list on each meeting page', part_of: 'multi-hop-paraphrase' },

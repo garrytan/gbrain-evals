@@ -22,8 +22,9 @@
  *
  * Paid: the run joins an open eval budget ledger run (--paid with --budget-run-id ID, checked by requirePaidArm like
  * every paid runner here); every request goes through the ledger's fetch guard.
- * An interrupted run resumes from checkpoint.ndjson in --output and never
- * re-asks a finished (model, seed) unit. Tests use the keyless mode
+ * A run the budget ledger stopped resumes from checkpoint.ndjson in --output and
+ * never re-asks a finished (model, seed) unit; a crash ends a paid stage, and it
+ * needs a fresh --output. Tests use the keyless mode
  * (runPinnedQuestionsPaid with a transport): gbrain's test chat transport, a
  * placeholder key, dead upstream base URLs and no provider keys.
  *
@@ -36,7 +37,7 @@
  * model under test; a counted launch needs --judge-check and --stale-probes <receipt.stale-probes.json>.
  */
 import './budget-ledger.ts';
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { appendFileSync, existsSync, mkdirSync, readFileSync, truncateSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import type { OperationContext } from 'gbrain/operations';
@@ -80,6 +81,16 @@ export const MAX_OUTPUT_TOKENS_KEY = 'cycle.standing_questions.max_output_tokens
  */
 export const STAGE_SEEDS = { dev: DEV_SEEDS, pilot: [21], 'judge-check': [21, 22, 23], counted: [11, 12, 13, 14, 15, 16, 17, 18, 19, 20] } as const;
 export type Stage = keyof typeof STAGE_SEEDS;
+
+/**
+ * The counted seeds run only in the counted stage, and the counted stage runs only them, so no dev, pilot or judge-check
+ * launch writes a unit a counted receipt could reuse.
+ */
+export function requireStageSeeds(stage: Stage, seeds: readonly number[]): void {
+  const counted: readonly number[] = STAGE_SEEDS.counted;
+  const wrong = seeds.filter(s => (stage === 'counted') !== counted.includes(s));
+  if (wrong.length) throw new PaidArmRefusal(`${CATEGORY}: seeds ${wrong.join(', ')} ${stage === 'counted' ? 'are not counted seeds' : `are counted seeds, which run only in the counted stage, not ${stage}`}`);
+}
 /** Pilot bar: above this share of a model's pin and refresh calls cut off at the output cap, the cap is a gbrain finding and the raised-cap arm runs. */
 export const TRUNCATION_BAR = 0.05;
 /** Provider keys restored for the paid run; nothing else leaves the hermetic environment. */
@@ -212,7 +223,7 @@ export function parseJudgeLabels(text: string): Record<Claim, JudgeLabel> | null
 
 /** models: every "provider:modelId" gbrain's gateway reported as the model that answered in this window. */
 export interface Usage { calls: number; input_tokens: number; output_tokens: number; cache_read_tokens: number; cache_write_tokens: number; models?: string[] }
-const noUsage = (): Usage => ({ calls: 0, input_tokens: 0, output_tokens: 0, cache_read_tokens: 0, cache_write_tokens: 0, models: [] });
+export const noUsage = (): Usage => ({ calls: 0, input_tokens: 0, output_tokens: 0, cache_read_tokens: 0, cache_write_tokens: 0, models: [] });
 
 /** The served id is the model under test, or a dated snapshot of it (the provider's id begins with the bare id). */
 const servedAs = (model: string, served: string) => (served.split(':').pop() ?? served).startsWith(model.split(':').pop() ?? model);
@@ -392,7 +403,7 @@ const rowId = (r: { model: string; seed: number; company: string }) => `${r.mode
 const judgePromptSha256 = () => createHash('sha256').update(PINNED_QUESTIONS_JUDGE_PROMPT).digest('hex');
 
 interface StageReceipt {
-  category?: string; run_status?: string; gbrain_version?: string; hashes?: Record<string, string>;
+  category?: string; run_status?: string; publishable?: boolean; gbrain_version?: string; hashes?: Record<string, string>;
   resolved_config?: { mode?: string; stage?: string; runner_source_sha256?: string; models?: Array<{ model: string; role: string }>; judge?: { prompt_sha256?: string }; gbrain_overlay?: unknown; seeds?: number[]; companies_per_seed?: number; judge_check_receipt_sha256?: string | null };
   data?: { rows?: PaidRow[]; probes?: StaleProbe[] };
 }
@@ -434,9 +445,10 @@ export function readJudgeCheck(path: string | undefined, opts: { gut: GbrainUnde
 }
 
 /**
- * The stale probes for a judge-check receipt: paid and completed, made by this runner, on the build under test and this
- * judge prompt, naming that judge-check receipt by its sha256, with exactly one probe per probed row, each that row's
- * first answer judged by the row's judge against the key after the change.
+ * The stale probes for a judge-check receipt: paid, completed and publishable, made by this runner, on the build under
+ * test and this judge prompt, naming that judge-check receipt by its sha256, with exactly one probe per probed row, each
+ * that row's first answer judged by the row's judge against the key after the change, and every probe with an
+ * unambiguous rule label carrying the judge's labels.
  */
 export function readStaleProbes(path: string | undefined, jc: JudgeCheck, opts: { gut: GbrainUnderTest }): StaleProbe[] {
   const refuse = (why: string): never => { throw new PaidArmRefusal(`${CATEGORY}: a counted launch needs the stale probes for its judge-check receipt (--stale-probes <receipt.stale-probes.json> from --stage stale-probes): ${why}`); };
@@ -446,6 +458,7 @@ export function readStaleProbes(path: string | undefined, jc: JudgeCheck, opts: 
   const c = r.resolved_config;
   if (r.category !== CATEGORY || c?.stage !== STALE_PROBES_STAGE || c.mode !== 'paid') return refuse(`${path} is not a paid ${CATEGORY} stale-probes receipt`);
   if (r.run_status !== 'completed') return refuse(`its run_status is ${r.run_status}`);
+  if (r.publishable !== true) return refuse('it is not publishable (a judge error, a harness error or a keyless run)');
   if (r.gbrain_version !== opts.gut.version || JSON.stringify(c.gbrain_overlay ?? null) !== JSON.stringify(overlaySummary(opts.gut) ?? null)) return refuse(`it measured gbrain ${r.gbrain_version}, not the build under test (${opts.gut.version})`);
   if (c.judge?.prompt_sha256 !== judgePromptSha256()) return refuse('its judge prompt differs from this runner\'s');
   if (c.runner_source_sha256 !== RUNNER_SOURCE_SHA256) return refuse('it was made by a different version of this runner or its generator; asking the probes again needs a paid window');
@@ -460,6 +473,7 @@ export function readStaleProbes(path: string | undefined, jc: JudgeCheck, opts: 
     if (p.judge_model !== row.judge_model || JSON.stringify(p.graded.sentences) !== JSON.stringify(row.first.sentences) || JSON.stringify(p.graded.rule_labels) !== JSON.stringify(ruleLabels(company, 'refreshed', row.first.sentences))) {
       return refuse(`probe ${rowId(p)} is not its row's first answer judged by ${row.judge_model} against the key after the change`);
     }
+    if (p.graded.rule_correct !== null && (p.graded.judge_error !== null || p.graded.answer_correct === null)) return refuse(`probe ${rowId(p)} has no judge labels (${p.graded.judge_error ?? 'none recorded'})`);
   }
   return probes;
 }
@@ -580,7 +594,7 @@ type ChatResult = { text: string; model: string; providerId?: string; stopReason
 /** gbrain's test chat transport shape (src/core/ai/gateway.ts __setChatTransportForTests). */
 export type ChatTransport = (opts: ChatOpts) => Promise<ChatResult>;
 
-interface Gateway {
+export interface Gateway {
   configureGateway(c: Record<string, unknown>): void;
   __setGenerateTextTransportForTests(fn: ((o: any) => Promise<any>) | null): void;
   chat(o: ChatOpts): Promise<ChatResult>;
@@ -614,17 +628,18 @@ const modelText = (r: QReceipt) => (r.answer ?? []).filter(s => s.origin === 'mo
 /**
  * One answer graded: rule labels from the synthetic tokens beside the judge's labels from one call, and one retry on
  * unparseable output, through gbrain's gateway, already configured for `judge`. With `skipAmbiguous`, an answer whose
- * rule label is ambiguous, and so is left out of the judge check, is not sent to the judge.
+ * rule label is ambiguous, and so is left out of the judge check, is not sent to the judge. `prompt` is the judge's
+ * system prompt: the frozen one unless a stage registered another (the rescore stage, pinned-questions-rescore.ts).
  */
-async function gradeAnswer(gateway: Gateway, meter: (fn: () => Promise<void>) => Promise<{ usage: Usage }>, judge: string, c: PqCompany, kind: 'first' | 'refreshed', sentences: string[], skipAmbiguous = false): Promise<GradedAnswer> {
+export async function gradeAnswer(gateway: Gateway, meter: (fn: () => Promise<void>) => Promise<{ usage: Usage }>, judge: string, c: PqCompany, kind: 'first' | 'refreshed', sentences: string[], opts: { skipAmbiguous?: boolean; prompt?: string } = {}): Promise<GradedAnswer> {
   const rule = ruleLabels(c, kind, sentences);
   const g: GradedAnswer = { sentences, judge_labels: null, judge_error: null, answer_correct: null, rule_labels: rule, rule_correct: Object.values(rule).includes('ambiguous') ? null : Object.values(rule).every(l => l === 'correct'), judge_usage: noUsage() };
-  if (skipAmbiguous && g.rule_correct === null) return g;
+  if (opts.skipAmbiguous && g.rule_correct === null) return g;
   const user = judgeUserMessage(c, kind, sentences);
   const { usage: u } = await meter(async () => {
     for (const content of [user, `${user}\n\n${JUDGE_RETRY_NOTE}`]) {
       try {
-        const res = await gateway.chat({ model: judge, system: PINNED_QUESTIONS_JUDGE_PROMPT, messages: [{ role: 'user', content }], maxTokens: JUDGE_MAX_TOKENS, allowFallback: false, ...(acceptsTemperature(judge) ? { temperature: 0 } : {}) });
+        const res = await gateway.chat({ model: judge, system: opts.prompt ?? PINNED_QUESTIONS_JUDGE_PROMPT, messages: [{ role: 'user', content }], maxTokens: JUDGE_MAX_TOKENS, allowFallback: false, ...(acceptsTemperature(judge) ? { temperature: 0 } : {}) });
         g.judge_labels = parseJudgeLabels(res.text);
         g.judge_error = g.judge_labels ? null : 'judge_output_not_json';
       } catch (e) {
@@ -743,6 +758,10 @@ export const MAX_UNIT_ATTEMPTS = 2;
 export interface Checkpointed { key: string; model: string; seed: number; attempt: number; transient: boolean; rows: PaidRow[] }
 export const unitTransient = (unit: readonly PaidRow[]) => unit.some(r =>
   outcomeOf(r.pin) === 'provider_error' || r.outcome === 'provider_error' || [r.first.judge_error, r.refreshed.judge_error].some(e => e?.startsWith('judge_call_failed')));
+/** A unit with a harness error (a call gbrain blocked for a setup reason, or another model answered): never reused, so a rerun after the setup is fixed asks it again. */
+export const unitHarnessError = (unit: readonly PaidRow[]) => unit.some(r => harnessBlocked(r.pin) || harnessBlocked(r.refresh) || servedWrongModel(r));
+/** A checkpointed unit a launch reuses instead of asking: no harness error, and not a transient failure still owed its retry. */
+export const reusableUnit = (prior: Checkpointed | undefined): boolean => !!prior && !unitHarnessError(prior.rows) && !(prior.transient && prior.attempt < MAX_UNIT_ATTEMPTS);
 /**
  * Checkpointed units. A final line with no newline that does not parse is an append a crash or full disk cut short: it
  * is cut off the file, so earlier units are reused and the next append starts on a clean line. Any other line that does
@@ -771,12 +790,13 @@ const isBudgetRefusal = (e: unknown) => e instanceof BudgetExceededError || (e i
 export interface PaidRunResult { worlds: PqWorld[]; rows: PaidRow[]; acc: ProbeAccounting; harnessErrors: string[]; resumedUnits: number }
 
 /**
- * What a checkpointed unit must match to be reused: mode, gbrain build, generator, world size, output cap, judge prompt,
- * and the runner's and generator's own source (WAIT_MS, the judge routing, the grading and every other constant here).
+ * What a checkpointed unit must match to be reused: whether it is a counted unit, mode, gbrain build, generator, world
+ * size, output cap, judge prompt, and the runner's and generator's own source (WAIT_MS, the judge routing, the grading and every other constant here).
  */
-export function checkpointKey(o: { mode: PaidMode['kind']; gut: GbrainUnderTest; companies?: number; maxOutputTokens?: number }): string {
+export function checkpointKey(o: { mode: PaidMode['kind']; gut: GbrainUnderTest; companies?: number; maxOutputTokens?: number; stage?: Stage }): string {
   return JSON.stringify({
     runner_sha256: RUNNER_SOURCE_SHA256,
+    counted: o.stage === 'counted',
     mode: o.mode, gbrain: o.gut.overlay?.build.commit ?? o.gut.version, generator: PINNED_QUESTIONS_GENERATOR_VERSION, companies: o.companies ?? 24, max_output_tokens: o.maxOutputTokens ?? null,
     judge_prompt_sha256: createHash('sha256').update(PINNED_QUESTIONS_JUDGE_PROMPT).digest('hex'),
   });
@@ -793,51 +813,105 @@ export function requireStageDirectory(output: string, seeds: readonly number[]):
   if (foreign.length) throw new PaidArmRefusal(`${CATEGORY}: ${output} already holds checkpointed units for seeds ${foreign.join(', ')}, outside this launch's seeds (${seeds.join(', ')}); give this stage its own --output`);
 }
 
-/** The (model, seed) units a launch would still ask: those with no checkpointed unit, or one owed its retry. */
+/** The (model, seed) units a launch would still ask: those with no reusable checkpointed unit (reusableUnit). */
 export function pendingUnits(output: string, key: string, models: readonly string[], seeds: readonly number[]): Array<{ model: string; seed: number }> {
   const done = readCheckpoint(join(output, 'checkpoint.ndjson')).filter(x => x.key === key);
   return models.flatMap(model => seeds.map(seed => ({ model, seed }))).filter(({ model, seed }) => {
-    const prior = done.filter(x => x.model === model && x.seed === seed).at(-1);
-    return !prior || (prior.transient && prior.attempt < MAX_UNIT_ATTEMPTS);
+    return !reusableUnit(done.filter(x => x.model === model && x.seed === seed).at(-1));
   });
 }
 
 type Unit = { model: string; seed: number };
 const unitId = (u: Unit) => `${u.model}|${u.seed}`;
-interface CostLine { key: string; stage: Stage; asked: Unit[]; summary: RunSummary }
+/**
+ * One line of ledger-costs.ndjson. A paid process writes a start line (no summary) with its process id, ledger run and the
+ * units it will ask before it asks any, and its closing summary under the same process id when it ends. A process whose
+ * start line has no summary ended without recording its spend (a kill or a crash).
+ */
+interface CostLine { key: string; stage: Stage; asked: Unit[]; process_id?: string; run_id?: string; summary?: RunSummary }
+const COST_FILE = 'ledger-costs.ndjson';
 
-/** Each paid process appends its ledger summary to ledger-costs.ndjson, with its stage and the units it asked. */
-export function recordProcessCost(output: string, line: CostLine): void {
+/**
+ * Appends one cost line. A final line with no newline is an append a crash cut short: it is cut off and replaced by a
+ * {"torn"} marker, so the next reader knows a cost line was lost instead of reading a corrupt line.
+ */
+function appendCostLine(output: string, line: CostLine): void {
   mkdirSync(output, { recursive: true });
-  appendFileSync(join(output, 'ledger-costs.ndjson'), JSON.stringify(line) + '\n');
+  const path = join(output, COST_FILE);
+  if (existsSync(path)) {
+    const text = readFileSync(path, 'utf8');
+    const end = text.lastIndexOf('\n') + 1;
+    if (text.slice(end).trim()) {
+      truncateSync(path, Buffer.byteLength(text.slice(0, end)));
+      appendFileSync(path, JSON.stringify({ torn: text.length - end }) + '\n');
+    }
+  }
+  appendFileSync(path, JSON.stringify(line) + '\n');
+}
+
+/** Before a paid process asks anything: its process id, ledger run and the units it will ask. */
+export function recordProcessStart(output: string, line: { key: string; stage: Stage; asked: Unit[]; process_id: string; run_id: string }): void {
+  appendCostLine(output, line);
+}
+
+/**
+ * Before a paid launch in an output directory: refuse when a process under this key started and never recorded its
+ * spend, since no receipt from the directory can then be publishable (combinedCost) and a resume would pay for nothing.
+ */
+export function requireClosedProcesses(output: string, key: string): void {
+  const path = join(output, COST_FILE);
+  if (!existsSync(path)) return;
+  const lines = readFileSync(path, 'utf8').split('\n').flatMap(l => { try { return l.trim() ? [JSON.parse(l) as CostLine & { torn?: number }] : []; } catch { return []; } }).filter(x => x.torn === undefined && x.key === key);
+  const closed = new Set(lines.filter(x => x.summary).map(x => x.process_id));
+  const open = [...new Set(lines.filter(x => !x.summary && !closed.has(x.process_id)).map(x => x.process_id))];
+  if (open.length) throw new PaidArmRefusal(`${CATEGORY}: ${path} holds paid process ${open.join(', ')}, which started and never recorded its spend, so no receipt from this directory can be publishable; refusing before any request. Give the launch a fresh --output`);
+}
+
+/** When a paid process ends: its ledger summary, with its stage and the units it asked. */
+export function recordProcessCost(output: string, line: CostLine & { summary: RunSummary }): void {
+  appendCostLine(output, line);
 }
 
 /**
  * Spend for a receipt whose rows may come from several processes: every recorded summary under the checkpoint key
  * whose process asked a unit behind the receipt's rows, so a resumed receipt carries the cost of every attempt behind
- * its rows, and never the spend of another stage's units that share the output directory.
+ * its rows, and never the spend of another stage's units that share the output directory. It is incomplete, and the
+ * receipt not publishable, when a process behind the rows started without recording its summary, when a unit behind the
+ * rows was asked by no recorded process, or when a cost line was lost to a torn append. A corrupt line refuses.
  */
-export function combinedCost(output: string, key: string, behind: readonly Unit[], current: RunSummary): RunSummary & { processes: number } {
-  const path = join(output, 'ledger-costs.ndjson');
+export function combinedCost(output: string, key: string, behind: readonly Unit[], current: RunSummary): RunSummary & { processes: number; complete: boolean; unrecorded_processes: string[]; unrecorded_units: string[]; lost_lines: number } {
+  const path = join(output, COST_FILE);
   const ids = new Set(behind.map(unitId));
-  const lines = existsSync(path) ? readFileSync(path, 'utf8').split('\n').flatMap(l => { try { return [JSON.parse(l) as CostLine]; } catch { return []; } }) : [];
-  const all = lines.filter(x => x.key === key && (x.asked ?? []).some(u => ids.has(unitId(u)))).map(x => x.summary);
+  const text = existsSync(path) ? readFileSync(path, 'utf8') : '';
+  const end = text.lastIndexOf('\n') + 1;
+  const parsed = text.slice(0, end).split('\n').flatMap((l, i) => {
+    if (!l.trim()) return [];
+    try { return [JSON.parse(l) as CostLine & { torn?: number }]; } catch { throw new Error(`${path}: line ${i + 1} is not valid JSON and is not a torn final line; refusing to sum spend over a corrupt cost file`); }
+  });
+  const lostLines = parsed.filter(x => x.torn !== undefined).length + (text.slice(end).trim() ? 1 : 0);
+  const lines = parsed.filter(x => x.torn === undefined && x.key === key && (x.asked ?? []).some(u => ids.has(unitId(u))));
+  const all = lines.flatMap(x => (x.summary ? [x.summary] : []));
+  const closed = new Set(lines.filter(x => x.summary && x.process_id).map(x => x.process_id!));
+  const unrecordedProcesses = [...new Set(lines.filter(x => !x.summary && !closed.has(x.process_id!)).map(x => x.process_id!))];
+  const asked = new Set(lines.flatMap(x => x.asked.map(unitId)));
+  const unrecordedUnits = [...ids].filter(u => !asked.has(u));
   const sum = (f: (s: RunSummary) => number) => all.reduce((a, s) => a + f(s), 0);
   return {
     ...current, run_id: [...new Set(all.map(s => s.run_id))].join(',') || current.run_id, processes: all.length,
+    complete: !unrecordedProcesses.length && !unrecordedUnits.length && !lostLines, unrecorded_processes: unrecordedProcesses, unrecorded_units: unrecordedUnits, lost_lines: lostLines,
     reserved_usd: sum(s => s.reserved_usd), actual_usd: sum(s => s.actual_usd), charged_reservations: sum(s => s.charged_reservations), requests: sum(s => s.requests),
     input_tokens: sum(s => s.input_tokens), output_tokens: sum(s => s.output_tokens), overshoot_usd: sum(s => s.overshoot_usd),
   };
 }
 
-interface GatewayRun { gateway: Gateway; gatewayConfig: (chatModel: string) => Record<string, unknown>; usage: { current: Usage | null }; finish: { current: SafetyFinish | null | undefined }; spend: { stop: string | null } }
+export interface GatewayRun { gateway: Gateway; gatewayConfig: (chatModel: string) => Record<string, unknown>; usage: { current: Usage | null }; finish: { current: SafetyFinish | null | undefined }; spend: { stop: string | null } }
 
 /**
  * gbrain's gateway for one paid or keyless run, inside the hermetic env: paid keys or gbrain's test chat transport, the
  * usage sink, and the budget-refusal and safety-finish records, all removed again when `body` ends. A paid run refuses
  * before any request unless the budget ledger's request guard is installed.
  */
-async function withGateway<T>(mode: PaidMode, gut: GbrainUnderTest, body: (g: GatewayRun) => Promise<T>): Promise<T> {
+export async function withGateway<T>(mode: PaidMode, gut: GbrainUnderTest, body: (g: GatewayRun) => Promise<T>): Promise<T> {
   if (mode.kind === 'paid' && !paidRequestGuardActive()) {
     throw new PaidArmRefusal(`${CATEGORY}: a paid run needs the budget ledger's request guard installed first (startPaidRun, as main() does); refusing before any request.`);
   }
@@ -884,7 +958,7 @@ async function withGateway<T>(mode: PaidMode, gut: GbrainUnderTest, body: (g: Ga
   });
 }
 
-export async function runPinnedQuestionsPaid(opts: { gut: GbrainUnderTest; models: readonly string[]; seeds: readonly number[]; companies?: number; maxOutputTokens?: number; output: string; mode: PaidMode; log?: (s: string) => void }): Promise<PaidRunResult> {
+export async function runPinnedQuestionsPaid(opts: { gut: GbrainUnderTest; models: readonly string[]; seeds: readonly number[]; companies?: number; maxOutputTokens?: number; stage?: Stage; output: string; mode: PaidMode; log?: (s: string) => void }): Promise<PaidRunResult> {
   const log = opts.log ?? (() => {});
   const models = opts.models.map(canonicalModel);
   for (const m of models) judgeFor(m);
@@ -892,7 +966,7 @@ export async function runPinnedQuestionsPaid(opts: { gut: GbrainUnderTest; model
       mkdirSync(opts.output, { recursive: true });
       const worlds = opts.seeds.map(seed => generatePinnedQuestionsWorld({ seed, companies: opts.companies }));
       const ckPath = join(opts.output, 'checkpoint.ndjson');
-      const ckKey = checkpointKey({ mode: opts.mode.kind, gut: opts.gut, companies: opts.companies, maxOutputTokens: opts.maxOutputTokens });
+      const ckKey = checkpointKey({ mode: opts.mode.kind, gut: opts.gut, companies: opts.companies, maxOutputTokens: opts.maxOutputTokens, stage: opts.stage });
       const done = readCheckpoint(ckPath, log).filter(x => x.key === ckKey);
       const acc = new ProbeAccounting(models.length * worlds.reduce((a, w) => a + w.companies.length, 0));
       const rows: PaidRow[] = [];
@@ -901,8 +975,8 @@ export async function runPinnedQuestionsPaid(opts: { gut: GbrainUnderTest; model
       units: for (const model of models) for (const world of worlds) {
         const prior = done.filter(x => x.model === model && x.seed === world.seed).at(-1);
         let unit: PaidRow[];
-        if (prior && !(prior.transient && prior.attempt < MAX_UNIT_ATTEMPTS)) {
-          unit = prior.rows;
+        if (reusableUnit(prior)) {
+          unit = prior!.rows;
           resumedUnits++;
         } else {
           const attempt = (prior?.attempt ?? 0) + 1;
@@ -967,7 +1041,7 @@ export async function runStaleProbes(opts: { gut: GbrainUnderTest; judgeCheck: J
       gateway.configureGateway(gatewayConfig(judge));
       for (const r of rows.filter(x => x.judge_model === judge)) {
         const c = opts.judgeCheck.worlds.get(r.seed)!.companies.find(x => x.slug === r.company)!;
-        const graded = await gradeAnswer(gateway, meter, judge, c, 'refreshed', r.first.sentences, true);
+        const graded = await gradeAnswer(gateway, meter, judge, c, 'refreshed', r.first.sentences, { skipAmbiguous: true });
         if (spend.stop) return { probes, harnessErrors: [`the budget ledger refused a request (${spend.stop}); ${rows.length - probes.length} stale probes not asked`] };
         probes.push({ model: r.model, seed: r.seed, company: r.company, mutation: r.mutation, judge_model: judge, graded });
       }
@@ -1042,7 +1116,7 @@ export function modelRoles(models: readonly string[]): Array<{ model: string; ro
   ];
 }
 
-export function buildReceipt(opts: { gut: GbrainUnderTest; models: readonly string[]; seeds: readonly number[]; companies: number; stage: Stage; maxOutputTokens?: number; result: PaidRunResult; cost: RunSummary | null; startedAt: string; mode: PaidMode['kind']; judgeCheckSha256?: string | null; staleProbesSha256?: string | null }): Receipt {
+export function buildReceipt(opts: { gut: GbrainUnderTest; models: readonly string[]; seeds: readonly number[]; companies: number; stage: Stage; maxOutputTokens?: number; result: PaidRunResult; cost: (RunSummary & { complete?: boolean; unrecorded_processes?: string[]; unrecorded_units?: string[]; lost_lines?: number }) | null; startedAt: string; mode: PaidMode['kind']; judgeCheckSha256?: string | null; staleProbesSha256?: string | null }): Receipt {
   const r = opts.result;
   const a = r.acc.summary();
   return {
@@ -1053,7 +1127,7 @@ export function buildReceipt(opts: { gut: GbrainUnderTest; models: readonly stri
     run_status: r.harnessErrors.length ? 'error' : 'completed',
     ...(r.harnessErrors.length ? {} : { verdict: judgeCheckPasses(r.rows, [...new Set(opts.models.map(m => judgeFor(canonicalModel(m))))]) ? 'pass' as const : 'fail' as const }),
     n_total: a.n_total, n_scored: a.n_scored, completion_rate: a.completion_rate, errors: a.errors,
-    publishable: a.publishable && r.harnessErrors.length === 0 && opts.mode === 'paid',
+    publishable: a.publishable && r.harnessErrors.length === 0 && opts.mode === 'paid' && !(opts.cost && 'complete' in opts.cost && opts.cost.complete === false),
     gbrain_version: opts.gut.version,
     gbrain_pin: gbrainPin(),
     execution: { source_tree: sourceTreeIdentity(), product: productIdentityFor(opts.gut) },
@@ -1077,6 +1151,7 @@ export function buildReceipt(opts: { gut: GbrainUnderTest; models: readonly stri
       stale_probes_receipt_sha256: opts.staleProbesSha256 ?? null,
       runner_source_sha256: RUNNER_SOURCE_SHA256,
       cost_processes: opts.cost && 'processes' in opts.cost ? opts.cost.processes : null,
+      cost_complete: opts.cost && 'complete' in opts.cost ? { complete: opts.cost.complete, unrecorded_processes: opts.cost.unrecorded_processes, unrecorded_units: opts.cost.unrecorded_units, lost_lines: opts.cost.lost_lines } : null,
       gbrain_overlay: overlaySummary(opts.gut),
     },
     hashes: Object.fromEntries(r.worlds.map(w => [`ledger_seed_${w.seed}`, w.fingerprint])),
@@ -1150,10 +1225,11 @@ async function main(): Promise<void> {
   const maxOutputTokens = capFlag === undefined ? undefined : Number(capFlag);
   if (maxOutputTokens !== undefined && !(Number.isInteger(maxOutputTokens) && maxOutputTokens > 0)) throw new Error('--max-output-tokens must be a positive integer');
   const outFlag = argValue(argv, '--output');
-  if (!outFlag) throw new Error('--output <dir> is required: it holds checkpoint.ndjson, so an interrupted run resumes');
+  if (!outFlag) throw new Error('--output <dir> is required: it holds checkpoint.ndjson, so a run the budget ledger stopped resumes (a crash ends a paid stage and needs a fresh --output)');
   const output = resolve(outFlag);
+  requireStageSeeds(stage, seeds);
   const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
-  const key = checkpointKey({ mode: 'paid', gut, companies, maxOutputTokens });
+  const key = checkpointKey({ mode: 'paid', gut, companies, maxOutputTokens, stage });
   requireStageDirectory(output, seeds);
   const pending = pendingUnits(output, key, models, seeds);
   const judgeCheck = stage === 'counted' ? argValue(argv, '--judge-check') : undefined;
@@ -1166,16 +1242,19 @@ async function main(): Promise<void> {
   const judgeCheckSha256 = judgeCheck ? createHash('sha256').update(readFileSync(judgeCheck)).digest('hex') : null;
   const staleProbesSha256 = staleProbes ? createHash('sha256').update(readFileSync(staleProbes)).digest('hex') : null;
   const keys = Object.fromEntries(PAID_KEY_NAMES.map(k => [k, process.env[k]]).filter(([, v]) => v)) as Partial<Record<typeof PAID_KEY_NAMES[number], string>>;
+  requireClosedProcesses(output, key);
   const startedAt = new Date().toISOString();
   const paid = startPaidRun(CATEGORY, { ...budgetOptionsFrom(argv), estimateUsd: estimate });
+  const processId = randomUUID();
   let result: PaidRunResult;
   let closed: RunSummary;
   try {
-    result = await runPinnedQuestionsPaid({ gut, models, seeds, companies, maxOutputTokens, output, mode: { kind: 'paid', keys }, log: s => console.error(s) });
+    recordProcessStart(output, { key, stage, asked: pending, process_id: processId, run_id: paid.run.runId });
+    result = await runPinnedQuestionsPaid({ gut, models, seeds, companies, maxOutputTokens, stage, output, mode: { kind: 'paid', keys }, log: s => console.error(s) });
   } finally {
     closed = paid.run.close();
     paid.guard.uninstall();
-    recordProcessCost(output, { key, stage, asked: pending, summary: closed });
+    recordProcessCost(output, { key, stage, asked: pending, process_id: processId, summary: closed });
   }
   const cost = combinedCost(output, key, result.rows.map(r => ({ model: r.model, seed: r.seed })), closed);
   writeReceipt(receiptFile(output, stage), buildReceipt({ gut, models, seeds, companies, stage, maxOutputTokens, result, cost, startedAt, mode: 'paid', judgeCheckSha256, staleProbesSha256 }));

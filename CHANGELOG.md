@@ -2,6 +2,29 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.277] - 2026-11-25
+
+- **What changed.** The code review that runs before a pull request is marked ready now leaves out the person-isolation
+  run receipts under `docs/benchmarks/2026-11-24-person-isolation/`: about 3.3 MB of JSON that the runner writes. With
+  them in, the pull request that adds the results has a 3.6 MB review diff, over the review's 2 MB limit, so no reviewer
+  could read it.
+- **What stays the same.** The receipts stay in the repository. The results page, the preregistration, its registry
+  entry and the runner are still reviewed. No score or verdict changes.
+
+- **The engine-bench speed runner no longer records 0 for memory or disk it could not measure.** On macOS
+  `eval/runner/engine-bench/perf.ts` read memory from `/proc` and disk with `du -sb`, neither of which exists there, so
+  both came back as 0 and looked like measurements. Each now records null with a method saying why. Where `/proc` is
+  missing, memory falls back to the process's own sampled RSS, and disk falls back to `du -sk`, each under its own
+  method name because neither is comparable with the Linux reading. A peak-RSS comparison where one engine's own process
+  memory has no reading is reported as missing. A local Postgres server whose container memory can't be read still
+  counts as 0, as before. Counted runs are Linux only, so no published number changes. New keyless tests cover each case.
+
+- Pinned-questions rescore under a rule for answers that give both values, written after the counted labels were seen
+  and added beside the preregistered numbers in [the results](docs/benchmarks/pinned-questions-results.md): particle-1
+  moves from 7.5 to 4.2 points below claude-opus-5-5, which leaves the comparison unsettled, and the preregistered
+  result stays the verdict. The paid runner also stops reusing units with harness errors, records its ledger link
+  before asking anything, restores the brain after a gbrain error, and runs counted seeds only in the counted stage.
+
 ## [0.10.276] - 2026-11-25
 
 ### Pinned questions: enforcement and scoring fixes before the pilot

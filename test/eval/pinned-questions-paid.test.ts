@@ -13,7 +13,7 @@ import { writeReceipt } from '../../eval/runner/receipt.ts';
 import {
   EST_TOKENS, JUDGE_CALLS_PER_ANSWER, JUDGE_CHECK_RUNNER_SOURCES, probed, runStaleProbes, staleProbesEstimateUsd, buildStaleProbesReceipt, JUDGE_MAX_TOKENS, JUDGE_MIN_LABELS, PINNED_QUESTIONS_JUDGE_PROMPT, RUNNER_SOURCE_SHA256, estimateUsd, measuredJudge, PINNED_QUESTIONS_MODELS_UNDER_TEST, STAGE_SEEDS, TRUNCATION_BAR, buildReceipt, canonicalModel, cohenKappa,
   familyOf, judgeAgreement, judgeCheckPasses, judgeFor, judgeUserMessage, modelRoles, parseJudgeLabels, requirePaidFlags, ruleLabels,
-  checkpointKey, combinedCost, harnessBlocked, judgeEstimateRows, recordProcessCost, requireStageDirectory, receiptFile, servedWrongModel, outcomeOf, pendingUnits, readCheckpoint, recordingGenerateText, redactProviderText, requireJudgeCheck, requireProviderKeys, runPinnedQuestionsPaid, scoredCorrect, summarizePaid,
+  checkpointKey, combinedCost, harnessBlocked, recordProcessStart, requireClosedProcesses, requireStageSeeds, judgeEstimateRows, recordProcessCost, requireStageDirectory, receiptFile, servedWrongModel, outcomeOf, pendingUnits, readCheckpoint, recordingGenerateText, redactProviderText, requireJudgeCheck, requireProviderKeys, runPinnedQuestionsPaid, scoredCorrect, summarizePaid,
   type ChatTransport, type GradedAnswer, type PaidRow, type PaidRunResult, type StaleProbe,
 } from '../../eval/runner/pinned-questions-paid.ts';
 
@@ -226,7 +226,7 @@ function judgeCheckFixture(gut: ReturnType<typeof resolveGbrainUnderTest>, model
   const probesReceipt = (jcPath: string) => {
     const jc = JSON.parse(readFileSync(jcPath, 'utf8')) as { data: { rows: PaidRow[] } };
     return {
-      category: 'pinned-questions-paid', run_status: 'completed', gbrain_version: gut.version,
+      category: 'pinned-questions-paid', run_status: 'completed', publishable: true, gbrain_version: gut.version,
       resolved_config: { mode: 'paid', stage: 'stale-probes', runner_source_sha256: RUNNER_SOURCE_SHA256, judge: { prompt_sha256: createHash('sha256').update(PINNED_QUESTIONS_JUDGE_PROMPT).digest('hex') }, gbrain_overlay: overlaySummary(gut), judge_check_receipt_sha256: createHash('sha256').update(readFileSync(jcPath)).digest('hex') },
       data: { probes: probesFor(jc.data.rows) },
     };
@@ -321,6 +321,10 @@ describe('pinned-questions paid arm: kappa', () => {
       expect(check(jc, at('p-text.json', { ...p, data: { probes: refreshedText } }))).toThrow(/is not its row's first answer/);
       const otherJudge = p.data.probes.map((x, i) => (i === 0 ? { ...x, judge_model: 'particle:particle-1' } : x));
       expect(check(jc, at('p-judge.json', { ...p, data: { probes: otherJudge } }))).toThrow(/is not its row's first answer judged by/);
+      expect(check(jc, at('p-unpublishable.json', { ...p, publishable: false }))).toThrow(/not publishable/);
+      const graded = p.data.probes.findIndex(x => x.graded.rule_correct !== null);
+      const judgeError = p.data.probes.map((x, i) => (i === graded ? { ...x, graded: { ...x.graded, judge_error: 'judge_output_not_json', answer_correct: null } } : x));
+      expect(check(jc, at('p-judge-error.json', { ...p, data: { probes: judgeError } }))).toThrow(/has no judge labels \(judge_output_not_json\)/);
       const blind = p.data.probes.map(x => (x.judge_model === 'anthropic:claude-opus-5-5' ? { ...x, graded: { ...x.graded, answer_correct: true } } : x));
       expect(check(jc, at('p-blind.json', { ...p, data: { probes: blind } }))).toThrow(/judge check fails for at least one of/);
 
@@ -795,6 +799,63 @@ describe('pinned-questions paid arm: provider errors, safety stops and budget re
     expect([counted.processes, counted.actual_usd, counted.run_id]).toEqual([0, 0, 'r3']);
     expect(combinedCost(out, key, [unit(22)], summary('r2', 0, 0)).actual_usd).toBe(4);
   }, 120_000);
+
+  test('a process that recorded no summary, a unit no process recorded or a torn cost line leaves the spend incomplete and the receipt unpublishable; a corrupt line refuses', async () => {
+    const out = dir();
+    const path = join(out, 'ledger-costs.ndjson');
+    const summary = (run_id: string, usd: number, requests: number) => ({ run_id, budget_usd: 50, reserved_usd: usd, actual_usd: usd, charged_reservations: 0, requests, input_tokens: requests * 10, output_tokens: requests * 5, overshoot_usd: 0, ledger_path: 'l', program_cap_usd: 500, event_loop_lag_ms: null });
+    const u = (seed: number) => ({ model: 'anthropic:claude-opus-5-5', seed });
+    recordProcessStart(out, { key: 'k', stage: 'counted', asked: [u(11)], process_id: 'p1', run_id: 'r1' });
+    recordProcessCost(out, { key: 'k', stage: 'counted', asked: [u(11)], process_id: 'p1', summary: summary('r1', 2, 4) });
+    expect(combinedCost(out, 'k', [u(11)], summary('r1', 0, 0))).toMatchObject({ complete: true, actual_usd: 2, processes: 1, unrecorded_processes: [], unrecorded_units: [], lost_lines: 0 });
+    recordProcessStart(out, { key: 'k', stage: 'counted', asked: [u(12)], process_id: 'p2', run_id: 'r1' });
+    expect(combinedCost(out, 'k', [u(11), u(12)], summary('r1', 0, 0))).toMatchObject({ complete: false, actual_usd: 2, unrecorded_processes: ['p2'] });
+    expect(combinedCost(out, 'k', [u(11), u(13)], summary('r1', 0, 0))).toMatchObject({ complete: false, unrecorded_units: ['anthropic:claude-opus-5-5|13'] });
+    appendFileSync(path, '{"key":"k","sta');
+    expect(combinedCost(out, 'k', [u(11)], summary('r1', 0, 0))).toMatchObject({ complete: false, lost_lines: 1 });
+    recordProcessCost(out, { key: 'k', stage: 'counted', asked: [u(14)], process_id: 'p3', summary: summary('r1', 1, 1) });
+    expect(readFileSync(path, 'utf8').trim().split('\n').map(l => JSON.parse(l))).toContainEqual({ torn: 15 });
+    expect(combinedCost(out, 'k', [u(11), u(14)], summary('r1', 0, 0))).toMatchObject({ complete: false, actual_usd: 3, lost_lines: 1 });
+    writeFileSync(path, `{"bad\n${readFileSync(path, 'utf8')}`);
+    expect(() => combinedCost(out, 'k', [u(11)], summary('r1', 0, 0))).toThrow(/line 1 is not valid JSON/);
+    expect(() => requireClosedProcesses(out, 'k')).toThrow(/p2, which started and never recorded its spend/);
+    expect(() => requireClosedProcesses(out, 'other')).not.toThrow();
+    recordProcessCost(out, { key: 'k', stage: 'counted', asked: [u(12)], process_id: 'p2', summary: summary('r1', 1, 1) });
+    expect(() => requireClosedProcesses(out, 'k')).not.toThrow();
+    expect(() => requireClosedProcesses(dir(), 'k')).not.toThrow();
+
+    const r = await run(dir(), () => null);
+    const cost = { ...summary('r1', 0, 0), processes: 1, complete: true, unrecorded_processes: [] as string[], unrecorded_units: [] as string[], lost_lines: 0 };
+    const receipt = (c: typeof cost) => buildReceipt({ gut, models: ['particle:particle-1'], seeds: [1], companies: 8, stage: 'dev', result: r, cost: c, startedAt: new Date().toISOString(), mode: 'paid' }) as unknown as { publishable: boolean };
+    expect(receipt(cost).publishable).toBe(true);
+    expect(receipt({ ...cost, complete: false, unrecorded_processes: ['p2'] }).publishable).toBe(false);
+  }, 120_000);
+
+  test('a unit with a harness error is never reused from the checkpoint: a rerun asks it again', async () => {
+    const out = dir();
+    const key = checkpointKey({ mode: 'keyless', gut, companies: 8 });
+    const first = await run(out, (slug, n) => (slug === b && n === 2 ? { model: 'particle:particle-0' } : null));
+    expect(first.harnessErrors).toEqual([expect.stringContaining('another model answered 1 question')]);
+    expect(pendingUnits(out, key, ['particle:particle-1'], [1])).toEqual([{ model: 'particle:particle-1', seed: 1 }]);
+    const calls: Array<{ model: string; kind: 'question' | 'judge'; chars: number }> = [];
+    const again = await run(out, () => null, ['particle:particle-1'], calls);
+    expect([again.resumedUnits, again.harnessErrors, calls.length > 0]).toEqual([0, [], true]);
+    expect(again.rows.every(x => x.correct !== null)).toBe(true);
+    expect(pendingUnits(out, key, ['particle:particle-1'], [1])).toEqual([]);
+  }, 120_000);
+
+  test('counted seeds run only in the counted stage, and a counted unit never shares a checkpoint key with another stage', () => {
+    expect(() => requireStageSeeds('dev', [1, 2, 3])).not.toThrow();
+    expect(() => requireStageSeeds('judge-check', [...STAGE_SEEDS['judge-check']])).not.toThrow();
+    expect(() => requireStageSeeds('counted', [...STAGE_SEEDS.counted])).not.toThrow();
+    expect(() => requireStageSeeds('pilot', [11])).toThrow(/seeds 11 are counted seeds, which run only in the counted stage, not pilot/);
+    expect(() => requireStageSeeds('dev', [1, 20])).toThrow(/seeds 20 are counted/);
+    expect(() => requireStageSeeds('counted', [11, 21])).toThrow(/seeds 21 are not counted seeds/);
+    expect(checkpointKey({ mode: 'paid', gut, stage: 'counted' })).not.toBe(checkpointKey({ mode: 'paid', gut, stage: 'dev' }));
+    expect(checkpointKey({ mode: 'paid', gut, stage: 'pilot' })).toBe(checkpointKey({ mode: 'paid', gut, stage: 'judge-check' }));
+    const cli = spawnSync('bun', ['eval/runner/pinned-questions-paid.ts', '--stage', 'dev', '--seeds', '1,12', '--output', join(tmpdir(), 'pq-never'), '--paid', '--budget-run-id', 'none'], { env: keylessEnv(), encoding: 'utf8' });
+    expect([cli.status, cli.stderr]).toEqual([2, expect.stringContaining('seeds 12 are counted seeds')]);
+  });
 
   test('a launch refuses an output directory holding another stage\'s units; the judge-check stage may resume the pilot\'s seed', async () => {
     const out = dir();
