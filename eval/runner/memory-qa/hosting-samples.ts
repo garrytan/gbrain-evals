@@ -39,11 +39,21 @@ export async function dockerReading(run: (args: string[]) => Promise<string> = d
   return { containers, volumes: (df.Volumes ?? []).map(v => ({ name: v.Name, bytes: parseBytes(v.Size) ?? 0 })) };
 }
 
-async function dockerCli(args: string[]): Promise<string> {
-  const p = Bun.spawn(['docker', ...args], { stdout: 'pipe', stderr: 'pipe' });
+async function spawnText(cmd: string[]): Promise<{ out: string; err: string; code: number }> {
+  const p = Bun.spawn(cmd, { stdout: 'pipe', stderr: 'pipe' });
   const [out, err, code] = await Promise.all([new Response(p.stdout).text(), new Response(p.stderr).text(), p.exited]);
-  if (code !== 0) throw new Error(`docker ${args[0]} exited ${code}: ${err.trim().slice(0, 200)}`);
-  return out;
+  return { out, err, code };
+}
+
+/**
+ * The docker CLI as the sampler's user, or through `sudo -n` when that user can't reach the docker socket (a VM user
+ * outside the docker group), the way bootstrap.sh's compose falls back.
+ */
+export async function dockerCli(args: string[], exec: typeof spawnText = spawnText): Promise<string> {
+  let r = await exec(['docker', ...args]);
+  if (r.code !== 0 && /permission denied/i.test(r.err)) r = await exec(['sudo', '-n', 'docker', ...args]);
+  if (r.code !== 0) throw new Error(`docker ${args[0]} exited ${r.code}: ${r.err.trim().slice(0, 200)}`);
+  return r.out;
 }
 
 /** Bytes of every regular file under `root` (0 when it doesn't exist yet). */

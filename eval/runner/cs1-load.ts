@@ -205,7 +205,10 @@ export function cs1Load(units: readonly Cs1Unit[], opts: Cs1LoadOptions) {
         worlds.set(system, [...(worlds.get(system) ?? []), world]);
       }
       if (system !== fcSystem) {
-        const h = hostingOf(lines<HostingSample>(join(dir, 'hosting.ndjson')), opts.stacks?.[system] ?? null, rs);
+        const samples = lines<HostingSample>(join(dir, 'hosting.ndjson')), failed = samples.filter(s => s.error);
+        if (!samples.length) problems.push(`${cell}: no hosting samples`);
+        if (failed.length) problems.push(`${cell}: ${failed.length} of ${samples.length} hosting samples failed (${failed[0].error})`);
+        const h = hostingOf(samples, opts.stacks?.[system] ?? null, rs);
         const prev = hosted.get(system);
         hosted.set(system, !prev ? h : !h ? prev : { resident_bytes: Math.max(prev.resident_bytes, h.resident_bytes), ...(h.disk_bytes / h.disk_tokens >= prev.disk_bytes / prev.disk_tokens ? { disk_bytes: h.disk_bytes, disk_tokens: h.disk_tokens } : { disk_bytes: prev.disk_bytes, disk_tokens: prev.disk_tokens }) });
       }

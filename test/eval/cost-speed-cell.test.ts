@@ -7,14 +7,14 @@
  * model shows up as an unlabelled route.
  */
 import { afterAll, beforeEach, describe, expect, test } from 'bun:test';
-import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { appendFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { realizationId, runCell, type WriteProbe } from '../../eval/runner/q1/cell.ts';
 import { estimateCell, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
 import { BudgetRun, closeLedgers } from '../../eval/runner/budget-ledger.ts';
 import { MeteringProxy, type UsageLine } from '../../eval/runner/metering-proxy.ts';
-import { dockerReading, parseBytes } from '../../eval/runner/memory-qa/hosting-samples.ts';
+import { dockerCli, dockerReading, parseBytes } from '../../eval/runner/memory-qa/hosting-samples.ts';
 import { cs1Bucket, cs1Load, hostingOf } from '../../eval/runner/cs1-load.ts';
 import { FakeMemorySystem } from '../../eval/runner/systems/fake.ts';
 import { FileAgentSystem } from '../../eval/runner/systems/file-agent.ts';
@@ -227,6 +227,9 @@ describe('held-back probes', () => {
     expect(sys.worlds.filter(w => w.idle).length).toBe(1);
     expect(sys.hosting).toMatchObject({ resident_bytes: 2e8, disk_bytes: 5e7 });
     expect(sys.hosting!.disk_tokens).toBe(sys.worlds.reduce((n, w) => n + w.ingested_tokens, 0));
+    appendFileSync(join(out, 'runs', def.id, 'hosting.ndjson'), JSON.stringify({ at: new Date().toISOString(), stage: 'late', harness_rss_bytes: 1, containers: [], volumes: [], error: 'docker stats exited 1: permission denied' }) + '\n');
+    const failed = cs1Load([{ dir: out, usage }], { cells: new Map([[def.id, def.system]]), questions, ladder, stacks: { [def.system]: 'stack' } });
+    expect(failed.problems.join('\n')).toMatch(/hosting samples failed \(docker stats exited 1: permission denied\)/);
   }, 60_000);
 
   test('a read that also calls a model shows up in the calibration window as a route the probe label misses', async () => {
@@ -280,6 +283,18 @@ describe('hosting readings', () => {
       ? 'stack-db-1\t123.4MiB / 15.6GiB\nstack-shim-1\t40MiB / 15.6GiB\n'
       : JSON.stringify({ Volumes: [{ Name: 'stack_db-data', Size: '12.3MB' }] });
     expect(await dockerReading(run)).toEqual({ containers: [{ name: 'stack-db-1', mem_bytes: 129_394_278 }, { name: 'stack-shim-1', mem_bytes: 41_943_040 }], volumes: [{ name: 'stack_db-data', bytes: 12_300_000 }] });
+  });
+
+  test('a user outside the docker group reads through sudo -n, and other failures still throw', async () => {
+    const calls: string[][] = [];
+    const denied = async (cmd: string[]) => {
+      calls.push(cmd);
+      return cmd[0] === 'sudo' ? { out: 'ok', err: '', code: 0 } : { out: '', err: 'permission denied while trying to connect to the docker API at unix:///var/run/docker.sock', code: 1 };
+    };
+    expect(await dockerCli(['stats', '--no-stream'], denied)).toBe('ok');
+    expect(calls).toEqual([['docker', 'stats', '--no-stream'], ['sudo', '-n', 'docker', 'stats', '--no-stream']]);
+    const down = async () => ({ out: '', err: 'Cannot connect to the Docker daemon', code: 1 });
+    await expect(dockerCli(['stats'], down)).rejects.toThrow('docker stats exited 1: Cannot connect to the Docker daemon');
   });
 });
 
