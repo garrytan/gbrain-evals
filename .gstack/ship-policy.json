@@ -58,6 +58,7 @@
     "docs/benchmarks/2026-11-18-entity-dedupe-h2h/counted/**/*.jsonl",
     "docs/benchmarks/2026-11-18-entity-dedupe-h2h/dev/**/*.json",
     "docs/benchmarks/2026-11-18-entity-dedupe-h2h/dev/**/*.jsonl",
-    "docs/comparison-systems/*/entity-h2h-smoke-run.json"
+    "docs/comparison-systems/*/entity-h2h-smoke-run.json",
+    "docs/benchmarks/2026-11-24-person-isolation/**/*.json"
   ]
 }
