@@ -2,6 +2,27 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.278] - 2026-11-25
+
+- **N14 large-page fidelity no longer reports counts it could not take as 0 on an engine without raw SQL.** On such an
+  engine (the Rust engine today), `eval/runner/n14-large-page-fidelity.ts` wrote the stored page and chunk counts, the
+  append's chunk counts and the stored-needle count as 0, so a page the engine had chunked read as "stored with 0
+  chunks" and could be filed as the zero-chunk finding N14-1. Those counts are now null, with a `not_applicable` reason
+  on the ingest and append rows, the stored-needle rate is null, the findings skip a null chunk count, and the
+  printed tables show n/a. An ingest or append that throws inside a running arm also records its counts as
+  null, on any engine; an arm whose process crashed still reports 0. No committed receipt is from an engine
+  without raw SQL, so no published number changes.
+
+- **The engine-bench speed runner no longer turns a missing memory reading into a measured one.** In
+  `eval/runner/engine-bench/perf.ts`, an arm whose only memory reading was the baseline taken before the engine opened
+  now records a null peak, where before the baseline stood in for the peak and the engine's share read as 0. A Postgres
+  arm whose server memory could not be read (a container whose cgroup files are not readable on the host, every
+  cgroup read failing or unparseable, or an external server) now records null server memory and a method saying why, so its engine
+  RSS is null and its peak-RSS comparison is reported as missing instead of counting the server as 0. Both published
+  speed runs read the Postgres container's cgroup memory, so no published number changes.
+
+- **The three long public dev worlds' rendered text is committed.** `bg1-dev-long-01` to `-03` now carry their model-rendered `world.json` under [eval/data/changing-facts-v1/dev/worlds/](eval/data/changing-facts-v1/dev/worlds/), so the weekly held-out line's long pilot and judge check can load them in a run that is not keyless. Each passes `validate.ts --dev` at its profile length of 1,000,000 tokens, and a test now checks that, in place of the earlier check that they were not yet rendered. The bg1-dev split keeps its 20 worlds.
+
 ## [0.10.277] - 2026-11-25
 
 - **What changed.** The code review that runs before a pull request is marked ready now leaves out the person-isolation
