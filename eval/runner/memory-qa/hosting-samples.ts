@@ -52,7 +52,7 @@ export function treeBytes(root: string): number {
   const walk = (p: string) => {
     let st;
     try { st = lstatSync(p); } catch { return; }
-    if (st.isDirectory()) for (const e of readdirSync(p)) walk(join(p, e));
+    if (st.isDirectory()) for (const e of readdirSync(p).sort()) walk(join(p, e));
     else if (st.isFile()) n += st.size;
   };
   walk(root);

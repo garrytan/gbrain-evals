@@ -86,7 +86,7 @@ function answers(out: string): Answer[] {
   const dir = join(out, 'cells');
   if (!existsSync(dir)) return [];
   const byId = new Map<string, Answer>();
-  for (const arm of readdirSync(dir)) for (const a of lines<Answer>(join(dir, arm, 'answers.ndjson'))) byId.set(a.answer_id, a);
+  for (const arm of readdirSync(dir).sort()) for (const a of lines<Answer>(join(dir, arm, 'answers.ndjson'))) byId.set(a.answer_id, a);
   return [...byId.values()];
 }
 
@@ -129,7 +129,7 @@ export function cs1Load(units: readonly Cs1Unit[], opts: Cs1LoadOptions) {
 
   for (const u of units) {
     const runs = join(u.dir, 'runs');
-    const cellIds = existsSync(runs) ? readdirSync(runs).filter(id => opts.cells.has(id)) : [];
+    const cellIds = existsSync(runs) ? readdirSync(runs).sort().filter(id => opts.cells.has(id)) : [];
     if (!cellIds.length) { problems.push(`${u.dir}: no cost-and-speed cell under runs/`); continue; }
     if (cellIds.length > 1) problems.push(`${u.dir}: holds ${cellIds.length} cells (${cellIds.join(', ')}); their usage log is attributed to each by key`);
     const all = answers(u.dir);
@@ -157,7 +157,7 @@ export function cs1Load(units: readonly Cs1Unit[], opts: Cs1LoadOptions) {
       const sum = (ls: readonly UsageLine[] | undefined) => (ls ?? []).reduce((n, l) => n + usd(l), 0);
       const rows = new Map<string, number>();
       const armDir = join(u.dir, 'cells');
-      if (existsSync(armDir)) for (const arm of readdirSync(armDir).filter(a => a.startsWith(`${cell}.`))) {
+      if (existsSync(armDir)) for (const arm of readdirSync(armDir).sort().filter(a => a.startsWith(`${cell}.`))) {
         for (const row of lines<{ conversation: string; realization_id: string }>(join(armDir, arm, 'rows.ndjson'))) if (rid.has(row.realization_id)) rows.set(row.conversation, (rows.get(row.conversation) ?? 0) + 1);
       }
       const classOf = (a: Answer): MatchClass => {
