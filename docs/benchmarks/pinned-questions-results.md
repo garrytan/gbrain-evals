@@ -1,15 +1,17 @@
 # Pinned questions results: gbrain refreshes an answer correctly after an edit, a deletion or an unrelated change, and misses contradictions
 
+- **We learned that gbrain misses contradictions and over-flags sentences an unrelated edit left true. You should refresh
+  a pinned answer by hand, and read it, after you add a note that contradicts an older one.** gbrain flagged 0 of the 60
+  sentences a contradicting note made wrong. When the contradiction was written into an existing note, it never asked for
+  a refresh (0 of 30). When it came as a new note, it scheduled a refresh, and it also made 23 other pinned questions due
+  each time. It flagged 25.9% of the sentences whose claim did not change, and after an unrelated edit to a cited page
+  it flagged 75% of that page's unchanged sentences (90 of 120).
 - **We learned that when a note behind a pinned answer is edited, superseded or deleted, gbrain flags the affected
   sentence and a refreshed answer comes back right. You should pin the questions you re-ask and refresh them after
   ordinary edits.** On 240 counted questions per model, gbrain v0.60.769.0 flagged every sentence whose claim was edited,
   superseded or deleted (90 of 90). On those changes, and on changes that touched no claim, every refreshed answer from
   claude-opus-5-5, particle-1 and gpt-6.2-sol was right, apart from six gpt-6.2-sol answers that the analysis below
   shows its judge marked wrongly.
-- **We learned that a contradiction is gbrain's weak spot. You should refresh a pinned answer by hand, and read it,
-  after you add a note that contradicts an older one.** gbrain flagged none of the 60 sentences a contradicting note made
-  wrong. When the contradiction was written into an existing note, it never asked for a refresh. When it came as a new
-  note, it scheduled a refresh, and it also made 23 other pinned questions due each time.
 - **We learned that this test can't yet tell the three models apart, because every gap between them comes from how one
   judge scored answers that reported a contradiction.** On the preregistered labels, refreshed answers were right 217 of
   240 times for claude-opus-5-5, 199 for particle-1 and 233 for gpt-6.2-sol, so particle-1 is 7.5 points below Opus
@@ -163,7 +165,8 @@ with lookalike characters from another alphabet. The only character outside ASCI
 appears in 363 of the 1,440 counted answers, and the token rule treats it as a word boundary. No counted score depends
 on the token rule.
 
-The judge check did not test answers that give both an old and a new value. The rule labels a claim "ambiguous" when
+The judge check excluded all 141 answers that give both an old and a new value, so the preregistered judges were never
+validated on the class of answers that decides the model comparison. The rule labels a claim "ambiguous" when
 an answer names both, and the agreement check leaves ambiguous labels out. In the counted rows that excludes 141
 answers: all 112 both-city contradiction answers (106 judged by gpt-6.2-astra, 6 by claude-opus-5-5) and 29 of
 claude-opus-5-5's 30 superseded-fact answers, which give the new founding year with the old one ("founded in 1994, a
