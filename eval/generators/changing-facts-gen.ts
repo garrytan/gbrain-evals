@@ -1015,7 +1015,7 @@ function buildPlan(id: string, seed: string, phrasing: Phrasing, custody: boolea
       const spec = ALIAS_RELATIONS.find(x => x.id === r.id)!, x = entities.find(e => e.id === r.subject)!, y = entities.find(e => e.id === r.object)!, tag = `${x.id}.relation`;
       const i = pick([x.id, y.id], true, tag);
       line(i, fill(spec.line, { x: x.aliases!.nickname, y: y.aliases!.nickname }), tag, 0, [{ entity: x.id, alias: 'nickname' }, { entity: y.id, alias: 'nickname' }], 'relation');
-      r.session = sessions[i].id;
+      Object.assign(r, { session: sessions[i].id });
     }
     return relations;
   }
