@@ -50,7 +50,9 @@ A **leak** is any one of five things:
 - another person's page slug, fact id or request id that the probe didn't ask for;
 - a response to a protected target that differs from the response to a target nobody ever wrote (an existence oracle);
 - an answer given as the wrong person (an identity slip);
-- a write-shaped call that changes another person's rows.
+- a write-shaped call that changes another person's pages, write requests or proposals. That check reads those rows
+  only, not the facts table, so a foreign `forget_fact` counts only if its answer differs from the answer for a fact id
+  nobody wrote.
 
 All five were zero on all 18 cell runs. Each cell also passed its validity checks:
 
@@ -159,7 +161,8 @@ match, a case change and a leading space.
 
 **The callers.** Every read operation in gbrain's registry is called by every kind of caller:
 
-- another person, named by a trusted client in a direct message or in a room;
+- another person, named by a trusted client in a direct message, or by the room client with the team source. That
+  caller never declares a room, so gbrain's own room handling, which tracks who is in the room, isn't tested;
 - a near-miss of the person's id;
 - another person's own key;
 - a client bound to nobody, with and without a source scope;
@@ -172,7 +175,7 @@ takes one, the person's direct-message source and `__all__`. The room caller is 
 client always sends the team source, which overrides the probe's own, so its direct-message and `__all__` variants
 reached gbrain as team-source calls and test the room's other arguments only. Probes run warm on shared sessions and again cold with
 concurrent callers; the CLI cells run warm only. A write-shaped phase checks that another person's write calls never
-change P's rows, and a run of gbrain's dream cycle checks that derived pages don't carry a canary to another person.
+change P's pages, write requests or proposals, and a run of gbrain's dream cycle checks that derived pages don't carry a canary to another person.
 
 **Validity.** A cell is invalid, and publishes no number, if any of these happen:
 
