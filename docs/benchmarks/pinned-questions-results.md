@@ -163,10 +163,12 @@ with lookalike characters from another alphabet. The only character outside ASCI
 appears in 363 of the 1,440 counted answers, and the token rule treats it as a word boundary. No counted score depends
 on the token rule.
 
-The judge check did not test the both-city contradiction answers. The rule labels a city "ambiguous" when an answer
-names both the old and the new value, and the agreement check leaves ambiguous labels out. In the counted rows that
-excludes all 112 both-city contradiction answers (106 judged by gpt-6.2-astra, 6 by claude-opus-5-5), so neither
-judge's handling of them was compared with a reference.
+The judge check did not test answers that give both an old and a new value. The rule labels a claim "ambiguous" when
+an answer names both, and the agreement check leaves ambiguous labels out. In the counted rows that excludes 141
+answers: all 112 both-city contradiction answers (106 judged by gpt-6.2-astra, 6 by claude-opus-5-5) and 29 of
+claude-opus-5-5's 30 superseded-fact answers, which give the new founding year with the old one ("founded in 1994, a
+record that superseded an earlier entry of 1991"). gpt-6.2-astra accepted all 29 of those, and they read as correct,
+but neither judge's handling of both-value answers was compared with a reference.
 
 ## Runs and build
 
@@ -183,15 +185,19 @@ All paid runs and both keyless runs used gbrain v0.60.769.0 (`38831bb6`), the ne
 each launch. The pilot and judge check ran from gbrain-evals `6646f4db`, and the stale probes, the counted paid run and
 the keyless runs from `0c7c4dbb`. Each file is a summary of the full receipt, whose sha256 is in
 [manifest.json](pinned-questions/manifest.json). The counted receipt's own `verdict` field reads "fail" because it
-recomputes the judge check from the counted rows alone, without probes. The judge check that gates a counted launch is
-the one above.
+recomputes the judge check from the counted rows alone, without probes. On those rows alone, claude-opus-5-5's kappa on
+the gpt-6.2-sol rows is 0.247 (474 labelled outputs, 7 rule negatives, 6 of them the removed-chief-executive
+disagreements above), and gpt-6.2-astra's is undefined, because its 825 labelled counted outputs hold no rule negative.
+The judge check that gates a counted launch is the one above.
 
 ## Limits
 
 - The worlds are synthetic and the generator is public. These are synthetic-production-path results at one build, not
   held-out confirmation.
 - The contradiction scores, and with them every difference between the models, depend on one judge's call on answers
-  that report both the old and the new city, a call it made inconsistently and that the judge check never tested.
+  that report both the old and the new city, a call it made inconsistently and that the judge check never tested. The
+  same judge accepted all 29 of claude-opus-5-5's superseded-fact answers that gave both years, so Opus's edit score,
+  and the 38.3-point gap between edits and contradictions, rest on that call too.
 - The stale probes test whether a judge recognises a stale value. They don't test the "wrong" label.
 - One judge grades each model, so judge differences between the families can move a model's score. The removed
   chief executive case is the one we found.
