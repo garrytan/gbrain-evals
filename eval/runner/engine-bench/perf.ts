@@ -529,8 +529,8 @@ export const ENGINES: Record<EvalEngineKind, ArmSpec> = {
 
 const RSS_SPAN = 'Baseline is RSS after the dataset is built and before the engine opens; engine RSS is that value minus baseline. Steady is RSS after 2,000 mixed reads that follow the import.';
 
-/** How the benchmark reads its own resident memory: `hwmKb` is the kernel's high-water mark, null when the source has none. */
-export interface RssSource { method: string; rssKb(): number; hwmKb(): number | null }
+/** How the benchmark reads its own resident memory. A read that fails is null, a skipped sample; `hwmKb` is the kernel's high-water mark. */
+export interface RssSource { method: string; rssKb(): number | null; hwmKb(): number | null }
 
 /**
  * /proc/self/status (VmRSS and VmHWM) on Linux. Where /proc is missing (macOS), process.memoryUsage().rss, sampled, under
@@ -542,14 +542,15 @@ export function rssSource(readStatus = () => readFileSync('/proc/self/status', '
     if (!m) throw new Error(`/proc/self/status has no ${key}`);
     return Number(m[1]);
   };
+  const orNull = (read: () => number) => () => { try { return read(); } catch { return null; } };
   try {
     field('VmRSS');
     field('VmHWM');
-    return { method: `VmHWM and VmRSS of the benchmark process from /proc/self/status (includes the WASM heap for PGLite and the addon for Rust). ${RSS_SPAN}`, rssKb: () => field('VmRSS'), hwmKb: () => field('VmHWM') };
-  } catch { /* no /proc: try the runtime's own reading */ }
+    return { method: `VmHWM and VmRSS of the benchmark process from /proc/self/status (includes the WASM heap for PGLite and the addon for Rust). ${RSS_SPAN}`, rssKb: orNull(() => field('VmRSS')), hwmKb: orNull(() => field('VmHWM')) };
+  } catch { /* no usable /proc: try the runtime's own reading */ }
   try {
     if (!(rssBytes() > 0)) return null;
-    return { method: `process.memoryUsage().rss of the benchmark process, sampled every 100 ms, because /proc/self/status is not available on ${process.platform}. There is no kernel high-water mark, so a peak between samples is missed and the numbers are not comparable with VmHWM. ${RSS_SPAN}`, rssKb: () => Math.round(rssBytes() / 1024), hwmKb: () => null };
+    return { method: `process.memoryUsage().rss of the benchmark process, sampled every 100 ms, because /proc/self/status with VmRSS and VmHWM is not available on ${process.platform}. There is no kernel high-water mark, so a peak between samples is missed and the numbers are not comparable with VmHWM. ${RSS_SPAN}`, rssKb: orNull(() => Math.round(rssBytes() / 1024)), hwmKb: () => null };
   } catch { return null; }
 }
 
@@ -572,7 +573,8 @@ class MemSampler {
   constructor(private cgroupDir?: string, private rss: RssSource | null = null) {}
   start() {
     const tick = () => {
-      if (this.rss) this.peakRssKb = Math.max(this.peakRssKb, this.rss.rssKb());
+      const kb = this.rss?.rssKb() ?? null;
+      if (kb !== null) this.peakRssKb = Math.max(this.peakRssKb, kb);
       const ws = cgroupWorkingSetBytes(this.cgroupDir);
       if (ws !== null) this.peakServerWs = Math.max(this.peakServerWs, ws);
     };
@@ -807,7 +809,8 @@ async function runArmChild(input: ChildInput) {
   const stats = await engine.getStats() as unknown as Record<string, unknown>;
   result.stats = { page_count: stats.page_count, chunk_count: stats.chunk_count, embedded_count: stats.embedded_count };
   await engine.disconnect();
-  const peakRssKb = rss ? Math.max(mem.peakRssKb, rss.hwmKb() ?? 0) : null;
+  const peakReadings = [mem.peakRssKb || null, baselineRssKb, steadyRssKb, rss?.hwmKb() ?? null].filter((kb): kb is number => kb !== null);
+  const peakRssKb = peakReadings.length ? Math.max(...peakReadings) : null;
   const bytes = (kb: number | null) => (kb === null ? null : kb * 1024);
   result.memory = {
     client_peak_rss_bytes: bytes(peakRssKb),

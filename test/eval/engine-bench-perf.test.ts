@@ -134,8 +134,8 @@ describe('a measurement source that is unavailable records null, never 0', () =>
   const noProc = () => { throw new Error('ENOENT: /proc/self/status'); };
   test('disk: du -sb on Linux, du -sk under its own method where -b is refused (macOS), and null when du answers nothing', () => {
     const d = store();
-    const linux = measureDisk(d, 'PGLite');
-    expect(linux.total_bytes).toBeGreaterThanOrEqual(5000);
+    const linux = measureDisk(d, 'PGLite', (args) => args[0] === '-sb' ? { status: 0, stdout: `5120\t${d}\n` } : { status: 1, stdout: '' });
+    expect(linux.total_bytes).toBe(5120);
     expect(linux.method).toBe('du -sb of the PGLite store after the engine closed');
     const bsd = measureDisk(d, 'PGLite', (args) => args[0] === '-sb' ? { status: 1, stdout: '' } : { status: 0, stdout: `8\t${d}\n` });
     expect(bsd).toEqual({ total_bytes: 8192, method: expect.stringMatching(/^du -sk .*1 KiB blocks/) });
@@ -156,6 +156,9 @@ describe('a measurement source that is unavailable records null, never 0', () =>
     expect(rssSource(noProc, () => { throw new Error('no rusage'); })).toBeNull();
     expect(rssSource(noProc, () => 0)).toBeNull();
     expect(rssSource(() => 'Name:\tbun\n', () => 0)).toBeNull();
+    let reads = 0;
+    const flaky = rssSource(() => { if (++reads > 2) throw new Error('EMFILE'); return 'VmHWM:\t 2048 kB\nVmRSS:\t 1024 kB\n'; })!;
+    expect([flaky.rssKb(), flaky.hwmKb()]).toEqual([null, null]);
   });
   test('an arm with no memory reading has no engine RSS, where a 0 reading still counts', () => {
     expect(engineRss({ memory: { client_engine_peak_rss_bytes: null, server_peak_working_set_bytes: null } })).toBeNull();
