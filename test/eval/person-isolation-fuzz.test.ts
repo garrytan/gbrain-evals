@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { generatePersonWorld, canariesOf, PI_CHANNELS, PI_DEFAULT_SEED } from '../../eval/generators/person-isolation-gen.ts';
 import {
-  containsSlug, factIdsInText, mustRefuse, nearMisses, normalizeForOracle, outcomeOf, publicData, scan, writeIdsIn, callersFor,
+  containsSlug, factIdsInText, mustRefuse, nearMisses, normalizeForOracle, outcomeOf, publicData, scan, writeIdsIn, callersFor, planProbes, MANDATORY_OPS,
   type Outcome,
 } from '../../eval/runner/person-isolation-fuzz.ts';
 
@@ -48,6 +48,20 @@ describe('person-isolation callers', () => {
     for (const t of ['mcp-dispatch', 'http', 'cli'] as const) for (const c of callersFor(world, target, 0, t)) expect(c.as).not.toBe(target.id);
     expect(mustRefuse({ kind: 'unbound', as: null, client: 'unbound', label: 'unbound' })).toBe(true);
     expect(mustRefuse({ kind: 'member-key', as: 'x', client: 'key:x', label: 'member-key' })).toBe(false);
+  });
+
+  test('the CI profile never aims a mandatory operation only at the member who left, whose own reads cannot give signal', () => {
+    const f = { world, facts: new Map(), requests: new Map(), proposals: new Map(), idempotency: new Map(), public_fact_id: null, max_fact_id: 0 };
+    const op = (name: string) => ({ name, params: { query: { type: 'string', required: true } } }) as unknown as Parameters<typeof planProbes>[1][number];
+    const leftAt = world.members.filter(m => m.writes).findIndex(m => m.role === 'left');
+    const ops = [...Array.from({ length: leftAt }, (_, i) => op('filler_' + i)), op('query'), op('not_mandatory')];
+    const shifted = [...Array.from({ length: leftAt }, (_, i) => op('filler_' + i)), op('not_mandatory'), op('query')];
+    expect((MANDATORY_OPS as readonly string[]).includes('query')).toBe(true);
+    for (const list of [ops, shifted]) {
+      const probes = planProbes(f, list, 'mcp-dispatch', 'ci');
+      expect(probes.filter(p => p.op.name === 'query').every(p => p.target.role !== 'left')).toBe(true);
+    }
+    expect(planProbes(f, shifted, 'mcp-dispatch', 'ci').filter(p => p.op.name === 'not_mandatory').every(p => p.target.role === 'left')).toBe(true);
   });
 });
 

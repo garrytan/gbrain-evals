@@ -1,5 +1,5 @@
 {
-  "source": "Seconds per offline category, measured in the ci checks job of run 40000004320 (attempt 2, ubuntu-latest, BRAINBENCH_CONCURRENCY=2, 2026-10-23). N15 was measured before its first CI run on a 4-CPU Capy cloud machine (2026-11-01, four solo runs of 5.0 to 5.5 s, rounded up to 6). Refresh after a category's runtime changes; a category missing here fails test/eval/brainbench-shards.test.ts.",
+  "source": "Seconds per offline category, measured in the ci checks job of run 40000004320 (attempt 2, ubuntu-latest, BRAINBENCH_CONCURRENCY=2, 2026-10-23). N15 was measured before its first CI run on a 4-CPU Capy cloud machine (2026-11-01, four solo runs of 5.0 to 5.5 s, rounded up to 6). person-isolation-ci was measured before its first CI run on a 4-CPU Capy cloud machine (2026-11-25, one solo run: 164 s in process and 196 s over HTTP, 360 s in all, rounded up to 365). Refresh after a category's runtime changes; a category missing here fails test/eval/brainbench-shards.test.ts.",
   "seconds": {
     "1": 9,
     "2": 1,
@@ -21,6 +21,7 @@
     "37": 100,
     "38": 47,
     "39": 31,
+    "person-isolation-ci": 365,
     "N9": 127,
     "N6": 124,
     "N8": 115,

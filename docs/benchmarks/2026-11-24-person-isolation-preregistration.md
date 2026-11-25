@@ -468,6 +468,50 @@ and `--as` previews refuse it, so it cannot carry signal on the CLI.
 not once around the whole phase, so a Q's own decoy writes are never read as a change to P's rows. The phase runs after
 the warm and cold probes and before the dream cycle. The caller Q is never the ghost member.
 
+### Amendment 2: re-run on the fixed release, and CI (2026-11-25, before the re-run's first counted probe)
+
+Committed on the results branch before the re-run's first counted probe.
+
+**What the first counted run found.** The counted run on v0.60.769.0 (seeds 20261124 to 20261126, runner at
+`c2bfa710f`) was at zero on every contract on the four in-process and HTTP cells. Both CLI cells failed, with 413 gate
+hits each. As this plan requires, the detail went privately to gbrain's maintainers the same day, who fixed it in
+v0.60.771.0. That run stands as the result for v0.60.769.0, and the results page reports it.
+
+**Build.** gbrain v0.60.771.0 (`97ef356f574a66709ef1bf4ae1cad604727852d8`). At 02:54 UTC on 2026-11-25,
+`git ls-remote --tags` showed it as the newest release tag on gbrain's master. The re-run measures it on all six cells
+and the same three seeds, from a clean tree, and the build is frozen from the re-run's first counted probe. The counted
+profile, sizes, limits and contracts are unchanged from amendment 1.
+
+**Pilot on the new build.** The pilot profile on seed 20261124, with all six cells running in parallel on one 16-vCPU
+machine. Every cell met the pilot bars: zero on the gate, both must-fail controls caught (10 of 12 planted probes on
+the in-process and HTTP cells, as amendment 1 explains, and 4 of 4 on the CLI; 2 of 2 misgrant probes), every mandatory
+operation with signal, every channel read back by its owner, no failed write, and receipts recording `dirty: false`
+and gbrain 0.60.771.0.
+
+| Cell | Probes | Operations with signal |
+|---|---:|---:|
+| mcp-dispatch-pglite, mcp-dispatch-postgres | 24,793 each | 80 |
+| http-pglite, http-postgres | 23,276 each | 67 |
+| cli-pglite, cli-postgres | 947 each | 4 |
+
+**CI profile.** A timed run of the ci profile stopped with `PI_COVERAGE` on mcp-dispatch-pglite: `query` had no
+signal. Rotating one target per operation had aimed `query` at the person who left, whose own reads are never run as
+owner controls, so no probe aimed at that person can carry signal. In the ci profile only, a mandatory operation whose
+rotation lands on that person now moves to the next person. Every other operation keeps its rotation, so the person
+who left is still a target in CI. The full and pilot profiles are unchanged, because they aim every operation at every
+person. After the change, on a 4-CPU machine, each PGLite cell ran 3,309 probes and passed: 164 s in process and 196 s
+over HTTP.
+
+**Where CI runs it.** As planned above, the PGLite cells run in the offline tier as the registry entry
+`person-isolation-fuzz-ci`: `--profile ci` on the in-process and HTTP PGLite cells, with an 840 s timeout inside the
+offline shard's 900 s bound. A job, `person-isolation-postgres`, runs the same profile on the two Postgres cells with
+a `pgvector/pgvector` service pinned by digest. Both gate on the same two rules: `data.gate_total` is 0, and the
+runner's verdict is pass, which needs coverage, both controls, every write and no reached cap. Like the offline shards,
+neither job is in `merge-gate`'s list of required jobs. Reports under `eval/reports/person-isolation-fuzz/` are never
+uploaded as CI artifacts, so a failing run in public CI shows only its total. The CI entries land in the results pull
+request. That pull request opens only after the re-run is green, so the gate lands in CI green on the fixed release, as
+this plan requires.
+
 ## Disclosures
 
 gbrain is Garry Tan's own project. Disclosure: QM is a project of Y Combinator, which Garry Tan runs.

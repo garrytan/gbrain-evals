@@ -683,7 +683,8 @@ export function planProbes(f: Fixture, ops: Operation[], transport: Transport, p
   const firstSeen = new Set<string>();
   ops.forEach((op, oi) => {
     const kinds = targetKindsFor(op);
-    const people = profile === 'ci' ? [targets[oi % targets.length]!] : targets;
+    const ciPick = (i: number) => targets[i % targets.length]!;
+    const people = profile === 'ci' ? [ciPick(oi).role === 'left' && (MANDATORY_OPS as readonly string[]).includes(op.name) ? ciPick(oi + 1) : ciPick(oi)] : targets;
     for (const [pi, p] of people.entries()) {
       let tks = targetsFor(f, p).filter(t => kinds.has(t.protected.kind));
       if (profile === 'ci') tks = tks.slice(0, 1);
