@@ -366,6 +366,17 @@ export function needsCustody(def: Pick<CellDefinition, 'benchmark' | 'split'>): 
 }
 
 /**
+ * Where a cell's reader and judge replies are cached. A sealed cell, a cost-and-speed cell (every read is a metered
+ * call it prices, so no reply may come from another cell or run) and any run behind a keyless upstream (whose stand-in
+ * replies must never answer a later paid run on the same machine) keep the cache inside the cell's own --out; other
+ * cells share GBRAIN_EVALS_QA_CACHE or ~/.cache/gbrain-evals/qa-cache.
+ */
+export function qaCacheRoot(def: Pick<CellDefinition, 'block'>, out: string, env: Record<string, string | undefined>, custody: boolean): string {
+  const own = custody || (CS1_BLOCK_IDS as readonly string[]).includes(def.block) || !!env.SHOOTOUT_KEYLESS_UPSTREAM;
+  return own ? join(out, 'cache', 'qa') : env.GBRAIN_EVALS_QA_CACHE ?? join(homedir(), '.cache', 'gbrain-evals', 'qa-cache');
+}
+
+/**
  * Contract 10 for a run that opens a sealed cell's conversations: GBRAIN_EVALS_CUSTODY_LOG set, `out` a custody root
  * outside the repository, and the opening logged (with `purpose`) before the corpus or any sealed staging is read.
  */
@@ -853,7 +864,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
         : runnable.length ? { next: 'run', argv: [...FRONT, 'run', '--cell', def.id, '--arms', runnable.join(',')], user_message: 'run the other arms now; the blocked arms wait for the system\'s answer route' } : { next: 'report', user_message: 'the cell waits for an answer route in the system\'s shim' } });
   }
   const readersOf = new Map(arms.map(a => [a.id, armReaders(a, capabilities)]));
-  const chat = deps.reader ?? deps.judge ?? new ChatClient(custody ? join(out, 'cache', 'qa') : env.GBRAIN_EVALS_QA_CACHE ?? join(homedir(), '.cache', 'gbrain-evals', 'qa-cache'));
+  const chat = deps.reader ?? deps.judge ?? new ChatClient(qaCacheRoot(def, out, env, custody));
   const reader = onSlot(deps.reader ?? chat, meter, 'harness');
   const judge = onSlot(deps.judge ?? chat, meter, 'judge');
   const fitTokenizer = deps.fitTokenizer ?? readerFitTokenizer;

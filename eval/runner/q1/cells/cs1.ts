@@ -129,8 +129,8 @@ export const CS1_PLAN: Readonly<Record<string, { write_usd_per_mtok: number; ans
   'gbrain-defaults': { write_usd_per_mtok: 1.0, answer_input_tokens: 23_800, hours_per_world: 2 },
   'ext-extract-first': { write_usd_per_mtok: 95, answer_input_tokens: 1_200, hours_per_world: 20 },
   'ext-memory-bank': { write_usd_per_mtok: 3.7, answer_input_tokens: 10_400, hours_per_world: 2 },
-  'ext-verbatim-session': { write_usd_per_mtok: 0, answer_input_tokens: 8_000, hours_per_world: 1.5 },
-  'baseline-hybrid': { write_usd_per_mtok: 0.14, answer_input_tokens: 7_100, hours_per_world: 1 },
+  'ext-verbatim-session': { write_usd_per_mtok: 0, answer_input_tokens: 17_600, hours_per_world: 1.5 },
+  'baseline-hybrid': { write_usd_per_mtok: 0.14, answer_input_tokens: 22_500, hours_per_world: 1 },
   'baseline-file-agent': { write_usd_per_mtok: 0, answer_input_tokens: 73_000, hours_per_world: 1.5 },
   'baseline-none': { write_usd_per_mtok: 0, answer_input_tokens: 0, hours_per_world: 0.5 },
   'baseline-full-context': { write_usd_per_mtok: 0, answer_input_tokens: null, hours_per_world: 0.5 },
@@ -326,6 +326,7 @@ function cell(set: CS1SetId, row: (typeof CS1_ROWS)[number]): CellDefinition {
     ...made, effort: CS1_EFFORT, scoring: 'key-match',
     ...(set === 'CS1-pilot' && writes ? { ingest_sessions: CS1_PILOT_SESSIONS } : {}),
     ...(set === 'CS1' && writes ? { idle_window: cs1IdleWindow(system) } : {}),
+    ...(set === 'CS1-pilot' && writes ? { idle_window: { ...cs1IdleWindow(system), worlds: [...ALL_SETS['CS1-pilot'].only_conversations!] } } : {}),
     hosting_samples: true,
     ...(system === 'gbrain-defaults' ? { gbrain_build: { ...CS1_GBRAIN_BUILD } } : {}),
   };

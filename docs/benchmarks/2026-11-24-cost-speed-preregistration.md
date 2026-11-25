@@ -284,8 +284,8 @@ CLAUDE.md asks; they go in the paid-window request and the tracking issue.
 | `gbrain-defaults` | 1.0 (measured embeddings 0.08, plus background fact extraction at an assumed 0.9 or less) | 23,800 tokens | 2 |
 | `ext-extract-first` | 95 (its recipe's rate from the scoreboard's development smokes, `ingest_usd_per_mtok` in `definitions.ts`; the battleground's 20.09 for gpt-4.1-mini in its matched configuration, times the 2.84 per-call ratio [its pilot](../../eval/systems/extract-first/PILOT.md) measured for gpt-5-mini, gives about 57, so the plan takes the higher) | 1,200 tokens | 20 (its recipe's 110 hours per million tokens, `hours_per_mtok`, for a world of about 0.18 million) |
 | `ext-memory-bank` | 3.7 (1.85 measured for its recipe with observations off, doubled for observations) | 10,400 tokens | 2 |
-| `ext-verbatim-session` | 0 | 8,000 tokens | 1.5 |
-| `baseline-hybrid` | 0.14 (measured) | 7,100 tokens | 1 |
+| `ext-verbatim-session` | 0 | 17,600 tokens (the pilot world's keyless rehearsal; amendment of 2026-11-25, item 14) | 1.5 |
+| `baseline-hybrid` | 0.14 (measured) | 22,500 tokens (the pilot world's keyless rehearsal; amendment of 2026-11-25, item 14) | 1 |
 | `baseline-file-agent` | 0 | 73,000 tokens over the agent's turns | 1.5 |
 | `baseline-none` | 0 | the question only | 0.5 |
 | `baseline-full-context` | 0 | the whole world, cached after the first read | 0.5 |
@@ -319,7 +319,9 @@ Each system's pilot must show:
 - **the part under test ran:** usage lines with provider usage fields for each call the table above says the system
   makes on write and on read (verbatim-session, the file agent and the floors must show no provider write lines), at
   least 20 completed counted probes with a time or a miss, no probe search billed to another phase, hosting samples
-  with nonzero resident memory, and for memory-bank, consolidation calls in its background lines;
+  with nonzero resident memory, an idle line measured over the idle window on `bg1-dev-11` (amendment of 2026-11-25,
+  item 15) with gbrain's upkeep trigger run and priced, and for memory-bank, consolidation calls in its background
+  lines;
 - **no judge:** there is none; every pilot answer gets a matcher class;
 - **the units can be supplied:** the paid pilot's write-and-drain time per session, times a world's session count, is
   inside the planned machine hours, the keyless capacity check finishes, and the write and background rate falls inside
@@ -487,6 +489,30 @@ Made on the results branch before any paid call. Where this amendment and the te
     two systems the fake can't stand in for the provider, so their capacity is checked on their first counted world,
     as the Pilot section says. Verbatim-session, the hybrid baseline and the file agent held the whole world in the
     first run. The answers are matcher-checked only for running: the fake's replies answer nothing.
+
+Added after a keyless rehearsal of all eight pilot cells on the pilot VM, before any paid call. Every rehearsal lease
+settled. It found four things, fixed here:
+
+12. **Reply cache.** Readers cached replies by prompt in a cache the whole machine shares, so a read whose prompt
+    matched an earlier one was answered from the cache with no provider call: in the rehearsal, extract-first's and
+    memory-bank's empty-evidence reads replayed the no-memory floor's replies, unmetered. A replay would leave a read
+    out of the read line and its latency, and a keyless reply left on the pilot VM could answer a paid read. Every
+    cost-and-speed cell, and any run behind a keyless upstream, now keeps its reply cache inside its own output
+    directory (`qaCacheRoot` in `eval/runner/q1/cell.ts`).
+13. **Hosting samples.** On the VM the run user is outside the docker group, so every hosting sample recorded an error
+    and no memory or disk reading. The sampler now reads docker through `sudo -n` when the socket refuses it, as the
+    stack's own bootstrap does, and the loader lists a unit with no samples or failed samples as a problem.
+14. **Read sizes.** The rehearsal read the pilot world's questions through each row's shipped read. Hybrid search
+    delivered 22,500 tokens per question and verbatim-session 17,600 (the fake counts a quarter of the prompt's
+    characters, close to cl100k), against the plan's 7,100 and 8,000, which came from default-delivery smokes on other
+    worlds. Hybrid's pilot cell stopped at its lease on its fourth question. The plan table now takes the measured
+    sizes, which raises those two rows' estimates and leases; the pilot's rate check compares against them. gbrain's
+    rehearsal read was smaller than its planned 23,800, but the fake's embeddings don't rank as the provider's do, so
+    its plan is unchanged until the pilot measures it.
+15. **Pilot idle window.** The pilot had no idle window, so it could not show gbrain's upkeep trigger priced or any
+    row's idle line measured, both parts R111 asks the pilot to show ran. Every writing row's pilot cell now idles on
+    `bg1-dev-11` for the same window as its counted cell (2 hours for gbrain, 30 minutes for the others), with the same
+    jobs and triggers.
 
 ## Disclosures
 

@@ -259,23 +259,23 @@
     {
       "id": "CS1",
       "label": "cost and speed counted cells: the eight rows on public dev worlds bg1-dev-01 to bg1-dev-10",
-      "plan_usd": 361.33,
-      "estimate_usd": 361.33,
-      "cap_usd": 542
+      "plan_usd": 392.56,
+      "estimate_usd": 392.56,
+      "cap_usd": 588.84
     },
     {
       "id": "CS1-pilot",
       "label": "cost and speed pilot (R111): the eight rows on bg1-dev-11, its first 60 sessions written",
-      "plan_usd": 12.27,
-      "estimate_usd": 12.27,
-      "cap_usd": 37.76
+      "plan_usd": 12.9,
+      "estimate_usd": 12.9,
+      "cap_usd": 39.4
     },
     {
       "id": "CS1-capacity",
       "label": "cost and speed keyless capacity check: every row that writes, on bg1-dev-12 against the fake upstream",
       "plan_usd": 0,
       "estimate_usd": 0,
-      "cap_usd": 56.04
+      "cap_usd": 60.81
     }
   ],
   "cells": [
@@ -653,9 +653,9 @@
         }
       ],
       "estimate": {
-        "usd": 13.11,
+        "usd": 25.1,
         "lines": {
-          "readers": 13.11
+          "readers": 25.1
         }
       },
       "scoring": "key-match",
@@ -677,8 +677,8 @@
       },
       "hosting_samples": true,
       "lease": {
-        "usd": 8.65,
-        "basis": "cost and speed: the largest unit's share ($6.61, 5 worlds at 1.0085 times the mean world) x 1.25 plus twice the peak reservation ($0.1916, reader anthropic:claude-opus-5-5)"
+        "usd": 16.53,
+        "basis": "cost and speed: the largest unit's share ($12.66, 5 worlds at 1.0085 times the mean world) x 1.25 plus twice the peak reservation ($0.3529, reader anthropic:claude-opus-5-5)"
       }
     },
     {
@@ -741,9 +741,9 @@
         }
       ],
       "estimate": {
-        "usd": 12.24,
+        "usd": 31.48,
         "lines": {
-          "readers": 11.98,
+          "readers": 31.23,
           "write_background": 0.25
         }
       },
@@ -766,8 +766,8 @@
       },
       "hosting_samples": true,
       "lease": {
-        "usd": 8.07,
-        "basis": "cost and speed: the largest unit's share ($6.17, 5 worlds at 1.0085 times the mean world) x 1.25 plus twice the peak reservation ($0.1765, reader anthropic:claude-opus-5-5)"
+        "usd": 20.72,
+        "basis": "cost and speed: the largest unit's share ($15.87, 5 worlds at 1.0085 times the mean world) x 1.25 plus twice the peak reservation ($0.4352, reader anthropic:claude-opus-5-5)"
       }
     },
     {
@@ -1034,7 +1034,7 @@
         "bg1-dev-11"
       ],
       "shards": 1,
-      "expected_hours": 8,
+      "expected_hours": 10,
       "launch": {
         "env": {
           "GBRAIN_BUN_IMAGE": "oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4",
@@ -1073,6 +1073,37 @@
       },
       "scoring": "key-match",
       "ingest_sessions": 60,
+      "idle_window": {
+        "worlds": [
+          "bg1-dev-11"
+        ],
+        "ms": 7200000,
+        "min_ms": 1800000,
+        "max_ms": 7200000,
+        "jobs": [
+          {
+            "job": "serve idle tick: idle sweep, then idle upkeep when due (a stdio serve with no input for a full tick)",
+            "cadence_minutes": 10,
+            "source": "gbrain v0.60.771.0 src/commands/serve.ts IDLE_SWEEP_INTERVAL_MS, src/core/maintenance/idle.ts; eval/systems/gbrain-defaults/shim.py docstring"
+          },
+          {
+            "job": "idle upkeep round (link and timeline extraction, repair lanes, bookkeeping GC, the capped embedding step), due a day after the last round finished, run in 3-second slices on the idle tick; priced per run through gbrain maintain --unattended",
+            "cadence_minutes": 1440,
+            "source": "gbrain v0.60.771.0 src/core/maintenance/run.ts UPKEEP_INTERVAL_MS, src/core/maintenance/idle.ts IDLE_UPKEEP_BUDGET_MS, src/commands/maintain-schedule.ts SCHEDULED_RUN_ARGS",
+            "trigger": "maintain"
+          },
+          {
+            "job": "facts drain timer: queued facts-absorb extraction jobs",
+            "cadence_minutes": 10,
+            "source": "gbrain v0.60.771.0 src/core/facts/drain-scheduler.ts FACTS_DRAIN_TICK_MS"
+          },
+          {
+            "job": "autopilot daemon cycle (every 5 minutes when installed): not started, because the shim installs with --no-autopilot-install and gbrain documents autopilot for a Postgres brain with a repo, while this brain is PGLite",
+            "cadence_minutes": null,
+            "source": "gbrain v0.60.771.0 src/commands/autopilot.ts (default --interval 300), docs/guides/cron-schedule.md; eval/systems/gbrain-defaults/shim.py apply-migrations"
+          }
+        ]
+      },
       "hosting_samples": true,
       "gbrain_build": {
         "release": "v0.60.771.0",
@@ -1148,6 +1179,21 @@
       },
       "scoring": "key-match",
       "ingest_sessions": 60,
+      "idle_window": {
+        "worlds": [
+          "bg1-dev-11"
+        ],
+        "ms": 1800000,
+        "min_ms": 1800000,
+        "max_ms": 7200000,
+        "jobs": [
+          {
+            "job": "per-namespace ingest worker: one Memory.add per chunk after /ingest returns; no scheduled job",
+            "cadence_minutes": null,
+            "source": "docs/comparison-systems/ext-extract-first/README.md (/ingest), shim.py"
+          }
+        ]
+      },
       "hosting_samples": true,
       "lease": {
         "usd": 9.28,
@@ -1219,6 +1265,21 @@
       },
       "scoring": "key-match",
       "ingest_sessions": 60,
+      "idle_window": {
+        "worlds": [
+          "bg1-dev-11"
+        ],
+        "ms": 1800000,
+        "min_ms": 1800000,
+        "max_ms": 7200000,
+        "jobs": [
+          {
+            "job": "observation consolidation on the server worker after each retain; no scheduled job",
+            "cadence_minutes": null,
+            "source": "the vendor's observations guide (How Consolidation Works); docs/comparison-systems/ext-memory-bank/README.md"
+          }
+        ]
+      },
       "hosting_samples": true,
       "lease": {
         "usd": 1.22,
@@ -1282,17 +1343,32 @@
         }
       ],
       "estimate": {
-        "usd": 0.26,
+        "usd": 0.5,
         "lines": {
-          "readers": 0.26
+          "readers": 0.5
         }
       },
       "scoring": "key-match",
       "ingest_sessions": 60,
+      "idle_window": {
+        "worlds": [
+          "bg1-dev-11"
+        ],
+        "ms": 1800000,
+        "min_ms": 1800000,
+        "max_ms": 7200000,
+        "jobs": [
+          {
+            "job": "none: the local embedder indexes each session inside its write",
+            "cadence_minutes": null,
+            "source": "docs/comparison-systems/ext-verbatim-session/README.md (/ingest)"
+          }
+        ]
+      },
       "hosting_samples": true,
       "lease": {
-        "usd": 0.71,
-        "basis": "cost and speed: the largest unit's share ($0.26, 1 world) x 1.25 plus twice the peak reservation ($0.1916, reader anthropic:claude-opus-5-5)"
+        "usd": 1.34,
+        "basis": "cost and speed: the largest unit's share ($0.50, 1 world) x 1.25 plus twice the peak reservation ($0.3529, reader anthropic:claude-opus-5-5)"
       }
     },
     {
@@ -1346,18 +1422,33 @@
         }
       ],
       "estimate": {
-        "usd": 0.25,
+        "usd": 0.64,
         "lines": {
-          "readers": 0.24,
+          "readers": 0.62,
           "write_background": 0.01
         }
       },
       "scoring": "key-match",
       "ingest_sessions": 60,
+      "idle_window": {
+        "worlds": [
+          "bg1-dev-11"
+        ],
+        "ms": 1800000,
+        "min_ms": 1800000,
+        "max_ms": 7200000,
+        "jobs": [
+          {
+            "job": "none: sessions are embedded and written in buffers during the write and at finish",
+            "cadence_minutes": null,
+            "source": "eval/runner/systems/baselines.ts PlainHybridSystem"
+          }
+        ]
+      },
       "hosting_samples": true,
       "lease": {
-        "usd": 0.67,
-        "basis": "cost and speed: the largest unit's share ($0.25, 1 world) x 1.25 plus twice the peak reservation ($0.1765, reader anthropic:claude-opus-5-5)"
+        "usd": 1.68,
+        "basis": "cost and speed: the largest unit's share ($0.64, 1 world) x 1.25 plus twice the peak reservation ($0.4352, reader anthropic:claude-opus-5-5)"
       }
     },
     {
@@ -1418,6 +1509,21 @@
       },
       "scoring": "key-match",
       "ingest_sessions": 60,
+      "idle_window": {
+        "worlds": [
+          "bg1-dev-11"
+        ],
+        "ms": 1800000,
+        "min_ms": 1800000,
+        "max_ms": 7200000,
+        "jobs": [
+          {
+            "job": "none: the write is a Markdown file",
+            "cadence_minutes": null,
+            "source": "eval/runner/systems/file-agent.ts"
+          }
+        ]
+      },
       "hosting_samples": true,
       "lease": {
         "usd": 13.97,
@@ -1821,8 +1927,8 @@
       "scoring": "key-match",
       "hosting_samples": true,
       "lease": {
-        "usd": 2.04,
-        "basis": "keyless capacity check, leased as one counted world because its lease proxy prices the fake upstream's usage fields: the largest unit's share ($1.32, 1 world at 1.0085 times the mean world) x 1.25 plus twice the peak reservation ($0.1916, reader anthropic:claude-opus-5-5)"
+        "usd": 3.87,
+        "basis": "keyless capacity check, leased as one counted world because its lease proxy prices the fake upstream's usage fields: the largest unit's share ($2.53, 1 world at 1.0085 times the mean world) x 1.25 plus twice the peak reservation ($0.3529, reader anthropic:claude-opus-5-5)"
       }
     },
     {
@@ -1882,8 +1988,8 @@
       "scoring": "key-match",
       "hosting_samples": true,
       "lease": {
-        "usd": 1.9,
-        "basis": "keyless capacity check, leased as one counted world because its lease proxy prices the fake upstream's usage fields: the largest unit's share ($1.23, 1 world at 1.0085 times the mean world) x 1.25 plus twice the peak reservation ($0.1765, reader anthropic:claude-opus-5-5)"
+        "usd": 4.84,
+        "basis": "keyless capacity check, leased as one counted world because its lease proxy prices the fake upstream's usage fields: the largest unit's share ($3.17, 1 world at 1.0085 times the mean world) x 1.25 plus twice the peak reservation ($0.4352, reader anthropic:claude-opus-5-5)"
       }
     },
     {
@@ -1948,9 +2054,9 @@
       }
     }
   ],
-  "total_usd": 361.33,
-  "plan_total_usd": 361.33,
-  "cap_usd": 542,
+  "total_usd": 392.56,
+  "plan_total_usd": 392.56,
+  "cap_usd": 588.84,
   "campaign_id": "q1-scoreboard-cost-speed",
   "registry": "docs/benchmarks/preregistrations.d/cost-speed-personal.json",
   "gbrain_build": {
@@ -2021,12 +2127,12 @@
     },
     "ext-verbatim-session": {
       "write_usd_per_mtok": 0,
-      "answer_input_tokens": 8000,
+      "answer_input_tokens": 17600,
       "hours_per_world": 1.5
     },
     "baseline-hybrid": {
       "write_usd_per_mtok": 0.14,
-      "answer_input_tokens": 7100,
+      "answer_input_tokens": 22500,
       "hours_per_world": 1
     },
     "baseline-file-agent": {

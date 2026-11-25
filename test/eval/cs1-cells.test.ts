@@ -11,7 +11,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { bg1CampaignManifest, bg1CellWindow, campaignCells, devOnly, findCell, loadCellManifest, readerFitTokenizer, readerMaxTokens, runCell } from '../../eval/runner/q1/cell.ts';
+import { bg1CampaignManifest, bg1CellWindow, campaignCells, devOnly, findCell, loadCellManifest, qaCacheRoot, readerFitTokenizer, readerMaxTokens, runCell } from '../../eval/runner/q1/cell.ts';
 import { keylessUpstream, MeteringProxy } from '../../eval/runner/metering-proxy.ts';
 import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { ALL_SETS, CELL_VM_MAX_HOURS, cellVmHours, CS1_SETS, definitionProblems, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
@@ -127,15 +127,15 @@ describe('cs1-cells.json', () => {
     expect(readFileSync(join(ROOT, 'docs/comparison-systems/ext-extract-first/read-route/Dockerfile'), 'utf8')).toContain('CMD ["python", "read_route.py"]');
   });
 
-  test('probes, the pilot\'s 60-session prefix and the idle window on rows that write; hosting samples everywhere', () => {
+  test('probes, the pilot\'s 60-session prefix and the idle window on rows that write (the pilot idles on its one world); hosting samples everywhere', () => {
     for (const c of all) {
       expect(c.hosting_samples).toBe(true);
       if (!writes(c)) { expect([c.probes.sample, c.probes.held_back, c.ingest_sessions, c.idle_window]).toEqual([0, undefined, undefined, undefined]); continue; }
       expect([c.probes.sample, c.probes.held_back]).toEqual([19, c.set === 'CS1-pilot' ? 20 : 21]);
       expect(c.ingest_sessions).toBe(c.set === 'CS1-pilot' ? CS1_PILOT_SESSIONS : undefined);
-      if (c.set !== 'CS1') { expect(c.idle_window).toBeUndefined(); continue; }
+      if (c.set === 'CS1-capacity') { expect(c.idle_window).toBeUndefined(); continue; }
       const w = c.idle_window!;
-      expect(w.worlds).toEqual([...CS1_IDLE_WORLDS]);
+      expect(w.worlds).toEqual(c.set === 'CS1-pilot' ? ['bg1-dev-11'] : [...CS1_IDLE_WORLDS]);
       expect(w.worlds.every(x => c.only_conversations!.includes(x))).toBe(true);
       expect(w.ms).toBeGreaterThanOrEqual(w.min_ms);
       expect(w.ms).toBeLessThanOrEqual(w.max_ms);
@@ -149,6 +149,16 @@ describe('cs1-cells.json', () => {
     for (const c of all) expect(cellVmHours(c.expected_hours)).toBeLessThanOrEqual(CELL_VM_MAX_HOURS);
     for (const p of pilot) expect(p.estimate.usd).toBeLessThanOrEqual(m.cells.find(c => c.system === p.system)!.estimate.usd / 10);
     for (const c of capacity) expect(c.estimate.usd).toBe(0);
+  });
+});
+
+describe('reply cache', () => {
+  test("a cost-and-speed cell and any keyless run cache replies in their own --out; other cells share the machine's cache", () => {
+    const shared = { GBRAIN_EVALS_QA_CACHE: '/shared/qa' };
+    for (const block of ['CS1', 'CS1-pilot', 'CS1-capacity'] as const) expect(qaCacheRoot({ block }, '/o', shared, false)).toBe('/o/cache/qa');
+    expect(qaCacheRoot({ block: 'BG1' }, '/o', { ...shared, SHOOTOUT_KEYLESS_UPSTREAM: 'http://127.0.0.1:18999' }, false)).toBe('/o/cache/qa');
+    expect(qaCacheRoot({ block: 'BG1' }, '/o', shared, true)).toBe('/o/cache/qa');
+    expect(qaCacheRoot({ block: 'BG1' }, '/o', shared, false)).toBe('/shared/qa');
   });
 });
 
