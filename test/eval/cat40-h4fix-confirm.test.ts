@@ -71,6 +71,9 @@ describe('h4fix-confirm plan', () => {
       expect(ids.slice(0, record).some(i => /-h4[ab]$|-other$/.test(i))).toBe(false);
       for (const half of ['a', 'b'] as const) for (const s of steps.filter(x => x.id.endsWith(`-h4${half}`))) expect(val(s.argv, '--tasks')).toBe(h4Half(half).join(','));
     });
+    test(`${w}: the oracle gate counts this world's planned tasks per reader`, () => {
+      expect(val(steps.find(s => s.id === 'oracle-gate')!.argv, '--tasks-per-model')).toBe(FULL_WORLDS.includes(w) ? '100' : '20');
+    });
     test(`${w}: every cap and allowance is a placeholder, never a dollar figure (R79)`, () => {
       for (const f of ['--budget-usd', '--slot-build-allowance-usd']) for (const s of steps.filter(x => x.argv.includes(f))) expect(val(s.argv, f)).toMatch(/^\$CAP_[A-Z0-9_]+$/);
       expect(val(steps[0].argv, '--program-cap-usd')).toBe('$CAP_PROGRAM');

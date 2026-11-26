@@ -5,7 +5,7 @@
  *   bun eval/runner/cat40/hard-ops.ts project --step <step> [--measured <results.jsonl|attempts.jsonl>,...] [--done <the step's attempts.jsonl>] [--world <world.json>] [--scale v1|large]
  *   bun eval/runner/cat40/hard-ops.ts roster
  *   bun eval/runner/cat40/hard-ops.ts confirm-ledger --world main|sealed
- *   bun eval/runner/cat40/hard-ops.ts oracle-gate --attempts <confirm-oracle attempts.jsonl>
+ *   bun eval/runner/cat40/hard-ops.ts oracle-gate --attempts <confirm-oracle attempts.jsonl> [--models <a,b>] [--tasks-per-model <n, default 100>]
  *   bun eval/runner/cat40/hard-ops.ts freeze write --knobs <knobs.round-N.json> --note "<why this round froze>"
  *   bun eval/runner/cat40/hard-ops.ts freeze check
  *
@@ -224,8 +224,8 @@ export function checkConfirmLedger(ledger: string | undefined, root = REPO_ROOT)
  * HARD_MODELS unless the run names its own readers, as the newest-build re-measure does). A cell with no harness-clean
  * attempt counts as missing, and any missing cell fails the gate. Cells of other models are left out.
  */
-export function confirmOracleGate(records: Array<Record<string, unknown>>, models: readonly string[] = HARD_MODELS): { cells: number; planned: number; successes: number; rate: number; by_model: Record<string, { cells: number; successes: number }>; incomplete: number; pass: boolean } {
-  const planned = models.length * 100;
+export function confirmOracleGate(records: Array<Record<string, unknown>>, models: readonly string[] = HARD_MODELS, tasksPerModel = 100): { cells: number; planned: number; successes: number; rate: number; by_model: Record<string, { cells: number; successes: number }>; incomplete: number; pass: boolean } {
+  const planned = models.length * tasksPerModel;
   const all = canonicalCells(records);
   const cells = all.cells.filter(c => models.includes(c.model));
   const incomplete = all.incomplete.filter(key => models.includes(key.split('|')[0]));
@@ -325,7 +325,9 @@ if (import.meta.main) {
     } else if (cmd === 'oracle-gate') {
       const results = flag('--attempts');
       if (!results) { console.error('usage: hard-ops.ts oracle-gate --attempts <confirm-oracle attempts.jsonl>'); process.exit(2); }
-      const g = confirmOracleGate(readRecords(results.split(',')), flag('--models')?.split(',').filter(Boolean) ?? HARD_MODELS);
+      const perModel = Number(flag('--tasks-per-model') ?? 100);
+      if (!Number.isInteger(perModel) || perModel < 1) { console.error('oracle-gate: --tasks-per-model takes a positive whole number of planned tasks per model'); process.exit(2); }
+      const g = confirmOracleGate(readRecords(results.split(',')), flag('--models')?.split(',').filter(Boolean) ?? HARD_MODELS, perModel);
       console.log(JSON.stringify(g, null, 2));
       if (!g.pass) throw new HardStop('HARD_ORACLE_GATE', `pooled oracle success ${(g.rate * 100).toFixed(1)}% on ${g.cells} of ${g.planned} cells (${g.incomplete} without a clean attempt); the gate needs ${CONFIRM_ORACLE_MIN * 100}% on all ${g.planned}`, 'run no counted cells on this world; report it', 'Garry decides what follows a failed oracle gate (PREREG.md, gate 2)');
     } else if (cmd === 'confirm-ledger') {

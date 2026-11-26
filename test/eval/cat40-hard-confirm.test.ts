@@ -87,6 +87,12 @@ describe('oracle gate (gate 2)', () => {
     expect(confirmOracleGate(records(16))).toMatchObject({ cells: 300, successes: 284, pass: false });
     expect(confirmOracleGate(records(0)).by_model[HARD_MODELS[1]]).toEqual({ cells: 100, successes: 100 });
   });
+  test('a world planned with fewer tasks per model counts its own planned cells', () => {
+    const h4 = HARD_MODELS.slice(0, 2).flatMap(m => tasks.filter(t => t.startsWith('H4')).map(t => rec(m, t, true)));
+    expect(confirmOracleGate(h4, HARD_MODELS.slice(0, 2))).toMatchObject({ cells: 40, planned: 200, pass: false });
+    expect(confirmOracleGate(h4, HARD_MODELS.slice(0, 2), 20)).toMatchObject({ cells: 40, planned: 40, pass: true });
+    expect(confirmOracleGate(h4.slice(1), HARD_MODELS.slice(0, 2), 20).pass).toBe(false);
+  });
   test('a missing cell or a cell with only harness-error attempts fails the gate; a clean retry counts', () => {
     expect(confirmOracleGate(records(0).slice(1)).pass).toBe(false);
     const errored = records(0);
