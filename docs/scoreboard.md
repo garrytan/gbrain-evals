@@ -109,7 +109,10 @@ cells launch only with `--sealed` from the custodian's host, where dataset cache
   whole conversation when the cell has no `restore_command`. A conversation is never partly re-ingested. The lost VM's
   lease is closed with `abandon`, which charges its full reservation against the cap and says so.
 - **Spend.** The campaign cap and each block's cap (1.5 times its estimate) stop new leases. Hitting either is a partial
-  result (exit 4) that states the dollars held in leases still charged at their full reservation.
+  result (exit 4) that states the dollars held in leases still charged at their full reservation. A campaign that names
+  a granted `paid_window` reserves from that window's shared ledger, whose cap is the window's cap, so a lease also stops
+  when it would take every campaign in the window past that cap. A window's unit name serves one grant: a campaign whose
+  window cap differs from the one its ledger already holds refuses.
 
 ### Cost and speed columns
 
@@ -205,6 +208,11 @@ preregistration.
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-11-26: one ledger per paid window
+
+The Spend guarantee adds that every campaign naming one granted `paid_window` reserves from that window's shared
+ledger and stops at the window's cap, and that a window name serves one grant only.
 
 ### 2026-11-10: what a Q1 VM receives
 
