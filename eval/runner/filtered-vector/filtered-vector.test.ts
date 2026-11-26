@@ -5,7 +5,7 @@ import { join, resolve } from 'node:path';
 import { afterDateFor, attributeRanks, dateFor, filters, pageAttributes, SHARES } from './attributes.ts';
 import { attemptKind, boostedSlug, firstSentence, queryPlan } from './harness.ts';
 import { ARM_PATCHES, applyPatch } from './patch-arm.ts';
-import { applyReruns, decide, recountDir } from './recount.ts';
+import { applyReruns, decide, recountDir, truthCheck, type CellResult } from './recount.ts';
 import { latencyState, outcome, recallAt, recallState, type CellVerdict } from './stats.ts';
 
 const GBRAIN = resolve(import.meta.dir, '../../../node_modules/gbrain');
@@ -169,5 +169,19 @@ describe('recount', () => {
     const again = recountDir(fixture(lossy), 400);
     applyReruns(again, recountDir(fixture(lossy), 400));
     expect(again[0]!.final_recall).toBe('loss');
+  });
+});
+
+describe('truth check', () => {
+  test('a disagreement or a stop makes the check unclean; agreement on every checked query is clean', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fv-truth-'));
+    const cells = [{ cell: 'a' }, { cell: 'b' }] as CellResult[];
+    writeFileSync(join(dir, 'oracle-check.jsonl'), [{ cell: 'a', ok: true }, { cell: 'a', ok: true }, { cell: 'b', ok: true }].map(r => JSON.stringify(r)).join('\n') + '\n');
+    expect(truthCheck([dir], cells)).toMatchObject({ cells_checked: 2, clean: true, disagreements: [], stops: [] });
+    writeFileSync(join(dir, 'oracle-check.jsonl'), [{ cell: 'a', ok: true }, { cell: 'b', ok: false }].map(r => JSON.stringify(r)).join('\n') + '\n');
+    expect(truthCheck([dir], cells)).toMatchObject({ clean: false, disagreements: [{ cell: 'b', ok: 0, n: 1 }] });
+    writeFileSync(join(dir, 'oracle-check.jsonl'), JSON.stringify({ cell: 'a', ok: true }) + '\n');
+    writeFileSync(join(dir, 'truth-stops.jsonl'), JSON.stringify({ cell: 'c' }) + '\n');
+    expect(truthCheck([dir], cells)).toMatchObject({ clean: false, stops: ['c'], unchecked: ['b'] });
   });
 });

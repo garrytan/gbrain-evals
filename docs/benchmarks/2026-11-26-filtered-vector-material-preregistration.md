@@ -306,3 +306,30 @@ Committed on the results branch before any pilot or counted cell. It changes no 
    is **Close**, reported with every cell's reached share.
 
 Both 2 and 3 were raised by the preregistration's second review round and left open on #662 for this amendment.
+
+``` 2026-11-26: query counts after the pilot, brute-force ground truth, and a truth stop
+
+Committed on the results branch after the pilot and before any counted cell. It changes no arm, filter, size, metric,
+margin or outcome rule. Approved by the experiment's owner on GST-4006.
+
+1. **Query counts.** The pilot passed its other checks (see "Pilot per arm"), but its projected recall half-width was
+   above 0.008 in every family of the untrusted caller, on both engines it ran on, and under 0.008 in every trusted
+   family. Under "Smallest detectable difference", those families rise to the rule's ceiling of 500 queries per cell at
+   375,000 chunks and below and on W. At 1,500,000 chunks, where the plan set 100 queries for cost, they rise to 250,
+   the same factor. That size is outside the realistic cells the outcome pools. Trusted cells keep 200 (100 at
+   1,500,000), and cold cells keep 30. In clustered mode an untrusted cell draws its own 500 queries, as before. In
+   independent mode the trusted cells use the first 200 queries of the same seeded set (`--queries-untrusted`).
+2. **Ground truth.** "Exact ground truth" names gbrain's `exactSql` with an unbounded candidate window. At the planned
+   sizes the pilot showed that query costs about as much as the timed searches it checks, and more on unselective
+   filters, so most of the grid's machine time would go to it. On every pilot cell (366 cells, two engines) it agreed
+   with the float64 brute force on every query, under the rule in that section (ties within 1e-6, scores within 1e-5).
+   So counted cells take the brute force as their truth (`--truth brute`): each eligible page ranked by its best
+   chunk's cosine with the query, over the vectors the harness loaded (generated on L, `vectors.f32` on W), with
+   eligibility from the same page attributes and caller rule. `exactSql` keeps running as a check on the first 20
+   queries of every cell at the cell's largest limit (`--exact-check 20`). Both results go to `oracle-check.jsonl`,
+   and the recount's `truth_check` lists every checked cell.
+3. **Truth stop.** If `exactSql` and the brute force disagree on any checked query, that cell stops before any
+   search runs. It's written to `truth-stops.jsonl`, reported, and goes to the experiment's owner before its
+   numbers count. It is never quietly re-run or dropped.
+4. **Harness only.** `exactSql` now runs on its own pool of connections, so several run at once on Postgres. This
+   changes no timed search and no result.

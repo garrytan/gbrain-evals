@@ -197,6 +197,18 @@ export function decide(dirs: string[], cells: CellResult[], resamples = BOOTSTRA
   return { pooled_cells: pooledCells.length, pooled, ...outcome(verdicts, pooled), invalid_cells: cells.filter(c => c.invalid).map(c => c.cell) };
 }
 
+/**
+ * The continuing truth check (amendment 2026-11-26): on the first queries of every counted cell, exactSql against the
+ * brute-force truth. A cell in truth-stops.jsonl never ran; any stop or disagreement goes to the Captain before numbers count.
+ */
+export function truthCheck(dirs: string[], cells: CellResult[]) {
+  const perCell = new Map<string, { ok: number; n: number }>();
+  for (const o of dirs.flatMap(d => readJsonl(join(d, 'oracle-check.jsonl')))) { const x = perCell.get(o.cell) ?? { ok: 0, n: 0 }; x.n++; if (o.ok) x.ok++; perCell.set(o.cell, x); }
+  const stops = dirs.flatMap(d => readJsonl(join(d, 'truth-stops.jsonl')).map(s => s.cell as string));
+  const disagreements = [...perCell].filter(([, x]) => x.ok !== x.n).map(([cell, x]) => ({ cell, ...x }));
+  return { cells_checked: cells.filter(c => perCell.has(c.cell)).length, cells: cells.length, unchecked: cells.filter(c => !perCell.has(c.cell)).map(c => c.cell), disagreements, stops, clean: !disagreements.length && !stops.length };
+}
+
 /** Pilot checks (preregistration, "Pilot per arm"). */
 export function pilotChecks(dirs: string[], cells: CellResult[]) {
   const oracle = dirs.flatMap(d => readJsonl(join(d, 'oracle-check.jsonl')));
@@ -248,7 +260,7 @@ if (import.meta.main) {
   if (!dirs.length) throw new Error('usage: recount.ts --out <dir> <run dir>... [--rerun <run dir>]... [--pilot]');
   const cells = dirs.flatMap(d => recountDir(d, resamples));
   applyReruns(cells, reruns.flatMap(d => recountDir(d, resamples)));
-  const result = { cells: cells.length, decision: decide(dirs, cells, resamples), sanity: sanity(dirs, cells, resamples), ...(pilot ? { pilot: pilotChecks(dirs, cells) } : {}), manifests: dirs.map(d => JSON.parse(readFileSync(join(d, 'manifest.json'), 'utf8'))) };
+  const result = { cells: cells.length, decision: decide(dirs, cells, resamples), truth_check: truthCheck(dirs, cells), sanity: sanity(dirs, cells, resamples), ...(pilot ? { pilot: pilotChecks(dirs, cells) } : {}), manifests: dirs.map(d => JSON.parse(readFileSync(join(d, 'manifest.json'), 'utf8'))) };
   mkdirSync(outDir, { recursive: true });
   writeFileSync(join(outDir, 'cells.json'), JSON.stringify(cells, null, 1));
   writeFileSync(join(outDir, 'summary.json'), JSON.stringify(result, null, 1));

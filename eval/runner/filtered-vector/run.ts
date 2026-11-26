@@ -65,6 +65,8 @@ const SEED = Number(flag('seed', '9817'));
 const ATTR_SEED = Number(flag('attr-seed', '9818'));
 const QUERY_SEED = Number(flag('query-seed', '9819'));
 const QUERIES = Number(flag('queries', '200'));
+const QUERIES_UNTRUSTED = Number(flag('queries-untrusted', String(QUERIES)));
+const queryCount = (caller: Caller) => (caller === 'untrusted' ? QUERIES_UNTRUSTED : QUERIES);
 const REPEATS = Number(flag('repeats', '3'));
 const CAPTURE = Number(flag('capture', '5'));
 const RUN_MODES = list('modes', MODES.join(',')) as Mode[];
@@ -79,6 +81,9 @@ const OUT = resolve(flag('out'));
 const WORKERS = Number(flag('workers', String(Math.max(1, cpus().length - 1))));
 const EXACT_CONCURRENCY = Number(flag('exact-concurrency', String(Math.max(1, Math.floor(cpus().length / 2)))));
 const ORACLE_CHECK = has('oracle-check');
+const TRUTH = flag('truth', 'exact') as 'exact' | 'brute';
+const EXACT_CHECK = Number(flag('exact-check', '20'));
+if (TRUTH === 'brute' && ORACLE_CHECK) throw new Error('--oracle-check compares exactSql truth with the brute force; with --truth brute the check is --exact-check');
 const IMAGE = flag('image', '');
 const KEEP = has('keep');
 
@@ -369,7 +374,7 @@ if (created) {
     db: ENGINE === 'pglite' ? DATA_DIR : dbName, label: LABEL, engine: ENGINE, image: IMAGE, corpus: CORPUS, corpus_files: corpusFiles, chunks: CHUNKS, dims: DIMS, seed: SEED, attr_seed: ATTR_SEED, query_seed: QUERY_SEED,
     latent: CORPUS === 'latent' ? params : null, pages: N, gbrain_commit: gbrainCommit, harness_commit: harnessCommit, arm_files: armFiles, index_sql: buildSql,
     load_seconds: loadSeconds, index_build_seconds: buildSeconds, maintenance_work_mem: mwm, env, machine: { cpus: cpus().length, mem_gb: Math.round(totalmem() / 2 ** 30) },
-    boost_map: boostMap, hard_excludes: hardExcludes, queries: QUERIES, repeats: REPEATS, capture: CAPTURE, started: new Date().toISOString(),
+    boost_map: boostMap, hard_excludes: hardExcludes, queries: QUERIES, queries_untrusted: QUERIES_UNTRUSTED, truth: TRUTH, exact_check: TRUTH === 'brute' ? EXACT_CHECK : null, repeats: REPEATS, capture: CAPTURE, started: new Date().toISOString(),
   }, null, 2));
   log('loaded in ' + loadSeconds.toFixed(0) + ' s, index built in ' + buildSeconds.toFixed(0) + ' s');
 }
@@ -500,15 +505,15 @@ function stratifiedSpecs(n: number, inPages: number[], outPages: number[], f: Fi
   });
 }
 
-const independent = await materialize(randomSpecs(QUERIES), 'independent');
+const independent = await materialize(randomSpecs(Math.max(QUERIES, QUERIES_UNTRUSTED, COLD_QUERIES)), 'independent');
 if (!existsSync(join(OUT, 'queries.jsonl'))) for (const q of independent) append('queries.jsonl', { set: 'independent', q: q.q, page: q.page + 1, chunk: q.chunk });
 
 async function queriesFor(mode: Mode, f: FilterSpec, caller: Caller): Promise<Query[]> {
   const attrs = attributesFor(mode);
   const inPages: number[] = [], outPages: number[] = [];
   attrs.forEach((a, p) => (f.matches(a) && callerSees(caller, a) ? inPages : outPages).push(p));
-  if (queryPlan(mode, f.kind, inPages.length, outPages.length) === 'independent') return independent;
-  return materialize(stratifiedSpecs(QUERIES, inPages, outPages, f, caller), 'stratified:' + f.id + ':' + caller);
+  if (queryPlan(mode, f.kind, inPages.length, outPages.length) === 'independent') return independent.slice(0, queryCount(caller));
+  return materialize(stratifiedSpecs(queryCount(caller), inPages, outPages, f, caller), 'stratified:' + f.id + ':' + caller);
 }
 
 // ---------------------------------------------------------------------------
@@ -520,28 +525,65 @@ function searchOpts(f: FilterSpec, caller: Caller, limit: number): Any {
 }
 
 /** gbrain's exactSql for the same statement, its candidate window unbounded (null bound), JIT off, own transaction. */
-async function exact(q: Query, opts: Any, k: number): Promise<{ pages: number[]; scores: number[]; ms: number }> {
+async function exact(q: Query, opts: Any, k: number, pool: Any): Promise<{ pages: number[]; scores: number[]; ms: number }> {
   const stmt = vectorStatement.buildVectorSearchStatement({ dialect: ENGINE, embedding: q.vector, limit: k, offset: 0, opts });
+  const bound = [...stmt.params];
+  bound[stmt.innerLimitIdx] = null;
   const t0 = performance.now();
-  const rows: Any[] = await control().transaction(async (tx: Any) => {
-    await tx.executeRaw("SET LOCAL statement_timeout = '1800s'");
-    await tx.executeRaw('SET LOCAL jit = off');
-    const bound = [...stmt.params];
-    bound[stmt.innerLimitIdx] = null;
-    return tx.executeRaw(stmt.exactSql, bound);
-  });
+  const rows: Any[] = pool
+    ? await pool.begin(async (tx: Any) => {
+      await tx.unsafe("SET LOCAL statement_timeout = '1800s'");
+      await tx.unsafe('SET LOCAL jit = off');
+      return Array.from(await tx.unsafe(stmt.exactSql, bound));
+    })
+    : await control().transaction(async (tx: Any) => {
+      await tx.executeRaw("SET LOCAL statement_timeout = '1800s'");
+      await tx.executeRaw('SET LOCAL jit = off');
+      return tx.executeRaw(stmt.exactSql, bound);
+    });
   const hits = rows.filter(r => r.page_id != null).slice(0, k);
   return { pages: hits.map(r => Number(r.page_id)), scores: hits.map(r => Number(r.score)), ms: performance.now() - t0 };
 }
 
-/** The exact top pages per query at the largest limit, shared by every limit and both arms (a top 20 is the top 50's prefix). */
-async function exactAll(queries: Query[], f: FilterSpec, caller: Caller, k: number) {
+/** gbrain's exactSql for each query, EXACT_CONCURRENCY at a time on Postgres (own pool), one at a time on PGLite. */
+async function exactMany(queries: Query[], f: FilterSpec, caller: Caller, k: number) {
   const out: Array<{ pages: number[]; scores: number[]; ms: number }> = new Array(queries.length);
+  const pool = ENGINE === 'postgres' ? postgres(url.toString(), { max: EXACT_CONCURRENCY, prepare: false, onnotice: () => {} }) : null;
   let next = 0;
-  await Promise.all(Array.from({ length: Math.min(EXACT_CONCURRENCY, queries.length) }, async () => {
-    for (let i = next++; i < queries.length; i = next++) out[i] = await exact(queries[i]!, searchOpts(f, caller, k), k);
-  }));
+  try {
+    await Promise.all(Array.from({ length: Math.min(pool ? EXACT_CONCURRENCY : 1, queries.length) }, async () => {
+      for (let i = next++; i < queries.length; i = next++) out[i] = await exact(queries[i]!, searchOpts(f, caller, k), k, pool);
+    }));
+  } finally { await pool?.end(); }
   return out;
+}
+
+/**
+ * The true top pages per query at the largest limit, shared by every limit and both arms (a top 20 is the top 50's
+ * prefix). --truth exact: gbrain's exactSql for every query. --truth brute (amendment 2026-11-26, after the pilot):
+ * the float64 brute force, with exactSql run on the first EXACT_CHECK queries and compared; on any disagreement the
+ * cell is stopped (truth-stops.jsonl) and returns null, so it never runs or counts.
+ */
+async function exactAll(queries: Query[], mode: Mode, f: FilterSpec, caller: Caller, k: number, ids: string[]): Promise<Array<{ pages: number[]; scores: number[]; ms: number }> | null> {
+  if (TRUTH === 'exact') return exactMany(queries, f, caller, k);
+  const eligible = eligiblePages(mode, f, caller);
+  const truth = queries.map(q => { const t0 = performance.now(); const b = bruteTop(q, eligible, k); return { ...b, ms: performance.now() - t0 }; });
+  const checked = queries.slice(0, EXACT_CHECK);
+  const ex = await exactMany(checked, f, caller, k);
+  const open = ids.filter(id => !done.has(id));
+  const rows = checked.map((q, i) => ({ q: q.q, ok: agrees(q, truth[i]!, ex[i]!, k), brute: truth[i]!.pages, brute_scores: truth[i]!.scores, exact: ex[i]!.pages.slice(0, k), exact_scores: ex[i]!.scores.slice(0, k) }));
+  const agree = rows.filter(r => r.ok).length;
+  log(open.join(', ') + ': exactSql agrees with the brute force on ' + agree + ' of ' + checked.length + ' checked queries');
+  if (agree === checked.length) {
+    for (const cell of open) for (const r of rows) stage('oracle-check.jsonl', { cell, k, ...r });
+    return truth;
+  }
+  for (const cell of open) {
+    for (const r of rows) append('oracle-check.jsonl', { cell, k, ...r });
+    append('truth-stops.jsonl', { cell, at: new Date().toISOString(), checked: checked.length, agree });
+  }
+  log('TRUTH STOP: ' + open.join(', ') + ': exactSql and the brute force disagree, so the cell does not run');
+  return null;
 }
 
 interface SearchRow { ms: number; pages: number[]; attempts: AttemptKind[]; joined: boolean; incomplete: boolean; error?: string }
@@ -597,25 +639,43 @@ function pageBest(q: Query): Float64Array {
   return best;
 }
 
-function oracleRows(cell: string, mode: Mode, caller: Caller, f: FilterSpec, queries: Query[], ex: Array<{ pages: number[]; scores: number[] }>, k: number) {
+function eligiblePages(mode: Mode, f: FilterSpec, caller: Caller): number[] {
   const attrs = attributesFor(mode);
   const eligible: number[] = [];
   for (let p = 0; p < N; p++) if (f.matches(attrs[p]!) && callerSees(caller, attrs[p]!)) eligible.push(p);
+  return eligible;
+}
+
+/** The brute force's ordered top k page ids (1-based, as gbrain returns them) and their best-chunk cosines. */
+function bruteTop(q: Query, eligible: number[], k: number): { pages: number[]; scores: number[] } {
+  const best = pageBest(q);
+  const ranked = [...eligible].sort((a, b) => best[b]! - best[a]! || a - b).slice(0, k);
+  return { pages: ranked.map(p => p + 1), scores: ranked.map(p => best[p]!) };
+}
+
+/**
+ * The oracle rule: exactSql's ordered top k equals the brute force's apart from ties within 1e-6 at the k-th score,
+ * and every score exactSql returns equals that page's brute-force best-chunk cosine within 1e-5.
+ */
+function agrees(q: Query, brute: { pages: number[]; scores: number[] }, e: { pages: number[]; scores: number[] }, k: number): boolean {
+  const best = pageBest(q);
+  const kth = brute.scores[brute.scores.length - 1] ?? 0;
+  const exactSet = new Set(e.pages.slice(0, k));
+  const scoreOf = new Map(e.pages.map((p, j) => [p, e.scores[j]!]));
+  return brute.pages.length === Math.min(k, e.pages.length) && e.pages.length >= brute.pages.length
+    && brute.pages.every(p => (exactSet.has(p) && Math.abs(best[p - 1]! - scoreOf.get(p)!) < 1e-5) || Math.abs(best[p - 1]! - kth) < 1e-6)
+    && e.pages.slice(0, k).every(p => Math.abs(best[p - 1]! - (scoreOf.get(p) ?? NaN)) < 1e-5);
+}
+
+function oracleRows(cell: string, mode: Mode, caller: Caller, f: FilterSpec, queries: Query[], ex: Array<{ pages: number[]; scores: number[] }>, k: number) {
+  const eligible = eligiblePages(mode, f, caller);
   let agree = 0;
   queries.forEach((q, i) => {
-    const best = pageBest(q);
-    const ranked = [...eligible].sort((a, b) => best[b]! - best[a]! || a - b).slice(0, k);
-    const brute = ranked.map(p => p + 1);
-    const bruteScores = ranked.map(p => best[p]!);
+    const brute = bruteTop(q, eligible, k);
     const e = ex[i]!;
-    const kth = bruteScores[bruteScores.length - 1] ?? 0;
-    const exactSet = new Set(e.pages.slice(0, k));
-    const scoreOf = new Map(e.pages.map((p, j) => [p, e.scores[j]!]));
-    const ok = brute.length === Math.min(k, e.pages.length) && e.pages.length >= brute.length
-      && brute.every(p => (exactSet.has(p) && Math.abs(best[p - 1]! - scoreOf.get(p)!) < 1e-5) || Math.abs(best[p - 1]! - kth) < 1e-6)
-      && e.pages.slice(0, k).every(p => Math.abs(best[p - 1]! - (scoreOf.get(p) ?? NaN)) < 1e-5);
+    const ok = agrees(q, brute, e, k);
     if (ok) agree++;
-    stage('oracle-check.jsonl', { cell, q: q.q, k, ok, brute, brute_scores: bruteScores, exact: e.pages.slice(0, k), exact_scores: e.scores.slice(0, k) });
+    stage('oracle-check.jsonl', { cell, q: q.q, k, ok, brute: brute.pages, brute_scores: brute.scores, exact: e.pages.slice(0, k), exact_scores: e.scores.slice(0, k) });
   });
   return agree;
 }
@@ -694,7 +754,8 @@ for (const mode of RUN_MODES) {
       if (!WARM || ids.every(id => done.has(id))) continue;
       if (!applied) { await applyAttributes(mode); applied = true; log('attributes: ' + mode); }
       const queries = await queriesFor(mode, f, caller);
-      const ex = await exactAll(queries, f, caller, Math.max(...limits));
+      const ex = await exactAll(queries, mode, f, caller, Math.max(...limits), ids);
+      if (!ex) continue;
       for (const [j, k] of limits.entries()) await runCell(ids[j]!, mode, caller, f, k, 'warm', queries, ex);
     }
   }
@@ -704,7 +765,8 @@ for (const mode of RUN_MODES) {
       if (done.has(id)) continue;
       if (!applied) { await applyAttributes(mode); applied = true; }
       const queries = independent.slice(0, COLD_QUERIES);
-      await runCell(id, mode, 'untrusted', f, 20, 'cold', queries, await exactAll(queries, f, 'untrusted', 20));
+      const ex = await exactAll(queries, mode, f, 'untrusted', 20, [id]);
+      if (ex) await runCell(id, mode, 'untrusted', f, 20, 'cold', queries, ex);
     }
     await disconnectAll();
     engines = await connectAll();
