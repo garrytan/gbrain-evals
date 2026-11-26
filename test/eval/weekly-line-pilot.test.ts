@@ -195,13 +195,17 @@ describe('pilot.ts', () => {
     for (const c of r.commands) expect(c.argv).toEqual(expect.arrayContaining(['--paid-window', 'weekly-line-pilot']));
   });
 
-  // Value: protects=every pilot campaign of one granted window reserves from that window's ledger at the window's cap, so a fresh campaign written later counts what the earlier ones settled; fails_when=each campaign names a ledger of its own at its own cap; why_new=#652 round-1 note on pilot.ts:226; seam=cell.ts weeklyPilotCampaignManifest; no_claim=the reservation itself (shootout-cell.test.ts covers it)
-  test('every campaign of one window names the window\'s ledger and cap', () => {
+  // Value: protects=every pilot campaign of one granted window reserves from that window's ledger at the window's cap less its mint, re-read and labelling caps, so a fresh campaign written later counts what the earlier ones settled and leaves the commands their share; fails_when=each campaign names a ledger of its own at its own cap, or the window ledger lets campaigns take the commands' share; why_new=#652 round-1 note on pilot.ts:226; seam=cell.ts weeklyPilotCampaignManifest; no_claim=the reservation itself (shootout-cell.test.ts covers it)
+  test('every campaign of one window names the window\'s ledger, at the window\'s cap less what its commands may spend', () => {
     const out = scratch('window-ledger');
     const r = writePilotCampaigns(manifest, { out, window: 'weekly-line-pilot', windowCapUsd: 300, worldEnd: WORLD_END });
+    const commandsUsd = r.plan.ledgers.filter(l => l.kind !== 'campaign').reduce((s, l) => s + l.cap_usd, 0);
+    expect(commandsUsd).toBeGreaterThan(0);
     for (const c of r.campaigns) {
       const campaign = JSON.parse(readFileSync(c.file, 'utf8'));
-      expect([campaign.ledger, campaign.paid_window]).toEqual(['eval/reports/scoreboard/windows/weekly-line-pilot.sqlite', { unit: 'weekly-line-pilot', cap_usd: 300 }]);
+      expect(campaign.ledger).toBe('eval/reports/scoreboard/windows/weekly-line-pilot.sqlite');
+      expect(campaign.paid_window.unit).toBe('weekly-line-pilot');
+      expect(campaign.paid_window.cap_usd).toBeCloseTo(300 - commandsUsd, 6);
     }
   });
 

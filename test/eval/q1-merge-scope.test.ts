@@ -57,11 +57,12 @@ describe('a merge reads every unit receipt and upstream mode before it writes', 
   const def = findCell(c.id, undefined, c.manifest);
   const paid = { keyless: false, paid_window: 'test-window' }, keyless = { keyless: true, paid_window: null };
   /** The committed shards with each unit's receipt recording the given upstream, or removed for null. */
-  const units = (name: string, ups: Array<typeof paid | typeof keyless | null>) => shards(c.set).map((src, i) => {
+  const units = (name: string, ups: Array<typeof paid | typeof keyless | null | 'unrecorded'>) => shards(c.set).map((src, i) => {
     const dir = join(tmp, 'modes', name, `shard${i}`);
     cpSync(src, dir, { recursive: true });
     for (const a of def.arms) {
       const path = join(dir, 'cells', a.cell_id, 'receipt.json');
+      if (ups[i] === 'unrecorded') continue;
       if (ups[i] === null) rmSync(path);
       else writeFileSync(path, JSON.stringify({ ...JSON.parse(readFileSync(path, 'utf8')), upstream: ups[i] }, null, 2) + '\n');
     }
@@ -81,6 +82,7 @@ describe('a merge reads every unit receipt and upstream mode before it writes', 
   test('keyless and paid units never merge into one score, and units of one mode still merge complete', () => {
     const out = join(tmp, 'modes', 'mixed-out');
     expect(refusal(() => merge(units('mixed', [keyless, paid]), out))).toMatchObject({ code: 'PREFLIGHT_FAILED', message: expect.stringContaining('different upstream modes') });
+    expect(refusal(() => merge(units('legacy-beside-paid', ['unrecorded', paid]), out))).toMatchObject({ code: 'PREFLIGHT_FAILED', message: expect.stringContaining('no upstream record') });
     expect(existsSync(out)).toBe(false);
     for (const [name, up] of [['paid', paid], ['keyless', keyless]] as const) {
       const res = merge(units(`same-${name}`, [up, up]), join(tmp, 'modes', `same-${name}-out`));

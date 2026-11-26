@@ -12,7 +12,7 @@ import { afterAll, afterEach, beforeEach, describe, expect, test } from 'bun:tes
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { campaignCells, campaignManifest, cellAggregates, contextKey, paidGuard, publishCell, frontierInstrumentId, probeSample, realizationId, runCell, runUpstreamOptions, scoreboardCampaignCell, selectCellQuestions, type CellDeps, type CellOptions, type CellResult } from '../../eval/runner/q1/cell.ts';
+import { campaignCells, campaignManifest, cellAggregates, contextKey, paidGuard, publishCell, frontierInstrumentId, probeSample, realizationId, runCell, runUpstreamOptions, scoreboardCampaignCell, selectCellQuestions, systemFor, type CellDeps, type CellOptions, type CellResult } from '../../eval/runner/q1/cell.ts';
 import { buildManifest, COUNTED_READERS, definitionProblems, estimateCell, loadManifest, manifestText, MANIFEST_PATH, SETS, type ArmDefinition, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
 import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { classifyV2, CLASSIFIER_VERSION_V2, RULES_SHA256_V2 } from '../../eval/runner/q1/hedge.ts';
@@ -23,6 +23,7 @@ import { ChatClient, type ChatLike, type ChatOptions, type ChatResult } from '..
 import { answerProblems, judgmentProblems, rowProblems } from '../../eval/runner/memory-qa/records.ts';
 import { FakeMemorySystem, FAKE_CAPABILITIES, serveProtocol } from '../../eval/runner/systems/fake.ts';
 import { FullContextSystem } from '../../eval/runner/systems/baselines.ts';
+import { Sanitizer } from '../../eval/runner/systems/sanitize.ts';
 import { FileAgentSystem } from '../../eval/runner/systems/file-agent.ts';
 import { BudgetExceededError, BudgetRun, closeLedgers } from '../../eval/runner/budget-ledger.ts';
 import { DEFAULT_ROUTE_CAPS, keylessKeys, keylessUpstream, MeteringProxy } from '../../eval/runner/metering-proxy.ts';
@@ -730,6 +731,29 @@ describe('a cell takes its upstream mode only from positive proof, and replays a
     } finally {
       for (const key of Object.keys(process.env)) if (!(key in saved)) delete process.env[key];
       Object.assign(process.env, saved);
+      rehearsal.stop(true); paid.stop(true);
+    }
+  });
+
+  // Value: protects=a paid baseline-hybrid cell never retrieves with a rehearsal's synthetic embeddings; fails_when=the shared embedding cache keys no upstream mode, so a paid run reuses vectors a keyless rehearsal cached for the same text; why_new=#661 round-1 outside voice; seam=cell.ts systemFor's embedding cache path; no_claim=the gbrain agent's own embeddings, which never run behind the proxy
+  test('a paid baseline-hybrid embeds through its own upstream instead of reusing a rehearsal\'s cached vectors', async () => {
+    const embeddings = (calls: number[]) => Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: async req => {
+      const body = await req.json() as { input: string[] };
+      calls.push(body.input.length);
+      return Response.json({ data: body.input.map((_, index) => ({ index, embedding: Array(1536).fill(0.5) })), usage: { prompt_tokens: 3, total_tokens: 3 } });
+    } });
+    const rehearsalCalls: number[] = [], paidCalls: number[] = [];
+    const rehearsal = embeddings(rehearsalCalls), paid = embeddings(paidCalls);
+    const saved = process.env.GBRAIN_EVALS_EMBED_CACHE;
+    process.env.GBRAIN_EVALS_EMBED_CACHE = join(tmp, 'embed-both-modes');
+    try {
+      const hybrid = cellDef('baseline-hybrid', 'in-process', [component({ reader_replicates: {} })]);
+      const embed = (port: number | undefined, keyless: boolean) => (systemFor(hybrid, { out: join(tmp, 'hybrid'), providerProxy: `http://127.0.0.1:${port}`, keyless }, new Sanitizer(corpus, 'test')) as unknown as { embed: (texts: string[]) => Promise<number[][]> }).embed(['the same session text']);
+      await embed(rehearsal.port, true);
+      await embed(paid.port, false);
+      expect([rehearsalCalls.length, paidCalls.length]).toEqual([1, 1]);
+    } finally {
+      if (saved === undefined) delete process.env.GBRAIN_EVALS_EMBED_CACHE; else process.env.GBRAIN_EVALS_EMBED_CACHE = saved;
       rehearsal.stop(true); paid.stop(true);
     }
   });

@@ -219,4 +219,12 @@ describe('campaigns in one paid window', () => {
     const { manifestPath, state } = campaign({ cap_usd: 10, paid_window: { unit: 'test-window', cap_usd: 5 } });
     expect(() => new Campaign(manifestPath, state)).toThrow(/paid_window must name the granted unit/);
   });
+
+  test('a window name already used for another grant refuses at init', () => {
+    const ledger = join(tmp, 'window-reused.sqlite');
+    const first = campaign({ cap_usd: 5, ledger, paid_window: { unit: 'reused-window', cap_usd: 10 } }, [5]);
+    const later = campaign({ cap_usd: 5, ledger, paid_window: { unit: 'reused-window', cap_usd: 20 } }, [5]);
+    new Campaign(first.manifestPath, first.state).init();
+    expect(() => new Campaign(later.manifestPath, later.state).init()).toThrow(/already holds a \$10\.00 cap.*used for one grant only/);
+  });
 });

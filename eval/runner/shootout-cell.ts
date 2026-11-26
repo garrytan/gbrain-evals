@@ -770,6 +770,10 @@ export class Campaign {
     }
     const label = this.q1 ? 'q1-scoreboard' : 'oss-shootout';
     const window = this.manifest.paid_window;
+    const recorded = window && existsSync(this.ledger) ? ledgerStatus({ ledgerPath: this.ledger }).totals?.program_cap_usd ?? null : null;
+    if (window && recorded !== null && Math.abs(recorded - window.cap_usd) > 1e-9) {
+      throw new Error(`paid window ${window.unit}'s ledger ${relative(REPO_ROOT, this.ledger)} already holds a $${recorded.toFixed(2)} cap, and campaign ${this.manifest.campaign_id} names $${window.cap_usd.toFixed(2)}: a window name is used for one grant only, so give a new grant its own unit name`);
+    }
     if (!existsSync(this.ledger)) initLedger({ ledgerPath: this.ledger, programCapUsd: this.programCap, reason: window ? `paid window ${window.unit}` : `${this.q1 ? 'Q1 scoreboard' : 'oss shootout'} campaign ${this.manifest.campaign_id}` });
     const run = BudgetRun.open({ runner: `${label}:${this.manifest.campaign_id}`, budgetUsd: this.manifest.cap_usd, ledgerPath: this.ledger, programCapMaxUsd: this.programCap });
     const s: CampaignState = { campaign_id: this.manifest.campaign_id, run_id: run.runId, ledger: relative(REPO_ROOT, this.ledger), manifest_sha256: this.sha, created_at: new Date().toISOString(), ...(this.q1 ? { kind: Q1_KIND } : {}) };
