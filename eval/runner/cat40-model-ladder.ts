@@ -76,6 +76,7 @@ import { scoreTask, judgePrompt, parseClaims, JUDGE_PROMPT_VERSION, type TaskSco
 import { budgetOptionsFrom, startPaidRun, receiptCost, type BudgetRun, type PaidRequestGuard } from './budget-ledger.ts';
 import { HARD_FAMILIES, HARD_SEEDS, isHardWorld, type HardWorld, type HardTask } from '../generators/hard/schema.ts';
 import { hardWorldDigest } from '../generators/model-ladder-hard.ts';
+import { H4FIX_WORLD_DIGESTS } from './cat40/h4fix-confirm.ts';
 import {
   HardStop, hardRefusals, checkHardWorld, identityOf, identityRefusal, requiresFreeze, oracleOversize, runHardCell, runWithRetries, hardTranscripts, codeHashes, settingsDigest,
   type HardCtx,
@@ -427,6 +428,11 @@ export function bindExperiment<T extends { run: BudgetRun; guard: PaidRequestGua
  */
 export const closesBudgetRun = (complete: boolean, options: { runId?: string | null }) => complete && !options.runId;
 
+/** particle-1 runs on a Hard world only when a preregistration lists that world: the newest-build re-measure's two seeds, or a world whose digest the H4 section-delivery confirmation recorded before generation. */
+export function particleRunsOnHardWorld(w: HardWorld, digests: readonly string[] = Object.values(H4FIX_WORLD_DIGESTS)): boolean {
+  return (HARD_SEEDS.newest as readonly number[]).includes(w.seed) || digests.includes(hardWorldDigest(w));
+}
+
 /** What a --dev-set receipt says about itself (GBEV-3, 2026-11-10): its numbers are never published or compared as a Hard-freeze result. */
 export const DEV_SET_LABEL = 'dev-set run on the current harness, not a Hard-freeze result: never publish or compare it as one';
 
@@ -563,7 +569,7 @@ export async function main(argv = process.argv.slice(2)) {
   if (!scripted && !buildSlots) {
     const judgeFlag = flag(argv, '--judge');
     if (judgeFlag && isParticle(judgeFlag)) throw new UsageError(`--judge ${judgeFlag}: particle-1 never judges a cell; pass --judge gpt-6.2-sol`);
-    if (hard && models.some(isParticle) && !(HARD_SEEDS.newest as readonly number[]).includes(raw.seed)) throw new UsageError('particle-1 does not run on Hard worlds: the Hard campaign keeps its model list (amendment A6), and its freeze does not cover the particle transport (eval/runner/providers); only the newest-build re-measure lists it (docs/benchmarks/2026-11-19-cat40-hard-newest-preregistration.md), on its two worlds (HARD_SEEDS.newest)');
+    if (hard && models.some(isParticle) && !particleRunsOnHardWorld(raw as HardWorld)) throw new UsageError('particle-1 does not run on Hard worlds: the Hard campaign keeps its model list (amendment A6), and its freeze does not cover the particle transport (eval/runner/providers); only the newest-build re-measure (docs/benchmarks/2026-11-19-cat40-hard-newest-preregistration.md, its two worlds HARD_SEEDS.newest) and the H4 section-delivery confirmation (docs/benchmarks/2026-11-24-cat40-h4-fix-confirmation-preregistration.md, its six recorded world digests H4FIX_WORLD_DIGESTS) list it');
     if (!hard && judgeFlag && /(^|[:/])gpt-5\.4-mini$/.test(judgeFlag)) throw new UsageError(`--judge ${judgeFlag}: gpt-5.4-mini is never run, so a paid v1 run needs its claims judge passed explicitly as another model (--judge <model>, or --judge none)`);
     if (!hard && !judgeFlag) throw new UsageError('a paid v1 run needs its claims judge passed explicitly (--judge <model>, from another family than every --models entry, or --judge none): v1 has no default judge');
   }

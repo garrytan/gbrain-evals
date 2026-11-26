@@ -214,7 +214,7 @@ frontier readers; everything else runs once. A task's success in an arm is the m
 Each arm's pilot costs at most a tenth of that arm's planned spend and runs before its counted cells, on S3: five cells
 per frontier reader, one task per family. A pilot shows the part under test ran on the arm's own outputs, that tasks
 can be supplied at the planned concurrency with no rate-limit stop, and that both judges have passed the judge check above.
-- `gbrain-section`: every cell calls gbrain tools, none gets `param_not_on_surface`, and at least one search across the
+- `gbrain-section` (as amended 2026-11-25): every cell calls gbrain tools, none gets `param_not_on_surface`, and at least one search across the
   arm's pilot and the S3 oracle-gate H4 probe shows section delivery firing (a search row carrying `delivered: {unit: "section"}`). If no pilot cell exercises it, five more H4 cells on S3 run as the pilot;
   if those don't either, the arm is reported as not exercised and the run stops for a dated amendment.
 - `gbrain-default`: every cell calls gbrain tools, none gets `param_not_on_surface`, and no search row carries `delivered: {unit: "section"}`.
@@ -277,9 +277,204 @@ gbrain's own provider models on the build (embedding pin, reranker, query expans
 counts; the judge check's result; model freshness; slot receipts and served hashes per arm; the oracle gate; pilots;
 the VM names and ledger run ids.
 
+### Judge check (2026-11-25)
+
+Run with `eval/runner/cat40/h4fix-judge-check.ts` at harness commit `ed68e3cbc26b56aa2fc106d084ffdfd97eb0040f` on public
+world N1 (`--scale large`, world digest `647d6123621842a5b43ec7291e94b440e18bd03bb0209f6b94c46d36cd5f52ac`, as recorded in `items.json`), plan seed 1, inside the granted
+window, on its own ledger. Labels are construction labels: each answer is a rule template filled with the task's
+accepted or listed-wrong values, account names and evidence ids, and the deterministic scorer passed every good answer
+and failed every bad one. No model wrote or labelled an item. The "answer styles" are those templates (numbered notes
+naming each account for Opus, one terse note for GPT-6.2 Sol, no notes for particle-1), not reader output, and errors
+are reported per style rather than per arm.
+
+| Judge | Grades rows of | Items (good / bad) | Unparseable | Kappa | Bad caught | Good flagged | Result |
+|---|---|---|---|---|---|---|---|
+| `gpt-6.2-sol` | claude-opus-5-5 | 100 (50 / 50) | 0 | 0.96 | 50 of 50 | 2 of 50 | pass |
+| `claude-opus-5-5` | gpt-6.2-sol, particle-1 | 100 (50 / 50) | 0 | 0.98 | 50 of 50 | 1 of 50 (particle-1 style) | pass |
+
+Both judges pass every gate (kappa at least 0.6, at least 40 per class, at most 1% unparseable), so counted cells may
+use them.
+
+### U1 to U6 (2026-11-26)
+
+Recorded after setup and the U1 pilots, before any counted cell.
+
+- **Build under test.** gbrain v0.60.775.0, commit `f832b4928844f149fb08657797eaa6fd9daebd5a` (tree
+  `0bbc3ce89faa7b920d7b14440cd868c18605a0da`), the newest release tag on gbrain's master when the tags were re-read
+  at 04:20 UTC on 2026-11-26 and again at 09:26 UTC, just before the first counted cell. It carries GST-3786 (`9df317b1`, checked by
+  each world's `launch-gate` step). Every slot receipt reports this commit and tree, `cli_version_matches: true`,
+  surface `starter`. The build is frozen from the first counted cell.
+- **gbrain's own provider models on the build.** Embeddings `openai:text-embedding-3-large`; reranker
+  `voyage:rerank-3-lite` (the rerank probe passed on every slot). The slots are built once and shared by both gbrain
+  arms.
+- **Harness.** gbrain-evals `e348313ecddd71b43f93424e3838c94d9a72bc69` on every VM, clean checkout. The step program
+  is `h4fix-confirm.ts plan --world <w> --build f832b492… --date 2026-11-26`.
+- **Worlds.** Generated on the seed owner's machine at that harness commit, copied to each VM through one Capy machine
+  with the SHA-256 checked on the owner's machine, on the transit copy and on the VM (all matched), then the transit
+  copy was deleted. `check-world` passed on every VM: digest, generator version `model-ladder-hard-v2`, the
+  generator's checks and `LONG_PAGE_PRECONDITION`. The shortest page of 20,000 characters or more that governs an H4
+  task is 26,581 characters (U1), so no world sits near the threshold.
+
+| World | World file SHA-256 | Documents | Tasks | H4 tasks with a `+long` item | H4 items (`+long`) | Slots (probes, queued effects) | Oracle gate (Opus, Sol) | VM |
+|---|---|---|---|---|---|---|---|---|
+| U1 | `8b8415b3c748d71c8e40557989f69f9f4bc924f643595f398dc4850105b91208` | 56,248 | 100 | 18 | 76 (28) | 5 (all passed, 0) | 198/200 (100/100, 98/100) | `ubirun-gbev134-1795664322-855d1092-t48` |
+| U2 | `2cecc62c1e2b91d543f4393dcec6270d71d71943cf5f3ed14f67a7dd2ee7c506` | 55,778 | 100 | 14 | 71 (26) | 5 (all passed, 0) | 197/200 (99/100, 98/100) | `ubirun-gbev134-1795664342-37a6c8fd-t48` |
+| U3 | `1b1d926844ae06ac85a4d5cff93e57a7c821f194be3e7a5a7ead9f63ea30e478` | 55,489 | 100 | 18 | 68 (37) | 2 (all passed, 0) | 40/40 (20/20, 20/20) | `ubirun-gbev134-1795664362-293f6dde-t48` |
+| U4 | `cb354727d5af7cdeee61469af53916a66bf20cc5cae5a227579c8ddc3818c552` | 54,992 | 100 | 20 | 71 (37) | 2 (all passed, 0) | 40/40 (20/20, 20/20) | `ubirun-gbev134-1795664382-73b61e73-t48` |
+| U5 | `0bd4e8b301a9dbe5d49282555c8e0c6bac71cbc3f496516cab0de983eeb55c81` | 55,680 | 100 | 18 | 72 (30) | 2 (all passed, 0) | 40/40 (20/20, 20/20) | `ubirun-gbev134-1795664403-f1494daf-t48` |
+| U6 | `92bca19cf01014b65eab28088871120e64d2769bb7a10046478040a619ec9c2e` | 55,230 | 100 | 18 | 67 (29) | 2 (all passed, 0) | 40/40 (20/20, 20/20) | `ubirun-gbev134-1795664422-e2c2cd1d-t48` |
+
+- **Model freshness** (2026-11-26, each world's `freshness` step): newest Opus `claude-opus-5-5`, newest GPT
+  `gpt-6.2-sol`, particle `particle-1`, all as preregistered; no blocking item. It warns that `claude-sonnet-5-5` is
+  listed, which is not a model in this run.
+- **Served surface, both gbrain arms.** Served instructions `216535f0d45a5507`, served tools `c009c07af6640b02`
+  (first 16 hex digits of SHA-256), identical on `gbrain-section` and `gbrain-default`. The restore probe reads the
+  slot config back as `{"search.long_page_unit":"section"}` on `gbrain-section` and `{}` on `gbrain-default`.
+  `fs` serves no gbrain surface.
+- **Pilots (U1, never counted).**
+
+  | Pilot | Cells | Submitted | Scored correct | Rows with `reason: "long_page"` (cells) | Calls passing `return_unit` |
+  |---|---|---|---|---|---|
+  | `gbrain-section`, Opus 5.5 | 5 | 4 (1 turn cap) | 4 | 0 (0) | 0 |
+  | `gbrain-section`, Opus 5.5, five more H4 cells | 5 | 5 | 5 | 4 (2) | 1 |
+  | `gbrain-section`, GPT-6.2 Sol | 5 | 5 | 5 | 0 (0) | 7 |
+  | `gbrain-section`, GPT-6.2 Sol, five more H4 cells | 5 | 5 | 5 | 3 (3) | 7 |
+  | `gbrain-default`, Opus 5.5 | 5 | 4 (1 turn cap) | 4 | 0 (0) | 10 |
+  | `gbrain-default`, GPT-6.2 Sol | 5 | 5 | 5 | 0 (0) | 6 |
+  | `fs`, Opus 5.5 | 5 | 4 (1 turn cap) | 4 | — | — |
+  | `fs`, GPT-6.2 Sol | 5 | 5 | 5 | — | — |
+
+  The five-cell pilot draws one task per family, and U1's H4 draw (H4-01) has no long governing page, so the setting
+  had nothing to act on. The preregistered fallback of five more H4 cells per reader then showed section delivery
+  firing on `gbrain-section` for both readers. `gbrain-default` delivered no row with `reason: "long_page"`. Every
+  `fs` cell used both grep and file reads. The `fs` Opus pilot stopped on its own step budget after 2 of 5 cells
+  (requests in flight are reserved before they are sent) and finished on a new budget run of the same step. The
+  particle-1 pilots run last on U1, inside the window, before particle-1's own cells.
+- **Judge check.** As recorded above (2026-11-25). The answer styles there are rule templates, and errors are reported
+  per style.
+- **Ledgers and VMs.** One ledger per VM, one writer, 0 open reservations at this record.
+  - U1: ledger `.budget/cat40-h4fix-u1.sqlite`; slot builds `cat40-slot-build-2026-11-26T04-26-01-754Z-1fdef45f`, `cat40-slot-build-2026-11-26T04-26-32-483Z-da595e02`, `cat40-slot-build-2026-11-26T05-44-04-956Z-d5e038a5`, `cat40-slot-build-2026-11-26T05-44-51-085Z-460fc451`, `cat40-slot-build-2026-11-26T06-55-18-706Z-5142e626`.
+  - U2: ledger `.budget/cat40-h4fix-u2.sqlite`; slot builds `cat40-slot-build-2026-11-26T04-26-27-499Z-ccd638d9`, `cat40-slot-build-2026-11-26T04-26-58-504Z-aa7719f6`, `cat40-slot-build-2026-11-26T05-40-53-200Z-0468accd`, `cat40-slot-build-2026-11-26T05-43-22-193Z-55d57ee0`, `cat40-slot-build-2026-11-26T06-52-35-938Z-3f355042`.
+  - U3: ledger `.budget/cat40-h4fix-u3.sqlite`; slot builds `cat40-slot-build-2026-11-26T04-26-57-386Z-4bda6208`, `cat40-slot-build-2026-11-26T05-41-27-148Z-4a118d3f`.
+  - U4: ledger `.budget/cat40-h4fix-u4.sqlite`; slot builds `cat40-slot-build-2026-11-26T04-27-28-154Z-1225929b`, `cat40-slot-build-2026-11-26T05-38-38-460Z-439dc533`.
+  - U5: ledger `.budget/cat40-h4fix-u5.sqlite`; slot builds `cat40-slot-build-2026-11-26T04-28-05-009Z-79116f02`, `cat40-slot-build-2026-11-26T05-38-53-051Z-f237e41c`.
+  - U6: ledger `.budget/cat40-h4fix-u6.sqlite`; slot builds `cat40-slot-build-2026-11-26T04-28-14-784Z-569c2a31`, `cat40-slot-build-2026-11-26T05-41-51-694Z-a29116b9`.
+- **Step budgets.** Each step's `--budget-usd` is an operator setting inside its world's ledger cap, re-split after
+  the pilots so a step can hold its in-flight reservations. The world caps are unchanged (tracking issue).
+
+### Interim look (2026-11-26)
+
+Taken once, as preregistered, when half A had finished on all six worlds for both gbrain arms and both frontier readers
+(`h4fix_analysis.py --look interim`, 10,000 resamples, seed 1, 60 tasks, none missing): z = 2.699 against the stop
+bound of 2.80, and conditional power is 0.9998 toward gain and 0.0283 toward harm, so neither futility condition holds.
+**Decision: continue.** Half B runs on every world. No other look is taken.
+
 ## Amendments
 
-None yet.
+### 2026-11-25: launch gate met; section delivery counted where the setting fired; gap wording precedence
+
+Made before any world was minted and before any cell, on the results branch. Both changes settle the two open notes
+from the preregistration's final review.
+
+- **Launch gate met.** gbrain v0.60.774.0 (`e8791f54e6b12cfa307363c3414b5bfe43db0b8a`) carries GST-3786
+  (`9df317b1573638986082e5866a5fcd6d5bc9f1ad`: `get_page` grep reads `a|b` as alternatives). The release under
+  test is still the newest release at launch, recorded under "Recorded before cells", and the step program's
+  `launch-gate` step checks that it contains that commit.
+- **Section delivery is counted where the setting fired.** An agent on either gbrain arm can ask for a unit itself
+  (`search`'s `return_unit`), and gbrain then skips the long-page setting for that call. So the arms differ by one
+  setting only for calls that leave the unit to gbrain. The `gbrain-section` pilot needs a search row delivered by
+  the setting (`delivered: {unit: "section", reason: "long_page"}`); the `gbrain-default` pilot needs none with
+  `reason: "long_page"` (rows the agent asked for are allowed). Secondary 4 counts rows with `reason: "long_page"`
+  per arm and, on their own line, calls where the agent passed `return_unit`.
+- **Gap wording is exclusive.** "Behind files" (upper bound below 0) takes precedence. Then "ahead of files" (lower
+  bound above 0), then "level with files" (lower bound above -3 points and upper bound at or above 0), else "not
+  distinguishable from files". The registry's decision rows now list "behind" and "not distinguishable" separately, as
+  the outcome table does.
+
+### 2026-11-25: S3 to S8 minted; claims endpoint narrowed to what the construction check decides
+
+Made after the six seeds were drawn and before any world was generated or any cell ran, on the results branch.
+
+- **Worlds S3 to S8 minted.** Six seeds were drawn with `od` on the seed owner's machine, as for S1 and S2, into
+  owner custody (mode 600, never printed, never committed, never on Capy Drive), from a temporary gbrain-evals checkout
+  at harness commit `de1be97722f80a2435b23b70927f4c75233740c5` that was removed afterwards. None of the six is a fixed
+  seed of this or the earlier plans or a test seed, and they are distinct; none needed redrawing. Each world's digest
+  was recorded with `--digest-only` (`hard-sealed-v2`, `--scale large`, frozen knobs, knob digest
+  `37a16085e0fbf2e92072b2e7cf00468d43451dd4fb35bb1232ebbf79d3027434`, matching the freeze). All six passed the
+  generator's own checks, so no seed was replaced (failures: 0).
+
+  | World | 50k world digest | Entities | Documents | Tasks |
+  |---|---|---|---|---|
+  | S3 | `e8486afeebb4a635a4b7fa63d67da1d74370368dabe2dca42204d14adbf0816a` | 2,870 | 55,607 | 100 |
+  | S4 | `5f768650070dcf1a030e4ef8d456b0669f35b463805cf9302d007a2ec4688aa4` | 2,882 | 55,840 | 100 |
+  | S5 | `08b231d8865c1d9ab214cafcddbce2b6688bcb48563461ccc55dc25e160646cf` | 2,887 | 56,070 | 100 |
+  | S6 | `eaf1d655181217ba8e319d7507e719315234f2136a0a120796124c91533392a5` | 2,883 | 55,959 | 100 |
+  | S7 | `1c247e010f70451be45a1c728c55453137ae8066d1001bcb99ccab824035241d` | 2,881 | 55,665 | 100 |
+  | S8 | `8c67a412a94c0ad071a509adc0365616449621d6768b35019f2b07b406bf23dc` | 2,874 | 55,608 | 100 |
+
+  Each world is generated later, on the seed owner's machine, with the same command without `--digest-only`; its
+  custody VM checks this digest and the world file's SHA-256 before any slot is built. The world files' SHA-256 and H4
+  variant counts are recorded under "Recorded before cells" when they exist.
+- **Claims endpoint narrowed.** The judge check labels each constructed answer good or bad by how it was built, a rule
+  with no model in the chain, so it can only vouch for the judge's answer-level reading. Secondary 7 therefore counts
+  one measure: the share of answers the claims judge flags with at least one contradicted or unsupported claim, per
+  arm and reader. Claim counts per answer and contradicted claims alone are reported beside it as descriptive and
+  labelled "not rule-checked". The judge check itself is unchanged and still gates every counted cell. No decision row
+  changes; every success endpoint is scored by the deterministic scorer.
+
+### 2026-11-26: the sealed worlds can't exercise section delivery; the run moves to fresh public-generator worlds
+
+Made after the S3 pilots and before any counted cell, on the results branch.
+
+- **Why.** gbrain delivers a search hit as its section only when the page's body holds at least
+  `search.long_page_min_chars` characters (20,000 by default). The sealed generator (`hard-sealed-v2`) writes no H4
+  page that long: on S3 to S8 the largest H4 governing document holds about 9,600 characters, and no H4 governing
+  document reaches 20,000. On public world N1, 14 of the 20 H4 tasks have a governing document over that threshold, and
+  those long contract pages are where the development diagnosis found gbrain's H4 loss. The S3 pilots confirmed it: in
+  20 `gbrain-section` cells (the five-cell pilot per frontier reader, then the fallback of five more H4 cells per
+  reader) no search row was delivered by the setting. Under "Pilot per arm" the arm was not exercised, so the sealed
+  run stopped before any counted cell. S3 to S8 ran slot builds, oracle gates (all passed) and the S3 pilots only; no
+  counted cell ran on them.
+- **New worlds U1 to U6.** Six fresh, unseen seeds of the public generator `model-ladder-hard-v2` at `--scale large`
+  with the frozen knobs. They are unseen but not sealed: anyone can regenerate a world from its seed, so the results
+  page says so in its takeaways. Seeds are drawn on the seed owner's machine as for S3 to S8, never printed, and none
+  may equal N1 (20261141), N2 (20263151), any other fixed seed of this or earlier plans, or a test seed (101, 202, 303).
+  Each world's digest is recorded below before the world is generated. U1 and U2 carry every family; U3 to U6 carry H4
+  only, as S3/S4 and S5 to S8 did.
+- **Precondition (checked before any digest is recorded and again by `check-world` before any slot is built).** At
+  least 14 of a world's 20 H4 tasks (N1's count) must have a governing document whose body reaches 20,000 characters.
+  A seed that falls short is replaced by a fresh draw before its digest is recorded, and the replacements are reported
+  below as a count.
+- **Unchanged.** Arms, readers, judges, the judge check (already passed on N1), the one interim look at H4 half A, the
+  margins, the decision rows, the gap wording and the paid window. The money stays inside the window already granted,
+  re-split per world in the tracking issue, with no world's cap above its earlier one.
+- **Build.** No counted cell has run, so the run takes gbrain's newest release at launch, provided it carries GST-3786.
+  It is re-read right before the first slot build and recorded under "Recorded before cells", and freezes from the first
+  counted cell. At this amendment that is v0.60.775.0 (`f832b4928844f149fb08657797eaa6fd9daebd5a`), which carries
+  `9df317b1` and leaves section delivery unchanged.
+- **Spent with no counted result.** The sealed attempt's slot builds (including about a sixth of them rebuilt after
+  gbrain's one-hour embed timeout), oracle gates and S3 pilots. The tracking issue carries the amount. One `fs` pilot
+  cell (Opus 5.5) ended in a context overflow after an unbounded `grep` returned about 2.2 million characters; that is
+  a harness outcome of the `hard` tool limits and is reported as such.
+- **U1 to U6 minted (2026-11-26).** Drawn with `od` on the seed owner's machine into owner custody (mode 600, never
+  printed, never committed), from a temporary gbrain-evals checkout at harness commit
+  `08eaf81ce63197e080b8aa63847791d0d27ba698`, removed afterwards. Each world was built in memory only to record its
+  digest and check the precondition; no document was written. No seed matched a fixed, test or sibling seed. Five draws
+  failed the generator's own invariants and were replaced by the next seed in steps of 1,000; seven draws fell short of
+  the precondition (10 to 13 long H4 tasks) and were replaced by fresh draws. Knob digest
+  `37a16085e0fbf2e92072b2e7cf00468d43451dd4fb35bb1232ebbf79d3027434` (the freeze).
+
+  | World | 50k world digest | Documents | Tasks | H4 tasks with a long governing page | H4 tasks with `+long` | H4 items (`+long`) |
+  |---|---|---|---|---|---|---|
+  | U1 | `7d4d8e5332a943386c52412fddb53d4adebd94f9cc82a549ae6cad9b5b55ea56` | 56,248 | 100 | 17 | 18 | 76 (28) |
+  | U2 | `38de2aa3ff9d73de2eecb2ada8f32e90f77ebb672f3fb505b06e1a4e09b60fa6` | 55,778 | 100 | 14 | 14 | 71 (26) |
+  | U3 | `f8a0f3eedbe5643fd4abcc0b2cf2ff1862d328158d714db7aecf5479b5c58b9f` | 55,489 | 100 | 18 | 18 | 68 (37) |
+  | U4 | `68cde0d248bd46d6f279e5ee457043ac49319381ed3da781d4d6f34e8dd3ab9b` | 54,992 | 100 | 18 | 20 | 71 (37) |
+  | U5 | `2d36f25c5861852f342f079e0a0537f4dd7ac96cb65670706e434f7508518554` | 55,680 | 100 | 17 | 18 | 72 (30) |
+  | U6 | `70384a6e3c0369234bac99eb3e650ac50a8704e5a6962af5a3c3581624d79704` | 55,230 | 100 | 15 | 18 | 67 (29) |
+
+  The precondition selects worlds by how many long pages they hold, which the setting needs in order to fire; it
+  reads nothing about any arm's answers. The results page says the worlds were selected this way.
 
 ## Disclosures
 
