@@ -34,8 +34,13 @@ Settled call: the default flip of `search.long_page_unit` to `section` goes to G
 
 ### Right answers and cost per correct answer
 
-particle-1's cells have not run yet (see "particle-1, reported apart from the headline" below), so this table shows
-the two frontier readers only.
+particle-1 is the repository's primary low-cost reader. It ran on both gbrain arms; its files arm was left out (below).
+
+| Reader | Arm | H4 right (120 tasks) | All five families right | Model spend per correct answer |
+|---|---|---:|---:|---:|
+| claude-opus-5-5 | gbrain, section delivery on | 95.42% | 356 of 400 cells | $0.81 |
+| particle-1 | gbrain, section delivery on | 42.50% | 108 of 280 cells | $0.44 |
+| particle-1 | gbrain, defaults | 30.83% | 98 of 280 cells | $0.46 |
 
 | Reader | Arm | H4 right (120 tasks) | All five families right | Model spend per correct answer |
 |---|---|---:|---:|---:|
@@ -126,9 +131,27 @@ only by a manager phrase. That is the known limit the preregistration names, and
 
 ### particle-1, reported apart from the headline
 
-Not run yet. The ladder harness refused particle-1 on these worlds, which no earlier plan listed. A harness change
-now lets it run on exactly these six recorded worlds, and the Particle account has no credit at the moment. These cells
-run once credit returns, or particle-1 is reported here as left out, by 2026-11-27.
+particle-1 read every planned task once on both gbrain arms (280 tasks each), after each world's frontier cells. It is
+descriptive and enters no headline or pooled endpoint.
+
+| particle-1 | Section on | Defaults | On minus defaults | 95% interval |
+|---|---:|---:|---:|---|
+| H4, 120 tasks | 42.50% | 30.83% | +11.67 | +0.83 to +22.50 |
+| H1, H2, H3, H5 on U1 and U2, 160 tasks | 35.62% | 38.12% | -2.50 | -9.38 to +4.38 |
+
+Section delivery helped particle-1 on H4 too, by about as much as the frontier readers, but it stays far behind them:
+Opus 5.5 with section delivery on answered 95.42% of the same H4 tasks, 52.9 points more. On the other families its
+difference is not distinguishable from 0, and the interval is wide. In particle-1's transcripts, the setting delivered
+729 search rows as sections on the section arm and none on the defaults. particle-1 stopped at the 16-turn cap in 134
+of 280 cells with section delivery on and 148 of 280 on the defaults.
+
+- **Its files arm was left out.** In particle-1's files pilot on U1, one cell's prompt passed Particle's limit of
+  1,048,576 tokens (`tokenization_token_limit_exceeded`) after its file reads, a context-length stop that the plan's
+  pilot rule doesn't allow. So particle-1 has no gap-to-files row here.
+- **One cell was not retried.** One U2 particle-1 cell on the section arm (an H5 task) ended on a connection reset
+  (`ECONNRESET`), a harness error the plan retries, and was scored as a wrong answer instead. Scored right, it would
+  move particle-1's other-family difference by +0.625 points.
+- These cells ran on the harness commit that lets particle-1 run on these six worlds (below), after the frontier cells.
 
 ## What didn't work
 
@@ -160,7 +183,9 @@ run once credit returns, or particle-1 is reported here as left out, by 2026-11-
   The gbrain arms ran every H4 task twice. Judges: `gpt-6.2-sol` graded Opus 5.5's rows, and `claude-opus-5-5` graded
   GPT-6.2 Sol's and particle-1's. No model graded its own family's rows.
 - **Harness.** gbrain-evals [`e348313e`](https://github.com/garrytan/gbrain-evals/commit/e348313ecddd71b43f93424e3838c94d9a72bc69)
-  for every frontier cell. particle-1's cells, when they run, use the later commit that lets particle-1 run on these six worlds.
+  for every frontier cell. particle-1's cells ran on [`459aa6e2`](https://github.com/garrytan/gbrain-evals/commit/459aa6e2c9b09449d234c8c82e700148f468feb6),
+  which adds only the change that lets particle-1 run on these six recorded worlds (the ladder refused particle-1 on any
+  Hard world no plan listed, before any request).
 - **Step order on U1 and U2.** The plan lists each full world's H4 half B after the other four families. On U1 and U2,
   H4 half B ran before the remaining other-family steps, so that a world reaching its budget cap could not leave the
   primary endpoint unfinished. No endpoint depends on the order of steps within a world. To reorder them, the step
