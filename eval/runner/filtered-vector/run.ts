@@ -612,24 +612,33 @@ const order = (q: number, r: number): Arm[] => ((q + r) % 2 === 0 ? ['C', 'T'] :
 // Oracle check: gbrain's exactSql against a float64 brute force over the corpus vectors
 // ---------------------------------------------------------------------------
 
-let allVectors: Float32Array | null = null;
+/** Every chunk vector in chunk order, in segments of 2^18 chunks (one typed array can't hold 1.5M x 1024 floats). */
+const SEGMENT_BITS = 18;
+let allVectors: Float32Array[] | null = null;
 const pageBestCache = new Map<string, Float64Array>();
+function loadVectors(): Float32Array[] {
+  const segments = Array.from({ length: Math.ceil(CHUNKS / 2 ** SEGMENT_BITS) }, (_, s) => new Float32Array(Math.min(2 ** SEGMENT_BITS, CHUNKS - s * 2 ** SEGMENT_BITS) * DIMS));
+  if (gen) {
+    let i = 0;
+    for (let p = 0; p < N; p++) gen.page(p, plan.chunkCount[p]!, (_c: number, v: Float32Array) => { segments[i >> SEGMENT_BITS]!.set(v, (i & (2 ** SEGMENT_BITS - 1)) * DIMS); i++; });
+  } else {
+    segments.forEach((seg, s) => { const buf = Buffer.from(seg.buffer); readSync(vectorFd!, buf, 0, buf.length, s * 2 ** SEGMENT_BITS * DIMS * 4); });
+  }
+  return segments;
+}
 function pageBest(q: Query): Float64Array {
   const key = q.set === 'independent' ? 'i' + q.q : q.page + ':' + q.chunk + ':' + q.q;
   const hit = pageBestCache.get(key);
   if (hit) return hit;
-  if (!allVectors) {
-    allVectors = new Float32Array(CHUNKS * DIMS);
-    if (gen) { let o = 0; for (let p = 0; p < N; p++) gen.page(p, plan.chunkCount[p]!, (_c: number, v: Float32Array) => { allVectors!.set(v, o); o += DIMS; }); }
-    else { const buf = Buffer.from(allVectors.buffer); readSync(vectorFd!, buf, 0, buf.length, 0); }
-  }
+  allVectors ??= loadVectors();
   const best = new Float64Array(N);
   for (let p = 0, i = 0; p < N; p++) {
     let b = -Infinity;
     for (let c = 0; c < plan.chunkCount[p]!; c++, i++) {
+      const seg = allVectors[i >> SEGMENT_BITS]!;
+      const o = (i & (2 ** SEGMENT_BITS - 1)) * DIMS;
       let dot = 0;
-      const o = i * DIMS;
-      for (let d = 0; d < DIMS; d++) dot += allVectors[o + d]! * q.vector[d]!;
+      for (let d = 0; d < DIMS; d++) dot += seg[o + d]! * q.vector[d]!;
       if (dot > b) b = dot;
     }
     best[p] = b;
