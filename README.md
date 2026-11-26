@@ -541,9 +541,10 @@ the same reranker 128 ([matched comparison](docs/benchmarks/2026-10-02-concept-v
   of 80 right at v0.60.742.0 (-16.25 points), as at earlier builds, `09d21554d` included (-11.25 on the same tasks)
   ([hard company questions, newest build](docs/benchmarks/2026-11-19-cat40-hard-newest.md);
   [old-build control](docs/benchmarks/2026-11-19-cat40-hard-old-build-control.md)). Turning on
-  `search.long_page_unit=section`, which is off by default, wins most of that back where the deciding documents are
-  long: on six unseen worlds at v0.60.775.0, Opus 5.5 answers 9.58 points more of these questions (+5.0 to +14.58) with
-  no harm on other questions, and its gap to files is +0.42 (-4.17 to +5.42), so that run can't tell level from behind.
+  `search.long_page_unit=section`, which is off by default, wins most of a gap like it back on other worlds where the
+  deciding documents are long: on six unseen worlds at v0.60.775.0, Opus 5.5 answers 9.58 points more of these questions
+  (+5.0 to +14.58) with no harm on other questions, and its gap to files is +0.42 (-4.17 to +5.42), so that run can't
+  tell level from behind.
   GPT-6.2 Sol stays behind files with it on (-4.58, -8.75 to -0.83)
   ([section delivery confirmation](docs/benchmarks/2026-11-24-cat40-h4-fix-confirmation.md)).
 - A timeline read on a 1,000-page brain took about 0.075 ms at `77cf8e111` against 0.045 ms before gbrain's Foundations

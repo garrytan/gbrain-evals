@@ -187,8 +187,8 @@ of 280 cells with section delivery on and 148 of 280 on the defaults.
   GPT-6.2 Sol's and particle-1's. No model graded its own family's rows.
 - **Harness.** gbrain-evals [`e348313e`](https://github.com/garrytan/gbrain-evals/commit/e348313ecddd71b43f93424e3838c94d9a72bc69)
   for every frontier cell. particle-1's cells ran on [`459aa6e2`](https://github.com/garrytan/gbrain-evals/commit/459aa6e2c9b09449d234c8c82e700148f468feb6),
-  which adds only the change that lets particle-1 run on these six recorded worlds (the ladder refused particle-1 on any
-  Hard world no plan listed, before any request).
+  a merge of main that adds the change letting particle-1 run on these six recorded worlds (the ladder refused particle-1
+  on any Hard world no plan listed, before any request).
 - **Step order on U1 and U2.** The plan lists each full world's H4 half B after the other four families. On U1 and U2,
   H4 half B ran before the remaining other-family steps, so that a world reaching its budget cap could not leave the
   primary endpoint unfinished. No endpoint depends on the order of steps within a world. To reorder them, the step
