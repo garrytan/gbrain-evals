@@ -11,7 +11,7 @@
   call people and companies by nicknames, roles or full names. We did not run gbrain on those questions, so this page
   makes no claim about gbrain against grep there.
 - **What didn't work: none of the question designs we built got grep below the line's 0.95 ceiling on a fair set of
-  questions.** Grep fell well below it only on the 34 questions where the chats spell the subject's name with one
+  questions.** Grep fell well below it on the 34 questions where the chats spell the subject's name with one
   letter changed (22 of 34), and two people asked blind agreed that such a pair is the same entity on 1 of 20. On those 34 questions every memory system scored below grep (gbrain 2 of 34), but because the items failed that
   check, those numbers are descriptive only and come from a judge nobody has checked against people.
 
@@ -19,9 +19,10 @@ Settled call: the weekly held-out line stops before week 1. No counted week runs
 agent on held-out worlds, and the long and alias development worlds stay public so anyone can reproduce these pilots.
 
 This page reports the pilots of the [weekly held-out line](2026-11-23-weekly-outcome-line-preregistration.md), run from
-November 24 to 26, 2026, on public development worlds only. No sealed world was minted and no counted week ran. Every
-number below is recounted from the committed records by
-[`eval/runner/weekly-line/results-recount.ts`](../../eval/runner/weekly-line/results-recount.ts).
+November 24 to 26, 2026, on public development worlds only. No sealed world was minted and no counted week ran.
+[`eval/runner/weekly-line/results-recount.ts`](../../eval/runner/weekly-line/results-recount.ts) recounts model scores,
+costs and paired comparisons from the committed records. The human fairness labels stay private and are reported only
+in aggregate.
 
 ## Cost per correct answer: the grep agent with both primary readers
 
@@ -76,14 +77,14 @@ claude-opus-5-5 reading:
 | extract-first server | 63/64, $0.106 | 63/64, $0.345 |
 | memory-bank server | 59/64, $0.055 | 62/64, $0.074 |
 
-Dollars per right answer for the three memory systems cover the whole cell: ingesting the world, the reader and the
+Dollars per right answer for the three memory systems cover ingesting the world, the reader and the
 judge. The grep agent ingests nothing; its agent calls cost $0.024 and $0.034 per right answer (first table). One
 question is 1.6 points at 64 questions, so no row is more than four questions from the grep agent, and one world gives
 no interval. At 1,000,000 tokens the memory-bank server's miss on "Which customer is Project Ostrava piloting with?"
 answered that the pilot had been called off, which reads as right; nobody adjudicated it.
 
-Making the history five times longer changed nothing for the grep agent, because the name still finds the right
-sessions. The questions, not the length, decide whether retrieval is hard.
+Opus grep remained near the ceiling on both named-subject pilots: 190 of 192 at 200,000 tokens and 192 of 192 at
+1,000,000 tokens. The pilots used different worlds, so they don't isolate the effect of history length.
 
 ## Described subjects: grep held on plain aliases
 
@@ -94,7 +95,7 @@ sessions. The questions, not the length, decide whether retrieval is hard.
 | Evidence names the subject by a one-letter misspelling (34) | 22 (0.647) | 26 (0.765) |
 
 By world, claude-opus-5-5 scored 57, 61 and 55 of 64, and particle-1 59, 57 and 55. On the plain aliases the grep
-agent stayed at the line's 0.95 ceiling. Most of claude-opus-5-5's misses came from the misspelling: it often noticed
+agent stayed at the line's 0.95 ceiling. Most of claude-opus-5-5's misses were on misspellings. It often noticed
 the spelling ("spelled differently from Clem's surname") and decided the name meant someone else.
 
 gbrain and the two servers were not run on the 158 plain-alias questions, so there is no gbrain number to set beside
@@ -105,7 +106,7 @@ gbrain and the two servers were not run on the 158 plain-alias questions, so the
 Before reading anything into the 34 misspelling questions we asked whether a careful person would treat a one-letter
 misspelling, such as "Clementine Hadded" for "Clementine Haddad", as the same entity. Two people each labelled 20 real
 pairs from those questions, shown with the evidence session and no system or answer, plus 5 control pairs and 2
-attention pairs. The rule was fixed before any answer was opened: the misspelling counts as fair only if at least 15 of
+attention pairs. Before any answer was opened, we set the rule that the misspelling counts as fair only if at least 15 of
 the 20 pairs settle as "same entity".
 
 - The two labellers agreed "same entity" on 1 of the 20 pairs. One labeller said yes on 1 of 20 and the other on 9 of
@@ -149,7 +150,7 @@ moved the line to described subjects after the named-subject pilots hit the ceil
 needed the grep agent below 0.95 and a judge check that could run; the alias pilot read 0.901 by judge, but each judge
 had fewer than 40 answers it called wrong, so the other rows stayed held and the decision went to the line's owner.
 
-Garry Tan then approved one more step and a rule for it: if gbrain resolved the misspellings grep missed and people
+Garry Tan then approved one more step. If gbrain resolved the misspellings grep missed and people
 judged the misspellings fair, the line would continue; otherwise it stops and the results are published. Neither held.
 gbrain got none of grep's 12 misspelling misses right, and people did not judge the misspellings fair. The line stops
 before week 1.
@@ -158,8 +159,8 @@ before week 1.
 
 - **gbrain on plain aliases.** Stage 2 asked only the 34 misspelling questions, so there is no gbrain number on the 158
   plain-alias questions, where the grep agent scored 151.
-- **particle-1 on gbrain and the servers** at 1,000,000 tokens and in stage 2. Their particle-1 re-reads were skipped
-  once the stop rules fired.
+- **particle-1 on gbrain and the servers** at 1,000,000 tokens and in stage 2. The 1,000,000-token re-reads were
+  skipped once the stop rules fired. The stage 2 plan left out particle-1 on cost.
 - **More than one world per length** for gbrain and the two servers on named subjects.
 
 ## The judge check never ran
@@ -167,8 +168,8 @@ before week 1.
 This line requires each judge to agree with at least 100 labelled grep-agent answers (kappa at least 0.6), with at
 least 40 of them judged wrong, before its numbers count. The grep agent was too accurate to supply that many wrong
 answers: 12 among 384 at 1,000,000 tokens, all particle-1's, and 19 and 20 per judge on the alias worlds. So no labels
-were bought and no kappa exists, and every number on this page comes from judges this line never checked against
-people. Read them as descriptive. Stage 2's wrong answers would not have joined the pool either: the pool code accepts
+were bought for the judge check, and no kappa exists. The model scores come from judges this line never checked against
+people, so read them as descriptive. Stage 2's wrong answers would not have joined the pool either: the pool code accepts
 only the grep agent's cells, and it fails closed.
 
 The line's own stop rule also had a model-free construction-label reading of the alias pilot. That scorer misread
@@ -202,7 +203,7 @@ its reading is not reported.
 ## Reproduce and inspect
 
 ```sh
-bun eval/runner/weekly-line/results-recount.ts          # every number on this page
+bun eval/runner/weekly-line/results-recount.ts          # model scores, costs and paired comparisons
 bun eval/runner/weekly-line/results-recount.ts --json   # with the discordant ids
 bun test test/eval/weekly-line-results.test.ts          # checks them against this page
 ```

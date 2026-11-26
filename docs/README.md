@@ -313,9 +313,9 @@ measures.
 ### 2026-11-26: Weekly held-out line results
 
 The [weekly held-out line](benchmarks/2026-11-23-weekly-outcome-line-preregistration.md) row links its
-[results](benchmarks/2026-11-23-weekly-outcome-line.md) in place of "no cell has run": the line stopped before week 1
-after a grep agent matched gbrain and two memory servers on public named-subject worlds and the only questions it
-failed did not pass a blind fairness check.
+[results](benchmarks/2026-11-23-weekly-outcome-line.md) in place of "no cell has run": a grep agent matched gbrain and
+two memory servers on public named-subject worlds.
+Opus grep missed 12 of 34 misspelling questions. gbrain recovered none of those 12, and the misspellings failed the blind fairness check, so the line stopped before week 1.
 
 ### 2026-11-25: Per-person memory isolation results
 

@@ -462,9 +462,9 @@ tools over the raw chats, up to 40 turns) made-up changing-facts histories whose
 claude-opus-5-5 it answered 190 of 192 on three 200,000-token worlds and 192 of 192 on three 1,000,000-token worlds. On
 one world at each length, gbrain (v0.60.768.0 and v0.60.769.0) and the extract-first server scored 63 of 64 against the
 grep agent's 63 and 64, and the memory-bank server 59 and 62. When the questions describe their subject instead, the grep agent
-still scored 151 of 158 where the chats use nicknames, roles or full names; gbrain was not run on those questions. The
-only questions that beat grep spell names with one letter changed, and people asked blind did not judge them fair, so
-the line stopped before its first counted week. The judges here were never checked against people. gbrain is Garry
+still scored 151 of 158 where the chats use nicknames, roles or full names; gbrain was not run on those questions.
+Opus grep missed 12 of 34 misspelling questions. gbrain recovered none of those 12, and the misspellings failed the blind fairness check, so the line stopped before week 1.
+The judges here were never checked against people. gbrain is Garry
 Tan's own project. Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1.
 Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator.
 Garry Tan runs Y Combinator.
@@ -704,8 +704,8 @@ Garry Tan runs Y Combinator.
 How gbrain compares adds a paragraph on the [weekly held-out line's pilots](docs/benchmarks/2026-11-23-weekly-outcome-line.md):
 a grep agent matched gbrain and two memory servers on public changing-facts worlds whose questions name their subject,
 at 200,000 and 1,000,000 tokens, and held at 151 of 158 when questions describe their subject through plain aliases,
-where gbrain was not run. The line stopped before its first counted week because the only questions grep failed did
-not pass a blind fairness check.
+where gbrain was not run.
+Opus grep missed 12 of 34 misspelling questions. gbrain recovered none of those 12, and the misspellings failed the blind fairness check, so the line stopped before week 1.
 
 ### 2026-11-25: Per-person memory isolation
 
