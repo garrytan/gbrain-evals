@@ -34,9 +34,11 @@ describe('check-world (amended 2026-11-26: fresh public-generator worlds with lo
     expect(() => checkWorld('u1', { ...(h4(20, 20) as object), version: 'hard-sealed-v2' } as never, 'w.json', D)).toThrow(/public generator/);
     expect(() => checkWorld('u1', h4(20, 20), 'w.json', undefined)).toThrow(/--digest/);
   });
-  test('N1 itself meets the precondition at exactly its recorded count', () => {
+  test('N1 itself meets the precondition at exactly its recorded count, and check-world refuses it as a U world', () => {
     const knobs = validateKnobs(JSON.parse(readFileSync('docs/benchmarks/cat40-hard/knobs.frozen.json', 'utf8')));
-    expect(longH4Tasks(generateHardWorld(20261141, knobs, { scale: 'large' }))).toBe(N1_LONG_H4_TASKS);
+    const n1 = generateHardWorld(20261141, knobs, { scale: 'large' });
+    expect(longH4Tasks(n1)).toBe(N1_LONG_H4_TASKS);
+    expect(() => checkWorld('u1', n1, 'w.json', hardWorldDigest(n1))).toThrow(/H4FIX_WORLD_DIGESTS/);
   }, 120_000);
 });
 
@@ -206,11 +208,20 @@ describe('h4fix_analysis.py', () => {
       expect(r.json.secondary.gap_to_files.pooled.wording).toBe('level with files');
       expect(r.json.secondary.particle.descriptive).toBe(true);
     });
-    test('a missing planned frontier cell refuses; a missing particle-1 cell leaves only its row incomplete', () => {
+    test('a missing planned frontier cell refuses; a missing particle-1 gbrain cell leaves only its row incomplete', () => {
       expect(analyse(() => true, [], { drop: 'gbrain-section|gpt-6.2-sol|H4-07|1' }).err).toContain('FINAL_INCOMPLETE');
-      const p = analyse(() => true, [], { drop: 'fs|particle-1|H4-07|0' });
+      const p = analyse(() => true, [], { drop: 'gbrain-default|particle-1|H4-07|0' });
       expect(p.code).toBe(0);
       expect(p.json.secondary.particle.incomplete).toBeDefined();
+      expect(p.json.secondary.particle.h4_delta).toBeUndefined();
+    });
+    test('particle-1 without its files arm still gets both gbrain deltas, and only its gap to files is incomplete', () => {
+      const p = analyse((arm, _m, t) => !t.startsWith('H4') || arm !== 'gbrain-default' || n(t) <= 10, [], { drop: 'fs|particle-1|H4-07|0' });
+      expect(p.code).toBe(0);
+      expect(p.json.secondary.particle.incomplete).toBeUndefined();
+      expect(p.json.secondary.particle.h4_delta.delta_pp).toBe(50);
+      expect(p.json.secondary.particle.other_delta.delta_pp).toBe(0);
+      expect(p.json.secondary.particle.h4_gap_to_files.incomplete).toBeDefined();
     });
     test('--stopped must match the look recomputed from half A, and no half-B cell may follow a stop', () => {
       const stopWorthy: Ok = (arm, _m, t) => arm !== 'gbrain-default' || n(t) % 2 === 0;

@@ -428,12 +428,12 @@ export function bindExperiment<T extends { run: BudgetRun; guard: PaidRequestGua
  */
 export const closesBudgetRun = (complete: boolean, options: { runId?: string | null }) => complete && !options.runId;
 
-/** What a --dev-set receipt says about itself (GBEV-3, 2026-11-10): its numbers are never published or compared as a Hard-freeze result. */
 /** particle-1 runs on a Hard world only when a preregistration lists that world: the newest-build re-measure's two seeds, or a world whose digest the H4 section-delivery confirmation recorded before generation. */
 export function particleRunsOnHardWorld(w: HardWorld, digests: readonly string[] = Object.values(H4FIX_WORLD_DIGESTS)): boolean {
   return (HARD_SEEDS.newest as readonly number[]).includes(w.seed) || digests.includes(hardWorldDigest(w));
 }
 
+/** What a --dev-set receipt says about itself (GBEV-3, 2026-11-10): its numbers are never published or compared as a Hard-freeze result. */
 export const DEV_SET_LABEL = 'dev-set run on the current harness, not a Hard-freeze result: never publish or compare it as one';
 
 /**

@@ -155,6 +155,7 @@ export function checkWorld(world: H4FixWorld, w: HardWorld, path: string, digest
   checkHardWorld(w, path);
   const got = hardWorldDigest(w);
   if (got !== digest) throw new Error(`${world}: world digest ${got} is not the recorded ${digest}`);
+  if (got !== H4FIX_WORLD_DIGESTS[world]) throw new Error(`${world}: world digest ${got} is not the one recorded in H4FIX_WORLD_DIGESTS`);
   return got;
 }
 

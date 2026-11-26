@@ -110,11 +110,13 @@ Counted from the transcripts of every counted cell, per arm and reader:
 | Rows it delivered that way | 246 | 0 | 357 | 0 |
 | `search` calls where the agent chose its own unit (`return_unit`) | 306 | 298 | 2,064 | 572 |
 | `get_page` grep calls with `a|b` (with matches) | 12 (12) | 29 (28) | 37 (36) | 20 (20) |
-| H4 items whose governing document never came back, by how it names the account | manager phrase 7 | manager phrase 10, code 2, nickname 1 | manager phrase 8 | manager phrase 6, nickname 2 |
+| H4 item-attempts whose governing document never came back, by how it names the account | manager phrase 7 | manager phrase 10, code 2, nickname 1 | manager phrase 8 | manager phrase 6, nickname 2 |
 
 The setting fired only on the arm that turns it on. An agent that names a unit itself bypasses the setting for that
-call, and GPT-6.2 Sol did so far more often with section delivery on (2,064 calls against 572). Of the H4 items whose
-governing document never reached the agent with section delivery on, every one was a record that names its account
+call, and GPT-6.2 Sol did so far more often with section delivery on (2,064 calls against 572). The last row counts
+attempts, not items: each H4 task runs twice on each gbrain arm, so an item missed both times counts twice, and a
+document id counts as returned when it appears anywhere in a tool result. Of the H4 item-attempts whose governing
+document never reached the agent with section delivery on, every one was a record that names its account
 only by a manager phrase. That is the known limit the preregistration names, and section delivery does not address it.
 
 ### Other outcomes
@@ -126,8 +128,8 @@ only by a manager phrase. That is the known limit the preregistration names, and
 - **Cost (secondary 6).** Opus 5.5's cost per cell was $0.72 with section delivery on and $0.73 off; the prototype had
   raised it by about a fifth, and here it didn't move. GPT-6.2 Sol's was $0.34 on both.
 - **Stops.** Turn-cap stops: Opus 5.5 28 on, 37 off, 46 files; GPT-6.2 Sol 19 on, 18 off, 27 files. The files arm with
-  Opus 5.5 also had 10 context-length stops, scored as failures as preregistered. No provider safety-filter stop
-  occurred.
+  Opus 5.5 also had 10 context-length stops, scored as failures as preregistered. No frontier cell ended on an error
+  stop (a transport or provider error), and no provider safety-filter stop occurred.
 
 ### particle-1, reported apart from the headline
 
@@ -149,8 +151,9 @@ of 280 cells with section delivery on and 148 of 280 on the defaults.
   1,048,576 tokens (`tokenization_token_limit_exceeded`) after its file reads, a context-length stop that the plan's
   pilot rule doesn't allow. So particle-1 has no gap-to-files row here.
 - **One cell was not retried.** One U2 particle-1 cell on the section arm (an H5 task) ended on a connection reset
-  (`ECONNRESET`), a harness error the plan retries, and was scored as a wrong answer instead. Scored right, it would
-  move particle-1's other-family difference by +0.625 points.
+  (`ECONNRESET`). The harness records a transport error like this as an error stop and scores it as a wrong answer;
+  it retries only its own harness errors, so this cell was not rerun. Scored right, it would move particle-1's
+  other-family difference by +0.625 points.
 - These cells ran on the harness commit that lets particle-1 run on these six worlds (below), after the frontier cells.
 
 ## What didn't work
@@ -206,6 +209,9 @@ the numbers above reproduce from the step program and the analysis script on tho
 bun eval/runner/cat40/h4fix-confirm.ts plan --world u1 --build f832b4928844f149fb08657797eaa6fd9daebd5a --date 2026-11-26
 python3 eval/runner/cat40/h4fix_analysis.py --world U1=<counted attempts.jsonl,...> ... --world U6=<...> --look final
 ```
+
+particle-1's rows come from the same command with its two gbrain arms' attempts added to each world's list; with no
+files-arm cells for it, the script prints its gap to files as incomplete.
 
 ## Disclosures
 

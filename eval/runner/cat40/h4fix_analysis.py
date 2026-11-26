@@ -340,12 +340,16 @@ def final(worlds, cost, stopped, B, S, transcripts, world_files):
         g = Comparison(worlds, SECTION, FS, models, h4_for).run(B, S)
         g['wording'] = gap_wording(g['ci95'])
         out['secondary']['gap_to_files'][name] = g
-    p_miss = gaps(worlds, [PARTICLE], [(w, a, t, 1) for (w, a, t, _) in plan])
+    p_plan = [(w, a, t, 1) for (w, a, t, _) in plan]
+    p_miss = gaps(worlds, [PARTICLE], [c for c in p_plan if c[1] != FS])
     if p_miss:
         out['secondary']['particle'] = {'incomplete': p_miss}
     else:
+        fs_miss = gaps(worlds, [PARTICLE], [c for c in p_plan if c[1] == FS])
         out['secondary']['particle'] = {'h4_delta': Comparison(worlds, SECTION, DEFAULT, [PARTICLE], h4_for).run(B, S),
-                                        'h4_gap_to_files': Comparison(worlds, SECTION, FS, [PARTICLE], h4_for).run(B, S), 'descriptive': True}
+                                        'other_delta': Comparison(worlds, SECTION, DEFAULT, [PARTICLE], other_for).run(B, S),
+                                        'h4_gap_to_files': {'incomplete': fs_miss} if fs_miss else Comparison(worlds, SECTION, FS, [PARTICLE], h4_for).run(B, S),
+                                        'descriptive': True}
     for arm in (SECTION, DEFAULT, FS):
         for m in FRONTIER + [PARTICLE]:
             c = claims(worlds, arm, m)
