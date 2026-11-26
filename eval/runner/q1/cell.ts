@@ -403,7 +403,7 @@ export interface CellOptions {
   frontier?: boolean;
   systemUrl?: string | null;
   providerProxy?: string | null;
-  /** BG1: the run's lease proxy reports a keyless upstream (bg1CellWindow), so a bg1-dev load may read the template fixtures. */
+  /** The mode verified by a window or ledger guard, if the caller already checked it. */
   keyless?: boolean;
   /** The granted paid window a windowed cell's run spends under (--paid-window, which bg1CellWindow checked), else null. */
   paidWindow?: string | null;
@@ -752,16 +752,9 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
   if (problems.length) throw refuse({ code: 'USAGE', message: `cell ${def.id} is not a valid definition: ${problems.slice(0, 4).join('; ')}`, why: 'the runner executes only definitions that pass the cell schema', fix: { next: 'run', argv: ['bun', 'eval/runner/q1/cells/definitions.ts'], verify: [...FRONT, 'show', '--cell', def.id] } });
   const out = resolve(opts.out);
   const maxAttempts = opts.maxAttempts ?? DEFAULT_MAX_ATTEMPTS;
-  const upstream: CellUpstream = { keyless: opts.keyless === true, paid_window: opts.keyless ? null : opts.paidWindow ?? null };
   const arms = def.arms.filter(a => !opts.arms || opts.arms.includes(a.id));
   if (!arms.length) throw refuse({ code: 'USAGE', message: `--arms ${opts.arms?.join(',')} names no arm of ${def.id}`, why: 'a run needs at least one arm', fix: { next: 'run', argv: [...FRONT, 'show', '--cell', def.id] } });
   if (opts.frontier === false && def.descriptive_view === false) throw refuse({ code: 'USAGE', message: `--no-frontier on ${def.id} would leave every answer ungraded: the cell has no canonical judge (descriptive_view false), so its per-reader judge is the only grade`, why: 'a paid run must not buy answers it cannot grade', fix: { next: 'ask_user', user_message: 'rerun your original command without --no-frontier, keeping every other flag' } });
-  for (const a of arms) {
-    const path = join(out, 'cells', a.cell_id, 'receipt.json');
-    const prior = existsSync(path) ? (JSON.parse(readFileSync(path, 'utf8')) as { upstream?: CellUpstream }).upstream : undefined;
-    if (prior && prior.keyless !== upstream.keyless) throw refuse({ code: 'RESUME_REFUSED', message: `${rel(path)} was written by ${prior.keyless ? 'a keyless rehearsal' : 'a paid run'}, and this run is ${upstream.keyless ? 'a keyless rehearsal' : 'paid'} (${a.cell_id})`,
-      why: 'a run carries forward every answer and judgment already in --out, so a paid receipt would count a rehearsal\'s answers, or a rehearsal would write into a paid cell', fix: { next: 'run', argv: [...FRONT, 'run', '--cell', def.id, '--out', '<a fresh directory>'] } });
-  }
   const instrument = instrumentFor(def.canonical_instrument);
   refuseCompatJudges(def.id, [...(def.descriptive_view === false ? [] : [instrument.canonical_judge]), ...(opts.frontier === false ? [] : arms.flatMap(a => a.frontier?.judges ?? []))]);
 
@@ -771,6 +764,15 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
   const week = weekScope(def, env, shard);
   const custody = !deps.corpus && needsCustody(def);
   if (custody) custodyGate(def, out, env, `q1 cell ${def.id}`);
+  const keyless = opts.keyless ?? (opts.providerProxy ? verifiedProxyMode(await cellProxyStatus(opts.providerProxy))
+    : deps.corpus || (deps.reader && deps.judge) ? true : verifiedProxyMode(null));
+  const upstream: CellUpstream = { keyless, paid_window: keyless ? null : opts.paidWindow ?? null };
+  for (const a of arms) {
+    const path = join(out, 'cells', a.cell_id, 'receipt.json');
+    const prior = existsSync(path) ? (JSON.parse(readFileSync(path, 'utf8')) as { upstream?: CellUpstream }).upstream : undefined;
+    if (prior && prior.keyless !== upstream.keyless) throw refuse({ code: 'RESUME_REFUSED', message: `${rel(path)} was written by ${prior.keyless ? 'a keyless rehearsal' : 'a paid run'}, and this run is ${upstream.keyless ? 'a keyless rehearsal' : 'paid'} (${a.cell_id})`,
+      why: 'a run carries forward every answer and judgment already in --out, so a paid receipt would count a rehearsal\'s answers, or a rehearsal would write into a paid cell', fix: { next: 'run', argv: [...FRONT, 'run', '--cell', def.id, '--out', '<a fresh directory>'] } });
+  }
   const staging = new Staging(out, def.id);
   const modePath = join(staging.root, 'upstream-mode');
   const mode = upstream.keyless ? 'keyless\n' : 'paid\n';
@@ -1922,6 +1924,18 @@ function reanswerOutcomes(raw: string | undefined): Outcome[] | null {
 
 const usage = (message: string): ScoreboardMessage => ({ code: 'USAGE', message, why: 'the cell runner has four subcommands: plan, show, run, merge', fix: { next: 'run', argv: [...FRONT, 'plan'] } });
 
+type CellProxyStatus = { keyless?: unknown; mode?: unknown; lease_usd?: unknown };
+const cellProxyStatus = (proxy: string): Promise<CellProxyStatus | null> =>
+  fetch(`${proxy.replace(/\/$/, '')}/__proxy/status`, { signal: AbortSignal.timeout(5000) })
+    .then(r => r.ok ? r.json() as Promise<CellProxyStatus | null> : null).catch(() => null);
+
+function verifiedProxyMode(status: CellProxyStatus | null): boolean {
+  if (typeof status?.keyless === 'boolean') return status.keyless;
+  throw refuse({ code: 'PREFLIGHT_FAILED', message: 'the upstream mode is unknown',
+    why: 'a cell must not label staged work or its receipt as paid without a verified upstream mode',
+    fix: { next: 'report', user_message: 'check that the lease proxy serves /__proxy/status with a boolean keyless field, or run through the required paid ledger guard' } });
+}
+
 /**
  * BG1's paid-window guard for `run` on a BG1 cell (eval/runner/paid-arm.ts, the shared window guard): a run needs the
  * granted window (--paid-window <unit> --window-cap-usd <n>) unless its lease proxy itself reports a keyless upstream
@@ -1934,7 +1948,7 @@ const usage = (message: string): ScoreboardMessage => ({ code: 'USAGE', message,
 export async function bg1CellWindow(argv: string[], def: CellDefinition, env: Record<string, string | undefined> = process.env): Promise<boolean> {
   const one = (n: string) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : undefined; };
   const proxy = (one('--provider-proxy') ?? env.SHOOTOUT_PROXY ?? '').replace(/\/$/, '') || null;
-  const status = proxy ? await fetch(`${proxy}/__proxy/status`, { signal: AbortSignal.timeout(5000) }).then(r => r.json() as Promise<{ keyless?: unknown; mode?: unknown; lease_usd?: unknown } | null>).catch(() => null) : null;
+  const status = proxy ? await cellProxyStatus(proxy) : null;
   const held = status?.mode === 'lease' && typeof status.lease_usd === 'number' && status.lease_usd > 0 ? status.lease_usd : null;
   const named = env.SHOOTOUT_LEASE_USD;
   const differs = !!named && held !== null && !(Math.abs(Number(named) - held) <= 1e-9);
@@ -1946,7 +1960,7 @@ export async function bg1CellWindow(argv: string[], def: CellDefinition, env: Re
     throw refuse({ code: 'PAID_FLAGS_MISSING', message: e.message, why: `every ${windowedLabel(def)} cell that can spend real keys runs inside a granted paid window, and no cap it spends under exceeds the window cap`,
       fix: { next: 'run', argv: [...FRONT, 'run', '--cell', def.id, '--manifest', bg1CellManifest(def), '--paid-window', '<granted unit>', '--window-cap-usd', '<granted cap>'] } });
   }
-  return status?.keyless === true;
+  return proxy ? verifiedProxyMode(status) : false;
 }
 
 /**
@@ -1964,14 +1978,18 @@ export async function windowedRunGuard(argv: string[], def: CellDefinition, env:
   return keyless;
 }
 
+type UpstreamOptions = Required<Pick<CellOptions, 'keyless' | 'paidWindow'>>;
 /**
- * What `run` hands runCell for its receipt's upstream record (CellUpstream), after the windowed guard (windowedRunGuard):
- * keyless when the lease proxy reports a keyless upstream, and the granted --paid-window only for a windowed cell whose
- * proxy did not, the one case the guard accepted that window. A cell that is not windowed records no window.
+ * The run's verified upstream and any accepted window. A non-windowed run without a proxy gets its mode only after
+ * the caller runs the paid ledger guard.
  */
-export async function runUpstreamOptions(argv: string[], def: CellDefinition, env: Record<string, string | undefined> = process.env): Promise<Required<Pick<CellOptions, 'keyless' | 'paidWindow'>>> {
-  const guarded = await windowedRunGuard(argv, def, env), i = argv.indexOf('--paid-window');
-  return { keyless: guarded ?? false, paidWindow: guarded === false && i >= 0 ? argv[i + 1] ?? null : null };
+export async function runUpstreamOptions(argv: string[], def: CellDefinition, env: Record<string, string | undefined> = process.env): Promise<UpstreamOptions | null> {
+  const one = (n: string) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : undefined; };
+  const proxy = (one('--provider-proxy') ?? env.SHOOTOUT_PROXY ?? '').replace(/\/$/, '') || null;
+  if (one('--manifest') === 'rs1') return rs1CellWindow(argv, def, proxy, env);
+  const guarded = await windowedRunGuard(argv, def, env);
+  if (guarded !== null) return { keyless: guarded, paidWindow: guarded ? null : one('--paid-window') ?? null };
+  return proxy ? { keyless: verifiedProxyMode(await cellProxyStatus(proxy)), paidWindow: null } : null;
 }
 
 /** The paid-run guard for `run` without a lease proxy: --paid and an open ledger run with room for the estimate. */
@@ -1998,15 +2016,16 @@ export function paidGuard(argv: string[], def: CellDefinition, limit: number | n
  * the lease that status reports in lease mode, and a SHOOTOUT_LEASE_USD that differs from it (or is not a number) refuses;
  * without one it is the ledger's program cap and the run's budget. Refuses with exit 2 before any provider client exists.
  */
-export async function rs1CellWindow(argv: string[], def: CellDefinition, proxy: string | null, env: Record<string, string | undefined> = process.env): Promise<void> {
+export async function rs1CellWindow(argv: string[], def: CellDefinition, proxy: string | null, env: Record<string, string | undefined> = process.env): Promise<UpstreamOptions> {
   const one = (n: string) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : undefined; };
-  const status = proxy ? await fetch(`${proxy}/__proxy/status`, { signal: AbortSignal.timeout(5000) }).then(r => r.json() as Promise<{ keyless?: unknown; mode?: unknown; lease_usd?: unknown } | null>).catch(() => null) : null;
+  const status = proxy ? await cellProxyStatus(proxy) : null;
   const held = status?.mode === 'lease' && typeof status.lease_usd === 'number' && status.lease_usd > 0 ? status.lease_usd : null;
   const named = env.SHOOTOUT_LEASE_USD;
   const differs = !!named && held !== null && !(Math.abs(Number(named) - held) <= 1e-9);
   try {
-    requireRs1Window(argv, { what: `RS1 cell ${def.id}`, keyless: status?.keyless === true,
+    const window = requireRs1Window(argv, { what: `RS1 cell ${def.id}`, keyless: status?.keyless === true,
       caps: () => proxy ? [{ label: differs ? `the lease proxy's lease (its status reports ${held}, SHOOTOUT_LEASE_USD names ${named})` : "the lease proxy's lease (GET /__proxy/status in lease mode)", usd: differs ? null : held }] : ledgerCaps(budgetOptionsFrom(argv).ledgerPath, one('--budget-run-id')) });
+    return { keyless: proxy ? verifiedProxyMode(status) : false, paidWindow: window?.unit ?? null };
   } catch (e) {
     if (!(e instanceof WindowRefusal)) throw e;
     throw refuse({ code: 'PAID_FLAGS_MISSING', message: e.message, why: 'every RS1 cell that can spend real keys runs inside a granted paid window, and no cap it spends under exceeds the window cap',
@@ -2055,7 +2074,6 @@ export async function main(argv: string[]): Promise<number> {
     const id = one('--cell');
     if (!id) throw refuse(usage(`${sub} needs --cell <id>`));
     const def = findCell(id, undefined, one('--manifest'));
-    const upstream = sub === 'run' ? await runUpstreamOptions(argv, def) : { keyless: false, paidWindow: null };
     const out = resolve(one('--out') ?? process.env.SHOOTOUT_OUT ?? join(REPO_ROOT, 'eval/reports/q1', def.id));
     if (sub === 'merge') {
       const from = many('--from').map(f => resolve(f));
@@ -2066,10 +2084,11 @@ export async function main(argv: string[]): Promise<number> {
     }
     const limit = one('--limit') ? Number(one('--limit')) : null;
     const proxy = (one('--provider-proxy') ?? process.env.SHOOTOUT_PROXY ?? '').replace(/\/$/, '') || null;
-    if (one('--manifest') === 'rs1') await rs1CellWindow(argv, def, proxy);
+    let upstream = await runUpstreamOptions(argv, def);
     if (!proxy) {
       const estimate = paidGuard(argv, def, limit, one('--arms')?.split(',') ?? null);
       startPaidRun(`q1-cell:${def.id}`, { ...budgetOptionsFrom(argv), estimateUsd: estimate });
+      upstream ??= { keyless: false, paidWindow: null };
     }
     const shardRaw = one('--shard') ?? '0/1';
     const [si, sn] = shardRaw.split('/').map(Number);
