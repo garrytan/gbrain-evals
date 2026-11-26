@@ -306,4 +306,21 @@ describe('particle-1 on this plan\'s worlds (the U digests recorded before gener
       rmSync(dir, { recursive: true, force: true });
     }
   }, 60_000);
+  test('on a listed Hard world the ladder refuses particle-1 without --paid-window, and the plan passes one', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'h4fix-particle-window-'));
+    const keys = ['ANTHROPIC_API_KEY', 'OPENAI_API_KEY', 'PARTICLE_API_KEY', 'VOYAGE_API_KEY'] as const;
+    const saved = keys.map(k => process.env[k]);
+    for (const k of keys) delete process.env[k];
+    try {
+      const listed = generateHardWorld(20261141);
+      expect(particleRunsOnHardWorld(listed)).toBe(true);
+      const file = join(dir, 'world.json');
+      writeFileSync(file, JSON.stringify(listed));
+      await expect(main(['--world', file, '--models', 'particle-1', '--judge', 'claude-opus-5-5', '--arms', 'fs', '--out', join(dir, 'out'), '--preflight'])).rejects.toThrow('--paid-window');
+    } finally {
+      keys.forEach((k, i) => { if (saved[i] !== undefined) process.env[k] = saved[i]; });
+      rmSync(dir, { recursive: true, force: true });
+    }
+    for (const w of H4FIX_WORLDS) for (const s of worldPlan(w, BUILD, SHA, '2026-11-25').filter(s => s.paid_window === 'particle')) expect(s.argv.slice(-2)).toEqual(['--paid-window', '$PAID_WINDOW']);
+  }, 60_000);
 });

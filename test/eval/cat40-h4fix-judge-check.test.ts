@@ -107,3 +107,28 @@ test('run refuses before any request without a paid window, with a budget above 
   expect(d.stderr).toMatch(/not the world items.json was planned on/);
   expect(STYLES_FOR['gpt-6.2-sol']).toEqual(['opus']);
 });
+
+test('run checks the budget the ledger will use, and never joins another budget run', () => {
+  const out = tmp(), wf = join(out, 'world.json');
+  writeFileSync(wf, JSON.stringify(world));
+  expect(spawnSync('bun', ['eval/runner/cat40/h4fix-judge-check.ts', 'plan', '--world', wf, '--out', out], { cwd: ROOT, encoding: 'utf8' }).status).toBe(0);
+  const env = { ...process.env, ANTHROPIC_API_KEY: '', OPENAI_API_KEY: '', ANTHROPIC_BASE_URL: 'http://127.0.0.1:9', OPENAI_BASE_URL: 'http://127.0.0.1:9' };
+  const base = ['eval/runner/cat40/h4fix-judge-check.ts', 'run', '--world', wf, '--out', out, '--paid-window', 'u', '--window-cap-usd', '5', '--budget-ledger', join(out, 'l.sqlite')];
+  const eq = spawnSync('bun', [...base, '--budget-usd', '5', '--budget-usd=6'], { cwd: ROOT, env, encoding: 'utf8', timeout: 60_000 });
+  expect(eq.status).toBe(2);
+  expect(eq.stderr).toMatch(/at or below the window cap/);
+  const join_ = spawnSync('bun', [...base, '--budget-usd', '5'], { cwd: ROOT, env: { ...env, BRAINBENCH_BUDGET_RUN_ID: 'other-run' }, encoding: 'utf8', timeout: 60_000 });
+  expect(join_.status).toBe(2);
+  expect(join_.stderr).toMatch(/BRAINBENCH_BUDGET_RUN_ID/);
+});
+
+test('plan refuses an output folder that already holds grades', () => {
+  const out = tmp(), wf = join(out, 'world.json');
+  writeFileSync(wf, JSON.stringify(world));
+  const plan = () => spawnSync('bun', ['eval/runner/cat40/h4fix-judge-check.ts', 'plan', '--world', wf, '--out', out, '--seed', '2'], { cwd: ROOT, encoding: 'utf8' });
+  expect(plan().status).toBe(0);
+  writeFileSync(join(out, 'grades.jsonl'), '{}\n');
+  const again = plan();
+  expect(again.status).toBe(2);
+  expect(again.stderr).toMatch(/already holds grades/);
+});
